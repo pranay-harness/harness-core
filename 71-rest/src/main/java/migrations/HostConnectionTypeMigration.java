@@ -1,12 +1,11 @@
 package migrations;
 
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+
 import static java.lang.String.format;
 
-import com.google.inject.Inject;
-
 import io.harness.persistence.HIterator;
-import lombok.extern.slf4j.Slf4j;
+
 import software.wings.beans.Account;
 import software.wings.beans.Application;
 import software.wings.beans.Application.ApplicationKeys;
@@ -21,8 +20,10 @@ import software.wings.infra.AwsInstanceInfrastructure.AwsInstanceInfrastructureK
 import software.wings.infra.InfrastructureDefinition;
 import software.wings.infra.InfrastructureDefinition.InfrastructureDefinitionKeys;
 
+import com.google.inject.Inject;
 import java.util.Collections;
 import javax.annotation.Nonnull;
+import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class HostConnectionTypeMigration implements Migration {

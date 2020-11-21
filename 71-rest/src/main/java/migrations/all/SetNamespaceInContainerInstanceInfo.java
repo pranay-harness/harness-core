@@ -1,17 +1,15 @@
 package migrations.all;
 
 import static io.harness.persistence.HQuery.excludeAuthority;
-import static org.apache.commons.lang3.StringUtils.isBlank;
 
-import com.google.inject.Inject;
+import static org.apache.commons.lang3.StringUtils.isBlank;
 
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.beans.SearchFilter.Operator;
 import io.harness.lock.AcquiredLock;
 import io.harness.lock.PersistentLocker;
-import lombok.extern.slf4j.Slf4j;
-import migrations.Migration;
+
 import software.wings.beans.Account;
 import software.wings.beans.Application;
 import software.wings.beans.InfrastructureMapping;
@@ -26,8 +24,11 @@ import software.wings.beans.infrastructure.instance.key.PodInstanceKey;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.InfrastructureMappingService;
 
+import com.google.inject.Inject;
 import java.time.Duration;
 import java.util.List;
+import lombok.extern.slf4j.Slf4j;
+import migrations.Migration;
 
 /**
  * Migration script to set namespace for kubernetes instances.

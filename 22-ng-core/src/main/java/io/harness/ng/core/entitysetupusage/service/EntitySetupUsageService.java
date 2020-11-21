@@ -1,6 +1,7 @@
 package io.harness.ng.core.entitysetupusage.service;
 
 import io.harness.ng.core.entitysetupusage.dto.EntitySetupUsageDTO;
+
 import org.springframework.data.domain.Page;
 
 public interface EntitySetupUsageService {

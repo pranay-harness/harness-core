@@ -2,13 +2,10 @@ package software.wings.sm.states.azure;
 
 import static io.harness.azure.model.AzureConstants.SKIP_VMSS_ROLLBACK;
 import static io.harness.exception.ExceptionUtils.getMessage;
+
 import static software.wings.service.impl.azure.manager.AzureVMSSAllPhaseRollbackData.AZURE_VMSS_ALL_PHASE_ROLLBACK;
 import static software.wings.sm.StateType.AZURE_VMSS_ROLLBACK;
 
-import com.google.inject.Inject;
-
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.beans.ExecutionStatus;
 import io.harness.beans.SweepingOutputInstance;
 import io.harness.delegate.task.azure.AzureVMSSPreDeploymentData;
@@ -17,6 +14,7 @@ import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.tasks.ResponseData;
+
 import software.wings.beans.InstanceUnitType;
 import software.wings.service.impl.azure.manager.AzureVMSSAllPhaseRollbackData;
 import software.wings.service.intfc.sweepingoutput.SweepingOutputInquiry;
@@ -24,6 +22,9 @@ import software.wings.service.intfc.sweepingoutput.SweepingOutputService;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionResponse;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.github.reinert.jjschema.SchemaIgnore;
+import com.google.inject.Inject;
 import java.util.Collections;
 import java.util.Map;
 

@@ -1,11 +1,10 @@
 package software.wings.delegatetasks;
 
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
-
 import software.wings.beans.SyncTaskContext;
 import software.wings.service.intfc.DelegateService;
 
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import java.lang.reflect.Proxy;
 
 /**

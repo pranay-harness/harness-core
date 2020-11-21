@@ -1,9 +1,10 @@
 package software.wings.graphql.schema.mutation.connector.payload;
 
-import lombok.Builder;
-import lombok.Value;
 import software.wings.security.PermissionAttribute;
 import software.wings.security.annotations.Scope;
+
+import lombok.Builder;
+import lombok.Value;
 
 @Value
 @Builder

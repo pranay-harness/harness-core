@@ -1,11 +1,11 @@
 package software.wings.cloudprovider.aws;
 
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
 import software.wings.cloudprovider.ClusterConfiguration;
 
 import java.util.List;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
 /**
  * Created by anubhaw on 12/29/16.

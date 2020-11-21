@@ -7,24 +7,20 @@ import static io.harness.beans.SearchFilter.Operator.IN;
 import static io.harness.rule.OwnerRule.AADITI;
 import static io.harness.rule.OwnerRule.AGORODETKI;
 import static io.harness.rule.OwnerRule.UJJAWAL;
-import static java.util.Arrays.asList;
-import static org.assertj.core.api.Assertions.assertThat;
+
 import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static software.wings.common.Constants.ACCOUNT_ID_KEY;
 import static software.wings.service.impl.PreferenceServiceImpl.USER_ID_KEY;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 import static software.wings.utils.WingsTestConstants.USER_ID;
 
-import com.google.inject.Inject;
+import static java.util.Arrays.asList;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.category.element.UnitTests;
 import io.harness.exception.InvalidRequestException;
 import io.harness.rule.Owner;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
-import org.mockito.InjectMocks;
-import org.mongodb.morphia.mapping.Mapper;
+
 import software.wings.WingsBaseTest;
 import software.wings.beans.DeploymentPreference;
 import software.wings.beans.HarnessTagFilter;
@@ -32,6 +28,13 @@ import software.wings.beans.Preference;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.PreferenceService;
 import software.wings.utils.WingsTestConstants;
+
+import com.google.inject.Inject;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
+import org.mockito.InjectMocks;
+import org.mongodb.morphia.mapping.Mapper;
 
 public class PreferenceServiceTest extends WingsBaseTest {
   private static final String TEST_USER_ID = "123";

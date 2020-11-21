@@ -1,5 +1,12 @@
 package software.wings.helpers.ext.newrelic;
 
+import software.wings.beans.NewRelicDeploymentMarkerPayload;
+import software.wings.service.impl.newrelic.NewRelicApplicationInstancesResponse;
+import software.wings.service.impl.newrelic.NewRelicApplicationsResponse;
+import software.wings.service.impl.newrelic.NewRelicMetricDataResponse;
+import software.wings.service.impl.newrelic.NewRelicMetricResponse;
+
+import java.util.Collection;
 import retrofit2.Call;
 import retrofit2.http.Body;
 import retrofit2.http.GET;
@@ -8,13 +15,6 @@ import retrofit2.http.POST;
 import retrofit2.http.Path;
 import retrofit2.http.Query;
 import retrofit2.http.Url;
-import software.wings.beans.NewRelicDeploymentMarkerPayload;
-import software.wings.service.impl.newrelic.NewRelicApplicationInstancesResponse;
-import software.wings.service.impl.newrelic.NewRelicApplicationsResponse;
-import software.wings.service.impl.newrelic.NewRelicMetricDataResponse;
-import software.wings.service.impl.newrelic.NewRelicMetricResponse;
-
-import java.util.Collection;
 
 /**
  * Created by rsingh on 8/28/17.

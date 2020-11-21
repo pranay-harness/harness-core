@@ -3,12 +3,9 @@ package software.wings.graphql.datafetcher.audit;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
-
 import io.harness.exception.GraphQLException;
 import io.harness.exception.WingsException;
-import org.mongodb.morphia.query.Query;
+
 import software.wings.audit.AuditHeader;
 import software.wings.audit.AuditHeaderYamlResponse;
 import software.wings.audit.AuditHeaderYamlResponse.AuditHeaderYamlResponseBuilder;
@@ -20,6 +17,8 @@ import software.wings.graphql.schema.type.QLPageInfo;
 import software.wings.graphql.schema.type.audit.QLChangeContent;
 import software.wings.graphql.schema.type.audit.QLChangeContentConnection.QLChangeContentConnectionBuilder;
 
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
@@ -29,6 +28,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import javax.validation.constraints.NotNull;
+import org.mongodb.morphia.query.Query;
 
 @Singleton
 public class ChangeContentController {

@@ -5,10 +5,6 @@ import static io.harness.event.model.EventType.DEPLOYMENT_VERIFIED;
 import static io.harness.event.model.EventType.INSTANCE_EVENT;
 import static io.harness.event.model.EventType.SERVICE_GUARD_SETUP;
 
-import com.google.common.collect.Sets;
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
-
 import io.harness.event.handler.EventHandler;
 import io.harness.event.listener.EventListener;
 import io.harness.event.model.Event;
@@ -16,9 +12,14 @@ import io.harness.event.timeseries.processor.DeploymentEventProcessor;
 import io.harness.event.timeseries.processor.InstanceEventProcessor;
 import io.harness.event.timeseries.processor.ServiceGuardSetupEventProcessor;
 import io.harness.event.timeseries.processor.VerificationEventProcessor;
-import lombok.extern.slf4j.Slf4j;
+
 import software.wings.service.impl.event.timeseries.TimeSeriesBatchEventInfo;
 import software.wings.service.impl.event.timeseries.TimeSeriesEventInfo;
+
+import com.google.common.collect.Sets;
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
+import lombok.extern.slf4j.Slf4j;
 
 @Singleton
 @Slf4j

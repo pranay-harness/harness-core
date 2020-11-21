@@ -16,13 +16,7 @@ import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
 import static io.harness.validation.PersistenceValidator.duplicateCheck;
 import static io.harness.validation.Validator.equalCheck;
 import static io.harness.validation.Validator.notNullCheck;
-import static java.time.Duration.ofHours;
-import static java.time.Duration.ofSeconds;
-import static java.util.regex.Pattern.compile;
-import static java.util.stream.Collectors.toList;
-import static java.util.stream.Collectors.toMap;
-import static java.util.stream.Collectors.toSet;
-import static org.apache.commons.lang3.StringUtils.isBlank;
+
 import static software.wings.beans.ExecutionCredential.ExecutionType.SSH;
 import static software.wings.beans.SSHExecutionCredential.Builder.aSSHExecutionCredential;
 import static software.wings.beans.trigger.ArtifactSelection.Type.ARTIFACT_SOURCE;
@@ -42,10 +36,13 @@ import static software.wings.service.impl.trigger.TriggerServiceHelper.validateA
 import static software.wings.service.impl.workflow.WorkflowServiceTemplateHelper.getServiceWorkflowVariables;
 import static software.wings.service.impl.workflow.WorkflowServiceTemplateHelper.getTemplatizedEnvVariableName;
 
-import com.google.common.annotations.VisibleForTesting;
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
-import com.google.inject.name.Named;
+import static java.time.Duration.ofHours;
+import static java.time.Duration.ofSeconds;
+import static java.util.regex.Pattern.compile;
+import static java.util.stream.Collectors.toList;
+import static java.util.stream.Collectors.toMap;
+import static java.util.stream.Collectors.toSet;
+import static org.apache.commons.lang3.StringUtils.isBlank;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.CreatedByType;
@@ -65,12 +62,7 @@ import io.harness.logging.AccountLogContext;
 import io.harness.logging.AutoLogContext;
 import io.harness.logging.ExceptionLogger;
 import io.harness.scheduler.PersistentScheduler;
-import lombok.Builder;
-import lombok.Value;
-import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.StringUtils;
-import org.jetbrains.annotations.NotNull;
-import org.quartz.TriggerKey;
+
 import software.wings.beans.Application;
 import software.wings.beans.EntityType;
 import software.wings.beans.Environment;
@@ -149,6 +141,10 @@ import software.wings.service.intfc.applicationmanifest.HelmChartService;
 import software.wings.service.intfc.trigger.TriggerExecutionService;
 import software.wings.service.intfc.yaml.YamlPushService;
 
+import com.google.common.annotations.VisibleForTesting;
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
+import com.google.inject.name.Named;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
@@ -164,6 +160,12 @@ import java.util.concurrent.ExecutorService;
 import java.util.regex.PatternSyntaxException;
 import java.util.stream.Collectors;
 import javax.validation.executable.ValidateOnExecution;
+import lombok.Builder;
+import lombok.Value;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
+import org.jetbrains.annotations.NotNull;
+import org.quartz.TriggerKey;
 
 @OwnedBy(CDC)
 @Singleton
@@ -791,7 +793,7 @@ public class TriggerServiceImpl implements TriggerService {
         List<Artifact> artifacts = new ArrayList<>();
         if (isNotEmpty(artifactSelections)
             && artifactSelections.stream().anyMatch(
-                   artifactSelection -> artifactSelection.getType() == PIPELINE_SOURCE)) {
+                artifactSelection -> artifactSelection.getType() == PIPELINE_SOURCE)) {
           log.info("Adding last deployed artifacts from source pipeline {} ", sourcePipelineId);
           addLastDeployedArtifacts(appId, sourcePipelineId, null, artifacts);
         }
@@ -971,7 +973,7 @@ public class TriggerServiceImpl implements TriggerService {
     helmCharts.add(isEmpty(manifestSelection.getVersionRegex())
             ? helmChartService.getLastCollectedManifest(appManifest.getAccountId(), appManifest.getUuid())
             : helmChartService.getLastCollectedManifestMatchingRegex(
-                  appManifest.getAccountId(), appManifest.getUuid(), manifestSelection.getVersionRegex()));
+                appManifest.getAccountId(), appManifest.getUuid(), manifestSelection.getVersionRegex()));
   }
 
   private WorkflowExecution triggerDeployment(
@@ -1140,7 +1142,7 @@ public class TriggerServiceImpl implements TriggerService {
       } else {
         if (infraDefIdOrName.contains(",")
             && featureFlagService.isEnabled(
-                   FeatureName.MULTISELECT_INFRA_PIPELINE, appService.getAccountIdByAppId(appId))) {
+                FeatureName.MULTISELECT_INFRA_PIPELINE, appService.getAccountIdByAppId(appId))) {
           if (!variable.isAllowMultipleValues()) {
             throw new InvalidRequestException(
                 "Multiple values provided for infra var { " + infraDefVarName + " }, but variable only allows one");
@@ -1436,7 +1438,7 @@ public class TriggerServiceImpl implements TriggerService {
     return (webhookTriggerCondition.getEventTypes() != null
                && webhookTriggerCondition.getEventTypes().contains(WebhookEventType.PUSH))
         && ((webhookTriggerCondition.getWebhookSource() == GITHUB)
-               || (webhookTriggerCondition.getWebhookSource() == GITLAB));
+            || (webhookTriggerCondition.getWebhookSource() == GITLAB));
   }
 
   private boolean validateWebhookTriggerCondition(Trigger trigger, Trigger existingTrigger) {
@@ -1469,7 +1471,7 @@ public class TriggerServiceImpl implements TriggerService {
 
       return isCheckFileContentChangedSame && isRepoNameSame
           && Objects.equals(
-                 webHookTriggerCondition.getGitConnectorId(), existingWebHookTriggerCondition.getGitConnectorId())
+              webHookTriggerCondition.getGitConnectorId(), existingWebHookTriggerCondition.getGitConnectorId())
           && Objects.equals(webHookTriggerCondition.getBranchName(), existingWebHookTriggerCondition.getBranchName())
           && Objects.equals(webHookTriggerCondition.getFilePaths(), existingWebHookTriggerCondition.getFilePaths());
     }

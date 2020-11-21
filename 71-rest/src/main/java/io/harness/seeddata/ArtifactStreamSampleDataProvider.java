@@ -2,10 +2,6 @@ package io.harness.seeddata;
 
 import static io.harness.seeddata.SampleDataProviderConstants.DOCKER_TODO_LIST_IMAGE_NAME;
 
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
-
-import lombok.extern.slf4j.Slf4j;
 import software.wings.beans.DockerConfig;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.artifact.ArtifactStream;
@@ -14,6 +10,10 @@ import software.wings.helpers.ext.jenkins.BuildDetails;
 import software.wings.service.impl.artifact.ArtifactCollectionUtils;
 import software.wings.service.intfc.ArtifactStreamService;
 import software.wings.service.intfc.BuildSourceService;
+
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
+import lombok.extern.slf4j.Slf4j;
 
 @Singleton
 @Slf4j

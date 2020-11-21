@@ -1,6 +1,5 @@
 package software.wings.resources.stats.service;
 
-import lombok.NoArgsConstructor;
 import software.wings.resources.stats.model.TimeRange;
 
 import java.time.Instant;
@@ -14,6 +13,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Locale;
 import javax.annotation.ParametersAreNonnullByDefault;
+import lombok.NoArgsConstructor;
 
 @NoArgsConstructor
 @ParametersAreNonnullByDefault

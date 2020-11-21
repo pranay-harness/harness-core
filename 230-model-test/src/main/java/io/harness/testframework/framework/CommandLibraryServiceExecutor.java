@@ -1,37 +1,37 @@
 package io.harness.testframework.framework;
 
-import static io.fabric8.utils.Strings.join;
 import static io.harness.filesystem.FileIo.acquireLock;
 import static io.harness.testframework.framework.utils.ExecutorUtils.addConfig;
 import static io.harness.testframework.framework.utils.ExecutorUtils.addGCVMOptions;
 import static io.harness.testframework.framework.utils.ExecutorUtils.addJacocoAgentVM;
 import static io.harness.testframework.framework.utils.ExecutorUtils.addJar;
+
+import static io.fabric8.utils.Strings.join;
 import static io.restassured.config.HttpClientConfig.httpClientConfig;
 import static java.lang.System.err;
 import static java.lang.System.out;
 import static java.time.Duration.ofMinutes;
 import static java.time.Duration.ofSeconds;
 
-import com.google.inject.Singleton;
-
 import io.harness.exception.GeneralException;
 import io.harness.filesystem.FileIo;
 import io.harness.resource.Project;
 import io.harness.threading.Poller;
+
+import com.google.inject.Singleton;
 import io.restassured.RestAssured;
 import io.restassured.config.RestAssuredConfig;
-import lombok.extern.slf4j.Slf4j;
-import org.apache.http.HttpStatus;
-import org.apache.http.params.HttpConnectionParams;
-import org.jetbrains.annotations.NotNull;
-import org.zeroturnaround.exec.ProcessExecutor;
-
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.http.HttpStatus;
+import org.apache.http.params.HttpConnectionParams;
+import org.jetbrains.annotations.NotNull;
+import org.zeroturnaround.exec.ProcessExecutor;
 
 @Singleton
 @Slf4j
@@ -88,7 +88,7 @@ public class CommandLibraryServiceExecutor {
 
         startServiceProcess(rootDirectory, command);
 
-        Poller.pollFor(ofMinutes(2), ofSeconds(2), this ::isHealthy);
+        Poller.pollFor(ofMinutes(2), ofSeconds(2), this::isHealthy);
       } catch (RuntimeException | IOException exception) {
         hasFailed = true;
         throw exception;

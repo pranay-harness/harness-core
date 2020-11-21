@@ -1,14 +1,14 @@
 package software.wings.beans;
 
+import software.wings.beans.Delegate.Status;
+
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
-import lombok.Builder;
-import lombok.Value;
-import software.wings.beans.Delegate.Status;
-
 import java.util.List;
 import java.util.Map;
+import lombok.Builder;
+import lombok.Value;
 
 @JsonInclude(Include.NON_NULL)
 @JsonIgnoreProperties(ignoreUnknown = true)

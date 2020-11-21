@@ -1,5 +1,10 @@
 package io.harness.azure.client;
 
+import io.harness.azure.model.AzureConfig;
+import io.harness.azure.model.AzureMachineImageArtifact;
+import io.harness.azure.model.AzureUserAuthVMInstanceData;
+import io.harness.azure.model.AzureVMSSTagsData;
+
 import com.microsoft.azure.management.compute.GalleryImage;
 import com.microsoft.azure.management.compute.VirtualMachineScaleSet;
 import com.microsoft.azure.management.compute.VirtualMachineScaleSetVM;
@@ -7,11 +12,6 @@ import com.microsoft.azure.management.network.LoadBalancer;
 import com.microsoft.azure.management.network.VirtualMachineScaleSetNetworkInterface;
 import com.microsoft.azure.management.network.implementation.PublicIPAddressInner;
 import com.microsoft.azure.management.resources.Subscription;
-import io.harness.azure.model.AzureConfig;
-import io.harness.azure.model.AzureMachineImageArtifact;
-import io.harness.azure.model.AzureUserAuthVMInstanceData;
-import io.harness.azure.model.AzureVMSSTagsData;
-
 import java.util.List;
 import java.util.Optional;
 

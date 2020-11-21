@@ -4,10 +4,7 @@ import static io.harness.annotations.dev.HarnessTeam.PL;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.EmbeddedUser;
-import lombok.Data;
-import lombok.EqualsAndHashCode;
-import lombok.NoArgsConstructor;
-import lombok.experimental.FieldNameConstants;
+
 import software.wings.beans.EntityType;
 import software.wings.search.entities.related.audit.RelatedAuditView;
 import software.wings.search.framework.EntityBaseView;
@@ -15,6 +12,10 @@ import software.wings.search.framework.EntityInfo;
 
 import java.util.List;
 import java.util.Set;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.NoArgsConstructor;
+import lombok.experimental.FieldNameConstants;
 
 @OwnedBy(PL)
 @Data

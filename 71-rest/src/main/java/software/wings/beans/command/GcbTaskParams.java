@@ -7,8 +7,7 @@ import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.delegate.beans.executioncapability.ExecutionCapabilityDemander;
 import io.harness.delegate.beans.executioncapability.SelectorCapability;
 import io.harness.security.encryption.EncryptedDataDetail;
-import lombok.Builder;
-import lombok.Data;
+
 import software.wings.beans.GcpConfig;
 import software.wings.beans.GitConfig;
 import software.wings.service.impl.DelegateServiceImpl;
@@ -20,6 +19,8 @@ import java.util.List;
 import java.util.Map;
 import javax.annotation.Nullable;
 import javax.validation.constraints.NotNull;
+import lombok.Builder;
+import lombok.Data;
 
 @OwnedBy(CDC)
 @Data

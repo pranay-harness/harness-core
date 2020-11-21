@@ -13,7 +13,7 @@ import static io.harness.eraro.ErrorCode.UNKNOWN_ERROR;
 import static io.harness.eraro.ErrorCode.UNKNOWN_HOST;
 import static io.harness.eraro.ErrorCode.UNREACHABLE_HOST;
 import static io.harness.logging.LogLevel.ERROR;
-import static java.lang.String.format;
+
 import static software.wings.beans.HostConnectionAttributes.AccessType.KEY_SUDO_APP_USER;
 import static software.wings.beans.HostConnectionAttributes.AccessType.KEY_SU_APP_USER;
 import static software.wings.beans.HostConnectionAttributes.AccessType.USER_PASSWORD;
@@ -23,16 +23,12 @@ import static software.wings.core.ssh.executors.ScriptExecutor.ExecutorType.KEY_
 import static software.wings.core.ssh.executors.ScriptExecutor.ExecutorType.PASSWORD_AUTH;
 import static software.wings.core.ssh.executors.SshSessionConfig.Builder.aSshSessionConfig;
 
-import com.jcraft.jsch.JSchException;
-import com.sun.mail.iap.ConnectionException;
+import static java.lang.String.format;
+
 import io.harness.eraro.ErrorCode;
 import io.harness.logging.LogCallback;
 import io.harness.logging.LogLevel;
-import io.netty.channel.ConnectTimeoutException;
-import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.StringUtils;
-import org.zeroturnaround.exec.ProcessExecutor;
-import org.zeroturnaround.exec.ProcessResult;
+
 import software.wings.beans.BastionConnectionAttributes;
 import software.wings.beans.HostConnectionAttributes;
 import software.wings.beans.HostConnectionAttributes.AccessType;
@@ -45,6 +41,9 @@ import software.wings.core.ssh.executors.ScriptExecutor.ExecutorType;
 import software.wings.core.ssh.executors.SshSessionConfig;
 import software.wings.core.ssh.executors.SshSessionConfig.Builder;
 
+import com.jcraft.jsch.JSchException;
+import com.sun.mail.iap.ConnectionException;
+import io.netty.channel.ConnectTimeoutException;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -55,6 +54,10 @@ import java.net.SocketException;
 import java.net.SocketTimeoutException;
 import java.net.UnknownHostException;
 import java.util.concurrent.TimeoutException;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
+import org.zeroturnaround.exec.ProcessExecutor;
+import org.zeroturnaround.exec.ProcessResult;
 
 /**
  * Created by anubhaw on 2/23/17.

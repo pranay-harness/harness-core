@@ -1,6 +1,7 @@
 package software.wings.service.impl.security;
 
 import static io.harness.rule.OwnerRule.ANKIT;
+
 import static junit.framework.TestCase.assertEquals;
 import static org.junit.runners.Parameterized.Parameter;
 import static org.junit.runners.Parameterized.Parameters;
@@ -8,14 +9,14 @@ import static org.junit.runners.Parameterized.Parameters;
 import io.harness.category.element.UnitTests;
 import io.harness.helpers.ext.azure.AzureParsedSecretReference;
 import io.harness.rule.Owner;
+
+import java.util.Arrays;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.junit.rules.ExpectedException;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
-
-import java.util.Arrays;
 
 @RunWith(Parameterized.class)
 public class AzureParsedSecretReferenceTest {

@@ -1,15 +1,16 @@
 package software.wings.helpers.ext.pcf.request;
 
 import io.harness.delegate.task.pcf.PcfManifestsPackage;
-import lombok.Builder;
-import lombok.Data;
-import lombok.EqualsAndHashCode;
+
 import software.wings.beans.PcfConfig;
 import software.wings.beans.artifact.ArtifactFile;
 import software.wings.beans.artifact.ArtifactStreamAttributes;
 
 import java.util.List;
 import java.util.Map;
+import lombok.Builder;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
 
 /**
  * This class contains all required data for PCFCommandTask.SETUP to perform setup task

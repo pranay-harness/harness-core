@@ -1,14 +1,14 @@
 package io.harness.gitsync.gitsyncerror.beans;
 
 import io.harness.git.model.ChangeType;
+
+import java.util.List;
 import lombok.Builder;
 import lombok.Data;
 import lombok.experimental.FieldNameConstants;
 import org.mongodb.morphia.annotations.Transient;
 import org.springframework.data.annotation.TypeAlias;
 import org.springframework.data.mongodb.core.mapping.Document;
-
-import java.util.List;
 
 @Data
 @Builder

@@ -24,10 +24,11 @@ import io.harness.state.io.StepInputPackage;
 import io.harness.state.io.StepResponse;
 import io.harness.tasks.Cd1SetupFields;
 import io.harness.tasks.ResponseData;
-import org.jetbrains.annotations.NotNull;
+
 import software.wings.beans.TaskType;
 
 import java.util.Map;
+import org.jetbrains.annotations.NotNull;
 
 @Redesign
 @ExcludeRedesign

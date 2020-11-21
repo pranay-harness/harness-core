@@ -1,13 +1,14 @@
 package migrations.all;
 
-import com.google.inject.Inject;
-
 import io.harness.persistence.HKeyIterator;
-import lombok.extern.slf4j.Slf4j;
-import migrations.Migration;
+
 import software.wings.beans.Account;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.DelegateProfileService;
+
+import com.google.inject.Inject;
+import lombok.extern.slf4j.Slf4j;
+import migrations.Migration;
 
 @Slf4j
 public class CreatePrimiryProfileForAllAccounts implements Migration {

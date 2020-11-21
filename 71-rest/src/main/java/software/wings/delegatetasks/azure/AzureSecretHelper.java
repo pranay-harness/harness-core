@@ -1,8 +1,5 @@
 package software.wings.delegatetasks.azure;
 
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
-
 import io.harness.azure.model.AzureConfig;
 import io.harness.beans.DecryptableEntity;
 import io.harness.delegate.beans.azure.AzureConfigDTO;
@@ -16,11 +13,13 @@ import io.harness.delegate.task.azure.request.AzureVMSSSetupTaskParameters;
 import io.harness.delegate.task.azure.request.AzureVMSSTaskParameters;
 import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.security.encryption.SecretDecryptionService;
-import lombok.NoArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import java.util.List;
 import java.util.Optional;
+import lombok.NoArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 @Singleton
 @NoArgsConstructor

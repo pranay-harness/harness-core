@@ -1,7 +1,6 @@
 package software.wings.common;
 
 import com.google.common.collect.ImmutableList;
-
 import java.util.List;
 
 public interface TemplateConstants {

@@ -5,8 +5,24 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.eraro.ErrorCode.INVALID_ARTIFACT_SERVER;
 import static io.harness.exception.WingsException.USER;
-import static java.util.stream.Collectors.toList;
+
 import static software.wings.helpers.ext.jenkins.BuildDetails.Builder.aBuildDetails;
+
+import static java.util.stream.Collectors.toList;
+
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.eraro.ErrorCode;
+import io.harness.exception.ArtifactServerException;
+import io.harness.exception.ExceptionUtils;
+import io.harness.exception.WingsException;
+import io.harness.security.encryption.EncryptedDataDetail;
+
+import software.wings.beans.GcpConfig;
+import software.wings.beans.artifact.Artifact.ArtifactMetadataKeys;
+import software.wings.beans.artifact.ArtifactStreamAttributes;
+import software.wings.helpers.ext.jenkins.BuildDetails;
+import software.wings.service.impl.GcpHelperService;
+import software.wings.service.intfc.security.EncryptionService;
 
 import com.google.api.services.storage.Storage;
 import com.google.api.services.storage.model.Bucket;
@@ -16,24 +32,6 @@ import com.google.api.services.storage.model.StorageObject;
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
-
-import io.harness.annotations.dev.OwnedBy;
-import io.harness.eraro.ErrorCode;
-import io.harness.exception.ArtifactServerException;
-import io.harness.exception.ExceptionUtils;
-import io.harness.exception.WingsException;
-import io.harness.security.encryption.EncryptedDataDetail;
-import lombok.extern.slf4j.Slf4j;
-import okhttp3.OkHttpClient;
-import okhttp3.Request;
-import org.json.JSONObject;
-import software.wings.beans.GcpConfig;
-import software.wings.beans.artifact.Artifact.ArtifactMetadataKeys;
-import software.wings.beans.artifact.ArtifactStreamAttributes;
-import software.wings.helpers.ext.jenkins.BuildDetails;
-import software.wings.service.impl.GcpHelperService;
-import software.wings.service.intfc.security.EncryptionService;
-
 import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.HashMap;
@@ -42,6 +40,10 @@ import java.util.Map;
 import java.util.PriorityQueue;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
+import lombok.extern.slf4j.Slf4j;
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
+import org.json.JSONObject;
 
 @OwnedBy(CDC)
 @Singleton

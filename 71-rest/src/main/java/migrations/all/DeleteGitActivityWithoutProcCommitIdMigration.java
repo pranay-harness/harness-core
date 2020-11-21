@@ -2,14 +2,14 @@ package migrations.all;
 
 import static io.harness.persistence.HPersistence.DEFAULT_STORE;
 
-import com.google.inject.Inject;
-
-import lombok.extern.slf4j.Slf4j;
-import migrations.Migration;
-import org.mongodb.morphia.query.Query;
 import software.wings.dl.WingsPersistence;
 import software.wings.yaml.gitSync.GitFileActivity;
 import software.wings.yaml.gitSync.GitFileActivity.GitFileActivityKeys;
+
+import com.google.inject.Inject;
+import lombok.extern.slf4j.Slf4j;
+import migrations.Migration;
+import org.mongodb.morphia.query.Query;
 
 @Slf4j
 public class DeleteGitActivityWithoutProcCommitIdMigration implements Migration {

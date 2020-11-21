@@ -1,10 +1,8 @@
 package software.wings.scheduler.marketplace.gcp;
 
 import static io.harness.mongo.iterator.MongoPersistenceIterator.SchedulingType.REGULAR;
-import static java.time.Duration.ofMinutes;
 
-import com.google.common.util.concurrent.ThreadFactoryBuilder;
-import com.google.inject.Inject;
+import static java.time.Duration.ofMinutes;
 
 import io.harness.iterator.PersistenceIterator;
 import io.harness.iterator.PersistenceIterator.ProcessMode;
@@ -14,15 +12,18 @@ import io.harness.mongo.iterator.MongoPersistenceIterator.Handler;
 import io.harness.mongo.iterator.filter.MorphiaFilterExpander;
 import io.harness.mongo.iterator.provider.MorphiaPersistenceProvider;
 import io.harness.workers.background.AccountStatusBasedEntityProcessController;
-import lombok.extern.slf4j.Slf4j;
+
 import software.wings.beans.marketplace.gcp.GCPBillingJobEntity;
 import software.wings.beans.marketplace.gcp.GCPBillingJobEntity.GCPBillingJobEntityKeys;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.marketplace.gcp.GCPMarketPlaceService;
 
+import com.google.common.util.concurrent.ThreadFactoryBuilder;
+import com.google.inject.Inject;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
+import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class GCPBillingHandler implements Handler<GCPBillingJobEntity> {

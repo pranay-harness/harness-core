@@ -1,17 +1,18 @@
 package io.harness.delegate.beans.executioncapability;
 
 import static io.harness.rule.OwnerRule.VUK;
+
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
 
 import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 public class SelectorCapabilityTest extends CategoryTest {
   @Test

@@ -1,6 +1,5 @@
 package io.harness.ngpipeline.pipeline.executions.beans;
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import io.harness.mongo.index.Field;
 import io.harness.mongo.index.NgUniqueIndex;
 import io.harness.ng.core.common.beans.NGTag;
@@ -9,15 +8,16 @@ import io.harness.ngpipeline.pipeline.executions.ExecutionStatus;
 import io.harness.ngpipeline.pipeline.executions.beans.PipelineExecutionSummary.PipelineExecutionSummaryKeys;
 import io.harness.persistence.PersistentEntity;
 import io.harness.pipeline.executions.NGStageType;
+
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import java.util.ArrayList;
+import java.util.List;
 import lombok.Builder;
 import lombok.Data;
 import lombok.experimental.FieldNameConstants;
 import org.mongodb.morphia.annotations.Entity;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
-
-import java.util.ArrayList;
-import java.util.List;
 
 @Data
 @Builder

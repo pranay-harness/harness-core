@@ -3,9 +3,8 @@ package io.harness.limits;
 import static io.harness.limits.ActionType.CREATE_APPLICATION;
 import static io.harness.limits.ActionType.DEPLOY;
 import static io.harness.rule.OwnerRule.UJJAWAL;
-import static org.assertj.core.api.Assertions.assertThat;
 
-import com.google.inject.Inject;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.category.element.DeprecatedIntegrationTests;
 import io.harness.limits.ConfiguredLimit.ConfiguredLimitKeys;
@@ -15,6 +14,13 @@ import io.harness.limits.impl.model.RateLimit;
 import io.harness.limits.impl.model.StaticLimit;
 import io.harness.limits.lib.LimitChecker;
 import io.harness.rule.Owner;
+
+import software.wings.dl.WingsPersistence;
+import software.wings.integration.IntegrationTestBase;
+import software.wings.integration.IntegrationTestUtils;
+
+import com.google.inject.Inject;
+import java.util.concurrent.TimeUnit;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.junit.After;
 import org.junit.Assert;
@@ -23,11 +29,6 @@ import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mongodb.morphia.Datastore;
-import software.wings.dl.WingsPersistence;
-import software.wings.integration.IntegrationTestBase;
-import software.wings.integration.IntegrationTestUtils;
-
-import java.util.concurrent.TimeUnit;
 
 public class LimitsEnforcementIntegrationTest extends IntegrationTestBase {
   @Inject private WingsPersistence dao;

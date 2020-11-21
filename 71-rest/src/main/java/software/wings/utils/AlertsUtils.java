@@ -2,14 +2,14 @@ package software.wings.utils;
 
 import static software.wings.beans.Application.GLOBAL_APP_ID;
 
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
-
 import software.wings.beans.alert.AlertType;
 import software.wings.beans.alert.GitSyncErrorAlert;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.AlertService;
 import software.wings.yaml.errorhandling.GitSyncError;
+
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
 
 @Singleton
 public class AlertsUtils {

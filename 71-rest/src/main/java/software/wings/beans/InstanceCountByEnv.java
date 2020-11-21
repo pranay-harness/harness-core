@@ -1,7 +1,6 @@
 package software.wings.beans;
 
 import com.google.common.base.MoreObjects;
-
 import org.mongodb.morphia.annotations.Id;
 
 /**

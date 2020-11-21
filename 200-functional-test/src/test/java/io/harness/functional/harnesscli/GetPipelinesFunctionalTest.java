@@ -1,9 +1,8 @@
 package io.harness.functional.harnesscli;
 
 import static io.harness.rule.OwnerRule.SHUBHANSHU;
-import static org.assertj.core.api.Assertions.assertThat;
 
-import com.google.inject.Inject;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.category.element.CliFunctionalTests;
 import io.harness.functional.AbstractFunctionalTest;
@@ -14,15 +13,17 @@ import io.harness.generator.OwnerManager.Owners;
 import io.harness.generator.Randomizer.Seed;
 import io.harness.rule.Owner;
 import io.harness.testframework.restutils.PipelineRestUtils;
+
+import software.wings.beans.Application;
+import software.wings.beans.Pipeline;
+
+import com.google.inject.Inject;
+import java.util.Iterator;
+import java.util.List;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
-import software.wings.beans.Application;
-import software.wings.beans.Pipeline;
-
-import java.util.Iterator;
-import java.util.List;
 
 @Slf4j
 public class GetPipelinesFunctionalTest extends AbstractFunctionalTest {

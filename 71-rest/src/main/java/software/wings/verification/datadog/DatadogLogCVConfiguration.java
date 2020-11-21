@@ -1,13 +1,14 @@
 package software.wings.verification.datadog;
 
+import software.wings.verification.CVConfiguration;
+import software.wings.verification.log.LogsCVConfiguration;
+
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
-import software.wings.verification.CVConfiguration;
-import software.wings.verification.log.LogsCVConfiguration;
 @Data
 @Builder
 @NoArgsConstructor

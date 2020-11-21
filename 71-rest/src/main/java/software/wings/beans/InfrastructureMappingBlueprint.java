@@ -1,6 +1,5 @@
 package software.wings.beans;
 
-import static java.lang.String.format;
 import static software.wings.api.DeploymentType.AMI;
 import static software.wings.api.DeploymentType.AWS_LAMBDA;
 import static software.wings.api.DeploymentType.ECS;
@@ -10,19 +9,21 @@ import static software.wings.beans.InfrastructureMappingBlueprint.CloudProviderT
 import static software.wings.beans.InfrastructureMappingBlueprint.CloudProviderType.GCP;
 import static software.wings.beans.InfrastructureMappingBlueprint.CloudProviderType.PHYSICAL_DATA_CENTER;
 
-import com.google.common.collect.ImmutableMap;
+import static java.lang.String.format;
 
 import io.harness.exception.InvalidRequestException;
+
+import software.wings.api.DeploymentType;
+
+import com.google.common.collect.ImmutableMap;
+import java.util.List;
+import java.util.Map;
+import javax.validation.constraints.NotNull;
 import lombok.Builder;
 import lombok.Data;
 import org.apache.commons.lang3.tuple.Pair;
 import org.hibernate.validator.constraints.NotBlank;
 import org.hibernate.validator.constraints.NotEmpty;
-import software.wings.api.DeploymentType;
-
-import java.util.List;
-import java.util.Map;
-import javax.validation.constraints.NotNull;
 
 @Data
 @Builder

@@ -3,6 +3,11 @@ package io.harness.morphia;
 import static io.harness.govern.IgnoreThrowable.ignoredOnPurpose;
 import static io.harness.morphia.MorphiaRegistrar.putClass;
 
+import io.harness.exception.GeneralException;
+import io.harness.exception.UnexpectedException;
+import io.harness.reflection.CodeUtils;
+import io.harness.testing.TestExecution;
+
 import com.google.inject.AbstractModule;
 import com.google.inject.Injector;
 import com.google.inject.Key;
@@ -13,17 +18,6 @@ import com.google.inject.TypeLiteral;
 import com.google.inject.multibindings.MapBinder;
 import com.google.inject.name.Named;
 import com.google.inject.name.Names;
-
-import io.harness.exception.GeneralException;
-import io.harness.exception.UnexpectedException;
-import io.harness.reflection.CodeUtils;
-import io.harness.testing.TestExecution;
-import lombok.extern.slf4j.Slf4j;
-import org.mongodb.morphia.Morphia;
-import org.mongodb.morphia.ObjectFactory;
-import org.mongodb.morphia.converters.TypeConverter;
-import org.mongodb.morphia.mapping.MappedClass;
-
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -31,6 +25,11 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import lombok.extern.slf4j.Slf4j;
+import org.mongodb.morphia.Morphia;
+import org.mongodb.morphia.ObjectFactory;
+import org.mongodb.morphia.converters.TypeConverter;
+import org.mongodb.morphia.mapping.MappedClass;
 
 @Slf4j
 public class MorphiaModule extends AbstractModule {

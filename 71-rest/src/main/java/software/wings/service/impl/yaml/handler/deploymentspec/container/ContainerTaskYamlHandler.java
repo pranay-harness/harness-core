@@ -3,9 +3,8 @@ package software.wings.service.impl.yaml.handler.deploymentspec.container;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.validation.Validator.notNullCheck;
-import static java.util.Arrays.asList;
 
-import com.google.inject.Inject;
+import static java.util.Arrays.asList;
 
 import software.wings.beans.container.ContainerDefinition;
 import software.wings.beans.container.ContainerTask;
@@ -17,6 +16,7 @@ import software.wings.service.impl.yaml.handler.deploymentspec.DeploymentSpecifi
 import software.wings.service.impl.yaml.service.YamlHelper;
 import software.wings.service.intfc.ServiceResourceService;
 
+import com.google.inject.Inject;
 import java.util.List;
 /**
  * @author rktummala on 11/15/17

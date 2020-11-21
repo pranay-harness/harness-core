@@ -1,9 +1,8 @@
 package io.harness.functional.users;
 
 import static io.harness.rule.OwnerRule.NATARAJA;
-import static org.assertj.core.api.Assertions.assertThat;
 
-import com.google.inject.Inject;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.category.element.FunctionalTests;
 import io.harness.functional.AbstractFunctionalTest;
@@ -22,20 +21,22 @@ import io.harness.testframework.framework.utils.TestUtils;
 import io.harness.testframework.restutils.HTMLUtils;
 import io.harness.testframework.restutils.MailinatorRestUtils;
 import io.harness.testframework.restutils.UserRestUtils;
+
+import software.wings.beans.Account;
+import software.wings.beans.PublicUser;
+import software.wings.beans.SettingAttribute;
+import software.wings.beans.UserInvite;
+
+import com.google.inject.Inject;
+import java.io.IOException;
+import java.util.List;
+import javax.mail.MessagingException;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.http.HttpStatus;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
-import software.wings.beans.Account;
-import software.wings.beans.PublicUser;
-import software.wings.beans.SettingAttribute;
-import software.wings.beans.UserInvite;
-
-import java.io.IOException;
-import java.util.List;
-import javax.mail.MessagingException;
 @Slf4j
 public class UserTest extends AbstractFunctionalTest {
   @Inject private SettingGenerator settingGenerator;

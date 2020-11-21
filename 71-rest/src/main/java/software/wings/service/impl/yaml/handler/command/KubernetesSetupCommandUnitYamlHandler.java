@@ -1,9 +1,9 @@
 package software.wings.service.impl.yaml.handler.command;
 
-import com.google.inject.Singleton;
-
 import software.wings.beans.command.KubernetesSetupCommandUnit;
 import software.wings.beans.command.KubernetesSetupCommandUnit.Yaml;
+
+import com.google.inject.Singleton;
 
 /**
  * @author brett on 11/28/17

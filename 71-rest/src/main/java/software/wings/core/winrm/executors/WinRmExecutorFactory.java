@@ -1,10 +1,10 @@
 package software.wings.core.winrm.executors;
 
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
-
 import software.wings.delegatetasks.DelegateFileManager;
 import software.wings.delegatetasks.DelegateLogService;
+
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
 
 @Singleton
 public class WinRmExecutorFactory {

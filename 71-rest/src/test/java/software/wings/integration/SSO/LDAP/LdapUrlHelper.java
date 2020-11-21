@@ -4,12 +4,12 @@ import static software.wings.integration.SSO.LDAP.LdapIntegrationTestConstants.A
 import static software.wings.integration.SSO.LDAP.LdapIntegrationTestConstants.ACCOUNT_ID_PARAM;
 import static software.wings.integration.SSO.LDAP.LdapIntegrationTestConstants.USER_GROUP_ID;
 
-import lombok.AccessLevel;
-import lombok.experimental.FieldDefaults;
-import org.apache.http.client.utils.URIBuilder;
 import software.wings.utils.WingsIntegrationTestConstants;
 
 import java.net.URISyntaxException;
+import lombok.AccessLevel;
+import lombok.experimental.FieldDefaults;
+import org.apache.http.client.utils.URIBuilder;
 
 @FieldDefaults(level = AccessLevel.PUBLIC)
 public class LdapUrlHelper implements WingsIntegrationTestConstants {

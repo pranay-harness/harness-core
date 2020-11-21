@@ -2,18 +2,16 @@ package io.harness.serializer;
 
 import static java.lang.String.format;
 
-import com.google.api.client.util.Base64;
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
+import io.harness.reflection.CodeUtils;
 
 import com.esotericsoftware.kryo.Registration;
 import com.esotericsoftware.kryo.io.Input;
 import com.esotericsoftware.kryo.io.Output;
 import com.esotericsoftware.kryo.pool.KryoPool;
 import com.esotericsoftware.kryo.util.IntMap;
-import io.harness.reflection.CodeUtils;
-import lombok.extern.slf4j.Slf4j;
-
+import com.google.api.client.util.Base64;
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import java.io.ByteArrayOutputStream;
 import java.io.OutputStream;
 import java.lang.reflect.Constructor;
@@ -22,6 +20,7 @@ import java.util.Collection;
 import java.util.Set;
 import java.util.zip.DeflaterOutputStream;
 import java.util.zip.InflaterInputStream;
+import lombok.extern.slf4j.Slf4j;
 
 @Singleton
 @Slf4j

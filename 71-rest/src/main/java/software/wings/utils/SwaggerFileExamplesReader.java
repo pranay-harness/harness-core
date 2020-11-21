@@ -2,7 +2,7 @@ package software.wings.utils;
 
 import static org.apache.commons.lang3.StringUtils.removeEnd;
 
-import com.google.common.collect.ImmutableMap;
+import io.harness.serializer.JsonUtils;
 
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.databind.DeserializationFeature;
@@ -11,7 +11,7 @@ import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.datatype.guava.GuavaModule;
 import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
-import io.harness.serializer.JsonUtils;
+import com.google.common.collect.ImmutableMap;
 import io.swagger.annotations.SwaggerDefinition;
 import io.swagger.jaxrs.Reader;
 import io.swagger.jaxrs.config.ReaderListener;
@@ -22,7 +22,6 @@ import io.swagger.models.Swagger;
 import io.swagger.models.auth.OAuth2Definition;
 import io.swagger.models.parameters.BodyParameter;
 import io.swagger.models.parameters.Parameter;
-
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;

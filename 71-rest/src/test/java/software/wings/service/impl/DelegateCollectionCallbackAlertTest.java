@@ -4,11 +4,11 @@ import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.rule.OwnerRule.RAGHU;
 import static io.harness.threading.Morpheus.sleep;
-import static org.assertj.core.api.Assertions.assertThat;
+
 import static software.wings.beans.Account.Builder.anAccount;
 import static software.wings.beans.Application.Builder.anApplication;
 
-import com.google.inject.Inject;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.beans.PageResponse;
 import io.harness.beans.SearchFilter.Operator;
@@ -17,10 +17,7 @@ import io.harness.delegate.beans.ErrorNotifyResponseData;
 import io.harness.rule.Owner;
 import io.harness.tasks.ResponseData;
 import io.harness.waiter.WaitNotifyEngine;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
-import org.mockito.Mock;
+
 import software.wings.WingsBaseTest;
 import software.wings.alerts.AlertCategory;
 import software.wings.alerts.AlertStatus;
@@ -38,9 +35,14 @@ import software.wings.service.intfc.verification.CVConfigurationService;
 import software.wings.verification.CVConfiguration;
 import software.wings.verification.VerificationStateAnalysisExecutionData;
 
+import com.google.inject.Inject;
 import java.time.Duration;
 import java.util.HashMap;
 import java.util.Map;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
+import org.mockito.Mock;
 
 public class DelegateCollectionCallbackAlertTest extends WingsBaseTest {
   private String appId;

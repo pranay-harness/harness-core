@@ -1,7 +1,8 @@
 package software.wings.beans;
 
-import lombok.Getter;
 import software.wings.beans.FeatureFlag.Scope;
+
+import lombok.Getter;
 
 /**
  * Add your feature name here. When the feature is fully launched and no longer needs to be flagged,

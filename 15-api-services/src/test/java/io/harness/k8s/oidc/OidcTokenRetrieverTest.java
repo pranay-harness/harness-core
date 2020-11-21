@@ -4,15 +4,13 @@ import static io.harness.k8s.K8sConstants.OPEN_ID;
 import static io.harness.k8s.model.KubernetesClusterAuthType.OIDC;
 import static io.harness.rule.OwnerRule.ADWAIT;
 import static io.harness.rule.OwnerRule.ANSHUL;
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 
-import com.github.scribejava.apis.openid.OpenIdOAuth2AccessToken;
-import com.github.scribejava.core.model.OAuth2AccessToken;
-import com.github.scribejava.core.oauth.OAuth20Service;
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.exception.InvalidRequestException;
@@ -21,6 +19,10 @@ import io.harness.k8s.model.OidcGrantType;
 import io.harness.oidc.model.OidcTokenRequestData;
 import io.harness.rule.Owner;
 import io.harness.rule.OwnerRule;
+
+import com.github.scribejava.apis.openid.OpenIdOAuth2AccessToken;
+import com.github.scribejava.core.model.OAuth2AccessToken;
+import com.github.scribejava.core.oauth.OAuth20Service;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;

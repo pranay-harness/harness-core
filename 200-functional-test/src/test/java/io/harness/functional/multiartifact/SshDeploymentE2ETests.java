@@ -2,9 +2,8 @@ package io.harness.functional.multiartifact;
 
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.rule.OwnerRule.AADITI;
-import static org.assertj.core.api.Assertions.assertThat;
 
-import com.google.inject.Inject;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.beans.ExecutionStatus;
 import io.harness.beans.WorkflowType;
@@ -21,11 +20,7 @@ import io.harness.generator.WorkflowGenerator;
 import io.harness.generator.artifactstream.ArtifactStreamManager;
 import io.harness.rule.Owner;
 import io.harness.testframework.framework.Setup;
-import org.awaitility.Awaitility;
-import org.junit.Before;
-import org.junit.Ignore;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
+
 import software.wings.beans.Account;
 import software.wings.beans.Application;
 import software.wings.beans.ArtifactVariable;
@@ -39,8 +34,14 @@ import software.wings.beans.artifact.Artifact;
 import software.wings.beans.artifact.ArtifactStream;
 import software.wings.beans.artifact.ArtifactStreamBinding;
 
+import com.google.inject.Inject;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
+import org.awaitility.Awaitility;
+import org.junit.Before;
+import org.junit.Ignore;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 public class SshDeploymentE2ETests extends AbstractFunctionalTest {
   @Inject private OwnerManager ownerManager;

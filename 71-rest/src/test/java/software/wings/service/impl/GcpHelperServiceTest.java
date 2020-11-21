@@ -6,17 +6,18 @@ import io.harness.category.element.UnitTests;
 import io.harness.exception.InvalidRequestException;
 import io.harness.rule.Owner;
 import io.harness.rule.OwnerRule;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.Spy;
+
 import software.wings.WingsBaseTest;
 import software.wings.beans.GcpConfig;
 import software.wings.service.intfc.security.EncryptionService;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.Spy;
 
 public class GcpHelperServiceTest extends WingsBaseTest {
   @Mock private EncryptionService encryptionService;

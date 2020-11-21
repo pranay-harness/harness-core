@@ -5,12 +5,9 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.eraro.ErrorCode.ARTIFACT_SERVER_ERROR;
 import static io.harness.eraro.ErrorCode.INVALID_ARTIFACT_SERVER;
 import static io.harness.exception.WingsException.USER;
+
 import static java.lang.String.format;
 import static java.util.Collections.emptyMap;
-
-import com.google.common.util.concurrent.TimeLimiter;
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.delegate.task.ListNotifyResponseData;
@@ -21,11 +18,7 @@ import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.network.Http;
 import io.harness.security.encryption.EncryptedDataDetail;
-import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.tuple.Pair;
-import retrofit2.Converter;
-import retrofit2.Response;
-import retrofit2.Retrofit;
+
 import software.wings.beans.artifact.ArtifactStreamAttributes;
 import software.wings.beans.config.NexusConfig;
 import software.wings.helpers.ext.jenkins.BuildDetails;
@@ -33,6 +26,9 @@ import software.wings.utils.ArtifactType;
 import software.wings.utils.RepositoryFormat;
 import software.wings.utils.RepositoryType;
 
+import com.google.common.util.concurrent.TimeLimiter;
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.SocketTimeoutException;
@@ -45,6 +41,11 @@ import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import javax.xml.stream.XMLStreamException;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.tuple.Pair;
+import retrofit2.Converter;
+import retrofit2.Response;
+import retrofit2.Retrofit;
 
 /**
  * Created by srinivas on 3/28/17.
@@ -465,7 +466,7 @@ public class NexusServiceImpl implements NexusService {
       if ((artifactStreamAttributes.getArtifactType() != null
               && artifactStreamAttributes.getArtifactType() == ArtifactType.DOCKER)
           || (artifactStreamAttributes.getRepositoryType() != null
-                 && artifactStreamAttributes.getRepositoryType().equals(RepositoryType.docker.name()))) {
+              && artifactStreamAttributes.getRepositoryType().equals(RepositoryType.docker.name()))) {
         return nexusThreeService.getDockerTags(nexusConfig, encryptionDetails, artifactStreamAttributes);
       }
     } catch (IOException e) {

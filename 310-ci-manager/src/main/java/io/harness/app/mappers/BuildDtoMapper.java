@@ -2,9 +2,6 @@ package io.harness.app.mappers;
 
 import static java.lang.String.format;
 
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
-
 import io.harness.app.beans.dto.CIBuildResponseDTO;
 import io.harness.app.beans.entities.CIBuildAuthor;
 import io.harness.app.beans.entities.CIBuildBranchHook;
@@ -24,6 +21,8 @@ import io.harness.ng.core.mapper.TagMapper;
 import io.harness.ngpipeline.pipeline.beans.entities.NgPipelineEntity;
 import io.harness.service.GraphGenerationService;
 
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import java.util.ArrayList;
 import java.util.List;
 

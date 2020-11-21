@@ -1,11 +1,10 @@
 package software.wings.service.impl.yaml.handler.InfraDefinition;
 
 import static io.harness.validation.Validator.notNullCheck;
+
 import static software.wings.beans.VMSSAuthType.PASSWORD;
 import static software.wings.beans.VMSSAuthType.SSH_PUBLIC_KEY;
 import static software.wings.infra.AzureVMSSInfra.Yaml;
-
-import com.google.inject.Inject;
 
 import software.wings.beans.InfrastructureType;
 import software.wings.beans.SettingAttribute;
@@ -14,6 +13,7 @@ import software.wings.infra.AzureVMSSInfra;
 import software.wings.service.impl.yaml.handler.CloudProviderInfrastructure.CloudProviderInfrastructureYamlHandler;
 import software.wings.service.intfc.SettingsService;
 
+import com.google.inject.Inject;
 import java.util.List;
 
 public class AzureVMSSInfraYamlHandler extends CloudProviderInfrastructureYamlHandler<Yaml, AzureVMSSInfra> {

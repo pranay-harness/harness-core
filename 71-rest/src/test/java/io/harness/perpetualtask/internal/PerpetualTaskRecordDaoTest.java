@@ -3,10 +3,8 @@ package io.harness.perpetualtask.internal;
 import static io.harness.rule.OwnerRule.HITESH;
 import static io.harness.rule.OwnerRule.MATT;
 import static io.harness.rule.OwnerRule.VUK;
-import static org.assertj.core.api.Assertions.assertThat;
 
-import com.google.inject.Inject;
-import com.google.protobuf.Any;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.category.element.UnitTests;
 import io.harness.perpetualtask.PerpetualTaskClientContext;
@@ -15,16 +13,19 @@ import io.harness.perpetualtask.PerpetualTaskState;
 import io.harness.perpetualtask.PerpetualTaskType;
 import io.harness.perpetualtask.instancesync.AwsSshInstanceSyncPerpetualTaskParams;
 import io.harness.rule.Owner;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
-import org.mockito.InjectMocks;
+
 import software.wings.WingsBaseTest;
 
+import com.google.inject.Inject;
+import com.google.protobuf.Any;
 import java.time.Instant;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
+import org.mockito.InjectMocks;
 
 public class PerpetualTaskRecordDaoTest extends WingsBaseTest {
   @InjectMocks @Inject private PerpetualTaskRecordDao perpetualTaskRecordDao;

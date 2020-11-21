@@ -1,12 +1,12 @@
 package io.harness.security.encryption;
 
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.security.encryption.EncryptionType.CUSTOM;
+
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
-import static io.harness.security.encryption.EncryptionType.CUSTOM;
 
 @Data
 @Builder

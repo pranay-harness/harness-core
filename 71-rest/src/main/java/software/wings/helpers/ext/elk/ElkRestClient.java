@@ -1,13 +1,12 @@
 package software.wings.helpers.ext.elk;
 
+import java.util.Map;
 import retrofit2.Call;
 import retrofit2.http.Body;
 import retrofit2.http.GET;
 import retrofit2.http.POST;
 import retrofit2.http.Path;
 import retrofit2.http.Query;
-
-import java.util.Map;
 
 /**
  * Created by rsingh on 8/01/17.

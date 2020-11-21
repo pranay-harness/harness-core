@@ -1,9 +1,10 @@
 package io.harness.serializer.kryo;
 
-import com.esotericsoftware.kryo.Kryo;
 import io.harness.beans.EmbeddedUser;
 import io.harness.cache.VersionedKey;
 import io.harness.serializer.KryoRegistrar;
+
+import com.esotericsoftware.kryo.Kryo;
 
 public class PersistenceKryoRegistrar implements KryoRegistrar {
   @Override

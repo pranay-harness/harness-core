@@ -3,17 +3,17 @@ package software.wings.common;
 import static io.harness.manage.GlobalContextManager.initGlobalContextGuard;
 import static io.harness.manage.GlobalContextManager.upsertGlobalContextRecord;
 
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
-
 import io.harness.context.GlobalContext;
 import io.harness.globalcontex.AuditGlobalContextData;
-import lombok.extern.slf4j.Slf4j;
+
 import software.wings.audit.AuditHeader;
 import software.wings.audit.AuditHeader.RequestType;
 import software.wings.service.intfc.AuditService;
 
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import java.io.InputStream;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * AuditHelper uses threadlocal to stitch both request and response pay-load with the common http

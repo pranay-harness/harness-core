@@ -1,22 +1,23 @@
 package software.wings.service.intfc.aws;
 
 import static io.harness.rule.OwnerRule.ADWAIT;
+
 import static org.assertj.core.api.Assertions.assertThat;
 
-import com.google.inject.Inject;
+import io.harness.category.element.UnitTests;
+import io.harness.rule.Owner;
+
+import software.wings.WingsBaseTest;
+import software.wings.service.intfc.aws.delegate.AwsAppAutoScalingHelperServiceDelegate;
 
 import com.amazonaws.services.applicationautoscaling.model.PredefinedMetricSpecification;
 import com.amazonaws.services.applicationautoscaling.model.ScalableTarget;
 import com.amazonaws.services.applicationautoscaling.model.ScalingPolicy;
 import com.amazonaws.services.applicationautoscaling.model.TargetTrackingScalingPolicyConfiguration;
-import io.harness.category.element.UnitTests;
-import io.harness.rule.Owner;
+import com.google.inject.Inject;
+import java.util.List;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
-import software.wings.WingsBaseTest;
-import software.wings.service.intfc.aws.delegate.AwsAppAutoScalingHelperServiceDelegate;
-
-import java.util.List;
 
 public class AwsAppAutoScalingHelperServiceDelegateTest extends WingsBaseTest {
   @Inject private AwsAppAutoScalingHelperServiceDelegate scalingHelperServiceDelegate;

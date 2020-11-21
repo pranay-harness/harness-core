@@ -1,19 +1,21 @@
 package io.harness.grpc.auth;
 
-import static com.google.common.util.concurrent.MoreExecutors.directExecutor;
 import static io.harness.rule.OwnerRule.VIKAS;
+
+import static com.google.common.util.concurrent.MoreExecutors.directExecutor;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import io.grpc.CallCredentials;
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.exception.InvalidArgumentsException;
 import io.harness.rule.Owner;
 import io.harness.security.ServiceTokenGenerator;
+
+import io.grpc.CallCredentials;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;

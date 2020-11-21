@@ -4,7 +4,7 @@ import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.validation.Validator.notNullCheck;
-import static java.util.Arrays.asList;
+
 import static software.wings.beans.EntityType.APPLICATION;
 import static software.wings.beans.EntityType.ENVIRONMENT;
 import static software.wings.beans.EntityType.PIPELINE;
@@ -16,10 +16,10 @@ import static software.wings.service.impl.expression.ExpressionBuilder.INFRA_PRE
 import static software.wings.service.impl.expression.ExpressionBuilder.PIPELINE_DESCRIPTION;
 import static software.wings.service.impl.expression.ExpressionBuilder.PIPELINE_NAME;
 
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
+import static java.util.Arrays.asList;
 
 import io.harness.annotations.dev.OwnedBy;
+
 import software.wings.beans.Account;
 import software.wings.beans.Application;
 import software.wings.beans.EntityType;
@@ -30,6 +30,8 @@ import software.wings.service.intfc.expression.ExpressionBuilderService;
 import software.wings.sm.StateType;
 import software.wings.utils.ApplicationManifestUtils;
 
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;

@@ -1,7 +1,5 @@
 package io.harness.ng.core.activityhistory.resource;
 
-import com.google.inject.Inject;
-
 import io.harness.NGCommonEntityConstants;
 import io.harness.NGResourceFilterConstants;
 import io.harness.ng.core.activityhistory.NGActivityStatus;
@@ -13,13 +11,10 @@ import io.harness.ng.core.activityhistory.dto.TimeGroupType;
 import io.harness.ng.core.activityhistory.service.EntityActivitySummaryService;
 import io.harness.ng.core.activityhistory.service.NGActivityService;
 import io.harness.ng.core.dto.ResponseDTO;
+
+import com.google.inject.Inject;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
-import lombok.AccessLevel;
-import lombok.AllArgsConstructor;
-import org.hibernate.validator.constraints.NotEmpty;
-import org.springframework.data.domain.Page;
-
 import javax.validation.constraints.NotNull;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DefaultValue;
@@ -28,6 +23,10 @@ import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
+import lombok.AccessLevel;
+import lombok.AllArgsConstructor;
+import org.hibernate.validator.constraints.NotEmpty;
+import org.springframework.data.domain.Page;
 
 @Api("/activityHistory")
 @Path("activityHistory")

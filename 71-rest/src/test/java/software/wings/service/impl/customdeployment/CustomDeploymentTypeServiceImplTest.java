@@ -1,5 +1,9 @@
 package software.wings.service.impl.customdeployment;
 
+import static software.wings.beans.Variable.VariableBuilder.aVariable;
+import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
+import static software.wings.utils.WingsTestConstants.TEMPLATE_ID;
+
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
@@ -9,22 +13,12 @@ import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.doThrow;
-import static software.wings.beans.Variable.VariableBuilder.aVariable;
-import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
-import static software.wings.utils.WingsTestConstants.TEMPLATE_ID;
-
-import com.google.inject.Inject;
 
 import io.harness.category.element.UnitTests;
 import io.harness.exception.CustomDeploymentTypeNotFoundException;
 import io.harness.rule.Owner;
 import io.harness.rule.OwnerRule;
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
+
 import software.wings.WingsBaseTest;
 import software.wings.beans.Variable;
 import software.wings.beans.customdeployment.CustomDeploymentTypeDTO;
@@ -34,11 +28,18 @@ import software.wings.service.intfc.customdeployment.CustomDeploymentTypeAware;
 import software.wings.service.intfc.customdeployment.CustomDeploymentTypeService;
 import software.wings.service.intfc.template.TemplateService;
 
+import com.google.inject.Inject;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
 
 public class CustomDeploymentTypeServiceImplTest extends WingsBaseTest {
   @Mock private TemplateService templateService;

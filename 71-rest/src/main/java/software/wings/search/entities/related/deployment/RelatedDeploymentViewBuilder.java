@@ -2,13 +2,13 @@ package software.wings.search.entities.related.deployment;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
 
-import com.google.inject.Singleton;
+import io.harness.annotations.dev.OwnedBy;
+
+import software.wings.beans.WorkflowExecution;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import io.harness.annotations.dev.OwnedBy;
-import software.wings.beans.WorkflowExecution;
-
+import com.google.inject.Singleton;
 import java.util.Map;
 
 @OwnedBy(PL)

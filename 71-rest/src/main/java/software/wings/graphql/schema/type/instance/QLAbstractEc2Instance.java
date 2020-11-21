@@ -1,8 +1,9 @@
 package software.wings.graphql.schema.type.instance;
 
+import software.wings.graphql.schema.type.artifact.QLArtifact;
+
 import lombok.Data;
 import lombok.EqualsAndHashCode;
-import software.wings.graphql.schema.type.artifact.QLArtifact;
 
 /**
  *

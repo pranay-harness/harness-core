@@ -1,6 +1,15 @@
 package io.harness.ngtriggers.mapper;
 
-import com.google.common.io.Resources;
+import static io.harness.ngtriggers.beans.source.NGTriggerType.WEBHOOK;
+import static io.harness.ngtriggers.beans.source.webhook.WebhookAction.CLOSED;
+import static io.harness.ngtriggers.beans.source.webhook.WebhookAction.OPENED;
+import static io.harness.ngtriggers.beans.source.webhook.WebhookEvent.PULL_REQUEST;
+import static io.harness.ngtriggers.beans.target.TargetType.PIPELINE;
+import static io.harness.rule.OwnerRule.ADWAIT;
+import static io.harness.rule.OwnerRule.NAMAN;
+
+import static org.assertj.core.api.Assertions.assertThat;
+
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.ngtriggers.beans.config.NGTriggerConfig;
@@ -9,24 +18,16 @@ import io.harness.ngtriggers.beans.entity.metadata.NGTriggerMetadata;
 import io.harness.ngtriggers.beans.source.webhook.WebhookTriggerConfig;
 import io.harness.ngtriggers.beans.source.webhook.WebhookTriggerSpec;
 import io.harness.rule.Owner;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
 
+import com.google.common.io.Resources;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
-
-import static io.harness.ngtriggers.beans.source.NGTriggerType.WEBHOOK;
-import static io.harness.ngtriggers.beans.source.webhook.WebhookAction.CLOSED;
-import static io.harness.ngtriggers.beans.source.webhook.WebhookAction.OPENED;
-import static io.harness.ngtriggers.beans.source.webhook.WebhookEvent.PULL_REQUEST;
-import static io.harness.ngtriggers.beans.target.TargetType.PIPELINE;
-import static io.harness.rule.OwnerRule.ADWAIT;
-import static io.harness.rule.OwnerRule.NAMAN;
-import static org.assertj.core.api.Assertions.assertThat;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 public class NGTriggerElementMapperTest extends CategoryTest {
   private String ngTriggerYaml;

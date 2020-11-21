@@ -2,17 +2,17 @@ package io.harness.cdng.jira.resources.request;
 
 import static com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL;
 
+import io.harness.jira.JiraCustomFieldValue;
+
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
-import io.harness.jira.JiraCustomFieldValue;
+import java.util.List;
+import java.util.Map;
+import javax.validation.constraints.NotNull;
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Value;
 import lombok.experimental.FieldDefaults;
-
-import java.util.List;
-import java.util.Map;
-import javax.validation.constraints.NotNull;
 
 @Value
 @Builder

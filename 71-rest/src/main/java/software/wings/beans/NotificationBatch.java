@@ -1,14 +1,14 @@
 package software.wings.beans;
 
 import io.harness.annotation.HarnessEntity;
+
+import java.util.ArrayList;
+import java.util.List;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Reference;
-
-import java.util.ArrayList;
-import java.util.List;
 
 /**
  * Created by anubhaw on 4/13/17.

@@ -1,8 +1,9 @@
 package io.harness.serializer.kryo;
 
-import com.esotericsoftware.kryo.Kryo;
 import io.harness.cache.MongoStoreTestBase;
 import io.harness.serializer.KryoRegistrar;
+
+import com.esotericsoftware.kryo.Kryo;
 
 public class TestPersistenceKryoRegistrar implements KryoRegistrar {
   int index = 21 * 10000;

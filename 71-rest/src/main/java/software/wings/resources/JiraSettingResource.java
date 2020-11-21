@@ -1,19 +1,19 @@
 package software.wings.resources;
 
-import com.google.inject.Inject;
+import io.harness.jira.JiraCreateMetaResponse;
+import io.harness.rest.RestResponse;
+
+import software.wings.service.impl.JiraHelperService;
 
 import com.codahale.metrics.annotation.ExceptionMetered;
 import com.codahale.metrics.annotation.Timed;
-import io.harness.jira.JiraCreateMetaResponse;
-import io.harness.rest.RestResponse;
-import org.hibernate.validator.constraints.NotEmpty;
-import software.wings.service.impl.JiraHelperService;
-
+import com.google.inject.Inject;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
+import org.hibernate.validator.constraints.NotEmpty;
 
 @Path("/jirasetting")
 @Produces("application/json")

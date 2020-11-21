@@ -2,29 +2,32 @@ package software.wings.service.impl.artifact;
 
 import static io.harness.event.handler.impl.Constants.ACCOUNT_ID;
 import static io.harness.rule.OwnerRule.HARSH;
+
+import static software.wings.utils.WingsTestConstants.APP_ID;
+import static software.wings.utils.WingsTestConstants.SERVICE_ID;
+
 import static java.util.Arrays.asList;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-import static software.wings.utils.WingsTestConstants.APP_ID;
-import static software.wings.utils.WingsTestConstants.SERVICE_ID;
-
-import com.google.inject.Inject;
 
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
 import io.harness.waiter.WaitNotifyEngine;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
+
 import software.wings.WingsBaseTest;
 import software.wings.beans.artifact.CustomArtifactStream;
 import software.wings.beans.artifact.CustomArtifactStream.Action;
 import software.wings.beans.artifact.GcrArtifactStream;
 import software.wings.service.intfc.DelegateService;
 import software.wings.service.intfc.SettingsService;
+
+import com.google.inject.Inject;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
 
 public class ArtifactCleanupServiceAsyncImplTest extends WingsBaseTest {
   @Mock private SettingsService settingsService;

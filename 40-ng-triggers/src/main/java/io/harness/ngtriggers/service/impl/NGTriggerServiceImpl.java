@@ -1,8 +1,5 @@
 package io.harness.ngtriggers.service.impl;
 
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
-import com.mongodb.client.result.UpdateResult;
 import io.harness.exception.DuplicateFieldException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
@@ -14,14 +11,17 @@ import io.harness.ngtriggers.mapper.TriggerFilterHelper;
 import io.harness.ngtriggers.repository.spring.NGTriggerRepository;
 import io.harness.ngtriggers.repository.spring.TriggerWebhookEventRepository;
 import io.harness.ngtriggers.service.NGTriggerService;
+
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
+import com.mongodb.client.result.UpdateResult;
+import java.util.Optional;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.mongodb.core.query.Criteria;
-
-import java.util.Optional;
 
 @Singleton
 @AllArgsConstructor(onConstructor = @__({ @Inject }))

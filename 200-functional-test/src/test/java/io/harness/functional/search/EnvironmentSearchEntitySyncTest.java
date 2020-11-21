@@ -1,9 +1,8 @@
 package io.harness.functional.search;
 
 import static io.harness.rule.OwnerRule.UTKARSH;
-import static org.assertj.core.api.Assertions.assertThat;
 
-import com.google.inject.Inject;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.category.element.FunctionalTests;
 import io.harness.functional.AbstractFunctionalTest;
@@ -13,11 +12,7 @@ import io.harness.testframework.framework.matchers.BooleanMatcher;
 import io.harness.testframework.restutils.ApplicationRestUtils;
 import io.harness.testframework.restutils.EnvironmentRestUtils;
 import io.harness.testframework.restutils.SearchRestUtils;
-import lombok.extern.slf4j.Slf4j;
-import org.apache.http.HttpStatus;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
+
 import software.wings.app.MainConfiguration;
 import software.wings.beans.Application;
 import software.wings.beans.Environment;
@@ -27,6 +22,13 @@ import software.wings.search.entities.environment.EnvironmentSearchEntity;
 import software.wings.search.framework.SearchResult;
 import software.wings.search.framework.SearchResults;
 import software.wings.service.intfc.FeatureFlagService;
+
+import com.google.inject.Inject;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.http.HttpStatus;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 @Slf4j
 public class EnvironmentSearchEntitySyncTest extends AbstractFunctionalTest {
@@ -70,7 +72,7 @@ public class EnvironmentSearchEntitySyncTest extends AbstractFunctionalTest {
     }
 
     BooleanMatcher booleanMatcher = new BooleanMatcher();
-    retry.executeWithRetry(this ::isEnvironmentInSearchResponse, booleanMatcher, true);
+    retry.executeWithRetry(this::isEnvironmentInSearchResponse, booleanMatcher, true);
     log.info("New environment with id {} and name {} synced.", environment.getUuid(), environment.getName());
 
     environment.setName(EDITED_ENVIRONMENT_NAME);
@@ -80,14 +82,14 @@ public class EnvironmentSearchEntitySyncTest extends AbstractFunctionalTest {
     assertThat(environment).isNotNull();
     assertThat(environment.getName()).isEqualTo(EDITED_ENVIRONMENT_NAME);
 
-    retry.executeWithRetry(this ::isEnvironmentInSearchResponse, booleanMatcher, true);
+    retry.executeWithRetry(this::isEnvironmentInSearchResponse, booleanMatcher, true);
     log.info("Environment update with id {} and name {} synced.", environment.getUuid(), environment.getName());
 
     int statusCode = EnvironmentRestUtils.deleteEnvironment(
         bearerToken, environment.getAppId(), environment.getAccountId(), environment.getUuid());
     assertThat(statusCode).isEqualTo(HttpStatus.SC_OK);
 
-    retry.executeWithRetry(this ::isEnvironmentInSearchResponse, booleanMatcher, false);
+    retry.executeWithRetry(this::isEnvironmentInSearchResponse, booleanMatcher, false);
     log.info("Environment with id {} deleted", environment.getUuid());
 
     ApplicationRestUtils.deleteApplication(bearerToken, application.getUuid(), application.getAccountId());

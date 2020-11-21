@@ -2,9 +2,8 @@ package io.harness.cvng.core.services.impl;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.rule.OwnerRule.PRAVEEN;
-import static org.assertj.core.api.Assertions.assertThat;
 
-import com.google.inject.Inject;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.CvNextGenTest;
 import io.harness.category.element.UnitTests;
@@ -14,11 +13,12 @@ import io.harness.cvng.core.services.api.WebhookService;
 import io.harness.cvng.exception.CVWebhookException;
 import io.harness.persistence.HPersistence;
 import io.harness.rule.Owner;
+
+import com.google.inject.Inject;
+import java.util.List;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
-
-import java.util.List;
 
 public class WebhookServiceImplTest extends CvNextGenTest {
   @Inject HPersistence hPersistence;

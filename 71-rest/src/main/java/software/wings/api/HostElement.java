@@ -4,17 +4,18 @@
 
 package software.wings.api;
 
-import com.amazonaws.services.ec2.model.Instance;
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import io.harness.context.ContextElementType;
 import io.harness.delegate.task.azure.response.AzureVMInstanceData;
-import lombok.Builder;
-import lombok.Data;
+
 import software.wings.sm.ContextElement;
 import software.wings.sm.ExecutionContext;
 
+import com.amazonaws.services.ec2.model.Instance;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import java.util.HashMap;
 import java.util.Map;
+import lombok.Builder;
+import lombok.Data;
 
 /**
  * The Class HostElement.

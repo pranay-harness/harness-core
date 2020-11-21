@@ -1,10 +1,11 @@
 package io.harness.serializer.kryo;
 
-import com.esotericsoftware.kryo.Kryo;
 import io.harness.serializer.KryoRegistrar;
 import io.harness.utils.DummyForkStepParameters;
 import io.harness.utils.DummyOutcome;
 import io.harness.utils.DummySectionStepParameters;
+
+import com.esotericsoftware.kryo.Kryo;
 
 public class OrchestrationVisualizationTestKryoRegistrar implements KryoRegistrar {
   @Override

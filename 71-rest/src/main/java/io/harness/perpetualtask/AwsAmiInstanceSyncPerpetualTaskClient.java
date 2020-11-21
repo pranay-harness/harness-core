@@ -1,14 +1,12 @@
 package io.harness.perpetualtask;
 
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
-import static java.util.Collections.singletonList;
+
 import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static software.wings.service.InstanceSyncConstants.HARNESS_APPLICATION_ID;
 import static software.wings.service.InstanceSyncConstants.INFRASTRUCTURE_MAPPING_ID;
 
-import com.google.inject.Inject;
-import com.google.protobuf.ByteString;
-import com.google.protobuf.Message;
+import static java.util.Collections.singletonList;
 
 import io.harness.beans.DelegateTask;
 import io.harness.delegate.beans.TaskData;
@@ -16,10 +14,7 @@ import io.harness.perpetualtask.instancesync.AwsAmiInstanceSyncPerpetualTaskPara
 import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.serializer.KryoSerializer;
 import io.harness.tasks.Cd1SetupFields;
-import lombok.AccessLevel;
-import lombok.Builder;
-import lombok.Data;
-import lombok.experimental.FieldDefaults;
+
 import software.wings.beans.AwsAmiInfrastructureMapping;
 import software.wings.beans.AwsConfig;
 import software.wings.beans.SettingAttribute;
@@ -30,9 +25,16 @@ import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.security.SecretManager;
 
+import com.google.inject.Inject;
+import com.google.protobuf.ByteString;
+import com.google.protobuf.Message;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
+import lombok.AccessLevel;
+import lombok.Builder;
+import lombok.Data;
+import lombok.experimental.FieldDefaults;
 
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class AwsAmiInstanceSyncPerpetualTaskClient implements PerpetualTaskServiceClient {

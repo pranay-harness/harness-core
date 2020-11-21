@@ -1,6 +1,7 @@
 package software.wings.beans.appmanifest;
 
 import io.harness.beans.WorkflowType;
+
 import lombok.Builder;
 import lombok.Data;
 

@@ -1,13 +1,12 @@
 package io.harness.scheduler;
 
+import java.util.Date;
+import java.util.List;
 import org.quartz.JobDetail;
 import org.quartz.JobKey;
 import org.quartz.SchedulerException;
 import org.quartz.Trigger;
 import org.quartz.TriggerKey;
-
-import java.util.Date;
-import java.util.List;
 
 @Deprecated
 public interface PersistentScheduler {

@@ -1,10 +1,10 @@
 package software.wings.service.impl.instance.licensing;
 
-import com.google.inject.Inject;
-
-import lombok.extern.slf4j.Slf4j;
 import software.wings.service.intfc.instance.licensing.InstanceLimitProvider;
 import software.wings.service.intfc.instance.licensing.InstanceUsageLimitChecker;
+
+import com.google.inject.Inject;
+import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class InstanceUsageLimitCheckerImpl implements InstanceUsageLimitChecker {

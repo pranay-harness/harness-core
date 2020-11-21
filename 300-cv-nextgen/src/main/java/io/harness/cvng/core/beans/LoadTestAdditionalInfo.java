@@ -2,6 +2,7 @@ package io.harness.cvng.core.beans;
 
 import io.harness.cvng.verificationjob.beans.AdditionalInfo;
 import io.harness.cvng.verificationjob.beans.VerificationJobType;
+
 import lombok.Builder;
 import lombok.Data;
 

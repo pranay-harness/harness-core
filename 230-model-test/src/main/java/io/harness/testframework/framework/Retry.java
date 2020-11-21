@@ -1,10 +1,10 @@
 package io.harness.testframework.framework;
 
 import io.harness.testframework.framework.matchers.Matcher;
-import lombok.extern.slf4j.Slf4j;
 
 import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
+import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class Retry<T> {

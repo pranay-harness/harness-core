@@ -3,16 +3,17 @@ package migrations.all;
 import static software.wings.beans.Base.ID_KEY;
 import static software.wings.service.impl.newrelic.NewRelicMetricDataRecord.DEFAULT_GROUP_NAME;
 
-import com.google.inject.Inject;
+import io.harness.persistence.HIterator;
 
+import software.wings.dl.WingsPersistence;
+import software.wings.service.impl.newrelic.NewRelicMetricDataRecord;
+
+import com.google.inject.Inject;
 import com.mongodb.BasicDBObject;
 import com.mongodb.BulkWriteOperation;
 import com.mongodb.DBCollection;
-import io.harness.persistence.HIterator;
 import lombok.extern.slf4j.Slf4j;
 import migrations.Migration;
-import software.wings.dl.WingsPersistence;
-import software.wings.service.impl.newrelic.NewRelicMetricDataRecord;
 
 /**
  * Created by rsingh on 3/26/18.

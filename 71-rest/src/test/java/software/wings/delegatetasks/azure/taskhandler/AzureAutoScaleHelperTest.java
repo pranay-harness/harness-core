@@ -5,6 +5,7 @@ import static io.harness.azure.model.AzureConstants.DEFAULT_AZURE_VMSS_MAX_INSTA
 import static io.harness.azure.model.AzureConstants.DEFAULT_AZURE_VMSS_MIN_INSTANCES;
 import static io.harness.azure.model.AzureConstants.SETUP_COMMAND_UNIT;
 import static io.harness.rule.OwnerRule.IVAN;
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
@@ -12,8 +13,6 @@ import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
 
-import com.microsoft.azure.management.compute.VirtualMachineScaleSet;
-import com.microsoft.azure.management.monitor.AutoscaleProfile;
 import io.harness.azure.client.AzureAutoScaleSettingsClient;
 import io.harness.azure.client.AzureComputeClient;
 import io.harness.azure.model.AzureConfig;
@@ -21,17 +20,20 @@ import io.harness.azure.model.AzureVMSSAutoScaleSettingsData;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.task.azure.request.AzureVMSSSetupTaskParameters;
 import io.harness.rule.Owner;
+
+import software.wings.WingsBaseTest;
+import software.wings.beans.command.ExecutionLogCallback;
+import software.wings.delegatetasks.DelegateLogService;
+
+import com.microsoft.azure.management.compute.VirtualMachineScaleSet;
+import com.microsoft.azure.management.monitor.AutoscaleProfile;
+import java.util.List;
+import java.util.Optional;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Spy;
-import software.wings.WingsBaseTest;
-import software.wings.beans.command.ExecutionLogCallback;
-import software.wings.delegatetasks.DelegateLogService;
-
-import java.util.List;
-import java.util.Optional;
 
 public class AzureAutoScaleHelperTest extends WingsBaseTest {
   @Mock private DelegateLogService mockDelegateLogService;

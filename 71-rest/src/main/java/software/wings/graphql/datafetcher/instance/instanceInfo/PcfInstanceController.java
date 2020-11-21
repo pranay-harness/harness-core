@@ -1,12 +1,12 @@
 package software.wings.graphql.datafetcher.instance.instanceInfo;
 
-import com.google.inject.Inject;
-
 import software.wings.beans.infrastructure.instance.Instance;
 import software.wings.beans.infrastructure.instance.info.PcfInstanceInfo;
 import software.wings.graphql.datafetcher.instance.InstanceControllerUtils;
 import software.wings.graphql.schema.type.instance.QLInstanceType;
 import software.wings.graphql.schema.type.instance.QLPcfInstance;
+
+import com.google.inject.Inject;
 
 public class PcfInstanceController implements InstanceController<QLPcfInstance> {
   @Inject InstanceControllerUtils util;

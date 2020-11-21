@@ -1,10 +1,8 @@
 package io.harness.gitsync.core.impl;
 
 import static io.harness.gitsync.core.beans.YamlSuccessfulChange.ChangeSource.HARNESS;
-import static java.lang.String.format;
 
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
+import static java.lang.String.format;
 
 import io.harness.delegate.beans.git.YamlGitConfigDTO;
 import io.harness.git.model.GitFileChange;
@@ -16,14 +14,16 @@ import io.harness.gitsync.core.dtos.YamlFilterResult;
 import io.harness.gitsync.core.dtos.YamlFilterResult.YamlFilterResultBuilder;
 import io.harness.gitsync.core.service.YamlChangeSetService;
 import io.harness.gitsync.core.service.YamlSuccessfulChangeService;
-import lombok.AllArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 import java.util.TimeZone;
+import lombok.AllArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 @Singleton
 @AllArgsConstructor(onConstructor = @__({ @Inject }))

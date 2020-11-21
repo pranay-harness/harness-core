@@ -1,13 +1,13 @@
 package software.wings.beans.command;
 
+import software.wings.stencils.DefaultValue;
+
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
+import java.util.List;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
-import software.wings.stencils.DefaultValue;
-
-import java.util.List;
 
 /**
  * Created by anubhaw on 7/12/16.

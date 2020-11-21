@@ -1,13 +1,12 @@
 package software.wings.resources;
 
 import static io.harness.rule.OwnerRule.UJJAWAL;
+
+import static software.wings.beans.Application.Builder.anApplication;
+
 import static javax.ws.rs.client.Entity.entity;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 import static org.assertj.core.api.Assertions.assertThat;
-import static software.wings.beans.Application.Builder.anApplication;
-
-import com.google.common.collect.ImmutableMap;
-import com.google.inject.Inject;
 
 import io.harness.category.element.DeprecatedIntegrationTests;
 import io.harness.limits.ActionType;
@@ -15,16 +14,7 @@ import io.harness.limits.configuration.LimitConfigurationService;
 import io.harness.limits.impl.model.StaticLimit;
 import io.harness.rule.Owner;
 import io.harness.rule.Repeat;
-import lombok.extern.slf4j.Slf4j;
-import lombok.val;
-import migrations.InitializeAppCounters;
-import org.apache.commons.lang3.RandomStringUtils;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Ignore;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
-import org.mongodb.morphia.query.Query;
+
 import software.wings.beans.Application;
 import software.wings.beans.Application.ApplicationKeys;
 import software.wings.dl.WingsPersistence;
@@ -32,6 +22,8 @@ import software.wings.integration.IntegrationTestBase;
 import software.wings.integration.IntegrationTestUtils;
 import software.wings.utils.WingsIntegrationTestConstants;
 
+import com.google.common.collect.ImmutableMap;
+import com.google.inject.Inject;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -42,6 +34,16 @@ import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.TimeUnit;
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.Response.Status;
+import lombok.extern.slf4j.Slf4j;
+import lombok.val;
+import migrations.InitializeAppCounters;
+import org.apache.commons.lang3.RandomStringUtils;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Ignore;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
+import org.mongodb.morphia.query.Query;
 
 @Slf4j
 public class AppResourceIntegrationTest extends IntegrationTestBase {

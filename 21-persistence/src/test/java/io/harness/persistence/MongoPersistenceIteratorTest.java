@@ -1,6 +1,7 @@
 package io.harness.persistence;
 
 import static io.harness.rule.OwnerRule.GEORGE;
+
 import static java.lang.System.currentTimeMillis;
 import static java.time.Duration.ofMinutes;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -11,11 +12,11 @@ import io.harness.iterator.PersistentIterable;
 import io.harness.mongo.iterator.MongoPersistenceIterator;
 import io.harness.mongo.iterator.filter.MorphiaFilterExpander;
 import io.harness.rule.Owner;
+
+import java.time.Duration;
 import lombok.Builder;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
-
-import java.time.Duration;
 
 public class MongoPersistenceIteratorTest extends PersistenceTestBase {
   private static Duration targetInterval = ofMinutes(1);

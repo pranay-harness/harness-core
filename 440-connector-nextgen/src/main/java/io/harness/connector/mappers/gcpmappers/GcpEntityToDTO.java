@@ -1,7 +1,5 @@
 package io.harness.connector.mappers.gcpmappers;
 
-import com.google.inject.Singleton;
-
 import io.harness.connector.entities.embedded.gcpconnector.GcpConfig;
 import io.harness.connector.entities.embedded.gcpconnector.GcpDelegateDetails;
 import io.harness.connector.entities.embedded.gcpconnector.GcpServiceAccountKey;
@@ -14,6 +12,8 @@ import io.harness.delegate.beans.connector.gcpconnector.GcpDelegateDetailsDTO;
 import io.harness.delegate.beans.connector.gcpconnector.GcpManualDetailsDTO;
 import io.harness.encryption.SecretRefData;
 import io.harness.exception.InvalidRequestException;
+
+import com.google.inject.Singleton;
 
 @Singleton
 public class GcpEntityToDTO implements ConnectorEntityToDTOMapper<GcpConfig> {

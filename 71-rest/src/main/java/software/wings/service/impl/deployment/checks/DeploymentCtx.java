@@ -1,8 +1,7 @@
 package software.wings.service.impl.deployment.checks;
 
-import lombok.Value;
-
 import java.util.List;
+import lombok.Value;
 
 /**
  * Deployment Context POJO.

@@ -44,7 +44,7 @@ public class SecretManagementException extends WingsException {
       ErrorCode errorCode, Throwable cause, EnumSet<ReportTarget> reportTargets, Map<String, String> params) {
     super(null, cause, errorCode, Level.ERROR, reportTargets, null);
     if (EmptyPredicate.isNotEmpty(params)) {
-      params.forEach(this ::param);
+      params.forEach(this::param);
     }
   }
 }

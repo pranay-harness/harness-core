@@ -3,13 +3,12 @@ package io.harness.migration;
 import static io.harness.migration.MigrationJobInstance.Status.BASELINE;
 import static io.harness.migration.MigrationJobInstance.Status.PENDING;
 
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
-
 import io.harness.persistence.HPersistence;
 import io.harness.persistence.Store;
 import io.harness.threading.Poller;
 
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import java.time.Duration;
 import java.util.Set;
 

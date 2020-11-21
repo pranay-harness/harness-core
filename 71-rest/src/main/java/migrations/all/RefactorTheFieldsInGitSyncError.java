@@ -1,21 +1,24 @@
 package migrations.all;
 
 import static io.harness.persistence.HPersistence.DEFAULT_STORE;
-import static org.apache.commons.lang3.StringUtils.isBlank;
+
 import static software.wings.yaml.errorhandling.GitSyncError.GitSyncDirection.GIT_TO_HARNESS;
 import static software.wings.yaml.errorhandling.GitSyncError.GitSyncDirection.HARNESS_TO_GIT;
 
-import com.google.inject.Inject;
+import static org.apache.commons.lang3.StringUtils.isBlank;
 
 import io.harness.persistence.HIterator;
-import lombok.extern.slf4j.Slf4j;
-import migrations.OnPrimaryManagerMigration;
-import org.mongodb.morphia.query.Query;
+
 import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.yaml.sync.GitSyncErrorService;
 import software.wings.yaml.errorhandling.GitSyncError;
 import software.wings.yaml.errorhandling.GitToHarnessErrorDetails;
 import software.wings.yaml.errorhandling.HarnessToGitErrorDetails;
+
+import com.google.inject.Inject;
+import lombok.extern.slf4j.Slf4j;
+import migrations.OnPrimaryManagerMigration;
+import org.mongodb.morphia.query.Query;
 
 @Slf4j
 public class RefactorTheFieldsInGitSyncError implements OnPrimaryManagerMigration {

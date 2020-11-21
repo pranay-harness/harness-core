@@ -2,13 +2,12 @@ package software.wings.delegatetasks.aws.ecs.ecstaskhandler.deploy;
 
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.logging.LogLevel.ERROR;
+
+import static software.wings.beans.ResizeStrategy.RESIZE_NEW_FIRST;
+
 import static java.lang.String.format;
 import static java.util.Collections.emptyList;
 import static java.util.stream.Collectors.toList;
-import static software.wings.beans.ResizeStrategy.RESIZE_NEW_FIRST;
-
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
 
 import io.harness.container.ContainerInfo;
 import io.harness.exception.ExceptionUtils;
@@ -16,7 +15,7 @@ import io.harness.exception.TimeoutException;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.logging.Misc;
 import io.harness.security.encryption.EncryptedDataDetail;
-import lombok.extern.slf4j.Slf4j;
+
 import software.wings.api.ContainerServiceData;
 import software.wings.beans.command.EcsResizeParams;
 import software.wings.beans.command.ExecutionLogCallback;
@@ -29,10 +28,13 @@ import software.wings.helpers.ext.ecs.request.EcsServiceDeployRequest;
 import software.wings.helpers.ext.ecs.response.EcsCommandExecutionResponse;
 import software.wings.helpers.ext.ecs.response.EcsServiceDeployResponse;
 
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import lombok.extern.slf4j.Slf4j;
 
 @Singleton
 @Slf4j

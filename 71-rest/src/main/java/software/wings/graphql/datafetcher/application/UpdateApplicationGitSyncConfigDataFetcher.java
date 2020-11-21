@@ -1,14 +1,13 @@
 package software.wings.graphql.datafetcher.application;
 
-import static org.apache.commons.lang3.StringUtils.strip;
 import static software.wings.security.PermissionAttribute.PermissionType.MANAGE_CONFIG_AS_CODE;
 
-import com.google.inject.Inject;
+import static org.apache.commons.lang3.StringUtils.strip;
 
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.persistence.HPersistence;
-import lombok.extern.slf4j.Slf4j;
+
 import software.wings.beans.Application;
 import software.wings.beans.EntityType;
 import software.wings.beans.SettingAttribute;
@@ -31,7 +30,9 @@ import software.wings.settings.SettingVariableTypes;
 import software.wings.yaml.gitSync.YamlGitConfig;
 import software.wings.yaml.gitSync.YamlGitConfig.YamlGitConfigBuilder;
 
+import com.google.inject.Inject;
 import java.util.Optional;
+import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class UpdateApplicationGitSyncConfigDataFetcher

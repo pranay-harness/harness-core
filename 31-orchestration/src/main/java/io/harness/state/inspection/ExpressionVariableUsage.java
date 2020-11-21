@@ -3,10 +3,10 @@ package io.harness.state.inspection;
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 
 import io.harness.annotations.dev.OwnedBy;
-import lombok.Builder;
-import lombok.Value;
 
 import java.util.List;
+import lombok.Builder;
+import lombok.Value;
 
 @Value
 @Builder

@@ -9,12 +9,12 @@ import io.harness.walktree.beans.LevelNode;
 import io.harness.walktree.beans.VisitableChildren;
 import io.harness.walktree.visitor.SimpleVisitorHelper;
 import io.harness.walktree.visitor.Visitable;
-import io.swagger.annotations.ApiModel;
-import lombok.Builder;
-import lombok.Data;
 
+import io.swagger.annotations.ApiModel;
 import java.io.Serializable;
 import javax.validation.constraints.NotNull;
+import lombok.Builder;
+import lombok.Data;
 
 @Data
 @Builder

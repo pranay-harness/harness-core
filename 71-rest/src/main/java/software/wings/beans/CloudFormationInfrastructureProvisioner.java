@@ -5,18 +5,18 @@ import static software.wings.beans.CloudFormationSourceType.TEMPLATE_BODY;
 import static software.wings.beans.CloudFormationSourceType.TEMPLATE_URL;
 import static software.wings.beans.InfrastructureProvisionerType.CLOUD_FORMATION;
 
+import io.harness.beans.EmbeddedUser;
+import io.harness.data.validator.Trimmed;
+
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.fasterxml.jackson.annotation.JsonTypeName;
-import io.harness.beans.EmbeddedUser;
-import io.harness.data.validator.Trimmed;
+import java.util.List;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import org.hibernate.validator.constraints.NotEmpty;
-
-import java.util.List;
 
 @Data
 @EqualsAndHashCode(callSuper = true)

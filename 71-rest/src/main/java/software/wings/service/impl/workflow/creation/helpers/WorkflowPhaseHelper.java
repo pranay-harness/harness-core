@@ -2,14 +2,14 @@ package software.wings.service.impl.workflow.creation.helpers;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+
 import static software.wings.api.DeploymentType.KUBERNETES;
 import static software.wings.beans.PhaseStep.PhaseStepBuilder.aPhaseStep;
 import static software.wings.beans.PhaseStepType.K8S_PHASE_STEP;
 import static software.wings.beans.WorkflowPhase.WorkflowPhaseBuilder.aWorkflowPhase;
 
-import com.google.inject.Inject;
-
 import io.harness.annotations.dev.OwnedBy;
+
 import software.wings.beans.CanaryOrchestrationWorkflow;
 import software.wings.beans.OrchestrationWorkflow;
 import software.wings.beans.PhaseStep;
@@ -20,6 +20,7 @@ import software.wings.service.impl.workflow.WorkflowServiceHelper;
 import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.ServiceResourceService;
 
+import com.google.inject.Inject;
 import java.util.List;
 
 @OwnedBy(CDC)

@@ -1,12 +1,12 @@
 package io.harness.batch.processing.anomalydetection;
 
 import io.harness.batch.processing.anomalydetection.types.TimeGranularity;
-import lombok.NonNull;
-import org.apache.commons.math3.stat.descriptive.DescriptiveStatistics;
 
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import lombok.NonNull;
+import org.apache.commons.math3.stat.descriptive.DescriptiveStatistics;
 
 public class TimeSeriesUtils {
   private TimeSeriesUtils() {}

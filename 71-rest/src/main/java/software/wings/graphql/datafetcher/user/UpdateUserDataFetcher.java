@@ -1,13 +1,10 @@
 package software.wings.graphql.datafetcher.user;
 
-import com.google.inject.Inject;
-
 import io.harness.exception.InvalidArgumentsException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.UnauthorizedException;
 import io.harness.utils.RequestField;
-import org.apache.commons.lang3.StringUtils;
-import org.apache.commons.lang3.tuple.Pair;
+
 import software.wings.beans.User;
 import software.wings.graphql.datafetcher.BaseMutatorDataFetcher;
 import software.wings.graphql.datafetcher.MutationContext;
@@ -19,9 +16,12 @@ import software.wings.security.PermissionAttribute;
 import software.wings.security.annotations.AuthRule;
 import software.wings.service.intfc.UserService;
 
+import com.google.inject.Inject;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
+import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.tuple.Pair;
 
 public class UpdateUserDataFetcher extends BaseMutatorDataFetcher<QLUpdateUserInput, QLUpdateUserPayload> {
   @Inject private UserService userService;

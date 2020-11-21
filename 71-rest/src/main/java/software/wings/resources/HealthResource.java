@@ -5,11 +5,6 @@ import static io.harness.exception.WingsException.USER;
 import static io.harness.govern.Switch.unhandled;
 import static io.harness.maintenance.MaintenanceController.getMaintenanceFlag;
 
-import com.google.inject.Inject;
-
-import com.codahale.metrics.annotation.ExceptionMetered;
-import com.codahale.metrics.annotation.Timed;
-import com.codahale.metrics.health.HealthCheck.Result;
 import io.harness.configuration.ConfigurationType;
 import io.harness.exception.WingsException;
 import io.harness.health.HealthException;
@@ -18,11 +13,15 @@ import io.harness.mongo.MongoConfig;
 import io.harness.rest.RestResponse;
 import io.harness.security.AsymmetricEncryptor;
 import io.harness.security.annotations.PublicApi;
-import io.swagger.annotations.Api;
-import lombok.extern.slf4j.Slf4j;
+
 import software.wings.app.MainConfiguration;
 import software.wings.search.framework.ElasticsearchConfig;
 
+import com.codahale.metrics.annotation.ExceptionMetered;
+import com.codahale.metrics.annotation.Timed;
+import com.codahale.metrics.health.HealthCheck.Result;
+import com.google.inject.Inject;
+import io.swagger.annotations.Api;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import javax.crypto.BadPaddingException;
@@ -34,6 +33,7 @@ import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * Created by brett on 12/3/17

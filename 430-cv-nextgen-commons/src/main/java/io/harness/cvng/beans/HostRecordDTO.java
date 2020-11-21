@@ -1,10 +1,9 @@
 package io.harness.cvng.beans;
 
-import lombok.Builder;
-import lombok.Value;
-
 import java.time.Instant;
 import java.util.Set;
+import lombok.Builder;
+import lombok.Value;
 @Value
 @Builder
 public class HostRecordDTO {

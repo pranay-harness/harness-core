@@ -1,6 +1,11 @@
 package io.harness.notification.service;
 
-import com.google.inject.Inject;
+import static io.harness.NotificationRequest.Slack;
+import static io.harness.NotificationServiceConstants.TEST_SLACK_TEMPLATE;
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
+
+import static org.apache.commons.lang3.StringUtils.trimToNull;
+
 import io.harness.NotificationRequest;
 import io.harness.Team;
 import io.harness.notification.NotificationChannelType;
@@ -9,17 +14,13 @@ import io.harness.notification.remote.dto.SlackSettingDTO;
 import io.harness.notification.service.api.NotificationSettingsService;
 import io.harness.notification.service.api.NotificationTemplateService;
 import io.harness.notification.service.api.SlackService;
+
+import com.google.inject.Inject;
+import java.util.*;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import okhttp3.*;
 import org.apache.commons.text.StrSubstitutor;
-
-import java.util.*;
-
-import static io.harness.NotificationRequest.Slack;
-import static io.harness.NotificationServiceConstants.TEST_SLACK_TEMPLATE;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static org.apache.commons.lang3.StringUtils.trimToNull;
 
 @AllArgsConstructor(onConstructor = @__({ @Inject }))
 @Slf4j

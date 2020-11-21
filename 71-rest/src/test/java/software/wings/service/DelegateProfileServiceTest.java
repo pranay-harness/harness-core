@@ -5,6 +5,13 @@ import static io.harness.rule.OwnerRule.MARKO;
 import static io.harness.rule.OwnerRule.NIKOLA;
 import static io.harness.rule.OwnerRule.SANJA;
 import static io.harness.rule.OwnerRule.VUK;
+
+import static software.wings.beans.Account.Builder.anAccount;
+import static software.wings.beans.Delegate.DelegateBuilder;
+import static software.wings.beans.Delegate.Status;
+import static software.wings.service.impl.DelegateProfileServiceImpl.PRIMARY_PROFILE_DESCRIPTION;
+import static software.wings.service.impl.DelegateProfileServiceImpl.PRIMARY_PROFILE_NAME;
+
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -12,13 +19,6 @@ import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.eq;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
-import static software.wings.beans.Account.Builder.anAccount;
-import static software.wings.beans.Delegate.DelegateBuilder;
-import static software.wings.beans.Delegate.Status;
-import static software.wings.service.impl.DelegateProfileServiceImpl.PRIMARY_PROFILE_DESCRIPTION;
-import static software.wings.service.impl.DelegateProfileServiceImpl.PRIMARY_PROFILE_NAME;
-
-import com.google.inject.Inject;
 
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.beans.DelegateProfile;
@@ -27,18 +27,20 @@ import io.harness.delegate.beans.DelegateProfile.DelegateProfileKeys;
 import io.harness.delegate.beans.DelegateProfileScopingRule;
 import io.harness.exception.InvalidRequestException;
 import io.harness.rule.Owner;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
+
 import software.wings.WingsBaseTest;
 import software.wings.beans.Account;
 import software.wings.beans.Delegate;
 import software.wings.service.impl.AuditServiceHelper;
 import software.wings.service.impl.DelegateProfileServiceImpl;
 
+import com.google.inject.Inject;
 import java.util.Arrays;
 import java.util.List;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
 
 public class DelegateProfileServiceTest extends WingsBaseTest {
   public static final String ACCOUNT_ID = generateUuid();

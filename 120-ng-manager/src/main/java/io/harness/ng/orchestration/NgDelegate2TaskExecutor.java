@@ -1,7 +1,5 @@
 package io.harness.ng.orchestration;
 
-import com.google.inject.Inject;
-
 import io.harness.beans.DelegateTaskRequest;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.delegate.beans.TaskData;
@@ -11,6 +9,7 @@ import io.harness.exception.InvalidRequestException;
 import io.harness.service.DelegateGrpcClientWrapper;
 import io.harness.tasks.TaskExecutor;
 
+import com.google.inject.Inject;
 import java.time.Duration;
 import java.util.Map;
 

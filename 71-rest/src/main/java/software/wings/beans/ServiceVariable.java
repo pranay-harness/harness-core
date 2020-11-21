@@ -5,10 +5,6 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.data.validator.EntityNameValidator.ALLOWED_CHARS_SERVICE_VARIABLE_MESSAGE;
 import static io.harness.data.validator.EntityNameValidator.ALLOWED_CHARS_SERVICE_VARIABLE_STRING;
 
-import com.google.common.collect.ImmutableList;
-
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.annotation.HarnessEntity;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.data.validator.EntityName;
@@ -20,6 +16,18 @@ import io.harness.mongo.index.MongoIndex;
 import io.harness.mongo.index.SortCompoundMongoIndex;
 import io.harness.security.encryption.EncryptionType;
 import io.harness.validation.Create;
+
+import software.wings.annotation.EncryptableSetting;
+import software.wings.beans.artifact.ArtifactStreamSummary;
+import software.wings.settings.SettingVariableTypes;
+
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.github.reinert.jjschema.SchemaIgnore;
+import com.google.common.collect.ImmutableList;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import javax.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -31,14 +39,6 @@ import lombok.experimental.UtilityClass;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Transient;
-import software.wings.annotation.EncryptableSetting;
-import software.wings.beans.artifact.ArtifactStreamSummary;
-import software.wings.settings.SettingVariableTypes;
-
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import javax.validation.constraints.NotNull;
 
 /**
  * Created by peeyushaggarwal on 9/14/16.

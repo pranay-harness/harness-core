@@ -1,10 +1,10 @@
 package io.harness.secretmanagers;
 
-import org.hibernate.validator.constraints.NotEmpty;
 import software.wings.security.ScopedEntity;
 import software.wings.security.UsageRestrictions;
 
 import javax.validation.constraints.NotNull;
+import org.hibernate.validator.constraints.NotEmpty;
 
 public interface SecretsManagerRBACService {
   boolean hasAccessToEditSM(@NotEmpty String accountId, @NotNull ScopedEntity scopedEntity);

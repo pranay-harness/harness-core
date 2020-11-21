@@ -3,9 +3,10 @@ package io.harness.functional.multiartifact;
 import io.harness.beans.PageResponse;
 import io.harness.rest.RestResponse;
 import io.harness.testframework.framework.Setup;
-import io.restassured.http.ContentType;
+
 import software.wings.beans.artifact.Artifact;
 
+import io.restassured.http.ContentType;
 import javax.ws.rs.core.GenericType;
 
 public class MultiArtifactTestUtils {

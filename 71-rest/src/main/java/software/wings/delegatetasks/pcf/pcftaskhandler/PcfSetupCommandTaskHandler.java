@@ -6,7 +6,7 @@ import static io.harness.logging.CommandExecutionStatus.SUCCESS;
 import static io.harness.logging.LogLevel.ERROR;
 import static io.harness.logging.LogLevel.INFO;
 import static io.harness.pcf.model.PcfConstants.PIVOTAL_CLOUD_FOUNDRY_LOG_PREFIX;
-import static java.util.stream.Collectors.toList;
+
 import static software.wings.beans.LogColor.White;
 import static software.wings.beans.LogHelper.color;
 import static software.wings.beans.LogWeight.Bold;
@@ -14,8 +14,7 @@ import static software.wings.beans.command.PcfDummyCommandUnit.CheckExistingApps
 import static software.wings.beans.command.PcfDummyCommandUnit.PcfSetup;
 import static software.wings.beans.command.PcfDummyCommandUnit.Wrapup;
 
-import com.google.common.annotations.VisibleForTesting;
-import com.google.inject.Singleton;
+import static java.util.stream.Collectors.toList;
 
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.delegate.task.pcf.PcfManifestFileData;
@@ -27,13 +26,7 @@ import io.harness.logging.CommandExecutionStatus;
 import io.harness.logging.LogLevel;
 import io.harness.logging.Misc;
 import io.harness.security.encryption.EncryptedDataDetail;
-import lombok.NoArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.collections.CollectionUtils;
-import org.apache.commons.lang3.StringUtils;
-import org.apache.commons.lang3.tuple.Pair;
-import org.cloudfoundry.operations.applications.ApplicationDetail;
-import org.cloudfoundry.operations.applications.ApplicationSummary;
+
 import software.wings.annotation.EncryptableSetting;
 import software.wings.beans.PcfConfig;
 import software.wings.beans.artifact.ArtifactStreamAttributes;
@@ -50,6 +43,8 @@ import software.wings.helpers.ext.pcf.response.PcfSetupCommandResponse;
 import software.wings.settings.SettingValue;
 import software.wings.utils.ServiceVersionConvention;
 
+import com.google.common.annotations.VisibleForTesting;
+import com.google.inject.Singleton;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -58,6 +53,13 @@ import java.util.List;
 import java.util.Set;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.atomic.AtomicInteger;
+import lombok.NoArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.collections.CollectionUtils;
+import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.tuple.Pair;
+import org.cloudfoundry.operations.applications.ApplicationDetail;
+import org.cloudfoundry.operations.applications.ApplicationSummary;
 
 @NoArgsConstructor
 @Singleton

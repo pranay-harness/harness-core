@@ -4,7 +4,9 @@ import com.google.common.base.Preconditions;
 import com.google.inject.AbstractModule;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
-
+import java.util.ArrayList;
+import java.util.List;
+import javax.validation.constraints.NotNull;
 import lombok.extern.slf4j.Slf4j;
 import org.atmosphere.cpr.AtmosphereConfig;
 import org.atmosphere.cpr.AtmosphereFramework;
@@ -14,10 +16,6 @@ import org.atmosphere.cpr.AtmosphereResourceSessionFactory;
 import org.atmosphere.cpr.BroadcasterFactory;
 import org.atmosphere.cpr.MetaBroadcaster;
 import org.atmosphere.inject.AtmosphereProducers;
-
-import java.util.ArrayList;
-import java.util.List;
-import javax.validation.constraints.NotNull;
 
 /**
  * Created by peeyushaggarwal on 8/18/16.

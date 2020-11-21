@@ -8,8 +8,7 @@ import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.generator.ResourceConstraintGenerator.ResourceConstraints.GENERIC_ASAP_TEST;
 import static io.harness.generator.SettingGenerator.Settings.HARNESS_JENKINS_CONNECTOR;
 import static io.harness.govern.Switch.unhandled;
-import static java.lang.String.format;
-import static java.util.Arrays.asList;
+
 import static software.wings.api.DeploymentType.SSH;
 import static software.wings.beans.BasicOrchestrationWorkflow.BasicOrchestrationWorkflowBuilder.aBasicOrchestrationWorkflow;
 import static software.wings.beans.BuildWorkflow.BuildOrchestrationWorkflowBuilder.aBuildOrchestrationWorkflow;
@@ -40,9 +39,8 @@ import static software.wings.sm.StateType.TERRAFORM_DESTROY;
 import static software.wings.sm.StateType.TERRAFORM_PROVISION;
 import static software.wings.sm.StepType.COMMAND;
 
-import com.google.common.collect.ImmutableMap;
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
+import static java.lang.String.format;
+import static java.util.Arrays.asList;
 
 import io.harness.beans.OrchestrationWorkflowType;
 import io.harness.beans.WorkflowType;
@@ -58,8 +56,7 @@ import io.harness.generator.artifactstream.ArtifactStreamManager.ArtifactStreams
 import io.harness.scm.ScmSecret;
 import io.harness.scm.SecretName;
 import io.harness.steps.resourcerestraint.beans.ResourceConstraint;
-import lombok.Builder;
-import lombok.Value;
+
 import software.wings.beans.Application;
 import software.wings.beans.ArtifactVariable;
 import software.wings.beans.BasicOrchestrationWorkflow;
@@ -89,10 +86,15 @@ import software.wings.sm.states.HoldingScope;
 import software.wings.sm.states.HttpState.HttpStateKeys;
 import software.wings.sm.states.JenkinsState;
 
+import com.google.common.collect.ImmutableMap;
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import lombok.Builder;
+import lombok.Value;
 
 @Singleton
 public class WorkflowGenerator {

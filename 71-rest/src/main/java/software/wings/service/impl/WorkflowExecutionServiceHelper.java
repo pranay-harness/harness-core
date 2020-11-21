@@ -9,19 +9,18 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.expression.ExpressionEvaluator.matchesVariablePattern;
 import static io.harness.validation.Validator.notNullCheck;
+
+import static software.wings.beans.VariableType.ENTITY;
+
 import static java.util.Arrays.asList;
 import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.StringUtils.isBlank;
-import static software.wings.beans.VariableType.ENTITY;
-
-import com.google.common.annotations.VisibleForTesting;
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.OrchestrationWorkflowType;
 import io.harness.exception.InvalidRequestException;
 import io.harness.expression.ExpressionEvaluator;
+
 import software.wings.api.CanaryWorkflowStandardParams;
 import software.wings.api.DeploymentType;
 import software.wings.api.WorkflowElement;
@@ -48,6 +47,9 @@ import software.wings.service.intfc.WorkflowService;
 import software.wings.sm.StateMachine;
 import software.wings.sm.WorkflowStandardParams;
 
+import com.google.common.annotations.VisibleForTesting;
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -78,12 +80,11 @@ public class WorkflowExecutionServiceHelper {
     if (workflowExecution == null || workflowExecution.getExecutionArgs() == null
         || executionArgs.getWorkflowType() != workflowExecution.getWorkflowType()
         || (ORCHESTRATION == workflowExecution.getWorkflowType()
-               && !executionArgs.getOrchestrationId().equals(workflowExecution.getWorkflowId()))
+            && !executionArgs.getOrchestrationId().equals(workflowExecution.getWorkflowId()))
         || (PIPELINE == workflowExecution.getWorkflowType()
-               && (workflowExecution.getPipelineExecution() == null
-                      || workflowExecution.getPipelineExecution().getPipeline() == null
-                      || !executionArgs.getPipelineId().equals(
-                             workflowExecution.getPipelineExecution().getPipelineId())))) {
+            && (workflowExecution.getPipelineExecution() == null
+                || workflowExecution.getPipelineExecution().getPipeline() == null
+                || !executionArgs.getPipelineId().equals(workflowExecution.getPipelineExecution().getPipelineId())))) {
       return new WorkflowVariablesMetadata(workflowVariables);
     }
 

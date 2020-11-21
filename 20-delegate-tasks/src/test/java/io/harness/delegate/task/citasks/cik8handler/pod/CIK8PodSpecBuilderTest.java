@@ -19,16 +19,12 @@ import static io.harness.delegate.task.citasks.cik8handler.pod.CIK8PodSpecBuilde
 import static io.harness.delegate.task.citasks.cik8handler.pod.CIK8PodSpecBuilderTestHelper.gitCloneCtrBuilder;
 import static io.harness.rule.OwnerRule.HARSH;
 import static io.harness.rule.OwnerRule.SHUBHAM;
+
 import static junit.framework.TestCase.assertEquals;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.when;
 
-import io.fabric8.kubernetes.api.model.ContainerBuilder;
-import io.fabric8.kubernetes.api.model.LocalObjectReference;
-import io.fabric8.kubernetes.api.model.Pod;
-import io.fabric8.kubernetes.api.model.PodBuilder;
-import io.fabric8.kubernetes.api.model.Volume;
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.beans.ci.pod.CIK8ContainerParams;
@@ -38,14 +34,19 @@ import io.harness.delegate.task.citasks.cik8handler.container.ContainerSpecBuild
 import io.harness.delegate.task.citasks.cik8handler.container.ContainerSpecBuilderResponse;
 import io.harness.delegate.task.citasks.cik8handler.container.GitCloneContainerSpecBuilder;
 import io.harness.rule.Owner;
+
+import io.fabric8.kubernetes.api.model.ContainerBuilder;
+import io.fabric8.kubernetes.api.model.LocalObjectReference;
+import io.fabric8.kubernetes.api.model.Pod;
+import io.fabric8.kubernetes.api.model.PodBuilder;
+import io.fabric8.kubernetes.api.model.Volume;
+import java.util.Arrays;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
-
-import java.util.Arrays;
 
 public class CIK8PodSpecBuilderTest extends CategoryTest {
   @Mock private GitCloneContainerSpecBuilder gitCloneContainerSpecBuilder;

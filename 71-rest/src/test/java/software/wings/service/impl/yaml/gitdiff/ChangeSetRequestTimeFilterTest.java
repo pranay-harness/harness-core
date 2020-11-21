@@ -1,6 +1,5 @@
 package software.wings.service.impl.yaml.gitdiff;
 
-import static org.assertj.core.api.Assertions.assertThat;
 import static software.wings.beans.yaml.GitFileChange.Builder.aGitFileChange;
 import static software.wings.beans.yaml.YamlSuccessfulChange.ChangeSource.GIT;
 import static software.wings.beans.yaml.YamlSuccessfulChange.ChangeSource.HARNESS;
@@ -8,18 +7,12 @@ import static software.wings.yaml.gitSync.YamlChangeSet.Status.COMPLETED;
 import static software.wings.yaml.gitSync.YamlChangeSet.Status.RUNNING;
 import static software.wings.yaml.gitSync.YamlChangeSet.builder;
 
-import com.google.common.collect.ImmutableList;
-import com.google.inject.Inject;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
 import io.harness.rule.OwnerRule;
-import org.jetbrains.annotations.NotNull;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
-import org.mockito.InjectMocks;
-import org.mockito.MockitoAnnotations;
+
 import software.wings.WingsBaseTest;
 import software.wings.beans.yaml.GitFileChange;
 import software.wings.beans.yaml.GitFileChange.Builder;
@@ -32,7 +25,15 @@ import software.wings.service.intfc.yaml.YamlChangeSetService;
 import software.wings.service.intfc.yaml.YamlSuccessfulChangeService;
 import software.wings.yaml.gitSync.YamlChangeSet;
 
+import com.google.common.collect.ImmutableList;
+import com.google.inject.Inject;
 import java.util.List;
+import org.jetbrains.annotations.NotNull;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
+import org.mockito.InjectMocks;
+import org.mockito.MockitoAnnotations;
 
 public class ChangeSetRequestTimeFilterTest extends WingsBaseTest {
   public static final String ACCOUNT_ID = "accountId";

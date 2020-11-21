@@ -1,9 +1,8 @@
 package io.harness.entities;
 
 import static io.harness.rule.OwnerRule.SOWMYA;
-import static org.assertj.core.api.Assertions.assertThat;
 
-import com.google.inject.Inject;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.VerificationBaseTest;
 import io.harness.category.element.UnitTests;
@@ -11,19 +10,21 @@ import io.harness.mongo.IndexCreator;
 import io.harness.mongo.IndexManagerSession;
 import io.harness.persistence.HPersistence;
 import io.harness.rule.Owner;
+
+import software.wings.beans.Account;
+
+import com.google.inject.Inject;
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.IOUtils;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mongodb.morphia.Morphia;
 import org.mongodb.morphia.ObjectFactory;
-import software.wings.beans.Account;
-
-import java.io.IOException;
-import java.io.InputStream;
-import java.util.List;
-import java.util.Set;
-import java.util.stream.Collectors;
 
 @Slf4j
 public class MongoIndexesTest extends VerificationBaseTest {

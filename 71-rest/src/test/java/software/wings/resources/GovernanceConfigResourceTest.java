@@ -1,19 +1,22 @@
 package software.wings.resources;
 
 import static io.harness.rule.OwnerRule.HINGER;
-import static org.assertj.core.api.Assertions.assertThat;
+
 import static software.wings.security.PermissionAttribute.PermissionType.MANAGE_DEPLOYMENT_FREEZES;
+
+import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
+
 import software.wings.beans.governance.GovernanceConfig;
 import software.wings.resources.governance.GovernanceConfigResource;
 import software.wings.security.annotations.AuthRule;
 
 import java.lang.reflect.Method;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 public class GovernanceConfigResourceTest extends CategoryTest {
   @Test

@@ -2,9 +2,6 @@ package io.harness.steps.barriers;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 
-import com.google.common.base.Preconditions;
-import com.google.inject.Inject;
-
 import io.harness.distribution.barrier.Barrier;
 import io.harness.engine.executions.plan.PlanExecutionService;
 import io.harness.execution.PlanExecution;
@@ -13,6 +10,8 @@ import io.harness.execution.events.SyncOrchestrationEventHandler;
 import io.harness.steps.barriers.beans.BarrierExecutionInstance;
 import io.harness.steps.barriers.service.BarrierService;
 
+import com.google.common.base.Preconditions;
+import com.google.inject.Inject;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;

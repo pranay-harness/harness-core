@@ -1,13 +1,13 @@
 package software.wings.graphql.schema.query;
 
+import software.wings.graphql.schema.mutation.execution.input.QLVariableInput;
+
+import java.util.List;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.experimental.FieldNameConstants;
-import software.wings.graphql.schema.mutation.execution.input.QLVariableInput;
-
-import java.util.List;
 
 @Data
 @Builder

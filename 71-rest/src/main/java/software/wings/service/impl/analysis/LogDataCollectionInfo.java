@@ -3,12 +3,13 @@ package software.wings.service.impl.analysis;
 import io.harness.delegate.beans.executioncapability.ExecutionCapabilityDemander;
 import io.harness.delegate.task.TaskParameters;
 import io.harness.security.encryption.EncryptedDataDetail;
-import lombok.Data;
-import lombok.EqualsAndHashCode;
+
 import software.wings.sm.StateType;
 
 import java.util.List;
 import java.util.Set;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
 
 /**
  * Common Log Data Collection Info class containing attributes used by Log Verification providers while

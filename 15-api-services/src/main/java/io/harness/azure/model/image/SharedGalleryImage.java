@@ -3,16 +3,17 @@ package io.harness.azure.model.image;
 import static io.harness.azure.model.AzureMachineImageArtifact.OSType.LINUX;
 import static io.harness.azure.model.AzureMachineImageArtifact.OSType.WINDOWS;
 
+import io.harness.azure.model.AzureMachineImageArtifact;
+import io.harness.azure.model.AzureMachineImageArtifact.MachineImageReference;
+import io.harness.azure.model.AzureMachineImageArtifact.MachineImageReference.OsState;
+import io.harness.azure.model.AzureMachineImageArtifact.OSType;
+
 import com.microsoft.azure.management.compute.ImageReference;
 import com.microsoft.azure.management.compute.LinuxConfiguration;
 import com.microsoft.azure.management.compute.VirtualMachineScaleSetOSProfile;
 import com.microsoft.azure.management.compute.VirtualMachineScaleSetStorageProfile;
 import com.microsoft.azure.management.compute.WindowsConfiguration;
 import com.microsoft.azure.management.compute.implementation.VirtualMachineScaleSetInner;
-import io.harness.azure.model.AzureMachineImageArtifact;
-import io.harness.azure.model.AzureMachineImageArtifact.MachineImageReference;
-import io.harness.azure.model.AzureMachineImageArtifact.MachineImageReference.OsState;
-import io.harness.azure.model.AzureMachineImageArtifact.OSType;
 
 public class SharedGalleryImage extends AzureMachineImage {
   public SharedGalleryImage(AzureMachineImageArtifact image) {

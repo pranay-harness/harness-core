@@ -1,7 +1,5 @@
 package io.harness.connector.mappers.docker;
 
-import com.google.inject.Singleton;
-
 import io.harness.connector.entities.embedded.docker.DockerConnector;
 import io.harness.connector.entities.embedded.docker.DockerUserNamePasswordAuthentication;
 import io.harness.connector.mappers.ConnectorEntityToDTOMapper;
@@ -10,6 +8,8 @@ import io.harness.delegate.beans.connector.docker.DockerAuthType;
 import io.harness.delegate.beans.connector.docker.DockerAuthenticationDTO;
 import io.harness.delegate.beans.connector.docker.DockerConnectorDTO;
 import io.harness.delegate.beans.connector.docker.DockerUserNamePasswordDTO;
+
+import com.google.inject.Singleton;
 
 @Singleton
 public class DockerEntityToDTO implements ConnectorEntityToDTOMapper<DockerConnector> {

@@ -2,26 +2,27 @@ package migrations.all;
 
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.mongo.MongoUtils.setUnset;
+
 import static software.wings.security.PermissionAttribute.Action.EXECUTE;
 import static software.wings.security.PermissionAttribute.Action.EXECUTE_PIPELINE;
 import static software.wings.security.PermissionAttribute.Action.EXECUTE_WORKFLOW;
 import static software.wings.security.PermissionAttribute.PermissionType.ALL_APP_ENTITIES;
 import static software.wings.security.PermissionAttribute.PermissionType.DEPLOYMENT;
 
-import com.google.inject.Inject;
-
 import io.harness.persistence.HIterator;
-import lombok.extern.slf4j.Slf4j;
-import migrations.Migration;
-import org.mongodb.morphia.query.UpdateOperations;
+
 import software.wings.beans.security.AppPermission;
 import software.wings.beans.security.UserGroup;
 import software.wings.beans.security.UserGroup.UserGroupKeys;
 import software.wings.dl.WingsPersistence;
 import software.wings.security.PermissionAttribute.Action;
 
+import com.google.inject.Inject;
 import java.util.HashSet;
 import java.util.Set;
+import lombok.extern.slf4j.Slf4j;
+import migrations.Migration;
+import org.mongodb.morphia.query.UpdateOperations;
 
 @Slf4j
 public class PipelineWorkflowExecutionActionQlMigration implements Migration {
@@ -38,7 +39,7 @@ public class PipelineWorkflowExecutionActionQlMigration implements Migration {
           for (AppPermission appPermission : userGroup.getAppPermissions()) {
             if (isNotEmpty(appPermission.getActions())
                 && (appPermission.getPermissionType() == ALL_APP_ENTITIES
-                       || appPermission.getPermissionType() == DEPLOYMENT)) {
+                    || appPermission.getPermissionType() == DEPLOYMENT)) {
               Set<Action> newActionSet = new HashSet<>();
               appPermission.getActions().forEach(action -> {
                 if (action != null && action.equals(EXECUTE)) {

@@ -2,13 +2,13 @@ package software.wings.beans;
 
 import static software.wings.beans.PreferenceType.DEPLOYMENT_PREFERENCE;
 
+import io.harness.mongo.index.FdIndex;
+
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.github.reinert.jjschema.SchemaIgnore;
-import io.harness.mongo.index.FdIndex;
+import java.util.List;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
-
-import java.util.List;
 
 /**
  * User Preference model

@@ -1,11 +1,11 @@
 package io.harness.functional.redesign.mixins.ambiance;
 
+import io.harness.ambiance.Ambiance;
+
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.databind.DeserializationContext;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.deser.std.StdDeserializer;
-import io.harness.ambiance.Ambiance;
-
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;

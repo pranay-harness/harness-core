@@ -3,11 +3,11 @@ package io.harness.ccm.communication;
 import static io.harness.persistence.HPersistence.upsertReturnNewOptions;
 import static io.harness.persistence.HQuery.excludeValidate;
 
-import com.google.inject.Inject;
-
 import io.harness.ccm.communication.entities.CESlackWebhook;
 import io.harness.ccm.communication.entities.CESlackWebhook.CESlackWebhookKeys;
 import io.harness.persistence.HPersistence;
+
+import com.google.inject.Inject;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
 

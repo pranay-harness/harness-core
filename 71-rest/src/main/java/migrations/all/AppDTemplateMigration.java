@@ -1,17 +1,16 @@
 package migrations.all;
 
-import com.google.inject.Inject;
-
-import com.mongodb.DuplicateKeyException;
-import lombok.extern.slf4j.Slf4j;
-import migrations.Migration;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.impl.analysis.TimeSeriesMetricTemplates;
 import software.wings.service.impl.newrelic.NewRelicMetricValueDefinition;
 import software.wings.verification.CVConfiguration;
 import software.wings.verification.CVConfiguration.CVConfigurationKeys;
 
+import com.google.inject.Inject;
+import com.mongodb.DuplicateKeyException;
 import java.util.List;
+import lombok.extern.slf4j.Slf4j;
+import migrations.Migration;
 
 @Slf4j
 public class AppDTemplateMigration implements Migration {

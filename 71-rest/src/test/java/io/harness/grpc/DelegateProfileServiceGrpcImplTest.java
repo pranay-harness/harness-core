@@ -4,6 +4,7 @@ import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.rule.OwnerRule.MARKO;
 import static io.harness.rule.OwnerRule.SANJA;
 import static io.harness.rule.OwnerRule.VUK;
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.assertj.core.api.Assertions.fail;
@@ -17,13 +18,6 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import com.google.common.collect.ImmutableMap;
-
-import io.grpc.Channel;
-import io.grpc.Server;
-import io.grpc.inprocess.InProcessChannelBuilder;
-import io.grpc.inprocess.InProcessServerBuilder;
-import io.grpc.testing.GrpcCleanupRule;
 import io.harness.MockableTestMixin;
 import io.harness.beans.PageResponse;
 import io.harness.category.element.UnitTests;
@@ -40,6 +34,25 @@ import io.harness.delegateprofile.ScopingValues;
 import io.harness.exception.DelegateServiceDriverException;
 import io.harness.paging.PageRequestGrpc;
 import io.harness.rule.Owner;
+
+import software.wings.WingsBaseTest;
+import software.wings.beans.User;
+import software.wings.security.PermissionAttribute;
+import software.wings.service.intfc.DelegateProfileService;
+import software.wings.service.intfc.UserService;
+
+import com.google.common.collect.ImmutableMap;
+import io.grpc.Channel;
+import io.grpc.Server;
+import io.grpc.inprocess.InProcessChannelBuilder;
+import io.grpc.inprocess.InProcessServerBuilder;
+import io.grpc.testing.GrpcCleanupRule;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -48,18 +61,6 @@ import org.junit.runner.RunWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.runners.MockitoJUnitRunner;
 import org.slf4j.Logger;
-import software.wings.WingsBaseTest;
-import software.wings.beans.User;
-import software.wings.security.PermissionAttribute;
-import software.wings.service.intfc.DelegateProfileService;
-import software.wings.service.intfc.UserService;
-
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
 
 @RunWith(MockitoJUnitRunner.class)
 public class DelegateProfileServiceGrpcImplTest extends WingsBaseTest implements MockableTestMixin {

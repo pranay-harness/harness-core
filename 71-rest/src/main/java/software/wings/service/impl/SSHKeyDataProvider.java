@@ -1,13 +1,11 @@
 package software.wings.service.impl;
 
-import static java.util.stream.Collectors.groupingBy;
 import static software.wings.beans.HostConnectionAttributes.AccessType;
 import static software.wings.beans.HostConnectionAttributes.AccessType.KERBEROS;
 import static software.wings.beans.HostConnectionAttributes.AccessType.KEY;
 import static software.wings.beans.HostConnectionAttributes.AccessType.USER_PASSWORD;
 
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
+import static java.util.stream.Collectors.groupingBy;
 
 import software.wings.beans.HostConnectionAttributes;
 import software.wings.beans.SettingAttribute;
@@ -16,6 +14,8 @@ import software.wings.service.intfc.SettingsService;
 import software.wings.settings.SettingVariableTypes;
 import software.wings.stencils.DataProvider;
 
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.List;

@@ -1,7 +1,5 @@
 package io.harness.gitsync.common.remote;
 
-import com.google.inject.Inject;
-
 import io.harness.EntityType;
 import io.harness.ModuleType;
 import io.harness.gitsync.common.dtos.GitSyncEntityListDTO;
@@ -9,11 +7,10 @@ import io.harness.gitsync.common.dtos.GitSyncProductDTO;
 import io.harness.gitsync.common.service.GitEntityService;
 import io.harness.ng.beans.PageResponse;
 import io.harness.ng.core.dto.ResponseDTO;
+
+import com.google.inject.Inject;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
-import lombok.AllArgsConstructor;
-import org.hibernate.validator.constraints.NotEmpty;
-
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
@@ -21,6 +18,8 @@ import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
+import lombok.AllArgsConstructor;
+import org.hibernate.validator.constraints.NotEmpty;
 
 @Api("/git-sync-entities")
 @Path("/git-sync-entities")

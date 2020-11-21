@@ -1,15 +1,14 @@
 package software.wings.helpers.ext.jenkins;
 
-import com.google.common.base.MoreObjects;
-
 import io.harness.delegate.beans.artifact.ArtifactFileMetadata;
-import lombok.experimental.UtilityClass;
 
+import com.google.common.base.MoreObjects;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import lombok.experimental.UtilityClass;
 
 public class BuildDetails {
   @UtilityClass

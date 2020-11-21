@@ -1,7 +1,5 @@
 package io.harness.cvng.core.services.impl;
 
-import com.google.inject.Inject;
-
 import io.harness.cvng.activity.services.api.KubernetesActivitySourceService;
 import io.harness.cvng.client.NextGenService;
 import io.harness.cvng.core.beans.CVSetupStatusDTO;
@@ -9,10 +7,11 @@ import io.harness.cvng.core.beans.OnboardingStep;
 import io.harness.cvng.core.services.api.CVConfigService;
 import io.harness.cvng.core.services.api.CVSetupService;
 import io.harness.cvng.verificationjob.services.api.VerificationJobService;
-import lombok.AllArgsConstructor;
 
+import com.google.inject.Inject;
 import java.util.ArrayList;
 import java.util.List;
+import lombok.AllArgsConstructor;
 
 @AllArgsConstructor(onConstructor = @__({ @Inject }))
 public class CVSetupServiceImpl implements CVSetupService {

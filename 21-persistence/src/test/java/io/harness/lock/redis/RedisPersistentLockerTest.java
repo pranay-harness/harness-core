@@ -2,6 +2,7 @@ package io.harness.lock.redis;
 
 import static io.harness.redis.RedisReadMode.SLAVE;
 import static io.harness.rule.OwnerRule.RAMA;
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyLong;
@@ -17,6 +18,9 @@ import io.harness.category.element.UnitTests;
 import io.harness.lock.AcquiredLock;
 import io.harness.redis.RedisConfig;
 import io.harness.rule.Owner;
+
+import java.time.Duration;
+import java.util.concurrent.TimeUnit;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -27,9 +31,6 @@ import org.powermock.modules.junit4.PowerMockRunner;
 import org.redisson.Redisson;
 import org.redisson.api.RLock;
 import org.redisson.api.RedissonClient;
-
-import java.time.Duration;
-import java.util.concurrent.TimeUnit;
 
 /**
  * @author rktummala on 01/07/2020

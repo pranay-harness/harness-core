@@ -3,6 +3,14 @@ package software.wings.sm.states;
 import static io.harness.rule.OwnerRule.ANSHUL;
 import static io.harness.rule.OwnerRule.SATYAM;
 import static io.harness.rule.OwnerRule.VAIBHAV_SI;
+
+import static software.wings.beans.PhaseStepType.AMI_AUTOSCALING_GROUP_SETUP;
+import static software.wings.beans.PhaseStepType.CLUSTER_SETUP;
+import static software.wings.beans.PhaseStepType.CONTAINER_SETUP;
+import static software.wings.beans.PhaseStepType.DEPLOY_AWS_LAMBDA;
+import static software.wings.beans.PhaseStepType.INFRASTRUCTURE_NODE;
+import static software.wings.beans.PhaseStepType.K8S_PHASE_STEP;
+
 import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -15,23 +23,13 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.powermock.api.mockito.PowerMockito.spy;
-import static software.wings.beans.PhaseStepType.AMI_AUTOSCALING_GROUP_SETUP;
-import static software.wings.beans.PhaseStepType.CLUSTER_SETUP;
-import static software.wings.beans.PhaseStepType.CONTAINER_SETUP;
-import static software.wings.beans.PhaseStepType.DEPLOY_AWS_LAMBDA;
-import static software.wings.beans.PhaseStepType.INFRASTRUCTURE_NODE;
-import static software.wings.beans.PhaseStepType.K8S_PHASE_STEP;
 
 import io.harness.beans.ExecutionStatus;
 import io.harness.category.element.UnitTests;
 import io.harness.context.ContextElementType;
 import io.harness.rule.Owner;
 import io.harness.tasks.ResponseData;
-import org.joor.Reflect;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
-import org.mockito.Mock;
+
 import software.wings.WingsBaseTest;
 import software.wings.api.AmiServiceSetupElement;
 import software.wings.api.AmiServiceTrafficShiftAlbSetupElement;
@@ -61,6 +59,11 @@ import software.wings.sm.states.spotinst.SpotinstTrafficShiftAlbSetupElement;
 
 import java.util.HashMap;
 import java.util.Map;
+import org.joor.Reflect;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
+import org.mockito.Mock;
 
 public class PhaseStepSubWorkflowTest extends WingsBaseTest {
   private static final String INFRA_DEFINITION_ID = "INFRA_DEFINITION_ID";

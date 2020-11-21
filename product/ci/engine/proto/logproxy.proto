@@ -15,30 +15,26 @@ message WriteRequest {
   repeated string lines = 2;
 }
 
-message WriteResponse {
-}
+message WriteResponse {}
 
 message OpenRequest {
   string key = 1;
 }
 
-message OpenResponse {
-}
+message OpenResponse {}
 
 message UploadRequest {
   string key = 1;
   repeated string lines = 2;
 }
 
-message UploadResponse {
-}
+message UploadResponse {}
 
 message CloseRequest {
   string key = 1;
 }
 
-message CloseResponse {
-}
+message CloseResponse {}
 
 message UploadLinkRequest {
   string key = 1;
@@ -53,8 +49,7 @@ message UploadUsingLinkRequest {
   repeated string lines = 2;
 }
 
-message UploadUsingLinkResponse {
-}
+message UploadUsingLinkResponse {}
 
 service LogProxy {
   // RPC to write to a stream

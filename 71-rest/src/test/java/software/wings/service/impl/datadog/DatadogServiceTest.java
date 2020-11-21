@@ -1,12 +1,12 @@
 package software.wings.service.impl.datadog;
 
 import static io.harness.rule.OwnerRule.PRAVEEN;
+
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
+
 import software.wings.service.intfc.datadog.DatadogService;
 import software.wings.sm.states.DatadogState;
 
@@ -17,6 +17,8 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 public class DatadogServiceTest {
   private static final SecureRandom random = new SecureRandom();

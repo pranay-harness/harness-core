@@ -1,24 +1,16 @@
 package software.wings.integration;
 
 import static io.harness.rule.OwnerRule.PUNEET;
+
 import static org.assertj.core.api.Assertions.assertThat;
 
-import com.google.inject.Inject;
-
-import com.microsoft.azure.management.compute.VirtualMachine;
-import com.microsoft.azure.management.containerservice.OSType;
 import io.harness.beans.AzureEnvironmentType;
 import io.harness.category.element.DeprecatedIntegrationTests;
 import io.harness.ccm.config.CCMConfig;
 import io.harness.rule.Owner;
 import io.harness.scm.ScmSecret;
 import io.harness.scm.SecretName;
-import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.reflect.FieldUtils;
-import org.junit.Before;
-import org.junit.Ignore;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
+
 import software.wings.WingsBaseTest;
 import software.wings.beans.AzureAvailabilitySet;
 import software.wings.beans.AzureConfig;
@@ -28,11 +20,20 @@ import software.wings.helpers.ext.azure.AzureHelperService;
 import software.wings.rules.Integration;
 import software.wings.service.intfc.security.EncryptionService;
 
+import com.google.inject.Inject;
+import com.microsoft.azure.management.compute.VirtualMachine;
+import com.microsoft.azure.management.containerservice.OSType;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.reflect.FieldUtils;
+import org.junit.Before;
+import org.junit.Ignore;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 @Integration
 @Slf4j

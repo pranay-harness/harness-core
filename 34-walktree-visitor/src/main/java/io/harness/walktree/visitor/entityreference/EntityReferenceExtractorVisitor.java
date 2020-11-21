@@ -1,15 +1,15 @@
 package io.harness.walktree.visitor.entityreference;
 
-import com.google.inject.Injector;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.ng.core.EntityDetail;
 import io.harness.walktree.beans.VisitElementResult;
 import io.harness.walktree.visitor.DummyVisitableElement;
 import io.harness.walktree.visitor.SimpleVisitor;
-import org.apache.commons.lang3.NotImplementedException;
 
+import com.google.inject.Injector;
 import java.util.HashSet;
 import java.util.Set;
+import org.apache.commons.lang3.NotImplementedException;
 
 public class EntityReferenceExtractorVisitor extends SimpleVisitor<DummyVisitableElement> {
   Set<EntityDetail> entityReferenceSet;

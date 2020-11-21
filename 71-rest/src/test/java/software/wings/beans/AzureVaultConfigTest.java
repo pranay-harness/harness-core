@@ -1,14 +1,17 @@
 package software.wings.beans;
 
 import static io.harness.rule.OwnerRule.ANSHUL;
+
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.beans.AzureEnvironmentType;
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
+
+import software.wings.WingsBaseTest;
+
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
-import software.wings.WingsBaseTest;
 
 public class AzureVaultConfigTest extends WingsBaseTest {
   @Test

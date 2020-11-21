@@ -2,9 +2,9 @@ package io.harness.ng.core.entitysetupusage;
 
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
-import com.google.inject.Singleton;
-
 import io.harness.ng.core.entitysetupusage.entity.EntitySetupUsage.EntitySetupUsageKeys;
+
+import com.google.inject.Singleton;
 import org.springframework.data.mongodb.core.query.Criteria;
 
 @Singleton

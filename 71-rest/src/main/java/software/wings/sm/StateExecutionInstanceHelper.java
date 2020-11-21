@@ -1,9 +1,9 @@
 package software.wings.sm;
 
-import com.google.inject.Inject;
-
 import io.harness.beans.ExecutionStatus;
 import io.harness.serializer.KryoSerializer;
+
+import com.google.inject.Inject;
 
 public class StateExecutionInstanceHelper {
   @Inject KryoSerializer kryoSerializer;

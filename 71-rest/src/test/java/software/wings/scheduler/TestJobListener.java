@@ -1,13 +1,12 @@
 package software.wings.scheduler;
 
+import java.time.Duration;
+import java.util.concurrent.TimeoutException;
 import org.eclipse.jgit.util.time.MonotonicSystemClock;
 import org.eclipse.jgit.util.time.ProposedTimestamp;
 import org.quartz.JobExecutionContext;
 import org.quartz.JobExecutionException;
 import org.quartz.JobListener;
-
-import java.time.Duration;
-import java.util.concurrent.TimeoutException;
 
 public class TestJobListener implements JobListener {
   private String jobKey;

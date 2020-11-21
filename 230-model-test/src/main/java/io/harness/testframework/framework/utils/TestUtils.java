@@ -1,9 +1,5 @@
 package io.harness.testframework.framework.utils;
 
-import com.google.common.base.Splitter;
-import com.google.gson.Gson;
-import com.google.gson.JsonObject;
-
 import io.harness.scm.ScmSecret;
 import io.harness.scm.SecretName;
 import io.harness.testframework.framework.Retry;
@@ -11,17 +7,21 @@ import io.harness.testframework.framework.constants.FrameworkConstants;
 import io.harness.testframework.framework.email.mailinator.MailinatorInbox;
 import io.harness.testframework.framework.matchers.MailinatorEmailMatcher;
 import io.harness.testframework.restutils.MailinatorRestUtils;
-import lombok.extern.slf4j.Slf4j;
+
 import software.wings.beans.alert.AlertNotificationRule;
 import software.wings.cdn.CdnConfig;
 import software.wings.helpers.ext.mail.SmtpConfig;
 
+import com.google.common.base.Splitter;
+import com.google.gson.Gson;
+import com.google.gson.JsonObject;
 import java.io.IOException;
 import java.net.URL;
 import java.net.URLConnection;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
+import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class TestUtils {

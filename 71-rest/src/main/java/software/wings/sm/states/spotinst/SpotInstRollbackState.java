@@ -2,15 +2,12 @@ package software.wings.sm.states.spotinst;
 
 import static io.harness.spotinst.model.SpotInstConstants.ELASTI_GROUP_ALL_PHASE_ROLLBACK;
 
-import com.google.inject.Inject;
-
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.beans.SweepingOutputInstance;
 import io.harness.beans.SweepingOutputInstance.Scope;
 import io.harness.delegate.task.spotinst.request.SpotInstDeployTaskParameters;
 import io.harness.serializer.KryoSerializer;
 import io.harness.spotinst.model.ElastiGroup;
+
 import software.wings.beans.Activity;
 import software.wings.beans.Application;
 import software.wings.beans.AwsAmiInfrastructureMapping;
@@ -22,6 +19,10 @@ import software.wings.service.intfc.sweepingoutput.SweepingOutputInquiry;
 import software.wings.service.intfc.sweepingoutput.SweepingOutputService;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.StateType;
+
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.github.reinert.jjschema.SchemaIgnore;
+import com.google.inject.Inject;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class SpotInstRollbackState extends SpotInstDeployState {

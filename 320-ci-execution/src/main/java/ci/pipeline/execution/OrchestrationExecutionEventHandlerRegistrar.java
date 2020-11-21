@@ -1,14 +1,13 @@
 package ci.pipeline.execution;
 
-import com.google.inject.Inject;
-import com.google.inject.Injector;
-
 import io.harness.execution.events.OrchestrationEventHandler;
 import io.harness.execution.events.OrchestrationEventType;
 import io.harness.registries.registrar.OrchestrationEventHandlerRegistrar;
-import org.apache.commons.lang3.tuple.Pair;
 
+import com.google.inject.Inject;
+import com.google.inject.Injector;
 import java.util.Set;
+import org.apache.commons.lang3.tuple.Pair;
 
 public class OrchestrationExecutionEventHandlerRegistrar implements OrchestrationEventHandlerRegistrar {
   @Inject private Injector injector;

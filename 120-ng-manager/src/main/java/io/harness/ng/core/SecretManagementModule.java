@@ -1,8 +1,5 @@
 package io.harness.ng.core;
 
-import com.google.inject.AbstractModule;
-import com.google.inject.name.Names;
-
 import io.harness.ng.core.api.NGSecretFileService;
 import io.harness.ng.core.api.NGSecretManagerService;
 import io.harness.ng.core.api.NGSecretService;
@@ -17,6 +14,9 @@ import io.harness.ng.core.api.impl.SSHSecretServiceImpl;
 import io.harness.ng.core.api.impl.SecretCrudServiceImpl;
 import io.harness.ng.core.api.impl.SecretFileServiceImpl;
 import io.harness.ng.core.api.impl.SecretTextServiceImpl;
+
+import com.google.inject.AbstractModule;
+import com.google.inject.name.Names;
 
 public class SecretManagementModule extends AbstractModule {
   public static final String SSH_SECRET_SERVICE = "sshSecretService";

@@ -1,6 +1,5 @@
 package software.wings.sm.states.azure;
 
-import static com.google.common.collect.Lists.newArrayList;
 import static io.harness.azure.model.AzureConstants.DELETE_NEW_VMSS;
 import static io.harness.azure.model.AzureConstants.DEPLOYMENT_ERROR;
 import static io.harness.azure.model.AzureConstants.DEPLOYMENT_STATUS;
@@ -12,16 +11,13 @@ import static io.harness.azure.model.AzureConstants.UP_SCALE_STEADY_STATE_WAIT_C
 import static io.harness.beans.ExecutionStatus.SKIPPED;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.exception.ExceptionUtils.getMessage;
-import static java.util.concurrent.TimeUnit.MINUTES;
+
 import static software.wings.beans.InstanceUnitType.PERCENTAGE;
 import static software.wings.sm.StateType.AZURE_VMSS_DEPLOY;
 
-import com.google.common.collect.ImmutableList;
-import com.google.inject.Inject;
+import static com.google.common.collect.Lists.newArrayList;
+import static java.util.concurrent.TimeUnit.MINUTES;
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.github.reinert.jjschema.Attributes;
-import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.azure.model.AzureConstants;
 import io.harness.beans.DelegateTask;
 import io.harness.beans.ExecutionStatus;
@@ -37,9 +33,7 @@ import io.harness.exception.WingsException;
 import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.tasks.Cd1SetupFields;
 import io.harness.tasks.ResponseData;
-import lombok.Getter;
-import lombok.Setter;
-import lombok.extern.slf4j.Slf4j;
+
 import software.wings.api.InstanceElement;
 import software.wings.api.InstanceElementListParam;
 import software.wings.beans.Activity;
@@ -67,10 +61,18 @@ import software.wings.sm.states.ManagerExecutionLogCallback;
 import software.wings.stencils.DefaultValue;
 import software.wings.stencils.EnumData;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.github.reinert.jjschema.Attributes;
+import com.github.reinert.jjschema.SchemaIgnore;
+import com.google.common.collect.ImmutableList;
+import com.google.inject.Inject;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import lombok.Getter;
+import lombok.Setter;
+import lombok.extern.slf4j.Slf4j;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 @Slf4j
@@ -358,7 +360,7 @@ public class AzureVMSSDeployState extends AbstractAzureState {
     return azureVMSSDeployTaskResponse == null
         ? Collections.emptyList()
         : azureVMSSStateHelper.generateInstanceElements(
-              context, azureVMSSInfrastructureMapping, azureVMSSDeployTaskResponse.getVmInstancesAdded());
+            context, azureVMSSInfrastructureMapping, azureVMSSDeployTaskResponse.getVmInstancesAdded());
   }
 
   private void addInstanceElements(
@@ -388,7 +390,7 @@ public class AzureVMSSDeployState extends AbstractAzureState {
     return azureVMSSDeployTaskResponse == null
         ? Collections.emptyList()
         : azureVMSSStateHelper.generateInstanceElements(
-              context, azureVMSSInfrastructureMapping, azureVMSSDeployTaskResponse.getVmInstancesExisting());
+            context, azureVMSSInfrastructureMapping, azureVMSSDeployTaskResponse.getVmInstancesExisting());
   }
 
   @Override

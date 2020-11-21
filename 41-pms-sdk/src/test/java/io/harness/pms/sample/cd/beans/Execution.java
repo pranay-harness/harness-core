@@ -1,10 +1,9 @@
 package io.harness.pms.sample.cd.beans;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import java.util.List;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-
-import java.util.List;
 
 @Data
 @NoArgsConstructor

@@ -1,14 +1,12 @@
 package software.wings.features;
 
-import static java.util.stream.Collectors.toList;
 import static software.wings.features.utils.PipelineUtils.getPipelinesPageRequest;
 import static software.wings.features.utils.PipelineUtils.getPipelinesWithApprovalSteps;
 import static software.wings.features.utils.WorkflowUtils.getWorkflowsPageRequest;
 import static software.wings.features.utils.WorkflowUtils.getWorkflowsWithApprovalSteps;
 import static software.wings.features.utils.WorkflowUtils.toDisallowedApprovalSteps;
 
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
+import static java.util.stream.Collectors.toList;
 
 import software.wings.beans.Pipeline;
 import software.wings.beans.Workflow;
@@ -23,6 +21,8 @@ import software.wings.service.intfc.PipelineService;
 import software.wings.service.intfc.WorkflowService;
 import software.wings.sm.states.ApprovalState.ApprovalStateType;
 
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;

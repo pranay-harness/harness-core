@@ -7,15 +7,14 @@ import static io.harness.distribution.barrier.Barrier.State.STANDING;
 import static io.harness.distribution.barrier.Barrier.State.TIMED_OUT;
 import static io.harness.govern.Switch.unhandled;
 
-import lombok.Builder;
-import lombok.Value;
-import lombok.extern.slf4j.Slf4j;
-
 import java.time.Duration;
 import java.time.Instant;
 import java.util.ArrayDeque;
 import java.util.Deque;
 import java.util.List;
+import lombok.Builder;
+import lombok.Value;
+import lombok.extern.slf4j.Slf4j;
 
 /*
  * Distributed Barrier is designed to provide a very well known inproc pattern of waiting until every thread hits a

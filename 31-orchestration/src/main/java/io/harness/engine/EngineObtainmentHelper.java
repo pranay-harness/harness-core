@@ -3,8 +3,6 @@ package io.harness.engine;
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 
-import com.google.inject.Inject;
-
 import io.harness.ambiance.Ambiance;
 import io.harness.annotations.Redesign;
 import io.harness.annotations.dev.OwnedBy;
@@ -21,6 +19,7 @@ import io.harness.state.io.StepInputPackage;
 import io.harness.state.io.StepInputPackage.StepInputPackageBuilder;
 import io.harness.state.io.StepTransput;
 
+import com.google.inject.Inject;
 import java.util.List;
 
 @OwnedBy(CDC)

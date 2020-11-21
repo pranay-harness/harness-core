@@ -10,6 +10,8 @@ import io.harness.mongo.index.NgUniqueIndex;
 import io.harness.persistence.PersistentEntity;
 import io.harness.persistence.UuidAccess;
 import io.harness.pms.ambiance.Level;
+
+import java.util.List;
 import lombok.Builder;
 import lombok.Singular;
 import lombok.Value;
@@ -22,8 +24,6 @@ import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.annotation.Version;
 import org.springframework.data.mongodb.core.mapping.Document;
-
-import java.util.List;
 
 @OwnedBy(CDC)
 @Value

@@ -3,7 +3,6 @@ package io.harness.data.validator;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 
 import com.google.common.annotations.VisibleForTesting;
-
 import java.util.HashSet;
 import java.util.Set;
 import java.util.regex.Pattern;

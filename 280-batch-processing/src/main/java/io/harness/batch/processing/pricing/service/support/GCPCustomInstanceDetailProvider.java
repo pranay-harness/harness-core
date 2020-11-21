@@ -4,6 +4,7 @@ import io.harness.batch.processing.billing.service.PricingData;
 import io.harness.batch.processing.ccm.InstanceCategory;
 import io.harness.batch.processing.pricing.data.CloudProvider;
 import io.harness.ccm.commons.beans.Resource;
+
 import org.springframework.stereotype.Component;
 
 @Component

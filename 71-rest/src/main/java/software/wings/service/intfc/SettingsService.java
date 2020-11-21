@@ -8,8 +8,7 @@ import io.harness.beans.PageResponse;
 import io.harness.k8s.model.response.CEK8sDelegatePrerequisite;
 import io.harness.validation.Create;
 import io.harness.validation.Update;
-import org.hibernate.validator.constraints.NotEmpty;
-import ru.vyarus.guice.validator.group.annotation.ValidationGroups;
+
 import software.wings.beans.GitConfig;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.ValidationResult;
@@ -24,6 +23,8 @@ import java.util.List;
 import java.util.Map;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
+import org.hibernate.validator.constraints.NotEmpty;
+import ru.vyarus.guice.validator.group.annotation.ValidationGroups;
 
 @OwnedBy(CDC)
 public interface SettingsService extends OwnedByAccount, OwnedBySettingAttribute {

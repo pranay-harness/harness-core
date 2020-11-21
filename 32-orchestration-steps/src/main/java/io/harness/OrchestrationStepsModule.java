@@ -1,8 +1,5 @@
 package io.harness;
 
-import com.google.inject.AbstractModule;
-import com.google.inject.multibindings.MapBinder;
-
 import io.harness.registrars.OrchestrationStepsModuleEventHandlerRegistrar;
 import io.harness.registrars.OrchestrationStepsModuleFacilitatorRegistrar;
 import io.harness.registrars.OrchestrationStepsModuleStepRegistrar;
@@ -17,6 +14,9 @@ import io.harness.steps.resourcerestraint.service.ResourceRestraintService;
 import io.harness.steps.resourcerestraint.service.ResourceRestraintServiceImpl;
 import io.harness.steps.resourcerestraint.service.RestraintService;
 import io.harness.steps.resourcerestraint.service.RestraintServiceImpl;
+
+import com.google.inject.AbstractModule;
+import com.google.inject.multibindings.MapBinder;
 
 public class OrchestrationStepsModule extends AbstractModule {
   private static OrchestrationStepsModule instance;

@@ -6,6 +6,16 @@ import static io.harness.rule.OwnerRule.GEORGE;
 import static io.harness.rule.OwnerRule.RAGHU;
 import static io.harness.rule.OwnerRule.SATYAM;
 import static io.harness.rule.OwnerRule.SRINIVAS;
+
+import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
+import static software.wings.service.impl.aws.model.AwsConstants.MAIN_ECS_CONTAINER_NAME_TAG;
+import static software.wings.utils.WingsTestConstants.ACCESS_KEY;
+import static software.wings.utils.WingsTestConstants.AUTO_SCALING_GROUP_NAME;
+import static software.wings.utils.WingsTestConstants.CLUSTER_NAME;
+import static software.wings.utils.WingsTestConstants.LAUNCHER_TEMPLATE_NAME;
+import static software.wings.utils.WingsTestConstants.SECRET_KEY;
+import static software.wings.utils.WingsTestConstants.SERVICE_NAME;
+
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
@@ -19,16 +29,18 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
-import static software.wings.service.impl.aws.model.AwsConstants.MAIN_ECS_CONTAINER_NAME_TAG;
-import static software.wings.utils.WingsTestConstants.ACCESS_KEY;
-import static software.wings.utils.WingsTestConstants.AUTO_SCALING_GROUP_NAME;
-import static software.wings.utils.WingsTestConstants.CLUSTER_NAME;
-import static software.wings.utils.WingsTestConstants.LAUNCHER_TEMPLATE_NAME;
-import static software.wings.utils.WingsTestConstants.SECRET_KEY;
-import static software.wings.utils.WingsTestConstants.SERVICE_NAME;
 
-import com.google.inject.Inject;
+import io.harness.category.element.UnitTests;
+import io.harness.container.ContainerInfo;
+import io.harness.ecs.EcsContainerDetails;
+import io.harness.rule.Owner;
+import io.harness.serializer.JsonUtils;
+
+import software.wings.WingsBaseTest;
+import software.wings.beans.AwsConfig;
+import software.wings.beans.SettingAttribute;
+import software.wings.beans.command.ExecutionLogCallback;
+import software.wings.service.impl.AwsHelperService;
 
 import com.amazonaws.regions.Regions;
 import com.amazonaws.services.autoscaling.model.AutoScalingGroup;
@@ -58,29 +70,19 @@ import com.amazonaws.services.ecs.model.Service;
 import com.amazonaws.services.ecs.model.ServiceEvent;
 import com.amazonaws.services.ecs.model.Task;
 import com.amazonaws.services.ecs.model.UpdateServiceRequest;
-import io.harness.category.element.UnitTests;
-import io.harness.container.ContainerInfo;
-import io.harness.ecs.EcsContainerDetails;
-import io.harness.rule.Owner;
-import io.harness.serializer.JsonUtils;
-import org.junit.Before;
-import org.junit.Ignore;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import software.wings.WingsBaseTest;
-import software.wings.beans.AwsConfig;
-import software.wings.beans.SettingAttribute;
-import software.wings.beans.command.ExecutionLogCallback;
-import software.wings.service.impl.AwsHelperService;
-
+import com.google.inject.Inject;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import org.junit.Before;
+import org.junit.Ignore;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
 
 /**
  * Created by anubhaw on 1/3/17.

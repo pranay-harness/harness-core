@@ -2,18 +2,15 @@ package software.wings.service.impl.yaml.gitdiff;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.rule.OwnerRule.VARDAN_BANSAL;
-import static org.assertj.core.api.Assertions.assertThat;
+
 import static software.wings.utils.WingsTestConstants.REPOSITORY_NAME;
 
-import com.google.inject.Inject;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.category.element.UnitTests;
 import io.harness.git.model.ChangeType;
 import io.harness.rule.Owner;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
-import org.mockito.InjectMocks;
-import org.mockito.Spy;
+
 import software.wings.WingsBaseTest;
 import software.wings.beans.EntityType;
 import software.wings.beans.yaml.GitDiffResult;
@@ -21,8 +18,13 @@ import software.wings.beans.yaml.GitFileChange;
 import software.wings.exception.YamlProcessingException;
 import software.wings.yaml.gitSync.YamlGitConfig;
 
+import com.google.inject.Inject;
 import java.util.Arrays;
 import java.util.Map;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
+import org.mockito.InjectMocks;
+import org.mockito.Spy;
 
 public class GitChangeSetHandlerTest extends WingsBaseTest {
   @InjectMocks @Inject @Spy private GitChangeSetHandler gitChangeSetHandler;

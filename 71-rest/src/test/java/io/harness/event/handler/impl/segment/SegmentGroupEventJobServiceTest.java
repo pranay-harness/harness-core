@@ -1,24 +1,25 @@
 package io.harness.event.handler.impl.segment;
 
 import static io.harness.rule.OwnerRule.UJJAWAL;
-import static org.assertj.core.api.Assertions.assertThat;
 
-import com.google.inject.Inject;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.category.element.DeprecatedIntegrationTests;
 import io.harness.rule.Owner;
-import org.junit.Before;
-import org.junit.Ignore;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
+
 import software.wings.dl.WingsPersistence;
 import software.wings.integration.IntegrationTestBase;
 import software.wings.integration.IntegrationTestUtils;
 import software.wings.scheduler.events.segment.SegmentGroupEventJobContext;
 
+import com.google.inject.Inject;
 import java.net.URISyntaxException;
 import java.time.Instant;
 import java.util.Collections;
+import org.junit.Before;
+import org.junit.Ignore;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 public class SegmentGroupEventJobServiceTest extends IntegrationTestBase {
   @Inject private WingsPersistence persistence;

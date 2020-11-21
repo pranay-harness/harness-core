@@ -1,13 +1,13 @@
 package migrations.all;
 
-import com.google.inject.Inject;
-
-import com.mongodb.BasicDBObject;
-import lombok.extern.slf4j.Slf4j;
-import migrations.OnPrimaryManagerMigration;
 import software.wings.beans.GitFileActivitySummary;
 import software.wings.dl.WingsPersistence;
 import software.wings.yaml.gitSync.GitFileActivity;
+
+import com.google.inject.Inject;
+import com.mongodb.BasicDBObject;
+import lombok.extern.slf4j.Slf4j;
+import migrations.OnPrimaryManagerMigration;
 
 @Slf4j
 public class DeleteGitFileActivityAndGitFileAcitivitySummary implements OnPrimaryManagerMigration {

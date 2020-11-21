@@ -1,7 +1,7 @@
 package migrations;
 
 import com.google.common.collect.ImmutableList;
-
+import java.util.List;
 import lombok.experimental.UtilityClass;
 import migrations.all.DeleteGitFileActivityAndGitFileAcitivitySummary;
 import migrations.all.RefactorTheFieldsInGitSyncError;
@@ -9,8 +9,6 @@ import migrations.all.SyncNewFolderForConfigFiles;
 import migrations.all.TemplateLibraryYamlOnPrimaryManagerMigration;
 import migrations.gitsync.SetQueueKeyYamChangeSetMigration;
 import org.apache.commons.lang3.tuple.Pair;
-
-import java.util.List;
 
 @UtilityClass
 public class OnPrimaryManagerMigrationList {

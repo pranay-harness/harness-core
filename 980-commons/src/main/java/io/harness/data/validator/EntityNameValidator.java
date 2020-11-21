@@ -4,12 +4,10 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
-
-import org.hibernate.validator.internal.engine.constraintvalidation.ConstraintValidatorContextImpl;
-
 import java.util.Set;
 import javax.validation.ConstraintValidator;
 import javax.validation.ConstraintValidatorContext;
+import org.hibernate.validator.internal.engine.constraintvalidation.ConstraintValidatorContextImpl;
 
 public class EntityNameValidator implements ConstraintValidator<EntityName, String> {
   private static final String ALLOWED_CHARS_STRING_DEFAULT =

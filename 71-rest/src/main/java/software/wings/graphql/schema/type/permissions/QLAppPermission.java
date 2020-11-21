@@ -1,11 +1,11 @@
 package software.wings.graphql.schema.type.permissions;
 
-import lombok.Builder;
-import lombok.Value;
-import lombok.experimental.FieldNameConstants;
 import software.wings.graphql.schema.type.QLAppFilter;
 
 import java.util.Set;
+import lombok.Builder;
+import lombok.Value;
+import lombok.experimental.FieldNameConstants;
 
 @Value
 @Builder

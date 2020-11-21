@@ -1,7 +1,7 @@
 package software.wings.service.impl.notifications;
 
 import static io.harness.rule.OwnerRule.UJJAWAL;
-import static org.mockito.Mockito.when;
+
 import static software.wings.beans.EntityType.ORCHESTRATED_DEPLOYMENT;
 import static software.wings.common.Constants.HARNESS_NAME;
 import static software.wings.common.NotificationMessageResolver.NotificationMessageType.ENTITY_CREATE_NOTIFICATION;
@@ -11,16 +11,11 @@ import static software.wings.utils.WingsTestConstants.ENV_NAME;
 import static software.wings.utils.WingsTestConstants.WORKFLOW_EXECUTION_ID;
 import static software.wings.utils.WingsTestConstants.WORKFLOW_NAME;
 
-import com.google.common.collect.ImmutableMap;
-import com.google.inject.Inject;
+import static org.mockito.Mockito.when;
 
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.Mockito;
+
 import software.wings.WingsBaseTest;
 import software.wings.beans.InformationNotification;
 import software.wings.beans.Notification;
@@ -28,8 +23,15 @@ import software.wings.beans.notification.SlackNotificationSetting;
 import software.wings.common.NotificationMessageResolver;
 import software.wings.service.intfc.SlackNotificationService;
 
+import com.google.common.collect.ImmutableMap;
+import com.google.inject.Inject;
 import java.util.Collections;
 import java.util.List;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.Mockito;
 
 public class SlackMessageDispatcherTest extends WingsBaseTest {
   @Inject @InjectMocks private SlackMessageDispatcher slackMessageDispatcher;

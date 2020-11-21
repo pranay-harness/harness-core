@@ -1,18 +1,17 @@
 package io.harness.ccm.setup.graphql;
 
-import com.google.inject.Inject;
-
-import graphql.schema.DataFetchingEnvironment;
-import org.mongodb.morphia.query.Query;
-import org.mongodb.morphia.query.Sort;
 import software.wings.beans.ce.CECloudAccount;
 import software.wings.graphql.datafetcher.AbstractConnectionV2DataFetcher;
 import software.wings.graphql.schema.query.QLPageQueryParameters;
 import software.wings.security.PermissionAttribute;
 import software.wings.security.annotations.AuthRule;
 
+import com.google.inject.Inject;
+import graphql.schema.DataFetchingEnvironment;
 import java.util.ArrayList;
 import java.util.List;
+import org.mongodb.morphia.query.Query;
+import org.mongodb.morphia.query.Sort;
 
 public class LinkedAccountStatsDataFetcher
     extends AbstractConnectionV2DataFetcher<QLCESetupFilter, QLCESetupSortCriteria, QLLinkedAccountData> {

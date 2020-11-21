@@ -2,11 +2,6 @@ package software.wings.graphql.datafetcher.cloudProvider;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
-
-import org.mongodb.morphia.query.FieldEnd;
-import org.mongodb.morphia.query.Query;
 import software.wings.beans.SettingAttribute;
 import software.wings.graphql.datafetcher.DataFetcherUtils;
 import software.wings.graphql.schema.type.aggregation.QLIdFilter;
@@ -14,7 +9,11 @@ import software.wings.graphql.schema.type.aggregation.QLTimeFilter;
 import software.wings.graphql.schema.type.aggregation.cloudprovider.QLCloudProviderFilter;
 import software.wings.graphql.schema.type.aggregation.cloudprovider.QLCloudProviderTypeFilter;
 
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import java.util.List;
+import org.mongodb.morphia.query.FieldEnd;
+import org.mongodb.morphia.query.Query;
 
 /**
  * @author rktummala on 07/12/19

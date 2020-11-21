@@ -2,12 +2,8 @@ package software.wings.graphql.datafetcher.connector;
 
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
-import com.google.common.collect.Lists;
-import com.google.inject.Inject;
-
 import io.harness.exception.WingsException;
-import org.jetbrains.annotations.NotNull;
-import org.mongodb.morphia.query.Query;
+
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.SettingAttribute.SettingAttributeKeys;
 import software.wings.beans.SettingAttribute.SettingCategory;
@@ -22,9 +18,13 @@ import software.wings.graphql.schema.type.aggregation.connector.QLConnectorFilte
 import software.wings.graphql.schema.type.aggregation.connector.QLConnectorTypeAggregation;
 import software.wings.graphql.utils.nameservice.NameService;
 
+import com.google.common.collect.Lists;
+import com.google.inject.Inject;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
+import org.jetbrains.annotations.NotNull;
+import org.mongodb.morphia.query.Query;
 
 public class ConnectorStatsDataFetcher extends SettingsAttributeStatsDataFetcher<QLNoOpAggregateFunction,
     QLConnectorFilter, QLConnectorAggregation, QLNoOpSortCriteria> {

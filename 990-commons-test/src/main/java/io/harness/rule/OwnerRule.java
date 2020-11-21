@@ -2,13 +2,17 @@ package io.harness.rule;
 
 import static java.lang.String.format;
 
-import com.google.common.collect.ImmutableMap;
-
 import io.harness.NoopStatement;
 import io.harness.exception.CategoryConfigException;
 import io.harness.rule.UserInfo.UserInfoBuilder;
 import io.harness.scm.ScmSecret;
 import io.harness.scm.SecretName;
+
+import com.google.common.collect.ImmutableMap;
+import java.io.File;
+import java.util.Arrays;
+import java.util.Map;
+import java.util.Map.Entry;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import net.rcarz.jiraclient.BasicCredentials;
@@ -19,11 +23,6 @@ import org.junit.Ignore;
 import org.junit.rules.TestRule;
 import org.junit.runner.Description;
 import org.junit.runners.model.Statement;
-
-import java.io.File;
-import java.util.Arrays;
-import java.util.Map;
-import java.util.Map.Entry;
 
 @Slf4j
 public class OwnerRule implements TestRule {

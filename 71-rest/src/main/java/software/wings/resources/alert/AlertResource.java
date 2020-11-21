@@ -1,22 +1,17 @@
 package software.wings.resources.alert;
 
-import static java.util.stream.Collectors.toList;
 import static software.wings.beans.alert.AlertType.CONTINUOUS_VERIFICATION_ALERT;
 import static software.wings.security.PermissionAttribute.ResourceType.ROLE;
 
-import com.google.common.collect.ImmutableSet;
-import com.google.inject.Inject;
+import static java.util.stream.Collectors.toList;
 
-import com.codahale.metrics.annotation.ExceptionMetered;
-import com.codahale.metrics.annotation.Timed;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.beans.SearchFilter.Operator;
 import io.harness.notifications.AlertVisibilityChecker;
 import io.harness.rest.RestResponse;
 import io.harness.security.annotations.LearningEngineAuth;
-import io.swagger.annotations.Api;
-import retrofit2.http.Body;
+
 import software.wings.beans.alert.Alert;
 import software.wings.beans.alert.Alert.AlertKeys;
 import software.wings.beans.alert.cv.ContinuousVerificationAlertData;
@@ -24,6 +19,11 @@ import software.wings.security.annotations.Scope;
 import software.wings.service.impl.analysis.ContinuousVerificationService;
 import software.wings.service.intfc.AlertService;
 
+import com.codahale.metrics.annotation.ExceptionMetered;
+import com.codahale.metrics.annotation.Timed;
+import com.google.common.collect.ImmutableSet;
+import com.google.inject.Inject;
+import io.swagger.annotations.Api;
 import java.util.List;
 import java.util.Set;
 import javax.ws.rs.BeanParam;
@@ -32,6 +32,7 @@ import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
+import retrofit2.http.Body;
 
 /**
  * Created by brett on 10/18/17

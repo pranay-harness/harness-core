@@ -1,11 +1,7 @@
 package software.wings.resources;
 
-import com.google.inject.Inject;
-
-import com.codahale.metrics.annotation.ExceptionMetered;
-import com.codahale.metrics.annotation.Timed;
 import io.harness.rest.RestResponse;
-import io.swagger.annotations.Api;
+
 import software.wings.APMFetchConfig;
 import software.wings.beans.FeatureName;
 import software.wings.metrics.ThresholdComparisonType;
@@ -24,6 +20,10 @@ import software.wings.service.intfc.newrelic.NewRelicService;
 import software.wings.service.intfc.verification.CVConfigurationService;
 import software.wings.sm.StateType;
 
+import com.codahale.metrics.annotation.ExceptionMetered;
+import com.codahale.metrics.annotation.Timed;
+import com.google.inject.Inject;
+import io.swagger.annotations.Api;
 import java.io.UnsupportedEncodingException;
 import java.util.List;
 import java.util.Map;

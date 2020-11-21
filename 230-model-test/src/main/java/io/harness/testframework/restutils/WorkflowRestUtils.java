@@ -1,21 +1,18 @@
 package io.harness.testframework.restutils;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
+
 import static software.wings.beans.PhaseStep.PhaseStepBuilder.aPhaseStep;
 import static software.wings.beans.PhaseStepType.CONTAINER_DEPLOY;
 import static software.wings.beans.PhaseStepType.CONTAINER_SETUP;
 import static software.wings.sm.StateType.ECS_SERVICE_DEPLOY;
 import static software.wings.sm.StateType.ECS_SERVICE_SETUP;
 
-import com.google.common.collect.ImmutableMap;
-import com.google.inject.Singleton;
-
 import io.harness.exception.EmptyRestResponseException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.rest.RestResponse;
 import io.harness.testframework.framework.Setup;
-import io.restassured.http.ContentType;
-import io.restassured.mapper.ObjectMapperType;
+
 import software.wings.beans.ExecutionArgs;
 import software.wings.beans.GraphNode;
 import software.wings.beans.PhaseStep;
@@ -25,6 +22,10 @@ import software.wings.beans.Workflow;
 import software.wings.beans.WorkflowExecution;
 import software.wings.beans.WorkflowPhase;
 
+import com.google.common.collect.ImmutableMap;
+import com.google.inject.Singleton;
+import io.restassured.http.ContentType;
+import io.restassured.mapper.ObjectMapperType;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;

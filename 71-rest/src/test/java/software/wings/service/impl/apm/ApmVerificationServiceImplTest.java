@@ -2,14 +2,13 @@ package software.wings.service.impl.apm;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.rule.OwnerRule.RAGHU;
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.Matchers.any;
-import static org.mockito.Mockito.doNothing;
+
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 import static software.wings.settings.SettingVariableTypes.APM_VERIFICATION;
 
-import com.google.common.collect.Sets;
-import com.google.inject.Inject;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Matchers.any;
+import static org.mockito.Mockito.doNothing;
 
 import io.harness.beans.EncryptedData;
 import io.harness.beans.EncryptedDataParent;
@@ -18,11 +17,7 @@ import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
 import io.harness.secrets.setupusage.SecretSetupUsage;
 import io.harness.secrets.setupusage.SecretSetupUsageService;
-import org.apache.commons.lang3.reflect.FieldUtils;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
-import org.mockito.Mock;
+
 import software.wings.WingsBaseTest;
 import software.wings.beans.APMValidateCollectorConfig;
 import software.wings.beans.APMVerificationConfig;
@@ -33,12 +28,19 @@ import software.wings.service.impl.SettingValidationService;
 import software.wings.service.intfc.apm.ApmVerificationService;
 import software.wings.service.intfc.newrelic.NewRelicService;
 
+import com.google.common.collect.Sets;
+import com.google.inject.Inject;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import org.apache.commons.lang3.reflect.FieldUtils;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
+import org.mockito.Mock;
 
 public class ApmVerificationServiceImplTest extends WingsBaseTest {
   @Inject private ApmVerificationService apmVerificationService;

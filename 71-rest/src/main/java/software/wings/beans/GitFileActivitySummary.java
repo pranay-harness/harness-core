@@ -9,6 +9,10 @@ import io.harness.persistence.PersistentEntity;
 import io.harness.persistence.UpdatedAtAware;
 import io.harness.persistence.UuidAware;
 import io.harness.validation.Update;
+
+import software.wings.yaml.gitSync.GitFileProcessingSummary;
+
+import javax.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -16,9 +20,6 @@ import lombok.experimental.FieldNameConstants;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Id;
 import org.mongodb.morphia.annotations.Transient;
-import software.wings.yaml.gitSync.GitFileProcessingSummary;
-
-import javax.validation.constraints.NotNull;
 
 /**
  * Created by deepak 5/09/20

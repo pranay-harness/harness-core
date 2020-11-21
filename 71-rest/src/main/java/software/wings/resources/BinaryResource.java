@@ -3,7 +3,6 @@ package software.wings.resources;
 import com.codahale.metrics.annotation.ExceptionMetered;
 import com.codahale.metrics.annotation.Timed;
 import io.swagger.annotations.Api;
-
 import java.io.File;
 import java.io.IOException;
 import java.net.URISyntaxException;

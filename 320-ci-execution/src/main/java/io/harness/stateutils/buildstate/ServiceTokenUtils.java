@@ -1,10 +1,9 @@
 package io.harness.stateutils.buildstate;
 
-import com.google.inject.Inject;
-import com.google.inject.name.Named;
-
 import io.harness.security.ServiceTokenGenerator;
 
+import com.google.inject.Inject;
+import com.google.inject.name.Named;
 import java.time.Duration;
 
 public class ServiceTokenUtils {

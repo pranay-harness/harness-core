@@ -2,25 +2,9 @@ package io.harness.rule;
 
 import static io.harness.cache.CacheBackend.NOOP;
 import static io.harness.mongo.MongoModule.defaultMongoClientOptions;
+
 import static org.mockito.Mockito.mock;
 
-import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableSet;
-import com.google.inject.AbstractModule;
-import com.google.inject.Injector;
-import com.google.inject.Key;
-import com.google.inject.Module;
-import com.google.inject.Provides;
-import com.google.inject.Singleton;
-import com.google.inject.TypeLiteral;
-import com.google.inject.name.Named;
-
-import com.codahale.metrics.MetricRegistry;
-import com.mongodb.MongoClient;
-import com.mongodb.MongoClientOptions;
-import com.mongodb.MongoClientURI;
-import graphql.GraphQL;
-import io.dropwizard.Configuration;
 import io.harness.OrchestrationPersistenceConfig;
 import io.harness.OrchestrationStepsModule;
 import io.harness.OrchestrationStepsPersistenceConfig;
@@ -67,18 +51,7 @@ import io.harness.testframework.framework.ManagerExecutor;
 import io.harness.testframework.framework.Setup;
 import io.harness.testlib.module.MongoRuleMixin;
 import io.harness.threading.CurrentThreadExecutor;
-import lombok.Getter;
-import org.atmosphere.cpr.BroadcasterFactory;
-import org.hibernate.validator.parameternameprovider.ReflectionParameterNameProvider;
-import org.junit.rules.MethodRule;
-import org.junit.runners.model.FrameworkMethod;
-import org.junit.runners.model.Statement;
-import org.mongodb.morphia.AdvancedDatastore;
-import org.mongodb.morphia.Morphia;
-import org.mongodb.morphia.converters.TypeConverter;
-import org.springframework.guice.module.BeanFactoryProvider;
-import org.springframework.guice.module.SpringModule;
-import ru.vyarus.guice.validator.ValidationModule;
+
 import software.wings.app.AuthModule;
 import software.wings.app.GcpMarketplaceIntegrationModule;
 import software.wings.app.GraphQLModule;
@@ -99,6 +72,22 @@ import software.wings.search.framework.ElasticsearchConfig;
 import software.wings.security.ThreadLocalUserProvider;
 import software.wings.service.impl.EventEmitter;
 
+import com.codahale.metrics.MetricRegistry;
+import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
+import com.google.inject.AbstractModule;
+import com.google.inject.Injector;
+import com.google.inject.Key;
+import com.google.inject.Module;
+import com.google.inject.Provides;
+import com.google.inject.Singleton;
+import com.google.inject.TypeLiteral;
+import com.google.inject.name.Named;
+import com.mongodb.MongoClient;
+import com.mongodb.MongoClientOptions;
+import com.mongodb.MongoClientURI;
+import graphql.GraphQL;
+import io.dropwizard.Configuration;
 import java.io.Closeable;
 import java.lang.annotation.Annotation;
 import java.util.ArrayList;
@@ -111,6 +100,18 @@ import java.util.concurrent.ExecutorService;
 import javax.validation.Validation;
 import javax.validation.ValidatorFactory;
 import javax.ws.rs.core.GenericType;
+import lombok.Getter;
+import org.atmosphere.cpr.BroadcasterFactory;
+import org.hibernate.validator.parameternameprovider.ReflectionParameterNameProvider;
+import org.junit.rules.MethodRule;
+import org.junit.runners.model.FrameworkMethod;
+import org.junit.runners.model.Statement;
+import org.mongodb.morphia.AdvancedDatastore;
+import org.mongodb.morphia.Morphia;
+import org.mongodb.morphia.converters.TypeConverter;
+import org.springframework.guice.module.BeanFactoryProvider;
+import org.springframework.guice.module.SpringModule;
+import ru.vyarus.guice.validator.ValidationModule;
 
 public class FunctionalTestRule implements MethodRule, InjectorRuleMixin, MongoRuleMixin {
   private ClosingFactory closingFactory;

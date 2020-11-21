@@ -14,14 +14,7 @@ import static io.harness.persistence.HQuery.excludeValidate;
 import static io.harness.validation.PersistenceValidator.duplicateCheck;
 import static io.harness.validation.Validator.equalCheck;
 import static io.harness.validation.Validator.notNullCheck;
-import static java.lang.String.format;
-import static java.lang.String.join;
-import static java.util.Arrays.asList;
-import static java.util.stream.Collectors.toList;
-import static org.apache.commons.lang3.StringUtils.isBlank;
-import static org.apache.commons.lang3.StringUtils.isNotBlank;
-import static org.atteo.evo.inflector.English.plural;
-import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
+
 import static software.wings.app.ManagerCacheRegistrar.NEW_RELIC_APPLICATION_CACHE;
 import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static software.wings.beans.Environment.GLOBAL_ENV_ID;
@@ -47,14 +40,15 @@ import static software.wings.settings.SettingVariableTypes.AMAZON_S3_HELM_REPO;
 import static software.wings.settings.SettingVariableTypes.GCS_HELM_REPO;
 import static software.wings.utils.UsageRestrictionsUtils.getAllAppAllEnvUsageRestrictions;
 
-import com.google.common.annotations.VisibleForTesting;
-import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.Lists;
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
-import com.google.inject.name.Named;
+import static java.lang.String.format;
+import static java.lang.String.join;
+import static java.util.Arrays.asList;
+import static java.util.stream.Collectors.toList;
+import static org.apache.commons.lang3.StringUtils.isBlank;
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
+import static org.atteo.evo.inflector.English.plural;
+import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 
-import com.amazonaws.arn.Arn;
 import io.harness.alert.AlertData;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
@@ -81,14 +75,7 @@ import io.harness.persistence.HIterator;
 import io.harness.queue.QueuePublisher;
 import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.validation.Create;
-import lombok.Getter;
-import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.StringUtils;
-import org.mongodb.morphia.annotations.Transient;
-import org.mongodb.morphia.query.FindOptions;
-import org.mongodb.morphia.query.Query;
-import org.mongodb.morphia.query.Sort;
-import ru.vyarus.guice.validator.group.annotation.ValidationGroups;
+
 import software.wings.annotation.EncryptableSetting;
 import software.wings.beans.APMVerificationConfig;
 import software.wings.beans.Account;
@@ -168,6 +155,13 @@ import software.wings.utils.CryptoUtils;
 import software.wings.verification.CVConfiguration;
 import software.wings.verification.CVConfiguration.CVConfigurationKeys;
 
+import com.amazonaws.arn.Arn;
+import com.google.common.annotations.VisibleForTesting;
+import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Lists;
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
+import com.google.inject.name.Named;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.EnumSet;
@@ -181,6 +175,14 @@ import java.util.stream.Collectors;
 import javax.annotation.Nullable;
 import javax.cache.Cache;
 import javax.validation.executable.ValidateOnExecution;
+import lombok.Getter;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
+import org.mongodb.morphia.annotations.Transient;
+import org.mongodb.morphia.query.FindOptions;
+import org.mongodb.morphia.query.Query;
+import org.mongodb.morphia.query.Sort;
+import ru.vyarus.guice.validator.group.annotation.ValidationGroups;
 
 /**
  * Created by anubhaw on 5/17/16.
@@ -467,8 +469,8 @@ public class SettingsServiceImpl implements SettingsService {
         String cloudProviderId = ((HelmRepoConfig) settingAttribute.getValue()).getConnectorId();
         if (isNotBlank(cloudProviderId) && cloudProvidersMap.containsKey(cloudProviderId)
             && isFilteredSettingAttribute(appIdFromRequest, envIdFromRequest, accountId, appEnvMapFromUserPermissions,
-                   restrictionsFromUserPermissions, isAccountAdmin, appIdEnvMap, settingAttribute,
-                   cloudProvidersMap.get(cloudProviderId))) {
+                restrictionsFromUserPermissions, isAccountAdmin, appIdEnvMap, settingAttribute,
+                cloudProvidersMap.get(cloudProviderId))) {
           filteredSettingAttributes.add(settingAttribute);
         }
       });
@@ -507,7 +509,7 @@ public class SettingsServiceImpl implements SettingsService {
   private boolean isSettingAttributeReferencingCloudProvider(SettingAttribute settingAttribute) {
     return SettingCategory.HELM_REPO == settingAttribute.getCategory()
         && (AMAZON_S3_HELM_REPO.name().equals(settingAttribute.getValue().getType())
-               || GCS_HELM_REPO.name().equals(settingAttribute.getValue().getType()));
+            || GCS_HELM_REPO.name().equals(settingAttribute.getValue().getType()));
   }
 
   private UsageRestrictions getUsageRestrictions(SettingAttribute settingAttribute) {
@@ -1729,7 +1731,7 @@ public class SettingsServiceImpl implements SettingsService {
   public boolean isOpenSSHKeyUsed(SettingAttribute settingAttribute) {
     return SettingVariableTypes.HOST_CONNECTION_ATTRIBUTES.name().equals(settingAttribute.getValue().getType())
         && HostConnectionAttributes.ConnectionType.SSH.name().equals(
-               ((HostConnectionAttributes) settingAttribute.getValue()).getConnectionType().name())
+            ((HostConnectionAttributes) settingAttribute.getValue()).getConnectionType().name())
         && null != ((HostConnectionAttributes) settingAttribute.getValue()).getKey();
   }
 

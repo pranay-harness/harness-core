@@ -1,19 +1,19 @@
 package io.harness.azure.client;
 
-import com.microsoft.azure.management.appservice.DeploymentSlot;
-import com.microsoft.azure.management.appservice.WebApp;
 import io.harness.azure.context.AzureClientContext;
 import io.harness.azure.context.AzureWebClientContext;
 import io.harness.azure.model.AzureAppServiceApplicationSetting;
 import io.harness.azure.model.AzureAppServiceConnectionString;
 import io.harness.azure.model.AzureAppServiceDockerSetting;
 import io.harness.azure.model.WebAppHostingOS;
-import rx.Completable;
-import rx.Observable;
 
+import com.microsoft.azure.management.appservice.DeploymentSlot;
+import com.microsoft.azure.management.appservice.WebApp;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import rx.Completable;
+import rx.Observable;
 
 public interface AzureWebClient {
   /**

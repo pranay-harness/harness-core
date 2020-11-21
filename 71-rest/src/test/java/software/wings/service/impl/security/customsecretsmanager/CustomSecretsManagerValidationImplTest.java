@@ -1,25 +1,28 @@
 package software.wings.service.impl.security.customsecretsmanager;
 
 import static io.harness.rule.OwnerRule.UTKARSH;
+
+import static software.wings.service.impl.security.customsecretsmanager.CustomSecretsManagerUtils.obtainConfig;
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.when;
 import static org.mockito.MockitoAnnotations.initMocks;
-import static software.wings.service.impl.security.customsecretsmanager.CustomSecretsManagerUtils.obtainConfig;
-
-import com.google.inject.Inject;
 
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
+
+import software.wings.beans.delegation.ShellScriptParameters;
+import software.wings.delegatetasks.validation.ShellScriptValidationHandler;
+import software.wings.security.encryption.secretsmanagerconfigs.CustomSecretsManagerConfig;
+
+import com.google.inject.Inject;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import software.wings.beans.delegation.ShellScriptParameters;
-import software.wings.delegatetasks.validation.ShellScriptValidationHandler;
-import software.wings.security.encryption.secretsmanagerconfigs.CustomSecretsManagerConfig;
 
 public class CustomSecretsManagerValidationImplTest extends CategoryTest {
   @Mock private ShellScriptValidationHandler shellScriptValidationHandler;

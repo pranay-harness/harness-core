@@ -1,6 +1,5 @@
 package software.wings.beans;
 
-import static java.util.Arrays.asList;
 import static software.wings.beans.ApprovalNotification.ApprovalStage.APPROVED;
 import static software.wings.beans.ApprovalNotification.ApprovalStage.PENDING;
 import static software.wings.beans.ApprovalNotification.ApprovalStage.REJECTED;
@@ -9,22 +8,24 @@ import static software.wings.beans.NotificationAction.Builder.aNotificationActio
 import static software.wings.beans.NotificationAction.NotificationActionType.APPROVE;
 import static software.wings.beans.NotificationAction.NotificationActionType.REJECT;
 
-import com.google.common.collect.ImmutableMap;
-import com.google.inject.Inject;
+import static java.util.Arrays.asList;
 
-import com.fasterxml.jackson.annotation.JsonTypeName;
 import io.harness.beans.EmbeddedUser;
-import lombok.EqualsAndHashCode;
-import org.hibernate.validator.constraints.NotEmpty;
-import org.mongodb.morphia.annotations.Transient;
+
 import software.wings.beans.NotificationAction.NotificationActionType;
 import software.wings.beans.artifact.Artifact.Status;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.ArtifactService;
 
+import com.fasterxml.jackson.annotation.JsonTypeName;
+import com.google.common.collect.ImmutableMap;
+import com.google.inject.Inject;
 import java.util.HashMap;
 import java.util.Map;
 import javax.validation.constraints.NotNull;
+import lombok.EqualsAndHashCode;
+import org.hibernate.validator.constraints.NotEmpty;
+import org.mongodb.morphia.annotations.Transient;
 
 /**
  * Created by anubhaw on 7/25/16.

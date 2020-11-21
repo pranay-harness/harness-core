@@ -4,29 +4,27 @@ import static io.harness.batch.processing.config.k8s.recommendation.estimators.C
 import static io.harness.batch.processing.config.k8s.recommendation.estimators.ContainerResourceRequirementEstimators.guaranteedRecommender;
 import static io.harness.batch.processing.config.k8s.recommendation.estimators.ContainerResourceRequirementEstimators.recommendedRecommender;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+
+import static software.wings.graphql.datafetcher.ce.recommendation.entity.ResourceRequirement.CPU;
+import static software.wings.graphql.datafetcher.ce.recommendation.entity.ResourceRequirement.MEMORY;
+
 import static java.math.RoundingMode.HALF_UP;
 import static java.time.Duration.between;
 import static java.util.Collections.emptyMap;
 import static java.util.Optional.ofNullable;
-import static software.wings.graphql.datafetcher.ce.recommendation.entity.ResourceRequirement.CPU;
-import static software.wings.graphql.datafetcher.ce.recommendation.entity.ResourceRequirement.MEMORY;
-
-import com.google.common.collect.ImmutableSet;
 
 import io.harness.batch.processing.config.k8s.recommendation.WorkloadCostService.Cost;
 import io.harness.batch.processing.config.k8s.recommendation.estimators.ResourceAmountUtils;
 import io.harness.batch.processing.service.intfc.WorkloadRepository;
 import io.harness.batch.processing.tasklet.support.K8sLabelServiceInfoFetcher;
 import io.harness.ccm.cluster.entities.K8sWorkload;
-import io.kubernetes.client.custom.Quantity;
-import lombok.extern.slf4j.Slf4j;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
-import org.springframework.batch.item.ItemWriter;
+
 import software.wings.graphql.datafetcher.ce.recommendation.entity.ContainerRecommendation;
 import software.wings.graphql.datafetcher.ce.recommendation.entity.K8sWorkloadRecommendation;
 import software.wings.graphql.datafetcher.ce.recommendation.entity.ResourceRequirement;
 
+import com.google.common.collect.ImmutableSet;
+import io.kubernetes.client.custom.Quantity;
 import java.math.BigDecimal;
 import java.time.Duration;
 import java.time.Instant;
@@ -35,6 +33,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
+import lombok.extern.slf4j.Slf4j;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
+import org.springframework.batch.item.ItemWriter;
 
 @Slf4j
 class ComputedRecommendationWriter implements ItemWriter<K8sWorkloadRecommendation> {

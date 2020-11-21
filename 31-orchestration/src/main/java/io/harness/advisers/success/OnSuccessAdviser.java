@@ -2,9 +2,6 @@ package io.harness.advisers.success;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 
-import com.google.common.base.Preconditions;
-import com.google.inject.Inject;
-
 import io.harness.StatusUtils;
 import io.harness.adviser.Advise;
 import io.harness.adviser.Adviser;
@@ -15,6 +12,9 @@ import io.harness.annotations.Redesign;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.pms.advisers.AdviserType;
 import io.harness.serializer.KryoSerializer;
+
+import com.google.common.base.Preconditions;
+import com.google.inject.Inject;
 
 @OwnedBy(CDC)
 @Redesign

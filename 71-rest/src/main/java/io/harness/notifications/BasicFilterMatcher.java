@@ -2,9 +2,11 @@ package io.harness.notifications;
 
 import io.harness.notifications.beans.Conditions;
 import io.harness.notifications.beans.Conditions.Operator;
-import lombok.Value;
+
 import software.wings.beans.alert.Alert;
 import software.wings.beans.alert.AlertFilter;
+
+import lombok.Value;
 
 /**
  * This matcher should be used there are no filters other than on alert type

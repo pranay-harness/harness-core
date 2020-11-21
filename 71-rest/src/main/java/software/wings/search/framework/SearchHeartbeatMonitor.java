@@ -3,9 +3,7 @@ package software.wings.search.framework;
 import static io.harness.annotations.dev.HarnessTeam.PL;
 
 import io.harness.annotations.dev.OwnedBy;
-import lombok.AllArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-import org.mongodb.morphia.query.Query;
+
 import software.wings.core.managerConfiguration.ConfigurationController;
 import software.wings.dl.WingsPersistence;
 import software.wings.search.framework.PerpetualSearchLocker.LockTimeoutCallback;
@@ -13,6 +11,9 @@ import software.wings.search.framework.SearchDistributedLock.SearchDistributedLo
 
 import java.time.Instant;
 import java.util.Date;
+import lombok.AllArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.mongodb.morphia.query.Query;
 
 /**
  * Update search lock heartbeat task

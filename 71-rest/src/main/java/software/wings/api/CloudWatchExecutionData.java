@@ -1,20 +1,19 @@
 package software.wings.api;
 
-import com.google.common.base.Functions;
-import com.google.common.collect.Lists;
+import software.wings.sm.StateExecutionData;
 
 import com.amazonaws.services.cloudwatch.model.Datapoint;
 import com.amazonaws.services.cloudwatch.model.Dimension;
+import com.google.common.base.Functions;
+import com.google.common.collect.Lists;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
-import software.wings.sm.StateExecutionData;
-
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
 
 /**
  * Created by anubhaw on 12/9/16.

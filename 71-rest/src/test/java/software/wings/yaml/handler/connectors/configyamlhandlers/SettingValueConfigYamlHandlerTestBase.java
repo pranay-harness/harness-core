@@ -1,18 +1,15 @@
 package software.wings.yaml.handler.connectors.configyamlhandlers;
 
+import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
+
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Fail.failBecauseExceptionWasNotThrown;
-import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
-
-import com.google.inject.Inject;
 
 import io.harness.exception.HarnessException;
 import io.harness.exception.WingsException;
 import io.harness.yaml.BaseYaml;
-import org.apache.commons.lang3.StringUtils;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
+
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.yaml.ChangeContext;
 import software.wings.beans.yaml.GitFileChange;
@@ -25,7 +22,11 @@ import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.security.SecretManager;
 import software.wings.yaml.handler.YamlHandlerTestBase;
 
+import com.google.inject.Inject;
 import java.io.IOException;
+import org.apache.commons.lang3.StringUtils;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
 
 public abstract class SettingValueConfigYamlHandlerTestBase extends YamlHandlerTestBase {
   @InjectMocks @Inject protected SecretManager secretManager;

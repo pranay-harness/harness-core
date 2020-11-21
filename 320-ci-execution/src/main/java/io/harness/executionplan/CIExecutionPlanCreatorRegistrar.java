@@ -1,8 +1,5 @@
 package io.harness.executionplan;
 
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
-
 import io.harness.executionplan.core.ExecutionPlanCreatorRegistry;
 import io.harness.executionplan.core.SupportDefinedExecutorPlanCreator;
 import io.harness.executionplan.plancreator.GenericStepPlanCreator;
@@ -12,6 +9,9 @@ import io.harness.executionplan.plancreator.StagesPlanCreator;
 import io.harness.plancreators.CIPipelinePlanCreator;
 import io.harness.plancreators.ExecutionPlanCreator;
 import io.harness.plancreators.IntegrationStagePlanCreator;
+
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import lombok.extern.slf4j.Slf4j;
 
 @Singleton

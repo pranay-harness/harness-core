@@ -1,10 +1,9 @@
 package io.harness.delegate.task.stepstatus;
 
+import java.util.Map;
 import lombok.Builder;
 import lombok.Data;
 import lombok.Singular;
-
-import java.util.Map;
 
 @Data
 @Builder

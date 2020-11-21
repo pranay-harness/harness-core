@@ -1,8 +1,9 @@
 package io.harness.cvng.verificationjob.beans;
 
-import com.fasterxml.jackson.annotation.JsonTypeName;
 import io.harness.cvng.verificationjob.entities.BlueGreenVerificationJob;
 import io.harness.cvng.verificationjob.entities.VerificationJob;
+
+import com.fasterxml.jackson.annotation.JsonTypeName;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;

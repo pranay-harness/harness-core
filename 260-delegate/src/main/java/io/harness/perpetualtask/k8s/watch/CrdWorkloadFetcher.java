@@ -1,9 +1,8 @@
 package io.harness.perpetualtask.k8s.watch;
 
-import com.google.common.base.Suppliers;
-
 import com.github.benmanes.caffeine.cache.Caffeine;
 import com.github.benmanes.caffeine.cache.LoadingCache;
+import com.google.common.base.Suppliers;
 import io.kubernetes.client.openapi.ApiClient;
 import io.kubernetes.client.openapi.ApiException;
 import io.kubernetes.client.openapi.JSON;
@@ -14,15 +13,14 @@ import io.kubernetes.client.openapi.models.V1CustomResourceDefinitionList;
 import io.kubernetes.client.openapi.models.V1CustomResourceDefinitionNames;
 import io.kubernetes.client.openapi.models.V1ObjectMeta;
 import io.kubernetes.client.openapi.models.V1ObjectMetaBuilder;
-import lombok.Builder;
-import lombok.Value;
-import lombok.extern.slf4j.Slf4j;
-
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
+import lombok.Builder;
+import lombok.Value;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * Used for getting details of CRD workload types that we don't watch.
@@ -53,8 +51,8 @@ public class CrdWorkloadFetcher {
   public CrdWorkloadFetcher(ApiClient apiClient) {
     this.tripped = false;
     this.apiClient = apiClient;
-    workloadCache = Caffeine.newBuilder().expireAfterWrite(10, TimeUnit.MINUTES).build(this ::getWorkloadInternal);
-    kindToPluralMapSupplier = Suppliers.memoizeWithExpiration(this ::loadKindToPluralMap, 10, TimeUnit.MINUTES);
+    workloadCache = Caffeine.newBuilder().expireAfterWrite(10, TimeUnit.MINUTES).build(this::getWorkloadInternal);
+    kindToPluralMapSupplier = Suppliers.memoizeWithExpiration(this::loadKindToPluralMap, 10, TimeUnit.MINUTES);
   }
 
   private Map<String, String> loadKindToPluralMap() {

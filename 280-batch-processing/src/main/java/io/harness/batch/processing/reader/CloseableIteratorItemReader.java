@@ -1,8 +1,7 @@
 package io.harness.batch.processing.reader;
 
-import org.springframework.batch.item.support.IteratorItemReader;
-
 import java.util.Iterator;
+import org.springframework.batch.item.support.IteratorItemReader;
 
 public class CloseableIteratorItemReader<T> extends IteratorItemReader<T> implements AutoCloseable {
   private AutoCloseable autoCloseable;

@@ -1,16 +1,17 @@
 package io.harness;
 
-import com.google.inject.AbstractModule;
-
-import com.codahale.metrics.MetricRegistry;
 import io.harness.managerclient.VerificationManagerClient;
 import io.harness.managerclient.VerificationManagerClientFactory;
 import io.harness.metrics.HarnessMetricRegistry;
 import io.harness.security.ServiceTokenGenerator;
 import io.harness.service.ContinuousVerificationServiceImpl;
 import io.harness.service.intfc.ContinuousVerificationService;
-import io.prometheus.client.CollectorRegistry;
+
 import software.wings.utils.WingsIntegrationTestConstants;
+
+import com.codahale.metrics.MetricRegistry;
+import com.google.inject.AbstractModule;
+import io.prometheus.client.CollectorRegistry;
 
 public class VerificationTestModule extends AbstractModule {
   @Override

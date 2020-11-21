@@ -8,25 +8,27 @@ import static io.harness.spotinst.model.SpotInstConstants.RENAME_OLD_COMMAND_UNI
 import static io.harness.spotinst.model.SpotInstConstants.SWAP_ROUTES_COMMAND_UNIT;
 import static io.harness.spotinst.model.SpotInstConstants.UP_SCALE_COMMAND_UNIT;
 import static io.harness.spotinst.model.SpotInstConstants.UP_SCALE_STEADY_STATE_WAIT_COMMAND_UNIT;
-import static java.util.Collections.emptyMap;
+
 import static software.wings.service.impl.aws.model.AwsConstants.MIN_TRAFFIC_SHIFT_WEIGHT;
 
-import com.google.common.collect.ImmutableList;
+import static java.util.Collections.emptyMap;
 
-import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
-import lombok.ToString;
-import lombok.extern.slf4j.Slf4j;
+
 import software.wings.beans.command.CommandUnit;
 import software.wings.beans.command.SpotinstDummyCommandUnit;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionResponse;
 import software.wings.sm.StateType;
 
+import com.github.reinert.jjschema.SchemaIgnore;
+import com.google.common.collect.ImmutableList;
 import java.util.List;
 import java.util.Map;
+import lombok.ToString;
+import lombok.extern.slf4j.Slf4j;
 
 @ToString
 @Slf4j

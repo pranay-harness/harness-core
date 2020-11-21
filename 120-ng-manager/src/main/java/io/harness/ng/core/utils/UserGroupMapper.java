@@ -2,6 +2,7 @@ package io.harness.ng.core.utils;
 
 import static io.harness.ng.core.mapper.TagMapper.convertToList;
 import static io.harness.ng.core.mapper.TagMapper.convertToMap;
+
 import static java.util.Collections.emptyList;
 import static java.util.Collections.emptyMap;
 
@@ -13,10 +14,10 @@ import io.harness.ng.core.entities.NotificationSettingConfig;
 import io.harness.ng.core.entities.PagerDutyConfig;
 import io.harness.ng.core.entities.SlackConfig;
 import io.harness.ng.core.entities.UserGroup;
-import lombok.experimental.UtilityClass;
 
 import java.util.Optional;
 import java.util.stream.Collectors;
+import lombok.experimental.UtilityClass;
 
 @UtilityClass
 public class UserGroupMapper {

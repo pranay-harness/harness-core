@@ -1,9 +1,8 @@
 package software.wings.beans.loginSettings;
 
+import java.util.List;
 import lombok.AllArgsConstructor;
 import lombok.Data;
-
-import java.util.List;
 
 @Data
 @AllArgsConstructor

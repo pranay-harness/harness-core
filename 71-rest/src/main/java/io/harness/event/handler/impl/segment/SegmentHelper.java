@@ -12,26 +12,26 @@ import static io.harness.event.model.EventConstants.LAST_NAME;
 import static io.harness.event.model.EventConstants.OAUTH_PROVIDER;
 import static io.harness.event.model.EventConstants.USER_INVITE_URL;
 
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.data.structure.UUIDGenerator;
+import io.harness.event.handler.impl.Utils;
+import io.harness.event.handler.segment.SegmentConfig;
+
+import software.wings.app.MainConfiguration;
+import software.wings.beans.Account;
+import software.wings.beans.LicenseInfo;
+
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
-
 import com.segment.analytics.Analytics;
 import com.segment.analytics.messages.GroupMessage;
 import com.segment.analytics.messages.IdentifyMessage;
 import com.segment.analytics.messages.IdentifyMessage.Builder;
 import com.segment.analytics.messages.TrackMessage;
-import io.harness.annotations.dev.OwnedBy;
-import io.harness.data.structure.UUIDGenerator;
-import io.harness.event.handler.impl.Utils;
-import io.harness.event.handler.segment.SegmentConfig;
-import lombok.extern.slf4j.Slf4j;
-import software.wings.app.MainConfiguration;
-import software.wings.beans.Account;
-import software.wings.beans.LicenseInfo;
-
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * @author rktummala on 11/20/18

@@ -2,8 +2,6 @@ package software.wings.delegatetasks.aws;
 
 import static io.harness.beans.ExecutionStatus.FAILED;
 
-import com.google.inject.Inject;
-
 import io.harness.beans.ExecutionStatus;
 import io.harness.delegate.beans.DelegateTaskPackage;
 import io.harness.delegate.beans.DelegateTaskResponse;
@@ -13,8 +11,7 @@ import io.harness.delegate.task.TaskParameters;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
-import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.NotImplementedException;
+
 import software.wings.beans.command.ExecutionLogCallback;
 import software.wings.delegatetasks.DelegateLogService;
 import software.wings.service.impl.aws.model.AwsLambdaExecuteFunctionRequest;
@@ -29,8 +26,11 @@ import software.wings.service.impl.aws.model.AwsResponse;
 import software.wings.service.impl.aws.model.request.AwsLambdaDetailsRequest;
 import software.wings.service.intfc.aws.delegate.AwsLambdaHelperServiceDelegate;
 
+import com.google.inject.Inject;
 import java.util.function.BooleanSupplier;
 import java.util.function.Consumer;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.NotImplementedException;
 
 @Slf4j
 public class AwsLambdaTask extends AbstractDelegateRunnableTask {
@@ -97,7 +97,9 @@ public class AwsLambdaTask extends AbstractDelegateRunnableTask {
         }
       }
 
-      default: { throw new InvalidRequestException("Invalid request type [" + requestType + "]", WingsException.USER); }
+      default: {
+        throw new InvalidRequestException("Invalid request type [" + requestType + "]", WingsException.USER);
+      }
     }
   }
 }

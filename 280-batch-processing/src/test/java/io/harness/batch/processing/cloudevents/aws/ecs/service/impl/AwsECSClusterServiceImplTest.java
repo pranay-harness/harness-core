@@ -1,12 +1,11 @@
 package io.harness.batch.processing.cloudevents.aws.ecs.service.impl;
 
 import static io.harness.rule.OwnerRule.HITESH;
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-
-import com.google.common.collect.ImmutableList;
 
 import io.harness.CategoryTest;
 import io.harness.batch.processing.cloudevents.aws.ecs.service.CEClusterDao;
@@ -14,6 +13,13 @@ import io.harness.batch.processing.cloudevents.aws.ecs.service.support.intfc.Aws
 import io.harness.batch.processing.cloudevents.aws.ecs.service.support.intfc.AwsHelperResourceService;
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
+
+import software.wings.beans.NameValuePair;
+import software.wings.beans.ce.CECloudAccount;
+import software.wings.beans.ce.CECluster;
+
+import com.google.common.collect.ImmutableList;
+import java.util.List;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -22,11 +28,6 @@ import org.mockito.Captor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
-import software.wings.beans.NameValuePair;
-import software.wings.beans.ce.CECloudAccount;
-import software.wings.beans.ce.CECluster;
-
-import java.util.List;
 
 public class AwsECSClusterServiceImplTest extends CategoryTest {
   @InjectMocks private AwsECSClusterServiceImpl awsECSClusterService;

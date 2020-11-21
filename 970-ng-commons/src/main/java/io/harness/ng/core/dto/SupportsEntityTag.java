@@ -1,3 +1,5 @@
 package io.harness.ng.core.dto;
 
-public interface SupportsEntityTag { String getEntityTag(); }
+public interface SupportsEntityTag {
+  String getEntityTag();
+}

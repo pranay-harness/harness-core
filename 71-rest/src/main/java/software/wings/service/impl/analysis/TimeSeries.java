@@ -1,11 +1,10 @@
 package software.wings.service.impl.analysis;
 
+import javax.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-
-import javax.validation.constraints.NotNull;
 
 /**
  * Created by rsingh on 3/14/18.

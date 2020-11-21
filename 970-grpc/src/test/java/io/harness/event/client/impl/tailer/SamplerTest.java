@@ -1,6 +1,7 @@
 package io.harness.event.client.impl.tailer;
 
 import static io.harness.rule.OwnerRule.AVMOHAN;
+
 import static org.assertj.core.api.Assertions.assertThatIllegalArgumentException;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
@@ -10,11 +11,11 @@ import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
 import io.harness.time.FakeClock;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
 
 import java.time.Duration;
 import java.time.temporal.ChronoUnit;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 public class SamplerTest extends CategoryTest {
   @Test

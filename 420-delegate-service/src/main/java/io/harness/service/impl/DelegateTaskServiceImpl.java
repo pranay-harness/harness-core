@@ -2,20 +2,19 @@ package io.harness.service.impl;
 
 import static java.lang.System.currentTimeMillis;
 
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
-
 import io.harness.beans.DelegateTask;
 import io.harness.beans.DelegateTask.DelegateTaskKeys;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.persistence.HIterator;
 import io.harness.persistence.HPersistence;
 import io.harness.service.intfc.DelegateTaskService;
-import lombok.extern.slf4j.Slf4j;
-import org.mongodb.morphia.query.Query;
 
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import java.util.List;
 import javax.validation.executable.ValidateOnExecution;
+import lombok.extern.slf4j.Slf4j;
+import org.mongodb.morphia.query.Query;
 
 @Singleton
 @ValidateOnExecution

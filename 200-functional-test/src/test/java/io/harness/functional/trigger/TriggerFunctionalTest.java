@@ -5,10 +5,8 @@ import static io.harness.beans.WorkflowType.PIPELINE;
 import static io.harness.generator.PipelineGenerator.Pipelines.BASIC;
 import static io.harness.rule.OwnerRule.POOJA;
 import static io.harness.rule.OwnerRule.SRINIVAS;
-import static org.assertj.core.api.Assertions.assertThat;
 
-import com.google.common.collect.ImmutableMap;
-import com.google.inject.Inject;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.beans.ExecutionStatus;
 import io.harness.beans.WorkflowType;
@@ -29,11 +27,7 @@ import io.harness.generator.WorkflowGenerator.Workflows;
 import io.harness.rest.RestResponse;
 import io.harness.rule.Owner;
 import io.harness.testframework.framework.Setup;
-import io.restassured.http.ContentType;
-import io.restassured.mapper.ObjectMapperType;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
+
 import software.wings.beans.Application;
 import software.wings.beans.Environment;
 import software.wings.beans.ExecutionArgs;
@@ -48,7 +42,14 @@ import software.wings.beans.trigger.WebHookTriggerCondition;
 import software.wings.service.impl.WorkflowExecutionServiceImpl;
 import software.wings.service.intfc.PipelineService;
 
+import com.google.common.collect.ImmutableMap;
+import com.google.inject.Inject;
+import io.restassured.http.ContentType;
+import io.restassured.mapper.ObjectMapperType;
 import javax.ws.rs.core.GenericType;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 public class TriggerFunctionalTest extends AbstractFunctionalTest {
   @Inject private OwnerManager ownerManager;

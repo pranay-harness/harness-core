@@ -18,8 +18,7 @@ import static io.harness.event.model.EventConstants.ENVIRONMENT_NAME;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.govern.Switch.unhandled;
 import static io.harness.validation.Validator.notNullCheck;
-import static java.util.Arrays.asList;
-import static java.util.Collections.singletonList;
+
 import static software.wings.beans.Environment.EnvironmentType.ALL;
 import static software.wings.beans.Environment.GLOBAL_ENV_ID;
 import static software.wings.beans.alert.AlertType.ApprovalNeeded;
@@ -34,11 +33,9 @@ import static software.wings.security.JWT_CATEGORY.EXTERNAL_SERVICE_SECRET;
 import static software.wings.service.impl.slack.SlackApprovalUtils.createSlackApprovalMessage;
 import static software.wings.sm.states.ApprovalState.ApprovalStateType.USER_GROUP;
 
-import com.google.common.annotations.VisibleForTesting;
-import com.google.inject.Inject;
-import com.google.inject.name.Named;
+import static java.util.Arrays.asList;
+import static java.util.Collections.singletonList;
 
-import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.ExecutionStatus;
 import io.harness.beans.SweepingOutputInstance;
@@ -58,18 +55,7 @@ import io.harness.logging.Misc;
 import io.harness.scheduler.PersistentScheduler;
 import io.harness.serializer.KryoSerializer;
 import io.harness.tasks.ResponseData;
-import lombok.Getter;
-import lombok.Setter;
-import lombok.experimental.FieldNameConstants;
-import lombok.extern.slf4j.Slf4j;
-import net.sf.json.JSONArray;
-import okhttp3.MediaType;
-import org.apache.commons.jexl3.JexlException;
-import org.apache.commons.lang3.StringUtils;
-import org.apache.commons.text.StringEscapeUtils;
-import org.jetbrains.annotations.Nullable;
-import org.json.JSONObject;
-import org.mongodb.morphia.annotations.Transient;
+
 import software.wings.api.ApprovalStateExecutionData;
 import software.wings.api.ApprovalStateExecutionData.ApprovalStateExecutionDataKeys;
 import software.wings.api.ServiceNowExecutionData;
@@ -130,6 +116,10 @@ import software.wings.sm.WorkflowStandardParams;
 import software.wings.sm.states.EnvState.EnvStateKeys;
 import software.wings.sm.states.mixin.SweepingOutputStateMixin;
 
+import com.github.reinert.jjschema.SchemaIgnore;
+import com.google.common.annotations.VisibleForTesting;
+import com.google.inject.Inject;
+import com.google.inject.name.Named;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -144,6 +134,18 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.StringJoiner;
 import java.util.stream.Collectors;
+import lombok.Getter;
+import lombok.Setter;
+import lombok.experimental.FieldNameConstants;
+import lombok.extern.slf4j.Slf4j;
+import net.sf.json.JSONArray;
+import okhttp3.MediaType;
+import org.apache.commons.jexl3.JexlException;
+import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.text.StringEscapeUtils;
+import org.jetbrains.annotations.Nullable;
+import org.json.JSONObject;
+import org.mongodb.morphia.annotations.Transient;
 
 @OwnedBy(CDC)
 @Slf4j

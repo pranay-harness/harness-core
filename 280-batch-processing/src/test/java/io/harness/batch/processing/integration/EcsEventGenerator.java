@@ -1,9 +1,5 @@
 package io.harness.batch.processing.integration;
 
-import com.google.protobuf.Any;
-import com.google.protobuf.Message;
-import com.google.protobuf.Timestamp;
-
 import io.harness.batch.processing.pricing.data.CloudProvider;
 import io.harness.batch.processing.writer.constants.InstanceMetaDataConstants;
 import io.harness.ccm.commons.beans.InstanceType;
@@ -26,6 +22,9 @@ import io.harness.event.payloads.Lifecycle;
 import io.harness.event.payloads.Lifecycle.EventType;
 import io.harness.event.payloads.ReservedResource;
 
+import com.google.protobuf.Any;
+import com.google.protobuf.Message;
+import com.google.protobuf.Timestamp;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;

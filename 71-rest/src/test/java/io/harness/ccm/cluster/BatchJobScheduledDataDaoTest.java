@@ -1,23 +1,24 @@
 package io.harness.ccm.cluster;
 
 import static io.harness.rule.OwnerRule.HITESH;
-import static org.assertj.core.api.Assertions.assertThat;
 
-import com.google.inject.Inject;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.category.element.UnitTests;
 import io.harness.ccm.cluster.dao.BatchJobScheduledDataDao;
 import io.harness.ccm.cluster.entities.BatchJobScheduledData;
 import io.harness.persistence.HPersistence;
 import io.harness.rule.Owner;
+
+import software.wings.WingsBaseTest;
+
+import com.google.inject.Inject;
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
-import software.wings.WingsBaseTest;
-
-import java.time.Instant;
-import java.time.temporal.ChronoUnit;
 
 public class BatchJobScheduledDataDaoTest extends WingsBaseTest {
   @InjectMocks @Inject private BatchJobScheduledDataDao batchJobScheduledDataDao;

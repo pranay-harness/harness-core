@@ -1,19 +1,14 @@
 package software.wings.security.saml;
 
-import static com.google.common.base.Charsets.UTF_8;
 import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.exception.WingsException.USER;
 
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
+import static com.google.common.base.Charsets.UTF_8;
 
-import com.coveo.saml.SamlClient;
-import com.coveo.saml.SamlException;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
-import org.apache.http.client.utils.URIBuilder;
-import org.hibernate.validator.constraints.NotBlank;
+
 import software.wings.beans.Account;
 import software.wings.beans.User;
 import software.wings.beans.sso.SamlSettings;
@@ -22,6 +17,10 @@ import software.wings.security.authentication.AuthenticationUtils;
 import software.wings.service.impl.AccountServiceImpl;
 import software.wings.service.intfc.SSOSettingService;
 
+import com.coveo.saml.SamlClient;
+import com.coveo.saml.SamlException;
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -32,6 +31,8 @@ import java.util.Base64;
 import java.util.Iterator;
 import java.util.zip.Deflater;
 import java.util.zip.DeflaterOutputStream;
+import org.apache.http.client.utils.URIBuilder;
+import org.hibernate.validator.constraints.NotBlank;
 
 @OwnedBy(PL)
 @Singleton

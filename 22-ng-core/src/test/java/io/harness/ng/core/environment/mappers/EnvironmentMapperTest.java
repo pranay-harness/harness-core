@@ -1,9 +1,8 @@
 package io.harness.ng.core.environment.mappers;
 
 import static io.harness.rule.OwnerRule.ARCHIT;
-import static org.assertj.core.api.Assertions.assertThat;
 
-import com.google.common.collect.ImmutableMap;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
@@ -13,12 +12,13 @@ import io.harness.ng.core.environment.beans.EnvironmentType;
 import io.harness.ng.core.environment.dto.EnvironmentRequestDTO;
 import io.harness.ng.core.environment.dto.EnvironmentResponseDTO;
 import io.harness.rule.Owner;
+
+import com.google.common.collect.ImmutableMap;
+import java.util.Arrays;
+import java.util.List;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
-
-import java.util.Arrays;
-import java.util.List;
 
 public class EnvironmentMapperTest extends CategoryTest {
   EnvironmentRequestDTO environmentRequestDTO;

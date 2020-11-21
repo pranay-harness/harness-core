@@ -1,6 +1,7 @@
 package io.harness.k8s.model;
 
 import io.harness.data.validator.Trimmed;
+
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;

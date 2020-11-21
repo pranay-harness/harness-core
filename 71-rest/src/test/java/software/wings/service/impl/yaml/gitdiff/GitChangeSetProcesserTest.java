@@ -1,6 +1,7 @@
 package software.wings.service.impl.yaml.gitdiff;
 
 import static io.harness.rule.OwnerRule.ROHIT_KUMAR;
+
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyMap;
 import static org.mockito.Matchers.anyString;
@@ -12,6 +13,13 @@ import static org.mockito.Mockito.verify;
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
+
+import software.wings.beans.yaml.GitDiffResult;
+import software.wings.service.impl.yaml.gitdiff.gitaudit.YamlAuditRecordGenerationUtils;
+import software.wings.service.intfc.FeatureFlagService;
+import software.wings.service.intfc.yaml.YamlGitService;
+import software.wings.service.intfc.yaml.sync.GitSyncService;
+
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -19,11 +27,6 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
-import software.wings.beans.yaml.GitDiffResult;
-import software.wings.service.impl.yaml.gitdiff.gitaudit.YamlAuditRecordGenerationUtils;
-import software.wings.service.intfc.FeatureFlagService;
-import software.wings.service.intfc.yaml.YamlGitService;
-import software.wings.service.intfc.yaml.sync.GitSyncService;
 
 public class GitChangeSetProcesserTest extends CategoryTest {
   public static final String ACCOUNTID = "accountid";

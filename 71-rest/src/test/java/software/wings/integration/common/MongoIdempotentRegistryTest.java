@@ -2,16 +2,15 @@ package software.wings.integration.common;
 
 import static io.harness.eraro.mongo.MongoError.DUPLICATE_KEY;
 import static io.harness.rule.OwnerRule.GEORGE;
+
+import static software.wings.beans.Idempotent.SUCCEEDED;
+import static software.wings.beans.Idempotent.TENTATIVE;
+
 import static java.time.Duration.ofHours;
 import static java.time.Duration.ofMillis;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static software.wings.beans.Idempotent.SUCCEEDED;
-import static software.wings.beans.Idempotent.TENTATIVE;
 
-import com.google.inject.Inject;
-
-import com.mongodb.MongoCommandException;
 import io.harness.category.element.DeprecatedIntegrationTests;
 import io.harness.category.element.UnitTests;
 import io.harness.distribution.idempotence.IdempotentId;
@@ -22,18 +21,21 @@ import io.harness.distribution.idempotence.UnableToRegisterIdempotentOperationEx
 import io.harness.rule.Owner;
 import io.harness.testlib.RealMongo;
 import io.harness.threading.Concurrent;
-import lombok.Builder;
-import lombok.Value;
-import org.junit.Ignore;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
+
 import software.wings.WingsBaseTest;
 import software.wings.beans.Idempotent;
 import software.wings.common.MongoIdempotentRegistry;
 import software.wings.dl.WingsPersistence;
 
+import com.google.inject.Inject;
+import com.mongodb.MongoCommandException;
 import java.security.SecureRandom;
 import java.util.ArrayList;
+import lombok.Builder;
+import lombok.Value;
+import org.junit.Ignore;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 public class MongoIdempotentRegistryTest extends WingsBaseTest {
   @Inject WingsPersistence wingsPersistence;

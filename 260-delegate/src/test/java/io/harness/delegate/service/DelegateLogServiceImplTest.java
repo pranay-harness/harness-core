@@ -1,8 +1,9 @@
 package io.harness.delegate.service;
 
+import static software.wings.beans.Log.Builder.aLog;
+
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
-import static software.wings.beans.Log.Builder.aLog;
 
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
@@ -12,13 +13,13 @@ import io.harness.managerclient.VerificationServiceClient;
 import io.harness.rule.Owner;
 import io.harness.rule.OwnerRule;
 import io.harness.serializer.KryoSerializer;
+
+import java.util.concurrent.ExecutorService;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
-
-import java.util.concurrent.ExecutorService;
 
 public class DelegateLogServiceImplTest extends CategoryTest {
   private static final int ACTIVITY_LOGS_BATCH_SIZE = DelegateLogServiceImpl.ACTIVITY_LOGS_BATCH_SIZE;

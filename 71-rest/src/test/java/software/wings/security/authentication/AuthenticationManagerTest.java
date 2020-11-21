@@ -9,6 +9,11 @@ import static io.harness.rule.OwnerRule.PHOENIKX;
 import static io.harness.rule.OwnerRule.RUSHABH;
 import static io.harness.rule.OwnerRule.UTKARSH;
 import static io.harness.rule.OwnerRule.VIKAS;
+
+import static software.wings.beans.Account.Builder.anAccount;
+import static software.wings.beans.User.Builder.anUser;
+import static software.wings.security.authentication.AuthenticationMechanism.USER_PASSWORD;
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.assertj.core.api.Assertions.fail;
@@ -22,12 +27,6 @@ import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-import static software.wings.beans.Account.Builder.anAccount;
-import static software.wings.beans.User.Builder.anUser;
-import static software.wings.security.authentication.AuthenticationMechanism.USER_PASSWORD;
-
-import com.google.common.collect.Lists;
-import com.google.inject.Inject;
 
 import io.harness.category.element.UnitTests;
 import io.harness.configuration.DeployMode;
@@ -35,16 +34,7 @@ import io.harness.eraro.ErrorCode;
 import io.harness.exception.InvalidCredentialsException;
 import io.harness.exception.WingsException;
 import io.harness.rule.Owner;
-import org.apache.commons.codec.binary.Base64;
-import org.apache.commons.lang3.reflect.FieldUtils;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
-import org.mockito.ArgumentCaptor;
-import org.mockito.Captor;
-import org.mockito.InjectMocks;
-import org.mockito.Matchers;
-import org.mockito.Mock;
-import org.mockito.Mockito;
+
 import software.wings.WingsBaseTest;
 import software.wings.app.MainConfiguration;
 import software.wings.app.PortalConfig;
@@ -57,10 +47,22 @@ import software.wings.security.saml.SamlClientService;
 import software.wings.service.intfc.AuthService;
 import software.wings.service.intfc.UserService;
 
+import com.google.common.collect.Lists;
+import com.google.inject.Inject;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.EnumSet;
 import java.util.Optional;
+import org.apache.commons.codec.binary.Base64;
+import org.apache.commons.lang3.reflect.FieldUtils;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
+import org.mockito.ArgumentCaptor;
+import org.mockito.Captor;
+import org.mockito.InjectMocks;
+import org.mockito.Matchers;
+import org.mockito.Mock;
+import org.mockito.Mockito;
 
 public class AuthenticationManagerTest extends WingsBaseTest {
   private static final String NON_EXISTING_USER = "nonExistingUser";

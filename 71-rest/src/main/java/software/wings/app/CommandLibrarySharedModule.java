@@ -20,9 +20,6 @@ import static software.wings.beans.command.CommandUnitType.RESIZE_KUBERNETES;
 import static software.wings.beans.command.CommandUnitType.SCP;
 import static software.wings.beans.command.CommandUnitType.SETUP_ENV;
 
-import com.google.inject.AbstractModule;
-import com.google.inject.multibindings.MapBinder;
-
 import software.wings.common.TemplateConstants;
 import software.wings.service.impl.yaml.handler.command.AmiCommandUnitYamlHandler;
 import software.wings.service.impl.yaml.handler.command.AwsLambdaCommandUnitYamlHandler;
@@ -45,6 +42,9 @@ import software.wings.service.impl.yaml.handler.command.ResizeCommandUnitYamlHan
 import software.wings.service.impl.yaml.handler.command.ScpCommandUnitYamlHandler;
 import software.wings.service.impl.yaml.handler.command.SetupEnvCommandUnitYamlHandler;
 import software.wings.service.impl.yaml.handler.templatelibrary.CommandTemplateRefYamlHandler;
+
+import com.google.inject.AbstractModule;
+import com.google.inject.multibindings.MapBinder;
 
 public class CommandLibrarySharedModule extends AbstractModule {
   private final boolean refCommandUnitSupported;

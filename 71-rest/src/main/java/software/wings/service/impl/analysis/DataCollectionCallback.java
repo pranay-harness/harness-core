@@ -2,21 +2,15 @@ package software.wings.service.impl.analysis;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.persistence.HPersistence.DEFAULT_STORE;
+
 import static software.wings.common.VerificationConstants.WORKFLOW_CV_COLLECTION_CRON_GROUP;
 
-import com.google.common.base.Preconditions;
-import com.google.inject.Inject;
-
-import com.mongodb.BasicDBObject;
-import com.mongodb.DBCollection;
 import io.harness.beans.ExecutionStatus;
 import io.harness.delegate.beans.ErrorNotifyResponseData;
 import io.harness.tasks.ResponseData;
 import io.harness.waiter.NotifyCallback;
 import io.harness.waiter.WaitNotifyEngine;
-import lombok.Builder;
-import lombok.Data;
-import lombok.extern.slf4j.Slf4j;
+
 import software.wings.beans.alert.AlertType;
 import software.wings.beans.alert.cv.ContinuousVerificationAlertData;
 import software.wings.beans.alert.cv.ContinuousVerificationDataCollectionAlert;
@@ -33,10 +27,17 @@ import software.wings.verification.CVConfiguration;
 import software.wings.verification.VerificationDataAnalysisResponse;
 import software.wings.verification.VerificationStateAnalysisExecutionData;
 
+import com.google.common.base.Preconditions;
+import com.google.inject.Inject;
+import com.mongodb.BasicDBObject;
+import com.mongodb.DBCollection;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
+import lombok.Builder;
+import lombok.Data;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * Created by rsingh on 5/18/17.

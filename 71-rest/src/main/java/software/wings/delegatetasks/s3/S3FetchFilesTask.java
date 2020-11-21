@@ -1,12 +1,10 @@
 package software.wings.delegatetasks.s3;
 
-import static java.lang.String.format;
 import static software.wings.beans.LogHelper.color;
 import static software.wings.beans.s3.FetchS3FilesExecutionResponse.FetchS3FilesCommandStatus.FAILURE;
 
-import com.google.inject.Inject;
+import static java.lang.String.format;
 
-import com.amazonaws.services.s3.model.S3Object;
 import io.harness.delegate.beans.DelegateTaskPackage;
 import io.harness.delegate.beans.DelegateTaskResponse;
 import io.harness.delegate.beans.git.GitCommandExecutionResponse;
@@ -18,9 +16,7 @@ import io.harness.exception.ExceptionUtils;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.logging.LogLevel;
 import io.harness.security.encryption.EncryptedDataDetail;
-import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.NotImplementedException;
-import org.springframework.util.StreamUtils;
+
 import software.wings.beans.AwsConfig;
 import software.wings.beans.LogColor;
 import software.wings.beans.LogWeight;
@@ -35,6 +31,8 @@ import software.wings.delegatetasks.DelegateLogService;
 import software.wings.service.impl.AwsHelperService;
 import software.wings.service.intfc.security.EncryptionService;
 
+import com.amazonaws.services.s3.model.S3Object;
+import com.google.inject.Inject;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
@@ -42,6 +40,9 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.function.BooleanSupplier;
 import java.util.function.Consumer;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.NotImplementedException;
+import org.springframework.util.StreamUtils;
 
 @Slf4j
 public class S3FetchFilesTask extends AbstractDelegateRunnableTask {

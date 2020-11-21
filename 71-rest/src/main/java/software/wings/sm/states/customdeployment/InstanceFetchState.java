@@ -1,14 +1,10 @@
 package software.wings.sm.states.customdeployment;
 
-import static com.google.common.base.Preconditions.checkArgument;
 import static io.harness.beans.ExecutionStatus.FAILED;
 import static io.harness.beans.ExecutionStatus.SUCCESS;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.logging.CommandExecutionStatus.RUNNING;
-import static java.lang.String.format;
-import static java.util.Arrays.asList;
-import static org.apache.commons.lang3.StringUtils.isBlank;
-import static org.apache.commons.lang3.StringUtils.isNotBlank;
+
 import static software.wings.api.InstanceElement.Builder.anInstanceElement;
 import static software.wings.api.ServiceTemplateElement.Builder.aServiceTemplateElement;
 import static software.wings.beans.Log.Builder.aLog;
@@ -19,10 +15,12 @@ import static software.wings.beans.command.CommandUnitDetails.CommandUnitType.CU
 import static software.wings.sm.InstanceStatusSummary.InstanceStatusSummaryBuilder.anInstanceStatusSummary;
 import static software.wings.sm.states.customdeployment.InstanceMapperUtils.getHostnameFieldName;
 
-import com.google.inject.Inject;
+import static com.google.common.base.Preconditions.checkArgument;
+import static java.lang.String.format;
+import static java.util.Arrays.asList;
+import static org.apache.commons.lang3.StringUtils.isBlank;
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.jayway.jsonpath.InvalidJsonException;
 import io.harness.beans.DelegateTask;
 import io.harness.beans.ExecutionStatus;
 import io.harness.beans.SweepingOutputInstance.Scope;
@@ -41,13 +39,7 @@ import io.harness.logging.LogCallback;
 import io.harness.logging.LogLevel;
 import io.harness.tasks.Cd1SetupFields;
 import io.harness.tasks.ResponseData;
-import lombok.Getter;
-import lombok.Setter;
-import lombok.experimental.FieldNameConstants;
-import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.ObjectUtils;
-import org.apache.commons.lang3.StringUtils;
-import org.mongodb.morphia.Key;
+
 import software.wings.api.HostElement;
 import software.wings.api.InfraMappingElement;
 import software.wings.api.InstanceElement;
@@ -90,6 +82,9 @@ import software.wings.sm.states.customdeployment.InstanceMapperUtils.HostPropert
 import software.wings.sm.states.utils.StateTimeoutUtils;
 import software.wings.stencils.DefaultValue;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.google.inject.Inject;
+import com.jayway.jsonpath.InvalidJsonException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -98,6 +93,13 @@ import java.util.Map.Entry;
 import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+import lombok.Getter;
+import lombok.Setter;
+import lombok.experimental.FieldNameConstants;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.ObjectUtils;
+import org.apache.commons.lang3.StringUtils;
+import org.mongodb.morphia.Key;
 
 @FieldNameConstants(innerTypeName = "InstanceFetchStateKeys")
 @Slf4j

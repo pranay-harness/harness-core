@@ -4,14 +4,11 @@ import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 import static io.harness.beans.PageRequest.UNLIMITED;
 import static io.harness.beans.SearchFilter.Operator.EQ;
 import static io.harness.persistence.HQuery.excludeAuthority;
+
 import static software.wings.api.DeploymentType.KUBERNETES;
 import static software.wings.beans.PhaseStepType.CONTAINER_DEPLOY;
 import static software.wings.common.Constants.ACCOUNT_ID_KEY;
 
-import com.google.inject.Inject;
-
-import lombok.extern.slf4j.Slf4j;
-import migrations.Migration;
 import software.wings.api.DeploymentType;
 import software.wings.beans.Account;
 import software.wings.beans.Application;
@@ -26,7 +23,10 @@ import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.WorkflowService;
 import software.wings.sm.StateType;
 
+import com.google.inject.Inject;
 import java.util.List;
+import lombok.extern.slf4j.Slf4j;
+import migrations.Migration;
 
 @Slf4j
 public class RemoveResizeFromStatefulSetWorkflows implements Migration {

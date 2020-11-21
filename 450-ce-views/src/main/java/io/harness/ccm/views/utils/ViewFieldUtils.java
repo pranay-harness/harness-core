@@ -1,9 +1,8 @@
 package io.harness.ccm.views.utils;
 
-import com.google.common.collect.ImmutableList;
-
 import io.harness.ccm.views.graphql.QLCEViewField;
 
+import com.google.common.collect.ImmutableList;
 import java.util.List;
 
 public class ViewFieldUtils {

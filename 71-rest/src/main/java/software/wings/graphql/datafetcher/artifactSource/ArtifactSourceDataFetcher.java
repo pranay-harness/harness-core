@@ -1,11 +1,11 @@
 package software.wings.graphql.datafetcher.artifactSource;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
+
 import static software.wings.graphql.datafetcher.artifactSource.ArtifactSourceController.populateArtifactSource;
 
-import com.google.inject.Inject;
-
 import io.harness.annotations.dev.OwnedBy;
+
 import software.wings.beans.artifact.ArtifactStream;
 import software.wings.graphql.datafetcher.AbstractObjectDataFetcher;
 import software.wings.graphql.schema.query.QLArtifactSourceQueryParam;
@@ -14,6 +14,7 @@ import software.wings.security.PermissionAttribute;
 import software.wings.security.annotations.AuthRule;
 import software.wings.service.intfc.ArtifactStreamService;
 
+import com.google.inject.Inject;
 import java.util.List;
 
 @OwnedBy(CDC)

@@ -3,13 +3,11 @@ package software.wings.service.impl;
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.expression.ExpressionEvaluator.containsVariablePattern;
 
-import com.google.inject.Inject;
-
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.lock.PersistentLocker;
 import io.harness.queue.QueueConsumer;
 import io.harness.queue.QueueListener;
-import lombok.extern.slf4j.Slf4j;
+
 import software.wings.beans.AzureKubernetesInfrastructureMapping;
 import software.wings.beans.DirectKubernetesInfrastructureMapping;
 import software.wings.beans.GcpKubernetesInfrastructureMapping;
@@ -20,6 +18,9 @@ import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.sm.StateMachineExecutor;
+
+import com.google.inject.Inject;
+import lombok.extern.slf4j.Slf4j;
 
 @OwnedBy(CDC)
 @Slf4j
@@ -55,7 +56,7 @@ public class ExecutionEventListener extends QueueListener<ExecutionEvent> {
         }
         if (infrastructureMapping instanceof DirectKubernetesInfrastructureMapping
             && containsVariablePattern(
-                   ((DirectKubernetesInfrastructureMapping) infrastructureMapping).getNamespace())) {
+                ((DirectKubernetesInfrastructureMapping) infrastructureMapping).getNamespace())) {
           namespaceExpression = true;
           break;
         }

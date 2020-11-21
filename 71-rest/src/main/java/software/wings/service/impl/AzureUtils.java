@@ -1,9 +1,7 @@
 package software.wings.service.impl;
 
 import com.google.inject.Singleton;
-
 import com.microsoft.azure.management.resources.fluentcore.arm.Region;
-
 import java.util.Arrays;
 import java.util.List;
 

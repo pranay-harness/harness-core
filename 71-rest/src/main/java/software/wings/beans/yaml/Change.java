@@ -1,8 +1,9 @@
 package software.wings.beans.yaml;
 
+import io.harness.git.model.ChangeType;
+
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.github.reinert.jjschema.SchemaIgnore;
-import io.harness.git.model.ChangeType;
 import lombok.Data;
 import lombok.ToString;
 

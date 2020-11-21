@@ -1,20 +1,21 @@
 package io.harness.cache;
 
 import static io.harness.rule.OwnerRule.GEORGE;
-import static org.assertj.core.api.Assertions.assertThat;
 
-import com.google.inject.Inject;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.category.element.UnitTests;
 import io.harness.exception.WingsException;
 import io.harness.rule.Cache;
 import io.harness.rule.Owner;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
+
 import software.wings.WingsBaseTest;
 
+import com.google.inject.Inject;
 import javax.cache.annotation.CacheKey;
 import javax.cache.annotation.CacheResult;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 /**
  * Created by peeyushaggarwal on 8/29/16.

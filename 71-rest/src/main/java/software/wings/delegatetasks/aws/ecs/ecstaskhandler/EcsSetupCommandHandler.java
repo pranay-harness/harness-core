@@ -2,19 +2,11 @@ package software.wings.delegatetasks.aws.ecs.ecstaskhandler;
 
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
-
-import com.amazonaws.services.ecs.model.CreateServiceRequest;
-import com.amazonaws.services.ecs.model.CreateServiceResult;
-import com.amazonaws.services.ecs.model.Service;
-import com.amazonaws.services.ecs.model.TaskDefinition;
-import com.amazonaws.services.ecs.model.UpdateServiceRequest;
 import io.harness.exception.ExceptionUtils;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.logging.Misc;
 import io.harness.security.encryption.EncryptedDataDetail;
-import lombok.extern.slf4j.Slf4j;
+
 import software.wings.beans.AwsConfig;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.command.ContainerSetupCommandUnitExecutionData;
@@ -28,8 +20,16 @@ import software.wings.helpers.ext.ecs.response.EcsCommandExecutionResponse;
 import software.wings.helpers.ext.ecs.response.EcsServiceSetupResponse;
 import software.wings.service.impl.AwsHelperService;
 
+import com.amazonaws.services.ecs.model.CreateServiceRequest;
+import com.amazonaws.services.ecs.model.CreateServiceResult;
+import com.amazonaws.services.ecs.model.Service;
+import com.amazonaws.services.ecs.model.TaskDefinition;
+import com.amazonaws.services.ecs.model.UpdateServiceRequest;
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import java.util.List;
 import java.util.Optional;
+import lombok.extern.slf4j.Slf4j;
 
 @Singleton
 @Slf4j

@@ -3,6 +3,7 @@ package software.wings.delegatetasks.cv;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.network.Http.getOkHttpClientBuilder;
+
 import static software.wings.service.impl.newrelic.NewRelicMetricDataRecord.DEFAULT_GROUP_NAME;
 import static software.wings.service.impl.newrelic.NewRelicMetricValueDefinition.APDEX_SCORE;
 import static software.wings.service.impl.newrelic.NewRelicMetricValueDefinition.AVERAGE_RESPONSE_TIME;
@@ -10,25 +11,12 @@ import static software.wings.service.impl.newrelic.NewRelicMetricValueDefinition
 import static software.wings.service.impl.newrelic.NewRelicMetricValueDefinition.ERROR;
 import static software.wings.service.impl.newrelic.NewRelicMetricValueDefinition.REQUSET_PER_MINUTE;
 
-import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Preconditions;
-import com.google.common.collect.Iterables;
-import com.google.common.collect.Sets;
-import com.google.common.collect.Table.Cell;
-import com.google.common.collect.TreeBasedTable;
-import com.google.inject.Inject;
-
 import io.harness.delegate.task.DataCollectionExecutorService;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
 import io.harness.exception.WingsException.ReportTarget;
 import io.harness.serializer.JsonUtils;
-import lombok.extern.slf4j.Slf4j;
-import okhttp3.OkHttpClient;
-import okhttp3.Request;
-import retrofit2.Call;
-import retrofit2.Retrofit;
-import retrofit2.converter.jackson.JacksonConverterFactory;
+
 import software.wings.beans.NewRelicConfig;
 import software.wings.helpers.ext.newrelic.NewRelicRestClient;
 import software.wings.service.impl.analysis.MetricElement;
@@ -45,6 +33,13 @@ import software.wings.service.impl.newrelic.NewRelicMetricDataResponse;
 import software.wings.service.impl.newrelic.NewRelicMetricResponse;
 import software.wings.service.impl.newrelic.NewRelicWebTransactions;
 
+import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Preconditions;
+import com.google.common.collect.Iterables;
+import com.google.common.collect.Sets;
+import com.google.common.collect.Table.Cell;
+import com.google.common.collect.TreeBasedTable;
+import com.google.inject.Inject;
 import java.io.IOException;
 import java.net.URLEncoder;
 import java.text.SimpleDateFormat;
@@ -63,6 +58,12 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
+import lombok.extern.slf4j.Slf4j;
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
+import retrofit2.Call;
+import retrofit2.Retrofit;
+import retrofit2.converter.jackson.JacksonConverterFactory;
 
 @Slf4j
 public class NewRelicDataCollector implements MetricsDataCollector<NewRelicDataCollectionInfoV2> {
@@ -513,9 +514,9 @@ public class NewRelicDataCollector implements MetricsDataCollector<NewRelicDataC
     final SimpleDateFormat dateFormatter = new SimpleDateFormat(NEW_RELIC_DATE_FORMAT);
     final Call<NewRelicMetricDataResponse> request = instanceId.isPresent()
         ? getNewRelicRestClient().getInstanceMetricData(getApiKey(), newRelicApplicationId, instanceId.get(),
-              dateFormatter.format(new Date(fromTime)), dateFormatter.format(new Date(toTime)), updatedMetrics)
+            dateFormatter.format(new Date(fromTime)), dateFormatter.format(new Date(toTime)), updatedMetrics)
         : getNewRelicRestClient().getApplicationMetricData(getApiKey(), newRelicApplicationId, summarize,
-              dateFormatter.format(new Date(fromTime)), dateFormatter.format(new Date(toTime)), updatedMetrics);
+            dateFormatter.format(new Date(fromTime)), dateFormatter.format(new Date(toTime)), updatedMetrics);
 
     return dataCollectionExecutionContext
         .executeRequest("Fetching " + (instanceId.isPresent() ? "instance" : "application") + " metric data for "

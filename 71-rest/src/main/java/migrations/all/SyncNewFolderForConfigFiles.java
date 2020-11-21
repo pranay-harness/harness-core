@@ -1,17 +1,15 @@
 package migrations.all;
 
 import static io.harness.persistence.HQuery.excludeAuthority;
+
 import static software.wings.beans.EntityType.ENVIRONMENT;
 import static software.wings.beans.EntityType.SERVICE_TEMPLATE;
 import static software.wings.beans.yaml.YamlConstants.PATH_DELIMITER;
 
-import com.google.inject.Inject;
-
 import io.harness.exception.InvalidRequestException;
 import io.harness.git.model.ChangeType;
 import io.harness.persistence.HIterator;
-import lombok.extern.slf4j.Slf4j;
-import migrations.OnPrimaryManagerMigration;
+
 import software.wings.beans.Account;
 import software.wings.beans.Application;
 import software.wings.beans.Application.ApplicationKeys;
@@ -27,10 +25,13 @@ import software.wings.service.intfc.yaml.YamlDirectoryService;
 import software.wings.yaml.gitSync.YamlChangeSet;
 import software.wings.yaml.gitSync.YamlGitConfig;
 
+import com.google.inject.Inject;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import lombok.extern.slf4j.Slf4j;
+import migrations.OnPrimaryManagerMigration;
 
 @Slf4j
 public class SyncNewFolderForConfigFiles implements OnPrimaryManagerMigration {

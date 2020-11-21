@@ -3,10 +3,8 @@ package software.wings.service.impl.security;
 import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.exception.WingsException.USER_SRE;
-import static software.wings.beans.Application.GLOBAL_APP_ID;
 
-import com.google.inject.Inject;
-import com.google.inject.name.Named;
+import static software.wings.beans.Application.GLOBAL_APP_ID;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.EncryptedData;
@@ -18,7 +16,7 @@ import io.harness.expression.SecretString;
 import io.harness.secretmanagers.SecretManagerConfigService;
 import io.harness.security.SimpleEncryption;
 import io.harness.security.encryption.EncryptionType;
-import lombok.extern.slf4j.Slf4j;
+
 import software.wings.beans.Account;
 import software.wings.beans.Event.Type;
 import software.wings.beans.alert.AlertType;
@@ -31,7 +29,10 @@ import software.wings.service.impl.AuditServiceHelper;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.AlertService;
 
+import com.google.inject.Inject;
+import com.google.inject.name.Named;
 import java.util.UUID;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * Created by rsingh on 11/6/17.

@@ -1,6 +1,7 @@
 package io.harness.batch.processing.writer;
 
 import static io.harness.rule.OwnerRule.ROHIT;
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 
@@ -8,15 +9,7 @@ import io.harness.CategoryTest;
 import io.harness.batch.processing.service.impl.AwsS3SyncServiceImpl;
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
-import org.junit.runner.RunWith;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.Mockito;
-import org.mockito.invocation.Invocation;
-import org.mockito.runners.MockitoJUnitRunner;
-import org.springframework.batch.core.JobParameters;
+
 import software.wings.beans.AwsCrossAccountAttributes;
 import software.wings.beans.AwsS3BucketDetails;
 import software.wings.beans.SettingAttribute;
@@ -28,6 +21,15 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
+import org.junit.runner.RunWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.Mockito;
+import org.mockito.invocation.Invocation;
+import org.mockito.runners.MockitoJUnitRunner;
+import org.springframework.batch.core.JobParameters;
 
 @RunWith(MockitoJUnitRunner.class)
 public class S3SyncEventWriterTest extends CategoryTest {

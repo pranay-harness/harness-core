@@ -5,10 +5,11 @@ import static org.assertj.core.api.Assertions.assertThat;
 import io.harness.beans.PageResponse;
 import io.harness.rest.RestResponse;
 import io.harness.testframework.framework.Setup;
-import io.restassured.http.ContentType;
-import io.restassured.mapper.ObjectMapperType;
+
 import software.wings.beans.ServiceVariable;
 
+import io.restassured.http.ContentType;
+import io.restassured.mapper.ObjectMapperType;
 import java.util.List;
 import javax.ws.rs.core.GenericType;
 

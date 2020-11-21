@@ -1,9 +1,8 @@
 package io.harness.annotations;
 
 import static io.harness.rule.OwnerRule.PRASHANT;
-import static org.assertj.core.api.Assertions.assertThat;
 
-import com.google.common.base.Preconditions;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.annotations.dev.ExcludeRedesign;
 import io.harness.annotations.dev.HarnessTeam;
@@ -11,13 +10,10 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
 import io.harness.reflection.CodeUtils;
 import io.harness.rule.Owner;
-import org.apache.commons.io.IOUtils;
-import org.junit.Ignore;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
-import org.reflections.Reflections;
+
 import software.wings.WingsBaseTest;
 
+import com.google.common.base.Preconditions;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Arrays;
@@ -25,6 +21,11 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
+import org.apache.commons.io.IOUtils;
+import org.junit.Ignore;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
+import org.reflections.Reflections;
 
 public class AnnotationMatcherTest extends WingsBaseTest {
   @Test
@@ -66,7 +67,7 @@ public class AnnotationMatcherTest extends WingsBaseTest {
             .filter(clazz
                 -> clazz.getAnnotation(OwnedBy.class) != null
                     && clazz.getAnnotation(OwnedBy.class).value().equals(HarnessTeam.CDC))
-            .map(this ::extractClassLocation)
+            .map(this::extractClassLocation)
             .sorted()
             .collect(Collectors.toList());
     List<String> expectedSet;

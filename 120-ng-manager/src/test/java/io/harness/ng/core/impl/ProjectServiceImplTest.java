@@ -1,11 +1,12 @@
 package io.harness.ng.core.impl;
 
-import static io.github.benas.randombeans.api.EnhancedRandom.random;
 import static io.harness.ModuleType.CD;
 import static io.harness.ng.core.remote.ProjectMapper.toProject;
 import static io.harness.rule.OwnerRule.KARAN;
 import static io.harness.security.encryption.EncryptionType.GCP_KMS;
 import static io.harness.utils.PageTestUtils.getPage;
+
+import static io.github.benas.randombeans.api.EnhancedRandom.random;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 import static junit.framework.TestCase.assertEquals;
@@ -21,7 +22,6 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.data.domain.Pageable.unpaged;
 
-import io.dropwizard.jersey.validation.JerseyViolationException;
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.connector.apis.dto.ConnectorResponseDTO;
@@ -37,6 +37,9 @@ import io.harness.ng.core.entities.Project.ProjectKeys;
 import io.harness.ng.core.services.OrganizationService;
 import io.harness.rule.Owner;
 import io.harness.secretmanagerclient.dto.GcpKmsConfigDTO;
+
+import io.dropwizard.jersey.validation.JerseyViolationException;
+import java.util.Optional;
 import org.bson.Document;
 import org.junit.Before;
 import org.junit.Test;
@@ -45,8 +48,6 @@ import org.mockito.ArgumentCaptor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.mongodb.core.query.Criteria;
-
-import java.util.Optional;
 
 public class ProjectServiceImplTest extends CategoryTest {
   private ProjectRepository projectRepository;

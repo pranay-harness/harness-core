@@ -5,6 +5,7 @@
 package software.wings.common;
 
 import static io.harness.rule.OwnerRule.UNKNOWN;
+
 import static java.util.stream.Collectors.toList;
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -12,16 +13,17 @@ import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.context.ContextElementType;
 import io.harness.rule.Owner;
-import lombok.extern.slf4j.Slf4j;
-import org.assertj.core.util.Lists;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
+
 import software.wings.api.PartitionElement;
 import software.wings.sm.ContextElement;
 import software.wings.sm.ExecutionContext;
 
 import java.util.List;
 import java.util.Map;
+import lombok.extern.slf4j.Slf4j;
+import org.assertj.core.util.Lists;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 /**
  * The type Partition processor test.

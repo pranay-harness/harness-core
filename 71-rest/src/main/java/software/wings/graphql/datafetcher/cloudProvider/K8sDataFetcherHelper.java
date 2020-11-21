@@ -2,12 +2,10 @@ package software.wings.graphql.datafetcher.cloudProvider;
 
 import static io.harness.exception.WingsException.USER;
 
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
-
 import io.harness.exception.InvalidRequestException;
 import io.harness.k8s.model.KubernetesClusterAuthType;
 import io.harness.utils.RequestField;
+
 import software.wings.beans.KubernetesClusterConfig;
 import software.wings.beans.KubernetesClusterConfig.KubernetesClusterConfigBuilder;
 import software.wings.beans.SettingAttribute;
@@ -17,6 +15,9 @@ import software.wings.graphql.schema.mutation.cloudProvider.k8s.QLK8sCloudProvid
 import software.wings.graphql.schema.mutation.cloudProvider.k8s.QLUpdateInheritClusterDetails;
 import software.wings.graphql.schema.mutation.cloudProvider.k8s.QLUpdateK8sCloudProviderInput;
 import software.wings.graphql.schema.type.secrets.QLUsageScope;
+
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
 
 @Singleton
 public class K8sDataFetcherHelper {

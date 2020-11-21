@@ -1,6 +1,7 @@
 package io.harness.scm;
 
 import static io.harness.rule.OwnerRule.GEORGE;
+
 import static java.lang.String.format;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.stream.Collectors.toList;
@@ -8,21 +9,15 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assumptions.assumeThat;
 
-import com.google.inject.Inject;
-
-import com.bettercloud.vault.VaultException;
 import io.harness.CategoryTest;
 import io.harness.category.element.StressTests;
 import io.harness.category.element.UnitTests;
 import io.harness.resource.Project;
 import io.harness.rule.CommonsMethodRule;
 import io.harness.rule.Owner;
-import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.StringUtils;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
 
+import com.bettercloud.vault.VaultException;
+import com.google.inject.Inject;
 import java.io.BufferedWriter;
 import java.io.FileWriter;
 import java.io.IOException;
@@ -30,6 +25,11 @@ import java.net.URISyntaxException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
+import org.junit.Rule;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 @Slf4j
 public class ScmSecretTest extends CategoryTest {
@@ -128,7 +128,6 @@ public class ScmSecretTest extends CategoryTest {
           writer.write(format("%n"));
         }
       }
-    })
-        .doesNotThrowAnyException();
+    }).doesNotThrowAnyException();
   }
 }

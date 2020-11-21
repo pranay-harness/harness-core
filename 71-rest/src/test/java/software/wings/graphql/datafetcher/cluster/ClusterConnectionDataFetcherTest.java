@@ -2,31 +2,32 @@ package software.wings.graphql.datafetcher.cluster;
 
 import static io.harness.ccm.cluster.entities.ClusterType.AWS_ECS;
 import static io.harness.rule.OwnerRule.SHUBHANSHU;
+
 import static org.assertj.core.api.Assertions.assertThat;
 
-import com.google.inject.Inject;
-
-import graphql.execution.MergedSelectionSet;
-import graphql.schema.DataFetchingFieldSelectionSet;
-import graphql.schema.GraphQLFieldDefinition;
-import graphql.schema.SelectedField;
 import io.harness.category.element.UnitTests;
 import io.harness.ccm.cluster.ClusterRecordService;
 import io.harness.rule.Owner;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
-import org.mockito.Mock;
+
 import software.wings.beans.User;
 import software.wings.graphql.datafetcher.AbstractDataFetcherTestBase;
 import software.wings.graphql.schema.query.QLClustersQueryParameters;
 import software.wings.graphql.schema.type.QLClusterConnection;
 import software.wings.security.UserThreadLocal;
 
+import com.google.inject.Inject;
+import graphql.execution.MergedSelectionSet;
+import graphql.schema.DataFetchingFieldSelectionSet;
+import graphql.schema.GraphQLFieldDefinition;
+import graphql.schema.SelectedField;
 import java.sql.SQLException;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
+import org.mockito.Mock;
 
 public class ClusterConnectionDataFetcherTest extends AbstractDataFetcherTestBase {
   @Mock ClusterRecordService clusterRecordService;

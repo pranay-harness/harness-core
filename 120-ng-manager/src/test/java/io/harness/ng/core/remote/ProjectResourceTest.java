@@ -3,6 +3,7 @@ package io.harness.ng.core.remote;
 import static io.harness.ng.core.remote.ProjectMapper.toProject;
 import static io.harness.rule.OwnerRule.KARAN;
 import static io.harness.utils.PageTestUtils.getPage;
+
 import static java.lang.Long.parseLong;
 import static java.util.Collections.singletonList;
 import static junit.framework.TestCase.assertEquals;
@@ -27,13 +28,13 @@ import io.harness.ng.core.dto.ResponseDTO;
 import io.harness.ng.core.entities.Project;
 import io.harness.ng.core.services.ProjectService;
 import io.harness.rule.Owner;
+
+import java.util.Optional;
+import javax.ws.rs.NotFoundException;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.ArgumentCaptor;
-
-import java.util.Optional;
-import javax.ws.rs.NotFoundException;
 
 public class ProjectResourceTest extends CategoryTest {
   private ProjectService projectService;

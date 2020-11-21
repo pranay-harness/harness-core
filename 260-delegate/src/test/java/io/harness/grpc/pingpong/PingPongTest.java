@@ -1,6 +1,7 @@
 package io.harness.grpc.pingpong;
 
 import static io.harness.rule.OwnerRule.AVMOHAN;
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
@@ -8,11 +9,6 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import io.grpc.Channel;
-import io.grpc.Server;
-import io.grpc.inprocess.InProcessChannelBuilder;
-import io.grpc.inprocess.InProcessServerBuilder;
-import io.grpc.testing.GrpcCleanupRule;
 import io.harness.CategoryTest;
 import io.harness.MockableTestMixin;
 import io.harness.category.element.UnitTests;
@@ -24,6 +20,13 @@ import io.harness.grpc.auth.DelegateAuthServerInterceptor;
 import io.harness.rule.Owner;
 import io.harness.security.TokenAuthenticator;
 import io.harness.security.TokenGenerator;
+
+import io.grpc.Channel;
+import io.grpc.Server;
+import io.grpc.inprocess.InProcessChannelBuilder;
+import io.grpc.inprocess.InProcessServerBuilder;
+import io.grpc.testing.GrpcCleanupRule;
+import java.time.Instant;
 import lombok.val;
 import org.junit.Before;
 import org.junit.Rule;
@@ -33,8 +36,6 @@ import org.junit.runner.RunWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.runners.MockitoJUnitRunner;
 import org.slf4j.Logger;
-
-import java.time.Instant;
 
 @RunWith(MockitoJUnitRunner.class)
 public class PingPongTest extends CategoryTest implements MockableTestMixin {

@@ -8,9 +8,9 @@ import io.harness.testframework.framework.email.mailinator.MailinatorInbox;
 import io.harness.testframework.framework.email.mailinator.MailinatorMessageDetails;
 import io.harness.testframework.framework.email.mailinator.MailinatorMetaMessage;
 import io.harness.testframework.framework.matchers.MailinatorEmailMatcher;
-import lombok.extern.slf4j.Slf4j;
 
 import java.util.List;
+import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class MailinatorRestUtils {
   static final int MAX_RETRIES = 60;

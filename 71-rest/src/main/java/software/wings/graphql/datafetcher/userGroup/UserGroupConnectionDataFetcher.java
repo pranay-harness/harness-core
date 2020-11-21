@@ -2,14 +2,9 @@ package software.wings.graphql.datafetcher.userGroup;
 
 import static software.wings.graphql.utils.nameservice.NameService.user;
 
-import com.google.inject.Inject;
-
-import graphql.schema.DataFetchingEnvironment;
 import io.harness.exception.GraphQLException;
 import io.harness.exception.WingsException;
-import lombok.extern.slf4j.Slf4j;
-import org.mongodb.morphia.query.Query;
-import org.mongodb.morphia.query.Sort;
+
 import software.wings.beans.security.UserGroup;
 import software.wings.beans.security.UserGroup.UserGroupKeys;
 import software.wings.graphql.datafetcher.AbstractConnectionV2DataFetcher;
@@ -25,7 +20,12 @@ import software.wings.graphql.schema.type.usergroup.QLUserGroupFilter;
 import software.wings.security.PermissionAttribute;
 import software.wings.security.annotations.AuthRule;
 
+import com.google.inject.Inject;
+import graphql.schema.DataFetchingEnvironment;
 import java.util.List;
+import lombok.extern.slf4j.Slf4j;
+import org.mongodb.morphia.query.Query;
+import org.mongodb.morphia.query.Sort;
 
 @Slf4j
 public class UserGroupConnectionDataFetcher

@@ -2,15 +2,11 @@ package io.harness.ccm.setup.graphql;
 
 import static software.wings.security.PermissionAttribute.PermissionType.LOGGED_IN;
 
-import com.google.inject.Inject;
-
-import graphql.schema.DataFetchingEnvironment;
 import io.harness.ccm.health.CEClusterHealth;
 import io.harness.ccm.health.CEHealthStatus;
 import io.harness.ccm.health.HealthStatusServiceImpl;
 import io.harness.ccm.setup.graphql.QLCEConnector.QLCEConnectorBuilder;
-import lombok.extern.slf4j.Slf4j;
-import org.mongodb.morphia.query.Query;
+
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.SettingAttribute.SettingAttributeKeys;
 import software.wings.beans.SettingAttribute.SettingCategory;
@@ -21,10 +17,14 @@ import software.wings.graphql.schema.query.QLPageQueryParameters;
 import software.wings.graphql.schema.type.aggregation.QLNoOpSortCriteria;
 import software.wings.security.annotations.AuthRule;
 
+import com.google.inject.Inject;
+import graphql.schema.DataFetchingEnvironment;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import lombok.extern.slf4j.Slf4j;
+import org.mongodb.morphia.query.Query;
 
 @Slf4j
 public class CeConnectorDataFetcher

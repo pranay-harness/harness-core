@@ -4,11 +4,9 @@ import static io.harness.product.ci.engine.proto.AuthType.ACCESS_KEY;
 import static io.harness.product.ci.engine.proto.AuthType.BASIC_AUTH;
 import static io.harness.product.ci.engine.proto.AuthType.SECRET_FILE;
 import static io.harness.rule.OwnerRule.ALEKSANDAR;
+
 import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
-
-import com.google.inject.Inject;
-import com.google.protobuf.InvalidProtocolBufferException;
 
 import io.harness.beans.CIBeansTest;
 import io.harness.beans.steps.stepinfo.PublishStepInfo;
@@ -24,6 +22,9 @@ import io.harness.product.ci.engine.proto.LocationType;
 import io.harness.product.ci.engine.proto.UnitStep;
 import io.harness.product.ci.engine.proto.UploadFile;
 import io.harness.rule.Owner;
+
+import com.google.inject.Inject;
+import com.google.protobuf.InvalidProtocolBufferException;
 import org.apache.commons.codec.binary.Base64;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;

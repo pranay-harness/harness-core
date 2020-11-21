@@ -1,17 +1,17 @@
 package software.wings.beans;
 
+import io.harness.data.validator.Trimmed;
+
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
-import io.harness.data.validator.Trimmed;
+import java.util.List;
+import javax.annotation.Nullable;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.experimental.FieldNameConstants;
 import org.mongodb.morphia.annotations.Transient;
-
-import java.util.List;
-import javax.annotation.Nullable;
 
 @Data
 @Builder

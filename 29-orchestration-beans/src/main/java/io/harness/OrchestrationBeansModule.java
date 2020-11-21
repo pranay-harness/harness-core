@@ -1,8 +1,5 @@
 package io.harness;
 
-import com.google.inject.AbstractModule;
-import com.google.inject.multibindings.MapBinder;
-
 import io.harness.orchestration.OrchestrationPersistenceModule;
 import io.harness.registrars.OrchestrationBeansFieldRegistrar;
 import io.harness.registrars.OrchestrationBeansTimeoutRegistrar;
@@ -14,6 +11,9 @@ import io.harness.registries.registrar.OrchestrationFieldRegistrar;
 import io.harness.registries.registrar.ResolverRegistrar;
 import io.harness.registries.registrar.StepRegistrar;
 import io.harness.registries.registrar.TimeoutRegistrar;
+
+import com.google.inject.AbstractModule;
+import com.google.inject.multibindings.MapBinder;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j

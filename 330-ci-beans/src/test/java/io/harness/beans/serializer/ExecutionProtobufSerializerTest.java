@@ -1,9 +1,8 @@
 package io.harness.beans.serializer;
 
 import static io.harness.rule.OwnerRule.ALEKSANDAR;
-import static org.assertj.core.api.Assertions.assertThat;
 
-import com.google.inject.Inject;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.beans.CIBeansTest;
 import io.harness.beans.steps.stepinfo.PluginStepInfo;
@@ -12,12 +11,13 @@ import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
 import io.harness.yaml.core.ExecutionElement;
 import io.harness.yaml.core.StepElement;
+
+import com.google.inject.Inject;
+import java.util.Arrays;
 import lombok.SneakyThrows;
 import org.apache.commons.codec.binary.Base64;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
-
-import java.util.Arrays;
 
 public class ExecutionProtobufSerializerTest extends CIBeansTest {
   @Inject ProtobufSerializer<ExecutionElement> executionProtobufSerializer;

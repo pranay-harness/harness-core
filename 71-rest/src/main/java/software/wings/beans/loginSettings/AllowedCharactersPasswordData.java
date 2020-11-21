@@ -1,8 +1,9 @@
 package software.wings.beans.loginSettings;
 
+import static software.wings.beans.loginSettings.SpecialCharactersPasswordData.SpecialCharactersAllowedInPassword;
+
 import static org.passay.EnglishCharacterData.Alphabetical;
 import static org.passay.EnglishCharacterData.Digit;
-import static software.wings.beans.loginSettings.SpecialCharactersPasswordData.SpecialCharactersAllowedInPassword;
 
 import org.passay.CharacterData;
 

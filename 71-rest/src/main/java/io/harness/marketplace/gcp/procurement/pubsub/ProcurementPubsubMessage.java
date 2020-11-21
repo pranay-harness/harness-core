@@ -1,7 +1,8 @@
 package io.harness.marketplace.gcp.procurement.pubsub;
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import io.harness.marketplace.gcp.procurement.ProcurementEventType;
+
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import lombok.Getter;
 import lombok.Setter;
 

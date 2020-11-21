@@ -3,13 +3,14 @@ package software.wings.service.impl.instance.sync.response;
 import io.harness.delegate.beans.DelegateMetaInfo;
 import io.harness.delegate.beans.DelegateTaskNotifyResponseData;
 import io.harness.logging.CommandExecutionStatus;
+
+import software.wings.beans.infrastructure.instance.info.ContainerInfo;
+
+import java.util.List;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import software.wings.beans.infrastructure.instance.info.ContainerInfo;
-
-import java.util.List;
 
 /**
  * @author rktummala on 09/02/17

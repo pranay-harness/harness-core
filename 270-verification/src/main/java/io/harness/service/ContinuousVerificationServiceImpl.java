@@ -6,8 +6,7 @@ import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
 import static io.harness.persistence.HPersistence.DEFAULT_STORE;
 import static io.harness.persistence.HQuery.excludeAuthority;
-import static org.apache.cxf.ws.addressing.ContextUtils.generateUUID;
-import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
+
 import static software.wings.common.VerificationConstants.CRON_POLL_INTERVAL;
 import static software.wings.common.VerificationConstants.CRON_POLL_INTERVAL_IN_MINUTES;
 import static software.wings.common.VerificationConstants.CV_24x7_STATE_EXECUTION;
@@ -29,18 +28,9 @@ import static software.wings.sm.states.AbstractMetricAnalysisState.MIN_REQUESTS_
 import static software.wings.sm.states.AbstractMetricAnalysisState.PARALLEL_PROCESSES;
 import static software.wings.sm.states.AbstractMetricAnalysisState.SMOOTH_WINDOW;
 
-import com.google.common.base.Preconditions;
-import com.google.common.collect.Lists;
-import com.google.common.collect.Sets;
-import com.google.inject.Inject;
-import com.google.inject.name.Named;
+import static org.apache.cxf.ws.addressing.ContextUtils.generateUUID;
+import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 
-import com.codahale.metrics.annotation.Counted;
-import com.codahale.metrics.annotation.Timed;
-import com.mongodb.BasicDBObject;
-import com.mongodb.DBCollection;
-import com.mongodb.DBCursor;
-import com.mongodb.DBObject;
 import io.harness.beans.ExecutionStatus;
 import io.harness.beans.SortOrder.OrderType;
 import io.harness.entities.CVTask;
@@ -53,9 +43,7 @@ import io.harness.service.intfc.LearningEngineService;
 import io.harness.service.intfc.LogAnalysisService;
 import io.harness.service.intfc.TimeSeriesAnalysisService;
 import io.harness.time.Timestamp;
-import lombok.extern.slf4j.Slf4j;
-import org.apache.http.client.utils.URIBuilder;
-import org.bson.types.ObjectId;
+
 import software.wings.alerts.AlertStatus;
 import software.wings.beans.Account;
 import software.wings.beans.AccountStatus;
@@ -96,6 +84,17 @@ import software.wings.verification.VerificationDataAnalysisResponse;
 import software.wings.verification.VerificationStateAnalysisExecutionData;
 import software.wings.verification.log.LogsCVConfiguration;
 
+import com.codahale.metrics.annotation.Counted;
+import com.codahale.metrics.annotation.Timed;
+import com.google.common.base.Preconditions;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
+import com.google.inject.Inject;
+import com.google.inject.name.Named;
+import com.mongodb.BasicDBObject;
+import com.mongodb.DBCollection;
+import com.mongodb.DBCursor;
+import com.mongodb.DBObject;
 import java.net.URISyntaxException;
 import java.time.Instant;
 import java.time.OffsetDateTime;
@@ -112,6 +111,9 @@ import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.http.client.utils.URIBuilder;
+import org.bson.types.ObjectId;
 
 /**
  * Created by rsingh on 10/9/18.
@@ -137,8 +139,8 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
   public boolean shouldPerformServiceGuardTasks(Account account) {
     if (account.getLicenseInfo() == null
         || (AccountStatus.ACTIVE.equals(account.getLicenseInfo().getAccountStatus())
-               && Arrays.asList(AccountType.PAID, AccountType.TRIAL)
-                      .contains(account.getLicenseInfo().getAccountType()))) {
+            && Arrays.asList(AccountType.PAID, AccountType.TRIAL)
+                   .contains(account.getLicenseInfo().getAccountType()))) {
       return true;
     }
     return false;
@@ -1490,7 +1492,7 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
     Double alertThreshold = null;
     if (cvConfiguration.isAlertEnabled()
         && !(analysisMin <= TimeUnit.MILLISECONDS.toMinutes(cvConfiguration.getSnoozeEndTime())
-               && analysisMin >= TimeUnit.MILLISECONDS.toMinutes(cvConfiguration.getSnoozeStartTime()))) {
+            && analysisMin >= TimeUnit.MILLISECONDS.toMinutes(cvConfiguration.getSnoozeStartTime()))) {
       alertThreshold = cvConfiguration.getAlertThreshold();
     }
     return alertThreshold;
@@ -1591,7 +1593,7 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
 
     if (analysisEndMinute.isPresent()
         && (analysisEndMinute.get() > currentMinute
-               || analysisEndMinute.get() < logsCVConfiguration.getBaselineStartMinute())) {
+            || analysisEndMinute.get() < logsCVConfiguration.getBaselineStartMinute())) {
       // This is in the future or way in the past, so we dont have anything to do now
       analysisEndMinute = Optional.empty();
     }
@@ -1627,7 +1629,7 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
     // this is the baseline prep case
     if (startMinute < logsCVConfiguration.getBaselineStartMinute()
         || (startMinute >= logsCVConfiguration.getBaselineStartMinute()
-               && startMinute < logsCVConfiguration.getBaselineEndMinute())) {
+            && startMinute < logsCVConfiguration.getBaselineEndMinute())) {
       URIBuilder controlInputBuilder = new URIBuilder();
       controlInputBuilder.setPath(
           "/verification/" + LogAnalysisResource.LOG_ANALYSIS + LogAnalysisResource.ANALYSIS_GET_24X7_ALL_LOGS_URL);
@@ -1865,7 +1867,7 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
     // this is the baseline prep case
     if (startMinute < logsCVConfiguration.getBaselineStartMinute()
         || (startMinute >= logsCVConfiguration.getBaselineStartMinute()
-               && startMinute < logsCVConfiguration.getBaselineEndMinute())) {
+            && startMinute < logsCVConfiguration.getBaselineEndMinute())) {
       URIBuilder controlInputBuilder = new URIBuilder();
       controlInputBuilder.setPath(
           "/verification/" + LogAnalysisResource.LOG_ANALYSIS + LogAnalysisResource.ANALYSIS_GET_24X7_ALL_LOGS_URL);

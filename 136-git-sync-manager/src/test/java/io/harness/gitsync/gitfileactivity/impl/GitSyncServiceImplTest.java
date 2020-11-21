@@ -3,11 +3,10 @@ package io.harness.gitsync.gitfileactivity.impl;
 import static io.harness.gitsync.core.beans.GitCommit.Status.COMPLETED;
 import static io.harness.gitsync.core.beans.GitCommit.Status.QUEUED;
 import static io.harness.rule.OwnerRule.ABHINAV;
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.doReturn;
-
-import com.google.inject.Inject;
 
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.beans.git.YamlGitConfigDTO;
@@ -22,16 +21,17 @@ import io.harness.gitsync.gitfileactivity.beans.GitFileActivitySummary;
 import io.harness.gitsync.gitfileactivity.dao.api.repositories.gitFileActivity.GitFileActivityRepository;
 import io.harness.gitsync.gitfileactivity.dao.api.repositories.gitFileActivitySummary.GitFileActivitySummaryRepository;
 import io.harness.rule.Owner;
+
+import com.google.inject.Inject;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.MockitoAnnotations;
 import org.mockito.Spy;
-
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
 
 public class GitSyncServiceImplTest extends GitSyncBaseTest {
   @Inject @Spy private GitSyncServiceImpl gitSyncService;

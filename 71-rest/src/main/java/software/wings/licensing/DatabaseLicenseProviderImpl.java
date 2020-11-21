@@ -2,11 +2,10 @@ package software.wings.licensing;
 
 import static io.harness.persistence.HQuery.excludeAuthority;
 
-import com.google.inject.Inject;
-
 import software.wings.beans.License;
 import software.wings.dl.WingsPersistence;
 
+import com.google.inject.Inject;
 import java.util.List;
 
 /**

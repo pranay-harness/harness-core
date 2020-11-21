@@ -1,13 +1,13 @@
 package io.harness.yaml.core.failurestrategy;
 
+import static io.harness.exception.FailureType.*;
+
+import io.harness.exception.FailureType;
+
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonValue;
-import io.harness.exception.FailureType;
-
 import java.util.EnumSet;
-
-import static io.harness.exception.FailureType.*;
 
 public enum NGFailureType {
   @JsonProperty(NGFailureTypeConstants.ALL_ERRORS)

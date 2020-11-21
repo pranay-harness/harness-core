@@ -8,18 +8,18 @@ import static io.harness.azure.model.AzureConstants.SKIP_VMSS_ROLLBACK;
 import static io.harness.azure.model.AzureConstants.UP_SCALE_COMMAND_UNIT;
 import static io.harness.azure.model.AzureConstants.UP_SCALE_STEADY_STATE_WAIT_COMMAND_UNIT;
 
-import com.google.common.collect.ImmutableList;
-
-import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
+
 import software.wings.beans.command.AzureVMSSDummyCommandUnit;
 import software.wings.beans.command.CommandUnit;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionResponse;
 import software.wings.sm.StateType;
 
+import com.github.reinert.jjschema.SchemaIgnore;
+import com.google.common.collect.ImmutableList;
 import java.util.List;
 
 public class AzureVMSSSwitchRoutesRollbackState extends AzureVMSSSwitchRoutesState {

@@ -1,6 +1,5 @@
 package software.wings.functional.vmss;
 
-import static com.google.common.collect.Maps.newHashMap;
 import static io.harness.azure.model.AzureConstants.BLUE_GREEN;
 import static io.harness.azure.model.AzureConstants.DEFAULT_AZURE_VMSS_MAX_INSTANCES;
 import static io.harness.azure.model.AzureConstants.DEFAULT_AZURE_VMSS_TIMEOUT_MIN;
@@ -11,8 +10,7 @@ import static io.harness.generator.InfrastructureDefinitionGenerator.Infrastruct
 import static io.harness.generator.InfrastructureDefinitionGenerator.InfrastructureDefinitions.AZURE_VMSS_BLUE_GREEN_TEST;
 import static io.harness.rule.OwnerRule.ANIL;
 import static io.harness.rule.OwnerRule.IVAN;
-import static java.util.Arrays.asList;
-import static org.assertj.core.api.Assertions.assertThat;
+
 import static software.wings.beans.BasicOrchestrationWorkflow.BasicOrchestrationWorkflowBuilder.aBasicOrchestrationWorkflow;
 import static software.wings.beans.BlueGreenOrchestrationWorkflow.BlueGreenOrchestrationWorkflowBuilder.aBlueGreenOrchestrationWorkflow;
 import static software.wings.beans.PhaseStep.PhaseStepBuilder.aPhaseStep;
@@ -31,9 +29,9 @@ import static software.wings.service.impl.workflow.WorkflowServiceHelper.ROLLBAC
 import static software.wings.service.impl.workflow.WorkflowServiceHelper.SETUP;
 import static software.wings.service.impl.workflow.WorkflowServiceHelper.VERIFY_SERVICE;
 
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
-import com.google.inject.Inject;
+import static com.google.common.collect.Maps.newHashMap;
+import static java.util.Arrays.asList;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.beans.ExecutionStatus;
 import io.harness.beans.OrchestrationWorkflowType;
@@ -53,10 +51,7 @@ import io.harness.generator.constants.InfraDefinitionGeneratorConstants;
 import io.harness.rule.Owner;
 import io.harness.testframework.restutils.ArtifactRestUtils;
 import io.harness.testframework.restutils.WorkflowRestUtils;
-import org.jetbrains.annotations.NotNull;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
+
 import software.wings.beans.Application;
 import software.wings.beans.Environment;
 import software.wings.beans.GraphNode;
@@ -73,11 +68,18 @@ import software.wings.beans.artifact.Artifact;
 import software.wings.infra.InfrastructureDefinition;
 import software.wings.sm.StateType;
 
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
+import com.google.inject.Inject;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import org.jetbrains.annotations.NotNull;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 public class AzureVMSSFunctionalTest extends AbstractFunctionalTest {
   public static final String BASIC_DEPLOYMENT_SERVICE_NAME = "Azure_VMSS_Service_Basic";

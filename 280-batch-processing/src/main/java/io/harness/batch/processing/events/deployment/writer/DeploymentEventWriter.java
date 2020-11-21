@@ -1,7 +1,5 @@
 package io.harness.batch.processing.events.deployment.writer;
 
-import com.google.inject.Singleton;
-
 import io.harness.batch.processing.ccm.CCMJobConstants;
 import io.harness.batch.processing.ccm.CostEventSource;
 import io.harness.batch.processing.ccm.CostEventType;
@@ -9,21 +7,23 @@ import io.harness.batch.processing.events.timeseries.data.CostEventData;
 import io.harness.batch.processing.events.timeseries.service.intfc.CostEventService;
 import io.harness.ccm.commons.beans.HarnessServiceInfo;
 import io.harness.persistence.HPersistence;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.batch.core.JobParameters;
-import org.springframework.batch.core.StepExecution;
-import org.springframework.batch.core.annotation.BeforeStep;
-import org.springframework.batch.item.ItemWriter;
-import org.springframework.beans.factory.annotation.Autowired;
+
 import software.wings.api.DeploymentSummary;
 import software.wings.service.intfc.instance.CloudToHarnessMappingService;
 
+import com.google.inject.Singleton;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.batch.core.JobParameters;
+import org.springframework.batch.core.StepExecution;
+import org.springframework.batch.core.annotation.BeforeStep;
+import org.springframework.batch.item.ItemWriter;
+import org.springframework.beans.factory.annotation.Autowired;
 
 @Slf4j
 @Singleton

@@ -8,12 +8,6 @@ import static io.harness.ng.core.SecretManagementModule.SECRET_TEXT_SERVICE;
 import static io.harness.ng.core.SecretManagementModule.SSH_SECRET_SERVICE;
 import static io.harness.remote.client.RestClientUtils.getResponse;
 
-import com.google.common.collect.ImmutableMap;
-import com.google.common.io.ByteStreams;
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
-import com.google.inject.name.Named;
-
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.SecretManagementException;
 import io.harness.ng.beans.PageResponse;
@@ -35,20 +29,26 @@ import io.harness.secretmanagerclient.remote.SecretManagerClient;
 import io.harness.serializer.JsonUtils;
 import io.harness.stream.BoundedInputStream;
 import io.harness.utils.PageUtils;
-import lombok.SneakyThrows;
-import lombok.extern.slf4j.Slf4j;
-import okhttp3.RequestBody;
-import org.apache.commons.lang3.StringUtils;
-import org.springframework.data.domain.Page;
-import org.springframework.data.mongodb.core.query.Criteria;
+
 import software.wings.app.FileUploadLimit;
 
+import com.google.common.collect.ImmutableMap;
+import com.google.common.io.ByteStreams;
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
+import com.google.inject.name.Named;
 import java.io.InputStream;
 import java.util.EnumMap;
 import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 import javax.validation.constraints.NotNull;
+import lombok.SneakyThrows;
+import lombok.extern.slf4j.Slf4j;
+import okhttp3.RequestBody;
+import org.apache.commons.lang3.StringUtils;
+import org.springframework.data.domain.Page;
+import org.springframework.data.mongodb.core.query.Criteria;
 
 @Singleton
 @Slf4j
@@ -146,7 +146,7 @@ public class SecretCrudServiceImpl implements SecretCrudService {
     }
     Page<Secret> secrets = ngSecretService.list(criteria, page, size);
     return PageUtils.getNGPageResponse(
-        secrets, secrets.getContent().stream().map(this ::getResponseWrapper).collect(Collectors.toList()));
+        secrets, secrets.getContent().stream().map(this::getResponseWrapper).collect(Collectors.toList()));
   }
 
   @Override

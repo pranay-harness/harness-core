@@ -1,6 +1,7 @@
 package software.wings.delegatetasks.aws.ecs.ecstaskhandler;
 
 import static io.harness.rule.OwnerRule.IVAN;
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyBoolean;
@@ -10,16 +11,10 @@ import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doReturn;
 
-import com.amazonaws.services.elasticloadbalancingv2.model.Action;
-import com.amazonaws.services.elasticloadbalancingv2.model.DescribeListenersResult;
-import com.amazonaws.services.elasticloadbalancingv2.model.Listener;
 import io.harness.category.element.UnitTests;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.rule.Owner;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
+
 import software.wings.WingsBaseTest;
 import software.wings.beans.command.ExecutionLogCallback;
 import software.wings.helpers.ext.ecs.request.EcsBGListenerUpdateRequest;
@@ -27,8 +22,15 @@ import software.wings.helpers.ext.ecs.request.EcsServiceDeployRequest;
 import software.wings.helpers.ext.ecs.response.EcsCommandExecutionResponse;
 import software.wings.service.intfc.aws.delegate.AwsElbHelperServiceDelegate;
 
+import com.amazonaws.services.elasticloadbalancingv2.model.Action;
+import com.amazonaws.services.elasticloadbalancingv2.model.DescribeListenersResult;
+import com.amazonaws.services.elasticloadbalancingv2.model.Listener;
 import java.util.Arrays;
 import java.util.Collections;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
 
 public class EcsListenerUpdateBGTaskHandlerTest extends WingsBaseTest {
   @Mock private AwsElbHelperServiceDelegate awsElbHelperServiceDelegate;

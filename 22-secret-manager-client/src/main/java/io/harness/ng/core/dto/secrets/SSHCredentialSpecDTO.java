@@ -1,8 +1,9 @@
 package io.harness.ng.core.dto.secrets;
 
+import io.harness.ng.core.models.SSHCredentialSpec;
+
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
-import io.harness.ng.core.models.SSHCredentialSpec;
 
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.EXTERNAL_PROPERTY, property = "credentialType",
     visible = true)

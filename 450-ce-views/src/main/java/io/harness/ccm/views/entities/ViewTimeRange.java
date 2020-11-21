@@ -1,11 +1,10 @@
 package io.harness.ccm.views.entities;
 
+import javax.annotation.Nullable;
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Value;
 import lombok.experimental.FieldDefaults;
-
-import javax.annotation.Nullable;
 
 @Value
 @Builder

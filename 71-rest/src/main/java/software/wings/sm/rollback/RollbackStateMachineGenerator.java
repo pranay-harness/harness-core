@@ -3,18 +3,18 @@ package software.wings.sm.rollback;
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
-import static java.util.stream.Collectors.toList;
+
 import static software.wings.beans.PhaseStep.PhaseStepBuilder.aPhaseStep;
 import static software.wings.beans.PhaseStepType.PRE_DEPLOYMENT;
 import static software.wings.beans.PhaseStepType.STAGE_EXECUTION;
 import static software.wings.sm.StateType.STAGING_ORIGINAL_EXECUTION;
 
-import com.google.common.collect.ImmutableMap;
-import com.google.inject.Inject;
+import static java.util.stream.Collectors.toList;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.ExecutionStatus;
 import io.harness.eraro.ErrorCode;
+
 import software.wings.beans.CanaryOrchestrationWorkflow;
 import software.wings.beans.Graph;
 import software.wings.beans.GraphNode;
@@ -31,6 +31,8 @@ import software.wings.service.intfc.WorkflowService;
 import software.wings.sm.StateMachine;
 import software.wings.sm.states.StagingOriginalExecution.StagingOriginalExecutionKeys;
 
+import com.google.common.collect.ImmutableMap;
+import com.google.inject.Inject;
 import java.util.Collections;
 import javax.validation.constraints.NotNull;
 

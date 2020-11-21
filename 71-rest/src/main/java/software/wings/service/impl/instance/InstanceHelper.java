@@ -4,7 +4,7 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.exception.WingsException.USER_SRE;
 import static io.harness.validation.Validator.notNullCheck;
-import static java.util.Collections.emptyList;
+
 import static software.wings.beans.InfrastructureMappingType.AWS_SSH;
 import static software.wings.beans.InfrastructureMappingType.PHYSICAL_DATA_CENTER_SSH;
 import static software.wings.beans.InfrastructureMappingType.PHYSICAL_DATA_CENTER_WINRM;
@@ -13,14 +13,8 @@ import static software.wings.service.InstanceSyncConstants.HARNESS_APPLICATION_I
 import static software.wings.service.InstanceSyncConstants.INFRASTRUCTURE_MAPPING_ID;
 import static software.wings.service.impl.instance.InstanceSyncFlow.MANUAL;
 
-import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Preconditions;
-import com.google.common.collect.Lists;
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
+import static java.util.Collections.emptyList;
 
-import com.amazonaws.services.ec2.model.DescribeInstancesRequest;
-import com.amazonaws.services.ec2.model.Reservation;
 import io.harness.beans.EmbeddedUser;
 import io.harness.beans.ExecutionStatus;
 import io.harness.context.ContextElementType;
@@ -34,8 +28,7 @@ import io.harness.perpetualtask.internal.PerpetualTaskRecord;
 import io.harness.queue.QueuePublisher;
 import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.validation.Validator;
-import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.StringUtils;
+
 import software.wings.annotation.EncryptableSetting;
 import software.wings.api.DeploymentEvent;
 import software.wings.api.DeploymentSummary;
@@ -84,6 +77,13 @@ import software.wings.sm.WorkflowStandardParams;
 import software.wings.sm.states.PhaseStepSubWorkflow;
 import software.wings.utils.Utils;
 
+import com.amazonaws.services.ec2.model.DescribeInstancesRequest;
+import com.amazonaws.services.ec2.model.Reservation;
+import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Preconditions;
+import com.google.common.collect.Lists;
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
@@ -92,6 +92,8 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.stream.Collectors;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 
 /**
  * Both the normal instance and container instance are handled here.
@@ -431,7 +433,7 @@ public class InstanceHelper {
         return;
       }
 
-      deploymentSummaries = deploymentSummaries.stream().filter(this ::hasDeploymentKey).collect(Collectors.toList());
+      deploymentSummaries = deploymentSummaries.stream().filter(this::hasDeploymentKey).collect(Collectors.toList());
 
       deploymentSummaries.forEach(deploymentSummary -> saveDeploymentSummary(deploymentSummary, false));
 
@@ -639,7 +641,7 @@ public class InstanceHelper {
     Optional<InstanceHandler> instanceHandler = getInstanceHandler(infrastructureMapping);
     return instanceHandler.isPresent()
         && featureFlagService.isEnabled(instanceHandler.get().getFeatureFlagToStopIteratorBasedInstanceSync(),
-               infrastructureMapping.getAccountId());
+            infrastructureMapping.getAccountId());
   }
 
   @VisibleForTesting

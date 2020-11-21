@@ -2,8 +2,6 @@ package software.wings.delegatetasks.helm;
 
 import static java.lang.String.format;
 
-import com.google.inject.Inject;
-
 import io.harness.delegate.beans.DelegateTaskPackage;
 import io.harness.delegate.beans.DelegateTaskResponse;
 import io.harness.delegate.beans.logstreaming.ILogStreamingTaskClient;
@@ -14,8 +12,7 @@ import io.harness.k8s.K8sGlobalConfigService;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.logging.LogCallback;
 import io.harness.logging.LogLevel;
-import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.NotImplementedException;
+
 import software.wings.beans.command.ExecutionLogCallback;
 import software.wings.beans.command.HelmDummyCommandUnit;
 import software.wings.beans.command.NoopExecutionCallback;
@@ -29,8 +26,11 @@ import software.wings.helpers.ext.helm.request.HelmReleaseHistoryCommandRequest;
 import software.wings.helpers.ext.helm.request.HelmRollbackCommandRequest;
 import software.wings.helpers.ext.helm.response.HelmCommandResponse;
 
+import com.google.inject.Inject;
 import java.util.function.BooleanSupplier;
 import java.util.function.Consumer;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.NotImplementedException;
 
 /**
  * Created by anubhaw on 3/22/18.
@@ -125,7 +125,7 @@ public class HelmCommandTask extends AbstractDelegateRunnableTask {
 
   protected LogCallback getExecutionLogCallback(HelmCommandRequest helmCommandRequest, String name) {
     return isAsync() ? new ExecutionLogCallback(delegateLogService, helmCommandRequest.getAccountId(),
-                           helmCommandRequest.getAppId(), helmCommandRequest.getActivityId(), name)
+               helmCommandRequest.getAppId(), helmCommandRequest.getActivityId(), name)
                      : new NoopExecutionCallback();
   }
 

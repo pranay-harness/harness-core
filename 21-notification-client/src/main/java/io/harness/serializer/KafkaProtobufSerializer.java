@@ -1,10 +1,8 @@
 package io.harness.serializer;
 
 import com.google.protobuf.MessageLite;
-
-import org.apache.kafka.common.serialization.Serializer;
-
 import java.util.Map;
+import org.apache.kafka.common.serialization.Serializer;
 
 /**
  * Serializer for Kafka to serialize Protocol Buffers messages

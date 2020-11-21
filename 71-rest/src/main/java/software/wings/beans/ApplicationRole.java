@@ -1,12 +1,11 @@
 package software.wings.beans;
 
-import com.google.common.collect.ImmutableList;
-
-import org.apache.commons.lang3.tuple.ImmutablePair;
 import software.wings.security.PermissionAttribute.Action;
 import software.wings.security.PermissionAttribute.ResourceType;
 
+import com.google.common.collect.ImmutableList;
 import java.util.List;
+import org.apache.commons.lang3.tuple.ImmutablePair;
 
 /**
  * Created by rishi on 3/23/17.

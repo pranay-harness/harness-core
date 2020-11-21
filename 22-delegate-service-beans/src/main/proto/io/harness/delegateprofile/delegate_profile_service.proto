@@ -60,8 +60,7 @@ message DeleteProfileRequest {
   ProfileId profile_id = 2;
 }
 
-message DeleteProfileResponse {
-}
+message DeleteProfileResponse {}
 
 message UpdateProfileScopingRulesRequest {
   delegate.AccountId account_id = 1;

@@ -5,11 +5,13 @@ import io.harness.beans.EmbeddedUser;
 import io.harness.mongo.index.CdIndex;
 import io.harness.mongo.index.Field;
 import io.harness.mongo.index.NgUniqueIndex;
+
+import software.wings.beans.Base;
+
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import org.mongodb.morphia.annotations.Entity;
-import software.wings.beans.Base;
 
 /**
  * Keeps track of the last sync status and time of the infra mapping.

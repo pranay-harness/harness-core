@@ -2,8 +2,6 @@ package io.harness.beans;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 
-import com.google.common.collect.ImmutableList;
-
 import io.harness.annotation.HarnessEntity;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.data.SweepingOutput;
@@ -15,6 +13,12 @@ import io.harness.mongo.index.SortCompoundMongoIndex;
 import io.harness.persistence.CreatedAtAware;
 import io.harness.persistence.PersistentEntity;
 import io.harness.persistence.UuidAccess;
+
+import com.google.common.collect.ImmutableList;
+import java.time.OffsetDateTime;
+import java.util.Date;
+import java.util.List;
+import javax.validation.constraints.NotNull;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;
@@ -25,11 +29,6 @@ import lombok.experimental.NonFinal;
 import lombok.experimental.Wither;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Id;
-
-import java.time.OffsetDateTime;
-import java.util.Date;
-import java.util.List;
-import javax.validation.constraints.NotNull;
 
 @OwnedBy(CDC)
 @Value

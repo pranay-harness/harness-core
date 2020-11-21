@@ -2,28 +2,20 @@ package software.wings.delegatetasks.cv;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.rule.OwnerRule.PRAVEEN;
+
+import static software.wings.sm.StateType.APM_VERIFICATION;
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.when;
-import static software.wings.sm.StateType.APM_VERIFICATION;
-
-import com.google.common.base.Charsets;
-import com.google.common.io.Resources;
 
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
 import io.harness.security.encryption.EncryptedDataDetail;
-import org.apache.commons.lang3.reflect.FieldUtils;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
-import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
-import retrofit2.Call;
-import retrofit2.Response;
+
 import software.wings.WingsBaseTest;
 import software.wings.beans.APMVerificationConfig;
 import software.wings.delegatetasks.DelegateCVActivityLogService;
@@ -37,11 +29,21 @@ import software.wings.service.intfc.security.EncryptionService;
 import software.wings.sm.states.APMVerificationState;
 import software.wings.verification.apm.APMCVServiceConfiguration;
 
+import com.google.common.base.Charsets;
+import com.google.common.io.Resources;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
+import org.apache.commons.lang3.reflect.FieldUtils;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
+import retrofit2.Call;
+import retrofit2.Response;
 
 public class CustomAPMDataCollectorTest extends WingsBaseTest {
   @Mock EncryptionService mockEncryptionService;

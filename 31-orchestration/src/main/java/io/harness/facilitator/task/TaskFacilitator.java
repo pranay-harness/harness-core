@@ -2,8 +2,6 @@ package io.harness.facilitator.task;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 
-import com.google.inject.Inject;
-
 import io.harness.ambiance.Ambiance;
 import io.harness.annotations.Redesign;
 import io.harness.annotations.dev.OwnedBy;
@@ -16,6 +14,7 @@ import io.harness.pms.facilitators.FacilitatorType;
 import io.harness.state.io.StepInputPackage;
 import io.harness.state.io.StepParameters;
 
+import com.google.inject.Inject;
 import java.time.Duration;
 
 @OwnedBy(CDC)

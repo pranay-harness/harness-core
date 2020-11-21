@@ -2,12 +2,12 @@ package software.wings.service.impl.analysis;
 
 import static io.harness.persistence.HQuery.excludeAuthority;
 
-import com.google.inject.Inject;
-
-import org.mongodb.morphia.query.Sort;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.impl.analysis.MetricAnalysisRecord.MetricAnalysisRecordKeys;
 import software.wings.service.intfc.analysis.TimeSeriesMLAnalysisRecordService;
+
+import com.google.inject.Inject;
+import org.mongodb.morphia.query.Sort;
 
 public class TimeSeriesMLAnalysisRecordServiceImpl implements TimeSeriesMLAnalysisRecordService {
   @Inject private WingsPersistence wingsPersistence;

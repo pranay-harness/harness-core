@@ -59,6 +59,7 @@ import static io.harness.network.Localhost.getLocalHostAddress;
 import static io.harness.network.Localhost.getLocalHostName;
 import static io.harness.network.SafeHttpCall.execute;
 import static io.harness.threading.Morpheus.sleep;
+
 import static java.lang.Boolean.TRUE;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.time.Duration.ofMillis;
@@ -73,18 +74,6 @@ import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.apache.commons.lang3.StringUtils.substringBefore;
 
-import com.google.common.annotations.VisibleForTesting;
-import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.Sets;
-import com.google.common.util.concurrent.TimeLimiter;
-import com.google.common.util.concurrent.UncheckedTimeoutException;
-import com.google.inject.Inject;
-import com.google.inject.Injector;
-import com.google.inject.Singleton;
-import com.google.inject.name.Named;
-
-import com.ning.http.client.AsyncHttpClient;
-import com.sun.management.OperatingSystemMXBean;
 import io.harness.configuration.DeployMode;
 import io.harness.data.structure.HarnessStringUtils;
 import io.harness.data.structure.NullSafeImmutableMap;
@@ -137,37 +126,7 @@ import io.harness.serializer.JsonUtils;
 import io.harness.threading.Schedulable;
 import io.harness.utils.ProcessControl;
 import io.harness.version.VersionInfoManager;
-import lombok.Getter;
-import lombok.extern.slf4j.Slf4j;
-import okhttp3.MediaType;
-import okhttp3.MultipartBody.Part;
-import okhttp3.RequestBody;
-import okhttp3.ResponseBody;
-import org.apache.commons.io.FileUtils;
-import org.apache.commons.io.filefilter.FileFilterUtils;
-import org.apache.commons.lang3.StringUtils;
-import org.apache.commons.lang3.tuple.Pair;
-import org.apache.commons.math3.util.Precision;
-import org.apache.http.client.utils.URIBuilder;
-import org.atmosphere.wasync.Client;
-import org.atmosphere.wasync.Encoder;
-import org.atmosphere.wasync.Event;
-import org.atmosphere.wasync.Function;
-import org.atmosphere.wasync.Options;
-import org.atmosphere.wasync.Request.METHOD;
-import org.atmosphere.wasync.Request.TRANSPORT;
-import org.atmosphere.wasync.RequestBuilder;
-import org.atmosphere.wasync.Socket;
-import org.atmosphere.wasync.Socket.STATUS;
-import org.atmosphere.wasync.transport.TransportNotSupported;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.zeroturnaround.exec.ProcessExecutor;
-import org.zeroturnaround.exec.StartedProcess;
-import org.zeroturnaround.exec.stream.LogOutputStream;
-import org.zeroturnaround.exec.stream.slf4j.Slf4jStream;
-import retrofit2.Call;
-import retrofit2.Response;
+
 import software.wings.beans.Delegate;
 import software.wings.beans.Delegate.Status;
 import software.wings.beans.DelegateTaskFactory;
@@ -186,6 +145,17 @@ import software.wings.delegatetasks.validation.DelegateConnectionResult;
 import software.wings.delegatetasks.validation.DelegateValidateTask;
 import software.wings.service.intfc.security.EncryptionService;
 
+import com.google.common.annotations.VisibleForTesting;
+import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Sets;
+import com.google.common.util.concurrent.TimeLimiter;
+import com.google.common.util.concurrent.UncheckedTimeoutException;
+import com.google.inject.Inject;
+import com.google.inject.Injector;
+import com.google.inject.Singleton;
+import com.google.inject.name.Named;
+import com.ning.http.client.AsyncHttpClient;
+import com.sun.management.OperatingSystemMXBean;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.IOException;
@@ -230,6 +200,37 @@ import java.util.stream.Stream;
 import javax.annotation.Nullable;
 import javax.net.ssl.SSLException;
 import javax.validation.constraints.NotNull;
+import lombok.Getter;
+import lombok.extern.slf4j.Slf4j;
+import okhttp3.MediaType;
+import okhttp3.MultipartBody.Part;
+import okhttp3.RequestBody;
+import okhttp3.ResponseBody;
+import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.filefilter.FileFilterUtils;
+import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.tuple.Pair;
+import org.apache.commons.math3.util.Precision;
+import org.apache.http.client.utils.URIBuilder;
+import org.atmosphere.wasync.Client;
+import org.atmosphere.wasync.Encoder;
+import org.atmosphere.wasync.Event;
+import org.atmosphere.wasync.Function;
+import org.atmosphere.wasync.Options;
+import org.atmosphere.wasync.Request.METHOD;
+import org.atmosphere.wasync.Request.TRANSPORT;
+import org.atmosphere.wasync.RequestBuilder;
+import org.atmosphere.wasync.Socket;
+import org.atmosphere.wasync.Socket.STATUS;
+import org.atmosphere.wasync.transport.TransportNotSupported;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.zeroturnaround.exec.ProcessExecutor;
+import org.zeroturnaround.exec.StartedProcess;
+import org.zeroturnaround.exec.stream.LogOutputStream;
+import org.zeroturnaround.exec.stream.slf4j.Slf4jStream;
+import retrofit2.Call;
+import retrofit2.Response;
 
 @Singleton
 @Slf4j
@@ -1175,7 +1176,7 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
 
   private void startTaskPolling() {
     rescheduleExecutor.scheduleAtFixedRate(
-        new Schedulable("Failed to poll for task", () -> taskPollExecutor.submit(this ::pollForTask)), 0,
+        new Schedulable("Failed to poll for task", () -> taskPollExecutor.submit(this::pollForTask)), 0,
         POLL_INTERVAL_SECONDS, TimeUnit.SECONDS);
     if (perpetualTaskWorker != null) {
       perpetualTaskWorker.start();
@@ -1403,7 +1404,7 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
 
     return new File(START_SH).exists()
         && (restartNeeded.get() || now - lastHeartbeatSentAt.get() > HEARTBEAT_TIMEOUT
-               || now - lastHeartbeatReceivedAt.get() > HEARTBEAT_TIMEOUT);
+            || now - lastHeartbeatReceivedAt.get() > HEARTBEAT_TIMEOUT);
   }
 
   private void sendHeartbeat(DelegateParamsBuilder builder, Socket socket) {

@@ -1,21 +1,18 @@
 package software.wings.service.impl;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static java.lang.String.format;
-import static java.util.Arrays.asList;
+
 import static software.wings.common.NotificationMessageResolver.NotificationMessageType.ARTIFACT_APPROVAL_NOTIFICATION;
 import static software.wings.common.NotificationMessageResolver.NotificationMessageType.ARTIFACT_APPROVAL_NOTIFICATION_STATUS;
 
-import com.google.common.collect.ImmutableMap;
-import com.google.inject.Inject;
-import com.google.inject.Injector;
-import com.google.inject.Singleton;
+import static java.lang.String.format;
+import static java.util.Arrays.asList;
 
 import io.harness.beans.EmbeddedUser;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.exception.InvalidRequestException;
-import org.hibernate.validator.constraints.NotEmpty;
+
 import software.wings.app.MainConfiguration;
 import software.wings.beans.ActionableNotification;
 import software.wings.beans.ApprovalNotification;
@@ -30,6 +27,10 @@ import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.NotificationDispatcherService;
 import software.wings.service.intfc.NotificationService;
 
+import com.google.common.collect.ImmutableMap;
+import com.google.inject.Inject;
+import com.google.inject.Injector;
+import com.google.inject.Singleton;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -37,6 +38,7 @@ import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import javax.validation.constraints.NotNull;
 import javax.validation.executable.ValidateOnExecution;
+import org.hibernate.validator.constraints.NotEmpty;
 
 /**
  * Created by anubhaw on 7/22/16.

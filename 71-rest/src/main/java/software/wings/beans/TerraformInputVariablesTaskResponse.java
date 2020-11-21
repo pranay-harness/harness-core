@@ -2,11 +2,12 @@ package software.wings.beans;
 
 import io.harness.delegate.beans.DelegateMetaInfo;
 import io.harness.delegate.beans.DelegateTaskNotifyResponseData;
-import lombok.Builder;
-import lombok.Data;
+
 import software.wings.api.TerraformExecutionData;
 
 import java.util.List;
+import lombok.Builder;
+import lombok.Data;
 
 @Data
 @Builder

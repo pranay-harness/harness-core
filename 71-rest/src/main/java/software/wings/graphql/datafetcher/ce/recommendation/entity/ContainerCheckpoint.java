@@ -1,10 +1,10 @@
 package software.wings.graphql.datafetcher.ce.recommendation.entity;
 
 import io.harness.histogram.HistogramCheckpoint;
-import lombok.Builder;
-import lombok.Value;
 
 import java.time.Instant;
+import lombok.Builder;
+import lombok.Value;
 
 @Value
 @Builder

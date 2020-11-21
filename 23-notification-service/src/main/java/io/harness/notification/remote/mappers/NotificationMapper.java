@@ -1,11 +1,12 @@
 package io.harness.notification.remote.mappers;
 
+import static io.harness.NotificationRequest.*;
+
 import io.harness.NotificationRequest;
 import io.harness.notification.entities.*;
+
 import lombok.experimental.UtilityClass;
 import lombok.extern.slf4j.Slf4j;
-
-import static io.harness.NotificationRequest.*;
 
 @UtilityClass
 @Slf4j

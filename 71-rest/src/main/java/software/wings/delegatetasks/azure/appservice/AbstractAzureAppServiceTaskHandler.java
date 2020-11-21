@@ -3,9 +3,8 @@ package software.wings.delegatetasks.azure.appservice;
 import static io.harness.azure.model.AzureConstants.DEPLOYMENT_ERROR;
 import static io.harness.logging.CommandExecutionStatus.FAILURE;
 import static io.harness.logging.LogLevel.ERROR;
-import static java.lang.String.format;
 
-import com.google.inject.Inject;
+import static java.lang.String.format;
 
 import io.harness.azure.model.AzureConfig;
 import io.harness.azure.utility.AzureResourceUtility;
@@ -16,8 +15,11 @@ import io.harness.delegate.task.azure.appservice.AzureAppServiceTaskResponse;
 import io.harness.exception.InvalidRequestException;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.logging.LogCallback;
-import lombok.extern.slf4j.Slf4j;
+
 import software.wings.delegatetasks.DelegateLogService;
+
+import com.google.inject.Inject;
+import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public abstract class AbstractAzureAppServiceTaskHandler {

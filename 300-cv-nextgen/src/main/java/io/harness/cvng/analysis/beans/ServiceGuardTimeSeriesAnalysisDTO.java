@@ -1,13 +1,12 @@
 package io.harness.cvng.analysis.beans;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import java.time.Instant;
+import java.util.Map;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.experimental.NonFinal;
-
-import java.time.Instant;
-import java.util.Map;
 
 @Getter
 @Builder

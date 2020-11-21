@@ -6,7 +6,6 @@ import io.harness.eraro.Level;
 import io.harness.eraro.ResponseMessage;
 import io.harness.exception.ExceptionUtils;
 import io.harness.rest.RestResponse;
-import lombok.extern.slf4j.Slf4j;
 
 import javax.ws.rs.container.ResourceInfo;
 import javax.ws.rs.core.Context;
@@ -14,6 +13,7 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.ext.ExceptionMapper;
 import javax.ws.rs.ext.Provider;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * The Class GenericExceptionMapper.

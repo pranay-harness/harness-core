@@ -1,21 +1,22 @@
 package software.wings.service.impl;
 
 import static io.harness.rule.OwnerRule.ABHINAV;
-import static org.assertj.core.api.Assertions.assertThat;
 
-import com.google.inject.Inject;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
+
+import software.wings.WingsBaseTest;
+import software.wings.beans.Schema;
+
+import com.google.inject.Inject;
+import java.util.HashMap;
+import java.util.Map;
 import migrations.OnPrimaryManagerMigration;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mongodb.morphia.query.Query;
-import software.wings.WingsBaseTest;
-import software.wings.beans.Schema;
-
-import java.util.HashMap;
-import java.util.Map;
 
 public class MigrationServiceImplTest extends WingsBaseTest {
   @Inject MigrationServiceImpl migrationService;

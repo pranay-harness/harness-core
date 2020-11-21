@@ -1,14 +1,14 @@
 package io.harness.beans.environment;
 
 import io.harness.beans.environment.pod.PodSetupInfo;
-import lombok.Builder;
-import lombok.Data;
-import lombok.Value;
-import org.hibernate.validator.constraints.NotEmpty;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
+import lombok.Builder;
+import lombok.Data;
+import lombok.Value;
+import org.hibernate.validator.constraints.NotEmpty;
 
 /**
  * Stores K8 specific data to setup Pod for running CI job

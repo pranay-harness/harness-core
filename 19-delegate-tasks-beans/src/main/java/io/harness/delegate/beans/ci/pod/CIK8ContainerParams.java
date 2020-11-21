@@ -1,11 +1,10 @@
 package io.harness.delegate.beans.ci.pod;
 
+import java.util.List;
+import java.util.Map;
 import lombok.Builder;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
-
-import java.util.List;
-import java.util.Map;
 
 @Getter
 @EqualsAndHashCode(callSuper = true)

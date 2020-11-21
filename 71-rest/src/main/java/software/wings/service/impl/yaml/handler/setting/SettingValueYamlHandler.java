@@ -1,14 +1,13 @@
 package software.wings.service.impl.yaml.handler.setting;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
+
 import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static software.wings.beans.Environment.GLOBAL_ENV_ID;
 import static software.wings.beans.yaml.YamlConstants.PATH_DELIMITER;
 
-import com.google.inject.Inject;
-
 import io.harness.exception.HarnessException;
-import lombok.extern.slf4j.Slf4j;
+
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.SettingAttribute.SettingCategory;
 import software.wings.beans.yaml.ChangeContext;
@@ -24,7 +23,9 @@ import software.wings.service.intfc.security.EncryptionService;
 import software.wings.service.intfc.security.SecretManager;
 import software.wings.settings.SettingValue;
 
+import com.google.inject.Inject;
 import java.util.List;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * @author rktummala on 11/19/17

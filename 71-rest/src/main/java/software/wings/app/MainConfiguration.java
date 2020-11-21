@@ -3,24 +3,6 @@ package software.wings.app;
 import static com.google.common.collect.ImmutableMap.of;
 import static java.util.Collections.singletonList;
 
-import com.google.common.collect.ImmutableList;
-import com.google.inject.Singleton;
-
-import ch.qos.logback.access.spi.IAccessEvent;
-import ch.qos.logback.classic.Level;
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonProperty;
-import io.dropwizard.Configuration;
-import io.dropwizard.bundles.assets.AssetsBundleConfiguration;
-import io.dropwizard.bundles.assets.AssetsConfiguration;
-import io.dropwizard.jetty.ConnectorFactory;
-import io.dropwizard.jetty.HttpConnectorFactory;
-import io.dropwizard.logging.FileAppenderFactory;
-import io.dropwizard.request.logging.LogbackAccessRequestLogFactory;
-import io.dropwizard.request.logging.RequestLogFactory;
-import io.dropwizard.server.DefaultServerFactory;
-import io.dropwizard.server.ServerFactory;
-import io.federecio.dropwizard.swagger.SwaggerBundleConfiguration;
 import io.harness.cache.CacheConfig;
 import io.harness.ccm.setup.config.CESetUpConfig;
 import io.harness.commandlibrary.CommandLibraryServiceConfig;
@@ -44,8 +26,7 @@ import io.harness.remote.client.ServiceHttpClientConfig;
 import io.harness.scheduler.SchedulerConfig;
 import io.harness.stream.AtmosphereBroadcaster;
 import io.harness.timescaledb.TimeScaleDBConfig;
-import lombok.Data;
-import lombok.EqualsAndHashCode;
+
 import software.wings.DataStorageMode;
 import software.wings.audit.AuditConfig;
 import software.wings.beans.DefaultSalesContacts;
@@ -64,12 +45,31 @@ import software.wings.security.authentication.oauth.GitlabConfig;
 import software.wings.security.authentication.oauth.GoogleConfig;
 import software.wings.security.authentication.oauth.LinkedinConfig;
 
+import ch.qos.logback.access.spi.IAccessEvent;
+import ch.qos.logback.classic.Level;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.google.common.collect.ImmutableList;
+import com.google.inject.Singleton;
+import io.dropwizard.Configuration;
+import io.dropwizard.bundles.assets.AssetsBundleConfiguration;
+import io.dropwizard.bundles.assets.AssetsConfiguration;
+import io.dropwizard.jetty.ConnectorFactory;
+import io.dropwizard.jetty.HttpConnectorFactory;
+import io.dropwizard.logging.FileAppenderFactory;
+import io.dropwizard.request.logging.LogbackAccessRequestLogFactory;
+import io.dropwizard.request.logging.RequestLogFactory;
+import io.dropwizard.server.DefaultServerFactory;
+import io.dropwizard.server.ServerFactory;
+import io.federecio.dropwizard.swagger.SwaggerBundleConfiguration;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
 
 /**
  * Used to load all the application configuration.

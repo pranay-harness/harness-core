@@ -1,6 +1,7 @@
 package io.harness.walktree.visitor.mergeinputset.beans;
 
 import io.harness.walktree.visitor.response.VisitorErrorResponse;
+
 import lombok.Builder;
 import lombok.EqualsAndHashCode;
 import lombok.Value;

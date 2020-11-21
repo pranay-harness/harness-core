@@ -1,17 +1,16 @@
 package io.harness.beans.serializer;
 
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
-
 import io.harness.beans.steps.stepinfo.PluginStepInfo;
 import io.harness.callback.DelegateCallbackToken;
 import io.harness.product.ci.engine.proto.PluginStep;
 import io.harness.product.ci.engine.proto.StepContext;
 import io.harness.product.ci.engine.proto.UnitStep;
-import org.apache.commons.codec.binary.Base64;
 
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import java.util.Optional;
 import java.util.function.Supplier;
+import org.apache.commons.codec.binary.Base64;
 
 @Singleton
 public class PluginStepProtobufSerializer implements ProtobufSerializer<PluginStepInfo> {

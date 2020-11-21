@@ -1,6 +1,5 @@
 package io.harness.batch.processing.pricing.gcp.bigquery.impl;
 
-import static com.google.cloud.bigquery.FieldValue.Attribute.PRIMITIVE;
 import static io.harness.batch.processing.pricing.gcp.bigquery.BigQueryConstants.computeProductFamily;
 import static io.harness.batch.processing.pricing.gcp.bigquery.BigQueryConstants.cost;
 import static io.harness.batch.processing.pricing.gcp.bigquery.BigQueryConstants.effectiveCost;
@@ -9,10 +8,19 @@ import static io.harness.batch.processing.pricing.gcp.bigquery.BigQueryConstants
 import static io.harness.batch.processing.pricing.gcp.bigquery.BigQueryConstants.resourceId;
 import static io.harness.batch.processing.pricing.gcp.bigquery.BigQueryConstants.serviceCode;
 import static io.harness.rule.OwnerRule.HITESH;
+
+import static com.google.cloud.bigquery.FieldValue.Attribute.PRIMITIVE;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.when;
+
+import io.harness.CategoryTest;
+import io.harness.batch.processing.config.BatchMainConfig;
+import io.harness.batch.processing.config.BillingDataPipelineConfig;
+import io.harness.batch.processing.pricing.data.VMInstanceBillingData;
+import io.harness.category.element.UnitTests;
+import io.harness.rule.Owner;
 
 import com.google.cloud.bigquery.BigQuery;
 import com.google.cloud.bigquery.Field;
@@ -22,22 +30,6 @@ import com.google.cloud.bigquery.FieldValueList;
 import com.google.cloud.bigquery.Schema;
 import com.google.cloud.bigquery.StandardSQLTypeName;
 import com.google.cloud.bigquery.TableResult;
-
-import io.harness.CategoryTest;
-import io.harness.batch.processing.config.BatchMainConfig;
-import io.harness.batch.processing.config.BillingDataPipelineConfig;
-import io.harness.batch.processing.pricing.data.VMInstanceBillingData;
-import io.harness.category.element.UnitTests;
-import io.harness.rule.Owner;
-import lombok.extern.slf4j.Slf4j;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
-import org.junit.runner.RunWith;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.Spy;
-import org.mockito.runners.MockitoJUnitRunner;
-
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
@@ -46,6 +38,14 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import lombok.extern.slf4j.Slf4j;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
+import org.junit.runner.RunWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.Spy;
+import org.mockito.runners.MockitoJUnitRunner;
 
 @Slf4j
 @RunWith(MockitoJUnitRunner.class)

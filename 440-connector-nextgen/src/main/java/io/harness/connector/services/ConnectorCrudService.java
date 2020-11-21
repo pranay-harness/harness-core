@@ -5,9 +5,9 @@ import io.harness.connector.apis.dto.ConnectorDTO;
 import io.harness.connector.apis.dto.ConnectorResponseDTO;
 import io.harness.delegate.beans.connector.ConnectorCategory;
 import io.harness.delegate.beans.connector.ConnectorType;
-import org.springframework.data.domain.Page;
 
 import java.util.Optional;
+import org.springframework.data.domain.Page;
 
 public interface ConnectorCrudService {
   Page<ConnectorResponseDTO> list(int page, int size, String accountIdentifier, String orgIdentifier,

@@ -1,13 +1,16 @@
 package software.wings.service.impl.aws.delegate;
 
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+
 import static com.amazonaws.services.ecs.model.ServiceField.TAGS;
 import static com.google.common.collect.Lists.newArrayList;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static java.util.Collections.emptyList;
 import static java.util.stream.Collectors.toList;
 
-import com.google.common.annotations.VisibleForTesting;
-import com.google.inject.Singleton;
+import io.harness.security.encryption.EncryptedDataDetail;
+
+import software.wings.beans.AwsConfig;
+import software.wings.service.intfc.aws.delegate.AwsEcsHelperServiceDelegate;
 
 import com.amazonaws.AmazonClientException;
 import com.amazonaws.AmazonServiceException;
@@ -34,10 +37,8 @@ import com.amazonaws.services.ecs.model.ListTasksResult;
 import com.amazonaws.services.ecs.model.Service;
 import com.amazonaws.services.ecs.model.Task;
 import com.amazonaws.services.ecs.model.TaskField;
-import io.harness.security.encryption.EncryptedDataDetail;
-import software.wings.beans.AwsConfig;
-import software.wings.service.intfc.aws.delegate.AwsEcsHelperServiceDelegate;
-
+import com.google.common.annotations.VisibleForTesting;
+import com.google.inject.Singleton;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -65,7 +66,7 @@ public class AwsEcsHelperServiceDelegateImpl
         ListClustersRequest listClustersRequest = new ListClustersRequest().withNextToken(nextToken);
         tracker.trackECSCall("List Clusters");
         ListClustersResult listClustersResult = getAmazonEcsClient(region, awsConfig).listClusters(listClustersRequest);
-        result.addAll(listClustersResult.getClusterArns().stream().map(this ::getIdFromArn).collect(toList()));
+        result.addAll(listClustersResult.getClusterArns().stream().map(this::getIdFromArn).collect(toList()));
         nextToken = listClustersResult.getNextToken();
       } while (nextToken != null);
       return result;

@@ -5,8 +5,7 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
 import static io.harness.persistence.HQuery.excludeAuthority;
 import static io.harness.threading.Morpheus.sleep;
-import static java.time.Duration.ofMillis;
-import static org.apache.commons.lang3.StringUtils.isBlank;
+
 import static software.wings.common.VerificationConstants.DEFAULT_GROUP_NAME;
 import static software.wings.common.VerificationConstants.DUMMY_HOST_NAME;
 import static software.wings.common.VerificationConstants.GA_PER_MINUTE_CV_STATES;
@@ -15,12 +14,9 @@ import static software.wings.service.impl.analysis.AnalysisComparisonStrategy.CO
 import static software.wings.service.impl.analysis.AnalysisComparisonStrategy.PREDICTIVE;
 import static software.wings.service.intfc.security.SecretManagementDelegateService.NUM_OF_RETRIES;
 
-import com.google.common.collect.Sets;
-import com.google.inject.Inject;
+import static java.time.Duration.ofMillis;
+import static org.apache.commons.lang3.StringUtils.isBlank;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import com.github.reinert.jjschema.Attributes;
-import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.beans.ExecutionStatus;
 import io.harness.context.ContextElementType;
 import io.harness.exception.ExceptionUtils;
@@ -28,8 +24,7 @@ import io.harness.serializer.JsonUtils;
 import io.harness.tasks.ResponseData;
 import io.harness.time.Timestamp;
 import io.harness.version.VersionInfoManager;
-import org.apache.commons.io.IOUtils;
-import org.mongodb.morphia.annotations.Transient;
+
 import software.wings.beans.DatadogConfig;
 import software.wings.beans.GcpConfig;
 import software.wings.beans.SettingAttribute;
@@ -58,6 +53,11 @@ import software.wings.verification.VerificationDataAnalysisResponse;
 import software.wings.verification.VerificationStateAnalysisExecutionData;
 import software.wings.verification.log.LogsCVConfiguration;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.github.reinert.jjschema.Attributes;
+import com.github.reinert.jjschema.SchemaIgnore;
+import com.google.common.collect.Sets;
+import com.google.inject.Inject;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
@@ -70,6 +70,8 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
+import org.apache.commons.io.IOUtils;
+import org.mongodb.morphia.annotations.Transient;
 
 /**
  * Created by rsingh on 7/6/17.
@@ -188,7 +190,7 @@ public abstract class AbstractLogAnalysisState extends AbstractAnalysisState {
 
         if (analysisContext.getNewNodesTrafficShiftPercent() != null
             && (analysisContext.getNewNodesTrafficShiftPercent() == 0
-                   || analysisContext.getNewNodesTrafficShiftPercent() > 50)) {
+                || analysisContext.getNewNodesTrafficShiftPercent() > 50)) {
           getLogger().info(
               "New nodes cannot be analyzed against old nodes if new traffic percentage is greater than 50 or equal to 0");
           return generateAnalysisResponse(analysisContext, ExecutionStatus.FAILED,
@@ -327,9 +329,9 @@ public abstract class AbstractLogAnalysisState extends AbstractAnalysisState {
               executionContext.getStateExecutionInstanceId(), ExecutionStatus.SUCCESS, true, false);
           return isQAVerificationPath(context.getAccountId(), context.getAppId())
               ? generateAnalysisResponse(
-                    context, ExecutionStatus.FAILED, "No Analysis result found. This is not a failure.")
+                  context, ExecutionStatus.FAILED, "No Analysis result found. This is not a failure.")
               : generateAnalysisResponse(
-                    context, ExecutionStatus.SUCCESS, "No data found with given queries. Skipped Analysis");
+                  context, ExecutionStatus.SUCCESS, "No data found with given queries. Skipped Analysis");
         }
 
         if (analysisSummary.getAnalysisMinute() < analysisMinute) {

@@ -1,9 +1,10 @@
 package io.harness.ng.core.models;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import io.harness.ng.core.dto.secrets.SSHAuthDTO;
 import io.harness.secretmanagerclient.SSHAuthScheme;
+
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;

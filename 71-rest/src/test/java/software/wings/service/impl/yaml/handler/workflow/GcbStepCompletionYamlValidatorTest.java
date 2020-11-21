@@ -1,25 +1,16 @@
 package software.wings.service.impl.yaml.handler.workflow;
 
 import static io.harness.rule.OwnerRule.AGORODETKI;
+
 import static java.util.Collections.EMPTY_MAP;
 import static java.util.Collections.singletonMap;
 import static org.junit.runners.Parameterized.Parameters;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.when;
 
-import com.google.common.collect.ImmutableMap;
-
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
-import org.junit.rules.ExpectedException;
-import org.junit.runner.RunWith;
-import org.junit.runners.Parameterized;
-import org.mockito.Mock;
-import org.mockito.Mockito;
+
 import software.wings.beans.GitConfig;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.yaml.Change;
@@ -29,11 +20,21 @@ import software.wings.service.intfc.SettingsService;
 import software.wings.utils.WingsTestConstants;
 import software.wings.yaml.workflow.StepYaml;
 
+import com.google.common.collect.ImmutableMap;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
+import org.junit.Before;
+import org.junit.Rule;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
+import org.junit.rules.ExpectedException;
+import org.junit.runner.RunWith;
+import org.junit.runners.Parameterized;
+import org.mockito.Mock;
+import org.mockito.Mockito;
 
 @RunWith(Parameterized.class)
 public class GcbStepCompletionYamlValidatorTest {

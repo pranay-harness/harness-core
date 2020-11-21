@@ -6,11 +6,8 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.eraro.ErrorCode.CYBERARK_OPERATION_ERROR;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.threading.Morpheus.sleep;
-import static java.time.Duration.ofMillis;
 
-import com.google.common.util.concurrent.TimeLimiter;
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
+import static java.time.Duration.ofMillis;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.encryptors.VaultEncryptor;
@@ -20,13 +17,17 @@ import io.harness.helpers.ext.cyberark.CyberArkRestClientFactory;
 import io.harness.security.encryption.EncryptedRecord;
 import io.harness.security.encryption.EncryptedRecordData;
 import io.harness.security.encryption.EncryptionConfig;
-import lombok.extern.slf4j.Slf4j;
-import retrofit2.Response;
+
 import software.wings.beans.CyberArkConfig;
 
+import com.google.common.util.concurrent.TimeLimiter;
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import java.io.IOException;
 import java.util.concurrent.TimeUnit;
 import javax.validation.executable.ValidateOnExecution;
+import lombok.extern.slf4j.Slf4j;
+import retrofit2.Response;
 
 @ValidateOnExecution
 @Singleton

@@ -1,12 +1,12 @@
 package software.wings.graphql.datafetcher.ce;
 
 import static io.harness.rule.OwnerRule.HANTANG;
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import graphql.schema.DataFetchingEnvironment;
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.ccm.health.CEClusterHealth;
@@ -14,6 +14,13 @@ import io.harness.ccm.health.CEError;
 import io.harness.ccm.health.CEHealthStatus;
 import io.harness.ccm.health.HealthStatusService;
 import io.harness.rule.Owner;
+
+import software.wings.graphql.schema.type.aggregation.cloudprovider.CEHealthStatusDTO;
+import software.wings.graphql.schema.type.cloudProvider.QLKubernetesClusterCloudProvider;
+
+import graphql.schema.DataFetchingEnvironment;
+import java.util.Arrays;
+import java.util.List;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -22,11 +29,6 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnit;
 import org.mockito.junit.MockitoRule;
-import software.wings.graphql.schema.type.aggregation.cloudprovider.CEHealthStatusDTO;
-import software.wings.graphql.schema.type.cloudProvider.QLKubernetesClusterCloudProvider;
-
-import java.util.Arrays;
-import java.util.List;
 
 public class CeHealthStatusDataFetcherTest extends CategoryTest {
   private String cloudProviderId = "CLOUD_PROVIDER_ID";

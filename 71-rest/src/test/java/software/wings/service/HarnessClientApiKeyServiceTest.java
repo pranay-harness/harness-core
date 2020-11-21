@@ -1,20 +1,22 @@
 package software.wings.service;
 
 import static io.harness.rule.OwnerRule.RAMA;
-import static org.assertj.core.api.Assertions.assertThat;
 
-import com.google.inject.Inject;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.beans.ClientType;
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
+
+import software.wings.WingsBaseTest;
+import software.wings.service.intfc.HarnessApiKeyService;
+
+import com.google.inject.Inject;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.junit.rules.ExpectedException;
 import org.mockito.InjectMocks;
-import software.wings.WingsBaseTest;
-import software.wings.service.intfc.HarnessApiKeyService;
 
 /**
  *

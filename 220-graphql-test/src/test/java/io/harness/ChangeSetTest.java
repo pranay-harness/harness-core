@@ -2,9 +2,8 @@ package io.harness;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.rule.OwnerRule.VARDAN_BANSAL;
-import static org.assertj.core.api.Assertions.assertThat;
 
-import com.google.inject.Inject;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.beans.EmbeddedUser;
 import io.harness.category.element.UnitTests;
@@ -13,10 +12,7 @@ import io.harness.generator.ChangeSetGenerator;
 import io.harness.generator.OwnerManager;
 import io.harness.generator.Randomizer;
 import io.harness.rule.Owner;
-import lombok.Data;
-import lombok.Singular;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
+
 import software.wings.audit.ApiKeyAuditDetails;
 import software.wings.audit.AuditHeader;
 import software.wings.audit.EntityAuditRecord;
@@ -32,7 +28,12 @@ import software.wings.graphql.schema.type.audit.QLGitChangeSet;
 import software.wings.graphql.schema.type.audit.QLRequestInfo;
 import software.wings.graphql.schema.type.audit.QLUserChangeSet;
 
+import com.google.inject.Inject;
 import java.util.List;
+import lombok.Data;
+import lombok.Singular;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 public class ChangeSetTest extends GraphQLTest {
   @Inject private OwnerManager ownerManager;

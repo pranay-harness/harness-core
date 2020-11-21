@@ -3,10 +3,10 @@ package io.harness.obfuscate;
 import static java.nio.charset.StandardCharsets.UTF_8;
 
 import io.harness.exception.UnexpectedException;
-import lombok.experimental.UtilityClass;
 
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import lombok.experimental.UtilityClass;
 
 @UtilityClass
 public class Obfuscator {

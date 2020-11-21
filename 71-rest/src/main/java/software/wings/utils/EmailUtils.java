@@ -2,9 +2,9 @@ package software.wings.utils;
 
 import static java.lang.String.format;
 
-import com.google.inject.Singleton;
-
 import software.wings.helpers.ext.mail.EmailData;
+
+import com.google.inject.Singleton;
 
 @Singleton
 public class EmailUtils {

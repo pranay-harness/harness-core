@@ -3,8 +3,6 @@ package io.harness.states;
 import static io.harness.ngpipeline.orchestration.StepUtils.createStepResponseFromChildResponse;
 import static io.harness.resolvers.ResolverUtils.GLOBAL_GROUP_SCOPE;
 
-import com.google.inject.Inject;
-
 import io.harness.ambiance.Ambiance;
 import io.harness.beans.CIPipelineSetupParameters;
 import io.harness.ci.stdvars.BuildStandardVariables;
@@ -21,9 +19,10 @@ import io.harness.state.io.StepInputPackage;
 import io.harness.state.io.StepParameters;
 import io.harness.state.io.StepResponse;
 import io.harness.tasks.ResponseData;
-import lombok.extern.slf4j.Slf4j;
 
+import com.google.inject.Inject;
 import java.util.Map;
+import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class CIPipelineSetupStep implements Step, ChildExecutable<CIPipelineSetupParameters>, SyncExecutable {

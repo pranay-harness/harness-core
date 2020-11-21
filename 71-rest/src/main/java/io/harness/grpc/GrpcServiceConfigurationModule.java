@@ -1,18 +1,5 @@
 package io.harness.grpc;
 
-import com.google.common.util.concurrent.Service;
-import com.google.common.util.concurrent.ServiceManager;
-import com.google.inject.AbstractModule;
-import com.google.inject.Key;
-import com.google.inject.Provider;
-import com.google.inject.Provides;
-import com.google.inject.Singleton;
-import com.google.inject.TypeLiteral;
-import com.google.inject.multibindings.MapBinder;
-import com.google.inject.multibindings.Multibinder;
-
-import io.grpc.BindableService;
-import io.grpc.ServerInterceptor;
 import io.harness.delegate.DelegateServiceGrpc;
 import io.harness.delegateprofile.DelegateProfileServiceGrpc;
 import io.harness.grpc.auth.DelegateAuthServerInterceptor;
@@ -25,8 +12,21 @@ import io.harness.grpc.server.GrpcServerExceptionHandler;
 import io.harness.grpc.server.GrpcServerModule;
 import io.harness.perpetualtask.grpc.PerpetualTaskServiceGrpc;
 import io.harness.security.KeySource;
+
 import software.wings.security.AccountKeySource;
 
+import com.google.common.util.concurrent.Service;
+import com.google.common.util.concurrent.ServiceManager;
+import com.google.inject.AbstractModule;
+import com.google.inject.Key;
+import com.google.inject.Provider;
+import com.google.inject.Provides;
+import com.google.inject.Singleton;
+import com.google.inject.TypeLiteral;
+import com.google.inject.multibindings.MapBinder;
+import com.google.inject.multibindings.Multibinder;
+import io.grpc.BindableService;
+import io.grpc.ServerInterceptor;
 import java.util.Set;
 
 public class GrpcServiceConfigurationModule extends AbstractModule {

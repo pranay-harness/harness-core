@@ -3,21 +3,20 @@ package software.wings.signup;
 import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.exception.WingsException.USER;
 
-import com.google.inject.Singleton;
-
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.exception.InvalidArgumentsException;
 import io.harness.network.Http;
+
+import com.google.inject.Singleton;
+import java.io.IOException;
+import java.util.Arrays;
+import java.util.stream.Stream;
 import lombok.extern.slf4j.Slf4j;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.Response;
 import okhttp3.ResponseBody;
 import org.apache.commons.codec.digest.DigestUtils;
-
-import java.io.IOException;
-import java.util.Arrays;
-import java.util.stream.Stream;
 
 @OwnedBy(PL)
 @Slf4j

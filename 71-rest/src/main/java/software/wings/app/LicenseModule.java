@@ -1,10 +1,10 @@
 package software.wings.app;
 
-import com.google.inject.AbstractModule;
-import com.google.inject.matcher.Matchers;
-
 import software.wings.licensing.LicenseInterceptor;
 import software.wings.licensing.Licensed;
+
+import com.google.inject.AbstractModule;
+import com.google.inject.matcher.Matchers;
 
 /**
  * Created by peeyushaggarwal on 3/22/17.

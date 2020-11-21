@@ -1,8 +1,5 @@
 package io.harness.batch.processing.anomalydetection.service.impl;
 
-import com.google.inject.Singleton;
-
-import com.healthmarketscience.sqlbuilder.InsertQuery;
 import io.harness.batch.processing.anomalydetection.Anomaly;
 import io.harness.batch.processing.anomalydetection.AnomalyDetectionConstants;
 import io.harness.batch.processing.anomalydetection.AnomalyDetectionTimeSeries;
@@ -11,11 +8,11 @@ import io.harness.batch.processing.anomalydetection.TimeSeriesSpec;
 import io.harness.batch.processing.anomalydetection.TimeSeriesUtils;
 import io.harness.timescaledb.DBUtils;
 import io.harness.timescaledb.TimeScaleDBService;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
+
 import software.wings.graphql.datafetcher.anomaly.AnomaliesDataTableSchema;
 
+import com.google.inject.Singleton;
+import com.healthmarketscience.sqlbuilder.InsertQuery;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -27,6 +24,9 @@ import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.IntStream;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
 
 @Service
 @Singleton

@@ -1,10 +1,8 @@
 package software.wings.beans;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
-import static software.wings.beans.ServiceTemplate.Builder.aServiceTemplate;
 
-import com.google.common.base.MoreObjects;
-import com.google.common.collect.ImmutableList;
+import static software.wings.beans.ServiceTemplate.Builder.aServiceTemplate;
 
 import io.harness.annotation.HarnessEntity;
 import io.harness.annotations.dev.OwnedBy;
@@ -13,6 +11,16 @@ import io.harness.mongo.index.CompoundMongoIndex;
 import io.harness.mongo.index.FdIndex;
 import io.harness.mongo.index.MongoIndex;
 import io.harness.mongo.index.SortCompoundMongoIndex;
+
+import software.wings.beans.appmanifest.ApplicationManifest;
+import software.wings.beans.appmanifest.ManifestFile;
+import software.wings.utils.ArtifactType;
+
+import com.google.common.base.MoreObjects;
+import com.google.common.collect.ImmutableList;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Objects;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.experimental.FieldNameConstants;
@@ -20,13 +28,6 @@ import lombok.experimental.UtilityClass;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Transient;
-import software.wings.beans.appmanifest.ApplicationManifest;
-import software.wings.beans.appmanifest.ManifestFile;
-import software.wings.utils.ArtifactType;
-
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Objects;
 
 @OwnedBy(CDC)
 @Entity(value = "serviceTemplates", noClassnameStored = true)
@@ -268,7 +269,7 @@ public class ServiceTemplate extends Base {
   public int hashCode() {
     return 31 * super.hashCode()
         + Objects.hash(envId, name, description, serviceId, configFilesOverrides, serviceVariablesOverrides,
-              defaultServiceTemplate);
+            defaultServiceTemplate);
   }
 
   @Override

@@ -3,18 +3,18 @@ package io.harness.ng.core.invites.dto;
 import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.ng.core.invites.entities.Invite.InviteType;
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import io.harness.annotations.dev.OwnedBy;
+
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import io.swagger.annotations.ApiModelProperty;
+import java.util.List;
+import javax.validation.Valid;
+import javax.validation.constraints.Size;
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Data;
 import lombok.experimental.FieldDefaults;
 import org.hibernate.validator.constraints.NotEmpty;
-
-import java.util.List;
-import javax.validation.Valid;
-import javax.validation.constraints.Size;
 
 @Data
 @Builder

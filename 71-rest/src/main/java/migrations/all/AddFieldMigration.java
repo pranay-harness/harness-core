@@ -2,8 +2,9 @@ package migrations.all;
 
 import static software.wings.beans.Base.ID_KEY;
 
-import com.google.inject.Inject;
+import software.wings.dl.WingsPersistence;
 
+import com.google.inject.Inject;
 import com.mongodb.BasicDBObject;
 import com.mongodb.BulkWriteOperation;
 import com.mongodb.DBCollection;
@@ -11,7 +12,6 @@ import com.mongodb.DBCursor;
 import com.mongodb.DBObject;
 import migrations.Migration;
 import org.slf4j.Logger;
-import software.wings.dl.WingsPersistence;
 
 /**
  * Created by rsingh on 3/26/18.

@@ -1,15 +1,13 @@
 package migrations;
 
 import com.google.common.collect.ImmutableList;
-
+import java.util.List;
 import lombok.experimental.UtilityClass;
 import migrations.seedata.IISInstallCommandMigration;
 import migrations.seedata.ReImportTemplatesMigration;
 import migrations.seedata.TemplateGalleryDefaultTemplatesMigration;
 import migrations.seedata.TomcatInstallCommandMigration;
 import org.apache.commons.lang3.tuple.Pair;
-
-import java.util.List;
 
 @UtilityClass
 public class SeedDataMigrationList {

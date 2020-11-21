@@ -9,18 +9,17 @@ import static io.harness.rule.OwnerRule.RAGHU;
 import static io.harness.rule.OwnerRule.UNKNOWN;
 import static io.harness.rule.OwnerRule.UTKARSH;
 import static io.harness.security.encryption.EncryptionType.KMS;
-import static java.util.Arrays.asList;
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
-import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
+
 import static software.wings.security.UserThreadLocal.userGuard;
 import static software.wings.settings.SettingVariableTypes.JENKINS;
 import static software.wings.utils.WingsTestConstants.ENV_ID;
 import static software.wings.utils.WingsTestConstants.TEMPLATE_ID;
 
-import com.google.common.base.MoreObjects;
-import com.google.inject.Inject;
+import static java.util.Arrays.asList;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
+import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 
 import io.harness.beans.EncryptedData;
 import io.harness.beans.PageRequest;
@@ -32,13 +31,7 @@ import io.harness.beans.SortOrder.OrderType;
 import io.harness.category.element.UnitTests;
 import io.harness.mongo.SampleEntity.SampleEntityKeys;
 import io.harness.rule.Owner;
-import lombok.extern.slf4j.Slf4j;
-import org.assertj.core.util.Lists;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
-import org.mongodb.morphia.annotations.Reference;
-import org.mongodb.morphia.query.Query;
-import org.mongodb.morphia.query.UpdateOperations;
+
 import software.wings.WingsBaseTest;
 import software.wings.annotation.EncryptableSetting;
 import software.wings.beans.Base;
@@ -56,6 +49,8 @@ import software.wings.service.intfc.security.KmsService;
 import software.wings.service.intfc.security.SecretManager;
 import software.wings.utils.WingsTestConstants;
 
+import com.google.common.base.MoreObjects;
+import com.google.inject.Inject;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.Collections;
@@ -68,6 +63,13 @@ import javax.ws.rs.core.AbstractMultivaluedMap;
 import javax.ws.rs.core.MultivaluedHashMap;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.UriInfo;
+import lombok.extern.slf4j.Slf4j;
+import org.assertj.core.util.Lists;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
+import org.mongodb.morphia.annotations.Reference;
+import org.mongodb.morphia.query.Query;
+import org.mongodb.morphia.query.UpdateOperations;
 
 /**
  * The Class WingsPersistenceTest.

@@ -1,16 +1,16 @@
 package io.harness.datahandler.utils;
 
-import com.google.common.collect.Lists;
-import com.google.inject.Inject;
-
 import io.harness.datahandler.models.AccountSummary;
 import io.harness.limits.ConfiguredLimit;
 import io.harness.limits.configuration.LimitConfigurationService;
 import io.harness.secretmanagers.SecretManagerConfigService;
+
 import software.wings.beans.Account;
 import software.wings.service.intfc.DelegateService;
 import software.wings.service.intfc.verification.CVConfigurationService;
 
+import com.google.common.collect.Lists;
+import com.google.inject.Inject;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
@@ -83,7 +83,7 @@ public class AccountSummaryHelperImpl implements AccountSummaryHelper {
   @Override
   public List<AccountSummary> getAccountSummariesFromAccounts(List<Account> accounts) {
     List<AccountSummary> accountSummaryList =
-        accounts.stream().map(this ::mapToBasicAccountSummary).collect(Collectors.toList());
+        accounts.stream().map(this::mapToBasicAccountSummary).collect(Collectors.toList());
     populate24x7Guard(accountSummaryList);
     populateLimits(accountSummaryList);
     populateNumberOfSecretManagers(accountSummaryList);

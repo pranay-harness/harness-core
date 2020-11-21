@@ -1,5 +1,14 @@
 package io.harness.connector.apis.resource;
 
+import static io.harness.delegate.beans.connector.ConnectorCategory.CLOUD_PROVIDER;
+import static io.harness.delegate.beans.connector.ConnectorType.KUBERNETES_CLUSTER;
+import static io.harness.delegate.beans.connector.k8Connector.KubernetesCredentialType.INHERIT_FROM_DELEGATE;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.eq;
+import static org.mockito.Mockito.*;
+
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.connector.apis.dto.*;
@@ -16,6 +25,10 @@ import io.harness.ng.core.dto.ResponseDTO;
 import io.harness.rule.Owner;
 import io.harness.rule.OwnerRule;
 import io.harness.utils.PageTestUtils;
+
+import java.util.Arrays;
+import java.util.List;
+import java.util.Optional;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -24,18 +37,6 @@ import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
 import org.springframework.data.domain.Page;
-
-import java.util.Arrays;
-import java.util.List;
-import java.util.Optional;
-
-import static io.harness.delegate.beans.connector.ConnectorCategory.CLOUD_PROVIDER;
-import static io.harness.delegate.beans.connector.ConnectorType.KUBERNETES_CLUSTER;
-import static io.harness.delegate.beans.connector.k8Connector.KubernetesCredentialType.INHERIT_FROM_DELEGATE;
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.eq;
-import static org.mockito.Mockito.*;
 
 public class ConnectorResourceTest extends CategoryTest {
   @Mock private ConnectorService connectorService;

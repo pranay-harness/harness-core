@@ -1,20 +1,13 @@
 package software.wings.beans.infrastructure.instance.stats;
 
 import static io.harness.rule.OwnerRule.UJJAWAL;
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.offset;
 
-import com.google.inject.Inject;
-
 import io.harness.category.element.DeprecatedIntegrationTests;
 import io.harness.rule.Owner;
-import lombok.val;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Ignore;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
-import org.mongodb.morphia.query.Query;
+
 import software.wings.beans.EntityType;
 import software.wings.beans.infrastructure.instance.stats.InstanceStatsSnapshot.InstanceStatsSnapshotKeys;
 import software.wings.dl.WingsPersistence;
@@ -22,6 +15,7 @@ import software.wings.integration.IntegrationTestBase;
 import software.wings.integration.IntegrationTestUtils;
 import software.wings.service.impl.instance.stats.InstanceStatServiceImpl;
 
+import com.google.inject.Inject;
 import java.net.URISyntaxException;
 import java.time.Instant;
 import java.util.ArrayList;
@@ -30,6 +24,13 @@ import java.util.List;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
+import lombok.val;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Ignore;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
+import org.mongodb.morphia.query.Query;
 
 public class InstanceStatServiceIntegrationTest extends IntegrationTestBase {
   @Inject private InstanceStatServiceImpl statService;
@@ -84,7 +85,7 @@ public class InstanceStatServiceIntegrationTest extends IntegrationTestBase {
     val from = Instant.now();
 
     val times = 10;
-    val statsToSave = list(times, this ::sampleSnapshot);
+    val statsToSave = list(times, this::sampleSnapshot);
 
     statsToSave.forEach(it -> {
       val saved = statService.save(it);
@@ -123,7 +124,7 @@ public class InstanceStatServiceIntegrationTest extends IntegrationTestBase {
     val from = Instant.now();
 
     val times = 100;
-    val statsToSave = list(times, this ::sampleSnapshot);
+    val statsToSave = list(times, this::sampleSnapshot);
 
     statsToSave.forEach(it -> {
       val saved = statService.save(it);

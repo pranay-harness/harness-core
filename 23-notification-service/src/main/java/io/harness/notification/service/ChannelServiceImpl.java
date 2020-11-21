@@ -1,11 +1,11 @@
 package io.harness.notification.service;
 
-import com.google.inject.Inject;
 import io.harness.NotificationRequest;
 import io.harness.notification.NotificationChannelType;
 import io.harness.notification.remote.dto.NotificationSettingDTO;
 import io.harness.notification.service.api.*;
 
+import com.google.inject.Inject;
 import java.util.HashMap;
 import java.util.Map;
 

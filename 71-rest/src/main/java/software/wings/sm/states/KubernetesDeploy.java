@@ -1,12 +1,13 @@
 package software.wings.sm.states;
 
-import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static software.wings.beans.command.KubernetesResizeParams.KubernetesResizeParamsBuilder.aKubernetesResizeParams;
 import static software.wings.sm.StateType.KUBERNETES_DEPLOY;
 
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
+
 import io.harness.context.ContextElementType;
 import io.harness.k8s.model.ContainerApiVersions;
-import org.apache.commons.lang3.StringUtils;
+
 import software.wings.beans.InstanceUnitType;
 import software.wings.beans.command.ContainerResizeParams;
 import software.wings.beans.container.Label;
@@ -14,6 +15,7 @@ import software.wings.sm.ExecutionContext;
 
 import java.util.Map;
 import java.util.stream.Collectors;
+import org.apache.commons.lang3.StringUtils;
 
 /**
  * Created by brett on 3/1/17
@@ -95,7 +97,7 @@ public class KubernetesDeploy extends ContainerServiceDeploy {
 
     Map<String, String> labelMap = (contextData.containerElement.getLookupLabels() != null)
         ? contextData.containerElement.getLookupLabels().stream().collect(
-              Collectors.toMap(Label::getName, Label::getValue))
+            Collectors.toMap(Label::getName, Label::getValue))
         : null;
 
     return aKubernetesResizeParams()

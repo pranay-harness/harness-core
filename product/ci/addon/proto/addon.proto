@@ -17,11 +17,9 @@ message ExecuteStepResponse {
   int32 num_retries = 2;
 }
 
-message SignalStopRequest {
-}
+message SignalStopRequest {}
 
-message SignalStopResponse {
-}
+message SignalStopResponse {}
 
 service Addon {
   // Synchronous RPC to execute a step

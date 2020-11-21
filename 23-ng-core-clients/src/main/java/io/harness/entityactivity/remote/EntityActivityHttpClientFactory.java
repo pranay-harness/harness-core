@@ -2,13 +2,13 @@ package io.harness.entityactivity.remote;
 
 import static io.harness.annotations.dev.HarnessTeam.DX;
 
-import com.google.inject.Provider;
-
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.remote.client.AbstractHttpClientFactory;
 import io.harness.remote.client.ServiceHttpClientConfig;
 import io.harness.security.ServiceTokenGenerator;
 import io.harness.serializer.kryo.KryoConverterFactory;
+
+import com.google.inject.Provider;
 
 @OwnedBy(DX)
 public class EntityActivityHttpClientFactory

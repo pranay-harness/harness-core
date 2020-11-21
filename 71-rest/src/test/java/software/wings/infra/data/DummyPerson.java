@@ -1,9 +1,10 @@
 package software.wings.infra.data;
 
-import lombok.AllArgsConstructor;
 import software.wings.annotation.CustomFieldMapKey;
 import software.wings.annotation.IncludeFieldMap;
 import software.wings.infra.FieldKeyValMapProvider;
+
+import lombok.AllArgsConstructor;
 
 @AllArgsConstructor
 public class DummyPerson implements FieldKeyValMapProvider {

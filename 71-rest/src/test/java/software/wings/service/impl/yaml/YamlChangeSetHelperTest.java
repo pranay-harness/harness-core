@@ -1,27 +1,20 @@
 package software.wings.service.impl.yaml;
 
 import static io.harness.rule.OwnerRule.ADWAIT;
+
+import static software.wings.utils.WingsTestConstants.USER_ID;
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-import static software.wings.utils.WingsTestConstants.USER_ID;
-
-import com.google.inject.Inject;
 
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.git.model.ChangeType;
 import io.harness.rule.Owner;
-import org.assertj.core.util.Lists;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
-import org.mockito.ArgumentCaptor;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
+
 import software.wings.beans.AwsInfrastructureMapping;
 import software.wings.beans.FeatureName;
 import software.wings.beans.InfrastructureMapping;
@@ -38,7 +31,16 @@ import software.wings.yaml.gitSync.YamlChangeSet;
 import software.wings.yaml.gitSync.YamlGitConfig;
 import software.wings.yaml.gitSync.YamlGitConfig.SyncMode;
 
+import com.google.inject.Inject;
 import java.util.List;
+import org.assertj.core.util.Lists;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
+import org.mockito.ArgumentCaptor;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
 
 public class YamlChangeSetHelperTest extends CategoryTest {
   public static final String ACCOUNTID = "000111";

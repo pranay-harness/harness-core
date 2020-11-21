@@ -1,13 +1,11 @@
 package io.harness.grpc.utils;
 
 import com.google.common.annotations.VisibleForTesting;
-
 import io.grpc.Context;
 import io.grpc.Metadata;
-import lombok.experimental.UtilityClass;
-
 import java.util.Optional;
 import javax.validation.constraints.NotNull;
+import lombok.experimental.UtilityClass;
 
 @UtilityClass
 public class GrpcAuthUtils {

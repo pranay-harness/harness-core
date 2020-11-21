@@ -1,12 +1,12 @@
 package io.harness.cvng.activity.beans;
 
 import io.harness.cvng.verificationjob.beans.AdditionalInfo;
-import lombok.Builder;
-import lombok.Data;
-import lombok.Value;
 
 import java.util.List;
 import java.util.Set;
+import lombok.Builder;
+import lombok.Data;
+import lombok.Value;
 
 @Data
 @Builder

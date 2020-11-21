@@ -2,8 +2,7 @@ package software.wings.service.intfc.yaml;
 
 import io.harness.validation.Create;
 import io.harness.validation.Update;
-import org.hibernate.validator.constraints.NotEmpty;
-import ru.vyarus.guice.validator.group.annotation.ValidationGroups;
+
 import software.wings.beans.yaml.GitFileChange;
 import software.wings.yaml.gitSync.YamlChangeSet;
 import software.wings.yaml.gitSync.YamlChangeSet.Status;
@@ -12,6 +11,8 @@ import software.wings.yaml.gitSync.YamlGitConfig;
 import java.util.List;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
+import org.hibernate.validator.constraints.NotEmpty;
+import ru.vyarus.guice.validator.group.annotation.ValidationGroups;
 
 /**
  * Created by anubhaw on 10/31/17.

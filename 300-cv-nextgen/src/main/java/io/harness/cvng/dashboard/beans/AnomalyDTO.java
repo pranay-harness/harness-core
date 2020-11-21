@@ -2,10 +2,10 @@ package io.harness.cvng.dashboard.beans;
 
 import io.harness.cvng.beans.CVMonitoringCategory;
 import io.harness.cvng.dashboard.entities.Anomaly.AnomalyStatus;
-import lombok.Builder;
-import lombok.Value;
 
 import java.util.SortedSet;
+import lombok.Builder;
+import lombok.Value;
 
 @Value
 @Builder

@@ -1,25 +1,24 @@
 package io.harness.managerclient;
 
-import com.google.common.collect.ImmutableList;
-import com.google.inject.Provider;
+import io.harness.network.FibonacciBackOff;
+import io.harness.network.Http;
+import io.harness.security.TokenGenerator;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.guava.GuavaModule;
 import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
-import io.harness.network.FibonacciBackOff;
-import io.harness.network.Http;
-import io.harness.security.TokenGenerator;
+import com.google.common.collect.ImmutableList;
+import com.google.inject.Provider;
+import javax.net.ssl.SSLContext;
+import javax.net.ssl.SSLSocketFactory;
+import javax.net.ssl.TrustManager;
+import javax.net.ssl.X509TrustManager;
 import okhttp3.ConnectionPool;
 import okhttp3.OkHttpClient;
 import okhttp3.Request.Builder;
 import retrofit2.Retrofit;
 import retrofit2.converter.jackson.JacksonConverterFactory;
-
-import javax.net.ssl.SSLContext;
-import javax.net.ssl.SSLSocketFactory;
-import javax.net.ssl.TrustManager;
-import javax.net.ssl.X509TrustManager;
 
 class ManagerClientV2X509TrustManager implements X509TrustManager {
   @Override

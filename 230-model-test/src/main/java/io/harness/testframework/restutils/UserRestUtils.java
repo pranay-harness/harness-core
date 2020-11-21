@@ -8,8 +8,7 @@ import io.harness.rest.RestResponse;
 import io.harness.testframework.framework.Registration;
 import io.harness.testframework.framework.Setup;
 import io.harness.testframework.framework.constants.UserConstants;
-import io.restassured.http.ContentType;
-import io.restassured.mapper.ObjectMapperType;
+
 import software.wings.beans.Account;
 import software.wings.beans.LoginRequest;
 import software.wings.beans.PublicUser;
@@ -17,6 +16,8 @@ import software.wings.beans.User;
 import software.wings.beans.UserInvite;
 import software.wings.resources.UserResource;
 
+import io.restassured.http.ContentType;
+import io.restassured.mapper.ObjectMapperType;
 import java.io.UnsupportedEncodingException;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;

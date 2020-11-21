@@ -1,8 +1,7 @@
 package software.wings.sm.states;
 
 import io.harness.security.encryption.EncryptedDataDetail;
-import lombok.Builder;
-import lombok.Data;
+
 import software.wings.api.ContainerRollbackRequestElement;
 import software.wings.api.ContainerServiceElement;
 import software.wings.beans.Application;
@@ -12,6 +11,8 @@ import software.wings.beans.Environment;
 import software.wings.beans.Service;
 
 import java.util.List;
+import lombok.Builder;
+import lombok.Data;
 
 @Data
 @Builder

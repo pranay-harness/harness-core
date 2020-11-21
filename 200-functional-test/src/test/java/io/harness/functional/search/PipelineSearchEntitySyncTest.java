@@ -1,9 +1,8 @@
 package io.harness.functional.search;
 
 import static io.harness.rule.OwnerRule.UTKARSH;
-import static org.assertj.core.api.Assertions.assertThat;
 
-import com.google.inject.Inject;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.category.element.FunctionalTests;
 import io.harness.functional.AbstractFunctionalTest;
@@ -13,11 +12,7 @@ import io.harness.testframework.framework.matchers.BooleanMatcher;
 import io.harness.testframework.restutils.ApplicationRestUtils;
 import io.harness.testframework.restutils.PipelineRestUtils;
 import io.harness.testframework.restutils.SearchRestUtils;
-import lombok.extern.slf4j.Slf4j;
-import org.apache.http.HttpStatus;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
+
 import software.wings.app.MainConfiguration;
 import software.wings.beans.Application;
 import software.wings.beans.FeatureName;
@@ -26,6 +21,13 @@ import software.wings.search.entities.pipeline.PipelineSearchEntity;
 import software.wings.search.framework.SearchResult;
 import software.wings.search.framework.SearchResults;
 import software.wings.service.intfc.FeatureFlagService;
+
+import com.google.inject.Inject;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.http.HttpStatus;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 @Slf4j
 public class PipelineSearchEntitySyncTest extends AbstractFunctionalTest {
@@ -68,7 +70,7 @@ public class PipelineSearchEntitySyncTest extends AbstractFunctionalTest {
     }
 
     BooleanMatcher booleanMatcher = new BooleanMatcher();
-    retry.executeWithRetry(this ::isPipelineInSearchResponse, booleanMatcher, true);
+    retry.executeWithRetry(this::isPipelineInSearchResponse, booleanMatcher, true);
     log.info("New pipeline with id {} and name {} synced.", pipeline.getUuid(), pipeline.getName());
 
     pipeline.setName(EDITED_PIPELINE_NAME);
@@ -77,13 +79,13 @@ public class PipelineSearchEntitySyncTest extends AbstractFunctionalTest {
     assertThat(pipeline).isNotNull();
     assertThat(pipeline.getName()).isEqualTo(EDITED_PIPELINE_NAME);
 
-    retry.executeWithRetry(this ::isPipelineInSearchResponse, booleanMatcher, true);
+    retry.executeWithRetry(this::isPipelineInSearchResponse, booleanMatcher, true);
     log.info("Pipeline update with id {} and name {} synced.", pipeline.getUuid(), pipeline.getName());
 
     int statusCode = PipelineRestUtils.deletePipeline(pipeline.getAppId(), pipeline.getUuid(), bearerToken);
     assertThat(statusCode).isEqualTo(HttpStatus.SC_OK);
 
-    retry.executeWithRetry(this ::isPipelineInSearchResponse, booleanMatcher, false);
+    retry.executeWithRetry(this::isPipelineInSearchResponse, booleanMatcher, false);
     log.info("Pipeline with id {} deleted", pipeline.getUuid());
 
     ApplicationRestUtils.deleteApplication(bearerToken, application.getUuid(), application.getAccountId());

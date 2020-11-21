@@ -1,18 +1,17 @@
 package io.harness.cvng.core.beans;
 
-import com.google.common.base.Preconditions;
-import com.google.common.collect.Lists;
-
-import com.fasterxml.jackson.annotation.JsonTypeName;
 import io.harness.cvng.beans.CVMonitoringCategory;
 import io.harness.cvng.beans.DataSourceType;
 import io.harness.cvng.core.entities.CVConfig;
 import io.harness.cvng.core.entities.SplunkCVConfig;
+
+import com.fasterxml.jackson.annotation.JsonTypeName;
+import com.google.common.base.Preconditions;
+import com.google.common.collect.Lists;
+import java.util.List;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
-
-import java.util.List;
 @Data
 @JsonTypeName("SPLUNK")
 @NoArgsConstructor

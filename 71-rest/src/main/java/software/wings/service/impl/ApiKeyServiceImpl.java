@@ -11,20 +11,17 @@ import static io.harness.exception.WingsException.USER;
 import static io.harness.mongo.MongoUtils.setUnset;
 import static io.harness.validation.PersistenceValidator.duplicateCheck;
 import static io.harness.validation.Validator.notNullCheck;
+
+import static software.wings.app.ManagerCacheRegistrar.APIKEY_CACHE;
+import static software.wings.app.ManagerCacheRegistrar.APIKEY_PERMISSION_CACHE;
+import static software.wings.app.ManagerCacheRegistrar.APIKEY_RESTRICTION_CACHE;
+
 import static java.lang.System.currentTimeMillis;
 import static java.util.function.Function.identity;
 import static org.apache.commons.collections4.ListUtils.emptyIfNull;
 import static org.mindrot.jbcrypt.BCrypt.checkpw;
 import static org.mindrot.jbcrypt.BCrypt.hashpw;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
-import static software.wings.app.ManagerCacheRegistrar.APIKEY_CACHE;
-import static software.wings.app.ManagerCacheRegistrar.APIKEY_PERMISSION_CACHE;
-import static software.wings.app.ManagerCacheRegistrar.APIKEY_RESTRICTION_CACHE;
-
-import com.google.common.base.Charsets;
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
-import com.google.inject.name.Named;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.PageRequest;
@@ -35,11 +32,7 @@ import io.harness.exception.GeneralException;
 import io.harness.exception.UnauthorizedException;
 import io.harness.persistence.HQuery;
 import io.harness.security.SimpleEncryption;
-import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.collections4.ListUtils;
-import org.mindrot.jbcrypt.BCrypt;
-import org.mongodb.morphia.query.Query;
-import org.mongodb.morphia.query.UpdateOperations;
+
 import software.wings.beans.Account;
 import software.wings.beans.ApiKeyEntry;
 import software.wings.beans.ApiKeyEntry.ApiKeyEntryKeys;
@@ -58,6 +51,10 @@ import software.wings.service.intfc.AuthService;
 import software.wings.service.intfc.UserGroupService;
 import software.wings.utils.CryptoUtils;
 
+import com.google.common.base.Charsets;
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
+import com.google.inject.name.Named;
 import java.util.ArrayList;
 import java.util.Base64;
 import java.util.Collections;
@@ -70,6 +67,11 @@ import java.util.concurrent.ExecutorService;
 import java.util.stream.Collectors;
 import javax.cache.Cache;
 import javax.validation.executable.ValidateOnExecution;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.collections4.ListUtils;
+import org.mindrot.jbcrypt.BCrypt;
+import org.mongodb.morphia.query.Query;
+import org.mongodb.morphia.query.UpdateOperations;
 
 @OwnedBy(PL)
 @Singleton

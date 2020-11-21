@@ -1,16 +1,17 @@
 package software.wings.service.impl.template;
 
-import static org.apache.commons.lang3.StringUtils.trim;
 import static software.wings.beans.template.TemplateType.CUSTOM_DEPLOYMENT_TYPE;
 
-import de.danielbechler.diff.ObjectDifferBuilder;
-import de.danielbechler.diff.node.DiffNode;
+import static org.apache.commons.lang3.StringUtils.trim;
+
 import software.wings.beans.EntityType;
 import software.wings.beans.template.BaseTemplate;
 import software.wings.beans.template.Template;
 import software.wings.beans.template.TemplateType;
 import software.wings.beans.template.deploymenttype.CustomDeploymentTypeTemplate;
 
+import de.danielbechler.diff.ObjectDifferBuilder;
+import de.danielbechler.diff.node.DiffNode;
 import java.util.List;
 import java.util.Optional;
 

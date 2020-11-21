@@ -1,8 +1,8 @@
 package io.harness.ngtriggers.beans.source.webhook;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
 import io.harness.exception.InvalidRequestException;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import java.util.Collections;
 import java.util.EnumSet;
 import java.util.Set;

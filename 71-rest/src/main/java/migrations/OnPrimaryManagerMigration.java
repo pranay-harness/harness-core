@@ -1,3 +1,5 @@
 package migrations;
 
-public interface OnPrimaryManagerMigration { void migrate(); }
+public interface OnPrimaryManagerMigration {
+  void migrate();
+}

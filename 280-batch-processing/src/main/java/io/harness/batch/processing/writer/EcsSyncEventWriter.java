@@ -1,23 +1,22 @@
 package io.harness.batch.processing.writer;
 
-import com.google.common.collect.Sets;
-import com.google.common.collect.Sets.SetView;
-import com.google.inject.Singleton;
-import com.google.protobuf.Timestamp;
-
 import io.harness.batch.processing.writer.constants.EventTypeConstants;
 import io.harness.event.grpc.PublishedMessage;
 import io.harness.event.payloads.EcsSyncEvent;
 import io.harness.event.payloads.Lifecycle;
 import io.harness.event.payloads.Lifecycle.EventType;
 import io.harness.grpc.utils.HTimestamps;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.batch.item.ItemWriter;
 
+import com.google.common.collect.Sets;
+import com.google.common.collect.Sets.SetView;
+import com.google.inject.Singleton;
+import com.google.protobuf.Timestamp;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.batch.item.ItemWriter;
 
 @Slf4j
 @Singleton
@@ -40,10 +39,10 @@ public class EcsSyncEventWriter extends EventWriter implements ItemWriter<Publis
           Set<String> activeInstanceArns = new HashSet<>();
           activeInstanceArns.addAll(ecsSyncEvent.getActiveEc2InstanceArnsList());
           activeInstanceArns.addAll(
-              ecsSyncEvent.getActiveTaskArnsList().stream().map(this ::getIdFromArn).collect(Collectors.toList()));
+              ecsSyncEvent.getActiveTaskArnsList().stream().map(this::getIdFromArn).collect(Collectors.toList()));
           activeInstanceArns.addAll(ecsSyncEvent.getActiveContainerInstanceArnsList()
                                         .stream()
-                                        .map(this ::getIdFromArn)
+                                        .map(this::getIdFromArn)
                                         .collect(Collectors.toList()));
           SetView<String> inactiveInstanceArns = Sets.difference(activeInstanceIds, activeInstanceArns);
           log.info("Inactive instance arns {}", inactiveInstanceArns.toString());

@@ -12,10 +12,10 @@ import io.harness.ngtriggers.beans.source.NGTriggerSource;
 import io.harness.ngtriggers.beans.source.NGTriggerType;
 import io.harness.ngtriggers.beans.source.webhook.WebhookTriggerConfig;
 import io.harness.yaml.utils.YamlPipelineUtils;
-import lombok.experimental.UtilityClass;
 
 import java.io.IOException;
 import java.util.List;
+import lombok.experimental.UtilityClass;
 
 @UtilityClass
 public class NGTriggerElementMapper {

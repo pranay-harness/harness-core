@@ -1,12 +1,11 @@
 package io.harness.walktree.visitor.validation;
 
 import static io.harness.rule.OwnerRule.SAHIL;
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.when;
-
-import com.google.inject.Injector;
 
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
@@ -18,6 +17,8 @@ import io.harness.walktree.registries.visitorfield.VisitorFieldRegistry;
 import io.harness.walktree.visitor.utilities.VisitorDummyElementUtils;
 import io.harness.walktree.visitor.utilities.VisitorParentPathUtils;
 import io.harness.walktree.visitor.validation.modes.ModeType;
+
+import com.google.inject.Injector;
 import org.assertj.core.api.Assertions;
 import org.junit.Before;
 import org.junit.Test;

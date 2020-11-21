@@ -3,12 +3,8 @@ package software.wings.common;
 import static software.wings.expression.ManagerExpressionEvaluator.matchesVariablePattern;
 import static software.wings.expression.ManagerExpressionEvaluator.wingsVariablePattern;
 
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
-
 import io.harness.exception.WingsException;
-import lombok.extern.slf4j.Slf4j;
-import org.jetbrains.annotations.NotNull;
+
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.Service;
 import software.wings.beans.SettingAttribute;
@@ -21,8 +17,12 @@ import software.wings.service.intfc.SettingsService;
 import software.wings.settings.SettingVariableTypes;
 import software.wings.sm.ExecutionContext;
 
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import java.util.List;
 import java.util.regex.Matcher;
+import lombok.extern.slf4j.Slf4j;
+import org.jetbrains.annotations.NotNull;
 
 @Singleton
 @Slf4j

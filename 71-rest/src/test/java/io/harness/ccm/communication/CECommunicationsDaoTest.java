@@ -1,20 +1,21 @@
 package io.harness.ccm.communication;
 
 import static io.harness.rule.OwnerRule.SHUBHANSHU;
-import static org.assertj.core.api.Assertions.assertThat;
 
-import com.google.inject.Inject;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.category.element.UnitTests;
 import io.harness.ccm.communication.entities.CECommunications;
 import io.harness.ccm.communication.entities.CommunicationType;
 import io.harness.rule.Owner;
+
+import software.wings.WingsBaseTest;
+
+import com.google.inject.Inject;
+import java.util.List;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
-import software.wings.WingsBaseTest;
-
-import java.util.List;
 
 public class CECommunicationsDaoTest extends WingsBaseTest {
   private String accountId = "ACCOUNT_ID";

@@ -2,20 +2,20 @@ package io.harness.execution.export.metadata;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 
-import com.google.common.annotations.VisibleForTesting;
-
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.execution.export.ExportExecutionsUtils;
 import io.harness.interrupts.ExecutionInterruptType;
+
+import software.wings.beans.StateExecutionInterrupt;
+
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.google.common.annotations.VisibleForTesting;
+import java.time.ZonedDateTime;
+import java.util.List;
 import lombok.Builder;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Value;
-import software.wings.beans.StateExecutionInterrupt;
-
-import java.time.ZonedDateTime;
-import java.util.List;
 
 @OwnedBy(CDC)
 @Value
@@ -62,7 +62,7 @@ public class ExecutionInterruptMetadata implements Comparable<ExecutionInterrupt
         .tookEffectAt(stateExecutionInterrupt.getTookAffectAt() == null
                 ? null
                 : ExportExecutionsUtils.prepareZonedDateTime(
-                      stateExecutionInterrupt.getTookAffectAt().toInstant().toEpochMilli()))
+                    stateExecutionInterrupt.getTookAffectAt().toInstant().toEpochMilli()))
         .build();
   }
 }

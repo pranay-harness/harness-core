@@ -1,3 +1,5 @@
 package migrations;
 
-public interface Migration { void migrate(); }
+public interface Migration {
+  void migrate();
+}

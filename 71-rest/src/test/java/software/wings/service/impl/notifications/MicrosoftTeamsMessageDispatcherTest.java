@@ -1,9 +1,7 @@
 package software.wings.service.impl.notifications;
 
 import static io.harness.rule.OwnerRule.MEHUL;
-import static junit.framework.TestCase.assertEquals;
-import static org.apache.commons.lang3.StringUtils.EMPTY;
-import static org.assertj.core.api.Assertions.assertThat;
+
 import static software.wings.common.NotificationConstants.BLUE_COLOR;
 import static software.wings.common.NotificationMessageResolver.NotificationMessageType.WORKFLOW_NOTIFICATION;
 import static software.wings.utils.WingsTestConstants.APPLICATION;
@@ -28,24 +26,21 @@ import static software.wings.utils.WingsTestConstants.VERB;
 import static software.wings.utils.WingsTestConstants.WORKFLOW_NAME;
 import static software.wings.utils.WingsTestConstants.WORKFLOW_URL;
 
-import com.google.api.client.util.Charsets;
-import com.google.common.collect.ImmutableMap;
-import com.google.inject.Inject;
+import static junit.framework.TestCase.assertEquals;
+import static org.apache.commons.lang3.StringUtils.EMPTY;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
-import org.apache.commons.io.FileUtils;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
-import org.mockito.ArgumentCaptor;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.Mockito;
+
 import software.wings.WingsBaseTest;
 import software.wings.beans.InformationNotification;
 import software.wings.beans.Notification;
 import software.wings.service.intfc.MicrosoftTeamsNotificationService;
 
+import com.google.api.client.util.Charsets;
+import com.google.common.collect.ImmutableMap;
+import com.google.inject.Inject;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -54,6 +49,13 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import org.apache.commons.io.FileUtils;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
+import org.mockito.ArgumentCaptor;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.Mockito;
 
 public class MicrosoftTeamsMessageDispatcherTest extends WingsBaseTest {
   @InjectMocks @Inject private MicrosoftTeamsMessageDispatcher microsoftTeamsMessageDispatcher;

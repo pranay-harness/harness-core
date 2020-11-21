@@ -5,6 +5,7 @@ import static io.harness.EntityType.PIPELINES;
 import static io.harness.ng.core.activityhistory.NGActivityStatus.SUCCESS;
 import static io.harness.ng.core.activityhistory.NGActivityType.CONNECTIVITY_CHECK;
 import static io.harness.ng.core.activityhistory.NGActivityType.ENTITY_USAGE;
+
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.CategoryTest;
@@ -21,6 +22,7 @@ import io.harness.rule.Owner;
 import io.harness.rule.OwnerRule;
 import io.harness.utils.FullyQualifiedIdentifierHelper;
 import io.harness.utils.IdentifierRefHelper;
+
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;

@@ -1,14 +1,12 @@
 package io.harness.skip.service.impl;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
-import static io.harness.rule.OwnerRule.ALEXEI;
 import static io.harness.pms.steps.SkipType.NOOP;
 import static io.harness.pms.steps.SkipType.SKIP_NODE;
 import static io.harness.pms.steps.SkipType.SKIP_TREE;
-import static org.assertj.core.api.Assertions.assertThat;
+import static io.harness.rule.OwnerRule.ALEXEI;
 
-import com.google.common.collect.Lists;
-import com.google.inject.Inject;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.OrchestrationVisualizationTestBase;
 import io.harness.beans.EphemeralOrchestrationGraph;
@@ -19,9 +17,9 @@ import io.harness.category.element.UnitTests;
 import io.harness.pms.execution.Status;
 import io.harness.rule.Owner;
 import io.harness.skip.service.VertexSkipperService;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
 
+import com.google.common.collect.Lists;
+import com.google.inject.Inject;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -29,6 +27,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 public class VertexSkipperServiceImplTest extends OrchestrationVisualizationTestBase {
   private static final String PLAN_EXECUTION_ID = generateUuid();

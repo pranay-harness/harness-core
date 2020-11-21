@@ -1,14 +1,15 @@
 package software.wings.api;
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import io.harness.container.ContainerInfo;
-import lombok.Builder;
-import lombok.Data;
-import lombok.EqualsAndHashCode;
+
 import software.wings.beans.container.Label;
 import software.wings.helpers.ext.helm.response.HelmChartInfo;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import java.util.List;
+import lombok.Builder;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
 
 /**
  * This holds deploymentInfo of helm based deployments.

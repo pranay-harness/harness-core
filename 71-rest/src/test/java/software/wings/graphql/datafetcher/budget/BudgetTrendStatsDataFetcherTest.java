@@ -1,6 +1,7 @@
 package software.wings.graphql.datafetcher.budget;
 
 import static io.harness.rule.OwnerRule.SHUBHANSHU;
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Matchers.any;
@@ -21,11 +22,7 @@ import io.harness.ccm.budget.entities.ClusterBudgetScope;
 import io.harness.ccm.budget.entities.EnvironmentType;
 import io.harness.exception.InvalidRequestException;
 import io.harness.rule.Owner;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
+
 import software.wings.beans.User;
 import software.wings.graphql.datafetcher.AbstractDataFetcherTestBase;
 import software.wings.graphql.datafetcher.DataFetcherUtils;
@@ -37,6 +34,11 @@ import software.wings.security.UserThreadLocal;
 import software.wings.service.intfc.ce.CeAccountExpirationChecker;
 
 import java.sql.SQLException;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
 
 public class BudgetTrendStatsDataFetcherTest extends AbstractDataFetcherTestBase {
   @Mock BudgetService budgetService;

@@ -1,7 +1,7 @@
 package software.wings.beans;
 
 import static io.harness.rule.OwnerRule.BRETT;
-import static org.assertj.core.api.Assertions.assertThat;
+
 import static software.wings.beans.LogColor.Blue;
 import static software.wings.beans.LogColor.Red;
 import static software.wings.beans.LogColor.RedDark;
@@ -14,9 +14,12 @@ import static software.wings.beans.LogHelper.doneColoring;
 import static software.wings.beans.LogWeight.Bold;
 import static software.wings.beans.LogWeight.Normal;
 
+import static org.assertj.core.api.Assertions.assertThat;
+
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
+
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 

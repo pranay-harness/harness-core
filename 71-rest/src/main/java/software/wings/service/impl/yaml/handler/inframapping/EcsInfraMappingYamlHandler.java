@@ -3,24 +3,25 @@ package software.wings.service.impl.yaml.handler.inframapping;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.validation.Validator.notNullCheck;
+
 import static java.lang.String.format;
 import static java.util.Arrays.asList;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 
-import com.google.common.annotations.VisibleForTesting;
-import com.google.inject.Singleton;
-
-import com.amazonaws.services.ecs.model.LaunchType;
 import io.harness.exception.HarnessException;
 import io.harness.exception.InvalidArgumentsException;
-import org.apache.commons.lang3.StringUtils;
+
 import software.wings.beans.EcsInfrastructureMapping;
 import software.wings.beans.EcsInfrastructureMapping.Yaml;
 import software.wings.beans.InfrastructureMappingType;
 import software.wings.beans.yaml.ChangeContext;
 
+import com.amazonaws.services.ecs.model.LaunchType;
+import com.google.common.annotations.VisibleForTesting;
+import com.google.inject.Singleton;
 import java.util.Collections;
 import java.util.List;
+import org.apache.commons.lang3.StringUtils;
 
 /**
  * @author rktummala on 10/22/17

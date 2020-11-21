@@ -6,8 +6,7 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.exception.WingsException.SRE;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.validation.Validator.notNullCheck;
-import static java.lang.String.format;
-import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
+
 import static software.wings.beans.Account.GLOBAL_ACCOUNT_ID;
 import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static software.wings.beans.template.Template.TYPE_KEY;
@@ -23,10 +22,9 @@ import static software.wings.common.TemplateConstants.POWER_SHELL_COMMANDS;
 import static software.wings.common.TemplateConstants.PREFIX_FOR_APP;
 import static software.wings.common.TemplateConstants.TOMCAT_COMMANDS;
 
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
+import static java.lang.String.format;
+import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 
-import com.mongodb.DuplicateKeyException;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.exception.ExceptionUtils;
@@ -36,10 +34,7 @@ import io.harness.exception.WingsException;
 import io.harness.validation.Create;
 import io.harness.validation.PersistenceValidator;
 import io.harness.validation.Update;
-import lombok.extern.slf4j.Slf4j;
-import org.mongodb.morphia.query.Query;
-import org.mongodb.morphia.query.UpdateOperations;
-import ru.vyarus.guice.validator.group.annotation.ValidationGroups;
+
 import software.wings.beans.Base;
 import software.wings.beans.Event.Type;
 import software.wings.beans.template.Template;
@@ -54,6 +49,9 @@ import software.wings.service.intfc.template.TemplateFolderService;
 import software.wings.service.intfc.template.TemplateGalleryService;
 import software.wings.service.intfc.template.TemplateService;
 
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
+import com.mongodb.DuplicateKeyException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -64,6 +62,10 @@ import java.util.Set;
 import java.util.function.UnaryOperator;
 import java.util.stream.Collectors;
 import javax.validation.executable.ValidateOnExecution;
+import lombok.extern.slf4j.Slf4j;
+import org.mongodb.morphia.query.Query;
+import org.mongodb.morphia.query.UpdateOperations;
+import ru.vyarus.guice.validator.group.annotation.ValidationGroups;
 
 @Singleton
 @ValidateOnExecution

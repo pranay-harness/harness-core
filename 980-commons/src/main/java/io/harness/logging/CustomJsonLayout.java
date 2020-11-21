@@ -1,6 +1,7 @@
 package io.harness.logging;
 
 import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
+
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 import ch.qos.logback.classic.Level;
@@ -9,11 +10,10 @@ import ch.qos.logback.classic.pattern.ThrowableHandlingConverter;
 import ch.qos.logback.classic.spi.ILoggingEvent;
 import ch.qos.logback.contrib.jackson.JacksonJsonFormatter;
 import ch.qos.logback.contrib.json.JsonLayoutBase;
-import lombok.extern.slf4j.Slf4j;
-
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * See {@link ch.qos.logback.contrib.json.classic.JsonLayout}

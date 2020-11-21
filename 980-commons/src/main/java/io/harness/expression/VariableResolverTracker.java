@@ -1,9 +1,8 @@
 package io.harness.expression;
 
-import lombok.Getter;
-
 import java.util.HashMap;
 import java.util.Map;
+import lombok.Getter;
 
 public class VariableResolverTracker {
   @Getter Map<String, Map<Object, Integer>> usage = new HashMap<>();

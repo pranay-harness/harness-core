@@ -6,9 +6,9 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.EncryptedData;
 import io.harness.beans.HarnessSecret;
 import io.harness.beans.SecretManagerConfig;
-import org.hibernate.validator.constraints.NotEmpty;
 
 import javax.validation.constraints.NotNull;
+import org.hibernate.validator.constraints.NotEmpty;
 
 @OwnedBy(PL)
 public interface SecretValidator {

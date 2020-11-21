@@ -1,9 +1,8 @@
 package io.harness.data.algorithm;
 
+import java.security.SecureRandom;
 import lombok.experimental.UtilityClass;
 import org.apache.commons.codec.binary.Base32;
-
-import java.security.SecureRandom;
 
 @UtilityClass
 public class IdentifierName {

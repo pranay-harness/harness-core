@@ -2,8 +2,6 @@ package io.harness.batch.processing.writer;
 
 import static io.harness.batch.processing.ccm.UtilizationInstanceType.K8S_POD;
 
-import com.google.inject.Singleton;
-
 import io.harness.batch.processing.billing.timeseries.data.K8sGranularUtilizationData;
 import io.harness.batch.processing.billing.timeseries.service.impl.K8sUtilizationGranularDataServiceImpl;
 import io.harness.batch.processing.tasklet.util.K8sResourceUtils;
@@ -11,12 +9,13 @@ import io.harness.batch.processing.writer.constants.EventTypeConstants;
 import io.harness.event.grpc.PublishedMessage;
 import io.harness.event.payloads.AggregatedUsage;
 import io.harness.event.payloads.PodMetric;
+
+import com.google.inject.Singleton;
+import java.util.ArrayList;
+import java.util.List;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.batch.item.ItemWriter;
 import org.springframework.beans.factory.annotation.Autowired;
-
-import java.util.ArrayList;
-import java.util.List;
 
 @Slf4j
 @Singleton

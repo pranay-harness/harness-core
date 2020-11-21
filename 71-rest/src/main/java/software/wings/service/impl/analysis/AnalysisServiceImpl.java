@@ -10,17 +10,13 @@ import static io.harness.govern.Switch.noop;
 import static io.harness.govern.Switch.unhandled;
 import static io.harness.persistence.HPersistence.upToOne;
 import static io.harness.persistence.HQuery.excludeAuthority;
+
 import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static software.wings.common.VerificationConstants.DEMO_FAILURE_LOG_STATE_EXECUTION_ID;
 import static software.wings.common.VerificationConstants.DEMO_SUCCESS_LOG_STATE_EXECUTION_ID;
 import static software.wings.common.VerificationConstants.IGNORED_ERRORS_METRIC_NAME;
 import static software.wings.delegatetasks.ElkLogzDataCollectionTask.parseElkResponse;
 import static software.wings.service.impl.ThirdPartyApiCallLog.createApiCallLog;
-
-import com.google.common.base.Preconditions;
-import com.google.common.collect.Lists;
-import com.google.common.collect.Sets;
-import com.google.inject.Inject;
 
 import io.harness.beans.ExecutionStatus;
 import io.harness.beans.PageRequest;
@@ -38,10 +34,7 @@ import io.harness.logging.Misc;
 import io.harness.metrics.HarnessMetricRegistry;
 import io.harness.persistence.HIterator;
 import io.harness.security.encryption.EncryptedDataDetail;
-import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.codec.digest.DigestUtils;
-import org.mongodb.morphia.query.Query;
-import org.mongodb.morphia.query.Sort;
+
 import software.wings.annotation.EncryptableSetting;
 import software.wings.api.PhaseElement;
 import software.wings.api.jira.JiraExecutionData;
@@ -104,6 +97,10 @@ import software.wings.verification.CVConfiguration;
 import software.wings.verification.VerificationStateAnalysisExecutionData;
 import software.wings.verification.log.LogsCVConfiguration;
 
+import com.google.common.base.Preconditions;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
+import com.google.inject.Inject;
 import java.security.SecureRandom;
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
@@ -120,6 +117,10 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 import javax.validation.executable.ValidateOnExecution;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.codec.digest.DigestUtils;
+import org.mongodb.morphia.query.Query;
+import org.mongodb.morphia.query.Sort;
 
 /**
  * Created by rsingh on 4/17/17.
@@ -787,9 +788,9 @@ public class AnalysisServiceImpl implements AnalysisService {
     RiskLevel riskLevel = RiskLevel.NA;
     String analysisSummaryMsg = isEmpty(analysisRecord.getAnalysisSummaryMessage())
         ? analysisSummary.getControlClusters().isEmpty() ? "No baseline data for the given query was found."
-                                                         : analysisSummary.getTestClusters().isEmpty()
-                ? "No new data for the given queries. Showing baseline data if any."
-                : "No anomaly found"
+            : analysisSummary.getTestClusters().isEmpty()
+            ? "No new data for the given queries. Showing baseline data if any."
+            : "No anomaly found"
         : analysisRecord.getAnalysisSummaryMessage();
 
     // Update with the feedback clusters
@@ -829,9 +830,10 @@ public class AnalysisServiceImpl implements AnalysisService {
           ++lowRiskClusters;
         }
       }
-      riskLevel = highRiskClusters > 0
-          ? RiskLevel.HIGH
-          : mediumRiskCluster > 0 ? RiskLevel.MEDIUM : lowRiskClusters > 0 ? RiskLevel.LOW : RiskLevel.HIGH;
+      riskLevel = highRiskClusters > 0 ? RiskLevel.HIGH
+          : mediumRiskCluster > 0      ? RiskLevel.MEDIUM
+          : lowRiskClusters > 0        ? RiskLevel.LOW
+                                       : RiskLevel.HIGH;
 
       unknownClusters = analysisSummary.getUnknownClusters().size();
       analysisSummary.setHighRiskClusters(highRiskClusters);
@@ -1142,9 +1144,9 @@ public class AnalysisServiceImpl implements AnalysisService {
             case UNKNOWN:
               score = clusterScores.get(labelEntry.getKey()).getTest_score() * 100;
               clusterSummary.setScore(score);
-              clusterSummary.setRiskLevel(score > HIGH_RISK_THRESHOLD
-                      ? RiskLevel.HIGH
-                      : score > MEDIUM_RISK_THRESHOLD ? RiskLevel.MEDIUM : RiskLevel.LOW);
+              clusterSummary.setRiskLevel(score > HIGH_RISK_THRESHOLD ? RiskLevel.HIGH
+                      : score > MEDIUM_RISK_THRESHOLD                 ? RiskLevel.MEDIUM
+                                                                      : RiskLevel.LOW);
               break;
             default:
               unhandled(cluster_type);

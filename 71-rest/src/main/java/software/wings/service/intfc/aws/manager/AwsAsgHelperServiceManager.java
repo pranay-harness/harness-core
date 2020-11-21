@@ -1,10 +1,11 @@
 package software.wings.service.intfc.aws.manager;
 
-import com.amazonaws.services.ec2.model.Instance;
 import io.harness.security.encryption.EncryptedDataDetail;
+
 import software.wings.beans.AwsConfig;
 import software.wings.service.impl.aws.model.AwsAsgGetRunningCountData;
 
+import com.amazonaws.services.ec2.model.Instance;
 import java.util.List;
 import java.util.Map;
 

@@ -11,9 +11,6 @@ import static io.harness.cvng.analysis.CVAnalysisConstants.TEST_DATA_PATH;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.persistence.HQuery.excludeAuthority;
 
-import com.google.common.base.Preconditions;
-import com.google.inject.Inject;
-
 import io.harness.cvng.analysis.beans.DeploymentLogAnalysisDTO;
 import io.harness.cvng.analysis.beans.LogAnalysisDTO;
 import io.harness.cvng.analysis.beans.LogClusterDTO;
@@ -54,11 +51,9 @@ import io.harness.cvng.verificationjob.entities.VerificationJobInstance.Analysis
 import io.harness.cvng.verificationjob.entities.VerificationJobInstance.ProgressLog;
 import io.harness.cvng.verificationjob.services.api.VerificationJobInstanceService;
 import io.harness.persistence.HPersistence;
-import lombok.extern.slf4j.Slf4j;
-import org.apache.http.client.utils.URIBuilder;
-import org.mongodb.morphia.query.FindOptions;
-import org.mongodb.morphia.query.Sort;
 
+import com.google.common.base.Preconditions;
+import com.google.inject.Inject;
 import java.net.URISyntaxException;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
@@ -70,6 +65,10 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.http.client.utils.URIBuilder;
+import org.mongodb.morphia.query.FindOptions;
+import org.mongodb.morphia.query.Sort;
 
 @Slf4j
 public class LogAnalysisServiceImpl implements LogAnalysisService {

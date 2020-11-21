@@ -1,13 +1,11 @@
 package software.wings.graphql.datafetcher;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
+
 import static java.util.function.Function.identity;
 
-import com.google.api.client.util.ArrayMap;
-import com.google.inject.Inject;
-
 import io.harness.ccm.cluster.entities.K8sWorkload;
-import lombok.extern.slf4j.Slf4j;
+
 import software.wings.beans.EntityType;
 import software.wings.beans.HarnessTagLink;
 import software.wings.graphql.datafetcher.billing.BillingDataHelper;
@@ -34,6 +32,8 @@ import software.wings.graphql.schema.type.aggregation.billing.QLEntityTableData;
 import software.wings.graphql.schema.type.aggregation.billing.QLEntityTableListData;
 import software.wings.service.intfc.HarnessTagService;
 
+import com.google.api.client.util.ArrayMap;
+import com.google.inject.Inject;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -41,6 +41,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
+import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public abstract class AbstractStatsDataFetcherWithAggregationListAndTags<A, F, G, S, E, TA extends TagAggregation, LA
@@ -318,7 +319,7 @@ public abstract class AbstractStatsDataFetcherWithAggregationListAndTags<A, F, G
       String entityId = dataPoint.getKey().getId();
       if (dataPoint.getKey().getType().equals(TYPE_LABEL)
           || (dataPoint.getKey().getType().equals(TYPE_UTILIZATION)
-                 && !dataPoint.getKey().getName().equals(operation.name()))) {
+              && !dataPoint.getKey().getName().equals(operation.name()))) {
         labelNameDataPointMap.put(entityId, dataPoint);
         return false;
       }

@@ -2,16 +2,15 @@ package migrations.all;
 
 import static software.wings.beans.Account.GLOBAL_ACCOUNT_ID;
 
-import com.google.inject.Inject;
-
-import lombok.extern.slf4j.Slf4j;
-import migrations.Migration;
 import software.wings.beans.Account;
 import software.wings.beans.alert.AlertNotificationRule;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.AlertNotificationRuleService;
 
+import com.google.inject.Inject;
 import java.util.List;
+import lombok.extern.slf4j.Slf4j;
+import migrations.Migration;
 
 @Slf4j
 public class CreateDefaultAlertNotificationRule implements Migration {

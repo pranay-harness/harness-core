@@ -2,6 +2,7 @@ package software.wings.resources;
 
 import static io.harness.rule.OwnerRule.SRINIVAS;
 import static io.harness.rule.OwnerRule.UTKARSH;
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -13,15 +14,16 @@ import io.harness.mongo.MongoConfig;
 import io.harness.rest.RestResponse;
 import io.harness.rule.Owner;
 import io.harness.security.AsymmetricEncryptor;
-import org.junit.ClassRule;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
+
 import software.wings.app.MainConfiguration;
 import software.wings.exception.WingsExceptionMapper;
 import software.wings.search.framework.ElasticsearchConfig;
 import software.wings.utils.ResourceTestRule;
 
 import javax.ws.rs.core.GenericType;
+import org.junit.ClassRule;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 public class HealthResourceTest extends CategoryTest {
   public static final MainConfiguration configuration = mock(MainConfiguration.class);

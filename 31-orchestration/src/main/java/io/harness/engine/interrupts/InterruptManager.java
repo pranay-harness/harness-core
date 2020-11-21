@@ -3,11 +3,11 @@ package io.harness.engine.interrupts;
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 
-import com.google.inject.Inject;
-
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.interrupts.Interrupt;
 import io.harness.logging.AutoLogContext;
+
+import com.google.inject.Inject;
 
 @OwnedBy(CDC)
 public class InterruptManager {

@@ -3,9 +3,8 @@ package software.wings.delegatetasks.azure;
 import static io.harness.azure.model.AzureConstants.UNRECOGNIZED_PARAMETERS;
 import static io.harness.azure.model.AzureConstants.UNRECOGNIZED_TASK;
 import static io.harness.logging.CommandExecutionStatus.FAILURE;
-import static java.lang.String.format;
 
-import com.google.inject.Inject;
+import static java.lang.String.format;
 
 import io.harness.azure.model.AzureConfig;
 import io.harness.delegate.beans.DelegateTaskPackage;
@@ -22,8 +21,7 @@ import io.harness.delegate.task.azure.request.AzureVMSSTaskParameters;
 import io.harness.delegate.task.azure.response.AzureVMSSTaskExecutionResponse;
 import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.security.encryption.SecretDecryptionService;
-import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.NotImplementedException;
+
 import software.wings.delegatetasks.azure.taskhandler.AzureVMSSDeployTaskHandler;
 import software.wings.delegatetasks.azure.taskhandler.AzureVMSSRollbackTaskHandler;
 import software.wings.delegatetasks.azure.taskhandler.AzureVMSSSetupTaskHandler;
@@ -32,9 +30,12 @@ import software.wings.delegatetasks.azure.taskhandler.AzureVMSSSyncTaskHandler;
 import software.wings.delegatetasks.azure.taskhandler.AzureVMSSTaskHandler;
 import software.wings.service.impl.azure.manager.AzureVMSSCommandRequest;
 
+import com.google.inject.Inject;
 import java.util.List;
 import java.util.function.BooleanSupplier;
 import java.util.function.Consumer;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.NotImplementedException;
 
 @Slf4j
 public class AzureVMSSTask extends AbstractDelegateRunnableTask {

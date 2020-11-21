@@ -3,6 +3,9 @@ package io.harness.batch.processing.schedule;
 import io.harness.batch.processing.ccm.BatchJobType;
 import io.harness.batch.processing.metrics.CeProductMetricsTasklet;
 import io.harness.batch.processing.metrics.ProductMetricsService;
+
+import software.wings.service.intfc.instance.CloudToHarnessMappingService;
+
 import org.springframework.batch.core.Job;
 import org.springframework.batch.core.Step;
 import org.springframework.batch.core.configuration.annotation.JobBuilderFactory;
@@ -13,7 +16,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import software.wings.service.intfc.instance.CloudToHarnessMappingService;
 
 @Configuration
 public class SegmentJobConfiguration {

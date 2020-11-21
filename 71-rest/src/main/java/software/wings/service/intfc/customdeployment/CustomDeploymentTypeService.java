@@ -1,12 +1,12 @@
 package software.wings.service.intfc.customdeployment;
 
-import org.hibernate.validator.constraints.NotBlank;
 import software.wings.beans.customdeployment.CustomDeploymentTypeDTO;
 import software.wings.beans.template.deploymenttype.CustomDeploymentTypeTemplate;
 
 import java.util.List;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
+import org.hibernate.validator.constraints.NotBlank;
 
 public interface CustomDeploymentTypeService {
   List<CustomDeploymentTypeDTO> list(@Nonnull String accountId, String appId, boolean withDetails);

@@ -2,21 +2,18 @@ package software.wings.service.impl.yaml.gitdiff.gitaudit;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
-import static java.util.stream.Collectors.toList;
-import static org.apache.commons.lang3.StringUtils.isNotBlank;
-import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
+
 import static software.wings.audit.AuditHeader.Builder.anAuditHeader;
 import static software.wings.beans.User.Builder.anUser;
 
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
+import static java.util.stream.Collectors.toList;
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
+import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 
 import io.harness.beans.EmbeddedUser;
 import io.harness.globalcontex.AuditGlobalContextData;
 import io.harness.manage.GlobalContextManager;
-import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.StringUtils;
-import org.mongodb.morphia.query.UpdateOperations;
+
 import software.wings.audit.AuditHeader;
 import software.wings.audit.AuditHeader.ResponseType;
 import software.wings.audit.AuditRecord;
@@ -31,11 +28,16 @@ import software.wings.dl.WingsPersistence;
 import software.wings.exception.YamlProcessingException.ChangeWithErrorMsg;
 import software.wings.service.intfc.FeatureFlagService;
 
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
+import org.mongodb.morphia.query.UpdateOperations;
 
 @Singleton
 @Slf4j

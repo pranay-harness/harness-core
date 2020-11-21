@@ -2,11 +2,12 @@ package software.wings.delegatetasks.validation.capabilities;
 
 import io.harness.delegate.beans.executioncapability.CapabilityType;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
-import lombok.Builder;
-import lombok.Value;
+
 import software.wings.beans.delegation.ShellScriptParameters;
 
 import javax.validation.constraints.NotNull;
+import lombok.Builder;
+import lombok.Value;
 
 @Value
 @Builder

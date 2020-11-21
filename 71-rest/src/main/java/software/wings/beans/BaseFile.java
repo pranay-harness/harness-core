@@ -1,17 +1,16 @@
 package software.wings.beans;
 
-import com.google.common.base.MoreObjects;
-
 import io.harness.beans.ChecksumType;
 import io.harness.validation.Create;
+
+import com.google.common.base.MoreObjects;
+import java.util.Objects;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import org.glassfish.jersey.media.multipart.FormDataParam;
 import org.hibernate.validator.constraints.NotEmpty;
-
-import java.util.Objects;
 
 /**
  * Created by anubhaw on 4/13/16.

@@ -1,10 +1,10 @@
 package software.wings.expression;
 
-import com.amazonaws.services.ec2.model.Tag;
 import io.harness.expression.ExpressionFunctor;
-import org.apache.commons.lang3.StringUtils;
 
+import com.amazonaws.services.ec2.model.Tag;
 import java.util.Collection;
+import org.apache.commons.lang3.StringUtils;
 
 public class AwsFunctor implements ExpressionFunctor {
   public static class TagsFunctor {

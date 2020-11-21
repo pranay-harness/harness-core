@@ -1,9 +1,8 @@
 package io.harness.ng;
 
 import static io.harness.rule.OwnerRule.ABHINAV;
-import static org.assertj.core.api.Assertions.assertThat;
 
-import com.google.common.base.Preconditions;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.CategoryTest;
 import io.harness.annotations.dev.HarnessTeam;
@@ -11,11 +10,8 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
 import io.harness.reflection.CodeUtils;
 import io.harness.rule.Owner;
-import org.apache.commons.io.IOUtils;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
-import org.reflections.Reflections;
 
+import com.google.common.base.Preconditions;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
@@ -24,6 +20,10 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
+import org.apache.commons.io.IOUtils;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
+import org.reflections.Reflections;
 
 public class DXCodeCoverage extends CategoryTest {
   @Test
@@ -49,7 +49,7 @@ public class DXCodeCoverage extends CategoryTest {
             .filter(clazz
                 -> clazz.getAnnotation(OwnedBy.class) != null
                     && clazz.getAnnotation(OwnedBy.class).value().equals(HarnessTeam.DX))
-            .map(this ::extractClassLocation)
+            .map(this::extractClassLocation)
             .sorted()
             .collect(Collectors.toList());
     List<String> expectedSet;

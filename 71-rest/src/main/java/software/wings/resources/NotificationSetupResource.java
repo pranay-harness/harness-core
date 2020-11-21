@@ -1,23 +1,24 @@
 package software.wings.resources;
 
 import static io.harness.beans.SearchFilter.Operator.EQ;
+
 import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static software.wings.security.PermissionAttribute.ResourceType.NOTIFICATION_GROUP;
 
-import com.google.inject.Inject;
-
-import com.codahale.metrics.annotation.ExceptionMetered;
-import com.codahale.metrics.annotation.Timed;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.rest.RestResponse;
-import io.swagger.annotations.Api;
+
 import software.wings.beans.NotificationGroup;
 import software.wings.security.PermissionAttribute.PermissionType;
 import software.wings.security.annotations.AuthRule;
 import software.wings.security.annotations.Scope;
 import software.wings.service.intfc.NotificationSetupService;
 
+import com.codahale.metrics.annotation.ExceptionMetered;
+import com.codahale.metrics.annotation.Timed;
+import com.google.inject.Inject;
+import io.swagger.annotations.Api;
 import javax.ws.rs.BeanParam;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
@@ -63,7 +64,7 @@ public class NotificationSetupResource {
       @QueryParam("accountId") String accountId, @BeanParam PageRequest<NotificationGroup> pageRequest) {
     if (pageRequest.getFilters() == null
         || pageRequest.getFilters().stream().noneMatch(
-               searchFilter -> searchFilter.getFieldName().equals("accountId"))) {
+            searchFilter -> searchFilter.getFieldName().equals("accountId"))) {
       pageRequest.addFilter("accountId", EQ, accountId);
     }
     return new RestResponse<>(notificationSetupService.listNotificationGroups(pageRequest));

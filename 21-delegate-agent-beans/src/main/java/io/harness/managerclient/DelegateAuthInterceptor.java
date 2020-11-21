@@ -3,11 +3,11 @@ package io.harness.managerclient;
 import static io.harness.network.Localhost.getLocalHostName;
 
 import io.harness.security.TokenGenerator;
+
+import java.io.IOException;
 import okhttp3.Interceptor;
 import okhttp3.Request;
 import okhttp3.Response;
-
-import java.io.IOException;
 
 public class DelegateAuthInterceptor implements Interceptor {
   private static final String HOST_NAME = getLocalHostName();

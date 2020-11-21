@@ -2,14 +2,17 @@ package software.wings.service.impl.yaml.handler.command;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
-import static java.util.stream.Collectors.toList;
+
 import static software.wings.beans.yaml.YamlConstants.NODE_PROPERTY_COMMAND_PATH;
 import static software.wings.beans.yaml.YamlConstants.NODE_PROPERTY_COMMAND_STRING;
 import static software.wings.beans.yaml.YamlConstants.NODE_PROPERTY_COMMAND_TYPE;
 import static software.wings.beans.yaml.YamlConstants.NODE_PROPERTY_TAIL_FILES;
 import static software.wings.beans.yaml.YamlConstants.NODE_PROPERTY_TAIL_PATTERNS;
 
+import static java.util.stream.Collectors.toList;
+
 import io.harness.delegate.task.shell.ScriptType;
+
 import software.wings.beans.command.AbstractCommandUnit;
 import software.wings.beans.command.ExecCommandUnit;
 import software.wings.beans.command.ExecCommandUnit.AbstractYaml;

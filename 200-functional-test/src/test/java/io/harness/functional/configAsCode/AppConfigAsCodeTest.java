@@ -1,9 +1,8 @@
 package io.harness.functional.configAsCode;
 
 import static io.harness.rule.OwnerRule.SHASWAT;
-import static org.assertj.core.api.Assertions.assertThat;
 
-import com.google.inject.Inject;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.category.element.FunctionalTests;
 import io.harness.functional.AbstractFunctionalTest;
@@ -12,14 +11,16 @@ import io.harness.testframework.framework.git.GitData;
 import io.harness.testframework.restutils.ConnectorUtils;
 import io.harness.testframework.restutils.GitRestUtils;
 import io.harness.testframework.restutils.SettingsUtils;
+
+import software.wings.beans.Application;
+import software.wings.beans.Environment;
+
+import com.google.inject.Inject;
+import java.util.List;
 import org.junit.FixMethodOrder;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.junit.runners.MethodSorters;
-import software.wings.beans.Application;
-import software.wings.beans.Environment;
-
-import java.util.List;
 
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
 public class AppConfigAsCodeTest extends AbstractFunctionalTest {

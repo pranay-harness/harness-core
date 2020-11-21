@@ -2,15 +2,15 @@ package io.harness.mongo;
 
 import static io.harness.mongo.IndexManagerSession.UNIQUE;
 
+import io.harness.mongo.index.IndexType;
+
 import com.mongodb.BasicDBObject;
 import com.mongodb.DBCollection;
 import com.mongodb.DBObject;
-import io.harness.mongo.index.IndexType;
-import lombok.Builder;
-import lombok.Value;
-
 import java.util.Iterator;
 import java.util.Map;
+import lombok.Builder;
+import lombok.Value;
 
 @Value
 @Builder

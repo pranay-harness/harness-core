@@ -1,6 +1,7 @@
 package io.harness.connector;
 
 import static io.harness.rule.OwnerRule.DEEPAK;
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.when;
@@ -12,6 +13,10 @@ import io.harness.connector.entities.embedded.kubernetescluster.KubernetesCluste
 import io.harness.ng.core.entities.Project;
 import io.harness.ng.core.services.ProjectService;
 import io.harness.rule.Owner;
+
+import java.util.Arrays;
+import java.util.List;
+import java.util.Map;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -19,10 +24,6 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.springframework.data.domain.PageImpl;
-
-import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
 
 public class ProjectScopeHelperTest extends CategoryTest {
   @InjectMocks ProjectScopeHelper projectScopeHelper;

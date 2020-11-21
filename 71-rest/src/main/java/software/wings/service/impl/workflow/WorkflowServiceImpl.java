@@ -28,18 +28,7 @@ import static io.harness.provision.TerraformConstants.INHERIT_APPROVED_PLAN;
 import static io.harness.provision.TerraformConstants.RUN_PLAN_ONLY_KEY;
 import static io.harness.validation.Validator.notEmptyCheck;
 import static io.harness.validation.Validator.notNullCheck;
-import static java.lang.String.format;
-import static java.util.Arrays.asList;
-import static java.util.Collections.singletonList;
-import static java.util.Comparator.comparing;
-import static java.util.stream.Collectors.toList;
-import static java.util.stream.Collectors.toMap;
-import static java.util.stream.Stream.concat;
-import static org.apache.commons.lang3.StringUtils.equalsIgnoreCase;
-import static org.apache.commons.lang3.StringUtils.isBlank;
-import static org.apache.commons.lang3.StringUtils.isNotBlank;
-import static org.atteo.evo.inflector.English.plural;
-import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
+
 import static software.wings.api.DeploymentType.HELM;
 import static software.wings.api.DeploymentType.KUBERNETES;
 import static software.wings.api.DeploymentType.SSH;
@@ -88,11 +77,18 @@ import static software.wings.sm.StepType.SPOTINST_LISTENER_ALB_SHIFT;
 import static software.wings.sm.StepType.SPOTINST_LISTENER_ALB_SHIFT_ROLLBACK;
 import static software.wings.stencils.WorkflowStepType.SERVICE_COMMAND;
 
-import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Joiner;
-import com.google.common.collect.Lists;
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
+import static java.lang.String.format;
+import static java.util.Arrays.asList;
+import static java.util.Collections.singletonList;
+import static java.util.Comparator.comparing;
+import static java.util.stream.Collectors.toList;
+import static java.util.stream.Collectors.toMap;
+import static java.util.stream.Stream.concat;
+import static org.apache.commons.lang3.StringUtils.equalsIgnoreCase;
+import static org.apache.commons.lang3.StringUtils.isBlank;
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
+import static org.atteo.evo.inflector.English.plural;
+import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.ExecutionStatus;
@@ -122,13 +118,7 @@ import io.harness.persistence.HIterator;
 import io.harness.queue.QueuePublisher;
 import io.harness.validation.Create;
 import io.harness.validation.Update;
-import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.StringUtils;
-import org.apache.commons.lang3.tuple.Pair;
-import org.hibernate.validator.constraints.NotEmpty;
-import org.mongodb.morphia.query.Sort;
-import org.mongodb.morphia.query.UpdateOperations;
-import ru.vyarus.guice.validator.group.annotation.ValidationGroups;
+
 import software.wings.api.DeploymentType;
 import software.wings.api.InstanceElement;
 import software.wings.app.StaticConfiguration;
@@ -262,6 +252,11 @@ import software.wings.stencils.StencilCategory;
 import software.wings.stencils.StencilPostProcessor;
 import software.wings.stencils.WorkflowStepType;
 
+import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Joiner;
+import com.google.common.collect.Lists;
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -285,6 +280,13 @@ import java.util.stream.Collectors;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 import javax.validation.executable.ValidateOnExecution;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.tuple.Pair;
+import org.hibernate.validator.constraints.NotEmpty;
+import org.mongodb.morphia.query.Sort;
+import org.mongodb.morphia.query.UpdateOperations;
+import ru.vyarus.guice.validator.group.annotation.ValidationGroups;
 
 /**
  * The Class WorkflowServiceImpl.
@@ -1614,7 +1616,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
       @NotEmpty String appId, @NotEmpty String workflowId, @Valid WorkflowPhase workflowPhase) {
     if (workflowPhase.isRollback()
         || workflowPhase.getPhaseSteps().stream().anyMatch(
-               phaseStep -> phaseStep.isRollback() || phaseStep.getSteps().stream().anyMatch(GraphNode::isRollback))) {
+            phaseStep -> phaseStep.isRollback() || phaseStep.getSteps().stream().anyMatch(GraphNode::isRollback))) {
       // This might seem as user error, but since this is controlled from the our UI lets get alerted for it
       throw new InvalidRequestException("The direct workflow phase should not have rollback flag set!", USER_SRE);
     }
@@ -1745,7 +1747,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
       String appId, String workflowId, String phaseId, WorkflowPhase rollbackWorkflowPhase) {
     if (!rollbackWorkflowPhase.isRollback()
         || rollbackWorkflowPhase.getPhaseSteps().stream().anyMatch(phaseStep
-               -> !phaseStep.isRollback() || phaseStep.getSteps().stream().anyMatch(step -> !step.isRollback()))) {
+            -> !phaseStep.isRollback() || phaseStep.getSteps().stream().anyMatch(step -> !step.isRollback()))) {
       // This might seem as user error, but since this is controlled from the our UI lets get alerted for it
       throw new InvalidRequestException("The rollback workflow phase should have rollback flag set!", USER_SRE);
     }
@@ -2331,7 +2333,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
                 && previousArtifactVariable.getArtifactStreamMetadata() != null
                 && isNotEmpty(artifactVariable.getAllowedList())
                 && artifactVariable.getAllowedList().contains(
-                       previousArtifactVariable.getArtifactStreamMetadata().getArtifactStreamId())) {
+                    previousArtifactVariable.getArtifactStreamMetadata().getArtifactStreamId())) {
               artifactVariable.setArtifactStreamMetadata(
                   fetchArtifactStreamMetadataInArtifactVariable(previousArtifactVariable));
               artifactVariable.setUiDisplayName(previousArtifactVariable.getUiDisplayName());
@@ -2781,7 +2783,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
 
     if (featureFlagService.isEnabled(HELM_CHART_AS_ARTIFACT, accountId)
         && hasPollingEnabled(serviceId, appId, pollingDisabledServices)
-        && phaseStep.getSteps().stream().anyMatch(this ::checkManifestNeededForStep)) {
+        && phaseStep.getSteps().stream().anyMatch(this::checkManifestNeededForStep)) {
       requiredEntityTypes.add(HELM_CHART);
     }
 
@@ -3413,7 +3415,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
 
     if (DeploymentType.HELM == deploymentType
         && (OrchestrationWorkflowType.BLUE_GREEN == orchestrationWorkflowType
-               || OrchestrationWorkflowType.CANARY == orchestrationWorkflowType)) {
+            || OrchestrationWorkflowType.CANARY == orchestrationWorkflowType)) {
       throw new InvalidRequestException(
           String.format("Workflow type %s is not supported for deployment type Helm", orchestrationWorkflowType), USER);
     }
@@ -3424,7 +3426,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     if (orchestrationWorkflow.getOrchestrationWorkflowType() == ROLLING) {
       if (!(InfrastructureMappingType.AWS_SSH.name().equals(infrastructureMapping.getInfraMappingType())
               || InfrastructureMappingType.PHYSICAL_DATA_CENTER_SSH.name().equals(
-                     infrastructureMapping.getInfraMappingType())
+                  infrastructureMapping.getInfraMappingType())
               || workflowServiceHelper.isK8sV2Service(infrastructureMapping.getAppId(), workflow.getServiceId()))) {
         throw new InvalidRequestException(
             "Requested Service/InfrastructureType is not supported using Rolling Deployment", USER);

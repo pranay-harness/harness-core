@@ -1,15 +1,13 @@
 package software.wings.graphql.datafetcher.application;
 
-import static java.lang.String.format;
 import static software.wings.beans.Application.Builder.anApplication;
 import static software.wings.security.PermissionAttribute.PermissionType.MANAGE_APPLICATIONS;
 
-import com.google.inject.Inject;
+import static java.lang.String.format;
 
 import io.harness.exception.InvalidRequestException;
 import io.harness.utils.RequestField;
-import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.StringUtils;
+
 import software.wings.beans.Application;
 import software.wings.graphql.datafetcher.BaseMutatorDataFetcher;
 import software.wings.graphql.datafetcher.MutationContext;
@@ -20,6 +18,10 @@ import software.wings.graphql.schema.type.QLApplication;
 import software.wings.security.PermissionAttribute;
 import software.wings.security.annotations.AuthRule;
 import software.wings.service.intfc.AppService;
+
+import com.google.inject.Inject;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 
 @Slf4j
 public class UpdateApplicationDataFetcher

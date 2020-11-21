@@ -1,11 +1,11 @@
 package software.wings.graphql.datafetcher.tag;
 
-import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static software.wings.security.PermissionAttribute.PermissionType.LOGGED_IN;
 
-import com.google.inject.Inject;
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 import io.harness.persistence.HPersistence;
+
 import software.wings.beans.HarnessTagLink;
 import software.wings.beans.HarnessTagLink.HarnessTagLinkKeys;
 import software.wings.graphql.datafetcher.AbstractArrayDataFetcher;
@@ -13,6 +13,7 @@ import software.wings.graphql.schema.query.QLTagsQueryParameters;
 import software.wings.graphql.schema.type.QLTag;
 import software.wings.security.annotations.AuthRule;
 
+import com.google.inject.Inject;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;

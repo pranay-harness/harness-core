@@ -3,7 +3,7 @@ package software.wings.service.impl.template;
 import static io.harness.rule.OwnerRule.AADITI;
 import static io.harness.rule.OwnerRule.ABHINAV;
 import static io.harness.rule.OwnerRule.SRINIVAS;
-import static org.assertj.core.api.Assertions.assertThat;
+
 import static software.wings.beans.Account.GLOBAL_ACCOUNT_ID;
 import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static software.wings.beans.template.TemplateType.SSH;
@@ -25,15 +25,13 @@ import static software.wings.utils.WingsTestConstants.APP_ID;
 import static software.wings.utils.WingsTestConstants.INVALID_NAME;
 import static software.wings.utils.WingsTestConstants.TEMPLATE_NAME;
 
-import com.google.common.collect.ImmutableSet;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.category.element.UnitTests;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.rule.Owner;
-import org.junit.Ignore;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
+
 import software.wings.beans.EntityType;
 import software.wings.beans.template.Template;
 import software.wings.beans.template.TemplateFolder;
@@ -44,8 +42,12 @@ import software.wings.utils.WingsTestConstants;
 import software.wings.yaml.gitSync.YamlChangeSet;
 import software.wings.yaml.gitSync.YamlGitConfig;
 
+import com.google.common.collect.ImmutableSet;
 import java.util.Arrays;
 import javax.validation.ConstraintViolationException;
+import org.junit.Ignore;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 public class TemplateFolderServiceTest extends TemplateBaseTestHelper {
   @Test(expected = InvalidRequestException.class)

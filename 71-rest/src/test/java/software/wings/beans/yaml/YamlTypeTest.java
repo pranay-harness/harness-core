@@ -1,16 +1,18 @@
 package software.wings.beans.yaml;
 
 import static io.harness.rule.OwnerRule.VAIBHAV_SI;
+
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
+
 import software.wings.beans.appmanifest.ApplicationManifest;
 
 import java.util.List;
 import java.util.regex.Pattern;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 public class YamlTypeTest {
   @Test

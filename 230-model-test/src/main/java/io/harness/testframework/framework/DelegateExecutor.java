@@ -4,26 +4,26 @@ import static io.harness.testframework.framework.utils.ExecutorUtils.addConfig;
 import static io.harness.testframework.framework.utils.ExecutorUtils.addGCVMOptions;
 import static io.harness.testframework.framework.utils.ExecutorUtils.addJacocoAgentVM;
 import static io.harness.testframework.framework.utils.ExecutorUtils.addJar;
-import static java.time.Duration.ofMinutes;
-import static java.time.Duration.ofSeconds;
+
 import static software.wings.beans.Delegate.DelegateKeys;
 
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
+import static java.time.Duration.ofMinutes;
+import static java.time.Duration.ofSeconds;
 
-import io.fabric8.utils.Strings;
 import io.harness.filesystem.FileIo;
 import io.harness.resource.Project;
 import io.harness.rest.RestResponse;
 import io.harness.threading.Poller;
-import lombok.extern.slf4j.Slf4j;
-import org.zeroturnaround.exec.ProcessExecutor;
+
 import software.wings.beans.Account;
 import software.wings.beans.Delegate.Status;
 import software.wings.beans.DelegateStatus;
 import software.wings.beans.DelegateStatus.DelegateInner;
 import software.wings.service.intfc.DelegateService;
 
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
+import io.fabric8.utils.Strings;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
@@ -33,6 +33,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 import javax.ws.rs.core.GenericType;
+import lombok.extern.slf4j.Slf4j;
+import org.zeroturnaround.exec.ProcessExecutor;
 
 @Singleton
 @Slf4j

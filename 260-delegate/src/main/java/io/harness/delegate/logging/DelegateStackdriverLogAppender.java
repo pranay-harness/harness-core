@@ -2,19 +2,19 @@ package io.harness.delegate.logging;
 
 import static io.harness.delegate.app.DelegateApplication.getConfiguration;
 import static io.harness.network.SafeHttpCall.execute;
+
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.substringBetween;
-
-import com.google.common.util.concurrent.TimeLimiter;
-import com.google.common.util.concurrent.UncheckedTimeoutException;
 
 import io.harness.logging.AccessTokenBean;
 import io.harness.logging.RemoteStackdriverLogAppender;
 import io.harness.managerclient.DelegateAgentManagerClient;
 import io.harness.rest.RestResponse;
-import lombok.extern.slf4j.Slf4j;
 
+import com.google.common.util.concurrent.TimeLimiter;
+import com.google.common.util.concurrent.UncheckedTimeoutException;
 import java.util.concurrent.TimeUnit;
+import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class DelegateStackdriverLogAppender extends RemoteStackdriverLogAppender {

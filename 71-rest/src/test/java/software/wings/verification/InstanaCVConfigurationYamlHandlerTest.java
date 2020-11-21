@@ -1,21 +1,16 @@
 package software.wings.verification;
 
 import static io.harness.rule.OwnerRule.KAMAL;
+
 import static org.apache.cxf.ws.addressing.ContextUtils.generateUUID;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.when;
 
-import com.amazonaws.services.codedeploy.model.TagFilter;
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
-import org.apache.commons.lang3.reflect.FieldUtils;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
-import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
+
 import software.wings.beans.Application;
 import software.wings.beans.Service;
 import software.wings.beans.SettingAttribute;
@@ -31,8 +26,15 @@ import software.wings.sm.StateType;
 import software.wings.verification.instana.InstanaCVConfiguration;
 import software.wings.verification.instana.InstanaCVConfiguration.InstanaCVConfigurationYaml;
 
+import com.amazonaws.services.codedeploy.model.TagFilter;
 import java.util.ArrayList;
 import java.util.List;
+import org.apache.commons.lang3.reflect.FieldUtils;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
 
 public class InstanaCVConfigurationYamlHandlerTest extends CategoryTest {
   @Mock YamlHelper yamlHelper;

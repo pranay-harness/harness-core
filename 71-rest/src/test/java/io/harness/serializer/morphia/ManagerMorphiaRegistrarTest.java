@@ -3,22 +3,15 @@ package io.harness.serializer.morphia;
 import static io.harness.mongo.ClassRefactoringManager.movementsToMyModule;
 import static io.harness.mongo.HObjectFactory.checkRegisteredClasses;
 import static io.harness.rule.OwnerRule.GEORGE;
-import static org.assertj.core.api.Assertions.assertThat;
 
-import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableSet;
-import com.google.inject.Inject;
-import com.google.inject.name.Named;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.beans.SecretManagerConfig;
 import io.harness.category.element.UnitTests;
 import io.harness.ccm.cluster.entities.Cluster;
 import io.harness.rule.Owner;
 import io.harness.waiter.NotifyCallback;
-import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.collections.map.HashedMap;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
+
 import software.wings.WingsBaseTest;
 import software.wings.api.DeploymentInfo;
 import software.wings.beans.command.CommandUnit;
@@ -38,8 +31,16 @@ import software.wings.sm.StateMachineTest.StateSync;
 import software.wings.sm.StepExecutionSummary;
 import software.wings.verification.CVConfiguration;
 
+import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
+import com.google.inject.Inject;
+import com.google.inject.name.Named;
 import java.util.Map;
 import java.util.Set;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.collections.map.HashedMap;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
 @Slf4j
 public class ManagerMorphiaRegistrarTest extends WingsBaseTest {
   @Inject @Named("morphiaInterfaceImplementersClasses") Map<String, Class> morphiaInterfaceImplementers;

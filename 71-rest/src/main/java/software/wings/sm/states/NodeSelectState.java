@@ -6,18 +6,17 @@ import static io.harness.beans.SearchFilter.Operator.EQ;
 import static io.harness.data.structure.CollectionUtils.emptyIfNull;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
-import static java.lang.String.format;
-import static java.util.Objects.requireNonNull;
-import static java.util.stream.Collectors.toList;
-import static org.atteo.evo.inflector.English.plural;
+
 import static software.wings.api.ServiceInstanceIdsParam.ServiceInstanceIdsParamBuilder.aServiceInstanceIdsParam;
 import static software.wings.beans.InstanceUnitType.COUNT;
 import static software.wings.beans.InstanceUnitType.PERCENTAGE;
 import static software.wings.beans.ServiceInstance.Builder.aServiceInstance;
 import static software.wings.beans.ServiceInstanceSelectionParams.Builder.aServiceInstanceSelectionParams;
 
-import com.google.common.annotations.VisibleForTesting;
-import com.google.inject.Inject;
+import static java.lang.String.format;
+import static java.util.Objects.requireNonNull;
+import static java.util.stream.Collectors.toList;
+import static org.atteo.evo.inflector.English.plural;
 
 import io.harness.beans.ExecutionStatus;
 import io.harness.beans.OrchestrationWorkflowType;
@@ -28,8 +27,7 @@ import io.harness.deployment.InstanceDetails;
 import io.harness.deployment.InstanceDetails.InstanceDetailsBuilder;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
-import lombok.extern.slf4j.Slf4j;
-import org.mongodb.morphia.annotations.Transient;
+
 import software.wings.api.InstanceElement;
 import software.wings.api.PhaseElement;
 import software.wings.api.SelectedNodeExecutionData;
@@ -71,6 +69,8 @@ import software.wings.sm.State;
 import software.wings.sm.StateExecutionInstance;
 import software.wings.sm.WorkflowStandardParams;
 
+import com.google.common.annotations.VisibleForTesting;
+import com.google.inject.Inject;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -78,6 +78,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
+import lombok.extern.slf4j.Slf4j;
+import org.mongodb.morphia.annotations.Transient;
 
 /**
  * Created by brett on 10/10/17
@@ -183,10 +185,10 @@ public abstract class NodeSelectState extends State {
           workflowStandardParams.isExcludeHostsWithSameArtifact() && ROLLING != context.getOrchestrationWorkflowType();
       if (InfrastructureMappingType.AWS_SSH.name().equals(infrastructureMapping.getInfraMappingType())
           || InfrastructureMappingType.PHYSICAL_DATA_CENTER_SSH.name().equals(
-                 infrastructureMapping.getInfraMappingType())
+              infrastructureMapping.getInfraMappingType())
           || InfrastructureMappingType.AZURE_INFRA.name().equals(infrastructureMapping.getInfraMappingType())
           || InfrastructureMappingType.PHYSICAL_DATA_CENTER_WINRM.name().equals(
-                 infrastructureMapping.getInfraMappingType())) {
+              infrastructureMapping.getInfraMappingType())) {
         if (excludeHostsWithSameArtifact && !nodesOverriddenFromExecutionHosts) {
           serviceInstances =
               excludeHostsWithTheSameArtifactDeployed(context, appId, serviceId, infraMappingId, serviceInstances);
@@ -406,7 +408,7 @@ public abstract class NodeSelectState extends State {
       Account account = accountService.get(requireNonNull(context.getApp()).getAccountId());
       if (account == null
           || (account.getLicenseInfo() != null && isNotEmpty(account.getLicenseInfo().getAccountType())
-                 && AccountType.COMMUNITY.equals(account.getLicenseInfo().getAccountType()))) {
+              && AccountType.COMMUNITY.equals(account.getLicenseInfo().getAccountType()))) {
         errorMessage = "The license for this account does not allow more than "
             + DEFAULT_CONCURRENT_EXECUTION_INSTANCE_LIMIT
             + " concurrent instance deployments. Please contact Harness Support.";

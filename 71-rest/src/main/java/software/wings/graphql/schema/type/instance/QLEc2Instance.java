@@ -1,9 +1,10 @@
 package software.wings.graphql.schema.type.instance;
 
+import software.wings.graphql.schema.type.artifact.QLArtifact;
+
 import lombok.Builder;
 import lombok.EqualsAndHashCode;
 import lombok.Value;
-import software.wings.graphql.schema.type.artifact.QLArtifact;
 
 @Value
 @EqualsAndHashCode(callSuper = true)

@@ -4,11 +4,13 @@ import static io.harness.annotations.dev.HarnessTeam.PL;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.ExecutionStatus;
+
+import software.wings.beans.WorkflowExecution;
+
 import lombok.AllArgsConstructor;
 import lombok.EqualsAndHashCode;
 import lombok.Value;
 import lombok.experimental.FieldNameConstants;
-import software.wings.beans.WorkflowExecution;
 
 @OwnedBy(PL)
 @Value

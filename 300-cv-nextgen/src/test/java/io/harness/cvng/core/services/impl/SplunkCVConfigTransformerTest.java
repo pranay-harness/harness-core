@@ -1,10 +1,9 @@
 package io.harness.cvng.core.services.impl;
 
 import static io.harness.rule.OwnerRule.KAMAL;
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-
-import com.google.inject.Inject;
 
 import io.harness.category.element.UnitTests;
 import io.harness.cvng.api.CVConfigTransformerTestBase;
@@ -12,11 +11,12 @@ import io.harness.cvng.beans.CVMonitoringCategory;
 import io.harness.cvng.core.beans.SplunkDSConfig;
 import io.harness.cvng.core.entities.SplunkCVConfig;
 import io.harness.rule.Owner;
+
+import com.google.inject.Inject;
+import java.util.Collections;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
-
-import java.util.Collections;
 
 public class SplunkCVConfigTransformerTest extends CVConfigTransformerTestBase {
   @Inject private SplunkCVConfigTransformer splunkCVConfigTransformer;

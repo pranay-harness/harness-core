@@ -1,14 +1,12 @@
 package io.harness.batch.processing;
 
 import static io.harness.rule.OwnerRule.AVMOHAN;
+
 import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.doThrow;
-
-import com.google.common.base.VerifyException;
-import com.google.common.util.concurrent.UncheckedTimeoutException;
 
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
@@ -16,6 +14,10 @@ import io.harness.mongo.IndexManager;
 import io.harness.persistence.HPersistence;
 import io.harness.rule.Owner;
 import io.harness.timescaledb.TimeScaleDBService;
+
+import com.google.common.base.VerifyException;
+import com.google.common.util.concurrent.UncheckedTimeoutException;
+import java.time.Duration;
 import lombok.val;
 import org.junit.Before;
 import org.junit.Test;
@@ -26,8 +28,6 @@ import org.mongodb.morphia.Morphia;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
 import org.springframework.mock.env.MockEnvironment;
-
-import java.time.Duration;
 
 @RunWith(PowerMockRunner.class)
 @PrepareForTest(IndexManager.class)

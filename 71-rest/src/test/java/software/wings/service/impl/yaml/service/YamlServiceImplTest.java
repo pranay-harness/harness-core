@@ -8,14 +8,7 @@ import static io.harness.rule.OwnerRule.ALEXEI;
 import static io.harness.rule.OwnerRule.ROHIT_KUMAR;
 import static io.harness.rule.OwnerRule.RUSHABH;
 import static io.harness.rule.OwnerRule.VARDAN_BANSAL;
-import static java.util.stream.Collectors.toList;
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.anyString;
-import static org.mockito.Mockito.doReturn;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
+
 import static software.wings.beans.yaml.Change.Builder.aFileChange;
 import static software.wings.beans.yaml.GitFileChange.Builder.aGitFileChange;
 import static software.wings.beans.yaml.YamlConstants.APPLICATIONS_FOLDER;
@@ -28,19 +21,19 @@ import static software.wings.beans.yaml.YamlConstants.SETUP_FOLDER;
 import static software.wings.utils.Utils.generatePath;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 
-import com.google.common.collect.Lists;
-import com.google.inject.Inject;
+import static java.util.stream.Collectors.toList;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyString;
+import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
 
 import io.harness.category.element.UnitTests;
 import io.harness.git.model.ChangeType;
 import io.harness.rule.Owner;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
-import org.mockito.Spy;
+
 import software.wings.WingsBaseTest;
 import software.wings.audit.AuditHeader;
 import software.wings.beans.Application;
@@ -58,6 +51,8 @@ import software.wings.service.intfc.yaml.YamlGitService;
 import software.wings.yaml.YamlOperationResponse;
 import software.wings.yaml.YamlPayload;
 
+import com.google.common.collect.Lists;
+import com.google.inject.Inject;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -69,6 +64,13 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import javax.activity.InvalidActivityException;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
+import org.mockito.Spy;
 
 public class YamlServiceImplTest extends WingsBaseTest {
   @Mock private YamlHandlerFactory yamlHandlerFactory;

@@ -2,21 +2,20 @@ package io.harness.ngpipeline.common;
 
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
-import com.google.inject.Singleton;
+import io.harness.exception.UnsupportedOperationException;
+import io.harness.mongo.index.Field;
+import io.harness.ng.RsqlQueryable;
 
 import com.github.rutledgepaulv.qbuilders.builders.GeneralQueryBuilder;
 import com.github.rutledgepaulv.qbuilders.conditions.Condition;
 import com.github.rutledgepaulv.rqe.pipes.QueryConversionPipeline;
-import io.harness.exception.UnsupportedOperationException;
-import io.harness.mongo.index.Field;
-import io.harness.ng.RsqlQueryable;
-import org.springframework.data.mongodb.core.query.Criteria;
-
+import com.google.inject.Singleton;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import javax.validation.constraints.NotNull;
+import org.springframework.data.mongodb.core.query.Criteria;
 
 /**
  * This class still needs improvement.

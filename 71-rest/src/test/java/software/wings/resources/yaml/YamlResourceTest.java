@@ -2,21 +2,24 @@ package software.wings.resources.yaml;
 
 import static io.harness.rule.OwnerRule.ABHINAV;
 import static io.harness.rule.OwnerRule.VARDAN_BANSAL;
-import static org.assertj.core.api.Assertions.assertThat;
+
 import static software.wings.security.PermissionAttribute.PermissionType.ACCOUNT_MANAGEMENT;
 import static software.wings.security.PermissionAttribute.PermissionType.MANAGE_CONFIG_AS_CODE;
+
+import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
+
 import software.wings.security.annotations.AuthRule;
 
 import java.lang.reflect.Method;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 public class YamlResourceTest extends CategoryTest {
   @Test

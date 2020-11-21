@@ -1,11 +1,13 @@
 package io.harness.cvng.core.entities;
 
-import static com.google.common.base.Preconditions.checkNotNull;
 import static io.harness.cvng.core.utils.ErrorMessageUtils.generateErrorMessageFromParam;
+
+import static com.google.common.base.Preconditions.checkNotNull;
+
+import io.harness.cvng.beans.DataSourceType;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonTypeName;
-import io.harness.cvng.beans.DataSourceType;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;

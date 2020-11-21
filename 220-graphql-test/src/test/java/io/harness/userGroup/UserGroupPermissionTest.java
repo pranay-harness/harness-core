@@ -2,7 +2,7 @@ package io.harness.userGroup;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.rule.OwnerRule.DEEPAK;
-import static org.assertj.core.api.Assertions.assertThat;
+
 import static software.wings.beans.Application.Builder.anApplication;
 import static software.wings.beans.Environment.Builder.anEnvironment;
 import static software.wings.security.PermissionAttribute.PermissionType.ACCOUNT_MANAGEMENT;
@@ -36,9 +36,8 @@ import static software.wings.security.PermissionAttribute.PermissionType.USER_PE
 import static software.wings.security.PermissionAttribute.PermissionType.USER_PERMISSION_READ;
 import static software.wings.security.PermissionAttribute.PermissionType.WORKFLOW;
 
-import com.google.inject.Inject;
+import static org.assertj.core.api.Assertions.assertThat;
 
-import graphql.ExecutionResult;
 import io.harness.GraphQLTest;
 import io.harness.beans.EmbeddedUser;
 import io.harness.category.element.UnitTests;
@@ -51,12 +50,7 @@ import io.harness.generator.OwnerManager;
 import io.harness.generator.Randomizer;
 import io.harness.generator.ServiceGenerator;
 import io.harness.rule.Owner;
-import lombok.extern.slf4j.Slf4j;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
-import org.junit.rules.ExpectedException;
+
 import software.wings.beans.Application;
 import software.wings.beans.Environment;
 import software.wings.beans.InfrastructureProvisioner;
@@ -71,10 +65,18 @@ import software.wings.security.PermissionAttribute.PermissionType;
 import software.wings.security.WorkflowFilter;
 import software.wings.service.intfc.UserGroupService;
 
+import com.google.inject.Inject;
+import graphql.ExecutionResult;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import lombok.extern.slf4j.Slf4j;
+import org.junit.Before;
+import org.junit.Rule;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
+import org.junit.rules.ExpectedException;
 
 @Slf4j
 public class UserGroupPermissionTest extends GraphQLTest {

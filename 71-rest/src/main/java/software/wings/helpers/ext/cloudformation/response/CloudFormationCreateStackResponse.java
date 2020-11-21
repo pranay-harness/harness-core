@@ -1,11 +1,11 @@
 package software.wings.helpers.ext.cloudformation.response;
 
 import io.harness.logging.CommandExecutionStatus;
+
+import java.util.Map;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
-
-import java.util.Map;
 
 @Data
 @EqualsAndHashCode(callSuper = false)

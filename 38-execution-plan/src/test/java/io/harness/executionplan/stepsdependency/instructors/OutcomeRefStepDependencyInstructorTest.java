@@ -1,6 +1,7 @@
 package io.harness.executionplan.stepsdependency.instructors;
 
 import static io.harness.rule.OwnerRule.ARCHIT;
+
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.CategoryTest;
@@ -12,10 +13,10 @@ import io.harness.plan.PlanNode;
 import io.harness.plan.PlanNode.PlanNodeBuilder;
 import io.harness.pms.refobjects.RefObject;
 import io.harness.rule.Owner;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
 
 import java.util.List;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 public class OutcomeRefStepDependencyInstructorTest extends CategoryTest {
   OutcomeRefStepDependencyInstructor instructor = OutcomeRefStepDependencyInstructor.builder()

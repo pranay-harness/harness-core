@@ -2,16 +2,16 @@ package software.wings.sm.states.azure;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.deployment.InstanceDetails.InstanceType.AZURE_VMSS;
-import static java.util.stream.Collectors.toList;
+
 import static software.wings.api.InstanceElement.Builder.anInstanceElement;
 import static software.wings.beans.infrastructure.Host.Builder.aHost;
 
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
+import static java.util.stream.Collectors.toList;
 
 import io.harness.beans.SweepingOutputInstance;
 import io.harness.delegate.task.azure.response.AzureVMInstanceData;
 import io.harness.deployment.InstanceDetails;
+
 import software.wings.api.HostElement;
 import software.wings.api.InstanceElement;
 import software.wings.api.instancedetails.InstanceInfoVariables;
@@ -24,6 +24,8 @@ import software.wings.service.intfc.HostService;
 import software.wings.service.intfc.sweepingoutput.SweepingOutputService;
 import software.wings.sm.ExecutionContext;
 
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;

@@ -1,3 +1,5 @@
 package migrations;
 
-public interface TimeScaleDBMigration { boolean migrate(); }
+public interface TimeScaleDBMigration {
+  boolean migrate();
+}

@@ -7,12 +7,12 @@ import io.harness.pms.plan.PlanNodeProto;
 import io.harness.pms.sdk.beans.PlanNode;
 import io.harness.pms.sdk.mappers.PlanNodeProtoMapper;
 import io.harness.pms.yaml.YamlField;
-import lombok.Builder;
-import lombok.Data;
-import lombok.Singular;
 
 import java.util.HashMap;
 import java.util.Map;
+import lombok.Builder;
+import lombok.Data;
+import lombok.Singular;
 
 @Data
 @Builder
@@ -31,7 +31,7 @@ public class PlanCreationResponse {
     if (EmptyPredicate.isEmpty(newNodes)) {
       return;
     }
-    newNodes.values().forEach(this ::addNode);
+    newNodes.values().forEach(this::addNode);
   }
 
   public void addNode(PlanNode newNode) {
@@ -52,7 +52,7 @@ public class PlanCreationResponse {
     if (EmptyPredicate.isEmpty(fields)) {
       return;
     }
-    fields.values().forEach(this ::addDependency);
+    fields.values().forEach(this::addDependency);
   }
 
   public void addDependency(YamlField field) {

@@ -1,10 +1,11 @@
 package io.harness.ngpipeline.pipeline.service;
 
-import com.google.common.collect.Lists;
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
-import com.google.inject.name.Named;
-import com.mongodb.client.result.UpdateResult;
+import static io.harness.exception.WingsException.USER_SRE;
+import static io.harness.utils.RestCallToNGManagerClientUtils.execute;
+
+import static java.lang.String.format;
+import static org.springframework.data.mongodb.core.query.Criteria.where;
+
 import io.harness.EntityType;
 import io.harness.NGResourceFilterConstants;
 import io.harness.beans.IdentifierRef;
@@ -22,21 +23,21 @@ import io.harness.ngpipeline.pipeline.repository.spring.NgPipelineRepository;
 import io.harness.utils.IdentifierRefHelper;
 import io.harness.walktree.visitor.SimpleVisitorFactory;
 import io.harness.walktree.visitor.entityreference.EntityReferenceExtractorVisitor;
+
+import com.google.common.collect.Lists;
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
+import com.google.inject.name.Named;
+import com.mongodb.client.result.UpdateResult;
+import java.util.*;
+import java.util.concurrent.ExecutorService;
+import java.util.stream.Collectors;
+import javax.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.mongodb.core.query.Criteria;
-
-import javax.validation.Valid;
-import java.util.*;
-import java.util.concurrent.ExecutorService;
-import java.util.stream.Collectors;
-
-import static io.harness.exception.WingsException.USER_SRE;
-import static io.harness.utils.RestCallToNGManagerClientUtils.execute;
-import static java.lang.String.format;
-import static org.springframework.data.mongodb.core.query.Criteria.where;
 
 @Singleton
 @Slf4j

@@ -1,10 +1,8 @@
 package software.wings.features;
 
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
-
 import io.harness.governance.pipeline.service.PipelineGovernanceService;
 import io.harness.governance.pipeline.service.model.PipelineGovernanceConfig;
+
 import software.wings.beans.EntityType;
 import software.wings.features.api.AbstractPremiumFeature;
 import software.wings.features.api.ComplianceByRemovingUsage;
@@ -12,6 +10,8 @@ import software.wings.features.api.FeatureRestrictions;
 import software.wings.features.api.Usage;
 import software.wings.service.intfc.AccountService;
 
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;

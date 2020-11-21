@@ -2,13 +2,36 @@ package software.wings.delegatetasks.aws.ecs.ecstaskhandler.deploy;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
-import static java.lang.String.format;
-import static org.apache.commons.lang3.StringUtils.substringBefore;
+
 import static software.wings.beans.InstanceUnitType.PERCENTAGE;
 
-import com.google.common.base.Preconditions;
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
+import static java.lang.String.format;
+import static org.apache.commons.lang3.StringUtils.substringBefore;
+
+import io.harness.container.ContainerInfo;
+import io.harness.data.structure.EmptyPredicate;
+import io.harness.exception.InvalidRequestException;
+import io.harness.logging.CommandExecutionStatus;
+import io.harness.logging.LogLevel;
+import io.harness.logging.Misc;
+import io.harness.security.encryption.EncryptedDataDetail;
+import io.harness.serializer.JsonUtils;
+
+import software.wings.api.ContainerServiceData;
+import software.wings.beans.AwsConfig;
+import software.wings.beans.SettingAttribute;
+import software.wings.beans.command.EcsResizeParams;
+import software.wings.beans.command.ExecutionLogCallback;
+import software.wings.beans.container.AwsAutoScalarConfig;
+import software.wings.cloudprovider.aws.AwsClusterService;
+import software.wings.cloudprovider.aws.EcsContainerService;
+import software.wings.delegatetasks.aws.ecs.ecstaskhandler.EcsCommandTaskHelper;
+import software.wings.helpers.ext.ecs.request.EcsRunTaskDeployRequest;
+import software.wings.helpers.ext.ecs.response.EcsRunTaskDeployResponse;
+import software.wings.helpers.ext.ecs.response.EcsServiceDeployResponse;
+import software.wings.service.impl.AwsHelperService;
+import software.wings.service.intfc.aws.delegate.AwsAppAutoScalingHelperServiceDelegate;
+import software.wings.service.intfc.aws.delegate.AwsEcsHelperServiceDelegate;
 
 import com.amazonaws.services.applicationautoscaling.model.DeregisterScalableTargetRequest;
 import com.amazonaws.services.applicationautoscaling.model.DescribeScalableTargetsRequest;
@@ -31,32 +54,9 @@ import com.amazonaws.services.ecs.model.RunTaskResult;
 import com.amazonaws.services.ecs.model.Service;
 import com.amazonaws.services.ecs.model.Task;
 import com.amazonaws.services.ecs.model.TaskDefinition;
-import io.harness.container.ContainerInfo;
-import io.harness.data.structure.EmptyPredicate;
-import io.harness.exception.InvalidRequestException;
-import io.harness.logging.CommandExecutionStatus;
-import io.harness.logging.LogLevel;
-import io.harness.logging.Misc;
-import io.harness.security.encryption.EncryptedDataDetail;
-import io.harness.serializer.JsonUtils;
-import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.StringUtils;
-import software.wings.api.ContainerServiceData;
-import software.wings.beans.AwsConfig;
-import software.wings.beans.SettingAttribute;
-import software.wings.beans.command.EcsResizeParams;
-import software.wings.beans.command.ExecutionLogCallback;
-import software.wings.beans.container.AwsAutoScalarConfig;
-import software.wings.cloudprovider.aws.AwsClusterService;
-import software.wings.cloudprovider.aws.EcsContainerService;
-import software.wings.delegatetasks.aws.ecs.ecstaskhandler.EcsCommandTaskHelper;
-import software.wings.helpers.ext.ecs.request.EcsRunTaskDeployRequest;
-import software.wings.helpers.ext.ecs.response.EcsRunTaskDeployResponse;
-import software.wings.helpers.ext.ecs.response.EcsServiceDeployResponse;
-import software.wings.service.impl.AwsHelperService;
-import software.wings.service.intfc.aws.delegate.AwsAppAutoScalingHelperServiceDelegate;
-import software.wings.service.intfc.aws.delegate.AwsEcsHelperServiceDelegate;
-
+import com.google.common.base.Preconditions;
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -66,6 +66,8 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.stream.Collectors;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 
 @Singleton
 @Slf4j
@@ -338,7 +340,7 @@ public class EcsDeployCommandTaskHelper {
           ? resizeParams.getInstanceCount() >= 100
           : (resizeParams.isUseFixedInstances() && resizeParams.getInstanceCount() >= resizeParams.getFixedInstances())
               || (!resizeParams.isUseFixedInstances()
-                     && resizeParams.getInstanceCount() >= resizeParams.getMaxInstances());
+                  && resizeParams.getInstanceCount() >= resizeParams.getMaxInstances());
     } else {
       deployingToHundredPercent = false;
     }
@@ -541,8 +543,8 @@ public class EcsDeployCommandTaskHelper {
                 + (isNotEmpty(info.getHostName()) && info.getHostName().equals(info.getIp()) ? ""
                                                                                              : " - " + info.getIp())
                 + (isNotEmpty(info.getHostName()) && info.getHostName().equals(info.getContainerId())
-                          ? ""
-                          : " - " + info.getContainerId())
+                        ? ""
+                        : " - " + info.getContainerId())
                 + (info.isNewContainer() ? " (new)" : "")));
         executionLogCallback.saveExecutionLog("");
       }

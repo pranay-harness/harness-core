@@ -2,11 +2,6 @@ package software.wings.graphql.datafetcher.ssoProvider;
 
 import static software.wings.security.PermissionAttribute.PermissionType.MANAGE_AUTHENTICATION_SETTINGS;
 
-import com.google.inject.Inject;
-
-import graphql.schema.DataFetchingEnvironment;
-import lombok.extern.slf4j.Slf4j;
-import org.mongodb.morphia.query.Query;
 import software.wings.beans.sso.SSOSettings;
 import software.wings.beans.sso.SSOType;
 import software.wings.graphql.datafetcher.AbstractConnectionV2DataFetcher;
@@ -22,8 +17,12 @@ import software.wings.graphql.schema.type.aggregation.ssoProvider.QLSSOProviderF
 import software.wings.security.annotations.AuthRule;
 import software.wings.service.intfc.SSOService;
 
+import com.google.inject.Inject;
+import graphql.schema.DataFetchingEnvironment;
 import java.util.ArrayList;
 import java.util.List;
+import lombok.extern.slf4j.Slf4j;
+import org.mongodb.morphia.query.Query;
 
 @Slf4j
 public class SsoProviderConnectionDataFetcher

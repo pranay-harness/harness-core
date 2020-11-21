@@ -5,16 +5,13 @@
 package software.wings.resources;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
+
 import static software.wings.beans.CatalogNames.BASTION_HOST_ATTRIBUTES;
 import static software.wings.beans.CatalogNames.CONNECTION_ATTRIBUTES;
 
-import com.google.inject.Inject;
-
-import com.codahale.metrics.annotation.ExceptionMetered;
-import com.codahale.metrics.annotation.Timed;
 import io.harness.rest.RestResponse;
 import io.harness.security.annotations.PublicApi;
-import io.swagger.annotations.Api;
+
 import software.wings.beans.CatalogNames;
 import software.wings.beans.Environment.EnvironmentType;
 import software.wings.beans.ExecutionCredential.ExecutionType;
@@ -24,6 +21,10 @@ import software.wings.service.intfc.CatalogService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.settings.SettingVariableTypes;
 
+import com.codahale.metrics.annotation.ExceptionMetered;
+import com.codahale.metrics.annotation.Timed;
+import com.google.inject.Inject;
+import io.swagger.annotations.Api;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.List;
@@ -141,7 +142,9 @@ public class CatalogResource {
             catalogs.put(catalogType, EnvironmentType.values());
             break;
           }
-          default: { catalogs.put(catalogType, catalogService.getCatalogItems(catalogType)); }
+          default: {
+            catalogs.put(catalogType, catalogService.getCatalogItems(catalogType));
+          }
         }
       }
     }

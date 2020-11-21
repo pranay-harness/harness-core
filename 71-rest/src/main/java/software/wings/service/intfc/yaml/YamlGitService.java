@@ -6,8 +6,7 @@ import io.harness.beans.PageResponse;
 import io.harness.rest.RestResponse;
 import io.harness.validation.Create;
 import io.harness.validation.Update;
-import org.hibernate.validator.constraints.NotEmpty;
-import ru.vyarus.guice.validator.group.annotation.ValidationGroups;
+
 import software.wings.beans.Application;
 import software.wings.beans.EntityType;
 import software.wings.beans.GitCommit;
@@ -27,6 +26,8 @@ import java.util.Map;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 import javax.ws.rs.core.HttpHeaders;
+import org.hibernate.validator.constraints.NotEmpty;
+import ru.vyarus.guice.validator.group.annotation.ValidationGroups;
 
 /**
  * The interface Yaml git sync service.

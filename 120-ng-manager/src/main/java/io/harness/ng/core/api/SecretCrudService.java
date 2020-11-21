@@ -6,11 +6,11 @@ import io.harness.ng.core.dto.secrets.SecretResponseWrapper;
 import io.harness.ng.core.remote.SecretValidationMetaData;
 import io.harness.ng.core.remote.SecretValidationResultDTO;
 import io.harness.secretmanagerclient.SecretType;
-import okhttp3.MediaType;
-import okhttp3.RequestBody;
 
 import java.io.InputStream;
 import java.util.Optional;
+import okhttp3.MediaType;
+import okhttp3.RequestBody;
 
 public interface SecretCrudService {
   default RequestBody getRequestBody(String value) {

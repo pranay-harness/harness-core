@@ -1,8 +1,5 @@
 package io.harness.entities;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.annotation.HarnessEntity;
 import io.harness.beans.ExecutionStatus;
 import io.harness.mongo.index.FdIndex;
@@ -12,6 +9,15 @@ import io.harness.persistence.CreatedAtAware;
 import io.harness.persistence.PersistentEntity;
 import io.harness.persistence.UpdatedAtAware;
 import io.harness.persistence.UuidAware;
+
+import software.wings.common.VerificationConstants;
+import software.wings.service.impl.analysis.DataCollectionInfoV2;
+
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.github.reinert.jjschema.SchemaIgnore;
+import java.time.OffsetDateTime;
+import java.util.Date;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NonNull;
@@ -19,11 +25,6 @@ import lombok.experimental.FieldNameConstants;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Id;
 import org.mongodb.morphia.annotations.PrePersist;
-import software.wings.common.VerificationConstants;
-import software.wings.service.impl.analysis.DataCollectionInfoV2;
-
-import java.time.OffsetDateTime;
-import java.util.Date;
 
 @FieldNameConstants(innerTypeName = "CVTaskKeys")
 @Data

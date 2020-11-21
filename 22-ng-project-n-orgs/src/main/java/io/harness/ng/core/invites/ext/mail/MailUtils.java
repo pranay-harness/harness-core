@@ -1,21 +1,26 @@
 package io.harness.ng.core.invites.ext.mail;
 
-import static freemarker.template.Configuration.VERSION_2_3_23;
 import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+
+import static freemarker.template.Configuration.VERSION_2_3_23;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
-import com.google.common.collect.ImmutableList;
-import com.google.inject.Inject;
-
-import freemarker.cache.ClassTemplateLoader;
-import freemarker.template.Configuration;
-import freemarker.template.Template;
-import freemarker.template.TemplateException;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.InvalidArgumentsException;
 import io.harness.queue.QueuePublisher;
+
+import com.google.common.collect.ImmutableList;
+import com.google.inject.Inject;
+import freemarker.cache.ClassTemplateLoader;
+import freemarker.template.Configuration;
+import freemarker.template.Template;
+import freemarker.template.TemplateException;
+import java.io.IOException;
+import java.io.StringWriter;
+import javax.mail.internet.AddressException;
+import javax.mail.internet.InternetAddress;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.mail.DefaultAuthenticator;
@@ -23,11 +28,6 @@ import org.apache.commons.mail.Email;
 import org.apache.commons.mail.EmailException;
 import org.apache.commons.mail.HtmlEmail;
 import org.apache.commons.mail.SimpleEmail;
-
-import java.io.IOException;
-import java.io.StringWriter;
-import javax.mail.internet.AddressException;
-import javax.mail.internet.InternetAddress;
 
 @OwnedBy(PL)
 @AllArgsConstructor(onConstructor = @__(@Inject))

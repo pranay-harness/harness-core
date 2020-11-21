@@ -2,28 +2,17 @@ package software.wings.service.impl.sumo;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.threading.Morpheus.sleep;
+
 import static software.wings.common.VerificationConstants.DATA_COLLECTION_RETRY_SLEEP;
 import static software.wings.common.VerificationConstants.RATE_LIMIT_STATUS;
 import static software.wings.common.VerificationConstants.URL_STRING;
 import static software.wings.delegatetasks.SumoDataCollectionTask.DEFAULT_TIME_ZONE;
 import static software.wings.service.impl.ThirdPartyApiCallLog.createApiCallLog;
 
-import com.google.common.base.Preconditions;
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
-
-import com.sumologic.client.Credentials;
-import com.sumologic.client.SumoLogicClient;
-import com.sumologic.client.SumoServerException;
-import com.sumologic.client.model.LogMessage;
-import com.sumologic.client.searchjob.model.GetMessagesForSearchJobResponse;
-import com.sumologic.client.searchjob.model.GetSearchJobStatusResponse;
 import io.harness.network.Http;
 import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.time.Timestamp;
-import lombok.extern.slf4j.Slf4j;
-import org.apache.http.HttpHost;
-import org.apache.http.HttpStatus;
+
 import software.wings.beans.SumoConfig;
 import software.wings.delegatetasks.DelegateLogService;
 import software.wings.delegatetasks.cv.DataCollectionException;
@@ -36,6 +25,15 @@ import software.wings.service.impl.analysis.VerificationNodeDataSetupResponse.Ve
 import software.wings.service.intfc.security.EncryptionService;
 import software.wings.service.intfc.sumo.SumoDelegateService;
 
+import com.google.common.base.Preconditions;
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
+import com.sumologic.client.Credentials;
+import com.sumologic.client.SumoLogicClient;
+import com.sumologic.client.SumoServerException;
+import com.sumologic.client.model.LogMessage;
+import com.sumologic.client.searchjob.model.GetMessagesForSearchJobResponse;
+import com.sumologic.client.searchjob.model.GetSearchJobStatusResponse;
 import java.net.MalformedURLException;
 import java.time.Duration;
 import java.time.OffsetDateTime;
@@ -45,6 +43,9 @@ import java.util.TimeZone;
 import java.util.concurrent.CancellationException;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.TimeUnit;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.http.HttpHost;
+import org.apache.http.HttpStatus;
 
 /**
  * Delegate Service impl for Sumo Logic.
@@ -275,7 +276,7 @@ public class SumoDelegateServiceImpl implements SumoDelegateService {
     // is either "DONE GATHERING RESULTS" or "CANCELLED".
     while (searchJobStatusResponse == null
         || (!searchJobStatusResponse.getState().equals("DONE GATHERING RESULTS")
-               && !searchJobStatusResponse.getState().equals("CANCELLED"))) {
+            && !searchJobStatusResponse.getState().equals("CANCELLED"))) {
       Thread.sleep(DEFAULT_SLEEP_TIME_IN_MILLIS);
 
       // Get the latest search job status.

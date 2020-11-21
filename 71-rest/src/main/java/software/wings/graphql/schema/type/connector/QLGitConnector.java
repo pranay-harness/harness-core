@@ -1,12 +1,13 @@
 package software.wings.graphql.schema.type.connector;
 
-import lombok.Builder;
-import lombok.Value;
 import software.wings.beans.GitConfig.UrlType;
 import software.wings.graphql.schema.type.QLCustomCommitDetails;
 import software.wings.graphql.schema.type.QLUser;
 import software.wings.security.PermissionAttribute.ResourceType;
 import software.wings.security.annotations.Scope;
+
+import lombok.Builder;
+import lombok.Value;
 
 @Value
 @Builder

@@ -3,16 +3,16 @@ package io.harness.logging;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.govern.Switch.unhandled;
 import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
-import static java.lang.String.format;
 
-import lombok.extern.slf4j.Slf4j;
-import org.slf4j.MDC;
-import org.slf4j.MDC.MDCCloseable;
+import static java.lang.String.format;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import lombok.extern.slf4j.Slf4j;
+import org.slf4j.MDC;
+import org.slf4j.MDC.MDCCloseable;
 
 @Slf4j
 public class AutoLogContext implements AutoCloseable {

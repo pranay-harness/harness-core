@@ -1,9 +1,8 @@
 package io.harness.iterator.provider;
 
 import static io.harness.rule.OwnerRule.GEORGE;
-import static org.assertj.core.api.Assertions.assertThat;
 
-import com.google.inject.Inject;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.PersistenceTestBase;
 import io.harness.category.element.UnitTests;
@@ -12,6 +11,8 @@ import io.harness.iterator.TestIterableEntity.TestIterableEntityKeys;
 import io.harness.mongo.iterator.filter.MorphiaFilterExpander;
 import io.harness.mongo.iterator.provider.MorphiaPersistenceProvider;
 import io.harness.rule.Owner;
+
+import com.google.inject.Inject;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mongodb.morphia.query.Query;

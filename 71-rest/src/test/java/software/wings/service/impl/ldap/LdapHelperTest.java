@@ -3,6 +3,7 @@ package software.wings.service.impl.ldap;
 import static io.harness.rule.OwnerRule.AMAN;
 import static io.harness.rule.OwnerRule.UNKNOWN;
 import static io.harness.rule.OwnerRule.VIKAS;
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyBoolean;
@@ -14,6 +15,20 @@ import static org.powermock.api.mockito.PowerMockito.whenNew;
 
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
+
+import software.wings.WingsBaseTest;
+import software.wings.beans.sso.LdapConnectionSettings;
+import software.wings.beans.sso.LdapGroupSettings;
+import software.wings.beans.sso.LdapSettings;
+import software.wings.beans.sso.LdapUserSettings;
+import software.wings.helpers.ext.ldap.LdapResponse;
+import software.wings.helpers.ext.ldap.LdapResponse.Status;
+import software.wings.helpers.ext.ldap.LdapSearch;
+
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -33,19 +48,6 @@ import org.powermock.api.mockito.PowerMockito;
 import org.powermock.core.classloader.annotations.PowerMockIgnore;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
-import software.wings.WingsBaseTest;
-import software.wings.beans.sso.LdapConnectionSettings;
-import software.wings.beans.sso.LdapGroupSettings;
-import software.wings.beans.sso.LdapSettings;
-import software.wings.beans.sso.LdapUserSettings;
-import software.wings.helpers.ext.ldap.LdapResponse;
-import software.wings.helpers.ext.ldap.LdapResponse.Status;
-import software.wings.helpers.ext.ldap.LdapSearch;
-
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
 
 /**
  * @author Swapnil

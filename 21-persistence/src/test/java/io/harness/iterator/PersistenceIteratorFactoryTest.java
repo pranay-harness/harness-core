@@ -2,13 +2,11 @@ package io.harness.iterator;
 
 import static io.harness.mongo.iterator.MongoPersistenceIterator.MongoPersistenceIteratorBuilder;
 import static io.harness.rule.OwnerRule.YOGESH;
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-import com.google.inject.Inject;
-
-import com.codahale.metrics.MetricRegistry;
 import io.harness.PersistenceTestBase;
 import io.harness.category.element.UnitTests;
 import io.harness.config.WorkersConfiguration;
@@ -17,14 +15,16 @@ import io.harness.metrics.HarnessMetricRegistry;
 import io.harness.mongo.iterator.MongoPersistenceIterator;
 import io.harness.mongo.iterator.filter.MorphiaFilterExpander;
 import io.harness.rule.Owner;
+
+import com.codahale.metrics.MetricRegistry;
+import com.google.inject.Inject;
+import java.security.SecureRandom;
+import java.time.Duration;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-
-import java.security.SecureRandom;
-import java.time.Duration;
 
 public class PersistenceIteratorFactoryTest extends PersistenceTestBase {
   @Mock WorkersConfiguration workersConfiguration;

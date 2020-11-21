@@ -1,11 +1,10 @@
 package io.harness.aws;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
+
 import static org.apache.commons.lang3.StringUtils.defaultString;
 
-import com.google.common.annotations.VisibleForTesting;
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
+import io.harness.exception.InvalidRequestException;
 
 import com.amazonaws.auth.AWSCredentialsProvider;
 import com.amazonaws.auth.AWSStaticCredentialsProvider;
@@ -19,10 +18,11 @@ import com.amazonaws.services.ec2.AmazonEC2ClientBuilder;
 import com.amazonaws.services.ec2.model.AmazonEC2Exception;
 import com.amazonaws.services.securitytoken.AWSSecurityTokenService;
 import com.amazonaws.services.securitytoken.AWSSecurityTokenServiceClientBuilder;
-import io.harness.exception.InvalidRequestException;
-import lombok.extern.slf4j.Slf4j;
-
+import com.google.common.annotations.VisibleForTesting;
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import java.util.UUID;
+import lombok.extern.slf4j.Slf4j;
 
 @Singleton
 @Slf4j

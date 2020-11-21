@@ -1,8 +1,5 @@
 package io.harness.connector.impl;
 
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
-
 import io.harness.EntityType;
 import io.harness.beans.IdentifierRef;
 import io.harness.connector.apis.dto.ConnectorInfoDTO;
@@ -13,6 +10,9 @@ import io.harness.ng.core.activityhistory.NGActivityType;
 import io.harness.ng.core.activityhistory.dto.NGActivityDTO;
 import io.harness.ng.core.activityhistory.service.NGActivityService;
 import io.harness.utils.IdentifierRefHelper;
+
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 

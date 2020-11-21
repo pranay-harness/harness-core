@@ -1,9 +1,8 @@
 package io.harness.batch.processing.cloudevents.aws.ecs.service.tasklet.support.response;
 
+import java.util.List;
 import lombok.Builder;
 import lombok.Data;
-
-import java.util.List;
 
 @Data
 @Builder

@@ -3,6 +3,7 @@ package io.harness.cvng.core.entities;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.rule.OwnerRule.KAMAL;
 import static io.harness.rule.OwnerRule.NEMANJA;
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
@@ -12,11 +13,11 @@ import io.harness.cvng.beans.CVMonitoringCategory;
 import io.harness.cvng.core.beans.TimeRange;
 import io.harness.cvng.models.VerificationType;
 import io.harness.rule.Owner;
+
+import java.time.Instant;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
-
-import java.time.Instant;
 
 public class LogCVConfigTest extends CategoryTest {
   private String accountId;

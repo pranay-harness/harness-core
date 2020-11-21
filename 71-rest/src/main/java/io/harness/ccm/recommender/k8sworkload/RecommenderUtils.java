@@ -7,9 +7,9 @@ import io.harness.histogram.ExponentialHistogramOptions;
 import io.harness.histogram.Histogram;
 import io.harness.histogram.HistogramCheckpoint;
 import io.harness.histogram.HistogramOptions;
-import lombok.experimental.UtilityClass;
 
 import java.time.Duration;
+import lombok.experimental.UtilityClass;
 
 @UtilityClass
 public class RecommenderUtils {

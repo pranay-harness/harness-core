@@ -2,12 +2,12 @@ package io.harness.walktree.visitor.utilities;
 
 import io.harness.exception.InvalidArgumentsException;
 import io.harness.walktree.beans.LevelNode;
-import lombok.experimental.UtilityClass;
 
 import java.util.LinkedList;
 import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
+import lombok.experimental.UtilityClass;
 
 @UtilityClass
 public class VisitorParentPathUtils {

@@ -6,6 +6,7 @@ import io.harness.data.structure.EmptyPredicate;
 import io.harness.encryption.Scope;
 import io.harness.encryption.ScopeHelper;
 import io.harness.exception.InvalidRequestException;
+
 import lombok.experimental.UtilityClass;
 
 @UtilityClass

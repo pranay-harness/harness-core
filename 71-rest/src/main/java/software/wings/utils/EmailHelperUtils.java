@@ -1,13 +1,12 @@
 package software.wings.utils;
 
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
-
 import software.wings.beans.SettingAttribute;
 import software.wings.helpers.ext.mail.SmtpConfig;
 import software.wings.service.intfc.SettingsService;
 import software.wings.settings.SettingVariableTypes;
 
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import java.util.List;
 
 @Singleton

@@ -2,19 +2,33 @@ package software.wings.scim;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.rule.OwnerRule.UJJAWAL;
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import com.google.gson.JsonObject;
-import com.google.inject.Inject;
+import io.harness.category.element.UnitTests;
+import io.harness.rule.Owner;
+
+import software.wings.WingsBaseTest;
+import software.wings.beans.Account;
+import software.wings.beans.User;
+import software.wings.beans.UserInvite;
+import software.wings.beans.scim.ScimUser;
+import software.wings.beans.security.UserGroup;
+import software.wings.dl.WingsPersistence;
+import software.wings.service.intfc.UserService;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import io.harness.category.element.UnitTests;
-import io.harness.rule.Owner;
+import com.google.gson.JsonObject;
+import com.google.inject.Inject;
+import java.io.IOException;
+import java.util.Arrays;
+import java.util.Collections;
+import javax.ws.rs.core.Response;
 import lombok.AccessLevel;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
@@ -25,19 +39,6 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
-import software.wings.WingsBaseTest;
-import software.wings.beans.Account;
-import software.wings.beans.User;
-import software.wings.beans.UserInvite;
-import software.wings.beans.scim.ScimUser;
-import software.wings.beans.security.UserGroup;
-import software.wings.dl.WingsPersistence;
-import software.wings.service.intfc.UserService;
-
-import java.io.IOException;
-import java.util.Arrays;
-import java.util.Collections;
-import javax.ws.rs.core.Response;
 
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @Slf4j

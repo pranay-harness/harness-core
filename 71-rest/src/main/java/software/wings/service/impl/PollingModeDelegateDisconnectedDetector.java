@@ -2,22 +2,24 @@ package software.wings.service.impl;
 
 import static io.harness.persistence.HPersistence.returnNewOptions;
 import static io.harness.persistence.HQuery.excludeAuthority;
-import static java.lang.System.currentTimeMillis;
+
 import static software.wings.beans.DelegateConnection.EXPIRY_TIME;
 
-import com.google.inject.Inject;
+import static java.lang.System.currentTimeMillis;
 
 import io.harness.observer.Subject;
-import lombok.Getter;
-import org.mongodb.morphia.query.Query;
-import org.mongodb.morphia.query.UpdateOperations;
+
 import software.wings.beans.Delegate;
 import software.wings.beans.Delegate.DelegateKeys;
 import software.wings.beans.DelegateConnection;
 import software.wings.beans.DelegateConnection.DelegateConnectionKeys;
 import software.wings.dl.WingsPersistence;
 
+import com.google.inject.Inject;
 import java.util.List;
+import lombok.Getter;
+import org.mongodb.morphia.query.Query;
+import org.mongodb.morphia.query.UpdateOperations;
 
 public class PollingModeDelegateDisconnectedDetector implements Runnable {
   @Inject private WingsPersistence wingsPersistence;

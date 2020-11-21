@@ -1,11 +1,11 @@
 package software.wings.graphql.schema.query;
 
-import graphql.schema.DataFetchingFieldSelectionSet;
-import lombok.Value;
 import software.wings.graphql.schema.type.QLExecutionStatus;
 
+import graphql.schema.DataFetchingFieldSelectionSet;
 import java.time.OffsetDateTime;
 import java.util.List;
+import lombok.Value;
 
 @Value
 public class QLExecutionsQueryParameters implements QLPageQueryParameters {

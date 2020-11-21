@@ -2,14 +2,16 @@ package software.wings.sm.states;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 
-import com.github.reinert.jjschema.Attributes;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.ExecutionStatus;
+
 import software.wings.api.EmailStateExecutionData;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionResponse;
 import software.wings.sm.StateType;
 import software.wings.stencils.DefaultValue;
+
+import com.github.reinert.jjschema.Attributes;
 
 /**
  * A Pause state to pause state machine execution.

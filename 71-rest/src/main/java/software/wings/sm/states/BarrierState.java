@@ -3,18 +3,14 @@ package software.wings.sm.states;
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.delegate.beans.TaskData.DEFAULT_ASYNC_CALL_TIMEOUT;
 import static io.harness.govern.Switch.unhandled;
+
 import static java.util.Arrays.asList;
 
-import com.google.inject.Inject;
-
-import com.github.reinert.jjschema.Attributes;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.ExecutionStatus;
 import io.harness.distribution.barrier.Barrier;
 import io.harness.tasks.ResponseData;
-import lombok.Getter;
-import lombok.Setter;
-import org.mongodb.morphia.annotations.Transient;
+
 import software.wings.api.BarrierExecutionData;
 import software.wings.beans.BarrierInstance;
 import software.wings.service.intfc.BarrierService;
@@ -26,7 +22,12 @@ import software.wings.sm.State;
 import software.wings.sm.StateType;
 import software.wings.stencils.DefaultValue;
 
+import com.github.reinert.jjschema.Attributes;
+import com.google.inject.Inject;
 import java.util.Map;
+import lombok.Getter;
+import lombok.Setter;
+import org.mongodb.morphia.annotations.Transient;
 
 /*
    The barrier is a primitive that will allow for multiple workflows that run in parallel to get aligned on particular

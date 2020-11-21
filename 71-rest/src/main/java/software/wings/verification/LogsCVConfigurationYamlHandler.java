@@ -4,9 +4,6 @@ import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.validation.Validator.notNullCheck;
 
-import lombok.SneakyThrows;
-import lombok.extern.slf4j.Slf4j;
-import org.simpleframework.xml.transform.InvalidFormatException;
 import software.wings.beans.yaml.ChangeContext;
 import software.wings.service.impl.analysis.FeedbackPriority;
 import software.wings.sm.StateType;
@@ -20,6 +17,9 @@ import software.wings.verification.log.SplunkCVConfiguration.SplunkCVConfigurati
 import software.wings.verification.log.StackdriverCVConfiguration.StackdriverCVConfigurationYaml;
 
 import java.util.List;
+import lombok.SneakyThrows;
+import lombok.extern.slf4j.Slf4j;
+import org.simpleframework.xml.transform.InvalidFormatException;
 
 @Slf4j
 public class LogsCVConfigurationYamlHandler

@@ -1,24 +1,17 @@
 package software.wings.service.impl.yaml;
 
+import static software.wings.beans.yaml.GitFileChange.Builder.aGitFileChange;
+import static software.wings.beans.yaml.YamlSuccessfulChange.ChangeSource.GIT;
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
-import static software.wings.beans.yaml.GitFileChange.Builder.aGitFileChange;
-import static software.wings.beans.yaml.YamlSuccessfulChange.ChangeSource.GIT;
-
-import com.google.common.collect.ImmutableList;
-import com.google.inject.Inject;
 
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
 import io.harness.rule.OwnerRule;
-import org.jetbrains.annotations.NotNull;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
-import org.mockito.MockitoAnnotations;
-import org.mockito.Spy;
+
 import software.wings.WingsBaseTest;
 import software.wings.beans.yaml.GitFileChange;
 import software.wings.beans.yaml.GitSuccessFulChangeDetail;
@@ -26,6 +19,15 @@ import software.wings.beans.yaml.YamlSuccessfulChange;
 import software.wings.beans.yaml.YamlSuccessfulChange.YamlSuccessfulChangeBuilder;
 import software.wings.service.intfc.yaml.YamlSuccessfulChangeService;
 import software.wings.yaml.gitSync.YamlChangeSet;
+
+import com.google.common.collect.ImmutableList;
+import com.google.inject.Inject;
+import org.jetbrains.annotations.NotNull;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
+import org.mockito.MockitoAnnotations;
+import org.mockito.Spy;
 
 public class YamlSuccessfulChangeServiceImplTest extends WingsBaseTest {
   public static final String ACCOUNT_ID = "accountId";

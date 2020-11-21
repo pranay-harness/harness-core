@@ -1,7 +1,5 @@
 package io.harness.connector.mappers.gitconnectormapper;
 
-import com.google.inject.Singleton;
-
 import io.harness.connector.entities.embedded.gitconnector.GitAuthentication;
 import io.harness.connector.entities.embedded.gitconnector.GitConfig;
 import io.harness.connector.entities.embedded.gitconnector.GitSSHAuthentication;
@@ -18,6 +16,7 @@ import io.harness.delegate.beans.connector.gitconnector.GitHTTPAuthenticationDTO
 import io.harness.delegate.beans.connector.gitconnector.GitSSHAuthenticationDTO;
 import io.harness.exception.UnknownEnumTypeException;
 
+import com.google.inject.Singleton;
 import java.util.Collections;
 import java.util.List;
 

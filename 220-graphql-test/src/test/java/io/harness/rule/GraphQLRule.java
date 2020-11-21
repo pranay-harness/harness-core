@@ -3,18 +3,9 @@ package io.harness.rule;
 import static io.harness.cache.CacheBackend.CAFFEINE;
 import static io.harness.cache.CacheBackend.NOOP;
 import static io.harness.logging.LoggingInitializer.initializeLogging;
+
 import static org.mockito.Mockito.mock;
 
-import com.google.common.collect.ImmutableSet;
-import com.google.inject.AbstractModule;
-import com.google.inject.Injector;
-import com.google.inject.Key;
-import com.google.inject.Module;
-import com.google.inject.Provides;
-import com.google.inject.Singleton;
-import com.google.inject.TypeLiteral;
-
-import graphql.GraphQL;
 import io.harness.cache.CacheConfig;
 import io.harness.cache.CacheConfig.CacheConfigBuilder;
 import io.harness.cache.CacheModule;
@@ -43,15 +34,7 @@ import io.harness.threading.CurrentThreadExecutor;
 import io.harness.threading.ExecutorModule;
 import io.harness.time.TimeModule;
 import io.harness.version.VersionModule;
-import lombok.Getter;
-import lombok.extern.slf4j.Slf4j;
-import org.atmosphere.cpr.BroadcasterFactory;
-import org.hibernate.validator.parameternameprovider.ReflectionParameterNameProvider;
-import org.junit.rules.MethodRule;
-import org.junit.runners.model.FrameworkMethod;
-import org.junit.runners.model.Statement;
-import org.mongodb.morphia.converters.TypeConverter;
-import ru.vyarus.guice.validator.ValidationModule;
+
 import software.wings.app.AuthModule;
 import software.wings.app.GcpMarketplaceIntegrationModule;
 import software.wings.app.GraphQLModule;
@@ -67,6 +50,15 @@ import software.wings.app.YamlModule;
 import software.wings.graphql.provider.QueryLanguageProvider;
 import software.wings.security.ThreadLocalUserProvider;
 
+import com.google.common.collect.ImmutableSet;
+import com.google.inject.AbstractModule;
+import com.google.inject.Injector;
+import com.google.inject.Key;
+import com.google.inject.Module;
+import com.google.inject.Provides;
+import com.google.inject.Singleton;
+import com.google.inject.TypeLiteral;
+import graphql.GraphQL;
 import java.io.Closeable;
 import java.lang.annotation.Annotation;
 import java.util.ArrayList;
@@ -75,6 +67,15 @@ import java.util.List;
 import java.util.Set;
 import javax.validation.Validation;
 import javax.validation.ValidatorFactory;
+import lombok.Getter;
+import lombok.extern.slf4j.Slf4j;
+import org.atmosphere.cpr.BroadcasterFactory;
+import org.hibernate.validator.parameternameprovider.ReflectionParameterNameProvider;
+import org.junit.rules.MethodRule;
+import org.junit.runners.model.FrameworkMethod;
+import org.junit.runners.model.Statement;
+import org.mongodb.morphia.converters.TypeConverter;
+import ru.vyarus.guice.validator.ValidationModule;
 
 @Slf4j
 public class GraphQLRule implements MethodRule, InjectorRuleMixin, MongoRuleMixin {

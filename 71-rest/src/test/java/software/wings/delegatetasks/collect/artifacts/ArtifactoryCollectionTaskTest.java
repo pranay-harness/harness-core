@@ -2,6 +2,7 @@ package software.wings.delegatetasks.collect.artifacts;
 
 import static io.harness.delegate.beans.TaskData.DEFAULT_ASYNC_CALL_TIMEOUT;
 import static io.harness.rule.OwnerRule.SRINIVAS;
+
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
@@ -9,14 +10,18 @@ import static org.mockito.Matchers.anyMap;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.when;
 
-import com.google.common.collect.ImmutableMap;
-
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.beans.DelegateTaskPackage;
 import io.harness.delegate.beans.TaskData;
 import io.harness.delegate.task.ListNotifyResponseData;
 import io.harness.rule.Owner;
+
+import software.wings.beans.TaskType;
+import software.wings.beans.config.ArtifactoryConfig;
+import software.wings.helpers.ext.artifactory.ArtifactoryService;
+
+import com.google.common.collect.ImmutableMap;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -24,9 +29,6 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnit;
 import org.mockito.junit.MockitoRule;
-import software.wings.beans.TaskType;
-import software.wings.beans.config.ArtifactoryConfig;
-import software.wings.helpers.ext.artifactory.ArtifactoryService;
 
 /**
  * Created by sgurubelli on 10/1/17.

@@ -2,10 +2,7 @@ package software.wings.service.impl.yaml.handler.templatelibrary;
 
 import static io.harness.rule.OwnerRule.ABHINAV;
 import static io.harness.rule.OwnerRule.ROHIT_KUMAR;
-import static java.util.Arrays.asList;
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.Mockito.doReturn;
-import static org.mockito.Mockito.when;
+
 import static software.wings.beans.Account.GLOBAL_ACCOUNT_ID;
 import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static software.wings.common.TemplateConstants.SHELL_SCRIPT;
@@ -18,17 +15,15 @@ import static software.wings.service.impl.yaml.handler.templatelibrary.TemplateL
 import static software.wings.service.impl.yaml.handler.templatelibrary.TemplateLibaryYamlConstants.rootTemplateFolder;
 import static software.wings.service.impl.yaml.handler.templatelibrary.TemplateLibaryYamlConstants.templateForSetup;
 
-import com.google.inject.Inject;
+import static java.util.Arrays.asList;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.when;
 
 import io.harness.category.element.UnitTests;
 import io.harness.exception.NoResultFoundException;
 import io.harness.rule.Owner;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
+
 import software.wings.beans.Application;
 import software.wings.beans.template.Template;
 import software.wings.beans.yaml.ChangeContext;
@@ -36,7 +31,14 @@ import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.template.TemplateService;
 import software.wings.yaml.templatelibrary.ShellScriptTemplateYaml;
 
+import com.google.inject.Inject;
 import java.io.IOException;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
 
 public class ShellScriptTemplateYamlHandlerTest extends TemplateLibraryYamlHandlerTestBase {
   private String templateName = "test-shell-script";

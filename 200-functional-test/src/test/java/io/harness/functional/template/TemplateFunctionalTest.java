@@ -6,14 +6,14 @@ import static io.harness.generator.TemplateFolderGenerator.TemplateFolders.APP_F
 import static io.harness.generator.TemplateFolderGenerator.TemplateFolders.TEMPLATE_FOLDER_SHELL_SCRIPTS;
 import static io.harness.rule.OwnerRule.AADITI;
 import static io.harness.rule.OwnerRule.ABHINAV;
-import static java.util.Arrays.asList;
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
+
 import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static software.wings.beans.Variable.VariableBuilder.aVariable;
 import static software.wings.beans.VariableType.TEXT;
 
-import com.google.inject.Inject;
+import static java.util.Arrays.asList;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import io.harness.category.element.FunctionalTests;
 import io.harness.delegate.task.shell.ScriptType;
@@ -28,12 +28,7 @@ import io.harness.rest.RestResponse;
 import io.harness.rule.Owner;
 import io.harness.testframework.framework.Setup;
 import io.harness.testframework.framework.utils.TestUtils;
-import io.restassured.http.ContentType;
-import org.apache.http.HttpStatus;
-import org.junit.Before;
-import org.junit.Ignore;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
+
 import software.wings.beans.Account;
 import software.wings.beans.Application;
 import software.wings.beans.Workflow;
@@ -45,9 +40,16 @@ import software.wings.beans.template.TemplateType;
 import software.wings.beans.template.command.ShellScriptTemplate;
 import software.wings.service.intfc.template.TemplateFolderService;
 
+import com.google.inject.Inject;
+import io.restassured.http.ContentType;
 import java.util.Collections;
 import java.util.Set;
 import javax.ws.rs.core.GenericType;
+import org.apache.http.HttpStatus;
+import org.junit.Before;
+import org.junit.Ignore;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 public class TemplateFunctionalTest extends AbstractFunctionalTest {
   @Inject private OwnerManager ownerManager;

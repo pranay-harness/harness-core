@@ -4,11 +4,8 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.exception.WingsException.USER_ADMIN;
 import static io.harness.validation.Validator.notNullCheck;
-import static software.wings.app.ManagerCacheRegistrar.HARNESS_API_KEY_CACHE;
 
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
-import com.google.inject.name.Named;
+import static software.wings.app.ManagerCacheRegistrar.HARNESS_API_KEY_CACHE;
 
 import io.harness.beans.AuthType;
 import io.harness.beans.ClientType;
@@ -20,6 +17,7 @@ import io.harness.exception.UnauthorizedException;
 import io.harness.exception.WingsException;
 import io.harness.security.EncryptionUtils;
 import io.harness.security.annotations.HarnessApiKeyAuth;
+
 import software.wings.dl.WingsPersistence;
 import software.wings.security.AuthenticationFilter;
 import software.wings.security.JWT_CATEGORY;
@@ -27,6 +25,9 @@ import software.wings.security.SecretManager;
 import software.wings.service.intfc.HarnessApiKeyService;
 import software.wings.utils.CryptoUtils;
 
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
+import com.google.inject.name.Named;
 import java.lang.reflect.Method;
 import java.nio.charset.Charset;
 import java.util.Arrays;

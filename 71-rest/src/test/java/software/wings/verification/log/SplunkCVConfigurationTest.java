@@ -3,21 +3,25 @@ package software.wings.verification.log;
 import static io.harness.rule.OwnerRule.KAMAL;
 import static io.harness.rule.OwnerRule.PRAVEEN;
 import static io.harness.rule.OwnerRule.SOWMYA;
+
+import static software.wings.common.VerificationConstants.CV_24x7_STATE_EXECUTION;
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.when;
-import static software.wings.common.VerificationConstants.CV_24x7_STATE_EXECUTION;
 
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
-import lombok.extern.slf4j.Slf4j;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
-import org.mockito.Mockito;
+
 import software.wings.WingsBaseTest;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.SplunkConfig;
 import software.wings.service.impl.splunk.SplunkDataCollectionInfoV2;
 import software.wings.sm.StateType;
+
+import lombok.extern.slf4j.Slf4j;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
+import org.mockito.Mockito;
 
 @Slf4j
 public class SplunkCVConfigurationTest extends WingsBaseTest {

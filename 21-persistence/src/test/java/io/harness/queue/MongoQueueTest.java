@@ -3,6 +3,7 @@ package io.harness.queue;
 import static io.harness.rule.OwnerRule.BRETT;
 import static io.harness.rule.OwnerRule.GEORGE;
 import static io.harness.threading.Morpheus.sleep;
+
 import static java.lang.String.format;
 import static java.time.Duration.ZERO;
 import static java.time.Duration.ofMillis;
@@ -13,8 +14,6 @@ import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 import static org.assertj.core.api.Assertions.fail;
 import static org.joor.Reflect.on;
 
-import com.google.inject.Inject;
-
 import io.harness.PersistenceTestBase;
 import io.harness.category.element.UnitTests;
 import io.harness.mongo.queue.MongoQueueConsumer;
@@ -23,14 +22,15 @@ import io.harness.persistence.HPersistence;
 import io.harness.queue.Queuable.QueuableKeys;
 import io.harness.queue.QueueConsumer.Filter;
 import io.harness.rule.Owner;
+
+import com.google.inject.Inject;
+import java.net.UnknownHostException;
+import java.time.Duration;
+import java.util.Date;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
-
-import java.net.UnknownHostException;
-import java.time.Duration;
-import java.util.Date;
 
 @Slf4j
 public class MongoQueueTest extends PersistenceTestBase {

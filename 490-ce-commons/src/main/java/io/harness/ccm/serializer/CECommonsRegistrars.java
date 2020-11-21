@@ -1,10 +1,10 @@
 package io.harness.ccm.serializer;
 
-import com.google.common.collect.ImmutableSet;
-
 import io.harness.ccm.serializer.morphia.CECommonsMorphiaRegistrar;
 import io.harness.morphia.MorphiaRegistrar;
 import io.harness.serializer.CommonsRegistrars;
+
+import com.google.common.collect.ImmutableSet;
 import lombok.experimental.UtilityClass;
 
 @UtilityClass

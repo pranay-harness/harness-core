@@ -3,14 +3,16 @@ package io.harness.encryption;
 import static io.harness.encryption.Scope.ACCOUNT;
 import static io.harness.encryption.Scope.ORG;
 import static io.harness.encryption.Scope.PROJECT;
+
 import static org.apache.commons.lang3.StringUtils.isBlank;
+
+import io.harness.exception.InvalidRequestException;
+import io.harness.exception.UnknownEnumTypeException;
+import io.harness.utils.IdentifierRefHelper;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonValue;
-import io.harness.exception.InvalidRequestException;
-import io.harness.exception.UnknownEnumTypeException;
-import io.harness.utils.IdentifierRefHelper;
 import lombok.Builder;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;

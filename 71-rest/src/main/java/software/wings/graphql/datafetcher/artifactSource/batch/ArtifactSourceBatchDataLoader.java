@@ -2,17 +2,16 @@ package software.wings.graphql.datafetcher.artifactSource.batch;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+
 import static software.wings.graphql.datafetcher.artifactSource.ArtifactSourceController.populateArtifactSource;
 
-import com.google.inject.Inject;
-
 import io.harness.annotations.dev.OwnedBy;
-import org.apache.commons.collections4.CollectionUtils;
-import org.dataloader.MappedBatchLoader;
+
 import software.wings.beans.artifact.ArtifactStream;
 import software.wings.graphql.schema.type.artifactSource.QLArtifactSource;
 import software.wings.service.intfc.ArtifactStreamService;
 
+import com.google.inject.Inject;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -21,6 +20,8 @@ import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
 import javax.validation.constraints.NotNull;
+import org.apache.commons.collections4.CollectionUtils;
+import org.dataloader.MappedBatchLoader;
 
 @OwnedBy(CDC)
 public class ArtifactSourceBatchDataLoader implements MappedBatchLoader<String, QLArtifactSource> {

@@ -1,14 +1,14 @@
 package software.wings.resources;
 
-import com.google.inject.Inject;
+import io.harness.marketplace.gcp.GcpMarketPlaceApiHandler;
+import io.harness.security.annotations.PublicApi;
+
+import software.wings.service.intfc.AwsMarketPlaceApiHandler;
 
 import com.codahale.metrics.annotation.ExceptionMetered;
 import com.codahale.metrics.annotation.Timed;
-import io.harness.marketplace.gcp.GcpMarketPlaceApiHandler;
-import io.harness.security.annotations.PublicApi;
+import com.google.inject.Inject;
 import io.swagger.annotations.Api;
-import software.wings.service.intfc.AwsMarketPlaceApiHandler;
-
 import java.net.URISyntaxException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;

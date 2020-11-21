@@ -1,14 +1,27 @@
 package io.harness.testframework.framework;
 
 import static io.harness.mongo.MongoUtils.setUnset;
+
+import static software.wings.beans.Delegate.DelegateKeys;
+
 import static java.time.Duration.ofMinutes;
 import static java.time.Duration.ofSeconds;
 import static java.util.Arrays.asList;
-import static software.wings.beans.Delegate.DelegateKeys;
+
+import io.harness.delegate.beans.DelegateConfiguration;
+import io.harness.resource.Project;
+import io.harness.rest.RestResponse;
+import io.harness.threading.Poller;
+import io.harness.version.VersionInfoManager;
+
+import software.wings.beans.Account;
+import software.wings.beans.Delegate.Status;
+import software.wings.beans.DelegateStatus;
+import software.wings.dl.WingsPersistence;
+import software.wings.service.intfc.DelegateService;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
-
 import com.spotify.docker.client.DefaultDockerClient;
 import com.spotify.docker.client.DockerClient;
 import com.spotify.docker.client.LogStream;
@@ -19,21 +32,6 @@ import com.spotify.docker.client.messages.ContainerConfig;
 import com.spotify.docker.client.messages.ContainerCreation;
 import com.spotify.docker.client.messages.ExecCreation;
 import com.spotify.docker.client.messages.HostConfig;
-import io.harness.delegate.beans.DelegateConfiguration;
-import io.harness.resource.Project;
-import io.harness.rest.RestResponse;
-import io.harness.threading.Poller;
-import io.harness.version.VersionInfoManager;
-import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.io.FileUtils;
-import org.mongodb.morphia.query.Query;
-import org.mongodb.morphia.query.UpdateOperations;
-import software.wings.beans.Account;
-import software.wings.beans.Delegate.Status;
-import software.wings.beans.DelegateStatus;
-import software.wings.dl.WingsPersistence;
-import software.wings.service.intfc.DelegateService;
-
 import java.io.File;
 import java.io.IOException;
 import java.net.URL;
@@ -42,6 +40,10 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
 import javax.ws.rs.core.GenericType;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.io.FileUtils;
+import org.mongodb.morphia.query.Query;
+import org.mongodb.morphia.query.UpdateOperations;
 
 @Singleton
 @Slf4j

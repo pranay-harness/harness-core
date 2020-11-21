@@ -5,30 +5,21 @@ import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.rule.OwnerRule.PRAVEEN;
 import static io.harness.rule.OwnerRule.RAGHU;
 import static io.harness.rule.OwnerRule.UJJAWAL;
-import static org.apache.cxf.ws.addressing.ContextUtils.generateUUID;
-import static org.assertj.core.api.Assertions.assertThat;
+
 import static software.wings.beans.Account.Builder.anAccount;
 import static software.wings.beans.Application.Builder.anApplication;
 import static software.wings.beans.Environment.Builder.anEnvironment;
 import static software.wings.common.VerificationConstants.CRON_POLL_INTERVAL_IN_MINUTES;
 
-import com.google.common.collect.Lists;
-import com.google.common.collect.TreeBasedTable;
-import com.google.gson.Gson;
-import com.google.gson.reflect.TypeToken;
-import com.google.inject.Inject;
+import static org.apache.cxf.ws.addressing.ContextUtils.generateUUID;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.category.element.UnitTests;
 import io.harness.rest.RestResponse;
 import io.harness.rule.Owner;
 import io.harness.security.EncryptionUtils;
 import io.harness.time.Timestamp;
-import lombok.extern.slf4j.Slf4j;
-import org.jetbrains.annotations.NotNull;
-import org.junit.Before;
-import org.junit.Ignore;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
+
 import software.wings.WingsBaseTest;
 import software.wings.beans.Account;
 import software.wings.beans.AccountType;
@@ -63,6 +54,11 @@ import software.wings.verification.appdynamics.AppDynamicsCVServiceConfiguration
 import software.wings.verification.cloudwatch.CloudWatchCVServiceConfiguration;
 import software.wings.verification.newrelic.NewRelicCVServiceConfiguration;
 
+import com.google.common.collect.Lists;
+import com.google.common.collect.TreeBasedTable;
+import com.google.gson.Gson;
+import com.google.gson.reflect.TypeToken;
+import com.google.inject.Inject;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
@@ -82,6 +78,12 @@ import java.util.SortedSet;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
+import lombok.extern.slf4j.Slf4j;
+import org.jetbrains.annotations.NotNull;
+import org.junit.Before;
+import org.junit.Ignore;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 /**
  * @author Vaibhav Tulsyan
@@ -880,7 +882,7 @@ public class HeatMapApiUnitTest extends WingsBaseTest {
             .setLong_term_pattern(1);
         if (idx == 1
             && tsAnalysisRecord.getTransactions().get("45").getMetrics().get("0").getMetric_name().equals(
-                   "95th Percentile Response Time (ms)")) {
+                "95th Percentile Response Time (ms)")) {
           tsAnalysisRecord.getTransactions().get("45").getMetrics().get("0").setLong_term_pattern(1);
           expectedTimeSeries =
               tsAnalysisRecord.getTransactions().get("45").getMetrics().get("0").getTest().getData().get(0);

@@ -1,7 +1,6 @@
 package software.wings.sm;
 
 import com.google.common.base.MoreObjects;
-
 import java.util.Objects;
 
 /**

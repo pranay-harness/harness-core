@@ -2,11 +2,13 @@ package software.wings.service.impl.analysis;
 
 import io.harness.delegate.beans.DelegateMetaInfo;
 import io.harness.delegate.beans.DelegateTaskNotifyResponseData;
+
+import software.wings.sm.StateType;
+
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import software.wings.sm.StateType;
 
 /**
  * Created by rsingh on 5/18/17.

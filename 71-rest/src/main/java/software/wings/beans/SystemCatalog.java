@@ -1,15 +1,15 @@
 package software.wings.beans;
 
-import com.google.common.base.MoreObjects;
-
 import io.harness.annotation.HarnessEntity;
 import io.harness.beans.ChecksumType;
 import io.harness.beans.EmbeddedUser;
-import org.mongodb.morphia.annotations.Entity;
+
 import software.wings.utils.ContainerFamily;
 import software.wings.utils.FileType;
 
+import com.google.common.base.MoreObjects;
 import java.util.Objects;
+import org.mongodb.morphia.annotations.Entity;
 
 /**
  * Created by sgurubelli on 5/23/17.

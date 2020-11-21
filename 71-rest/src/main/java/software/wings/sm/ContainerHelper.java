@@ -5,13 +5,13 @@ import static io.harness.deployment.InstanceDetails.InstanceType.K8s;
 
 import io.harness.container.ContainerInfo;
 import io.harness.deployment.InstanceDetails;
-import lombok.experimental.UtilityClass;
 
 import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
 import javax.annotation.Nonnull;
+import lombok.experimental.UtilityClass;
 
 @UtilityClass
 public final class ContainerHelper {

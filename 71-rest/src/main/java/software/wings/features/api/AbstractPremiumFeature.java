@@ -2,10 +2,9 @@ package software.wings.features.api;
 
 import static software.wings.beans.AccountType.allAccountTypes;
 
-import com.google.inject.Inject;
-
 import software.wings.service.intfc.AccountService;
 
+import com.google.inject.Inject;
 import java.util.Collection;
 import java.util.Set;
 import java.util.stream.Collectors;

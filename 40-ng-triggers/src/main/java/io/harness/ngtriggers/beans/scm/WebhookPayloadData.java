@@ -1,6 +1,7 @@
 package io.harness.ngtriggers.beans.scm;
 
 import io.harness.ngtriggers.beans.entity.TriggerWebhookEvent;
+
 import lombok.Builder;
 import lombok.Value;
 

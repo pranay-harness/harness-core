@@ -1,10 +1,9 @@
 package software.wings.yaml;
 
+import java.util.Map;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
-
-import java.util.Map;
 
 /**
  * Base class for all the yaml classes which are exposed as a .yaml file.

@@ -10,13 +10,13 @@ import io.harness.mongo.index.FdTtlIndex;
 import io.harness.mongo.index.Field;
 import io.harness.persistence.PersistentEntity;
 import io.harness.queue.Queuable.QueuableKeys;
+
+import java.util.Date;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.experimental.FieldNameConstants;
 import org.mongodb.morphia.annotations.Id;
 import org.mongodb.morphia.annotations.PrePersist;
-
-import java.util.Date;
 
 @CdIndex(name = "next4", fields = { @Field(QueuableKeys.topic)
                                     , @Field(QueuableKeys.earliestGet) })

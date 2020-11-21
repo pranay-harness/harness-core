@@ -4,6 +4,7 @@ import static java.lang.String.format;
 
 import io.harness.alert.AlertData;
 import io.harness.k8s.KubernetesConvention;
+
 import lombok.Builder;
 import lombok.Data;
 import org.apache.commons.lang3.StringUtils;
@@ -21,7 +22,7 @@ public class DelegatesDownAlert implements AlertData {
     return StringUtils.equals(accountId, delegatesDownAlert.getAccountId())
         && StringUtils.equals(hostName, delegatesDownAlert.getHostName())
         && (hostName.contains(KubernetesConvention.getAccountIdentifier(accountId))
-               || StringUtils.equals(obfuscatedIpAddress, delegatesDownAlert.getObfuscatedIpAddress()));
+            || StringUtils.equals(obfuscatedIpAddress, delegatesDownAlert.getObfuscatedIpAddress()));
   }
 
   @Override

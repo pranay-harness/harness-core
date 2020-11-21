@@ -5,9 +5,9 @@ import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.encryption.Scope;
 import io.harness.gitsync.common.beans.YamlGitConfig;
-import org.springframework.data.repository.CrudRepository;
 
 import java.util.List;
+import org.springframework.data.repository.CrudRepository;
 
 @HarnessRepo
 @OwnedBy(HarnessTeam.DX)

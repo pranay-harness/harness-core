@@ -2,9 +2,6 @@ package io.harness.cdng.orchestration;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 
-import com.google.inject.Inject;
-import com.google.inject.Injector;
-
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.cdng.infra.steps.InfrastructureSectionStep;
 import io.harness.cdng.infra.steps.InfrastructureStep;
@@ -20,9 +17,11 @@ import io.harness.cdng.service.steps.ServiceStep;
 import io.harness.pms.steps.StepType;
 import io.harness.registries.registrar.StepRegistrar;
 import io.harness.state.Step;
-import org.apache.commons.lang3.tuple.Pair;
 
+import com.google.inject.Inject;
+import com.google.inject.Injector;
 import java.util.Set;
+import org.apache.commons.lang3.tuple.Pair;
 
 @OwnedBy(CDC)
 public class NgStepRegistrar implements StepRegistrar {

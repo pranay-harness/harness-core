@@ -2,18 +2,18 @@ package software.wings.delegatetasks.cv;
 
 import static software.wings.common.VerificationConstants.TOTAL_HITS_PER_MIN_THRESHOLD;
 
-import com.google.common.collect.Iterables;
-import com.google.inject.Inject;
-
 import io.harness.delegate.beans.DelegateTaskPackage;
 import io.harness.delegate.beans.DelegateTaskResponse;
 import io.harness.delegate.beans.logstreaming.ILogStreamingTaskClient;
+
 import software.wings.common.VerificationConstants;
 import software.wings.delegatetasks.LogAnalysisStoreService;
 import software.wings.service.impl.analysis.LogDataCollectionInfoV2;
 import software.wings.service.impl.analysis.LogElement;
 import software.wings.service.intfc.analysis.ClusterLevel;
 
+import com.google.common.collect.Iterables;
+import com.google.inject.Inject;
 import java.io.IOException;
 import java.time.Duration;
 import java.util.ArrayList;

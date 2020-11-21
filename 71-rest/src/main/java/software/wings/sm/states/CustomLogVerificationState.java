@@ -4,23 +4,16 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.waiter.OrchestrationNotifyEventListener.ORCHESTRATION;
-import static org.apache.commons.lang3.StringUtils.isBlank;
+
 import static software.wings.common.VerificationConstants.URL_BODY_APPENDER;
 import static software.wings.common.VerificationConstants.VERIFICATION_HOST_PLACEHOLDER;
 
-import com.google.common.collect.Lists;
+import static org.apache.commons.lang3.StringUtils.isBlank;
 
-import com.github.reinert.jjschema.Attributes;
 import io.harness.beans.DelegateTask;
 import io.harness.delegate.beans.TaskData;
 import io.harness.tasks.Cd1SetupFields;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
-import lombok.experimental.FieldNameConstants;
-import lombok.extern.slf4j.Slf4j;
-import org.slf4j.Logger;
+
 import software.wings.beans.APMVerificationConfig;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.TaskType;
@@ -36,12 +29,21 @@ import software.wings.stencils.DefaultValue;
 import software.wings.stencils.EnumData;
 import software.wings.verification.VerificationStateAnalysisExecutionData;
 
+import com.github.reinert.jjschema.Attributes;
+import com.google.common.collect.Lists;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+import lombok.experimental.FieldNameConstants;
+import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
 
 /**
  * @author Praveen
@@ -210,7 +212,7 @@ public class CustomLogVerificationState extends AbstractLogAnalysisState {
       shouldDoHostbasedFiltering = logCollectionInfos.stream().allMatch(logCollectionInfo
           -> logCollectionInfo.getCollectionUrl().contains(VERIFICATION_HOST_PLACEHOLDER)
               || (logCollectionInfo.getCollectionBody() != null
-                     && logCollectionInfo.getCollectionBody().contains(VERIFICATION_HOST_PLACEHOLDER)));
+                  && logCollectionInfo.getCollectionBody().contains(VERIFICATION_HOST_PLACEHOLDER)));
     }
     return shouldDoHostbasedFiltering;
   }

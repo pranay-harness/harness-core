@@ -1,10 +1,9 @@
 package software.wings.delegatetasks.aws;
 
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
-
-import com.google.inject.Singleton;
 
 import software.wings.beans.AwsConfig;
 import software.wings.beans.SettingAttribute;
@@ -13,6 +12,7 @@ import software.wings.helpers.ext.k8s.request.K8sClusterConfig;
 import software.wings.helpers.ext.k8s.request.K8sTaskParameters;
 import software.wings.settings.SettingValue;
 
+import com.google.inject.Singleton;
 import java.util.List;
 
 @Singleton

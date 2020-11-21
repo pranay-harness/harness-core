@@ -3,15 +3,16 @@ package io.harness.migration;
 import static io.harness.migration.MigrationJobInstance.Status.BASELINE;
 import static io.harness.migration.MigrationJobInstance.Status.PENDING;
 import static io.harness.rule.OwnerRule.GEORGE;
-import static org.assertj.core.api.Assertions.assertThat;
 
-import com.google.inject.Inject;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.PersistenceTestBase;
 import io.harness.category.element.UnitTests;
 import io.harness.migration.MigrationJobInstance.MigrationJobInstanceKeys;
 import io.harness.persistence.HPersistence;
 import io.harness.rule.Owner;
+
+import com.google.inject.Inject;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 

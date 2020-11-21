@@ -2,8 +2,10 @@ package migrations.all;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 
-import com.google.inject.Inject;
+import software.wings.dl.WingsPersistence;
+import software.wings.service.impl.newrelic.NewRelicMetricDataRecord;
 
+import com.google.inject.Inject;
 import com.mongodb.BasicDBObject;
 import com.mongodb.BulkWriteOperation;
 import com.mongodb.DBCollection;
@@ -11,8 +13,6 @@ import com.mongodb.DBCursor;
 import com.mongodb.DBObject;
 import lombok.extern.slf4j.Slf4j;
 import migrations.Migration;
-import software.wings.dl.WingsPersistence;
-import software.wings.service.impl.newrelic.NewRelicMetricDataRecord;
 
 /**
  * Created by rsingh on 3/26/18.

@@ -2,12 +2,6 @@ package io.harness;
 
 import static org.mockito.Mockito.mock;
 
-import com.google.common.collect.ImmutableSet;
-import com.google.inject.AbstractModule;
-import com.google.inject.Provides;
-import com.google.inject.Singleton;
-import com.google.inject.name.Named;
-
 import io.harness.ci.beans.entities.LogServiceConfig;
 import io.harness.connector.apis.client.ConnectorResourceClientModule;
 import io.harness.grpc.DelegateServiceGrpcClient;
@@ -21,9 +15,14 @@ import io.harness.serializer.CiExecutionRegistrars;
 import io.harness.serializer.KryoRegistrar;
 import io.harness.serializer.OrchestrationBeansRegistrars;
 import io.harness.serializer.PersistenceRegistrars;
-import org.mongodb.morphia.converters.TypeConverter;
 
+import com.google.common.collect.ImmutableSet;
+import com.google.inject.AbstractModule;
+import com.google.inject.Provides;
+import com.google.inject.Singleton;
+import com.google.inject.name.Named;
 import java.util.Set;
+import org.mongodb.morphia.converters.TypeConverter;
 
 public class CIExecutionTestModule extends AbstractModule {
   @Provides

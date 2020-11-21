@@ -2,11 +2,12 @@ package software.wings.delegatetasks.azure.taskhandler;
 
 import static io.harness.logging.CommandExecutionStatus.SUCCESS;
 import static io.harness.logging.LogLevel.INFO;
+
 import static java.lang.String.format;
 
-import com.microsoft.rest.ServiceCallback;
 import software.wings.beans.command.ExecutionLogCallback;
 
+import com.microsoft.rest.ServiceCallback;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 public class AzureRestCallBack<T> implements ServiceCallback<T> {

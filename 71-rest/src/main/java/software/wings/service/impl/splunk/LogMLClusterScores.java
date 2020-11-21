@@ -1,9 +1,8 @@
 package software.wings.service.impl.splunk;
 
+import java.util.Map;
 import lombok.Builder;
 import lombok.Data;
-
-import java.util.Map;
 
 /**
  * Created by sriram_parthasarathy on 10/23/17.

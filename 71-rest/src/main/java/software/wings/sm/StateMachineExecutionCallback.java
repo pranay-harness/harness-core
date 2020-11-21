@@ -2,9 +2,10 @@ package software.wings.sm;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 
-import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.ExecutionStatus;
+
+import com.fasterxml.jackson.annotation.JsonTypeInfo;
 
 /**
  * Interface defining StateMachine execution callback.

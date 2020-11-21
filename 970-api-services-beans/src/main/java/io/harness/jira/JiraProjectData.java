@@ -1,17 +1,17 @@
 package io.harness.jira;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
+import static io.harness.annotations.dev.HarnessTeam.CDC;
+
 import io.harness.annotations.dev.OwnedBy;
+
+import com.fasterxml.jackson.annotation.JsonProperty;
+import java.util.ArrayList;
+import java.util.List;
 import lombok.Data;
 import net.rcarz.jiraclient.IssueType;
 import net.rcarz.jiraclient.Project;
 import net.sf.json.JSONArray;
 import net.sf.json.JSONObject;
-
-import java.util.ArrayList;
-import java.util.List;
-
-import static io.harness.annotations.dev.HarnessTeam.CDC;
 
 @OwnedBy(CDC)
 @Data

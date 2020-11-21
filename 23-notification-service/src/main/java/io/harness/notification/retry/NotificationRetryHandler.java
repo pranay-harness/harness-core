@@ -1,7 +1,9 @@
 package io.harness.notification.retry;
 
-import com.google.common.collect.ImmutableList;
-import com.google.inject.Inject;
+import static io.harness.mongo.iterator.MongoPersistenceIterator.SchedulingType.REGULAR;
+
+import static java.time.Duration.ofSeconds;
+
 import io.harness.iterator.PersistenceIteratorFactory;
 import io.harness.mongo.iterator.MongoPersistenceIterator;
 import io.harness.mongo.iterator.filter.MorphiaFilterExpander;
@@ -9,11 +11,11 @@ import io.harness.mongo.iterator.provider.MorphiaPersistenceRequiredProvider;
 import io.harness.notification.entities.Notification;
 import io.harness.notification.entities.Notification.NotificationKeys;
 import io.harness.notification.service.api.NotificationService;
+
+import com.google.common.collect.ImmutableList;
+import com.google.inject.Inject;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-
-import static io.harness.mongo.iterator.MongoPersistenceIterator.SchedulingType.REGULAR;
-import static java.time.Duration.ofSeconds;
 
 @AllArgsConstructor(onConstructor = @__({ @Inject }))
 @Slf4j

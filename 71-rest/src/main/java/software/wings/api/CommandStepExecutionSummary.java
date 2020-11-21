@@ -1,16 +1,16 @@
 package software.wings.api;
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import lombok.Data;
-import lombok.EqualsAndHashCode;
 import software.wings.api.AwsLambdaContextElement.FunctionMeta;
 import software.wings.beans.Tag;
 import software.wings.beans.command.CodeDeployParams;
 import software.wings.beans.container.AwsAutoScalarConfig;
 import software.wings.sm.StepExecutionSummary;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import java.util.ArrayList;
 import java.util.List;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
 
 /**
  * Created by rishi on 4/4/17.

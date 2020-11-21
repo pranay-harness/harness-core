@@ -1,9 +1,7 @@
 package software.wings.integration.setup.rest;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static javax.ws.rs.client.Entity.entity;
-import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
-import static org.assertj.core.api.Assertions.assertThat;
+
 import static software.wings.integration.SeedData.randomText;
 import static software.wings.utils.ArtifactType.DOCKER;
 import static software.wings.utils.ArtifactType.WAR;
@@ -12,16 +10,20 @@ import static software.wings.utils.WingsIntegrationTestConstants.SEED_SERVICE_DO
 import static software.wings.utils.WingsIntegrationTestConstants.SEED_SERVICE_WAR_KEY;
 import static software.wings.utils.WingsIntegrationTestConstants.SEED_SERVICE_WAR_NAME;
 
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
+import static javax.ws.rs.client.Entity.entity;
+import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.beans.PageResponse;
 import io.harness.exception.WingsException;
 import io.harness.rest.RestResponse;
+
 import software.wings.beans.Service;
 import software.wings.integration.UserResourceRestClient;
 import software.wings.utils.ArtifactType;
 
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
 import java.util.HashMap;

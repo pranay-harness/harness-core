@@ -5,6 +5,10 @@ import io.harness.mongo.index.FdIndex;
 import io.harness.mongo.index.Field;
 import io.harness.mongo.index.NgUniqueIndex;
 import io.harness.persistence.AccountAccess;
+
+import software.wings.beans.Base;
+import software.wings.yaml.BaseEntityYaml;
+
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -12,8 +16,6 @@ import lombok.NoArgsConstructor;
 import lombok.experimental.FieldNameConstants;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Entity;
-import software.wings.beans.Base;
-import software.wings.yaml.BaseEntityYaml;
 
 @NgUniqueIndex(name = "manifestFileIdx", fields = { @Field("applicationManifestId")
                                                     , @Field("fileName") })

@@ -1,11 +1,11 @@
 package io.harness.beans.yaml.extended;
 
-import com.fasterxml.jackson.annotation.JsonTypeName;
 import io.harness.encryption.SecretRefData;
+
+import com.fasterxml.jackson.annotation.JsonTypeName;
+import javax.validation.constraints.NotNull;
 import lombok.Builder;
 import lombok.Value;
-
-import javax.validation.constraints.NotNull;
 
 @Value
 @Builder

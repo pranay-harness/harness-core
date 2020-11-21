@@ -1,11 +1,11 @@
 package io.harness;
 
-import com.google.inject.AbstractModule;
-import com.google.inject.multibindings.MapBinder;
-
 import io.harness.registrars.TimeoutEngineTimeoutRegistrar;
 import io.harness.registries.TimeoutEngineRegistryModule;
 import io.harness.registries.registrar.TimeoutRegistrar;
+
+import com.google.inject.AbstractModule;
+import com.google.inject.multibindings.MapBinder;
 
 public class TimeoutEngineModule extends AbstractModule {
   private static TimeoutEngineModule instance;

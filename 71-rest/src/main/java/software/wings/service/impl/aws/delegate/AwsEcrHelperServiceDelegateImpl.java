@@ -2,11 +2,14 @@ package software.wings.service.impl.aws.delegate;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+
 import static java.util.Collections.singletonList;
 
-import com.google.common.annotations.VisibleForTesting;
-import com.google.common.collect.Lists;
-import com.google.inject.Singleton;
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.security.encryption.EncryptedDataDetail;
+
+import software.wings.beans.AwsConfig;
+import software.wings.service.intfc.aws.delegate.AwsEcrHelperServiceDelegate;
 
 import com.amazonaws.AmazonClientException;
 import com.amazonaws.AmazonServiceException;
@@ -16,11 +19,9 @@ import com.amazonaws.services.ecr.model.DescribeRepositoriesRequest;
 import com.amazonaws.services.ecr.model.DescribeRepositoriesResult;
 import com.amazonaws.services.ecr.model.GetAuthorizationTokenRequest;
 import com.amazonaws.services.ecr.model.Repository;
-import io.harness.annotations.dev.OwnedBy;
-import io.harness.security.encryption.EncryptedDataDetail;
-import software.wings.beans.AwsConfig;
-import software.wings.service.intfc.aws.delegate.AwsEcrHelperServiceDelegate;
-
+import com.google.common.annotations.VisibleForTesting;
+import com.google.common.collect.Lists;
+import com.google.inject.Singleton;
 import java.util.List;
 
 @OwnedBy(CDC)

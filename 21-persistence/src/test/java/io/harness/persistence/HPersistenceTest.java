@@ -6,12 +6,10 @@ import static io.harness.persistence.HQuery.excludeAuthority;
 import static io.harness.rule.OwnerRule.ABHINAV;
 import static io.harness.rule.OwnerRule.GEORGE;
 import static io.harness.rule.TestUserProvider.testUserProvider;
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThatThrownBy;
 
-import com.google.inject.Inject;
-
-import com.mongodb.DuplicateKeyException;
 import io.harness.PersistenceTestBase;
 import io.harness.beans.EmbeddedUser;
 import io.harness.category.element.UnitTests;
@@ -19,14 +17,16 @@ import io.harness.persistence.TestEntity.TestEntityKeys;
 import io.harness.persistence.TestEntityCreatedAware.TestEntityCreatedAwareKeys;
 import io.harness.persistence.TestEntityCreatedLastUpdatedAware.TestEntityCreatedLastUpdatedAwareKeys;
 import io.harness.rule.Owner;
+
+import com.google.inject.Inject;
+import com.mongodb.DuplicateKeyException;
+import java.util.List;
+import java.util.stream.IntStream;
 import org.assertj.core.util.Lists;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
-
-import java.util.List;
-import java.util.stream.IntStream;
 
 public class HPersistenceTest extends PersistenceTestBase {
   @Inject private HPersistence persistence;

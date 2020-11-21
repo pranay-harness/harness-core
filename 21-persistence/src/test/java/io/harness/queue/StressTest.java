@@ -2,10 +2,9 @@ package io.harness.queue;
 
 import static io.harness.queue.QueueConsumer.Filter.ALL;
 import static io.harness.rule.OwnerRule.GEORGE;
+
 import static java.time.Duration.ofMillis;
 import static org.assertj.core.api.Assertions.assertThatCode;
-
-import com.google.inject.Inject;
 
 import io.harness.PersistenceTestBase;
 import io.harness.category.element.StressTests;
@@ -14,13 +13,14 @@ import io.harness.persistence.HPersistence;
 import io.harness.rule.Owner;
 import io.harness.testlib.RealMongo;
 import io.harness.threading.Poller;
+
+import com.google.inject.Inject;
+import java.io.IOException;
+import java.time.Duration;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
-
-import java.io.IOException;
-import java.time.Duration;
 
 @Slf4j
 public class StressTest extends PersistenceTestBase {
@@ -72,8 +72,7 @@ public class StressTest extends PersistenceTestBase {
         final long diff = start - topicConsumer.count(ALL);
         log.info("Items handled for 10s: {}", diff);
       }
-    })
-        .doesNotThrowAnyException();
+    }).doesNotThrowAnyException();
   }
 
   @Test
@@ -116,7 +115,6 @@ public class StressTest extends PersistenceTestBase {
         final long diff = start - noTopicConsumer.count(ALL);
         log.info("Items handled for 10s: {}", diff);
       }
-    })
-        .doesNotThrowAnyException();
+    }).doesNotThrowAnyException();
   }
 }

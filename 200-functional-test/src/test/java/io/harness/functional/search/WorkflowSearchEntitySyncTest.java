@@ -1,9 +1,8 @@
 package io.harness.functional.search;
 
 import static io.harness.rule.OwnerRule.UTKARSH;
-import static org.assertj.core.api.Assertions.assertThat;
 
-import com.google.inject.Inject;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.category.element.FunctionalTests;
 import io.harness.functional.AbstractFunctionalTest;
@@ -14,10 +13,7 @@ import io.harness.testframework.restutils.ApplicationRestUtils;
 import io.harness.testframework.restutils.EnvironmentRestUtils;
 import io.harness.testframework.restutils.SearchRestUtils;
 import io.harness.testframework.restutils.WorkflowRestUtils;
-import lombok.extern.slf4j.Slf4j;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
+
 import software.wings.app.MainConfiguration;
 import software.wings.beans.Application;
 import software.wings.beans.CanaryOrchestrationWorkflow;
@@ -30,6 +26,12 @@ import software.wings.search.entities.workflow.WorkflowSearchEntity;
 import software.wings.search.framework.SearchResult;
 import software.wings.search.framework.SearchResults;
 import software.wings.service.intfc.FeatureFlagService;
+
+import com.google.inject.Inject;
+import lombok.extern.slf4j.Slf4j;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 @Slf4j
 public class WorkflowSearchEntitySyncTest extends AbstractFunctionalTest {
@@ -81,7 +83,7 @@ public class WorkflowSearchEntitySyncTest extends AbstractFunctionalTest {
     }
 
     BooleanMatcher booleanMatcher = new BooleanMatcher();
-    retry.executeWithRetry(this ::isWorkflowInSearchResponse, booleanMatcher, true);
+    retry.executeWithRetry(this::isWorkflowInSearchResponse, booleanMatcher, true);
     log.info("New workflow with id {} and name {} synced.", workflow.getUuid(), workflow.getName());
 
     workflow.setName(EDITED_WORKFLOW_NAME);
@@ -90,12 +92,12 @@ public class WorkflowSearchEntitySyncTest extends AbstractFunctionalTest {
     assertThat(workflow).isNotNull();
     assertThat(workflow.getName()).isEqualTo(EDITED_WORKFLOW_NAME);
 
-    retry.executeWithRetry(this ::isWorkflowInSearchResponse, booleanMatcher, true);
+    retry.executeWithRetry(this::isWorkflowInSearchResponse, booleanMatcher, true);
     log.info("Workflow update with id {} and name {} synced.", workflow.getUuid(), workflow.getName());
 
     assertThat(WorkflowRestUtils.deleteWorkflow(bearerToken, workflow.getUuid(), workflow.getAppId())).isNull();
 
-    retry.executeWithRetry(this ::isWorkflowInSearchResponse, booleanMatcher, false);
+    retry.executeWithRetry(this::isWorkflowInSearchResponse, booleanMatcher, false);
     log.info("Workflow delete with id {} synced", workflow.getUuid());
 
     EnvironmentRestUtils.deleteEnvironment(

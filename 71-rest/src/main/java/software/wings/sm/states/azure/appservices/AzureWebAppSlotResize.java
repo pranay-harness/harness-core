@@ -1,18 +1,20 @@
 package software.wings.sm.states.azure.appservices;
 
 import static io.harness.exception.ExceptionUtils.getMessage;
+
 import static software.wings.sm.StateType.AZURE_WEBAPP_SLOT_RESIZE;
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.tasks.ResponseData;
-import lombok.extern.slf4j.Slf4j;
+
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionResponse;
 import software.wings.sm.State;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import java.util.Map;
+import lombok.extern.slf4j.Slf4j;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 @Slf4j

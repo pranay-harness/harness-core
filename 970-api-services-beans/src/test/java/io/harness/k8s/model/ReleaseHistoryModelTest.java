@@ -1,16 +1,17 @@
 package io.harness.k8s.model;
 
 import static io.harness.rule.OwnerRule.ABOSII;
+
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.k8s.model.Release.Status;
 import io.harness.rule.Owner;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
 
 import java.util.Collections;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 public class ReleaseHistoryModelTest extends CategoryTest {
   @Test

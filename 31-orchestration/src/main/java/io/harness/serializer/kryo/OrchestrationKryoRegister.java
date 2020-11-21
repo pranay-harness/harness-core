@@ -2,7 +2,6 @@ package io.harness.serializer.kryo;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 
-import com.esotericsoftware.kryo.Kryo;
 import io.harness.advisers.fail.OnFailAdviserParameters;
 import io.harness.advisers.ignore.IgnoreAdviserParameters;
 import io.harness.advisers.manualintervention.ManualInterventionAdviserParameters;
@@ -17,6 +16,8 @@ import io.harness.beans.WorkflowType;
 import io.harness.context.ContextElementType;
 import io.harness.delay.DelayEventNotifyData;
 import io.harness.serializer.KryoRegistrar;
+
+import com.esotericsoftware.kryo.Kryo;
 
 @OwnedBy(CDC)
 public class OrchestrationKryoRegister implements KryoRegistrar {

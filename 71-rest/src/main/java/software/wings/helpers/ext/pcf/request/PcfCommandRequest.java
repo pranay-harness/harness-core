@@ -1,9 +1,10 @@
 package software.wings.helpers.ext.pcf.request;
 
+import software.wings.beans.PcfConfig;
+
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import org.hibernate.validator.constraints.NotEmpty;
-import software.wings.beans.PcfConfig;
 
 @Data
 @AllArgsConstructor

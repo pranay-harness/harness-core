@@ -1,14 +1,12 @@
 package software.wings.resources.graphql;
 
 import static io.harness.rule.OwnerRule.UTKARSH;
+
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.when;
 
-import com.google.inject.Inject;
-
-import es.moki.ratelimitj.core.limiter.request.RequestRateLimiter;
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.data.structure.UUIDGenerator;
@@ -19,6 +17,14 @@ import io.harness.limits.defaults.service.DefaultLimitsService;
 import io.harness.limits.impl.model.RateLimit;
 import io.harness.limits.lib.RateBasedLimit;
 import io.harness.rule.Owner;
+
+import software.wings.app.MainConfiguration;
+import software.wings.app.PortalConfig;
+
+import com.google.inject.Inject;
+import es.moki.ratelimitj.core.limiter.request.RequestRateLimiter;
+import java.util.Collection;
+import java.util.concurrent.TimeUnit;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.Before;
 import org.junit.Rule;
@@ -32,11 +38,6 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnit;
 import org.mockito.junit.MockitoRule;
-import software.wings.app.MainConfiguration;
-import software.wings.app.PortalConfig;
-
-import java.util.Collection;
-import java.util.concurrent.TimeUnit;
 
 /**
  * @author marklu on 9/12/19

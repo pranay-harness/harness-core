@@ -1,10 +1,10 @@
 package io.harness.ng.core.entitysetupusage.mappers;
 
-import com.google.inject.Singleton;
-
 import io.harness.ng.core.EntityDetail;
 import io.harness.ng.core.entitysetupusage.dto.EntitySetupUsageDTO;
 import io.harness.ng.core.entitysetupusage.entity.EntitySetupUsage;
+
+import com.google.inject.Singleton;
 
 @Singleton
 public class EntitySetupUsageDTOtoEntity {

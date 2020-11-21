@@ -2,9 +2,8 @@ package io.harness.cvng.core.services.impl;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.rule.OwnerRule.KAMAL;
-import static org.assertj.core.api.Assertions.assertThat;
 
-import com.google.inject.Inject;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.CvNextGenTest;
 import io.harness.category.element.UnitTests;
@@ -14,15 +13,16 @@ import io.harness.cvng.core.entities.LogRecord.LogRecordKeys;
 import io.harness.cvng.core.services.api.LogRecordService;
 import io.harness.persistence.HPersistence;
 import io.harness.rule.Owner;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
 
+import com.google.inject.Inject;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 public class LogRecordServiceImplTest extends CvNextGenTest {
   @Inject private HPersistence hPersistence;

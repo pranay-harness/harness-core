@@ -3,19 +3,16 @@ package software.wings.search.framework;
 import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.persistence.HPersistence.upsertReturnNewOptions;
 
-import com.google.inject.Inject;
-
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.persistence.HIterator;
-import lombok.extern.slf4j.Slf4j;
-import org.mongodb.morphia.query.Query;
-import org.mongodb.morphia.query.UpdateOperations;
+
 import software.wings.dl.WingsPersistence;
 import software.wings.search.framework.ElasticsearchBulkMigrationJob.ElasticsearchBulkMigrationJobBuilder;
 import software.wings.search.framework.SearchEntityIndexState.SearchEntityIndexStateKeys;
 import software.wings.search.framework.changestreams.ChangeEvent;
 import software.wings.search.framework.changestreams.ChangeSubscriber;
 
+import com.google.inject.Inject;
 import java.time.Instant;
 import java.util.Collection;
 import java.util.HashMap;
@@ -25,6 +22,9 @@ import java.util.LinkedList;
 import java.util.Map;
 import java.util.Queue;
 import java.util.Set;
+import lombok.extern.slf4j.Slf4j;
+import org.mongodb.morphia.query.Query;
+import org.mongodb.morphia.query.UpdateOperations;
 
 /**
  * The task responsible for carrying out the bulk sync
@@ -86,7 +86,7 @@ public class ElasticsearchBulkSyncTask {
           wingsPersistence.get(ElasticsearchBulkMigrationJob.class, syncedBulkEntity.getClass().getCanonicalName());
       isRunningSuccessfully = updateSearchEntityIndexState(elasticsearchBulkMigrationJob)
           && wingsPersistence.delete(
-                 ElasticsearchBulkMigrationJob.class, syncedBulkEntity.getClass().getCanonicalName());
+              ElasticsearchBulkMigrationJob.class, syncedBulkEntity.getClass().getCanonicalName());
     }
     return isRunningSuccessfully;
   }
@@ -137,7 +137,7 @@ public class ElasticsearchBulkSyncTask {
       String newIndexName = generateIndexName(searchEntity.getType(), searchEntity.getVersion());
       areJobsCreated = areJobsCreated
           && createSearchBulkMigrationJob(
-                 searchEntityIndexState, newIndexName, searchEntity.getVersion(), searchEntity.getClass());
+              searchEntityIndexState, newIndexName, searchEntity.getVersion(), searchEntity.getClass());
     }
     return areJobsCreated;
   }

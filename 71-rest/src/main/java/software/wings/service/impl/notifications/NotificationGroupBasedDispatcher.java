@@ -2,16 +2,13 @@ package software.wings.service.impl.notifications;
 
 import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static java.util.stream.Collectors.toList;
 
-import com.google.inject.Inject;
+import static java.util.stream.Collectors.toList;
 
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.beans.SearchFilter.Operator;
-import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.collections4.CollectionUtils;
-import org.slf4j.Logger;
+
 import software.wings.beans.Notification;
 import software.wings.beans.NotificationGroup;
 import software.wings.beans.User;
@@ -19,7 +16,11 @@ import software.wings.processingcontrollers.NotificationProcessingController;
 import software.wings.service.intfc.NotificationSetupService;
 import software.wings.service.intfc.UserService;
 
+import com.google.inject.Inject;
 import java.util.List;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.collections4.CollectionUtils;
+import org.slf4j.Logger;
 
 @Slf4j
 public class NotificationGroupBasedDispatcher implements NotificationDispatcher<NotificationGroup> {

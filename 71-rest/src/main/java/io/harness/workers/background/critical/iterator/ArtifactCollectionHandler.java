@@ -5,14 +5,10 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.exception.WingsException.ExecutionContext.MANAGER;
 import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
 import static io.harness.mongo.iterator.MongoPersistenceIterator.SchedulingType.REGULAR;
+
 import static java.time.Duration.ofMinutes;
 import static java.time.Duration.ofSeconds;
 
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
-import com.google.inject.name.Named;
-
-import com.codahale.metrics.InstrumentedExecutorService;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.exception.WingsException;
 import io.harness.iterator.PersistenceIterator;
@@ -26,7 +22,7 @@ import io.harness.mongo.iterator.MongoPersistenceIterator.Handler;
 import io.harness.mongo.iterator.filter.MorphiaFilterExpander;
 import io.harness.mongo.iterator.provider.MorphiaPersistenceRequiredProvider;
 import io.harness.workers.background.AccountStatusBasedEntityProcessController;
-import lombok.extern.slf4j.Slf4j;
+
 import software.wings.beans.Account;
 import software.wings.beans.Permit;
 import software.wings.beans.artifact.ArtifactStream;
@@ -38,10 +34,15 @@ import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.ArtifactCollectionService;
 import software.wings.service.intfc.PermitService;
 
+import com.codahale.metrics.InstrumentedExecutorService;
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
+import com.google.inject.name.Named;
 import java.util.Date;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
+import lombok.extern.slf4j.Slf4j;
 
 @OwnedBy(CDC)
 @Singleton

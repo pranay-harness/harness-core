@@ -2,10 +2,7 @@ package software.wings.integration;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.network.Localhost.getLocalHostName;
-import static java.lang.String.format;
-import static org.apache.commons.codec.binary.Base64.encodeBase64String;
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.mindrot.jbcrypt.BCrypt.hashpw;
+
 import static software.wings.beans.Account.Builder.anAccount;
 import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static software.wings.beans.User.Builder.anUser;
@@ -19,10 +16,23 @@ import static software.wings.utils.WingsIntegrationTestConstants.defaultAccountN
 import static software.wings.utils.WingsIntegrationTestConstants.defaultCompanyName;
 import static software.wings.utils.WingsIntegrationTestConstants.delegateAccountSecret;
 
+import static java.lang.String.format;
+import static org.apache.commons.codec.binary.Base64.encodeBase64String;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mindrot.jbcrypt.BCrypt.hashpw;
+
+import io.harness.rest.RestResponse;
+
+import software.wings.beans.Account;
+import software.wings.beans.User;
+import software.wings.beans.User.UserKeys;
+import software.wings.dl.WingsPersistence;
+import software.wings.service.intfc.AccountService;
+import software.wings.service.intfc.RoleService;
+
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
-
 import com.nimbusds.jose.EncryptionMethod;
 import com.nimbusds.jose.JOSEException;
 import com.nimbusds.jose.JWEAlgorithm;
@@ -31,18 +41,6 @@ import com.nimbusds.jose.KeyLengthException;
 import com.nimbusds.jose.crypto.DirectEncrypter;
 import com.nimbusds.jwt.EncryptedJWT;
 import com.nimbusds.jwt.JWTClaimsSet;
-import io.harness.rest.RestResponse;
-import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.codec.DecoderException;
-import org.apache.commons.codec.binary.Hex;
-import org.mindrot.jbcrypt.BCrypt;
-import software.wings.beans.Account;
-import software.wings.beans.User;
-import software.wings.beans.User.UserKeys;
-import software.wings.dl.WingsPersistence;
-import software.wings.service.intfc.AccountService;
-import software.wings.service.intfc.RoleService;
-
 import java.net.UnknownHostException;
 import java.util.Date;
 import java.util.UUID;
@@ -53,6 +51,10 @@ import javax.ws.rs.client.Client;
 import javax.ws.rs.client.Invocation.Builder;
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.GenericType;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.codec.DecoderException;
+import org.apache.commons.codec.binary.Hex;
+import org.mindrot.jbcrypt.BCrypt;
 
 @Singleton
 @Slf4j

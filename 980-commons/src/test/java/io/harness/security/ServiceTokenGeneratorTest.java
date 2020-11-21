@@ -2,17 +2,18 @@ package io.harness.security;
 
 import static io.harness.rule.OwnerRule.ALEKSANDAR;
 import static io.harness.rule.OwnerRule.ROHIT_KUMAR;
+
 import static org.assertj.core.api.Assertions.assertThat;
 
-import com.auth0.jwt.JWT;
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.exception.InvalidRequestException;
 import io.harness.rule.Owner;
+
+import com.auth0.jwt.JWT;
+import java.time.Duration;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
-
-import java.time.Duration;
 
 public class ServiceTokenGeneratorTest extends CategoryTest {
   public static final String SECRETKEY = "a611aa13eb1d5e77bc3295517ebe65ff";

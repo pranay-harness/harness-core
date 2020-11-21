@@ -3,9 +3,6 @@ package io.harness.cdng.infra.steps;
 import static io.harness.ng.core.mapper.TagMapper.convertToList;
 import static io.harness.ngpipeline.common.ParameterFieldHelper.getParameterFieldValue;
 
-import com.google.common.annotations.VisibleForTesting;
-import com.google.inject.Inject;
-
 import io.harness.ambiance.Ambiance;
 import io.harness.cdng.environment.EnvironmentMapper;
 import io.harness.cdng.environment.EnvironmentOutcome;
@@ -30,6 +27,9 @@ import io.harness.state.Step;
 import io.harness.state.io.StepInputPackage;
 import io.harness.state.io.StepResponse;
 import io.harness.state.io.StepResponse.StepOutcome;
+
+import com.google.common.annotations.VisibleForTesting;
+import com.google.inject.Inject;
 
 public class InfrastructureStep implements Step, SyncExecutable<InfraStepParameters> {
   public static final StepType STEP_TYPE =
@@ -94,7 +94,7 @@ public class InfrastructureStep implements Step, SyncExecutable<InfraStepParamet
     EnvironmentYaml environment = pipelineInfrastructure.getEnvironment();
     if (environment.getName() == null
         || (!environment.getName().isExpression()
-               && EmptyPredicate.isEmpty(getParameterFieldValue(environment.getName())))) {
+            && EmptyPredicate.isEmpty(getParameterFieldValue(environment.getName())))) {
       environment.setName(environment.getIdentifier());
     }
 

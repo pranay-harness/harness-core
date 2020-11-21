@@ -7,17 +7,14 @@ import static io.harness.distribution.barrier.Barrier.builder;
 import static io.harness.distribution.barrier.Forcer.State.ABANDONED;
 import static io.harness.distribution.barrier.Forcer.State.APPROACHING;
 import static io.harness.distribution.barrier.Forcer.State.ARRIVED;
-import static io.harness.pms.execution.Status.ABORTED;
-import static io.harness.pms.execution.Status.EXPIRED;
 import static io.harness.govern.Switch.unhandled;
 import static io.harness.mongo.iterator.MongoPersistenceIterator.SchedulingType.REGULAR;
+import static io.harness.pms.execution.Status.ABORTED;
+import static io.harness.pms.execution.Status.EXPIRED;
+
 import static java.time.Duration.ofMinutes;
 import static org.springframework.data.mongodb.core.query.Criteria.where;
 import static org.springframework.data.mongodb.core.query.Query.query;
-
-import com.google.common.collect.ImmutableMap;
-import com.google.inject.Inject;
-import com.google.inject.name.Named;
 
 import io.harness.StatusUtils;
 import io.harness.annotations.dev.OwnedBy;
@@ -31,26 +28,29 @@ import io.harness.exception.InvalidRequestException;
 import io.harness.execution.NodeExecution;
 import io.harness.execution.NodeExecution.NodeExecutionKeys;
 import io.harness.execution.PlanExecution;
-import io.harness.pms.execution.Status;
 import io.harness.iterator.PersistenceIteratorFactory;
 import io.harness.mongo.iterator.MongoPersistenceIterator;
 import io.harness.mongo.iterator.filter.SpringFilterExpander;
 import io.harness.mongo.iterator.provider.SpringPersistenceProvider;
 import io.harness.persistence.HPersistence;
+import io.harness.pms.execution.Status;
 import io.harness.steps.barriers.BarrierStep;
 import io.harness.steps.barriers.beans.BarrierExecutionInstance;
 import io.harness.steps.barriers.beans.BarrierExecutionInstance.BarrierExecutionInstanceKeys;
 import io.harness.steps.barriers.beans.BarrierResponseData;
 import io.harness.waiter.WaitNotifyEngine;
+
+import com.google.common.collect.ImmutableMap;
+import com.google.inject.Inject;
+import com.google.inject.name.Named;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.Update;
-
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
 
 @OwnedBy(CDC)
 @Slf4j
@@ -80,7 +80,7 @@ public class BarrierServiceImpl implements BarrierService, ForceProctor {
             .fieldName(BarrierExecutionInstanceKeys.nextIteration)
             .targetInterval(ofMinutes(1))
             .acceptableNoAlertDelay(ofMinutes(1))
-            .handler(this ::update)
+            .handler(this::update)
             .filterExpander(
                 query -> query.addCriteria(Criteria.where(BarrierExecutionInstanceKeys.barrierState).in(STANDING)))
             .schedulingType(REGULAR)

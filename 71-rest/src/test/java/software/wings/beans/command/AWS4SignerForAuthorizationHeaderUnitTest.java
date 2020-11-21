@@ -2,23 +2,26 @@ package software.wings.beans.command;
 
 import static io.harness.rule.OwnerRule.AADITI;
 import static io.harness.rule.OwnerRule.INDER;
-import static org.assertj.core.api.Assertions.assertThat;
+
 import static software.wings.utils.WingsTestConstants.ACCESS_KEY;
 import static software.wings.utils.WingsTestConstants.ARTIFACT_PATH;
 import static software.wings.utils.WingsTestConstants.BUCKET_NAME;
 import static software.wings.utils.WingsTestConstants.SECRET_KEY;
 
+import static org.assertj.core.api.Assertions.assertThat;
+
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
-import junitparams.JUnitParamsRunner;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
-import org.junit.runner.RunWith;
+
 import software.wings.WingsBaseTest;
 
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.Date;
+import junitparams.JUnitParamsRunner;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
+import org.junit.runner.RunWith;
 
 @RunWith(JUnitParamsRunner.class)
 public class AWS4SignerForAuthorizationHeaderUnitTest extends WingsBaseTest {

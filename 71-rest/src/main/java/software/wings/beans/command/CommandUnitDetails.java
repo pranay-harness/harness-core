@@ -32,14 +32,15 @@ import static software.wings.sm.states.spotinst.SpotInstListenerUpdateState.SPOT
 import static software.wings.sm.states.spotinst.SpotInstServiceSetup.SPOTINST_SERVICE_SETUP_COMMAND;
 
 import io.harness.logging.CommandExecutionStatus;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+
 import software.wings.beans.Variable;
 
 import java.util.ArrayList;
 import java.util.List;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
 /**
  * Created by rsingh on 11/17/17.

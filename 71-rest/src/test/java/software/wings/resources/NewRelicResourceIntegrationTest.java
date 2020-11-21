@@ -1,18 +1,13 @@
 package software.wings.resources;
 
 import static io.harness.rule.OwnerRule.UNKNOWN;
+
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.category.element.DeprecatedIntegrationTests;
 import io.harness.rest.RestResponse;
 import io.harness.rule.Owner;
-import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.StringUtils;
-import org.apache.http.client.utils.URIBuilder;
-import org.junit.Before;
-import org.junit.Ignore;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
+
 import software.wings.integration.IntegrationTestBase;
 import software.wings.metrics.MetricType;
 import software.wings.service.impl.newrelic.NewRelicMetricValueDefinition;
@@ -28,6 +23,13 @@ import java.util.Map;
 import java.util.Set;
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.GenericType;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
+import org.apache.http.client.utils.URIBuilder;
+import org.junit.Before;
+import org.junit.Ignore;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 @Slf4j
 public class NewRelicResourceIntegrationTest extends IntegrationTestBase {

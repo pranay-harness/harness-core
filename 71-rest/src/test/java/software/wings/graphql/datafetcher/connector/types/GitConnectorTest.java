@@ -1,9 +1,7 @@
 package software.wings.graphql.datafetcher.connector.types;
 
 import static io.harness.rule.OwnerRule.TMACARI;
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.Matchers.any;
-import static org.mockito.Mockito.doReturn;
+
 import static software.wings.graphql.datafetcher.connector.utils.ConnectorConstants.ACCOUNT_ID;
 import static software.wings.graphql.datafetcher.connector.utils.ConnectorConstants.AUTHOR;
 import static software.wings.graphql.datafetcher.connector.utils.ConnectorConstants.BRANCH;
@@ -13,16 +11,15 @@ import static software.wings.graphql.datafetcher.connector.utils.ConnectorConsta
 import static software.wings.graphql.datafetcher.connector.utils.ConnectorConstants.SSH;
 import static software.wings.graphql.datafetcher.connector.utils.Utility.getQlGitConnectorInputBuilder;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Matchers.any;
+import static org.mockito.Mockito.doReturn;
+
 import io.harness.beans.EncryptedData;
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
 import io.harness.utils.RequestField;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
+
 import software.wings.beans.GitConfig;
 import software.wings.beans.SettingAttribute;
 import software.wings.graphql.datafetcher.connector.ConnectorsController;
@@ -34,6 +31,12 @@ import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.security.SecretManager;
 
 import java.sql.SQLException;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
 
 public class GitConnectorTest {
   @Mock private SecretManager secretManager;

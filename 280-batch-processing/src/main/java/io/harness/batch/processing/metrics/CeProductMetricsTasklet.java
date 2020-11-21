@@ -1,14 +1,21 @@
 package io.harness.batch.processing.metrics;
 
-import com.google.common.collect.ImmutableMap;
-import com.google.inject.Singleton;
-
-import com.segment.analytics.Analytics;
-import com.segment.analytics.messages.GroupMessage;
 import io.harness.batch.processing.ccm.CCMJobConstants;
 import io.harness.batch.processing.config.BatchMainConfig;
 import io.harness.ccm.license.CeLicenseInfo;
 import io.harness.event.handler.segment.SegmentConfig;
+
+import software.wings.beans.Account;
+import software.wings.service.intfc.instance.CloudToHarnessMappingService;
+
+import com.google.common.collect.ImmutableMap;
+import com.google.inject.Singleton;
+import com.segment.analytics.Analytics;
+import com.segment.analytics.messages.GroupMessage;
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
+import java.util.Date;
+import java.util.Optional;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.batch.core.JobParameters;
 import org.springframework.batch.core.StepContribution;
@@ -16,13 +23,6 @@ import org.springframework.batch.core.scope.context.ChunkContext;
 import org.springframework.batch.core.step.tasklet.Tasklet;
 import org.springframework.batch.repeat.RepeatStatus;
 import org.springframework.beans.factory.annotation.Autowired;
-import software.wings.beans.Account;
-import software.wings.service.intfc.instance.CloudToHarnessMappingService;
-
-import java.time.Instant;
-import java.time.temporal.ChronoUnit;
-import java.util.Date;
-import java.util.Optional;
 
 @Slf4j
 @Singleton

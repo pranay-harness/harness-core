@@ -1,14 +1,14 @@
 package software.wings.service.impl.template;
 
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
-import static java.util.Arrays.asList;
 
-import com.google.inject.Singleton;
+import static java.util.Arrays.asList;
 
 import software.wings.beans.template.Template;
 import software.wings.beans.template.TemplateType;
 import software.wings.beans.template.command.ShellScriptTemplate;
 
+import com.google.inject.Singleton;
 import java.util.List;
 import java.util.Map;
 

@@ -1,6 +1,7 @@
 package io.harness.connector.mappers.awsmapper;
 
 import static io.harness.rule.OwnerRule.ABHINAV;
+
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.CategoryTest;
@@ -16,6 +17,7 @@ import io.harness.delegate.beans.connector.awsconnector.AwsManualConfigSpecDTO;
 import io.harness.delegate.beans.connector.awsconnector.CrossAccountAccessDTO;
 import io.harness.encryption.SecretRefData;
 import io.harness.rule.Owner;
+
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;

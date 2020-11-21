@@ -1,3 +1,5 @@
 package software.wings.sm.status;
 
-public interface WorkflowStatusPropagator { void handleStatusUpdate(StateStatusUpdateInfo updateInfo); }
+public interface WorkflowStatusPropagator {
+  void handleStatusUpdate(StateStatusUpdateInfo updateInfo);
+}

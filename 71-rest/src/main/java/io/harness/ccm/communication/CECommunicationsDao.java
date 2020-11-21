@@ -1,16 +1,15 @@
 package io.harness.ccm.communication;
 
-import com.google.inject.Inject;
-
 import io.harness.ccm.communication.entities.CECommunications;
 import io.harness.ccm.communication.entities.CECommunications.CECommunicationsKeys;
 import io.harness.ccm.communication.entities.CommunicationType;
 import io.harness.persistence.HPersistence;
+
+import com.google.inject.Inject;
+import java.util.List;
 import org.mongodb.morphia.query.FindOptions;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
-
-import java.util.List;
 
 public class CECommunicationsDao {
   @Inject private HPersistence persistence;

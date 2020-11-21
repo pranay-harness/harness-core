@@ -1,18 +1,19 @@
 package io.harness;
 
 import static io.harness.rule.OwnerRule.VIKAS;
+
 import static org.assertj.core.api.Assertions.assertThat;
 
-import graphql.ExecutionResult;
 import io.harness.category.element.UnitTests;
 import io.harness.category.layer.GraphQLTests;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.rule.Owner;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
 
+import graphql.ExecutionResult;
 import java.util.List;
 import java.util.Map;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 public class GraphQLExceptionHandlingTest extends GraphQLTest {
   private static final String INCORRECT_ENVIRONMENT_ID = "TEST";

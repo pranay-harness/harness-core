@@ -2,22 +2,18 @@ package software.wings.sm.states;
 
 import static io.harness.delegate.beans.TaskData.DEFAULT_ASYNC_CALL_TIMEOUT;
 import static io.harness.logging.Misc.isLong;
-import static java.util.Arrays.asList;
+
 import static software.wings.common.TemplateExpressionProcessor.checkFieldTemplatized;
 import static software.wings.sm.StateType.NEW_RELIC_DEPLOYMENT_MARKER;
 
-import com.google.inject.Inject;
+import static java.util.Arrays.asList;
 
-import com.github.reinert.jjschema.Attributes;
-import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.beans.DelegateTask;
 import io.harness.beans.ExecutionStatus;
 import io.harness.delegate.beans.TaskData;
 import io.harness.tasks.Cd1SetupFields;
 import io.harness.tasks.ResponseData;
-import lombok.experimental.FieldNameConstants;
-import lombok.extern.slf4j.Slf4j;
-import org.slf4j.Logger;
+
 import software.wings.beans.NewRelicConfig;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.TaskType;
@@ -30,11 +26,17 @@ import software.wings.service.intfc.newrelic.NewRelicService;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionResponse;
 
+import com.github.reinert.jjschema.Attributes;
+import com.github.reinert.jjschema.SchemaIgnore;
+import com.google.inject.Inject;
 import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import lombok.experimental.FieldNameConstants;
+import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
 
 @Attributes
 @Slf4j

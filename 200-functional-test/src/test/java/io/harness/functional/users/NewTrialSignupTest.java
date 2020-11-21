@@ -1,9 +1,8 @@
 package io.harness.functional.users;
 
 import static io.harness.rule.OwnerRule.RAMA;
-import static org.assertj.core.api.Assertions.assertThat;
 
-import com.google.inject.Inject;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.category.element.FunctionalTests;
 import io.harness.data.structure.UUIDGenerator;
@@ -16,12 +15,15 @@ import io.harness.generator.SettingGenerator.Settings;
 import io.harness.rule.Owner;
 import io.harness.testframework.framework.utils.TestUtils;
 import io.harness.testframework.restutils.UserRestUtils;
-import lombok.extern.slf4j.Slf4j;
-import org.junit.Before;
-import org.junit.experimental.categories.Category;
+
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.User;
 import software.wings.beans.UserInvite;
+
+import com.google.inject.Inject;
+import lombok.extern.slf4j.Slf4j;
+import org.junit.Before;
+import org.junit.experimental.categories.Category;
 
 /**
  * @author rktummala on 04/04/19

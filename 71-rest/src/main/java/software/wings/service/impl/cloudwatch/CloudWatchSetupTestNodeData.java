@@ -1,15 +1,15 @@
 package software.wings.service.impl.cloudwatch;
 
+import software.wings.service.impl.analysis.SetupTestNodeData;
+import software.wings.sm.StateType;
+
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import java.util.List;
+import java.util.Map;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
-import software.wings.service.impl.analysis.SetupTestNodeData;
-import software.wings.sm.StateType;
-
-import java.util.List;
-import java.util.Map;
 
 /**
  * Created by Pranjal on 09/04/2018

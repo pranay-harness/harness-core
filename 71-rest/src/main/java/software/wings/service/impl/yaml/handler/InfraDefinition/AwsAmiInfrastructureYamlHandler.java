@@ -2,9 +2,8 @@ package software.wings.service.impl.yaml.handler.InfraDefinition;
 
 import static io.harness.exception.WingsException.USER;
 import static io.harness.validation.Validator.notNullCheck;
-import static java.lang.String.format;
 
-import com.google.inject.Inject;
+import static java.lang.String.format;
 
 import software.wings.beans.AmiDeploymentType;
 import software.wings.beans.InfrastructureType;
@@ -15,6 +14,7 @@ import software.wings.infra.AwsAmiInfrastructure.Yaml;
 import software.wings.service.impl.yaml.handler.CloudProviderInfrastructure.CloudProviderInfrastructureYamlHandler;
 import software.wings.service.intfc.SettingsService;
 
+import com.google.inject.Inject;
 import java.util.List;
 
 public class AwsAmiInfrastructureYamlHandler

@@ -1,11 +1,11 @@
 package io.harness.serializer;
 
-import com.google.common.collect.ImmutableSet;
-
 import io.harness.morphia.MorphiaRegistrar;
 import io.harness.serializer.morphia.NextGenMorphiaClassesRegistrar;
 import io.harness.serializer.morphia.UserGroupMorphiaRegistrar;
 import io.harness.spring.AliasRegistrar;
+
+import com.google.common.collect.ImmutableSet;
 
 public class NextGenRegistrars {
   public static final ImmutableSet<Class<? extends KryoRegistrar>> kryoRegistrars =

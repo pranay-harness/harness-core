@@ -1,18 +1,21 @@
 package software.wings.beans;
 
-import static org.assertj.core.api.Assertions.assertThat;
 import static software.wings.beans.AppContainer.Builder.anAppContainer;
+
+import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.category.element.UnitTests;
 import io.harness.k8s.model.HelmVersion;
 import io.harness.rule.Owner;
 import io.harness.rule.OwnerRule;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
+
 import software.wings.WingsBaseTest;
 import software.wings.api.DeploymentType;
 import software.wings.utils.ArtifactType;
 import software.wings.utils.WingsTestConstants;
+
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 public class ServiceTest extends WingsBaseTest {
   @Test

@@ -2,9 +2,6 @@ package io.harness.integrationstage;
 
 import static io.harness.common.CIExecutionConstants.CI_PIPELINE_CONFIG;
 
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
-
 import io.harness.beans.executionargs.CIExecutionArgs;
 import io.harness.beans.executionargs.ExecutionArgs;
 import io.harness.beans.stages.IntegrationStage;
@@ -14,6 +11,9 @@ import io.harness.ngpipeline.pipeline.beans.yaml.NgPipeline;
 import io.harness.yaml.core.ExecutionElement;
 import io.harness.yaml.core.intfc.StageType;
 import io.harness.yaml.extended.ci.codebase.CodeBase;
+
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import lombok.extern.slf4j.Slf4j;
 
 /**

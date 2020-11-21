@@ -5,6 +5,7 @@ import static io.harness.distribution.constraint.Consumer.State.ACTIVE;
 import static io.harness.distribution.constraint.Consumer.State.BLOCKED;
 import static io.harness.distribution.constraint.Consumer.State.FINISHED;
 import static io.harness.rule.OwnerRule.GEORGE;
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 
@@ -14,12 +15,12 @@ import io.harness.distribution.constraint.Constraint.Spec;
 import io.harness.distribution.constraint.Constraint.Strategy;
 import io.harness.rule.Owner;
 import io.harness.threading.Concurrent;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
 
 import java.security.SecureRandom;
 import java.util.List;
 import java.util.stream.Collectors;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 public class ConstraintTest extends CategoryTest {
   private static final SecureRandom random = new SecureRandom();

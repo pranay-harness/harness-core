@@ -1,16 +1,12 @@
 package software.wings.service.impl.yaml;
 
 import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
+
 import static software.wings.beans.yaml.YamlSuccessfulChange.ChangeSource.GIT;
 import static software.wings.beans.yaml.YamlSuccessfulChange.ChangeSource.HARNESS;
 
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
-
 import io.harness.logging.AccountLogContext;
-import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.collections4.ListUtils;
-import org.mongodb.morphia.query.Query;
+
 import software.wings.beans.yaml.GitFileChange;
 import software.wings.beans.yaml.GitSuccessFulChangeDetail;
 import software.wings.beans.yaml.HarnessSuccessFulChangeDetail;
@@ -19,6 +15,12 @@ import software.wings.beans.yaml.YamlSuccessfulChange.YamlSuccessfulChangeKeys;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.yaml.YamlSuccessfulChangeService;
 import software.wings.yaml.gitSync.YamlChangeSet;
+
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.collections4.ListUtils;
+import org.mongodb.morphia.query.Query;
 
 @Singleton
 @Slf4j

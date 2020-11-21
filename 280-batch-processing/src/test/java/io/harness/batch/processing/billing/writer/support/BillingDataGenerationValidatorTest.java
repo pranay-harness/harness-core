@@ -1,6 +1,7 @@
 package io.harness.batch.processing.billing.writer.support;
 
 import static io.harness.rule.OwnerRule.HITESH;
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.mock;
@@ -11,12 +12,12 @@ import io.harness.category.element.UnitTests;
 import io.harness.ccm.cluster.entities.LastReceivedPublishedMessage;
 import io.harness.ccm.health.LastReceivedPublishedMessageDao;
 import io.harness.rule.Owner;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
 
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 public class BillingDataGenerationValidatorTest extends CategoryTest {
   private static final String ACCOUNT_ID = "fcf53242-4a9d-4b8c-8497-5ba7360569d9";

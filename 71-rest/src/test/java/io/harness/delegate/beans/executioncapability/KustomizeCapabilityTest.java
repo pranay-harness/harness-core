@@ -5,10 +5,12 @@ import static org.assertj.core.api.Assertions.assertThat;
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
 import io.harness.rule.OwnerRule;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
+
 import software.wings.WingsBaseTest;
 import software.wings.helpers.ext.kustomize.KustomizeConfig;
+
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 public class KustomizeCapabilityTest extends WingsBaseTest {
   private KustomizeCapability capability =

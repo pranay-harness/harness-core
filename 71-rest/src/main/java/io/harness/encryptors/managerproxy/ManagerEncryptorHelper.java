@@ -2,10 +2,9 @@ package io.harness.encryptors.managerproxy;
 
 import static io.harness.eraro.ErrorCode.SECRET_MANAGEMENT_ERROR;
 import static io.harness.exception.WingsException.USER;
+
 import static software.wings.beans.TaskType.FETCH_SECRET;
 import static software.wings.beans.TaskType.VALIDATE_SECRET_REFERENCE;
-
-import com.google.inject.Inject;
 
 import io.harness.beans.DelegateTask;
 import io.harness.delegate.beans.DelegateResponseData;
@@ -18,7 +17,10 @@ import io.harness.encryptors.DelegateTaskUtils;
 import io.harness.exception.SecretManagementException;
 import io.harness.security.encryption.EncryptedRecord;
 import io.harness.security.encryption.EncryptionConfig;
+
 import software.wings.service.intfc.DelegateService;
+
+import com.google.inject.Inject;
 
 public class ManagerEncryptorHelper {
   private final DelegateService delegateService;

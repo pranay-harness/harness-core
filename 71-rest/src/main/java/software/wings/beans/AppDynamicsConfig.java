@@ -1,22 +1,11 @@
 package software.wings.beans;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonTypeName;
-import com.fasterxml.jackson.annotation.JsonView;
-import com.github.reinert.jjschema.Attributes;
-import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.cvng.beans.Connector;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.delegate.beans.executioncapability.ExecutionCapabilityDemander;
 import io.harness.delegate.task.mixin.HttpConnectionExecutionCapabilityGenerator;
 import io.harness.encryption.Encrypted;
-import lombok.Builder;
-import lombok.Data;
-import lombok.EqualsAndHashCode;
-import lombok.NoArgsConstructor;
-import lombok.ToString;
-import org.apache.commons.codec.binary.Base64;
-import org.hibernate.validator.constraints.NotEmpty;
+
 import software.wings.annotation.EncryptableSetting;
 import software.wings.audit.ResourceType;
 import software.wings.jersey.JsonViews;
@@ -25,12 +14,24 @@ import software.wings.settings.SettingValue;
 import software.wings.sm.StateType;
 import software.wings.yaml.setting.VerificationProviderYaml;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonTypeName;
+import com.fasterxml.jackson.annotation.JsonView;
+import com.github.reinert.jjschema.Attributes;
+import com.github.reinert.jjschema.SchemaIgnore;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import lombok.Builder;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.NoArgsConstructor;
+import lombok.ToString;
+import org.apache.commons.codec.binary.Base64;
+import org.hibernate.validator.constraints.NotEmpty;
 
 /**
  * Created by anubhaw on 8/4/16.
@@ -105,8 +106,8 @@ public class AppDynamicsConfig
   private String getHeaderWithCredentials() {
     return "Basic "
         + Base64.encodeBase64String(
-              String.format("%s@%s:%s", getUsername(), getAccountname(), new String(getPassword()))
-                  .getBytes(StandardCharsets.UTF_8));
+            String.format("%s@%s:%s", getUsername(), getAccountname(), new String(getPassword()))
+                .getBytes(StandardCharsets.UTF_8));
   }
 
   @Data

@@ -1,6 +1,7 @@
 package io.harness.persistence;
 
 import io.harness.beans.EmbeddedUser;
+
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;

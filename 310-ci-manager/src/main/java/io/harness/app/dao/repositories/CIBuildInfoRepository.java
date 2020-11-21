@@ -2,9 +2,9 @@ package io.harness.app.dao.repositories;
 
 import io.harness.annotation.HarnessRepo;
 import io.harness.ci.beans.entities.CIBuild;
-import org.springframework.data.repository.PagingAndSortingRepository;
 
 import java.util.Optional;
+import org.springframework.data.repository.PagingAndSortingRepository;
 
 @HarnessRepo
 public interface CIBuildInfoRepository

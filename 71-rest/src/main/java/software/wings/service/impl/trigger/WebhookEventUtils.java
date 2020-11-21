@@ -4,8 +4,7 @@ import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.govern.Switch.noop;
 import static io.harness.govern.Switch.unhandled;
-import static java.lang.String.format;
-import static java.util.Arrays.asList;
+
 import static software.wings.beans.trigger.WebhookParameters.BIT_BUCKET_COMMIT_ID;
 import static software.wings.beans.trigger.WebhookParameters.BIT_BUCKET_ON_PREM_PULL_BRANCH_REF;
 import static software.wings.beans.trigger.WebhookParameters.BIT_BUCKET_ON_PREM_PULL_REPOSITORY_CLONE_HTTP;
@@ -35,16 +34,14 @@ import static software.wings.beans.trigger.WebhookParameters.GIT_LAB_PUSH_REPOSI
 import static software.wings.beans.trigger.WebhookParameters.GIT_LAB_PUSH_REPOSITORY_FULL_NAME;
 import static software.wings.beans.trigger.WebhookParameters.GIT_LAB_PUSH_REPOSITORY_NAME;
 
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
+import static java.lang.String.format;
+import static java.util.Arrays.asList;
 
-import com.fasterxml.jackson.core.type.TypeReference;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.InvalidRequestException;
 import io.harness.serializer.JsonUtils;
-import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.StringUtils;
+
 import software.wings.beans.HostConnectionAttributes.AuthenticationScheme;
 import software.wings.beans.trigger.PayloadSource.Type;
 import software.wings.beans.trigger.WebhookEventType;
@@ -55,11 +52,16 @@ import software.wings.beans.trigger.WebhookSource.GitHubEventType;
 import software.wings.beans.trigger.WebhookSource.GitLabEventType;
 import software.wings.expression.ManagerExpressionEvaluator;
 
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import javax.ws.rs.core.HttpHeaders;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 
 @OwnedBy(CDC)
 @Singleton
@@ -260,7 +262,7 @@ public class WebhookEventUtils {
         StringUtils.difference(StringUtils.reverse(urlCleanup(url1)), StringUtils.reverse(urlCleanup(url2))));
 
     return Optional.of(StringUtils.substringAfter(url2, url2Diff))
-        .map(this ::urlCleanup)
+        .map(this::urlCleanup)
         .orElseThrow(IllegalArgumentException::new);
   }
 

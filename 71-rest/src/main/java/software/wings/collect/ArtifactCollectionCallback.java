@@ -2,6 +2,7 @@ package software.wings.collect;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
+
 import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static software.wings.beans.ApprovalNotification.Builder.anApprovalNotification;
 import static software.wings.beans.Event.Builder.anEvent;
@@ -9,13 +10,11 @@ import static software.wings.beans.artifact.Artifact.ContentStatus.DOWNLOADED;
 import static software.wings.beans.artifact.Artifact.ContentStatus.FAILED;
 import static software.wings.beans.artifact.Artifact.Status.APPROVED;
 
-import com.google.inject.Inject;
-
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.delegate.task.ListNotifyResponseData;
 import io.harness.tasks.ResponseData;
 import io.harness.waiter.NotifyCallback;
-import lombok.extern.slf4j.Slf4j;
+
 import software.wings.beans.EntityType;
 import software.wings.beans.Event.Type;
 import software.wings.beans.SettingAttribute;
@@ -28,7 +27,9 @@ import software.wings.service.intfc.ArtifactStreamService;
 import software.wings.service.intfc.NotificationService;
 import software.wings.service.intfc.SettingsService;
 
+import com.google.inject.Inject;
 import java.util.Map;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * Created by rishi on 12/20/16.

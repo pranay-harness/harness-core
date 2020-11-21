@@ -2,18 +2,19 @@ package io.harness.generator.artifactstream;
 
 import static software.wings.beans.Application.GLOBAL_APP_ID;
 
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
-
 import io.harness.generator.OwnerManager.Owners;
 import io.harness.generator.Randomizer.Seed;
 import io.harness.generator.SettingGenerator;
 import io.harness.generator.SettingGenerator.Settings;
+
 import software.wings.beans.Application;
 import software.wings.beans.Service;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.artifact.ArtifactStream;
 import software.wings.beans.artifact.EcrArtifactStream;
+
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
 
 @Singleton
 public class EcrArtifactStreamStreamsGenerator implements ArtifactStreamsGenerator {
@@ -31,17 +32,18 @@ public class EcrArtifactStreamStreamsGenerator implements ArtifactStreamsGenerat
     Application application = owners.obtainApplication();
     final SettingAttribute settingAttribute =
         settingGenerator.ensurePredefined(seed, owners, Settings.AWS_DEPLOYMENT_FUNCTIONAL_TESTS_CLOUD_PROVIDER);
-    ArtifactStream artifactStream =
-        EcrArtifactStream.builder()
-            .appId(atConnector ? GLOBAL_APP_ID : application.getUuid())
-            .serviceId(atConnector ? settingAttribute.getUuid() : service != null ? service.getUuid() : null)
-            .region("us-east-1")
-            .imageName("hello-world")
-            .name("hello-world")
-            .autoPopulate(true)
-            .metadataOnly(true)
-            .settingId(settingAttribute.getUuid())
-            .build();
+    ArtifactStream artifactStream = EcrArtifactStream.builder()
+                                        .appId(atConnector ? GLOBAL_APP_ID : application.getUuid())
+                                        .serviceId(atConnector    ? settingAttribute.getUuid()
+                                                : service != null ? service.getUuid()
+                                                                  : null)
+                                        .region("us-east-1")
+                                        .imageName("hello-world")
+                                        .name("hello-world")
+                                        .autoPopulate(true)
+                                        .metadataOnly(true)
+                                        .settingId(settingAttribute.getUuid())
+                                        .build();
     return ensureArtifactStream(seed, artifactStream, owners);
   }
 

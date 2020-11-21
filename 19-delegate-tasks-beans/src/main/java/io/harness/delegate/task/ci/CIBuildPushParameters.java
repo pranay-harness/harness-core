@@ -3,13 +3,13 @@ package io.harness.delegate.task.ci;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.delegate.beans.executioncapability.ExecutionCapabilityDemander;
 import io.harness.delegate.task.TaskParameters;
+
+import java.util.Collections;
+import java.util.List;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.ToString;
 import org.hibernate.validator.constraints.NotEmpty;
-
-import java.util.Collections;
-import java.util.List;
 
 @Data
 @ToString(callSuper = true)

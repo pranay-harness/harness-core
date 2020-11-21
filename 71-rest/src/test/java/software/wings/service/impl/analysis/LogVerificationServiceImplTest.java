@@ -1,6 +1,7 @@
 package software.wings.service.impl.analysis;
 
 import static io.harness.rule.OwnerRule.PRAVEEN;
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
@@ -10,12 +11,7 @@ import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.exception.WingsException;
 import io.harness.rule.Owner;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
+
 import software.wings.annotation.EncryptableSetting;
 import software.wings.beans.BugsnagConfig;
 import software.wings.beans.SettingAttribute;
@@ -30,6 +26,12 @@ import software.wings.sm.StateType;
 import java.util.Arrays;
 import java.util.Set;
 import java.util.TreeSet;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
 
 public class LogVerificationServiceImplTest extends CategoryTest {
   @Mock private SettingsService mockSettingsService;

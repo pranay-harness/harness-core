@@ -1,9 +1,10 @@
 package software.wings.helpers.ext.trigger.request;
 
+import software.wings.beans.trigger.TriggerCommand.TriggerCommandType;
+
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import org.hibernate.validator.constraints.NotEmpty;
-import software.wings.beans.trigger.TriggerCommand.TriggerCommandType;
 
 @Data
 @AllArgsConstructor

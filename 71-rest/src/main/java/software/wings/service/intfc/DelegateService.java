@@ -17,9 +17,7 @@ import io.harness.delegate.beans.DelegateTaskPackage;
 import io.harness.delegate.beans.DelegateTaskResponse;
 import io.harness.delegate.service.DelegateAgentFileService.FileBucket;
 import io.harness.validation.Create;
-import org.glassfish.jersey.media.multipart.FormDataContentDisposition;
-import org.mongodb.morphia.query.Query;
-import ru.vyarus.guice.validator.group.annotation.ValidationGroups;
+
 import software.wings.beans.CEDelegateStatus;
 import software.wings.beans.Delegate;
 import software.wings.beans.DelegateStatus;
@@ -33,6 +31,9 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import javax.validation.Valid;
+import org.glassfish.jersey.media.multipart.FormDataContentDisposition;
+import org.mongodb.morphia.query.Query;
+import ru.vyarus.guice.validator.group.annotation.ValidationGroups;
 
 public interface DelegateService extends OwnedByAccount {
   PageResponse<Delegate> list(PageRequest<Delegate> pageRequest);

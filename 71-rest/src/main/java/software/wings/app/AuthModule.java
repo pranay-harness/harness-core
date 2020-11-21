@@ -1,9 +1,9 @@
 package software.wings.app;
 
-import com.google.inject.AbstractModule;
-
 import software.wings.service.impl.AuthServiceImpl;
 import software.wings.service.intfc.AuthService;
+
+import com.google.inject.AbstractModule;
 
 public class AuthModule extends AbstractModule {
   @Override

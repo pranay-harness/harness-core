@@ -1,7 +1,5 @@
 package io.harness.dto;
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.fasterxml.jackson.annotation.JsonInclude;
 import io.harness.data.Outcome;
 import io.harness.interrupts.InterruptEffect;
 import io.harness.pms.execution.ExecutionMode;
@@ -9,12 +7,14 @@ import io.harness.pms.execution.Status;
 import io.harness.pms.steps.SkipType;
 import io.harness.state.io.FailureInfo;
 import io.harness.state.io.StepParameters;
-import lombok.Builder;
-import lombok.Value;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonInclude;
 import java.time.Duration;
 import java.util.List;
 import java.util.Map;
+import lombok.Builder;
+import lombok.Value;
 
 @Value
 @Builder

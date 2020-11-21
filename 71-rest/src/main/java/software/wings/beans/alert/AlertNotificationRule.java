@@ -2,11 +2,17 @@ package software.wings.beans.alert;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import io.harness.annotation.HarnessEntity;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.mongo.index.FdIndex;
 import io.harness.persistence.AccountAccess;
+
+import software.wings.alerts.AlertCategory;
+import software.wings.beans.Base;
+
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import java.util.Collections;
+import java.util.Set;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.EqualsAndHashCode;
@@ -17,11 +23,6 @@ import lombok.Setter;
 import lombok.experimental.FieldDefaults;
 import lombok.experimental.FieldNameConstants;
 import org.mongodb.morphia.annotations.Entity;
-import software.wings.alerts.AlertCategory;
-import software.wings.beans.Base;
-
-import java.util.Collections;
-import java.util.Set;
 
 @OwnedBy(PL)
 @Getter

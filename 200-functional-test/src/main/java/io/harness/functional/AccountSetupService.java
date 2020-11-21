@@ -1,11 +1,10 @@
 package io.harness.functional;
 
 import static io.harness.generator.AccountGenerator.Accounts.GENERIC_TEST;
-import static java.time.Duration.ofMinutes;
+
 import static software.wings.beans.Account.Builder.anAccount;
 
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
+import static java.time.Duration.ofMinutes;
 
 import io.harness.exception.GeneralException;
 import io.harness.filesystem.FileIo;
@@ -14,8 +13,11 @@ import io.harness.generator.OwnerManager;
 import io.harness.generator.OwnerManager.Owners;
 import io.harness.generator.Randomizer.Seed;
 import io.harness.resource.Project;
+
 import software.wings.beans.Account;
 
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import java.io.File;
 
 @Singleton

@@ -2,10 +2,9 @@ package software.wings.service.impl.analysis;
 
 import static java.util.stream.Collectors.toMap;
 
-import com.google.inject.Singleton;
-
 import software.wings.stencils.DataProvider;
 
+import com.google.inject.Singleton;
 import java.util.Map;
 import java.util.stream.Stream;
 

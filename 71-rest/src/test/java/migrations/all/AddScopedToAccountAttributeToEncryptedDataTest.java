@@ -2,17 +2,14 @@ package migrations.all;
 
 import static io.harness.persistence.HQuery.excludeAuthority;
 import static io.harness.rule.OwnerRule.VIKAS;
-import static org.assertj.core.api.Assertions.assertThat;
 
-import com.google.inject.Inject;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.beans.EncryptedData;
 import io.harness.beans.EncryptedData.EncryptedDataKeys;
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
-import org.mongodb.morphia.query.Query;
+
 import software.wings.WingsBaseTest;
 import software.wings.dl.WingsPersistence;
 import software.wings.security.EnvFilter;
@@ -22,10 +19,14 @@ import software.wings.security.UsageRestrictions;
 import software.wings.security.UsageRestrictions.AppEnvRestriction;
 import software.wings.settings.SettingVariableTypes;
 
+import com.google.inject.Inject;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
+import org.mongodb.morphia.query.Query;
 
 public class AddScopedToAccountAttributeToEncryptedDataTest extends WingsBaseTest {
   @Inject WingsPersistence wingsPersistence;

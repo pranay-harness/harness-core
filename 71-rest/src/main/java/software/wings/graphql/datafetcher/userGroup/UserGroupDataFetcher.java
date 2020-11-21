@@ -1,9 +1,8 @@
 package software.wings.graphql.datafetcher.userGroup;
 
-import com.google.inject.Inject;
-
 import io.harness.exception.InvalidRequestException;
 import io.harness.persistence.HIterator;
+
 import software.wings.beans.security.UserGroup;
 import software.wings.beans.security.UserGroup.UserGroupKeys;
 import software.wings.graphql.datafetcher.AbstractObjectDataFetcher;
@@ -13,6 +12,8 @@ import software.wings.graphql.schema.type.usergroup.QLUserGroupQueryParameters;
 import software.wings.security.PermissionAttribute;
 import software.wings.security.annotations.AuthRule;
 import software.wings.service.intfc.UserGroupService;
+
+import com.google.inject.Inject;
 
 public class UserGroupDataFetcher extends AbstractObjectDataFetcher<QLUserGroup, QLUserGroupQueryParameters> {
   @Inject UserGroupService userGroupService;

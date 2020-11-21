@@ -1,6 +1,5 @@
 package io.harness.perpetualtask.instancesync;
 
-import static java.util.Objects.nonNull;
 import static software.wings.service.InstanceSyncConstants.CONTAINER_SERVICE_NAME;
 import static software.wings.service.InstanceSyncConstants.CONTAINER_TYPE;
 import static software.wings.service.InstanceSyncConstants.HARNESS_APPLICATION_ID;
@@ -10,9 +9,7 @@ import static software.wings.service.InstanceSyncConstants.RELEASE_NAME;
 import static software.wings.service.InstanceSyncConstants.VALIDATION_TIMEOUT_MINUTES;
 import static software.wings.utils.Utils.emptyIfNull;
 
-import com.google.inject.Inject;
-import com.google.protobuf.ByteString;
-import com.google.protobuf.Message;
+import static java.util.Objects.nonNull;
 
 import io.harness.beans.DelegateTask;
 import io.harness.data.structure.UUIDGenerator;
@@ -22,12 +19,7 @@ import io.harness.perpetualtask.PerpetualTaskServiceClient;
 import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.serializer.KryoSerializer;
 import io.harness.tasks.Cd1SetupFields;
-import lombok.AccessLevel;
-import lombok.Builder;
-import lombok.Data;
-import lombok.experimental.FieldDefaults;
-import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.collections.ListUtils;
+
 import software.wings.annotation.EncryptableSetting;
 import software.wings.beans.AzureKubernetesInfrastructureMapping;
 import software.wings.beans.ContainerInfrastructureMapping;
@@ -47,9 +39,18 @@ import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.security.SecretManager;
 import software.wings.sm.states.k8s.K8sStateHelper;
 
+import com.google.inject.Inject;
+import com.google.protobuf.ByteString;
+import com.google.protobuf.Message;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
+import lombok.AccessLevel;
+import lombok.Builder;
+import lombok.Data;
+import lombok.experimental.FieldDefaults;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.collections.ListUtils;
 
 @Slf4j
 @FieldDefaults(level = AccessLevel.PRIVATE)
@@ -224,10 +225,9 @@ public class ContainerInstanceSyncPerpetualTaskClient implements PerpetualTaskSe
 
   private List<EncryptedDataDetail> getEncryptedDataDetails(
       SettingAttribute settingAttribute, ContainerInfrastructureMapping containerInfraMapping) {
-    return nonNull(settingAttribute)
-        ? secretManager.getEncryptionDetails(
-              (EncryptableSetting) settingAttribute.getValue(), containerInfraMapping.getAppId(), null)
-        : null;
+    return nonNull(settingAttribute) ? secretManager.getEncryptionDetails(
+               (EncryptableSetting) settingAttribute.getValue(), containerInfraMapping.getAppId(), null)
+                                     : null;
   }
 
   private String getClusterName(

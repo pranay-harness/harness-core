@@ -1,9 +1,9 @@
 package software.wings.graphql.schema.type.aggregation.cloudprovider;
 
 import io.harness.ccm.health.CEClusterHealth;
-import lombok.Builder;
 
 import java.util.List;
+import lombok.Builder;
 
 @Builder
 public class CEHealthStatusDTO {

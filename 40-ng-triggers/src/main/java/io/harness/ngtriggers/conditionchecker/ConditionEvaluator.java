@@ -9,20 +9,20 @@ import static io.harness.ngtriggers.conditionchecker.OperationEvaluator.NOT_EQUA
 import static io.harness.ngtriggers.conditionchecker.OperationEvaluator.NOT_IN_OPERATOR;
 import static io.harness.ngtriggers.conditionchecker.OperationEvaluator.REGEX_OPERATOR;
 import static io.harness.ngtriggers.conditionchecker.OperationEvaluator.STARTS_WITH_OPERATOR;
+
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
-import com.google.common.base.Splitter;
-
 import io.harness.common.NGExpressionUtils;
 import io.harness.exception.InvalidArgumentsException;
-import lombok.experimental.UtilityClass;
 
+import com.google.common.base.Splitter;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.regex.Pattern;
+import lombok.experimental.UtilityClass;
 
 @UtilityClass
 public class ConditionEvaluator {

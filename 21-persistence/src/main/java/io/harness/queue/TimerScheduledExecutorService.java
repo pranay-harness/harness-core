@@ -1,8 +1,8 @@
 package io.harness.queue;
 
-import com.google.inject.Singleton;
-
 import io.harness.manage.ManagedScheduledExecutorService;
+
+import com.google.inject.Singleton;
 
 @Singleton
 public class TimerScheduledExecutorService extends ManagedScheduledExecutorService {

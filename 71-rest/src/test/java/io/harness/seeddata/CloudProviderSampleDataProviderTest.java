@@ -2,6 +2,7 @@ package io.harness.seeddata;
 
 import static io.harness.rule.OwnerRule.HANTANG;
 import static io.harness.seeddata.SampleDataProviderConstants.K8S_CLOUD_PROVIDER_NAME;
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.when;
@@ -9,6 +10,11 @@ import static org.mockito.Mockito.when;
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
+
+import software.wings.beans.SettingAttribute;
+import software.wings.service.intfc.SettingsService;
+import software.wings.settings.SettingVariableTypes;
+
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -17,9 +23,6 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnit;
 import org.mockito.junit.MockitoRule;
-import software.wings.beans.SettingAttribute;
-import software.wings.service.intfc.SettingsService;
-import software.wings.settings.SettingVariableTypes;
 
 public class CloudProviderSampleDataProviderTest extends CategoryTest {
   private String accountId = "ACCOUNT_ID";

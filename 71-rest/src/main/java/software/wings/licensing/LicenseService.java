@@ -1,11 +1,12 @@
 package software.wings.licensing;
 
 import io.harness.ccm.license.CeLicenseInfo;
-import org.hibernate.validator.constraints.NotEmpty;
+
 import software.wings.beans.Account;
 import software.wings.beans.LicenseInfo;
 
 import java.util.List;
+import org.hibernate.validator.constraints.NotEmpty;
 
 public interface LicenseService {
   String LICENSE_INFO = "LICENSE_INFO";

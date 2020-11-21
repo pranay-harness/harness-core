@@ -3,6 +3,7 @@ package software.wings.service.impl;
 import static io.harness.data.structure.CollectionUtils.emptyIfNull;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.encryption.EncryptionReflectUtils.getEncryptedRefField;
+
 import static software.wings.beans.SettingAttribute.SettingCategory.AZURE_ARTIFACTS;
 import static software.wings.beans.SettingAttribute.SettingCategory.CONNECTOR;
 import static software.wings.beans.SettingAttribute.SettingCategory.HELM_REPO;
@@ -48,10 +49,6 @@ import static software.wings.settings.SettingVariableTypes.SPOT_INST;
 import static software.wings.settings.SettingVariableTypes.SUMO;
 import static software.wings.settings.SettingVariableTypes.WINRM_CONNECTION_ATTRIBUTES;
 
-import com.google.common.collect.Sets;
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
-
 import io.harness.beans.Encryptable;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.encryption.EncryptionReflectUtils;
@@ -60,7 +57,7 @@ import io.harness.exception.UnauthorizedUsageRestrictionsException;
 import io.harness.exception.WingsException;
 import io.harness.reflection.ReflectionUtils;
 import io.harness.security.encryption.EncryptedDataDetail;
-import org.apache.commons.lang3.StringUtils;
+
 import software.wings.annotation.EncryptableSetting;
 import software.wings.beans.FeatureName;
 import software.wings.beans.SettingAttribute;
@@ -73,12 +70,16 @@ import software.wings.settings.SettingValue;
 import software.wings.settings.SettingVariableTypes;
 import software.wings.yaml.YamlHelper;
 
+import com.google.common.collect.Sets;
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
+import org.apache.commons.lang3.StringUtils;
 
 @Singleton
 public class SettingServiceHelper {
@@ -395,7 +396,9 @@ public class SettingServiceHelper {
       case CLOUD_PROVIDER: {
         return MANAGE_CLOUD_PROVIDERS;
       }
-      default: { return ACCOUNT_MANAGEMENT; }
+      default: {
+        return ACCOUNT_MANAGEMENT;
+      }
     }
   }
 }

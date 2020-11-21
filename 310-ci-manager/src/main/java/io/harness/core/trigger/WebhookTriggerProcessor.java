@@ -1,13 +1,12 @@
 package io.harness.core.trigger;
 
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
-
 import io.harness.beans.execution.WebhookExecutionSource;
 import io.harness.beans.executionargs.CIExecutionArgs;
 import io.harness.beans.inputset.WebhookTriggerExecutionInputSet;
 import io.harness.ci.beans.entities.BuildNumberDetails;
 
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import javax.ws.rs.core.HttpHeaders;
 
 @Singleton

@@ -3,11 +3,11 @@ package io.harness.functional.harnesscli;
 import static io.harness.functional.harnesscli.DeployFunctionalTest.getPipelineWithTwoStages;
 import static io.harness.functional.harnesscli.DeployFunctionalTest.getTemplateExpressions;
 import static io.harness.rule.OwnerRule.ROHIT;
-import static org.assertj.core.api.Assertions.assertThat;
+
 import static software.wings.beans.Variable.VariableBuilder.aVariable;
 import static software.wings.beans.VariableType.TEXT;
 
-import com.google.inject.Inject;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.category.element.CliFunctionalTests;
 import io.harness.functional.AbstractFunctionalTest;
@@ -21,11 +21,7 @@ import io.harness.rule.Owner;
 import io.harness.testframework.framework.utils.PipelineUtils;
 import io.harness.testframework.restutils.PipelineRestUtils;
 import io.harness.testframework.restutils.WorkflowRestUtils;
-import lombok.extern.slf4j.Slf4j;
-import org.junit.Before;
-import org.junit.Ignore;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
+
 import software.wings.beans.Pipeline;
 import software.wings.beans.PipelineStage;
 import software.wings.beans.Service;
@@ -33,12 +29,18 @@ import software.wings.beans.Variable;
 import software.wings.beans.Workflow;
 import software.wings.infra.InfrastructureDefinition;
 
+import com.google.inject.Inject;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import lombok.extern.slf4j.Slf4j;
+import org.junit.Before;
+import org.junit.Ignore;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 @Slf4j
 public class DeployInfoFunctionalTest extends AbstractFunctionalTest {

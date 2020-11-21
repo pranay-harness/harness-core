@@ -6,13 +6,14 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.SweepingOutputInstance;
 import io.harness.data.SweepingOutput;
 import io.harness.deployment.InstanceDetails;
-import org.mongodb.morphia.query.Query;
+
 import software.wings.api.InstanceElement;
 import software.wings.sm.StateExecutionInstance;
 
 import java.util.List;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
+import org.mongodb.morphia.query.Query;
 
 @OwnedBy(CDC)
 public interface SweepingOutputService {

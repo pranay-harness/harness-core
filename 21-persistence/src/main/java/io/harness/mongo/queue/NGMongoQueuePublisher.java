@@ -1,18 +1,18 @@
 package io.harness.mongo.queue;
 
+import static io.harness.manage.GlobalContextManager.obtainGlobalContext;
+
 import io.harness.logging.AutoLogRemoveContext;
 import io.harness.mongo.MessageLogContext;
 import io.harness.queue.Queuable;
 import io.harness.queue.QueuePublisher;
 import io.harness.queue.TopicUtils;
-import lombok.Getter;
-import org.springframework.dao.DuplicateKeyException;
-import org.springframework.data.mongodb.core.MongoTemplate;
 
 import java.util.List;
 import java.util.Objects;
-
-import static io.harness.manage.GlobalContextManager.obtainGlobalContext;
+import lombok.Getter;
+import org.springframework.dao.DuplicateKeyException;
+import org.springframework.data.mongodb.core.MongoTemplate;
 
 public class NGMongoQueuePublisher<T extends Queuable> implements QueuePublisher<T> {
   @Getter private final String name;

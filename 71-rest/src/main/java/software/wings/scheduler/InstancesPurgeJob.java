@@ -1,11 +1,20 @@
 package software.wings.scheduler;
 
+import io.harness.scheduler.BackgroundExecutorService;
+import io.harness.scheduler.PersistentScheduler;
+
+import software.wings.graphql.datafetcher.instance.InstanceTimeSeriesDataHelper;
+import software.wings.service.intfc.instance.InstanceService;
+import software.wings.service.intfc.instance.stats.InstanceStatService;
+
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Stopwatch;
 import com.google.inject.Inject;
-
-import io.harness.scheduler.BackgroundExecutorService;
-import io.harness.scheduler.PersistentScheduler;
+import java.time.Instant;
+import java.time.LocalDate;
+import java.time.ZoneOffset;
+import java.time.temporal.TemporalAdjusters;
+import java.util.concurrent.TimeUnit;
 import lombok.extern.slf4j.Slf4j;
 import org.quartz.CronScheduleBuilder;
 import org.quartz.DateBuilder;
@@ -16,15 +25,6 @@ import org.quartz.JobDetail;
 import org.quartz.JobExecutionContext;
 import org.quartz.Trigger;
 import org.quartz.TriggerBuilder;
-import software.wings.graphql.datafetcher.instance.InstanceTimeSeriesDataHelper;
-import software.wings.service.intfc.instance.InstanceService;
-import software.wings.service.intfc.instance.stats.InstanceStatService;
-
-import java.time.Instant;
-import java.time.LocalDate;
-import java.time.ZoneOffset;
-import java.time.temporal.TemporalAdjusters;
-import java.util.concurrent.TimeUnit;
 
 @DisallowConcurrentExecution
 @Slf4j
@@ -57,7 +57,7 @@ public class InstancesPurgeJob implements Job {
   @Override
   public void execute(JobExecutionContext jobExecutionContext) {
     log.info("Triggering instances and instance stats purge job asynchronously");
-    executorService.submit(this ::purge);
+    executorService.submit(this::purge);
   }
 
   @VisibleForTesting

@@ -1,14 +1,15 @@
 package software.wings.sm.states;
 
 import io.harness.security.encryption.EncryptedDataDetail;
-import lombok.Builder;
-import lombok.Data;
+
 import software.wings.api.AmiServiceSetupElement;
 import software.wings.beans.AwsConfig;
 import software.wings.service.impl.aws.model.AwsAmiResizeData;
 import software.wings.sm.ExecutionContext;
 
 import java.util.List;
+import lombok.Builder;
+import lombok.Data;
 
 @Data
 @Builder

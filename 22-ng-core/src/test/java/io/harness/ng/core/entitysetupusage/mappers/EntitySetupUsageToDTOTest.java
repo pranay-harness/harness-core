@@ -2,6 +2,7 @@ package io.harness.ng.core.entitysetupusage.mappers;
 
 import static io.harness.EntityType.CONNECTORS;
 import static io.harness.EntityType.SECRETS;
+
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.CategoryTest;
@@ -12,6 +13,7 @@ import io.harness.ng.core.entitysetupusage.dto.EntitySetupUsageDTO;
 import io.harness.ng.core.entitysetupusage.entity.EntitySetupUsage;
 import io.harness.rule.Owner;
 import io.harness.rule.OwnerRule;
+
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;

@@ -1,10 +1,9 @@
 package io.harness.perpetualtask;
 
+import java.util.Map;
 import lombok.Builder;
 import lombok.Value;
 import lombok.experimental.FieldNameConstants;
-
-import java.util.Map;
 
 @Value
 @Builder

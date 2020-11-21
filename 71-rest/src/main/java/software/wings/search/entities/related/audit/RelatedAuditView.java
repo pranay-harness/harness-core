@@ -3,12 +3,14 @@ package software.wings.search.entities.related.audit;
 import static io.harness.annotations.dev.HarnessTeam.PL;
 
 import io.harness.annotations.dev.OwnedBy;
+
+import software.wings.search.framework.EntityBaseView;
+
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.experimental.FieldNameConstants;
-import software.wings.search.framework.EntityBaseView;
 
 @OwnedBy(PL)
 @Data

@@ -2,9 +2,12 @@ package io.harness.testframework.graphql;
 
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
+import software.wings.graphql.schema.type.QLObject;
+
 import graphql.ExecutionInput;
 import graphql.ExecutionResult;
 import graphql.GraphQL;
+import java.util.LinkedHashMap;
 import org.dataloader.DataLoaderRegistry;
 import org.modelmapper.ModelMapper;
 import org.modelmapper.Provider;
@@ -12,9 +15,6 @@ import org.modelmapper.config.Configuration.AccessLevel;
 import org.modelmapper.convention.MatchingStrategies;
 import org.modelmapper.internal.objenesis.Objenesis;
 import org.modelmapper.internal.objenesis.ObjenesisStd;
-import software.wings.graphql.schema.type.QLObject;
-
-import java.util.LinkedHashMap;
 
 public interface GraphQLTestMixin {
   GraphQL getGraphQL();

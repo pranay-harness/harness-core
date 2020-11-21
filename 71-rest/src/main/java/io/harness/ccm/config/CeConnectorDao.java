@@ -1,15 +1,17 @@
 package io.harness.ccm.config;
 
 import static io.harness.persistence.HQuery.excludeValidate;
+
 import static software.wings.beans.SettingAttribute.SettingCategory.CE_CONNECTOR;
 
-import com.google.inject.Inject;
-
 import io.harness.persistence.HPersistence;
-import lombok.extern.slf4j.Slf4j;
+
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.SettingAttribute.SettingAttributeKeys;
 import software.wings.beans.ce.CEGcpConfig.CEGcpConfigKeys;
+
+import com.google.inject.Inject;
+import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class CeConnectorDao {

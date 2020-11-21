@@ -2,11 +2,6 @@ package migrations.all;
 
 import static java.util.stream.Collectors.toList;
 
-import com.google.inject.Inject;
-import com.google.inject.name.Named;
-
-import lombok.extern.slf4j.Slf4j;
-import migrations.Migration;
 import software.wings.beans.HarnessTag;
 import software.wings.beans.HarnessTag.HarnessTagKeys;
 import software.wings.dl.WingsPersistence;
@@ -14,7 +9,11 @@ import software.wings.features.TagsFeature;
 import software.wings.features.api.PremiumFeature;
 import software.wings.service.intfc.HarnessTagService;
 
+import com.google.inject.Inject;
+import com.google.inject.name.Named;
 import java.util.Collection;
+import lombok.extern.slf4j.Slf4j;
+import migrations.Migration;
 
 @Slf4j
 public class ConvertRestrictedTagsToNonRestrictedTagsForUnsupportedAccountTypes implements Migration {

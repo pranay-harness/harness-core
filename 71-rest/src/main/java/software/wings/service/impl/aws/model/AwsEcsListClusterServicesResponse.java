@@ -1,12 +1,12 @@
 package software.wings.service.impl.aws.model;
 
-import com.amazonaws.services.ecs.model.Service;
 import io.harness.beans.ExecutionStatus;
 import io.harness.delegate.beans.DelegateMetaInfo;
+
+import com.amazonaws.services.ecs.model.Service;
+import java.util.List;
 import lombok.Builder;
 import lombok.Data;
-
-import java.util.List;
 
 @Data
 @Builder

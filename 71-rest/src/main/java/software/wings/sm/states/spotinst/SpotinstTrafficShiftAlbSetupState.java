@@ -12,13 +12,11 @@ import static io.harness.spotinst.model.SpotInstConstants.SETUP_COMMAND_UNIT;
 import static io.harness.spotinst.model.SpotInstConstants.SPOTINST_SERVICE_ALB_SETUP_SWEEPING_OUTPUT_NAME;
 import static io.harness.spotinst.model.SpotInstConstants.defaultSteadyStateTimeout;
 import static io.harness.validation.Validator.notNullCheck;
-import static java.util.Collections.singletonList;
-import static org.apache.commons.lang3.StringUtils.isBlank;
+
 import static software.wings.sm.states.spotinst.SpotInstServiceSetup.SPOTINST_SERVICE_SETUP_COMMAND;
 
-import com.google.common.annotations.VisibleForTesting;
-import com.google.common.collect.ImmutableList;
-import com.google.inject.Inject;
+import static java.util.Collections.singletonList;
+import static org.apache.commons.lang3.StringUtils.isBlank;
 
 import io.harness.beans.DelegateTask;
 import io.harness.beans.ExecutionStatus;
@@ -35,9 +33,7 @@ import io.harness.logging.Misc;
 import io.harness.spotinst.model.ElastiGroup;
 import io.harness.spotinst.model.ElastiGroupCapacity;
 import io.harness.tasks.ResponseData;
-import lombok.Getter;
-import lombok.Setter;
-import lombok.extern.slf4j.Slf4j;
+
 import software.wings.api.PhaseElement;
 import software.wings.api.ServiceElement;
 import software.wings.beans.Activity;
@@ -57,9 +53,15 @@ import software.wings.sm.StateType;
 import software.wings.sm.states.spotinst.SpotinstTrafficShiftAlbSetupElement.SpotinstTrafficShiftAlbSetupElementBuilder;
 import software.wings.utils.ServiceVersionConvention;
 
+import com.google.common.annotations.VisibleForTesting;
+import com.google.common.collect.ImmutableList;
+import com.google.inject.Inject;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import lombok.Getter;
+import lombok.Setter;
+import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class SpotinstTrafficShiftAlbSetupState extends State {
@@ -180,7 +182,7 @@ public class SpotinstTrafficShiftAlbSetupState extends State {
 
     String finalElastigroupNamePrefix = isBlank(elastigroupNamePrefix)
         ? ServiceVersionConvention.getPrefix(
-              dataBag.getApp().getName(), serviceElement.getName(), dataBag.getEnv().getName())
+            dataBag.getApp().getName(), serviceElement.getName(), dataBag.getEnv().getName())
         : context.renderExpression(elastigroupNamePrefix);
     finalElastigroupNamePrefix = Misc.normalizeExpression(finalElastigroupNamePrefix);
 

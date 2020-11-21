@@ -1,9 +1,8 @@
 package io.harness.logging;
 
+import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
 import org.slf4j.MDC;
-
-import java.util.Map;
 
 @Slf4j
 public class AutoLogRemoveAllContext implements AutoCloseable {

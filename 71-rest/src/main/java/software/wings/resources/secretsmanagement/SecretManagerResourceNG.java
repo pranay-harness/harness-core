@@ -2,8 +2,6 @@ package software.wings.resources.secretsmanagement;
 
 import static io.harness.exception.WingsException.USER;
 
-import com.google.inject.Inject;
-
 import io.harness.NGCommonEntityConstants;
 import io.harness.beans.SecretManagerConfig;
 import io.harness.eraro.ErrorCode;
@@ -15,9 +13,11 @@ import io.harness.secretmanagerclient.dto.SecretManagerConfigUpdateDTO;
 import io.harness.secretmanagerclient.dto.SecretManagerMetadataDTO;
 import io.harness.secretmanagerclient.dto.SecretManagerMetadataRequestDTO;
 import io.harness.security.annotations.NextGenManagerAuth;
-import io.swagger.annotations.Api;
+
 import software.wings.service.intfc.security.NGSecretManagerService;
 
+import com.google.inject.Inject;
+import io.swagger.annotations.Api;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;

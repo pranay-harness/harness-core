@@ -2,11 +2,10 @@ package io.harness.ccm.billing;
 
 import com.healthmarketscience.sqlbuilder.Condition;
 import com.healthmarketscience.sqlbuilder.SqlObject;
-import org.apache.commons.math3.stat.regression.SimpleRegression;
-
 import java.math.BigDecimal;
 import java.util.Date;
 import java.util.List;
+import org.apache.commons.math3.stat.regression.SimpleRegression;
 
 public interface GcpBillingService {
   BigDecimal getTotalCost(List<Condition> conditions);

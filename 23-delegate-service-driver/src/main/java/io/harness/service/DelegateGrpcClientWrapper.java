@@ -1,13 +1,12 @@
 package io.harness.service;
 
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
-
 import io.harness.beans.DelegateTaskRequest;
 import io.harness.callback.DelegateCallbackToken;
 import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.grpc.DelegateServiceGrpcClient;
 
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import java.util.function.Supplier;
 
 @Singleton

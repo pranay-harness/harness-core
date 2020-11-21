@@ -2,9 +2,6 @@ package io.harness.beans;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.annotation.HarnessEntity;
 import io.harness.delegate.beans.executioncapability.ExecutionCapabilityDemander;
 import io.harness.iterator.PersistentRegularIterable;
@@ -25,6 +22,16 @@ import io.harness.security.encryption.EncryptionConfig;
 import io.harness.security.encryption.EncryptionType;
 import io.harness.security.encryption.SecretManagerType;
 import io.harness.validation.Update;
+
+import software.wings.security.ScopedEntity;
+import software.wings.security.UsageRestrictions;
+
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.github.reinert.jjschema.SchemaIgnore;
+import java.util.List;
+import java.util.Optional;
+import javax.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -36,12 +43,6 @@ import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Id;
 import org.mongodb.morphia.annotations.Transient;
-import software.wings.security.ScopedEntity;
-import software.wings.security.UsageRestrictions;
-
-import java.util.List;
-import java.util.Optional;
-import javax.validation.constraints.NotNull;
 
 /**
  * This is a shared persistent entity to track Secret Managers of different type (KMS/AWS Secrets Manager/Vault etc.) in

@@ -2,14 +2,13 @@ package io.harness.cvng.core.resources;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.rule.OwnerRule.KAMAL;
+
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.when;
 import static org.mockito.MockitoAnnotations.initMocks;
-
-import com.google.inject.Inject;
 
 import io.harness.CvNextGenTest;
 import io.harness.category.element.UnitTests;
@@ -18,18 +17,19 @@ import io.harness.cvng.core.services.api.SplunkService;
 import io.harness.cvng.exception.ValidationError;
 import io.harness.rule.Owner;
 import io.harness.rule.ResourceTestRule;
+
+import com.google.inject.Inject;
+import java.time.Duration;
+import java.util.List;
+import javax.ws.rs.core.GenericType;
+import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
 import org.apache.commons.lang3.reflect.FieldUtils;
 import org.junit.Before;
 import org.junit.ClassRule;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.Mock;
-
-import java.time.Duration;
-import java.util.List;
-import javax.ws.rs.core.GenericType;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.Response;
 
 public class SplunkResourceTest extends CvNextGenTest {
   @Inject private static SplunkResource splunkResource = new SplunkResource();

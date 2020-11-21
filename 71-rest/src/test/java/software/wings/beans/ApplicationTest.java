@@ -1,15 +1,18 @@
 package software.wings.beans;
 
 import static io.harness.rule.OwnerRule.RAMA;
+
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
 import io.harness.serializer.JsonUtils;
+
+import software.wings.WingsBaseTest;
+
 import lombok.extern.slf4j.Slf4j;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
-import software.wings.WingsBaseTest;
 
 /**
  * Test case.

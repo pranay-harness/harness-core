@@ -6,16 +6,9 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.event.model.EventConstants.EMAIL;
 import static io.harness.event.model.EventConstants.FIRST_NAME;
 import static io.harness.event.model.EventConstants.LAST_NAME;
+
 import static software.wings.beans.Account.GLOBAL_ACCOUNT_ID;
 
-import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableMap.Builder;
-import com.google.common.collect.Sets;
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
-
-import com.segment.analytics.messages.GroupMessage;
-import com.segment.analytics.messages.IdentifyMessage;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.SecretManagerConfig;
 import io.harness.ccm.license.CeLicenseInfo;
@@ -30,9 +23,7 @@ import io.harness.event.model.EventData;
 import io.harness.event.model.EventType;
 import io.harness.persistence.HPersistence;
 import io.harness.secretmanagers.SecretManagerConfigService;
-import lombok.NoArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.StringUtils;
+
 import software.wings.app.MainConfiguration;
 import software.wings.beans.Account;
 import software.wings.beans.AccountStatus;
@@ -47,11 +38,21 @@ import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.UserService;
 import software.wings.service.intfc.instance.stats.InstanceStatService;
 
+import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableMap.Builder;
+import com.google.common.collect.Sets;
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
+import com.segment.analytics.messages.GroupMessage;
+import com.segment.analytics.messages.IdentifyMessage;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import lombok.NoArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 
 @OwnedBy(PL)
 @NoArgsConstructor

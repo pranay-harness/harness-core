@@ -1,14 +1,25 @@
 package software.wings.resources;
 
 import static io.harness.rule.OwnerRule.VAIBHAV_SI;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
+
 import static software.wings.utils.WingsTestConstants.APP_ID;
 import static software.wings.utils.WingsTestConstants.PROVISIONER_ID;
 import static software.wings.utils.WingsTestConstants.PROVISIONER_NAME;
 
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+
 import io.harness.category.element.UnitTests;
 import io.harness.rest.RestResponse;
 import io.harness.rule.Owner;
+
+import software.wings.WingsBaseTest;
+import software.wings.beans.InfrastructureProvisioner;
+import software.wings.beans.TerraformInfrastructureProvisioner;
+import software.wings.service.intfc.InfrastructureProvisionerService;
+import software.wings.utils.ResourceTestRule;
+import software.wings.utils.WingsTestConstants;
+
+import javax.ws.rs.core.GenericType;
 import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
@@ -18,14 +29,6 @@ import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.MockitoJUnit;
 import org.mockito.junit.MockitoRule;
-import software.wings.WingsBaseTest;
-import software.wings.beans.InfrastructureProvisioner;
-import software.wings.beans.TerraformInfrastructureProvisioner;
-import software.wings.service.intfc.InfrastructureProvisionerService;
-import software.wings.utils.ResourceTestRule;
-import software.wings.utils.WingsTestConstants;
-
-import javax.ws.rs.core.GenericType;
 
 public class InfrastructureProvisionerResourceTest extends WingsBaseTest {
   @Rule public MockitoRule mockitoRule = MockitoJUnit.rule();

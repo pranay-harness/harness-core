@@ -3,16 +3,11 @@ package software.wings.service.impl.instance;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
-import com.google.common.collect.Sets;
-import com.google.common.collect.Sets.SetView;
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
-
 import io.harness.beans.ExecutionStatus;
 import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.exception.InvalidRequestException;
 import io.harness.validation.Validator;
-import lombok.extern.slf4j.Slf4j;
+
 import software.wings.api.CustomDeploymentTypeInfo;
 import software.wings.api.DeploymentInfo;
 import software.wings.api.DeploymentSummary;
@@ -40,6 +35,10 @@ import software.wings.sm.StepExecutionSummary;
 import software.wings.sm.states.customdeployment.InstanceMapperUtils;
 import software.wings.sm.states.customdeployment.InstanceMapperUtils.HostProperties;
 
+import com.google.common.collect.Sets;
+import com.google.common.collect.Sets.SetView;
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -47,6 +46,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+import lombok.extern.slf4j.Slf4j;
 
 @Singleton
 @Slf4j

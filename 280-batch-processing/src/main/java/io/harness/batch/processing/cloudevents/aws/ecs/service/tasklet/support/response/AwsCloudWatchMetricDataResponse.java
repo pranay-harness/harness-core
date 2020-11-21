@@ -1,13 +1,14 @@
 package io.harness.batch.processing.cloudevents.aws.ecs.service.tasklet.support.response;
 
-import com.amazonaws.services.cloudwatch.model.MetricDataResult;
 import io.harness.beans.ExecutionStatus;
 import io.harness.delegate.beans.DelegateMetaInfo;
-import lombok.Builder;
-import lombok.Data;
+
 import software.wings.service.impl.aws.model.AwsResponse;
 
+import com.amazonaws.services.cloudwatch.model.MetricDataResult;
 import java.util.List;
+import lombok.Builder;
+import lombok.Data;
 
 @Data
 public class AwsCloudWatchMetricDataResponse implements AwsResponse {

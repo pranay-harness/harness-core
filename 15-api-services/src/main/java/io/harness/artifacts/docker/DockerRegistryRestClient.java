@@ -7,6 +7,7 @@ import io.harness.artifacts.docker.beans.DockerImageManifestResponse;
 import io.harness.artifacts.docker.beans.DockerPublicImageTagResponse;
 import io.harness.artifacts.docker.service.DockerRegistryServiceImpl.DockerImageTagResponse;
 import io.harness.artifacts.docker.service.DockerRegistryServiceImpl.DockerRegistryToken;
+
 import retrofit2.Call;
 import retrofit2.http.GET;
 import retrofit2.http.Header;

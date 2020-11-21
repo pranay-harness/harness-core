@@ -2,10 +2,12 @@ package io.harness.notifications;
 
 import io.harness.notifications.conditions.CVFilterMatcher;
 import io.harness.notifications.conditions.ManualInterventionFilterMatcher;
-import lombok.extern.slf4j.Slf4j;
+
 import software.wings.beans.alert.Alert;
 import software.wings.beans.alert.AlertFilter;
 import software.wings.beans.alert.AlertNotificationRule;
+
+import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class AlertNotificationRuleCheckerImpl implements AlertNotificationRuleChecker {

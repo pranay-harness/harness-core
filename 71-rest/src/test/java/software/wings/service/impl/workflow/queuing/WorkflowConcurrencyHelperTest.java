@@ -2,8 +2,7 @@ package software.wings.service.impl.workflow.queuing;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.rule.OwnerRule.PRASHANT;
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.Mockito.when;
+
 import static software.wings.common.InfrastructureConstants.RC_INFRA_STEP_NAME;
 import static software.wings.infra.InfraDefinitionTestConstants.RESOURCE_CONSTRAINT_NAME;
 import static software.wings.service.impl.workflow.WorkflowServiceTestHelper.constructCanaryWorkflowWithConcurrencyStrategy;
@@ -12,17 +11,14 @@ import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 import static software.wings.utils.WingsTestConstants.APP_ID;
 import static software.wings.utils.WingsTestConstants.INFRA_DEFINITION_ID;
 
-import com.google.inject.Inject;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.when;
 
 import io.harness.category.element.UnitTests;
 import io.harness.distribution.constraint.Constraint.Strategy;
 import io.harness.rule.Owner;
 import io.harness.steps.resourcerestraint.beans.ResourceConstraint;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
+
 import software.wings.WingsBaseTest;
 import software.wings.beans.CanaryOrchestrationWorkflow;
 import software.wings.beans.Workflow;
@@ -32,8 +28,14 @@ import software.wings.service.impl.workflow.WorkflowServiceTestHelper;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ResourceConstraintService;
 
+import com.google.inject.Inject;
 import java.util.HashMap;
 import java.util.List;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
 
 public class WorkflowConcurrencyHelperTest extends WingsBaseTest {
   @Mock private ResourceConstraintService resourceConstraintService;

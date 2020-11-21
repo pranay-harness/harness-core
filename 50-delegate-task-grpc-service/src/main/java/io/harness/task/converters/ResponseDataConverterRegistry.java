@@ -1,10 +1,9 @@
 package io.harness.task.converters;
 
-import com.google.inject.Singleton;
-
 import io.harness.exception.InvalidArgumentsException;
 import io.harness.task.service.TaskType;
 
+import com.google.inject.Singleton;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 

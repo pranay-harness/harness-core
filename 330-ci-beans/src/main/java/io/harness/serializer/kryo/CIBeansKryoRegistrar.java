@@ -1,6 +1,5 @@
 package io.harness.serializer.kryo;
 
-import com.esotericsoftware.kryo.Kryo;
 import io.harness.beans.CIPipelineSetupParameters;
 import io.harness.beans.build.CIPipelineDetails;
 import io.harness.beans.build.PublishedArtifact;
@@ -62,6 +61,7 @@ import io.harness.ci.stdvars.BuildStandardVariables;
 import io.harness.ci.stdvars.GitVariables;
 import io.harness.serializer.KryoRegistrar;
 
+import com.esotericsoftware.kryo.Kryo;
 import java.util.LinkedHashSet;
 
 /**

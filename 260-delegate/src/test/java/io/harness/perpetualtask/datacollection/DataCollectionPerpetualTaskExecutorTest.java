@@ -2,6 +2,7 @@ package io.harness.perpetualtask.datacollection;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.rule.OwnerRule.KAMAL;
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.joor.Reflect.on;
 import static org.mockito.Matchers.any;
@@ -10,12 +11,6 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-
-import com.google.common.collect.Lists;
-import com.google.common.collect.Sets;
-import com.google.inject.Inject;
-import com.google.protobuf.Any;
-import com.google.protobuf.ByteString;
 
 import io.harness.DelegateTest;
 import io.harness.category.element.UnitTests;
@@ -39,6 +34,17 @@ import io.harness.rule.Owner;
 import io.harness.security.encryption.SecretDecryptionService;
 import io.harness.serializer.KryoSerializer;
 import io.harness.verificationclient.CVNextGenServiceClient;
+
+import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
+import com.google.inject.Inject;
+import com.google.protobuf.Any;
+import com.google.protobuf.ByteString;
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.time.Instant;
+import java.util.List;
+import java.util.Map;
 import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.lang3.reflect.FieldUtils;
 import org.junit.Before;
@@ -51,12 +57,6 @@ import org.mockito.junit.MockitoJUnit;
 import org.mockito.junit.MockitoRule;
 import retrofit2.Call;
 import retrofit2.Response;
-
-import java.io.IOException;
-import java.nio.charset.StandardCharsets;
-import java.time.Instant;
-import java.util.List;
-import java.util.Map;
 
 public class DataCollectionPerpetualTaskExecutorTest extends DelegateTest {
   @Rule public MockitoRule mockitoRule = MockitoJUnit.rule();
@@ -176,11 +176,10 @@ public class DataCollectionPerpetualTaskExecutorTest extends DelegateTest {
     assertThat(runtimeParameters.getCommonHeaders().get("Authorization"))
         .isEqualTo("Basic "
             + Base64.encodeBase64String(
-                  String
-                      .format("%s@%s:%s", appDynamicsConnectorDTO.getUsername(),
-                          appDynamicsConnectorDTO.getAccountname(),
-                          new String(appDynamicsConnectorDTO.getPasswordRef().getDecryptedValue()))
-                      .getBytes(StandardCharsets.UTF_8)));
+                String
+                    .format("%s@%s:%s", appDynamicsConnectorDTO.getUsername(), appDynamicsConnectorDTO.getAccountname(),
+                        new String(appDynamicsConnectorDTO.getPasswordRef().getDecryptedValue()))
+                    .getBytes(StandardCharsets.UTF_8)));
     Map<String, Object> otherEnvVariables = runtimeParameters.getOtherEnvVariables();
     assertThat(otherEnvVariables.size()).isEqualTo(4);
     assertThat(otherEnvVariables.get("applicationName")).isEqualTo(dataCollectionInfo.getApplicationName());

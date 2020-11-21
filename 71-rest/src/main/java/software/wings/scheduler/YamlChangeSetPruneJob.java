@@ -1,17 +1,29 @@
 package software.wings.scheduler;
 
 import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
+
 import static software.wings.yaml.gitSync.YamlChangeSet.Status.COMPLETED;
 import static software.wings.yaml.gitSync.YamlChangeSet.Status.FAILED;
 import static software.wings.yaml.gitSync.YamlChangeSet.Status.SKIPPED;
-
-import com.google.inject.Inject;
-import com.google.inject.name.Named;
 
 import io.harness.exception.WingsException;
 import io.harness.lock.AcquiredLock;
 import io.harness.lock.PersistentLocker;
 import io.harness.scheduler.PersistentScheduler;
+
+import software.wings.beans.Account;
+import software.wings.service.intfc.AccountService;
+import software.wings.service.intfc.yaml.YamlChangeSetService;
+import software.wings.yaml.gitSync.YamlChangeSet;
+import software.wings.yaml.gitSync.YamlChangeSet.Status;
+
+import com.google.inject.Inject;
+import com.google.inject.name.Named;
+import java.time.Duration;
+import java.time.OffsetDateTime;
+import java.util.Date;
+import java.util.List;
+import java.util.concurrent.ExecutorService;
 import lombok.extern.slf4j.Slf4j;
 import org.quartz.Job;
 import org.quartz.JobBuilder;
@@ -20,17 +32,6 @@ import org.quartz.JobExecutionContext;
 import org.quartz.SimpleScheduleBuilder;
 import org.quartz.Trigger;
 import org.quartz.TriggerBuilder;
-import software.wings.beans.Account;
-import software.wings.service.intfc.AccountService;
-import software.wings.service.intfc.yaml.YamlChangeSetService;
-import software.wings.yaml.gitSync.YamlChangeSet;
-import software.wings.yaml.gitSync.YamlChangeSet.Status;
-
-import java.time.Duration;
-import java.time.OffsetDateTime;
-import java.util.Date;
-import java.util.List;
-import java.util.concurrent.ExecutorService;
 
 @Slf4j
 public class YamlChangeSetPruneJob implements Job {

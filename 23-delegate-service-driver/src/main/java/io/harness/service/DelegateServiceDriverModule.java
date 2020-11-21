@@ -1,13 +1,13 @@
 package io.harness.service;
 
-import com.google.inject.AbstractModule;
-
 import io.harness.service.impl.DelegateAsyncServiceImpl;
 import io.harness.service.impl.DelegateProgressServiceImpl;
 import io.harness.service.impl.DelegateSyncServiceImpl;
 import io.harness.service.intfc.DelegateAsyncService;
 import io.harness.service.intfc.DelegateProgressService;
 import io.harness.service.intfc.DelegateSyncService;
+
+import com.google.inject.AbstractModule;
 
 public class DelegateServiceDriverModule extends AbstractModule {
   private static volatile DelegateServiceDriverModule instance;

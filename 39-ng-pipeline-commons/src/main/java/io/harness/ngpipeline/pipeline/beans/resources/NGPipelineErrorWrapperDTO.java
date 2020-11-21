@@ -1,10 +1,9 @@
 package io.harness.ngpipeline.pipeline.beans.resources;
 
 import io.swagger.annotations.ApiModel;
+import java.util.Map;
 import lombok.Builder;
 import lombok.Value;
-
-import java.util.Map;
 
 @Value
 @Builder

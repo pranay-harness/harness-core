@@ -1,6 +1,7 @@
 package software.wings.graphql.datafetcher.user;
 
 import static io.harness.rule.OwnerRule.VARDAN_BANSAL;
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
@@ -8,10 +9,16 @@ import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
-import graphql.schema.DataFetchingEnvironment;
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
+
+import software.wings.graphql.datafetcher.MutationContext;
+import software.wings.graphql.schema.type.user.QLDeleteUserInput;
+import software.wings.graphql.schema.type.user.QLDeleteUserPayload;
+import software.wings.service.intfc.UserService;
+
+import graphql.schema.DataFetchingEnvironment;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -20,10 +27,6 @@ import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
 import org.mockito.Spy;
-import software.wings.graphql.datafetcher.MutationContext;
-import software.wings.graphql.schema.type.user.QLDeleteUserInput;
-import software.wings.graphql.schema.type.user.QLDeleteUserPayload;
-import software.wings.service.intfc.UserService;
 
 public class DeleteUserDataFetcherTest extends CategoryTest {
   @Mock UserService userService;

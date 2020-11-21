@@ -1,12 +1,12 @@
 package software.wings.yaml.directory;
 
-import lombok.Getter;
-import lombok.Setter;
 import software.wings.service.intfc.yaml.YamlGitService;
 import software.wings.yaml.gitSync.YamlGitConfig;
 
 import java.util.ArrayList;
 import java.util.List;
+import lombok.Getter;
+import lombok.Setter;
 
 public class FolderNode extends DirectoryNode {
   private boolean defaultToClosed;

@@ -1,10 +1,11 @@
 package software.wings.graphql.schema.type.aggregation.environment;
 
-import lombok.Builder;
-import lombok.Value;
 import software.wings.graphql.schema.type.QLEnvironmentType;
 import software.wings.graphql.schema.type.aggregation.Filter;
 import software.wings.graphql.schema.type.aggregation.QLEnumOperator;
+
+import lombok.Builder;
+import lombok.Value;
 
 /**
  * @author rktummala on 07/18/19

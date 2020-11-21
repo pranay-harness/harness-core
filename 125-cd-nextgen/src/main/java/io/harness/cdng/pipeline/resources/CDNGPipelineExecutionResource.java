@@ -1,7 +1,5 @@
 package io.harness.cdng.pipeline.resources;
 
-import com.google.inject.Inject;
-
 import io.harness.NGCommonEntityConstants;
 import io.harness.beans.EmbeddedUser;
 import io.harness.cdng.pipeline.beans.CDPipelineValidationInfo;
@@ -14,6 +12,8 @@ import io.harness.ng.core.dto.ResponseDTO;
 import io.harness.ngpipeline.inputset.beans.resource.MergeInputSetRequestDTO;
 import io.harness.ngpipeline.pipeline.beans.resources.NGPipelineExecutionResponseDTO;
 import io.harness.ngpipeline.pipeline.beans.yaml.NgPipeline;
+
+import com.google.inject.Inject;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiImplicitParam;
 import io.swagger.annotations.ApiImplicitParams;
@@ -21,11 +21,6 @@ import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
-import lombok.AccessLevel;
-import lombok.AllArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-import org.hibernate.validator.constraints.NotEmpty;
-
 import java.io.IOException;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
@@ -37,6 +32,10 @@ import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
+import lombok.AccessLevel;
+import lombok.AllArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.hibernate.validator.constraints.NotEmpty;
 
 @Api("pipelines")
 @Path("pipelines/execute")

@@ -2,9 +2,6 @@ package io.harness;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 
-import com.google.inject.AbstractModule;
-import com.google.inject.multibindings.MapBinder;
-
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.registrars.OrchestrationVisualizationModuleEventHandlerRegistrar;
 import io.harness.registries.registrar.OrchestrationEventHandlerRegistrar;
@@ -12,6 +9,9 @@ import io.harness.service.GraphGenerationService;
 import io.harness.service.impl.GraphGenerationServiceImpl;
 import io.harness.skip.service.VertexSkipperService;
 import io.harness.skip.service.impl.VertexSkipperServiceImpl;
+
+import com.google.inject.AbstractModule;
+import com.google.inject.multibindings.MapBinder;
 
 @OwnedBy(CDC)
 public class OrchestrationVisualizationModule extends AbstractModule {

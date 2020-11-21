@@ -2,26 +2,13 @@ package software.wings.graphql.datafetcher.billing;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+
 import static software.wings.beans.FeatureName.CE_BILLING_DATA_PRE_AGGREGATION;
 
-import com.google.common.collect.ImmutableSet;
-import com.google.inject.Inject;
-
-import com.healthmarketscience.sqlbuilder.BinaryCondition;
-import com.healthmarketscience.sqlbuilder.Converter;
-import com.healthmarketscience.sqlbuilder.CustomExpression;
-import com.healthmarketscience.sqlbuilder.FunctionCall;
-import com.healthmarketscience.sqlbuilder.InCondition;
-import com.healthmarketscience.sqlbuilder.OrderObject;
-import com.healthmarketscience.sqlbuilder.OrderObject.Dir;
-import com.healthmarketscience.sqlbuilder.SelectQuery;
-import com.healthmarketscience.sqlbuilder.UnaryCondition;
-import com.healthmarketscience.sqlbuilder.dbspec.basic.DbColumn;
-import io.fabric8.utils.Lists;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
-import lombok.extern.slf4j.Slf4j;
+
 import software.wings.beans.EntityType;
 import software.wings.graphql.datafetcher.billing.BillingDataQueryMetadata.BillingDataMetaDataFields;
 import software.wings.graphql.datafetcher.billing.BillingDataQueryMetadata.BillingDataQueryMetadataBuilder;
@@ -56,6 +43,19 @@ import software.wings.graphql.schema.type.aggregation.billing.QLTimeGroupType;
 import software.wings.service.impl.EnvironmentServiceImpl;
 import software.wings.service.intfc.FeatureFlagService;
 
+import com.google.common.collect.ImmutableSet;
+import com.google.inject.Inject;
+import com.healthmarketscience.sqlbuilder.BinaryCondition;
+import com.healthmarketscience.sqlbuilder.Converter;
+import com.healthmarketscience.sqlbuilder.CustomExpression;
+import com.healthmarketscience.sqlbuilder.FunctionCall;
+import com.healthmarketscience.sqlbuilder.InCondition;
+import com.healthmarketscience.sqlbuilder.OrderObject;
+import com.healthmarketscience.sqlbuilder.OrderObject.Dir;
+import com.healthmarketscience.sqlbuilder.SelectQuery;
+import com.healthmarketscience.sqlbuilder.UnaryCondition;
+import com.healthmarketscience.sqlbuilder.dbspec.basic.DbColumn;
+import io.fabric8.utils.Lists;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZoneId;
@@ -69,6 +69,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.StringTokenizer;
 import java.util.stream.Collectors;
+import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class BillingDataQueryBuilder {
@@ -118,7 +119,7 @@ public class BillingDataQueryBuilder {
 
     if (addInstanceTypeFilter && !checkForAdditionalFilterInClusterDrillDown(filters)
         && ((isGroupByClusterPresent(groupBy) && !isClusterDrilldown(groupBy))
-               || isNoneGroupBySelectedWithoutFilterInClusterView(groupBy, filters) || isEfficiencyStatsQuery)) {
+            || isNoneGroupBySelectedWithoutFilterInClusterView(groupBy, filters) || isEfficiencyStatsQuery)) {
       addInstanceTypeFilter(filters);
     }
 
@@ -1580,7 +1581,7 @@ public class BillingDataQueryBuilder {
             || aggregationFunction.getColumnName().equals(schema.getEffectiveMemoryRequest().getColumnNameSQL())
             || aggregationFunction.getColumnName().equals(schema.getEffectiveCpuUtilizationValue().getColumnNameSQL())
             || aggregationFunction.getColumnName().equals(
-                   schema.getEffectiveMemoryUtilizationValue().getColumnNameSQL()));
+                schema.getEffectiveMemoryUtilizationValue().getColumnNameSQL()));
   }
 
   private List<QLCCMAggregationFunction> getSupportedAggregations(List<QLCCMAggregationFunction> aggregationFunctions) {

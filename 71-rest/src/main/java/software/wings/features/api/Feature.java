@@ -1,3 +1,5 @@
 package software.wings.features.api;
 
-public interface Feature { String getFeatureName(); }
+public interface Feature {
+  String getFeatureName();
+}

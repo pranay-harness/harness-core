@@ -18,11 +18,9 @@ import static io.harness.common.CIExecutionConstants.LOG_SERVICE_ENDPOINT_VARIAB
 import static io.harness.common.CIExecutionConstants.LOG_SERVICE_TOKEN_VARIABLE;
 import static io.harness.common.CIExecutionConstants.SECRET_KEY_MINIO_VARIABLE;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+
 import static java.util.Collections.singletonList;
 import static java.util.stream.Collectors.toList;
-
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
 
 import io.harness.ambiance.Ambiance;
 import io.harness.beans.environment.K8BuildJobEnvInfo;
@@ -66,10 +64,9 @@ import io.harness.yaml.extended.ci.codebase.CodeBase;
 import io.harness.yaml.extended.ci.codebase.CodeBaseSpec;
 import io.harness.yaml.extended.ci.codebase.CodeBaseType;
 import io.harness.yaml.extended.ci.codebase.impl.GitHubCodeBase;
-import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.codec.binary.Base64;
-import org.jetbrains.annotations.NotNull;
 
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
@@ -78,6 +75,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.codec.binary.Base64;
+import org.jetbrains.annotations.NotNull;
 
 @Singleton
 @Slf4j

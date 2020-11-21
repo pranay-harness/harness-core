@@ -4,13 +4,10 @@ import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.validation.Validator.equalCheck;
 
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
-
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.exception.InvalidArgumentsException;
 import io.harness.security.encryption.EncryptedDataDetail;
-import org.apache.commons.lang3.tuple.ImmutablePair;
+
 import software.wings.beans.AzureConfig;
 import software.wings.beans.AzureImageDefinition;
 import software.wings.beans.artifact.ArtifactStreamAttributes;
@@ -20,12 +17,15 @@ import software.wings.helpers.ext.azure.AzureHelperService;
 import software.wings.helpers.ext.jenkins.BuildDetails;
 import software.wings.service.intfc.AzureMachineImageBuildService;
 
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
+import org.apache.commons.lang3.tuple.ImmutablePair;
 
 @OwnedBy(CDC)
 @Singleton

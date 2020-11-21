@@ -1,17 +1,20 @@
 package io.harness;
 
 import static io.harness.rule.OwnerRule.RUSHABH;
+
 import static org.assertj.core.api.Assertions.assertThat;
 
-import graphql.schema.CoercingParseLiteralException;
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
+
+import software.wings.WingsBaseTest;
+import software.wings.graphql.scalar.NumberScalar;
+
+import graphql.schema.CoercingParseLiteralException;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.junit.rules.ExpectedException;
-import software.wings.WingsBaseTest;
-import software.wings.graphql.scalar.NumberScalar;
 
 public class NumberScalarTest extends WingsBaseTest {
   @Rule public ExpectedException thrown = ExpectedException.none();

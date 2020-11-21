@@ -1,20 +1,16 @@
 package software.wings.sm.states;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
+
 import static software.wings.api.GcpClusterExecutionData.GcpClusterExecutionDataBuilder.aGcpClusterExecutionData;
 import static software.wings.sm.StateType.GCP_CLUSTER_SETUP;
 
-import com.google.common.collect.ImmutableMap;
-import com.google.inject.Inject;
-
-import com.github.reinert.jjschema.Attributes;
 import io.harness.beans.ExecutionStatus;
 import io.harness.context.ContextElementType;
 import io.harness.exception.InvalidRequestException;
 import io.harness.k8s.KubernetesConvention;
 import io.harness.security.encryption.EncryptedDataDetail;
-import lombok.extern.slf4j.Slf4j;
-import org.mongodb.morphia.annotations.Transient;
+
 import software.wings.annotation.EncryptableSetting;
 import software.wings.api.ClusterElement;
 import software.wings.api.DeploymentType;
@@ -33,7 +29,12 @@ import software.wings.sm.ExecutionResponse;
 import software.wings.sm.State;
 import software.wings.sm.WorkflowStandardParams;
 
+import com.github.reinert.jjschema.Attributes;
+import com.google.common.collect.ImmutableMap;
+import com.google.inject.Inject;
 import java.util.List;
+import lombok.extern.slf4j.Slf4j;
+import org.mongodb.morphia.annotations.Transient;
 /**
  * Created by brett on 4/14/17
  */
@@ -90,7 +91,7 @@ public class GcpClusterSetup extends State {
 
     String clusterName = "harness-"
         + KubernetesConvention.getKubernetesServiceName(
-              KubernetesConvention.getControllerNamePrefix(app.getName(), serviceName, env));
+            KubernetesConvention.getControllerNamePrefix(app.getName(), serviceName, env));
     String zoneCluster = zone + "/" + clusterName;
 
     gkeClusterService.createCluster(computeProviderSetting, encryptionDetails, zoneCluster,

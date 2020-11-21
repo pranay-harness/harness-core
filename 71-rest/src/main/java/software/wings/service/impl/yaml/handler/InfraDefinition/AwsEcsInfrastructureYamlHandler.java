@@ -1,9 +1,8 @@
 package software.wings.service.impl.yaml.handler.InfraDefinition;
 
 import static io.harness.validation.Validator.notNullCheck;
-import static java.lang.String.format;
 
-import com.google.inject.Inject;
+import static java.lang.String.format;
 
 import software.wings.beans.InfrastructureType;
 import software.wings.beans.SettingAttribute;
@@ -13,6 +12,7 @@ import software.wings.infra.AwsEcsInfrastructure.Yaml;
 import software.wings.service.impl.yaml.handler.CloudProviderInfrastructure.CloudProviderInfrastructureYamlHandler;
 import software.wings.service.intfc.SettingsService;
 
+import com.google.inject.Inject;
 import java.util.List;
 
 public class AwsEcsInfrastructureYamlHandler

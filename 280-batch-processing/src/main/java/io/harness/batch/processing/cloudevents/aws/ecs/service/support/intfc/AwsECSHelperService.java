@@ -1,12 +1,12 @@
 package io.harness.batch.processing.cloudevents.aws.ecs.service.support.intfc;
 
+import software.wings.beans.AwsCrossAccountAttributes;
+
 import com.amazonaws.services.ecs.model.ContainerInstance;
 import com.amazonaws.services.ecs.model.ContainerInstanceStatus;
 import com.amazonaws.services.ecs.model.DesiredStatus;
 import com.amazonaws.services.ecs.model.Service;
 import com.amazonaws.services.ecs.model.Task;
-import software.wings.beans.AwsCrossAccountAttributes;
-
 import java.util.List;
 
 public interface AwsECSHelperService {

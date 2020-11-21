@@ -4,10 +4,8 @@ import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.gitsync.gitsyncerror.beans.GitSyncError.GitSyncDirection.GIT_TO_HARNESS;
 import static io.harness.gitsync.gitsyncerror.beans.GitSyncError.GitSyncDirection.HARNESS_TO_GIT;
 import static io.harness.gitsync.gitsyncerror.utils.GitSyncErrorUtils.getCommitIdOfError;
-import static org.apache.commons.collections4.ListUtils.emptyIfNull;
 
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
+import static org.apache.commons.collections4.ListUtils.emptyIfNull;
 
 import io.harness.delegate.beans.git.YamlGitConfigDTO;
 import io.harness.git.model.GitFileChange;
@@ -21,13 +19,15 @@ import io.harness.gitsync.gitsyncerror.beans.GitToHarnessErrorDetails;
 import io.harness.gitsync.gitsyncerror.beans.HarnessToGitErrorDetails;
 import io.harness.gitsync.gitsyncerror.dao.api.repositories.gitSyncError.GitSyncErrorRepository;
 import io.harness.gitsync.gitsyncerror.service.GitSyncErrorService;
-import lombok.AllArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.EnumSet;
 import java.util.List;
+import lombok.AllArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 @Singleton
 @AllArgsConstructor(onConstructor = @__({ @Inject }))

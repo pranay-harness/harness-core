@@ -3,10 +3,9 @@ package io.harness.jobs;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
+
 import static software.wings.beans.FeatureName.DISABLE_LOGML_NEURAL_NET;
 import static software.wings.common.VerificationConstants.GET_LOG_FEEDBACKS;
-
-import com.google.common.collect.Lists;
 
 import io.harness.beans.ExecutionStatus;
 import io.harness.exception.ExceptionUtils;
@@ -14,7 +13,7 @@ import io.harness.managerclient.VerificationManagerClient;
 import io.harness.managerclient.VerificationManagerClientHelper;
 import io.harness.service.intfc.LearningEngineService;
 import io.harness.service.intfc.LogAnalysisService;
-import lombok.extern.slf4j.Slf4j;
+
 import software.wings.common.VerificationConstants;
 import software.wings.service.impl.VerificationLogContext;
 import software.wings.service.impl.analysis.AnalysisComparisonStrategy;
@@ -32,10 +31,12 @@ import software.wings.sm.StateType;
 import software.wings.verification.VerificationDataAnalysisResponse;
 import software.wings.verification.VerificationStateAnalysisExecutionData;
 
+import com.google.common.collect.Lists;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * Created by sriram_parthasarathy on 8/23/17.
@@ -98,7 +99,7 @@ public class LogMLAnalysisGenerator implements Runnable {
       // TODO fix this
       if (context.getComparisonStrategy() == AnalysisComparisonStrategy.COMPARE_WITH_CURRENT
           && !analysisService.isLogDataCollected(
-                 applicationId, context.getStateExecutionId(), query, logAnalysisMinute, context.getStateType())) {
+              applicationId, context.getStateExecutionId(), query, logAnalysisMinute, context.getStateType())) {
         log.warn("No data collected for minute " + logAnalysisMinute + " for application: " + applicationId
             + " stateExecution: " + context.getStateExecutionId() + ". No ML analysis will be run this minute");
         return;

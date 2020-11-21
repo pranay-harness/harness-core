@@ -2,12 +2,12 @@ package io.harness.perpetualtask.k8s.metrics.collector;
 
 import static com.google.common.base.Preconditions.checkState;
 
+import io.harness.grpc.utils.HTimestamps;
+
 import com.google.protobuf.Duration;
 import com.google.protobuf.Timestamp;
 import com.google.protobuf.util.Durations;
 import com.google.protobuf.util.Timestamps;
-
-import io.harness.grpc.utils.HTimestamps;
 import lombok.Getter;
 
 class Aggregates {

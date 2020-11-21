@@ -1,13 +1,11 @@
 package io.harness.reflection;
 
 import static io.harness.exception.WingsException.USER_SRE;
+
 import static java.lang.String.format;
 
 import io.harness.exception.InvalidArgumentsException;
 import io.harness.expression.ExpressionReflectionUtils;
-import lombok.NonNull;
-import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.reflect.FieldUtils;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
@@ -23,6 +21,9 @@ import java.util.Map;
 import java.util.Set;
 import java.util.function.Predicate;
 import javax.annotation.Nonnull;
+import lombok.NonNull;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.reflect.FieldUtils;
 
 @Slf4j
 public class ReflectionUtils {
@@ -60,7 +61,9 @@ public class ReflectionUtils {
     return declaredFields;
   }
 
-  public interface Functor<T extends Annotation> { String update(T annotation, String o); }
+  public interface Functor<T extends Annotation> {
+    String update(T annotation, String o);
+  }
 
   public static <T extends Annotation> void updateAnnotatedField(Class<T> cls, Object o, Functor<T> functor) {
     Class<?> c = o.getClass();

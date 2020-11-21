@@ -2,6 +2,7 @@ package software.wings.graphql.datafetcher.cloudProvider;
 
 import static io.harness.rule.OwnerRule.BOJANA;
 import static io.harness.rule.OwnerRule.IGOR;
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
@@ -9,12 +10,7 @@ import io.harness.category.element.UnitTests;
 import io.harness.exception.InvalidRequestException;
 import io.harness.rule.Owner;
 import io.harness.utils.RequestField;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
+
 import software.wings.WingsBaseTest;
 import software.wings.beans.AwsConfig;
 import software.wings.beans.SettingAttribute;
@@ -28,6 +24,12 @@ import software.wings.graphql.schema.mutation.cloudProvider.aws.QLUpdateAwsManua
 import software.wings.graphql.schema.type.cloudProvider.aws.QLAwsCredentialsType;
 
 import java.sql.SQLException;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
 
 public class AwsDataFetcherHelperTest extends WingsBaseTest {
   private static final String NAME = "K8S";

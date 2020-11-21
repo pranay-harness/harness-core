@@ -1,10 +1,5 @@
 package io.harness.rules;
 
-import com.google.common.collect.ImmutableSet;
-import com.google.inject.Injector;
-import com.google.inject.Module;
-
-import io.dropwizard.Configuration;
 import io.harness.VerificationBaseIntegrationTest;
 import io.harness.VerificationTestModule;
 import io.harness.app.VerificationQueueModule;
@@ -19,14 +14,19 @@ import io.harness.serializer.VerificationRegistrars;
 import io.harness.serializer.morphia.VerificationMorphiaRegistrar;
 import io.harness.testlib.RealMongo;
 import io.harness.testlib.module.TestMongoModule;
-import lombok.extern.slf4j.Slf4j;
+
 import software.wings.rules.SetupScheduler;
 import software.wings.rules.WingsRule;
 
+import com.google.common.collect.ImmutableSet;
+import com.google.inject.Injector;
+import com.google.inject.Module;
+import io.dropwizard.Configuration;
 import java.lang.annotation.Annotation;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
+import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class VerificationTestRule extends WingsRule {

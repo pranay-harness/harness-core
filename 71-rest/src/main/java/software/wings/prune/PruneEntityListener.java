@@ -1,10 +1,9 @@
 package software.wings.prune;
 
 import static io.harness.exception.WingsException.ExecutionContext.MANAGER;
+
 import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static software.wings.prune.PruneEvent.MAX_RETRIES;
-
-import com.google.inject.Inject;
 
 import io.harness.exception.CauseCollection;
 import io.harness.exception.WingsException;
@@ -13,7 +12,7 @@ import io.harness.logging.ExceptionLogger;
 import io.harness.manage.GlobalContextManager;
 import io.harness.queue.QueueConsumer;
 import io.harness.queue.QueueListener;
-import lombok.extern.slf4j.Slf4j;
+
 import software.wings.beans.Activity;
 import software.wings.beans.Application;
 import software.wings.beans.Environment;
@@ -43,10 +42,12 @@ import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.WorkflowService;
 
+import com.google.inject.Inject;
 import java.time.OffsetDateTime;
 import java.util.Date;
 import java.util.concurrent.ExecutorService;
 import java.util.function.Consumer;
+import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class PruneEntityListener extends QueueListener<PruneEvent> {

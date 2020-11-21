@@ -1,29 +1,28 @@
 package software.wings.resources;
 
 import static io.harness.delegate.service.DelegateAgentFileService.FileBucket.PLATFORMS;
-import static javax.ws.rs.core.MediaType.MULTIPART_FORM_DATA;
+
 import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static software.wings.security.PermissionAttribute.PermissionType.MANAGE_APPLICATION_STACKS;
 import static software.wings.security.PermissionAttribute.ResourceType.APP_STACK;
 
-import com.google.inject.Inject;
+import static javax.ws.rs.core.MediaType.MULTIPART_FORM_DATA;
 
-import com.codahale.metrics.annotation.ExceptionMetered;
-import com.codahale.metrics.annotation.Timed;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.rest.RestResponse;
 import io.harness.stream.BoundedInputStream;
-import io.swagger.annotations.Api;
-import org.glassfish.jersey.media.multipart.FormDataContentDisposition;
-import org.glassfish.jersey.media.multipart.FormDataParam;
-import org.hibernate.validator.constraints.NotEmpty;
+
 import software.wings.app.MainConfiguration;
 import software.wings.beans.AppContainer;
 import software.wings.security.annotations.AuthRule;
 import software.wings.security.annotations.Scope;
 import software.wings.service.intfc.AppContainerService;
 
+import com.codahale.metrics.annotation.ExceptionMetered;
+import com.codahale.metrics.annotation.Timed;
+import com.google.inject.Inject;
+import io.swagger.annotations.Api;
 import java.io.BufferedInputStream;
 import java.io.File;
 import java.io.InputStream;
@@ -40,6 +39,9 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.ResponseBuilder;
+import org.glassfish.jersey.media.multipart.FormDataContentDisposition;
+import org.glassfish.jersey.media.multipart.FormDataParam;
+import org.hibernate.validator.constraints.NotEmpty;
 
 /**
  * Created by anubhaw on 5/4/16.

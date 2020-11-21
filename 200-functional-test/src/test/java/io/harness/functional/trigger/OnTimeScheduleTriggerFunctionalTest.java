@@ -1,9 +1,8 @@
 package io.harness.functional.trigger;
 
 import static io.harness.rule.OwnerRule.MILAN;
-import static org.assertj.core.api.Assertions.assertThat;
 
-import com.google.inject.Inject;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.category.element.FunctionalTests;
 import io.harness.functional.AbstractFunctionalTest;
@@ -16,10 +15,7 @@ import io.harness.generator.ServiceGenerator;
 import io.harness.rule.Owner;
 import io.harness.testframework.restutils.GraphQLRestUtils;
 import io.harness.testframework.restutils.WorkflowRestUtils;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
+
 import software.wings.beans.Application;
 import software.wings.beans.FeatureName;
 import software.wings.beans.InfrastructureType;
@@ -29,8 +25,13 @@ import software.wings.infra.InfrastructureDefinition;
 import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.WorkflowService;
 
+import com.google.inject.Inject;
 import java.util.List;
 import java.util.Map;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 public class OnTimeScheduleTriggerFunctionalTest extends AbstractFunctionalTest {
   private final Randomizer.Seed seed = new Randomizer.Seed(0);

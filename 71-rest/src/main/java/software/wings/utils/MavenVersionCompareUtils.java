@@ -2,10 +2,9 @@ package software.wings.utils;
 
 import static java.util.regex.Pattern.compile;
 
-import org.apache.maven.artifact.versioning.ComparableVersion;
-
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import org.apache.maven.artifact.versioning.ComparableVersion;
 
 /**
  * <p>Utility to compare version.</p>

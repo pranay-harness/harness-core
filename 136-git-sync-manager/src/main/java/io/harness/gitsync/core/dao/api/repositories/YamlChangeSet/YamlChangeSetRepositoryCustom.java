@@ -1,7 +1,9 @@
 package io.harness.gitsync.core.dao.api.repositories.YamlChangeSet;
 
-import com.mongodb.client.result.UpdateResult;
 import io.harness.gitsync.common.beans.YamlChangeSet;
+
+import com.mongodb.client.result.UpdateResult;
+import java.util.List;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.mongodb.core.aggregation.Aggregation;
@@ -9,8 +11,6 @@ import org.springframework.data.mongodb.core.aggregation.AggregationResults;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.Update;
-
-import java.util.List;
 
 public interface YamlChangeSetRepositoryCustom {
   UpdateResult updateYamlChangeSetStatus(YamlChangeSet.Status status, String yamlChangeSetId);

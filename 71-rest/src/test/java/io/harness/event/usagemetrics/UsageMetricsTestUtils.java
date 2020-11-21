@@ -2,12 +2,10 @@ package io.harness.event.usagemetrics;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import com.google.common.collect.Lists;
-
 import io.harness.beans.EmbeddedUser;
 import io.harness.beans.ExecutionStatus;
 import io.harness.event.timeseries.processor.EventProcessor;
-import lombok.experimental.FieldNameConstants;
+
 import software.wings.api.DeploymentTimeSeriesEvent;
 import software.wings.beans.EnvSummary;
 import software.wings.beans.Environment.EnvironmentType;
@@ -18,9 +16,11 @@ import software.wings.beans.artifact.Artifact;
 import software.wings.beans.artifact.Artifact.ArtifactKeys;
 import software.wings.service.impl.event.timeseries.TimeSeriesEventInfo;
 
+import com.google.common.collect.Lists;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
+import lombok.experimental.FieldNameConstants;
 
 @FieldNameConstants(innerTypeName = "UsageMetricsTestKeys")
 public class UsageMetricsTestUtils {

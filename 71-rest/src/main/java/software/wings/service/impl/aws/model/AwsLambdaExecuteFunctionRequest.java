@@ -3,14 +3,15 @@ package software.wings.service.impl.aws.model;
 import static software.wings.service.impl.aws.model.AwsLambdaRequest.AwsLambdaRequestType.EXECUTE_LAMBDA_FUNCTION;
 
 import io.harness.security.encryption.EncryptedDataDetail;
-import lombok.Builder;
-import lombok.Data;
-import lombok.EqualsAndHashCode;
+
 import software.wings.api.AwsLambdaExecutionData;
 import software.wings.beans.AwsConfig;
 import software.wings.beans.LambdaTestEvent;
 
 import java.util.List;
+import lombok.Builder;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
 
 @Data
 @EqualsAndHashCode(callSuper = true)

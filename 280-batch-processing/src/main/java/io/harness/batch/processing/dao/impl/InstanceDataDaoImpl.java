@@ -5,9 +5,8 @@ import static io.harness.persistence.HPersistence.upsertReturnOldOptions;
 import static io.harness.persistence.HQuery.excludeAuthority;
 import static io.harness.persistence.HQuery.excludeAuthorityCount;
 import static io.harness.persistence.HQuery.excludeCount;
-import static java.util.Objects.isNull;
 
-import com.google.inject.Inject;
+import static java.util.Objects.isNull;
 
 import io.harness.batch.processing.ccm.InstanceEvent;
 import io.harness.batch.processing.ccm.InstanceInfo;
@@ -23,14 +22,8 @@ import io.harness.ccm.commons.entities.InstanceData;
 import io.harness.ccm.commons.entities.InstanceData.InstanceDataKeys;
 import io.harness.persistence.HIterator;
 import io.harness.persistence.HPersistence;
-import lombok.extern.slf4j.Slf4j;
-import org.mongodb.morphia.query.FindOptions;
-import org.mongodb.morphia.query.Query;
-import org.mongodb.morphia.query.Sort;
-import org.mongodb.morphia.query.UpdateOperations;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Repository;
 
+import com.google.inject.Inject;
 import java.time.Instant;
 import java.util.Collections;
 import java.util.HashSet;
@@ -38,6 +31,13 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
+import lombok.extern.slf4j.Slf4j;
+import org.mongodb.morphia.query.FindOptions;
+import org.mongodb.morphia.query.Query;
+import org.mongodb.morphia.query.Sort;
+import org.mongodb.morphia.query.UpdateOperations;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Repository;
 
 @Slf4j
 @Repository
@@ -201,7 +201,7 @@ public class InstanceDataDaoImpl implements InstanceDataDao {
 
       if (false
           && InstanceMetaDataUtils.carryUpdatedMapKeyFromTo(newInstanceMetaData,
-                 oldInstanceMetaData)) { // carry updated (key,value) from newInstanceMetaData to oldInstanceMetaData
+              oldInstanceMetaData)) { // carry updated (key,value) from newInstanceMetaData to oldInstanceMetaData
         UpdateOperations<InstanceData> updateOperations = hPersistence.createUpdateOperations(InstanceData.class);
         updateOperations.set(InstanceDataKeys.metaData, oldInstanceMetaData);
         return hPersistence.upsert(query, updateOperations, upsertReturnNewOptions);

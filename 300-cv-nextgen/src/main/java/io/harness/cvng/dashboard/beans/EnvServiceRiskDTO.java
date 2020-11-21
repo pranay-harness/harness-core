@@ -1,10 +1,9 @@
 package io.harness.cvng.dashboard.beans;
 
+import java.util.Set;
 import lombok.Builder;
 import lombok.Data;
 import lombok.Singular;
-
-import java.util.Set;
 
 @Data
 @Builder

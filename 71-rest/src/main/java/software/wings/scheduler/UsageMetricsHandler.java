@@ -1,12 +1,12 @@
 package software.wings.scheduler;
 
 import static io.harness.mongo.iterator.MongoPersistenceIterator.SchedulingType.REGULAR;
+
+import static software.wings.beans.Account.GLOBAL_ACCOUNT_ID;
+
 import static java.time.Duration.ofHours;
 import static java.time.Duration.ofMinutes;
 import static java.time.Duration.ofSeconds;
-import static software.wings.beans.Account.GLOBAL_ACCOUNT_ID;
-
-import com.google.inject.Inject;
 
 import io.harness.event.usagemetrics.UsageMetricsService;
 import io.harness.iterator.PersistenceIteratorFactory;
@@ -16,12 +16,15 @@ import io.harness.mongo.iterator.MongoPersistenceIterator.Handler;
 import io.harness.mongo.iterator.filter.MorphiaFilterExpander;
 import io.harness.mongo.iterator.provider.MorphiaPersistenceProvider;
 import io.harness.workers.background.AccountLevelEntityProcessController;
-import lombok.extern.slf4j.Slf4j;
+
 import software.wings.beans.Account;
 import software.wings.beans.Account.AccountKeys;
 import software.wings.beans.AccountStatus;
 import software.wings.beans.AccountType;
 import software.wings.service.intfc.AccountService;
+
+import com.google.inject.Inject;
+import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class UsageMetricsHandler implements Handler<Account> {
@@ -51,9 +54,9 @@ public class UsageMetricsHandler implements Handler<Account> {
   public void handle(Account account) {
     if ((account.getLicenseInfo() == null
             || ((account.getLicenseInfo() != null && account.getLicenseInfo().getAccountStatus() != null)
-                   && (account.getLicenseInfo().getAccountStatus().equals(AccountStatus.ACTIVE)
-                          && (account.getLicenseInfo().getAccountType().equals(AccountType.TRIAL)
-                                 || account.getLicenseInfo().getAccountType().equals(AccountType.PAID)))))
+                && (account.getLicenseInfo().getAccountStatus().equals(AccountStatus.ACTIVE)
+                    && (account.getLicenseInfo().getAccountType().equals(AccountType.TRIAL)
+                        || account.getLicenseInfo().getAccountType().equals(AccountType.PAID)))))
         && (!account.getUuid().equals(GLOBAL_ACCOUNT_ID))) {
       usageMetricsService.createVerificationUsageEvents(account);
       usageMetricsService.createSetupEventsForTimescaleDB(account);

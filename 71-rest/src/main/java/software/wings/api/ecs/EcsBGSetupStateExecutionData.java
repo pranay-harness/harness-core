@@ -1,7 +1,5 @@
 package software.wings.api.ecs;
 
-import lombok.Builder;
-import lombok.Data;
 import software.wings.beans.ResizeStrategy;
 import software.wings.beans.TaskType;
 import software.wings.beans.appmanifest.ApplicationManifest;
@@ -12,6 +10,8 @@ import software.wings.sm.states.EcsSetUpDataBag;
 
 import java.util.List;
 import java.util.Map;
+import lombok.Builder;
+import lombok.Data;
 
 @Data
 public class EcsBGSetupStateExecutionData extends EcsSetupStateExecutionData {

@@ -2,14 +2,13 @@ package io.harness.connector.mappers.jira;
 
 import static io.harness.delegate.beans.connector.ConnectorCategory.TICKETING;
 
-import com.google.inject.Singleton;
-
 import io.harness.connector.entities.embedded.jira.JiraConnector;
 import io.harness.connector.mappers.ConnectorDTOToEntityMapper;
 import io.harness.connector.mappers.SecretRefHelper;
 import io.harness.delegate.beans.connector.ConnectorCategory;
 import io.harness.delegate.beans.connector.jira.JiraConnectorDTO;
 
+import com.google.inject.Singleton;
 import java.util.Collections;
 import java.util.List;
 

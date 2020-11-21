@@ -1,10 +1,10 @@
 package io.harness.commandlibrary.client;
 
-import com.google.inject.AbstractModule;
-import com.google.inject.Scopes;
-
 import io.harness.commandlibrary.CommandLibraryServiceConfig;
 import io.harness.security.ServiceTokenGenerator;
+
+import com.google.inject.AbstractModule;
+import com.google.inject.Scopes;
 
 public class CommandLibraryServiceClientModule extends AbstractModule {
   private final CommandLibraryServiceConfig commandLibraryServiceConfig;

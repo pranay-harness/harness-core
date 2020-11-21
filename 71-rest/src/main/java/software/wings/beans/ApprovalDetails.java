@@ -1,11 +1,11 @@
 package software.wings.beans;
 
 import io.harness.beans.EmbeddedUser;
+
+import java.util.List;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.hibernate.validator.constraints.NotEmpty;
-
-import java.util.List;
 
 /**
  * Created by sgurubelli on 6/7/17.

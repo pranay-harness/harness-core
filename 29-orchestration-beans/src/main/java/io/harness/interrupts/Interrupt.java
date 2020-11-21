@@ -9,6 +9,10 @@ import io.harness.logging.AutoLogContext;
 import io.harness.persistence.PersistentEntity;
 import io.harness.persistence.UuidAccess;
 import io.harness.state.io.StepParameters;
+
+import java.util.HashMap;
+import java.util.Map;
+import javax.validation.constraints.NotNull;
 import lombok.Builder;
 import lombok.NonNull;
 import lombok.Setter;
@@ -22,10 +26,6 @@ import org.springframework.data.annotation.Id;
 import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.annotation.Version;
 import org.springframework.data.mongodb.core.mapping.Document;
-
-import java.util.HashMap;
-import java.util.Map;
-import javax.validation.constraints.NotNull;
 
 @OwnedBy(CDC)
 @Value

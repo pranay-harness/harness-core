@@ -3,13 +3,13 @@ package io.harness.jira;
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 
 import io.harness.annotations.dev.OwnedBy;
+
+import java.util.ArrayList;
+import java.util.List;
 import lombok.Data;
 import net.sf.json.JSONArray;
 import net.sf.json.JSONObject;
 import org.codehaus.jackson.annotate.JsonTypeName;
-
-import java.util.ArrayList;
-import java.util.List;
 
 @OwnedBy(CDC)
 @Data

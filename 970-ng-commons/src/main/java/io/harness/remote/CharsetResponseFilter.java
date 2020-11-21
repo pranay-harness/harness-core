@@ -1,7 +1,6 @@
 package io.harness.remote;
 
 import com.google.inject.Singleton;
-
 import javax.ws.rs.container.ContainerRequestContext;
 import javax.ws.rs.container.ContainerResponseContext;
 import javax.ws.rs.container.ContainerResponseFilter;

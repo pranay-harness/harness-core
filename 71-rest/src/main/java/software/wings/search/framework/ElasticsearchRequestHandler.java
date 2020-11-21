@@ -3,10 +3,10 @@ package software.wings.search.framework;
 import static io.harness.annotations.dev.HarnessTeam.PL;
 
 import io.harness.annotations.dev.OwnedBy;
-import org.elasticsearch.index.query.BoolQueryBuilder;
-import org.elasticsearch.search.SearchHits;
 
 import java.util.List;
+import org.elasticsearch.index.query.BoolQueryBuilder;
+import org.elasticsearch.search.SearchHits;
 
 @OwnedBy(PL)
 public interface ElasticsearchRequestHandler {

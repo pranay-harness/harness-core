@@ -1,23 +1,24 @@
 package migrations.all;
 
 import static io.harness.rule.OwnerRule.RUSHABH;
+
 import static migrations.all.UnregisteredUserNameMigration.NOT_REGISTERED;
 import static org.assertj.core.api.Assertions.assertThat;
 
-import com.google.inject.Inject;
-
-import com.mongodb.BasicDBObject;
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
+
 import software.wings.WingsBaseTest;
 import software.wings.beans.User;
 import software.wings.beans.User.Builder;
 import software.wings.dl.WingsPersistence;
 
+import com.google.inject.Inject;
+import com.mongodb.BasicDBObject;
 import java.util.stream.LongStream;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 public class UnregisteredUserNameMigrationTest extends WingsBaseTest {
   @Inject WingsPersistence wingsPersistence;

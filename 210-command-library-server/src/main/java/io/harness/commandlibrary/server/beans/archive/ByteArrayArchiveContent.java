@@ -1,14 +1,14 @@
 package io.harness.commandlibrary.server.beans.archive;
 
 import io.harness.exception.GeneralException;
-import lombok.Builder;
-import lombok.NonNull;
-import org.apache.commons.io.IOUtils;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.Charset;
+import lombok.Builder;
+import lombok.NonNull;
+import org.apache.commons.io.IOUtils;
 
 @Builder
 public class ByteArrayArchiveContent implements ArchiveContent {

@@ -10,19 +10,20 @@ import io.harness.testframework.framework.email.mailinator.MailinatorMetaMessage
 import io.harness.testframework.restutils.HTMLUtils;
 import io.harness.testframework.restutils.MailinatorRestUtils;
 import io.harness.testframework.restutils.UserRestUtils;
-import io.restassured.http.ContentType;
-import io.restassured.mapper.ObjectMapperType;
-import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.StringUtils;
-import org.apache.http.HttpStatus;
+
 import software.wings.beans.Account;
 import software.wings.beans.PublicUser;
 import software.wings.beans.UserInvite;
 
+import io.restassured.http.ContentType;
+import io.restassured.mapper.ObjectMapperType;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import javax.mail.MessagingException;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
+import org.apache.http.HttpStatus;
 
 @Slf4j
 public class UserUtils {

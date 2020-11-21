@@ -1,17 +1,18 @@
 package migrations.all;
 
-import com.google.common.collect.Sets;
-import com.google.inject.Inject;
-
 import io.harness.beans.EncryptedData;
 import io.harness.beans.EncryptedData.EncryptedDataKeys;
+
+import software.wings.dl.WingsPersistence;
+import software.wings.settings.SettingVariableTypes;
+
+import com.google.common.collect.Sets;
+import com.google.inject.Inject;
 import lombok.extern.slf4j.Slf4j;
 import migrations.Migration;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
 import org.mongodb.morphia.query.UpdateResults;
-import software.wings.dl.WingsPersistence;
-import software.wings.settings.SettingVariableTypes;
 
 @Slf4j
 public class AddScopedToAccountAttributeToEncryptedData implements Migration {

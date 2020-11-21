@@ -2,10 +2,8 @@ package io.harness.batch.processing.dao.impl;
 
 import static io.harness.rule.OwnerRule.HANTANG;
 import static io.harness.rule.OwnerRule.ROHIT;
-import static org.assertj.core.api.Assertions.assertThat;
 
-import com.google.cloud.bigquery.datatransfer.v1.TransferState;
-import com.google.inject.Inject;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.batch.processing.BatchProcessingBaseTest;
 import io.harness.category.element.UnitTests;
@@ -13,12 +11,14 @@ import io.harness.ccm.billing.entities.BillingDataPipelineRecord;
 import io.harness.ccm.billing.entities.BillingDataPipelineRecord.BillingDataPipelineRecordKeys;
 import io.harness.persistence.HPersistence;
 import io.harness.rule.Owner;
+
+import com.google.cloud.bigquery.datatransfer.v1.TransferState;
+import com.google.inject.Inject;
+import java.time.Instant;
+import java.util.List;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
-
-import java.time.Instant;
-import java.util.List;
 
 public class BillingDataPipelineRecordDaoImplTest extends BatchProcessingBaseTest {
   @Inject private BillingDataPipelineRecordDaoImpl billingDataPipelineRecordDao;

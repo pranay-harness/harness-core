@@ -7,10 +7,7 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.exception.WingsException.USER;
-import static java.lang.String.format;
-import static java.lang.String.join;
-import static java.util.stream.Collectors.toList;
-import static org.apache.commons.lang3.StringUtils.isBlank;
+
 import static software.wings.beans.CanaryOrchestrationWorkflow.CanaryOrchestrationWorkflowBuilder.aCanaryOrchestrationWorkflow;
 import static software.wings.beans.EntityType.APPDYNAMICS_APPID;
 import static software.wings.beans.EntityType.APPDYNAMICS_CONFIGID;
@@ -44,21 +41,23 @@ import static software.wings.service.impl.workflow.WorkflowServiceHelper.ROLLBAC
 import static software.wings.sm.rollback.RollbackStateMachineGenerator.STAGING_PHASE_NAME;
 import static software.wings.sm.rollback.RollbackStateMachineGenerator.WHITE_SPACE;
 
-import com.google.common.base.Joiner;
+import static java.lang.String.format;
+import static java.lang.String.join;
+import static java.util.stream.Collectors.toList;
+import static org.apache.commons.lang3.StringUtils.isBlank;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonTypeName;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.OrchestrationWorkflowType;
 import io.harness.exception.InvalidRequestException;
-import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.StringUtils;
-import org.mongodb.morphia.annotations.Transient;
+
 import software.wings.api.DeploymentType;
 import software.wings.beans.Graph.Builder;
 import software.wings.beans.concurrency.ConcurrencyStrategy;
 import software.wings.sm.TransitionType;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonTypeName;
+import com.google.common.base.Joiner;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -66,6 +65,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import javax.validation.constraints.NotNull;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
+import org.mongodb.morphia.annotations.Transient;
 
 @OwnedBy(CDC)
 @JsonTypeName("CANARY")
@@ -810,7 +812,7 @@ public class CanaryOrchestrationWorkflow extends CustomOrchestrationWorkflow {
     if (isEmpty(workflowPhase.getPhaseSteps())) {
       return;
     }
-    workflowPhase.getPhaseSteps().forEach(this ::populatePhaseStepIds);
+    workflowPhase.getPhaseSteps().forEach(this::populatePhaseStepIds);
   }
 
   public void populatePhaseStepIds(PhaseStep phaseStep) {

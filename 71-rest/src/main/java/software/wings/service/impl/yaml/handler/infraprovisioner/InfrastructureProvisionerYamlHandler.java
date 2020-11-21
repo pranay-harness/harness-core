@@ -3,9 +3,8 @@ package software.wings.service.impl.yaml.handler.infraprovisioner;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.validation.Validator.notNullCheck;
-import static java.util.stream.Collectors.toList;
 
-import com.google.inject.Inject;
+import static java.util.stream.Collectors.toList;
 
 import software.wings.beans.Application;
 import software.wings.beans.BlueprintProperty;
@@ -25,6 +24,7 @@ import software.wings.service.intfc.InfrastructureProvisionerService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.utils.Utils;
 
+import com.google.inject.Inject;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;

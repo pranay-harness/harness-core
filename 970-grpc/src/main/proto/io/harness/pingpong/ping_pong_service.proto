@@ -17,5 +17,4 @@ message Ping {
   string version = 4;
 }
 
-message Pong {
-}
+message Pong {}

@@ -1,24 +1,26 @@
 package io.harness.functional.authentication;
 
 import static io.harness.rule.OwnerRule.UTKARSH;
+
 import static junit.framework.TestCase.fail;
 import static org.assertj.core.api.Assertions.assertThat;
-
-import com.google.inject.Inject;
 
 import io.harness.category.element.FunctionalTests;
 import io.harness.exception.WingsException;
 import io.harness.functional.AbstractFunctionalTest;
 import io.harness.rule.Owner;
 import io.harness.testframework.restutils.LoginSettingsUtils;
+
+import software.wings.beans.loginSettings.LoginSettings;
+import software.wings.beans.loginSettings.LoginSettingsService;
+import software.wings.beans.loginSettings.PasswordStrengthPolicy;
+
+import com.google.inject.Inject;
 import org.junit.FixMethodOrder;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.junit.runners.MethodSorters;
-import software.wings.beans.loginSettings.LoginSettings;
-import software.wings.beans.loginSettings.LoginSettingsService;
-import software.wings.beans.loginSettings.PasswordStrengthPolicy;
 
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
 public class PasswordStrengthPolicyFunctionalTest extends AbstractFunctionalTest {

@@ -2,6 +2,7 @@ package io.harness.logging;
 
 import static io.harness.logging.LoggingInitializer.RESPONSE_MESSAGE_FILE;
 import static io.harness.rule.OwnerRule.ANSHUL;
+
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.CategoryTest;
@@ -9,8 +10,6 @@ import io.harness.category.element.UnitTests;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
 import io.harness.rule.Owner;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -18,6 +17,8 @@ import java.util.Arrays;
 import java.util.Properties;
 import java.util.Set;
 import java.util.stream.Collectors;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 public class ErrorCodePropertiesTest extends CategoryTest {
   @Test

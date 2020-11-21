@@ -2,6 +2,7 @@ package io.harness.cdng.artifact.bean;
 
 import io.harness.ngpipeline.pipeline.executions.beans.ArtifactSummary;
 import io.harness.ngpipeline.pipeline.executions.beans.DockerArtifactSummary;
+
 import lombok.Builder;
 import lombok.EqualsAndHashCode;
 import lombok.Value;

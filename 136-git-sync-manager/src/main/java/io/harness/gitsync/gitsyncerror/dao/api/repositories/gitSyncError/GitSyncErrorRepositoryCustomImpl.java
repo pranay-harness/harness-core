@@ -1,19 +1,21 @@
 package io.harness.gitsync.gitsyncerror.dao.api.repositories.gitSyncError;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
+
 import static org.springframework.data.mongodb.core.query.Query.query;
 import static org.springframework.data.mongodb.core.query.Update.update;
 
-import com.google.inject.Inject;
-
-import com.mongodb.client.result.DeleteResult;
-import com.mongodb.client.result.UpdateResult;
 import io.harness.git.model.ChangeType;
 import io.harness.gitsync.common.beans.YamlChangeSet;
 import io.harness.gitsync.gitsyncerror.GitSyncErrorStatus;
 import io.harness.gitsync.gitsyncerror.beans.GitSyncError;
 import io.harness.gitsync.gitsyncerror.beans.GitSyncError.GitSyncErrorKeys;
 import io.harness.gitsync.gitsyncerror.beans.GitSyncErrorDetails;
+
+import com.google.inject.Inject;
+import com.mongodb.client.result.DeleteResult;
+import com.mongodb.client.result.UpdateResult;
+import java.util.List;
 import lombok.AllArgsConstructor;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.aggregation.Aggregation;
@@ -21,8 +23,6 @@ import org.springframework.data.mongodb.core.aggregation.AggregationResults;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.Update;
-
-import java.util.List;
 
 @AllArgsConstructor(onConstructor = @__({ @Inject }))
 public class GitSyncErrorRepositoryCustomImpl implements GitSyncErrorRepositoryCustom {

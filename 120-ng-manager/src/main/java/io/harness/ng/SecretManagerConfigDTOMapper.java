@@ -11,6 +11,7 @@ import io.harness.delegate.beans.connector.gcpkmsconnector.GcpKmsConnectorDTO;
 import io.harness.delegate.beans.connector.localconnector.LocalConnectorDTO;
 import io.harness.delegate.beans.connector.vaultconnector.VaultConnectorDTO;
 import io.harness.secretmanagerclient.dto.SecretManagerConfigDTO;
+
 import lombok.experimental.UtilityClass;
 
 @UtilityClass

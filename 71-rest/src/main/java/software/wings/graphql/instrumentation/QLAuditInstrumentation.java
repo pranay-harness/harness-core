@@ -1,27 +1,15 @@
 package software.wings.graphql.instrumentation;
 
-import static com.google.common.base.Strings.nullToEmpty;
 import static software.wings.security.AuthenticationFilter.API_KEY_HEADER;
 
-import com.google.common.annotations.VisibleForTesting;
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
+import static com.google.common.base.Strings.nullToEmpty;
 
-import graphql.ExecutionResult;
-import graphql.GraphQLContext;
-import graphql.execution.instrumentation.InstrumentationContext;
-import graphql.execution.instrumentation.SimpleInstrumentation;
-import graphql.execution.instrumentation.SimpleInstrumentationContext;
-import graphql.execution.instrumentation.parameters.InstrumentationExecuteOperationParameters;
-import graphql.language.OperationDefinition;
-import graphql.language.OperationDefinition.Operation;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.UnexpectedException;
 import io.harness.network.Localhost;
 import io.harness.serializer.JsonUtils;
-import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.io.IOUtils;
+
 import software.wings.audit.ApiKeyAuditDetails;
 import software.wings.audit.AuditHeader;
 import software.wings.audit.AuditHeader.Builder;
@@ -32,12 +20,25 @@ import software.wings.common.AuditHelper;
 import software.wings.graphql.utils.GraphQLConstants;
 import software.wings.service.intfc.ApiKeyService;
 
+import com.google.common.annotations.VisibleForTesting;
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
+import graphql.ExecutionResult;
+import graphql.GraphQLContext;
+import graphql.execution.instrumentation.InstrumentationContext;
+import graphql.execution.instrumentation.SimpleInstrumentation;
+import graphql.execution.instrumentation.SimpleInstrumentationContext;
+import graphql.execution.instrumentation.parameters.InstrumentationExecuteOperationParameters;
+import graphql.language.OperationDefinition;
+import graphql.language.OperationDefinition.Operation;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.Optional;
 import javax.servlet.http.HttpServletRequest;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.io.IOUtils;
 
 @Singleton
 @Slf4j
@@ -52,7 +53,7 @@ public class QLAuditInstrumentation extends SimpleInstrumentation {
       if (shouldAudit(parameters)) {
         createAuditHeaderFromHttpRequest(parameters);
       }
-      return SimpleInstrumentationContext.whenCompleted(this ::handleRequestCompletion);
+      return SimpleInstrumentationContext.whenCompleted(this::handleRequestCompletion);
     } catch (Exception e) {
       throw new UnexpectedException("Error while creating audit information", e);
     }

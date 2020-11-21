@@ -2,6 +2,12 @@ package software.wings.delegatetasks;
 
 import static io.harness.delegate.beans.TaskData.DEFAULT_ASYNC_CALL_TIMEOUT;
 import static io.harness.rule.OwnerRule.SATYAM;
+
+import static software.wings.beans.HostConnectionAttributes.Builder.aHostConnectionAttributes;
+import static software.wings.beans.HostValidationResponse.Builder.aHostValidationResponse;
+import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
+import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
+
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 import static org.joor.Reflect.on;
@@ -10,20 +16,12 @@ import static org.mockito.Matchers.anyList;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
-import static software.wings.beans.HostConnectionAttributes.Builder.aHostConnectionAttributes;
-import static software.wings.beans.HostValidationResponse.Builder.aHostValidationResponse;
-import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
-import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.beans.DelegateTaskPackage;
 import io.harness.delegate.beans.TaskData;
 import io.harness.rule.Owner;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
+
 import software.wings.WingsBaseTest;
 import software.wings.beans.WinRmConnectionAttributes;
 import software.wings.helpers.ext.mail.Mailer;
@@ -33,6 +31,12 @@ import software.wings.settings.validation.SmtpConnectivityValidationAttributes;
 import software.wings.settings.validation.SshConnectionConnectivityValidationAttributes;
 import software.wings.settings.validation.WinRmConnectivityValidationAttributes;
 import software.wings.utils.HostValidationService;
+
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
 
 public class ConnectivityValidationTaskTest extends WingsBaseTest {
   @Mock private HostValidationService mockHostValidationService;

@@ -1,12 +1,12 @@
 package io.harness.logserviceclient;
 
+import io.harness.ci.beans.entities.LogServiceConfig;
+import io.harness.network.Http;
+
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.inject.Inject;
 import com.google.inject.Provider;
-
-import io.harness.ci.beans.entities.LogServiceConfig;
-import io.harness.network.Http;
 import retrofit2.Retrofit;
 import retrofit2.converter.gson.GsonConverterFactory;
 

@@ -3,8 +3,6 @@ package io.harness.advisers.manualintervention;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.pms.execution.Status.INTERVENTION_WAITING;
 
-import com.google.inject.Inject;
-
 import io.harness.StatusUtils;
 import io.harness.adviser.Advise;
 import io.harness.adviser.Adviser;
@@ -15,6 +13,7 @@ import io.harness.pms.advisers.AdviserType;
 import io.harness.serializer.KryoSerializer;
 import io.harness.state.io.FailureInfo;
 
+import com.google.inject.Inject;
 import java.util.Collections;
 
 public class ManualInterventionAdviser implements Adviser {

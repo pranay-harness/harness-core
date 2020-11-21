@@ -5,19 +5,17 @@ import static io.harness.beans.SearchFilter.Operator.IN;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.exception.WingsException.USER;
-import static java.lang.String.format;
-import static java.util.stream.Collectors.toList;
-import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
-import static javax.ws.rs.core.MediaType.MULTIPART_FORM_DATA;
+
 import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 import static software.wings.service.impl.security.SecretManagerImpl.ENCRYPTED_FIELD_MASK;
 import static software.wings.settings.SettingVariableTypes.GCP;
 
-import com.google.inject.Inject;
+import static java.lang.String.format;
+import static java.util.stream.Collectors.toList;
+import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
+import static javax.ws.rs.core.MediaType.MULTIPART_FORM_DATA;
 
-import com.codahale.metrics.annotation.ExceptionMetered;
-import com.codahale.metrics.annotation.Timed;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.data.structure.EmptyPredicate;
@@ -26,12 +24,7 @@ import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.perpetualtask.k8s.watch.K8sClusterConfigFactory;
 import io.harness.rest.RestResponse;
-import io.swagger.annotations.Api;
-import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.io.IOUtils;
-import org.glassfish.jersey.media.multipart.FormDataContentDisposition;
-import org.glassfish.jersey.media.multipart.FormDataParam;
-import org.hibernate.validator.constraints.NotEmpty;
+
 import software.wings.annotation.EncryptableSetting;
 import software.wings.beans.EntityType;
 import software.wings.beans.GcpConfig;
@@ -65,6 +58,10 @@ import software.wings.utils.ArtifactType;
 import software.wings.utils.RepositoryFormat;
 import software.wings.utils.RepositoryType;
 
+import com.codahale.metrics.annotation.ExceptionMetered;
+import com.codahale.metrics.annotation.Timed;
+import com.google.inject.Inject;
+import io.swagger.annotations.Api;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.Charset;
@@ -83,6 +80,11 @@ import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.io.IOUtils;
+import org.glassfish.jersey.media.multipart.FormDataContentDisposition;
+import org.glassfish.jersey.media.multipart.FormDataParam;
+import org.hibernate.validator.constraints.NotEmpty;
 
 /**
  * Created by anubhaw on 5/17/16.
@@ -669,7 +671,7 @@ public class SettingResource {
       SettingAttribute settingAttribute = settingsService.get(settingId);
       if (settingAttribute == null || !settingAttribute.getAccountId().equals(accountId)
           || isEmpty(settingsService.getFilteredSettingAttributes(
-                 Collections.singletonList(settingAttribute), currentAppId, currentEnvId))) {
+              Collections.singletonList(settingAttribute), currentAppId, currentEnvId))) {
         throw new InvalidRequestException("Setting attribute does not exist", USER);
       }
     }

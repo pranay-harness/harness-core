@@ -3,18 +3,18 @@ package migrations.all;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.persistence.HQuery.excludeAuthority;
 
-import com.google.inject.Inject;
-
 import io.harness.persistence.HIterator;
-import lombok.extern.slf4j.Slf4j;
-import migrations.Migration;
+
 import software.wings.beans.security.AccountPermissions;
 import software.wings.beans.security.UserGroup;
 import software.wings.dl.WingsPersistence;
 import software.wings.security.PermissionAttribute.PermissionType;
 import software.wings.service.intfc.UserGroupService;
 
+import com.google.inject.Inject;
 import java.util.Set;
+import lombok.extern.slf4j.Slf4j;
+import migrations.Migration;
 
 @Slf4j
 public class AddTagManagementPermissionToAdminUserGroup implements Migration {

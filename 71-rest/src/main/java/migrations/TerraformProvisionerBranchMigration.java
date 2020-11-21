@@ -1,10 +1,7 @@
 package migrations;
 
-import com.google.inject.Inject;
-
 import io.harness.persistence.HIterator;
-import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.StringUtils;
+
 import software.wings.beans.GitConfig;
 import software.wings.beans.InfrastructureProvisioner;
 import software.wings.beans.InfrastructureProvisioner.InfrastructureProvisionerKeys;
@@ -12,6 +9,10 @@ import software.wings.beans.SettingAttribute;
 import software.wings.beans.TerraformInfrastructureProvisioner;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.SettingsService;
+
+import com.google.inject.Inject;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 
 @Slf4j
 public class TerraformProvisionerBranchMigration implements Migration {

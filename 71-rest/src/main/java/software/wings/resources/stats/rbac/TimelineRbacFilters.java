@@ -1,15 +1,13 @@
 package software.wings.resources.stats.rbac;
 
-import static com.google.common.collect.Sets.union;
 import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
+
+import static com.google.common.collect.Sets.union;
 import static java.util.Collections.emptySet;
 
-import com.google.common.collect.Sets;
-
 import io.harness.annotations.dev.OwnedBy;
-import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.collections4.SetUtils;
+
 import software.wings.beans.EntityType;
 import software.wings.beans.User;
 import software.wings.beans.infrastructure.instance.stats.InstanceStatsSnapshot;
@@ -23,6 +21,7 @@ import software.wings.security.UserRequestContext;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.UserService;
 
+import com.google.common.collect.Sets;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.LinkedList;
@@ -30,6 +29,8 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 import javax.annotation.Nonnull;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.collections4.SetUtils;
 
 @OwnedBy(PL)
 @Slf4j

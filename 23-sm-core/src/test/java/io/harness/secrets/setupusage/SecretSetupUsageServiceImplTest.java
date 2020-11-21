@@ -1,6 +1,11 @@
 package io.harness.secrets.setupusage;
 
 import static io.harness.rule.OwnerRule.UTKARSH;
+
+import static software.wings.settings.SettingVariableTypes.AWS;
+import static software.wings.settings.SettingVariableTypes.DOCKER;
+import static software.wings.settings.SettingVariableTypes.SERVICE_VARIABLE;
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.eq;
@@ -8,12 +13,6 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-import static software.wings.settings.SettingVariableTypes.AWS;
-import static software.wings.settings.SettingVariableTypes.DOCKER;
-import static software.wings.settings.SettingVariableTypes.SERVICE_VARIABLE;
-
-import com.google.common.collect.Sets;
-import com.google.inject.Inject;
 
 import io.harness.SMCoreTestBase;
 import io.harness.beans.EncryptedData;
@@ -25,16 +24,19 @@ import io.harness.rule.Owner;
 import io.harness.secretmanagers.SecretManagerConfigService;
 import io.harness.secrets.SecretsDao;
 import io.harness.security.encryption.EncryptionType;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
-import org.mockito.Matchers;
+
 import software.wings.settings.SettingVariableTypes;
 
+import com.google.common.collect.Sets;
+import com.google.inject.Inject;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
+import org.mockito.Matchers;
 
 public class SecretSetupUsageServiceImplTest extends SMCoreTestBase {
   private SecretManagerConfigService secretManagerConfigService;

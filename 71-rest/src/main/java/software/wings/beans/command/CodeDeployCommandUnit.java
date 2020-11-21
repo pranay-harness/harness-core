@@ -1,36 +1,37 @@
 package software.wings.beans.command;
 
-import static java.lang.String.format;
-import static java.lang.String.join;
 import static software.wings.beans.command.CodeDeployCommandExecutionData.Builder.aCodeDeployCommandExecutionData;
 
-import com.google.inject.Inject;
+import static java.lang.String.format;
+import static java.lang.String.join;
 
-import com.amazonaws.services.codedeploy.model.AutoRollbackConfiguration;
-import com.amazonaws.services.codedeploy.model.CreateDeploymentRequest;
-import com.amazonaws.services.codedeploy.model.RevisionLocation;
-import com.amazonaws.services.codedeploy.model.S3Location;
-import com.fasterxml.jackson.annotation.JsonTypeName;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.WingsException;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.logging.LogLevel;
 import io.harness.logging.Misc;
-import lombok.Builder;
-import lombok.Data;
-import lombok.EqualsAndHashCode;
-import lombok.extern.slf4j.Slf4j;
-import org.mongodb.morphia.annotations.Transient;
+
 import software.wings.api.DeploymentType;
 import software.wings.beans.SettingAttribute;
 import software.wings.cloudprovider.CodeDeployDeploymentInfo;
 import software.wings.cloudprovider.aws.AwsCodeDeployService;
 import software.wings.delegatetasks.DelegateLogService;
 
+import com.amazonaws.services.codedeploy.model.AutoRollbackConfiguration;
+import com.amazonaws.services.codedeploy.model.CreateDeploymentRequest;
+import com.amazonaws.services.codedeploy.model.RevisionLocation;
+import com.amazonaws.services.codedeploy.model.S3Location;
+import com.fasterxml.jackson.annotation.JsonTypeName;
+import com.google.inject.Inject;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import lombok.Builder;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.extern.slf4j.Slf4j;
+import org.mongodb.morphia.annotations.Transient;
 
 /**
  * Created by anubhaw on 6/23/17.

@@ -3,10 +3,10 @@ package io.harness.beans;
 import io.harness.beans.executionargs.CIExecutionArgs;
 import io.harness.ngpipeline.pipeline.beans.yaml.NgPipeline;
 import io.harness.state.io.StepParameters;
-import lombok.Builder;
-import lombok.Data;
 
 import java.util.Map;
+import lombok.Builder;
+import lombok.Data;
 
 @Data
 @Builder

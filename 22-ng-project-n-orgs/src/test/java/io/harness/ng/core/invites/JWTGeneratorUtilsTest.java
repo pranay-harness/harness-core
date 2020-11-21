@@ -2,20 +2,20 @@ package io.harness.ng.core.invites;
 
 import static io.harness.ng.core.invites.entities.Invite.InviteKeys.id;
 import static io.harness.rule.OwnerRule.ANKUSH;
+
 import static org.apache.commons.lang3.RandomStringUtils.randomAlphabetic;
 import static org.junit.Assert.assertTrue;
 
-import com.google.common.collect.ImmutableMap;
-
-import com.auth0.jwt.interfaces.Claim;
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
 
+import com.auth0.jwt.interfaces.Claim;
+import com.google.common.collect.ImmutableMap;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 public class JWTGeneratorUtilsTest extends CategoryTest {
   private JWTGeneratorUtils jwtGeneratorUtils = new JWTGeneratorUtils();

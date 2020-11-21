@@ -1,11 +1,10 @@
 package io.harness.ngpipeline.pipeline.executions.beans;
 
+import java.util.List;
 import lombok.Builder;
 import lombok.Data;
 import lombok.Singular;
 import lombok.Value;
-
-import java.util.List;
 
 @Value
 @Builder

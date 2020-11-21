@@ -3,10 +3,8 @@ package io.harness.cdng.pipeline.executions;
 import static io.harness.cdng.pipeline.DeploymentStage.DEPLOYMENT_STAGE_TYPE;
 import static io.harness.rule.OwnerRule.SAHIL;
 import static io.harness.rule.OwnerRule.VAIBHAV_SI;
-import static org.assertj.core.api.Assertions.assertThat;
 
-import com.google.common.collect.Lists;
-import com.google.inject.Inject;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.beans.ParameterField;
 import io.harness.category.element.UnitTests;
@@ -37,15 +35,17 @@ import io.harness.rule.Owner;
 import io.harness.state.io.FailureInfo;
 import io.harness.yaml.core.ParallelStageElement;
 import io.harness.yaml.core.StageElement;
-import org.apache.groovy.util.Maps;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
-import org.springframework.data.mongodb.core.query.Update;
 
+import com.google.common.collect.Lists;
+import com.google.inject.Inject;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import org.apache.groovy.util.Maps;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
+import org.springframework.data.mongodb.core.query.Update;
 
 public class PipelineExecutionHelperTest extends CDNGBaseTest {
   @Inject PipelineExecutionHelper pipelineExecutionHelper;

@@ -1,20 +1,22 @@
 package migrations.seedata;
 
-import static java.util.Arrays.asList;
 import static software.wings.beans.Account.GLOBAL_ACCOUNT_ID;
 import static software.wings.common.TemplateConstants.HARNESS_GALLERY;
 import static software.wings.common.TemplateConstants.POWER_SHELL_COMMANDS;
 import static software.wings.common.TemplateConstants.POWER_SHELL_IIS_APP_INSTALL_PATH;
 import static software.wings.common.TemplateConstants.POWER_SHELL_IIS_WEBSITE_INSTALL_PATH;
 
-import com.google.inject.Inject;
+import static java.util.Arrays.asList;
 
 import io.harness.exception.WingsException;
-import lombok.extern.slf4j.Slf4j;
-import migrations.SeedDataMigration;
+
 import software.wings.beans.template.TemplateType;
 import software.wings.service.intfc.template.TemplateGalleryService;
 import software.wings.service.intfc.template.TemplateService;
+
+import com.google.inject.Inject;
+import lombok.extern.slf4j.Slf4j;
+import migrations.SeedDataMigration;
 
 @Slf4j
 public class IISInstallCommandMigration implements SeedDataMigration {

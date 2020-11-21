@@ -1,6 +1,7 @@
 package software.wings.graphql.datafetcher.connector.types;
 
 import io.harness.exception.InvalidRequestException;
+
 import software.wings.graphql.datafetcher.connector.ConnectorsController;
 import software.wings.graphql.schema.type.QLConnectorType;
 import software.wings.service.intfc.SettingsService;

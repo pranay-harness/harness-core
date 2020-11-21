@@ -1,15 +1,12 @@
 package software.wings.graphql.datafetcher.cloudProvider;
 
 import static io.harness.rule.OwnerRule.ROHIT;
-import static org.assertj.core.api.Assertions.assertThat;
 
-import com.google.inject.Inject;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
+
 import software.wings.beans.User;
 import software.wings.graphql.datafetcher.AbstractDataFetcherTestBase;
 import software.wings.graphql.schema.query.QLCloudProvidersQueryParameters;
@@ -20,9 +17,13 @@ import software.wings.graphql.schema.type.cloudProvider.QLCloudProviderConnectio
 import software.wings.graphql.schema.type.cloudProvider.QLPhysicalDataCenterCloudProvider;
 import software.wings.security.UserThreadLocal;
 
+import com.google.inject.Inject;
 import java.sql.SQLException;
 import java.util.Arrays;
 import java.util.List;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 public class CloudProviderConnectionDataFetcherTest extends AbstractDataFetcherTestBase {
   @Inject CloudProviderConnectionDataFetcher cloudProviderDataFetcher;

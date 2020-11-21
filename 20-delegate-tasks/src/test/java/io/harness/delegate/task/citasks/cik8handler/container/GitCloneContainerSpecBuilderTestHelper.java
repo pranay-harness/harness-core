@@ -10,7 +10,19 @@ import static io.harness.delegate.task.citasks.cik8handler.params.CIGitConstants
 import static io.harness.delegate.task.citasks.cik8handler.params.CIGitConstants.GIT_USERNAME_ENV_VAR;
 import static io.harness.delegate.task.citasks.cik8handler.params.CIGitConstants.LOG_SERVICE_ENDPOINT_VARIABLE;
 import static io.harness.delegate.task.citasks.cik8handler.params.CIGitConstants.LOG_SERVICE_ENDPOINT_VARIABLE_VALUE;
+
 import static java.lang.String.format;
+
+import io.harness.delegate.beans.ci.pod.ConnectorDetails;
+import io.harness.delegate.beans.connector.ConnectorType;
+import io.harness.delegate.beans.connector.gitconnector.GitAuthType;
+import io.harness.delegate.beans.connector.gitconnector.GitConfigDTO;
+import io.harness.delegate.beans.connector.gitconnector.GitHTTPAuthenticationDTO;
+import io.harness.delegate.beans.connector.gitconnector.GitSSHAuthenticationDTO;
+import io.harness.delegate.task.citasks.cik8handler.SecretSpecBuilder;
+import io.harness.delegate.task.citasks.cik8handler.params.GitCloneContainerParams;
+import io.harness.delegate.task.citasks.cik8handler.params.GitCloneContainerParams.GitCloneContainerParamsBuilder;
+import io.harness.encryption.SecretRefData;
 
 import io.fabric8.kubernetes.api.model.Container;
 import io.fabric8.kubernetes.api.model.ContainerBuilder;
@@ -25,17 +37,6 @@ import io.fabric8.kubernetes.api.model.Volume;
 import io.fabric8.kubernetes.api.model.VolumeBuilder;
 import io.fabric8.kubernetes.api.model.VolumeMount;
 import io.fabric8.kubernetes.api.model.VolumeMountBuilder;
-import io.harness.delegate.beans.ci.pod.ConnectorDetails;
-import io.harness.delegate.beans.connector.ConnectorType;
-import io.harness.delegate.beans.connector.gitconnector.GitAuthType;
-import io.harness.delegate.beans.connector.gitconnector.GitConfigDTO;
-import io.harness.delegate.beans.connector.gitconnector.GitHTTPAuthenticationDTO;
-import io.harness.delegate.beans.connector.gitconnector.GitSSHAuthenticationDTO;
-import io.harness.delegate.task.citasks.cik8handler.SecretSpecBuilder;
-import io.harness.delegate.task.citasks.cik8handler.params.GitCloneContainerParams;
-import io.harness.delegate.task.citasks.cik8handler.params.GitCloneContainerParams.GitCloneContainerParamsBuilder;
-import io.harness.encryption.SecretRefData;
-
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;

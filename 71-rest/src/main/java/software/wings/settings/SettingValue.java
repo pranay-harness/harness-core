@@ -1,21 +1,22 @@
 package software.wings.settings;
 
+import io.harness.delegate.beans.executioncapability.ExecutionCapabilityDemander;
+
+import software.wings.security.UsageRestrictions;
+import software.wings.service.impl.SettingServiceHelper;
+import software.wings.yaml.BaseEntityYaml;
+
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.fasterxml.jackson.annotation.JsonTypeInfo.As;
 import com.github.reinert.jjschema.SchemaIgnore;
-import io.harness.delegate.beans.executioncapability.ExecutionCapabilityDemander;
+import java.lang.reflect.Field;
+import java.util.List;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-import software.wings.security.UsageRestrictions;
-import software.wings.service.impl.SettingServiceHelper;
-import software.wings.yaml.BaseEntityYaml;
-
-import java.lang.reflect.Field;
-import java.util.List;
 
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "type", include = As.EXISTING_PROPERTY)
 public abstract class SettingValue implements ExecutionCapabilityDemander {

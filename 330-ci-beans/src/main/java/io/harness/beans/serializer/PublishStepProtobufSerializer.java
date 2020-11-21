@@ -2,9 +2,6 @@ package io.harness.beans.serializer;
 
 import static io.harness.product.ci.engine.proto.AuthType.BASIC_AUTH;
 
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
-
 import io.harness.beans.steps.stepinfo.PublishStepInfo;
 import io.harness.beans.steps.stepinfo.publish.artifact.Artifact;
 import io.harness.beans.steps.stepinfo.publish.artifact.DockerFileArtifact;
@@ -23,10 +20,12 @@ import io.harness.product.ci.engine.proto.PublishArtifactsStep;
 import io.harness.product.ci.engine.proto.UnitStep;
 import io.harness.product.ci.engine.proto.UploadFile;
 import io.harness.utils.IdentifierRefHelper;
-import org.apache.commons.codec.binary.Base64;
 
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import java.util.Optional;
 import java.util.function.Supplier;
+import org.apache.commons.codec.binary.Base64;
 
 @Singleton
 public class PublishStepProtobufSerializer implements ProtobufSerializer<PublishStepInfo> {

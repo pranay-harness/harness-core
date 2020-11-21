@@ -3,10 +3,9 @@ package software.wings.sm.states;
 import static software.wings.beans.InstanceUnitType.COUNT;
 import static software.wings.beans.InstanceUnitType.PERCENTAGE;
 
-import com.google.common.collect.ImmutableMap;
-
 import software.wings.stencils.DataProvider;
 
+import com.google.common.collect.ImmutableMap;
 import java.util.Map;
 
 /**

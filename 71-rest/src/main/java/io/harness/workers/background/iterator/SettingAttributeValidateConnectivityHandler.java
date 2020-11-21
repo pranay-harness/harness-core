@@ -1,12 +1,11 @@
 package io.harness.workers.background.iterator;
 
 import static io.harness.mongo.iterator.MongoPersistenceIterator.SchedulingType.REGULAR;
+
 import static java.time.Duration.ofHours;
 import static java.util.Arrays.asList;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
-
-import com.google.inject.Inject;
 
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.ExceptionUtils;
@@ -19,7 +18,7 @@ import io.harness.mongo.iterator.MongoPersistenceIterator.Handler;
 import io.harness.mongo.iterator.filter.MorphiaFilterExpander;
 import io.harness.mongo.iterator.provider.MorphiaPersistenceProvider;
 import io.harness.workers.background.AccountStatusBasedEntityProcessController;
-import lombok.extern.slf4j.Slf4j;
+
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.SettingAttribute.SettingAttributeKeys;
 import software.wings.service.impl.SettingValidationService;
@@ -27,7 +26,9 @@ import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.settings.SettingVariableTypes;
 
+import com.google.inject.Inject;
 import java.time.Duration;
+import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class SettingAttributeValidateConnectivityHandler implements Handler<SettingAttribute> {

@@ -12,8 +12,7 @@ import io.harness.exception.ServiceNowException;
 import io.harness.exception.WingsException;
 import io.harness.logging.ExceptionLogger;
 import io.harness.waiter.WaitNotifyEngine;
-import lombok.experimental.UtilityClass;
-import lombok.extern.slf4j.Slf4j;
+
 import software.wings.api.ApprovalStateExecutionData;
 import software.wings.beans.Application;
 import software.wings.beans.ApprovalDetails;
@@ -23,6 +22,9 @@ import software.wings.service.intfc.StateExecutionService;
 import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.sm.StateExecutionInstance;
 import software.wings.sm.states.ApprovalState;
+
+import lombok.experimental.UtilityClass;
+import lombok.extern.slf4j.Slf4j;
 
 @OwnedBy(CDC)
 @UtilityClass

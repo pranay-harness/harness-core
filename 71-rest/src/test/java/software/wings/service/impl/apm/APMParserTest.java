@@ -3,27 +3,27 @@ package software.wings.service.impl.apm;
 import static io.harness.rule.OwnerRule.PRAVEEN;
 import static io.harness.rule.OwnerRule.RAGHU;
 import static io.harness.rule.OwnerRule.SRIRAM;
-import static org.assertj.core.api.Assertions.assertThat;
+
 import static software.wings.api.DeploymentType.KUBERNETES;
 import static software.wings.service.impl.newrelic.NewRelicMetricDataRecord.DEFAULT_GROUP_NAME;
 
-import com.google.common.base.Charsets;
-import com.google.common.collect.Lists;
-import com.google.common.io.Resources;
+import static org.assertj.core.api.Assertions.assertThat;
 
-import com.fasterxml.jackson.core.type.TypeReference;
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
 import io.harness.serializer.JsonUtils;
 import io.harness.serializer.YamlUtils;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
+
 import software.wings.WingsBaseTest;
 import software.wings.metrics.MetricType;
 import software.wings.service.impl.newrelic.NewRelicMetricDataRecord;
 import software.wings.sm.states.APMVerificationState;
 import software.wings.sm.states.DatadogState;
 
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.google.common.base.Charsets;
+import com.google.common.collect.Lists;
+import com.google.common.io.Resources;
 import java.io.IOException;
 import java.util.Collection;
 import java.util.HashMap;
@@ -31,6 +31,8 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 public class APMParserTest extends WingsBaseTest {
   @Test

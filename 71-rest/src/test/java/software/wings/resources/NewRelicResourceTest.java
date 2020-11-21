@@ -2,6 +2,7 @@ package software.wings.resources;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.rule.OwnerRule.SOWMYA;
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.when;
@@ -9,12 +10,7 @@ import static org.mockito.Mockito.when;
 import io.harness.category.element.UnitTests;
 import io.harness.rest.RestResponse;
 import io.harness.rule.Owner;
-import org.apache.commons.lang3.reflect.FieldUtils;
-import org.junit.Before;
-import org.junit.ClassRule;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
-import org.mockito.Mock;
+
 import software.wings.WingsBaseTest;
 import software.wings.exception.WingsExceptionMapper;
 import software.wings.service.impl.newrelic.NewRelicApplication;
@@ -23,6 +19,12 @@ import software.wings.utils.ResourceTestRule;
 
 import javax.ws.rs.BadRequestException;
 import javax.ws.rs.core.GenericType;
+import org.apache.commons.lang3.reflect.FieldUtils;
+import org.junit.Before;
+import org.junit.ClassRule;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
+import org.mockito.Mock;
 
 public class NewRelicResourceTest extends WingsBaseTest {
   private static final NewRelicResource NEW_RELIC_RESOURCE = new NewRelicResource();

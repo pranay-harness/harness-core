@@ -2,20 +2,16 @@ package software.wings.graphql.datafetcher.instance;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+
 import static org.mongodb.morphia.aggregation.Accumulator.accumulator;
 import static org.mongodb.morphia.aggregation.Group.grouping;
 import static org.mongodb.morphia.aggregation.Projection.projection;
 import static org.mongodb.morphia.query.Sort.ascending;
 import static org.mongodb.morphia.query.Sort.descending;
 
-import com.google.common.collect.Sets;
-import com.google.inject.Inject;
-
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
-import lombok.extern.slf4j.Slf4j;
-import org.mongodb.morphia.aggregation.Group;
-import org.mongodb.morphia.query.Query;
+
 import software.wings.beans.EntityType;
 import software.wings.beans.infrastructure.instance.Instance;
 import software.wings.graphql.datafetcher.RealTimeStatsDataFetcherWithTags;
@@ -39,11 +35,16 @@ import software.wings.graphql.schema.type.aggregation.tag.QLTagInput;
 import software.wings.graphql.utils.nameservice.NameService;
 import software.wings.service.impl.instance.FlatEntitySummaryStats;
 
+import com.google.common.collect.Sets;
+import com.google.inject.Inject;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
+import lombok.extern.slf4j.Slf4j;
+import org.mongodb.morphia.aggregation.Group;
+import org.mongodb.morphia.query.Query;
 
 @Slf4j
 public class InstanceStatsDataFetcher

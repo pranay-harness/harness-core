@@ -1,10 +1,10 @@
 package io.harness.core.ci.services;
 
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
-
 import io.harness.ci.beans.entities.CIBuild;
 import io.harness.ci.execution.dao.CIBuildRepository;
+
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import lombok.AllArgsConstructor;
 
 /**

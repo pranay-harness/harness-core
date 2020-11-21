@@ -2,12 +2,10 @@ package io.harness.commandlibrary.client;
 
 import static io.harness.rest.RestResponse.Builder.aRestResponse;
 import static io.harness.rule.OwnerRule.ROHIT_KUMAR;
+
 import static java.util.Collections.emptyMap;
 import static org.assertj.core.api.Assertions.assertThat;
 
-import com.google.common.collect.ImmutableList;
-
-import com.fasterxml.jackson.core.type.TypeReference;
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.commandlibrary.CommandLibraryServiceConfig;
@@ -16,6 +14,14 @@ import io.harness.rest.RestResponse;
 import io.harness.rule.Owner;
 import io.harness.security.ServiceTokenGenerator;
 import io.harness.serializer.JsonUtils;
+
+import software.wings.app.MainConfiguration;
+
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.google.common.collect.ImmutableList;
+import java.io.IOException;
+import java.net.HttpURLConnection;
+import java.util.List;
 import okhttp3.mockwebserver.MockResponse;
 import okhttp3.mockwebserver.MockWebServer;
 import org.apache.commons.lang3.reflect.FieldUtils;
@@ -24,11 +30,6 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.MockitoAnnotations;
-import software.wings.app.MainConfiguration;
-
-import java.io.IOException;
-import java.net.HttpURLConnection;
-import java.util.List;
 
 public class CommandLibraryServiceHttpClientFactoryTest extends CategoryTest {
   private MockWebServer mockWebServer;

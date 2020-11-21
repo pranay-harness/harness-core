@@ -2,9 +2,6 @@ package io.harness.gitsync.core.impl;
 
 import static io.harness.encryption.ScopeHelper.getScope;
 
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
-
 import io.harness.delegate.beans.git.YamlGitConfigDTO;
 import io.harness.exception.InvalidRequestException;
 import io.harness.git.model.ChangeType;
@@ -17,11 +14,13 @@ import io.harness.gitsync.common.service.YamlGitConfigService;
 import io.harness.gitsync.core.dao.api.repositories.GitFileLocation.GitFileLocationRepository;
 import io.harness.gitsync.core.service.YamlChangeSetService;
 import io.harness.ng.core.gitsync.GitSyncManagerInterface;
-import lombok.AllArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import java.util.Collections;
 import java.util.Optional;
+import lombok.AllArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 @AllArgsConstructor(onConstructor = @__({ @Inject }))
 @Slf4j

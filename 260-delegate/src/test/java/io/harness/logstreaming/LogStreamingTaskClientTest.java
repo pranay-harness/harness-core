@@ -3,6 +3,7 @@ package io.harness.logstreaming;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.logstreaming.LogStreamingTaskClient.COMMAND_UNIT_PLACEHOLDER;
 import static io.harness.rule.OwnerRule.MARKO;
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.assertj.core.api.Assertions.fail;
@@ -18,16 +19,17 @@ import io.harness.exception.InvalidArgumentsException;
 import io.harness.logging.LogCallback;
 import io.harness.logging.LogLevel;
 import io.harness.rule.Owner;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
-import org.mockito.ArgumentCaptor;
-import org.zeroturnaround.exec.stream.LogOutputStream;
+
 import software.wings.beans.command.ExecutionLogCallback;
 import software.wings.delegatetasks.DelegateLogService;
 
 import java.io.IOException;
 import java.io.OutputStream;
 import java.util.List;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
+import org.mockito.ArgumentCaptor;
+import org.zeroturnaround.exec.stream.LogOutputStream;
 
 public class LogStreamingTaskClientTest extends CategoryTest {
   private final DelegateLogService logServiceMock = mock(DelegateLogService.class);

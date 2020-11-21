@@ -1,11 +1,9 @@
 package io.harness.generator;
 
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
-
 import io.harness.exception.InvalidRequestException;
 import io.harness.generator.OwnerManager.Owners;
 import io.harness.generator.Randomizer.Seed;
+
 import software.wings.beans.Application;
 import software.wings.beans.Service;
 import software.wings.beans.artifact.ArtifactStreamBinding;
@@ -14,6 +12,8 @@ import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.ArtifactStreamServiceBindingService;
 import software.wings.service.intfc.ServiceVariableService;
 
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import java.util.ArrayList;
 import java.util.List;
 

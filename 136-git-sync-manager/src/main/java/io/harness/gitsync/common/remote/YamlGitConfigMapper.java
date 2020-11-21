@@ -1,10 +1,10 @@
 package io.harness.gitsync.common.remote;
 
-import static io.fabric8.utils.Strings.nullIfEmpty;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.encryption.ScopeHelper.getScope;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
+import static io.fabric8.utils.Strings.nullIfEmpty;
+
 import io.harness.delegate.beans.git.YamlGitConfigDTO;
 import io.harness.encryption.Scope;
 import io.harness.exception.InvalidRequestException;
@@ -14,12 +14,13 @@ import io.harness.gitsync.common.beans.YamlGitFolderConfig.YamlGitFolderConfigBu
 import io.harness.gitsync.common.dtos.GitSyncConfigDTO;
 import io.harness.gitsync.common.dtos.GitSyncFolderConfigDTO;
 import io.harness.gitsync.common.dtos.GitSyncFolderConfigDTO.GitSyncFolderConfigDTOBuilder;
-import lombok.SneakyThrows;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
+import lombok.SneakyThrows;
 
 public class YamlGitConfigMapper {
   public static final YamlGitConfig toYamlGitConfig(YamlGitConfigDTO yamlGitConfigDTO) {

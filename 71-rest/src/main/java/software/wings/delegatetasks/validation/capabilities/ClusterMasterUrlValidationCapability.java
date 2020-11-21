@@ -3,8 +3,7 @@ package software.wings.delegatetasks.validation.capabilities;
 import io.harness.delegate.beans.executioncapability.CapabilityType;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.exception.InvalidRequestException;
-import lombok.Builder;
-import lombok.Value;
+
 import software.wings.beans.AzureConfig;
 import software.wings.beans.GcpConfig;
 import software.wings.beans.KubernetesClusterConfig;
@@ -12,6 +11,8 @@ import software.wings.service.impl.ContainerServiceParams;
 import software.wings.settings.SettingValue;
 
 import javax.validation.constraints.NotNull;
+import lombok.Builder;
+import lombok.Value;
 
 @Value
 @Builder

@@ -1,16 +1,14 @@
 package software.wings.service.impl.yaml.handler.defaults;
 
-import static java.util.function.Function.identity;
-import static java.util.stream.Collectors.toList;
 import static software.wings.beans.Environment.GLOBAL_ENV_ID;
 
-import com.google.common.collect.Lists;
-import com.google.inject.Inject;
+import static java.util.function.Function.identity;
+import static java.util.stream.Collectors.toList;
 
 import io.harness.exception.HarnessException;
 import io.harness.exception.WingsException;
 import io.harness.git.model.ChangeType;
-import org.apache.commons.collections.CollectionUtils;
+
 import software.wings.beans.NameValuePair;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.StringValue;
@@ -20,10 +18,13 @@ import software.wings.service.intfc.yaml.YamlPushService;
 import software.wings.settings.SettingValue;
 import software.wings.settings.SettingVariableTypes;
 
+import com.google.common.collect.Lists;
+import com.google.inject.Inject;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
+import org.apache.commons.collections.CollectionUtils;
 
 /**
  * Takes care of converting Account and Application level defaults to Defaults entity object.

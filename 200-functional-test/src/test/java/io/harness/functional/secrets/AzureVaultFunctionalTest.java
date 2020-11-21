@@ -4,12 +4,11 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.rule.OwnerRule.ANKIT;
 import static io.harness.testframework.restutils.SecretsRestUtils.addSecret;
 import static io.harness.testframework.restutils.SecretsRestUtils.deleteSecret;
+
 import static junit.framework.TestCase.assertEquals;
 import static junit.framework.TestCase.assertNotNull;
 import static junit.framework.TestCase.assertTrue;
 import static org.apache.commons.lang3.RandomStringUtils.randomAlphanumeric;
-
-import com.google.inject.Inject;
 
 import io.harness.beans.EncryptedData;
 import io.harness.beans.SecretText;
@@ -22,17 +21,19 @@ import io.harness.rule.Owner;
 import io.harness.scm.ScmSecret;
 import io.harness.scm.SecretName;
 import io.harness.testframework.framework.Setup;
+
+import software.wings.beans.AzureVaultConfig;
+import software.wings.dl.WingsPersistence;
+
+import com.google.inject.Inject;
 import io.restassured.mapper.ObjectMapperType;
+import java.util.List;
+import javax.ws.rs.core.GenericType;
 import lombok.extern.slf4j.Slf4j;
 import org.jetbrains.annotations.NotNull;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
-import software.wings.beans.AzureVaultConfig;
-import software.wings.dl.WingsPersistence;
-
-import java.util.List;
-import javax.ws.rs.core.GenericType;
 
 /**
  * @author marklu on 9/11/19

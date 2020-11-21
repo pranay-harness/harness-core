@@ -1,8 +1,9 @@
 package software.wings.graphql.datafetcher.application;
 
-import lombok.experimental.UtilityClass;
 import software.wings.graphql.schema.type.QLGitSyncConfig.QLGitSyncConfigBuilder;
 import software.wings.yaml.gitSync.YamlGitConfig;
+
+import lombok.experimental.UtilityClass;
 
 @UtilityClass
 public class YamlGitConfigController {

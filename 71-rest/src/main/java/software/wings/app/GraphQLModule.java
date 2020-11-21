@@ -1,14 +1,5 @@
 package software.wings.app;
 
-import com.google.common.collect.Sets;
-import com.google.inject.AbstractModule;
-import com.google.inject.Scopes;
-import com.google.inject.TypeLiteral;
-import com.google.inject.multibindings.MapBinder;
-import com.google.inject.name.Names;
-
-import graphql.GraphQL;
-import graphql.schema.DataFetcher;
 import io.harness.ccm.setup.graphql.CeConnectorDataFetcher;
 import io.harness.ccm.setup.graphql.EksClusterStatsDataFetcher;
 import io.harness.ccm.setup.graphql.InfraAccountConnectionDataFetcher;
@@ -20,9 +11,7 @@ import io.harness.ccm.views.graphql.ViewFilterStatsDataFetcher;
 import io.harness.ccm.views.graphql.ViewTimeSeriesStatsDataFetcher;
 import io.harness.ccm.views.graphql.ViewTrendStatsDataFetcher;
 import io.harness.ccm.views.graphql.ViewsDataFetcher;
-import org.dataloader.MappedBatchLoader;
-import org.hibernate.validator.constraints.NotBlank;
-import org.jetbrains.annotations.NotNull;
+
 import software.wings.beans.infrastructure.instance.info.AutoScalingGroupInstanceInfo;
 import software.wings.beans.infrastructure.instance.info.CodeDeployInstanceInfo;
 import software.wings.beans.infrastructure.instance.info.Ec2InstanceInfo;
@@ -177,8 +166,19 @@ import software.wings.graphql.instrumentation.QLAuditInstrumentation;
 import software.wings.graphql.provider.GraphQLProvider;
 import software.wings.graphql.provider.QueryLanguageProvider;
 
+import com.google.common.collect.Sets;
+import com.google.inject.AbstractModule;
+import com.google.inject.Scopes;
+import com.google.inject.TypeLiteral;
+import com.google.inject.multibindings.MapBinder;
+import com.google.inject.name.Names;
+import graphql.GraphQL;
+import graphql.schema.DataFetcher;
 import java.util.Collections;
 import java.util.Set;
+import org.dataloader.MappedBatchLoader;
+import org.hibernate.validator.constraints.NotBlank;
+import org.jetbrains.annotations.NotNull;
 
 /**
  * Created a new module as part of code review comment

@@ -1,20 +1,17 @@
 package io.harness.ng.core.schema.resource;
 
 import static io.harness.exception.WingsException.USER;
+
 import static javax.ws.rs.core.MediaType.APPLICATION_OCTET_STREAM;
+
+import io.harness.exception.InvalidRequestException;
+import io.harness.ng.core.schema.YamlBaseUrlService;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Charsets;
 import com.google.inject.Inject;
-
-import io.harness.exception.InvalidRequestException;
-import io.harness.ng.core.schema.YamlBaseUrlService;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
-import lombok.AccessLevel;
-import lombok.AllArgsConstructor;
-import org.apache.commons.io.FileUtils;
-
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -33,6 +30,9 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.ResponseBuilder;
+import lombok.AccessLevel;
+import lombok.AllArgsConstructor;
+import org.apache.commons.io.FileUtils;
 
 @Api("/yamlschema")
 @Path("yamlschema")

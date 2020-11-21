@@ -2,11 +2,10 @@ package io.harness.cvng.core.services.api;
 
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
-import com.google.common.base.Preconditions;
-
 import io.harness.cvng.core.beans.DSConfig;
 import io.harness.cvng.core.entities.CVConfig;
 
+import com.google.common.base.Preconditions;
 import java.util.List;
 
 public interface CVConfigTransformer<C extends CVConfig, T extends DSConfig> {

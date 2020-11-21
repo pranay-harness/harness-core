@@ -1,11 +1,11 @@
 package io.harness.governance.pipeline.service.model;
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import lombok.Value;
 import software.wings.beans.HarnessTagLink;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
+import lombok.Value;
 
 @Value
 @JsonIgnoreProperties(ignoreUnknown = true)

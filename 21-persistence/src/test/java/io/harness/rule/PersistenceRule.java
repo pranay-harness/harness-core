@@ -4,17 +4,9 @@ import static io.harness.cache.CacheBackend.CAFFEINE;
 import static io.harness.cache.CacheBackend.NOOP;
 import static io.harness.lock.DistributedLockImplementation.MONGO;
 import static io.harness.rule.TestUserProvider.testUserProvider;
+
 import static java.time.Duration.ofSeconds;
 import static java.util.Arrays.asList;
-
-import com.google.common.collect.ImmutableSet;
-import com.google.inject.AbstractModule;
-import com.google.inject.Injector;
-import com.google.inject.Module;
-import com.google.inject.Provides;
-import com.google.inject.Singleton;
-import com.google.inject.TypeLiteral;
-import com.google.inject.name.Named;
 
 import io.harness.cache.CacheConfig;
 import io.harness.cache.CacheConfig.CacheConfigBuilder;
@@ -50,12 +42,15 @@ import io.harness.testlib.module.TestMongoModule;
 import io.harness.threading.CurrentThreadExecutor;
 import io.harness.threading.ExecutorModule;
 import io.harness.time.TimeModule;
-import lombok.extern.slf4j.Slf4j;
-import org.junit.rules.MethodRule;
-import org.junit.runners.model.FrameworkMethod;
-import org.junit.runners.model.Statement;
-import org.mongodb.morphia.converters.TypeConverter;
 
+import com.google.common.collect.ImmutableSet;
+import com.google.inject.AbstractModule;
+import com.google.inject.Injector;
+import com.google.inject.Module;
+import com.google.inject.Provides;
+import com.google.inject.Singleton;
+import com.google.inject.TypeLiteral;
+import com.google.inject.name.Named;
 import java.io.Closeable;
 import java.io.IOException;
 import java.lang.annotation.Annotation;
@@ -63,6 +58,11 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import lombok.extern.slf4j.Slf4j;
+import org.junit.rules.MethodRule;
+import org.junit.runners.model.FrameworkMethod;
+import org.junit.runners.model.Statement;
+import org.mongodb.morphia.converters.TypeConverter;
 
 @Slf4j
 public class PersistenceRule implements MethodRule, InjectorRuleMixin, MongoRuleMixin {
@@ -177,15 +177,15 @@ public class PersistenceRule implements MethodRule, InjectorRuleMixin, MongoRule
       @Override
       protected void configure() {
         final List<String> topic = asList("topic");
-        bind(new TypeLiteral<QueuePublisher<TestTopicQueuableObject>>() {})
-            .toInstance(new MongoQueuePublisher<>(TestTopicQueuableObject.class.getSimpleName(), topic));
+        bind(new TypeLiteral<QueuePublisher<TestTopicQueuableObject>>() {
+        }).toInstance(new MongoQueuePublisher<>(TestTopicQueuableObject.class.getSimpleName(), topic));
         final List<List<String>> topicExpression = asList(topic);
-        bind(new TypeLiteral<QueueConsumer<TestTopicQueuableObject>>() {})
-            .toInstance(new MongoQueueConsumer<>(TestTopicQueuableObject.class, ofSeconds(5), topicExpression));
-        bind(new TypeLiteral<QueuePublisher<TestNoTopicQueuableObject>>() {})
-            .toInstance(new MongoQueuePublisher<>(TestNoTopicQueuableObject.class.getSimpleName(), topic));
-        bind(new TypeLiteral<QueueConsumer<TestNoTopicQueuableObject>>() {})
-            .toInstance(new MongoQueueConsumer<>(TestNoTopicQueuableObject.class, ofSeconds(5), topicExpression));
+        bind(new TypeLiteral<QueueConsumer<TestTopicQueuableObject>>() {
+        }).toInstance(new MongoQueueConsumer<>(TestTopicQueuableObject.class, ofSeconds(5), topicExpression));
+        bind(new TypeLiteral<QueuePublisher<TestNoTopicQueuableObject>>() {
+        }).toInstance(new MongoQueuePublisher<>(TestNoTopicQueuableObject.class.getSimpleName(), topic));
+        bind(new TypeLiteral<QueueConsumer<TestNoTopicQueuableObject>>() {
+        }).toInstance(new MongoQueueConsumer<>(TestNoTopicQueuableObject.class, ofSeconds(5), topicExpression));
 
         bind(QueueController.class).toInstance(new QueueController() {
           @Override

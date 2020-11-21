@@ -3,6 +3,7 @@ package io.harness.ccm.views.graphql;
 import io.harness.ccm.views.entities.ViewChartType;
 import io.harness.ccm.views.entities.ViewState;
 import io.harness.ccm.views.entities.ViewType;
+
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Value;

@@ -3,10 +3,10 @@ package io.harness.delegate.task.azure.appservice;
 import io.harness.azure.model.AzureAppServiceApplicationSetting;
 import io.harness.azure.model.AzureAppServiceConnectionString;
 import io.harness.azure.model.AzureAppServiceDockerSetting;
-import lombok.Builder;
-import lombok.Data;
 
 import java.util.Map;
+import lombok.Builder;
+import lombok.Data;
 
 @Data
 @Builder

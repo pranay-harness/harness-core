@@ -1,13 +1,14 @@
 package software.wings.service.intfc.aws.delegate;
 
+import io.harness.security.encryption.EncryptedDataDetail;
+
+import software.wings.beans.AwsConfig;
+
 import com.amazonaws.services.ecs.model.ContainerInstance;
 import com.amazonaws.services.ecs.model.ContainerInstanceStatus;
 import com.amazonaws.services.ecs.model.DesiredStatus;
 import com.amazonaws.services.ecs.model.Service;
 import com.amazonaws.services.ecs.model.Task;
-import io.harness.security.encryption.EncryptedDataDetail;
-import software.wings.beans.AwsConfig;
-
 import java.util.List;
 
 public interface AwsEcsHelperServiceDelegate {

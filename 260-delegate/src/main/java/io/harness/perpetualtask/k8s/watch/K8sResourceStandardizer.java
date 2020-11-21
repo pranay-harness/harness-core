@@ -3,9 +3,8 @@ package io.harness.perpetualtask.k8s.watch;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 
 import io.kubernetes.client.custom.Quantity;
-import lombok.experimental.UtilityClass;
-
 import java.math.BigDecimal;
+import lombok.experimental.UtilityClass;
 
 /**
  * Standardize units of cpu & memory resources.

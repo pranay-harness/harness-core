@@ -2,6 +2,7 @@ package io.harness.connector.entities.embedded.vaultconnector;
 
 import io.harness.connector.entities.Connector;
 import io.harness.security.encryption.AccessType;
+
 import lombok.Builder;
 import lombok.EqualsAndHashCode;
 import lombok.Value;

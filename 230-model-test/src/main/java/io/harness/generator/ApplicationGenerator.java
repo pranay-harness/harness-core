@@ -1,20 +1,22 @@
 package io.harness.generator;
 
 import static io.harness.govern.Switch.unhandled;
+
 import static software.wings.beans.Application.Builder.anApplication;
 
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
-
-import io.github.benas.randombeans.api.EnhancedRandom;
 import io.harness.generator.AccountGenerator.Accounts;
 import io.harness.generator.OwnerManager.Owners;
+
 import software.wings.beans.Account;
 import software.wings.beans.Application;
 import software.wings.beans.Application.ApplicationKeys;
 import software.wings.beans.Application.Builder;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.AppService;
+
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
+import io.github.benas.randombeans.api.EnhancedRandom;
 
 @Singleton
 public class ApplicationGenerator {

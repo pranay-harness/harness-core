@@ -2,6 +2,10 @@ package software.wings.delegatetasks.aws.ecs.ecstaskhandler;
 
 import static io.harness.logging.CommandExecutionStatus.SUCCESS;
 import static io.harness.rule.OwnerRule.ARVIND;
+
+import static software.wings.beans.command.EcsSetupParams.EcsSetupParamsBuilder.anEcsSetupParams;
+import static software.wings.utils.WingsTestConstants.SERVICE_ID;
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
@@ -9,19 +13,11 @@ import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
-import static software.wings.beans.command.EcsSetupParams.EcsSetupParamsBuilder.anEcsSetupParams;
-import static software.wings.utils.WingsTestConstants.SERVICE_ID;
 
-import com.google.inject.Inject;
-
-import com.amazonaws.services.ecs.model.TaskDefinition;
 import io.harness.category.element.UnitTests;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.rule.Owner;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
+
 import software.wings.WingsBaseTest;
 import software.wings.beans.AwsConfig;
 import software.wings.beans.command.ExecutionLogCallback;
@@ -32,7 +28,13 @@ import software.wings.helpers.ext.ecs.request.EcsServiceSetupRequest;
 import software.wings.helpers.ext.ecs.response.EcsCommandExecutionResponse;
 import software.wings.service.intfc.security.EncryptionService;
 
+import com.amazonaws.services.ecs.model.TaskDefinition;
+import com.google.inject.Inject;
 import java.util.HashMap;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
 
 public class EcsBlueGreenRoute53SetupCommandHandlerTest extends WingsBaseTest {
   @Mock private EcsSetupCommandTaskHelper mockEcsSetupCommandTaskHelper;

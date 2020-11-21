@@ -2,10 +2,9 @@ package io.harness.queue;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 
-import lombok.experimental.UtilityClass;
-
 import java.util.ArrayList;
 import java.util.List;
+import lombok.experimental.UtilityClass;
 
 @UtilityClass
 public class TopicUtils {

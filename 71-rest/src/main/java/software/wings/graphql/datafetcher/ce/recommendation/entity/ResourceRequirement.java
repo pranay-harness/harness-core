@@ -2,11 +2,11 @@ package software.wings.graphql.datafetcher.ce.recommendation.entity;
 
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.data.structure.EmptyPredicate.IsEmpty;
+
+import java.util.Map;
 import lombok.Builder;
 import lombok.Singular;
 import lombok.Value;
-
-import java.util.Map;
 
 @Value
 @Builder

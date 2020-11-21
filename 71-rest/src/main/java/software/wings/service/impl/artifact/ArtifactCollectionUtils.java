@@ -6,10 +6,7 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.validation.Validator.notNullCheck;
-import static java.lang.String.format;
-import static java.util.Optional.ofNullable;
-import static java.util.stream.Collectors.toList;
-import static org.apache.commons.lang3.StringUtils.isNotBlank;
+
 import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static software.wings.beans.artifact.Artifact.Builder.anArtifact;
 import static software.wings.beans.artifact.ArtifactStreamType.ACR;
@@ -31,9 +28,10 @@ import static software.wings.expression.SecretFunctor.Mode.CASCADING;
 import static software.wings.helpers.ext.jenkins.BuildDetails.Builder.aBuildDetails;
 import static software.wings.service.impl.artifact.ArtifactServiceImpl.ARTIFACT_RETENTION_SIZE;
 
-import com.google.common.collect.Lists;
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
+import static java.lang.String.format;
+import static java.util.Optional.ofNullable;
+import static java.util.stream.Collectors.toList;
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.artifact.ArtifactCollectionResponseHandler;
@@ -55,8 +53,7 @@ import io.harness.perpetualtask.PerpetualTaskService;
 import io.harness.persistence.HIterator;
 import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.tasks.Cd1SetupFields;
-import lombok.extern.slf4j.Slf4j;
-import org.mongodb.morphia.annotations.Transient;
+
 import software.wings.annotation.EncryptableSetting;
 import software.wings.beans.AwsConfig;
 import software.wings.beans.AzureConfig;
@@ -109,6 +106,9 @@ import software.wings.settings.SettingVariableTypes;
 import software.wings.utils.ArtifactType;
 import software.wings.utils.RepositoryType;
 
+import com.google.common.collect.Lists;
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -120,6 +120,8 @@ import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+import lombok.extern.slf4j.Slf4j;
+import org.mongodb.morphia.annotations.Transient;
 
 @OwnedBy(CDC)
 @Singleton
@@ -403,8 +405,8 @@ public class ArtifactCollectionUtils {
         String loginServer = isNotEmpty(acrArtifactStream.getRegistryHostName())
             ? acrArtifactStream.getRegistryHostName()
             : azureHelperService.getLoginServerForRegistry(azureConfig,
-                  secretManager.getEncryptionDetails(azureConfig, null, workflowExecutionId),
-                  acrArtifactStream.getSubscriptionId(), acrArtifactStream.getRegistryName());
+                secretManager.getEncryptionDetails(azureConfig, null, workflowExecutionId),
+                acrArtifactStream.getSubscriptionId(), acrArtifactStream.getRegistryName());
 
         imageDetailsBuilder.registryUrl(azureHelperService.getUrl(loginServer))
             .sourceName(acrArtifactStream.getRepositoryName())
@@ -606,7 +608,7 @@ public class ArtifactCollectionUtils {
   private static boolean isArtifactoryDockerOrGeneric(ArtifactStream artifactStream) {
     return ARTIFACTORY.name().equals(artifactStream.getArtifactStreamType())
         && (artifactStream.fetchArtifactStreamAttributes().getRepositoryType().equals(RepositoryType.docker.name())
-               || !"maven".equals(artifactStream.fetchArtifactStreamAttributes().getRepositoryType()));
+            || !"maven".equals(artifactStream.fetchArtifactStreamAttributes().getRepositoryType()));
   }
 
   public static BuildSourceRequestType getRequestType(ArtifactStream artifactStream, ArtifactType artifactType) {

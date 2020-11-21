@@ -2,7 +2,6 @@ package io.harness.orchestration.persistence;
 
 import com.google.protobuf.Message;
 import com.google.protobuf.util.JsonFormat;
-
 import lombok.SneakyThrows;
 import org.bson.Document;
 import org.springframework.core.convert.converter.Converter;

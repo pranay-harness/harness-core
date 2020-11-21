@@ -2,21 +2,21 @@ package migrations.all;
 
 import static software.wings.beans.Application.GLOBAL_APP_ID;
 
-import com.google.inject.Inject;
-
 import io.harness.persistence.HIterator;
-import lombok.extern.slf4j.Slf4j;
-import migrations.Migration;
-import org.apache.commons.lang3.StringUtils;
-import org.mongodb.morphia.query.Query;
+
 import software.wings.beans.Application;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.impl.yaml.service.YamlHelper;
 import software.wings.service.intfc.AppService;
 import software.wings.yaml.errorhandling.GitSyncError;
 
+import com.google.inject.Inject;
 import java.util.HashMap;
 import java.util.Map;
+import lombok.extern.slf4j.Slf4j;
+import migrations.Migration;
+import org.apache.commons.lang3.StringUtils;
+import org.mongodb.morphia.query.Query;
 
 @Slf4j
 public class UpdateGitSyncErrorMigration implements Migration {

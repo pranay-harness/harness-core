@@ -1,9 +1,8 @@
 package io.harness.secret;
 
 import static io.harness.rule.OwnerRule.DEEPAK;
-import static org.assertj.core.api.Assertions.assertThat;
 
-import com.google.inject.Inject;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.GraphQLTest;
 import io.harness.beans.SecretText;
@@ -15,11 +14,14 @@ import io.harness.generator.Randomizer;
 import io.harness.rule.Owner;
 import io.harness.serializer.JsonUtils;
 import io.harness.testframework.graphql.QLTestObject;
+
+import software.wings.beans.Account;
+import software.wings.service.intfc.security.SecretManager;
+
+import com.google.inject.Inject;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
-import software.wings.beans.Account;
-import software.wings.service.intfc.security.SecretManager;
 
 public class UpdateWinRMCredentialsTest extends GraphQLTest {
   @Inject private AccountGenerator accountGenerator;

@@ -1,7 +1,5 @@
 package io.harness.states;
 
-import com.google.inject.Inject;
-
 import io.harness.ambiance.Ambiance;
 import io.harness.beans.DelegateTaskRequest;
 import io.harness.beans.steps.stepinfo.CleanupStepInfo;
@@ -24,10 +22,11 @@ import io.harness.state.Step;
 import io.harness.state.io.StepInputPackage;
 import io.harness.state.io.StepResponse;
 import io.harness.stateutils.buildstate.ConnectorUtils;
-import lombok.extern.slf4j.Slf4j;
 
+import com.google.inject.Inject;
 import java.time.Duration;
 import java.util.ArrayList;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * State sends cleanup task to finish CI build job. It has to be executed in the end once all steps are complete

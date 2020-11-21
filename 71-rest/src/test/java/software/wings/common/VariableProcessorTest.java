@@ -3,9 +3,7 @@ package software.wings.common;
 import static io.harness.rule.OwnerRule.GEORGE;
 import static io.harness.rule.OwnerRule.RAGHU;
 import static io.harness.rule.OwnerRule.SRINIVAS;
-import static java.util.Arrays.asList;
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.Mockito.when;
+
 import static software.wings.api.InstanceElement.Builder.anInstanceElement;
 import static software.wings.api.ServiceTemplateElement.Builder.aServiceTemplateElement;
 import static software.wings.service.intfc.ServiceTemplateService.EncryptedFieldComputeMode.OBTAIN_VALUE;
@@ -15,11 +13,22 @@ import static software.wings.utils.WingsTestConstants.ENV_ID;
 import static software.wings.utils.WingsTestConstants.HOST_ID;
 import static software.wings.utils.WingsTestConstants.TEMPLATE_ID;
 
-import com.google.common.collect.ImmutableMap;
+import static java.util.Arrays.asList;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.when;
 
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
+
+import software.wings.api.HostElement;
+import software.wings.api.InstanceElement;
+import software.wings.beans.ServiceVariable;
+import software.wings.service.intfc.ServiceTemplateService;
+import software.wings.sm.WorkflowStandardParams;
+
+import com.google.common.collect.ImmutableMap;
+import java.util.ArrayDeque;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -27,13 +36,6 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnit;
 import org.mockito.junit.MockitoRule;
-import software.wings.api.HostElement;
-import software.wings.api.InstanceElement;
-import software.wings.beans.ServiceVariable;
-import software.wings.service.intfc.ServiceTemplateService;
-import software.wings.sm.WorkflowStandardParams;
-
-import java.util.ArrayDeque;
 
 /**
  * Created by peeyushaggarwal on 9/27/16.

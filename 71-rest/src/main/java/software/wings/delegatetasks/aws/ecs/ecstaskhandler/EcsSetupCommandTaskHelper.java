@@ -1,9 +1,17 @@
 package software.wings.delegatetasks.aws.ecs.ecstaskhandler;
 
-import static com.google.common.collect.Lists.newArrayList;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.exception.WingsException.USER;
+
+import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
+import static software.wings.beans.command.EcsSetupCommandUnit.ERROR;
+import static software.wings.delegatetasks.aws.ecs.ecstaskhandler.EcsSwapRoutesCommandTaskHelper.BG_GREEN;
+import static software.wings.delegatetasks.aws.ecs.ecstaskhandler.EcsSwapRoutesCommandTaskHelper.BG_VERSION;
+import static software.wings.service.impl.aws.model.AwsConstants.MAIN_ECS_CONTAINER_NAME_TAG;
+import static software.wings.utils.EcsConvention.getServiceNamePrefixFromServiceName;
+
+import static com.google.common.collect.Lists.newArrayList;
 import static java.lang.String.format;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
@@ -15,18 +23,28 @@ import static java.util.stream.Collectors.toSet;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.apache.commons.lang3.StringUtils.trim;
-import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
-import static software.wings.beans.command.EcsSetupCommandUnit.ERROR;
-import static software.wings.delegatetasks.aws.ecs.ecstaskhandler.EcsSwapRoutesCommandTaskHelper.BG_GREEN;
-import static software.wings.delegatetasks.aws.ecs.ecstaskhandler.EcsSwapRoutesCommandTaskHelper.BG_VERSION;
-import static software.wings.service.impl.aws.model.AwsConstants.MAIN_ECS_CONTAINER_NAME_TAG;
-import static software.wings.utils.EcsConvention.getServiceNamePrefixFromServiceName;
 
-import com.google.common.annotations.VisibleForTesting;
-import com.google.common.collect.HashMultimap;
-import com.google.common.collect.Multimap;
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
+import io.harness.container.ContainerInfo;
+import io.harness.eraro.ErrorCode;
+import io.harness.exception.WingsException;
+import io.harness.logging.LogLevel;
+import io.harness.security.encryption.EncryptedDataDetail;
+
+import software.wings.beans.AwsConfig;
+import software.wings.beans.SettingAttribute;
+import software.wings.beans.command.ContainerSetupCommandUnitExecutionData.ContainerSetupCommandUnitExecutionDataBuilder;
+import software.wings.beans.command.EcsSetupParams;
+import software.wings.beans.command.ExecutionLogCallback;
+import software.wings.beans.container.AwsAutoScalarConfig;
+import software.wings.beans.container.EcsContainerTask;
+import software.wings.beans.container.EcsServiceSpecification;
+import software.wings.cloudprovider.UpdateServiceCountRequestData;
+import software.wings.cloudprovider.aws.AwsClusterService;
+import software.wings.cloudprovider.aws.EcsContainerService;
+import software.wings.service.impl.AwsHelperService;
+import software.wings.service.intfc.aws.delegate.AwsAppAutoScalingHelperServiceDelegate;
+import software.wings.service.intfc.aws.delegate.AwsEcsHelperServiceDelegate;
+import software.wings.utils.EcsConvention;
 
 import com.amazonaws.services.applicationautoscaling.model.DescribeScalableTargetsRequest;
 import com.amazonaws.services.applicationautoscaling.model.DescribeScalableTargetsResult;
@@ -62,32 +80,11 @@ import com.amazonaws.services.elasticloadbalancingv2.model.Listener;
 import com.amazonaws.services.elasticloadbalancingv2.model.TargetGroup;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import io.harness.container.ContainerInfo;
-import io.harness.eraro.ErrorCode;
-import io.harness.exception.WingsException;
-import io.harness.logging.LogLevel;
-import io.harness.security.encryption.EncryptedDataDetail;
-import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.collections.CollectionUtils;
-import org.apache.commons.lang3.ArrayUtils;
-import org.apache.commons.lang3.StringUtils;
-import org.slf4j.Logger;
-import software.wings.beans.AwsConfig;
-import software.wings.beans.SettingAttribute;
-import software.wings.beans.command.ContainerSetupCommandUnitExecutionData.ContainerSetupCommandUnitExecutionDataBuilder;
-import software.wings.beans.command.EcsSetupParams;
-import software.wings.beans.command.ExecutionLogCallback;
-import software.wings.beans.container.AwsAutoScalarConfig;
-import software.wings.beans.container.EcsContainerTask;
-import software.wings.beans.container.EcsServiceSpecification;
-import software.wings.cloudprovider.UpdateServiceCountRequestData;
-import software.wings.cloudprovider.aws.AwsClusterService;
-import software.wings.cloudprovider.aws.EcsContainerService;
-import software.wings.service.impl.AwsHelperService;
-import software.wings.service.intfc.aws.delegate.AwsAppAutoScalingHelperServiceDelegate;
-import software.wings.service.intfc.aws.delegate.AwsEcsHelperServiceDelegate;
-import software.wings.utils.EcsConvention;
-
+import com.google.common.annotations.VisibleForTesting;
+import com.google.common.collect.HashMultimap;
+import com.google.common.collect.Multimap;
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -101,6 +98,11 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.collections.CollectionUtils;
+import org.apache.commons.lang3.ArrayUtils;
+import org.apache.commons.lang3.StringUtils;
+import org.slf4j.Logger;
 
 @Singleton
 @Slf4j

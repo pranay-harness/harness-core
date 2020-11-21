@@ -1,6 +1,7 @@
 package io.harness.gitsync.core.beans;
 
 import io.harness.git.model.GitFileChange;
+
 import lombok.Builder;
 import lombok.Data;
 

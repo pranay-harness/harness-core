@@ -2,12 +2,8 @@ package software.wings.resources.yaml;
 
 import static software.wings.security.PermissionAttribute.ResourceType.APPLICATION;
 
-import com.google.inject.Inject;
-
-import com.codahale.metrics.annotation.ExceptionMetered;
-import com.codahale.metrics.annotation.Timed;
 import io.harness.rest.RestResponse;
-import io.swagger.annotations.Api;
+
 import software.wings.security.annotations.Scope;
 import software.wings.service.intfc.yaml.YamlHistoryService;
 import software.wings.yaml.YamlHistory;
@@ -15,6 +11,10 @@ import software.wings.yaml.YamlVersion;
 import software.wings.yaml.YamlVersion.Type;
 import software.wings.yaml.YamlVersionList;
 
+import com.codahale.metrics.annotation.ExceptionMetered;
+import com.codahale.metrics.annotation.Timed;
+import com.google.inject.Inject;
+import io.swagger.annotations.Api;
 import java.util.Optional;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;

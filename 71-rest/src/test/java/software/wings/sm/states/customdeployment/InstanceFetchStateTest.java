@@ -5,6 +5,20 @@ import static io.harness.beans.ExecutionStatus.SUCCESS;
 import static io.harness.beans.SweepingOutputInstance.Scope.WORKFLOW;
 import static io.harness.rule.OwnerRule.TATHAGAT;
 import static io.harness.rule.OwnerRule.YOGESH;
+
+import static software.wings.api.InstanceElement.Builder.anInstanceElement;
+import static software.wings.beans.yaml.YamlConstants.PATH_DELIMITER;
+import static software.wings.sm.WorkflowStandardParams.Builder.aWorkflowStandardParams;
+import static software.wings.sm.states.customdeployment.InstanceFetchState.OUTPUT_PATH_KEY;
+import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
+import static software.wings.utils.WingsTestConstants.ACTIVITY_ID;
+import static software.wings.utils.WingsTestConstants.APP_ID;
+import static software.wings.utils.WingsTestConstants.ENV_ID;
+import static software.wings.utils.WingsTestConstants.INFRA_MAPPING_ID;
+import static software.wings.utils.WingsTestConstants.SERVICE_ID;
+import static software.wings.utils.WingsTestConstants.SERVICE_TEMPLATE_ID;
+import static software.wings.utils.WingsTestConstants.TEMPLATE_ID;
+
 import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -19,20 +33,6 @@ import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-import static software.wings.api.InstanceElement.Builder.anInstanceElement;
-import static software.wings.beans.yaml.YamlConstants.PATH_DELIMITER;
-import static software.wings.sm.WorkflowStandardParams.Builder.aWorkflowStandardParams;
-import static software.wings.sm.states.customdeployment.InstanceFetchState.OUTPUT_PATH_KEY;
-import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
-import static software.wings.utils.WingsTestConstants.ACTIVITY_ID;
-import static software.wings.utils.WingsTestConstants.APP_ID;
-import static software.wings.utils.WingsTestConstants.ENV_ID;
-import static software.wings.utils.WingsTestConstants.INFRA_MAPPING_ID;
-import static software.wings.utils.WingsTestConstants.SERVICE_ID;
-import static software.wings.utils.WingsTestConstants.SERVICE_TEMPLATE_ID;
-import static software.wings.utils.WingsTestConstants.TEMPLATE_ID;
-
-import com.google.common.collect.ImmutableMap;
 
 import io.harness.beans.DelegateTask;
 import io.harness.beans.DelegateTask.DelegateTaskKeys;
@@ -46,15 +46,7 @@ import io.harness.expression.ExpressionEvaluator;
 import io.harness.rule.Owner;
 import io.harness.tasks.Cd1SetupFields;
 import io.harness.tasks.ResponseData;
-import org.apache.commons.io.FileUtils;
-import org.apache.commons.lang3.StringUtils;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
-import org.mockito.ArgumentCaptor;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mongodb.morphia.Key;
+
 import software.wings.WingsBaseTest;
 import software.wings.api.HostElement;
 import software.wings.api.InfraMappingElement;
@@ -85,6 +77,7 @@ import software.wings.sm.ExecutionResponse;
 import software.wings.sm.StateExecutionContext;
 import software.wings.sm.WorkflowStandardParams;
 
+import com.google.common.collect.ImmutableMap;
 import java.io.File;
 import java.io.IOException;
 import java.net.URISyntaxException;
@@ -94,6 +87,15 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
+import org.apache.commons.io.FileUtils;
+import org.apache.commons.lang3.StringUtils;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
+import org.mockito.ArgumentCaptor;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mongodb.morphia.Key;
 
 public class InstanceFetchStateTest extends WingsBaseTest {
   @Mock private ExecutionContext context;
@@ -343,7 +345,7 @@ public class InstanceFetchStateTest extends WingsBaseTest {
             "cd-statefulset-0", "cd-statefulset-1", "k8sv2-statefulset-0", "statefulset-test-0", "statefulset-test-1");
     assertThat(instanceElements.stream()
                    .map(InstanceElement::getHost)
-                   .map(HostElement ::getProperties)
+                   .map(HostElement::getProperties)
                    .map(propertiesMap -> propertiesMap.get("uuid")))
         .containsExactlyInAnyOrder("1a86e740-32b3-467d-a3fa-e6c4af8bab7a", "2a3e8a66-439a-4a82-ac9a-e2e53e577266",
             "3af21535-c9fd-4b0d-98a5-06a0cb692803", "3c800ea6-7f46-4281-a351-1c436858b563",

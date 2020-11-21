@@ -1,15 +1,14 @@
 package io.harness.cvng.core.entities;
 
-import com.google.common.collect.Lists;
-
 import io.harness.cvng.core.utils.DateTimeUtils;
-import lombok.Data;
-import lombok.EqualsAndHashCode;
-import lombok.experimental.SuperBuilder;
 
+import com.google.common.collect.Lists;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.List;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.experimental.SuperBuilder;
 
 @Data
 @EqualsAndHashCode(callSuper = true)

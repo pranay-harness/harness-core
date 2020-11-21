@@ -2,11 +2,13 @@ package software.wings.beans.infrastructure.instance;
 
 import io.harness.annotation.HarnessEntity;
 import io.harness.beans.EmbeddedUser;
+
+import software.wings.beans.Base;
+
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import org.mongodb.morphia.annotations.Entity;
-import software.wings.beans.Base;
 
 /**
  * Keeps track of the manual sync job. These are short-lived.

@@ -1,8 +1,8 @@
 package io.harness.expression.app;
 
-import com.google.inject.AbstractModule;
-
 import io.harness.expression.evaluator.ExpressionServiceEvaluator;
+
+import com.google.inject.AbstractModule;
 
 public class ExpressionServiceModule extends AbstractModule {
   @Override

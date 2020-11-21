@@ -1,9 +1,10 @@
 package io.harness.ng.core.dto.secrets;
 
-import com.fasterxml.jackson.annotation.JsonTypeName;
 import io.harness.beans.DecryptableEntity;
 import io.harness.ng.core.models.TGTGenerationSpec;
 import io.harness.ng.core.models.TGTKeyTabFilePathSpec;
+
+import com.fasterxml.jackson.annotation.JsonTypeName;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;

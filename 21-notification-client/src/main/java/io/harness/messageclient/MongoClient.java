@@ -1,10 +1,11 @@
 package io.harness.messageclient;
 
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
 import io.harness.NotificationRequest;
 import io.harness.ng.MongoNotificationRequest;
 import io.harness.queue.QueuePublisher;
+
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
 
 @Singleton
 public class MongoClient implements MessageClient {

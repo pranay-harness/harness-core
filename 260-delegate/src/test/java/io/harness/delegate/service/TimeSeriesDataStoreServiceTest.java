@@ -1,6 +1,7 @@
 package io.harness.delegate.service;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.data.Offset.offset;
 
@@ -10,8 +11,6 @@ import io.harness.cvng.beans.TimeSeriesDataCollectionRecord;
 import io.harness.datacollection.entity.TimeSeriesRecord;
 import io.harness.rule.Owner;
 import io.harness.rule.OwnerRule;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -20,6 +19,8 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 public class TimeSeriesDataStoreServiceTest extends CategoryTest {
   @Test

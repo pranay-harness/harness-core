@@ -1,11 +1,11 @@
 package io.harness.cdng.service.beans;
 
+import io.harness.beans.ExecutionStrategyType;
+
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonValue;
 import io.fabric8.utils.Lists;
-import io.harness.beans.ExecutionStrategyType;
-
 import java.util.Arrays;
 import java.util.List;
 

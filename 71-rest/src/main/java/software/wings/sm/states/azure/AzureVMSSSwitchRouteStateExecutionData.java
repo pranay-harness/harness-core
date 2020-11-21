@@ -7,15 +7,16 @@ import static io.harness.azure.model.AzureConstants.PROD_BACKEND_POOL;
 import static io.harness.azure.model.AzureConstants.STAGE_BACKEND_POOL;
 
 import io.harness.delegate.beans.DelegateTaskNotifyResponseData;
+
+import software.wings.api.ExecutionDataValue;
+import software.wings.sm.StateExecutionData;
+
+import java.util.Map;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
-import software.wings.api.ExecutionDataValue;
-import software.wings.sm.StateExecutionData;
-
-import java.util.Map;
 
 @Data
 @Builder

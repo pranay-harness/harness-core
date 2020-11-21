@@ -4,12 +4,13 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.validation.Validator.notNullCheck;
-import static java.util.stream.Collectors.toList;
+
 import static software.wings.beans.Application.GLOBAL_APP_ID;
 
-import com.google.inject.Inject;
+import static java.util.stream.Collectors.toList;
 
 import io.harness.exception.InvalidRequestException;
+
 import software.wings.beans.Application;
 import software.wings.beans.InfrastructureProvisionerType;
 import software.wings.beans.NameValuePair;
@@ -22,6 +23,7 @@ import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.utils.Utils;
 
+import com.google.inject.Inject;
 import java.util.List;
 
 public class TerraformInfrastructureProvisionerYamlHandler

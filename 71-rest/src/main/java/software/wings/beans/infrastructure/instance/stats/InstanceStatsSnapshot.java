@@ -1,12 +1,19 @@
 package software.wings.beans.infrastructure.instance.stats;
 
-import com.google.common.collect.ImmutableList;
-
 import io.harness.annotation.HarnessEntity;
 import io.harness.mongo.index.FdIndex;
 import io.harness.mongo.index.Field;
 import io.harness.mongo.index.NgUniqueIndex;
 import io.harness.persistence.AccountAccess;
+
+import software.wings.beans.Base;
+import software.wings.beans.EntityType;
+
+import com.google.common.collect.ImmutableList;
+import java.time.Instant;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.EqualsAndHashCode;
@@ -16,13 +23,6 @@ import lombok.experimental.FieldNameConstants;
 import lombok.experimental.NonFinal;
 import org.apache.commons.collections4.CollectionUtils;
 import org.mongodb.morphia.annotations.Entity;
-import software.wings.beans.Base;
-import software.wings.beans.EntityType;
-
-import java.time.Instant;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
 
 @Value
 @NoArgsConstructor(access = AccessLevel.PRIVATE)

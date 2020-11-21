@@ -1,8 +1,9 @@
 package software.wings.service.impl.analysis;
 
+import software.wings.beans.jira.JiraTaskParameters;
+
 import lombok.Builder;
 import lombok.Data;
-import software.wings.beans.jira.JiraTaskParameters;
 
 @Data
 @Builder

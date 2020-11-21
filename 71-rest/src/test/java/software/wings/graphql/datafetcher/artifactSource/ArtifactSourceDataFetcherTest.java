@@ -1,9 +1,7 @@
 package software.wings.graphql.datafetcher.artifactSource;
 
 import static io.harness.rule.OwnerRule.AADITI;
-import static java.util.Arrays.asList;
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.Mockito.when;
+
 import static software.wings.graphql.datafetcher.artifactSource.ArtifactSourceTestHelper.getNexusArtifactStream;
 import static software.wings.graphql.datafetcher.artifactSource.ArtifactSourceTestHelper.getSmbArtifactStream;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
@@ -12,14 +10,13 @@ import static software.wings.utils.WingsTestConstants.ARTIFACT_STREAM_ID;
 import static software.wings.utils.WingsTestConstants.SERVICE_ID;
 import static software.wings.utils.WingsTestConstants.SETTING_ID;
 
-import com.google.inject.Inject;
+import static java.util.Arrays.asList;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.when;
 
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
+
 import software.wings.beans.artifact.NexusArtifactStream;
 import software.wings.beans.artifact.SmbArtifactStream;
 import software.wings.graphql.datafetcher.AbstractDataFetcherTestBase;
@@ -29,8 +26,13 @@ import software.wings.graphql.schema.type.artifactSource.QLNexusArtifactSource;
 import software.wings.graphql.schema.type.artifactSource.QLSMBArtifactSource;
 import software.wings.service.intfc.ArtifactStreamService;
 
+import com.google.inject.Inject;
 import java.util.ArrayList;
 import java.util.List;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
 
 public class ArtifactSourceDataFetcherTest extends AbstractDataFetcherTestBase {
   @Mock private ArtifactStreamService artifactStreamService;

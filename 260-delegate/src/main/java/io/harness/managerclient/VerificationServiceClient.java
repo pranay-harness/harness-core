@@ -3,10 +3,7 @@ package io.harness.managerclient;
 import static software.wings.common.VerificationConstants.DELEGATE_DATA_COLLECTION;
 
 import io.harness.rest.RestResponse;
-import retrofit2.Call;
-import retrofit2.http.Body;
-import retrofit2.http.POST;
-import retrofit2.http.Query;
+
 import software.wings.common.VerificationConstants;
 import software.wings.service.impl.analysis.DataCollectionTaskResult;
 import software.wings.service.impl.analysis.LogElement;
@@ -17,6 +14,10 @@ import software.wings.sm.StateType;
 import software.wings.verification.CVActivityLog;
 
 import java.util.List;
+import retrofit2.Call;
+import retrofit2.http.Body;
+import retrofit2.http.POST;
+import retrofit2.http.Query;
 
 /**
  * Created by raghu on 09/17/18.

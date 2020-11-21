@@ -9,12 +9,12 @@ import io.harness.steps.resourcerestraint.beans.HoldingScope;
 import io.harness.timeout.TimeoutObtainment;
 import io.harness.timeout.trackers.absolute.AbsoluteTimeoutParameters;
 import io.harness.timeout.trackers.absolute.AbsoluteTimeoutTrackerFactory;
-import lombok.Builder;
-import lombok.Value;
 
 import java.util.Collections;
 import java.util.List;
 import javax.validation.constraints.NotNull;
+import lombok.Builder;
+import lombok.Value;
 
 @OwnedBy(CDC)
 @Value

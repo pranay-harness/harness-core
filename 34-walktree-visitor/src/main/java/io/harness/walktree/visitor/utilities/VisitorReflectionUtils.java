@@ -1,8 +1,7 @@
 package io.harness.walktree.visitor.utilities;
 
-import lombok.experimental.UtilityClass;
-
 import java.lang.reflect.Field;
+import lombok.experimental.UtilityClass;
 
 @UtilityClass
 public class VisitorReflectionUtils {

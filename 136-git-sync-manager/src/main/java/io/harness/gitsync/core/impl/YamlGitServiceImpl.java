@@ -1,7 +1,5 @@
 package io.harness.gitsync.core.impl;
 
-import static com.google.common.base.Preconditions.checkNotNull;
-import static com.google.common.base.Preconditions.checkState;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
@@ -15,18 +13,15 @@ import static io.harness.gitsync.common.YamlProcessingLogContext.REPO_NAME;
 import static io.harness.gitsync.common.YamlProcessingLogContext.WEBHOOK_TOKEN;
 import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
 import static io.harness.waiter.NgOrchestrationNotifyEventListener.NG_ORCHESTRATION;
+
+import static software.wings.beans.yaml.GitCommandRequest.gitRequestTimeout;
+
+import static com.google.common.base.Preconditions.checkNotNull;
+import static com.google.common.base.Preconditions.checkState;
 import static java.lang.String.format;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static java.util.stream.Collectors.toList;
-import static software.wings.beans.yaml.GitCommandRequest.gitRequestTimeout;
 
-import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Stopwatch;
-import com.google.common.collect.ImmutableMap;
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
-
-import com.fasterxml.jackson.core.type.TypeReference;
 import io.harness.connector.apis.dto.ConnectorFilter;
 import io.harness.connector.apis.dto.ConnectorInfoDTO;
 import io.harness.data.structure.NullSafeImmutableMap;
@@ -62,12 +57,17 @@ import io.harness.secretmanagerclient.services.api.SecretManagerClientService;
 import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.serializer.JsonUtils;
 import io.harness.waiter.WaitNotifyEngine;
-import lombok.AllArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
+
 import software.wings.beans.TaskType;
 import software.wings.beans.trigger.WebhookSource;
 import software.wings.service.impl.trigger.WebhookEventUtils;
 
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Stopwatch;
+import com.google.common.collect.ImmutableMap;
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -75,6 +75,8 @@ import java.util.Map;
 import java.util.Optional;
 import javax.validation.executable.ValidateOnExecution;
 import javax.ws.rs.core.HttpHeaders;
+import lombok.AllArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 @ValidateOnExecution
 @Singleton

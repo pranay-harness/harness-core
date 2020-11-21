@@ -1,22 +1,19 @@
 package software.wings.service.impl.yaml;
 
-import static com.google.common.base.Charsets.UTF_8;
 import static io.harness.exception.WingsException.SRE;
 import static io.harness.validation.Validator.notNullCheck;
+
 import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static software.wings.beans.yaml.YamlConstants.DEFAULTS_YAML;
 import static software.wings.beans.yaml.YamlConstants.PATH_DELIMITER;
 import static software.wings.beans.yaml.YamlConstants.YAML_EXTENSION;
 
-import com.google.common.collect.Lists;
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
+import static com.google.common.base.Charsets.UTF_8;
 
 import io.harness.delegate.service.DelegateAgentFileService.FileBucket;
 import io.harness.exception.WingsException;
 import io.harness.git.model.ChangeType;
-import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.StringUtils;
+
 import software.wings.beans.Application;
 import software.wings.beans.Base;
 import software.wings.beans.ConfigFile;
@@ -46,9 +43,14 @@ import software.wings.service.intfc.yaml.YamlResourceService;
 import software.wings.settings.SettingVariableTypes;
 import software.wings.utils.Utils;
 
+import com.google.common.collect.Lists;
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import java.io.ByteArrayOutputStream;
 import java.util.ArrayList;
 import java.util.List;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 
 /**
  * Entity Update Service Implementation.

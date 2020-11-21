@@ -5,9 +5,9 @@ import static io.harness.annotations.dev.HarnessTeam.CDC;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.data.Outcome;
 import io.harness.resolvers.Resolver;
-import lombok.NonNull;
 
 import java.util.List;
+import lombok.NonNull;
 
 @OwnedBy(CDC)
 public interface OutcomeService extends Resolver<Outcome> {

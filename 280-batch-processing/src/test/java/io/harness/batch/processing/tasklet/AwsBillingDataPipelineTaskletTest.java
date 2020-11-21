@@ -4,6 +4,7 @@ import static io.harness.batch.processing.ccm.CCMJobConstants.ACCOUNT_ID;
 import static io.harness.batch.processing.service.impl.BillingDataPipelineServiceImpl.preAggQueryKey;
 import static io.harness.batch.processing.service.impl.BillingDataPipelineServiceImpl.scheduledQueryKey;
 import static io.harness.rule.OwnerRule.ROHIT;
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.verify;
@@ -17,6 +18,19 @@ import io.harness.category.element.UnitTests;
 import io.harness.ccm.billing.entities.BillingDataPipelineRecord;
 import io.harness.ccm.billing.entities.BillingDataPipelineRecord.BillingDataPipelineRecordKeys;
 import io.harness.rule.Owner;
+
+import software.wings.beans.Account;
+import software.wings.beans.SettingAttribute;
+import software.wings.beans.ce.CEAwsConfig;
+import software.wings.service.intfc.instance.CloudToHarnessMappingService;
+import software.wings.settings.SettingVariableTypes;
+
+import java.io.IOException;
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -32,18 +46,6 @@ import org.springframework.batch.core.JobParameters;
 import org.springframework.batch.core.StepExecution;
 import org.springframework.batch.core.scope.context.ChunkContext;
 import org.springframework.batch.core.scope.context.StepContext;
-import software.wings.beans.Account;
-import software.wings.beans.SettingAttribute;
-import software.wings.beans.ce.CEAwsConfig;
-import software.wings.service.intfc.instance.CloudToHarnessMappingService;
-import software.wings.settings.SettingVariableTypes;
-
-import java.io.IOException;
-import java.time.Instant;
-import java.time.temporal.ChronoUnit;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Map;
 
 @RunWith(MockitoJUnitRunner.class)
 public class AwsBillingDataPipelineTaskletTest extends CategoryTest {

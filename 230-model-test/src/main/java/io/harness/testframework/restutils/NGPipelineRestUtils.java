@@ -7,10 +7,10 @@ import static io.harness.NGCommonEntityConstants.PROJECT_KEY;
 
 import io.harness.ng.core.dto.ResponseDTO;
 import io.harness.testframework.framework.Setup;
-import lombok.experimental.UtilityClass;
 
 import java.util.Map;
 import javax.ws.rs.core.GenericType;
+import lombok.experimental.UtilityClass;
 
 @UtilityClass
 public class NGPipelineRestUtils {

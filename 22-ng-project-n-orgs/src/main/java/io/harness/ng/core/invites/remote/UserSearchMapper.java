@@ -4,6 +4,7 @@ import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.ng.core.invites.dto.UserSearchDTO;
 import io.harness.ng.core.user.User;
+
 import lombok.experimental.UtilityClass;
 
 @UtilityClass

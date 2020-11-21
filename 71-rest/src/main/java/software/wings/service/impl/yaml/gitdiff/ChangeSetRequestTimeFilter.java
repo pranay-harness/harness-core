@@ -1,12 +1,9 @@
 package software.wings.service.impl.yaml.gitdiff;
 
-import static java.lang.String.format;
 import static software.wings.beans.yaml.YamlSuccessfulChange.ChangeSource.HARNESS;
 
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
+import static java.lang.String.format;
 
-import lombok.extern.slf4j.Slf4j;
 import software.wings.beans.yaml.GitFileChange;
 import software.wings.beans.yaml.HarnessSuccessFulChangeDetail;
 import software.wings.beans.yaml.SuccessfulChangeDetail;
@@ -16,10 +13,13 @@ import software.wings.service.intfc.yaml.YamlChangeSetService;
 import software.wings.service.intfc.yaml.YamlSuccessfulChangeService;
 import software.wings.yaml.gitSync.YamlChangeSet;
 
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
 import java.util.TimeZone;
+import lombok.extern.slf4j.Slf4j;
 
 @Singleton
 @Slf4j

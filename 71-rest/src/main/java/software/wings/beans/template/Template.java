@@ -3,8 +3,6 @@ package software.wings.beans.template;
 import static com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL;
 import static java.util.Arrays.asList;
 
-import com.fasterxml.jackson.annotation.JsonInclude;
-import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.annotation.HarnessEntity;
 import io.harness.beans.EmbeddedUser;
 import io.harness.data.validator.EntityName;
@@ -15,6 +13,17 @@ import io.harness.mongo.index.NgUniqueIndex;
 import io.harness.persistence.NameAccess;
 import io.harness.validation.Create;
 import io.harness.validation.Update;
+
+import software.wings.beans.Base;
+import software.wings.beans.Variable;
+import software.wings.beans.entityinterface.KeywordsAware;
+import software.wings.beans.template.dto.ImportedTemplateDetails;
+
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.github.reinert.jjschema.SchemaIgnore;
+import java.util.List;
+import java.util.Set;
+import javax.validation.constraints.NotNull;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -23,14 +32,6 @@ import lombok.experimental.FieldNameConstants;
 import lombok.experimental.UtilityClass;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Entity;
-import software.wings.beans.Base;
-import software.wings.beans.Variable;
-import software.wings.beans.entityinterface.KeywordsAware;
-import software.wings.beans.template.dto.ImportedTemplateDetails;
-
-import java.util.List;
-import java.util.Set;
-import javax.validation.constraints.NotNull;
 
 @JsonInclude(NON_NULL)
 

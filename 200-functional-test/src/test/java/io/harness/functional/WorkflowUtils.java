@@ -2,7 +2,7 @@ package io.harness.functional;
 
 import static io.harness.beans.ExecutionStatus.SUCCESS;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
-import static java.util.Arrays.asList;
+
 import static software.wings.api.DeploymentType.SSH;
 import static software.wings.beans.BasicOrchestrationWorkflow.BasicOrchestrationWorkflowBuilder.aBasicOrchestrationWorkflow;
 import static software.wings.beans.BlueGreenOrchestrationWorkflow.BlueGreenOrchestrationWorkflowBuilder.aBlueGreenOrchestrationWorkflow;
@@ -32,11 +32,7 @@ import static software.wings.sm.StateType.ECS_RUN_TASK;
 import static software.wings.sm.StateType.ECS_SERVICE_DEPLOY;
 import static software.wings.sm.StateType.ECS_SERVICE_SETUP;
 
-import com.google.api.client.util.Lists;
-import com.google.common.base.Joiner;
-import com.google.common.collect.ImmutableMap;
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
+import static java.util.Arrays.asList;
 
 import io.harness.beans.ExecutionStatus;
 import io.harness.beans.WorkflowType;
@@ -44,9 +40,7 @@ import io.harness.exception.InvalidRequestException;
 import io.harness.generator.OwnerManager;
 import io.harness.generator.Randomizer;
 import io.harness.generator.TemplateGenerator;
-import org.apache.commons.lang3.StringUtils;
-import org.awaitility.Awaitility;
-import org.hibernate.validator.constraints.NotEmpty;
+
 import software.wings.api.DeploymentType;
 import software.wings.beans.EntityType;
 import software.wings.beans.GraphNode;
@@ -67,12 +61,20 @@ import software.wings.service.impl.workflow.WorkflowServiceHelper;
 import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.sm.StateType;
 
+import com.google.api.client.util.Lists;
+import com.google.common.base.Joiner;
+import com.google.common.collect.ImmutableMap;
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
+import org.apache.commons.lang3.StringUtils;
+import org.awaitility.Awaitility;
+import org.hibernate.validator.constraints.NotEmpty;
 
 @Singleton
 public class WorkflowUtils {

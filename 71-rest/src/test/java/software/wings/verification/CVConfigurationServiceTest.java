@@ -1,22 +1,24 @@
 package software.wings.verification;
 
 import static io.harness.rule.OwnerRule.PRAVEEN;
+
 import static org.apache.cxf.ws.addressing.ContextUtils.generateUUID;
 import static org.assertj.core.api.Assertions.assertThat;
-
-import com.google.inject.Inject;
 
 import io.harness.category.element.DeprecatedIntegrationTests;
 import io.harness.exception.WingsException;
 import io.harness.rule.Owner;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
+
 import software.wings.integration.IntegrationTestBase;
 import software.wings.service.impl.analysis.AnalysisTolerance;
 import software.wings.service.intfc.verification.CVConfigurationService;
 import software.wings.sm.StateType;
 import software.wings.verification.appdynamics.AppDynamicsCVServiceConfiguration;
+
+import com.google.inject.Inject;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 public class CVConfigurationServiceTest extends IntegrationTestBase {
   @Inject CVConfigurationService cvConfigurationService;

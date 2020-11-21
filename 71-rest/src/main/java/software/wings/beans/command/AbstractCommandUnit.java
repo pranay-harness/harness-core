@@ -1,6 +1,11 @@
 package software.wings.beans.command;
 
-import com.google.common.base.MoreObjects;
+import io.harness.expression.ExpressionEvaluator;
+import io.harness.logging.CommandExecutionStatus;
+import io.harness.yaml.BaseYaml;
+
+import software.wings.beans.Variable;
+import software.wings.yaml.command.CommandRefYaml;
 
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonSubTypes.Type;
@@ -8,17 +13,12 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.fasterxml.jackson.annotation.JsonTypeInfo.As;
 import com.fasterxml.jackson.annotation.JsonTypeInfo.Id;
 import com.github.reinert.jjschema.SchemaIgnore;
-import io.harness.expression.ExpressionEvaluator;
-import io.harness.logging.CommandExecutionStatus;
-import io.harness.yaml.BaseYaml;
-import lombok.Data;
-import lombok.EqualsAndHashCode;
-import software.wings.beans.Variable;
-import software.wings.yaml.command.CommandRefYaml;
-
+import com.google.common.base.MoreObjects;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
 
 /**
  * Created by anubhaw on 5/25/16.

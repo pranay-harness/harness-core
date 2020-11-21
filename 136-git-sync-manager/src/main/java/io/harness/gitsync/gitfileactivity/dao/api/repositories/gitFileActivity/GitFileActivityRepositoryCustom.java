@@ -1,12 +1,12 @@
 package io.harness.gitsync.gitfileactivity.dao.api.repositories.gitFileActivity;
 
+import io.harness.gitsync.gitfileactivity.beans.GitFileActivity;
+
 import com.mongodb.client.result.DeleteResult;
 import com.mongodb.client.result.UpdateResult;
-import io.harness.gitsync.gitfileactivity.beans.GitFileActivity;
+import java.util.List;
 import org.springframework.data.mongodb.core.aggregation.Aggregation;
 import org.springframework.data.mongodb.core.aggregation.AggregationResults;
-
-import java.util.List;
 
 public interface GitFileActivityRepositoryCustom {
   DeleteResult deleteByIds(List<String> ids);

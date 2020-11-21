@@ -1,9 +1,8 @@
 package software.wings.service.intfc.instance.licensing;
 
-import com.google.common.collect.ImmutableMap;
-
 import software.wings.beans.AccountType;
 
+import com.google.common.collect.ImmutableMap;
 import java.util.Map;
 
 public interface InstanceLimitProvider {

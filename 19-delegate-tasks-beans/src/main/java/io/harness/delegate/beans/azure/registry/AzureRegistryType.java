@@ -1,9 +1,10 @@
 package io.harness.delegate.beans.azure.registry;
 
+import io.harness.azure.model.AzureConstants;
+
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonValue;
-import io.harness.azure.model.AzureConstants;
 
 public enum AzureRegistryType {
   @JsonProperty(AzureConstants.ACR) ACR("ACR"),

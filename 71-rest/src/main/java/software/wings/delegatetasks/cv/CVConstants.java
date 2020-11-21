@@ -1,7 +1,6 @@
 package software.wings.delegatetasks.cv;
 
 import com.google.common.annotations.VisibleForTesting;
-
 import java.time.Duration;
 
 public class CVConstants {

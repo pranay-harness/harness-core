@@ -1,20 +1,15 @@
 package software.wings.verification;
 
 import static io.harness.rule.OwnerRule.PRAVEEN;
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.when;
 
-import com.google.common.base.Charsets;
-import com.google.common.io.Resources;
-import com.google.inject.Inject;
-
 import io.harness.category.element.UnitTests;
 import io.harness.exception.VerificationOperationException;
 import io.harness.rule.Owner;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
+
 import software.wings.beans.yaml.Change;
 import software.wings.beans.yaml.ChangeContext;
 import software.wings.service.impl.verification.CVConfigurationServiceImplTest;
@@ -22,8 +17,14 @@ import software.wings.verification.stackdriver.StackDriverMetricCVConfiguration;
 import software.wings.verification.stackdriver.StackDriverMetricCVConfiguration.StackDriverMetricCVConfigurationYaml;
 import software.wings.verification.stackdriver.StackDriverMetricDefinition;
 
+import com.google.common.base.Charsets;
+import com.google.common.io.Resources;
+import com.google.inject.Inject;
 import java.util.Arrays;
 import java.util.List;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 public class StackdriverMetricCVConfigurationYamlHandlerTest extends CVConfigurationYamlHandlerTestBase {
   @Inject StackDriverMetricsCVConfigurationYamlHandler yamlHandler;

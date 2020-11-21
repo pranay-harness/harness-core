@@ -1,7 +1,6 @@
 package io.harness.ngtriggers.beans.source.webhook;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-
 import java.util.EnumSet;
 import java.util.Set;
 

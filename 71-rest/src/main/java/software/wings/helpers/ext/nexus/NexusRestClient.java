@@ -2,8 +2,13 @@ package software.wings.helpers.ext.nexus;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 
-import com.fasterxml.jackson.databind.JsonNode;
 import io.harness.annotations.dev.OwnedBy;
+
+import software.wings.helpers.ext.nexus.model.IndexBrowserTreeViewResponse;
+import software.wings.helpers.ext.nexus.model.Project;
+
+import com.fasterxml.jackson.databind.JsonNode;
+import java.util.Map;
 import org.sonatype.nexus.rest.model.ContentListResourceResponse;
 import org.sonatype.nexus.rest.model.RepositoryListResourceResponse;
 import retrofit2.Call;
@@ -13,10 +18,6 @@ import retrofit2.http.Headers;
 import retrofit2.http.Path;
 import retrofit2.http.QueryMap;
 import retrofit2.http.Url;
-import software.wings.helpers.ext.nexus.model.IndexBrowserTreeViewResponse;
-import software.wings.helpers.ext.nexus.model.Project;
-
-import java.util.Map;
 
 /**
  * Created by srinivas on 3/30/17.

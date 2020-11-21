@@ -1,10 +1,9 @@
 package io.harness.registries.facilitator;
 
 import static io.harness.rule.OwnerRule.PRASHANT;
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-
-import com.google.inject.Inject;
 
 import io.harness.OrchestrationBeansTestBase;
 import io.harness.ambiance.Ambiance;
@@ -18,6 +17,8 @@ import io.harness.registries.exceptions.UnregisteredKeyAccessException;
 import io.harness.rule.Owner;
 import io.harness.state.io.StepInputPackage;
 import io.harness.state.io.StepParameters;
+
+import com.google.inject.Inject;
 import lombok.Builder;
 import lombok.Value;
 import org.junit.Test;

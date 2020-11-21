@@ -2,16 +2,26 @@ package software.wings.core.managerController;
 
 import static io.harness.rule.OwnerRule.PUNEET;
 import static io.harness.threading.Morpheus.sleep;
+
+import static software.wings.beans.ManagerConfiguration.Builder.aManagerConfiguration;
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.when;
-import static software.wings.beans.ManagerConfiguration.Builder.aManagerConfiguration;
 
 import io.harness.category.element.UnitTests;
 import io.harness.persistence.HQuery;
 import io.harness.rule.Owner;
 import io.harness.version.VersionInfo;
 import io.harness.version.VersionInfoManager;
+
+import software.wings.WingsBaseTest;
+import software.wings.beans.ManagerConfiguration;
+import software.wings.core.managerConfiguration.ConfigurationController;
+import software.wings.dl.WingsPersistence;
+
+import java.time.Duration;
+import java.util.concurrent.ExecutorService;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -20,13 +30,6 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.stubbing.Answer;
-import software.wings.WingsBaseTest;
-import software.wings.beans.ManagerConfiguration;
-import software.wings.core.managerConfiguration.ConfigurationController;
-import software.wings.dl.WingsPersistence;
-
-import java.time.Duration;
-import java.util.concurrent.ExecutorService;
 
 public class ConfigurationControllerTest extends WingsBaseTest {
   @Mock private WingsPersistence wingsPersistence;

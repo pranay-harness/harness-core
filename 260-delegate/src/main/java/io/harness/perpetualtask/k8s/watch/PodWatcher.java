@@ -1,10 +1,15 @@
 package io.harness.perpetualtask.k8s.watch;
 
-import static com.google.common.base.MoreObjects.firstNonNull;
 import static io.harness.ccm.health.HealthStatusService.CLUSTER_ID_IDENTIFIER;
 import static io.harness.perpetualtask.k8s.watch.PodEvent.EventType.EVENT_TYPE_TERMINATED;
 import static io.harness.perpetualtask.k8s.watch.Volume.VolumeType.VOLUME_TYPE_PVC;
+
+import static com.google.common.base.MoreObjects.firstNonNull;
 import static java.util.Optional.ofNullable;
+
+import io.harness.event.client.EventPublisher;
+import io.harness.grpc.utils.HTimestamps;
+import io.harness.perpetualtask.k8s.informer.ClusterDetails;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
@@ -14,10 +19,6 @@ import com.google.protobuf.Message;
 import com.google.protobuf.Timestamp;
 import com.google.protobuf.util.JsonFormat;
 import com.google.protobuf.util.JsonFormat.TypeRegistry;
-
-import io.harness.event.client.EventPublisher;
-import io.harness.grpc.utils.HTimestamps;
-import io.harness.perpetualtask.k8s.informer.ClusterDetails;
 import io.kubernetes.client.informer.EventType;
 import io.kubernetes.client.informer.ResourceEventHandler;
 import io.kubernetes.client.informer.SharedInformerFactory;
@@ -32,9 +33,6 @@ import io.kubernetes.client.openapi.models.V1PodList;
 import io.kubernetes.client.openapi.models.V1PodStatus;
 import io.kubernetes.client.openapi.models.V1Volume;
 import io.kubernetes.client.util.CallGeneratorParams;
-import lombok.extern.slf4j.Slf4j;
-import org.joda.time.DateTime;
-
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -42,6 +40,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentSkipListSet;
+import lombok.extern.slf4j.Slf4j;
+import org.joda.time.DateTime;
 
 @Slf4j
 public class PodWatcher implements ResourceEventHandler<V1Pod> {

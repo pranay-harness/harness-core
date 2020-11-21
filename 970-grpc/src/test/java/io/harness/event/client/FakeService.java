@@ -1,12 +1,12 @@
 package io.harness.event.client;
 
-import io.grpc.Status;
-import io.grpc.stub.StreamObserver;
 import io.harness.event.EventPublisherGrpc;
 import io.harness.event.PublishMessage;
 import io.harness.event.PublishRequest;
 import io.harness.event.PublishResponse;
 
+import io.grpc.Status;
+import io.grpc.stub.StreamObserver;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;

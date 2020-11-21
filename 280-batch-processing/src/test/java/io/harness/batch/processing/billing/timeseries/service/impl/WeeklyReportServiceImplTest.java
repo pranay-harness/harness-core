@@ -1,6 +1,7 @@
 package io.harness.batch.processing.billing.timeseries.service.impl;
 
 import static io.harness.rule.OwnerRule.SHUBHANSHU;
+
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.mock;
@@ -19,15 +20,7 @@ import io.harness.ccm.communication.entities.CESlackWebhook;
 import io.harness.ccm.communication.entities.CommunicationType;
 import io.harness.rule.Owner;
 import io.harness.timescaledb.TimeScaleDBService;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
-import org.junit.runner.RunWith;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
-import org.mockito.runners.MockitoJUnitRunner;
-import org.mockito.stubbing.Answer;
+
 import software.wings.beans.Account;
 import software.wings.service.impl.instance.CloudToHarnessMappingServiceImpl;
 
@@ -38,6 +31,15 @@ import java.sql.Statement;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
+import org.junit.runner.RunWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
+import org.mockito.runners.MockitoJUnitRunner;
+import org.mockito.stubbing.Answer;
 
 @RunWith(MockitoJUnitRunner.class)
 public class WeeklyReportServiceImplTest extends CategoryTest {

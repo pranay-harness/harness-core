@@ -2,11 +2,12 @@ package software.wings.api.instancedetails;
 
 import io.harness.data.SweepingOutput;
 import io.harness.deployment.InstanceDetails;
-import lombok.Builder;
-import lombok.Value;
+
 import software.wings.api.InstanceElement;
 
 import java.util.List;
+import lombok.Builder;
+import lombok.Value;
 
 @Value
 @Builder

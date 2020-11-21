@@ -2,8 +2,7 @@ package software.wings.graphql.datafetcher.connector.types;
 
 import io.harness.exception.InvalidRequestException;
 import io.harness.utils.RequestField;
-import lombok.AllArgsConstructor;
-import lombok.NoArgsConstructor;
+
 import software.wings.beans.GitConfig;
 import software.wings.beans.SettingAttribute;
 import software.wings.graphql.datafetcher.connector.ConnectorsController;
@@ -14,6 +13,9 @@ import software.wings.graphql.schema.mutation.connector.input.git.QLGitConnector
 import software.wings.graphql.schema.mutation.connector.input.git.QLUpdateGitConnectorInput;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.security.SecretManager;
+
+import lombok.AllArgsConstructor;
+import lombok.NoArgsConstructor;
 
 @NoArgsConstructor
 @AllArgsConstructor

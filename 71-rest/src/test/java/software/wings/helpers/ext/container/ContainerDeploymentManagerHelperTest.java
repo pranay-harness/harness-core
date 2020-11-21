@@ -1,21 +1,19 @@
 package software.wings.helpers.ext.container;
 
 import static io.harness.rule.OwnerRule.ANSHUL;
-import static org.assertj.core.api.Assertions.assertThat;
+
 import static software.wings.beans.DirectKubernetesInfrastructureMapping.Builder.aDirectKubernetesInfrastructureMapping;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 import static software.wings.utils.WingsTestConstants.SETTING_ID;
 import static software.wings.utils.WingsTestConstants.SETTING_NAME;
 
-import com.google.inject.Inject;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.category.element.UnitTests;
 import io.harness.container.ContainerInfo;
 import io.harness.rule.Owner;
 import io.harness.rule.OwnerRule;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
-import org.mockito.InjectMocks;
+
 import software.wings.WingsBaseTest;
 import software.wings.api.InstanceElement;
 import software.wings.api.ServiceTemplateElement;
@@ -25,6 +23,11 @@ import software.wings.beans.SettingAttribute;
 import software.wings.dl.WingsPersistence;
 import software.wings.helpers.ext.k8s.request.K8sClusterConfig;
 import software.wings.service.intfc.SettingsService;
+
+import com.google.inject.Inject;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
+import org.mockito.InjectMocks;
 
 public class ContainerDeploymentManagerHelperTest extends WingsBaseTest {
   @Inject private WingsPersistence wingsPersistence;

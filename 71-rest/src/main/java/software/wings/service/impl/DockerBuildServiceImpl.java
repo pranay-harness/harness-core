@@ -4,10 +4,8 @@ import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.exception.WingsException.SRE;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.validation.Validator.equalCheck;
-import static software.wings.beans.artifact.ArtifactStreamType.DOCKER;
 
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
+import static software.wings.beans.artifact.ArtifactStreamType.DOCKER;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.artifacts.beans.BuildDetailsInternal;
@@ -15,6 +13,7 @@ import io.harness.artifacts.docker.service.DockerRegistryService;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.security.encryption.EncryptedDataDetail;
+
 import software.wings.beans.DockerConfig;
 import software.wings.beans.artifact.ArtifactStreamAttributes;
 import software.wings.helpers.ext.jenkins.BuildDetails;
@@ -25,6 +24,8 @@ import software.wings.service.mappers.artifact.ArtifactConfigMapper;
 import software.wings.service.mappers.artifact.DockerConfigToInternalMapper;
 import software.wings.utils.ArtifactType;
 
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;

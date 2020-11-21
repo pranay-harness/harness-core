@@ -11,9 +11,6 @@ import static io.harness.common.CIExecutionConstants.GIT_CLONE_STEP_NAME;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
-
 import io.harness.beans.execution.ExecutionSource;
 import io.harness.beans.executionargs.CIExecutionArgs;
 import io.harness.beans.stages.IntegrationStage;
@@ -27,13 +24,15 @@ import io.harness.yaml.core.ParallelStepElement;
 import io.harness.yaml.core.StepElement;
 import io.harness.yaml.core.auxiliary.intfc.ExecutionWrapper;
 import io.harness.yaml.extended.ci.codebase.CodeBase;
-import lombok.extern.slf4j.Slf4j;
 
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import java.security.SecureRandom;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import lombok.extern.slf4j.Slf4j;
 
 @Singleton
 @Slf4j
@@ -121,7 +120,7 @@ public class CILiteEngineStepGroupUtils {
   }
 
   private boolean containsManagerStep(List<ExecutionWrapper> executionSections) {
-    return executionSections.stream().anyMatch(this ::isCIManagerStep);
+    return executionSections.stream().anyMatch(this::isCIManagerStep);
   }
 
   private boolean isCIManagerStep(ExecutionWrapper executionWrapper) {
@@ -156,7 +155,7 @@ public class CILiteEngineStepGroupUtils {
             CIStepInfo ciStepInfo = (CIStepInfo) stepElement.getStepSpecType();
             if (ciStepExecEnvironment == null
                 || (ciStepExecEnvironment
-                       == ciStepInfo.getNonYamlInfo().getStepInfoType().getCiStepExecEnvironment())) {
+                    == ciStepInfo.getNonYamlInfo().getStepInfoType().getCiStepExecEnvironment())) {
               ciStepExecEnvironment = ciStepInfo.getNonYamlInfo().getStepInfoType().getCiStepExecEnvironment();
             } else {
               throw new InvalidRequestException("All parallel steps can either run on manager or on lite engine");

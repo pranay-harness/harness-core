@@ -1,10 +1,9 @@
 package io.harness.datahandler.services;
 
-import com.google.inject.Inject;
-
 import software.wings.beans.User;
 import software.wings.service.intfc.UserService;
 
+import com.google.inject.Inject;
 import java.util.Objects;
 
 public class AdminUserServiceImpl implements AdminUserService {

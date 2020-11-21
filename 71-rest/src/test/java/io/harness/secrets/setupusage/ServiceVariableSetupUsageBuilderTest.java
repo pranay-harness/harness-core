@@ -1,16 +1,15 @@
 package io.harness.secrets.setupusage;
 
 import static io.harness.rule.OwnerRule.UTKARSH;
+
+import static software.wings.beans.Environment.GLOBAL_ENV_ID;
+import static software.wings.settings.SettingVariableTypes.SERVICE_VARIABLE;
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 import static org.mockito.MockitoAnnotations.initMocks;
-import static software.wings.beans.Environment.GLOBAL_ENV_ID;
-import static software.wings.settings.SettingVariableTypes.SERVICE_VARIABLE;
-
-import com.google.common.collect.Sets;
-import com.google.inject.Inject;
 
 import io.harness.beans.EncryptedData;
 import io.harness.beans.EncryptedDataParent;
@@ -21,11 +20,7 @@ import io.harness.exception.InvalidArgumentsException;
 import io.harness.rule.Owner;
 import io.harness.secrets.setupusage.builders.ServiceVariableSetupUsageBuilder;
 import io.harness.security.encryption.EncryptionType;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
+
 import software.wings.WingsBaseTest;
 import software.wings.beans.Account;
 import software.wings.beans.AccountType;
@@ -36,6 +31,8 @@ import software.wings.beans.ServiceVariable.ServiceVariableKeys;
 import software.wings.service.intfc.ServiceVariableService;
 import software.wings.settings.SettingVariableTypes;
 
+import com.google.common.collect.Sets;
+import com.google.inject.Inject;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -43,6 +40,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
 
 public class ServiceVariableSetupUsageBuilderTest extends WingsBaseTest {
   @Mock ServiceVariableService serviceVariableService;

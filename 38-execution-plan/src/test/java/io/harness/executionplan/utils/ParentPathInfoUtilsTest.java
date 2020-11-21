@@ -1,6 +1,7 @@
 package io.harness.executionplan.utils;
 
 import static io.harness.rule.OwnerRule.ARCHIT;
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
@@ -11,6 +12,7 @@ import io.harness.executionplan.core.impl.ExecutionPlanCreationContextImpl;
 import io.harness.executionplan.plancreator.beans.PlanLevelNode;
 import io.harness.executionplan.plancreator.beans.PlanNodeType;
 import io.harness.rule.Owner;
+
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 

@@ -3,11 +3,11 @@ package io.harness.jira;
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 
 import io.harness.annotations.dev.OwnedBy;
+
+import javax.validation.constraints.NotNull;
 import lombok.Data;
 import net.sf.json.JSONArray;
 import net.sf.json.JSONObject;
-
-import javax.validation.constraints.NotNull;
 
 @OwnedBy(CDC)
 @Data

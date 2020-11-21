@@ -1,25 +1,26 @@
 package software.wings.beans.marketplace.gcp;
 
 import static io.harness.rule.OwnerRule.HITESH;
-import static org.assertj.core.api.Assertions.assertThat;
 
-import com.google.inject.Inject;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.category.element.DeprecatedIntegrationTests;
 import io.harness.rule.Owner;
-import lombok.val;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Ignore;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
+
 import software.wings.beans.marketplace.gcp.GCPUsageReport.GCPUsageReportKeys;
 import software.wings.dl.WingsPersistence;
 import software.wings.integration.IntegrationTestBase;
 import software.wings.service.impl.marketplace.gcp.GCPMarketPlaceServiceIntegrationTest;
 import software.wings.service.impl.marketplace.gcp.GCPUsageReportServiceImpl;
 
+import com.google.inject.Inject;
 import java.time.Instant;
+import lombok.val;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Ignore;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 public class GCPUsageReportServiceIntegrationTest extends IntegrationTestBase {
   @Inject private GCPUsageReportServiceImpl gcpUsageReportService;

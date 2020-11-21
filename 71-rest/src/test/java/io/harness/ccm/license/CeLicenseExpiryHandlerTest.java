@@ -2,6 +2,7 @@ package io.harness.ccm.license;
 
 import static io.harness.ccm.license.CeLicenseInfo.CE_TRIAL_GRACE_PERIOD_DAYS;
 import static io.harness.rule.OwnerRule.HANTANG;
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyZeroInteractions;
@@ -9,6 +10,12 @@ import static org.mockito.Mockito.verifyZeroInteractions;
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
+
+import software.wings.beans.Account;
+import software.wings.service.intfc.AccountService;
+
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -19,11 +26,6 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnit;
 import org.mockito.junit.MockitoRule;
-import software.wings.beans.Account;
-import software.wings.service.intfc.AccountService;
-
-import java.time.Instant;
-import java.time.temporal.ChronoUnit;
 
 public class CeLicenseExpiryHandlerTest extends CategoryTest {
   private Account account;

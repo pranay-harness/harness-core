@@ -2,14 +2,13 @@ package io.harness.generator;
 
 import static io.harness.generator.SettingGenerator.Settings.GCP_PLAYGROUND;
 import static io.harness.govern.Switch.unhandled;
-import static software.wings.sm.StateType.STACK_DRIVER_LOG;
 
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
+import static software.wings.sm.StateType.STACK_DRIVER_LOG;
 
 import io.harness.generator.EnvironmentGenerator.Environments;
 import io.harness.generator.OwnerManager.Owners;
 import io.harness.generator.ServiceGenerator.Services;
+
 import software.wings.beans.Environment;
 import software.wings.beans.Service;
 import software.wings.beans.SettingAttribute;
@@ -19,6 +18,8 @@ import software.wings.sm.StateType;
 import software.wings.verification.CVConfiguration;
 import software.wings.verification.log.StackdriverCVConfiguration;
 
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import java.util.concurrent.TimeUnit;
 
 /**

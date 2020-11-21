@@ -2,14 +2,13 @@ package migrations.all;
 
 import static io.harness.persistence.HQuery.excludeAuthority;
 
-import com.google.inject.Inject;
-
-import lombok.extern.slf4j.Slf4j;
-import migrations.Migration;
 import software.wings.beans.security.HarnessUserGroup;
 import software.wings.dl.WingsPersistence;
 
+import com.google.inject.Inject;
 import java.util.List;
+import lombok.extern.slf4j.Slf4j;
+import migrations.Migration;
 
 /**
  * Re-saving Harness user groups to remove deprecated fields 'applyToAllFields' and 'actions'

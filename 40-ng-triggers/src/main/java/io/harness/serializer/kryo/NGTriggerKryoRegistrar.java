@@ -1,8 +1,9 @@
 package io.harness.serializer.kryo;
 
-import com.esotericsoftware.kryo.Kryo;
 import io.harness.ngtriggers.beans.config.NGTriggerConfig;
 import io.harness.serializer.KryoRegistrar;
+
+import com.esotericsoftware.kryo.Kryo;
 
 public class NGTriggerKryoRegistrar implements KryoRegistrar {
   @Override

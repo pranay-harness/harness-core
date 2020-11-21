@@ -4,4 +4,6 @@ import io.harness.batch.processing.entities.AccountShardMapping;
 
 import java.util.List;
 
-public interface AccountShardMappingDao { List<AccountShardMapping> getAccountShardMapping(); }
+public interface AccountShardMappingDao {
+  List<AccountShardMapping> getAccountShardMapping();
+}

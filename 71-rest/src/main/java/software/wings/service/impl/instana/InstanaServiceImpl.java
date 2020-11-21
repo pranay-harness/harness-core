@@ -2,20 +2,18 @@ package software.wings.service.impl.instana;
 
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.delegate.beans.TaskData.DEFAULT_SYNC_CALL_TIMEOUT;
+
 import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static software.wings.common.VerificationConstants.INSTANA_DOCKER_PLUGIN;
 import static software.wings.common.VerificationConstants.INSTANA_GROUPBY_TAG_TRACE_NAME;
 import static software.wings.common.VerificationConstants.VERIFICATION_HOST_PLACEHOLDER;
 import static software.wings.service.impl.ThirdPartyApiCallLog.createApiCallLog;
 
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
-
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.VerificationOperationException;
 import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.time.Timestamp;
-import lombok.extern.slf4j.Slf4j;
+
 import software.wings.beans.InstanaConfig;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.SyncTaskContext;
@@ -29,10 +27,13 @@ import software.wings.service.intfc.instana.InstanaDelegateService;
 import software.wings.service.intfc.instana.InstanaService;
 import software.wings.service.intfc.security.SecretManager;
 
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 import javax.validation.executable.ValidateOnExecution;
+import lombok.extern.slf4j.Slf4j;
 
 @ValidateOnExecution
 @Singleton

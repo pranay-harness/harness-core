@@ -3,15 +3,13 @@ package software.wings.service.impl.yaml.handler.tag;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.exception.WingsException.USER;
-import static software.wings.beans.Application.GLOBAL_APP_ID;
 
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
+import static software.wings.beans.Application.GLOBAL_APP_ID;
 
 import io.harness.exception.InvalidRequestException;
 import io.harness.persistence.PersistentEntity;
 import io.harness.persistence.UuidAware;
-import lombok.extern.slf4j.Slf4j;
+
 import software.wings.beans.Application;
 import software.wings.beans.EntityType;
 import software.wings.beans.Environment;
@@ -31,6 +29,8 @@ import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.HarnessTagService;
 import software.wings.yaml.BaseEntityYaml;
 
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -39,6 +39,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
+import lombok.extern.slf4j.Slf4j;
 
 @Singleton
 @Slf4j

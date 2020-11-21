@@ -2,11 +2,12 @@ package io.harness.datahandler.models;
 
 import io.harness.ccm.license.CeLicenseInfo;
 import io.harness.limits.ConfiguredLimit;
-import lombok.Builder;
-import lombok.Data;
+
 import software.wings.beans.LicenseInfo;
 
 import java.util.List;
+import lombok.Builder;
+import lombok.Data;
 
 @Data
 @Builder

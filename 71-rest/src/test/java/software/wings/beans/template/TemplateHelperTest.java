@@ -1,18 +1,20 @@
 package software.wings.beans.template;
 
 import static io.harness.rule.OwnerRule.ROHIT_KUMAR;
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 
 import io.harness.category.element.UnitTests;
 import io.harness.exception.InvalidArgumentsException;
 import io.harness.rule.Owner;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
+
 import software.wings.service.impl.template.TemplateBaseTestHelper;
 
 import java.util.Arrays;
 import java.util.List;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 public class TemplateHelperTest extends TemplateBaseTestHelper {
   @Test

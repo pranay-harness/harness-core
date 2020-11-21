@@ -1,13 +1,16 @@
 package software.wings.beans.alert;
 
 import static io.harness.rule.OwnerRule.ARVIND;
-import static org.assertj.core.api.Assertions.assertThat;
+
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 import static software.wings.utils.WingsTestConstants.REPOSITORY_NAME;
+
+import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
+
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;

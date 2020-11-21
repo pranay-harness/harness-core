@@ -9,15 +9,14 @@ import static io.harness.seeddata.SampleDataProviderConstants.K8S_PROD_ENVIRONME
 import static io.harness.seeddata.SampleDataProviderConstants.K8S_QA_ENVIRONMENT;
 import static io.harness.seeddata.SampleDataProviderConstants.K8S_ROLLING_WORKFLOW_NAME;
 import static io.harness.seeddata.SampleDataProviderConstants.K8S_SERVICE_NAME;
-import static org.assertj.core.api.Assertions.assertThat;
+
 import static software.wings.beans.Account.Builder.anAccount;
 
-import com.google.inject.Inject;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
+
 import software.wings.WingsBaseTest;
 import software.wings.beans.Account;
 import software.wings.beans.Application;
@@ -31,6 +30,10 @@ import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.WorkflowService;
 import software.wings.utils.WingsTestConstants;
+
+import com.google.inject.Inject;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 public class SampleDataProviderServiceTest extends WingsBaseTest {
   @Inject private WingsPersistence wingsPersistence;

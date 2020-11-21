@@ -1,10 +1,10 @@
 package io.harness.generator;
 
-import com.google.inject.Inject;
-
 import software.wings.beans.AppContainer;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.AppContainerService;
+
+import com.google.inject.Inject;
 
 /**
  * Created by sgurubelli on 9/10/18.

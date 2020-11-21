@@ -2,13 +2,14 @@ package software.wings.delegatetasks;
 
 import io.harness.delegate.beans.DelegateFile;
 import io.harness.delegate.service.DelegateAgentFileService.FileBucket;
-import org.hibernate.validator.constraints.NotEmpty;
+
 import software.wings.beans.artifact.ArtifactStreamAttributes;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.concurrent.ExecutionException;
 import javax.validation.constraints.NotNull;
+import org.hibernate.validator.constraints.NotEmpty;
 
 /**
  * Created by rishi on 12/19/16.

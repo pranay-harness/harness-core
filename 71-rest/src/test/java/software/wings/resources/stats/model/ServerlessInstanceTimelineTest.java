@@ -1,21 +1,23 @@
 package software.wings.resources.stats.model;
 
 import static io.harness.rule.OwnerRule.ROHIT_KUMAR;
+
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
-import org.mockito.MockitoAnnotations;
+
 import software.wings.beans.infrastructure.instance.InvocationCount.InvocationCountKey;
 import software.wings.beans.infrastructure.instance.stats.ServerlessInstanceStats;
 import software.wings.service.impl.instance.ServerlessTestHelper;
 
 import java.util.Arrays;
 import java.util.Collections;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
+import org.mockito.MockitoAnnotations;
 
 public class ServerlessInstanceTimelineTest extends CategoryTest {
   public static final String ACCOUNTID = "accountid";

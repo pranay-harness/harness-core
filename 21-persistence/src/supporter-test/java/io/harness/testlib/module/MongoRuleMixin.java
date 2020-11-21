@@ -3,15 +3,14 @@ package io.harness.testlib.module;
 import static io.harness.testlib.module.FakeMongoCreator.takeFakeMongo;
 import static io.harness.testlib.module.RealMongoCreator.takeRealMongo;
 
-import com.google.inject.Module;
-import com.google.inject.Provides;
-import com.google.inject.Singleton;
-
-import com.mongodb.MongoClient;
 import io.harness.factory.ClosingFactory;
 import io.harness.govern.ProviderModule;
 import io.harness.testlib.RealMongo;
 
+import com.google.inject.Module;
+import com.google.inject.Provides;
+import com.google.inject.Singleton;
+import com.mongodb.MongoClient;
 import java.lang.annotation.Annotation;
 import java.util.List;
 import java.util.Random;

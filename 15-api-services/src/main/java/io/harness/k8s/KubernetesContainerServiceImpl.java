@@ -34,6 +34,7 @@ import static io.harness.k8s.KubernetesConvention.getServiceNameFromControllerNa
 import static io.harness.k8s.model.ContainerApiVersions.KUBERNETES_V1;
 import static io.harness.state.StateConstants.DEFAULT_STEADY_STATE_TIMEOUT;
 import static io.harness.threading.Morpheus.sleep;
+
 import static java.lang.Boolean.TRUE;
 import static java.lang.String.format;
 import static java.time.Duration.ofSeconds;
@@ -50,6 +51,28 @@ import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.apache.http.HttpStatus.SC_FORBIDDEN;
 import static org.apache.http.HttpStatus.SC_UNAUTHORIZED;
 
+import io.harness.container.ContainerInfo;
+import io.harness.container.ContainerInfo.ContainerInfoBuilder;
+import io.harness.container.ContainerInfo.Status;
+import io.harness.eraro.ErrorCode;
+import io.harness.exception.ExceptionUtils;
+import io.harness.exception.GeneralException;
+import io.harness.exception.InvalidArgumentsException;
+import io.harness.exception.InvalidRequestException;
+import io.harness.exception.WingsException;
+import io.harness.filesystem.FileIo;
+import io.harness.k8s.kubectl.Kubectl;
+import io.harness.k8s.model.Kind;
+import io.harness.k8s.model.KubernetesClusterAuthType;
+import io.harness.k8s.model.KubernetesConfig;
+import io.harness.k8s.model.response.CEK8sDelegatePrerequisite;
+import io.harness.k8s.oidc.OidcTokenRetriever;
+import io.harness.logging.LogCallback;
+import io.harness.logging.LogLevel;
+import io.harness.logging.Misc;
+import io.harness.oidc.model.OidcTokenRequestData;
+
+import com.github.scribejava.apis.openid.OpenIdOAuth2AccessToken;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Charsets;
 import com.google.common.base.Joiner;
@@ -59,8 +82,6 @@ import com.google.common.util.concurrent.TimeLimiter;
 import com.google.common.util.concurrent.UncheckedTimeoutException;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
-
-import com.github.scribejava.apis.openid.OpenIdOAuth2AccessToken;
 import io.fabric8.kubernetes.api.KubernetesHelper;
 import io.fabric8.kubernetes.api.model.ConfigMap;
 import io.fabric8.kubernetes.api.model.ConfigMapBuilder;
@@ -108,26 +129,6 @@ import io.fabric8.openshift.api.model.DeploymentConfig;
 import io.fabric8.openshift.api.model.DeploymentConfigList;
 import io.fabric8.openshift.api.model.DoneableDeploymentConfig;
 import io.fabric8.openshift.client.dsl.DeployableScalableResource;
-import io.harness.container.ContainerInfo;
-import io.harness.container.ContainerInfo.ContainerInfoBuilder;
-import io.harness.container.ContainerInfo.Status;
-import io.harness.eraro.ErrorCode;
-import io.harness.exception.ExceptionUtils;
-import io.harness.exception.GeneralException;
-import io.harness.exception.InvalidArgumentsException;
-import io.harness.exception.InvalidRequestException;
-import io.harness.exception.WingsException;
-import io.harness.filesystem.FileIo;
-import io.harness.k8s.kubectl.Kubectl;
-import io.harness.k8s.model.Kind;
-import io.harness.k8s.model.KubernetesClusterAuthType;
-import io.harness.k8s.model.KubernetesConfig;
-import io.harness.k8s.model.response.CEK8sDelegatePrerequisite;
-import io.harness.k8s.oidc.OidcTokenRetriever;
-import io.harness.logging.LogCallback;
-import io.harness.logging.LogLevel;
-import io.harness.logging.Misc;
-import io.harness.oidc.model.OidcTokenRequestData;
 import io.kubernetes.client.openapi.ApiClient;
 import io.kubernetes.client.openapi.ApiException;
 import io.kubernetes.client.openapi.apis.CoreV1Api;
@@ -144,23 +145,6 @@ import io.kubernetes.client.openapi.models.V1SecretList;
 import io.kubernetes.client.openapi.models.V1Service;
 import io.kubernetes.client.openapi.models.V1ServiceList;
 import io.kubernetes.client.openapi.models.VersionInfo;
-import lombok.extern.slf4j.Slf4j;
-import me.snowdrop.istio.api.IstioResource;
-import me.snowdrop.istio.api.internal.IstioSpecRegistry;
-import me.snowdrop.istio.api.networking.v1alpha3.DestinationRule;
-import me.snowdrop.istio.api.networking.v1alpha3.DestinationRuleBuilder;
-import me.snowdrop.istio.api.networking.v1alpha3.DestinationWeight;
-import me.snowdrop.istio.api.networking.v1alpha3.DoneableDestinationRule;
-import me.snowdrop.istio.api.networking.v1alpha3.DoneableVirtualService;
-import me.snowdrop.istio.api.networking.v1alpha3.VirtualService;
-import me.snowdrop.istio.api.networking.v1alpha3.VirtualServiceBuilder;
-import me.snowdrop.istio.api.networking.v1alpha3.VirtualServiceSpec;
-import me.snowdrop.istio.client.IstioClient;
-import org.apache.commons.lang3.StringUtils;
-import org.apache.commons.lang3.tuple.Pair;
-import org.joda.time.DateTime;
-import org.zeroturnaround.exec.ProcessResult;
-
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
@@ -180,6 +164,22 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
+import lombok.extern.slf4j.Slf4j;
+import me.snowdrop.istio.api.IstioResource;
+import me.snowdrop.istio.api.internal.IstioSpecRegistry;
+import me.snowdrop.istio.api.networking.v1alpha3.DestinationRule;
+import me.snowdrop.istio.api.networking.v1alpha3.DestinationRuleBuilder;
+import me.snowdrop.istio.api.networking.v1alpha3.DestinationWeight;
+import me.snowdrop.istio.api.networking.v1alpha3.DoneableDestinationRule;
+import me.snowdrop.istio.api.networking.v1alpha3.DoneableVirtualService;
+import me.snowdrop.istio.api.networking.v1alpha3.VirtualService;
+import me.snowdrop.istio.api.networking.v1alpha3.VirtualServiceBuilder;
+import me.snowdrop.istio.api.networking.v1alpha3.VirtualServiceSpec;
+import me.snowdrop.istio.client.IstioClient;
+import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.tuple.Pair;
+import org.joda.time.DateTime;
+import org.zeroturnaround.exec.ProcessResult;
 
 /**
  * Created by brett on 2/9/17
@@ -664,10 +664,9 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
   public List<ContainerInfo> getContainerInfosWhenReady(KubernetesConfig kubernetesConfig, String controllerName,
       int previousCount, int desiredCount, int serviceSteadyStateTimeout, List<Pod> originalPods,
       boolean isNotVersioned, LogCallback logCallback, boolean wait, long startTime, String namespace) {
-    List<Pod> pods = wait
-        ? waitForPodsToBeRunning(kubernetesConfig, controllerName, previousCount, desiredCount,
-              serviceSteadyStateTimeout, originalPods, isNotVersioned, startTime, namespace, logCallback)
-        : originalPods;
+    List<Pod> pods = wait ? waitForPodsToBeRunning(kubernetesConfig, controllerName, previousCount, desiredCount,
+                         serviceSteadyStateTimeout, originalPods, isNotVersioned, startTime, namespace, logCallback)
+                          : originalPods;
 
     HasMetadata controllerInfo = getController(kubernetesConfig, controllerName, namespace);
     if (controllerInfo == null) {
@@ -753,9 +752,9 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
       } else {
         containerInfoBuilder.status(Status.FAILURE);
         String containerMessage = Joiner.on("], [").join(
-            pod.getStatus().getContainerStatuses().stream().map(this ::getContainerStatusMessage).collect(toList()));
+            pod.getStatus().getContainerStatuses().stream().map(this::getContainerStatusMessage).collect(toList()));
         String conditionMessage = Joiner.on("], [").join(
-            pod.getStatus().getConditions().stream().map(this ::getPodConditionMessage).collect(toList()));
+            pod.getStatus().getConditions().stream().map(this::getPodConditionMessage).collect(toList()));
         String reason = Joiner.on("], [").join(pod.getStatus()
                                                    .getContainerStatuses()
                                                    .stream()
@@ -763,8 +762,8 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
                                                        -> containerStatus.getState().getTerminated() != null
                                                            ? containerStatus.getState().getTerminated().getReason()
                                                            : containerStatus.getState().getWaiting() != null
-                                                               ? containerStatus.getState().getWaiting().getReason()
-                                                               : RUNNING)
+                                                           ? containerStatus.getState().getWaiting().getReason()
+                                                           : RUNNING)
                                                    .collect(toList()));
         String msg =
             format("Pod [%s] has state [%s]. Current status: phase - %s. Container status: [%s]. Condition: [%s].",
@@ -1575,7 +1574,7 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
             }
 
             if (isNotVersioned || absoluteDesiredCount > previousCount) {
-              int running = (int) pods.stream().filter(this ::isRunning).count();
+              int running = (int) pods.stream().filter(this::isRunning).count();
               if (running != absoluteDesiredCount) {
                 executionLogCallback.saveExecutionLog(
                     format("Waiting for pods to be running [%d/%d]", running, absoluteDesiredCount));
@@ -1587,7 +1586,7 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
                     format("Pods are running [%d/%d]", running, absoluteDesiredCount));
               }
 
-              int steadyState = (int) pods.stream().filter(this ::inSteadyState).count();
+              int steadyState = (int) pods.stream().filter(this::inSteadyState).count();
               if (steadyState != absoluteDesiredCount) {
                 executionLogCallback.saveExecutionLog(
                     format("Waiting for pods to reach steady state [%d/%d]", steadyState, absoluteDesiredCount));

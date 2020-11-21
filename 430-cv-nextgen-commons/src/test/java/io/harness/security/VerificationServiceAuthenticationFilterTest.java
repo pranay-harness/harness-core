@@ -3,13 +3,12 @@ package io.harness.security;
 import static io.harness.beans.ClientType.PROMETHEUS;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.rule.OwnerRule.RAGHU;
+
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.when;
-
-import com.google.inject.Inject;
 
 import io.harness.CvNextGenCommonsTestBase;
 import io.harness.beans.ClientType;
@@ -18,15 +17,16 @@ import io.harness.entity.HarnessApiKey;
 import io.harness.exception.WingsException;
 import io.harness.persistence.HPersistence;
 import io.harness.rule.Owner;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
-import org.mockito.Mock;
 
+import com.google.inject.Inject;
 import java.nio.charset.Charset;
 import javax.ws.rs.container.ContainerRequestContext;
 import javax.ws.rs.container.ResourceInfo;
 import javax.ws.rs.core.HttpHeaders;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
+import org.mockito.Mock;
 
 public class VerificationServiceAuthenticationFilterTest extends CvNextGenCommonsTestBase {
   @Mock private ResourceInfo resourceInfo;

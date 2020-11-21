@@ -1,7 +1,5 @@
 package software.wings.beans;
 
-import lombok.Builder;
-import lombok.Value;
 import software.wings.service.intfc.WorkflowService;
 import software.wings.sm.State;
 import software.wings.sm.StateType;
@@ -11,6 +9,8 @@ import software.wings.sm.states.EnvResumeState.EnvResumeStateKeys;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import lombok.Builder;
+import lombok.Value;
 
 @Value
 @Builder

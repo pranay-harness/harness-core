@@ -1,9 +1,7 @@
 package software.wings.metrics;
 
-import com.google.common.collect.Lists;
-
 import com.fasterxml.jackson.annotation.JsonIgnore;
-
+import com.google.common.collect.Lists;
 import java.util.List;
 
 /**

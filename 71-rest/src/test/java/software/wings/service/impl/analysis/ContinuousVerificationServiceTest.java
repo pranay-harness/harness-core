@@ -7,16 +7,15 @@ import static io.harness.rule.OwnerRule.NANDAN;
 import static io.harness.rule.OwnerRule.PRAVEEN;
 import static io.harness.rule.OwnerRule.RAGHU;
 import static io.harness.threading.Morpheus.sleep;
+
+import static software.wings.common.VerificationConstants.DELAY_MINUTES;
+
 import static java.time.Duration.ofMillis;
 import static org.apache.commons.lang3.reflect.FieldUtils.writeField;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.doAnswer;
-import static software.wings.common.VerificationConstants.DELAY_MINUTES;
-
-import com.google.common.collect.Sets;
-import com.google.inject.Inject;
 
 import io.harness.beans.ExecutionStatus;
 import io.harness.category.element.UnitTests;
@@ -26,10 +25,7 @@ import io.harness.event.model.GenericEvent;
 import io.harness.notifications.AlertNotificationRuleChecker;
 import io.harness.rest.RestResponse;
 import io.harness.rule.Owner;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
-import org.mockito.Mock;
+
 import software.wings.WingsBaseTest;
 import software.wings.alerts.AlertCategory;
 import software.wings.api.ExecutionDataValue;
@@ -56,6 +52,8 @@ import software.wings.verification.VerificationStateAnalysisExecutionData;
 import software.wings.verification.log.LogsCVConfiguration;
 import software.wings.verification.newrelic.NewRelicCVServiceConfiguration;
 
+import com.google.common.collect.Sets;
+import com.google.inject.Inject;
 import java.io.IOException;
 import java.time.Instant;
 import java.util.ArrayList;
@@ -66,6 +64,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
+import org.mockito.Mock;
 
 public class ContinuousVerificationServiceTest extends WingsBaseTest {
   private String accountId;

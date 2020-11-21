@@ -1,11 +1,12 @@
 package software.wings.graphql.schema.type.aggregation.instance;
 
-import lombok.Builder;
-import lombok.Data;
 import software.wings.graphql.schema.type.aggregation.EntityFilter;
 import software.wings.graphql.schema.type.aggregation.QLIdFilter;
 import software.wings.graphql.schema.type.aggregation.QLTimeFilter;
 import software.wings.graphql.schema.type.instance.QLInstanceType;
+
+import lombok.Builder;
+import lombok.Data;
 
 @Data
 @Builder

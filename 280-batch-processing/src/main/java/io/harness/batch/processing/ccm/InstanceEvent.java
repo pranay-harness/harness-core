@@ -1,9 +1,8 @@
 package io.harness.batch.processing.ccm;
 
+import java.time.Instant;
 import lombok.Builder;
 import lombok.Data;
-
-import java.time.Instant;
 
 @Data
 @Builder

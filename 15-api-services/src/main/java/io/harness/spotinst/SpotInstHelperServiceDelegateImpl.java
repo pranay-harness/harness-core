@@ -5,6 +5,7 @@ import static io.harness.network.Http.getOkHttpClientBuilder;
 import static io.harness.spotinst.model.SpotInstConstants.SPOTINST_REST_TIMEOUT_MINUTES;
 import static io.harness.spotinst.model.SpotInstConstants.listElastiGroupsQueryTime;
 import static io.harness.spotinst.model.SpotInstConstants.spotInstBaseUrl;
+
 import static java.lang.String.format;
 import static java.util.Collections.emptyList;
 import static java.util.Optional.empty;
@@ -13,10 +14,6 @@ import static java.util.concurrent.TimeUnit.DAYS;
 import static java.util.concurrent.TimeUnit.MINUTES;
 import static java.util.stream.Collectors.toList;
 
-import com.google.common.reflect.TypeToken;
-import com.google.gson.Gson;
-import com.google.inject.Singleton;
-
 import io.harness.exception.WingsException;
 import io.harness.exception.WingsException.ReportTarget;
 import io.harness.spotinst.model.ElastiGroup;
@@ -24,12 +21,10 @@ import io.harness.spotinst.model.ElastiGroupInstanceHealth;
 import io.harness.spotinst.model.SpotInstConstants;
 import io.harness.spotinst.model.SpotInstListElastiGroupInstancesHealthResponse;
 import io.harness.spotinst.model.SpotInstListElastiGroupsResponse;
-import lombok.extern.slf4j.Slf4j;
-import retrofit2.Call;
-import retrofit2.Response;
-import retrofit2.Retrofit;
-import retrofit2.converter.jackson.JacksonConverterFactory;
 
+import com.google.common.reflect.TypeToken;
+import com.google.gson.Gson;
+import com.google.inject.Singleton;
 import java.lang.reflect.Type;
 import java.util.Comparator;
 import java.util.EnumSet;
@@ -37,6 +32,11 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import lombok.extern.slf4j.Slf4j;
+import retrofit2.Call;
+import retrofit2.Response;
+import retrofit2.Retrofit;
+import retrofit2.converter.jackson.JacksonConverterFactory;
 
 @Singleton
 @Slf4j

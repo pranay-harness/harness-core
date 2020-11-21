@@ -2,12 +2,13 @@ package software.wings.helpers.ext.ecs.response;
 
 import io.harness.container.ContainerInfo;
 import io.harness.logging.CommandExecutionStatus;
-import lombok.Builder;
-import lombok.Data;
-import lombok.EqualsAndHashCode;
+
 import software.wings.api.ContainerServiceData;
 
 import java.util.List;
+import lombok.Builder;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
 
 @Data
 @EqualsAndHashCode(callSuper = false)

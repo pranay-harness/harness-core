@@ -3,7 +3,7 @@ package software.wings.annotation;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 
 import io.harness.exception.InvalidRequestException;
-import lombok.experimental.UtilityClass;
+
 import software.wings.beans.InfrastructureMapping;
 
 import java.lang.annotation.Annotation;
@@ -11,6 +11,7 @@ import java.lang.reflect.Field;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
+import lombok.experimental.UtilityClass;
 
 @UtilityClass
 public class BlueprintProcessor {

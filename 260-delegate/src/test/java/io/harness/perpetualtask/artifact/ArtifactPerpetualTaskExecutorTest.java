@@ -1,5 +1,8 @@
 package io.harness.perpetualtask.artifact;
 
+import static software.wings.beans.artifact.ArtifactStreamType.DOCKER;
+import static software.wings.helpers.ext.jenkins.BuildDetails.Builder.aBuildDetails;
+
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
@@ -7,12 +10,6 @@ import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-import static software.wings.beans.artifact.ArtifactStreamType.DOCKER;
-import static software.wings.helpers.ext.jenkins.BuildDetails.Builder.aBuildDetails;
-
-import com.google.inject.Inject;
-import com.google.protobuf.Any;
-import com.google.protobuf.ByteString;
 
 import io.harness.DelegateTest;
 import io.harness.category.element.UnitTests;
@@ -26,6 +23,21 @@ import io.harness.rest.RestResponse;
 import io.harness.rule.Owner;
 import io.harness.rule.OwnerRule;
 import io.harness.serializer.KryoSerializer;
+
+import software.wings.delegatetasks.buildsource.BuildSourceExecutionResponse;
+import software.wings.delegatetasks.buildsource.BuildSourceParameters;
+import software.wings.delegatetasks.buildsource.BuildSourceResponse;
+import software.wings.helpers.ext.jenkins.BuildDetails;
+
+import com.google.inject.Inject;
+import com.google.protobuf.Any;
+import com.google.protobuf.ByteString;
+import java.io.IOException;
+import java.time.Instant;
+import java.util.HashSet;
+import java.util.List;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 import okhttp3.MediaType;
 import okhttp3.ResponseBody;
 import org.junit.Before;
@@ -36,17 +48,6 @@ import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
 import retrofit2.Call;
 import retrofit2.Response;
-import software.wings.delegatetasks.buildsource.BuildSourceExecutionResponse;
-import software.wings.delegatetasks.buildsource.BuildSourceParameters;
-import software.wings.delegatetasks.buildsource.BuildSourceResponse;
-import software.wings.helpers.ext.jenkins.BuildDetails;
-
-import java.io.IOException;
-import java.time.Instant;
-import java.util.HashSet;
-import java.util.List;
-import java.util.stream.Collectors;
-import java.util.stream.IntStream;
 
 @RunWith(MockitoJUnitRunner.class)
 public class ArtifactPerpetualTaskExecutorTest extends DelegateTest {

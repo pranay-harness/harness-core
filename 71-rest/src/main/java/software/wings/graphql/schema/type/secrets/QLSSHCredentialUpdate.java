@@ -1,11 +1,13 @@
 package software.wings.graphql.schema.type.secrets;
 
 import io.harness.utils.RequestField;
+
+import software.wings.security.PermissionAttribute;
+import software.wings.security.annotations.Scope;
+
 import lombok.Builder;
 import lombok.Value;
 import lombok.experimental.FieldNameConstants;
-import software.wings.security.PermissionAttribute;
-import software.wings.security.annotations.Scope;
 
 @Value
 @Builder

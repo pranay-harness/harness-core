@@ -1,24 +1,18 @@
 package software.wings.service.impl.analysis;
 
 import static io.harness.rule.OwnerRule.SOWMYA;
+
+import static software.wings.metrics.RiskLevel.LOW;
+import static software.wings.metrics.RiskLevel.MEDIUM;
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.when;
-import static software.wings.metrics.RiskLevel.LOW;
-import static software.wings.metrics.RiskLevel.MEDIUM;
 
-import com.google.inject.Inject;
-
-import io.fabric8.utils.Lists;
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
-import org.apache.commons.lang3.reflect.FieldUtils;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
-import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
+
 import software.wings.WingsBaseTest;
 import software.wings.service.impl.newrelic.ExperimentalMetricRecord;
 import software.wings.service.intfc.analysis.ExperimentalAnalysisService;
@@ -27,9 +21,17 @@ import software.wings.service.intfc.analysis.TimeSeriesMLAnalysisRecordService;
 import software.wings.sm.StateType;
 import software.wings.sm.states.NewRelicState;
 
+import com.google.inject.Inject;
+import io.fabric8.utils.Lists;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import org.apache.commons.lang3.reflect.FieldUtils;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
 
 public class ExperimentalAnalysisServiceImplTest extends WingsBaseTest {
   @Inject private ExperimentalAnalysisService experimentalAnalysisService;

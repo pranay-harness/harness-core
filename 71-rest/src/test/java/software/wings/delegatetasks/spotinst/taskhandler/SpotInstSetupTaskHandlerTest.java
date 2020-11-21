@@ -1,7 +1,5 @@
 package software.wings.delegatetasks.spotinst.taskhandler;
 
-import static com.google.common.collect.Lists.newArrayList;
-import static com.google.common.collect.Maps.newHashMap;
 import static io.harness.logging.CommandExecutionStatus.SUCCESS;
 import static io.harness.logging.LogLevel.INFO;
 import static io.harness.rule.OwnerRule.ADWAIT;
@@ -11,6 +9,11 @@ import static io.harness.spotinst.model.SpotInstConstants.ELASTI_GROUP_CREATED_A
 import static io.harness.spotinst.model.SpotInstConstants.ELASTI_GROUP_ID;
 import static io.harness.spotinst.model.SpotInstConstants.ELASTI_GROUP_UPDATED_AT;
 import static io.harness.spotinst.model.SpotInstConstants.defaultSteadyStateTimeout;
+
+import static software.wings.service.impl.aws.model.AwsConstants.FORWARD_LISTENER_ACTION;
+
+import static com.google.common.collect.Lists.newArrayList;
+import static com.google.common.collect.Maps.newHashMap;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -23,15 +26,7 @@ import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
-import static software.wings.service.impl.aws.model.AwsConstants.FORWARD_LISTENER_ACTION;
 
-import com.google.common.util.concurrent.TimeLimiter;
-import com.google.inject.Inject;
-
-import com.amazonaws.services.ec2.model.Instance;
-import com.amazonaws.services.elasticloadbalancingv2.model.Action;
-import com.amazonaws.services.elasticloadbalancingv2.model.Listener;
-import com.amazonaws.services.elasticloadbalancingv2.model.TargetGroup;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.task.aws.AwsElbListener;
 import io.harness.delegate.task.aws.LoadBalancerDetailsForBGDeployment;
@@ -45,11 +40,7 @@ import io.harness.spotinst.SpotInstHelperServiceDelegate;
 import io.harness.spotinst.model.ElastiGroup;
 import io.harness.spotinst.model.ElastiGroupCapacity;
 import io.harness.spotinst.model.ElastiGroupInstanceHealth;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.Spy;
+
 import software.wings.WingsBaseTest;
 import software.wings.beans.AwsConfig;
 import software.wings.beans.SpotInstConfig;
@@ -58,11 +49,22 @@ import software.wings.delegatetasks.DelegateLogService;
 import software.wings.service.intfc.aws.delegate.AwsEc2HelperServiceDelegate;
 import software.wings.service.intfc.aws.delegate.AwsElbHelperServiceDelegate;
 
+import com.amazonaws.services.ec2.model.Instance;
+import com.amazonaws.services.elasticloadbalancingv2.model.Action;
+import com.amazonaws.services.elasticloadbalancingv2.model.Listener;
+import com.amazonaws.services.elasticloadbalancingv2.model.TargetGroup;
+import com.google.common.util.concurrent.TimeLimiter;
+import com.google.inject.Inject;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.Spy;
 
 public class SpotInstSetupTaskHandlerTest extends WingsBaseTest {
   @Mock private DelegateLogService mockDelegateLogService;

@@ -1,18 +1,17 @@
 package io.harness.mongo.queue;
 
-import com.google.inject.Injector;
-
 import io.harness.config.PublisherConfiguration;
 import io.harness.queue.NoopQueueConsumer;
 import io.harness.queue.NoopQueuePublisher;
 import io.harness.queue.Queuable;
 import io.harness.queue.QueueConsumer;
 import io.harness.queue.QueuePublisher;
-import lombok.experimental.UtilityClass;
-import lombok.extern.slf4j.Slf4j;
 
+import com.google.inject.Injector;
 import java.time.Duration;
 import java.util.List;
+import lombok.experimental.UtilityClass;
+import lombok.extern.slf4j.Slf4j;
 
 @UtilityClass
 @Slf4j

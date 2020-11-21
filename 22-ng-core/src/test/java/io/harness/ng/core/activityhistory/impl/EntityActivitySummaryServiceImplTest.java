@@ -2,9 +2,8 @@ package io.harness.ng.core.activityhistory.impl;
 
 import static io.harness.ng.core.activityhistory.ActivityHistoryTestHelper.createActivityHistoryDTO;
 import static io.harness.rule.OwnerRule.DEEPAK;
-import static org.assertj.core.api.Assertions.assertThat;
 
-import com.google.inject.Inject;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.CategoryTest;
 import io.harness.category.element.FunctionalTests;
@@ -19,17 +18,18 @@ import io.harness.ng.core.activityhistory.dto.TimeGroupType;
 import io.harness.ng.core.activityhistory.service.NGActivityService;
 import io.harness.rule.Owner;
 import io.harness.utils.FullyQualifiedIdentifierHelper;
-import lombok.extern.slf4j.Slf4j;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
-import org.mockito.InjectMocks;
 
+import com.google.inject.Inject;
 import java.text.SimpleDateFormat;
 import java.time.Instant;
 import java.util.Date;
 import java.util.List;
 import java.util.Random;
 import java.util.TimeZone;
+import lombok.extern.slf4j.Slf4j;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
+import org.mockito.InjectMocks;
 
 @Slf4j
 public class EntityActivitySummaryServiceImplTest extends NGCoreTestBase {

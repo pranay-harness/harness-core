@@ -2,9 +2,8 @@ package io.harness.functional.authentication;
 
 import static io.harness.rule.OwnerRule.UTKARSH;
 import static io.harness.testframework.restutils.UserRestUtils.loginUserOrNull;
-import static org.assertj.core.api.Assertions.assertThat;
 
-import com.google.inject.Inject;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.category.element.FunctionalTests;
 import io.harness.functional.AbstractFunctionalTest;
@@ -12,6 +11,13 @@ import io.harness.rule.Owner;
 import io.harness.testframework.framework.Setup;
 import io.harness.testframework.restutils.LoginSettingsUtils;
 import io.harness.testframework.restutils.UserRestUtils;
+
+import software.wings.beans.User;
+import software.wings.beans.loginSettings.LoginSettings;
+import software.wings.beans.loginSettings.UserLockoutPolicy;
+import software.wings.service.intfc.UserService;
+
+import com.google.inject.Inject;
 import lombok.AccessLevel;
 import lombok.experimental.FieldDefaults;
 import lombok.experimental.NonFinal;
@@ -19,10 +25,6 @@ import org.junit.FixMethodOrder;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.junit.runners.MethodSorters;
-import software.wings.beans.User;
-import software.wings.beans.loginSettings.LoginSettings;
-import software.wings.beans.loginSettings.UserLockoutPolicy;
-import software.wings.service.intfc.UserService;
 
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
 @FieldDefaults(makeFinal = true, level = AccessLevel.PRIVATE)

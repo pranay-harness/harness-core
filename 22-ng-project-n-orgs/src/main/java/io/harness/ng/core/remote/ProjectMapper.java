@@ -1,15 +1,16 @@
 package io.harness.ng.core.remote;
 
 import static io.harness.NGConstants.HARNESS_BLUE;
+
 import static java.util.Collections.emptyList;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import io.harness.ng.core.dto.ProjectDTO;
 import io.harness.ng.core.entities.Project;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
+import java.util.Optional;
 import lombok.SneakyThrows;
 import lombok.experimental.UtilityClass;
-
-import java.util.Optional;
 
 @UtilityClass
 public class ProjectMapper {

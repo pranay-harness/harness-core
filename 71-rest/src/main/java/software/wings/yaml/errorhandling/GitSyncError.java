@@ -6,6 +6,14 @@ import io.harness.mongo.index.CdIndex;
 import io.harness.mongo.index.FdIndex;
 import io.harness.mongo.index.Field;
 import io.harness.mongo.index.NgUniqueIndex;
+
+import software.wings.beans.Base;
+import software.wings.beans.GitRepositoryInfo;
+import software.wings.service.impl.yaml.GitSyncErrorStatus;
+import software.wings.yaml.errorhandling.GitToHarnessErrorDetails.GitToHarnessErrorDetailsKeys;
+import software.wings.yaml.errorhandling.HarnessToGitErrorDetails.HarnessToGitErrorDetailsKeys;
+
+import javax.ws.rs.DefaultValue;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -15,13 +23,6 @@ import lombok.experimental.FieldNameConstants;
 import lombok.experimental.UtilityClass;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Transient;
-import software.wings.beans.Base;
-import software.wings.beans.GitRepositoryInfo;
-import software.wings.service.impl.yaml.GitSyncErrorStatus;
-import software.wings.yaml.errorhandling.GitToHarnessErrorDetails.GitToHarnessErrorDetailsKeys;
-import software.wings.yaml.errorhandling.HarnessToGitErrorDetails.HarnessToGitErrorDetailsKeys;
-
-import javax.ws.rs.DefaultValue;
 
 /**
  * @author rktummala on 12/15/17

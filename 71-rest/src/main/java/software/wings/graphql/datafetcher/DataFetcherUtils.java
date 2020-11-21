@@ -1,27 +1,15 @@
 package software.wings.graphql.datafetcher;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
+
 import static java.lang.String.format;
 
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
-
-import com.github.benmanes.caffeine.cache.Caffeine;
-import com.github.benmanes.caffeine.cache.LoadingCache;
-import graphql.GraphQLContext;
-import graphql.schema.DataFetchingEnvironment;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.persistence.HIterator;
 import io.harness.timescaledb.DBUtils;
 import io.harness.timescaledb.TimeScaleDBService;
-import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.beanutils.PropertyUtils;
-import org.apache.commons.lang3.StringUtils;
-import org.jetbrains.annotations.NotNull;
-import org.mongodb.morphia.query.FieldEnd;
-import org.mongodb.morphia.query.FindOptions;
-import org.mongodb.morphia.query.Query;
+
 import software.wings.beans.FeatureName;
 import software.wings.beans.SettingAttribute.SettingAttributeKeys;
 import software.wings.dl.WingsPersistence;
@@ -43,6 +31,12 @@ import software.wings.graphql.schema.type.aggregation.QLTimeOperator;
 import software.wings.resources.graphql.TriggeredByType;
 import software.wings.service.intfc.FeatureFlagService;
 
+import com.github.benmanes.caffeine.cache.Caffeine;
+import com.github.benmanes.caffeine.cache.LoadingCache;
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
+import graphql.GraphQLContext;
+import graphql.schema.DataFetchingEnvironment;
 import java.lang.reflect.InvocationTargetException;
 import java.sql.Connection;
 import java.sql.ResultSet;
@@ -55,6 +49,13 @@ import java.util.Map;
 import java.util.TimeZone;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.beanutils.PropertyUtils;
+import org.apache.commons.lang3.StringUtils;
+import org.jetbrains.annotations.NotNull;
+import org.mongodb.morphia.query.FieldEnd;
+import org.mongodb.morphia.query.FindOptions;
+import org.mongodb.morphia.query.Query;
 
 @Slf4j
 @Singleton
@@ -72,7 +73,7 @@ public class DataFetcherUtils {
   @Inject private TimeScaleDBService timeScaleDBService;
   @Inject protected FeatureFlagService featureFlagService;
   private final LoadingCache<String, Boolean> isClusterDataPresentCache =
-      Caffeine.newBuilder().expireAfterAccess(15, TimeUnit.SECONDS).build(this ::isAnyClusterDataPresent);
+      Caffeine.newBuilder().expireAfterAccess(15, TimeUnit.SECONDS).build(this::isAnyClusterDataPresent);
 
   public static String SAMPLE_ACCOUNT_ID =
       "Sy3KVuK1SZy2Z7OLhbKlNg"; // Sy3KVuK1SZy2Z7OLhbKlNg belongs to "harness-demo" in Free Cluster
@@ -174,7 +175,9 @@ public class DataFetcherUtils {
     return accountId;
   }
 
-  public interface Controller<T> { void populate(T entity); }
+  public interface Controller<T> {
+    void populate(T entity);
+  }
 
   public void setStringFilter(FieldEnd<? extends Query<?>> field, String value) {
     field.equal(value);

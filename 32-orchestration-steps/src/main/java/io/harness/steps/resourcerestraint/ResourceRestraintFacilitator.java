@@ -4,9 +4,6 @@ import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.distribution.constraint.Consumer.State.ACTIVE;
 import static io.harness.facilitator.FacilitatorResponse.FacilitatorResponseBuilder;
 
-import com.google.common.base.Preconditions;
-import com.google.inject.Inject;
-
 import io.harness.ambiance.Ambiance;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.distribution.constraint.Constraint;
@@ -26,10 +23,12 @@ import io.harness.steps.resourcerestraint.beans.ResourceRestraint;
 import io.harness.steps.resourcerestraint.service.ResourceRestraintRegistry;
 import io.harness.steps.resourcerestraint.service.ResourceRestraintService;
 import io.harness.steps.resourcerestraint.service.RestraintService;
-import lombok.extern.slf4j.Slf4j;
 
+import com.google.common.base.Preconditions;
+import com.google.inject.Inject;
 import java.time.Duration;
 import java.util.List;
+import lombok.extern.slf4j.Slf4j;
 
 @OwnedBy(CDC)
 @Slf4j

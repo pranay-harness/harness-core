@@ -2,10 +2,8 @@ package software.wings.service.impl.yaml.handler.command;
 
 import static io.harness.exception.WingsException.USER;
 import static io.harness.validation.Validator.notNullCheck;
-import static software.wings.beans.yaml.YamlConstants.NODE_PROPERTY_REFERENCEID;
 
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
+import static software.wings.beans.yaml.YamlConstants.NODE_PROPERTY_REFERENCEID;
 
 import software.wings.beans.command.AbstractCommandUnit;
 import software.wings.beans.command.Command;
@@ -19,6 +17,8 @@ import software.wings.service.intfc.CommandService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.yaml.command.CommandRefYaml;
 
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;

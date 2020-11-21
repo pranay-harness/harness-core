@@ -1,15 +1,14 @@
 package migrations.all;
 
-import com.google.inject.Inject;
-
-import lombok.extern.slf4j.Slf4j;
-import migrations.Migration;
 import software.wings.beans.container.ContainerTask;
 import software.wings.beans.container.ContainerTask.ContainerTaskKeys;
 import software.wings.beans.container.KubernetesContainerTask;
 import software.wings.dl.WingsPersistence;
 
+import com.google.inject.Inject;
 import java.util.List;
+import lombok.extern.slf4j.Slf4j;
+import migrations.Migration;
 
 @Slf4j
 public class TrimYamlMigration implements Migration {

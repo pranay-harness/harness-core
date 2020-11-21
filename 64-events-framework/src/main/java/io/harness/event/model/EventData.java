@@ -1,10 +1,9 @@
 package io.harness.event.model;
 
+import java.util.Map;
 import lombok.Builder;
 import lombok.Builder.Default;
 import lombok.Data;
-
-import java.util.Map;
 
 /**
  * @author rktummala

@@ -1,12 +1,11 @@
 package software.wings.service.impl.yaml.handler.setting.cloudprovider;
 
-import com.google.inject.Singleton;
-
 import software.wings.beans.PhysicalDataCenterConfig;
 import software.wings.beans.PhysicalDataCenterConfig.Yaml;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.yaml.ChangeContext;
 
+import com.google.inject.Singleton;
 import java.util.List;
 
 /**

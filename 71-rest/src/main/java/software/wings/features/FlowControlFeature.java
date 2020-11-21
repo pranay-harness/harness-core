@@ -1,11 +1,9 @@
 package software.wings.features;
 
-import static java.util.stream.Collectors.toList;
 import static software.wings.features.utils.WorkflowUtils.FLOW_CONTROL_USAGE_PREDICATE;
 import static software.wings.features.utils.WorkflowUtils.getWorkflowsPageRequest;
 
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
+import static java.util.stream.Collectors.toList;
 
 import software.wings.beans.Workflow;
 import software.wings.features.api.AbstractPremiumFeature;
@@ -16,6 +14,8 @@ import software.wings.features.utils.WorkflowUtils;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.WorkflowService;
 
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;

@@ -1,14 +1,18 @@
 package io.harness.ccm.setup.service.support;
 
 import static io.harness.rule.OwnerRule.ROHIT;
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.when;
 
-import com.amazonaws.auth.AWSCredentialsProvider;
-import com.amazonaws.services.securitytoken.AWSSecurityTokenService;
 import io.harness.category.element.UnitTests;
 import io.harness.ccm.setup.config.CESetUpConfig;
 import io.harness.rule.Owner;
+
+import software.wings.app.MainConfiguration;
+
+import com.amazonaws.auth.AWSCredentialsProvider;
+import com.amazonaws.services.securitytoken.AWSSecurityTokenService;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -16,7 +20,6 @@ import org.junit.runner.RunWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
-import software.wings.app.MainConfiguration;
 
 @RunWith(MockitoJUnitRunner.class)
 public class AwsCredentialHelperTest {

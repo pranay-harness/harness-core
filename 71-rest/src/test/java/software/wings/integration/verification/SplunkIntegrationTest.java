@@ -3,27 +3,28 @@ package software.wings.integration.verification;
 import static io.harness.rule.OwnerRule.PRAVEEN;
 import static io.harness.rule.OwnerRule.RAGHU;
 import static io.harness.rule.OwnerRule.SRIRAM;
+
 import static org.assertj.core.api.Assertions.assertThat;
 
-import com.google.common.collect.Lists;
-import com.google.inject.Inject;
-
-import com.splunk.Service;
 import io.harness.category.element.DeprecatedIntegrationTests;
 import io.harness.rule.Owner;
 import io.harness.scm.ScmSecret;
 import io.harness.scm.SecretName;
+
+import software.wings.beans.SplunkConfig;
+import software.wings.integration.IntegrationTestBase;
+import software.wings.service.intfc.splunk.SplunkDelegateService;
+
+import com.google.common.collect.Lists;
+import com.google.inject.Inject;
+import com.splunk.Service;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
-import software.wings.beans.SplunkConfig;
-import software.wings.integration.IntegrationTestBase;
-import software.wings.service.intfc.splunk.SplunkDelegateService;
-
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
 
 public class SplunkIntegrationTest extends IntegrationTestBase {
   private static final String SPLUNK_CLOUD_URL = "https://api-prd-p-429h4vj2lsng.cloud.splunk.com:8089";

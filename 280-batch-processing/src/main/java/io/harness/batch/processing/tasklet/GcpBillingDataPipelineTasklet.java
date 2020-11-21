@@ -2,9 +2,6 @@ package io.harness.batch.processing.tasklet;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 
-import com.google.cloud.bigquery.datatransfer.v1.TransferRun;
-import com.google.inject.Singleton;
-
 import io.harness.batch.processing.ccm.CCMJobConstants;
 import io.harness.batch.processing.config.BatchMainConfig;
 import io.harness.batch.processing.dao.intfc.BillingDataPipelineRecordDao;
@@ -18,6 +15,14 @@ import io.harness.ccm.config.GcpBillingAccount;
 import io.harness.ccm.config.GcpOrganization;
 import io.harness.ccm.config.GcpOrganizationDao;
 import io.harness.ccm.config.GcpOrganizationService;
+
+import software.wings.beans.Account;
+import software.wings.service.intfc.instance.CloudToHarnessMappingService;
+
+import com.google.cloud.bigquery.datatransfer.v1.TransferRun;
+import com.google.inject.Singleton;
+import java.io.IOException;
+import java.util.List;
 import lombok.extern.slf4j.Slf4j;
 import org.bouncycastle.util.Strings;
 import org.springframework.batch.core.JobParameters;
@@ -26,11 +31,6 @@ import org.springframework.batch.core.scope.context.ChunkContext;
 import org.springframework.batch.core.step.tasklet.Tasklet;
 import org.springframework.batch.repeat.RepeatStatus;
 import org.springframework.beans.factory.annotation.Autowired;
-import software.wings.beans.Account;
-import software.wings.service.intfc.instance.CloudToHarnessMappingService;
-
-import java.io.IOException;
-import java.util.List;
 
 @Slf4j
 @Singleton

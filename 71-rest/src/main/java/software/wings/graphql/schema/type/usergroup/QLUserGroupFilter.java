@@ -1,8 +1,9 @@
 package software.wings.graphql.schema.type.usergroup;
 
+import software.wings.graphql.schema.type.aggregation.QLIdFilter;
+
 import lombok.Builder;
 import lombok.Value;
-import software.wings.graphql.schema.type.aggregation.QLIdFilter;
 
 @Value
 @Builder

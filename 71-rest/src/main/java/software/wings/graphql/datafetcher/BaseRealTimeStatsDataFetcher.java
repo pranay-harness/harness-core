@@ -1,18 +1,14 @@
 package software.wings.graphql.datafetcher;
 
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+
 import static org.mongodb.morphia.aggregation.Group.grouping;
 import static org.mongodb.morphia.aggregation.Projection.projection;
 import static org.mongodb.morphia.query.Sort.ascending;
 import static org.mongodb.morphia.query.Sort.descending;
 
-import com.google.common.collect.Lists;
-
 import io.harness.exception.WingsException;
-import org.jetbrains.annotations.NotNull;
-import org.mongodb.morphia.aggregation.Accumulator;
-import org.mongodb.morphia.aggregation.Group;
-import org.mongodb.morphia.query.Query;
+
 import software.wings.beans.instance.dashboard.EntitySummary;
 import software.wings.dl.WingsPersistence;
 import software.wings.graphql.datafetcher.AbstractStatsDataFetcher.TwoLevelAggregatedData;
@@ -27,11 +23,16 @@ import software.wings.graphql.utils.nameservice.NameResult;
 import software.wings.graphql.utils.nameservice.NameService;
 import software.wings.service.impl.instance.FlatEntitySummaryStats;
 
+import com.google.common.collect.Lists;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
+import org.jetbrains.annotations.NotNull;
+import org.mongodb.morphia.aggregation.Accumulator;
+import org.mongodb.morphia.aggregation.Group;
+import org.mongodb.morphia.query.Query;
 
 public interface BaseRealTimeStatsDataFetcher<F> extends BaseStatsDataFetcher {
   default QLData getStackedData(NameService nameService, WingsPersistence wingsPersistence, List<String> groupBy,

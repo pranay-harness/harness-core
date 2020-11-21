@@ -1,9 +1,8 @@
 package io.harness.registries.events;
 
 import static io.harness.rule.OwnerRule.PRASHANT;
-import static org.assertj.core.api.Assertions.assertThat;
 
-import com.google.inject.Inject;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.OrchestrationBeansTestBase;
 import io.harness.category.element.UnitTests;
@@ -14,11 +13,12 @@ import io.harness.execution.events.OrchestrationEventType;
 import io.harness.execution.events.SyncOrchestrationEventHandler;
 import io.harness.registries.RegistryType;
 import io.harness.rule.Owner;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
 
+import com.google.inject.Inject;
 import java.util.Collections;
 import java.util.Set;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 public class OrchestrationEventHandlerRegistryTest extends OrchestrationBeansTestBase {
   @Inject OrchestrationEventHandlerRegistry registry;

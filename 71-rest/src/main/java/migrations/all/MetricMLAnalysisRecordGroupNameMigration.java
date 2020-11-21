@@ -1,9 +1,10 @@
 package migrations.all;
 
-import com.mongodb.DBObject;
-import org.slf4j.LoggerFactory;
 import software.wings.service.impl.analysis.TimeSeriesMLAnalysisRecord;
 import software.wings.service.impl.newrelic.NewRelicMetricDataRecord;
+
+import com.mongodb.DBObject;
+import org.slf4j.LoggerFactory;
 
 /**
  * Created by rsingh on 5/20/18.

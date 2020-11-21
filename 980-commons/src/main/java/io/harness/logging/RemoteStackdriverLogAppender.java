@@ -4,8 +4,14 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.govern.Switch.unhandled;
 import static io.harness.network.Http.connectableHttpUrl;
 import static io.harness.network.Localhost.getLocalHostName;
+
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
+import io.harness.version.VersionInfoManager;
+
+import ch.qos.logback.classic.Level;
+import ch.qos.logback.classic.spi.ILoggingEvent;
+import ch.qos.logback.core.AppenderBase;
 import com.google.auth.oauth2.AccessToken;
 import com.google.auth.oauth2.GoogleCredentials;
 import com.google.cloud.MonitoredResource;
@@ -24,14 +30,6 @@ import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Queues;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
-
-import ch.qos.logback.classic.Level;
-import ch.qos.logback.classic.spi.ILoggingEvent;
-import ch.qos.logback.core.AppenderBase;
-import io.harness.version.VersionInfoManager;
-import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.StringUtils;
-
 import java.lang.management.ManagementFactory;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -45,6 +43,8 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 
 @Slf4j
 public abstract class RemoteStackdriverLogAppender<E> extends AppenderBase<E> {
@@ -87,7 +87,7 @@ public abstract class RemoteStackdriverLogAppender<E> extends AppenderBase<E> {
       Executors
           .newSingleThreadScheduledExecutor(
               new ThreadFactoryBuilder().setNameFormat("remote-stackdriver-log-submitter").build())
-          .scheduleWithFixedDelay(this ::send, 1L, 3L, TimeUnit.SECONDS);
+          .scheduleWithFixedDelay(this::send, 1L, 3L, TimeUnit.SECONDS);
     }
   }
   @Override
@@ -161,7 +161,7 @@ public abstract class RemoteStackdriverLogAppender<E> extends AppenderBase<E> {
 
       if (logQueue.isEmpty()
           || (logQueue.size() < minimum
-                 && (logQueue.peek().getTimestamp() + LOG_QUEUE_BUFFER_MILLIS > System.currentTimeMillis()))) {
+              && (logQueue.peek().getTimestamp() + LOG_QUEUE_BUFFER_MILLIS > System.currentTimeMillis()))) {
         return;
       }
 

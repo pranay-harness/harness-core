@@ -1,6 +1,7 @@
 package io.harness.beans.environment.pod.container;
 
 import io.harness.k8s.model.ImageDetails;
+
 import lombok.Builder;
 import lombok.Data;
 import org.hibernate.validator.constraints.NotEmpty;

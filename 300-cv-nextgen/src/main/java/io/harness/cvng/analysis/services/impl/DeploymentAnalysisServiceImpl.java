@@ -1,7 +1,5 @@
 package io.harness.cvng.analysis.services.impl;
 
-import com.google.inject.Inject;
-
 import io.harness.cvng.activity.services.api.ActivityService;
 import io.harness.cvng.analysis.beans.CanaryDeploymentAdditionalInfo;
 import io.harness.cvng.analysis.beans.CanaryDeploymentAdditionalInfo.HostSummaryInfo;
@@ -22,6 +20,7 @@ import io.harness.cvng.verificationjob.entities.TestVerificationJob;
 import io.harness.cvng.verificationjob.entities.VerificationJobInstance;
 import io.harness.cvng.verificationjob.services.api.VerificationJobInstanceService;
 
+import com.google.inject.Inject;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Optional;

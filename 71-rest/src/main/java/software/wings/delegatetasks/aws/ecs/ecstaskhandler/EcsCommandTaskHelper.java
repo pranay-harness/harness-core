@@ -2,10 +2,15 @@ package software.wings.delegatetasks.aws.ecs.ecstaskhandler;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+
 import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 
-import com.google.inject.Singleton;
+import io.harness.security.encryption.EncryptedDataDetail;
+
+import software.wings.beans.AwsConfig;
+import software.wings.beans.command.ExecutionLogCallback;
+import software.wings.service.intfc.aws.delegate.AwsAppAutoScalingHelperServiceDelegate;
 
 import com.amazonaws.services.applicationautoscaling.model.Alarm;
 import com.amazonaws.services.applicationautoscaling.model.PutScalingPolicyRequest;
@@ -14,11 +19,7 @@ import com.amazonaws.services.applicationautoscaling.model.RegisterScalableTarge
 import com.amazonaws.services.applicationautoscaling.model.ScalableTarget;
 import com.amazonaws.services.applicationautoscaling.model.ScalingPolicy;
 import com.amazonaws.services.cloudwatch.model.MetricAlarm;
-import io.harness.security.encryption.EncryptedDataDetail;
-import software.wings.beans.AwsConfig;
-import software.wings.beans.command.ExecutionLogCallback;
-import software.wings.service.intfc.aws.delegate.AwsAppAutoScalingHelperServiceDelegate;
-
+import com.google.inject.Singleton;
 import java.util.List;
 
 @Singleton

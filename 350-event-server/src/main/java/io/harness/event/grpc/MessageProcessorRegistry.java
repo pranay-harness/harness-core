@@ -1,10 +1,9 @@
 package io.harness.event.grpc;
 
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
-
 import io.harness.event.MessageProcessorType;
 
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import java.util.Map;
 
 @Singleton

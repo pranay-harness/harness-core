@@ -4,15 +4,17 @@ import static io.harness.batch.processing.config.k8s.recommendation.estimators.R
 import static io.harness.batch.processing.config.k8s.recommendation.estimators.ResourceAmountUtils.readableCpuAmount;
 import static io.harness.batch.processing.config.k8s.recommendation.estimators.ResourceAmountUtils.readableMemoryAmount;
 import static io.harness.rule.OwnerRule.AVMOHAN;
-import static org.assertj.core.api.Assertions.assertThat;
+
 import static software.wings.graphql.datafetcher.ce.recommendation.entity.ResourceRequirement.CPU;
 import static software.wings.graphql.datafetcher.ce.recommendation.entity.ResourceRequirement.MEMORY;
 
-import com.google.common.collect.ImmutableMap;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
+
+import com.google.common.collect.ImmutableMap;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 

@@ -1,16 +1,13 @@
 package software.wings.delegatetasks;
 
 import static io.harness.threading.Morpheus.sleep;
+
 import static software.wings.common.VerificationConstants.DATA_COLLECTION_RETRY_SLEEP;
 import static software.wings.common.VerificationConstants.DURATION_TO_ASK_MINUTES;
 import static software.wings.common.VerificationConstants.PERIODIC_GAP_IN_DAYS;
 import static software.wings.service.impl.analysis.AnalysisComparisonStrategy.COMPARE_WITH_CURRENT;
 import static software.wings.service.impl.newrelic.NewRelicMetricDataRecord.DEFAULT_GROUP_NAME;
 import static software.wings.sm.states.AbstractMetricAnalysisState.CANARY_DAYS_TO_COLLECT;
-
-import com.google.common.base.Preconditions;
-import com.google.common.collect.TreeBasedTable;
-import com.google.inject.Inject;
 
 import io.harness.delegate.beans.DelegateTaskPackage;
 import io.harness.delegate.beans.DelegateTaskResponse;
@@ -20,8 +17,7 @@ import io.harness.exception.ExceptionUtils;
 import io.harness.exception.WingsException;
 import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.time.Timestamp;
-import lombok.extern.slf4j.Slf4j;
-import org.slf4j.Logger;
+
 import software.wings.beans.DynaTraceConfig;
 import software.wings.beans.TaskType;
 import software.wings.service.impl.ThirdPartyApiCallLog;
@@ -38,6 +34,9 @@ import software.wings.service.intfc.dynatrace.DynaTraceDelegateService;
 import software.wings.sm.StateType;
 import software.wings.sm.states.DynatraceState;
 
+import com.google.common.base.Preconditions;
+import com.google.common.collect.TreeBasedTable;
+import com.google.inject.Inject;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -48,6 +47,8 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.TimeUnit;
 import java.util.function.BooleanSupplier;
 import java.util.function.Consumer;
+import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
 
 /**
  * Created by rsingh on 2/6/18.
@@ -304,8 +305,7 @@ public class DynaTraceDataCollectionTask extends AbstractDelegateDataCollectionT
         case PREDICTIVE:
           long startTimeStamp;
           long endTimeStamp;
-          long periodToCollect = is247Task
-              ? dataCollectionInfo.getCollectionTime()
+          long periodToCollect = is247Task  ? dataCollectionInfo.getCollectionTime()
               : (dataCollectionMinute == 0) ? PREDECTIVE_HISTORY_MINUTES + DURATION_TO_ASK_MINUTES
                                             : DURATION_TO_ASK_MINUTES;
           periodToCollect = TimeUnit.MINUTES.toMillis(periodToCollect);

@@ -2,17 +2,16 @@ package software.wings.infra;
 
 import static io.harness.rule.OwnerRule.PRASHANT;
 import static io.harness.rule.OwnerRule.YOGESH;
-import static org.assertj.core.api.Assertions.assertThat;
+
 import static software.wings.api.DeploymentType.CUSTOM;
 import static software.wings.infra.InfraDefinitionTestConstants.RELEASE_NAME;
+
+import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
 import io.harness.rule.OwnerRule;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
+
 import software.wings.WingsBaseTest;
 import software.wings.api.CloudProviderType;
 import software.wings.api.DeploymentType;
@@ -22,6 +21,10 @@ import software.wings.beans.InfrastructureMapping;
 import software.wings.utils.WingsTestConstants;
 
 import java.util.Arrays;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 public class InfrastructureDefinitionTest extends WingsBaseTest {
   private InfraMappingInfrastructureProvider mappingProvider;

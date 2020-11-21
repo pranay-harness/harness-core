@@ -1,9 +1,5 @@
 package software.wings.beans;
 
-import com.google.common.collect.ImmutableList;
-
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.annotation.HarnessEntity;
 import io.harness.iterator.PersistentRegularIterable;
 import io.harness.mongo.index.CompoundMongoIndex;
@@ -12,6 +8,18 @@ import io.harness.mongo.index.FdTtlIndex;
 import io.harness.mongo.index.MongoIndex;
 import io.harness.persistence.PersistentEntity;
 import io.harness.persistence.UuidAware;
+
+import software.wings.beans.BarrierInstancePipeline.BarrierInstancePipelineKeys;
+import software.wings.beans.BarrierInstanceWorkflow.BarrierInstanceWorkflowKeys;
+import software.wings.beans.entityinterface.ApplicationAccess;
+
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.github.reinert.jjschema.SchemaIgnore;
+import com.google.common.collect.ImmutableList;
+import java.time.OffsetDateTime;
+import java.util.Date;
+import java.util.List;
+import javax.validation.constraints.NotNull;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -19,14 +27,6 @@ import lombok.experimental.FieldNameConstants;
 import lombok.experimental.UtilityClass;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Id;
-import software.wings.beans.BarrierInstancePipeline.BarrierInstancePipelineKeys;
-import software.wings.beans.BarrierInstanceWorkflow.BarrierInstanceWorkflowKeys;
-import software.wings.beans.entityinterface.ApplicationAccess;
-
-import java.time.OffsetDateTime;
-import java.util.Date;
-import java.util.List;
-import javax.validation.constraints.NotNull;
 
 @Data
 @Builder

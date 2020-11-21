@@ -3,11 +3,12 @@ package io.harness.cdng.artifact.bean;
 import static com.fasterxml.jackson.annotation.JsonTypeInfo.As.EXTERNAL_PROPERTY;
 import static com.fasterxml.jackson.annotation.JsonTypeInfo.Id.NAME;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import io.harness.delegate.task.artifacts.ArtifactSourceType;
 import io.harness.yaml.core.intfc.OverridesApplier;
 import io.harness.yaml.core.intfc.WithIdentifier;
+
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonTypeInfo;
 
 /**
  * wrapper object for dockerhub, gcr, etc element.

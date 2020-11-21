@@ -1,12 +1,8 @@
 package software.wings.graphql.datafetcher.artifact;
 
-import com.google.inject.Inject;
-
-import graphql.schema.DataFetchingEnvironment;
 import io.harness.exception.InvalidRequestException;
 import io.harness.persistence.CreatedAtAware;
-import org.mongodb.morphia.query.Query;
-import org.mongodb.morphia.query.Sort;
+
 import software.wings.beans.artifact.Artifact;
 import software.wings.graphql.datafetcher.AbstractConnectionV2DataFetcher;
 import software.wings.graphql.schema.query.QLPageQueryParameters;
@@ -22,7 +18,11 @@ import software.wings.graphql.utils.nameservice.NameService;
 import software.wings.security.PermissionAttribute;
 import software.wings.security.annotations.AuthRule;
 
+import com.google.inject.Inject;
+import graphql.schema.DataFetchingEnvironment;
 import java.util.List;
+import org.mongodb.morphia.query.Query;
+import org.mongodb.morphia.query.Sort;
 
 public class ArtifactConnectionDataFetcher
     extends AbstractConnectionV2DataFetcher<QLArtifactFilter, QLNoOpSortCriteria, QLArtifactConnection> {

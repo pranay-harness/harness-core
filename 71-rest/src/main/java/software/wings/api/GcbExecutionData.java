@@ -2,17 +2,12 @@ package software.wings.api;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+
 import static software.wings.api.ExecutionDataValue.executionDataValue;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.delegate.beans.DelegateTaskNotifyResponseData;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.EqualsAndHashCode;
-import lombok.NoArgsConstructor;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
+
 import software.wings.beans.command.GcbTaskParams;
 import software.wings.helpers.ext.gcb.models.GcbArtifactObjects;
 import software.wings.helpers.ext.gcb.models.GcbArtifacts;
@@ -23,6 +18,13 @@ import software.wings.sm.states.GcbState;
 
 import java.util.List;
 import java.util.Map;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.NoArgsConstructor;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 /**
  * Created by vglijin on 5/29/20.

@@ -3,13 +3,15 @@ package software.wings.resources;
 import static io.harness.rule.OwnerRule.HANTANG;
 import static io.harness.rule.OwnerRule.UTSAV;
 import static io.harness.rule.OwnerRule.VIKAS;
+
+import static software.wings.beans.Account.Builder.anAccount;
+
 import static java.lang.String.format;
 import static javax.ws.rs.client.Entity.entity;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
-import static software.wings.beans.Account.Builder.anAccount;
 
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
@@ -18,10 +20,7 @@ import io.harness.datahandler.services.AdminAccountService;
 import io.harness.datahandler.services.AdminUserService;
 import io.harness.rest.RestResponse;
 import io.harness.rule.Owner;
-import org.junit.Before;
-import org.junit.ClassRule;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
+
 import software.wings.beans.Account;
 import software.wings.beans.CeLicenseUpdateInfo;
 import software.wings.utils.ResourceTestRule;
@@ -29,6 +28,10 @@ import software.wings.utils.ResourceTestRule;
 import javax.ws.rs.client.Entity;
 import javax.ws.rs.core.GenericType;
 import javax.ws.rs.core.MediaType;
+import org.junit.Before;
+import org.junit.ClassRule;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 public class AdminAccountResourceTest extends CategoryTest {
   private String accountId = "ACCOUNT_ID";

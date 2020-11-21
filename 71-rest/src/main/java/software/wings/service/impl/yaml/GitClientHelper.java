@@ -11,12 +11,8 @@ import static io.harness.git.model.ChangeType.DELETE;
 import static io.harness.git.model.ChangeType.MODIFY;
 import static io.harness.git.model.ChangeType.RENAME;
 import static io.harness.govern.Switch.unhandled;
-import static org.apache.commons.codec.binary.Hex.encodeHexString;
 
-import com.google.common.cache.CacheBuilder;
-import com.google.common.cache.CacheLoader;
-import com.google.common.cache.LoadingCache;
-import com.google.inject.Singleton;
+import static org.apache.commons.codec.binary.Hex.encodeHexString;
 
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.GitConnectionDelegateException;
@@ -26,16 +22,14 @@ import io.harness.filesystem.FileIo;
 import io.harness.git.model.ChangeType;
 import io.harness.git.model.GitFile;
 import io.harness.git.model.GitRepositoryType;
-import lombok.extern.slf4j.Slf4j;
-import org.eclipse.jgit.api.errors.GitAPIException;
-import org.eclipse.jgit.api.errors.JGitInternalException;
-import org.eclipse.jgit.diff.DiffEntry;
-import org.eclipse.jgit.errors.MissingObjectException;
-import org.eclipse.jgit.errors.TransportException;
-import org.jetbrains.annotations.NotNull;
+
 import software.wings.beans.GitConfig;
 import software.wings.beans.GitOperationContext;
 
+import com.google.common.cache.CacheBuilder;
+import com.google.common.cache.CacheLoader;
+import com.google.common.cache.LoadingCache;
+import com.google.inject.Singleton;
 import java.io.File;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -47,6 +41,13 @@ import java.util.List;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Stream;
+import lombok.extern.slf4j.Slf4j;
+import org.eclipse.jgit.api.errors.GitAPIException;
+import org.eclipse.jgit.api.errors.JGitInternalException;
+import org.eclipse.jgit.diff.DiffEntry;
+import org.eclipse.jgit.errors.MissingObjectException;
+import org.eclipse.jgit.errors.TransportException;
+import org.jetbrains.annotations.NotNull;
 
 @Singleton
 @Slf4j

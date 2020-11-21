@@ -1,21 +1,21 @@
 package io.harness.cvng.core.entities;
 
-import static com.google.common.base.Preconditions.checkNotNull;
 import static io.harness.cvng.core.utils.ErrorMessageUtils.generateErrorMessageFromParam;
 
-import com.google.common.annotations.VisibleForTesting;
-import com.google.common.io.Resources;
+import static com.google.common.base.Preconditions.checkNotNull;
+
+import io.harness.cvng.beans.DataSourceType;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonTypeName;
-import io.harness.cvng.beans.DataSourceType;
+import com.google.common.annotations.VisibleForTesting;
+import com.google.common.io.Resources;
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.experimental.FieldNameConstants;
-
-import java.io.IOException;
-import java.nio.charset.StandardCharsets;
 
 @JsonTypeName("SPLUNK")
 @Data

@@ -1,6 +1,7 @@
 package io.harness.functional.ci;
 
 import static io.harness.rule.OwnerRule.ALEKSANDAR;
+
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.CategoryTest;
@@ -8,16 +9,16 @@ import io.harness.category.element.FunctionalTests;
 import io.harness.rule.Owner;
 import io.harness.testframework.framework.CIManagerExecutor;
 import io.harness.testframework.restutils.NGPipelineRestUtils;
-import io.restassured.RestAssured;
-import org.apache.commons.io.IOUtils;
-import org.junit.BeforeClass;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
 
+import io.restassured.RestAssured;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.Map;
 import java.util.UUID;
+import org.apache.commons.io.IOUtils;
+import org.junit.BeforeClass;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 public class CIPipelineCRUDFunctionalTest extends CategoryTest {
   private static final String ALPN_JAR =

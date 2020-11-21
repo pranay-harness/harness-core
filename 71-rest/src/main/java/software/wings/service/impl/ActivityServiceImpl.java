@@ -4,14 +4,12 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.eraro.ErrorCode.INVALID_ARGUMENT;
 import static io.harness.exception.WingsException.ADMIN;
 import static io.harness.persistence.HQuery.excludeAuthority;
-import static org.apache.commons.lang3.StringUtils.isNotBlank;
-import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
+
 import static software.wings.beans.Event.Builder.anEvent;
 
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
+import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 
-import com.mongodb.ReadPreference;
 import io.harness.beans.ExecutionStatus;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
@@ -19,12 +17,7 @@ import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.queue.QueuePublisher;
-import lombok.extern.slf4j.Slf4j;
-import org.hibernate.validator.constraints.NotEmpty;
-import org.mongodb.morphia.mapping.Mapper;
-import org.mongodb.morphia.query.FindOptions;
-import org.mongodb.morphia.query.Query;
-import org.mongodb.morphia.query.UpdateOperations;
+
 import software.wings.beans.Activity;
 import software.wings.beans.Activity.ActivityKeys;
 import software.wings.beans.Environment.EnvironmentType;
@@ -44,6 +37,9 @@ import software.wings.service.intfc.LogService;
 import software.wings.service.intfc.ServiceInstanceService;
 import software.wings.service.intfc.ownership.OwnedByActivity;
 
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
+import com.mongodb.ReadPreference;
 import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
@@ -54,6 +50,12 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 import javax.validation.executable.ValidateOnExecution;
+import lombok.extern.slf4j.Slf4j;
+import org.hibernate.validator.constraints.NotEmpty;
+import org.mongodb.morphia.mapping.Mapper;
+import org.mongodb.morphia.query.FindOptions;
+import org.mongodb.morphia.query.Query;
+import org.mongodb.morphia.query.UpdateOperations;
 
 /**
  * Created by peeyushaggarwal on 5/27/16.
@@ -140,7 +142,7 @@ public class ActivityServiceImpl implements ActivityService {
       return new HashMap<>();
     }
 
-    return activities.stream().collect(Collectors.toMap(Activity::getUuid, this ::getCommandUnits));
+    return activities.stream().collect(Collectors.toMap(Activity::getUuid, this::getCommandUnits));
   }
 
   @Override
@@ -246,7 +248,7 @@ public class ActivityServiceImpl implements ActivityService {
 
   @Override
   public void updateCommandUnitStatus(Map<String, Map<String, Log>> activityCommandUnitLastLogMap) {
-    activityCommandUnitLastLogMap.forEach(this ::updateActivityCommandUnitStatus);
+    activityCommandUnitLastLogMap.forEach(this::updateActivityCommandUnitStatus);
   }
 
   @Override

@@ -1,12 +1,13 @@
 package software.wings.graphql.schema.type;
 
-import lombok.Builder;
-import lombok.Value;
-import lombok.experimental.FieldNameConstants;
 import software.wings.api.DeploymentType;
 import software.wings.security.PermissionAttribute.ResourceType;
 import software.wings.security.annotations.Scope;
 import software.wings.utils.ArtifactType;
+
+import lombok.Builder;
+import lombok.Value;
+import lombok.experimental.FieldNameConstants;
 
 @Value
 @Builder

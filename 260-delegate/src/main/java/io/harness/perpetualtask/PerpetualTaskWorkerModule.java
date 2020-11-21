@@ -1,14 +1,5 @@
 package io.harness.perpetualtask;
 
-import com.google.inject.AbstractModule;
-import com.google.inject.Provides;
-import com.google.inject.Singleton;
-import com.google.inject.assistedinject.FactoryModuleBuilder;
-import com.google.inject.multibindings.MapBinder;
-import com.google.inject.name.Named;
-
-import io.grpc.CallCredentials;
-import io.grpc.Channel;
 import io.harness.perpetualtask.PerpetualTaskServiceGrpc.PerpetualTaskServiceBlockingStub;
 import io.harness.perpetualtask.artifact.ArtifactCollectionTaskParams;
 import io.harness.perpetualtask.artifact.ArtifactPerpetualTaskExecutor;
@@ -37,6 +28,15 @@ import io.harness.perpetualtask.k8s.watch.PodWatcher;
 import io.harness.perpetualtask.k8s.watch.WatcherFactory;
 import io.harness.perpetualtask.manifest.ManifestCollectionTaskParams;
 import io.harness.perpetualtask.manifest.ManifestPerpetualTaskExecutor;
+
+import com.google.inject.AbstractModule;
+import com.google.inject.Provides;
+import com.google.inject.Singleton;
+import com.google.inject.assistedinject.FactoryModuleBuilder;
+import com.google.inject.multibindings.MapBinder;
+import com.google.inject.name.Named;
+import io.grpc.CallCredentials;
+import io.grpc.Channel;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j

@@ -6,7 +6,7 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.govern.Switch.unhandled;
 import static io.harness.persistence.HPersistence.upToOne;
 import static io.harness.persistence.HQuery.excludeValidate;
-import static java.util.stream.Collectors.toList;
+
 import static software.wings.beans.EntityType.ARTIFACT_STREAM;
 import static software.wings.beans.EntityType.INFRASTRUCTURE_DEFINITION;
 import static software.wings.beans.EntityType.SECRETS_MANAGER;
@@ -21,15 +21,13 @@ import static software.wings.common.TemplateConstants.DEFAULT_TAG;
 import static software.wings.common.TemplateConstants.GALLERY_TOP_LEVEL_PATH_DELIMITER;
 import static software.wings.common.TemplateConstants.PATH_DELIMITER;
 
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
+import static java.util.stream.Collectors.toList;
 
 import io.harness.exception.InvalidArgumentsException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.persistence.PersistentEntity;
-import org.hibernate.validator.constraints.NotEmpty;
-import org.mongodb.morphia.query.Query;
+
 import software.wings.beans.Application.ApplicationKeys;
 import software.wings.beans.CommandCategory;
 import software.wings.beans.EntityType;
@@ -54,6 +52,8 @@ import software.wings.service.impl.command.CommandHelper;
 import software.wings.service.intfc.InfrastructureDefinitionService;
 import software.wings.service.intfc.ServiceResourceService;
 
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -62,6 +62,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
+import org.hibernate.validator.constraints.NotEmpty;
+import org.mongodb.morphia.query.Query;
 
 @Singleton
 public class TemplateHelper {

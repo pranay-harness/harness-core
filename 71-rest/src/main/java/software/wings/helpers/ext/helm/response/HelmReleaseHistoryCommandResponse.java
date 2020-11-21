@@ -1,11 +1,11 @@
 package software.wings.helpers.ext.helm.response;
 
 import io.harness.logging.CommandExecutionStatus;
+
+import java.util.List;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
-
-import java.util.List;
 
 /**
  * Created by anubhaw on 4/2/18.

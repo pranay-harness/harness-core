@@ -1,6 +1,7 @@
 package io.harness.expression.configuration.util;
 
 import static io.harness.rule.OwnerRule.ALEKSANDAR;
+
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.category.element.UnitTests;
@@ -8,11 +9,11 @@ import io.harness.expression.ExpressionServiceTestBase;
 import io.harness.expression.app.ExpressionServiceConfiguration;
 import io.harness.grpc.server.Connector;
 import io.harness.rule.Owner;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
 
 import java.io.IOException;
 import java.io.InputStream;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 public class ExpressionServiceConfigurationUtilsTest extends ExpressionServiceTestBase {
   @Test

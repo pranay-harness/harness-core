@@ -1,11 +1,11 @@
 package io.harness.walktree.beans;
 
 import io.harness.data.structure.EmptyPredicate;
-import lombok.Builder;
-import lombok.Data;
 
 import java.util.ArrayList;
 import java.util.List;
+import lombok.Builder;
+import lombok.Data;
 
 @Data
 @Builder

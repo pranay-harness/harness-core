@@ -1,12 +1,12 @@
 package io.harness.serializer.jackson;
 
+import io.harness.beans.ParameterField;
+
 import com.fasterxml.jackson.databind.JavaType;
 import com.fasterxml.jackson.databind.type.ReferenceType;
 import com.fasterxml.jackson.databind.type.TypeBindings;
 import com.fasterxml.jackson.databind.type.TypeFactory;
 import com.fasterxml.jackson.databind.type.TypeModifier;
-import io.harness.beans.ParameterField;
-
 import java.lang.reflect.Type;
 
 public class NGHarnessJacksonTypeModifier extends TypeModifier {

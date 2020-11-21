@@ -1,19 +1,19 @@
 package io.harness.integrationstage;
 
 import static io.harness.rule.OwnerRule.SHUBHAM;
-import static org.assertj.core.api.Assertions.assertThat;
 
-import com.google.inject.Inject;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.beans.executionargs.CIExecutionArgs;
 import io.harness.category.element.UnitTests;
 import io.harness.executionplan.CIExecutionPlanTestHelper;
 import io.harness.executionplan.CIExecutionTest;
 import io.harness.rule.Owner;
+
+import com.google.inject.Inject;
+import java.util.Map;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
-
-import java.util.Map;
 
 public class BuildEnvironmentUtilsTest extends CIExecutionTest {
   @Inject CIExecutionPlanTestHelper ciExecutionPlanTestHelper;

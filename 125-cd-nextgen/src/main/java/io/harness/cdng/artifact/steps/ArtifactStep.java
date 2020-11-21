@@ -1,10 +1,5 @@
 package io.harness.cdng.artifact.steps;
 
-import com.google.common.annotations.VisibleForTesting;
-import com.google.common.collect.ImmutableMap;
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
-
 import io.harness.ambiance.Ambiance;
 import io.harness.beans.ParameterField;
 import io.harness.cdng.artifact.bean.ArtifactConfig;
@@ -33,8 +28,11 @@ import io.harness.ngpipeline.orchestration.StepUtils;
 import io.harness.state.io.StepResponse.StepOutcome;
 import io.harness.tasks.Cd1SetupFields;
 import io.harness.tasks.Task;
-import lombok.extern.slf4j.Slf4j;
 
+import com.google.common.annotations.VisibleForTesting;
+import com.google.common.collect.ImmutableMap;
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -42,6 +40,7 @@ import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import java.util.function.BiConsumer;
 import java.util.stream.Collectors;
+import lombok.extern.slf4j.Slf4j;
 
 @Singleton
 @Slf4j

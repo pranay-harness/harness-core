@@ -1,14 +1,13 @@
 package software.wings.service.impl.instance.licensing;
 
-import com.google.inject.Inject;
-
-import lombok.extern.slf4j.Slf4j;
 import software.wings.beans.AccountType;
 import software.wings.beans.LicenseInfo;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.instance.licensing.InstanceLimitProvider;
 
+import com.google.inject.Inject;
 import javax.annotation.ParametersAreNonnullByDefault;
+import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @ParametersAreNonnullByDefault

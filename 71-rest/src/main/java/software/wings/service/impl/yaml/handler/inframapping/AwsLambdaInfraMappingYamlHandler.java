@@ -3,13 +3,12 @@ package software.wings.service.impl.yaml.handler.inframapping;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.validation.Validator.notNullCheck;
 
-import com.google.inject.Singleton;
-
 import software.wings.beans.AwsLambdaInfraStructureMapping;
 import software.wings.beans.AwsLambdaInfraStructureMapping.Yaml;
 import software.wings.beans.InfrastructureMappingType;
 import software.wings.beans.yaml.ChangeContext;
 
+import com.google.inject.Singleton;
 import java.util.List;
 
 /**

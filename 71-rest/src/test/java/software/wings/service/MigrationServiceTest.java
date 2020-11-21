@@ -1,18 +1,20 @@
 package software.wings.service;
 
 import static io.harness.rule.OwnerRule.BRETT;
+
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
-import migrations.MigrationList;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
+
 import software.wings.WingsBaseTest;
 
 import java.util.HashSet;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
+import migrations.MigrationList;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 public class MigrationServiceTest extends WingsBaseTest {
   @Test

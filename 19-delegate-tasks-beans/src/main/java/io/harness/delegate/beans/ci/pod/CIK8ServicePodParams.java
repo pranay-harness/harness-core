@@ -1,11 +1,10 @@
 package io.harness.delegate.beans.ci.pod;
 
+import java.util.List;
+import java.util.Map;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NonNull;
-
-import java.util.List;
-import java.util.Map;
 
 @Data
 @Builder

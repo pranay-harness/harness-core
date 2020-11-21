@@ -5,6 +5,12 @@ import static io.harness.rule.OwnerRule.ANKIT;
 import static io.harness.rule.OwnerRule.MEHUL;
 import static io.harness.rule.OwnerRule.UJJAWAL;
 import static io.harness.rule.OwnerRule.VOJIN;
+
+import static software.wings.beans.Account.Builder.anAccount;
+import static software.wings.beans.FeatureName.SEARCH_REQUEST;
+import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
+import static software.wings.utils.WingsTestConstants.JOB_NAME;
+
 import static java.util.Collections.EMPTY_LIST;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
@@ -14,14 +20,6 @@ import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-import static software.wings.beans.Account.Builder.anAccount;
-import static software.wings.beans.FeatureName.SEARCH_REQUEST;
-import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
-import static software.wings.utils.WingsTestConstants.JOB_NAME;
-
-import com.google.common.collect.Sets;
-import com.google.inject.Inject;
-import com.google.inject.name.Named;
 
 import io.harness.category.element.UnitTests;
 import io.harness.limits.checker.rate.UsageBucket;
@@ -32,14 +30,7 @@ import io.harness.persistence.AccountAccess;
 import io.harness.persistence.PersistentEntity;
 import io.harness.rule.Owner;
 import io.harness.scheduler.PersistentScheduler;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mongodb.morphia.Morphia;
-import org.mongodb.morphia.annotations.Entity;
-import org.quartz.JobKey;
-import org.quartz.SchedulerException;
+
 import software.wings.WingsBaseTest;
 import software.wings.beans.Account;
 import software.wings.beans.AccountStatus;
@@ -57,11 +48,22 @@ import software.wings.scheduler.events.segment.SegmentGroupEventJobContext;
 import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.UserService;
 
+import com.google.common.collect.Sets;
+import com.google.inject.Inject;
+import com.google.inject.name.Named;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mongodb.morphia.Morphia;
+import org.mongodb.morphia.annotations.Entity;
+import org.quartz.JobKey;
+import org.quartz.SchedulerException;
 
 public class DeleteAccountHelperTest extends WingsBaseTest {
   @InjectMocks @Inject private DeleteAccountHelper deleteAccountHelper;

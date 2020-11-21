@@ -2,9 +2,8 @@ package io.harness.functional.artifactstream;
 
 import static io.harness.generator.SettingGenerator.Settings.HARNESS_JENKINS_DEV_CONNECTOR;
 import static io.harness.rule.OwnerRule.AADITI;
-import static org.assertj.core.api.Assertions.assertThat;
 
-import com.google.inject.Inject;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.category.element.FunctionalTests;
 import io.harness.functional.AbstractFunctionalTest;
@@ -17,20 +16,22 @@ import io.harness.generator.SettingGenerator.Settings;
 import io.harness.rest.RestResponse;
 import io.harness.rule.Owner;
 import io.harness.testframework.framework.Setup;
-import io.restassured.http.ContentType;
-import org.junit.Before;
-import org.junit.Ignore;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
+
 import software.wings.beans.Account;
 import software.wings.beans.Application;
 import software.wings.beans.SettingAttribute;
 import software.wings.utils.RepositoryType;
 
+import com.google.inject.Inject;
+import io.restassured.http.ContentType;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import javax.ws.rs.core.GenericType;
+import org.junit.Before;
+import org.junit.Ignore;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 public class BuildSourceFunctionalTest extends AbstractFunctionalTest {
   @Inject private SettingGenerator settingGenerator;

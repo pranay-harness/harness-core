@@ -1,17 +1,14 @@
 package io.harness.testframework.framework.utils;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
-import static org.assertj.core.api.Assertions.assertThat;
 
-import com.google.gson.JsonObject;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.testframework.framework.Setup;
 import io.harness.testframework.restutils.ApiKeysRestUtils;
 import io.harness.testframework.restutils.IPWhitelistingRestUtils;
 import io.harness.testframework.restutils.SSORestUtils;
-import io.restassured.mapper.ObjectMapperType;
-import lombok.extern.slf4j.Slf4j;
-import org.apache.http.HttpStatus;
+
 import software.wings.beans.Account;
 import software.wings.beans.ApiKeyEntry;
 import software.wings.beans.User;
@@ -21,8 +18,12 @@ import software.wings.beans.security.access.Whitelist;
 import software.wings.beans.security.access.WhitelistStatus;
 import software.wings.beans.sso.LdapSettings;
 
+import com.google.gson.JsonObject;
+import io.restassured.mapper.ObjectMapperType;
 import java.util.ArrayList;
 import java.util.List;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.http.HttpStatus;
 
 @Slf4j
 public class AccessManagementUtils {

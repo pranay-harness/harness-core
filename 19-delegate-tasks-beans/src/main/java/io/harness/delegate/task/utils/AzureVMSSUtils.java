@@ -2,13 +2,12 @@ package io.harness.delegate.task.utils;
 
 import static java.lang.String.format;
 
-import lombok.experimental.UtilityClass;
-
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.SimpleTimeZone;
+import lombok.experimental.UtilityClass;
 
 @UtilityClass
 public class AzureVMSSUtils {

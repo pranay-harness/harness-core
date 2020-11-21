@@ -2,8 +2,6 @@ package io.harness.perpetualtask;
 
 import static io.harness.network.SafeHttpCall.execute;
 
-import com.google.inject.Inject;
-
 import io.harness.azure.model.AzureConfig;
 import io.harness.delegate.task.azure.request.AzureVMSSListVMDataParameters;
 import io.harness.delegate.task.azure.response.AzureVMSSTaskExecutionResponse;
@@ -13,13 +11,15 @@ import io.harness.managerclient.DelegateAgentManagerClient;
 import io.harness.perpetualtask.instancesync.AzureVmssInstanceSyncPerpetualTaskParams;
 import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.serializer.KryoSerializer;
-import lombok.extern.slf4j.Slf4j;
-import org.eclipse.jetty.server.Response;
+
 import software.wings.delegatetasks.azure.taskhandler.AzureVMSSSyncTaskHandler;
 import software.wings.service.intfc.security.EncryptionService;
 
+import com.google.inject.Inject;
 import java.time.Instant;
 import java.util.List;
+import lombok.extern.slf4j.Slf4j;
+import org.eclipse.jetty.server.Response;
 
 @Slf4j
 public class AzureVMSSInstanceSyncDelegateExecutor implements PerpetualTaskExecutor {

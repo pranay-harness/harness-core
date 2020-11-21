@@ -3,11 +3,11 @@ package io.harness;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.generator.PipelineGenerator.Pipelines.BARRIER;
 import static io.harness.rule.OwnerRule.SRINIVAS;
-import static org.assertj.core.api.Assertions.assertThat;
+
 import static software.wings.graphql.schema.type.trigger.QLTrigger.QLTriggerKeys;
 import static software.wings.utils.WingsTestConstants.ARTIFACT_FILTER;
 
-import com.google.inject.Inject;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.beans.EmbeddedUser;
 import io.harness.category.element.UnitTests;
@@ -21,9 +21,7 @@ import io.harness.generator.artifactstream.ArtifactStreamManager;
 import io.harness.generator.artifactstream.ArtifactStreamManager.ArtifactStreams;
 import io.harness.rule.Owner;
 import io.harness.testframework.graphql.QLTestObject;
-import lombok.extern.slf4j.Slf4j;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
+
 import software.wings.beans.Application;
 import software.wings.beans.EntityType;
 import software.wings.beans.HarnessTagLink;
@@ -38,9 +36,13 @@ import software.wings.service.impl.trigger.TriggerGenerator;
 import software.wings.service.intfc.HarnessTagService;
 import software.wings.service.intfc.TriggerService;
 
+import com.google.inject.Inject;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import lombok.extern.slf4j.Slf4j;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 @Slf4j
 public class TriggerTest extends GraphQLTest {

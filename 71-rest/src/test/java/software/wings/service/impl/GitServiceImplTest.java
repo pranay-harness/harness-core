@@ -1,11 +1,10 @@
 package software.wings.service.impl;
 
 import static io.harness.rule.OwnerRule.ABHINAV;
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.doReturn;
-
-import com.google.inject.Inject;
 
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
@@ -16,12 +15,7 @@ import io.harness.git.model.CommitResult;
 import io.harness.git.model.PushResultGit;
 import io.harness.git.model.PushResultGit.RefUpdate;
 import io.harness.rule.Owner;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
+
 import software.wings.beans.GitConfig;
 import software.wings.beans.GitOperationContext;
 import software.wings.beans.yaml.GitCommitAndPushResult;
@@ -30,7 +24,14 @@ import software.wings.beans.yaml.GitCommitResult;
 import software.wings.beans.yaml.GitFileChange;
 import software.wings.beans.yaml.GitPushResult;
 
+import com.google.inject.Inject;
 import java.util.Collections;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
 
 public class GitServiceImplTest extends CategoryTest {
   @Mock GitClientV2 gitClient;

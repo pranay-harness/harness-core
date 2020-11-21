@@ -2,10 +2,7 @@ package software.wings.service.impl;
 
 import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
 import static io.harness.logging.Misc.getDurationString;
-import static java.lang.String.format;
-import static java.lang.System.currentTimeMillis;
-import static java.util.Arrays.asList;
-import static java.util.stream.Collectors.toList;
+
 import static software.wings.alerts.AlertStatus.Closed;
 import static software.wings.alerts.AlertStatus.Open;
 import static software.wings.alerts.AlertStatus.Pending;
@@ -27,11 +24,10 @@ import static software.wings.beans.alert.AlertType.RESOURCE_USAGE_APPROACHING_LI
 import static software.wings.beans.alert.AlertType.USAGE_LIMIT_EXCEEDED;
 import static software.wings.beans.alert.AlertType.USERGROUP_SYNC_FAILED;
 
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableSet;
-import com.google.inject.Inject;
-import com.google.inject.Injector;
-import com.google.inject.Singleton;
+import static java.lang.String.format;
+import static java.lang.System.currentTimeMillis;
+import static java.util.Arrays.asList;
+import static java.util.stream.Collectors.toList;
 
 import io.harness.alert.AlertData;
 import io.harness.beans.PageRequest;
@@ -44,10 +40,7 @@ import io.harness.event.publisher.EventPublisher;
 import io.harness.exception.WingsException;
 import io.harness.logging.AutoLogContext;
 import io.harness.persistence.HIterator;
-import lombok.extern.slf4j.Slf4j;
-import org.mongodb.morphia.query.Query;
-import org.mongodb.morphia.query.UpdateOperations;
-import org.mongodb.morphia.query.UpdateResults;
+
 import software.wings.alerts.AlertStatus;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.alert.Alert;
@@ -71,6 +64,11 @@ import software.wings.service.intfc.AssignDelegateService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.alert.NotificationRulesStatusService;
 
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
+import com.google.inject.Inject;
+import com.google.inject.Injector;
+import com.google.inject.Singleton;
 import java.time.Instant;
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
@@ -80,6 +78,10 @@ import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
+import lombok.extern.slf4j.Slf4j;
+import org.mongodb.morphia.query.Query;
+import org.mongodb.morphia.query.UpdateOperations;
+import org.mongodb.morphia.query.UpdateResults;
 
 @Singleton
 @Slf4j
@@ -128,19 +130,19 @@ public class AlertServiceImpl implements AlertService {
 
   @Override
   public void closeAlert(String accountId, String appId, AlertType alertType, AlertData alertData) {
-    executorService.submit(() -> findExistingAlert(accountId, appId, alertType, alertData).ifPresent(this ::close));
+    executorService.submit(() -> findExistingAlert(accountId, appId, alertType, alertData).ifPresent(this::close));
   }
 
   @Override
   public void closeAllAlerts(String accountId, String appId, AlertType alertType, AlertData alertData) {
-    executorService.submit(() -> findAllExistingAlerts(accountId, appId, alertType, alertData).forEach(this ::close));
+    executorService.submit(() -> findAllExistingAlerts(accountId, appId, alertType, alertData).forEach(this::close));
   }
 
   @Override
   public void closeAlertsOfType(String accountId, String appId, AlertType alertType) {
     executorService.submit(() -> {
       try (HIterator<Alert> iterator = findExistingAlertsOfType(accountId, appId, alertType)) {
-        iterator.forEach(this ::close);
+        iterator.forEach(this::close);
       }
     });
   }
@@ -149,10 +151,10 @@ public class AlertServiceImpl implements AlertService {
   public void delegateAvailabilityUpdated(String accountId) {
     findExistingAlert(
         accountId, GLOBAL_APP_ID, NoActiveDelegates, NoActiveDelegatesAlert.builder().accountId(accountId).build())
-        .ifPresent(this ::close);
+        .ifPresent(this::close);
     findExistingAlert(accountId, GLOBAL_APP_ID, NoInstalledDelegates,
         NoInstalledDelegatesAlert.builder().accountId(accountId).build())
-        .ifPresent(this ::close);
+        .ifPresent(this::close);
   }
 
   @Override

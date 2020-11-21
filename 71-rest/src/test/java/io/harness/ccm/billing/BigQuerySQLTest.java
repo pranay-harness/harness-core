@@ -2,25 +2,24 @@ package io.harness.ccm.billing;
 
 import static io.harness.rule.OwnerRule.HANTANG;
 
-import com.google.cloud.Timestamp;
-
-import com.healthmarketscience.sqlbuilder.BetweenCondition;
-import com.healthmarketscience.sqlbuilder.Condition;
-import com.healthmarketscience.sqlbuilder.FunctionCall;
-import com.healthmarketscience.sqlbuilder.custom.postgresql.PgLimitClause;
 import io.harness.category.element.UnitTests;
 import io.harness.ccm.billing.bigquery.BigQuerySQL;
 import io.harness.ccm.billing.graphql.CloudEntityGroupBy;
 import io.harness.rule.Owner;
-import lombok.extern.slf4j.Slf4j;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
 
+import com.google.cloud.Timestamp;
+import com.healthmarketscience.sqlbuilder.BetweenCondition;
+import com.healthmarketscience.sqlbuilder.Condition;
+import com.healthmarketscience.sqlbuilder.FunctionCall;
+import com.healthmarketscience.sqlbuilder.custom.postgresql.PgLimitClause;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
 import java.util.GregorianCalendar;
 import java.util.List;
+import lombok.extern.slf4j.Slf4j;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 @Slf4j
 public class BigQuerySQLTest {

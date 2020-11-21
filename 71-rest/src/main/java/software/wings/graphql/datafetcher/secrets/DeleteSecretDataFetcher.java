@@ -1,6 +1,5 @@
 package software.wings.graphql.datafetcher.secrets;
 
-import static org.apache.commons.lang3.StringUtils.isBlank;
 import static software.wings.beans.SettingAttribute.SettingCategory.SETTING;
 import static software.wings.graphql.schema.type.secrets.QLSecretType.ENCRYPTED_FILE;
 import static software.wings.graphql.schema.type.secrets.QLSecretType.ENCRYPTED_TEXT;
@@ -12,12 +11,12 @@ import static software.wings.settings.SettingVariableTypes.HOST_CONNECTION_ATTRI
 import static software.wings.settings.SettingVariableTypes.SECRET_TEXT;
 import static software.wings.settings.SettingVariableTypes.WINRM_CONNECTION_ATTRIBUTES;
 
-import com.google.inject.Inject;
+import static org.apache.commons.lang3.StringUtils.isBlank;
 
 import io.harness.beans.EncryptedData;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.UnexpectedException;
-import lombok.extern.slf4j.Slf4j;
+
 import software.wings.beans.SettingAttribute;
 import software.wings.graphql.datafetcher.BaseMutatorDataFetcher;
 import software.wings.graphql.datafetcher.MutationContext;
@@ -30,7 +29,9 @@ import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.security.SecretManager;
 import software.wings.settings.SettingValue;
 
+import com.google.inject.Inject;
 import java.util.HashMap;
+import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class DeleteSecretDataFetcher extends BaseMutatorDataFetcher<QLDeleteSecretInput, QLDeleteSecretPayload> {

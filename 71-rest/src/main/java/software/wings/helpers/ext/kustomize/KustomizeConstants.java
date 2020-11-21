@@ -1,8 +1,7 @@
 package software.wings.helpers.ext.kustomize;
 
-import lombok.experimental.UtilityClass;
-
 import java.util.concurrent.TimeUnit;
+import lombok.experimental.UtilityClass;
 
 @UtilityClass
 public final class KustomizeConstants {

@@ -1,21 +1,15 @@
 package software.wings.service.impl;
 
 import static io.harness.validation.Validator.notNullCheck;
-import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 
-import com.google.common.collect.ImmutableMap;
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
+import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.exception.InvalidRequestException;
 import io.harness.queue.QueuePublisher;
 import io.harness.stream.BoundedInputStream;
-import lombok.extern.slf4j.Slf4j;
-import org.hibernate.validator.constraints.NotEmpty;
-import org.mongodb.morphia.query.Query;
-import org.mongodb.morphia.query.UpdateOperations;
+
 import software.wings.api.DeploymentType;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.infrastructure.Host;
@@ -32,10 +26,17 @@ import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.ownership.OwnedByHost;
 import software.wings.utils.HostCsvFileHelper;
 
+import com.google.common.collect.ImmutableMap;
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.ExecutorService;
 import javax.validation.executable.ValidateOnExecution;
+import lombok.extern.slf4j.Slf4j;
+import org.hibernate.validator.constraints.NotEmpty;
+import org.mongodb.morphia.query.Query;
+import org.mongodb.morphia.query.UpdateOperations;
 
 /**
  * Created by anubhaw on 5/9/16.
@@ -203,7 +204,7 @@ public class HostServiceImpl implements HostService {
         .filter("appId", appId)
         .filter(HostKeys.envId, envId)
         .asList()
-        .forEach(this ::delete);
+        .forEach(this::delete);
   }
 
   @Override

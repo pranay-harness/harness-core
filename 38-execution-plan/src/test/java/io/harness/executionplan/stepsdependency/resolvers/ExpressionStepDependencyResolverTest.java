@@ -1,6 +1,7 @@
 package io.harness.executionplan.stepsdependency.resolvers;
 
 import static io.harness.rule.OwnerRule.ARCHIT;
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.doReturn;
 
@@ -11,6 +12,8 @@ import io.harness.engine.expressions.EngineExpressionService;
 import io.harness.executionplan.stepsdependency.StepDependencyResolverContext;
 import io.harness.executionplan.stepsdependency.StepDependencySpec;
 import io.harness.rule.Owner;
+
+import java.util.Optional;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -18,8 +21,6 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnit;
 import org.mockito.junit.MockitoRule;
-
-import java.util.Optional;
 
 public class ExpressionStepDependencyResolverTest extends CategoryTest {
   @Rule public MockitoRule mockitoRule = MockitoJUnit.rule();

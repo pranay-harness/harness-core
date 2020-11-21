@@ -1,11 +1,11 @@
 package io.harness.scheduler;
 
+import io.harness.lock.PersistentLocker;
+import io.harness.lock.noop.PersistentNoopLocker;
+
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
-
-import io.harness.lock.PersistentLocker;
-import io.harness.lock.noop.PersistentNoopLocker;
 import lombok.Getter;
 
 @Singleton

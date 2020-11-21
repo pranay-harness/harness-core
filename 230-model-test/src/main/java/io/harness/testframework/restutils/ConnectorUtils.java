@@ -1,14 +1,14 @@
 package io.harness.testframework.restutils;
 
-import static org.assertj.core.api.Assertions.assertThat;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 import static software.wings.beans.SettingAttribute.SettingCategory.CONNECTOR;
 import static software.wings.utils.UsageRestrictionsUtils.getAllAppAllEnvUsageRestrictions;
 
+import static org.assertj.core.api.Assertions.assertThat;
+
 import io.harness.scm.ScmSecret;
 import io.harness.scm.SecretName;
-import io.restassured.path.json.JsonPath;
-import lombok.extern.slf4j.Slf4j;
+
 import software.wings.beans.AppDynamicsConfig;
 import software.wings.beans.BugsnagConfig;
 import software.wings.beans.DatadogConfig;
@@ -26,8 +26,10 @@ import software.wings.beans.config.ArtifactoryConfig;
 import software.wings.beans.config.NexusConfig;
 import software.wings.security.UsageRestrictions;
 
+import io.restassured.path.json.JsonPath;
 import java.util.ArrayList;
 import java.util.List;
+import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class ConnectorUtils {

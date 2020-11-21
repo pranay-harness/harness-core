@@ -1,12 +1,11 @@
 package software.wings.resources;
 
-import com.google.inject.Inject;
-
 import io.harness.ccm.communication.CECommunicationsService;
 import io.harness.rest.RestResponse;
 import io.harness.security.annotations.PublicApi;
-import io.swagger.annotations.Api;
 
+import com.google.inject.Inject;
+import io.swagger.annotations.Api;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;

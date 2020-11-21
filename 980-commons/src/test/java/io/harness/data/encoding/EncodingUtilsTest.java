@@ -7,18 +7,18 @@ import static io.harness.data.encoding.EncodingUtils.decodeBase64ToString;
 import static io.harness.data.encoding.EncodingUtils.encodeBase64;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.rule.OwnerRule.BRETT;
-import static org.assertj.core.api.Assertions.assertThat;
 
-import com.google.common.base.Charsets;
-import com.google.common.io.Resources;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
+
+import com.google.common.base.Charsets;
+import com.google.common.io.Resources;
+import java.net.URL;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
-
-import java.net.URL;
 
 public class EncodingUtilsTest extends CategoryTest {
   @Test

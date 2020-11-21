@@ -1,15 +1,16 @@
 package software.wings.beans.container;
 
+import io.harness.yaml.BaseYaml;
+
+import software.wings.stencils.DefaultValue;
+
 import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
-import io.harness.yaml.BaseYaml;
+import java.util.List;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
-import software.wings.stencils.DefaultValue;
-
-import java.util.List;
 
 @Builder
 public class ContainerDefinition {

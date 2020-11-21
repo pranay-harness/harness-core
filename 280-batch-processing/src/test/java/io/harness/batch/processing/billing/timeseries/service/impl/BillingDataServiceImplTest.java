@@ -4,6 +4,7 @@ import static io.harness.rule.OwnerRule.HITESH;
 import static io.harness.rule.OwnerRule.ROHIT;
 import static io.harness.rule.OwnerRule.SHUBHANSHU;
 import static io.harness.rule.OwnerRule.UTSAV;
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
@@ -20,16 +21,6 @@ import io.harness.ccm.commons.beans.InstanceType;
 import io.harness.ccm.commons.utils.DataUtils;
 import io.harness.rule.Owner;
 import io.harness.timescaledb.TimeScaleDBService;
-import jersey.repackaged.com.google.common.collect.ImmutableList;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
-import org.junit.runner.RunWith;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
-import org.mockito.runners.MockitoJUnitRunner;
-import org.mockito.stubbing.Answer;
 
 import java.math.BigDecimal;
 import java.sql.Connection;
@@ -42,6 +33,16 @@ import java.time.temporal.ChronoUnit;
 import java.util.Calendar;
 import java.util.List;
 import java.util.TimeZone;
+import jersey.repackaged.com.google.common.collect.ImmutableList;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
+import org.junit.runner.RunWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
+import org.mockito.runners.MockitoJUnitRunner;
+import org.mockito.stubbing.Answer;
 
 @RunWith(MockitoJUnitRunner.class)
 public class BillingDataServiceImplTest extends CategoryTest {
@@ -77,7 +78,7 @@ public class BillingDataServiceImplTest extends CategoryTest {
              BillingDataTableNameProvider.replaceTableName(
                  billingDataService.PREAGG_QUERY_PREFIX, BatchJobType.INSTANCE_BILLING_AGGREGATION)
              + BillingDataTableNameProvider.replaceTableName(
-                   billingDataService.PREAGG_QUERY_SUFFIX, BatchJobType.INSTANCE_BILLING)))
+                 billingDataService.PREAGG_QUERY_SUFFIX, BatchJobType.INSTANCE_BILLING)))
         .thenReturn(statement);
     when(mockConnection.prepareStatement(BillingDataTableNameProvider.replaceTableName(
              billingDataService.DELETE_EXISTING_PREAGG, BatchJobType.INSTANCE_BILLING_AGGREGATION)))

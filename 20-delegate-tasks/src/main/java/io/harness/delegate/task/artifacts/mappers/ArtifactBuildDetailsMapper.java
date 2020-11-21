@@ -2,9 +2,9 @@ package io.harness.delegate.task.artifacts.mappers;
 
 import io.harness.artifacts.beans.BuildDetailsInternal;
 import io.harness.delegate.task.artifacts.response.ArtifactBuildDetailsNG;
-import lombok.experimental.UtilityClass;
 
 import java.util.Map;
+import lombok.experimental.UtilityClass;
 
 @UtilityClass
 public class ArtifactBuildDetailsMapper {

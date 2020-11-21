@@ -9,6 +9,7 @@ import static io.harness.ng.core.invites.entities.Invite.InviteKeys.id;
 import static io.harness.ng.core.invites.entities.Invite.InviteType.ADMIN_INITIATED_INVITE;
 import static io.harness.ng.core.invites.entities.Invite.InviteType.USER_INITIATED_INVITE;
 import static io.harness.rule.OwnerRule.ANKUSH;
+
 import static org.apache.commons.lang3.RandomStringUtils.randomAlphabetic;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertFalse;
@@ -21,11 +22,6 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
-
-import com.auth0.jwt.interfaces.Claim;
-import com.mongodb.client.result.UpdateResult;
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.exception.InvalidArgumentsException;
@@ -42,6 +38,12 @@ import io.harness.ng.core.invites.repositories.spring.InvitesRepository;
 import io.harness.ng.core.user.User;
 import io.harness.ng.core.user.services.api.NgUserService;
 import io.harness.rule.Owner;
+
+import com.auth0.jwt.interfaces.Claim;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
+import com.mongodb.client.result.UpdateResult;
+import java.util.Optional;
 import org.bson.Document;
 import org.junit.Before;
 import org.junit.Test;
@@ -51,8 +53,6 @@ import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.springframework.data.mongodb.core.query.Update;
 import org.springframework.transaction.support.TransactionTemplate;
-
-import java.util.Optional;
 
 public class InvitesServiceImplTest extends CategoryTest {
   private final String BASE_URL = "baseurl";

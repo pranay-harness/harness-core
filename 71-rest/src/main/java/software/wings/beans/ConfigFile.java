@@ -2,14 +2,27 @@ package software.wings.beans;
 
 import static software.wings.beans.EntityVersion.Builder.anEntityVersion;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.annotation.HarnessEntity;
 import io.harness.mongo.index.CdIndex;
 import io.harness.mongo.index.Field;
 import io.harness.mongo.index.NgUniqueIndex;
 import io.harness.security.encryption.EncryptionType;
 import io.harness.validation.Create;
+
+import software.wings.annotation.EncryptableSetting;
+import software.wings.beans.yaml.YamlType;
+import software.wings.settings.SettingVariableTypes;
+import software.wings.yaml.BaseEntityYaml;
+
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.github.reinert.jjschema.SchemaIgnore;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import javax.validation.constraints.NotNull;
+import javax.ws.rs.DefaultValue;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Builder.Default;
@@ -21,18 +34,6 @@ import org.glassfish.jersey.media.multipart.FormDataParam;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Transient;
-import software.wings.annotation.EncryptableSetting;
-import software.wings.beans.yaml.YamlType;
-import software.wings.settings.SettingVariableTypes;
-import software.wings.yaml.BaseEntityYaml;
-
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import javax.validation.constraints.NotNull;
-import javax.ws.rs.DefaultValue;
 
 /**
  * Created by anubhaw on 4/12/16.

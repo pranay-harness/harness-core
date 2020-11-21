@@ -1,15 +1,14 @@
 package io.harness.delegate.task.executioncapability;
 
-import com.google.inject.Singleton;
-
 import io.harness.delegate.beans.executioncapability.CapabilityResponse;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.delegate.beans.executioncapability.SocketConnectivityExecutionCapability;
-import lombok.extern.slf4j.Slf4j;
 
+import com.google.inject.Singleton;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.net.Socket;
+import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Singleton

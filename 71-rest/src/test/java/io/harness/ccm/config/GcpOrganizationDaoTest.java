@@ -1,19 +1,20 @@
 package io.harness.ccm.config;
 
 import static io.harness.rule.OwnerRule.HANTANG;
-import static org.assertj.core.api.Assertions.assertThat;
 
-import com.google.inject.Inject;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.category.element.UnitTests;
 import io.harness.ccm.config.GcpOrganization.GcpOrganizationKeys;
 import io.harness.rule.Owner;
+
+import software.wings.WingsBaseTest;
+
+import com.google.inject.Inject;
+import java.util.List;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
-import software.wings.WingsBaseTest;
-
-import java.util.List;
 
 public class GcpOrganizationDaoTest extends WingsBaseTest {
   private String accountId = "ACCOUNT_ID";

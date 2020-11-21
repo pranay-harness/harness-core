@@ -2,7 +2,6 @@ package io.harness.serializer.kryo;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 
-import com.esotericsoftware.kryo.Kryo;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.serializer.KryoRegistrar;
 import io.harness.steps.barriers.BarrierStepParameters;
@@ -21,6 +20,8 @@ import io.harness.steps.resourcerestraint.beans.ResourceRestraintOutcome;
 import io.harness.steps.resourcerestraint.beans.ResourceRestraintResponseData;
 import io.harness.steps.section.SectionStepParameters;
 import io.harness.steps.section.chain.SectionChainStepParameters;
+
+import com.esotericsoftware.kryo.Kryo;
 
 @OwnedBy(CDC)
 public class OrchestrationStepsKryoRegistrar implements KryoRegistrar {

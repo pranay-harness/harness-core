@@ -4,8 +4,7 @@ import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
-import static java.lang.String.format;
-import static java.util.stream.Collectors.toList;
+
 import static software.wings.beans.Graph.Builder.aGraph;
 import static software.wings.beans.GraphLink.Builder.aLink;
 import static software.wings.beans.PhaseStep.PhaseStepBuilder.aPhaseStep;
@@ -15,17 +14,14 @@ import static software.wings.beans.PhaseStepType.INFRASTRUCTURE_NODE;
 import static software.wings.beans.PhaseStepType.PCF_SETUP;
 import static software.wings.sm.StateType.FORK;
 
-import com.google.common.collect.ImmutableMap;
+import static java.lang.String.format;
+import static java.util.stream.Collectors.toList;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.ExecutionStatus;
 import io.harness.data.structure.MapUtils;
 import io.harness.data.structure.NullSafeImmutableMap;
-import lombok.Data;
-import lombok.EqualsAndHashCode;
-import lombok.NoArgsConstructor;
-import org.mongodb.morphia.annotations.Transient;
+
 import software.wings.api.DeploymentType;
 import software.wings.beans.Graph.Builder;
 import software.wings.beans.workflow.StepSkipStrategy;
@@ -35,6 +31,8 @@ import software.wings.sm.TransitionType;
 import software.wings.yaml.BaseYamlWithType;
 import software.wings.yaml.workflow.StepYaml;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.google.common.collect.ImmutableMap;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -44,6 +42,10 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.NoArgsConstructor;
+import org.mongodb.morphia.annotations.Transient;
 
 /**
  * Created by rishi on 12/21/16.
@@ -356,7 +358,7 @@ public class PhaseStep {
         GraphNode clonedStep = step.cloneInternal();
         if (INFRASTRUCTURE_NODE == clonedPhaseStep.getPhaseStepType()
             && (clonedStep.getType().equals(StateType.DC_NODE_SELECT.name())
-                   || clonedStep.getType().equals(StateType.AWS_NODE_SELECT.name()))) {
+                || clonedStep.getType().equals(StateType.AWS_NODE_SELECT.name()))) {
           Map<String, Object> properties = new HashMap<>(clonedStep.getProperties());
           if (properties.containsKey("specificHosts") && (Boolean) properties.get("specificHosts")) {
             properties.remove("hostNames");

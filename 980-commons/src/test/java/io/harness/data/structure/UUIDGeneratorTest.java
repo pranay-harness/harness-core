@@ -5,6 +5,7 @@ import static io.harness.data.structure.UUIDGenerator.convertToBase64String;
 import static io.harness.data.structure.UUIDGenerator.generateTimeBasedUuid;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.rule.OwnerRule.GEORGE;
+
 import static java.time.Duration.ofMillis;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
@@ -12,10 +13,10 @@ import static org.assertj.core.api.Assertions.assertThatCode;
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
 import io.harness.threading.Morpheus;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
 
 import java.util.UUID;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 public class UUIDGeneratorTest {
   @Test

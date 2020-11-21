@@ -1,16 +1,15 @@
 package io.harness.beans.serializer;
 
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
-
 import io.harness.beans.steps.stepinfo.RestoreCacheStepInfo;
 import io.harness.callback.DelegateCallbackToken;
 import io.harness.product.ci.engine.proto.RestoreCacheStep;
 import io.harness.product.ci.engine.proto.UnitStep;
-import org.apache.commons.codec.binary.Base64;
 
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import java.util.Optional;
 import java.util.function.Supplier;
+import org.apache.commons.codec.binary.Base64;
 
 @Singleton
 public class RestoreCacheStepProtobufSerializer implements ProtobufSerializer<RestoreCacheStepInfo> {

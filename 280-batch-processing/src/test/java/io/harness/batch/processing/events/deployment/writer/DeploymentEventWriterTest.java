@@ -1,6 +1,7 @@
 package io.harness.batch.processing.events.deployment.writer;
 
 import static io.harness.rule.OwnerRule.HITESH;
+
 import static java.util.Collections.emptyList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
@@ -16,6 +17,17 @@ import io.harness.batch.processing.events.timeseries.service.intfc.CostEventServ
 import io.harness.category.element.UnitTests;
 import io.harness.ccm.commons.beans.HarnessServiceInfo;
 import io.harness.rule.Owner;
+
+import software.wings.api.DeploymentSummary;
+import software.wings.service.intfc.instance.CloudToHarnessMappingService;
+
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -28,16 +40,6 @@ import org.springframework.batch.core.JobExecution;
 import org.springframework.batch.core.JobParameter;
 import org.springframework.batch.core.JobParameters;
 import org.springframework.batch.core.StepExecution;
-import software.wings.api.DeploymentSummary;
-import software.wings.service.intfc.instance.CloudToHarnessMappingService;
-
-import java.time.Instant;
-import java.time.temporal.ChronoUnit;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 
 @RunWith(MockitoJUnitRunner.class)
 public class DeploymentEventWriterTest extends CategoryTest {

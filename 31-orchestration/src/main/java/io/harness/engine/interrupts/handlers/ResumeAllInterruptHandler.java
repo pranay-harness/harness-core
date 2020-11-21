@@ -11,8 +11,6 @@ import static io.harness.interrupts.Interrupt.State.DISCARDED;
 import static io.harness.interrupts.Interrupt.State.PROCESSED_SUCCESSFULLY;
 import static io.harness.interrupts.Interrupt.State.PROCESSING;
 
-import com.google.inject.Inject;
-
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.engine.executions.node.NodeExecutionService;
 import io.harness.engine.interrupts.InterruptHandler;
@@ -28,6 +26,7 @@ import io.harness.pms.execution.Status;
 import io.harness.state.io.StatusNotifyResponseData;
 import io.harness.waiter.WaitNotifyEngine;
 
+import com.google.inject.Inject;
 import java.util.List;
 import java.util.Optional;
 

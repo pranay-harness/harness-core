@@ -1,14 +1,20 @@
 package io.harness.app;
 
-import static com.google.common.collect.ImmutableMap.of;
-import static java.util.Collections.singletonList;
 import static software.wings.common.VerificationConstants.VERIFICATION_SERVICE_BASE_URL;
 
-import com.google.common.collect.ImmutableList;
+import static com.google.common.collect.ImmutableMap.of;
+import static java.util.Collections.singletonList;
+
+import io.harness.mongo.MongoConfig;
+import io.harness.scheduler.SchedulerConfig;
+
+import software.wings.DataStorageMode;
+import software.wings.beans.HttpMethod;
 
 import ch.qos.logback.access.spi.IAccessEvent;
 import ch.qos.logback.classic.Level;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.google.common.collect.ImmutableList;
 import io.dropwizard.Configuration;
 import io.dropwizard.bundles.assets.AssetsBundleConfiguration;
 import io.dropwizard.bundles.assets.AssetsConfiguration;
@@ -20,17 +26,12 @@ import io.dropwizard.request.logging.RequestLogFactory;
 import io.dropwizard.server.DefaultServerFactory;
 import io.dropwizard.server.ServerFactory;
 import io.federecio.dropwizard.swagger.SwaggerBundleConfiguration;
-import io.harness.mongo.MongoConfig;
-import io.harness.scheduler.SchedulerConfig;
-import lombok.Data;
-import lombok.EqualsAndHashCode;
-import software.wings.DataStorageMode;
-import software.wings.beans.HttpMethod;
-
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Optional;
 import java.util.Set;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
 
 /**
  * Used to load all the application configuration.

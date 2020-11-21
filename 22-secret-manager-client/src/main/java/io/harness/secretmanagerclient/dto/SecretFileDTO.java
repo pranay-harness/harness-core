@@ -1,19 +1,20 @@
 package io.harness.secretmanagerclient.dto;
 
+import io.harness.data.validator.SecretTypeAllowedValues;
+import io.harness.secretmanagerclient.SecretType;
+
+import software.wings.settings.SettingVariableTypes;
+
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import io.harness.data.validator.SecretTypeAllowedValues;
-import io.harness.secretmanagerclient.SecretType;
+import java.util.List;
+import javax.validation.constraints.NotNull;
 import lombok.Builder;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
-import software.wings.settings.SettingVariableTypes;
-
-import java.util.List;
-import javax.validation.constraints.NotNull;
 
 @Getter
 @Setter

@@ -1,10 +1,5 @@
 package io.harness.rule;
 
-import lombok.Builder;
-import org.junit.runners.model.MultipleFailureException;
-import org.junit.runners.model.Statement;
-import org.junit.runners.model.TestTimedOutException;
-
 import java.lang.management.ManagementFactory;
 import java.lang.management.ThreadMXBean;
 import java.util.Arrays;
@@ -14,6 +9,10 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.FutureTask;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
+import lombok.Builder;
+import org.junit.runners.model.MultipleFailureException;
+import org.junit.runners.model.Statement;
+import org.junit.runners.model.TestTimedOutException;
 
 @Builder
 public class HFailOnTimeout extends Statement {

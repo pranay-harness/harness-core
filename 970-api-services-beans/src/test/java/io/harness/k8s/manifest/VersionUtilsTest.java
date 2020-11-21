@@ -3,20 +3,20 @@ package io.harness.k8s.manifest;
 import static io.harness.k8s.manifest.ManifestHelper.processYaml;
 import static io.harness.k8s.manifest.VersionUtils.addRevisionNumber;
 import static io.harness.rule.OwnerRule.PUNEET;
-import static org.assertj.core.api.Assertions.assertThat;
 
-import com.google.common.base.Charsets;
-import com.google.common.io.Resources;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.k8s.model.KubernetesResource;
 import io.harness.rule.Owner;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
 
+import com.google.common.base.Charsets;
+import com.google.common.io.Resources;
 import java.net.URL;
 import java.util.List;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 public class VersionUtilsTest extends CategoryTest {
   @Test

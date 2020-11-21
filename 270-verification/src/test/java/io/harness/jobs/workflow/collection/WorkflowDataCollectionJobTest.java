@@ -1,14 +1,14 @@
 package io.harness.jobs.workflow.collection;
 
 import static io.harness.rule.OwnerRule.RAGHU;
+
+import static software.wings.common.VerificationConstants.DELAY_MINUTES;
+
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.atLeastOnce;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-import static software.wings.common.VerificationConstants.DELAY_MINUTES;
-
-import com.google.inject.Inject;
 
 import io.harness.VerificationBaseTest;
 import io.harness.category.element.UnitTests;
@@ -16,16 +16,18 @@ import io.harness.managerclient.VerificationManagerClientHelper;
 import io.harness.rest.RestResponse;
 import io.harness.rule.Owner;
 import io.harness.service.intfc.ContinuousVerificationService;
+
+import software.wings.service.impl.analysis.AnalysisContext;
+import software.wings.sm.StateType;
+
+import com.google.inject.Inject;
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import org.apache.commons.lang3.reflect.FieldUtils;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.Mock;
-import software.wings.service.impl.analysis.AnalysisContext;
-import software.wings.sm.StateType;
-
-import java.time.Instant;
-import java.time.temporal.ChronoUnit;
 
 public class WorkflowDataCollectionJobTest extends VerificationBaseTest {
   @Mock private VerificationManagerClientHelper verificationManagerClientHelper;

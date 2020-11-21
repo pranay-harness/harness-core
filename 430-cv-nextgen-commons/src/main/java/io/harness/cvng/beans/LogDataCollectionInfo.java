@@ -2,6 +2,7 @@ package io.harness.cvng.beans;
 
 import io.harness.cvng.models.VerificationType;
 import io.harness.delegate.beans.connector.ConnectorConfigDTO;
+
 import lombok.Data;
 
 @Data

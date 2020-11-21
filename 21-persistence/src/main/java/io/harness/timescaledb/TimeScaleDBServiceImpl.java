@@ -1,20 +1,19 @@
 package io.harness.timescaledb;
 
+import io.harness.timescaledb.TimeScaleDBConfig.TimeScaleDBConfigFields;
+
 import com.google.common.base.Strings;
 import com.google.inject.Singleton;
-
 import com.jayway.jsonpath.internal.Utils;
-import io.harness.timescaledb.TimeScaleDBConfig.TimeScaleDBConfigFields;
-import lombok.NoArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.dbcp.BasicDataSource;
-
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.Properties;
+import lombok.NoArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.dbcp.BasicDataSource;
 
 @Singleton
 @NoArgsConstructor

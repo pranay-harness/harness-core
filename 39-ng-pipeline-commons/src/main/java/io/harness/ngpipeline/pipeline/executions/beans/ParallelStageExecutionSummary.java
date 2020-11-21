@@ -1,11 +1,10 @@
 package io.harness.ngpipeline.pipeline.executions.beans;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
+import java.util.List;
 import lombok.Builder;
 import lombok.Data;
 import lombok.experimental.FieldNameConstants;
-
-import java.util.List;
 
 @Data
 @Builder

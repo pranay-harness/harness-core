@@ -1,12 +1,5 @@
 package io.harness.cvng;
 
-import com.google.common.util.concurrent.ThreadFactoryBuilder;
-import com.google.inject.AbstractModule;
-import com.google.inject.Provides;
-import com.google.inject.Singleton;
-import com.google.inject.name.Named;
-import com.google.inject.name.Names;
-
 import io.harness.cvng.activity.services.api.ActivityService;
 import io.harness.cvng.activity.services.api.KubernetesActivitySourceService;
 import io.harness.cvng.activity.services.impl.ActivityServiceImpl;
@@ -96,13 +89,19 @@ import io.harness.persistence.HPersistence;
 import io.harness.queue.QueueController;
 import io.harness.threading.ThreadPool;
 import io.harness.version.VersionInfoManager;
-import org.apache.commons.io.IOUtils;
 
+import com.google.common.util.concurrent.ThreadFactoryBuilder;
+import com.google.inject.AbstractModule;
+import com.google.inject.Provides;
+import com.google.inject.Singleton;
+import com.google.inject.name.Named;
+import com.google.inject.name.Names;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.time.Clock;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
+import org.apache.commons.io.IOUtils;
 
 /**
  * Guice Module for initializing all beans.

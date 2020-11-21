@@ -3,11 +3,11 @@ package io.harness.seeddata;
 import static io.harness.seeddata.SampleDataProviderConstants.HARNESS_SAMPLE_APP;
 import static io.harness.seeddata.SampleDataProviderConstants.HARNESS_SAMPLE_APP_DESC;
 
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
-
 import software.wings.beans.Application;
 import software.wings.service.intfc.AppService;
+
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
 
 @Singleton
 public class ApplicationSampleDataProvider {

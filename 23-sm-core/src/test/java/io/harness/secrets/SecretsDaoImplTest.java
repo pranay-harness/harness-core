@@ -7,10 +7,8 @@ import static io.harness.SecretTestUtils.getReferencedSecretText;
 import static io.harness.SecretTestUtils.getSecretFile;
 import static io.harness.eraro.ErrorCode.SECRET_MANAGEMENT_ERROR;
 import static io.harness.rule.OwnerRule.UTKARSH;
-import static org.assertj.core.api.Assertions.assertThat;
 
-import com.google.common.collect.Sets;
-import com.google.inject.Inject;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.SMCoreTestBase;
 import io.harness.beans.EncryptedData;
@@ -24,13 +22,16 @@ import io.harness.persistence.HIterator;
 import io.harness.rule.Owner;
 import io.harness.security.encryption.EncryptedDataParams;
 import io.harness.security.encryption.EncryptedRecord;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
+
 import software.wings.security.UsageRestrictions;
 import software.wings.settings.SettingVariableTypes;
 
+import com.google.common.collect.Sets;
+import com.google.inject.Inject;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicReference;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 public class SecretsDaoImplTest extends SMCoreTestBase {
   @Inject private SecretsDaoImpl secretsDao;

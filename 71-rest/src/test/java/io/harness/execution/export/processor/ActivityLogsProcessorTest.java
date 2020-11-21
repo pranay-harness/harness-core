@@ -2,6 +2,9 @@ package io.harness.execution.export.processor;
 
 import static io.harness.beans.PageResponse.PageResponseBuilder.aPageResponse;
 import static io.harness.rule.OwnerRule.GARVIT;
+
+import static software.wings.beans.Log.Builder.aLog;
+
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -15,9 +18,6 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-import static software.wings.beans.Log.Builder.aLog;
-
-import com.google.common.collect.ImmutableMap;
 
 import io.harness.CategoryTest;
 import io.harness.beans.PageRequest;
@@ -33,19 +33,14 @@ import io.harness.execution.export.metadata.PipelineStageExecutionMetadata;
 import io.harness.execution.export.metadata.WorkflowExecutionMetadata;
 import io.harness.execution.export.processor.ActivityLogsProcessor.ActivityIdsVisitor;
 import io.harness.rule.Owner;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
-import org.mockito.Mock;
-import org.mockito.junit.MockitoJUnit;
-import org.mockito.junit.MockitoRule;
+
 import software.wings.beans.Log;
 import software.wings.beans.Log.LogKeys;
 import software.wings.service.impl.MongoDataStoreServiceImpl;
 import software.wings.service.intfc.DataStoreService;
 import software.wings.service.intfc.LogService;
 
+import com.google.common.collect.ImmutableMap;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -57,6 +52,13 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
+import org.junit.Before;
+import org.junit.Rule;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
+import org.mockito.Mock;
+import org.mockito.junit.MockitoJUnit;
+import org.mockito.junit.MockitoRule;
 
 public class ActivityLogsProcessorTest extends CategoryTest {
   @Mock private LogService logService;

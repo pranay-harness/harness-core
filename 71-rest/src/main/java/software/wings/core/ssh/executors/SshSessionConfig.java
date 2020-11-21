@@ -1,11 +1,7 @@
 package software.wings.core.ssh.executors;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.encryption.Encrypted;
-import lombok.Data;
-import lombok.ToString;
-import org.hibernate.validator.constraints.NotEmpty;
+
 import software.wings.annotation.EncryptableSetting;
 import software.wings.beans.HostConnectionAttributes.AccessType;
 import software.wings.beans.HostConnectionAttributes.AuthenticationScheme;
@@ -13,7 +9,12 @@ import software.wings.beans.KerberosConfig;
 import software.wings.core.ssh.executors.ScriptExecutor.ExecutorType;
 import software.wings.settings.SettingVariableTypes;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.github.reinert.jjschema.SchemaIgnore;
 import java.util.concurrent.TimeUnit;
+import lombok.Data;
+import lombok.ToString;
+import org.hibernate.validator.constraints.NotEmpty;
 
 /**
  * Created by anubhaw on 2/8/16.

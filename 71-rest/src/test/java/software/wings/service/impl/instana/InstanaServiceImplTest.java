@@ -1,22 +1,17 @@
 package software.wings.service.impl.instana;
 
 import static io.harness.rule.OwnerRule.KAMAL;
+
+import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.when;
 import static org.mockito.MockitoAnnotations.initMocks;
-import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
-
-import com.google.common.collect.Lists;
-import com.google.inject.Inject;
 
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
-import org.apache.commons.lang3.reflect.FieldUtils;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
-import org.mockito.Mock;
+
 import software.wings.WingsBaseTest;
 import software.wings.beans.InstanaConfig;
 import software.wings.beans.SettingAttribute;
@@ -27,6 +22,8 @@ import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.instana.InstanaDelegateService;
 import software.wings.service.intfc.instana.InstanaService;
 
+import com.google.common.collect.Lists;
+import com.google.inject.Inject;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -35,6 +32,11 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import org.apache.commons.lang3.reflect.FieldUtils;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
+import org.mockito.Mock;
 
 public class InstanaServiceImplTest extends WingsBaseTest {
   private String accountId = UUID.randomUUID().toString();

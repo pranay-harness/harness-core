@@ -2,6 +2,13 @@ package io.harness.batch.processing.service.impl;
 
 import static io.harness.ccm.billing.GcpServiceAccountServiceImpl.getCredentials;
 
+import io.harness.batch.processing.dao.intfc.BillingDataPipelineRecordDao;
+import io.harness.batch.processing.pricing.data.CloudProvider;
+import io.harness.batch.processing.service.intfc.AccountExpiryService;
+import io.harness.ccm.billing.entities.BillingDataPipelineRecord;
+
+import software.wings.beans.Account;
+
 import com.google.api.gax.core.FixedCredentialsProvider;
 import com.google.auth.Credentials;
 import com.google.auth.oauth2.ServiceAccountCredentials;
@@ -9,19 +16,12 @@ import com.google.cloud.bigquery.BigQuery;
 import com.google.cloud.bigquery.BigQueryOptions;
 import com.google.cloud.bigquery.datatransfer.v1.DataTransferServiceClient;
 import com.google.cloud.bigquery.datatransfer.v1.DataTransferServiceSettings;
-
-import io.harness.batch.processing.dao.intfc.BillingDataPipelineRecordDao;
-import io.harness.batch.processing.pricing.data.CloudProvider;
-import io.harness.batch.processing.service.intfc.AccountExpiryService;
-import io.harness.ccm.billing.entities.BillingDataPipelineRecord;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
-import software.wings.beans.Account;
-
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
 
 @Slf4j
 @Service

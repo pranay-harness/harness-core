@@ -2,23 +2,11 @@ package io.harness.grpc.auth;
 
 import static io.harness.grpc.utils.GrpcAuthUtils.IS_AUTHENTICATED_CONTEXT_KEY;
 import static io.harness.rule.OwnerRule.ROHIT_KUMAR;
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 
-import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableSet;
-
-import io.grpc.Channel;
-import io.grpc.Metadata;
-import io.grpc.StatusRuntimeException;
-import io.grpc.health.v1.HealthCheckRequest;
-import io.grpc.health.v1.HealthGrpc;
-import io.grpc.inprocess.InProcessChannelBuilder;
-import io.grpc.inprocess.InProcessServerBuilder;
-import io.grpc.services.HealthStatusManager;
-import io.grpc.stub.MetadataUtils;
-import io.grpc.testing.GrpcCleanupRule;
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.event.EventPublisherGrpc;
@@ -29,6 +17,19 @@ import io.harness.grpc.auth.DelegateAuthServerInterceptorTest.ContextRecordingIn
 import io.harness.grpc.utils.GrpcAuthUtils;
 import io.harness.rule.Owner;
 import io.harness.security.ServiceTokenGenerator;
+
+import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
+import io.grpc.Channel;
+import io.grpc.Metadata;
+import io.grpc.StatusRuntimeException;
+import io.grpc.health.v1.HealthCheckRequest;
+import io.grpc.health.v1.HealthGrpc;
+import io.grpc.inprocess.InProcessChannelBuilder;
+import io.grpc.inprocess.InProcessServerBuilder;
+import io.grpc.services.HealthStatusManager;
+import io.grpc.stub.MetadataUtils;
+import io.grpc.testing.GrpcCleanupRule;
 import lombok.val;
 import org.junit.Before;
 import org.junit.Rule;

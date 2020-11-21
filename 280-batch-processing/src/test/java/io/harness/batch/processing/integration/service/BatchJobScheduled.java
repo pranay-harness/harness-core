@@ -1,6 +1,7 @@
 package io.harness.batch.processing.integration.service;
 
 import static io.harness.rule.OwnerRule.HITESH;
+
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.batch.processing.ccm.BatchJobType;
@@ -10,6 +11,9 @@ import io.harness.ccm.cluster.entities.BatchJobScheduledData;
 import io.harness.ccm.cluster.entities.BatchJobScheduledData.BatchJobScheduledDataKeys;
 import io.harness.persistence.HPersistence;
 import io.harness.rule.Owner;
+
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import lombok.val;
 import org.junit.After;
 import org.junit.Ignore;
@@ -20,9 +24,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
-
-import java.time.Instant;
-import java.time.temporal.ChronoUnit;
 
 @SpringBootTest
 @ActiveProfiles("test")

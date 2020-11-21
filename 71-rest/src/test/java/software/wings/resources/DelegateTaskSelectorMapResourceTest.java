@@ -2,6 +2,10 @@ package software.wings.resources;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.rule.OwnerRule.SANJA;
+
+import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
+import static software.wings.utils.WingsTestConstants.TAG_NAME;
+
 import static java.util.Arrays.asList;
 import static java.util.Collections.singleton;
 import static javax.ws.rs.client.Entity.entity;
@@ -10,8 +14,6 @@ import static org.mockito.Mockito.atLeastOnce;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
-import static software.wings.utils.WingsTestConstants.TAG_NAME;
 
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
@@ -23,6 +25,13 @@ import io.harness.exception.NoResultFoundException;
 import io.harness.rest.RestResponse;
 import io.harness.rule.Owner;
 import io.harness.service.intfc.DelegateTaskSelectorMapService;
+
+import software.wings.exception.WingsExceptionMapper;
+import software.wings.utils.ResourceTestRule;
+
+import javax.servlet.http.HttpServletRequest;
+import javax.ws.rs.core.GenericType;
+import javax.ws.rs.core.MediaType;
 import org.glassfish.hk2.utilities.binding.AbstractBinder;
 import org.hamcrest.CoreMatchers;
 import org.hamcrest.Matchers;
@@ -33,12 +42,6 @@ import org.junit.experimental.categories.Category;
 import org.junit.rules.ExpectedException;
 import org.junit.runners.Parameterized;
 import org.springframework.http.HttpStatus;
-import software.wings.exception.WingsExceptionMapper;
-import software.wings.utils.ResourceTestRule;
-
-import javax.servlet.http.HttpServletRequest;
-import javax.ws.rs.core.GenericType;
-import javax.ws.rs.core.MediaType;
 
 public class DelegateTaskSelectorMapResourceTest {
   private static DelegateTaskSelectorMapService taskSelectorMapService = mock(DelegateTaskSelectorMapService.class);

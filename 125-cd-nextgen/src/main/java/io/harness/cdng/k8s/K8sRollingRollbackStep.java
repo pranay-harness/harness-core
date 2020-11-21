@@ -1,7 +1,5 @@
 package io.harness.cdng.k8s;
 
-import com.google.inject.Inject;
-
 import io.harness.ambiance.Ambiance;
 import io.harness.cdng.executionplan.CDStepDependencyKey;
 import io.harness.cdng.infra.beans.InfrastructureOutcome;
@@ -24,10 +22,12 @@ import io.harness.state.io.StepInputPackage;
 import io.harness.state.io.StepResponse;
 import io.harness.tasks.ResponseData;
 import io.harness.tasks.Task;
+
 import software.wings.helpers.ext.k8s.request.K8sRollingDeployRollbackTaskParameters;
 import software.wings.helpers.ext.k8s.response.K8sTaskExecutionResponse;
 import software.wings.sm.states.k8s.K8sRollingDeployRollback;
 
+import com.google.inject.Inject;
 import java.util.Map;
 
 public class K8sRollingRollbackStep implements Step, TaskExecutable<K8sRollingRollbackStepParameters> {

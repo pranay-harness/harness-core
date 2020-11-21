@@ -1,19 +1,19 @@
 package software.wings.sm.states.azure.appservices;
 
-import com.google.common.collect.ImmutableMap;
-
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import io.harness.context.ContextElementType;
 import io.harness.delegate.task.azure.appservice.AzureAppServicePreDeploymentData;
+
+import software.wings.sm.ContextElement;
+import software.wings.sm.ExecutionContext;
+
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.google.common.collect.ImmutableMap;
+import java.util.HashMap;
+import java.util.Map;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import software.wings.sm.ContextElement;
-import software.wings.sm.ExecutionContext;
-
-import java.util.HashMap;
-import java.util.Map;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 @Data

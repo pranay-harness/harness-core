@@ -1,12 +1,13 @@
 package io.harness.perpetualtask.datacollection;
 
 import io.harness.datacollection.entity.CallDetails;
-import lombok.extern.slf4j.Slf4j;
+
 import software.wings.delegatetasks.DelegateLogService;
 import software.wings.service.impl.ThirdPartyApiCallLog;
 import software.wings.service.impl.ThirdPartyApiCallLog.ThirdPartyApiCallField;
 
 import java.util.function.Consumer;
+import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class ThirdPartyCallHandler implements Consumer<CallDetails> {

@@ -5,11 +5,9 @@ import static com.google.common.base.Preconditions.checkElementIndex;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 import com.google.common.collect.ImmutableMap;
-
-import lombok.ToString;
-
 import java.time.Instant;
 import java.util.Map;
+import lombok.ToString;
 
 /**
  * Simple bucket-based implementation of the Histogram interface. Each bucket holds the total weight of samples that

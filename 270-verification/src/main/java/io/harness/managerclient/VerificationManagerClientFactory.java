@@ -1,25 +1,24 @@
 package io.harness.managerclient;
 
-import com.google.common.collect.ImmutableList;
-import com.google.inject.Provider;
+import io.harness.network.Http;
+import io.harness.security.ServiceTokenGenerator;
+import io.harness.security.VerificationAuthInterceptor;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.guava.GuavaModule;
 import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
-import io.harness.network.Http;
-import io.harness.security.ServiceTokenGenerator;
-import io.harness.security.VerificationAuthInterceptor;
-import okhttp3.ConnectionPool;
-import okhttp3.OkHttpClient;
-import retrofit2.Retrofit;
-import retrofit2.converter.jackson.JacksonConverterFactory;
-
+import com.google.common.collect.ImmutableList;
+import com.google.inject.Provider;
 import java.security.cert.X509Certificate;
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.SSLSocketFactory;
 import javax.net.ssl.TrustManager;
 import javax.net.ssl.X509TrustManager;
+import okhttp3.ConnectionPool;
+import okhttp3.OkHttpClient;
+import retrofit2.Retrofit;
+import retrofit2.converter.jackson.JacksonConverterFactory;
 
 /**
  * Created by raghu on 11/29/16.

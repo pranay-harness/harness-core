@@ -2,14 +2,9 @@ package software.wings.service.impl.instana;
 
 import static software.wings.delegatetasks.AbstractDelegateDataCollectionTask.getUnsafeHttpClient;
 
-import com.google.inject.Inject;
-
 import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.time.Timestamp;
-import lombok.extern.slf4j.Slf4j;
-import retrofit2.Call;
-import retrofit2.Retrofit;
-import retrofit2.converter.jackson.JacksonConverterFactory;
+
 import software.wings.beans.InstanaConfig;
 import software.wings.delegatetasks.cv.RequestExecutor;
 import software.wings.helpers.ext.instana.InstanaRestClient;
@@ -17,8 +12,13 @@ import software.wings.service.impl.ThirdPartyApiCallLog;
 import software.wings.service.intfc.instana.InstanaDelegateService;
 import software.wings.service.intfc.security.EncryptionService;
 
+import com.google.inject.Inject;
 import java.util.Arrays;
 import java.util.List;
+import lombok.extern.slf4j.Slf4j;
+import retrofit2.Call;
+import retrofit2.Retrofit;
+import retrofit2.converter.jackson.JacksonConverterFactory;
 
 @Slf4j
 public class InstanaDelegateServiceImpl implements InstanaDelegateService {

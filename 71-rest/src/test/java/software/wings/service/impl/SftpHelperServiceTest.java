@@ -2,19 +2,31 @@ package software.wings.service.impl;
 
 import static io.harness.rule.OwnerRule.GARVIT;
 import static io.harness.rule.OwnerRule.GEORGE;
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.Mockito.doNothing;
-import static org.mockito.Mockito.doReturn;
+
 import static software.wings.helpers.ext.jenkins.BuildDetails.Builder.aBuildDetails;
 import static software.wings.service.impl.instance.InstanceHelperTest.ACCOUNT_ID;
 import static software.wings.utils.WingsTestConstants.PARENT;
 import static software.wings.utils.WingsTestConstants.PATH;
 
-import com.google.api.client.util.Lists;
-import com.google.inject.Inject;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.doReturn;
 
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
+
+import software.wings.WingsBaseTest;
+import software.wings.beans.SftpConfig;
+import software.wings.beans.artifact.Artifact.ArtifactMetadataKeys;
+import software.wings.helpers.ext.jenkins.BuildDetails;
+
+import com.google.api.client.util.Lists;
+import com.google.inject.Inject;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import net.schmizz.sshj.SSHClient;
 import net.schmizz.sshj.sftp.FileAttributes;
 import net.schmizz.sshj.sftp.PathComponents;
@@ -23,16 +35,6 @@ import net.schmizz.sshj.sftp.SFTPClient;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.Mock;
-import software.wings.WingsBaseTest;
-import software.wings.beans.SftpConfig;
-import software.wings.beans.artifact.Artifact.ArtifactMetadataKeys;
-import software.wings.helpers.ext.jenkins.BuildDetails;
-
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 
 public class SftpHelperServiceTest extends WingsBaseTest {
   @Inject SftpHelperService sftpHelperService;

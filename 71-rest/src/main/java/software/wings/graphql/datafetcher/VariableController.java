@@ -4,7 +4,7 @@ import static io.harness.annotations.dev.HarnessTeam.CDC;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.exception.InvalidRequestException;
-import lombok.experimental.UtilityClass;
+
 import software.wings.beans.EntityType;
 import software.wings.beans.Variable;
 import software.wings.beans.VariableDisplayType;
@@ -12,6 +12,7 @@ import software.wings.beans.VariableType;
 import software.wings.graphql.schema.type.QLVariable;
 
 import java.util.List;
+import lombok.experimental.UtilityClass;
 
 @OwnedBy(CDC)
 @UtilityClass

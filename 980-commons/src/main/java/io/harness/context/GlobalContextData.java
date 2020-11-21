@@ -1,3 +1,5 @@
 package io.harness.context;
 
-public interface GlobalContextData { String getKey(); }
+public interface GlobalContextData {
+  String getKey();
+}

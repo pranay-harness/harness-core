@@ -1,12 +1,12 @@
 package io.harness.yaml.core.serializer;
 
+import io.harness.yaml.core.ParallelStageElement;
+import io.harness.yaml.core.auxiliary.intfc.StageElementWrapper;
+
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.databind.JsonSerializer;
 import com.fasterxml.jackson.databind.SerializerProvider;
 import com.fasterxml.jackson.databind.jsontype.TypeSerializer;
-import io.harness.yaml.core.ParallelStageElement;
-import io.harness.yaml.core.auxiliary.intfc.StageElementWrapper;
-
 import java.io.IOException;
 
 public class ParallelStageElementSerializer extends JsonSerializer<ParallelStageElement> {

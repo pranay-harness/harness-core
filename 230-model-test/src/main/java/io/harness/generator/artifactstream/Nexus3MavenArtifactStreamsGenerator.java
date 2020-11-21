@@ -1,19 +1,21 @@
 package io.harness.generator.artifactstream;
 
-import static java.util.Arrays.asList;
 import static software.wings.beans.Application.GLOBAL_APP_ID;
 
-import com.google.inject.Singleton;
+import static java.util.Arrays.asList;
 
 import io.harness.generator.OwnerManager;
 import io.harness.generator.Randomizer;
 import io.harness.generator.SettingGenerator;
+
 import software.wings.beans.Application;
 import software.wings.beans.Service;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.artifact.ArtifactStream;
 import software.wings.beans.artifact.NexusArtifactStream;
 import software.wings.utils.RepositoryFormat;
+
+import com.google.inject.Singleton;
 
 @Singleton
 public class Nexus3MavenArtifactStreamsGenerator extends NexusArtifactStreamsGenerator {

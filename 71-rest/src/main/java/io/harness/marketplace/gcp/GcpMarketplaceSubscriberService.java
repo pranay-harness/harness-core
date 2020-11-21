@@ -2,13 +2,14 @@ package io.harness.marketplace.gcp;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
 
+import io.harness.annotations.dev.OwnedBy;
+
+import software.wings.app.MainConfiguration;
+
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
-
 import io.dropwizard.lifecycle.Managed;
-import io.harness.annotations.dev.OwnedBy;
 import lombok.extern.slf4j.Slf4j;
-import software.wings.app.MainConfiguration;
 
 @OwnedBy(PL)
 @Slf4j

@@ -2,10 +2,9 @@ package io.harness.advisers.manualintervention;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.rule.OwnerRule.PRASHANT;
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.when;
-
-import com.google.inject.Inject;
 
 import io.harness.OrchestrationTestBase;
 import io.harness.adviser.Advise;
@@ -25,13 +24,14 @@ import io.harness.rule.Owner;
 import io.harness.serializer.KryoSerializer;
 import io.harness.state.io.FailureInfo;
 import io.harness.utils.AmbianceTestUtils;
+
+import com.google.inject.Inject;
+import java.util.EnumSet;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-
-import java.util.EnumSet;
 
 public class ManualInterventionAdviserTest extends OrchestrationTestBase {
   public static final String NODE_EXECUTION_ID = generateUuid();

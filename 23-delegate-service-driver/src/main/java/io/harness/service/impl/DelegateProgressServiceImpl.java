@@ -3,10 +3,8 @@ package io.harness.service.impl;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.delegate.beans.DelegateTaskProgressResponse.DelegateTaskProgressResponseKeys;
 import static io.harness.persistence.HQuery.excludeAuthority;
-import static java.lang.System.currentTimeMillis;
 
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
+import static java.lang.System.currentTimeMillis;
 
 import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.delegate.beans.DelegateTaskProgressResponse;
@@ -14,12 +12,14 @@ import io.harness.persistence.HPersistence;
 import io.harness.serializer.KryoSerializer;
 import io.harness.service.intfc.DelegateProgressService;
 import io.harness.waiter.WaitNotifyEngineV2;
+
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
+import java.util.HashSet;
+import java.util.Set;
 import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
-
-import java.util.HashSet;
-import java.util.Set;
 
 @Singleton
 @Slf4j

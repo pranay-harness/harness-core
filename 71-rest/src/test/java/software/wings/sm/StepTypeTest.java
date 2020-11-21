@@ -2,7 +2,7 @@ package software.wings.sm;
 
 import static io.harness.rule.OwnerRule.ACASIAN;
 import static io.harness.rule.OwnerRule.ADWAIT;
-import static org.assertj.core.api.Assertions.assertThat;
+
 import static software.wings.api.DeploymentType.AMI;
 import static software.wings.api.DeploymentType.ECS;
 import static software.wings.api.DeploymentType.PCF;
@@ -12,10 +12,13 @@ import static software.wings.api.DeploymentType.WINRM;
 import static software.wings.sm.StepType.AWS_AMI_SERVICE_SETUP;
 import static software.wings.sm.StepType.AWS_NODE_SELECT;
 
+import static org.assertj.core.api.Assertions.assertThat;
+
 import io.harness.CategoryTest;
 import io.harness.beans.OrchestrationWorkflowType;
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
+
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 

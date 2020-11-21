@@ -1,6 +1,7 @@
 package io.harness.delegate.ci;
 
 import static io.harness.rule.OwnerRule.HARSH;
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.joor.Reflect.on;
 import static org.mockito.Matchers.any;
@@ -24,6 +25,8 @@ import io.harness.delegate.beans.ci.status.BuildStatusPushResponse.Status;
 import io.harness.delegate.task.ci.CIBuildStatusPushParameters;
 import io.harness.delegate.task.ci.CIBuildStatusPushTask;
 import io.harness.rule.Owner;
+
+import java.io.IOException;
 import okhttp3.MediaType;
 import okhttp3.Protocol;
 import okhttp3.Request;
@@ -35,8 +38,6 @@ import org.mockito.InjectMocks;
 import org.mockito.Mockito;
 import retrofit2.Call;
 import retrofit2.Response;
-
-import java.io.IOException;
 
 public class CIBuildStatusPushTaskTest extends CategoryTest {
   private GithubRestClient githubRestClient;

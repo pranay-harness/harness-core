@@ -1,6 +1,7 @@
 package io.harness.ccm.budget;
 
 import io.harness.ccm.budget.entities.Budget;
+
 import software.wings.graphql.schema.type.aggregation.budget.QLBudgetDataList;
 import software.wings.graphql.schema.type.aggregation.budget.QLBudgetTableData;
 

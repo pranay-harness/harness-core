@@ -1,9 +1,8 @@
 package io.harness.cdng.pipeline.plancreators;
 
 import static io.harness.cdng.executionplan.CDPlanCreatorType.STEP_GROUPS_ROLLBACK_PLAN_CREATOR;
-import static java.util.Collections.singletonList;
 
-import com.google.inject.Inject;
+import static java.util.Collections.singletonList;
 
 import io.harness.cdng.executionplan.CDPlanCreatorType;
 import io.harness.cdng.pipeline.beans.RollbackNode;
@@ -30,6 +29,7 @@ import io.harness.yaml.core.ParallelStepElement;
 import io.harness.yaml.core.StepGroupElement;
 import io.harness.yaml.core.auxiliary.intfc.ExecutionWrapper;
 
+import com.google.inject.Inject;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;

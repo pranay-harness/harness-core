@@ -2,18 +2,15 @@ package software.wings.service.impl.template;
 
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.persistence.HQuery.excludeAuthority;
+
 import static software.wings.beans.Account.GLOBAL_ACCOUNT_ID;
 import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static software.wings.common.TemplateConstants.HARNESS_GALLERY;
 import static software.wings.common.TemplateConstants.LATEST_TAG;
 
-import com.google.inject.Inject;
-
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import io.harness.exception.WingsException;
 import io.harness.persistence.HIterator;
-import lombok.extern.slf4j.Slf4j;
+
 import software.wings.beans.CanaryOrchestrationWorkflow;
 import software.wings.beans.EntityType;
 import software.wings.beans.GraphNode;
@@ -30,9 +27,13 @@ import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.WorkflowService;
 import software.wings.service.intfc.template.TemplateService;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
+import com.google.inject.Inject;
 import java.io.IOException;
 import java.net.URL;
 import java.util.List;
+import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public abstract class AbstractTemplateProcessor {
@@ -177,8 +178,8 @@ public abstract class AbstractTemplateProcessor {
       for (GraphNode step : phaseStep.getSteps()) {
         if (template.getUuid().equals(step.getTemplateUuid())
             && ((step.getTemplateVersion() == null || TemplateConstants.LATEST_TAG.equals(step.getTemplateVersion()))
-                   || ((TemplateConstants.DEFAULT_TAG.equals(step.getTemplateVersion()))
-                          && isDefaultVersionOfTemplateChanged(template)))) {
+                || ((TemplateConstants.DEFAULT_TAG.equals(step.getTemplateVersion()))
+                    && isDefaultVersionOfTemplateChanged(template)))) {
           GraphNode templateStep = (GraphNode) constructEntityFromTemplate(template, EntityType.WORKFLOW);
           step.setTemplateVariables(
               templateHelper.overrideVariables(templateStep.getTemplateVariables(), step.getTemplateVariables()));

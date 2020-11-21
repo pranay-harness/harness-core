@@ -1,9 +1,10 @@
 package software.wings.beans.yaml;
 
+import software.wings.yaml.gitSync.YamlGitConfig;
+
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
-import software.wings.yaml.gitSync.YamlGitConfig;
 
 /**
  * Created by anubhaw on 11/2/17.

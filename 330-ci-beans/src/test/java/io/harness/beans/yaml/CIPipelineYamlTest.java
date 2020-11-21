@@ -1,6 +1,7 @@
 package io.harness.beans.yaml;
 
 import static io.harness.rule.OwnerRule.ALEKSANDAR;
+
 import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -30,11 +31,11 @@ import io.harness.yaml.core.ParallelStepElement;
 import io.harness.yaml.core.StageElement;
 import io.harness.yaml.core.StepElement;
 import io.harness.yaml.utils.YamlPipelineUtils;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
 
 import java.io.IOException;
 import java.net.URL;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 public class CIPipelineYamlTest extends CIBeansTest {
   @Test

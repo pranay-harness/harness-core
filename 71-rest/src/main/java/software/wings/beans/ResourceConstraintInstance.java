@@ -2,8 +2,6 @@ package software.wings.beans;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 
-import com.google.common.collect.ImmutableList;
-
 import io.harness.annotation.HarnessEntity;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.distribution.constraint.Consumer.State;
@@ -15,6 +13,12 @@ import io.harness.mongo.index.MongoIndex;
 import io.harness.persistence.AccountAccess;
 import io.harness.persistence.UuidAware;
 import io.harness.validation.Update;
+
+import com.google.common.collect.ImmutableList;
+import java.time.OffsetDateTime;
+import java.util.Date;
+import java.util.List;
+import javax.validation.constraints.NotNull;
 import lombok.Builder;
 import lombok.Builder.Default;
 import lombok.Data;
@@ -22,11 +26,6 @@ import lombok.EqualsAndHashCode;
 import lombok.experimental.FieldNameConstants;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Id;
-
-import java.time.OffsetDateTime;
-import java.util.Date;
-import java.util.List;
-import javax.validation.constraints.NotNull;
 
 @OwnedBy(CDC)
 @Data

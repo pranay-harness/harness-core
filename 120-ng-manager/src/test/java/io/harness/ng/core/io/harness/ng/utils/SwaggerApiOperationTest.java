@@ -1,18 +1,15 @@
 package io.harness.ng.core.io.harness.ng.utils;
 
 import static io.harness.rule.OwnerRule.VIKAS;
-import static org.assertj.core.api.Assertions.assertThat;
 
-import com.google.common.collect.Sets;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
-import io.swagger.annotations.ApiOperation;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
-import org.reflections.Reflections;
 
+import com.google.common.collect.Sets;
+import io.swagger.annotations.ApiOperation;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
 import java.util.Set;
@@ -21,6 +18,9 @@ import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
+import org.reflections.Reflections;
 
 public class SwaggerApiOperationTest extends CategoryTest {
   private static final String BASE_PACKAGE = "io.harness.ng";

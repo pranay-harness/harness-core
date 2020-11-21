@@ -1,8 +1,5 @@
 package software.wings.yaml.handler.inframappings;
 
-import static java.util.Collections.singletonList;
-import static org.mockito.Matchers.anyString;
-import static org.mockito.Mockito.when;
 import static software.wings.beans.Application.Builder.anApplication;
 import static software.wings.beans.Environment.Builder.anEnvironment;
 import static software.wings.beans.ServiceTemplate.Builder.aServiceTemplate;
@@ -21,9 +18,12 @@ import static software.wings.utils.WingsTestConstants.SERVICE_NAME;
 import static software.wings.utils.WingsTestConstants.SETTING_ID;
 import static software.wings.utils.WingsTestConstants.TEMPLATE_ID;
 
+import static java.util.Collections.singletonList;
+import static org.mockito.Matchers.anyString;
+import static org.mockito.Mockito.when;
+
 import io.harness.yaml.BaseYaml;
-import org.mockito.Mock;
-import org.mongodb.morphia.Key;
+
 import software.wings.beans.AwsConfig;
 import software.wings.beans.Environment;
 import software.wings.beans.InfrastructureProvisioner;
@@ -47,6 +47,8 @@ import software.wings.utils.ArtifactType;
 import software.wings.yaml.handler.YamlHandlerTestBase;
 
 import java.util.Optional;
+import org.mockito.Mock;
+import org.mongodb.morphia.Key;
 
 public class BaseInfraMappingYamlHandlerTestBase extends YamlHandlerTestBase {
   protected Service service =

@@ -1,15 +1,13 @@
 package migrations;
 
 import com.google.common.collect.ImmutableList;
-
+import java.util.List;
 import lombok.experimental.UtilityClass;
 import migrations.timescaledb.data.MigrateWorkflowsToTimeScaleDB;
 import migrations.timescaledb.data.SetInstancesDeployedInDeployment;
 import migrations.timescaledb.data.SetRollbackDurationInDeployment;
 import migrations.timescaledb.data.UpdateEnvSvcCPInDeployment;
 import org.apache.commons.lang3.tuple.Pair;
-
-import java.util.List;
 
 @UtilityClass
 public class TimescaleDBDataMigrationList {

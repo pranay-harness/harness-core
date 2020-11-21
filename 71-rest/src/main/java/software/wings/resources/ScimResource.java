@@ -1,7 +1,6 @@
 package software.wings.resources;
 
 import com.google.common.collect.Sets;
-
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 

@@ -2,11 +2,12 @@ package io.harness.testframework.restutils;
 
 import io.harness.rest.RestResponse;
 import io.harness.testframework.framework.Setup;
-import io.restassured.http.ContentType;
-import io.restassured.mapper.ObjectMapperType;
+
 import software.wings.beans.Account;
 import software.wings.beans.Application;
 
+import io.restassured.http.ContentType;
+import io.restassured.mapper.ObjectMapperType;
 import javax.ws.rs.core.GenericType;
 
 public class ApplicationRestUtils {

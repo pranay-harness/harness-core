@@ -3,8 +3,6 @@ package software.wings.delegatetasks.aws;
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.beans.ExecutionStatus.SUCCESS;
 
-import com.google.inject.Inject;
-
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.delegate.beans.DelegateTaskPackage;
 import io.harness.delegate.beans.DelegateTaskResponse;
@@ -13,8 +11,7 @@ import io.harness.delegate.task.AbstractDelegateRunnableTask;
 import io.harness.delegate.task.TaskParameters;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
-import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.NotImplementedException;
+
 import software.wings.service.impl.aws.model.AwsEcrGetAuthTokenRequest;
 import software.wings.service.impl.aws.model.AwsEcrGetAuthTokenResponse;
 import software.wings.service.impl.aws.model.AwsEcrGetImageUrlRequest;
@@ -24,8 +21,11 @@ import software.wings.service.impl.aws.model.AwsEcrRequest.AwsEcrRequestType;
 import software.wings.service.impl.aws.model.AwsResponse;
 import software.wings.service.intfc.aws.delegate.AwsEcrHelperServiceDelegate;
 
+import com.google.inject.Inject;
 import java.util.function.BooleanSupplier;
 import java.util.function.Consumer;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.NotImplementedException;
 
 @OwnedBy(CDC)
 @Slf4j

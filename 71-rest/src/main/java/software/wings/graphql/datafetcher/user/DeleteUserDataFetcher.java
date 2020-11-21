@@ -1,8 +1,7 @@
 package software.wings.graphql.datafetcher.user;
 
-import com.google.inject.Inject;
-
 import io.harness.exception.InvalidRequestException;
+
 import software.wings.graphql.datafetcher.BaseMutatorDataFetcher;
 import software.wings.graphql.datafetcher.MutationContext;
 import software.wings.graphql.schema.type.user.QLDeleteUserInput;
@@ -11,6 +10,8 @@ import software.wings.graphql.schema.type.user.QLDeleteUserPayload.QLDeleteUserP
 import software.wings.security.PermissionAttribute;
 import software.wings.security.annotations.AuthRule;
 import software.wings.service.intfc.UserService;
+
+import com.google.inject.Inject;
 
 public class DeleteUserDataFetcher extends BaseMutatorDataFetcher<QLDeleteUserInput, QLDeleteUserPayload> {
   @Inject private UserService userService;

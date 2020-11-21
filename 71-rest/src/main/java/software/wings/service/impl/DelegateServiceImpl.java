@@ -1,7 +1,5 @@
 package software.wings.service.impl;
 
-import static com.google.common.base.Charsets.UTF_8;
-import static freemarker.template.Configuration.VERSION_2_3_23;
 import static io.harness.beans.DelegateTask.Status.ABORTED;
 import static io.harness.beans.DelegateTask.Status.ERROR;
 import static io.harness.beans.DelegateTask.Status.QUEUED;
@@ -37,6 +35,15 @@ import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_NESTS;
 import static io.harness.mongo.MongoUtils.setUnset;
 import static io.harness.obfuscate.Obfuscator.obfuscate;
 import static io.harness.persistence.HQuery.excludeAuthority;
+
+import static software.wings.beans.Application.GLOBAL_APP_ID;
+import static software.wings.beans.DelegateSequenceConfig.Builder.aDelegateSequenceBuilder;
+import static software.wings.beans.Event.Builder.anEvent;
+import static software.wings.beans.FeatureName.USE_CDN_FOR_STORAGE_FILES;
+import static software.wings.beans.alert.AlertType.NoEligibleDelegates;
+
+import static com.google.common.base.Charsets.UTF_8;
+import static freemarker.template.Configuration.VERSION_2_3_23;
 import static java.lang.String.format;
 import static java.lang.String.join;
 import static java.lang.System.currentTimeMillis;
@@ -55,33 +62,7 @@ import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.apache.commons.lang3.StringUtils.substringAfter;
 import static org.apache.commons.lang3.StringUtils.substringBefore;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
-import static software.wings.beans.Application.GLOBAL_APP_ID;
-import static software.wings.beans.DelegateSequenceConfig.Builder.aDelegateSequenceBuilder;
-import static software.wings.beans.Event.Builder.anEvent;
-import static software.wings.beans.FeatureName.USE_CDN_FOR_STORAGE_FILES;
-import static software.wings.beans.alert.AlertType.NoEligibleDelegates;
 
-import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Charsets;
-import com.google.common.base.Preconditions;
-import com.google.common.base.Suppliers;
-import com.google.common.cache.CacheBuilder;
-import com.google.common.cache.CacheLoader;
-import com.google.common.cache.LoadingCache;
-import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.Lists;
-import com.google.common.util.concurrent.UncheckedExecutionException;
-import com.google.inject.Inject;
-import com.google.inject.Injector;
-import com.google.inject.Singleton;
-import com.google.inject.name.Named;
-
-import com.github.zafarkhaja.semver.Version;
-import com.mongodb.DuplicateKeyException;
-import com.mongodb.MongoGridFSException;
-import freemarker.cache.ClassTemplateLoader;
-import freemarker.template.Configuration;
-import freemarker.template.TemplateException;
 import io.harness.beans.DelegateTask;
 import io.harness.beans.DelegateTask.DelegateTaskKeys;
 import io.harness.beans.FileMetadata;
@@ -163,21 +144,7 @@ import io.harness.service.intfc.DelegateTaskService;
 import io.harness.stream.BoundedInputStream;
 import io.harness.version.VersionInfoManager;
 import io.harness.waiter.WaitNotifyEngine;
-import lombok.Getter;
-import lombok.Value;
-import lombok.extern.slf4j.Slf4j;
-import okhttp3.Request.Builder;
-import okhttp3.Response;
-import org.apache.commons.compress.archivers.tar.TarArchiveEntry;
-import org.apache.commons.compress.archivers.tar.TarArchiveOutputStream;
-import org.apache.commons.io.IOUtils;
-import org.apache.commons.lang3.StringUtils;
-import org.apache.commons.lang3.tuple.Pair;
-import org.atmosphere.cpr.BroadcasterFactory;
-import org.glassfish.jersey.media.multipart.FormDataContentDisposition;
-import org.jetbrains.annotations.NotNull;
-import org.mongodb.morphia.query.Query;
-import org.mongodb.morphia.query.UpdateOperations;
+
 import software.wings.app.DelegateGrpcConfig;
 import software.wings.app.MainConfiguration;
 import software.wings.beans.Account;
@@ -242,6 +209,26 @@ import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.security.ManagerDecryptionService;
 import software.wings.service.intfc.security.SecretManager;
 
+import com.github.zafarkhaja.semver.Version;
+import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Charsets;
+import com.google.common.base.Preconditions;
+import com.google.common.base.Suppliers;
+import com.google.common.cache.CacheBuilder;
+import com.google.common.cache.CacheLoader;
+import com.google.common.cache.LoadingCache;
+import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Lists;
+import com.google.common.util.concurrent.UncheckedExecutionException;
+import com.google.inject.Inject;
+import com.google.inject.Injector;
+import com.google.inject.Singleton;
+import com.google.inject.name.Named;
+import com.mongodb.DuplicateKeyException;
+import com.mongodb.MongoGridFSException;
+import freemarker.cache.ClassTemplateLoader;
+import freemarker.template.Configuration;
+import freemarker.template.TemplateException;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
@@ -275,6 +262,21 @@ import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import java.util.zip.GZIPOutputStream;
 import javax.validation.executable.ValidateOnExecution;
+import lombok.Getter;
+import lombok.Value;
+import lombok.extern.slf4j.Slf4j;
+import okhttp3.Request.Builder;
+import okhttp3.Response;
+import org.apache.commons.compress.archivers.tar.TarArchiveEntry;
+import org.apache.commons.compress.archivers.tar.TarArchiveOutputStream;
+import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.tuple.Pair;
+import org.atmosphere.cpr.BroadcasterFactory;
+import org.glassfish.jersey.media.multipart.FormDataContentDisposition;
+import org.jetbrains.annotations.NotNull;
+import org.mongodb.morphia.query.Query;
+import org.mongodb.morphia.query.UpdateOperations;
 
 @Singleton
 @ValidateOnExecution
@@ -384,7 +386,7 @@ public class DelegateServiceImpl implements DelegateService {
             }
           });
 
-  private Supplier<Long> taskCountCache = Suppliers.memoizeWithExpiration(this ::fetchTaskCount, 1, TimeUnit.MINUTES);
+  private Supplier<Long> taskCountCache = Suppliers.memoizeWithExpiration(this::fetchTaskCount, 1, TimeUnit.MINUTES);
 
   private LoadingCache<String, String> logStreamingAccountTokenCache =
       CacheBuilder.newBuilder()
@@ -3118,7 +3120,7 @@ public class DelegateServiceImpl implements DelegateService {
           Delegate delegate = get(accountId, delegateId, false);
           boolean sameShellScriptDelegateLocation = DelegateType.SHELL_SCRIPT.equals(delegate.getDelegateType())
               && (isEmpty(heartbeat.getLocation()) || isEmpty(existingConnection.getLocation())
-                     || heartbeat.getLocation().equals(existingConnection.getLocation()));
+                  || heartbeat.getLocation().equals(existingConnection.getLocation()));
           if (!sameShellScriptDelegateLocation) {
             log.error(
                 "Newer delegate connection found for the delegate id! Will initiate self destruct sequence for the current delegate.");

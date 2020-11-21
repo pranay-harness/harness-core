@@ -1,7 +1,6 @@
 package io.harness.perpetualtask;
 
 import com.google.inject.Singleton;
-
 import java.util.HashMap;
 import java.util.Map;
 

@@ -2,18 +2,18 @@ package software.wings.beans.command;
 
 import static java.util.stream.Collectors.toList;
 
-import com.google.inject.Inject;
-
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.security.encryption.EncryptedDataDetail;
-import lombok.Data;
-import lombok.EqualsAndHashCode;
-import org.mongodb.morphia.annotations.Transient;
+
 import software.wings.beans.SettingAttribute;
 import software.wings.delegatetasks.DelegateLogService;
 
+import com.google.inject.Inject;
 import java.util.List;
 import java.util.Map;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
+import org.mongodb.morphia.annotations.Transient;
 
 /**
  * Created by brett on 11/18/17

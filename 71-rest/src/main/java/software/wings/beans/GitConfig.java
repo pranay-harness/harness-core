@@ -1,17 +1,31 @@
 package software.wings.beans;
 
-import static org.apache.commons.lang3.StringUtils.isBlank;
 import static software.wings.audit.ResourceType.SOURCE_REPO_PROVIDER;
 import static software.wings.beans.HostConnectionAttributes.AuthenticationScheme.HTTP_PASSWORD;
+
+import static org.apache.commons.lang3.StringUtils.isBlank;
+
+import io.harness.data.validator.Trimmed;
+import io.harness.delegate.beans.executioncapability.ExecutionCapability;
+import io.harness.encryption.Encrypted;
+import io.harness.git.model.GitRepositoryType;
+
+import software.wings.annotation.EncryptableSetting;
+import software.wings.beans.HostConnectionAttributes.AuthenticationScheme;
+import software.wings.jersey.JsonViews;
+import software.wings.security.UsageRestrictions;
+import software.wings.settings.SettingValue;
+import software.wings.settings.SettingVariableTypes;
+import software.wings.yaml.setting.SourceRepoProviderYaml;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.fasterxml.jackson.annotation.JsonView;
 import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
-import io.harness.data.validator.Trimmed;
-import io.harness.delegate.beans.executioncapability.ExecutionCapability;
-import io.harness.encryption.Encrypted;
-import io.harness.git.model.GitRepositoryType;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import javax.annotation.Nullable;
 import lombok.Builder;
 import lombok.Builder.Default;
 import lombok.Data;
@@ -22,18 +36,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.hibernate.validator.constraints.Email;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Transient;
-import software.wings.annotation.EncryptableSetting;
-import software.wings.beans.HostConnectionAttributes.AuthenticationScheme;
-import software.wings.jersey.JsonViews;
-import software.wings.security.UsageRestrictions;
-import software.wings.settings.SettingValue;
-import software.wings.settings.SettingVariableTypes;
-import software.wings.yaml.setting.SourceRepoProviderYaml;
-
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import javax.annotation.Nullable;
 
 @JsonTypeName("GIT")
 @Data

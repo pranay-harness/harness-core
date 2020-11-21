@@ -1,7 +1,5 @@
 package io.harness.ng.core;
 
-import com.google.inject.AbstractModule;
-
 import io.harness.ng.core.activityhistory.impl.EntityActivitySummaryServiceImpl;
 import io.harness.ng.core.activityhistory.impl.NGActivityServiceImpl;
 import io.harness.ng.core.activityhistory.service.EntityActivitySummaryService;
@@ -13,6 +11,7 @@ import io.harness.ng.core.environment.services.impl.EnvironmentServiceImpl;
 import io.harness.ng.core.service.services.ServiceEntityService;
 import io.harness.ng.core.service.services.impl.ServiceEntityServiceImpl;
 
+import com.google.inject.AbstractModule;
 import java.util.concurrent.atomic.AtomicReference;
 
 public class NGCoreModule extends AbstractModule {

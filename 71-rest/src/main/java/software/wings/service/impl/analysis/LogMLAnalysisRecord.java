@@ -3,13 +3,9 @@ package software.wings.service.impl.analysis;
 import static io.harness.data.encoding.EncodingUtils.deCompressString;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+
 import static software.wings.common.VerificationConstants.ML_RECORDS_TTL_MONTHS;
 
-import com.google.protobuf.InvalidProtocolBufferException;
-
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.annotation.HarnessEntity;
 import io.harness.beans.EmbeddedUser;
 import io.harness.data.encoding.EncodingUtils;
@@ -20,13 +16,7 @@ import io.harness.mongo.index.Field;
 import io.harness.mongo.index.IndexType;
 import io.harness.persistence.AccountAccess;
 import io.harness.serializer.JsonUtils;
-import lombok.Builder;
-import lombok.Data;
-import lombok.EqualsAndHashCode;
-import lombok.NoArgsConstructor;
-import lombok.experimental.FieldNameConstants;
-import org.hibernate.validator.constraints.NotEmpty;
-import org.mongodb.morphia.annotations.Entity;
+
 import software.wings.beans.Base;
 import software.wings.service.impl.splunk.FrequencyPattern;
 import software.wings.service.impl.splunk.LogAnalysisResult;
@@ -41,6 +31,10 @@ import software.wings.service.impl.verification.generated.LogMLAnalysisRecordPro
 import software.wings.service.impl.verification.generated.LogMLAnalysisRecordProto.LogMLAnalysisRecordDetails;
 import software.wings.sm.StateType;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.github.reinert.jjschema.SchemaIgnore;
+import com.google.protobuf.InvalidProtocolBufferException;
 import java.io.IOException;
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
@@ -49,6 +43,13 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import lombok.Builder;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.NoArgsConstructor;
+import lombok.experimental.FieldNameConstants;
+import org.hibernate.validator.constraints.NotEmpty;
+import org.mongodb.morphia.annotations.Entity;
 
 /**
  * Created by rsingh on 6/23/17.

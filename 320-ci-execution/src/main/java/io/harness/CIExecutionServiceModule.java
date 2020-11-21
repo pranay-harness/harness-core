@@ -1,12 +1,5 @@
 package io.harness;
 
-import com.google.inject.AbstractModule;
-import com.google.inject.Inject;
-import com.google.inject.Provides;
-import com.google.inject.Singleton;
-import com.google.inject.multibindings.MapBinder;
-
-import ci.pipeline.execution.OrchestrationExecutionEventHandlerRegistrar;
 import io.harness.ci.config.CIExecutionServiceConfig;
 import io.harness.core.ci.services.CIBuildService;
 import io.harness.core.ci.services.CIBuildServiceImpl;
@@ -21,6 +14,13 @@ import io.harness.states.CIDelegateTaskExecutor;
 import io.harness.tasks.TaskExecutor;
 import io.harness.tasks.TaskMode;
 import io.harness.waiter.OrchestrationNotifyEventListener;
+
+import ci.pipeline.execution.OrchestrationExecutionEventHandlerRegistrar;
+import com.google.inject.AbstractModule;
+import com.google.inject.Inject;
+import com.google.inject.Provides;
+import com.google.inject.Singleton;
+import com.google.inject.multibindings.MapBinder;
 
 public class CIExecutionServiceModule extends AbstractModule {
   private CIExecutionServiceConfig ciExecutionServiceConfig;

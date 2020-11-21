@@ -1,11 +1,12 @@
 package io.harness.helpers.ext.azure;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
+
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
-import com.google.common.base.Preconditions;
-
 import io.harness.annotations.dev.OwnedBy;
+
+import com.google.common.base.Preconditions;
 import lombok.Value;
 
 @OwnedBy(PL)

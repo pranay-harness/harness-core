@@ -2,11 +2,12 @@ package software.wings.security.authentication.oauth.ProvidersImpl;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
 
+import io.harness.annotations.dev.OwnedBy;
+
 import com.github.scribejava.apis.openid.OpenIdJsonTokenExtractor;
 import com.github.scribejava.core.builder.api.DefaultApi20;
 import com.github.scribejava.core.extractors.TokenExtractor;
 import com.github.scribejava.core.model.OAuth2AccessToken;
-import io.harness.annotations.dev.OwnedBy;
 
 @OwnedBy(PL)
 public class Bitbucket extends DefaultApi20 {

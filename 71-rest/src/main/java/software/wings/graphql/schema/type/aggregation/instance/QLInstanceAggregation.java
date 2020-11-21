@@ -1,9 +1,10 @@
 package software.wings.graphql.schema.type.aggregation.instance;
 
-import lombok.Builder;
-import lombok.Value;
 import software.wings.graphql.schema.type.aggregation.Aggregation;
 import software.wings.graphql.schema.type.aggregation.QLTimeSeriesAggregation;
+
+import lombok.Builder;
+import lombok.Value;
 
 @Value
 @Builder

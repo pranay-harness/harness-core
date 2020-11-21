@@ -2,10 +2,10 @@ package io.harness.beans.steps;
 
 import io.harness.pms.steps.StepType;
 import io.harness.yaml.core.nonyaml.NonYamlInfo;
-import lombok.Builder;
-import lombok.Value;
 
 import javax.validation.constraints.NotNull;
+import lombok.Builder;
+import lombok.Value;
 
 /**
  * Each stepInfo will bind to some step

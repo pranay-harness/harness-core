@@ -1,12 +1,11 @@
 package io.harness.delegate.service;
 
-import com.google.inject.Inject;
-
 import software.wings.delegatetasks.DelegateCVActivityLogService;
 import software.wings.delegatetasks.DelegateLogService;
 import software.wings.verification.CVActivityLog;
 import software.wings.verification.CVActivityLog.LogLevel;
 
+import com.google.inject.Inject;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Arrays;

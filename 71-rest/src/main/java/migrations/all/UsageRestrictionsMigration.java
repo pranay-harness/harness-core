@@ -2,19 +2,14 @@ package migrations.all;
 
 import static io.harness.exception.WingsException.ExecutionContext.MANAGER;
 import static io.harness.persistence.HQuery.excludeAuthority;
-import static java.util.Arrays.asList;
 
-import com.google.common.collect.Sets;
-import com.google.inject.Inject;
+import static java.util.Arrays.asList;
 
 import io.harness.beans.EncryptedData;
 import io.harness.exception.WingsException;
 import io.harness.logging.ExceptionLogger;
 import io.harness.persistence.HIterator;
-import lombok.extern.slf4j.Slf4j;
-import migrations.Migration;
-import org.mongodb.morphia.query.Query;
-import org.mongodb.morphia.query.UpdateOperations;
+
 import software.wings.beans.SettingAttribute;
 import software.wings.dl.WingsPersistence;
 import software.wings.security.EnvFilter;
@@ -25,8 +20,14 @@ import software.wings.security.UsageRestrictions.AppEnvRestriction;
 import software.wings.service.intfc.UsageRestrictionsService;
 import software.wings.settings.SettingVariableTypes;
 
+import com.google.common.collect.Sets;
+import com.google.inject.Inject;
 import java.util.HashSet;
 import java.util.Set;
+import lombok.extern.slf4j.Slf4j;
+import migrations.Migration;
+import org.mongodb.morphia.query.Query;
+import org.mongodb.morphia.query.UpdateOperations;
 
 /**
  * Migration script to transform usage restrictions with no restrictions to all app restrictions for setting attributes,

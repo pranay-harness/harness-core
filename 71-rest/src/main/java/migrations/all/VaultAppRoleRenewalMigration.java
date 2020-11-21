@@ -3,16 +3,17 @@ package migrations.all;
 import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.security.encryption.EncryptionType.VAULT;
 
-import com.google.inject.Inject;
-
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.SecretManagerConfig.SecretManagerConfigKeys;
 import io.harness.persistence.HIterator;
-import lombok.extern.slf4j.Slf4j;
-import migrations.Migration;
+
 import software.wings.beans.VaultConfig;
 import software.wings.beans.VaultConfig.VaultConfigKeys;
 import software.wings.dl.WingsPersistence;
+
+import com.google.inject.Inject;
+import lombok.extern.slf4j.Slf4j;
+import migrations.Migration;
 
 @OwnedBy(PL)
 @Slf4j

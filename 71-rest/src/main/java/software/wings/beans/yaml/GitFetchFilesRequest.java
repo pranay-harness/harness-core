@@ -1,10 +1,9 @@
 package software.wings.beans.yaml;
 
+import java.util.List;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
-
-import java.util.List;
 
 @Data
 @Builder

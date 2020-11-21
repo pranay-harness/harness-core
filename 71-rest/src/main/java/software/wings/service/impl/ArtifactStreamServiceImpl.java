@@ -11,9 +11,7 @@ import static io.harness.exception.WingsException.USER;
 import static io.harness.mongo.MongoUtils.setUnset;
 import static io.harness.persistence.HQuery.excludeAuthority;
 import static io.harness.validation.Validator.notNullCheck;
-import static java.lang.String.format;
-import static java.util.Arrays.asList;
-import static java.util.stream.Collectors.toList;
+
 import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static software.wings.beans.artifact.ArtifactStreamType.ACR;
 import static software.wings.beans.artifact.ArtifactStreamType.AMAZON_S3;
@@ -34,10 +32,9 @@ import static software.wings.beans.artifact.ArtifactStreamType.SMB;
 import static software.wings.common.TemplateConstants.LATEST_TAG;
 import static software.wings.security.PermissionAttribute.PermissionType.ACCOUNT_MANAGEMENT;
 
-import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.Lists;
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
+import static java.lang.String.format;
+import static java.util.Arrays.asList;
+import static java.util.stream.Collectors.toList;
 
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
@@ -56,16 +53,7 @@ import io.harness.queue.QueuePublisher;
 import io.harness.validation.Create;
 import io.harness.validation.PersistenceValidator;
 import io.harness.validation.Update;
-import lombok.Getter;
-import lombok.extern.slf4j.Slf4j;
-import org.hibernate.validator.constraints.NotEmpty;
-import org.mongodb.morphia.annotations.Transient;
-import org.mongodb.morphia.query.FindOptions;
-import org.mongodb.morphia.query.Query;
-import org.mongodb.morphia.query.Sort;
-import org.mongodb.morphia.query.UpdateOperations;
-import org.mongodb.morphia.query.UpdateResults;
-import ru.vyarus.guice.validator.group.annotation.ValidationGroups;
+
 import software.wings.beans.AccountEvent;
 import software.wings.beans.AccountEventType;
 import software.wings.beans.AzureContainerRegistry;
@@ -120,6 +108,10 @@ import software.wings.utils.RepositoryFormat;
 import software.wings.utils.RepositoryType;
 import software.wings.utils.Utils;
 
+import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Lists;
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -133,6 +125,16 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 import javax.validation.executable.ValidateOnExecution;
 import javax.ws.rs.NotFoundException;
+import lombok.Getter;
+import lombok.extern.slf4j.Slf4j;
+import org.hibernate.validator.constraints.NotEmpty;
+import org.mongodb.morphia.annotations.Transient;
+import org.mongodb.morphia.query.FindOptions;
+import org.mongodb.morphia.query.Query;
+import org.mongodb.morphia.query.Sort;
+import org.mongodb.morphia.query.UpdateOperations;
+import org.mongodb.morphia.query.UpdateResults;
+import ru.vyarus.guice.validator.group.annotation.ValidationGroups;
 
 @Singleton
 @ValidateOnExecution
@@ -818,7 +820,7 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
         NexusArtifactStream nexusArtifactStream = (NexusArtifactStream) artifactStream;
         if (nexusArtifactStream.getRepositoryFormat() == null
             || !nexusArtifactStream.getRepositoryFormat().equals(
-                   ((NexusArtifactStream) existingArtifactStream).getRepositoryFormat())) {
+                ((NexusArtifactStream) existingArtifactStream).getRepositoryFormat())) {
           throw new InvalidRequestException("Repository Format cannot be updated", USER);
         }
       }

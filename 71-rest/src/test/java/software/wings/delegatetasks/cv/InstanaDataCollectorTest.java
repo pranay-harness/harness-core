@@ -2,6 +2,7 @@ package software.wings.delegatetasks.cv;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.rule.OwnerRule.KAMAL;
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Matchers.any;
@@ -9,20 +10,11 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 import static org.mockito.MockitoAnnotations.initMocks;
 
-import com.google.common.collect.Lists;
-import com.google.inject.Inject;
-
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.task.DataCollectionExecutorService;
 import io.harness.rule.Owner;
 import io.harness.serializer.JsonUtils;
-import org.apache.commons.lang3.reflect.FieldUtils;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
-import org.mockito.Mock;
-import retrofit2.Call;
-import retrofit2.Response;
+
 import software.wings.WingsBaseTest;
 import software.wings.beans.InstanaConfig;
 import software.wings.delegatetasks.DelegateCVActivityLogService;
@@ -33,6 +25,8 @@ import software.wings.service.impl.instana.InstanaDataCollectionInfo;
 import software.wings.service.impl.instana.InstanaInfraMetrics;
 import software.wings.service.intfc.instana.InstanaDelegateService;
 
+import com.google.common.collect.Lists;
+import com.google.inject.Inject;
 import java.io.IOException;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
@@ -41,6 +35,13 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.UUID;
+import org.apache.commons.lang3.reflect.FieldUtils;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
+import org.mockito.Mock;
+import retrofit2.Call;
+import retrofit2.Response;
 
 public class InstanaDataCollectorTest extends WingsBaseTest {
   private InstanaConfig config;

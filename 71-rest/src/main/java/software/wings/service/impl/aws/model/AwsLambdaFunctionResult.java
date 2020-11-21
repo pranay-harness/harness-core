@@ -1,8 +1,9 @@
 package software.wings.service.impl.aws.model;
 
+import software.wings.api.AwsLambdaContextElement.FunctionMeta;
+
 import lombok.Builder;
 import lombok.Data;
-import software.wings.api.AwsLambdaContextElement.FunctionMeta;
 
 @Data
 @Builder

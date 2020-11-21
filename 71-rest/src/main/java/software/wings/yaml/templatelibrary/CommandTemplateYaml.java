@@ -2,16 +2,16 @@ package software.wings.yaml.templatelibrary;
 
 import static software.wings.common.TemplateConstants.SSH;
 
+import software.wings.beans.command.AbstractCommandUnit;
+
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.fasterxml.jackson.annotation.JsonTypeName;
+import java.util.ArrayList;
+import java.util.List;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
-import software.wings.beans.command.AbstractCommandUnit;
-
-import java.util.ArrayList;
-import java.util.List;
 
 @Data
 @NoArgsConstructor

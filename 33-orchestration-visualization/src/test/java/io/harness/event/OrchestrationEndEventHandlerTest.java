@@ -3,11 +3,9 @@ package io.harness.event;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.execution.events.OrchestrationEventType.ORCHESTRATION_END;
 import static io.harness.rule.OwnerRule.ALEXEI;
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-
-import com.google.common.collect.Lists;
-import com.google.inject.Inject;
 
 import io.harness.OrchestrationVisualizationTestBase;
 import io.harness.ambiance.Ambiance;
@@ -22,12 +20,14 @@ import io.harness.pms.execution.Status;
 import io.harness.rule.Owner;
 import io.harness.service.GraphGenerationService;
 import io.harness.testlib.RealMongo;
+
+import com.google.common.collect.Lists;
+import com.google.inject.Inject;
+import java.time.Duration;
+import java.util.concurrent.TimeUnit;
 import org.awaitility.Awaitility;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
-
-import java.time.Duration;
-import java.util.concurrent.TimeUnit;
 
 /**
  * Test class for {@link OrchestrationEndEventHandler}

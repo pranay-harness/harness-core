@@ -1,8 +1,9 @@
 package io.harness.springdata;
 
+import io.harness.exception.ExceptionUtils;
+
 import com.mongodb.MongoSocketOpenException;
 import com.mongodb.MongoSocketReadException;
-import io.harness.exception.ExceptionUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.OptimisticLockingFailureException;
 import org.springframework.data.mongodb.MongoDbFactory;
@@ -40,7 +41,9 @@ public class HMongoTemplate extends MongoTemplate {
     return retry(() -> findAndModify(query, update, options, entityClass, getCollectionName(entityClass)));
   }
 
-  public interface Executor<R> { R execute(); }
+  public interface Executor<R> {
+    R execute();
+  }
 
   public static <R> R retry(Executor<R> executor) {
     for (int i = 1; i < RETRIES; ++i) {

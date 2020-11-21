@@ -1,11 +1,11 @@
 package software.wings.helpers.ext.openshift;
 
-import org.hibernate.validator.constraints.NotEmpty;
 import software.wings.beans.command.ExecutionLogCallback;
 import software.wings.helpers.ext.cli.CliResponse;
 
 import java.util.List;
 import javax.annotation.Nonnull;
+import org.hibernate.validator.constraints.NotEmpty;
 
 public interface OpenShiftClient {
   @Nonnull

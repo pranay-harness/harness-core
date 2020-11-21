@@ -4,11 +4,6 @@ import static software.wings.security.PermissionAttribute.Action.UPDATE;
 import static software.wings.security.PermissionAttribute.PermissionType.ENV;
 import static software.wings.security.PermissionAttribute.PermissionType.SERVICE;
 
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
-
-import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.StringUtils;
 import software.wings.beans.ConfigFile;
 import software.wings.beans.ServiceTemplate;
 import software.wings.beans.User;
@@ -19,8 +14,12 @@ import software.wings.security.UserThreadLocal;
 import software.wings.service.intfc.AuthService;
 import software.wings.service.intfc.ServiceTemplateService;
 
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import java.util.Collections;
 import java.util.List;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 
 /**
  * Created by ujjawal
@@ -59,7 +58,9 @@ public class ConfigFileAuthHandler {
         authorizeEnvironmentTypeConfigFile(configFile);
         break;
       }
-      default: { break; }
+      default: {
+        break;
+      }
     }
   }
 

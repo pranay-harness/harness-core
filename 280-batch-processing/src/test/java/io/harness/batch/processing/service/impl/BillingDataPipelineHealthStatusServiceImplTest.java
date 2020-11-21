@@ -1,13 +1,12 @@
 package io.harness.batch.processing.service.impl;
 
 import static io.harness.rule.OwnerRule.ROHIT;
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-
-import com.google.cloud.bigquery.datatransfer.v1.TransferState;
 
 import io.harness.CategoryTest;
 import io.harness.batch.processing.dao.intfc.BatchJobScheduledDataDao;
@@ -15,6 +14,10 @@ import io.harness.batch.processing.dao.intfc.BillingDataPipelineRecordDao;
 import io.harness.category.element.UnitTests;
 import io.harness.ccm.billing.entities.BillingDataPipelineRecord;
 import io.harness.rule.Owner;
+
+import com.google.cloud.bigquery.datatransfer.v1.TransferState;
+import java.util.Collections;
+import java.util.HashMap;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -22,9 +25,6 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
-
-import java.util.Collections;
-import java.util.HashMap;
 
 public class BillingDataPipelineHealthStatusServiceImplTest extends CategoryTest {
   @InjectMocks BillingDataPipelineHealthStatusServiceImpl billingDataPipelineHealthStatusService;

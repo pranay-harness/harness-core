@@ -1,7 +1,6 @@
 package io.harness.ccm.views.service;
 
 import com.google.cloud.bigquery.BigQuery;
-
 import java.util.Map;
 
 public interface CEReportTemplateBuilderService {

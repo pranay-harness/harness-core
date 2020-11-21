@@ -2,9 +2,6 @@ package software.wings.service.impl;
 
 import static software.wings.beans.FeatureName.DISABLE_DELEGATE_SELECTION_LOG;
 
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
-
 import io.harness.beans.DelegateTask;
 import io.harness.delegate.beans.DelegateProfile;
 import io.harness.delegate.beans.DelegateSelectionLogParams;
@@ -12,7 +9,7 @@ import io.harness.selection.log.BatchDelegateSelectionLog;
 import io.harness.selection.log.DelegateSelectionLog;
 import io.harness.selection.log.DelegateSelectionLog.DelegateSelectionLogBuilder;
 import io.harness.selection.log.DelegateSelectionLog.DelegateSelectionLogKeys;
-import lombok.extern.slf4j.Slf4j;
+
 import software.wings.beans.Delegate;
 import software.wings.beans.DelegateScope;
 import software.wings.dl.WingsPersistence;
@@ -20,6 +17,8 @@ import software.wings.service.intfc.DelegateSelectionLogsService;
 import software.wings.service.intfc.DelegateService;
 import software.wings.service.intfc.FeatureFlagService;
 
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
@@ -28,6 +27,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
+import lombok.extern.slf4j.Slf4j;
 
 @Singleton
 @Slf4j

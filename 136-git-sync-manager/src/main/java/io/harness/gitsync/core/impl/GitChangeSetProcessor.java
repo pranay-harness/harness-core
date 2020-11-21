@@ -6,15 +6,11 @@ import static io.harness.git.Constants.GIT_YAML_LOG_PREFIX;
 import static io.harness.gitsync.gitfileactivity.beans.GitFileActivity.Status.SKIPPED;
 import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
 import static io.harness.manage.GlobalContextManager.ensureGlobalContextGuard;
+
 import static java.lang.Boolean.FALSE;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static java.util.function.Function.identity;
 import static java.util.stream.Collectors.toList;
-
-import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Stopwatch;
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
 
 import io.harness.delegate.beans.git.YamlGitConfigDTO;
 import io.harness.git.model.DiffResult;
@@ -32,16 +28,20 @@ import io.harness.gitsync.gitfileactivity.service.GitSyncService;
 import io.harness.logging.AccountLogContext;
 import io.harness.manage.GlobalContextManager.GlobalContextGuard;
 import io.harness.mongo.ProcessTimeLogContext;
-import lombok.AllArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.collections4.MapUtils;
 
+import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Stopwatch;
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
+import lombok.AllArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.collections4.MapUtils;
 
 @Singleton
 @AllArgsConstructor(onConstructor = @__({ @Inject }))

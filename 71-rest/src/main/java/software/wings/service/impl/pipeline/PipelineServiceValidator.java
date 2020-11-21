@@ -7,17 +7,16 @@ import static io.harness.exception.WingsException.USER;
 import static io.harness.expression.ExpressionEvaluator.matchesVariablePattern;
 import static io.harness.interrupts.RepairActionCode.isPipelineRuntimeTimeoutAction;
 import static io.harness.validation.Validator.nullCheckForInvalidRequest;
-import static java.lang.String.format;
+
 import static software.wings.sm.StateType.APPROVAL;
 
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
+import static java.lang.String.format;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.exception.ExplanationException;
 import io.harness.exception.HintException;
 import io.harness.exception.InvalidRequestException;
-import org.jetbrains.annotations.NotNull;
+
 import software.wings.beans.EntityType;
 import software.wings.beans.Pipeline;
 import software.wings.beans.PipelineStage;
@@ -27,9 +26,12 @@ import software.wings.beans.Variable;
 import software.wings.service.intfc.UserGroupService;
 import software.wings.sm.states.ApprovalState;
 
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import org.jetbrains.annotations.NotNull;
 
 @OwnedBy(CDC)
 @Singleton

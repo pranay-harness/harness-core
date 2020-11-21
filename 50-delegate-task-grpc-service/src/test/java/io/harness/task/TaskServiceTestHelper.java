@@ -1,9 +1,5 @@
 package io.harness.task;
 
-import com.google.inject.Inject;
-import com.google.protobuf.ByteString;
-
-import com.esotericsoftware.kryo.Kryo;
 import io.harness.delegate.TaskResponseData;
 import io.harness.delegate.beans.DelegateStringResponseData;
 import io.harness.delegate.task.stepstatus.StepStatusTaskResponseData;
@@ -16,10 +12,13 @@ import io.harness.task.service.JiraTaskResponse;
 import io.harness.task.service.TaskStatusData;
 import io.harness.task.service.TaskType;
 import io.harness.tasks.ResponseData;
+
+import com.esotericsoftware.kryo.Kryo;
+import com.google.inject.Inject;
+import com.google.protobuf.ByteString;
+import java.time.Duration;
 import lombok.Builder;
 import lombok.Data;
-
-import java.time.Duration;
 
 public class TaskServiceTestHelper {
   public static final String JIRA_ISSUE_KEY = "issueKey";

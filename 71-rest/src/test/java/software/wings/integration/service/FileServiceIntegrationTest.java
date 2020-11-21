@@ -3,32 +3,34 @@ package software.wings.integration.service;
 import static io.harness.rule.OwnerRule.GEORGE;
 import static io.harness.rule.OwnerRule.RAGHU;
 import static io.harness.rule.OwnerRule.UTKARSH;
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
+
 import static software.wings.utils.WingsTestConstants.FILE_ID;
 
-import com.google.common.io.Files;
-import com.google.inject.Inject;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 
 import io.harness.beans.FileMetadata;
 import io.harness.category.element.DeprecatedIntegrationTests;
 import io.harness.data.structure.UUIDGenerator;
 import io.harness.delegate.service.DelegateAgentFileService.FileBucket;
 import io.harness.rule.Owner;
+
+import software.wings.WingsBaseTest;
+import software.wings.beans.BaseFile;
+import software.wings.rules.Integration;
+import software.wings.service.intfc.FileService;
+
+import com.google.common.io.Files;
+import com.google.inject.Inject;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.junit.rules.TemporaryFolder;
-import software.wings.WingsBaseTest;
-import software.wings.beans.BaseFile;
-import software.wings.rules.Integration;
-import software.wings.service.intfc.FileService;
-
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.IOException;
 
 @Integration
 public class FileServiceIntegrationTest extends WingsBaseTest {

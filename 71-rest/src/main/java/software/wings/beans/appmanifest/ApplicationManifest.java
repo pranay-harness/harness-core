@@ -5,6 +5,13 @@ import io.harness.mongo.index.FdIndex;
 import io.harness.mongo.index.Field;
 import io.harness.mongo.index.NgUniqueIndex;
 import io.harness.persistence.AccountAccess;
+
+import software.wings.beans.Base;
+import software.wings.beans.GitFileConfig;
+import software.wings.beans.HelmChartConfig;
+import software.wings.helpers.ext.kustomize.KustomizeConfig;
+import software.wings.yaml.BaseEntityYaml;
+
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -13,11 +20,6 @@ import lombok.NonNull;
 import lombok.experimental.FieldNameConstants;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Transient;
-import software.wings.beans.Base;
-import software.wings.beans.GitFileConfig;
-import software.wings.beans.HelmChartConfig;
-import software.wings.helpers.ext.kustomize.KustomizeConfig;
-import software.wings.yaml.BaseEntityYaml;
 
 @NgUniqueIndex(
     name = "appManifestIdx", fields = { @Field("appId")

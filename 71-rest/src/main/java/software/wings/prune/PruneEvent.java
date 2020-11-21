@@ -2,13 +2,13 @@ package software.wings.prune;
 
 import io.harness.annotation.HarnessEntity;
 import io.harness.queue.Queuable;
-import lombok.EqualsAndHashCode;
-import lombok.Value;
-import org.mongodb.morphia.annotations.Entity;
 
 import java.time.Duration;
 import java.time.OffsetDateTime;
 import java.util.Date;
+import lombok.EqualsAndHashCode;
+import lombok.Value;
+import org.mongodb.morphia.annotations.Entity;
 
 @Value
 @EqualsAndHashCode(callSuper = true)

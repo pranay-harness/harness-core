@@ -3,10 +3,10 @@ package software.wings.beans.alert;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 
 import io.harness.alert.AlertData;
-import lombok.AllArgsConstructor;
-import lombok.Value;
 
 import javax.validation.constraints.NotNull;
+import lombok.AllArgsConstructor;
+import lombok.Value;
 
 /**
  * When an account is close to it's usage limit, these alerts are triggered.

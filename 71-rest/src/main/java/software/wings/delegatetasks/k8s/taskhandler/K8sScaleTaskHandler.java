@@ -12,15 +12,14 @@ import static io.harness.logging.CommandExecutionStatus.SUCCESS;
 import static io.harness.logging.LogLevel.ERROR;
 import static io.harness.logging.LogLevel.INFO;
 import static io.harness.validation.Validator.nullCheckForInvalidRequest;
-import static java.lang.String.format;
-import static org.apache.commons.lang3.StringUtils.isBlank;
+
 import static software.wings.beans.LogColor.Cyan;
 import static software.wings.beans.LogColor.White;
 import static software.wings.beans.LogHelper.color;
 import static software.wings.beans.LogWeight.Bold;
 
-import com.google.common.annotations.VisibleForTesting;
-import com.google.inject.Inject;
+import static java.lang.String.format;
+import static org.apache.commons.lang3.StringUtils.isBlank;
 
 import io.harness.delegate.task.k8s.K8sTaskHelperBase;
 import io.harness.exception.ExceptionUtils;
@@ -32,10 +31,7 @@ import io.harness.k8s.model.K8sPod;
 import io.harness.k8s.model.KubernetesConfig;
 import io.harness.k8s.model.KubernetesResourceId;
 import io.harness.logging.CommandExecutionStatus;
-import lombok.NoArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.StringUtils;
-import org.apache.commons.lang3.tuple.Pair;
+
 import software.wings.beans.command.ExecutionLogCallback;
 import software.wings.delegatetasks.k8s.K8sTaskHelper;
 import software.wings.helpers.ext.container.ContainerDeploymentDelegateHelper;
@@ -44,10 +40,16 @@ import software.wings.helpers.ext.k8s.request.K8sTaskParameters;
 import software.wings.helpers.ext.k8s.response.K8sScaleResponse;
 import software.wings.helpers.ext.k8s.response.K8sTaskExecutionResponse;
 
+import com.google.common.annotations.VisibleForTesting;
+import com.google.inject.Inject;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
+import lombok.NoArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.tuple.Pair;
 
 @NoArgsConstructor
 @Slf4j
@@ -92,9 +94,9 @@ public class K8sScaleTaskHandler extends K8sTaskHandler {
     long steadyStateTimeoutInMillis = getTimeoutMillisFromMinutes(k8sScaleTaskParameters.getTimeoutIntervalInMin());
     List<K8sPod> beforePodList = isDeprecateFabric8Enabled
         ? k8sTaskHelperBase.getPodDetails(kubernetesConfig, resourceIdToScale.getNamespace(),
-              k8sScaleTaskParameters.getReleaseName(), steadyStateTimeoutInMillis)
+            k8sScaleTaskParameters.getReleaseName(), steadyStateTimeoutInMillis)
         : k8sTaskHelperBase.getPodDetailsFabric8(kubernetesConfig, resourceIdToScale.getNamespace(),
-              k8sScaleTaskParameters.getReleaseName(), steadyStateTimeoutInMillis);
+            k8sScaleTaskParameters.getReleaseName(), steadyStateTimeoutInMillis);
 
     success = k8sTaskHelperBase.scale(client, k8sDelegateTaskParams, resourceIdToScale, targetReplicaCount,
         new ExecutionLogCallback(delegateLogService, k8sScaleTaskParameters.getAccountId(),
@@ -116,9 +118,9 @@ public class K8sScaleTaskHandler extends K8sTaskHandler {
 
     List<K8sPod> afterPodList = isDeprecateFabric8Enabled
         ? k8sTaskHelperBase.getPodDetails(kubernetesConfig, resourceIdToScale.getNamespace(),
-              k8sScaleTaskParameters.getReleaseName(), steadyStateTimeoutInMillis)
+            k8sScaleTaskParameters.getReleaseName(), steadyStateTimeoutInMillis)
         : k8sTaskHelperBase.getPodDetailsFabric8(kubernetesConfig, resourceIdToScale.getNamespace(),
-              k8sScaleTaskParameters.getReleaseName(), steadyStateTimeoutInMillis);
+            k8sScaleTaskParameters.getReleaseName(), steadyStateTimeoutInMillis);
 
     k8sScaleResponse.setK8sPodList(tagNewPods(beforePodList, afterPodList));
     return k8sTaskHelper.getK8sTaskExecutionResponse(k8sScaleResponse, CommandExecutionStatus.SUCCESS);

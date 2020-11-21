@@ -2,6 +2,7 @@ package io.harness.ng.core.service.mappers;
 
 import static io.harness.rule.OwnerRule.ARCHIT;
 import static io.harness.rule.OwnerRule.NAMAN;
+
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.CategoryTest;
@@ -9,17 +10,17 @@ import io.harness.category.element.UnitTests;
 import io.harness.ng.core.service.entity.ServiceEntity;
 import io.harness.ng.core.service.entity.ServiceEntity.ServiceEntityKeys;
 import io.harness.rule.Owner;
+
+import java.beans.PropertyDescriptor;
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.Set;
 import org.bson.Document;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.springframework.beans.BeanUtils;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Update;
-
-import java.beans.PropertyDescriptor;
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.Set;
 
 public class ServiceFilterHelperTest extends CategoryTest {
   @Test

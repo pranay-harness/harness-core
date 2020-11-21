@@ -1,26 +1,27 @@
 package migrations.all;
 
 import static io.harness.rule.OwnerRule.ABOSII;
+
 import static migrations.all.CleanUpDirectK8sInfraMappingEncryptedFieldsMigration.ENCRYPTED_FIELDS;
 import static org.assertj.core.api.Assertions.assertThat;
 
-import com.google.inject.Inject;
-
-import com.mongodb.BasicDBList;
-import com.mongodb.BasicDBObject;
-import com.mongodb.DBObject;
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
+
 import software.wings.WingsBaseTest;
 import software.wings.beans.DirectKubernetesInfrastructureMapping;
 import software.wings.dl.WingsPersistence;
 
+import com.google.inject.Inject;
+import com.mongodb.BasicDBList;
+import com.mongodb.BasicDBObject;
+import com.mongodb.DBObject;
 import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 public class CleanUpDirectK8sInfraMappingEncryptedFieldsMigrationTest extends WingsBaseTest {
   private static final int GENERATED_ENTITIES_COUNT = 10;

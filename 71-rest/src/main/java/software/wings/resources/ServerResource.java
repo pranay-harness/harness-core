@@ -1,11 +1,12 @@
 package software.wings.resources;
 
-import com.codahale.metrics.annotation.ExceptionMetered;
-import com.codahale.metrics.annotation.Timed;
 import io.harness.rest.RestResponse;
-import io.swagger.annotations.Api;
+
 import software.wings.beans.ServerInfo;
 
+import com.codahale.metrics.annotation.ExceptionMetered;
+import com.codahale.metrics.annotation.Timed;
+import io.swagger.annotations.Api;
 import java.time.ZoneId;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;

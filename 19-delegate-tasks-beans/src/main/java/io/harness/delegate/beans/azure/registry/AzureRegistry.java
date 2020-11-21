@@ -4,6 +4,7 @@ import static io.harness.azure.model.AzureConstants.DOCKER_REGISTRY_SERVER_SECRE
 import static io.harness.azure.model.AzureConstants.DOCKER_REGISTRY_SERVER_URL_PROPERTY_NAME;
 import static io.harness.azure.model.AzureConstants.DOCKER_REGISTRY_SERVER_USERNAME_PROPERTY_NAME;
 import static io.harness.azure.model.AzureConstants.DOCKER_REGISTRY_URL_BLANK_VALIDATION_MSG;
+
 import static org.apache.commons.lang3.StringUtils.isBlank;
 
 import io.harness.azure.model.AzureAppServiceDockerSetting;

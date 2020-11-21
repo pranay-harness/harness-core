@@ -1,13 +1,12 @@
 package software.wings.resources.graphql;
 
-import com.google.inject.Inject;
+import software.wings.graphql.utils.GraphQLConstants;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.inject.Inject;
 import graphql.ExecutionResultImpl;
 import graphql.GraphqlErrorBuilder;
-import software.wings.graphql.utils.GraphQLConstants;
-
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;

@@ -3,14 +3,16 @@ package software.wings.security.authentication;
 import static io.harness.annotations.dev.HarnessTeam.PL;
 
 import io.harness.annotations.dev.OwnedBy;
+
+import software.wings.beans.User;
+import software.wings.security.authentication.oauth.OauthClient;
+import software.wings.security.authentication.oauth.OauthUserInfo;
+
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.experimental.FieldDefaults;
-import software.wings.beans.User;
-import software.wings.security.authentication.oauth.OauthClient;
-import software.wings.security.authentication.oauth.OauthUserInfo;
 
 @OwnedBy(PL)
 @FieldDefaults(level = AccessLevel.PRIVATE)

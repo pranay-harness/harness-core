@@ -1,6 +1,7 @@
 package io.harness.connector.mappers.artifactorymapper;
 
 import static io.harness.encryption.Scope.ACCOUNT;
+
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.CategoryTest;
@@ -14,6 +15,7 @@ import io.harness.delegate.beans.connector.artifactoryconnector.ArtifactoryConne
 import io.harness.delegate.beans.connector.artifactoryconnector.ArtifactoryUsernamePasswordAuthDTO;
 import io.harness.rule.Owner;
 import io.harness.rule.OwnerRule;
+
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;

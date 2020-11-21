@@ -5,16 +5,20 @@ import static io.harness.NGCommonEntityConstants.PROJECT_KEY;
 import static io.harness.NGConstants.DEFAULT_ORG_IDENTIFIER;
 import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.rule.OwnerRule.KARAN;
+
 import static java.util.Collections.singletonList;
 import static junit.framework.TestCase.assertEquals;
 import static junit.framework.TestCase.assertNull;
 
-import com.google.inject.Inject;
-import com.google.inject.Module;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
 import io.harness.rule.InjectorRuleMixin;
 import io.harness.rule.Owner;
+
+import com.google.inject.Inject;
+import com.google.inject.Module;
+import java.lang.annotation.Annotation;
+import java.util.List;
 import org.apache.commons.lang3.tuple.Pair;
 import org.junit.Rule;
 import org.junit.Test;
@@ -22,9 +26,6 @@ import org.junit.experimental.categories.Category;
 import org.junit.rules.MethodRule;
 import org.junit.runners.model.FrameworkMethod;
 import org.junit.runners.model.Statement;
-
-import java.lang.annotation.Annotation;
-import java.util.List;
 
 @OwnedBy(PL)
 public class DefaultOrganizationInterceptorTest {

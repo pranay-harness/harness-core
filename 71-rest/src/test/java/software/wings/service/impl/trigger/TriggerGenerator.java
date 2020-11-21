@@ -6,6 +6,7 @@ import static software.wings.utils.WingsTestConstants.ARTIFACT_STREAM_ID;
 import static software.wings.utils.WingsTestConstants.WORKFLOW_ID;
 
 import io.harness.beans.WorkflowType;
+
 import software.wings.beans.trigger.ArtifactTriggerCondition;
 import software.wings.beans.trigger.Trigger;
 import software.wings.beans.trigger.Trigger.TriggerBuilder;

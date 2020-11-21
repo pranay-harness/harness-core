@@ -8,6 +8,9 @@ import io.harness.NGResourceFilterConstants;
 import io.harness.ng.beans.PageResponse;
 import io.harness.ng.core.dto.ProjectDTO;
 import io.harness.ng.core.dto.ResponseDTO;
+
+import java.util.List;
+import java.util.Optional;
 import retrofit2.Call;
 import retrofit2.http.Body;
 import retrofit2.http.DELETE;
@@ -17,9 +20,6 @@ import retrofit2.http.POST;
 import retrofit2.http.PUT;
 import retrofit2.http.Path;
 import retrofit2.http.Query;
-
-import java.util.List;
-import java.util.Optional;
 
 public interface ProjectManagerClient {
   String PROJECTS_API = "projects";

@@ -1,16 +1,16 @@
 package io.harness.ngpipeline.inputset.beans.yaml;
 
-import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
-import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import io.harness.ngpipeline.inputset.beans.yaml.serializer.InputSetConfigSerializer;
 import io.harness.ngpipeline.inputset.deserialiser.InputSetDeserializer;
 import io.harness.ngpipeline.pipeline.beans.yaml.NgPipeline;
 import io.harness.yaml.core.intfc.BaseInputSetConfig;
+
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import java.util.Map;
+import javax.validation.constraints.NotNull;
 import lombok.Builder;
 import lombok.Data;
-
-import javax.validation.constraints.NotNull;
-import java.util.Map;
 
 @Data
 @Builder

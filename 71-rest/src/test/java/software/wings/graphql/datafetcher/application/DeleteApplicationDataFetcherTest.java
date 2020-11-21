@@ -2,17 +2,27 @@ package software.wings.graphql.datafetcher.application;
 
 import static io.harness.rule.OwnerRule.HINGER;
 import static io.harness.rule.OwnerRule.ROHIT_KUMAR;
+
+import static software.wings.security.PermissionAttribute.PermissionType.MANAGE_APPLICATIONS;
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
-import static software.wings.security.PermissionAttribute.PermissionType.MANAGE_APPLICATIONS;
 
-import graphql.schema.DataFetchingEnvironment;
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
+
+import software.wings.graphql.datafetcher.MutationContext;
+import software.wings.graphql.schema.mutation.application.input.QLUpdateApplicationInput;
+import software.wings.graphql.schema.mutation.application.payload.QLDeleteApplicationPayload;
+import software.wings.security.annotations.AuthRule;
+import software.wings.service.intfc.AppService;
+
+import graphql.schema.DataFetchingEnvironment;
+import java.lang.reflect.Method;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -21,13 +31,6 @@ import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
 import org.mockito.Spy;
-import software.wings.graphql.datafetcher.MutationContext;
-import software.wings.graphql.schema.mutation.application.input.QLUpdateApplicationInput;
-import software.wings.graphql.schema.mutation.application.payload.QLDeleteApplicationPayload;
-import software.wings.security.annotations.AuthRule;
-import software.wings.service.intfc.AppService;
-
-import java.lang.reflect.Method;
 
 public class DeleteApplicationDataFetcherTest extends CategoryTest {
   @Mock AppService appService;

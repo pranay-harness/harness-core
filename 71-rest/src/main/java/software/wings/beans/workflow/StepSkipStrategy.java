@@ -8,12 +8,7 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.InvalidRequestException;
 import io.harness.yaml.BaseYaml;
-import lombok.Builder;
-import lombok.Data;
-import lombok.EqualsAndHashCode;
-import lombok.NoArgsConstructor;
-import org.codehaus.jackson.annotate.JsonIgnore;
-import org.mongodb.morphia.annotations.Transient;
+
 import software.wings.beans.PhaseStep;
 
 import java.util.ArrayList;
@@ -22,6 +17,12 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import javax.validation.constraints.NotNull;
+import lombok.Builder;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.NoArgsConstructor;
+import org.codehaus.jackson.annotate.JsonIgnore;
+import org.mongodb.morphia.annotations.Transient;
 
 @OwnedBy(CDC)
 @Data

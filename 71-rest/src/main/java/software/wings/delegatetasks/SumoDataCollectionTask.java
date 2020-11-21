@@ -1,18 +1,14 @@
 package software.wings.delegatetasks;
 
 import static io.harness.threading.Morpheus.sleep;
+
 import static software.wings.common.VerificationConstants.DATA_COLLECTION_RETRY_SLEEP;
 
-import com.google.inject.Inject;
-
-import com.sumologic.client.SumoLogicClient;
 import io.harness.delegate.beans.DelegateTaskPackage;
 import io.harness.delegate.beans.DelegateTaskResponse;
 import io.harness.delegate.beans.logstreaming.ILogStreamingTaskClient;
 import io.harness.delegate.task.TaskParameters;
-import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.exception.ExceptionUtils;
-import org.slf4j.Logger;
+
 import software.wings.beans.TaskType;
 import software.wings.service.impl.ThirdPartyApiCallLog;
 import software.wings.service.impl.analysis.DataCollectionTaskResult;
@@ -22,12 +18,17 @@ import software.wings.service.impl.sumo.SumoDataCollectionInfo;
 import software.wings.service.impl.sumo.SumoDelegateServiceImpl;
 import software.wings.sm.StateType;
 
+import com.google.inject.Inject;
+import com.sumologic.client.SumoLogicClient;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CancellationException;
 import java.util.concurrent.TimeUnit;
 import java.util.function.BooleanSupplier;
 import java.util.function.Consumer;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.exception.ExceptionUtils;
+import org.slf4j.Logger;
 
 /**
  * Created by sriram_parthasarathy on 9/12/17.

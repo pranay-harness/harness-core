@@ -1,21 +1,26 @@
 package io.harness.commandlibrary.client;
 
-import static com.fasterxml.jackson.databind.DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES;
 import static io.harness.commandlibrary.common.CommandLibraryConstants.MANAGER_CLIENT_ID;
 
-import com.google.common.annotations.VisibleForTesting;
-import com.google.inject.Inject;
-import com.google.inject.Provider;
+import static com.fasterxml.jackson.databind.DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.datatype.guava.GuavaModule;
-import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
-import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import io.harness.exception.GeneralException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.network.Http;
 import io.harness.security.ServiceTokenGenerator;
 import io.harness.serializer.JsonSubtypeResolver;
+
+import software.wings.app.MainConfiguration;
+import software.wings.jersey.JsonViews;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.datatype.guava.GuavaModule;
+import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+import com.google.common.annotations.VisibleForTesting;
+import com.google.inject.Inject;
+import com.google.inject.Provider;
+import java.util.function.Supplier;
 import lombok.extern.slf4j.Slf4j;
 import okhttp3.ConnectionPool;
 import okhttp3.Interceptor;
@@ -25,10 +30,6 @@ import org.apache.commons.lang3.StringUtils;
 import org.jetbrains.annotations.NotNull;
 import retrofit2.Retrofit;
 import retrofit2.converter.jackson.JacksonConverterFactory;
-import software.wings.app.MainConfiguration;
-import software.wings.jersey.JsonViews;
-
-import java.util.function.Supplier;
 
 @Slf4j
 public class CommandLibraryServiceHttpClientFactory implements Provider<CommandLibraryServiceHttpClient> {
@@ -87,7 +88,7 @@ public class CommandLibraryServiceHttpClientFactory implements Provider<CommandL
 
   @NotNull
   private Interceptor getAuthorizationInterceptor() {
-    final Supplier<String> secretKeyForManageSupplier = this ::getServiceSecretForManager;
+    final Supplier<String> secretKeyForManageSupplier = this::getServiceSecretForManager;
     return chain -> {
       String token = tokenGenerator.getServiceToken(secretKeyForManageSupplier.get());
       Request request = chain.request();

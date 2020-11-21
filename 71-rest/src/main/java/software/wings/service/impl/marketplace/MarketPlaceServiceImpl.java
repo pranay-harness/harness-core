@@ -2,17 +2,17 @@ package software.wings.service.impl.marketplace;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
 
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
-
 import io.harness.annotations.dev.OwnedBy;
-import lombok.extern.slf4j.Slf4j;
+
 import software.wings.beans.MarketPlace;
 import software.wings.beans.marketplace.MarketPlaceType;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.marketplace.MarketPlaceService;
 
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import java.util.Optional;
+import lombok.extern.slf4j.Slf4j;
 
 @OwnedBy(PL)
 @Singleton

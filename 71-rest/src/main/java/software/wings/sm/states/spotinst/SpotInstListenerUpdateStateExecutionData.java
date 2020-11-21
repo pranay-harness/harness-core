@@ -1,16 +1,12 @@
 package software.wings.sm.states.spotinst;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
+
 import static java.util.stream.Collectors.toList;
 
 import io.harness.delegate.beans.DelegateTaskNotifyResponseData;
 import io.harness.delegate.task.aws.LoadBalancerDetailsForBGDeployment;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.EqualsAndHashCode;
-import lombok.NoArgsConstructor;
-import org.apache.commons.lang3.StringUtils;
+
 import software.wings.api.ExecutionDataValue;
 import software.wings.service.impl.spotinst.SpotInstCommandRequest;
 import software.wings.sm.StateExecutionData;
@@ -18,6 +14,12 @@ import software.wings.sm.StateExecutionData;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.NoArgsConstructor;
+import org.apache.commons.lang3.StringUtils;
 
 @Data
 @Builder

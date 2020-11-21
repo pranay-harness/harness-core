@@ -2,12 +2,14 @@ package io.harness.metrics;
 
 import static io.harness.metrics.HarnessMetricRegistry.getAbsoluteMetricName;
 import static io.harness.rule.OwnerRule.PRANJAL;
+
 import static org.assertj.core.api.Assertions.assertThat;
 
-import com.codahale.metrics.MetricRegistry;
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
+
+import com.codahale.metrics.MetricRegistry;
 import io.prometheus.client.CollectorRegistry;
 import io.prometheus.client.Gauge;
 import org.junit.Before;

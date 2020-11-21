@@ -1,17 +1,18 @@
 package io.harness.walktree.registries.visitorfield;
 
 import static io.harness.rule.OwnerRule.ARCHIT;
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-
-import com.google.inject.Inject;
-import com.google.inject.Injector;
 
 import io.harness.WalkTreeTestBase;
 import io.harness.category.element.UnitTests;
 import io.harness.registries.exceptions.DuplicateRegistryException;
 import io.harness.registries.exceptions.UnregisteredKeyAccessException;
 import io.harness.rule.Owner;
+
+import com.google.inject.Inject;
+import com.google.inject.Injector;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 

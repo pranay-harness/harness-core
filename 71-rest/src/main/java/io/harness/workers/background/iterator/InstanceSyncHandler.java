@@ -2,11 +2,11 @@ package io.harness.workers.background.iterator;
 
 import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
 import static io.harness.mongo.iterator.MongoPersistenceIterator.SchedulingType.REGULAR;
-import static java.time.Duration.ofMinutes;
-import static java.time.Duration.ofSeconds;
+
 import static software.wings.service.impl.instance.InstanceSyncFlow.ITERATOR;
 
-import com.google.inject.Inject;
+import static java.time.Duration.ofMinutes;
+import static java.time.Duration.ofSeconds;
 
 import io.harness.iterator.PersistenceIteratorFactory;
 import io.harness.iterator.PersistenceIteratorFactory.PumpExecutorOptions;
@@ -17,12 +17,15 @@ import io.harness.mongo.iterator.MongoPersistenceIterator.Handler;
 import io.harness.mongo.iterator.filter.MorphiaFilterExpander;
 import io.harness.mongo.iterator.provider.MorphiaPersistenceProvider;
 import io.harness.workers.background.AccountStatusBasedEntityProcessController;
-import lombok.extern.slf4j.Slf4j;
+
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.InfrastructureMapping.InfrastructureMappingKeys;
 import software.wings.service.impl.InfraMappingLogContext;
 import software.wings.service.impl.instance.InstanceHelper;
 import software.wings.service.intfc.AccountService;
+
+import com.google.inject.Inject;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * Handler class that syncs all the instances of an inframapping.

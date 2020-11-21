@@ -1,15 +1,13 @@
 package software.wings.service.impl.yaml.handler.workflow;
 
 import static io.harness.validation.Validator.notNullCheck;
-import static org.apache.commons.lang3.StringUtils.isBlank;
 
-import com.google.inject.Inject;
+import static org.apache.commons.lang3.StringUtils.isBlank;
 
 import io.harness.beans.SweepingOutputInstance;
 import io.harness.expression.ExpressionEvaluator;
 import io.harness.serializer.JsonUtils;
-import lombok.Data;
-import lombok.extern.slf4j.Slf4j;
+
 import software.wings.beans.GitConfig;
 import software.wings.beans.NameValuePair;
 import software.wings.beans.SettingAttribute;
@@ -20,10 +18,13 @@ import software.wings.sm.states.gcbconfigs.GcbOptions;
 import software.wings.sm.states.gcbconfigs.GcbTriggerBuildSpec;
 import software.wings.yaml.workflow.StepYaml;
 
+import com.google.inject.Inject;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
+import lombok.Data;
+import lombok.extern.slf4j.Slf4j;
 
 @Data
 @Slf4j

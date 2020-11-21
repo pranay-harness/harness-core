@@ -1,12 +1,12 @@
 package io.harness.gitsync.core.dtos;
 
 import io.harness.git.model.GitFileChange;
-import lombok.Builder;
-import lombok.Singular;
-import lombok.Value;
 
 import java.util.List;
 import java.util.Map;
+import lombok.Builder;
+import lombok.Singular;
+import lombok.Value;
 
 @Value
 @Builder

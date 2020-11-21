@@ -3,17 +3,13 @@ package io.harness.histogram;
 import static io.harness.histogram.HistogramImplTest.testHistogramOptions;
 import static io.harness.histogram.HistogramImplTest.valueEpsilon;
 import static io.harness.rule.OwnerRule.AVMOHAN;
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.within;
 
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
-import lombok.val;
-import lombok.var;
-import org.joor.Reflect;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
 
 import java.time.Duration;
 import java.time.Instant;
@@ -21,6 +17,11 @@ import java.time.LocalDateTime;
 import java.time.Month;
 import java.time.ZoneId;
 import java.time.temporal.ChronoUnit;
+import lombok.val;
+import lombok.var;
+import org.joor.Reflect;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 public class DecayingHistogramTest extends CategoryTest {
   private static final Instant startTime = Instant.ofEpochSecond(1234567890L);

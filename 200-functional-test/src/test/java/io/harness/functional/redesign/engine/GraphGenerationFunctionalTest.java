@@ -1,10 +1,8 @@
 package io.harness.functional.redesign.engine;
 
 import static io.harness.rule.OwnerRule.ALEXEI;
-import static org.assertj.core.api.Assertions.assertThat;
 
-import com.google.common.collect.Lists;
-import com.google.inject.Inject;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.StatusUtils;
 import io.harness.beans.EdgeList;
@@ -21,21 +19,24 @@ import io.harness.pms.execution.Status;
 import io.harness.rest.RestResponse;
 import io.harness.rule.Owner;
 import io.harness.testframework.framework.MockServerExecutor;
-import io.restassured.http.ContentType;
-import io.restassured.mapper.ObjectMapperType;
-import org.awaitility.Awaitility;
-import org.awaitility.Duration;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
+
 import software.wings.beans.Application;
 
+import com.google.common.collect.Lists;
+import com.google.inject.Inject;
+import io.restassured.http.ContentType;
+import io.restassured.mapper.ObjectMapperType;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import javax.ws.rs.core.GenericType;
+import org.awaitility.Awaitility;
+import org.awaitility.Duration;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 /**
  * Functional Tests for {@link io.harness.service.GraphGenerationService}

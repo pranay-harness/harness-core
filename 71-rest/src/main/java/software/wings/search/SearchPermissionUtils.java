@@ -4,7 +4,7 @@ import static io.harness.annotations.dev.HarnessTeam.PL;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.data.structure.EmptyPredicate;
-import lombok.experimental.UtilityClass;
+
 import software.wings.beans.User;
 import software.wings.search.entities.related.deployment.RelatedDeploymentView;
 import software.wings.search.framework.EntityInfo;
@@ -20,6 +20,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
+import lombok.experimental.UtilityClass;
 
 @OwnedBy(PL)
 @UtilityClass

@@ -2,9 +2,6 @@ package io.harness.batch.processing.tasklet;
 
 import static io.harness.ccm.cluster.entities.K8sWorkload.encodeDotsInKey;
 
-import com.google.common.annotations.VisibleForTesting;
-import com.google.common.collect.ImmutableSet;
-
 import io.harness.batch.processing.ccm.CCMJobConstants;
 import io.harness.batch.processing.ccm.ClusterType;
 import io.harness.batch.processing.ccm.InstanceCategory;
@@ -29,6 +26,14 @@ import io.harness.ccm.commons.entities.InstanceData;
 import io.harness.event.grpc.PublishedMessage;
 import io.harness.grpc.utils.HTimestamps;
 import io.harness.perpetualtask.k8s.watch.NodeInfo;
+
+import com.google.common.annotations.VisibleForTesting;
+import com.google.common.collect.ImmutableSet;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.batch.core.JobParameters;
 import org.springframework.batch.core.StepContribution;
@@ -36,12 +41,6 @@ import org.springframework.batch.core.scope.context.ChunkContext;
 import org.springframework.batch.core.step.tasklet.Tasklet;
 import org.springframework.batch.repeat.RepeatStatus;
 import org.springframework.beans.factory.annotation.Autowired;
-
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.stream.Collectors;
 
 @Slf4j
 public class K8sNodeInfoTasklet implements Tasklet {
@@ -72,7 +71,7 @@ public class K8sNodeInfoTasklet implements Tasklet {
     do {
       publishedMessageList = publishedMessageReader.getNext();
       publishedMessageList.stream()
-          .map(this ::processNodeInfoMessage)
+          .map(this::processNodeInfoMessage)
           .filter(instanceInfo -> instanceInfo.getMetaData().containsKey(InstanceMetaDataConstants.INSTANCE_CATEGORY))
           .forEach(instanceInfo -> instanceDataDao.upsert(instanceInfo));
     } while (publishedMessageList.size() == batchSize);

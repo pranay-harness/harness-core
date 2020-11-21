@@ -1,21 +1,22 @@
 package software.wings.verification.dashboard;
 
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+
 import static software.wings.common.VerificationConstants.HIGH_RISK_CUTOFF;
 import static software.wings.common.VerificationConstants.MEDIUM_RISK_CUTOFF;
 import static software.wings.common.VerificationConstants.NO_DATA_CUTOFF;
 
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
-import org.jetbrains.annotations.NotNull;
 import software.wings.metrics.RiskLevel;
 
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+import org.jetbrains.annotations.NotNull;
 
 /**
  * @author Vaibhav Tulsyan

@@ -2,9 +2,9 @@ package io.harness.dto.converter;
 
 import io.harness.beans.GraphVertex;
 import io.harness.dto.GraphVertexDTO;
-import lombok.experimental.UtilityClass;
 
 import java.util.function.Function;
+import lombok.experimental.UtilityClass;
 
 @UtilityClass
 public class GraphVertexDTOConverter {

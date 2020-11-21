@@ -2,8 +2,6 @@ package io.harness.batch.processing.tasklet;
 
 import static io.harness.filesystem.FileIo.createDirectoryIfDoesNotExist;
 
-import com.google.inject.Singleton;
-
 import io.harness.avro.ClusterBillingData;
 import io.harness.avro.Label;
 import io.harness.batch.processing.billing.timeseries.data.InstanceBillingData;
@@ -16,18 +14,8 @@ import io.harness.batch.processing.tasklet.reader.BillingDataReader;
 import io.harness.batch.processing.tasklet.support.HarnessTagService;
 import io.harness.batch.processing.tasklet.support.K8SWorkloadService;
 import io.harness.ccm.commons.beans.InstanceType;
-import lombok.extern.slf4j.Slf4j;
-import org.apache.avro.file.DataFileWriter;
-import org.apache.avro.io.DatumWriter;
-import org.apache.avro.specific.SpecificDatumWriter;
-import org.jetbrains.annotations.NotNull;
-import org.springframework.batch.core.JobParameters;
-import org.springframework.batch.core.StepContribution;
-import org.springframework.batch.core.scope.context.ChunkContext;
-import org.springframework.batch.core.step.tasklet.Tasklet;
-import org.springframework.batch.repeat.RepeatStatus;
-import org.springframework.beans.factory.annotation.Autowired;
 
+import com.google.inject.Singleton;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -40,6 +28,17 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.avro.file.DataFileWriter;
+import org.apache.avro.io.DatumWriter;
+import org.apache.avro.specific.SpecificDatumWriter;
+import org.jetbrains.annotations.NotNull;
+import org.springframework.batch.core.JobParameters;
+import org.springframework.batch.core.StepContribution;
+import org.springframework.batch.core.scope.context.ChunkContext;
+import org.springframework.batch.core.step.tasklet.Tasklet;
+import org.springframework.batch.repeat.RepeatStatus;
+import org.springframework.beans.factory.annotation.Autowired;
 
 @Slf4j
 @Singleton
@@ -75,7 +74,7 @@ public class ClusterDataToBigQueryTasklet implements Tasklet {
       instanceBillingDataList = billingDataReader.getNext();
       refreshLabelCache(accountId, instanceBillingDataList);
       List<ClusterBillingData> clusterBillingData = instanceBillingDataList.stream()
-                                                        .map(this ::convertInstanceBillingDataToAVROObjects)
+                                                        .map(this::convertInstanceBillingDataToAVROObjects)
                                                         .collect(Collectors.toList());
       writeDataToAvro(accountId, clusterBillingData, billingDataFileName, avroFileWithSchemaExists);
       avroFileWithSchemaExists = true;
@@ -99,7 +98,7 @@ public class ClusterDataToBigQueryTasklet implements Tasklet {
             .filter(instanceBillingData
                 -> null
                     == k8SWorkloadService.getK8sWorkloadLabel(
-                           accountId, instanceBillingData.getClusterId(), instanceBillingData.getWorkloadName()))
+                        accountId, instanceBillingData.getClusterId(), instanceBillingData.getWorkloadName()))
             .collect(Collectors.groupingBy(InstanceBillingData::getClusterId,
                 Collectors.mapping(InstanceBillingData::getWorkloadName, Collectors.toSet())));
     clusterWorkload.forEach(

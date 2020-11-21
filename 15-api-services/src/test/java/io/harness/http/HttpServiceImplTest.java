@@ -1,18 +1,19 @@
 package io.harness.http;
 
-import com.google.inject.Inject;
+import static io.harness.rule.OwnerRule.AGORODETKI;
+
+import static org.assertj.core.api.Assertions.assertThat;
+
 import io.harness.ApiServiceTestBase;
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
+
+import com.google.inject.Inject;
+import java.util.Arrays;
+import java.util.List;
 import org.apache.http.client.methods.HttpUriRequest;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
-
-import java.util.Arrays;
-import java.util.List;
-
-import static io.harness.rule.OwnerRule.AGORODETKI;
-import static org.assertj.core.api.Assertions.assertThat;
 
 public class HttpServiceImplTest extends ApiServiceTestBase {
   @Inject HttpServiceImpl httpService;

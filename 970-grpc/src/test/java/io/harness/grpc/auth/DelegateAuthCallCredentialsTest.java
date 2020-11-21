@@ -1,9 +1,10 @@
 package io.harness.grpc.auth;
 
-import static com.google.common.util.concurrent.MoreExecutors.directExecutor;
 import static io.harness.grpc.auth.DelegateAuthCallCredentials.ACCOUNT_ID_METADATA_KEY;
 import static io.harness.grpc.auth.DelegateAuthCallCredentials.TOKEN_METADATA_KEY;
 import static io.harness.rule.OwnerRule.AVMOHAN;
+
+import static com.google.common.util.concurrent.MoreExecutors.directExecutor;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
@@ -11,14 +12,15 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import io.grpc.CallCredentials.MetadataApplier;
-import io.grpc.CallCredentials.RequestInfo;
-import io.grpc.Metadata;
-import io.grpc.SecurityLevel;
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
 import io.harness.security.TokenGenerator;
+
+import io.grpc.CallCredentials.MetadataApplier;
+import io.grpc.CallCredentials.RequestInfo;
+import io.grpc.Metadata;
+import io.grpc.SecurityLevel;
 import lombok.val;
 import org.junit.Before;
 import org.junit.Test;

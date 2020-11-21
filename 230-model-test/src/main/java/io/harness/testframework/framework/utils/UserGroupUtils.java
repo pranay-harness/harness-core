@@ -2,14 +2,11 @@ package io.harness.testframework.framework.utils;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import com.google.gson.JsonObject;
-
 import io.harness.scm.ScmSecret;
 import io.harness.scm.SecretName;
 import io.harness.testframework.framework.constants.AccountManagementConstants.PermissionTypes;
 import io.harness.testframework.restutils.UserGroupRestUtils;
-import lombok.extern.slf4j.Slf4j;
-import org.apache.http.HttpStatus;
+
 import software.wings.beans.Account;
 import software.wings.beans.notification.NotificationSettings;
 import software.wings.beans.notification.SlackNotificationSetting;
@@ -17,10 +14,13 @@ import software.wings.beans.security.AccountPermissions;
 import software.wings.beans.security.UserGroup;
 import software.wings.security.PermissionAttribute.PermissionType;
 
+import com.google.gson.JsonObject;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.http.HttpStatus;
 
 @Slf4j
 public class UserGroupUtils {

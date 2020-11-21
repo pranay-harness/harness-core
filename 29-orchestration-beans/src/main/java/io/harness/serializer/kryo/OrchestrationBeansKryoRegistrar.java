@@ -2,7 +2,6 @@ package io.harness.serializer.kryo;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 
-import com.esotericsoftware.kryo.Kryo;
 import io.harness.ambiance.Ambiance;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.data.OutcomeInstance;
@@ -27,6 +26,7 @@ import io.harness.state.io.StepResponse.StepOutcome;
 import io.harness.state.io.StepResponseNotifyData;
 import io.harness.tasks.TaskMode;
 
+import com.esotericsoftware.kryo.Kryo;
 import java.time.Duration;
 
 /**

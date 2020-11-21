@@ -1,15 +1,12 @@
 package software.wings.resources;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
-import static software.wings.security.PermissionAttribute.PermissionType.MANAGE_ALERT_NOTIFICATION_RULES;
 
-import com.google.common.collect.ImmutableList;
-import com.google.inject.Inject;
+import static software.wings.security.PermissionAttribute.PermissionType.MANAGE_ALERT_NOTIFICATION_RULES;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.rest.RestResponse;
-import io.swagger.annotations.Api;
-import org.springframework.web.bind.annotation.RequestBody;
+
 import software.wings.beans.alert.AlertNotificationRule;
 import software.wings.beans.alert.NotificationRulesStatus;
 import software.wings.security.PermissionAttribute.ResourceType;
@@ -18,6 +15,9 @@ import software.wings.security.annotations.Scope;
 import software.wings.service.intfc.AlertNotificationRuleService;
 import software.wings.service.intfc.alert.NotificationRulesStatusService;
 
+import com.google.common.collect.ImmutableList;
+import com.google.inject.Inject;
+import io.swagger.annotations.Api;
 import java.util.List;
 import java.util.stream.Collectors;
 import javax.ws.rs.Consumes;
@@ -30,6 +30,7 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
+import org.springframework.web.bind.annotation.RequestBody;
 
 @OwnedBy(PL)
 @Api("alert-notification-rules")

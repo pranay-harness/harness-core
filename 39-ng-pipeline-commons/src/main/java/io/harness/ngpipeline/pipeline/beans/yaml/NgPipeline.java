@@ -21,15 +21,15 @@ import io.harness.yaml.core.failurestrategy.FailureStrategyConfig;
 import io.harness.yaml.core.intfc.Pipeline;
 import io.harness.yaml.core.variables.NGVariable;
 import io.harness.yaml.extended.ci.codebase.CodeBase;
+
 import io.swagger.annotations.ApiModelProperty;
+import java.util.List;
+import java.util.Map;
+import javax.validation.constraints.NotNull;
 import lombok.Builder;
 import lombok.Data;
 import lombok.Singular;
 import lombok.experimental.FieldNameConstants;
-
-import javax.validation.constraints.NotNull;
-import java.util.List;
-import java.util.Map;
 
 @Data
 @Builder

@@ -4,11 +4,13 @@ import static io.harness.annotations.dev.HarnessTeam.PL;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.persistence.UuidAware;
+
+import software.wings.settings.SettingVariableTypes;
+
 import lombok.Builder;
 import lombok.EqualsAndHashCode;
 import lombok.NonNull;
 import lombok.Value;
-import software.wings.settings.SettingVariableTypes;
 
 @OwnedBy(PL)
 @Value

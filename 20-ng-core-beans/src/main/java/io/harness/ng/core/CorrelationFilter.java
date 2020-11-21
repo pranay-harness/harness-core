@@ -1,9 +1,6 @@
 package io.harness.ng.core;
 
 import com.google.inject.Singleton;
-
-import org.apache.commons.lang3.StringUtils;
-
 import java.util.Random;
 import java.util.UUID;
 import java.util.concurrent.ThreadLocalRandom;
@@ -14,6 +11,7 @@ import javax.ws.rs.container.ContainerRequestFilter;
 import javax.ws.rs.container.ContainerResponseContext;
 import javax.ws.rs.container.ContainerResponseFilter;
 import javax.ws.rs.ext.Provider;
+import org.apache.commons.lang3.StringUtils;
 
 @Provider
 @Priority(Priorities.USER)

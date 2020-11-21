@@ -1,18 +1,18 @@
 package io.harness.mock.server;
 
-import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
-import static com.github.tomakehurst.wiremock.client.WireMock.get;
-import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
-import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.wireMockConfig;
 import static io.harness.mock.utils.UriUtils.HTTP_200_REQUEST;
 import static io.harness.mock.utils.UriUtils.HTTP_404_REQUEST;
 import static io.harness.mock.utils.UriUtils.HTTP_500_REQUEST;
 
+import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
+import static com.github.tomakehurst.wiremock.client.WireMock.get;
+import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
+import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.wireMockConfig;
+
 import com.github.tomakehurst.wiremock.WireMockServer;
 import com.github.tomakehurst.wiremock.common.ConsoleNotifier;
-import org.apache.http.HttpStatus;
-
 import java.util.ResourceBundle;
+import org.apache.http.HttpStatus;
 
 public class MockServer {
   private static final String APPLICATION = "mock/application";

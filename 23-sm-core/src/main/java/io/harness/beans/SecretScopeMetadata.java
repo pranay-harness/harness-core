@@ -1,11 +1,11 @@
 package io.harness.beans;
 
-import lombok.Builder;
-import lombok.EqualsAndHashCode;
-import lombok.Value;
 import software.wings.security.ScopedEntity;
 
 import javax.validation.constraints.NotNull;
+import lombok.Builder;
+import lombok.EqualsAndHashCode;
+import lombok.Value;
 
 @Value
 @Builder

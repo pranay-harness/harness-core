@@ -2,19 +2,19 @@ package software.wings.beans;
 
 import static org.joor.Reflect.on;
 
-import com.google.common.base.Charsets;
-import com.google.common.base.MoreObjects;
-import com.google.common.collect.Lists;
-import com.google.common.io.Resources;
-
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.databind.JsonNode;
 import io.harness.exception.WingsException;
 import io.harness.serializer.JsonUtils;
+
 import software.wings.api.DeploymentType;
 import software.wings.stencils.OverridingStencil;
 import software.wings.stencils.StencilCategory;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.google.common.base.Charsets;
+import com.google.common.base.MoreObjects;
+import com.google.common.collect.Lists;
+import com.google.common.io.Resources;
 import java.net.URL;
 import java.util.HashMap;
 import java.util.List;

@@ -2,12 +2,13 @@ package software.wings.beans.command;
 
 import io.harness.container.ContainerInfo;
 import io.harness.delegate.command.CommandExecutionData;
-import lombok.Builder;
-import lombok.Data;
-import lombok.Singular;
+
 import software.wings.api.ContainerServiceData;
 
 import java.util.List;
+import lombok.Builder;
+import lombok.Data;
+import lombok.Singular;
 
 @Data
 @Builder

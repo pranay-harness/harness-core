@@ -1,14 +1,15 @@
 package software.wings.service.impl.aws.model;
 
 import io.harness.security.encryption.EncryptedDataDetail;
+
+import software.wings.beans.AwsConfig;
+
+import java.util.List;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
-import software.wings.beans.AwsConfig;
-
-import java.util.List;
 
 @Data
 @EqualsAndHashCode(callSuper = true)

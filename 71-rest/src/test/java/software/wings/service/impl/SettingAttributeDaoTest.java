@@ -1,20 +1,22 @@
 package software.wings.service.impl;
 
 import static io.harness.rule.OwnerRule.HANTANG;
-import static org.assertj.core.api.Assertions.assertThat;
+
 import static software.wings.beans.SettingAttribute.SettingCategory.CLOUD_PROVIDER;
 
-import com.google.inject.Inject;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
+
 import software.wings.WingsBaseTest;
 import software.wings.beans.KubernetesClusterConfig;
 import software.wings.beans.SettingAttribute;
 
+import com.google.inject.Inject;
 import java.util.List;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 public class SettingAttributeDaoTest extends WingsBaseTest {
   private String accountId = "ACCOUNT_ID";

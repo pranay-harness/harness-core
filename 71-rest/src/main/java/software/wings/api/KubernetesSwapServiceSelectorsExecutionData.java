@@ -1,15 +1,16 @@
 package software.wings.api;
 
 import io.harness.delegate.beans.DelegateTaskNotifyResponseData;
+
+import software.wings.api.k8s.K8sExecutionSummary;
+import software.wings.sm.StateExecutionData;
+
+import java.util.Map;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
-import software.wings.api.k8s.K8sExecutionSummary;
-import software.wings.sm.StateExecutionData;
-
-import java.util.Map;
 
 @Data
 @Builder

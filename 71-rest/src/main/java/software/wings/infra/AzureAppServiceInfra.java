@@ -2,20 +2,21 @@ package software.wings.infra;
 
 import static io.harness.validation.Validator.ensureType;
 import static io.harness.validation.Validator.notNullCheck;
+
 import static java.lang.String.format;
 
-import com.google.common.collect.ImmutableSet;
-
 import io.harness.exception.InvalidRequestException;
+
+import software.wings.api.CloudProviderType;
+import software.wings.service.impl.yaml.handler.InfraDefinition.CloudProviderInfrastructureYaml;
+
+import com.google.common.collect.ImmutableSet;
+import java.util.Map;
+import java.util.Set;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.experimental.FieldNameConstants;
 import org.apache.commons.lang3.StringUtils;
-import software.wings.api.CloudProviderType;
-import software.wings.service.impl.yaml.handler.InfraDefinition.CloudProviderInfrastructureYaml;
-
-import java.util.Map;
-import java.util.Set;
 
 @Data
 @FieldNameConstants(innerTypeName = "AzureAppServiceInfraKeys")

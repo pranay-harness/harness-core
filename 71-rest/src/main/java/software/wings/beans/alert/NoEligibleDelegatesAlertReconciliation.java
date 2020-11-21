@@ -1,10 +1,9 @@
 package software.wings.beans.alert;
 
+import java.util.List;
 import lombok.Builder;
 import lombok.Value;
 import lombok.experimental.FieldNameConstants;
-
-import java.util.List;
 
 @FieldNameConstants(innerTypeName = "NoEligibleDelegatesAlertReconciliationKeys")
 @Value

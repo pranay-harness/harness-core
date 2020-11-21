@@ -1,14 +1,14 @@
 package software.wings.service.impl.security;
 
 import static io.harness.rule.OwnerRule.UTKARSH;
+
+import static software.wings.beans.Account.GLOBAL_ACCOUNT_ID;
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 import static org.mockito.MockitoAnnotations.initMocks;
-import static software.wings.beans.Account.GLOBAL_ACCOUNT_ID;
-
-import com.google.inject.Inject;
 
 import io.harness.beans.EncryptedData;
 import io.harness.category.element.UnitTests;
@@ -18,13 +18,16 @@ import io.harness.rule.Owner;
 import io.harness.security.SimpleEncryption;
 import io.harness.security.encryption.EncryptedRecordData;
 import io.harness.security.encryption.EncryptionType;
+
+import software.wings.WingsBaseTest;
+import software.wings.beans.GcpKmsConfig;
+
+import com.google.inject.Inject;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import software.wings.WingsBaseTest;
-import software.wings.beans.GcpKmsConfig;
 
 public class GlobalEncryptDecryptClientTest extends WingsBaseTest {
   @Mock private KmsEncryptor kmsEncryptor;

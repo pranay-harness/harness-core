@@ -1,6 +1,7 @@
 package io.harness.delegate.task.artifacts.docker;
 
 import static io.harness.rule.OwnerRule.SAHIL;
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.verify;
@@ -17,6 +18,7 @@ import io.harness.delegate.task.artifacts.response.ArtifactTaskResponse;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.rule.Owner;
 import io.harness.security.encryption.SecretDecryptionService;
+
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;

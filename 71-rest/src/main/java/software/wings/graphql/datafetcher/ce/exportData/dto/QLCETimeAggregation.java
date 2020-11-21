@@ -1,8 +1,9 @@
 package software.wings.graphql.datafetcher.ce.exportData.dto;
 
+import software.wings.graphql.schema.type.aggregation.billing.QLTimeGroupType;
+
 import lombok.Builder;
 import lombok.Value;
-import software.wings.graphql.schema.type.aggregation.billing.QLTimeGroupType;
 
 @Value
 @Builder

@@ -2,17 +2,16 @@ package migrations.all;
 
 import static io.harness.persistence.HQuery.excludeValidate;
 
-import com.google.inject.Inject;
-
-import lombok.extern.slf4j.Slf4j;
-import migrations.Migration;
-import org.apache.commons.lang3.reflect.FieldUtils;
 import software.wings.beans.SettingAttribute;
 import software.wings.dl.WingsPersistence;
 
+import com.google.inject.Inject;
 import java.util.Arrays;
 import java.util.List;
 import java.util.regex.Pattern;
+import lombok.extern.slf4j.Slf4j;
+import migrations.Migration;
+import org.apache.commons.lang3.reflect.FieldUtils;
 
 @Slf4j
 public class TrimURLsForAPMVerificationSettings implements Migration {

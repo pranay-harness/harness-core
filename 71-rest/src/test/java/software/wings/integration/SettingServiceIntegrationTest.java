@@ -1,18 +1,18 @@
 package software.wings.integration;
 
 import static io.harness.rule.OwnerRule.ANUBHAW;
-import static java.lang.String.format;
-import static javax.ws.rs.client.Entity.entity;
-import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.tuple;
+
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 import static software.wings.utils.WingsTestConstants.HARNESS_BAMBOO;
 import static software.wings.utils.WingsTestConstants.HARNESS_DOCKER_REGISTRY;
 import static software.wings.utils.WingsTestConstants.HARNESS_JENKINS;
 import static software.wings.utils.WingsTestConstants.HARNESS_NEXUS;
 
-import com.google.inject.Inject;
+import static java.lang.String.format;
+import static javax.ws.rs.client.Entity.entity;
+import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.tuple;
 
 import io.harness.category.element.DeprecatedIntegrationTests;
 import io.harness.eraro.ResponseMessage;
@@ -21,10 +21,7 @@ import io.harness.rule.Owner;
 import io.harness.rule.Repeat;
 import io.harness.scm.ScmSecret;
 import io.harness.scm.SecretName;
-import org.junit.Before;
-import org.junit.Ignore;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
+
 import software.wings.beans.BambooConfig;
 import software.wings.beans.DockerConfig;
 import software.wings.beans.JenkinsConfig;
@@ -32,9 +29,14 @@ import software.wings.beans.SettingAttribute;
 import software.wings.beans.SettingAttribute.SettingCategory;
 import software.wings.beans.config.NexusConfig;
 
+import com.google.inject.Inject;
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.GenericType;
 import javax.ws.rs.core.Response;
+import org.junit.Before;
+import org.junit.Ignore;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 public class SettingServiceIntegrationTest extends IntegrationTestBase {
   @Inject private ScmSecret scmSecret;

@@ -5,9 +5,8 @@ import io.kubernetes.client.openapi.models.V1DaemonSetSpec;
 import io.kubernetes.client.openapi.models.V1PodSpec;
 import io.kubernetes.client.openapi.models.V1PodTemplateSpec;
 import io.kubernetes.client.util.Yaml;
-import org.springframework.stereotype.Service;
-
 import java.util.Optional;
+import org.springframework.stereotype.Service;
 
 @Service
 public class DaemonSetRcdCalculator implements ResourceClaimDiffCalculator {

@@ -1,14 +1,14 @@
 package io.harness.generator;
 
 import static io.harness.govern.Switch.unhandled;
-import static software.wings.beans.License.Builder.aLicense;
 
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
+import static software.wings.beans.License.Builder.aLicense;
 
 import software.wings.beans.License;
 import software.wings.dl.WingsPersistence;
 
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import java.util.concurrent.TimeUnit;
 
 @Singleton

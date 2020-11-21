@@ -2,18 +2,12 @@ package io.harness.task.service.impl;
 
 import static io.harness.rule.OwnerRule.ALEKSANDAR;
 import static io.harness.rule.OwnerRule.SANJA;
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.when;
 
-import com.google.inject.Inject;
-import com.google.protobuf.ByteString;
-
-import io.grpc.Server;
-import io.grpc.inprocess.InProcessChannelBuilder;
-import io.grpc.inprocess.InProcessServerBuilder;
-import io.grpc.testing.GrpcCleanupRule;
 import io.harness.callback.DelegateCallbackToken;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.AccountId;
@@ -38,14 +32,20 @@ import io.harness.task.service.TaskProgressResponse;
 import io.harness.task.service.TaskServiceGrpc;
 import io.harness.task.service.TaskStatusData;
 import io.harness.task.service.TaskType;
+
+import com.google.inject.Inject;
+import com.google.protobuf.ByteString;
+import io.grpc.Server;
+import io.grpc.inprocess.InProcessChannelBuilder;
+import io.grpc.inprocess.InProcessServerBuilder;
+import io.grpc.testing.GrpcCleanupRule;
+import java.io.IOException;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.Mock;
-
-import java.io.IOException;
 
 public class TaskServiceImplTest extends TaskServiceTestBase {
   @Rule public GrpcCleanupRule grpcCleanupRule = new GrpcCleanupRule();

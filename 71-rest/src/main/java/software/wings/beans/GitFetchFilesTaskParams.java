@@ -6,8 +6,7 @@ import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.delegate.beans.executioncapability.ExecutionCapabilityDemander;
 import io.harness.delegate.task.ActivityAccess;
 import io.harness.delegate.task.TaskParameters;
-import lombok.Builder;
-import lombok.Data;
+
 import software.wings.beans.appmanifest.AppManifestKind;
 import software.wings.delegatetasks.validation.capabilities.GitConnectionCapability;
 import software.wings.service.impl.ContainerServiceParams;
@@ -15,6 +14,8 @@ import software.wings.service.impl.ContainerServiceParams;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import lombok.Builder;
+import lombok.Data;
 
 @Data
 @Builder

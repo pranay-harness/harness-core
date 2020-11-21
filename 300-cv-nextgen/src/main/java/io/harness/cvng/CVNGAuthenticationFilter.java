@@ -2,18 +2,17 @@ package io.harness.cvng;
 
 import static io.harness.eraro.ErrorCode.INVALID_CREDENTIAL;
 import static io.harness.exception.WingsException.USER;
+
 import static javax.ws.rs.Priorities.AUTHORIZATION;
 import static org.apache.commons.lang3.StringUtils.substringAfter;
-
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
 
 import io.harness.cvng.client.VerificationManagerClient;
 import io.harness.exception.WingsException;
 import io.harness.security.VerificationServiceAuthenticationFilter;
 import io.harness.security.annotations.NextGenManagerAuth;
-import lombok.extern.slf4j.Slf4j;
 
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import java.io.IOException;
 import java.lang.reflect.Method;
 import javax.annotation.Priority;
@@ -22,6 +21,7 @@ import javax.ws.rs.container.ContainerRequestFilter;
 import javax.ws.rs.container.ResourceInfo;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.HttpHeaders;
+import lombok.extern.slf4j.Slf4j;
 
 @Singleton
 @Priority(AUTHORIZATION)

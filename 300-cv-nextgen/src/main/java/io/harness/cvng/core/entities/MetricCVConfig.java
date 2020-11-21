@@ -1,18 +1,19 @@
 package io.harness.cvng.core.entities;
 
-import static com.google.common.base.Preconditions.checkNotNull;
 import static io.harness.cvng.core.utils.ErrorMessageUtils.generateErrorMessageFromParam;
+
+import static com.google.common.base.Preconditions.checkNotNull;
 
 import io.harness.cvng.core.beans.TimeRange;
 import io.harness.cvng.core.utils.DateTimeUtils;
 import io.harness.cvng.models.VerificationType;
+
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.experimental.FieldNameConstants;
-
-import java.time.Instant;
-import java.time.temporal.ChronoUnit;
 
 @Data
 @NoArgsConstructor

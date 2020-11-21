@@ -1,19 +1,19 @@
 package io.harness.ng.core.user.remote;
 
-import static io.harness.annotations.dev.HarnessTeam.PL;
-import static io.harness.NGCommonEntityConstants.IDENTIFIER_KEY;
 import static io.harness.NGCommonEntityConstants.ACCOUNT_KEY;
+import static io.harness.NGCommonEntityConstants.IDENTIFIER_KEY;
+import static io.harness.annotations.dev.HarnessTeam.PL;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.PageResponse;
 import io.harness.ng.core.user.User;
 import io.harness.rest.RestResponse;
-import retrofit2.Call;
-import retrofit2.http.GET;
-import retrofit2.http.Query;
 
 import java.util.List;
 import java.util.Optional;
+import retrofit2.Call;
+import retrofit2.http.GET;
+import retrofit2.http.Query;
 
 @OwnedBy(PL)
 public interface UserClient {

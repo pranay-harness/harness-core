@@ -3,12 +3,18 @@ package software.wings.delegatetasks.aws.ecs.ecstaskhandler;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.threading.Morpheus.sleep;
+
 import static java.lang.String.format;
 import static java.time.Duration.ofSeconds;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
+import io.harness.security.encryption.EncryptedDataDetail;
+
+import software.wings.beans.AwsConfig;
+import software.wings.beans.command.ExecutionLogCallback;
+import software.wings.cloudprovider.UpdateServiceCountRequestData;
+import software.wings.cloudprovider.aws.EcsContainerService;
+import software.wings.service.impl.AwsHelperService;
 
 import com.amazonaws.services.ecs.model.DescribeServicesRequest;
 import com.amazonaws.services.ecs.model.DescribeServicesResult;
@@ -17,13 +23,8 @@ import com.amazonaws.services.ecs.model.ServiceEvent;
 import com.amazonaws.services.ecs.model.Tag;
 import com.amazonaws.services.ecs.model.TagResourceRequest;
 import com.amazonaws.services.ecs.model.UntagResourceRequest;
-import io.harness.security.encryption.EncryptedDataDetail;
-import software.wings.beans.AwsConfig;
-import software.wings.beans.command.ExecutionLogCallback;
-import software.wings.cloudprovider.UpdateServiceCountRequestData;
-import software.wings.cloudprovider.aws.EcsContainerService;
-import software.wings.service.impl.AwsHelperService;
-
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import java.util.List;
 
 @Singleton

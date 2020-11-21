@@ -1,9 +1,8 @@
 package io.harness.delegate.task.aws;
 
+import java.util.List;
 import lombok.Builder;
 import lombok.Value;
-
-import java.util.List;
 
 @Value
 @Builder

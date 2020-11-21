@@ -1,6 +1,5 @@
 package io.harness.yaml.core;
 
-import com.fasterxml.jackson.annotation.JsonTypeName;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.data.validator.EntityIdentifier;
 import io.harness.data.validator.EntityName;
@@ -12,12 +11,13 @@ import io.harness.walktree.visitor.Visitable;
 import io.harness.yaml.core.auxiliary.intfc.ExecutionWrapper;
 import io.harness.yaml.core.failurestrategy.FailureStrategyConfig;
 import io.harness.yaml.core.intfc.WithIdentifier;
+
+import com.fasterxml.jackson.annotation.JsonTypeName;
+import java.util.List;
+import javax.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
-
-import java.util.List;
-import javax.validation.constraints.NotNull;
 
 @Data
 @Builder

@@ -1,9 +1,5 @@
 package migrations.all;
 
-import com.google.inject.Inject;
-
-import lombok.extern.slf4j.Slf4j;
-import migrations.Migration;
 import software.wings.beans.Account;
 import software.wings.beans.notification.NotificationSettings;
 import software.wings.beans.security.UserGroup;
@@ -11,8 +7,11 @@ import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.UserGroupService;
 
+import com.google.inject.Inject;
 import java.util.Collections;
 import java.util.List;
+import lombok.extern.slf4j.Slf4j;
+import migrations.Migration;
 
 /**
  * Refer to https://harness.atlassian.net/browse/PL-1296 for context.

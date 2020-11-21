@@ -1,5 +1,6 @@
 package software.wings.helpers.ext.apm;
 
+import java.util.Map;
 import retrofit2.Call;
 import retrofit2.http.Body;
 import retrofit2.http.Field;
@@ -10,8 +11,6 @@ import retrofit2.http.POST;
 import retrofit2.http.PUT;
 import retrofit2.http.QueryMap;
 import retrofit2.http.Url;
-
-import java.util.Map;
 
 public interface APMRestClient {
   @GET

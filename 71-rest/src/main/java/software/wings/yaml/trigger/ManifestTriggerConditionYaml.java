@@ -1,8 +1,9 @@
 package software.wings.yaml.trigger;
 
-import com.fasterxml.jackson.annotation.JsonTypeName;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
+
+import com.fasterxml.jackson.annotation.JsonTypeName;
 import lombok.Builder;
 import lombok.Data;
 

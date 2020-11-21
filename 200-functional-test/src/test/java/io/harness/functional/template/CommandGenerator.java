@@ -1,14 +1,12 @@
 package io.harness.functional.template;
 
-import com.google.inject.Inject;
-
-import io.github.benas.randombeans.api.EnhancedRandom;
 import io.harness.generator.AccountGenerator;
 import io.harness.generator.GeneratorUtils;
 import io.harness.generator.OwnerManager;
 import io.harness.generator.Randomizer;
 import io.harness.generator.TemplateFolderGenerator;
 import io.harness.generator.TemplateGalleryGenerator;
+
 import software.wings.beans.commandlibrary.CommandEntity;
 import software.wings.beans.commandlibrary.CommandEntity.CommandEntityBuilder;
 import software.wings.beans.commandlibrary.CommandEntity.CommandEntityKeys;
@@ -18,6 +16,9 @@ import software.wings.beans.commandlibrary.CommandVersionEntity.CommandVersionsK
 import software.wings.beans.template.command.SshCommandTemplate;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.template.TemplateService;
+
+import com.google.inject.Inject;
+import io.github.benas.randombeans.api.EnhancedRandom;
 
 public class CommandGenerator {
   @Inject AccountGenerator accountGenerator;

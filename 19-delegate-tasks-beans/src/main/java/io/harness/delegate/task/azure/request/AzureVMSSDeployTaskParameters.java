@@ -3,11 +3,11 @@ package io.harness.delegate.task.azure.request;
 import static io.harness.delegate.task.azure.request.AzureVMSSTaskParameters.AzureVMSSTaskType.AZURE_VMSS_DEPLOY;
 
 import io.harness.delegate.task.azure.AzureVMSSPreDeploymentData;
+
+import java.util.List;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
-
-import java.util.List;
 
 @Data
 @EqualsAndHashCode(callSuper = true)

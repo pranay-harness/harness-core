@@ -1,15 +1,14 @@
 package software.wings.service.intfc.yaml.sync;
 
 import static io.harness.rule.OwnerRule.ABHINAV;
-import static org.assertj.core.api.Assertions.assertThat;
+
 import static software.wings.beans.Account.GLOBAL_ACCOUNT_ID;
 
-import com.google.inject.Inject;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
+
 import software.wings.WingsBaseTest;
 import software.wings.beans.Application;
 import software.wings.beans.EntityType;
@@ -21,7 +20,10 @@ import software.wings.yaml.gitSync.GitSyncMetadata;
 import software.wings.yaml.gitSync.YamlChangeSet;
 import software.wings.yaml.gitSync.YamlGitConfig;
 
+import com.google.inject.Inject;
 import java.util.List;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 public class GitSyncServiceTest extends WingsBaseTest {
   @Inject GitSyncService gitSyncService;

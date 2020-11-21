@@ -1,11 +1,11 @@
 package io.harness.functional.redesign.mixins.advisertype;
 
+import io.harness.pms.advisers.AdviserType;
+
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.databind.DeserializationContext;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.deser.std.StdDeserializer;
-import io.harness.pms.advisers.AdviserType;
-
 import java.io.IOException;
 
 public class AdviserTypeTestDeserializer extends StdDeserializer<AdviserType> {

@@ -3,6 +3,10 @@ package software.wings.service.impl;
 import static io.harness.logging.CommandExecutionStatus.SUCCESS;
 import static io.harness.rule.OwnerRule.ANKIT;
 import static io.harness.rule.OwnerRule.ANSHUL;
+
+import static software.wings.helpers.ext.pcf.response.PcfInstanceSyncResponse.builder;
+import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
+
 import static junit.framework.TestCase.assertEquals;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
@@ -10,18 +14,12 @@ import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-import static software.wings.helpers.ext.pcf.response.PcfInstanceSyncResponse.builder;
-import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 
 import io.harness.beans.DelegateTask;
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
 import io.harness.security.encryption.EncryptedDataDetail;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
-import org.mockito.ArgumentCaptor;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
+
 import software.wings.WingsBaseTest;
 import software.wings.beans.PcfConfig;
 import software.wings.helpers.ext.pcf.response.PcfCommandExecutionResponse;
@@ -31,6 +29,11 @@ import software.wings.service.intfc.FeatureFlagService;
 
 import java.util.ArrayList;
 import java.util.List;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
+import org.mockito.ArgumentCaptor;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
 
 public class PcfHelperServiceTest extends WingsBaseTest {
   @Mock private DelegateService delegateService;

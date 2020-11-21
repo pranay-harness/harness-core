@@ -2,11 +2,12 @@ package software.wings.yaml.setting;
 
 import static software.wings.yaml.YamlHelper.ENCRYPTED_VALUE_STR;
 
+import software.wings.security.UsageRestrictions;
+import software.wings.settings.SettingValue;
+
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
-import software.wings.security.UsageRestrictions;
-import software.wings.settings.SettingValue;
 
 /**
  * @author dhruvupadhyay on 01/06/20

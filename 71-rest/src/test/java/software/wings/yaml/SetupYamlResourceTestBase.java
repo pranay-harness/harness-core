@@ -1,13 +1,13 @@
 package software.wings.yaml;
 
+import static software.wings.beans.Application.Builder.anApplication;
+
 import static java.util.Arrays.asList;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.reset;
-import static software.wings.beans.Application.Builder.anApplication;
 
 import io.harness.CategoryTest;
-import lombok.extern.slf4j.Slf4j;
-import org.junit.After;
+
 import software.wings.beans.Application;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.SettingsService;
@@ -15,6 +15,8 @@ import software.wings.service.intfc.yaml.YamlGitService;
 import software.wings.service.intfc.yaml.YamlHistoryService;
 
 import java.util.List;
+import lombok.extern.slf4j.Slf4j;
+import org.junit.After;
 
 // import software.wings.resources.yaml.SetupYamlResource;
 

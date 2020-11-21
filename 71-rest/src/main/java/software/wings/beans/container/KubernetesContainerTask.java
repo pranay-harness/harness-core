@@ -4,9 +4,19 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.k8s.KubernetesHelperService.toYaml;
+
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.apache.commons.lang3.StringUtils.strip;
+
+import io.harness.eraro.ErrorCode;
+import io.harness.exception.ExceptionUtils;
+import io.harness.exception.WingsException;
+import io.harness.k8s.KubernetesConvention;
+
+import software.wings.api.DeploymentType;
+import software.wings.beans.artifact.ArtifactEnumDataProvider;
+import software.wings.stencils.EnumData;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonTypeName;
@@ -22,20 +32,6 @@ import io.fabric8.kubernetes.api.model.Volume;
 import io.fabric8.kubernetes.api.model.VolumeBuilder;
 import io.fabric8.kubernetes.api.model.extensions.Deployment;
 import io.fabric8.kubernetes.api.model.extensions.DeploymentBuilder;
-import io.harness.eraro.ErrorCode;
-import io.harness.exception.ExceptionUtils;
-import io.harness.exception.WingsException;
-import io.harness.k8s.KubernetesConvention;
-import lombok.Builder;
-import lombok.Data;
-import lombok.EqualsAndHashCode;
-import lombok.NoArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.io.LineIterator;
-import software.wings.api.DeploymentType;
-import software.wings.beans.artifact.ArtifactEnumDataProvider;
-import software.wings.stencils.EnumData;
-
 import java.io.IOException;
 import java.io.StringReader;
 import java.util.HashMap;
@@ -43,6 +39,12 @@ import java.util.List;
 import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import lombok.Builder;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.NoArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.io.LineIterator;
 
 /**
  * Created by brett on 3/8/17
@@ -252,7 +254,7 @@ public class KubernetesContainerTask extends ContainerTask {
         .withNewSpec()
         .addNewImagePullSecret(DUMMY_SECRET_NAME)
         .addToContainers(
-            getContainerDefinitions().stream().map(this ::createContainerDefinition).toArray(Container[] ::new))
+            getContainerDefinitions().stream().map(this::createContainerDefinition).toArray(Container[] ::new))
         .addToVolumes(volumeMap.values().toArray(new Volume[0]))
         .endSpec()
         .endTemplate()

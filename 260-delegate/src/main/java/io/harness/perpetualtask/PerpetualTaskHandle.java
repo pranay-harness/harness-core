@@ -1,8 +1,7 @@
 package io.harness.perpetualtask;
 
-import lombok.Value;
-
 import java.util.concurrent.Future;
+import lombok.Value;
 
 @Value
 public class PerpetualTaskHandle {

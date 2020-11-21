@@ -1,9 +1,8 @@
 package software.wings.service.impl;
 
 import static io.harness.rule.OwnerRule.ADWAIT;
-import static org.assertj.core.api.Assertions.assertThat;
 
-import com.google.inject.Inject;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.category.element.UnitTests;
 import io.harness.globalcontex.AuditGlobalContextData;
@@ -12,10 +11,13 @@ import io.harness.globalcontex.EntityOperationIdentifier.entityOperation;
 import io.harness.manage.GlobalContextManager;
 import io.harness.manage.GlobalContextManager.GlobalContextGuard;
 import io.harness.rule.Owner;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
+
 import software.wings.WingsBaseTest;
 import software.wings.beans.EntityType;
+
+import com.google.inject.Inject;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 public class AuditServiceHelperTest extends WingsBaseTest {
   @Inject AuditServiceHelper auditServiceHelper;

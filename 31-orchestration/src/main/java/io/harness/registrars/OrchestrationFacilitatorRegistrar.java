@@ -2,9 +2,6 @@ package io.harness.registrars;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 
-import com.google.inject.Inject;
-import com.google.inject.Injector;
-
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.facilitator.Facilitator;
 import io.harness.facilitator.async.AsyncFacilitator;
@@ -20,9 +17,11 @@ import io.harness.facilitator.taskv2.TaskV2Facilitator;
 import io.harness.facilitator.taskv3.TaskV3Facilitator;
 import io.harness.pms.facilitators.FacilitatorType;
 import io.harness.registries.registrar.FacilitatorRegistrar;
-import org.apache.commons.lang3.tuple.Pair;
 
+import com.google.inject.Inject;
+import com.google.inject.Injector;
 import java.util.Set;
+import org.apache.commons.lang3.tuple.Pair;
 
 @OwnedBy(CDC)
 public class OrchestrationFacilitatorRegistrar implements FacilitatorRegistrar {

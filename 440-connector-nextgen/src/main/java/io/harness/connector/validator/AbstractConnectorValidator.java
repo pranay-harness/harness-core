@@ -1,7 +1,5 @@
 package io.harness.connector.validator;
 
-import com.google.inject.Inject;
-
 import io.harness.beans.DecryptableEntity;
 import io.harness.beans.DelegateTaskRequest;
 import io.harness.delegate.beans.DelegateResponseData;
@@ -15,6 +13,7 @@ import io.harness.secretmanagerclient.services.api.SecretManagerClientService;
 import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.service.DelegateGrpcClientWrapper;
 
+import com.google.inject.Inject;
 import java.time.Duration;
 import java.util.List;
 

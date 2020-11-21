@@ -2,19 +2,20 @@ package software.wings.service.impl.template;
 
 import static java.util.Arrays.asList;
 
-import de.danielbechler.diff.ObjectDifferBuilder;
-import de.danielbechler.diff.node.DiffNode;
 import io.harness.exception.InvalidRequestException;
-import lombok.extern.slf4j.Slf4j;
+
 import software.wings.beans.EntityType;
 import software.wings.beans.GraphNode;
 import software.wings.beans.template.BaseTemplate;
 import software.wings.beans.template.Template;
 
+import de.danielbechler.diff.ObjectDifferBuilder;
+import de.danielbechler.diff.node.DiffNode;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public abstract class StateTemplateProcessor extends AbstractTemplateProcessor {

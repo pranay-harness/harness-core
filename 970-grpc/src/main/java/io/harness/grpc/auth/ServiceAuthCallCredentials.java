@@ -2,16 +2,15 @@ package io.harness.grpc.auth;
 
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
-import com.google.common.base.Preconditions;
-import com.google.inject.Singleton;
-
-import io.grpc.CallCredentials;
-import io.grpc.Metadata;
 import io.harness.grpc.utils.GrpcAuthUtils;
 import io.harness.security.ServiceTokenGenerator;
-import lombok.Getter;
 
+import com.google.common.base.Preconditions;
+import com.google.inject.Singleton;
+import io.grpc.CallCredentials;
+import io.grpc.Metadata;
 import java.util.concurrent.Executor;
+import lombok.Getter;
 
 @Getter
 @Singleton

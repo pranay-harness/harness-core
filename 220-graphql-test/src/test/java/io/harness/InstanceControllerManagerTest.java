@@ -1,15 +1,12 @@
 package io.harness;
 
 import static io.harness.rule.OwnerRule.RUSHABH;
+
 import static org.assertj.core.api.Assertions.assertThat;
 
-import com.google.inject.Inject;
-
-import io.fabric8.utils.Lists;
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
+
 import software.wings.beans.infrastructure.instance.Instance;
 import software.wings.beans.infrastructure.instance.InstanceType;
 import software.wings.beans.infrastructure.instance.info.AutoScalingGroupInstanceInfo;
@@ -29,6 +26,11 @@ import software.wings.graphql.schema.type.instance.QLInstanceType;
 import software.wings.graphql.schema.type.instance.QLK8SPodInstance;
 import software.wings.graphql.schema.type.instance.QLPcfInstance;
 import software.wings.graphql.schema.type.instance.QLPhysicalHostInstance;
+
+import com.google.inject.Inject;
+import io.fabric8.utils.Lists;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 public class InstanceControllerManagerTest extends GraphQLMockBaseTest {
   @Inject InstanceControllerManager instanceControllerManager;

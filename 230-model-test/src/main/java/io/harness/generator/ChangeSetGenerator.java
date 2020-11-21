@@ -2,9 +2,8 @@ package io.harness.generator;
 
 import static io.harness.govern.Switch.unhandled;
 
-import com.google.inject.Inject;
-
 import io.harness.beans.EmbeddedUser;
+
 import software.wings.audit.AuditHeader;
 import software.wings.audit.AuditSource;
 import software.wings.audit.EntityAuditRecord;
@@ -12,6 +11,7 @@ import software.wings.beans.Account;
 import software.wings.beans.HttpMethod;
 import software.wings.service.intfc.AuditService;
 
+import com.google.inject.Inject;
 import java.util.Arrays;
 import java.util.LinkedList;
 

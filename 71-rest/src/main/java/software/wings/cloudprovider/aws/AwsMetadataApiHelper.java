@@ -5,23 +5,24 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.logging.LogLevel.ERROR;
 import static io.harness.logging.LogLevel.INFO;
 import static io.harness.logging.LogLevel.WARN;
+
 import static java.lang.String.format;
 import static org.apache.commons.lang3.StringUtils.EMPTY;
 
-import com.google.common.annotations.VisibleForTesting;
-import com.google.inject.Singleton;
-
-import com.amazonaws.services.ec2.model.Instance;
-import com.amazonaws.services.ecs.model.Task;
 import io.harness.logging.LogLevel;
 import io.harness.network.Http;
 import io.harness.serializer.JsonUtils;
-import lombok.extern.slf4j.Slf4j;
+
 import software.wings.beans.command.ExecutionLogCallback;
 
+import com.amazonaws.services.ec2.model.Instance;
+import com.amazonaws.services.ecs.model.Task;
+import com.google.common.annotations.VisibleForTesting;
+import com.google.inject.Singleton;
 import java.io.IOException;
 import java.util.List;
 import java.util.Optional;
+import lombok.extern.slf4j.Slf4j;
 
 @Singleton
 @Slf4j

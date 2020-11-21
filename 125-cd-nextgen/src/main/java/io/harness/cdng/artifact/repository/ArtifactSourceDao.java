@@ -1,11 +1,11 @@
 package io.harness.cdng.artifact.repository;
 
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
-
 import io.harness.cdng.artifact.bean.artifactsource.ArtifactSource;
 import io.harness.cdng.artifact.bean.artifactsource.ArtifactSource.ArtifactSourceKeys;
 import io.harness.validation.PersistenceValidator;
+
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
 
 /**
  * Entries are immutable, thus no update function should be there.

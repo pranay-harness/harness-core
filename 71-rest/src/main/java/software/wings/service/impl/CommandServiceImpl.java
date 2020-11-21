@@ -1,8 +1,5 @@
 package software.wings.service.impl;
 
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
-
 import software.wings.beans.Event.Type;
 import software.wings.beans.command.Command;
 import software.wings.beans.command.Command.CommandKeys;
@@ -12,6 +9,9 @@ import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.CommandService;
 import software.wings.service.intfc.yaml.YamlPushService;
+
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
 
 @Singleton
 public class CommandServiceImpl implements CommandService {

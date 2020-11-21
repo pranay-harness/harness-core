@@ -4,6 +4,7 @@ import static io.harness.ccm.budget.entities.BudgetType.SPECIFIED_AMOUNT;
 import static io.harness.rule.OwnerRule.HANTANG;
 import static io.harness.rule.OwnerRule.SANDESH;
 import static io.harness.rule.OwnerRule.SHUBHANSHU;
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Matchers.any;
@@ -13,8 +14,6 @@ import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-
-import com.google.inject.name.Named;
 
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
@@ -29,17 +28,7 @@ import io.harness.ccm.budget.entities.EnvironmentType;
 import io.harness.exception.InvalidRequestException;
 import io.harness.rule.Owner;
 import io.harness.timescaledb.TimeScaleDBService;
-import io.vavr.collection.Stream;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
-import org.mockito.ArgumentCaptor;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.junit.MockitoJUnit;
-import org.mockito.junit.MockitoRule;
-import org.mockito.stubbing.Answer;
+
 import software.wings.features.CeBudgetFeature;
 import software.wings.features.api.UsageLimitedFeature;
 import software.wings.graphql.datafetcher.DataFetcherUtils;
@@ -54,6 +43,8 @@ import software.wings.graphql.schema.type.aggregation.budget.QLBudgetDataList;
 import software.wings.graphql.schema.type.aggregation.budget.QLBudgetTableData;
 import software.wings.service.intfc.ce.CeAccountExpirationChecker;
 
+import com.google.inject.name.Named;
+import io.vavr.collection.Stream;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -62,6 +53,16 @@ import java.sql.Timestamp;
 import java.time.Instant;
 import java.util.Collections;
 import java.util.stream.Collectors;
+import org.junit.Before;
+import org.junit.Rule;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
+import org.mockito.ArgumentCaptor;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.MockitoJUnit;
+import org.mockito.junit.MockitoRule;
+import org.mockito.stubbing.Answer;
 
 public class BudgetServiceImplTest extends CategoryTest {
   @Mock private TimeScaleDBService timeScaleDBService;
@@ -267,8 +268,9 @@ public class BudgetServiceImplTest extends CategoryTest {
                                .alertThresholds(budget1.getAlertThresholds())
                                .userGroupIds(budget1.getUserGroupIds())
                                .build();
-    assertThatThrownBy(() -> { budgetService.update(budgetId1, updatedBudget); })
-        .isInstanceOf(InvalidRequestException.class);
+    assertThatThrownBy(() -> {
+      budgetService.update(budgetId1, updatedBudget);
+    }).isInstanceOf(InvalidRequestException.class);
   }
 
   @Test

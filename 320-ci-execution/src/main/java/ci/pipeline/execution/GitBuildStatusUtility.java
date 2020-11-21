@@ -1,8 +1,5 @@
 package ci.pipeline.execution;
 
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
-
 import io.harness.ambiance.Ambiance;
 import io.harness.beans.DelegateTaskRequest;
 import io.harness.beans.stages.IntegrationStageStepParameters;
@@ -18,9 +15,11 @@ import io.harness.plancreators.IntegrationStagePlanCreator;
 import io.harness.pms.execution.Status;
 import io.harness.service.DelegateGrpcClientWrapper;
 import io.harness.stateutils.buildstate.ConnectorUtils;
-import lombok.extern.slf4j.Slf4j;
 
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import java.util.Objects;
+import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Singleton

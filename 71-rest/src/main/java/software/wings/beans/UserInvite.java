@@ -1,10 +1,9 @@
 package software.wings.beans;
 
-import static com.fasterxml.jackson.annotation.JsonProperty.Access.WRITE_ONLY;
 import static io.harness.annotations.dev.HarnessTeam.PL;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonProperty;
+import static com.fasterxml.jackson.annotation.JsonProperty.Access.WRITE_ONLY;
+
 import io.harness.annotation.HarnessEntity;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.EmbeddedUser;
@@ -14,6 +13,14 @@ import io.harness.mongo.index.CdIndex;
 import io.harness.mongo.index.Field;
 import io.harness.persistence.AccountAccess;
 import io.harness.validation.Update;
+
+import software.wings.beans.security.UserGroup;
+import software.wings.beans.utm.UtmInfo;
+
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import java.util.ArrayList;
+import java.util.List;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.experimental.FieldNameConstants;
@@ -21,11 +28,6 @@ import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Reference;
 import org.mongodb.morphia.annotations.Transient;
-import software.wings.beans.security.UserGroup;
-import software.wings.beans.utm.UtmInfo;
-
-import java.util.ArrayList;
-import java.util.List;
 
 /**
  * Created by anubhaw on 3/6/17.

@@ -1,8 +1,9 @@
 package io.harness.serializer.kryo;
 
-import com.esotericsoftware.kryo.Kryo;
 import io.harness.serializer.KryoRegistrar;
 import io.harness.waiter.StringNotifyResponseData;
+
+import com.esotericsoftware.kryo.Kryo;
 
 public class WaitEngineKryoRegister implements KryoRegistrar {
   @Override

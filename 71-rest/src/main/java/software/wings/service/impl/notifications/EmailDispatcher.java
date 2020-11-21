@@ -2,7 +2,7 @@ package software.wings.service.impl.notifications;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static org.apache.commons.lang3.StringUtils.isNotBlank;
+
 import static software.wings.common.NotificationConstants.ABORTED_COLOR;
 import static software.wings.common.NotificationConstants.COMPLETED_COLOR;
 import static software.wings.common.NotificationConstants.FAILED_COLOR;
@@ -10,23 +10,25 @@ import static software.wings.common.NotificationConstants.PAUSED_COLOR;
 import static software.wings.common.NotificationConstants.RESUMED_COLOR;
 import static software.wings.common.NotificationMessageResolver.getDecoratedNotificationMessage;
 
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 import io.harness.annotations.dev.OwnedBy;
-import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.StringUtils;
+
 import software.wings.beans.Notification;
 import software.wings.common.NotificationMessageResolver;
 import software.wings.common.NotificationMessageResolver.ChannelTemplate.EmailTemplate;
 import software.wings.helpers.ext.mail.EmailData;
 import software.wings.service.intfc.EmailNotificationService;
 
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 
 @OwnedBy(CDC)
 @Singleton

@@ -2,10 +2,9 @@ package migrations.accountpermission;
 import static software.wings.security.PermissionAttribute.PermissionType.MANAGE_ALERT_NOTIFICATION_RULES;
 import static software.wings.security.PermissionAttribute.PermissionType.MANAGE_APPLICATION_STACKS;
 
-import com.google.common.collect.Sets;
-
 import software.wings.security.PermissionAttribute.PermissionType;
 
+import com.google.common.collect.Sets;
 import java.util.Set;
 
 public class AlertNotificationAccountPermissionMigration extends AbstractAccountManagementPermissionMigration {

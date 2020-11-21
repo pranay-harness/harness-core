@@ -4,20 +4,19 @@ import static io.harness.govern.IgnoreThrowable.ignoredOnPurpose;
 import static io.harness.mongo.IndexManager.Mode.INSPECT;
 import static io.harness.mongo.IndexManager.Mode.MANUAL;
 
+import io.harness.mongo.index.migrator.Migrator;
+import io.harness.persistence.Store;
+
 import com.google.inject.Inject;
 import com.google.inject.Injector;
 import com.google.inject.Singleton;
-
 import com.mongodb.DBCollection;
-import io.harness.mongo.index.migrator.Migrator;
-import io.harness.persistence.Store;
+import java.util.Map;
+import javax.annotation.Nullable;
 import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.AdvancedDatastore;
 import org.mongodb.morphia.Morphia;
 import org.mongodb.morphia.mapping.MappedClass;
-
-import java.util.Map;
-import javax.annotation.Nullable;
 
 @Singleton
 @Slf4j

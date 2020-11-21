@@ -3,15 +3,15 @@ package software.wings.beans.sso;
 import static io.harness.annotations.dev.HarnessTeam.PL;
 
 import io.harness.annotations.dev.OwnedBy;
+
+import java.util.Collection;
+import java.util.Collections;
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Builder.Default;
 import lombok.Data;
 import lombok.experimental.FieldDefaults;
 import org.hibernate.validator.constraints.NotBlank;
-
-import java.util.Collection;
-import java.util.Collections;
 
 @OwnedBy(PL)
 @Data

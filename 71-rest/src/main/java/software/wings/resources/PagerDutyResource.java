@@ -1,17 +1,17 @@
 package software.wings.resources;
 
-import com.google.inject.Inject;
+import io.harness.rest.RestResponse;
+
+import software.wings.service.intfc.pagerduty.PagerDutyService;
 
 import com.codahale.metrics.annotation.ExceptionMetered;
 import com.codahale.metrics.annotation.Timed;
-import io.harness.rest.RestResponse;
-import org.hibernate.validator.constraints.NotEmpty;
-import software.wings.service.intfc.pagerduty.PagerDutyService;
-
+import com.google.inject.Inject;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
+import org.hibernate.validator.constraints.NotEmpty;
 
 @Path("/pagerduty")
 @Produces("application/json")

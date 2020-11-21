@@ -1,18 +1,15 @@
 package software.wings.service;
 
-import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.anyString;
-import static org.mockito.Matchers.eq;
-import static org.mockito.Mockito.doReturn;
-import static org.mockito.Mockito.verify;
 import static software.wings.service.impl.instance.InstanceSyncTestConstants.ACCOUNT_ID;
 import static software.wings.service.impl.instance.InstanceSyncTestConstants.APP_ID;
 import static software.wings.service.impl.instance.InstanceSyncTestConstants.INFRA_MAPPING_ID;
 import static software.wings.service.impl.instance.InstanceSyncTestConstants.PERPETUAL_TASK_ID;
 
-import com.google.common.collect.ImmutableMap;
-import com.google.inject.Inject;
-import com.google.protobuf.util.Durations;
+import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyString;
+import static org.mockito.Matchers.eq;
+import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.verify;
 
 import io.harness.category.element.UnitTests;
 import io.harness.perpetualtask.PerpetualTaskClientContext;
@@ -21,17 +18,21 @@ import io.harness.perpetualtask.PerpetualTaskService;
 import io.harness.perpetualtask.PerpetualTaskType;
 import io.harness.rule.Owner;
 import io.harness.rule.OwnerRule;
+
+import software.wings.WingsBaseTest;
+import software.wings.beans.AwsInfrastructureMapping;
+import software.wings.service.impl.instance.InstanceSyncTestConstants;
+
+import com.google.common.collect.ImmutableMap;
+import com.google.inject.Inject;
+import com.google.protobuf.util.Durations;
+import java.util.Collections;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
-import software.wings.WingsBaseTest;
-import software.wings.beans.AwsInfrastructureMapping;
-import software.wings.service.impl.instance.InstanceSyncTestConstants;
-
-import java.util.Collections;
 
 public class AwsSshInstanceSyncPerpetualTaskCreatorTest extends WingsBaseTest {
   @Mock private PerpetualTaskService perpetualTaskService;

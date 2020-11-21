@@ -1,9 +1,6 @@
 
 package io.harness.cvng.core.services.impl;
 
-import com.google.common.base.Preconditions;
-import com.google.inject.Inject;
-
 import io.harness.cvng.CVConstants;
 import io.harness.cvng.core.entities.VerificationTask;
 import io.harness.cvng.core.entities.VerificationTask.VerificationTaskKeys;
@@ -12,6 +9,8 @@ import io.harness.cvng.verificationjob.entities.TestVerificationJob;
 import io.harness.cvng.verificationjob.entities.VerificationJobInstance;
 import io.harness.persistence.HPersistence;
 
+import com.google.common.base.Preconditions;
+import com.google.inject.Inject;
 import java.time.Clock;
 import java.util.Date;
 import java.util.List;

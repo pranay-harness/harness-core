@@ -1,6 +1,7 @@
 package software.wings.integration.network;
 
 import static io.harness.rule.OwnerRule.ADWAIT;
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.fail;
 
@@ -8,6 +9,12 @@ import io.harness.CategoryTest;
 import io.harness.category.element.DeprecatedIntegrationTests;
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
+
+import java.io.IOException;
+import java.io.InputStream;
+import java.net.InetSocketAddress;
+import java.net.Proxy;
+import java.util.Properties;
 import okhttp3.Authenticator;
 import okhttp3.Credentials;
 import okhttp3.OkHttpClient;
@@ -21,12 +28,6 @@ import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
-
-import java.io.IOException;
-import java.io.InputStream;
-import java.net.InetSocketAddress;
-import java.net.Proxy;
-import java.util.Properties;
 
 public class ProxyTest extends CategoryTest {
   private String proxyHost;

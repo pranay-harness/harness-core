@@ -3,8 +3,10 @@ package io.harness.functional.cloudProviders;
 import static io.harness.rule.OwnerRule.DEEPAK;
 import static io.harness.rule.OwnerRule.NATARAJA;
 import static io.harness.rule.OwnerRule.UTKARSH;
-import static org.assertj.core.api.Assertions.assertThat;
+
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
+
+import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.category.element.FunctionalTests;
 import io.harness.functional.AbstractFunctionalTest;
@@ -14,18 +16,20 @@ import io.harness.scm.SecretName;
 import io.harness.testframework.framework.Retry;
 import io.harness.testframework.framework.matchers.BooleanMatcher;
 import io.harness.testframework.restutils.SettingsUtils;
-import io.restassured.path.json.JsonPath;
-import lombok.extern.slf4j.Slf4j;
-import org.junit.FixMethodOrder;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
-import org.junit.runners.MethodSorters;
+
 import software.wings.beans.AwsConfig;
 import software.wings.beans.AzureConfig;
 import software.wings.beans.PhysicalDataCenterConfig;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.SettingAttribute.SettingCategory;
 import software.wings.settings.SettingVariableTypes;
+
+import io.restassured.path.json.JsonPath;
+import lombok.extern.slf4j.Slf4j;
+import org.junit.FixMethodOrder;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
+import org.junit.runners.MethodSorters;
 
 @Slf4j
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
@@ -58,7 +62,7 @@ public class CloudProviderTest extends AbstractFunctionalTest {
   @Owner(developers = NATARAJA, intermittent = true)
   @Category(FunctionalTests.class)
   public void runAWSCloudProviderCRUDTests() {
-    retry.executeWithRetry(this ::createAWSCloudProvider, booleanMatcher, true);
+    retry.executeWithRetry(this::createAWSCloudProvider, booleanMatcher, true);
     log.info("Created AWS Cloud provider with id {}", AWSCloudProviderId);
     updateAWSCloudProvider();
     log.info("Updated AWS Cloud provider with id {}", AWSCloudProviderId);
@@ -70,7 +74,7 @@ public class CloudProviderTest extends AbstractFunctionalTest {
   @Owner(developers = DEEPAK)
   @Category(FunctionalTests.class)
   public void runAzureCloudProviderCRUDTests() {
-    retry.executeWithRetry(this ::createAzureCloudProvider, booleanMatcher, true);
+    retry.executeWithRetry(this::createAzureCloudProvider, booleanMatcher, true);
     log.info("Created Azure Cloud provider with id {}", AzureCloudProviderId);
     updateAzureCloudProvider();
     log.info("Updated Azure Cloud provider with id {}", AzureCloudProviderId);
@@ -95,7 +99,7 @@ public class CloudProviderTest extends AbstractFunctionalTest {
   @Owner(developers = DEEPAK)
   @Category(FunctionalTests.class)
   public void runPhysicalDataCenterCloudProvider() {
-    retry.executeWithRetry(this ::createPhysicalDataCenterCloudProvider, booleanMatcher, true);
+    retry.executeWithRetry(this::createPhysicalDataCenterCloudProvider, booleanMatcher, true);
     log.info(
         String.format("Created Physical Data Center Cloud provider with id %s", PhysicalDataCenterCloudProviderId));
     updatePhyscialDataCenterCloudProvider();

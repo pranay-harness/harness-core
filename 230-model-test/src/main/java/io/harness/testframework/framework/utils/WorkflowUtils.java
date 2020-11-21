@@ -1,11 +1,11 @@
 package io.harness.testframework.framework.utils;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
+
 import static software.wings.sm.StateType.HTTP;
 
-import com.google.common.collect.ImmutableMap;
-
 import io.harness.testframework.restutils.WorkflowRestUtils;
+
 import software.wings.beans.CanaryOrchestrationWorkflow;
 import software.wings.beans.GraphNode;
 import software.wings.beans.PhaseStep;
@@ -15,6 +15,7 @@ import software.wings.beans.WorkflowPhase;
 import software.wings.sm.states.HttpState;
 import software.wings.sm.states.HttpState.HttpStateKeys;
 
+import com.google.common.collect.ImmutableMap;
 import java.util.ArrayList;
 import java.util.Collections;
 

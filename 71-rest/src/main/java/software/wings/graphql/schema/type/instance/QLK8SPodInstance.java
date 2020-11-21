@@ -1,12 +1,12 @@
 package software.wings.graphql.schema.type.instance;
 
+import software.wings.graphql.schema.type.artifact.QLArtifact;
+
+import java.util.List;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
-import software.wings.graphql.schema.type.artifact.QLArtifact;
-
-import java.util.List;
 
 @Data
 @NoArgsConstructor

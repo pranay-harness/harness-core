@@ -2,12 +2,13 @@ package software.wings.service.impl.yaml.handler.artifactstream;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 
-import com.google.inject.Singleton;
-
 import io.harness.annotations.dev.OwnedBy;
+
 import software.wings.beans.artifact.AmazonS3ArtifactStream;
 import software.wings.beans.artifact.AmazonS3ArtifactStream.Yaml;
 import software.wings.beans.yaml.ChangeContext;
+
+import com.google.inject.Singleton;
 
 /**
  * @author rktummala on 10/09/17

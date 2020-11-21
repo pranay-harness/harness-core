@@ -1,10 +1,12 @@
 package io.harness.cvng.core.beans;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
+
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.CategoryTest;
 import io.harness.cvng.core.entities.CVConfig;
+
 import org.junit.Before;
 
 public class DSConfigTestBase extends CategoryTest {

@@ -4,6 +4,13 @@ import static io.harness.rule.OwnerRule.ANSHUL;
 import static io.harness.rule.OwnerRule.ANUBHAW;
 import static io.harness.rule.OwnerRule.DINESH;
 import static io.harness.rule.OwnerRule.RAMA;
+
+import static software.wings.beans.AppContainer.Builder.anAppContainer;
+import static software.wings.beans.command.ServiceCommand.Builder.aServiceCommand;
+import static software.wings.utils.ArtifactType.JAR;
+import static software.wings.utils.WingsTestConstants.APP_ID;
+import static software.wings.utils.WingsTestConstants.SERVICE_ID;
+
 import static java.lang.String.format;
 import static java.util.Arrays.asList;
 import static javax.ws.rs.client.Entity.entity;
@@ -14,11 +21,6 @@ import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-import static software.wings.beans.AppContainer.Builder.anAppContainer;
-import static software.wings.beans.command.ServiceCommand.Builder.aServiceCommand;
-import static software.wings.utils.ArtifactType.JAR;
-import static software.wings.utils.WingsTestConstants.APP_ID;
-import static software.wings.utils.WingsTestConstants.SERVICE_ID;
 
 import io.harness.CategoryTest;
 import io.harness.beans.PageRequest;
@@ -27,9 +29,7 @@ import io.harness.beans.SearchFilter.Operator;
 import io.harness.category.element.UnitTests;
 import io.harness.rest.RestResponse;
 import io.harness.rule.Owner;
-import org.junit.ClassRule;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
+
 import software.wings.beans.Service;
 import software.wings.beans.Setup.SetupStatus;
 import software.wings.beans.command.ServiceCommand;
@@ -39,6 +39,9 @@ import software.wings.utils.ResourceTestRule;
 
 import javax.ws.rs.core.GenericType;
 import javax.ws.rs.core.Response;
+import org.junit.ClassRule;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 /**
  * Created by anubhaw on 5/23/16.

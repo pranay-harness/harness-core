@@ -2,10 +2,9 @@ package io.harness.annotations;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 
-import com.google.inject.BindingAnnotation;
-
 import io.harness.annotations.dev.OwnedBy;
 
+import com.google.inject.BindingAnnotation;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 

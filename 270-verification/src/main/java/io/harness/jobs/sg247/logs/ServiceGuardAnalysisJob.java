@@ -1,12 +1,13 @@
 package io.harness.jobs.sg247.logs;
 
-import com.google.inject.Inject;
-
 import io.harness.mongo.iterator.MongoPersistenceIterator.Handler;
 import io.harness.service.intfc.ContinuousVerificationService;
-import lombok.extern.slf4j.Slf4j;
+
 import software.wings.beans.Account;
 import software.wings.service.intfc.verification.CVConfigurationService;
+
+import com.google.inject.Inject;
+import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class ServiceGuardAnalysisJob implements Handler<Account> {

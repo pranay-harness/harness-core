@@ -1,13 +1,12 @@
 package ci.pipeline.execution;
 
 import static io.harness.rule.OwnerRule.HARSH;
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-
-import com.google.inject.Inject;
 
 import io.harness.ambiance.Ambiance;
 import io.harness.beans.stages.IntegrationStageStepParameters;
@@ -23,6 +22,9 @@ import io.harness.pms.execution.Status;
 import io.harness.rule.Owner;
 import io.harness.service.DelegateGrpcClientWrapper;
 import io.harness.stateutils.buildstate.ConnectorUtils;
+
+import com.google.inject.Inject;
+import java.io.IOException;
 import org.apache.groovy.util.Maps;
 import org.junit.Before;
 import org.junit.Test;
@@ -30,8 +32,6 @@ import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
-
-import java.io.IOException;
 
 public class GitBuildStatusUtilityTest extends CIExecutionTest {
   private final String accountId = "accountId";

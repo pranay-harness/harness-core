@@ -1,6 +1,9 @@
 package software.wings.graphql.instrumentation;
 
 import static io.harness.rule.OwnerRule.ROHIT_KUMAR;
+
+import static software.wings.security.AuthenticationFilter.API_KEY_HEADER;
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.eq;
@@ -10,10 +13,19 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
-import static software.wings.security.AuthenticationFilter.API_KEY_HEADER;
+
+import io.harness.CategoryTest;
+import io.harness.category.element.UnitTests;
+import io.harness.rule.Owner;
+
+import software.wings.audit.ApiKeyAuditDetails;
+import software.wings.audit.AuditHeader;
+import software.wings.beans.ApiKeyEntry;
+import software.wings.common.AuditHelper;
+import software.wings.graphql.utils.GraphQLConstants;
+import software.wings.service.intfc.ApiKeyService;
 
 import com.google.common.collect.ImmutableList;
-
 import graphql.ExecutionResult;
 import graphql.ExecutionResultImpl;
 import graphql.GraphQLContext;
@@ -21,9 +33,9 @@ import graphql.execution.ExecutionContext;
 import graphql.execution.instrumentation.InstrumentationContext;
 import graphql.execution.instrumentation.parameters.InstrumentationExecuteOperationParameters;
 import graphql.language.OperationDefinition;
-import io.harness.CategoryTest;
-import io.harness.category.element.UnitTests;
-import io.harness.rule.Owner;
+import java.io.InputStream;
+import java.util.Collections;
+import javax.servlet.http.HttpServletRequest;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -32,16 +44,6 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.mockito.Spy;
-import software.wings.audit.ApiKeyAuditDetails;
-import software.wings.audit.AuditHeader;
-import software.wings.beans.ApiKeyEntry;
-import software.wings.common.AuditHelper;
-import software.wings.graphql.utils.GraphQLConstants;
-import software.wings.service.intfc.ApiKeyService;
-
-import java.io.InputStream;
-import java.util.Collections;
-import javax.servlet.http.HttpServletRequest;
 
 public class QLAuditInstrumentationTest extends CategoryTest {
   @Mock private AuditHelper auditHelper;

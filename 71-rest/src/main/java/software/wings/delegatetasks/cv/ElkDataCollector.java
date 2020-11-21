@@ -2,23 +2,13 @@ package software.wings.delegatetasks.cv;
 
 import static io.harness.network.Http.getOkHttpClientBuilder;
 import static io.harness.network.Http.getOkHttpClientBuilderWithReadtimeOut;
+
 import static java.lang.String.format;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
-import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Preconditions;
-
 import io.harness.network.Http;
 import io.harness.serializer.JsonUtils;
-import lombok.extern.slf4j.Slf4j;
-import okhttp3.OkHttpClient;
-import okhttp3.Request;
-import org.apache.commons.codec.binary.Base64;
-import org.json.JSONArray;
-import org.json.JSONObject;
-import retrofit2.Call;
-import retrofit2.Retrofit;
-import retrofit2.converter.jackson.JacksonConverterFactory;
+
 import software.wings.beans.ElkConfig;
 import software.wings.helpers.ext.elk.ElkRestClient;
 import software.wings.helpers.ext.elk.KibanaRestClient;
@@ -29,6 +19,8 @@ import software.wings.service.impl.elk.ElkDataCollectionInfoV2;
 import software.wings.service.impl.elk.ElkLogFetchRequest;
 import software.wings.service.impl.elk.ElkQueryType;
 
+import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Preconditions;
 import java.nio.charset.StandardCharsets;
 import java.security.cert.X509Certificate;
 import java.text.ParseException;
@@ -44,6 +36,15 @@ import javax.net.ssl.SSLContext;
 import javax.net.ssl.SSLSocketFactory;
 import javax.net.ssl.TrustManager;
 import javax.net.ssl.X509TrustManager;
+import lombok.extern.slf4j.Slf4j;
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
+import org.apache.commons.codec.binary.Base64;
+import org.json.JSONArray;
+import org.json.JSONObject;
+import retrofit2.Call;
+import retrofit2.Retrofit;
+import retrofit2.converter.jackson.JacksonConverterFactory;
 @Slf4j
 public class ElkDataCollector implements LogDataCollector<ElkDataCollectionInfoV2> {
   private ElkDataCollectionInfoV2 dataCollectionInfo;
@@ -90,10 +91,10 @@ public class ElkDataCollector implements LogDataCollector<ElkDataCollectionInfoV
   public Object search(ElkConfig elkConfig, ElkLogFetchRequest logFetchRequest, int maxRecords) {
     final Call<Object> request = elkConfig.getElkConnector() == ElkConnector.KIBANA_SERVER
         ? getKibanaRestClient(elkConfig).getLogSample(
-              format(KibanaRestClient.searchPathPattern, logFetchRequest.getIndices(), 10000),
-              KibanaRestClient.searchMethod, logFetchRequest.toElasticSearchJsonObject())
+            format(KibanaRestClient.searchPathPattern, logFetchRequest.getIndices(), 10000),
+            KibanaRestClient.searchMethod, logFetchRequest.toElasticSearchJsonObject())
         : getElkRestClient(elkConfig).search(
-              logFetchRequest.getIndices(), logFetchRequest.toElasticSearchJsonObject(), maxRecords);
+            logFetchRequest.getIndices(), logFetchRequest.toElasticSearchJsonObject(), maxRecords);
     return context.executeRequest("Fetching logs from " + elkConfig.getElkUrl(), request);
   }
 

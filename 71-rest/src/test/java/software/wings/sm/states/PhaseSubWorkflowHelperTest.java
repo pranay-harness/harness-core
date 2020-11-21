@@ -1,20 +1,17 @@
 package software.wings.sm.states;
 
 import static io.harness.rule.OwnerRule.VAIBHAV_SI;
+
+import static software.wings.utils.WingsTestConstants.APP_ID;
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.when;
-import static software.wings.utils.WingsTestConstants.APP_ID;
-
-import com.google.inject.Inject;
 
 import io.harness.category.element.UnitTests;
 import io.harness.exception.InvalidRequestException;
 import io.harness.rule.Owner;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
+
 import software.wings.WingsBaseTest;
 import software.wings.beans.Environment;
 import software.wings.beans.GcpKubernetesInfrastructureMapping;
@@ -29,8 +26,13 @@ import software.wings.service.intfc.InfrastructureDefinitionService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.sm.ExecutionContext;
 
+import com.google.inject.Inject;
 import java.util.Arrays;
 import java.util.Collections;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
 
 public class PhaseSubWorkflowHelperTest extends WingsBaseTest {
   private static final String SERVICE_NAME_FOR_NON_TEMPLATIZED = "SERVICE_FOR_NON_TEMPLATIZED";

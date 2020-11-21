@@ -2,11 +2,12 @@ package io.harness.testframework.restutils;
 
 import io.harness.rest.RestResponse;
 import io.harness.testframework.framework.Setup;
-import io.restassured.mapper.ObjectMapperType;
-import org.apache.commons.lang3.StringUtils;
+
 import software.wings.beans.VaultConfig;
 
+import io.restassured.mapper.ObjectMapperType;
 import javax.ws.rs.core.GenericType;
+import org.apache.commons.lang3.StringUtils;
 
 public class VaultRestUtils {
   public static String addVault(String bearerToken, VaultConfig vaultConfig) {

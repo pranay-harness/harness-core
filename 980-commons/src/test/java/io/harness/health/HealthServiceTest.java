@@ -1,6 +1,7 @@
 package io.harness.health;
 
 import static io.harness.rule.OwnerRule.GEORGE;
+
 import static java.time.Duration.ofMillis;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
@@ -13,11 +14,11 @@ import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
 import io.harness.threading.Morpheus;
 import io.harness.threading.ThreadPoolGuard;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
 
 import java.time.Duration;
 import java.util.concurrent.Executors;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 public class HealthServiceTest extends CategoryTest {
   private static final Duration DEFAULT_VALID_FOR = Duration.ofMillis(110);

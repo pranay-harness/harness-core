@@ -1,7 +1,8 @@
 package software.wings.utils;
 
-import com.openpojo.reflection.PojoClass;
 import io.harness.logging.Misc;
+
+import com.openpojo.reflection.PojoClass;
 
 /**
  * Created by peeyushaggarwal on 5/18/16.

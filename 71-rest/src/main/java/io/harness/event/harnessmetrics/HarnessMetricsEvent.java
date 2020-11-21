@@ -4,8 +4,8 @@ import io.harness.event.model.Event;
 import io.harness.event.model.EventData;
 import io.harness.event.model.EventType;
 import io.harness.metrics.HarnessMetricRegistry;
-import io.prometheus.client.Collector;
 
+import io.prometheus.client.Collector;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;

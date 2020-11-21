@@ -1,10 +1,9 @@
 package io.harness.perpetualtask.k8s.informer;
 
+import javax.annotation.Nonnull;
 import lombok.Builder;
 import lombok.NonNull;
 import lombok.Value;
-
-import javax.annotation.Nonnull;
 
 @Value
 @Builder

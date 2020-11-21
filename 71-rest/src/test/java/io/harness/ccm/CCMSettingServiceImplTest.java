@@ -1,11 +1,13 @@
 package io.harness.ccm;
 
 import static io.harness.rule.OwnerRule.HANTANG;
+
+import static software.wings.beans.Account.Builder.anAccount;
+import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.when;
-import static software.wings.beans.Account.Builder.anAccount;
-import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
@@ -16,6 +18,14 @@ import io.harness.ccm.config.CCMConfig;
 import io.harness.ccm.config.CCMSettingServiceImpl;
 import io.harness.ccm.config.CloudCostAware;
 import io.harness.rule.Owner;
+
+import software.wings.beans.Account;
+import software.wings.beans.KubernetesClusterConfig;
+import software.wings.beans.SettingAttribute;
+import software.wings.beans.SettingAttribute.SettingCategory;
+import software.wings.service.intfc.AccountService;
+import software.wings.service.intfc.SettingsService;
+
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -24,12 +34,6 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnit;
 import org.mockito.junit.MockitoRule;
-import software.wings.beans.Account;
-import software.wings.beans.KubernetesClusterConfig;
-import software.wings.beans.SettingAttribute;
-import software.wings.beans.SettingAttribute.SettingCategory;
-import software.wings.service.intfc.AccountService;
-import software.wings.service.intfc.SettingsService;
 
 public class CCMSettingServiceImplTest extends CategoryTest {
   private String accountIdWithCCM;

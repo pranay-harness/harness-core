@@ -1,7 +1,8 @@
 package software.wings.yaml.templatelibrary;
 
-import static org.apache.commons.lang3.StringUtils.isBlank;
 import static software.wings.beans.Application.GLOBAL_APP_ID;
+
+import static org.apache.commons.lang3.StringUtils.isBlank;
 
 import software.wings.beans.yaml.YamlConstants;
 import software.wings.beans.yaml.YamlType;

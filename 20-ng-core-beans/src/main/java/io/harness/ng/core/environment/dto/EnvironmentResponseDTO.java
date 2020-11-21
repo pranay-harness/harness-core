@@ -1,14 +1,14 @@
 package io.harness.ng.core.environment.dto;
 
+import io.harness.ng.core.environment.beans.EnvironmentType;
+
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import io.harness.ng.core.environment.beans.EnvironmentType;
+import java.util.Map;
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Data;
 import lombok.experimental.FieldDefaults;
-
-import java.util.Map;
 
 @Data
 @Builder

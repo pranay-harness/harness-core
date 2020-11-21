@@ -1,6 +1,7 @@
 package software.wings.resources;
 
 import static io.harness.rule.OwnerRule.HANTANG;
+
 import static java.lang.String.format;
 import static javax.ws.rs.client.Entity.entity;
 import static org.mockito.Matchers.anyString;
@@ -18,15 +19,16 @@ import io.harness.ccm.config.GcpBillingAccountService;
 import io.harness.ccm.setup.service.intfc.AWSAccountService;
 import io.harness.rest.RestResponse;
 import io.harness.rule.Owner;
-import org.junit.Before;
-import org.junit.ClassRule;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
+
 import software.wings.utils.ResourceTestRule;
 
 import java.util.List;
 import javax.ws.rs.core.GenericType;
 import javax.ws.rs.core.MediaType;
+import org.junit.Before;
+import org.junit.ClassRule;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 public class GcpBillingAccountResourceTest extends CategoryTest {
   private String accountId = "ACCOUNT_ID";

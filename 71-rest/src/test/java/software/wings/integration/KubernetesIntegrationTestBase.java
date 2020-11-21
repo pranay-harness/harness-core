@@ -3,25 +3,25 @@ package software.wings.integration;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 import static software.wings.service.impl.GcpHelperService.LOCATION_DELIMITER;
 
-import com.google.api.services.container.model.NodePoolAutoscaling;
-import com.google.common.collect.ImmutableMap;
-
-import io.fabric8.kubernetes.api.model.Quantity;
-import io.fabric8.kubernetes.api.model.ReplicationControllerBuilder;
-import io.fabric8.kubernetes.api.model.ServiceBuilder;
 import io.harness.CategoryTest;
 import io.harness.k8s.KubernetesContainerServiceImpl;
 import io.harness.k8s.model.KubernetesConfig;
-import lombok.extern.slf4j.Slf4j;
+
 import software.wings.beans.GcpConfig;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.command.ExecutionLogCallback;
 import software.wings.cloudprovider.gke.GkeClusterServiceImpl;
 import software.wings.rules.Integration;
 
+import com.google.api.services.container.model.NodePoolAutoscaling;
+import com.google.common.collect.ImmutableMap;
+import io.fabric8.kubernetes.api.model.Quantity;
+import io.fabric8.kubernetes.api.model.ReplicationControllerBuilder;
+import io.fabric8.kubernetes.api.model.ServiceBuilder;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
+import lombok.extern.slf4j.Slf4j;
 
 @Integration
 @Slf4j

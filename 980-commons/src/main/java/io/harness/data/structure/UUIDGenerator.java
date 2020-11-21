@@ -3,10 +3,9 @@ package io.harness.data.structure;
 import static com.fasterxml.uuid.Generators.timeBasedGenerator;
 import static org.apache.commons.codec.binary.Base64.decodeBase64;
 
-import org.apache.commons.codec.binary.Base64;
-
 import java.nio.ByteBuffer;
 import java.util.UUID;
+import org.apache.commons.codec.binary.Base64;
 
 /**
  * A universal unique ID generator.

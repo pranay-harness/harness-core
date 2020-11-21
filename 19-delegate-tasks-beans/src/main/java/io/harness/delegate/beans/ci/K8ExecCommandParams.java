@@ -1,12 +1,12 @@
 package io.harness.delegate.beans.ci;
 
 import io.harness.delegate.beans.ci.pod.ConnectorDetails;
-import lombok.Builder;
-import lombok.Data;
-import lombok.Value;
 
 import java.util.List;
 import javax.validation.constraints.NotNull;
+import lombok.Builder;
+import lombok.Data;
+import lombok.Value;
 
 @Data
 @Value

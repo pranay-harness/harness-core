@@ -3,10 +3,9 @@ package io.harness.plancreators;
 import static io.harness.executionplan.plancreator.beans.PlanCreatorType.STAGE_PLAN_CREATOR;
 import static io.harness.rule.OwnerRule.ALEKSANDAR;
 import static io.harness.rule.OwnerRule.HARSH;
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.when;
-
-import com.google.inject.Inject;
 
 import io.harness.beans.stages.IntegrationStage;
 import io.harness.category.element.UnitTests;
@@ -19,12 +18,13 @@ import io.harness.executionplan.core.PlanCreatorSearchContext;
 import io.harness.executionplan.core.impl.ExecutionPlanCreationContextImpl;
 import io.harness.plan.PlanNode;
 import io.harness.rule.Owner;
+
+import com.google.inject.Inject;
+import java.util.List;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.Mock;
-
-import java.util.List;
 
 public class IntegrationStagePlanCreatorTest extends CIExecutionTest {
   @Inject private IntegrationStagePlanCreator integrationStagePlanCreator;

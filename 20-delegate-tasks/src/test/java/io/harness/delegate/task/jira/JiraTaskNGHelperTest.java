@@ -1,25 +1,26 @@
 package io.harness.delegate.task.jira;
 
+import static io.harness.rule.OwnerRule.ALEXEI;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Matchers.any;
+import static org.mockito.Mockito.when;
+
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.task.jira.response.JiraTaskNGResponse;
 import io.harness.jira.JiraAction;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.rule.Owner;
 import io.harness.security.encryption.SecretDecryptionService;
+
+import java.util.ArrayList;
+import java.util.Collections;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
-
-import java.util.ArrayList;
-import java.util.Collections;
-
-import static io.harness.rule.OwnerRule.ALEXEI;
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.Matchers.any;
-import static org.mockito.Mockito.when;
 
 public class JiraTaskNGHelperTest {
   @Mock private JiraTaskNGHandler jiraTaskNGHandler;

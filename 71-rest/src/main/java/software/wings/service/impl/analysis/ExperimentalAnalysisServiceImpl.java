@@ -4,11 +4,9 @@ import static io.harness.beans.SearchFilter.Operator.EQ;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.persistence.HQuery.excludeAuthority;
+
 import static software.wings.metrics.RiskLevel.NA;
 import static software.wings.metrics.RiskLevel.getRiskLevel;
-
-import com.google.common.base.Preconditions;
-import com.google.inject.Inject;
 
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageRequest.PageRequestBuilder;
@@ -18,8 +16,7 @@ import io.harness.beans.SearchFilter.Operator;
 import io.harness.beans.SortOrder;
 import io.harness.exception.InvalidRequestException;
 import io.harness.persistence.HIterator;
-import lombok.extern.slf4j.Slf4j;
-import org.mongodb.morphia.query.Sort;
+
 import software.wings.beans.Base.BaseKeys;
 import software.wings.beans.User;
 import software.wings.dl.WingsPersistence;
@@ -42,6 +39,8 @@ import software.wings.sm.StateType;
 import software.wings.verification.CVConfiguration;
 import software.wings.verification.CVConfiguration.CVConfigurationKeys;
 
+import com.google.common.base.Preconditions;
+import com.google.inject.Inject;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -52,6 +51,8 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 import javax.validation.executable.ValidateOnExecution;
+import lombok.extern.slf4j.Slf4j;
+import org.mongodb.morphia.query.Sort;
 
 @ValidateOnExecution
 @Slf4j
@@ -453,8 +454,8 @@ public class ExperimentalAnalysisServiceImpl implements ExperimentalAnalysisServ
         ? analysisSummary.getControlClusters().isEmpty()
             ? "No baseline data for the given queries. This will be baseline for the next run."
             : analysisSummary.getTestClusters().isEmpty()
-                ? "No new data for the given queries. Showing baseline data if any."
-                : "No anomaly found"
+            ? "No new data for the given queries. Showing baseline data if any."
+            : "No anomaly found"
         : analysisRecord.getAnalysisSummaryMessage();
 
     int unknownClusters = 0;
@@ -471,9 +472,10 @@ public class ExperimentalAnalysisServiceImpl implements ExperimentalAnalysisServ
           ++lowRiskClusters;
         }
       }
-      riskLevel = highRiskClusters > 0
-          ? RiskLevel.HIGH
-          : mediumRiskCluster > 0 ? RiskLevel.MEDIUM : lowRiskClusters > 0 ? RiskLevel.LOW : RiskLevel.HIGH;
+      riskLevel = highRiskClusters > 0 ? RiskLevel.HIGH
+          : mediumRiskCluster > 0      ? RiskLevel.MEDIUM
+          : lowRiskClusters > 0        ? RiskLevel.LOW
+                                       : RiskLevel.HIGH;
 
       unknownClusters = analysisSummary.getUnknownClusters().size();
       analysisSummary.setHighRiskClusters(highRiskClusters);

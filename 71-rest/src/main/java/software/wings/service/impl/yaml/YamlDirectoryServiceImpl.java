@@ -7,10 +7,7 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.govern.Switch.unhandled;
 import static io.harness.validation.Validator.notNullCheck;
-import static java.util.Collections.emptySet;
-import static java.util.Collections.sort;
-import static org.apache.commons.lang3.StringUtils.isBlank;
-import static org.apache.commons.lang3.StringUtils.isNotBlank;
+
 import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static software.wings.beans.ConfigFile.DEFAULT_TEMPLATE_ID;
 import static software.wings.beans.EntityType.ENVIRONMENT;
@@ -60,9 +57,10 @@ import static software.wings.common.TemplateConstants.TEMPLATE_TYPES_WITH_YAML_S
 import static software.wings.security.UserThreadLocal.userGuard;
 import static software.wings.settings.SettingVariableTypes.PHYSICAL_DATA_CENTER;
 
-import com.google.common.annotations.VisibleForTesting;
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
+import static java.util.Collections.emptySet;
+import static java.util.Collections.sort;
+import static org.apache.commons.lang3.StringUtils.isBlank;
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
@@ -73,10 +71,7 @@ import io.harness.exception.GeneralException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.git.model.ChangeType;
-import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.collections4.ListUtils;
-import org.apache.commons.lang3.StringUtils;
-import org.hibernate.validator.constraints.NotEmpty;
+
 import software.wings.api.DeploymentType;
 import software.wings.beans.Account;
 import software.wings.beans.Application;
@@ -173,6 +168,9 @@ import software.wings.yaml.directory.YamlNode;
 import software.wings.yaml.gitSync.YamlGitConfig;
 import software.wings.yaml.gitSync.YamlGitConfig.SyncMode;
 
+import com.google.common.annotations.VisibleForTesting;
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -186,6 +184,10 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
 import java.util.stream.Collectors;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.collections4.ListUtils;
+import org.apache.commons.lang3.StringUtils;
+import org.hibernate.validator.constraints.NotEmpty;
 
 @Singleton
 @Slf4j
@@ -2199,9 +2201,9 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
           final String templateYamlFileName = template.getName() + YAML_EXTENSION;
           rootYamlFolder.addChild(type == Type.GLOBAL_TEMPLATE_LIBRARY
                   ? new AccountLevelYamlNode(accountId, template.getUuid(), templateYamlFileName, Template.class,
-                        templatePath.add(templateYamlFileName), yamlGitSyncService, type)
+                      templatePath.add(templateYamlFileName), yamlGitSyncService, type)
                   : new AppLevelYamlNode(accountId, template.getUuid(), appId, templateYamlFileName, Template.class,
-                        templatePath.add(templateYamlFileName), yamlGitSyncService, type));
+                      templatePath.add(templateYamlFileName), yamlGitSyncService, type));
         });
 
     return rootYamlFolder;

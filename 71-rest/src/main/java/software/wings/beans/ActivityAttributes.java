@@ -1,12 +1,12 @@
 package software.wings.beans;
 
-import lombok.Builder;
-import lombok.Value;
 import software.wings.beans.Activity.Type;
 import software.wings.beans.artifact.Artifact;
 import software.wings.beans.command.CommandUnit;
 
 import java.util.List;
+import lombok.Builder;
+import lombok.Value;
 
 @Value
 @Builder

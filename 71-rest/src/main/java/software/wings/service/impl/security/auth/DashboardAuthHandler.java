@@ -4,10 +4,6 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.exception.WingsException.USER;
 
-import com.google.common.collect.Sets;
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
-
 import io.harness.dashboard.Action;
 import io.harness.dashboard.DashboardAccessPermissions;
 import io.harness.dashboard.DashboardSettings;
@@ -15,7 +11,7 @@ import io.harness.eraro.ErrorCode;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.persistence.HIterator;
-import org.mongodb.morphia.query.Query;
+
 import software.wings.beans.User;
 import software.wings.beans.security.UserGroup;
 import software.wings.dl.WingsPersistence;
@@ -24,12 +20,16 @@ import software.wings.security.PermissionAttribute.PermissionType;
 import software.wings.security.UserPermissionInfo;
 import software.wings.security.UserThreadLocal;
 
+import com.google.common.collect.Sets;
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
+import org.mongodb.morphia.query.Query;
 
 /**
  * @author rktummala on 07/01/19

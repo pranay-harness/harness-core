@@ -1,15 +1,10 @@
 package io.harness.ng.core;
 
 import static io.harness.rule.OwnerRule.VIKAS;
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 import static org.mockito.MockitoAnnotations.initMocks;
-
-import com.google.inject.Guice;
-import com.google.inject.Injector;
-import com.google.inject.Module;
-import com.google.inject.Provides;
-import com.google.inject.Singleton;
 
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
@@ -28,14 +23,19 @@ import io.harness.secretmanagerclient.services.api.SecretManagerClientService;
 import io.harness.serializer.KryoRegistrar;
 import io.harness.serializer.NextGenRegistrars;
 import io.harness.service.DelegateGrpcClientWrapper;
+
+import com.google.inject.Guice;
+import com.google.inject.Injector;
+import com.google.inject.Module;
+import com.google.inject.Provides;
+import com.google.inject.Singleton;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Set;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.Mock;
-
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Set;
 
 public class SecretManagementModuleTest extends CategoryTest {
   private SecretManagementModule secretManagementModule;

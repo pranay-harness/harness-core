@@ -1,10 +1,9 @@
 package io.harness.perpetualtask.internal;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
+
 import static java.time.Duration.ofMinutes;
 import static java.time.Duration.ofSeconds;
-
-import com.google.common.collect.ImmutableList;
 
 import io.harness.annotation.HarnessEntity;
 import io.harness.iterator.PersistentFibonacciIterable;
@@ -21,6 +20,10 @@ import io.harness.persistence.CreatedAtAware;
 import io.harness.persistence.PersistentEntity;
 import io.harness.persistence.UpdatedAtAware;
 import io.harness.persistence.UuidAware;
+
+import com.google.common.collect.ImmutableList;
+import java.util.ArrayList;
+import java.util.List;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -31,9 +34,6 @@ import lombok.experimental.FieldNameConstants;
 import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Id;
-
-import java.util.ArrayList;
-import java.util.List;
 
 @Data
 @Builder

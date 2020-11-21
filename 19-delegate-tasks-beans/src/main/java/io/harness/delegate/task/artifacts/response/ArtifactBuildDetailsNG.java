@@ -1,9 +1,8 @@
 package io.harness.delegate.task.artifacts.response;
 
+import java.util.Map;
 import lombok.Builder;
 import lombok.Value;
-
-import java.util.Map;
 
 @Value
 @Builder

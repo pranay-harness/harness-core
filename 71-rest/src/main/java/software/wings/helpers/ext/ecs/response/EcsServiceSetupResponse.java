@@ -1,10 +1,12 @@
 package software.wings.helpers.ext.ecs.response;
 
 import io.harness.logging.CommandExecutionStatus;
+
+import software.wings.beans.command.ContainerSetupCommandUnitExecutionData;
+
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
-import software.wings.beans.command.ContainerSetupCommandUnitExecutionData;
 
 @Data
 @EqualsAndHashCode(callSuper = false)

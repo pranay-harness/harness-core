@@ -1,23 +1,23 @@
 package software.wings.core.managerConfiguration;
 
 import static io.harness.threading.Morpheus.sleep;
-import static java.util.Collections.singletonList;
-import static org.apache.commons.collections.MapUtils.synchronizedMap;
+
 import static software.wings.beans.ManagerConfiguration.Builder.aManagerConfiguration;
 import static software.wings.beans.ManagerConfiguration.MATCH_ALL_VERSION;
 import static software.wings.core.managerConfiguration.ConfigChangeEvent.PrimaryChanged;
 
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
+import static java.util.Collections.singletonList;
+import static org.apache.commons.collections.MapUtils.synchronizedMap;
 
-import io.dropwizard.lifecycle.Managed;
 import io.harness.queue.QueueController;
 import io.harness.version.VersionInfoManager;
-import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.codec.binary.StringUtils;
+
 import software.wings.beans.ManagerConfiguration;
 import software.wings.dl.WingsPersistence;
 
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
+import io.dropwizard.lifecycle.Managed;
 import java.time.Duration;
 import java.util.HashMap;
 import java.util.List;
@@ -25,6 +25,8 @@ import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.codec.binary.StringUtils;
 
 @Singleton
 @Slf4j
@@ -61,7 +63,7 @@ public class ConfigurationController implements Managed, QueueController {
 
   @Override
   public void start() {
-    executorService.submit(this ::run);
+    executorService.submit(this::run);
   }
 
   @Override
@@ -97,7 +99,7 @@ public class ConfigurationController implements Managed, QueueController {
 
       boolean isPrimary = StringUtils.equals(MATCH_ALL_VERSION, managerConfiguration.getPrimaryVersion())
           || StringUtils.equals(
-                 versionInfoManager.getVersionInfo().getVersion(), managerConfiguration.getPrimaryVersion());
+              versionInfoManager.getVersionInfo().getVersion(), managerConfiguration.getPrimaryVersion());
 
       if (primary.getAndSet(isPrimary) != isPrimary) {
         log.info("{} primary mode", isPrimary ? "Entering" : "Leaving");

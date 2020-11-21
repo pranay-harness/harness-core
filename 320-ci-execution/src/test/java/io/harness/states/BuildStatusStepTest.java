@@ -2,12 +2,11 @@
 package io.harness.states;
 
 import static io.harness.rule.OwnerRule.HARSH;
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.joor.Reflect.on;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.when;
-
-import com.google.inject.Inject;
 
 import io.harness.ambiance.Ambiance;
 import io.harness.category.element.UnitTests;
@@ -20,13 +19,14 @@ import io.harness.executionplan.CIExecutionTest;
 import io.harness.ngpipeline.status.BuildStatusUpdateParameter;
 import io.harness.rule.Owner;
 import io.harness.stateutils.buildstate.ConnectorUtils;
+
+import com.google.inject.Inject;
+import java.io.IOException;
+import java.util.HashMap;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.Mock;
-
-import java.io.IOException;
-import java.util.HashMap;
 
 public class BuildStatusStepTest extends CIExecutionTest {
   @Mock private ConnectorUtils connectorUtils;

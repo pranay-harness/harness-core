@@ -1,15 +1,15 @@
 package software.wings.beans.template.dto;
 
-import static com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL;
 import static software.wings.common.TemplateConstants.HARNESS_COMMAND_LIBRARY_GALLERY;
+
+import static com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonTypeName;
+import java.util.Set;
 import lombok.Builder;
 import lombok.Data;
-
-import java.util.Set;
 
 @JsonTypeName(HARNESS_COMMAND_LIBRARY_GALLERY)
 @Data

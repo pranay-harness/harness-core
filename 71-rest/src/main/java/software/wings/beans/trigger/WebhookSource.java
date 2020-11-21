@@ -3,14 +3,14 @@ package software.wings.beans.trigger;
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 
 import io.harness.annotations.dev.OwnedBy;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.Value;
-import lombok.experimental.UtilityClass;
 
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.Value;
+import lombok.experimental.UtilityClass;
 
 public enum WebhookSource {
   GITHUB,

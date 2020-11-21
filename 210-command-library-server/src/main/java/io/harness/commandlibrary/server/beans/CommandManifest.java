@@ -3,12 +3,12 @@ package io.harness.commandlibrary.server.beans;
 import static org.apache.commons.lang3.StringUtils.strip;
 
 import io.harness.commandlibrary.server.utils.JsonSerializable;
+
+import java.util.Set;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.experimental.FieldNameConstants;
-
-import java.util.Set;
 
 @Data
 @NoArgsConstructor

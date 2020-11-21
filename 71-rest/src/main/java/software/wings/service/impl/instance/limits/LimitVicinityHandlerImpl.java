@@ -3,8 +3,6 @@ package software.wings.service.impl.instance.limits;
 import static software.wings.beans.Account.GLOBAL_ACCOUNT_ID;
 import static software.wings.beans.Application.GLOBAL_APP_ID;
 
-import com.google.inject.Inject;
-
 import io.harness.alert.AlertData;
 import io.harness.limits.Action;
 import io.harness.limits.ActionType;
@@ -16,14 +14,16 @@ import io.harness.limits.lib.LimitChecker;
 import io.harness.limits.lib.LimitType;
 import io.harness.limits.lib.StaticLimit;
 import io.harness.limits.lib.StaticLimitChecker;
-import lombok.extern.slf4j.Slf4j;
+
 import software.wings.beans.alert.AlertType;
 import software.wings.beans.alert.ResourceUsageApproachingLimitAlert;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.AlertService;
 import software.wings.service.intfc.limits.LimitVicinityHandler;
 
+import com.google.inject.Inject;
 import java.util.Arrays;
+import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class LimitVicinityHandlerImpl implements LimitVicinityHandler {
@@ -42,7 +42,7 @@ public class LimitVicinityHandlerImpl implements LimitVicinityHandler {
     Arrays.stream(ActionType.values())
         .filter(actionType -> actionType.getAllowedLimitTypes().contains(LimitType.STATIC))
         .map(actionType -> new Action(accountId, actionType))
-        .forEach(this ::handleAction);
+        .forEach(this::handleAction);
   }
 
   private void handleAction(Action action) {

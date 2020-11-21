@@ -1,12 +1,13 @@
 package software.wings.verification.dynatrace;
 
+import software.wings.verification.CVConfiguration;
+
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
-import software.wings.verification.CVConfiguration;
 
 /**
  * Created by Pranjal on 10/16/2018

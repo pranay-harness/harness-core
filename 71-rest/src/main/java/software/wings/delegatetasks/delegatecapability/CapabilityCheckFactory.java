@@ -1,8 +1,5 @@
 package software.wings.delegatetasks.delegatecapability;
 
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
-
 import io.harness.delegate.beans.executioncapability.CapabilityType;
 import io.harness.delegate.task.executioncapability.AlwaysFalseValidationCapabilityCheck;
 import io.harness.delegate.task.executioncapability.AwsRegionCapabilityCheck;
@@ -14,6 +11,7 @@ import io.harness.delegate.task.executioncapability.KustomizeCapabilityCheck;
 import io.harness.delegate.task.executioncapability.ProcessExecutorCapabilityCheck;
 import io.harness.delegate.task.executioncapability.SocketConnectivityCapabilityCheck;
 import io.harness.delegate.task.executioncapability.SystemEnvCapabilityCheck;
+
 import software.wings.delegatetasks.validation.capabilitycheck.ClusterMasterUrlCapabilityCheck;
 import software.wings.delegatetasks.validation.capabilitycheck.GitConnectionCapabilityCheck;
 import software.wings.delegatetasks.validation.capabilitycheck.HelmCommandCapabilityCheck;
@@ -26,6 +24,9 @@ import software.wings.delegatetasks.validation.capabilitycheck.ShellConnectionCa
 import software.wings.delegatetasks.validation.capabilitycheck.SmbConnectionCapabilityCheck;
 import software.wings.delegatetasks.validation.capabilitycheck.SmtpCapabilityCheck;
 import software.wings.delegatetasks.validation.capabilitycheck.WinrmHostValidationCapabilityCheck;
+
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
 
 @Singleton
 public class CapabilityCheckFactory {

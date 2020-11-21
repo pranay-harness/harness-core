@@ -2,10 +2,11 @@ package io.harness.redesign.states.email;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 
-import com.github.reinert.jjschema.Attributes;
 import io.harness.annotations.Redesign;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.state.io.StepParameters;
+
+import com.github.reinert.jjschema.Attributes;
 import lombok.Builder;
 import lombok.Value;
 

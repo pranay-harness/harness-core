@@ -1,25 +1,24 @@
 package io.harness.mongo;
 
 import static io.harness.mongo.IndexManager.Mode.MANUAL;
-import static lombok.AccessLevel.NONE;
 
-import com.google.common.collect.ImmutableMap;
+import static lombok.AccessLevel.NONE;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.google.common.collect.ImmutableMap;
 import com.mongodb.ReadPreference;
 import com.mongodb.Tag;
 import com.mongodb.TagSet;
+import java.util.Collections;
+import java.util.Optional;
+import java.util.stream.Collectors;
 import lombok.Builder;
 import lombok.Builder.Default;
 import lombok.Getter;
 import lombok.ToString;
 import lombok.Value;
 import org.hibernate.validator.constraints.NotEmpty;
-
-import java.util.Collections;
-import java.util.Optional;
-import java.util.stream.Collectors;
 
 /**
  * MongoConfig is used to store the MongoDB connection related configuration.

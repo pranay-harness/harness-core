@@ -1,12 +1,12 @@
 package software.wings.beans;
 
-import com.fasterxml.jackson.annotation.JsonTypeName;
 import io.harness.event.model.EventType;
+
+import com.fasterxml.jackson.annotation.JsonTypeName;
+import java.util.Map;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
-
-import java.util.Map;
 
 /**
  * Created by anubhaw on 7/27/16.

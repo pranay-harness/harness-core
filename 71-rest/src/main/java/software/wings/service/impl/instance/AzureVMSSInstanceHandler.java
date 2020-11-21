@@ -1,21 +1,17 @@
 package software.wings.service.impl.instance;
 
-import static com.google.common.collect.Sets.difference;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.logging.CommandExecutionStatus.SUCCESS;
 import static io.harness.validation.Validator.notNullCheck;
+
+import static software.wings.beans.FeatureName.AZURE_VMSS;
+
+import static com.google.common.collect.Sets.difference;
 import static java.lang.String.format;
 import static java.util.Collections.emptyMap;
 import static java.util.Optional.of;
 import static java.util.stream.Collectors.toSet;
-import static software.wings.beans.FeatureName.AZURE_VMSS;
-
-import com.google.common.collect.ArrayListMultimap;
-import com.google.common.collect.Multimap;
-import com.google.common.collect.Sets.SetView;
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
 
 import io.harness.azure.model.AzureVMData;
 import io.harness.delegate.beans.DelegateResponseData;
@@ -23,7 +19,7 @@ import io.harness.delegate.task.azure.response.AzureVMSSListVMDataResponse;
 import io.harness.delegate.task.azure.response.AzureVMSSTaskExecutionResponse;
 import io.harness.exception.InvalidRequestException;
 import io.harness.security.encryption.EncryptedDataDetail;
-import lombok.extern.slf4j.Slf4j;
+
 import software.wings.api.AzureVMSSDeploymentInfo;
 import software.wings.api.DeploymentInfo;
 import software.wings.api.DeploymentSummary;
@@ -50,6 +46,11 @@ import software.wings.sm.PhaseStepExecutionSummary;
 import software.wings.sm.StepExecutionSummary;
 import software.wings.sm.states.azure.AzureVMSSDeployExecutionSummary;
 
+import com.google.common.collect.ArrayListMultimap;
+import com.google.common.collect.Multimap;
+import com.google.common.collect.Sets.SetView;
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -58,6 +59,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Singleton

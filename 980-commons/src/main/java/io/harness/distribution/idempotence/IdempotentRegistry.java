@@ -1,9 +1,8 @@
 package io.harness.distribution.idempotence;
 
+import java.time.Duration;
 import lombok.Builder;
 import lombok.Value;
-
-import java.time.Duration;
 
 public interface IdempotentRegistry<T extends IdempotentResult> {
   enum State {

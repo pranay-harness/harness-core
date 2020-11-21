@@ -2,11 +2,19 @@ package software.wings.scheduler;
 
 import static java.time.Duration.ofSeconds;
 
-import com.google.inject.Inject;
-import com.google.inject.name.Named;
-
 import io.harness.delegate.service.DelegateAgentFileService.FileBucket;
 import io.harness.scheduler.PersistentScheduler;
+
+import software.wings.beans.AppContainer;
+import software.wings.beans.artifact.Artifact;
+import software.wings.dl.WingsPersistence;
+import software.wings.service.intfc.FileService;
+
+import com.google.inject.Inject;
+import com.google.inject.name.Named;
+import java.time.Duration;
+import java.time.OffsetDateTime;
+import java.util.Date;
 import lombok.extern.slf4j.Slf4j;
 import org.quartz.Job;
 import org.quartz.JobBuilder;
@@ -17,14 +25,6 @@ import org.quartz.SimpleScheduleBuilder;
 import org.quartz.SimpleTrigger;
 import org.quartz.Trigger;
 import org.quartz.TriggerBuilder;
-import software.wings.beans.AppContainer;
-import software.wings.beans.artifact.Artifact;
-import software.wings.dl.WingsPersistence;
-import software.wings.service.intfc.FileService;
-
-import java.time.Duration;
-import java.time.OffsetDateTime;
-import java.util.Date;
 @Slf4j
 public class PruneFileJob implements Job {
   public static final String GROUP = "PRUNE_FILE_GROUP";

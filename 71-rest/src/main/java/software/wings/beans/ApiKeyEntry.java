@@ -1,6 +1,5 @@
 package software.wings.beans;
 
-import com.fasterxml.jackson.annotation.JsonView;
 import io.harness.annotation.HarnessEntity;
 import io.harness.mongo.index.FdIndex;
 import io.harness.mongo.index.Field;
@@ -9,6 +8,13 @@ import io.harness.persistence.AccountAccess;
 import io.harness.persistence.CreatedAtAccess;
 import io.harness.persistence.PersistentEntity;
 import io.harness.persistence.UuidAccess;
+
+import software.wings.beans.ApiKeyEntry.ApiKeyEntryKeys;
+import software.wings.beans.security.UserGroup;
+import software.wings.jersey.JsonViews;
+
+import com.fasterxml.jackson.annotation.JsonView;
+import java.util.List;
 import lombok.Builder;
 import lombok.Data;
 import lombok.experimental.FieldNameConstants;
@@ -16,11 +22,6 @@ import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Id;
 import org.mongodb.morphia.annotations.Transient;
-import software.wings.beans.ApiKeyEntry.ApiKeyEntryKeys;
-import software.wings.beans.security.UserGroup;
-import software.wings.jersey.JsonViews;
-
-import java.util.List;
 
 @Data
 @Builder

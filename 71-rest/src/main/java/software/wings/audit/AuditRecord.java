@@ -13,6 +13,10 @@ import io.harness.persistence.AccountAccess;
 import io.harness.persistence.CreatedAtAware;
 import io.harness.persistence.PersistentEntity;
 import io.harness.persistence.UuidAware;
+
+import software.wings.audit.AuditRecord.AuditRecordKeys;
+
+import javax.validation.constraints.NotNull;
 import lombok.Builder;
 import lombok.Data;
 import lombok.Setter;
@@ -20,9 +24,6 @@ import lombok.experimental.FieldNameConstants;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Id;
-import software.wings.audit.AuditRecord.AuditRecordKeys;
-
-import javax.validation.constraints.NotNull;
 
 @OwnedBy(PL)
 @Data

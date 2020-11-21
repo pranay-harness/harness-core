@@ -5,9 +5,7 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.mongo.iterator.MongoPersistenceIterator.SchedulingType.REGULAR;
 import static io.harness.persistence.HPersistence.returnNewOptions;
 import static io.harness.persistence.UpdatedAtAware.LAST_UPDATED_AT_KEY;
-import static java.time.Duration.ofHours;
-import static java.time.Duration.ofMinutes;
-import static java.time.Duration.ofSeconds;
+
 import static software.wings.beans.Base.ID_KEY;
 import static software.wings.beans.FeatureName.CONNECTORS_REF_SECRETS_MIGRATION;
 import static software.wings.beans.SettingAttribute.VALUE_TYPE_KEY;
@@ -15,9 +13,9 @@ import static software.wings.service.impl.SettingServiceHelper.ATTRIBUTES_USING_
 import static software.wings.settings.SettingVariableTypes.APM_VERIFICATION;
 import static software.wings.settings.SettingVariableTypes.SECRET_TEXT;
 
-import com.google.common.annotations.VisibleForTesting;
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
+import static java.time.Duration.ofHours;
+import static java.time.Duration.ofMinutes;
+import static java.time.Duration.ofSeconds;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.Encryptable;
@@ -33,10 +31,7 @@ import io.harness.mongo.iterator.MongoPersistenceIterator.Handler;
 import io.harness.mongo.iterator.filter.MorphiaFilterExpander;
 import io.harness.mongo.iterator.provider.MorphiaPersistenceProvider;
 import io.harness.workers.background.AccountStatusBasedEntityProcessController;
-import lombok.NonNull;
-import lombok.extern.slf4j.Slf4j;
-import org.mongodb.morphia.query.Query;
-import org.mongodb.morphia.query.UpdateOperations;
+
 import software.wings.annotation.EncryptableSetting;
 import software.wings.beans.APMVerificationConfig;
 import software.wings.beans.SettingAttribute;
@@ -46,10 +41,17 @@ import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.FeatureFlagService;
 import software.wings.settings.SettingValue;
 
+import com.google.common.annotations.VisibleForTesting;
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import java.lang.reflect.Field;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicBoolean;
+import lombok.NonNull;
+import lombok.extern.slf4j.Slf4j;
+import org.mongodb.morphia.query.Query;
+import org.mongodb.morphia.query.UpdateOperations;
 
 @OwnedBy(PL)
 @Slf4j
@@ -76,7 +78,7 @@ public class SettingAttributesSecretsMigrationHandler implements Handler<Setting
             .acceptableNoAlertDelay(ofHours(1))
             .handler(this)
             .entityProcessController(new AccountStatusBasedEntityProcessController<>(accountService))
-            .filterExpander(this ::createQuery)
+            .filterExpander(this::createQuery)
             .schedulingType(REGULAR)
             .persistenceProvider(persistenceProvider)
             .redistribute(true));

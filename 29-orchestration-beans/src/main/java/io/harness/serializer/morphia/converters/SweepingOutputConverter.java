@@ -1,10 +1,10 @@
 package io.harness.serializer.morphia.converters;
 
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
-
 import io.harness.data.SweepingOutput;
 import io.harness.serializer.KryoSerializer;
+
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import org.mongodb.morphia.converters.SimpleValueConverter;
 import org.mongodb.morphia.converters.TypeConverter;
 import org.mongodb.morphia.mapping.MappedField;

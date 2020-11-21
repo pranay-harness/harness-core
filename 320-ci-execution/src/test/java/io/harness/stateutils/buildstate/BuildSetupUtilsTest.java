@@ -2,6 +2,7 @@ package io.harness.stateutils.buildstate;
 
 import static io.harness.executionplan.CIExecutionPlanTestHelper.GIT_CONNECTOR;
 import static io.harness.rule.OwnerRule.HARSH;
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.joor.Reflect.on;
 import static org.mockito.Matchers.any;
@@ -10,8 +11,6 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.mockito.internal.verification.VerificationModeFactory.times;
-
-import com.google.inject.Inject;
 
 import io.harness.ambiance.Ambiance;
 import io.harness.beans.sweepingoutputs.K8PodDetails;
@@ -28,14 +27,15 @@ import io.harness.executionplan.CIExecutionTest;
 import io.harness.logserviceclient.CILogServiceUtils;
 import io.harness.ng.core.dto.ResponseDTO;
 import io.harness.rule.Owner;
+
+import com.google.inject.Inject;
+import java.util.Optional;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.Mock;
 import retrofit2.Call;
 import retrofit2.Response;
-
-import java.util.Optional;
 
 public class BuildSetupUtilsTest extends CIExecutionTest {
   @Inject private BuildSetupUtils buildSetupUtils;

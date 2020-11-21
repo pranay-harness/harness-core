@@ -1,7 +1,8 @@
 package io.harness.beans.steps.stepinfo.publish.artifact;
 
-import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import io.harness.beans.steps.stepinfo.publish.artifact.connectors.ArtifactConnector;
+
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import lombok.Getter;
 
 @JsonDeserialize(using = ArtifactDeserializer.class)

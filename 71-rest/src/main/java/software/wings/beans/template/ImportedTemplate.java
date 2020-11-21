@@ -2,7 +2,6 @@ package software.wings.beans.template;
 
 import static com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL;
 
-import com.fasterxml.jackson.annotation.JsonInclude;
 import io.harness.annotation.HarnessEntity;
 import io.harness.beans.EmbeddedUser;
 import io.harness.mongo.index.CdIndex;
@@ -16,6 +15,12 @@ import io.harness.persistence.UpdatedAtAware;
 import io.harness.persistence.UpdatedByAware;
 import io.harness.persistence.UuidAware;
 import io.harness.validation.Update;
+
+import software.wings.beans.entityinterface.ApplicationAccess;
+
+import com.fasterxml.jackson.annotation.JsonInclude;
+import java.util.Set;
+import javax.validation.constraints.NotNull;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -24,10 +29,6 @@ import lombok.experimental.FieldNameConstants;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Id;
-import software.wings.beans.entityinterface.ApplicationAccess;
-
-import java.util.Set;
-import javax.validation.constraints.NotNull;
 
 @JsonInclude(NON_NULL)
 @Data

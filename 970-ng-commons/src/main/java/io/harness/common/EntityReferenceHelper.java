@@ -2,9 +2,9 @@ package io.harness.common;
 
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.InvalidArgumentsException;
-import lombok.experimental.UtilityClass;
 
 import java.util.List;
+import lombok.experimental.UtilityClass;
 
 @UtilityClass
 public class EntityReferenceHelper {

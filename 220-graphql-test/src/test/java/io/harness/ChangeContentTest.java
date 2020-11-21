@@ -2,9 +2,8 @@ package io.harness;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.rule.OwnerRule.VARDAN_BANSAL;
-import static org.assertj.core.api.Assertions.assertThat;
 
-import com.google.inject.Inject;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.beans.EmbeddedUser;
 import io.harness.category.element.UnitTests;
@@ -13,14 +12,16 @@ import io.harness.generator.ChangeContentGenerator;
 import io.harness.generator.OwnerManager;
 import io.harness.generator.Randomizer;
 import io.harness.rule.Owner;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
+
 import software.wings.beans.EntityYamlRecord;
 import software.wings.graphql.schema.type.QLPageInfo;
 import software.wings.graphql.schema.type.audit.QLChangeContent;
 import software.wings.graphql.schema.type.audit.QLChangeContentConnection;
 
+import com.google.inject.Inject;
 import java.util.List;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 public class ChangeContentTest extends GraphQLTest {
   @Inject private OwnerManager ownerManager;

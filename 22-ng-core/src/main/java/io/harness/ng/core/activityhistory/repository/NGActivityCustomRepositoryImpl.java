@@ -2,11 +2,12 @@ package io.harness.ng.core.activityhistory.repository;
 
 import static io.harness.ng.core.activityhistory.NGActivityConstants.ACTIVITY_COLLECTION_NAME;
 
-import com.google.inject.Inject;
-
 import io.harness.annotation.HarnessRepo;
 import io.harness.ng.core.activityhistory.NGActivityConstants;
 import io.harness.ng.core.activityhistory.entity.NGActivity;
+
+import com.google.inject.Inject;
+import java.util.List;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -17,8 +18,6 @@ import org.springframework.data.mongodb.core.aggregation.AggregationResults;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.repository.support.PageableExecutionUtils;
-
-import java.util.List;
 
 @HarnessRepo
 @AllArgsConstructor(access = AccessLevel.PRIVATE, onConstructor = @__({ @Inject }))

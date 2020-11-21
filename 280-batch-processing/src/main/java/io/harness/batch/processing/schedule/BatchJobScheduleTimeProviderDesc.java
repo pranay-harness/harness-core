@@ -1,7 +1,6 @@
 package io.harness.batch.processing.schedule;
 
 import com.google.common.base.Preconditions;
-
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.Objects;

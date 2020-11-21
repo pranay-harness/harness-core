@@ -1,18 +1,15 @@
 package software.wings.service.impl;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
+
 import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
 import static java.util.stream.Collectors.toList;
 
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
-
 import io.harness.beans.EmbeddedUser;
 import io.harness.exception.ExceptionUtils;
 import io.harness.notifications.NotificationReceiverInfo;
-import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.StringUtils;
+
 import software.wings.beans.Notification;
 import software.wings.beans.NotificationGroup;
 import software.wings.beans.NotificationRule;
@@ -28,9 +25,13 @@ import software.wings.service.impl.notifications.UseUserGroup;
 import software.wings.service.intfc.NotificationDispatcherService;
 import software.wings.service.intfc.UserGroupService;
 
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 
 /**
  * Created by rishi on 10/30/16.

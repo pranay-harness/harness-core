@@ -2,18 +2,19 @@ package migrations.all;
 
 import static io.harness.rule.OwnerRule.UTKARSH;
 import static io.harness.security.encryption.EncryptionType.VAULT;
-import static org.assertj.core.api.Assertions.assertThat;
 
-import com.google.inject.Inject;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
+
 import software.wings.WingsBaseTest;
 import software.wings.beans.VaultConfig;
 
+import com.google.inject.Inject;
 import java.time.Duration;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 public class VaultConfigRenewalIntervalMigrationTest extends WingsBaseTest {
   @Inject private VaultConfigRenewalIntervalMigration vaultConfigRenewalIntervalMigration;

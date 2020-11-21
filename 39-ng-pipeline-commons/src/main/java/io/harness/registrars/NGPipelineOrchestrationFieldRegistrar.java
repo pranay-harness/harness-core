@@ -1,16 +1,15 @@
 package io.harness.registrars;
 
-import com.google.inject.Inject;
-import com.google.inject.Injector;
-
 import io.harness.beans.ParameterField;
 import io.harness.expression.field.OrchestrationFieldProcessor;
 import io.harness.expression.field.OrchestrationFieldType;
 import io.harness.ngpipeline.expressions.ParameterFieldProcessor;
 import io.harness.registries.registrar.OrchestrationFieldRegistrar;
-import org.apache.commons.lang3.tuple.Pair;
 
+import com.google.inject.Inject;
+import com.google.inject.Injector;
 import java.util.Set;
+import org.apache.commons.lang3.tuple.Pair;
 
 public class NGPipelineOrchestrationFieldRegistrar implements OrchestrationFieldRegistrar {
   @Inject private Injector injector;

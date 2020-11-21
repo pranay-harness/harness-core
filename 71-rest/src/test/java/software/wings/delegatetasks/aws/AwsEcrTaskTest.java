@@ -2,6 +2,7 @@ package software.wings.delegatetasks.aws;
 
 import static io.harness.delegate.beans.TaskData.DEFAULT_ASYNC_CALL_TIMEOUT;
 import static io.harness.rule.OwnerRule.SATYAM;
+
 import static org.joor.Reflect.on;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyList;
@@ -12,16 +13,18 @@ import io.harness.category.element.UnitTests;
 import io.harness.delegate.beans.DelegateTaskPackage;
 import io.harness.delegate.beans.TaskData;
 import io.harness.rule.Owner;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
+
 import software.wings.WingsBaseTest;
 import software.wings.service.impl.aws.model.AwsEcrGetAuthTokenRequest;
 import software.wings.service.impl.aws.model.AwsEcrGetImageUrlRequest;
 import software.wings.service.impl.aws.model.AwsEcrRequest;
 import software.wings.service.intfc.aws.delegate.AwsEcrHelperServiceDelegate;
+
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
 
 public class AwsEcrTaskTest extends WingsBaseTest {
   @Mock private AwsEcrHelperServiceDelegate mockEcrServiceDelegate;

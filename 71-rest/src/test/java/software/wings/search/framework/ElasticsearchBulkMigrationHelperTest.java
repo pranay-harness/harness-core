@@ -1,6 +1,7 @@
 package software.wings.search.framework;
 
 import static io.harness.rule.OwnerRule.UTKARSH;
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.eq;
@@ -10,10 +11,18 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import com.google.inject.Inject;
-
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
+
+import software.wings.WingsBaseTest;
+import software.wings.beans.Account;
+import software.wings.beans.Application;
+import software.wings.search.entities.application.ApplicationSearchEntity;
+
+import com.google.inject.Inject;
+import java.io.IOException;
+import java.util.HashSet;
+import java.util.Set;
 import lombok.extern.slf4j.Slf4j;
 import org.elasticsearch.action.index.IndexResponse;
 import org.elasticsearch.rest.RestStatus;
@@ -22,14 +31,6 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import software.wings.WingsBaseTest;
-import software.wings.beans.Account;
-import software.wings.beans.Application;
-import software.wings.search.entities.application.ApplicationSearchEntity;
-
-import java.io.IOException;
-import java.util.HashSet;
-import java.util.Set;
 
 @Slf4j
 

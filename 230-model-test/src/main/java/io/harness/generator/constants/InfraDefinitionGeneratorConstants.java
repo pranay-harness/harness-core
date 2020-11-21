@@ -1,10 +1,8 @@
 package io.harness.generator.constants;
 
 import com.google.common.collect.ImmutableList;
-
-import lombok.experimental.UtilityClass;
-
 import java.util.List;
+import lombok.experimental.UtilityClass;
 
 @UtilityClass
 public class InfraDefinitionGeneratorConstants {

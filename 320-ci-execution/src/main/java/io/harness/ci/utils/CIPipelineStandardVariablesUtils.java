@@ -1,9 +1,9 @@
 package io.harness.ci.utils;
 
-import com.google.inject.Singleton;
-
 import io.harness.beans.executionargs.CIExecutionArgs;
 import io.harness.ci.stdvars.BuildStandardVariables;
+
+import com.google.inject.Singleton;
 import lombok.Builder;
 
 @Singleton

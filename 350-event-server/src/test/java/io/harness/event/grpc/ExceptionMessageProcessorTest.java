@@ -1,11 +1,9 @@
 package io.harness.event.grpc;
 
 import static io.harness.rule.OwnerRule.HANTANG;
+
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.verify;
-
-import com.google.protobuf.Any;
-import com.google.protobuf.Message;
 
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
@@ -13,6 +11,9 @@ import io.harness.ccm.health.CeExceptionRecord;
 import io.harness.ccm.health.CeExceptionRecordDao;
 import io.harness.event.payloads.CeExceptionMessage;
 import io.harness.rule.Owner;
+
+import com.google.protobuf.Any;
+import com.google.protobuf.Message;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;

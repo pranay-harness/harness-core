@@ -1,11 +1,8 @@
 package software.wings.delegatetasks;
 
 import static io.harness.exception.WingsException.ExecutionContext.DELEGATE;
-import static org.joor.Reflect.on;
 
-import com.google.inject.Inject;
-import com.google.inject.Injector;
-import com.google.inject.Key;
+import static org.joor.Reflect.on;
 
 import io.harness.delegate.beans.DelegateTaskPackage;
 import io.harness.delegate.beans.DelegateTaskResponse;
@@ -15,12 +12,15 @@ import io.harness.delegate.task.AbstractDelegateRunnableTask;
 import io.harness.delegate.task.TaskParameters;
 import io.harness.exception.WingsException;
 import io.harness.logging.ExceptionLogger;
+
+import com.google.inject.Inject;
+import com.google.inject.Injector;
+import com.google.inject.Key;
+import java.util.function.BooleanSupplier;
+import java.util.function.Consumer;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.NotImplementedException;
 import org.joor.ReflectException;
-
-import java.util.function.BooleanSupplier;
-import java.util.function.Consumer;
 
 /**
  * Created by peeyushaggarwal on 1/12/17.

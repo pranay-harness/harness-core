@@ -2,7 +2,7 @@ package software.wings.verification;
 
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.VerificationOperationException;
-import lombok.extern.slf4j.Slf4j;
+
 import software.wings.beans.yaml.ChangeContext;
 import software.wings.sm.StateType;
 import software.wings.verification.log.CustomLogCVServiceConfiguration;
@@ -11,6 +11,7 @@ import software.wings.verification.log.LogsCVConfiguration;
 import software.wings.verification.log.LogsCVConfiguration.LogsCVConfigurationYaml;
 
 import java.util.List;
+import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class CustomLogCVConfigurationYamlHandler extends LogsCVConfigurationYamlHandler {

@@ -23,6 +23,14 @@ import static io.harness.provision.TerraformConstants.TF_VAR_FILES_KEY;
 import static io.harness.provision.TerraformConstants.VARIABLES_KEY;
 import static io.harness.provision.TerraformConstants.WORKSPACE_KEY;
 import static io.harness.validation.Validator.notNullCheck;
+
+import static software.wings.beans.Application.GLOBAL_APP_ID;
+import static software.wings.beans.Environment.EnvironmentType.ALL;
+import static software.wings.beans.Environment.GLOBAL_ENV_ID;
+import static software.wings.beans.TaskType.TERRAFORM_PROVISION_TASK;
+import static software.wings.beans.delegation.TerraformProvisionParameters.TIMEOUT_IN_MINUTES;
+import static software.wings.utils.Utils.splitCommaSeparatedFilePath;
+
 import static java.lang.String.format;
 import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
@@ -31,19 +39,7 @@ import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toMap;
 import static org.apache.commons.lang3.StringUtils.EMPTY;
 import static org.apache.commons.lang3.StringUtils.isBlank;
-import static software.wings.beans.Application.GLOBAL_APP_ID;
-import static software.wings.beans.Environment.EnvironmentType.ALL;
-import static software.wings.beans.Environment.GLOBAL_ENV_ID;
-import static software.wings.beans.TaskType.TERRAFORM_PROVISION_TASK;
-import static software.wings.beans.delegation.TerraformProvisionParameters.TIMEOUT_IN_MINUTES;
-import static software.wings.utils.Utils.splitCommaSeparatedFilePath;
 
-import com.google.common.annotations.VisibleForTesting;
-import com.google.inject.Inject;
-
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.github.reinert.jjschema.Attributes;
 import io.harness.beans.DelegateTask;
 import io.harness.beans.ExecutionStatus;
 import io.harness.beans.FileMetadata;
@@ -61,12 +57,7 @@ import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.serializer.JsonUtils;
 import io.harness.tasks.Cd1SetupFields;
 import io.harness.tasks.ResponseData;
-import lombok.Getter;
-import lombok.Setter;
-import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.io.FilenameUtils;
-import org.apache.commons.io.IOUtils;
-import org.mongodb.morphia.query.Query;
+
 import software.wings.api.ScriptStateExecutionData;
 import software.wings.api.TerraformApplyMarkerParam;
 import software.wings.api.TerraformExecutionData;
@@ -120,6 +111,11 @@ import software.wings.sm.WorkflowStandardParams;
 import software.wings.sm.states.ManagerExecutionLogCallback;
 import software.wings.utils.GitUtilsManager;
 
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.github.reinert.jjschema.Attributes;
+import com.google.common.annotations.VisibleForTesting;
+import com.google.inject.Inject;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -130,6 +126,12 @@ import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
+import lombok.Getter;
+import lombok.Setter;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.io.FilenameUtils;
+import org.apache.commons.io.IOUtils;
+import org.mongodb.morphia.query.Query;
 
 @Slf4j
 public abstract class TerraformProvisionState extends State {

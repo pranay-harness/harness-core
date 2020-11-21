@@ -1,8 +1,7 @@
 package software.wings.service.impl.elk;
 
-import lombok.Data;
-
 import java.util.Map;
+import lombok.Data;
 
 /**
  * Created by rsingh on 8/23/17.

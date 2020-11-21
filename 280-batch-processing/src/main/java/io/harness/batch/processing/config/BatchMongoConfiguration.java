@@ -5,6 +5,9 @@ import static io.harness.event.app.EventServiceApplication.EVENTS_STORE;
 
 import io.harness.mongo.MongoModule;
 import io.harness.persistence.HPersistence;
+
+import software.wings.security.ThreadLocalUserProvider;
+
 import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.AdvancedDatastore;
 import org.springframework.context.annotation.Bean;
@@ -13,7 +16,6 @@ import org.springframework.context.annotation.Profile;
 import org.springframework.data.mongodb.MongoDbFactory;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.SimpleMongoDbFactory;
-import software.wings.security.ThreadLocalUserProvider;
 
 @Configuration
 @Slf4j

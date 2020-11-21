@@ -9,11 +9,11 @@ import io.harness.ng.core.NGAccess;
 import io.harness.ng.core.invites.dto.CreateInviteListDTO;
 import io.harness.ng.core.invites.dto.InviteDTO;
 import io.harness.ng.core.invites.entities.Invite;
-import lombok.experimental.UtilityClass;
-import org.apache.commons.validator.routines.EmailValidator;
 
 import java.util.ArrayList;
 import java.util.List;
+import lombok.experimental.UtilityClass;
+import org.apache.commons.validator.routines.EmailValidator;
 
 @UtilityClass
 @OwnedBy(HarnessTeam.PL)

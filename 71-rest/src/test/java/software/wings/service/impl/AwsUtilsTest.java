@@ -1,30 +1,32 @@
 package software.wings.service.impl;
 
 import static io.harness.rule.OwnerRule.SATYAM;
+
+import static software.wings.beans.AwsInfrastructureMapping.Builder.anAwsInfrastructureMapping;
+import static software.wings.utils.WingsTestConstants.HOST_NAME;
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.verify;
-import static software.wings.beans.AwsInfrastructureMapping.Builder.anAwsInfrastructureMapping;
-import static software.wings.utils.WingsTestConstants.HOST_NAME;
 
-import com.google.inject.Inject;
-
-import com.amazonaws.services.ec2.model.Filter;
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
+
 import software.wings.WingsBaseTest;
 import software.wings.beans.AwsInfrastructureMapping;
 import software.wings.beans.AwsInstanceFilter;
 import software.wings.expression.ManagerExpressionEvaluator;
 
+import com.amazonaws.services.ec2.model.Filter;
+import com.google.inject.Inject;
 import java.util.Collections;
 import java.util.List;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
 
 public class AwsUtilsTest extends WingsBaseTest {
   @Mock private ManagerExpressionEvaluator mockExpressionEvaluator;

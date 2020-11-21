@@ -1,15 +1,12 @@
 package software.wings.graphql.datafetcher;
 
-import static com.amazonaws.util.CollectionUtils.mergeLists;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
+
+import static com.amazonaws.util.CollectionUtils.mergeLists;
 import static java.util.function.Function.identity;
 
-import com.google.api.client.util.ArrayMap;
-
 import io.harness.exception.InvalidRequestException;
-import lombok.AccessLevel;
-import lombok.experimental.FieldDefaults;
-import lombok.extern.slf4j.Slf4j;
+
 import software.wings.beans.EntityType;
 import software.wings.beans.HarnessTagLink;
 import software.wings.graphql.schema.type.aggregation.QLAggregatedData;
@@ -27,11 +24,15 @@ import software.wings.graphql.schema.type.aggregation.TagAggregation;
 import software.wings.graphql.schema.type.aggregation.deployment.QLDeploymentTagAggregation;
 import software.wings.graphql.schema.type.aggregation.deployment.QLDeploymentTagType;
 
+import com.google.api.client.util.ArrayMap;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
+import lombok.AccessLevel;
+import lombok.experimental.FieldDefaults;
+import lombok.extern.slf4j.Slf4j;
 
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @Slf4j

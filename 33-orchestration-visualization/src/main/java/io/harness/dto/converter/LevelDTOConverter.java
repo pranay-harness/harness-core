@@ -2,9 +2,9 @@ package io.harness.dto.converter;
 
 import io.harness.dto.LevelDTO;
 import io.harness.pms.ambiance.Level;
-import lombok.experimental.UtilityClass;
 
 import java.util.function.Function;
+import lombok.experimental.UtilityClass;
 
 @UtilityClass
 public class LevelDTOConverter {

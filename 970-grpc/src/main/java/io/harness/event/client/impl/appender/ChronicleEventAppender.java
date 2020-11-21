@@ -1,19 +1,18 @@
 package io.harness.event.client.impl.appender;
 
+import io.harness.event.PublishMessage;
+import io.harness.event.client.EventPublisher;
+
 import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
-
-import io.harness.event.PublishMessage;
-import io.harness.event.client.EventPublisher;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.function.Supplier;
 import lombok.extern.slf4j.Slf4j;
 import net.openhft.chronicle.queue.impl.RollingChronicleQueue;
 import net.openhft.chronicle.wire.DocumentContext;
 import net.openhft.chronicle.wire.Wire;
-
-import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.function.Supplier;
 
 /**
  * {@link EventPublisher} that appends the events to a chronicle-queue.

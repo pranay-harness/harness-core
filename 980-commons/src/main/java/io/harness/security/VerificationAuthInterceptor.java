@@ -1,10 +1,9 @@
 package io.harness.security;
 
+import java.io.IOException;
 import okhttp3.Interceptor;
 import okhttp3.Request;
 import okhttp3.Response;
-
-import java.io.IOException;
 
 /**
  * Created by peeyushaggarwal on 12/5/16.

@@ -2,17 +2,13 @@ package migrations.all;
 
 import static io.harness.persistence.HQuery.excludeAuthority;
 import static io.harness.threading.Morpheus.sleep;
-import static java.time.Duration.ofMillis;
 
-import com.google.inject.Inject;
+import static java.time.Duration.ofMillis;
 
 import io.harness.beans.ExecutionStatus;
 import io.harness.persistence.HIterator;
 import io.harness.time.Timestamp;
-import lombok.extern.slf4j.Slf4j;
-import migrations.Migration;
-import org.apache.commons.math3.util.Pair;
-import org.mongodb.morphia.query.Query;
+
 import software.wings.common.VerificationConstants;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.impl.MongoDataStoreServiceImpl;
@@ -24,11 +20,16 @@ import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.DataStoreService;
 
+import com.google.inject.Inject;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
+import lombok.extern.slf4j.Slf4j;
+import migrations.Migration;
+import org.apache.commons.math3.util.Pair;
+import org.mongodb.morphia.query.Query;
 
 @Slf4j
 public class MigrateTimeSeriesRawDataToGoogle implements Migration {

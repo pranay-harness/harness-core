@@ -2,6 +2,7 @@ package software.wings.events;
 
 import static io.harness.rule.OwnerRule.UJJAWAL;
 import static io.harness.rule.OwnerRule.VIKAS;
+
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyDouble;
 import static org.mockito.Matchers.anyString;
@@ -12,10 +13,6 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import com.google.inject.Inject;
-
-import com.segment.analytics.messages.GroupMessage;
-import com.segment.analytics.messages.IdentifyMessage;
 import io.harness.beans.SecretManagerConfig;
 import io.harness.category.element.UnitTests;
 import io.harness.event.handler.impl.Utils;
@@ -31,13 +28,7 @@ import io.harness.event.model.EventType;
 import io.harness.persistence.HPersistence;
 import io.harness.rule.Owner;
 import io.harness.secretmanagers.SecretManagerConfigService;
-import org.apache.commons.lang3.reflect.FieldUtils;
-import org.junit.Before;
-import org.junit.FixMethodOrder;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
-import org.junit.runners.MethodSorters;
-import org.mockito.Mock;
+
 import software.wings.WingsBaseTest;
 import software.wings.app.MainConfiguration;
 import software.wings.beans.Account;
@@ -52,10 +43,20 @@ import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.UserService;
 import software.wings.service.intfc.instance.stats.InstanceStatService;
 
+import com.google.inject.Inject;
+import com.segment.analytics.messages.GroupMessage;
+import com.segment.analytics.messages.IdentifyMessage;
 import java.time.Instant;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
+import org.apache.commons.lang3.reflect.FieldUtils;
+import org.junit.Before;
+import org.junit.FixMethodOrder;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
+import org.junit.runners.MethodSorters;
+import org.mockito.Mock;
 
 /**
  * @author rktummala on 10/03/19

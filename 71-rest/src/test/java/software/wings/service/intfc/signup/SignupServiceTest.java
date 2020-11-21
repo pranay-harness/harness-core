@@ -3,22 +3,24 @@ package software.wings.service.intfc.signup;
 import static io.harness.rule.OwnerRule.AMAN;
 import static io.harness.rule.OwnerRule.MEHUL;
 import static io.harness.rule.OwnerRule.UJJAWAL;
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-
-import com.google.inject.Inject;
 
 import io.harness.category.element.UnitTests;
 import io.harness.exception.InvalidArgumentsException;
 import io.harness.rule.Owner;
-import lombok.extern.slf4j.Slf4j;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
+
 import software.wings.WingsBaseTest;
 import software.wings.beans.UserInvite.UserInviteBuilder;
 import software.wings.exception.WeakPasswordException;
 import software.wings.service.intfc.SignupService;
 import software.wings.service.intfc.UserService;
+
+import com.google.inject.Inject;
+import lombok.extern.slf4j.Slf4j;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 @Slf4j
 public class SignupServiceTest extends WingsBaseTest {

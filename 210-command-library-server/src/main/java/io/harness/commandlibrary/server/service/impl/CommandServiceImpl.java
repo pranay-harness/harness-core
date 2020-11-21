@@ -3,9 +3,6 @@ package io.harness.commandlibrary.server.service.impl;
 import static io.harness.commandlibrary.server.utils.CommandUtils.populateCommandDTO;
 import static io.harness.persistence.HQuery.excludeAuthority;
 
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
-
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.commandlibrary.api.dto.CommandDTO;
@@ -14,15 +11,18 @@ import io.harness.commandlibrary.server.beans.CommandType;
 import io.harness.commandlibrary.server.service.intfc.CommandService;
 import io.harness.commandlibrary.server.service.intfc.CommandVersionService;
 import io.harness.exception.UnexpectedException;
-import lombok.extern.slf4j.Slf4j;
+
 import software.wings.beans.commandlibrary.CommandEntity;
 import software.wings.beans.commandlibrary.CommandEntity.CommandEntityBuilder;
 import software.wings.beans.commandlibrary.CommandEntity.CommandEntityKeys;
 import software.wings.beans.commandlibrary.CommandVersionEntity;
 import software.wings.dl.WingsPersistence;
 
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import java.util.List;
 import java.util.Optional;
+import lombok.extern.slf4j.Slf4j;
 
 @Singleton
 @Slf4j
@@ -38,7 +38,7 @@ public class CommandServiceImpl implements CommandService {
 
   @Override
   public Optional<CommandDTO> getCommandDetails(String commandStoreName, String commandName) {
-    return getCommandEntity(commandStoreName, commandName).map(this ::getCommandDTOFromEntity);
+    return getCommandEntity(commandStoreName, commandName).map(this::getCommandDTOFromEntity);
   }
 
   private CommandDTO getCommandDTOFromEntity(CommandEntity commandEntity) {

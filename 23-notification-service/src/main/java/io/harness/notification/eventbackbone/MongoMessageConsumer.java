@@ -1,12 +1,13 @@
 package io.harness.notification.eventbackbone;
 
-import com.google.inject.Inject;
-import com.google.protobuf.InvalidProtocolBufferException;
 import io.harness.NotificationRequest;
 import io.harness.mongo.queue.NGMongoQueueConsumer;
 import io.harness.ng.MongoNotificationRequest;
 import io.harness.notification.service.api.NotificationService;
 import io.harness.queue.QueueListener;
+
+import com.google.inject.Inject;
+import com.google.protobuf.InvalidProtocolBufferException;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j

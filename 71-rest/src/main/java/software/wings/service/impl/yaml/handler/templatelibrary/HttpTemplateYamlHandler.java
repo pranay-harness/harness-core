@@ -2,15 +2,15 @@ package software.wings.service.impl.yaml.handler.templatelibrary;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 
-import com.google.inject.Singleton;
-
 import io.harness.annotations.dev.OwnedBy;
+
 import software.wings.beans.template.BaseTemplate;
 import software.wings.beans.template.Template;
 import software.wings.beans.template.command.HttpTemplate;
 import software.wings.beans.yaml.ChangeContext;
 import software.wings.yaml.templatelibrary.HttpTemplateYaml;
 
+import com.google.inject.Singleton;
 import java.util.List;
 
 @OwnedBy(CDC)

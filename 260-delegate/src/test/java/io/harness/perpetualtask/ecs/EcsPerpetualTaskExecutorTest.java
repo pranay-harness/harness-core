@@ -3,6 +3,7 @@ package io.harness.perpetualtask.ecs;
 import static io.harness.ccm.health.HealthStatusService.CLUSTER_ID_IDENTIFIER;
 import static io.harness.rule.OwnerRule.AVMOHAN;
 import static io.harness.rule.OwnerRule.HITESH;
+
 import static java.time.temporal.ChronoUnit.HOURS;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.BDDMockito.given;
@@ -13,15 +14,6 @@ import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 
-import com.google.common.collect.ImmutableList;
-import com.google.inject.Inject;
-import com.google.protobuf.Any;
-import com.google.protobuf.ByteString;
-import com.google.protobuf.Message;
-
-import com.amazonaws.services.ecs.model.Cluster;
-import com.amazonaws.services.ecs.model.Service;
-import com.github.benmanes.caffeine.cache.Cache;
 import io.harness.DelegateTest;
 import io.harness.category.element.UnitTests;
 import io.harness.event.client.EventPublisher;
@@ -35,20 +27,19 @@ import io.harness.rule.Owner;
 import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.serializer.KryoSerializer;
 import io.harness.time.FakeClock;
-import org.joor.Reflect;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
-import org.junit.runner.RunWith;
-import org.junit.runners.Parameterized;
-import org.mockito.ArgumentCaptor;
-import org.mockito.Captor;
-import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
+
 import software.wings.beans.AwsConfig;
 import software.wings.service.intfc.aws.delegate.AwsEc2HelperServiceDelegate;
 import software.wings.service.intfc.aws.delegate.AwsEcsHelperServiceDelegate;
 
+import com.amazonaws.services.ecs.model.Cluster;
+import com.amazonaws.services.ecs.model.Service;
+import com.github.benmanes.caffeine.cache.Cache;
+import com.google.common.collect.ImmutableList;
+import com.google.inject.Inject;
+import com.google.protobuf.Any;
+import com.google.protobuf.ByteString;
+import com.google.protobuf.Message;
 import java.sql.Date;
 import java.time.Clock;
 import java.time.Duration;
@@ -60,6 +51,16 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import org.joor.Reflect;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
+import org.junit.runner.RunWith;
+import org.junit.runners.Parameterized;
+import org.mockito.ArgumentCaptor;
+import org.mockito.Captor;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
 
 @RunWith(Parameterized.class)
 public class EcsPerpetualTaskExecutorTest extends DelegateTest {

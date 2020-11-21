@@ -1,6 +1,8 @@
 package io.harness.ng.core.activityhistory.entity;
 
 import io.harness.ng.core.EntityDetail;
+
+import javax.validation.constraints.NotNull;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
@@ -10,8 +12,6 @@ import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Entity;
 import org.springframework.data.annotation.Persistent;
 import org.springframework.data.annotation.TypeAlias;
-
-import javax.validation.constraints.NotNull;
 
 @Data
 @SuperBuilder

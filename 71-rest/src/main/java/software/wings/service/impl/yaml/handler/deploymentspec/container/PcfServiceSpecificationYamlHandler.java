@@ -2,10 +2,8 @@ package software.wings.service.impl.yaml.handler.deploymentspec.container;
 
 import static io.harness.validation.Validator.notNullCheck;
 
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
-
 import io.harness.exception.HarnessException;
+
 import software.wings.api.DeploymentType;
 import software.wings.beans.Service;
 import software.wings.beans.container.PcfServiceSpecification;
@@ -16,6 +14,8 @@ import software.wings.service.impl.yaml.handler.deploymentspec.DeploymentSpecifi
 import software.wings.service.impl.yaml.service.YamlHelper;
 import software.wings.service.intfc.ServiceResourceService;
 
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import java.util.List;
 
 @Singleton

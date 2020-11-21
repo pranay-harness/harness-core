@@ -3,6 +3,7 @@ package io.harness.delegate.task.azure.appservice.webapp.request;
 import static io.harness.delegate.task.azure.appservice.AzureAppServiceTaskParameters.AzureAppServiceTaskType.LIST_WEB_APP_DEPLOYMENT_SLOT_NAMES;
 
 import io.harness.delegate.task.azure.appservice.AzureAppServiceTaskParameters;
+
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;

@@ -4,10 +4,8 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.validation.Validator.notNullCheck;
-import static java.util.stream.Collectors.toList;
 
-import com.google.common.collect.Lists;
-import com.google.inject.Singleton;
+import static java.util.stream.Collectors.toList;
 
 import software.wings.beans.AwsInfrastructureMapping;
 import software.wings.beans.AwsInfrastructureMapping.Yaml;
@@ -20,6 +18,8 @@ import software.wings.beans.NameValuePair;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.yaml.ChangeContext;
 
+import com.google.common.collect.Lists;
+import com.google.inject.Singleton;
 import java.util.List;
 
 /**

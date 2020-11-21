@@ -3,9 +3,6 @@ package software.wings.service.impl.yaml.handler.deploymentspec.container;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.validation.Validator.notNullCheck;
 
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
-
 import software.wings.api.DeploymentType;
 import software.wings.beans.container.HelmChartSpecification;
 import software.wings.beans.container.HelmChartSpecification.Yaml;
@@ -15,6 +12,8 @@ import software.wings.service.impl.yaml.handler.deploymentspec.DeploymentSpecifi
 import software.wings.service.impl.yaml.service.YamlHelper;
 import software.wings.service.intfc.ServiceResourceService;
 
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import java.util.List;
 
 @Singleton

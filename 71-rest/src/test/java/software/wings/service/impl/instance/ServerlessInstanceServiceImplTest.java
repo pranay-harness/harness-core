@@ -2,6 +2,7 @@ package software.wings.service.impl.instance;
 
 import static io.harness.rule.OwnerRule.ACASIAN;
 import static io.harness.rule.OwnerRule.ROHIT_KUMAR;
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
@@ -9,14 +10,23 @@ import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
 
-import com.google.inject.Inject;
-
 import io.harness.CategoryTest;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.category.element.UnitTests;
 import io.harness.exception.NoResultFoundException;
 import io.harness.rule.Owner;
+
+import software.wings.beans.infrastructure.instance.ServerlessInstance;
+import software.wings.beans.infrastructure.instance.SyncStatus;
+import software.wings.dl.WingsPersistence;
+import software.wings.service.impl.instance.ServerlessTestHelper.Mocks;
+import software.wings.service.intfc.AppService;
+
+import com.google.inject.Inject;
+import java.time.Instant;
+import java.util.Arrays;
+import java.util.List;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -27,15 +37,6 @@ import org.mockito.Spy;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
 import org.mongodb.morphia.query.UpdateResults;
-import software.wings.beans.infrastructure.instance.ServerlessInstance;
-import software.wings.beans.infrastructure.instance.SyncStatus;
-import software.wings.dl.WingsPersistence;
-import software.wings.service.impl.instance.ServerlessTestHelper.Mocks;
-import software.wings.service.intfc.AppService;
-
-import java.time.Instant;
-import java.util.Arrays;
-import java.util.List;
 
 public class ServerlessInstanceServiceImplTest extends CategoryTest {
   @Mock private WingsPersistence wingsPersistence;

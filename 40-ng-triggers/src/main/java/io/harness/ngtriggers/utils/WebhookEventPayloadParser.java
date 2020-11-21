@@ -1,25 +1,26 @@
 package io.harness.ngtriggers.utils;
 
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.exception.WingsException.USER;
+
+import static java.util.stream.Collectors.toSet;
+
+import io.harness.exception.InvalidRequestException;
+import io.harness.ngtriggers.beans.config.HeaderConfig;
+import io.harness.ngtriggers.beans.entity.TriggerWebhookEvent;
+import io.harness.ngtriggers.beans.scm.*;
+import io.harness.ngtriggers.beans.scm.Repository;
+import io.harness.ngtriggers.beans.scm.WebhookPayloadData.WebhookPayloadDataBuilder;
+import io.harness.product.ci.scm.proto.*;
+
 import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import io.grpc.StatusRuntimeException;
-import io.harness.exception.InvalidRequestException;
-import io.harness.ngtriggers.beans.config.HeaderConfig;
-import io.harness.ngtriggers.beans.entity.TriggerWebhookEvent;
-import io.harness.ngtriggers.beans.scm.Repository;
-import io.harness.ngtriggers.beans.scm.*;
-import io.harness.ngtriggers.beans.scm.WebhookPayloadData.WebhookPayloadDataBuilder;
-import io.harness.product.ci.scm.proto.*;
-import lombok.extern.slf4j.Slf4j;
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
-
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.exception.WingsException.USER;
-import static java.util.stream.Collectors.toSet;
+import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Singleton

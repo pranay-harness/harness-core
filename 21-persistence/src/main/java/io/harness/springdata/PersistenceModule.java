@@ -2,9 +2,9 @@ package io.harness.springdata;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
 
-import com.google.inject.AbstractModule;
-
 import io.harness.annotations.dev.OwnedBy;
+
+import com.google.inject.AbstractModule;
 import org.springframework.guice.module.BeanFactoryProvider;
 import org.springframework.guice.module.SpringModule;
 

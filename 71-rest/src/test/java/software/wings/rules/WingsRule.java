@@ -7,26 +7,13 @@ import static io.harness.maintenance.MaintenanceController.forceMaintenance;
 import static io.harness.manage.GlobalContextManager.upsertGlobalContextRecord;
 import static io.harness.microservice.NotifyEngineTarget.GENERAL;
 import static io.harness.waiter.OrchestrationNotifyEventListener.ORCHESTRATION;
-import static java.util.Arrays.asList;
-import static org.mockito.Mockito.mock;
+
 import static software.wings.utils.WingsTestConstants.PORTAL_URL;
 import static software.wings.utils.WingsTestConstants.VERIFICATION_PATH;
 
-import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Lists;
-import com.google.inject.AbstractModule;
-import com.google.inject.Guice;
-import com.google.inject.Injector;
-import com.google.inject.Key;
-import com.google.inject.Module;
-import com.google.inject.Provides;
-import com.google.inject.Singleton;
-import com.google.inject.TypeLiteral;
+import static java.util.Arrays.asList;
+import static org.mockito.Mockito.mock;
 
-import com.codahale.metrics.MetricRegistry;
-import com.mongodb.MongoClient;
-import io.dropwizard.Configuration;
-import io.dropwizard.lifecycle.Managed;
 import io.harness.NoopStatement;
 import io.harness.cache.CacheConfig;
 import io.harness.cache.CacheConfig.CacheConfigBuilder;
@@ -74,14 +61,7 @@ import io.harness.waiter.NotifyEvent;
 import io.harness.waiter.NotifyQueuePublisherRegister;
 import io.harness.waiter.NotifyResponseCleaner;
 import io.harness.waiter.OrchestrationNotifyEventListener;
-import lombok.extern.slf4j.Slf4j;
-import org.atmosphere.cpr.BroadcasterFactory;
-import org.hibernate.validator.parameternameprovider.ReflectionParameterNameProvider;
-import org.junit.rules.MethodRule;
-import org.junit.runners.model.FrameworkMethod;
-import org.junit.runners.model.Statement;
-import org.mongodb.morphia.converters.TypeConverter;
-import ru.vyarus.guice.validator.ValidationModule;
+
 import software.wings.WingsTestModule;
 import software.wings.app.AuthModule;
 import software.wings.app.GcpMarketplaceIntegrationModule;
@@ -103,6 +83,20 @@ import software.wings.security.ThreadLocalUserProvider;
 import software.wings.security.authentication.MarketPlaceConfig;
 import software.wings.service.impl.EventEmitter;
 
+import com.codahale.metrics.MetricRegistry;
+import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Lists;
+import com.google.inject.AbstractModule;
+import com.google.inject.Guice;
+import com.google.inject.Injector;
+import com.google.inject.Key;
+import com.google.inject.Module;
+import com.google.inject.Provides;
+import com.google.inject.Singleton;
+import com.google.inject.TypeLiteral;
+import com.mongodb.MongoClient;
+import io.dropwizard.Configuration;
+import io.dropwizard.lifecycle.Managed;
 import java.io.Closeable;
 import java.lang.annotation.Annotation;
 import java.util.ArrayList;
@@ -113,6 +107,14 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
 import javax.validation.Validation;
 import javax.validation.ValidatorFactory;
+import lombok.extern.slf4j.Slf4j;
+import org.atmosphere.cpr.BroadcasterFactory;
+import org.hibernate.validator.parameternameprovider.ReflectionParameterNameProvider;
+import org.junit.rules.MethodRule;
+import org.junit.runners.model.FrameworkMethod;
+import org.junit.runners.model.Statement;
+import org.mongodb.morphia.converters.TypeConverter;
+import ru.vyarus.guice.validator.ValidationModule;
 
 @Slf4j
 public class WingsRule implements MethodRule, InjectorRuleMixin, MongoRuleMixin {

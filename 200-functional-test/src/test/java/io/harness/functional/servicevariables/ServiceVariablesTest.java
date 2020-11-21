@@ -2,13 +2,12 @@ package io.harness.functional.servicevariables;
 
 import static io.harness.beans.WorkflowType.ORCHESTRATION;
 import static io.harness.rule.OwnerRule.NATARAJA;
-import static org.assertj.core.api.Assertions.assertThat;
+
 import static software.wings.beans.CanaryOrchestrationWorkflow.CanaryOrchestrationWorkflowBuilder.aCanaryOrchestrationWorkflow;
 import static software.wings.beans.Workflow.WorkflowBuilder.aWorkflow;
 import static software.wings.beans.WorkflowPhase.WorkflowPhaseBuilder.aWorkflowPhase;
 
-import com.google.common.collect.ImmutableList;
-import com.google.inject.Inject;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.beans.ExecutionStatus;
 import io.harness.beans.WorkflowType;
@@ -34,13 +33,7 @@ import io.harness.testframework.framework.utils.WorkflowUtils;
 import io.harness.testframework.restutils.ArtifactRestUtils;
 import io.harness.testframework.restutils.ServiceVariablesUtils;
 import io.harness.testframework.restutils.WorkflowRestUtils;
-import io.restassured.path.json.JsonPath;
-import lombok.extern.slf4j.Slf4j;
-import org.awaitility.Awaitility;
-import org.junit.Before;
-import org.junit.Ignore;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
+
 import software.wings.api.ExecutionDataValue;
 import software.wings.beans.Application;
 import software.wings.beans.EntityType;
@@ -60,10 +53,19 @@ import software.wings.beans.artifact.ArtifactStream;
 import software.wings.infra.InfrastructureDefinition;
 import software.wings.service.intfc.WorkflowExecutionService;
 
+import com.google.common.collect.ImmutableList;
+import com.google.inject.Inject;
+import io.restassured.path.json.JsonPath;
 import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
+import lombok.extern.slf4j.Slf4j;
+import org.awaitility.Awaitility;
+import org.junit.Before;
+import org.junit.Ignore;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
 @Slf4j
 public class ServiceVariablesTest extends AbstractFunctionalTest {
   @Inject private OwnerManager ownerManager;

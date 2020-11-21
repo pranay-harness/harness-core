@@ -1,10 +1,9 @@
 package io.harness.delegate.beans.connector;
 
-import lombok.Getter;
-
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
+import lombok.Getter;
 
 public enum ConnectorCategory {
   CLOUD_PROVIDER(new HashSet(Arrays.asList(ConnectorType.KUBERNETES_CLUSTER, ConnectorType.GCP, ConnectorType.AWS))),

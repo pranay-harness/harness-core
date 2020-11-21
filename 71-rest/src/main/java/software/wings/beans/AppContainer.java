@@ -1,19 +1,19 @@
 package software.wings.beans;
 
-import com.google.common.base.MoreObjects;
-
 import io.harness.annotation.HarnessEntity;
 import io.harness.beans.ChecksumType;
 import io.harness.beans.EmbeddedUser;
 import io.harness.mongo.index.Field;
 import io.harness.mongo.index.NgUniqueIndex;
-import lombok.experimental.FieldNameConstants;
-import org.glassfish.jersey.media.multipart.FormDataParam;
-import org.mongodb.morphia.annotations.Entity;
+
 import software.wings.utils.ContainerFamily;
 import software.wings.utils.FileType;
 
+import com.google.common.base.MoreObjects;
 import java.util.Objects;
+import lombok.experimental.FieldNameConstants;
+import org.glassfish.jersey.media.multipart.FormDataParam;
+import org.mongodb.morphia.annotations.Entity;
 
 /**
  * Application bean class.
@@ -172,7 +172,7 @@ public class AppContainer extends BaseFile {
   public int hashCode() {
     return 31 * super.hashCode()
         + Objects.hash(standard, description, standardUpload, family, stackRootDirectory, fileType, accountId,
-              systemCreated, hardened, version);
+            systemCreated, hardened, version);
   }
 
   @Override

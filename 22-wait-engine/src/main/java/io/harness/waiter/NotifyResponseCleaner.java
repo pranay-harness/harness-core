@@ -6,8 +6,6 @@ import static io.harness.exception.WingsException.ExecutionContext.MANAGER;
 import static io.harness.maintenance.MaintenanceController.getMaintenanceFlag;
 import static io.harness.persistence.HQuery.excludeAuthority;
 
-import com.google.inject.Inject;
-
 import io.harness.exception.WingsException;
 import io.harness.logging.ExceptionLogger;
 import io.harness.persistence.HIterator;
@@ -16,12 +14,13 @@ import io.harness.persistence.HPersistence;
 import io.harness.queue.QueueController;
 import io.harness.waiter.NotifyResponse.NotifyResponseKeys;
 import io.harness.waiter.WaitInstance.WaitInstanceKeys;
-import lombok.extern.slf4j.Slf4j;
-import org.mongodb.morphia.Key;
 
+import com.google.inject.Inject;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
+import lombok.extern.slf4j.Slf4j;
+import org.mongodb.morphia.Key;
 
 /**
  * Scheduled Task to look for finished WaitInstances and send messages to NotifyEventQueue.

@@ -1,7 +1,5 @@
 package io.harness.cvng.client;
 
-import com.google.inject.Inject;
-
 import io.harness.beans.IdentifierRef;
 import io.harness.connector.apis.dto.ConnectorDTO;
 import io.harness.connector.apis.dto.ConnectorInfoDTO;
@@ -11,6 +9,7 @@ import io.harness.ng.core.environment.dto.EnvironmentResponseDTO;
 import io.harness.ng.core.service.dto.ServiceResponseDTO;
 import io.harness.utils.IdentifierRefHelper;
 
+import com.google.inject.Inject;
 import java.util.List;
 import java.util.Optional;
 

@@ -2,9 +2,9 @@ package software.wings.helpers.ext.jenkins;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 
-import com.google.inject.assistedinject.Assisted;
-
 import io.harness.annotations.dev.OwnedBy;
+
+import com.google.inject.assistedinject.Assisted;
 
 /**
  * Created by peeyushaggarwal on 5/12/16.

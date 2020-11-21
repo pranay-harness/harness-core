@@ -1,10 +1,10 @@
 package software.wings.beans.command;
 
 import io.harness.delegate.command.CommandExecutionData;
-import lombok.Builder;
-import lombok.Data;
 
 import java.util.Map;
+import lombok.Builder;
+import lombok.Data;
 
 @Data
 @Builder

@@ -1,8 +1,8 @@
 package io.harness.app.impl;
 
-import com.google.inject.Singleton;
-
 import io.harness.ngpipeline.pipeline.beans.entities.NgPipelineEntity;
+
+import com.google.inject.Singleton;
 
 /**
  * Validates inputs before persisting pipeline

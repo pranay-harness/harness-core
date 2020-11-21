@@ -2,14 +2,14 @@ package software.wings.api;
 
 import static java.util.Collections.singletonList;
 
-import lombok.Builder;
-import lombok.Data;
-import lombok.EqualsAndHashCode;
 import software.wings.service.impl.instance.DeploymentInfoExtractor;
 import software.wings.sm.StepExecutionSummary;
 
 import java.util.List;
 import java.util.Optional;
+import lombok.Builder;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
 
 @Data
 @Builder

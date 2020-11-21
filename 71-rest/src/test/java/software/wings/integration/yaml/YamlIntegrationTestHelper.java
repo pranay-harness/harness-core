@@ -3,8 +3,7 @@ package software.wings.integration.yaml;
 import static io.harness.eraro.ErrorCode.GIT_CONNECTION_ERROR;
 import static io.harness.exception.WingsException.USER_ADMIN;
 import static io.harness.govern.Switch.unhandled;
-import static java.util.Arrays.asList;
-import static org.assertj.core.api.Assertions.assertThat;
+
 import static software.wings.beans.Application.Builder.anApplication;
 import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static software.wings.beans.CloudFormationSourceType.TEMPLATE_BODY;
@@ -14,13 +13,14 @@ import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 import static software.wings.integration.yaml.YamlIntegrationTestConstants.DESCRIPTION;
 import static software.wings.settings.SettingVariableTypes.PHYSICAL_DATA_CENTER;
 
-import com.google.inject.Singleton;
+import static java.util.Arrays.asList;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.exception.GitConnectionDelegateException;
 import io.harness.scm.ScmSecret;
 import io.harness.scm.SecretName;
 import io.harness.security.encryption.EncryptedDataDetail;
-import org.slf4j.Logger;
+
 import software.wings.api.DeploymentType;
 import software.wings.beans.Application;
 import software.wings.beans.CloudFormationInfrastructureProvisioner;
@@ -60,8 +60,10 @@ import software.wings.utils.ArtifactType;
 import software.wings.yaml.gitSync.YamlGitConfig;
 import software.wings.yaml.gitSync.YamlGitConfig.SyncMode;
 
+import com.google.inject.Singleton;
 import java.util.List;
 import java.util.Map;
+import org.slf4j.Logger;
 
 @Singleton
 public class YamlIntegrationTestHelper {

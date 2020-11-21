@@ -1,27 +1,28 @@
 package software.wings.utils;
 
 import static io.harness.rule.OwnerRule.ANKIT;
+
 import static java.net.HttpURLConnection.HTTP_OK;
 import static junit.framework.TestCase.assertEquals;
 
-import com.google.inject.Inject;
-
-import io.dropwizard.configuration.ConfigurationException;
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
 import io.harness.scm.ScmSecret;
 import io.harness.scm.SecretName;
-import org.junit.Before;
-import org.junit.Ignore;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
+
 import software.wings.WingsBaseTest;
 import software.wings.cdn.CdnConfig;
 
+import com.google.inject.Inject;
+import io.dropwizard.configuration.ConfigurationException;
 import java.io.IOException;
 import java.net.HttpURLConnection;
 import java.net.URISyntaxException;
 import java.net.URL;
+import org.junit.Before;
+import org.junit.Ignore;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 public class CdnStorageUrlGeneratorTest extends WingsBaseTest {
   private static final String DELEGATE_JAR_VERSION = "50300";

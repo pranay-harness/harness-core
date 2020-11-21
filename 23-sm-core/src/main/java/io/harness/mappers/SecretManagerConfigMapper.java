@@ -12,9 +12,11 @@ import io.harness.secretmanagerclient.dto.SecretManagerConfigDTO;
 import io.harness.secretmanagerclient.dto.SecretManagerConfigUpdateDTO;
 import io.harness.secretmanagerclient.dto.VaultConfigDTO;
 import io.harness.secretmanagerclient.dto.VaultConfigUpdateDTO;
-import lombok.experimental.UtilityClass;
+
 import software.wings.beans.GcpKmsConfig;
 import software.wings.beans.VaultConfig;
+
+import lombok.experimental.UtilityClass;
 
 @UtilityClass
 @OwnedBy(PL)

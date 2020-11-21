@@ -2,6 +2,7 @@ package software.wings.prune;
 
 import static io.harness.eraro.ErrorCode.DEFAULT_ERROR_CODE;
 import static io.harness.rule.OwnerRule.GEORGE;
+
 import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Matchers.anyString;
@@ -12,17 +13,11 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import com.google.inject.Inject;
-
 import io.harness.category.element.UnitTests;
 import io.harness.exception.WingsException;
 import io.harness.rule.Owner;
 import io.harness.scheduler.PersistentScheduler;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.slf4j.Logger;
+
 import software.wings.WingsBaseTest;
 import software.wings.beans.Activity;
 import software.wings.beans.Application;
@@ -33,6 +28,13 @@ import software.wings.service.intfc.ActivityService;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.EnvironmentService;
 import software.wings.service.intfc.LogService;
+
+import com.google.inject.Inject;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.slf4j.Logger;
 
 public class PruneEntityListenerTest extends WingsBaseTest {
   @Mock private WingsPersistence wingsPersistence;
@@ -111,7 +113,6 @@ public class PruneEntityListenerTest extends WingsBaseTest {
       when(wingsPersistence.get(Application.class, ENTITY_ID)).thenReturn(null);
 
       listener.onMessage(new PruneEvent(Application.class, APP_ID, ENTITY_ID));
-    })
-        .doesNotThrowAnyException();
+    }).doesNotThrowAnyException();
   }
 }

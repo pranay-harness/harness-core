@@ -2,10 +2,10 @@ package io.harness.cdng.tasks.manifestFetch.step;
 
 import io.harness.cdng.manifest.yaml.ManifestAttributes;
 import io.harness.state.io.StepParameters;
-import lombok.Builder;
-import lombok.Value;
 
 import java.util.List;
+import lombok.Builder;
+import lombok.Value;
 
 @Value
 @Builder

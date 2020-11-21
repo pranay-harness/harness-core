@@ -1,23 +1,23 @@
 package io.harness.commandlibrary.server;
 
-import com.google.common.collect.ImmutableSet;
-import com.google.inject.Injector;
-import com.google.inject.Module;
-
-import io.dropwizard.Configuration;
 import io.harness.commandlibrary.server.app.CommandLibraryServerConfig;
 import io.harness.commandlibrary.server.app.CommandLibraryServerModule;
 import io.harness.commandlibrary.server.beans.TagConfig;
 import io.harness.factory.ClosingFactoryModule;
 import io.harness.mongo.MongoConfig;
 import io.harness.testlib.module.TestMongoModule;
-import lombok.extern.slf4j.Slf4j;
+
 import software.wings.app.CommandLibrarySharedModule;
 import software.wings.rules.WingsRule;
 
+import com.google.common.collect.ImmutableSet;
+import com.google.inject.Injector;
+import com.google.inject.Module;
+import io.dropwizard.Configuration;
 import java.lang.annotation.Annotation;
 import java.util.ArrayList;
 import java.util.List;
+import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class CommandLibraryServerTestRule extends WingsRule {

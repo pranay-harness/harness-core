@@ -2,9 +2,19 @@ package io.harness.ccm.views.graphql;
 
 import static io.harness.ccm.views.graphql.ViewsMetaDataFields.LABEL_KEY;
 
+import io.harness.ccm.views.dao.ViewCustomFieldDao;
+import io.harness.ccm.views.entities.ViewCondition;
+import io.harness.ccm.views.entities.ViewCustomField;
+import io.harness.ccm.views.entities.ViewField;
+import io.harness.ccm.views.entities.ViewFieldIdentifier;
+import io.harness.ccm.views.entities.ViewIdCondition;
+import io.harness.ccm.views.entities.ViewIdOperator;
+import io.harness.ccm.views.entities.ViewRule;
+import io.harness.ccm.views.entities.ViewTimeGranularity;
+import io.harness.exception.InvalidRequestException;
+
 import com.google.common.collect.ImmutableSet;
 import com.google.inject.Inject;
-
 import com.healthmarketscience.sqlbuilder.BinaryCondition;
 import com.healthmarketscience.sqlbuilder.ComboCondition;
 import com.healthmarketscience.sqlbuilder.Condition;
@@ -18,18 +28,6 @@ import com.healthmarketscience.sqlbuilder.SelectQuery;
 import com.healthmarketscience.sqlbuilder.UnaryCondition;
 import com.healthmarketscience.sqlbuilder.custom.postgresql.PgLimitClause;
 import com.healthmarketscience.sqlbuilder.custom.postgresql.PgOffsetClause;
-import io.harness.ccm.views.dao.ViewCustomFieldDao;
-import io.harness.ccm.views.entities.ViewCondition;
-import io.harness.ccm.views.entities.ViewCustomField;
-import io.harness.ccm.views.entities.ViewField;
-import io.harness.ccm.views.entities.ViewFieldIdentifier;
-import io.harness.ccm.views.entities.ViewIdCondition;
-import io.harness.ccm.views.entities.ViewIdOperator;
-import io.harness.ccm.views.entities.ViewRule;
-import io.harness.ccm.views.entities.ViewTimeGranularity;
-import io.harness.exception.InvalidRequestException;
-import lombok.extern.slf4j.Slf4j;
-
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -37,6 +35,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
+import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class ViewsQueryBuilder {
@@ -406,7 +405,7 @@ public class ViewsQueryBuilder {
     for (ViewRule rule : rules) {
       labelConditionPresent = labelConditionPresent
           || rule.getViewConditions().stream().anyMatch(
-                 c -> ((ViewIdCondition) c).getViewField().getIdentifier() == ViewFieldIdentifier.LABEL);
+              c -> ((ViewIdCondition) c).getViewField().getIdentifier() == ViewFieldIdentifier.LABEL);
     }
 
     return labelFilterPresent || labelConditionPresent;

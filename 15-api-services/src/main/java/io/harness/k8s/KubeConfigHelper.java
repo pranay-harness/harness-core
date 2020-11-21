@@ -3,7 +3,6 @@ package io.harness.k8s;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 
 import io.kubernetes.client.util.KubeConfig;
-
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;

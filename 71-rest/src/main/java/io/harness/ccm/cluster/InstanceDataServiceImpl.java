@@ -1,10 +1,9 @@
 package io.harness.ccm.cluster;
 
-import com.google.inject.Inject;
-
 import io.harness.ccm.cluster.dao.InstanceDataDao;
 import io.harness.ccm.commons.entities.InstanceData;
 
+import com.google.inject.Inject;
 import java.util.List;
 
 public class InstanceDataServiceImpl implements InstanceDataService {

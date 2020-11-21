@@ -2,10 +2,10 @@ package io.harness.ngpipeline.inputset.beans.entities;
 
 import io.harness.ngpipeline.pipeline.beans.yaml.NgPipeline;
 import io.harness.walktree.visitor.response.VisitorErrorResponseWrapper;
-import lombok.Builder;
-import lombok.Value;
 
 import java.util.Map;
+import lombok.Builder;
+import lombok.Value;
 
 @Value
 @Builder

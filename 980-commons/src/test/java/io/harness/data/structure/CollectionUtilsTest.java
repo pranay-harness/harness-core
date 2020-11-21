@@ -3,25 +3,25 @@ package io.harness.data.structure;
 import static io.harness.rule.OwnerRule.GARVIT;
 import static io.harness.rule.OwnerRule.PRASHANT;
 import static io.harness.rule.OwnerRule.VGLIJIN;
-import static org.assertj.core.api.Assertions.assertThat;
 
-import com.google.common.collect.Sets;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
 import io.harness.rule.OwnerRule;
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
 
+import com.google.common.collect.Sets;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 public class CollectionUtilsTest extends CategoryTest {
   private final List<DummyPerson> personCollection =

@@ -2,13 +2,12 @@ package software.wings.service.impl.yaml.handler.command;
 
 import static software.wings.beans.yaml.YamlConstants.NODE_PROPERTY_DESTINATION_PARENT_PATH;
 
-import com.google.inject.Singleton;
-
 import software.wings.beans.command.AbstractCommandUnit;
 import software.wings.beans.command.CopyConfigCommandUnit;
 import software.wings.beans.command.CopyConfigCommandUnit.Yaml;
 import software.wings.beans.yaml.ChangeContext;
 
+import com.google.inject.Singleton;
 import java.util.Map;
 
 /**

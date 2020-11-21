@@ -2,13 +2,11 @@ package io.harness.serializer.kryo;
 
 import static com.esotericsoftware.kryo.Kryo.NULL;
 
-import com.google.protobuf.Message;
-
 import com.esotericsoftware.kryo.Kryo;
 import com.esotericsoftware.kryo.Serializer;
 import com.esotericsoftware.kryo.io.Input;
 import com.esotericsoftware.kryo.io.Output;
-
+import com.google.protobuf.Message;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 

@@ -1,18 +1,21 @@
 package software.wings.yaml.trigger;
 
 import static io.harness.rule.OwnerRule.HARSH;
-import static java.util.Arrays.asList;
-import static org.assertj.core.api.Assertions.assertThat;
+
 import static software.wings.beans.trigger.GithubAction.CLOSED;
 
-import com.google.inject.Inject;
+import static java.util.Arrays.asList;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
+
+import software.wings.beans.trigger.WebHookTriggerCondition;
+
+import com.google.inject.Inject;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
-import software.wings.beans.trigger.WebHookTriggerCondition;
 
 public class WebhookTriggerConditionHandlerTest extends CategoryTest {
   @Inject private WebhookTriggerConditionHandler webhookTriggerConditionHandler = new WebhookTriggerConditionHandler();

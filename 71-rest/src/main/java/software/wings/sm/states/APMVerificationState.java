@@ -4,6 +4,7 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.waiter.OrchestrationNotifyEventListener.ORCHESTRATION;
+
 import static software.wings.common.VerificationConstants.URL_BODY_APPENDER;
 import static software.wings.common.VerificationConstants.VERIFICATION_HOST_PLACEHOLDER;
 import static software.wings.service.impl.apm.APMMetricInfo.ResponseMapper;
@@ -11,25 +12,13 @@ import static software.wings.service.impl.newrelic.NewRelicMetricDataRecord.DEFA
 import static software.wings.sm.states.DynatraceState.CONTROL_HOST_NAME;
 import static software.wings.sm.states.DynatraceState.TEST_HOST_NAME;
 
-import com.google.common.base.Preconditions;
-import com.google.common.collect.Lists;
-import com.google.common.collect.Sets;
-
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.github.reinert.jjschema.Attributes;
 import io.harness.beans.DelegateTask;
 import io.harness.delegate.beans.TaskData;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.VerificationOperationException;
 import io.harness.exception.WingsException;
 import io.harness.tasks.Cd1SetupFields;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
-import lombok.experimental.FieldNameConstants;
-import lombok.extern.slf4j.Slf4j;
-import org.slf4j.Logger;
+
 import software.wings.beans.APMVerificationConfig;
 import software.wings.beans.FeatureName;
 import software.wings.beans.SettingAttribute;
@@ -50,6 +39,11 @@ import software.wings.sm.StateType;
 import software.wings.stencils.DefaultValue;
 import software.wings.verification.VerificationStateAnalysisExecutionData;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.github.reinert.jjschema.Attributes;
+import com.google.common.base.Preconditions;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
 import java.util.ArrayList;
@@ -63,6 +57,13 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+import lombok.experimental.FieldNameConstants;
+import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
 
 @Slf4j
 @FieldNameConstants(innerTypeName = "APMVerificationStateKeys")
@@ -194,7 +195,7 @@ public class APMVerificationState extends AbstractMetricAnalysisState {
         if ((isNotEmpty(metricCollectionInfo.getCollectionUrl())
                 && metricCollectionInfo.getCollectionUrl().contains(VERIFICATION_HOST_PLACEHOLDER))
             || (isNotEmpty(metricCollectionInfo.getCollectionBody())
-                   && metricCollectionInfo.getCollectionBody().contains(VERIFICATION_HOST_PLACEHOLDER))) {
+                && metricCollectionInfo.getCollectionBody().contains(VERIFICATION_HOST_PLACEHOLDER))) {
           isHistorical = false;
         }
       }
@@ -240,7 +241,7 @@ public class APMVerificationState extends AbstractMetricAnalysisState {
           && !metricCollectionInfo.getCollectionUrl().contains("${start_time_seconds}")) {
         if (isEmpty(metricCollectionInfo.getCollectionBody())
             || (!metricCollectionInfo.getCollectionBody().contains("${start_time}")
-                   && !metricCollectionInfo.getCollectionBody().contains("${start_time_seconds}"))) {
+                && !metricCollectionInfo.getCollectionBody().contains("${start_time_seconds}"))) {
           invalidFields.put(
               "collectionUrl", "MetricCollection URL or body should contain ${start_time} or ${start_time_seconds}");
         }
@@ -250,7 +251,7 @@ public class APMVerificationState extends AbstractMetricAnalysisState {
           && !metricCollectionInfo.getCollectionUrl().contains("${end_time_seconds}")) {
         if (isEmpty(metricCollectionInfo.getCollectionBody())
             || (!metricCollectionInfo.getCollectionBody().contains("${end_time}")
-                   && !metricCollectionInfo.getCollectionBody().contains("${end_time_seconds}"))) {
+                && !metricCollectionInfo.getCollectionBody().contains("${end_time_seconds}"))) {
           invalidFields.put(
               "collectionUrl", "MetricCollection URL or body should contain ${end_time} or ${end_time_seconds}");
         }

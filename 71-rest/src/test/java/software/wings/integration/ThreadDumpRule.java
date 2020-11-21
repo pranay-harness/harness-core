@@ -1,11 +1,10 @@
 package software.wings.integration;
 
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.rules.TestWatcher;
 import org.junit.runner.Description;
-
-import java.io.BufferedReader;
-import java.io.InputStreamReader;
 
 /**
  * Created by rsingh on 5/23/17.

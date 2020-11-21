@@ -1,10 +1,10 @@
 package io.harness.azure.client;
 
-import com.microsoft.azure.management.monitor.EventData;
 import io.harness.azure.model.AzureConfig;
-import org.joda.time.DateTime;
 
+import com.microsoft.azure.management.monitor.EventData;
 import java.util.List;
+import org.joda.time.DateTime;
 
 public interface AzureMonitorClient {
   /**

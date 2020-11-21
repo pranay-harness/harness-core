@@ -1,12 +1,12 @@
 package io.harness.ccm.views.graphql;
 
 import io.harness.ccm.views.entities.ViewFieldIdentifier;
+
+import java.util.List;
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Value;
 import lombok.experimental.FieldDefaults;
-
-import java.util.List;
 
 @Value
 @Builder

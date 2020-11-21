@@ -1,7 +1,12 @@
 package io.harness.delegate.task.jira;
 
-import com.google.common.annotations.VisibleForTesting;
-import com.google.inject.Singleton;
+import static io.harness.logging.CommandExecutionStatus.FAILURE;
+import static io.harness.logging.CommandExecutionStatus.RUNNING;
+import static io.harness.logging.CommandExecutionStatus.SUCCESS;
+
+import static net.rcarz.jiraclient.Field.RESOLUTION;
+import static net.rcarz.jiraclient.Field.TIME_TRACKING;
+
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.delegate.beans.connector.jira.JiraConnectorDTO;
 import io.harness.delegate.task.jira.response.JiraTaskNGResponse;
@@ -15,26 +20,9 @@ import io.harness.jira.JiraCustomFieldValue;
 import io.harness.jira.JiraField;
 import io.harness.jira.JiraIssueType;
 import io.harness.jira.JiraProjectData;
-import lombok.extern.slf4j.Slf4j;
-import net.rcarz.jiraclient.BasicCredentials;
-import net.rcarz.jiraclient.Field;
-import net.rcarz.jiraclient.Field.ValueTuple;
-import net.rcarz.jiraclient.Issue;
-import net.rcarz.jiraclient.Issue.FluentCreate;
-import net.rcarz.jiraclient.Issue.FluentUpdate;
-import net.rcarz.jiraclient.JiraClient;
-import net.rcarz.jiraclient.JiraException;
-import net.rcarz.jiraclient.Resource;
-import net.rcarz.jiraclient.RestException;
-import net.rcarz.jiraclient.TimeTracking;
-import net.rcarz.jiraclient.Transition;
-import net.sf.json.JSON;
-import net.sf.json.JSONArray;
-import net.sf.json.JSONObject;
-import net.rcarz.jiraclient.Project;
-import org.apache.commons.collections.CollectionUtils;
-import org.apache.commons.lang3.StringUtils;
 
+import com.google.common.annotations.VisibleForTesting;
+import com.google.inject.Singleton;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URI;
@@ -46,12 +34,25 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-
-import static io.harness.logging.CommandExecutionStatus.FAILURE;
-import static io.harness.logging.CommandExecutionStatus.RUNNING;
-import static io.harness.logging.CommandExecutionStatus.SUCCESS;
-import static net.rcarz.jiraclient.Field.RESOLUTION;
-import static net.rcarz.jiraclient.Field.TIME_TRACKING;
+import lombok.extern.slf4j.Slf4j;
+import net.rcarz.jiraclient.BasicCredentials;
+import net.rcarz.jiraclient.Field;
+import net.rcarz.jiraclient.Field.ValueTuple;
+import net.rcarz.jiraclient.Issue;
+import net.rcarz.jiraclient.Issue.FluentCreate;
+import net.rcarz.jiraclient.Issue.FluentUpdate;
+import net.rcarz.jiraclient.JiraClient;
+import net.rcarz.jiraclient.JiraException;
+import net.rcarz.jiraclient.Project;
+import net.rcarz.jiraclient.Resource;
+import net.rcarz.jiraclient.RestException;
+import net.rcarz.jiraclient.TimeTracking;
+import net.rcarz.jiraclient.Transition;
+import net.sf.json.JSON;
+import net.sf.json.JSONArray;
+import net.sf.json.JSONObject;
+import org.apache.commons.collections.CollectionUtils;
+import org.apache.commons.lang3.StringUtils;
 
 @Singleton
 @Slf4j

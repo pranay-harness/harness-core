@@ -1,10 +1,10 @@
 package software.wings.service.impl.yaml.handler.deploymentspec.container;
 
-import com.google.inject.Singleton;
-
 import software.wings.api.DeploymentType;
 import software.wings.beans.container.EcsContainerTask;
 import software.wings.beans.container.EcsContainerTask.Yaml;
+
+import com.google.inject.Singleton;
 
 /**
  * @author rktummala on 11/15/17

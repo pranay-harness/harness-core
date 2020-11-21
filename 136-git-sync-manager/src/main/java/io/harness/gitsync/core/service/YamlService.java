@@ -4,4 +4,6 @@ import io.harness.git.model.GitFileChange;
 
 import java.util.List;
 
-public interface YamlService { void processChangeSet(List<GitFileChange> gitFileChanges); }
+public interface YamlService {
+  void processChangeSet(List<GitFileChange> gitFileChanges);
+}

@@ -1,10 +1,9 @@
 package io.harness.batch.processing.config;
 
+import javax.sql.DataSource;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.batch.core.configuration.annotation.DefaultBatchConfigurer;
 import org.springframework.stereotype.Component;
-
-import javax.sql.DataSource;
 
 /**
  * To use Map based JobRepository (In memory)

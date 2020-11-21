@@ -1,9 +1,5 @@
 package software.wings.delegatetasks.azure.appservice.webapp.taskhandler;
 
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
-
-import com.microsoft.azure.management.appservice.WebApp;
 import io.harness.azure.client.AzureWebClient;
 import io.harness.azure.context.AzureClientContext;
 import io.harness.azure.model.AzureConfig;
@@ -12,13 +8,17 @@ import io.harness.delegate.task.azure.appservice.AzureAppServiceTaskParameters;
 import io.harness.delegate.task.azure.appservice.AzureAppServiceTaskResponse;
 import io.harness.delegate.task.azure.appservice.webapp.request.AzureWebAppListWebAppNamesParameters;
 import io.harness.delegate.task.azure.appservice.webapp.response.AzureWebAppListWebAppNamesResponse;
+
+import software.wings.delegatetasks.azure.appservice.webapp.AbstractAzureWebAppTaskHandler;
+
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
+import com.microsoft.azure.management.appservice.WebApp;
+import java.util.List;
+import java.util.stream.Collectors;
 import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.jetbrains.annotations.NotNull;
-import software.wings.delegatetasks.azure.appservice.webapp.AbstractAzureWebAppTaskHandler;
-
-import java.util.List;
-import java.util.stream.Collectors;
 
 @Singleton
 @NoArgsConstructor

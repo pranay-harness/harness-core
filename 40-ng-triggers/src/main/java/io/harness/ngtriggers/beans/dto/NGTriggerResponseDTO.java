@@ -1,9 +1,10 @@
 package io.harness.ngtriggers.beans.dto;
 
+import io.harness.ngtriggers.beans.source.NGTriggerType;
+
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
-import io.harness.ngtriggers.beans.source.NGTriggerType;
 import io.swagger.annotations.ApiModel;
 import lombok.AccessLevel;
 import lombok.Builder;

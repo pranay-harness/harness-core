@@ -2,19 +2,19 @@ package software.wings.service.impl.email;
 
 import static software.wings.beans.Application.GLOBAL_APP_ID;
 
-import com.google.inject.Inject;
-
 import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.tasks.ResponseData;
 import io.harness.waiter.NotifyCallback;
-import lombok.extern.slf4j.Slf4j;
+
 import software.wings.beans.alert.AlertType;
 import software.wings.beans.alert.EmailSendingFailedAlert;
 import software.wings.helpers.ext.external.comm.CollaborationProviderResponse;
 import software.wings.service.intfc.AlertService;
 
+import com.google.inject.Inject;
 import java.util.Map;
+import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class EmailNotificationCallBack implements NotifyCallback {

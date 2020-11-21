@@ -1,13 +1,11 @@
 package software.wings.service.impl;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
+
 import static software.wings.common.VerificationConstants.ML_RECORDS_TTL_MONTHS;
 
-import com.google.common.base.Preconditions;
-import com.google.inject.Inject;
-
 import io.harness.beans.WorkflowType;
-import lombok.extern.slf4j.Slf4j;
+
 import software.wings.beans.Base;
 import software.wings.beans.PipelineExecution;
 import software.wings.beans.PipelineStageExecution;
@@ -22,11 +20,14 @@ import software.wings.service.impl.newrelic.NewRelicMetricAnalysisRecord;
 import software.wings.service.impl.newrelic.NewRelicMetricDataRecord;
 import software.wings.service.intfc.WorkflowExecutionBaselineService;
 
+import com.google.common.base.Preconditions;
+import com.google.inject.Inject;
 import java.time.OffsetDateTime;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * Created by rsingh on 2/16/18.
@@ -103,9 +104,9 @@ public class WorkflowExecutionBaselineServiceImpl implements WorkflowExecutionBa
 
     WorkflowExecution workflowExecution = isEmpty(baseline.getPipelineExecutionId())
         ? wingsPersistence.getWithAppId(
-              WorkflowExecution.class, baseline.getAppId(), execution.getPipelineExecutionId())
+            WorkflowExecution.class, baseline.getAppId(), execution.getPipelineExecutionId())
         : wingsPersistence.getWithAppId(
-              WorkflowExecution.class, baseline.getAppId(), baseline.getPipelineExecutionId());
+            WorkflowExecution.class, baseline.getAppId(), baseline.getPipelineExecutionId());
     if (workflowExecution == null) {
       return;
     }

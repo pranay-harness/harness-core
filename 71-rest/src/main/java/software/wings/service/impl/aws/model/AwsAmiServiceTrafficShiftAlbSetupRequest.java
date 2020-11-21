@@ -4,12 +4,13 @@ import static software.wings.service.impl.aws.model.AwsAmiRequest.AwsAmiRequestT
 
 import io.harness.delegate.task.aws.LbDetailsForAlbTrafficShift;
 import io.harness.security.encryption.EncryptedDataDetail;
-import lombok.Builder;
-import lombok.Data;
-import lombok.EqualsAndHashCode;
+
 import software.wings.beans.AwsConfig;
 
 import java.util.List;
+import lombok.Builder;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
 
 @Data
 @EqualsAndHashCode(callSuper = true)

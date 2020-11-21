@@ -2,10 +2,8 @@ package io.harness.jobs;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 
-import com.google.common.collect.Lists;
-
 import io.harness.service.intfc.LearningEngineService;
-import lombok.extern.slf4j.Slf4j;
+
 import software.wings.common.VerificationConstants;
 import software.wings.service.impl.analysis.LogClusterContext;
 import software.wings.service.impl.analysis.LogRequest;
@@ -13,6 +11,9 @@ import software.wings.service.impl.analysis.MLAnalysisType;
 import software.wings.service.impl.newrelic.LearningEngineAnalysisTask;
 import software.wings.service.intfc.analysis.ClusterLevel;
 import software.wings.service.intfc.analysis.LogAnalysisResource;
+
+import com.google.common.collect.Lists;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * Created by sriram_parthasarathy on 8/24/17.

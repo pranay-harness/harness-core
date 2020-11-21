@@ -7,24 +7,20 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.expression.ExpressionEvaluator.matchesVariablePattern;
 import static io.harness.validation.Validator.notNullCheck;
-import static org.apache.commons.lang3.StringUtils.isBlank;
+
 import static software.wings.beans.EntityType.ENVIRONMENT;
 import static software.wings.beans.EntityType.INFRASTRUCTURE_DEFINITION;
 import static software.wings.beans.EntityType.INFRASTRUCTURE_MAPPING;
 import static software.wings.beans.trigger.ManifestSelection.ManifestSelectionType;
 import static software.wings.beans.yaml.YamlConstants.PATH_DELIMITER;
 
-import com.google.common.collect.Maps;
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
+import static org.apache.commons.lang3.StringUtils.isBlank;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.WorkflowType;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.InvalidRequestException;
-import lombok.Data;
-import lombok.EqualsAndHashCode;
-import lombok.extern.slf4j.Slf4j;
+
 import software.wings.beans.Application;
 import software.wings.beans.EntityType;
 import software.wings.beans.Environment;
@@ -51,6 +47,9 @@ import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.TriggerService;
 import software.wings.yaml.trigger.TriggerConditionYaml;
 
+import com.google.common.collect.Maps;
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -58,6 +57,9 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.extern.slf4j.Slf4j;
 
 @OwnedBy(CDC)
 @Singleton
@@ -319,7 +321,7 @@ public class TriggerYamlHandler extends BaseYamlHandler<Yaml, Trigger> {
       String valueForBean = null;
       if (isNotEmpty(entityType)
           && (entityType.equals(INFRASTRUCTURE_DEFINITION.name())
-                 || entityType.equals(INFRASTRUCTURE_MAPPING.name()))) {
+              || entityType.equals(INFRASTRUCTURE_MAPPING.name()))) {
         valueForBean = getValueForInfraVariable(triggerVariables, variable, pipeline, accountId, appId, variableOrg);
       } else {
         valueForBean = workflowYAMLHelper.getWorkflowVariableValueBean(

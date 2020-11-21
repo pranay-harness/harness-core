@@ -1,7 +1,8 @@
 package software.wings.beans.container;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import software.wings.stencils.Stencil;
+
+import com.fasterxml.jackson.annotation.JsonIgnore;
 
 /**
  * Created by anubhaw on 2/6/17.

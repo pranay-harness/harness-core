@@ -1,13 +1,18 @@
 package io.harness.generator;
 
-import com.mongodb.DuplicateKeyException;
 import io.harness.exception.DuplicateFieldException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 
+import com.mongodb.DuplicateKeyException;
+
 public class GeneratorUtils {
-  public interface PersistenceIn<T> { T save(); }
-  public interface PersistenceOut<T> { T obtain(); }
+  public interface PersistenceIn<T> {
+    T save();
+  }
+  public interface PersistenceOut<T> {
+    T obtain();
+  }
 
   public static <T> T suppressDuplicateException(PersistenceIn<T> persistenceIn, PersistenceOut<T> persistenceOut) {
     try {

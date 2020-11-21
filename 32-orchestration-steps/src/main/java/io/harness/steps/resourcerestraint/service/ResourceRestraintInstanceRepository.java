@@ -6,10 +6,10 @@ import io.harness.annotation.HarnessRepo;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.distribution.constraint.Consumer;
 import io.harness.steps.resourcerestraint.beans.ResourceRestraintInstance;
-import org.springframework.data.repository.CrudRepository;
 
 import java.util.List;
 import java.util.Optional;
+import org.springframework.data.repository.CrudRepository;
 
 @OwnedBy(CDC)
 @HarnessRepo

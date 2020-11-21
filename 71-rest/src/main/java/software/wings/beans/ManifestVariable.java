@@ -1,14 +1,14 @@
 package software.wings.beans;
 
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
 import software.wings.beans.appmanifest.ApplicationManifestSummary;
 import software.wings.beans.appmanifest.LastDeployedHelmChartInformation;
 
 import java.util.List;
 import java.util.Map;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
 @Data
 @NoArgsConstructor

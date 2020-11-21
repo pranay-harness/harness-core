@@ -1,10 +1,8 @@
 package io.harness.time;
 
 import com.google.common.base.Preconditions;
-
-import lombok.experimental.UtilityClass;
-
 import java.time.Duration;
+import lombok.experimental.UtilityClass;
 
 @UtilityClass
 public class DurationUtils {

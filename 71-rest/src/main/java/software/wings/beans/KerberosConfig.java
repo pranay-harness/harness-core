@@ -3,11 +3,10 @@ package software.wings.beans;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.github.reinert.jjschema.Attributes;
+import java.beans.Transient;
 import lombok.Builder;
 import lombok.Data;
 import org.hibernate.validator.constraints.NotEmpty;
-
-import java.beans.Transient;
 
 /**
  * Created by Aaditi Joag on 10/16/18.

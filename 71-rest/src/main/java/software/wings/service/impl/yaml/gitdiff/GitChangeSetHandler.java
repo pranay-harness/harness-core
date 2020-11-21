@@ -3,13 +3,7 @@ package software.wings.service.impl.yaml.gitdiff;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.validation.Validator.notNullCheck;
-import static java.lang.Boolean.FALSE;
-import static java.util.Collections.emptySet;
-import static java.util.Optional.ofNullable;
-import static java.util.function.Function.identity;
-import static java.util.stream.Collectors.toList;
-import static org.apache.commons.collections4.ListUtils.emptyIfNull;
-import static org.apache.commons.collections4.MapUtils.emptyIfNull;
+
 import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static software.wings.beans.GitCommit.Status.COMPLETED;
 import static software.wings.beans.GitCommit.Status.COMPLETED_WITH_ERRORS;
@@ -18,13 +12,16 @@ import static software.wings.yaml.gitSync.YamlGitConfig.BRANCH_NAME_KEY;
 import static software.wings.yaml.gitSync.YamlGitConfig.GIT_CONNECTOR_ID_KEY;
 import static software.wings.yaml.gitSync.YamlGitConfig.REPOSITORY_NAME_KEY;
 
-import com.google.inject.Inject;
+import static java.lang.Boolean.FALSE;
+import static java.util.Collections.emptySet;
+import static java.util.Optional.ofNullable;
+import static java.util.function.Function.identity;
+import static java.util.stream.Collectors.toList;
+import static org.apache.commons.collections4.ListUtils.emptyIfNull;
+import static org.apache.commons.collections4.MapUtils.emptyIfNull;
 
-import com.mongodb.DuplicateKeyException;
 import io.harness.exception.UnexpectedException;
-import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.collections4.CollectionUtils;
-import org.mongodb.morphia.annotations.Transient;
+
 import software.wings.beans.Application;
 import software.wings.beans.Base;
 import software.wings.beans.GitCommit;
@@ -44,6 +41,8 @@ import software.wings.yaml.gitSync.YamlChangeSet;
 import software.wings.yaml.gitSync.YamlChangeSet.Status;
 import software.wings.yaml.gitSync.YamlGitConfig;
 
+import com.google.inject.Inject;
+import com.mongodb.DuplicateKeyException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -51,6 +50,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.collections4.CollectionUtils;
+import org.mongodb.morphia.annotations.Transient;
 
 @Slf4j
 public class GitChangeSetHandler {

@@ -1,7 +1,5 @@
 package software.wings.resources;
 
-import com.google.inject.Inject;
-
 import io.harness.annotations.Redesign;
 import io.harness.dto.OrchestrationGraphDTO;
 import io.harness.engine.interrupts.InterruptPackage;
@@ -10,6 +8,7 @@ import io.harness.interrupts.Interrupt;
 import io.harness.redesign.services.CustomExecutionService;
 import io.harness.rest.RestResponse;
 
+import com.google.inject.Inject;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;

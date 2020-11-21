@@ -1,6 +1,5 @@
 package software.wings.service.intfc;
 
-import org.hibernate.validator.constraints.NotBlank;
 import software.wings.beans.sso.LdapGroupResponse;
 import software.wings.beans.sso.LdapSettings;
 import software.wings.beans.sso.LdapTestResponse;
@@ -14,6 +13,7 @@ import java.io.InputStream;
 import java.util.Collection;
 import java.util.Set;
 import javax.validation.constraints.NotNull;
+import org.hibernate.validator.constraints.NotBlank;
 
 // TODO: Refactor this to make it more abstract and common across different SSO providers
 public interface SSOService {

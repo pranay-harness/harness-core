@@ -3,10 +3,7 @@ package io.harness.functional.deploymentTags;
 import static io.harness.beans.WorkflowType.PIPELINE;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.rule.OwnerRule.AADITI;
-import static java.lang.String.format;
-import static java.util.Arrays.asList;
-import static java.util.Collections.singletonList;
-import static org.assertj.core.api.Assertions.assertThat;
+
 import static software.wings.beans.CanaryOrchestrationWorkflow.CanaryOrchestrationWorkflowBuilder.aCanaryOrchestrationWorkflow;
 import static software.wings.beans.PhaseStep.PhaseStepBuilder.aPhaseStep;
 import static software.wings.beans.PhaseStepType.POST_DEPLOYMENT;
@@ -15,8 +12,10 @@ import static software.wings.beans.Variable.VariableBuilder.aVariable;
 import static software.wings.beans.Workflow.WorkflowBuilder.aWorkflow;
 import static software.wings.sm.StateType.ENV_STATE;
 
-import com.google.common.collect.ImmutableMap;
-import com.google.inject.Inject;
+import static java.lang.String.format;
+import static java.util.Arrays.asList;
+import static java.util.Collections.singletonList;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.beans.WorkflowType;
 import io.harness.category.element.FunctionalTests;
@@ -30,13 +29,7 @@ import io.harness.generator.WorkflowGenerator;
 import io.harness.rule.Owner;
 import io.harness.testframework.framework.Setup;
 import io.harness.testframework.restutils.PipelineRestUtils;
-import io.restassured.http.ContentType;
-import io.restassured.path.json.JsonPath;
-import org.jetbrains.annotations.NotNull;
-import org.junit.Before;
-import org.junit.Ignore;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
+
 import software.wings.beans.Application;
 import software.wings.beans.CanaryOrchestrationWorkflow.CanaryOrchestrationWorkflowBuilder;
 import software.wings.beans.EntityType;
@@ -56,11 +49,20 @@ import software.wings.beans.artifact.Artifact;
 import software.wings.service.impl.WorkflowExecutionServiceImpl;
 import software.wings.service.intfc.FeatureFlagService;
 
+import com.google.common.collect.ImmutableMap;
+import com.google.inject.Inject;
+import io.restassured.http.ContentType;
+import io.restassured.path.json.JsonPath;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import org.jetbrains.annotations.NotNull;
+import org.junit.Before;
+import org.junit.Ignore;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 public class DeploymentTagsFunctionalTest extends AbstractFunctionalTest {
   private static final String WORKFLOW_VARIABLE_NAME = "var_workflow";

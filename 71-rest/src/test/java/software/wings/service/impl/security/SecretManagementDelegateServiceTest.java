@@ -2,6 +2,7 @@ package software.wings.service.impl.security;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.rule.OwnerRule.UTKARSH;
+
 import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.mock;
@@ -9,7 +10,6 @@ import static org.mockito.Mockito.when;
 import static org.mockito.MockitoAnnotations.initMocks;
 import static org.powermock.api.mockito.PowerMockito.mockStatic;
 
-import com.microsoft.azure.keyvault.KeyVaultClient;
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.exception.SecretManagementDelegateException;
@@ -18,6 +18,11 @@ import io.harness.helpers.ext.cyberark.CyberArkReadResponse;
 import io.harness.helpers.ext.cyberark.CyberArkRestClient;
 import io.harness.helpers.ext.cyberark.CyberArkRestClientFactory;
 import io.harness.rule.Owner;
+
+import software.wings.beans.CyberArkConfig;
+
+import com.microsoft.azure.keyvault.KeyVaultClient;
+import java.io.IOException;
 import lombok.extern.slf4j.Slf4j;
 import okhttp3.MediaType;
 import okhttp3.Protocol;
@@ -32,9 +37,6 @@ import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
 import retrofit2.Call;
 import retrofit2.Response;
-import software.wings.beans.CyberArkConfig;
-
-import java.io.IOException;
 
 /**
  * @author marklu on 2019-03-06

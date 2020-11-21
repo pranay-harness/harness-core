@@ -2,17 +2,20 @@ package io.harness.ccm.billing;
 
 import static io.harness.rule.OwnerRule.HANTANG;
 import static io.harness.rule.OwnerRule.ROHIT;
+
 import static org.assertj.core.api.Assertions.assertThat;
 
-import com.healthmarketscience.sqlbuilder.SqlObject;
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.ccm.billing.graphql.CloudBillingAggregate;
 import io.harness.rule.Owner;
+
+import software.wings.graphql.datafetcher.billing.QLCCMAggregateOperation;
+
+import com.healthmarketscience.sqlbuilder.SqlObject;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
-import software.wings.graphql.datafetcher.billing.QLCCMAggregateOperation;
 
 public class CloudBillingAggregateTest extends CategoryTest {
   private CloudBillingAggregate cloudBillingAggregate;

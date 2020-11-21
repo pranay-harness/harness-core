@@ -1,19 +1,18 @@
 package io.harness.cvng.statemachine.entities;
 
-import com.google.inject.Inject;
-
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import io.harness.cvng.analysis.entities.HealthVerificationPeriod;
 import io.harness.cvng.analysis.services.api.HealthVerificationService;
 import io.harness.cvng.statemachine.beans.AnalysisInput;
 import io.harness.cvng.statemachine.beans.AnalysisState;
 import io.harness.cvng.statemachine.beans.AnalysisStatus;
 import io.harness.cvng.statemachine.exception.AnalysisStateMachineException;
-import lombok.Builder;
-import lombok.Data;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.google.inject.Inject;
 import java.time.Duration;
 import java.time.Instant;
+import lombok.Builder;
+import lombok.Data;
 
 @Data
 @Builder

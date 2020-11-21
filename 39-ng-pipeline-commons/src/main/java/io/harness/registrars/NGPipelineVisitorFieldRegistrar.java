@@ -1,17 +1,16 @@
 package io.harness.registrars;
 
-import com.google.inject.Inject;
-import com.google.inject.Injector;
-
 import io.harness.beans.ParameterField;
 import io.harness.ngpipeline.inputset.ParameterVisitorFieldProcessor;
 import io.harness.walktree.registries.registrars.VisitableFieldRegistrar;
 import io.harness.walktree.registries.visitorfield.VisitableFieldProcessor;
 import io.harness.walktree.registries.visitorfield.VisitorFieldType;
 import io.harness.walktree.registries.visitorfield.VisitorFieldWrapper;
-import org.apache.commons.lang3.tuple.Pair;
 
+import com.google.inject.Inject;
+import com.google.inject.Injector;
 import java.util.Set;
+import org.apache.commons.lang3.tuple.Pair;
 
 public class NGPipelineVisitorFieldRegistrar implements VisitableFieldRegistrar {
   @Inject private Injector injector;

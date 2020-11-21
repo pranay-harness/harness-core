@@ -1,26 +1,28 @@
 package software.wings.security.encryption.migration;
 
 import static io.harness.rule.OwnerRule.UTKARSH;
-import static org.assertj.core.api.Assertions.assertThat;
+
 import static software.wings.beans.FeatureName.CONNECTORS_REF_SECRETS;
 import static software.wings.beans.FeatureName.CONNECTORS_REF_SECRETS_MIGRATION;
 
-import com.google.inject.Inject;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
-import lombok.AccessLevel;
-import lombok.experimental.FieldDefaults;
-import org.apache.commons.lang3.reflect.FieldUtils;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
+
 import software.wings.WingsBaseTest;
 import software.wings.beans.Account;
 import software.wings.beans.AccountType;
 import software.wings.beans.AppDynamicsConfig;
 import software.wings.beans.SettingAttribute;
 
+import com.google.inject.Inject;
 import java.util.concurrent.Future;
+import lombok.AccessLevel;
+import lombok.experimental.FieldDefaults;
+import org.apache.commons.lang3.reflect.FieldUtils;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class SettingAttributesSecretReferenceFeatureFlagJobTest extends WingsBaseTest {

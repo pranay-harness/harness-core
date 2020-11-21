@@ -4,22 +4,20 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.validation.Validator.notNullCheck;
+
+import static software.wings.beans.Environment.GLOBAL_ENV_ID;
+import static software.wings.beans.ServiceVariable.Type.ARTIFACT;
+
 import static java.lang.String.format;
 import static java.util.Collections.emptyList;
 import static java.util.function.Function.identity;
 import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
-import static software.wings.beans.Environment.GLOBAL_ENV_ID;
-import static software.wings.beans.ServiceVariable.Type.ARTIFACT;
-
-import com.google.common.collect.Lists;
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
 
 import io.harness.exception.InvalidRequestException;
 import io.harness.k8s.model.HelmVersion;
-import lombok.extern.slf4j.Slf4j;
+
 import software.wings.api.DeploymentType;
 import software.wings.beans.AllowedValueYaml;
 import software.wings.beans.AppContainer;
@@ -48,6 +46,9 @@ import software.wings.service.intfc.security.SecretManager;
 import software.wings.utils.ArtifactType;
 import software.wings.utils.Utils;
 
+import com.google.common.collect.Lists;
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -56,6 +57,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.stream.Collectors;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * @author rktummala on 10/22/17

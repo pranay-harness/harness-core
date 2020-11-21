@@ -1,12 +1,12 @@
 package io.harness.notification.remote.dto;
 
 import io.harness.notification.NotificationChannelType;
+
+import javax.validation.constraints.NotNull;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
-
-import javax.validation.constraints.NotNull;
 
 @EqualsAndHashCode(callSuper = true)
 @Data

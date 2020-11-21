@@ -1,7 +1,8 @@
 package io.harness.delegate.beans.connector.artifactoryconnector;
 
-import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import io.harness.beans.DecryptableEntity;
+
+import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import io.swagger.annotations.ApiModel;
 
 @JsonTypeInfo(

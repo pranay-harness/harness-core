@@ -6,23 +6,16 @@ import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.delegate.beans.TaskData.DEFAULT_ASYNC_CALL_TIMEOUT;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.validation.Validator.notNullCheck;
-import static java.lang.String.format;
-import static java.util.Collections.emptyList;
-import static java.util.Collections.singletonList;
+
 import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static software.wings.beans.TaskType.CLOUD_FORMATION_TASK;
 import static software.wings.beans.TaskType.FETCH_S3_FILE_TASK;
 import static software.wings.beans.TaskType.GIT_FETCH_FILES_TASK;
 
-import com.google.inject.Inject;
+import static java.lang.String.format;
+import static java.util.Collections.emptyList;
+import static java.util.Collections.singletonList;
 
-import com.amazonaws.services.cloudformation.model.Parameter;
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.MapperFeature;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.github.reinert.jjschema.Attributes;
-import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.beans.DelegateTask;
 import io.harness.beans.ExecutionStatus;
 import io.harness.beans.SweepingOutputInstance;
@@ -36,10 +29,7 @@ import io.harness.logging.CommandExecutionStatus;
 import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.tasks.Cd1SetupFields;
 import io.harness.tasks.ResponseData;
-import lombok.Getter;
-import lombok.Setter;
-import org.apache.commons.lang3.StringUtils;
-import org.jetbrains.annotations.NotNull;
+
 import software.wings.api.ScriptStateExecutionData;
 import software.wings.api.cloudformation.CloudFormationElement;
 import software.wings.api.cloudformation.CloudFormationOutputInfoElement;
@@ -77,6 +67,14 @@ import software.wings.sm.StateType;
 import software.wings.sm.WorkflowStandardParams;
 import software.wings.utils.GitUtilsManager;
 
+import com.amazonaws.services.cloudformation.model.Parameter;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.MapperFeature;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.github.reinert.jjschema.Attributes;
+import com.github.reinert.jjschema.SchemaIgnore;
+import com.google.inject.Inject;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -86,6 +84,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
+import lombok.Getter;
+import lombok.Setter;
+import org.apache.commons.lang3.StringUtils;
+import org.jetbrains.annotations.NotNull;
 
 public class CloudFormationCreateStackState extends CloudFormationState {
   private static final String CREATE_STACK_COMMAND_UNIT = "Create Stack";
@@ -517,8 +519,8 @@ public class CloudFormationCreateStackState extends CloudFormationState {
           .stream()
           .filter(gitFile -> getParametersFilePaths().contains(gitFile.getFilePath()))
           .map(GitFile::getFileContent)
-          .map(this ::getParametersFromJson)
-          .forEach(this ::addNewVariables);
+          .map(this::getParametersFromJson)
+          .forEach(this::addNewVariables);
     }
     setFileFetched(true);
     return executeInternal(context, ((ScriptStateExecutionData) context.getStateExecutionData()).getActivityId());
@@ -549,8 +551,8 @@ public class CloudFormationCreateStackState extends CloudFormationState {
               .stream()
               .filter(s3File -> buckets.get(s3Bucket.getName()).contains(s3File.getFileKey()))
               .map(S3File::getFileContent)
-              .map(this ::getParametersFromJson)
-              .forEach(this ::addNewVariables);
+              .map(this::getParametersFromJson)
+              .forEach(this::addNewVariables);
         }
       });
     }

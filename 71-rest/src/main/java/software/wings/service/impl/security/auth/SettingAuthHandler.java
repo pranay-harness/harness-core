@@ -4,8 +4,6 @@ import static software.wings.beans.SettingAttribute.SettingCategory;
 import static software.wings.security.PermissionAttribute.PermissionType.MANAGE_CLOUD_PROVIDERS;
 import static software.wings.security.PermissionAttribute.PermissionType.MANAGE_CONNECTORS;
 
-import com.google.inject.Inject;
-
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.User;
 import software.wings.security.PermissionAttribute;
@@ -14,6 +12,7 @@ import software.wings.security.UserThreadLocal;
 import software.wings.service.intfc.SettingsService;
 import software.wings.settings.SettingVariableTypes;
 
+import com.google.inject.Inject;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -48,7 +47,9 @@ public class SettingAuthHandler {
         authorizeCloudProvider();
         break;
       }
-      default: { break; }
+      default: {
+        break;
+      }
     }
   }
 

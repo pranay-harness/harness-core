@@ -5,12 +5,12 @@ import static io.harness.annotations.dev.HarnessTeam.CDC;
 import io.harness.annotation.HarnessEntity;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.queue.Queuable;
+
+import java.util.List;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import org.mongodb.morphia.annotations.Entity;
-
-import java.util.List;
 
 @OwnedBy(CDC)
 @Data

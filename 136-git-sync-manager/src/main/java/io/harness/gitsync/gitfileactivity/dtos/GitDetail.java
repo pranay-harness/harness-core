@@ -1,9 +1,10 @@
 package io.harness.gitsync.gitfileactivity.dtos;
 
+import software.wings.beans.EntityType;
+
 import lombok.Builder;
 import lombok.Data;
 import org.mongodb.morphia.annotations.Transient;
-import software.wings.beans.EntityType;
 
 @Data
 @Builder

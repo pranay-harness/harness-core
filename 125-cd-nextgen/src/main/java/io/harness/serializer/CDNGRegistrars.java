@@ -1,12 +1,12 @@
 package io.harness.serializer;
 
-import com.google.common.collect.ImmutableSet;
-
 import io.harness.morphia.MorphiaRegistrar;
 import io.harness.serializer.kryo.NGKryoRegistrar;
 import io.harness.serializer.morphia.NGMorphiaRegistrar;
 import io.harness.serializer.spring.NgAliasRegistrar;
 import io.harness.spring.AliasRegistrar;
+
+import com.google.common.collect.ImmutableSet;
 import lombok.experimental.UtilityClass;
 
 @UtilityClass

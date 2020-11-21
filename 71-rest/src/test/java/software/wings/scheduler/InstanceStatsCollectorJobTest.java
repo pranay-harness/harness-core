@@ -1,6 +1,7 @@
 package software.wings.scheduler;
 
 import static io.harness.rule.OwnerRule.ROHIT_KUMAR;
+
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.doReturn;
@@ -8,14 +9,17 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
-import com.google.inject.Inject;
-
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.lock.AcquiredLock;
 import io.harness.lock.PersistentLocker;
 import io.harness.rule.Owner;
 import io.harness.scheduler.BackgroundSchedulerLocker;
+
+import software.wings.service.intfc.instance.stats.collector.StatsCollector;
+
+import com.google.inject.Inject;
+import java.time.Duration;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -23,9 +27,6 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.mockito.Spy;
-import software.wings.service.intfc.instance.stats.collector.StatsCollector;
-
-import java.time.Duration;
 
 public class InstanceStatsCollectorJobTest extends CategoryTest {
   public static final String ACCOUNTID = "accountid";

@@ -1,10 +1,11 @@
 package software.wings.common;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
+
 import static software.wings.api.AwsLambdaContextElement.AWS_LAMBDA_REQUEST_PARAM;
 
 import io.harness.context.ContextElementType;
-import lombok.extern.slf4j.Slf4j;
+
 import software.wings.api.AwsLambdaContextElement;
 import software.wings.api.AwsLambdaFunctionElement;
 import software.wings.sm.ExecutionContext;
@@ -13,6 +14,7 @@ import software.wings.sm.ExpressionProcessor;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class AwsLambdaFunctionProcessor implements ExpressionProcessor {

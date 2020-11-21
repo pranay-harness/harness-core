@@ -4,13 +4,10 @@ import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+
 import static java.lang.String.format;
 import static java.util.stream.Collectors.groupingBy;
 import static java.util.stream.Collectors.toMap;
-
-import com.google.common.annotations.VisibleForTesting;
-import com.google.inject.Inject;
-import com.google.inject.name.Named;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.PageRequest;
@@ -25,11 +22,7 @@ import io.harness.execution.export.metadata.ExecutionMetadata;
 import io.harness.execution.export.metadata.GraphNodeMetadata;
 import io.harness.execution.export.metadata.GraphNodeVisitor;
 import io.harness.persistence.CreatedAtAware;
-import lombok.Setter;
-import lombok.Value;
-import lombok.experimental.NonFinal;
-import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.RandomStringUtils;
+
 import software.wings.beans.Application;
 import software.wings.beans.Log;
 import software.wings.beans.Log.LogKeys;
@@ -37,6 +30,9 @@ import software.wings.service.impl.LogServiceImpl;
 import software.wings.service.intfc.DataStoreService;
 import software.wings.service.intfc.LogService;
 
+import com.google.common.annotations.VisibleForTesting;
+import com.google.inject.Inject;
+import com.google.inject.name.Named;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.text.SimpleDateFormat;
@@ -55,6 +51,11 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
+import lombok.Setter;
+import lombok.Value;
+import lombok.experimental.NonFinal;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.RandomStringUtils;
 
 @OwnedBy(CDC)
 @Value
@@ -300,7 +301,7 @@ public class ActivityLogsProcessor implements ExportExecutionsProcessor {
     public void visitGraphNode(GraphNodeMetadata nodeMetadata) {
       addExecutionDetailsMetadata(nodeMetadata);
       if (nodeMetadata != null && isNotEmpty(nodeMetadata.getExecutionHistory())) {
-        nodeMetadata.getExecutionHistory().forEach(this ::addExecutionDetailsMetadata);
+        nodeMetadata.getExecutionHistory().forEach(this::addExecutionDetailsMetadata);
       }
     }
 

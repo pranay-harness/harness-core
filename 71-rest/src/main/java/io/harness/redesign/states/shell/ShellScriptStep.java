@@ -1,19 +1,19 @@
 package io.harness.redesign.states.shell;
 
-import static com.google.common.collect.Lists.newArrayList;
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.data.structure.ListUtils.trimStrings;
 import static io.harness.delegate.beans.TaskData.DEFAULT_ASYNC_CALL_TIMEOUT;
 import static io.harness.logging.CommandExecutionStatus.SUCCESS;
-import static java.util.Collections.emptyList;
-import static java.util.Collections.singletonList;
+
 import static software.wings.beans.FeatureName.LOCAL_DELEGATE_CONFIG_OVERRIDE;
 import static software.wings.beans.delegation.ShellScriptParameters.CommandUnit;
 import static software.wings.sm.StateType.SHELL_SCRIPT;
 
-import com.google.inject.Inject;
+import static com.google.common.collect.Lists.newArrayList;
+import static java.util.Collections.emptyList;
+import static java.util.Collections.singletonList;
 
 import io.harness.ambiance.Ambiance;
 import io.harness.annotations.Redesign;
@@ -43,8 +43,7 @@ import io.harness.state.io.StepResponse.StepResponseBuilder;
 import io.harness.tasks.Cd1SetupFields;
 import io.harness.tasks.ResponseData;
 import io.harness.tasks.Task;
-import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.StringUtils;
+
 import software.wings.annotation.EncryptableSetting;
 import software.wings.api.ScriptStateExecutionData;
 import software.wings.beans.Activity;
@@ -69,8 +68,11 @@ import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.security.SecretManager;
 
+import com.google.inject.Inject;
 import java.util.List;
 import java.util.Map;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 
 @OwnedBy(CDC)
 @Redesign

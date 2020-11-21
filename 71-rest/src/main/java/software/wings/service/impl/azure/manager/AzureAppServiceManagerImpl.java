@@ -5,10 +5,10 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.exception.ExceptionUtils.getMessage;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.logging.CommandExecutionStatus.FAILURE;
-import static java.lang.String.format;
+
 import static software.wings.beans.Application.GLOBAL_APP_ID;
 
-import com.google.inject.Inject;
+import static java.lang.String.format;
 
 import io.harness.beans.DelegateTask;
 import io.harness.delegate.beans.DelegateResponseData;
@@ -25,12 +25,14 @@ import io.harness.delegate.task.azure.appservice.webapp.response.AzureWebAppList
 import io.harness.exception.InvalidRequestException;
 import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.tasks.Cd1SetupFields;
+
 import software.wings.beans.AzureConfig;
 import software.wings.beans.TaskType;
 import software.wings.service.intfc.DelegateService;
 import software.wings.service.intfc.azure.manager.AzureAppServiceManager;
 import software.wings.sm.states.azure.AzureStateHelper;
 
+import com.google.inject.Inject;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 

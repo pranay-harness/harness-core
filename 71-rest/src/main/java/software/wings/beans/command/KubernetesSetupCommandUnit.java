@@ -21,6 +21,15 @@ import static io.harness.k8s.KubernetesHelperService.toDisplayYaml;
 import static io.harness.k8s.KubernetesHelperService.toYaml;
 import static io.harness.k8s.model.ContainerApiVersions.KUBERNETES_V1;
 import static io.harness.threading.Morpheus.sleep;
+
+import static software.wings.beans.LogHelper.color;
+import static software.wings.beans.LogWeight.Bold;
+import static software.wings.beans.command.ContainerResizeCommandUnit.DASH_STRING;
+import static software.wings.beans.container.KubernetesContainerTask.CONFIG_MAP_NAME_PLACEHOLDER_REGEX;
+import static software.wings.beans.container.KubernetesContainerTask.SECRET_MAP_NAME_PLACEHOLDER_REGEX;
+import static software.wings.beans.container.KubernetesServiceType.None;
+import static software.wings.beans.container.Label.Builder.aLabel;
+
 import static java.lang.String.format;
 import static java.time.Duration.ofSeconds;
 import static java.util.Arrays.asList;
@@ -32,14 +41,41 @@ import static java.util.stream.Collectors.toMap;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.atteo.evo.inflector.English.plural;
-import static software.wings.beans.LogHelper.color;
-import static software.wings.beans.LogWeight.Bold;
-import static software.wings.beans.command.ContainerResizeCommandUnit.DASH_STRING;
-import static software.wings.beans.container.KubernetesContainerTask.CONFIG_MAP_NAME_PLACEHOLDER_REGEX;
-import static software.wings.beans.container.KubernetesContainerTask.SECRET_MAP_NAME_PLACEHOLDER_REGEX;
-import static software.wings.beans.container.KubernetesServiceType.None;
-import static software.wings.beans.container.Label.Builder.aLabel;
 
+import io.harness.container.ContainerInfo;
+import io.harness.eraro.ErrorCode;
+import io.harness.exception.ExceptionUtils;
+import io.harness.exception.InvalidArgumentsException;
+import io.harness.exception.InvalidRequestException;
+import io.harness.exception.WingsException;
+import io.harness.k8s.K8sConstants;
+import io.harness.k8s.KubernetesContainerService;
+import io.harness.k8s.KubernetesConvention;
+import io.harness.k8s.model.ContainerApiVersions;
+import io.harness.k8s.model.ImageDetails;
+import io.harness.k8s.model.KubernetesConfig;
+import io.harness.logging.CommandExecutionStatus;
+import io.harness.logging.LogLevel;
+import io.harness.logging.Misc;
+import io.harness.security.encryption.EncryptedDataDetail;
+
+import software.wings.api.DeploymentType;
+import software.wings.beans.AzureConfig;
+import software.wings.beans.KubernetesClusterConfig;
+import software.wings.beans.LogColor;
+import software.wings.beans.SettingAttribute;
+import software.wings.beans.command.ContainerSetupCommandUnitExecutionData.ContainerSetupCommandUnitExecutionDataBuilder;
+import software.wings.beans.container.ContainerDefinition;
+import software.wings.beans.container.KubernetesContainerTask;
+import software.wings.beans.container.KubernetesServiceSpecification;
+import software.wings.beans.container.KubernetesServiceType;
+import software.wings.beans.container.Label;
+import software.wings.cloudprovider.gke.GkeClusterService;
+import software.wings.helpers.ext.azure.AzureHelperService;
+import software.wings.service.impl.artifact.ArtifactCollectionUtils;
+import software.wings.service.intfc.security.EncryptionService;
+
+import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
@@ -49,8 +85,6 @@ import com.google.common.collect.Lists;
 import com.google.common.util.concurrent.TimeLimiter;
 import com.google.common.util.concurrent.UncheckedTimeoutException;
 import com.google.inject.Inject;
-
-import com.fasterxml.jackson.annotation.JsonTypeName;
 import io.fabric8.kubernetes.api.KubernetesHelper;
 import io.fabric8.kubernetes.api.model.ConfigMap;
 import io.fabric8.kubernetes.api.model.ConfigMapBuilder;
@@ -89,22 +123,19 @@ import io.fabric8.kubernetes.api.model.extensions.ReplicaSet;
 import io.fabric8.kubernetes.api.model.extensions.ReplicaSetSpec;
 import io.fabric8.kubernetes.api.model.extensions.StatefulSet;
 import io.fabric8.kubernetes.api.model.extensions.StatefulSetSpec;
-import io.harness.container.ContainerInfo;
-import io.harness.eraro.ErrorCode;
-import io.harness.exception.ExceptionUtils;
-import io.harness.exception.InvalidArgumentsException;
-import io.harness.exception.InvalidRequestException;
-import io.harness.exception.WingsException;
-import io.harness.k8s.K8sConstants;
-import io.harness.k8s.KubernetesContainerService;
-import io.harness.k8s.KubernetesConvention;
-import io.harness.k8s.model.ContainerApiVersions;
-import io.harness.k8s.model.ImageDetails;
-import io.harness.k8s.model.KubernetesConfig;
-import io.harness.logging.CommandExecutionStatus;
-import io.harness.logging.LogLevel;
-import io.harness.logging.Misc;
-import io.harness.security.encryption.EncryptedDataDetail;
+import java.io.IOException;
+import java.time.Clock;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.Optional;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicReference;
+import java.util.regex.Pattern;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -122,35 +153,6 @@ import me.snowdrop.istio.api.networking.v1alpha3.VirtualServiceSpecFluent.HttpNe
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.mongodb.morphia.annotations.Transient;
-import software.wings.api.DeploymentType;
-import software.wings.beans.AzureConfig;
-import software.wings.beans.KubernetesClusterConfig;
-import software.wings.beans.LogColor;
-import software.wings.beans.SettingAttribute;
-import software.wings.beans.command.ContainerSetupCommandUnitExecutionData.ContainerSetupCommandUnitExecutionDataBuilder;
-import software.wings.beans.container.ContainerDefinition;
-import software.wings.beans.container.KubernetesContainerTask;
-import software.wings.beans.container.KubernetesServiceSpecification;
-import software.wings.beans.container.KubernetesServiceType;
-import software.wings.beans.container.Label;
-import software.wings.cloudprovider.gke.GkeClusterService;
-import software.wings.helpers.ext.azure.AzureHelperService;
-import software.wings.service.impl.artifact.ArtifactCollectionUtils;
-import software.wings.service.intfc.security.EncryptionService;
-
-import java.io.IOException;
-import java.time.Clock;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
-import java.util.Optional;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicInteger;
-import java.util.concurrent.atomic.AtomicReference;
-import java.util.regex.Pattern;
 
 /**
  * Created by brett on 3/3/17
@@ -921,10 +923,10 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
     if (secretMap != null) {
       executionLogCallback.saveExecutionLog("Creating secret map:\n\n"
               + toDisplayYaml(
-                    new SecretBuilder()
-                        .withMetadata(secretMap.getMetadata())
-                        .withData(secretData.entrySet().stream().collect(toMap(Entry::getKey, entry -> SECRET_MASK)))
-                        .build()),
+                  new SecretBuilder()
+                      .withMetadata(secretMap.getMetadata())
+                      .withData(secretData.entrySet().stream().collect(toMap(Entry::getKey, entry -> SECRET_MASK)))
+                      .build()),
           LogLevel.INFO);
       secretMap.setData(secretData);
       secretMap = kubernetesContainerService.createOrReplaceSecretFabric8(kubernetesConfig, secretMap);
@@ -1319,11 +1321,11 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
         throw new InvalidArgumentsException("Couldn't parse secretMap YAML: " + controllerName, e, USER);
       }
       executionLogCallback.saveExecutionLog("Setting secretMap:\n\n"
-          + toDisplayYaml(new SecretBuilder()
-                              .withMetadata(secretMap.getMetadata())
-                              .withData(secretMap.getData().entrySet().stream().collect(
-                                  toMap(Entry::getKey, entry -> SECRET_MASK)))
-                              .build()));
+          + toDisplayYaml(
+              new SecretBuilder()
+                  .withMetadata(secretMap.getMetadata())
+                  .withData(secretMap.getData().entrySet().stream().collect(toMap(Entry::getKey, entry -> SECRET_MASK)))
+                  .build()));
       kubernetesContainerService.createOrReplaceSecretFabric8(kubernetesConfig, secretMap);
     } else {
       Secret secretMap = kubernetesContainerService.getSecretFabric8(kubernetesConfig, controllerName);
@@ -1414,7 +1416,7 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
     LoadBalancerStatus loadBalancer = service.getStatus().getLoadBalancer();
     if (loadBalancer != null
         && (loadBalancer.getIngress().isEmpty()
-               || (isNotBlank(loadBalancerIP) && !loadBalancerIP.equals(loadBalancer.getIngress().get(0).getIp())))) {
+            || (isNotBlank(loadBalancerIP) && !loadBalancerIP.equals(loadBalancer.getIngress().get(0).getIp())))) {
       executionLogCallback.saveExecutionLog("Waiting for service " + serviceName + " load balancer to be ready");
       try {
         return timeLimiter.callWithTimeout(() -> {
@@ -1487,7 +1489,7 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
     return isNotVersioned || kubernetesResource == null
         ? 0
         : Integer.parseInt(
-              kubernetesResource.getMetadata().getLabels().get(K8sConstants.HARNESS_KUBERNETES_REVISION_LABEL_KEY));
+            kubernetesResource.getMetadata().getLabels().get(K8sConstants.HARNESS_KUBERNETES_REVISION_LABEL_KEY));
   }
 
   private HorizontalPodAutoscaler getAutoscaler(KubernetesConfig kubernetesConfig, String name) {

@@ -4,12 +4,8 @@ import static io.harness.eraro.ErrorCode.SECRET_MANAGEMENT_ERROR;
 import static io.harness.exception.WingsException.SRE;
 import static io.harness.ng.core.utils.NGUtils.verifyValuesNotChanged;
 import static io.harness.remote.client.RestClientUtils.getResponse;
-import static software.wings.resources.secretsmanagement.EncryptedDataMapper.fromDTO;
 
-import com.google.common.collect.Lists;
-import com.google.common.io.ByteStreams;
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
+import static software.wings.resources.secretsmanagement.EncryptedDataMapper.fromDTO;
 
 import io.harness.beans.EncryptedData;
 import io.harness.exception.InvalidRequestException;
@@ -22,15 +18,19 @@ import io.harness.secretmanagerclient.dto.SecretFileUpdateDTO;
 import io.harness.secretmanagerclient.remote.SecretManagerClient;
 import io.harness.serializer.JsonUtils;
 import io.harness.stream.BoundedInputStream;
+
+import com.google.common.collect.Lists;
+import com.google.common.io.ByteStreams;
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
+import java.io.IOException;
+import java.util.Optional;
 import lombok.AllArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import okhttp3.MediaType;
 import okhttp3.RequestBody;
 import org.apache.commons.lang3.tuple.Pair;
-
-import java.io.IOException;
-import java.util.Optional;
 
 @Singleton
 @AllArgsConstructor(onConstructor = @__({ @Inject }))

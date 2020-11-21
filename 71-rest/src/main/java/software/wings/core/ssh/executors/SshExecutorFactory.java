@@ -1,10 +1,10 @@
 package software.wings.core.ssh.executors;
 
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
-
 import software.wings.delegatetasks.DelegateFileManager;
 import software.wings.delegatetasks.DelegateLogService;
+
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
 
 /**
  * A factory for creating ScriptExecutor objects.

@@ -1,6 +1,5 @@
 package io.harness.watcher.service;
 
-import static com.google.common.collect.Sets.newHashSet;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.delegate.message.MessageConstants.DELEGATE_DASH;
@@ -39,6 +38,8 @@ import static io.harness.delegate.message.MessengerType.DELEGATE;
 import static io.harness.delegate.message.MessengerType.WATCHER;
 import static io.harness.threading.Morpheus.sleep;
 import static io.harness.watcher.app.WatcherApplication.getProcessId;
+
+import static com.google.common.collect.Sets.newHashSet;
 import static java.lang.String.join;
 import static java.time.Duration.ofSeconds;
 import static java.util.Arrays.asList;
@@ -60,21 +61,6 @@ import static org.apache.commons.lang3.StringUtils.startsWith;
 import static org.apache.commons.lang3.StringUtils.substringAfter;
 import static org.apache.commons.lang3.StringUtils.substringBefore;
 
-import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Charsets;
-import com.google.common.base.Splitter;
-import com.google.common.base.Stopwatch;
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.LinkedHashMultimap;
-import com.google.common.collect.Lists;
-import com.google.common.collect.Multimap;
-import com.google.common.collect.Sets;
-import com.google.common.util.concurrent.TimeLimiter;
-import com.google.common.util.concurrent.UncheckedTimeoutException;
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
-import com.google.inject.name.Named;
-
 import io.harness.data.structure.UUIDGenerator;
 import io.harness.delegate.beans.DelegateConfiguration;
 import io.harness.delegate.beans.DelegateScripts;
@@ -93,16 +79,21 @@ import io.harness.utils.ProcessControl;
 import io.harness.watcher.app.WatcherApplication;
 import io.harness.watcher.app.WatcherConfiguration;
 import io.harness.watcher.logging.WatcherStackdriverLogAppender;
-import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.io.FileUtils;
-import org.apache.commons.io.LineIterator;
-import org.apache.commons.io.filefilter.AgeFileFilter;
-import org.apache.commons.io.filefilter.IOFileFilter;
-import org.apache.commons.lang3.StringUtils;
-import org.zeroturnaround.exec.ProcessExecutor;
-import org.zeroturnaround.exec.StartedProcess;
-import org.zeroturnaround.exec.stream.slf4j.Slf4jStream;
 
+import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Charsets;
+import com.google.common.base.Splitter;
+import com.google.common.base.Stopwatch;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.LinkedHashMultimap;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Multimap;
+import com.google.common.collect.Sets;
+import com.google.common.util.concurrent.TimeLimiter;
+import com.google.common.util.concurrent.UncheckedTimeoutException;
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
+import com.google.inject.name.Named;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileFilter;
@@ -139,6 +130,15 @@ import java.util.jar.JarFile;
 import java.util.regex.Pattern;
 import java.util.stream.Stream;
 import javax.annotation.Nullable;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.LineIterator;
+import org.apache.commons.io.filefilter.AgeFileFilter;
+import org.apache.commons.io.filefilter.IOFileFilter;
+import org.apache.commons.lang3.StringUtils;
+import org.zeroturnaround.exec.ProcessExecutor;
+import org.zeroturnaround.exec.StartedProcess;
+import org.zeroturnaround.exec.stream.slf4j.Slf4jStream;
 
 /**
  * Created by brett on 10/26/17
@@ -278,7 +278,7 @@ public class WatcherServiceImpl implements WatcherService {
 
     log.info("Scheduling logging of file handles...");
     watchExecutor.scheduleWithFixedDelay(
-        new Schedulable("Unexpected exception occurred while logging file handles", this ::logFileHandles), 0,
+        new Schedulable("Unexpected exception occurred while logging file handles", this::logFileHandles), 0,
         watcherConfiguration.getFileHandlesMonitoringIntervalInMinutes(), TimeUnit.MINUTES);
   }
 
@@ -408,7 +408,7 @@ public class WatcherServiceImpl implements WatcherService {
 
   private void startUpgradeCheck() {
     upgradeExecutor.scheduleWithFixedDelay(
-        new Schedulable("Error while checking for upgrades", this ::syncCheckForWatcherUpgrade), 0,
+        new Schedulable("Error while checking for upgrades", this::syncCheckForWatcherUpgrade), 0,
         watcherConfiguration.getUpgradeCheckIntervalSeconds(), TimeUnit.SECONDS);
   }
 
@@ -426,9 +426,9 @@ public class WatcherServiceImpl implements WatcherService {
         Optional.ofNullable(messageService.getData(WATCHER_DATA, RUNNING_DELEGATES, List.class)).orElse(emptyList()));
 
     heartbeatExecutor.scheduleWithFixedDelay(
-        new Schedulable("Error while heart-beating", this ::heartbeat), 0, 10, TimeUnit.SECONDS);
+        new Schedulable("Error while heart-beating", this::heartbeat), 0, 10, TimeUnit.SECONDS);
     watchExecutor.scheduleWithFixedDelay(
-        new Schedulable("Error while watching delegate", this ::syncWatchDelegate), 0, 10, TimeUnit.SECONDS);
+        new Schedulable("Error while watching delegate", this::syncWatchDelegate), 0, 10, TimeUnit.SECONDS);
   }
 
   private void heartbeat() {
@@ -632,19 +632,19 @@ public class WatcherServiceImpl implements WatcherService {
             log.info("Obsolete processes {} no longer tracked", obsolete);
             runningDelegates.removeAll(obsolete);
             messageService.putData(WATCHER_DATA, RUNNING_DELEGATES, runningDelegates);
-            obsolete.forEach(this ::shutdownDelegate);
+            obsolete.forEach(this::shutdownDelegate);
           }
 
           if (!multiVersion && shutdownPendingList.containsAll(runningDelegates)) {
             log.warn("No delegates acquiring tasks. Delegate processes {} pending shutdown. Forcing shutdown now",
                 shutdownPendingList);
-            shutdownPendingList.forEach(this ::shutdownDelegate);
+            shutdownPendingList.forEach(this::shutdownDelegate);
           }
         }
 
         if (isNotEmpty(drainingNeededList)) {
           log.info("Delegate processes {} to be drained.", drainingNeededList);
-          drainingNeededList.forEach(this ::drainDelegateProcess);
+          drainingNeededList.forEach(this::drainDelegateProcess);
           Set<String> allVersions = new HashSet<>(expectedVersions);
           allVersions.addAll(runningVersions.keySet());
           removeDelegateVersionsFromCapsule(allVersions);
@@ -652,7 +652,7 @@ public class WatcherServiceImpl implements WatcherService {
         }
         if (isNotEmpty(shutdownNeededList)) {
           log.warn("Delegate processes {} exceeded grace period. Forcing shutdown", shutdownNeededList);
-          shutdownNeededList.forEach(this ::shutdownDelegate);
+          shutdownNeededList.forEach(this::shutdownDelegate);
           if (newDelegateTimedOut && upgradePendingDelegate != null) {
             log.warn("New delegate failed to start. Resuming old delegate {}", upgradePendingDelegate);
             messageService.writeMessageToChannel(DELEGATE, upgradePendingDelegate, DELEGATE_RESUME);
@@ -660,13 +660,13 @@ public class WatcherServiceImpl implements WatcherService {
         }
         if (isNotEmpty(restartNeededList)) {
           log.warn("Delegate processes {} need restart. Shutting down", restartNeededList);
-          restartNeededList.forEach(this ::shutdownDelegate);
+          restartNeededList.forEach(this::shutdownDelegate);
         }
         if (isNotEmpty(drainingRestartNeededList)) {
           if (multiVersion) {
             log.warn("Delegate processes {} need restart. Will be drained and new process with same version started",
                 drainingRestartNeededList);
-            drainingRestartNeededList.forEach(this ::drainDelegateProcess);
+            drainingRestartNeededList.forEach(this::drainDelegateProcess);
           } else if (drainingRestartNeededList.containsAll(runningDelegates) && working.compareAndSet(false, true)) {
             log.warn(
                 "Delegate processes {} need restart. Starting new process and draining old", drainingRestartNeededList);
@@ -800,7 +800,7 @@ public class WatcherServiceImpl implements WatcherService {
 
   private void restartDelegate() {
     if (multiVersion) {
-      runningDelegates.forEach(this ::drainDelegateProcess);
+      runningDelegates.forEach(this::drainDelegateProcess);
     } else if (working.compareAndSet(false, true)) {
       startDelegateProcess(null, ".", new ArrayList<>(runningDelegates), DELEGATE_RESTART_SCRIPT, getProcessId());
     }

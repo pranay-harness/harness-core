@@ -4,9 +4,10 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.rest.RestResponse;
 import io.harness.testframework.framework.Setup;
-import io.restassured.mapper.ObjectMapperType;
+
 import software.wings.beans.alert.AlertNotificationRule;
 
+import io.restassured.mapper.ObjectMapperType;
 import java.util.List;
 import javax.ws.rs.core.GenericType;
 

@@ -2,18 +2,12 @@ package software.wings.service.intfc;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.rule.OwnerRule.UJJAWAL;
-import static org.assertj.core.api.Assertions.assertThat;
 
-import com.google.inject.Inject;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
-import org.junit.Before;
-import org.junit.FixMethodOrder;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
-import org.junit.runners.MethodSorters;
-import org.mockito.InjectMocks;
+
 import software.wings.WingsBaseTest;
 import software.wings.audit.EntityAuditRecord;
 import software.wings.audit.ResourceType;
@@ -22,6 +16,14 @@ import software.wings.beans.AccountType;
 import software.wings.beans.ResourceLookup;
 import software.wings.beans.ResourceLookup.ResourceLookupKeys;
 import software.wings.beans.User;
+
+import com.google.inject.Inject;
+import org.junit.Before;
+import org.junit.FixMethodOrder;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
+import org.junit.runners.MethodSorters;
+import org.mockito.InjectMocks;
 
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
 public class ResourceLookupServiceTest extends WingsBaseTest {

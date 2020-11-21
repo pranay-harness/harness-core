@@ -1,13 +1,13 @@
 package io.harness.cvng.dashboard.beans;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import io.harness.cvng.beans.CVMonitoringCategory;
+
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import java.util.SortedSet;
+import java.util.TreeSet;
 import lombok.Builder;
 import lombok.Data;
 import org.jetbrains.annotations.NotNull;
-
-import java.util.SortedSet;
-import java.util.TreeSet;
 
 @Data
 @Builder

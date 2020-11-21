@@ -1,15 +1,8 @@
 package software.wings.service.impl.instance;
 
-import com.google.common.annotations.VisibleForTesting;
-import com.google.common.collect.Sets;
-import com.google.common.util.concurrent.ThreadFactoryBuilder;
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
-
-import io.dropwizard.lifecycle.Managed;
 import io.harness.lock.AcquiredLock;
 import io.harness.lock.PersistentLocker;
-import lombok.extern.slf4j.Slf4j;
+
 import software.wings.beans.Account;
 import software.wings.beans.FeatureName;
 import software.wings.beans.InfrastructureMapping;
@@ -18,6 +11,12 @@ import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.InfrastructureMappingService;
 
+import com.google.common.annotations.VisibleForTesting;
+import com.google.common.collect.Sets;
+import com.google.common.util.concurrent.ThreadFactoryBuilder;
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
+import io.dropwizard.lifecycle.Managed;
 import java.time.Duration;
 import java.util.Collections;
 import java.util.EnumMap;
@@ -28,6 +27,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
+import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Singleton
@@ -53,7 +53,7 @@ public class InstanceSyncPerpetualTaskMigrationJob implements Managed {
     executorService = Executors.newSingleThreadScheduledExecutor(
         new ThreadFactoryBuilder().setNameFormat("instance-sync-perpetual-task-migration-job").build());
 
-    executorService.scheduleWithFixedDelay(this ::run, 30, DELAY_IN_MINUTES, TimeUnit.MINUTES);
+    executorService.scheduleWithFixedDelay(this::run, 30, DELAY_IN_MINUTES, TimeUnit.MINUTES);
   }
 
   @Override

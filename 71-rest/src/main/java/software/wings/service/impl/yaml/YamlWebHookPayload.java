@@ -2,13 +2,12 @@ package software.wings.service.impl.yaml;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import lombok.Builder;
-import lombok.Data;
-import org.hibernate.validator.constraints.NotEmpty;
-
 import java.util.List;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
+import lombok.Builder;
+import lombok.Data;
+import org.hibernate.validator.constraints.NotEmpty;
 
 @Data
 @Builder

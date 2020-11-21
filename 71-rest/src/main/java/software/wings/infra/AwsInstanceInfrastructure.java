@@ -2,21 +2,16 @@ package software.wings.infra;
 
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.validation.Validator.ensureType;
-import static java.lang.String.format;
-import static java.util.stream.Collectors.toList;
+
 import static software.wings.beans.AwsInfrastructureMapping.Builder.anAwsInfrastructureMapping;
 import static software.wings.beans.InfrastructureType.AWS_INSTANCE;
 
-import com.google.common.collect.ImmutableSet;
+import static java.lang.String.format;
+import static java.util.stream.Collectors.toList;
 
-import com.fasterxml.jackson.annotation.JsonTypeName;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
-import lombok.Builder;
-import lombok.Data;
-import lombok.EqualsAndHashCode;
-import lombok.experimental.FieldNameConstants;
-import org.mongodb.morphia.annotations.Transient;
+
 import software.wings.annotation.IncludeFieldMap;
 import software.wings.api.CloudProviderType;
 import software.wings.beans.AwsInfrastructureMapping;
@@ -27,10 +22,17 @@ import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.InfrastructureMappingType;
 import software.wings.service.impl.yaml.handler.InfraDefinition.CloudProviderInfrastructureYaml;
 
+import com.fasterxml.jackson.annotation.JsonTypeName;
+import com.google.common.collect.ImmutableSet;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import lombok.Builder;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.experimental.FieldNameConstants;
+import org.mongodb.morphia.annotations.Transient;
 
 @JsonTypeName("AWS_SSH")
 @Data

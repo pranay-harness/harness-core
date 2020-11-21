@@ -2,6 +2,10 @@ package io.harness.commandlibrary.client;
 
 import io.harness.commandlibrary.api.dto.CommandDTO;
 import io.harness.rest.RestResponse;
+
+import software.wings.api.commandlibrary.EnrichedCommandVersionDTO;
+
+import java.util.Map;
 import okhttp3.MultipartBody;
 import retrofit2.Call;
 import retrofit2.http.GET;
@@ -10,9 +14,6 @@ import retrofit2.http.POST;
 import retrofit2.http.Part;
 import retrofit2.http.Path;
 import retrofit2.http.QueryMap;
-import software.wings.api.commandlibrary.EnrichedCommandVersionDTO;
-
-import java.util.Map;
 
 public interface CommandLibraryServiceHttpClient {
   @GET("command-stores") Call<Object> getCommandStores(@QueryMap Map<String, Object> pageRequestParams);

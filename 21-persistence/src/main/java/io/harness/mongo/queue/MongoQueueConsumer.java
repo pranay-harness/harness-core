@@ -4,9 +4,8 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.govern.Switch.unhandled;
 import static io.harness.persistence.HPersistence.returnOldOptions;
 import static io.harness.persistence.HQuery.excludeAuthority;
-import static java.lang.String.format;
 
-import com.google.inject.Inject;
+import static java.lang.String.format;
 
 import io.harness.exception.UnexpectedException;
 import io.harness.persistence.HPersistence;
@@ -14,19 +13,20 @@ import io.harness.queue.Queuable;
 import io.harness.queue.Queuable.QueuableKeys;
 import io.harness.queue.QueueConsumer;
 import io.harness.queue.TopicUtils;
-import lombok.Setter;
-import lombok.extern.slf4j.Slf4j;
-import org.mongodb.morphia.AdvancedDatastore;
-import org.mongodb.morphia.query.Query;
-import org.mongodb.morphia.query.Sort;
-import org.mongodb.morphia.query.UpdateOperations;
 
+import com.google.inject.Inject;
 import java.time.Duration;
 import java.util.Date;
 import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
+import lombok.Setter;
+import lombok.extern.slf4j.Slf4j;
+import org.mongodb.morphia.AdvancedDatastore;
+import org.mongodb.morphia.query.Query;
+import org.mongodb.morphia.query.Sort;
+import org.mongodb.morphia.query.UpdateOperations;
 
 @Slf4j
 public class MongoQueueConsumer<T extends Queuable> implements QueueConsumer<T> {

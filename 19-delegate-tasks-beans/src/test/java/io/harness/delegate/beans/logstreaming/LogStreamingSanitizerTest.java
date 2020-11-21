@@ -6,12 +6,12 @@ import static io.harness.rule.OwnerRule.MARKO;
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
-import org.assertj.core.api.Assertions;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
 
 import java.util.HashSet;
 import java.util.Set;
+import org.assertj.core.api.Assertions;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 public class LogStreamingSanitizerTest extends CategoryTest {
   @Test

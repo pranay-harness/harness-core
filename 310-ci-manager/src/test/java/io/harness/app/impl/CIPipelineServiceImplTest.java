@@ -2,12 +2,11 @@ package io.harness.app.impl;
 
 import static io.harness.rule.OwnerRule.ALEKSANDAR;
 import static io.harness.rule.OwnerRule.SHUBHAM;
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-
-import com.google.inject.Inject;
 
 import io.harness.app.beans.dto.CIPipelineFilterDTO;
 import io.harness.beans.ParameterField;
@@ -22,6 +21,13 @@ import io.harness.ngpipeline.pipeline.service.NGPipelineServiceImpl;
 import io.harness.rule.Owner;
 import io.harness.yaml.core.ExecutionElement;
 import io.harness.yaml.core.StageElement;
+
+import com.google.inject.Inject;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.Scanner;
 import org.joor.Reflect;
 import org.junit.Before;
 import org.junit.Test;
@@ -31,12 +37,6 @@ import org.mockito.Mock;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.mongodb.core.query.Criteria;
-
-import java.util.Arrays;
-import java.util.List;
-import java.util.Objects;
-import java.util.Optional;
-import java.util.Scanner;
 
 public class CIPipelineServiceImplTest extends CIManagerTest {
   @Mock private NgPipelineRepository ngPipelineRepository;

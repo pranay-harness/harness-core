@@ -1,14 +1,10 @@
 package software.wings.sm.states;
 
 import static io.harness.logging.Misc.replaceDotWithUnicode;
+
 import static software.wings.common.VerificationConstants.DATA_DOG_DEFAULT_HOSTNAME;
 import static software.wings.common.VerificationConstants.KUBERNETES_HOSTNAME;
 
-import com.google.common.base.Preconditions;
-
-import com.github.reinert.jjschema.Attributes;
-import lombok.extern.slf4j.Slf4j;
-import org.slf4j.Logger;
 import software.wings.api.DeploymentType;
 import software.wings.beans.DatadogConfig;
 import software.wings.sm.ExecutionContext;
@@ -16,11 +12,15 @@ import software.wings.sm.StateType;
 import software.wings.stencils.DefaultValue;
 import software.wings.verification.VerificationStateAnalysisExecutionData;
 
+import com.github.reinert.jjschema.Attributes;
+import com.google.common.base.Preconditions;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
 
 @Slf4j
 public class DatadogLogState extends AbstractLogAnalysisState {

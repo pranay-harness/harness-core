@@ -1,9 +1,10 @@
 package software.wings.yaml.handler.connectors.configyamlhandlers;
 
-import lombok.Builder;
-import lombok.Data;
 import software.wings.beans.SettingAttribute;
 import software.wings.service.impl.yaml.handler.setting.SettingValueYamlHandler;
+
+import lombok.Builder;
+import lombok.Data;
 
 @Data
 @Builder

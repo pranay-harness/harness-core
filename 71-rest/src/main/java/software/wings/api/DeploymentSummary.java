@@ -6,11 +6,7 @@ import io.harness.mongo.index.CdIndex;
 import io.harness.mongo.index.FdIndex;
 import io.harness.mongo.index.Field;
 import io.harness.mongo.index.IndexType;
-import lombok.Builder;
-import lombok.Data;
-import lombok.EqualsAndHashCode;
-import lombok.experimental.FieldNameConstants;
-import org.mongodb.morphia.annotations.Entity;
+
 import software.wings.api.DeploymentSummary.DeploymentSummaryKeys;
 import software.wings.beans.Base;
 import software.wings.beans.infrastructure.instance.key.deployment.AwsAmiDeploymentKey;
@@ -22,6 +18,12 @@ import software.wings.beans.infrastructure.instance.key.deployment.CustomDeploym
 import software.wings.beans.infrastructure.instance.key.deployment.K8sDeploymentKey;
 import software.wings.beans.infrastructure.instance.key.deployment.PcfDeploymentKey;
 import software.wings.beans.infrastructure.instance.key.deployment.SpotinstAmiDeploymentKey;
+
+import lombok.Builder;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.experimental.FieldNameConstants;
+import org.mongodb.morphia.annotations.Entity;
 
 @Data
 @EqualsAndHashCode(callSuper = true)

@@ -2,13 +2,12 @@ package io.harness.rule;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import java.util.Set;
+import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.rules.TestRule;
 import org.junit.runner.Description;
 import org.junit.runners.model.Statement;
-
-import java.util.Set;
-import java.util.stream.Collectors;
 
 @Slf4j
 public class ThreadRule implements TestRule {

@@ -1,11 +1,11 @@
 package software.wings.integration.service;
 
-import com.google.inject.Inject;
-
-import org.mockito.InjectMocks;
 import software.wings.integration.IntegrationTestBase;
 import software.wings.rules.Integration;
 import software.wings.service.intfc.InfrastructureProvisionerService;
+
+import com.google.inject.Inject;
+import org.mockito.InjectMocks;
 
 @Integration
 public class InfrastructureProvisionerServiceIntegrationTestBase extends IntegrationTestBase {

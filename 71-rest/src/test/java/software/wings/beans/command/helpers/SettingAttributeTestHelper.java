@@ -1,6 +1,5 @@
 package software.wings.beans.command.helpers;
 
-import static java.util.Collections.singletonList;
 import static software.wings.beans.HostConnectionAttributes.Builder.aHostConnectionAttributes;
 import static software.wings.beans.InstanceUnitType.COUNT;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
@@ -17,8 +16,10 @@ import static software.wings.utils.WingsTestConstants.SERVICE_NAME;
 import static software.wings.utils.WingsTestConstants.TASK_FAMILY;
 import static software.wings.utils.WingsTestConstants.USER_NAME;
 
-import com.amazonaws.regions.Regions;
+import static java.util.Collections.singletonList;
+
 import io.harness.k8s.model.ImageDetails;
+
 import software.wings.beans.HostConnectionAttributes;
 import software.wings.beans.KubernetesClusterConfig;
 import software.wings.beans.SettingAttribute;
@@ -27,6 +28,8 @@ import software.wings.beans.command.ContainerResizeParams;
 import software.wings.beans.command.ContainerSetupParams;
 import software.wings.beans.container.AwsAutoScalarConfig;
 import software.wings.utils.WingsTestConstants;
+
+import com.amazonaws.regions.Regions;
 
 public class SettingAttributeTestHelper {
   public static SettingAttribute obtainKubernetesClusterSettingAttribute(boolean useK8sDelegate) {

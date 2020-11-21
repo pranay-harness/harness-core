@@ -1,15 +1,17 @@
 package software.wings.sm.states;
 
 import static io.harness.state.StateConstants.DEFAULT_STEADY_STATE_TIMEOUT;
-import static org.apache.commons.lang3.StringUtils.isNotBlank;
+
 import static software.wings.beans.command.KubernetesSetupParams.KubernetesSetupParamsBuilder.aKubernetesSetupParams;
 import static software.wings.sm.StateType.KUBERNETES_SETUP_ROLLBACK;
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
+
 import io.harness.beans.ExecutionStatus;
 import io.harness.context.ContextElementType;
 import io.harness.delegate.command.CommandExecutionResult;
 import io.harness.k8s.model.ImageDetails;
+
 import software.wings.api.CommandStateExecutionData;
 import software.wings.api.ContainerRollbackRequestElement;
 import software.wings.api.ContainerServiceElement;
@@ -29,6 +31,8 @@ import software.wings.beans.command.ContainerSetupParams;
 import software.wings.beans.command.KubernetesSetupParams;
 import software.wings.beans.container.ContainerTask;
 import software.wings.sm.ExecutionContext;
+
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
 /**
  * Created by brett on 12/18/17

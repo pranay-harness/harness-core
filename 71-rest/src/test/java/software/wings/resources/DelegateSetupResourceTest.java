@@ -7,6 +7,15 @@ import static io.harness.rule.OwnerRule.PRAVEEN;
 import static io.harness.rule.OwnerRule.ROHITKARELIA;
 import static io.harness.rule.OwnerRule.SANJA;
 import static io.harness.rule.OwnerRule.UTSAV;
+
+import static software.wings.resources.DelegateSetupResource.YAML;
+import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
+import static software.wings.utils.WingsTestConstants.DELEGATE_GROUP_NAME;
+import static software.wings.utils.WingsTestConstants.DELEGATE_ID;
+import static software.wings.utils.WingsTestConstants.DELEGATE_NAME;
+import static software.wings.utils.WingsTestConstants.DELEGATE_PROFILE_ID;
+import static software.wings.utils.WingsTestConstants.HOST_NAME;
+
 import static java.util.Arrays.asList;
 import static javax.ws.rs.client.Entity.entity;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -20,13 +29,6 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
-import static software.wings.resources.DelegateSetupResource.YAML;
-import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
-import static software.wings.utils.WingsTestConstants.DELEGATE_GROUP_NAME;
-import static software.wings.utils.WingsTestConstants.DELEGATE_ID;
-import static software.wings.utils.WingsTestConstants.DELEGATE_NAME;
-import static software.wings.utils.WingsTestConstants.DELEGATE_PROFILE_ID;
-import static software.wings.utils.WingsTestConstants.HOST_NAME;
 
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
@@ -34,15 +36,7 @@ import io.harness.category.element.UnitTests;
 import io.harness.delegate.beans.DelegateApproval;
 import io.harness.rest.RestResponse;
 import io.harness.rule.Owner;
-import org.apache.commons.io.IOUtils;
-import org.glassfish.hk2.utilities.binding.AbstractBinder;
-import org.joda.time.DateTime;
-import org.junit.ClassRule;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
-import org.junit.runners.Parameterized.Parameter;
-import org.junit.runners.Parameterized.Parameters;
-import org.mockito.ArgumentCaptor;
+
 import software.wings.beans.CEDelegateStatus;
 import software.wings.beans.Delegate;
 import software.wings.beans.DelegateScalingGroup;
@@ -70,6 +64,15 @@ import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.core.GenericType;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+import org.apache.commons.io.IOUtils;
+import org.glassfish.hk2.utilities.binding.AbstractBinder;
+import org.joda.time.DateTime;
+import org.junit.ClassRule;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
+import org.junit.runners.Parameterized.Parameter;
+import org.junit.runners.Parameterized.Parameters;
+import org.mockito.ArgumentCaptor;
 
 public class DelegateSetupResourceTest {
   private static String accountId = "ACCOUNT_ID";

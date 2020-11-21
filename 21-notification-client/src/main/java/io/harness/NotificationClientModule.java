@@ -1,11 +1,5 @@
 package io.harness;
 
-import com.google.common.collect.ImmutableSet;
-import com.google.inject.*;
-import com.mongodb.MongoClient;
-import com.mongodb.MongoClientOptions;
-import com.mongodb.MongoClientURI;
-import com.mongodb.ReadPreference;
 import io.harness.govern.ProviderModule;
 import io.harness.messageclient.KafkaClient;
 import io.harness.messageclient.MessageClient;
@@ -24,11 +18,17 @@ import io.harness.remote.client.ServiceHttpClientConfig;
 import io.harness.security.ServiceTokenGenerator;
 import io.harness.serializer.KryoRegistrar;
 import io.harness.serializer.kryo.KryoConverterFactory;
-import org.springframework.data.mongodb.core.MongoTemplate;
 
+import com.google.common.collect.ImmutableSet;
+import com.google.inject.*;
+import com.mongodb.MongoClient;
+import com.mongodb.MongoClientOptions;
+import com.mongodb.MongoClientURI;
+import com.mongodb.ReadPreference;
 import java.util.ArrayList;
 import java.util.Objects;
 import java.util.Set;
+import org.springframework.data.mongodb.core.MongoTemplate;
 
 public class NotificationClientModule extends AbstractModule {
   private final NotificationClientConfiguration notificationClientConfiguration;
@@ -83,8 +83,8 @@ public class NotificationClientModule extends AbstractModule {
       MongoClient mongoClient = getMongoClient(mongoBackendConfiguration);
       MongoTemplate mongoTemplate = new MongoTemplate(
           mongoClient, Objects.requireNonNull(new MongoClientURI(mongoBackendConfiguration.getUri()).getDatabase()));
-      bind(new TypeLiteral<QueuePublisher<MongoNotificationRequest>>() {})
-          .toInstance(new NGMongoQueuePublisher<>("Notification-queue", new ArrayList<>(), mongoTemplate));
+      bind(new TypeLiteral<QueuePublisher<MongoNotificationRequest>>() {
+      }).toInstance(new NGMongoQueuePublisher<>("Notification-queue", new ArrayList<>(), mongoTemplate));
       bind(MessageClient.class).to(io.harness.messageclient.MongoClient.class);
     }
   }

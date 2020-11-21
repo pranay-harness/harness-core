@@ -1,11 +1,10 @@
 package software.wings.beans;
 
-import com.google.common.base.MoreObjects;
+import software.wings.settings.SettingValue;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.github.zafarkhaja.semver.Version;
-import software.wings.settings.SettingValue;
-
+import com.google.common.base.MoreObjects;
 import java.util.List;
 import java.util.Objects;
 

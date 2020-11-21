@@ -1,13 +1,13 @@
 package software.wings.service.impl.event;
 
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
-
 import io.harness.event.model.Event;
 import io.harness.event.model.GenericEvent;
 import io.harness.event.publisher.EventPublishException;
 import io.harness.event.publisher.EventPublisher;
 import io.harness.queue.QueuePublisher;
+
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
 
 /**
  * @author rktummala on 11/26/18

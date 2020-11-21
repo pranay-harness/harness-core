@@ -1,13 +1,12 @@
 package software.wings.service.impl.yaml.handler.templatelibrary;
 
-import com.google.inject.Singleton;
-
 import software.wings.beans.template.BaseTemplate;
 import software.wings.beans.template.Template;
 import software.wings.beans.template.command.PcfCommandTemplate;
 import software.wings.beans.yaml.ChangeContext;
 import software.wings.yaml.templatelibrary.PcfCommandTemplateYaml;
 
+import com.google.inject.Singleton;
 import java.util.List;
 
 @Singleton

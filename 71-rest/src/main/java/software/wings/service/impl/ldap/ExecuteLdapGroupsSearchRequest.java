@@ -3,15 +3,16 @@ package software.wings.service.impl.ldap;
 import static io.harness.annotations.dev.HarnessTeam.PL;
 
 import io.harness.annotations.dev.OwnedBy;
-import lombok.extern.slf4j.Slf4j;
-import org.ldaptive.LdapException;
-import org.ldaptive.SearchResult;
+
 import software.wings.helpers.ext.ldap.LdapGroupConfig;
 import software.wings.helpers.ext.ldap.LdapResponse;
 import software.wings.helpers.ext.ldap.LdapResponse.Status;
 import software.wings.helpers.ext.ldap.LdapSearch;
 
 import java.util.function.Function;
+import lombok.extern.slf4j.Slf4j;
+import org.ldaptive.LdapException;
+import org.ldaptive.SearchResult;
 
 /**
  * Function to fetch ldap group search results

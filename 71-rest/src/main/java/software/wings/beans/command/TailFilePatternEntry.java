@@ -1,15 +1,15 @@
 package software.wings.beans.command;
 
-import com.google.common.base.MoreObjects;
+import io.harness.yaml.BaseYaml;
+
+import software.wings.stencils.DefaultValue;
 
 import com.github.reinert.jjschema.Attributes;
-import io.harness.yaml.BaseYaml;
+import com.google.common.base.MoreObjects;
+import java.util.Objects;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
-import software.wings.stencils.DefaultValue;
-
-import java.util.Objects;
 
 /**
  * Created by peeyushaggarwal on 8/3/16.

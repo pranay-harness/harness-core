@@ -6,6 +6,7 @@ import static io.harness.iterator.PersistenceIterator.ProcessMode.LOOP;
 import static io.harness.iterator.PersistenceIterator.ProcessMode.PUMP;
 import static io.harness.mongo.iterator.MongoPersistenceIterator.SchedulingType.IRREGULAR_SKIP_MISSED;
 import static io.harness.rule.OwnerRule.GEORGE;
+
 import static java.time.Duration.ofMillis;
 import static java.time.Duration.ofSeconds;
 import static java.util.Arrays.asList;
@@ -14,9 +15,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.joor.Reflect.on;
 
-import com.google.inject.Inject;
-
-import com.mongodb.BasicDBObject;
 import io.harness.PersistenceTestBase;
 import io.harness.category.element.UnitTests;
 import io.harness.iterator.PersistenceIterator.ProcessMode;
@@ -32,15 +30,17 @@ import io.harness.rule.Owner;
 import io.harness.testlib.RealMongo;
 import io.harness.threading.Morpheus;
 import io.harness.threading.ThreadPool;
-import lombok.extern.slf4j.Slf4j;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
-import org.mongodb.morphia.query.FilterOperator;
 
+import com.google.inject.Inject;
+import com.mongodb.BasicDBObject;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
+import lombok.extern.slf4j.Slf4j;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
+import org.mongodb.morphia.query.FilterOperator;
 
 @Slf4j
 public class PersistenceIrregularIteratorTest extends PersistenceTestBase {
@@ -103,8 +103,7 @@ public class PersistenceIrregularIteratorTest extends PersistenceTestBase {
         Future<?> future1 = executorService.submit(() -> iterator.process());
         Morpheus.sleep(ofMillis(300));
         future1.cancel(true);
-      })
-          .doesNotThrowAnyException();
+      }).doesNotThrowAnyException();
     }
   }
 

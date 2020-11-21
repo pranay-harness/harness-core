@@ -6,31 +6,32 @@ package software.wings.expression;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.rule.OwnerRule.GEORGE;
+
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 
-import com.google.common.collect.ImmutableMap;
-import com.google.inject.Inject;
-
-import com.amazonaws.services.ec2.model.Instance;
-import com.amazonaws.services.ec2.model.Tag;
 import io.harness.beans.SweepingOutputInstance;
 import io.harness.category.element.UnitTests;
 import io.harness.data.SweepingOutput;
 import io.harness.rule.Owner;
 import io.harness.serializer.KryoSerializer;
-import lombok.Builder;
-import lombok.Value;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
+
 import software.wings.WingsBaseTest;
 import software.wings.api.HostElement;
 import software.wings.beans.infrastructure.Host;
 import software.wings.service.intfc.sweepingoutput.SweepingOutputInquiry;
 import software.wings.service.intfc.sweepingoutput.SweepingOutputService;
 
+import com.amazonaws.services.ec2.model.Instance;
+import com.amazonaws.services.ec2.model.Tag;
+import com.google.common.collect.ImmutableMap;
+import com.google.inject.Inject;
 import java.util.HashMap;
 import java.util.Map;
+import lombok.Builder;
+import lombok.Value;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 /**
  * The Class ManagerExpressionEvaluatorTest.

@@ -3,9 +3,6 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 
 import io.harness.beans.steps.CIStepInfo;
 import io.harness.yaml.core.intfc.WithIdentifier;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.Setter;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -15,6 +12,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.Setter;
 
 @Builder
 public class StepInfoGraph implements Graph<CIStepInfo> {

@@ -3,6 +3,7 @@ package io.harness.cvng.analysis.entities;
 import static io.harness.cvng.analysis.entities.LearningEngineTask.LearningEngineTaskType.LOG_CLUSTER;
 
 import io.harness.cvng.analysis.beans.LogClusterLevel;
+
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;

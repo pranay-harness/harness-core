@@ -1,20 +1,22 @@
 package software.wings.inframapping;
 
 import static io.harness.rule.OwnerRule.VAIBHAV_SI;
+
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.category.element.UnitTests;
 import io.harness.exception.InvalidRequestException;
 import io.harness.rule.Owner;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
+
 import software.wings.WingsBaseTest;
 import software.wings.beans.AwsLambdaInfraStructureMapping;
 import software.wings.beans.InfrastructureMappingBlueprint.NodeFilteringType;
 
 import java.util.HashMap;
 import java.util.Map;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 public class AwsLambdaInfraMappingTest extends WingsBaseTest {
   private AwsLambdaInfraStructureMapping awsLambdaInfraStructureMapping;

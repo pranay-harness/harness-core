@@ -2,11 +2,11 @@ package migrations.all;
 
 import static software.wings.beans.Account.GLOBAL_ACCOUNT_ID;
 
-import com.google.inject.Inject;
+import software.wings.service.intfc.template.TemplateGalleryService;
 
+import com.google.inject.Inject;
 import lombok.extern.slf4j.Slf4j;
 import migrations.Migration;
-import software.wings.service.intfc.template.TemplateGalleryService;
 
 @Slf4j
 public class DuplicateGlobalAccountMigration implements Migration {

@@ -1,8 +1,14 @@
 package io.harness.notification.service;
 
-import com.google.common.collect.ImmutableList;
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
+import static io.harness.NotificationConstants.*;
+import static io.harness.NotificationRequest.MSTeam;
+import static io.harness.NotificationServiceConstants.TEST_MICROSOFTTEAMS_TEMPLATE;
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
+
+import static java.lang.String.format;
+import static java.lang.String.join;
+import static org.apache.commons.lang3.StringUtils.*;
+
 import io.harness.NotificationRequest;
 import io.harness.Team;
 import io.harness.notification.NotificationChannelType;
@@ -11,22 +17,17 @@ import io.harness.notification.remote.dto.NotificationSettingDTO;
 import io.harness.notification.service.api.MSTeamsService;
 import io.harness.notification.service.api.NotificationSettingsService;
 import io.harness.notification.service.api.NotificationTemplateService;
+
+import com.google.common.collect.ImmutableList;
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
+import java.util.*;
+import java.util.regex.Pattern;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.text.StrSubstitutor;
 import org.apache.commons.validator.routines.UrlValidator;
-
-import java.util.*;
-import java.util.regex.Pattern;
-
-import static io.harness.NotificationConstants.*;
-import static io.harness.NotificationRequest.MSTeam;
-import static io.harness.NotificationServiceConstants.TEST_MICROSOFTTEAMS_TEMPLATE;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static java.lang.String.format;
-import static java.lang.String.join;
-import static org.apache.commons.lang3.StringUtils.*;
 
 @Singleton
 @AllArgsConstructor(onConstructor = @__({ @Inject }))

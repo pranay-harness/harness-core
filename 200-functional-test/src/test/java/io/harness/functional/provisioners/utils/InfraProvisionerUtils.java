@@ -1,11 +1,12 @@
 package io.harness.functional.provisioners.utils;
 
-import com.google.inject.Singleton;
-
 import io.harness.scm.ScmSecret;
 import io.harness.scm.SecretName;
+
 import software.wings.beans.InfrastructureProvisioner;
 import software.wings.beans.NameValuePair;
+
+import com.google.inject.Singleton;
 
 @Singleton
 public class InfraProvisionerUtils {

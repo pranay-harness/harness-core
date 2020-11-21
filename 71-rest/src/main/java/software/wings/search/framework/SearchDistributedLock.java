@@ -9,14 +9,14 @@ import io.harness.mongo.index.FdTtlIndex;
 import io.harness.persistence.CreatedAtAccess;
 import io.harness.persistence.PersistentEntity;
 import io.harness.validation.Update;
+
+import java.util.Date;
+import javax.validation.constraints.NotNull;
 import lombok.Builder;
 import lombok.Value;
 import lombok.experimental.FieldNameConstants;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Id;
-
-import java.util.Date;
-import javax.validation.constraints.NotNull;
 
 /**
  * The search lock bean based on

@@ -1,7 +1,5 @@
 package io.harness.cdng.expressions;
 
-import com.google.inject.Inject;
-
 import io.harness.ambiance.Ambiance;
 import io.harness.cdng.pipeline.plancreators.PipelinePlanCreator;
 import io.harness.engine.expressions.AmbianceExpressionEvaluator;
@@ -13,6 +11,7 @@ import io.harness.ngpipeline.expressions.functors.OrgFunctor;
 import io.harness.ngpipeline.expressions.functors.ProjectFunctor;
 import io.harness.ngtriggers.functor.EventPayloadFunctor;
 
+import com.google.inject.Inject;
 import java.util.Set;
 
 public class CDExpressionEvaluator extends AmbianceExpressionEvaluator {

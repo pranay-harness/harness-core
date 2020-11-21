@@ -1,10 +1,10 @@
 package software.wings.service.impl.verification;
 
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
-
 import software.wings.service.intfc.elk.ElkAnalysisService;
 import software.wings.service.intfc.stackdriver.StackDriverService;
+
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
 
 /**
  * Created by Pranjal on 03/14/2019

@@ -5,6 +5,10 @@ import io.harness.mongo.index.Field;
 import io.harness.mongo.index.NgUniqueIndex;
 import io.harness.persistence.AccountAccess;
 import io.harness.persistence.PersistentEntity;
+
+import software.wings.beans.peronalization.PersonalizationSteps.PersonalizationStepsKeys;
+import software.wings.beans.peronalization.PersonalizationTemplates.PersonalizationTemplatesKeys;
+
 import lombok.Builder;
 import lombok.Value;
 import lombok.experimental.FieldNameConstants;
@@ -12,8 +16,6 @@ import lombok.experimental.UtilityClass;
 import org.bson.types.ObjectId;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Id;
-import software.wings.beans.peronalization.PersonalizationSteps.PersonalizationStepsKeys;
-import software.wings.beans.peronalization.PersonalizationTemplates.PersonalizationTemplatesKeys;
 
 @Value
 @Builder

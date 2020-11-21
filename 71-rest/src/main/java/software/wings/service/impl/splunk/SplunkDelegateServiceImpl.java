@@ -2,27 +2,10 @@ package software.wings.service.impl.splunk;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+
 import static software.wings.common.VerificationConstants.DUMMY_HOST_NAME;
 import static software.wings.common.VerificationConstants.URL_STRING;
 
-import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Preconditions;
-import com.google.gson.Gson;
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
-
-import com.splunk.Args;
-import com.splunk.Event;
-import com.splunk.HttpException;
-import com.splunk.HttpService;
-import com.splunk.Job;
-import com.splunk.JobArgs;
-import com.splunk.JobResultsArgs;
-import com.splunk.ResultsReaderJson;
-import com.splunk.SSLSecurityProtocol;
-import com.splunk.SavedSearchCollection;
-import com.splunk.Service;
-import com.splunk.ServiceArgs;
 import io.harness.cvng.beans.SplunkSavedSearch;
 import io.harness.cvng.beans.SplunkValidationResponse;
 import io.harness.cvng.beans.SplunkValidationResponse.Histogram;
@@ -36,12 +19,7 @@ import io.harness.exception.WingsException;
 import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.security.encryption.SecretDecryptionService;
 import io.harness.serializer.JsonUtils;
-import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.exception.ExceptionUtils;
-import org.apache.commons.lang3.time.FastDateFormat;
-import org.apache.http.HttpStatus;
-import org.apache.xerces.impl.dv.util.Base64;
-import org.jetbrains.annotations.NotNull;
+
 import software.wings.beans.SplunkConfig;
 import software.wings.delegatetasks.DelegateLogService;
 import software.wings.delegatetasks.cv.DataCollectionException;
@@ -52,6 +30,23 @@ import software.wings.service.impl.analysis.LogElement;
 import software.wings.service.intfc.security.EncryptionService;
 import software.wings.service.intfc.splunk.SplunkDelegateService;
 
+import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Preconditions;
+import com.google.gson.Gson;
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
+import com.splunk.Args;
+import com.splunk.Event;
+import com.splunk.HttpException;
+import com.splunk.HttpService;
+import com.splunk.Job;
+import com.splunk.JobArgs;
+import com.splunk.JobResultsArgs;
+import com.splunk.ResultsReaderJson;
+import com.splunk.SSLSecurityProtocol;
+import com.splunk.SavedSearchCollection;
+import com.splunk.Service;
+import com.splunk.ServiceArgs;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
@@ -70,6 +65,12 @@ import java.util.Map;
 import java.util.TimeZone;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.exception.ExceptionUtils;
+import org.apache.commons.lang3.time.FastDateFormat;
+import org.apache.http.HttpStatus;
+import org.apache.xerces.impl.dv.util.Base64;
+import org.jetbrains.annotations.NotNull;
 
 /**
  * Implementation of Splunk Delegate Service.

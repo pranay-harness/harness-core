@@ -2,15 +2,16 @@ package io.harness.secrets;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.threading.Morpheus.sleep;
-import static java.time.Duration.ofMillis;
 
-import com.google.inject.Inject;
+import static java.time.Duration.ofMillis;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.MigrateSecretTask;
 import io.harness.exception.WingsException;
 import io.harness.queue.QueueConsumer;
 import io.harness.queue.QueueListener;
+
+import com.google.inject.Inject;
 import lombok.extern.slf4j.Slf4j;
 
 /**

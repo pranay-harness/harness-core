@@ -1,18 +1,18 @@
 package migrations.all;
 
-import com.google.inject.Inject;
-
 import io.harness.persistence.HIterator;
+
+import software.wings.beans.infrastructure.instance.stats.InstanceStatsSnapshot;
+import software.wings.dl.WingsPersistence;
+
+import com.google.inject.Inject;
+import java.time.Instant;
+import java.util.HashSet;
+import java.util.Set;
 import lombok.AllArgsConstructor;
 import lombok.Value;
 import lombok.extern.slf4j.Slf4j;
 import migrations.Migration;
-import software.wings.beans.infrastructure.instance.stats.InstanceStatsSnapshot;
-import software.wings.dl.WingsPersistence;
-
-import java.time.Instant;
-import java.util.HashSet;
-import java.util.Set;
 
 /**
  * remove duplicate entries from `instanceStats` collection.

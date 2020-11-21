@@ -1,15 +1,15 @@
 package io.harness.beans;
 
+import software.wings.security.ScopedEntity;
+import software.wings.security.UsageRestrictions;
+
+import java.util.Map;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.experimental.FieldNameConstants;
 import lombok.experimental.SuperBuilder;
 import org.hibernate.validator.constraints.NotEmpty;
-import software.wings.security.ScopedEntity;
-import software.wings.security.UsageRestrictions;
-
-import java.util.Map;
 
 @Data
 @SuperBuilder

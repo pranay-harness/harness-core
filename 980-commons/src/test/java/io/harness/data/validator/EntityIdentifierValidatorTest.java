@@ -2,22 +2,23 @@ package io.harness.data.validator;
 
 import static io.harness.data.validator.EntityIdentifierValidator.NOT_ALLOWED_WORDS;
 import static io.harness.rule.OwnerRule.VIKAS;
+
 import static junit.framework.TestCase.assertEquals;
 import static junit.framework.TestCase.assertTrue;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
-import lombok.Builder;
-import org.apache.commons.lang3.RandomStringUtils;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
 
 import java.util.Random;
 import javax.validation.Validation;
 import javax.validation.Validator;
 import javax.validation.ValidatorFactory;
+import lombok.Builder;
+import org.apache.commons.lang3.RandomStringUtils;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 public class EntityIdentifierValidatorTest {
   private Validator validator;

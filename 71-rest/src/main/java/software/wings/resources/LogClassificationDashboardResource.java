@@ -1,13 +1,7 @@
 package software.wings.resources;
 
-import com.google.inject.Inject;
-
-import com.codahale.metrics.annotation.ExceptionMetered;
-import com.codahale.metrics.annotation.Timed;
 import io.harness.rest.RestResponse;
-import io.swagger.annotations.Api;
-import org.apache.commons.lang3.tuple.Pair;
-import retrofit2.http.Body;
+
 import software.wings.common.VerificationConstants;
 import software.wings.security.PermissionAttribute.ResourceType;
 import software.wings.security.annotations.Scope;
@@ -17,6 +11,10 @@ import software.wings.service.impl.analysis.LogDataRecord;
 import software.wings.service.impl.analysis.LogLabel;
 import software.wings.service.intfc.analysis.LogLabelingService;
 
+import com.codahale.metrics.annotation.ExceptionMetered;
+import com.codahale.metrics.annotation.Timed;
+import com.google.inject.Inject;
+import io.swagger.annotations.Api;
 import java.util.List;
 import java.util.Map;
 import javax.ws.rs.GET;
@@ -24,6 +22,8 @@ import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
+import org.apache.commons.lang3.tuple.Pair;
+import retrofit2.http.Body;
 
 @Api(VerificationConstants.LOG_CLASSIFY_URL)
 @Path("/" + VerificationConstants.LOG_CLASSIFY_URL)

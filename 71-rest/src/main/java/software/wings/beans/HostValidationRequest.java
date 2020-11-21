@@ -1,9 +1,8 @@
 package software.wings.beans;
 
-import org.hibernate.validator.constraints.NotEmpty;
-
 import java.util.ArrayList;
 import java.util.List;
+import org.hibernate.validator.constraints.NotEmpty;
 
 /**
  * Created by anubhaw on 2/23/17.

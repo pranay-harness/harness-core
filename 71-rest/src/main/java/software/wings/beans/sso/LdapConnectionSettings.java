@@ -2,18 +2,19 @@ package software.wings.beans.sso;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import io.harness.annotations.dev.OwnedBy;
+
+import software.wings.helpers.ext.ldap.LdapConnectionConfig;
+import software.wings.helpers.ext.ldap.LdapConstants;
+
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import javax.validation.constraints.AssertTrue;
+import javax.validation.constraints.Min;
+import javax.validation.constraints.NotNull;
 import lombok.AccessLevel;
 import lombok.Data;
 import lombok.experimental.FieldDefaults;
 import org.apache.commons.lang3.StringUtils;
-import software.wings.helpers.ext.ldap.LdapConnectionConfig;
-import software.wings.helpers.ext.ldap.LdapConstants;
-
-import javax.validation.constraints.AssertTrue;
-import javax.validation.constraints.Min;
-import javax.validation.constraints.NotNull;
 
 /**
  * Class denotes Connection settings for Ldap.

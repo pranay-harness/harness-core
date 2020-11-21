@@ -1,6 +1,7 @@
 package io.harness.ng.core.api.repositories.custom;
 
 import static io.harness.rule.OwnerRule.KARAN;
+
 import static java.util.Collections.singletonList;
 import static junit.framework.TestCase.assertEquals;
 import static junit.framework.TestCase.assertFalse;
@@ -17,6 +18,7 @@ import io.harness.category.element.UnitTests;
 import io.harness.ng.core.entities.Organization;
 import io.harness.ng.core.entities.Organization.OrganizationKeys;
 import io.harness.rule.Owner;
+
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;

@@ -1,12 +1,10 @@
 package software.wings.delegatetasks.spotinst.taskhandler;
 
 import static io.harness.logging.CommandExecutionStatus.SUCCESS;
+
 import static java.lang.String.format;
 import static java.lang.String.valueOf;
 
-import com.google.inject.Singleton;
-
-import com.amazonaws.services.ec2.model.Instance;
 import io.harness.delegate.task.spotinst.request.SpotInstGetElastigroupJsonParameters;
 import io.harness.delegate.task.spotinst.request.SpotInstListElastigroupInstancesParameters;
 import io.harness.delegate.task.spotinst.request.SpotInstTaskParameters;
@@ -17,12 +15,15 @@ import io.harness.delegate.task.spotinst.response.SpotInstTaskExecutionResponse;
 import io.harness.delegate.task.spotinst.response.SpotInstTaskResponse;
 import io.harness.exception.InvalidRequestException;
 import io.harness.spotinst.model.ElastiGroup;
-import lombok.NoArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
+
 import software.wings.beans.AwsConfig;
 import software.wings.beans.SpotInstConfig;
 
+import com.amazonaws.services.ec2.model.Instance;
+import com.google.inject.Singleton;
 import java.util.List;
+import lombok.NoArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 @Singleton
 @NoArgsConstructor

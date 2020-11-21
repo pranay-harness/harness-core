@@ -1,18 +1,17 @@
 package io.harness.batch.processing.config.k8s.recommendation.estimators;
 
-import static io.kubernetes.client.custom.Quantity.Format.DECIMAL_SI;
-import static java.math.RoundingMode.HALF_UP;
 import static software.wings.graphql.datafetcher.ce.recommendation.entity.ResourceRequirement.CPU;
 import static software.wings.graphql.datafetcher.ce.recommendation.entity.ResourceRequirement.MEMORY;
 
+import static io.kubernetes.client.custom.Quantity.Format.DECIMAL_SI;
+import static java.math.RoundingMode.HALF_UP;
+
 import com.google.common.collect.ImmutableMap;
-
 import io.kubernetes.client.custom.Quantity;
-import lombok.experimental.UtilityClass;
-
 import java.math.BigDecimal;
 import java.util.Map;
 import java.util.Optional;
+import lombok.experimental.UtilityClass;
 
 @UtilityClass
 public class ResourceAmountUtils {

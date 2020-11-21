@@ -1,9 +1,5 @@
 package io.harness.walktree.visitor.mergeinputset;
 
-import com.google.common.annotations.VisibleForTesting;
-import com.google.inject.Inject;
-import com.google.inject.Injector;
-
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.InvalidArgumentsException;
 import io.harness.reflection.ReflectionUtils;
@@ -21,15 +17,18 @@ import io.harness.walktree.visitor.utilities.MergeInputSetHelperUtils;
 import io.harness.walktree.visitor.utilities.VisitorDummyElementUtils;
 import io.harness.walktree.visitor.utilities.VisitorParentPathUtils;
 import io.harness.walktree.visitor.utilities.VisitorResponseUtils;
-import lombok.Getter;
-import lombok.extern.slf4j.Slf4j;
 
+import com.google.common.annotations.VisibleForTesting;
+import com.google.inject.Inject;
+import com.google.inject.Injector;
 import java.lang.reflect.Field;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import lombok.Getter;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * This visitor merges the given input set list with given object.
@@ -73,7 +72,7 @@ public class MergeInputSetVisitor extends SimpleVisitor<DummyVisitableElement> {
     if (!elementToInputSetElementListMap.containsKey(element)) {
       if (!givenInputSetPipelineList.isEmpty()
           && MergeInputSetHelperUtils.checkIfInputSetFieldAtSameLevelOfOriginalField(
-                 element, givenInputSetPipelineList.get(0).getInputSetElement(), this ::getNewDummyObject)) {
+              element, givenInputSetPipelineList.get(0).getInputSetElement(), this::getNewDummyObject)) {
         elementToInputSetElementListMap.put(element, givenInputSetPipelineList);
       }
     }
@@ -206,7 +205,7 @@ public class MergeInputSetVisitor extends SimpleVisitor<DummyVisitableElement> {
 
         // Add inputSet currentElementChildren fields to map.
         MergeInputSetHelperUtils.addToWalkInputSetMap(currentElementChildrenFieldNames, field, currentElement,
-            elementToInputSetElementListMap, this ::getNewDummyObject);
+            elementToInputSetElementListMap, this::getNewDummyObject);
       }
     } catch (IllegalAccessException e) {
       throw new InvalidArgumentsException(String.format("Error using reflection : %s", e.getMessage()));

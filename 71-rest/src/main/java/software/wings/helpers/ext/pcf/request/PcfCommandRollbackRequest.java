@@ -1,14 +1,14 @@
 package software.wings.helpers.ext.pcf.request;
 
-import lombok.Builder;
-import lombok.Data;
-import lombok.EqualsAndHashCode;
 import software.wings.api.pcf.PcfServiceData;
 import software.wings.beans.PcfConfig;
 import software.wings.beans.ResizeStrategy;
 import software.wings.helpers.ext.pcf.response.PcfAppSetupTimeDetails;
 
 import java.util.List;
+import lombok.Builder;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
 
 /**
  * This class contains all required data for PCFCommandTask.DEPLOY to perform setup task

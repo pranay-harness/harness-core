@@ -2,9 +2,6 @@ package io.harness.registrars;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 
-import com.google.inject.Inject;
-import com.google.inject.Injector;
-
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.pms.steps.StepType;
 import io.harness.redesign.states.email.EmailStep;
@@ -14,9 +11,11 @@ import io.harness.redesign.states.shell.ShellScriptStep;
 import io.harness.redesign.states.wait.WaitStep;
 import io.harness.registries.registrar.StepRegistrar;
 import io.harness.state.Step;
-import org.apache.commons.lang3.tuple.Pair;
 
+import com.google.inject.Inject;
+import com.google.inject.Injector;
 import java.util.Set;
+import org.apache.commons.lang3.tuple.Pair;
 
 @OwnedBy(CDC)
 public class WingsStepRegistrar implements StepRegistrar {

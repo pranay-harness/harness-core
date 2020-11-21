@@ -1,13 +1,14 @@
 package software.wings.graphql.datafetcher.ce.exportData.dto;
 
+import software.wings.graphql.schema.type.aggregation.QLData;
+import software.wings.security.PermissionAttribute;
+import software.wings.security.annotations.Scope;
+
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Data;
 import lombok.experimental.FieldDefaults;
 import lombok.experimental.FieldNameConstants;
-import software.wings.graphql.schema.type.aggregation.QLData;
-import software.wings.security.PermissionAttribute;
-import software.wings.security.annotations.Scope;
 
 @Data
 @Builder

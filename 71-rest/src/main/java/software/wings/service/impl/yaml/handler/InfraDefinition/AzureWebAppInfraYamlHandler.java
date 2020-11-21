@@ -2,8 +2,6 @@ package software.wings.service.impl.yaml.handler.InfraDefinition;
 
 import static io.harness.validation.Validator.notNullCheck;
 
-import com.google.inject.Inject;
-
 import software.wings.beans.InfrastructureType;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.yaml.ChangeContext;
@@ -12,6 +10,7 @@ import software.wings.infra.AzureWebAppInfra.Yaml;
 import software.wings.service.impl.yaml.handler.CloudProviderInfrastructure.CloudProviderInfrastructureYamlHandler;
 import software.wings.service.intfc.SettingsService;
 
+import com.google.inject.Inject;
 import java.util.List;
 
 public class AzureWebAppInfraYamlHandler extends CloudProviderInfrastructureYamlHandler<Yaml, AzureWebAppInfra> {

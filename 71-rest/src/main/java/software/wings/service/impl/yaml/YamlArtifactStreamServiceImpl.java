@@ -2,16 +2,15 @@ package software.wings.service.impl.yaml;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.exception.WingsException.USER;
+
 import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static software.wings.beans.yaml.YamlConstants.YAML_EXTENSION;
-
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
 import io.harness.rest.RestResponse;
+
 import software.wings.beans.Base;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.artifact.ArtifactStream;
@@ -25,6 +24,9 @@ import software.wings.service.intfc.yaml.YamlGitService;
 import software.wings.service.intfc.yaml.sync.YamlService;
 import software.wings.yaml.YamlHelper;
 import software.wings.yaml.YamlPayload;
+
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
 
 /**
  * @author rktummala on 10/09/17

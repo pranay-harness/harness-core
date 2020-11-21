@@ -1,9 +1,10 @@
 package software.wings.helpers.ext.pcf.request;
 
+import software.wings.beans.PcfConfig;
+
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
-import software.wings.beans.PcfConfig;
 
 @Data
 @EqualsAndHashCode(callSuper = false)

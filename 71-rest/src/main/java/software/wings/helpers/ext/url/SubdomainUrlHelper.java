@@ -1,13 +1,7 @@
 package software.wings.helpers.ext.url;
 
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
-
 import io.harness.configuration.DeployMode;
-import lombok.AllArgsConstructor;
-import lombok.NoArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.StringUtils;
+
 import software.wings.app.UrlConfiguration;
 import software.wings.beans.Account;
 import software.wings.beans.User;
@@ -16,9 +10,15 @@ import software.wings.security.UserThreadLocal;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.FeatureFlagService;
 
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import java.net.URL;
 import java.util.Optional;
 import javax.servlet.http.HttpServletRequest;
+import lombok.AllArgsConstructor;
+import lombok.NoArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 
 /**
  * Created by mehulkasliwal on 2020-01-21.

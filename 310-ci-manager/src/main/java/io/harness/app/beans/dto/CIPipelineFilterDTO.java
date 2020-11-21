@@ -1,12 +1,11 @@
 package io.harness.app.beans.dto;
 
+import java.util.List;
+import javax.validation.constraints.NotNull;
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Data;
 import lombok.experimental.FieldDefaults;
-
-import java.util.List;
-import javax.validation.constraints.NotNull;
 
 @Data
 @Builder

@@ -1,10 +1,7 @@
 package migrations.all;
 
-import com.google.inject.Inject;
-
 import io.harness.persistence.HIterator;
-import lombok.extern.slf4j.Slf4j;
-import migrations.Migration;
+
 import software.wings.beans.Account;
 import software.wings.beans.Pipeline;
 import software.wings.beans.Pipeline.PipelineKeys;
@@ -12,6 +9,10 @@ import software.wings.beans.PipelineStage;
 import software.wings.beans.PipelineStage.PipelineStageElement;
 import software.wings.dl.WingsPersistence;
 import software.wings.sm.StateType;
+
+import com.google.inject.Inject;
+import lombok.extern.slf4j.Slf4j;
+import migrations.Migration;
 
 @Slf4j
 public class MigratePipelineStagesToUseDisableAssertion implements Migration {

@@ -3,6 +3,7 @@ package io.harness.ngpipeline.inputset.beans.entities;
 import io.harness.annotation.HarnessEntity;
 import io.harness.ngpipeline.inputset.beans.yaml.InputSetConfig;
 import io.harness.ngpipeline.overlayinputset.beans.BaseInputSetEntity;
+
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;

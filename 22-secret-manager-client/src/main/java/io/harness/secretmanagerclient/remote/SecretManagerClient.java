@@ -18,6 +18,10 @@ import io.harness.secretmanagerclient.dto.SecretTextUpdateDTO;
 import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.serializer.kryo.KryoRequest;
 import io.harness.serializer.kryo.KryoResponse;
+
+import software.wings.settings.SettingVariableTypes;
+
+import java.util.List;
 import okhttp3.RequestBody;
 import retrofit2.Call;
 import retrofit2.http.Body;
@@ -29,9 +33,6 @@ import retrofit2.http.PUT;
 import retrofit2.http.Part;
 import retrofit2.http.Path;
 import retrofit2.http.Query;
-import software.wings.settings.SettingVariableTypes;
-
-import java.util.List;
 
 public interface SecretManagerClient {
   String SECRETS_API = "ng/secrets";

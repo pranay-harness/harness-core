@@ -5,9 +5,9 @@ import static io.harness.batch.processing.ccm.BatchJobType.INSTANCE_BILLING_AGGR
 import static io.harness.batch.processing.ccm.BatchJobType.INSTANCE_BILLING_HOURLY;
 import static io.harness.batch.processing.ccm.BatchJobType.UNALLOCATED_BILLING_HOURLY;
 
-import com.google.common.collect.ImmutableSet;
-
 import io.harness.batch.processing.ccm.BatchJobType;
+
+import com.google.common.collect.ImmutableSet;
 import org.springframework.stereotype.Component;
 
 @Component

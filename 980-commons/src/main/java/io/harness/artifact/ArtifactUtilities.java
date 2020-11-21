@@ -2,12 +2,12 @@ package io.harness.artifact;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
-import static java.lang.String.format;
 
-import lombok.experimental.UtilityClass;
+import static java.lang.String.format;
 
 import java.net.MalformedURLException;
 import java.net.URL;
+import lombok.experimental.UtilityClass;
 
 @UtilityClass
 public class ArtifactUtilities {

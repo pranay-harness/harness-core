@@ -7,9 +7,8 @@ import io.kubernetes.client.openapi.models.V1beta1CronJob;
 import io.kubernetes.client.openapi.models.V1beta1CronJobSpec;
 import io.kubernetes.client.openapi.models.V1beta1JobTemplateSpec;
 import io.kubernetes.client.util.Yaml;
-import org.springframework.stereotype.Service;
-
 import java.util.Optional;
+import org.springframework.stereotype.Service;
 
 @Service
 public class CronJobRcdCalculator implements ResourceClaimDiffCalculator {

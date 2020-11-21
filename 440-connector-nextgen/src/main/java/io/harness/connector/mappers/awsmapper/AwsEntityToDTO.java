@@ -1,7 +1,5 @@
 package io.harness.connector.mappers.awsmapper;
 
-import com.google.inject.Singleton;
-
 import io.harness.connector.entities.embedded.awsconnector.AwsAccessKeyCredential;
 import io.harness.connector.entities.embedded.awsconnector.AwsConfig;
 import io.harness.connector.entities.embedded.awsconnector.AwsIamCredential;
@@ -15,6 +13,8 @@ import io.harness.delegate.beans.connector.awsconnector.AwsInheritFromDelegateSp
 import io.harness.delegate.beans.connector.awsconnector.AwsManualConfigSpecDTO;
 import io.harness.encryption.SecretRefData;
 import io.harness.exception.InvalidRequestException;
+
+import com.google.inject.Singleton;
 
 @Singleton
 public class AwsEntityToDTO implements ConnectorEntityToDTOMapper<AwsConfig> {

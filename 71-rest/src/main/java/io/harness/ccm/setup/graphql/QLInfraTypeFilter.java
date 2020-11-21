@@ -1,10 +1,11 @@
 package io.harness.ccm.setup.graphql;
 
+import software.wings.graphql.schema.type.aggregation.EntityFilter;
+import software.wings.graphql.schema.type.aggregation.QLIdFilter;
+
 import lombok.Builder;
 import lombok.ToString;
 import lombok.Value;
-import software.wings.graphql.schema.type.aggregation.EntityFilter;
-import software.wings.graphql.schema.type.aggregation.QLIdFilter;
 
 @Value
 @Builder

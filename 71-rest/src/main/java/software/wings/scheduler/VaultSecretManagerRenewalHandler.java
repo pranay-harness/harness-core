@@ -2,11 +2,11 @@ package software.wings.scheduler;
 
 import static io.harness.mongo.iterator.MongoPersistenceIterator.SchedulingType.REGULAR;
 import static io.harness.security.encryption.AccessType.APP_ROLE;
-import static java.time.Duration.ofSeconds;
+
 import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static software.wings.beans.alert.AlertType.InvalidKMS;
 
-import com.google.inject.Inject;
+import static java.time.Duration.ofSeconds;
 
 import io.harness.beans.SecretManagerConfig;
 import io.harness.beans.SecretManagerConfig.SecretManagerConfigKeys;
@@ -17,14 +17,16 @@ import io.harness.mongo.iterator.filter.MorphiaFilterExpander;
 import io.harness.mongo.iterator.provider.MorphiaPersistenceProvider;
 import io.harness.security.encryption.EncryptionType;
 import io.harness.workers.background.AccountStatusBasedEntityProcessController;
-import lombok.extern.slf4j.Slf4j;
+
 import software.wings.beans.VaultConfig;
 import software.wings.beans.alert.KmsSetupAlert;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.AlertService;
 import software.wings.service.intfc.security.VaultService;
 
+import com.google.inject.Inject;
 import java.util.concurrent.TimeUnit;
+import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class VaultSecretManagerRenewalHandler implements Handler<SecretManagerConfig> {

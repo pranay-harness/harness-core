@@ -2,17 +2,19 @@ package software.wings.service.impl;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.eraro.ErrorCode.FILE_INTEGRITY_CHECK_FAILED;
+
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.FileMetadata;
 import io.harness.exception.WingsException;
-import lombok.experimental.UtilityClass;
-import org.bson.types.ObjectId;
+
 import software.wings.beans.BaseFile;
 
 import java.nio.charset.Charset;
 import java.util.Base64;
+import lombok.experimental.UtilityClass;
+import org.bson.types.ObjectId;
 
 /**
  * An utility class for recognizing the file ID format. And get file UUID out of the file ID.

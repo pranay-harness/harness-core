@@ -1,9 +1,7 @@
 package software.wings.graphql.datafetcher.cloudProvider;
 
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
-
 import io.harness.exception.InvalidRequestException;
+
 import software.wings.beans.AzureConfig;
 import software.wings.beans.AzureConfig.AzureConfigBuilder;
 import software.wings.beans.SettingAttribute;
@@ -11,6 +9,9 @@ import software.wings.beans.SettingAttribute.Builder;
 import software.wings.graphql.datafetcher.secrets.UsageScopeController;
 import software.wings.graphql.schema.mutation.cloudProvider.QLAzureCloudProviderInput;
 import software.wings.graphql.schema.mutation.cloudProvider.QLUpdateAzureCloudProviderInput;
+
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
 
 @Singleton
 public class AzureDataFetcherHelper {

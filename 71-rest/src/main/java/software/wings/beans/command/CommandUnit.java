@@ -1,12 +1,13 @@
 package software.wings.beans.command;
 
+import io.harness.logging.CommandExecutionStatus;
+
+import software.wings.beans.Variable;
+
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.fasterxml.jackson.annotation.JsonTypeInfo.As;
 import com.fasterxml.jackson.annotation.JsonTypeInfo.Id;
 import com.github.reinert.jjschema.SchemaIgnore;
-import io.harness.logging.CommandExecutionStatus;
-import software.wings.beans.Variable;
-
 import java.util.List;
 import java.util.Set;
 

@@ -1,10 +1,9 @@
 package io.harness.ccm.views.graphql;
 
 import com.healthmarketscience.sqlbuilder.SelectQuery;
+import java.util.List;
 import lombok.Builder;
 import lombok.Value;
-
-import java.util.List;
 
 @Value
 @Builder

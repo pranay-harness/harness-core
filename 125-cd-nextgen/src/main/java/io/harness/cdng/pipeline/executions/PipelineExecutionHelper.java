@@ -2,9 +2,6 @@ package io.harness.cdng.pipeline.executions;
 
 import static io.harness.ngpipeline.pipeline.executions.ExecutionStatus.getExecutionStatus;
 
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
-
 import io.harness.cdng.artifact.bean.ArtifactOutcome;
 import io.harness.cdng.environment.EnvironmentOutcome;
 import io.harness.cdng.service.beans.ServiceOutcome;
@@ -28,15 +25,17 @@ import io.harness.yaml.core.ParallelStageElement;
 import io.harness.yaml.core.StageElement;
 import io.harness.yaml.core.auxiliary.intfc.StageElementWrapper;
 import io.harness.yaml.core.intfc.StageType;
-import lombok.Builder;
-import lombok.Value;
-import org.springframework.data.mongodb.core.query.Update;
 
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Collectors;
+import lombok.Builder;
+import lombok.Value;
+import org.springframework.data.mongodb.core.query.Update;
 
 @Singleton
 public class PipelineExecutionHelper {
@@ -240,10 +239,10 @@ public class PipelineExecutionHelper {
   private String getKeyForGivenStage(StageIndex stageIndex) {
     return stageIndex.getSecondLevelIndex() != -1
         ? String.format("%s.%s.%s.%s", PipelineExecutionSummaryKeys.stageExecutionSummarySummaryElements,
-              stageIndex.getFirstLevelIndex(), ParallelStageExecutionSummaryKeys.stageExecutionSummaries,
-              stageIndex.getSecondLevelIndex())
+            stageIndex.getFirstLevelIndex(), ParallelStageExecutionSummaryKeys.stageExecutionSummaries,
+            stageIndex.getSecondLevelIndex())
         : String.format("%s.%s", PipelineExecutionSummaryKeys.stageExecutionSummarySummaryElements,
-              stageIndex.getFirstLevelIndex());
+            stageIndex.getFirstLevelIndex());
   }
 
   @Value

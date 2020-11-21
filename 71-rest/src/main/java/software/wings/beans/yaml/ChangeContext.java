@@ -2,11 +2,12 @@ package software.wings.beans.yaml;
 
 import io.harness.persistence.PersistentEntity;
 import io.harness.yaml.BaseYaml;
-import lombok.Data;
+
 import software.wings.service.impl.yaml.handler.BaseYamlHandler;
 
 import java.util.HashMap;
 import java.util.Map;
+import lombok.Data;
 
 /**
  * @author rktummala on 10/17/17

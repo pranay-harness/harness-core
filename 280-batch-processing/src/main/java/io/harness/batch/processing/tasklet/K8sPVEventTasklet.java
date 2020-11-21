@@ -10,6 +10,8 @@ import io.harness.batch.processing.writer.constants.EventTypeConstants;
 import io.harness.event.grpc.PublishedMessage;
 import io.harness.grpc.utils.HTimestamps;
 import io.harness.perpetualtask.k8s.watch.PVEvent;
+
+import java.util.List;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.batch.core.JobParameters;
 import org.springframework.batch.core.StepContribution;
@@ -17,8 +19,6 @@ import org.springframework.batch.core.scope.context.ChunkContext;
 import org.springframework.batch.core.step.tasklet.Tasklet;
 import org.springframework.batch.repeat.RepeatStatus;
 import org.springframework.beans.factory.annotation.Autowired;
-
-import java.util.List;
 
 @Slf4j
 public class K8sPVEventTasklet implements Tasklet {
@@ -43,7 +43,7 @@ public class K8sPVEventTasklet implements Tasklet {
       // change logger to debug in future
       log.info("Processing publishedMessage of size: {}", publishedMessageList.size());
       publishedMessageList.stream()
-          .map(this ::processPVEventMessage)
+          .map(this::processPVEventMessage)
           .filter(instanceEvent -> null != instanceEvent.getAccountId())
           .forEach(instanceEvent -> instanceDataDao.upsert(instanceEvent));
     } while (publishedMessageList.size() == batchSize);

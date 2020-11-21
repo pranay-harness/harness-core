@@ -2,7 +2,7 @@ package software.wings.infra;
 
 import static io.harness.rule.OwnerRule.GEORGE;
 import static io.harness.rule.OwnerRule.PRASHANT;
-import static org.assertj.core.api.Assertions.assertThat;
+
 import static software.wings.infra.InfraDefinitionTestConstants.CLASSIC_LOAD_BALANCERS;
 import static software.wings.infra.InfraDefinitionTestConstants.HOSTNAME_CONVENTION;
 import static software.wings.infra.InfraDefinitionTestConstants.REGION;
@@ -10,16 +10,19 @@ import static software.wings.infra.InfraDefinitionTestConstants.STAGE_CLASSIC_LO
 import static software.wings.infra.InfraDefinitionTestConstants.STAGE_TARGET_GROUP_ARNS;
 import static software.wings.infra.InfraDefinitionTestConstants.TARGET_GROUP_ARNS;
 
+import static org.assertj.core.api.Assertions.assertThat;
+
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
+
 import software.wings.beans.AwsAmiInfrastructureMapping;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.utils.WingsTestConstants;
 
 import java.util.Map;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 public class AwsAmiInfrastructureTest extends CategoryTest {
   private final AwsAmiInfrastructure awsAmiInfrastructure =

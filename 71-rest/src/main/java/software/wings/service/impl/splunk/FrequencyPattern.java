@@ -1,10 +1,9 @@
 package software.wings.service.impl.splunk;
 
+import java.util.List;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
-
-import java.util.List;
 
 // TODO Compress Frequency pattern in log_analysis_record.proto
 @Data

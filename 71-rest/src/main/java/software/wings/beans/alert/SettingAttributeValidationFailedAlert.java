@@ -1,18 +1,20 @@
 package software.wings.beans.alert;
 
-import static org.apache.commons.lang3.StringUtils.isBlank;
 import static software.wings.beans.SettingAttribute.SettingCategory;
 
-import com.google.inject.Inject;
+import static org.apache.commons.lang3.StringUtils.isBlank;
+
+import io.harness.alert.AlertData;
+
+import software.wings.beans.SettingAttribute;
+import software.wings.service.intfc.SettingsService;
 
 import com.github.reinert.jjschema.SchemaIgnore;
-import io.harness.alert.AlertData;
+import com.google.inject.Inject;
 import lombok.Builder;
 import lombok.Data;
 import org.apache.commons.lang3.StringUtils;
 import org.mongodb.morphia.annotations.Transient;
-import software.wings.beans.SettingAttribute;
-import software.wings.service.intfc.SettingsService;
 
 @Data
 @Builder

@@ -2,12 +2,10 @@ package io.harness.serializer;
 
 import com.google.protobuf.MessageLite;
 import com.google.protobuf.Parser;
-
+import java.util.Map;
 import org.apache.kafka.common.serialization.Deserializer;
 import org.apache.kafka.common.serialization.Serde;
 import org.apache.kafka.common.serialization.Serializer;
-
-import java.util.Map;
 
 public class KafkaProtobufSerde<T extends MessageLite> implements Serde<T> {
   private final Serializer<T> serializer;

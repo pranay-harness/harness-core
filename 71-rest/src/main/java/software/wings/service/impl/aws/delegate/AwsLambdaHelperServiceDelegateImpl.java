@@ -8,19 +8,52 @@ import static io.harness.exception.WingsException.USER;
 import static io.harness.logging.LogLevel.ERROR;
 import static io.harness.logging.LogLevel.INFO;
 import static io.harness.threading.Morpheus.sleep;
-import static java.lang.String.format;
-import static java.time.Duration.ofSeconds;
-import static java.util.stream.Collectors.toList;
+
 import static software.wings.beans.LogColor.White;
 import static software.wings.beans.LogHelper.color;
 import static software.wings.common.TemplateConstants.PATH_DELIMITER;
 import static software.wings.service.impl.aws.model.AwsConstants.LAMBDA_SLEEP_SECS;
 
-import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Joiner;
-import com.google.common.collect.Lists;
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
+import static java.lang.String.format;
+import static java.time.Duration.ofSeconds;
+import static java.util.stream.Collectors.toList;
+
+import io.harness.beans.ExecutionStatus;
+import io.harness.data.structure.UUIDGenerator;
+import io.harness.delegate.service.DelegateAgentFileService;
+import io.harness.eraro.ErrorCode;
+import io.harness.eraro.Level;
+import io.harness.exception.ExceptionUtils;
+import io.harness.exception.FileCreationException;
+import io.harness.exception.InvalidArgumentsException;
+import io.harness.exception.InvalidRequestException;
+import io.harness.exception.WingsException;
+import io.harness.filesystem.FileIo;
+import io.harness.logging.CommandExecutionStatus;
+import io.harness.logging.LogLevel;
+import io.harness.security.encryption.EncryptedDataDetail;
+
+import software.wings.api.AwsLambdaContextElement.FunctionMeta;
+import software.wings.beans.AwsConfig;
+import software.wings.beans.artifact.ArtifactFile;
+import software.wings.beans.artifact.ArtifactStreamType;
+import software.wings.beans.command.ExecutionLogCallback;
+import software.wings.delegatetasks.DelegateFileManager;
+import software.wings.service.impl.aws.model.AwsLambdaExecuteFunctionRequest;
+import software.wings.service.impl.aws.model.AwsLambdaExecuteFunctionResponse;
+import software.wings.service.impl.aws.model.AwsLambdaExecuteFunctionResponse.AwsLambdaExecuteFunctionResponseBuilder;
+import software.wings.service.impl.aws.model.AwsLambdaExecuteWfRequest;
+import software.wings.service.impl.aws.model.AwsLambdaExecuteWfResponse;
+import software.wings.service.impl.aws.model.AwsLambdaExecuteWfResponse.AwsLambdaExecuteWfResponseBuilder;
+import software.wings.service.impl.aws.model.AwsLambdaFunctionParams;
+import software.wings.service.impl.aws.model.AwsLambdaFunctionRequest;
+import software.wings.service.impl.aws.model.AwsLambdaFunctionResponse;
+import software.wings.service.impl.aws.model.AwsLambdaFunctionResponse.AwsLambdaFunctionResponseBuilder;
+import software.wings.service.impl.aws.model.AwsLambdaFunctionResult;
+import software.wings.service.impl.aws.model.AwsLambdaVpcConfig;
+import software.wings.service.impl.aws.model.request.AwsLambdaDetailsRequest;
+import software.wings.service.impl.aws.model.response.AwsLambdaDetailsResponse;
+import software.wings.service.intfc.aws.delegate.AwsLambdaHelperServiceDelegate;
 
 import com.amazonaws.AmazonClientException;
 import com.amazonaws.AmazonServiceException;
@@ -55,48 +88,11 @@ import com.amazonaws.services.lambda.model.UpdateFunctionCodeResult;
 import com.amazonaws.services.lambda.model.UpdateFunctionConfigurationRequest;
 import com.amazonaws.services.lambda.model.UpdateFunctionConfigurationResult;
 import com.amazonaws.services.lambda.model.VpcConfig;
-import io.harness.beans.ExecutionStatus;
-import io.harness.data.structure.UUIDGenerator;
-import io.harness.delegate.service.DelegateAgentFileService;
-import io.harness.eraro.ErrorCode;
-import io.harness.eraro.Level;
-import io.harness.exception.ExceptionUtils;
-import io.harness.exception.FileCreationException;
-import io.harness.exception.InvalidArgumentsException;
-import io.harness.exception.InvalidRequestException;
-import io.harness.exception.WingsException;
-import io.harness.filesystem.FileIo;
-import io.harness.logging.CommandExecutionStatus;
-import io.harness.logging.LogLevel;
-import io.harness.security.encryption.EncryptedDataDetail;
-import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.codec.binary.Base64;
-import org.apache.commons.io.FilenameUtils;
-import org.apache.commons.io.IOUtils;
-import org.apache.commons.lang3.tuple.Pair;
-import org.apache.logging.log4j.util.Strings;
-import software.wings.api.AwsLambdaContextElement.FunctionMeta;
-import software.wings.beans.AwsConfig;
-import software.wings.beans.artifact.ArtifactFile;
-import software.wings.beans.artifact.ArtifactStreamType;
-import software.wings.beans.command.ExecutionLogCallback;
-import software.wings.delegatetasks.DelegateFileManager;
-import software.wings.service.impl.aws.model.AwsLambdaExecuteFunctionRequest;
-import software.wings.service.impl.aws.model.AwsLambdaExecuteFunctionResponse;
-import software.wings.service.impl.aws.model.AwsLambdaExecuteFunctionResponse.AwsLambdaExecuteFunctionResponseBuilder;
-import software.wings.service.impl.aws.model.AwsLambdaExecuteWfRequest;
-import software.wings.service.impl.aws.model.AwsLambdaExecuteWfResponse;
-import software.wings.service.impl.aws.model.AwsLambdaExecuteWfResponse.AwsLambdaExecuteWfResponseBuilder;
-import software.wings.service.impl.aws.model.AwsLambdaFunctionParams;
-import software.wings.service.impl.aws.model.AwsLambdaFunctionRequest;
-import software.wings.service.impl.aws.model.AwsLambdaFunctionResponse;
-import software.wings.service.impl.aws.model.AwsLambdaFunctionResponse.AwsLambdaFunctionResponseBuilder;
-import software.wings.service.impl.aws.model.AwsLambdaFunctionResult;
-import software.wings.service.impl.aws.model.AwsLambdaVpcConfig;
-import software.wings.service.impl.aws.model.request.AwsLambdaDetailsRequest;
-import software.wings.service.impl.aws.model.response.AwsLambdaDetailsResponse;
-import software.wings.service.intfc.aws.delegate.AwsLambdaHelperServiceDelegate;
-
+import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Joiner;
+import com.google.common.collect.Lists;
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -110,6 +106,12 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.concurrent.ExecutionException;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.codec.binary.Base64;
+import org.apache.commons.io.FilenameUtils;
+import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang3.tuple.Pair;
+import org.apache.logging.log4j.util.Strings;
 
 @Singleton
 @Slf4j
@@ -343,7 +345,7 @@ public class AwsLambdaHelperServiceDelegateImpl
     if (awsLambdaExecuteWfRequest.getArtifactStreamAttributes().getArtifactStreamType().equalsIgnoreCase(
             ArtifactStreamType.AMAZON_S3.name())
         || ArtifactStreamType.CUSTOM.name().equalsIgnoreCase(
-               awsLambdaExecuteWfRequest.getArtifactStreamAttributes().getArtifactStreamType())) {
+            awsLambdaExecuteWfRequest.getArtifactStreamAttributes().getArtifactStreamType())) {
       return executeFunctionDeploymentFromS3OrCustomRepository(
           lambdaClient, roleArn, evaluatedAliases, serviceVariables, lambdaVpcConfig, functionParams, logCallback);
     } else {

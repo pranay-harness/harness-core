@@ -1,8 +1,5 @@
 package io.harness.ccm.views.service;
 
-import com.google.cloud.bigquery.BigQuery;
-import com.google.cloud.bigquery.TableResult;
-
 import io.harness.ccm.views.graphql.QLCEViewAggregation;
 import io.harness.ccm.views.graphql.QLCEViewEntityStatsDataPoint;
 import io.harness.ccm.views.graphql.QLCEViewFilter;
@@ -11,6 +8,8 @@ import io.harness.ccm.views.graphql.QLCEViewGroupBy;
 import io.harness.ccm.views.graphql.QLCEViewSortCriteria;
 import io.harness.ccm.views.graphql.QLCEViewTrendInfo;
 
+import com.google.cloud.bigquery.BigQuery;
+import com.google.cloud.bigquery.TableResult;
 import java.util.List;
 
 public interface ViewsBillingService {

@@ -2,9 +2,8 @@ package io.harness.common;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 
-import lombok.experimental.UtilityClass;
-
 import java.util.regex.Pattern;
+import lombok.experimental.UtilityClass;
 
 @UtilityClass
 public class NGExpressionUtils {

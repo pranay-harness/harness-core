@@ -1,11 +1,11 @@
 package software.wings.beans.instance.dashboard;
 
-import lombok.experimental.UtilityClass;
 import software.wings.resources.DashboardStatisticsResource;
 import software.wings.service.intfc.instance.stats.InstanceStatService;
 
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
+import lombok.experimental.UtilityClass;
 
 @UtilityClass
 public class InstanceStatsUtils {

@@ -1,21 +1,16 @@
 package software.wings.graphql.datafetcher.ce.recommendation;
 
 import static io.harness.rule.OwnerRule.AVMOHAN;
+
 import static org.assertj.core.api.Assertions.assertThat;
 
-import com.google.common.collect.ImmutableList;
-import com.google.inject.Inject;
-
-import graphql.schema.DataFetchingFieldSelectionSet;
 import io.harness.category.element.UnitTests;
 import io.harness.ccm.cluster.dao.ClusterRecordDao;
 import io.harness.ccm.cluster.entities.ClusterRecord;
 import io.harness.ccm.cluster.entities.DirectKubernetesCluster;
 import io.harness.persistence.HPersistence;
 import io.harness.rule.Owner;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
+
 import software.wings.beans.Account;
 import software.wings.beans.User;
 import software.wings.graphql.datafetcher.AbstractDataFetcherTestBase;
@@ -34,10 +29,16 @@ import software.wings.graphql.schema.type.aggregation.QLIdFilter;
 import software.wings.graphql.schema.type.aggregation.QLIdOperator;
 import software.wings.security.UserThreadLocal;
 
+import com.google.common.collect.ImmutableList;
+import com.google.inject.Inject;
+import graphql.schema.DataFetchingFieldSelectionSet;
 import java.math.BigDecimal;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.List;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 public class K8sWorkloadRecommendationsDataFetcherTest extends AbstractDataFetcherTestBase {
   private static final QLPageQueryParameters DUMMY_PAGE_QUERY_PARAMS = new QLPageQueryParameters() {

@@ -1,9 +1,8 @@
 package io.harness.stream;
 
-import lombok.experimental.UtilityClass;
-
 import java.io.IOException;
 import java.io.InputStream;
+import lombok.experimental.UtilityClass;
 
 @UtilityClass
 public class StreamUtils {

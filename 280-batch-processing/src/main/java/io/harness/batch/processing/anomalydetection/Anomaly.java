@@ -2,11 +2,11 @@ package io.harness.batch.processing.anomalydetection;
 
 import io.harness.batch.processing.anomalydetection.types.AnomalyDetectionModel;
 import io.harness.batch.processing.anomalydetection.types.AnomalyType;
+
+import java.time.Instant;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.experimental.SuperBuilder;
-
-import java.time.Instant;
 
 @Data
 @EqualsAndHashCode(callSuper = true)

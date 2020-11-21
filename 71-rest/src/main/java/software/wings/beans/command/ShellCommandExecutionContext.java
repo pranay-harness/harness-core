@@ -2,13 +2,14 @@ package software.wings.beans.command;
 
 import io.harness.delegate.service.DelegateAgentFileService.FileBucket;
 import io.harness.logging.CommandExecutionStatus;
-import lombok.EqualsAndHashCode;
-import org.apache.commons.lang3.tuple.Pair;
+
 import software.wings.beans.artifact.ArtifactStreamAttributes;
 import software.wings.beans.command.CopyConfigCommandUnit.ConfigFileMetaData;
 import software.wings.core.BaseScriptExecutor;
 
 import java.util.List;
+import lombok.EqualsAndHashCode;
+import org.apache.commons.lang3.tuple.Pair;
 
 @EqualsAndHashCode(callSuper = true)
 public class ShellCommandExecutionContext extends CommandExecutionContext {

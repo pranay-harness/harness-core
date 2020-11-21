@@ -1,11 +1,23 @@
 package io.harness.mongo.queue;
 
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.govern.Switch.unhandled;
+
+import static java.lang.String.format;
+
 import io.harness.exception.UnexpectedException;
 import io.harness.persistence.HPersistence;
 import io.harness.queue.Queuable;
 import io.harness.queue.Queuable.QueuableKeys;
 import io.harness.queue.QueueConsumer;
 import io.harness.queue.TopicUtils;
+
+import java.time.Duration;
+import java.util.Date;
+import java.util.List;
+import java.util.Objects;
+import java.util.concurrent.Semaphore;
+import java.util.concurrent.TimeUnit;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Sort;
@@ -14,17 +26,6 @@ import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.Update;
-
-import java.time.Duration;
-import java.util.Date;
-import java.util.List;
-import java.util.Objects;
-import java.util.concurrent.Semaphore;
-import java.util.concurrent.TimeUnit;
-
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
-import static io.harness.govern.Switch.unhandled;
-import static java.lang.String.format;
 
 @Slf4j
 public class NGMongoQueueConsumer<T extends Queuable> implements QueueConsumer<T> {

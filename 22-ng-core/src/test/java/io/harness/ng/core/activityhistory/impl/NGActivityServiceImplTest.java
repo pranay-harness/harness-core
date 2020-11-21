@@ -1,9 +1,8 @@
 package io.harness.ng.core.activityhistory.impl;
 
 import static io.harness.rule.OwnerRule.DEEPAK;
-import static org.assertj.core.api.Assertions.assertThat;
 
-import com.google.inject.Inject;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.category.element.UnitTests;
 import io.harness.ng.core.NGCoreTestBase;
@@ -13,11 +12,12 @@ import io.harness.ng.core.activityhistory.NGActivityType;
 import io.harness.ng.core.activityhistory.dto.ConnectivityCheckSummaryDTO;
 import io.harness.ng.core.activityhistory.dto.NGActivityDTO;
 import io.harness.rule.Owner;
+
+import com.google.inject.Inject;
+import java.util.List;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
-
-import java.util.List;
 
 public class NGActivityServiceImplTest extends NGCoreTestBase {
   @Inject @InjectMocks NGActivityServiceImpl activityHistoryService;

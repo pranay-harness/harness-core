@@ -1,11 +1,10 @@
 package io.harness.functional.migration;
 
-import static io.github.benas.randombeans.api.EnhancedRandom.random;
 import static software.wings.beans.Application.Builder.anApplication;
 import static software.wings.beans.Environment.Builder.anEnvironment;
 import static software.wings.beans.security.UserGroup.DEFAULT_ACCOUNT_ADMIN_USER_GROUP_NAME;
 
-import com.google.inject.Inject;
+import static io.github.benas.randombeans.api.EnhancedRandom.random;
 
 import io.harness.functional.AbstractFunctionalTest;
 import io.harness.functional.WorkflowUtils;
@@ -22,7 +21,7 @@ import io.harness.testframework.restutils.EnvironmentRestUtils;
 import io.harness.testframework.restutils.IPWhitelistingRestUtils;
 import io.harness.testframework.restutils.SettingsUtils;
 import io.harness.testframework.restutils.WorkflowRestUtils;
-import org.junit.Before;
+
 import software.wings.beans.Account;
 import software.wings.beans.AccountType;
 import software.wings.beans.ApiKeyEntry;
@@ -38,8 +37,10 @@ import software.wings.beans.security.UserGroup;
 import software.wings.beans.security.access.Whitelist;
 import software.wings.service.intfc.SettingsService;
 
+import com.google.inject.Inject;
 import java.util.Arrays;
 import java.util.Map;
+import org.junit.Before;
 
 public abstract class AbstractAccountMigrationTest extends AbstractFunctionalTest {
   private static final String testUserPassword = "testPassword";

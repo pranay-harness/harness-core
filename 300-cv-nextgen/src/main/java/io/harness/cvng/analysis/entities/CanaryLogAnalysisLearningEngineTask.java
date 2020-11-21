@@ -1,13 +1,12 @@
 package io.harness.cvng.analysis.entities;
 
+import java.util.Collections;
+import java.util.Set;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
-
-import java.util.Collections;
-import java.util.Set;
 
 @Data
 @Builder

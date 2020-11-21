@@ -1,8 +1,9 @@
 package software.wings.yaml.directory;
 
+import software.wings.service.intfc.yaml.YamlGitService;
+
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonValue;
-import software.wings.service.intfc.yaml.YamlGitService;
 
 public class DirectoryNode {
   private String accountId;

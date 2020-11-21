@@ -2,14 +2,14 @@ package software.wings.expression;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 
-import com.google.inject.Singleton;
-
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.delegate.task.shell.ScriptType;
 import io.harness.expression.ExpressionEvaluator;
 import io.harness.expression.JsonFunctor;
 import io.harness.expression.RegexFunctor;
 import io.harness.expression.XmlFunctor;
+
+import com.google.inject.Singleton;
 import lombok.extern.slf4j.Slf4j;
 
 /**

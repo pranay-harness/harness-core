@@ -3,19 +3,15 @@ package software.wings.service.impl.verification;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.rule.OwnerRule.PRAVEEN;
 import static io.harness.rule.OwnerRule.RAGHU;
-import static org.assertj.core.api.Assertions.assertThat;
+
 import static software.wings.service.impl.newrelic.NewRelicMetricDataRecord.DEFAULT_GROUP_NAME;
 
-import com.google.common.collect.Lists;
-import com.google.inject.Inject;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.category.element.UnitTests;
 import io.harness.exception.VerificationOperationException;
 import io.harness.rule.Owner;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
-import org.mockito.MockitoAnnotations;
+
 import software.wings.WingsBaseTest;
 import software.wings.dl.WingsPersistence;
 import software.wings.metrics.MetricType;
@@ -29,9 +25,15 @@ import software.wings.service.impl.analysis.TimeSeriesMLTransactionThresholds.Ti
 import software.wings.service.intfc.MetricDataAnalysisService;
 import software.wings.sm.StateType;
 
+import com.google.common.collect.Lists;
+import com.google.inject.Inject;
 import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
+import org.mockito.MockitoAnnotations;
 
 /**
  * Created by rsingh on 9/7/18.

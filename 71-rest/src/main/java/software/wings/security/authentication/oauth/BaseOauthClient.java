@@ -2,16 +2,17 @@ package software.wings.security.authentication.oauth;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
 
-import io.fabric8.utils.Strings;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.exception.WingsException;
-import lombok.extern.slf4j.Slf4j;
-import org.apache.http.client.utils.URIBuilder;
+
 import software.wings.security.JWT_CATEGORY;
 import software.wings.security.SecretManager;
 
+import io.fabric8.utils.Strings;
 import java.net.URI;
 import java.net.URISyntaxException;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.http.client.utils.URIBuilder;
 
 @OwnedBy(PL)
 @Slf4j

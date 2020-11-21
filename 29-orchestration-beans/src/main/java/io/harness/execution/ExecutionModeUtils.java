@@ -1,12 +1,12 @@
 package io.harness.execution;
 
+import static io.harness.pms.execution.ExecutionMode.*;
+
 import io.harness.pms.execution.ExecutionMode;
-import lombok.experimental.UtilityClass;
 
 import java.util.EnumSet;
 import java.util.Set;
-
-import static io.harness.pms.execution.ExecutionMode.*;
+import lombok.experimental.UtilityClass;
 
 @UtilityClass
 public class ExecutionModeUtils {

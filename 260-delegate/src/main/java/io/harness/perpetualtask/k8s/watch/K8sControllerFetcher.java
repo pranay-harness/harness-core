@@ -11,10 +11,9 @@ import io.kubernetes.client.openapi.models.V1OwnerReference;
 import io.kubernetes.client.openapi.models.V1Pod;
 import io.kubernetes.client.util.ObjectAccessor;
 import io.kubernetes.client.util.exception.ObjectMetaReflectException;
-import lombok.extern.slf4j.Slf4j;
-
 import java.util.Map;
 import javax.validation.constraints.NotNull;
+import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class K8sControllerFetcher {

@@ -1,8 +1,7 @@
 package software.wings.resources.graphql;
 
-import lombok.Data;
-
 import java.util.Map;
+import lombok.Data;
 
 /**
  * At present this is a representation of

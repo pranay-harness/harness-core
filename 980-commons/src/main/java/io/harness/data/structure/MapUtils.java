@@ -2,10 +2,9 @@ package io.harness.data.structure;
 
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
-import lombok.experimental.UtilityClass;
-
 import java.util.HashMap;
 import java.util.Map;
+import lombok.experimental.UtilityClass;
 
 @UtilityClass
 public class MapUtils {

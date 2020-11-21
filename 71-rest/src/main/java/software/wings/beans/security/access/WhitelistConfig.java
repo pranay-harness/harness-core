@@ -3,10 +3,10 @@ package software.wings.beans.security.access;
 import static io.harness.annotations.dev.HarnessTeam.PL;
 
 import io.harness.annotations.dev.OwnedBy;
-import lombok.Builder;
-import lombok.Data;
 
 import java.util.List;
+import lombok.Builder;
+import lombok.Data;
 
 /**
  * Wrapper class created for holding all the white list configs for an account. It was needed for CacheManager.

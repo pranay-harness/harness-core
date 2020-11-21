@@ -1,23 +1,24 @@
 package io.harness.delegate.service;
 
 import static io.harness.network.SafeHttpCall.execute;
+
 import static software.wings.common.VerificationConstants.MAX_RETRIES;
+
+import io.harness.managerclient.VerificationServiceClient;
+
+import software.wings.delegatetasks.DelegateCVTaskService;
+import software.wings.service.impl.analysis.DataCollectionTaskResult;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.util.concurrent.TimeLimiter;
 import com.google.common.util.concurrent.UncheckedTimeoutException;
 import com.google.inject.Inject;
-
-import io.harness.managerclient.VerificationServiceClient;
-import lombok.extern.slf4j.Slf4j;
-import net.jodah.failsafe.Failsafe;
-import net.jodah.failsafe.RetryPolicy;
-import software.wings.delegatetasks.DelegateCVTaskService;
-import software.wings.service.impl.analysis.DataCollectionTaskResult;
-
 import java.time.Duration;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
+import lombok.extern.slf4j.Slf4j;
+import net.jodah.failsafe.Failsafe;
+import net.jodah.failsafe.RetryPolicy;
 @Slf4j
 public class DelegateCVTaskServiceImpl implements DelegateCVTaskService {
   private static final int TIMEOUT_DURATION_SEC = 5;

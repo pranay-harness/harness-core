@@ -1,14 +1,13 @@
 package io.harness.ccm.cluster;
 
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
-import static java.util.Objects.isNull;
+
 import static software.wings.beans.InfrastructureType.AWS_ECS;
 import static software.wings.beans.InfrastructureType.AZURE_KUBERNETES;
 import static software.wings.beans.InfrastructureType.DIRECT_KUBERNETES;
 import static software.wings.beans.InfrastructureType.GCP_KUBERNETES_ENGINE;
 
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
+import static java.util.Objects.isNull;
 
 import io.harness.ccm.cluster.dao.ClusterRecordDao;
 import io.harness.ccm.cluster.entities.AzureKubernetesCluster;
@@ -18,9 +17,7 @@ import io.harness.ccm.cluster.entities.DirectKubernetesCluster;
 import io.harness.ccm.cluster.entities.EcsCluster;
 import io.harness.ccm.cluster.entities.GcpKubernetesCluster;
 import io.harness.observer.Subject;
-import lombok.Getter;
-import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.StringUtils;
+
 import software.wings.beans.Application;
 import software.wings.beans.AzureKubernetesInfrastructureMapping;
 import software.wings.beans.DirectKubernetesInfrastructureMapping;
@@ -38,8 +35,13 @@ import software.wings.infra.InfrastructureDefinition;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.SettingsService;
 
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import java.util.List;
 import java.util.stream.Collectors;
+import lombok.Getter;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 
 @Slf4j
 @Singleton

@@ -2,18 +2,17 @@ package software.wings.graphql.datafetcher.tag;
 
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
-
-import lombok.extern.slf4j.Slf4j;
 import software.wings.beans.EntityType;
 import software.wings.graphql.schema.type.aggregation.tag.QLTagInput;
 import software.wings.service.intfc.HarnessTagService;
 import software.wings.service.intfc.WorkflowExecutionService;
 
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * @author rktummala on 09/08/2019

@@ -1,9 +1,10 @@
 package software.wings.beans;
 
-import lombok.Builder;
-import lombok.Data;
 import software.wings.beans.yaml.GitCommitRequest;
 import software.wings.beans.yaml.GitDiffRequest;
+
+import lombok.Builder;
+import lombok.Data;
 
 @Data
 @Builder

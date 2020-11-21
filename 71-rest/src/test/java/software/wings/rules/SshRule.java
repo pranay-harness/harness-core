@@ -1,5 +1,9 @@
 package software.wings.rules;
 
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Path;
+import java.security.Security;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.sshd.common.file.virtualfs.VirtualFileSystemFactory;
 import org.apache.sshd.common.util.security.SecurityUtils;
@@ -10,11 +14,6 @@ import org.junit.rules.MethodRule;
 import org.junit.rules.TemporaryFolder;
 import org.junit.runners.model.FrameworkMethod;
 import org.junit.runners.model.Statement;
-
-import java.io.File;
-import java.io.IOException;
-import java.nio.file.Path;
-import java.security.Security;
 
 /**
  * Created by peeyushaggarwal on 7/27/16.

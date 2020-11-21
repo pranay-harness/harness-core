@@ -1,6 +1,7 @@
 package io.harness.perpetualtask;
 
 import static io.harness.rule.OwnerRule.ABOSII;
+
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.joor.Reflect.on;
@@ -12,11 +13,6 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import com.google.inject.Inject;
-import com.google.protobuf.Any;
-import com.google.protobuf.ByteString;
-
-import com.amazonaws.services.ec2.model.Instance;
 import io.harness.DelegateTest;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.beans.DelegateResponseData;
@@ -31,6 +27,19 @@ import io.harness.rest.RestResponse;
 import io.harness.rule.Owner;
 import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.serializer.KryoSerializer;
+
+import software.wings.annotation.EncryptableSetting;
+import software.wings.beans.AwsConfig;
+import software.wings.beans.SpotInstConfig;
+import software.wings.delegatetasks.spotinst.taskhandler.SpotInstSyncTaskHandler;
+import software.wings.service.intfc.security.EncryptionService;
+
+import com.amazonaws.services.ec2.model.Instance;
+import com.google.inject.Inject;
+import com.google.protobuf.Any;
+import com.google.protobuf.ByteString;
+import java.time.Instant;
+import java.util.ArrayList;
 import org.eclipse.jetty.server.Response;
 import org.junit.Before;
 import org.junit.Test;
@@ -41,14 +50,6 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
 import retrofit2.Call;
-import software.wings.annotation.EncryptableSetting;
-import software.wings.beans.AwsConfig;
-import software.wings.beans.SpotInstConfig;
-import software.wings.delegatetasks.spotinst.taskhandler.SpotInstSyncTaskHandler;
-import software.wings.service.intfc.security.EncryptionService;
-
-import java.time.Instant;
-import java.util.ArrayList;
 
 @RunWith(MockitoJUnitRunner.class)
 public class SpotinstAmiInstanceSyncDelegateExecutorTest extends DelegateTest {

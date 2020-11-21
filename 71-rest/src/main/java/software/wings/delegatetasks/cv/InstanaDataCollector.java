@@ -5,9 +5,6 @@ import static software.wings.common.VerificationConstants.INSTANA_DOCKER_PLUGIN;
 import static software.wings.common.VerificationConstants.INSTANA_GROUPBY_TAG_TRACE_NAME;
 import static software.wings.common.VerificationConstants.VERIFICATION_HOST_PLACEHOLDER;
 
-import com.google.common.base.Preconditions;
-import com.google.inject.Inject;
-
 import software.wings.common.VerificationConstants;
 import software.wings.service.impl.analysis.MetricElement;
 import software.wings.service.impl.instana.InstanaAnalyzeMetricRequest;
@@ -21,6 +18,8 @@ import software.wings.service.impl.instana.InstanaTimeFrame;
 import software.wings.service.impl.instana.InstanaUtils;
 import software.wings.service.intfc.instana.InstanaDelegateService;
 
+import com.google.common.base.Preconditions;
+import com.google.inject.Inject;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Collections;

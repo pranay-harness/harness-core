@@ -2,6 +2,8 @@ package io.harness.notification.entities;
 
 import io.harness.Team;
 import io.harness.mongo.index.*;
+import io.harness.notification.entities.NotificationTemplate.TemplateKeys;
+
 import lombok.Builder;
 import lombok.Data;
 import lombok.experimental.FieldNameConstants;
@@ -9,8 +11,6 @@ import org.mongodb.morphia.annotations.Entity;
 import org.springframework.data.annotation.*;
 import org.springframework.data.mongodb.core.index.Indexed;
 import org.springframework.data.mongodb.core.mapping.Document;
-
-import io.harness.notification.entities.NotificationTemplate.TemplateKeys;
 
 @Builder
 @Data

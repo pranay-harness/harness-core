@@ -3,13 +3,14 @@ package software.wings.delegatetasks.validation.capabilities;
 import io.harness.delegate.beans.executioncapability.CapabilityType;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.security.encryption.EncryptedDataDetail;
-import lombok.Builder;
-import lombok.ToString;
-import lombok.Value;
+
 import software.wings.beans.GitConfig;
 import software.wings.beans.SettingAttribute;
 
 import java.util.List;
+import lombok.Builder;
+import lombok.ToString;
+import lombok.Value;
 
 /**
  * Adding Setting attribute here is wrong but people used a variety of git URL's and we need to have an appropriate

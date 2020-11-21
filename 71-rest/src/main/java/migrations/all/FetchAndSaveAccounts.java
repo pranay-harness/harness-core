@@ -1,12 +1,11 @@
 package migrations.all;
 
-import com.google.inject.Inject;
-
-import migrations.Migration;
 import software.wings.beans.Account;
 import software.wings.service.intfc.AccountService;
 
+import com.google.inject.Inject;
 import java.util.List;
+import migrations.Migration;
 
 public class FetchAndSaveAccounts implements Migration {
   @Inject private AccountService accountService;

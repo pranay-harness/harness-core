@@ -1,14 +1,12 @@
 package software.wings.utils;
 
 import com.google.common.collect.ImmutableMap;
-
-import org.apache.commons.io.IOUtils;
-
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.Map;
+import org.apache.commons.io.IOUtils;
 
 public class PowerShellScriptsLoader {
   public enum PsScript {

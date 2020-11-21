@@ -2,8 +2,6 @@ package io.harness.steps.barriers;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 
-import com.google.inject.Inject;
-
 import io.harness.ambiance.Ambiance;
 import io.harness.facilitator.Facilitator;
 import io.harness.facilitator.FacilitatorResponse;
@@ -17,6 +15,7 @@ import io.harness.state.io.StepParameters;
 import io.harness.steps.barriers.beans.BarrierExecutionInstance;
 import io.harness.steps.barriers.service.BarrierService;
 
+import com.google.inject.Inject;
 import java.time.Duration;
 import java.util.List;
 

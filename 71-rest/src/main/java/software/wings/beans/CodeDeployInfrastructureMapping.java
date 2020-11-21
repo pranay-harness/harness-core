@@ -2,22 +2,23 @@ package software.wings.beans;
 
 import static java.lang.String.format;
 
+import io.harness.beans.EmbeddedUser;
+
+import software.wings.beans.InfrastructureMappingBlueprint.NodeFilteringType;
+import software.wings.stencils.EnumData;
+import software.wings.utils.Utils;
+
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
-import io.harness.beans.EmbeddedUser;
+import java.util.Map;
+import java.util.Optional;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.experimental.FieldNameConstants;
 import org.hibernate.validator.constraints.NotEmpty;
-import software.wings.beans.InfrastructureMappingBlueprint.NodeFilteringType;
-import software.wings.stencils.EnumData;
-import software.wings.utils.Utils;
-
-import java.util.Map;
-import java.util.Optional;
 
 /**
  * Created by brett on 6/22/17

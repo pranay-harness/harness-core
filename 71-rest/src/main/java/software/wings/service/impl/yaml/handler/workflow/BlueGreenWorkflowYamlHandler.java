@@ -3,9 +3,8 @@ package software.wings.service.impl.yaml.handler.workflow;
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
-import com.google.inject.Singleton;
-
 import io.harness.annotations.dev.OwnedBy;
+
 import software.wings.beans.BlueGreenOrchestrationWorkflow.BlueGreenOrchestrationWorkflowBuilder;
 import software.wings.beans.Workflow;
 import software.wings.beans.Workflow.WorkflowBuilder;
@@ -13,6 +12,7 @@ import software.wings.beans.WorkflowPhase;
 import software.wings.beans.concurrency.ConcurrencyStrategy;
 import software.wings.yaml.workflow.BlueGreenWorkflowYaml;
 
+import com.google.inject.Singleton;
 import java.util.List;
 
 @OwnedBy(CDC)

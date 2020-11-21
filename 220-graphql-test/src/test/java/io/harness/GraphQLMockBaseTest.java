@@ -7,9 +7,7 @@ import io.harness.encryptors.clients.AwsKmsEncryptor;
 import io.harness.exception.SecretManagementException;
 import io.harness.rule.GraphQLWithWingsRule;
 import io.harness.security.encryption.EncryptionType;
-import org.junit.Rule;
-import org.mockito.junit.MockitoJUnit;
-import org.mockito.junit.MockitoRule;
+
 import software.wings.beans.AccountStatus;
 import software.wings.beans.AccountType;
 import software.wings.beans.KmsConfig;
@@ -19,6 +17,9 @@ import software.wings.settings.SettingVariableTypes;
 
 import java.io.IOException;
 import javax.crypto.spec.SecretKeySpec;
+import org.junit.Rule;
+import org.mockito.junit.MockitoJUnit;
+import org.mockito.junit.MockitoRule;
 
 public abstract class GraphQLMockBaseTest extends CategoryTest implements MockableTestMixin {
   private static final String plainTextKey = "1234567890123456";

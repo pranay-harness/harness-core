@@ -1,5 +1,14 @@
 package software.wings.service.impl.instance;
 
+import static software.wings.beans.Environment.EnvironmentType.NON_PROD;
+import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
+import static software.wings.utils.WingsTestConstants.APP_ID;
+import static software.wings.utils.WingsTestConstants.ENV_ID;
+import static software.wings.utils.WingsTestConstants.INFRA_MAPPING_ID;
+import static software.wings.utils.WingsTestConstants.SERVICE_ID;
+import static software.wings.utils.WingsTestConstants.TEMPLATE_ID;
+import static software.wings.utils.WingsTestConstants.WORKFLOW_EXECUTION_ID;
+
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -10,29 +19,13 @@ import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
-import static software.wings.beans.Environment.EnvironmentType.NON_PROD;
-import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
-import static software.wings.utils.WingsTestConstants.APP_ID;
-import static software.wings.utils.WingsTestConstants.ENV_ID;
-import static software.wings.utils.WingsTestConstants.INFRA_MAPPING_ID;
-import static software.wings.utils.WingsTestConstants.SERVICE_ID;
-import static software.wings.utils.WingsTestConstants.TEMPLATE_ID;
-import static software.wings.utils.WingsTestConstants.WORKFLOW_EXECUTION_ID;
-
-import com.google.common.collect.ImmutableMap;
 
 import io.harness.beans.ExecutionStatus;
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
 import io.harness.rule.OwnerRule;
 import io.harness.serializer.JsonUtils;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
-import org.mockito.ArgumentCaptor;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.Spy;
+
 import software.wings.WingsBaseTest;
 import software.wings.api.CustomDeploymentTypeInfo;
 import software.wings.api.DeploymentSummary;
@@ -56,12 +49,20 @@ import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.customdeployment.CustomDeploymentTypeService;
 import software.wings.service.intfc.instance.InstanceService;
 
+import com.google.common.collect.ImmutableMap;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
+import org.mockito.ArgumentCaptor;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.Spy;
 
 public class CustomDeploymentInstanceHandlerTest extends WingsBaseTest {
   @Mock private CustomDeploymentInstanceSyncPTCreator perpetualTaskCreator;
@@ -114,8 +115,8 @@ public class CustomDeploymentInstanceHandlerTest extends WingsBaseTest {
     final List<Instance> savedInstances = captor.getAllValues();
 
     List<Instance> expectedInstances = buildSampleInstances(1, 2, 3);
-    savedInstances.forEach(this ::nullUuid);
-    expectedInstances.forEach(this ::nullUuid);
+    savedInstances.forEach(this::nullUuid);
+    expectedInstances.forEach(this::nullUuid);
     assertThat(savedInstances).containsExactlyElementsOf(expectedInstances);
   }
 
@@ -186,8 +187,8 @@ public class CustomDeploymentInstanceHandlerTest extends WingsBaseTest {
 
     List<Instance> expectedInstances = buildSampleInstances(6, 7);
     List<Instance> savedInstances = captor.getAllValues();
-    savedInstances.forEach(this ::nullUuid);
-    expectedInstances.forEach(this ::nullUuid);
+    savedInstances.forEach(this::nullUuid);
+    expectedInstances.forEach(this::nullUuid);
     assertThat(savedInstances).containsExactlyElementsOf(expectedInstances);
     assertThat(instanceIdsDeleted).contains("2", "3", "4");
   }

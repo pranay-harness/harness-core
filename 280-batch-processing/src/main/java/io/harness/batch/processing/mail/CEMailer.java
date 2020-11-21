@@ -1,32 +1,33 @@
 package io.harness.batch.processing.mail;
 
-import static freemarker.template.Configuration.VERSION_2_3_23;
 import static io.harness.ccm.commons.Constants.HARNESS_NAME;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+
+import static freemarker.template.Configuration.VERSION_2_3_23;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
-import com.google.common.collect.ImmutableList;
+import io.harness.exception.ExceptionUtils;
 
+import software.wings.helpers.ext.mail.EmailData;
+import software.wings.helpers.ext.mail.SmtpConfig;
+
+import com.google.common.collect.ImmutableList;
 import freemarker.cache.ClassTemplateLoader;
 import freemarker.template.Configuration;
 import freemarker.template.Template;
 import freemarker.template.TemplateException;
-import io.harness.exception.ExceptionUtils;
-import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.mail.DefaultAuthenticator;
-import org.apache.commons.mail.Email;
-import org.apache.commons.mail.EmailException;
-import org.apache.commons.mail.HtmlEmail;
-import org.apache.commons.mail.SimpleEmail;
-import software.wings.helpers.ext.mail.EmailData;
-import software.wings.helpers.ext.mail.SmtpConfig;
-
 import java.io.IOException;
 import java.io.StringWriter;
 import java.util.Map;
 import javax.mail.internet.AddressException;
 import javax.mail.internet.InternetAddress;
 import javax.mail.util.ByteArrayDataSource;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.mail.DefaultAuthenticator;
+import org.apache.commons.mail.Email;
+import org.apache.commons.mail.EmailException;
+import org.apache.commons.mail.HtmlEmail;
+import org.apache.commons.mail.SimpleEmail;
 
 @Slf4j
 public class CEMailer {

@@ -1,13 +1,12 @@
 package io.harness.histogram;
 
+import java.time.Instant;
+import java.util.Map;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.Singular;
-
-import java.time.Instant;
-import java.util.Map;
 
 @Data
 @Builder(toBuilder = true)

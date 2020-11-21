@@ -2,11 +2,8 @@ package software.wings.graphql.datafetcher.trigger;
 
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
-import com.google.inject.Inject;
-
 import io.harness.exception.InvalidRequestException;
-import lombok.extern.slf4j.Slf4j;
-import org.mongodb.morphia.query.Query;
+
 import software.wings.beans.EntityType;
 import software.wings.beans.trigger.Trigger;
 import software.wings.beans.trigger.Trigger.TriggerKeys;
@@ -24,9 +21,12 @@ import software.wings.graphql.schema.type.aggregation.trigger.QLTriggerTagType;
 import software.wings.graphql.utils.nameservice.NameService;
 import software.wings.service.intfc.AppService;
 
+import com.google.inject.Inject;
 import java.util.ArrayList;
 import java.util.List;
 import javax.validation.constraints.NotNull;
+import lombok.extern.slf4j.Slf4j;
+import org.mongodb.morphia.query.Query;
 
 @Slf4j
 public class TriggerStatsDataFetcher extends RealTimeStatsDataFetcherWithTags<QLNoOpAggregateFunction, QLTriggerFilter,

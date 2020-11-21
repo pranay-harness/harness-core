@@ -1,23 +1,21 @@
 package io.harness.metrics;
 
-import com.google.common.annotations.VisibleForTesting;
-import com.google.inject.Singleton;
-
 import com.codahale.metrics.Meter;
 import com.codahale.metrics.MetricRegistry;
+import com.google.common.annotations.VisibleForTesting;
+import com.google.inject.Singleton;
 import io.prometheus.client.Collector.MetricFamilySamples;
 import io.prometheus.client.CollectorRegistry;
 import io.prometheus.client.Counter;
 import io.prometheus.client.Gauge;
 import io.prometheus.client.Histogram;
 import io.prometheus.client.Summary;
-import lombok.NoArgsConstructor;
-
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
+import lombok.NoArgsConstructor;
 
 /**
  * Harness Metric Registry is a custom Metric Registry build on the top of CodeHale MetricRegistry

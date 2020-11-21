@@ -5,7 +5,14 @@ import static com.amazonaws.services.cloudwatch.model.Statistic.Maximum;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.apache.commons.codec.digest.DigestUtils.md5Hex;
 
-import com.google.common.collect.Iterables;
+import io.harness.batch.processing.cloudevents.aws.ecs.service.support.intfc.AwsCloudWatchHelperService;
+import io.harness.batch.processing.cloudevents.aws.ecs.service.tasklet.support.request.AwsCloudWatchMetricDataRequest;
+import io.harness.batch.processing.cloudevents.aws.ecs.service.tasklet.support.response.EcsUtilizationData;
+import io.harness.batch.processing.cloudevents.aws.ecs.service.tasklet.support.response.EcsUtilizationData.EcsUtilizationDataBuilder;
+import io.harness.batch.processing.cloudevents.aws.ecs.service.tasklet.support.response.MetricValue;
+
+import software.wings.beans.AwsCrossAccountAttributes;
+import software.wings.beans.ce.CECluster;
 
 import com.amazonaws.services.cloudwatch.model.Dimension;
 import com.amazonaws.services.cloudwatch.model.Metric;
@@ -15,17 +22,7 @@ import com.amazonaws.services.cloudwatch.model.MetricStat;
 import com.amazonaws.services.cloudwatch.model.Statistic;
 import com.amazonaws.services.ecs.model.Cluster;
 import com.amazonaws.services.ecs.model.Service;
-import io.harness.batch.processing.cloudevents.aws.ecs.service.support.intfc.AwsCloudWatchHelperService;
-import io.harness.batch.processing.cloudevents.aws.ecs.service.tasklet.support.request.AwsCloudWatchMetricDataRequest;
-import io.harness.batch.processing.cloudevents.aws.ecs.service.tasklet.support.response.EcsUtilizationData;
-import io.harness.batch.processing.cloudevents.aws.ecs.service.tasklet.support.response.EcsUtilizationData.EcsUtilizationDataBuilder;
-import io.harness.batch.processing.cloudevents.aws.ecs.service.tasklet.support.response.MetricValue;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
-import software.wings.beans.AwsCrossAccountAttributes;
-import software.wings.beans.ce.CECluster;
-
+import com.google.common.collect.Iterables;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -37,6 +34,9 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 import javax.annotation.Nullable;
 import javax.annotation.ParametersAreNonnullByDefault;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
 
 @Slf4j
 @Component

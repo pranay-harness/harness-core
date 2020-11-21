@@ -1,11 +1,12 @@
 package software.wings.verification.log;
 
+import software.wings.verification.CVConfiguration;
+
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.github.reinert.jjschema.Attributes;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
-import software.wings.verification.CVConfiguration;
 
 /**
  * Created by Pranjal on 03/29/2019

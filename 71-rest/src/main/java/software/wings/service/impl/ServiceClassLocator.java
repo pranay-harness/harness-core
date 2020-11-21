@@ -1,12 +1,7 @@
 package software.wings.service.impl;
 
-import com.google.inject.Inject;
-import com.google.inject.Injector;
-import com.google.inject.Singleton;
-
 import io.harness.exception.UnknownArtifactStreamTypeException;
-import lombok.extern.slf4j.Slf4j;
-import org.reflections.Reflections;
+
 import software.wings.beans.artifact.ArtifactStreamType;
 import software.wings.service.intfc.AcrBuildService;
 import software.wings.service.intfc.AmazonS3BuildService;
@@ -26,6 +21,9 @@ import software.wings.service.intfc.NexusBuildService;
 import software.wings.service.intfc.SftpBuildService;
 import software.wings.service.intfc.SmbBuildService;
 
+import com.google.inject.Inject;
+import com.google.inject.Injector;
+import com.google.inject.Singleton;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -33,6 +31,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import lombok.extern.slf4j.Slf4j;
+import org.reflections.Reflections;
 
 /**
  * Service class locator for all the artifact streams.

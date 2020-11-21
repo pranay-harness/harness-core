@@ -1,7 +1,5 @@
 package io.harness.cdng.pipeline.steps;
 
-import com.google.inject.Inject;
-
 import io.harness.ambiance.Ambiance;
 import io.harness.cdng.pipeline.beans.RollbackNode;
 import io.harness.cdng.pipeline.beans.RollbackOptionalChildChainStepParameters;
@@ -18,6 +16,7 @@ import io.harness.state.io.StepResponseNotifyData;
 import io.harness.steps.section.chain.SectionChainPassThroughData;
 import io.harness.tasks.ResponseData;
 
+import com.google.inject.Inject;
 import java.util.Map;
 
 public class RollbackOptionalChildChainStep

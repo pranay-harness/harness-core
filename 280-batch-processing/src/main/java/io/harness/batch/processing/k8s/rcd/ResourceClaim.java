@@ -1,9 +1,8 @@
 package io.harness.batch.processing.k8s.rcd;
 
+import javax.annotation.Nonnull;
 import lombok.Builder;
 import lombok.Value;
-
-import javax.annotation.Nonnull;
 
 @Value
 @Builder

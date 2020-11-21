@@ -1,27 +1,20 @@
 package software.wings.service.intfc.signup;
 
 import static io.harness.rule.OwnerRule.AMAN;
+
+import static software.wings.beans.UserInvite.UserInviteBuilder.anUserInvite;
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.anyMap;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-import static software.wings.beans.UserInvite.UserInviteBuilder.anUserInvite;
-
-import com.google.inject.Inject;
 
 import io.harness.category.element.UnitTests;
 import io.harness.event.handler.impl.EventPublishHelper;
 import io.harness.rule.Owner;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
-import org.mockito.ArgumentCaptor;
-import org.mockito.Captor;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.Mockito;
+
 import software.wings.WingsBaseTest;
 import software.wings.app.MainConfiguration;
 import software.wings.beans.User;
@@ -30,7 +23,16 @@ import software.wings.resources.UserResource.UpdatePasswordRequest;
 import software.wings.service.intfc.SignupService;
 import software.wings.service.intfc.UserService;
 
+import com.google.inject.Inject;
 import java.io.UnsupportedEncodingException;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
+import org.mockito.ArgumentCaptor;
+import org.mockito.Captor;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.Mockito;
 
 public class AzureSignupHandlerTest extends WingsBaseTest {
   private static final String EMAIL = "abc@harness.io";

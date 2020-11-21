@@ -2,12 +2,9 @@ package io.harness.marketplace.gcp.signup;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
 
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
-
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.exception.UnexpectedException;
-import lombok.extern.slf4j.Slf4j;
+
 import software.wings.beans.UserInvite;
 import software.wings.beans.marketplace.MarketPlaceConstants;
 import software.wings.beans.marketplace.MarketPlaceType;
@@ -17,10 +14,13 @@ import software.wings.security.authentication.AuthenticationUtils;
 import software.wings.security.authentication.SimpleUrlBuilder;
 import software.wings.service.intfc.UserService;
 
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.HashMap;
 import java.util.Map;
+import lombok.extern.slf4j.Slf4j;
 
 @OwnedBy(PL)
 @Slf4j

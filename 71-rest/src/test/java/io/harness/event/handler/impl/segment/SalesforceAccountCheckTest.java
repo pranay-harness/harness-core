@@ -1,22 +1,24 @@
 package io.harness.event.handler.impl.segment;
 
 import static io.harness.rule.OwnerRule.UJJAWAL;
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.when;
 
-import com.google.inject.Inject;
-
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
+
+import software.wings.WingsBaseTest;
+import software.wings.beans.Account;
+import software.wings.beans.AccountType;
+
+import com.google.inject.Inject;
 import org.junit.FixMethodOrder;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.junit.runners.MethodSorters;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import software.wings.WingsBaseTest;
-import software.wings.beans.Account;
-import software.wings.beans.AccountType;
 
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
 public class SalesforceAccountCheckTest extends WingsBaseTest {

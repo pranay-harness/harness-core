@@ -2,14 +2,9 @@ package software.wings.verification.apm;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+
 import static software.wings.service.impl.newrelic.NewRelicMetricDataRecord.DEFAULT_GROUP_NAME;
 
-import com.fasterxml.jackson.annotation.JsonPropertyOrder;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.EqualsAndHashCode;
-import lombok.NoArgsConstructor;
 import software.wings.beans.FeatureName;
 import software.wings.metrics.MetricType;
 import software.wings.service.impl.analysis.DataCollectionInfoV2;
@@ -18,12 +13,18 @@ import software.wings.sm.states.APMVerificationState;
 import software.wings.sm.states.APMVerificationState.MetricCollectionInfo;
 import software.wings.verification.CVConfiguration;
 
+import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicBoolean;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.NoArgsConstructor;
 
 @Data
 @Builder
@@ -82,7 +83,7 @@ public class APMCVServiceConfiguration extends CVConfiguration {
           && !metricCollectionInfo.getCollectionUrl().contains("${start_time_seconds}")) {
         if (isEmpty(metricCollectionInfo.getCollectionBody())
             || (!metricCollectionInfo.getCollectionBody().contains("${start_time}")
-                   && !metricCollectionInfo.getCollectionBody().contains("${start_time_seconds}"))) {
+                && !metricCollectionInfo.getCollectionBody().contains("${start_time_seconds}"))) {
           return false;
         }
       }
@@ -91,7 +92,7 @@ public class APMCVServiceConfiguration extends CVConfiguration {
           && !metricCollectionInfo.getCollectionUrl().contains("${end_time_seconds}")) {
         if (isEmpty(metricCollectionInfo.getCollectionBody())
             || (!metricCollectionInfo.getCollectionBody().contains("${end_time}")
-                   && !metricCollectionInfo.getCollectionBody().contains("${end_time_seconds}"))) {
+                && !metricCollectionInfo.getCollectionBody().contains("${end_time_seconds}"))) {
           return false;
         }
       }

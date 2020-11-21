@@ -1,8 +1,9 @@
 package software.wings.helpers.ext.pcf.request;
 
+import software.wings.beans.PcfConfig;
+
 import lombok.Builder;
 import lombok.Data;
-import software.wings.beans.PcfConfig;
 
 /**
  * This class contains all required data for PCFCommandTask.SETUP to perform setup task

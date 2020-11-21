@@ -1,14 +1,14 @@
 package software.wings.service.impl.splunk;
 
+import software.wings.service.impl.analysis.SetupTestNodeData;
+import software.wings.sm.StateType;
+
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import javax.validation.constraints.NotNull;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
-import software.wings.service.impl.analysis.SetupTestNodeData;
-import software.wings.sm.StateType;
-
-import javax.validation.constraints.NotNull;
 
 /**
  * Created by Pranjal on 08/31/2018

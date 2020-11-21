@@ -10,8 +10,6 @@ import io.harness.walktree.visitor.mergeinputset.beans.MergeInputSetErrorRespons
 import io.harness.walktree.visitor.mergeinputset.beans.MergeVisitorInputSetElement;
 import io.harness.walktree.visitor.response.VisitorErrorResponseWrapper;
 import io.harness.walktree.visitor.response.VisitorErrorResponseWrapper.VisitorErrorResponseWrapperBuilder;
-import lombok.experimental.UtilityClass;
-import lombok.extern.slf4j.Slf4j;
 
 import java.lang.reflect.Field;
 import java.util.HashMap;
@@ -24,6 +22,8 @@ import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+import lombok.experimental.UtilityClass;
+import lombok.extern.slf4j.Slf4j;
 
 @UtilityClass
 @Slf4j

@@ -1,3 +1,5 @@
 package io.harness.migration;
 
-public interface MigrationChannel { String getId(); }
+public interface MigrationChannel {
+  String getId();
+}

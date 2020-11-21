@@ -3,12 +3,7 @@ package software.wings.beans.alert.cv;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
 import io.harness.alert.AlertData;
-import lombok.Builder;
-import lombok.Builder.Default;
-import lombok.Data;
-import lombok.experimental.FieldNameConstants;
-import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.StringUtils;
+
 import software.wings.alerts.AlertStatus;
 import software.wings.service.impl.analysis.MLAnalysisType;
 import software.wings.verification.CVConfiguration;
@@ -21,6 +16,12 @@ import java.util.Date;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
+import lombok.Builder;
+import lombok.Builder.Default;
+import lombok.Data;
+import lombok.experimental.FieldNameConstants;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 
 @Data
 @Builder

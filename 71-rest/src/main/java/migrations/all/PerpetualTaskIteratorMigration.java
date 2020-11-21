@@ -1,10 +1,10 @@
 package migrations.all;
 
-import com.google.inject.Inject;
-
 import io.harness.perpetualtask.internal.PerpetualTaskRecord;
 import io.harness.perpetualtask.internal.PerpetualTaskRecord.PerpetualTaskRecordKeys;
 import io.harness.persistence.HPersistence;
+
+import com.google.inject.Inject;
 import migrations.Migration;
 
 public class PerpetualTaskIteratorMigration implements Migration {

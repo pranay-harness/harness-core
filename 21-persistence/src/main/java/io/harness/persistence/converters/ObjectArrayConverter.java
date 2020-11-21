@@ -1,9 +1,9 @@
 package io.harness.persistence.converters;
 
+import io.harness.serializer.KryoSerializer;
+
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
-
-import io.harness.serializer.KryoSerializer;
 import org.mongodb.morphia.converters.SimpleValueConverter;
 import org.mongodb.morphia.converters.TypeConverter;
 import org.mongodb.morphia.mapping.MappedField;

@@ -4,18 +4,14 @@ import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.data.encoding.EncodingUtils.encodeBase64;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.network.Http.getOkHttpClientBuilder;
+
 import static java.lang.String.format;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.exception.InvalidArtifactServerException;
 import io.harness.network.Http;
-import lombok.experimental.UtilityClass;
-import okhttp3.OkHttpClient;
-import retrofit2.Call;
-import retrofit2.Response;
-import retrofit2.Retrofit;
-import retrofit2.converter.jackson.JacksonConverterFactory;
+
 import software.wings.beans.artifact.ArtifactStreamAttributes;
 import software.wings.beans.artifact.AzureArtifactsArtifactStream.ProtocolType;
 import software.wings.beans.settings.azureartifacts.AzureArtifactsConfig;
@@ -26,6 +22,12 @@ import java.io.InputStream;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.concurrent.TimeUnit;
+import lombok.experimental.UtilityClass;
+import okhttp3.OkHttpClient;
+import retrofit2.Call;
+import retrofit2.Response;
+import retrofit2.Retrofit;
+import retrofit2.converter.jackson.JacksonConverterFactory;
 
 @OwnedBy(CDC)
 @UtilityClass
@@ -176,7 +178,7 @@ public class AzureArtifactsServiceHelper {
     }
     return url
         + format("_apis/packaging/feeds/%s/maven/%s/%s/%s/%s/content?api-version=5.1-preview.1", feed, groupId,
-              artifactId, version, artifactFileName);
+            artifactId, version, artifactFileName);
   }
 
   static String getNuGetDownloadUrl(
@@ -191,7 +193,7 @@ public class AzureArtifactsServiceHelper {
     String packageName = artifactStreamAttributes.getPackageName();
     return url
         + format("_apis/packaging/feeds/%s/nuget/packages/%s/versions/%s/content?api-version=5.1-preview.1", feed,
-              packageName, version);
+            packageName, version);
   }
 
   static boolean shouldDownloadFile(String artifactFileName) {

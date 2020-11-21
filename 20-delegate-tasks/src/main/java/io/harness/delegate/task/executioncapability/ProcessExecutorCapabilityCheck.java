@@ -1,10 +1,10 @@
 package io.harness.delegate.task.executioncapability;
 
-import com.google.inject.Singleton;
-
 import io.harness.delegate.beans.executioncapability.CapabilityResponse;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.delegate.beans.executioncapability.ProcessExecutorCapability;
+
+import com.google.inject.Singleton;
 import lombok.extern.slf4j.Slf4j;
 import org.zeroturnaround.exec.ProcessExecutor;
 import org.zeroturnaround.exec.ProcessResult;

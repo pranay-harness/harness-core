@@ -1,6 +1,7 @@
 package migrations.seedata;
 
 import static io.harness.exception.WingsException.ExecutionContext.MANAGER;
+
 import static software.wings.beans.Account.GLOBAL_ACCOUNT_ID;
 import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static software.wings.common.TemplateConstants.HARNESS_GALLERY;
@@ -8,12 +9,9 @@ import static software.wings.common.TemplateConstants.POWER_SHELL_IIS_APP_V5_INS
 import static software.wings.common.TemplateConstants.POWER_SHELL_IIS_V6_INSTALL_PATH;
 import static software.wings.common.TemplateConstants.POWER_SHELL_IIS_WEBSITE_V5_INSTALL_PATH;
 
-import com.google.inject.Inject;
-
 import io.harness.exception.WingsException;
 import io.harness.logging.ExceptionLogger;
-import lombok.extern.slf4j.Slf4j;
-import migrations.Migration;
+
 import software.wings.beans.template.Template;
 import software.wings.beans.template.TemplateFolder;
 import software.wings.beans.template.TemplateGallery;
@@ -21,7 +19,10 @@ import software.wings.service.intfc.template.TemplateFolderService;
 import software.wings.service.intfc.template.TemplateGalleryService;
 import software.wings.service.intfc.template.TemplateService;
 
+import com.google.inject.Inject;
 import java.io.IOException;
+import lombok.extern.slf4j.Slf4j;
+import migrations.Migration;
 
 @Slf4j
 public class IISInstallCommandV5Migration implements Migration {

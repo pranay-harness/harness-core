@@ -1,12 +1,13 @@
 package software.wings.service.impl.yaml.gitsync;
 
+import software.wings.beans.GitDetail;
+import software.wings.yaml.gitSync.YamlChangeSet;
+
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import lombok.Builder;
 import lombok.Value;
 import lombok.experimental.FieldNameConstants;
-import software.wings.beans.GitDetail;
-import software.wings.yaml.gitSync.YamlChangeSet;
 
 @Value
 @Builder

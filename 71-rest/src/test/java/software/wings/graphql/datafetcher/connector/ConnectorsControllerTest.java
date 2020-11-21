@@ -2,23 +2,19 @@ package software.wings.graphql.datafetcher.connector;
 
 import static io.harness.rule.OwnerRule.RUSHABH;
 import static io.harness.rule.OwnerRule.TMACARI;
+
+import static software.wings.graphql.datafetcher.connector.ConnectorsController.WEBHOOK_URL_PATH;
+
 import static junit.framework.TestCase.fail;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.doReturn;
-import static software.wings.graphql.datafetcher.connector.ConnectorsController.WEBHOOK_URL_PATH;
 
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.exception.InvalidRequestException;
 import io.harness.rule.Owner;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.Mockito;
-import org.mockito.MockitoAnnotations;
+
 import software.wings.beans.GitConfig;
 import software.wings.beans.GitConfig.UrlType;
 import software.wings.beans.SettingAttribute;
@@ -34,6 +30,13 @@ import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.Mockito;
+import org.mockito.MockitoAnnotations;
 
 public class ConnectorsControllerTest extends CategoryTest {
   @Mock SubdomainUrlHelper subdomainUrlHelper;

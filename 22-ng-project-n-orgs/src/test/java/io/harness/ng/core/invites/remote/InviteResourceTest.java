@@ -4,15 +4,13 @@ import static io.harness.ng.core.invites.InviteOperationResponse.*;
 import static io.harness.ng.core.invites.InviteOperationResponse.USER_ALREADY_ADDED;
 import static io.harness.ng.core.invites.entities.Invite.InviteType.ADMIN_INITIATED_INVITE;
 import static io.harness.rule.OwnerRule.ANKUSH;
+
 import static javax.ws.rs.core.Response.Status.*;
 import static org.apache.commons.lang3.RandomStringUtils.randomAlphabetic;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.*;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.when;
-
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Range;
 
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
@@ -31,6 +29,16 @@ import io.harness.ng.core.invites.entities.Role;
 import io.harness.ng.core.user.services.api.NgUserService;
 import io.harness.rule.Owner;
 import io.harness.utils.PageUtils;
+
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Range;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Optional;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
+import javax.ws.rs.core.Response;
 import org.apache.http.protocol.HTTP;
 import org.junit.Before;
 import org.junit.BeforeClass;
@@ -40,14 +48,6 @@ import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
-
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Optional;
-import java.util.stream.Collectors;
-import java.util.stream.IntStream;
-import javax.ws.rs.core.Response;
 
 public class InviteResourceTest extends CategoryTest {
   @Mock private InvitesService invitesService;

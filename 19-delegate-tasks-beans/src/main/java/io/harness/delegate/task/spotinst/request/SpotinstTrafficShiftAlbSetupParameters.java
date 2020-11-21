@@ -3,11 +3,11 @@ package io.harness.delegate.task.spotinst.request;
 import static io.harness.delegate.task.spotinst.request.SpotInstTaskParameters.SpotInstTaskType.SPOT_INST_ALB_SHIFT_SETUP;
 
 import io.harness.delegate.task.aws.LbDetailsForAlbTrafficShift;
+
+import java.util.List;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
-
-import java.util.List;
 
 @Data
 @EqualsAndHashCode(callSuper = true)

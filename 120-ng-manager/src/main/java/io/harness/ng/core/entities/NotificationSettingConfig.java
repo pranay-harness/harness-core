@@ -1,9 +1,8 @@
 package io.harness.ng.core.entities;
 
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
-import lombok.Data;
-
 import javax.validation.constraints.NotNull;
+import lombok.Data;
 
 @Data
 @JsonTypeInfo(

@@ -4,10 +4,8 @@ import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.network.Http.connectableHttpUrl;
-import static java.util.stream.Collectors.toList;
 
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
+import static java.util.stream.Collectors.toList;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.artifact.ArtifactMetadataKeys;
@@ -25,14 +23,9 @@ import io.harness.exception.InvalidCredentialsException;
 import io.harness.exception.WingsException;
 import io.harness.expression.RegexFunctor;
 import io.harness.network.Http;
-import lombok.extern.slf4j.Slf4j;
-import net.jodah.expiringmap.ExpirationPolicy;
-import net.jodah.expiringmap.ExpiringMap;
-import okhttp3.Credentials;
-import okhttp3.Headers;
-import org.apache.commons.lang3.tuple.ImmutablePair;
-import retrofit2.Response;
 
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import java.io.IOException;
 import java.net.URL;
 import java.util.ArrayList;
@@ -43,6 +36,13 @@ import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+import lombok.extern.slf4j.Slf4j;
+import net.jodah.expiringmap.ExpirationPolicy;
+import net.jodah.expiringmap.ExpiringMap;
+import okhttp3.Credentials;
+import okhttp3.Headers;
+import org.apache.commons.lang3.tuple.ImmutablePair;
+import retrofit2.Response;
 
 /**
  * Created by anubhaw on 1/6/17.

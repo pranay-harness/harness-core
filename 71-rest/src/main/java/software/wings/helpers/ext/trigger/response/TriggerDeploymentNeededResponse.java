@@ -1,6 +1,7 @@
 package software.wings.helpers.ext.trigger.response;
 
 import io.harness.beans.ExecutionStatus;
+
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;

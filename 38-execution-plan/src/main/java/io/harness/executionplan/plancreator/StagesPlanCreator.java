@@ -1,9 +1,8 @@
 package io.harness.executionplan.plancreator;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
-import static java.util.Collections.singletonList;
 
-import com.google.inject.Inject;
+import static java.util.Collections.singletonList;
 
 import io.harness.executionplan.core.AbstractPlanCreatorWithChildren;
 import io.harness.executionplan.core.ExecutionPlanCreationContext;
@@ -27,14 +26,15 @@ import io.harness.yaml.core.ParallelStageElement;
 import io.harness.yaml.core.StageElement;
 import io.harness.yaml.core.auxiliary.intfc.StageElementWrapper;
 import io.harness.yaml.core.intfc.StageType;
-import lombok.extern.slf4j.Slf4j;
 
+import com.google.inject.Inject;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 import javax.validation.constraints.NotNull;
+import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class StagesPlanCreator extends AbstractPlanCreatorWithChildren<List<StageElementWrapper>>

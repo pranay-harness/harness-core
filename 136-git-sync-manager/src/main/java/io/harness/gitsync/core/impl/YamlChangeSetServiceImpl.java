@@ -6,13 +6,10 @@ import static io.harness.gitsync.common.beans.YamlChangeSet.MAX_RETRY_COUNT_EXCE
 import static io.harness.gitsync.common.beans.YamlChangeSet.Status.QUEUED;
 import static io.harness.gitsync.common.beans.YamlChangeSet.Status.RUNNING;
 import static io.harness.gitsync.common.beans.YamlChangeSet.Status.SKIPPED;
+
 import static java.lang.Boolean.TRUE;
 import static java.lang.String.format;
 
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
-
-import com.mongodb.client.result.UpdateResult;
 import io.harness.delegate.beans.git.YamlGitConfigDTO;
 import io.harness.exception.NoResultFoundException;
 import io.harness.exception.WingsException;
@@ -25,14 +22,10 @@ import io.harness.gitsync.core.service.YamlChangeSetService;
 import io.harness.gitsync.core.service.YamlGitService;
 import io.harness.gitsync.core.service.YamlSuccessfulChangeService;
 import io.harness.logging.ExceptionLogger;
-import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.StringUtils;
-import org.springframework.data.mongodb.core.aggregation.Aggregation;
-import org.springframework.data.mongodb.core.aggregation.AggregationResults;
-import org.springframework.data.mongodb.core.query.Criteria;
-import org.springframework.data.mongodb.core.query.Query;
-import org.springframework.data.mongodb.core.query.Update;
 
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
+import com.mongodb.client.result.UpdateResult;
 import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
@@ -40,6 +33,13 @@ import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 import javax.validation.constraints.NotNull;
 import javax.validation.executable.ValidateOnExecution;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
+import org.springframework.data.mongodb.core.aggregation.Aggregation;
+import org.springframework.data.mongodb.core.aggregation.AggregationResults;
+import org.springframework.data.mongodb.core.query.Criteria;
+import org.springframework.data.mongodb.core.query.Query;
+import org.springframework.data.mongodb.core.query.Update;
 
 @Singleton
 @ValidateOnExecution

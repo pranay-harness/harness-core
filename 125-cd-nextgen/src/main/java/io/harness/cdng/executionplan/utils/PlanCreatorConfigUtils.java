@@ -7,9 +7,9 @@ import io.harness.ngpipeline.pipeline.beans.yaml.NgPipeline;
 import io.harness.yaml.core.ParallelStageElement;
 import io.harness.yaml.core.StageElement;
 import io.harness.yaml.core.auxiliary.intfc.StageElementWrapper;
-import lombok.experimental.UtilityClass;
 
 import java.util.Optional;
+import lombok.experimental.UtilityClass;
 
 @UtilityClass
 public class PlanCreatorConfigUtils {

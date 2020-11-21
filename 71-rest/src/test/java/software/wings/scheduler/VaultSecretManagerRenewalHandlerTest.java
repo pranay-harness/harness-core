@@ -1,29 +1,31 @@
 package software.wings.scheduler;
 
 import static io.harness.rule.OwnerRule.UTKARSH;
+
+import static software.wings.beans.Application.GLOBAL_APP_ID;
+import static software.wings.beans.alert.AlertType.InvalidKMS;
+
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
-import static software.wings.beans.Application.GLOBAL_APP_ID;
-import static software.wings.beans.alert.AlertType.InvalidKMS;
-
-import com.google.inject.Inject;
 
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
+
 import software.wings.WingsBaseTest;
 import software.wings.beans.VaultConfig;
 import software.wings.beans.alert.KmsSetupAlert;
 import software.wings.service.intfc.AlertService;
 import software.wings.service.intfc.security.VaultService;
 
+import com.google.inject.Inject;
 import java.time.Duration;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
 
 public class VaultSecretManagerRenewalHandlerTest extends WingsBaseTest {
   @Mock private VaultService vaultService;

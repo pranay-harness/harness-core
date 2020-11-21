@@ -8,10 +8,7 @@ import static io.harness.exception.WingsException.USER;
 import static io.harness.pcf.model.PcfConstants.PCF_CONFIG_FILE_EXTENSION;
 import static io.harness.threading.Morpheus.quietSleep;
 import static io.harness.validation.Validator.notNullCheck;
-import static java.time.Duration.ofMillis;
-import static java.util.Arrays.asList;
-import static java.util.stream.Collectors.toList;
-import static org.apache.commons.collections4.MapUtils.emptyIfNull;
+
 import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static software.wings.beans.yaml.YamlConstants.ENVIRONMENTS_FOLDER;
 import static software.wings.beans.yaml.YamlConstants.GIT_YAML_LOG_PREFIX;
@@ -71,26 +68,11 @@ import static software.wings.beans.yaml.YamlType.VERIFICATION_PROVIDER;
 import static software.wings.beans.yaml.YamlType.WORKFLOW;
 import static software.wings.security.UserThreadLocal.userGuard;
 
-import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Strings;
-import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
-import com.google.common.collect.Sets;
-import com.google.common.util.concurrent.ThreadFactoryBuilder;
-import com.google.common.util.concurrent.TimeLimiter;
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
+import static java.time.Duration.ofMillis;
+import static java.util.Arrays.asList;
+import static java.util.stream.Collectors.toList;
+import static org.apache.commons.collections4.MapUtils.emptyIfNull;
 
-import com.esotericsoftware.yamlbeans.YamlReader;
-import com.fasterxml.jackson.databind.DeserializationFeature;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.exc.UnrecognizedPropertyException;
-import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
-import com.fasterxml.jackson.dataformat.yaml.snakeyaml.Yaml;
-import com.fasterxml.jackson.dataformat.yaml.snakeyaml.constructor.SafeConstructor;
-import com.fasterxml.jackson.dataformat.yaml.snakeyaml.error.Mark;
-import com.fasterxml.jackson.dataformat.yaml.snakeyaml.scanner.ScannerException;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.eraro.ErrorCode;
@@ -105,13 +87,7 @@ import io.harness.logging.ExceptionLogger;
 import io.harness.rest.RestResponse;
 import io.harness.rest.RestResponse.Builder;
 import io.harness.yaml.BaseYaml;
-import lombok.AllArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.collections.CollectionUtils;
-import org.apache.commons.io.FileUtils;
-import org.apache.commons.io.IOUtils;
-import org.apache.commons.lang3.StringUtils;
-import org.apache.commons.lang3.tuple.Pair;
+
 import software.wings.audit.AuditHeader;
 import software.wings.beans.Application;
 import software.wings.beans.Base;
@@ -146,6 +122,25 @@ import software.wings.yaml.YamlOperationResponse;
 import software.wings.yaml.YamlOperationResponse.YamlOperationResponseBuilder;
 import software.wings.yaml.YamlPayload;
 
+import com.esotericsoftware.yamlbeans.YamlReader;
+import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.exc.UnrecognizedPropertyException;
+import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
+import com.fasterxml.jackson.dataformat.yaml.snakeyaml.Yaml;
+import com.fasterxml.jackson.dataformat.yaml.snakeyaml.constructor.SafeConstructor;
+import com.fasterxml.jackson.dataformat.yaml.snakeyaml.error.Mark;
+import com.fasterxml.jackson.dataformat.yaml.snakeyaml.scanner.ScannerException;
+import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Strings;
+import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
+import com.google.common.util.concurrent.ThreadFactoryBuilder;
+import com.google.common.util.concurrent.TimeLimiter;
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -175,6 +170,13 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.regex.Pattern;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
+import lombok.AllArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.collections.CollectionUtils;
+import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.tuple.Pair;
 
 /**
  * @author rktummala on 10/16/17
@@ -431,7 +433,7 @@ public class YamlServiceImpl<Y extends BaseYaml, B extends Base> implements Yaml
         try {
           if (!currFile.isHidden() && !entry.isDirectory()
               && (entry.getName().endsWith(YAML_EXTENSION)
-                     || entry.getName().contains(YamlConstants.CONFIG_FILES_FOLDER))) {
+                  || entry.getName().contains(YamlConstants.CONFIG_FILES_FOLDER))) {
             InputStream stream = zipFile.getInputStream(entry);
             StringWriter writer = new StringWriter();
             IOUtils.copy(stream, writer, "UTF-8");

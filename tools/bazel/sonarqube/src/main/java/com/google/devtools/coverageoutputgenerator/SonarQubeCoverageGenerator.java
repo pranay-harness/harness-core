@@ -1,8 +1,13 @@
 package com.google.devtools.coverageoutputgenerator;
 
+import static com.google.devtools.coverageoutputgenerator.Constants.GCOV_EXTENSION;
+import static com.google.devtools.coverageoutputgenerator.Constants.PROFDATA_EXTENSION;
+import static com.google.devtools.coverageoutputgenerator.Constants.TRACEFILE_EXTENSION;
+import static java.nio.charset.StandardCharsets.UTF_8;
+import static java.nio.file.StandardCopyOption.REPLACE_EXISTING;
+
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableMap;
-
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
@@ -21,12 +26,6 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
-
-import static com.google.devtools.coverageoutputgenerator.Constants.GCOV_EXTENSION;
-import static com.google.devtools.coverageoutputgenerator.Constants.PROFDATA_EXTENSION;
-import static com.google.devtools.coverageoutputgenerator.Constants.TRACEFILE_EXTENSION;
-import static java.nio.charset.StandardCharsets.UTF_8;
-import static java.nio.file.StandardCopyOption.REPLACE_EXISTING;
 
 /**
  * <p>A copy of {@link Main} which instead uses the SonarQubeCoverageReportPrinter

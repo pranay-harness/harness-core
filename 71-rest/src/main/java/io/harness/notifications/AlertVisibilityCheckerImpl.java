@@ -2,10 +2,6 @@ package io.harness.notifications;
 
 import static org.apache.commons.collections4.CollectionUtils.intersection;
 
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
-
-import lombok.extern.slf4j.Slf4j;
 import software.wings.beans.User;
 import software.wings.beans.alert.Alert;
 import software.wings.beans.alert.AlertNotificationRule;
@@ -13,10 +9,13 @@ import software.wings.beans.security.UserGroup;
 import software.wings.service.intfc.AlertNotificationRuleService;
 import software.wings.service.intfc.UserGroupService;
 
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 import javax.annotation.Nonnull;
+import lombok.extern.slf4j.Slf4j;
 
 @Singleton
 @Slf4j

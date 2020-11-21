@@ -2,20 +2,20 @@ package io.harness.threading;
 
 import static io.harness.rule.OwnerRule.GEORGE;
 import static io.harness.threading.Morpheus.sleep;
-import static org.assertj.core.api.Assertions.assertThat;
 
-import com.google.common.util.concurrent.ThreadFactoryBuilder;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
 
+import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import java.time.Duration;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 public class SchedulableTest {
   @Test

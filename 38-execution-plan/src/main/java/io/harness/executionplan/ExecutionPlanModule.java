@@ -2,9 +2,6 @@ package io.harness.executionplan;
 
 import static com.google.inject.Scopes.SINGLETON;
 
-import com.google.inject.AbstractModule;
-import com.google.inject.name.Names;
-
 import io.harness.executionplan.core.ExecutionPlanCreatorRegistry;
 import io.harness.executionplan.core.impl.ExecutionPlanCreatorRegistryImpl;
 import io.harness.executionplan.plancreator.GenericStepPlanCreator;
@@ -20,6 +17,9 @@ import io.harness.executionplan.stepsdependency.StepDependencyService;
 import io.harness.executionplan.stepsdependency.resolvers.ExpressionStepDependencyResolver;
 import io.harness.executionplan.stepsdependency.resolvers.RefObjectStepDependencyResolver;
 import io.harness.executionplan.stepsdependency.service.StepDependencyServiceImpl;
+
+import com.google.inject.AbstractModule;
+import com.google.inject.name.Names;
 
 public class ExecutionPlanModule extends AbstractModule {
   private static volatile ExecutionPlanModule instance;

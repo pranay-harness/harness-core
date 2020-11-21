@@ -1,10 +1,10 @@
 package io.harness.delegate.beans;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import io.harness.beans.ChecksumType;
 import io.harness.beans.FileMetadata;
 import io.harness.delegate.service.DelegateAgentFileService.FileBucket;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;

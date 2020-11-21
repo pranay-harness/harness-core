@@ -2,15 +2,15 @@ package software.wings.yaml;
 
 import static software.wings.yaml.YamlVersion.Builder.aYamlVersion;
 
-import com.google.common.base.MoreObjects;
-
-import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.annotation.HarnessEntity;
-import lombok.experimental.FieldNameConstants;
-import org.mongodb.morphia.annotations.Entity;
+
 import software.wings.beans.Base;
 
+import com.github.reinert.jjschema.SchemaIgnore;
+import com.google.common.base.MoreObjects;
 import java.util.Objects;
+import lombok.experimental.FieldNameConstants;
+import org.mongodb.morphia.annotations.Entity;
 
 /**
  * Created by bsollish on 8/30/17

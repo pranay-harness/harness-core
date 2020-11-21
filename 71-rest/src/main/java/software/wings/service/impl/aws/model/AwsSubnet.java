@@ -1,9 +1,8 @@
 package software.wings.service.impl.aws.model;
 
+import java.io.Serializable;
 import lombok.Builder;
 import lombok.Data;
-
-import java.io.Serializable;
 
 @Data
 @Builder

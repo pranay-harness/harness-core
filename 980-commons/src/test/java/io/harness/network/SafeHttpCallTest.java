@@ -1,6 +1,7 @@
 package io.harness.network;
 
 import static io.harness.rule.OwnerRule.GARVIT;
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.spy;
@@ -9,6 +10,8 @@ import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.exception.GeneralException;
 import io.harness.rule.Owner;
+
+import java.io.IOException;
 import okhttp3.MediaType;
 import okhttp3.Protocol;
 import okhttp3.Request;
@@ -17,8 +20,6 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import retrofit2.Call;
 import retrofit2.Response;
-
-import java.io.IOException;
 
 public class SafeHttpCallTest extends CategoryTest {
   @Test(expected = GeneralException.class)

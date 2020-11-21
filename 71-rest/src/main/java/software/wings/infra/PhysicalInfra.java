@@ -1,16 +1,13 @@
 package software.wings.infra;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
+
 import static software.wings.beans.InfrastructureType.PHYSICAL_INFRA;
 import static software.wings.beans.PhysicalInfrastructureMapping.Builder.aPhysicalInfrastructureMapping;
 
-import com.fasterxml.jackson.annotation.JsonTypeName;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
-import lombok.Builder;
-import lombok.Data;
-import lombok.EqualsAndHashCode;
-import org.mongodb.morphia.annotations.Transient;
+
 import software.wings.api.CloudProviderType;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.InfrastructureMappingType;
@@ -18,12 +15,17 @@ import software.wings.beans.PhysicalInfrastructureMapping;
 import software.wings.beans.infrastructure.Host;
 import software.wings.service.impl.yaml.handler.InfraDefinition.CloudProviderInfrastructureYaml;
 
+import com.fasterxml.jackson.annotation.JsonTypeName;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
+import lombok.Builder;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
+import org.mongodb.morphia.annotations.Transient;
 
 @JsonTypeName("PHYSICAL_DATA_CENTER_SSH")
 @Data

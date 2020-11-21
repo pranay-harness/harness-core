@@ -8,9 +8,8 @@ import static io.harness.manage.GlobalContextManager.obtainGlobalContextCopy;
 import static io.harness.manage.GlobalContextManager.upsertGlobalContextRecord;
 import static io.harness.rule.OwnerRule.ADWAIT;
 import static io.harness.rule.OwnerRule.GEORGE;
-import static org.assertj.core.api.Assertions.assertThat;
 
-import com.google.common.collect.ImmutableMap;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
@@ -21,14 +20,15 @@ import io.harness.logging.AutoLogContext;
 import io.harness.logging.AutoLogRemoveContext;
 import io.harness.manage.GlobalContextManager.GlobalContextGuard;
 import io.harness.rule.Owner;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
-import org.slf4j.MDC;
 
+import com.google.common.collect.ImmutableMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.atomic.AtomicBoolean;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
+import org.slf4j.MDC;
 
 public class ManagedExecutorServiceTest extends CategoryTest {
   @Test

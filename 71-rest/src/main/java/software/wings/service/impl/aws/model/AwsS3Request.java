@@ -2,12 +2,13 @@ package software.wings.service.impl.aws.model;
 
 import io.harness.delegate.task.TaskParameters;
 import io.harness.security.encryption.EncryptedDataDetail;
-import lombok.Data;
-import lombok.EqualsAndHashCode;
+
 import software.wings.beans.AwsConfig;
 
 import java.util.List;
 import javax.validation.constraints.NotNull;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
 
 @Data
 @EqualsAndHashCode(callSuper = true)

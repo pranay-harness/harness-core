@@ -2,11 +2,11 @@ package io.harness.ngtriggers.service;
 
 import io.harness.ngtriggers.beans.entity.NGTriggerEntity;
 import io.harness.ngtriggers.beans.entity.TriggerWebhookEvent;
+
+import java.util.Optional;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.mongodb.core.query.Criteria;
-
-import java.util.Optional;
 
 public interface NGTriggerService {
   NGTriggerEntity create(NGTriggerEntity ngTriggerEntity);

@@ -1,11 +1,12 @@
 package software.wings.graphql.datafetcher.cloudefficiencyevents;
 
+import software.wings.security.PermissionAttribute;
+import software.wings.security.annotations.Scope;
+
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Value;
 import lombok.experimental.FieldDefaults;
-import software.wings.security.PermissionAttribute;
-import software.wings.security.annotations.Scope;
 
 @Value
 @Builder

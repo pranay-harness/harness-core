@@ -2,9 +2,9 @@ package io.harness.ng.core.delegate.sample;
 
 import io.harness.tasks.ResponseData;
 import io.harness.waiter.NotifyCallback;
-import lombok.extern.slf4j.Slf4j;
 
 import java.util.Map;
+import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class SimpleNotifyCallback implements NotifyCallback {

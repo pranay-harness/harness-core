@@ -1,10 +1,9 @@
 package software.wings.service.impl.analysis;
 
-import lombok.Builder;
-import lombok.Data;
-
 import java.util.HashMap;
 import java.util.Map;
+import lombok.Builder;
+import lombok.Data;
 
 @Data
 @Builder

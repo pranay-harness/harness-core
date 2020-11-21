@@ -1,7 +1,7 @@
 package migrations.all;
 
 import static io.harness.persistence.HQuery.excludeAuthority;
-import static org.apache.commons.lang3.StringUtils.isNotBlank;
+
 import static software.wings.audit.ResourceType.APPLICATION;
 import static software.wings.audit.ResourceType.ENVIRONMENT;
 import static software.wings.audit.ResourceType.PIPELINE;
@@ -14,15 +14,11 @@ import static software.wings.audit.ResourceType.TRIGGER;
 import static software.wings.audit.ResourceType.USER_GROUP;
 import static software.wings.audit.ResourceType.WORKFLOW;
 
-import com.google.inject.Inject;
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
-import com.mongodb.BulkWriteOperation;
-import com.mongodb.DBCollection;
 import io.harness.data.structure.UUIDGenerator;
 import io.harness.persistence.HIterator;
-import lombok.extern.slf4j.Slf4j;
-import migrations.Migration;
-import org.mongodb.morphia.Morphia;
+
 import software.wings.beans.Application;
 import software.wings.beans.Application.ApplicationKeys;
 import software.wings.beans.Environment;
@@ -50,10 +46,16 @@ import software.wings.beans.trigger.Trigger.TriggerKeys;
 import software.wings.dl.WingsPersistence;
 import software.wings.settings.SettingValue;
 
+import com.google.inject.Inject;
+import com.mongodb.BulkWriteOperation;
+import com.mongodb.DBCollection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
+import lombok.extern.slf4j.Slf4j;
+import migrations.Migration;
+import org.mongodb.morphia.Morphia;
 
 /**
  * This migration will create an entry for any auditable entity into ResourceLookup collection

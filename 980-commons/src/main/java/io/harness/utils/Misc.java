@@ -3,12 +3,12 @@ package io.harness.utils;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
 import io.harness.version.ServiceApiVersion;
-import org.apache.commons.codec.binary.Hex;
-import org.apache.commons.lang3.StringUtils;
 
 import java.security.NoSuchAlgorithmException;
 import javax.crypto.KeyGenerator;
 import javax.crypto.SecretKey;
+import org.apache.commons.codec.binary.Hex;
+import org.apache.commons.lang3.StringUtils;
 
 public class Misc {
   private Misc() {

@@ -1,18 +1,18 @@
 package io.harness.notification.service;
 
-import com.google.common.io.Resources;
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
 import io.harness.notification.SeedDataConfiguration;
 import io.harness.notification.entities.NotificationTemplate;
 import io.harness.notification.service.api.NotificationTemplateService;
 import io.harness.notification.service.api.SeedDataPopulaterService;
 import io.harness.templates.PredefinedTemplate;
-import lombok.AllArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 
+import com.google.common.io.Resources;
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import java.io.IOException;
 import java.net.URL;
+import lombok.AllArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Singleton

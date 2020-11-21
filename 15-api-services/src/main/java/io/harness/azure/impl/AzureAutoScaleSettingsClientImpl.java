@@ -4,12 +4,19 @@ import static io.harness.azure.model.AzureConstants.RESOURCE_GROUP_NAME_NULL_VAL
 import static io.harness.azure.model.AzureConstants.TARGET_RESOURCE_ID_NULL_VALIDATION_MSG;
 import static io.harness.azure.model.AzureConstants.VMSS_AUTOSCALE_SUFIX;
 import static io.harness.exception.WingsException.USER;
+
 import static java.lang.String.format;
 import static java.util.Objects.isNull;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 
-import com.google.inject.Singleton;
+import io.harness.azure.AzureClient;
+import io.harness.azure.client.AzureAutoScaleSettingsClient;
+import io.harness.azure.model.AzureConfig;
+import io.harness.azure.model.AzureConstants;
+import io.harness.azure.utility.AzureResourceUtility;
+import io.harness.exception.InvalidRequestException;
 
+import com.google.inject.Singleton;
 import com.microsoft.azure.PagedList;
 import com.microsoft.azure.management.Azure;
 import com.microsoft.azure.management.monitor.AutoscaleProfile;
@@ -18,14 +25,6 @@ import com.microsoft.azure.management.monitor.ScaleCapacity;
 import com.microsoft.azure.management.monitor.implementation.AutoscaleProfileInner;
 import com.microsoft.azure.management.monitor.implementation.AutoscaleSettingResourceInner;
 import com.microsoft.azure.serializer.AzureJacksonAdapter;
-import io.harness.azure.AzureClient;
-import io.harness.azure.client.AzureAutoScaleSettingsClient;
-import io.harness.azure.model.AzureConfig;
-import io.harness.azure.model.AzureConstants;
-import io.harness.azure.utility.AzureResourceUtility;
-import io.harness.exception.InvalidRequestException;
-import lombok.extern.slf4j.Slf4j;
-
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -34,6 +33,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
+import lombok.extern.slf4j.Slf4j;
 
 @Singleton
 @Slf4j

@@ -2,23 +2,23 @@ package io.harness.azure.impl;
 
 import static io.harness.azure.model.AzureConstants.ACR_REGISTRY_NAME_BLANK_VALIDATION_MSG;
 import static io.harness.azure.model.AzureConstants.RESOURCE_GROUP_NAME_NULL_VALIDATION_MSG;
+
 import static org.apache.commons.lang3.StringUtils.isBlank;
 
-import com.google.inject.Singleton;
-
-import com.microsoft.azure.PagedList;
-import com.microsoft.azure.management.Azure;
-import com.microsoft.azure.management.containerregistry.Registry;
-import com.microsoft.azure.management.containerregistry.RegistryCredentials;
 import io.harness.azure.AzureClient;
 import io.harness.azure.client.AzureContainerRegistryClient;
 import io.harness.azure.context.AzureContainerRegistryClientContext;
 import io.harness.azure.model.AzureConfig;
-import lombok.extern.slf4j.Slf4j;
 
+import com.google.inject.Singleton;
+import com.microsoft.azure.PagedList;
+import com.microsoft.azure.management.Azure;
+import com.microsoft.azure.management.containerregistry.Registry;
+import com.microsoft.azure.management.containerregistry.RegistryCredentials;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.Optional;
+import lombok.extern.slf4j.Slf4j;
 
 @Singleton
 @Slf4j

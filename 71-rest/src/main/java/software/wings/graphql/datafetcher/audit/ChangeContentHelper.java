@@ -1,11 +1,8 @@
 package software.wings.graphql.datafetcher.audit;
 
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
-
 import io.harness.event.handler.impl.segment.SegmentHandler;
 import io.harness.event.handler.impl.segment.SegmentHelper;
-import lombok.extern.slf4j.Slf4j;
+
 import software.wings.beans.Account;
 import software.wings.beans.User;
 import software.wings.graphql.datafetcher.Principal;
@@ -13,8 +10,11 @@ import software.wings.resources.graphql.TriggeredByType;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.UserService;
 
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import java.util.HashMap;
 import java.util.Map;
+import lombok.extern.slf4j.Slf4j;
 
 @Singleton
 @Slf4j

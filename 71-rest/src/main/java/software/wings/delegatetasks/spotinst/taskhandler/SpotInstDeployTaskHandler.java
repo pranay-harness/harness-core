@@ -8,25 +8,26 @@ import static io.harness.spotinst.model.SpotInstConstants.DOWN_SCALE_COMMAND_UNI
 import static io.harness.spotinst.model.SpotInstConstants.DOWN_SCALE_STEADY_STATE_WAIT_COMMAND_UNIT;
 import static io.harness.spotinst.model.SpotInstConstants.UP_SCALE_COMMAND_UNIT;
 import static io.harness.spotinst.model.SpotInstConstants.UP_SCALE_STEADY_STATE_WAIT_COMMAND_UNIT;
+
 import static java.lang.String.format;
 import static java.util.Collections.emptyList;
 
-import com.google.common.annotations.VisibleForTesting;
-import com.google.inject.Singleton;
-
-import com.amazonaws.services.ec2.model.Instance;
 import io.harness.delegate.task.spotinst.request.SpotInstDeployTaskParameters;
 import io.harness.delegate.task.spotinst.request.SpotInstTaskParameters;
 import io.harness.delegate.task.spotinst.response.SpotInstDeployTaskResponse;
 import io.harness.delegate.task.spotinst.response.SpotInstTaskExecutionResponse;
 import io.harness.spotinst.model.ElastiGroup;
-import lombok.NoArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
+
 import software.wings.beans.AwsConfig;
 import software.wings.beans.SpotInstConfig;
 import software.wings.beans.command.ExecutionLogCallback;
 
+import com.amazonaws.services.ec2.model.Instance;
+import com.google.common.annotations.VisibleForTesting;
+import com.google.inject.Singleton;
 import java.util.List;
+import lombok.NoArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 @Singleton
 @NoArgsConstructor
@@ -106,12 +107,12 @@ public class SpotInstDeployTaskHandler extends SpotInstTaskHandler {
 
     List<Instance> newElastiGroupInstances = newElastiGroup != null
         ? getAllEc2InstancesOfElastiGroup(
-              awsConfig, deployTaskParameters.getAwsRegion(), spotInstToken, spotInstAccountId, newElastiGroup.getId())
+            awsConfig, deployTaskParameters.getAwsRegion(), spotInstToken, spotInstAccountId, newElastiGroup.getId())
         : emptyList();
 
     List<Instance> ec2InstancesForOlderElastiGroup = oldElastiGroup != null
         ? getAllEc2InstancesOfElastiGroup(
-              awsConfig, deployTaskParameters.getAwsRegion(), spotInstToken, spotInstAccountId, oldElastiGroup.getId())
+            awsConfig, deployTaskParameters.getAwsRegion(), spotInstToken, spotInstAccountId, oldElastiGroup.getId())
         : emptyList();
 
     return SpotInstTaskExecutionResponse.builder()

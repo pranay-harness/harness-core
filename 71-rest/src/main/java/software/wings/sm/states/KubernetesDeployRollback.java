@@ -3,12 +3,12 @@ package software.wings.sm.states;
 import static software.wings.beans.command.KubernetesResizeParams.KubernetesResizeParamsBuilder.aKubernetesResizeParams;
 import static software.wings.sm.StateType.KUBERNETES_DEPLOY_ROLLBACK;
 
-import com.github.reinert.jjschema.Attributes;
 import software.wings.beans.InstanceUnitType;
 import software.wings.beans.command.ContainerResizeParams;
 import software.wings.beans.container.Label;
 import software.wings.sm.ExecutionContext;
 
+import com.github.reinert.jjschema.Attributes;
 import java.util.Map;
 import java.util.stream.Collectors;
 
@@ -67,7 +67,7 @@ public class KubernetesDeployRollback extends ContainerServiceDeploy {
 
     Map<String, String> labelMap = (contextData.containerElement.getLookupLabels() != null)
         ? contextData.containerElement.getLookupLabels().stream().collect(
-              Collectors.toMap(Label::getName, Label::getValue))
+            Collectors.toMap(Label::getName, Label::getValue))
         : null;
 
     return aKubernetesResizeParams()

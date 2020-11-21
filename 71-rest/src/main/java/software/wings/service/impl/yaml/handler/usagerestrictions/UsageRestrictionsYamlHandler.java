@@ -4,14 +4,10 @@ import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
-import com.google.common.collect.Lists;
-import com.google.common.collect.Sets;
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
-
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
+
 import software.wings.beans.Application;
 import software.wings.beans.Environment;
 import software.wings.beans.yaml.ChangeContext;
@@ -26,6 +22,10 @@ import software.wings.service.impl.yaml.handler.BaseYamlHandler;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.EnvironmentService;
 
+import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -194,7 +194,7 @@ public class UsageRestrictionsYamlHandler extends BaseYamlHandler<UsageRestricti
     UsageRestrictions.Yaml.YamlBuilder usageRestrictionsYamlBuilder = UsageRestrictions.Yaml.builder();
     List<AppEnvRestriction.Yaml> appEnvRestrictionYamlList = usageRestrictions.getAppEnvRestrictions()
                                                                  .stream()
-                                                                 .map(this ::constructAppEnvRestrictionYaml)
+                                                                 .map(this::constructAppEnvRestrictionYaml)
                                                                  .collect(Collectors.toList());
     usageRestrictionsYamlBuilder.appEnvRestrictions(appEnvRestrictionYamlList);
     return usageRestrictionsYamlBuilder.build();

@@ -1,19 +1,18 @@
 package migrations.all;
 
-import com.google.inject.Inject;
+import software.wings.beans.trigger.Trigger;
+import software.wings.dl.WingsPersistence;
 
+import com.google.inject.Inject;
 import com.mongodb.BasicDBList;
 import com.mongodb.BasicDBObject;
 import com.mongodb.BulkWriteOperation;
 import com.mongodb.DBCollection;
 import com.mongodb.DBCursor;
 import com.mongodb.DBObject;
+import java.util.Arrays;
 import lombok.extern.slf4j.Slf4j;
 import migrations.Migration;
-import software.wings.beans.trigger.Trigger;
-import software.wings.dl.WingsPersistence;
-
-import java.util.Arrays;
 
 @Slf4j
 @SuppressWarnings("deprecation")

@@ -1,23 +1,20 @@
 package software.wings.graphql.datafetcher.audit;
 
 import static io.harness.rule.OwnerRule.VARDAN_BANSAL;
+
+import static software.wings.beans.Account.Builder.anAccount;
+
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyMap;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-import static software.wings.beans.Account.Builder.anAccount;
-
-import com.google.inject.Inject;
 
 import io.harness.category.element.UnitTests;
 import io.harness.event.handler.impl.segment.SegmentHandler;
 import io.harness.rule.Owner;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
+
 import software.wings.beans.Account;
 import software.wings.beans.User;
 import software.wings.graphql.datafetcher.AbstractDataFetcherTestBase;
@@ -26,7 +23,12 @@ import software.wings.resources.graphql.TriggeredByType;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.UserService;
 
+import com.google.inject.Inject;
 import java.net.URISyntaxException;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
 
 public class ChangeContentHelperTest extends AbstractDataFetcherTestBase {
   @Mock private SegmentHandler segmentHandler;

@@ -1,10 +1,10 @@
 package io.harness.governance.pipeline.service.model;
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import io.harness.data.structure.CollectionUtils;
-import lombok.Value;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import java.util.List;
+import lombok.Value;
 
 @Value
 @JsonIgnoreProperties(ignoreUnknown = true)

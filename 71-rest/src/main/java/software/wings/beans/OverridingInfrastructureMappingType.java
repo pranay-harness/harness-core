@@ -1,12 +1,11 @@
 package software.wings.beans;
 
-import com.google.common.base.MoreObjects;
-
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.databind.JsonNode;
 import software.wings.stencils.OverridingStencil;
 import software.wings.stencils.StencilCategory;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.google.common.base.MoreObjects;
 import java.util.Optional;
 
 /**

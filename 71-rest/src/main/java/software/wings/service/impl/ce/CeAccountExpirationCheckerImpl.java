@@ -3,18 +3,18 @@ package software.wings.service.impl.ce;
 import static io.harness.annotations.dev.HarnessTeam.CE;
 import static io.harness.persistence.HQuery.excludeAuthority;
 
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
-
-import com.github.benmanes.caffeine.cache.Caffeine;
-import com.github.benmanes.caffeine.cache.LoadingCache;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.exception.InvalidRequestException;
 import io.harness.persistence.HPersistence;
+
 import software.wings.beans.Account;
 import software.wings.beans.Account.AccountKeys;
 import software.wings.service.intfc.ce.CeAccountExpirationChecker;
 
+import com.github.benmanes.caffeine.cache.Caffeine;
+import com.github.benmanes.caffeine.cache.LoadingCache;
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import javax.annotation.ParametersAreNonnullByDefault;
 
 @OwnedBy(CE)
@@ -25,7 +25,7 @@ public class CeAccountExpirationCheckerImpl implements CeAccountExpirationChecke
   private static final long CACHE_SIZE = 1000;
 
   private LoadingCache<String, Boolean> accountIdToIsCeEnabled =
-      Caffeine.newBuilder().maximumSize(CACHE_SIZE).build(this ::isCeEnabledForAccount);
+      Caffeine.newBuilder().maximumSize(CACHE_SIZE).build(this::isCeEnabledForAccount);
 
   @Override
   public void checkIsCeEnabled(String accountId) {

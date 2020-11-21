@@ -2,15 +2,17 @@ package io.harness;
 
 import static io.harness.rule.OwnerRule.RUSHABH;
 
-import graphql.schema.CoercingParseLiteralException;
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
+
+import software.wings.WingsBaseTest;
+import software.wings.graphql.scalar.LongScalar;
+
+import graphql.schema.CoercingParseLiteralException;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.junit.rules.ExpectedException;
-import software.wings.WingsBaseTest;
-import software.wings.graphql.scalar.LongScalar;
 
 public class LongScalarTest extends WingsBaseTest {
   @Rule public ExpectedException thrown = ExpectedException.none();

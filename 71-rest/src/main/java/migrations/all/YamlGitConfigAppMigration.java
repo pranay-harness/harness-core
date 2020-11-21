@@ -1,15 +1,13 @@
 package migrations.all;
 
 import static io.harness.persistence.HQuery.excludeAuthority;
-import static software.wings.common.Constants.ACCOUNT_ID_KEY;
 
-import com.google.inject.Inject;
+import static software.wings.common.Constants.ACCOUNT_ID_KEY;
 
 import io.harness.beans.EncryptedData;
 import io.harness.beans.EncryptedData.EncryptedDataKeys;
 import io.harness.persistence.HIterator;
-import lombok.extern.slf4j.Slf4j;
-import migrations.Migration;
+
 import software.wings.beans.Account;
 import software.wings.beans.Application;
 import software.wings.beans.EntityType;
@@ -17,6 +15,10 @@ import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.yaml.YamlGitService;
 import software.wings.yaml.gitSync.YamlGitConfig;
 import software.wings.yaml.gitSync.YamlGitConfig.SyncMode;
+
+import com.google.inject.Inject;
+import lombok.extern.slf4j.Slf4j;
+import migrations.Migration;
 
 @Slf4j
 public class YamlGitConfigAppMigration implements Migration {

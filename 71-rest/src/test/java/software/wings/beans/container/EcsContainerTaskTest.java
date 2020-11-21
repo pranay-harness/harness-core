@@ -2,17 +2,18 @@ package software.wings.beans.container;
 
 import static io.harness.rule.OwnerRule.ADWAIT;
 import static io.harness.rule.OwnerRule.GEORGE;
+
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 
-import com.amazonaws.services.ecs.model.TaskDefinition;
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
+
+import com.amazonaws.services.ecs.model.TaskDefinition;
+import java.util.List;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
-
-import java.util.List;
 
 public class EcsContainerTaskTest extends CategoryTest {
   public static final String CONTAINER_NAME = "containerName";

@@ -2,17 +2,18 @@ package software.wings.beans.ce;
 
 import static software.wings.audit.ResourceType.CE_CONNECTOR;
 
-import com.fasterxml.jackson.annotation.JsonTypeName;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
-import lombok.Builder;
-import lombok.Data;
-import lombok.EqualsAndHashCode;
+
 import software.wings.beans.AwsCrossAccountAttributes;
 import software.wings.beans.AwsS3BucketDetails;
 import software.wings.settings.SettingValue;
 import software.wings.settings.SettingVariableTypes;
 
+import com.fasterxml.jackson.annotation.JsonTypeName;
 import java.util.List;
+import lombok.Builder;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
 
 @JsonTypeName("CE_AWS")
 @Data

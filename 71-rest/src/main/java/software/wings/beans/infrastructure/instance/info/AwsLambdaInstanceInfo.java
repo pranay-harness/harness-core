@@ -2,9 +2,6 @@ package software.wings.beans.infrastructure.instance.info;
 
 import static org.apache.commons.collections4.ListUtils.emptyIfNull;
 
-import lombok.Builder;
-import lombok.Data;
-import lombok.EqualsAndHashCode;
 import software.wings.beans.Tag;
 import software.wings.beans.infrastructure.instance.InvocationCount;
 
@@ -12,6 +9,9 @@ import java.util.List;
 import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+import lombok.Builder;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
 
 @Data
 @EqualsAndHashCode(callSuper = true)

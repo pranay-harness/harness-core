@@ -1,11 +1,12 @@
 package software.wings.sm.status;
 
-import com.google.inject.Inject;
-
 import io.harness.beans.ExecutionStatus;
+
 import software.wings.sm.status.handlers.NoopWorkflowPropagator;
 import software.wings.sm.status.handlers.WorkflowPausePropagator;
 import software.wings.sm.status.handlers.WorkflowResumePropagator;
+
+import com.google.inject.Inject;
 
 public class WorkflowStatusPropagatorFactory {
   @Inject private WorkflowPausePropagator workflowPausePropagator;

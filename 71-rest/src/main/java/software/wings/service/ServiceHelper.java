@@ -1,14 +1,13 @@
 package software.wings.service;
 
-import com.google.inject.Singleton;
-
-import lombok.extern.slf4j.Slf4j;
 import software.wings.beans.container.PcfServiceSpecification;
 
+import com.google.inject.Singleton;
 import java.io.BufferedReader;
 import java.io.StringReader;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import lombok.extern.slf4j.Slf4j;
 
 @Singleton
 @Slf4j

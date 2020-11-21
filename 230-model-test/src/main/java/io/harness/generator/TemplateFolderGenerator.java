@@ -3,18 +3,19 @@ package io.harness.generator;
 import static io.harness.generator.TemplateGalleryGenerator.TemplateGalleries.HARNESS_GALLERY;
 import static io.harness.generator.TemplateGalleryGenerator.TemplateGalleries.HARNESS_IMPORTED_TEMPLATE_GALLERY;
 import static io.harness.govern.Switch.unhandled;
+
 import static software.wings.beans.Application.GLOBAL_APP_ID;
 
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
-
-import io.github.benas.randombeans.api.EnhancedRandom;
 import software.wings.beans.Account;
 import software.wings.beans.template.TemplateFolder;
 import software.wings.beans.template.TemplateFolder.TemplateFolderBuilder;
 import software.wings.beans.template.TemplateGallery;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.template.TemplateFolderService;
+
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
+import io.github.benas.randombeans.api.EnhancedRandom;
 
 @Singleton
 public class TemplateFolderGenerator {

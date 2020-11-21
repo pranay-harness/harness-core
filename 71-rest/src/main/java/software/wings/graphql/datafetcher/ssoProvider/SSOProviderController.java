@@ -1,10 +1,11 @@
 package software.wings.graphql.datafetcher.ssoProvider;
 
-import lombok.experimental.UtilityClass;
 import software.wings.beans.sso.SSOSettings;
 import software.wings.beans.sso.SSOType;
 import software.wings.graphql.schema.type.QLSSOProvider.QLSSOProviderBuilder;
 import software.wings.graphql.schema.type.aggregation.ssoProvider.QLSSOType;
+
+import lombok.experimental.UtilityClass;
 
 @UtilityClass
 public class SSOProviderController {

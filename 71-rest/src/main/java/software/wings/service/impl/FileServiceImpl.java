@@ -2,15 +2,13 @@ package software.wings.service.impl;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
-import static software.wings.service.impl.FileServiceUtils.isMongoFileIdFormat;
 
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
+import static software.wings.service.impl.FileServiceUtils.isMongoFileIdFormat;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.FileMetadata;
 import io.harness.stream.BoundedInputStream;
-import lombok.extern.slf4j.Slf4j;
+
 import software.wings.DataStorageMode;
 import software.wings.app.MainConfiguration;
 import software.wings.beans.BaseFile;
@@ -19,12 +17,15 @@ import software.wings.beans.GcsFileMetadata.GcsFileMetadataKeys;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.FileService;
 
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import java.io.File;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.List;
 import java.util.Map;
 import javax.validation.executable.ValidateOnExecution;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * This is a wrapper file service implementation which will dual-write files (such as artifact) into Mongo GridFs and

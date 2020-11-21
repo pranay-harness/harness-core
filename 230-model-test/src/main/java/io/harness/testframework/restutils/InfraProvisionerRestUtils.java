@@ -1,17 +1,17 @@
 package io.harness.testframework.restutils;
 
-import com.google.inject.Singleton;
-
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.EmptyRestResponseException;
 import io.harness.rest.RestResponse;
 import io.harness.testframework.framework.Setup;
-import io.restassured.http.ContentType;
-import io.restassured.mapper.ObjectMapperType;
-import io.restassured.specification.RequestSpecification;
+
 import software.wings.beans.InfrastructureProvisioner;
 import software.wings.beans.NameValuePair;
 
+import com.google.inject.Singleton;
+import io.restassured.http.ContentType;
+import io.restassured.mapper.ObjectMapperType;
+import io.restassured.specification.RequestSpecification;
 import java.util.List;
 import javax.ws.rs.core.GenericType;
 

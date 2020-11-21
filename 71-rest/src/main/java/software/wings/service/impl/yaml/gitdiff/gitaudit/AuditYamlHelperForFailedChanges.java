@@ -1,7 +1,7 @@
 package software.wings.service.impl.yaml.gitdiff.gitaudit;
 
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
-import static org.apache.commons.lang3.StringUtils.isBlank;
+
 import static software.wings.beans.Application.Builder.anApplication;
 import static software.wings.beans.Environment.Builder.anEnvironment;
 import static software.wings.beans.Environment.GLOBAL_ENV_ID;
@@ -10,16 +10,11 @@ import static software.wings.beans.Workflow.WorkflowBuilder.aWorkflow;
 import static software.wings.beans.command.ServiceCommand.Builder.aServiceCommand;
 import static software.wings.beans.yaml.YamlConstants.PATH_DELIMITER;
 
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
+import static org.apache.commons.lang3.StringUtils.isBlank;
 
-import com.esotericsoftware.yamlbeans.YamlReader;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.git.model.ChangeType;
-import lombok.Builder;
-import lombok.Value;
-import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.StringUtils;
+
 import software.wings.audit.EntityAuditRecord;
 import software.wings.audit.EntityAuditRecord.EntityAuditRecordBuilder;
 import software.wings.beans.Application;
@@ -53,9 +48,16 @@ import software.wings.service.impl.EntityHelper;
 import software.wings.service.impl.yaml.service.YamlHelper;
 import software.wings.verification.CVConfiguration;
 
+import com.esotericsoftware.yamlbeans.YamlReader;
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import lombok.Builder;
+import lombok.Value;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 
 @Singleton
 @Slf4j
@@ -832,7 +834,9 @@ public class AuditYamlHelperForFailedChanges {
         return Type.DELETE;
       }
 
-      default: { return Type.UPDATE; }
+      default: {
+        return Type.UPDATE;
+      }
     }
   }
 

@@ -1,18 +1,20 @@
 package software.wings.api;
 
-import static com.google.common.base.Joiner.on;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 
+import static com.google.common.base.Joiner.on;
+
 import io.harness.delegate.beans.DelegateTaskNotifyResponseData;
+
+import software.wings.sm.StateExecutionData;
+
+import java.util.List;
+import java.util.Map;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
-import software.wings.sm.StateExecutionData;
-
-import java.util.List;
-import java.util.Map;
 
 @Data
 @Builder

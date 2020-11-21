@@ -1,6 +1,7 @@
 package io.harness.encryptors;
 
 import static io.harness.rule.OwnerRule.UTKARSH;
+
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.CategoryTest;
@@ -9,10 +10,12 @@ import io.harness.data.structure.UUIDGenerator;
 import io.harness.encryptors.clients.LocalEncryptor;
 import io.harness.rule.Owner;
 import io.harness.security.encryption.EncryptedRecord;
+
+import software.wings.beans.LocalEncryptionConfig;
+
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
-import software.wings.beans.LocalEncryptionConfig;
 
 public class LocalEncryptorTest extends CategoryTest {
   private LocalEncryptor localEncryptor;

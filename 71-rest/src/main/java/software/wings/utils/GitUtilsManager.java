@@ -2,15 +2,16 @@ package software.wings.utils;
 
 import static io.harness.validation.Validator.notNullCheck;
 
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
-
 import io.harness.exception.InvalidRequestException;
-import org.apache.commons.lang3.StringUtils;
+
 import software.wings.beans.GitConfig;
 import software.wings.beans.SettingAttribute;
 import software.wings.service.impl.GitConfigHelperService;
 import software.wings.service.intfc.SettingsService;
+
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
+import org.apache.commons.lang3.StringUtils;
 
 @Singleton
 public class GitUtilsManager {

@@ -4,9 +4,8 @@ import static io.harness.logging.CommandExecutionStatus.FAILURE;
 import static io.harness.logging.CommandExecutionStatus.SUCCESS;
 import static io.harness.network.SafeHttpCall.execute;
 import static io.harness.state.StateConstants.DEFAULT_STEADY_STATE_TIMEOUT;
-import static software.wings.service.impl.ContainerMetadataType.K8S;
 
-import com.google.inject.Inject;
+import static software.wings.service.impl.ContainerMetadataType.K8S;
 
 import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.delegate.task.k8s.K8sTaskHelperBase;
@@ -19,8 +18,7 @@ import io.harness.perpetualtask.instancesync.ContainerServicePerpetualTaskParams
 import io.harness.perpetualtask.instancesync.K8sContainerInstanceSyncPerpetualTaskParams;
 import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.serializer.KryoSerializer;
-import lombok.extern.slf4j.Slf4j;
-import org.eclipse.jetty.server.Response;
+
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.infrastructure.instance.info.ContainerInfo;
 import software.wings.delegatetasks.k8s.K8sTaskHelper;
@@ -32,8 +30,11 @@ import software.wings.service.impl.ContainerServiceParams;
 import software.wings.service.impl.instance.sync.response.ContainerSyncResponse;
 import software.wings.service.intfc.ContainerService;
 
+import com.google.inject.Inject;
 import java.time.Instant;
 import java.util.List;
+import lombok.extern.slf4j.Slf4j;
+import org.eclipse.jetty.server.Response;
 
 @Slf4j
 public class ContainerInstanceSyncPerpetualTaskExecutor implements PerpetualTaskExecutor {

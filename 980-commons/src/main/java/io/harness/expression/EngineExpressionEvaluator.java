@@ -1,6 +1,7 @@
 package io.harness.expression;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
+
 import static java.lang.String.format;
 
 import io.harness.annotations.dev.OwnedBy;
@@ -9,16 +10,6 @@ import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.CriticalExpressionEvaluationException;
 import io.harness.exception.FunctorException;
 import io.harness.exception.InvalidRequestException;
-import lombok.Getter;
-import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.jexl3.JexlBuilder;
-import org.apache.commons.jexl3.JexlEngine;
-import org.apache.commons.jexl3.JexlException;
-import org.apache.commons.jexl3.JexlExpression;
-import org.apache.commons.lang3.tuple.Pair;
-import org.apache.commons.logging.impl.NoOpLog;
-import org.apache.commons.text.StrSubstitutor;
-import org.hibernate.validator.constraints.NotEmpty;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -30,6 +21,16 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import javax.validation.constraints.NotNull;
+import lombok.Getter;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.jexl3.JexlBuilder;
+import org.apache.commons.jexl3.JexlEngine;
+import org.apache.commons.jexl3.JexlException;
+import org.apache.commons.jexl3.JexlExpression;
+import org.apache.commons.lang3.tuple.Pair;
+import org.apache.commons.logging.impl.NoOpLog;
+import org.apache.commons.text.StrSubstitutor;
+import org.hibernate.validator.constraints.NotEmpty;
 
 @OwnedBy(CDC)
 @Slf4j

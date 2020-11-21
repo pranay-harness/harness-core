@@ -2,13 +2,13 @@ package io.harness.delegate.service;
 
 import static io.harness.network.SafeHttpCall.execute;
 
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
-
 import io.harness.managerclient.ManagerClient;
+
 import software.wings.beans.ConfigFile;
 import software.wings.delegatetasks.DelegateConfigService;
 
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import java.io.IOException;
 import java.util.List;
 

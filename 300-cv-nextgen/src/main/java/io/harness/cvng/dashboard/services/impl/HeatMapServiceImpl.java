@@ -6,11 +6,6 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.persistence.HQuery.excludeAuthority;
 
-import com.google.common.collect.Lists;
-import com.google.inject.Inject;
-
-import com.mongodb.BasicDBObject;
-import com.mongodb.client.model.DBCollectionUpdateOptions;
 import io.harness.cvng.analysis.services.api.AnalysisService;
 import io.harness.cvng.beans.CVMonitoringCategory;
 import io.harness.cvng.client.NextGenService;
@@ -34,10 +29,11 @@ import io.harness.ng.core.environment.beans.EnvironmentType;
 import io.harness.ng.core.service.dto.ServiceResponseDTO;
 import io.harness.persistence.HIterator;
 import io.harness.persistence.HPersistence;
-import org.mongodb.morphia.UpdateOptions;
-import org.mongodb.morphia.query.Query;
-import org.mongodb.morphia.query.Sort;
 
+import com.google.common.collect.Lists;
+import com.google.inject.Inject;
+import com.mongodb.BasicDBObject;
+import com.mongodb.client.model.DBCollectionUpdateOptions;
 import java.time.Clock;
 import java.time.Duration;
 import java.time.Instant;
@@ -56,6 +52,9 @@ import java.util.TreeSet;
 import java.util.stream.Collectors;
 import javax.annotation.Nullable;
 import javax.validation.constraints.NotNull;
+import org.mongodb.morphia.UpdateOptions;
+import org.mongodb.morphia.query.Query;
+import org.mongodb.morphia.query.Sort;
 
 public class HeatMapServiceImpl implements HeatMapService {
   private static final int RISK_TIME_BUFFER_MINS = 15;

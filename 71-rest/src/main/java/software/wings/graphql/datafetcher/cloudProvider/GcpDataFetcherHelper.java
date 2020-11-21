@@ -1,14 +1,14 @@
 package software.wings.graphql.datafetcher.cloudProvider;
 
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
-
 import software.wings.beans.GcpConfig;
 import software.wings.beans.GcpConfig.GcpConfigBuilder;
 import software.wings.beans.SettingAttribute;
 import software.wings.graphql.datafetcher.secrets.UsageScopeController;
 import software.wings.graphql.schema.mutation.cloudProvider.QLGcpCloudProviderInput;
 import software.wings.graphql.schema.mutation.cloudProvider.QLUpdateGcpCloudProviderInput;
+
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
 
 @Singleton
 public class GcpDataFetcherHelper {

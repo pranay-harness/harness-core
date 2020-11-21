@@ -2,9 +2,8 @@ package io.harness.distribution.barrier;
 
 import static java.util.Collections.synchronizedMap;
 
-import org.apache.commons.collections.map.LRUMap;
-
 import java.util.Map;
+import org.apache.commons.collections.map.LRUMap;
 
 public class InprocBarrierRegistry implements BarrierRegistry {
   private Map<BarrierId, Forcer> map = synchronizedMap(new LRUMap(1000));

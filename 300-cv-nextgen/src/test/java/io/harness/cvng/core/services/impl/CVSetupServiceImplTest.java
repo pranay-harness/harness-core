@@ -4,11 +4,10 @@ import static io.harness.cvng.core.beans.OnboardingStep.ACTIVITY_SOURCE;
 import static io.harness.cvng.core.beans.OnboardingStep.MONITORING_SOURCE;
 import static io.harness.cvng.core.beans.OnboardingStep.VERIFICATION_JOBS;
 import static io.harness.rule.OwnerRule.DEEPAK;
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.when;
-
-import com.google.inject.Inject;
 
 import io.harness.CvNextGenTest;
 import io.harness.category.element.UnitTests;
@@ -19,13 +18,14 @@ import io.harness.cvng.core.services.api.CVConfigService;
 import io.harness.cvng.core.services.api.CVSetupService;
 import io.harness.cvng.verificationjob.services.api.VerificationJobService;
 import io.harness.rule.Owner;
+
+import com.google.inject.Inject;
+import java.util.Arrays;
 import org.apache.commons.lang3.reflect.FieldUtils;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.Mock;
-
-import java.util.Arrays;
 
 public class CVSetupServiceImplTest extends CvNextGenTest {
   @Inject private CVSetupService cvSetupService;

@@ -3,21 +3,24 @@ package software.wings.service.impl.analysis;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.persistence.HQuery.excludeAuthority;
 import static io.harness.rule.OwnerRule.SOWMYA;
-import static org.assertj.core.api.Assertions.assertThat;
+
 import static software.wings.service.impl.analysis.LogMLAnalysisStatus.LE_ANALYSIS_COMPLETE;
 
-import com.google.inject.Inject;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
-import org.apache.commons.lang3.reflect.FieldUtils;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
+
 import software.wings.WingsBaseTest;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.analysis.AnalysisService;
 import software.wings.sm.StateType;
+
+import com.google.inject.Inject;
+import org.apache.commons.lang3.reflect.FieldUtils;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 public class AnalysisServiceImplTest extends WingsBaseTest {
   @Inject private AnalysisService analysisService;

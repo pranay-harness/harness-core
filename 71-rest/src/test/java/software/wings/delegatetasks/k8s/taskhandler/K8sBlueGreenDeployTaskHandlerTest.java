@@ -10,6 +10,19 @@ import static io.harness.rule.OwnerRule.ANSHUL;
 import static io.harness.rule.OwnerRule.BOJANA;
 import static io.harness.rule.OwnerRule.ROHITKARELIA;
 import static io.harness.rule.OwnerRule.YOGESH;
+
+import static software.wings.delegatetasks.k8s.K8sTestConstants.DEPLOYMENT_YAML;
+import static software.wings.delegatetasks.k8s.K8sTestConstants.PRIMARY_SERVICE_YAML;
+import static software.wings.delegatetasks.k8s.K8sTestConstants.SERVICE_YAML;
+import static software.wings.delegatetasks.k8s.K8sTestConstants.STAGE_SERVICE_YAML;
+import static software.wings.delegatetasks.k8s.K8sTestConstants.STATEFUL_SET_YAML;
+import static software.wings.delegatetasks.k8s.K8sTestHelper.configMap;
+import static software.wings.delegatetasks.k8s.K8sTestHelper.deployment;
+import static software.wings.delegatetasks.k8s.K8sTestHelper.primaryService;
+import static software.wings.delegatetasks.k8s.K8sTestHelper.service;
+import static software.wings.delegatetasks.k8s.K8sTestHelper.stageService;
+import static software.wings.utils.WingsTestConstants.LONG_TIMEOUT_INTERVAL;
+
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -30,23 +43,7 @@ import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-import static software.wings.delegatetasks.k8s.K8sTestConstants.DEPLOYMENT_YAML;
-import static software.wings.delegatetasks.k8s.K8sTestConstants.PRIMARY_SERVICE_YAML;
-import static software.wings.delegatetasks.k8s.K8sTestConstants.SERVICE_YAML;
-import static software.wings.delegatetasks.k8s.K8sTestConstants.STAGE_SERVICE_YAML;
-import static software.wings.delegatetasks.k8s.K8sTestConstants.STATEFUL_SET_YAML;
-import static software.wings.delegatetasks.k8s.K8sTestHelper.configMap;
-import static software.wings.delegatetasks.k8s.K8sTestHelper.deployment;
-import static software.wings.delegatetasks.k8s.K8sTestHelper.primaryService;
-import static software.wings.delegatetasks.k8s.K8sTestHelper.service;
-import static software.wings.delegatetasks.k8s.K8sTestHelper.stageService;
-import static software.wings.utils.WingsTestConstants.LONG_TIMEOUT_INTERVAL;
 
-import com.google.common.collect.ImmutableMap;
-
-import io.fabric8.kubernetes.api.model.Service;
-import io.fabric8.kubernetes.api.model.ServiceBuilder;
-import io.fabric8.kubernetes.api.model.ServiceSpec;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.task.k8s.K8sTaskHelperBase;
 import io.harness.delegate.task.k8s.K8sTaskType;
@@ -66,14 +63,7 @@ import io.harness.k8s.model.Release.KubernetesResourceIdRevision;
 import io.harness.k8s.model.ReleaseHistory;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.rule.Owner;
-import io.kubernetes.client.openapi.models.V1Service;
-import io.kubernetes.client.openapi.models.V1ServiceBuilder;
-import lombok.Data;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
-import org.mockito.ArgumentCaptor;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
+
 import software.wings.WingsBaseTest;
 import software.wings.beans.appmanifest.StoreType;
 import software.wings.beans.command.ExecutionLogCallback;
@@ -88,12 +78,24 @@ import software.wings.helpers.ext.k8s.response.K8sBlueGreenDeployResponse;
 import software.wings.helpers.ext.k8s.response.K8sTaskExecutionResponse;
 import software.wings.helpers.ext.k8s.response.K8sTaskResponse;
 
+import com.google.common.collect.ImmutableMap;
+import io.fabric8.kubernetes.api.model.Service;
+import io.fabric8.kubernetes.api.model.ServiceBuilder;
+import io.fabric8.kubernetes.api.model.ServiceSpec;
+import io.kubernetes.client.openapi.models.V1Service;
+import io.kubernetes.client.openapi.models.V1ServiceBuilder;
 import java.io.IOException;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
+import lombok.Data;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
+import org.mockito.ArgumentCaptor;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
 
 public class K8sBlueGreenDeployTaskHandlerTest extends WingsBaseTest {
   @Mock private ContainerDeploymentDelegateHelper containerDeploymentDelegateHelper;

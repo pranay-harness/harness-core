@@ -3,31 +3,33 @@ package software.wings.helpers.ext.mail;
 import static io.harness.rule.OwnerRule.ANUBHAW;
 import static io.harness.rule.OwnerRule.RAGHU;
 import static io.harness.rule.OwnerRule.VIKAS;
-import static org.assertj.core.api.Assertions.assertThat;
+
 import static software.wings.common.Constants.HARNESS_NAME;
+
+import static org.assertj.core.api.Assertions.assertThat;
+
+import io.harness.category.element.UnitTests;
+import io.harness.rule.Owner;
+
+import software.wings.WingsBaseTest;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
-
 import com.icegreen.greenmail.junit.GreenMailRule;
 import com.icegreen.greenmail.util.GreenMailUtil;
 import com.icegreen.greenmail.util.ServerSetupTest;
 import freemarker.template.TemplateException;
-import io.harness.category.element.UnitTests;
-import io.harness.rule.Owner;
+import java.io.IOException;
+import java.util.Collections;
+import javax.mail.Address;
+import javax.mail.MessagingException;
 import org.apache.commons.mail.EmailException;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.Mockito;
-import software.wings.WingsBaseTest;
-
-import java.io.IOException;
-import java.util.Collections;
-import javax.mail.Address;
-import javax.mail.MessagingException;
 
 /**
  * Created by peeyushaggarwal on 5/20/16.

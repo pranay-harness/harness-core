@@ -2,18 +2,18 @@ package software.wings.search.framework;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
 
-import com.google.inject.Inject;
-
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.persistence.PersistentEntity;
-import lombok.extern.slf4j.Slf4j;
+
 import software.wings.dl.WingsPersistence;
 import software.wings.search.framework.changestreams.ChangeSubscriber;
 import software.wings.search.framework.changestreams.ChangeTracker;
 import software.wings.search.framework.changestreams.ChangeTrackingInfo;
 
+import com.google.inject.Inject;
 import java.util.HashSet;
 import java.util.Set;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * Abstract template class for both

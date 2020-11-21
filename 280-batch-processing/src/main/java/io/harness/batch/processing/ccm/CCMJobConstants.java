@@ -1,8 +1,7 @@
 package io.harness.batch.processing.ccm;
 
-import org.springframework.batch.core.JobParameters;
-
 import java.time.Instant;
+import org.springframework.batch.core.JobParameters;
 
 public class CCMJobConstants {
   public static final String JOB_ID = "JobID";

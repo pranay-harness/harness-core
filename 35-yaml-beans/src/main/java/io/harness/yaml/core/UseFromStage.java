@@ -1,10 +1,9 @@
 package io.harness.yaml.core;
 
-import lombok.Builder;
-import lombok.Value;
-
 import java.io.Serializable;
 import javax.validation.constraints.NotNull;
+import lombok.Builder;
+import lombok.Value;
 
 @Value
 @Builder

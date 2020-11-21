@@ -3,12 +3,12 @@ package io.harness.beans.internal;
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 
 import io.harness.annotations.dev.OwnedBy;
+
+import java.util.List;
 import lombok.Builder;
 import lombok.Setter;
 import lombok.Value;
 import lombok.experimental.NonFinal;
-
-import java.util.List;
 
 @OwnedBy(CDC)
 @Value

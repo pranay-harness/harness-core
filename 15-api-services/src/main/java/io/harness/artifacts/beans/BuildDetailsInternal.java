@@ -1,9 +1,8 @@
 package io.harness.artifacts.beans;
 
+import java.util.Map;
 import lombok.Builder;
 import lombok.Value;
-
-import java.util.Map;
 
 @Value
 @Builder

@@ -4,10 +4,6 @@ import static io.harness.encryption.ScopeHelper.getScope;
 import static io.harness.utils.PageUtils.getNGPageResponse;
 import static io.harness.utils.PageUtils.getPageRequest;
 
-import com.google.common.annotations.VisibleForTesting;
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
-
 import io.harness.EntityType;
 import io.harness.ModuleType;
 import io.harness.encryption.Scope;
@@ -21,6 +17,15 @@ import io.harness.gitsync.common.helper.GitFileLocationHelper;
 import io.harness.gitsync.common.service.GitEntityService;
 import io.harness.gitsync.core.dao.api.repositories.GitFileLocation.GitFileLocationRepository;
 import io.harness.ng.beans.PageResponse;
+
+import com.google.common.annotations.VisibleForTesting;
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
+import java.net.URISyntaxException;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.stream.Collectors;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
@@ -29,12 +34,6 @@ import org.jetbrains.annotations.NotNull;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.mongodb.core.query.Criteria;
-
-import java.net.URISyntaxException;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.stream.Collectors;
 
 @Singleton
 @AllArgsConstructor(onConstructor = @__({ @Inject }))
@@ -157,7 +156,7 @@ public class GitEntityServiceImpl implements GitEntityService {
   }
 
   private List<GitSyncEntityDTO> buildEntityDtoFromPage(Page<GitFileLocation> gitFileLocationsPage) {
-    return gitFileLocationsPage.get().map(this ::buildGitSyncEntityDTO).collect(Collectors.toList());
+    return gitFileLocationsPage.get().map(this::buildGitSyncEntityDTO).collect(Collectors.toList());
   }
 
   private List<GitSyncEntityDTO> listByType(

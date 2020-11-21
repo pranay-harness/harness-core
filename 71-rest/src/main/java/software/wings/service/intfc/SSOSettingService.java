@@ -1,8 +1,7 @@
 package software.wings.service.intfc;
 
 import io.harness.validation.Create;
-import org.hibernate.validator.constraints.NotBlank;
-import ru.vyarus.guice.validator.group.annotation.ValidationGroups;
+
 import software.wings.beans.sso.LdapSettings;
 import software.wings.beans.sso.OauthSettings;
 import software.wings.beans.sso.SSOSettings;
@@ -15,6 +14,8 @@ import java.util.List;
 import java.util.Set;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
+import org.hibernate.validator.constraints.NotBlank;
+import ru.vyarus.guice.validator.group.annotation.ValidationGroups;
 
 // TODO: Create settings helper classes such as LdapHelper, SamlHelper, etc.
 public interface SSOSettingService extends OwnedByAccount {

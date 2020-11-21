@@ -1,11 +1,12 @@
 package software.wings.sm.status;
 
 import io.harness.beans.ExecutionStatus;
-import lombok.Builder;
-import lombok.Value;
+
 import software.wings.sm.StateExecutionInstance;
 
 import javax.validation.constraints.NotNull;
+import lombok.Builder;
+import lombok.Value;
 
 @Value
 @Builder

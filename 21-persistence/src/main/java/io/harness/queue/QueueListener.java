@@ -6,10 +6,9 @@ import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
 import static io.harness.maintenance.MaintenanceController.getMaintenanceFlag;
 import static io.harness.manage.GlobalContextManager.initGlobalContextGuard;
 import static io.harness.threading.Morpheus.sleep;
+
 import static java.lang.System.currentTimeMillis;
 import static java.time.Duration.ofSeconds;
-
-import com.google.inject.Inject;
 
 import io.harness.exception.WingsException;
 import io.harness.logging.ExceptionLogger;
@@ -17,14 +16,15 @@ import io.harness.manage.GlobalContextManager.GlobalContextGuard;
 import io.harness.mongo.DelayLogContext;
 import io.harness.mongo.MessageLogContext;
 import io.harness.mongo.ProcessTimeLogContext;
-import lombok.Getter;
-import lombok.Setter;
-import lombok.extern.slf4j.Slf4j;
 
+import com.google.inject.Inject;
 import java.time.Duration;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
+import lombok.Getter;
+import lombok.Setter;
+import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public abstract class QueueListener<T extends Queuable> implements Runnable {

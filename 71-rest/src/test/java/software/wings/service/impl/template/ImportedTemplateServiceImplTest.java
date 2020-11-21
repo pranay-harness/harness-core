@@ -1,22 +1,19 @@
 package software.wings.service.impl.template;
 
 import static io.harness.rule.OwnerRule.ABHINAV;
+
+import static software.wings.beans.Account.GLOBAL_ACCOUNT_ID;
+import static software.wings.beans.Application.GLOBAL_APP_ID;
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.doReturn;
-import static software.wings.beans.Account.GLOBAL_ACCOUNT_ID;
-import static software.wings.beans.Application.GLOBAL_APP_ID;
-
-import com.google.inject.Inject;
 
 import io.harness.category.element.UnitTests;
 import io.harness.commandlibrary.api.dto.CommandDTO;
 import io.harness.rule.Owner;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
-import org.mockito.MockitoAnnotations;
-import org.mockito.Spy;
+
 import software.wings.api.commandlibrary.EnrichedCommandVersionDTO;
 import software.wings.beans.template.ImportedTemplate;
 import software.wings.beans.template.Template;
@@ -26,6 +23,12 @@ import software.wings.beans.template.command.HttpTemplate;
 import software.wings.beans.template.dto.HarnessImportedTemplateDetails;
 import software.wings.service.intfc.template.TemplateGalleryService;
 import software.wings.service.intfc.template.TemplateService;
+
+import com.google.inject.Inject;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
+import org.mockito.MockitoAnnotations;
+import org.mockito.Spy;
 
 public class ImportedTemplateServiceImplTest extends TemplateBaseTestHelper {
   @Inject private TemplateGalleryService templateGalleryService;

@@ -1,6 +1,5 @@
 package software.wings.helpers.ext.azure;
 
-import static com.google.common.base.Charsets.UTF_8;
 import static io.harness.beans.PageResponse.PageResponseBuilder.aPageResponse;
 import static io.harness.data.encoding.EncodingUtils.decodeBase64ToString;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
@@ -11,31 +10,16 @@ import static io.harness.eraro.ErrorCode.INVALID_AZURE_VAULT_CONFIGURATION;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.network.Http.getOkHttpClientBuilder;
 import static io.harness.validation.Validator.notNullCheck;
+
+import static software.wings.beans.infrastructure.Host.Builder.aHost;
+
+import static com.google.common.base.Charsets.UTF_8;
 import static java.lang.String.format;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toSet;
 import static org.apache.commons.codec.binary.Base64.encodeBase64String;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
-import static software.wings.beans.infrastructure.Host.Builder.aHost;
 
-import com.google.common.annotations.VisibleForTesting;
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
-
-import com.microsoft.aad.adal4j.AuthenticationException;
-import com.microsoft.azure.AzureEnvironment;
-import com.microsoft.azure.credentials.ApplicationTokenCredentials;
-import com.microsoft.azure.management.Azure;
-import com.microsoft.azure.management.Azure.Authenticated;
-import com.microsoft.azure.management.compute.VirtualMachine;
-import com.microsoft.azure.management.containerregistry.Registry;
-import com.microsoft.azure.management.containerservice.KubernetesCluster;
-import com.microsoft.azure.management.containerservice.OSType;
-import com.microsoft.azure.management.keyvault.Vault;
-import com.microsoft.azure.management.resources.ResourceGroup;
-import com.microsoft.azure.management.resources.Subscription;
-import com.microsoft.azure.management.resources.fluentcore.arm.models.HasName;
-import com.microsoft.rest.LogLevel;
 import io.harness.beans.AzureEnvironmentType;
 import io.harness.beans.PageResponse;
 import io.harness.exception.AzureServiceException;
@@ -47,14 +31,7 @@ import io.harness.k8s.KubeConfigHelper;
 import io.harness.k8s.model.KubernetesConfig;
 import io.harness.network.Http;
 import io.harness.security.encryption.EncryptedDataDetail;
-import io.kubernetes.client.util.KubeConfig;
-import lombok.extern.slf4j.Slf4j;
-import okhttp3.OkHttpClient;
-import org.apache.commons.lang3.tuple.ImmutablePair;
-import org.apache.http.HttpStatus;
-import retrofit2.Response;
-import retrofit2.Retrofit;
-import retrofit2.converter.jackson.JacksonConverterFactory;
+
 import software.wings.api.DeploymentType;
 import software.wings.beans.AzureAvailabilitySet;
 import software.wings.beans.AzureConfig;
@@ -74,6 +51,24 @@ import software.wings.infra.AzureInstanceInfrastructure;
 import software.wings.infra.InfrastructureDefinition;
 import software.wings.service.intfc.security.EncryptionService;
 
+import com.google.common.annotations.VisibleForTesting;
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
+import com.microsoft.aad.adal4j.AuthenticationException;
+import com.microsoft.azure.AzureEnvironment;
+import com.microsoft.azure.credentials.ApplicationTokenCredentials;
+import com.microsoft.azure.management.Azure;
+import com.microsoft.azure.management.Azure.Authenticated;
+import com.microsoft.azure.management.compute.VirtualMachine;
+import com.microsoft.azure.management.containerregistry.Registry;
+import com.microsoft.azure.management.containerservice.KubernetesCluster;
+import com.microsoft.azure.management.containerservice.OSType;
+import com.microsoft.azure.management.keyvault.Vault;
+import com.microsoft.azure.management.resources.ResourceGroup;
+import com.microsoft.azure.management.resources.Subscription;
+import com.microsoft.azure.management.resources.fluentcore.arm.models.HasName;
+import com.microsoft.rest.LogLevel;
+import io.kubernetes.client.util.KubeConfig;
 import java.io.IOException;
 import java.io.StringReader;
 import java.util.ArrayList;
@@ -84,6 +79,13 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
+import lombok.extern.slf4j.Slf4j;
+import okhttp3.OkHttpClient;
+import org.apache.commons.lang3.tuple.ImmutablePair;
+import org.apache.http.HttpStatus;
+import retrofit2.Response;
+import retrofit2.Retrofit;
+import retrofit2.converter.jackson.JacksonConverterFactory;
 
 @Singleton
 @Slf4j

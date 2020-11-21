@@ -3,9 +3,8 @@ package io.harness.execution.export.processor;
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
-import static java.util.stream.Collectors.toList;
 
-import com.google.inject.Inject;
+import static java.util.stream.Collectors.toList;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.execution.export.metadata.ActivityCommandUnitMetadata;
@@ -16,16 +15,18 @@ import io.harness.execution.export.metadata.GraphNodeMetadata;
 import io.harness.execution.export.metadata.GraphNodeVisitor;
 import io.harness.execution.export.metadata.PipelineExecutionMetadata;
 import io.harness.execution.export.metadata.PipelineStageExecutionMetadata;
-import lombok.Setter;
-import lombok.Value;
-import lombok.experimental.NonFinal;
+
 import software.wings.beans.command.CommandUnitDetails;
 import software.wings.service.intfc.ActivityService;
 
+import com.google.inject.Inject;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import lombok.Setter;
+import lombok.Value;
+import lombok.experimental.NonFinal;
 
 @OwnedBy(CDC)
 @Value
@@ -46,7 +47,7 @@ public class SubCommandsProcessor implements ExportExecutionsProcessor, GraphNod
   public void visitGraphNode(GraphNodeMetadata nodeMetadata) {
     addExecutionDetailsMetadata(nodeMetadata);
     if (isNotEmpty(nodeMetadata.getExecutionHistory())) {
-      nodeMetadata.getExecutionHistory().forEach(this ::addExecutionDetailsMetadata);
+      nodeMetadata.getExecutionHistory().forEach(this::addExecutionDetailsMetadata);
     }
   }
 
@@ -57,7 +58,7 @@ public class SubCommandsProcessor implements ExportExecutionsProcessor, GraphNod
       return;
     }
 
-    shellScriptApprovalMetadataList.forEach(this ::addExecutionDetailsMetadata);
+    shellScriptApprovalMetadataList.forEach(this::addExecutionDetailsMetadata);
   }
 
   private void addExecutionDetailsMetadata(ExecutionDetailsMetadata executionDetailsMetadata) {

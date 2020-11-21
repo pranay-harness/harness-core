@@ -1,12 +1,10 @@
 package io.harness.generator;
 
 import static io.harness.rule.OwnerRule.ALEXEI;
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.when;
-
-import com.google.common.collect.Lists;
-import com.google.inject.Inject;
 
 import io.harness.OrchestrationVisualizationTestBase;
 import io.harness.ambiance.Ambiance;
@@ -20,19 +18,16 @@ import io.harness.execution.NodeExecution;
 import io.harness.plan.PlanNode;
 import io.harness.pms.ambiance.Level;
 import io.harness.pms.execution.ExecutionMode;
-import io.harness.rule.Owner;
 import io.harness.pms.steps.SkipType;
 import io.harness.pms.steps.StepType;
+import io.harness.rule.Owner;
 import io.harness.state.io.StepParameters;
 import io.harness.utils.DummyForkStepParameters;
 import io.harness.utils.DummyOutcome;
 import io.harness.utils.DummySectionStepParameters;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
 
+import com.google.common.collect.Lists;
+import com.google.inject.Inject;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -41,6 +36,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
 
 /**
  * Test class for {@link OrchestrationAdjacencyListGenerator}

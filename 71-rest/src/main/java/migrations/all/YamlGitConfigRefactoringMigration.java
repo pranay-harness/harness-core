@@ -3,16 +3,13 @@ package migrations.all;
 import static software.wings.beans.SettingAttribute.NAME_KEY;
 import static software.wings.common.Constants.ACCOUNT_ID_KEY;
 
-import com.google.inject.Inject;
-
 import io.harness.beans.EncryptedData;
 import io.harness.beans.EncryptedData.EncryptedDataKeys;
 import io.harness.beans.EncryptedDataParent;
 import io.harness.data.validator.EntityNameValidator;
 import io.harness.encryption.EncryptionReflectUtils;
 import io.harness.persistence.HIterator;
-import lombok.extern.slf4j.Slf4j;
-import migrations.Migration;
+
 import software.wings.beans.Account;
 import software.wings.beans.GitConfig;
 import software.wings.beans.SettingAttribute;
@@ -24,8 +21,11 @@ import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.UsageRestrictionsService;
 import software.wings.yaml.gitSync.YamlGitConfig;
 
+import com.google.inject.Inject;
 import java.lang.reflect.Field;
 import java.util.List;
+import lombok.extern.slf4j.Slf4j;
+import migrations.Migration;
 
 @Slf4j
 public class YamlGitConfigRefactoringMigration implements Migration {

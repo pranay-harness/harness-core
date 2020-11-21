@@ -1,6 +1,7 @@
 package software.wings.graphql.datafetcher.user;
 
 import static io.harness.rule.OwnerRule.VARDAN_BANSAL;
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.eq;
@@ -8,20 +9,10 @@ import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
-import com.google.common.collect.ImmutableMap;
-
-import graphql.schema.DataFetchingEnvironment;
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.Mockito;
-import org.mockito.MockitoAnnotations;
-import org.mockito.Spy;
+
 import software.wings.beans.User;
 import software.wings.graphql.datafetcher.AuthRuleGraphQL;
 import software.wings.graphql.datafetcher.BaseDataFetcher;
@@ -33,7 +24,17 @@ import software.wings.graphql.schema.type.user.QLCreateUserInput;
 import software.wings.graphql.schema.type.user.QLCreateUserPayload;
 import software.wings.service.intfc.UserService;
 
+import com.google.common.collect.ImmutableMap;
+import graphql.schema.DataFetchingEnvironment;
 import java.util.Arrays;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.Mockito;
+import org.mockito.MockitoAnnotations;
+import org.mockito.Spy;
 
 public class CreateUserDataFetcherTest extends CategoryTest {
   @Mock AuthRuleGraphQL authRuleInstrumentation;

@@ -2,8 +2,6 @@ package software.wings.delegatetasks.aws;
 
 import static io.harness.beans.ExecutionStatus.FAILED;
 
-import com.google.inject.Inject;
-
 import io.harness.delegate.beans.DelegateTaskPackage;
 import io.harness.delegate.beans.DelegateTaskResponse;
 import io.harness.delegate.beans.logstreaming.ILogStreamingTaskClient;
@@ -12,7 +10,7 @@ import io.harness.delegate.task.TaskParameters;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
-import org.apache.commons.lang3.NotImplementedException;
+
 import software.wings.beans.command.ExecutionLogCallback;
 import software.wings.delegatetasks.DelegateLogService;
 import software.wings.service.impl.aws.model.AwsAmiRequest;
@@ -27,8 +25,10 @@ import software.wings.service.impl.aws.model.AwsAmiTrafficShiftAlbSwitchRouteReq
 import software.wings.service.impl.aws.model.AwsResponse;
 import software.wings.service.intfc.aws.delegate.AwsAmiHelperServiceDelegate;
 
+import com.google.inject.Inject;
 import java.util.function.BooleanSupplier;
 import java.util.function.Consumer;
+import org.apache.commons.lang3.NotImplementedException;
 
 public class AwsAmiAsyncTask extends AbstractDelegateRunnableTask {
   @Inject private DelegateLogService delegateLogService;

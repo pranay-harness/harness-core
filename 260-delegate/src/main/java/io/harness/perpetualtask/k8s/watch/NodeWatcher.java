@@ -2,16 +2,17 @@ package io.harness.perpetualtask.k8s.watch;
 
 import static io.harness.ccm.health.HealthStatusService.CLUSTER_ID_IDENTIFIER;
 import static io.harness.perpetualtask.k8s.watch.NodeEvent.EventType.EVENT_TYPE_STOP;
+
 import static java.util.Optional.ofNullable;
+
+import io.harness.event.client.EventPublisher;
+import io.harness.grpc.utils.HTimestamps;
+import io.harness.perpetualtask.k8s.informer.ClusterDetails;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
 import com.google.inject.assistedinject.Assisted;
 import com.google.protobuf.Timestamp;
-
-import io.harness.event.client.EventPublisher;
-import io.harness.grpc.utils.HTimestamps;
-import io.harness.perpetualtask.k8s.informer.ClusterDetails;
 import io.kubernetes.client.informer.EventType;
 import io.kubernetes.client.informer.ResourceEventHandler;
 import io.kubernetes.client.informer.SharedInformerFactory;
@@ -21,11 +22,10 @@ import io.kubernetes.client.openapi.apis.CoreV1Api;
 import io.kubernetes.client.openapi.models.V1Node;
 import io.kubernetes.client.openapi.models.V1NodeList;
 import io.kubernetes.client.util.CallGeneratorParams;
-import lombok.extern.slf4j.Slf4j;
-import org.joda.time.DateTime;
-
 import java.util.Set;
 import java.util.concurrent.ConcurrentSkipListSet;
+import lombok.extern.slf4j.Slf4j;
+import org.joda.time.DateTime;
 
 @Slf4j
 public class NodeWatcher implements ResourceEventHandler<V1Node> {

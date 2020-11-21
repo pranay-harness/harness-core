@@ -4,18 +4,13 @@ import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 import static io.harness.beans.PageRequest.UNLIMITED;
 import static io.harness.beans.SearchFilter.Operator.EQ;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
-import static software.wings.beans.Application.GLOBAL_APP_ID;
 
-import com.google.common.collect.Sets;
-import com.google.inject.Inject;
+import static software.wings.beans.Application.GLOBAL_APP_ID;
 
 import io.harness.beans.PageRequest;
 import io.harness.data.validator.EntityNameValidator;
 import io.harness.exception.ExceptionUtils;
-import lombok.Builder;
-import lombok.EqualsAndHashCode;
-import lombok.extern.slf4j.Slf4j;
-import migrations.Migration;
+
 import software.wings.beans.Account;
 import software.wings.beans.Application;
 import software.wings.beans.Base;
@@ -29,9 +24,15 @@ import software.wings.beans.artifact.ArtifactStream;
 import software.wings.beans.command.Command;
 import software.wings.dl.WingsPersistence;
 
+import com.google.common.collect.Sets;
+import com.google.inject.Inject;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
+import lombok.Builder;
+import lombok.EqualsAndHashCode;
+import lombok.extern.slf4j.Slf4j;
+import migrations.Migration;
 
 /**
  * A lot of code in this class seems repetitive.
@@ -65,7 +66,7 @@ public abstract class EntityNameValidationMigration implements Migration {
   @Override
   public void migrate() {
     List<String> accountIdsToMigrate = getAccountIdsToMigrate();
-    accountIdsToMigrate.forEach(this ::migrateAccount);
+    accountIdsToMigrate.forEach(this::migrateAccount);
   }
 
   private List<String> getAccountIdsToMigrate() {

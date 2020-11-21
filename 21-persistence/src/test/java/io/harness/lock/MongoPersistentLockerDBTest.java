@@ -4,15 +4,11 @@ import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.lock.mongo.MongoPersistentLocker.LOCKS_STORE;
 import static io.harness.rule.OwnerRule.GEORGE;
 import static io.harness.threading.Morpheus.sleep;
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assumptions.assumeThat;
 
-import com.google.inject.Inject;
-
-import com.mongodb.BasicDBObject;
-import com.mongodb.DBCollection;
-import com.mongodb.DBObject;
 import io.harness.PersistenceTestBase;
 import io.harness.category.element.UnitTests;
 import io.harness.exception.WingsException;
@@ -20,11 +16,15 @@ import io.harness.lock.mongo.MongoPersistentLocker;
 import io.harness.rule.Owner;
 import io.harness.testlib.RealMongo;
 import io.harness.threading.Concurrent;
+
+import com.google.inject.Inject;
+import com.mongodb.BasicDBObject;
+import com.mongodb.DBCollection;
+import com.mongodb.DBObject;
+import java.time.Duration;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
-
-import java.time.Duration;
 
 /**
  * The Class PersistentLockerTest.
@@ -109,8 +109,7 @@ public class MongoPersistentLockerDBTest extends PersistenceTestBase {
 
       try (AcquiredLock lock = mongoPersistentLocker.acquireLock(uuid, Duration.ofSeconds(1))) {
       }
-    })
-        .doesNotThrowAnyException();
+    }).doesNotThrowAnyException();
   }
 
   @Test
@@ -123,8 +122,7 @@ public class MongoPersistentLockerDBTest extends PersistenceTestBase {
       try (AcquiredLock outer =
                mongoPersistentLocker.tryToAcquireEphemeralLock(AcquiredLock.class, "foo", Duration.ofSeconds(1))) {
       }
-    })
-        .doesNotThrowAnyException();
+    }).doesNotThrowAnyException();
   }
 
   @Test

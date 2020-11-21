@@ -1,12 +1,12 @@
 package software.wings.app;
 
-import com.google.inject.AbstractModule;
-import com.google.inject.multibindings.MapBinder;
-
 import io.harness.mongo.index.migrator.ApiKeysNameUniqueInAccountMigration;
 import io.harness.mongo.index.migrator.DelegateProfileNameUniqueInAccountMigration;
 import io.harness.mongo.index.migrator.DelegateScopeNameUniqueInAccountMigration;
 import io.harness.mongo.index.migrator.Migrator;
+
+import com.google.inject.AbstractModule;
+import com.google.inject.multibindings.MapBinder;
 
 public class IndexMigratorModule extends AbstractModule {
   @Override

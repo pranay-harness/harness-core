@@ -3,15 +3,13 @@ package io.harness.reflection;
 import static java.lang.String.format;
 
 import com.google.common.base.Preconditions;
-
-import lombok.experimental.UtilityClass;
-
 import java.net.URL;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.security.CodeSource;
 import java.security.ProtectionDomain;
 import java.util.Set;
+import lombok.experimental.UtilityClass;
 
 @UtilityClass
 public class CodeUtils {

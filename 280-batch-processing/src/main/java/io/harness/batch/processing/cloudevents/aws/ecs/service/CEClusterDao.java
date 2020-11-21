@@ -2,15 +2,15 @@ package io.harness.batch.processing.cloudevents.aws.ecs.service;
 
 import static io.harness.persistence.HQuery.excludeAuthority;
 
-import com.google.inject.Inject;
-
 import io.harness.persistence.HPersistence;
-import lombok.extern.slf4j.Slf4j;
-import org.mongodb.morphia.query.Query;
+
 import software.wings.beans.ce.CECluster;
 import software.wings.beans.ce.CECluster.CEClusterKeys;
 
+import com.google.inject.Inject;
 import java.util.List;
+import lombok.extern.slf4j.Slf4j;
+import org.mongodb.morphia.query.Query;
 
 @Slf4j
 public class CEClusterDao {

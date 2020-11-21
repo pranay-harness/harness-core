@@ -2,16 +2,15 @@ package io.harness.gitsync.core.runnable;
 
 import static io.harness.gitsync.common.beans.YamlChangeSet.MAX_QUEUE_DURATION_EXCEEDED_CODE;
 
-import com.google.inject.Singleton;
-
-import com.mongodb.client.result.UpdateResult;
 import io.harness.gitsync.common.beans.YamlChangeSet;
 import io.harness.gitsync.common.beans.YamlChangeSet.Status;
 import io.harness.gitsync.core.service.YamlChangeSetService;
-import lombok.extern.slf4j.Slf4j;
 
+import com.google.inject.Singleton;
+import com.mongodb.client.result.UpdateResult;
 import java.time.Duration;
 import java.util.List;
+import lombok.extern.slf4j.Slf4j;
 
 @Singleton
 @Slf4j

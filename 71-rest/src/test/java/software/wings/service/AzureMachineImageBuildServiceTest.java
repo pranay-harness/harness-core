@@ -1,6 +1,7 @@
 package software.wings.service;
 
 import static io.harness.rule.OwnerRule.DEEPAK_PUTHRAYA;
+
 import static junit.framework.TestCase.assertEquals;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Matchers.any;
@@ -8,18 +9,10 @@ import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.when;
 
-import com.google.common.collect.Lists;
-import com.google.inject.Inject;
-
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import io.harness.category.element.UnitTests;
 import io.harness.exception.InvalidArgumentsException;
 import io.harness.rule.Owner;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
+
 import software.wings.WingsBaseTest;
 import software.wings.beans.AzureImageDefinition;
 import software.wings.beans.AzureImageVersion;
@@ -29,9 +22,17 @@ import software.wings.helpers.ext.jenkins.BuildDetails;
 import software.wings.service.impl.AzureMachineImageBuildServiceImpl;
 import software.wings.service.intfc.AzureMachineImageBuildService;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.common.collect.Lists;
+import com.google.inject.Inject;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
 
 public class AzureMachineImageBuildServiceTest extends WingsBaseTest {
   @Mock AzureHelperService azureHelperService;

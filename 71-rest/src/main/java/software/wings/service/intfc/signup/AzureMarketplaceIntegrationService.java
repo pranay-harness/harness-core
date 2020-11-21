@@ -1,24 +1,16 @@
 package software.wings.service.intfc.signup;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
+
+import static software.wings.sm.states.ApprovalState.JSON;
+
 import static javax.ws.rs.core.HttpHeaders.AUTHORIZATION;
 import static javax.ws.rs.core.HttpHeaders.CONTENT_TYPE;
 import static javax.ws.rs.core.MediaType.APPLICATION_FORM_URLENCODED;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
-import static software.wings.sm.states.ApprovalState.JSON;
-
-import com.google.inject.Inject;
 
 import io.harness.annotations.dev.OwnedBy;
-import lombok.extern.slf4j.Slf4j;
-import okhttp3.MultipartBody;
-import okhttp3.OkHttpClient;
-import okhttp3.Request;
-import okhttp3.Request.Builder;
-import okhttp3.RequestBody;
-import org.apache.commons.codec.binary.Base64;
-import org.apache.http.HttpStatus;
-import org.json.JSONObject;
+
 import software.wings.app.MainConfiguration;
 import software.wings.beans.MarketPlace;
 import software.wings.beans.User;
@@ -28,8 +20,18 @@ import software.wings.dl.WingsPersistence;
 import software.wings.security.authentication.AuthenticationUtils;
 import software.wings.security.authentication.MarketPlaceConfig;
 
+import com.google.inject.Inject;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import lombok.extern.slf4j.Slf4j;
+import okhttp3.MultipartBody;
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
+import okhttp3.Request.Builder;
+import okhttp3.RequestBody;
+import org.apache.commons.codec.binary.Base64;
+import org.apache.http.HttpStatus;
+import org.json.JSONObject;
 
 @OwnedBy(PL)
 @Slf4j

@@ -6,9 +6,6 @@ import static io.harness.persistence.GoogleDataStoreAware.addFieldIfNotEmpty;
 import static io.harness.persistence.GoogleDataStoreAware.readLong;
 import static io.harness.persistence.GoogleDataStoreAware.readString;
 
-import com.google.cloud.datastore.Datastore;
-import com.google.cloud.datastore.Key;
-
 import io.harness.annotation.HarnessEntity;
 import io.harness.annotation.IgnoreUnusedIndex;
 import io.harness.beans.EmbeddedUser;
@@ -16,6 +13,14 @@ import io.harness.mongo.index.FdIndex;
 import io.harness.mongo.index.Field;
 import io.harness.mongo.index.NgUniqueIndex;
 import io.harness.persistence.GoogleDataStoreAware;
+
+import software.wings.beans.Base;
+import software.wings.service.impl.analysis.AnalysisServiceImpl.CLUSTER_TYPE;
+import software.wings.service.impl.analysis.AnalysisServiceImpl.LogMLFeedbackType;
+import software.wings.sm.StateType;
+
+import com.google.cloud.datastore.Datastore;
+import com.google.cloud.datastore.Key;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -23,10 +28,6 @@ import lombok.NoArgsConstructor;
 import lombok.experimental.FieldNameConstants;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Entity;
-import software.wings.beans.Base;
-import software.wings.service.impl.analysis.AnalysisServiceImpl.CLUSTER_TYPE;
-import software.wings.service.impl.analysis.AnalysisServiceImpl.LogMLFeedbackType;
-import software.wings.sm.StateType;
 
 @NgUniqueIndex(name = "logFeedbackUniqueIdx",
     fields = { @Field("applicationId")

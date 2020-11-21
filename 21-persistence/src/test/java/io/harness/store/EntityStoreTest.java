@@ -1,9 +1,8 @@
 package io.harness.store;
 
 import static io.harness.rule.OwnerRule.GEORGE;
-import static org.assertj.core.api.Assertions.assertThat;
 
-import com.google.inject.Inject;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.PersistenceTestBase;
 import io.harness.annotation.StoreIn;
@@ -12,6 +11,8 @@ import io.harness.persistence.HPersistence;
 import io.harness.persistence.PersistentEntity;
 import io.harness.persistence.Store;
 import io.harness.rule.Owner;
+
+import com.google.inject.Inject;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mongodb.morphia.AdvancedDatastore;

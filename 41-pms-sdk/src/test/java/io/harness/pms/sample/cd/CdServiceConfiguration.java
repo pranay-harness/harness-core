@@ -2,17 +2,17 @@ package io.harness.pms.sample.cd;
 
 import static java.util.Collections.singletonList;
 
-import com.google.inject.Singleton;
+import io.harness.grpc.client.GrpcClientConfig;
+import io.harness.grpc.server.GrpcServerConfig;
+import io.harness.mongo.MongoConfig;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.google.inject.Singleton;
 import io.dropwizard.Configuration;
 import io.dropwizard.jetty.ConnectorFactory;
 import io.dropwizard.jetty.HttpConnectorFactory;
 import io.dropwizard.server.DefaultServerFactory;
 import io.dropwizard.server.ServerFactory;
-import io.harness.grpc.client.GrpcClientConfig;
-import io.harness.grpc.server.GrpcServerConfig;
-import io.harness.mongo.MongoConfig;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 

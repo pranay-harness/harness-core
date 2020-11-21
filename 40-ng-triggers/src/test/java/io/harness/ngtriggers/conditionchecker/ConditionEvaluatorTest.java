@@ -8,11 +8,13 @@ import static io.harness.ngtriggers.conditionchecker.OperationEvaluator.NOT_IN_O
 import static io.harness.ngtriggers.conditionchecker.OperationEvaluator.REGEX_OPERATOR;
 import static io.harness.ngtriggers.conditionchecker.OperationEvaluator.STARTS_WITH_OPERATOR;
 import static io.harness.rule.OwnerRule.NAMAN;
+
 import static org.assertj.core.api.AssertionsForInterfaceTypes.assertThat;
 
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
+
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 

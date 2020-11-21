@@ -1,12 +1,10 @@
 package software.wings.resources.limits;
 
 import static io.harness.rule.OwnerRule.UJJAWAL;
+
 import static javax.ws.rs.client.Entity.entity;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 import static org.assertj.core.api.Assertions.assertThat;
-
-import com.google.common.collect.ImmutableMap;
-import com.google.inject.Inject;
 
 import io.harness.category.element.DeprecatedIntegrationTests;
 import io.harness.limits.ActionType;
@@ -16,17 +14,20 @@ import io.harness.limits.impl.model.StaticLimit;
 import io.harness.limits.lib.Limit;
 import io.harness.rest.RestResponse;
 import io.harness.rule.Owner;
-import org.junit.Before;
-import org.junit.Ignore;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
+
 import software.wings.integration.IntegrationTestBase;
 import software.wings.integration.IntegrationTestUtils;
 import software.wings.utils.WingsTestConstants;
 
+import com.google.common.collect.ImmutableMap;
+import com.google.inject.Inject;
 import java.util.concurrent.TimeUnit;
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.GenericType;
+import org.junit.Before;
+import org.junit.Ignore;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 public class LimitConfigurationResourceIntegrationTest extends IntegrationTestBase {
   @Inject private LimitConfigurationServiceMongo limits;

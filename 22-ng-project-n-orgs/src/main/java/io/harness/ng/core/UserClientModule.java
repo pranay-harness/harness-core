@@ -1,9 +1,5 @@
 package io.harness.ng.core;
 
-import com.google.inject.AbstractModule;
-import com.google.inject.Provides;
-import com.google.inject.Scopes;
-
 import io.harness.ng.core.user.remote.UserClient;
 import io.harness.ng.core.user.remote.UserHttpClientFactory;
 import io.harness.ng.core.user.services.api.NgUserService;
@@ -11,6 +7,10 @@ import io.harness.ng.core.user.services.api.impl.NgUserServiceImpl;
 import io.harness.remote.client.ServiceHttpClientConfig;
 import io.harness.security.ServiceTokenGenerator;
 import io.harness.serializer.kryo.KryoConverterFactory;
+
+import com.google.inject.AbstractModule;
+import com.google.inject.Provides;
+import com.google.inject.Scopes;
 
 public class UserClientModule extends AbstractModule {
   private final ServiceHttpClientConfig serviceHttpClientConfig;

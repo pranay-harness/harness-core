@@ -2,6 +2,7 @@ package io.harness.walktree.beans;
 
 import io.harness.walktree.registries.visitorfield.VisitorFieldType;
 import io.harness.walktree.registries.visitorfield.VisitorFieldWrapper;
+
 import lombok.Builder;
 import lombok.Data;
 

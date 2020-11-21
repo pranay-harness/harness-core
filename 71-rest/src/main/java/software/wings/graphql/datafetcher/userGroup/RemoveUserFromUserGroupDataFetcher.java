@@ -1,10 +1,7 @@
 package software.wings.graphql.datafetcher.userGroup;
 
-import com.google.inject.Inject;
-
 import io.harness.exception.InvalidRequestException;
-import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.collections4.ListUtils;
+
 import software.wings.beans.User;
 import software.wings.beans.security.UserGroup;
 import software.wings.graphql.datafetcher.BaseMutatorDataFetcher;
@@ -16,8 +13,11 @@ import software.wings.security.annotations.AuthRule;
 import software.wings.service.intfc.UserGroupService;
 import software.wings.service.intfc.UserService;
 
+import com.google.inject.Inject;
 import java.util.ArrayList;
 import java.util.List;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.collections4.ListUtils;
 
 @Slf4j
 public class RemoveUserFromUserGroupDataFetcher

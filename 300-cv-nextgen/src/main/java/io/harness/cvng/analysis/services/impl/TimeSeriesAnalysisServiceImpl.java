@@ -8,9 +8,6 @@ import static io.harness.cvng.analysis.CVAnalysisConstants.TIMESERIES_VERIFICATI
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.persistence.HQuery.excludeAuthority;
 
-import com.google.common.base.Preconditions;
-import com.google.inject.Inject;
-
 import io.harness.cvng.analysis.beans.DeploymentTimeSeriesAnalysisDTO;
 import io.harness.cvng.analysis.beans.ServiceGuardTimeSeriesAnalysisDTO;
 import io.harness.cvng.analysis.beans.TimeSeriesAnomalies;
@@ -54,10 +51,9 @@ import io.harness.cvng.verificationjob.entities.VerificationJobInstance.Analysis
 import io.harness.cvng.verificationjob.entities.VerificationJobInstance.ProgressLog;
 import io.harness.cvng.verificationjob.services.api.VerificationJobInstanceService;
 import io.harness.persistence.HPersistence;
-import lombok.extern.slf4j.Slf4j;
-import org.apache.http.client.utils.URIBuilder;
-import org.mongodb.morphia.query.Sort;
 
+import com.google.common.base.Preconditions;
+import com.google.inject.Inject;
 import java.net.URISyntaxException;
 import java.time.Duration;
 import java.time.Instant;
@@ -73,6 +69,9 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.http.client.utils.URIBuilder;
+import org.mongodb.morphia.query.Sort;
 
 @Slf4j
 public class TimeSeriesAnalysisServiceImpl implements TimeSeriesAnalysisService {

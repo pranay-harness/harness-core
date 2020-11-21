@@ -2,18 +2,24 @@ package software.wings.service.impl.instance;
 
 import static io.harness.rule.OwnerRule.ANKIT;
 import static io.harness.rule.OwnerRule.ROHIT_KUMAR;
-import static junit.framework.TestCase.assertFalse;
-import static junit.framework.TestCase.assertTrue;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.spy;
+
 import static software.wings.service.impl.instance.InstanceSyncFlow.ITERATOR;
 import static software.wings.service.impl.instance.InstanceSyncFlow.MANUAL;
 import static software.wings.service.impl.instance.InstanceSyncFlow.NEW_DEPLOYMENT;
 import static software.wings.service.impl.instance.InstanceSyncFlow.PERPETUAL_TASK;
 
+import static junit.framework.TestCase.assertFalse;
+import static junit.framework.TestCase.assertTrue;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.spy;
+
 import io.harness.category.element.UnitTests;
 import io.harness.exception.WingsException;
 import io.harness.rule.Owner;
+
+import software.wings.WingsBaseTest;
+import software.wings.beans.InfrastructureMappingType;
+
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -21,8 +27,6 @@ import org.mockito.InjectMocks;
 import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
 import org.mockito.Spy;
-import software.wings.WingsBaseTest;
-import software.wings.beans.InfrastructureMappingType;
 
 public class InstanceHandlerTest extends WingsBaseTest {
   @Spy InstanceUtils instanceUtil;

@@ -1,9 +1,8 @@
 package software.wings.beans;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
-import static java.util.Arrays.asList;
 
-import com.google.common.base.MoreObjects;
+import static java.util.Arrays.asList;
 
 import io.harness.annotation.HarnessEntity;
 import io.harness.annotations.dev.OwnedBy;
@@ -13,6 +12,20 @@ import io.harness.mongo.index.NgUniqueIndex;
 import io.harness.persistence.AccountAccess;
 import io.harness.persistence.LogKeyUtils;
 import io.harness.persistence.NameAccess;
+
+import software.wings.beans.Application.ApplicationKeys;
+import software.wings.beans.entityinterface.KeywordsAware;
+import software.wings.beans.entityinterface.TagAware;
+import software.wings.yaml.BaseEntityYaml;
+import software.wings.yaml.gitSync.YamlGitConfig;
+
+import com.google.common.base.MoreObjects;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -23,18 +36,6 @@ import lombok.experimental.UtilityClass;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Transient;
-import software.wings.beans.Application.ApplicationKeys;
-import software.wings.beans.entityinterface.KeywordsAware;
-import software.wings.beans.entityinterface.TagAware;
-import software.wings.yaml.BaseEntityYaml;
-import software.wings.yaml.gitSync.YamlGitConfig;
-
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Set;
 
 /**
  * Application bean class.
@@ -269,7 +270,7 @@ public class Application extends Base implements KeywordsAware, NameAccess, TagA
   public int hashCode() {
     return 31 * super.hashCode()
         + Objects.hash(
-              name, description, accountId, services, environments, recentExecutions, notifications, nextDeploymentOn);
+            name, description, accountId, services, environments, recentExecutions, notifications, nextDeploymentOn);
   }
 
   @Override

@@ -1,5 +1,9 @@
 package io.harness.ngtriggers.mapper;
 
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+
+import static org.springframework.data.mongodb.core.query.Criteria.where;
+
 import io.harness.NGResourceFilterConstants;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.ngtriggers.beans.entity.NGTriggerEntity;
@@ -7,15 +11,12 @@ import io.harness.ngtriggers.beans.entity.NGTriggerEntity.NGTriggerEntityKeys;
 import io.harness.ngtriggers.beans.entity.TriggerWebhookEvent;
 import io.harness.ngtriggers.beans.entity.TriggerWebhookEvent.TriggerWebhookEventsKeys;
 import io.harness.ngtriggers.beans.source.NGTriggerType;
+
+import com.google.inject.Singleton;
 import lombok.NoArgsConstructor;
 import lombok.experimental.UtilityClass;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Update;
-
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
-import static org.springframework.data.mongodb.core.query.Criteria.where;
-
-import com.google.inject.Singleton;
 
 @UtilityClass
 public class TriggerFilterHelper {

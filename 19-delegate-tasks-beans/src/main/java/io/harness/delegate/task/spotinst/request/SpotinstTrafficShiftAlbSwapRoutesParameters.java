@@ -4,11 +4,11 @@ import static io.harness.delegate.task.spotinst.request.SpotInstTaskParameters.S
 
 import io.harness.delegate.task.aws.LbDetailsForAlbTrafficShift;
 import io.harness.spotinst.model.ElastiGroup;
+
+import java.util.List;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
-
-import java.util.List;
 
 @Data
 @EqualsAndHashCode(callSuper = true)

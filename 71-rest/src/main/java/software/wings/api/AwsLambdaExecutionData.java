@@ -1,16 +1,16 @@
 package software.wings.api;
 
-import com.google.common.collect.Maps;
-
 import io.harness.delegate.beans.DelegateTaskNotifyResponseData;
+
+import software.wings.sm.StateExecutionData;
+
+import com.google.common.collect.Maps;
+import java.util.Map;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
-import software.wings.sm.StateExecutionData;
-
-import java.util.Map;
 
 @Data
 @Builder

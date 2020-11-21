@@ -4,8 +4,6 @@ import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.pms.execution.Status.PAUSED;
 import static io.harness.pms.execution.Status.RUNNING;
 
-import com.google.inject.Inject;
-
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.engine.executions.node.NodeExecutionService;
 import io.harness.engine.executions.plan.PlanExecutionService;
@@ -13,6 +11,8 @@ import io.harness.execution.NodeExecution;
 import io.harness.execution.NodeExecution.NodeExecutionKeys;
 import io.harness.interrupts.ExecutionInterruptType;
 import io.harness.interrupts.InterruptEffect;
+
+import com.google.inject.Inject;
 
 @OwnedBy(CDC)
 public class ResumeStepStatusUpdate implements StepStatusUpdate {

@@ -1,14 +1,11 @@
 package io.harness.cvng.core.services.impl;
 
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static java.util.stream.Collectors.toList;
 
-import com.google.common.base.Preconditions;
-import com.google.inject.Inject;
-
-import com.mongodb.BasicDBObject;
 import io.harness.cvng.beans.CVMonitoringCategory;
 import io.harness.cvng.beans.DataSourceType;
 import io.harness.cvng.client.NextGenService;
@@ -24,9 +21,10 @@ import io.harness.ng.core.environment.beans.EnvironmentType;
 import io.harness.ng.core.environment.dto.EnvironmentResponseDTO;
 import io.harness.ng.core.service.dto.ServiceResponseDTO;
 import io.harness.persistence.HPersistence;
-import org.mongodb.morphia.query.Query;
-import org.mongodb.morphia.query.UpdateOperations;
 
+import com.google.common.base.Preconditions;
+import com.google.inject.Inject;
+import com.mongodb.BasicDBObject;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -39,6 +37,8 @@ import java.util.Set;
 import java.util.stream.Collectors;
 import javax.annotation.Nullable;
 import javax.validation.constraints.NotNull;
+import org.mongodb.morphia.query.Query;
+import org.mongodb.morphia.query.UpdateOperations;
 
 public class CVConfigServiceImpl implements CVConfigService {
   @Inject private HPersistence hPersistence;
@@ -58,7 +58,7 @@ public class CVConfigServiceImpl implements CVConfigService {
 
   @Override
   public List<CVConfig> save(List<CVConfig> cvConfigs) {
-    return cvConfigs.stream().map(this ::save).collect(Collectors.toList());
+    return cvConfigs.stream().map(this::save).collect(Collectors.toList());
   }
 
   @Nullable
@@ -93,7 +93,7 @@ public class CVConfigServiceImpl implements CVConfigService {
   @Override
   public void update(List<CVConfig> cvConfigs) {
     cvConfigs.forEach(cvConfig -> cvConfig.validate());
-    cvConfigs.forEach(this ::update); // TODO: implement batch update
+    cvConfigs.forEach(this::update); // TODO: implement batch update
   }
 
   @Override

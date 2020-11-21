@@ -2,9 +2,6 @@ package io.harness.ng.core.api.impl;
 
 import static io.harness.NGConstants.ENTITY_REFERENCE_LOG_PREFIX;
 
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
-
 import io.harness.EntityType;
 import io.harness.common.EntityReference;
 import io.harness.entitysetupusageclient.EntitySetupUsageHelper;
@@ -15,6 +12,9 @@ import io.harness.secretmanagerclient.dto.EncryptedDataDTO;
 import io.harness.utils.FullyQualifiedIdentifierHelper;
 import io.harness.utils.IdentifierRefHelper;
 import io.harness.utils.RestCallToNGManagerClientUtils;
+
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

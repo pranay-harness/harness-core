@@ -1,8 +1,15 @@
 package io.harness;
 
-import static com.google.common.collect.ImmutableMap.of;
 import static io.harness.PipelineServiceConfiguration.getResourceClasses;
 import static io.harness.logging.LoggingInitializer.initializeLogging;
+
+import static com.google.common.collect.ImmutableMap.of;
+
+import io.harness.govern.ProviderModule;
+import io.harness.maintenance.MaintenanceController;
+import io.harness.persistence.HPersistence;
+import io.harness.pms.exception.WingsExceptionMapper;
+import io.harness.queue.QueueListenerController;
 
 import com.google.common.util.concurrent.ServiceManager;
 import com.google.inject.Guice;
@@ -10,7 +17,6 @@ import com.google.inject.Injector;
 import com.google.inject.Module;
 import com.google.inject.Provides;
 import com.google.inject.Singleton;
-
 import io.dropwizard.Application;
 import io.dropwizard.configuration.EnvironmentVariableSubstitutor;
 import io.dropwizard.configuration.SubstitutingSourceProvider;
@@ -20,21 +26,15 @@ import io.dropwizard.setup.Bootstrap;
 import io.dropwizard.setup.Environment;
 import io.federecio.dropwizard.swagger.SwaggerBundle;
 import io.federecio.dropwizard.swagger.SwaggerBundleConfiguration;
-import io.harness.govern.ProviderModule;
-import io.harness.maintenance.MaintenanceController;
-import io.harness.persistence.HPersistence;
-import io.harness.pms.exception.WingsExceptionMapper;
-import io.harness.queue.QueueListenerController;
-import lombok.extern.slf4j.Slf4j;
-import org.eclipse.jetty.servlets.CrossOriginFilter;
-import org.glassfish.jersey.media.multipart.MultiPartFeature;
-import org.glassfish.jersey.server.model.Resource;
-
 import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.List;
 import javax.servlet.DispatcherType;
 import javax.servlet.FilterRegistration;
+import lombok.extern.slf4j.Slf4j;
+import org.eclipse.jetty.servlets.CrossOriginFilter;
+import org.glassfish.jersey.media.multipart.MultiPartFeature;
+import org.glassfish.jersey.server.model.Resource;
 
 @Slf4j
 public class PipelineServiceApplication extends Application<PipelineServiceConfiguration> {

@@ -1,6 +1,7 @@
 package software.wings.service.impl.security;
 
 import static io.harness.rule.OwnerRule.PHOENIKX;
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyBoolean;
@@ -9,15 +10,20 @@ import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
-import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
-import com.google.inject.Inject;
-
 import io.harness.beans.SecretManagerConfig;
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
 import io.harness.serializer.KryoSerializer;
+
+import software.wings.WingsBaseTest;
+import software.wings.beans.VaultConfig;
+import software.wings.service.intfc.AlertService;
+
+import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
+import com.google.inject.Inject;
+import java.util.Optional;
 import org.joor.Reflect;
 import org.junit.Before;
 import org.junit.Test;
@@ -25,11 +31,6 @@ import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
-import software.wings.WingsBaseTest;
-import software.wings.beans.VaultConfig;
-import software.wings.service.intfc.AlertService;
-
-import java.util.Optional;
 
 public class RuntimeCredentialsInjectorTest extends WingsBaseTest {
   @Mock private AlertService alertService;

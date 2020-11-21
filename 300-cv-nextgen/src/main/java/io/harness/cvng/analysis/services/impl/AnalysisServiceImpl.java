@@ -2,8 +2,6 @@ package io.harness.cvng.analysis.services.impl;
 
 import static io.harness.cvng.analysis.CVAnalysisConstants.ANALYSIS_RISK_RESULTS_LIMIT;
 
-import com.google.inject.Inject;
-
 import io.harness.cvng.analysis.entities.LogAnalysisResult;
 import io.harness.cvng.analysis.entities.TimeSeriesRiskSummary;
 import io.harness.cvng.analysis.services.api.AnalysisService;
@@ -15,6 +13,7 @@ import io.harness.cvng.core.services.api.CVConfigService;
 import io.harness.cvng.core.services.api.VerificationTaskService;
 import io.harness.cvng.dashboard.beans.RiskSummaryPopoverDTO.AnalysisRisk;
 
+import com.google.inject.Inject;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Collections;

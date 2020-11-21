@@ -4,17 +4,13 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.exception.WingsException.ExecutionContext.MANAGER;
 import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
+
+import static software.wings.beans.yaml.YamlConstants.GIT_YAML_LOG_PREFIX;
+
 import static java.lang.String.format;
 import static java.util.Collections.singletonList;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static java.util.stream.Collectors.toList;
-import static software.wings.beans.yaml.YamlConstants.GIT_YAML_LOG_PREFIX;
-
-import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Stopwatch;
-import com.google.common.collect.Sets;
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
 
 import io.harness.exception.WingsException;
 import io.harness.gitsync.common.YamlProcessingLogContext;
@@ -27,6 +23,20 @@ import io.harness.logging.AccountLogContext;
 import io.harness.logging.AutoLogContext;
 import io.harness.logging.ExceptionLogger;
 import io.harness.mongo.ProcessTimeLogContext;
+
+import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Stopwatch;
+import com.google.common.collect.Sets;
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicLong;
+import java.util.stream.Collectors;
 import lombok.AllArgsConstructor;
 import lombok.EqualsAndHashCode;
 import lombok.EqualsAndHashCode.Include;
@@ -36,15 +46,6 @@ import org.jetbrains.annotations.NotNull;
 import org.springframework.data.mongodb.core.aggregation.Aggregation;
 import org.springframework.data.mongodb.core.aggregation.AggregationResults;
 import org.springframework.data.mongodb.core.query.Criteria;
-
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Set;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicLong;
-import java.util.stream.Collectors;
 
 @AllArgsConstructor(onConstructor = @__({ @Inject }))
 @Slf4j
@@ -77,7 +78,7 @@ public class GitChangeSetRunnable implements Runnable {
       } else {
         log.info("changesets to process =[{}]", yamlChangeSets.stream().map(YamlChangeSet::getUuid).collect(toList()));
 
-        yamlChangeSets.forEach(this ::processChangeSet);
+        yamlChangeSets.forEach(this::processChangeSet);
       }
 
       try (ProcessTimeLogContext ignore4 = new ProcessTimeLogContext(stopwatch.elapsed(MILLISECONDS), OVERRIDE_ERROR)) {
@@ -216,7 +217,7 @@ public class GitChangeSetRunnable implements Runnable {
           stuckChangeSets.stream().collect(Collectors.groupingBy(YamlChangeSet::getAccountId));
 
       // Mark these yamlChagneSets as Queued.
-      accountIdToStuckChangeSets.forEach(this ::retryOrSkipStuckChangeSets);
+      accountIdToStuckChangeSets.forEach(this::retryOrSkipStuckChangeSets);
     }
   }
 

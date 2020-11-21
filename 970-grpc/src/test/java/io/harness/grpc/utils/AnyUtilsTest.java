@@ -1,11 +1,10 @@
 package io.harness.grpc.utils;
 
 import static io.harness.rule.OwnerRule.AVMOHAN;
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
-
-import com.google.protobuf.Any;
 
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
@@ -13,6 +12,8 @@ import io.harness.event.payloads.AggregatedUsage;
 import io.harness.event.payloads.Lifecycle;
 import io.harness.exception.DataFormatException;
 import io.harness.rule.Owner;
+
+import com.google.protobuf.Any;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 

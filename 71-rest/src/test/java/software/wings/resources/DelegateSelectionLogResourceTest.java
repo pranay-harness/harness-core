@@ -2,6 +2,7 @@ package software.wings.resources;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.rule.OwnerRule.VUK;
+
 import static org.mockito.Mockito.atLeastOnce;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
@@ -10,10 +11,7 @@ import io.harness.category.element.UnitTests;
 import io.harness.delegate.beans.DelegateSelectionLogParams;
 import io.harness.rest.RestResponse;
 import io.harness.rule.Owner;
-import org.glassfish.hk2.utilities.binding.AbstractBinder;
-import org.junit.ClassRule;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
+
 import software.wings.exception.WingsExceptionMapper;
 import software.wings.service.intfc.DelegateSelectionLogsService;
 import software.wings.utils.ResourceTestRule;
@@ -21,6 +19,10 @@ import software.wings.utils.ResourceTestRule;
 import java.util.List;
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.core.GenericType;
+import org.glassfish.hk2.utilities.binding.AbstractBinder;
+import org.junit.ClassRule;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 public class DelegateSelectionLogResourceTest {
   private static HttpServletRequest httpServletRequest = mock(HttpServletRequest.class);

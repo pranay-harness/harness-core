@@ -1,9 +1,10 @@
 package io.harness.ng.core.entitysetupusage.repositories;
 
-import com.google.inject.Inject;
-
 import io.harness.annotation.HarnessRepo;
 import io.harness.ng.core.entitysetupusage.entity.EntitySetupUsage;
+
+import com.google.inject.Inject;
+import java.util.List;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -12,8 +13,6 @@ import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.repository.support.PageableExecutionUtils;
-
-import java.util.List;
 
 @HarnessRepo
 @AllArgsConstructor(access = AccessLevel.PRIVATE, onConstructor = @__({ @Inject }))

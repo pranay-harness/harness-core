@@ -2,10 +2,10 @@ package io.harness.ng.core.api;
 
 import io.harness.ng.core.dto.secrets.SecretDTOV2;
 import io.harness.secretmanagerclient.dto.EncryptedDataDTO;
-import okhttp3.MediaType;
-import okhttp3.RequestBody;
 
 import java.util.Optional;
+import okhttp3.MediaType;
+import okhttp3.RequestBody;
 
 public interface SecretModifyService {
   default RequestBody getRequestBody(String value) {

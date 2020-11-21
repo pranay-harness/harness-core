@@ -7,27 +7,19 @@ import static io.harness.logging.CommandExecutionStatus.FAILURE;
 import static io.harness.logging.CommandExecutionStatus.RUNNING;
 import static io.harness.logging.CommandExecutionStatus.SUCCESS;
 import static io.harness.network.SafeHttpCall.execute;
-import static java.util.Arrays.asList;
-import static java.util.stream.Collectors.groupingBy;
-import static java.util.stream.Collectors.joining;
-import static java.util.stream.Collectors.toList;
-import static org.apache.commons.lang3.StringUtils.isBlank;
+
 import static software.wings.beans.LogColor.Red;
 import static software.wings.beans.LogColor.Yellow;
 import static software.wings.beans.LogHelper.color;
 import static software.wings.beans.LogHelper.doneColoring;
 import static software.wings.beans.LogWeight.Bold;
 
-import com.google.common.annotations.VisibleForTesting;
-import com.google.common.collect.Iterables;
-import com.google.common.util.concurrent.ThreadFactoryBuilder;
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
-import com.google.inject.name.Named;
+import static java.util.Arrays.asList;
+import static java.util.stream.Collectors.groupingBy;
+import static java.util.stream.Collectors.joining;
+import static java.util.stream.Collectors.toList;
+import static org.apache.commons.lang3.StringUtils.isBlank;
 
-import com.github.benmanes.caffeine.cache.Cache;
-import com.github.benmanes.caffeine.cache.Caffeine;
-import com.github.benmanes.caffeine.cache.RemovalCause;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.logging.LogLevel;
 import io.harness.managerclient.DelegateAgentManagerClient;
@@ -36,17 +28,22 @@ import io.harness.managerclient.VerificationServiceClient;
 import io.harness.observer.Subject;
 import io.harness.rest.RestResponse;
 import io.harness.serializer.KryoSerializer;
-import lombok.extern.slf4j.Slf4j;
-import okhttp3.MediaType;
-import okhttp3.RequestBody;
-import org.apache.commons.lang3.StringUtils;
-import retrofit2.Response;
+
 import software.wings.beans.Log;
 import software.wings.delegatetasks.DelegateLogService;
 import software.wings.delegatetasks.LogSanitizer;
 import software.wings.service.impl.ThirdPartyApiCallLog;
 import software.wings.verification.CVActivityLog;
 
+import com.github.benmanes.caffeine.cache.Cache;
+import com.github.benmanes.caffeine.cache.Caffeine;
+import com.github.benmanes.caffeine.cache.RemovalCause;
+import com.google.common.annotations.VisibleForTesting;
+import com.google.common.collect.Iterables;
+import com.google.common.util.concurrent.ThreadFactoryBuilder;
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
+import com.google.inject.name.Named;
 import java.io.IOException;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
@@ -58,6 +55,11 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import javax.validation.executable.ValidateOnExecution;
+import lombok.extern.slf4j.Slf4j;
+import okhttp3.MediaType;
+import okhttp3.RequestBody;
+import org.apache.commons.lang3.StringUtils;
+import retrofit2.Response;
 
 @Singleton
 @ValidateOnExecution
@@ -87,17 +89,17 @@ public class DelegateLogServiceImpl implements DelegateLogService {
     this.cache = Caffeine.newBuilder()
                      .executor(executorService)
                      .expireAfterWrite(1000, TimeUnit.MILLISECONDS)
-                     .removalListener(this ::dispatchCommandExecutionLogs)
+                     .removalListener(this::dispatchCommandExecutionLogs)
                      .build();
     this.apiCallLogCache = Caffeine.newBuilder()
                                .executor(executorService)
                                .expireAfterWrite(1000, TimeUnit.MILLISECONDS)
-                               .removalListener(this ::dispatchApiCallLogs)
+                               .removalListener(this::dispatchApiCallLogs)
                                .build();
     this.cvActivityLogCache = Caffeine.newBuilder()
                                   .executor(executorService)
                                   .expireAfterWrite(1000, TimeUnit.MILLISECONDS)
-                                  .removalListener(this ::dispatchCVActivityLogs)
+                                  .removalListener(this::dispatchCVActivityLogs)
                                   .build();
     this.kryoSerializer = kryoSerializer;
 
