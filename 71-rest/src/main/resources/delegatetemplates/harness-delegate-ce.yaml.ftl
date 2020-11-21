@@ -44,6 +44,7 @@ rules:
   resources:
   - pods
   - nodes
+  - nodes/proxy
   - events
   - namespaces
   - persistentvolumes
