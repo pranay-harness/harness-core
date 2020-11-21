@@ -19,7 +19,7 @@ public class SecretGenerator {
   @Inject ScmSecret scmSecret;
   @Inject SecretManager secretManager;
 
-  String ensureStored(String accountId, SecretName name) {
+  public String ensureStored(String accountId, SecretName name) {
     final EncryptedData encryptedData = secretManager.getSecretByName(accountId, name.getValue());
     if (encryptedData != null) {
       return encryptedData.getUuid();

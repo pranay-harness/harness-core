@@ -10,6 +10,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.category.element.FunctionalTests;
 import io.harness.functional.AbstractFunctionalTest;
+import io.harness.generator.SecretGenerator;
 import io.harness.rule.Owner;
 import io.harness.scm.ScmSecret;
 import io.harness.scm.SecretName;
@@ -24,6 +25,7 @@ import software.wings.beans.SettingAttribute;
 import software.wings.beans.SettingAttribute.SettingCategory;
 import software.wings.settings.SettingVariableTypes;
 
+import com.google.inject.Inject;
 import io.restassured.path.json.JsonPath;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.FixMethodOrder;
@@ -34,6 +36,7 @@ import org.junit.runners.MethodSorters;
 @Slf4j
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
 public class CloudProviderTest extends AbstractFunctionalTest {
+  @Inject private SecretGenerator secretGenerator;
   // Test Constants
   private static String CONNECTOR_NAME = "%s-Automation-CloudProvider-" + System.currentTimeMillis();
   private static String CATEGORY = "CLOUD_PROVIDER";
@@ -71,7 +74,7 @@ public class CloudProviderTest extends AbstractFunctionalTest {
   }
 
   @Test
-  @Owner(developers = DEEPAK)
+  @Owner(developers = DEEPAK, intermittent = true)
   @Category(FunctionalTests.class)
   public void runAzureCloudProviderCRUDTests() {
     retry.executeWithRetry(this::createAzureCloudProvider, booleanMatcher, true);
@@ -112,6 +115,8 @@ public class CloudProviderTest extends AbstractFunctionalTest {
 
   private boolean createAzureCloudProvider() {
     String AZURE_CONNECTOR_NAME = String.format(CONNECTOR_NAME, AZURE_NAMESPACE);
+    final String azure_key =
+        secretGenerator.ensureStored(getAccount().getUuid(), SecretName.builder().value("azure_key").build());
     SettingAttribute settingAttribute =
         aSettingAttribute()
             .withCategory(SettingCategory.CLOUD_PROVIDER)
@@ -120,7 +125,7 @@ public class CloudProviderTest extends AbstractFunctionalTest {
             .withValue(AzureConfig.builder()
                            .clientId(new ScmSecret().decryptToString(new SecretName("azure_client_id")))
                            .tenantId(new ScmSecret().decryptToString(new SecretName("azure_tenant_id")))
-                           .key(new ScmSecret().decryptToCharArray(new SecretName("azure_key")))
+                           .key(azure_key.toCharArray())
                            .accountId(getAccount().getUuid())
                            .build())
             .build();

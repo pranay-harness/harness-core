@@ -7,7 +7,6 @@ import static io.harness.persistence.HPersistence.returnNewOptions;
 import static io.harness.persistence.UpdatedAtAware.LAST_UPDATED_AT_KEY;
 
 import static software.wings.beans.Base.ID_KEY;
-import static software.wings.beans.FeatureName.CONNECTORS_REF_SECRETS_MIGRATION;
 import static software.wings.beans.SettingAttribute.VALUE_TYPE_KEY;
 import static software.wings.service.impl.SettingServiceHelper.ATTRIBUTES_USING_REFERENCES;
 import static software.wings.settings.SettingVariableTypes.APM_VERIFICATION;
@@ -91,8 +90,7 @@ public class SettingAttributesSecretsMigrationHandler implements Handler<Setting
 
   public void handle(@NonNull SettingAttribute settingAttribute) {
     try {
-      if (!featureFlagService.isEnabled(CONNECTORS_REF_SECRETS_MIGRATION, settingAttribute.getAccountId())
-          || settingAttribute.isSecretsMigrated()) {
+      if (settingAttribute.isSecretsMigrated()) {
         return;
       }
 

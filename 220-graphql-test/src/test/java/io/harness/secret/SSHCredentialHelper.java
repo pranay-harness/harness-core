@@ -3,10 +3,14 @@ package io.harness.secret;
 import static software.wings.beans.Application.GLOBAL_APP_ID;
 
 import io.harness.generator.AccountGenerator;
+import io.harness.generator.ApplicationGenerator;
 import io.harness.generator.OwnerManager;
 import io.harness.generator.Randomizer;
+import io.harness.generator.SecretGenerator;
+import io.harness.scm.SecretName;
 
 import software.wings.beans.Account;
+import software.wings.beans.Application;
 import software.wings.beans.HostConnectionAttributes;
 import software.wings.beans.KerberosConfig;
 import software.wings.beans.SettingAttribute;
@@ -23,6 +27,8 @@ public class SSHCredentialHelper {
   @Inject private AccountGenerator accountGenerator;
   private String accountId;
   @Inject SettingsService settingsService;
+  @Inject private SecretGenerator secretGenerator;
+  @Inject private ApplicationGenerator applicationGenerator;
 
   @Data
   public static class SSHAuthenticationType {
@@ -66,21 +72,24 @@ public class SSHCredentialHelper {
   public String createSSHCredential(String name) {
     final Randomizer.Seed seed = new Randomizer.Seed(0);
     final OwnerManager.Owners owners = ownerManager.create();
+    Application application =
+        applicationGenerator.ensurePredefined(seed, owners, ApplicationGenerator.Applications.GENERIC_TEST);
     Account account = accountGenerator.ensurePredefined(seed, owners, AccountGenerator.Accounts.GENERIC_TEST);
     accountId = account.getUuid();
+    final String secretId = secretGenerator.ensureStored(owners, SecretName.builder().value("pcf_password").build());
     HostConnectionAttributes settingValue =
         HostConnectionAttributes.Builder.aHostConnectionAttributes()
             .withAccessType(HostConnectionAttributes.AccessType.KERBEROS)
             .withUserName("userName")
             .withSshPort(22)
             .withConnectionType(HostConnectionAttributes.ConnectionType.SSH)
-            .withKey("key".toCharArray())
-            .withSshPassword("sshPassword".toCharArray())
-            .withKerberosPassword("kerberosPassword".toCharArray())
+            .withKey(secretId.toCharArray())
+            .withSshPassword(secretId.toCharArray())
+            .withKerberosPassword(secretId.toCharArray())
             .withKerberosConfig(KerberosConfig.builder().principal("principal").realm("realm").build())
             .withKeyPath("keyPath")
             .withKeyless(false)
-            .withPassphrase("passphrase".toCharArray())
+            .withPassphrase(secretId.toCharArray())
             .withAuthenticationScheme(HostConnectionAttributes.AuthenticationScheme.SSH_KEY)
             .build();
     settingValue.setSettingType(SettingVariableTypes.HOST_CONNECTION_ATTRIBUTES);

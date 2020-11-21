@@ -9,14 +9,19 @@ import io.harness.beans.SecretText;
 import io.harness.category.element.UnitTests;
 import io.harness.category.layer.GraphQLTests;
 import io.harness.generator.AccountGenerator;
+import io.harness.generator.ApplicationGenerator;
 import io.harness.generator.OwnerManager;
 import io.harness.generator.Randomizer;
+import io.harness.generator.SecretGenerator;
 import io.harness.rule.Owner;
+import io.harness.scm.SecretName;
 import io.harness.serializer.JsonUtils;
 import io.harness.testframework.graphql.QLTestObject;
 
 import software.wings.beans.Account;
-import software.wings.service.intfc.security.SecretManager;
+import software.wings.beans.Application;
+import software.wings.beans.FeatureName;
+import software.wings.service.intfc.FeatureFlagService;
 
 import com.google.inject.Inject;
 import org.junit.Before;
@@ -26,7 +31,9 @@ import org.junit.experimental.categories.Category;
 public class CreateSSHCredentialTest extends GraphQLTest {
   @Inject private AccountGenerator accountGenerator;
   @Inject private OwnerManager ownerManager;
-  @Inject private SecretManager secretManager;
+  @Inject private SecretGenerator secretGenerator;
+  @Inject private ApplicationGenerator applicationGenerator;
+  @Inject private FeatureFlagService featureFlagService;
   private String secretName = "tests";
   private String userName = "ubuntu";
   private int port = 5986;
@@ -38,12 +45,16 @@ public class CreateSSHCredentialTest extends GraphQLTest {
 
   @Before
   public void setup() {
+    featureFlagService.enableGlobally(FeatureName.CONNECTORS_REF_SECRETS);
     final OwnerManager.Owners owners = ownerManager.create();
     final Randomizer.Seed seed = new Randomizer.Seed(0);
     Account account = accountGenerator.ensurePredefined(seed, owners, AccountGenerator.Accounts.GENERIC_TEST);
     accountId = account.getUuid();
     SecretText secretText = SecretText.builder().name("sshPasswordSecretId").value("abc").build();
-    secretId = secretManager.saveSecretText(accountId, secretText, false);
+    final Application application =
+        applicationGenerator.ensurePredefined(seed, owners, ApplicationGenerator.Applications.GENERIC_TEST);
+
+    secretId = secretGenerator.ensureStored(owners, SecretName.builder().value("pcf_password").build());
   }
 
   private String createMutationInput(String variable) {

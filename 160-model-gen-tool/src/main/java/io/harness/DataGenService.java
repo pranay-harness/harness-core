@@ -30,6 +30,7 @@ import static java.util.Arrays.asList;
 
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
+import io.harness.beans.SecretText;
 import io.harness.entity.ServiceSecretKey;
 import io.harness.entity.ServiceSecretKey.ServiceSecretKeyKeys;
 import io.harness.entity.ServiceSecretKey.ServiceType;
@@ -89,6 +90,7 @@ import software.wings.service.intfc.UserGroupService;
 import software.wings.service.intfc.UserService;
 import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.service.intfc.WorkflowService;
+import software.wings.service.intfc.security.SecretManager;
 import software.wings.service.intfc.template.TemplateGalleryService;
 import software.wings.utils.ArtifactType;
 
@@ -154,6 +156,7 @@ public class DataGenService {
   @Inject private WingsPersistence wingsPersistence;
   @Inject private LoginSettingsService loginSettingsService;
   @Inject private IndexManager indexManager;
+  @Inject private SecretManager secretManager;
   @Inject private DelegateProfileGenerator delegateProfileGenerator;
 
   public void populateData() {
@@ -217,6 +220,14 @@ public class DataGenService {
 
     UsageRestrictions defaultUsageRestrictions = getAllAppAllEnvUsageRestrictions();
 
+    String splunkPwd = secretManager.saveSecretText(accountId,
+        SecretText.builder()
+            .name("splunk_pwd")
+            .value(scmSecret.decryptToString(new SecretName("splunk_config_password")))
+            .usageRestrictions(defaultUsageRestrictions)
+            .build(),
+        false);
+
     SettingAttribute splunkSettingAttribute =
         aSettingAttribute()
             .withCategory(SettingCategory.CONNECTOR)
@@ -225,12 +236,20 @@ public class DataGenService {
             .withValue(SplunkConfig.builder()
                            .accountId(accountId)
                            .splunkUrl("https://ec2-52-54-103-49.compute-1.amazonaws.com:8089")
-                           .password(scmSecret.decryptToCharArray(new SecretName("splunk_config_password")))
+                           .encryptedPassword(splunkPwd)
                            .username("admin")
                            .build())
             .withUsageRestrictions(defaultUsageRestrictions)
             .build();
     wingsPersistence.save(splunkSettingAttribute);
+
+    String appdPwd = secretManager.saveSecretText(accountId,
+        SecretText.builder()
+            .name("appd_test_pwd")
+            .value(scmSecret.decryptToString(new SecretName("appd_config_password")))
+            .usageRestrictions(defaultUsageRestrictions)
+            .build(),
+        false);
 
     SettingAttribute appdSettingAttribute =
         aSettingAttribute()
@@ -242,24 +261,31 @@ public class DataGenService {
                            .controllerUrl("https://harness-test.saas.appdynamics.com/controller")
                            .username("raghu@harness.io")
                            .accountname("harness-test")
-                           .password(scmSecret.decryptToCharArray(new SecretName("appd_config_password")))
+                           .encryptedPassword(appdPwd)
                            .build())
             .withUsageRestrictions(defaultUsageRestrictions)
             .build();
     wingsPersistence.save(appdSettingAttribute);
 
-    SettingAttribute newRelicSettingAttribute =
-        aSettingAttribute()
-            .withCategory(SettingCategory.CONNECTOR)
-            .withName(NEW_RELIC_CONNECTOR_NAME)
-            .withAccountId(accountId)
-            .withValue(NewRelicConfig.builder()
-                           .accountId(accountId)
-                           .newRelicUrl("https://api.newrelic.com")
-                           .apiKey("d8d3da54ce9355bd39cb7ced542a8acd2c1672312711610".toCharArray())
-                           .build())
-            .withUsageRestrictions(defaultUsageRestrictions)
-            .build();
+    String newRelicApiKey = secretManager.saveSecretText(accountId,
+        SecretText.builder()
+            .name("new_relic_api_key")
+            .value(scmSecret.decryptToString(new SecretName("new_relic_api_key")))
+            .usageRestrictions(defaultUsageRestrictions)
+            .build(),
+        false);
+
+    SettingAttribute newRelicSettingAttribute = aSettingAttribute()
+                                                    .withCategory(SettingCategory.CONNECTOR)
+                                                    .withName(NEW_RELIC_CONNECTOR_NAME)
+                                                    .withAccountId(accountId)
+                                                    .withValue(NewRelicConfig.builder()
+                                                                   .accountId(accountId)
+                                                                   .newRelicUrl("https://api.newrelic.com")
+                                                                   .encryptedApiKey(newRelicApiKey)
+                                                                   .build())
+                                                    .withUsageRestrictions(defaultUsageRestrictions)
+                                                    .build();
 
     wingsPersistence.save(newRelicSettingAttribute);
 

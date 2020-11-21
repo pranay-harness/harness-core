@@ -425,6 +425,7 @@ public class AccountServiceImpl implements AccountService {
   }
 
   private void enableFeatureFlags(@NotNull Account account) {
+    featureFlagService.enableAccount(FeatureName.CONNECTORS_REF_SECRETS, account.getUuid());
     featureFlagService.enableAccount(FeatureName.DISABLE_ADDING_SERVICE_VARS_TO_ECS_SPEC, account.getUuid());
     featureFlagService.enableAccount(FeatureName.DEPRECATE_FABRIC8_FOR_K8S, account.getUuid());
   }

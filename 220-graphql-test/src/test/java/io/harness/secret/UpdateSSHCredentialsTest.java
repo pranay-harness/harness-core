@@ -9,13 +9,19 @@ import io.harness.beans.SecretText;
 import io.harness.category.element.UnitTests;
 import io.harness.category.layer.GraphQLTests;
 import io.harness.generator.AccountGenerator;
+import io.harness.generator.ApplicationGenerator;
 import io.harness.generator.OwnerManager;
 import io.harness.generator.Randomizer;
+import io.harness.generator.SecretGenerator;
 import io.harness.rule.Owner;
+import io.harness.scm.SecretName;
 import io.harness.serializer.JsonUtils;
 import io.harness.testframework.graphql.QLTestObject;
 
 import software.wings.beans.Account;
+import software.wings.beans.Application;
+import software.wings.beans.FeatureName;
+import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.security.SecretManager;
 
 import com.google.inject.Inject;
@@ -26,23 +32,31 @@ import org.junit.experimental.categories.Category;
 public class UpdateSSHCredentialsTest extends GraphQLTest {
   @Inject private AccountGenerator accountGenerator;
   @Inject private OwnerManager ownerManager;
+  @Inject private SecretManager secretManager;
+  @Inject private SecretGenerator secretGenerator;
+  @Inject private ApplicationGenerator applicationGenerator;
+  @Inject private FeatureFlagService featureFlagService;
   @Inject SSHCredentialHelper sshCredentialHelper;
-  @Inject SecretManager secretManager;
   private String updatedSecretName = "updatedSecretName";
   private String updatedUserName = "updatedUserName";
   private int updatedPort = 222;
   private String accountId;
   private String secretId;
+  private String sshKeySecretId;
   private String updatedPrincipal = "updatedPrincipal";
   private String updatedRealm = "updatedRealm";
 
   @Before
   public void setup() {
+    featureFlagService.enableGlobally(FeatureName.CONNECTORS_REF_SECRETS);
     final OwnerManager.Owners owners = ownerManager.create();
     final Randomizer.Seed seed = new Randomizer.Seed(0);
+    final Application application =
+        applicationGenerator.ensurePredefined(seed, owners, ApplicationGenerator.Applications.GENERIC_TEST);
     Account account = accountGenerator.ensurePredefined(seed, owners, AccountGenerator.Accounts.GENERIC_TEST);
     accountId = account.getUuid();
     secretId = sshCredentialHelper.createSSHCredential("secretName");
+    sshKeySecretId = secretGenerator.ensureStored(owners, SecretName.builder().value("pcf_password").build());
   }
 
   private String updateMutationInput(String variable) {
@@ -83,8 +97,6 @@ public class UpdateSSHCredentialsTest extends GraphQLTest {
   }
 
   private String getUpdateSSHCredentialInput() {
-    String sshKeySecretId = secretManager.saveSecretText(
-        accountId, SecretText.builder().name("sshKeySecretId").value("abc").build(), false);
     String queryVariable = $GQL(/*
   {
       secretType: SSH_CREDENTIAL,

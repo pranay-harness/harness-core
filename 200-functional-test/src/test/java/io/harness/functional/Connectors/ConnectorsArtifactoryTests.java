@@ -105,7 +105,7 @@ public class ConnectorsArtifactoryTests extends AbstractFunctionalTest {
   }
 
   @Test
-  @Owner(developers = GARVIT)
+  @Owner(developers = GARVIT, intermittent = true)
   @Category(FunctionalTests.class)
   public void runDockerConnectorCRUDTests() {
     retry.executeWithRetry(this::TC7_createDockerConnector, booleanMatcher, true);
@@ -129,7 +129,7 @@ public class ConnectorsArtifactoryTests extends AbstractFunctionalTest {
   }
 
   @Test
-  @Owner(developers = GARVIT)
+  @Owner(developers = GARVIT, intermittent = true)
   @Category(FunctionalTests.class)
   public void runArtifactoryConnectorCRUDTests() {
     retry.executeWithRetry(this::TC13_createArtifactoryConnector, booleanMatcher, true);
