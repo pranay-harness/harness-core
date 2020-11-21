@@ -1246,6 +1246,7 @@ public class ExecutionContextImpl implements DeploymentExecutionContext {
                       .tempRoute(tempRoute)
                       .organization(pcfInfrastructureMapping.getOrganization())
                       .space(pcfInfrastructureMapping.getSpace())
+                      .cloudProvider(cloudProvider)
                       .build());
     } else if (DeploymentType.HELM.name().equals(phaseElement.getDeploymentType())) {
       builder.helm(Helm.builder()
