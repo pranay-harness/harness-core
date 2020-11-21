@@ -13,14 +13,22 @@ CLASSES=`find $FROM_MODULE/target/classes/$FROM_PACKAGE_DIR -iname "*.class" | g
 
 for CLASS_PATH in $CLASSES
 do
-   COUNT=`jdeps -v -cp $FROM_MODULE/target/classes $CLASS_PATH | grep " -> software.wings\| -> io.harness" | grep -v "not found" | wc -l`
-   if [ $COUNT -eq 0 ]
-   then
-     break
-   fi
+  COUNT=`jdeps -v -cp $FROM_MODULE/target/classes $CLASS_PATH | grep " -> software.wings\| -> io.harness" | grep -v "not found" | wc -l`
+  if [ $COUNT -eq 0 ]
+  then
+    if [ -z "$TO_MODULE" ]
+    then
+      echo $CLASS_PATH
+    else
+      break
+    fi
+  fi
 done
 
-CLASS_PATH=71-rest/target/classes/software/wings/delegatetasks/azure/appservice/deployment/context/AzureAppServiceDeploymentContext.class
+if [ -z "$TO_MODULE" ]
+then
+  exit 0
+fi
 
 SOURCE=`echo $CLASS_PATH | sed 's;target/classes;src/main/java;g' | sed 's/\.class/.java/g'`
 TARGET=`echo $SOURCE | sed "s/$FROM_MODULE/$TO_MODULE/g" | sed "s;$FROM_PACKAGE_DIR;$TO_PACKAGE_DIR;g" `
