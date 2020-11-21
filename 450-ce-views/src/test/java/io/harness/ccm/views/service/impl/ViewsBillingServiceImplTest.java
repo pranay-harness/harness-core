@@ -1,16 +1,13 @@
 package io.harness.ccm.views.service.impl;
 
 import static io.harness.rule.OwnerRule.ROHIT;
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyInt;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.doCallRealMethod;
 import static org.mockito.Mockito.doReturn;
-
-import com.google.cloud.bigquery.BigQuery;
-import com.google.cloud.bigquery.TableResult;
-import com.google.inject.Inject;
 
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
@@ -20,6 +17,13 @@ import io.harness.ccm.views.graphql.QLCEViewFilter;
 import io.harness.ccm.views.graphql.ViewsMetaDataFields;
 import io.harness.ccm.views.graphql.ViewsQueryBuilder;
 import io.harness.rule.Owner;
+
+import com.google.cloud.bigquery.BigQuery;
+import com.google.cloud.bigquery.TableResult;
+import com.google.inject.Inject;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -27,10 +31,6 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.mockito.Spy;
-
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
 
 public class ViewsBillingServiceImplTest extends CategoryTest {
   public static final String CLUSTER_ID = "clusterId";

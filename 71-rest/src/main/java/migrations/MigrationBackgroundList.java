@@ -1,7 +1,7 @@
 package migrations;
 
 import com.google.common.collect.ImmutableList;
-
+import java.util.List;
 import lombok.experimental.UtilityClass;
 import migrations.all.AddAccountIdToActivityCollection;
 import migrations.all.AddAccountIdToBarrierInstanceCollection;
@@ -104,8 +104,6 @@ import migrations.all.UpdateWorkflowExecutionDuration;
 import migrations.all.WFEAddDeploymentMetaData;
 import migrations.all.WorkflowExecutionAddCDPageCandidateMigration;
 import org.apache.commons.lang3.tuple.Pair;
-
-import java.util.List;
 
 @UtilityClass
 public class MigrationBackgroundList {

@@ -8,10 +8,10 @@ import io.harness.beans.GraphVertex;
 import io.harness.beans.internal.EdgeListInternal;
 import io.harness.beans.internal.OrchestrationAdjacencyListInternal;
 import io.harness.skip.skipper.VertexSkipper;
-import lombok.AllArgsConstructor;
 
 import java.util.List;
 import java.util.Map;
+import lombok.AllArgsConstructor;
 
 @OwnedBy(CDC)
 public class SkipNodeSkipper extends VertexSkipper {

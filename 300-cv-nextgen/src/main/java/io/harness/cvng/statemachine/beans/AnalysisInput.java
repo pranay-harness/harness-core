@@ -1,11 +1,11 @@
 package io.harness.cvng.statemachine.beans;
 
 import io.harness.cvng.core.beans.TimeRange;
+
+import java.time.Instant;
 import lombok.Builder;
 import lombok.Data;
 import lombok.experimental.FieldNameConstants;
-
-import java.time.Instant;
 
 @Data
 @FieldNameConstants(innerTypeName = "AnalysisInputKeys")

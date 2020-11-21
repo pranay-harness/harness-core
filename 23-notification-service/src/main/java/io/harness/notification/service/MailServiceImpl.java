@@ -1,12 +1,11 @@
 package io.harness.notification.service;
 
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.google.common.collect.ImmutableList;
-import com.google.inject.Inject;
-import freemarker.core.InvalidReferenceException;
-import freemarker.template.Configuration;
-import freemarker.template.Template;
-import freemarker.template.TemplateException;
+import static io.harness.NotificationClientConstants.HARNESS_NAME;
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
+
+import static freemarker.template.Configuration.VERSION_2_3_23;
+import static org.apache.commons.lang3.StringUtils.stripToNull;
+
 import io.harness.NotificationRequest;
 import io.harness.Team;
 import io.harness.exception.ExceptionUtils;
@@ -18,6 +17,19 @@ import io.harness.notification.service.api.MailService;
 import io.harness.notification.service.api.NotificationSettingsService;
 import io.harness.notification.service.api.NotificationTemplateService;
 import io.harness.serializer.YamlUtils;
+
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.google.common.collect.ImmutableList;
+import com.google.inject.Inject;
+import freemarker.core.InvalidReferenceException;
+import freemarker.template.Configuration;
+import freemarker.template.Template;
+import freemarker.template.TemplateException;
+import java.io.IOException;
+import java.io.StringWriter;
+import java.util.*;
+import javax.mail.internet.AddressException;
+import javax.mail.internet.InternetAddress;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.Setter;
@@ -26,17 +38,6 @@ import org.apache.commons.mail.DefaultAuthenticator;
 import org.apache.commons.mail.Email;
 import org.apache.commons.mail.EmailException;
 import org.apache.commons.mail.HtmlEmail;
-
-import javax.mail.internet.AddressException;
-import javax.mail.internet.InternetAddress;
-import java.io.IOException;
-import java.io.StringWriter;
-import java.util.*;
-
-import static freemarker.template.Configuration.VERSION_2_3_23;
-import static io.harness.NotificationClientConstants.HARNESS_NAME;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static org.apache.commons.lang3.StringUtils.stripToNull;
 
 @AllArgsConstructor(onConstructor = @__({ @Inject }))
 @Slf4j

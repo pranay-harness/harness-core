@@ -1,22 +1,23 @@
 package migrations.all;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
+
 import static software.wings.yaml.gitSync.YamlGitConfig.ENTITY_ID_KEY;
 import static software.wings.yaml.gitSync.YamlGitConfig.ENTITY_TYPE_KEY;
 import static software.wings.yaml.gitSync.YamlGitConfig.SYNC_MODE_KEY;
 
-import com.google.inject.Inject;
-
 import io.harness.persistence.HIterator;
-import lombok.extern.slf4j.Slf4j;
-import migrations.Migration;
+
 import software.wings.beans.EntityType;
 import software.wings.dl.WingsPersistence;
 import software.wings.yaml.gitSync.YamlGitConfig;
 import software.wings.yaml.gitSync.YamlGitConfig.SyncMode;
 
+import com.google.inject.Inject;
 import java.util.HashMap;
 import java.util.Map;
+import lombok.extern.slf4j.Slf4j;
+import migrations.Migration;
 
 @Slf4j
 public class YamlGitConfigMigration implements Migration {

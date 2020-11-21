@@ -1,8 +1,9 @@
 package software.wings.graphql.datafetcher.execution;
 
+import software.wings.graphql.schema.type.aggregation.QLCountAggregateOperation;
+
 import lombok.Builder;
 import lombok.Value;
-import software.wings.graphql.schema.type.aggregation.QLCountAggregateOperation;
 
 @Value
 @Builder

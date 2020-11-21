@@ -1,12 +1,8 @@
 package io.harness.ng.core.remote.deserialization;
 
-import com.fasterxml.jackson.core.JsonParser;
-import com.fasterxml.jackson.databind.DeserializationContext;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.deser.std.StdDeserializer;
-import com.fasterxml.jackson.databind.node.ObjectNode;
 import io.harness.security.encryption.EncryptionConfig;
 import io.harness.security.encryption.EncryptionType;
+
 import software.wings.beans.AwsSecretsManagerConfig;
 import software.wings.beans.AzureVaultConfig;
 import software.wings.beans.CyberArkConfig;
@@ -16,6 +12,11 @@ import software.wings.beans.LocalEncryptionConfig;
 import software.wings.beans.VaultConfig;
 import software.wings.security.encryption.secretsmanagerconfigs.CustomSecretsManagerConfig;
 
+import com.fasterxml.jackson.core.JsonParser;
+import com.fasterxml.jackson.databind.DeserializationContext;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.deser.std.StdDeserializer;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import java.io.IOException;
 
 public class EncryptionConfigDeserializer extends StdDeserializer<EncryptionConfig> {

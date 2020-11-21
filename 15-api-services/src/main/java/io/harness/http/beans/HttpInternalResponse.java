@@ -1,6 +1,7 @@
 package io.harness.http.beans;
 
 import io.harness.logging.CommandExecutionStatus;
+
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;

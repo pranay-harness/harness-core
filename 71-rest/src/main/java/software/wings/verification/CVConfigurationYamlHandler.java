@@ -3,11 +3,10 @@ package software.wings.verification;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.validation.Validator.notNullCheck;
 
-import com.google.inject.Inject;
-
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.VerificationOperationException;
 import io.harness.exception.WingsException;
+
 import software.wings.beans.Application;
 import software.wings.beans.Service;
 import software.wings.beans.SettingAttribute;
@@ -21,6 +20,7 @@ import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.verification.CVConfigurationService;
 import software.wings.verification.CVConfiguration.CVConfigurationYaml;
 
+import com.google.inject.Inject;
 import java.util.Date;
 
 public abstract class CVConfigurationYamlHandler<Y extends CVConfigurationYaml, B extends CVConfiguration>

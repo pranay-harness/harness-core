@@ -2,8 +2,8 @@ package io.harness.serializer.spring;
 
 import io.harness.ngpipeline.pipeline.beans.entities.NgPipelineEntity;
 import io.harness.ngpipeline.pipeline.beans.yaml.NgPipeline;
-import io.harness.spring.AliasRegistrar;
 import io.harness.ngpipeline.status.BuildStatusUpdateParameter;
+import io.harness.spring.AliasRegistrar;
 
 import java.util.Map;
 

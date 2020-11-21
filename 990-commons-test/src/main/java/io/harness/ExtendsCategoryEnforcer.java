@@ -2,12 +2,11 @@ package io.harness;
 
 import static org.assertj.core.api.Assertions.fail;
 
+import java.util.ArrayList;
+import java.util.List;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.runner.Description;
 import org.junit.runner.notification.RunListener;
-
-import java.util.ArrayList;
-import java.util.List;
 
 @RunListener.ThreadSafe
 @Slf4j

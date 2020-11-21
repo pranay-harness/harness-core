@@ -3,24 +3,25 @@ package software.wings.verification.prometheus;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.rule.OwnerRule.RAGHU;
 import static io.harness.rule.OwnerRule.SOWMYA;
-import static org.assertj.core.api.Assertions.assertThat;
 
-import com.google.common.collect.Lists;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
-import lombok.extern.slf4j.Slf4j;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
+
 import software.wings.WingsBaseTest;
 import software.wings.metrics.MetricType;
 import software.wings.service.impl.analysis.TimeSeries;
 import software.wings.sm.StateType;
 import software.wings.verification.ServiceGuardThroughputToErrorsMap;
 
+import com.google.common.collect.Lists;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
+import lombok.extern.slf4j.Slf4j;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 @Slf4j
 public class PrometheusCVServiceConfigurationTest extends WingsBaseTest {

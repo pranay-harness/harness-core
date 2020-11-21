@@ -4,8 +4,6 @@ import static io.harness.security.encryption.EncryptionType.GCP_KMS;
 import static io.harness.security.encryption.EncryptionType.LOCAL;
 import static io.harness.security.encryption.EncryptionType.VAULT;
 
-import com.google.inject.Inject;
-
 import io.harness.beans.SecretManagerConfig;
 import io.harness.beans.SecretManagerConfig.SecretManagerConfigKeys;
 import io.harness.data.structure.EmptyPredicate;
@@ -26,8 +24,7 @@ import io.harness.secretmanagerclient.dto.VaultSecretEngineDTO;
 import io.harness.secretmanagers.SecretManagerConfigService;
 import io.harness.security.encryption.AccessType;
 import io.harness.security.encryption.EncryptionType;
-import lombok.extern.slf4j.Slf4j;
-import org.mongodb.morphia.query.Query;
+
 import software.wings.beans.GcpKmsConfig;
 import software.wings.beans.LocalEncryptionConfig;
 import software.wings.beans.VaultConfig;
@@ -38,10 +35,13 @@ import software.wings.service.intfc.security.NGSecretManagerService;
 import software.wings.service.intfc.security.SecretManager;
 import software.wings.service.intfc.security.VaultService;
 
+import com.google.inject.Inject;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 import javax.validation.constraints.NotNull;
+import lombok.extern.slf4j.Slf4j;
+import org.mongodb.morphia.query.Query;
 
 @Slf4j
 public class NGSecretManagerServiceImpl implements NGSecretManagerService {
@@ -251,7 +251,7 @@ public class NGSecretManagerServiceImpl implements NGSecretManagerService {
           .spec(
               VaultMetadataSpecDTO.builder()
                   .secretEngines(
-                      secretEngineSummaryList.stream().map(this ::fromSecretEngineSummary).collect(Collectors.toList()))
+                      secretEngineSummaryList.stream().map(this::fromSecretEngineSummary).collect(Collectors.toList()))
                   .build())
           .build();
     }

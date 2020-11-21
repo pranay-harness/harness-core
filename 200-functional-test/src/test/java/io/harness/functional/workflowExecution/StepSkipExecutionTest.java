@@ -2,11 +2,7 @@ package io.harness.functional.workflowExecution;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.rule.OwnerRule.GARVIT;
-import static java.lang.String.format;
-import static java.util.Arrays.asList;
-import static java.util.Collections.singletonList;
-import static java.util.stream.Collectors.toMap;
-import static org.assertj.core.api.Assertions.assertThat;
+
 import static software.wings.beans.CanaryOrchestrationWorkflow.CanaryOrchestrationWorkflowBuilder.aCanaryOrchestrationWorkflow;
 import static software.wings.beans.PhaseStep.PhaseStepBuilder.aPhaseStep;
 import static software.wings.beans.PhaseStepType.ENABLE_SERVICE;
@@ -21,8 +17,11 @@ import static software.wings.sm.StateType.ENV_STATE;
 import static software.wings.sm.StateType.HTTP;
 import static software.wings.sm.states.HttpState.HttpStateKeys;
 
-import com.google.common.collect.ImmutableMap;
-import com.google.inject.Inject;
+import static java.lang.String.format;
+import static java.util.Arrays.asList;
+import static java.util.Collections.singletonList;
+import static java.util.stream.Collectors.toMap;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.beans.ExecutionStatus;
 import io.harness.beans.OrchestrationWorkflowType;
@@ -45,11 +44,7 @@ import io.harness.rule.Owner;
 import io.harness.testframework.restutils.ExecutionRestUtils;
 import io.harness.testframework.restutils.PipelineRestUtils;
 import io.harness.testframework.restutils.UserGroupRestUtils;
-import lombok.extern.slf4j.Slf4j;
-import org.awaitility.Awaitility;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
+
 import software.wings.api.DeploymentType;
 import software.wings.beans.Application;
 import software.wings.beans.ApprovalDetails;
@@ -70,12 +65,19 @@ import software.wings.beans.workflow.StepSkipStrategy;
 import software.wings.infra.InfrastructureDefinition;
 import software.wings.service.intfc.WorkflowExecutionService;
 
+import com.google.common.collect.ImmutableMap;
+import com.google.inject.Inject;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
+import lombok.extern.slf4j.Slf4j;
+import org.awaitility.Awaitility;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 @Slf4j
 public class StepSkipExecutionTest extends AbstractFunctionalTest {

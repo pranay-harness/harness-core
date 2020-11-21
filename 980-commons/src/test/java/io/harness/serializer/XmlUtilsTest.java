@@ -5,18 +5,19 @@
 package io.harness.serializer;
 
 import static io.harness.rule.OwnerRule.GEORGE;
+
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
-import org.xml.sax.SAXException;
 
 import java.io.IOException;
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.xpath.XPathExpressionException;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
+import org.xml.sax.SAXException;
 
 /**
  * The Class XmlUtilsTest.

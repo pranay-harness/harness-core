@@ -1,9 +1,8 @@
 package software.wings.beans;
 
-import lombok.EqualsAndHashCode;
-
 import java.util.ArrayList;
 import java.util.List;
+import lombok.EqualsAndHashCode;
 
 /**
  * The Class GraphGroup.

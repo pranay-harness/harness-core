@@ -13,9 +13,8 @@ import static io.harness.generator.constants.InfraDefinitionGeneratorConstants.A
 import static io.harness.generator.constants.InfraDefinitionGeneratorConstants.AZURE_VMSS_SUBSCRIPTION_QA_NAME;
 import static io.harness.generator.constants.InfraDefinitionGeneratorConstants.AZURE_VMSS_VM_USERNAME;
 import static io.harness.rule.OwnerRule.IVAN;
-import static org.assertj.core.api.Assertions.assertThat;
 
-import com.google.inject.Inject;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.azure.model.VirtualMachineScaleSetData;
 import io.harness.category.element.CDFunctionalTests;
@@ -29,17 +28,19 @@ import io.harness.generator.Randomizer;
 import io.harness.generator.SettingGenerator;
 import io.harness.rule.Owner;
 import io.harness.testframework.restutils.InfrastructureDefinitionRestUtils;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
+
 import software.wings.beans.Application;
 import software.wings.beans.Environment;
 import software.wings.beans.SettingAttribute;
 import software.wings.infra.InfrastructureDefinition;
 
+import com.google.inject.Inject;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 public class AzureVMSSAPIFunctionalTest extends AbstractFunctionalTest {
   @Inject private OwnerManager ownerManager;

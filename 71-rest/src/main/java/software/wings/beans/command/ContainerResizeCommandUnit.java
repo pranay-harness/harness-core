@@ -1,14 +1,13 @@
 package software.wings.beans.command;
 
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
-import static java.lang.String.format;
-import static java.util.Collections.emptyList;
-import static java.util.stream.Collectors.toList;
+
 import static software.wings.beans.InstanceUnitType.PERCENTAGE;
 import static software.wings.beans.ResizeStrategy.RESIZE_NEW_FIRST;
 
-import com.google.common.base.Preconditions;
-import com.google.inject.Inject;
+import static java.lang.String.format;
+import static java.util.Collections.emptyList;
+import static java.util.stream.Collectors.toList;
 
 import io.harness.container.ContainerInfo;
 import io.harness.exception.ExceptionUtils;
@@ -17,15 +16,14 @@ import io.harness.logging.CommandExecutionStatus;
 import io.harness.logging.LogLevel;
 import io.harness.logging.Misc;
 import io.harness.security.encryption.EncryptedDataDetail;
-import lombok.Data;
-import lombok.EqualsAndHashCode;
-import lombok.extern.slf4j.Slf4j;
-import org.mongodb.morphia.annotations.Transient;
+
 import software.wings.api.ContainerServiceData;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.command.ResizeCommandUnitExecutionData.ResizeCommandUnitExecutionDataBuilder;
 import software.wings.delegatetasks.DelegateLogService;
 
+import com.google.common.base.Preconditions;
+import com.google.inject.Inject;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
@@ -34,6 +32,10 @@ import java.util.Map.Entry;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.extern.slf4j.Slf4j;
+import org.mongodb.morphia.annotations.Transient;
 
 @Slf4j
 public abstract class ContainerResizeCommandUnit extends AbstractCommandUnit {
@@ -184,8 +186,8 @@ public abstract class ContainerResizeCommandUnit extends AbstractCommandUnit {
                 + (isNotEmpty(info.getHostName()) && info.getHostName().equals(info.getIp()) ? ""
                                                                                              : " - " + info.getIp())
                 + (isNotEmpty(info.getHostName()) && info.getHostName().equals(info.getContainerId())
-                          ? ""
-                          : " - " + info.getContainerId())
+                        ? ""
+                        : " - " + info.getContainerId())
                 + (info.isNewContainer() ? " (new)" : "")));
         executionLogCallback.saveExecutionLog("");
       }
@@ -345,7 +347,7 @@ public abstract class ContainerResizeCommandUnit extends AbstractCommandUnit {
             : (resizeParams.isUseFixedInstances()
                   && resizeParams.getInstanceCount() >= resizeParams.getFixedInstances())
                 || (!resizeParams.isUseFixedInstances()
-                       && resizeParams.getInstanceCount() >= resizeParams.getMaxInstances());
+                    && resizeParams.getInstanceCount() >= resizeParams.getMaxInstances());
       } else {
         deployingToHundredPercent = false;
       }

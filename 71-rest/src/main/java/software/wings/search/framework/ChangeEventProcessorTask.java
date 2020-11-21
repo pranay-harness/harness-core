@@ -3,17 +3,14 @@ package software.wings.search.framework;
 import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.persistence.HPersistence.upsertReturnNewOptions;
 
-import com.google.common.util.concurrent.ThreadFactoryBuilder;
-
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.persistence.PersistentEntity;
-import lombok.extern.slf4j.Slf4j;
-import org.mongodb.morphia.query.Query;
-import org.mongodb.morphia.query.UpdateOperations;
+
 import software.wings.dl.WingsPersistence;
 import software.wings.search.framework.SearchSourceEntitySyncState.SearchSourceEntitySyncStateKeys;
 import software.wings.search.framework.changestreams.ChangeEvent;
 
+import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.ArrayList;
@@ -26,6 +23,9 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
+import lombok.extern.slf4j.Slf4j;
+import org.mongodb.morphia.query.Query;
+import org.mongodb.morphia.query.UpdateOperations;
 
 @OwnedBy(PL)
 @Slf4j

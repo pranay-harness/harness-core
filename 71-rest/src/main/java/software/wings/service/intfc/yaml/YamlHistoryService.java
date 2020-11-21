@@ -1,10 +1,10 @@
 package software.wings.service.intfc.yaml;
 
-import org.hibernate.validator.constraints.NotEmpty;
 import software.wings.yaml.YamlVersion;
 import software.wings.yaml.YamlVersion.Type;
 
 import java.util.List;
+import org.hibernate.validator.constraints.NotEmpty;
 
 /**
  * Yaml History Service.

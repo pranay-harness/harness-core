@@ -5,6 +5,10 @@ import static io.harness.expression.Expression.ALLOW_SECRETS;
 import io.harness.data.validator.Trimmed;
 import io.harness.expression.Expression;
 import io.harness.yaml.BaseYaml;
+
+import java.util.ArrayList;
+import java.util.List;
+import javax.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -12,10 +16,6 @@ import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.experimental.FieldNameConstants;
 import org.hibernate.validator.constraints.NotEmpty;
-
-import java.util.ArrayList;
-import java.util.List;
-import javax.validation.constraints.NotNull;
 
 /**
  * Generic Name Value pair

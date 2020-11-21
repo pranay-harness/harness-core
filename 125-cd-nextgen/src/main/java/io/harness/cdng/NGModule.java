@@ -1,8 +1,5 @@
 package io.harness.cdng;
 
-import com.google.inject.AbstractModule;
-import com.google.inject.multibindings.MapBinder;
-
 import io.harness.NGPipelineCommonsModule;
 import io.harness.WalkTreeModule;
 import io.harness.cdng.artifact.resources.docker.service.DockerResourceService;
@@ -21,6 +18,8 @@ import io.harness.registrars.OrchestrationExecutionEventHandlerRegistrar;
 import io.harness.registrars.StageTypeToStageExecutionMapperRegistrar;
 import io.harness.registries.registrar.OrchestrationEventHandlerRegistrar;
 
+import com.google.inject.AbstractModule;
+import com.google.inject.multibindings.MapBinder;
 import java.util.concurrent.atomic.AtomicReference;
 
 public class NGModule extends AbstractModule {

@@ -2,11 +2,6 @@ package io.harness.registries;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 
-import com.google.inject.AbstractModule;
-import com.google.inject.Injector;
-import com.google.inject.Provides;
-import com.google.inject.Singleton;
-
 import io.harness.adviser.Adviser;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.execution.events.OrchestrationEventHandler;
@@ -17,6 +12,7 @@ import io.harness.facilitator.Facilitator;
 import io.harness.pms.advisers.AdviserType;
 import io.harness.pms.facilitators.FacilitatorType;
 import io.harness.pms.refobjects.RefType;
+import io.harness.pms.steps.StepType;
 import io.harness.registries.adviser.AdviserRegistry;
 import io.harness.registries.events.OrchestrationEventHandlerRegistry;
 import io.harness.registries.facilitator.FacilitatorRegistry;
@@ -31,14 +27,17 @@ import io.harness.registries.resolver.ResolverRegistry;
 import io.harness.registries.state.StepRegistry;
 import io.harness.resolvers.Resolver;
 import io.harness.state.Step;
-import io.harness.pms.steps.StepType;
-import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.tuple.Pair;
 
+import com.google.inject.AbstractModule;
+import com.google.inject.Injector;
+import com.google.inject.Provides;
+import com.google.inject.Singleton;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.tuple.Pair;
 
 @OwnedBy(CDC)
 @Slf4j

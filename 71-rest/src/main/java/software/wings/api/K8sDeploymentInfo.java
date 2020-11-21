@@ -1,13 +1,13 @@
 package software.wings.api;
 
+import software.wings.helpers.ext.helm.response.HelmChartInfo;
+
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import java.util.HashSet;
+import java.util.Set;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
-import software.wings.helpers.ext.helm.response.HelmChartInfo;
-
-import java.util.HashSet;
-import java.util.Set;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 @Data

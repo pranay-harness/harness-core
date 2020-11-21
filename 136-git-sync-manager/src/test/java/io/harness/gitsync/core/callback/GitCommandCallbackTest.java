@@ -1,6 +1,9 @@
 package io.harness.gitsync.core.callback;
 
 import static io.harness.rule.OwnerRule.ABHINAV;
+
+import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.joor.Reflect.on;
 import static org.mockito.Matchers.any;
@@ -11,7 +14,6 @@ import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
-import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
@@ -40,13 +42,6 @@ import io.harness.gitsync.gitsyncerror.beans.GitSyncError;
 import io.harness.gitsync.gitsyncerror.service.GitSyncErrorService;
 import io.harness.rule.Owner;
 import io.harness.tasks.ResponseData;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
-import org.mockito.Spy;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -55,6 +50,13 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
+import org.mockito.Spy;
 
 public class GitCommandCallbackTest extends CategoryTest {
   private static final String CHANGESET_ID = "changesetId";

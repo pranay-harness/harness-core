@@ -3,21 +3,11 @@ package software.wings.delegatetasks.cv;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.network.Http.getOkHttpClientBuilder;
+
 import static software.wings.service.impl.appdynamics.AppdynamicsDelegateServiceImpl.BT_PERFORMANCE_PATH_PREFIX;
 
-import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Preconditions;
-import com.google.common.collect.TreeBasedTable;
-import com.google.inject.Inject;
-
 import io.harness.delegate.task.DataCollectionExecutorService;
-import lombok.extern.slf4j.Slf4j;
-import okhttp3.OkHttpClient;
-import okhttp3.Request;
-import org.apache.commons.codec.binary.Base64;
-import retrofit2.Call;
-import retrofit2.Retrofit;
-import retrofit2.converter.jackson.JacksonConverterFactory;
+
 import software.wings.beans.AppDynamicsConfig;
 import software.wings.helpers.ext.appdynamics.AppdynamicsRestClient;
 import software.wings.service.impl.analysis.MetricElement;
@@ -27,6 +17,10 @@ import software.wings.service.impl.appdynamics.AppdynamicsMetricData;
 import software.wings.service.impl.appdynamics.AppdynamicsTier;
 import software.wings.service.impl.appdynamics.AppdynamicsTimeSeries;
 
+import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Preconditions;
+import com.google.common.collect.TreeBasedTable;
+import com.google.inject.Inject;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -39,6 +33,13 @@ import java.util.Set;
 import java.util.concurrent.Callable;
 import java.util.regex.Pattern;
 import javax.annotation.Nullable;
+import lombok.extern.slf4j.Slf4j;
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
+import org.apache.commons.codec.binary.Base64;
+import retrofit2.Call;
+import retrofit2.Retrofit;
+import retrofit2.converter.jackson.JacksonConverterFactory;
 
 @Slf4j
 public class AppDynamicsDataCollector implements MetricsDataCollector<AppDynamicsDataCollectionInfoV2> {
@@ -91,10 +92,10 @@ public class AppDynamicsDataCollector implements MetricsDataCollector<AppDynamic
     AppDynamicsConfig appDynamicsConfig = dataCollectionInfo.getAppDynamicsConfig();
     return "Basic "
         + Base64.encodeBase64String(
-              String
-                  .format("%s@%s:%s", appDynamicsConfig.getUsername(), appDynamicsConfig.getAccountname(),
-                      new String(appDynamicsConfig.getPassword()))
-                  .getBytes(StandardCharsets.UTF_8));
+            String
+                .format("%s@%s:%s", appDynamicsConfig.getUsername(), appDynamicsConfig.getAccountname(),
+                    new String(appDynamicsConfig.getPassword()))
+                .getBytes(StandardCharsets.UTF_8));
   }
 
   @Override

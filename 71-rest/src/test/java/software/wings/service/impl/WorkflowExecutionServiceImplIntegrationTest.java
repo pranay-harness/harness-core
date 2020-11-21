@@ -1,22 +1,24 @@
 package software.wings.service.impl;
 
 import static io.harness.rule.OwnerRule.VAIBHAV_SI;
-import static org.assertj.core.api.Assertions.assertThat;
+
 import static software.wings.sm.StateExecutionInstance.Builder.aStateExecutionInstance;
 
-import com.google.inject.Inject;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.category.element.DeprecatedIntegrationTests;
 import io.harness.rule.Owner;
-import org.junit.Ignore;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
+
 import software.wings.integration.IntegrationTestBase;
 import software.wings.sm.StateExecutionInstance;
 import software.wings.sm.StateType;
 
+import com.google.inject.Inject;
 import java.util.Arrays;
 import java.util.List;
+import org.junit.Ignore;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 public class WorkflowExecutionServiceImplIntegrationTest extends IntegrationTestBase {
   @Inject WorkflowExecutionServiceImpl workflowExecutionService;

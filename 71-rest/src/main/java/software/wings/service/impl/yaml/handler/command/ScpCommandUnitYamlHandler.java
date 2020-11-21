@@ -1,7 +1,5 @@
 package software.wings.service.impl.yaml.handler.command;
 
-import com.google.inject.Singleton;
-
 import software.wings.beans.command.AbstractCommandUnit;
 import software.wings.beans.command.ScpCommandUnit;
 import software.wings.beans.command.ScpCommandUnit.ScpFileCategory;
@@ -10,6 +8,7 @@ import software.wings.beans.yaml.ChangeContext;
 import software.wings.beans.yaml.YamlConstants;
 import software.wings.utils.Utils;
 
+import com.google.inject.Singleton;
 import java.util.Map;
 
 /**

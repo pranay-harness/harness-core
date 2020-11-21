@@ -13,6 +13,11 @@ import static io.harness.logging.CommandExecutionStatus.SUCCESS;
 import static io.harness.rule.OwnerRule.AADITI;
 import static io.harness.rule.OwnerRule.ANUBHAW;
 import static io.harness.rule.OwnerRule.YOGESH;
+
+import static software.wings.core.ssh.executors.SshSessionConfig.Builder.aSshSessionConfig;
+import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
+import static software.wings.utils.WingsTestConstants.FILE_ID;
+
 import static java.lang.String.format;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -20,11 +25,6 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.when;
-import static software.wings.core.ssh.executors.SshSessionConfig.Builder.aSshSessionConfig;
-import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
-import static software.wings.utils.WingsTestConstants.FILE_ID;
-
-import com.google.common.io.CharStreams;
 
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.service.DelegateAgentFileService.FileBucket;
@@ -32,6 +32,20 @@ import io.harness.exception.WingsException;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.rule.Owner;
 import io.harness.rule.Repeat;
+
+import software.wings.WingsBaseTest;
+import software.wings.beans.ConfigFile;
+import software.wings.core.ssh.executors.ScriptExecutor.ExecutorType;
+import software.wings.delegatetasks.DelegateFileManager;
+import software.wings.delegatetasks.DelegateLogService;
+import software.wings.rules.SshRule;
+
+import com.google.common.io.CharStreams;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.util.concurrent.ExecutionException;
 import org.apache.commons.lang3.tuple.Pair;
 import org.junit.Before;
 import org.junit.Ignore;
@@ -40,18 +54,6 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.junit.rules.TemporaryFolder;
 import org.mockito.Mock;
-import software.wings.WingsBaseTest;
-import software.wings.beans.ConfigFile;
-import software.wings.core.ssh.executors.ScriptExecutor.ExecutorType;
-import software.wings.delegatetasks.DelegateFileManager;
-import software.wings.delegatetasks.DelegateLogService;
-import software.wings.rules.SshRule;
-
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileWriter;
-import java.io.IOException;
-import java.util.concurrent.ExecutionException;
 
 /**
  * Created by anubhaw on 2/10/16.

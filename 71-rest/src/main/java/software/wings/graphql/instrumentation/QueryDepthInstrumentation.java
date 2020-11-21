@@ -1,16 +1,14 @@
 package software.wings.graphql.instrumentation;
 
 import com.google.common.collect.Sets;
-
 import graphql.analysis.MaxQueryDepthInstrumentation;
 import graphql.execution.instrumentation.InstrumentationContext;
 import graphql.execution.instrumentation.SimpleInstrumentationContext;
 import graphql.execution.instrumentation.parameters.InstrumentationValidationParameters;
 import graphql.validation.ValidationError;
-import lombok.extern.slf4j.Slf4j;
-
 import java.util.List;
 import java.util.Set;
+import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class QueryDepthInstrumentation extends MaxQueryDepthInstrumentation {

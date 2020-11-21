@@ -3,6 +3,8 @@ package io.harness.batch.processing.config;
 import io.harness.batch.processing.ccm.BatchJobType;
 import io.harness.batch.processing.events.deployment.writer.DeploymentEventWriter;
 import io.harness.batch.processing.reader.DeploymentEventReader;
+
+import java.util.List;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.batch.core.Job;
 import org.springframework.batch.core.Step;
@@ -14,8 +16,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-
-import java.util.List;
 
 @Slf4j
 @Configuration

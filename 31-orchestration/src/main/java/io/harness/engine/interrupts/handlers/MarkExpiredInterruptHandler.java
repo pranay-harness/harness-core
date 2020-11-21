@@ -2,11 +2,9 @@ package io.harness.engine.interrupts.handlers;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.pms.execution.Status.EXPIRED;
 import static io.harness.interrupts.Interrupt.State.PROCESSED_SUCCESSFULLY;
 import static io.harness.interrupts.Interrupt.State.PROCESSED_UNSUCCESSFULLY;
-
-import com.google.inject.Inject;
+import static io.harness.pms.execution.Status.EXPIRED;
 
 import io.harness.StatusUtils;
 import io.harness.annotations.dev.OwnedBy;
@@ -17,10 +15,11 @@ import io.harness.engine.interrupts.helpers.AbortHelper;
 import io.harness.exception.InvalidRequestException;
 import io.harness.execution.NodeExecution;
 import io.harness.interrupts.Interrupt;
+
+import com.google.inject.Inject;
+import javax.validation.Valid;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
-
-import javax.validation.Valid;
 
 @OwnedBy(CDC)
 @Slf4j

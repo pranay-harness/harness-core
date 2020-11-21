@@ -5,13 +5,9 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.exception.WingsException.ReportTarget.DELEGATE_LOG_SYSTEM;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.filesystem.FileIo.deleteFileIfExists;
+
 import static software.wings.helpers.ext.jenkins.BuildDetails.Builder.aBuildDetails;
 
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
-
-import com.fasterxml.jackson.databind.JsonNode;
-import com.jayway.jsonpath.DocumentContext;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.eraro.ErrorCode;
 import io.harness.eraro.Level;
@@ -22,13 +18,17 @@ import io.harness.serializer.JsonUtils;
 import io.harness.shell.ShellExecutionRequest;
 import io.harness.shell.ShellExecutionResponse;
 import io.harness.shell.ShellExecutionService;
-import lombok.extern.slf4j.Slf4j;
+
 import software.wings.beans.artifact.ArtifactStreamAttributes;
 import software.wings.helpers.ext.jenkins.BuildDetails;
 import software.wings.helpers.ext.jenkins.CustomRepositoryResponse;
 import software.wings.helpers.ext.jenkins.CustomRepositoryResponse.CustomRepositoryResponseBuilder;
 import software.wings.helpers.ext.jenkins.CustomRepositoryResponse.Result;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
+import com.jayway.jsonpath.DocumentContext;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -39,6 +39,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import lombok.extern.slf4j.Slf4j;
 
 @Singleton
 @Slf4j

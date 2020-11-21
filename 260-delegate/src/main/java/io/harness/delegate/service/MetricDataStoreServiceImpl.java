@@ -2,18 +2,18 @@ package io.harness.delegate.service;
 
 import static io.harness.network.SafeHttpCall.execute;
 
-import com.google.common.util.concurrent.TimeLimiter;
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
-
 import io.harness.managerclient.VerificationServiceClient;
 import io.harness.rest.RestResponse;
-import lombok.extern.slf4j.Slf4j;
+
 import software.wings.delegatetasks.MetricDataStoreService;
 import software.wings.service.impl.newrelic.NewRelicMetricDataRecord;
 
+import com.google.common.util.concurrent.TimeLimiter;
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * Created by raghu on 5/19/17.

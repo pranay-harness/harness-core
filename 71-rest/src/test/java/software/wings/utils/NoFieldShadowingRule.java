@@ -1,13 +1,11 @@
 package software.wings.utils;
 
 import com.google.common.collect.Lists;
-
 import com.openpojo.log.utils.MessageFormatter;
 import com.openpojo.reflection.PojoClass;
 import com.openpojo.reflection.PojoField;
 import com.openpojo.validation.affirm.Affirm;
 import com.openpojo.validation.rule.Rule;
-
 import java.util.LinkedList;
 import java.util.List;
 

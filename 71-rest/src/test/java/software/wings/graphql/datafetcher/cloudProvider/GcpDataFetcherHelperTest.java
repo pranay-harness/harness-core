@@ -1,17 +1,13 @@
 package software.wings.graphql.datafetcher.cloudProvider;
 
 import static io.harness.rule.OwnerRule.IGOR;
+
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
 import io.harness.utils.RequestField;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
+
 import software.wings.WingsBaseTest;
 import software.wings.beans.GcpConfig;
 import software.wings.beans.SettingAttribute;
@@ -20,6 +16,12 @@ import software.wings.graphql.schema.mutation.cloudProvider.QLGcpCloudProviderIn
 import software.wings.graphql.schema.mutation.cloudProvider.QLUpdateGcpCloudProviderInput;
 
 import java.sql.SQLException;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
 
 public class GcpDataFetcherHelperTest extends WingsBaseTest {
   private static final String NAME = "NAME";

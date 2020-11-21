@@ -1,15 +1,16 @@
 package migrations.all;
 
-import com.google.inject.Inject;
+import io.harness.persistence.HIterator;
 
+import software.wings.dl.WingsPersistence;
+import software.wings.service.impl.analysis.TimeSeriesMLAnalysisRecord;
+
+import com.google.inject.Inject;
 import com.mongodb.BasicDBObject;
 import com.mongodb.BulkWriteOperation;
 import com.mongodb.DBCollection;
-import io.harness.persistence.HIterator;
 import lombok.extern.slf4j.Slf4j;
 import migrations.Migration;
-import software.wings.dl.WingsPersistence;
-import software.wings.service.impl.analysis.TimeSeriesMLAnalysisRecord;
 @Slf4j
 public class TimeSeriesMLAnalysisDeleteUncompressedMigration implements Migration {
   private static final int BATCH_SIZE = 50;

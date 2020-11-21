@@ -1,13 +1,13 @@
 package io.harness.notification.service;
 
-import com.google.inject.Inject;
 import io.harness.notification.NotificationChannelType;
 import io.harness.notification.remote.UserGroupClient;
 import io.harness.notification.service.api.NotificationSettingsService;
-import lombok.AllArgsConstructor;
 
+import com.google.inject.Inject;
 import java.util.Collections;
 import java.util.List;
+import lombok.AllArgsConstructor;
 
 @AllArgsConstructor(onConstructor = @__({ @Inject }))
 public class NotificationSettingsServiceImpl implements NotificationSettingsService {

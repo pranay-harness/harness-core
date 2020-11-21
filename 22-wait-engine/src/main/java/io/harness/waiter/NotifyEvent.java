@@ -1,16 +1,15 @@
 package io.harness.waiter;
 
-import com.google.common.base.MoreObjects;
-
 import io.harness.annotation.HarnessEntity;
 import io.harness.mongo.index.FdUniqueIndex;
 import io.harness.queue.Queuable;
+
+import com.google.common.base.MoreObjects;
+import java.util.Date;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.experimental.FieldNameConstants;
 import org.mongodb.morphia.annotations.Entity;
-
-import java.util.Date;
 
 @Data
 @EqualsAndHashCode(callSuper = false)

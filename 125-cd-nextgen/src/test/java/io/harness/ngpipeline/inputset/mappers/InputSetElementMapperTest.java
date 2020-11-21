@@ -2,9 +2,8 @@ package io.harness.ngpipeline.inputset.mappers;
 
 import static io.harness.rule.OwnerRule.ARCHIT;
 import static io.harness.rule.OwnerRule.NAMAN;
-import static org.assertj.core.api.Assertions.assertThat;
 
-import com.google.common.io.Resources;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
@@ -26,16 +25,17 @@ import io.harness.ngpipeline.pipeline.beans.yaml.NgPipeline;
 import io.harness.rule.Owner;
 import io.harness.walktree.visitor.response.VisitorErrorResponseWrapper;
 import io.harness.yaml.utils.YamlPipelineUtils;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
 
+import com.google.common.io.Resources;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Objects;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 public class InputSetElementMapperTest extends CategoryTest {
   InputSetResponseDTO inputSetResponseDTO;

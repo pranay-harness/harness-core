@@ -3,32 +3,34 @@ package software.wings.beans;
 import static io.harness.rule.OwnerRule.GEORGE;
 import static io.harness.rule.OwnerRule.SATYAM;
 import static io.harness.rule.OwnerRule.VAIBHAV_SI;
-import static java.util.Arrays.asList;
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.assertj.core.api.Assertions.fail;
+
 import static software.wings.beans.AwsInfrastructureMapping.Builder.anAwsInfrastructureMapping;
 import static software.wings.beans.EcsInfrastructureMapping.Builder.anEcsInfrastructureMapping;
 import static software.wings.beans.InfrastructureMappingBlueprint.NodeFilteringType.AWS_AUTOSCALING_GROUP;
 import static software.wings.beans.InfrastructureMappingBlueprint.NodeFilteringType.AWS_ECS_EC2;
 import static software.wings.beans.InfrastructureMappingBlueprint.NodeFilteringType.AWS_INSTANCE_FILTER;
 
-import com.google.common.collect.ImmutableMap;
+import static java.util.Arrays.asList;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.assertj.core.api.Assertions.fail;
 
 import io.harness.category.element.UnitTests;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.rule.Owner;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
+
 import software.wings.WingsBaseTest;
 import software.wings.beans.AwsInfrastructureMapping.AwsInfrastructureMappingKeys;
 import software.wings.beans.AwsInfrastructureMapping.Builder;
 
+import com.google.common.collect.ImmutableMap;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 public class AwsInfrastructureMappingTest extends WingsBaseTest {
   @Test

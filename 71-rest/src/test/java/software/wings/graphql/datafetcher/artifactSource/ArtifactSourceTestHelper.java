@@ -1,9 +1,10 @@
 package software.wings.graphql.datafetcher.artifactSource;
 
-import static java.util.Arrays.asList;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 import static software.wings.utils.WingsTestConstants.APP_ID;
 import static software.wings.utils.WingsTestConstants.SERVICE_ID;
+
+import static java.util.Arrays.asList;
 
 import software.wings.beans.artifact.NexusArtifactStream;
 import software.wings.beans.artifact.SmbArtifactStream;

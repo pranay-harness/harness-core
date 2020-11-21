@@ -2,10 +2,6 @@ package io.harness.delegate.git;
 
 import static io.harness.git.model.GitRepositoryType.YAML;
 
-import com.google.common.annotations.VisibleForTesting;
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
-
 import io.harness.delegate.beans.connector.gitconnector.CustomCommitAttributes;
 import io.harness.delegate.beans.connector.gitconnector.GitConfigDTO;
 import io.harness.delegate.beans.connector.gitconnector.GitHTTPAuthenticationDTO;
@@ -22,11 +18,14 @@ import io.harness.git.model.FetchFilesByPathRequest;
 import io.harness.git.model.FetchFilesResult;
 import io.harness.git.model.GitBaseRequest;
 import io.harness.git.model.GitRepositoryType;
-import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.NotImplementedException;
 
+import com.google.common.annotations.VisibleForTesting;
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import java.util.Optional;
 import javax.validation.executable.ValidateOnExecution;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.NotImplementedException;
 
 @Singleton
 @ValidateOnExecution

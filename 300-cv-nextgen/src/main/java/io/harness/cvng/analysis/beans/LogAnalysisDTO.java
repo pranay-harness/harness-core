@@ -4,12 +4,12 @@ import io.harness.cvng.analysis.entities.LogAnalysisCluster;
 import io.harness.cvng.analysis.entities.LogAnalysisResult;
 import io.harness.cvng.analysis.entities.LogAnalysisResult.AnalysisResult;
 import io.harness.mongo.index.FdIndex;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.Setter;
 
 import java.time.Instant;
 import java.util.List;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.Setter;
 
 @Getter
 @Builder

@@ -2,13 +2,8 @@ package software.wings.service.impl;
 
 import static software.wings.service.impl.AzureUtils.AZURE_GOV_REGIONS_NAMES;
 
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
-
-import com.microsoft.azure.management.resources.fluentcore.arm.Region;
 import io.harness.exception.InvalidArgumentsException;
-import org.apache.commons.lang3.tuple.Pair;
-import org.jetbrains.annotations.NotNull;
+
 import software.wings.app.MainConfiguration;
 import software.wings.beans.AzureConfig;
 import software.wings.beans.AzureContainerRegistry;
@@ -23,6 +18,9 @@ import software.wings.service.intfc.AzureResourceService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.security.SecretManager;
 
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
+import com.microsoft.azure.management.resources.fluentcore.arm.Region;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
@@ -30,6 +28,8 @@ import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import javax.validation.executable.ValidateOnExecution;
+import org.apache.commons.lang3.tuple.Pair;
+import org.jetbrains.annotations.NotNull;
 
 @Singleton
 @ValidateOnExecution

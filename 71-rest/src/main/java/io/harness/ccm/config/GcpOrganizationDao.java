@@ -2,15 +2,14 @@ package io.harness.ccm.config;
 
 import static io.harness.persistence.HPersistence.upsertReturnNewOptions;
 
-import com.google.inject.Inject;
-
 import io.harness.ccm.config.GcpOrganization.GcpOrganizationKeys;
 import io.harness.persistence.HPersistence;
+
+import com.google.inject.Inject;
+import java.util.List;
 import org.bson.types.ObjectId;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
-
-import java.util.List;
 
 public class GcpOrganizationDao {
   @Inject private HPersistence persistence;

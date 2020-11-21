@@ -1,24 +1,26 @@
 package software.wings.service;
 
-import static freemarker.template.Configuration.VERSION_2_3_23;
 import static io.harness.rule.OwnerRule.RUSHABH;
+
+import static freemarker.template.Configuration.VERSION_2_3_23;
 import static org.assertj.core.api.Assertions.assertThat;
+
+import io.harness.CategoryTest;
+import io.harness.category.element.UnitTests;
+import io.harness.rule.Owner;
+
+import software.wings.helpers.ext.mail.EmailData;
 
 import freemarker.template.Configuration;
 import freemarker.template.Template;
 import freemarker.template.TemplateException;
-import io.harness.CategoryTest;
-import io.harness.category.element.UnitTests;
-import io.harness.rule.Owner;
-import org.apache.commons.io.IOUtils;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
-import software.wings.helpers.ext.mail.EmailData;
-
 import java.io.IOException;
 import java.io.StringWriter;
 import java.util.HashMap;
 import java.util.Map;
+import org.apache.commons.io.IOUtils;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 /**
  * For every email action, this class tests if the template matches to the expected output.

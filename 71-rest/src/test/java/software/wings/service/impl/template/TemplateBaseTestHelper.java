@@ -1,6 +1,5 @@
 package software.wings.service.impl.template;
 
-import static java.util.Arrays.asList;
 import static software.wings.api.DeploymentType.SSH;
 import static software.wings.beans.Account.GLOBAL_ACCOUNT_ID;
 import static software.wings.beans.CanaryOrchestrationWorkflow.CanaryOrchestrationWorkflowBuilder.aCanaryOrchestrationWorkflow;
@@ -17,10 +16,10 @@ import static software.wings.utils.WingsTestConstants.SERVICE_ID;
 import static software.wings.utils.WingsTestConstants.WORKFLOW_ID;
 import static software.wings.utils.WingsTestConstants.WORKFLOW_NAME;
 
-import com.google.inject.Inject;
+import static java.util.Arrays.asList;
 
 import io.harness.beans.WorkflowType;
-import org.junit.Before;
+
 import software.wings.WingsBaseTest;
 import software.wings.beans.GraphNode;
 import software.wings.beans.Workflow;
@@ -29,6 +28,9 @@ import software.wings.service.impl.workflow.WorkflowServiceHelper;
 import software.wings.service.intfc.template.TemplateFolderService;
 import software.wings.service.intfc.template.TemplateGalleryService;
 import software.wings.service.intfc.template.TemplateService;
+
+import com.google.inject.Inject;
+import org.junit.Before;
 
 public class TemplateBaseTestHelper extends WingsBaseTest {
   @Inject protected TemplateFolderService templateFolderService;

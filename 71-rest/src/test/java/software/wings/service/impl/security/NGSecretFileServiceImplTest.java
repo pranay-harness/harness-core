@@ -1,8 +1,9 @@
 package software.wings.service.impl.security;
 
-import static io.github.benas.randombeans.api.EnhancedRandom.random;
 import static io.harness.rule.OwnerRule.PHOENIKX;
 import static io.harness.security.encryption.EncryptionType.VAULT;
+
+import static io.github.benas.randombeans.api.EnhancedRandom.random;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.fail;
 import static org.mockito.Matchers.any;
@@ -27,10 +28,7 @@ import io.harness.secretmanagerclient.dto.SecretFileDTO;
 import io.harness.secretmanagerclient.dto.SecretFileUpdateDTO;
 import io.harness.secretmanagers.SecretManagerConfigService;
 import io.harness.secrets.SecretsFileService;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
-import org.mockito.Mock;
+
 import software.wings.WingsBaseTest;
 import software.wings.beans.VaultConfig;
 import software.wings.dl.WingsPersistence;
@@ -41,6 +39,10 @@ import software.wings.service.intfc.security.NGSecretService;
 
 import java.util.ArrayList;
 import java.util.Optional;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
+import org.mockito.Mock;
 
 public class NGSecretFileServiceImplTest extends WingsBaseTest {
   @Mock private NGSecretManagerService ngSecretManagerService;

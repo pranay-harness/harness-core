@@ -1,10 +1,9 @@
 package software.wings.service.impl;
 
+import java.util.Collection;
 import lombok.Builder;
 import lombok.Singular;
 import lombok.Value;
-
-import java.util.Collection;
 
 @Value
 @Builder

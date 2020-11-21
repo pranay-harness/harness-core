@@ -2,9 +2,8 @@ package software.wings;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.persistence.HQuery.excludeAuthority;
-import static org.assertj.core.api.Assertions.assertThat;
 
-import com.google.inject.Inject;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.CategoryTest;
 import io.harness.MockableTestMixin;
@@ -17,9 +16,7 @@ import io.harness.exception.WingsException;
 import io.harness.queue.QueueConsumer;
 import io.harness.security.encryption.EncryptedRecord;
 import io.harness.security.encryption.EncryptionType;
-import org.junit.Rule;
-import org.mockito.junit.MockitoJUnit;
-import org.mockito.junit.MockitoRule;
+
 import software.wings.beans.Account;
 import software.wings.beans.Account.Builder;
 import software.wings.beans.AccountStatus;
@@ -50,6 +47,7 @@ import software.wings.service.intfc.security.EncryptionService;
 import software.wings.service.intfc.security.LocalSecretManagerService;
 import software.wings.service.intfc.security.SecretManager;
 
+import com.google.inject.Inject;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -57,6 +55,9 @@ import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
 import javax.crypto.spec.SecretKeySpec;
+import org.junit.Rule;
+import org.mockito.junit.MockitoJUnit;
+import org.mockito.junit.MockitoRule;
 
 /**
  * Created by anubhaw on 4/28/16.

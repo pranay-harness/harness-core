@@ -1,8 +1,7 @@
 package software.wings.graphql.datafetcher;
 
-import org.dataloader.DataLoader;
-
 import java.util.concurrent.CompletionStage;
+import org.dataloader.DataLoader;
 
 public abstract class AbstractBatchDataFetcher<T, P, K> extends AbstractObjectDataFetcher<T, P> {
   protected abstract CompletionStage<T> load(P parameters, DataLoader<K, T> dataLoader);

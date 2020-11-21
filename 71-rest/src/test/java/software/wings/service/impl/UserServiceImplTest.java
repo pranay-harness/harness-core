@@ -2,17 +2,17 @@ package software.wings.service.impl;
 
 import static io.harness.rule.OwnerRule.DEEPAK;
 import static io.harness.rule.OwnerRule.MOHIT;
+
+import static software.wings.beans.Account.Builder.anAccount;
+import static software.wings.beans.User.Builder.anUser;
+import static software.wings.beans.UserInvite.UserInviteBuilder.anUserInvite;
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.when;
-import static software.wings.beans.Account.Builder.anAccount;
-import static software.wings.beans.User.Builder.anUser;
-import static software.wings.beans.UserInvite.UserInviteBuilder.anUserInvite;
-
-import com.google.inject.Inject;
 
 import io.harness.beans.PageRequest;
 import io.harness.category.element.UnitTests;
@@ -20,12 +20,7 @@ import io.harness.data.structure.UUIDGenerator;
 import io.harness.event.handler.impl.EventPublishHelper;
 import io.harness.exception.InvalidRequestException;
 import io.harness.rule.Owner;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
-import org.mockito.InjectMocks;
-import org.mockito.Matchers;
-import org.mockito.Mock;
-import org.mockito.Mockito;
+
 import software.wings.WingsBaseTest;
 import software.wings.beans.Account;
 import software.wings.beans.User;
@@ -34,12 +29,19 @@ import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.SignupService;
 
+import com.google.inject.Inject;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import javax.ws.rs.core.MultivaluedHashMap;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.UriInfo;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
+import org.mockito.InjectMocks;
+import org.mockito.Matchers;
+import org.mockito.Mock;
+import org.mockito.Mockito;
 
 public class UserServiceImplTest extends WingsBaseTest {
   @Mock AccountService accountService;

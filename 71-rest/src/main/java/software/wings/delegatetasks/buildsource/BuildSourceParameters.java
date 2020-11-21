@@ -1,19 +1,19 @@
 package software.wings.delegatetasks.buildsource;
 
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
-import static java.util.Collections.emptyList;
+
 import static software.wings.beans.artifact.ArtifactStreamType.ACR;
 import static software.wings.beans.artifact.ArtifactStreamType.AZURE_ARTIFACTS;
 import static software.wings.beans.artifact.ArtifactStreamType.GCR;
+
+import static java.util.Collections.emptyList;
 
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.delegate.beans.executioncapability.ExecutionCapabilityDemander;
 import io.harness.delegate.task.TaskParameters;
 import io.harness.delegate.task.mixin.HttpConnectionExecutionCapabilityGenerator;
 import io.harness.security.encryption.EncryptedDataDetail;
-import lombok.Builder;
-import lombok.Value;
-import org.hibernate.validator.constraints.NotEmpty;
+
 import software.wings.beans.artifact.ArtifactStreamAttributes;
 import software.wings.settings.SettingValue;
 
@@ -21,6 +21,9 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 import javax.validation.constraints.NotNull;
+import lombok.Builder;
+import lombok.Value;
+import org.hibernate.validator.constraints.NotEmpty;
 
 @Value
 @Builder

@@ -5,11 +5,10 @@ import static io.harness.rule.OwnerRule.ALEKSANDAR;
 import static io.harness.rule.OwnerRule.GEORGE;
 import static io.harness.rule.OwnerRule.MARKO;
 import static io.harness.threading.Morpheus.sleep;
+
 import static java.time.Duration.ofMillis;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-
-import com.google.inject.Inject;
 
 import io.harness.DelegateServiceTestBase;
 import io.harness.callback.DelegateCallback;
@@ -22,6 +21,8 @@ import io.harness.persistence.HPersistence;
 import io.harness.rule.Owner;
 import io.harness.service.impl.DelegateCallbackRegistryImpl;
 import io.harness.service.impl.MongoDelegateCallbackService;
+
+import com.google.inject.Inject;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 

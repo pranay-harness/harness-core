@@ -2,11 +2,6 @@ package io.harness.cvng.dashboard.services.impl;
 
 import static io.harness.persistence.HQuery.excludeAuthority;
 
-import com.google.common.collect.HashBasedTable;
-import com.google.common.collect.Table;
-import com.google.common.util.concurrent.AtomicDouble;
-import com.google.inject.Inject;
-
 import io.harness.cvng.beans.CVMonitoringCategory;
 import io.harness.cvng.core.entities.CVConfig;
 import io.harness.cvng.core.services.api.CVConfigService;
@@ -22,9 +17,11 @@ import io.harness.cvng.dashboard.entities.Anomaly.AnomalyStatus;
 import io.harness.cvng.dashboard.services.api.AnomalyService;
 import io.harness.persistence.HIterator;
 import io.harness.persistence.HPersistence;
-import org.mongodb.morphia.UpdateOptions;
-import org.mongodb.morphia.query.Query;
 
+import com.google.common.collect.HashBasedTable;
+import com.google.common.collect.Table;
+import com.google.common.util.concurrent.AtomicDouble;
+import com.google.inject.Inject;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -35,6 +32,8 @@ import java.util.Map;
 import java.util.Set;
 import java.util.SortedSet;
 import java.util.TreeSet;
+import org.mongodb.morphia.UpdateOptions;
+import org.mongodb.morphia.query.Query;
 
 public class AnomalyServiceImpl implements AnomalyService {
   @Inject private HPersistence hPersistence;

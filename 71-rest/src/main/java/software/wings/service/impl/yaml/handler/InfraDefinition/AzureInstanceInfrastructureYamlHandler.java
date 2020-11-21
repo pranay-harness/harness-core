@@ -3,12 +3,11 @@ package software.wings.service.impl.yaml.handler.InfraDefinition;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.eraro.ErrorCode.GENERAL_ERROR;
 import static io.harness.validation.Validator.notNullCheck;
+
 import static java.lang.String.format;
 
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
-
 import io.harness.exception.WingsException;
+
 import software.wings.beans.InfrastructureType;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.yaml.ChangeContext;
@@ -17,6 +16,8 @@ import software.wings.infra.AzureInstanceInfrastructure.Yaml;
 import software.wings.service.impl.yaml.handler.CloudProviderInfrastructure.CloudProviderInfrastructureYamlHandler;
 import software.wings.service.intfc.SettingsService;
 
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import java.util.List;
 
 @Singleton

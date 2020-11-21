@@ -13,6 +13,12 @@ import static io.harness.eraro.ErrorCode.NO_APPS_ASSIGNED;
 import static io.harness.exception.WingsException.ExecutionContext.MANAGER;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.validation.Validator.notNullCheck;
+
+import static software.wings.beans.Base.CREATED_AT_KEY;
+import static software.wings.beans.EntityType.APPLICATION;
+import static software.wings.beans.EntityType.ARTIFACT;
+import static software.wings.features.DeploymentHistoryFeature.FEATURE_NAME;
+
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 import static java.util.stream.Collectors.toList;
@@ -21,17 +27,6 @@ import static org.mongodb.morphia.aggregation.Group.grouping;
 import static org.mongodb.morphia.aggregation.Projection.projection;
 import static org.mongodb.morphia.query.Sort.ascending;
 import static org.mongodb.morphia.query.Sort.descending;
-import static software.wings.beans.Base.CREATED_AT_KEY;
-import static software.wings.beans.EntityType.APPLICATION;
-import static software.wings.beans.EntityType.ARTIFACT;
-import static software.wings.features.DeploymentHistoryFeature.FEATURE_NAME;
-
-import com.google.common.annotations.VisibleForTesting;
-import com.google.common.collect.Lists;
-import com.google.common.collect.Sets;
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
-import com.google.inject.name.Named;
 
 import io.harness.beans.EmbeddedUser;
 import io.harness.beans.ExecutionStatus;
@@ -49,12 +44,7 @@ import io.harness.logging.ExceptionLogger;
 import io.harness.persistence.HIterator;
 import io.harness.persistence.HPersistence;
 import io.harness.time.EpochUtils;
-import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.ObjectUtils;
-import org.mongodb.morphia.aggregation.AggregationPipeline;
-import org.mongodb.morphia.aggregation.Group;
-import org.mongodb.morphia.query.Query;
-import org.mongodb.morphia.query.Sort;
+
 import software.wings.beans.Application;
 import software.wings.beans.ElementExecutionSummary;
 import software.wings.beans.EntityType;
@@ -117,6 +107,12 @@ import software.wings.service.intfc.instance.DashboardStatisticsService;
 import software.wings.service.intfc.instance.InstanceService;
 import software.wings.sm.PipelineSummary;
 
+import com.google.common.annotations.VisibleForTesting;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
+import com.google.inject.name.Named;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
@@ -129,6 +125,12 @@ import java.util.Set;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Collectors;
 import javax.annotation.Nonnull;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.ObjectUtils;
+import org.mongodb.morphia.aggregation.AggregationPipeline;
+import org.mongodb.morphia.aggregation.Group;
+import org.mongodb.morphia.query.Query;
+import org.mongodb.morphia.query.Sort;
 
 /**
  * @author rktummala on 8/13/17
@@ -508,7 +510,7 @@ public class DashboardStatisticsServiceImpl implements DashboardStatisticsServic
   private PageResponse<InstanceSummaryStatsByService> constructInstanceSummaryStatsByService(
       List<ServiceInstanceCount> serviceInstanceCountList, int offset, int limit) {
     List<InstanceSummaryStatsByService> instanceSummaryStatsByServiceList =
-        serviceInstanceCountList.stream().map(this ::getInstanceSummaryStatsByService).collect(toList());
+        serviceInstanceCountList.stream().map(this::getInstanceSummaryStatsByService).collect(toList());
     return aPageResponse()
         .withResponse(instanceSummaryStatsByServiceList)
         .withOffset(Integer.toString(offset))
@@ -1029,7 +1031,7 @@ public class DashboardStatisticsServiceImpl implements DashboardStatisticsServic
           manifestSummary = helmCharts.stream()
                                 .filter(chart -> serviceId.equals(chart.getServiceId()))
                                 .findFirst()
-                                .map(this ::prepareManifestSummaryFromHelmChart)
+                                .map(this::prepareManifestSummaryFromHelmChart)
                                 .orElse(null);
         }
       }

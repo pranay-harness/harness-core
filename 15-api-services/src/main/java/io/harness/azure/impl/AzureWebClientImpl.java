@@ -6,13 +6,23 @@ import static io.harness.azure.model.AzureConstants.DOCKER_REGISTRY_SERVER_SECRE
 import static io.harness.azure.model.AzureConstants.DOCKER_REGISTRY_SERVER_URL_PROPERTY_NAME;
 import static io.harness.azure.model.AzureConstants.DOCKER_REGISTRY_SERVER_USERNAME_PROPERTY_NAME;
 import static io.harness.azure.model.AzureConstants.SLOT_NAME_BLANK_VALIDATION_MSG;
+
 import static java.lang.String.format;
 import static org.apache.commons.lang3.StringUtils.EMPTY;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
-import com.google.inject.Singleton;
+import io.harness.azure.AzureClient;
+import io.harness.azure.client.AzureWebClient;
+import io.harness.azure.context.AzureClientContext;
+import io.harness.azure.context.AzureWebClientContext;
+import io.harness.azure.model.AzureAppServiceApplicationSetting;
+import io.harness.azure.model.AzureAppServiceConnectionString;
+import io.harness.azure.model.AzureAppServiceDockerSetting;
+import io.harness.azure.model.WebAppHostingOS;
+import io.harness.azure.utility.AzureResourceUtility;
 
+import com.google.inject.Singleton;
 import com.microsoft.azure.PagedList;
 import com.microsoft.azure.management.Azure;
 import com.microsoft.azure.management.appservice.AppSetting;
@@ -25,20 +35,6 @@ import com.microsoft.azure.management.appservice.RampUpRule;
 import com.microsoft.azure.management.appservice.WebApp;
 import com.microsoft.azure.management.appservice.implementation.SiteConfigResourceInner;
 import com.microsoft.azure.management.appservice.implementation.StringDictionaryInner;
-import io.harness.azure.AzureClient;
-import io.harness.azure.client.AzureWebClient;
-import io.harness.azure.context.AzureClientContext;
-import io.harness.azure.context.AzureWebClientContext;
-import io.harness.azure.model.AzureAppServiceApplicationSetting;
-import io.harness.azure.model.AzureAppServiceConnectionString;
-import io.harness.azure.model.AzureAppServiceDockerSetting;
-import io.harness.azure.model.WebAppHostingOS;
-import io.harness.azure.utility.AzureResourceUtility;
-import lombok.extern.slf4j.Slf4j;
-import org.jetbrains.annotations.NotNull;
-import rx.Completable;
-import rx.Observable;
-
 import java.time.Duration;
 import java.time.Instant;
 import java.util.ArrayList;
@@ -47,6 +43,10 @@ import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Optional;
 import java.util.stream.Collectors;
+import lombok.extern.slf4j.Slf4j;
+import org.jetbrains.annotations.NotNull;
+import rx.Completable;
+import rx.Observable;
 
 @Singleton
 @Slf4j
@@ -197,7 +197,7 @@ public class AzureWebClientImpl extends AzureClient implements AzureWebClient {
     Map<String, AppSetting> appSettings = deploymentSlot.getAppSettings();
 
     return appSettings.values().stream().collect(
-        Collectors.toMap(AppSetting::key, this ::buildAzureAppServiceApplicationSettings));
+        Collectors.toMap(AppSetting::key, this::buildAzureAppServiceApplicationSettings));
   }
 
   public AzureAppServiceApplicationSetting buildAzureAppServiceApplicationSettings(AppSetting appSetting) {
@@ -233,7 +233,7 @@ public class AzureWebClientImpl extends AzureClient implements AzureWebClient {
     Map<String, ConnectionString> connSettings = deploymentSlot.getConnectionStrings();
 
     return connSettings.values().stream().collect(
-        Collectors.toMap(ConnectionString::name, this ::buildAzureAppServiceConnectionStrings));
+        Collectors.toMap(ConnectionString::name, this::buildAzureAppServiceConnectionStrings));
   }
 
   public AzureAppServiceConnectionString buildAzureAppServiceConnectionStrings(ConnectionString connectionString) {
@@ -282,7 +282,7 @@ public class AzureWebClientImpl extends AzureClient implements AzureWebClient {
     return appSettings.values()
         .stream()
         .filter(appSetting -> AzureResourceUtility.DOCKER_REGISTRY_PROPERTY_NAMES.contains(appSetting.key()))
-        .collect(Collectors.toMap(AppSetting::key, this ::buildAzureAppServiceDockerSetting));
+        .collect(Collectors.toMap(AppSetting::key, this::buildAzureAppServiceDockerSetting));
   }
 
   public AzureAppServiceDockerSetting buildAzureAppServiceDockerSetting(AppSetting appSetting) {

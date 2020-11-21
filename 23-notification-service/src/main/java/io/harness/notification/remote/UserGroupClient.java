@@ -1,18 +1,18 @@
 package io.harness.notification.remote;
 
-import io.harness.annotations.dev.OwnedBy;
-import io.harness.notification.NotificationChannelType;
-import io.harness.rest.RestResponse;
-import retrofit2.Call;
-import retrofit2.http.GET;
-import retrofit2.http.Query;
-
-import java.util.List;
-
 import static io.harness.NGCommonEntityConstants.ACCOUNT_KEY;
 import static io.harness.NGCommonEntityConstants.GROUP_IDENTIFIERS_KEY;
 import static io.harness.NotificationResourceConstants.NOTIFICATION_CHANNEL_KEY;
 import static io.harness.annotations.dev.HarnessTeam.PL;
+
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.notification.NotificationChannelType;
+import io.harness.rest.RestResponse;
+
+import java.util.List;
+import retrofit2.Call;
+import retrofit2.http.GET;
+import retrofit2.http.Query;
 
 @OwnedBy(PL)
 public interface UserGroupClient {

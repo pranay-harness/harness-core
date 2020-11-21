@@ -3,11 +3,11 @@ package io.harness.delegate.task.spotinst.request;
 import static com.google.common.collect.Sets.newHashSet;
 
 import io.harness.delegate.task.TaskParameters;
+
+import java.util.Set;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import org.hibernate.validator.constraints.NotEmpty;
-
-import java.util.Set;
 
 @Data
 @AllArgsConstructor

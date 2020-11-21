@@ -2,22 +2,14 @@ package io.harness.ccm.views.graphql;
 
 import static io.harness.ccm.billing.preaggregated.PreAggregatedBillingDataHelper.convertTimeSeriesPointsMapToList;
 import static io.harness.ccm.billing.preaggregated.PreAggregatedBillingDataHelper.getNumericValue;
+
 import static software.wings.graphql.datafetcher.billing.CloudBillingHelper.unified;
 import static software.wings.graphql.datafetcher.billing.CloudTimeSeriesStatsDataFetcher.OTHERS;
 
-import com.google.cloud.Timestamp;
-import com.google.cloud.bigquery.BigQuery;
-import com.google.cloud.bigquery.Field;
-import com.google.cloud.bigquery.FieldList;
-import com.google.cloud.bigquery.FieldValueList;
-import com.google.cloud.bigquery.Schema;
-import com.google.cloud.bigquery.TableResult;
-import com.google.inject.Inject;
-
-import graphql.schema.DataFetchingEnvironment;
 import io.harness.ccm.billing.TimeSeriesDataPoints;
 import io.harness.ccm.billing.bigquery.BigQueryService;
 import io.harness.ccm.views.service.ViewsBillingService;
+
 import software.wings.graphql.datafetcher.AbstractStatsDataFetcherWithAggregationListAndLimit;
 import software.wings.graphql.datafetcher.billing.BillingDataHelper;
 import software.wings.graphql.datafetcher.billing.CloudBillingHelper;
@@ -28,6 +20,15 @@ import software.wings.graphql.schema.type.aggregation.QLReference;
 import software.wings.security.PermissionAttribute;
 import software.wings.security.annotations.AuthRule;
 
+import com.google.cloud.Timestamp;
+import com.google.cloud.bigquery.BigQuery;
+import com.google.cloud.bigquery.Field;
+import com.google.cloud.bigquery.FieldList;
+import com.google.cloud.bigquery.FieldValueList;
+import com.google.cloud.bigquery.Schema;
+import com.google.cloud.bigquery.TableResult;
+import com.google.inject.Inject;
+import graphql.schema.DataFetchingEnvironment;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedHashMap;

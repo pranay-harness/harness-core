@@ -1,6 +1,5 @@
 package io.harness.pms.serializer.kryo;
 
-import com.esotericsoftware.kryo.Kryo;
 import io.harness.pms.advisers.AdviserObtainment;
 import io.harness.pms.advisers.AdviserType;
 import io.harness.pms.ambiance.Ambiance;
@@ -16,6 +15,8 @@ import io.harness.pms.serializer.kryo.serializers.StepTypeKryoSerializer;
 import io.harness.pms.steps.SkipType;
 import io.harness.pms.steps.StepType;
 import io.harness.serializer.KryoRegistrar;
+
+import com.esotericsoftware.kryo.Kryo;
 
 public class PmsContractsKryoRegistrar implements KryoRegistrar {
   @Override

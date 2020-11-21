@@ -1,13 +1,14 @@
 package software.wings.beans.command;
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import io.harness.delegate.command.CommandExecutionData;
-import lombok.Builder;
-import lombok.Data;
+
 import software.wings.beans.container.AwsAutoScalarConfig;
 import software.wings.beans.container.Label;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import java.util.List;
+import lombok.Builder;
+import lombok.Data;
 
 /**
  * Created by brett on 11/18/17

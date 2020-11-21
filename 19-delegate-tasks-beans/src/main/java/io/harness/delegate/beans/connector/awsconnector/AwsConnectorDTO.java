@@ -1,14 +1,14 @@
 package io.harness.delegate.beans.connector.awsconnector;
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import io.harness.delegate.beans.connector.ConnectorConfigDTO;
+
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import io.swagger.annotations.ApiModel;
+import javax.validation.Valid;
+import javax.validation.constraints.NotNull;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
-
-import javax.validation.Valid;
-import javax.validation.constraints.NotNull;
 
 @Data
 @Builder

@@ -1,15 +1,16 @@
 package io.harness.ng.core.activityhistory;
 
 import static io.harness.rule.OwnerRule.DEEPAK;
-import static org.assertj.core.api.Assertions.assertThat;
 
-import com.google.inject.Singleton;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.ng.core.activityhistory.entity.NGActivity.ActivityHistoryEntityKeys;
 import io.harness.rule.Owner;
 import io.harness.utils.FullyQualifiedIdentifierHelper;
+
+import com.google.inject.Singleton;
 import org.bson.Document;
 import org.junit.Before;
 import org.junit.Test;

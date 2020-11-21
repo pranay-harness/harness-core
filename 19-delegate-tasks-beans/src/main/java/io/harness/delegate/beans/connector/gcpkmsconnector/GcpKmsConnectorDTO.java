@@ -1,8 +1,9 @@
 package io.harness.delegate.beans.connector.gcpkmsconnector;
 
+import io.harness.delegate.beans.connector.ConnectorConfigDTO;
+
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
-import io.harness.delegate.beans.connector.ConnectorConfigDTO;
 import lombok.Builder;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;

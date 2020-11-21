@@ -6,8 +6,7 @@ import static io.harness.beans.ExecutionStatus.FAILED;
 import static io.harness.beans.ExecutionStatus.RUNNING;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.delegate.beans.TaskData.DEFAULT_ASYNC_CALL_TIMEOUT;
-import static java.util.Collections.singletonList;
-import static java.util.stream.Collectors.toMap;
+
 import static software.wings.beans.TaskType.GCB;
 import static software.wings.beans.command.GcbTaskParams.GcbTaskType.CANCEL;
 import static software.wings.beans.command.GcbTaskParams.GcbTaskType.POLL;
@@ -17,10 +16,9 @@ import static software.wings.sm.states.gcbconfigs.GcbOptions.GcbSpecSource.REMOT
 import static software.wings.sm.states.gcbconfigs.GcbOptions.GcbSpecSource.TRIGGER;
 import static software.wings.utils.GitUtilsManager.fetchCompleteGitRepoUrl;
 
-import com.google.common.annotations.VisibleForTesting;
-import com.google.inject.Inject;
+import static java.util.Collections.singletonList;
+import static java.util.stream.Collectors.toMap;
 
-import com.github.reinert.jjschema.Attributes;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.DelegateTask;
 import io.harness.beans.ExecutionStatus;
@@ -37,15 +35,7 @@ import io.harness.exception.UnsupportedOperationException;
 import io.harness.serializer.KryoSerializer;
 import io.harness.tasks.Cd1SetupFields;
 import io.harness.tasks.ResponseData;
-import lombok.Data;
-import lombok.EqualsAndHashCode;
-import lombok.Getter;
-import lombok.RequiredArgsConstructor;
-import lombok.Setter;
-import lombok.extern.slf4j.Slf4j;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
-import org.mongodb.morphia.annotations.Transient;
+
 import software.wings.api.GcbExecutionData;
 import software.wings.beans.Activity;
 import software.wings.beans.Activity.ActivityBuilder;
@@ -78,12 +68,24 @@ import software.wings.sm.states.gcbconfigs.GcbOptions;
 import software.wings.sm.states.mixin.SweepingOutputStateMixin;
 import software.wings.stencils.DefaultValue;
 
+import com.github.reinert.jjschema.Attributes;
+import com.google.common.annotations.VisibleForTesting;
+import com.google.inject.Inject;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Stream;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.RequiredArgsConstructor;
+import lombok.Setter;
+import lombok.extern.slf4j.Slf4j;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
+import org.mongodb.morphia.annotations.Transient;
 
 @Slf4j
 @OwnedBy(CDC)

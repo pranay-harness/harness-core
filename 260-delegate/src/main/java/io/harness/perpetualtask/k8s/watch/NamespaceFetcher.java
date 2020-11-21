@@ -2,7 +2,6 @@ package io.harness.perpetualtask.k8s.watch;
 
 import com.google.inject.Inject;
 import com.google.inject.assistedinject.Assisted;
-
 import io.kubernetes.client.informer.SharedInformerFactory;
 import io.kubernetes.client.informer.cache.Store;
 import io.kubernetes.client.openapi.ApiClient;

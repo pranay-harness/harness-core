@@ -1,14 +1,11 @@
 package software.wings.resources;
 
-import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 import static software.wings.security.PermissionAttribute.ResourceType.SETTING;
 
-import com.google.inject.Inject;
+import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 
-import com.codahale.metrics.annotation.ExceptionMetered;
-import com.codahale.metrics.annotation.Timed;
 import io.harness.rest.RestResponse;
-import io.swagger.annotations.Api;
+
 import software.wings.beans.AzureContainerRegistry;
 import software.wings.beans.AzureImageDefinition;
 import software.wings.beans.AzureImageGallery;
@@ -18,6 +15,10 @@ import software.wings.beans.NameValuePair;
 import software.wings.security.annotations.Scope;
 import software.wings.service.intfc.AzureResourceService;
 
+import com.codahale.metrics.annotation.ExceptionMetered;
+import com.codahale.metrics.annotation.Timed;
+import com.google.inject.Inject;
+import io.swagger.annotations.Api;
 import java.util.List;
 import java.util.Map;
 import javax.ws.rs.Consumes;

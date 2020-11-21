@@ -2,17 +2,17 @@ package migrations.all;
 
 import static io.harness.mongo.MongoUtils.setUnset;
 
-import com.google.inject.Inject;
+import software.wings.beans.GitCommit;
+import software.wings.beans.GitCommit.GitCommitKeys;
+import software.wings.beans.GitCommit.Status;
+import software.wings.dl.WingsPersistence;
 
+import com.google.inject.Inject;
 import lombok.extern.slf4j.Slf4j;
 import migrations.Migration;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
 import org.mongodb.morphia.query.UpdateResults;
-import software.wings.beans.GitCommit;
-import software.wings.beans.GitCommit.GitCommitKeys;
-import software.wings.beans.GitCommit.Status;
-import software.wings.dl.WingsPersistence;
 
 @Slf4j
 public class GitCommitStatusMigration implements Migration {

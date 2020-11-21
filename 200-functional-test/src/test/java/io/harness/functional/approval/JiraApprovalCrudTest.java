@@ -4,11 +4,10 @@ import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.generator.EnvironmentGenerator.Environments.GENERIC_TEST;
 import static io.harness.generator.SettingGenerator.Settings.HARNESS_JIRA;
 import static io.harness.rule.OwnerRule.ROHIT;
-import static org.assertj.core.api.Assertions.assertThat;
+
 import static software.wings.sm.StateType.APPROVAL;
 
-import com.google.common.collect.ImmutableMap;
-import com.google.inject.Inject;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.category.element.FunctionalTests;
 import io.harness.functional.AbstractFunctionalTest;
@@ -22,10 +21,7 @@ import io.harness.generator.Randomizer.Seed;
 import io.harness.generator.SettingGenerator;
 import io.harness.rule.Owner;
 import io.harness.testframework.restutils.WorkflowRestUtils;
-import lombok.extern.slf4j.Slf4j;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
+
 import software.wings.beans.Application;
 import software.wings.beans.CanaryOrchestrationWorkflow;
 import software.wings.beans.Environment;
@@ -35,9 +31,15 @@ import software.wings.beans.SettingAttribute;
 import software.wings.beans.Workflow;
 import software.wings.service.intfc.WorkflowService;
 
+import com.google.common.collect.ImmutableMap;
+import com.google.inject.Inject;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import lombok.extern.slf4j.Slf4j;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 @Slf4j
 public class JiraApprovalCrudTest extends AbstractFunctionalTest {

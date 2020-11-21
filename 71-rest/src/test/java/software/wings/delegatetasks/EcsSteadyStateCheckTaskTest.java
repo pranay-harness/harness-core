@@ -2,6 +2,9 @@ package software.wings.delegatetasks;
 
 import static io.harness.delegate.beans.TaskData.DEFAULT_ASYNC_CALL_TIMEOUT;
 import static io.harness.rule.OwnerRule.SATYAM;
+
+import static software.wings.utils.WingsTestConstants.DELEGATE_ID;
+
 import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.joor.Reflect.on;
@@ -11,26 +14,27 @@ import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doReturn;
-import static software.wings.utils.WingsTestConstants.DELEGATE_ID;
 
-import com.amazonaws.services.ecs.model.DescribeServicesResult;
-import com.amazonaws.services.ecs.model.Service;
 import io.harness.beans.ExecutionStatus;
 import io.harness.category.element.UnitTests;
 import io.harness.container.ContainerInfo;
 import io.harness.delegate.beans.DelegateTaskPackage;
 import io.harness.delegate.beans.TaskData;
 import io.harness.rule.Owner;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
+
 import software.wings.WingsBaseTest;
 import software.wings.beans.container.EcsSteadyStateCheckParams;
 import software.wings.beans.container.EcsSteadyStateCheckResponse;
 import software.wings.cloudprovider.aws.EcsContainerService;
 import software.wings.service.impl.AwsHelperService;
+
+import com.amazonaws.services.ecs.model.DescribeServicesResult;
+import com.amazonaws.services.ecs.model.Service;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
 
 public class EcsSteadyStateCheckTaskTest extends WingsBaseTest {
   @Mock private AwsHelperService mockAwsHelperService;

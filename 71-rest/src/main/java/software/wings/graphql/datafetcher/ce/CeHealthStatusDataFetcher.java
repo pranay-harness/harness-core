@@ -1,14 +1,15 @@
 package software.wings.graphql.datafetcher.ce;
 
-import com.google.inject.Inject;
-
-import graphql.schema.DataFetcher;
-import graphql.schema.DataFetchingEnvironment;
 import io.harness.ccm.health.CEHealthStatus;
 import io.harness.ccm.health.HealthStatusService;
-import lombok.extern.slf4j.Slf4j;
+
 import software.wings.graphql.schema.type.aggregation.cloudprovider.CEHealthStatusDTO;
 import software.wings.graphql.schema.type.cloudProvider.QLCloudProvider;
+
+import com.google.inject.Inject;
+import graphql.schema.DataFetcher;
+import graphql.schema.DataFetchingEnvironment;
+import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class CeHealthStatusDataFetcher implements DataFetcher<CEHealthStatusDTO> {

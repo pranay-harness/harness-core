@@ -2,31 +2,30 @@ package software.wings.service.impl.artifact;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.persistence.HQuery.excludeAuthority;
-import static java.lang.String.format;
+
 import static software.wings.beans.FeatureName.ARTIFACT_PERPETUAL_TASK;
 import static software.wings.beans.FeatureName.ARTIFACT_PERPETUAL_TASK_MIGRATION;
 
-import com.google.common.annotations.VisibleForTesting;
-import com.google.common.collect.Sets;
-import com.google.common.util.concurrent.ThreadFactoryBuilder;
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
+import static java.lang.String.format;
 
-import io.dropwizard.lifecycle.Managed;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.artifact.ArtifactCollectionResponseHandler;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.lock.AcquiredLock;
 import io.harness.lock.PersistentLocker;
-import lombok.extern.slf4j.Slf4j;
-import org.mongodb.morphia.query.FindOptions;
-import org.mongodb.morphia.query.Query;
+
 import software.wings.beans.FeatureName;
 import software.wings.beans.artifact.ArtifactStream;
 import software.wings.beans.artifact.ArtifactStream.ArtifactStreamKeys;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.FeatureFlagService;
 
+import com.google.common.annotations.VisibleForTesting;
+import com.google.common.collect.Sets;
+import com.google.common.util.concurrent.ThreadFactoryBuilder;
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
+import io.dropwizard.lifecycle.Managed;
 import java.time.Duration;
 import java.util.Collections;
 import java.util.List;
@@ -35,6 +34,9 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
+import lombok.extern.slf4j.Slf4j;
+import org.mongodb.morphia.query.FindOptions;
+import org.mongodb.morphia.query.Query;
 
 @OwnedBy(CDC)
 @Slf4j
@@ -54,7 +56,7 @@ public class ArtifactStreamPTaskMigrationJob implements Managed {
 
   @Override
   public void start() {
-    artifactStreamPTaskJobFuture = executorService.scheduleWithFixedDelay(this ::run, 0, 10, TimeUnit.MINUTES);
+    artifactStreamPTaskJobFuture = executorService.scheduleWithFixedDelay(this::run, 0, 10, TimeUnit.MINUTES);
   }
 
   @Override

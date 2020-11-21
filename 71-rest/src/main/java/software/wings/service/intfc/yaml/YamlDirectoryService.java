@@ -1,6 +1,5 @@
 package software.wings.service.intfc.yaml;
 
-import org.hibernate.validator.constraints.NotEmpty;
 import software.wings.beans.Application;
 import software.wings.beans.Environment;
 import software.wings.beans.InfrastructureMapping;
@@ -36,6 +35,7 @@ import software.wings.yaml.gitSync.YamlGitConfig;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import org.hibernate.validator.constraints.NotEmpty;
 
 /**
  * Yaml Directory Service.

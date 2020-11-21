@@ -2,27 +2,27 @@ package io.harness.delegate.service;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.network.SafeHttpCall.execute;
+
 import static java.util.stream.Collectors.groupingBy;
 import static java.util.stream.Collectors.toList;
 
-import com.google.common.util.concurrent.TimeLimiter;
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
-import com.google.inject.name.Named;
+import io.harness.cvng.beans.KubernetesActivityDTO;
+import io.harness.rest.RestResponse;
+import io.harness.verificationclient.CVNextGenServiceClient;
 
 import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
 import com.github.benmanes.caffeine.cache.RemovalCause;
-import io.harness.cvng.beans.KubernetesActivityDTO;
-import io.harness.rest.RestResponse;
-import io.harness.verificationclient.CVNextGenServiceClient;
-import lombok.extern.slf4j.Slf4j;
-
+import com.google.common.util.concurrent.TimeLimiter;
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
+import com.google.inject.name.Named;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * Created by raghu on 5/19/17.
@@ -42,7 +42,7 @@ public class KubernetesActivitiesStoreService {
     this.activitiesCache = Caffeine.newBuilder()
                                .executor(executorService)
                                .expireAfterWrite(1000, TimeUnit.MILLISECONDS)
-                               .removalListener(this ::dispatchKubernetesActivities)
+                               .removalListener(this::dispatchKubernetesActivities)
                                .build();
   }
 

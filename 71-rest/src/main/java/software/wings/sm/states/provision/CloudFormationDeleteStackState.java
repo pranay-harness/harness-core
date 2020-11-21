@@ -3,15 +3,17 @@ package software.wings.sm.states.provision;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.delegate.beans.TaskData.DEFAULT_ASYNC_CALL_TIMEOUT;
 import static io.harness.validation.Validator.notNullCheck;
-import static java.util.Collections.emptyList;
-import static java.util.Collections.singletonList;
+
 import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static software.wings.beans.TaskType.CLOUD_FORMATION_TASK;
+
+import static java.util.Collections.emptyList;
+import static java.util.Collections.singletonList;
 
 import io.harness.beans.DelegateTask;
 import io.harness.delegate.beans.TaskData;
 import io.harness.tasks.Cd1SetupFields;
-import org.apache.commons.lang3.StringUtils;
+
 import software.wings.api.ScriptStateExecutionData;
 import software.wings.api.cloudformation.CloudFormationElement;
 import software.wings.beans.AwsConfig;
@@ -26,6 +28,7 @@ import software.wings.sm.StateType;
 
 import java.util.Collections;
 import java.util.List;
+import org.apache.commons.lang3.StringUtils;
 
 public class CloudFormationDeleteStackState extends CloudFormationState {
   private static final String COMMAND_UNIT = "Delete Stack";

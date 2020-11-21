@@ -1,17 +1,18 @@
 package io.harness.generator.artifactstream;
 
-import com.google.common.base.Preconditions;
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
-
 import io.harness.generator.OwnerManager;
 import io.harness.generator.Randomizer;
 import io.harness.generator.SettingGenerator;
+
 import software.wings.beans.Service;
 import software.wings.beans.artifact.ArtifactStream;
 import software.wings.beans.artifact.NexusArtifactStream;
 import software.wings.beans.artifact.NexusArtifactStream.NexusArtifactStreamBuilder;
 import software.wings.utils.RepositoryFormat;
+
+import com.google.common.base.Preconditions;
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
 
 @Singleton
 public abstract class NexusArtifactStreamsGenerator implements ArtifactStreamsGenerator {

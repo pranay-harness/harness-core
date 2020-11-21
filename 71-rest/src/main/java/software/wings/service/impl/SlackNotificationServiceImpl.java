@@ -2,19 +2,11 @@ package software.wings.service.impl;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.delegate.beans.TaskData.DEFAULT_SYNC_CALL_TIMEOUT;
+
 import static software.wings.beans.Application.GLOBAL_APP_ID;
 
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
-
 import io.harness.annotations.dev.OwnedBy;
-import lombok.extern.slf4j.Slf4j;
-import okhttp3.MediaType;
-import okhttp3.OkHttpClient;
-import okhttp3.Request;
-import okhttp3.RequestBody;
-import okhttp3.Response;
-import org.apache.commons.lang3.StringUtils;
+
 import software.wings.beans.FeatureName;
 import software.wings.beans.SlackMessage;
 import software.wings.beans.SyncTaskContext;
@@ -25,8 +17,17 @@ import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.SlackMessageSender;
 import software.wings.service.intfc.SlackNotificationService;
 
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import java.util.List;
 import java.util.Objects;
+import lombok.extern.slf4j.Slf4j;
+import okhttp3.MediaType;
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
+import okhttp3.RequestBody;
+import okhttp3.Response;
+import org.apache.commons.lang3.StringUtils;
 
 /**
  * Created by anubhaw on 12/14/16.

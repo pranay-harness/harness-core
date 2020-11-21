@@ -13,6 +13,7 @@ import static io.harness.delegate.task.citasks.cik8handler.params.CIConstants.PO
 import static io.harness.delegate.task.citasks.cik8handler.params.CIConstants.POD_WAIT_UNTIL_READY_SLEEP_SECS;
 import static io.harness.rule.OwnerRule.ALEKSANDAR;
 import static io.harness.rule.OwnerRule.SHUBHAM;
+
 import static junit.framework.TestCase.assertEquals;
 import static junit.framework.TestCase.assertFalse;
 import static junit.framework.TestCase.assertTrue;
@@ -23,8 +24,18 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import com.google.inject.Provider;
+import io.harness.CategoryTest;
+import io.harness.category.element.UnitTests;
+import io.harness.delegate.beans.ci.pod.ConnectorDetails;
+import io.harness.delegate.beans.ci.pod.ImageDetailsWithConnector;
+import io.harness.delegate.beans.ci.pod.SecretParams;
+import io.harness.delegate.beans.ci.pod.SecretVariableDetails;
+import io.harness.exception.PodNotFoundException;
+import io.harness.k8s.model.ImageDetails;
+import io.harness.rule.Owner;
+import io.harness.threading.Sleeper;
 
+import com.google.inject.Provider;
 import io.fabric8.kubernetes.api.model.DoneablePersistentVolumeClaim;
 import io.fabric8.kubernetes.api.model.DoneablePod;
 import io.fabric8.kubernetes.api.model.DoneableSecret;
@@ -51,23 +62,6 @@ import io.fabric8.kubernetes.client.dsl.PodResource;
 import io.fabric8.kubernetes.client.dsl.Resource;
 import io.fabric8.kubernetes.client.dsl.TtyExecErrorable;
 import io.fabric8.kubernetes.client.dsl.TtyExecOutputErrorable;
-import io.harness.CategoryTest;
-import io.harness.category.element.UnitTests;
-import io.harness.delegate.beans.ci.pod.ConnectorDetails;
-import io.harness.delegate.beans.ci.pod.ImageDetailsWithConnector;
-import io.harness.delegate.beans.ci.pod.SecretParams;
-import io.harness.delegate.beans.ci.pod.SecretVariableDetails;
-import io.harness.exception.PodNotFoundException;
-import io.harness.k8s.model.ImageDetails;
-import io.harness.rule.Owner;
-import io.harness.threading.Sleeper;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
-
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.PipedInputStream;
@@ -79,6 +73,12 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
 
 public class CIK8CtlHandlerTest extends CategoryTest {
   @Mock private SecretSpecBuilder mockSecretSpecBuilder;

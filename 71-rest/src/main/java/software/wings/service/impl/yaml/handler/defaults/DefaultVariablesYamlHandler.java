@@ -2,11 +2,9 @@ package software.wings.service.impl.yaml.handler.defaults;
 
 import static software.wings.beans.Application.GLOBAL_APP_ID;
 
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
-
 import io.harness.exception.HarnessException;
 import io.harness.exception.WingsException;
+
 import software.wings.beans.Application;
 import software.wings.beans.NameValuePair;
 import software.wings.beans.SettingAttribute;
@@ -17,6 +15,8 @@ import software.wings.service.impl.yaml.handler.BaseYamlHandler;
 import software.wings.service.impl.yaml.service.YamlHelper;
 import software.wings.service.intfc.AppService;
 
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import java.util.List;
 
 /**

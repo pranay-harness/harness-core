@@ -1,21 +1,28 @@
 package software.wings.cloudprovider.aws;
 
-import static com.amazonaws.services.codedeploy.model.DeploymentStatus.Failed;
-import static com.amazonaws.services.codedeploy.model.DeploymentStatus.Stopped;
-import static com.amazonaws.services.codedeploy.model.DeploymentStatus.Succeeded;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.eraro.ErrorCode.INIT_TIMEOUT;
 import static io.harness.threading.Morpheus.sleep;
+
+import static com.amazonaws.services.codedeploy.model.DeploymentStatus.Failed;
+import static com.amazonaws.services.codedeploy.model.DeploymentStatus.Stopped;
+import static com.amazonaws.services.codedeploy.model.DeploymentStatus.Succeeded;
 import static java.lang.String.format;
 import static java.time.Duration.ofSeconds;
 import static java.util.Arrays.asList;
 import static java.util.stream.Collectors.toList;
 
-import com.google.common.collect.Sets;
-import com.google.common.util.concurrent.TimeLimiter;
-import com.google.common.util.concurrent.UncheckedTimeoutException;
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
+import io.harness.exception.InvalidRequestException;
+import io.harness.exception.WingsException;
+import io.harness.logging.CommandExecutionStatus;
+import io.harness.logging.LogLevel;
+import io.harness.security.encryption.EncryptedDataDetail;
+
+import software.wings.beans.AwsConfig;
+import software.wings.beans.SettingAttribute;
+import software.wings.beans.command.ExecutionLogCallback;
+import software.wings.cloudprovider.CodeDeployDeploymentInfo;
+import software.wings.service.impl.AwsHelperService;
 
 import com.amazonaws.services.codedeploy.model.CreateDeploymentRequest;
 import com.amazonaws.services.codedeploy.model.CreateDeploymentResult;
@@ -36,23 +43,17 @@ import com.amazonaws.services.codedeploy.model.ListDeploymentInstancesResult;
 import com.amazonaws.services.codedeploy.model.RevisionLocation;
 import com.amazonaws.services.ec2.model.DescribeInstancesRequest;
 import com.amazonaws.services.ec2.model.Instance;
-import io.harness.exception.InvalidRequestException;
-import io.harness.exception.WingsException;
-import io.harness.logging.CommandExecutionStatus;
-import io.harness.logging.LogLevel;
-import io.harness.security.encryption.EncryptedDataDetail;
-import lombok.extern.slf4j.Slf4j;
-import software.wings.beans.AwsConfig;
-import software.wings.beans.SettingAttribute;
-import software.wings.beans.command.ExecutionLogCallback;
-import software.wings.cloudprovider.CodeDeployDeploymentInfo;
-import software.wings.service.impl.AwsHelperService;
-
+import com.google.common.collect.Sets;
+import com.google.common.util.concurrent.TimeLimiter;
+import com.google.common.util.concurrent.UncheckedTimeoutException;
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * Created by anubhaw on 6/22/17.

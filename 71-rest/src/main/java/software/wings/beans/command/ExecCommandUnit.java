@@ -1,28 +1,29 @@
 package software.wings.beans.command;
 
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+
 import static software.wings.beans.command.CommandUnitType.EXEC;
 
-import com.google.common.base.MoreObjects;
+import io.harness.delegate.task.shell.ScriptType;
+import io.harness.expression.ExpressionEvaluator;
+import io.harness.logging.CommandExecutionStatus;
+
+import software.wings.stencils.DefaultValue;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
-import io.harness.delegate.task.shell.ScriptType;
-import io.harness.expression.ExpressionEvaluator;
-import io.harness.logging.CommandExecutionStatus;
+import com.google.common.base.MoreObjects;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Objects;
+import java.util.Set;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Transient;
-import software.wings.stencils.DefaultValue;
-
-import java.util.HashSet;
-import java.util.List;
-import java.util.Objects;
-import java.util.Set;
 
 /**
  * Created by anubhaw on 5/25/16.

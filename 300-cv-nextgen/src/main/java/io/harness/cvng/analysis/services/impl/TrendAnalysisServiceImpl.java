@@ -16,10 +16,6 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.persistence.HQuery.excludeAuthority;
 
-import com.google.common.base.Preconditions;
-import com.google.inject.Inject;
-
-import com.fasterxml.jackson.core.type.TypeReference;
 import io.harness.cvng.analysis.beans.ServiceGuardTimeSeriesAnalysisDTO;
 import io.harness.cvng.analysis.beans.ServiceGuardTxnMetricAnalysisDataDTO;
 import io.harness.cvng.analysis.beans.TimeSeriesAnomalies;
@@ -57,10 +53,10 @@ import io.harness.eraro.ErrorCode;
 import io.harness.exception.VerificationOperationException;
 import io.harness.persistence.HPersistence;
 import io.harness.serializer.YamlUtils;
-import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.io.IOUtils;
-import org.apache.http.client.utils.URIBuilder;
 
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.google.common.base.Preconditions;
+import com.google.inject.Inject;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URISyntaxException;
@@ -75,6 +71,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.io.IOUtils;
+import org.apache.http.client.utils.URIBuilder;
 
 @Slf4j
 public class TrendAnalysisServiceImpl implements TrendAnalysisService {

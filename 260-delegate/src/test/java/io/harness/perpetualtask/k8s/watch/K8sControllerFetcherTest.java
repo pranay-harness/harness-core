@@ -1,14 +1,15 @@
 package io.harness.perpetualtask.k8s.watch;
 
 import static io.harness.rule.OwnerRule.AVMOHAN;
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.when;
-
-import com.google.common.collect.ImmutableMap;
 
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
+
+import com.google.common.collect.ImmutableMap;
 import io.kubernetes.client.informer.cache.Store;
 import io.kubernetes.client.openapi.models.V1Deployment;
 import io.kubernetes.client.openapi.models.V1DeploymentBuilder;
@@ -16,14 +17,13 @@ import io.kubernetes.client.openapi.models.V1ObjectMetaBuilder;
 import io.kubernetes.client.openapi.models.V1PodBuilder;
 import io.kubernetes.client.openapi.models.V1ReplicaSet;
 import io.kubernetes.client.openapi.models.V1ReplicaSetBuilder;
+import java.util.Map;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
-
-import java.util.Map;
 
 @RunWith(MockitoJUnitRunner.class)
 public class K8sControllerFetcherTest extends CategoryTest {

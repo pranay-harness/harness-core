@@ -27,11 +27,8 @@ import static software.wings.integration.SSO.LDAP.LdapIntegrationTestConstants.u
 import static software.wings.integration.SSO.LDAP.LdapIntegrationTestConstants.userSettingEmailAttr;
 import static software.wings.integration.SSO.LDAP.LdapIntegrationTestConstants.userSettingSearchFilter;
 
-import com.fasterxml.jackson.databind.DeserializationFeature;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.jaxrs.json.JacksonJaxbJsonProvider;
 import io.harness.serializer.JsonSubtypeResolver;
-import org.glassfish.jersey.media.multipart.MultiPartFeature;
+
 import software.wings.beans.sso.LdapConnectionSettings;
 import software.wings.beans.sso.LdapGroupSettings;
 import software.wings.beans.sso.LdapLinkGroupRequest;
@@ -39,6 +36,9 @@ import software.wings.beans.sso.LdapSettings;
 import software.wings.beans.sso.LdapUserSettings;
 import software.wings.resources.SSOResource.LDAPTestAuthenticationRequest;
 
+import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.jaxrs.json.JacksonJaxbJsonProvider;
 import java.security.KeyManagementException;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
@@ -51,6 +51,7 @@ import javax.ws.rs.client.Client;
 import javax.ws.rs.client.ClientBuilder;
 import javax.ws.rs.client.Invocation.Builder;
 import javax.ws.rs.client.WebTarget;
+import org.glassfish.jersey.media.multipart.MultiPartFeature;
 
 public class LdapTestHelper {
   static LdapSettings buildLdapSettings() {

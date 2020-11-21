@@ -2,11 +2,10 @@ package software.wings.delegatetasks.jira;
 
 import static io.harness.rule.OwnerRule.AGORODETKI;
 import static io.harness.rule.OwnerRule.ROHITKARELIA;
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.powermock.api.mockito.PowerMockito.mock;
 import static org.powermock.api.mockito.PowerMockito.spy;
-
-import com.google.inject.Inject;
 
 import io.harness.CategoryTest;
 import io.harness.beans.ExecutionStatus;
@@ -16,6 +15,16 @@ import io.harness.delegate.beans.TaskData;
 import io.harness.jira.JiraAction;
 import io.harness.jira.JiraCustomFieldValue;
 import io.harness.rule.Owner;
+
+import software.wings.api.jira.JiraExecutionData;
+import software.wings.beans.JiraConfig;
+import software.wings.beans.jira.JiraTaskParameters;
+import software.wings.service.intfc.security.EncryptionService;
+
+import com.google.inject.Inject;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import net.rcarz.jiraclient.Field;
 import net.rcarz.jiraclient.Issue.FluentCreate;
 import net.rcarz.jiraclient.Issue.FluentUpdate;
@@ -31,14 +40,6 @@ import org.mockito.Mockito;
 import org.powermock.core.classloader.annotations.PowerMockIgnore;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
-import software.wings.api.jira.JiraExecutionData;
-import software.wings.beans.JiraConfig;
-import software.wings.beans.jira.JiraTaskParameters;
-import software.wings.service.intfc.security.EncryptionService;
-
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 
 @RunWith(PowerMockRunner.class)
 @PrepareForTest({FluentCreate.class, FluentUpdate.class})

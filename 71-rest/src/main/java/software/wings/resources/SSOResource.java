@@ -1,23 +1,15 @@
 package software.wings.resources;
 
-import static javax.ws.rs.core.MediaType.MULTIPART_FORM_DATA;
 import static software.wings.security.PermissionAttribute.PermissionType.LOGGED_IN;
 import static software.wings.security.PermissionAttribute.PermissionType.MANAGE_AUTHENTICATION_SETTINGS;
 
-import com.google.inject.Inject;
+import static javax.ws.rs.core.MediaType.MULTIPART_FORM_DATA;
 
-import com.codahale.metrics.annotation.ExceptionMetered;
-import com.codahale.metrics.annotation.Timed;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.rest.RestResponse;
-import io.swagger.annotations.Api;
-import lombok.Data;
-import lombok.extern.slf4j.Slf4j;
-import org.glassfish.jersey.media.multipart.FormDataContentDisposition;
-import org.glassfish.jersey.media.multipart.FormDataParam;
-import org.hibernate.validator.constraints.NotBlank;
+
 import software.wings.beans.sso.LdapGroupResponse;
 import software.wings.beans.sso.LdapSettings;
 import software.wings.beans.sso.LdapTestResponse;
@@ -34,6 +26,10 @@ import software.wings.security.authentication.SSOConfig;
 import software.wings.security.saml.SamlClientService;
 import software.wings.service.intfc.SSOService;
 
+import com.codahale.metrics.annotation.ExceptionMetered;
+import com.codahale.metrics.annotation.Timed;
+import com.google.inject.Inject;
+import io.swagger.annotations.Api;
 import java.io.InputStream;
 import java.util.Collection;
 import javax.validation.Valid;
@@ -48,6 +44,11 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
+import lombok.Data;
+import lombok.extern.slf4j.Slf4j;
+import org.glassfish.jersey.media.multipart.FormDataContentDisposition;
+import org.glassfish.jersey.media.multipart.FormDataParam;
+import org.hibernate.validator.constraints.NotBlank;
 
 @Api("sso")
 @Path("/sso")

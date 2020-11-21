@@ -1,15 +1,12 @@
 package io.harness.scm;
 
+import io.harness.exception.ScmSecretException;
+
 import com.bettercloud.vault.Vault;
 import com.bettercloud.vault.VaultConfig;
 import com.bettercloud.vault.VaultException;
 import com.bettercloud.vault.response.AuthResponse;
 import com.bettercloud.vault.response.LogicalResponse;
-import io.harness.exception.ScmSecretException;
-import lombok.Getter;
-import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.codec.binary.Hex;
-
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
@@ -17,6 +14,9 @@ import java.security.Key;
 import java.util.Properties;
 import javax.crypto.Cipher;
 import javax.crypto.spec.SecretKeySpec;
+import lombok.Getter;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.codec.binary.Hex;
 
 @Slf4j
 public class ScmSecret {

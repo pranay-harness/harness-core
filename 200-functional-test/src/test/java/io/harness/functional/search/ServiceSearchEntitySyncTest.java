@@ -1,9 +1,8 @@
 package io.harness.functional.search;
 
 import static io.harness.rule.OwnerRule.UTKARSH;
-import static org.assertj.core.api.Assertions.assertThat;
 
-import com.google.inject.Inject;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.category.element.FunctionalTests;
 import io.harness.functional.AbstractFunctionalTest;
@@ -13,12 +12,7 @@ import io.harness.testframework.framework.matchers.BooleanMatcher;
 import io.harness.testframework.restutils.ApplicationRestUtils;
 import io.harness.testframework.restutils.SearchRestUtils;
 import io.harness.testframework.restutils.ServiceRestUtils;
-import lombok.extern.slf4j.Slf4j;
-import org.apache.http.HttpStatus;
-import org.junit.Before;
-import org.junit.Ignore;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
+
 import software.wings.app.MainConfiguration;
 import software.wings.beans.Application;
 import software.wings.beans.FeatureName;
@@ -27,6 +21,14 @@ import software.wings.search.entities.service.ServiceSearchEntity;
 import software.wings.search.framework.SearchResult;
 import software.wings.search.framework.SearchResults;
 import software.wings.service.intfc.FeatureFlagService;
+
+import com.google.inject.Inject;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.http.HttpStatus;
+import org.junit.Before;
+import org.junit.Ignore;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 @Slf4j
 public class ServiceSearchEntitySyncTest extends AbstractFunctionalTest {
@@ -72,7 +74,7 @@ public class ServiceSearchEntitySyncTest extends AbstractFunctionalTest {
     }
 
     BooleanMatcher booleanMatcher = new BooleanMatcher();
-    retry.executeWithRetry(this ::isServiceInSearchResponse, booleanMatcher, true);
+    retry.executeWithRetry(this::isServiceInSearchResponse, booleanMatcher, true);
     log.info("New service with id {} and name {} synced.", service.getUuid(), service.getName());
 
     service.setName(EDITED_SERVICE_NAME);
@@ -81,13 +83,13 @@ public class ServiceSearchEntitySyncTest extends AbstractFunctionalTest {
     assertThat(service).isNotNull();
     assertThat(service.getName()).isEqualTo(EDITED_SERVICE_NAME);
 
-    retry.executeWithRetry(this ::isServiceInSearchResponse, booleanMatcher, true);
+    retry.executeWithRetry(this::isServiceInSearchResponse, booleanMatcher, true);
     log.info("Service update with id {} and name {} synced.", service.getUuid(), service.getName());
 
     int statusCode = ServiceRestUtils.deleteService(bearerToken, service.getAppId(), service.getUuid());
     assertThat(statusCode).isEqualTo(HttpStatus.SC_OK);
 
-    retry.executeWithRetry(this ::isServiceInSearchResponse, booleanMatcher, false);
+    retry.executeWithRetry(this::isServiceInSearchResponse, booleanMatcher, false);
     log.info("Service with id {} deleted", service.getUuid());
 
     ApplicationRestUtils.deleteApplication(bearerToken, application.getUuid(), application.getAccountId());

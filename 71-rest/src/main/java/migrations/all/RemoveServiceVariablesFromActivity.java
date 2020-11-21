@@ -1,16 +1,17 @@
 package migrations.all;
 
-import com.google.inject.Inject;
-
-import com.mongodb.BasicDBObject;
-import com.mongodb.BulkWriteOperation;
-import com.mongodb.DBCollection;
 import io.harness.persistence.HIterator;
-import lombok.extern.slf4j.Slf4j;
-import migrations.Migration;
+
 import software.wings.beans.Activity;
 import software.wings.beans.Activity.ActivityKeys;
 import software.wings.dl.WingsPersistence;
+
+import com.google.inject.Inject;
+import com.mongodb.BasicDBObject;
+import com.mongodb.BulkWriteOperation;
+import com.mongodb.DBCollection;
+import lombok.extern.slf4j.Slf4j;
+import migrations.Migration;
 
 @Slf4j
 public class RemoveServiceVariablesFromActivity implements Migration {

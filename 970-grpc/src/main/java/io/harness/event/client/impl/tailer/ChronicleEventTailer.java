@@ -3,24 +3,23 @@ package io.harness.event.client.impl.tailer;
 import static com.google.common.base.Verify.verify;
 import static java.util.Objects.requireNonNull;
 
-import com.google.common.util.concurrent.AbstractScheduledService;
-import com.google.common.util.concurrent.MoreExecutors;
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
-import com.google.inject.name.Named;
-
 import io.harness.event.EventPublisherGrpc.EventPublisherBlockingStub;
 import io.harness.event.PublishMessage;
 import io.harness.event.PublishRequest;
 import io.harness.flow.BackoffScheduler;
 import io.harness.logging.LoggingListener;
+
+import com.google.common.util.concurrent.AbstractScheduledService;
+import com.google.common.util.concurrent.MoreExecutors;
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
+import com.google.inject.name.Named;
+import java.time.Duration;
+import java.util.concurrent.TimeUnit;
 import lombok.extern.slf4j.Slf4j;
 import net.openhft.chronicle.queue.ExcerptTailer;
 import net.openhft.chronicle.queue.impl.RollingChronicleQueue;
 import net.openhft.chronicle.wire.DocumentContext;
-
-import java.time.Duration;
-import java.util.concurrent.TimeUnit;
 
 /**
  * Tails the chronicle-queue and publishes the events over rpc.
@@ -146,7 +145,7 @@ public class ChronicleEventTailer extends AbstractScheduledService {
       log.error("Encountered exception", e);
     } finally {
       try {
-        sampler.sampled(this ::printStats);
+        sampler.sampled(this::printStats);
         sampler.sampled(fileDeletionManager::deleteOlderFiles);
       } catch (Exception e) {
         log.error("Encountered exception in finally", e);

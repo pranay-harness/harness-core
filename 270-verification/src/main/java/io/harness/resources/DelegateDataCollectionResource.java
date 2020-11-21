@@ -2,15 +2,11 @@ package io.harness.resources;
 
 import static software.wings.common.VerificationConstants.DELEGATE_DATA_COLLECTION;
 
-import com.google.inject.Inject;
-
-import com.codahale.metrics.annotation.ExceptionMetered;
-import com.codahale.metrics.annotation.Timed;
 import io.harness.rest.RestResponse;
 import io.harness.security.annotations.DelegateAuth;
 import io.harness.service.intfc.LogAnalysisService;
 import io.harness.service.intfc.TimeSeriesAnalysisService;
-import io.swagger.annotations.Api;
+
 import software.wings.common.VerificationConstants;
 import software.wings.security.PermissionAttribute.ResourceType;
 import software.wings.security.annotations.Scope;
@@ -24,6 +20,10 @@ import software.wings.service.intfc.verification.CVTaskService;
 import software.wings.sm.StateType;
 import software.wings.verification.CVActivityLog;
 
+import com.codahale.metrics.annotation.ExceptionMetered;
+import com.codahale.metrics.annotation.Timed;
+import com.google.inject.Inject;
+import io.swagger.annotations.Api;
 import java.util.List;
 import javax.validation.Valid;
 import javax.ws.rs.POST;

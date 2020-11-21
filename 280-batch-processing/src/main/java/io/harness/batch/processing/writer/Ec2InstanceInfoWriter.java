@@ -1,7 +1,5 @@
 package io.harness.batch.processing.writer;
 
-import com.google.inject.Singleton;
-
 import io.harness.batch.processing.ccm.InstanceCategory;
 import io.harness.batch.processing.pricing.data.CloudProvider;
 import io.harness.batch.processing.tasklet.util.InstanceMetaDataUtils;
@@ -13,12 +11,13 @@ import io.harness.ccm.commons.beans.Resource;
 import io.harness.ccm.commons.entities.InstanceData;
 import io.harness.event.grpc.PublishedMessage;
 import io.harness.event.payloads.Ec2InstanceInfo;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.batch.item.ItemWriter;
 
+import com.google.inject.Singleton;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.batch.item.ItemWriter;
 
 @Slf4j
 @Singleton

@@ -4,24 +4,19 @@ import static io.harness.beans.ExecutionStatus.SUCCESS;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.rule.OwnerRule.PRAVEEN;
 import static io.harness.rule.OwnerRule.SOWMYA;
+
+import static software.wings.service.impl.newrelic.NewRelicMetricDataRecord.DEFAULT_GROUP_NAME;
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.when;
-import static software.wings.service.impl.newrelic.NewRelicMetricDataRecord.DEFAULT_GROUP_NAME;
-
-import com.google.common.collect.Lists;
-import com.google.inject.Inject;
 
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
 import io.harness.service.TimeSeriesAnalysisServiceImpl;
 import io.harness.service.intfc.LearningEngineService;
 import io.harness.service.intfc.TimeSeriesAnalysisService;
-import org.apache.commons.lang3.reflect.FieldUtils;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
-import org.mockito.Mock;
+
 import software.wings.WingsBaseTest;
 import software.wings.beans.WorkflowExecution;
 import software.wings.dl.WingsPersistence;
@@ -37,8 +32,15 @@ import software.wings.service.intfc.DataStoreService;
 import software.wings.service.intfc.MetricDataAnalysisService;
 import software.wings.sm.StateType;
 
+import com.google.common.collect.Lists;
+import com.google.inject.Inject;
 import java.util.Arrays;
 import java.util.List;
+import org.apache.commons.lang3.reflect.FieldUtils;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
+import org.mockito.Mock;
 
 /**
  * @author Praveen

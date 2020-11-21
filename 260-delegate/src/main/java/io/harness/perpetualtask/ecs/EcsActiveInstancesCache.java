@@ -1,10 +1,9 @@
 package io.harness.perpetualtask.ecs;
 
-import lombok.Builder;
-import lombok.Data;
-
 import java.time.Instant;
 import java.util.Set;
+import lombok.Builder;
+import lombok.Data;
 
 @Data
 @Builder

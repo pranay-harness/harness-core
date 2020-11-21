@@ -1,12 +1,11 @@
 package io.harness.grpc.utils;
 
-import lombok.experimental.UtilityClass;
-
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.Objects;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+import lombok.experimental.UtilityClass;
 
 /**
  * Utility class for the methods to extract grpc target & authority from manager url. Used to provide values while

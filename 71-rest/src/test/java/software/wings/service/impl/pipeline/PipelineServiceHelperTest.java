@@ -1,22 +1,21 @@
 package software.wings.service.impl.pipeline;
 
 import static io.harness.rule.OwnerRule.POOJA;
-import static java.util.Arrays.asList;
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
+
 import static software.wings.beans.CanaryOrchestrationWorkflow.CanaryOrchestrationWorkflowBuilder.aCanaryOrchestrationWorkflow;
 import static software.wings.beans.EntityType.ENVIRONMENT;
 import static software.wings.beans.EntityType.INFRASTRUCTURE_DEFINITION;
 import static software.wings.beans.Variable.VariableBuilder.aVariable;
 import static software.wings.beans.Workflow.WorkflowBuilder.aWorkflow;
 
-import com.google.common.collect.ImmutableMap;
+import static java.util.Arrays.asList;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import io.harness.category.element.UnitTests;
 import io.harness.exception.InvalidRequestException;
 import io.harness.rule.Owner;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
+
 import software.wings.WingsBaseTest;
 import software.wings.beans.OrchestrationWorkflow;
 import software.wings.beans.Pipeline;
@@ -27,10 +26,13 @@ import software.wings.beans.Variable;
 import software.wings.beans.Workflow;
 import software.wings.sm.StateType;
 
+import com.google.common.collect.ImmutableMap;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 public class PipelineServiceHelperTest extends WingsBaseTest {
   @Test

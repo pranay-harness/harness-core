@@ -1,10 +1,10 @@
 package io.harness.managerclient;
 
-import com.google.inject.AbstractModule;
-
 import io.harness.security.TokenGenerator;
 import io.harness.verificationclient.CVNextGenServiceClient;
 import io.harness.verificationclient.CVNextGenServiceClientFactory;
+
+import com.google.inject.AbstractModule;
 
 /**
  * Created by peeyushaggarwal on 11/29/16.

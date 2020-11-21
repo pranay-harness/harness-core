@@ -1,11 +1,10 @@
 package software.wings.service.impl.instance.stats.collector;
 
+import java.util.List;
+import java.util.stream.Collectors;
 import lombok.AllArgsConstructor;
 import lombok.Value;
 import org.apache.commons.collections.CollectionUtils;
-
-import java.util.List;
-import java.util.stream.Collectors;
 
 @Value
 @AllArgsConstructor

@@ -1,8 +1,7 @@
 package software.wings.helpers.ext.nexus.model;
 
-import lombok.Builder;
-
 import java.util.List;
+import lombok.Builder;
 
 /**
  * Created by sgurubelli on 11/17/17.

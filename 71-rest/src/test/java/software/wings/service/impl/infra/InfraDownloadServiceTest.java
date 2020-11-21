@@ -3,6 +3,7 @@ package software.wings.service.impl.infra;
 import static io.harness.rule.OwnerRule.BRETT;
 import static io.harness.rule.OwnerRule.GUNA;
 import static io.harness.rule.OwnerRule.RUSHABH;
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyLong;
@@ -10,14 +11,24 @@ import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.when;
 
-import com.google.api.client.googleapis.auth.oauth2.GoogleCredential;
-import com.google.inject.Inject;
-
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.environment.SystemEnvironment;
 import io.harness.logging.AccessTokenBean;
 import io.harness.rule.Owner;
+
+import software.wings.app.MainConfiguration;
+import software.wings.app.PortalConfig;
+import software.wings.beans.FeatureName;
+import software.wings.service.intfc.FeatureFlagService;
+import software.wings.utils.GcsUtils;
+
+import com.google.api.client.googleapis.auth.oauth2.GoogleCredential;
+import com.google.inject.Inject;
+import java.io.File;
+import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
+import java.util.concurrent.TimeUnit;
 import org.apache.commons.io.FileUtils;
 import org.junit.Before;
 import org.junit.Rule;
@@ -32,16 +43,6 @@ import org.mockito.junit.MockitoRule;
 import org.powermock.api.mockito.PowerMockito;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
-import software.wings.app.MainConfiguration;
-import software.wings.app.PortalConfig;
-import software.wings.beans.FeatureName;
-import software.wings.service.intfc.FeatureFlagService;
-import software.wings.utils.GcsUtils;
-
-import java.io.File;
-import java.io.InputStream;
-import java.nio.charset.StandardCharsets;
-import java.util.concurrent.TimeUnit;
 
 @RunWith(PowerMockRunner.class)
 @PrepareForTest({GoogleCredential.class})

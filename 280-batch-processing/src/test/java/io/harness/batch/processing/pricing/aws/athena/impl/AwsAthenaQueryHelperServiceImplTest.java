@@ -1,6 +1,7 @@
 package io.harness.batch.processing.pricing.aws.athena.impl;
 
 import static io.harness.rule.OwnerRule.HITESH;
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.doReturn;
@@ -12,6 +13,13 @@ import io.harness.batch.processing.pricing.data.AccountComputePricingData;
 import io.harness.batch.processing.pricing.data.AccountFargatePricingData;
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
+
+import java.time.Instant;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
+import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.Before;
 import org.junit.Test;
@@ -35,13 +43,6 @@ import software.amazon.awssdk.services.athena.model.Row;
 import software.amazon.awssdk.services.athena.model.StartQueryExecutionRequest;
 import software.amazon.awssdk.services.athena.model.StartQueryExecutionResponse;
 import software.amazon.awssdk.services.athena.paginators.GetQueryResultsIterable;
-
-import java.time.Instant;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
-import java.util.stream.Collectors;
 
 @Slf4j
 @RunWith(MockitoJUnitRunner.class)
@@ -175,7 +176,7 @@ public class AwsAthenaQueryHelperServiceImplTest extends CategoryTest {
   }
 
   private List<Row> getRowList(List<List<String>> dataList) {
-    return dataList.stream().map(this ::getRow).collect(Collectors.toList());
+    return dataList.stream().map(this::getRow).collect(Collectors.toList());
   }
 
   private Row getRow(List<String> dataList) {
@@ -183,7 +184,7 @@ public class AwsAthenaQueryHelperServiceImplTest extends CategoryTest {
   }
 
   private List<Datum> getDatumList(List<String> dataList) {
-    return dataList.stream().map(this ::datum).collect(Collectors.toList());
+    return dataList.stream().map(this::datum).collect(Collectors.toList());
   }
 
   private Datum datum(String dataValue) {

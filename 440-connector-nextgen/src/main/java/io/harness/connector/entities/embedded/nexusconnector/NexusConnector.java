@@ -2,6 +2,7 @@ package io.harness.connector.entities.embedded.nexusconnector;
 
 import io.harness.connector.entities.Connector;
 import io.harness.delegate.beans.connector.nexusconnector.NexusAuthType;
+
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Data;

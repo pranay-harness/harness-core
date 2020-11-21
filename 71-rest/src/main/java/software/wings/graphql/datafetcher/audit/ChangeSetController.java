@@ -1,11 +1,9 @@
 package software.wings.graphql.datafetcher.audit;
 
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
-
 import io.harness.beans.EmbeddedUser;
 import io.harness.exception.GraphQLException;
 import io.harness.exception.WingsException;
+
 import software.wings.audit.ApiKeyAuditDetails;
 import software.wings.audit.AuditHeader;
 import software.wings.audit.AuditSource;
@@ -25,6 +23,8 @@ import software.wings.graphql.schema.type.audit.QLUserChangeSet;
 import software.wings.graphql.schema.type.audit.QLUserChangeSet.QLUserChangeSetBuilder;
 import software.wings.service.impl.yaml.gitdiff.gitaudit.YamlAuditRecordGenerationUtils;
 
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import java.util.List;
 import java.util.stream.Collectors;
 import javax.validation.constraints.NotNull;

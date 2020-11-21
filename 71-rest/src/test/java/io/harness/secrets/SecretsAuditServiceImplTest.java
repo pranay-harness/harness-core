@@ -1,15 +1,15 @@
 package io.harness.secrets;
 
 import static io.harness.rule.OwnerRule.UTKARSH;
+
+import static software.wings.beans.Event.Type.CREATE;
+import static software.wings.beans.Event.Type.UPDATE;
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-import static software.wings.beans.Event.Type.CREATE;
-import static software.wings.beans.Event.Type.UPDATE;
-
-import com.google.inject.Inject;
 
 import io.harness.beans.EncryptedData;
 import io.harness.beans.HarnessSecret;
@@ -19,14 +19,17 @@ import io.harness.beans.SecretUpdateData;
 import io.harness.category.element.UnitTests;
 import io.harness.data.structure.UUIDGenerator;
 import io.harness.rule.Owner;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
+
 import software.wings.WingsBaseTest;
 import software.wings.beans.User;
 import software.wings.dl.WingsPersistence;
 import software.wings.security.UserThreadLocal;
 import software.wings.service.impl.AuditServiceHelper;
+
+import com.google.inject.Inject;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 public class SecretsAuditServiceImplTest extends WingsBaseTest {
   @Inject private WingsPersistence wingsPersistence;

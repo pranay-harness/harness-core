@@ -1,10 +1,9 @@
 package software.wings.beans;
 
-import lombok.Builder;
-import lombok.Data;
-
 import java.util.List;
 import java.util.Map;
+import lombok.Builder;
+import lombok.Data;
 
 @Data
 @Builder

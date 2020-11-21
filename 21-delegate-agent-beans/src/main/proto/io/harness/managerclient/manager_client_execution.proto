@@ -6,22 +6,19 @@ option java_multiple_files = true;
 option go_package = "21_delegate_agent_beans";
 
 // Request/response pairs for delegate properties
-message WatcherVersionQuery {
-}
+message WatcherVersionQuery {}
 
 message WatcherVersion {
   string watcher_version = 1;
 }
 
-message DelegateVersionsQuery {
-}
+message DelegateVersionsQuery {}
 
 message DelegateVersions {
   repeated string delegate_version = 2;
 }
 
-message HttpsCertRequirementQuery {
-}
+message HttpsCertRequirementQuery {}
 
 message HttpsCertRequirement {
   enum CertRequirement {

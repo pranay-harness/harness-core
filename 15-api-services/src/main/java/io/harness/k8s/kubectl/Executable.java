@@ -1,9 +1,8 @@
 package io.harness.k8s.kubectl;
 
+import java.io.OutputStream;
 import org.zeroturnaround.exec.ProcessResult;
 import org.zeroturnaround.exec.StartedProcess;
-
-import java.io.OutputStream;
 
 interface Executable {
   ProcessResult execute(String directory, OutputStream output, OutputStream error, boolean printCommand)

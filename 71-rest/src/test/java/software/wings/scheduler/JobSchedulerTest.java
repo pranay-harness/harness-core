@@ -2,10 +2,12 @@ package software.wings.scheduler;
 
 import static io.harness.rule.OwnerRule.ANUBHAW;
 
-import com.google.inject.Inject;
-
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
+
+import software.wings.WingsBaseTest;
+
+import com.google.inject.Inject;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.Before;
 import org.junit.Ignore;
@@ -16,7 +18,6 @@ import org.quartz.JobExecutionContext;
 import org.quartz.JobExecutionException;
 import org.quartz.SchedulerException;
 import org.quartz.impl.matchers.GroupMatcher;
-import software.wings.WingsBaseTest;
 
 @Slf4j
 public class JobSchedulerTest extends WingsBaseTest {

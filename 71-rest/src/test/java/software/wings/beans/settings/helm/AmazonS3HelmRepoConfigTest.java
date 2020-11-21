@@ -1,18 +1,20 @@
 package software.wings.beans.settings.helm;
 
 import static io.harness.rule.OwnerRule.PRASHANT;
+
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.beans.executioncapability.CapabilityType;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.rule.Owner;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
+
 import software.wings.WingsBaseTest;
 
 import java.util.List;
 import java.util.stream.Collectors;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 public class AmazonS3HelmRepoConfigTest extends WingsBaseTest {
   @Test

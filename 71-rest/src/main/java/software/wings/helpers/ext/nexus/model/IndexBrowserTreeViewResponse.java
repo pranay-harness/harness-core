@@ -1,13 +1,12 @@
 package software.wings.helpers.ext.nexus.model;
 
-import lombok.EqualsAndHashCode;
-import org.sonatype.nexus.rest.model.NexusResponse;
-
 import java.io.Serializable;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
+import lombok.EqualsAndHashCode;
+import org.sonatype.nexus.rest.model.NexusResponse;
 
 /**
  * Created by srinivas on 4/4/17.

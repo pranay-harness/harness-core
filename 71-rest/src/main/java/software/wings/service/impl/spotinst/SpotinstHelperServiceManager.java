@@ -5,15 +5,13 @@ import static io.harness.exception.ExceptionUtils.getMessage;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.logging.CommandExecutionStatus.FAILURE;
 import static io.harness.spotinst.model.SpotInstConstants.defaultSyncSpotinstTimeoutMin;
+
+import static software.wings.beans.Application.GLOBAL_APP_ID;
+
 import static java.lang.String.format;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
-import static software.wings.beans.Application.GLOBAL_APP_ID;
 
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
-
-import com.amazonaws.services.ec2.model.Instance;
 import io.harness.beans.DelegateTask;
 import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.delegate.beans.ErrorNotifyResponseData;
@@ -32,14 +30,18 @@ import io.harness.exception.InvalidRequestException;
 import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.spotinst.model.ElastiGroup;
 import io.harness.tasks.Cd1SetupFields;
-import lombok.extern.slf4j.Slf4j;
+
 import software.wings.beans.AwsConfig;
 import software.wings.beans.SpotInstConfig;
 import software.wings.beans.TaskType;
 import software.wings.service.intfc.DelegateService;
 
+import com.amazonaws.services.ec2.model.Instance;
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
+import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Singleton

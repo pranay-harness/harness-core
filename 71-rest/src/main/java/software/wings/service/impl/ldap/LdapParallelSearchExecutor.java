@@ -2,17 +2,12 @@ package software.wings.service.impl.ldap;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
 
-import com.google.common.collect.Lists;
-
-import de.danielbechler.util.Collections;
 import io.harness.annotations.dev.OwnedBy;
-import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.collections.CollectionUtils;
-import org.apache.commons.lang3.StringUtils;
-import org.ldaptive.Connection;
-import org.ldaptive.LdapException;
+
 import software.wings.helpers.ext.ldap.LdapSearch;
 
+import com.google.common.collect.Lists;
+import de.danielbechler.util.Collections;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -25,6 +20,11 @@ import java.util.concurrent.TimeoutException;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import javax.validation.constraints.NotNull;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.collections.CollectionUtils;
+import org.apache.commons.lang3.StringUtils;
+import org.ldaptive.Connection;
+import org.ldaptive.LdapException;
 
 /**
  * This class is meant to make parallel call for LDAP search

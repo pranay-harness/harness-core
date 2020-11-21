@@ -4,10 +4,8 @@ import static io.harness.exception.WingsException.USER;
 import static io.harness.jira.JiraAction.CHECK_APPROVAL;
 import static io.harness.jira.JiraAction.FETCH_ISSUE;
 import static io.harness.validation.Validator.notNullCheck;
-import static software.wings.service.ApprovalUtils.checkApproval;
 
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
+import static software.wings.service.ApprovalUtils.checkApproval;
 
 import io.harness.beans.DelegateTask;
 import io.harness.beans.ExecutionStatus;
@@ -21,9 +19,7 @@ import io.harness.jira.JiraAction;
 import io.harness.jira.JiraCreateMetaResponse;
 import io.harness.tasks.Cd1SetupFields;
 import io.harness.waiter.WaitNotifyEngine;
-import lombok.extern.slf4j.Slf4j;
-import net.sf.json.JSONArray;
-import org.mongodb.morphia.annotations.Transient;
+
 import software.wings.api.ApprovalStateExecutionData;
 import software.wings.api.jira.JiraExecutionData;
 import software.wings.app.MainConfiguration;
@@ -37,6 +33,12 @@ import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.StateExecutionService;
 import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.service.intfc.security.SecretManager;
+
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
+import lombok.extern.slf4j.Slf4j;
+import net.sf.json.JSONArray;
+import org.mongodb.morphia.annotations.Transient;
 
 /**
  * All Jira apis should be accessed via this object.

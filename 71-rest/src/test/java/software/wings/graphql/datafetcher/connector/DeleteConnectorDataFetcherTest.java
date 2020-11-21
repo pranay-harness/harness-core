@@ -1,6 +1,7 @@
 package software.wings.graphql.datafetcher.connector;
 
 import static io.harness.rule.OwnerRule.TMACARI;
+
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.times;
@@ -9,12 +10,7 @@ import static org.mockito.Mockito.verify;
 import io.harness.category.element.UnitTests;
 import io.harness.exception.InvalidRequestException;
 import io.harness.rule.Owner;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
+
 import software.wings.beans.GitConfig;
 import software.wings.beans.PcfConfig;
 import software.wings.beans.SettingAttribute;
@@ -24,6 +20,12 @@ import software.wings.graphql.schema.mutation.connector.input.QLDeleteConnectorI
 import software.wings.service.intfc.SettingsService;
 
 import java.sql.SQLException;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
 
 public class DeleteConnectorDataFetcherTest extends AbstractDataFetcherTestBase {
   private static final String CONNECTOR_ID = "CP-ID";

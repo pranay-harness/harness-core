@@ -1,12 +1,11 @@
 package io.harness.batch.processing.support;
 
-import lombok.Value;
-import org.jetbrains.annotations.NotNull;
-
 import java.time.Duration;
 import java.util.Comparator;
 import java.util.List;
 import java.util.PriorityQueue;
+import lombok.Value;
+import org.jetbrains.annotations.NotNull;
 
 public class Deduper<E> {
   // Time window for which we remember events to check a new event for duplicates.
@@ -31,7 +30,7 @@ public class Deduper<E> {
   public Deduper(List<Timestamped<E>> timestampedEvents) {
     this.lastTimestampMillis = 0;
     this.recentEventsQ = new PriorityQueue<>();
-    timestampedEvents.forEach(this ::checkEvent);
+    timestampedEvents.forEach(this::checkEvent);
   }
 
   /**

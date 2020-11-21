@@ -2,9 +2,8 @@ package io.harness.functional.identity;
 
 import static io.harness.rule.OwnerRule.UJJAWAL;
 import static io.harness.rule.OwnerRule.UTKARSH;
-import static org.assertj.core.api.Assertions.assertThat;
 
-import com.google.inject.Inject;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.category.element.FunctionalTests;
 import io.harness.functional.AbstractFunctionalTest;
@@ -13,11 +12,7 @@ import io.harness.generator.OwnerManager.Owners;
 import io.harness.rest.RestResponse;
 import io.harness.rule.Owner;
 import io.harness.testframework.framework.Setup;
-import io.restassured.http.ContentType;
-import lombok.extern.slf4j.Slf4j;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
+
 import software.wings.beans.Account;
 import software.wings.beans.User;
 import software.wings.security.AuthenticationFilter;
@@ -28,12 +23,18 @@ import software.wings.security.authentication.AccountSettingsResponse;
 import software.wings.security.authentication.AuthenticationMechanism;
 import software.wings.security.authentication.oauth.OauthUserInfo;
 
+import com.google.inject.Inject;
+import io.restassured.http.ContentType;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import javax.ws.rs.core.GenericType;
 import javax.ws.rs.core.HttpHeaders;
+import lombok.extern.slf4j.Slf4j;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 /**
  * @author marklu on 2019-06-11

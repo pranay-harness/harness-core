@@ -1,15 +1,15 @@
 package io.harness.delegate.beans.connector.awsconnector;
 
-import com.fasterxml.jackson.annotation.JsonTypeName;
 import io.harness.beans.DecryptableEntity;
 import io.harness.encryption.SecretRefData;
 import io.harness.encryption.SecretReference;
+
+import com.fasterxml.jackson.annotation.JsonTypeName;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
+import javax.validation.constraints.NotNull;
 import lombok.Builder;
 import lombok.Value;
-
-import javax.validation.constraints.NotNull;
 
 @Value
 @Builder

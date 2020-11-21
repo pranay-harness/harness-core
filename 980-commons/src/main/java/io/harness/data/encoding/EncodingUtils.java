@@ -2,13 +2,10 @@ package io.harness.data.encoding;
 
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
+import io.harness.exception.WingsException;
+
 import com.google.common.base.Charsets;
 import com.google.common.base.Preconditions;
-
-import io.harness.exception.WingsException;
-import lombok.experimental.UtilityClass;
-import org.apache.commons.io.IOUtils;
-
 import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -18,6 +15,8 @@ import java.nio.charset.Charset;
 import java.util.Base64;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
+import lombok.experimental.UtilityClass;
+import org.apache.commons.io.IOUtils;
 
 @UtilityClass
 public class EncodingUtils {

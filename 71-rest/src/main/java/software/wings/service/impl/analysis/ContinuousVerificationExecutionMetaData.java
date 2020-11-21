@@ -2,8 +2,6 @@ package software.wings.service.impl.analysis;
 
 import static software.wings.common.VerificationConstants.ML_RECORDS_TTL_MONTHS;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.annotation.HarnessEntity;
 import io.harness.beans.ExecutionStatus;
 import io.harness.mongo.index.CdIndex;
@@ -12,6 +10,14 @@ import io.harness.mongo.index.FdTtlIndex;
 import io.harness.mongo.index.Field;
 import io.harness.mongo.index.IndexType;
 import io.harness.persistence.AccountAccess;
+
+import software.wings.beans.Base;
+import software.wings.sm.StateType;
+
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.github.reinert.jjschema.SchemaIgnore;
+import java.time.OffsetDateTime;
+import java.util.Date;
 import lombok.Builder;
 import lombok.Builder.Default;
 import lombok.Data;
@@ -19,11 +25,6 @@ import lombok.EqualsAndHashCode;
 import lombok.experimental.FieldNameConstants;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Entity;
-import software.wings.beans.Base;
-import software.wings.sm.StateType;
-
-import java.time.OffsetDateTime;
-import java.util.Date;
 
 @Data
 @Builder

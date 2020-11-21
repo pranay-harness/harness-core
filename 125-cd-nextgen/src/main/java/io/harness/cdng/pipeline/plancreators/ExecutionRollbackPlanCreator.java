@@ -1,9 +1,8 @@
 package io.harness.cdng.pipeline.plancreators;
 
 import static io.harness.cdng.executionplan.CDPlanCreatorType.EXECUTION_ROLLBACK_PLAN_CREATOR;
-import static java.util.Collections.singletonList;
 
-import com.google.inject.Inject;
+import static java.util.Collections.singletonList;
 
 import io.harness.data.structure.UUIDGenerator;
 import io.harness.executionplan.core.AbstractPlanCreatorWithChildren;
@@ -26,6 +25,7 @@ import io.harness.steps.section.chain.SectionChainStepParameters;
 import io.harness.yaml.core.ExecutionElement;
 import io.harness.yaml.core.auxiliary.intfc.ExecutionWrapper;
 
+import com.google.inject.Inject;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;

@@ -3,6 +3,7 @@ package io.harness.delegate.beans.alert;
 import static java.lang.String.format;
 
 import io.harness.alert.AlertData;
+
 import lombok.Builder;
 import lombok.Data;
 import org.apache.commons.lang3.StringUtils;

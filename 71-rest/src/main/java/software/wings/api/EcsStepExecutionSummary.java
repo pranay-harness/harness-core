@@ -1,9 +1,10 @@
 package software.wings.api;
 
+import software.wings.sm.StepExecutionSummary;
+
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
-import software.wings.sm.StepExecutionSummary;
 
 /**
  * Created by rishi on 4/4/17.

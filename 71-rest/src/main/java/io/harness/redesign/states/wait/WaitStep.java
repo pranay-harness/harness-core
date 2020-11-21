@@ -3,9 +3,6 @@ package io.harness.redesign.states.wait;
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 
-import com.google.inject.Inject;
-import com.google.inject.name.Named;
-
 import io.harness.ambiance.Ambiance;
 import io.harness.annotations.Redesign;
 import io.harness.annotations.dev.OwnedBy;
@@ -22,12 +19,15 @@ import io.harness.state.io.StepResponse;
 import io.harness.state.io.StepResponse.StepOutcome;
 import io.harness.tasks.ResponseData;
 import io.harness.waiter.WaitNotifyEngine;
-import org.mongodb.morphia.annotations.Transient;
+
 import software.wings.api.WaitStateExecutionData;
 
+import com.google.inject.Inject;
+import com.google.inject.name.Named;
 import java.util.Map;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
+import org.mongodb.morphia.annotations.Transient;
 
 @OwnedBy(CDC)
 @Redesign

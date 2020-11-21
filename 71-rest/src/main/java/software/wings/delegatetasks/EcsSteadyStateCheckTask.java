@@ -2,10 +2,6 @@ package software.wings.delegatetasks;
 
 import static com.amazonaws.util.CollectionUtils.isNullOrEmpty;
 
-import com.google.inject.Inject;
-
-import com.amazonaws.services.ecs.model.DescribeServicesRequest;
-import com.amazonaws.services.ecs.model.Service;
 import io.harness.beans.ExecutionStatus;
 import io.harness.container.ContainerInfo;
 import io.harness.delegate.beans.DelegateTaskPackage;
@@ -16,8 +12,7 @@ import io.harness.delegate.task.TaskParameters;
 import io.harness.exception.InvalidRequestException;
 import io.harness.logging.LogLevel;
 import io.harness.security.encryption.EncryptedDataDetail;
-import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.NotImplementedException;
+
 import software.wings.beans.AwsConfig;
 import software.wings.beans.command.ExecutionLogCallback;
 import software.wings.beans.container.EcsSteadyStateCheckParams;
@@ -26,11 +21,16 @@ import software.wings.cloudprovider.UpdateServiceCountRequestData;
 import software.wings.cloudprovider.aws.EcsContainerService;
 import software.wings.service.impl.AwsHelperService;
 
+import com.amazonaws.services.ecs.model.DescribeServicesRequest;
+import com.amazonaws.services.ecs.model.Service;
+import com.google.inject.Inject;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.function.BooleanSupplier;
 import java.util.function.Consumer;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.NotImplementedException;
 
 @Slf4j
 public class EcsSteadyStateCheckTask extends AbstractDelegateRunnableTask {

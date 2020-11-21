@@ -2,17 +2,12 @@ package migrations.all;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+
 import static java.lang.String.format;
 
-import com.google.inject.Inject;
-
-import com.amazonaws.services.ecs.model.LaunchType;
 import io.harness.exception.ExceptionUtils;
 import io.harness.persistence.HIterator;
-import lombok.extern.slf4j.Slf4j;
-import migrations.Migration;
-import org.apache.commons.collections4.CollectionUtils;
-import org.apache.commons.lang3.StringUtils;
+
 import software.wings.api.CloudProviderType;
 import software.wings.api.DeploymentType;
 import software.wings.beans.Account;
@@ -65,6 +60,8 @@ import software.wings.service.intfc.InfrastructureDefinitionService;
 import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.yaml.YamlGitService;
 
+import com.amazonaws.services.ecs.model.LaunchType;
+import com.google.inject.Inject;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -76,6 +73,10 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
+import lombok.extern.slf4j.Slf4j;
+import migrations.Migration;
+import org.apache.commons.collections4.CollectionUtils;
+import org.apache.commons.lang3.StringUtils;
 
 @Slf4j
 public class InfraMappingToDefinitionMigration implements Migration {

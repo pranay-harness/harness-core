@@ -1,11 +1,9 @@
 package io.harness.waiter;
 
 import com.google.inject.Singleton;
-
-import lombok.extern.slf4j.Slf4j;
-
 import java.util.HashMap;
 import java.util.Map;
+import lombok.extern.slf4j.Slf4j;
 
 @Singleton
 @Slf4j

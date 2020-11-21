@@ -4,27 +4,30 @@ import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.exception.WingsException.USER;
-import static java.lang.String.format;
-import static org.apache.commons.lang3.StringUtils.isBlank;
+
 import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static software.wings.beans.artifact.ArtifactStreamType.ARTIFACTORY;
 
-import com.fasterxml.jackson.annotation.JsonTypeName;
+import static java.lang.String.format;
+import static org.apache.commons.lang3.StringUtils.isBlank;
+
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.EmbeddedUser;
 import io.harness.exception.InvalidRequestException;
+
+import software.wings.utils.RepositoryType;
+import software.wings.utils.Utils;
+
+import com.fasterxml.jackson.annotation.JsonTypeName;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.List;
+import java.util.Set;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import org.hibernate.validator.constraints.NotEmpty;
-import software.wings.utils.RepositoryType;
-import software.wings.utils.Utils;
-
-import java.text.SimpleDateFormat;
-import java.util.Date;
-import java.util.List;
-import java.util.Set;
 
 @OwnedBy(CDC)
 @JsonTypeName("ARTIFACTORY")
@@ -65,7 +68,7 @@ public class ArtifactoryArtifactStream extends ArtifactStream {
     return isBlank(getImageName())
         ? format("%s_%s_%s", getSourceName(), buildNo, new SimpleDateFormat(dateFormat).format(new Date()))
         : format("%s_%s_%s", getJobname() + "/" + getImageName(), buildNo,
-              new SimpleDateFormat(dateFormat).format(new Date()));
+            new SimpleDateFormat(dateFormat).format(new Date()));
   }
 
   @Override

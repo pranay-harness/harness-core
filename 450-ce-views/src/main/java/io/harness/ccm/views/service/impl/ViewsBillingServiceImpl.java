@@ -4,20 +4,6 @@ import static io.harness.ccm.views.graphql.ViewMetaDataConstants.entityConstantC
 import static io.harness.ccm.views.graphql.ViewMetaDataConstants.entityConstantMaxStartTime;
 import static io.harness.ccm.views.graphql.ViewMetaDataConstants.entityConstantMinStartTime;
 
-import com.google.cloud.bigquery.BigQuery;
-import com.google.cloud.bigquery.Field;
-import com.google.cloud.bigquery.FieldList;
-import com.google.cloud.bigquery.FieldValue;
-import com.google.cloud.bigquery.FieldValueList;
-import com.google.cloud.bigquery.QueryJobConfiguration;
-import com.google.cloud.bigquery.Schema;
-import com.google.cloud.bigquery.TableResult;
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
-
-import com.healthmarketscience.sqlbuilder.SelectQuery;
-import com.healthmarketscience.sqlbuilder.custom.postgresql.PgLimitClause;
-import com.healthmarketscience.sqlbuilder.custom.postgresql.PgOffsetClause;
 import io.harness.ccm.views.entities.CEView;
 import io.harness.ccm.views.entities.ViewCondition;
 import io.harness.ccm.views.entities.ViewField;
@@ -54,8 +40,20 @@ import io.harness.ccm.views.graphql.ViewsQueryMetadata;
 import io.harness.ccm.views.service.CEViewService;
 import io.harness.ccm.views.service.ViewsBillingService;
 import io.harness.exception.InvalidRequestException;
-import lombok.extern.slf4j.Slf4j;
 
+import com.google.cloud.bigquery.BigQuery;
+import com.google.cloud.bigquery.Field;
+import com.google.cloud.bigquery.FieldList;
+import com.google.cloud.bigquery.FieldValue;
+import com.google.cloud.bigquery.FieldValueList;
+import com.google.cloud.bigquery.QueryJobConfiguration;
+import com.google.cloud.bigquery.Schema;
+import com.google.cloud.bigquery.TableResult;
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
+import com.healthmarketscience.sqlbuilder.SelectQuery;
+import com.healthmarketscience.sqlbuilder.custom.postgresql.PgLimitClause;
+import com.healthmarketscience.sqlbuilder.custom.postgresql.PgOffsetClause;
 import java.time.Duration;
 import java.time.Instant;
 import java.time.ZoneId;
@@ -68,6 +66,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
+import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Singleton

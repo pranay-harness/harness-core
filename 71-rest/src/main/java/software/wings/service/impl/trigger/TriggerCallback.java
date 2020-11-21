@@ -2,8 +2,6 @@ package software.wings.service.impl.trigger;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 
-import com.google.inject.Inject;
-
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.ExecutionStatus;
 import io.harness.delegate.beans.DelegateResponseData;
@@ -12,12 +10,14 @@ import io.harness.delegate.beans.RemoteMethodReturnValueData;
 import io.harness.exception.ExceptionUtils;
 import io.harness.tasks.ResponseData;
 import io.harness.waiter.NotifyCallback;
-import lombok.extern.slf4j.Slf4j;
+
 import software.wings.helpers.ext.trigger.response.TriggerDeploymentNeededResponse;
 import software.wings.helpers.ext.trigger.response.TriggerResponse;
 import software.wings.service.intfc.TriggerService;
 
+import com.google.inject.Inject;
 import java.util.Map;
+import lombok.extern.slf4j.Slf4j;
 
 @OwnedBy(CDC)
 @Slf4j

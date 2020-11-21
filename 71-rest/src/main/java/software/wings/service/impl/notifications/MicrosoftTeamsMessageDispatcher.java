@@ -1,11 +1,18 @@
 package software.wings.service.impl.notifications;
 
+import static software.wings.common.NotificationConstants.BLUE_COLOR;
+import static software.wings.common.NotificationMessageResolver.getDecoratedNotificationMessage;
+
 import static java.lang.String.format;
 import static java.lang.String.join;
 import static org.apache.commons.lang3.StringUtils.EMPTY;
 import static org.apache.commons.lang3.StringUtils.SPACE;
-import static software.wings.common.NotificationConstants.BLUE_COLOR;
-import static software.wings.common.NotificationMessageResolver.getDecoratedNotificationMessage;
+
+import io.harness.data.structure.EmptyPredicate;
+
+import software.wings.beans.Notification;
+import software.wings.common.NotificationMessageResolver;
+import software.wings.service.intfc.MicrosoftTeamsNotificationService;
 
 import com.google.api.client.util.Charsets;
 import com.google.common.annotations.VisibleForTesting;
@@ -13,21 +20,15 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.io.Resources;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
-
-import io.harness.data.structure.EmptyPredicate;
-import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.StringUtils;
-import org.apache.commons.validator.routines.UrlValidator;
-import org.jetbrains.annotations.Nullable;
-import software.wings.beans.Notification;
-import software.wings.common.NotificationMessageResolver;
-import software.wings.service.intfc.MicrosoftTeamsNotificationService;
-
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.validator.routines.UrlValidator;
+import org.jetbrains.annotations.Nullable;
 
 /**
  * Created by mehulkasliwal on 2020-04-17.

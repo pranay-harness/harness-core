@@ -3,15 +3,11 @@ package io.harness.service;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.persistence.HQuery.excludeAuthority;
+
 import static software.wings.common.VerificationConstants.CRON_POLL_INTERVAL_IN_MINUTES;
 import static software.wings.common.VerificationConstants.CV_24x7_STATE_EXECUTION;
 import static software.wings.service.impl.newrelic.LearningEngineAnalysisTask.TIME_SERIES_ANALYSIS_TASK_TIME_OUT;
 
-import com.google.common.base.Preconditions;
-import com.google.common.collect.Lists;
-import com.google.inject.Inject;
-
-import com.mongodb.DuplicateKeyException;
 import io.harness.beans.ExecutionStatus;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageRequest.PageRequestBuilder;
@@ -23,11 +19,7 @@ import io.harness.metrics.HarnessMetricRegistry;
 import io.harness.service.intfc.LearningEngineService;
 import io.harness.time.Timestamp;
 import io.harness.version.ServiceApiVersion;
-import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.StringUtils;
-import org.mongodb.morphia.FindAndModifyOptions;
-import org.mongodb.morphia.query.Query;
-import org.mongodb.morphia.query.UpdateOperations;
+
 import software.wings.api.PhaseElement;
 import software.wings.beans.Base.BaseKeys;
 import software.wings.dl.WingsPersistence;
@@ -50,6 +42,10 @@ import software.wings.sm.StateExecutionInstance;
 import software.wings.verification.VerificationDataAnalysisResponse;
 import software.wings.verification.VerificationStateAnalysisExecutionData;
 
+import com.google.common.base.Preconditions;
+import com.google.common.collect.Lists;
+import com.google.inject.Inject;
+import com.mongodb.DuplicateKeyException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.time.Instant;
@@ -59,6 +55,11 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Properties;
 import java.util.concurrent.TimeUnit;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
+import org.mongodb.morphia.FindAndModifyOptions;
+import org.mongodb.morphia.query.Query;
+import org.mongodb.morphia.query.UpdateOperations;
 
 /**
  * Created by rsingh on 1/9/18.

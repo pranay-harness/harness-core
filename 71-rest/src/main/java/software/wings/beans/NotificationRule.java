@@ -2,23 +2,22 @@ package software.wings.beans;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 
-import com.google.common.base.MoreObjects;
-
 import io.harness.beans.ExecutionStatus;
 import io.harness.data.structure.CollectionUtils;
 import io.harness.yaml.BaseYaml;
+
+import com.google.common.base.MoreObjects;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Objects;
+import javax.validation.constraints.NotNull;
+import javax.validation.constraints.Size;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Objects;
-import javax.validation.constraints.NotNull;
-import javax.validation.constraints.Size;
 
 public class NotificationRule {
   private String uuid = generateUuid();

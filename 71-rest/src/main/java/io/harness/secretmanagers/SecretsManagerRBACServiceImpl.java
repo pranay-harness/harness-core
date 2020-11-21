@@ -2,8 +2,6 @@ package io.harness.secretmanagers;
 
 import static software.wings.security.PermissionAttribute.PermissionType.MANAGE_SECRET_MANAGERS;
 
-import com.google.inject.Inject;
-
 import software.wings.beans.Base;
 import software.wings.security.PermissionAttribute;
 import software.wings.security.ScopedEntity;
@@ -14,6 +12,7 @@ import software.wings.service.intfc.UsageRestrictionsService;
 import software.wings.service.intfc.UserService;
 import software.wings.settings.RestrictionsAndAppEnvMap;
 
+import com.google.inject.Inject;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;

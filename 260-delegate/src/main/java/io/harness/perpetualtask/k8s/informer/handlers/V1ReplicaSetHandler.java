@@ -2,14 +2,13 @@ package io.harness.perpetualtask.k8s.informer.handlers;
 
 import static io.harness.perpetualtask.k8s.informer.handlers.support.WorkloadSpecUtils.makeContainerSpecs;
 
-import com.google.protobuf.Timestamp;
-
 import io.harness.event.client.EventPublisher;
 import io.harness.perpetualtask.k8s.informer.ClusterDetails;
 import io.harness.perpetualtask.k8s.watch.K8sWorkloadSpec;
+
+import com.google.protobuf.Timestamp;
 import io.kubernetes.client.openapi.models.V1Container;
 import io.kubernetes.client.openapi.models.V1ReplicaSet;
-
 import java.util.List;
 
 public class V1ReplicaSetHandler extends BaseHandler<V1ReplicaSet> {

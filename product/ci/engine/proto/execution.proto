@@ -83,8 +83,7 @@ message UpdateStateRequest {
   Action action = 1;
 }
 
-message UpdateStateResponse {
-}
+message UpdateStateResponse {}
 
 service LiteEngine {
   // Synchronous RPC to execute a step

@@ -3,9 +3,11 @@ package software.wings.security.authentication;
 import static io.harness.annotations.dev.HarnessTeam.PL;
 
 import io.harness.annotations.dev.OwnedBy;
+
+import software.wings.security.saml.SSORequest;
+
 import lombok.Builder;
 import lombok.Data;
-import software.wings.security.saml.SSORequest;
 
 @OwnedBy(PL)
 @Data

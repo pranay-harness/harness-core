@@ -1,9 +1,7 @@
 package software.wings.service.impl.instance.stats.collector;
 
-import com.google.inject.Inject;
-
 import io.harness.event.usagemetrics.UsageMetricsEventPublisher;
-import lombok.extern.slf4j.Slf4j;
+
 import software.wings.beans.infrastructure.instance.Instance;
 import software.wings.beans.infrastructure.instance.ServerlessInstance;
 import software.wings.beans.infrastructure.instance.stats.InstanceStatsSnapshot;
@@ -16,6 +14,7 @@ import software.wings.service.intfc.instance.stats.InstanceStatService;
 import software.wings.service.intfc.instance.stats.ServerlessInstanceStatService;
 import software.wings.service.intfc.instance.stats.collector.StatsCollector;
 
+import com.google.inject.Inject;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
@@ -24,6 +23,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 import javax.annotation.ParametersAreNonnullByDefault;
+import lombok.extern.slf4j.Slf4j;
 
 @ParametersAreNonnullByDefault
 @Slf4j

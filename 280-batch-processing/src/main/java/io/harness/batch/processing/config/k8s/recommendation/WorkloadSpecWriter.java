@@ -5,8 +5,7 @@ import static java.util.Optional.ofNullable;
 
 import io.harness.event.grpc.PublishedMessage;
 import io.harness.perpetualtask.k8s.watch.K8sWorkloadSpec;
-import org.springframework.batch.item.ItemWriter;
-import org.springframework.stereotype.Component;
+
 import software.wings.graphql.datafetcher.ce.recommendation.entity.ContainerRecommendation;
 import software.wings.graphql.datafetcher.ce.recommendation.entity.K8sWorkloadRecommendation;
 import software.wings.graphql.datafetcher.ce.recommendation.entity.ResourceRequirement;
@@ -16,6 +15,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
+import org.springframework.batch.item.ItemWriter;
+import org.springframework.stereotype.Component;
 
 @Component
 class WorkloadSpecWriter implements ItemWriter<PublishedMessage> {

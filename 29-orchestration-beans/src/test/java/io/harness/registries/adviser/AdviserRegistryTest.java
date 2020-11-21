@@ -1,11 +1,9 @@
 package io.harness.registries.adviser;
 
 import static io.harness.rule.OwnerRule.PRASHANT;
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-
-import com.google.inject.Inject;
-import com.google.inject.Injector;
 
 import io.harness.OrchestrationBeansTestBase;
 import io.harness.adviser.Advise;
@@ -18,6 +16,9 @@ import io.harness.registries.RegistryType;
 import io.harness.registries.exceptions.DuplicateRegistryException;
 import io.harness.registries.exceptions.UnregisteredKeyAccessException;
 import io.harness.rule.Owner;
+
+import com.google.inject.Inject;
+import com.google.inject.Injector;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 

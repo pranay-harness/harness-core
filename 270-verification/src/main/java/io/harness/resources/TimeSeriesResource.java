@@ -1,14 +1,9 @@
 package io.harness.resources;
 
 import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
+
 import static java.lang.System.currentTimeMillis;
 
-import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Preconditions;
-import com.google.inject.Inject;
-
-import com.codahale.metrics.annotation.ExceptionMetered;
-import com.codahale.metrics.annotation.Timed;
 import io.harness.entities.TimeSeriesAnomaliesRecord;
 import io.harness.entities.TimeSeriesCumulativeSums;
 import io.harness.managerclient.VerificationManagerClient;
@@ -17,8 +12,7 @@ import io.harness.rest.RestResponse;
 import io.harness.security.annotations.LearningEngineAuth;
 import io.harness.service.intfc.LearningEngineService;
 import io.harness.service.intfc.TimeSeriesAnalysisService;
-import io.swagger.annotations.Api;
-import lombok.extern.slf4j.Slf4j;
+
 import software.wings.beans.FeatureName;
 import software.wings.metrics.TimeSeriesMetricDefinition;
 import software.wings.security.PermissionAttribute.ResourceType;
@@ -36,6 +30,12 @@ import software.wings.service.intfc.DataStoreService;
 import software.wings.service.intfc.MetricDataAnalysisService;
 import software.wings.sm.StateType;
 
+import com.codahale.metrics.annotation.ExceptionMetered;
+import com.codahale.metrics.annotation.Timed;
+import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Preconditions;
+import com.google.inject.Inject;
+import io.swagger.annotations.Api;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -46,6 +46,7 @@ import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * Created by rsingh on 04/11/18.

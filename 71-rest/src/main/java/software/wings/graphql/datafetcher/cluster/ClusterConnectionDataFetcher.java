@@ -1,11 +1,8 @@
 package software.wings.graphql.datafetcher.cluster;
 
-import graphql.schema.DataFetchingEnvironment;
 import io.harness.ccm.cluster.entities.ClusterRecord;
 import io.harness.ccm.cluster.entities.ClusterRecord.ClusterRecordKeys;
-import lombok.extern.slf4j.Slf4j;
-import org.mongodb.morphia.query.Query;
-import org.mongodb.morphia.query.Sort;
+
 import software.wings.graphql.datafetcher.AbstractConnectionV2DataFetcher;
 import software.wings.graphql.schema.query.QLPageQueryParameters;
 import software.wings.graphql.schema.type.QLCluster;
@@ -17,7 +14,11 @@ import software.wings.graphql.schema.type.aggregation.cluster.QLClusterFilter;
 import software.wings.security.PermissionAttribute;
 import software.wings.security.annotations.AuthRule;
 
+import graphql.schema.DataFetchingEnvironment;
 import java.util.List;
+import lombok.extern.slf4j.Slf4j;
+import org.mongodb.morphia.query.Query;
+import org.mongodb.morphia.query.Sort;
 
 @Slf4j
 public class ClusterConnectionDataFetcher

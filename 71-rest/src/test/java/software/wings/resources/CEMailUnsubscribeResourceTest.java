@@ -1,6 +1,7 @@
 package software.wings.resources;
 
 import static io.harness.rule.OwnerRule.SHUBHANSHU;
+
 import static java.lang.String.format;
 import static javax.ws.rs.client.Entity.entity;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -14,14 +15,15 @@ import io.harness.ccm.communication.entities.CECommunications;
 import io.harness.ccm.communication.entities.CommunicationType;
 import io.harness.rest.RestResponse;
 import io.harness.rule.Owner;
-import org.junit.Before;
-import org.junit.ClassRule;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
+
 import software.wings.utils.ResourceTestRule;
 
 import javax.ws.rs.core.GenericType;
 import javax.ws.rs.core.MediaType;
+import org.junit.Before;
+import org.junit.ClassRule;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 public class CEMailUnsubscribeResourceTest extends CategoryTest {
   private String accountId = "ACCOUNT_ID";

@@ -2,11 +2,9 @@ package io.harness.batch.processing.writer;
 
 import static io.harness.batch.processing.ccm.UtilizationInstanceType.K8S_POD;
 import static io.harness.rule.OwnerRule.ROHIT;
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.verify;
-
-import com.google.protobuf.Duration;
-import com.google.protobuf.Timestamp;
 
 import io.harness.CategoryTest;
 import io.harness.batch.processing.billing.timeseries.data.K8sGranularUtilizationData;
@@ -17,6 +15,11 @@ import io.harness.event.grpc.PublishedMessage;
 import io.harness.event.payloads.AggregatedUsage;
 import io.harness.event.payloads.PodMetric;
 import io.harness.rule.Owner;
+
+import com.google.protobuf.Duration;
+import com.google.protobuf.Timestamp;
+import java.util.Collections;
+import java.util.List;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
@@ -25,9 +28,6 @@ import org.mockito.Captor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
-
-import java.util.Collections;
-import java.util.List;
 
 @RunWith(MockitoJUnitRunner.class)
 public class PodUtilizationMetricsWriterTest extends CategoryTest implements EcsEventGenerator {

@@ -1,10 +1,9 @@
 package software.wings.beans;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
+
 import static java.lang.System.currentTimeMillis;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.beans.EmbeddedUser;
 import io.harness.mongo.index.FdIndex;
 import io.harness.persistence.CreatedAtAware;
@@ -14,6 +13,15 @@ import io.harness.persistence.UpdatedAtAware;
 import io.harness.persistence.UpdatedByAware;
 import io.harness.persistence.UuidAware;
 import io.harness.validation.Update;
+
+import software.wings.beans.entityinterface.ApplicationAccess;
+import software.wings.security.ThreadLocalUserProvider;
+
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.github.reinert.jjschema.SchemaIgnore;
+import java.util.HashMap;
+import java.util.Map;
+import javax.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -23,12 +31,6 @@ import lombok.experimental.FieldNameConstants;
 import org.mongodb.morphia.annotations.Id;
 import org.mongodb.morphia.annotations.PrePersist;
 import org.mongodb.morphia.annotations.Transient;
-import software.wings.beans.entityinterface.ApplicationAccess;
-import software.wings.security.ThreadLocalUserProvider;
-
-import java.util.HashMap;
-import java.util.Map;
-import javax.validation.constraints.NotNull;
 
 /**
  * The Base class is used to extend all the bean classes that requires persistence. The base class

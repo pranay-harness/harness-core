@@ -1,16 +1,19 @@
 package io.harness.beans;
 
 import static io.harness.rule.OwnerRule.UTKARSH;
+
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.encryption.Encrypted;
 import io.harness.rule.Owner;
+
+import software.wings.settings.SettingVariableTypes;
+
 import lombok.experimental.FieldNameConstants;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
-import software.wings.settings.SettingVariableTypes;
 
 @FieldNameConstants(innerTypeName = "EncryptedDataParentTestKeys")
 public class EncryptedDataParentTest extends CategoryTest {

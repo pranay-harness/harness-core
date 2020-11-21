@@ -1,11 +1,7 @@
 package software.wings.api;
 
 import io.harness.delegate.beans.DelegateTaskNotifyResponseData;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.EqualsAndHashCode;
-import lombok.NoArgsConstructor;
+
 import software.wings.beans.InstanceUnitType;
 import software.wings.beans.ResizeStrategy;
 import software.wings.sm.InstanceStatusSummary;
@@ -15,6 +11,11 @@ import software.wings.sm.StepExecutionSummary;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.NoArgsConstructor;
 
 /**
  * Created by anubhaw on 12/22/17.

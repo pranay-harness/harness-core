@@ -1,13 +1,15 @@
 package software.wings.service.impl.aws.model.response;
 
-import com.amazonaws.services.lambda.model.GetFunctionResult;
-import com.amazonaws.services.lambda.model.ListAliasesResult;
 import io.harness.beans.ExecutionStatus;
 import io.harness.delegate.beans.DelegateMetaInfo;
-import lombok.Builder;
-import lombok.Data;
+
 import software.wings.service.impl.aws.model.AwsResponse;
 import software.wings.service.impl.aws.model.embed.AwsLambdaDetails;
+
+import com.amazonaws.services.lambda.model.GetFunctionResult;
+import com.amazonaws.services.lambda.model.ListAliasesResult;
+import lombok.Builder;
+import lombok.Data;
 
 @Data
 public class AwsLambdaDetailsResponse implements AwsResponse {

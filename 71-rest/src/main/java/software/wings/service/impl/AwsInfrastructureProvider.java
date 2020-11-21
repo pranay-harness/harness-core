@@ -5,20 +5,15 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.eraro.ErrorCode.INVALID_ARGUMENT;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.govern.Switch.unhandled;
-import static java.util.Collections.emptyList;
-import static java.util.stream.Collectors.toList;
-import static org.apache.commons.lang3.StringUtils.isNotBlank;
+
 import static software.wings.beans.HostConnectionType.PRIVATE_DNS;
 import static software.wings.beans.HostConnectionType.PUBLIC_DNS;
 import static software.wings.beans.infrastructure.Host.Builder.aHost;
 
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
+import static java.util.Collections.emptyList;
+import static java.util.stream.Collectors.toList;
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
-import com.amazonaws.services.ec2.model.DescribeInstancesResult;
-import com.amazonaws.services.ec2.model.Filter;
-import com.amazonaws.services.ec2.model.Instance;
-import com.amazonaws.services.ecs.model.Service;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.delegate.task.aws.AwsElbListener;
@@ -27,7 +22,7 @@ import io.harness.exception.ExceptionUtils;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.security.encryption.EncryptedDataDetail;
-import lombok.extern.slf4j.Slf4j;
+
 import software.wings.api.DeploymentType;
 import software.wings.api.HostElement;
 import software.wings.app.MainConfiguration;
@@ -54,11 +49,18 @@ import software.wings.service.intfc.aws.manager.AwsLambdaHelperServiceManager;
 import software.wings.service.intfc.security.SecretManager;
 import software.wings.sm.states.ManagerExecutionLogCallback;
 
+import com.amazonaws.services.ec2.model.DescribeInstancesResult;
+import com.amazonaws.services.ec2.model.Filter;
+import com.amazonaws.services.ec2.model.Instance;
+import com.amazonaws.services.ecs.model.Service;
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * Created by anubhaw on 10/4/16.
@@ -118,7 +120,7 @@ public class AwsInfrastructureProvider implements InfrastructureProvider {
               .collect(toList());
       if (awsInfrastructureMapping.getHostNameConvention() != null
           && !awsInfrastructureMapping.getHostNameConvention().equals(
-                 InfrastructureConstants.DEFAULT_AWS_HOST_NAME_CONVENTION)) {
+              InfrastructureConstants.DEFAULT_AWS_HOST_NAME_CONVENTION)) {
         awsHosts.forEach(h -> {
           HostElement hostElement = HostElement.builder().ec2Instance(h.getEc2Instance()).build();
 
@@ -201,7 +203,7 @@ public class AwsInfrastructureProvider implements InfrastructureProvider {
               .collect(toList());
       if (awsInstanceInfrastructure.getHostNameConvention() != null
           && !awsInstanceInfrastructure.getHostNameConvention().equals(
-                 InfrastructureConstants.DEFAULT_AWS_HOST_NAME_CONVENTION)) {
+              InfrastructureConstants.DEFAULT_AWS_HOST_NAME_CONVENTION)) {
         awsHosts.forEach(h -> {
           HostElement hostElement = HostElement.builder().ec2Instance(h.getEc2Instance()).build();
 

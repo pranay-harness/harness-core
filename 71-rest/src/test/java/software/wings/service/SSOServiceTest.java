@@ -2,6 +2,9 @@ package software.wings.service;
 
 import static io.harness.rule.OwnerRule.RUSHABH;
 import static io.harness.rule.OwnerRule.UJJAWAL;
+
+import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.failBecauseExceptionWasNotThrown;
 import static org.mockito.Matchers.any;
@@ -11,24 +14,14 @@ import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.when;
-import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 
-import com.google.inject.Inject;
-
-import com.coveo.saml.SamlException;
 import io.harness.category.element.UnitTests;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
 import io.harness.rule.Owner;
 import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.security.encryption.EncryptedRecordData;
-import org.apache.commons.io.IOUtils;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
-import org.ldaptive.ResultCode;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
+
 import software.wings.WingsBaseTest;
 import software.wings.beans.Account;
 import software.wings.beans.AccountType;
@@ -53,6 +46,8 @@ import software.wings.service.intfc.SSOSettingService;
 import software.wings.service.intfc.ldap.LdapDelegateService;
 import software.wings.service.intfc.security.SecretManager;
 
+import com.coveo.saml.SamlException;
+import com.google.inject.Inject;
 import java.io.IOException;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
@@ -62,6 +57,13 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Optional;
+import org.apache.commons.io.IOUtils;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
+import org.ldaptive.ResultCode;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
 
 public class SSOServiceTest extends WingsBaseTest {
   @Mock private AccountService ACCOUNT_SERVICE;

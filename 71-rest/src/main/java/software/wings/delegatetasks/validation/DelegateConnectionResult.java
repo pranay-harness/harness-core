@@ -1,6 +1,5 @@
 package software.wings.delegatetasks.validation;
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import io.harness.annotation.HarnessEntity;
 import io.harness.mongo.index.FdIndex;
 import io.harness.mongo.index.FdTtlIndex;
@@ -10,6 +9,13 @@ import io.harness.persistence.AccountAccess;
 import io.harness.persistence.PersistentEntity;
 import io.harness.persistence.UpdatedAtAware;
 import io.harness.persistence.UuidAware;
+
+import software.wings.delegatetasks.validation.DelegateConnectionResult.DelegateConnectionResultKeys;
+
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import java.time.OffsetDateTime;
+import java.util.Date;
+import javax.validation.constraints.NotNull;
 import lombok.Builder;
 import lombok.Builder.Default;
 import lombok.Data;
@@ -17,11 +23,6 @@ import lombok.experimental.FieldNameConstants;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Id;
-import software.wings.delegatetasks.validation.DelegateConnectionResult.DelegateConnectionResultKeys;
-
-import java.time.OffsetDateTime;
-import java.util.Date;
-import javax.validation.constraints.NotNull;
 
 @Data
 @Builder

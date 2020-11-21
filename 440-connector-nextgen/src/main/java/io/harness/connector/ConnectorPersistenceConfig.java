@@ -1,12 +1,16 @@
 package io.harness.connector;
 
-import com.google.inject.Inject;
-import com.google.inject.Injector;
-
 import io.harness.annotation.HarnessRepo;
 import io.harness.exception.GeneralException;
 import io.harness.springdata.HMongoTemplate;
 import io.harness.springdata.SpringPersistenceConfig;
+
+import com.google.inject.Inject;
+import com.google.inject.Injector;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import org.reflections.Reflections;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
@@ -22,11 +26,6 @@ import org.springframework.data.mongodb.core.convert.MappingMongoConverter;
 import org.springframework.data.mongodb.core.convert.MongoTypeMapper;
 import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
 import org.springframework.data.mongodb.repository.config.EnableMongoRepositories;
-
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 
 @Configuration
 @EnableMongoRepositories(basePackages = {"io.harness.connector"},

@@ -2,9 +2,6 @@ package software.wings.delegatetasks.jira;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 
-import com.google.common.annotations.VisibleForTesting;
-import com.google.inject.Inject;
-
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.ExecutionStatus;
 import io.harness.data.structure.EmptyPredicate;
@@ -22,6 +19,30 @@ import io.harness.jira.JiraCreateMetaResponse;
 import io.harness.jira.JiraCustomFieldValue;
 import io.harness.jira.JiraField;
 import io.harness.logging.CommandExecutionStatus;
+
+import software.wings.api.jira.JiraExecutionData;
+import software.wings.api.jira.JiraExecutionData.JiraIssueData;
+import software.wings.beans.JiraConfig;
+import software.wings.beans.jira.JiraTaskParameters;
+import software.wings.delegatetasks.DelegateLogService;
+import software.wings.service.intfc.security.EncryptionService;
+
+import com.google.common.annotations.VisibleForTesting;
+import com.google.inject.Inject;
+import java.io.IOException;
+import java.net.MalformedURLException;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.net.URL;
+import java.sql.Timestamp;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.function.BooleanSupplier;
+import java.util.function.Consumer;
 import lombok.extern.slf4j.Slf4j;
 import net.rcarz.jiraclient.BasicCredentials;
 import net.rcarz.jiraclient.Field;
@@ -41,27 +62,6 @@ import net.sf.json.JSONObject;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.NotImplementedException;
 import org.apache.commons.lang3.StringUtils;
-import software.wings.api.jira.JiraExecutionData;
-import software.wings.api.jira.JiraExecutionData.JiraIssueData;
-import software.wings.beans.JiraConfig;
-import software.wings.beans.jira.JiraTaskParameters;
-import software.wings.delegatetasks.DelegateLogService;
-import software.wings.service.intfc.security.EncryptionService;
-
-import java.io.IOException;
-import java.net.MalformedURLException;
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.net.URL;
-import java.sql.Timestamp;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
-import java.util.function.BooleanSupplier;
-import java.util.function.Consumer;
 
 @OwnedBy(CDC)
 @Slf4j

@@ -1,9 +1,8 @@
 package io.harness.functional.users;
 
 import static io.harness.rule.OwnerRule.NATARAJA;
-import static org.assertj.core.api.Assertions.assertThat;
 
-import com.google.inject.Inject;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.category.element.FunctionalTests;
 import io.harness.functional.AbstractFunctionalTest;
@@ -13,14 +12,16 @@ import io.harness.scm.SecretName;
 import io.harness.testframework.framework.Setup;
 import io.harness.testframework.restutils.TwoFactorAuthRestUtils;
 import io.harness.testframework.restutils.UserRestUtils;
-import lombok.extern.slf4j.Slf4j;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
+
 import software.wings.beans.PublicUser;
 import software.wings.beans.User;
 import software.wings.security.authentication.TwoFactorAuthenticationSettings;
 
+import com.google.inject.Inject;
 import java.util.List;
+import lombok.extern.slf4j.Slf4j;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 @Slf4j
 public class TwoFactorAuthenticationTest extends AbstractFunctionalTest {

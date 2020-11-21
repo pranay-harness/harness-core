@@ -2,14 +2,15 @@ package software.wings.verification.instana;
 
 import static io.harness.rule.OwnerRule.KAMAL;
 import static io.harness.rule.OwnerRule.SOWMYA;
-import static org.assertj.core.api.Assertions.assertThat;
+
 import static software.wings.common.VerificationConstants.CV_24x7_STATE_EXECUTION;
 import static software.wings.service.impl.newrelic.NewRelicMetricDataRecord.DEFAULT_GROUP_NAME;
 
+import static org.assertj.core.api.Assertions.assertThat;
+
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
+
 import software.wings.WingsBaseTest;
 import software.wings.service.impl.instana.InstanaDataCollectionInfo;
 import software.wings.service.impl.instana.InstanaTagFilter;
@@ -19,6 +20,8 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 public class InstanaCVConfigurationTest extends WingsBaseTest {
   private static final String configName = "configName";

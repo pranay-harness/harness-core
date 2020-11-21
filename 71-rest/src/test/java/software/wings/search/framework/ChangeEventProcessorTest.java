@@ -1,6 +1,7 @@
 package software.wings.search.framework;
 
 import static io.harness.rule.OwnerRule.UTKARSH;
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.awaitility.Awaitility.await;
 import static org.mockito.Mockito.mock;
@@ -8,25 +9,25 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import com.google.inject.Inject;
-
 import io.harness.category.element.UnitTests;
 import io.harness.persistence.PersistentEntity;
 import io.harness.rule.Owner;
-import org.junit.Ignore;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
-import org.mockito.InjectMocks;
-import org.mockito.Spy;
+
 import software.wings.WingsBaseTest;
 import software.wings.search.framework.changestreams.ChangeEvent;
 import software.wings.search.framework.changestreams.ChangeType;
 
+import com.google.inject.Inject;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
+import org.junit.Ignore;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
+import org.mockito.InjectMocks;
+import org.mockito.Spy;
 
 public class ChangeEventProcessorTest extends WingsBaseTest {
   @Spy private Set<SearchEntity<?>> searchEntities = new HashSet<>();

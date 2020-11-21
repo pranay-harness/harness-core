@@ -1,23 +1,25 @@
 package software.wings.beans.sso;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
+
 import static software.wings.beans.Application.GLOBAL_APP_ID;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import io.harness.annotation.HarnessEntity;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.mongo.index.CdIndex;
 import io.harness.mongo.index.Field;
 import io.harness.persistence.AccountAccess;
+
+import software.wings.beans.Base;
+import software.wings.beans.sso.SSOSettings.SSOSettingsKeys;
+
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import javax.validation.constraints.NotNull;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.experimental.FieldNameConstants;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Entity;
-import software.wings.beans.Base;
-import software.wings.beans.sso.SSOSettings.SSOSettingsKeys;
-
-import javax.validation.constraints.NotNull;
 
 @OwnedBy(PL)
 @Data

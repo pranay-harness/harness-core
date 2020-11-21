@@ -2,17 +2,19 @@ package migrations.all;
 
 import static io.harness.persistence.HQuery.excludeAuthority;
 import static io.harness.threading.Morpheus.sleep;
+
 import static java.time.Duration.ofMillis;
 
-import com.google.inject.Inject;
-
 import io.harness.persistence.HIterator;
-import lombok.extern.slf4j.Slf4j;
-import migrations.Migration;
+
 import software.wings.beans.SettingAttribute;
 import software.wings.dl.WingsPersistence;
 import software.wings.verification.CVConfiguration;
 import software.wings.verification.CVConfiguration.CVConfigurationKeys;
+
+import com.google.inject.Inject;
+import lombok.extern.slf4j.Slf4j;
+import migrations.Migration;
 
 @Slf4j
 public class DisableServiceGuardsWithDeletedConnectorsMigration implements Migration {

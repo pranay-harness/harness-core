@@ -2,21 +2,21 @@ package io.harness.generator;
 
 import static io.harness.govern.Switch.unhandled;
 
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
-
 import io.harness.delegate.beans.DelegateProfile;
 import io.harness.delegate.beans.DelegateProfile.DelegateProfileKeys;
 import io.harness.exception.WingsException;
-import org.apache.commons.io.IOUtils;
+
 import software.wings.beans.Account;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.DelegateProfileService;
 
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.EnumSet;
+import org.apache.commons.io.IOUtils;
 
 @Singleton
 public class DelegateProfileGenerator {

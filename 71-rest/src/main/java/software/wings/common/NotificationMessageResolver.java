@@ -3,32 +3,23 @@ package software.wings.common;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.govern.Switch.unhandled;
 import static io.harness.logging.Misc.getDurationString;
-import static java.lang.String.format;
-import static java.nio.charset.StandardCharsets.UTF_8;
+
 import static software.wings.common.NotificationConstants.ABORTED_COLOR;
 import static software.wings.common.NotificationConstants.COMPLETED_COLOR;
 import static software.wings.common.NotificationConstants.FAILED_COLOR;
 import static software.wings.common.NotificationConstants.PAUSED_COLOR;
 import static software.wings.common.NotificationConstants.RESUMED_COLOR;
 
-import com.google.common.io.Resources;
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
+import static java.lang.String.format;
+import static java.nio.charset.StandardCharsets.UTF_8;
 
-import com.fasterxml.jackson.core.type.TypeReference;
 import io.harness.beans.ExecutionStatus;
 import io.harness.beans.WorkflowType;
 import io.harness.context.ContextElementType;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
 import io.harness.serializer.YamlUtils;
-import lombok.Getter;
-import lombok.Setter;
-import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.StringUtils;
-import org.apache.commons.text.StrSubstitutor;
-import org.apache.commons.text.WordUtils;
-import org.apache.http.client.utils.URIBuilder;
+
 import software.wings.app.MainConfiguration;
 import software.wings.beans.Application;
 import software.wings.beans.Environment;
@@ -39,6 +30,10 @@ import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionContextImpl;
 import software.wings.sm.WorkflowStandardParams;
 
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.google.common.io.Resources;
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.text.DateFormat;
@@ -47,6 +42,13 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.regex.Pattern;
+import lombok.Getter;
+import lombok.Setter;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.text.StrSubstitutor;
+import org.apache.commons.text.WordUtils;
+import org.apache.http.client.utils.URIBuilder;
 
 /**
  * Created by anubhaw on 7/25/16.

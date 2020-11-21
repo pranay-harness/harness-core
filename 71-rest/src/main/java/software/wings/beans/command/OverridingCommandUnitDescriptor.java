@@ -1,10 +1,10 @@
 package software.wings.beans.command;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.databind.JsonNode;
 import software.wings.stencils.OverridingStencil;
 import software.wings.stencils.StencilCategory;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.databind.JsonNode;
 import java.util.Optional;
 
 /**

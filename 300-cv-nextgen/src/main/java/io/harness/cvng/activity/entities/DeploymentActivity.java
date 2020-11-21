@@ -3,16 +3,20 @@ package io.harness.cvng.activity.entities;
 import static io.harness.cvng.core.services.CVNextGenConstants.DATA_COLLECTION_DELAY;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 
-import com.google.common.base.Preconditions;
-
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonTypeName;
 import io.harness.cvng.beans.ActivityDTO;
 import io.harness.cvng.beans.ActivityType;
 import io.harness.cvng.beans.DeploymentActivityDTO;
 import io.harness.cvng.core.utils.DateTimeUtils;
 import io.harness.cvng.verificationjob.beans.VerificationJobType;
 import io.harness.cvng.verificationjob.entities.VerificationJobInstance;
+
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonTypeName;
+import com.google.common.base.Preconditions;
+import java.time.Duration;
+import java.time.Instant;
+import java.util.Set;
+import javax.validation.constraints.NotNull;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -20,11 +24,6 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.experimental.FieldNameConstants;
-
-import java.time.Duration;
-import java.time.Instant;
-import java.util.Set;
-import javax.validation.constraints.NotNull;
 
 @JsonTypeName("DEPLOYMENT")
 @FieldNameConstants(innerTypeName = "DeploymentActivityKeys")

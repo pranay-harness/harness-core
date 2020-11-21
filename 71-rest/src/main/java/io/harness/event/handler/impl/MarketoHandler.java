@@ -34,10 +34,6 @@ import static io.harness.event.model.EventType.USER_INVITED_FROM_EXISTING_ACCOUN
 import static io.harness.exception.WingsException.USER;
 import static io.harness.validation.Validator.notNullCheck;
 
-import com.google.common.collect.Sets;
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
-
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.event.handler.EventHandler;
 import io.harness.event.handler.marketo.MarketoConfig;
@@ -54,15 +50,16 @@ import io.harness.exception.WingsException;
 import io.harness.lock.AcquiredLock;
 import io.harness.lock.PersistentLocker;
 import io.harness.network.Http;
-import lombok.extern.slf4j.Slf4j;
-import retrofit2.Retrofit;
-import retrofit2.converter.jackson.JacksonConverterFactory;
+
 import software.wings.beans.Account;
 import software.wings.beans.User;
 import software.wings.beans.utm.UtmInfo;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.UserService;
 
+import com.google.common.collect.Sets;
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import java.io.IOException;
 import java.net.URISyntaxException;
 import java.time.Duration;
@@ -71,6 +68,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
+import lombok.extern.slf4j.Slf4j;
+import retrofit2.Retrofit;
+import retrofit2.converter.jackson.JacksonConverterFactory;
 
 /**
  * @author rktummala on 11/20/18

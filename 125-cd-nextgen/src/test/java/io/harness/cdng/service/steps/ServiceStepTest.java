@@ -1,6 +1,7 @@
 package io.harness.cdng.service.steps;
 
 import static io.harness.rule.OwnerRule.ADWAIT;
+
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.CategoryTest;
@@ -18,15 +19,15 @@ import io.harness.cdng.service.beans.ServiceOutcome;
 import io.harness.delegate.beans.storeconfig.FetchType;
 import io.harness.rule.Owner;
 import io.harness.state.io.StepResponse.StepOutcome;
+
+import java.util.Arrays;
+import java.util.Collections;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.mockito.junit.MockitoJUnit;
 import org.mockito.junit.MockitoRule;
-
-import java.util.Arrays;
-import java.util.Collections;
 
 public class ServiceStepTest extends CategoryTest {
   @Rule public MockitoRule mockitoRule = MockitoJUnit.rule();

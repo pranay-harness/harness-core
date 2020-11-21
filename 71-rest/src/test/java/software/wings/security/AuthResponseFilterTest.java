@@ -1,24 +1,21 @@
 package software.wings.security;
 
 import static io.harness.rule.OwnerRule.RAMA;
+
+import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
+
 import static org.assertj.core.api.Assertions.fail;
 import static org.mockito.Matchers.anyBoolean;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.exception.WingsException;
 import io.harness.rule.Owner;
-import org.apache.commons.lang3.reflect.FieldUtils;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
+
 import software.wings.beans.AuthToken;
 import software.wings.beans.User;
 import software.wings.service.intfc.AuthService;
@@ -30,6 +27,12 @@ import javax.ws.rs.container.ContainerResponseContext;
 import javax.ws.rs.core.MultivaluedHashMap;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.UriInfo;
+import org.apache.commons.lang3.reflect.FieldUtils;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
 
 public class AuthResponseFilterTest extends CategoryTest {
   @Mock AuthService authService = mock(AuthService.class);

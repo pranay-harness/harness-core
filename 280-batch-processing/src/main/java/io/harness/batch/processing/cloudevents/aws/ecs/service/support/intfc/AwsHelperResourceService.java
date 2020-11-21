@@ -4,4 +4,6 @@ import software.wings.beans.NameValuePair;
 
 import java.util.List;
 
-public interface AwsHelperResourceService { List<NameValuePair> getAwsRegions(); }
+public interface AwsHelperResourceService {
+  List<NameValuePair> getAwsRegions();
+}

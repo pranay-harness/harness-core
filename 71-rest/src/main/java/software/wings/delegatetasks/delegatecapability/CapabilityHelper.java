@@ -2,10 +2,10 @@ package software.wings.delegatetasks.delegatecapability;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
-import static java.util.stream.Collectors.toList;
+
 import static software.wings.beans.artifact.ArtifactStreamType.GCR;
 
-import com.google.inject.Singleton;
+import static java.util.stream.Collectors.toList;
 
 import io.harness.beans.DelegateTask;
 import io.harness.delegate.beans.TaskData;
@@ -18,12 +18,11 @@ import io.harness.security.encryption.EncryptableSettingWithEncryptionDetails;
 import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.security.encryption.EncryptionConfig;
 import io.harness.security.encryption.EncryptionType;
-import lombok.AccessLevel;
-import lombok.NoArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
+
 import software.wings.beans.artifact.ArtifactStreamAttributes;
 import software.wings.settings.SettingValue;
 
+import com.google.inject.Singleton;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -33,6 +32,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 import javax.validation.constraints.NotNull;
+import lombok.AccessLevel;
+import lombok.NoArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 @Singleton

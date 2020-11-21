@@ -2,22 +2,22 @@ package io.harness.serializer.jackson;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.multiline.MultilineStringMixin;
 import io.harness.rule.Owner;
 import io.harness.rule.OwnerRule;
 import io.harness.utils.RequestField;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
+import java.io.IOException;
+import java.util.Arrays;
+import java.util.List;
 import lombok.Builder;
 import lombok.Data;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
-
-import java.io.IOException;
-import java.util.Arrays;
-import java.util.List;
 
 public class RequestFieldDeserializerTest extends CategoryTest implements MultilineStringMixin {
   private ObjectMapper objectMapper;

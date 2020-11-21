@@ -2,9 +2,8 @@ package io.harness.cvng.core.beans;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.rule.OwnerRule.KAMAL;
-import static org.assertj.core.api.Assertions.assertThat;
 
-import com.google.common.collect.Sets;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.category.element.UnitTests;
 import io.harness.cvng.core.beans.DSConfig.CVConfigUpdateResult;
@@ -12,15 +11,16 @@ import io.harness.cvng.core.entities.AppDynamicsCVConfig;
 import io.harness.cvng.core.entities.CVConfig;
 import io.harness.cvng.core.entities.MetricPack;
 import io.harness.rule.Owner;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
 
+import com.google.common.collect.Sets;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 public class AppDynamicsDSConfigTest extends DSConfigTestBase {
   private AppDynamicsDSConfig appDynamicsDSConfig;

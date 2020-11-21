@@ -7,15 +7,10 @@ import static io.harness.distribution.constraint.Consumer.State.ACTIVE;
 import static io.harness.distribution.constraint.Consumer.State.BLOCKED;
 import static io.harness.distribution.constraint.Consumer.State.FINISHED;
 import static io.harness.pms.execution.Status.DISCONTINUING;
+
 import static java.util.stream.Collectors.toList;
 import static org.springframework.data.mongodb.core.query.Criteria.where;
 import static org.springframework.data.mongodb.core.query.Query.query;
-
-import com.google.common.base.Joiner;
-import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.Lists;
-import com.google.inject.Inject;
-import com.google.inject.name.Named;
 
 import io.harness.StatusUtils;
 import io.harness.annotations.dev.OwnedBy;
@@ -30,21 +25,26 @@ import io.harness.engine.executions.plan.PlanExecutionService;
 import io.harness.exception.InvalidRequestException;
 import io.harness.execution.NodeExecution;
 import io.harness.execution.PlanExecution;
-import io.harness.pms.execution.Status;
 import io.harness.persistence.HPersistence;
+import io.harness.pms.execution.Status;
 import io.harness.steps.resourcerestraint.beans.ResourceRestraint;
 import io.harness.steps.resourcerestraint.beans.ResourceRestraintInstance;
 import io.harness.steps.resourcerestraint.beans.ResourceRestraintInstance.ResourceRestraintInstanceKeys;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.data.mongodb.core.MongoTemplate;
-import org.springframework.data.mongodb.core.query.Criteria;
-import org.springframework.data.mongodb.core.query.Query;
 
+import com.google.common.base.Joiner;
+import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Lists;
+import com.google.inject.Inject;
+import com.google.inject.name.Named;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.mongodb.core.MongoTemplate;
+import org.springframework.data.mongodb.core.query.Criteria;
+import org.springframework.data.mongodb.core.query.Query;
 
 @OwnedBy(CDC)
 @Slf4j
@@ -110,7 +110,7 @@ public class ResourceRestraintServiceImpl implements ResourceRestraintService {
             ResourceRestraintService.getPlanExecutionIdFromReleaseEntityId(releaseEntityId));
         finished = nodeExecution != null
             && (StatusUtils.finalStatuses().contains(nodeExecution.getStatus())
-                   || DISCONTINUING == nodeExecution.getStatus());
+                || DISCONTINUING == nodeExecution.getStatus());
       } catch (InvalidRequestException e) {
         log.error("", e);
         return false;

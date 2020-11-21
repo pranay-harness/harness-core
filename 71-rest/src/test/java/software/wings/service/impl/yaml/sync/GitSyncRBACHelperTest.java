@@ -3,21 +3,18 @@ package software.wings.service.impl.yaml.sync;
 import static io.harness.beans.PageResponse.PageResponseBuilder.aPageResponse;
 import static io.harness.event.handler.impl.Constants.ACCOUNT_ID;
 import static io.harness.rule.OwnerRule.DEEPAK;
+
+import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.doCallRealMethod;
 import static org.mockito.Mockito.doReturn;
-import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 
 import io.harness.beans.PageResponse;
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
+
 import software.wings.beans.SettingAttribute;
 import software.wings.service.impl.yaml.service.YamlHelper;
 import software.wings.service.intfc.SettingsService;
@@ -27,6 +24,12 @@ import software.wings.yaml.gitSync.GitFileActivity;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
 
 public class GitSyncRBACHelperTest {
   @Mock SettingsService settingService;

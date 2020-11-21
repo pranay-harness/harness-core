@@ -1,16 +1,12 @@
 package software.wings.service.impl;
 
-import static com.google.common.collect.ImmutableMap.of;
 import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 import static io.harness.delegate.service.DelegateAgentFileService.FileBucket.PLATFORMS;
 import static io.harness.validation.Validator.notNullCheck;
+
+import static com.google.common.collect.ImmutableMap.of;
 import static java.lang.String.format;
 import static org.atteo.evo.inflector.English.plural;
-
-import com.google.common.io.Files;
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
-import com.google.inject.name.Named;
 
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
@@ -19,7 +15,7 @@ import io.harness.delegate.service.DelegateAgentFileService.FileBucket;
 import io.harness.exception.InvalidRequestException;
 import io.harness.logging.Misc;
 import io.harness.scheduler.PersistentScheduler;
-import org.mongodb.morphia.mapping.Mapper;
+
 import software.wings.beans.AppContainer;
 import software.wings.beans.Service;
 import software.wings.dl.WingsPersistence;
@@ -31,6 +27,10 @@ import software.wings.service.intfc.ServiceResourceService;
 import software.wings.utils.FileType;
 import software.wings.utils.FileTypeDetector;
 
+import com.google.common.io.Files;
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
+import com.google.inject.name.Named;
 import java.io.BufferedInputStream;
 import java.io.File;
 import java.io.FileInputStream;
@@ -39,6 +39,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import javax.validation.executable.ValidateOnExecution;
+import org.mongodb.morphia.mapping.Mapper;
 
 /**
  * Created by anubhaw on 5/4/16.

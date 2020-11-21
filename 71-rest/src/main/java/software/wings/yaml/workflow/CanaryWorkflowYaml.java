@@ -2,19 +2,20 @@ package software.wings.yaml.workflow;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 
-import com.fasterxml.jackson.annotation.JsonTypeName;
 import io.harness.annotations.dev.OwnedBy;
-import lombok.Builder;
-import lombok.Data;
-import lombok.EqualsAndHashCode;
-import lombok.NoArgsConstructor;
+
 import software.wings.beans.FailureStrategy;
 import software.wings.beans.NotificationRule;
 import software.wings.beans.TemplateExpression.Yaml;
 import software.wings.beans.VariableYaml;
 import software.wings.beans.WorkflowPhase;
 
+import com.fasterxml.jackson.annotation.JsonTypeName;
 import java.util.List;
+import lombok.Builder;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.NoArgsConstructor;
 
 /**
  * @author rktummala on 11/1/17

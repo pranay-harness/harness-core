@@ -2,11 +2,9 @@ package software.wings.graphql.datafetcher.secrets;
 
 import static software.wings.security.PermissionAttribute.PermissionType.LOGGED_IN;
 
-import com.google.inject.Inject;
-
 import io.harness.beans.EncryptedData;
 import io.harness.exception.InvalidRequestException;
-import lombok.extern.slf4j.Slf4j;
+
 import software.wings.beans.SettingAttribute;
 import software.wings.graphql.datafetcher.BaseMutatorDataFetcher;
 import software.wings.graphql.datafetcher.MutationContext;
@@ -19,6 +17,9 @@ import software.wings.graphql.schema.type.secrets.QLWinRMCredentialUpdate;
 import software.wings.security.annotations.AuthRule;
 import software.wings.service.impl.security.auth.SecretAuthHandler;
 import software.wings.service.intfc.security.SecretManager;
+
+import com.google.inject.Inject;
+import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class UpdateSecretDataFetcher extends BaseMutatorDataFetcher<QLUpdateSecretInput, QLUpdateSecretPayload> {

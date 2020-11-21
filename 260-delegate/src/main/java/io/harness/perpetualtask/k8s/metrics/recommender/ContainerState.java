@@ -4,9 +4,9 @@ import static io.harness.ccm.recommender.k8sworkload.RecommenderUtils.MIN_SAMPLE
 import static io.harness.ccm.recommender.k8sworkload.RecommenderUtils.newCpuHistogram;
 
 import io.harness.histogram.Histogram;
-import lombok.Data;
 
 import java.time.Instant;
+import lombok.Data;
 
 @Data
 public class ContainerState {

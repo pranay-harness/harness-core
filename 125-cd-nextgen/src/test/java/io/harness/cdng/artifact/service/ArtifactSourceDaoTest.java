@@ -1,9 +1,8 @@
 package io.harness.cdng.artifact.service;
 
 import static io.harness.rule.OwnerRule.ARCHIT;
-import static org.assertj.core.api.Assertions.assertThat;
 
-import com.google.inject.Inject;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.category.element.UnitTests;
 import io.harness.cdng.CDNGBaseTest;
@@ -11,6 +10,8 @@ import io.harness.cdng.artifact.bean.artifactsource.ArtifactSource;
 import io.harness.cdng.artifact.bean.artifactsource.DockerArtifactSource;
 import io.harness.cdng.artifact.repository.ArtifactSourceDao;
 import io.harness.rule.Owner;
+
+import com.google.inject.Inject;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 

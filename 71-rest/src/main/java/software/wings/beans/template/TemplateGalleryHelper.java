@@ -1,10 +1,10 @@
 package software.wings.beans.template;
 
-import com.google.inject.Inject;
-
 import software.wings.beans.template.TemplateGallery.GalleryKey;
 import software.wings.service.intfc.template.TemplateGalleryService;
 import software.wings.utils.Utils;
+
+import com.google.inject.Inject;
 
 public class TemplateGalleryHelper {
   @Inject TemplateGalleryService templateGalleryService;

@@ -1,3 +1,5 @@
 package io.harness.ng.core;
 
-public interface NGOrgAccess { String getOrgIdentifier(); }
+public interface NGOrgAccess {
+  String getOrgIdentifier();
+}

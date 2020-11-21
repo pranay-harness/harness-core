@@ -2,21 +2,20 @@ package io.harness.delegate.service;
 
 import static io.harness.network.SafeHttpCall.execute;
 
+import io.harness.managerclient.DelegateAgentManagerClient;
+import io.harness.managerclient.GetDelegatePropertiesRequest;
+import io.harness.managerclient.GetDelegatePropertiesResponse;
+
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.google.protobuf.TextFormat;
-
-import io.harness.managerclient.DelegateAgentManagerClient;
-import io.harness.managerclient.GetDelegatePropertiesRequest;
-import io.harness.managerclient.GetDelegatePropertiesResponse;
-import lombok.SneakyThrows;
-import lombok.extern.slf4j.Slf4j;
-
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
+import lombok.SneakyThrows;
+import lombok.extern.slf4j.Slf4j;
 
 @Singleton
 @Slf4j

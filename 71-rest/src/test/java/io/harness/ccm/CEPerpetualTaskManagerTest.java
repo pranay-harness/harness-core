@@ -5,6 +5,10 @@ import static io.harness.ccm.cluster.entities.ClusterType.DIRECT_KUBERNETES;
 import static io.harness.perpetualtask.PerpetualTaskType.K8S_WATCH;
 import static io.harness.rule.OwnerRule.HANTANG;
 import static io.harness.rule.OwnerRule.ROHIT;
+
+import static software.wings.beans.Account.Builder.anAccount;
+import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
+
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Matchers.isA;
@@ -12,8 +16,6 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.mockito.internal.verification.VerificationModeFactory.times;
-import static software.wings.beans.Account.Builder.anAccount;
-import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 
 import io.harness.CategoryTest;
 import io.harness.beans.PageResponse;
@@ -30,6 +32,14 @@ import io.harness.perpetualtask.PerpetualTaskType;
 import io.harness.perpetualtask.ecs.EcsPerpetualTaskClientParams;
 import io.harness.perpetualtask.k8s.watch.K8WatchPerpetualTaskClientParams;
 import io.harness.rule.Owner;
+
+import software.wings.beans.Account;
+import software.wings.beans.KubernetesClusterConfig;
+import software.wings.beans.SettingAttribute;
+import software.wings.beans.SettingAttribute.SettingCategory;
+
+import java.util.ArrayList;
+import java.util.Arrays;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -38,13 +48,6 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnit;
 import org.mockito.junit.MockitoRule;
-import software.wings.beans.Account;
-import software.wings.beans.KubernetesClusterConfig;
-import software.wings.beans.SettingAttribute;
-import software.wings.beans.SettingAttribute.SettingCategory;
-
-import java.util.ArrayList;
-import java.util.Arrays;
 
 public class CEPerpetualTaskManagerTest extends CategoryTest {
   private String clusterRecordId = "clusterId";

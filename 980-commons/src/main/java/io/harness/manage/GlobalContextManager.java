@@ -7,12 +7,12 @@ import io.harness.context.GlobalContext;
 import io.harness.context.GlobalContextData;
 import io.harness.context.MdcGlobalContextData;
 import io.harness.logging.AutoLogContext;
-import lombok.experimental.UtilityClass;
-import lombok.extern.slf4j.Slf4j;
-import org.slf4j.MDC;
 
 import java.util.Map;
 import java.util.concurrent.Callable;
+import lombok.experimental.UtilityClass;
+import lombok.extern.slf4j.Slf4j;
+import org.slf4j.MDC;
 
 @UtilityClass
 @Slf4j

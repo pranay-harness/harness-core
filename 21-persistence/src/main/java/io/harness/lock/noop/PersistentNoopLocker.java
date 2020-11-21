@@ -1,9 +1,9 @@
 package io.harness.lock.noop;
 
-import io.dropwizard.lifecycle.Managed;
 import io.harness.lock.AcquiredLock;
 import io.harness.lock.PersistentLocker;
 
+import io.dropwizard.lifecycle.Managed;
 import java.time.Duration;
 
 public class PersistentNoopLocker implements PersistentLocker, Managed {

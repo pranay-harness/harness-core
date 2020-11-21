@@ -28,12 +28,11 @@ import static io.harness.k8s.model.Kind.ServiceAccount;
 import static io.harness.k8s.model.Kind.StatefulSet;
 import static io.harness.k8s.model.Kind.StorageClass;
 
-import org.apache.commons.lang3.StringUtils;
-
 import java.io.Serializable;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Map;
+import org.apache.commons.lang3.StringUtils;
 
 public class KubernetesResourceComparer implements Comparator<KubernetesResource>, Serializable {
   private static String[] KindOrder = {

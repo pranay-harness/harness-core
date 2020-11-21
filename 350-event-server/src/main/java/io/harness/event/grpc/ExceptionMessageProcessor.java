@@ -1,10 +1,10 @@
 package io.harness.event.grpc;
 
-import com.google.inject.Inject;
-
 import io.harness.ccm.health.CeExceptionRecord;
 import io.harness.ccm.health.CeExceptionRecordDao;
 import io.harness.event.payloads.CeExceptionMessage;
+
+import com.google.inject.Inject;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j

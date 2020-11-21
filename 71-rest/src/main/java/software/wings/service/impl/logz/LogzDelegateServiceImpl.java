@@ -1,24 +1,14 @@
 package software.wings.service.impl.logz;
 
 import static io.harness.network.Http.getOkHttpClientBuilder;
+
 import static software.wings.common.VerificationConstants.URL_STRING;
 import static software.wings.service.impl.ThirdPartyApiCallLog.PAYLOAD;
-
-import com.google.common.base.Preconditions;
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
 
 import io.harness.exception.WingsException;
 import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.serializer.JsonUtils;
-import okhttp3.OkHttpClient;
-import okhttp3.Request;
-import org.apache.commons.lang3.exception.ExceptionUtils;
-import org.apache.http.HttpStatus;
-import retrofit2.Call;
-import retrofit2.Response;
-import retrofit2.Retrofit;
-import retrofit2.converter.jackson.JacksonConverterFactory;
+
 import software.wings.beans.config.LogzConfig;
 import software.wings.delegatetasks.DelegateLogService;
 import software.wings.delegatetasks.cv.RequestExecutor;
@@ -30,9 +20,20 @@ import software.wings.service.impl.elk.ElkLogFetchRequest;
 import software.wings.service.intfc.logz.LogzDelegateService;
 import software.wings.service.intfc.security.EncryptionService;
 
+import com.google.common.base.Preconditions;
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import java.io.IOException;
 import java.time.OffsetDateTime;
 import java.util.List;
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
+import org.apache.commons.lang3.exception.ExceptionUtils;
+import org.apache.http.HttpStatus;
+import retrofit2.Call;
+import retrofit2.Response;
+import retrofit2.Retrofit;
+import retrofit2.converter.jackson.JacksonConverterFactory;
 
 /**
  * Created by rsingh on 8/21/17.

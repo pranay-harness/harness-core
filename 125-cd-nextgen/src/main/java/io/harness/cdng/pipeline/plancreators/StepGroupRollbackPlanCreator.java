@@ -2,9 +2,8 @@ package io.harness.cdng.pipeline.plancreators;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.executionplan.plancreator.beans.PlanCreatorType.STEP_PLAN_CREATOR;
-import static java.lang.String.format;
 
-import com.google.inject.Inject;
+import static java.lang.String.format;
 
 import io.harness.cdng.executionplan.CDPlanCreatorType;
 import io.harness.executionplan.core.AbstractPlanCreatorWithChildren;
@@ -25,6 +24,7 @@ import io.harness.steps.section.chain.SectionChainStepParameters;
 import io.harness.yaml.core.StepGroupElement;
 import io.harness.yaml.core.auxiliary.intfc.ExecutionWrapper;
 
+import com.google.inject.Inject;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;

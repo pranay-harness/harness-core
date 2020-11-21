@@ -1,9 +1,7 @@
 package software.wings.integration.setup.rest;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static javax.ws.rs.client.Entity.entity;
-import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
-import static org.assertj.core.api.Assertions.assertThat;
+
 import static software.wings.beans.BasicOrchestrationWorkflow.BasicOrchestrationWorkflowBuilder.aBasicOrchestrationWorkflow;
 import static software.wings.beans.RollingOrchestrationWorkflow.RollingOrchestrationWorkflowBuilder.aRollingOrchestrationWorkflow;
 import static software.wings.beans.Workflow.WorkflowBuilder.aWorkflow;
@@ -14,14 +12,15 @@ import static software.wings.utils.WingsIntegrationTestConstants.SEED_BASIC_WORK
 import static software.wings.utils.WingsIntegrationTestConstants.SEED_ROLLING_WORKFLOW_KEY;
 import static software.wings.utils.WingsIntegrationTestConstants.SEED_ROLLING_WORKFLOW_NAME;
 
-import com.google.common.collect.ImmutableMap;
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
+import static javax.ws.rs.client.Entity.entity;
+import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.beans.PageResponse;
 import io.harness.beans.WorkflowType;
 import io.harness.exception.WingsException;
 import io.harness.rest.RestResponse;
+
 import software.wings.beans.CanaryOrchestrationWorkflow;
 import software.wings.beans.GraphNode;
 import software.wings.beans.InfrastructureMapping;
@@ -33,6 +32,9 @@ import software.wings.beans.WorkflowPhase;
 import software.wings.integration.UserResourceRestClient;
 import software.wings.sm.StateType;
 
+import com.google.common.collect.ImmutableMap;
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
 import java.util.ArrayList;

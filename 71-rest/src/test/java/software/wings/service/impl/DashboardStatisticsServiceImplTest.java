@@ -1,19 +1,10 @@
 package software.wings.service.impl;
 
-import static com.google.common.collect.Sets.newHashSet;
 import static io.harness.beans.PageResponse.PageResponseBuilder.aPageResponse;
 import static io.harness.rule.OwnerRule.ABHINAV;
 import static io.harness.rule.OwnerRule.PRABU;
 import static io.harness.rule.OwnerRule.RAMA;
-import static java.util.Arrays.asList;
-import static java.util.Objects.deepEquals;
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.anyBoolean;
-import static org.mockito.Matchers.anyString;
-import static org.mockito.Matchers.eq;
-import static org.mockito.Mockito.spy;
-import static org.mockito.Mockito.when;
+
 import static software.wings.service.impl.instance.InstanceSyncTestConstants.ACCOUNT_1_ID;
 import static software.wings.service.impl.instance.InstanceSyncTestConstants.ACCOUNT_2_ID;
 import static software.wings.service.impl.instance.InstanceSyncTestConstants.APP_1_ID;
@@ -91,9 +82,16 @@ import static software.wings.utils.WingsTestConstants.WORKFLOW_EXECUTION_ID;
 import static software.wings.utils.WingsTestConstants.WORKFLOW_ID;
 import static software.wings.utils.WingsTestConstants.WORKFLOW_NAME;
 
-import com.google.common.collect.Lists;
-import com.google.common.collect.Sets;
-import com.google.inject.Inject;
+import static com.google.common.collect.Sets.newHashSet;
+import static java.util.Arrays.asList;
+import static java.util.Objects.deepEquals;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyBoolean;
+import static org.mockito.Matchers.anyString;
+import static org.mockito.Matchers.eq;
+import static org.mockito.Mockito.spy;
+import static org.mockito.Mockito.when;
 
 import io.harness.beans.ExecutionStatus;
 import io.harness.beans.PageRequest;
@@ -102,12 +100,7 @@ import io.harness.category.element.UnitTests;
 import io.harness.event.usagemetrics.UsageMetricsHelper;
 import io.harness.rule.Owner;
 import io.harness.testlib.RealMongo;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
+
 import software.wings.WingsBaseTest;
 import software.wings.beans.Account;
 import software.wings.beans.EntityType;
@@ -157,6 +150,9 @@ import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.service.intfc.instance.DashboardStatisticsService;
 import software.wings.sm.PipelineSummary;
 
+import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
+import com.google.inject.Inject;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -164,6 +160,12 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
 
 /**
  * @author rktummala on 9/4/18

@@ -4,15 +4,10 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.delegate.beans.TaskData.DEFAULT_SYNC_CALL_TIMEOUT;
 import static io.harness.exception.WingsException.ExecutionContext.MANAGER;
 import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
+
 import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static software.wings.beans.UserInvite.UserInviteBuilder.anUserInvite;
 import static software.wings.common.Constants.ACCOUNT_ID_KEY;
-
-import com.google.common.annotations.VisibleForTesting;
-import com.google.common.collect.Lists;
-import com.google.common.collect.Sets;
-import com.google.inject.Inject;
-import com.google.inject.name.Named;
 
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
@@ -22,13 +17,7 @@ import io.harness.logging.AutoLogContext;
 import io.harness.logging.ExceptionLogger;
 import io.harness.scheduler.PersistentScheduler;
 import io.harness.security.encryption.EncryptedDataDetail;
-import lombok.extern.slf4j.Slf4j;
-import org.quartz.Job;
-import org.quartz.JobBuilder;
-import org.quartz.JobDetail;
-import org.quartz.JobExecutionContext;
-import org.quartz.SimpleScheduleBuilder;
-import org.quartz.TriggerBuilder;
+
 import software.wings.beans.SyncTaskContext;
 import software.wings.beans.User;
 import software.wings.beans.UserInvite;
@@ -51,6 +40,11 @@ import software.wings.service.intfc.UserService;
 import software.wings.service.intfc.ldap.LdapDelegateService;
 import software.wings.service.intfc.security.SecretManager;
 
+import com.google.common.annotations.VisibleForTesting;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
+import com.google.inject.Inject;
+import com.google.inject.name.Named;
 import java.security.SecureRandom;
 import java.time.Duration;
 import java.util.ArrayList;
@@ -65,6 +59,13 @@ import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
+import lombok.extern.slf4j.Slf4j;
+import org.quartz.Job;
+import org.quartz.JobBuilder;
+import org.quartz.JobDetail;
+import org.quartz.JobExecutionContext;
+import org.quartz.SimpleScheduleBuilder;
+import org.quartz.TriggerBuilder;
 
 /**
  * Periodic job which syncs the LDAP group users with the linked group in Harness for given SSO provider

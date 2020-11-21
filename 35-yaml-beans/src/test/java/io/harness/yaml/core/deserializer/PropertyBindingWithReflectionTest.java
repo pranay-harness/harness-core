@@ -1,8 +1,14 @@
 package io.harness.yaml.core.deserializer;
 
 import static io.harness.rule.OwnerRule.ALEKSANDAR;
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+
+import io.harness.CategoryTest;
+import io.harness.category.element.UnitTests;
+import io.harness.rule.Owner;
+import io.harness.serializer.AnnotationAwareJsonSubtypeResolver;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonTypeName;
@@ -12,18 +18,13 @@ import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
-import io.harness.CategoryTest;
-import io.harness.category.element.UnitTests;
-import io.harness.rule.Owner;
-import io.harness.serializer.AnnotationAwareJsonSubtypeResolver;
+import java.io.IOException;
+import java.util.List;
 import lombok.Builder;
 import lombok.Data;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
-
-import java.io.IOException;
-import java.util.List;
 
 public class PropertyBindingWithReflectionTest extends CategoryTest {
   private static final String PROPERTY_NAME_A = "propertyNameA";

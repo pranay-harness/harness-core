@@ -2,11 +2,9 @@ package io.harness.cvng.core.resources;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.rule.OwnerRule.NEMANJA;
+
 import static javax.ws.rs.client.Entity.entity;
 import static org.assertj.core.api.Assertions.assertThat;
-
-import com.google.inject.Inject;
-import com.google.inject.Injector;
 
 import io.harness.CvNextGenTest;
 import io.harness.category.element.UnitTests;
@@ -17,16 +15,18 @@ import io.harness.cvng.models.VerificationType;
 import io.harness.rest.RestResponse;
 import io.harness.rule.Owner;
 import io.harness.rule.ResourceTestRule;
-import org.junit.Before;
-import org.junit.ClassRule;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
 
+import com.google.inject.Inject;
+import com.google.inject.Injector;
 import java.util.Arrays;
 import java.util.List;
 import javax.ws.rs.core.GenericType;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+import org.junit.Before;
+import org.junit.ClassRule;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 public class CVConfigResourceTest extends CvNextGenTest {
   @Inject private Injector injector;

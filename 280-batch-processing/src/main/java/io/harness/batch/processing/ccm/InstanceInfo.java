@@ -6,12 +6,12 @@ import io.harness.ccm.commons.beans.InstanceState;
 import io.harness.ccm.commons.beans.InstanceType;
 import io.harness.ccm.commons.beans.Resource;
 import io.harness.ccm.commons.beans.StorageResource;
-import lombok.Builder;
-import lombok.Data;
 
 import java.time.Instant;
 import java.util.List;
 import java.util.Map;
+import lombok.Builder;
+import lombok.Data;
 
 @Data
 @Builder

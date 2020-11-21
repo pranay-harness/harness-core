@@ -1,6 +1,7 @@
 package software.wings.service.impl.aws.manager;
 
 import static io.harness.rule.OwnerRule.SATYAM;
+
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -11,14 +12,10 @@ import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.spy;
 
-import com.google.common.collect.ImmutableMap;
-
-import com.amazonaws.services.ec2.model.Instance;
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
+
 import software.wings.beans.AwsConfig;
 import software.wings.service.impl.aws.model.AwsAsgGetRunningCountData;
 import software.wings.service.impl.aws.model.AwsAsgGetRunningCountResponse;
@@ -27,8 +24,12 @@ import software.wings.service.impl.aws.model.AwsAsgListDesiredCapacitiesResponse
 import software.wings.service.impl.aws.model.AwsAsgListInstancesResponse;
 import software.wings.service.intfc.DelegateService;
 
+import com.amazonaws.services.ec2.model.Instance;
+import com.google.common.collect.ImmutableMap;
 import java.util.List;
 import java.util.Map;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 public class AwsAsgHelperServiceManagerImplTest extends CategoryTest {
   @Test

@@ -1,12 +1,11 @@
 package software.wings.verification;
 
+import java.util.Set;
+import java.util.SortedSet;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-
-import java.util.Set;
-import java.util.SortedSet;
 
 @Data
 @Builder

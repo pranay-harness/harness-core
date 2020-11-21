@@ -2,6 +2,10 @@ package software.wings.service.impl.aws.delegate;
 
 import static io.harness.rule.OwnerRule.ADWAIT;
 import static io.harness.rule.OwnerRule.SATYAM;
+
+import static software.wings.service.impl.aws.model.AwsConstants.MAX_TRAFFIC_SHIFT_WEIGHT;
+import static software.wings.service.impl.aws.model.AwsConstants.MIN_TRAFFIC_SHIFT_WEIGHT;
+
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
@@ -18,8 +22,21 @@ import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.verify;
-import static software.wings.service.impl.aws.model.AwsConstants.MAX_TRAFFIC_SHIFT_WEIGHT;
-import static software.wings.service.impl.aws.model.AwsConstants.MIN_TRAFFIC_SHIFT_WEIGHT;
+
+import io.harness.aws.AwsCallTracker;
+import io.harness.category.element.UnitTests;
+import io.harness.delegate.task.aws.AwsElbListener;
+import io.harness.delegate.task.aws.AwsElbListenerRuleData;
+import io.harness.delegate.task.aws.AwsLoadBalancerDetails;
+import io.harness.delegate.task.aws.LbDetailsForAlbTrafficShift;
+import io.harness.exception.InvalidRequestException;
+import io.harness.rule.Owner;
+import io.harness.spotinst.model.SpotInstConstants;
+
+import software.wings.WingsBaseTest;
+import software.wings.beans.AwsConfig;
+import software.wings.beans.command.ExecutionLogCallback;
+import software.wings.service.intfc.security.EncryptionService;
 
 import com.amazonaws.services.elasticloadbalancing.model.DescribeInstanceHealthResult;
 import com.amazonaws.services.elasticloadbalancing.model.InstanceState;
@@ -44,28 +61,14 @@ import com.amazonaws.services.elasticloadbalancingv2.model.TargetGroup;
 import com.amazonaws.services.elasticloadbalancingv2.model.TargetGroupTuple;
 import com.amazonaws.services.elasticloadbalancingv2.model.TargetHealth;
 import com.amazonaws.services.elasticloadbalancingv2.model.TargetHealthDescription;
-import io.harness.aws.AwsCallTracker;
-import io.harness.category.element.UnitTests;
-import io.harness.delegate.task.aws.AwsElbListener;
-import io.harness.delegate.task.aws.AwsElbListenerRuleData;
-import io.harness.delegate.task.aws.AwsLoadBalancerDetails;
-import io.harness.delegate.task.aws.LbDetailsForAlbTrafficShift;
-import io.harness.exception.InvalidRequestException;
-import io.harness.rule.Owner;
-import io.harness.spotinst.model.SpotInstConstants;
+import java.util.List;
+import java.util.Map;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Spy;
-import software.wings.WingsBaseTest;
-import software.wings.beans.AwsConfig;
-import software.wings.beans.command.ExecutionLogCallback;
-import software.wings.service.intfc.security.EncryptionService;
-
-import java.util.List;
-import java.util.Map;
 
 public class AwsElbHelperServiceDelegateImplTest extends WingsBaseTest {
   @Mock private EncryptionService mockEncryptionService;

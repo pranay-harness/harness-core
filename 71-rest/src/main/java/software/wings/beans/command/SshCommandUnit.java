@@ -2,9 +2,11 @@ package software.wings.beans.command;
 
 import io.harness.exception.WingsException;
 import io.harness.logging.CommandExecutionStatus;
+
+import software.wings.api.DeploymentType;
+
 import lombok.Data;
 import lombok.EqualsAndHashCode;
-import software.wings.api.DeploymentType;
 
 /**
  * Created by peeyushaggarwal on 2/1/17.

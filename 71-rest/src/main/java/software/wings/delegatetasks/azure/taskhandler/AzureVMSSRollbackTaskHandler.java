@@ -8,22 +8,23 @@ import static io.harness.logging.CommandExecutionStatus.FAILURE;
 import static io.harness.logging.CommandExecutionStatus.SUCCESS;
 import static io.harness.logging.LogLevel.ERROR;
 import static io.harness.logging.LogLevel.INFO;
+
 import static java.lang.String.format;
 
-import com.google.inject.Singleton;
-
-import com.microsoft.azure.management.compute.VirtualMachineScaleSet;
 import io.harness.azure.model.AzureConfig;
 import io.harness.delegate.task.azure.request.AzureVMSSDeployTaskParameters;
 import io.harness.delegate.task.azure.request.AzureVMSSTaskParameters;
 import io.harness.delegate.task.azure.response.AzureVMSSTaskExecutionResponse;
 import io.harness.exception.ExceptionUtils;
-import lombok.NoArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
+
 import software.wings.beans.command.ExecutionLogCallback;
 
+import com.google.inject.Singleton;
+import com.microsoft.azure.management.compute.VirtualMachineScaleSet;
 import java.util.List;
 import java.util.Optional;
+import lombok.NoArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 @Singleton
 @NoArgsConstructor

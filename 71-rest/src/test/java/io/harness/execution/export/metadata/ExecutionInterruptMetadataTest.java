@@ -1,16 +1,17 @@
 package io.harness.execution.export.metadata;
 
 import static io.harness.rule.OwnerRule.GARVIT;
+
+import static software.wings.sm.ExecutionInterrupt.ExecutionInterruptBuilder.anExecutionInterrupt;
+
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
-import static software.wings.sm.ExecutionInterrupt.ExecutionInterruptBuilder.anExecutionInterrupt;
 
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.interrupts.ExecutionInterruptType;
 import io.harness.rule.Owner;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
+
 import software.wings.beans.StateExecutionInterrupt;
 
 import java.time.Instant;
@@ -18,6 +19,8 @@ import java.time.ZonedDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.Date;
 import java.util.List;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 public class ExecutionInterruptMetadataTest extends CategoryTest {
   @Test

@@ -1,28 +1,29 @@
 package software.wings.service.impl.instance.stats.collector;
 
 import static io.harness.rule.OwnerRule.UJJAWAL;
-import static org.assertj.core.api.Assertions.assertThat;
 
-import com.google.common.base.Suppliers;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
-import lombok.AllArgsConstructor;
-import lombok.Value;
-import org.apache.commons.lang3.RandomStringUtils;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
+
 import software.wings.WingsBaseTest;
 import software.wings.beans.EntityType;
 import software.wings.beans.infrastructure.instance.Instance;
 import software.wings.beans.infrastructure.instance.stats.InstanceStatsSnapshot;
 
+import com.google.common.base.Suppliers;
 import java.time.Instant;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
+import lombok.AllArgsConstructor;
+import lombok.Value;
+import org.apache.commons.lang3.RandomStringUtils;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 public class InstanceMapperTest extends WingsBaseTest {
   @Value

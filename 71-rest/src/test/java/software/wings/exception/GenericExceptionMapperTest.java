@@ -1,6 +1,7 @@
 package software.wings.exception;
 
 import static io.harness.rule.OwnerRule.KAMAL;
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.when;
 import static org.mockito.MockitoAnnotations.initMocks;
@@ -12,18 +13,19 @@ import io.harness.eraro.Level;
 import io.harness.eraro.ResponseMessage;
 import io.harness.rest.RestResponse;
 import io.harness.rule.Owner;
+
+import software.wings.WingsBaseTest;
+
 import io.swagger.annotations.Api;
+import javax.ws.rs.GET;
+import javax.ws.rs.container.ResourceInfo;
+import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
 import org.apache.commons.lang3.reflect.FieldUtils;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.Mock;
-import software.wings.WingsBaseTest;
-
-import javax.ws.rs.GET;
-import javax.ws.rs.container.ResourceInfo;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.Response;
 
 public class GenericExceptionMapperTest extends WingsBaseTest {
   private GenericExceptionMapper<?> genericExceptionMapper;

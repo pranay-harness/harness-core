@@ -7,6 +7,11 @@ import static io.harness.rule.OwnerRule.RUSHABH;
 import static io.harness.rule.OwnerRule.UJJAWAL;
 import static io.harness.rule.OwnerRule.UNKNOWN;
 import static io.harness.rule.OwnerRule.VAIBHAV_SI;
+
+import static software.wings.beans.Account.Builder.anAccount;
+import static software.wings.beans.User.Builder.anUser;
+import static software.wings.security.authentication.TwoFactorAuthenticationMechanism.TOTP;
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.fail;
 import static org.assertj.core.api.Assertions.failBecauseExceptionWasNotThrown;
@@ -20,27 +25,13 @@ import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-import static software.wings.beans.Account.Builder.anAccount;
-import static software.wings.beans.User.Builder.anUser;
-import static software.wings.security.authentication.TwoFactorAuthenticationMechanism.TOTP;
 
-import com.google.common.collect.Lists;
-import com.google.inject.Inject;
-import com.google.inject.name.Named;
-
-import com.j256.twofactorauth.TimeBasedOneTimePasswordUtil;
 import io.harness.category.element.UnitTests;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
 import io.harness.rule.Owner;
 import io.harness.rule.Repeat;
-import lombok.extern.slf4j.Slf4j;
-import org.joda.time.DateTimeUtils;
-import org.junit.Assert;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
+
 import software.wings.WingsBaseTest;
 import software.wings.beans.Account;
 import software.wings.beans.AccountType;
@@ -58,11 +49,22 @@ import software.wings.service.intfc.AuthService;
 import software.wings.service.intfc.UserService;
 import software.wings.utils.WingsTestConstants;
 
+import com.google.common.collect.Lists;
+import com.google.inject.Inject;
+import com.google.inject.name.Named;
+import com.j256.twofactorauth.TimeBasedOneTimePasswordUtil;
 import java.security.GeneralSecurityException;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
 import java.util.UUID;
+import lombok.extern.slf4j.Slf4j;
+import org.joda.time.DateTimeUtils;
+import org.junit.Assert;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
 
 @Slf4j
 public class TwoFactorAuthenticationManagerTest extends WingsBaseTest {

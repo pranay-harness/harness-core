@@ -1,13 +1,12 @@
 package io.harness.ng.core.exceptionmappers;
 
-import io.dropwizard.jersey.validation.JerseyViolationException;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.ExceptionUtils;
 import io.harness.ng.core.Status;
 import io.harness.ng.core.ValidationError;
 import io.harness.ng.core.dto.FailureDTO;
-import lombok.extern.slf4j.Slf4j;
 
+import io.dropwizard.jersey.validation.JerseyViolationException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
@@ -18,6 +17,7 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.ext.ExceptionMapper;
+import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class JerseyViolationExceptionMapperV2 implements ExceptionMapper<JerseyViolationException> {

@@ -2,20 +2,20 @@ package io.harness.serializer;
 
 import static io.harness.rule.OwnerRule.GEORGE;
 import static io.harness.rule.OwnerRule.PRASHANT;
-import static org.assertj.core.api.Assertions.assertThat;
 
-import com.google.common.collect.Maps;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
+
+import com.google.common.collect.Maps;
+import java.util.HashMap;
+import java.util.Map;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
-
-import java.util.HashMap;
-import java.util.Map;
 
 public class MapperUtilsTest extends CategoryTest {
   @Test

@@ -1,15 +1,12 @@
 package software.wings.service.impl.instance;
 
 import static io.harness.rule.OwnerRule.HITESH;
-import static org.assertj.core.api.Assertions.assertThat;
 
-import com.google.inject.Inject;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
-import org.mockito.InjectMocks;
+
 import software.wings.WingsBaseTest;
 import software.wings.api.ContainerDeploymentInfoWithNames;
 import software.wings.api.DeploymentSummary;
@@ -18,11 +15,15 @@ import software.wings.beans.container.Label;
 import software.wings.beans.infrastructure.instance.key.deployment.ContainerDeploymentKey;
 import software.wings.beans.infrastructure.instance.key.deployment.K8sDeploymentKey;
 
+import com.google.inject.Inject;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
+import org.mockito.InjectMocks;
 
 public class DeploymentServiceImplTest extends WingsBaseTest {
   @InjectMocks @Inject private DeploymentServiceImpl deploymentService;

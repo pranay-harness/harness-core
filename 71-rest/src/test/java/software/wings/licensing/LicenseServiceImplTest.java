@@ -3,6 +3,7 @@ package software.wings.licensing;
 import static io.harness.ccm.license.CeLicenseType.Constants.CE_TRIAL_PERIOD_DAYS;
 import static io.harness.ccm.license.CeLicenseType.LIMITED_TRIAL;
 import static io.harness.rule.OwnerRule.HANTANG;
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.data.Offset.offset;
 import static org.mockito.Matchers.eq;
@@ -15,17 +16,7 @@ import io.harness.ccm.license.CeLicenseInfo;
 import io.harness.ccm.license.CeLicenseType;
 import io.harness.event.handler.impl.EventPublishHelper;
 import io.harness.rule.Owner;
-import org.joda.time.LocalDate;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
-import org.mockito.ArgumentCaptor;
-import org.mockito.Captor;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.junit.MockitoJUnit;
-import org.mockito.junit.MockitoRule;
+
 import software.wings.app.MainConfiguration;
 import software.wings.beans.Account;
 import software.wings.dl.GenericDbCache;
@@ -37,6 +28,17 @@ import software.wings.service.intfc.EmailNotificationService;
 import java.time.Duration;
 import java.time.temporal.ChronoUnit;
 import java.util.concurrent.ExecutorService;
+import org.joda.time.LocalDate;
+import org.junit.Before;
+import org.junit.Rule;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
+import org.mockito.ArgumentCaptor;
+import org.mockito.Captor;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.MockitoJUnit;
+import org.mockito.junit.MockitoRule;
 
 public class LicenseServiceImplTest extends CategoryTest {
   private String accountId = "ACCOUNT_ID";

@@ -1,16 +1,17 @@
 package software.wings.api;
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import io.harness.annotation.HarnessEntity;
 import io.harness.queue.Queuable;
+
+import software.wings.beans.infrastructure.instance.Instance;
+import software.wings.service.impl.event.timeseries.TimeSeriesBatchEventInfo;
+
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import java.util.Set;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import org.mongodb.morphia.annotations.Entity;
-import software.wings.beans.infrastructure.instance.Instance;
-import software.wings.service.impl.event.timeseries.TimeSeriesBatchEventInfo;
-
-import java.util.Set;
 
 /**
  * This is used as request for capturing instance information.

@@ -2,24 +2,13 @@ package software.wings.scheduler;
 
 import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
 
-import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Stopwatch;
-import com.google.inject.Inject;
-
 import io.harness.lock.AcquiredLock;
 import io.harness.logging.AccountLogContext;
 import io.harness.logging.AutoLogContext;
 import io.harness.scheduler.BackgroundExecutorService;
 import io.harness.scheduler.BackgroundSchedulerLocker;
 import io.harness.scheduler.PersistentScheduler;
-import lombok.extern.slf4j.Slf4j;
-import org.quartz.DisallowConcurrentExecution;
-import org.quartz.Job;
-import org.quartz.JobBuilder;
-import org.quartz.JobDetail;
-import org.quartz.JobExecutionContext;
-import org.quartz.SimpleScheduleBuilder;
-import org.quartz.TriggerBuilder;
+
 import software.wings.beans.Account;
 import software.wings.beans.AccountStatus;
 import software.wings.beans.LicenseInfo;
@@ -29,12 +18,23 @@ import software.wings.service.intfc.instance.licensing.InstanceUsageLimitExcessH
 import software.wings.service.intfc.instance.stats.InstanceStatService;
 import software.wings.service.intfc.instance.stats.collector.StatsCollector;
 
+import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Stopwatch;
+import com.google.inject.Inject;
 import java.security.SecureRandom;
 import java.time.Duration;
 import java.util.Date;
 import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 import javax.annotation.Nonnull;
+import lombok.extern.slf4j.Slf4j;
+import org.quartz.DisallowConcurrentExecution;
+import org.quartz.Job;
+import org.quartz.JobBuilder;
+import org.quartz.JobDetail;
+import org.quartz.JobExecutionContext;
+import org.quartz.SimpleScheduleBuilder;
+import org.quartz.TriggerBuilder;
 
 @DisallowConcurrentExecution
 @Slf4j

@@ -2,8 +2,6 @@ package software.wings.delegatetasks;
 
 import static java.lang.String.format;
 
-import com.google.inject.Inject;
-
 import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.delegate.beans.DelegateTaskPackage;
 import io.harness.delegate.beans.DelegateTaskResponse;
@@ -12,15 +10,17 @@ import io.harness.delegate.beans.logstreaming.ILogStreamingTaskClient;
 import io.harness.delegate.task.AbstractDelegateRunnableTask;
 import io.harness.delegate.task.TaskParameters;
 import io.harness.security.encryption.EncryptedDataDetail;
-import lombok.extern.slf4j.Slf4j;
+
 import software.wings.beans.ExecutionCredential;
 import software.wings.beans.HostValidationTaskParameters;
 import software.wings.beans.SettingAttribute;
 import software.wings.utils.HostValidationService;
 
+import com.google.inject.Inject;
 import java.util.List;
 import java.util.function.BooleanSupplier;
 import java.util.function.Consumer;
+import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class HostValidationTask extends AbstractDelegateRunnableTask {

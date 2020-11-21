@@ -8,12 +8,11 @@ import io.kubernetes.client.custom.Quantity;
 import io.kubernetes.client.openapi.models.V1Container;
 import io.kubernetes.client.openapi.models.V1PodSpec;
 import io.kubernetes.client.openapi.models.V1ResourceRequirements;
-import lombok.experimental.UtilityClass;
-
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import lombok.experimental.UtilityClass;
 
 @UtilityClass
 class ResourceClaimUtils {

@@ -2,13 +2,6 @@ package io.harness.event;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
 
-import com.google.inject.AbstractModule;
-import com.google.inject.Injector;
-import com.google.inject.Provides;
-import com.google.inject.Singleton;
-import com.google.inject.multibindings.MapBinder;
-import com.google.inject.name.Named;
-
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.event.handler.EventHandler;
 import io.harness.event.handler.impl.MarketoHandler;
@@ -24,10 +17,17 @@ import io.harness.event.listener.EventListener;
 import io.harness.event.publisher.EventPublisher;
 import io.harness.event.timeseries.TimeSeriesHandler;
 import io.harness.event.usagemetrics.HarnessMetricsRegistryHandler;
+
 import software.wings.app.MainConfiguration;
 import software.wings.service.impl.event.GenericEventListener;
 import software.wings.service.impl.event.GenericEventPublisher;
 
+import com.google.inject.AbstractModule;
+import com.google.inject.Injector;
+import com.google.inject.Provides;
+import com.google.inject.Singleton;
+import com.google.inject.multibindings.MapBinder;
+import com.google.inject.name.Named;
 import javax.annotation.Nullable;
 
 /**

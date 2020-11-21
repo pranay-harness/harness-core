@@ -1,12 +1,14 @@
 package software.wings.sm.states;
 
-import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
+
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionResponse;
 import software.wings.sm.StateType;
+
+import com.github.reinert.jjschema.SchemaIgnore;
 
 public class AwsAmiRollbackSwitchRoutesState extends AwsAmiSwitchRoutesState {
   public AwsAmiRollbackSwitchRoutesState(String name) {

@@ -1,19 +1,20 @@
 package software.wings.beans;
 
-import static java.lang.String.format;
 import static software.wings.beans.InfrastructureMappingBlueprint.NodeFilteringType;
+
+import static java.lang.String.format;
+
+import software.wings.utils.Utils;
 
 import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
+import java.util.Map;
+import java.util.Optional;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.experimental.FieldNameConstants;
-import software.wings.utils.Utils;
-
-import java.util.Map;
-import java.util.Optional;
 
 @Data
 @EqualsAndHashCode(callSuper = true)

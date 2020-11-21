@@ -2,8 +2,6 @@ package io.harness.app.resources.sample;
 
 import static io.harness.waiter.OrchestrationNotifyEventListener.ORCHESTRATION;
 
-import com.google.inject.Inject;
-
 import io.harness.beans.DelegateTaskRequest;
 import io.harness.callback.DelegateCallbackToken;
 import io.harness.delegate.task.http.HttpTaskParameters;
@@ -12,13 +10,10 @@ import io.harness.grpc.DelegateServiceGrpcClient;
 import io.harness.tasks.ResponseData;
 import io.harness.waiter.NotifyCallback;
 import io.harness.waiter.WaitNotifyEngine;
+
+import com.google.inject.Inject;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
-import lombok.AccessLevel;
-import lombok.AllArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-import org.hibernate.validator.constraints.NotBlank;
-
 import java.util.Map;
 import java.util.function.Supplier;
 import javax.ws.rs.Consumes;
@@ -26,6 +21,10 @@ import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
+import lombok.AccessLevel;
+import lombok.AllArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.hibernate.validator.constraints.NotBlank;
 
 @Api("delegate2-tasks")
 @Path("/sample")

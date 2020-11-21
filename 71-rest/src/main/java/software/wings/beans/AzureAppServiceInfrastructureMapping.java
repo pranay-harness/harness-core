@@ -2,13 +2,19 @@ package software.wings.beans;
 
 import static io.harness.validation.Validator.ensureType;
 import static io.harness.validation.Validator.notNullCheck;
+
 import static java.lang.String.format;
 
-import com.github.reinert.jjschema.Attributes;
-import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.beans.EmbeddedUser;
 import io.harness.data.validator.Trimmed;
 import io.harness.exception.InvalidRequestException;
+
+import software.wings.utils.Utils;
+
+import com.github.reinert.jjschema.Attributes;
+import com.github.reinert.jjschema.SchemaIgnore;
+import java.util.Map;
+import java.util.Optional;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -16,10 +22,6 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.experimental.FieldNameConstants;
 import org.apache.commons.lang3.StringUtils;
-import software.wings.utils.Utils;
-
-import java.util.Map;
-import java.util.Optional;
 
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = true)

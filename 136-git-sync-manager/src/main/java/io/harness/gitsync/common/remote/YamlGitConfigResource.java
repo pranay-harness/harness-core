@@ -4,16 +4,13 @@ import static io.harness.gitsync.common.remote.YamlGitConfigMapper.applyUpdateTo
 import static io.harness.gitsync.common.remote.YamlGitConfigMapper.toSetupGitSyncDTO;
 import static io.harness.gitsync.common.remote.YamlGitConfigMapper.toYamlGitConfigDTO;
 
-import com.google.inject.Inject;
-
 import io.harness.delegate.beans.git.YamlGitConfigDTO;
 import io.harness.gitsync.common.dtos.GitSyncConfigDTO;
 import io.harness.gitsync.common.service.YamlGitConfigService;
+
+import com.google.inject.Inject;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
-import lombok.AllArgsConstructor;
-import org.hibernate.validator.constraints.NotEmpty;
-
 import java.util.List;
 import java.util.stream.Collectors;
 import javax.validation.Valid;
@@ -26,6 +23,8 @@ import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
+import lombok.AllArgsConstructor;
+import org.hibernate.validator.constraints.NotEmpty;
 
 @Api("/git-sync")
 @Path("/git-sync")

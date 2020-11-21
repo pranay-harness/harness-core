@@ -4,8 +4,7 @@ import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.delegate.beans.executioncapability.ExecutionCapabilityDemander;
 import io.harness.delegate.task.mixin.HttpConnectionExecutionCapabilityGenerator;
 import io.harness.security.encryption.EncryptedDataDetail;
-import lombok.Builder;
-import lombok.Data;
+
 import software.wings.beans.AzureKubernetesCluster;
 import software.wings.beans.GcpKubernetesCluster;
 import software.wings.beans.KubernetesClusterConfig;
@@ -14,6 +13,8 @@ import software.wings.settings.SettingValue;
 
 import java.util.ArrayList;
 import java.util.List;
+import lombok.Builder;
+import lombok.Data;
 
 @Data
 @Builder

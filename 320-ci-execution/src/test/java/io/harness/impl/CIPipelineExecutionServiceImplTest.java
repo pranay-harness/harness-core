@@ -2,14 +2,13 @@ package io.harness.impl;
 
 import static io.harness.pms.execution.Status.RUNNING;
 import static io.harness.rule.OwnerRule.ALEKSANDAR;
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.joor.Reflect.on;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-
-import com.google.inject.Inject;
 
 import io.harness.category.element.UnitTests;
 import io.harness.engine.OrchestrationService;
@@ -19,6 +18,8 @@ import io.harness.executionplan.CIExecutionPlanTestHelper;
 import io.harness.executionplan.CIExecutionTest;
 import io.harness.ngpipeline.pipeline.beans.entities.NgPipelineEntity;
 import io.harness.rule.Owner;
+
+import com.google.inject.Inject;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;

@@ -1,6 +1,7 @@
 package io.harness.encryptors;
 
 import static io.harness.rule.OwnerRule.UTKARSH;
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.fail;
 import static org.mockito.Matchers.any;
@@ -9,14 +10,6 @@ import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
-
-import com.google.cloud.kms.v1.CryptoKeyName;
-import com.google.cloud.kms.v1.DecryptResponse;
-import com.google.cloud.kms.v1.EncryptResponse;
-import com.google.cloud.kms.v1.KeyManagementServiceClient;
-import com.google.common.util.concurrent.SimpleTimeLimiter;
-import com.google.common.util.concurrent.TimeLimiter;
-import com.google.protobuf.ByteString;
 
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
@@ -27,6 +20,17 @@ import io.harness.rule.Owner;
 import io.harness.security.encryption.EncryptedRecord;
 import io.harness.security.encryption.EncryptedRecordData;
 import io.harness.security.encryption.EncryptionType;
+
+import software.wings.beans.GcpKmsConfig;
+
+import com.google.cloud.kms.v1.CryptoKeyName;
+import com.google.cloud.kms.v1.DecryptResponse;
+import com.google.cloud.kms.v1.EncryptResponse;
+import com.google.cloud.kms.v1.KeyManagementServiceClient;
+import com.google.common.util.concurrent.SimpleTimeLimiter;
+import com.google.common.util.concurrent.TimeLimiter;
+import com.google.protobuf.ByteString;
+import java.nio.charset.StandardCharsets;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.Before;
 import org.junit.Test;
@@ -37,9 +41,6 @@ import org.powermock.api.mockito.PowerMockito;
 import org.powermock.core.classloader.annotations.PowerMockIgnore;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
-import software.wings.beans.GcpKmsConfig;
-
-import java.nio.charset.StandardCharsets;
 
 @Slf4j
 @RunWith(PowerMockRunner.class)

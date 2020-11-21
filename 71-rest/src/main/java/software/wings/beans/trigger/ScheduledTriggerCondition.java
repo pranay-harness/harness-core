@@ -1,10 +1,12 @@
 package software.wings.beans.trigger;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
+
 import static software.wings.beans.trigger.TriggerConditionType.SCHEDULED;
 
-import com.fasterxml.jackson.annotation.JsonTypeName;
 import io.harness.annotations.dev.OwnedBy;
+
+import com.fasterxml.jackson.annotation.JsonTypeName;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;

@@ -1,9 +1,8 @@
 package io.harness.ng.core.dto.secrets;
 
+import javax.validation.constraints.NotNull;
 import lombok.Builder;
 import lombok.Data;
-
-import javax.validation.constraints.NotNull;
 
 @Data
 @Builder

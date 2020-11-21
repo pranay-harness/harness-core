@@ -1,26 +1,26 @@
 package io.harness.batch.processing.dummydata;
 
 import static io.harness.rule.OwnerRule.ROHIT;
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.when;
-
-import com.google.inject.Inject;
 
 import io.harness.CategoryTest;
 import io.harness.batch.processing.dao.intfc.InstanceDataDao;
 import io.harness.category.element.UnitTests;
 import io.harness.ccm.commons.beans.HarnessServiceInfo;
 import io.harness.rule.Owner;
+
+import com.google.inject.Inject;
+import java.util.Arrays;
+import java.util.List;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
-
-import java.util.Arrays;
-import java.util.List;
 
 public class EcsDummyInstanceDataGeneratorTest extends CategoryTest {
   @Inject @InjectMocks EcsDummyInstanceDataGenerator ecsDummyInstanceDataGenerator;

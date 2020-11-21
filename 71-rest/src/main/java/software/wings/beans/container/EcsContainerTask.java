@@ -3,13 +3,23 @@ package software.wings.beans.container;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.exception.WingsException.USER;
+
 import static java.util.Collections.emptyList;
 import static java.util.stream.Collectors.joining;
 import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.apache.commons.lang3.StringUtils.strip;
 
-import com.google.common.annotations.VisibleForTesting;
+import io.harness.eraro.ErrorCode;
+import io.harness.exception.ExceptionUtils;
+import io.harness.exception.WingsException;
+import io.harness.expression.RegexFunctor;
+import io.harness.serializer.JsonUtils;
+
+import software.wings.api.DeploymentType;
+import software.wings.beans.artifact.ArtifactEnumDataProvider;
+import software.wings.stencils.EnumData;
+import software.wings.utils.EcsConvention;
 
 import com.amazonaws.services.ecs.model.HostVolumeProperties;
 import com.amazonaws.services.ecs.model.MountPoint;
@@ -19,22 +29,7 @@ import com.amazonaws.services.ecs.model.Volume;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.github.reinert.jjschema.SchemaIgnore;
-import io.harness.eraro.ErrorCode;
-import io.harness.exception.ExceptionUtils;
-import io.harness.exception.WingsException;
-import io.harness.expression.RegexFunctor;
-import io.harness.serializer.JsonUtils;
-import lombok.Builder;
-import lombok.Data;
-import lombok.EqualsAndHashCode;
-import lombok.NoArgsConstructor;
-import org.apache.commons.io.LineIterator;
-import org.apache.commons.lang3.StringUtils;
-import software.wings.api.DeploymentType;
-import software.wings.beans.artifact.ArtifactEnumDataProvider;
-import software.wings.stencils.EnumData;
-import software.wings.utils.EcsConvention;
-
+import com.google.common.annotations.VisibleForTesting;
 import java.io.IOException;
 import java.io.StringReader;
 import java.util.Arrays;
@@ -44,6 +39,12 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import lombok.Builder;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.NoArgsConstructor;
+import org.apache.commons.io.LineIterator;
+import org.apache.commons.lang3.StringUtils;
 
 /**
  * Created by anubhaw on 2/6/17.

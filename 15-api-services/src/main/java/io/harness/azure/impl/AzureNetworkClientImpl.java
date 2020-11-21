@@ -3,11 +3,15 @@ package io.harness.azure.impl;
 import static io.harness.azure.model.AzureConstants.BACKEND_POOL_NAME_NULL_VALIDATION_MSG;
 import static io.harness.azure.model.AzureConstants.LOAD_BALANCER_NAME_NULL_VALIDATION_MSG;
 import static io.harness.azure.model.AzureConstants.RESOURCE_GROUP_NAME_NULL_VALIDATION_MSG;
+
 import static java.util.Objects.isNull;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 
-import com.google.inject.Singleton;
+import io.harness.azure.AzureClient;
+import io.harness.azure.client.AzureNetworkClient;
+import io.harness.azure.model.AzureConfig;
 
+import com.google.inject.Singleton;
 import com.microsoft.azure.PagedList;
 import com.microsoft.azure.management.Azure;
 import com.microsoft.azure.management.network.LoadBalancer;
@@ -15,17 +19,13 @@ import com.microsoft.azure.management.network.LoadBalancerBackend;
 import com.microsoft.azure.management.network.LoadBalancerProbe;
 import com.microsoft.azure.management.network.LoadBalancerTcpProbe;
 import com.microsoft.azure.management.network.LoadBalancingRule;
-import io.harness.azure.AzureClient;
-import io.harness.azure.client.AzureNetworkClient;
-import io.harness.azure.model.AzureConfig;
-import lombok.extern.slf4j.Slf4j;
-import org.jetbrains.annotations.NotNull;
-
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
+import lombok.extern.slf4j.Slf4j;
+import org.jetbrains.annotations.NotNull;
 
 @Singleton
 @Slf4j
@@ -134,7 +134,7 @@ public class AzureNetworkClientImpl extends AzureClient implements AzureNetworkC
 
     log.debug("Start listing backend pool probes for backendPoolName {}, loadBalancerName {}, resourceGroupName: {}",
         backendPoolName, loadBalancerName, resourceGroupName);
-    return loadBalancerBackendPoolOp.map(this ::toLoadBalancerBackendProbes).orElse(Collections.emptyList());
+    return loadBalancerBackendPoolOp.map(this::toLoadBalancerBackendProbes).orElse(Collections.emptyList());
   }
 
   @NotNull

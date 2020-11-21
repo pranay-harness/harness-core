@@ -6,9 +6,6 @@ import static io.harness.cvng.analysis.CVAnalysisConstants.MARK_FAILURE_PATH;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.persistence.HQuery.excludeAuthority;
 
-import com.google.common.base.Preconditions;
-import com.google.inject.Inject;
-
 import io.harness.cvng.analysis.entities.LearningEngineTask;
 import io.harness.cvng.analysis.entities.LearningEngineTask.ExecutionStatus;
 import io.harness.cvng.analysis.entities.LearningEngineTask.LearningEngineTaskKeys;
@@ -16,13 +13,9 @@ import io.harness.cvng.analysis.entities.LearningEngineTask.LearningEngineTaskTy
 import io.harness.cvng.analysis.exceptions.ServiceGuardAnalysisException;
 import io.harness.cvng.analysis.services.api.LearningEngineTaskService;
 import io.harness.persistence.HPersistence;
-import lombok.extern.slf4j.Slf4j;
-import org.apache.http.client.utils.URIBuilder;
-import org.mongodb.morphia.FindAndModifyOptions;
-import org.mongodb.morphia.query.Query;
-import org.mongodb.morphia.query.Sort;
-import org.mongodb.morphia.query.UpdateOperations;
 
+import com.google.common.base.Preconditions;
+import com.google.inject.Inject;
 import java.net.URISyntaxException;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
@@ -31,6 +24,12 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.http.client.utils.URIBuilder;
+import org.mongodb.morphia.FindAndModifyOptions;
+import org.mongodb.morphia.query.Query;
+import org.mongodb.morphia.query.Sort;
+import org.mongodb.morphia.query.UpdateOperations;
 
 @Slf4j
 public class LearningEngineTaskServiceImpl implements LearningEngineTaskService {

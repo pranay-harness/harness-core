@@ -1,16 +1,14 @@
 package software.wings.service.impl.yaml.handler.deploymentspec.container;
 
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+
 import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
-
-import com.google.common.collect.Lists;
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
 
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.HarnessException;
 import io.harness.exception.WingsException;
+
 import software.wings.beans.container.ContainerDefinition;
 import software.wings.beans.container.ContainerDefinition.Yaml;
 import software.wings.beans.container.LogConfiguration;
@@ -21,6 +19,9 @@ import software.wings.beans.yaml.YamlType;
 import software.wings.service.impl.yaml.handler.BaseYamlHandler;
 import software.wings.service.impl.yaml.handler.YamlHandlerFactory;
 
+import com.google.common.collect.Lists;
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import java.util.Collections;
 import java.util.List;
 /**

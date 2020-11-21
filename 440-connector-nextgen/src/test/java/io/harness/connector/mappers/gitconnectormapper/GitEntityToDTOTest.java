@@ -4,6 +4,7 @@ import static io.harness.delegate.beans.connector.gitconnector.GitAuthType.HTTP;
 import static io.harness.delegate.beans.connector.gitconnector.GitAuthType.SSH;
 import static io.harness.delegate.beans.connector.gitconnector.GitConnectionType.ACCOUNT;
 import static io.harness.rule.OwnerRule.DEEPAK;
+
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.CategoryTest;
@@ -17,6 +18,7 @@ import io.harness.delegate.beans.connector.gitconnector.GitHTTPAuthenticationDTO
 import io.harness.delegate.beans.connector.gitconnector.GitSSHAuthenticationDTO;
 import io.harness.encryption.Scope;
 import io.harness.rule.Owner;
+
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;

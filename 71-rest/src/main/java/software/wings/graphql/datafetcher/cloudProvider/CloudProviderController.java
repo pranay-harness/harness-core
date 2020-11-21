@@ -2,7 +2,7 @@ package software.wings.graphql.datafetcher.cloudProvider;
 
 import io.harness.ccm.config.CloudCostAware;
 import io.harness.exception.InvalidRequestException;
-import lombok.experimental.UtilityClass;
+
 import software.wings.beans.SettingAttribute;
 import software.wings.graphql.datafetcher.user.UserController;
 import software.wings.graphql.schema.type.QLCloudProviderType;
@@ -14,6 +14,8 @@ import software.wings.graphql.schema.type.cloudProvider.QLKubernetesClusterCloud
 import software.wings.graphql.schema.type.cloudProvider.QLPcfCloudProvider;
 import software.wings.graphql.schema.type.cloudProvider.QLPhysicalDataCenterCloudProvider;
 import software.wings.graphql.schema.type.cloudProvider.QLSpotInstCloudProvider;
+
+import lombok.experimental.UtilityClass;
 
 @UtilityClass
 public class CloudProviderController {

@@ -1,10 +1,11 @@
 package software.wings.service.impl.instance.stats.collector;
 
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+
 import static java.util.stream.Collectors.groupingBy;
 
 import io.harness.data.structure.EmptyPredicate;
-import lombok.AllArgsConstructor;
+
 import software.wings.beans.EntityType;
 import software.wings.beans.infrastructure.instance.InvocationCount;
 import software.wings.beans.infrastructure.instance.InvocationCount.InvocationCountKey;
@@ -18,6 +19,7 @@ import java.util.Collection;
 import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+import lombok.AllArgsConstructor;
 
 @AllArgsConstructor
 class ServerlessInstanceMapper implements Mapper<Collection<ServerlessInstance>, ServerlessInstanceStats> {
@@ -36,7 +38,7 @@ class ServerlessInstanceMapper implements Mapper<Collection<ServerlessInstance>,
         .collect(groupingBy(ServerlessInstance::getAppId))
         .values()
         .stream()
-        .flatMap(this ::processInstancesWithSameAppId)
+        .flatMap(this::processInstancesWithSameAppId)
         .collect(Collectors.toList());
   }
   // all instances should belong to same app id

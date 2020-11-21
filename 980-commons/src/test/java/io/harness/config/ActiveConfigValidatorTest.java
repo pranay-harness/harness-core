@@ -1,13 +1,14 @@
 package io.harness.config;
 
 import static io.harness.rule.OwnerRule.GEORGE;
-import static org.assertj.core.api.Assertions.assertThat;
 
-import com.google.common.collect.ImmutableMap;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
+
+import com.google.common.collect.ImmutableMap;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 

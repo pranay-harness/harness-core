@@ -2,7 +2,7 @@ package software.wings.service.intfc;
 
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
-import org.hibernate.validator.constraints.NotEmpty;
+
 import software.wings.beans.appmanifest.AppManifestKind;
 import software.wings.beans.appmanifest.ApplicationManifest;
 import software.wings.beans.appmanifest.ApplicationManifest.AppManifestSource;
@@ -17,6 +17,7 @@ import java.util.Map;
 import java.util.Set;
 import javax.annotation.Nonnull;
 import javax.validation.constraints.NotNull;
+import org.hibernate.validator.constraints.NotEmpty;
 
 public interface ApplicationManifestService extends OwnedByService, OwnedByEnvironment {
   ApplicationManifest create(ApplicationManifest applicationManifest);

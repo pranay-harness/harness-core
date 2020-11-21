@@ -2,14 +2,14 @@ package io.harness.cvng.verificationjob.beans;
 
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import io.harness.cvng.beans.DataSourceType;
 import io.harness.cvng.verificationjob.entities.VerificationJob;
+
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import java.util.List;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-
-import java.util.List;
 
 @Data
 @NoArgsConstructor

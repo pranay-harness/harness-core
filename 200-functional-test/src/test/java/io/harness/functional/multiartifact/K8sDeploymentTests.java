@@ -5,9 +5,8 @@ import static io.harness.generator.InfrastructureDefinitionGenerator.Infrastruct
 import static io.harness.generator.InfrastructureDefinitionGenerator.InfrastructureDefinitions.K8S_CANARY_TEST;
 import static io.harness.generator.InfrastructureDefinitionGenerator.InfrastructureDefinitions.K8S_ROLLING_TEST;
 import static io.harness.rule.OwnerRule.AADITI;
-import static org.assertj.core.api.Assertions.assertThat;
 
-import com.google.inject.Inject;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.beans.OrchestrationWorkflowType;
 import io.harness.category.element.FunctionalTests;
@@ -26,10 +25,7 @@ import io.harness.generator.WorkflowGenerator;
 import io.harness.generator.artifactstream.ArtifactStreamManager;
 import io.harness.rule.Owner;
 import io.harness.testframework.restutils.WorkflowRestUtils;
-import org.junit.Before;
-import org.junit.Ignore;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
+
 import software.wings.beans.Account;
 import software.wings.beans.Application;
 import software.wings.beans.ArtifactVariable;
@@ -44,7 +40,12 @@ import software.wings.beans.artifact.ArtifactStreamBinding;
 import software.wings.infra.InfrastructureDefinition;
 import software.wings.service.impl.WorkflowExecutionServiceImpl;
 
+import com.google.inject.Inject;
 import java.util.List;
+import org.junit.Before;
+import org.junit.Ignore;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 public class K8sDeploymentTests extends AbstractFunctionalTest {
   @Inject private OwnerManager ownerManager;

@@ -1,9 +1,5 @@
 package software.wings.api.pcf;
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import lombok.Builder;
-import lombok.Data;
-import lombok.EqualsAndHashCode;
 import software.wings.api.DeploymentInfo;
 import software.wings.api.PcfDeploymentInfo;
 import software.wings.helpers.ext.pcf.request.PcfRouteUpdateRequestConfigData;
@@ -11,9 +7,13 @@ import software.wings.helpers.ext.pcf.response.PcfAppSetupTimeDetails;
 import software.wings.service.impl.instance.DeploymentInfoExtractor;
 import software.wings.sm.StepExecutionSummary;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import lombok.Builder;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 @Data

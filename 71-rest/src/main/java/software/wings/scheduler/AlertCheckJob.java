@@ -3,23 +3,14 @@ package software.wings.scheduler;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.obfuscate.Obfuscator.obfuscate;
+
 import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static software.wings.common.Constants.ACCOUNT_ID_KEY;
-
-import com.google.common.annotations.VisibleForTesting;
-import com.google.inject.Inject;
-import com.google.inject.name.Named;
 
 import io.harness.alert.AlertData;
 import io.harness.delegate.beans.alert.DelegatesScalingGroupDownAlert;
 import io.harness.scheduler.PersistentScheduler;
-import lombok.extern.slf4j.Slf4j;
-import org.quartz.Job;
-import org.quartz.JobBuilder;
-import org.quartz.JobDetail;
-import org.quartz.JobExecutionContext;
-import org.quartz.SimpleScheduleBuilder;
-import org.quartz.TriggerBuilder;
+
 import software.wings.app.MainConfiguration;
 import software.wings.beans.Account;
 import software.wings.beans.Delegate;
@@ -35,6 +26,9 @@ import software.wings.service.intfc.AlertService;
 import software.wings.service.intfc.FeatureFlagService;
 import software.wings.utils.EmailHelperUtils;
 
+import com.google.common.annotations.VisibleForTesting;
+import com.google.inject.Inject;
+import com.google.inject.name.Named;
 import java.security.SecureRandom;
 import java.time.Clock;
 import java.util.Date;
@@ -44,6 +38,13 @@ import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
+import lombok.extern.slf4j.Slf4j;
+import org.quartz.Job;
+import org.quartz.JobBuilder;
+import org.quartz.JobDetail;
+import org.quartz.JobExecutionContext;
+import org.quartz.SimpleScheduleBuilder;
+import org.quartz.TriggerBuilder;
 
 /**
  * @author brett on 10/17/17

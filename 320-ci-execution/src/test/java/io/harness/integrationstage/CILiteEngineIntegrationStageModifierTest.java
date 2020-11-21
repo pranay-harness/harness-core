@@ -2,9 +2,8 @@ package io.harness.integrationstage;
 
 import static io.harness.beans.environment.BuildJobEnvInfo.Type.K8;
 import static io.harness.rule.OwnerRule.ALEKSANDAR;
-import static org.assertj.core.api.Assertions.assertThat;
 
-import com.google.inject.Inject;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.beans.environment.K8BuildJobEnvInfo;
 import io.harness.beans.stages.IntegrationStage;
@@ -16,6 +15,8 @@ import io.harness.executionplan.core.impl.ExecutionPlanCreationContextImpl;
 import io.harness.rule.Owner;
 import io.harness.yaml.core.ExecutionElement;
 import io.harness.yaml.core.StepElement;
+
+import com.google.inject.Inject;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;

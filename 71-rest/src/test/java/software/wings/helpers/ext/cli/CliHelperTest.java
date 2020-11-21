@@ -3,22 +3,23 @@ package software.wings.helpers.ext.cli;
 import static io.harness.logging.CommandExecutionStatus.FAILURE;
 import static io.harness.logging.CommandExecutionStatus.SUCCESS;
 import static io.harness.rule.OwnerRule.VAIBHAV_SI;
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-import com.google.inject.Inject;
-
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
+
 import software.wings.WingsBaseTest;
 import software.wings.beans.command.ExecutionLogCallback;
 
+import com.google.inject.Inject;
 import java.io.IOException;
 import java.util.Collections;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 public class CliHelperTest extends WingsBaseTest {
   @Inject private CliHelper cliHelper;

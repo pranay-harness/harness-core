@@ -4,14 +4,7 @@ import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.rule.OwnerRule.GEORGE;
 import static io.harness.rule.OwnerRule.PRASHANT;
 import static io.harness.rule.OwnerRule.VAIBHAV_SI;
-import static java.util.Arrays.asList;
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.failBecauseExceptionWasNotThrown;
-import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.anyString;
-import static org.mockito.Mockito.doReturn;
-import static org.mockito.Mockito.when;
-import static org.powermock.api.mockito.PowerMockito.spy;
+
 import static software.wings.beans.ResizeStrategy.RESIZE_NEW_FIRST;
 import static software.wings.sm.StateExecutionInstance.Builder.aStateExecutionInstance;
 import static software.wings.sm.WorkflowStandardParams.Builder.aWorkflowStandardParams;
@@ -20,8 +13,14 @@ import static software.wings.utils.WingsTestConstants.APP_ID;
 import static software.wings.utils.WingsTestConstants.INFRA_MAPPING_ID;
 import static software.wings.utils.WingsTestConstants.PHASE_STEP;
 
-import com.google.common.collect.Lists;
-import com.google.inject.Inject;
+import static java.util.Arrays.asList;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.failBecauseExceptionWasNotThrown;
+import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyString;
+import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.when;
+import static org.powermock.api.mockito.PowerMockito.spy;
 
 import io.harness.beans.ExecutionStatus;
 import io.harness.beans.SweepingOutputInstance;
@@ -30,10 +29,7 @@ import io.harness.exception.WingsException;
 import io.harness.rule.Owner;
 import io.harness.serializer.KryoSerializer;
 import io.harness.tasks.ResponseData;
-import org.joor.Reflect;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
-import org.mockito.Mock;
+
 import software.wings.WingsBaseTest;
 import software.wings.api.ContainerServiceElement;
 import software.wings.api.DeploymentType;
@@ -57,10 +53,16 @@ import software.wings.sm.ExecutionStatusData;
 import software.wings.sm.StateExecutionInstance;
 import software.wings.sm.WorkflowStandardParams;
 
+import com.google.common.collect.Lists;
+import com.google.inject.Inject;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import org.joor.Reflect;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
+import org.mockito.Mock;
 
 /**
  * Created by rishi on 2/25/17.

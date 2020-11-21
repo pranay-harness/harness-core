@@ -1,24 +1,19 @@
 package software.wings.yaml.handler.connectors.configyamlhandlers;
 
 import static io.harness.rule.OwnerRule.ADWAIT;
+
+import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
+import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.when;
-import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
-import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 
-import com.google.inject.Inject;
-
-import com.amazonaws.regions.Regions;
 import io.harness.beans.PageResponse;
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
+
 import software.wings.beans.ElasticLoadBalancerConfig;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.SettingAttribute;
@@ -26,8 +21,15 @@ import software.wings.beans.SettingAttribute.SettingCategory;
 import software.wings.service.impl.yaml.handler.setting.loadbalancer.ElasticLoadBalancerConfigYamlHandler;
 import software.wings.service.intfc.InfrastructureMappingService;
 
+import com.amazonaws.regions.Regions;
+import com.google.inject.Inject;
 import java.util.ArrayList;
 import java.util.List;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
 
 public class ElasticLoadBalancerConfigYamlHandlerTest extends SettingValueConfigYamlHandlerTestBase {
   @InjectMocks @Inject private ElasticLoadBalancerConfigYamlHandler yamlHandler;

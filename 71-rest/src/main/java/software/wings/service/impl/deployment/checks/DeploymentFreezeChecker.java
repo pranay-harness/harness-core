@@ -9,8 +9,7 @@ import io.harness.exception.WingsException;
 import io.harness.governance.GovernanceFreezeConfig;
 import io.harness.governance.TimeRangeBasedFreezeConfig;
 import io.harness.governance.WeeklyFreezeConfig;
-import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.collections4.CollectionUtils;
+
 import software.wings.beans.Environment;
 import software.wings.beans.Environment.EnvironmentType;
 import software.wings.beans.governance.GovernanceConfig;
@@ -21,6 +20,8 @@ import software.wings.service.intfc.deployment.PreDeploymentChecker;
 import java.util.List;
 import java.util.stream.Collectors;
 import javax.annotation.ParametersAreNonnullByDefault;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.collections4.CollectionUtils;
 
 @Slf4j
 @ParametersAreNonnullByDefault

@@ -7,8 +7,7 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.govern.Switch.noop;
-import static java.util.Arrays.asList;
-import static org.apache.commons.lang3.StringUtils.isBlank;
+
 import static software.wings.beans.security.UserGroup.DEFAULT_ACCOUNT_ADMIN_USER_GROUP_NAME;
 import static software.wings.beans.security.UserGroup.DEFAULT_NON_PROD_SUPPORT_USER_GROUP_NAME;
 import static software.wings.beans.security.UserGroup.DEFAULT_PROD_SUPPORT_USER_GROUP_NAME;
@@ -49,25 +48,15 @@ import static software.wings.security.PermissionAttribute.PermissionType.USER_PE
 import static software.wings.security.PermissionAttribute.PermissionType.WORKFLOW;
 import static software.wings.security.UserRequestContext.EntityInfo;
 
-import com.google.common.collect.HashMultimap;
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Multimap;
-import com.google.common.collect.Sets;
-import com.google.common.collect.Sets.SetView;
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
+import static java.util.Arrays.asList;
+import static org.apache.commons.lang3.StringUtils.isBlank;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.beans.SearchFilter.Operator;
 import io.harness.exception.InvalidRequestException;
-import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.collections.CollectionUtils;
-import org.apache.commons.collections.MapUtils;
-import org.apache.commons.lang3.StringUtils;
-import org.apache.commons.lang3.tuple.ImmutablePair;
-import org.apache.commons.lang3.tuple.Pair;
+
 import software.wings.beans.Account;
 import software.wings.beans.ApiKeyEntry;
 import software.wings.beans.Base;
@@ -123,6 +112,13 @@ import software.wings.service.intfc.WorkflowService;
 import software.wings.sm.StateType;
 import software.wings.sm.states.EnvState.EnvStateKeys;
 
+import com.google.common.collect.HashMultimap;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Multimap;
+import com.google.common.collect.Sets;
+import com.google.common.collect.Sets.SetView;
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -136,6 +132,12 @@ import java.util.concurrent.Callable;
 import java.util.stream.Collectors;
 import javax.ws.rs.container.ContainerRequestContext;
 import javax.ws.rs.core.MultivaluedMap;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.collections.CollectionUtils;
+import org.apache.commons.collections.MapUtils;
+import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.tuple.ImmutablePair;
+import org.apache.commons.lang3.tuple.Pair;
 
 /**
  * @author rktummala on 3/7/18
@@ -634,7 +636,9 @@ public class AuthHandler {
           permissionTypeAppIdEntityMap.put(permissionType, getAppIdPipelineMap(accountId));
           break;
         }
-        default: { noop(); }
+        default: {
+          noop();
+        }
       }
     });
     return permissionTypeAppIdEntityMap;
@@ -1098,7 +1102,7 @@ public class AuthHandler {
                    .filter(environment
                        -> finalFilterEnvIds.contains(environment.getUuid())
                            || finalWorkflowFilter.getFilterTypes().contains(
-                                  ((Environment) environment).getEnvironmentType().name()))
+                               ((Environment) environment).getEnvironmentType().name()))
                    .map(Base::getUuid)
                    .collect(Collectors.toSet());
     } else {

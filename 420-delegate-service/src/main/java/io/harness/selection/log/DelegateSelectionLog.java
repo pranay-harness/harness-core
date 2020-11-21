@@ -1,7 +1,5 @@
 package io.harness.selection.log;
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.annotation.HarnessEntity;
 import io.harness.mongo.index.FdTtlIndex;
 import io.harness.mongo.index.Field;
@@ -11,17 +9,19 @@ import io.harness.persistence.PersistentEntity;
 import io.harness.persistence.UuidAware;
 import io.harness.selection.log.DelegateSelectionLog.DelegateSelectionLogKeys;
 import io.harness.validation.Update;
+
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.github.reinert.jjschema.SchemaIgnore;
+import java.time.OffsetDateTime;
+import java.util.Date;
+import java.util.Set;
+import javax.validation.constraints.NotNull;
 import lombok.Builder;
 import lombok.Data;
 import lombok.experimental.FieldNameConstants;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Id;
-
-import java.time.OffsetDateTime;
-import java.util.Date;
-import java.util.Set;
-import javax.validation.constraints.NotNull;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 @Data

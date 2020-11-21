@@ -6,16 +6,17 @@ import static org.assertj.core.api.Assertions.assertThat;
 import io.harness.scm.ScmSecret;
 import io.harness.scm.SecretName;
 import io.harness.testframework.framework.Setup;
+
+import software.wings.beans.SettingAttribute;
+
 import io.restassured.RestAssured;
 import io.restassured.http.ContentType;
 import io.restassured.mapper.ObjectMapperType;
 import io.restassured.path.json.JsonPath;
 import io.restassured.response.Response;
-import org.junit.Assert;
-import software.wings.beans.SettingAttribute;
-
 import java.util.ArrayList;
 import java.util.HashMap;
+import org.junit.Assert;
 
 public class SettingsUtils {
   private static String ACCOUNT_ID = "accountId";

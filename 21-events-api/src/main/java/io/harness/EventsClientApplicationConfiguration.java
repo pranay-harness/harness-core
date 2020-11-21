@@ -3,11 +3,10 @@ package io.harness;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import io.dropwizard.Configuration;
+import java.util.Collection;
+import javax.ws.rs.Path;
 import lombok.Getter;
 import org.reflections.Reflections;
-
-import javax.ws.rs.Path;
-import java.util.Collection;
 
 @Getter
 @JsonIgnoreProperties(ignoreUnknown = true)

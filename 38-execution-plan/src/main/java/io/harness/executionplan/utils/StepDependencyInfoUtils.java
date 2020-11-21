@@ -2,11 +2,11 @@ package io.harness.executionplan.utils;
 
 import io.harness.executionplan.core.ExecutionPlanCreationContext;
 import io.harness.executionplan.stepsdependency.StepDependencyInstructor;
-import lombok.experimental.UtilityClass;
 
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Optional;
+import lombok.experimental.UtilityClass;
 
 @UtilityClass
 public class StepDependencyInfoUtils {

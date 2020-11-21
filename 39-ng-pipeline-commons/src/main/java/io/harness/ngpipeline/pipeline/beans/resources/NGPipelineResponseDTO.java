@@ -1,14 +1,14 @@
 package io.harness.ngpipeline.pipeline.beans.resources;
 
+import io.harness.ngpipeline.pipeline.beans.yaml.NgPipeline;
+
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
-import io.harness.ngpipeline.pipeline.beans.yaml.NgPipeline;
 import io.swagger.annotations.ApiModel;
+import java.util.List;
 import lombok.Builder;
 import lombok.Data;
-
-import java.util.List;
 
 @Data
 @Builder

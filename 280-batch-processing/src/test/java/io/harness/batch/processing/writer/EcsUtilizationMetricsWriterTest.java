@@ -2,6 +2,7 @@ package io.harness.batch.processing.writer;
 
 import static io.harness.batch.processing.ccm.UtilizationInstanceType.ECS_CLUSTER;
 import static io.harness.rule.OwnerRule.ROHIT;
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 import static org.mockito.Mockito.verify;
@@ -17,6 +18,10 @@ import io.harness.event.payloads.EcsUtilization;
 import io.harness.event.payloads.EcsUtilization.MetricValue;
 import io.harness.exception.InvalidRequestException;
 import io.harness.rule.Owner;
+
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
@@ -25,10 +30,6 @@ import org.mockito.Captor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
-
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
 
 @RunWith(MockitoJUnitRunner.class)
 public class EcsUtilizationMetricsWriterTest extends CategoryTest implements EcsEventGenerator {

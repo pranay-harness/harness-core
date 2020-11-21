@@ -3,21 +3,21 @@ package software.wings.scheduler.persistance;
 import static io.harness.exception.WingsException.ExecutionContext.MANAGER;
 import static io.harness.lock.mongo.MongoPersistentLocker.LOCKS_STORE;
 
-import com.google.inject.Inject;
-
-import com.mongodb.BasicDBObject;
-import com.mongodb.DBCursor;
 import io.harness.exception.WingsException;
 import io.harness.lock.AcquiredLock;
 import io.harness.lock.PersistentLocker;
 import io.harness.logging.ExceptionLogger;
-import lombok.extern.slf4j.Slf4j;
+
 import software.wings.dl.WingsPersistence;
 
+import com.google.inject.Inject;
+import com.mongodb.BasicDBObject;
+import com.mongodb.DBCursor;
 import java.time.Duration;
 import java.time.OffsetDateTime;
 import java.util.Date;
 import java.util.concurrent.ExecutorService;
+import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class PersistentLockCleanup implements Runnable {
@@ -44,7 +44,7 @@ public class PersistentLockCleanup implements Runnable {
   public void run() {
     log.info("Running PersistentLockCleanup Job asynchronously and returning");
 
-    executorService.submit(this ::executeInternal);
+    executorService.submit(this::executeInternal);
   }
 
   private void executeInternal() {

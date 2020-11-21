@@ -1,18 +1,15 @@
 package software.wings.verification;
 
 import static io.harness.rule.OwnerRule.PRAVEEN;
+
 import static org.apache.cxf.ws.addressing.ContextUtils.generateUUID;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.when;
 
-import com.google.inject.Inject;
-
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
+
 import software.wings.beans.yaml.Change;
 import software.wings.beans.yaml.ChangeContext;
 import software.wings.service.impl.analysis.FeedbackPriority;
@@ -25,6 +22,11 @@ import software.wings.sm.states.CustomLogVerificationState.ResponseType;
 import software.wings.verification.log.CustomLogCVServiceConfiguration;
 import software.wings.verification.log.CustomLogCVServiceConfiguration.CustomLogsCVConfigurationYaml;
 import software.wings.verification.log.LogsCVConfiguration.LogsCVConfigurationYaml;
+
+import com.google.inject.Inject;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 public class CustomLogsCVConfigurationYamlHandlerTest extends CVConfigurationYamlHandlerTestBase {
   @Inject CustomLogCVConfigurationYamlHandler yamlHandler;

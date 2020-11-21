@@ -2,13 +2,8 @@ package software.wings.resources;
 
 import static software.wings.security.PermissionAttribute.PermissionType.LOGGED_IN;
 
-import com.google.inject.Inject;
-
-import com.codahale.metrics.annotation.ExceptionMetered;
-import com.codahale.metrics.annotation.Timed;
 import io.harness.rest.RestResponse;
-import io.swagger.annotations.Api;
-import lombok.extern.slf4j.Slf4j;
+
 import software.wings.security.annotations.AuthRule;
 import software.wings.service.impl.analysis.VerificationNodeDataSetupResponse;
 import software.wings.service.impl.bugsnag.BugsnagApplication;
@@ -17,6 +12,10 @@ import software.wings.service.intfc.analysis.LogAnalysisResource;
 import software.wings.service.intfc.analysis.LogVerificationService;
 import software.wings.sm.StateType;
 
+import com.codahale.metrics.annotation.ExceptionMetered;
+import com.codahale.metrics.annotation.Timed;
+import com.google.inject.Inject;
+import io.swagger.annotations.Api;
 import java.io.IOException;
 import java.util.Set;
 import javax.validation.Valid;
@@ -25,6 +24,7 @@ import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * @author Praveen

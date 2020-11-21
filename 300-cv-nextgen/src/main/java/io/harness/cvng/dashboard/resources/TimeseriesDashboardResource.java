@@ -1,9 +1,5 @@
 package io.harness.cvng.dashboard.resources;
 
-import com.google.inject.Inject;
-
-import com.codahale.metrics.annotation.ExceptionMetered;
-import com.codahale.metrics.annotation.Timed;
 import io.harness.annotations.ExposeInternalException;
 import io.harness.cvng.beans.CVMonitoringCategory;
 import io.harness.cvng.dashboard.beans.TimeSeriesMetricDataDTO;
@@ -11,9 +7,12 @@ import io.harness.cvng.dashboard.services.api.TimeSeriesDashboardService;
 import io.harness.ng.beans.PageResponse;
 import io.harness.rest.RestResponse;
 import io.harness.security.annotations.NextGenManagerAuth;
+
+import com.codahale.metrics.annotation.ExceptionMetered;
+import com.codahale.metrics.annotation.Timed;
+import com.google.inject.Inject;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
-
 import javax.validation.constraints.NotNull;
 import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;

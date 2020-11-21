@@ -1,8 +1,5 @@
 package io.harness.perpetualtask.k8s.informer;
 
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
-
 import io.harness.event.client.EventPublisher;
 import io.harness.perpetualtask.k8s.informer.handlers.V1DaemonSetHandler;
 import io.harness.perpetualtask.k8s.informer.handlers.V1DeploymentHandler;
@@ -10,6 +7,9 @@ import io.harness.perpetualtask.k8s.informer.handlers.V1JobHandler;
 import io.harness.perpetualtask.k8s.informer.handlers.V1ReplicaSetHandler;
 import io.harness.perpetualtask.k8s.informer.handlers.V1StatefulSetHandler;
 import io.harness.perpetualtask.k8s.informer.handlers.V1beta1CronJobHandler;
+
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import io.kubernetes.client.informer.SharedInformerFactory;
 import io.kubernetes.client.openapi.ApiClient;
 import io.kubernetes.client.openapi.apis.AppsV1Api;

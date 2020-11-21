@@ -1,16 +1,17 @@
 package io.harness.data.structure;
 
 import static io.harness.rule.OwnerRule.SRINIVAS;
+
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
 
 import java.util.HashMap;
 import java.util.Map;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 public class MapUtilTest extends CategoryTest {
   @Test

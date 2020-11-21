@@ -1,6 +1,7 @@
 package software.wings.resources;
 
 import static io.harness.rule.OwnerRule.SHUBHANSHU;
+
 import static java.lang.String.format;
 import static javax.ws.rs.client.Entity.entity;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -14,11 +15,7 @@ import io.harness.ccm.communication.entities.CECommunications;
 import io.harness.ccm.communication.entities.CommunicationType;
 import io.harness.rest.RestResponse;
 import io.harness.rule.Owner;
-import org.apache.commons.lang3.reflect.FieldUtils;
-import org.junit.Before;
-import org.junit.ClassRule;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
+
 import software.wings.utils.ResourceTestRule;
 
 import java.util.Collections;
@@ -26,6 +23,11 @@ import java.util.List;
 import javax.ws.rs.ProcessingException;
 import javax.ws.rs.core.GenericType;
 import javax.ws.rs.core.MediaType;
+import org.apache.commons.lang3.reflect.FieldUtils;
+import org.junit.Before;
+import org.junit.ClassRule;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 public class CECommunicationsResourceTest extends CategoryTest {
   @ClassRule

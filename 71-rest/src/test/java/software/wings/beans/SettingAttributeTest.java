@@ -4,19 +4,19 @@ import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.rule.OwnerRule.GARVIT;
 import static io.harness.rule.OwnerRule.UTKARSH;
 import static io.harness.rule.OwnerRule.VAIBHAV_SI;
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.fail;
+
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 import static software.wings.utils.WingsTestConstants.SETTING_ID;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.fail;
 
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.k8s.model.KubernetesClusterAuthType;
 import io.harness.rule.Owner;
-import org.apache.commons.lang3.reflect.FieldUtils;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
+
 import software.wings.beans.SettingAttribute.SettingAttributeKeys;
 import software.wings.beans.settings.helm.GCSHelmRepoConfig;
 import software.wings.service.impl.jenkins.JenkinsUtils;
@@ -24,6 +24,9 @@ import software.wings.settings.SettingValue;
 
 import java.util.List;
 import java.util.Random;
+import org.apache.commons.lang3.reflect.FieldUtils;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 public class SettingAttributeTest extends CategoryTest {
   private static final String PASSWORD = "password";

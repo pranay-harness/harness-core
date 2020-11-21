@@ -2,8 +2,7 @@ package software.wings.service;
 
 import static io.harness.data.structure.CollectionUtils.emptyIfNull;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
-import static java.util.Objects.nonNull;
-import static org.apache.commons.lang3.StringUtils.isNotBlank;
+
 import static software.wings.service.InstanceSyncConstants.CONTAINER_SERVICE_NAME;
 import static software.wings.service.InstanceSyncConstants.CONTAINER_TYPE;
 import static software.wings.service.InstanceSyncConstants.HARNESS_APPLICATION_ID;
@@ -14,11 +13,8 @@ import static software.wings.service.InstanceSyncConstants.RELEASE_NAME;
 import static software.wings.service.InstanceSyncConstants.TIMEOUT_SECONDS;
 import static software.wings.service.impl.ContainerMetadataType.K8S;
 
-import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Sets;
-import com.google.common.collect.Sets.SetView;
-import com.google.inject.Inject;
-import com.google.protobuf.util.Durations;
+import static java.util.Objects.nonNull;
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.perpetualtask.PerpetualTaskClientContext;
@@ -28,9 +24,7 @@ import io.harness.perpetualtask.PerpetualTaskType;
 import io.harness.perpetualtask.instancesync.ContainerInstanceSyncPerpetualTaskClient;
 import io.harness.perpetualtask.instancesync.ContainerInstanceSyncPerpetualTaskClientParams;
 import io.harness.perpetualtask.internal.PerpetualTaskRecord;
-import lombok.AccessLevel;
-import lombok.experimental.FieldDefaults;
-import lombok.extern.slf4j.Slf4j;
+
 import software.wings.api.BaseContainerDeploymentInfo;
 import software.wings.api.ContainerDeploymentInfoWithLabels;
 import software.wings.api.ContainerDeploymentInfoWithNames;
@@ -48,6 +42,11 @@ import software.wings.service.impl.ContainerMetadataType;
 import software.wings.service.intfc.instance.InstanceService;
 import software.wings.utils.Utils;
 
+import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Sets;
+import com.google.common.collect.Sets.SetView;
+import com.google.inject.Inject;
+import com.google.protobuf.util.Durations;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -55,6 +54,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
+import lombok.AccessLevel;
+import lombok.experimental.FieldDefaults;
+import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @FieldDefaults(level = AccessLevel.PRIVATE)

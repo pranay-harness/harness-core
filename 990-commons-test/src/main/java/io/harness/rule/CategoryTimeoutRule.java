@@ -13,15 +13,15 @@ import io.harness.category.speed.FastTests;
 import io.harness.category.speed.SlowTests;
 import io.harness.exception.CategoryConfigException;
 import io.harness.exception.ImpossibleException;
-import org.junit.experimental.categories.Category;
-import org.junit.rules.Timeout;
-import org.junit.runner.Description;
-import org.junit.runners.model.Statement;
 
 import java.lang.management.ManagementFactory;
 import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
+import org.junit.experimental.categories.Category;
+import org.junit.rules.Timeout;
+import org.junit.runner.Description;
+import org.junit.runners.model.Statement;
 
 public class CategoryTimeoutRule extends Timeout {
   public static class RunMode {}
@@ -36,7 +36,7 @@ public class CategoryTimeoutRule extends Timeout {
 
     Class element = null;
     for (Class clz : classes) {
-      final boolean match = Arrays.stream(category.value()).anyMatch(clz ::isAssignableFrom);
+      final boolean match = Arrays.stream(category.value()).anyMatch(clz::isAssignableFrom);
       if (match) {
         if (element != null) {
           throw new RuntimeException("More than one category element");

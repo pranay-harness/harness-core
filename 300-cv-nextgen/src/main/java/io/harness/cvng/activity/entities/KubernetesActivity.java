@@ -2,12 +2,12 @@ package io.harness.cvng.activity.entities;
 
 import static io.harness.cvng.core.utils.ErrorMessageUtils.generateErrorMessageFromParam;
 
-import com.google.common.base.Preconditions;
-
-import com.fasterxml.jackson.annotation.JsonTypeName;
 import io.harness.cvng.beans.ActivityDTO;
 import io.harness.cvng.beans.ActivityType;
 import io.harness.cvng.beans.KubernetesActivityDTO;
+
+import com.fasterxml.jackson.annotation.JsonTypeName;
+import com.google.common.base.Preconditions;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;

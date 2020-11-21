@@ -5,11 +5,15 @@ import static io.harness.persistence.HQuery.QueryChecks.AUTHORITY;
 import static io.harness.persistence.HQuery.QueryChecks.COUNT;
 import static io.harness.persistence.HQuery.QueryChecks.VALIDATE;
 
-import com.google.common.collect.Sets;
-
-import com.mongodb.DBCollection;
 import io.harness.logging.AutoLogContext;
 import io.harness.mongo.CollectionLogContext;
+
+import com.google.common.collect.Sets;
+import com.mongodb.DBCollection;
+import java.util.EnumSet;
+import java.util.List;
+import java.util.Objects;
+import java.util.Set;
 import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.Datastore;
 import org.mongodb.morphia.Key;
@@ -20,11 +24,6 @@ import org.mongodb.morphia.query.MorphiaIterator;
 import org.mongodb.morphia.query.MorphiaKeyIterator;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.QueryImpl;
-
-import java.util.EnumSet;
-import java.util.List;
-import java.util.Objects;
-import java.util.Set;
 
 /**
  * The type H query.

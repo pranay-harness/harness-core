@@ -2,25 +2,27 @@ package software.wings.verification.newrelic;
 
 import static io.harness.rule.OwnerRule.KAMAL;
 import static io.harness.rule.OwnerRule.SOWMYA;
-import static org.assertj.core.api.Assertions.assertThat;
+
 import static software.wings.common.VerificationConstants.CV_24x7_STATE_EXECUTION;
 import static software.wings.service.impl.newrelic.NewRelicMetricDataRecord.DEFAULT_GROUP_NAME;
 
-import com.google.common.collect.Lists;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
-import lombok.extern.slf4j.Slf4j;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
+
 import software.wings.WingsBaseTest;
 import software.wings.service.impl.newrelic.NewRelicDataCollectionInfoV2;
 import software.wings.sm.StateType;
 
+import com.google.common.collect.Lists;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import lombok.extern.slf4j.Slf4j;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 @Slf4j
 public class NewRelicCVServiceConfigurationTest extends WingsBaseTest {

@@ -3,6 +3,7 @@ package io.harness.commandlibrary.server.security;
 import static io.harness.commandlibrary.common.CommandLibraryConstants.MANAGER_CLIENT_ID;
 import static io.harness.eraro.ErrorCode.INVALID_CREDENTIAL;
 import static io.harness.exception.WingsException.USER;
+
 import static javax.ws.rs.HttpMethod.OPTIONS;
 import static javax.ws.rs.Priorities.AUTHENTICATION;
 import static org.apache.commons.lang3.StringUtils.SPACE;
@@ -10,17 +11,14 @@ import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.apache.commons.lang3.StringUtils.startsWith;
 import static org.apache.commons.lang3.StringUtils.substringAfter;
 
-import com.google.common.annotations.VisibleForTesting;
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
-
 import io.harness.commandlibrary.server.app.CommandLibraryServerConfig;
 import io.harness.exception.InvalidRequestException;
 import io.harness.security.ServiceTokenAuthenticator;
 import io.harness.security.annotations.PublicApi;
-import lombok.extern.slf4j.Slf4j;
-import org.jetbrains.annotations.NotNull;
 
+import com.google.common.annotations.VisibleForTesting;
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import java.lang.reflect.Method;
 import java.util.function.Supplier;
 import javax.annotation.Priority;
@@ -29,6 +27,8 @@ import javax.ws.rs.container.ContainerRequestFilter;
 import javax.ws.rs.container.ResourceInfo;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.HttpHeaders;
+import lombok.extern.slf4j.Slf4j;
+import org.jetbrains.annotations.NotNull;
 
 @Singleton
 @Priority(AUTHENTICATION)
@@ -38,7 +38,7 @@ public class CommandLibraryServerAuthenticationFilter implements ContainerReques
 
   @Inject private CommandLibraryServerConfig commandLibraryServerConfig;
 
-  private final Supplier<String> secretKeyForManageSupplier = this ::getServiceSecretForManager;
+  private final Supplier<String> secretKeyForManageSupplier = this::getServiceSecretForManager;
 
   @Override
   public void filter(ContainerRequestContext requestContext) {

@@ -3,15 +3,14 @@ package software.wings.beans;
 import static io.harness.beans.ExecutionStatus.PAUSED;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.interrupts.ExecutionInterruptType.PAUSE_FOR_INPUTS;
+
 import static software.wings.api.EnvStateExecutionData.Builder.anEnvStateExecutionData;
 import static software.wings.sm.ExecutionEventAdvice.ExecutionEventAdviceBuilder.anExecutionEventAdvice;
 import static software.wings.sm.StateType.ENV_LOOP_STATE;
 import static software.wings.sm.StateType.ENV_STATE;
 
-import com.google.inject.Inject;
-
 import io.harness.context.ContextElementType;
-import lombok.extern.slf4j.Slf4j;
+
 import software.wings.api.EnvStateExecutionData;
 import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.service.intfc.WorkflowService;
@@ -25,7 +24,9 @@ import software.wings.sm.StateExecutionInstance;
 import software.wings.sm.WorkflowStandardParams;
 import software.wings.sm.states.WorkflowState;
 
+import com.google.inject.Inject;
 import java.util.List;
+import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class PipelineStageExecutionAdvisor implements ExecutionEventAdvisor {

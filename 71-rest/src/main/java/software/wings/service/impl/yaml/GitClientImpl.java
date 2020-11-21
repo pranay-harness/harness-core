@@ -1,6 +1,5 @@
 package software.wings.service.impl.yaml;
 
-import static com.google.common.base.Charsets.UTF_8;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.eraro.ErrorCode.UNREACHABLE_HOST;
@@ -10,9 +9,7 @@ import static io.harness.exception.WingsException.ADMIN_SRE;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.exception.WingsException.USER_ADMIN;
 import static io.harness.govern.Switch.unhandled;
-import static java.lang.String.format;
-import static java.util.Objects.requireNonNull;
-import static org.apache.commons.lang3.StringUtils.isBlank;
+
 import static software.wings.beans.HostConnectionAttributes.AuthenticationScheme.HTTP_PASSWORD;
 import static software.wings.beans.HostConnectionAttributes.AuthenticationScheme.KERBEROS;
 import static software.wings.beans.yaml.YamlConstants.GIT_DEFAULT_LOG_PREFIX;
@@ -26,13 +23,11 @@ import static software.wings.core.ssh.executors.SshSessionFactory.generateTGTUsi
 import static software.wings.core.ssh.executors.SshSessionFactory.getSSHSession;
 import static software.wings.utils.SshHelperUtils.createSshSessionConfig;
 
-import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Preconditions;
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
+import static com.google.common.base.Charsets.UTF_8;
+import static java.lang.String.format;
+import static java.util.Objects.requireNonNull;
+import static org.apache.commons.lang3.StringUtils.isBlank;
 
-import com.jcraft.jsch.JSchException;
-import com.jcraft.jsch.Session;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.GitClientException;
@@ -44,6 +39,48 @@ import io.harness.git.UsernamePasswordCredentialsProviderWithSkipSslVerify;
 import io.harness.git.model.ChangeType;
 import io.harness.git.model.GitFile;
 import io.harness.git.model.GitRepositoryType;
+
+import software.wings.beans.GitConfig;
+import software.wings.beans.GitOperationContext;
+import software.wings.beans.HostConnectionAttributes;
+import software.wings.beans.SettingAttribute;
+import software.wings.beans.command.NoopExecutionCallback;
+import software.wings.beans.yaml.GitCheckoutResult;
+import software.wings.beans.yaml.GitCloneResult;
+import software.wings.beans.yaml.GitCommitRequest;
+import software.wings.beans.yaml.GitCommitResult;
+import software.wings.beans.yaml.GitDiffResult;
+import software.wings.beans.yaml.GitFetchFilesRequest;
+import software.wings.beans.yaml.GitFetchFilesResult;
+import software.wings.beans.yaml.GitFileChange;
+import software.wings.beans.yaml.GitFilesBetweenCommitsRequest;
+import software.wings.core.ssh.executors.SshSessionConfig;
+import software.wings.service.intfc.yaml.GitClient;
+
+import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Preconditions;
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
+import com.jcraft.jsch.JSchException;
+import com.jcraft.jsch.Session;
+import java.io.File;
+import java.io.IOException;
+import java.net.Proxy;
+import java.net.URL;
+import java.net.UnknownHostException;
+import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+import java.util.function.Predicate;
+import java.util.stream.Stream;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -86,41 +123,6 @@ import org.eclipse.jgit.transport.http.apache.HttpClientConnectionFactory;
 import org.eclipse.jgit.treewalk.CanonicalTreeParser;
 import org.eclipse.jgit.util.FS;
 import org.eclipse.jgit.util.HttpSupport;
-import software.wings.beans.GitConfig;
-import software.wings.beans.GitOperationContext;
-import software.wings.beans.HostConnectionAttributes;
-import software.wings.beans.SettingAttribute;
-import software.wings.beans.command.NoopExecutionCallback;
-import software.wings.beans.yaml.GitCheckoutResult;
-import software.wings.beans.yaml.GitCloneResult;
-import software.wings.beans.yaml.GitCommitRequest;
-import software.wings.beans.yaml.GitCommitResult;
-import software.wings.beans.yaml.GitDiffResult;
-import software.wings.beans.yaml.GitFetchFilesRequest;
-import software.wings.beans.yaml.GitFetchFilesResult;
-import software.wings.beans.yaml.GitFileChange;
-import software.wings.beans.yaml.GitFilesBetweenCommitsRequest;
-import software.wings.core.ssh.executors.SshSessionConfig;
-import software.wings.service.intfc.yaml.GitClient;
-
-import java.io.File;
-import java.io.IOException;
-import java.net.Proxy;
-import java.net.URL;
-import java.net.UnknownHostException;
-import java.nio.charset.Charset;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.nio.file.StandardCopyOption;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
-import java.util.function.Predicate;
-import java.util.stream.Stream;
 
 /**
  * Created by anubhaw on 10/16/17.

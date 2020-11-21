@@ -1,9 +1,5 @@
 package software.wings.service.impl.yaml.handler.workflow;
 
-import static java.util.Arrays.asList;
-import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.anyString;
-import static org.mockito.Mockito.when;
 import static software.wings.beans.Application.Builder.anApplication;
 import static software.wings.beans.NotificationGroup.NotificationGroupBuilder.aNotificationGroup;
 import static software.wings.beans.yaml.YamlConstants.PATH_DELIMITER;
@@ -20,12 +16,14 @@ import static software.wings.utils.WingsTestConstants.NOTIFICATION_GROUP_ID;
 import static software.wings.utils.WingsTestConstants.SERVICE_ID;
 import static software.wings.utils.WingsTestConstants.SERVICE_NAME;
 
-import com.google.inject.Inject;
+import static java.util.Arrays.asList;
+import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyString;
+import static org.mockito.Mockito.when;
 
 import io.harness.exception.WingsException;
 import io.harness.yaml.BaseYaml;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
+
 import software.wings.api.CloudProviderType;
 import software.wings.api.DeploymentType;
 import software.wings.beans.Environment;
@@ -65,7 +63,10 @@ import software.wings.service.intfc.yaml.YamlPushService;
 import software.wings.utils.ArtifactType;
 import software.wings.yaml.handler.YamlHandlerTestBase;
 
+import com.google.inject.Inject;
 import java.util.Optional;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
 
 /**
  * @author rktummala on 1/11/18

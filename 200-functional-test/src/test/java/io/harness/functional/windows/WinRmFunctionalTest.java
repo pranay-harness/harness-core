@@ -3,7 +3,7 @@ package io.harness.functional.windows;
 import static io.harness.beans.WorkflowType.ORCHESTRATION;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.rule.OwnerRule.SRINIVAS;
-import static org.assertj.core.api.Assertions.assertThat;
+
 import static software.wings.api.DeploymentType.WINRM;
 import static software.wings.beans.BasicOrchestrationWorkflow.BasicOrchestrationWorkflowBuilder.aBasicOrchestrationWorkflow;
 import static software.wings.beans.PhaseStep.PhaseStepBuilder.aPhaseStep;
@@ -19,8 +19,7 @@ import static software.wings.service.impl.workflow.WorkflowServiceHelper.SELECT_
 import static software.wings.sm.StateType.COMMAND;
 import static software.wings.sm.StateType.DC_NODE_SELECT;
 
-import com.google.common.collect.Lists;
-import com.google.inject.Inject;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.beans.ExecutionStatus;
 import io.harness.beans.PageResponse;
@@ -41,13 +40,7 @@ import io.harness.rest.RestResponse;
 import io.harness.rule.Owner;
 import io.harness.testframework.framework.Setup;
 import io.harness.testframework.restutils.WorkflowRestUtils;
-import io.restassured.http.ContentType;
-import org.awaitility.Awaitility;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Ignore;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
+
 import software.wings.beans.Application;
 import software.wings.beans.Environment;
 import software.wings.beans.ExecutionArgs;
@@ -64,6 +57,9 @@ import software.wings.infra.InfrastructureDefinition;
 import software.wings.service.impl.WorkflowExecutionServiceImpl;
 import software.wings.service.impl.workflow.WorkflowServiceHelper;
 
+import com.google.common.collect.Lists;
+import com.google.inject.Inject;
+import io.restassured.http.ContentType;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -71,6 +67,12 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import javax.ws.rs.core.GenericType;
+import org.awaitility.Awaitility;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Ignore;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 public class WinRmFunctionalTest extends AbstractFunctionalTest {
   @Inject private OwnerManager ownerManager;

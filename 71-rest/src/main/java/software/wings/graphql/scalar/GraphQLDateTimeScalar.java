@@ -6,12 +6,11 @@ import graphql.schema.CoercingParseLiteralException;
 import graphql.schema.CoercingParseValueException;
 import graphql.schema.CoercingSerializeException;
 import graphql.schema.GraphQLScalarType;
-import lombok.experimental.UtilityClass;
-
 import java.time.OffsetDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 import java.util.function.Function;
+import lombok.experimental.UtilityClass;
 
 /**
  * Created this GraphQLScalar for DateTime scalar.

@@ -3,9 +3,6 @@ package io.harness.ng.core.api.impl;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.remote.client.RestClientUtils.getResponse;
 
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
-
 import io.harness.exception.InvalidRequestException;
 import io.harness.ng.core.api.SecretModifyService;
 import io.harness.ng.core.dto.secrets.SecretDTOV2;
@@ -15,11 +12,13 @@ import io.harness.secretmanagerclient.dto.EncryptedDataDTO;
 import io.harness.secretmanagerclient.dto.SecretTextDTO;
 import io.harness.secretmanagerclient.dto.SecretTextUpdateDTO;
 import io.harness.secretmanagerclient.remote.SecretManagerClient;
-import lombok.AllArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
+import lombok.AllArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 @Singleton
 @AllArgsConstructor(onConstructor = @__({ @Inject }))

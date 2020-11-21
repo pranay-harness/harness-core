@@ -2,8 +2,11 @@ package io.harness.scheduler;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 
-import com.google.inject.Injector;
+import io.harness.exception.WingsException;
+import io.harness.maintenance.MaintenanceListener;
+import io.harness.mongo.MongoModule;
 
+import com.google.inject.Injector;
 import com.mongodb.BasicDBObject;
 import com.mongodb.MongoClient;
 import com.mongodb.MongoClientOptions;
@@ -12,9 +15,12 @@ import com.mongodb.MongoClientURI;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
 import com.mongodb.client.model.IndexOptions;
-import io.harness.exception.WingsException;
-import io.harness.maintenance.MaintenanceListener;
-import io.harness.mongo.MongoModule;
+import java.util.Collections;
+import java.util.Date;
+import java.util.List;
+import java.util.Properties;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.bson.Document;
@@ -26,13 +32,6 @@ import org.quartz.Trigger;
 import org.quartz.TriggerKey;
 import org.quartz.impl.StdSchedulerFactory;
 import org.quartz.impl.matchers.GroupMatcher;
-
-import java.util.Collections;
-import java.util.Date;
-import java.util.List;
-import java.util.Properties;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 @Slf4j
 public class HQuartzScheduler implements PersistentScheduler, MaintenanceListener {
@@ -388,7 +387,7 @@ public class HQuartzScheduler implements PersistentScheduler, MaintenanceListene
     if (null != scheduler) {
       List<String> groupNames = scheduler.getJobGroupNames();
       return groupNames.stream()
-          .flatMap(this ::jobKeysFromGroupName)
+          .flatMap(this::jobKeysFromGroupName)
           .filter(jobKey -> accountId.equals(accountIdFromJobKey(jobKey)))
           .collect(Collectors.toList());
     }

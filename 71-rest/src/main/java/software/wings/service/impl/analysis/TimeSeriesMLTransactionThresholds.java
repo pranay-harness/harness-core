@@ -1,25 +1,25 @@
 package software.wings.service.impl.analysis;
 
-import com.google.common.collect.Sets;
-
 import io.harness.annotation.HarnessEntity;
 import io.harness.mongo.index.CdIndex;
 import io.harness.mongo.index.FdIndex;
 import io.harness.mongo.index.Field;
 import io.harness.persistence.AccountAccess;
+
+import software.wings.beans.Base;
+import software.wings.metrics.TimeSeriesCustomThresholdType;
+import software.wings.metrics.TimeSeriesMetricDefinition;
+import software.wings.sm.StateType;
+
+import com.google.common.collect.Sets;
+import java.util.ArrayList;
+import java.util.HashMap;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.experimental.FieldNameConstants;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Entity;
-import software.wings.beans.Base;
-import software.wings.metrics.TimeSeriesCustomThresholdType;
-import software.wings.metrics.TimeSeriesMetricDefinition;
-import software.wings.sm.StateType;
-
-import java.util.ArrayList;
-import java.util.HashMap;
 
 @CdIndex(name = "timeseriesThresholdsQueryIndex",
     fields =

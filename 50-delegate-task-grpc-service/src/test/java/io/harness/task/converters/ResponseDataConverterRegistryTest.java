@@ -1,10 +1,9 @@
 package io.harness.task.converters;
 
 import static io.harness.rule.OwnerRule.ALEKSANDAR;
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-
-import com.google.inject.Inject;
 
 import io.harness.category.element.UnitTests;
 import io.harness.exception.InvalidArgumentsException;
@@ -13,6 +12,8 @@ import io.harness.task.TaskServiceTestBase;
 import io.harness.task.TaskServiceTestHelper;
 import io.harness.task.service.HTTPTaskResponse;
 import io.harness.task.service.TaskType;
+
+import com.google.inject.Inject;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 

@@ -2,21 +2,20 @@ package io.harness.cdng.artifact.utils;
 
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
-import com.google.common.hash.Hashing;
-
 import io.harness.NGConstants;
 import io.harness.cdng.artifact.bean.ArtifactConfig;
 import io.harness.cdng.artifact.bean.SidecarArtifactWrapper;
 import io.harness.cdng.artifact.bean.yaml.ArtifactListConfig;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.InvalidRequestException;
-import lombok.experimental.UtilityClass;
 
+import com.google.common.hash.Hashing;
 import java.nio.charset.StandardCharsets;
 import java.util.Comparator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.stream.Collectors;
+import lombok.experimental.UtilityClass;
 
 @UtilityClass
 public class ArtifactUtils {

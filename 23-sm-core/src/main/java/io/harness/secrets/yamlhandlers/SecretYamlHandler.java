@@ -1,9 +1,9 @@
 package io.harness.secrets.yamlhandlers;
 
 import io.harness.beans.EncryptedData;
-import org.hibernate.validator.constraints.NotEmpty;
 
 import javax.validation.constraints.NotNull;
+import org.hibernate.validator.constraints.NotEmpty;
 
 public interface SecretYamlHandler {
   String URL_ROOT_PREFIX = "//";

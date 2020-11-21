@@ -2,13 +2,10 @@ package io.harness.registrars;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 
-import com.google.inject.Inject;
-import com.google.inject.Injector;
-
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.pms.steps.StepType;
 import io.harness.registries.registrar.StepRegistrar;
 import io.harness.state.Step;
-import io.harness.pms.steps.StepType;
 import io.harness.steps.barriers.BarrierStep;
 import io.harness.steps.dummy.DummySectionStep;
 import io.harness.steps.dummy.DummyStep;
@@ -16,9 +13,11 @@ import io.harness.steps.fork.ForkStep;
 import io.harness.steps.resourcerestraint.ResourceRestraintStep;
 import io.harness.steps.section.SectionStep;
 import io.harness.steps.section.chain.SectionChainStep;
-import org.apache.commons.lang3.tuple.Pair;
 
+import com.google.inject.Inject;
+import com.google.inject.Injector;
 import java.util.Set;
+import org.apache.commons.lang3.tuple.Pair;
 
 @OwnedBy(CDC)
 public class OrchestrationStepsModuleStepRegistrar implements StepRegistrar {

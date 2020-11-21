@@ -2,7 +2,7 @@ package io.harness.functional.downloadArtifact;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.rule.OwnerRule.AADITI;
-import static org.assertj.core.api.Assertions.assertThat;
+
 import static software.wings.api.DeploymentType.WINRM;
 import static software.wings.beans.BasicOrchestrationWorkflow.BasicOrchestrationWorkflowBuilder.aBasicOrchestrationWorkflow;
 import static software.wings.beans.PhaseStep.PhaseStepBuilder.aPhaseStep;
@@ -13,9 +13,7 @@ import static software.wings.beans.WorkflowPhase.WorkflowPhaseBuilder.aWorkflowP
 import static software.wings.sm.StateType.COMMAND;
 import static software.wings.sm.StateType.DC_NODE_SELECT;
 
-import com.google.common.base.Joiner;
-import com.google.common.collect.ImmutableMap;
-import com.google.inject.Inject;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.beans.WorkflowType;
 import io.harness.category.element.FunctionalTests;
@@ -33,11 +31,7 @@ import io.harness.rule.Owner;
 import io.harness.testframework.framework.Setup;
 import io.harness.testframework.restutils.ArtifactRestUtils;
 import io.harness.testframework.restutils.WorkflowRestUtils;
-import org.apache.commons.lang3.StringUtils;
-import org.junit.Before;
-import org.junit.Ignore;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
+
 import software.wings.beans.Application;
 import software.wings.beans.ExecutionArgs;
 import software.wings.beans.GraphNode;
@@ -51,11 +45,19 @@ import software.wings.infra.InfrastructureDefinition;
 import software.wings.service.impl.WorkflowExecutionServiceImpl;
 import software.wings.service.impl.workflow.WorkflowServiceHelper;
 
+import com.google.common.base.Joiner;
+import com.google.common.collect.ImmutableMap;
+import com.google.inject.Inject;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import org.apache.commons.lang3.StringUtils;
+import org.junit.Before;
+import org.junit.Ignore;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 public class WinRmDownloadArtifactTest extends AbstractFunctionalTest {
   @Inject private OwnerManager ownerManager;

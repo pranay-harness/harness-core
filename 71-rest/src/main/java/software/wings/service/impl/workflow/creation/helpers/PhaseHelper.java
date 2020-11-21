@@ -2,13 +2,12 @@ package software.wings.service.impl.workflow.creation.helpers;
 
 import static software.wings.beans.WorkflowPhase.WorkflowPhaseBuilder.aWorkflowPhase;
 
-import com.google.inject.Inject;
-
 import software.wings.beans.PhaseStep;
 import software.wings.beans.Workflow;
 import software.wings.beans.WorkflowPhase;
 import software.wings.service.impl.workflow.WorkflowServiceTemplateHelper;
 
+import com.google.inject.Inject;
 import java.util.List;
 
 public abstract class PhaseHelper {

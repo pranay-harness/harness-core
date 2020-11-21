@@ -3,6 +3,7 @@ package io.harness.event.grpc;
 import static io.harness.event.payloads.Lifecycle.EventType.EVENT_TYPE_START;
 import static io.harness.event.payloads.Lifecycle.EventType.EVENT_TYPE_STOP;
 import static io.harness.rule.OwnerRule.AVMOHAN;
+
 import static java.util.stream.Collectors.toList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
@@ -12,15 +13,6 @@ import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 
-import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.Streams;
-import com.google.protobuf.Any;
-import com.google.protobuf.Message;
-
-import io.grpc.Context;
-import io.grpc.Status.Code;
-import io.grpc.StatusException;
-import io.grpc.stub.StreamObserver;
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.event.PublishMessage;
@@ -32,6 +24,22 @@ import io.harness.grpc.auth.DelegateAuthServerInterceptor;
 import io.harness.grpc.utils.HTimestamps;
 import io.harness.persistence.HPersistence;
 import io.harness.rule.Owner;
+
+import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Streams;
+import com.google.protobuf.Any;
+import com.google.protobuf.Message;
+import io.grpc.Context;
+import io.grpc.Status.Code;
+import io.grpc.StatusException;
+import io.grpc.stub.StreamObserver;
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
+import java.util.Arrays;
+import java.util.List;
+import java.util.UUID;
+import java.util.stream.IntStream;
+import java.util.stream.Stream;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -40,14 +48,6 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
-
-import java.time.Instant;
-import java.time.temporal.ChronoUnit;
-import java.util.Arrays;
-import java.util.List;
-import java.util.UUID;
-import java.util.stream.IntStream;
-import java.util.stream.Stream;
 
 @RunWith(MockitoJUnitRunner.class)
 public class EventPublisherServerImplTest extends CategoryTest {

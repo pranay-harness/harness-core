@@ -1,11 +1,12 @@
 package io.harness.jobs.workflow.collection;
 
-import com.google.inject.Inject;
-
 import io.harness.mongo.iterator.MongoPersistenceIterator.Handler;
 import io.harness.service.intfc.ContinuousVerificationService;
-import lombok.extern.slf4j.Slf4j;
+
 import software.wings.beans.Account;
+
+import com.google.inject.Inject;
+import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class CVDataCollectionJob implements Handler<Account> {

@@ -1,11 +1,11 @@
 package migrations.all;
 
-import com.google.inject.Inject;
-
-import lombok.extern.slf4j.Slf4j;
-import migrations.Migration;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.impl.ThirdPartyApiCallLog;
+
+import com.google.inject.Inject;
+import lombok.extern.slf4j.Slf4j;
+import migrations.Migration;
 
 @Slf4j
 public class DeleteOldThirdPartyApiCallsMigration implements Migration {

@@ -2,22 +2,20 @@ package software.wings.sm.states;
 
 import static io.harness.beans.ExecutionStatus.SKIPPED;
 import static io.harness.exception.ExceptionUtils.getMessage;
-import static java.util.Collections.singletonList;
-import static org.apache.commons.lang3.StringUtils.isBlank;
-import static org.apache.commons.lang3.StringUtils.isNotBlank;
+
 import static software.wings.api.CommandStateExecutionData.Builder.aCommandStateExecutionData;
 import static software.wings.beans.command.CommandUnitDetails.CommandUnitType.AWS_ECS_SERVICE_DEPLOY;
 import static software.wings.beans.command.EcsResizeParams.EcsResizeParamsBuilder.anEcsResizeParams;
 import static software.wings.sm.StateExecutionData.StateExecutionDataBuilder.aStateExecutionData;
 
-import com.google.inject.Inject;
+import static java.util.Collections.singletonList;
+import static org.apache.commons.lang3.StringUtils.isBlank;
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.tasks.ResponseData;
-import lombok.Getter;
-import lombok.Setter;
+
 import software.wings.api.CommandStateExecutionData;
 import software.wings.beans.Activity;
 import software.wings.beans.InstanceUnitType;
@@ -36,8 +34,12 @@ import software.wings.sm.ExecutionResponse;
 import software.wings.sm.State;
 import software.wings.sm.StateType;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.google.inject.Inject;
 import java.util.HashMap;
 import java.util.Map;
+import lombok.Getter;
+import lombok.Setter;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class EcsServiceDeploy extends State {

@@ -1,10 +1,12 @@
 package io.harness.ng.core.entitysetupusage.entity;
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import io.harness.beans.EmbeddedUser;
 import io.harness.ng.core.EntityDetail;
 import io.harness.ng.core.NGAccountAccess;
 import io.harness.persistence.PersistentEntity;
+
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import javax.validation.constraints.NotNull;
 import lombok.Builder;
 import lombok.Data;
 import lombok.experimental.FieldNameConstants;
@@ -17,8 +19,6 @@ import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.annotation.TypeAlias;
 import org.springframework.data.annotation.Version;
 import org.springframework.data.mongodb.core.mapping.Document;
-
-import javax.validation.constraints.NotNull;
 
 @Data
 @Builder

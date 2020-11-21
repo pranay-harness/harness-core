@@ -7,6 +7,10 @@ import static io.harness.rule.OwnerRule.KAMAL;
 import static io.harness.rule.OwnerRule.PRAVEEN;
 import static io.harness.rule.OwnerRule.RAGHU;
 import static io.harness.rule.OwnerRule.SOWMYA;
+
+import static software.wings.beans.AwsInfrastructureMapping.Builder.anAwsInfrastructureMapping;
+import static software.wings.service.impl.newrelic.NewRelicMetricDataRecord.DEFAULT_GROUP_NAME;
+
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -20,11 +24,6 @@ import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-import static software.wings.beans.AwsInfrastructureMapping.Builder.anAwsInfrastructureMapping;
-import static software.wings.service.impl.newrelic.NewRelicMetricDataRecord.DEFAULT_GROUP_NAME;
-
-import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.Sets;
 
 import io.harness.beans.DelegateTask;
 import io.harness.beans.EmbeddedUser;
@@ -34,13 +33,7 @@ import io.harness.exception.UnexpectedException;
 import io.harness.exception.WingsException;
 import io.harness.rule.Owner;
 import io.harness.waiter.WaitNotifyEngine;
-import org.apache.commons.lang3.reflect.FieldUtils;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
-import org.mockito.ArgumentCaptor;
-import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
+
 import software.wings.api.DeploymentType;
 import software.wings.beans.AccountType;
 import software.wings.beans.Environment;
@@ -69,6 +62,8 @@ import software.wings.sm.StateType;
 import software.wings.sm.states.NewRelicState.Metric;
 import software.wings.verification.VerificationStateAnalysisExecutionData;
 
+import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Sets;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
@@ -76,6 +71,13 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
+import org.apache.commons.lang3.reflect.FieldUtils;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
+import org.mockito.ArgumentCaptor;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
 
 /**
  * author: Praveen

@@ -12,15 +12,13 @@ import static io.harness.azure.model.AzureConstants.DOWN_SCALE_STEADY_STATE_WAIT
 import static io.harness.azure.model.AzureConstants.SETUP_COMMAND_UNIT;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.exception.ExceptionUtils.getMessage;
-import static java.util.Collections.singletonList;
-import static java.util.concurrent.TimeUnit.MINUTES;
+
 import static software.wings.beans.ResizeStrategy.RESIZE_NEW_FIRST;
 import static software.wings.sm.StateType.AZURE_VMSS_SETUP;
 
-import com.google.common.collect.ImmutableList;
-import com.google.inject.Inject;
+import static java.util.Collections.singletonList;
+import static java.util.concurrent.TimeUnit.MINUTES;
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import io.harness.azure.model.AzureConstants;
 import io.harness.beans.DelegateTask;
 import io.harness.beans.ExecutionStatus;
@@ -37,10 +35,7 @@ import io.harness.exception.WingsException;
 import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.tasks.Cd1SetupFields;
 import io.harness.tasks.ResponseData;
-import lombok.Getter;
-import lombok.Setter;
-import lombok.extern.slf4j.Slf4j;
-import org.jetbrains.annotations.NotNull;
+
 import software.wings.beans.Activity;
 import software.wings.beans.Application;
 import software.wings.beans.AzureConfig;
@@ -59,9 +54,16 @@ import software.wings.service.intfc.DelegateService;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionResponse;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.google.common.collect.ImmutableList;
+import com.google.inject.Inject;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import lombok.Getter;
+import lombok.Setter;
+import lombok.extern.slf4j.Slf4j;
+import org.jetbrains.annotations.NotNull;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 @Slf4j

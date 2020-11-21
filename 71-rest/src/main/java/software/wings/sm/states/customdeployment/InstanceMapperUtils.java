@@ -2,16 +2,11 @@ package software.wings.sm.states.customdeployment;
 
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
-import com.google.common.annotations.VisibleForTesting;
-import com.google.inject.Singleton;
+import io.harness.serializer.JsonUtils;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import io.harness.serializer.JsonUtils;
-import lombok.Builder;
-import lombok.Data;
-import lombok.experimental.UtilityClass;
-import org.apache.commons.lang3.StringUtils;
-
+import com.google.common.annotations.VisibleForTesting;
+import com.google.inject.Singleton;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -19,6 +14,10 @@ import java.util.Map;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import javax.validation.constraints.NotNull;
+import lombok.Builder;
+import lombok.Data;
+import lombok.experimental.UtilityClass;
+import org.apache.commons.lang3.StringUtils;
 
 @Singleton
 @UtilityClass

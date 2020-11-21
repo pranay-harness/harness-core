@@ -2,17 +2,14 @@ package software.wings.service.impl;
 
 import static io.harness.logging.CommandExecutionStatus.FAILURE;
 import static io.harness.logging.CommandExecutionStatus.SKIPPED;
-import static java.util.stream.Collectors.toList;
+
 import static software.wings.beans.command.CommandUnitType.COMMAND;
 
-import com.google.common.annotations.VisibleForTesting;
-import com.google.common.collect.Sets;
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
+import static java.util.stream.Collectors.toList;
 
 import io.harness.delegate.task.shell.ScriptType;
 import io.harness.logging.CommandExecutionStatus;
-import lombok.extern.slf4j.Slf4j;
+
 import software.wings.annotation.EncryptableSetting;
 import software.wings.api.DeploymentType;
 import software.wings.beans.command.CleanupPowerShellCommandUnit;
@@ -29,11 +26,16 @@ import software.wings.service.intfc.CommandUnitExecutorService;
 import software.wings.service.intfc.ServiceCommandExecutorService;
 import software.wings.service.intfc.security.EncryptionService;
 
+import com.google.common.annotations.VisibleForTesting;
+import com.google.common.collect.Sets;
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Stream;
 import javax.validation.executable.ValidateOnExecution;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * Created by anubhaw on 6/2/16.

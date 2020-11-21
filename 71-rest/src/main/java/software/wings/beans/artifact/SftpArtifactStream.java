@@ -2,24 +2,26 @@ package software.wings.beans.artifact;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+
+import static software.wings.beans.artifact.ArtifactStreamType.SFTP;
+
 import static java.lang.String.format;
 import static java.util.stream.Collectors.joining;
 import static org.apache.commons.lang3.StringUtils.isBlank;
-import static software.wings.beans.artifact.ArtifactStreamType.SFTP;
 
-import com.fasterxml.jackson.annotation.JsonTypeName;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.EmbeddedUser;
+
+import com.fasterxml.jackson.annotation.JsonTypeName;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.List;
+import java.util.Set;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import org.hibernate.validator.constraints.NotEmpty;
-
-import java.text.SimpleDateFormat;
-import java.util.Date;
-import java.util.List;
-import java.util.Set;
 
 @OwnedBy(CDC)
 @JsonTypeName("SFTP")

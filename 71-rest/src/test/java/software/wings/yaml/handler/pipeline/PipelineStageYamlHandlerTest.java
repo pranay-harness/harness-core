@@ -1,12 +1,7 @@
 package software.wings.yaml.handler.pipeline;
 
 import static io.harness.rule.OwnerRule.PRABU;
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.fail;
-import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.anyString;
-import static org.mockito.Matchers.eq;
-import static org.mockito.Mockito.when;
+
 import static software.wings.beans.BasicOrchestrationWorkflow.BasicOrchestrationWorkflowBuilder.aBasicOrchestrationWorkflow;
 import static software.wings.beans.Workflow.WorkflowBuilder.aWorkflow;
 import static software.wings.beans.yaml.YamlConstants.PATH_DELIMITER;
@@ -16,17 +11,16 @@ import static software.wings.utils.WingsTestConstants.ENV_ID;
 import static software.wings.utils.WingsTestConstants.USER_GROUP_ID;
 import static software.wings.utils.WingsTestConstants.WORKFLOW_ID;
 
-import com.google.inject.Inject;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.fail;
+import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyString;
+import static org.mockito.Matchers.eq;
+import static org.mockito.Mockito.when;
 
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
-import lombok.experimental.UtilityClass;
-import org.apache.commons.io.FileUtils;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
+
 import software.wings.beans.PipelineStage;
 import software.wings.beans.Workflow;
 import software.wings.beans.security.UserGroup;
@@ -40,10 +34,18 @@ import software.wings.service.intfc.UserGroupService;
 import software.wings.service.intfc.WorkflowService;
 import software.wings.yaml.handler.YamlHandlerTestBase;
 
+import com.google.inject.Inject;
 import java.io.File;
 import java.io.IOException;
 import java.net.URISyntaxException;
 import java.util.Collections;
+import lombok.experimental.UtilityClass;
+import org.apache.commons.io.FileUtils;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
 
 public class PipelineStageYamlHandlerTest extends YamlHandlerTestBase {
   @InjectMocks @Inject private PipelineStageYamlHandler pipelineStageYamlHandler;

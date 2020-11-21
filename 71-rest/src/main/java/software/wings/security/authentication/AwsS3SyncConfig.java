@@ -1,7 +1,6 @@
 package software.wings.security.authentication;
 
 import com.google.inject.Singleton;
-
 import lombok.Builder;
 import lombok.Data;
 

@@ -1,13 +1,12 @@
 package software.wings.service.impl.instana;
 
-import com.google.common.base.Preconditions;
-
-import com.fasterxml.jackson.core.type.TypeReference;
 import io.harness.serializer.YamlUtils;
-import org.apache.commons.io.IOUtils;
+
 import software.wings.metrics.TimeSeriesMetricDefinition;
 import software.wings.sm.states.InstanaState;
 
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.google.common.base.Preconditions;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.Collections;
@@ -15,6 +14,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import javax.annotation.Nullable;
+import org.apache.commons.io.IOUtils;
 
 public class InstanaUtils {
   private static final String INSTANA_METRICS_YAML_PATH = "/apm/instana_metrics.yml";

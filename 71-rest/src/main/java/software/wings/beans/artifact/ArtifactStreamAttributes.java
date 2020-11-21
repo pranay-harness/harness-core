@@ -8,9 +8,7 @@ import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.delegate.beans.executioncapability.ExecutionCapabilityDemander;
 import io.harness.delegate.task.mixin.HttpConnectionExecutionCapabilityGenerator;
 import io.harness.security.encryption.EncryptedDataDetail;
-import lombok.Builder;
-import lombok.Data;
-import lombok.ToString;
+
 import software.wings.beans.SettingAttribute;
 import software.wings.delegatetasks.delegatecapability.CapabilityHelper;
 import software.wings.utils.ArtifactType;
@@ -20,6 +18,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import lombok.Builder;
+import lombok.Data;
+import lombok.ToString;
 
 @OwnedBy(CDC)
 @Data

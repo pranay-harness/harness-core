@@ -3,7 +3,7 @@ package software.wings.service.impl.yaml;
 import static io.harness.rule.OwnerRule.ABHINAV;
 import static io.harness.rule.OwnerRule.DEEPAK;
 import static io.harness.rule.OwnerRule.ROHIT_KUMAR;
-import static org.assertj.core.api.Assertions.assertThat;
+
 import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
@@ -13,14 +13,11 @@ import static software.wings.yaml.gitSync.YamlChangeSet.Status.QUEUED;
 import static software.wings.yaml.gitSync.YamlChangeSet.Status.RUNNING;
 import static software.wings.yaml.gitSync.YamlChangeSet.Status.SKIPPED;
 
-import com.google.inject.Inject;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
-import org.mockito.MockitoAnnotations;
+
 import software.wings.WingsBaseTest;
 import software.wings.beans.GitConfig;
 import software.wings.beans.SettingAttribute;
@@ -29,7 +26,12 @@ import software.wings.yaml.gitSync.GitWebhookRequestAttributes;
 import software.wings.yaml.gitSync.YamlChangeSet;
 import software.wings.yaml.gitSync.YamlGitConfig;
 
+import com.google.inject.Inject;
 import java.util.Collections;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
+import org.mockito.MockitoAnnotations;
 
 public class YamlChangeSetServiceImplTest extends WingsBaseTest {
   @Inject private YamlChangeSetServiceImpl yamlChangeSetService;

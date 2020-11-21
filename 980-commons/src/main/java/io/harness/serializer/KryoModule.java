@@ -2,17 +2,16 @@ package io.harness.serializer;
 
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
+import io.harness.testing.TestExecution;
+
 import com.google.inject.AbstractModule;
 import com.google.inject.Key;
 import com.google.inject.Provider;
 import com.google.inject.TypeLiteral;
 import com.google.inject.multibindings.MapBinder;
-
-import io.harness.testing.TestExecution;
+import java.util.Set;
 import lombok.extern.slf4j.Slf4j;
 import org.reflections.Reflections;
-
-import java.util.Set;
 
 @Slf4j
 public class KryoModule extends AbstractModule {

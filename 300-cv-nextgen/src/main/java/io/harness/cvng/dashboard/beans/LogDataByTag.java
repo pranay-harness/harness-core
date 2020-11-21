@@ -1,12 +1,12 @@
 package io.harness.cvng.dashboard.beans;
 
 import io.harness.cvng.analysis.entities.LogAnalysisResult.LogAnalysisTag;
-import lombok.Builder;
-import lombok.Data;
-import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
 import java.util.List;
+import lombok.Builder;
+import lombok.Data;
+import org.jetbrains.annotations.NotNull;
 
 @Data
 @Builder

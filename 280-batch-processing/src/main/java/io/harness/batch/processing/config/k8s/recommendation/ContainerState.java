@@ -4,12 +4,13 @@ import static io.harness.ccm.recommender.k8sworkload.RecommenderUtils.newCpuHist
 import static io.harness.ccm.recommender.k8sworkload.RecommenderUtils.newMemoryHistogram;
 
 import io.harness.histogram.Histogram;
-import lombok.AccessLevel;
-import lombok.Data;
-import lombok.experimental.FieldDefaults;
+
 import software.wings.graphql.datafetcher.ce.recommendation.entity.ContainerCheckpoint;
 
 import java.time.Instant;
+import lombok.AccessLevel;
+import lombok.Data;
+import lombok.experimental.FieldDefaults;
 
 /**
  * ContainerState maintains the live structures for each container, such as cpu & mem histograms and the various

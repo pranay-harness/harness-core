@@ -1,8 +1,5 @@
 package software.wings.service.impl;
 
-import static java.util.Arrays.asList;
-import static java.util.Collections.singletonList;
-import static java.util.stream.Collectors.toMap;
 import static software.wings.beans.AccountPlugin.Builder.anAccountPlugin;
 import static software.wings.beans.PluginCategory.Artifact;
 import static software.wings.beans.PluginCategory.AzureArtifacts;
@@ -14,17 +11,13 @@ import static software.wings.beans.PluginCategory.LoadBalancer;
 import static software.wings.beans.PluginCategory.SourceRepo;
 import static software.wings.beans.PluginCategory.Verification;
 
-import com.google.common.base.Charsets;
-import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.Lists;
-import com.google.common.io.Resources;
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
+import static java.util.Arrays.asList;
+import static java.util.Collections.singletonList;
+import static java.util.stream.Collectors.toMap;
 
 import io.harness.exception.InvalidArgumentsException;
 import io.harness.serializer.JsonUtils;
-import org.apache.commons.lang3.tuple.ImmutablePair;
-import org.mongodb.morphia.annotations.Transient;
+
 import software.wings.beans.APMVerificationConfig;
 import software.wings.beans.AccountPlugin;
 import software.wings.beans.AppDynamicsConfig;
@@ -69,10 +62,18 @@ import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.PluginService;
 import software.wings.settings.SettingVariableTypes;
 
+import com.google.common.base.Charsets;
+import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Lists;
+import com.google.common.io.Resources;
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import java.net.URL;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import org.apache.commons.lang3.tuple.ImmutablePair;
+import org.mongodb.morphia.annotations.Transient;
 
 /**
  * Created by peeyushaggarwal on 10/20/16.

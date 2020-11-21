@@ -3,15 +3,12 @@ package software.wings.service.impl.yaml.handler.command;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.validation.Validator.notNullCheck;
-import static java.util.stream.Collectors.toList;
+
 import static software.wings.beans.Graph.graphIdGenerator;
 import static software.wings.beans.yaml.YamlConstants.PATH_DELIMITER;
 
-import com.google.common.collect.Lists;
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
+import static java.util.stream.Collectors.toList;
 
-import lombok.extern.slf4j.Slf4j;
 import software.wings.beans.Application;
 import software.wings.beans.EntityVersion;
 import software.wings.beans.Environment;
@@ -41,10 +38,14 @@ import software.wings.service.intfc.template.TemplateService;
 import software.wings.utils.Utils;
 import software.wings.yaml.command.CommandYaml;
 
+import com.google.common.collect.Lists;
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  *  @author rktummala on 11/13/17

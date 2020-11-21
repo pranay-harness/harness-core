@@ -1,11 +1,7 @@
 package migrations.all;
 
-import com.google.inject.Inject;
-
 import io.harness.persistence.HIterator;
-import lombok.extern.slf4j.Slf4j;
-import migrations.Migration;
-import org.mongodb.morphia.query.UpdateOperations;
+
 import software.wings.beans.Account;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.infrastructure.instance.Instance;
@@ -14,7 +10,11 @@ import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.SettingsService;
 
+import com.google.inject.Inject;
 import java.util.List;
+import lombok.extern.slf4j.Slf4j;
+import migrations.Migration;
+import org.mongodb.morphia.query.UpdateOperations;
 
 @Slf4j
 public class InstanceComputerProviderNameFixMigration implements Migration {

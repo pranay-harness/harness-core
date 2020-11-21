@@ -2,6 +2,9 @@ package software.wings.sm.states.spotinst;
 
 import static io.harness.beans.ExecutionStatus.SUCCESS;
 import static io.harness.rule.OwnerRule.SATYAM;
+
+import static software.wings.utils.WingsTestConstants.ACTIVITY_ID;
+
 import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
@@ -10,9 +13,6 @@ import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
-import static software.wings.utils.WingsTestConstants.ACTIVITY_ID;
-
-import com.google.common.collect.ImmutableMap;
 
 import io.harness.beans.DelegateTask;
 import io.harness.beans.OrchestrationWorkflowType;
@@ -26,10 +26,7 @@ import io.harness.rule.Owner;
 import io.harness.spotinst.model.ElastiGroup;
 import io.harness.spotinst.model.ElastiGroupCapacity;
 import io.harness.tasks.ResponseData;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
+
 import software.wings.WingsBaseTest;
 import software.wings.service.impl.spotinst.SpotInstCommandRequest;
 import software.wings.service.intfc.ActivityService;
@@ -39,8 +36,13 @@ import software.wings.sm.ContextElement;
 import software.wings.sm.ExecutionContextImpl;
 import software.wings.sm.ExecutionResponse;
 
+import com.google.common.collect.ImmutableMap;
 import java.util.List;
 import java.util.Map;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
 
 public class SpotInstServiceSetupTest extends WingsBaseTest {
   @Mock private ActivityService mockActivityService;

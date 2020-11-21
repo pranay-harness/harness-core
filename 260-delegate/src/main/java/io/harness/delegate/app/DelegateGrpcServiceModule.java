@@ -1,5 +1,14 @@
 package io.harness.delegate.app;
 
+import io.harness.expression.app.ExpressionServiceModule;
+import io.harness.expression.service.ExpressionEvaulatorServiceGrpc;
+import io.harness.expression.service.ExpressionServiceImpl;
+import io.harness.grpc.auth.ServiceInfo;
+import io.harness.grpc.server.Connector;
+import io.harness.grpc.server.GrpcServerModule;
+import io.harness.task.service.TaskServiceGrpc;
+import io.harness.task.service.impl.TaskServiceImpl;
+
 import com.google.common.util.concurrent.Service;
 import com.google.common.util.concurrent.ServiceManager;
 import com.google.inject.AbstractModule;
@@ -10,18 +19,8 @@ import com.google.inject.Singleton;
 import com.google.inject.TypeLiteral;
 import com.google.inject.multibindings.MapBinder;
 import com.google.inject.multibindings.Multibinder;
-
 import io.grpc.BindableService;
 import io.grpc.ServerInterceptor;
-import io.harness.expression.app.ExpressionServiceModule;
-import io.harness.expression.service.ExpressionEvaulatorServiceGrpc;
-import io.harness.expression.service.ExpressionServiceImpl;
-import io.harness.grpc.auth.ServiceInfo;
-import io.harness.grpc.server.Connector;
-import io.harness.grpc.server.GrpcServerModule;
-import io.harness.task.service.TaskServiceGrpc;
-import io.harness.task.service.impl.TaskServiceImpl;
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;

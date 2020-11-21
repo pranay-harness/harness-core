@@ -10,6 +10,7 @@ import static io.harness.app.impl.CIBuildInfoServiceImplTestHelper.getBasicBuild
 import static io.harness.app.impl.CIBuildInfoServiceImplTestHelper.getBuildFilter;
 import static io.harness.app.impl.CIBuildInfoServiceImplTestHelper.getPipeline;
 import static io.harness.rule.OwnerRule.SHUBHAM;
+
 import static junit.framework.TestCase.assertEquals;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.when;
@@ -23,6 +24,10 @@ import io.harness.ci.beans.entities.CIBuild;
 import io.harness.ngpipeline.pipeline.beans.entities.NgPipelineEntity;
 import io.harness.ngpipeline.pipeline.service.NGPipelineService;
 import io.harness.rule.Owner;
+
+import java.util.Arrays;
+import java.util.Optional;
+import javax.ws.rs.NotFoundException;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
@@ -31,10 +36,6 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
-
-import java.util.Arrays;
-import java.util.Optional;
-import javax.ws.rs.NotFoundException;
 
 public class CIBuildInfoServiceImplTest extends CIManagerTest {
   @Mock private CIBuildInfoRepository ciBuildInfoRepository;

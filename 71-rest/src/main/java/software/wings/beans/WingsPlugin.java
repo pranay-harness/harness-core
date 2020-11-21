@@ -1,8 +1,8 @@
 package software.wings.beans;
 
-import com.github.zafarkhaja.semver.Version;
 import software.wings.settings.SettingValue;
 
+import com.github.zafarkhaja.semver.Version;
 import java.util.List;
 
 /**

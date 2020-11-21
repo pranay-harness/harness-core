@@ -2,8 +2,6 @@ package io.harness.beans;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 
-import com.google.common.collect.ImmutableList;
-
 import io.harness.annotation.HarnessEntity;
 import io.harness.delegate.beans.DelegateTaskRank;
 import io.harness.delegate.beans.TaskData;
@@ -19,6 +17,16 @@ import io.harness.persistence.PersistentEntity;
 import io.harness.persistence.UpdatedAtAware;
 import io.harness.persistence.UuidAware;
 import io.harness.tasks.Cd1SetupFields;
+
+import com.google.common.collect.ImmutableList;
+import java.time.OffsetDateTime;
+import java.util.Date;
+import java.util.EnumSet;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import javax.validation.constraints.NotNull;
 import lombok.Builder;
 import lombok.Builder.Default;
 import lombok.Data;
@@ -29,15 +37,6 @@ import lombok.experimental.UtilityClass;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Id;
-
-import java.time.OffsetDateTime;
-import java.util.Date;
-import java.util.EnumSet;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import javax.validation.constraints.NotNull;
 
 @Data
 @Builder

@@ -1,13 +1,12 @@
 package software.wings.graphql.datafetcher.billing;
 
 import static io.harness.rule.OwnerRule.ROHIT;
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.anyList;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.when;
-
-import com.google.inject.Inject;
 
 import io.harness.category.element.UnitTests;
 import io.harness.ccm.billing.GcpBillingEntityStatsDTO;
@@ -19,21 +18,23 @@ import io.harness.ccm.billing.graphql.CloudBillingIdFilter;
 import io.harness.ccm.billing.graphql.CloudBillingTimeFilter;
 import io.harness.ccm.billing.graphql.CloudEntityGroupBy;
 import io.harness.rule.Owner;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
+
 import software.wings.graphql.datafetcher.AbstractDataFetcherTestBase;
 import software.wings.graphql.schema.type.aggregation.QLData;
 import software.wings.graphql.schema.type.aggregation.QLIdOperator;
 import software.wings.graphql.schema.type.aggregation.QLTimeOperator;
 import software.wings.service.intfc.ce.CeAccountExpirationChecker;
 
+import com.google.inject.Inject;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
 
 public class GcpBillingEntityStatsDataFetcherTest extends AbstractDataFetcherTestBase {
   @Mock GcpBillingServiceImpl gcpBillingServiceImpl;

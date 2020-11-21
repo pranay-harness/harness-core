@@ -1,14 +1,14 @@
 package software.wings.beans.defaults;
 
-import lombok.Builder;
-import lombok.Data;
-import lombok.EqualsAndHashCode;
-import lombok.NoArgsConstructor;
 import software.wings.beans.Base;
 import software.wings.beans.NameValuePair;
 import software.wings.yaml.BaseEntityYaml;
 
 import java.util.List;
+import lombok.Builder;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.NoArgsConstructor;
 
 /**
  * @author rktummala on 1/15/18

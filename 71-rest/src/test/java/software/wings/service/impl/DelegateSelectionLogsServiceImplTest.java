@@ -4,6 +4,7 @@ import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.rule.OwnerRule.MARKO;
 import static io.harness.rule.OwnerRule.SANJA;
 import static io.harness.rule.OwnerRule.VUK;
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.mockito.Matchers.anyString;
@@ -11,8 +12,6 @@ import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-
-import com.google.inject.Inject;
 
 import io.harness.beans.DelegateTask;
 import io.harness.category.element.UnitTests;
@@ -24,10 +23,7 @@ import io.harness.selection.log.DelegateSelectionLog;
 import io.harness.selection.log.DelegateSelectionLog.DelegateSelectionLogBuilder;
 import io.harness.selection.log.DelegateSelectionLog.DelegateSelectionLogKeys;
 import io.harness.threading.Concurrent;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
+
 import software.wings.WingsBaseTest;
 import software.wings.beans.Delegate;
 import software.wings.beans.DelegateScope;
@@ -36,11 +32,16 @@ import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.DelegateSelectionLogsService;
 import software.wings.service.intfc.FeatureFlagService;
 
+import com.google.inject.Inject;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
 
 public class DelegateSelectionLogsServiceImplTest extends WingsBaseTest {
   private static final String WAITING_FOR_APPROVAL = "Waiting for Approval";

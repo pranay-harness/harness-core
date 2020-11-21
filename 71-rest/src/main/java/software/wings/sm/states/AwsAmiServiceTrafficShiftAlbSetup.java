@@ -5,7 +5,7 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.delegate.beans.TaskData.DEFAULT_ASYNC_CALL_TIMEOUT;
 import static io.harness.exception.ExceptionUtils.getMessage;
 import static io.harness.logging.Misc.normalizeExpression;
-import static java.util.Collections.singletonList;
+
 import static software.wings.beans.Log.Builder.aLog;
 import static software.wings.service.impl.aws.model.AwsConstants.AMI_ALB_SETUP_SWEEPING_OUTPUT_NAME;
 import static software.wings.service.impl.aws.model.AwsConstants.AMI_SETUP_COMMAND_NAME;
@@ -15,7 +15,7 @@ import static software.wings.service.impl.aws.model.AwsConstants.DEFAULT_AMI_ASG
 import static software.wings.service.impl.aws.model.AwsConstants.DEFAULT_AMI_ASG_TIMEOUT_MIN;
 import static software.wings.service.impl.workflow.WorkflowServiceHelper.LOAD_BALANCER_DETAILS;
 
-import com.google.inject.Inject;
+import static java.util.Collections.singletonList;
 
 import io.harness.beans.DelegateTask;
 import io.harness.beans.ExecutionStatus;
@@ -29,10 +29,7 @@ import io.harness.logging.CommandExecutionStatus;
 import io.harness.logging.Misc;
 import io.harness.tasks.Cd1SetupFields;
 import io.harness.tasks.ResponseData;
-import lombok.Getter;
-import lombok.Setter;
-import lombok.extern.slf4j.Slf4j;
-import org.jetbrains.annotations.NotNull;
+
 import software.wings.api.AmiServiceTrafficShiftAlbSetupElement;
 import software.wings.api.AwsAmiSetupExecutionData;
 import software.wings.beans.Activity;
@@ -59,10 +56,15 @@ import software.wings.sm.StateType;
 import software.wings.sm.states.spotinst.SpotInstStateHelper;
 import software.wings.utils.AsgConvention;
 
+import com.google.inject.Inject;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
+import lombok.Getter;
+import lombok.Setter;
+import lombok.extern.slf4j.Slf4j;
+import org.jetbrains.annotations.NotNull;
 
 @Slf4j
 public class AwsAmiServiceTrafficShiftAlbSetup extends State {

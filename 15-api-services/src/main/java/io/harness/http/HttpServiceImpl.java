@@ -1,14 +1,26 @@
 package io.harness.http;
 
-import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Splitter;
-import com.google.inject.Singleton;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+
+import static com.google.common.base.Ascii.toUpperCase;
+import static org.apache.commons.lang3.exception.ExceptionUtils.getMessage;
+
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.http.beans.HttpInternalConfig;
 import io.harness.http.beans.HttpInternalResponse;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.network.Http;
+
+import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Splitter;
+import com.google.inject.Singleton;
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.security.KeyManagementException;
+import java.security.KeyStoreException;
+import java.security.NoSuchAlgorithmException;
+import java.util.List;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpHost;
@@ -22,17 +34,6 @@ import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.*;
 import org.apache.http.ssl.SSLContextBuilder;
 import org.apache.http.util.EntityUtils;
-
-import java.io.IOException;
-import java.nio.charset.StandardCharsets;
-import java.security.KeyManagementException;
-import java.security.KeyStoreException;
-import java.security.NoSuchAlgorithmException;
-import java.util.List;
-
-import static com.google.common.base.Ascii.toUpperCase;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
-import static org.apache.commons.lang3.exception.ExceptionUtils.getMessage;
 
 @Singleton
 @Slf4j

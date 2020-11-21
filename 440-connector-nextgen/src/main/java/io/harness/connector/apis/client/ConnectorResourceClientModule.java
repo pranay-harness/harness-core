@@ -1,14 +1,13 @@
 package io.harness.connector.apis.client;
 
+import io.harness.remote.client.ServiceHttpClientConfig;
+import io.harness.security.ServiceTokenGenerator;
+import io.harness.serializer.kryo.KryoConverterFactory;
+
 import com.google.inject.AbstractModule;
 import com.google.inject.Inject;
 import com.google.inject.Provides;
 import com.google.inject.Scopes;
-
-import io.harness.remote.client.ServiceHttpClientConfig;
-
-import io.harness.security.ServiceTokenGenerator;
-import io.harness.serializer.kryo.KryoConverterFactory;
 
 public class ConnectorResourceClientModule extends AbstractModule {
   private final ServiceHttpClientConfig secretManagerConfig;

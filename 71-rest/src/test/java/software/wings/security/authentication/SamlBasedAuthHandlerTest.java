@@ -1,6 +1,7 @@
 package software.wings.security.authentication;
 
 import static io.harness.rule.OwnerRule.RUSHABH;
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.fail;
 import static org.assertj.core.api.Assertions.failBecauseExceptionWasNotThrown;
@@ -12,22 +13,11 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.when;
 
-import com.google.inject.Inject;
-
-import com.coveo.saml.SamlClient;
-import com.coveo.saml.SamlException;
-import com.coveo.saml.SamlResponse;
 import io.harness.category.element.UnitTests;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
 import io.harness.rule.Owner;
-import org.apache.commons.io.IOUtils;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.Spy;
+
 import software.wings.WingsBaseTest;
 import software.wings.beans.Account;
 import software.wings.beans.User;
@@ -36,10 +26,21 @@ import software.wings.security.saml.SamlClientService;
 import software.wings.security.saml.SamlUserGroupSync;
 import software.wings.service.intfc.SSOSettingService;
 
+import com.coveo.saml.SamlClient;
+import com.coveo.saml.SamlException;
+import com.coveo.saml.SamlResponse;
+import com.google.inject.Inject;
 import java.io.IOException;
 import java.nio.charset.Charset;
 import java.util.Arrays;
 import java.util.List;
+import org.apache.commons.io.IOUtils;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.Spy;
 
 public class SamlBasedAuthHandlerTest extends WingsBaseTest {
   @Mock AuthenticationUtils authenticationUtils;

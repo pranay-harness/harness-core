@@ -2,15 +2,15 @@ package software.wings.service.impl.yaml.handler.setting.collaborationprovider;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 
-import com.google.inject.Singleton;
-
 import io.harness.annotations.dev.OwnedBy;
+
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.SpotInstConfig;
 import software.wings.beans.SpotInstConfig.Yaml;
 import software.wings.beans.yaml.ChangeContext;
 import software.wings.service.impl.yaml.handler.setting.cloudprovider.CloudProviderYamlHandler;
 
+import com.google.inject.Singleton;
 import java.util.List;
 
 @OwnedBy(CDC)

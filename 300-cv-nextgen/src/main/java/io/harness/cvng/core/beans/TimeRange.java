@@ -1,10 +1,9 @@
 package io.harness.cvng.core.beans;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
+import java.time.Instant;
 import lombok.Builder;
 import lombok.Value;
-
-import java.time.Instant;
 
 @Value
 @Builder

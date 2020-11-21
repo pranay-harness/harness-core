@@ -2,13 +2,12 @@ package io.harness.generator.artifactstream;
 
 import static software.wings.beans.Application.GLOBAL_APP_ID;
 
-import com.google.inject.Inject;
-
 import io.harness.generator.OwnerManager.Owners;
 import io.harness.generator.Randomizer;
 import io.harness.generator.Randomizer.Seed;
 import io.harness.generator.SettingGenerator;
 import io.harness.generator.SettingGenerator.Settings;
+
 import software.wings.beans.Application;
 import software.wings.beans.Service;
 import software.wings.beans.SettingAttribute;
@@ -16,6 +15,7 @@ import software.wings.beans.artifact.AmiArtifactStream;
 import software.wings.beans.artifact.AmiArtifactStream.AmiArtifactStreamBuilder;
 import software.wings.beans.artifact.ArtifactStream;
 
+import com.google.inject.Inject;
 import javax.validation.constraints.NotNull;
 
 public class AmazonAmiArtifactStreamsGenerator implements ArtifactStreamsGenerator {
@@ -38,7 +38,9 @@ public class AmazonAmiArtifactStreamsGenerator implements ArtifactStreamsGenerat
         AmiArtifactStream.builder()
             .name("aws-playground-ami")
             .appId(atConnector ? GLOBAL_APP_ID : application.getUuid())
-            .serviceId(atConnector ? settingAttribute.getUuid() : service != null ? service.getUuid() : null)
+            .serviceId(atConnector    ? settingAttribute.getUuid()
+                    : service != null ? service.getUuid()
+                                      : null)
             .settingId(settingAttribute.getUuid())
             .region("us-east-1")
             .sourceName("us-east-1")

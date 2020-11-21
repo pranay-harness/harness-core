@@ -1,10 +1,9 @@
 package software.wings.cdn;
 
+import java.util.Map;
 import lombok.AccessLevel;
 import lombok.Data;
 import lombok.experimental.FieldDefaults;
-
-import java.util.Map;
 
 @Data
 @FieldDefaults(level = AccessLevel.PRIVATE)

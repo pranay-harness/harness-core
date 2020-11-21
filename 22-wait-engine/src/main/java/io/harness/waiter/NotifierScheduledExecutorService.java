@@ -1,8 +1,8 @@
 package io.harness.waiter;
 
-import com.google.inject.Singleton;
-
 import io.harness.manage.ManagedScheduledExecutorService;
+
+import com.google.inject.Singleton;
 
 @Singleton
 public class NotifierScheduledExecutorService extends ManagedScheduledExecutorService {

@@ -1,25 +1,26 @@
 package software.wings.service.impl.template;
 
-import static org.assertj.core.api.Assertions.assertThat;
 import static software.wings.beans.Variable.VariableBuilder.aVariable;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 import static software.wings.utils.WingsTestConstants.TEMPLATE_NAME;
 
-import com.google.common.collect.ImmutableMap;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
 import io.harness.rule.OwnerRule;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
+
 import software.wings.WingsBaseTest;
 import software.wings.beans.template.Template;
 import software.wings.beans.template.TemplateType;
 import software.wings.beans.template.deploymenttype.CustomDeploymentTypeTemplate;
 import software.wings.utils.WingsTestConstants;
 
+import com.google.common.collect.ImmutableMap;
 import java.util.Arrays;
 import java.util.HashMap;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 public class CustomDeploymentTypeProcessorTest extends WingsBaseTest {
   private CustomDeploymentTypeProcessor processor = new CustomDeploymentTypeProcessor();

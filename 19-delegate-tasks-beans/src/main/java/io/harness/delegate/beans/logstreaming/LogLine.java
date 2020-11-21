@@ -1,13 +1,13 @@
 package io.harness.delegate.beans.logstreaming;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
 import io.harness.logging.LogLevel;
-import lombok.Builder;
-import lombok.Data;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import java.time.Instant;
 import java.util.Map;
 import javax.validation.constraints.NotNull;
+import lombok.Builder;
+import lombok.Data;
 
 @Data
 @Builder

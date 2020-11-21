@@ -2,12 +2,8 @@ package software.wings.resources;
 
 import static software.wings.security.PermissionAttribute.PermissionType.MANAGE_AUTHENTICATION_SETTINGS;
 
-import com.google.inject.Inject;
-
 import io.harness.rest.RestResponse;
-import io.swagger.annotations.Api;
-import lombok.AccessLevel;
-import lombok.experimental.FieldDefaults;
+
 import software.wings.beans.loginSettings.LoginSettings;
 import software.wings.beans.loginSettings.LoginSettingsService;
 import software.wings.beans.loginSettings.PasswordExpirationPolicy;
@@ -18,6 +14,8 @@ import software.wings.security.annotations.AuthRule;
 import software.wings.security.annotations.Scope;
 import software.wings.service.intfc.FeatureFlagService;
 
+import com.google.inject.Inject;
+import io.swagger.annotations.Api;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 import javax.ws.rs.Consumes;
@@ -27,6 +25,8 @@ import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
+import lombok.AccessLevel;
+import lombok.experimental.FieldDefaults;
 
 @Api("loginSettings")
 @Path("/loginSettings")

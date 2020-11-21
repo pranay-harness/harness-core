@@ -1,12 +1,9 @@
 package migrations.all;
 
-import com.google.inject.Inject;
-
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.expression.ExpressionEvaluator;
 import io.harness.persistence.HIterator;
-import lombok.extern.slf4j.Slf4j;
-import migrations.Migration;
+
 import software.wings.beans.Account;
 import software.wings.beans.Application;
 import software.wings.beans.Application.ApplicationKeys;
@@ -21,12 +18,15 @@ import software.wings.beans.artifact.ArtifactStreamSummary;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.ArtifactStreamServiceBindingService;
 
+import com.google.inject.Inject;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
+import lombok.extern.slf4j.Slf4j;
+import migrations.Migration;
 
 @Slf4j
 public class MigrateArtifactStreamBindingsToServiceVariable implements Migration {

@@ -2,14 +2,7 @@ package io.harness.perpetualtask;
 
 import static io.harness.perpetualtask.PerpetualTaskType.AWS_CODE_DEPLOY_INSTANCE_SYNC;
 import static io.harness.rule.OwnerRule.ABOSII;
-import static java.util.Collections.emptyList;
-import static java.util.Collections.singletonList;
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.Mockito.any;
-import static org.mockito.Mockito.doReturn;
-import static org.mockito.Mockito.eq;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
+
 import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static software.wings.beans.CodeDeployInfrastructureMapping.CodeDeployInfrastructureMappingBuilder.aCodeDeployInfrastructureMapping;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
@@ -22,21 +15,21 @@ import static software.wings.service.impl.instance.InstanceSyncTestConstants.INF
 import static software.wings.service.impl.instance.InstanceSyncTestConstants.SERVICE_ID;
 import static software.wings.service.impl.instance.InstanceSyncTestConstants.US_EAST;
 
-import com.google.common.collect.ImmutableMap;
-import com.google.inject.Inject;
-import com.google.protobuf.util.Durations;
+import static java.util.Collections.emptyList;
+import static java.util.Collections.singletonList;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.any;
+import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.eq;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
 
-import com.amazonaws.services.ec2.model.Filter;
 import io.harness.beans.DelegateTask;
 import io.harness.category.element.UnitTests;
 import io.harness.perpetualtask.instancesync.AwsCodeDeployInstanceSyncPerpetualTaskParams;
 import io.harness.rule.Owner;
 import io.harness.tasks.Cd1SetupFields;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
+
 import software.wings.WingsBaseTest;
 import software.wings.annotation.EncryptableSetting;
 import software.wings.api.DeploymentType;
@@ -51,7 +44,16 @@ import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.security.SecretManager;
 
+import com.amazonaws.services.ec2.model.Filter;
+import com.google.common.collect.ImmutableMap;
+import com.google.inject.Inject;
+import com.google.protobuf.util.Durations;
 import java.util.List;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
 
 public class AwsCodeDeployInstanceSyncPerpetualTaskClientTest extends WingsBaseTest {
   @Mock private PerpetualTaskService perpetualTaskService;

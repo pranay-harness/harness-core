@@ -1,6 +1,7 @@
 package io.harness.functional.Connectors;
 
 import static io.harness.rule.OwnerRule.SHASWAT;
+
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.category.element.FunctionalTests;
@@ -8,14 +9,14 @@ import io.harness.functional.AbstractFunctionalTest;
 import io.harness.rule.Owner;
 import io.harness.testframework.restutils.ConnectorUtils;
 import io.harness.testframework.restutils.SettingsUtils;
+
 import io.restassured.path.json.JsonPath;
+import java.util.List;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.FixMethodOrder;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.junit.runners.MethodSorters;
-
-import java.util.List;
 
 @Slf4j
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)

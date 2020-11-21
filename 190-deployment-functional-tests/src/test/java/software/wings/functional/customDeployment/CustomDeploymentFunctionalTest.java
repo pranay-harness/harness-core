@@ -3,10 +3,7 @@ package software.wings.functional.customDeployment;
 import static io.harness.beans.WorkflowType.ORCHESTRATION;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.rule.OwnerRule.TATHAGAT;
-import static org.apache.commons.lang3.StringUtils.isNotBlank;
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.assertj.core.api.Assertions.fail;
+
 import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static software.wings.beans.BasicOrchestrationWorkflow.BasicOrchestrationWorkflowBuilder.aBasicOrchestrationWorkflow;
 import static software.wings.beans.PhaseStep.PhaseStepBuilder.aPhaseStep;
@@ -23,8 +20,10 @@ import static software.wings.beans.yaml.YamlConstants.PATH_DELIMITER;
 import static software.wings.service.impl.workflow.WorkflowServiceHelper.ROLLBACK_PREFIX;
 import static software.wings.sm.StateType.CUSTOM_DEPLOYMENT_FETCH_INSTANCES;
 
-import com.google.common.collect.ImmutableMap;
-import com.google.inject.Inject;
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.assertj.core.api.Assertions.fail;
 
 import io.harness.beans.ExecutionStatus;
 import io.harness.beans.WorkflowType;
@@ -44,11 +43,7 @@ import io.harness.rule.Owner;
 import io.harness.scm.SecretName;
 import io.harness.testframework.restutils.ArtifactStreamRestUtils;
 import io.harness.testframework.restutils.WorkflowRestUtils;
-import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.io.FileUtils;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
+
 import software.wings.api.DeploymentType;
 import software.wings.beans.Application;
 import software.wings.beans.CanaryOrchestrationWorkflow;
@@ -74,6 +69,8 @@ import software.wings.service.intfc.template.TemplateService;
 import software.wings.sm.StateType;
 import software.wings.sm.states.customdeployment.InstanceFetchState.InstanceFetchStateKeys;
 
+import com.google.common.collect.ImmutableMap;
+import com.google.inject.Inject;
 import java.io.File;
 import java.io.IOException;
 import java.net.URISyntaxException;
@@ -83,6 +80,11 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.io.FileUtils;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 @Slf4j
 public class CustomDeploymentFunctionalTest extends AbstractFunctionalTest {

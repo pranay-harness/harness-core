@@ -3,6 +3,7 @@ package io.harness.data.structure;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.rule.OwnerRule.GEORGE;
+
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -10,15 +11,15 @@ import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.data.structure.EmptyPredicate.IsEmpty;
 import io.harness.rule.Owner;
-import lombok.Builder;
-import lombok.Getter;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import lombok.Builder;
+import lombok.Getter;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 public class EmptyPredicateTest extends CategoryTest {
   @Getter

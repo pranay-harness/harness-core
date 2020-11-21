@@ -1,15 +1,14 @@
 package io.harness.registrars;
 
-import com.google.inject.Injector;
-import com.google.inject.Singleton;
-
 import io.harness.cdng.pipeline.DeploymentStage;
 import io.harness.cdng.pipeline.DeploymentStageTypeToStageExecutionSummaryMapper;
 import io.harness.ngpipeline.pipeline.StageTypeToStageExecutionSummaryMapper;
 import io.harness.pipeline.executions.NGStageType;
-import org.apache.commons.lang3.tuple.Pair;
 
+import com.google.inject.Injector;
+import com.google.inject.Singleton;
 import java.util.Set;
+import org.apache.commons.lang3.tuple.Pair;
 
 @Singleton
 public class NGStageTypeToStageExecutionSummaryMapperRegistrar implements StageTypeToStageExecutionMapperRegistrar {

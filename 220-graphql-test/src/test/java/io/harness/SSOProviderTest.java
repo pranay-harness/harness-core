@@ -1,11 +1,11 @@
 package io.harness;
 
 import static io.harness.rule.OwnerRule.DEEPAK;
-import static org.assertj.core.api.Assertions.assertThat;
+
 import static software.wings.graphql.schema.type.aggregation.ssoProvider.QLSSOType.LDAP;
 import static software.wings.graphql.schema.type.aggregation.ssoProvider.QLSSOType.SAML;
 
-import com.google.inject.Inject;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.category.element.UnitTests;
 import io.harness.category.layer.GraphQLTests;
@@ -14,10 +14,7 @@ import io.harness.generator.OwnerManager;
 import io.harness.generator.Randomizer;
 import io.harness.rule.Owner;
 import io.harness.testframework.graphql.QLTestObject;
-import lombok.extern.slf4j.Slf4j;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
+
 import software.wings.beans.Account;
 import software.wings.beans.sso.LdapConnectionSettings;
 import software.wings.beans.sso.LdapGroupSettings;
@@ -28,9 +25,14 @@ import software.wings.graphql.schema.type.QLSSOProvider.QLSSOProviderKeys;
 import software.wings.graphql.schema.type.QLSSOProviderConnection;
 import software.wings.service.intfc.SSOSettingService;
 
+import com.google.inject.Inject;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import lombok.extern.slf4j.Slf4j;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 @Slf4j
 public class SSOProviderTest extends GraphQLTest {

@@ -3,9 +3,8 @@ package io.harness.batch.processing.integration.writer;
 import static io.harness.event.payloads.Lifecycle.EventType.EVENT_TYPE_START;
 import static io.harness.event.payloads.Lifecycle.EventType.EVENT_TYPE_STOP;
 import static io.harness.rule.OwnerRule.HITESH;
-import static org.assertj.core.api.Assertions.assertThat;
 
-import com.google.protobuf.Timestamp;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.CategoryTest;
 import io.harness.batch.processing.integration.EcsEventGenerator;
@@ -18,6 +17,11 @@ import io.harness.event.grpc.PublishedMessage;
 import io.harness.grpc.utils.HTimestamps;
 import io.harness.persistence.HPersistence;
 import io.harness.rule.Owner;
+
+import com.google.protobuf.Timestamp;
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
+import java.util.List;
 import lombok.val;
 import org.junit.After;
 import org.junit.Test;
@@ -29,10 +33,6 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
-
-import java.time.Instant;
-import java.time.temporal.ChronoUnit;
-import java.util.List;
 
 @SpringBootTest
 @ActiveProfiles("test")

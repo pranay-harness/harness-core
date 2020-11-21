@@ -2,7 +2,6 @@ package io.harness.serializer.kryo;
 
 import static io.harness.annotations.dev.HarnessTeam.CV;
 
-import com.esotericsoftware.kryo.Kryo;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.cvng.beans.AppDynamicsDataCollectionInfo;
 import io.harness.cvng.beans.AppdynamicsValidationResponse;
@@ -34,6 +33,8 @@ import io.harness.cvng.beans.splunk.SplunkDataCollectionRequest;
 import io.harness.cvng.beans.splunk.SplunkSavedSearchRequest;
 import io.harness.cvng.models.VerificationType;
 import io.harness.serializer.KryoRegistrar;
+
+import com.esotericsoftware.kryo.Kryo;
 
 @OwnedBy(CV)
 public class CvNextGenCommonsBeansKryoRegistrar implements KryoRegistrar {

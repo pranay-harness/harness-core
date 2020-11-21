@@ -2,18 +2,12 @@ package io.harness.perpetualtask;
 
 import static io.harness.rule.OwnerRule.GEORGE;
 import static io.harness.rule.OwnerRule.VUK;
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.isA;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-
-import com.google.inject.Inject;
-import com.google.inject.name.Named;
-import com.google.protobuf.Any;
-import com.google.protobuf.ByteString;
-import com.google.protobuf.Timestamp;
-import com.google.protobuf.util.Durations;
 
 import io.harness.DelegateTest;
 import io.harness.category.element.UnitTests;
@@ -23,6 +17,23 @@ import io.harness.perpetualtask.k8s.watch.K8sWatchTaskParams;
 import io.harness.rule.Owner;
 import io.harness.serializer.KryoSerializer;
 import io.harness.threading.Concurrent;
+
+import software.wings.beans.KubernetesClusterConfig;
+
+import com.google.inject.Inject;
+import com.google.inject.name.Named;
+import com.google.protobuf.Any;
+import com.google.protobuf.ByteString;
+import com.google.protobuf.Timestamp;
+import com.google.protobuf.util.Durations;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.ScheduledExecutorService;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.Before;
 import org.junit.Rule;
@@ -33,16 +44,6 @@ import org.mockito.Mock;
 import org.mockito.Spy;
 import org.mockito.junit.MockitoJUnit;
 import org.mockito.junit.MockitoRule;
-import software.wings.beans.KubernetesClusterConfig;
-
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.ScheduledExecutorService;
 
 @Slf4j
 public class PerpetualTaskWorkerTest extends DelegateTest {

@@ -1,10 +1,9 @@
 package io.harness.cvng.core.services.impl;
 
-import com.google.inject.Inject;
-
 import io.harness.cvng.client.VerificationManagerClient;
 import io.harness.cvng.core.services.api.FeatureFlagService;
 
+import com.google.inject.Inject;
 import java.io.IOException;
 
 public class FeatureFlagServiceImpl implements FeatureFlagService {

@@ -49,23 +49,6 @@ import static io.harness.ccm.billing.preaggregated.PreAggregateConstants.minPreA
 import static io.harness.ccm.billing.preaggregated.PreAggregateConstants.nullStringValueConstant;
 import static io.harness.ccm.billing.preaggregated.PreAggregateConstants.totalStringValueConstant;
 
-import com.google.cloud.Timestamp;
-import com.google.cloud.bigquery.Field;
-import com.google.cloud.bigquery.FieldList;
-import com.google.cloud.bigquery.FieldValue;
-import com.google.cloud.bigquery.FieldValueList;
-import com.google.cloud.bigquery.Schema;
-import com.google.cloud.bigquery.StandardSQLTypeName;
-import com.google.cloud.bigquery.TableResult;
-import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Preconditions;
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
-
-import com.healthmarketscience.sqlbuilder.Condition;
-import com.healthmarketscience.sqlbuilder.SelectQuery;
-import com.healthmarketscience.sqlbuilder.SqlObject;
-import com.healthmarketscience.sqlbuilder.dbspec.basic.DbColumn;
 import io.harness.ccm.billing.RawBillingTableSchema;
 import io.harness.ccm.billing.TimeSeriesDataPoints;
 import io.harness.ccm.billing.bigquery.AliasExpression;
@@ -78,7 +61,7 @@ import io.harness.ccm.billing.preaggregated.PreAggregateBillingEntityDataPoint.P
 import io.harness.ccm.billing.preaggregated.PreAggregateCloudOverviewDataPoint.PreAggregateCloudOverviewDataPointBuilder;
 import io.harness.ccm.billing.preaggregated.PreAggregatedCostData.PreAggregatedCostDataBuilder;
 import io.harness.exception.InvalidRequestException;
-import lombok.extern.slf4j.Slf4j;
+
 import software.wings.graphql.datafetcher.billing.BillingDataHelper;
 import software.wings.graphql.datafetcher.billing.CloudBillingHelper;
 import software.wings.graphql.datafetcher.billing.QLBillingAmountData;
@@ -90,6 +73,22 @@ import software.wings.graphql.schema.type.aggregation.QLReference;
 import software.wings.graphql.schema.type.aggregation.QLTimeOperator;
 import software.wings.graphql.schema.type.aggregation.billing.QLBillingStatsInfo;
 
+import com.google.cloud.Timestamp;
+import com.google.cloud.bigquery.Field;
+import com.google.cloud.bigquery.FieldList;
+import com.google.cloud.bigquery.FieldValue;
+import com.google.cloud.bigquery.FieldValueList;
+import com.google.cloud.bigquery.Schema;
+import com.google.cloud.bigquery.StandardSQLTypeName;
+import com.google.cloud.bigquery.TableResult;
+import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Preconditions;
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
+import com.healthmarketscience.sqlbuilder.Condition;
+import com.healthmarketscience.sqlbuilder.SelectQuery;
+import com.healthmarketscience.sqlbuilder.SqlObject;
+import com.healthmarketscience.sqlbuilder.dbspec.basic.DbColumn;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.Duration;
@@ -107,6 +106,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Singleton

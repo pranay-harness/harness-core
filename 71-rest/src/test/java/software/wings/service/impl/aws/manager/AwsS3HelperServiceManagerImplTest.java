@@ -1,6 +1,7 @@
 package software.wings.service.impl.aws.manager;
 
 import static io.harness.rule.OwnerRule.SATYAM;
+
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -14,13 +15,14 @@ import static org.mockito.Mockito.spy;
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
+
 import software.wings.beans.AwsConfig;
 import software.wings.service.impl.aws.model.AwsS3ListBucketNamesResponse;
 import software.wings.service.intfc.DelegateService;
 
 import java.util.List;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 public class AwsS3HelperServiceManagerImplTest extends CategoryTest {
   @Test

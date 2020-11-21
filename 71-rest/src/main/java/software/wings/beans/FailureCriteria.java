@@ -1,11 +1,10 @@
 package software.wings.beans;
 
+import javax.validation.constraints.Max;
+import javax.validation.constraints.Min;
 import lombok.Builder;
 import lombok.EqualsAndHashCode;
 import lombok.Value;
-
-import javax.validation.constraints.Max;
-import javax.validation.constraints.Min;
 
 @Value
 @Builder

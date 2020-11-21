@@ -3,19 +3,15 @@ package software.wings.service.impl.instance;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.validation.Validator.notNullCheck;
+
 import static software.wings.service.impl.instance.InstanceSyncFlow.ITERATOR;
 import static software.wings.service.impl.instance.InstanceSyncFlow.MANUAL;
 import static software.wings.service.impl.instance.InstanceSyncFlow.NEW_DEPLOYMENT;
 import static software.wings.service.impl.instance.InstanceSyncFlow.PERPETUAL_TASK;
 
-import com.google.common.collect.Sets;
-import com.google.common.collect.Sets.SetView;
-import com.google.inject.Inject;
-
 import io.harness.beans.EmbeddedUser;
 import io.harness.perpetualtask.PerpetualTaskService;
-import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.StringUtils;
+
 import software.wings.api.DeploymentInfo;
 import software.wings.api.DeploymentSummary;
 import software.wings.api.PhaseExecutionData;
@@ -46,6 +42,9 @@ import software.wings.service.intfc.instance.InstanceService;
 import software.wings.service.intfc.security.SecretManager;
 import software.wings.sm.PipelineSummary;
 
+import com.google.common.collect.Sets;
+import com.google.common.collect.Sets.SetView;
+import com.google.inject.Inject;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
@@ -53,6 +52,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 
 /**
  * @author rktummala on 01/30/18

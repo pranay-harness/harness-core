@@ -1,14 +1,16 @@
 package software.wings.testutils.encryptionsamples;
 
-import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.encryption.Encrypted;
 import io.harness.mongo.index.FdIndex;
 import io.harness.persistence.PersistentEntity;
 import io.harness.persistence.UuidAware;
-import lombok.Builder;
-import lombok.Data;
+
 import software.wings.annotation.EncryptableSetting;
 import software.wings.settings.SettingVariableTypes;
+
+import com.github.reinert.jjschema.SchemaIgnore;
+import lombok.Builder;
+import lombok.Data;
 
 @Data
 @Builder

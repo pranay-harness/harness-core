@@ -1,12 +1,14 @@
 package software.wings.beans.yaml;
 
+import io.harness.git.model.ChangeType;
+
+import software.wings.yaml.gitSync.YamlGitConfig;
+
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.github.reinert.jjschema.SchemaIgnore;
-import io.harness.git.model.ChangeType;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.ToString;
-import software.wings.yaml.gitSync.YamlGitConfig;
 
 /**
  * Created by anubhaw on 10/16/17.

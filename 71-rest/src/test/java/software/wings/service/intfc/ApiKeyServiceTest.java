@@ -6,6 +6,14 @@ import static io.harness.rule.OwnerRule.RAMA;
 import static io.harness.rule.OwnerRule.SATYAM;
 import static io.harness.rule.OwnerRule.UJJAWAL;
 import static io.harness.validation.Validator.notNullCheck;
+
+import static software.wings.beans.Account.Builder.anAccount;
+import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
+import static software.wings.utils.WingsTestConstants.ACCOUNT_KEY;
+import static software.wings.utils.WingsTestConstants.USER_GROUP_ID;
+import static software.wings.utils.WingsTestConstants.USER_ID;
+import static software.wings.utils.WingsTestConstants.USER_NAME;
+
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.fail;
@@ -16,14 +24,6 @@ import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
-import static software.wings.beans.Account.Builder.anAccount;
-import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
-import static software.wings.utils.WingsTestConstants.ACCOUNT_KEY;
-import static software.wings.utils.WingsTestConstants.USER_GROUP_ID;
-import static software.wings.utils.WingsTestConstants.USER_ID;
-import static software.wings.utils.WingsTestConstants.USER_NAME;
-
-import com.google.inject.Inject;
 
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageRequest.PageRequestBuilder;
@@ -34,12 +34,7 @@ import io.harness.exception.UnauthorizedException;
 import io.harness.exception.WingsException;
 import io.harness.rule.Owner;
 import io.harness.security.SimpleEncryption;
-import lombok.extern.slf4j.Slf4j;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
+
 import software.wings.WingsBaseTest;
 import software.wings.beans.Account;
 import software.wings.beans.ApiKeyEntry;
@@ -49,6 +44,14 @@ import software.wings.beans.security.UserGroup;
 import software.wings.security.UserRequestContext;
 import software.wings.security.UserThreadLocal;
 import software.wings.service.impl.AuditServiceHelper;
+
+import com.google.inject.Inject;
+import lombok.extern.slf4j.Slf4j;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
 
 @Slf4j
 public class ApiKeyServiceTest extends WingsBaseTest {

@@ -1,12 +1,12 @@
 package io.harness.azure.client;
 
+import io.harness.azure.model.AzureConfig;
+
 import com.microsoft.azure.management.network.LoadBalancer;
 import com.microsoft.azure.management.network.LoadBalancerBackend;
 import com.microsoft.azure.management.network.LoadBalancerProbe;
 import com.microsoft.azure.management.network.LoadBalancerTcpProbe;
 import com.microsoft.azure.management.network.LoadBalancingRule;
-import io.harness.azure.model.AzureConfig;
-
 import java.util.List;
 import java.util.Optional;
 

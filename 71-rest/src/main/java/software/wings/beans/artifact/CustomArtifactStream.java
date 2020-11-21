@@ -1,24 +1,27 @@
 package software.wings.beans.artifact;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
-import static java.lang.String.format;
+
 import static software.wings.beans.artifact.ArtifactStreamType.CUSTOM;
 
-import com.fasterxml.jackson.annotation.JsonTypeName;
+import static java.lang.String.format;
+
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.EmbeddedUser;
+
+import software.wings.beans.template.artifactsource.CustomRepositoryMapping;
+
+import com.fasterxml.jackson.annotation.JsonTypeName;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Set;
+import javax.validation.constraints.NotNull;
 import lombok.Builder;
 import lombok.Builder.Default;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import org.hibernate.validator.constraints.NotEmpty;
-import software.wings.beans.template.artifactsource.CustomRepositoryMapping;
-
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Set;
-import javax.validation.constraints.NotNull;
 
 @OwnedBy(CDC)
 @JsonTypeName("CUSTOM")

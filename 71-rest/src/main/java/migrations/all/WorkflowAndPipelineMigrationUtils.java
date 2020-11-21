@@ -5,9 +5,6 @@ import static io.harness.beans.PageRequest.UNLIMITED;
 import static io.harness.beans.SearchFilter.Operator.EQ;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 
-import com.google.common.collect.ImmutableMap;
-
-import lombok.extern.slf4j.Slf4j;
 import software.wings.beans.Pipeline;
 import software.wings.beans.Pipeline.PipelineKeys;
 import software.wings.beans.Workflow;
@@ -19,11 +16,13 @@ import software.wings.sm.states.ApprovalState;
 import software.wings.sm.states.ApprovalState.ApprovalStateKeys;
 import software.wings.sm.states.ApprovalState.ApprovalStateType;
 
+import com.google.common.collect.ImmutableMap;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public final class WorkflowAndPipelineMigrationUtils {

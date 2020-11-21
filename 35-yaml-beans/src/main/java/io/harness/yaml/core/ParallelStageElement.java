@@ -1,8 +1,5 @@
 package io.harness.yaml.core;
 
-import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JsonTypeName;
-import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import io.harness.visitor.helpers.stage.ParallelStageElementVisitorHelper;
 import io.harness.walktree.beans.LevelNode;
 import io.harness.walktree.beans.VisitableChildren;
@@ -10,11 +7,14 @@ import io.harness.walktree.visitor.SimpleVisitorHelper;
 import io.harness.walktree.visitor.Visitable;
 import io.harness.yaml.core.auxiliary.intfc.StageElementWrapper;
 import io.harness.yaml.core.serializer.ParallelStageElementSerializer;
-import lombok.Builder;
-import lombok.Value;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonTypeName;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import java.util.List;
 import javax.validation.constraints.NotNull;
+import lombok.Builder;
+import lombok.Value;
 
 @Value
 @Builder

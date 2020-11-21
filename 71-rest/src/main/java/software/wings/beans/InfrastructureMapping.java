@@ -2,16 +2,6 @@ package software.wings.beans;
 
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
-import com.google.common.base.MoreObjects;
-import com.google.common.collect.ImmutableList;
-
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.fasterxml.jackson.annotation.JsonInclude;
-import com.fasterxml.jackson.annotation.JsonInclude.Include;
-import com.fasterxml.jackson.annotation.JsonTypeInfo;
-import com.fasterxml.jackson.annotation.JsonTypeInfo.Id;
-import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.annotation.HarnessEntity;
 import io.harness.beans.EmbeddedUser;
 import io.harness.data.validator.EntityName;
@@ -23,6 +13,26 @@ import io.harness.mongo.index.SortCompoundMongoIndex;
 import io.harness.persistence.AccountAccess;
 import io.harness.persistence.NameAccess;
 import io.harness.validation.Update;
+
+import software.wings.annotation.EncryptableSetting;
+import software.wings.beans.InfrastructureMappingBlueprint.NodeFilteringType;
+import software.wings.settings.SettingVariableTypes;
+import software.wings.yaml.BaseEntityYaml;
+
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonInclude.Include;
+import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import com.fasterxml.jackson.annotation.JsonTypeInfo.Id;
+import com.github.reinert.jjschema.SchemaIgnore;
+import com.google.common.base.MoreObjects;
+import com.google.common.collect.ImmutableList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import javax.annotation.Nullable;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -34,16 +44,6 @@ import lombok.experimental.FieldNameConstants;
 import lombok.experimental.UtilityClass;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Entity;
-import software.wings.annotation.EncryptableSetting;
-import software.wings.beans.InfrastructureMappingBlueprint.NodeFilteringType;
-import software.wings.settings.SettingVariableTypes;
-import software.wings.yaml.BaseEntityYaml;
-
-import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import javax.annotation.Nullable;
 
 @JsonTypeInfo(use = Id.NAME, property = "infraMappingType")
 @NoArgsConstructor
@@ -399,7 +399,7 @@ public abstract class InfrastructureMapping
   public int hashCode() {
     return 31 * super.hashCode()
         + Objects.hash(computeProviderSettingId, envId, serviceTemplateId, computeProviderType, infraMappingType,
-              deploymentType, provisionerId);
+            deploymentType, provisionerId);
   }
 
   @Override

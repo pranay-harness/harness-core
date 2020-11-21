@@ -2,17 +2,14 @@ package software.wings.sm.states;
 
 import static io.harness.beans.OrchestrationWorkflowType.BUILD;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
-import static java.util.Collections.singletonList;
+
 import static software.wings.beans.Environment.EnvironmentType.ALL;
 import static software.wings.beans.Environment.GLOBAL_ENV_ID;
 import static software.wings.beans.TaskType.AWS_AMI_ASYNC_TASK;
 import static software.wings.service.impl.aws.model.AwsConstants.AMI_SERVICE_SETUP_SWEEPING_OUTPUT_NAME;
 
-import com.google.common.collect.ImmutableList;
-import com.google.inject.Inject;
+import static java.util.Collections.singletonList;
 
-import com.github.reinert.jjschema.Attributes;
-import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.beans.DelegateTask;
 import io.harness.beans.ExecutionStatus;
 import io.harness.delegate.beans.TaskData;
@@ -22,9 +19,7 @@ import io.harness.exception.WingsException;
 import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.tasks.Cd1SetupFields;
 import io.harness.tasks.ResponseData;
-import lombok.Getter;
-import lombok.Setter;
-import lombok.extern.slf4j.Slf4j;
+
 import software.wings.api.AmiServiceSetupElement;
 import software.wings.api.AwsAmiSwitchRoutesStateExecutionData;
 import software.wings.beans.Activity;
@@ -51,9 +46,16 @@ import software.wings.sm.State;
 import software.wings.sm.StateType;
 import software.wings.stencils.DefaultValue;
 
+import com.github.reinert.jjschema.Attributes;
+import com.github.reinert.jjschema.SchemaIgnore;
+import com.google.common.collect.ImmutableList;
+import com.google.inject.Inject;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
+import lombok.Getter;
+import lombok.Setter;
+import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class AwsAmiSwitchRoutesState extends State {

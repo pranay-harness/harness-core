@@ -1,11 +1,13 @@
 package software.wings.integration;
 
+import io.harness.CategoryTest;
+
+import software.wings.rules.Integration;
+
 import io.fabric8.kubernetes.client.ConfigBuilder;
 import io.fabric8.kubernetes.client.DefaultKubernetesClient;
 import io.fabric8.kubernetes.client.KubernetesClient;
-import io.harness.CategoryTest;
 import lombok.extern.slf4j.Slf4j;
-import software.wings.rules.Integration;
 
 @Integration
 @Slf4j

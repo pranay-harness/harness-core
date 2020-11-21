@@ -1,24 +1,20 @@
 package software.wings.service.impl.yaml.handler.infraprovisioner;
 
 import static io.harness.rule.OwnerRule.GEORGE;
+
+import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
+import static software.wings.utils.WingsTestConstants.APP_ID;
+import static software.wings.utils.WingsTestConstants.SERVICE_ID;
+
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.verify;
-import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
-import static software.wings.utils.WingsTestConstants.APP_ID;
-import static software.wings.utils.WingsTestConstants.SERVICE_ID;
-
-import com.google.inject.Inject;
 
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
-import org.mockito.ArgumentCaptor;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
+
 import software.wings.beans.CloudFormationInfrastructureProvisioner;
 import software.wings.beans.CloudFormationInfrastructureProvisioner.Yaml;
 import software.wings.beans.Service;
@@ -33,6 +29,13 @@ import software.wings.service.intfc.InfrastructureProvisionerService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.utils.WingsTestConstants;
 import software.wings.yaml.handler.YamlHandlerTestBase;
+
+import com.google.inject.Inject;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
+import org.mockito.ArgumentCaptor;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
 
 public class CloudFormationInfrastructureProvisionerYamlHandlerTest extends YamlHandlerTestBase {
   @Mock private YamlHelper mockYamlHelper;

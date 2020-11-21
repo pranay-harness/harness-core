@@ -2,22 +2,21 @@ package io.harness.perpetualtask;
 
 import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
 
-import com.google.common.util.concurrent.TimeLimiter;
-import com.google.common.util.concurrent.UncheckedTimeoutException;
-import com.google.protobuf.util.Durations;
-
-import com.github.benmanes.caffeine.cache.Cache;
-import com.github.benmanes.caffeine.cache.Caffeine;
 import io.harness.grpc.utils.AnyUtils;
 import io.harness.grpc.utils.HTimestamps;
 import io.harness.logging.AutoLogContext;
 import io.harness.perpetualtask.grpc.PerpetualTaskServiceGrpcClient;
-import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.StringUtils;
 
+import com.github.benmanes.caffeine.cache.Cache;
+import com.github.benmanes.caffeine.cache.Caffeine;
+import com.google.common.util.concurrent.TimeLimiter;
+import com.google.common.util.concurrent.UncheckedTimeoutException;
+import com.google.protobuf.util.Durations;
 import java.time.Instant;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 
 @Slf4j
 public class PerpetualTaskLifecycleManager {
@@ -46,7 +45,7 @@ public class PerpetualTaskLifecycleManager {
 
   void startTask() {
     try {
-      timeLimiter.callWithTimeout(this ::call, timeoutMillis, TimeUnit.MILLISECONDS, true);
+      timeLimiter.callWithTimeout(this::call, timeoutMillis, TimeUnit.MILLISECONDS, true);
     } catch (UncheckedTimeoutException tex) {
       log.warn("Timed out starting task", tex);
     } catch (Exception ex) {

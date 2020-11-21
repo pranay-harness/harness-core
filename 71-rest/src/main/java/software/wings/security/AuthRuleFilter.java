@@ -8,15 +8,12 @@ import static io.harness.eraro.ErrorCode.ACCOUNT_MIGRATED;
 import static io.harness.eraro.ErrorCode.INACTIVE_ACCOUNT;
 import static io.harness.eraro.ErrorCode.NOT_WHITELISTED_IP;
 import static io.harness.exception.WingsException.USER;
+
 import static java.util.Arrays.asList;
 import static javax.ws.rs.HttpMethod.OPTIONS;
 import static javax.ws.rs.Priorities.AUTHORIZATION;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.apache.commons.lang3.StringUtils.startsWith;
-
-import com.google.common.annotations.VisibleForTesting;
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.exception.AccessDeniedException;
@@ -27,10 +24,7 @@ import io.harness.security.annotations.HarnessApiKeyAuth;
 import io.harness.security.annotations.LearningEngineAuth;
 import io.harness.security.annotations.NextGenManagerAuth;
 import io.harness.security.annotations.PublicApi;
-import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.collections.CollectionUtils;
-import org.apache.commons.collections.MapUtils;
-import org.apache.commons.lang3.StringUtils;
+
 import software.wings.beans.Account;
 import software.wings.beans.AccountStatus;
 import software.wings.beans.HttpMethod;
@@ -55,6 +49,9 @@ import software.wings.service.intfc.HarnessUserGroupService;
 import software.wings.service.intfc.UserService;
 import software.wings.service.intfc.WhitelistService;
 
+import com.google.common.annotations.VisibleForTesting;
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -71,6 +68,10 @@ import javax.ws.rs.container.ResourceInfo;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MultivaluedMap;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.collections.CollectionUtils;
+import org.apache.commons.collections.MapUtils;
+import org.apache.commons.lang3.StringUtils;
 
 /**
  * Created by anubhaw on 3/11/16.
@@ -475,20 +476,20 @@ public class AuthRuleFilter implements ContainerRequestFilter {
   private boolean isIdentityServiceRequest(ContainerRequestContext requestContext) {
     return identityServiceAPI()
         && startsWith(
-               requestContext.getHeaderString(HttpHeaders.AUTHORIZATION), AuthenticationFilter.IDENTITY_SERVICE_PREFIX);
+            requestContext.getHeaderString(HttpHeaders.AUTHORIZATION), AuthenticationFilter.IDENTITY_SERVICE_PREFIX);
   }
 
   private boolean isAdminPortalRequest(ContainerRequestContext requestContext) {
     return adminPortalAPI()
         && startsWith(
-               requestContext.getHeaderString(HttpHeaders.AUTHORIZATION), AuthenticationFilter.ADMIN_PORTAL_PREFIX);
+            requestContext.getHeaderString(HttpHeaders.AUTHORIZATION), AuthenticationFilter.ADMIN_PORTAL_PREFIX);
   }
 
   @VisibleForTesting
   boolean isNextGenManagerRequest(ContainerRequestContext requestContext) {
     return isNextGenManagerAPI()
         && startsWith(
-               requestContext.getHeaderString(HttpHeaders.AUTHORIZATION), AuthenticationFilter.NEXT_GEN_MANAGER_PREFIX);
+            requestContext.getHeaderString(HttpHeaders.AUTHORIZATION), AuthenticationFilter.NEXT_GEN_MANAGER_PREFIX);
   }
 
   private boolean authorizationExemptedRequest(ContainerRequestContext requestContext) {

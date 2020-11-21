@@ -4,15 +4,14 @@ import static io.harness.generator.InfrastructureDefinitionGenerator.Infrastruct
 import static io.harness.generator.InfrastructureDefinitionGenerator.InfrastructureDefinitions.K8S_ROLLING_TEST;
 import static io.harness.generator.SettingGenerator.Settings.ACCOUNT_LEVEL_GIT_CONNECTOR;
 import static io.harness.rule.OwnerRule.ABOSII;
-import static java.lang.String.format;
-import static org.assertj.core.api.Assertions.assertThat;
+
 import static software.wings.beans.BasicOrchestrationWorkflow.BasicOrchestrationWorkflowBuilder.aBasicOrchestrationWorkflow;
 import static software.wings.beans.InfrastructureType.PCF_INFRASTRUCTURE;
 import static software.wings.beans.Service.builder;
 import static software.wings.beans.Workflow.WorkflowBuilder.aWorkflow;
 
-import com.google.common.collect.ImmutableMap;
-import com.google.inject.Inject;
+import static java.lang.String.format;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.beans.ExecutionStatus;
 import io.harness.beans.OrchestrationWorkflowType;
@@ -35,9 +34,7 @@ import io.harness.k8s.model.HelmVersion;
 import io.harness.rule.Owner;
 import io.harness.testframework.restutils.ArtifactStreamRestUtils;
 import io.harness.testframework.restutils.ServiceVariablesUtils;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
+
 import software.wings.api.DeploymentType;
 import software.wings.beans.Application;
 import software.wings.beans.BasicOrchestrationWorkflow;
@@ -65,10 +62,15 @@ import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.WorkflowService;
 import software.wings.utils.ArtifactType;
 
+import com.google.common.collect.ImmutableMap;
+import com.google.inject.Inject;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Map;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 public class AccountLevelGitConnectorFunctionalTest extends AbstractFunctionalTest {
   private static final long TIMEOUT = 1200000; // 20 minutes

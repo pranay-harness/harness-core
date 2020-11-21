@@ -1,7 +1,5 @@
 package io.harness.ng.core.activityhistory.mapper;
 
-import com.google.inject.Singleton;
-
 import io.harness.exception.UnknownEnumTypeException;
 import io.harness.ng.core.EntityDetail;
 import io.harness.ng.core.activityhistory.dto.EntityUsageActivityDetailDTO;
@@ -10,6 +8,8 @@ import io.harness.ng.core.activityhistory.entity.ConnectivityCheckDetail;
 import io.harness.ng.core.activityhistory.entity.EntityUsageActivityDetail;
 import io.harness.ng.core.activityhistory.entity.NGActivity;
 import io.harness.ng.core.activityhistory.entity.NGActivity.NGActivityBuilder;
+
+import com.google.inject.Singleton;
 
 @Singleton
 public class NGActivityDTOToEntityMapper {

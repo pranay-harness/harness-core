@@ -1,8 +1,9 @@
 package io.harness.secretmanagerclient.dto;
 
+import io.harness.security.encryption.EncryptionType;
+
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
-import io.harness.security.encryption.EncryptionType;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;

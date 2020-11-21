@@ -1,20 +1,20 @@
 package io.harness.ccm.views.graphql;
 
-import com.google.common.collect.ImmutableList;
-import com.google.inject.Inject;
-
 import io.harness.ccm.views.entities.ViewField;
 import io.harness.ccm.views.entities.ViewFieldIdentifier;
 import io.harness.ccm.views.service.ViewCustomFieldService;
 import io.harness.ccm.views.utils.ViewFieldUtils;
-import lombok.extern.slf4j.Slf4j;
+
 import software.wings.graphql.datafetcher.AbstractFieldsDataFetcher;
 import software.wings.security.PermissionAttribute;
 import software.wings.security.annotations.AuthRule;
 
+import com.google.common.collect.ImmutableList;
+import com.google.inject.Inject;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
+import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class ViewFieldsDataFetcher extends AbstractFieldsDataFetcher<QLCEViewFieldsData, QLCEViewFilterWrapper> {

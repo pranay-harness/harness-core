@@ -1,17 +1,15 @@
 package software.wings.resources;
 
 import static io.harness.beans.SearchFilter.Operator.IN;
-import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
+
 import static software.wings.security.PermissionAttribute.PermissionType.MANAGE_TAGS;
 
-import com.google.inject.Inject;
+import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 
-import com.codahale.metrics.annotation.ExceptionMetered;
-import com.codahale.metrics.annotation.Timed;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.rest.RestResponse;
-import io.swagger.annotations.Api;
+
 import software.wings.beans.HarnessTag;
 import software.wings.beans.HarnessTagLink;
 import software.wings.beans.HarnessTagLink.HarnessTagLinkKeys;
@@ -19,6 +17,10 @@ import software.wings.security.PermissionAttribute.PermissionType;
 import software.wings.security.annotations.AuthRule;
 import software.wings.service.intfc.HarnessTagService;
 
+import com.codahale.metrics.annotation.ExceptionMetered;
+import com.codahale.metrics.annotation.Timed;
+import com.google.inject.Inject;
+import io.swagger.annotations.Api;
 import javax.validation.constraints.NotNull;
 import javax.ws.rs.BeanParam;
 import javax.ws.rs.Consumes;

@@ -2,23 +2,24 @@ package software.wings.service.impl;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.rule.OwnerRule.VUK;
+
 import static java.lang.System.currentTimeMillis;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 
-import com.google.inject.Inject;
-
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
-import org.mockito.InjectMocks;
+
 import software.wings.WingsBaseTest;
 import software.wings.beans.Delegate;
 import software.wings.beans.DelegateConnection;
 
+import com.google.inject.Inject;
 import java.time.Duration;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
+import org.mockito.InjectMocks;
 
 public class PollingModeDelegateDisconnectedDetectorTest extends WingsBaseTest {
   @Inject @InjectMocks private PollingModeDelegateDisconnectedDetector pollingModeDelegateDisconnectedDetector;

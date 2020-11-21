@@ -2,19 +2,16 @@ package software.wings.resources;
 
 import static io.harness.beans.PageResponse.PageResponseBuilder.aPageResponse;
 
-import com.google.inject.Inject;
-
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.rest.RestResponse;
 import io.harness.security.annotations.NextGenManagerAuth;
-import io.swagger.annotations.Api;
-import lombok.AllArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-import org.hibernate.validator.constraints.NotEmpty;
+
 import software.wings.beans.User;
 import software.wings.service.intfc.UserService;
 
+import com.google.inject.Inject;
+import io.swagger.annotations.Api;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -24,6 +21,9 @@ import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
+import lombok.AllArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.hibernate.validator.constraints.NotEmpty;
 
 @Api("/ng/users")
 @Path("/ng/users")

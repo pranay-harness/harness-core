@@ -4,10 +4,8 @@ import static io.harness.gitsync.common.beans.YamlChangeSet.Status.COMPLETED;
 import static io.harness.gitsync.common.beans.YamlChangeSet.Status.RUNNING;
 import static io.harness.gitsync.core.beans.YamlSuccessfulChange.ChangeSource.GIT;
 import static io.harness.gitsync.core.beans.YamlSuccessfulChange.ChangeSource.HARNESS;
-import static org.assertj.core.api.Assertions.assertThat;
 
-import com.google.common.collect.ImmutableList;
-import com.google.inject.Inject;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.beans.git.YamlGitConfigDTO;
@@ -26,13 +24,15 @@ import io.harness.gitsync.core.service.YamlChangeSetService;
 import io.harness.gitsync.core.service.YamlSuccessfulChangeService;
 import io.harness.rule.Owner;
 import io.harness.rule.OwnerRule;
+
+import com.google.common.collect.ImmutableList;
+import com.google.inject.Inject;
+import java.util.List;
 import org.jetbrains.annotations.NotNull;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.MockitoAnnotations;
-
-import java.util.List;
 
 public class ChangeSetRequestTimeFilterTest extends GitSyncBaseTest {
   public static final String ACCOUNT_ID = "accountId";

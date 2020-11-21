@@ -2,21 +2,12 @@ package software.wings.service.impl.compliance;
 
 import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
 
-import com.google.common.collect.ImmutableMap;
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
-
-import com.segment.analytics.messages.TrackMessage;
-import com.segment.analytics.messages.TrackMessage.Builder;
 import io.harness.beans.EmbeddedUser;
 import io.harness.event.handler.impl.segment.SegmentHelper;
 import io.harness.event.model.EventType;
 import io.harness.logging.AccountLogContext;
 import io.harness.logging.AutoLogContext;
-import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.collections4.ListUtils;
-import org.mongodb.morphia.query.Query;
-import org.mongodb.morphia.query.UpdateOperations;
+
 import software.wings.beans.Event.Type;
 import software.wings.beans.User;
 import software.wings.beans.governance.GovernanceConfig;
@@ -30,8 +21,17 @@ import software.wings.service.impl.AuditServiceHelper;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.compliance.GovernanceConfigService;
 
+import com.google.common.collect.ImmutableMap;
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
+import com.segment.analytics.messages.TrackMessage;
+import com.segment.analytics.messages.TrackMessage.Builder;
 import javax.annotation.Nonnull;
 import javax.validation.executable.ValidateOnExecution;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.collections4.ListUtils;
+import org.mongodb.morphia.query.Query;
+import org.mongodb.morphia.query.UpdateOperations;
 
 /**
  * @author rktummala on 02/04/19

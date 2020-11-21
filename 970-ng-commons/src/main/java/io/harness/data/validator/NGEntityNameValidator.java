@@ -2,11 +2,9 @@ package io.harness.data.validator;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
-
-import org.apache.commons.lang3.StringUtils;
-
 import javax.validation.ConstraintValidator;
 import javax.validation.ConstraintValidatorContext;
+import org.apache.commons.lang3.StringUtils;
 
 public class NGEntityNameValidator implements ConstraintValidator<NGEntityName, String> {
   private static final String ALLOWED_CHARS_STRING =

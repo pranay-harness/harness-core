@@ -1,16 +1,17 @@
 package io.harness.perpetualtask.k8s.watch;
 
+import static io.harness.ccm.health.HealthStatusService.CLUSTER_ID_IDENTIFIER;
+import static io.harness.perpetualtask.k8s.watch.PodEvent.EventType.EVENT_TYPE_SCHEDULED;
+import static io.harness.perpetualtask.k8s.watch.PodEvent.EventType.EVENT_TYPE_TERMINATED;
+import static io.harness.rule.OwnerRule.AVMOHAN;
+import static io.harness.rule.OwnerRule.UTSAV;
+
 import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
 import static com.github.tomakehurst.wiremock.client.WireMock.equalTo;
 import static com.github.tomakehurst.wiremock.client.WireMock.get;
 import static com.github.tomakehurst.wiremock.client.WireMock.getRequestedFor;
 import static com.github.tomakehurst.wiremock.client.WireMock.stubFor;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlMatching;
-import static io.harness.ccm.health.HealthStatusService.CLUSTER_ID_IDENTIFIER;
-import static io.harness.perpetualtask.k8s.watch.PodEvent.EventType.EVENT_TYPE_SCHEDULED;
-import static io.harness.perpetualtask.k8s.watch.PodEvent.EventType.EVENT_TYPE_TERMINATED;
-import static io.harness.rule.OwnerRule.AVMOHAN;
-import static io.harness.rule.OwnerRule.UTSAV;
 import static io.kubernetes.client.custom.Quantity.Format.BINARY_SI;
 import static io.kubernetes.client.custom.Quantity.Format.DECIMAL_SI;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -21,20 +22,20 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
-import com.google.protobuf.Message;
-import com.google.protobuf.Timestamp;
-
-import com.github.tomakehurst.wiremock.client.UrlMatchingStrategy;
-import com.github.tomakehurst.wiremock.client.WireMock;
-import com.github.tomakehurst.wiremock.junit.WireMockRule;
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.event.client.EventPublisher;
 import io.harness.grpc.utils.HTimestamps;
 import io.harness.perpetualtask.k8s.informer.ClusterDetails;
 import io.harness.rule.Owner;
+
+import com.github.tomakehurst.wiremock.client.UrlMatchingStrategy;
+import com.github.tomakehurst.wiremock.client.WireMock;
+import com.github.tomakehurst.wiremock.junit.WireMockRule;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
+import com.google.protobuf.Message;
+import com.google.protobuf.Timestamp;
 import io.kubernetes.client.informer.EventType;
 import io.kubernetes.client.informer.SharedInformerFactory;
 import io.kubernetes.client.openapi.JSON;
@@ -49,6 +50,10 @@ import io.kubernetes.client.openapi.models.V1PodList;
 import io.kubernetes.client.openapi.models.V1VolumeBuilder;
 import io.kubernetes.client.util.ClientBuilder;
 import io.kubernetes.client.util.Watch;
+import java.math.BigDecimal;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
 import org.joda.time.DateTime;
 import org.junit.Before;
@@ -59,11 +64,6 @@ import org.junit.experimental.categories.Category;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
 import org.mockito.MockitoAnnotations;
-
-import java.math.BigDecimal;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
 
 @Slf4j
 public class PodWatcherTest extends CategoryTest {
@@ -170,8 +170,8 @@ public class PodWatcherTest extends CategoryTest {
 
     verify(eventPublisher, times(2)).publishMessage(captor.capture(), any(), any());
 
-    assertThat(captor.getAllValues().get(0)).isInstanceOfSatisfying(PodInfo.class, this ::infoMessageAssertions);
-    assertThat(captor.getAllValues().get(1)).isInstanceOfSatisfying(PodEvent.class, this ::scheduledMessageAssertions);
+    assertThat(captor.getAllValues().get(0)).isInstanceOfSatisfying(PodInfo.class, this::infoMessageAssertions);
+    assertThat(captor.getAllValues().get(1)).isInstanceOfSatisfying(PodEvent.class, this::scheduledMessageAssertions);
 
     sharedInformerFactory.stopAllRegisteredInformers();
   }
@@ -184,7 +184,7 @@ public class PodWatcherTest extends CategoryTest {
     verify(eventPublisher, times(1))
         .publishMessage(captor.capture(), any(Timestamp.class), mapArgumentCaptor.capture());
     assertThat(captor.getAllValues()).hasSize(1);
-    assertThat(captor.getAllValues().get(0)).isInstanceOfSatisfying(PodInfo.class, this ::infoMessageAssertions);
+    assertThat(captor.getAllValues().get(0)).isInstanceOfSatisfying(PodInfo.class, this::infoMessageAssertions);
     assertThat(mapArgumentCaptor.getValue().keySet()).contains(CLUSTER_ID_IDENTIFIER);
   }
 
@@ -196,7 +196,7 @@ public class PodWatcherTest extends CategoryTest {
 
     verify(eventPublisher, atLeastOnce())
         .publishMessage(captor.capture(), any(Timestamp.class), mapArgumentCaptor.capture());
-    assertThat(captor.getAllValues().get(1)).isInstanceOfSatisfying(PodEvent.class, this ::deletedMessageAssertions);
+    assertThat(captor.getAllValues().get(1)).isInstanceOfSatisfying(PodEvent.class, this::deletedMessageAssertions);
     assertThat(mapArgumentCaptor.getValue().keySet()).contains(CLUSTER_ID_IDENTIFIER);
   }
 
@@ -213,8 +213,8 @@ public class PodWatcherTest extends CategoryTest {
         .publishMessage(captor.capture(), any(Timestamp.class), mapArgumentCaptor.capture());
     List<Message> publishedMessages = captor.getAllValues();
     assertThat(publishedMessages).hasSize(2);
-    assertThat(publishedMessages.get(0)).isInstanceOfSatisfying(PodInfo.class, this ::infoMessageAssertions);
-    assertThat(publishedMessages.get(1)).isInstanceOfSatisfying(PodEvent.class, this ::deletedMessageAssertions);
+    assertThat(publishedMessages.get(0)).isInstanceOfSatisfying(PodInfo.class, this::infoMessageAssertions);
+    assertThat(publishedMessages.get(1)).isInstanceOfSatisfying(PodEvent.class, this::deletedMessageAssertions);
     assertThat(mapArgumentCaptor.getValue().keySet()).contains(CLUSTER_ID_IDENTIFIER);
   }
 

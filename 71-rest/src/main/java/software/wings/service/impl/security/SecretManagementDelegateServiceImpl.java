@@ -7,9 +7,8 @@ import static io.harness.eraro.ErrorCode.CYBERARK_OPERATION_ERROR;
 import static io.harness.eraro.ErrorCode.VAULT_OPERATION_ERROR;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.threading.Morpheus.sleep;
-import static java.time.Duration.ofMillis;
 
-import com.google.inject.Singleton;
+import static java.time.Duration.ofMillis;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.EmbeddedUser;
@@ -29,19 +28,21 @@ import io.harness.helpers.ext.vault.VaultSecretMetadata;
 import io.harness.helpers.ext.vault.VaultSecretMetadata.VersionMetadata;
 import io.harness.helpers.ext.vault.VaultSysAuthRestClient;
 import io.harness.security.encryption.EncryptedRecord;
-import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.StringUtils;
-import retrofit2.Response;
+
 import software.wings.beans.CyberArkConfig;
 import software.wings.beans.VaultConfig;
 import software.wings.service.intfc.security.SecretManagementDelegateService;
 
+import com.google.inject.Singleton;
 import java.io.IOException;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
+import retrofit2.Response;
 
 @OwnedBy(PL)
 @Singleton

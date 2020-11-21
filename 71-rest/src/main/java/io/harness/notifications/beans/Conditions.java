@@ -1,9 +1,8 @@
 package io.harness.notifications.beans;
 
-import lombok.Value;
-
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
+import lombok.Value;
 
 @Value
 public class Conditions {

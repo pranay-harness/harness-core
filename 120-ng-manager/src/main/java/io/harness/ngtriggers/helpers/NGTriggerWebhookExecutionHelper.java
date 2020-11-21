@@ -1,8 +1,5 @@
 package io.harness.ngtriggers.helpers;
 
-import com.google.common.annotations.VisibleForTesting;
-import com.google.inject.Inject;
-
 import io.harness.beans.EmbeddedUser;
 import io.harness.cdng.pipeline.helpers.NGPipelineExecuteHelper;
 import io.harness.data.structure.EmptyPredicate;
@@ -22,14 +19,16 @@ import io.harness.ngtriggers.mapper.NGTriggerElementMapper;
 import io.harness.ngtriggers.service.NGTriggerService;
 import io.harness.ngtriggers.utils.WebhookEventPayloadParser;
 import io.harness.ngtriggers.utils.WebhookTriggerFilterUtil;
-import lombok.AllArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.data.domain.Page;
 
+import com.google.common.annotations.VisibleForTesting;
+import com.google.inject.Inject;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
+import lombok.AllArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
 
 @AllArgsConstructor(onConstructor = @__({ @Inject }))
 @Slf4j

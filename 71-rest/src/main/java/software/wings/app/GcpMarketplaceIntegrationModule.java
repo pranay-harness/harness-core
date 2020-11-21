@@ -1,18 +1,19 @@
 package software.wings.app;
 
-import com.google.inject.AbstractModule;
-
 import io.harness.marketplace.gcp.GcpMarketPlaceApiHandler;
 import io.harness.marketplace.gcp.GcpMarketPlaceApiHandlerImpl;
 import io.harness.marketplace.gcp.signup.GcpMarketplaceSignUpHandler;
 import io.harness.marketplace.gcp.signup.NewUserRegistrationHandler;
 import io.harness.marketplace.gcp.signup.annotations.NewSignUp;
+
 import software.wings.service.impl.marketplace.gcp.GCPBillingPollingServiceImpl;
 import software.wings.service.impl.marketplace.gcp.GCPMarketPlaceServiceImpl;
 import software.wings.service.impl.marketplace.gcp.GCPUsageReportServiceImpl;
 import software.wings.service.intfc.marketplace.gcp.GCPBillingPollingService;
 import software.wings.service.intfc.marketplace.gcp.GCPMarketPlaceService;
 import software.wings.service.intfc.marketplace.gcp.GCPUsageReportService;
+
+import com.google.inject.AbstractModule;
 
 public final class GcpMarketplaceIntegrationModule extends AbstractModule {
   @Override

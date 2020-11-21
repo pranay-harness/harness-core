@@ -1,10 +1,11 @@
 package software.wings.beans.infrastructure.instance.info;
 
+import software.wings.helpers.ext.helm.response.HelmChartInfo;
+
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
-import software.wings.helpers.ext.helm.response.HelmChartInfo;
 
 /**
  * @author rktummala on 09/05/17

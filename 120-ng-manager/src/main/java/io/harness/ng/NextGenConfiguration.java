@@ -2,25 +2,24 @@ package io.harness.ng;
 
 import static java.util.stream.Collectors.toSet;
 
-import com.google.common.collect.Lists;
-
-import com.fasterxml.jackson.annotation.JsonProperty;
-import io.dropwizard.Configuration;
-import io.federecio.dropwizard.swagger.SwaggerBundleConfiguration;
 import io.harness.grpc.client.GrpcClientConfig;
 import io.harness.grpc.server.GrpcServerConfig;
 import io.harness.mongo.MongoConfig;
 import io.harness.ng.core.NextGenConfig;
 import io.harness.ng.core.invites.ext.mail.SmtpConfig;
 import io.harness.remote.client.ServiceHttpClientConfig;
-import lombok.Getter;
-import org.reflections.Reflections;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.google.common.collect.Lists;
+import io.dropwizard.Configuration;
+import io.federecio.dropwizard.swagger.SwaggerBundleConfiguration;
 import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import javax.ws.rs.Path;
+import lombok.Getter;
+import org.reflections.Reflections;
 
 @Getter
 public class NextGenConfiguration extends Configuration {

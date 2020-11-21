@@ -5,6 +5,14 @@ import static io.harness.persistence.HQuery.excludeAuthority;
 import static io.harness.rule.OwnerRule.RAGHU;
 import static io.harness.rule.OwnerRule.UTKARSH;
 import static io.harness.security.encryption.EncryptionType.KMS;
+
+import static software.wings.beans.FeatureName.CONNECTORS_REF_SECRETS_MIGRATION;
+import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
+import static software.wings.beans.SettingAttribute.VALUE_TYPE_KEY;
+import static software.wings.service.impl.SettingServiceHelper.ATTRIBUTES_USING_REFERENCES;
+import static software.wings.settings.SettingVariableTypes.APP_DYNAMICS;
+import static software.wings.settings.SettingVariableTypes.SECRET_TEXT;
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.eq;
@@ -13,15 +21,6 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-import static software.wings.beans.FeatureName.CONNECTORS_REF_SECRETS_MIGRATION;
-import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
-import static software.wings.beans.SettingAttribute.VALUE_TYPE_KEY;
-import static software.wings.service.impl.SettingServiceHelper.ATTRIBUTES_USING_REFERENCES;
-import static software.wings.settings.SettingVariableTypes.APP_DYNAMICS;
-import static software.wings.settings.SettingVariableTypes.SECRET_TEXT;
-
-import com.google.common.collect.Sets;
-import com.google.inject.Inject;
 
 import io.harness.beans.EncryptedData;
 import io.harness.beans.EncryptedDataParent;
@@ -29,19 +28,7 @@ import io.harness.category.element.UnitTests;
 import io.harness.iterator.PersistenceIteratorFactory;
 import io.harness.mongo.iterator.MongoPersistenceIterator.MongoPersistenceIteratorBuilder;
 import io.harness.rule.Owner;
-import lombok.AccessLevel;
-import lombok.experimental.FieldDefaults;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
-import org.junit.runner.RunWith;
-import org.mockito.ArgumentCaptor;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mongodb.morphia.query.FieldEnd;
-import org.mongodb.morphia.query.Query;
-import org.powermock.core.classloader.annotations.PowerMockIgnore;
-import org.powermock.core.classloader.annotations.PrepareForTest;
-import org.powermock.modules.junit4.PowerMockRunner;
+
 import software.wings.WingsBaseTest;
 import software.wings.beans.APMValidateCollectorConfig;
 import software.wings.beans.APMVerificationConfig;
@@ -59,8 +46,23 @@ import software.wings.service.intfc.UsageRestrictionsService;
 import software.wings.service.intfc.newrelic.NewRelicService;
 import software.wings.settings.SettingVariableTypes;
 
+import com.google.common.collect.Sets;
+import com.google.inject.Inject;
 import java.util.ArrayList;
 import java.util.List;
+import lombok.AccessLevel;
+import lombok.experimental.FieldDefaults;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
+import org.junit.runner.RunWith;
+import org.mockito.ArgumentCaptor;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mongodb.morphia.query.FieldEnd;
+import org.mongodb.morphia.query.Query;
+import org.powermock.core.classloader.annotations.PowerMockIgnore;
+import org.powermock.core.classloader.annotations.PrepareForTest;
+import org.powermock.modules.junit4.PowerMockRunner;
 
 @RunWith(PowerMockRunner.class)
 @PrepareForTest({PersistenceIteratorFactory.class})

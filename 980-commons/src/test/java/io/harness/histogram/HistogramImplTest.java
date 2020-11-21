@@ -2,27 +2,27 @@ package io.harness.histogram;
 
 import static io.harness.histogram.HistogramImpl.MAX_CHECKPOINT_WEIGHT;
 import static io.harness.rule.OwnerRule.AVMOHAN;
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 import static org.assertj.core.api.Assertions.assertThatIllegalArgumentException;
 import static org.assertj.core.api.Assertions.assertThatNullPointerException;
 import static org.assertj.core.api.Assertions.within;
 
-import com.google.common.collect.ImmutableMap;
-
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
-import lombok.val;
-import org.joor.Reflect;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
 
+import com.google.common.collect.ImmutableMap;
 import java.time.Instant;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.stream.Collectors;
+import lombok.val;
+import org.joor.Reflect;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 public class HistogramImplTest extends CategoryTest {
   static final double valueEpsilon = 1e-15;

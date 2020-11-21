@@ -1,5 +1,9 @@
 package io.harness.ngpipeline.inputset.mappers;
 
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+
+import static org.springframework.data.mongodb.core.query.Criteria.where;
+
 import io.harness.NGResourceFilterConstants;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.ngpipeline.inputset.beans.entities.InputSetEntity;
@@ -10,12 +14,10 @@ import io.harness.ngpipeline.overlayinputset.beans.BaseInputSetEntity.BaseInputS
 import io.harness.ngpipeline.overlayinputset.beans.InputSetEntityType;
 import io.harness.ngpipeline.overlayinputset.beans.entities.OverlayInputSetEntity;
 import io.harness.ngpipeline.overlayinputset.beans.entities.OverlayInputSetEntity.OverlayInputSetEntityKeys;
+
 import lombok.experimental.UtilityClass;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Update;
-
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
-import static org.springframework.data.mongodb.core.query.Criteria.where;
 
 @UtilityClass
 public class InputSetFilterHelper {

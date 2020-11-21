@@ -1,10 +1,12 @@
 package software.wings.graphql.datafetcher.user;
 
 import io.harness.beans.EmbeddedUser;
-import lombok.experimental.UtilityClass;
+
 import software.wings.beans.User;
 import software.wings.graphql.schema.type.QLUser;
 import software.wings.graphql.schema.type.QLUser.QLUserBuilder;
+
+import lombok.experimental.UtilityClass;
 
 @UtilityClass
 public class UserController {

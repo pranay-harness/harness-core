@@ -6,15 +6,9 @@ import static io.harness.eraro.ErrorCode.AZURE_KEY_VAULT_OPERATION_ERROR;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.exception.WingsException.USER_SRE;
 import static io.harness.persistence.HPersistence.upToOne;
+
 import static software.wings.settings.SettingVariableTypes.AZURE_VAULT;
 
-import com.google.common.base.Preconditions;
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
-
-import com.microsoft.azure.management.keyvault.Vault;
-import com.microsoft.azure.management.resources.fluentcore.arm.models.HasName;
-import com.mongodb.DuplicateKeyException;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.EncryptedData;
 import io.harness.beans.EncryptedData.EncryptedDataKeys;
@@ -22,16 +16,23 @@ import io.harness.beans.EncryptedDataParent;
 import io.harness.exception.AzureKeyVaultOperationException;
 import io.harness.security.encryption.EncryptionType;
 import io.harness.serializer.KryoSerializer;
-import lombok.extern.slf4j.Slf4j;
-import org.mongodb.morphia.query.Query;
+
 import software.wings.beans.AzureVaultConfig;
 import software.wings.beans.AzureVaultConfig.AzureVaultConfigKeys;
 import software.wings.dl.WingsPersistence;
 import software.wings.helpers.ext.azure.AzureHelperService;
 import software.wings.service.intfc.security.AzureSecretsManagerService;
 
+import com.google.common.base.Preconditions;
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
+import com.microsoft.azure.management.keyvault.Vault;
+import com.microsoft.azure.management.resources.fluentcore.arm.models.HasName;
+import com.mongodb.DuplicateKeyException;
 import java.util.List;
 import java.util.stream.Collectors;
+import lombok.extern.slf4j.Slf4j;
+import org.mongodb.morphia.query.Query;
 
 @OwnedBy(PL)
 @Singleton

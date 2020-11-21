@@ -1,19 +1,22 @@
 package software.wings.beans;
 
+import static io.harness.rule.OwnerRule.UNKNOWN;
+
 import static com.google.common.base.CaseFormat.UPPER_CAMEL;
 import static com.google.common.base.CaseFormat.UPPER_UNDERSCORE;
-import static io.harness.rule.OwnerRule.UNKNOWN;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
+
+import software.wings.beans.command.CommandUnitType;
+
 import junitparams.JUnitParamsRunner;
 import junitparams.Parameters;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
-import software.wings.beans.command.CommandUnitType;
 
 /**
  * Created by peeyushaggarwal on 6/6/16.

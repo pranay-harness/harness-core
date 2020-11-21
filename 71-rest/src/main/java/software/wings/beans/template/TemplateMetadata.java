@@ -1,8 +1,9 @@
 package software.wings.beans.template;
 
-import static com.fasterxml.jackson.annotation.JsonTypeInfo.As.PROPERTY;
 import static software.wings.common.TemplateConstants.COPIED_TEMPLATE_METADATA;
 import static software.wings.common.TemplateConstants.IMPORTED_TEMPLATE_METADATA;
+
+import static com.fasterxml.jackson.annotation.JsonTypeInfo.As.PROPERTY;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonSubTypes;

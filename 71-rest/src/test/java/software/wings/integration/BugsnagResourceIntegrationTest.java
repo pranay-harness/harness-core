@@ -2,14 +2,14 @@ package software.wings.integration;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.rule.OwnerRule.PRANJAL;
-import static javax.ws.rs.client.Entity.entity;
-import static org.apache.commons.lang3.StringUtils.isBlank;
-import static org.assertj.core.api.Assertions.assertThat;
+
 import static software.wings.beans.Application.Builder.anApplication;
 import static software.wings.beans.Workflow.WorkflowBuilder.aWorkflow;
 import static software.wings.sm.StateExecutionInstance.Builder.aStateExecutionInstance;
 
-import com.google.inject.Inject;
+import static javax.ws.rs.client.Entity.entity;
+import static org.apache.commons.lang3.StringUtils.isBlank;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.beans.ExecutionStatus;
 import io.harness.category.element.DeprecatedIntegrationTests;
@@ -17,12 +17,7 @@ import io.harness.rest.RestResponse;
 import io.harness.rule.Owner;
 import io.harness.scm.ScmSecret;
 import io.harness.scm.SecretName;
-import org.apache.http.HttpStatus;
-import org.json.JSONObject;
-import org.junit.Before;
-import org.junit.Ignore;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
+
 import software.wings.beans.BugsnagConfig;
 import software.wings.beans.SettingAttribute.Builder;
 import software.wings.beans.WorkflowExecution;
@@ -31,12 +26,19 @@ import software.wings.service.impl.bugsnag.BugsnagSetupTestData;
 import software.wings.service.intfc.analysis.LogAnalysisResource;
 import software.wings.sm.StateType;
 
+import com.google.inject.Inject;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.GenericType;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+import org.apache.http.HttpStatus;
+import org.json.JSONObject;
+import org.junit.Before;
+import org.junit.Ignore;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 /**
  * Created by Pranjal on 04/09/2019

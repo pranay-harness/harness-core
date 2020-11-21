@@ -2,19 +2,11 @@ package migrations.all;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+
 import static java.util.stream.Collectors.toList;
 
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
-
-import com.mongodb.BasicDBList;
-import com.mongodb.BasicDBObject;
-import com.mongodb.BulkWriteOperation;
-import com.mongodb.DBCollection;
 import io.harness.persistence.HIterator;
-import lombok.extern.slf4j.Slf4j;
-import migrations.Migration;
-import org.mongodb.morphia.Morphia;
+
 import software.wings.audit.AuditHeader;
 import software.wings.audit.AuditHeader.AuditHeaderKeys;
 import software.wings.audit.EntityAuditRecord;
@@ -22,10 +14,19 @@ import software.wings.audit.ResourceType;
 import software.wings.beans.Application;
 import software.wings.dl.WingsPersistence;
 
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
+import com.mongodb.BasicDBList;
+import com.mongodb.BasicDBObject;
+import com.mongodb.BulkWriteOperation;
+import com.mongodb.DBCollection;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import lombok.extern.slf4j.Slf4j;
+import migrations.Migration;
+import org.mongodb.morphia.Morphia;
 
 @Slf4j
 @Singleton
@@ -149,7 +150,7 @@ public class AuditRecordMigration implements Migration {
     boolean unchanged = true;
     // stamp _GLOBAL_APP_ID_ as appId wherever missing
     List<EntityAuditRecord> recordList =
-        auditHeader.getEntityAuditRecords().stream().filter(this ::recordNeedsUpdateForGlobalAppId).collect(toList());
+        auditHeader.getEntityAuditRecords().stream().filter(this::recordNeedsUpdateForGlobalAppId).collect(toList());
 
     if (isNotEmpty(recordList)) {
       recordList.forEach(record -> record.setAppId(Application.GLOBAL_APP_ID));
@@ -173,7 +174,7 @@ public class AuditRecordMigration implements Migration {
                      .filter(record -> "CONNECTOR".equals(record.getAffectedResourceType()))
                      .collect(toList());
     if (isNotEmpty(recordList)) {
-      recordList.forEach(this ::updateRequiredForConnectorToNewCategory);
+      recordList.forEach(this::updateRequiredForConnectorToNewCategory);
       unchanged = false;
     }
 

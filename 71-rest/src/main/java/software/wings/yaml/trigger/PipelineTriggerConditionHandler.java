@@ -2,18 +2,18 @@ package software.wings.yaml.trigger;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 
-import com.google.inject.Singleton;
-
 import io.harness.annotations.dev.OwnedBy;
-import lombok.Data;
-import lombok.EqualsAndHashCode;
-import lombok.NoArgsConstructor;
+
 import software.wings.beans.trigger.PipelineTriggerCondition;
 import software.wings.beans.trigger.TriggerCondition;
 import software.wings.beans.yaml.ChangeContext;
 import software.wings.service.impl.yaml.handler.trigger.TriggerConditionYamlHandler;
 
+import com.google.inject.Singleton;
 import java.util.List;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.NoArgsConstructor;
 
 @OwnedBy(CDC)
 @Data

@@ -1,8 +1,9 @@
 package software.wings.graphql.datafetcher.ce.recommendation.dto;
 
+import software.wings.graphql.schema.type.QLObject;
+
 import lombok.Builder;
 import lombok.Value;
-import software.wings.graphql.schema.type.QLObject;
 
 @Value
 @Builder

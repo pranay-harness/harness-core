@@ -3,21 +3,16 @@ package io.harness.testframework.framework;
 import static io.harness.testframework.framework.utils.ExecutorUtils.addGCVMOptions;
 import static io.harness.testframework.framework.utils.ExecutorUtils.addJacocoAgentVM;
 import static io.harness.testframework.framework.utils.ExecutorUtils.addJar;
+
 import static java.time.Duration.ofMinutes;
 import static java.time.Duration.ofSeconds;
 
-import com.google.inject.Singleton;
-
-import io.fabric8.utils.Strings;
 import io.harness.filesystem.FileIo;
 import io.harness.resource.Project;
 import io.harness.threading.Poller;
-import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.io.FileUtils;
-import org.zeroturnaround.exec.ProcessExecutor;
-import org.zeroturnaround.exec.StartedProcess;
-import org.zeroturnaround.exec.stream.slf4j.Slf4jStream;
 
+import com.google.inject.Singleton;
+import io.fabric8.utils.Strings;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -25,6 +20,11 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.io.FileUtils;
+import org.zeroturnaround.exec.ProcessExecutor;
+import org.zeroturnaround.exec.StartedProcess;
+import org.zeroturnaround.exec.stream.slf4j.Slf4jStream;
 
 @Singleton
 @Slf4j
@@ -99,7 +99,7 @@ public class BatchProcessingExecutor {
 
         final StartedProcess startedProcess = processExecutor.start();
         Runtime.getRuntime().addShutdownHook(new Thread(startedProcess.getProcess()::destroy));
-        Poller.pollFor(ofMinutes(5), ofSeconds(2), this ::isHealthy);
+        Poller.pollFor(ofMinutes(5), ofSeconds(2), this::isHealthy);
       } catch (RuntimeException | IOException exception) {
         failedAlready = true;
         throw exception;

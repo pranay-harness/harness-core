@@ -1,12 +1,11 @@
 package software.wings.helpers.ext.ldap;
 
-import org.apache.commons.collections.CollectionUtils;
-import org.slf4j.Logger;
-
 import java.util.Set;
 import javax.validation.ConstraintViolation;
 import javax.validation.ConstraintViolationException;
 import javax.validation.Validation;
+import org.apache.commons.collections.CollectionUtils;
+import org.slf4j.Logger;
 
 public interface LdapValidator {
   default void validate(Logger log) {

@@ -12,12 +12,12 @@ import io.harness.ngpipeline.pipeline.executions.beans.PipelineExecutionInterrup
 import io.harness.ngpipeline.pipeline.executions.beans.PipelineExecutionSummary;
 import io.harness.ngpipeline.pipeline.executions.beans.PipelineExecutionSummaryFilter;
 import io.harness.ngpipeline.pipeline.executions.beans.dto.PipelineExecutionInterruptDTO;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
 
 import java.util.List;
 import java.util.Map;
 import javax.annotation.Nonnull;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 
 public interface NgPipelineExecutionService {
   Page<PipelineExecutionSummary> getExecutions(String accountId, String orgId, String projectId, Pageable pageable,

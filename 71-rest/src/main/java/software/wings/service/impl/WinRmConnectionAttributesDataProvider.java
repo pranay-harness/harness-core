@@ -2,9 +2,6 @@ package software.wings.service.impl;
 
 import static java.util.stream.Collectors.toMap;
 
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
-
 import software.wings.beans.EntityType;
 import software.wings.beans.SettingAttribute;
 import software.wings.service.intfc.AppService;
@@ -12,6 +9,8 @@ import software.wings.service.intfc.SettingsService;
 import software.wings.settings.SettingVariableTypes;
 import software.wings.stencils.DataProvider;
 
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import java.util.List;
 import java.util.Map;
 

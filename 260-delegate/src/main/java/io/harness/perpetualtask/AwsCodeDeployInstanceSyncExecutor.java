@@ -2,25 +2,25 @@ package io.harness.perpetualtask;
 
 import static io.harness.network.SafeHttpCall.execute;
 
-import com.google.inject.Inject;
-
-import com.amazonaws.services.ec2.model.Filter;
-import com.amazonaws.services.ec2.model.Instance;
 import io.harness.beans.ExecutionStatus;
 import io.harness.grpc.utils.AnyUtils;
 import io.harness.managerclient.DelegateAgentManagerClient;
 import io.harness.perpetualtask.instancesync.AwsCodeDeployInstanceSyncPerpetualTaskParams;
 import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.serializer.KryoSerializer;
-import lombok.extern.slf4j.Slf4j;
-import org.eclipse.jetty.server.Response;
+
 import software.wings.beans.AwsConfig;
 import software.wings.service.impl.aws.model.AwsCodeDeployListDeploymentInstancesResponse;
 import software.wings.service.impl.aws.model.AwsResponse;
 import software.wings.service.intfc.aws.delegate.AwsEc2HelperServiceDelegate;
 
+import com.amazonaws.services.ec2.model.Filter;
+import com.amazonaws.services.ec2.model.Instance;
+import com.google.inject.Inject;
 import java.time.Instant;
 import java.util.List;
+import lombok.extern.slf4j.Slf4j;
+import org.eclipse.jetty.server.Response;
 
 @Slf4j
 public class AwsCodeDeployInstanceSyncExecutor implements PerpetualTaskExecutor {

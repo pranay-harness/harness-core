@@ -1,7 +1,6 @@
 package io.harness.k8s.model;
 
 import io.kubernetes.client.openapi.models.V1ListMeta;
-
 import java.util.List;
 
 /**

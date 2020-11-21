@@ -1,15 +1,18 @@
 package software.wings.verification.log;
 
 import static io.harness.rule.OwnerRule.SOWMYA;
+
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
+
+import software.wings.WingsBaseTest;
+import software.wings.sm.StateType;
+
 import lombok.extern.slf4j.Slf4j;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
-import software.wings.WingsBaseTest;
-import software.wings.sm.StateType;
 
 @Slf4j
 public class LogsCVConfigurationTest extends WingsBaseTest {

@@ -3,22 +3,23 @@ package migrations.accountpermission;
 import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.mongo.MongoUtils.setUnset;
-import static software.wings.security.PermissionAttribute.PermissionType.ACCOUNT_MANAGEMENT;
 
-import com.google.inject.Inject;
+import static software.wings.security.PermissionAttribute.PermissionType.ACCOUNT_MANAGEMENT;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.persistence.HIterator;
-import lombok.extern.slf4j.Slf4j;
-import migrations.Migration;
-import org.mongodb.morphia.query.UpdateOperations;
+
 import software.wings.beans.security.AccountPermissions;
 import software.wings.beans.security.UserGroup;
 import software.wings.beans.security.UserGroup.UserGroupKeys;
 import software.wings.dl.WingsPersistence;
 import software.wings.security.PermissionAttribute.PermissionType;
 
+import com.google.inject.Inject;
 import java.util.Set;
+import lombok.extern.slf4j.Slf4j;
+import migrations.Migration;
+import org.mongodb.morphia.query.UpdateOperations;
 
 @OwnedBy(PL)
 @Slf4j

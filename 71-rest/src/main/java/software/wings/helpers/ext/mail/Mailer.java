@@ -1,34 +1,36 @@
 package software.wings.helpers.ext.mail;
 
-import static freemarker.template.Configuration.VERSION_2_3_23;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
-import static org.apache.commons.lang3.StringUtils.isNotBlank;
+
 import static software.wings.common.Constants.HARNESS_NAME;
 
-import com.google.common.collect.ImmutableList;
-import com.google.inject.Inject;
+import static freemarker.template.Configuration.VERSION_2_3_23;
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
-import freemarker.cache.ClassTemplateLoader;
-import freemarker.template.Configuration;
-import freemarker.template.Template;
-import freemarker.template.TemplateException;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.WingsException;
 import io.harness.security.encryption.EncryptedDataDetail;
+
+import software.wings.service.intfc.security.EncryptionService;
+
+import com.google.common.collect.ImmutableList;
+import com.google.inject.Inject;
+import freemarker.cache.ClassTemplateLoader;
+import freemarker.template.Configuration;
+import freemarker.template.Template;
+import freemarker.template.TemplateException;
+import java.io.IOException;
+import java.io.StringWriter;
+import java.util.List;
+import javax.mail.internet.AddressException;
+import javax.mail.internet.InternetAddress;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.mail.DefaultAuthenticator;
 import org.apache.commons.mail.Email;
 import org.apache.commons.mail.EmailException;
 import org.apache.commons.mail.HtmlEmail;
 import org.apache.commons.mail.SimpleEmail;
-import software.wings.service.intfc.security.EncryptionService;
-
-import java.io.IOException;
-import java.io.StringWriter;
-import java.util.List;
-import javax.mail.internet.AddressException;
-import javax.mail.internet.InternetAddress;
 
 /**
  * Created by peeyushaggarwal on 5/20/16.

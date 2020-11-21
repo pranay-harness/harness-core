@@ -1,6 +1,7 @@
 package software.wings.delegatetasks.cv;
 
 import static io.harness.rule.OwnerRule.KAMAL;
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyBoolean;
@@ -14,24 +15,11 @@ import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.when;
 import static org.mockito.MockitoAnnotations.initMocks;
 
-import com.google.inject.Inject;
-
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.task.DataCollectionExecutorService;
 import io.harness.rule.Owner;
 import io.harness.serializer.JsonUtils;
-import okhttp3.Request;
-import org.apache.commons.lang3.reflect.FieldUtils;
-import org.assertj.core.util.Lists;
-import org.intellij.lang.annotations.Language;
-import org.jetbrains.annotations.NotNull;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
-import org.mockito.Mock;
-import org.mockito.internal.util.collections.Sets;
-import retrofit2.Call;
-import retrofit2.Response;
+
 import software.wings.WingsBaseTest;
 import software.wings.beans.NewRelicConfig;
 import software.wings.delegatetasks.DelegateCVActivityLogService.Logger;
@@ -46,6 +34,7 @@ import software.wings.service.impl.newrelic.NewRelicMetricData;
 import software.wings.service.impl.newrelic.NewRelicMetricDataResponse;
 import software.wings.service.impl.newrelic.NewRelicMetricResponse;
 
+import com.google.inject.Inject;
 import java.io.IOException;
 import java.security.SecureRandom;
 import java.time.Instant;
@@ -54,6 +43,18 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.UUID;
+import okhttp3.Request;
+import org.apache.commons.lang3.reflect.FieldUtils;
+import org.assertj.core.util.Lists;
+import org.intellij.lang.annotations.Language;
+import org.jetbrains.annotations.NotNull;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
+import org.mockito.Mock;
+import org.mockito.internal.util.collections.Sets;
+import retrofit2.Call;
+import retrofit2.Response;
 
 public class NewRelicDataCollectorTest extends WingsBaseTest {
   private static final SecureRandom random = new SecureRandom();

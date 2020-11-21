@@ -5,6 +5,15 @@ import static io.harness.rule.OwnerRule.ANUBHAW;
 import static io.harness.rule.OwnerRule.GEORGE;
 import static io.harness.rule.OwnerRule.PRAVEEN;
 import static io.harness.rule.OwnerRule.RAGHU;
+
+import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
+import static software.wings.utils.WingsTestConstants.ACCESS_KEY;
+import static software.wings.utils.WingsTestConstants.METRIC_DIMENSION;
+import static software.wings.utils.WingsTestConstants.METRIC_NAME;
+import static software.wings.utils.WingsTestConstants.NAMESPACE;
+import static software.wings.utils.WingsTestConstants.SECRET_KEY;
+import static software.wings.utils.WingsTestConstants.SETTING_ID;
+
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
@@ -14,30 +23,10 @@ import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
-import static software.wings.utils.WingsTestConstants.ACCESS_KEY;
-import static software.wings.utils.WingsTestConstants.METRIC_DIMENSION;
-import static software.wings.utils.WingsTestConstants.METRIC_NAME;
-import static software.wings.utils.WingsTestConstants.NAMESPACE;
-import static software.wings.utils.WingsTestConstants.SECRET_KEY;
-import static software.wings.utils.WingsTestConstants.SETTING_ID;
 
-import com.google.common.collect.Lists;
-import com.google.inject.Inject;
-
-import com.amazonaws.services.cloudwatch.model.Dimension;
-import com.amazonaws.services.cloudwatch.model.ListMetricsRequest;
-import com.amazonaws.services.cloudwatch.model.ListMetricsResult;
-import com.amazonaws.services.cloudwatch.model.Metric;
-import com.amazonaws.services.cloudwatch.model.StandardUnit;
-import com.amazonaws.services.costandusagereport.model.AWSRegion;
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
+
 import software.wings.WingsBaseTest;
 import software.wings.beans.AwsConfig;
 import software.wings.delegatetasks.DelegateProxyFactory;
@@ -54,12 +43,25 @@ import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.cloudwatch.CloudWatchDelegateService;
 import software.wings.verification.cloudwatch.CloudWatchCVServiceConfiguration;
 
+import com.amazonaws.services.cloudwatch.model.Dimension;
+import com.amazonaws.services.cloudwatch.model.ListMetricsRequest;
+import com.amazonaws.services.cloudwatch.model.ListMetricsResult;
+import com.amazonaws.services.cloudwatch.model.Metric;
+import com.amazonaws.services.cloudwatch.model.StandardUnit;
+import com.amazonaws.services.costandusagereport.model.AWSRegion;
+import com.google.common.collect.Lists;
+import com.google.inject.Inject;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
 
 /**
  * Created by anubhaw on 12/15/16.

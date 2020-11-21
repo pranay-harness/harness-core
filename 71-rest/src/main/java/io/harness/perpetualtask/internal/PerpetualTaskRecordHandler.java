@@ -6,14 +6,13 @@ import static io.harness.govern.IgnoreThrowable.ignoredOnPurpose;
 import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
 import static io.harness.mongo.iterator.MongoPersistenceIterator.SchedulingType.IRREGULAR_SKIP_MISSED;
 import static io.harness.mongo.iterator.MongoPersistenceIterator.SchedulingType.REGULAR;
+
+import static software.wings.beans.alert.AlertType.PerpetualTaskAlert;
+
 import static java.lang.String.format;
 import static java.time.Duration.ofMinutes;
 import static java.time.Duration.ofSeconds;
 import static java.util.stream.Collectors.toList;
-import static software.wings.beans.alert.AlertType.PerpetualTaskAlert;
-
-import com.google.inject.Inject;
-import com.google.protobuf.InvalidProtocolBufferException;
 
 import io.harness.beans.DelegateTask;
 import io.harness.delegate.Capability;
@@ -45,7 +44,7 @@ import io.harness.perpetualtask.PerpetualTaskUnassignedReason;
 import io.harness.perpetualtask.internal.PerpetualTaskRecord.PerpetualTaskRecordKeys;
 import io.harness.serializer.KryoSerializer;
 import io.harness.workers.background.AccountStatusBasedEntityProcessController;
-import lombok.extern.slf4j.Slf4j;
+
 import software.wings.beans.TaskType;
 import software.wings.service.InstanceSyncConstants;
 import software.wings.service.impl.PerpetualTaskCapabilityCheckResponse;
@@ -54,9 +53,12 @@ import software.wings.service.intfc.AlertService;
 import software.wings.service.intfc.DelegateService;
 import software.wings.service.intfc.perpetualtask.PerpetualTaskCrudObserver;
 
+import com.google.inject.Inject;
+import com.google.protobuf.InvalidProtocolBufferException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
+import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class PerpetualTaskRecordHandler implements PerpetualTaskCrudObserver {
@@ -105,7 +107,7 @@ public class PerpetualTaskRecordHandler implements PerpetualTaskCrudObserver {
             .targetInterval(ofMinutes(PERPETUAL_TASK_ASSIGNMENT_INTERVAL_MINUTE))
             .acceptableNoAlertDelay(ofSeconds(45))
             .acceptableExecutionTime(ofSeconds(30))
-            .handler(this ::assign)
+            .handler(this::assign)
             .filterExpander(query -> query.filter(PerpetualTaskRecordKeys.state, PerpetualTaskState.TASK_UNASSIGNED))
             .entityProcessController(new AccountStatusBasedEntityProcessController<>(accountService))
             .schedulingType(IRREGULAR_SKIP_MISSED)
@@ -124,7 +126,7 @@ public class PerpetualTaskRecordHandler implements PerpetualTaskCrudObserver {
             .targetInterval(ofMinutes(PERPETUAL_TASK_ASSIGNMENT_INTERVAL_MINUTE))
             .acceptableNoAlertDelay(ofSeconds(45))
             .acceptableExecutionTime(ofSeconds(30))
-            .handler(this ::rebalance)
+            .handler(this::rebalance)
             .filterExpander(query -> query.filter(PerpetualTaskRecordKeys.state, PerpetualTaskState.TASK_TO_REBALANCE))
             .entityProcessController(new AccountStatusBasedEntityProcessController<>(accountService))
             .schedulingType(REGULAR)

@@ -2,16 +2,17 @@ package migrations.all;
 
 import static io.harness.persistence.HQuery.excludeAuthority;
 
-import com.google.inject.Inject;
-
 import io.harness.persistence.HIterator;
-import lombok.extern.slf4j.Slf4j;
-import migrations.Migration;
-import org.mongodb.morphia.query.Query;
+
 import software.wings.beans.User;
 import software.wings.beans.UserInvite;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.UserService;
+
+import com.google.inject.Inject;
+import lombok.extern.slf4j.Slf4j;
+import migrations.Migration;
+import org.mongodb.morphia.query.Query;
 
 /**
  * Previously user invites are not deleted if the corresponding user with the same email address has been deleted.

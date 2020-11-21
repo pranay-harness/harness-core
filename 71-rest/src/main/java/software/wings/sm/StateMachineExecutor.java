@@ -36,14 +36,7 @@ import static io.harness.interrupts.ExecutionInterruptType.RETRY;
 import static io.harness.threading.Morpheus.quietSleep;
 import static io.harness.validation.Validator.notNullCheck;
 import static io.harness.waiter.OrchestrationNotifyEventListener.ORCHESTRATION;
-import static java.lang.String.format;
-import static java.util.Arrays.asList;
-import static java.util.Collections.emptyMap;
-import static java.util.Collections.singletonList;
-import static java.util.stream.Collectors.toList;
-import static org.apache.commons.lang3.StringUtils.isBlank;
-import static org.apache.commons.lang3.StringUtils.isNotBlank;
-import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
+
 import static software.wings.beans.ExecutionScope.WORKFLOW;
 import static software.wings.beans.NotificationRule.NotificationRuleBuilder.aNotificationRule;
 import static software.wings.beans.alert.AlertType.ManualInterventionNeeded;
@@ -55,13 +48,14 @@ import static software.wings.sm.ExecutionInterrupt.ExecutionInterruptBuilder.anE
 import static software.wings.sm.StateExecutionData.StateExecutionDataBuilder.aStateExecutionData;
 import static software.wings.sm.StateExecutionInstance.Builder.aStateExecutionInstance;
 
-import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Preconditions;
-import com.google.common.collect.Lists;
-import com.google.inject.Inject;
-import com.google.inject.Injector;
-import com.google.inject.Singleton;
-import com.google.inject.name.Named;
+import static java.lang.String.format;
+import static java.util.Arrays.asList;
+import static java.util.Collections.emptyMap;
+import static java.util.Collections.singletonList;
+import static java.util.stream.Collectors.toList;
+import static org.apache.commons.lang3.StringUtils.isBlank;
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
+import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 
 import io.harness.alert.AlertData;
 import io.harness.annotations.dev.OwnedBy;
@@ -90,12 +84,7 @@ import io.harness.state.inspection.StateInspectionService;
 import io.harness.tasks.ResponseData;
 import io.harness.waiter.NotifyCallback;
 import io.harness.waiter.WaitNotifyEngine;
-import lombok.Getter;
-import lombok.extern.slf4j.Slf4j;
-import org.mongodb.morphia.FindAndModifyOptions;
-import org.mongodb.morphia.query.Query;
-import org.mongodb.morphia.query.UpdateOperations;
-import org.mongodb.morphia.query.UpdateResults;
+
 import software.wings.api.ContinuePipelineResponseData;
 import software.wings.api.SkipStateExecutionData;
 import software.wings.beans.Account;
@@ -139,6 +128,13 @@ import software.wings.sm.states.PhaseSubWorkflow;
 import software.wings.sm.states.WorkflowState;
 import software.wings.sm.status.StateStatusUpdateInfo;
 
+import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Preconditions;
+import com.google.common.collect.Lists;
+import com.google.inject.Inject;
+import com.google.inject.Injector;
+import com.google.inject.Singleton;
+import com.google.inject.name.Named;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -156,6 +152,12 @@ import java.util.concurrent.ExecutorService;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 import javax.validation.constraints.NotNull;
+import lombok.Getter;
+import lombok.extern.slf4j.Slf4j;
+import org.mongodb.morphia.FindAndModifyOptions;
+import org.mongodb.morphia.query.Query;
+import org.mongodb.morphia.query.UpdateOperations;
+import org.mongodb.morphia.query.UpdateResults;
 
 /**
  * Class responsible for executing state machine.
@@ -1646,7 +1648,7 @@ public class StateMachineExecutor implements StateInspectionListener {
         StateStatusUpdateInfo.buildFromStateExecutionInstance(stateExecutionInstance,
             reason != null
                 && (RESUME_ALL == reason.getExecutionInterruptType()
-                       || CONTINUE_PIPELINE_STAGE == reason.getExecutionInterruptType())));
+                    || CONTINUE_PIPELINE_STAGE == reason.getExecutionInterruptType())));
 
     return true;
   }

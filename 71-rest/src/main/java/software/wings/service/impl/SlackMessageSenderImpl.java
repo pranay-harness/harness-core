@@ -2,19 +2,26 @@ package software.wings.service.impl;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
-import static java.lang.String.format;
+
 import static software.wings.common.NotificationConstants.WHITE_COLOR;
 import static software.wings.service.impl.SlackNotificationServiceImpl.SLACK_WEBHOOK_URL_PREFIX;
 
-import com.google.common.collect.ImmutableList;
+import static java.lang.String.format;
+
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.exception.InvalidRequestException;
+import io.harness.network.Http;
+
+import software.wings.beans.SlackMessage;
+import software.wings.common.NotificationMessageResolver;
+import software.wings.service.intfc.SlackMessageSender;
 
 import allbegray.slack.SlackClientFactory;
 import allbegray.slack.type.Attachment;
 import allbegray.slack.type.Payload;
 import allbegray.slack.webhook.SlackWebhookClient;
-import io.harness.annotations.dev.OwnedBy;
-import io.harness.exception.InvalidRequestException;
-import io.harness.network.Http;
+import com.google.common.collect.ImmutableList;
+import java.io.IOException;
 import lombok.extern.slf4j.Slf4j;
 import okhttp3.ResponseBody;
 import org.apache.commons.lang3.StringUtils;
@@ -24,11 +31,6 @@ import retrofit2.converter.jackson.JacksonConverterFactory;
 import retrofit2.http.Body;
 import retrofit2.http.POST;
 import retrofit2.http.Url;
-import software.wings.beans.SlackMessage;
-import software.wings.common.NotificationMessageResolver;
-import software.wings.service.intfc.SlackMessageSender;
-
-import java.io.IOException;
 
 @OwnedBy(CDC)
 @Slf4j
@@ -109,7 +111,9 @@ public class SlackMessageSenderImpl implements SlackMessageSender {
     return retrofit.create(SlackHttpClient.class);
   }
 
-  public interface SlackHttpClient { @POST Call<ResponseBody> PostMsg(@Url String url, @Body Payload payload); }
+  public interface SlackHttpClient {
+    @POST Call<ResponseBody> PostMsg(@Url String url, @Body Payload payload);
+  }
 
   private String processText(String message) {
     return message.replaceAll("<<<", "*<")

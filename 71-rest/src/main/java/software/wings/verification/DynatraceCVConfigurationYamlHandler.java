@@ -6,9 +6,6 @@ import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.validation.Validator.notNullCheck;
 
-import com.google.inject.Inject;
-
-import lombok.extern.slf4j.Slf4j;
 import software.wings.beans.yaml.ChangeContext;
 import software.wings.delegatetasks.cv.DataCollectionException;
 import software.wings.service.impl.dynatrace.DynaTraceApplication;
@@ -17,7 +14,9 @@ import software.wings.sm.StateType;
 import software.wings.verification.dynatrace.DynaTraceCVServiceConfiguration;
 import software.wings.verification.dynatrace.DynaTraceCVServiceConfiguration.DynaTraceCVConfigurationYaml;
 
+import com.google.inject.Inject;
 import java.util.List;
+import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class DynatraceCVConfigurationYamlHandler

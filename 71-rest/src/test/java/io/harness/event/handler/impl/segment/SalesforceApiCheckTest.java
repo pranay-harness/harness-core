@@ -1,6 +1,7 @@
 package io.harness.event.handler.impl.segment;
 
 import static io.harness.rule.OwnerRule.UJJAWAL;
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.when;
@@ -8,6 +9,13 @@ import static org.mockito.Mockito.when;
 import io.harness.category.element.UnitTests;
 import io.harness.event.handler.segment.SalesforceConfig;
 import io.harness.rule.Owner;
+
+import software.wings.WingsBaseTest;
+import software.wings.beans.Account;
+import software.wings.beans.AccountType;
+
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.reflect.FieldUtils;
 import org.apache.http.HttpEntity;
@@ -26,12 +34,6 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.junit.runners.MethodSorters;
 import org.mockito.Mockito;
-import software.wings.WingsBaseTest;
-import software.wings.beans.Account;
-import software.wings.beans.AccountType;
-
-import java.io.ByteArrayInputStream;
-import java.io.IOException;
 
 @Slf4j
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)

@@ -2,6 +2,7 @@ package io.harness.connector.entities.embedded.docker;
 
 import io.harness.connector.entities.Connector;
 import io.harness.delegate.beans.connector.docker.DockerAuthType;
+
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Value;

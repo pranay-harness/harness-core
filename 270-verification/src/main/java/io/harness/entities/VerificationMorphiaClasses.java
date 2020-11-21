@@ -1,9 +1,8 @@
 package io.harness.entities;
 
-import com.google.common.collect.ImmutableSet;
-
 import software.wings.service.impl.analysis.SupervisedTrainingStatus;
 
+import com.google.common.collect.ImmutableSet;
 import java.util.Set;
 
 public class VerificationMorphiaClasses {

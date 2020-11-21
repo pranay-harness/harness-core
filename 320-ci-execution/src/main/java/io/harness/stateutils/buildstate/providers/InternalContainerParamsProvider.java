@@ -33,9 +33,6 @@ import static io.harness.common.CIExecutionConstants.STAGE_ARG_COMMAND;
 import static io.harness.common.CIExecutionConstants.TMP_PATH;
 import static io.harness.common.CIExecutionConstants.TMP_PATH_ARG_PREFIX;
 
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
-
 import io.harness.beans.sweepingoutputs.K8PodDetails;
 import io.harness.ci.config.CIExecutionServiceConfig;
 import io.harness.delegate.beans.ci.pod.CIContainerType;
@@ -45,13 +42,15 @@ import io.harness.delegate.beans.ci.pod.ContainerResourceParams;
 import io.harness.delegate.beans.ci.pod.ContainerSecrets;
 import io.harness.delegate.beans.ci.pod.ImageDetailsWithConnector;
 import io.harness.k8s.model.ImageDetails;
-import org.apache.commons.lang3.StringUtils;
 
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import org.apache.commons.lang3.StringUtils;
 
 /**
  * Provides container parameters for internally used containers

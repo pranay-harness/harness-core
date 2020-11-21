@@ -2,8 +2,6 @@ package software.wings.delegatetasks.collect.artifacts;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 
-import com.google.inject.Inject;
-
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.delegate.beans.DelegateTaskPackage;
 import io.harness.delegate.beans.DelegateTaskResponse;
@@ -13,14 +11,16 @@ import io.harness.delegate.task.ListNotifyResponseData;
 import io.harness.delegate.task.TaskParameters;
 import io.harness.exception.ExceptionUtils;
 import io.harness.security.encryption.EncryptedDataDetail;
-import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.NotImplementedException;
+
 import software.wings.beans.AwsConfig;
 import software.wings.helpers.ext.amazons3.AmazonS3Service;
 
+import com.google.inject.Inject;
 import java.util.List;
 import java.util.function.BooleanSupplier;
 import java.util.function.Consumer;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.NotImplementedException;
 
 /**
  * Created by rktummala on 7/30/17.

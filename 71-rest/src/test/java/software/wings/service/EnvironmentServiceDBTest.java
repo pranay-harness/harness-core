@@ -1,9 +1,7 @@
 package software.wings.service;
 
 import static io.harness.rule.OwnerRule.AADITI;
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
+
 import static software.wings.beans.Environment.Builder.anEnvironment;
 import static software.wings.beans.ServiceTemplate.Builder.aServiceTemplate;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
@@ -16,14 +14,13 @@ import static software.wings.utils.WingsTestConstants.SERVICE_NAME;
 import static software.wings.utils.WingsTestConstants.SERVICE_TEMPLATE_ID;
 import static software.wings.utils.WingsTestConstants.TEMPLATE_NAME;
 
-import com.google.inject.Inject;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
 
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
+
 import software.wings.WingsBaseTest;
 import software.wings.beans.Application;
 import software.wings.beans.Environment;
@@ -34,8 +31,13 @@ import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.EnvironmentService;
 import software.wings.service.intfc.yaml.YamlPushService;
 
+import com.google.inject.Inject;
 import java.util.HashMap;
 import java.util.Map;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
 
 public class EnvironmentServiceDBTest extends WingsBaseTest {
   @Inject @InjectMocks private WingsPersistence wingsPersistence;

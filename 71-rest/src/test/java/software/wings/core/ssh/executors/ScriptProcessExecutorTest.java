@@ -4,20 +4,35 @@ import static io.harness.filesystem.FileIo.deleteFileIfExists;
 import static io.harness.logging.CommandExecutionStatus.FAILURE;
 import static io.harness.logging.CommandExecutionStatus.SUCCESS;
 import static io.harness.rule.OwnerRule.AADITI;
-import static java.util.Arrays.asList;
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.joor.Reflect.on;
+
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 import static software.wings.utils.WingsTestConstants.ACTIVITY_ID;
 import static software.wings.utils.WingsTestConstants.APP_ID;
 
-import com.google.common.io.CharStreams;
+import static java.util.Arrays.asList;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.joor.Reflect.on;
 
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.command.CommandExecutionResult;
 import io.harness.delegate.task.shell.ScriptType;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.rule.Owner;
+
+import software.wings.WingsBaseTest;
+import software.wings.beans.command.ShellExecutionData;
+import software.wings.core.local.executors.ShellExecutorConfig;
+import software.wings.delegatetasks.DelegateFileManager;
+import software.wings.delegatetasks.DelegateLogService;
+
+import com.google.common.io.CharStreams;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.OutputStream;
+import java.util.HashMap;
+import java.util.Map;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
@@ -26,19 +41,6 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.junit.rules.TemporaryFolder;
 import org.mockito.Mock;
-import software.wings.WingsBaseTest;
-import software.wings.beans.command.ShellExecutionData;
-import software.wings.core.local.executors.ShellExecutorConfig;
-import software.wings.delegatetasks.DelegateFileManager;
-import software.wings.delegatetasks.DelegateLogService;
-
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileWriter;
-import java.io.IOException;
-import java.io.OutputStream;
-import java.util.HashMap;
-import java.util.Map;
 
 public class ScriptProcessExecutorTest extends WingsBaseTest {
   @Mock private DelegateFileManager delegateFileManager;

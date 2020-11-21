@@ -1,15 +1,13 @@
 package io.harness.secrets.setupusage;
 
 import static io.harness.rule.OwnerRule.UTKARSH;
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 import static org.mockito.MockitoAnnotations.initMocks;
-
-import com.google.common.collect.Sets;
-import com.google.inject.Inject;
 
 import io.harness.beans.EncryptedData;
 import io.harness.beans.EncryptedDataParent;
@@ -21,11 +19,7 @@ import io.harness.reflection.ReflectionUtils;
 import io.harness.rule.Owner;
 import io.harness.secrets.setupusage.builders.SettingAttributeSetupUsageBuilder;
 import io.harness.security.encryption.EncryptionType;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
+
 import software.wings.WingsBaseTest;
 import software.wings.beans.Account;
 import software.wings.beans.AccountType;
@@ -35,11 +29,18 @@ import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.settings.SettingVariableTypes;
 
+import com.google.common.collect.Sets;
+import com.google.inject.Inject;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
 
 public class SettingAttributeSetupUsageBuilderTest extends WingsBaseTest {
   @Mock SettingsService settingsService;

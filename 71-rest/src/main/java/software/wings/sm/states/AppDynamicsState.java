@@ -4,27 +4,19 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.logging.Misc.isLong;
 import static io.harness.waiter.OrchestrationNotifyEventListener.ORCHESTRATION;
-import static org.apache.commons.lang3.StringUtils.isBlank;
+
 import static software.wings.common.TemplateExpressionProcessor.checkFieldTemplatized;
 import static software.wings.service.impl.analysis.TimeSeriesMlAnalysisType.PREDICTIVE;
 import static software.wings.service.impl.newrelic.NewRelicMetricValueDefinition.APP_DYNAMICS_24X7_VALUES_TO_ANALYZE;
 import static software.wings.service.impl.newrelic.NewRelicMetricValueDefinition.APP_DYNAMICS_VALUES_TO_ANALYZE;
 
-import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Preconditions;
-import com.google.inject.Inject;
+import static org.apache.commons.lang3.StringUtils.isBlank;
 
-import com.github.reinert.jjschema.Attributes;
-import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.beans.DelegateTask;
 import io.harness.delegate.beans.TaskData;
 import io.harness.exception.WingsException;
 import io.harness.tasks.Cd1SetupFields;
-import lombok.experimental.FieldNameConstants;
-import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.StringUtils;
-import org.mongodb.morphia.annotations.Transient;
-import org.slf4j.Logger;
+
 import software.wings.api.DeploymentType;
 import software.wings.beans.AppDynamicsConfig;
 import software.wings.beans.FeatureName;
@@ -55,6 +47,11 @@ import software.wings.stencils.DefaultValue;
 import software.wings.stencils.EnumData;
 import software.wings.verification.VerificationStateAnalysisExecutionData;
 
+import com.github.reinert.jjschema.Attributes;
+import com.github.reinert.jjschema.SchemaIgnore;
+import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Preconditions;
+import com.google.inject.Inject;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -65,6 +62,11 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
+import lombok.experimental.FieldNameConstants;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
+import org.mongodb.morphia.annotations.Transient;
+import org.slf4j.Logger;
 
 /**
  * Created by anubhaw on 8/4/16.
@@ -415,7 +417,7 @@ public class AppDynamicsState extends AbstractMetricAnalysisState {
       InfrastructureMapping infrastructureMapping = getInfrastructureMapping(context);
       if (DeploymentType.HELM
           == serviceResourceService.getDeploymentType(
-                 infrastructureMapping, null, infrastructureMapping.getServiceId())) {
+              infrastructureMapping, null, infrastructureMapping.getServiceId())) {
         throw new WingsException("can not analyze dependent tiers for helm type deployment");
       }
     }

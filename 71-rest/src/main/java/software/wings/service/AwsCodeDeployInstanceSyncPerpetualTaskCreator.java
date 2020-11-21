@@ -1,20 +1,21 @@
 package software.wings.service;
 
-import static java.util.Collections.emptyList;
-import static java.util.Collections.singletonList;
 import static software.wings.service.InstanceSyncConstants.HARNESS_APPLICATION_ID;
 
-import com.google.inject.Inject;
+import static java.util.Collections.emptyList;
+import static java.util.Collections.singletonList;
 
 import io.harness.perpetualtask.AwsCodeDeployInstanceSyncPerpetualTaskClient;
 import io.harness.perpetualtask.AwsCodeDeployInstanceSyncPerpetualTaskClientParams;
 import io.harness.perpetualtask.internal.PerpetualTaskRecord;
-import lombok.AccessLevel;
-import lombok.experimental.FieldDefaults;
+
 import software.wings.api.DeploymentSummary;
 import software.wings.beans.InfrastructureMapping;
 
+import com.google.inject.Inject;
 import java.util.List;
+import lombok.AccessLevel;
+import lombok.experimental.FieldDefaults;
 
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class AwsCodeDeployInstanceSyncPerpetualTaskCreator implements InstanceSyncPerpetualTaskCreator {

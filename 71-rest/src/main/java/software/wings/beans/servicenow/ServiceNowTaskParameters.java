@@ -4,9 +4,7 @@ import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.delegate.beans.executioncapability.ExecutionCapabilityDemander;
 import io.harness.delegate.task.TaskParameters;
 import io.harness.security.encryption.EncryptedDataDetail;
-import lombok.Builder;
-import lombok.Data;
-import lombok.ToString;
+
 import software.wings.beans.ServiceNowConfig;
 import software.wings.delegatetasks.servicenow.ServiceNowAction;
 import software.wings.service.impl.servicenow.ServiceNowServiceImpl.ServiceNowFieldType;
@@ -14,6 +12,9 @@ import software.wings.service.impl.servicenow.ServiceNowServiceImpl.ServiceNowTi
 
 import java.util.List;
 import java.util.Map;
+import lombok.Builder;
+import lombok.Data;
+import lombok.ToString;
 
 @Data
 @Builder

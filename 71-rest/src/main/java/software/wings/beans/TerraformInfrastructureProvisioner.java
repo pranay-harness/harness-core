@@ -2,21 +2,21 @@ package software.wings.beans;
 
 import static software.wings.beans.InfrastructureProvisionerType.TERRAFORM;
 
+import io.harness.beans.EmbeddedUser;
+import io.harness.data.validator.Trimmed;
+
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.fasterxml.jackson.annotation.JsonTypeName;
-import io.harness.beans.EmbeddedUser;
-import io.harness.data.validator.Trimmed;
+import java.util.List;
+import javax.annotation.Nullable;
+import javax.validation.constraints.NotNull;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import org.apache.commons.io.FilenameUtils;
 import org.hibernate.validator.constraints.NotEmpty;
-
-import java.util.List;
-import javax.annotation.Nullable;
-import javax.validation.constraints.NotNull;
 
 @Data
 @EqualsAndHashCode(callSuper = true)

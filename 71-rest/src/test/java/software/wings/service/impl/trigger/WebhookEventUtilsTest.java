@@ -3,8 +3,7 @@ package software.wings.service.impl.trigger;
 import static io.harness.rule.OwnerRule.HARSH;
 import static io.harness.rule.OwnerRule.IGOR;
 import static io.harness.rule.OwnerRule.SRINIVAS;
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.Mockito.when;
+
 import static software.wings.beans.trigger.WebhookSource.BITBUCKET;
 import static software.wings.beans.trigger.WebhookSource.GITHUB;
 import static software.wings.beans.trigger.WebhookSource.GITLAB;
@@ -12,17 +11,13 @@ import static software.wings.service.impl.trigger.WebhookEventUtils.X_BIT_BUCKET
 import static software.wings.service.impl.trigger.WebhookEventUtils.X_GIT_HUB_EVENT;
 import static software.wings.service.impl.trigger.WebhookEventUtils.X_GIT_LAB_EVENT;
 
-import com.google.inject.Inject;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.when;
 
-import com.fasterxml.jackson.core.type.TypeReference;
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
 import io.harness.serializer.JsonUtils;
-import org.apache.commons.io.FileUtils;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
+
 import software.wings.WingsBaseTest;
 import software.wings.beans.HostConnectionAttributes.AuthenticationScheme;
 import software.wings.beans.trigger.WebhookSource;
@@ -30,11 +25,18 @@ import software.wings.beans.trigger.WebhookSource.BitBucketEventType;
 import software.wings.beans.trigger.WebhookSource.GitHubEventType;
 import software.wings.beans.trigger.WebhookSource.GitLabEventType;
 
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.google.inject.Inject;
 import java.io.File;
 import java.io.IOException;
 import java.nio.charset.Charset;
 import java.util.Map;
 import javax.ws.rs.core.HttpHeaders;
+import org.apache.commons.io.FileUtils;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
 
 public class WebhookEventUtilsTest extends WingsBaseTest {
   @Inject @InjectMocks private WebhookEventUtils webhookEventUtils;

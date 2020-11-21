@@ -1,21 +1,21 @@
 package io.harness.walktree.registries.visitorfield;
 
 import static io.harness.rule.OwnerRule.ARCHIT;
-import static org.assertj.core.api.Assertions.assertThat;
 
-import com.google.inject.Inject;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.WalkTreeTestBase;
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
 import io.harness.walktree.registries.registrars.VisitableFieldRegistrar;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
-import org.reflections.Reflections;
 
+import com.google.inject.Inject;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
+import org.reflections.Reflections;
 
 public class VisitorFieldRegistrarTest extends WalkTreeTestBase {
   @Inject Map<String, VisitableFieldRegistrar> visitableFieldRegistrarMap;

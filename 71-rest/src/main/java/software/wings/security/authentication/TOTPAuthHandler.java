@@ -3,19 +3,15 @@ package software.wings.security.authentication;
 import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
+
 import static java.lang.String.format;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
-
-import com.j256.twofactorauth.TimeBasedOneTimePasswordUtil;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
 import io.harness.logging.AutoLogContext;
-import lombok.extern.slf4j.Slf4j;
-import org.joda.time.DateTimeUtils;
+
 import software.wings.beans.Account;
 import software.wings.beans.User;
 import software.wings.helpers.ext.mail.EmailData;
@@ -23,12 +19,17 @@ import software.wings.logcontext.UserLogContext;
 import software.wings.service.intfc.EmailNotificationService;
 import software.wings.service.intfc.UserService;
 
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
+import com.j256.twofactorauth.TimeBasedOneTimePasswordUtil;
 import java.security.GeneralSecurityException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import lombok.extern.slf4j.Slf4j;
+import org.joda.time.DateTimeUtils;
 
 @OwnedBy(PL)
 @Singleton
@@ -55,9 +56,9 @@ public class TOTPAuthHandler implements TwoFactorAuthHandler {
       if (!TimeBasedOneTimePasswordUtil.validateCurrentNumber(
               totpSecret, code, 0, currentTime, TimeBasedOneTimePasswordUtil.DEFAULT_TIME_STEP_SECONDS)
           && !TimeBasedOneTimePasswordUtil.validateCurrentNumber(
-                 totpSecret, code, 0, currentTime - 10000, TimeBasedOneTimePasswordUtil.DEFAULT_TIME_STEP_SECONDS)
+              totpSecret, code, 0, currentTime - 10000, TimeBasedOneTimePasswordUtil.DEFAULT_TIME_STEP_SECONDS)
           && !TimeBasedOneTimePasswordUtil.validateCurrentNumber(
-                 totpSecret, code, 0, currentTime + 10000, TimeBasedOneTimePasswordUtil.DEFAULT_TIME_STEP_SECONDS)) {
+              totpSecret, code, 0, currentTime + 10000, TimeBasedOneTimePasswordUtil.DEFAULT_TIME_STEP_SECONDS)) {
         throw new WingsException(ErrorCode.INVALID_TOTP_TOKEN, USER);
       }
       return user;

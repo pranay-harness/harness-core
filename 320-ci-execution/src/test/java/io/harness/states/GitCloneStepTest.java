@@ -1,9 +1,8 @@
 package io.harness.states;
 
 import static io.harness.rule.OwnerRule.ALEKSANDAR;
-import static org.assertj.core.api.Assertions.assertThat;
 
-import com.google.inject.Inject;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.beans.steps.stepinfo.GitCloneStepInfo;
 import io.harness.category.element.UnitTests;
@@ -11,6 +10,8 @@ import io.harness.executionplan.CIExecutionTest;
 import io.harness.pms.execution.Status;
 import io.harness.rule.Owner;
 import io.harness.state.io.StepResponse;
+
+import com.google.inject.Inject;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 

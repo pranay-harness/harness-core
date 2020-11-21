@@ -1,9 +1,14 @@
 package io.harness.ccm.billing;
 
-import static com.hazelcast.util.Preconditions.checkFalse;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
+
+import static com.hazelcast.util.Preconditions.checkFalse;
 import static java.lang.String.format;
 import static java.util.Collections.singletonList;
+
+import io.harness.ccm.setup.config.CESetUpConfig;
+
+import software.wings.app.MainConfiguration;
 
 import com.google.api.client.googleapis.auth.oauth2.GoogleCredential;
 import com.google.api.client.googleapis.javanet.GoogleNetHttpTransport;
@@ -22,17 +27,13 @@ import com.google.auth.oauth2.ImpersonatedCredentials;
 import com.google.auth.oauth2.ServiceAccountCredentials;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
-
-import io.harness.ccm.setup.config.CESetUpConfig;
-import lombok.extern.slf4j.Slf4j;
-import software.wings.app.MainConfiguration;
-
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.security.GeneralSecurityException;
 import java.util.Arrays;
+import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Singleton

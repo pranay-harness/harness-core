@@ -5,27 +5,27 @@ import static io.harness.mongo.IndexManager.Mode.AUTO;
 import static io.harness.mongo.IndexManagerCollectionSession.createCollectionSession;
 import static io.harness.mongo.IndexManagerSession.UNIQUE;
 import static io.harness.rule.OwnerRule.GEORGE;
+
 import static java.util.Collections.emptyMap;
 import static org.assertj.core.api.Assertions.assertThat;
 
-import com.google.common.collect.ImmutableSet;
-import com.google.inject.Inject;
-
-import com.mongodb.BasicDBObject;
-import com.mongodb.DBCollection;
-import com.mongodb.DBObject;
 import io.harness.PersistenceTestBase;
 import io.harness.category.element.UnitTests;
 import io.harness.mongo.IndexCreator.IndexCreatorBuilder;
 import io.harness.persistence.HPersistence;
 import io.harness.rule.Owner;
 import io.harness.testlib.RealMongo;
+
+import com.google.common.collect.ImmutableSet;
+import com.google.inject.Inject;
+import com.mongodb.BasicDBObject;
+import com.mongodb.DBCollection;
+import com.mongodb.DBObject;
+import java.util.List;
+import java.util.Set;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mongodb.morphia.Morphia;
-
-import java.util.List;
-import java.util.Set;
 
 public class IndexManagerCollectionSessionTest extends PersistenceTestBase {
   @Inject HPersistence persistence;

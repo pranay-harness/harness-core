@@ -7,12 +7,13 @@ import io.harness.delegate.beans.executioncapability.CapabilityType;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.rule.Owner;
 import io.harness.rule.OwnerRule;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
+
 import software.wings.WingsBaseTest;
 import software.wings.beans.GitConfig;
 
 import java.util.stream.Collectors;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 public class TerraformProvisionParametersTest extends WingsBaseTest {
   @Test

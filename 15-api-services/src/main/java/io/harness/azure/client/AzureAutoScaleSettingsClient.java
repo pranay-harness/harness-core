@@ -1,10 +1,10 @@
 package io.harness.azure.client;
 
+import io.harness.azure.model.AzureConfig;
+
 import com.microsoft.azure.management.monitor.AutoscaleProfile;
 import com.microsoft.azure.management.monitor.AutoscaleSetting;
 import com.microsoft.azure.management.monitor.ScaleCapacity;
-import io.harness.azure.model.AzureConfig;
-
 import java.util.List;
 import java.util.Optional;
 

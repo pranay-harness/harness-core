@@ -4,13 +4,10 @@ import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.execution.events.OrchestrationEventType.NODE_EXECUTION_STATUS_UPDATE;
 import static io.harness.pms.execution.Status.SUCCEEDED;
 import static io.harness.rule.OwnerRule.ALEXEI;
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
-
-import com.google.common.collect.Lists;
-import com.google.inject.Inject;
-import com.google.inject.name.Named;
 
 import io.harness.LevelUtils;
 import io.harness.OrchestrationVisualizationTestBase;
@@ -31,24 +28,27 @@ import io.harness.plan.PlanNode;
 import io.harness.pms.ambiance.Level;
 import io.harness.pms.execution.ExecutionMode;
 import io.harness.pms.execution.Status;
+import io.harness.pms.steps.StepType;
 import io.harness.rule.Owner;
 import io.harness.service.GraphGenerationService;
-import io.harness.pms.steps.StepType;
 import io.harness.testlib.RealMongo;
 import io.harness.utils.DummyOutcome;
-import org.assertj.core.util.Maps;
-import org.awaitility.Awaitility;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
-import org.mockito.Spy;
-import org.springframework.data.mongodb.core.MongoTemplate;
 
+import com.google.common.collect.Lists;
+import com.google.inject.Inject;
+import com.google.inject.name.Named;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
+import org.assertj.core.util.Maps;
+import org.awaitility.Awaitility;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
+import org.mockito.Spy;
+import org.springframework.data.mongodb.core.MongoTemplate;
 
 /**
  * Test class for {@link NodeExecutionStatusUpdateEventHandlerV2}

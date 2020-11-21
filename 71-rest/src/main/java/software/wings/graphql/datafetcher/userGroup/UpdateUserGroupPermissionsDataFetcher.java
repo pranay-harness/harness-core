@@ -1,9 +1,7 @@
 package software.wings.graphql.datafetcher.userGroup;
 
-import com.google.inject.Inject;
-
 import io.harness.exception.InvalidRequestException;
-import lombok.extern.slf4j.Slf4j;
+
 import software.wings.beans.security.AccountPermissions;
 import software.wings.beans.security.AppPermission;
 import software.wings.beans.security.UserGroup;
@@ -16,7 +14,9 @@ import software.wings.security.PermissionAttribute;
 import software.wings.security.annotations.AuthRule;
 import software.wings.service.intfc.UserGroupService;
 
+import com.google.inject.Inject;
 import java.util.Set;
+import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class UpdateUserGroupPermissionsDataFetcher

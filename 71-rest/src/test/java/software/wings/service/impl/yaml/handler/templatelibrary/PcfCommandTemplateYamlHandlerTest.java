@@ -1,11 +1,7 @@
 package software.wings.service.impl.yaml.handler.templatelibrary;
 
 import static io.harness.rule.OwnerRule.AADITI;
-import static java.util.Arrays.asList;
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.Matchers.anyString;
-import static org.mockito.Matchers.eq;
-import static org.mockito.Mockito.when;
+
 import static software.wings.beans.Account.GLOBAL_ACCOUNT_ID;
 import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static software.wings.common.TemplateConstants.PCF_PLUGIN;
@@ -18,23 +14,29 @@ import static software.wings.service.impl.yaml.handler.templatelibrary.TemplateL
 import static software.wings.service.impl.yaml.handler.templatelibrary.TemplateLibaryYamlConstants.expectedPcfCommandTemplateWithoutVariable;
 import static software.wings.service.impl.yaml.handler.templatelibrary.TemplateLibaryYamlConstants.rootTemplateFolder;
 
-import com.google.inject.Inject;
+import static java.util.Arrays.asList;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Matchers.anyString;
+import static org.mockito.Matchers.eq;
+import static org.mockito.Mockito.when;
 
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
+
 import software.wings.beans.template.Template;
 import software.wings.beans.yaml.ChangeContext;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.template.TemplateService;
 import software.wings.yaml.templatelibrary.PcfCommandTemplateYaml;
 
+import com.google.inject.Inject;
 import java.io.IOException;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
 
 public class PcfCommandTemplateYamlHandlerTest extends TemplateLibraryYamlHandlerTestBase {
   private String templateName = "test-pcf-command";

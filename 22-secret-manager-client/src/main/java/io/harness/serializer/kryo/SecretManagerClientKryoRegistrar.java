@@ -1,6 +1,5 @@
 package io.harness.serializer.kryo;
 
-import com.esotericsoftware.kryo.Kryo;
 import io.harness.delegate.beans.SSHTaskParams;
 import io.harness.ng.core.dto.secrets.KerberosConfigDTO;
 import io.harness.ng.core.dto.secrets.SSHAuthDTO;
@@ -27,6 +26,8 @@ import io.harness.secretmanagerclient.dto.SecretTextUpdateDTO;
 import io.harness.secretmanagerclient.dto.VaultConfigDTO;
 import io.harness.secretmanagerclient.dto.VaultConfigUpdateDTO;
 import io.harness.serializer.KryoRegistrar;
+
+import com.esotericsoftware.kryo.Kryo;
 
 public class SecretManagerClientKryoRegistrar implements KryoRegistrar {
   @Override

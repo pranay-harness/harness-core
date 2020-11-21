@@ -1,9 +1,8 @@
 package software.wings.service.impl;
 
 import static io.harness.rule.OwnerRule.GARVIT;
-import static org.assertj.core.api.Assertions.assertThat;
 
-import com.google.inject.Inject;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.artifacts.beans.BuildDetailsInternal;
 import io.harness.artifacts.docker.beans.DockerInternalConfig;
@@ -14,18 +13,20 @@ import io.harness.exception.WingsException;
 import io.harness.rule.Owner;
 import io.harness.scm.ScmSecret;
 import io.harness.scm.SecretName;
-import lombok.extern.slf4j.Slf4j;
-import org.junit.Ignore;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
-import org.mockito.InjectMocks;
+
 import software.wings.WingsBaseTest;
 import software.wings.beans.DockerConfig;
 import software.wings.rules.Integration;
 import software.wings.service.intfc.DockerBuildService;
 
+import com.google.inject.Inject;
 import java.util.Collections;
 import java.util.List;
+import lombok.extern.slf4j.Slf4j;
+import org.junit.Ignore;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
+import org.mockito.InjectMocks;
 
 /**
  * Created by anubhaw on 1/6/17.

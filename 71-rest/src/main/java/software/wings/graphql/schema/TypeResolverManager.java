@@ -1,10 +1,5 @@
 package software.wings.graphql.schema;
 
-import com.google.common.collect.ImmutableMap;
-import com.google.inject.Singleton;
-
-import graphql.schema.TypeResolver;
-import lombok.experimental.UtilityClass;
 import software.wings.graphql.schema.type.QLApprovalStageExecution;
 import software.wings.graphql.schema.type.QLDeploymentOutcome;
 import software.wings.graphql.schema.type.QLExecutedAlongPipeline;
@@ -112,9 +107,13 @@ import software.wings.graphql.schema.type.trigger.QLWorkflowAction;
 import software.wings.graphql.schema.type.usergroup.QLLDAPSettings;
 import software.wings.graphql.schema.type.usergroup.QLSAMLSettings;
 
+import com.google.common.collect.ImmutableMap;
+import com.google.inject.Singleton;
+import graphql.schema.TypeResolver;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
+import lombok.experimental.UtilityClass;
 
 @Singleton
 public class TypeResolverManager {

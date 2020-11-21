@@ -1,7 +1,5 @@
 package software.wings.beans.deployment;
 
-import lombok.Builder;
-import lombok.Data;
 import software.wings.api.DeploymentType;
 import software.wings.beans.ArtifactVariable;
 import software.wings.beans.EnvSummary;
@@ -10,6 +8,8 @@ import software.wings.beans.Service;
 
 import java.util.ArrayList;
 import java.util.List;
+import lombok.Builder;
+import lombok.Data;
 
 @Data
 @Builder

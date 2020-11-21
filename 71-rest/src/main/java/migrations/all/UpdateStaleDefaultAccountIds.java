@@ -3,21 +3,21 @@ package migrations.all;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.persistence.HQuery.excludeAuthority;
 
-import com.google.inject.Inject;
-
 import io.harness.persistence.HIterator;
-import lombok.extern.slf4j.Slf4j;
-import migrations.Migration;
-import org.mongodb.morphia.query.Query;
-import org.mongodb.morphia.query.UpdateOperations;
+
 import software.wings.beans.Account;
 import software.wings.beans.User;
 import software.wings.beans.User.UserKeys;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.UserService;
 
+import com.google.inject.Inject;
 import java.util.Set;
 import java.util.stream.Collectors;
+import lombok.extern.slf4j.Slf4j;
+import migrations.Migration;
+import org.mongodb.morphia.query.Query;
+import org.mongodb.morphia.query.UpdateOperations;
 
 /**
  * Migration script for updating default account ids for users which are not part of that account anymore

@@ -1,11 +1,9 @@
 package software.wings.service.impl;
 
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
-
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.security.encryption.EncryptedDataDetail;
+
 import software.wings.beans.AwsInfrastructureMapping;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.SettingAttribute;
@@ -14,6 +12,8 @@ import software.wings.infra.InfrastructureDefinition;
 import software.wings.service.intfc.HostService;
 import software.wings.service.intfc.InfrastructureProvider;
 
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import java.util.List;
 
 /**

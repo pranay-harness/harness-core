@@ -3,6 +3,7 @@ package io.harness.steps.resourcerestraint;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.pms.execution.Status.SUCCEEDED;
 import static io.harness.rule.OwnerRule.ALEXEI;
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Matchers.any;
@@ -11,8 +12,6 @@ import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-
-import com.google.inject.Inject;
 
 import io.harness.OrchestrationStepsTestBase;
 import io.harness.ambiance.Ambiance;
@@ -35,13 +34,14 @@ import io.harness.steps.resourcerestraint.beans.ResourceRestraintInstance;
 import io.harness.steps.resourcerestraint.service.ResourceRestraintRegistry;
 import io.harness.steps.resourcerestraint.service.ResourceRestraintService;
 import io.harness.steps.resourcerestraint.service.RestraintService;
+
+import com.google.inject.Inject;
+import java.util.Collections;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-
-import java.util.Collections;
 
 public class ResourceRestraintStepTest extends OrchestrationStepsTestBase {
   private static final String CLAIMANT_ID = generateUuid();

@@ -1,18 +1,17 @@
 package io.harness.delegate.service;
 
-import com.google.common.collect.Lists;
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
-
 import io.harness.cvng.beans.HostRecordDTO;
 import io.harness.rest.RestResponse;
 import io.harness.verificationclient.CVNextGenServiceClient;
-import lombok.extern.slf4j.Slf4j;
-import retrofit2.Response;
 
+import com.google.common.collect.Lists;
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import java.io.IOException;
 import java.time.Instant;
 import java.util.Set;
+import lombok.extern.slf4j.Slf4j;
+import retrofit2.Response;
 
 @Singleton
 @Slf4j

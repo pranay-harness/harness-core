@@ -6,10 +6,10 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.security.encryption.EncryptedDataParams;
 import io.harness.security.encryption.EncryptedRecord;
 import io.harness.security.encryption.EncryptionConfig;
-import org.hibernate.validator.constraints.NotEmpty;
 
 import java.util.Set;
 import javax.validation.constraints.NotNull;
+import org.hibernate.validator.constraints.NotEmpty;
 
 @OwnedBy(PL)
 public interface CustomEncryptor {

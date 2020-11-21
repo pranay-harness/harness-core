@@ -10,16 +10,7 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.persistence.CreatedAtAware.CREATED_AT_KEY;
-import static java.util.Comparator.comparingInt;
-import static java.util.stream.Collectors.toList;
-import static org.apache.commons.collections4.ListUtils.emptyIfNull;
-import static org.apache.commons.lang3.StringUtils.isBlank;
-import static org.apache.commons.lang3.StringUtils.isNotBlank;
-import static org.mongodb.morphia.aggregation.Accumulator.accumulator;
-import static org.mongodb.morphia.aggregation.Group.first;
-import static org.mongodb.morphia.aggregation.Group.grouping;
-import static org.mongodb.morphia.aggregation.Projection.projection;
-import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
+
 import static software.wings.alerts.AlertStatus.Open;
 import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static software.wings.beans.EntityType.APPLICATION;
@@ -32,10 +23,17 @@ import static software.wings.service.impl.yaml.sync.GitSyncErrorUtils.getCommitI
 import static software.wings.yaml.errorhandling.GitSyncError.GitSyncDirection.GIT_TO_HARNESS;
 import static software.wings.yaml.errorhandling.GitSyncError.GitSyncDirection.HARNESS_TO_GIT;
 
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
+import static java.util.Comparator.comparingInt;
+import static java.util.stream.Collectors.toList;
+import static org.apache.commons.collections4.ListUtils.emptyIfNull;
+import static org.apache.commons.lang3.StringUtils.isBlank;
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
+import static org.mongodb.morphia.aggregation.Accumulator.accumulator;
+import static org.mongodb.morphia.aggregation.Group.first;
+import static org.mongodb.morphia.aggregation.Group.grouping;
+import static org.mongodb.morphia.aggregation.Projection.projection;
+import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 
-import io.fabric8.utils.Strings;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.beans.SearchFilter;
@@ -43,12 +41,7 @@ import io.harness.exception.InvalidRequestException;
 import io.harness.exception.UnexpectedException;
 import io.harness.git.model.ChangeType;
 import io.harness.persistence.CreatedAtAware;
-import lombok.extern.slf4j.Slf4j;
-import org.jetbrains.annotations.NotNull;
-import org.mongodb.morphia.query.FindOptions;
-import org.mongodb.morphia.query.Query;
-import org.mongodb.morphia.query.Sort;
-import org.mongodb.morphia.query.UpdateOperations;
+
 import software.wings.beans.GitConfig;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.User;
@@ -82,6 +75,9 @@ import software.wings.yaml.gitSync.GitFileActivity;
 import software.wings.yaml.gitSync.YamlGitConfig;
 import software.wings.yaml.gitSync.YamlGitConfig.YamlGitConfigKeys;
 
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
+import io.fabric8.utils.Strings;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -91,6 +87,12 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
+import lombok.extern.slf4j.Slf4j;
+import org.jetbrains.annotations.NotNull;
+import org.mongodb.morphia.query.FindOptions;
+import org.mongodb.morphia.query.Query;
+import org.mongodb.morphia.query.Sort;
+import org.mongodb.morphia.query.UpdateOperations;
 
 @Singleton
 @Slf4j
@@ -498,7 +500,7 @@ public class GitSyncErrorServiceImpl implements GitSyncErrorService {
       return Collections.emptyList();
     }
     final List<Change> changesConstructedFromErrors =
-        gitSyncErrors.stream().map(this ::convertToChange).collect(toList());
+        gitSyncErrors.stream().map(this::convertToChange).collect(toList());
     yamlService.sortByProcessingOrder(changesConstructedFromErrors);
 
     return changesConstructedFromErrors.stream().map(Change::getFilePath).collect(toList());
@@ -887,7 +889,7 @@ public class GitSyncErrorServiceImpl implements GitSyncErrorService {
       return aPageResponse().withTotal(0).withResponse(Collections.emptyList()).build();
     }
     List<GitProcessingError> gitProcessingErrors =
-        gitProcessingAlerts.stream().map(this ::getGitProcessingError).collect(toList());
+        gitProcessingAlerts.stream().map(this::getGitProcessingError).collect(toList());
     List<String> connectorIds =
         gitProcessingErrors.stream().map(GitProcessingError::getGitConnectorId).distinct().collect(toList());
     Map<String, SettingAttribute> connectorMap = gitSyncService.getGitConnectorMap(connectorIds, accountId);

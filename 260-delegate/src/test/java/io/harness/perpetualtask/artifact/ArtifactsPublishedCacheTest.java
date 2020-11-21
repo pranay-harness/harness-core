@@ -1,18 +1,16 @@
 package io.harness.perpetualtask.artifact;
 
 import static io.harness.rule.OwnerRule.GARVIT;
+
+import static software.wings.helpers.ext.jenkins.BuildDetails.Builder.aBuildDetails;
+
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
-import static software.wings.helpers.ext.jenkins.BuildDetails.Builder.aBuildDetails;
 
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
-import org.apache.commons.lang3.tuple.ImmutablePair;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
-import org.junit.runner.RunWith;
-import org.mockito.runners.MockitoJUnitRunner;
+
 import software.wings.helpers.ext.jenkins.BuildDetails;
 
 import java.util.Collection;
@@ -21,6 +19,11 @@ import java.util.List;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
+import org.apache.commons.lang3.tuple.ImmutablePair;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
+import org.junit.runner.RunWith;
+import org.mockito.runners.MockitoJUnitRunner;
 
 @RunWith(MockitoJUnitRunner.class)
 public class ArtifactsPublishedCacheTest extends CategoryTest {

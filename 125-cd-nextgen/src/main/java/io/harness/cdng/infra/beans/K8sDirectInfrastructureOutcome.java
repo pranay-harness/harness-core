@@ -1,7 +1,8 @@
 package io.harness.cdng.infra.beans;
 
-import com.fasterxml.jackson.annotation.JsonTypeName;
 import io.harness.cdng.infra.yaml.InfrastructureKind;
+
+import com.fasterxml.jackson.annotation.JsonTypeName;
 import lombok.Builder;
 import lombok.Value;
 

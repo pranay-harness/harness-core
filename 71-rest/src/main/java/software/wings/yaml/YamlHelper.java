@@ -1,11 +1,9 @@
 package software.wings.yaml;
 
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.dataformat.yaml.snakeyaml.Yaml;
-import com.fasterxml.jackson.dataformat.yaml.snakeyaml.introspector.PropertyUtils;
 import io.harness.eraro.ErrorCode;
 import io.harness.eraro.Level;
 import io.harness.eraro.ResponseMessage;
@@ -14,7 +12,7 @@ import io.harness.rest.RestResponse;
 import io.harness.yaml.BaseYaml;
 import io.harness.yaml.YamlRepresenter;
 import io.harness.yaml.YamlUtils;
-import lombok.extern.slf4j.Slf4j;
+
 import software.wings.beans.Account;
 import software.wings.beans.Application;
 import software.wings.beans.Environment;
@@ -32,9 +30,13 @@ import software.wings.yaml.YamlVersion.Type;
 import software.wings.yaml.gitSync.GitSyncWebhook;
 import software.wings.yaml.gitSync.GitSyncWebhook.GitSyncWebhookKeys;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.dataformat.yaml.snakeyaml.Yaml;
+import com.fasterxml.jackson.dataformat.yaml.snakeyaml.introspector.PropertyUtils;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class YamlHelper {

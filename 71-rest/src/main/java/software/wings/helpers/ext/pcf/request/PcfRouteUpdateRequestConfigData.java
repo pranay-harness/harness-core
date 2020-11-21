@@ -1,10 +1,10 @@
 package software.wings.helpers.ext.pcf.request;
 
-import lombok.Builder;
-import lombok.Data;
 import software.wings.helpers.ext.pcf.response.PcfAppSetupTimeDetails;
 
 import java.util.List;
+import lombok.Builder;
+import lombok.Data;
 
 @Data
 @Builder

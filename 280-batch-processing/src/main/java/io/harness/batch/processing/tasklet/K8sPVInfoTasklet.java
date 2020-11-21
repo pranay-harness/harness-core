@@ -2,8 +2,6 @@ package io.harness.batch.processing.tasklet;
 
 import static io.harness.ccm.cluster.entities.K8sWorkload.encodeDotsInKey;
 
-import com.google.common.collect.ImmutableSet;
-
 import io.harness.batch.processing.ccm.CCMJobConstants;
 import io.harness.batch.processing.ccm.ClusterType;
 import io.harness.batch.processing.ccm.InstanceInfo;
@@ -23,6 +21,13 @@ import io.harness.ccm.commons.entities.InstanceData;
 import io.harness.event.grpc.PublishedMessage;
 import io.harness.grpc.utils.HTimestamps;
 import io.harness.perpetualtask.k8s.watch.PVInfo;
+
+import com.google.common.collect.ImmutableSet;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.batch.core.JobParameters;
 import org.springframework.batch.core.StepContribution;
@@ -30,12 +35,6 @@ import org.springframework.batch.core.scope.context.ChunkContext;
 import org.springframework.batch.core.step.tasklet.Tasklet;
 import org.springframework.batch.repeat.RepeatStatus;
 import org.springframework.beans.factory.annotation.Autowired;
-
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
 
 @Slf4j
 public class K8sPVInfoTasklet implements Tasklet {
@@ -64,7 +63,7 @@ public class K8sPVInfoTasklet implements Tasklet {
       // change logger to debug in future
       log.info("Processing publishedMessage of size: {}", publishedMessageList.size());
       publishedMessageList.stream()
-          .map(this ::processPVInfoMessage)
+          .map(this::processPVInfoMessage)
           .filter(instanceInfo -> instanceInfo.getAccountId() != null)
           .forEach(instanceInfo -> instanceDataDao.upsert(instanceInfo));
     } while (publishedMessageList.size() == batchSize);

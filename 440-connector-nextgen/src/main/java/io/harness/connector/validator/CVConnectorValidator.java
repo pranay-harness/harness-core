@@ -2,9 +2,6 @@ package io.harness.connector.validator;
 
 import static java.time.Duration.ofMinutes;
 
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
-
 import io.harness.beans.DecryptableEntity;
 import io.harness.beans.DelegateTaskRequest;
 import io.harness.delegate.beans.DelegateResponseData;
@@ -18,12 +15,14 @@ import io.harness.ng.core.NGAccess;
 import io.harness.secretmanagerclient.services.api.SecretManagerClientService;
 import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.service.DelegateGrpcClientWrapper;
+
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
+import java.util.ArrayList;
+import java.util.List;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-
-import java.util.ArrayList;
-import java.util.List;
 @AllArgsConstructor(access = AccessLevel.PRIVATE, onConstructor = @__({ @Inject }))
 @Slf4j
 @Singleton

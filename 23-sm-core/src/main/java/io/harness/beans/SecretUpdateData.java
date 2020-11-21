@@ -8,11 +8,11 @@ import static io.harness.security.encryption.SecretManagerType.VAULT;
 
 import io.harness.security.encryption.EncryptedDataParams;
 import io.harness.security.encryption.SecretManagerType;
-import lombok.Value;
 
 import java.util.HashSet;
 import java.util.Objects;
 import java.util.Set;
+import lombok.Value;
 
 @Value
 public class SecretUpdateData {

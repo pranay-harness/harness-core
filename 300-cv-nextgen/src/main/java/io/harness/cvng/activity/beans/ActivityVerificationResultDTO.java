@@ -2,12 +2,12 @@ package io.harness.cvng.activity.beans;
 
 import io.harness.cvng.beans.ActivityType;
 import io.harness.cvng.beans.CVMonitoringCategory;
+
+import java.util.Set;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.Value;
-
-import java.util.Set;
 
 @Value
 @Builder

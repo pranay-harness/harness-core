@@ -1,9 +1,7 @@
 package software.wings.api.customdeployment;
 
 import io.harness.data.Outcome;
-import lombok.Builder;
-import lombok.Data;
-import lombok.EqualsAndHashCode;
+
 import software.wings.api.ExecutionDataValue;
 import software.wings.api.InstanceFetchStateExecutionSummary;
 import software.wings.sm.InstanceStatusSummary;
@@ -12,6 +10,9 @@ import software.wings.sm.StateExecutionData;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import lombok.Builder;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
 
 @Data
 @Builder

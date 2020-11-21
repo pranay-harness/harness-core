@@ -6,12 +6,12 @@ import io.harness.delegate.task.artifacts.ArtifactSourceDelegateRequest;
 import io.harness.delegate.task.artifacts.ArtifactSourceType;
 import io.harness.delegate.task.mixin.HttpConnectionExecutionCapabilityGenerator;
 import io.harness.security.encryption.EncryptedDataDetail;
-import lombok.Builder;
-import lombok.EqualsAndHashCode;
-import lombok.Value;
 
 import java.util.Collections;
 import java.util.List;
+import lombok.Builder;
+import lombok.EqualsAndHashCode;
+import lombok.Value;
 
 /**
  * DTO object to be passed to delegate tasks.

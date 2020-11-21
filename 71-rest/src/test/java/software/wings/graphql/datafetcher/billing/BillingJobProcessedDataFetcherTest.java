@@ -1,25 +1,26 @@
 package software.wings.graphql.datafetcher.billing;
 
 import static io.harness.rule.OwnerRule.HITESH;
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.when;
-
-import com.google.inject.Inject;
 
 import io.harness.category.element.UnitTests;
 import io.harness.ccm.cluster.dao.BatchJobScheduledDataDao;
 import io.harness.ccm.cluster.entities.BatchJobScheduledData;
 import io.harness.rule.Owner;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
+
 import software.wings.graphql.datafetcher.AbstractDataFetcherTestBase;
 import software.wings.graphql.schema.query.QLNoOpQueryParameters;
 import software.wings.graphql.schema.type.aggregation.billing.QLBatchLastProcessedData;
 
+import com.google.inject.Inject;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
 
 public class BillingJobProcessedDataFetcherTest extends AbstractDataFetcherTestBase {
   @Inject @InjectMocks BillingJobProcessedDataFetcher billingJobProcessedDataFetcher;

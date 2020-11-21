@@ -4,9 +4,8 @@
 
 package software.wings.beans;
 
-import com.google.common.base.MoreObjects;
-
 import com.fasterxml.jackson.annotation.JsonTypeName;
+import com.google.common.base.MoreObjects;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 

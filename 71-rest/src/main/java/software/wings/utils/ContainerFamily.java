@@ -1,7 +1,5 @@
 package software.wings.utils;
 
-import static com.google.common.collect.ImmutableMap.of;
-import static java.util.Collections.singletonList;
 import static software.wings.beans.Graph.Builder.aGraph;
 import static software.wings.beans.Graph.graphIdGenerator;
 import static software.wings.beans.command.Command.Builder.aCommand;
@@ -15,8 +13,8 @@ import static software.wings.beans.command.CommandUnitType.PROCESS_CHECK_STOPPED
 import static software.wings.beans.command.CommandUnitType.SCP;
 import static software.wings.beans.command.CommandUnitType.SETUP_ENV;
 
-import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.Lists;
+import static com.google.common.collect.ImmutableMap.of;
+import static java.util.Collections.singletonList;
 
 import software.wings.beans.AppContainer;
 import software.wings.beans.Graph;
@@ -26,6 +24,8 @@ import software.wings.beans.command.CommandType;
 import software.wings.beans.command.ScpCommandUnit.ScpFileCategory;
 import software.wings.beans.command.SetupEnvCommandUnit;
 
+import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Lists;
 import java.util.List;
 
 /**
@@ -191,10 +191,10 @@ public enum ContainerFamily {
                               .put("commandString",
                                   "rm -rf tomcat\n"
                                       + (".".equals(appContainer.getStackRootDirectory())
-                                                ? ""
-                                                : "rm -rf " + appContainer.getStackRootDirectory() + "\n")
+                                              ? ""
+                                              : "rm -rf " + appContainer.getStackRootDirectory() + "\n")
                                       + appContainer.getFileType().getUnarchiveCommand(
-                                            appContainer.getFileName(), appContainer.getStackRootDirectory(), "tomcat")
+                                          appContainer.getFileName(), appContainer.getStackRootDirectory(), "tomcat")
                                       + "\nchmod +x tomcat/bin/*")
                               .build())
                       .build(),
@@ -370,10 +370,10 @@ public enum ContainerFamily {
                               .put("commandString",
                                   "rm -rf jboss\n"
                                       + (".".equals(appContainer.getStackRootDirectory())
-                                                ? ""
-                                                : "rm -rf " + appContainer.getStackRootDirectory() + "\n")
+                                              ? ""
+                                              : "rm -rf " + appContainer.getStackRootDirectory() + "\n")
                                       + appContainer.getFileType().getUnarchiveCommand(
-                                            appContainer.getFileName(), appContainer.getStackRootDirectory(), "jboss")
+                                          appContainer.getFileName(), appContainer.getStackRootDirectory(), "jboss")
                                       + "\nchmod +x jboss/bin/*")
                               .build())
                       .build(),

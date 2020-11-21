@@ -1,14 +1,17 @@
 package software.wings.verification.datadog;
 
 import static io.harness.rule.OwnerRule.KAMAL;
+
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
+
 import software.wings.WingsBaseTest;
 import software.wings.sm.StateType;
+
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 public class DatadogLogCVConfigurationTest extends WingsBaseTest {
   private static final String configName = "configName";

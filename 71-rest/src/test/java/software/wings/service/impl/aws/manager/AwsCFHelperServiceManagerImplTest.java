@@ -1,6 +1,11 @@
 package software.wings.service.impl.aws.manager;
 
 import static io.harness.rule.OwnerRule.SATYAM;
+
+import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
+import static software.wings.utils.WingsTestConstants.REPO_NAME;
+import static software.wings.utils.WingsTestConstants.SETTING_ID;
+
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -12,15 +17,11 @@ import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.verify;
-import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
-import static software.wings.utils.WingsTestConstants.REPO_NAME;
-import static software.wings.utils.WingsTestConstants.SETTING_ID;
 
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
+
 import software.wings.beans.AwsConfig;
 import software.wings.beans.GitConfig;
 import software.wings.service.impl.GitConfigHelperService;
@@ -32,6 +33,8 @@ import software.wings.service.intfc.security.SecretManager;
 import software.wings.utils.GitUtilsManager;
 
 import java.util.List;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 public class AwsCFHelperServiceManagerImplTest extends CategoryTest {
   @Test

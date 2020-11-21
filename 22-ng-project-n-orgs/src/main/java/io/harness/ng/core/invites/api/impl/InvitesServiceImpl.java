@@ -5,15 +5,6 @@ import static io.harness.exception.WingsException.USER_SRE;
 import static io.harness.ng.core.invites.entities.Invite.InviteType.ADMIN_INITIATED_INVITE;
 import static io.harness.ng.core.invites.entities.Invite.InviteType.USER_INITIATED_INVITE;
 
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
-import com.google.inject.name.Named;
-
-import com.auth0.jwt.interfaces.Claim;
-import com.mongodb.MongoClientURI;
-import com.mongodb.client.result.UpdateResult;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.exception.DuplicateFieldException;
 import io.harness.exception.InvalidArgumentsException;
@@ -31,6 +22,25 @@ import io.harness.ng.core.invites.ext.mail.MailUtils;
 import io.harness.ng.core.invites.repositories.spring.InvitesRepository;
 import io.harness.ng.core.user.User;
 import io.harness.ng.core.user.services.api.NgUserService;
+
+import com.auth0.jwt.interfaces.Claim;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
+import com.google.inject.name.Named;
+import com.mongodb.MongoClientURI;
+import com.mongodb.client.result.UpdateResult;
+import java.time.Duration;
+import java.time.OffsetDateTime;
+import java.util.Date;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.concurrent.TimeUnit;
+import java.util.function.BiFunction;
+import java.util.function.Function;
+import javax.validation.constraints.NotNull;
 import lombok.extern.slf4j.Slf4j;
 import net.jodah.failsafe.Failsafe;
 import net.jodah.failsafe.RetryPolicy;
@@ -42,17 +52,6 @@ import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Update;
 import org.springframework.transaction.TransactionException;
 import org.springframework.transaction.support.TransactionTemplate;
-
-import java.time.Duration;
-import java.time.OffsetDateTime;
-import java.util.Date;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.concurrent.TimeUnit;
-import java.util.function.BiFunction;
-import java.util.function.Function;
-import javax.validation.constraints.NotNull;
 
 @Singleton
 @Slf4j
@@ -112,7 +111,7 @@ public class InvitesServiceImpl implements InvitesService {
         }
 
         if (!existingInviteOptional.isPresent()) {
-          return wrapperForTransactions(this ::newInviteHandler, invite);
+          return wrapperForTransactions(this::newInviteHandler, invite);
         }
         resendInvitationMail(existingInviteOptional.get());
         return InviteOperationResponse.USER_INVITE_RESENT;
@@ -120,7 +119,7 @@ public class InvitesServiceImpl implements InvitesService {
 
       // Case: user is not registered in the account
       if (!existingInviteOptional.isPresent()) {
-        return wrapperForTransactions(this ::newInviteHandler, invite);
+        return wrapperForTransactions(this::newInviteHandler, invite);
       }
       Invite existingInvite = existingInviteOptional.get();
       if (Boolean.TRUE.equals(existingInvite.getApproved())) {

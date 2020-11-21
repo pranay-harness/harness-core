@@ -1,6 +1,7 @@
 package io.harness.logserviceclient;
 
 import static io.harness.rule.OwnerRule.VISTAAR;
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.eq;
@@ -14,13 +15,13 @@ import io.harness.ci.beans.entities.LogServiceConfig;
 import io.harness.exception.GeneralException;
 import io.harness.executionplan.CIExecutionTest;
 import io.harness.rule.Owner;
+
+import java.io.IOException;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.Mock;
 import retrofit2.Call;
 import retrofit2.Response;
-
-import java.io.IOException;
 
 public class CILogServiceUtilsTest extends CIExecutionTest {
   @Mock private CILogServiceClient logServiceClient;

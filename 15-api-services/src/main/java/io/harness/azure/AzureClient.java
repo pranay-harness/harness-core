@@ -2,20 +2,21 @@ package io.harness.azure;
 
 import static io.harness.azure.model.AzureConstants.SUBSCRIPTION_ID_NULL_VALIDATION_MSG;
 import static io.harness.exception.WingsException.USER;
+
 import static org.apache.commons.lang3.StringUtils.isBlank;
 
-import com.google.inject.Singleton;
-
-import com.microsoft.aad.adal4j.AuthenticationException;
-import com.microsoft.azure.AzureEnvironment;
-import com.microsoft.azure.credentials.ApplicationTokenCredentials;
-import com.microsoft.azure.management.Azure;
-import com.microsoft.rest.LogLevel;
 import io.harness.azure.context.AzureClientContext;
 import io.harness.azure.model.AzureConfig;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.InvalidCredentialsException;
 import io.harness.exception.InvalidRequestException;
+
+import com.google.inject.Singleton;
+import com.microsoft.aad.adal4j.AuthenticationException;
+import com.microsoft.azure.AzureEnvironment;
+import com.microsoft.azure.credentials.ApplicationTokenCredentials;
+import com.microsoft.azure.management.Azure;
+import com.microsoft.rest.LogLevel;
 import lombok.extern.slf4j.Slf4j;
 
 @Singleton

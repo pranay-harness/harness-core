@@ -1,14 +1,14 @@
 package io.harness.integrationstage;
 
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
-
 import io.harness.beans.environment.BuildJobEnvInfo;
 import io.harness.beans.executionargs.CIExecutionArgs;
 import io.harness.beans.stages.IntegrationStage;
 import io.harness.beans.steps.stepinfo.LiteEngineTaskStepInfo;
 import io.harness.yaml.core.ExecutionElement;
 import io.harness.yaml.extended.ci.codebase.CodeBase;
+
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
 
 @Singleton
 public class LiteEngineTaskStepGenerator {

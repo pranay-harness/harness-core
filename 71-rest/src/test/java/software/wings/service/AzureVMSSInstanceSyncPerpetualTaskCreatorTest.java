@@ -1,5 +1,9 @@
 package software.wings.service;
 
+import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
+import static software.wings.utils.WingsTestConstants.APP_ID;
+import static software.wings.utils.WingsTestConstants.INFRA_MAPPING_ID;
+
 import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
@@ -7,12 +11,6 @@ import static org.mockito.Matchers.anyBoolean;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.verify;
-import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
-import static software.wings.utils.WingsTestConstants.APP_ID;
-import static software.wings.utils.WingsTestConstants.INFRA_MAPPING_ID;
-
-import com.google.common.collect.ImmutableMap;
-import com.google.inject.Inject;
 
 import io.harness.category.element.UnitTests;
 import io.harness.perpetualtask.PerpetualTaskClientContext;
@@ -20,11 +18,7 @@ import io.harness.perpetualtask.PerpetualTaskService;
 import io.harness.perpetualtask.internal.PerpetualTaskRecord;
 import io.harness.rule.Owner;
 import io.harness.rule.OwnerRule;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
-import org.mockito.ArgumentCaptor;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
+
 import software.wings.WingsBaseTest;
 import software.wings.api.DeploymentSummary;
 import software.wings.beans.AzureVMSSInfrastructureMapping;
@@ -33,8 +27,15 @@ import software.wings.beans.infrastructure.instance.info.AzureVMSSInstanceInfo;
 import software.wings.beans.infrastructure.instance.key.deployment.AzureVMSSDeploymentKey;
 import software.wings.service.intfc.instance.InstanceService;
 
+import com.google.common.collect.ImmutableMap;
+import com.google.inject.Inject;
 import java.util.List;
 import java.util.Map;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
+import org.mockito.ArgumentCaptor;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
 
 public class AzureVMSSInstanceSyncPerpetualTaskCreatorTest extends WingsBaseTest {
   @Mock private InstanceService mockInstanceService;

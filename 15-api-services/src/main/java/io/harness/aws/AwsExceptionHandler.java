@@ -6,6 +6,8 @@ import static io.harness.eraro.ErrorCode.AWS_CLUSTER_NOT_FOUND;
 import static io.harness.eraro.ErrorCode.AWS_SERVICE_NOT_FOUND;
 import static io.harness.exception.WingsException.USER;
 
+import io.harness.exception.InvalidRequestException;
+
 import com.amazonaws.AmazonClientException;
 import com.amazonaws.AmazonServiceException;
 import com.amazonaws.services.autoscaling.model.AmazonAutoScalingException;
@@ -17,7 +19,6 @@ import com.amazonaws.services.ecs.model.AmazonECSException;
 import com.amazonaws.services.ecs.model.ClientException;
 import com.amazonaws.services.ecs.model.ClusterNotFoundException;
 import com.amazonaws.services.ecs.model.ServiceNotFoundException;
-import io.harness.exception.InvalidRequestException;
 import lombok.experimental.UtilityClass;
 import lombok.extern.slf4j.Slf4j;
 

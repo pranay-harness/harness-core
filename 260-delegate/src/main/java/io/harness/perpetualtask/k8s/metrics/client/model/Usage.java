@@ -1,14 +1,12 @@
 package io.harness.perpetualtask.k8s.metrics.client.model;
 
 import com.google.gson.annotations.SerializedName;
-
+import java.io.Serializable;
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.experimental.FieldDefaults;
-
-import java.io.Serializable;
 
 @Data
 @Builder

@@ -1,15 +1,13 @@
 package software.wings.service.impl;
 
 import static io.harness.rule.OwnerRule.GEORGE;
-import static org.assertj.core.api.Assertions.assertThat;
 
-import com.google.inject.Inject;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.category.element.UnitTests;
 import io.harness.limits.configuration.LimitConfigurationServiceMongo;
 import io.harness.rule.Owner;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
+
 import software.wings.WingsBaseTest;
 import software.wings.beans.loginSettings.LoginSettingsService;
 import software.wings.service.intfc.ActivityService;
@@ -37,7 +35,10 @@ import software.wings.service.intfc.template.TemplateGalleryService;
 import software.wings.service.intfc.template.TemplateService;
 import software.wings.service.intfc.verification.CVConfigurationService;
 
+import com.google.inject.Inject;
 import java.util.List;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 public class ServiceClassLocatorTest extends WingsBaseTest {
   @Inject ServiceClassLocator serviceClassLocator;

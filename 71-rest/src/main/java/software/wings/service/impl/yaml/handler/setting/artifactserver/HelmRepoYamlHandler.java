@@ -1,6 +1,7 @@
 package software.wings.service.impl.yaml.handler.setting.artifactserver;
 
 import static io.harness.validation.Validator.notNullCheck;
+
 import static java.lang.String.format;
 
 import software.wings.beans.SettingAttribute;

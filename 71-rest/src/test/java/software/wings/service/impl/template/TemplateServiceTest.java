@@ -9,12 +9,7 @@ import static io.harness.rule.OwnerRule.GARVIT;
 import static io.harness.rule.OwnerRule.MILOS;
 import static io.harness.rule.OwnerRule.SRINIVAS;
 import static io.harness.rule.OwnerRule.UTKARSH;
-import static java.util.Arrays.asList;
-import static java.util.Collections.EMPTY_LIST;
-import static java.util.Collections.singletonList;
-import static java.util.stream.Collectors.toList;
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
+
 import static software.wings.beans.Account.GLOBAL_ACCOUNT_ID;
 import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static software.wings.beans.CommandCategory.Type.COMMANDS;
@@ -51,8 +46,12 @@ import static software.wings.utils.TemplateTestConstants.TEMPLATE_FOLDER_NAME;
 import static software.wings.utils.TemplateTestConstants.TEMPLATE_ID;
 import static software.wings.utils.WingsTestConstants.APP_ID;
 
-import com.google.common.collect.ImmutableSet;
-import com.google.inject.Inject;
+import static java.util.Arrays.asList;
+import static java.util.Collections.EMPTY_LIST;
+import static java.util.Collections.singletonList;
+import static java.util.stream.Collectors.toList;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import io.harness.beans.PageRequest;
 import io.harness.category.element.UnitTests;
@@ -60,9 +59,7 @@ import io.harness.data.structure.UUIDGenerator;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.rule.Owner;
-import org.junit.Test;
-import org.junit.Test.None;
-import org.junit.experimental.categories.Category;
+
 import software.wings.beans.CommandCategory;
 import software.wings.beans.EntityType;
 import software.wings.beans.GraphNode;
@@ -93,6 +90,8 @@ import software.wings.service.intfc.template.ImportedTemplateService;
 import software.wings.service.intfc.template.TemplateVersionService;
 import software.wings.utils.WingsTestConstants;
 
+import com.google.common.collect.ImmutableSet;
+import com.google.inject.Inject;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -100,6 +99,9 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import javax.validation.ConstraintViolationException;
+import org.junit.Test;
+import org.junit.Test.None;
+import org.junit.experimental.categories.Category;
 
 public class TemplateServiceTest extends TemplateBaseTestHelper {
   private static final String MY_START_COMMAND = "My Start Command";

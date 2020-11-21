@@ -1,10 +1,10 @@
 package io.harness.ccm.config;
 
-import lombok.extern.slf4j.Slf4j;
 import software.wings.beans.yaml.ChangeContext;
 import software.wings.service.impl.yaml.handler.BaseYamlHandler;
 
 import java.util.List;
+import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class CCMConfigYamlHandler extends BaseYamlHandler<CCMConfig.Yaml, CCMConfig> {

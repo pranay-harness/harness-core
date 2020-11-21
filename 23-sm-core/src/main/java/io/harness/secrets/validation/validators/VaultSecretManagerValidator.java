@@ -4,9 +4,6 @@ import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.eraro.ErrorCode.VAULT_OPERATION_ERROR;
 import static io.harness.exception.WingsException.USER;
 
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
-
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.EncryptedData;
 import io.harness.beans.SecretManagerConfig;
@@ -15,6 +12,8 @@ import io.harness.exception.SecretManagementException;
 import io.harness.secrets.SecretsDao;
 import io.harness.secrets.validation.BaseSecretValidator;
 
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import javax.validation.executable.ValidateOnExecution;
 
 @ValidateOnExecution

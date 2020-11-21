@@ -3,14 +3,15 @@ package software.wings.delegatetasks.validation.capabilities;
 import io.harness.delegate.beans.executioncapability.CapabilityType;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.security.encryption.EncryptedDataDetail;
-import lombok.Builder;
-import lombok.Value;
+
 import software.wings.beans.WinRmConnectionAttributes;
 
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import javax.validation.constraints.NotNull;
+import lombok.Builder;
+import lombok.Value;
 
 @Value
 @Builder

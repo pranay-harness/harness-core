@@ -2,12 +2,13 @@ package io.harness.testframework.restutils;
 
 import io.harness.rest.RestResponse;
 import io.harness.testframework.framework.Setup;
-import io.restassured.http.ContentType;
-import io.restassured.mapper.ObjectMapperType;
+
 import software.wings.beans.loginSettings.LoginSettings;
 import software.wings.beans.loginSettings.PasswordStrengthPolicy;
 import software.wings.beans.loginSettings.UserLockoutPolicy;
 
+import io.restassured.http.ContentType;
+import io.restassured.mapper.ObjectMapperType;
 import javax.ws.rs.core.GenericType;
 
 public class LoginSettingsUtils {

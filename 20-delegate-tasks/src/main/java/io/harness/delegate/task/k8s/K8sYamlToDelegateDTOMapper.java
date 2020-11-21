@@ -3,9 +3,8 @@ package io.harness.delegate.task.k8s;
 import static io.harness.k8s.KubernetesHelperService.getKubernetesConfigFromDefaultKubeConfigFile;
 import static io.harness.k8s.KubernetesHelperService.getKubernetesConfigFromServiceAccount;
 import static io.harness.k8s.KubernetesHelperService.isRunningInCluster;
-import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
-import com.google.inject.Singleton;
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 import io.harness.delegate.beans.connector.k8Connector.KubernetesAuthDTO;
 import io.harness.delegate.beans.connector.k8Connector.KubernetesClientKeyCertDTO;
@@ -19,6 +18,8 @@ import io.harness.k8s.model.KubernetesClusterAuthType;
 import io.harness.k8s.model.KubernetesConfig;
 import io.harness.k8s.model.KubernetesConfig.KubernetesConfigBuilder;
 import io.harness.k8s.model.OidcGrantType;
+
+import com.google.inject.Singleton;
 
 @Singleton
 public class K8sYamlToDelegateDTOMapper {

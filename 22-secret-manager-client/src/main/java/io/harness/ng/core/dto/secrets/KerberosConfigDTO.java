@@ -1,21 +1,21 @@
 package io.harness.ng.core.dto.secrets;
 
+import io.harness.ng.core.models.BaseSSHSpec;
+import io.harness.ng.core.models.KerberosConfig;
+
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.annotation.JsonTypeId;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.fasterxml.jackson.annotation.JsonTypeName;
-import io.harness.ng.core.models.BaseSSHSpec;
-import io.harness.ng.core.models.KerberosConfig;
+import java.util.Optional;
+import javax.validation.Valid;
+import javax.validation.constraints.NotNull;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
-
-import java.util.Optional;
-import javax.validation.Valid;
-import javax.validation.constraints.NotNull;
 
 @Data
 @NoArgsConstructor

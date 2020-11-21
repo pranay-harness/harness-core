@@ -4,9 +4,6 @@ import static io.harness.cvng.beans.DataCollectionExecutionStatus.FAILED;
 import static io.harness.cvng.beans.DataCollectionExecutionStatus.SUCCESS;
 import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
 
-import com.google.inject.Inject;
-import com.google.inject.name.Named;
-
 import io.harness.beans.DecryptableEntity;
 import io.harness.cvng.beans.CVDataCollectionInfo;
 import io.harness.cvng.beans.DataCollectionInfo;
@@ -29,10 +26,11 @@ import io.harness.perpetualtask.PerpetualTaskResponse;
 import io.harness.security.encryption.SecretDecryptionService;
 import io.harness.serializer.KryoSerializer;
 import io.harness.verificationclient.CVNextGenServiceClient;
-import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.exception.ExceptionUtils;
+
 import software.wings.delegatetasks.DelegateLogService;
 
+import com.google.inject.Inject;
+import com.google.inject.name.Named;
 import java.io.IOException;
 import java.time.Instant;
 import java.util.Collection;
@@ -40,6 +38,8 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.ExecutorService;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.exception.ExceptionUtils;
 
 @Slf4j
 public class DataCollectionPerpetualTaskExecutor implements PerpetualTaskExecutor {

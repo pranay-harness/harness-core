@@ -7,17 +7,15 @@ import static io.harness.distribution.barrier.Barrier.getDuration;
 import static io.harness.eraro.ErrorCode.BARRIERS_NOT_RUNNING_CONCURRENTLY;
 import static io.harness.govern.Switch.unhandled;
 import static io.harness.mongo.iterator.MongoPersistenceIterator.SchedulingType.REGULAR;
-import static java.time.Duration.ofMinutes;
-import static java.util.Arrays.asList;
-import static java.util.stream.Collectors.toList;
+
 import static software.wings.sm.StateType.BARRIER;
 import static software.wings.sm.StateType.ENV_STATE;
 import static software.wings.sm.StateType.PHASE;
 import static software.wings.sm.StateType.PHASE_STEP;
 
-import com.google.common.collect.ImmutableMap;
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
+import static java.time.Duration.ofMinutes;
+import static java.util.Arrays.asList;
+import static java.util.stream.Collectors.toList;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.ExecutionStatus;
@@ -36,10 +34,7 @@ import io.harness.mongo.iterator.provider.MorphiaPersistenceProvider;
 import io.harness.persistence.HIterator;
 import io.harness.persistence.HKeyIterator;
 import io.harness.waiter.WaitNotifyEngine;
-import lombok.Builder;
-import lombok.Value;
-import lombok.extern.slf4j.Slf4j;
-import org.mongodb.morphia.query.UpdateOperations;
+
 import software.wings.beans.BarrierInstance;
 import software.wings.beans.BarrierInstance.BarrierInstanceKeys;
 import software.wings.beans.BarrierInstancePipeline;
@@ -58,12 +53,19 @@ import software.wings.sm.BarrierStatusData;
 import software.wings.sm.StateExecutionInstance;
 import software.wings.sm.StateExecutionInstance.StateExecutionInstanceKeys;
 
+import com.google.common.collect.ImmutableMap;
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 import javax.validation.Valid;
+import lombok.Builder;
+import lombok.Value;
+import lombok.extern.slf4j.Slf4j;
+import org.mongodb.morphia.query.UpdateOperations;
 
 @OwnedBy(CDC)
 @Singleton
@@ -89,7 +91,7 @@ public class BarrierServiceImpl implements BarrierService, ForceProctor {
             .fieldName(BarrierInstanceKeys.nextIteration)
             .targetInterval(ofMinutes(1))
             .acceptableNoAlertDelay(ofMinutes(1))
-            .handler(this ::update)
+            .handler(this::update)
             .filterExpander(query -> query.filter(BarrierInstanceKeys.state, STANDING.name()))
             .schedulingType(REGULAR)
             .persistenceProvider(persistenceProvider)

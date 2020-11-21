@@ -1,16 +1,15 @@
 package software.wings.service.impl.alert;
 
-import com.google.common.base.Preconditions;
-import com.google.inject.Inject;
-
-import org.apache.commons.lang3.StringUtils;
 import software.wings.beans.AccountType;
 import software.wings.beans.alert.NotificationRulesStatus;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.alert.NotificationRulesStatusService;
 
+import com.google.common.base.Preconditions;
+import com.google.inject.Inject;
 import javax.annotation.Nonnull;
+import org.apache.commons.lang3.StringUtils;
 
 public class NotificationRulesStatusServiceImpl implements NotificationRulesStatusService {
   @Inject private WingsPersistence persistence;

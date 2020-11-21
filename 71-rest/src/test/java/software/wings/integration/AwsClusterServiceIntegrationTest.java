@@ -1,21 +1,16 @@
 package software.wings.integration;
 
 import static io.harness.rule.OwnerRule.ANUBHAW;
-import static java.util.Arrays.asList;
+
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 
-import com.google.inject.Inject;
+import static java.util.Arrays.asList;
 
-import com.amazonaws.regions.Regions;
 import io.harness.category.element.DeprecatedIntegrationTests;
 import io.harness.rule.Owner;
 import io.harness.scm.ScmSecret;
 import io.harness.scm.SecretName;
-import org.apache.commons.text.StrSubstitutor;
-import org.junit.Before;
-import org.junit.Ignore;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
+
 import software.wings.WingsBaseTest;
 import software.wings.beans.AwsConfig;
 import software.wings.beans.SettingAttribute;
@@ -25,9 +20,16 @@ import software.wings.cloudprovider.aws.EcsContainerService;
 import software.wings.cloudprovider.aws.EcsContainerServiceImpl;
 import software.wings.service.impl.AwsHelperService;
 
+import com.amazonaws.regions.Regions;
+import com.google.inject.Inject;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
+import org.apache.commons.text.StrSubstitutor;
+import org.junit.Before;
+import org.junit.Ignore;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 /**
  * Created by anubhaw on 12/29/16.

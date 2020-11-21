@@ -1,9 +1,7 @@
 package software.wings.integration;
 
 import static io.harness.rule.OwnerRule.BRETT;
-import static java.lang.String.format;
-import static java.util.Arrays.asList;
-import static org.assertj.core.api.Assertions.assertThat;
+
 import static software.wings.beans.Account.Builder.anAccount;
 import static software.wings.beans.Application.Builder.anApplication;
 import static software.wings.beans.ConfigFile.DEFAULT_TEMPLATE_ID;
@@ -15,19 +13,15 @@ import static software.wings.common.Constants.HARNESS_NAME;
 import static software.wings.integration.IntegrationTestUtils.randomInt;
 import static software.wings.service.intfc.ServiceVariableService.EncryptedFieldMode.OBTAIN_VALUE;
 
-import com.google.inject.Inject;
+import static java.lang.String.format;
+import static java.util.Arrays.asList;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.beans.PageRequest;
 import io.harness.category.element.DeprecatedIntegrationTests;
 import io.harness.rule.Owner;
 import io.harness.stream.BoundedInputStream;
-import lombok.extern.slf4j.Slf4j;
-import org.junit.Before;
-import org.junit.Ignore;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
-import org.junit.rules.TemporaryFolder;
+
 import software.wings.WingsBaseTest;
 import software.wings.beans.AppDynamicsConfig;
 import software.wings.beans.Application;
@@ -48,6 +42,7 @@ import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.ServiceTemplateService;
 import software.wings.service.intfc.SettingsService;
 
+import com.google.inject.Inject;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileInputStream;
@@ -56,6 +51,13 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import lombok.extern.slf4j.Slf4j;
+import org.junit.Before;
+import org.junit.Ignore;
+import org.junit.Rule;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
+import org.junit.rules.TemporaryFolder;
 
 /**
  * Created by anubhaw on 4/28/16.

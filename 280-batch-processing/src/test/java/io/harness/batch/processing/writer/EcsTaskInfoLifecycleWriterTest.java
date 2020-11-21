@@ -2,13 +2,12 @@ package io.harness.batch.processing.writer;
 
 import static io.harness.event.payloads.Lifecycle.EventType.EVENT_TYPE_START;
 import static io.harness.rule.OwnerRule.HITESH;
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-
-import com.google.protobuf.Timestamp;
 
 import io.harness.CategoryTest;
 import io.harness.batch.processing.integration.EcsEventGenerator;
@@ -25,6 +24,14 @@ import io.harness.event.payloads.EcsTaskInfo;
 import io.harness.exception.InvalidRequestException;
 import io.harness.grpc.utils.HTimestamps;
 import io.harness.rule.Owner;
+
+import software.wings.service.intfc.instance.CloudToHarnessMappingService;
+
+import com.google.protobuf.Timestamp;
+import java.time.Instant;
+import java.util.Arrays;
+import java.util.Map;
+import java.util.Optional;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -34,12 +41,6 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.mockito.runners.MockitoJUnitRunner;
-import software.wings.service.intfc.instance.CloudToHarnessMappingService;
-
-import java.time.Instant;
-import java.util.Arrays;
-import java.util.Map;
-import java.util.Optional;
 
 @RunWith(MockitoJUnitRunner.class)
 public class EcsTaskInfoLifecycleWriterTest extends CategoryTest implements EcsEventGenerator {

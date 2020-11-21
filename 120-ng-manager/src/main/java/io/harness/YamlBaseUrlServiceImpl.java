@@ -1,9 +1,9 @@
 package io.harness;
 
-import com.google.inject.Inject;
-
 import io.harness.ng.NextGenConfiguration;
 import io.harness.ng.core.schema.YamlBaseUrlService;
+
+import com.google.inject.Inject;
 
 public class YamlBaseUrlServiceImpl implements YamlBaseUrlService {
   @Inject NextGenConfiguration nextGenConfiguration;

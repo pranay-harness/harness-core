@@ -3,7 +3,6 @@ package io.harness.cvng.exception;
 import io.harness.eraro.ErrorCode;
 import io.harness.eraro.ResponseMessage;
 import io.harness.exception.ExceptionUtils;
-import lombok.extern.slf4j.Slf4j;
 
 import javax.ws.rs.BadRequestException;
 import javax.ws.rs.container.ResourceInfo;
@@ -12,6 +11,7 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.ext.ExceptionMapper;
 import javax.ws.rs.ext.Provider;
+import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Provider

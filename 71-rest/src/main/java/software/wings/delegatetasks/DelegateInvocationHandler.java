@@ -1,6 +1,7 @@
 package software.wings.delegatetasks;
 
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+
 import static java.util.Collections.singletonList;
 
 import io.harness.beans.DelegateTask;
@@ -8,6 +9,7 @@ import io.harness.beans.DelegateTask.DelegateTaskBuilder;
 import io.harness.delegate.beans.RemoteMethodReturnValueData;
 import io.harness.delegate.beans.TaskData;
 import io.harness.tasks.Cd1SetupFields;
+
 import software.wings.beans.AwsConfig;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.SyncTaskContext;

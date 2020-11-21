@@ -2,6 +2,7 @@ package io.harness.states;
 
 import static io.harness.rule.OwnerRule.ALEKSANDAR;
 import static io.harness.rule.OwnerRule.HARSH;
+
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -18,13 +19,13 @@ import io.harness.executionplan.CIExecutionTest;
 import io.harness.rule.Owner;
 import io.harness.service.DelegateGrpcClientWrapper;
 import io.harness.stateutils.buildstate.ConnectorUtils;
+
+import java.io.IOException;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-
-import java.io.IOException;
 
 public class CleanupStepTest extends CIExecutionTest {
   @Mock private Ambiance ambiance;

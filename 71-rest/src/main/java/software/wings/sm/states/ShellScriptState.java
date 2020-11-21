@@ -1,23 +1,21 @@
 package software.wings.sm.states;
 
-import static com.google.common.collect.Lists.newArrayList;
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.data.structure.ListUtils.trimStrings;
 import static io.harness.delegate.beans.TaskData.DEFAULT_ASYNC_CALL_TIMEOUT;
 import static io.harness.logging.CommandExecutionStatus.SUCCESS;
-import static java.util.Arrays.asList;
-import static java.util.Collections.emptyList;
-import static java.util.Collections.singletonList;
+
 import static software.wings.beans.FeatureName.DISABLE_WINRM_COMMAND_ENCODING;
 import static software.wings.beans.FeatureName.LOCAL_DELEGATE_CONFIG_OVERRIDE;
 import static software.wings.beans.delegation.ShellScriptParameters.CommandUnit;
 
-import com.google.inject.Inject;
+import static com.google.common.collect.Lists.newArrayList;
+import static java.util.Arrays.asList;
+import static java.util.Collections.emptyList;
+import static java.util.Collections.singletonList;
 
-import com.github.reinert.jjschema.Attributes;
-import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.DelegateTask;
 import io.harness.beans.ExecutionStatus;
@@ -40,13 +38,7 @@ import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.serializer.KryoSerializer;
 import io.harness.tasks.Cd1SetupFields;
 import io.harness.tasks.ResponseData;
-import lombok.Getter;
-import lombok.Setter;
-import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.StringUtils;
-import org.hibernate.validator.constraints.NotEmpty;
-import org.mongodb.morphia.annotations.Property;
-import org.mongodb.morphia.annotations.Transient;
+
 import software.wings.annotation.EncryptableSetting;
 import software.wings.api.ScriptStateExecutionData;
 import software.wings.beans.Activity.Type;
@@ -94,9 +86,19 @@ import software.wings.sm.states.mixin.SweepingOutputStateMixin;
 import software.wings.stencils.DefaultValue;
 import software.wings.stencils.EnumData;
 
+import com.github.reinert.jjschema.Attributes;
+import com.github.reinert.jjschema.SchemaIgnore;
+import com.google.inject.Inject;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
+import lombok.Getter;
+import lombok.Setter;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
+import org.hibernate.validator.constraints.NotEmpty;
+import org.mongodb.morphia.annotations.Property;
+import org.mongodb.morphia.annotations.Transient;
 
 @OwnedBy(CDC)
 @Slf4j

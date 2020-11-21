@@ -13,15 +13,11 @@ import static io.harness.eraro.ErrorCode.INVALID_ARGUMENT;
 import static io.harness.exception.WingsException.ReportTarget.LOG_SYSTEM;
 import static io.harness.validation.PersistenceValidator.validateUuid;
 import static io.harness.validation.Validator.notNullCheck;
+
 import static software.wings.security.PermissionAttribute.Action.UPDATE;
 import static software.wings.security.PermissionAttribute.PermissionType.LOGGED_IN;
 import static software.wings.security.PermissionAttribute.PermissionType.WORKFLOW;
 
-import com.google.inject.Inject;
-
-import com.codahale.metrics.annotation.ExceptionMetered;
-import com.codahale.metrics.annotation.Timed;
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.beans.WorkflowType;
@@ -29,7 +25,7 @@ import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
 import io.harness.rest.RestResponse;
 import io.harness.security.annotations.LearningEngineAuth;
-import io.swagger.annotations.Api;
+
 import software.wings.api.InstanceElement;
 import software.wings.beans.EntityType;
 import software.wings.beans.FailureStrategy;
@@ -60,6 +56,11 @@ import software.wings.sm.StateType;
 import software.wings.sm.StateTypeScope;
 import software.wings.stencils.Stencil;
 
+import com.codahale.metrics.annotation.ExceptionMetered;
+import com.codahale.metrics.annotation.Timed;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.google.inject.Inject;
+import io.swagger.annotations.Api;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
@@ -123,8 +124,8 @@ public class WorkflowResource {
       @QueryParam("tagFilter") String tagFilter, @QueryParam("withTags") @DefaultValue("false") boolean withTags) {
     if ((isEmpty(workflowTypes))
         && (pageRequest.getFilters() == null
-               || pageRequest.getFilters().stream().noneMatch(
-                      searchFilter -> searchFilter.getFieldName().equals("workflowType")))) {
+            || pageRequest.getFilters().stream().noneMatch(
+                searchFilter -> searchFilter.getFieldName().equals("workflowType")))) {
       pageRequest.addFilter("workflowType", EQ, WorkflowType.ORCHESTRATION);
     }
     if (isNotEmpty(appIds)) {

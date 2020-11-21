@@ -6,24 +6,18 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.mongo.MongoUtils.setUnset;
 import static io.harness.validation.Validator.notNullCheck;
-import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
+
 import static software.wings.app.ManagerCacheRegistrar.WHITELIST_CACHE;
 import static software.wings.beans.security.access.WhitelistStatus.ACTIVE;
 
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
-import com.google.inject.name.Named;
+import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.eraro.ErrorCode;
 import io.harness.event.handler.impl.EventPublishHelper;
 import io.harness.exception.WingsException;
-import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.net.util.SubnetUtils;
-import org.apache.commons.validator.routines.InetAddressValidator;
-import org.mongodb.morphia.query.Query;
-import org.mongodb.morphia.query.UpdateOperations;
+
 import software.wings.app.MainConfiguration;
 import software.wings.beans.Event.Type;
 import software.wings.beans.security.access.GlobalWhitelistConfig;
@@ -35,10 +29,18 @@ import software.wings.features.api.PremiumFeature;
 import software.wings.features.api.RestrictedApi;
 import software.wings.service.intfc.WhitelistService;
 
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
+import com.google.inject.name.Named;
 import java.util.Arrays;
 import java.util.List;
 import javax.cache.Cache;
 import javax.validation.executable.ValidateOnExecution;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.net.util.SubnetUtils;
+import org.apache.commons.validator.routines.InetAddressValidator;
+import org.mongodb.morphia.query.Query;
+import org.mongodb.morphia.query.UpdateOperations;
 
 /**
  * @author rktummala on 04/06/18

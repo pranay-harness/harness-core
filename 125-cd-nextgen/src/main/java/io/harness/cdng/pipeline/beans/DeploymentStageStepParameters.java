@@ -2,10 +2,10 @@ package io.harness.cdng.pipeline.beans;
 
 import io.harness.cdng.pipeline.DeploymentStage;
 import io.harness.state.io.StepParameters;
-import lombok.Builder;
-import lombok.Data;
 
 import java.util.Map;
+import lombok.Builder;
+import lombok.Data;
 
 @Data
 @Builder

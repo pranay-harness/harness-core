@@ -1,19 +1,21 @@
 package software.wings.notification;
 
 import static io.harness.rule.OwnerRule.ANUBHAW;
-import static org.mockito.Mockito.verify;
 
-import com.google.inject.Inject;
+import static org.mockito.Mockito.verify;
 
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
+
+import software.wings.WingsBaseTest;
+import software.wings.helpers.ext.mail.EmailData;
+import software.wings.service.intfc.EmailNotificationService;
+
+import com.google.inject.Inject;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import software.wings.WingsBaseTest;
-import software.wings.helpers.ext.mail.EmailData;
-import software.wings.service.intfc.EmailNotificationService;
 
 /**
  * Created by peeyushaggarwal on 5/25/16.

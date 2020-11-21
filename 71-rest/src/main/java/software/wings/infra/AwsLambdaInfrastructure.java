@@ -1,18 +1,13 @@
 package software.wings.infra;
 
 import static io.harness.validation.Validator.ensureType;
-import static java.lang.String.format;
+
 import static software.wings.beans.InfrastructureType.AWS_LAMBDA;
 
-import com.google.common.collect.ImmutableSet;
+import static java.lang.String.format;
 
-import com.fasterxml.jackson.annotation.JsonTypeName;
 import io.harness.exception.InvalidRequestException;
-import lombok.Builder;
-import lombok.Data;
-import lombok.EqualsAndHashCode;
-import lombok.experimental.FieldNameConstants;
-import org.apache.commons.lang3.StringUtils;
+
 import software.wings.annotation.IncludeFieldMap;
 import software.wings.api.CloudProviderType;
 import software.wings.beans.AwsLambdaInfraStructureMapping;
@@ -20,9 +15,16 @@ import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.InfrastructureMappingType;
 import software.wings.service.impl.yaml.handler.InfraDefinition.CloudProviderInfrastructureYaml;
 
+import com.fasterxml.jackson.annotation.JsonTypeName;
+import com.google.common.collect.ImmutableSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import lombok.Builder;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.experimental.FieldNameConstants;
+import org.apache.commons.lang3.StringUtils;
 
 @JsonTypeName("AWS_AWS_LAMBDA")
 @Data
@@ -106,7 +108,9 @@ public class AwsLambdaInfrastructure
                 "Security Groups should be of List or comma-separated String type. Found : " + entry.getValue());
           }
           break;
-        default: { throw new InvalidRequestException(format("Unknown expression : [%s]", entry.getKey())); }
+        default: {
+          throw new InvalidRequestException(format("Unknown expression : [%s]", entry.getKey()));
+        }
       }
     }
     if (StringUtils.isEmpty(region)) {

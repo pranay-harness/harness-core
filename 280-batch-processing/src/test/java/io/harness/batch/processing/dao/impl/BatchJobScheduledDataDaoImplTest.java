@@ -1,22 +1,22 @@
 package io.harness.batch.processing.dao.impl;
 
 import static io.harness.rule.OwnerRule.HITESH;
-import static org.assertj.core.api.Assertions.assertThat;
 
-import com.google.inject.Inject;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.batch.processing.BatchProcessingBaseTest;
 import io.harness.batch.processing.ccm.BatchJobType;
 import io.harness.category.element.UnitTests;
 import io.harness.ccm.cluster.entities.BatchJobScheduledData;
 import io.harness.rule.Owner;
+
+import com.google.inject.Inject;
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
 import org.mockito.runners.MockitoJUnitRunner;
-
-import java.time.Instant;
-import java.time.temporal.ChronoUnit;
 
 @RunWith(MockitoJUnitRunner.class)
 public class BatchJobScheduledDataDaoImplTest extends BatchProcessingBaseTest {

@@ -3,8 +3,10 @@ package io.harness.mappers;
 import static io.harness.mappers.SecretManagerConfigMapper.ngMetaDataFromDto;
 
 import io.harness.secretmanagerclient.dto.LocalConfigDTO;
-import lombok.experimental.UtilityClass;
+
 import software.wings.beans.LocalEncryptionConfig;
+
+import lombok.experimental.UtilityClass;
 
 @UtilityClass
 public class LocalConfigMapper {

@@ -2,12 +2,9 @@ package io.harness.functional.verification.workflow;
 
 import static io.harness.persistence.HQuery.excludeAuthority;
 import static io.harness.rule.OwnerRule.SOWMYA;
+
 import static org.assertj.core.api.Assertions.assertThat;
 
-import com.google.common.collect.ImmutableList;
-import com.google.inject.Inject;
-
-import com.amazonaws.services.ec2.model.Instance;
 import io.harness.category.element.FunctionalTests;
 import io.harness.context.ContextElementType;
 import io.harness.functional.AbstractFunctionalTest;
@@ -22,10 +19,7 @@ import io.harness.generator.WorkflowGenerator;
 import io.harness.rule.Owner;
 import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.testframework.restutils.ArtifactRestUtils;
-import org.junit.Before;
-import org.junit.Ignore;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
+
 import software.wings.beans.AwsConfig;
 import software.wings.beans.Service;
 import software.wings.beans.SettingAttribute;
@@ -45,11 +39,18 @@ import software.wings.sm.StateExecutionInstance;
 import software.wings.sm.StateExecutionInstance.StateExecutionInstanceKeys;
 import software.wings.sm.states.spotinst.SpotInstSetupContextElement;
 
+import com.amazonaws.services.ec2.model.Instance;
+import com.google.common.collect.ImmutableList;
+import com.google.inject.Inject;
 import java.io.IOException;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
+import org.junit.Before;
+import org.junit.Ignore;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 public class SpotinstDeploymentTypeVerification extends AbstractFunctionalTest {
   @Inject private OwnerManager ownerManager;

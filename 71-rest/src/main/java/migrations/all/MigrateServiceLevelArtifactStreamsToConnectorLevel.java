@@ -1,20 +1,14 @@
 package migrations.all;
 
 import static io.harness.persistence.HPersistence.DEFAULT_STORE;
-import static org.apache.commons.lang3.StringUtils.isBlank;
+
 import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static software.wings.beans.artifact.ArtifactStreamType.CUSTOM;
 
-import com.google.inject.Inject;
+import static org.apache.commons.lang3.StringUtils.isBlank;
 
-import com.mongodb.BasicDBObject;
-import com.mongodb.BulkWriteOperation;
-import com.mongodb.DBCollection;
 import io.harness.persistence.HIterator;
-import lombok.extern.slf4j.Slf4j;
-import migrations.Migration;
-import org.apache.commons.lang3.tuple.ImmutablePair;
-import org.apache.commons.lang3.tuple.Pair;
+
 import software.wings.beans.Account;
 import software.wings.beans.Application;
 import software.wings.beans.Application.ApplicationKeys;
@@ -33,11 +27,19 @@ import software.wings.security.GenericEntityFilter;
 import software.wings.security.UsageRestrictions;
 import software.wings.service.intfc.SettingsService;
 
+import com.google.inject.Inject;
+import com.mongodb.BasicDBObject;
+import com.mongodb.BulkWriteOperation;
+import com.mongodb.DBCollection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import lombok.extern.slf4j.Slf4j;
+import migrations.Migration;
+import org.apache.commons.lang3.tuple.ImmutablePair;
+import org.apache.commons.lang3.tuple.Pair;
 
 @Slf4j
 @SuppressWarnings("deprecation")

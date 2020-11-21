@@ -2,7 +2,6 @@ package io.harness.cdng.artifact.bean.yaml;
 
 import static io.harness.delegate.task.artifacts.ArtifactSourceConstants.GCR_NAME;
 
-import com.fasterxml.jackson.annotation.JsonTypeName;
 import io.harness.beans.ParameterField;
 import io.harness.cdng.artifact.bean.ArtifactConfig;
 import io.harness.cdng.artifact.utils.ArtifactUtils;
@@ -14,14 +13,15 @@ import io.harness.delegate.task.artifacts.ArtifactSourceType;
 import io.harness.walktree.beans.LevelNode;
 import io.harness.walktree.visitor.SimpleVisitorHelper;
 import io.harness.walktree.visitor.Visitable;
+
+import com.fasterxml.jackson.annotation.JsonTypeName;
 import io.swagger.annotations.ApiModelProperty;
+import java.util.Arrays;
+import java.util.List;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.experimental.Wither;
-
-import java.util.Arrays;
-import java.util.List;
 
 /**
  * This is Yaml POJO class which may contain expressions as well.

@@ -1,8 +1,8 @@
 package io.harness.managerclient;
 
-import com.google.inject.AbstractModule;
-
 import io.harness.security.ServiceTokenGenerator;
+
+import com.google.inject.AbstractModule;
 
 /**
  * Guice Module for initializing Verification Manager client.

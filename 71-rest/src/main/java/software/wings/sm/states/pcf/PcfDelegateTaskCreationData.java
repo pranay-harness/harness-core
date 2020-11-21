@@ -1,10 +1,10 @@
 package software.wings.sm.states.pcf;
 
-import lombok.Builder;
-import lombok.Data;
 import software.wings.beans.TaskType;
 
 import java.util.List;
+import lombok.Builder;
+import lombok.Data;
 
 @Data
 @Builder

@@ -1,9 +1,8 @@
 package io.harness.queue;
 
-import lombok.extern.slf4j.Slf4j;
-
 import java.time.Duration;
 import java.util.Date;
+import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class NoopQueueConsumer<T extends Queuable> implements QueueConsumer<T> {

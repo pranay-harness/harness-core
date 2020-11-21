@@ -4,16 +4,26 @@ import static io.harness.data.encoding.EncodingUtils.compressString;
 import static io.harness.data.encoding.EncodingUtils.deCompressString;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+
 import static software.wings.common.VerificationConstants.ML_RECORDS_TTL_MONTHS;
 import static software.wings.service.impl.newrelic.NewRelicMetricDataRecord.DEFAULT_GROUP_NAME;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.mongo.index.FdIndex;
 import io.harness.mongo.index.FdTtlIndex;
 import io.harness.persistence.AccountAccess;
 import io.harness.serializer.JsonUtils;
+
+import software.wings.beans.Base;
+import software.wings.sm.StateType;
+
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.github.reinert.jjschema.SchemaIgnore;
+import java.io.IOException;
+import java.time.OffsetDateTime;
+import java.util.Date;
+import java.util.List;
+import java.util.Map;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -23,14 +33,6 @@ import lombok.experimental.FieldNameConstants;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.jetbrains.annotations.NotNull;
 import org.mongodb.morphia.annotations.Transient;
-import software.wings.beans.Base;
-import software.wings.sm.StateType;
-
-import java.io.IOException;
-import java.time.OffsetDateTime;
-import java.util.Date;
-import java.util.List;
-import java.util.Map;
 
 /**
  * Common Class extended by TimeSeries and Experimental Analysis Record.

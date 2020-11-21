@@ -1,16 +1,19 @@
 package software.wings.beans.artifact;
 
 import static io.harness.rule.OwnerRule.DEEPAK_PUTHRAYA;
-import static junit.framework.TestCase.assertEquals;
-import static junit.framework.TestCase.assertTrue;
+
 import static software.wings.beans.artifact.AzureMachineImageArtifactStream.ImageDefinition;
 import static software.wings.beans.artifact.AzureMachineImageArtifactStream.ImageType.IMAGE_GALLERY;
 import static software.wings.beans.artifact.AzureMachineImageArtifactStream.OSType.LINUX;
 import static software.wings.beans.artifact.AzureMachineImageArtifactStream.builder;
 
+import static junit.framework.TestCase.assertEquals;
+import static junit.framework.TestCase.assertTrue;
+
 import io.harness.category.element.UnitTests;
 import io.harness.exception.InvalidRequestException;
 import io.harness.rule.Owner;
+
 import org.assertj.core.api.Assertions;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;

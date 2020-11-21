@@ -2,10 +2,7 @@ package software.wings.helpers.ext.external.comm;
 
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.security.encryption.EncryptedDataDetail;
-import lombok.Builder;
-import lombok.Data;
-import lombok.EqualsAndHashCode;
-import lombok.NoArgsConstructor;
+
 import software.wings.delegatetasks.validation.capabilities.SmtpCapability;
 import software.wings.helpers.ext.mail.EmailData;
 import software.wings.helpers.ext.mail.SmtpConfig;
@@ -13,6 +10,10 @@ import software.wings.helpers.ext.mail.SmtpConfig;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import lombok.Builder;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.NoArgsConstructor;
 
 @Data
 @NoArgsConstructor

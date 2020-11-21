@@ -1,10 +1,10 @@
 package io.harness.azure.client;
 
-import com.microsoft.azure.management.containerregistry.Registry;
-import com.microsoft.azure.management.containerregistry.RegistryCredentials;
 import io.harness.azure.context.AzureContainerRegistryClientContext;
 import io.harness.azure.model.AzureConfig;
 
+import com.microsoft.azure.management.containerregistry.Registry;
+import com.microsoft.azure.management.containerregistry.RegistryCredentials;
 import java.util.Optional;
 
 public interface AzureContainerRegistryClient {

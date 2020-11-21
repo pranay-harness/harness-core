@@ -3,13 +3,12 @@ package io.harness.batch.processing.writer;
 import static io.harness.event.payloads.Lifecycle.EventType.EVENT_TYPE_START;
 import static io.harness.event.payloads.Lifecycle.EventType.EVENT_TYPE_STOP;
 import static io.harness.rule.OwnerRule.HITESH;
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-
-import com.google.protobuf.Timestamp;
 
 import io.harness.CategoryTest;
 import io.harness.batch.processing.integration.EcsEventGenerator;
@@ -24,6 +23,12 @@ import io.harness.ccm.commons.entities.InstanceData;
 import io.harness.event.grpc.PublishedMessage;
 import io.harness.grpc.utils.HTimestamps;
 import io.harness.rule.Owner;
+
+import com.google.protobuf.Timestamp;
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
+import java.util.Arrays;
+import java.util.Map;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -33,11 +38,6 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.mockito.runners.MockitoJUnitRunner;
-
-import java.time.Instant;
-import java.time.temporal.ChronoUnit;
-import java.util.Arrays;
-import java.util.Map;
 
 @RunWith(MockitoJUnitRunner.class)
 public class Ec2InstanceInfoLifecycleWriterTest extends CategoryTest implements EcsEventGenerator {

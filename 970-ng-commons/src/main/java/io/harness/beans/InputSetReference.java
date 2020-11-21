@@ -2,10 +2,10 @@ package io.harness.beans;
 
 import io.harness.common.EntityReference;
 import io.harness.common.EntityReferenceHelper;
-import lombok.Builder;
-import lombok.Data;
 
 import java.util.Arrays;
+import lombok.Builder;
+import lombok.Data;
 
 @Data
 @Builder

@@ -2,10 +2,9 @@ package io.harness.marketplace.gcp.procurement;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
 
-import com.google.inject.Inject;
-
 import io.harness.annotations.dev.OwnedBy;
 
+import com.google.inject.Inject;
 import java.util.Map;
 
 @OwnedBy(PL)

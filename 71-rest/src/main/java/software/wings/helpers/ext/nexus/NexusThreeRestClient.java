@@ -3,14 +3,7 @@ package software.wings.helpers.ext.nexus;
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 
 import io.harness.annotations.dev.OwnedBy;
-import retrofit2.Call;
-import retrofit2.http.Body;
-import retrofit2.http.GET;
-import retrofit2.http.Header;
-import retrofit2.http.Headers;
-import retrofit2.http.POST;
-import retrofit2.http.Path;
-import retrofit2.http.Query;
+
 import software.wings.helpers.ext.nexus.model.DockerImageResponse;
 import software.wings.helpers.ext.nexus.model.DockerImageTagResponse;
 import software.wings.helpers.ext.nexus.model.Nexus3AssetResponse;
@@ -22,6 +15,14 @@ import software.wings.helpers.ext.nexus.model.RepositoryRequest;
 import software.wings.helpers.ext.nexus.model.RepositoryResponse;
 
 import java.util.List;
+import retrofit2.Call;
+import retrofit2.http.Body;
+import retrofit2.http.GET;
+import retrofit2.http.Header;
+import retrofit2.http.Headers;
+import retrofit2.http.POST;
+import retrofit2.http.Path;
+import retrofit2.http.Query;
 
 /**
  * Created by sgurubelli on 11/16/17.

@@ -5,6 +5,9 @@ import static io.harness.persistence.HQuery.excludeAuthority;
 import static io.harness.rule.OwnerRule.GEORGE;
 import static io.harness.rule.OwnerRule.PRAVEEN;
 import static io.harness.rule.OwnerRule.RAGHU;
+
+import static software.wings.service.impl.newrelic.NewRelicMetricDataRecord.DEFAULT_GROUP_NAME;
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
@@ -12,10 +15,6 @@ import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.when;
-import static software.wings.service.impl.newrelic.NewRelicMetricDataRecord.DEFAULT_GROUP_NAME;
-
-import com.google.common.collect.Lists;
-import com.google.inject.Inject;
 
 import io.harness.beans.DelegateTask;
 import io.harness.beans.DelegateTask.Status;
@@ -25,12 +24,7 @@ import io.harness.context.ContextElementType;
 import io.harness.rule.Owner;
 import io.harness.tasks.Cd1SetupFields;
 import io.harness.tasks.ResponseData;
-import org.apache.commons.lang3.reflect.FieldUtils;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
-import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
+
 import software.wings.beans.AccountType;
 import software.wings.beans.Application;
 import software.wings.beans.DynaTraceConfig;
@@ -51,6 +45,8 @@ import software.wings.sm.ExecutionResponse;
 import software.wings.verification.VerificationDataAnalysisResponse;
 import software.wings.verification.VerificationStateAnalysisExecutionData;
 
+import com.google.common.collect.Lists;
+import com.google.inject.Inject;
 import java.text.ParseException;
 import java.util.Collections;
 import java.util.HashMap;
@@ -60,6 +56,12 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
+import org.apache.commons.lang3.reflect.FieldUtils;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
 
 /**
  * Created by rsingh on 3/22/18.

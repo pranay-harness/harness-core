@@ -1,10 +1,9 @@
 package io.harness.factory;
 
-import lombok.extern.slf4j.Slf4j;
-
 import java.io.Closeable;
 import java.util.Iterator;
 import java.util.LinkedList;
+import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class ClosingFactory implements AutoCloseable {

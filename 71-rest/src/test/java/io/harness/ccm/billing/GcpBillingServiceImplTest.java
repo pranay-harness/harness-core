@@ -1,13 +1,19 @@
 package io.harness.ccm.billing;
 
-import static com.google.cloud.bigquery.StandardSQLTypeName.FLOAT64;
-import static com.google.cloud.bigquery.StandardSQLTypeName.STRING;
 import static io.harness.rule.OwnerRule.HANTANG;
 import static io.harness.rule.OwnerRule.ROHIT;
+
+import static com.google.cloud.bigquery.StandardSQLTypeName.FLOAT64;
+import static com.google.cloud.bigquery.StandardSQLTypeName.STRING;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.data.Percentage.withPercentage;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.when;
+
+import io.harness.CategoryTest;
+import io.harness.category.element.UnitTests;
+import io.harness.ccm.billing.bigquery.BigQueryService;
+import io.harness.rule.Owner;
 
 import com.google.cloud.Timestamp;
 import com.google.cloud.bigquery.BigQuery;
@@ -17,14 +23,16 @@ import com.google.cloud.bigquery.QueryJobConfiguration;
 import com.google.cloud.bigquery.Schema;
 import com.google.cloud.bigquery.StandardSQLTypeName;
 import com.google.cloud.bigquery.TableResult;
-
 import com.healthmarketscience.sqlbuilder.BinaryCondition;
 import com.healthmarketscience.sqlbuilder.Condition;
 import com.healthmarketscience.sqlbuilder.FunctionCall;
-import io.harness.CategoryTest;
-import io.harness.category.element.UnitTests;
-import io.harness.ccm.billing.bigquery.BigQueryService;
-import io.harness.rule.Owner;
+import java.math.BigDecimal;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Calendar;
+import java.util.Collections;
+import java.util.GregorianCalendar;
+import java.util.List;
 import org.apache.commons.math3.stat.regression.SimpleRegression;
 import org.junit.Before;
 import org.junit.Rule;
@@ -34,14 +42,6 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnit;
 import org.mockito.junit.MockitoRule;
-
-import java.math.BigDecimal;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Calendar;
-import java.util.Collections;
-import java.util.GregorianCalendar;
-import java.util.List;
 
 public class GcpBillingServiceImplTest extends CategoryTest {
   private SimpleRegression regression;

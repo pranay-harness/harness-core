@@ -4,8 +4,6 @@ import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.exception.WingsException.ExecutionContext.MANAGER;
 
-import com.google.inject.Inject;
-
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.beans.SearchFilter.Operator;
@@ -13,8 +11,7 @@ import io.harness.exception.WingsException;
 import io.harness.lock.AcquiredLock;
 import io.harness.lock.PersistentLocker;
 import io.harness.logging.ExceptionLogger;
-import lombok.extern.slf4j.Slf4j;
-import migrations.Migration;
+
 import software.wings.beans.Account;
 import software.wings.beans.AzureKubernetesInfrastructureMapping;
 import software.wings.beans.DirectKubernetesInfrastructureMapping;
@@ -30,8 +27,11 @@ import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.InfrastructureMappingService;
 
+import com.google.inject.Inject;
 import java.time.Duration;
 import java.util.List;
+import lombok.extern.slf4j.Slf4j;
+import migrations.Migration;
 
 /**
  * Migration script to set namespace for kubernetes instances.

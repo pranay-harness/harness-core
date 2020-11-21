@@ -1,6 +1,7 @@
 package io.harness.states;
 
 import static io.harness.rule.OwnerRule.ALEKSANDAR;
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Matchers.any;
@@ -18,14 +19,14 @@ import io.harness.exception.InvalidRequestException;
 import io.harness.executionplan.CIExecutionTest;
 import io.harness.grpc.DelegateServiceGrpcClient;
 import io.harness.rule.Owner;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
 
 import java.time.Duration;
 import java.util.HashMap;
 import java.util.function.Supplier;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
 
 public class CIDelegateTaskExecutorTest extends CIExecutionTest {
   private static final String TASK_ID = "123456";

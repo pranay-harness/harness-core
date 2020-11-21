@@ -2,6 +2,7 @@ package software.wings.graphql.datafetcher.trigger;
 
 import static io.harness.rule.OwnerRule.MILAN;
 import static io.harness.rule.OwnerRule.ROHITKARELIA;
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.when;
 
@@ -9,14 +10,7 @@ import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.configuration.DeployMode;
 import io.harness.rule.Owner;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
-import org.mockito.InjectMocks;
-import org.mockito.Matchers;
-import org.mockito.Mock;
-import org.mockito.Mockito;
-import org.mockito.MockitoAnnotations;
+
 import software.wings.app.MainConfiguration;
 import software.wings.app.PortalConfig;
 import software.wings.beans.SettingAttribute;
@@ -42,6 +36,14 @@ import software.wings.service.intfc.SettingsService;
 
 import java.util.Arrays;
 import java.util.Collections;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
+import org.mockito.InjectMocks;
+import org.mockito.Matchers;
+import org.mockito.Mock;
+import org.mockito.Mockito;
+import org.mockito.MockitoAnnotations;
 
 public class TriggerConditionControllerTest extends CategoryTest {
   @Mock MainConfiguration mainConfiguration;

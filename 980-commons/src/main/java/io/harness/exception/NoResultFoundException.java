@@ -2,9 +2,9 @@ package io.harness.exception;
 
 import io.harness.eraro.ErrorCode;
 import io.harness.eraro.Level;
-import lombok.Builder;
 
 import java.util.EnumSet;
+import lombok.Builder;
 
 public class NoResultFoundException extends WingsException {
   @Builder(builderMethodName = "newBuilder")

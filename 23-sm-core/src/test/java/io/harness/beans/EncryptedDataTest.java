@@ -3,6 +3,7 @@ package io.harness.beans;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.rule.OwnerRule.UTKARSH;
 import static io.harness.rule.OwnerRule.VIKAS;
+
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.fail;
@@ -12,12 +13,7 @@ import io.harness.beans.EncryptedData.EncryptedDataKeys;
 import io.harness.category.element.UnitTests;
 import io.harness.data.structure.UUIDGenerator;
 import io.harness.rule.Owner;
-import org.apache.commons.lang3.reflect.FieldUtils;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
-import org.junit.runners.Parameterized.Parameters;
-import org.powermock.reflect.Whitebox;
+
 import software.wings.settings.SettingVariableTypes;
 
 import java.util.ArrayList;
@@ -25,6 +21,12 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Random;
 import java.util.Set;
+import org.apache.commons.lang3.reflect.FieldUtils;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
+import org.junit.runners.Parameterized.Parameters;
+import org.powermock.reflect.Whitebox;
 
 public class EncryptedDataTest extends SMCoreTestBase {
   private static final Random random = new Random();

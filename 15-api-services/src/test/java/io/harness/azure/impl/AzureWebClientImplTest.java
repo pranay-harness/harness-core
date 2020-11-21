@@ -9,17 +9,6 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import com.google.common.util.concurrent.TimeLimiter;
-
-import com.microsoft.azure.Page;
-import com.microsoft.azure.PagedList;
-import com.microsoft.azure.credentials.ApplicationTokenCredentials;
-import com.microsoft.azure.management.Azure;
-import com.microsoft.azure.management.appservice.DeploymentSlot;
-import com.microsoft.azure.management.appservice.DeploymentSlots;
-import com.microsoft.azure.management.appservice.WebApp;
-import com.microsoft.azure.management.appservice.WebApps;
-import com.microsoft.rest.LogLevel;
 import io.harness.CategoryTest;
 import io.harness.azure.AzureClient;
 import io.harness.azure.context.AzureClientContext;
@@ -29,6 +18,19 @@ import io.harness.category.element.UnitTests;
 import io.harness.network.Http;
 import io.harness.rule.Owner;
 import io.harness.rule.OwnerRule;
+
+import com.google.common.util.concurrent.TimeLimiter;
+import com.microsoft.azure.Page;
+import com.microsoft.azure.PagedList;
+import com.microsoft.azure.credentials.ApplicationTokenCredentials;
+import com.microsoft.azure.management.Azure;
+import com.microsoft.azure.management.appservice.DeploymentSlot;
+import com.microsoft.azure.management.appservice.DeploymentSlots;
+import com.microsoft.azure.management.appservice.WebApp;
+import com.microsoft.azure.management.appservice.WebApps;
+import com.microsoft.rest.LogLevel;
+import java.util.List;
+import java.util.Optional;
 import org.jetbrains.annotations.NotNull;
 import org.junit.Before;
 import org.junit.Test;
@@ -42,9 +44,6 @@ import org.powermock.core.classloader.annotations.PowerMockIgnore;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
 import rx.Completable;
-
-import java.util.List;
-import java.util.Optional;
 
 @RunWith(PowerMockRunner.class)
 @PrepareForTest({Azure.class, AzureClient.class, Http.class, TimeLimiter.class})

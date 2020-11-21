@@ -1,18 +1,19 @@
 package software.wings.beans;
 
-import static org.assertj.core.api.Assertions.assertThat;
 import static software.wings.beans.Variable.VariableBuilder.aVariable;
 
-import com.google.common.collect.ImmutableMap;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
 import io.harness.rule.OwnerRule;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
+
 import software.wings.WingsBaseTest;
 
+import com.google.common.collect.ImmutableMap;
 import java.util.Arrays;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 public class VariableTest extends WingsBaseTest {
   @Test

@@ -14,27 +14,28 @@ import static io.harness.delegate.task.citasks.cik8handler.container.GitCloneCon
 import static io.harness.delegate.task.citasks.cik8handler.container.GitCloneContainerSpecBuilderTestHelper.gitCloneWithSSHExpectedResponse;
 import static io.harness.delegate.task.citasks.cik8handler.container.GitCloneContainerSpecBuilderTestHelper.gitCloneWithSSHExpectedVolumes;
 import static io.harness.rule.OwnerRule.SHUBHAM;
+
 import static junit.framework.TestCase.assertEquals;
 import static junit.framework.TestCase.assertNull;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-import io.fabric8.kubernetes.api.model.Container;
-import io.fabric8.kubernetes.api.model.Volume;
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.task.citasks.cik8handler.params.GitCloneContainerParams;
 import io.harness.exception.GeneralException;
 import io.harness.exception.InvalidArgumentsException;
 import io.harness.rule.Owner;
+
+import io.fabric8.kubernetes.api.model.Container;
+import io.fabric8.kubernetes.api.model.Volume;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.mockito.MockitoAnnotations;
-
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
 
 public class GitCloneContainerSpecBuilderTest extends CategoryTest {
   @InjectMocks private GitCloneContainerSpecBuilder gitCloneContainerSpecBuilder;

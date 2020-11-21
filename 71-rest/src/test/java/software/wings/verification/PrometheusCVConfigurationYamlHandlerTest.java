@@ -2,6 +2,7 @@ package software.wings.verification;
 
 import static io.harness.rule.OwnerRule.RAGHU;
 import static io.harness.rule.OwnerRule.SOWMYA;
+
 import static org.apache.cxf.ws.addressing.ContextUtils.generateUUID;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.fail;
@@ -11,12 +12,7 @@ import static org.mockito.Mockito.when;
 import io.harness.category.element.UnitTests;
 import io.harness.exception.WingsException;
 import io.harness.rule.Owner;
-import org.apache.commons.lang3.reflect.FieldUtils;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
-import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
+
 import software.wings.WingsBaseTest;
 import software.wings.beans.Application;
 import software.wings.beans.Service;
@@ -36,6 +32,12 @@ import software.wings.verification.prometheus.PrometheusCVServiceConfiguration;
 
 import java.util.ArrayList;
 import java.util.List;
+import org.apache.commons.lang3.reflect.FieldUtils;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
 
 public class PrometheusCVConfigurationYamlHandlerTest extends WingsBaseTest {
   @Mock YamlHelper yamlHelper;

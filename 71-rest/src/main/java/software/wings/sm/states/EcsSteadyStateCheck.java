@@ -5,16 +5,15 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.delegate.beans.TaskData.DEFAULT_ASYNC_CALL_TIMEOUT;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.validation.Validator.notNullCheck;
-import static java.util.Collections.singletonList;
-import static java.util.stream.Collectors.toList;
+
 import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static software.wings.beans.Environment.EnvironmentType.ALL;
 import static software.wings.beans.Environment.GLOBAL_ENV_ID;
 import static software.wings.sm.StateType.ECS_STEADY_STATE_CHECK;
 
-import com.google.inject.Inject;
+import static java.util.Collections.singletonList;
+import static java.util.stream.Collectors.toList;
 
-import com.github.reinert.jjschema.Attributes;
 import io.harness.beans.DelegateTask;
 import io.harness.beans.ExecutionStatus;
 import io.harness.beans.TriggeredBy;
@@ -25,8 +24,7 @@ import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.tasks.Cd1SetupFields;
 import io.harness.tasks.ResponseData;
-import lombok.Getter;
-import lombok.Setter;
+
 import software.wings.api.InstanceElement;
 import software.wings.api.InstanceElementListParam;
 import software.wings.api.ScriptStateExecutionData;
@@ -58,9 +56,13 @@ import software.wings.sm.State;
 import software.wings.sm.WorkflowStandardParams;
 import software.wings.stencils.DefaultValue;
 
+import com.github.reinert.jjschema.Attributes;
+import com.google.inject.Inject;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import lombok.Getter;
+import lombok.Setter;
 
 public class EcsSteadyStateCheck extends State {
   public static final String ECS_STEADY_STATE_CHECK_COMMAND_NAME = "ECS Steady State Check";

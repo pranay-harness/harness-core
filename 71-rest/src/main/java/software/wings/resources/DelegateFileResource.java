@@ -1,17 +1,14 @@
 package software.wings.resources;
 
 import static io.harness.delegate.beans.DelegateFile.Builder.aDelegateFile;
+
+import static software.wings.security.PermissionAttribute.ResourceType.DELEGATE;
+
 import static java.time.Duration.ofHours;
 import static java.time.Duration.ofMinutes;
 import static java.time.Duration.ofSeconds;
 import static javax.ws.rs.core.MediaType.MULTIPART_FORM_DATA;
-import static software.wings.security.PermissionAttribute.ResourceType.DELEGATE;
 
-import com.google.common.io.Files;
-import com.google.inject.Inject;
-
-import com.codahale.metrics.annotation.ExceptionMetered;
-import com.codahale.metrics.annotation.Timed;
 import io.harness.beans.FileMetadata;
 import io.harness.data.structure.UUIDGenerator;
 import io.harness.delegate.beans.DelegateFile;
@@ -22,13 +19,7 @@ import io.harness.distribution.idempotence.IdempotentResult;
 import io.harness.rest.RestResponse;
 import io.harness.security.annotations.DelegateAuth;
 import io.harness.stream.BoundedInputStream;
-import io.swagger.annotations.Api;
-import lombok.Builder;
-import lombok.Value;
-import lombok.extern.slf4j.Slf4j;
-import org.glassfish.jersey.media.multipart.FormDataContentDisposition;
-import org.glassfish.jersey.media.multipart.FormDataParam;
-import org.hibernate.validator.constraints.NotEmpty;
+
 import software.wings.app.MainConfiguration;
 import software.wings.common.MongoIdempotentRegistry;
 import software.wings.security.annotations.Scope;
@@ -36,6 +27,11 @@ import software.wings.service.intfc.ConfigService;
 import software.wings.service.intfc.DelegateService;
 import software.wings.service.intfc.FileService;
 
+import com.codahale.metrics.annotation.ExceptionMetered;
+import com.codahale.metrics.annotation.Timed;
+import com.google.common.io.Files;
+import com.google.inject.Inject;
+import io.swagger.annotations.Api;
 import java.io.File;
 import java.io.InputStream;
 import javax.validation.constraints.NotNull;
@@ -47,6 +43,12 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.StreamingOutput;
+import lombok.Builder;
+import lombok.Value;
+import lombok.extern.slf4j.Slf4j;
+import org.glassfish.jersey.media.multipart.FormDataContentDisposition;
+import org.glassfish.jersey.media.multipart.FormDataParam;
+import org.hibernate.validator.constraints.NotEmpty;
 
 @Api("agent/delegateFiles")
 @Path("agent/delegateFiles")

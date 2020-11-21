@@ -1,19 +1,24 @@
 package io.harness.rule;
 
-import com.google.common.collect.Sets;
-
-import com.codahale.metrics.MetricRegistry;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.jaxrs.json.JacksonJsonProvider;
-import io.dropwizard.jackson.Jackson;
-import io.dropwizard.jersey.DropwizardResourceConfig;
-import io.dropwizard.jersey.jackson.JacksonMessageBodyProvider;
-import io.dropwizard.jersey.validation.Validators;
 import io.harness.cvng.exception.BadRequestExceptionMapper;
 import io.harness.cvng.exception.ConstraintViolationExceptionMapper;
 import io.harness.cvng.exception.GenericExceptionMapper;
 import io.harness.cvng.exception.NotFoundExceptionMapper;
 import io.harness.serializer.JsonSubtypeResolver;
+
+import com.codahale.metrics.MetricRegistry;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.jaxrs.json.JacksonJsonProvider;
+import com.google.common.collect.Sets;
+import io.dropwizard.jackson.Jackson;
+import io.dropwizard.jersey.DropwizardResourceConfig;
+import io.dropwizard.jersey.jackson.JacksonMessageBodyProvider;
+import io.dropwizard.jersey.validation.Validators;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Set;
+import javax.validation.Validator;
+import javax.ws.rs.client.Client;
 import org.glassfish.jersey.client.ClientConfig;
 import org.glassfish.jersey.server.ServerProperties;
 import org.glassfish.jersey.servlet.ServletProperties;
@@ -25,12 +30,6 @@ import org.glassfish.jersey.test.spi.TestContainerFactory;
 import org.junit.rules.TestRule;
 import org.junit.runner.Description;
 import org.junit.runners.model.Statement;
-
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Set;
-import javax.validation.Validator;
-import javax.ws.rs.client.Client;
 
 public class ResourceTestRule implements TestRule {
   private final Set<Object> singletons;

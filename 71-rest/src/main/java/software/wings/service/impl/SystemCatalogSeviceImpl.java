@@ -1,16 +1,16 @@
 package software.wings.service.impl;
 
-import static com.google.common.collect.ImmutableMap.of;
 import static io.harness.validation.Validator.notNullCheck;
+
 import static software.wings.beans.Application.GLOBAL_APP_ID;
 
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
+import static com.google.common.collect.ImmutableMap.of;
 
 import io.harness.beans.PageRequest;
 import io.harness.delegate.service.DelegateAgentFileService.FileBucket;
 import io.harness.logging.Misc;
 import io.harness.stream.BoundedInputStream;
+
 import software.wings.beans.SystemCatalog;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.FileService;
@@ -18,6 +18,8 @@ import software.wings.service.intfc.SystemCatalogService;
 import software.wings.utils.FileType;
 import software.wings.utils.FileTypeDetector;
 
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import java.io.BufferedInputStream;
 import java.io.File;
 import java.io.FileInputStream;

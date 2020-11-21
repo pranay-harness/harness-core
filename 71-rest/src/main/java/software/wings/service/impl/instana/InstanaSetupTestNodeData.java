@@ -1,15 +1,15 @@
 package software.wings.service.impl.instana;
 
+import software.wings.service.impl.analysis.SetupTestNodeData;
+import software.wings.sm.StateType;
+
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import java.util.Collections;
+import java.util.List;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
-import software.wings.service.impl.analysis.SetupTestNodeData;
-import software.wings.sm.StateType;
-
-import java.util.Collections;
-import java.util.List;
 
 @Data
 @JsonIgnoreProperties(ignoreUnknown = true)

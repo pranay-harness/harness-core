@@ -1,8 +1,8 @@
 package io.harness.util;
 
-import com.google.common.collect.ImmutableMap;
-
 import io.harness.logging.AutoLogContext;
+
+import com.google.common.collect.ImmutableMap;
 
 public class CIExecutionAutoLogContext extends AutoLogContext {
   private static final String PIPELINE_IDENTIFIER = "pipelineId";

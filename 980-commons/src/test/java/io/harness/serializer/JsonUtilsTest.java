@@ -4,20 +4,17 @@ import static io.harness.rule.OwnerRule.AADITI;
 import static io.harness.rule.OwnerRule.BOJANA;
 import static io.harness.rule.OwnerRule.GEORGE;
 import static io.harness.rule.OwnerRule.SRINIVAS;
+
 import static org.assertj.core.api.Assertions.assertThat;
 
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.jayway.jsonpath.DocumentContext;
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
 import io.harness.serializer.JsonUtilsTest.CustomResponse.Result;
 import io.harness.serializer.TestJsonBase.BaseType;
-import lombok.extern.slf4j.Slf4j;
-import net.javacrumbs.jsonunit.fluent.JsonFluentAssert;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
 
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.jayway.jsonpath.DocumentContext;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
@@ -28,6 +25,10 @@ import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import lombok.extern.slf4j.Slf4j;
+import net.javacrumbs.jsonunit.fluent.JsonFluentAssert;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 /**
  * The Class JsonUtilsTest.

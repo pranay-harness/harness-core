@@ -1,11 +1,11 @@
 package io.harness.ngpipeline.pipeline.executions.beans;
 
 import io.harness.ngpipeline.pipeline.executions.ExecutionStatus;
+
+import javax.validation.constraints.NotNull;
 import lombok.Builder;
 import lombok.Data;
 import lombok.experimental.FieldNameConstants;
-
-import javax.validation.constraints.NotNull;
 
 @Data
 @Builder

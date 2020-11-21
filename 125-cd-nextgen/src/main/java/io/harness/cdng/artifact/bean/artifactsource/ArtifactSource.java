@@ -1,6 +1,5 @@
 package io.harness.cdng.artifact.bean.artifactsource;
 
-import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.annotation.HarnessEntity;
 import io.harness.delegate.task.artifacts.ArtifactSourceType;
 import io.harness.mongo.index.FdIndex;
@@ -11,6 +10,9 @@ import io.harness.persistence.CreatedAtAware;
 import io.harness.persistence.PersistentEntity;
 import io.harness.persistence.UpdatedAtAware;
 import io.harness.persistence.UuidAware;
+
+import com.github.reinert.jjschema.SchemaIgnore;
+import javax.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -22,8 +24,6 @@ import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.annotation.TypeAlias;
 import org.springframework.data.annotation.Version;
 import org.springframework.data.mongodb.core.mapping.Document;
-
-import javax.validation.constraints.NotNull;
 
 /**
  * Artifacts Streams like Docker Hub, Nexus, GCR, etc.

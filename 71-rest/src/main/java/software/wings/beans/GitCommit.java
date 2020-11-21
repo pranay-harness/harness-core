@@ -1,7 +1,5 @@
 package software.wings.beans;
 
-import com.google.common.collect.ImmutableList;
-
 import io.harness.annotation.HarnessEntity;
 import io.harness.mongo.index.CdIndex;
 import io.harness.mongo.index.FdIndex;
@@ -9,6 +7,14 @@ import io.harness.mongo.index.Field;
 import io.harness.mongo.index.IndexType;
 import io.harness.mongo.index.NgUniqueIndex;
 import io.harness.persistence.AccountAccess;
+
+import software.wings.beans.GitCommit.GitCommitKeys;
+import software.wings.beans.yaml.GitCommandResult;
+import software.wings.yaml.gitSync.GitFileProcessingSummary;
+import software.wings.yaml.gitSync.YamlChangeSet;
+
+import com.google.common.collect.ImmutableList;
+import java.util.List;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -17,12 +23,6 @@ import lombok.NoArgsConstructor;
 import lombok.experimental.FieldNameConstants;
 import lombok.experimental.UtilityClass;
 import org.mongodb.morphia.annotations.Entity;
-import software.wings.beans.GitCommit.GitCommitKeys;
-import software.wings.beans.yaml.GitCommandResult;
-import software.wings.yaml.gitSync.GitFileProcessingSummary;
-import software.wings.yaml.gitSync.YamlChangeSet;
-
-import java.util.List;
 
 /**
  * Created by bsollish 10/13/17

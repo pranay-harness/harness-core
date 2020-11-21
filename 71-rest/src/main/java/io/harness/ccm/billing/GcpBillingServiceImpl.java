@@ -1,5 +1,15 @@
 package io.harness.ccm.billing;
 
+import io.harness.ccm.billing.GcpBillingEntityDataPoints.GcpBillingEntityDataPointsBuilder;
+import io.harness.ccm.billing.bigquery.AliasExpression;
+import io.harness.ccm.billing.bigquery.BigQuerySQL;
+import io.harness.ccm.billing.bigquery.BigQueryService;
+import io.harness.ccm.billing.bigquery.ConstExpression;
+import io.harness.ccm.billing.bigquery.TruncExpression;
+
+import software.wings.graphql.schema.type.aggregation.QLBillingDataPoint;
+import software.wings.graphql.schema.type.aggregation.QLReference;
+
 import com.google.cloud.Timestamp;
 import com.google.cloud.bigquery.Field;
 import com.google.cloud.bigquery.FieldList;
@@ -10,23 +20,11 @@ import com.google.cloud.bigquery.TableResult;
 import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
-
 import com.healthmarketscience.sqlbuilder.AliasedObject;
 import com.healthmarketscience.sqlbuilder.Condition;
 import com.healthmarketscience.sqlbuilder.FunctionCall;
 import com.healthmarketscience.sqlbuilder.SqlObject;
 import com.healthmarketscience.sqlbuilder.dbspec.basic.DbColumn;
-import io.harness.ccm.billing.GcpBillingEntityDataPoints.GcpBillingEntityDataPointsBuilder;
-import io.harness.ccm.billing.bigquery.AliasExpression;
-import io.harness.ccm.billing.bigquery.BigQuerySQL;
-import io.harness.ccm.billing.bigquery.BigQueryService;
-import io.harness.ccm.billing.bigquery.ConstExpression;
-import io.harness.ccm.billing.bigquery.TruncExpression;
-import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.math3.stat.regression.SimpleRegression;
-import software.wings.graphql.schema.type.aggregation.QLBillingDataPoint;
-import software.wings.graphql.schema.type.aggregation.QLReference;
-
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.Instant;
@@ -42,6 +40,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.math3.stat.regression.SimpleRegression;
 
 @Slf4j
 @Singleton

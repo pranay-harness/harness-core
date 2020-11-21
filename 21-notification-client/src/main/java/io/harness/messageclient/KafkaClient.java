@@ -4,13 +4,13 @@ import io.harness.NotificationClientConstants;
 import io.harness.NotificationRequest;
 import io.harness.notification.KafkaBackendConfiguration;
 import io.harness.serializer.KafkaProtobufSerializer;
+
+import java.util.Objects;
+import java.util.Properties;
 import org.apache.kafka.clients.producer.KafkaProducer;
 import org.apache.kafka.clients.producer.Producer;
 import org.apache.kafka.clients.producer.ProducerRecord;
 import org.apache.kafka.common.serialization.StringSerializer;
-
-import java.util.Objects;
-import java.util.Properties;
 
 public class KafkaClient implements MessageClient {
   private final String topicName;

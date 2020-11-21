@@ -2,11 +2,14 @@ package io.harness.expression;
 
 import io.harness.expression.Expression.SecretsMode;
 import io.harness.reflection.ReflectionUtils;
+
 import lombok.experimental.UtilityClass;
 
 @UtilityClass
 public class ExpressionReflectionUtils {
-  public interface Functor { String update(SecretsMode mode, String value); }
+  public interface Functor {
+    String update(SecretsMode mode, String value);
+  }
 
   public interface NestedAnnotationResolver {}
 

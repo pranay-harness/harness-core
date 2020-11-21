@@ -2,9 +2,7 @@ package software.wings.sm.states.pcf;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.pcf.model.PcfConstants.DEFAULT_PCF_TASK_TIMEOUT_MIN;
-import static java.nio.charset.StandardCharsets.UTF_8;
-import static java.util.Objects.requireNonNull;
-import static org.apache.commons.lang3.StringUtils.defaultIfEmpty;
+
 import static software.wings.beans.FeatureName.IGNORE_PCF_CONNECTION_CONTEXT_CACHE;
 import static software.wings.beans.FeatureName.LIMIT_PCF_THREADS;
 import static software.wings.beans.TaskType.GIT_FETCH_FILES_TASK;
@@ -12,17 +10,10 @@ import static software.wings.beans.TaskType.PCF_COMMAND_TASK;
 import static software.wings.beans.command.PcfDummyCommandUnit.FetchFiles;
 import static software.wings.beans.command.PcfDummyCommandUnit.Pcfplugin;
 
-import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Splitter;
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableList.Builder;
-import com.google.common.collect.ImmutableMap;
-import com.google.common.primitives.Ints;
-import com.google.inject.Inject;
+import static java.nio.charset.StandardCharsets.UTF_8;
+import static java.util.Objects.requireNonNull;
+import static org.apache.commons.lang3.StringUtils.defaultIfEmpty;
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.github.reinert.jjschema.Attributes;
-import io.fabric8.utils.Strings;
 import io.harness.beans.DelegateTask;
 import io.harness.beans.ExecutionStatus;
 import io.harness.beans.FileData;
@@ -38,10 +29,7 @@ import io.harness.logging.CommandExecutionStatus;
 import io.harness.pcf.model.PcfConstants;
 import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.tasks.ResponseData;
-import lombok.Getter;
-import lombok.Setter;
-import org.apache.commons.collections4.CollectionUtils;
-import org.apache.commons.collections4.MapUtils;
+
 import software.wings.annotation.EncryptableSetting;
 import software.wings.api.PhaseElement;
 import software.wings.api.ServiceElement;
@@ -89,6 +77,16 @@ import software.wings.sm.StateType;
 import software.wings.sm.WorkflowStandardParams;
 import software.wings.utils.ApplicationManifestUtils;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.github.reinert.jjschema.Attributes;
+import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Splitter;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableList.Builder;
+import com.google.common.collect.ImmutableMap;
+import com.google.common.primitives.Ints;
+import com.google.inject.Inject;
+import io.fabric8.utils.Strings;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
@@ -100,6 +98,10 @@ import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
+import lombok.Getter;
+import lombok.Setter;
+import org.apache.commons.collections4.CollectionUtils;
+import org.apache.commons.collections4.MapUtils;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class PcfPluginState extends State {
@@ -216,7 +218,7 @@ public class PcfPluginState extends State {
     if (!(isEmpty(repoRoot) || "/".equals(repoRoot))) {
       serviceManifestPrefixPathList = serviceManifestPrefixPathList.stream()
                                           .map(path -> repoRoot + path)
-                                          .map(this ::removeTrailingSlash)
+                                          .map(this::removeTrailingSlash)
                                           .collect(Collectors.toList());
     }
 
@@ -240,7 +242,7 @@ public class PcfPluginState extends State {
                                   .replaceFirst(fileEndRegex, "");
       filePathList.add(filePath);
     }
-    return filePathList.stream().map(this ::canonacalizePath).distinct().collect(Collectors.toList());
+    return filePathList.stream().map(this::canonacalizePath).distinct().collect(Collectors.toList());
   }
 
   private String canonacalizePath(String path) {
@@ -286,7 +288,7 @@ public class PcfPluginState extends State {
 
   private Map<K8sValuesLocation, ApplicationManifest> prepareManifestForGitFetchTask(
       ApplicationManifest serviceManifest, List<String> pathsFromScript) {
-    List<String> gitFiles = pathsFromScript.stream().map(this ::toRelativePath).collect(Collectors.toList());
+    List<String> gitFiles = pathsFromScript.stream().map(this::toRelativePath).collect(Collectors.toList());
     // in case root folder is accessed, remove all the file paths
     if (gitFiles.contains("")) {
       gitFiles = Collections.singletonList("");

@@ -1,7 +1,8 @@
 package io.harness.delegate.beans.connector.k8Connector;
 
-import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import io.harness.beans.DecryptableEntity;
+
+import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import lombok.Data;
 
 @Data

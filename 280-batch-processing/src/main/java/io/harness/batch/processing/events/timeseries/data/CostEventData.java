@@ -1,9 +1,8 @@
 package io.harness.batch.processing.events.timeseries.data;
 
+import java.math.BigDecimal;
 import lombok.Builder;
 import lombok.Value;
-
-import java.math.BigDecimal;
 
 @Value
 @Builder

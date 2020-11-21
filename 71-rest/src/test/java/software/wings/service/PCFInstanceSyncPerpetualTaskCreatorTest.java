@@ -1,23 +1,32 @@
 package software.wings.service;
 
 import static io.harness.rule.OwnerRule.AMAN;
+
+import static software.wings.service.InstanceSyncConstants.HARNESS_APPLICATION_ID;
+import static software.wings.service.InstanceSyncConstants.INTERVAL_MINUTES;
+import static software.wings.service.InstanceSyncConstants.TIMEOUT_SECONDS;
+
 import static junit.framework.TestCase.assertEquals;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.when;
-import static software.wings.service.InstanceSyncConstants.HARNESS_APPLICATION_ID;
-import static software.wings.service.InstanceSyncConstants.INTERVAL_MINUTES;
-import static software.wings.service.InstanceSyncConstants.TIMEOUT_SECONDS;
-
-import com.google.protobuf.util.Durations;
 
 import io.harness.category.element.UnitTests;
 import io.harness.perpetualtask.PerpetualTaskSchedule;
 import io.harness.perpetualtask.PerpetualTaskService;
 import io.harness.perpetualtask.instancesync.PcfInstanceSyncPerpetualTaskClientParams;
 import io.harness.rule.Owner;
+
+import software.wings.WingsBaseTest;
+import software.wings.api.DeploymentSummary;
+import software.wings.api.PcfDeploymentInfo;
+import software.wings.beans.PcfInfrastructureMapping;
+
+import com.google.protobuf.util.Durations;
+import java.util.Collections;
+import java.util.List;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -26,13 +35,6 @@ import org.mockito.Captor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
-import software.wings.WingsBaseTest;
-import software.wings.api.DeploymentSummary;
-import software.wings.api.PcfDeploymentInfo;
-import software.wings.beans.PcfInfrastructureMapping;
-
-import java.util.Collections;
-import java.util.List;
 
 public class PCFInstanceSyncPerpetualTaskCreatorTest extends WingsBaseTest {
   public static final String ACCOUNT_ID = "accountId";

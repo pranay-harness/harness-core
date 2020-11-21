@@ -2,29 +2,27 @@ package software.wings.graphql.datafetcher;
 
 import static io.harness.exception.WingsException.ReportTarget.GRAPHQL_API;
 import static io.harness.exception.WingsException.USER_SRE;
+
 import static software.wings.graphql.datafetcher.DataFetcherUtils.EXCEPTION_MSG_DELIMITER;
 import static software.wings.graphql.datafetcher.DataFetcherUtils.GENERIC_EXCEPTION_MSG;
 import static software.wings.graphql.datafetcher.DataFetcherUtils.NEGATIVE_LIMIT_ARG_MSG;
 import static software.wings.graphql.datafetcher.DataFetcherUtils.NEGATIVE_OFFSET_ARG_MSG;
 
-import com.google.common.collect.Lists;
-
-import com.fasterxml.jackson.databind.ObjectMapper;
-import graphql.schema.DataFetchingEnvironment;
 import io.harness.eraro.ErrorCode;
 import io.harness.eraro.ResponseMessage;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.logging.ExceptionLogger;
-import lombok.extern.slf4j.Slf4j;
-import org.jetbrains.annotations.NotNull;
-import org.mongodb.morphia.query.Query;
+
 import software.wings.beans.SettingAttribute.SettingAttributeKeys;
 import software.wings.dl.WingsPersistence;
 import software.wings.graphql.directive.DataFetcherDirective.DataFetcherDirectiveAttributes;
 import software.wings.graphql.schema.query.QLPageQueryParameterImpl;
 import software.wings.graphql.schema.query.QLPageQueryParameters;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.common.collect.Lists;
+import graphql.schema.DataFetchingEnvironment;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
@@ -32,6 +30,9 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
+import lombok.extern.slf4j.Slf4j;
+import org.jetbrains.annotations.NotNull;
+import org.mongodb.morphia.query.Query;
 
 @Slf4j
 public abstract class AbstractConnectionV2DataFetcher<F, S, O> extends BaseDataFetcher {
@@ -116,7 +117,9 @@ public abstract class AbstractConnectionV2DataFetcher<F, S, O> extends BaseDataF
     }
 
     return QLPageQueryParameterImpl.builder()
-        .limit(limit == null ? MAX_RECORD_LIMIT : limit > MAX_RECORD_LIMIT ? MAX_RECORD_LIMIT : limit)
+        .limit(limit == null               ? MAX_RECORD_LIMIT
+                : limit > MAX_RECORD_LIMIT ? MAX_RECORD_LIMIT
+                                           : limit)
         .offset(offset == null ? 0 : offset)
         .selectionSet(dataFetchingEnvironment.getSelectionSet())
         .dataFetchingEnvironment(dataFetchingEnvironment)

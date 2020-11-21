@@ -1,13 +1,13 @@
 package io.harness.delegate.task;
 
 import io.harness.delegate.beans.TaskData;
+
+import java.util.LinkedHashMap;
+import java.util.Map;
 import lombok.Builder;
 import lombok.NonNull;
 import lombok.Singular;
 import lombok.Value;
-
-import java.util.LinkedHashMap;
-import java.util.Map;
 
 @Value
 @Builder

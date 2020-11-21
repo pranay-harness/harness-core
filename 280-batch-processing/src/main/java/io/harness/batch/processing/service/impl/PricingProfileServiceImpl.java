@@ -1,10 +1,10 @@
 package io.harness.batch.processing.service.impl;
 
-import com.google.inject.Inject;
-
 import io.harness.batch.processing.dao.impl.PricingProfileDaoImpl;
 import io.harness.batch.processing.service.intfc.PricingProfileService;
 import io.harness.ccm.cluster.entities.PricingProfile;
+
+import com.google.inject.Inject;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;

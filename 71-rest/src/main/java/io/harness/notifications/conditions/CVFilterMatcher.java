@@ -6,8 +6,7 @@ import io.harness.notifications.FilterMatcher;
 import io.harness.notifications.beans.CVAlertFilters;
 import io.harness.notifications.beans.Conditions;
 import io.harness.notifications.beans.Conditions.Operator;
-import lombok.Value;
-import lombok.extern.slf4j.Slf4j;
+
 import software.wings.beans.alert.Alert;
 import software.wings.beans.alert.AlertFilter;
 import software.wings.beans.alert.cv.ContinuousVerificationAlertData;
@@ -15,6 +14,8 @@ import software.wings.beans.alert.cv.ContinuousVerificationAlertData;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.function.Supplier;
+import lombok.Value;
+import lombok.extern.slf4j.Slf4j;
 
 @Value
 @Slf4j

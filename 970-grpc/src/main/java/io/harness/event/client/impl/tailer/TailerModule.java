@@ -1,15 +1,5 @@
 package io.harness.event.client.impl.tailer;
 
-import com.google.inject.Provides;
-import com.google.inject.Singleton;
-import com.google.inject.name.Named;
-
-import io.grpc.CallCredentials;
-import io.grpc.Channel;
-import io.grpc.netty.shaded.io.grpc.netty.GrpcSslContexts;
-import io.grpc.netty.shaded.io.grpc.netty.NettyChannelBuilder;
-import io.grpc.netty.shaded.io.netty.handler.ssl.SslContext;
-import io.grpc.netty.shaded.io.netty.handler.ssl.util.InsecureTrustManagerFactory;
 import io.harness.event.EventPublisherGrpc;
 import io.harness.event.EventPublisherGrpc.EventPublisherBlockingStub;
 import io.harness.event.client.impl.EventPublisherConstants;
@@ -17,13 +7,22 @@ import io.harness.flow.BackoffScheduler;
 import io.harness.govern.ProviderModule;
 import io.harness.grpc.auth.DelegateAuthCallCredentials;
 import io.harness.security.TokenGenerator;
+
+import com.google.inject.Provides;
+import com.google.inject.Singleton;
+import com.google.inject.name.Named;
+import io.grpc.CallCredentials;
+import io.grpc.Channel;
+import io.grpc.netty.shaded.io.grpc.netty.GrpcSslContexts;
+import io.grpc.netty.shaded.io.grpc.netty.NettyChannelBuilder;
+import io.grpc.netty.shaded.io.netty.handler.ssl.SslContext;
+import io.grpc.netty.shaded.io.netty.handler.ssl.util.InsecureTrustManagerFactory;
+import java.time.Duration;
 import lombok.Builder;
 import lombok.SneakyThrows;
 import lombok.Value;
 import net.openhft.chronicle.queue.ChronicleQueue;
 import net.openhft.chronicle.queue.impl.RollingChronicleQueue;
-
-import java.time.Duration;
 
 public class TailerModule extends ProviderModule {
   private final Config config;

@@ -1,8 +1,9 @@
 package software.wings.yaml.errorhandling;
 
+import software.wings.beans.GitRepositoryInfo;
+
 import lombok.Builder;
 import lombok.Data;
-import software.wings.beans.GitRepositoryInfo;
 
 @Data
 @Builder

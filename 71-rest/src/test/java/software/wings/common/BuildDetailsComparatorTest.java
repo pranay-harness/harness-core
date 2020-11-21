@@ -1,6 +1,7 @@
 package software.wings.common;
 
 import static io.harness.rule.OwnerRule.SRINIVAS;
+
 import static java.util.Arrays.asList;
 import static java.util.stream.Collectors.toList;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -8,11 +9,12 @@ import static org.assertj.core.api.Assertions.assertThat;
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
+
 import software.wings.helpers.ext.jenkins.BuildDetails;
 
 import java.util.List;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 public class BuildDetailsComparatorTest extends CategoryTest {
   private BuildDetails.Builder buildDetails = BuildDetails.Builder.aBuildDetails();

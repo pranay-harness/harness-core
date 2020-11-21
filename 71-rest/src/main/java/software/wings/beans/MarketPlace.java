@@ -2,7 +2,6 @@ package software.wings.beans;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
 
-import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.annotation.HarnessEntity;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.EmbeddedUser;
@@ -16,15 +15,17 @@ import io.harness.persistence.UpdatedAtAware;
 import io.harness.persistence.UpdatedByAware;
 import io.harness.persistence.UuidAware;
 import io.harness.validation.Update;
+
+import software.wings.beans.marketplace.MarketPlaceType;
+
+import com.github.reinert.jjschema.SchemaIgnore;
+import java.util.Date;
+import javax.validation.constraints.NotNull;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Id;
-import software.wings.beans.marketplace.MarketPlaceType;
-
-import java.util.Date;
-import javax.validation.constraints.NotNull;
 
 @OwnedBy(PL)
 @Data

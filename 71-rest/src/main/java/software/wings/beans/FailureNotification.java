@@ -1,13 +1,14 @@
 package software.wings.beans;
 
-import com.fasterxml.jackson.annotation.JsonTypeName;
 import io.harness.beans.EmbeddedUser;
-import lombok.EqualsAndHashCode;
+
 import software.wings.beans.NotificationAction.NotificationActionType;
 
+import com.fasterxml.jackson.annotation.JsonTypeName;
 import java.util.HashMap;
 import java.util.Map;
 import javax.validation.constraints.NotNull;
+import lombok.EqualsAndHashCode;
 
 /**
  * Created by anubhaw on 7/25/16.

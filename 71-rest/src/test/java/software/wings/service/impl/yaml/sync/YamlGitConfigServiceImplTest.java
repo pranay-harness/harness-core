@@ -3,24 +3,21 @@ package software.wings.service.impl.yaml.sync;
 import static io.harness.beans.PageResponse.PageResponseBuilder.aPageResponse;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.rule.OwnerRule.DEEPAK;
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.eq;
-import static org.powermock.api.mockito.PowerMockito.when;
+
 import static software.wings.beans.Account.Builder.anAccount;
 import static software.wings.beans.Application.Builder.anApplication;
 import static software.wings.beans.User.Builder.anUser;
 import static software.wings.security.UserThreadLocal.userGuard;
 
-import com.google.inject.Inject;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.eq;
+import static org.powermock.api.mockito.PowerMockito.when;
 
 import io.harness.beans.PageResponse;
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
+
 import software.wings.WingsBaseTest;
 import software.wings.beans.Application;
 import software.wings.beans.EntityType;
@@ -33,11 +30,16 @@ import software.wings.service.intfc.AuthService;
 import software.wings.service.intfc.yaml.sync.YamlGitConfigService;
 import software.wings.yaml.gitSync.YamlGitConfig;
 
+import com.google.inject.Inject;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
 
 public class YamlGitConfigServiceImplTest extends WingsBaseTest {
   @Inject @InjectMocks YamlGitConfigService yamlGitConfigService;

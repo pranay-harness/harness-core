@@ -1,17 +1,17 @@
 package software.wings.verification.cloudwatch;
 
+import software.wings.service.impl.cloudwatch.CloudWatchMetric;
+import software.wings.verification.CVConfiguration;
+
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.github.reinert.jjschema.Attributes;
+import java.util.List;
+import java.util.Map;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
-import software.wings.service.impl.cloudwatch.CloudWatchMetric;
-import software.wings.verification.CVConfiguration;
-
-import java.util.List;
-import java.util.Map;
 
 /**
  * Cloud watch configuration for CV 24x7

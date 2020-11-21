@@ -1,14 +1,17 @@
 package io.harness.testframework.restutils;
 
-import static org.assertj.core.api.Assertions.assertThat;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
+
+import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.scm.ScmSecret;
 import io.harness.scm.SecretName;
-import io.restassured.path.json.JsonPath;
+
 import software.wings.beans.AwsConfig;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.SettingAttribute.SettingCategory;
+
+import io.restassured.path.json.JsonPath;
 
 public class CloudProviderUtils {
   public static String createAWSCloudProvider(String bearerToken, String cloudPrividerName, String accountId) {

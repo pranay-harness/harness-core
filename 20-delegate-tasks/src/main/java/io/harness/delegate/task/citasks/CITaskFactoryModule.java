@@ -1,7 +1,5 @@
 package io.harness.delegate.task.citasks;
 
-import com.google.inject.AbstractModule;
-
 import io.harness.delegate.task.citasks.cik8handler.CIK8BuildTaskHandler;
 import io.harness.delegate.task.citasks.cik8handler.CIK8CleanupTaskHandler;
 import io.harness.delegate.task.citasks.cik8handler.ExecCommandListener;
@@ -11,6 +9,8 @@ import io.harness.threading.Sleeper;
 import io.harness.threading.ThreadSleeper;
 import io.harness.time.ClockTimer;
 import io.harness.time.Timer;
+
+import com.google.inject.AbstractModule;
 
 public class CITaskFactoryModule extends AbstractModule {
   @Override

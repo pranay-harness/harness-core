@@ -10,8 +10,7 @@ import io.harness.ccm.commons.entities.InstanceData;
 import io.harness.event.payloads.Lifecycle;
 import io.harness.exception.InvalidRequestException;
 import io.harness.grpc.utils.HTimestamps;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
+
 import software.wings.service.intfc.instance.CloudToHarnessMappingService;
 
 import java.time.Instant;
@@ -19,6 +18,8 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 
 @Slf4j
 public abstract class EventWriter {
@@ -51,7 +52,7 @@ public abstract class EventWriter {
           accountId, clusterId, instanceId, new ArrayList<>(Arrays.asList(currentInstanceState)));
       if (null != instanceData
           && !(instanceData.getInstanceState() == InstanceState.RUNNING
-                 && instanceData.getUsageStartTime().isAfter(instanceTime))) {
+              && instanceData.getUsageStartTime().isAfter(instanceTime))) {
         instanceDataService.updateInstanceState(instanceData, instanceTime, updateInstanceState);
       } else {
         log.info("Received past duplicate event {} {} {} ", accountId, instanceId, lifecycle.toString());

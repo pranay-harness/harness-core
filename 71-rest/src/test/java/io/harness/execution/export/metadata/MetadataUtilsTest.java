@@ -1,6 +1,7 @@
 package io.harness.execution.export.metadata;
 
 import static io.harness.rule.OwnerRule.GARVIT;
+
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -8,13 +9,13 @@ import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.execution.export.metadata.MetadataTestUtils.SimpleVisitor;
 import io.harness.rule.Owner;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
 
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.function.Function;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 public class MetadataUtilsTest extends CategoryTest {
   @Test

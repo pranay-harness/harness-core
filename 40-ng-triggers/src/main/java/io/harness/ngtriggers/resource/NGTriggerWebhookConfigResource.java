@@ -1,6 +1,7 @@
 package io.harness.ngtriggers.resource;
 
-import com.google.inject.Inject;
+import static io.harness.utils.PageUtils.getNGPageResponse;
+
 import io.harness.NGCommonEntityConstants;
 import io.harness.ng.core.dto.ErrorDTO;
 import io.harness.ng.core.dto.FailureDTO;
@@ -13,23 +14,22 @@ import io.harness.ngtriggers.beans.source.webhook.WebhookSourceRepo;
 import io.harness.ngtriggers.helpers.WebhookConfigHelper;
 import io.harness.ngtriggers.mapper.NGTriggerElementMapper;
 import io.harness.ngtriggers.service.NGTriggerService;
+
+import com.google.inject.Inject;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
-import lombok.AccessLevel;
-import lombok.AllArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
 import javax.validation.constraints.NotNull;
 import javax.ws.rs.*;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.HttpHeaders;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-
-import static io.harness.utils.PageUtils.getNGPageResponse;
+import lombok.AccessLevel;
+import lombok.AllArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 @Api("webhook")
 @Path("webhook")

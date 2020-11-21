@@ -1,19 +1,22 @@
 package software.wings.resources;
 
 import static io.harness.rule.OwnerRule.HINGER;
-import static org.assertj.core.api.Assertions.assertThat;
+
 import static software.wings.security.PermissionAttribute.PermissionType.MANAGE_PIPELINE_GOVERNANCE_STANDARDS;
+
+import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.governance.pipeline.service.model.PipelineGovernanceConfig;
 import io.harness.rule.Owner;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
+
 import software.wings.resources.governance.PipelineGovernanceResource;
 import software.wings.security.annotations.AuthRule;
 
 import java.lang.reflect.Method;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 public class PipelineGovernanceResourceTest extends CategoryTest {
   @Test

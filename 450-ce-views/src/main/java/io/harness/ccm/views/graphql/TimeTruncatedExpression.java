@@ -5,9 +5,8 @@ import com.healthmarketscience.sqlbuilder.Converter;
 import com.healthmarketscience.sqlbuilder.Expression;
 import com.healthmarketscience.sqlbuilder.SqlObject;
 import com.healthmarketscience.sqlbuilder.ValidationContext;
-import lombok.Getter;
-
 import java.io.IOException;
+import lombok.Getter;
 
 public class TimeTruncatedExpression extends Expression {
   private final SqlObject timestampExpression;

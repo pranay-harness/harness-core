@@ -1,10 +1,10 @@
 package io.harness.logserviceclient;
 
+import io.harness.ci.beans.entities.LogServiceConfig;
+
 import com.google.inject.AbstractModule;
 import com.google.inject.Inject;
 import com.google.inject.Scopes;
-
-import io.harness.ci.beans.entities.LogServiceConfig;
 
 public class CILogServiceClientModule extends AbstractModule {
   LogServiceConfig logServiceConfig;

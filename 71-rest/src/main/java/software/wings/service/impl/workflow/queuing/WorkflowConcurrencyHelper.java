@@ -5,6 +5,7 @@ import static io.harness.data.structure.CollectionUtils.fetchIndex;
 import static io.harness.data.structure.CollectionUtils.isPresent;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
+
 import static software.wings.common.InfrastructureConstants.QUEUING_RC_NAME;
 import static software.wings.common.InfrastructureConstants.RC_INFRA_STEP_NAME;
 import static software.wings.common.InfrastructureConstants.STATE_TIMEOUT_KEY_NAME;
@@ -14,14 +15,9 @@ import static software.wings.sm.StateType.RESOURCE_CONSTRAINT;
 import static software.wings.sm.StateType.SHELL_SCRIPT_PROVISION;
 import static software.wings.sm.StateType.TERRAFORM_PROVISION;
 
-import com.google.common.base.Preconditions;
-import com.google.common.collect.ImmutableMap;
-import com.google.inject.Inject;
-
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.steps.resourcerestraint.beans.ResourceConstraint;
-import lombok.extern.slf4j.Slf4j;
-import org.jetbrains.annotations.NotNull;
+
 import software.wings.beans.CanaryOrchestrationWorkflow;
 import software.wings.beans.GraphNode;
 import software.wings.beans.OrchestrationWorkflow;
@@ -37,11 +33,16 @@ import software.wings.service.intfc.ResourceConstraintService;
 import software.wings.sm.states.ResourceConstraintState.AcquireMode;
 import software.wings.sm.states.ResourceConstraintState.ResourceConstraintStateKeys;
 
+import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableMap;
+import com.google.inject.Inject;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Predicate;
+import lombok.extern.slf4j.Slf4j;
+import org.jetbrains.annotations.NotNull;
 
 @OwnedBy(CDC)
 @Slf4j
@@ -150,9 +151,9 @@ public class WorkflowConcurrencyHelper {
       CanaryOrchestrationWorkflow canaryOrchestrationWorkflow, boolean isDynamicInfra, List<PhaseStep> phaseSteps) {
     return (!isDynamicInfra && isNotEmpty(phaseSteps))
         || (canaryOrchestrationWorkflow.getPreDeploymentSteps() != null
-               && isPresent(canaryOrchestrationWorkflow.getPreDeploymentSteps().getSteps(),
-                      step -> PROVISIONER_STEP_TYPES.contains(step.getType()))
-               && isNotEmpty(phaseSteps));
+            && isPresent(canaryOrchestrationWorkflow.getPreDeploymentSteps().getSteps(),
+                step -> PROVISIONER_STEP_TYPES.contains(step.getType()))
+            && isNotEmpty(phaseSteps));
   }
 
   @NotNull

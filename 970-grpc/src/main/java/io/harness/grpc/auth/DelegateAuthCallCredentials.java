@@ -1,15 +1,14 @@
 package io.harness.grpc.auth;
 
-import com.google.inject.Singleton;
+import io.harness.security.TokenGenerator;
 
+import com.google.inject.Singleton;
 import io.grpc.CallCredentials;
 import io.grpc.Metadata;
 import io.grpc.SecurityLevel;
 import io.grpc.Status;
-import io.harness.security.TokenGenerator;
-import lombok.extern.slf4j.Slf4j;
-
 import java.util.concurrent.Executor;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * {@link CallCredentials} that adds delegate token to the request before calling the manager.

@@ -2,28 +2,28 @@ package migrations.timescaledb.data;
 
 import static io.harness.persistence.HQuery.excludeAuthority;
 
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
-
-import com.mongodb.ReadPreference;
 import io.harness.beans.ExecutionStatus;
 import io.harness.persistence.HIterator;
 import io.harness.timescaledb.DBUtils;
 import io.harness.timescaledb.TimeScaleDBService;
-import lombok.extern.slf4j.Slf4j;
-import migrations.TimeScaleDBDataMigration;
-import org.mongodb.morphia.query.FindOptions;
-import org.mongodb.morphia.query.Sort;
+
 import software.wings.beans.WorkflowExecution;
 import software.wings.beans.WorkflowExecution.WorkflowExecutionKeys;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.impl.WorkflowExecutionUpdate;
 import software.wings.sm.StateExecutionInstance;
 
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
+import com.mongodb.ReadPreference;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import lombok.extern.slf4j.Slf4j;
+import migrations.TimeScaleDBDataMigration;
+import org.mongodb.morphia.query.FindOptions;
+import org.mongodb.morphia.query.Sort;
 
 /**
  * This migration will set rollback duration for the last 60 days of top level executions to TimeScaleDB

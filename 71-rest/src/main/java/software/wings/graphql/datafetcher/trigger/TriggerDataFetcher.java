@@ -3,13 +3,12 @@ package software.wings.graphql.datafetcher.trigger;
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.exception.WingsException.USER;
 
-import com.google.inject.Inject;
-
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.persistence.HPersistence;
+
 import software.wings.beans.trigger.Trigger;
 import software.wings.beans.trigger.Trigger.TriggerKeys;
 import software.wings.graphql.datafetcher.AbstractObjectDataFetcher;
@@ -21,6 +20,7 @@ import software.wings.security.annotations.AuthRule;
 import software.wings.service.impl.trigger.TriggerAuthHandler;
 import software.wings.service.intfc.AppService;
 
+import com.google.inject.Inject;
 import java.util.Collections;
 
 @OwnedBy(CDC)

@@ -9,6 +9,9 @@ import io.harness.mongo.index.NgUniqueIndex;
 import io.harness.ng.core.common.beans.NGTag;
 import io.harness.ng.core.service.entity.ServiceEntity.ServiceEntityKeys;
 import io.harness.persistence.PersistentEntity;
+
+import java.util.List;
+import javax.validation.constraints.Size;
 import lombok.Builder;
 import lombok.Data;
 import lombok.Singular;
@@ -22,9 +25,6 @@ import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.annotation.TypeAlias;
 import org.springframework.data.annotation.Version;
 import org.springframework.data.mongodb.core.mapping.Document;
-
-import java.util.List;
-import javax.validation.constraints.Size;
 
 @Data
 @Builder

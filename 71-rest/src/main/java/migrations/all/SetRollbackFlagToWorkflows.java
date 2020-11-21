@@ -6,10 +6,6 @@ import static io.harness.beans.SearchFilter.Operator.EQ;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.persistence.HQuery.excludeAuthority;
 
-import com.google.inject.Inject;
-
-import lombok.extern.slf4j.Slf4j;
-import migrations.Migration;
 import software.wings.beans.Application;
 import software.wings.beans.CanaryOrchestrationWorkflow;
 import software.wings.beans.GraphNode;
@@ -18,7 +14,10 @@ import software.wings.beans.WorkflowPhase;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.WorkflowService;
 
+import com.google.inject.Inject;
 import java.util.List;
+import lombok.extern.slf4j.Slf4j;
+import migrations.Migration;
 
 @Slf4j
 public class SetRollbackFlagToWorkflows implements Migration {
@@ -78,7 +77,7 @@ public class SetRollbackFlagToWorkflows implements Migration {
     for (WorkflowPhase workflowPhase : coWorkflow.getWorkflowPhaseIdMap().values()) {
       modified = modified || workflowPhase.isRollback()
           || workflowPhase.getPhaseSteps().stream().anyMatch(
-                 phaseStep -> phaseStep.isRollback() || phaseStep.getSteps().stream().anyMatch(GraphNode::isRollback));
+              phaseStep -> phaseStep.isRollback() || phaseStep.getSteps().stream().anyMatch(GraphNode::isRollback));
 
       workflowPhase.setRollback(false);
       workflowPhase.getPhaseSteps().forEach(phaseStep -> {
@@ -90,7 +89,7 @@ public class SetRollbackFlagToWorkflows implements Migration {
     for (WorkflowPhase workflowPhase : coWorkflow.getRollbackWorkflowPhaseIdMap().values()) {
       modified = modified || !workflowPhase.isRollback()
           || workflowPhase.getPhaseSteps().stream().anyMatch(phaseStep
-                 -> !phaseStep.isRollback() || phaseStep.getSteps().stream().anyMatch(step -> !step.isRollback()));
+              -> !phaseStep.isRollback() || phaseStep.getSteps().stream().anyMatch(step -> !step.isRollback()));
       workflowPhase.setRollback(true);
       workflowPhase.getPhaseSteps().forEach(phaseStep -> {
         phaseStep.setRollback(true);

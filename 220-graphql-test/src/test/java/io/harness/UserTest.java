@@ -1,11 +1,10 @@
 package io.harness;
 
-import static io.github.benas.randombeans.api.EnhancedRandom.random;
 import static io.harness.rule.OwnerRule.VARDAN_BANSAL;
 import static io.harness.rule.OwnerRule.VOJIN;
-import static org.assertj.core.api.Assertions.assertThat;
 
-import com.google.inject.Inject;
+import static io.github.benas.randombeans.api.EnhancedRandom.random;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.category.element.UnitTests;
 import io.harness.category.layer.GraphQLTests;
@@ -13,8 +12,7 @@ import io.harness.generator.AccountGenerator;
 import io.harness.multiline.MultilineStringMixin;
 import io.harness.rule.Owner;
 import io.harness.testframework.graphql.QLTestObject;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
+
 import software.wings.beans.Account;
 import software.wings.beans.AccountType;
 import software.wings.beans.User;
@@ -22,6 +20,10 @@ import software.wings.graphql.schema.type.QLPageInfo;
 import software.wings.graphql.schema.type.QLUser;
 import software.wings.graphql.schema.type.QLUser.QLUserKeys;
 import software.wings.graphql.schema.type.user.QLUserConnection;
+
+import com.google.inject.Inject;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 public class UserTest extends GraphQLTest {
   @Inject private AccountGenerator accountGenerator;

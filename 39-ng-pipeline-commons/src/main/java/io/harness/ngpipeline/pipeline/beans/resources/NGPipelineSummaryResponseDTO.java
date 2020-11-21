@@ -3,12 +3,11 @@ package io.harness.ngpipeline.pipeline.beans.resources;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import io.swagger.annotations.ApiModel;
+import java.util.List;
+import java.util.Map;
 import lombok.Builder;
 import lombok.Value;
 import org.springframework.data.annotation.Version;
-
-import java.util.List;
-import java.util.Map;
 
 @Value
 @Builder

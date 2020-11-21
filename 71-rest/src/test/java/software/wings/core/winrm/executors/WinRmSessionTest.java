@@ -1,17 +1,25 @@
 package software.wings.core.winrm.executors;
 
 import static io.harness.rule.OwnerRule.SAHIL;
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
 
-import com.jcraft.jsch.JSchException;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.configuration.InstallUtils;
 import io.harness.exception.InvalidRequestException;
 import io.harness.logging.LogCallback;
 import io.harness.rule.Owner;
+
+import software.wings.WingsBaseTest;
+import software.wings.beans.WinRmConnectionAttributes;
+import software.wings.utils.SshHelperUtils;
+
+import com.jcraft.jsch.JSchException;
+import java.io.Writer;
+import java.util.HashMap;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
@@ -21,12 +29,6 @@ import org.powermock.api.mockito.PowerMockito;
 import org.powermock.core.classloader.annotations.PowerMockIgnore;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
-import software.wings.WingsBaseTest;
-import software.wings.beans.WinRmConnectionAttributes;
-import software.wings.utils.SshHelperUtils;
-
-import java.io.Writer;
-import java.util.HashMap;
 
 @RunWith(PowerMockRunner.class)
 @PrepareForTest({SshHelperUtils.class, WinRmSession.class, InstallUtils.class})

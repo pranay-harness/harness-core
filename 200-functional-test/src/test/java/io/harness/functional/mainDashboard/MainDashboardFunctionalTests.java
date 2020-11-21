@@ -2,9 +2,8 @@ package io.harness.functional.mainDashboard;
 
 import static io.harness.generator.EnvironmentGenerator.Environments.GENERIC_TEST;
 import static io.harness.rule.OwnerRule.SHUBHANSHU;
-import static org.assertj.core.api.Assertions.assertThat;
 
-import com.google.inject.Inject;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.category.element.FunctionalTests;
 import io.harness.functional.AbstractFunctionalTest;
@@ -19,9 +18,7 @@ import io.harness.generator.SettingGenerator;
 import io.harness.rule.Owner;
 import io.harness.testframework.restutils.MainDashboardRestUtils;
 import io.harness.testframework.restutils.WorkflowRestUtils;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
+
 import software.wings.beans.Application;
 import software.wings.beans.Environment;
 import software.wings.beans.Environment.EnvironmentType;
@@ -33,7 +30,11 @@ import software.wings.beans.stats.DeploymentStatistics.AggregatedDayStats;
 import software.wings.beans.stats.ServiceInstanceStatistics;
 import software.wings.service.intfc.WorkflowExecutionService;
 
+import com.google.inject.Inject;
 import java.util.Collections;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 public class MainDashboardFunctionalTests extends AbstractFunctionalTest {
   @Inject private OwnerManager ownerManager;

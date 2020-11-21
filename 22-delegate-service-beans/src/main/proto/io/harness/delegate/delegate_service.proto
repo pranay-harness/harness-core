@@ -155,8 +155,7 @@ message DeletePerpetualTaskRequest {
   perpetualtask.PerpetualTaskId perpetual_task_id = 2;
 }
 
-message DeletePerpetualTaskResponse {
-}
+message DeletePerpetualTaskResponse {}
 
 message ResetPerpetualTaskRequest {
   AccountId account_id = 1;
@@ -164,8 +163,7 @@ message ResetPerpetualTaskRequest {
   perpetualtask.PerpetualTaskExecutionBundle task_execution_bundle = 3;
 }
 
-message ResetPerpetualTaskResponse {
-}
+message ResetPerpetualTaskResponse {}
 
 // Temporary {{
 message Documents {

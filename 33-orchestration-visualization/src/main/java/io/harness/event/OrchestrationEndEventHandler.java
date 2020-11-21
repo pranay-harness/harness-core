@@ -2,8 +2,6 @@ package io.harness.event;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 
-import com.google.inject.Inject;
-
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.OrchestrationGraph;
 import io.harness.engine.executions.plan.PlanExecutionService;
@@ -11,6 +9,8 @@ import io.harness.execution.PlanExecution;
 import io.harness.execution.events.AsyncOrchestrationEventHandler;
 import io.harness.execution.events.OrchestrationEvent;
 import io.harness.service.GraphGenerationService;
+
+import com.google.inject.Inject;
 import lombok.extern.slf4j.Slf4j;
 
 @OwnedBy(CDC)

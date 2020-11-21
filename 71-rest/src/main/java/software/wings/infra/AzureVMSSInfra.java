@@ -2,11 +2,6 @@ package software.wings.infra;
 
 import static software.wings.beans.InfrastructureType.AZURE_VMSS;
 
-import com.fasterxml.jackson.annotation.JsonTypeName;
-import lombok.Builder;
-import lombok.Data;
-import lombok.EqualsAndHashCode;
-import lombok.experimental.FieldNameConstants;
 import software.wings.annotation.IncludeFieldMap;
 import software.wings.api.CloudProviderType;
 import software.wings.beans.AzureVMSSInfrastructureMapping;
@@ -14,6 +9,12 @@ import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.VMSSAuthType;
 import software.wings.beans.VMSSDeploymentType;
 import software.wings.service.impl.yaml.handler.InfraDefinition.CloudProviderInfrastructureYaml;
+
+import com.fasterxml.jackson.annotation.JsonTypeName;
+import lombok.Builder;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.experimental.FieldNameConstants;
 
 @JsonTypeName("AZURE_VMSS")
 @Data

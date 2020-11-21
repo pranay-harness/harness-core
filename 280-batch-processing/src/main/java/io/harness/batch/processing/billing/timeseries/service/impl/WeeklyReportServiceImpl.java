@@ -25,11 +25,8 @@ import static io.harness.batch.processing.billing.timeseries.helper.WeeklyReport
 import static io.harness.batch.processing.billing.timeseries.helper.WeeklyReportTemplateHelper.TOTAL_CLUSTER_IDLE_COST;
 import static io.harness.batch.processing.billing.timeseries.helper.WeeklyReportTemplateHelper.TOTAL_CLUSTER_UNALLOCATED_COST;
 import static io.harness.batch.processing.billing.timeseries.helper.WeeklyReportTemplateHelper.WORKLOAD;
-import static software.wings.sm.states.ApprovalState.JSON;
 
-import com.google.api.client.util.Charsets;
-import com.google.common.io.Resources;
-import com.google.inject.Singleton;
+import static software.wings.sm.states.ApprovalState.JSON;
 
 import io.harness.batch.processing.billing.timeseries.data.WeeklyReportEntityData;
 import io.harness.batch.processing.billing.timeseries.helper.WeeklyReportTemplateHelper;
@@ -42,19 +39,15 @@ import io.harness.ccm.communication.entities.CommunicationMedium;
 import io.harness.ccm.communication.entities.CommunicationType;
 import io.harness.rest.RestResponse;
 import io.harness.timescaledb.TimeScaleDBService;
-import lombok.extern.slf4j.Slf4j;
-import okhttp3.OkHttpClient;
-import okhttp3.Request;
-import okhttp3.RequestBody;
-import okhttp3.Response;
-import org.apache.commons.text.StrSubstitutor;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
+
 import software.wings.beans.Account;
 import software.wings.graphql.datafetcher.billing.BillingDataQueryMetadata;
 import software.wings.helpers.ext.mail.EmailData;
 import software.wings.service.impl.instance.CloudToHarnessMappingServiceImpl;
 
+import com.google.api.client.util.Charsets;
+import com.google.common.io.Resources;
+import com.google.inject.Singleton;
 import java.io.IOException;
 import java.net.URISyntaxException;
 import java.net.URL;
@@ -75,6 +68,14 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.stream.Collectors;
+import lombok.extern.slf4j.Slf4j;
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
+import okhttp3.RequestBody;
+import okhttp3.Response;
+import org.apache.commons.text.StrSubstitutor;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
 
 @Service
 @Singleton

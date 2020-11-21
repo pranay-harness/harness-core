@@ -3,17 +3,15 @@ package software.wings.utils;
 import static io.harness.encryption.EncryptionReflectUtils.getEncryptedFieldTag;
 import static io.harness.encryption.EncryptionReflectUtils.getEncryptedRefField;
 
-import com.google.common.collect.Sets;
-
 import io.harness.beans.Encryptable;
 import io.harness.beans.EncryptedDataParent;
 import io.harness.beans.SecretParentsUpdateDetail;
 import io.harness.reflection.ReflectionUtils;
 import io.harness.security.encryption.EncryptionType;
-import lombok.NonNull;
-import lombok.experimental.UtilityClass;
+
 import software.wings.annotation.EncryptableSetting;
 
+import com.google.common.collect.Sets;
 import java.lang.reflect.Field;
 import java.util.Collections;
 import java.util.HashMap;
@@ -24,6 +22,8 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
+import lombok.NonNull;
+import lombok.experimental.UtilityClass;
 
 @UtilityClass
 public class WingsReflectionUtils {

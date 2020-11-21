@@ -1,6 +1,7 @@
 package software.wings.service.intfc.newrelic;
 
 import io.harness.security.encryption.EncryptedDataDetail;
+
 import software.wings.beans.NewRelicConfig;
 import software.wings.beans.NewRelicDeploymentMarkerPayload;
 import software.wings.beans.TaskType;

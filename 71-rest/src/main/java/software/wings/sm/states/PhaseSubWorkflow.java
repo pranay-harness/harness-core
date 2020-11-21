@@ -5,13 +5,11 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.validation.Validator.notNullCheck;
-import static java.lang.String.format;
+
 import static software.wings.api.PhaseExecutionData.PhaseExecutionDataBuilder.aPhaseExecutionData;
 
-import com.google.common.annotations.VisibleForTesting;
-import com.google.inject.Inject;
+import static java.lang.String.format;
 
-import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.OrchestrationWorkflowType;
 import io.harness.beans.SweepingOutputInstance;
@@ -23,9 +21,7 @@ import io.harness.expression.ExpressionEvaluator;
 import io.harness.serializer.KryoSerializer;
 import io.harness.serializer.MapperUtils;
 import io.harness.tasks.ResponseData;
-import lombok.extern.slf4j.Slf4j;
-import org.jetbrains.annotations.Nullable;
-import org.mongodb.morphia.annotations.Transient;
+
 import software.wings.api.ContainerServiceElement;
 import software.wings.api.DeploymentType;
 import software.wings.api.PhaseElement;
@@ -70,10 +66,16 @@ import software.wings.sm.StateExecutionInstance;
 import software.wings.sm.StateType;
 import software.wings.sm.WorkflowStandardParams;
 
+import com.github.reinert.jjschema.SchemaIgnore;
+import com.google.common.annotations.VisibleForTesting;
+import com.google.inject.Inject;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import lombok.extern.slf4j.Slf4j;
+import org.jetbrains.annotations.Nullable;
+import org.mongodb.morphia.annotations.Transient;
 
 /**
  * Created by rishi on 1/12/17.

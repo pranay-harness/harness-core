@@ -1,12 +1,10 @@
 package io.harness.app;
 
-import static com.google.inject.matcher.Matchers.not;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.logging.LoggingInitializer.initializeLogging;
 import static io.harness.mongo.iterator.MongoPersistenceIterator.SchedulingType.REGULAR;
 import static io.harness.security.ServiceTokenGenerator.VERIFICATION_SERVICE_SECRET;
-import static java.time.Duration.ofMinutes;
-import static java.time.Duration.ofSeconds;
+
 import static software.wings.beans.alert.Alert.AlertKeys;
 import static software.wings.common.VerificationConstants.CV_TASK_CRON_POLL_INTERVAL_SEC;
 import static software.wings.common.VerificationConstants.DATA_COLLECTION_TASKS_PER_MINUTE;
@@ -16,33 +14,10 @@ import static software.wings.common.VerificationConstants.IGNORED_ERRORS_METRIC_
 import static software.wings.common.VerificationConstants.NUM_LOG_RECORDS;
 import static software.wings.common.VerificationConstants.getDataAnalysisMetricHelpDocument;
 
-import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Lists;
-import com.google.common.collect.Sets;
-import com.google.common.util.concurrent.ThreadFactoryBuilder;
-import com.google.inject.Guice;
-import com.google.inject.Injector;
-import com.google.inject.Module;
-import com.google.inject.Provides;
-import com.google.inject.Singleton;
-import com.google.inject.TypeLiteral;
-import com.google.inject.matcher.AbstractMatcher;
-import com.google.inject.name.Named;
+import static com.google.inject.matcher.Matchers.not;
+import static java.time.Duration.ofMinutes;
+import static java.time.Duration.ofSeconds;
 
-import com.codahale.metrics.MetricRegistry;
-import com.github.dirkraft.dropwizard.fileassets.FileAssetsBundle;
-import com.palominolabs.metrics.guice.MetricsInstrumentationModule;
-import io.dropwizard.Application;
-import io.dropwizard.bundles.assets.ConfiguredAssetsBundle;
-import io.dropwizard.configuration.EnvironmentVariableSubstitutor;
-import io.dropwizard.configuration.SubstitutingSourceProvider;
-import io.dropwizard.jersey.errors.EarlyEofExceptionMapper;
-import io.dropwizard.lifecycle.Managed;
-import io.dropwizard.setup.Bootstrap;
-import io.dropwizard.setup.Environment;
-import io.federecio.dropwizard.swagger.SwaggerBundle;
-import io.federecio.dropwizard.swagger.SwaggerBundleConfiguration;
 import io.harness.beans.ExecutionStatus;
 import io.harness.cvng.core.services.api.VerificationServiceSecretManager;
 import io.harness.delegate.beans.DelegateAsyncTaskResponse;
@@ -85,13 +60,7 @@ import io.harness.serializer.KryoRegistrar;
 import io.harness.serializer.ManagerRegistrars;
 import io.harness.serializer.VerificationRegistrars;
 import io.harness.serializer.morphia.VerificationMorphiaRegistrar;
-import lombok.extern.slf4j.Slf4j;
-import org.glassfish.jersey.media.multipart.MultiPartFeature;
-import org.glassfish.jersey.server.model.Resource;
-import org.hibernate.validator.parameternameprovider.ReflectionParameterNameProvider;
-import org.mongodb.morphia.converters.TypeConverter;
-import org.reflections.Reflections;
-import ru.vyarus.guice.validator.ValidationModule;
+
 import software.wings.app.CharsetResponseFilter;
 import software.wings.beans.Account;
 import software.wings.beans.Account.AccountKeys;
@@ -112,6 +81,32 @@ import software.wings.service.impl.analysis.AnalysisContext;
 import software.wings.service.impl.analysis.AnalysisContext.AnalysisContextKeys;
 import software.wings.service.impl.analysis.MLAnalysisType;
 
+import com.codahale.metrics.MetricRegistry;
+import com.github.dirkraft.dropwizard.fileassets.FileAssetsBundle;
+import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
+import com.google.common.util.concurrent.ThreadFactoryBuilder;
+import com.google.inject.Guice;
+import com.google.inject.Injector;
+import com.google.inject.Module;
+import com.google.inject.Provides;
+import com.google.inject.Singleton;
+import com.google.inject.TypeLiteral;
+import com.google.inject.matcher.AbstractMatcher;
+import com.google.inject.name.Named;
+import com.palominolabs.metrics.guice.MetricsInstrumentationModule;
+import io.dropwizard.Application;
+import io.dropwizard.bundles.assets.ConfiguredAssetsBundle;
+import io.dropwizard.configuration.EnvironmentVariableSubstitutor;
+import io.dropwizard.configuration.SubstitutingSourceProvider;
+import io.dropwizard.jersey.errors.EarlyEofExceptionMapper;
+import io.dropwizard.lifecycle.Managed;
+import io.dropwizard.setup.Bootstrap;
+import io.dropwizard.setup.Environment;
+import io.federecio.dropwizard.swagger.SwaggerBundle;
+import io.federecio.dropwizard.swagger.SwaggerBundleConfiguration;
 import java.time.Duration;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
@@ -125,6 +120,13 @@ import java.util.concurrent.TimeUnit;
 import javax.validation.Validation;
 import javax.validation.ValidatorFactory;
 import javax.ws.rs.Path;
+import lombok.extern.slf4j.Slf4j;
+import org.glassfish.jersey.media.multipart.MultiPartFeature;
+import org.glassfish.jersey.server.model.Resource;
+import org.hibernate.validator.parameternameprovider.ReflectionParameterNameProvider;
+import org.mongodb.morphia.converters.TypeConverter;
+import org.reflections.Reflections;
+import ru.vyarus.guice.validator.ValidationModule;
 
 /**
  * The main application - entry point for the entire verification service.

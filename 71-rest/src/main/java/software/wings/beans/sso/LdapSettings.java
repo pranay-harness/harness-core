@@ -3,14 +3,25 @@ package software.wings.beans.sso;
 import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
-import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JsonProperty;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.SecretText;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.delegate.beans.executioncapability.ExecutionCapabilityDemander;
 import io.harness.delegate.task.mixin.SocketConnectivityCapabilityGenerator;
 import io.harness.security.encryption.EncryptedDataDetail;
+
+import software.wings.helpers.ext.ldap.LdapConstants;
+import software.wings.service.intfc.security.EncryptionService;
+import software.wings.service.intfc.security.SecretManager;
+
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.UUID;
+import javax.validation.Valid;
+import javax.validation.constraints.NotNull;
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Data;
@@ -18,16 +29,6 @@ import lombok.EqualsAndHashCode;
 import lombok.experimental.FieldDefaults;
 import lombok.experimental.FieldNameConstants;
 import org.hibernate.validator.constraints.NotBlank;
-import software.wings.helpers.ext.ldap.LdapConstants;
-import software.wings.service.intfc.security.EncryptionService;
-import software.wings.service.intfc.security.SecretManager;
-
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.UUID;
-import javax.validation.Valid;
-import javax.validation.constraints.NotNull;
 
 /**
  * Bean to store all the ldap sso provider configuration details

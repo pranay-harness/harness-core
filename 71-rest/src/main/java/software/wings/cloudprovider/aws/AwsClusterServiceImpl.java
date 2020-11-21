@@ -1,13 +1,20 @@
 package software.wings.cloudprovider.aws;
 
-import static java.lang.String.format;
-import static java.util.Comparator.comparingInt;
-import static java.util.stream.Collectors.toList;
 import static software.wings.utils.EcsConvention.getRevisionFromServiceName;
 import static software.wings.utils.EcsConvention.getServiceNamePrefixFromServiceName;
 
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
+import static java.lang.String.format;
+import static java.util.Comparator.comparingInt;
+import static java.util.stream.Collectors.toList;
+
+import io.harness.container.ContainerInfo;
+import io.harness.exception.WingsException;
+import io.harness.logging.LogCallback;
+import io.harness.security.encryption.EncryptedDataDetail;
+
+import software.wings.beans.SettingAttribute;
+import software.wings.beans.command.ExecutionLogCallback;
+import software.wings.cloudprovider.ClusterConfiguration;
 
 import com.amazonaws.services.ecs.model.ContainerDefinition;
 import com.amazonaws.services.ecs.model.CreateServiceRequest;
@@ -17,19 +24,13 @@ import com.amazonaws.services.ecs.model.RunTaskResult;
 import com.amazonaws.services.ecs.model.Service;
 import com.amazonaws.services.ecs.model.TaskDefinition;
 import com.amazonaws.services.elasticloadbalancingv2.model.TargetGroup;
-import io.harness.container.ContainerInfo;
-import io.harness.exception.WingsException;
-import io.harness.logging.LogCallback;
-import io.harness.security.encryption.EncryptedDataDetail;
-import lombok.extern.slf4j.Slf4j;
-import software.wings.beans.SettingAttribute;
-import software.wings.beans.command.ExecutionLogCallback;
-import software.wings.cloudprovider.ClusterConfiguration;
-
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * Created by anubhaw on 12/29/16.

@@ -2,6 +2,7 @@ package software.wings.delegatetasks.k8s.taskhandler;
 
 import static io.harness.rule.OwnerRule.ABOSII;
 import static io.harness.rule.OwnerRule.BOJANA;
+
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyBoolean;
@@ -19,10 +20,7 @@ import io.harness.k8s.model.K8sPod;
 import io.harness.k8s.model.KubernetesConfig;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.rule.Owner;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
+
 import software.wings.WingsBaseTest;
 import software.wings.delegatetasks.k8s.K8sTaskHelper;
 import software.wings.helpers.ext.container.ContainerDeploymentDelegateHelper;
@@ -32,6 +30,10 @@ import software.wings.helpers.ext.k8s.response.K8sTaskResponse;
 
 import java.util.Arrays;
 import java.util.List;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
 
 public class K8sInstanceSyncTaskHandlerTest extends WingsBaseTest {
   @Mock private ContainerDeploymentDelegateHelper containerDeploymentDelegateHelper;

@@ -7,6 +7,9 @@ import static io.harness.rule.OwnerRule.ABOSII;
 import static io.harness.rule.OwnerRule.AGORODETKI;
 import static io.harness.rule.OwnerRule.ANSHUL;
 import static io.harness.rule.OwnerRule.DEEPAK_PUTHRAYA;
+
+import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
+
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.emptyMap;
@@ -22,7 +25,20 @@ import static org.mockito.Mockito.verify;
 import static org.powermock.api.mockito.PowerMockito.mock;
 import static org.powermock.api.mockito.PowerMockito.when;
 import static org.powermock.api.mockito.PowerMockito.whenNew;
-import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
+
+import io.harness.beans.AzureEnvironmentType;
+import io.harness.category.element.UnitTests;
+import io.harness.exception.InvalidRequestException;
+import io.harness.k8s.model.KubernetesConfig;
+import io.harness.network.Http;
+import io.harness.rule.Owner;
+
+import software.wings.WingsBaseTest;
+import software.wings.beans.AzureConfig;
+import software.wings.beans.AzureTagDetails;
+import software.wings.beans.AzureVaultConfig;
+import software.wings.helpers.ext.azure.AksGetCredentialsResponse.AksGetCredentialProperties;
+import software.wings.service.intfc.security.EncryptionService;
 
 import com.microsoft.aad.adal4j.AuthenticationException;
 import com.microsoft.azure.Page;
@@ -64,12 +80,11 @@ import com.microsoft.azure.management.resources.fluentcore.arm.Region;
 import com.microsoft.azure.management.resources.implementation.SubscriptionInner;
 import com.microsoft.rest.LogLevel;
 import com.microsoft.rest.RestException;
-import io.harness.beans.AzureEnvironmentType;
-import io.harness.category.element.UnitTests;
-import io.harness.exception.InvalidRequestException;
-import io.harness.k8s.model.KubernetesConfig;
-import io.harness.network.Http;
-import io.harness.rule.Owner;
+import java.io.IOException;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.stream.Stream;
 import okhttp3.OkHttpClient;
 import org.joda.time.DateTime;
 import org.junit.Test;
@@ -85,18 +100,6 @@ import org.powermock.modules.junit4.PowerMockRunner;
 import retrofit2.Call;
 import retrofit2.Response;
 import rx.Observable;
-import software.wings.WingsBaseTest;
-import software.wings.beans.AzureConfig;
-import software.wings.beans.AzureTagDetails;
-import software.wings.beans.AzureVaultConfig;
-import software.wings.helpers.ext.azure.AksGetCredentialsResponse.AksGetCredentialProperties;
-import software.wings.service.intfc.security.EncryptionService;
-
-import java.io.IOException;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.stream.Stream;
 
 @RunWith(PowerMockRunner.class)
 @PrepareForTest({Azure.class, AzureHelperService.class, Http.class})

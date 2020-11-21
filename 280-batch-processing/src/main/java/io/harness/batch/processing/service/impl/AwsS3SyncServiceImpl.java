@@ -1,32 +1,32 @@
 package io.harness.batch.processing.service.impl;
 
+import io.harness.batch.processing.BatchProcessingException;
+import io.harness.batch.processing.ccm.S3SyncRecord;
+import io.harness.batch.processing.config.BatchMainConfig;
+import io.harness.batch.processing.service.intfc.AwsS3SyncService;
+
+import software.wings.security.authentication.AwsS3SyncConfig;
+
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonSyntaxException;
 import com.google.inject.Inject;
-
 import io.github.resilience4j.core.IntervalFunction;
 import io.github.resilience4j.retry.Retry;
 import io.github.resilience4j.retry.RetryConfig;
 import io.github.resilience4j.retry.RetryRegistry;
-import io.harness.batch.processing.BatchProcessingException;
-import io.harness.batch.processing.ccm.S3SyncRecord;
-import io.harness.batch.processing.config.BatchMainConfig;
-import io.harness.batch.processing.service.intfc.AwsS3SyncService;
 import io.vavr.CheckedFunction0;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import lombok.extern.slf4j.Slf4j;
 import org.zeroturnaround.exec.InvalidExitValueException;
 import org.zeroturnaround.exec.ProcessExecutor;
 import org.zeroturnaround.exec.ProcessResult;
 import org.zeroturnaround.exec.stream.slf4j.Slf4jStream;
-import software.wings.security.authentication.AwsS3SyncConfig;
-
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
 
 /**
  * Performs aws s3 sync.

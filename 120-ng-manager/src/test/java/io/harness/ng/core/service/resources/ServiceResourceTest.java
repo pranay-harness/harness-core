@@ -1,10 +1,12 @@
 package io.harness.ng.core.service.resources;
 
 import static io.harness.rule.OwnerRule.ARCHIT;
+
+import static software.wings.beans.Service.ServiceKeys;
+
 import static java.util.Collections.singletonMap;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.doReturn;
-import static software.wings.beans.Service.ServiceKeys;
 
 import io.harness.NgManagerTest;
 import io.harness.category.element.UnitTests;
@@ -15,6 +17,11 @@ import io.harness.ng.core.service.entity.ServiceEntity;
 import io.harness.ng.core.service.mappers.ServiceFilterHelper;
 import io.harness.ng.core.service.services.impl.ServiceEntityServiceImpl;
 import io.harness.rule.Owner;
+
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
+import java.util.Optional;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -26,11 +33,6 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.mongodb.core.query.Criteria;
-
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
-import java.util.Optional;
 
 public class ServiceResourceTest extends NgManagerTest {
   @Mock ServiceEntityServiceImpl serviceEntityService;

@@ -1,18 +1,18 @@
 package io.harness.notification.remote.dto;
 
+import static io.harness.data.structure.UUIDGenerator.generateUuid;
+
+import io.harness.notification.NotificationChannelType;
+
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.google.inject.Inject;
-import io.harness.notification.NotificationChannelType;
+import javax.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-
-import javax.validation.constraints.NotNull;
-
-import static io.harness.data.structure.UUIDGenerator.generateUuid;
 
 @Getter
 @Setter

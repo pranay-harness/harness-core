@@ -1,10 +1,9 @@
 package io.harness.threading;
 
-import lombok.Getter;
-
 import java.io.Closeable;
 import java.io.IOException;
 import java.util.concurrent.ExecutorService;
+import lombok.Getter;
 
 public class ThreadPoolGuard implements Closeable {
   @Getter private ExecutorService executorService;

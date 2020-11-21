@@ -1,3 +1,5 @@
 package io.harness.persistence;
 
-public interface CreatedAtAccess { long getCreatedAt(); }
+public interface CreatedAtAccess {
+  long getCreatedAt();
+}

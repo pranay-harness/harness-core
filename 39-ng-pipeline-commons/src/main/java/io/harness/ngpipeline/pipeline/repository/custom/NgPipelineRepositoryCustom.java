@@ -1,13 +1,13 @@
 package io.harness.ngpipeline.pipeline.repository.custom;
 
-import com.mongodb.client.result.UpdateResult;
 import io.harness.ngpipeline.pipeline.beans.entities.NgPipelineEntity;
+
+import com.mongodb.client.result.UpdateResult;
+import java.util.List;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.mongodb.core.query.Criteria;
-
-import java.util.List;
 
 public interface NgPipelineRepositoryCustom {
   Page<NgPipelineEntity> findAll(Criteria criteria, Pageable pageable);

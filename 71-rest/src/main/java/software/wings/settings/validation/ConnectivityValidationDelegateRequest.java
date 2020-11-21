@@ -5,8 +5,7 @@ import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.delegate.beans.executioncapability.ExecutionCapabilityDemander;
 import io.harness.delegate.task.mixin.SocketConnectivityCapabilityGenerator;
 import io.harness.security.encryption.EncryptedDataDetail;
-import lombok.Builder;
-import lombok.Data;
+
 import software.wings.beans.HostConnectionAttributes;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.WinRmConnectionAttributes;
@@ -16,6 +15,8 @@ import software.wings.helpers.ext.mail.SmtpConfig;
 import software.wings.settings.SettingValue;
 
 import java.util.List;
+import lombok.Builder;
+import lombok.Data;
 
 @Data
 @Builder

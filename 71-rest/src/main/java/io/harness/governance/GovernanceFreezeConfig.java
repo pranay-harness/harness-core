@@ -1,13 +1,14 @@
 package io.harness.governance;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
 import io.harness.data.structure.CollectionUtils;
+
+import software.wings.beans.Environment.EnvironmentType;
+
+import com.fasterxml.jackson.annotation.JsonProperty;
+import java.util.List;
 import lombok.EqualsAndHashCode;
 import lombok.ToString;
 import org.codehaus.jackson.annotate.JsonCreator;
-import software.wings.beans.Environment.EnvironmentType;
-
-import java.util.List;
 
 @ToString
 @EqualsAndHashCode

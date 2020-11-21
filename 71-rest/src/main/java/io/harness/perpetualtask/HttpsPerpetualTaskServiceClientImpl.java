@@ -2,14 +2,17 @@ package io.harness.perpetualtask;
 
 import static java.lang.String.format;
 
-import com.google.api.client.util.Base64;
-import com.google.protobuf.ByteString;
-import com.google.protobuf.Message;
-
 import io.harness.beans.DelegateTask;
 import io.harness.callback.HttpsClientEntrypoint;
 import io.harness.network.Http;
 import io.harness.perpetualtask.https.HttpsPerpetualTaskParams;
+
+import com.google.api.client.util.Base64;
+import com.google.protobuf.ByteString;
+import com.google.protobuf.Message;
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
 import okhttp3.ConnectionPool;
 import okhttp3.OkHttpClient;
@@ -22,10 +25,6 @@ import retrofit2.converter.jackson.JacksonConverterFactory;
 import retrofit2.http.FieldMap;
 import retrofit2.http.FormUrlEncoded;
 import retrofit2.http.POST;
-
-import java.io.IOException;
-import java.nio.charset.StandardCharsets;
-import java.util.Map;
 
 @Slf4j
 public class HttpsPerpetualTaskServiceClientImpl implements HttpsPerpetualTaskServiceClient {
@@ -82,7 +81,7 @@ public class HttpsPerpetualTaskServiceClientImpl implements HttpsPerpetualTaskSe
               Request.Builder request = chain.request().newBuilder().addHeader("Authorization",
                   "Basic "
                       + Base64.encodeBase64String(format("%s:%s", entrypoint.getBasicAuthCredentials().getUsername(),
-                            entrypoint.getBasicAuthCredentials().getPassword())
+                          entrypoint.getBasicAuthCredentials().getPassword())
                                                       .getBytes(StandardCharsets.UTF_8)));
               return chain.proceed(request.build());
             })

@@ -2,8 +2,9 @@ package io.harness.ccm.cluster.entities;
 
 import static io.harness.ccm.cluster.entities.ClusterType.AWS_ECS;
 
-import com.fasterxml.jackson.annotation.JsonTypeName;
 import io.harness.ccm.cluster.entities.ClusterRecord.ClusterRecordKeys;
+
+import com.fasterxml.jackson.annotation.JsonTypeName;
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Data;

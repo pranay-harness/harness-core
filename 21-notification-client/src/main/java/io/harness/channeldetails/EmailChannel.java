@@ -1,13 +1,13 @@
 package io.harness.channeldetails;
 
+import static io.harness.data.structure.UUIDGenerator.generateUuid;
+
 import io.harness.NotificationRequest;
 import io.harness.Team;
-import lombok.*;
 
 import java.util.List;
 import java.util.Map;
-
-import static io.harness.data.structure.UUIDGenerator.generateUuid;
+import lombok.*;
 
 @EqualsAndHashCode(callSuper = true)
 @Data

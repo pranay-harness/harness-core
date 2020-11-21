@@ -1,11 +1,7 @@
 package software.wings.api.ecs;
 
 import io.harness.delegate.beans.DelegateTaskNotifyResponseData;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.EqualsAndHashCode;
-import lombok.NoArgsConstructor;
+
 import software.wings.api.ExecutionDataValue;
 import software.wings.beans.GitFileConfig;
 import software.wings.beans.TaskType;
@@ -14,6 +10,11 @@ import software.wings.sm.StateExecutionData;
 import software.wings.sm.states.EcsRunTaskDataBag;
 
 import java.util.Map;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.NoArgsConstructor;
 
 @Data
 @Builder

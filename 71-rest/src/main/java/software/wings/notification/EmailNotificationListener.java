@@ -1,11 +1,12 @@
 package software.wings.notification;
 
-import com.google.inject.Inject;
-
 import io.harness.queue.QueueConsumer;
 import io.harness.queue.QueueListener;
+
 import software.wings.helpers.ext.mail.EmailData;
 import software.wings.service.intfc.EmailNotificationService;
+
+import com.google.inject.Inject;
 
 /**
  * Created by peeyushaggarwal on 5/24/16.

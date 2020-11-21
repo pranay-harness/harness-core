@@ -1,13 +1,15 @@
 package io.harness.ng.core.entities;
 
+import io.harness.encryption.Encrypted;
+
+import software.wings.annotation.EncryptableSetting;
+import software.wings.settings.SettingVariableTypes;
+
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.github.reinert.jjschema.SchemaIgnore;
-import io.harness.encryption.Encrypted;
 import lombok.Builder;
 import lombok.Data;
 import lombok.ToString;
-import software.wings.annotation.EncryptableSetting;
-import software.wings.settings.SettingVariableTypes;
 
 @Data
 @Builder

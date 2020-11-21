@@ -1,13 +1,13 @@
 package io.harness.secretmanagerclient.dto;
 
+import io.harness.secretmanagerclient.ValueType;
+
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import io.harness.secretmanagerclient.ValueType;
-import lombok.Builder;
-import lombok.Data;
-
 import java.util.List;
 import javax.validation.constraints.NotNull;
+import lombok.Builder;
+import lombok.Data;
 
 @Data
 @JsonIgnoreProperties(ignoreUnknown = true)

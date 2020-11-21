@@ -1,12 +1,12 @@
 package software.wings.service.impl.yaml.handler.deploymentspec.container;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static java.util.stream.Collectors.toList;
 
-import com.google.inject.Singleton;
+import static java.util.stream.Collectors.toList;
 
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
+
 import software.wings.beans.NameValuePair;
 import software.wings.beans.container.LogConfiguration;
 import software.wings.beans.container.LogConfiguration.LogOption;
@@ -14,6 +14,7 @@ import software.wings.beans.container.LogConfiguration.Yaml;
 import software.wings.beans.yaml.ChangeContext;
 import software.wings.service.impl.yaml.handler.BaseYamlHandler;
 
+import com.google.inject.Singleton;
 import java.util.Collections;
 import java.util.List;
 /**

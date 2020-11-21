@@ -1,21 +1,21 @@
 package software.wings.beans;
 
-import com.google.common.base.MoreObjects;
-
-import com.fasterxml.jackson.annotation.JsonProperty;
 import io.harness.annotation.HarnessEntity;
 import io.harness.beans.EmbeddedUser;
 import io.harness.beans.ExecutionStatus;
 import io.harness.mongo.index.FdIndex;
+
+import software.wings.beans.infrastructure.Host;
+
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.google.common.base.MoreObjects;
+import java.util.Objects;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.experimental.FieldNameConstants;
 import lombok.experimental.UtilityClass;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Property;
-import software.wings.beans.infrastructure.Host;
-
-import java.util.Objects;
 
 /**
  * The Class ServiceInstance.
@@ -445,9 +445,9 @@ public class ServiceInstance extends Base {
   public int hashCode() {
     return 31 * super.hashCode()
         + Objects.hash(envId, serviceTemplateId, serviceTemplateName, serviceId, serviceName, hostId, hostName,
-              artifactStreamId, artifactStreamName, artifactId, artifactName, artifactDeployedOn,
-              artifactDeploymentStatus, artifactDeploymentActivityId, lastActivityId, lastActivityStatus,
-              lastActivityCreatedAt, commandName, commandType, lastDeployedOn);
+            artifactStreamId, artifactStreamName, artifactId, artifactName, artifactDeployedOn,
+            artifactDeploymentStatus, artifactDeploymentActivityId, lastActivityId, lastActivityStatus,
+            lastActivityCreatedAt, commandName, commandType, lastDeployedOn);
   }
 
   @Override

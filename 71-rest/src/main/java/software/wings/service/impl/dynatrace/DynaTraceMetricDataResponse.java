@@ -1,10 +1,9 @@
 package software.wings.service.impl.dynatrace;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import lombok.Data;
-
 import java.util.List;
 import java.util.Map;
+import lombok.Data;
 
 /**
  * Created by rsingh on 2/6/18.

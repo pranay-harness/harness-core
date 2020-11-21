@@ -2,13 +2,11 @@ package io.harness.ccm.config;
 
 import static io.harness.rule.OwnerRule.HANTANG;
 import static io.harness.rule.OwnerRule.ROHIT;
+
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-
-import com.google.cloud.bigquery.BigQuery;
-import com.google.cloud.bigquery.Dataset;
 
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
@@ -17,6 +15,13 @@ import io.harness.ccm.billing.bigquery.BigQueryService;
 import io.harness.ccm.config.GcpBillingAccount.GcpBillingAccountBuilder;
 import io.harness.exception.InvalidRequestException;
 import io.harness.rule.Owner;
+
+import software.wings.beans.ValidationResult;
+
+import com.google.cloud.bigquery.BigQuery;
+import com.google.cloud.bigquery.Dataset;
+import java.io.IOException;
+import java.security.GeneralSecurityException;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -25,10 +30,6 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnit;
 import org.mockito.junit.MockitoRule;
-import software.wings.beans.ValidationResult;
-
-import java.io.IOException;
-import java.security.GeneralSecurityException;
 
 public class GcpBillingAccountServiceImplTest extends CategoryTest {
   private String accountId = "ACCOUNT_ID";

@@ -1,11 +1,5 @@
 package io.harness.cdng.pipeline.helpers;
 
-import com.google.common.annotations.VisibleForTesting;
-import com.google.common.cache.CacheBuilder;
-import com.google.common.cache.CacheLoader;
-import com.google.common.cache.LoadingCache;
-import com.google.common.io.Resources;
-
 import io.harness.beans.ExecutionStrategyType;
 import io.harness.cdng.pipeline.NGStepType;
 import io.harness.cdng.pipeline.StepCategory;
@@ -13,6 +7,11 @@ import io.harness.cdng.pipeline.StepData;
 import io.harness.cdng.service.beans.ServiceDefinitionType;
 import io.harness.exception.GeneralException;
 
+import com.google.common.annotations.VisibleForTesting;
+import com.google.common.cache.CacheBuilder;
+import com.google.common.cache.CacheLoader;
+import com.google.common.cache.LoadingCache;
+import com.google.common.io.Resources;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;

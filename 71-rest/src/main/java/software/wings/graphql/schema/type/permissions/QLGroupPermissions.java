@@ -1,12 +1,12 @@
 package software.wings.graphql.schema.type.permissions;
 
-import lombok.Builder;
-import lombok.Value;
-import lombok.experimental.FieldNameConstants;
 import software.wings.security.PermissionAttribute;
 import software.wings.security.annotations.Scope;
 
 import java.util.List;
+import lombok.Builder;
+import lombok.Value;
+import lombok.experimental.FieldNameConstants;
 
 @Value
 @Builder

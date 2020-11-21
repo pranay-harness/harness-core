@@ -1,10 +1,8 @@
 package io.harness.walktree.visitor.entityreference;
 
 import static io.harness.rule.OwnerRule.NAMAN;
-import static org.assertj.core.api.Assertions.assertThat;
 
-import com.google.common.io.Resources;
-import com.google.inject.Inject;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.beans.IdentifierRef;
 import io.harness.category.element.UnitTests;
@@ -16,16 +14,18 @@ import io.harness.ngpipeline.pipeline.beans.yaml.NgPipeline;
 import io.harness.rule.Owner;
 import io.harness.walktree.visitor.SimpleVisitorFactory;
 import io.harness.yaml.utils.YamlPipelineUtils;
-import lombok.extern.slf4j.Slf4j;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
 
+import com.google.common.io.Resources;
+import com.google.inject.Inject;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.HashSet;
 import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
+import lombok.extern.slf4j.Slf4j;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 @Slf4j
 public class EntityReferenceExtractorVisitorTest extends CDNGBaseTest {

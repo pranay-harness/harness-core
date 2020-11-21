@@ -1,6 +1,7 @@
 package software.wings.resources;
 
 import static io.harness.rule.OwnerRule.NIKUNJ;
+
 import static java.lang.String.format;
 import static javax.ws.rs.client.Entity.entity;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -8,14 +9,22 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import com.google.common.io.ByteStreams;
-import com.google.common.io.Files;
-
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.ccm.views.entities.CEReportSchedule;
 import io.harness.ccm.views.service.CEReportScheduleService;
 import io.harness.rule.Owner;
+
+import software.wings.utils.ResourceTestRule;
+
+import com.google.common.io.ByteStreams;
+import com.google.common.io.Files;
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import javax.ws.rs.core.GenericType;
+import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
 import org.apache.commons.lang3.reflect.FieldUtils;
 import org.junit.Before;
 import org.junit.ClassRule;
@@ -24,14 +33,6 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.junit.rules.TemporaryFolder;
 import org.springframework.scheduling.support.CronSequenceGenerator;
-import software.wings.utils.ResourceTestRule;
-
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
-import javax.ws.rs.core.GenericType;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.Response;
 
 public class CEReportScheduleResourceTest extends CategoryTest {
   private static CEReportScheduleService ceReportScheduleService = mock(CEReportScheduleService.class);

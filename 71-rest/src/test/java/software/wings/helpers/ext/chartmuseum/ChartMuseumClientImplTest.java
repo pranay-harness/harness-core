@@ -5,14 +5,15 @@ import static org.assertj.core.api.Assertions.assertThat;
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
 import io.harness.rule.OwnerRule;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
-import org.mockito.InjectMocks;
-import org.mockito.Mockito;
+
 import software.wings.WingsBaseTest;
 import software.wings.beans.AwsConfig;
 
 import java.util.Map;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
+import org.mockito.InjectMocks;
+import org.mockito.Mockito;
 
 public class ChartMuseumClientImplTest extends WingsBaseTest {
   @InjectMocks private ChartMuseumClientImpl chartMuseumClient = Mockito.spy(ChartMuseumClientImpl.class);

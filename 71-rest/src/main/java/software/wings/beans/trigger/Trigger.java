@@ -3,11 +3,9 @@ package software.wings.beans.trigger;
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.beans.WorkflowType.PIPELINE;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+
 import static software.wings.beans.trigger.TriggerConditionType.WEBHOOK;
 
-import com.google.common.collect.ImmutableList;
-
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import io.harness.annotation.HarnessEntity;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.EmbeddedUser;
@@ -16,14 +14,7 @@ import io.harness.mongo.index.CompoundMongoIndex;
 import io.harness.mongo.index.FdIndex;
 import io.harness.mongo.index.MongoIndex;
 import io.harness.persistence.NameAccess;
-import lombok.Builder;
-import lombok.Data;
-import lombok.EqualsAndHashCode;
-import lombok.NoArgsConstructor;
-import lombok.experimental.FieldNameConstants;
-import lombok.experimental.UtilityClass;
-import org.hibernate.validator.constraints.NotEmpty;
-import org.mongodb.morphia.annotations.Entity;
+
 import software.wings.beans.AllowedValueYaml;
 import software.wings.beans.Base;
 import software.wings.beans.EntityType;
@@ -38,11 +29,21 @@ import software.wings.beans.trigger.TriggerCondition.TriggerConditionKeys;
 import software.wings.yaml.BaseEntityYaml;
 import software.wings.yaml.trigger.TriggerConditionYaml;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.google.common.collect.ImmutableList;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import javax.validation.constraints.NotNull;
+import lombok.Builder;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.NoArgsConstructor;
+import lombok.experimental.FieldNameConstants;
+import lombok.experimental.UtilityClass;
+import org.hibernate.validator.constraints.NotEmpty;
+import org.mongodb.morphia.annotations.Entity;
 
 /**
  * Created by sgurubelli on 10/25/17.

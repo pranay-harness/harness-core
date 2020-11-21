@@ -1,6 +1,7 @@
 package software.wings.graphql.datafetcher.application;
 
 import static io.harness.rule.OwnerRule.MILOS;
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
@@ -8,26 +9,10 @@ import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.when;
 import static org.mockito.MockitoAnnotations.initMocks;
 
-import com.google.common.collect.ImmutableMap;
-
-import graphql.execution.MergedSelectionSet;
-import graphql.schema.DataFetchingEnvironment;
-import graphql.schema.DataFetchingFieldSelectionSet;
-import graphql.schema.GraphQLFieldDefinition;
-import graphql.schema.SelectedField;
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.Mockito;
-import org.mockito.Spy;
-import org.mongodb.morphia.query.FieldEnd;
-import org.mongodb.morphia.query.MorphiaIterator;
-import org.mongodb.morphia.query.Query;
+
 import software.wings.dl.WingsPersistence;
 import software.wings.graphql.datafetcher.DataFetcherUtils;
 import software.wings.graphql.datafetcher.tag.TagHelper;
@@ -40,6 +25,12 @@ import software.wings.graphql.schema.type.aggregation.application.QLApplicationT
 import software.wings.graphql.schema.type.aggregation.application.QLApplicationTagType;
 import software.wings.graphql.schema.type.aggregation.tag.QLTagInput;
 
+import com.google.common.collect.ImmutableMap;
+import graphql.execution.MergedSelectionSet;
+import graphql.schema.DataFetchingEnvironment;
+import graphql.schema.DataFetchingFieldSelectionSet;
+import graphql.schema.GraphQLFieldDefinition;
+import graphql.schema.SelectedField;
 import java.lang.reflect.InvocationTargetException;
 import java.util.Arrays;
 import java.util.Collections;
@@ -47,6 +38,16 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.Mockito;
+import org.mockito.Spy;
+import org.mongodb.morphia.query.FieldEnd;
+import org.mongodb.morphia.query.MorphiaIterator;
+import org.mongodb.morphia.query.Query;
 
 public class ApplicationConnectionDataFetcherTest extends CategoryTest {
   @Mock FieldEnd<Query> field;

@@ -3,23 +3,22 @@ package io.harness.ng.core.invites;
 import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.exception.InvalidRequestException;
+import io.harness.security.JWTTokenServiceUtils;
 
 import com.auth0.jwt.JWT;
 import com.auth0.jwt.JWTCreator;
 import com.auth0.jwt.algorithms.Algorithm;
 import com.auth0.jwt.exceptions.JWTCreationException;
 import com.auth0.jwt.interfaces.Claim;
-import io.harness.annotations.dev.OwnedBy;
-import io.harness.exception.InvalidRequestException;
-import io.harness.security.JWTTokenServiceUtils;
-import lombok.AllArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import java.io.UnsupportedEncodingException;
 import java.util.Date;
 import java.util.Map;
+import lombok.AllArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 //  I want to have JWTGeneratorUtils as util class but how will I inject dependencies then?
 @AllArgsConstructor(onConstructor = @__({ @Inject }))

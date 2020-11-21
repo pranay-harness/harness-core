@@ -1,10 +1,9 @@
 package io.harness.ccm.license;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import java.time.Duration;
 import lombok.Builder;
 import lombok.Value;
-
-import java.time.Duration;
 
 @Value
 @Builder

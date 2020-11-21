@@ -2,16 +2,16 @@ package io.harness.entitysetupusageclient;
 
 import static io.harness.annotations.dev.HarnessTeam.DX;
 
-import com.google.inject.AbstractModule;
-import com.google.inject.Provides;
-import com.google.inject.Scopes;
-
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.entitysetupusageclient.remote.EntitySetupUsageClient;
 import io.harness.entitysetupusageclient.remote.EntitySetupUsageHttpClientFactory;
 import io.harness.remote.client.ServiceHttpClientConfig;
 import io.harness.security.ServiceTokenGenerator;
 import io.harness.serializer.kryo.KryoConverterFactory;
+
+import com.google.inject.AbstractModule;
+import com.google.inject.Provides;
+import com.google.inject.Scopes;
 
 @OwnedBy(DX)
 public class EntitySetupUsageClientModule extends AbstractModule {

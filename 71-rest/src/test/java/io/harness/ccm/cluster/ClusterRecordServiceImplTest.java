@@ -1,6 +1,9 @@
 package io.harness.ccm.cluster;
 
 import static io.harness.rule.OwnerRule.HANTANG;
+
+import static software.wings.beans.InfrastructureType.DIRECT_KUBERNETES;
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.eq;
@@ -8,7 +11,6 @@ import static org.mockito.Matchers.isA;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.mockito.internal.verification.VerificationModeFactory.times;
-import static software.wings.beans.InfrastructureType.DIRECT_KUBERNETES;
 
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
@@ -18,14 +20,7 @@ import io.harness.ccm.cluster.entities.DirectKubernetesCluster;
 import io.harness.ccm.cluster.entities.EcsCluster;
 import io.harness.observer.Subject;
 import io.harness.rule.Owner;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.junit.MockitoJUnit;
-import org.mockito.junit.MockitoRule;
+
 import software.wings.beans.Application;
 import software.wings.beans.DirectKubernetesInfrastructureMapping;
 import software.wings.infra.AwsEcsInfrastructure;
@@ -35,6 +30,14 @@ import software.wings.service.intfc.AppService;
 
 import java.util.Arrays;
 import java.util.List;
+import org.junit.Before;
+import org.junit.Rule;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.MockitoJUnit;
+import org.mockito.junit.MockitoRule;
 
 public class ClusterRecordServiceImplTest extends CategoryTest {
   @Mock private Subject<ClusterRecordObserver> subject;

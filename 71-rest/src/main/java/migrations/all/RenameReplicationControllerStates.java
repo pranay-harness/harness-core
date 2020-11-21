@@ -1,16 +1,17 @@
 package migrations.all;
 
-import static migrations.MigrationUtils.renameStateTypeAndStateClass;
 import static software.wings.sm.StateType.KUBERNETES_DEPLOY;
 import static software.wings.sm.StateType.KUBERNETES_DEPLOY_ROLLBACK;
 import static software.wings.sm.StateType.KUBERNETES_SETUP;
 
-import com.google.inject.Inject;
+import static migrations.MigrationUtils.renameStateTypeAndStateClass;
 
-import lombok.extern.slf4j.Slf4j;
-import migrations.Migration;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.WorkflowService;
+
+import com.google.inject.Inject;
+import lombok.extern.slf4j.Slf4j;
+import migrations.Migration;
 
 @Slf4j
 public class RenameReplicationControllerStates implements Migration {

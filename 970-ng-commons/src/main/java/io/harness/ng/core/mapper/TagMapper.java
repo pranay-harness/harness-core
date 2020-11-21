@@ -1,16 +1,17 @@
 package io.harness.ng.core.mapper;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
+
 import static java.util.Collections.EMPTY_LIST;
 import static java.util.Collections.EMPTY_MAP;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toMap;
 
 import io.harness.ng.core.common.beans.NGTag;
-import lombok.experimental.UtilityClass;
 
 import java.util.List;
 import java.util.Map;
+import lombok.experimental.UtilityClass;
 
 @UtilityClass
 public class TagMapper {

@@ -1,9 +1,5 @@
 package software.wings.integration.yaml;
 
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
-
-import org.slf4j.Logger;
 import software.wings.beans.GitConfig;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.yaml.GitFetchFilesRequest;
@@ -12,7 +8,10 @@ import software.wings.service.intfc.DelegateService;
 import software.wings.service.intfc.security.SecretManager;
 import software.wings.service.intfc.yaml.GitClient;
 
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import java.util.List;
+import org.slf4j.Logger;
 
 @Singleton
 public class GitIntegrationTestUtils {

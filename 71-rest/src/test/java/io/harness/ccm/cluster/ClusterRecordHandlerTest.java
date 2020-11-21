@@ -1,14 +1,16 @@
 package io.harness.ccm.cluster;
 
 import static io.harness.rule.OwnerRule.HANTANG;
+
+import static software.wings.beans.InfrastructureType.DIRECT_KUBERNETES;
+import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
+
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Matchers.isA;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-import static software.wings.beans.InfrastructureType.DIRECT_KUBERNETES;
-import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
@@ -16,15 +18,7 @@ import io.harness.ccm.CEPerpetualTaskManager;
 import io.harness.ccm.cluster.entities.ClusterRecord;
 import io.harness.ccm.config.CCMSettingService;
 import io.harness.rule.Owner;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.Spy;
-import org.mockito.junit.MockitoJUnit;
-import org.mockito.junit.MockitoRule;
+
 import software.wings.beans.AwsConfig;
 import software.wings.beans.DirectKubernetesInfrastructureMapping;
 import software.wings.beans.EcsInfrastructureMapping;
@@ -37,6 +31,15 @@ import software.wings.infra.InfrastructureDefinition;
 import software.wings.settings.SettingVariableTypes;
 
 import java.util.Arrays;
+import org.junit.Before;
+import org.junit.Rule;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.Spy;
+import org.mockito.junit.MockitoJUnit;
+import org.mockito.junit.MockitoRule;
 
 public class ClusterRecordHandlerTest extends CategoryTest {
   @Mock CCMSettingService ccmSettingService;

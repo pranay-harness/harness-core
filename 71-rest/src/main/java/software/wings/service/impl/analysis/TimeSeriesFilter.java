@@ -1,10 +1,9 @@
 package software.wings.service.impl.analysis;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import java.util.Set;
 import lombok.Builder;
 import lombok.Data;
-
-import java.util.Set;
 
 @Data
 @JsonIgnoreProperties(ignoreUnknown = true)

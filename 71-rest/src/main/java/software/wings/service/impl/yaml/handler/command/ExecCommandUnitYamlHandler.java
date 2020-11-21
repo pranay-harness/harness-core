@@ -1,9 +1,9 @@
 package software.wings.service.impl.yaml.handler.command;
 
-import com.google.inject.Singleton;
-
 import software.wings.beans.command.ExecCommandUnit;
 import software.wings.beans.command.ExecCommandUnit.Yaml;
+
+import com.google.inject.Singleton;
 
 /**
  * @author rktummala on 11/13/17

@@ -4,18 +4,15 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
 import static io.harness.persistence.HQuery.excludeAuthority;
-import static org.apache.commons.lang3.StringUtils.isBlank;
+
 import static software.wings.common.VerificationConstants.LAMBDA_HOST_NAME;
 import static software.wings.service.impl.analysis.AnalysisComparisonStrategy.COMPARE_WITH_PREVIOUS;
 import static software.wings.service.impl.newrelic.NewRelicMetricDataRecord.DEFAULT_GROUP_NAME;
 import static software.wings.sm.states.DynatraceState.CONTROL_HOST_NAME;
 import static software.wings.sm.states.DynatraceState.TEST_HOST_NAME;
 
-import com.google.common.base.Preconditions;
-import com.google.common.collect.Lists;
-import com.google.inject.Inject;
+import static org.apache.commons.lang3.StringUtils.isBlank;
 
-import com.fasterxml.jackson.databind.JsonNode;
 import io.harness.beans.ExecutionStatus;
 import io.harness.context.ContextElementType;
 import io.harness.exception.ExceptionUtils;
@@ -23,10 +20,7 @@ import io.harness.serializer.JsonUtils;
 import io.harness.tasks.ResponseData;
 import io.harness.time.Timestamp;
 import io.harness.version.VersionInfoManager;
-import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.io.IOUtils;
-import org.intellij.lang.annotations.Language;
-import org.mongodb.morphia.annotations.Transient;
+
 import software.wings.beans.GcpConfig;
 import software.wings.metrics.RiskLevel;
 import software.wings.service.impl.VerificationLogContext;
@@ -53,6 +47,10 @@ import software.wings.sm.WorkflowStandardParams;
 import software.wings.verification.VerificationDataAnalysisResponse;
 import software.wings.verification.VerificationStateAnalysisExecutionData;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.google.common.base.Preconditions;
+import com.google.common.collect.Lists;
+import com.google.inject.Inject;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
@@ -65,6 +63,10 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.io.IOUtils;
+import org.intellij.lang.annotations.Language;
+import org.mongodb.morphia.annotations.Transient;
 
 /**
  * Created by rsingh on 9/25/17.
@@ -217,7 +219,7 @@ public abstract class AbstractMetricAnalysisState extends AbstractAnalysisState 
 
         if (analysisContext.getNewNodesTrafficShiftPercent() != null
             && (analysisContext.getNewNodesTrafficShiftPercent() == 0
-                   || analysisContext.getNewNodesTrafficShiftPercent() > 50)) {
+                || analysisContext.getNewNodesTrafficShiftPercent() > 50)) {
           getLogger().info(
               "New nodes cannot be analyzed against old nodes if new traffic percentage is greater than 50");
           return generateAnalysisResponse(analysisContext, ExecutionStatus.FAILED,
@@ -394,7 +396,7 @@ public abstract class AbstractMetricAnalysisState extends AbstractAnalysisState 
     for (NewRelicMetricAnalysis metricAnalysisRecord : deploymentTimeSeriesAnalysis.getMetricAnalyses()) {
       if (metricAnalysisRecord.getRiskLevel() == RiskLevel.HIGH
           || (AnalysisTolerance.fromInt(context.getTolerance()) == AnalysisTolerance.LOW
-                 && !Arrays.asList(RiskLevel.LOW, RiskLevel.NA).contains(metricAnalysisRecord.getRiskLevel()))) {
+              && !Arrays.asList(RiskLevel.LOW, RiskLevel.NA).contains(metricAnalysisRecord.getRiskLevel()))) {
         executionStatus = ExecutionStatus.FAILED;
         break;
       }

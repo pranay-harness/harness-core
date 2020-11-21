@@ -1,16 +1,15 @@
 package software.wings.beans;
 
-import com.google.common.collect.ImmutableList;
-
 import io.harness.beans.EmbeddedUser;
 import io.harness.mongo.index.FdIndex;
 import io.harness.mongo.index.MongoIndex;
 import io.harness.mongo.index.SortCompoundMongoIndex;
+
+import com.google.common.collect.ImmutableList;
+import java.util.List;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.experimental.FieldNameConstants;
-
-import java.util.List;
 
 /**
  * Created by rishi on 10/13/16.

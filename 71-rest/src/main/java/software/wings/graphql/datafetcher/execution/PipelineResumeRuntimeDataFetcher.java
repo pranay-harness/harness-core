@@ -1,8 +1,5 @@
 package software.wings.graphql.datafetcher.execution;
 
-import com.google.inject.Inject;
-
-import lombok.extern.slf4j.Slf4j;
 import software.wings.beans.ExecutionArgs;
 import software.wings.beans.Pipeline;
 import software.wings.beans.WorkflowExecution;
@@ -16,7 +13,9 @@ import software.wings.security.annotations.AuthRule;
 import software.wings.service.intfc.PipelineService;
 import software.wings.service.intfc.WorkflowExecutionService;
 
+import com.google.inject.Inject;
 import java.util.ArrayList;
+import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class PipelineResumeRuntimeDataFetcher

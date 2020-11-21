@@ -1,16 +1,15 @@
 package software.wings.service.impl.sumo;
 
 import static io.harness.delegate.beans.TaskData.DEFAULT_SYNC_CALL_TIMEOUT;
+
 import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static software.wings.service.impl.ThirdPartyApiCallLog.createApiCallLog;
-
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
 
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.VerificationOperationException;
 import io.harness.exception.WingsException;
 import io.harness.security.encryption.EncryptedDataDetail;
+
 import software.wings.annotation.EncryptableSetting;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.SumoConfig;
@@ -21,6 +20,8 @@ import software.wings.service.impl.apm.MLServiceUtils;
 import software.wings.service.intfc.sumo.SumoDelegateService;
 import software.wings.service.intfc.sumo.SumoLogicAnalysisService;
 
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import java.util.List;
 
 /**

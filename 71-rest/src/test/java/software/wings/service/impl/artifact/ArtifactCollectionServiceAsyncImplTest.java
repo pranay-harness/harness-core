@@ -3,6 +3,12 @@ package software.wings.service.impl.artifact;
 import static io.harness.event.handler.impl.Constants.ACCOUNT_ID;
 import static io.harness.rule.OwnerRule.AADITI;
 import static io.harness.rule.OwnerRule.HARSH;
+
+import static software.wings.utils.WingsTestConstants.APP_ID;
+import static software.wings.utils.WingsTestConstants.ARTIFACT_ID;
+import static software.wings.utils.WingsTestConstants.ARTIFACT_STREAM_ID;
+import static software.wings.utils.WingsTestConstants.SERVICE_ID;
+
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
@@ -10,22 +16,12 @@ import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-import static software.wings.utils.WingsTestConstants.APP_ID;
-import static software.wings.utils.WingsTestConstants.ARTIFACT_ID;
-import static software.wings.utils.WingsTestConstants.ARTIFACT_STREAM_ID;
-import static software.wings.utils.WingsTestConstants.SERVICE_ID;
-
-import com.google.inject.Inject;
 
 import io.harness.beans.DelegateTask;
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
 import io.harness.waiter.WaitNotifyEngine;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
-import org.mockito.ArgumentCaptor;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
+
 import software.wings.WingsBaseTest;
 import software.wings.beans.artifact.Artifact;
 import software.wings.beans.artifact.CustomArtifactStream;
@@ -35,8 +31,14 @@ import software.wings.helpers.ext.jenkins.BuildDetails;
 import software.wings.service.intfc.BuildSourceService;
 import software.wings.service.intfc.DelegateService;
 
+import com.google.inject.Inject;
 import java.util.HashMap;
 import java.util.Map;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
+import org.mockito.ArgumentCaptor;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
 
 public class ArtifactCollectionServiceAsyncImplTest extends WingsBaseTest {
   @Mock private DelegateService delegateService;

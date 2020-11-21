@@ -5,14 +5,11 @@ import static io.harness.beans.SearchFilter.Operator.IN;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
-
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.beans.SearchFilter;
 import io.harness.exception.InvalidRequestException;
-import lombok.extern.slf4j.Slf4j;
+
 import software.wings.beans.InfrastructureProvisioner;
 import software.wings.beans.Service;
 import software.wings.graphql.datafetcher.application.AppFilterController;
@@ -25,10 +22,13 @@ import software.wings.graphql.schema.type.permissions.QLUserGroupPermissions;
 import software.wings.service.intfc.InfrastructureProvisionerService;
 import software.wings.service.intfc.ServiceResourceService;
 
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
+import lombok.extern.slf4j.Slf4j;
 
 /*
  * Class to validate that the input given by the user is correct.
@@ -148,42 +148,42 @@ public class UserGroupPermissionValidator {
       case SERVICE:
         if (appPermission.getServices() != null
             && (isNotEmpty(appPermission.getServices().getServiceIds())
-                   || appPermission.getServices().getFilterType() != null)) {
+                || appPermission.getServices().getFilterType() != null)) {
           return;
         }
         break;
       case ENV:
         if (appPermission.getEnvironments() != null
             && (isNotEmpty(appPermission.getEnvironments().getEnvIds())
-                   || isNotEmpty(appPermission.getEnvironments().getFilterTypes()))) {
+                || isNotEmpty(appPermission.getEnvironments().getFilterTypes()))) {
           return;
         }
         break;
       case WORKFLOW:
         if (appPermission.getWorkflows() != null
             && (isNotEmpty(appPermission.getWorkflows().getEnvIds())
-                   || isNotEmpty(appPermission.getWorkflows().getFilterTypes()))) {
+                || isNotEmpty(appPermission.getWorkflows().getFilterTypes()))) {
           return;
         }
         break;
       case PIPELINE:
         if (appPermission.getPipelines() != null
             && (isNotEmpty(appPermission.getPipelines().getEnvIds())
-                   || isNotEmpty(appPermission.getPipelines().getFilterTypes()))) {
+                || isNotEmpty(appPermission.getPipelines().getFilterTypes()))) {
           return;
         }
         break;
       case DEPLOYMENT:
         if (appPermission.getDeployments() != null
             && (isNotEmpty(appPermission.getDeployments().getEnvIds())
-                   || isNotEmpty(appPermission.getDeployments().getFilterTypes()))) {
+                || isNotEmpty(appPermission.getDeployments().getFilterTypes()))) {
           return;
         }
         break;
       case PROVISIONER:
         if (appPermission.getProvisioners() != null
             && (isNotEmpty(appPermission.getProvisioners().getProvisionerIds())
-                   || appPermission.getProvisioners().getFilterType() != null)) {
+                || appPermission.getProvisioners().getFilterType() != null)) {
           return;
         }
         break;

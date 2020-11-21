@@ -2,17 +2,17 @@ package io.harness.cvng.verificationjob.beans;
 
 import static io.harness.cvng.core.services.CVNextGenConstants.DATA_COLLECTION_DELAY;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import io.harness.cvng.core.utils.DateTimeUtils;
-import lombok.AccessLevel;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.Value;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.Set;
 import javax.validation.constraints.NotNull;
+import lombok.AccessLevel;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.Value;
 
 @Value
 @Builder

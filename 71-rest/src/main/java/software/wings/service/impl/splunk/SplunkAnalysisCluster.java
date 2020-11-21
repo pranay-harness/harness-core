@@ -1,12 +1,12 @@
 package software.wings.service.impl.splunk;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
-import lombok.Builder;
-import lombok.Data;
 import software.wings.service.impl.analysis.FeedbackPriority;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import java.util.ArrayList;
 import java.util.List;
+import lombok.Builder;
+import lombok.Data;
 
 /**
  * Created by rsingh on 6/28/17.

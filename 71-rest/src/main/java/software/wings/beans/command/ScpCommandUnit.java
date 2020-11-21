@@ -7,19 +7,13 @@ import static io.harness.logging.CommandExecutionStatus.RUNNING;
 import static io.harness.logging.CommandExecutionStatus.SUCCESS;
 import static io.harness.logging.LogLevel.ERROR;
 import static io.harness.logging.LogLevel.WARN;
-import static java.lang.String.format;
-import static java.util.stream.Collectors.toMap;
+
 import static software.wings.beans.Log.Builder.aLog;
 import static software.wings.beans.command.ScpCommandUnit.ScpFileCategory.ARTIFACTS;
 
-import com.google.common.base.MoreObjects;
-import com.google.common.collect.Lists;
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
+import static java.lang.String.format;
+import static java.util.stream.Collectors.toMap;
 
-import com.fasterxml.jackson.annotation.JsonTypeName;
-import com.github.reinert.jjschema.Attributes;
-import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.delegate.beans.artifact.ArtifactFileMetadata;
 import io.harness.delegate.service.DelegateAgentFileService.FileBucket;
 import io.harness.exception.InvalidRequestException;
@@ -27,11 +21,7 @@ import io.harness.exception.WingsException;
 import io.harness.expression.ExpressionEvaluator;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.logging.LogLevel;
-import lombok.Data;
-import lombok.EqualsAndHashCode;
-import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.tuple.Pair;
-import org.mongodb.morphia.annotations.Transient;
+
 import software.wings.beans.AppContainer;
 import software.wings.beans.BambooConfig;
 import software.wings.beans.JenkinsConfig;
@@ -54,12 +44,24 @@ import software.wings.stencils.DefaultValue;
 import software.wings.stencils.EnumData;
 import software.wings.utils.ArtifactType;
 
+import com.fasterxml.jackson.annotation.JsonTypeName;
+import com.github.reinert.jjschema.Attributes;
+import com.github.reinert.jjschema.SchemaIgnore;
+import com.google.common.base.MoreObjects;
+import com.google.common.collect.Lists;
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Stream;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.tuple.Pair;
+import org.mongodb.morphia.annotations.Transient;
 
 /**
  * Created by anubhaw on 7/14/16.
@@ -240,9 +242,9 @@ public class ScpCommandUnit extends SshCommandUnit {
               // before we reach here
               if ((isNotEmpty(artifactStreamAttributes.getExtension())
                       && !artifactFileMetadata.getFileName().endsWith(
-                             PERIOD_DELIMITER + artifactStreamAttributes.getExtension()))
+                          PERIOD_DELIMITER + artifactStreamAttributes.getExtension()))
                   || (isNotEmpty(artifactStreamAttributes.getClassifier())
-                         && !artifactFileMetadata.getFileName().contains(artifactStreamAttributes.getClassifier()))) {
+                      && !artifactFileMetadata.getFileName().contains(artifactStreamAttributes.getClassifier()))) {
                 continue;
               }
 

@@ -2,10 +2,6 @@ package io.harness.cvng.statemachine.services;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 
-import com.google.common.base.Preconditions;
-import com.google.inject.Inject;
-import com.google.inject.Injector;
-
 import io.harness.cvng.analysis.beans.LogClusterLevel;
 import io.harness.cvng.analysis.entities.HealthVerificationPeriod;
 import io.harness.cvng.core.beans.TimeRange;
@@ -33,13 +29,16 @@ import io.harness.cvng.verificationjob.entities.VerificationJobInstance;
 import io.harness.cvng.verificationjob.services.api.VerificationJobInstanceService;
 import io.harness.cvng.verificationjob.services.api.VerificationJobService;
 import io.harness.persistence.HPersistence;
-import lombok.extern.slf4j.Slf4j;
-import org.mongodb.morphia.query.Sort;
 
+import com.google.common.base.Preconditions;
+import com.google.inject.Inject;
+import com.google.inject.Injector;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.Optional;
+import lombok.extern.slf4j.Slf4j;
+import org.mongodb.morphia.query.Sort;
 
 @Slf4j
 public class AnalysisStateMachineServiceImpl implements AnalysisStateMachineService {

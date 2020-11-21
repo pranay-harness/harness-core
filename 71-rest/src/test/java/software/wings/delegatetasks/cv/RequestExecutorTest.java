@@ -2,6 +2,7 @@ package software.wings.delegatetasks.cv;
 
 import static io.harness.rule.OwnerRule.KAMAL;
 import static io.harness.rule.OwnerRule.PRAVEEN;
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThatThrownBy;
 import static org.mockito.Matchers.eq;
@@ -14,6 +15,18 @@ import static org.mockito.MockitoAnnotations.initMocks;
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
+
+import software.wings.delegatetasks.DelegateLogService;
+import software.wings.service.impl.ThirdPartyApiCallLog;
+import software.wings.service.impl.ThirdPartyApiCallLog.FieldType;
+import software.wings.service.impl.ThirdPartyApiCallLog.ThirdPartyApiCallField;
+
+import java.io.IOException;
+import java.time.Duration;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
 import okhttp3.MediaType;
 import okhttp3.Protocol;
 import okhttp3.Request;
@@ -28,17 +41,6 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import retrofit2.Call;
 import retrofit2.Response;
-import software.wings.delegatetasks.DelegateLogService;
-import software.wings.service.impl.ThirdPartyApiCallLog;
-import software.wings.service.impl.ThirdPartyApiCallLog.FieldType;
-import software.wings.service.impl.ThirdPartyApiCallLog.ThirdPartyApiCallField;
-
-import java.io.IOException;
-import java.time.Duration;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
 
 public class RequestExecutorTest extends CategoryTest {
   @Mock private DelegateLogService delegateLogService;

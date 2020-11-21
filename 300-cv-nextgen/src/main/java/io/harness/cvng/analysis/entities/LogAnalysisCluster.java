@@ -1,8 +1,5 @@
 package io.harness.cvng.analysis.entities;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.annotation.HarnessEntity;
 import io.harness.mongo.index.CdIndex;
 import io.harness.mongo.index.FdIndex;
@@ -12,6 +9,14 @@ import io.harness.persistence.CreatedAtAware;
 import io.harness.persistence.PersistentEntity;
 import io.harness.persistence.UpdatedAtAware;
 import io.harness.persistence.UuidAware;
+
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.github.reinert.jjschema.SchemaIgnore;
+import java.time.Instant;
+import java.time.OffsetDateTime;
+import java.util.Date;
+import java.util.List;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -20,11 +25,6 @@ import lombok.experimental.FieldNameConstants;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Id;
 import org.mongodb.morphia.annotations.PrePersist;
-
-import java.time.Instant;
-import java.time.OffsetDateTime;
-import java.util.Date;
-import java.util.List;
 
 @CdIndex(name = "configId_label_index", fields = { @Field("cvConfigId")
                                                    , @Field("label") })

@@ -1,15 +1,14 @@
 package io.harness.utils;
 
-import com.google.inject.Singleton;
-
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.UnexpectedException;
 import io.harness.ng.core.dto.ResponseDTO;
+
+import com.google.inject.Singleton;
+import java.io.IOException;
 import lombok.extern.slf4j.Slf4j;
 import retrofit2.Call;
 import retrofit2.Response;
-
-import java.io.IOException;
 
 @Singleton
 @Slf4j

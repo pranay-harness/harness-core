@@ -3,11 +3,8 @@ package io.harness.perpetualtask;
 import static io.harness.rule.OwnerRule.GEORGE;
 import static io.harness.rule.OwnerRule.HITESH;
 import static io.harness.rule.OwnerRule.VUK;
-import static org.assertj.core.api.Assertions.assertThat;
 
-import com.google.inject.Inject;
-import com.google.protobuf.Any;
-import com.google.protobuf.util.Durations;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.category.element.UnitTests;
 import io.harness.data.structure.UUIDGenerator;
@@ -16,6 +13,17 @@ import io.harness.perpetualtask.instancesync.AwsSshInstanceSyncPerpetualTaskPara
 import io.harness.perpetualtask.internal.PerpetualTaskRecord;
 import io.harness.perpetualtask.internal.PerpetualTaskRecordDao;
 import io.harness.rule.Owner;
+
+import software.wings.WingsBaseTest;
+
+import com.google.inject.Inject;
+import com.google.protobuf.Any;
+import com.google.protobuf.util.Durations;
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Set;
 import org.apache.commons.lang3.reflect.FieldUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.eclipse.jetty.util.ConcurrentHashSet;
@@ -24,13 +32,6 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import software.wings.WingsBaseTest;
-
-import java.time.Instant;
-import java.time.temporal.ChronoUnit;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Set;
 
 public class PerpetualTaskServiceImplTest extends WingsBaseTest {
   @Mock private PerpetualTaskServiceClient client;

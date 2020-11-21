@@ -1,10 +1,10 @@
 package io.harness.gitsync.gitsyncerror.dtos;
 
 import io.harness.gitsync.gitsyncerror.beans.GitSyncError;
-import lombok.Data;
-import lombok.experimental.FieldNameConstants;
 
 import java.util.List;
+import lombok.Data;
+import lombok.experimental.FieldNameConstants;
 
 @Data
 @FieldNameConstants(innerTypeName = "GitToHarnessErrorCommitStatsKeys")

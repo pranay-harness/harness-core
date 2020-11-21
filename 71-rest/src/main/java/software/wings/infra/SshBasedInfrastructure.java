@@ -1,3 +1,5 @@
 package software.wings.infra;
 
-public interface SshBasedInfrastructure { String getHostConnectionAttrs(); }
+public interface SshBasedInfrastructure {
+  String getHostConnectionAttrs();
+}

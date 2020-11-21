@@ -1,7 +1,5 @@
 package io.harness.cvng.dashboard.services.impl;
 
-import com.google.inject.Inject;
-
 import io.harness.cvng.activity.entities.Activity;
 import io.harness.cvng.activity.services.api.ActivityService;
 import io.harness.cvng.analysis.entities.LogAnalysisCluster;
@@ -22,8 +20,8 @@ import io.harness.cvng.dashboard.beans.LogDataByTag;
 import io.harness.cvng.dashboard.beans.LogDataByTag.CountByTag;
 import io.harness.cvng.dashboard.services.api.LogDashboardService;
 import io.harness.ng.beans.PageResponse;
-import lombok.extern.slf4j.Slf4j;
 
+import com.google.inject.Inject;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -40,6 +38,7 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
+import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class LogDashboardServiceImpl implements LogDashboardService {

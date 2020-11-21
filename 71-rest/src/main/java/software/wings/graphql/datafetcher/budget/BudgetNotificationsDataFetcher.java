@@ -1,12 +1,10 @@
 package software.wings.graphql.datafetcher.budget;
 
-import com.google.inject.Inject;
-
 import io.harness.ccm.budget.BudgetService;
 import io.harness.exception.InvalidRequestException;
 import io.harness.timescaledb.DBUtils;
 import io.harness.timescaledb.TimeScaleDBService;
-import lombok.extern.slf4j.Slf4j;
+
 import software.wings.graphql.datafetcher.AbstractStatsDataFetcher;
 import software.wings.graphql.datafetcher.billing.BillingDataQueryMetadata;
 import software.wings.graphql.datafetcher.billing.BillingDataQueryMetadata.BillingDataMetaDataFields;
@@ -21,11 +19,13 @@ import software.wings.security.PermissionAttribute;
 import software.wings.security.annotations.AuthRule;
 import software.wings.service.intfc.ce.CeAccountExpirationChecker;
 
+import com.google.inject.Inject;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.List;
+import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class BudgetNotificationsDataFetcher extends AbstractStatsDataFetcher<QLCCMAggregationFunction,

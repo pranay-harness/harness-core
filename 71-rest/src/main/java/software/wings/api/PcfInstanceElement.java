@@ -4,19 +4,20 @@
 
 package software.wings.api;
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import io.harness.context.ContextElementType;
+
+import software.wings.sm.ContextElement;
+import software.wings.sm.ExecutionContext;
+import software.wings.sm.VerificationElement;
+
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import java.util.HashMap;
+import java.util.Map;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.experimental.FieldNameConstants;
-import software.wings.sm.ContextElement;
-import software.wings.sm.ExecutionContext;
-import software.wings.sm.VerificationElement;
-
-import java.util.HashMap;
-import java.util.Map;
 
 /**
  * This class holds information for verification step.

@@ -6,12 +6,9 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.validation.Validator.notNullCheck;
 
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
-
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.data.structure.EmptyPredicate;
-import lombok.extern.slf4j.Slf4j;
+
 import software.wings.beans.SyncTaskContext;
 import software.wings.beans.artifact.ArtifactStream;
 import software.wings.beans.artifact.ArtifactStreamAttributes;
@@ -23,10 +20,13 @@ import software.wings.service.intfc.ArtifactStreamService;
 import software.wings.service.intfc.BuildService;
 import software.wings.service.intfc.artifact.CustomBuildSourceService;
 
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import java.time.Duration;
 import java.util.List;
 import java.util.stream.Collectors;
 import javax.validation.executable.ValidateOnExecution;
+import lombok.extern.slf4j.Slf4j;
 
 @OwnedBy(CDC)
 @Singleton

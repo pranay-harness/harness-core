@@ -2,15 +2,16 @@ package migrations.all;
 
 import static io.harness.persistence.HQuery.excludeAuthority;
 
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
-
 import io.harness.persistence.HIterator;
-import lombok.extern.slf4j.Slf4j;
-import migrations.Migration;
+
 import software.wings.beans.Account;
 import software.wings.dl.WingsPersistence;
 import software.wings.security.authentication.AuthenticationMechanism;
+
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
+import lombok.extern.slf4j.Slf4j;
+import migrations.Migration;
 
 /**
  * @author Vaibhav Tulsyan

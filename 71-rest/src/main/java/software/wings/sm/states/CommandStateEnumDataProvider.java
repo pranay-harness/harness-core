@@ -3,10 +3,8 @@ package software.wings.sm.states;
 import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 import static io.harness.beans.SearchFilter.Operator.EQ;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static java.util.stream.Collectors.toMap;
 
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
+import static java.util.stream.Collectors.toMap;
 
 import software.wings.beans.EntityType;
 import software.wings.beans.Service;
@@ -14,6 +12,8 @@ import software.wings.beans.command.ServiceCommand;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.stencils.DataProvider;
 
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;

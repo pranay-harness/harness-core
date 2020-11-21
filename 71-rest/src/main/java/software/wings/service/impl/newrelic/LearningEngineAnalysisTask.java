@@ -1,9 +1,5 @@
 package software.wings.service.impl.newrelic;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.fasterxml.jackson.annotation.JsonProperty;
-import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.annotation.HarnessEntity;
 import io.harness.beans.ExecutionStatus;
 import io.harness.mongo.index.CdIndex;
@@ -13,23 +9,28 @@ import io.harness.mongo.index.Field;
 import io.harness.mongo.index.IndexType;
 import io.harness.persistence.AccountAccess;
 import io.harness.version.ServiceApiVersion;
-import lombok.Builder;
-import lombok.Builder.Default;
-import lombok.Data;
-import lombok.EqualsAndHashCode;
-import lombok.experimental.FieldNameConstants;
-import org.mongodb.morphia.annotations.Entity;
+
 import software.wings.beans.Base;
 import software.wings.service.impl.analysis.AnalysisComparisonStrategy;
 import software.wings.service.impl.analysis.MLAnalysisType;
 import software.wings.service.impl.analysis.TimeSeriesMlAnalysisType;
 import software.wings.sm.StateType;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.github.reinert.jjschema.SchemaIgnore;
 import java.time.OffsetDateTime;
 import java.util.Date;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
+import lombok.Builder;
+import lombok.Builder.Default;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.experimental.FieldNameConstants;
+import org.mongodb.morphia.annotations.Entity;
 
 /**
  * Created by rsingh on 1/8/18.

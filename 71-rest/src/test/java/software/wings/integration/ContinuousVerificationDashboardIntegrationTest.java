@@ -2,11 +2,10 @@ package software.wings.integration;
 
 import static io.harness.rule.OwnerRule.PRAVEEN;
 import static io.harness.rule.OwnerRule.SRIRAM;
+
 import static org.apache.cxf.ws.addressing.ContextUtils.generateUUID;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.when;
-
-import com.google.inject.Inject;
 
 import io.harness.beans.ExecutionStatus;
 import io.harness.beans.PageRequest.PageRequestBuilder;
@@ -14,12 +13,7 @@ import io.harness.beans.PageResponse;
 import io.harness.category.element.DeprecatedIntegrationTests;
 import io.harness.rest.RestResponse;
 import io.harness.rule.Owner;
-import org.apache.commons.lang3.reflect.FieldUtils;
-import org.junit.Before;
-import org.junit.Ignore;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
-import org.mockito.Mock;
+
 import software.wings.beans.FeatureName;
 import software.wings.beans.Service;
 import software.wings.beans.User;
@@ -40,6 +34,7 @@ import software.wings.sm.PipelineSummary;
 import software.wings.sm.StateType;
 import software.wings.utils.WingsIntegrationTestConstants;
 
+import com.google.inject.Inject;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.Arrays;
@@ -50,6 +45,12 @@ import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.GenericType;
+import org.apache.commons.lang3.reflect.FieldUtils;
+import org.junit.Before;
+import org.junit.Ignore;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
+import org.mockito.Mock;
 
 public class ContinuousVerificationDashboardIntegrationTest extends IntegrationTestBase {
   @Inject ContinuousVerificationService continuousVerificationService;

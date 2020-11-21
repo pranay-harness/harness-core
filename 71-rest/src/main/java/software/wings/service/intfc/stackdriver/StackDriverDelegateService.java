@@ -1,7 +1,5 @@
 package software.wings.service.intfc.stackdriver;
 
-import com.google.api.services.logging.v2.model.LogEntry;
-
 import software.wings.beans.GcpConfig;
 import software.wings.beans.TaskType;
 import software.wings.delegatetasks.DelegateTaskType;
@@ -13,6 +11,7 @@ import software.wings.service.impl.stackdriver.StackDriverSetupTestNodeData;
 import software.wings.service.impl.stackdriver.StackdriverGcpConfigTaskParams;
 import software.wings.service.impl.stackdriver.StackdriverLogGcpConfigTaskParams;
 
+import com.google.api.services.logging.v2.model.LogEntry;
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;

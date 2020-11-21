@@ -1,19 +1,22 @@
 package software.wings.sm.states.spotinst;
 
 import static io.harness.rule.OwnerRule.SATYAM;
-import static org.assertj.core.api.Assertions.assertThat;
+
 import static software.wings.utils.WingsTestConstants.ACTIVITY_ID;
+
+import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.task.spotinst.request.SpotInstDeployTaskParameters;
 import io.harness.rule.Owner;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
+
 import software.wings.WingsBaseTest;
 import software.wings.api.ExecutionDataValue;
 import software.wings.service.impl.spotinst.SpotInstCommandRequest;
 
 import java.util.Map;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 public class SpotInstDeployStateExecutionDataTest extends WingsBaseTest {
   @Test

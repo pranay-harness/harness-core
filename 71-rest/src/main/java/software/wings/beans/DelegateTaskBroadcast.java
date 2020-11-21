@@ -1,9 +1,8 @@
 package software.wings.beans;
 
+import java.util.Set;
 import lombok.Builder;
 import lombok.Value;
-
-import java.util.Set;
 
 @Value
 @Builder

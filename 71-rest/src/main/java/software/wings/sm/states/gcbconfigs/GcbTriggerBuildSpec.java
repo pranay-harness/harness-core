@@ -1,9 +1,9 @@
 package software.wings.sm.states.gcbconfigs;
 
-import lombok.Data;
 import software.wings.beans.NameValuePair;
 
 import java.util.List;
+import lombok.Data;
 
 @Data
 public class GcbTriggerBuildSpec {

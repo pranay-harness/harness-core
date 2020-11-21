@@ -2,10 +2,9 @@ package io.harness.plancreators;
 
 import static io.harness.executionplan.plancreator.beans.PlanCreatorType.STEP_PLAN_CREATOR;
 import static io.harness.rule.OwnerRule.ALEKSANDAR;
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.when;
-
-import com.google.inject.Inject;
 
 import io.harness.beans.steps.stepinfo.GitCloneStepInfo;
 import io.harness.category.element.UnitTests;
@@ -18,6 +17,8 @@ import io.harness.facilitator.OrchestrationFacilitatorType;
 import io.harness.plan.PlanNode;
 import io.harness.rule.Owner;
 import io.harness.yaml.core.StepElement;
+
+import com.google.inject.Inject;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;

@@ -1,6 +1,5 @@
 package io.harness.connector.mappers.nexusmapper;
 
-import com.google.inject.Singleton;
 import io.harness.connector.entities.embedded.nexusconnector.NexusConnector;
 import io.harness.connector.entities.embedded.nexusconnector.NexusUserNamePasswordAuthentication;
 import io.harness.connector.mappers.ConnectorDTOToEntityMapper;
@@ -10,6 +9,7 @@ import io.harness.delegate.beans.connector.nexusconnector.NexusAuthType;
 import io.harness.delegate.beans.connector.nexusconnector.NexusConnectorDTO;
 import io.harness.delegate.beans.connector.nexusconnector.NexusUsernamePasswordAuthDTO;
 
+import com.google.inject.Singleton;
 import java.util.Collections;
 import java.util.List;
 

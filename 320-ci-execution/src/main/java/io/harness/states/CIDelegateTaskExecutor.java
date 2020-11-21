@@ -1,7 +1,5 @@
 package io.harness.states;
 
-import com.google.inject.Inject;
-
 import io.harness.beans.DelegateTaskRequest;
 import io.harness.callback.DelegateCallbackToken;
 import io.harness.data.structure.EmptyPredicate;
@@ -12,6 +10,7 @@ import io.harness.exception.InvalidRequestException;
 import io.harness.grpc.DelegateServiceGrpcClient;
 import io.harness.tasks.TaskExecutor;
 
+import com.google.inject.Inject;
 import java.time.Duration;
 import java.util.Map;
 import java.util.function.Supplier;

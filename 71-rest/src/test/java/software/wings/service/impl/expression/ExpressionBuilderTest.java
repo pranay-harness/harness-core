@@ -10,8 +10,7 @@ import static io.harness.pcf.model.PcfConstants.CONTEXT_OLD_APP_NAME_EXPR;
 import static io.harness.pcf.model.PcfConstants.CONTEXT_OLD_APP_ROUTES_EXPR;
 import static io.harness.rule.OwnerRule.ADWAIT;
 import static io.harness.rule.OwnerRule.PRABU;
-import static java.util.Arrays.asList;
-import static org.assertj.core.api.Assertions.assertThat;
+
 import static software.wings.service.impl.expression.ExpressionBuilder.ARTIFACT_ARTIFACT_FILE_NAME;
 import static software.wings.service.impl.expression.ExpressionBuilder.ARTIFACT_BUCKET_KEY;
 import static software.wings.service.impl.expression.ExpressionBuilder.ARTIFACT_BUCKET_NAME;
@@ -56,10 +55,12 @@ import static software.wings.service.impl.expression.ExpressionBuilder.WORKFLOW_
 import static software.wings.service.impl.expression.ExpressionBuilder.WORKFLOW_RELEASE_NO;
 import static software.wings.service.impl.expression.ExpressionBuilder.WORKFLOW_START_TS;
 
+import static java.util.Arrays.asList;
+import static org.assertj.core.api.Assertions.assertThat;
+
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
+
 import software.wings.WingsBaseTest;
 import software.wings.sm.StateType;
 
@@ -68,6 +69,8 @@ import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 public class ExpressionBuilderTest extends WingsBaseTest {
   @Test

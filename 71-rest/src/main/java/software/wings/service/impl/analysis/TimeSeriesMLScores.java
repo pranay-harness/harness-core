@@ -4,6 +4,11 @@ import io.harness.annotation.HarnessEntity;
 import io.harness.beans.EmbeddedUser;
 import io.harness.mongo.index.FdIndex;
 import io.harness.persistence.AccountAccess;
+
+import software.wings.beans.Base;
+import software.wings.sm.StateType;
+
+import java.util.Map;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -11,10 +16,6 @@ import lombok.NoArgsConstructor;
 import lombok.experimental.FieldNameConstants;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Entity;
-import software.wings.beans.Base;
-import software.wings.sm.StateType;
-
-import java.util.Map;
 
 /**
  * Created by sriram_parthasarathy on 10/17/17.

@@ -3,17 +3,6 @@ package io.harness.grpc;
 import static io.harness.delegate.DelegateServiceGrpc.DelegateServiceBlockingStub;
 import static io.harness.delegateprofile.DelegateProfileServiceGrpc.DelegateProfileServiceBlockingStub;
 
-import com.google.inject.Provides;
-import com.google.inject.Singleton;
-import com.google.inject.name.Named;
-
-import io.grpc.CallCredentials;
-import io.grpc.Channel;
-import io.grpc.internal.GrpcUtil;
-import io.grpc.netty.shaded.io.grpc.netty.GrpcSslContexts;
-import io.grpc.netty.shaded.io.grpc.netty.NettyChannelBuilder;
-import io.grpc.netty.shaded.io.netty.handler.ssl.SslContext;
-import io.grpc.netty.shaded.io.netty.handler.ssl.util.InsecureTrustManagerFactory;
 import io.harness.delegate.DelegateServiceGrpc;
 import io.harness.delegateprofile.DelegateProfileServiceGrpc;
 import io.harness.govern.ProviderModule;
@@ -21,10 +10,20 @@ import io.harness.grpc.auth.ServiceAuthCallCredentials;
 import io.harness.security.ServiceTokenGenerator;
 import io.harness.version.VersionInfo;
 import io.harness.version.VersionInfoManager;
+
+import com.google.inject.Provides;
+import com.google.inject.Singleton;
+import com.google.inject.name.Named;
+import io.grpc.CallCredentials;
+import io.grpc.Channel;
+import io.grpc.internal.GrpcUtil;
+import io.grpc.netty.shaded.io.grpc.netty.GrpcSslContexts;
+import io.grpc.netty.shaded.io.grpc.netty.NettyChannelBuilder;
+import io.grpc.netty.shaded.io.netty.handler.ssl.SslContext;
+import io.grpc.netty.shaded.io.netty.handler.ssl.util.InsecureTrustManagerFactory;
+import javax.net.ssl.SSLException;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
-
-import javax.net.ssl.SSLException;
 
 @Slf4j
 public class DelegateServiceDriverGrpcClientModule extends ProviderModule {

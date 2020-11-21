@@ -1,15 +1,12 @@
 package io.harness.event.usagemetrics;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
+
 import static java.util.stream.Collectors.groupingBy;
 
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
-
-import io.fabric8.utils.Lists;
 import io.harness.event.timeseries.processor.EventProcessor;
 import io.harness.queue.QueuePublisher;
-import lombok.extern.slf4j.Slf4j;
+
 import software.wings.api.DeploymentTimeSeriesEvent;
 import software.wings.api.InstanceEvent;
 import software.wings.beans.EnvSummary;
@@ -21,6 +18,9 @@ import software.wings.service.impl.event.timeseries.TimeSeriesBatchEventInfo.Dat
 import software.wings.service.impl.event.timeseries.TimeSeriesEventInfo;
 import software.wings.service.intfc.WorkflowExecutionService;
 
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
+import io.fabric8.utils.Lists;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -29,6 +29,7 @@ import java.util.Map;
 import java.util.TimeZone;
 import java.util.concurrent.ExecutorService;
 import java.util.stream.Collectors;
+import lombok.extern.slf4j.Slf4j;
 
 @Singleton
 @Slf4j

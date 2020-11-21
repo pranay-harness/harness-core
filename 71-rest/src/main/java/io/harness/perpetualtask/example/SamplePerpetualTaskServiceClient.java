@@ -1,18 +1,18 @@
 package io.harness.perpetualtask.example;
 
-import com.google.inject.Inject;
-
 import io.harness.beans.DelegateTask;
 import io.harness.delegate.beans.TaskData;
 import io.harness.delegate.task.http.HttpTaskParameters;
 import io.harness.perpetualtask.PerpetualTaskClientContext;
 import io.harness.perpetualtask.PerpetualTaskService;
 import io.harness.perpetualtask.PerpetualTaskServiceClient;
-import lombok.extern.slf4j.Slf4j;
+
 import software.wings.beans.TaskType;
 
+import com.google.inject.Inject;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
+import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class SamplePerpetualTaskServiceClient implements PerpetualTaskServiceClient {

@@ -4,6 +4,12 @@ import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.threading.Morpheus.quietSleep;
+
+import static software.wings.helpers.ext.jenkins.BuildDetails.Builder.aBuildDetails;
+import static software.wings.helpers.ext.nexus.NexusServiceImpl.getBaseUrl;
+import static software.wings.helpers.ext.nexus.NexusServiceImpl.getRetrofit;
+import static software.wings.helpers.ext.nexus.NexusServiceImpl.isSuccessful;
+
 import static java.lang.String.format;
 import static java.time.Duration.ofMillis;
 import static java.util.Arrays.asList;
@@ -11,15 +17,7 @@ import static java.util.Collections.emptyMap;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toMap;
 import static org.apache.commons.lang3.StringUtils.isBlank;
-import static software.wings.helpers.ext.jenkins.BuildDetails.Builder.aBuildDetails;
-import static software.wings.helpers.ext.nexus.NexusServiceImpl.getBaseUrl;
-import static software.wings.helpers.ext.nexus.NexusServiceImpl.getRetrofit;
-import static software.wings.helpers.ext.nexus.NexusServiceImpl.isSuccessful;
 
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
-
-import com.fasterxml.jackson.databind.JsonNode;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.delegate.beans.artifact.ArtifactFileMetadata;
 import io.harness.delegate.task.ListNotifyResponseData;
@@ -31,19 +29,7 @@ import io.harness.exception.WingsException;
 import io.harness.network.Http;
 import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.stream.StreamUtils;
-import lombok.extern.slf4j.Slf4j;
-import okhttp3.Credentials;
-import org.apache.commons.lang3.tuple.ImmutablePair;
-import org.apache.commons.lang3.tuple.Pair;
-import org.jetbrains.annotations.NotNull;
-import org.sonatype.nexus.rest.model.ContentListResource;
-import org.sonatype.nexus.rest.model.ContentListResourceResponse;
-import org.sonatype.nexus.rest.model.RepositoryListResource;
-import org.sonatype.nexus.rest.model.RepositoryListResourceResponse;
-import retrofit2.Call;
-import retrofit2.Response;
-import retrofit2.converter.jackson.JacksonConverterFactory;
-import retrofit2.converter.simplexml.SimpleXmlConverterFactory;
+
 import software.wings.beans.artifact.Artifact.ArtifactMetadataKeys;
 import software.wings.beans.artifact.ArtifactStreamAttributes;
 import software.wings.beans.config.NexusConfig;
@@ -57,6 +43,9 @@ import software.wings.helpers.ext.nexus.model.Project;
 import software.wings.service.intfc.security.EncryptionService;
 import software.wings.utils.RepositoryFormat;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.Authenticator;
@@ -77,6 +66,19 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
 import javax.net.ssl.HttpsURLConnection;
+import lombok.extern.slf4j.Slf4j;
+import okhttp3.Credentials;
+import org.apache.commons.lang3.tuple.ImmutablePair;
+import org.apache.commons.lang3.tuple.Pair;
+import org.jetbrains.annotations.NotNull;
+import org.sonatype.nexus.rest.model.ContentListResource;
+import org.sonatype.nexus.rest.model.ContentListResourceResponse;
+import org.sonatype.nexus.rest.model.RepositoryListResource;
+import org.sonatype.nexus.rest.model.RepositoryListResourceResponse;
+import retrofit2.Call;
+import retrofit2.Response;
+import retrofit2.converter.jackson.JacksonConverterFactory;
+import retrofit2.converter.simplexml.SimpleXmlConverterFactory;
 
 /**
  * Created by sgurubelli on 11/18/17.

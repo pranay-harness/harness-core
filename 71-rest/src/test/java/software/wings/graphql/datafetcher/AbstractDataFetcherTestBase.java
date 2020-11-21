@@ -2,8 +2,6 @@ package software.wings.graphql.datafetcher;
 
 import static software.wings.beans.Account.Builder.anAccount;
 
-import com.google.inject.Inject;
-
 import io.harness.beans.WorkflowType;
 import io.harness.ccm.cluster.ClusterRecordService;
 import io.harness.ccm.cluster.entities.Cluster;
@@ -12,6 +10,7 @@ import io.harness.ccm.cluster.entities.EcsCluster;
 import io.harness.ccm.setup.CECloudAccountDao;
 import io.harness.ccm.setup.CEClusterDao;
 import io.harness.persistence.HPersistence;
+
 import software.wings.WingsBaseTest;
 import software.wings.beans.Account;
 import software.wings.beans.Application;
@@ -46,6 +45,8 @@ import software.wings.service.intfc.WorkflowService;
 import software.wings.service.intfc.instance.InstanceService;
 import software.wings.settings.SettingValue;
 import software.wings.settings.SettingVariableTypes;
+
+import com.google.inject.Inject;
 
 public abstract class AbstractDataFetcherTestBase extends WingsBaseTest {
   public static final String TAG_TEAM = "TEAM";

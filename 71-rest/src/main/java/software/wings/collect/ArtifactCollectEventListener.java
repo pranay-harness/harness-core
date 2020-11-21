@@ -7,12 +7,11 @@ import static io.harness.delegate.beans.TaskData.DEFAULT_ASYNC_CALL_TIMEOUT;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
 import static io.harness.microservice.NotifyEngineTarget.GENERAL;
-import static java.util.Collections.singletonList;
+
 import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static software.wings.beans.Event.Builder.anEvent;
 
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
+import static java.util.Collections.singletonList;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.DelegateTask;
@@ -26,7 +25,7 @@ import io.harness.queue.QueueConsumer;
 import io.harness.queue.QueueListener;
 import io.harness.tasks.Cd1SetupFields;
 import io.harness.waiter.WaitNotifyEngine;
-import lombok.extern.slf4j.Slf4j;
+
 import software.wings.beans.AwsConfig;
 import software.wings.beans.BambooConfig;
 import software.wings.beans.Event.Type;
@@ -56,6 +55,10 @@ import software.wings.service.intfc.ArtifactStreamService;
 import software.wings.service.intfc.DelegateService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.security.SecretManager;
+
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * Created by peeyushaggarwal on 5/11/16.

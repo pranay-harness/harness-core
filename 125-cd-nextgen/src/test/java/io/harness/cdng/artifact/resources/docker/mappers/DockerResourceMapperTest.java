@@ -1,9 +1,8 @@
 package io.harness.cdng.artifact.resources.docker.mappers;
 
 import static io.harness.rule.OwnerRule.SAHIL;
-import static org.assertj.core.api.Assertions.assertThat;
 
-import com.google.common.collect.Lists;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
@@ -12,10 +11,11 @@ import io.harness.cdng.artifact.resources.docker.dtos.DockerResponseDTO;
 import io.harness.delegate.task.artifacts.docker.DockerArtifactDelegateResponse;
 import io.harness.delegate.task.artifacts.response.ArtifactBuildDetailsNG;
 import io.harness.rule.Owner;
+
+import com.google.common.collect.Lists;
+import java.util.List;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
-
-import java.util.List;
 
 public class DockerResourceMapperTest extends CategoryTest {
   @Test

@@ -1,8 +1,9 @@
 package software.wings.beans;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
+
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Builder;
 import lombok.Value;
 

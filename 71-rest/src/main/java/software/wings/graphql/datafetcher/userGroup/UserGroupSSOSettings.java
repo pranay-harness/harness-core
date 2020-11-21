@@ -1,8 +1,9 @@
 package software.wings.graphql.datafetcher.userGroup;
 
+import software.wings.beans.sso.SSOType;
+
 import lombok.Builder;
 import lombok.Data;
-import software.wings.beans.sso.SSOType;
 
 @Data
 @Builder

@@ -3,14 +3,13 @@ package software.wings.service.impl.yaml.sync;
 import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 import static io.harness.beans.SearchFilter.Operator.IN;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static software.wings.beans.Base.ID_KEY;
 
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
+import static software.wings.beans.Base.ID_KEY;
 
 import io.harness.beans.PageRequest;
 import io.harness.beans.SearchFilter;
 import io.harness.exception.UnexpectedException;
+
 import software.wings.beans.Account;
 import software.wings.beans.Application;
 import software.wings.beans.Application.ApplicationKeys;
@@ -26,6 +25,8 @@ import software.wings.service.intfc.yaml.sync.YamlGitConfigService;
 import software.wings.yaml.gitSync.YamlGitConfig;
 import software.wings.yaml.gitSync.YamlGitConfig.YamlGitConfigKeys;
 
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;

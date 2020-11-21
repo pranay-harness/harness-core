@@ -3,10 +3,8 @@ package software.wings.graphql.datafetcher.cloudProvider;
 import static software.wings.graphql.datafetcher.cloudProvider.CloudProviderController.checkIfInputIsNotPresent;
 import static software.wings.security.PermissionAttribute.PermissionType.MANAGE_CLOUD_PROVIDERS;
 
-import com.google.inject.Inject;
-
 import io.harness.exception.InvalidRequestException;
-import lombok.extern.slf4j.Slf4j;
+
 import software.wings.beans.Application;
 import software.wings.beans.SettingAttribute;
 import software.wings.graphql.datafetcher.BaseMutatorDataFetcher;
@@ -17,6 +15,9 @@ import software.wings.graphql.schema.mutation.cloudProvider.QLCreateCloudProvide
 import software.wings.security.annotations.AuthRule;
 import software.wings.service.impl.SettingServiceHelper;
 import software.wings.service.intfc.SettingsService;
+
+import com.google.inject.Inject;
+import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class CreateCloudProviderDataFetcher

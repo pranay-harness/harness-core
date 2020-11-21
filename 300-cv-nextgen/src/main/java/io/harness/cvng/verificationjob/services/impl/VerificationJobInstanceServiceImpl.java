@@ -7,14 +7,8 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.persistence.HQuery.excludeAuthority;
-import static java.util.stream.Collectors.groupingBy;
 
-import com.google.common.base.Charsets;
-import com.google.common.base.Preconditions;
-import com.google.inject.Inject;
-import com.google.inject.Injector;
-import com.google.inject.Key;
-import com.google.inject.name.Names;
+import static java.util.stream.Collectors.groupingBy;
 
 import io.harness.cvng.activity.beans.ActivityVerificationStatus;
 import io.harness.cvng.activity.beans.ActivityVerificationSummary;
@@ -56,13 +50,13 @@ import io.harness.cvng.verificationjob.services.api.VerificationJobService;
 import io.harness.ng.core.environment.beans.EnvironmentType;
 import io.harness.ng.core.environment.dto.EnvironmentResponseDTO;
 import io.harness.persistence.HPersistence;
-import lombok.extern.slf4j.Slf4j;
-import org.mongodb.morphia.UpdateOptions;
-import org.mongodb.morphia.query.FindOptions;
-import org.mongodb.morphia.query.Query;
-import org.mongodb.morphia.query.Sort;
-import org.mongodb.morphia.query.UpdateOperations;
 
+import com.google.common.base.Charsets;
+import com.google.common.base.Preconditions;
+import com.google.inject.Inject;
+import com.google.inject.Injector;
+import com.google.inject.Key;
+import com.google.inject.name.Names;
 import java.time.Clock;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -76,6 +70,12 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
 import javax.annotation.Nullable;
+import lombok.extern.slf4j.Slf4j;
+import org.mongodb.morphia.UpdateOptions;
+import org.mongodb.morphia.query.FindOptions;
+import org.mongodb.morphia.query.Query;
+import org.mongodb.morphia.query.Sort;
+import org.mongodb.morphia.query.UpdateOperations;
 
 @Slf4j
 public class VerificationJobInstanceServiceImpl implements VerificationJobInstanceService {

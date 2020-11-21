@@ -6,5 +6,4 @@ option java_multiple_files = true;
 option go_package = "240_capability";
 
 // A testing method for capabilities
-message TestingCapability {
-}
+message TestingCapability {}

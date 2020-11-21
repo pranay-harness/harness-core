@@ -1,12 +1,5 @@
 package io.harness.cvng.client;
 
-import com.google.inject.Inject;
-import com.google.inject.Provider;
-import com.google.inject.Singleton;
-
-import com.fasterxml.jackson.databind.ObjectMapper;
-import io.github.resilience4j.circuitbreaker.CircuitBreaker;
-import io.github.resilience4j.retrofit.CircuitBreakerCallAdapter;
 import io.harness.cvng.core.NGManagerServiceConfig;
 import io.harness.exception.GeneralException;
 import io.harness.exception.InvalidRequestException;
@@ -14,6 +7,15 @@ import io.harness.network.Http;
 import io.harness.remote.NGObjectMapperHelper;
 import io.harness.security.ServiceTokenGenerator;
 import io.harness.serializer.kryo.KryoConverterFactory;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.inject.Inject;
+import com.google.inject.Provider;
+import com.google.inject.Singleton;
+import io.github.resilience4j.circuitbreaker.CircuitBreaker;
+import io.github.resilience4j.retrofit.CircuitBreakerCallAdapter;
+import java.util.function.Supplier;
+import javax.validation.constraints.NotNull;
 import lombok.AccessLevel;
 import lombok.experimental.FieldDefaults;
 import okhttp3.ConnectionPool;
@@ -23,9 +25,6 @@ import okhttp3.Request;
 import org.apache.commons.lang3.StringUtils;
 import retrofit2.Retrofit;
 import retrofit2.converter.jackson.JacksonConverterFactory;
-
-import java.util.function.Supplier;
-import javax.validation.constraints.NotNull;
 
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @Singleton
@@ -87,7 +86,7 @@ public class NextGenClientFactory implements Provider<NextGenClient> {
 
   @NotNull
   private Interceptor getAuthorizationInterceptor() {
-    final Supplier<String> secretKeySupplier = this ::getServiceSecret;
+    final Supplier<String> secretKeySupplier = this::getServiceSecret;
     return chain -> {
       String token = tokenGenerator.getServiceToken(secretKeySupplier.get());
       Request request = chain.request();

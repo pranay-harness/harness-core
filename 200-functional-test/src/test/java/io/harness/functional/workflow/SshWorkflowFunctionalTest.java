@@ -2,9 +2,8 @@ package io.harness.functional.workflow;
 
 import static io.harness.beans.ExecutionStatus.SUCCESS;
 import static io.harness.rule.OwnerRule.YOGESH;
-import static org.assertj.core.api.Assertions.assertThat;
 
-import com.google.inject.Inject;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.category.element.FunctionalTests;
 import io.harness.functional.AbstractFunctionalTest;
@@ -16,16 +15,18 @@ import io.harness.generator.Randomizer;
 import io.harness.generator.ServiceGenerator;
 import io.harness.generator.WorkflowGenerator;
 import io.harness.rule.Owner;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
+
 import software.wings.beans.Service;
 import software.wings.beans.Workflow;
 import software.wings.beans.WorkflowExecution;
 import software.wings.beans.artifact.Artifact;
 import software.wings.infra.InfrastructureDefinition;
 
+import com.google.inject.Inject;
 import java.util.Collections;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 public class SshWorkflowFunctionalTest extends AbstractFunctionalTest {
   @Inject private OwnerManager ownerManager;

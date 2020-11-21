@@ -6,8 +6,6 @@ import static io.harness.eraro.ErrorCode.GIT_DIFF_COMMIT_NOT_IN_ORDER;
 import static io.harness.eraro.ErrorCode.GIT_UNSEEN_REMOTE_HEAD_COMMIT;
 import static io.harness.git.Constants.GIT_YAML_LOG_PREFIX;
 
-import com.google.inject.Inject;
-
 import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.delegate.beans.DelegateTaskPackage;
 import io.harness.delegate.beans.DelegateTaskResponse;
@@ -27,12 +25,13 @@ import io.harness.git.model.CommitAndPushResult;
 import io.harness.git.model.GitBaseRequest;
 import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.security.encryption.SecretDecryptionService;
-import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.NotImplementedException;
 
+import com.google.inject.Inject;
 import java.util.List;
 import java.util.function.BooleanSupplier;
 import java.util.function.Consumer;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.NotImplementedException;
 
 @Slf4j
 public class NGGitCommandTask extends AbstractDelegateRunnableTask {

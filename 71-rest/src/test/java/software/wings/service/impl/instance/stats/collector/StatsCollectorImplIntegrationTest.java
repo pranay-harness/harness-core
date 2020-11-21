@@ -1,24 +1,13 @@
 package software.wings.service.impl.instance.stats.collector;
 
 import static io.harness.rule.OwnerRule.UJJAWAL;
-import static org.assertj.core.api.Assertions.assertThat;
 
-import com.google.common.collect.ImmutableMap;
-import com.google.inject.Inject;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.category.element.DeprecatedIntegrationTests;
 import io.harness.rest.RestResponse;
 import io.harness.rule.Owner;
-import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.RandomStringUtils;
-import org.apache.commons.lang3.StringUtils;
-import org.apache.http.client.utils.URIBuilder;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Ignore;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
-import org.mongodb.morphia.Datastore;
+
 import software.wings.beans.infrastructure.instance.Instance;
 import software.wings.beans.infrastructure.instance.Instance.InstanceKeys;
 import software.wings.beans.infrastructure.instance.stats.InstanceStatsSnapshot;
@@ -30,6 +19,8 @@ import software.wings.resources.stats.model.InstanceTimeline.DataPoint;
 import software.wings.service.intfc.instance.stats.InstanceStatService;
 import software.wings.utils.WingsTestConstants;
 
+import com.google.common.collect.ImmutableMap;
+import com.google.inject.Inject;
 import java.net.URISyntaxException;
 import java.time.Instant;
 import java.util.Arrays;
@@ -37,6 +28,16 @@ import java.util.List;
 import java.util.Map;
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.GenericType;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.RandomStringUtils;
+import org.apache.commons.lang3.StringUtils;
+import org.apache.http.client.utils.URIBuilder;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Ignore;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
+import org.mongodb.morphia.Datastore;
 
 /**
  * End-to-End test which tests:

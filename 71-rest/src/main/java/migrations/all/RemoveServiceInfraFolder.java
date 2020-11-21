@@ -5,14 +5,10 @@ import static software.wings.beans.yaml.YamlConstants.ENVIRONMENTS_FOLDER;
 import static software.wings.beans.yaml.YamlConstants.INFRA_MAPPING_FOLDER;
 import static software.wings.beans.yaml.YamlConstants.SETUP_FOLDER;
 
-import com.google.inject.Inject;
-
 import io.harness.data.structure.HarnessStringUtils;
 import io.harness.exception.ExceptionUtils;
 import io.harness.git.model.ChangeType;
-import lombok.extern.slf4j.Slf4j;
-import migrations.Migration;
-import org.apache.commons.lang3.StringUtils;
+
 import software.wings.beans.Application;
 import software.wings.beans.Environment;
 import software.wings.beans.yaml.GitFileChange;
@@ -21,8 +17,12 @@ import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.EnvironmentService;
 import software.wings.service.intfc.yaml.YamlChangeSetService;
 
+import com.google.inject.Inject;
 import java.util.ArrayList;
 import java.util.List;
+import lombok.extern.slf4j.Slf4j;
+import migrations.Migration;
+import org.apache.commons.lang3.StringUtils;
 
 @Slf4j
 public class RemoveServiceInfraFolder implements Migration {

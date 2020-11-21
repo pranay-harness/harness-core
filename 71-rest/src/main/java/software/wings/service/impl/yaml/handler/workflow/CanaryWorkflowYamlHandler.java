@@ -2,14 +2,15 @@ package software.wings.service.impl.yaml.handler.workflow;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 
-import com.google.inject.Singleton;
-
 import io.harness.annotations.dev.OwnedBy;
+
 import software.wings.beans.CanaryOrchestrationWorkflow.CanaryOrchestrationWorkflowBuilder;
 import software.wings.beans.Workflow;
 import software.wings.beans.Workflow.WorkflowBuilder;
 import software.wings.beans.concurrency.ConcurrencyStrategy;
 import software.wings.yaml.workflow.CanaryWorkflowYaml;
+
+import com.google.inject.Singleton;
 
 /**
  * @author rktummala on 11/1/17

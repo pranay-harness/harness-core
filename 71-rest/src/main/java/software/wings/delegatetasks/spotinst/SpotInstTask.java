@@ -1,9 +1,8 @@
 package software.wings.delegatetasks.spotinst;
 
 import static io.harness.logging.CommandExecutionStatus.FAILURE;
-import static java.lang.String.format;
 
-import com.google.inject.Inject;
+import static java.lang.String.format;
 
 import io.harness.delegate.beans.DelegateTaskPackage;
 import io.harness.delegate.beans.DelegateTaskResponse;
@@ -12,8 +11,7 @@ import io.harness.delegate.task.AbstractDelegateRunnableTask;
 import io.harness.delegate.task.TaskParameters;
 import io.harness.delegate.task.spotinst.request.SpotInstTaskParameters;
 import io.harness.delegate.task.spotinst.response.SpotInstTaskExecutionResponse;
-import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.NotImplementedException;
+
 import software.wings.delegatetasks.spotinst.taskhandler.SpotInstDeployTaskHandler;
 import software.wings.delegatetasks.spotinst.taskhandler.SpotInstSetupTaskHandler;
 import software.wings.delegatetasks.spotinst.taskhandler.SpotInstSwapRoutesTaskHandler;
@@ -25,8 +23,11 @@ import software.wings.delegatetasks.spotinst.taskhandler.SpotinstTrafficShiftAlb
 import software.wings.service.impl.spotinst.SpotInstCommandRequest;
 import software.wings.service.intfc.security.EncryptionService;
 
+import com.google.inject.Inject;
 import java.util.function.BooleanSupplier;
 import java.util.function.Consumer;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.NotImplementedException;
 
 @Slf4j
 public class SpotInstTask extends AbstractDelegateRunnableTask {

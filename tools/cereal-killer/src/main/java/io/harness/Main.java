@@ -7,11 +7,6 @@ import io.harness.checks.ReportFinder;
 import io.harness.checks.ReportProcessor;
 import io.harness.checks.buildpulse.client.BuildPulseClient;
 import io.harness.monitoring.GoogleCloudMonitoring;
-import lombok.extern.slf4j.Slf4j;
-import okhttp3.OkHttpClient;
-import org.xml.sax.SAXException;
-import retrofit2.Retrofit;
-import retrofit2.converter.gson.GsonConverterFactory;
 
 import java.io.IOException;
 import java.time.Duration;
@@ -21,6 +16,11 @@ import java.util.Set;
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.transform.TransformerException;
 import javax.xml.xpath.XPathExpressionException;
+import lombok.extern.slf4j.Slf4j;
+import okhttp3.OkHttpClient;
+import org.xml.sax.SAXException;
+import retrofit2.Retrofit;
+import retrofit2.converter.gson.GsonConverterFactory;
 
 @Slf4j
 public class Main {

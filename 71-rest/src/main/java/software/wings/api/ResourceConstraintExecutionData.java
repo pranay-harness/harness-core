@@ -2,12 +2,12 @@ package software.wings.api;
 
 import static software.wings.common.InfrastructureConstants.QUEUING_RC_NAME;
 
-import lombok.Getter;
-import lombok.Setter;
 import software.wings.sm.StateExecutionData;
 import software.wings.sm.StepExecutionSummary;
 
 import java.util.Map;
+import lombok.Getter;
+import lombok.Setter;
 
 public class ResourceConstraintExecutionData extends StateExecutionData {
   @Getter @Setter private String resourceConstraintName;

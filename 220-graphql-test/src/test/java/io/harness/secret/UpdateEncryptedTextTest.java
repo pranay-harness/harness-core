@@ -1,11 +1,9 @@
 package io.harness.secret;
 
 import static io.harness.rule.OwnerRule.DEEPAK;
+
 import static org.assertj.core.api.Assertions.assertThat;
 
-import com.google.inject.Inject;
-
-import graphql.ExecutionResult;
 import io.harness.GraphQLTest;
 import io.harness.category.element.UnitTests;
 import io.harness.category.layer.GraphQLTests;
@@ -15,14 +13,18 @@ import io.harness.generator.Randomizer;
 import io.harness.rule.Owner;
 import io.harness.serializer.JsonUtils;
 import io.harness.testframework.graphql.QLTestObject;
+
+import software.wings.beans.Account;
+import software.wings.graphql.schema.type.secrets.QLEncryptedText;
+import software.wings.graphql.schema.type.secrets.QLSecret;
+
+import com.google.inject.Inject;
+import graphql.ExecutionResult;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
-import software.wings.beans.Account;
-import software.wings.graphql.schema.type.secrets.QLEncryptedText;
-import software.wings.graphql.schema.type.secrets.QLSecret;
 
 @Slf4j
 public class UpdateEncryptedTextTest extends GraphQLTest {

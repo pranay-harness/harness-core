@@ -1,17 +1,14 @@
 package software.wings.resources;
 
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
-import static java.util.stream.Collectors.toList;
-import static org.apache.commons.lang3.StringUtils.isBlank;
+
 import static software.wings.security.PermissionAttribute.ResourceType.APPLICATION;
 
-import com.google.inject.Inject;
+import static java.util.stream.Collectors.toList;
+import static org.apache.commons.lang3.StringUtils.isBlank;
 
-import com.codahale.metrics.annotation.ExceptionMetered;
-import com.codahale.metrics.annotation.Timed;
 import io.harness.rest.RestResponse;
-import io.swagger.annotations.Api;
-import org.hibernate.validator.constraints.NotEmpty;
+
 import software.wings.beans.artifact.Artifact;
 import software.wings.common.BuildDetailsComparator;
 import software.wings.helpers.ext.azure.devops.AzureArtifactsFeed;
@@ -23,6 +20,10 @@ import software.wings.helpers.ext.jenkins.JobDetails;
 import software.wings.security.annotations.Scope;
 import software.wings.service.intfc.BuildSourceService;
 
+import com.codahale.metrics.annotation.ExceptionMetered;
+import com.codahale.metrics.annotation.Timed;
+import com.google.inject.Inject;
+import io.swagger.annotations.Api;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -32,6 +33,7 @@ import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
+import org.hibernate.validator.constraints.NotEmpty;
 
 /**
  * Created by anubhaw on 8/18/16.

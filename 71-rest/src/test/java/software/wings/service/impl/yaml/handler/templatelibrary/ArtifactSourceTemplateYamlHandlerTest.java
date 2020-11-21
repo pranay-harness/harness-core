@@ -1,9 +1,7 @@
 package software.wings.service.impl.yaml.handler.templatelibrary;
 
 import static io.harness.rule.OwnerRule.ABHINAV;
-import static java.util.Arrays.asList;
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.Mockito.when;
+
 import static software.wings.beans.Account.GLOBAL_ACCOUNT_ID;
 import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static software.wings.common.TemplateConstants.ARTIFACT_SOURCE;
@@ -16,22 +14,26 @@ import static software.wings.service.impl.yaml.handler.templatelibrary.TemplateL
 import static software.wings.service.impl.yaml.handler.templatelibrary.TemplateLibaryYamlConstants.expectedArtifactTemplate;
 import static software.wings.service.impl.yaml.handler.templatelibrary.TemplateLibaryYamlConstants.rootTemplateFolder;
 
-import com.google.inject.Inject;
+import static java.util.Arrays.asList;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.when;
 
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
+
+import software.wings.beans.template.Template;
+import software.wings.beans.yaml.ChangeContext;
+import software.wings.service.intfc.template.TemplateService;
+import software.wings.yaml.templatelibrary.ArtifactSourceTemplateYaml;
+
+import com.google.inject.Inject;
+import java.io.IOException;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
-import software.wings.beans.template.Template;
-import software.wings.beans.yaml.ChangeContext;
-import software.wings.service.intfc.template.TemplateService;
-import software.wings.yaml.templatelibrary.ArtifactSourceTemplateYaml;
-
-import java.io.IOException;
 
 public class ArtifactSourceTemplateYamlHandlerTest extends TemplateLibraryYamlHandlerTestBase {
   @InjectMocks @Inject private ArtifactSourceTemplateYamlHandler yamlHandler;

@@ -1,11 +1,7 @@
 package software.wings.api.pcf;
 
 import io.harness.delegate.beans.DelegateTaskNotifyResponseData;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.EqualsAndHashCode;
-import lombok.NoArgsConstructor;
+
 import software.wings.api.ExecutionDataValue;
 import software.wings.api.pcf.PcfPluginExecutionSummary.PcfPluginExecutionSummaryBuilder;
 import software.wings.beans.TaskType;
@@ -17,6 +13,11 @@ import software.wings.sm.StateExecutionData;
 
 import java.util.List;
 import java.util.Map;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.NoArgsConstructor;
 
 @Data
 @Builder

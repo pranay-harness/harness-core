@@ -1,9 +1,8 @@
 package io.harness.integrationstage;
 
 import static io.harness.rule.OwnerRule.ALEKSANDAR;
-import static org.assertj.core.api.Assertions.assertThat;
 
-import com.google.inject.Inject;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.beans.environment.K8BuildJobEnvInfo;
 import io.harness.beans.executionargs.CIExecutionArgs;
@@ -14,6 +13,8 @@ import io.harness.executionplan.CIExecutionPlanTestHelper;
 import io.harness.executionplan.CIExecutionTest;
 import io.harness.rule.Owner;
 import io.harness.yaml.core.ExecutionElement;
+
+import com.google.inject.Inject;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 

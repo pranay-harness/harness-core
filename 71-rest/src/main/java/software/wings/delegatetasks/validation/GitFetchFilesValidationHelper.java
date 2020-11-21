@@ -2,16 +2,16 @@ package software.wings.delegatetasks.validation;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
-
 import io.harness.security.encryption.EncryptedDataDetail;
-import lombok.extern.slf4j.Slf4j;
+
 import software.wings.beans.GitConfig;
 import software.wings.service.intfc.security.EncryptionService;
 import software.wings.service.intfc.yaml.GitClient;
 
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import java.util.List;
+import lombok.extern.slf4j.Slf4j;
 
 @Singleton
 @Slf4j

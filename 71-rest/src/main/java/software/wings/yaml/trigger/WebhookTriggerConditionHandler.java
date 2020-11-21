@@ -2,16 +2,13 @@ package software.wings.yaml.trigger;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.validation.Validator.notNullCheck;
+
 import static software.wings.beans.trigger.WebhookSource.BITBUCKET;
 import static software.wings.beans.trigger.WebhookSource.GITHUB;
 
-import com.google.inject.Singleton;
-
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.data.structure.EmptyPredicate;
-import lombok.Data;
-import lombok.EqualsAndHashCode;
-import lombok.NoArgsConstructor;
+
 import software.wings.beans.trigger.GithubAction;
 import software.wings.beans.trigger.ReleaseAction;
 import software.wings.beans.trigger.TriggerCondition;
@@ -23,9 +20,13 @@ import software.wings.beans.yaml.ChangeContext;
 import software.wings.service.impl.yaml.handler.trigger.TriggerConditionYamlHandler;
 import software.wings.yaml.trigger.WebhookEventTriggerConditionYaml.WebhookEventTriggerConditionYamlBuilder;
 
+import com.google.inject.Singleton;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.NoArgsConstructor;
 
 @OwnedBy(CDC)
 @Data

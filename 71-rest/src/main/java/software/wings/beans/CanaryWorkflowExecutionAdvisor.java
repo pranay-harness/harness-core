@@ -9,8 +9,7 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.interrupts.ExecutionInterruptType.ABORT_ALL;
 import static io.harness.interrupts.ExecutionInterruptType.ROLLBACK;
-import static java.util.Collections.disjoint;
-import static java.util.stream.Collectors.toList;
+
 import static software.wings.beans.PhaseStepType.PRE_DEPLOYMENT;
 import static software.wings.beans.ServiceInstanceSelectionParams.Builder.aServiceInstanceSelectionParams;
 import static software.wings.common.WorkflowConstants.PHASE_NAME_PREFIX;
@@ -25,8 +24,8 @@ import static software.wings.sm.StateType.SUB_WORKFLOW;
 import static software.wings.sm.rollback.RollbackStateMachineGenerator.STAGING_PHASE_NAME;
 import static software.wings.sm.rollback.RollbackStateMachineGenerator.WHITE_SPACE;
 
-import com.google.common.annotations.VisibleForTesting;
-import com.google.inject.Inject;
+import static java.util.Collections.disjoint;
+import static java.util.stream.Collectors.toList;
 
 import io.harness.beans.ExecutionStatus;
 import io.harness.beans.WorkflowType;
@@ -36,8 +35,7 @@ import io.harness.exception.FailureType;
 import io.harness.interrupts.ExecutionInterruptType;
 import io.harness.interrupts.RepairActionCode;
 import io.harness.logging.AutoLogContext;
-import lombok.extern.slf4j.Slf4j;
-import org.mongodb.morphia.annotations.Transient;
+
 import software.wings.api.PhaseElement;
 import software.wings.beans.workflow.StepSkipStrategy;
 import software.wings.service.impl.instance.InstanceHelper;
@@ -62,10 +60,14 @@ import software.wings.sm.WorkflowStandardParams;
 import software.wings.sm.states.PhaseStepSubWorkflow;
 import software.wings.sm.states.PhaseSubWorkflow;
 
+import com.google.common.annotations.VisibleForTesting;
+import com.google.inject.Inject;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import lombok.extern.slf4j.Slf4j;
+import org.mongodb.morphia.annotations.Transient;
 
 /**
  * Created by rishi on 1/24/17.
@@ -613,7 +615,7 @@ public class CanaryWorkflowExecutionAdvisor implements ExecutionEventAdvisor {
       PhaseSubWorkflow phaseSubWorkflow, StateExecutionInstance stateExecutionInstance) {
     if (stateExecutionInstance.getOrchestrationWorkflowType() == ROLLING
         && !workflowServiceHelper.isOrchestrationWorkflowForK8sV2Service(
-               stateExecutionInstance.getAppId(), orchestrationWorkflow)) {
+            stateExecutionInstance.getAppId(), orchestrationWorkflow)) {
       return phaseSubWorkflowAdviceForRolling(orchestrationWorkflow, phaseSubWorkflow, stateExecutionInstance, false);
     } else {
       return phaseSubWorkflowAdviceForOthers(orchestrationWorkflow, phaseSubWorkflow, stateExecutionInstance);
@@ -658,8 +660,8 @@ public class CanaryWorkflowExecutionAdvisor implements ExecutionEventAdvisor {
   private ExecutionEventAdvice getRollbackProvisionerAdviceIfNeeded(PhaseStep preDeploymentSteps) {
     if (preDeploymentSteps != null && preDeploymentSteps.getSteps() != null
         && preDeploymentSteps.getSteps().stream().anyMatch(step
-               -> step.getType().equals(StateType.CLOUD_FORMATION_CREATE_STACK.name())
-                   || step.getType().equals(StateType.TERRAFORM_PROVISION.getType()))) {
+            -> step.getType().equals(StateType.CLOUD_FORMATION_CREATE_STACK.name())
+                || step.getType().equals(StateType.TERRAFORM_PROVISION.getType()))) {
       return anExecutionEventAdvice()
           .withNextStateName(ROLLBACK_PROVISIONERS)
           .withExecutionInterruptType(ROLLBACK)

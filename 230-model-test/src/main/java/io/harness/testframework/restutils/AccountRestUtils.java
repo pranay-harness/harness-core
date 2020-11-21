@@ -2,10 +2,11 @@ package io.harness.testframework.restutils;
 
 import io.harness.rest.RestResponse;
 import io.harness.testframework.framework.Setup;
-import io.restassured.http.ContentType;
+
 import software.wings.beans.Account;
 import software.wings.beans.LicenseUpdateInfo;
 
+import io.restassured.http.ContentType;
 import javax.ws.rs.core.GenericType;
 
 public class AccountRestUtils {

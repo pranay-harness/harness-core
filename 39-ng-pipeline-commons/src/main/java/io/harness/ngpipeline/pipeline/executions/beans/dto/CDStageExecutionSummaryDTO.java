@@ -1,9 +1,10 @@
 package io.harness.ngpipeline.pipeline.executions.beans.dto;
 
-import com.fasterxml.jackson.annotation.JsonTypeName;
 import io.harness.ngpipeline.pipeline.executions.ExecutionStatus;
 import io.harness.ngpipeline.pipeline.executions.beans.ExecutionErrorInfo;
 import io.harness.ngpipeline.pipeline.executions.beans.ServiceExecutionSummary;
+
+import com.fasterxml.jackson.annotation.JsonTypeName;
 import lombok.Builder;
 import lombok.Data;
 

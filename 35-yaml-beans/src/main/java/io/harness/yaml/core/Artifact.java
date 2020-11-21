@@ -1,10 +1,10 @@
 package io.harness.yaml.core;
 
 import io.harness.yaml.core.intfc.ArtifactStream;
-import lombok.Builder;
-import lombok.Value;
 
 import javax.validation.constraints.NotNull;
+import lombok.Builder;
+import lombok.Value;
 
 /**
  * Base class for defining Artifacts

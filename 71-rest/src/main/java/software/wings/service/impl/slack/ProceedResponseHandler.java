@@ -1,18 +1,17 @@
 package software.wings.service.impl.slack;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
+
 import static software.wings.service.impl.slack.SlackApprovalUtils.approve;
 import static software.wings.service.impl.slack.SlackApprovalUtils.createBody;
 import static software.wings.service.impl.slack.SlackApprovalUtils.createMessageFromTemplate;
 import static software.wings.service.impl.slack.SlackApprovalUtils.slackPostRequest;
 
-import com.google.inject.Inject;
-
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.EmbeddedUser;
 import io.harness.beans.ExecutionStatus;
 import io.harness.rest.RestResponse;
-import okhttp3.RequestBody;
+
 import software.wings.beans.ApprovalDetails;
 import software.wings.beans.ApprovalDetails.Action;
 import software.wings.beans.approval.SlackApprovalParams;
@@ -20,10 +19,12 @@ import software.wings.service.impl.notifications.SlackApprovalMessageKeys;
 import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.service.intfc.slack.SlackActionHandler;
 
+import com.google.inject.Inject;
 import java.io.IOException;
 import java.net.URL;
 import java.util.HashMap;
 import java.util.Map;
+import okhttp3.RequestBody;
 
 @OwnedBy(CDC)
 public class ProceedResponseHandler implements SlackActionHandler {

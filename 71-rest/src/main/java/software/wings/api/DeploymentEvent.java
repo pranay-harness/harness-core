@@ -1,15 +1,16 @@
 package software.wings.api;
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import io.harness.annotation.HarnessEntity;
 import io.harness.queue.Queuable;
+
+import software.wings.api.ondemandrollback.OnDemandRollbackInfo;
+
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import java.util.List;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import org.mongodb.morphia.annotations.Entity;
-import software.wings.api.ondemandrollback.OnDemandRollbackInfo;
-
-import java.util.List;
 
 /**
  * This is used as request for capturing deployment and instance information.

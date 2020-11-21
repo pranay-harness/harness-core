@@ -2,9 +2,6 @@ package software.wings.delegatetasks.aws;
 
 import static io.harness.beans.ExecutionStatus.SUCCESS;
 
-import com.google.inject.Inject;
-
-import com.amazonaws.services.ec2.model.Instance;
 import io.harness.delegate.beans.DelegateTaskPackage;
 import io.harness.delegate.beans.DelegateTaskResponse;
 import io.harness.delegate.beans.logstreaming.ILogStreamingTaskClient;
@@ -12,7 +9,7 @@ import io.harness.delegate.task.AbstractDelegateRunnableTask;
 import io.harness.delegate.task.TaskParameters;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
-import org.apache.commons.lang3.NotImplementedException;
+
 import software.wings.service.impl.aws.model.AwsEc2ListInstancesRequest;
 import software.wings.service.impl.aws.model.AwsEc2ListInstancesResponse;
 import software.wings.service.impl.aws.model.AwsEc2ListRegionsResponse;
@@ -32,10 +29,13 @@ import software.wings.service.impl.aws.model.AwsSubnet;
 import software.wings.service.impl.aws.model.AwsVPC;
 import software.wings.service.intfc.aws.delegate.AwsEc2HelperServiceDelegate;
 
+import com.amazonaws.services.ec2.model.Instance;
+import com.google.inject.Inject;
 import java.util.List;
 import java.util.Set;
 import java.util.function.BooleanSupplier;
 import java.util.function.Consumer;
+import org.apache.commons.lang3.NotImplementedException;
 
 public class AwsEc2Task extends AbstractDelegateRunnableTask {
   @Inject private AwsEc2HelperServiceDelegate ec2ServiceDelegate;

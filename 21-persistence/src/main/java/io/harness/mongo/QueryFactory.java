@@ -1,8 +1,9 @@
 package io.harness.mongo;
 
+import io.harness.persistence.HQuery;
+
 import com.mongodb.DBCollection;
 import com.mongodb.DBObject;
-import io.harness.persistence.HQuery;
 import org.mongodb.morphia.Datastore;
 import org.mongodb.morphia.query.DefaultQueryFactory;
 import org.mongodb.morphia.query.Query;

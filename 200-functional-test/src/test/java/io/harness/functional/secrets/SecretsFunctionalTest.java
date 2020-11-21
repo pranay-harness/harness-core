@@ -1,9 +1,8 @@
 package io.harness.functional.secrets;
 
 import static io.harness.rule.OwnerRule.NATARAJA;
-import static org.assertj.core.api.Assertions.assertThat;
 
-import com.google.inject.Inject;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.beans.EncryptedData;
 import io.harness.beans.SecretText;
@@ -15,6 +14,12 @@ import io.harness.scm.SecretName;
 import io.harness.testframework.framework.utils.SecretsUtils;
 import io.harness.testframework.restutils.SecretsRestUtils;
 import io.harness.testframework.restutils.VaultRestUtils;
+
+import software.wings.beans.VaultConfig;
+import software.wings.service.intfc.security.EncryptionService;
+
+import com.google.inject.Inject;
+import java.util.List;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.junit.After;
@@ -22,10 +27,6 @@ import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
-import software.wings.beans.VaultConfig;
-import software.wings.service.intfc.security.EncryptionService;
-
-import java.util.List;
 
 @Slf4j
 public class SecretsFunctionalTest extends AbstractFunctionalTest {

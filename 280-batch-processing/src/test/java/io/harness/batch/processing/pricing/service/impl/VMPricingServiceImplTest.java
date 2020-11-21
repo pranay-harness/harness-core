@@ -1,6 +1,7 @@
 package io.harness.batch.processing.pricing.service.impl;
 
 import static io.harness.rule.OwnerRule.HITESH;
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -13,6 +14,9 @@ import io.harness.batch.processing.pricing.data.PricingResponse;
 import io.harness.batch.processing.pricing.data.VMComputePricingInfo;
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
+
+import java.io.IOException;
+import java.util.Arrays;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -22,9 +26,6 @@ import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
 import retrofit2.Call;
 import retrofit2.Response;
-
-import java.io.IOException;
-import java.util.Arrays;
 
 @Slf4j
 @RunWith(MockitoJUnitRunner.class)

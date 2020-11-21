@@ -3,6 +3,7 @@ package io.harness.cdng.pipeline.executions.service;
 import static io.harness.rule.OwnerRule.SAHIL;
 import static io.harness.rule.OwnerRule.VAIBHAV_SI;
 import static io.harness.utils.PageTestUtils.getPage;
+
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 import static junit.framework.TestCase.assertEquals;
@@ -16,7 +17,6 @@ import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import io.fabric8.utils.Lists;
 import io.harness.CategoryTest;
 import io.harness.beans.EmbeddedUser;
 import io.harness.category.element.UnitTests;
@@ -51,6 +51,12 @@ import io.harness.plan.Plan;
 import io.harness.plan.PlanNode;
 import io.harness.rule.Owner;
 import io.harness.service.GraphGenerationService;
+
+import io.fabric8.utils.Lists;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Optional;
 import org.bson.Document;
 import org.junit.Rule;
 import org.junit.Test;
@@ -68,11 +74,6 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Update;
-
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Optional;
 
 @RunWith(PowerMockRunner.class)
 @PrepareForTest({ExecutionGraphMapper.class})

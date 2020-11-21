@@ -1,6 +1,7 @@
 package software.wings.resources;
 
 import static io.harness.rule.OwnerRule.HANTANG;
+
 import static java.lang.String.format;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.mock;
@@ -12,13 +13,14 @@ import io.harness.ccm.cluster.ClusterRecordService;
 import io.harness.ccm.cluster.entities.ClusterRecord;
 import io.harness.rest.RestResponse;
 import io.harness.rule.Owner;
-import org.junit.ClassRule;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
+
 import software.wings.utils.ResourceTestRule;
 
 import java.util.List;
 import javax.ws.rs.core.GenericType;
+import org.junit.ClassRule;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 public class ClusterResourceTest extends CategoryTest {
   private String accountId = "ACCOUNT_ID";

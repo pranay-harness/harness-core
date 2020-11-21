@@ -2,15 +2,9 @@ package io.harness.delegate.service;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.network.SafeHttpCall.execute;
+
 import static java.lang.String.format;
 import static javax.ws.rs.core.MediaType.MULTIPART_FORM_DATA;
-
-import com.google.common.cache.CacheBuilder;
-import com.google.common.cache.CacheLoader;
-import com.google.common.cache.LoadingCache;
-import com.google.common.util.concurrent.ThreadFactoryBuilder;
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
 
 import io.harness.delegate.beans.DelegateFile;
 import io.harness.delegate.configuration.DelegateConfiguration;
@@ -19,21 +13,19 @@ import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.managerclient.DelegateAgentManagerClient;
 import io.harness.rest.RestResponse;
-import lombok.extern.slf4j.Slf4j;
-import okhttp3.MediaType;
-import okhttp3.MultipartBody.Part;
-import okhttp3.RequestBody;
-import okhttp3.ResponseBody;
-import org.apache.commons.io.FileUtils;
-import org.apache.commons.io.IOUtils;
-import org.apache.commons.lang3.tuple.Pair;
-import retrofit2.Response;
+
 import software.wings.beans.artifact.Artifact.ArtifactMetadataKeys;
 import software.wings.beans.artifact.ArtifactStreamAttributes;
 import software.wings.beans.artifact.ArtifactStreamType;
 import software.wings.delegatetasks.DelegateFileManager;
 import software.wings.delegatetasks.collect.artifacts.ArtifactCollectionTaskHelper;
 
+import com.google.common.cache.CacheBuilder;
+import com.google.common.cache.CacheLoader;
+import com.google.common.cache.LoadingCache;
+import com.google.common.util.concurrent.ThreadFactoryBuilder;
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -46,6 +38,15 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import javax.validation.executable.ValidateOnExecution;
+import lombok.extern.slf4j.Slf4j;
+import okhttp3.MediaType;
+import okhttp3.MultipartBody.Part;
+import okhttp3.RequestBody;
+import okhttp3.ResponseBody;
+import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang3.tuple.Pair;
+import retrofit2.Response;
 
 /**
  * Created by rishi on 12/19/16.
@@ -75,7 +76,7 @@ public class DelegateFileManagerImpl implements DelegateFileManager {
     this.delegateConfiguration = delegateConfiguration;
     Executors
         .newSingleThreadScheduledExecutor(new ThreadFactoryBuilder().setNameFormat("delegate-file-manager").build())
-        .scheduleAtFixedRate(this ::deleteCachedArtifacts, 1000, 5 * 60 * (long) 1000,
+        .scheduleAtFixedRate(this::deleteCachedArtifacts, 1000, 5 * 60 * (long) 1000,
             TimeUnit.MILLISECONDS); // periodic cleanup for cached artifacts
   }
 

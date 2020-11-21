@@ -3,9 +3,8 @@ package io.harness.ng.core.entitysetupusage.impl;
 import static io.harness.EntityType.CONNECTORS;
 import static io.harness.EntityType.PIPELINES;
 import static io.harness.EntityType.SECRETS;
-import static org.assertj.core.api.Assertions.assertThat;
 
-import com.google.inject.Inject;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.EntityType;
 import io.harness.category.element.UnitTests;
@@ -18,13 +17,14 @@ import io.harness.rule.Owner;
 import io.harness.rule.OwnerRule;
 import io.harness.utils.FullyQualifiedIdentifierHelper;
 import io.harness.utils.IdentifierRefHelper;
+
+import com.google.inject.Inject;
+import java.util.ArrayList;
+import java.util.List;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.springframework.data.domain.Page;
-
-import java.util.ArrayList;
-import java.util.List;
 
 public class EntitySetupUsageServiceImplTest extends NGCoreTestBase {
   @Inject @InjectMocks EntitySetupUsageService entitySetupUsageService;

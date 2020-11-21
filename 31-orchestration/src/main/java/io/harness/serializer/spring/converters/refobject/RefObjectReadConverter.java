@@ -1,9 +1,9 @@
 package io.harness.serializer.spring.converters.refobject;
 
-import com.google.inject.Singleton;
-
 import io.harness.orchestration.persistence.ProtoReadConverter;
 import io.harness.pms.refobjects.RefObject;
+
+import com.google.inject.Singleton;
 import org.springframework.data.convert.ReadingConverter;
 
 @Singleton

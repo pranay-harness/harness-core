@@ -1,12 +1,11 @@
 package io.harness.cvng.analysis.beans;
 
-import lombok.Builder;
-import lombok.Value;
-
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import javax.validation.constraints.NotNull;
+import lombok.Builder;
+import lombok.Value;
 
 @Value
 @Builder

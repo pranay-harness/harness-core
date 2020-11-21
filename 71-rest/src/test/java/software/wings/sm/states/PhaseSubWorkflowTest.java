@@ -1,21 +1,19 @@
 package software.wings.sm.states;
 
 import static io.harness.rule.OwnerRule.PRABU;
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.Mockito.doReturn;
+
 import static software.wings.beans.artifact.Artifact.Builder.anArtifact;
 import static software.wings.utils.WingsTestConstants.ARTIFACT_ID;
 import static software.wings.utils.WingsTestConstants.ARTIFACT_STREAM_ID;
 import static software.wings.utils.WingsTestConstants.PHASE_STEP;
 import static software.wings.utils.WingsTestConstants.SERVICE;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.doReturn;
+
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
-import org.joor.Reflect;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
-import org.mockito.Mock;
+
 import software.wings.WingsBaseTest;
 import software.wings.beans.ExecutionArgs;
 import software.wings.beans.Service;
@@ -26,6 +24,11 @@ import software.wings.utils.WingsTestConstants;
 
 import java.util.Arrays;
 import java.util.Collections;
+import org.joor.Reflect;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
+import org.mockito.Mock;
 
 public class PhaseSubWorkflowTest extends WingsBaseTest {
   @Mock private ArtifactStreamServiceBindingService artifactStreamServiceBindingService;

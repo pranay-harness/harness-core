@@ -2,11 +2,13 @@ package software.wings.audit;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
 
-import com.fasterxml.jackson.annotation.JsonView;
 import io.harness.annotations.dev.OwnedBy;
+
+import software.wings.jersey.JsonViews;
+
+import com.fasterxml.jackson.annotation.JsonView;
 import lombok.Builder;
 import lombok.Data;
-import software.wings.jersey.JsonViews;
 
 @OwnedBy(PL)
 @Data

@@ -1,9 +1,8 @@
 package io.harness.delegate.task.stepstatus;
 
+import java.time.Duration;
 import lombok.Builder;
 import lombok.Data;
-
-import java.time.Duration;
 
 @Data
 @Builder

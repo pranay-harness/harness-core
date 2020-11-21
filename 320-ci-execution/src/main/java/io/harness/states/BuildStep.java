@@ -4,9 +4,8 @@ import static io.harness.common.CICommonPodConstants.CONTAINER_NAME;
 import static io.harness.common.CICommonPodConstants.MOUNT_PATH;
 import static io.harness.common.CICommonPodConstants.REL_STDERR_FILE_PATH;
 import static io.harness.common.CICommonPodConstants.REL_STDOUT_FILE_PATH;
-import static java.util.stream.Collectors.toList;
 
-import com.google.inject.Inject;
+import static java.util.stream.Collectors.toList;
 
 import io.harness.ambiance.Ambiance;
 import io.harness.beans.DelegateTaskRequest;
@@ -33,10 +32,11 @@ import io.harness.state.Step;
 import io.harness.state.io.StepInputPackage;
 import io.harness.state.io.StepResponse;
 import io.harness.stateutils.buildstate.ConnectorUtils;
-import lombok.extern.slf4j.Slf4j;
 
+import com.google.inject.Inject;
 import java.time.Duration;
 import java.util.List;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * This state will execute build command on already setup pod. It will send customer defined commands.

@@ -1,9 +1,7 @@
 package software.wings.service.impl.expression;
 
 import static io.harness.rule.OwnerRule.AADITI;
-import static java.util.Arrays.asList;
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.Mockito.when;
+
 import static software.wings.sm.StateType.ENV_STATE;
 import static software.wings.utils.WingsTestConstants.APP_ID;
 import static software.wings.utils.WingsTestConstants.ENTITY_ID;
@@ -11,15 +9,13 @@ import static software.wings.utils.WingsTestConstants.ENV_ID;
 import static software.wings.utils.WingsTestConstants.PIPELINE_ID;
 import static software.wings.utils.WingsTestConstants.VARIABLE_VALUE;
 
-import com.google.common.collect.ImmutableMap;
-import com.google.inject.Inject;
+import static java.util.Arrays.asList;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.when;
 
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
+
 import software.wings.WingsBaseTest;
 import software.wings.beans.ArtifactVariable;
 import software.wings.beans.Pipeline;
@@ -29,11 +25,17 @@ import software.wings.beans.Variable;
 import software.wings.beans.VariableType;
 import software.wings.service.intfc.PipelineService;
 
+import com.google.common.collect.ImmutableMap;
+import com.google.inject.Inject;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
 
 public class PipelineExpressionBuilderTest extends WingsBaseTest {
   @Inject @InjectMocks private PipelineExpressionBuilder pipelineExpressionBuilder;

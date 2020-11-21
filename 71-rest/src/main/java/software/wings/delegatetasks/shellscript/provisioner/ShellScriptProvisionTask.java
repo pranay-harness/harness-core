@@ -1,12 +1,10 @@
 package software.wings.delegatetasks.shellscript.provisioner;
 
 import static io.harness.logging.LogLevel.INFO;
-import static java.util.Collections.emptyList;
+
 import static software.wings.beans.Log.Builder.aLog;
 
-import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Charsets;
-import com.google.inject.Inject;
+import static java.util.Collections.emptyList;
 
 import io.harness.beans.ExecutionStatus;
 import io.harness.data.structure.EmptyPredicate;
@@ -22,8 +20,7 @@ import io.harness.exception.ExceptionUtils;
 import io.harness.exception.WingsException;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.security.encryption.EncryptedDataDetail;
-import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.io.FileUtils;
+
 import software.wings.api.shellscript.provision.ShellScriptProvisionExecutionData;
 import software.wings.beans.shellscript.provisioner.ShellScriptProvisionParameters;
 import software.wings.core.local.executors.ShellExecutorConfig;
@@ -32,6 +29,9 @@ import software.wings.core.ssh.executors.ScriptProcessExecutor;
 import software.wings.delegatetasks.DelegateLogService;
 import software.wings.service.intfc.security.EncryptionService;
 
+import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Charsets;
+import com.google.inject.Inject;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -41,6 +41,8 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.function.BooleanSupplier;
 import java.util.function.Consumer;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.io.FileUtils;
 
 @Slf4j
 public class ShellScriptProvisionTask extends AbstractDelegateRunnableTask {

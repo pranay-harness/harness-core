@@ -1,16 +1,13 @@
 package software.wings.service.impl.analysis;
 
 import static io.harness.delegate.task.mixin.HttpConnectionExecutionCapabilityGenerator.HttpCapabilityDetailsLevel.QUERY;
+
 import static software.wings.common.VerificationConstants.DELAY_MINUTES;
 
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.delegate.task.mixin.HttpConnectionExecutionCapabilityGenerator;
 import io.harness.security.encryption.EncryptedDataDetail;
-import lombok.Builder;
-import lombok.Builder.Default;
-import lombok.Data;
-import lombok.EqualsAndHashCode;
-import lombok.ToString;
+
 import software.wings.delegatetasks.delegatecapability.CapabilityHelper;
 import software.wings.sm.StateType;
 import software.wings.sm.states.CustomLogVerificationState.ResponseMapper;
@@ -20,6 +17,11 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import lombok.Builder;
+import lombok.Builder.Default;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.ToString;
 
 @Data
 @ToString(callSuper = true)

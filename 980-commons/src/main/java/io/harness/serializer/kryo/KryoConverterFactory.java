@@ -2,19 +2,18 @@ package io.harness.serializer.kryo;
 
 import static java.util.Arrays.stream;
 
+import io.harness.serializer.KryoSerializer;
+
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
-
-import io.harness.serializer.KryoSerializer;
+import java.lang.annotation.Annotation;
+import java.lang.reflect.Type;
 import okhttp3.MediaType;
 import okhttp3.RequestBody;
 import okhttp3.ResponseBody;
 import retrofit2.Converter;
 import retrofit2.Converter.Factory;
 import retrofit2.Retrofit;
-
-import java.lang.annotation.Annotation;
-import java.lang.reflect.Type;
 
 @Singleton
 public class KryoConverterFactory extends Factory {

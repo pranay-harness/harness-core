@@ -3,8 +3,6 @@ package io.harness.batch.processing.reports;
 import static software.wings.graphql.datafetcher.billing.CloudBillingHelper.unified;
 import static software.wings.security.UserThreadLocal.userGuard;
 
-import com.google.inject.Singleton;
-
 import io.harness.batch.processing.config.BatchMainConfig;
 import io.harness.batch.processing.mail.CEMailNotificationService;
 import io.harness.batch.processing.shard.AccountShardService;
@@ -13,9 +11,7 @@ import io.harness.ccm.billing.bigquery.BigQueryService;
 import io.harness.ccm.views.entities.CEReportSchedule;
 import io.harness.ccm.views.service.impl.CEReportScheduleServiceImpl;
 import io.harness.ccm.views.service.impl.CEReportTemplateBuilderServiceImpl;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
+
 import software.wings.beans.Account;
 import software.wings.beans.User;
 import software.wings.graphql.datafetcher.billing.CloudBillingHelper;
@@ -23,6 +19,7 @@ import software.wings.helpers.ext.mail.EmailData;
 import software.wings.security.UserThreadLocal;
 import software.wings.service.intfc.instance.CloudToHarnessMappingService;
 
+import com.google.inject.Singleton;
 import java.net.URISyntaxException;
 import java.util.Arrays;
 import java.util.Base64;
@@ -31,6 +28,9 @@ import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
 
 @Service
 @Singleton

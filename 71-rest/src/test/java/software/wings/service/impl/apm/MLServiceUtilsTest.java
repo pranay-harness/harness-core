@@ -2,17 +2,15 @@ package software.wings.service.impl.apm;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.rule.OwnerRule.KAMAL;
-import static org.assertj.core.api.Assertions.assertThat;
 
-import com.google.inject.Inject;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.beans.ExecutionStatus;
 import io.harness.category.element.UnitTests;
 import io.harness.deployment.InstanceDetails;
 import io.harness.rule.Owner;
 import io.harness.time.Timestamp;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
+
 import software.wings.WingsBaseTest;
 import software.wings.beans.WorkflowExecution;
 import software.wings.dl.WingsPersistence;
@@ -20,6 +18,10 @@ import software.wings.service.impl.analysis.SetupTestNodeData;
 import software.wings.service.impl.datadog.DataDogSetupTestNodeData;
 import software.wings.sm.StateExecutionInstance;
 import software.wings.sm.StateType;
+
+import com.google.inject.Inject;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 public class MLServiceUtilsTest extends WingsBaseTest {
   @Inject private MLServiceUtils mlServiceUtils;

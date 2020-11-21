@@ -1,8 +1,7 @@
 package software.wings.sm.states;
 
 import io.harness.k8s.model.ImageDetails;
-import lombok.Builder;
-import lombok.Data;
+
 import software.wings.beans.Application;
 import software.wings.beans.Environment;
 import software.wings.beans.InfrastructureMapping;
@@ -12,6 +11,8 @@ import software.wings.beans.container.ContainerTask;
 import software.wings.beans.container.EcsServiceSpecification;
 
 import java.util.List;
+import lombok.Builder;
+import lombok.Data;
 
 @Data
 @Builder

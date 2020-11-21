@@ -1,8 +1,7 @@
 package software.wings.service.impl.analysis;
 
-import lombok.Data;
-
 import java.util.List;
+import lombok.Data;
 
 /**
  * Created by sriram_parthasarathy on 9/22/17.

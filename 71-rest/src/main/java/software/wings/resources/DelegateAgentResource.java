@@ -1,17 +1,11 @@
 package software.wings.resources;
 
 import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
-import static java.util.stream.Collectors.toList;
+
 import static software.wings.security.PermissionAttribute.ResourceType.DELEGATE;
 
-import com.google.inject.Inject;
-import com.google.protobuf.Any;
-import com.google.protobuf.TextFormat;
-import com.google.protobuf.TextFormat.ParseException;
+import static java.util.stream.Collectors.toList;
 
-import com.codahale.metrics.annotation.ExceptionMetered;
-import com.codahale.metrics.annotation.Timed;
-import freemarker.template.TemplateException;
 import io.harness.artifact.ArtifactCollectionResponseHandler;
 import io.harness.delegate.beans.ConnectionMode;
 import io.harness.delegate.beans.DelegateConfiguration;
@@ -39,9 +33,7 @@ import io.harness.perpetualtask.PerpetualTaskLogContext;
 import io.harness.rest.RestResponse;
 import io.harness.security.annotations.DelegateAuth;
 import io.harness.serializer.KryoSerializer;
-import io.swagger.annotations.Api;
-import lombok.extern.slf4j.Slf4j;
-import org.hibernate.validator.constraints.NotEmpty;
+
 import software.wings.beans.Delegate;
 import software.wings.delegatetasks.buildsource.BuildSourceExecutionResponse;
 import software.wings.delegatetasks.manifest.ManifestCollectionExecutionResponse;
@@ -55,6 +47,14 @@ import software.wings.service.impl.instance.InstanceHelper;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.DelegateService;
 
+import com.codahale.metrics.annotation.ExceptionMetered;
+import com.codahale.metrics.annotation.Timed;
+import com.google.inject.Inject;
+import com.google.protobuf.Any;
+import com.google.protobuf.TextFormat;
+import com.google.protobuf.TextFormat.ParseException;
+import freemarker.template.TemplateException;
+import io.swagger.annotations.Api;
 import java.io.IOException;
 import java.util.List;
 import javax.servlet.http.HttpServletRequest;
@@ -68,6 +68,8 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Context;
+import lombok.extern.slf4j.Slf4j;
+import org.hibernate.validator.constraints.NotEmpty;
 
 @Api("/agent/delegates")
 @Path("/agent/delegates")

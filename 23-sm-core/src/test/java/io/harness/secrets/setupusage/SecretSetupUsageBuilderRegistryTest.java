@@ -1,19 +1,20 @@
 package io.harness.secrets.setupusage;
 
 import static io.harness.rule.OwnerRule.UTKARSH;
-import static org.assertj.core.api.Assertions.assertThat;
 
-import com.google.inject.Inject;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.SMCoreTestBase;
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
+
+import software.wings.settings.SettingVariableTypes;
+
+import com.google.inject.Inject;
+import java.util.Optional;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
-import software.wings.settings.SettingVariableTypes;
-
-import java.util.Optional;
 
 public class SecretSetupUsageBuilderRegistryTest extends SMCoreTestBase {
   @Inject @InjectMocks private SecretSetupUsageBuilderRegistry secretSetupUsageBuilderRegistry;

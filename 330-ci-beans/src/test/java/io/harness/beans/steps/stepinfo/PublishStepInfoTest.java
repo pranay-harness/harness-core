@@ -1,6 +1,7 @@
 package io.harness.beans.steps.stepinfo;
 
 import static io.harness.rule.OwnerRule.ALEKSANDAR;
+
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.beans.CIBeansTest;
@@ -12,15 +13,15 @@ import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
 import io.harness.yaml.core.StepElement;
 import io.harness.yaml.utils.YamlPipelineUtils;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
 
 import java.io.IOException;
 import java.util.List;
 import java.util.Objects;
 import java.util.Scanner;
 import java.util.stream.Collectors;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 public class PublishStepInfoTest extends CIBeansTest {
   private String yamlString;

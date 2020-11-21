@@ -2,16 +2,16 @@ package software.wings.sm.states;
 
 import static io.harness.spotinst.model.SpotInstConstants.DOWN_SCALE_STEADY_STATE_WAIT_COMMAND_UNIT;
 import static io.harness.spotinst.model.SpotInstConstants.UP_SCALE_STEADY_STATE_WAIT_COMMAND_UNIT;
-import static java.util.Collections.emptyMap;
+
 import static software.wings.service.impl.aws.model.AwsConstants.MIN_TRAFFIC_SHIFT_WEIGHT;
 import static software.wings.sm.states.AwsAmiSwitchRoutesState.SWAP_AUTO_SCALING_ROUTES;
 
-import com.google.common.collect.ImmutableList;
+import static java.util.Collections.emptyMap;
 
-import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
+
 import software.wings.beans.command.CommandUnit;
 import software.wings.beans.command.SpotinstDummyCommandUnit;
 import software.wings.service.impl.aws.model.AwsConstants;
@@ -19,6 +19,8 @@ import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionResponse;
 import software.wings.sm.StateType;
 
+import com.github.reinert.jjschema.SchemaIgnore;
+import com.google.common.collect.ImmutableList;
 import java.util.List;
 import java.util.Map;
 

@@ -2,15 +2,15 @@ package software.wings.beans;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 
+import software.wings.beans.artifact.ArtifactStreamSummary;
+
+import java.util.List;
+import java.util.Map;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
-import software.wings.beans.artifact.ArtifactStreamSummary;
-
-import java.util.List;
-import java.util.Map;
 
 @Data
 @NoArgsConstructor

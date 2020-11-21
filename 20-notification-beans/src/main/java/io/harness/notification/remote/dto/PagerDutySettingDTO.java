@@ -1,6 +1,7 @@
 package io.harness.notification.remote.dto;
 
 import io.harness.notification.NotificationChannelType;
+
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;

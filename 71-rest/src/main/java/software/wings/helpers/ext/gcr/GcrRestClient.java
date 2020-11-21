@@ -3,11 +3,13 @@ package software.wings.helpers.ext.gcr;
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 
 import io.harness.annotations.dev.OwnedBy;
+
+import software.wings.helpers.ext.gcr.GcrServiceImpl.GcrImageTagResponse;
+
 import retrofit2.Call;
 import retrofit2.http.GET;
 import retrofit2.http.Header;
 import retrofit2.http.Path;
-import software.wings.helpers.ext.gcr.GcrServiceImpl.GcrImageTagResponse;
 
 /**
  * Created by brett on 8/2/17

@@ -4,6 +4,12 @@ import static io.harness.rule.OwnerRule.RAGHVENDRA;
 import static io.harness.rule.OwnerRule.ROHIT_KUMAR;
 import static io.harness.rule.OwnerRule.SATYAM;
 import static io.harness.rule.OwnerRule.YOGESH;
+
+import static software.wings.service.impl.aws.delegate.AwsAmiHelperServiceDelegateImpl.BG_BLUE;
+import static software.wings.service.impl.aws.delegate.AwsAmiHelperServiceDelegateImpl.BG_VERSION;
+import static software.wings.service.impl.aws.delegate.AwsAmiHelperServiceDelegateImpl.HARNESS_AUTOSCALING_GROUP_TAG;
+import static software.wings.utils.WingsTestConstants.INFRA_MAPPING_ID;
+
 import static java.lang.String.format;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
@@ -22,12 +28,19 @@ import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
-import static software.wings.service.impl.aws.delegate.AwsAmiHelperServiceDelegateImpl.BG_BLUE;
-import static software.wings.service.impl.aws.delegate.AwsAmiHelperServiceDelegateImpl.BG_VERSION;
-import static software.wings.service.impl.aws.delegate.AwsAmiHelperServiceDelegateImpl.HARNESS_AUTOSCALING_GROUP_TAG;
-import static software.wings.utils.WingsTestConstants.INFRA_MAPPING_ID;
 
-import com.google.common.util.concurrent.TimeLimiter;
+import io.harness.aws.AwsCallTracker;
+import io.harness.category.element.UnitTests;
+import io.harness.exception.UnexpectedException;
+import io.harness.logging.LogCallback;
+import io.harness.rule.Owner;
+
+import software.wings.WingsBaseTest;
+import software.wings.beans.AwsConfig;
+import software.wings.beans.command.ExecutionLogCallback;
+import software.wings.service.impl.aws.model.AwsAsgGetRunningCountData;
+import software.wings.service.intfc.aws.delegate.AwsEc2HelperServiceDelegate;
+import software.wings.service.intfc.security.EncryptionService;
 
 import com.amazonaws.services.autoscaling.AmazonAutoScalingClient;
 import com.amazonaws.services.autoscaling.model.AutoScalingGroup;
@@ -48,28 +61,17 @@ import com.amazonaws.services.autoscaling.model.Tag;
 import com.amazonaws.services.autoscaling.model.TagDescription;
 import com.amazonaws.services.ec2.model.Instance;
 import com.amazonaws.services.ec2.model.InstanceState;
-import io.harness.aws.AwsCallTracker;
-import io.harness.category.element.UnitTests;
-import io.harness.exception.UnexpectedException;
-import io.harness.logging.LogCallback;
-import io.harness.rule.Owner;
+import com.google.common.util.concurrent.TimeLimiter;
+import java.util.Collections;
+import java.util.Date;
+import java.util.List;
+import java.util.Map;
 import lombok.Builder;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Spy;
-import software.wings.WingsBaseTest;
-import software.wings.beans.AwsConfig;
-import software.wings.beans.command.ExecutionLogCallback;
-import software.wings.service.impl.aws.model.AwsAsgGetRunningCountData;
-import software.wings.service.intfc.aws.delegate.AwsEc2HelperServiceDelegate;
-import software.wings.service.intfc.security.EncryptionService;
-
-import java.util.Collections;
-import java.util.Date;
-import java.util.List;
-import java.util.Map;
 
 public class AwsAsgHelperServiceDelegateImplTest extends WingsBaseTest {
   @Mock private AwsEc2HelperServiceDelegate mockAwsEc2HelperServiceDelegate;

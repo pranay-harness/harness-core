@@ -2,14 +2,11 @@ package software.wings.graphql.datafetcher.billing;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 
-import com.google.inject.Inject;
-
-import com.hazelcast.util.Preconditions;
 import io.harness.ccm.billing.GcpBillingService;
 import io.harness.ccm.billing.graphql.CloudBillingAggregate;
 import io.harness.ccm.billing.graphql.CloudBillingFilter;
 import io.harness.ccm.billing.graphql.CloudBillingGroupBy;
-import org.apache.commons.math3.stat.regression.SimpleRegression;
+
 import software.wings.graphql.datafetcher.AbstractStatsDataFetcher;
 import software.wings.graphql.schema.type.aggregation.QLData;
 import software.wings.graphql.schema.type.aggregation.billing.QLBillingSortCriteria;
@@ -17,12 +14,15 @@ import software.wings.graphql.schema.type.aggregation.billing.QLBillingStatsInfo
 import software.wings.graphql.schema.type.aggregation.billing.QLBillingTrendStats;
 import software.wings.service.intfc.ce.CeAccountExpirationChecker;
 
+import com.google.inject.Inject;
+import com.hazelcast.util.Preconditions;
 import java.math.BigDecimal;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
+import org.apache.commons.math3.stat.regression.SimpleRegression;
 
 public class GcpBillingTrendStatsDataFetcher extends AbstractStatsDataFetcher<CloudBillingAggregate, CloudBillingFilter,
     CloudBillingGroupBy, QLBillingSortCriteria> {

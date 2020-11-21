@@ -1,7 +1,8 @@
 package software.wings.yaml;
 
-import org.junit.Before;
 import software.wings.integration.IntegrationTestBase;
+
+import org.junit.Before;
 
 /**
  * Created by bsollish on 8/10/17.

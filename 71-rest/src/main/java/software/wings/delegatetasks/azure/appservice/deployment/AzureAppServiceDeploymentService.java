@@ -10,15 +10,10 @@ import static io.harness.azure.model.AzureConstants.UPDATE_DEPLOYMENT_SLOT_CONTA
 import static io.harness.azure.model.AzureConstants.WEB_APP_NAME_BLANK_ERROR_MSG;
 import static io.harness.logging.CommandExecutionStatus.SUCCESS;
 import static io.harness.logging.LogLevel.INFO;
+
 import static java.lang.String.format;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
-
-import com.microsoft.azure.management.appservice.DeploymentSlot;
-import com.microsoft.azure.management.containerregistry.Registry;
-import com.microsoft.azure.management.containerregistry.RegistryCredentials;
 import io.harness.azure.client.AzureContainerRegistryClient;
 import io.harness.azure.client.AzureWebClient;
 import io.harness.azure.context.AzureContainerRegistryClientContext;
@@ -34,18 +29,24 @@ import io.harness.delegate.beans.logstreaming.ILogStreamingTaskClient;
 import io.harness.delegate.task.azure.appservice.AzureAppServicePreDeploymentData;
 import io.harness.exception.InvalidRequestException;
 import io.harness.logging.LogCallback;
-import lombok.NoArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
+
 import software.wings.delegatetasks.azure.AzureTimeLimiter;
 import software.wings.delegatetasks.azure.DefaultCompletableSubscriber;
 import software.wings.delegatetasks.azure.appservice.deployment.context.AzureAppServiceDeploymentContext;
 import software.wings.delegatetasks.azure.appservice.deployment.context.AzureAppServiceDockerDeploymentContext;
 
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
+import com.microsoft.azure.management.appservice.DeploymentSlot;
+import com.microsoft.azure.management.containerregistry.Registry;
+import com.microsoft.azure.management.containerregistry.RegistryCredentials;
 import java.util.Arrays;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.function.Supplier;
+import lombok.NoArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 @Singleton
 @NoArgsConstructor

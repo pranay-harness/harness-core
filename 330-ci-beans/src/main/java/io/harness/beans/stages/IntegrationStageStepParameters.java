@@ -3,10 +3,10 @@ package io.harness.beans.stages;
 import io.harness.ci.beans.entities.BuildNumberDetails;
 import io.harness.ngpipeline.status.BuildStatusUpdateParameter;
 import io.harness.state.io.StepParameters;
-import lombok.Builder;
-import lombok.Data;
 
 import java.util.Map;
+import lombok.Builder;
+import lombok.Data;
 
 @Data
 @Builder

@@ -3,19 +3,19 @@ package software.wings.service;
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
-
 import io.harness.annotations.dev.OwnedBy;
-import lombok.extern.slf4j.Slf4j;
+
 import software.wings.beans.artifact.ArtifactStream;
 import software.wings.beans.artifact.NexusArtifactStream;
 import software.wings.expression.ManagerExpressionEvaluator;
 import software.wings.utils.RepositoryFormat;
 
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import lombok.extern.slf4j.Slf4j;
 
 @OwnedBy(CDC)
 @Singleton

@@ -1,6 +1,5 @@
 package software.wings.core.ssh.executors;
 
-import static com.google.common.collect.Sets.newHashSet;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.filesystem.FileIo.createDirectoryIfDoesNotExist;
 import static io.harness.filesystem.FileIo.deleteDirectoryAndItsContentIfExists;
@@ -11,29 +10,26 @@ import static io.harness.logging.CommandExecutionStatus.RUNNING;
 import static io.harness.logging.CommandExecutionStatus.SUCCESS;
 import static io.harness.logging.LogLevel.ERROR;
 import static io.harness.logging.LogLevel.INFO;
-import static java.lang.String.format;
+
 import static software.wings.beans.Log.Builder.aLog;
 import static software.wings.common.Constants.HARNESS_KUBE_CONFIG_PATH;
 
-import com.google.inject.Inject;
+import static com.google.common.collect.Sets.newHashSet;
+import static java.lang.String.format;
 
 import io.harness.delegate.command.CommandExecutionResult;
 import io.harness.delegate.command.CommandExecutionResult.CommandExecutionResultBuilder;
 import io.harness.delegate.task.shell.ScriptType;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.logging.LogLevel;
-import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.io.output.NullOutputStream;
-import org.apache.commons.lang3.tuple.Pair;
-import org.zeroturnaround.exec.ProcessExecutor;
-import org.zeroturnaround.exec.ProcessResult;
-import org.zeroturnaround.exec.stream.LogOutputStream;
+
 import software.wings.beans.command.ShellExecutionData;
 import software.wings.beans.command.ShellExecutionData.ShellExecutionDataBuilder;
 import software.wings.core.local.executors.ShellExecutorConfig;
 import software.wings.delegatetasks.DelegateFileManager;
 import software.wings.delegatetasks.DelegateLogService;
 
+import com.google.inject.Inject;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
@@ -49,6 +45,12 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeoutException;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.io.output.NullOutputStream;
+import org.apache.commons.lang3.tuple.Pair;
+import org.zeroturnaround.exec.ProcessExecutor;
+import org.zeroturnaround.exec.ProcessResult;
+import org.zeroturnaround.exec.stream.LogOutputStream;
 
 /**
  * Created by anubhaw on 2019-03-11.

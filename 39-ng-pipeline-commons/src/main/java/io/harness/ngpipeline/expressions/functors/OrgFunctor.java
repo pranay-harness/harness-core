@@ -1,10 +1,10 @@
 package io.harness.ngpipeline.expressions.functors;
 
 import io.harness.ambiance.Ambiance;
-import io.harness.ngpipeline.common.AmbianceHelper;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.expression.LateBindingValue;
 import io.harness.ng.core.services.OrganizationService;
+import io.harness.ngpipeline.common.AmbianceHelper;
 
 public class OrgFunctor implements LateBindingValue {
   private final OrganizationService organizationService;

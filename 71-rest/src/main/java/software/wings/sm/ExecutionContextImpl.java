@@ -13,10 +13,7 @@ import static io.harness.govern.Switch.unhandled;
 import static io.harness.k8s.KubernetesConvention.getNormalizedInfraMappingIdLabelValue;
 import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_NESTS;
 import static io.harness.validation.Validator.notNullCheck;
-import static java.util.Arrays.asList;
-import static java.util.stream.Collectors.toList;
-import static org.apache.commons.lang3.StringUtils.isBlank;
-import static org.apache.commons.lang3.StringUtils.join;
+
 import static software.wings.beans.Environment.EnvironmentType.ALL;
 import static software.wings.beans.Environment.GLOBAL_ENV_ID;
 import static software.wings.beans.ServiceVariable.Type.TEXT;
@@ -28,13 +25,10 @@ import static software.wings.sm.ContextElement.HELM_CHART;
 import static software.wings.sm.ContextElement.SAFE_DISPLAY_SERVICE_VARIABLE;
 import static software.wings.sm.ContextElement.SERVICE_VARIABLE;
 
-import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Splitter;
-import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.Iterables;
-import com.google.common.collect.Lists;
-import com.google.inject.Inject;
-import com.google.inject.Injector;
+import static java.util.Arrays.asList;
+import static java.util.stream.Collectors.toList;
+import static org.apache.commons.lang3.StringUtils.isBlank;
+import static org.apache.commons.lang3.StringUtils.join;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.EmbeddedUser;
@@ -55,10 +49,7 @@ import io.harness.expression.VariableResolverTracker;
 import io.harness.logging.AccountLogContext;
 import io.harness.logging.AutoLogContext;
 import io.harness.serializer.KryoSerializer;
-import lombok.Getter;
-import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.StringUtils;
-import org.mongodb.morphia.Key;
+
 import software.wings.api.DeploymentType;
 import software.wings.api.InfraMappingElement;
 import software.wings.api.InfraMappingElement.CloudProvider;
@@ -141,6 +132,13 @@ import software.wings.service.intfc.sweepingoutput.SweepingOutputService;
 import software.wings.settings.SettingValue;
 import software.wings.sm.LateBindingServiceVariables.LateBindingServiceVariablesBuilder;
 
+import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Splitter;
+import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Iterables;
+import com.google.common.collect.Lists;
+import com.google.inject.Inject;
+import com.google.inject.Injector;
 import java.security.SecureRandom;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -160,6 +158,10 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import javax.annotation.Nonnull;
 import javax.validation.constraints.NotNull;
+import lombok.Getter;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
+import org.mongodb.morphia.Key;
 
 @OwnedBy(CDC)
 @Slf4j

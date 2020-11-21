@@ -3,7 +3,7 @@ package io.harness;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.generator.WorkflowGenerator.Workflows.BASIC_SIMPLE;
 import static io.harness.rule.OwnerRule.GEORGE;
-import static org.assertj.core.api.Assertions.assertThat;
+
 import static software.wings.beans.Application.Builder.anApplication;
 import static software.wings.beans.BasicOrchestrationWorkflow.BasicOrchestrationWorkflowBuilder.aBasicOrchestrationWorkflow;
 import static software.wings.beans.EntityType.WORKFLOW;
@@ -12,9 +12,8 @@ import static software.wings.beans.PhaseStepType.POST_DEPLOYMENT;
 import static software.wings.beans.PhaseStepType.PRE_DEPLOYMENT;
 import static software.wings.beans.Workflow.WorkflowBuilder.aWorkflow;
 
-import com.google.inject.Inject;
+import static org.assertj.core.api.Assertions.assertThat;
 
-import graphql.ExecutionResult;
 import io.harness.beans.EmbeddedUser;
 import io.harness.beans.WorkflowType;
 import io.harness.category.element.UnitTests;
@@ -28,9 +27,7 @@ import io.harness.generator.Randomizer.Seed;
 import io.harness.generator.WorkflowGenerator;
 import io.harness.rule.Owner;
 import io.harness.testframework.graphql.QLTestObject;
-import lombok.extern.slf4j.Slf4j;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
+
 import software.wings.beans.Application;
 import software.wings.beans.HarnessTagLink;
 import software.wings.beans.Workflow;
@@ -42,9 +39,14 @@ import software.wings.graphql.schema.type.QLWorkflowConnection;
 import software.wings.infra.InfrastructureDefinition;
 import software.wings.service.intfc.HarnessTagService;
 
+import com.google.inject.Inject;
+import graphql.ExecutionResult;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import lombok.extern.slf4j.Slf4j;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 @Slf4j
 public class WorkflowTest extends GraphQLTest {

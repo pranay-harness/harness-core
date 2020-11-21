@@ -5,6 +5,11 @@ import static io.harness.rule.OwnerRule.ABOSII;
 import static io.harness.rule.OwnerRule.ACASIAN;
 import static io.harness.rule.OwnerRule.ANSHUL;
 import static io.harness.rule.OwnerRule.BOJANA;
+
+import static software.wings.delegatetasks.k8s.K8sTestConstants.CONFIG_MAP_YAML;
+import static software.wings.delegatetasks.k8s.K8sTestConstants.DEPLOYMENT_YAML;
+import static software.wings.delegatetasks.k8s.K8sTestConstants.SECRET_YAML;
+
 import static java.util.Collections.emptyList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
@@ -23,11 +28,6 @@ import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-import static software.wings.delegatetasks.k8s.K8sTestConstants.CONFIG_MAP_YAML;
-import static software.wings.delegatetasks.k8s.K8sTestConstants.DEPLOYMENT_YAML;
-import static software.wings.delegatetasks.k8s.K8sTestConstants.SECRET_YAML;
-
-import com.google.common.collect.ImmutableList;
 
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.k8s.K8sRollingBaseHandler;
@@ -43,13 +43,7 @@ import io.harness.k8s.model.KubernetesResource;
 import io.harness.k8s.model.ReleaseHistory;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.rule.Owner;
-import org.assertj.core.util.Lists;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
-import org.mockito.ArgumentCaptor;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.Mockito;
+
 import software.wings.WingsBaseTest;
 import software.wings.beans.appmanifest.StoreType;
 import software.wings.beans.command.ExecutionLogCallback;
@@ -65,9 +59,17 @@ import software.wings.helpers.ext.k8s.request.K8sTaskParameters;
 import software.wings.helpers.ext.k8s.response.K8sRollingDeployResponse;
 import software.wings.helpers.ext.k8s.response.K8sTaskExecutionResponse;
 
+import com.google.common.collect.ImmutableList;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
+import org.assertj.core.util.Lists;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
+import org.mockito.ArgumentCaptor;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.Mockito;
 
 public class K8sRollingDeployTaskHandlerTest extends WingsBaseTest {
   @Mock private ContainerDeploymentDelegateHelper containerDeploymentDelegateHelper;

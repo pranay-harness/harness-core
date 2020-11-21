@@ -1,19 +1,26 @@
 package software.wings.graphql.datafetcher;
 
 import static io.harness.rule.OwnerRule.ROHIT_KUMAR;
+
+import static software.wings.graphql.utils.GraphQLConstants.CREATE_APPLICATION_API;
+import static software.wings.graphql.utils.GraphQLConstants.DELETE_APPLICATION_API;
+
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
-import static software.wings.graphql.utils.GraphQLConstants.CREATE_APPLICATION_API;
-import static software.wings.graphql.utils.GraphQLConstants.DELETE_APPLICATION_API;
 
-import graphql.language.Field;
-import graphql.schema.DataFetchingEnvironment;
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.persistence.HPersistence;
 import io.harness.rule.Owner;
+
+import software.wings.security.AuthRuleFilter;
+import software.wings.service.impl.security.auth.AuthHandler;
+import software.wings.service.intfc.AuthService;
+
+import graphql.language.Field;
+import graphql.schema.DataFetchingEnvironment;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -22,9 +29,6 @@ import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
 import org.mockito.Spy;
-import software.wings.security.AuthRuleFilter;
-import software.wings.service.impl.security.auth.AuthHandler;
-import software.wings.service.intfc.AuthService;
 
 public class AuthRuleGraphQLTest extends CategoryTest {
   @Mock AuthRuleFilter authRuleFilter;

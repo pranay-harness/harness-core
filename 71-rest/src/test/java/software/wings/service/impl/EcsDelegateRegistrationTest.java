@@ -1,6 +1,11 @@
 package software.wings.service.impl;
 
 import static io.harness.rule.OwnerRule.ADWAIT;
+
+import static software.wings.beans.DelegateSequenceConfig.Builder.aDelegateSequenceBuilder;
+import static software.wings.beans.FeatureName.USE_CDN_FOR_STORAGE_FILES;
+import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.joor.Reflect.on;
 import static org.mockito.AdditionalAnswers.returnsFirstArg;
@@ -18,20 +23,10 @@ import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-import static software.wings.beans.DelegateSequenceConfig.Builder.aDelegateSequenceBuilder;
-import static software.wings.beans.FeatureName.USE_CDN_FOR_STORAGE_FILES;
-import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
-import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.StringUtils;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
-import org.mockito.ArgumentCaptor;
-import org.mockito.Mock;
-import org.mongodb.morphia.query.Query;
-import org.mongodb.morphia.query.UpdateOperations;
+
 import software.wings.WingsBaseTest;
 import software.wings.app.MainConfiguration;
 import software.wings.beans.Delegate;
@@ -45,6 +40,14 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
+import org.mockito.ArgumentCaptor;
+import org.mockito.Mock;
+import org.mongodb.morphia.query.Query;
+import org.mongodb.morphia.query.UpdateOperations;
 
 @Slf4j
 public class EcsDelegateRegistrationTest extends WingsBaseTest {

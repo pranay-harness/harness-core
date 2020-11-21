@@ -1,11 +1,10 @@
 package software.wings.features.api;
 
+import java.util.Collection;
 import lombok.Builder;
 import lombok.NonNull;
 import lombok.Singular;
 import lombok.Value;
-
-import java.util.Collection;
 
 @Value
 @Builder

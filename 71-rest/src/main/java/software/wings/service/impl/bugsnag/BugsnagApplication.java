@@ -1,10 +1,9 @@
 package software.wings.service.impl.bugsnag;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import java.util.List;
 import lombok.Builder;
 import lombok.Data;
-
-import java.util.List;
 
 /**
  * Created by Praveen

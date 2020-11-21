@@ -1,10 +1,9 @@
 package io.harness.event.model.marketo;
 
+import java.util.List;
 import lombok.Builder;
 import lombok.Builder.Default;
 import lombok.Data;
-
-import java.util.List;
 
 /**
  * @author rktummala on 11/20/2018

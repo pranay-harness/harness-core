@@ -14,14 +14,17 @@
       </option>
       <option name="IMPORT_LAYOUT_TABLE">
         <value>
+          <package name="io.harness" withSubpackages="true" static="true" />
+          <emptyLine />
+          <package name="software.wings" withSubpackages="true" static="true" />
+          <emptyLine />
           <package name="" withSubpackages="true" static="true" />
           <emptyLine />
-          <package name="com.google" withSubpackages="true" static="false" />
+          <package name="io.harness" withSubpackages="true" static="false" />
+          <emptyLine />
+          <package name="software.wings" withSubpackages="true" static="false" />
           <emptyLine />
           <package name="" withSubpackages="true" static="false" />
-          <emptyLine />
-          <package name="java" withSubpackages="true" static="false" />
-          <package name="javax" withSubpackages="true" static="false" />
         </value>
       </option>
     </JavaCodeStyleSettings>

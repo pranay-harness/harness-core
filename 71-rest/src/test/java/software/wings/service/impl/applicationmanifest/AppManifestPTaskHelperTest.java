@@ -1,5 +1,11 @@
 package software.wings.service.impl.applicationmanifest;
 
+import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
+import static software.wings.utils.WingsTestConstants.APP_ID;
+import static software.wings.utils.WingsTestConstants.MANIFEST_ID;
+import static software.wings.utils.WingsTestConstants.PERPETUAL_TASK_ID;
+import static software.wings.utils.WingsTestConstants.SERVICE_ID;
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Matchers.anyString;
@@ -7,13 +13,6 @@ import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
-import static software.wings.utils.WingsTestConstants.APP_ID;
-import static software.wings.utils.WingsTestConstants.MANIFEST_ID;
-import static software.wings.utils.WingsTestConstants.PERPETUAL_TASK_ID;
-import static software.wings.utils.WingsTestConstants.SERVICE_ID;
-
-import com.google.inject.Inject;
 
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
@@ -25,6 +24,12 @@ import io.harness.perpetualtask.PerpetualTaskService;
 import io.harness.perpetualtask.PerpetualTaskType;
 import io.harness.rule.Owner;
 import io.harness.rule.OwnerRule;
+
+import software.wings.beans.appmanifest.ApplicationManifest;
+import software.wings.beans.appmanifest.StoreType;
+import software.wings.service.intfc.ApplicationManifestService;
+
+import com.google.inject.Inject;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
@@ -32,9 +37,6 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
-import software.wings.beans.appmanifest.ApplicationManifest;
-import software.wings.beans.appmanifest.StoreType;
-import software.wings.service.intfc.ApplicationManifestService;
 
 @RunWith(MockitoJUnitRunner.class)
 public class AppManifestPTaskHelperTest extends CategoryTest {

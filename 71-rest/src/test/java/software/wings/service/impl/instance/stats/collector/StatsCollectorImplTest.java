@@ -2,17 +2,26 @@ package software.wings.service.impl.instance.stats.collector;
 
 import static io.harness.rule.OwnerRule.ROHIT_KUMAR;
 import static io.harness.rule.OwnerRule.UJJAWAL;
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyLong;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.doReturn;
 
-import com.google.inject.Inject;
-
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
+
+import software.wings.beans.infrastructure.instance.ServerlessInstance;
+import software.wings.beans.infrastructure.instance.stats.ServerlessInstanceStats;
+import software.wings.service.intfc.FeatureFlagService;
+import software.wings.service.intfc.instance.ServerlessDashboardService;
+import software.wings.service.intfc.instance.stats.ServerlessInstanceStatService;
+
+import com.google.inject.Inject;
+import java.time.Instant;
+import java.util.Collections;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -20,14 +29,6 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.mockito.Spy;
-import software.wings.beans.infrastructure.instance.ServerlessInstance;
-import software.wings.beans.infrastructure.instance.stats.ServerlessInstanceStats;
-import software.wings.service.intfc.FeatureFlagService;
-import software.wings.service.intfc.instance.ServerlessDashboardService;
-import software.wings.service.intfc.instance.stats.ServerlessInstanceStatService;
-
-import java.time.Instant;
-import java.util.Collections;
 
 public class StatsCollectorImplTest extends CategoryTest {
   public static final String ACCOUNTID = "accountid";

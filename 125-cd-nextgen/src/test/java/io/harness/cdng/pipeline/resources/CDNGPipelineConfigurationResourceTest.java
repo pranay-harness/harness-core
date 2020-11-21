@@ -1,26 +1,27 @@
 package io.harness.cdng.pipeline.resources;
 
 import static io.harness.rule.OwnerRule.SAHIL;
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.doCallRealMethod;
 import static org.mockito.Mockito.when;
 
-import io.fabric8.utils.Lists;
 import io.harness.CategoryTest;
 import io.harness.beans.ExecutionStrategyType;
 import io.harness.category.element.UnitTests;
 import io.harness.cdng.pipeline.helpers.CDNGPipelineConfigurationHelper;
 import io.harness.cdng.service.beans.ServiceDefinitionType;
 import io.harness.rule.Owner;
+
+import io.fabric8.utils.Lists;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Map;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
-
-import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
 
 public class CDNGPipelineConfigurationResourceTest extends CategoryTest {
   @Mock CDNGPipelineConfigurationHelper pipelineService;

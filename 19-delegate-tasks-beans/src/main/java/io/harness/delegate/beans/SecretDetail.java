@@ -1,6 +1,7 @@
 package io.harness.delegate.beans;
 
 import io.harness.security.encryption.EncryptedRecord;
+
 import lombok.Builder;
 import lombok.Value;
 

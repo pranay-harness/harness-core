@@ -1,10 +1,8 @@
 package io.harness.artifact;
 
 import static io.harness.rule.OwnerRule.SRINIVAS;
-import static org.assertj.core.api.Assertions.assertThat;
 
-import com.google.common.collect.ImmutableMap;
-import com.google.inject.Inject;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.GraphQLTest;
 import io.harness.category.element.UnitTests;
@@ -17,15 +15,19 @@ import io.harness.generator.artifactstream.ArtifactStreamManager;
 import io.harness.generator.artifactstream.ArtifactStreamManager.ArtifactStreams;
 import io.harness.rule.Owner;
 import io.harness.testframework.graphql.QLTestObject;
-import lombok.extern.slf4j.Slf4j;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
+
 import software.wings.beans.Application;
 import software.wings.beans.artifact.Artifact;
 import software.wings.beans.artifact.Artifact.ArtifactMetadataKeys;
 import software.wings.beans.artifact.ArtifactStream;
 import software.wings.graphql.schema.type.artifact.QLArtifact.QLArtifactKeys;
 import software.wings.service.intfc.ArtifactService;
+
+import com.google.common.collect.ImmutableMap;
+import com.google.inject.Inject;
+import lombok.extern.slf4j.Slf4j;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 @Slf4j
 public class ArtifactTest extends GraphQLTest {

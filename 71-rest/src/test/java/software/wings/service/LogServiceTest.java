@@ -5,29 +5,31 @@ import static io.harness.beans.SearchFilter.Operator.EQ;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.logging.LogLevel.INFO;
 import static io.harness.rule.OwnerRule.RAGHU;
-import static org.assertj.core.api.Assertions.assertThat;
+
 import static software.wings.beans.Log.Builder.aLog;
 import static software.wings.service.impl.LogServiceImpl.MAX_LOG_ROWS_PER_ACTIVITY;
 import static software.wings.utils.WingsTestConstants.HOST_NAME;
 
-import com.google.inject.Inject;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.beans.PageRequest;
 import io.harness.category.element.UnitTests;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.rule.Owner;
-import org.apache.commons.io.FileUtils;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
+
 import software.wings.WingsBaseTest;
 import software.wings.beans.Log;
 import software.wings.service.intfc.LogService;
 
+import com.google.inject.Inject;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import org.apache.commons.io.FileUtils;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 public class LogServiceTest extends WingsBaseTest {
   @Inject private LogService logService;

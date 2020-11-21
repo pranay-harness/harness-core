@@ -4,14 +4,8 @@
 
 package software.wings.api;
 
-import com.google.inject.Inject;
-
 import io.harness.context.ContextElementType;
-import lombok.AccessLevel;
-import lombok.Builder;
-import lombok.Data;
-import lombok.Getter;
-import org.mongodb.morphia.annotations.Transient;
+
 import software.wings.beans.FeatureName;
 import software.wings.beans.NameValuePair;
 import software.wings.beans.artifact.Artifact;
@@ -20,10 +14,16 @@ import software.wings.service.intfc.FeatureFlagService;
 import software.wings.sm.ContextElement;
 import software.wings.sm.ExecutionContext;
 
+import com.google.inject.Inject;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import lombok.AccessLevel;
+import lombok.Builder;
+import lombok.Data;
+import lombok.Getter;
+import org.mongodb.morphia.annotations.Transient;
 
 /**
  * The Class PhaseElement.

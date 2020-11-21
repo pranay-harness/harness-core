@@ -1,11 +1,12 @@
 package software.wings.service.impl.event;
 
-import com.google.inject.Inject;
-
 import io.harness.event.timeseries.processor.DeploymentEventProcessor;
 import io.harness.queue.QueueConsumer;
 import io.harness.queue.QueueListener;
+
 import software.wings.api.DeploymentTimeSeriesEvent;
+
+import com.google.inject.Inject;
 
 /**
  * The instance

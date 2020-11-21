@@ -2,6 +2,7 @@ package io.harness.delegate.beans.connector.cvconnector;
 
 import io.harness.delegate.beans.DelegateMetaInfo;
 import io.harness.delegate.beans.DelegateTaskNotifyResponseData;
+
 import lombok.Builder;
 import lombok.Data;
 

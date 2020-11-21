@@ -1,8 +1,9 @@
 package software.wings.beans.container;
 
+import io.harness.yaml.BaseYaml;
+
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.github.reinert.jjschema.Attributes;
-import io.harness.yaml.BaseYaml;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;

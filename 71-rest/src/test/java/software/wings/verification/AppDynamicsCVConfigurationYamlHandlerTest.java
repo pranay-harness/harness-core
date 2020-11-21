@@ -1,6 +1,7 @@
 package software.wings.verification;
 
 import static io.harness.rule.OwnerRule.PRAVEEN;
+
 import static org.apache.cxf.ws.addressing.ContextUtils.generateUUID;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.anyLong;
@@ -10,12 +11,7 @@ import static org.mockito.Mockito.when;
 import io.harness.category.element.UnitTests;
 import io.harness.exception.WingsException;
 import io.harness.rule.Owner;
-import org.apache.commons.lang3.reflect.FieldUtils;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
-import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
+
 import software.wings.WingsBaseTest;
 import software.wings.beans.Application;
 import software.wings.beans.Service;
@@ -37,6 +33,12 @@ import software.wings.verification.appdynamics.AppDynamicsCVServiceConfiguration
 
 import java.util.Arrays;
 import java.util.HashSet;
+import org.apache.commons.lang3.reflect.FieldUtils;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
 
 public class AppDynamicsCVConfigurationYamlHandlerTest extends WingsBaseTest {
   @Mock YamlHelper yamlHelper;

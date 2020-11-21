@@ -5,8 +5,10 @@ import static com.google.inject.name.Names.named;
 
 import com.google.common.collect.ImmutableList;
 import com.google.inject.Injector;
-
 import com.mongodb.MongoClient;
+import java.util.Collection;
+import java.util.List;
+import java.util.stream.Collectors;
 import org.mongodb.morphia.AdvancedDatastore;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -23,10 +25,6 @@ import org.springframework.data.mongodb.core.convert.MongoCustomConversions;
 import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
 import org.springframework.data.mongodb.repository.config.EnableMongoRepositories;
 import org.springframework.guice.annotation.GuiceModule;
-
-import java.util.Collection;
-import java.util.List;
-import java.util.stream.Collectors;
 
 @Configuration
 @GuiceModule

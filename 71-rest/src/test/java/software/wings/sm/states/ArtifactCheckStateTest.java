@@ -1,26 +1,21 @@
 package software.wings.sm.states;
 
 import static io.harness.rule.OwnerRule.RAGHU;
+
+import static software.wings.beans.artifact.Artifact.Builder.anArtifact;
+import static software.wings.sm.WorkflowStandardParams.Builder.aWorkflowStandardParams;
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyInt;
 import static org.mockito.Mockito.when;
-import static software.wings.beans.artifact.Artifact.Builder.anArtifact;
-import static software.wings.sm.WorkflowStandardParams.Builder.aWorkflowStandardParams;
-
-import com.google.common.collect.Lists;
-import com.google.inject.Inject;
 
 import io.harness.beans.ExecutionStatus;
 import io.harness.category.element.UnitTests;
 import io.harness.context.ContextElementType;
 import io.harness.delay.DelayEventHelper;
 import io.harness.rule.Owner;
-import org.apache.commons.lang3.reflect.FieldUtils;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
-import org.mockito.Mock;
+
 import software.wings.WingsBaseTest;
 import software.wings.beans.artifact.Artifact.ContentStatus;
 import software.wings.beans.artifact.Artifact.Status;
@@ -32,7 +27,14 @@ import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionResponse;
 import software.wings.sm.WorkflowStandardParams;
 
+import com.google.common.collect.Lists;
+import com.google.inject.Inject;
 import java.util.UUID;
+import org.apache.commons.lang3.reflect.FieldUtils;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
+import org.mockito.Mock;
 
 public class ArtifactCheckStateTest extends WingsBaseTest {
   @Inject private ArtifactService artifactService;

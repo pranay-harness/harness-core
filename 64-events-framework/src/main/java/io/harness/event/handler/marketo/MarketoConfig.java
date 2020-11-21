@@ -1,8 +1,7 @@
 package io.harness.event.handler.marketo;
 
-import com.google.inject.Singleton;
-
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.google.inject.Singleton;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;

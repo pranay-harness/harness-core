@@ -1,11 +1,11 @@
 package io.harness.version;
 
 import io.harness.serializer.YamlUtils;
-import org.apache.commons.io.IOUtils;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
+import org.apache.commons.io.IOUtils;
 
 public class VersionInfoManager {
   private static final String INIT_VERSION_INFO = "version   : 0.0.0.0\n"

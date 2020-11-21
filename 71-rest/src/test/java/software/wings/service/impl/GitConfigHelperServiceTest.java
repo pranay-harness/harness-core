@@ -2,6 +2,14 @@ package software.wings.service.impl;
 
 import static io.harness.rule.OwnerRule.ARVIND;
 import static io.harness.rule.OwnerRule.YOGESH;
+
+import static software.wings.beans.GitRepositoryInfo.GitProvider.BITBUCKET;
+import static software.wings.beans.GitRepositoryInfo.GitProvider.GITHUB;
+import static software.wings.beans.GitRepositoryInfo.GitProvider.GITLAB;
+import static software.wings.beans.GitRepositoryInfo.GitProvider.UNKNOWN;
+import static software.wings.beans.yaml.GitCommand.GitCommandType.VALIDATE;
+import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -10,14 +18,6 @@ import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-import static software.wings.beans.GitRepositoryInfo.GitProvider.BITBUCKET;
-import static software.wings.beans.GitRepositoryInfo.GitProvider.GITHUB;
-import static software.wings.beans.GitRepositoryInfo.GitProvider.GITLAB;
-import static software.wings.beans.GitRepositoryInfo.GitProvider.UNKNOWN;
-import static software.wings.beans.yaml.GitCommand.GitCommandType.VALIDATE;
-import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
-
-import com.google.inject.Inject;
 
 import io.harness.beans.DelegateTask;
 import io.harness.category.element.UnitTests;
@@ -25,11 +25,7 @@ import io.harness.exception.GeneralException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.rule.Owner;
 import io.harness.security.encryption.EncryptedDataDetail;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
-import org.mockito.ArgumentCaptor;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
+
 import software.wings.WingsBaseTest;
 import software.wings.beans.FeatureName;
 import software.wings.beans.GitConfig;
@@ -39,11 +35,17 @@ import software.wings.service.intfc.DelegateService;
 import software.wings.service.intfc.FeatureFlagService;
 import software.wings.sm.ExecutionContext;
 
+import com.google.inject.Inject;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
+import org.mockito.ArgumentCaptor;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
 
 public class GitConfigHelperServiceTest extends WingsBaseTest {
   @Mock ExecutionContext context;
@@ -87,7 +89,7 @@ public class GitConfigHelperServiceTest extends WingsBaseTest {
   public void validateGitConfigTestFeatureOffUrlTypeAccount() throws Exception {
     doReturn(false).when(featureFlagService).isEnabled(FeatureName.GIT_ACCOUNT_SUPPORT, ACCOUNT_ID);
     assertThatExceptionOfType(InvalidRequestException.class)
-        .isThrownBy(this ::validateGitConfigUrlTypeAccount)
+        .isThrownBy(this::validateGitConfigUrlTypeAccount)
         .withMessageContaining("Account level git connector is not enabled");
   }
 
@@ -205,8 +207,7 @@ public class GitConfigHelperServiceTest extends WingsBaseTest {
     assertThatThrownBy(() -> {
       GitConfig config = GitConfig.builder().urlType(GitConfig.UrlType.ACCOUNT).build();
       gitConfigHelperService.convertToRepoGitConfig(config, null);
-    })
-        .isInstanceOf(InvalidRequestException.class);
+    }).isInstanceOf(InvalidRequestException.class);
   }
 
   private void validateGitConfigUrlTypeRepo() throws InterruptedException {

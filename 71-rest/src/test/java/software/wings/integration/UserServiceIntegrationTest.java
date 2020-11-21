@@ -4,19 +4,16 @@ import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 import static io.harness.rule.OwnerRule.RAGHU;
 import static io.harness.rule.OwnerRule.RAMA;
 import static io.harness.rule.OwnerRule.UTKARSH;
+
+import static software.wings.beans.User.Builder.anUser;
+
 import static java.lang.String.format;
 import static javax.ws.rs.client.Entity.entity;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 import static org.apache.commons.codec.binary.Base64.encodeBase64String;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.fail;
-import static software.wings.beans.User.Builder.anUser;
 
-import com.google.common.collect.Sets;
-import com.google.common.io.ByteStreams;
-import com.google.inject.Inject;
-
-import com.fasterxml.jackson.core.type.TypeReference;
 import io.harness.beans.SearchFilter.Operator;
 import io.harness.category.element.DeprecatedIntegrationTests;
 import io.harness.data.structure.UUIDGenerator;
@@ -25,14 +22,7 @@ import io.harness.eraro.ResponseMessage;
 import io.harness.rest.RestResponse;
 import io.harness.rule.Owner;
 import io.harness.serializer.JsonUtils;
-import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.reflect.FieldUtils;
-import org.apache.http.HttpStatus;
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Ignore;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
+
 import software.wings.app.MainConfiguration;
 import software.wings.app.PortalConfig;
 import software.wings.beans.Account;
@@ -57,6 +47,10 @@ import software.wings.security.authentication.LoginTypeResponse;
 import software.wings.service.impl.UserServiceImpl;
 import software.wings.service.intfc.instance.licensing.InstanceLimitProvider;
 
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.google.common.collect.Sets;
+import com.google.common.io.ByteStreams;
+import com.google.inject.Inject;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.HashMap;
@@ -68,6 +62,14 @@ import javax.ws.rs.NotAuthorizedException;
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.GenericType;
 import javax.ws.rs.core.HttpHeaders;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.reflect.FieldUtils;
+import org.apache.http.HttpStatus;
+import org.junit.Assert;
+import org.junit.Before;
+import org.junit.Ignore;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 /**
  * Created by rsingh on 4/24/17.

@@ -4,7 +4,7 @@ import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.generator.SettingGenerator.Settings.AWS_DEPLOYMENT_FUNCTIONAL_TESTS_CLOUD_PROVIDER;
 import static io.harness.generator.SettingGenerator.Settings.ECS_FUNCTIONAL_TEST_GIT_REPO;
 import static io.harness.rule.OwnerRule.RAGHVENDRA;
-import static org.assertj.core.api.Assertions.assertThat;
+
 import static software.wings.beans.BasicOrchestrationWorkflow.BasicOrchestrationWorkflowBuilder.aBasicOrchestrationWorkflow;
 import static software.wings.beans.PhaseStep.PhaseStepBuilder.aPhaseStep;
 import static software.wings.beans.PhaseStepType.CONTAINER_SETUP;
@@ -15,16 +15,8 @@ import static software.wings.beans.Workflow.WorkflowBuilder.aWorkflow;
 import static software.wings.beans.WorkflowPhase.WorkflowPhaseBuilder.aWorkflowPhase;
 import static software.wings.sm.StateType.ECS_RUN_TASK;
 
-import com.google.common.collect.ImmutableMap;
-import com.google.inject.Inject;
+import static org.assertj.core.api.Assertions.assertThat;
 
-import com.amazonaws.auth.AWSStaticCredentialsProvider;
-import com.amazonaws.auth.BasicAWSCredentials;
-import com.amazonaws.services.ecs.AmazonECSAsync;
-import com.amazonaws.services.ecs.AmazonECSAsyncClientBuilder;
-import com.amazonaws.services.ecs.model.ListTasksRequest;
-import com.amazonaws.services.ecs.model.ListTasksResult;
-import com.amazonaws.services.ecs.model.StopTaskRequest;
 import io.harness.beans.WorkflowType;
 import io.harness.category.element.CDFunctionalTests;
 import io.harness.functional.AbstractFunctionalTest;
@@ -43,11 +35,7 @@ import io.harness.rule.Owner;
 import io.harness.scm.ScmSecret;
 import io.harness.scm.SecretName;
 import io.harness.testframework.restutils.WorkflowRestUtils;
-import lombok.extern.slf4j.Slf4j;
-import org.jetbrains.annotations.NotNull;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
+
 import software.wings.api.DeploymentType;
 import software.wings.beans.Application;
 import software.wings.beans.EntityType;
@@ -64,9 +52,23 @@ import software.wings.beans.artifact.Artifact;
 import software.wings.beans.artifact.ArtifactStream;
 import software.wings.infra.InfrastructureDefinition;
 
+import com.amazonaws.auth.AWSStaticCredentialsProvider;
+import com.amazonaws.auth.BasicAWSCredentials;
+import com.amazonaws.services.ecs.AmazonECSAsync;
+import com.amazonaws.services.ecs.AmazonECSAsyncClientBuilder;
+import com.amazonaws.services.ecs.model.ListTasksRequest;
+import com.amazonaws.services.ecs.model.ListTasksResult;
+import com.amazonaws.services.ecs.model.StopTaskRequest;
+import com.google.common.collect.ImmutableMap;
+import com.google.inject.Inject;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import lombok.extern.slf4j.Slf4j;
+import org.jetbrains.annotations.NotNull;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 @Slf4j
 public class EcsRunTaskFunctionalTest extends AbstractFunctionalTest {

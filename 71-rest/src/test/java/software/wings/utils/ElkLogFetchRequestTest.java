@@ -2,21 +2,21 @@ package software.wings.utils;
 
 import static io.harness.rule.OwnerRule.PRAVEEN;
 import static io.harness.rule.OwnerRule.RAGHU;
-import static org.assertj.core.api.Assertions.assertThat;
+
 import static software.wings.delegatetasks.ElkLogzDataCollectionTask.parseElkResponse;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
+import static org.assertj.core.api.Assertions.assertThat;
+
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
-import org.json.JSONObject;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
+
 import software.wings.delegatetasks.ElkLogzDataCollectionTask;
 import software.wings.service.impl.analysis.LogElement;
 import software.wings.service.impl.elk.ElkLogFetchRequest;
 import software.wings.service.impl.elk.ElkQueryType;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -26,6 +26,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
+import org.json.JSONObject;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 /**
  * Created by rsingh on 8/3/17.

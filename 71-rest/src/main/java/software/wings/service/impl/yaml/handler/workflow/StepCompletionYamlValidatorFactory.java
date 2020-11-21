@@ -1,10 +1,10 @@
 package software.wings.service.impl.yaml.handler.workflow;
 
+import software.wings.sm.StepType;
+
 import com.google.inject.Inject;
 import com.google.inject.Injector;
-
 import lombok.extern.slf4j.Slf4j;
-import software.wings.sm.StepType;
 
 @Slf4j
 public class StepCompletionYamlValidatorFactory {

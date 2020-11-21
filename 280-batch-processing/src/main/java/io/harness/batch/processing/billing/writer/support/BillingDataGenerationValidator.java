@@ -1,17 +1,16 @@
 package io.harness.batch.processing.billing.writer.support;
 
-import com.google.inject.Inject;
+import io.harness.ccm.cluster.entities.LastReceivedPublishedMessage;
+import io.harness.ccm.health.LastReceivedPublishedMessageDao;
 
 import com.github.benmanes.caffeine.cache.Caffeine;
 import com.github.benmanes.caffeine.cache.LoadingCache;
-import io.harness.ccm.cluster.entities.LastReceivedPublishedMessage;
-import io.harness.ccm.health.LastReceivedPublishedMessageDao;
+import com.google.inject.Inject;
+import java.time.Instant;
+import java.util.concurrent.TimeUnit;
 import lombok.Value;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
-
-import java.time.Instant;
-import java.util.concurrent.TimeUnit;
 
 /**
  * Get decide if need to generate billing data or not.

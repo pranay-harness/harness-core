@@ -1,20 +1,15 @@
 package software.wings.resources;
 
-import static javax.ws.rs.core.MediaType.MULTIPART_FORM_DATA;
 import static software.wings.security.PermissionAttribute.PermissionType.ENV;
 import static software.wings.security.PermissionAttribute.ResourceType.APPLICATION;
 
-import com.google.inject.Inject;
+import static javax.ws.rs.core.MediaType.MULTIPART_FORM_DATA;
 
-import com.codahale.metrics.annotation.ExceptionMetered;
-import com.codahale.metrics.annotation.Timed;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.rest.RestResponse;
 import io.harness.stream.BoundedInputStream;
-import io.swagger.annotations.Api;
-import org.glassfish.jersey.media.multipart.FormDataContentDisposition;
-import org.glassfish.jersey.media.multipart.FormDataParam;
+
 import software.wings.app.MainConfiguration;
 import software.wings.beans.infrastructure.Host;
 import software.wings.security.PermissionAttribute.Action;
@@ -22,6 +17,10 @@ import software.wings.security.annotations.AuthRule;
 import software.wings.security.annotations.Scope;
 import software.wings.service.intfc.HostService;
 
+import com.codahale.metrics.annotation.ExceptionMetered;
+import com.codahale.metrics.annotation.Timed;
+import com.google.inject.Inject;
+import io.swagger.annotations.Api;
 import java.io.InputStream;
 import javax.ws.rs.BeanParam;
 import javax.ws.rs.Consumes;
@@ -35,6 +34,8 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Response;
+import org.glassfish.jersey.media.multipart.FormDataContentDisposition;
+import org.glassfish.jersey.media.multipart.FormDataParam;
 
 /**
  * Created by anubhaw on 5/9/16.

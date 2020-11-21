@@ -1,27 +1,28 @@
 package software.wings.beans.infrastructure.instance.stats;
 
 import static io.harness.rule.OwnerRule.UJJAWAL;
-import static org.assertj.core.api.Assertions.assertThat;
 
-import com.google.inject.Inject;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.category.element.DeprecatedIntegrationTests;
 import io.harness.rule.Owner;
-import lombok.val;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Ignore;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
+
 import software.wings.beans.EntityType;
 import software.wings.beans.infrastructure.instance.stats.InstanceStatsSnapshot.AggregateCount;
 import software.wings.beans.infrastructure.instance.stats.InstanceStatsSnapshot.InstanceStatsSnapshotKeys;
 import software.wings.dl.WingsPersistence;
 import software.wings.integration.IntegrationTestBase;
 
+import com.google.inject.Inject;
 import java.time.Instant;
 import java.util.Arrays;
 import java.util.concurrent.ThreadLocalRandom;
+import lombok.val;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Ignore;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 public class InstanceStatsSnapshotIntegrationTest extends IntegrationTestBase {
   @Inject private WingsPersistence persistence;

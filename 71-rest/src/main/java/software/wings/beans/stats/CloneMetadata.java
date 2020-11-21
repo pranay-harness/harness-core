@@ -1,12 +1,12 @@
 package software.wings.beans.stats;
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import lombok.Builder;
-import lombok.Data;
 import software.wings.beans.Environment;
 import software.wings.beans.Workflow;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import java.util.Map;
+import lombok.Builder;
+import lombok.Data;
 
 /**
  * Created by sgurubelli on 9/8/17.

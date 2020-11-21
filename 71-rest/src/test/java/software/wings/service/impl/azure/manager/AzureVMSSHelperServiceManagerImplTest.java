@@ -1,6 +1,7 @@
 package software.wings.service.impl.azure.manager;
 
 import static io.harness.rule.OwnerRule.IVAN;
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.joor.Reflect.on;
 import static org.mockito.Matchers.any;
@@ -18,14 +19,15 @@ import io.harness.delegate.task.azure.response.AzureVMSSListSubscriptionsRespons
 import io.harness.delegate.task.azure.response.AzureVMSSListVirtualMachineScaleSetsResponse;
 import io.harness.delegate.task.azure.response.AzureVMSSTaskExecutionResponse;
 import io.harness.rule.Owner;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
+
 import software.wings.beans.AzureConfig;
 import software.wings.service.intfc.DelegateService;
 import software.wings.sm.states.azure.AzureStateHelper;
 
 import java.util.Collections;
 import java.util.List;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 public class AzureVMSSHelperServiceManagerImplTest extends CategoryTest {
   @Test

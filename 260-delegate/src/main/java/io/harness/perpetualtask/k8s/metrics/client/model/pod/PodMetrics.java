@@ -3,10 +3,12 @@ package io.harness.perpetualtask.k8s.metrics.client.model.pod;
 import static io.harness.perpetualtask.k8s.metrics.client.K8sMetricsClient.METRICS_API_GROUP;
 import static io.harness.perpetualtask.k8s.metrics.client.K8sMetricsClient.METRICS_API_VERSION;
 
-import com.google.gson.annotations.SerializedName;
-
 import io.harness.perpetualtask.k8s.metrics.client.model.Usage;
 import io.harness.perpetualtask.k8s.metrics.client.model.common.CustomResource;
+
+import com.google.gson.annotations.SerializedName;
+import java.io.Serializable;
+import java.util.List;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -16,9 +18,6 @@ import lombok.NoArgsConstructor;
 import lombok.Singular;
 import lombok.ToString;
 import lombok.experimental.FieldDefaults;
-
-import java.io.Serializable;
-import java.util.List;
 
 @Data
 @NoArgsConstructor

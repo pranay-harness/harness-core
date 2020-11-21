@@ -1,13 +1,12 @@
 package migrations.all;
 
-import com.google.inject.Inject;
-
-import lombok.extern.slf4j.Slf4j;
-import migrations.Migration;
 import software.wings.beans.Account;
 import software.wings.service.intfc.AccountService;
 
+import com.google.inject.Inject;
 import java.util.List;
+import lombok.extern.slf4j.Slf4j;
+import migrations.Migration;
 
 @Slf4j
 public class FetchAndSaveAccounts2 implements Migration {

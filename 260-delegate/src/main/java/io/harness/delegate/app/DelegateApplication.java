@@ -1,6 +1,5 @@
 package io.harness.delegate.app;
 
-import static com.google.common.base.Charsets.UTF_8;
 import static io.harness.configuration.DeployMode.DEPLOY_MODE;
 import static io.harness.configuration.DeployMode.isOnPrem;
 import static io.harness.delegate.message.MessageConstants.DELEGATE_DASH;
@@ -14,20 +13,10 @@ import static io.harness.delegate.service.DelegateAgentServiceImpl.getDelegateId
 import static io.harness.grpc.utils.DelegateGrpcConfigExtractor.extractAuthority;
 import static io.harness.grpc.utils.DelegateGrpcConfigExtractor.extractTarget;
 import static io.harness.logging.LoggingInitializer.initializeLogging;
+
+import static com.google.common.base.Charsets.UTF_8;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
-import com.google.common.collect.ImmutableSet;
-import com.google.common.util.concurrent.ServiceManager;
-import com.google.common.util.concurrent.ThreadFactoryBuilder;
-import com.google.inject.AbstractModule;
-import com.google.inject.Guice;
-import com.google.inject.Injector;
-import com.google.inject.Module;
-import com.google.inject.Provides;
-import com.google.inject.Singleton;
-
-import ch.qos.logback.classic.LoggerContext;
-import com.ning.http.client.AsyncHttpClient;
 import io.harness.delegate.configuration.DelegateConfiguration;
 import io.harness.delegate.message.MessageService;
 import io.harness.delegate.service.DelegateAgentService;
@@ -52,15 +41,21 @@ import io.harness.serializer.kryo.CvNextGenCommonsBeansKryoRegistrar;
 import io.harness.threading.ExecutorModule;
 import io.harness.threading.ThreadPool;
 import io.harness.utils.ProcessControl;
-import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.io.FileUtils;
-import org.apache.commons.lang3.StringUtils;
-import org.slf4j.ILoggerFactory;
-import org.slf4j.LoggerFactory;
-import org.slf4j.bridge.SLF4JBridgeHandler;
+
 import software.wings.delegatetasks.k8s.apiclient.KubernetesApiClientFactoryModule;
 import software.wings.delegatetasks.k8s.client.KubernetesClientFactoryModule;
 
+import ch.qos.logback.classic.LoggerContext;
+import com.google.common.collect.ImmutableSet;
+import com.google.common.util.concurrent.ServiceManager;
+import com.google.common.util.concurrent.ThreadFactoryBuilder;
+import com.google.inject.AbstractModule;
+import com.google.inject.Guice;
+import com.google.inject.Injector;
+import com.google.inject.Module;
+import com.google.inject.Provides;
+import com.google.inject.Singleton;
+import com.ning.http.client.AsyncHttpClient;
 import java.io.File;
 import java.io.IOException;
 import java.lang.management.ManagementFactory;
@@ -73,6 +68,12 @@ import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.io.FileUtils;
+import org.apache.commons.lang3.StringUtils;
+import org.slf4j.ILoggerFactory;
+import org.slf4j.LoggerFactory;
+import org.slf4j.bridge.SLF4JBridgeHandler;
 
 @Slf4j
 public class DelegateApplication {

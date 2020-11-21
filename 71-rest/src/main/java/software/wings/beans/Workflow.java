@@ -7,12 +7,13 @@ package software.wings.beans;
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+
+import static software.wings.beans.Workflow.WorkflowBuilder.aWorkflow;
+
 import static java.util.Arrays.asList;
 import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
-import static software.wings.beans.Workflow.WorkflowBuilder.aWorkflow;
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import io.harness.annotation.HarnessEntity;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.EmbeddedUser;
@@ -24,12 +25,7 @@ import io.harness.mongo.index.Field;
 import io.harness.mongo.index.IndexType;
 import io.harness.persistence.AccountAccess;
 import io.harness.persistence.NameAccess;
-import lombok.Getter;
-import lombok.Setter;
-import lombok.experimental.FieldNameConstants;
-import lombok.experimental.UtilityClass;
-import org.mongodb.morphia.annotations.Entity;
-import org.mongodb.morphia.annotations.Transient;
+
 import software.wings.api.DeploymentType;
 import software.wings.beans.Workflow.WorkflowKeys;
 import software.wings.beans.entityinterface.ApplicationAccess;
@@ -37,10 +33,17 @@ import software.wings.beans.entityinterface.KeywordsAware;
 import software.wings.beans.entityinterface.TagAware;
 import software.wings.service.impl.workflow.WorkflowServiceTemplateHelper;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 import javax.validation.constraints.NotNull;
+import lombok.Getter;
+import lombok.Setter;
+import lombok.experimental.FieldNameConstants;
+import lombok.experimental.UtilityClass;
+import org.mongodb.morphia.annotations.Entity;
+import org.mongodb.morphia.annotations.Transient;
 
 /**
  * The Class Workflow.
@@ -339,7 +342,7 @@ public class Workflow extends Base implements KeywordsAware, NameAccess, TagAwar
   private boolean checkFieldTemplatized(String fieldName) {
     return templateExpressions != null
         && templateExpressions.stream().anyMatch(
-               templateExpression -> templateExpression.getFieldName().equals(fieldName));
+            templateExpression -> templateExpression.getFieldName().equals(fieldName));
   }
 
   public boolean envValid() {

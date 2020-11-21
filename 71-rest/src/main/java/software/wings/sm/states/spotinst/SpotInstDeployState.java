@@ -1,7 +1,5 @@
 package software.wings.sm.states.spotinst;
 
-import static com.google.common.collect.Lists.newArrayList;
-import static com.google.common.collect.Maps.newHashMap;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.spotinst.model.SpotInstConstants.DELETE_NEW_ELASTI_GROUP;
 import static io.harness.spotinst.model.SpotInstConstants.DEPLOYMENT_ERROR;
@@ -11,15 +9,14 @@ import static io.harness.spotinst.model.SpotInstConstants.SPOTINST_SERVICE_SETUP
 import static io.harness.spotinst.model.SpotInstConstants.UP_SCALE_COMMAND_UNIT;
 import static io.harness.spotinst.model.SpotInstConstants.UP_SCALE_STEADY_STATE_WAIT_COMMAND_UNIT;
 import static io.harness.validation.Validator.notNullCheck;
-import static java.util.stream.Collectors.toList;
+
 import static software.wings.beans.InstanceUnitType.PERCENTAGE;
 import static software.wings.sm.InstanceStatusSummary.InstanceStatusSummaryBuilder.anInstanceStatusSummary;
 
-import com.google.common.annotations.VisibleForTesting;
-import com.google.common.collect.ImmutableList;
-import com.google.inject.Inject;
+import static com.google.common.collect.Lists.newArrayList;
+import static com.google.common.collect.Maps.newHashMap;
+import static java.util.stream.Collectors.toList;
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import io.harness.beans.DelegateTask;
 import io.harness.beans.ExecutionStatus;
 import io.harness.beans.OrchestrationWorkflowType;
@@ -34,8 +31,7 @@ import io.harness.logging.CommandExecutionStatus;
 import io.harness.spotinst.model.ElastiGroup;
 import io.harness.spotinst.model.ElastiGroupCapacity;
 import io.harness.tasks.ResponseData;
-import lombok.Getter;
-import lombok.Setter;
+
 import software.wings.api.InstanceElement;
 import software.wings.api.InstanceElementListParam;
 import software.wings.beans.Activity;
@@ -64,9 +60,15 @@ import software.wings.sm.StateType;
 import software.wings.sm.WorkflowStandardParams;
 import software.wings.sm.states.AwsStateHelper;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.google.common.annotations.VisibleForTesting;
+import com.google.common.collect.ImmutableList;
+import com.google.inject.Inject;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import lombok.Getter;
+import lombok.Setter;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class SpotInstDeployState extends State {

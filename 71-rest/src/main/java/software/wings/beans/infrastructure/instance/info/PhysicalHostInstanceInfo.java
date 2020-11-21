@@ -1,10 +1,9 @@
 package software.wings.beans.infrastructure.instance.info;
 
+import java.util.Map;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
-
-import java.util.Map;
 
 /**
  *

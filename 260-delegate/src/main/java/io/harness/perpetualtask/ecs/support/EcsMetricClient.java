@@ -5,9 +5,16 @@ import static com.amazonaws.services.cloudwatch.model.Statistic.Maximum;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.apache.commons.codec.digest.DigestUtils.md5Hex;
 
-import com.google.common.collect.Iterables;
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
+import io.harness.event.payloads.EcsUtilization;
+import io.harness.event.payloads.EcsUtilization.Builder;
+import io.harness.event.payloads.EcsUtilization.MetricValue;
+import io.harness.grpc.utils.HTimestamps;
+import io.harness.perpetualtask.ecs.EcsPerpetualTaskParams;
+import io.harness.security.encryption.EncryptedDataDetail;
+
+import software.wings.beans.AwsConfig;
+import software.wings.service.impl.aws.model.request.AwsCloudWatchMetricDataRequest;
+import software.wings.service.intfc.aws.delegate.AwsCloudWatchHelperServiceDelegate;
 
 import com.amazonaws.services.cloudwatch.model.Dimension;
 import com.amazonaws.services.cloudwatch.model.Metric;
@@ -17,17 +24,9 @@ import com.amazonaws.services.cloudwatch.model.MetricStat;
 import com.amazonaws.services.cloudwatch.model.Statistic;
 import com.amazonaws.services.ecs.model.Cluster;
 import com.amazonaws.services.ecs.model.Service;
-import io.harness.event.payloads.EcsUtilization;
-import io.harness.event.payloads.EcsUtilization.Builder;
-import io.harness.event.payloads.EcsUtilization.MetricValue;
-import io.harness.grpc.utils.HTimestamps;
-import io.harness.perpetualtask.ecs.EcsPerpetualTaskParams;
-import io.harness.security.encryption.EncryptedDataDetail;
-import lombok.extern.slf4j.Slf4j;
-import software.wings.beans.AwsConfig;
-import software.wings.service.impl.aws.model.request.AwsCloudWatchMetricDataRequest;
-import software.wings.service.intfc.aws.delegate.AwsCloudWatchHelperServiceDelegate;
-
+import com.google.common.collect.Iterables;
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -39,6 +38,7 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 import javax.annotation.Nullable;
 import javax.annotation.ParametersAreNonnullByDefault;
+import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Singleton

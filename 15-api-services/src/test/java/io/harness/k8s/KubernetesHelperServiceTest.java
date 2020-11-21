@@ -1,6 +1,7 @@
 package io.harness.k8s;
 
 import static io.harness.rule.OwnerRule.ANSHUL;
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.doReturn;
@@ -9,8 +10,6 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.powermock.api.mockito.PowerMockito.when;
 
-import io.fabric8.kubernetes.client.Config;
-import io.fabric8.openshift.client.OpenShiftClient;
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.k8s.model.KubernetesClusterAuthType;
@@ -18,6 +17,9 @@ import io.harness.k8s.model.KubernetesConfig;
 import io.harness.k8s.oidc.OidcTokenRetriever;
 import io.harness.rule.Owner;
 import io.harness.rule.OwnerRule;
+
+import io.fabric8.kubernetes.client.Config;
+import io.fabric8.openshift.client.OpenShiftClient;
 import okhttp3.OkHttpClient;
 import org.junit.Before;
 import org.junit.Rule;

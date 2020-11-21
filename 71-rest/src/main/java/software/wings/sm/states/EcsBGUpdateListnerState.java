@@ -1,11 +1,9 @@
 package software.wings.sm.states;
 
 import static io.harness.beans.ExecutionStatus.SKIPPED;
+
 import static software.wings.sm.StateExecutionData.StateExecutionDataBuilder.aStateExecutionData;
 
-import com.google.inject.Inject;
-
-import com.github.reinert.jjschema.Attributes;
 import io.harness.beans.ExecutionStatus;
 import io.harness.context.ContextElementType;
 import io.harness.exception.ExceptionUtils;
@@ -14,6 +12,7 @@ import io.harness.exception.WingsException;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.tasks.ResponseData;
+
 import software.wings.annotation.EncryptableSetting;
 import software.wings.api.ContainerServiceElement;
 import software.wings.api.ecs.EcsBGSetupData;
@@ -40,6 +39,8 @@ import software.wings.sm.State;
 import software.wings.sm.StateType;
 import software.wings.sm.WorkflowStandardParams;
 
+import com.github.reinert.jjschema.Attributes;
+import com.google.inject.Inject;
 import java.util.List;
 import java.util.Map;
 

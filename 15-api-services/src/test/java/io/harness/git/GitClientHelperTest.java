@@ -13,6 +13,7 @@ import static io.harness.rule.OwnerRule.ARVIND;
 import static io.harness.rule.OwnerRule.DEEPAK;
 import static io.harness.rule.OwnerRule.HARSH;
 import static io.harness.rule.OwnerRule.YOGESH;
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.eclipse.jgit.diff.DiffEntry.ChangeType.ADD;
@@ -20,9 +21,6 @@ import static org.eclipse.jgit.diff.DiffEntry.ChangeType.COPY;
 import static org.eclipse.jgit.diff.DiffEntry.ChangeType.DELETE;
 import static org.eclipse.jgit.diff.DiffEntry.ChangeType.MODIFY;
 import static org.eclipse.jgit.diff.DiffEntry.ChangeType.RENAME;
-
-import com.google.common.cache.LoadingCache;
-import com.google.inject.Inject;
 
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
@@ -35,6 +33,16 @@ import io.harness.git.model.GitBaseRequest;
 import io.harness.git.model.GitFile;
 import io.harness.reflection.ReflectionUtils;
 import io.harness.rule.Owner;
+
+import com.google.common.cache.LoadingCache;
+import com.google.inject.Inject;
+import java.lang.reflect.Field;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.stream.Stream;
 import lombok.extern.slf4j.Slf4j;
 import org.eclipse.jgit.api.errors.GitAPIException;
 import org.eclipse.jgit.errors.TransportException;
@@ -44,14 +52,6 @@ import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.mockito.junit.MockitoJUnit;
 import org.mockito.junit.MockitoRule;
-
-import java.lang.reflect.Field;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.stream.Stream;
 
 @Slf4j
 public class GitClientHelperTest extends CategoryTest {

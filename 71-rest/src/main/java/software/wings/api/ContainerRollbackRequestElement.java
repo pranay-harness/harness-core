@@ -2,14 +2,15 @@ package software.wings.api;
 
 import io.harness.context.ContextElementType;
 import io.harness.data.SweepingOutput;
-import lombok.Builder;
-import lombok.Data;
+
 import software.wings.beans.container.AwsAutoScalarConfig;
 import software.wings.sm.ContextElement;
 import software.wings.sm.ExecutionContext;
 
 import java.util.List;
 import java.util.Map;
+import lombok.Builder;
+import lombok.Data;
 
 /**
  * Created by rishi on 4/11/17.

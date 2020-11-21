@@ -3,9 +3,8 @@ package io.harness.functional.jira;
 import static io.harness.generator.EnvironmentGenerator.Environments.GENERIC_TEST;
 import static io.harness.generator.SettingGenerator.Settings.HARNESS_JIRA;
 import static io.harness.rule.OwnerRule.POOJA;
-import static org.assertj.core.api.Assertions.assertThat;
 
-import com.google.inject.Inject;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.beans.ExecutionStatus;
 import io.harness.category.element.FunctionalTests;
@@ -21,9 +20,7 @@ import io.harness.generator.SettingGenerator;
 import io.harness.rule.Owner;
 import io.harness.testframework.framework.utils.JiraUtils;
 import io.harness.testframework.restutils.WorkflowRestUtils;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
+
 import software.wings.beans.Application;
 import software.wings.beans.Environment;
 import software.wings.beans.GraphNode;
@@ -33,7 +30,11 @@ import software.wings.beans.WorkflowExecution;
 import software.wings.beans.artifact.Artifact;
 import software.wings.service.intfc.WorkflowExecutionService;
 
+import com.google.inject.Inject;
 import java.util.Collections;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 public class JiraCrudTest extends AbstractFunctionalTest {
   @Inject private OwnerManager ownerManager;

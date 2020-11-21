@@ -1,7 +1,8 @@
 package io.harness.connector.apis.dto;
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import io.harness.connector.entities.ConnectorConnectivityDetails;
+
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import io.swagger.annotations.ApiModel;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;

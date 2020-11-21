@@ -2,10 +2,6 @@ package io.harness.ng.core.user.services.api.impl;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
 
-import com.google.common.collect.ImmutableList;
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
-
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.PageResponse;
 import io.harness.ng.core.invites.entities.Invite;
@@ -15,14 +11,17 @@ import io.harness.ng.core.user.User;
 import io.harness.ng.core.user.remote.UserClient;
 import io.harness.ng.core.user.services.api.NgUserService;
 import io.harness.remote.client.RestClientUtils;
+
+import com.google.common.collect.ImmutableList;
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
+import java.util.List;
+import java.util.Optional;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
-
-import java.util.List;
-import java.util.Optional;
 
 @Singleton
 @AllArgsConstructor(onConstructor = @__({ @Inject }))

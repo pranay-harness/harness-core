@@ -1,7 +1,7 @@
 package software.wings.integration.SSO.LDAP;
 
 import static io.harness.rule.OwnerRule.AMAN;
-import static org.assertj.core.api.Assertions.assertThat;
+
 import static software.wings.integration.SSO.LDAP.LdapIntegrationTestConstants.ACCOUNT_ID;
 import static software.wings.integration.SSO.LDAP.LdapIntegrationTestConstants.ADMIN_HARNESS_ID;
 import static software.wings.integration.SSO.LDAP.LdapIntegrationTestConstants.INVALID_TOKEN;
@@ -18,17 +18,13 @@ import static software.wings.integration.SSO.LDAP.LdapUrlHelper.createTestLdapUs
 import static software.wings.integration.SSO.LDAP.LdapUrlHelper.createUnlinkGroupByUrl;
 import static software.wings.integration.SSO.LDAP.LdapUrlHelper.createUploadLdapSettingsURL;
 
-import com.google.inject.Inject;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.category.element.DeprecatedIntegrationTests;
 import io.harness.rest.RestResponse;
 import io.harness.rule.Owner;
 import io.harness.serializer.JsonUtils;
-import lombok.extern.slf4j.Slf4j;
-import org.junit.Before;
-import org.junit.Ignore;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
+
 import software.wings.beans.security.UserGroup;
 import software.wings.beans.sso.LdapGroupResponse;
 import software.wings.beans.sso.LdapLinkGroupRequest;
@@ -43,6 +39,7 @@ import software.wings.service.intfc.UserGroupService;
 import software.wings.service.intfc.UserService;
 import software.wings.utils.WingsIntegrationTestConstants;
 
+import com.google.inject.Inject;
 import java.security.KeyManagementException;
 import java.security.NoSuchAlgorithmException;
 import java.util.Collection;
@@ -51,6 +48,11 @@ import javax.ws.rs.client.Entity;
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.GenericType;
 import javax.ws.rs.core.Response;
+import lombok.extern.slf4j.Slf4j;
+import org.junit.Before;
+import org.junit.Ignore;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 /**
  * Integration test for Ldap.

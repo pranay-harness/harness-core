@@ -3,6 +3,10 @@ package software.wings.verification.log;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
+import software.wings.sm.states.CustomLogVerificationState.LogCollectionInfo;
+import software.wings.sm.states.CustomLogVerificationState.Method;
+import software.wings.verification.CVConfiguration;
+
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -10,9 +14,6 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.experimental.FieldNameConstants;
-import software.wings.sm.states.CustomLogVerificationState.LogCollectionInfo;
-import software.wings.sm.states.CustomLogVerificationState.Method;
-import software.wings.verification.CVConfiguration;
 
 @Data
 @Builder
@@ -41,12 +42,12 @@ public class CustomLogCVServiceConfiguration extends LogsCVConfiguration {
       }
       boolean bodyContainsStartTime = isNotEmpty(logCollectionInfo.getCollectionBody())
           && (logCollectionInfo.getCollectionBody().contains("${start_time}")
-                 || logCollectionInfo.getCollectionBody().contains("${start_time_seconds}"));
+              || logCollectionInfo.getCollectionBody().contains("${start_time_seconds}"));
       boolean urlContainsStartTime = logCollectionInfo.getCollectionUrl().contains("${start_time}")
           || logCollectionInfo.getCollectionUrl().contains("${start_time_seconds}");
       boolean bodyContainsEndTime = isNotEmpty(logCollectionInfo.getCollectionBody())
           && (logCollectionInfo.getCollectionBody().contains("${end_time}")
-                 || logCollectionInfo.getCollectionBody().contains("${end_time_seconds}"));
+              || logCollectionInfo.getCollectionBody().contains("${end_time_seconds}"));
       boolean urlContainsEndTime = logCollectionInfo.getCollectionUrl().contains("${end_time}")
           || logCollectionInfo.getCollectionUrl().contains("${end_time_seconds}");
 

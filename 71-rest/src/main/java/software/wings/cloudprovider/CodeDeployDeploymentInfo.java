@@ -1,11 +1,11 @@
 package software.wings.cloudprovider;
 
-import com.amazonaws.services.ec2.model.Instance;
 import io.harness.logging.CommandExecutionStatus;
+
+import com.amazonaws.services.ec2.model.Instance;
+import java.util.List;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-
-import java.util.List;
 
 /**
  * Created by anubhaw on 6/23/17.

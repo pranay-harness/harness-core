@@ -1,6 +1,5 @@
 package software.wings.service.impl;
 
-import static io.fabric8.utils.Lists.isNullOrEmpty;
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.beans.ApiKeyInfo.getEmbeddedUserFromApiKey;
 import static io.harness.beans.ExecutionStatus.ABORTED;
@@ -44,18 +43,7 @@ import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_NESTS;
 import static io.harness.persistence.HQuery.excludeAuthority;
 import static io.harness.threading.Morpheus.quietSleep;
 import static io.harness.validation.Validator.notNullCheck;
-import static java.lang.String.format;
-import static java.time.Duration.ofDays;
-import static java.time.Duration.ofMillis;
-import static java.time.Duration.ofMinutes;
-import static java.util.Arrays.asList;
-import static java.util.function.Function.identity;
-import static java.util.stream.Collectors.toList;
-import static java.util.stream.Collectors.toMap;
-import static org.apache.commons.collections4.ListUtils.emptyIfNull;
-import static org.apache.commons.lang3.StringUtils.isBlank;
-import static org.apache.commons.lang3.StringUtils.isNotBlank;
-import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
+
 import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static software.wings.beans.ApprovalDetails.Action.APPROVE;
 import static software.wings.beans.ApprovalDetails.Action.REJECT;
@@ -82,13 +70,19 @@ import static software.wings.sm.StateType.PCF_RESIZE;
 import static software.wings.sm.StateType.PHASE;
 import static software.wings.sm.StateType.PHASE_STEP;
 
-import com.google.common.annotations.VisibleForTesting;
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
+import static io.fabric8.utils.Lists.isNullOrEmpty;
+import static java.lang.String.format;
+import static java.time.Duration.ofDays;
+import static java.time.Duration.ofMillis;
+import static java.time.Duration.ofMinutes;
+import static java.util.Arrays.asList;
+import static java.util.function.Function.identity;
+import static java.util.stream.Collectors.toList;
+import static java.util.stream.Collectors.toMap;
+import static org.apache.commons.collections4.ListUtils.emptyIfNull;
+import static org.apache.commons.lang3.StringUtils.isBlank;
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
+import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 
 import io.harness.alert.AlertData;
 import io.harness.annotations.dev.OwnedBy;
@@ -129,16 +123,7 @@ import io.harness.serializer.MapperUtils;
 import io.harness.steps.resourcerestraint.beans.ResourceConstraint;
 import io.harness.tasks.ResponseData;
 import io.harness.waiter.WaitNotifyEngine;
-import lombok.Data;
-import lombok.NoArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.StringUtils;
-import org.mongodb.morphia.query.CriteriaContainerImpl;
-import org.mongodb.morphia.query.FindOptions;
-import org.mongodb.morphia.query.Query;
-import org.mongodb.morphia.query.Sort;
-import org.mongodb.morphia.query.UpdateOperations;
-import org.mongodb.morphia.query.UpdateResults;
+
 import software.wings.api.ApprovalStateExecutionData;
 import software.wings.api.ArtifactCollectionExecutionData;
 import software.wings.api.AwsAmiDeployStateExecutionData;
@@ -311,6 +296,13 @@ import software.wings.sm.status.StateStatusUpdateInfo;
 import software.wings.sm.status.WorkflowStatusPropagator;
 import software.wings.sm.status.WorkflowStatusPropagatorFactory;
 
+import com.google.common.annotations.VisibleForTesting;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -339,6 +331,16 @@ import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import javax.validation.constraints.NotNull;
 import javax.validation.executable.ValidateOnExecution;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
+import org.mongodb.morphia.query.CriteriaContainerImpl;
+import org.mongodb.morphia.query.FindOptions;
+import org.mongodb.morphia.query.Query;
+import org.mongodb.morphia.query.Sort;
+import org.mongodb.morphia.query.UpdateOperations;
+import org.mongodb.morphia.query.UpdateResults;
 
 /**
  * The Class WorkflowExecutionServiceImpl.
@@ -752,7 +754,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
             } else if ((ENV_LOOP_STATE.name().equals(stateExecutionInstance.getStateType())
                            || ENV_LOOP_RESUME_STATE.name().equals(stateExecutionInstance.getStateType()))
                 && featureFlagService.isEnabled(
-                       FeatureName.MULTISELECT_INFRA_PIPELINE, workflowExecution.getAccountId())) {
+                    FeatureName.MULTISELECT_INFRA_PIPELINE, workflowExecution.getAccountId())) {
               if (featureFlagService.isEnabled(FeatureName.RUNTIME_INPUT_PIPELINE, workflowExecution.getAccountId())) {
                 setWaitingForInputFlag(stateExecutionInstance, stageExecution);
               }
@@ -871,7 +873,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
             .flatMap(pe -> pe.getPipelineStageExecutions().stream())
             .collect(Collectors.groupingBy(pse
                 -> (pse.getStateUuid() == null) ? pse.getStateName() : pse.getStateUuid(),
-                Collectors.summarizingLong(this ::getEstimate)));
+                Collectors.summarizingLong(this::getEstimate)));
 
     Map<String, Long> newEstimates = new HashMap<>();
 
@@ -1733,7 +1735,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
     stdParams.setErrorStrategy(workflowExecution.getErrorStrategy());
     String workflowUrl = mainConfiguration.getPortal().getUrl() + "/"
         + format(mainConfiguration.getPortal().getExecutionUrlPattern(), workflowExecution.getAppId(),
-              workflowExecution.getEnvId(), workflowExecution.getUuid());
+            workflowExecution.getEnvId(), workflowExecution.getUuid());
 
     if (stdParams.getWorkflowElement() == null) {
       WorkflowElementBuilder workflowElementBuilder = WorkflowElement.builder()
@@ -2712,7 +2714,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
 
       if (workflowExecution2 == null
           || (workflowExecution2.getStatus() != null
-                 && ExecutionStatus.isFinalStatus(workflowExecution2.getStatus()))) {
+              && ExecutionStatus.isFinalStatus(workflowExecution2.getStatus()))) {
         continue;
       }
 
@@ -4956,14 +4958,14 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
     return DeploymentType.AMI == infrastructureDefinition.getDeploymentType()
         && infrastructureDefinition.getInfrastructure() instanceof AwsAmiInfrastructure
         && (((AwsAmiInfrastructure) infrastructureDefinition.getInfrastructure()).getAmiDeploymentType()
-               == AmiDeploymentType.AWS_ASG);
+            == AmiDeploymentType.AWS_ASG);
   }
 
   private boolean isAmiSpotinst(InfrastructureDefinition infrastructureDefinition) {
     return DeploymentType.AMI == infrastructureDefinition.getDeploymentType()
         && infrastructureDefinition.getInfrastructure() instanceof AwsAmiInfrastructure
         && (((AwsAmiInfrastructure) infrastructureDefinition.getInfrastructure()).getAmiDeploymentType()
-               == AmiDeploymentType.SPOTINST);
+            == AmiDeploymentType.SPOTINST);
   }
 
   @Override

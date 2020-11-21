@@ -12,9 +12,9 @@ import io.harness.state.Step;
 import io.harness.state.io.StepInputPackage;
 import io.harness.state.io.StepResponse;
 import io.harness.tasks.ResponseData;
-import lombok.extern.slf4j.Slf4j;
 
 import java.util.Map;
+import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class DeploymentStageStep implements Step, ChildExecutable<DeploymentStageStepParameters> {

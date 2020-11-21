@@ -1,11 +1,11 @@
 package io.harness.batch.processing.dao.impl;
 
-import com.google.inject.Inject;
-
 import io.harness.batch.processing.dao.intfc.PricingProfileDao;
 import io.harness.ccm.cluster.entities.PricingProfile;
 import io.harness.ccm.cluster.entities.PricingProfile.PricingProfileKeys;
 import io.harness.persistence.HPersistence;
+
+import com.google.inject.Inject;
 import org.springframework.stereotype.Component;
 
 @Component

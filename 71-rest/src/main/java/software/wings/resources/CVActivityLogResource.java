@@ -1,11 +1,7 @@
 package software.wings.resources;
 
-import com.google.inject.Inject;
-
-import com.codahale.metrics.annotation.ExceptionMetered;
-import com.codahale.metrics.annotation.Timed;
 import io.harness.rest.RestResponse;
-import io.swagger.annotations.Api;
+
 import software.wings.common.VerificationConstants;
 import software.wings.dl.WingsPersistence;
 import software.wings.security.PermissionAttribute.ResourceType;
@@ -14,6 +10,10 @@ import software.wings.service.intfc.WorkflowService;
 import software.wings.service.intfc.verification.CVActivityLogService;
 import software.wings.verification.CVActivityLog;
 
+import com.codahale.metrics.annotation.ExceptionMetered;
+import com.codahale.metrics.annotation.Timed;
+import com.google.inject.Inject;
+import io.swagger.annotations.Api;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 import javax.validation.Valid;

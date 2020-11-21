@@ -3,18 +3,16 @@ package io.harness.steps.barriers;
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.distribution.barrier.Barrier.State.DOWN;
 
-import com.google.inject.Inject;
-
 import io.harness.ambiance.Ambiance;
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.pms.execution.Status;
 import io.harness.facilitator.PassThroughData;
 import io.harness.facilitator.modes.async.AsyncExecutable;
 import io.harness.facilitator.modes.async.AsyncExecutableResponse;
 import io.harness.facilitator.modes.sync.SyncExecutable;
 import io.harness.orchestration.persistence.OrchestrationMongoTemplate;
-import io.harness.state.Step;
+import io.harness.pms.execution.Status;
 import io.harness.pms.steps.StepType;
+import io.harness.state.Step;
 import io.harness.state.io.FailureInfo;
 import io.harness.state.io.StepInputPackage;
 import io.harness.state.io.StepResponse;
@@ -25,9 +23,10 @@ import io.harness.steps.barriers.beans.BarrierOutcome;
 import io.harness.steps.barriers.beans.BarrierResponseData;
 import io.harness.steps.barriers.service.BarrierService;
 import io.harness.tasks.ResponseData;
-import lombok.extern.slf4j.Slf4j;
 
+import com.google.inject.Inject;
 import java.util.Map;
+import lombok.extern.slf4j.Slf4j;
 
 @OwnedBy(CDC)
 @Slf4j

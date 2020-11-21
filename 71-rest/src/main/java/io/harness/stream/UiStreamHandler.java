@@ -5,14 +5,13 @@ import static io.harness.eraro.ErrorCode.INVALID_TOKEN;
 import static io.harness.eraro.ErrorCode.UNKNOWN_ERROR;
 import static io.harness.eraro.Level.ERROR;
 import static io.harness.govern.Switch.unhandled;
-import static java.util.Arrays.asList;
-import static org.apache.commons.lang3.StringUtils.isBlank;
-import static org.apache.commons.lang3.StringUtils.isNotBlank;
+
 import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static software.wings.beans.Environment.GLOBAL_ENV_ID;
 
-import com.google.common.base.Splitter;
-import com.google.inject.Inject;
+import static java.util.Arrays.asList;
+import static org.apache.commons.lang3.StringUtils.isBlank;
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 import io.harness.eraro.ErrorCode;
 import io.harness.eraro.ErrorCodeName;
@@ -20,6 +19,18 @@ import io.harness.eraro.MessageManager;
 import io.harness.eraro.ResponseMessage;
 import io.harness.exception.WingsException;
 import io.harness.serializer.JsonUtils;
+
+import software.wings.beans.AuthToken;
+import software.wings.security.PermissionAttribute;
+import software.wings.service.impl.EventEmitter.Channel;
+import software.wings.service.intfc.AuthService;
+
+import com.google.common.base.Splitter;
+import com.google.inject.Inject;
+import java.io.IOException;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
 import org.atmosphere.cache.UUIDBroadcasterCache;
 import org.atmosphere.config.service.AtmosphereHandlerService;
@@ -29,15 +40,6 @@ import org.atmosphere.cpr.AtmosphereResourceEvent;
 import org.atmosphere.cpr.AtmosphereResponse;
 import org.atmosphere.handler.AtmosphereHandlerAdapter;
 import org.atmosphere.interceptor.AtmosphereResourceLifecycleInterceptor;
-import software.wings.beans.AuthToken;
-import software.wings.security.PermissionAttribute;
-import software.wings.service.impl.EventEmitter.Channel;
-import software.wings.service.intfc.AuthService;
-
-import java.io.IOException;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 
 /**
  * Created by peeyushaggarwal on 8/15/16.

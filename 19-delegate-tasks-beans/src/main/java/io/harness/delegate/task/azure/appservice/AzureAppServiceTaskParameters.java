@@ -3,12 +3,12 @@ package io.harness.delegate.task.azure.appservice;
 import static com.google.common.collect.Sets.newHashSet;
 
 import io.harness.delegate.task.azure.AzureTaskParameters;
+
+import java.util.Set;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import org.hibernate.validator.constraints.NotEmpty;
-
-import java.util.Set;
 
 @Data
 @AllArgsConstructor

@@ -2,21 +2,21 @@ package io.harness.event.grpc;
 
 import static io.harness.event.payloads.Lifecycle.EventType.EVENT_TYPE_START;
 import static io.harness.rule.OwnerRule.AVMOHAN;
-import static org.assertj.core.api.Assertions.assertThat;
 
-import com.google.protobuf.Any;
-import com.google.protobuf.util.Timestamps;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.event.payloads.EcsTaskLifecycle;
 import io.harness.event.payloads.Lifecycle;
 import io.harness.rule.Owner;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
 
+import com.google.protobuf.Any;
+import com.google.protobuf.util.Timestamps;
 import java.time.OffsetDateTime;
 import java.util.Date;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 public class PublishedMessageTest extends CategoryTest {
   @Test

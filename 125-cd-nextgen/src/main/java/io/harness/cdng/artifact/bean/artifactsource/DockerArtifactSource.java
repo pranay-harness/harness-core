@@ -1,6 +1,7 @@
 package io.harness.cdng.artifact.bean.artifactsource;
 
 import io.harness.delegate.task.artifacts.ArtifactSourceType;
+
 import lombok.Builder;
 import lombok.EqualsAndHashCode;
 import lombok.Value;

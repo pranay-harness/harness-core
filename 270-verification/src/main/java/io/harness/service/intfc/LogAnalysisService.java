@@ -2,7 +2,7 @@ package io.harness.service.intfc;
 
 import io.harness.beans.SortOrder.OrderType;
 import io.harness.validation.Create;
-import ru.vyarus.guice.validator.group.annotation.ValidationGroups;
+
 import software.wings.service.impl.analysis.AnalysisComparisonStrategy;
 import software.wings.service.impl.analysis.AnalysisContext;
 import software.wings.service.impl.analysis.CVFeedbackRecord;
@@ -25,6 +25,7 @@ import java.util.Optional;
 import java.util.Set;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
+import ru.vyarus.guice.validator.group.annotation.ValidationGroups;
 
 public interface LogAnalysisService {
   @ValidationGroups(Create.class)

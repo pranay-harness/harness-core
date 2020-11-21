@@ -2,6 +2,12 @@ package software.wings.verification.log;
 
 import static software.wings.sm.states.ElkAnalysisState.DEFAULT_TIME_FIELD;
 
+import software.wings.service.impl.analysis.DataCollectionInfoV2;
+import software.wings.service.impl.elk.ElkDataCollectionInfoV2;
+import software.wings.service.impl.elk.ElkQueryType;
+import software.wings.stencils.DefaultValue;
+import software.wings.verification.CVConfiguration;
+
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.github.reinert.jjschema.Attributes;
@@ -10,11 +16,6 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
-import software.wings.service.impl.analysis.DataCollectionInfoV2;
-import software.wings.service.impl.elk.ElkDataCollectionInfoV2;
-import software.wings.service.impl.elk.ElkQueryType;
-import software.wings.stencils.DefaultValue;
-import software.wings.verification.CVConfiguration;
 
 @Data
 @Builder

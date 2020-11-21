@@ -2,14 +2,9 @@ package migrations.all;
 
 import static io.harness.persistence.HQuery.excludeAuthority;
 
-import com.google.inject.Inject;
-
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.persistence.HIterator;
-import lombok.extern.slf4j.Slf4j;
-import migrations.Migration;
-import org.mongodb.morphia.annotations.Transient;
-import org.mongodb.morphia.query.Query;
+
 import software.wings.beans.GitConfig;
 import software.wings.beans.InfrastructureProvisioner;
 import software.wings.beans.SettingAttribute;
@@ -17,6 +12,12 @@ import software.wings.beans.TerraformInfrastructureProvisioner;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.InfrastructureProvisionerService;
 import software.wings.service.intfc.SettingsService;
+
+import com.google.inject.Inject;
+import lombok.extern.slf4j.Slf4j;
+import migrations.Migration;
+import org.mongodb.morphia.annotations.Transient;
+import org.mongodb.morphia.query.Query;
 
 @Slf4j
 public class TerraformIsTemplatizedMigration implements Migration {

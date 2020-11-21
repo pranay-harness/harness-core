@@ -2,11 +2,11 @@ package software.wings.scheduler.account;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.mongo.iterator.MongoPersistenceIterator.SchedulingType.REGULAR;
-import static java.time.Duration.ofMinutes;
-import static java.time.Duration.ofSeconds;
+
 import static software.wings.utils.TimeUtils.isWeekend;
 
-import com.google.inject.Inject;
+import static java.time.Duration.ofMinutes;
+import static java.time.Duration.ofSeconds;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.iterator.PersistenceIteratorFactory;
@@ -14,11 +14,14 @@ import io.harness.mongo.iterator.MongoPersistenceIterator;
 import io.harness.mongo.iterator.MongoPersistenceIterator.Handler;
 import io.harness.mongo.iterator.filter.MorphiaFilterExpander;
 import io.harness.mongo.iterator.provider.MorphiaPersistenceProvider;
+
 import software.wings.app.JobsFrequencyConfig;
 import software.wings.beans.Account;
 import software.wings.beans.Account.AccountKeys;
 import software.wings.beans.AccountStatus;
 import software.wings.service.intfc.AccountService;
+
+import com.google.inject.Inject;
 
 @OwnedBy(PL)
 public class DeleteAccountHandler implements Handler<Account> {

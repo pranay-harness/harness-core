@@ -2,7 +2,7 @@ package software.wings.graphql.datafetcher.userGroup;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
-import static org.elasticsearch.common.util.set.Sets.newHashSet;
+
 import static software.wings.graphql.schema.type.permissions.QLAccountPermissionType.ADMINISTER_CE;
 import static software.wings.graphql.schema.type.permissions.QLAccountPermissionType.ADMINISTER_OTHER_ACCOUNT_FUNCTIONS;
 import static software.wings.graphql.schema.type.permissions.QLAccountPermissionType.CREATE_AND_DELETE_APPLICATION;
@@ -52,12 +52,11 @@ import static software.wings.security.PermissionAttribute.PermissionType.USER_PE
 import static software.wings.security.PermissionAttribute.PermissionType.VIEW_USER_AND_USER_GROUPS_AND_API_KEYS;
 import static software.wings.security.PermissionAttribute.PermissionType.WORKFLOW;
 
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
+import static org.elasticsearch.common.util.set.Sets.newHashSet;
 
 import io.harness.exception.DuplicateFieldException;
 import io.harness.exception.InvalidRequestException;
-import lombok.extern.slf4j.Slf4j;
+
 import software.wings.beans.security.AccountPermissions;
 import software.wings.beans.security.AppPermission;
 import software.wings.beans.security.UserGroup;
@@ -89,12 +88,15 @@ import software.wings.security.PermissionAttribute.Action;
 import software.wings.security.PermissionAttribute.PermissionType;
 import software.wings.security.WorkflowFilter;
 
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import java.util.Collections;
 import java.util.EnumSet;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
+import lombok.extern.slf4j.Slf4j;
 
 @Singleton
 @Slf4j
@@ -342,7 +344,7 @@ public class UserGroupPermissionsController {
     // Converting the GraphQL actions to portal actions
     Set<QLActions> actionsList = permission.getActions();
     addDeploymentPermissions(actionsList);
-    Set<Action> actions = actionsList.stream().map(this ::mapAppActions).collect(Collectors.toSet());
+    Set<Action> actions = actionsList.stream().map(this::mapAppActions).collect(Collectors.toSet());
     // Change the graphQL permissionType to the portal permissionType enum
     QLPermissionType permissionType = permission.getPermissionType();
     PermissionType appPermissionType = mapToApplicationPermission(permissionType);
@@ -406,7 +408,7 @@ public class UserGroupPermissionsController {
     Set<AppPermission> userGroupAppPermissions = null;
     if (appPermissions != null) {
       userGroupAppPermissions =
-          appPermissions.stream().map(this ::convertToAppPermissionEntity).collect(Collectors.toSet());
+          appPermissions.stream().map(this::convertToAppPermissionEntity).collect(Collectors.toSet());
     }
     return userGroupAppPermissions;
   }
@@ -428,7 +430,7 @@ public class UserGroupPermissionsController {
           "The permission MANAGE_USERS_AND_GROUPS cannot be set without setting READ_USERS_AND_GROUPS");
     }
     Set<PermissionType> accountPermissions =
-        accountPermissionsInput.stream().map(this ::mapAccountPermissions).collect(Collectors.toSet());
+        accountPermissionsInput.stream().map(this::mapAccountPermissions).collect(Collectors.toSet());
     return AccountPermissions.builder().permissions(accountPermissions).build();
   }
 
@@ -631,7 +633,7 @@ public class UserGroupPermissionsController {
     List<QLAppPermission> userGroupAppPermissions = null;
     if (appPermissions != null) {
       userGroupAppPermissions =
-          appPermissions.stream().map(this ::convertToAppPermissionOutput).collect(Collectors.toList());
+          appPermissions.stream().map(this::convertToAppPermissionOutput).collect(Collectors.toList());
     }
     return userGroupAppPermissions;
   }
@@ -639,7 +641,7 @@ public class UserGroupPermissionsController {
   private QLAppPermission convertToAppPermissionOutput(AppPermission permission) {
     // Convert portal actions to graphQL output
     Set<Action> actionsList = permission.getActions();
-    Set<QLActions> actions = actionsList.stream().map(this ::mapAppActionsToOutput).collect(Collectors.toSet());
+    Set<QLActions> actions = actionsList.stream().map(this::mapAppActionsToOutput).collect(Collectors.toSet());
     // Convert portal permissionType to graphQL output PermissionType
     PermissionType permissionType = permission.getPermissionType();
     QLPermissionType appPermissionType = mapToApplicationPermissionOutput(permissionType);
@@ -699,7 +701,7 @@ public class UserGroupPermissionsController {
     Set<PermissionType> accountPermissions = permissions.getPermissions();
     if (accountPermissions != null) {
       outputPermissions =
-          accountPermissions.stream().map(this ::mapAccountPermissionsToOutput).collect(Collectors.toSet());
+          accountPermissions.stream().map(this::mapAccountPermissionsToOutput).collect(Collectors.toSet());
     }
     return QLAccountPermissions.builder().accountPermissionTypes(outputPermissions).build();
   }

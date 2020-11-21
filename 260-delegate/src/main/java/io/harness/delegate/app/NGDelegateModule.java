@@ -1,12 +1,12 @@
 package io.harness.delegate.app;
 
-import com.google.inject.AbstractModule;
-
 import io.harness.artifacts.docker.service.DockerRegistryService;
 import io.harness.artifacts.docker.service.DockerRegistryServiceImpl;
 import io.harness.delegate.task.artifacts.docker.DockerArtifactTaskHandler;
 import io.harness.http.HttpService;
 import io.harness.http.HttpServiceImpl;
+
+import com.google.inject.AbstractModule;
 
 public class NGDelegateModule extends AbstractModule {
   private static volatile NGDelegateModule instance;

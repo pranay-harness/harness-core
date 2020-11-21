@@ -2,18 +2,8 @@ package software.wings.app;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
 
-import com.google.inject.AbstractModule;
-import com.google.inject.Provides;
-import com.google.inject.Singleton;
-import com.google.inject.TypeLiteral;
-import com.google.inject.multibindings.Multibinder;
-
 import io.harness.annotations.dev.OwnedBy;
-import lombok.extern.slf4j.Slf4j;
-import org.apache.http.HttpHost;
-import org.apache.http.client.utils.URIBuilder;
-import org.elasticsearch.client.RestClient;
-import org.elasticsearch.client.RestHighLevelClient;
+
 import software.wings.search.ElasticsearchServiceImpl;
 import software.wings.search.SearchService;
 import software.wings.search.entities.application.ApplicationSearchEntity;
@@ -26,8 +16,18 @@ import software.wings.search.framework.SearchDao;
 import software.wings.search.framework.SearchEntity;
 import software.wings.search.framework.SynchronousElasticsearchDao;
 
+import com.google.inject.AbstractModule;
+import com.google.inject.Provides;
+import com.google.inject.Singleton;
+import com.google.inject.TypeLiteral;
+import com.google.inject.multibindings.Multibinder;
 import java.net.URI;
 import java.net.URISyntaxException;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.http.HttpHost;
+import org.apache.http.client.utils.URIBuilder;
+import org.elasticsearch.client.RestClient;
+import org.elasticsearch.client.RestHighLevelClient;
 
 /**
  * Module with Binding for all search related classes.

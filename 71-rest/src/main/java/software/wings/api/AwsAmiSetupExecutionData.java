@@ -1,15 +1,16 @@
 package software.wings.api;
 
 import io.harness.delegate.beans.DelegateTaskNotifyResponseData;
+
+import software.wings.beans.ResizeStrategy;
+import software.wings.sm.StateExecutionData;
+
+import java.util.Map;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
-import software.wings.beans.ResizeStrategy;
-import software.wings.sm.StateExecutionData;
-
-import java.util.Map;
 
 /**
  * Created by anubhaw on 12/20/17.

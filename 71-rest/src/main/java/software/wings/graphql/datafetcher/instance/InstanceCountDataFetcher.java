@@ -2,10 +2,8 @@ package software.wings.graphql.datafetcher.instance;
 
 import static io.harness.govern.Switch.unhandled;
 
-import com.google.inject.Inject;
-
 import io.harness.persistence.HPersistence;
-import lombok.extern.slf4j.Slf4j;
+
 import software.wings.beans.instance.dashboard.InstanceStatsUtils;
 import software.wings.graphql.datafetcher.AbstractObjectDataFetcher;
 import software.wings.graphql.schema.query.QLInstancesCountQueryParameters;
@@ -16,7 +14,9 @@ import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.instance.DashboardStatisticsService;
 import software.wings.service.intfc.instance.stats.InstanceStatService;
 
+import com.google.inject.Inject;
 import java.util.List;
+import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class InstanceCountDataFetcher

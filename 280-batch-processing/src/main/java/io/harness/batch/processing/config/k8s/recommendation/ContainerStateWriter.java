@@ -7,10 +7,9 @@ import static io.harness.ccm.recommender.k8sworkload.RecommenderUtils.RECOMMENDE
 import static io.harness.ccm.recommender.k8sworkload.RecommenderUtils.newCpuHistogram;
 import static io.harness.ccm.recommender.k8sworkload.RecommenderUtils.protoToCheckpoint;
 import static io.harness.time.DurationUtils.truncate;
+
 import static java.time.Duration.between;
 
-import com.github.benmanes.caffeine.cache.Caffeine;
-import com.github.benmanes.caffeine.cache.LoadingCache;
 import io.harness.batch.processing.dao.intfc.InstanceDataDao;
 import io.harness.batch.processing.writer.constants.InstanceMetaDataConstants;
 import io.harness.ccm.commons.entities.InstanceData;
@@ -18,14 +17,12 @@ import io.harness.event.grpc.PublishedMessage;
 import io.harness.event.payloads.ContainerStateProto;
 import io.harness.grpc.utils.HTimestamps;
 import io.harness.histogram.Histogram;
-import lombok.extern.slf4j.Slf4j;
-import org.checkerframework.checker.nullness.qual.NonNull;
-import org.jetbrains.annotations.NotNull;
-import org.springframework.batch.item.ItemWriter;
-import org.springframework.stereotype.Component;
+
 import software.wings.graphql.datafetcher.ce.recommendation.entity.ContainerCheckpoint;
 import software.wings.graphql.datafetcher.ce.recommendation.entity.K8sWorkloadRecommendation;
 
+import com.github.benmanes.caffeine.cache.Caffeine;
+import com.github.benmanes.caffeine.cache.LoadingCache;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.Collections;
@@ -36,6 +33,11 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
+import lombok.extern.slf4j.Slf4j;
+import org.checkerframework.checker.nullness.qual.NonNull;
+import org.jetbrains.annotations.NotNull;
+import org.springframework.batch.item.ItemWriter;
+import org.springframework.stereotype.Component;
 
 @Component
 @Slf4j
@@ -48,7 +50,7 @@ class ContainerStateWriter implements ItemWriter<PublishedMessage> {
   private final LoadingCache<ResourceId, ResourceId> podToWorkload;
 
   ContainerStateWriter(InstanceDataDao instanceDataDao, WorkloadRecommendationDao workloadRecommendationDao) {
-    this.podToWorkload = Caffeine.newBuilder().maximumSize(10000).build(this ::fetchWorkloadIdForPod);
+    this.podToWorkload = Caffeine.newBuilder().maximumSize(10000).build(this::fetchWorkloadIdForPod);
     this.instanceDataDao = instanceDataDao;
     this.workloadRecommendationDao = workloadRecommendationDao;
   }
@@ -81,7 +83,7 @@ class ContainerStateWriter implements ItemWriter<PublishedMessage> {
         log.debug("Skipping sample {} as pod to workload mapping not found", containerStateProto);
         continue;
       }
-      WorkloadState workloadState = workloadToRecommendation.computeIfAbsent(workloadId, this ::getWorkloadState);
+      WorkloadState workloadState = workloadToRecommendation.computeIfAbsent(workloadId, this::getWorkloadState);
       updateContainerStateMap(workloadState.getContainerStateMap(), containerStateProto);
     }
     persistChanges(workloadToRecommendation);

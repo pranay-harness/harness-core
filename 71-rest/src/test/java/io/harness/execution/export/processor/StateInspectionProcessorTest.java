@@ -1,6 +1,7 @@
 package io.harness.execution.export.processor;
 
 import static io.harness.rule.OwnerRule.GARVIT;
+
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
@@ -8,8 +9,6 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-
-import com.google.common.collect.ImmutableMap;
 
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
@@ -20,16 +19,17 @@ import io.harness.state.inspection.ExpressionVariableUsage;
 import io.harness.state.inspection.StateInspection;
 import io.harness.state.inspection.StateInspectionData;
 import io.harness.state.inspection.StateInspectionService;
+
+import com.google.common.collect.ImmutableMap;
+import java.util.Collections;
+import java.util.Map;
+import java.util.stream.Collectors;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnit;
 import org.mockito.junit.MockitoRule;
-
-import java.util.Collections;
-import java.util.Map;
-import java.util.stream.Collectors;
 
 public class StateInspectionProcessorTest extends CategoryTest {
   @Mock private StateInspectionService stateInspectionService;
@@ -123,7 +123,7 @@ public class StateInspectionProcessorTest extends CategoryTest {
             .variables(key == null
                     ? Collections.emptyList()
                     : Collections.singletonList(
-                          ExpressionVariableUsage.Item.builder().expression(key).value("v").count(1).build()))
+                        ExpressionVariableUsage.Item.builder().expression(key).value("v").count(1).build()))
             .build());
   }
 }

@@ -6,15 +6,16 @@ import static org.apache.commons.lang3.StringUtils.split;
 import static org.apache.commons.lang3.StringUtils.strip;
 import static org.apache.commons.lang3.StringUtils.substringAfterLast;
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import io.harness.beans.ExecutionStatus;
 import io.harness.delegate.beans.DelegateTaskNotifyResponseData;
-import lombok.Data;
-import lombok.EqualsAndHashCode;
+
 import software.wings.sm.StateExecutionData;
 import software.wings.sm.StepExecutionSummary;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import java.util.Map;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
 
 /**
  * Created by rishi on 2/15/17.

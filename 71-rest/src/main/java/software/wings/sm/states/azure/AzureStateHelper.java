@@ -1,12 +1,13 @@
 package software.wings.sm.states.azure;
 
-import com.google.inject.Singleton;
-
 import io.harness.delegate.beans.azure.AzureConfigDTO;
 import io.harness.encryption.Scope;
 import io.harness.encryption.SecretRefData;
-import lombok.extern.slf4j.Slf4j;
+
 import software.wings.beans.AzureConfig;
+
+import com.google.inject.Singleton;
+import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Singleton

@@ -1,10 +1,11 @@
 package software.wings.service.impl.instance;
 
-import com.google.inject.Inject;
-
 import io.harness.queue.QueueConsumer;
 import io.harness.queue.QueueListener;
+
 import software.wings.api.DeploymentEvent;
+
+import com.google.inject.Inject;
 
 /**
  * Receives all the completed phases and their deployment info and fetches from the corresponding servers.

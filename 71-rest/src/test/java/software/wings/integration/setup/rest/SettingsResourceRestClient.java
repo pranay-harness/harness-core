@@ -1,9 +1,7 @@
 package software.wings.integration.setup.rest;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static javax.ws.rs.client.Entity.entity;
-import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
-import static org.assertj.core.api.Assertions.assertThat;
+
 import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static software.wings.beans.Environment.GLOBAL_ENV_ID;
 import static software.wings.beans.HostConnectionAttributes.AccessType.KEY;
@@ -19,15 +17,19 @@ import static software.wings.utils.WingsIntegrationTestConstants.defaultSshKey;
 import static software.wings.utils.WingsIntegrationTestConstants.defaultSshUserName;
 import static software.wings.utils.WingsIntegrationTestConstants.sshKeyName;
 
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
+import static javax.ws.rs.client.Entity.entity;
+import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.beans.PageResponse;
 import io.harness.rest.RestResponse;
+
 import software.wings.beans.Account;
 import software.wings.beans.SettingAttribute;
 import software.wings.integration.UserResourceRestClient;
 
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import java.util.concurrent.ConcurrentHashMap;
 import javax.ws.rs.client.Client;
 import javax.ws.rs.client.WebTarget;

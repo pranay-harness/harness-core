@@ -1,7 +1,5 @@
 package software.wings.graphql.datafetcher.instance.instanceInfo;
 
-import com.google.inject.Inject;
-
 import software.wings.beans.infrastructure.instance.Instance;
 import software.wings.beans.infrastructure.instance.info.K8sPodInfo;
 import software.wings.graphql.datafetcher.instance.InstanceControllerUtils;
@@ -9,6 +7,7 @@ import software.wings.graphql.schema.type.instance.QLInstanceType;
 import software.wings.graphql.schema.type.instance.QLK8SPodInstance;
 import software.wings.graphql.schema.type.instance.QLK8sContainer;
 
+import com.google.inject.Inject;
 import java.util.stream.Collectors;
 
 public class K8SPodController implements InstanceController<QLK8SPodInstance> {

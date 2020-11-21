@@ -1,18 +1,20 @@
 package software.wings.resources.stats.service;
 
 import static io.harness.rule.OwnerRule.UJJAWAL;
+
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
+
 import software.wings.resources.stats.model.TimeRange;
 
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.util.List;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 public class TimeRangeProviderTest extends CategoryTest {
   @Test

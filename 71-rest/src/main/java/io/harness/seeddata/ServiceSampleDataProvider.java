@@ -2,10 +2,8 @@ package io.harness.seeddata;
 
 import static io.harness.seeddata.SampleDataProviderConstants.K8S_SERVICE_DESC;
 import static io.harness.seeddata.SampleDataProviderConstants.K8S_SERVICE_NAME;
-import static java.util.Arrays.asList;
 
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
+import static java.util.Arrays.asList;
 
 import software.wings.api.DeploymentType;
 import software.wings.beans.Service;
@@ -19,6 +17,9 @@ import software.wings.beans.container.LogConfiguration;
 import software.wings.service.intfc.ApplicationManifestService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.utils.ArtifactType;
+
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
 
 @Singleton
 public class ServiceSampleDataProvider {

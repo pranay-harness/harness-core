@@ -2,14 +2,9 @@ package software.wings.service.impl.verification;
 
 import static io.harness.persistence.HQuery.excludeAuthority;
 
-import com.google.common.base.Preconditions;
-import com.google.common.base.Strings;
-import com.google.inject.Inject;
-
 import io.harness.beans.ExecutionStatus;
 import io.harness.persistence.HIterator;
-import lombok.extern.slf4j.Slf4j;
-import org.mongodb.morphia.query.Sort;
+
 import software.wings.dl.WingsPersistence;
 import software.wings.service.impl.analysis.AnalysisContext;
 import software.wings.service.impl.analysis.AnalysisContext.AnalysisContextKeys;
@@ -19,10 +14,15 @@ import software.wings.verification.CVActivityLog;
 import software.wings.verification.CVActivityLog.CVActivityLogKeys;
 import software.wings.verification.CVActivityLog.LogLevel;
 
+import com.google.common.base.Preconditions;
+import com.google.common.base.Strings;
+import com.google.inject.Inject;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
+import lombok.extern.slf4j.Slf4j;
+import org.mongodb.morphia.query.Sort;
 
 @Slf4j
 public class CVActivityLogServiceImpl implements CVActivityLogService {
@@ -90,8 +90,8 @@ public class CVActivityLogServiceImpl implements CVActivityLogService {
       cvActivityLogs = findByStateExecutionId(stateExecutionId);
       if (cvActivityLogs.isEmpty()
           && (analysisContext == null
-                 || ExecutionStatus.isFinalStatus(workflowService.getExecutionStatus(
-                        analysisContext.getAppId(), analysisContext.getStateExecutionId())))) {
+              || ExecutionStatus.isFinalStatus(workflowService.getExecutionStatus(
+                  analysisContext.getAppId(), analysisContext.getStateExecutionId())))) {
         CVActivityLog placeholderActivityLog = CVActivityLog.builder()
                                                    .stateExecutionId(stateExecutionId)
                                                    .log(EXECUTION_LOGS_NOT_AVAILABLE)

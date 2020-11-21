@@ -3,11 +3,8 @@ package io.harness.steps.resourcerestraint.service;
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.distribution.constraint.Consumer.State.ACTIVE;
 import static io.harness.distribution.constraint.Consumer.State.BLOCKED;
-import static java.lang.String.format;
 
-import com.google.common.collect.ImmutableMap;
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
+import static java.lang.String.format;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.distribution.constraint.Constraint;
@@ -25,13 +22,16 @@ import io.harness.steps.resourcerestraint.beans.ResourceRestraintInstance.Resour
 import io.harness.steps.resourcerestraint.beans.ResourceRestraintInstance.ResourceRestraintInstanceKeys;
 import io.harness.steps.resourcerestraint.beans.ResourceRestraintResponseData;
 import io.harness.waiter.WaitNotifyEngine;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.dao.DuplicateKeyException;
 
+import com.google.common.collect.ImmutableMap;
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.dao.DuplicateKeyException;
 
 @OwnedBy(CDC)
 @Singleton

@@ -1,26 +1,20 @@
 package software.wings.service.impl.analysis;
 
 import static io.harness.rule.OwnerRule.PRAVEEN;
+
+import static software.wings.common.VerificationConstants.AZURE_BASE_URL;
+import static software.wings.common.VerificationConstants.AZURE_TOKEN_URL;
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-import static software.wings.common.VerificationConstants.AZURE_BASE_URL;
-import static software.wings.common.VerificationConstants.AZURE_TOKEN_URL;
 
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
 import io.harness.security.encryption.EncryptedDataDetail;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
-import org.mockito.ArgumentCaptor;
-import org.mockito.Captor;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
-import retrofit2.Call;
+
 import software.wings.beans.APMValidateCollectorConfig;
 import software.wings.beans.DatadogConfig;
 import software.wings.delegatetasks.cv.RequestExecutor;
@@ -31,6 +25,15 @@ import software.wings.sm.states.APMVerificationState;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
+import org.mockito.ArgumentCaptor;
+import org.mockito.Captor;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
+import retrofit2.Call;
 
 public class APMDelegateServiceTest {
   @Mock private RequestExecutor mockRequestExecutor;

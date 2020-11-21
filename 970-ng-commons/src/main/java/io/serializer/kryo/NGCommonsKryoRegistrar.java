@@ -1,10 +1,11 @@
 package io.serializer.kryo;
 
-import com.esotericsoftware.kryo.Kryo;
 import io.harness.encryption.SecretRefData;
 import io.harness.ng.core.BaseNGAccess;
 import io.harness.ng.core.common.beans.NGTag;
 import io.harness.serializer.KryoRegistrar;
+
+import com.esotericsoftware.kryo.Kryo;
 
 public class NGCommonsKryoRegistrar implements KryoRegistrar {
   @Override

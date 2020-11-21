@@ -1,15 +1,16 @@
 package software.wings.service.impl.template;
 
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
-import static java.util.Arrays.asList;
+
 import static software.wings.common.TemplateConstants.HTTP_HEALTH_CHECK;
 
-import com.google.inject.Singleton;
+import static java.util.Arrays.asList;
 
 import software.wings.beans.template.Template;
 import software.wings.beans.template.TemplateType;
 import software.wings.beans.template.command.HttpTemplate;
 
+import com.google.inject.Singleton;
 import java.util.List;
 import java.util.Map;
 

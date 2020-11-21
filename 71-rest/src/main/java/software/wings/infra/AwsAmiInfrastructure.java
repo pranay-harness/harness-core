@@ -1,22 +1,16 @@
 package software.wings.infra;
 
-import static java.lang.String.format;
-import static java.util.Collections.emptyList;
-import static java.util.Collections.emptySet;
 import static software.wings.beans.AmiDeploymentType.AWS_ASG;
 import static software.wings.beans.AwsAmiInfrastructureMapping.Builder.anAwsAmiInfrastructureMapping;
 import static software.wings.beans.InfrastructureType.AWS_AMI;
 
-import com.google.common.collect.ImmutableSet;
+import static java.lang.String.format;
+import static java.util.Collections.emptyList;
+import static java.util.Collections.emptySet;
 
-import com.fasterxml.jackson.annotation.JsonTypeName;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.InvalidRequestException;
-import lombok.Builder;
-import lombok.Data;
-import lombok.EqualsAndHashCode;
-import lombok.experimental.FieldNameConstants;
-import org.apache.commons.lang3.StringUtils;
+
 import software.wings.annotation.IncludeFieldMap;
 import software.wings.api.CloudProviderType;
 import software.wings.beans.AmiDeploymentType;
@@ -25,12 +19,19 @@ import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.InfrastructureMappingType;
 import software.wings.service.impl.yaml.handler.InfraDefinition.CloudProviderInfrastructureYaml;
 
+import com.fasterxml.jackson.annotation.JsonTypeName;
+import com.google.common.collect.ImmutableSet;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
+import lombok.Builder;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.experimental.FieldNameConstants;
+import org.apache.commons.lang3.StringUtils;
 
 @JsonTypeName("AWS_AMI")
 @Data
@@ -147,7 +148,9 @@ public class AwsAmiInfrastructure
           setStageTargetGroupArns(getList(value));
           break;
         }
-        default: { throw new InvalidRequestException(format("Unknown expression : [%s]", entry.getKey())); }
+        default: {
+          throw new InvalidRequestException(format("Unknown expression : [%s]", entry.getKey()));
+        }
       }
     }
     if (EmptyPredicate.isEmpty(getRegion())) {

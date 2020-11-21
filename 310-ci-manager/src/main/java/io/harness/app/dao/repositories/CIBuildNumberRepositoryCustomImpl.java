@@ -2,10 +2,10 @@ package io.harness.app.dao.repositories;
 
 import static org.springframework.data.mongodb.core.FindAndModifyOptions.options;
 
-import com.google.inject.Inject;
-
 import io.harness.ci.beans.entities.BuildNumberDetails;
 import io.harness.ci.beans.entities.BuildNumberDetails.BuildNumberDetailsKeys;
+
+import com.google.inject.Inject;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import org.springframework.data.mongodb.core.MongoTemplate;

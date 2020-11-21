@@ -6,29 +6,30 @@ import static io.harness.functional.yaml.YamlFunctionalTestConstants.BASE_VERIFY
 import static io.harness.functional.yaml.YamlFunctionalTestConstants.YAML_WEBHOOK_PAYLOAD_GITHUB;
 import static io.harness.generator.AccountGenerator.ACCOUNT_ID;
 import static io.harness.rule.OwnerRule.HARSH;
+
 import static software.wings.beans.yaml.YamlConstants.APPLICATIONS_FOLDER;
 import static software.wings.beans.yaml.YamlConstants.SETUP_FOLDER_PATH;
-
-import com.google.inject.Inject;
 
 import io.harness.category.element.FunctionalTests;
 import io.harness.functional.AbstractFunctionalTest;
 import io.harness.functional.yaml.YamlFunctionalTestHelper;
 import io.harness.rule.Owner;
-import org.awaitility.Awaitility;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Ignore;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
+
 import software.wings.beans.Application;
 import software.wings.beans.GitConfig;
 import software.wings.beans.SettingAttribute;
 import software.wings.service.intfc.AppService;
 import software.wings.settings.SettingValue;
 
+import com.google.inject.Inject;
 import java.nio.file.Paths;
 import java.util.concurrent.TimeUnit;
+import org.awaitility.Awaitility;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Ignore;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 public class TriggerYamlFunctionalTest extends AbstractFunctionalTest {
   @Inject private AppService appService;

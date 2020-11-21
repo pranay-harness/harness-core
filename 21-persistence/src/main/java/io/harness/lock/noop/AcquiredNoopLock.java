@@ -1,9 +1,9 @@
 package io.harness.lock.noop;
 
 import io.harness.lock.AcquiredLock;
-import lombok.Builder;
 
 import java.util.concurrent.locks.Lock;
+import lombok.Builder;
 
 @Builder
 public class AcquiredNoopLock implements AcquiredLock {

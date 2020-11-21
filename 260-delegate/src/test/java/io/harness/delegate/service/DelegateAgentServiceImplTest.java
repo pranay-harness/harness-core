@@ -2,13 +2,12 @@ package io.harness.delegate.service;
 
 import static io.harness.rule.OwnerRule.GEORGE;
 import static io.harness.rule.OwnerRule.SRINIVAS;
+
 import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.mockito.Matchers.anyMap;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-
-import com.google.inject.Inject;
 
 import io.harness.CategoryTest;
 import io.harness.beans.EncryptedData;
@@ -21,6 +20,12 @@ import io.harness.managerclient.ManagerClient;
 import io.harness.rule.Owner;
 import io.harness.security.encryption.DelegateDecryptionService;
 import io.harness.security.encryption.EncryptionConfig;
+
+import software.wings.beans.KmsConfig;
+
+import com.google.inject.Inject;
+import java.util.HashMap;
+import java.util.Map;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -31,10 +36,6 @@ import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnit;
 import org.mockito.junit.MockitoRule;
 import retrofit2.Call;
-import software.wings.beans.KmsConfig;
-
-import java.util.HashMap;
-import java.util.Map;
 
 public class DelegateAgentServiceImplTest extends CategoryTest {
   @Rule public MockitoRule mockitoRule = MockitoJUnit.rule();

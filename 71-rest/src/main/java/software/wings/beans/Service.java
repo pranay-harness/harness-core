@@ -1,12 +1,9 @@
 package software.wings.beans;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
+
 import static java.util.Arrays.asList;
 
-import com.google.common.collect.ImmutableList;
-
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.annotation.HarnessEntity;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.EmbeddedUser;
@@ -19,6 +16,23 @@ import io.harness.mongo.index.MongoIndex;
 import io.harness.mongo.index.SortCompoundMongoIndex;
 import io.harness.persistence.AccountAccess;
 import io.harness.persistence.NameAccess;
+
+import software.wings.api.DeploymentType;
+import software.wings.beans.artifact.ArtifactStream;
+import software.wings.beans.artifact.ArtifactStreamBinding;
+import software.wings.beans.command.ServiceCommand;
+import software.wings.beans.entityinterface.KeywordsAware;
+import software.wings.beans.entityinterface.TagAware;
+import software.wings.service.intfc.customdeployment.CustomDeploymentTypeAware;
+import software.wings.utils.ArtifactType;
+import software.wings.yaml.BaseEntityYaml;
+
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.github.reinert.jjschema.SchemaIgnore;
+import com.google.common.collect.ImmutableList;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Set;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -30,19 +44,6 @@ import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Reference;
 import org.mongodb.morphia.annotations.Transient;
 import org.mongodb.morphia.annotations.Version;
-import software.wings.api.DeploymentType;
-import software.wings.beans.artifact.ArtifactStream;
-import software.wings.beans.artifact.ArtifactStreamBinding;
-import software.wings.beans.command.ServiceCommand;
-import software.wings.beans.entityinterface.KeywordsAware;
-import software.wings.beans.entityinterface.TagAware;
-import software.wings.service.intfc.customdeployment.CustomDeploymentTypeAware;
-import software.wings.utils.ArtifactType;
-import software.wings.yaml.BaseEntityYaml;
-
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Set;
 
 /**
  * Component bean class.

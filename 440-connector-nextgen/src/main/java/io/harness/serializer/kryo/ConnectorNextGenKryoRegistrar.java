@@ -1,9 +1,10 @@
 package io.harness.serializer.kryo;
 
-import com.esotericsoftware.kryo.Kryo;
 import io.harness.connector.apis.dto.ConnectorDTO;
 import io.harness.connector.apis.dto.ConnectorInfoDTO;
 import io.harness.serializer.KryoRegistrar;
+
+import com.esotericsoftware.kryo.Kryo;
 
 public class ConnectorNextGenKryoRegistrar implements KryoRegistrar {
   @Override

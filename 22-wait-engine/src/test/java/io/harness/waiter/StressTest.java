@@ -4,8 +4,6 @@ import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.rule.OwnerRule.GEORGE;
 import static io.harness.waiter.TestNotifyEventListener.TEST_PUBLISHER;
 
-import com.google.inject.Inject;
-
 import io.harness.WaitEngineTestBase;
 import io.harness.category.element.StressTests;
 import io.harness.maintenance.MaintenanceGuard;
@@ -14,16 +12,17 @@ import io.harness.rule.Owner;
 import io.harness.testlib.RealMongo;
 import io.harness.threading.Concurrent;
 import io.harness.threading.Morpheus;
-import lombok.extern.slf4j.Slf4j;
-import org.junit.Ignore;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
 
+import com.google.inject.Inject;
 import java.io.IOException;
 import java.security.SecureRandom;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
+import lombok.extern.slf4j.Slf4j;
+import org.junit.Ignore;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 @Slf4j
 public class StressTest extends WaitEngineTestBase {

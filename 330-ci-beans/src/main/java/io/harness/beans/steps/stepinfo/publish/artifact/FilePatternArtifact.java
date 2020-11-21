@@ -1,12 +1,12 @@
 package io.harness.beans.steps.stepinfo.publish.artifact;
 
-import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import io.harness.beans.steps.stepinfo.publish.artifact.connectors.ArtifactConnector;
 import io.harness.beans.steps.stepinfo.publish.artifact.connectors.WithFileConnector;
+
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import javax.validation.constraints.NotNull;
 import lombok.Builder;
 import lombok.Data;
-
-import javax.validation.constraints.NotNull;
 
 @Data
 @Builder

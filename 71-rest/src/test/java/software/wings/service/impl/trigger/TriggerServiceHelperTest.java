@@ -2,8 +2,7 @@ package software.wings.service.impl.trigger;
 
 import static io.harness.rule.OwnerRule.AADITI;
 import static io.harness.rule.OwnerRule.PRABU;
-import static java.util.Arrays.asList;
-import static org.assertj.core.api.Assertions.assertThat;
+
 import static software.wings.beans.trigger.ArtifactSelection.Type.WEBHOOK_VARIABLE;
 import static software.wings.service.impl.trigger.TriggerServiceTestHelper.buildNexusArtifactStream;
 import static software.wings.service.impl.trigger.TriggerServiceTestHelper.buildWorkflowWebhookTrigger;
@@ -13,16 +12,12 @@ import static software.wings.utils.WingsTestConstants.MANIFEST_ID;
 import static software.wings.utils.WingsTestConstants.SERVICE_ID;
 import static software.wings.utils.WingsTestConstants.TRIGGER_ID;
 
-import com.google.gson.Gson;
-import com.google.inject.Inject;
+import static java.util.Arrays.asList;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.Mockito;
+
 import software.wings.WingsBaseTest;
 import software.wings.beans.FeatureName;
 import software.wings.beans.Service;
@@ -34,9 +29,16 @@ import software.wings.beans.trigger.Trigger;
 import software.wings.service.intfc.ArtifactStreamService;
 import software.wings.service.intfc.FeatureFlagService;
 
+import com.google.gson.Gson;
+import com.google.inject.Inject;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.Mockito;
 
 public class TriggerServiceHelperTest extends WingsBaseTest {
   private static final String ARTIFACT_STREAM_ID_1 = "ARTIFACT_STREAM_ID_1";

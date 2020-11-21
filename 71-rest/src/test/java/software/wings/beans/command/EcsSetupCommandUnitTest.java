@@ -1,14 +1,7 @@
 package software.wings.beans.command;
 
 import static io.harness.rule.OwnerRule.BRETT;
-import static java.util.Collections.emptyList;
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.anyList;
-import static org.mockito.Matchers.anyString;
-import static org.mockito.Matchers.eq;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 import static software.wings.beans.command.CommandExecutionContext.Builder.aCommandExecutionContext;
 import static software.wings.beans.command.EcsSetupParams.EcsSetupParamsBuilder.anEcsSetupParams;
@@ -19,22 +12,20 @@ import static software.wings.utils.WingsTestConstants.SERVICE_NAME;
 import static software.wings.utils.WingsTestConstants.TASK_FAMILY;
 import static software.wings.utils.WingsTestConstants.TASK_REVISION;
 
-import com.google.common.collect.Lists;
-import com.google.inject.Inject;
+import static java.util.Collections.emptyList;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyList;
+import static org.mockito.Matchers.anyString;
+import static org.mockito.Matchers.eq;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
-import com.amazonaws.regions.Regions;
-import com.amazonaws.services.ecs.model.CreateServiceRequest;
-import com.amazonaws.services.ecs.model.RegisterTaskDefinitionRequest;
-import com.amazonaws.services.ecs.model.TaskDefinition;
 import io.harness.category.element.UnitTests;
 import io.harness.k8s.model.ImageDetails;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.rule.Owner;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
+
 import software.wings.WingsBaseTest;
 import software.wings.beans.AwsConfig;
 import software.wings.beans.SettingAttribute;
@@ -44,8 +35,19 @@ import software.wings.delegatetasks.aws.ecs.ecstaskhandler.EcsSetupCommandTaskHe
 import software.wings.utils.EcsConvention;
 import software.wings.utils.WingsTestConstants;
 
+import com.amazonaws.regions.Regions;
+import com.amazonaws.services.ecs.model.CreateServiceRequest;
+import com.amazonaws.services.ecs.model.RegisterTaskDefinitionRequest;
+import com.amazonaws.services.ecs.model.TaskDefinition;
+import com.google.common.collect.Lists;
+import com.google.inject.Inject;
 import java.util.Collections;
 import java.util.Date;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
 
 public class EcsSetupCommandUnitTest extends WingsBaseTest {
   public static final String CLUSTER_NAME = "clusterName";

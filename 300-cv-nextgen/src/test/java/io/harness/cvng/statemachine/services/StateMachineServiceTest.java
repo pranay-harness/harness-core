@@ -2,6 +2,7 @@ package io.harness.cvng.statemachine.services;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.rule.OwnerRule.PRAVEEN;
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
@@ -9,9 +10,6 @@ import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-
-import com.google.common.collect.Lists;
-import com.google.inject.Injector;
 
 import io.harness.CvNextGenTest;
 import io.harness.category.element.UnitTests;
@@ -37,6 +35,12 @@ import io.harness.cvng.verificationjob.entities.VerificationJobInstance;
 import io.harness.cvng.verificationjob.services.api.VerificationJobInstanceService;
 import io.harness.persistence.HPersistence;
 import io.harness.rule.Owner;
+
+import com.google.common.collect.Lists;
+import com.google.inject.Injector;
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
+import java.util.concurrent.TimeUnit;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -46,10 +50,6 @@ import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.Sort;
-
-import java.time.Instant;
-import java.time.temporal.ChronoUnit;
-import java.util.concurrent.TimeUnit;
 
 public class StateMachineServiceTest extends CvNextGenTest {
   private String cvConfigId;

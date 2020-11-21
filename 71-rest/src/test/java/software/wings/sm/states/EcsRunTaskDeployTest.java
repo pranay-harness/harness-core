@@ -1,6 +1,14 @@
 package software.wings.sm.states;
 
 import static io.harness.rule.OwnerRule.RAGHVENDRA;
+
+import static software.wings.beans.TaskType.GIT_FETCH_FILES_TASK;
+import static software.wings.sm.states.EcsRunTaskDeploy.ECS_RUN_TASK_COMMAND;
+import static software.wings.utils.WingsTestConstants.ACTIVITY_ID;
+import static software.wings.utils.WingsTestConstants.APP_ID;
+import static software.wings.utils.WingsTestConstants.ENV_ID;
+import static software.wings.utils.WingsTestConstants.SERVICE_ID;
+
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -13,30 +21,14 @@ import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.powermock.api.mockito.PowerMockito.when;
-import static software.wings.beans.TaskType.GIT_FETCH_FILES_TASK;
-import static software.wings.sm.states.EcsRunTaskDeploy.ECS_RUN_TASK_COMMAND;
-import static software.wings.utils.WingsTestConstants.ACTIVITY_ID;
-import static software.wings.utils.WingsTestConstants.APP_ID;
-import static software.wings.utils.WingsTestConstants.ENV_ID;
-import static software.wings.utils.WingsTestConstants.SERVICE_ID;
 
-import com.google.common.collect.ImmutableMap;
-import com.google.inject.Inject;
-
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import io.harness.beans.DelegateTask;
 import io.harness.beans.ExecutionStatus;
 import io.harness.category.element.UnitTests;
 import io.harness.context.ContextElementType;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.rule.Owner;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
-import org.mockito.ArgumentCaptor;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.invocation.InvocationOnMock;
-import org.mockito.stubbing.Answer;
+
 import software.wings.WingsBaseTest;
 import software.wings.api.PhaseElement;
 import software.wings.api.ServiceElement;
@@ -69,6 +61,17 @@ import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.security.SecretManager;
 import software.wings.sm.ExecutionContextImpl;
 import software.wings.sm.ExecutionResponse;
+
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.google.common.collect.ImmutableMap;
+import com.google.inject.Inject;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
+import org.mockito.ArgumentCaptor;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.invocation.InvocationOnMock;
+import org.mockito.stubbing.Answer;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class EcsRunTaskDeployTest extends WingsBaseTest {

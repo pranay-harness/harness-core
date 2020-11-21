@@ -1,18 +1,17 @@
 package software.wings.graphql.datafetcher.instance;
 
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
-
-import io.jsonwebtoken.lang.Collections;
-import lombok.extern.slf4j.Slf4j;
 import software.wings.beans.infrastructure.instance.Instance;
 import software.wings.beans.infrastructure.instance.info.InstanceInfo;
 import software.wings.graphql.schema.type.instance.QLInstance;
 import software.wings.graphql.schema.type.instance.QLInstanceType;
 
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
+import io.jsonwebtoken.lang.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import javax.validation.constraints.NotNull;
+import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Singleton

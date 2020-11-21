@@ -2,6 +2,7 @@ package software.wings.service.impl;
 
 import static io.harness.rule.OwnerRule.SRINIVAS;
 import static io.harness.rule.OwnerRule.TATHAGAT;
+
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -9,17 +10,10 @@ import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.doReturn;
 
-import com.google.inject.Inject;
-
-import com.amazonaws.regions.Regions;
-import com.amazonaws.services.ec2.model.ResourceType;
 import io.harness.category.element.UnitTests;
 import io.harness.exception.WingsException;
 import io.harness.rule.Owner;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
+
 import software.wings.WingsBaseTest;
 import software.wings.beans.AwsConfig;
 import software.wings.beans.NameValuePair;
@@ -29,10 +23,17 @@ import software.wings.service.impl.aws.manager.AwsS3HelperServiceManagerImpl;
 import software.wings.service.intfc.AwsHelperResourceService;
 import software.wings.service.intfc.SettingsService;
 
+import com.amazonaws.regions.Regions;
+import com.amazonaws.services.ec2.model.ResourceType;
+import com.google.inject.Inject;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
 
 /**
  * Created by sgurubelli on 7/20/18.

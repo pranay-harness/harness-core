@@ -1,13 +1,13 @@
 package io.harness.cvng.analysis.beans;
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import io.harness.cvng.analysis.entities.ClusteredLog;
+
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import java.time.Instant;
+import java.util.concurrent.TimeUnit;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Value;
-
-import java.time.Instant;
-import java.util.concurrent.TimeUnit;
 
 @Value
 @Builder

@@ -1,14 +1,14 @@
 package software.wings.graphql.datafetcher.secrets;
 
-import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static software.wings.beans.SettingAttribute.SettingCategory.SETTING;
 import static software.wings.settings.SettingVariableTypes.HOST_CONNECTION_ATTRIBUTES;
 import static software.wings.settings.SettingVariableTypes.WINRM_CONNECTION_ATTRIBUTES;
 
-import com.google.inject.Inject;
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 import io.harness.beans.EncryptedData;
 import io.harness.exception.InvalidRequestException;
+
 import software.wings.beans.SettingAttribute;
 import software.wings.graphql.datafetcher.AbstractObjectDataFetcher;
 import software.wings.graphql.schema.query.QLSecretQueryParameters;
@@ -20,6 +20,8 @@ import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.security.SecretManager;
 import software.wings.settings.SettingValue;
 import software.wings.settings.SettingVariableTypes;
+
+import com.google.inject.Inject;
 
 public class GetSecretDataFetcher extends AbstractObjectDataFetcher<QLSecret, QLSecretQueryParameters> {
   @Inject SecretManager secretManager;
@@ -92,7 +94,7 @@ public class GetSecretDataFetcher extends AbstractObjectDataFetcher<QLSecret, QL
 
     if (settingValue != null
         && (settingValue.getSettingType() == HOST_CONNECTION_ATTRIBUTES
-               || settingValue.getSettingType() == WINRM_CONNECTION_ATTRIBUTES)) {
+            || settingValue.getSettingType() == WINRM_CONNECTION_ATTRIBUTES)) {
       if (settingValue.getSettingType() == WINRM_CONNECTION_ATTRIBUTES) {
         qlSecret = winRMCredentialController.populateWinRMCredential(settingAttribute);
       } else {

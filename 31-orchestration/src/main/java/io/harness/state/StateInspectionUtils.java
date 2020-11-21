@@ -3,9 +3,9 @@ package io.harness.state;
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 
 import io.harness.annotations.dev.OwnedBy;
-import lombok.experimental.UtilityClass;
 
 import java.time.Duration;
+import lombok.experimental.UtilityClass;
 
 @OwnedBy(CDC)
 @UtilityClass

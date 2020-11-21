@@ -2,14 +2,11 @@ package software.wings.service.impl;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 
-import com.google.common.collect.Lists;
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
-
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.security.encryption.EncryptedDataDetail;
+
 import software.wings.beans.AwsConfig;
 import software.wings.beans.artifact.ArtifactStreamAttributes;
 import software.wings.helpers.ext.amazons3.AmazonS3Service;
@@ -18,6 +15,9 @@ import software.wings.helpers.ext.jenkins.JobDetails;
 import software.wings.service.intfc.AmazonS3BuildService;
 import software.wings.utils.ArtifactType;
 
+import com.google.common.collect.Lists;
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;

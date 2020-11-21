@@ -5,26 +5,20 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.delegate.beans.TaskData.DEFAULT_SYNC_CALL_TIMEOUT;
 import static io.harness.eraro.ErrorCode.USER_NOT_AUTHORIZED;
 import static io.harness.exception.WingsException.USER;
-import static java.util.Arrays.asList;
+
 import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static software.wings.security.authentication.AuthenticationMechanism.OAUTH;
 import static software.wings.security.authentication.AuthenticationMechanism.USER_PASSWORD;
 
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
-import com.google.inject.name.Named;
+import static java.util.Arrays.asList;
 
-import com.coveo.saml.SamlClient;
-import com.coveo.saml.SamlException;
 import io.harness.beans.SecretText;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.security.encryption.EncryptedDataDetail;
-import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.io.IOUtils;
-import org.hibernate.validator.constraints.NotBlank;
+
 import software.wings.beans.Account;
 import software.wings.beans.SyncTaskContext;
 import software.wings.beans.sso.LdapGroupResponse;
@@ -54,6 +48,11 @@ import software.wings.service.intfc.SSOSettingService;
 import software.wings.service.intfc.ldap.LdapDelegateService;
 import software.wings.service.intfc.security.SecretManager;
 
+import com.coveo.saml.SamlClient;
+import com.coveo.saml.SamlException;
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
+import com.google.inject.name.Named;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
@@ -67,6 +66,9 @@ import java.util.Set;
 import java.util.UUID;
 import javax.validation.constraints.NotNull;
 import javax.validation.executable.ValidateOnExecution;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.io.IOUtils;
+import org.hibernate.validator.constraints.NotBlank;
 
 @ValidateOnExecution
 @Singleton

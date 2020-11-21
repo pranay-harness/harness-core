@@ -3,12 +3,9 @@ package io.harness.grpc;
 import static io.harness.beans.PageRequest.PageRequestBuilder;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.delegate.beans.DelegateProfile.DelegateProfileKeys;
+
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
-
-import io.grpc.stub.StreamObserver;
 import io.harness.beans.EmbeddedUser;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
@@ -40,12 +37,15 @@ import io.harness.delegateprofile.UpdateProfileScopingRulesResponse;
 import io.harness.delegateprofile.UpdateProfileSelectorsRequest;
 import io.harness.delegateprofile.UpdateProfileSelectorsResponse;
 import io.harness.paging.PageRequestGrpc;
-import lombok.extern.slf4j.Slf4j;
+
 import software.wings.beans.User;
 import software.wings.security.UserThreadLocal;
 import software.wings.service.intfc.DelegateProfileService;
 import software.wings.service.intfc.UserService;
 
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
+import io.grpc.stub.StreamObserver;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -53,6 +53,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Singleton

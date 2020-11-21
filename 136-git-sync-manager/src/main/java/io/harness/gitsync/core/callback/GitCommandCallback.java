@@ -11,13 +11,9 @@ import static io.harness.gitsync.gitsyncerror.utils.GitSyncErrorUtils.getCommitM
 import static io.harness.gitsync.gitsyncerror.utils.GitSyncErrorUtils.getCommitTimeOfError;
 import static io.harness.gitsync.gitsyncerror.utils.GitSyncErrorUtils.getYamlContentOfError;
 import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
+
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
-import com.google.common.annotations.VisibleForTesting;
-import com.google.common.collect.ImmutableMap;
-import com.google.inject.Inject;
-
-import com.mongodb.DuplicateKeyException;
 import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.delegate.beans.git.GitCommandExecutionResponse;
 import io.harness.delegate.beans.git.GitCommandType;
@@ -45,8 +41,11 @@ import io.harness.logging.AccountLogContext;
 import io.harness.logging.AutoLogContext;
 import io.harness.tasks.ResponseData;
 import io.harness.waiter.NotifyCallback;
-import lombok.extern.slf4j.Slf4j;
 
+import com.google.common.annotations.VisibleForTesting;
+import com.google.common.collect.ImmutableMap;
+import com.google.inject.Inject;
+import com.mongodb.DuplicateKeyException;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -55,6 +54,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
+import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class GitCommandCallback implements NotifyCallback {
@@ -174,7 +174,7 @@ public class GitCommandCallback implements NotifyCallback {
     return gitSyncErrorService
         .getActiveGitToHarnessSyncErrors(accountId, gitConnectorId, repoName, branchName, null, _30_days_millis)
         .stream()
-        .map(this ::convertToGitFileChange)
+        .map(this::convertToGitFileChange)
         .collect(Collectors.toList());
   }
 

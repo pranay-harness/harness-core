@@ -3,12 +3,12 @@ package io.harness.connector;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.springframework.data.mongodb.core.query.Criteria.where;
 
-import com.google.inject.Singleton;
-
 import io.harness.NGCommonEntityConstants;
 import io.harness.connector.entities.Connector.ConnectorKeys;
 import io.harness.delegate.beans.connector.ConnectorCategory;
 import io.harness.delegate.beans.connector.ConnectorType;
+
+import com.google.inject.Singleton;
 import org.springframework.data.mongodb.core.query.Criteria;
 
 @Singleton

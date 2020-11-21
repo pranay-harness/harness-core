@@ -4,10 +4,8 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.ng.core.mapper.TagMapper.convertToList;
 import static io.harness.ngpipeline.common.ParameterFieldHelper.getParameterFieldValue;
-import static java.util.stream.Collectors.toList;
 
-import com.google.common.annotations.VisibleForTesting;
-import com.google.inject.Inject;
+import static java.util.stream.Collectors.toList;
 
 import io.harness.ambiance.Ambiance;
 import io.harness.cdng.artifact.bean.ArtifactOutcome;
@@ -40,15 +38,17 @@ import io.harness.state.io.StepResponse;
 import io.harness.state.io.StepResponse.StepOutcome;
 import io.harness.tasks.ResponseData;
 import io.harness.tasks.Task;
-import lombok.Builder;
-import lombok.Data;
-import lombok.Singular;
-import lombok.extern.slf4j.Slf4j;
 
+import com.google.common.annotations.VisibleForTesting;
+import com.google.inject.Inject;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import lombok.Builder;
+import lombok.Data;
+import lombok.Singular;
+import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class ServiceStep implements Step, TaskChainExecutable<ServiceStepParameters> {

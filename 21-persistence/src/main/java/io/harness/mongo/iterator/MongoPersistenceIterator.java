@@ -7,13 +7,11 @@ import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
 import static io.harness.mongo.iterator.MongoPersistenceIterator.SchedulingType.IRREGULAR_SKIP_MISSED;
 import static io.harness.mongo.iterator.MongoPersistenceIterator.SchedulingType.REGULAR;
 import static io.harness.threading.Morpheus.sleep;
+
 import static java.lang.System.currentTimeMillis;
 import static java.time.Duration.ZERO;
 import static java.time.Duration.ofMillis;
 import static java.time.Duration.ofSeconds;
-
-import com.google.common.annotations.VisibleForTesting;
-import com.google.inject.Inject;
 
 import io.harness.iterator.PersistenceIterator;
 import io.harness.iterator.PersistentIrregularIterable;
@@ -27,14 +25,16 @@ import io.harness.mongo.ProcessTimeLogContext;
 import io.harness.mongo.iterator.filter.FilterExpander;
 import io.harness.mongo.iterator.provider.PersistenceProvider;
 import io.harness.queue.QueueController;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.extern.slf4j.Slf4j;
 
+import com.google.common.annotations.VisibleForTesting;
+import com.google.inject.Inject;
 import java.time.Duration;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Semaphore;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.extern.slf4j.Slf4j;
 
 @Builder
 @Slf4j
@@ -44,7 +44,9 @@ public class MongoPersistenceIterator<T extends PersistentIterable, F extends Fi
 
   @Inject private final QueueController queueController;
 
-  public interface Handler<T> { void handle(T entity); }
+  public interface Handler<T> {
+    void handle(T entity);
+  }
 
   public enum SchedulingType { REGULAR, IRREGULAR, IRREGULAR_SKIP_MISSED }
 
@@ -77,7 +79,7 @@ public class MongoPersistenceIterator<T extends PersistentIterable, F extends Fi
   public synchronized void wakeup() {
     switch (mode) {
       case PUMP:
-        executorService.submit(this ::process);
+        executorService.submit(this::process);
         break;
       case LOOP:
         notifyAll();

@@ -1,21 +1,16 @@
 package software.wings.service.impl.yaml.handler.templatelibrary;
 
-import static java.util.Arrays.asList;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.mockito.Matchers.anyString;
-import static org.mockito.Mockito.when;
 import static software.wings.beans.Account.GLOBAL_ACCOUNT_ID;
 import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 
-import com.google.inject.Inject;
+import static java.util.Arrays.asList;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.Matchers.anyString;
+import static org.mockito.Mockito.when;
 
 import io.harness.yaml.BaseYaml;
-import org.junit.Rule;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.junit.MockitoJUnit;
-import org.mockito.junit.MockitoRule;
+
 import software.wings.beans.template.TemplateGallery;
 import software.wings.beans.yaml.ChangeContext;
 import software.wings.beans.yaml.GitFileChange;
@@ -29,7 +24,13 @@ import software.wings.service.intfc.template.TemplateGalleryService;
 import software.wings.service.intfc.yaml.YamlPushService;
 import software.wings.yaml.handler.YamlHandlerTestBase;
 
+import com.google.inject.Inject;
 import java.io.IOException;
+import org.junit.Rule;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.MockitoJUnit;
+import org.mockito.junit.MockitoRule;
 
 public abstract class TemplateLibraryYamlHandlerTestBase extends YamlHandlerTestBase {
   @Rule public MockitoRule mockitoRule = MockitoJUnit.rule();

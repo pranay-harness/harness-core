@@ -3,13 +3,12 @@ package software.wings.signup;
 import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
-import com.google.inject.Singleton;
-
 import io.harness.annotations.dev.OwnedBy;
-import lombok.extern.slf4j.Slf4j;
+
 import software.wings.app.MainConfiguration;
 import software.wings.service.intfc.signup.SignupException;
 
+import com.google.inject.Singleton;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
@@ -17,6 +16,7 @@ import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
 import java.util.HashSet;
 import java.util.Set;
+import lombok.extern.slf4j.Slf4j;
 
 @OwnedBy(PL)
 @Slf4j

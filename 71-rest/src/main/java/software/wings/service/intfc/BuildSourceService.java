@@ -3,7 +3,7 @@ package software.wings.service.intfc;
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 
 import io.harness.annotations.dev.OwnedBy;
-import org.hibernate.validator.constraints.NotEmpty;
+
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.artifact.Artifact;
 import software.wings.beans.artifact.ArtifactStream;
@@ -20,6 +20,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import javax.annotation.Nullable;
+import org.hibernate.validator.constraints.NotEmpty;
 
 /**
  * Created by anubhaw on 8/18/16.

@@ -5,15 +5,14 @@ import static io.harness.generator.SettingGenerator.Settings.GITHUB_TEST_CONNECT
 import static io.harness.generator.SettingGenerator.Settings.PHYSICAL_DATA_CENTER;
 import static io.harness.rule.OwnerRule.ABHINAV;
 import static io.harness.rule.OwnerRule.YOGESH;
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
+
 import static software.wings.beans.CanaryOrchestrationWorkflow.CanaryOrchestrationWorkflowBuilder.aCanaryOrchestrationWorkflow;
 import static software.wings.beans.PhaseStep.PhaseStepBuilder.aPhaseStep;
 import static software.wings.beans.PhaseStepType.PRE_DEPLOYMENT;
 import static software.wings.beans.Workflow.WorkflowBuilder.aWorkflow;
 
-import com.google.common.collect.ImmutableMap;
-import com.google.inject.Inject;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import io.harness.beans.WorkflowType;
 import io.harness.category.element.FunctionalTests;
@@ -39,9 +38,7 @@ import io.harness.scm.ScmSecret;
 import io.harness.scm.SecretName;
 import io.harness.testframework.restutils.InfraProvisionerRestUtils;
 import io.harness.testframework.restutils.WorkflowRestUtils;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
+
 import software.wings.api.DeploymentType;
 import software.wings.beans.Account;
 import software.wings.beans.Application;
@@ -71,11 +68,16 @@ import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.sm.StateType;
 
+import com.google.common.collect.ImmutableMap;
+import com.google.inject.Inject;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 public class ShellScriptProvisionerTest extends AbstractFunctionalTest {
   private static final String secretKeyName = "aws_playground_secret_key";

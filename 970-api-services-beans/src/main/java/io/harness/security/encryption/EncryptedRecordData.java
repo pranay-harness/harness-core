@@ -3,11 +3,11 @@ package io.harness.security.encryption;
 import static io.harness.annotations.dev.HarnessTeam.PL;
 
 import io.harness.annotations.dev.OwnedBy;
+
+import java.util.Set;
 import lombok.Builder;
 import lombok.Data;
 import lombok.ToString;
-
-import java.util.Set;
 
 /*
  * Encrypted record data implements EncryptedRecord for serialization purposes between the manager and the delegate.

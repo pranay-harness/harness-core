@@ -2,11 +2,12 @@ package software.wings.helpers.ext.ecs.request;
 
 import static software.wings.helpers.ext.ecs.request.EcsCommandRequest.EcsCommandType.SERVICE_DEPLOY;
 
+import software.wings.beans.AwsConfig;
+import software.wings.beans.command.EcsResizeParams;
+
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
-import software.wings.beans.AwsConfig;
-import software.wings.beans.command.EcsResizeParams;
 
 @Data
 @EqualsAndHashCode(callSuper = false)

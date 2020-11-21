@@ -2,8 +2,7 @@ package software.wings.graphql.datafetcher.connector.types;
 
 import io.harness.exception.InvalidRequestException;
 import io.harness.utils.RequestField;
-import lombok.AllArgsConstructor;
-import org.apache.commons.lang3.StringUtils;
+
 import software.wings.beans.DockerConfig;
 import software.wings.beans.SettingAttribute;
 import software.wings.graphql.datafetcher.connector.ConnectorsController;
@@ -13,6 +12,8 @@ import software.wings.graphql.schema.mutation.connector.input.docker.QLDockerCon
 import software.wings.service.intfc.security.SecretManager;
 
 import java.util.Optional;
+import lombok.AllArgsConstructor;
+import org.apache.commons.lang3.StringUtils;
 
 @AllArgsConstructor
 public class DockerConnector extends Connector {

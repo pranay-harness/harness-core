@@ -2,8 +2,6 @@ package io.harness.engine.executions.node;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 
-import com.google.inject.Inject;
-
 import io.harness.StatusUtils;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.engine.interrupts.InterruptManager;
@@ -14,6 +12,8 @@ import io.harness.interrupts.ExecutionInterruptType;
 import io.harness.timeout.TimeoutCallback;
 import io.harness.timeout.TimeoutDetails;
 import io.harness.timeout.TimeoutInstance;
+
+import com.google.inject.Inject;
 import org.springframework.data.annotation.Transient;
 
 @OwnedBy(CDC)

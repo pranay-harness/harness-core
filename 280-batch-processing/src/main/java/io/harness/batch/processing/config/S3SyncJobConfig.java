@@ -4,6 +4,9 @@ import io.harness.batch.processing.ccm.BatchJobType;
 import io.harness.batch.processing.reader.EventReaderFactory;
 import io.harness.batch.processing.reader.SettingAttributeReader;
 import io.harness.batch.processing.writer.S3SyncEventWriter;
+
+import software.wings.beans.SettingAttribute;
+
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.batch.core.Job;
 import org.springframework.batch.core.Step;
@@ -15,7 +18,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import software.wings.beans.SettingAttribute;
 
 @Slf4j
 @Configuration

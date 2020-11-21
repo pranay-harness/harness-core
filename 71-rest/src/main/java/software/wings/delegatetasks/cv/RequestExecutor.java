@@ -2,26 +2,19 @@ package software.wings.delegatetasks.cv;
 
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.threading.Morpheus.sleep;
+
 import static software.wings.common.VerificationConstants.MAX_RETRIES;
 import static software.wings.common.VerificationConstants.RATE_LIMIT_STATUS;
 import static software.wings.common.VerificationConstants.URL_STRING;
 import static software.wings.delegatetasks.cv.CVConstants.RETRY_SLEEP_DURATION;
 
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
-
-import lombok.extern.slf4j.Slf4j;
-import okhttp3.Request;
-import okio.Buffer;
-import org.apache.commons.lang3.exception.ExceptionUtils;
-import org.apache.http.HttpStatus;
-import retrofit2.Call;
-import retrofit2.Response;
 import software.wings.delegatetasks.DelegateLogService;
 import software.wings.service.impl.ThirdPartyApiCallLog;
 import software.wings.service.impl.ThirdPartyApiCallLog.FieldType;
 import software.wings.service.impl.ThirdPartyApiCallLog.ThirdPartyApiCallField;
 
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import java.io.IOException;
 import java.time.Duration;
 import java.time.OffsetDateTime;
@@ -29,6 +22,13 @@ import java.util.Map;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import lombok.extern.slf4j.Slf4j;
+import okhttp3.Request;
+import okio.Buffer;
+import org.apache.commons.lang3.exception.ExceptionUtils;
+import org.apache.http.HttpStatus;
+import retrofit2.Call;
+import retrofit2.Response;
 
 @Slf4j
 @Singleton

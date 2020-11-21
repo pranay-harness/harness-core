@@ -1,25 +1,26 @@
 package software.wings.inframapping;
 
 import static io.harness.rule.OwnerRule.VAIBHAV_SI;
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
-
-import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
 
 import io.harness.category.element.UnitTests;
 import io.harness.exception.InvalidRequestException;
 import io.harness.rule.Owner;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
+
 import software.wings.WingsBaseTest;
 import software.wings.beans.PhysicalInfrastructureMapping;
 import software.wings.beans.PhysicalInfrastructureMapping.Builder;
 
+import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 public class PhysicalInfrastructureMappingTest extends WingsBaseTest {
   @Test

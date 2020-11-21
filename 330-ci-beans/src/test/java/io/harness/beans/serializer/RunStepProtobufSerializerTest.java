@@ -1,21 +1,21 @@
 package io.harness.beans.serializer;
 
 import static io.harness.rule.OwnerRule.ALEKSANDAR;
-import static org.assertj.core.api.Assertions.assertThat;
 
-import com.google.inject.Inject;
-import com.google.protobuf.InvalidProtocolBufferException;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.beans.CIBeansTest;
 import io.harness.beans.steps.stepinfo.RunStepInfo;
 import io.harness.category.element.UnitTests;
 import io.harness.product.ci.engine.proto.UnitStep;
 import io.harness.rule.Owner;
+
+import com.google.inject.Inject;
+import com.google.protobuf.InvalidProtocolBufferException;
+import java.util.Arrays;
 import org.apache.commons.codec.binary.Base64;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
-
-import java.util.Arrays;
 
 public class RunStepProtobufSerializerTest extends CIBeansTest {
   public static final String RUN_STEP = "run-step";

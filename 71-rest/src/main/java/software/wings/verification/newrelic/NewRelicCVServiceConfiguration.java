@@ -2,21 +2,21 @@ package software.wings.verification.newrelic;
 
 import static software.wings.service.impl.newrelic.NewRelicMetricDataRecord.DEFAULT_GROUP_NAME;
 
-import com.fasterxml.jackson.annotation.JsonPropertyOrder;
-import com.github.reinert.jjschema.Attributes;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.EqualsAndHashCode;
-import lombok.NoArgsConstructor;
 import software.wings.beans.FeatureName;
 import software.wings.service.impl.analysis.DataCollectionInfoV2;
 import software.wings.service.impl.newrelic.NewRelicDataCollectionInfoV2;
 import software.wings.verification.CVConfiguration;
 
+import com.fasterxml.jackson.annotation.JsonPropertyOrder;
+import com.github.reinert.jjschema.Attributes;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.NoArgsConstructor;
 
 /**
  * @author Vaibhav Tulsyan

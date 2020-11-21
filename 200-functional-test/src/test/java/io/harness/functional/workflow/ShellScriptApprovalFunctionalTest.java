@@ -2,10 +2,8 @@ package io.harness.functional.workflow;
 
 import static io.harness.generator.EnvironmentGenerator.Environments.GENERIC_TEST;
 import static io.harness.rule.OwnerRule.PRABU;
-import static org.assertj.core.api.Assertions.assertThat;
 
-import com.google.common.collect.ImmutableMap;
-import com.google.inject.Inject;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.beans.ExecutionStatus;
 import io.harness.category.element.FunctionalTests;
@@ -17,9 +15,7 @@ import io.harness.generator.OwnerManager;
 import io.harness.generator.Randomizer;
 import io.harness.rule.Owner;
 import io.harness.testframework.restutils.WorkflowRestUtils;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
+
 import software.wings.beans.Application;
 import software.wings.beans.Environment;
 import software.wings.beans.GraphNode;
@@ -31,7 +27,12 @@ import software.wings.beans.artifact.Artifact;
 import software.wings.sm.StateType;
 import software.wings.sm.states.ApprovalState.ApprovalStateType;
 
+import com.google.common.collect.ImmutableMap;
+import com.google.inject.Inject;
 import java.util.Collections;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 public class ShellScriptApprovalFunctionalTest extends AbstractFunctionalTest {
   @Inject private OwnerManager ownerManager;

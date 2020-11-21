@@ -1,10 +1,10 @@
 package io.harness.connector.apis.dto;
 
 import io.harness.delegate.beans.connector.ConnectorType;
-import lombok.Builder;
-import lombok.Value;
 
 import java.util.List;
+import lombok.Builder;
+import lombok.Value;
 
 @Value
 @Builder

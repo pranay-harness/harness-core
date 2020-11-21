@@ -1,11 +1,12 @@
 package software.wings.service.impl;
 
-import com.google.inject.Inject;
-
 import io.harness.persistence.HPersistence;
-import org.mongodb.morphia.query.Query;
+
 import software.wings.beans.Delegate;
 import software.wings.beans.Delegate.DelegateKeys;
+
+import com.google.inject.Inject;
+import org.mongodb.morphia.query.Query;
 
 public class DelegateDao {
   @Inject private HPersistence persistence;

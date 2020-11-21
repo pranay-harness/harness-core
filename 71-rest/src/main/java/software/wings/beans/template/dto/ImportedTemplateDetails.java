@@ -1,7 +1,8 @@
 package software.wings.beans.template.dto;
 
-import static com.fasterxml.jackson.annotation.JsonTypeInfo.As.EXTERNAL_PROPERTY;
 import static software.wings.common.TemplateConstants.HARNESS_COMMAND_LIBRARY_GALLERY;
+
+import static com.fasterxml.jackson.annotation.JsonTypeInfo.As.EXTERNAL_PROPERTY;
 
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;

@@ -6,11 +6,6 @@ import io.harness.commandlibrary.server.beans.archive.ArchiveFileImpl;
 import io.harness.commandlibrary.server.beans.archive.ByteArrayArchiveContent;
 import io.harness.exception.FileReadException;
 import io.harness.exception.GeneralException;
-import lombok.experimental.UtilityClass;
-import org.apache.commons.compress.archivers.ArchiveEntry;
-import org.apache.commons.compress.archivers.ArchiveInputStream;
-import org.apache.commons.compress.archivers.ArchiveStreamFactory;
-import org.apache.commons.io.IOUtils;
 
 import java.io.BufferedInputStream;
 import java.io.IOException;
@@ -20,6 +15,11 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.stream.Collectors;
+import lombok.experimental.UtilityClass;
+import org.apache.commons.compress.archivers.ArchiveEntry;
+import org.apache.commons.compress.archivers.ArchiveInputStream;
+import org.apache.commons.compress.archivers.ArchiveStreamFactory;
+import org.apache.commons.io.IOUtils;
 
 @UtilityClass
 public class ArchiveUtils {

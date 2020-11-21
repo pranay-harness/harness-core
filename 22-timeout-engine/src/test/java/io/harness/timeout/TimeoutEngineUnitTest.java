@@ -1,15 +1,16 @@
 package io.harness.timeout;
 
 import static io.harness.rule.OwnerRule.GARVIT;
-import static org.assertj.core.api.Assertions.assertThat;
 
-import com.google.inject.Inject;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.TimeoutEngineTestBase;
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
 import io.harness.testlib.RealMongo;
 import io.harness.timeout.trackers.absolute.AbsoluteTimeoutTracker;
+
+import com.google.inject.Inject;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 

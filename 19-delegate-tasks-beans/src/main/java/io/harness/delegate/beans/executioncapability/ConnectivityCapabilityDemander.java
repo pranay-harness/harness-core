@@ -2,9 +2,8 @@ package io.harness.delegate.beans.executioncapability;
 
 import static java.util.Collections.singletonList;
 
-import lombok.Value;
-
 import java.util.List;
+import lombok.Value;
 
 @Value
 public class ConnectivityCapabilityDemander implements ExecutionCapabilityDemander {

@@ -2,14 +2,11 @@ package software.wings.service.impl.appdynamics;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+
 import static software.wings.common.VerificationConstants.DURATION_TO_ASK_MINUTES;
 import static software.wings.delegatetasks.AbstractDelegateDataCollectionTask.getUnsafeHttpClient;
 import static software.wings.service.impl.ThirdPartyApiCallLog.NO_STATE_EXECUTION_ID;
 import static software.wings.service.impl.ThirdPartyApiCallLog.createApiCallLog;
-
-import com.google.common.base.Preconditions;
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
 
 import io.harness.cvng.beans.AppdynamicsValidationResponse;
 import io.harness.cvng.beans.AppdynamicsValidationResponse.AppdynamicsMetricValueValidationResponse;
@@ -24,11 +21,7 @@ import io.harness.delegate.task.DataCollectionExecutorService;
 import io.harness.exception.ExceptionUtils;
 import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.security.encryption.SecretDecryptionService;
-import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.codec.binary.Base64;
-import retrofit2.Call;
-import retrofit2.Retrofit;
-import retrofit2.converter.jackson.JacksonConverterFactory;
+
 import software.wings.beans.AppDynamicsConfig;
 import software.wings.delegatetasks.DelegateLogService;
 import software.wings.delegatetasks.cv.RequestExecutor;
@@ -41,6 +34,9 @@ import software.wings.service.impl.newrelic.NewRelicApplication;
 import software.wings.service.intfc.appdynamics.AppdynamicsDelegateService;
 import software.wings.service.intfc.security.EncryptionService;
 
+import com.google.common.base.Preconditions;
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 import java.util.ArrayList;
@@ -57,6 +53,11 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.codec.binary.Base64;
+import retrofit2.Call;
+import retrofit2.Retrofit;
+import retrofit2.converter.jackson.JacksonConverterFactory;
 
 /**
  * Created by rsingh on 4/17/17.
@@ -500,10 +501,10 @@ public class AppdynamicsDelegateServiceImpl implements AppdynamicsDelegateServic
     encryptionService.decrypt(appDynamicsConfig, encryptionDetails, false);
     return "Basic "
         + Base64.encodeBase64String(
-              String
-                  .format("%s@%s:%s", appDynamicsConfig.getUsername(), appDynamicsConfig.getAccountname(),
-                      new String(appDynamicsConfig.getPassword()))
-                  .getBytes(StandardCharsets.UTF_8));
+            String
+                .format("%s@%s:%s", appDynamicsConfig.getUsername(), appDynamicsConfig.getAccountname(),
+                    new String(appDynamicsConfig.getPassword()))
+                .getBytes(StandardCharsets.UTF_8));
   }
 
   private String getHeaderWithCredentials(
@@ -511,9 +512,9 @@ public class AppdynamicsDelegateServiceImpl implements AppdynamicsDelegateServic
     secretDecryptionService.decrypt(appDynamicsConnector, encryptionDetails);
     return "Basic "
         + Base64.encodeBase64String(
-              String
-                  .format("%s@%s:%s", appDynamicsConnector.getUsername(), appDynamicsConnector.getAccountname(),
-                      new String(appDynamicsConnector.getPasswordRef().getDecryptedValue()))
-                  .getBytes(StandardCharsets.UTF_8));
+            String
+                .format("%s@%s:%s", appDynamicsConnector.getUsername(), appDynamicsConnector.getAccountname(),
+                    new String(appDynamicsConnector.getPasswordRef().getDecryptedValue()))
+                .getBytes(StandardCharsets.UTF_8));
   }
 }

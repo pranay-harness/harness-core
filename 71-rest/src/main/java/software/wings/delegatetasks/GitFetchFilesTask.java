@@ -6,11 +6,11 @@ import static io.harness.k8s.K8sCommandUnitConstants.FetchFiles;
 import static io.harness.logging.LogLevel.ERROR;
 import static io.harness.logging.LogLevel.INFO;
 import static io.harness.logging.LogLevel.WARN;
-import static java.lang.String.format;
-import static org.apache.commons.lang3.StringUtils.isBlank;
+
 import static software.wings.beans.LogHelper.color;
 
-import com.google.inject.Inject;
+import static java.lang.String.format;
+import static org.apache.commons.lang3.StringUtils.isBlank;
 
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.delegate.beans.DelegateTaskPackage;
@@ -21,8 +21,7 @@ import io.harness.delegate.task.TaskParameters;
 import io.harness.delegate.task.git.GitFetchFilesTaskHelper;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.security.encryption.EncryptedDataDetail;
-import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.NotImplementedException;
+
 import software.wings.beans.GitConfig;
 import software.wings.beans.GitFetchFilesConfig;
 import software.wings.beans.GitFetchFilesTaskParams;
@@ -39,6 +38,7 @@ import software.wings.helpers.ext.k8s.request.K8sValuesLocation;
 import software.wings.service.intfc.GitService;
 import software.wings.service.intfc.security.EncryptionService;
 
+import com.google.inject.Inject;
 import java.nio.file.NoSuchFileException;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -48,6 +48,8 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.function.BooleanSupplier;
 import java.util.function.Consumer;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.NotImplementedException;
 
 @Slf4j
 public class GitFetchFilesTask extends AbstractDelegateRunnableTask {

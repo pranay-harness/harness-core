@@ -12,11 +12,10 @@ import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import com.fasterxml.jackson.datatype.guava.GuavaModule;
 import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
-import lombok.experimental.UtilityClass;
-
 import java.io.IOException;
 import java.util.Iterator;
 import java.util.Map.Entry;
+import lombok.experimental.UtilityClass;
 
 @UtilityClass
 public class YamlUtils {

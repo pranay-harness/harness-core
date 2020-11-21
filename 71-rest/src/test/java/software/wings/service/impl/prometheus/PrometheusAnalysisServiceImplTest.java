@@ -2,15 +2,12 @@ package software.wings.service.impl.prometheus;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.rule.OwnerRule.RAGHU;
-import static org.assertj.core.api.Assertions.assertThat;
 
-import com.google.common.collect.Lists;
-import com.google.inject.Inject;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
+
 import software.wings.WingsBaseTest;
 import software.wings.metrics.MetricType;
 import software.wings.service.impl.analysis.TimeSeries;
@@ -18,9 +15,13 @@ import software.wings.service.impl.apm.APMMetricInfo;
 import software.wings.service.intfc.prometheus.PrometheusAnalysisService;
 import software.wings.sm.states.APMVerificationState;
 
+import com.google.common.collect.Lists;
+import com.google.inject.Inject;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 public class PrometheusAnalysisServiceImplTest extends WingsBaseTest {
   @Inject private PrometheusAnalysisService prometheusAnalysisService;

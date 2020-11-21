@@ -1,20 +1,14 @@
 package io.harness.watcher.app;
 
-import static com.google.common.base.Charsets.UTF_8;
 import static io.harness.configuration.DeployMode.DEPLOY_MODE;
 import static io.harness.configuration.DeployMode.isOnPrem;
 import static io.harness.delegate.message.MessageConstants.NEW_WATCHER;
 import static io.harness.delegate.message.MessengerType.WATCHER;
 import static io.harness.grpc.utils.DelegateGrpcConfigExtractor.extractAuthority;
 import static io.harness.grpc.utils.DelegateGrpcConfigExtractor.extractTarget;
-import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
-import com.google.common.base.Splitter;
-import com.google.common.util.concurrent.ThreadFactoryBuilder;
-import com.google.inject.AbstractModule;
-import com.google.inject.Guice;
-import com.google.inject.Injector;
-import com.google.inject.Module;
+import static com.google.common.base.Charsets.UTF_8;
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 import io.harness.delegate.message.MessageService;
 import io.harness.event.client.impl.EventPublisherConstants;
@@ -24,12 +18,13 @@ import io.harness.managerclient.ManagerClientModule;
 import io.harness.serializer.YamlUtils;
 import io.harness.threading.ExecutorModule;
 import io.harness.watcher.service.WatcherService;
-import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.io.FileUtils;
-import org.apache.commons.lang3.StringUtils;
-import org.apache.log4j.LogManager;
-import org.slf4j.bridge.SLF4JBridgeHandler;
 
+import com.google.common.base.Splitter;
+import com.google.common.util.concurrent.ThreadFactoryBuilder;
+import com.google.inject.AbstractModule;
+import com.google.inject.Guice;
+import com.google.inject.Injector;
+import com.google.inject.Module;
 import java.io.File;
 import java.lang.management.ManagementFactory;
 import java.util.HashSet;
@@ -40,6 +35,11 @@ import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.io.FileUtils;
+import org.apache.commons.lang3.StringUtils;
+import org.apache.log4j.LogManager;
+import org.slf4j.bridge.SLF4JBridgeHandler;
 
 /**
  * Created by brett on 10/26/17

@@ -1,9 +1,10 @@
 package software.wings.graphql.schema.mutation.application.input;
 
+import software.wings.graphql.schema.mutation.QLMutationInput;
+
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import lombok.Builder;
 import lombok.Value;
-import software.wings.graphql.schema.mutation.QLMutationInput;
 
 @Value
 @Builder

@@ -1,14 +1,15 @@
 package io.harness.ccm.setup.service.support;
 
-import com.google.inject.Inject;
+import io.harness.ccm.setup.config.CESetUpConfig;
+
+import software.wings.app.MainConfiguration;
 
 import com.amazonaws.auth.AWSCredentialsProvider;
 import com.amazonaws.auth.AWSStaticCredentialsProvider;
 import com.amazonaws.auth.BasicAWSCredentials;
 import com.amazonaws.services.securitytoken.AWSSecurityTokenService;
 import com.amazonaws.services.securitytoken.AWSSecurityTokenServiceClientBuilder;
-import io.harness.ccm.setup.config.CESetUpConfig;
-import software.wings.app.MainConfiguration;
+import com.google.inject.Inject;
 
 public class AwsCredentialHelper {
   @Inject private MainConfiguration configuration;

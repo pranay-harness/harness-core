@@ -1,10 +1,11 @@
 package software.wings.graphql.datafetcher.secretManager;
 
-import lombok.Builder;
-import lombok.Value;
 import software.wings.graphql.schema.type.aggregation.Filter;
 import software.wings.graphql.schema.type.aggregation.QLEnumOperator;
 import software.wings.graphql.schema.type.secretManagers.QLSecretManagerType;
+
+import lombok.Builder;
+import lombok.Value;
 
 @Value
 @Builder

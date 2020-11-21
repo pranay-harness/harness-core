@@ -4,20 +4,12 @@ import static io.harness.data.structure.CollectionUtils.trimmedLowercaseSet;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.delegate.task.TaskFailureReason.EXPIRED;
+
 import static java.util.Collections.emptyList;
 import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
-import com.google.common.annotations.VisibleForTesting;
-import com.google.common.cache.CacheBuilder;
-import com.google.common.cache.CacheLoader;
-import com.google.common.cache.LoadingCache;
-import com.google.inject.Inject;
-import com.google.inject.Injector;
-import com.google.inject.Singleton;
-
-import com.mongodb.DuplicateKeyException;
 import io.harness.beans.DelegateTask;
 import io.harness.delegate.beans.DelegateActivity;
 import io.harness.delegate.beans.DelegateProfile;
@@ -31,12 +23,7 @@ import io.harness.delegate.task.TaskFailureReason;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
 import io.harness.selection.log.BatchDelegateSelectionLog;
-import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.tuple.ImmutablePair;
-import org.mongodb.morphia.FindAndModifyOptions;
-import org.mongodb.morphia.Key;
-import org.mongodb.morphia.query.Query;
-import org.mongodb.morphia.query.UpdateOperations;
+
 import software.wings.beans.Delegate;
 import software.wings.beans.Delegate.DelegateKeys;
 import software.wings.beans.Delegate.Status;
@@ -55,6 +42,14 @@ import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.utils.DelegateTaskUtils;
 
+import com.google.common.annotations.VisibleForTesting;
+import com.google.common.cache.CacheBuilder;
+import com.google.common.cache.CacheLoader;
+import com.google.common.cache.LoadingCache;
+import com.google.inject.Inject;
+import com.google.inject.Injector;
+import com.google.inject.Singleton;
+import com.mongodb.DuplicateKeyException;
 import java.security.SecureRandom;
 import java.time.Clock;
 import java.time.Instant;
@@ -70,6 +65,12 @@ import java.util.Set;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.tuple.ImmutablePair;
+import org.mongodb.morphia.FindAndModifyOptions;
+import org.mongodb.morphia.Key;
+import org.mongodb.morphia.query.Query;
+import org.mongodb.morphia.query.UpdateOperations;
 
 /**
  * Created by brett on 7/20/17
@@ -394,7 +395,7 @@ public class AssignDelegateServiceImpl implements AssignDelegateService {
           if (!result.isPresent() || !result.get().isValidated()
               || clock.millis() - result.get().getLastUpdatedAt() > BLACKLIST_TTL
               || (!retrieveActiveDelegates(task.getAccountId(), null).contains(delegateId)
-                     && isEmpty(connectedWhitelistedDelegates(task)))) {
+                  && isEmpty(connectedWhitelistedDelegates(task)))) {
             return true;
           }
         } else {

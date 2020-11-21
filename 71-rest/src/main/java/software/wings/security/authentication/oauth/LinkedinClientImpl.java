@@ -2,8 +2,12 @@ package software.wings.security.authentication.oauth;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
 
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.eraro.ErrorCode;
+import io.harness.exception.WingsException;
+
+import software.wings.app.MainConfiguration;
+import software.wings.security.SecretManager;
 
 import com.github.scribejava.apis.LinkedInApi20;
 import com.github.scribejava.core.builder.ServiceBuilder;
@@ -12,21 +16,17 @@ import com.github.scribejava.core.model.OAuthRequest;
 import com.github.scribejava.core.model.Response;
 import com.github.scribejava.core.model.Verb;
 import com.github.scribejava.core.oauth.OAuth20Service;
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import com.jayway.jsonpath.DocumentContext;
 import com.jayway.jsonpath.JsonPath;
-import io.harness.annotations.dev.OwnedBy;
-import io.harness.eraro.ErrorCode;
-import io.harness.exception.WingsException;
+import java.io.IOException;
+import java.net.URI;
+import java.util.concurrent.ExecutionException;
 import lombok.AccessLevel;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.http.client.utils.URIBuilder;
-import software.wings.app.MainConfiguration;
-import software.wings.security.SecretManager;
-
-import java.io.IOException;
-import java.net.URI;
-import java.util.concurrent.ExecutionException;
 
 @OwnedBy(PL)
 @Singleton

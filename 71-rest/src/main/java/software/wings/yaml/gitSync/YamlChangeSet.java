@@ -1,12 +1,18 @@
 package software.wings.yaml.gitSync;
 
-import com.google.common.collect.ImmutableList;
-
 import io.harness.annotation.HarnessEntity;
 import io.harness.mongo.index.CdIndex;
 import io.harness.mongo.index.FdIndex;
 import io.harness.mongo.index.Field;
 import io.harness.mongo.index.IndexType;
+
+import software.wings.beans.Base;
+import software.wings.beans.yaml.GitFileChange;
+
+import com.google.common.collect.ImmutableList;
+import java.util.ArrayList;
+import java.util.List;
+import javax.validation.constraints.NotNull;
 import lombok.Builder;
 import lombok.Builder.Default;
 import lombok.Data;
@@ -14,12 +20,6 @@ import lombok.EqualsAndHashCode;
 import lombok.experimental.FieldNameConstants;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Entity;
-import software.wings.beans.Base;
-import software.wings.beans.yaml.GitFileChange;
-
-import java.util.ArrayList;
-import java.util.List;
-import javax.validation.constraints.NotNull;
 
 /**
  * @author bsollish 9/26/17

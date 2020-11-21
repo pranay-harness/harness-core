@@ -1,11 +1,8 @@
 package io.harness.governance.pipeline.service;
 
-import static java.util.stream.Collectors.toList;
 import static software.wings.beans.Application.Builder.anApplication;
 
-import com.google.common.annotations.VisibleForTesting;
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
+import static java.util.stream.Collectors.toList;
 
 import io.harness.governance.pipeline.enforce.GovernanceRuleStatus;
 import io.harness.governance.pipeline.enforce.PipelineReportCard;
@@ -15,8 +12,7 @@ import io.harness.governance.pipeline.service.model.PipelineGovernanceConfig;
 import io.harness.governance.pipeline.service.model.PipelineGovernanceRule;
 import io.harness.governance.pipeline.service.model.Restriction;
 import io.harness.governance.pipeline.service.model.Tag;
-import lombok.Value;
-import org.apache.commons.collections4.CollectionUtils;
+
 import software.wings.beans.HarnessTagLink;
 import software.wings.beans.Pipeline;
 import software.wings.beans.Workflow;
@@ -26,10 +22,15 @@ import software.wings.service.intfc.HarnessTagService;
 import software.wings.service.intfc.PipelineService;
 import software.wings.service.intfc.WorkflowService;
 
+import com.google.common.annotations.VisibleForTesting;
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.stream.Collectors;
+import lombok.Value;
+import org.apache.commons.collections4.CollectionUtils;
 
 @Singleton
 public class PipelineGovernanceReportEvaluator {

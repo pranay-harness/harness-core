@@ -3,12 +3,11 @@ package io.harness.functional.harnesscli;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.generator.AccountGenerator.adminUserEmail;
 import static io.harness.generator.EnvironmentGenerator.Environments.GENERIC_TEST;
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.awaitility.Awaitility.await;
+
 import static software.wings.sm.StateType.APPROVAL;
 
-import com.google.common.collect.ImmutableMap;
-import com.google.inject.Inject;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.awaitility.Awaitility.await;
 
 import io.harness.functional.WorkflowUtils;
 import io.harness.generator.ApplicationGenerator;
@@ -19,9 +18,7 @@ import io.harness.generator.OwnerManager.Owners;
 import io.harness.generator.Randomizer.Seed;
 import io.harness.testframework.restutils.UserGroupRestUtils;
 import io.harness.testframework.restutils.WorkflowRestUtils;
-import lombok.extern.slf4j.Slf4j;
-import org.awaitility.Duration;
-import org.hamcrest.CoreMatchers;
+
 import software.wings.beans.Account;
 import software.wings.beans.Application;
 import software.wings.beans.CanaryOrchestrationWorkflow;
@@ -31,6 +28,8 @@ import software.wings.beans.Pipeline;
 import software.wings.beans.Workflow;
 import software.wings.beans.security.UserGroup;
 
+import com.google.common.collect.ImmutableMap;
+import com.google.inject.Inject;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
@@ -38,6 +37,9 @@ import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import lombok.extern.slf4j.Slf4j;
+import org.awaitility.Duration;
+import org.hamcrest.CoreMatchers;
 
 @Slf4j
 public class HarnesscliHelper {

@@ -9,17 +9,7 @@ import static io.harness.mongo.MongoUtils.setUnset;
 import static io.harness.persistence.HQuery.excludeAuthority;
 import static io.harness.validation.Validator.notNullCheck;
 import static io.harness.validation.Validator.unEqualCheck;
-import static java.lang.Boolean.TRUE;
-import static java.util.Arrays.asList;
-import static java.util.Collections.emptyList;
-import static java.util.Collections.emptySet;
-import static java.util.Collections.singletonList;
-import static java.util.function.Function.identity;
-import static java.util.stream.Collectors.toList;
-import static java.util.stream.Collectors.toSet;
-import static org.apache.commons.lang3.StringUtils.isNotBlank;
-import static org.elasticsearch.common.util.set.Sets.newHashSet;
-import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
+
 import static software.wings.beans.security.UserGroup.DEFAULT_ACCOUNT_ADMIN_USER_GROUP_NAME;
 import static software.wings.scheduler.LdapGroupSyncJob.add;
 import static software.wings.security.PermissionAttribute.Action.EXECUTE;
@@ -32,12 +22,18 @@ import static software.wings.security.PermissionAttribute.PermissionType.DEPLOYM
 import static software.wings.security.PermissionAttribute.PermissionType.USER_PERMISSION_MANAGEMENT;
 import static software.wings.security.PermissionAttribute.PermissionType.USER_PERMISSION_READ;
 
-import com.google.common.collect.Sets;
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
-import com.google.inject.name.Named;
+import static java.lang.Boolean.TRUE;
+import static java.util.Arrays.asList;
+import static java.util.Collections.emptyList;
+import static java.util.Collections.emptySet;
+import static java.util.Collections.singletonList;
+import static java.util.function.Function.identity;
+import static java.util.stream.Collectors.toList;
+import static java.util.stream.Collectors.toSet;
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
+import static org.elasticsearch.common.util.set.Sets.newHashSet;
+import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 
-import com.mongodb.ReadPreference;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageRequest.PageRequestBuilder;
@@ -55,13 +51,7 @@ import io.harness.persistence.HIterator;
 import io.harness.persistence.HPersistence;
 import io.harness.persistence.UuidAware;
 import io.harness.scheduler.PersistentScheduler;
-import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.collections.CollectionUtils;
-import org.apache.commons.lang3.StringUtils;
-import org.hibernate.validator.constraints.NotBlank;
-import org.mongodb.morphia.query.FindOptions;
-import org.mongodb.morphia.query.Query;
-import org.mongodb.morphia.query.UpdateOperations;
+
 import software.wings.beans.Account;
 import software.wings.beans.EntityType;
 import software.wings.beans.Event.Type;
@@ -92,6 +82,11 @@ import software.wings.service.intfc.UserGroupService;
 import software.wings.service.intfc.UserService;
 import software.wings.service.intfc.pagerduty.PagerDutyService;
 
+import com.google.common.collect.Sets;
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
+import com.google.inject.name.Named;
+import com.mongodb.ReadPreference;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -108,6 +103,13 @@ import java.util.stream.Collectors;
 import javax.annotation.Nullable;
 import javax.validation.constraints.NotNull;
 import javax.validation.executable.ValidateOnExecution;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.collections.CollectionUtils;
+import org.apache.commons.lang3.StringUtils;
+import org.hibernate.validator.constraints.NotBlank;
+import org.mongodb.morphia.query.FindOptions;
+import org.mongodb.morphia.query.Query;
+import org.mongodb.morphia.query.UpdateOperations;
 
 @OwnedBy(PL)
 @ValidateOnExecution
@@ -264,7 +266,7 @@ public class UserGroupServiceImpl implements UserGroupService {
     if (isEmpty(userGroupList)) {
       return emptyList();
     }
-    return userGroupList.stream().map(this ::getUserGroupSummary).collect(toList());
+    return userGroupList.stream().map(this::getUserGroupSummary).collect(toList());
   }
 
   @Override
@@ -521,7 +523,7 @@ public class UserGroupServiceImpl implements UserGroupService {
     for (AppPermission appPermission : userGroup.getAppPermissions()) {
       if (isNotEmpty(appPermission.getActions())
           && (appPermission.getPermissionType() == ALL_APP_ENTITIES
-                 || appPermission.getPermissionType() == DEPLOYMENT)) {
+              || appPermission.getPermissionType() == DEPLOYMENT)) {
         Set<PermissionAttribute.Action> actionSet = new HashSet<>();
         appPermission.getActions().forEach(action -> {
           if (action != null && action.equals(EXECUTE)) {

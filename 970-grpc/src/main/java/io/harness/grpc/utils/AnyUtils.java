@@ -1,10 +1,10 @@
 package io.harness.grpc.utils;
 
+import io.harness.exception.DataFormatException;
+
 import com.google.protobuf.Any;
 import com.google.protobuf.InvalidProtocolBufferException;
 import com.google.protobuf.Message;
-
-import io.harness.exception.DataFormatException;
 import lombok.experimental.UtilityClass;
 
 /**

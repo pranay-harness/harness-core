@@ -3,6 +3,15 @@ package software.wings.delegatetasks.collect.artifacts;
 import static io.harness.delegate.beans.artifact.ArtifactFileMetadata.builder;
 import static io.harness.rule.OwnerRule.AADITI;
 import static io.harness.rule.OwnerRule.GARVIT;
+
+import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
+import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
+import static software.wings.utils.WingsTestConstants.ACTIVITY_ID;
+import static software.wings.utils.WingsTestConstants.APP_ID;
+import static software.wings.utils.WingsTestConstants.ARTIFACT_STREAM_ID;
+import static software.wings.utils.WingsTestConstants.COMMAND_UNIT_NAME;
+import static software.wings.utils.WingsTestConstants.HOST_NAME;
+
 import static java.util.Arrays.asList;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -12,28 +21,13 @@ import static org.mockito.Matchers.anyMap;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.when;
-import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
-import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
-import static software.wings.utils.WingsTestConstants.ACTIVITY_ID;
-import static software.wings.utils.WingsTestConstants.APP_ID;
-import static software.wings.utils.WingsTestConstants.ARTIFACT_STREAM_ID;
-import static software.wings.utils.WingsTestConstants.COMMAND_UNIT_NAME;
-import static software.wings.utils.WingsTestConstants.HOST_NAME;
-
-import com.google.common.collect.ImmutableMap;
-import com.google.inject.Inject;
 
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.beans.artifact.ArtifactFileMetadata;
 import io.harness.exception.InvalidArgumentsException;
 import io.harness.rule.Owner;
 import io.harness.security.encryption.EncryptedDataDetail;
-import org.apache.commons.lang3.tuple.ImmutablePair;
-import org.apache.commons.lang3.tuple.Pair;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
+
 import software.wings.WingsBaseTest;
 import software.wings.beans.BambooConfig;
 import software.wings.beans.JenkinsConfig;
@@ -51,6 +45,8 @@ import software.wings.helpers.ext.jenkins.Jenkins;
 import software.wings.helpers.ext.nexus.NexusService;
 import software.wings.service.impl.jenkins.JenkinsUtils;
 
+import com.google.common.collect.ImmutableMap;
+import com.google.inject.Inject;
 import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
@@ -62,6 +58,12 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
+import org.apache.commons.lang3.tuple.ImmutablePair;
+import org.apache.commons.lang3.tuple.Pair;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
 
 public class ArtifactCollectionTaskHelperTest extends WingsBaseTest {
   private static final String MAVEN = ProtocolType.maven.name();

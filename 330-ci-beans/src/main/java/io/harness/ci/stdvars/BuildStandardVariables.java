@@ -1,13 +1,13 @@
 package io.harness.ci.stdvars;
 
-import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.data.SweepingOutput;
 import io.harness.validation.Update;
+
+import com.github.reinert.jjschema.SchemaIgnore;
+import javax.validation.constraints.NotNull;
 import lombok.Builder;
 import lombok.Value;
 import org.mongodb.morphia.annotations.Id;
-
-import javax.validation.constraints.NotNull;
 
 @Value
 @Builder

@@ -9,8 +9,7 @@ import io.harness.delegate.task.TaskParameters;
 import io.harness.expression.Expression;
 import io.harness.provision.TfVarSource;
 import io.harness.security.encryption.EncryptedDataDetail;
-import lombok.Builder;
-import lombok.Value;
+
 import software.wings.beans.GitConfig;
 import software.wings.beans.NameValuePair;
 import software.wings.delegatetasks.delegatecapability.CapabilityHelper;
@@ -19,6 +18,8 @@ import software.wings.delegatetasks.validation.capabilities.GitConnectionCapabil
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
+import lombok.Builder;
+import lombok.Value;
 
 @Value
 @Builder

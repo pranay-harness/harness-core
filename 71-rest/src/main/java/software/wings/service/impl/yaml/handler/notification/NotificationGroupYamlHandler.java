@@ -2,13 +2,11 @@ package software.wings.service.impl.yaml.handler.notification;
 
 import static io.harness.exception.WingsException.USER;
 import static io.harness.validation.Validator.notNullCheck;
-import static java.util.stream.Collectors.toList;
+
 import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static software.wings.beans.ObjectType.NOTIFICATION_GROUP;
 
-import com.google.common.collect.Lists;
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
+import static java.util.stream.Collectors.toList;
 
 import software.wings.beans.NotificationChannelType;
 import software.wings.beans.NotificationGroup;
@@ -21,6 +19,9 @@ import software.wings.service.impl.yaml.service.YamlHelper;
 import software.wings.service.intfc.NotificationSetupService;
 import software.wings.utils.Utils;
 
+import com.google.common.collect.Lists;
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -88,7 +89,7 @@ public class NotificationGroupYamlHandler extends BaseYamlHandler<Yaml, Notifica
   }
 
   private List<AddressYaml> toAddressYamlList(Map<NotificationChannelType, List<String>> addressesByChannelType) {
-    return addressesByChannelType.entrySet().stream().map(this ::toAddressYaml).collect(toList());
+    return addressesByChannelType.entrySet().stream().map(this::toAddressYaml).collect(toList());
   }
 
   private AddressYaml toAddressYaml(Entry<NotificationChannelType, List<String>> entry) {

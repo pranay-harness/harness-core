@@ -1,8 +1,8 @@
 package io.harness.managerclient;
 
-import com.google.inject.AbstractModule;
-
 import io.harness.security.TokenGenerator;
+
+import com.google.inject.AbstractModule;
 
 public class ManagerClientModule extends AbstractModule {
   private String managerBaseUrl;

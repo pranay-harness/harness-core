@@ -1,9 +1,8 @@
 package software.wings.service.impl.newrelic;
 
+import java.util.List;
 import lombok.Builder;
 import lombok.Data;
-
-import java.util.List;
 
 /**
  * Created by rsingh on 9/5/17.

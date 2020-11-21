@@ -2,9 +2,8 @@ package io.harness.cvng.core.beans;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.rule.OwnerRule.KAMAL;
-import static org.assertj.core.api.Assertions.assertThat;
 
-import com.google.common.collect.Lists;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.category.element.UnitTests;
 import io.harness.cvng.beans.CVMonitoringCategory;
@@ -13,12 +12,13 @@ import io.harness.cvng.core.entities.CVConfig;
 import io.harness.cvng.core.entities.SplunkCVConfig;
 import io.harness.cvng.core.services.CVNextGenConstants;
 import io.harness.rule.Owner;
+
+import com.google.common.collect.Lists;
+import java.util.Collections;
+import java.util.List;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
-
-import java.util.Collections;
-import java.util.List;
 
 public class SplunkDSConfigTest extends DSConfigTestBase {
   private SplunkDSConfig splunkDSConfig;

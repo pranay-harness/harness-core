@@ -2,8 +2,15 @@ package io.harness.azure.impl;
 
 import static org.mockito.Matchers.anyString;
 
-import com.google.common.util.concurrent.TimeLimiter;
+import io.harness.CategoryTest;
+import io.harness.azure.AzureClient;
+import io.harness.azure.model.AzureConfig;
+import io.harness.category.element.UnitTests;
+import io.harness.network.Http;
+import io.harness.rule.Owner;
+import io.harness.rule.OwnerRule;
 
+import com.google.common.util.concurrent.TimeLimiter;
 import com.microsoft.azure.Page;
 import com.microsoft.azure.PagedList;
 import com.microsoft.azure.credentials.ApplicationTokenCredentials;
@@ -15,13 +22,11 @@ import com.microsoft.azure.management.monitor.ScaleCapacity;
 import com.microsoft.azure.management.monitor.implementation.AutoscaleSettingResourceInner;
 import com.microsoft.azure.management.monitor.implementation.AutoscaleSettingsInner;
 import com.microsoft.rest.LogLevel;
-import io.harness.CategoryTest;
-import io.harness.azure.AzureClient;
-import io.harness.azure.model.AzureConfig;
-import io.harness.category.element.UnitTests;
-import io.harness.network.Http;
-import io.harness.rule.Owner;
-import io.harness.rule.OwnerRule;
+import java.io.IOException;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Optional;
 import org.assertj.core.api.Assertions;
 import org.jetbrains.annotations.NotNull;
 import org.junit.Before;
@@ -37,12 +42,6 @@ import org.powermock.api.mockito.PowerMockito;
 import org.powermock.core.classloader.annotations.PowerMockIgnore;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
-
-import java.io.IOException;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Optional;
 
 @RunWith(PowerMockRunner.class)
 @PrepareForTest({Azure.class, AzureClient.class, Http.class, TimeLimiter.class})

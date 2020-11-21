@@ -1,13 +1,13 @@
 package io.harness.notification.repositories;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
+
 import io.harness.annotation.HarnessRepo;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.notification.entities.Notification;
-import org.springframework.data.repository.PagingAndSortingRepository;
 
 import java.util.Optional;
-
-import static io.harness.annotations.dev.HarnessTeam.PL;
+import org.springframework.data.repository.PagingAndSortingRepository;
 
 @HarnessRepo
 @OwnedBy(PL)

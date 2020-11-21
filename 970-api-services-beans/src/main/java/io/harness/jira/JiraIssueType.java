@@ -2,19 +2,18 @@ package io.harness.jira;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
 import io.harness.annotations.dev.OwnedBy;
-import lombok.Data;
-import net.rcarz.jiraclient.IssueType;
-import net.sf.json.JSONArray;
-import net.sf.json.JSONObject;
 
-import javax.validation.constraints.NotNull;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import javax.validation.constraints.NotNull;
+import lombok.Data;
+import net.rcarz.jiraclient.IssueType;
+import net.sf.json.JSONArray;
+import net.sf.json.JSONObject;
 
 @OwnedBy(CDC)
 @Data

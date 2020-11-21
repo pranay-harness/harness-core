@@ -4,19 +4,11 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.waiter.OrchestrationNotifyEventListener.ORCHESTRATION;
 
-import com.google.inject.Inject;
-
-import com.github.reinert.jjschema.Attributes;
-import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.beans.DelegateTask;
 import io.harness.delegate.beans.TaskData;
 import io.harness.exception.WingsException;
 import io.harness.tasks.Cd1SetupFields;
-import lombok.Builder;
-import lombok.Data;
-import lombok.experimental.FieldNameConstants;
-import lombok.extern.slf4j.Slf4j;
-import org.slf4j.Logger;
+
 import software.wings.beans.FeatureName;
 import software.wings.beans.NewRelicConfig;
 import software.wings.beans.SettingAttribute;
@@ -40,6 +32,9 @@ import software.wings.sm.ExecutionContext;
 import software.wings.sm.StateType;
 import software.wings.verification.VerificationStateAnalysisExecutionData;
 
+import com.github.reinert.jjschema.Attributes;
+import com.github.reinert.jjschema.SchemaIgnore;
+import com.google.inject.Inject;
 import java.text.DecimalFormat;
 import java.util.Collection;
 import java.util.HashMap;
@@ -50,6 +45,11 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
+import lombok.Builder;
+import lombok.Data;
+import lombok.experimental.FieldNameConstants;
+import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
 
 /**
  * Created by rsingh on 8/28/17.

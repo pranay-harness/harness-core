@@ -1,7 +1,5 @@
 package io.harness.delegate.task.gcp;
 
-import com.google.inject.Inject;
-
 import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.delegate.beans.DelegateTaskPackage;
 import io.harness.delegate.beans.DelegateTaskResponse;
@@ -14,6 +12,7 @@ import io.harness.delegate.task.gcp.taskHandlers.TaskHandler;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 
+import com.google.inject.Inject;
 import java.util.Map;
 import java.util.function.BooleanSupplier;
 import java.util.function.Consumer;

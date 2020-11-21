@@ -9,13 +9,14 @@ import io.harness.rest.RestResponse;
 import io.harness.scm.ScmSecret;
 import io.harness.scm.SecretName;
 import io.harness.testframework.framework.matchers.LoginMatcher;
-import io.restassured.specification.RequestSpecification;
-import lombok.extern.slf4j.Slf4j;
+
 import software.wings.beans.LoginRequest;
 import software.wings.beans.User;
 
+import io.restassured.specification.RequestSpecification;
 import java.nio.charset.StandardCharsets;
 import javax.ws.rs.core.GenericType;
+import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class Setup {

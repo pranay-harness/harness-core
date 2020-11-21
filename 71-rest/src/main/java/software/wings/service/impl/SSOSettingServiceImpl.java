@@ -1,16 +1,13 @@
 package software.wings.service.impl;
 
 import static io.harness.persistence.HQuery.excludeAuthority;
-import static java.util.Collections.singletonList;
-import static java.util.stream.Collectors.joining;
+
 import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static software.wings.beans.NotificationRule.NotificationRuleBuilder.aNotificationRule;
 import static software.wings.common.NotificationMessageResolver.NotificationMessageType.SSO_PROVIDER_NOT_REACHABLE_NOTIFICATION;
 
-import com.google.common.collect.ImmutableMap;
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
-import com.google.inject.name.Named;
+import static java.util.Collections.singletonList;
+import static java.util.stream.Collectors.joining;
 
 import io.harness.beans.PageRequest.PageRequestBuilder;
 import io.harness.beans.SearchFilter.Operator;
@@ -18,8 +15,7 @@ import io.harness.event.handler.impl.EventPublishHelper;
 import io.harness.exception.InvalidRequestException;
 import io.harness.persistence.HIterator;
 import io.harness.scheduler.PersistentScheduler;
-import lombok.extern.slf4j.Slf4j;
-import org.hibernate.validator.constraints.NotBlank;
+
 import software.wings.beans.Account;
 import software.wings.beans.Delegate;
 import software.wings.beans.Delegate.DelegateKeys;
@@ -55,6 +51,10 @@ import software.wings.service.intfc.SSOSettingService;
 import software.wings.service.intfc.UserGroupService;
 import software.wings.service.intfc.security.SecretManager;
 
+import com.google.common.collect.ImmutableMap;
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
+import com.google.inject.name.Named;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -63,6 +63,8 @@ import java.util.Set;
 import java.util.stream.Collectors;
 import javax.validation.constraints.NotNull;
 import javax.validation.executable.ValidateOnExecution;
+import lombok.extern.slf4j.Slf4j;
+import org.hibernate.validator.constraints.NotBlank;
 
 @ValidateOnExecution
 @Singleton

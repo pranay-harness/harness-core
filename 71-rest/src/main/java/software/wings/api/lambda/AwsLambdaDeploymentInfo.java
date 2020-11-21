@@ -1,13 +1,13 @@
 package software.wings.api.lambda;
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import lombok.Builder;
-import lombok.Data;
-import lombok.EqualsAndHashCode;
 import software.wings.api.DeploymentInfo;
 import software.wings.beans.Tag;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import java.util.List;
+import lombok.Builder;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 @Data

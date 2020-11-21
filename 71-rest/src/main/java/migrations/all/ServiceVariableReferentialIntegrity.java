@@ -1,21 +1,21 @@
 package migrations.all;
 
 import static io.harness.persistence.HQuery.excludeAuthority;
+
 import static software.wings.beans.Base.ID_KEY;
 import static software.wings.common.Constants.ACCOUNT_ID_KEY;
 import static software.wings.common.Constants.APP_ID_KEY;
 
-import com.google.inject.Inject;
-
-import lombok.extern.slf4j.Slf4j;
-import migrations.Migration;
-import org.mongodb.morphia.query.UpdateOperations;
 import software.wings.beans.Account;
 import software.wings.beans.Application;
 import software.wings.beans.ServiceVariable;
 import software.wings.dl.WingsPersistence;
 
+import com.google.inject.Inject;
 import java.util.List;
+import lombok.extern.slf4j.Slf4j;
+import migrations.Migration;
+import org.mongodb.morphia.query.UpdateOperations;
 
 /**
  * Created by brett on 5/1/18.

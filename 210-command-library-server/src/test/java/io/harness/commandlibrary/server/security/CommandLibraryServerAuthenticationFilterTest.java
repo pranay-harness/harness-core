@@ -1,6 +1,7 @@
 package io.harness.commandlibrary.server.security;
 
 import static io.harness.commandlibrary.common.CommandLibraryConstants.MANAGER_CLIENT_ID;
+
 import static org.apache.commons.lang3.StringUtils.SPACE;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doReturn;
@@ -12,14 +13,7 @@ import io.harness.commandlibrary.server.app.CommandLibraryServerConfig;
 import io.harness.commandlibrary.server.beans.ServiceSecretConfig;
 import io.harness.rule.Owner;
 import io.harness.rule.OwnerRule;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.Test.None;
-import org.junit.experimental.categories.Category;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
-import org.mockito.Spy;
+
 import software.wings.resources.commandlibrary.CommandLibraryResource;
 
 import java.io.IOException;
@@ -29,6 +23,14 @@ import javax.ws.rs.container.ContainerRequestContext;
 import javax.ws.rs.container.ResourceInfo;
 import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.UriInfo;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.Test.None;
+import org.junit.experimental.categories.Category;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
+import org.mockito.Spy;
 
 public class CommandLibraryServerAuthenticationFilterTest extends CategoryTest {
   @Mock CommandLibraryServerConfig commandLibraryServerConfig;

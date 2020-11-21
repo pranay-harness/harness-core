@@ -2,20 +2,9 @@ package software.wings.service.impl.ldap;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
 
-import com.google.common.annotations.VisibleForTesting;
-import com.google.common.collect.Sets;
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
-
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.security.encryption.EncryptedDataDetail;
-import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.StringUtils;
-import org.ldaptive.LdapAttribute;
-import org.ldaptive.LdapEntry;
-import org.ldaptive.LdapException;
-import org.ldaptive.ResultCode;
-import org.ldaptive.SearchResult;
+
 import software.wings.beans.sso.LdapGroupResponse;
 import software.wings.beans.sso.LdapSettings;
 import software.wings.beans.sso.LdapTestResponse;
@@ -28,6 +17,10 @@ import software.wings.helpers.ext.ldap.LdapUserConfig;
 import software.wings.service.intfc.ldap.LdapDelegateService;
 import software.wings.service.intfc.security.EncryptionService;
 
+import com.google.common.annotations.VisibleForTesting;
+import com.google.common.collect.Sets;
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -35,6 +28,13 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
+import org.ldaptive.LdapAttribute;
+import org.ldaptive.LdapEntry;
+import org.ldaptive.LdapException;
+import org.ldaptive.ResultCode;
+import org.ldaptive.SearchResult;
 
 /**
  * Impl for Ldap Delegate Service  {@link LdapDelegateService}.

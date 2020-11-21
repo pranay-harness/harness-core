@@ -1,23 +1,20 @@
 package software.wings.delegatetasks.validation.capabilitycheck;
 
 import static io.harness.rule.OwnerRule.PRASHANT;
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.Matchers.any;
-import static org.mockito.Mockito.doNothing;
+
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 import static software.wings.utils.WingsTestConstants.ACTIVITY_ID;
 import static software.wings.utils.WingsTestConstants.APP_ID;
 
-import com.jcraft.jsch.JSchException;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Matchers.any;
+import static org.mockito.Mockito.doNothing;
+
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.beans.executioncapability.CapabilityResponse;
 import io.harness.rule.Owner;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.Spy;
+
 import software.wings.WingsBaseTest;
 import software.wings.beans.BastionConnectionAttributes;
 import software.wings.beans.ExecutionCredential;
@@ -31,7 +28,13 @@ import software.wings.delegatetasks.validation.capabilities.SSHHostValidationCap
 import software.wings.service.intfc.security.EncryptionService;
 import software.wings.utils.WingsTestConstants;
 
+import com.jcraft.jsch.JSchException;
 import java.util.ArrayList;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.Spy;
 
 public class SSHHostValidationCapabilityCheckTest extends WingsBaseTest {
   @Mock private EncryptionService encryptionService;

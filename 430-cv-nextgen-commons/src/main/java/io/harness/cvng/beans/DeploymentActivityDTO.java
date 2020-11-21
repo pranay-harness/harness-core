@@ -1,12 +1,11 @@
 package io.harness.cvng.beans;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
+import java.util.Set;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.experimental.SuperBuilder;
-
-import java.util.Set;
 
 @Data
 @SuperBuilder

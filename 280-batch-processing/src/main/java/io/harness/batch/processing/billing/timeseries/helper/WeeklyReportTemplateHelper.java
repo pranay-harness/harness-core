@@ -4,14 +4,15 @@ import static io.harness.batch.processing.billing.timeseries.service.impl.Weekly
 
 import io.harness.batch.processing.config.BatchMainConfig;
 import io.harness.ccm.communication.entities.CommunicationMedium;
-import lombok.extern.slf4j.Slf4j;
-import org.apache.http.client.utils.URIBuilder;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
+
 import software.wings.dl.WingsPersistence;
 
 import java.net.URISyntaxException;
 import java.util.Map;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.http.client.utils.URIBuilder;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
 
 @Component
 @Slf4j

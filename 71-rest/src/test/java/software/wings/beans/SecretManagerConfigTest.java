@@ -2,6 +2,7 @@ package software.wings.beans;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.rule.OwnerRule.UTKARSH;
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.fail;
 
@@ -10,11 +11,11 @@ import io.harness.beans.SecretManagerConfig.SecretManagerConfigKeys;
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
 import io.harness.security.encryption.EncryptionType;
+
+import java.security.SecureRandom;
 import org.apache.commons.lang3.reflect.FieldUtils;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
-
-import java.security.SecureRandom;
 
 public class SecretManagerConfigTest extends CategoryTest {
   private static final SecureRandom random = new SecureRandom();

@@ -1,9 +1,8 @@
 package io.harness.gitsync.core.impl;
 
 import static io.harness.rule.OwnerRule.ABHINAV;
-import static org.assertj.core.api.Assertions.assertThat;
 
-import com.google.inject.Inject;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.category.element.UnitTests;
 import io.harness.gitsync.GitSyncBaseTest;
@@ -11,11 +10,12 @@ import io.harness.gitsync.common.beans.YamlChangeSet;
 import io.harness.gitsync.common.beans.YamlChangeSet.Status;
 import io.harness.gitsync.core.dao.api.repositories.YamlChangeSet.YamlChangeSetRepository;
 import io.harness.rule.Owner;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
 
+import com.google.inject.Inject;
 import java.util.Collections;
 import java.util.Optional;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 public class YamlChangeSetServiceImplTest extends GitSyncBaseTest {
   public static final String ACCOUNT_ID = "accountId";

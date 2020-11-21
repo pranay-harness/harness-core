@@ -4,8 +4,7 @@ import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.beans.OrchestrationWorkflowType.BUILD;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
-import static java.lang.String.format;
-import static java.util.stream.Collectors.toList;
+
 import static software.wings.sm.ExpressionProcessor.EXPRESSION_PREFIX;
 import static software.wings.sm.ExpressionProcessor.EXPRESSION_SUFFIX;
 import static software.wings.sm.ExpressionProcessor.SUBFIELD_ACCESS;
@@ -13,7 +12,8 @@ import static software.wings.sm.StateType.REPEAT;
 import static software.wings.sm.Transition.Builder.aTransition;
 import static software.wings.sm.states.RepeatState.Builder.aRepeatState;
 
-import com.google.common.collect.Lists;
+import static java.lang.String.format;
+import static java.util.stream.Collectors.toList;
 
 import io.harness.annotation.HarnessEntity;
 import io.harness.annotations.dev.OwnedBy;
@@ -32,15 +32,7 @@ import io.harness.mongo.index.Field;
 import io.harness.persistence.CreatedAtAware;
 import io.harness.persistence.PersistentEntity;
 import io.harness.persistence.UuidAware;
-import lombok.Data;
-import lombok.experimental.FieldNameConstants;
-import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.StringUtils;
-import org.apache.commons.lang3.tuple.Pair;
-import org.mongodb.morphia.annotations.Entity;
-import org.mongodb.morphia.annotations.Id;
-import org.mongodb.morphia.annotations.PostLoad;
-import org.mongodb.morphia.annotations.Transient;
+
 import software.wings.beans.ExecutionStrategy;
 import software.wings.beans.Graph;
 import software.wings.beans.GraphLink;
@@ -61,6 +53,7 @@ import software.wings.sm.states.RepeatState;
 import software.wings.sm.states.SubWorkflowState;
 import software.wings.sm.states.mixin.SweepingOutputStateMixin;
 
+import com.google.common.collect.Lists;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -70,6 +63,15 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 import javax.validation.constraints.NotNull;
+import lombok.Data;
+import lombok.experimental.FieldNameConstants;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.tuple.Pair;
+import org.mongodb.morphia.annotations.Entity;
+import org.mongodb.morphia.annotations.Id;
+import org.mongodb.morphia.annotations.PostLoad;
+import org.mongodb.morphia.annotations.Transient;
 
 /**
  * Describes a StateMachine.
@@ -976,8 +978,8 @@ public class StateMachine implements PersistentEntity, UuidAware, CreatedAtAware
     if (patternsForRequiredContextElementType.stream().anyMatch(pattern
             -> pattern != null
                 && (pattern.contains(EXPRESSION_PREFIX + ContextElement.INSTANCE + EXPRESSION_SUFFIX)
-                       || pattern.contains(EXPRESSION_PREFIX + ContextElement.INSTANCE + SUBFIELD_ACCESS)
-                       || pattern.contains(EXPRESSION_PREFIX + ContextElement.HOST + SUBFIELD_ACCESS)))) {
+                    || pattern.contains(EXPRESSION_PREFIX + ContextElement.INSTANCE + SUBFIELD_ACCESS)
+                    || pattern.contains(EXPRESSION_PREFIX + ContextElement.HOST + SUBFIELD_ACCESS)))) {
       return ContextElementType.INSTANCE;
     }
 

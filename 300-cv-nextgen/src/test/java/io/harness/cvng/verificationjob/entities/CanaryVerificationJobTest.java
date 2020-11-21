@@ -2,6 +2,7 @@ package io.harness.cvng.verificationjob.entities;
 
 import static io.harness.rule.OwnerRule.NEMANJA;
 import static io.harness.rule.OwnerRule.SOWMYA;
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
@@ -10,12 +11,12 @@ import io.harness.category.element.UnitTests;
 import io.harness.cvng.core.beans.TimeRange;
 import io.harness.cvng.verificationjob.beans.Sensitivity;
 import io.harness.rule.Owner;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
 
 import java.time.Duration;
 import java.time.Instant;
 import java.util.Optional;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 public class CanaryVerificationJobTest extends CategoryTest {
   @Test

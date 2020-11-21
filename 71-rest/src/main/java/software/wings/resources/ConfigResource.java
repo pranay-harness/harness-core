@@ -1,23 +1,17 @@
 package software.wings.resources;
 
-import static javax.ws.rs.core.MediaType.MULTIPART_FORM_DATA;
 import static software.wings.beans.ConfigFile.DEFAULT_TEMPLATE_ID;
 import static software.wings.beans.EntityType.SERVICE;
 
-import com.google.inject.Inject;
+import static javax.ws.rs.core.MediaType.MULTIPART_FORM_DATA;
 
-import com.codahale.metrics.annotation.ExceptionMetered;
-import com.codahale.metrics.annotation.Timed;
-import com.fasterxml.jackson.core.type.TypeReference;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.rest.RestResponse;
 import io.harness.serializer.JsonUtils;
 import io.harness.stream.BoundedInputStream;
 import io.harness.validation.PersistenceValidator;
-import io.swagger.annotations.Api;
-import org.glassfish.jersey.media.multipart.FormDataContentDisposition;
-import org.glassfish.jersey.media.multipart.FormDataParam;
+
 import software.wings.app.MainConfiguration;
 import software.wings.beans.Application;
 import software.wings.beans.ConfigFile;
@@ -29,6 +23,11 @@ import software.wings.service.impl.security.auth.ConfigFileAuthHandler;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ConfigService;
 
+import com.codahale.metrics.annotation.ExceptionMetered;
+import com.codahale.metrics.annotation.Timed;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.google.inject.Inject;
+import io.swagger.annotations.Api;
 import java.io.File;
 import java.io.InputStream;
 import java.util.Map;
@@ -46,6 +45,8 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.ResponseBuilder;
+import org.glassfish.jersey.media.multipart.FormDataContentDisposition;
+import org.glassfish.jersey.media.multipart.FormDataParam;
 
 /**
  * Application Resource class.

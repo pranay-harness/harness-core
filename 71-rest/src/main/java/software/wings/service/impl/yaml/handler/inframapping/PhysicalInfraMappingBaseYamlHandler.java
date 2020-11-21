@@ -2,11 +2,11 @@ package software.wings.service.impl.yaml.handler.inframapping;
 
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
-import com.google.inject.Singleton;
-
 import software.wings.beans.PhysicalInfrastructureMappingBase;
 import software.wings.beans.PhysicalInfrastructureMappingBase.Yaml;
 import software.wings.beans.yaml.ChangeContext;
+
+import com.google.inject.Singleton;
 
 @Singleton
 public abstract class PhysicalInfraMappingBaseYamlHandler<Y extends PhysicalInfrastructureMappingBase.Yaml, B

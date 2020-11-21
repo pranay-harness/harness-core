@@ -1,12 +1,11 @@
 package software.wings.service.impl.aws.manager;
 
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
-import static java.util.Collections.singletonList;
-import static java.util.concurrent.TimeUnit.MINUTES;
+
 import static software.wings.beans.Application.GLOBAL_APP_ID;
 
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
+import static java.util.Collections.singletonList;
+import static java.util.concurrent.TimeUnit.MINUTES;
 
 import io.harness.beans.DelegateTask;
 import io.harness.delegate.beans.DelegateResponseData;
@@ -16,6 +15,7 @@ import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.tasks.Cd1SetupFields;
+
 import software.wings.beans.AwsConfig;
 import software.wings.beans.TaskType;
 import software.wings.service.impl.aws.model.AwsResponse;
@@ -26,6 +26,8 @@ import software.wings.service.impl.aws.model.AwsRoute53Request;
 import software.wings.service.intfc.DelegateService;
 import software.wings.service.intfc.aws.manager.AwsRoute53HelperServiceManager;
 
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import java.util.List;
 
 @Singleton

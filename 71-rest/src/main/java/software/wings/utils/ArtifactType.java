@@ -1,8 +1,7 @@
 package software.wings.utils;
 
 import static io.harness.delegate.task.shell.ScriptType.POWERSHELL;
-import static java.util.Arrays.asList;
-import static java.util.Collections.emptyList;
+
 import static software.wings.beans.Graph.Builder.aGraph;
 import static software.wings.beans.Graph.graphIdGenerator;
 import static software.wings.beans.command.Command.Builder.aCommand;
@@ -33,7 +32,8 @@ import static software.wings.sm.states.AwsAmiServiceDeployState.ASG_COMMAND_NAME
 import static software.wings.sm.states.AwsLambdaState.AWS_LAMBDA_COMMAND_NAME;
 import static software.wings.utils.PowerShellScriptsLoader.psScriptMap;
 
-import com.google.common.collect.ImmutableMap;
+import static java.util.Arrays.asList;
+import static java.util.Collections.emptyList;
 
 import software.wings.beans.GraphNode;
 import software.wings.beans.command.Command;
@@ -44,6 +44,7 @@ import software.wings.beans.command.ScpCommandUnit.ScpFileCategory;
 import software.wings.beans.command.SetupEnvCommandUnit;
 import software.wings.utils.PowerShellScriptsLoader.PsScript;
 
+import com.google.common.collect.ImmutableMap;
 import java.util.List;
 
 /**

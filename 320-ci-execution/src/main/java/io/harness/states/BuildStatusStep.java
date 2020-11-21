@@ -1,7 +1,5 @@
 package io.harness.states;
 
-import com.google.inject.Inject;
-
 import io.harness.ambiance.Ambiance;
 import io.harness.delegate.beans.TaskData;
 import io.harness.delegate.beans.ci.pod.ConnectorDetails;
@@ -22,9 +20,10 @@ import io.harness.state.io.StepResponse;
 import io.harness.stateutils.buildstate.ConnectorUtils;
 import io.harness.tasks.ResponseData;
 import io.harness.tasks.Task;
-import lombok.extern.slf4j.Slf4j;
 
+import com.google.inject.Inject;
 import java.util.Map;
+import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class BuildStatusStep implements Step, TaskExecutable<BuildStatusUpdateParameter> {

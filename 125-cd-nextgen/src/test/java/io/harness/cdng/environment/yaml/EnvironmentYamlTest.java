@@ -1,6 +1,7 @@
 package io.harness.cdng.environment.yaml;
 
 import static io.harness.rule.OwnerRule.VAIBHAV_SI;
+
 import static java.util.Collections.singletonMap;
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -10,10 +11,10 @@ import io.harness.category.element.UnitTests;
 import io.harness.ng.core.common.beans.NGTag;
 import io.harness.ng.core.environment.beans.EnvironmentType;
 import io.harness.rule.Owner;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
 
 import java.util.Collections;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 public class EnvironmentYamlTest extends CategoryTest {
   @Test

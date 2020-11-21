@@ -2,22 +2,15 @@ package software.wings.service.impl.newrelic;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.rule.OwnerRule.SOWMYA;
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.when;
 
-import com.google.common.collect.Sets;
-import com.google.inject.Inject;
-
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
-import org.apache.commons.lang3.reflect.FieldUtils;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
-import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
+
 import software.wings.WingsBaseTest;
 import software.wings.beans.NewRelicConfig;
 import software.wings.beans.SettingAttribute;
@@ -31,6 +24,8 @@ import software.wings.service.intfc.newrelic.NewRelicService;
 import software.wings.sm.states.NewRelicState;
 import software.wings.sm.states.NewRelicState.Metric;
 
+import com.google.common.collect.Sets;
+import com.google.inject.Inject;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -38,6 +33,12 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import org.apache.commons.lang3.reflect.FieldUtils;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
 
 public class NewRelicServiceImplTest extends WingsBaseTest {
   @Mock private DelegateProxyFactory delegateProxyFactory;

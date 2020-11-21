@@ -2,18 +2,19 @@ package io.harness.version;
 
 import static io.harness.rule.OwnerRule.BRETT;
 import static io.harness.rule.OwnerRule.PUNEET;
+
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
 import io.harness.serializer.YamlUtils;
-import org.apache.commons.io.IOUtils;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
 
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
+import org.apache.commons.io.IOUtils;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 public class VersionInfoManagerTest extends CategoryTest {
   private static String sampleVersionInfoYaml = "version   : 1.1.1.1\n"

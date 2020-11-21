@@ -4,10 +4,10 @@ import static org.apache.commons.lang3.StringUtils.isBlank;
 
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.UnknownEnumTypeException;
-import lombok.Getter;
 
 import java.util.HashMap;
 import java.util.Map;
+import lombok.Getter;
 
 public enum WebhookEventType {
   PULL_REQUEST("On Pull Request", "pull_request"),

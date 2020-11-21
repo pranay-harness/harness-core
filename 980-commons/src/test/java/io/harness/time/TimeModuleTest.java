@@ -1,26 +1,26 @@
 package io.harness.time;
 
 import static io.harness.rule.OwnerRule.AVMOHAN;
-import static org.assertj.core.api.Assertions.assertThat;
 
-import com.google.common.util.concurrent.TimeLimiter;
-import com.google.inject.Guice;
-import com.google.inject.Injector;
-import com.google.inject.Module;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.logging.AutoLogContext;
 import io.harness.rule.Owner;
 import io.harness.threading.ExecutorModule;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
-import org.slf4j.MDC;
 
+import com.google.common.util.concurrent.TimeLimiter;
+import com.google.inject.Guice;
+import com.google.inject.Injector;
+import com.google.inject.Module;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
+import org.slf4j.MDC;
 
 public class TimeModuleTest extends CategoryTest {
   @Test

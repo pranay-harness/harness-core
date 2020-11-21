@@ -2,6 +2,10 @@ package software.wings.integration;
 
 import static io.harness.rule.OwnerRule.ANUBHAW;
 
+import io.harness.CategoryTest;
+import io.harness.category.element.DeprecatedIntegrationTests;
+import io.harness.rule.Owner;
+
 import com.amazonaws.auth.BasicAWSCredentials;
 import com.amazonaws.regions.Region;
 import com.amazonaws.regions.Regions;
@@ -33,17 +37,13 @@ import com.amazonaws.services.ecs.model.Service;
 import com.amazonaws.services.ecs.model.UpdateServiceRequest;
 import com.amazonaws.services.ecs.model.UpdateServiceResult;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import io.harness.CategoryTest;
-import io.harness.category.element.DeprecatedIntegrationTests;
-import io.harness.rule.Owner;
+import java.io.IOException;
+import java.util.List;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.codec.binary.Base64;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
-
-import java.io.IOException;
-import java.util.List;
 
 /**
  * Created by anubhaw on 12/23/16.

@@ -1,6 +1,7 @@
 package io.harness.cdng.stepsdependency.utils;
 
 import static io.harness.rule.OwnerRule.ARCHIT;
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.doReturn;
@@ -29,6 +30,10 @@ import io.harness.state.io.StepInputPackage;
 import io.harness.state.io.StepParameters;
 import io.harness.state.io.StepTransput;
 import io.harness.steps.dummy.DummyStepParameters;
+
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import org.junit.Rule;
@@ -37,10 +42,6 @@ import org.junit.experimental.categories.Category;
 import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnit;
 import org.mockito.junit.MockitoRule;
-
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
 
 public class CDStepDependencyUtilsTest extends CategoryTest {
   @Rule public MockitoRule mockitoRule = MockitoJUnit.rule();

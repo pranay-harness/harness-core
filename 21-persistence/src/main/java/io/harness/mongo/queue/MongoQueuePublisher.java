@@ -2,19 +2,18 @@ package io.harness.mongo.queue;
 
 import static io.harness.manage.GlobalContextManager.obtainGlobalContext;
 
-import com.google.inject.Inject;
-
 import io.harness.logging.AutoLogRemoveContext;
 import io.harness.mongo.MessageLogContext;
 import io.harness.persistence.HPersistence;
 import io.harness.queue.Queuable;
 import io.harness.queue.QueuePublisher;
 import io.harness.queue.TopicUtils;
-import lombok.Getter;
-import lombok.extern.slf4j.Slf4j;
 
+import com.google.inject.Inject;
 import java.util.List;
 import java.util.Objects;
+import lombok.Getter;
+import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class MongoQueuePublisher<T extends Queuable> implements QueuePublisher<T> {

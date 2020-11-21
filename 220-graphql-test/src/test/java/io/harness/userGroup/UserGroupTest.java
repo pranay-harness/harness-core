@@ -1,15 +1,13 @@
 package io.harness.userGroup;
 
-import static io.github.benas.randombeans.api.EnhancedRandom.random;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.generator.AccountGenerator.ACCOUNT_ID;
 import static io.harness.rule.OwnerRule.DEEPAK;
 import static io.harness.rule.OwnerRule.VARDAN_BANSAL;
+
+import static io.github.benas.randombeans.api.EnhancedRandom.random;
 import static org.assertj.core.api.Assertions.assertThat;
 
-import com.google.inject.Inject;
-
-import graphql.ExecutionResult;
 import io.harness.GraphQLTest;
 import io.harness.beans.EmbeddedUser;
 import io.harness.category.element.UnitTests;
@@ -21,11 +19,7 @@ import io.harness.multiline.MultilineStringMixin;
 import io.harness.rule.Owner;
 import io.harness.serializer.JsonUtils;
 import io.harness.testframework.graphql.QLTestObject;
-import lombok.Data;
-import lombok.extern.slf4j.Slf4j;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
+
 import software.wings.beans.Account;
 import software.wings.beans.User;
 import software.wings.beans.security.UserGroup;
@@ -44,10 +38,17 @@ import software.wings.graphql.schema.type.usergroup.QLUserGroupConnection;
 import software.wings.service.intfc.SSOSettingService;
 import software.wings.service.intfc.UserGroupService;
 
+import com.google.inject.Inject;
+import graphql.ExecutionResult;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import lombok.Data;
+import lombok.extern.slf4j.Slf4j;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 @Slf4j
 public class UserGroupTest extends GraphQLTest {

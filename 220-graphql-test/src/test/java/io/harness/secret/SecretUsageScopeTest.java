@@ -1,9 +1,8 @@
 package io.harness.secret;
 
 import static io.harness.rule.OwnerRule.DEEPAK;
-import static org.assertj.core.api.Assertions.assertThat;
 
-import com.google.inject.Inject;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.GraphQLTest;
 import io.harness.category.element.UnitTests;
@@ -14,16 +13,18 @@ import io.harness.generator.Randomizer;
 import io.harness.rule.Owner;
 import io.harness.serializer.JsonUtils;
 import io.harness.testframework.graphql.QLTestObject;
-import lombok.extern.slf4j.Slf4j;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
+
 import software.wings.beans.Account;
 import software.wings.graphql.schema.type.secrets.QLAppEnvScope;
 import software.wings.graphql.schema.type.secrets.QLUsageScope;
 
+import com.google.inject.Inject;
 import java.util.ArrayList;
 import java.util.List;
+import lombok.extern.slf4j.Slf4j;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 @Slf4j
 public class SecretUsageScopeTest extends GraphQLTest {

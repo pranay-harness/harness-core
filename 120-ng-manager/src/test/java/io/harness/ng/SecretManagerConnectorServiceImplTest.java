@@ -1,7 +1,8 @@
 package io.harness.ng;
 
-import static io.github.benas.randombeans.api.EnhancedRandom.random;
 import static io.harness.rule.OwnerRule.PHOENIKX;
+
+import static io.github.benas.randombeans.api.EnhancedRandom.random;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.fail;
 import static org.mockito.Matchers.any;
@@ -24,11 +25,11 @@ import io.harness.ng.core.api.NGSecretManagerService;
 import io.harness.rule.Owner;
 import io.harness.secretmanagerclient.dto.SecretManagerConfigDTO;
 import io.harness.secretmanagerclient.dto.VaultConfigDTO;
+
+import java.io.IOException;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
-
-import java.io.IOException;
 
 public class SecretManagerConnectorServiceImplTest extends CategoryTest {
   private static final String ACCOUNT = "account";

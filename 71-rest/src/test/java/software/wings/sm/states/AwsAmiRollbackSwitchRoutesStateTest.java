@@ -3,24 +3,28 @@ package software.wings.sm.states;
 import static io.harness.rule.OwnerRule.ARVIND;
 import static io.harness.rule.OwnerRule.IVAN;
 import static io.harness.rule.OwnerRule.TMACARI;
+
+import static software.wings.service.impl.aws.model.AwsConstants.AMI_SERVICE_SETUP_SWEEPING_OUTPUT_NAME;
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyBoolean;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
-import static software.wings.service.impl.aws.model.AwsConstants.AMI_SERVICE_SETUP_SWEEPING_OUTPUT_NAME;
 
 import io.harness.category.element.UnitTests;
 import io.harness.exception.InvalidRequestException;
 import io.harness.rule.Owner;
+
+import software.wings.WingsBaseTest;
+import software.wings.sm.ExecutionContextImpl;
+
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Spy;
-import software.wings.WingsBaseTest;
-import software.wings.sm.ExecutionContextImpl;
 
 public class AwsAmiRollbackSwitchRoutesStateTest extends WingsBaseTest {
   @Mock AwsAmiServiceStateHelper awsAmiServiceHelper;

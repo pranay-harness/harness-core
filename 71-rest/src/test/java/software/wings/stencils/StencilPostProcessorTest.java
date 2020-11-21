@@ -3,38 +3,40 @@ package software.wings.stencils;
 import static io.harness.rule.OwnerRule.GEORGE;
 import static io.harness.rule.OwnerRule.SRINIVAS;
 import static io.harness.rule.OwnerRule.UNKNOWN;
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.tuple;
-import static org.joor.Reflect.on;
-import static org.mockito.Mockito.when;
+
 import static software.wings.utils.WingsTestConstants.APP_ID;
 import static software.wings.utils.WingsTestConstants.DOUBLE_DEFAULT_VALUE;
 import static software.wings.utils.WingsTestConstants.FLOAT_DEFAULT_VALUE;
 import static software.wings.utils.WingsTestConstants.INTEGER_DEFAULT_VALUE;
 import static software.wings.utils.WingsTestConstants.LONG_DEFAULT_VALUE;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.tuple;
+import static org.joor.Reflect.on;
+import static org.mockito.Mockito.when;
+
+import io.harness.category.element.UnitTests;
+import io.harness.rule.Owner;
+import io.harness.serializer.JsonUtils;
+
+import software.wings.WingsBaseTest;
+
+import com.fasterxml.jackson.databind.JsonNode;
 import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
 import com.google.inject.Singleton;
-
-import com.fasterxml.jackson.databind.JsonNode;
-import io.harness.category.element.UnitTests;
-import io.harness.rule.Owner;
-import io.harness.serializer.JsonUtils;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 import lombok.Value;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import software.wings.WingsBaseTest;
-
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
 
 /**
  * Created by peeyushaggarwal on 6/28/16.

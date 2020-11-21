@@ -1,13 +1,12 @@
 package software.wings.resources;
 
-import static com.google.common.collect.ImmutableMap.of;
 import static io.harness.beans.PageResponse.PageResponseBuilder.aPageResponse;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.exception.WingsException.ReportTarget.REST_API;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
-import static java.nio.charset.StandardCharsets.UTF_8;
+
 import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static software.wings.security.PermissionAttribute.PermissionType.LOGGED_IN;
 import static software.wings.security.PermissionAttribute.PermissionType.MANAGE_AUTHENTICATION_SETTINGS;
@@ -18,11 +17,9 @@ import static software.wings.signup.BugsnagConstants.FREEMIUM;
 import static software.wings.signup.BugsnagConstants.ONBOARDING;
 import static software.wings.utils.Utils.urlDecode;
 
-import com.google.common.collect.Lists;
-import com.google.inject.Inject;
+import static com.google.common.collect.ImmutableMap.of;
+import static java.nio.charset.StandardCharsets.UTF_8;
 
-import com.codahale.metrics.annotation.ExceptionMetered;
-import com.codahale.metrics.annotation.Timed;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.configuration.DeployMode;
@@ -36,13 +33,7 @@ import io.harness.logging.ExceptionLogger;
 import io.harness.rest.RestResponse;
 import io.harness.rest.RestResponse.Builder;
 import io.harness.security.annotations.PublicApi;
-import io.swagger.annotations.Api;
-import lombok.Data;
-import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.collections.CollectionUtils;
-import org.apache.commons.lang3.StringUtils;
-import org.hibernate.validator.constraints.NotBlank;
-import org.hibernate.validator.constraints.NotEmpty;
+
 import software.wings.app.MainConfiguration;
 import software.wings.beans.Account;
 import software.wings.beans.AccountJoinRequest;
@@ -85,6 +76,11 @@ import software.wings.service.intfc.UserService;
 import software.wings.signup.BugsnagErrorReporter;
 import software.wings.utils.AccountPermissionUtils;
 
+import com.codahale.metrics.annotation.ExceptionMetered;
+import com.codahale.metrics.annotation.Timed;
+import com.google.common.collect.Lists;
+import com.google.inject.Inject;
+import io.swagger.annotations.Api;
 import java.io.UnsupportedEncodingException;
 import java.net.URISyntaxException;
 import java.net.URLDecoder;
@@ -117,6 +113,12 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+import lombok.Data;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.collections.CollectionUtils;
+import org.apache.commons.lang3.StringUtils;
+import org.hibernate.validator.constraints.NotBlank;
+import org.hibernate.validator.constraints.NotEmpty;
 
 /**
  * Users Resource class.
@@ -1215,7 +1217,7 @@ public class UserResource {
     if (isEmpty(userInvites)) {
       return new RestResponse<>(pageResponse);
     }
-    userInvites.forEach(this ::setUserGroupSummary);
+    userInvites.forEach(this::setUserGroupSummary);
     return new RestResponse<>(pageResponse);
   }
 

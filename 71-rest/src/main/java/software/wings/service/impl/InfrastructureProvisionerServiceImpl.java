@@ -5,15 +5,12 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.validation.Validator.notNullCheck;
+
 import static java.lang.String.format;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toMap;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.atteo.evo.inflector.English.plural;
-
-import com.google.common.annotations.VisibleForTesting;
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
 
 import io.harness.beans.DelegateTask;
 import io.harness.beans.EncryptedData;
@@ -48,13 +45,7 @@ import io.harness.security.encryption.EncryptionConfig;
 import io.harness.tasks.Cd1SetupFields;
 import io.harness.validation.Create;
 import io.harness.validation.Update;
-import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.io.FilenameUtils;
-import org.hibernate.validator.constraints.NotEmpty;
-import org.jetbrains.annotations.NotNull;
-import org.mongodb.morphia.Key;
-import org.mongodb.morphia.query.Query;
-import ru.vyarus.guice.validator.group.annotation.ValidationGroups;
+
 import software.wings.api.DeploymentType;
 import software.wings.api.PhaseElement;
 import software.wings.api.TerraformExecutionData;
@@ -110,6 +101,9 @@ import software.wings.sm.ExecutionContextImpl;
 import software.wings.sm.states.ManagerExecutionLogCallback;
 import software.wings.utils.GitUtilsManager;
 
+import com.google.common.annotations.VisibleForTesting;
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -124,6 +118,13 @@ import java.util.stream.Stream;
 import javax.validation.Valid;
 import javax.validation.executable.ValidateOnExecution;
 import javax.ws.rs.core.StreamingOutput;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.io.FilenameUtils;
+import org.hibernate.validator.constraints.NotEmpty;
+import org.jetbrains.annotations.NotNull;
+import org.mongodb.morphia.Key;
+import org.mongodb.morphia.query.Query;
+import ru.vyarus.guice.validator.group.annotation.ValidationGroups;
 
 @Singleton
 @ValidateOnExecution

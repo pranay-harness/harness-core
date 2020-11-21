@@ -3,16 +3,17 @@ package software.wings.sm.status.handlers;
 import static io.harness.beans.ExecutionStatus.PAUSED;
 import static io.harness.beans.ExecutionStatus.QUEUED;
 import static io.harness.beans.ExecutionStatus.RUNNING;
+
 import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
 
-import com.google.inject.Inject;
-
-import lombok.extern.slf4j.Slf4j;
 import software.wings.beans.WorkflowExecution;
 import software.wings.service.impl.WorkflowExecutionUpdate;
 import software.wings.sm.status.StateStatusUpdateInfo;
 import software.wings.sm.status.WorkflowStatusPropagator;
+
+import com.google.inject.Inject;
+import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class WorkflowPausePropagator implements WorkflowStatusPropagator {
   @Inject private WorkflowStatusPropagatorHelper propagatorHelper;

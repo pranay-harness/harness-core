@@ -5,11 +5,9 @@ import static io.harness.ng.core.activityhistory.NGActivityStatus.SUCCESS;
 import static io.harness.ng.core.activityhistory.NGActivityType.CONNECTIVITY_CHECK;
 import static io.harness.ng.core.activityhistory.dto.TimeGroupType.DAY;
 import static io.harness.ng.core.activityhistory.dto.TimeGroupType.HOUR;
+
 import static org.springframework.data.mongodb.core.aggregation.Aggregation.bucket;
 import static org.springframework.data.mongodb.core.aggregation.Aggregation.group;
-
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
 
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.UnknownEnumTypeException;
@@ -20,6 +18,11 @@ import io.harness.ng.core.activityhistory.dto.TimeGroupType;
 import io.harness.ng.core.activityhistory.entity.NGActivity.ActivityHistoryEntityKeys;
 import io.harness.ng.core.activityhistory.repository.NGActivityRepository;
 import io.harness.ng.core.activityhistory.service.EntityActivitySummaryService;
+
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
+import java.util.ArrayList;
+import java.util.List;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -38,9 +41,6 @@ import org.springframework.data.mongodb.core.aggregation.MatchOperation;
 import org.springframework.data.mongodb.core.aggregation.ProjectionOperation;
 import org.springframework.data.mongodb.core.aggregation.SortOperation;
 import org.springframework.data.mongodb.core.query.Criteria;
-
-import java.util.ArrayList;
-import java.util.List;
 
 @Singleton
 @AllArgsConstructor(access = AccessLevel.PRIVATE, onConstructor = @__({ @Inject }))

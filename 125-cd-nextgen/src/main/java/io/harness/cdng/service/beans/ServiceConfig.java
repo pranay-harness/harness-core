@@ -1,6 +1,5 @@
 package io.harness.cdng.service.beans;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import io.harness.beans.ParameterField;
 import io.harness.cdng.visitor.YamlTypes;
 import io.harness.cdng.visitor.helpers.serviceconfig.ServiceConfigVisitorHelper;
@@ -10,12 +9,13 @@ import io.harness.walktree.beans.VisitableChildren;
 import io.harness.walktree.visitor.SimpleVisitorHelper;
 import io.harness.walktree.visitor.Visitable;
 import io.harness.yaml.core.intfc.OverridesApplier;
+
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import io.swagger.annotations.ApiModelProperty;
+import java.util.Map;
 import lombok.Builder;
 import lombok.Data;
 import lombok.experimental.Wither;
-
-import java.util.Map;
 
 @Data
 @Builder

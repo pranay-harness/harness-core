@@ -2,12 +2,12 @@ package io.harness.artifacts.docker.beans;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 
+import io.harness.annotations.dev.OwnedBy;
+
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import io.harness.annotations.dev.OwnedBy;
-import lombok.Getter;
-
 import java.util.List;
+import lombok.Getter;
 
 @OwnedBy(CDC)
 @Getter

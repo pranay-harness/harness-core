@@ -1,3 +1,5 @@
 package io.harness.persistence;
 
-public interface NameAccess { String getName(); }
+public interface NameAccess {
+  String getName();
+}

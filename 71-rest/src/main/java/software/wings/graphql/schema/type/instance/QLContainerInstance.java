@@ -1,9 +1,10 @@
 package software.wings.graphql.schema.type.instance;
 
+import software.wings.graphql.schema.type.artifact.QLArtifact;
+
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import software.wings.graphql.schema.type.artifact.QLArtifact;
 
 /**
  * Base class for container instance like docker

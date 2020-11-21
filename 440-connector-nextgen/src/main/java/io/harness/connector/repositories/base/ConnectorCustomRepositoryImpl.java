@@ -2,6 +2,8 @@ package io.harness.connector.repositories.base;
 
 import io.harness.annotation.HarnessRepo;
 import io.harness.connector.entities.Connector;
+
+import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.data.domain.Page;
@@ -10,8 +12,6 @@ import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.repository.support.PageableExecutionUtils;
-
-import java.util.List;
 
 @HarnessRepo
 public class ConnectorCustomRepositoryImpl implements ConnectorCustomRepository {

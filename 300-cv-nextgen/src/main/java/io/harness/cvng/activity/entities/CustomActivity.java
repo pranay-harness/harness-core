@@ -3,6 +3,7 @@ package io.harness.cvng.activity.entities;
 import io.harness.cvng.beans.ActivityDTO;
 import io.harness.cvng.beans.ActivityType;
 import io.harness.cvng.verificationjob.entities.VerificationJobInstance;
+
 import lombok.Builder;
 import lombok.EqualsAndHashCode;
 

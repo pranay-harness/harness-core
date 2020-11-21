@@ -1,6 +1,7 @@
 package io.harness.functional.alerts;
 
 import static io.harness.rule.OwnerRule.NATARAJA;
+
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.category.element.FunctionalTests;
@@ -11,9 +12,7 @@ import io.harness.rule.Owner;
 import io.harness.testframework.framework.utils.AlertsUtils;
 import io.harness.testframework.framework.utils.UserGroupUtils;
 import io.harness.testframework.restutils.AlertsRestUtils;
-import lombok.extern.slf4j.Slf4j;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
+
 import software.wings.alerts.AlertCategory;
 import software.wings.beans.alert.AlertNotificationRule;
 import software.wings.beans.alert.AlertType;
@@ -21,6 +20,9 @@ import software.wings.beans.alert.AlertType;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import lombok.extern.slf4j.Slf4j;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 @Slf4j
 public class AlertsSetupCRUDTest extends AbstractFunctionalTest {

@@ -2,18 +2,12 @@ package software.wings.beans.settings.helm;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 
-import com.fasterxml.jackson.annotation.JsonTypeName;
-import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.delegate.beans.executioncapability.ChartMuseumCapability;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.delegate.task.mixin.HttpConnectionExecutionCapabilityGenerator;
 import io.harness.k8s.model.HelmVersion;
-import lombok.Builder;
-import lombok.Data;
-import lombok.EqualsAndHashCode;
-import lombok.NoArgsConstructor;
-import org.hibernate.validator.constraints.NotEmpty;
+
 import software.wings.audit.ResourceType;
 import software.wings.delegatetasks.validation.capabilities.HelmInstallationCapability;
 import software.wings.security.UsageRestrictions;
@@ -21,8 +15,15 @@ import software.wings.settings.SettingValue;
 import software.wings.settings.SettingVariableTypes;
 import software.wings.yaml.setting.HelmRepoYaml;
 
+import com.fasterxml.jackson.annotation.JsonTypeName;
+import com.github.reinert.jjschema.SchemaIgnore;
 import java.util.ArrayList;
 import java.util.List;
+import lombok.Builder;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.NoArgsConstructor;
+import org.hibernate.validator.constraints.NotEmpty;
 
 @OwnedBy(CDC)
 @JsonTypeName("AMAZON_S3_HELM_REPO")

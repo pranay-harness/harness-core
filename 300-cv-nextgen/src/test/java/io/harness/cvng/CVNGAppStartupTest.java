@@ -1,7 +1,12 @@
 package io.harness.cvng;
 
 import static io.harness.rule.OwnerRule.RAGHU;
+
 import static org.assertj.core.api.Assertions.assertThat;
+
+import io.harness.CvNextGenTest;
+import io.harness.category.element.UnitTests;
+import io.harness.rule.Owner;
 
 import com.mongodb.ServerAddress;
 import de.bwaldvogel.mongo.MongoServer;
@@ -9,18 +14,14 @@ import de.bwaldvogel.mongo.backend.memory.MemoryBackend;
 import io.dropwizard.testing.ConfigOverride;
 import io.dropwizard.testing.DropwizardTestSupport;
 import io.dropwizard.testing.ResourceHelpers;
-import io.harness.CvNextGenTest;
-import io.harness.category.element.UnitTests;
-import io.harness.rule.Owner;
+import java.net.InetSocketAddress;
+import javax.ws.rs.client.Client;
+import javax.ws.rs.core.Response;
 import org.glassfish.jersey.client.JerseyClientBuilder;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
-
-import java.net.InetSocketAddress;
-import javax.ws.rs.client.Client;
-import javax.ws.rs.core.Response;
 
 public class CVNGAppStartupTest extends CvNextGenTest {
   public static MongoServer MONGO_SERVER;

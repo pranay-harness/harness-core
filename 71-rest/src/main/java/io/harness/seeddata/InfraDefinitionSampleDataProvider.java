@@ -2,14 +2,14 @@ package io.harness.seeddata;
 
 import static io.harness.seeddata.SampleDataProviderConstants.K8S_INFRA_NAME;
 
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
-
 import software.wings.api.CloudProviderType;
 import software.wings.api.DeploymentType;
 import software.wings.infra.DirectKubernetesInfrastructure;
 import software.wings.infra.InfrastructureDefinition;
 import software.wings.service.intfc.InfrastructureDefinitionService;
+
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
 
 @Singleton
 public class InfraDefinitionSampleDataProvider {

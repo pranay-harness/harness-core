@@ -1,22 +1,5 @@
 package io.harness.serializer.kryo;
 
-import com.google.api.services.logging.v2.model.LogEntry;
-import com.google.api.services.logging.v2.model.LogEntryOperation;
-import com.google.api.services.logging.v2.model.LogEntrySourceLocation;
-import com.google.api.services.logging.v2.model.MonitoredResource;
-import com.google.api.services.logging.v2.model.MonitoredResourceMetadata;
-
-import com.amazonaws.services.cloudwatch.model.Datapoint;
-import com.amazonaws.services.cloudwatch.model.Dimension;
-import com.amazonaws.services.cloudwatch.model.StandardUnit;
-import com.amazonaws.services.ecs.model.Deployment;
-import com.amazonaws.services.ecs.model.DeploymentConfiguration;
-import com.amazonaws.services.ecs.model.Service;
-import com.amazonaws.services.ecs.model.ServiceEvent;
-import com.esotericsoftware.kryo.Kryo;
-import com.splunk.HttpException;
-import com.sumologic.client.SumoClientException;
-import com.sumologic.client.SumoException;
 import io.harness.ccm.config.CCMConfig;
 import io.harness.ccm.license.CeLicenseInfo;
 import io.harness.ccm.license.CeLicenseType;
@@ -31,6 +14,7 @@ import io.harness.redesign.states.shell.ShellScriptStepParameters;
 import io.harness.redesign.states.shell.ShellScriptVariablesSweepingOutput;
 import io.harness.redesign.states.wait.WaitStepParameters;
 import io.harness.serializer.KryoRegistrar;
+
 import software.wings.api.AmiServiceDeployElement;
 import software.wings.api.AmiServiceSetupElement;
 import software.wings.api.AmiServiceTrafficShiftAlbSetupElement;
@@ -825,6 +809,22 @@ import software.wings.verification.VerificationStateAnalysisExecutionData;
 import software.wings.verification.stackdriver.StackDriverMetricDefinition;
 import software.wings.yaml.gitSync.YamlGitConfig;
 
+import com.amazonaws.services.cloudwatch.model.Datapoint;
+import com.amazonaws.services.cloudwatch.model.Dimension;
+import com.amazonaws.services.cloudwatch.model.StandardUnit;
+import com.amazonaws.services.ecs.model.Deployment;
+import com.amazonaws.services.ecs.model.DeploymentConfiguration;
+import com.amazonaws.services.ecs.model.Service;
+import com.amazonaws.services.ecs.model.ServiceEvent;
+import com.esotericsoftware.kryo.Kryo;
+import com.google.api.services.logging.v2.model.LogEntry;
+import com.google.api.services.logging.v2.model.LogEntryOperation;
+import com.google.api.services.logging.v2.model.LogEntrySourceLocation;
+import com.google.api.services.logging.v2.model.MonitoredResource;
+import com.google.api.services.logging.v2.model.MonitoredResourceMetadata;
+import com.splunk.HttpException;
+import com.sumologic.client.SumoClientException;
+import com.sumologic.client.SumoException;
 import java.time.Instant;
 
 public class ManagerKryoRegistrar implements KryoRegistrar {

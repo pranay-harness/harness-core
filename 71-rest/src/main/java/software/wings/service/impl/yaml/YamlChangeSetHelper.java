@@ -1,10 +1,7 @@
 package software.wings.service.impl.yaml;
 
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
-
 import io.harness.git.model.ChangeType;
-import lombok.extern.slf4j.Slf4j;
+
 import software.wings.beans.ConfigFile;
 import software.wings.beans.FeatureName;
 import software.wings.beans.SettingAttribute;
@@ -20,8 +17,11 @@ import software.wings.service.intfc.yaml.YamlGitService;
 import software.wings.yaml.gitSync.YamlChangeSet;
 import software.wings.yaml.gitSync.YamlGitConfig;
 
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import java.util.ArrayList;
 import java.util.List;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * Created by anubhaw on 12/3/17.

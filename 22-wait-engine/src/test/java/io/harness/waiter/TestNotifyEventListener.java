@@ -1,9 +1,9 @@
 package io.harness.waiter;
 
+import io.harness.queue.QueueConsumer;
+
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
-
-import io.harness.queue.QueueConsumer;
 
 @Singleton
 public final class TestNotifyEventListener extends NotifyEventListener {

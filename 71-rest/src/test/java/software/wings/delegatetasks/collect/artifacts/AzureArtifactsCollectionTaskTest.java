@@ -2,13 +2,13 @@ package software.wings.delegatetasks.collect.artifacts;
 
 import static io.harness.delegate.beans.TaskData.DEFAULT_ASYNC_CALL_TIMEOUT;
 import static io.harness.rule.OwnerRule.GARVIT;
+
+import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
+
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
-import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
-
-import com.google.common.collect.ImmutableMap;
 
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
@@ -16,6 +16,15 @@ import io.harness.delegate.beans.DelegateTaskPackage;
 import io.harness.delegate.beans.TaskData;
 import io.harness.delegate.task.TaskParameters;
 import io.harness.rule.Owner;
+
+import software.wings.beans.TaskType;
+import software.wings.beans.artifact.ArtifactStreamAttributes;
+import software.wings.beans.artifact.AzureArtifactsArtifactStream.ProtocolType;
+import software.wings.beans.settings.azureartifacts.AzureArtifactsConfig;
+import software.wings.beans.settings.azureartifacts.AzureArtifactsPATConfig;
+import software.wings.helpers.ext.azure.devops.AzureArtifactsService;
+
+import com.google.common.collect.ImmutableMap;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -23,12 +32,6 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnit;
 import org.mockito.junit.MockitoRule;
-import software.wings.beans.TaskType;
-import software.wings.beans.artifact.ArtifactStreamAttributes;
-import software.wings.beans.artifact.AzureArtifactsArtifactStream.ProtocolType;
-import software.wings.beans.settings.azureartifacts.AzureArtifactsConfig;
-import software.wings.beans.settings.azureartifacts.AzureArtifactsPATConfig;
-import software.wings.helpers.ext.azure.devops.AzureArtifactsService;
 
 public class AzureArtifactsCollectionTaskTest extends CategoryTest {
   private static final String DELEGATE_ID1 = "DELEGATE_ID1";

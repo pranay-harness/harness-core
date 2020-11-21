@@ -1,12 +1,12 @@
 package io.harness.perpetualtask.k8s.metrics.client.model.pod;
 
 import io.harness.perpetualtask.k8s.metrics.client.model.common.CustomResourceList;
+
+import java.util.List;
 import lombok.Builder;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.Singular;
-
-import java.util.List;
 
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = true)

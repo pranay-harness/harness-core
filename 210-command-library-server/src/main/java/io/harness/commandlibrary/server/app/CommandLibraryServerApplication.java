@@ -1,33 +1,10 @@
 package io.harness.commandlibrary.server.app;
 
-import static com.google.inject.matcher.Matchers.not;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.logging.LoggingInitializer.initializeLogging;
 
-import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableSet;
-import com.google.inject.Guice;
-import com.google.inject.Injector;
-import com.google.inject.Module;
-import com.google.inject.Provides;
-import com.google.inject.Singleton;
-import com.google.inject.TypeLiteral;
-import com.google.inject.matcher.AbstractMatcher;
-import com.google.inject.name.Named;
+import static com.google.inject.matcher.Matchers.not;
 
-import com.codahale.metrics.MetricRegistry;
-import com.github.dirkraft.dropwizard.fileassets.FileAssetsBundle;
-import com.palominolabs.metrics.guice.MetricsInstrumentationModule;
-import io.dropwizard.Application;
-import io.dropwizard.bundles.assets.ConfiguredAssetsBundle;
-import io.dropwizard.configuration.EnvironmentVariableSubstitutor;
-import io.dropwizard.configuration.SubstitutingSourceProvider;
-import io.dropwizard.jersey.errors.EarlyEofExceptionMapper;
-import io.dropwizard.lifecycle.Managed;
-import io.dropwizard.setup.Bootstrap;
-import io.dropwizard.setup.Environment;
-import io.federecio.dropwizard.swagger.SwaggerBundle;
-import io.federecio.dropwizard.swagger.SwaggerBundleConfiguration;
 import io.harness.commandlibrary.server.resources.CommandStoreResource;
 import io.harness.commandlibrary.server.security.CommandLibraryServerAuthenticationFilter;
 import io.harness.delegate.beans.DelegateAsyncTaskResponse;
@@ -47,13 +24,7 @@ import io.harness.serializer.CommonsRegistrars;
 import io.harness.serializer.JsonSubtypeResolver;
 import io.harness.serializer.KryoRegistrar;
 import io.harness.serializer.ManagerRegistrars;
-import lombok.extern.slf4j.Slf4j;
-import org.glassfish.jersey.media.multipart.MultiPartFeature;
-import org.glassfish.jersey.server.model.Resource;
-import org.hibernate.validator.parameternameprovider.ReflectionParameterNameProvider;
-import org.mongodb.morphia.converters.TypeConverter;
-import org.reflections.Reflections;
-import ru.vyarus.guice.validator.ValidationModule;
+
 import software.wings.app.CharsetResponseFilter;
 import software.wings.app.CommandLibrarySharedModule;
 import software.wings.dl.WingsPersistence;
@@ -64,6 +35,29 @@ import software.wings.exception.WingsExceptionMapper;
 import software.wings.jersey.JsonViews;
 import software.wings.security.ThreadLocalUserProvider;
 
+import com.codahale.metrics.MetricRegistry;
+import com.github.dirkraft.dropwizard.fileassets.FileAssetsBundle;
+import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
+import com.google.inject.Guice;
+import com.google.inject.Injector;
+import com.google.inject.Module;
+import com.google.inject.Provides;
+import com.google.inject.Singleton;
+import com.google.inject.TypeLiteral;
+import com.google.inject.matcher.AbstractMatcher;
+import com.google.inject.name.Named;
+import com.palominolabs.metrics.guice.MetricsInstrumentationModule;
+import io.dropwizard.Application;
+import io.dropwizard.bundles.assets.ConfiguredAssetsBundle;
+import io.dropwizard.configuration.EnvironmentVariableSubstitutor;
+import io.dropwizard.configuration.SubstitutingSourceProvider;
+import io.dropwizard.jersey.errors.EarlyEofExceptionMapper;
+import io.dropwizard.lifecycle.Managed;
+import io.dropwizard.setup.Bootstrap;
+import io.dropwizard.setup.Environment;
+import io.federecio.dropwizard.swagger.SwaggerBundle;
+import io.federecio.dropwizard.swagger.SwaggerBundleConfiguration;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -71,6 +65,13 @@ import java.util.Set;
 import javax.validation.Validation;
 import javax.validation.ValidatorFactory;
 import javax.ws.rs.Path;
+import lombok.extern.slf4j.Slf4j;
+import org.glassfish.jersey.media.multipart.MultiPartFeature;
+import org.glassfish.jersey.server.model.Resource;
+import org.hibernate.validator.parameternameprovider.ReflectionParameterNameProvider;
+import org.mongodb.morphia.converters.TypeConverter;
+import org.reflections.Reflections;
+import ru.vyarus.guice.validator.ValidationModule;
 
 @Slf4j
 public class CommandLibraryServerApplication extends Application<CommandLibraryServerConfig> {

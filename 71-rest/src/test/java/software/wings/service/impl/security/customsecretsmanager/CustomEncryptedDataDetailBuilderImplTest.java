@@ -1,6 +1,10 @@
 package software.wings.service.impl.security.customsecretsmanager;
 
 import static io.harness.rule.OwnerRule.UTKARSH;
+
+import static software.wings.service.impl.security.customsecretsmanager.CustomSecretsManagerUtils.obtainConfig;
+import static software.wings.settings.SettingVariableTypes.HOST_CONNECTION_ATTRIBUTES;
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.eq;
@@ -9,10 +13,6 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.mockito.MockitoAnnotations.initMocks;
-import static software.wings.service.impl.security.customsecretsmanager.CustomSecretsManagerUtils.obtainConfig;
-import static software.wings.settings.SettingVariableTypes.HOST_CONNECTION_ATTRIBUTES;
-
-import com.google.inject.Inject;
 
 import io.harness.CategoryTest;
 import io.harness.beans.EncryptedData;
@@ -20,16 +20,19 @@ import io.harness.category.element.UnitTests;
 import io.harness.expression.ExpressionEvaluator;
 import io.harness.rule.Owner;
 import io.harness.security.encryption.EncryptedDataDetail;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
+
 import software.wings.annotation.EncryptableSetting;
 import software.wings.security.encryption.secretsmanagerconfigs.CustomSecretsManagerConfig;
 import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.security.ManagerDecryptionService;
 import software.wings.service.intfc.security.SecretManager;
+
+import com.google.inject.Inject;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
 
 public class CustomEncryptedDataDetailBuilderImplTest extends CategoryTest {
   @Mock private CustomSecretsManagerConnectorHelper customSecretsManagerConnectorHelper;

@@ -5,12 +5,6 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.persistence.HQuery.excludeAuthority;
 
-import com.google.common.annotations.VisibleForTesting;
-import com.google.inject.Inject;
-import com.google.inject.Injector;
-import com.google.inject.Singleton;
-
-import com.mongodb.ReadPreference;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.CreatedByType;
 import io.harness.beans.WorkflowType;
@@ -32,12 +26,7 @@ import io.harness.execution.export.request.ExportExecutionsRequestHelper;
 import io.harness.execution.export.request.ExportExecutionsRequestQuery;
 import io.harness.execution.export.request.ExportExecutionsRequestService;
 import io.harness.persistence.CreatedAtAware;
-import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.RandomStringUtils;
-import org.hibernate.validator.constraints.NotEmpty;
-import org.mongodb.morphia.query.FindOptions;
-import org.mongodb.morphia.query.Query;
-import org.mongodb.morphia.query.Sort;
+
 import software.wings.beans.PipelineStageExecution;
 import software.wings.beans.WorkflowExecution;
 import software.wings.beans.WorkflowExecution.WorkflowExecutionKeys;
@@ -45,6 +34,11 @@ import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.WorkflowExecutionService;
 
+import com.google.common.annotations.VisibleForTesting;
+import com.google.inject.Inject;
+import com.google.inject.Injector;
+import com.google.inject.Singleton;
+import com.mongodb.ReadPreference;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -64,6 +58,12 @@ import java.util.stream.Collectors;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 import javax.validation.constraints.NotNull;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.RandomStringUtils;
+import org.hibernate.validator.constraints.NotEmpty;
+import org.mongodb.morphia.query.FindOptions;
+import org.mongodb.morphia.query.Query;
+import org.mongodb.morphia.query.Sort;
 
 @OwnedBy(CDC)
 @Singleton
@@ -164,7 +164,7 @@ public class ExportExecutionsService {
       return Collections.emptyList();
     }
 
-    return workflowExecutions.stream().map(this ::prepareExecutionMetadata).collect(Collectors.toList());
+    return workflowExecutions.stream().map(this::prepareExecutionMetadata).collect(Collectors.toList());
   }
 
   private ExecutionMetadata prepareExecutionMetadata(WorkflowExecution workflowExecution) {

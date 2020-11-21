@@ -2,14 +2,15 @@ package software.wings.beans.trigger;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 
-import com.fasterxml.jackson.annotation.JsonTypeName;
 import io.harness.annotations.dev.OwnedBy;
-import lombok.Builder;
-import lombok.Value;
+
 import software.wings.beans.trigger.WebhookSource.GitHubEventType;
 
+import com.fasterxml.jackson.annotation.JsonTypeName;
 import java.util.List;
 import javax.validation.constraints.NotNull;
+import lombok.Builder;
+import lombok.Value;
 
 @OwnedBy(CDC)
 @JsonTypeName("GITHUB")

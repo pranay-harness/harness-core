@@ -1,11 +1,12 @@
 package software.wings.service.impl.instance;
 
-import com.google.inject.Inject;
-
 import io.harness.event.timeseries.processor.InstanceEventProcessor;
 import io.harness.queue.QueueConsumer;
 import io.harness.queue.QueueListener;
+
 import software.wings.api.InstanceEvent;
+
+import com.google.inject.Inject;
 
 /**
  * The instance event that has info about the instance changes, which needs to be pushed

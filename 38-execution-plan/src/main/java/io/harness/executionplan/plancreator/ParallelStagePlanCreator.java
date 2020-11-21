@@ -3,8 +3,6 @@ package io.harness.executionplan.plancreator;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.executionplan.plancreator.beans.PlanCreatorType.STAGE_PLAN_CREATOR;
 
-import com.google.inject.Inject;
-
 import io.harness.executionplan.core.ExecutionPlanCreationContext;
 import io.harness.executionplan.core.ExecutionPlanCreator;
 import io.harness.executionplan.core.ExecutionPlanCreatorResponse;
@@ -25,6 +23,7 @@ import io.harness.yaml.core.StageElement;
 import io.harness.yaml.core.auxiliary.intfc.StageElementWrapper;
 import io.harness.yaml.core.intfc.StageType;
 
+import com.google.inject.Inject;
 import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;

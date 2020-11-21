@@ -6,17 +6,18 @@ import static io.harness.cvng.dashboard.entities.HeatMap.HeatMapResolution.FIVE_
 import static io.harness.cvng.dashboard.entities.HeatMap.HeatMapResolution.THIRTY_MINUTES;
 import static io.harness.cvng.dashboard.entities.HeatMap.HeatMapResolution.THREE_HOURS_THIRTY_MINUTES;
 import static io.harness.rule.OwnerRule.RAGHU;
+
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.CvNextGenTest;
 import io.harness.category.element.UnitTests;
 import io.harness.cvng.dashboard.entities.HeatMap.HeatMapResolution;
 import io.harness.rule.Owner;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
 
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 public class HeatMapResolutionTest extends CvNextGenTest {
   @Test

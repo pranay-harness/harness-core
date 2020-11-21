@@ -2,17 +2,18 @@ package software.wings.service.impl.analysis;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 
+import io.harness.deployment.InstanceDetails;
+
+import software.wings.sm.StateType;
+
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import io.harness.deployment.InstanceDetails;
+import java.util.concurrent.TimeUnit;
+import javax.validation.constraints.NotNull;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.Value;
-import software.wings.sm.StateType;
-
-import java.util.concurrent.TimeUnit;
-import javax.validation.constraints.NotNull;
 
 /**
  * Created by rsingh on 8/3/18.

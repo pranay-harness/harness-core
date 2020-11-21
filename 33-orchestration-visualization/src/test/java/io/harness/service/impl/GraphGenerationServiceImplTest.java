@@ -2,11 +2,8 @@ package io.harness.service.impl;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.rule.OwnerRule.ALEXEI;
-import static org.assertj.core.api.Assertions.assertThat;
 
-import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.Lists;
-import com.google.inject.Inject;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.OrchestrationVisualizationTestBase;
 import io.harness.ambiance.Ambiance;
@@ -29,15 +26,15 @@ import io.harness.plan.PlanNode;
 import io.harness.pms.ambiance.Level;
 import io.harness.pms.execution.ExecutionMode;
 import io.harness.pms.execution.Status;
-import io.harness.rule.Owner;
-import io.harness.service.GraphGenerationService;
 import io.harness.pms.steps.SkipType;
 import io.harness.pms.steps.StepType;
+import io.harness.rule.Owner;
+import io.harness.service.GraphGenerationService;
 import io.harness.testlib.RealMongo;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
-import org.mockito.InjectMocks;
 
+import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Lists;
+import com.google.inject.Inject;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -46,6 +43,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
+import org.mockito.InjectMocks;
 
 /**
  * Test class for {@link GraphGenerationServiceImpl}

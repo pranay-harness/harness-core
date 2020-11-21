@@ -4,20 +4,21 @@ import static io.harness.beans.ExecutionStatus.RUNNING;
 import static io.harness.beans.TriggeredBy.triggeredBy;
 import static io.harness.beans.WorkflowType.ORCHESTRATION;
 import static io.harness.rule.OwnerRule.VGLIJIN;
+
+import static software.wings.beans.Activity.Type.Verification;
+import static software.wings.beans.Environment.EnvironmentType.NON_PROD;
+
 import static java.util.Collections.emptyList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
-import static software.wings.beans.Activity.Type.Verification;
-import static software.wings.beans.Environment.EnvironmentType.NON_PROD;
 
 import io.harness.CategoryTest;
 import io.harness.beans.EmbeddedUser;
 import io.harness.category.element.UnitTests;
 import io.harness.context.ContextElementType;
 import io.harness.rule.Owner;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
+
 import software.wings.api.HostElement;
 import software.wings.api.InstanceElement;
 import software.wings.api.ServiceElement;
@@ -26,6 +27,9 @@ import software.wings.beans.Activity.ActivityBuilder;
 import software.wings.sm.ExecutionContextImpl;
 import software.wings.sm.State;
 import software.wings.sm.WorkflowStandardParams;
+
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 public class ActivityTest extends CategoryTest {
   private static final ExecutionContextImpl executionContext = mock(ExecutionContextImpl.class);

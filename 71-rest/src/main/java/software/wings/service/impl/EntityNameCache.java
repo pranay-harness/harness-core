@@ -3,17 +3,10 @@ package software.wings.service.impl;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 
-import com.google.common.cache.CacheBuilder;
-import com.google.common.cache.CacheLoader;
-import com.google.common.cache.LoadingCache;
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
-
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
 import io.harness.persistence.NameAccess;
-import lombok.AllArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
+
 import software.wings.beans.Application;
 import software.wings.beans.EntityType;
 import software.wings.beans.Environment;
@@ -30,8 +23,15 @@ import software.wings.beans.trigger.Trigger;
 import software.wings.dl.WingsPersistence;
 import software.wings.verification.CVConfiguration;
 
+import com.google.common.cache.CacheBuilder;
+import com.google.common.cache.CacheLoader;
+import com.google.common.cache.LoadingCache;
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
+import lombok.AllArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 @Singleton
 @Slf4j
@@ -104,7 +104,9 @@ public class EntityNameCache {
         claz = SettingAttribute.class;
         break;
       }
-      default: { log.error("Invalid entity type For EntityNameCache: " + entityNameCacheKey.entityType); }
+      default: {
+        log.error("Invalid entity type For EntityNameCache: " + entityNameCacheKey.entityType);
+      }
     }
 
     if (claz != null) {

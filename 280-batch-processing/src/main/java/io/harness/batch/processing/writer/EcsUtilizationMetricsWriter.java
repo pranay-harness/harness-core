@@ -3,9 +3,6 @@ package io.harness.batch.processing.writer;
 import static io.harness.batch.processing.ccm.UtilizationInstanceType.ECS_CLUSTER;
 import static io.harness.batch.processing.ccm.UtilizationInstanceType.ECS_SERVICE;
 
-import com.google.inject.Singleton;
-import com.google.protobuf.Timestamp;
-
 import io.harness.batch.processing.billing.timeseries.data.InstanceUtilizationData;
 import io.harness.batch.processing.billing.timeseries.service.impl.UtilizationDataServiceImpl;
 import io.harness.batch.processing.writer.constants.EventTypeConstants;
@@ -13,13 +10,15 @@ import io.harness.event.grpc.PublishedMessage;
 import io.harness.event.payloads.EcsUtilization;
 import io.harness.event.payloads.EcsUtilization.MetricValue;
 import io.harness.exception.InvalidRequestException;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.batch.item.ItemWriter;
-import org.springframework.beans.factory.annotation.Autowired;
 
+import com.google.inject.Singleton;
+import com.google.protobuf.Timestamp;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.batch.item.ItemWriter;
+import org.springframework.beans.factory.annotation.Autowired;
 
 @Slf4j
 @Singleton

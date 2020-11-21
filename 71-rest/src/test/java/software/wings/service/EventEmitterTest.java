@@ -2,19 +2,28 @@ package software.wings.service;
 
 import static io.harness.rule.OwnerRule.GEORGE;
 import static io.harness.rule.OwnerRule.UNKNOWN;
-import static org.mockito.Matchers.anyBoolean;
-import static org.mockito.Matchers.anyString;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+
 import static software.wings.beans.Application.Builder.anApplication;
 import static software.wings.beans.Event.Builder.anEvent;
 import static software.wings.utils.WingsTestConstants.APP_ID;
 import static software.wings.utils.WingsTestConstants.ARTIFACT_ID;
 
+import static org.mockito.Matchers.anyBoolean;
+import static org.mockito.Matchers.anyString;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
+
+import software.wings.beans.Event;
+import software.wings.beans.Event.Type;
+import software.wings.service.impl.EventEmitter;
+import software.wings.service.impl.EventEmitter.Channel;
+import software.wings.service.intfc.AppService;
+
 import org.atmosphere.cpr.Broadcaster;
 import org.atmosphere.cpr.BroadcasterFactory;
 import org.junit.Before;
@@ -25,11 +34,6 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnit;
 import org.mockito.junit.MockitoRule;
-import software.wings.beans.Event;
-import software.wings.beans.Event.Type;
-import software.wings.service.impl.EventEmitter;
-import software.wings.service.impl.EventEmitter.Channel;
-import software.wings.service.intfc.AppService;
 
 /**
  * Created by peeyushaggarwal on 8/16/16.

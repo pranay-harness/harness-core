@@ -1,9 +1,9 @@
 package io.harness.ng.core.activityhistory;
 
-import com.google.inject.Singleton;
-
 import io.harness.ng.core.activityhistory.entity.NGActivity.ActivityHistoryEntityKeys;
 import io.harness.utils.FullyQualifiedIdentifierHelper;
+
+import com.google.inject.Singleton;
 import org.springframework.data.mongodb.core.query.Criteria;
 
 @Singleton

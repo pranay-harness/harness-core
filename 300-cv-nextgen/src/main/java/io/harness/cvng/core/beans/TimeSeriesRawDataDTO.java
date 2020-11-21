@@ -1,11 +1,10 @@
 package io.harness.cvng.core.beans;
 
+import java.util.List;
+import java.util.Map;
 import lombok.Builder;
 import lombok.Data;
 import lombok.Value;
-
-import java.util.List;
-import java.util.Map;
 
 @Value
 @Builder

@@ -1,24 +1,25 @@
 package io.harness.functional.harnesscli;
 
 import static io.harness.rule.OwnerRule.DEEPAK;
-import static org.assertj.core.api.Assertions.assertThat;
 
-import com.google.inject.Inject;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.category.element.CliFunctionalTests;
 import io.harness.functional.AbstractFunctionalTest;
 import io.harness.rule.Owner;
 import io.harness.testframework.framework.utils.PipelineUtils;
 import io.harness.testframework.restutils.PipelineRestUtils;
-import lombok.extern.slf4j.Slf4j;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
+
 import software.wings.beans.Application;
 import software.wings.beans.Pipeline;
 import software.wings.beans.Workflow;
 
+import com.google.inject.Inject;
 import java.util.List;
+import lombok.extern.slf4j.Slf4j;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 @Slf4j
 public class ApproveFunctionalTest extends AbstractFunctionalTest {

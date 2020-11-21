@@ -3,22 +3,23 @@ package software.wings.yaml.trigger;
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.validation.Validator.notNullCheck;
-import static java.lang.String.format;
 
-import com.google.inject.Singleton;
+import static java.lang.String.format;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.data.structure.EmptyPredicate;
-import lombok.Data;
-import lombok.EqualsAndHashCode;
-import lombok.NoArgsConstructor;
+
 import software.wings.beans.artifact.ArtifactStream;
 import software.wings.beans.trigger.ArtifactTriggerCondition;
 import software.wings.beans.trigger.TriggerCondition;
 import software.wings.beans.yaml.ChangeContext;
 import software.wings.service.impl.yaml.handler.trigger.TriggerConditionYamlHandler;
 
+import com.google.inject.Singleton;
 import java.util.List;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.NoArgsConstructor;
 
 @OwnedBy(CDC)
 @Data

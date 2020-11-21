@@ -16,11 +16,11 @@ import static software.wings.beans.InfrastructureType.PCF_INFRASTRUCTURE;
 import static software.wings.beans.InfrastructureType.PHYSICAL_INFRA;
 import static software.wings.beans.InfrastructureType.PHYSICAL_INFRA_WINRM;
 
+import software.wings.beans.InfrastructureMapping;
+
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
-import software.wings.beans.InfrastructureMapping;
-
 import java.util.Collections;
 import java.util.Set;
 

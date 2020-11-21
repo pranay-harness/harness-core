@@ -1,6 +1,7 @@
 package software.wings.graphql.datafetcher.connector.types;
 
 import io.harness.exception.InvalidRequestException;
+
 import software.wings.beans.SettingAttribute;
 import software.wings.graphql.schema.mutation.connector.input.QLConnectorInput;
 import software.wings.graphql.schema.mutation.connector.input.QLUpdateConnectorInput;

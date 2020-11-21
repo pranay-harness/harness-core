@@ -2,6 +2,7 @@ package io.harness.delegate.task.spotinst.request;
 import static io.harness.delegate.task.spotinst.request.SpotInstTaskParameters.SpotInstTaskType.SPOT_INST_DEPLOY;
 
 import io.harness.spotinst.model.ElastiGroup;
+
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;

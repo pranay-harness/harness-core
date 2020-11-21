@@ -14,6 +14,8 @@ import io.harness.logging.AccessTokenBean;
 import io.harness.rest.RestResponse;
 import io.harness.serializer.kryo.KryoRequest;
 import io.harness.serializer.kryo.KryoResponse;
+
+import java.util.List;
 import okhttp3.MultipartBody;
 import okhttp3.RequestBody;
 import okhttp3.ResponseBody;
@@ -26,8 +28,6 @@ import retrofit2.http.POST;
 import retrofit2.http.Part;
 import retrofit2.http.Path;
 import retrofit2.http.Query;
-
-import java.util.List;
 
 public interface DelegateAgentManagerClient {
   @POST("agent/delegates/register")

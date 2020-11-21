@@ -1,11 +1,5 @@
 package io.harness.notification;
 
-import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableSet;
-import com.google.inject.AbstractModule;
-import com.google.inject.Provides;
-import com.google.inject.Singleton;
-import com.google.inject.name.Named;
 import io.harness.govern.ProviderModule;
 import io.harness.mongo.MongoConfig;
 import io.harness.mongo.MongoModule;
@@ -21,14 +15,20 @@ import io.harness.serializer.KryoRegistrar;
 import io.harness.serializer.NotificationRegistrars;
 import io.harness.spring.AliasRegistrar;
 import io.harness.version.VersionModule;
+
+import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
+import com.google.inject.AbstractModule;
+import com.google.inject.Provides;
+import com.google.inject.Singleton;
+import com.google.inject.name.Named;
+import java.util.Map;
+import java.util.Set;
+import javax.validation.Validation;
+import javax.validation.ValidatorFactory;
 import org.hibernate.validator.parameternameprovider.ReflectionParameterNameProvider;
 import org.mongodb.morphia.converters.TypeConverter;
 import ru.vyarus.guice.validator.ValidationModule;
-
-import javax.validation.Validation;
-import javax.validation.ValidatorFactory;
-import java.util.Map;
-import java.util.Set;
 
 public class NotificationModule extends AbstractModule {
   private final NotificationConfiguration appConfig;

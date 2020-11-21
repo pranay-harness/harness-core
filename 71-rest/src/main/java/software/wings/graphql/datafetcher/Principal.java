@@ -1,8 +1,9 @@
 package software.wings.graphql.datafetcher;
 
+import software.wings.resources.graphql.TriggeredByType;
+
 import lombok.Builder;
 import lombok.Value;
-import software.wings.resources.graphql.TriggeredByType;
 
 @Value
 @Builder

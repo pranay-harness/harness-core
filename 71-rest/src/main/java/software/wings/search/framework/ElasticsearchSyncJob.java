@@ -2,19 +2,19 @@ package software.wings.search.framework;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
 
+import io.harness.annotations.dev.OwnedBy;
+
+import software.wings.dl.WingsPersistence;
+
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.google.inject.Inject;
 import com.google.inject.Provider;
-
-import io.harness.annotations.dev.OwnedBy;
-import lombok.extern.slf4j.Slf4j;
-import software.wings.dl.WingsPersistence;
-
 import java.util.UUID;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * The job responsible to maintain sync
@@ -46,7 +46,7 @@ public class ElasticsearchSyncJob implements Runnable {
       elasticsearchRealtimeSyncTask = elasticsearchRealtimeSyncTaskProvider.get();
       String uuid = UUID.randomUUID().toString();
 
-      searchLock = perpetualSearchLocker.acquireLock(ElasticsearchSyncJob.class.getName(), uuid, this ::stop);
+      searchLock = perpetualSearchLocker.acquireLock(ElasticsearchSyncJob.class.getName(), uuid, this::stop);
       log.info("Starting search synchronization now");
 
       SearchSyncHeartbeat searchSyncHeartbeat =

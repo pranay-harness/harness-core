@@ -12,6 +12,11 @@ import static io.harness.rule.OwnerRule.PRAVEEN;
 import static io.harness.rule.OwnerRule.RAGHU;
 import static io.harness.rule.OwnerRule.SRIRAM;
 import static io.harness.service.LearningEngineAnalysisServiceImpl.BACKOFF_LIMIT;
+
+import static software.wings.common.VerificationConstants.NON_HOST_PREVIOUS_ANALYSIS;
+import static software.wings.sm.StateType.ELK;
+import static software.wings.sm.StateType.SPLUNKV2;
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.fail;
 import static org.mockito.Matchers.any;
@@ -22,15 +27,6 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-import static software.wings.common.VerificationConstants.NON_HOST_PREVIOUS_ANALYSIS;
-import static software.wings.sm.StateType.ELK;
-import static software.wings.sm.StateType.SPLUNKV2;
-
-import com.google.common.collect.Lists;
-import com.google.common.collect.Sets;
-import com.google.gson.Gson;
-import com.google.gson.reflect.TypeToken;
-import com.google.inject.Inject;
 
 import io.harness.VerificationBaseTest;
 import io.harness.beans.ExecutionStatus;
@@ -45,19 +41,7 @@ import io.harness.service.intfc.ContinuousVerificationService;
 import io.harness.service.intfc.LearningEngineService;
 import io.harness.service.intfc.LogAnalysisService;
 import io.harness.testlib.RealMongo;
-import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.io.IOUtils;
-import org.apache.commons.lang3.reflect.FieldUtils;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
-import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
-import org.mongodb.morphia.Datastore;
-import org.mongodb.morphia.query.Query;
-import org.mongodb.morphia.query.UpdateOperations;
-import retrofit2.Call;
-import retrofit2.Response;
+
 import software.wings.api.PhaseElement;
 import software.wings.api.ServiceElement;
 import software.wings.beans.FeatureName;
@@ -107,6 +91,11 @@ import software.wings.sm.StateType;
 import software.wings.sm.states.ElkAnalysisState;
 import software.wings.verification.log.LogsCVConfiguration;
 
+import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
+import com.google.gson.Gson;
+import com.google.gson.reflect.TypeToken;
+import com.google.inject.Inject;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
@@ -129,6 +118,19 @@ import java.util.Random;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang3.reflect.FieldUtils;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
+import org.mongodb.morphia.Datastore;
+import org.mongodb.morphia.query.Query;
+import org.mongodb.morphia.query.UpdateOperations;
+import retrofit2.Call;
+import retrofit2.Response;
 
 /**
  * Created by rsingh on 9/27/17.

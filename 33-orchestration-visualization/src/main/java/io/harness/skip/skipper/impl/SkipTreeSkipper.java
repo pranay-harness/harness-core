@@ -8,9 +8,9 @@ import io.harness.beans.GraphVertex;
 import io.harness.beans.internal.EdgeListInternal;
 import io.harness.beans.internal.OrchestrationAdjacencyListInternal;
 import io.harness.skip.skipper.VertexSkipper;
-import lombok.AllArgsConstructor;
 
 import java.util.List;
+import lombok.AllArgsConstructor;
 
 @OwnedBy(CDC)
 public class SkipTreeSkipper extends VertexSkipper {
@@ -37,7 +37,7 @@ public class SkipTreeSkipper extends VertexSkipper {
       if (skippedVertexEdges.isEmpty()) {
         return;
       }
-      skippedVertexEdges.forEach(this ::remove);
+      skippedVertexEdges.forEach(this::remove);
     }
 
     private void remove(String vertexIdToRemove) {

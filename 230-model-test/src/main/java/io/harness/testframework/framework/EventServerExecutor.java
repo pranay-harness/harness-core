@@ -4,11 +4,15 @@ import static io.harness.testframework.framework.utils.ExecutorUtils.addConfig;
 import static io.harness.testframework.framework.utils.ExecutorUtils.addGCVMOptions;
 import static io.harness.testframework.framework.utils.ExecutorUtils.addJacocoAgentVM;
 import static io.harness.testframework.framework.utils.ExecutorUtils.addJar;
+
 import static java.time.Duration.ofMinutes;
 import static java.time.Duration.ofSeconds;
 
-import com.google.inject.Singleton;
+import io.harness.filesystem.FileIo;
+import io.harness.resource.Project;
+import io.harness.threading.Poller;
 
+import com.google.inject.Singleton;
 import io.fabric8.utils.Strings;
 import io.grpc.Channel;
 import io.grpc.health.v1.HealthCheckRequest;
@@ -18,16 +22,6 @@ import io.grpc.netty.shaded.io.grpc.netty.GrpcSslContexts;
 import io.grpc.netty.shaded.io.grpc.netty.NettyChannelBuilder;
 import io.grpc.netty.shaded.io.netty.handler.ssl.SslContext;
 import io.grpc.netty.shaded.io.netty.handler.ssl.util.InsecureTrustManagerFactory;
-import io.harness.filesystem.FileIo;
-import io.harness.resource.Project;
-import io.harness.threading.Poller;
-import lombok.Getter;
-import lombok.SneakyThrows;
-import lombok.extern.slf4j.Slf4j;
-import org.zeroturnaround.exec.ProcessExecutor;
-import org.zeroturnaround.exec.StartedProcess;
-import org.zeroturnaround.exec.stream.slf4j.Slf4jStream;
-
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -35,6 +29,12 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
+import lombok.Getter;
+import lombok.SneakyThrows;
+import lombok.extern.slf4j.Slf4j;
+import org.zeroturnaround.exec.ProcessExecutor;
+import org.zeroturnaround.exec.StartedProcess;
+import org.zeroturnaround.exec.stream.slf4j.Slf4jStream;
 
 /**
  * Start Event service as part of functional tests
@@ -108,7 +108,7 @@ public class EventServerExecutor {
 
         final StartedProcess startedProcess = processExecutor.start();
         Runtime.getRuntime().addShutdownHook(new Thread(startedProcess.getProcess()::destroy));
-        Poller.pollFor(ofMinutes(2), ofSeconds(2), this ::isHealthy);
+        Poller.pollFor(ofMinutes(2), ofSeconds(2), this::isHealthy);
       } catch (RuntimeException | IOException exception) {
         failedAlready = true;
         throw exception;

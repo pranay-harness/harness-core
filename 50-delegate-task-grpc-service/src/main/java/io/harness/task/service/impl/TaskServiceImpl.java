@@ -1,12 +1,9 @@
 package io.harness.task.service.impl;
 
 import static io.harness.govern.Switch.unhandled;
+
 import static java.lang.String.format;
 
-import com.google.inject.Inject;
-import com.google.protobuf.ByteString;
-
-import io.grpc.stub.StreamObserver;
 import io.harness.delegate.TaskExecutionStage;
 import io.harness.delegate.TaskId;
 import io.harness.delegate.task.stepstatus.StepStatusTaskResponseData;
@@ -30,9 +27,12 @@ import io.harness.task.service.TaskServiceGrpc;
 import io.harness.task.service.TaskStatusData;
 import io.harness.task.service.TaskType;
 import io.harness.tasks.ResponseData;
-import lombok.extern.slf4j.Slf4j;
 
+import com.google.inject.Inject;
+import com.google.protobuf.ByteString;
+import io.grpc.stub.StreamObserver;
 import java.time.Duration;
+import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class TaskServiceImpl extends TaskServiceGrpc.TaskServiceImplBase {

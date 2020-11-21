@@ -1,16 +1,15 @@
 package migrations.all;
 
-import com.google.inject.Inject;
-
-import com.mongodb.BasicDBObject;
-import com.mongodb.BulkWriteOperation;
-import com.mongodb.DBCollection;
-import lombok.extern.slf4j.Slf4j;
-import migrations.Migration;
 import software.wings.beans.AuthToken;
 import software.wings.dl.WingsPersistence;
 
+import com.google.inject.Inject;
+import com.mongodb.BasicDBObject;
+import com.mongodb.BulkWriteOperation;
+import com.mongodb.DBCollection;
 import java.util.Date;
+import lombok.extern.slf4j.Slf4j;
+import migrations.Migration;
 
 @Slf4j
 public class AuthTokenTtlMigration implements Migration {

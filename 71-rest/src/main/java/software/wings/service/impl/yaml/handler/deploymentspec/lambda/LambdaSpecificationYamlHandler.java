@@ -3,14 +3,12 @@ package software.wings.service.impl.yaml.handler.deploymentspec.lambda;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.validation.Validator.notNullCheck;
-import static java.util.stream.Collectors.toList;
 
-import com.google.common.collect.Lists;
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
+import static java.util.stream.Collectors.toList;
 
 import io.harness.exception.HarnessException;
 import io.harness.exception.WingsException;
+
 import software.wings.api.DeploymentType;
 import software.wings.beans.LambdaSpecification;
 import software.wings.beans.LambdaSpecification.DefaultSpecification;
@@ -23,6 +21,9 @@ import software.wings.service.impl.yaml.handler.deploymentspec.DeploymentSpecifi
 import software.wings.service.impl.yaml.service.YamlHelper;
 import software.wings.service.intfc.ServiceResourceService;
 
+import com.google.common.collect.Lists;
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import java.util.Collections;
 import java.util.List;
 /**

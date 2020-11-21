@@ -4,13 +4,13 @@ import static javax.ws.rs.core.Response.status;
 
 import io.harness.exception.GeneralException;
 import io.harness.network.SafeHttpCall;
+
+import java.io.IOException;
+import javax.ws.rs.core.Response.ResponseBuilder;
 import lombok.experimental.UtilityClass;
 import okhttp3.ResponseBody;
 import retrofit2.Call;
 import retrofit2.Response;
-
-import java.io.IOException;
-import javax.ws.rs.core.Response.ResponseBuilder;
 
 @UtilityClass
 public class CommandLibraryServiceClientUtils {

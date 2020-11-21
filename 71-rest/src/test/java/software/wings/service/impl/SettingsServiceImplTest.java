@@ -6,6 +6,9 @@ import static io.harness.rule.OwnerRule.ARVIND;
 import static io.harness.rule.OwnerRule.DELEGATE;
 import static io.harness.rule.OwnerRule.HANTANG;
 import static io.harness.rule.OwnerRule.UTSAV;
+
+import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
+
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
@@ -21,9 +24,6 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
-
-import com.google.inject.name.Named;
 
 import io.harness.category.element.UnitTests;
 import io.harness.ccm.config.CCMConfig;
@@ -35,13 +35,7 @@ import io.harness.exception.InvalidRequestException;
 import io.harness.k8s.model.response.CEK8sDelegatePrerequisite;
 import io.harness.rule.Owner;
 import io.harness.rule.OwnerRule;
-import org.apache.commons.lang3.reflect.FieldUtils;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.Spy;
+
 import software.wings.WingsBaseTest;
 import software.wings.beans.Account;
 import software.wings.beans.AwsConfig;
@@ -70,12 +64,20 @@ import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.UsageRestrictionsService;
 import software.wings.service.intfc.security.SecretManager;
 
+import com.google.inject.name.Named;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+import org.apache.commons.lang3.reflect.FieldUtils;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.Spy;
 
 public class SettingsServiceImplTest extends WingsBaseTest {
   private static final String PASSWORD = "PASSWORD";

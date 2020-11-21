@@ -3,24 +3,19 @@ package software.wings.service.impl.instance;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.logging.CommandExecutionStatus.SUCCESS;
 import static io.harness.validation.Validator.notNullCheck;
-import static java.util.function.Function.identity;
+
 import static software.wings.beans.FeatureName.MOVE_PCF_INSTANCE_SYNC_TO_PERPETUAL_TASK;
 import static software.wings.beans.FeatureName.STOP_INSTANCE_SYNC_VIA_ITERATOR_FOR_PCF_DEPLOYMENTS;
 import static software.wings.service.impl.instance.InstanceSyncFlow.NEW_DEPLOYMENT;
 import static software.wings.service.impl.instance.InstanceSyncFlow.PERPETUAL_TASK;
 
-import com.google.common.collect.ArrayListMultimap;
-import com.google.common.collect.Multimap;
-import com.google.common.collect.Sets;
-import com.google.common.collect.Sets.SetView;
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
+import static java.util.function.Function.identity;
 
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.delegate.beans.NoDelegatesException;
 import io.harness.exception.WingsException;
-import lombok.extern.slf4j.Slf4j;
+
 import software.wings.api.DeploymentInfo;
 import software.wings.api.DeploymentSummary;
 import software.wings.api.PcfDeploymentInfo;
@@ -50,6 +45,12 @@ import software.wings.service.impl.PcfHelperService;
 import software.wings.sm.PhaseStepExecutionSummary;
 import software.wings.sm.StepExecutionSummary;
 
+import com.google.common.collect.ArrayListMultimap;
+import com.google.common.collect.Multimap;
+import com.google.common.collect.Sets;
+import com.google.common.collect.Sets.SetView;
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -61,6 +62,7 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
+import lombok.extern.slf4j.Slf4j;
 
 @Singleton
 @Slf4j

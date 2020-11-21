@@ -1,12 +1,9 @@
 package migrations.all;
 
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+
 import static software.wings.common.VerificationConstants.CV_24x7_STATE_EXECUTION;
 
-import com.google.inject.Inject;
-
-import lombok.extern.slf4j.Slf4j;
-import migrations.Migration;
 import software.wings.dl.WingsPersistence;
 import software.wings.metrics.TimeSeriesMetricDefinition;
 import software.wings.service.impl.CloudWatchServiceImpl;
@@ -18,8 +15,11 @@ import software.wings.verification.CVConfiguration;
 import software.wings.verification.CVConfiguration.CVConfigurationKeys;
 import software.wings.verification.cloudwatch.CloudWatchCVServiceConfiguration;
 
+import com.google.inject.Inject;
 import java.util.List;
 import java.util.Map;
+import lombok.extern.slf4j.Slf4j;
+import migrations.Migration;
 
 @Slf4j
 public class MigrateCloudwatchCVTemplates implements Migration {

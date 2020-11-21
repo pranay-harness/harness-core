@@ -1,10 +1,10 @@
 package software.wings.beans.instance.dashboard;
 
-import lombok.Builder;
-import lombok.Data;
 import software.wings.beans.infrastructure.instance.SyncStatus;
 
 import java.util.List;
+import lombok.Builder;
+import lombok.Data;
 
 /**
  * @author rktummala on 08/13/17

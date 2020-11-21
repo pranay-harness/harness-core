@@ -1,8 +1,9 @@
 package software.wings.service.impl.analysis;
 
+import software.wings.sm.StateExecutionInstance;
+
 import lombok.Builder;
 import lombok.Data;
-import software.wings.sm.StateExecutionInstance;
 
 @Data
 @Builder

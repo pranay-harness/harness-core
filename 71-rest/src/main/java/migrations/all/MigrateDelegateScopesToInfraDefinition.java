@@ -1,10 +1,8 @@
 package migrations.all;
 
-import com.google.inject.Inject;
-
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.persistence.HIterator;
-import lombok.extern.slf4j.Slf4j;
+
 import software.wings.beans.Account;
 import software.wings.beans.DelegateScope;
 import software.wings.beans.DelegateScope.DelegateScopeKeys;
@@ -12,8 +10,10 @@ import software.wings.beans.InfrastructureMapping;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.DelegateScopeService;
 
+import com.google.inject.Inject;
 import java.util.List;
 import java.util.stream.Collectors;
+import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class MigrateDelegateScopesToInfraDefinition {

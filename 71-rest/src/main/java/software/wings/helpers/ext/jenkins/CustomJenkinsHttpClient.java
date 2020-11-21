@@ -3,10 +3,12 @@ package software.wings.helpers.ext.jenkins;
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
-import com.offbytwo.jenkins.client.JenkinsHttpClient;
-import com.offbytwo.jenkins.client.PreemptiveAuth;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.network.Http;
+
+import com.offbytwo.jenkins.client.JenkinsHttpClient;
+import com.offbytwo.jenkins.client.PreemptiveAuth;
+import java.net.URI;
 import org.apache.http.HttpHeaders;
 import org.apache.http.HttpRequestInterceptor;
 import org.apache.http.auth.AuthScope;
@@ -17,8 +19,6 @@ import org.apache.http.impl.client.BasicCredentialsProvider;
 import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.http.impl.client.ProxyAuthenticationStrategy;
 import org.apache.http.protocol.BasicHttpContext;
-
-import java.net.URI;
 
 /**
  * Created by sgurubelli on 8/14/17.

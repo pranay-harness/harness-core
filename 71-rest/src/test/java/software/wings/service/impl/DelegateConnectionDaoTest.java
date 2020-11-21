@@ -5,20 +5,18 @@ import static io.harness.rule.OwnerRule.BRETT;
 import static io.harness.rule.OwnerRule.GEORGE;
 import static io.harness.rule.OwnerRule.HANTANG;
 import static io.harness.rule.OwnerRule.VUK;
-import static java.util.Collections.emptyList;
-import static org.assertj.core.api.Assertions.assertThat;
+
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 import static software.wings.utils.WingsTestConstants.DELEGATE_ID;
 
-import com.google.inject.Inject;
+import static java.util.Collections.emptyList;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.beans.ConnectionMode;
 import io.harness.delegate.beans.DelegateConnectionHeartbeat;
 import io.harness.rule.Owner;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
+
 import software.wings.WingsBaseTest;
 import software.wings.beans.Delegate;
 import software.wings.beans.DelegateConnection;
@@ -26,8 +24,12 @@ import software.wings.beans.DelegateConnection.DelegateConnectionKeys;
 import software.wings.beans.DelegateStatus;
 import software.wings.service.intfc.DelegateService;
 
+import com.google.inject.Inject;
 import java.util.List;
 import java.util.Map;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 public class DelegateConnectionDaoTest extends WingsBaseTest {
   private String delegateId = "DELEGATE_ID";

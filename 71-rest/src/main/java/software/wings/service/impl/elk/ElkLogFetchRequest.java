@@ -1,14 +1,11 @@
 package software.wings.service.impl.elk;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
+
 import static java.util.Arrays.asList;
 
 import io.harness.exception.WingsException;
 import io.harness.serializer.JsonUtils;
-import lombok.Builder;
-import lombok.Data;
-import org.json.JSONException;
-import org.json.JSONObject;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -16,6 +13,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.Stack;
+import lombok.Builder;
+import lombok.Data;
+import org.json.JSONException;
+import org.json.JSONObject;
 
 /**
  * Created by rsingh on 8/3/17.

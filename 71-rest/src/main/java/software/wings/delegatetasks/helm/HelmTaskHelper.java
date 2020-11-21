@@ -10,16 +10,13 @@ import static io.harness.filesystem.FileIo.waitForDirectoryToBeAccessibleOutOfPr
 import static io.harness.helm.HelmConstants.HELM_PATH_PLACEHOLDER;
 import static io.harness.k8s.kubectl.Utils.encloseWithQuotesIfNeeded;
 import static io.harness.state.StateConstants.DEFAULT_STEADY_STATE_TIMEOUT;
+
+import static software.wings.helpers.ext.chartmuseum.ChartMuseumConstants.CHART_MUSEUM_SERVER_URL;
+
 import static java.lang.String.format;
 import static org.apache.commons.lang3.StringUtils.defaultString;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
-import static software.wings.helpers.ext.chartmuseum.ChartMuseumConstants.CHART_MUSEUM_SERVER_URL;
-
-import com.google.common.annotations.VisibleForTesting;
-import com.google.common.util.concurrent.UncheckedTimeoutException;
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
 
 import io.harness.beans.FileData;
 import io.harness.exception.ExceptionUtils;
@@ -27,14 +24,7 @@ import io.harness.exception.HelmClientException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.k8s.K8sGlobalConfigService;
 import io.harness.k8s.model.HelmVersion;
-import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.csv.CSVFormat;
-import org.apache.commons.csv.CSVParser;
-import org.apache.commons.csv.CSVRecord;
-import org.apache.commons.lang3.StringUtils;
-import org.zeroturnaround.exec.ProcessExecutor;
-import org.zeroturnaround.exec.ProcessResult;
-import org.zeroturnaround.exec.stream.LogOutputStream;
+
 import software.wings.annotation.EncryptableSetting;
 import software.wings.beans.appmanifest.HelmChart;
 import software.wings.beans.command.ExecutionLogCallback;
@@ -55,6 +45,10 @@ import software.wings.helpers.ext.helm.response.HelmChartInfo;
 import software.wings.service.intfc.security.EncryptionService;
 import software.wings.settings.SettingValue;
 
+import com.google.common.annotations.VisibleForTesting;
+import com.google.common.util.concurrent.UncheckedTimeoutException;
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
@@ -72,6 +66,14 @@ import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.csv.CSVFormat;
+import org.apache.commons.csv.CSVParser;
+import org.apache.commons.csv.CSVRecord;
+import org.apache.commons.lang3.StringUtils;
+import org.zeroturnaround.exec.ProcessExecutor;
+import org.zeroturnaround.exec.ProcessResult;
+import org.zeroturnaround.exec.stream.LogOutputStream;
 
 @Singleton
 @Slf4j
@@ -760,7 +762,7 @@ public class HelmTaskHelper {
             .filter(record
                 -> record.size() > 1
                     && matchesChartName(
-                           manifestCollectionParams.getHelmChartConfigParams().getChartName(), record.get(0)))
+                        manifestCollectionParams.getHelmChartConfigParams().getChartName(), record.get(0)))
             .map(record
                 -> HelmChart.builder()
                        .appId(manifestCollectionParams.getAppId())

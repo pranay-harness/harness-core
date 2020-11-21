@@ -1,7 +1,5 @@
 package io.harness.cdng.pipeline.stepinfo;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonTypeName;
 import io.harness.cdng.pipeline.CDStepInfo;
 import io.harness.cdng.pipeline.steps.HttpStep;
 import io.harness.cdng.visitor.YamlTypes;
@@ -14,6 +12,9 @@ import io.harness.walktree.beans.LevelNode;
 import io.harness.walktree.beans.VisitableChildren;
 import io.harness.walktree.visitor.SimpleVisitorHelper;
 import io.harness.walktree.visitor.Visitable;
+
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonTypeName;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;

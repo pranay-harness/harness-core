@@ -1,10 +1,8 @@
 package io.harness.functional.artifactstream;
 
 import static io.harness.rule.OwnerRule.ANSHUL;
-import static org.assertj.core.api.Assertions.assertThat;
 
-import com.google.common.collect.Lists;
-import com.google.inject.Inject;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.category.element.FunctionalTests;
 import io.harness.functional.AbstractFunctionalTest;
@@ -21,12 +19,7 @@ import io.harness.rest.RestResponse;
 import io.harness.rule.Owner;
 import io.harness.testframework.framework.Setup;
 import io.harness.testframework.restutils.ArtifactRestUtils;
-import io.restassured.http.ContentType;
-import io.restassured.mapper.ObjectMapperType;
-import org.junit.Before;
-import org.junit.Ignore;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
+
 import software.wings.beans.Application;
 import software.wings.beans.Service;
 import software.wings.beans.SettingAttribute;
@@ -36,9 +29,17 @@ import software.wings.beans.artifact.ArtifactStream;
 import software.wings.beans.artifact.ArtifactStreamType;
 import software.wings.beans.artifact.GcsArtifactStream;
 
+import com.google.common.collect.Lists;
+import com.google.inject.Inject;
+import io.restassured.http.ContentType;
+import io.restassured.mapper.ObjectMapperType;
 import java.util.ArrayList;
 import java.util.HashMap;
 import javax.ws.rs.core.GenericType;
+import org.junit.Before;
+import org.junit.Ignore;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 public class GCSFunctionalTest extends AbstractFunctionalTest {
   @Inject private OwnerManager ownerManager;

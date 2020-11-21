@@ -1,12 +1,12 @@
 package io.harness.cvng.analysis.beans;
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import io.harness.cvng.analysis.entities.TimeSeriesCumulativeSums;
 import io.harness.cvng.beans.TimeSeriesMetricType;
+
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import java.util.List;
 import lombok.Builder;
 import lombok.Value;
-
-import java.util.List;
 
 @Value
 @Builder

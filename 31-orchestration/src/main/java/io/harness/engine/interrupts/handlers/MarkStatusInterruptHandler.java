@@ -6,8 +6,6 @@ import static io.harness.interrupts.Interrupt.State.PROCESSED_UNSUCCESSFULLY;
 import static io.harness.pms.execution.Status.INTERVENTION_WAITING;
 import static io.harness.pms.execution.Status.RUNNING;
 
-import com.google.inject.Inject;
-
 import io.harness.engine.OrchestrationEngine;
 import io.harness.engine.executions.node.NodeExecutionService;
 import io.harness.engine.executions.plan.PlanExecutionService;
@@ -19,9 +17,10 @@ import io.harness.execution.NodeExecution.NodeExecutionKeys;
 import io.harness.interrupts.Interrupt;
 import io.harness.interrupts.InterruptEffect;
 import io.harness.pms.execution.Status;
-import lombok.NonNull;
 
+import com.google.inject.Inject;
 import javax.validation.Valid;
+import lombok.NonNull;
 
 public abstract class MarkStatusInterruptHandler implements InterruptHandler {
   @Inject private NodeExecutionService nodeExecutionService;

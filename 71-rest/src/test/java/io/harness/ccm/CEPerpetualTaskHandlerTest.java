@@ -3,6 +3,9 @@ package io.harness.ccm;
 import static io.harness.ccm.cluster.entities.ClusterType.DIRECT_KUBERNETES;
 import static io.harness.rule.OwnerRule.HANTANG;
 import static io.harness.rule.OwnerRule.SHUBHANSHU;
+
+import static software.wings.beans.Account.Builder.anAccount;
+
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
@@ -10,9 +13,6 @@ import static org.mockito.Matchers.isA;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-import static software.wings.beans.Account.Builder.anAccount;
-
-import com.google.inject.name.Named;
 
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
@@ -24,6 +24,14 @@ import io.harness.ccm.cluster.entities.EcsCluster;
 import io.harness.ccm.config.CCMSettingService;
 import io.harness.exception.InvalidRequestException;
 import io.harness.rule.Owner;
+
+import software.wings.beans.Account;
+import software.wings.features.CeClusterFeature;
+import software.wings.features.api.UsageLimitedFeature;
+import software.wings.service.intfc.FeatureFlagService;
+
+import com.google.inject.name.Named;
+import java.util.Arrays;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -32,12 +40,6 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnit;
 import org.mockito.junit.MockitoRule;
-import software.wings.beans.Account;
-import software.wings.features.CeClusterFeature;
-import software.wings.features.api.UsageLimitedFeature;
-import software.wings.service.intfc.FeatureFlagService;
-
-import java.util.Arrays;
 
 public class CEPerpetualTaskHandlerTest extends CategoryTest {
   private String accountId = "ACCOUNT_ID";

@@ -1,9 +1,8 @@
 package software.wings.service.impl.newrelic;
 
-import com.google.inject.Singleton;
-
 import software.wings.stencils.DataProvider;
 
+import com.google.inject.Singleton;
 import java.util.Collections;
 import java.util.Map;
 

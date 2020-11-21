@@ -1,6 +1,5 @@
 package software.wings.graphql.schema.type.instance;
 
-import io.fabric8.utils.Lists;
 import software.wings.beans.infrastructure.instance.info.AutoScalingGroupInstanceInfo;
 import software.wings.beans.infrastructure.instance.info.CodeDeployInstanceInfo;
 import software.wings.beans.infrastructure.instance.info.Ec2InstanceInfo;
@@ -11,6 +10,7 @@ import software.wings.beans.infrastructure.instance.info.KubernetesContainerInfo
 import software.wings.beans.infrastructure.instance.info.PcfInstanceInfo;
 import software.wings.beans.infrastructure.instance.info.PhysicalHostInstanceInfo;
 
+import io.fabric8.utils.Lists;
 import java.util.List;
 
 public enum QLInstanceType {

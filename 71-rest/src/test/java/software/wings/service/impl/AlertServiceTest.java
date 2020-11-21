@@ -4,10 +4,7 @@ import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 import static io.harness.rule.OwnerRule.BRETT;
 import static io.harness.rule.OwnerRule.GARVIT;
 import static io.harness.rule.OwnerRule.GEORGE;
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+
 import static software.wings.alerts.AlertStatus.Closed;
 import static software.wings.alerts.AlertStatus.Open;
 import static software.wings.alerts.AlertStatus.Pending;
@@ -24,7 +21,10 @@ import static software.wings.utils.WingsTestConstants.DELEGATE_ID;
 import static software.wings.utils.WingsTestConstants.SERVICE_ID;
 import static software.wings.utils.WingsTestConstants.SETTING_ID;
 
-import com.google.inject.Inject;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 import io.harness.alert.AlertData;
 import io.harness.beans.PageResponse;
@@ -34,14 +34,7 @@ import io.harness.delegate.beans.TaskGroup;
 import io.harness.event.model.Event;
 import io.harness.event.publisher.EventPublisher;
 import io.harness.rule.Owner;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
-import org.mockito.ArgumentCaptor;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.Mockito;
-import org.mockito.stubbing.Answer;
+
 import software.wings.WingsBaseTest;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.TaskType;
@@ -58,8 +51,17 @@ import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ArtifactStreamService;
 import software.wings.service.intfc.SettingsService;
 
+import com.google.inject.Inject;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
+import org.mockito.ArgumentCaptor;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.Mockito;
+import org.mockito.stubbing.Answer;
 
 public class AlertServiceTest extends WingsBaseTest {
   @Mock private ExecutorService executorService;

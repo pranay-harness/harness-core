@@ -1,20 +1,19 @@
 package io.harness.cvng.beans;
 
-import com.google.common.io.Resources;
-
 import io.harness.cvng.beans.appd.AppDynamicsConnectorValidationInfo;
 import io.harness.cvng.beans.splunk.SplunkConnectorValidationInfo;
 import io.harness.delegate.beans.connector.ConnectorConfigDTO;
 import io.harness.delegate.beans.connector.appdynamicsconnector.AppDynamicsConnectorDTO;
 import io.harness.delegate.beans.connector.splunkconnector.SplunkConnectorDTO;
-import lombok.Data;
 
+import com.google.common.io.Resources;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.Collections;
 import java.util.Map;
+import lombok.Data;
 
 @Data
 public abstract class ConnectorValidationInfo<T extends ConnectorConfigDTO> {

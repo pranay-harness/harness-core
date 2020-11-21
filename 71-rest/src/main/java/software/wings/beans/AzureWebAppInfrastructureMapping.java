@@ -3,17 +3,18 @@ package software.wings.beans;
 import static io.harness.validation.Validator.ensureType;
 import static io.harness.validation.Validator.notNullCheck;
 
-import com.github.reinert.jjschema.Attributes;
 import io.harness.beans.EmbeddedUser;
 import io.harness.data.validator.Trimmed;
+
+import software.wings.api.DeploymentType;
+
+import com.github.reinert.jjschema.Attributes;
+import java.util.Map;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.experimental.FieldNameConstants;
-import software.wings.api.DeploymentType;
-
-import java.util.Map;
 
 @Data
 @EqualsAndHashCode(callSuper = true)

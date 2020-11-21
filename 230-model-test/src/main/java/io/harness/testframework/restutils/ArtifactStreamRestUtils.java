@@ -2,16 +2,17 @@ package io.harness.testframework.restutils;
 
 import io.harness.rest.RestResponse;
 import io.harness.testframework.framework.Setup;
-import io.restassured.http.ContentType;
-import io.restassured.mapper.ObjectMapperType;
-import io.restassured.path.json.JsonPath;
-import lombok.extern.slf4j.Slf4j;
+
 import software.wings.beans.artifact.ArtifactStream;
 import software.wings.beans.artifact.DockerArtifactStream;
 
+import io.restassured.http.ContentType;
+import io.restassured.mapper.ObjectMapperType;
+import io.restassured.path.json.JsonPath;
 import java.util.ArrayList;
 import java.util.HashMap;
 import javax.ws.rs.core.GenericType;
+import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class ArtifactStreamRestUtils {

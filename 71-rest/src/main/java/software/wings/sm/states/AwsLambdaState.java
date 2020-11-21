@@ -7,20 +7,18 @@ import static io.harness.delegate.beans.TaskData.DEFAULT_ASYNC_CALL_TIMEOUT;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.validation.Validator.notNullCheck;
 import static io.harness.validation.Validator.nullCheckForInvalidRequest;
-import static java.lang.String.format;
-import static java.util.Collections.emptyList;
-import static java.util.Collections.singletonList;
-import static java.util.stream.Collectors.toList;
+
 import static software.wings.api.CommandStateExecutionData.Builder.aCommandStateExecutionData;
 import static software.wings.beans.Log.Builder.aLog;
 import static software.wings.beans.TaskType.AWS_LAMBDA_TASK;
 import static software.wings.service.intfc.ServiceTemplateService.EncryptedFieldComputeMode.OBTAIN_VALUE;
 import static software.wings.sm.StateType.AWS_LAMBDA_STATE;
 
-import com.google.inject.Inject;
+import static java.lang.String.format;
+import static java.util.Collections.emptyList;
+import static java.util.Collections.singletonList;
+import static java.util.stream.Collectors.toList;
 
-import com.github.reinert.jjschema.Attributes;
-import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.beans.DelegateTask;
 import io.harness.beans.ExecutionStatus;
 import io.harness.beans.TriggeredBy;
@@ -34,9 +32,7 @@ import io.harness.logging.LogLevel;
 import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.tasks.Cd1SetupFields;
 import io.harness.tasks.ResponseData;
-import lombok.Getter;
-import lombok.Setter;
-import lombok.extern.slf4j.Slf4j;
+
 import software.wings.annotation.EncryptableSetting;
 import software.wings.api.AwsLambdaContextElement;
 import software.wings.api.AwsLambdaContextElement.FunctionMeta;
@@ -93,12 +89,18 @@ import software.wings.sm.WorkflowStandardParams;
 import software.wings.stencils.DefaultValue;
 import software.wings.utils.LambdaConvention;
 
+import com.github.reinert.jjschema.Attributes;
+import com.github.reinert.jjschema.SchemaIgnore;
+import com.google.inject.Inject;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
+import lombok.Getter;
+import lombok.Setter;
+import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class AwsLambdaState extends State {
@@ -408,7 +410,7 @@ public class AwsLambdaState extends State {
         String artifactUrl = artifactStreamAttributes.getMetadata().get(URL);
         return "."
             + artifactUrl.substring(artifactUrl.lastIndexOf(artifactStreamAttributes.getJobName())
-                  + artifactStreamAttributes.getJobName().length());
+                + artifactStreamAttributes.getJobName().length());
       default:
         return artifactStreamAttributes.getMetadata().get(URL);
     }

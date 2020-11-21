@@ -2,9 +2,6 @@ package io.harness.functional.winrm;
 
 import static io.harness.rule.OwnerRule.PRASHANT;
 
-import com.google.common.collect.ImmutableMap;
-import com.google.inject.Inject;
-
 import io.harness.beans.WorkflowType;
 import io.harness.category.element.FunctionalTests;
 import io.harness.functional.AbstractFunctionalTest;
@@ -21,10 +18,7 @@ import io.harness.generator.WorkflowGenerator;
 import io.harness.rule.Owner;
 import io.harness.testframework.restutils.ArtifactRestUtils;
 import io.harness.testframework.restutils.WorkflowRestUtils;
-import org.junit.Before;
-import org.junit.Ignore;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
+
 import software.wings.beans.ExecutionArgs;
 import software.wings.beans.Service;
 import software.wings.beans.Workflow;
@@ -33,8 +27,14 @@ import software.wings.beans.artifact.Artifact;
 import software.wings.infra.InfrastructureDefinition;
 import software.wings.service.intfc.FeatureFlagService;
 
+import com.google.common.collect.ImmutableMap;
+import com.google.inject.Inject;
 import java.util.Collections;
 import java.util.List;
+import org.junit.Before;
+import org.junit.Ignore;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 public class WinRMRollbackFunctionalTest extends AbstractFunctionalTest {
   @Inject private OwnerManager ownerManager;

@@ -1,13 +1,13 @@
 package software.wings.beans.instance.dashboard.service;
 
-import lombok.Builder;
-import lombok.Data;
 import software.wings.beans.appmanifest.ManifestSummary;
 import software.wings.beans.instance.dashboard.ArtifactSummary;
 import software.wings.beans.instance.dashboard.EntitySummary;
 
 import java.util.Date;
 import java.util.List;
+import lombok.Builder;
+import lombok.Data;
 
 /**
  * @author rktummala on 08/14/17

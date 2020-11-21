@@ -3,19 +3,18 @@ package software.wings.delegatetasks;
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.logging.LogLevel.INFO;
 import static io.harness.threading.Morpheus.sleep;
-import static java.lang.String.format;
-import static java.util.Collections.singletonList;
-import static java.util.Objects.requireNonNull;
-import static org.apache.commons.lang3.StringUtils.isNotBlank;
+
 import static software.wings.beans.Log.Builder.aLog;
 import static software.wings.sm.states.GcbState.GcbDelegateResponse.failedGcbTaskResponse;
 import static software.wings.sm.states.GcbState.GcbDelegateResponse.gcbDelegateResponseOf;
 import static software.wings.sm.states.GcbState.GcbDelegateResponse.interruptedGcbTask;
 import static software.wings.sm.states.gcbconfigs.GcbRemoteBuildSpec.RemoteFileSource.BRANCH;
 
-import com.google.inject.Inject;
+import static java.lang.String.format;
+import static java.util.Collections.singletonList;
+import static java.util.Objects.requireNonNull;
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
-import com.hazelcast.core.RuntimeInterruptedException;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.ExecutionStatus;
 import io.harness.delegate.beans.DelegateTaskPackage;
@@ -27,10 +26,7 @@ import io.harness.exception.InterruptedRuntimeException;
 import io.harness.exception.UnsupportedOperationException;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.serializer.JsonUtils;
-import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.NotImplementedException;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
+
 import software.wings.beans.Log;
 import software.wings.beans.command.GcbTaskParams;
 import software.wings.beans.yaml.GitFetchFilesRequest;
@@ -49,6 +45,8 @@ import software.wings.sm.states.gcbconfigs.GcbOptions;
 import software.wings.sm.states.gcbconfigs.GcbRemoteBuildSpec;
 import software.wings.sm.states.gcbconfigs.GcbTriggerBuildSpec;
 
+import com.google.inject.Inject;
+import com.hazelcast.core.RuntimeInterruptedException;
 import java.time.Duration;
 import java.util.List;
 import java.util.Map;
@@ -56,6 +54,10 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.BooleanSupplier;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.NotImplementedException;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 /**
  * Created by rishi on 12/14/16.

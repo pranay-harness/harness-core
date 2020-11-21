@@ -4,12 +4,11 @@ import static io.harness.event.handler.impl.Constants.ACCOUNT_ID;
 import static io.harness.event.handler.impl.Constants.EMAIL_ID;
 import static io.harness.event.model.EventType.USER_INVITE_ACCEPTED_FOR_TRIAL_ACCOUNT;
 import static io.harness.rule.OwnerRule.VIKAS;
+
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-
-import com.google.inject.Inject;
 
 import io.harness.category.element.UnitTests;
 import io.harness.event.handler.impl.Utils;
@@ -18,12 +17,7 @@ import io.harness.event.listener.EventListener;
 import io.harness.event.model.Event;
 import io.harness.event.model.EventData;
 import io.harness.rule.Owner;
-import org.junit.FixMethodOrder;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
-import org.junit.runners.MethodSorters;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
+
 import software.wings.WingsBaseTest;
 import software.wings.beans.Account;
 import software.wings.beans.User;
@@ -32,9 +26,16 @@ import software.wings.events.TestUtils;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.UserService;
 
+import com.google.inject.Inject;
 import java.net.URISyntaxException;
 import java.util.HashMap;
 import java.util.Map;
+import org.junit.FixMethodOrder;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
+import org.junit.runners.MethodSorters;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
 
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
 public class SegmentHandlerTest extends WingsBaseTest {

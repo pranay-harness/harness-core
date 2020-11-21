@@ -1,7 +1,8 @@
 package io.harness.container;
 
-import com.amazonaws.services.ec2.model.Instance;
 import io.harness.ecs.EcsContainerDetails;
+
+import com.amazonaws.services.ec2.model.Instance;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;

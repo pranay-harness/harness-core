@@ -1,10 +1,8 @@
 package software.wings.features;
 
-import static com.google.common.collect.Sets.newHashSet;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
+import static com.google.common.collect.Sets.newHashSet;
 
 import software.wings.beans.EntityType;
 import software.wings.beans.HarnessTag;
@@ -15,6 +13,8 @@ import software.wings.features.api.Usage;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.HarnessTagService;
 
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.stream.Collectors;

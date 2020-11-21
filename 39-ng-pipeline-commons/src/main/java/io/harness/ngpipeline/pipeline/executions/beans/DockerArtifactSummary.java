@@ -1,7 +1,8 @@
 package io.harness.ngpipeline.pipeline.executions.beans;
 
-import com.fasterxml.jackson.annotation.JsonTypeName;
 import io.harness.ngpipeline.artifact.bean.ArtifactTypes;
+
+import com.fasterxml.jackson.annotation.JsonTypeName;
 import lombok.Builder;
 import lombok.Data;
 

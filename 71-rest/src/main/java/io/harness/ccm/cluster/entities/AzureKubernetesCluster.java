@@ -2,19 +2,20 @@ package io.harness.ccm.cluster.entities;
 
 import static io.harness.ccm.cluster.entities.ClusterType.AZURE_KUBERNETES;
 
-import com.fasterxml.jackson.annotation.JsonTypeName;
 import io.harness.ccm.cluster.entities.ClusterRecord.ClusterRecordKeys;
 import io.harness.security.encryption.EncryptedDataDetail;
+
+import software.wings.helpers.ext.k8s.request.K8sClusterConfig;
+import software.wings.settings.SettingValue;
+
+import com.fasterxml.jackson.annotation.JsonTypeName;
+import java.util.List;
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Data;
 import lombok.experimental.FieldDefaults;
 import lombok.experimental.FieldNameConstants;
 import org.mongodb.morphia.query.Query;
-import software.wings.helpers.ext.k8s.request.K8sClusterConfig;
-import software.wings.settings.SettingValue;
-
-import java.util.List;
 
 @Data
 @JsonTypeName("AZURE_KUBERNETES")

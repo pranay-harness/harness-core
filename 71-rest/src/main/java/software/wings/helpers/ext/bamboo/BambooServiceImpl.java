@@ -8,18 +8,13 @@ import static io.harness.eraro.ErrorCode.GENERAL_ERROR;
 import static io.harness.eraro.ErrorCode.INVALID_ARTIFACT_SERVER;
 import static io.harness.exception.ExceptionUtils.getMessage;
 import static io.harness.exception.WingsException.USER;
+
+import static software.wings.helpers.ext.jenkins.BuildDetails.Builder.aBuildDetails;
+
 import static java.lang.String.format;
 import static java.util.Arrays.asList;
 import static java.util.stream.Collectors.toList;
-import static software.wings.helpers.ext.jenkins.BuildDetails.Builder.aBuildDetails;
 
-import com.google.common.base.Joiner;
-import com.google.common.util.concurrent.TimeLimiter;
-import com.google.common.util.concurrent.UncheckedTimeoutException;
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
-
-import com.fasterxml.jackson.databind.JsonNode;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.delegate.beans.artifact.ArtifactFileMetadata;
 import io.harness.delegate.task.ListNotifyResponseData;
@@ -29,22 +24,19 @@ import io.harness.exception.WingsException;
 import io.harness.network.Http;
 import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.stream.StreamUtils;
-import lombok.extern.slf4j.Slf4j;
-import okhttp3.Credentials;
-import org.apache.commons.io.IOUtils;
-import org.apache.commons.lang3.exception.ExceptionUtils;
-import org.apache.commons.lang3.tuple.ImmutablePair;
-import org.apache.commons.lang3.tuple.Pair;
-import retrofit2.Call;
-import retrofit2.Response;
-import retrofit2.Retrofit;
-import retrofit2.converter.jackson.JacksonConverterFactory;
+
 import software.wings.beans.BambooConfig;
 import software.wings.beans.artifact.ArtifactStreamAttributes;
 import software.wings.delegatetasks.collect.artifacts.ArtifactCollectionTaskHelper;
 import software.wings.helpers.ext.jenkins.BuildDetails;
 import software.wings.service.intfc.security.EncryptionService;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.google.common.base.Joiner;
+import com.google.common.util.concurrent.TimeLimiter;
+import com.google.common.util.concurrent.UncheckedTimeoutException;
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
@@ -60,6 +52,16 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Pattern;
+import lombok.extern.slf4j.Slf4j;
+import okhttp3.Credentials;
+import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang3.exception.ExceptionUtils;
+import org.apache.commons.lang3.tuple.ImmutablePair;
+import org.apache.commons.lang3.tuple.Pair;
+import retrofit2.Call;
+import retrofit2.Response;
+import retrofit2.Retrofit;
+import retrofit2.converter.jackson.JacksonConverterFactory;
 
 /**
  * Created by anubhaw on 11/29/16.
@@ -446,7 +448,7 @@ public class BambooServiceImpl implements BambooService {
   }
 
   private List<String> getArtifactRelativePaths(Collection<String> paths) {
-    return paths.stream().map(this ::extractRelativePath).filter(Objects::nonNull).collect(toList());
+    return paths.stream().map(this::extractRelativePath).filter(Objects::nonNull).collect(toList());
   }
 
   private String extractRelativePath(String path) {

@@ -1,28 +1,30 @@
 package software.wings.api;
 
 import static io.harness.rule.OwnerRule.VGLIJIN;
-import static org.assertj.core.api.Assertions.assertThat;
+
 import static software.wings.api.ExecutionDataValue.executionDataValue;
 import static software.wings.helpers.ext.gcb.models.GcbBuildStatus.WORKING;
 import static software.wings.sm.states.GcbState.GcbDelegateResponse.gcbDelegateResponseOf;
 
-import com.google.common.collect.ImmutableMap;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.CategoryTest;
 import io.harness.beans.ExecutionStatus;
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
+
 import software.wings.beans.command.GcbTaskParams;
 import software.wings.helpers.ext.gcb.models.GcbArtifacts;
 import software.wings.helpers.ext.gcb.models.GcbBuildDetails;
 import software.wings.sm.states.GcbState.GcbDelegateResponse;
 
+import com.google.common.collect.ImmutableMap;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 public class GcbExecutionDataTest extends CategoryTest {
   public static final String ACTIVITY_ID = "activityId";

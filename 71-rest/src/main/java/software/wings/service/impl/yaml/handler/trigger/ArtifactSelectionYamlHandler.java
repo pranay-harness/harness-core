@@ -2,20 +2,21 @@ package software.wings.service.impl.yaml.handler.trigger;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.validation.Validator.notNullCheck;
-import static org.apache.commons.lang3.StringUtils.isNotBlank;
+
 import static software.wings.beans.trigger.ArtifactSelection.Type.ARTIFACT_SOURCE;
 import static software.wings.beans.trigger.ArtifactSelection.Type.LAST_COLLECTED;
 import static software.wings.beans.trigger.ArtifactSelection.Type.LAST_DEPLOYED;
 import static software.wings.beans.trigger.ArtifactSelection.Type.PIPELINE_SOURCE;
 import static software.wings.beans.trigger.ArtifactSelection.Type.WEBHOOK_VARIABLE;
 
-import com.google.inject.Inject;
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.GeneralException;
 import io.harness.exception.WingsException;
+
 import software.wings.beans.Service;
 import software.wings.beans.Workflow;
 import software.wings.beans.artifact.ArtifactStream;
@@ -27,6 +28,7 @@ import software.wings.service.impl.yaml.handler.BaseYamlHandler;
 import software.wings.service.impl.yaml.service.YamlHelper;
 import software.wings.service.intfc.ServiceResourceService;
 
+import com.google.inject.Inject;
 import java.util.List;
 
 @OwnedBy(CDC)

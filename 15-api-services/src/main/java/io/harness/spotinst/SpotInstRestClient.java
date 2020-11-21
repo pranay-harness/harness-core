@@ -5,6 +5,8 @@ import io.harness.spotinst.model.SpotInstListElastiGroupInstancesHealthResponse;
 import io.harness.spotinst.model.SpotInstListElastiGroupsResponse;
 import io.harness.spotinst.model.SpotInstScaleDownElastiGroupResponse;
 import io.harness.spotinst.model.SpotInstUpdateElastiGroupResponse;
+
+import java.util.Map;
 import retrofit2.Call;
 import retrofit2.http.Body;
 import retrofit2.http.DELETE;
@@ -15,8 +17,6 @@ import retrofit2.http.POST;
 import retrofit2.http.PUT;
 import retrofit2.http.Path;
 import retrofit2.http.Query;
-
-import java.util.Map;
 
 public interface SpotInstRestClient {
   @GET("aws/ec2/group")

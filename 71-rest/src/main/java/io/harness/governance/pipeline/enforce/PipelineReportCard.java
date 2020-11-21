@@ -2,9 +2,9 @@ package io.harness.governance.pipeline.enforce;
 
 import io.harness.data.structure.CollectionUtils;
 import io.harness.governance.pipeline.service.model.PipelineGovernanceConfig;
-import lombok.Value;
 
 import java.util.List;
+import lombok.Value;
 
 /**
  * this model tells how a pipeline is performing relative a pipeline governance standard.

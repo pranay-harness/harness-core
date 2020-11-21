@@ -21,8 +21,7 @@ import static io.harness.logging.CommandExecutionStatus.FAILURE;
 import static io.harness.logging.CommandExecutionStatus.SUCCESS;
 import static io.harness.logging.LogLevel.ERROR;
 import static io.harness.logging.LogLevel.INFO;
-import static java.lang.String.format;
-import static java.util.Arrays.asList;
+
 import static software.wings.beans.LogColor.Blue;
 import static software.wings.beans.LogColor.Green;
 import static software.wings.beans.LogColor.White;
@@ -30,11 +29,9 @@ import static software.wings.beans.LogColor.Yellow;
 import static software.wings.beans.LogHelper.color;
 import static software.wings.beans.LogWeight.Bold;
 
-import com.google.common.annotations.VisibleForTesting;
-import com.google.common.collect.ImmutableMap;
-import com.google.inject.Inject;
+import static java.lang.String.format;
+import static java.util.Arrays.asList;
 
-import io.fabric8.kubernetes.api.model.Service;
 import io.harness.beans.FileData;
 import io.harness.delegate.task.k8s.K8sTaskHelperBase;
 import io.harness.exception.ExceptionUtils;
@@ -55,11 +52,7 @@ import io.harness.k8s.model.Release;
 import io.harness.k8s.model.Release.Status;
 import io.harness.k8s.model.ReleaseHistory;
 import io.harness.logging.CommandExecutionStatus;
-import io.kubernetes.client.openapi.models.V1Service;
-import lombok.NoArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.StringUtils;
-import org.apache.commons.lang3.tuple.Pair;
+
 import software.wings.beans.LogColor;
 import software.wings.beans.command.ExecutionLogCallback;
 import software.wings.delegatetasks.k8s.K8sTaskHelper;
@@ -70,11 +63,20 @@ import software.wings.helpers.ext.k8s.request.K8sTaskParameters;
 import software.wings.helpers.ext.k8s.response.K8sBlueGreenDeployResponse;
 import software.wings.helpers.ext.k8s.response.K8sTaskExecutionResponse;
 
+import com.google.common.annotations.VisibleForTesting;
+import com.google.common.collect.ImmutableMap;
+import com.google.inject.Inject;
+import io.fabric8.kubernetes.api.model.Service;
+import io.kubernetes.client.openapi.models.V1Service;
 import java.io.IOException;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
+import lombok.NoArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.tuple.Pair;
 
 @NoArgsConstructor
 @Slf4j
@@ -195,14 +197,14 @@ public class K8sBlueGreenDeployTaskHandler extends K8sTaskHandler {
     String namespace = managedWorkload.getResourceId().getNamespace();
     final List<K8sPod> stagePods = isDeprecateFabric8Enabled
         ? k8sTaskHelperBase.getPodDetailsWithColor(
-              kubernetesConfig, namespace, releaseName, stageColor, timeoutInMillis)
+            kubernetesConfig, namespace, releaseName, stageColor, timeoutInMillis)
         : k8sTaskHelperBase.getPodDetailsWithColorFabric8(
-              kubernetesConfig, namespace, releaseName, stageColor, timeoutInMillis);
+            kubernetesConfig, namespace, releaseName, stageColor, timeoutInMillis);
     final List<K8sPod> primaryPods = isDeprecateFabric8Enabled
         ? k8sTaskHelperBase.getPodDetailsWithColor(
-              kubernetesConfig, namespace, releaseName, primaryColor, timeoutInMillis)
+            kubernetesConfig, namespace, releaseName, primaryColor, timeoutInMillis)
         : k8sTaskHelperBase.getPodDetailsWithColorFabric8(
-              kubernetesConfig, namespace, releaseName, primaryColor, timeoutInMillis);
+            kubernetesConfig, namespace, releaseName, primaryColor, timeoutInMillis);
     stagePods.forEach(pod -> pod.setNewPod(true));
     allPods.addAll(stagePods);
     allPods.addAll(primaryPods);

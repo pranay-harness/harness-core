@@ -2,11 +2,10 @@ package io.harness.histogram;
 
 import static com.google.api.client.util.Preconditions.checkArgument;
 
-import lombok.EqualsAndHashCode;
-import lombok.ToString;
-
 import java.time.Duration;
 import java.time.Instant;
+import lombok.EqualsAndHashCode;
+import lombok.ToString;
 
 /**
  * A histogram that gives newer samples a higher weight than the old samples,

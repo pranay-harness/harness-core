@@ -1,29 +1,21 @@
 package software.wings.helpers.ext.gcb;
 
 import static io.harness.rule.OwnerRule.AGORODETKI;
+
+import static software.wings.helpers.ext.gcb.GcbServiceImpl.GCB_BASE_URL;
+import static software.wings.helpers.ext.gcb.GcbServiceImpl.GCS_BASE_URL;
+
 import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.anyObject;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.when;
-import static software.wings.helpers.ext.gcb.GcbServiceImpl.GCB_BASE_URL;
-import static software.wings.helpers.ext.gcb.GcbServiceImpl.GCS_BASE_URL;
 
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
 import io.harness.security.encryption.EncryptedDataDetail;
-import okhttp3.ResponseBody;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
-import org.junit.rules.ExpectedException;
-import org.junit.runner.RunWith;
-import org.mockito.Mock;
-import org.mockito.runners.MockitoJUnitRunner;
-import retrofit2.Call;
-import retrofit2.Response;
+
 import software.wings.beans.GcpConfig;
 import software.wings.exception.GcbClientException;
 import software.wings.helpers.ext.gcb.models.BuildOperationDetails;
@@ -40,6 +32,17 @@ import software.wings.service.impl.GcpHelperService;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import okhttp3.ResponseBody;
+import org.junit.Before;
+import org.junit.Rule;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
+import org.junit.rules.ExpectedException;
+import org.junit.runner.RunWith;
+import org.mockito.Mock;
+import org.mockito.runners.MockitoJUnitRunner;
+import retrofit2.Call;
+import retrofit2.Response;
 
 @RunWith(MockitoJUnitRunner.class)
 public class GcbServiceImplTest {

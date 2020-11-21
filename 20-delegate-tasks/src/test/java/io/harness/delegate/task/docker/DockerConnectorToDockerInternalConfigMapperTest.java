@@ -1,6 +1,7 @@
 package io.harness.delegate.task.docker;
 
 import static io.harness.delegate.beans.connector.docker.DockerAuthType.USER_PASSWORD;
+
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.CategoryTest;
@@ -13,6 +14,7 @@ import io.harness.encryption.Scope;
 import io.harness.encryption.SecretRefData;
 import io.harness.rule.Owner;
 import io.harness.rule.OwnerRule;
+
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;

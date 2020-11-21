@@ -4,27 +4,29 @@ import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.eraro.ErrorCode.INVALID_ARGUMENT;
 import static io.harness.eraro.ErrorCode.INVALID_ARTIFACT_SERVER;
 import static io.harness.exception.WingsException.USER;
-import static java.util.stream.Collectors.toList;
+
 import static software.wings.helpers.ext.jenkins.BuildDetails.Builder.aBuildDetails;
 
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
+import static java.util.stream.Collectors.toList;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.WingsException;
 import io.harness.security.encryption.EncryptedDataDetail;
-import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.StringUtils;
+
 import software.wings.beans.AzureConfig;
 import software.wings.beans.artifact.Artifact.ArtifactMetadataKeys;
 import software.wings.beans.artifact.ArtifactStreamAttributes;
 import software.wings.helpers.ext.jenkins.BuildDetails;
 
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 
 @OwnedBy(CDC)
 @Singleton
@@ -54,7 +56,7 @@ public class AcrServiceImpl implements AcrService {
       String loginServer = StringUtils.isNotEmpty(artifactStreamAttributes.getRegistryHostName())
           ? artifactStreamAttributes.getRegistryHostName()
           : azureHelperService.getLoginServerForRegistry(config, encryptionDetails,
-                artifactStreamAttributes.getSubscriptionId(), artifactStreamAttributes.getRegistryName());
+              artifactStreamAttributes.getSubscriptionId(), artifactStreamAttributes.getRegistryName());
 
       String repository = loginServer + "/" + artifactStreamAttributes.getRepositoryName();
 

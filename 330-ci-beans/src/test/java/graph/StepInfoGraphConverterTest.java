@@ -1,10 +1,9 @@
 package graph;
 
 import static io.harness.rule.OwnerRule.ALEKSANDAR;
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
-
-import com.google.inject.Inject;
 
 import io.harness.beans.CIBeansTest;
 import io.harness.beans.steps.stepinfo.GitCloneStepInfo;
@@ -13,12 +12,13 @@ import io.harness.rule.Owner;
 import io.harness.yaml.core.ParallelStepElement;
 import io.harness.yaml.core.StepElement;
 import io.harness.yaml.core.auxiliary.intfc.ExecutionWrapper;
+
+import com.google.inject.Inject;
+import java.util.ArrayList;
+import java.util.List;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
-
-import java.util.ArrayList;
-import java.util.List;
 
 public class StepInfoGraphConverterTest extends CIBeansTest {
   @Inject private StepInfoGraphConverter stepInfoGraphConverter;

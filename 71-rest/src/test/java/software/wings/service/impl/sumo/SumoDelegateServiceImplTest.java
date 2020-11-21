@@ -1,17 +1,27 @@
 package software.wings.service.impl.sumo;
 
 import static io.harness.rule.OwnerRule.SRIRAM;
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.when;
 
-import com.sumologic.client.SumoClientException;
-import com.sumologic.client.SumoLogicClient;
-import com.sumologic.client.SumoServerException;
 import io.harness.category.element.UnitTests;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.WingsException;
 import io.harness.rule.Owner;
+
+import software.wings.WingsBaseTest;
+import software.wings.beans.SumoConfig;
+import software.wings.delegatetasks.cv.DataCollectionException;
+import software.wings.service.impl.security.EncryptionServiceImpl;
+import software.wings.service.intfc.security.EncryptionService;
+
+import com.sumologic.client.SumoClientException;
+import com.sumologic.client.SumoLogicClient;
+import com.sumologic.client.SumoServerException;
+import java.io.IOException;
+import java.util.Collections;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.reflect.FieldUtils;
 import org.junit.Before;
@@ -20,14 +30,6 @@ import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
-import software.wings.WingsBaseTest;
-import software.wings.beans.SumoConfig;
-import software.wings.delegatetasks.cv.DataCollectionException;
-import software.wings.service.impl.security.EncryptionServiceImpl;
-import software.wings.service.intfc.security.EncryptionService;
-
-import java.io.IOException;
-import java.util.Collections;
 
 /**
  * Created by sriram_parthasarathy on 9/12/17.

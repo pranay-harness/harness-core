@@ -1,14 +1,11 @@
 package software.wings.sm.states;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
+
 import static software.wings.common.VerificationConstants.KUBERNETES_HOSTNAME;
 import static software.wings.common.VerificationConstants.STACKDRIVER_DEFAULT_LOG_MESSAGE_FIELD;
 import static software.wings.common.VerificationConstants.STACK_DRIVER_DEFAULT_HOSTNAME;
 
-import com.github.reinert.jjschema.Attributes;
-import lombok.experimental.FieldNameConstants;
-import lombok.extern.slf4j.Slf4j;
-import org.slf4j.Logger;
 import software.wings.api.DeploymentType;
 import software.wings.service.impl.analysis.AnalysisComparisonStrategy;
 import software.wings.service.impl.analysis.AnalysisComparisonStrategyProvider;
@@ -20,7 +17,11 @@ import software.wings.stencils.DefaultValue;
 import software.wings.stencils.EnumData;
 import software.wings.verification.VerificationStateAnalysisExecutionData;
 
+import com.github.reinert.jjschema.Attributes;
 import java.util.Set;
+import lombok.experimental.FieldNameConstants;
+import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
 
 @Slf4j
 @FieldNameConstants(innerTypeName = "StackDriverLogStateKeys")

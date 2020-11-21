@@ -1,19 +1,21 @@
 package io.harness.execution.export.metadata;
 
 import static io.harness.rule.OwnerRule.GARVIT;
+
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.CategoryTest;
 import io.harness.beans.ExecutionStatus;
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
+
 import software.wings.beans.PipelineStage;
 import software.wings.beans.PipelineStage.PipelineStageElement;
 import software.wings.beans.PipelineStageExecution;
 
 import java.util.Collections;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 public class SkipConditionMetadataTest extends CategoryTest {
   @Test

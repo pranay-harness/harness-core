@@ -1,6 +1,7 @@
 package software.wings.service.impl.aws.delegate;
 
 import static io.harness.rule.OwnerRule.SATYAM;
+
 import static java.util.Collections.emptyList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
@@ -12,7 +13,16 @@ import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
 
-import com.google.common.collect.Lists;
+import io.harness.aws.AwsCallTracker;
+import io.harness.category.element.UnitTests;
+import io.harness.rule.Owner;
+
+import software.wings.WingsBaseTest;
+import software.wings.beans.AwsConfig;
+import software.wings.service.impl.AwsUtils;
+import software.wings.service.impl.aws.model.AwsCodeDeployS3LocationData;
+import software.wings.service.intfc.aws.delegate.AwsEc2HelperServiceDelegate;
+import software.wings.service.intfc.security.EncryptionService;
 
 import com.amazonaws.services.codedeploy.AmazonCodeDeployClient;
 import com.amazonaws.services.codedeploy.model.DeploymentGroupInfo;
@@ -24,22 +34,13 @@ import com.amazonaws.services.codedeploy.model.ListDeploymentInstancesResult;
 import com.amazonaws.services.codedeploy.model.RevisionLocation;
 import com.amazonaws.services.codedeploy.model.S3Location;
 import com.amazonaws.services.ec2.model.Instance;
-import io.harness.aws.AwsCallTracker;
-import io.harness.category.element.UnitTests;
-import io.harness.rule.Owner;
+import com.google.common.collect.Lists;
+import java.util.List;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Spy;
-import software.wings.WingsBaseTest;
-import software.wings.beans.AwsConfig;
-import software.wings.service.impl.AwsUtils;
-import software.wings.service.impl.aws.model.AwsCodeDeployS3LocationData;
-import software.wings.service.intfc.aws.delegate.AwsEc2HelperServiceDelegate;
-import software.wings.service.intfc.security.EncryptionService;
-
-import java.util.List;
 
 public class AwsCodeDeployHelperServiceDelegateImplTest extends WingsBaseTest {
   @Mock private EncryptionService mockEncryptionService;

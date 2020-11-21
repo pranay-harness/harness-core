@@ -2,24 +2,22 @@ package software.wings.resources;
 
 import static io.harness.rule.OwnerRule.HINGER;
 import static io.harness.rule.OwnerRule.SRINIVAS;
+
+import static software.wings.beans.Application.Builder.anApplication;
+import static software.wings.security.PermissionAttribute.PermissionType.MANAGE_APPLICATIONS;
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.reset;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-import static software.wings.beans.Application.Builder.anApplication;
-import static software.wings.security.PermissionAttribute.PermissionType.MANAGE_APPLICATIONS;
 
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.limits.LimitCheckerFactory;
 import io.harness.rest.RestResponse;
 import io.harness.rule.Owner;
-import lombok.extern.slf4j.Slf4j;
-import org.junit.After;
-import org.junit.ClassRule;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
+
 import software.wings.beans.Application;
 import software.wings.security.annotations.AuthRule;
 import software.wings.service.intfc.AppService;
@@ -28,6 +26,11 @@ import software.wings.utils.ResourceTestRule;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import javax.ws.rs.core.GenericType;
+import lombok.extern.slf4j.Slf4j;
+import org.junit.After;
+import org.junit.ClassRule;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 /**
  * The Class AppResourceTest.

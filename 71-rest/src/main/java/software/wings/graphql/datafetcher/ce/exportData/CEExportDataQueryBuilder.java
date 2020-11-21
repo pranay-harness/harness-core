@@ -3,22 +3,10 @@ package software.wings.graphql.datafetcher.ce.exportData;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
-import com.google.inject.Inject;
-
-import com.healthmarketscience.sqlbuilder.BinaryCondition;
-import com.healthmarketscience.sqlbuilder.Converter;
-import com.healthmarketscience.sqlbuilder.CustomExpression;
-import com.healthmarketscience.sqlbuilder.FunctionCall;
-import com.healthmarketscience.sqlbuilder.InCondition;
-import com.healthmarketscience.sqlbuilder.OrderObject;
-import com.healthmarketscience.sqlbuilder.SelectQuery;
-import com.healthmarketscience.sqlbuilder.UnaryCondition;
-import com.healthmarketscience.sqlbuilder.dbspec.basic.DbColumn;
-import io.fabric8.utils.Lists;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
-import lombok.extern.slf4j.Slf4j;
+
 import software.wings.beans.EntityType;
 import software.wings.graphql.datafetcher.billing.BillingStatsDefaultKeys;
 import software.wings.graphql.datafetcher.ce.exportData.CEExportDataQueryMetadata.CEExportDataMetadataFields;
@@ -51,6 +39,17 @@ import software.wings.graphql.schema.type.aggregation.QLTimeFilter;
 import software.wings.graphql.schema.type.aggregation.billing.QLBillingDataLabelFilter;
 import software.wings.graphql.schema.type.aggregation.billing.QLTimeGroupType;
 
+import com.google.inject.Inject;
+import com.healthmarketscience.sqlbuilder.BinaryCondition;
+import com.healthmarketscience.sqlbuilder.Converter;
+import com.healthmarketscience.sqlbuilder.CustomExpression;
+import com.healthmarketscience.sqlbuilder.FunctionCall;
+import com.healthmarketscience.sqlbuilder.InCondition;
+import com.healthmarketscience.sqlbuilder.OrderObject;
+import com.healthmarketscience.sqlbuilder.SelectQuery;
+import com.healthmarketscience.sqlbuilder.UnaryCondition;
+import com.healthmarketscience.sqlbuilder.dbspec.basic.DbColumn;
+import io.fabric8.utils.Lists;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.time.Instant;
@@ -62,6 +61,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.StringTokenizer;
 import java.util.stream.Collectors;
+import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class CEExportDataQueryBuilder {

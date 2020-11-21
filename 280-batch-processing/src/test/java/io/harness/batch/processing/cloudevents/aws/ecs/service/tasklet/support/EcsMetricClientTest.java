@@ -1,6 +1,7 @@
 package io.harness.batch.processing.cloudevents.aws.ecs.service.tasklet.support;
 
 import static io.harness.rule.OwnerRule.AVMOHAN;
+
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -9,9 +10,6 @@ import static org.mockito.BDDMockito.then;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.times;
 
-import com.amazonaws.services.cloudwatch.model.MetricDataResult;
-import com.amazonaws.services.ecs.model.Cluster;
-import com.amazonaws.services.ecs.model.Service;
 import io.harness.CategoryTest;
 import io.harness.batch.processing.cloudevents.aws.ecs.service.support.intfc.AwsCloudWatchHelperService;
 import io.harness.batch.processing.cloudevents.aws.ecs.service.tasklet.support.request.AwsCloudWatchMetricDataRequest;
@@ -20,6 +18,20 @@ import io.harness.batch.processing.cloudevents.aws.ecs.service.tasklet.support.r
 import io.harness.batch.processing.cloudevents.aws.ecs.service.tasklet.support.response.MetricValue;
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
+
+import software.wings.beans.AwsCrossAccountAttributes;
+import software.wings.beans.ce.CECluster;
+
+import com.amazonaws.services.cloudwatch.model.MetricDataResult;
+import com.amazonaws.services.ecs.model.Cluster;
+import com.amazonaws.services.ecs.model.Service;
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
+import java.util.Arrays;
+import java.util.Date;
+import java.util.List;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -28,16 +40,6 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
 import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
-import software.wings.beans.AwsCrossAccountAttributes;
-import software.wings.beans.ce.CECluster;
-
-import java.time.Instant;
-import java.time.temporal.ChronoUnit;
-import java.util.Arrays;
-import java.util.Date;
-import java.util.List;
-import java.util.stream.Collectors;
-import java.util.stream.IntStream;
 
 @RunWith(MockitoJUnitRunner.class)
 public class EcsMetricClientTest extends CategoryTest {

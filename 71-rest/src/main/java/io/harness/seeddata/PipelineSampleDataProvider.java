@@ -2,10 +2,6 @@ package io.harness.seeddata;
 
 import static java.util.Arrays.asList;
 
-import com.google.common.collect.ImmutableMap;
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
-
 import software.wings.beans.Pipeline;
 import software.wings.beans.PipelineStage;
 import software.wings.beans.PipelineStage.PipelineStageElement;
@@ -14,6 +10,10 @@ import software.wings.beans.security.UserGroup;
 import software.wings.service.intfc.PipelineService;
 import software.wings.service.intfc.UserGroupService;
 import software.wings.sm.StateType;
+
+import com.google.common.collect.ImmutableMap;
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
 
 @Singleton
 public class PipelineSampleDataProvider {

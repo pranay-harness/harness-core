@@ -4,9 +4,11 @@ import static io.harness.annotations.dev.HarnessTeam.CDC;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.CreatedByType;
+
+import software.wings.beans.WorkflowExecution;
+
 import lombok.Builder;
 import lombok.Value;
-import software.wings.beans.WorkflowExecution;
 
 @OwnedBy(CDC)
 @Value

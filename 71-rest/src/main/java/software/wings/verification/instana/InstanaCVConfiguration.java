@@ -2,23 +2,23 @@ package software.wings.verification.instana;
 
 import static software.wings.service.impl.newrelic.NewRelicMetricDataRecord.DEFAULT_GROUP_NAME;
 
+import software.wings.service.impl.analysis.DataCollectionInfoV2;
+import software.wings.service.impl.instana.InstanaDataCollectionInfo;
+import software.wings.service.impl.instana.InstanaTagFilter;
+import software.wings.verification.CVConfiguration;
+
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.experimental.FieldNameConstants;
-import software.wings.service.impl.analysis.DataCollectionInfoV2;
-import software.wings.service.impl.instana.InstanaDataCollectionInfo;
-import software.wings.service.impl.instana.InstanaTagFilter;
-import software.wings.verification.CVConfiguration;
-
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 
 @FieldNameConstants(innerTypeName = "InstanaCVConfigurationKeys")
 @Data

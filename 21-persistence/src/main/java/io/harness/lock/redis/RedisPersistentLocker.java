@@ -4,14 +4,10 @@ import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.eraro.ErrorCode.FAILED_TO_ACQUIRE_PERSISTENT_LOCK;
 import static io.harness.exception.WingsException.SRE;
+
 import static java.lang.String.format;
 import static java.time.Duration.ofSeconds;
 
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
-import com.google.inject.name.Named;
-
-import io.dropwizard.lifecycle.Managed;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.PersistentLockException;
@@ -21,15 +17,19 @@ import io.harness.health.HealthMonitor;
 import io.harness.lock.AcquiredLock;
 import io.harness.lock.PersistentLocker;
 import io.harness.redis.RedisConfig;
+
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
+import com.google.inject.name.Named;
+import io.dropwizard.lifecycle.Managed;
+import java.time.Duration;
+import java.util.concurrent.TimeUnit;
 import lombok.extern.slf4j.Slf4j;
 import org.redisson.Redisson;
 import org.redisson.api.RLock;
 import org.redisson.api.RedissonClient;
 import org.redisson.config.Config;
 import org.redisson.config.ReadMode;
-
-import java.time.Duration;
-import java.util.concurrent.TimeUnit;
 
 @OwnedBy(PL)
 @Singleton

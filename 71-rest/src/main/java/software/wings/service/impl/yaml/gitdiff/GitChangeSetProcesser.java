@@ -4,21 +4,18 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
 import static io.harness.manage.GlobalContextManager.ensureGlobalContextGuard;
+
+import static software.wings.beans.yaml.YamlConstants.GIT_YAML_LOG_PREFIX;
+
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toSet;
 import static org.apache.commons.collections4.ListUtils.emptyIfNull;
-import static software.wings.beans.yaml.YamlConstants.GIT_YAML_LOG_PREFIX;
-
-import com.google.common.base.Stopwatch;
-import com.google.common.collect.Iterables;
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
 
 import io.harness.logging.AccountLogContext;
 import io.harness.manage.GlobalContextManager.GlobalContextGuard;
 import io.harness.mongo.ProcessTimeLogContext;
-import lombok.extern.slf4j.Slf4j;
+
 import software.wings.beans.Application;
 import software.wings.beans.Application.ApplicationKeys;
 import software.wings.beans.GitCommit;
@@ -34,11 +31,16 @@ import software.wings.service.intfc.yaml.sync.GitSyncService;
 import software.wings.yaml.gitSync.GitFileActivity;
 import software.wings.yaml.gitSync.YamlGitConfig;
 
+import com.google.common.base.Stopwatch;
+import com.google.common.collect.Iterables;
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
+import lombok.extern.slf4j.Slf4j;
 
 @Singleton
 @Slf4j

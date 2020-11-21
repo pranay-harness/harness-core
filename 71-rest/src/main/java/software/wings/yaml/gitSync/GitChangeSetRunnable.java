@@ -5,6 +5,9 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.exception.WingsException.ExecutionContext.MANAGER;
 import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
 import static io.harness.maintenance.MaintenanceController.getMaintenanceFlag;
+
+import static software.wings.beans.yaml.YamlConstants.GIT_YAML_LOG_PREFIX;
+
 import static java.lang.String.format;
 import static java.util.Collections.singletonList;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
@@ -12,25 +15,13 @@ import static java.util.stream.Collectors.toList;
 import static org.mongodb.morphia.aggregation.Accumulator.accumulator;
 import static org.mongodb.morphia.aggregation.Group.first;
 import static org.mongodb.morphia.aggregation.Group.grouping;
-import static software.wings.beans.yaml.YamlConstants.GIT_YAML_LOG_PREFIX;
-
-import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Stopwatch;
-import com.google.common.collect.Sets;
-import com.google.inject.Inject;
 
 import io.harness.exception.WingsException;
 import io.harness.logging.AccountLogContext;
 import io.harness.logging.AutoLogContext;
 import io.harness.logging.ExceptionLogger;
 import io.harness.mongo.ProcessTimeLogContext;
-import lombok.EqualsAndHashCode;
-import lombok.EqualsAndHashCode.Include;
-import lombok.Value;
-import lombok.extern.slf4j.Slf4j;
-import org.jetbrains.annotations.NotNull;
-import org.mongodb.morphia.aggregation.Group;
-import org.mongodb.morphia.query.Query;
+
 import software.wings.core.managerConfiguration.ConfigurationController;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.impl.yaml.YamlProcessingLogContext;
@@ -39,6 +30,10 @@ import software.wings.service.intfc.yaml.YamlGitService;
 import software.wings.yaml.gitSync.YamlChangeSet.Status;
 import software.wings.yaml.gitSync.YamlChangeSet.YamlChangeSetKeys;
 
+import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Stopwatch;
+import com.google.common.collect.Sets;
+import com.google.inject.Inject;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
@@ -48,6 +43,13 @@ import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Collectors;
+import lombok.EqualsAndHashCode;
+import lombok.EqualsAndHashCode.Include;
+import lombok.Value;
+import lombok.extern.slf4j.Slf4j;
+import org.jetbrains.annotations.NotNull;
+import org.mongodb.morphia.aggregation.Group;
+import org.mongodb.morphia.query.Query;
 
 /**
  * @author bsollish on 09/26/17
@@ -85,7 +87,7 @@ public class GitChangeSetRunnable implements Runnable {
       } else {
         log.info("changesets to process =[{}]", yamlChangeSets.stream().map(YamlChangeSet::getUuid).collect(toList()));
 
-        yamlChangeSets.forEach(this ::processChangeSet);
+        yamlChangeSets.forEach(this::processChangeSet);
       }
 
       try (ProcessTimeLogContext ignore4 = new ProcessTimeLogContext(stopwatch.elapsed(MILLISECONDS), OVERRIDE_ERROR)) {
@@ -222,7 +224,7 @@ public class GitChangeSetRunnable implements Runnable {
           stuckChangeSets.stream().collect(Collectors.groupingBy(YamlChangeSet::getAccountId));
 
       // Mark these yamlChagneSets as Queued.
-      accountIdToStuckChangeSets.forEach(this ::retryOrSkipStuckChangeSets);
+      accountIdToStuckChangeSets.forEach(this::retryOrSkipStuckChangeSets);
     }
   }
 

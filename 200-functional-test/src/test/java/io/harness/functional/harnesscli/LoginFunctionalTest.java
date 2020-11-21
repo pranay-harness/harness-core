@@ -2,18 +2,18 @@ package io.harness.functional.harnesscli;
 
 import static io.harness.generator.AccountGenerator.adminUserEmail;
 import static io.harness.rule.OwnerRule.DEEPAK;
-import static org.assertj.core.api.Assertions.assertThat;
 
-import com.google.inject.Inject;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.category.element.CliFunctionalTests;
 import io.harness.functional.AbstractFunctionalTest;
 import io.harness.rule.Owner;
+
+import com.google.inject.Inject;
+import java.util.List;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
-
-import java.util.List;
 
 @Slf4j
 public class LoginFunctionalTest extends AbstractFunctionalTest {

@@ -1,6 +1,7 @@
 package software.wings.service.intfc.logz;
 
 import io.harness.security.encryption.EncryptedDataDetail;
+
 import software.wings.beans.TaskType;
 import software.wings.beans.config.LogzConfig;
 import software.wings.delegatetasks.DelegateTaskType;

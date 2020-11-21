@@ -2,13 +2,10 @@ package io.harness.ccm.cluster;
 
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
-
 import io.harness.ccm.CEPerpetualTaskManager;
 import io.harness.ccm.cluster.entities.ClusterRecord;
 import io.harness.ccm.config.CCMSettingService;
-import lombok.extern.slf4j.Slf4j;
+
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.SettingAttribute;
 import software.wings.infra.InfrastructureDefinition;
@@ -17,6 +14,8 @@ import software.wings.service.intfc.InfrastructureDefinitionServiceObserver;
 import software.wings.service.intfc.InfrastructureMappingServiceObserver;
 import software.wings.settings.SettingVariableTypes;
 
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -24,6 +23,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Singleton

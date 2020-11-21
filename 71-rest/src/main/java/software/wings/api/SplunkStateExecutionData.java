@@ -2,12 +2,12 @@ package software.wings.api;
 
 import static org.apache.commons.lang3.StringUtils.abbreviate;
 
-import lombok.Builder;
-import lombok.Data;
-import lombok.EqualsAndHashCode;
 import software.wings.sm.StateExecutionData;
 
 import java.util.Map;
+import lombok.Builder;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
 
 /**
  * Created by peeyushaggarwal on 7/15/16.

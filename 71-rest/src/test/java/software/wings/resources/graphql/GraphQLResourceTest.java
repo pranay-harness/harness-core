@@ -1,6 +1,7 @@
 package software.wings.resources.graphql;
 
 import static io.harness.rule.OwnerRule.SHUBHANSHU;
+
 import static java.lang.String.format;
 import static javax.ws.rs.client.Entity.entity;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -8,21 +9,10 @@ import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-import com.google.inject.name.Named;
-
-import graphql.ExecutionInput;
-import graphql.ExecutionResult;
-import graphql.GraphQL;
-import graphql.GraphQLError;
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
-import org.dataloader.DataLoaderRegistry;
-import org.glassfish.hk2.utilities.binding.AbstractBinder;
-import org.junit.Before;
-import org.junit.ClassRule;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
+
 import software.wings.beans.FeatureName;
 import software.wings.beans.User;
 import software.wings.exception.WingsExceptionMapper;
@@ -38,12 +28,23 @@ import software.wings.service.intfc.ApiKeyService;
 import software.wings.service.intfc.FeatureFlagService;
 import software.wings.utils.ResourceTestRule;
 
+import com.google.inject.name.Named;
+import graphql.ExecutionInput;
+import graphql.ExecutionResult;
+import graphql.GraphQL;
+import graphql.GraphQLError;
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+import org.dataloader.DataLoaderRegistry;
+import org.glassfish.hk2.utilities.binding.AbstractBinder;
+import org.junit.Before;
+import org.junit.ClassRule;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 public class GraphQLResourceTest extends CategoryTest {
   private static final GraphQLProvider GRAPH_QL_PROVIDER = mockGraphQLProvider();

@@ -2,9 +2,10 @@ package io.harness.gitsync.core.dao.api.repositories.GitFileLocation;
 
 import static org.springframework.data.mongodb.core.query.Query.query;
 
-import com.google.inject.Inject;
-
 import io.harness.gitsync.common.beans.GitFileLocation;
+
+import com.google.inject.Inject;
+import java.util.List;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -13,8 +14,6 @@ import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.repository.support.PageableExecutionUtils;
-
-import java.util.List;
 
 @AllArgsConstructor(access = AccessLevel.PRIVATE, onConstructor = @__({ @Inject }))
 public class GitFileLocationRepositoryCustomImpl implements GitFileLocationRepositoryCustom {

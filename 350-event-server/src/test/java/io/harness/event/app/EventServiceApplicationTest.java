@@ -7,11 +7,8 @@ import static io.harness.rule.EventServiceRule.DEFAULT_ACCOUNT_SECRET;
 import static io.harness.rule.EventServiceRule.DEFAULT_DELEGATE_ID;
 import static io.harness.rule.EventServiceRule.QUEUE_FILE_PATH;
 import static io.harness.rule.OwnerRule.AVMOHAN;
-import static org.assertj.core.api.Assertions.assertThat;
 
-import com.google.common.collect.ImmutableMap;
-import com.google.common.util.concurrent.ServiceManager;
-import com.google.inject.Inject;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.EventServerTest;
 import io.harness.category.element.UnitTests;
@@ -23,20 +20,24 @@ import io.harness.grpc.utils.HTimestamps;
 import io.harness.persistence.HPersistence;
 import io.harness.rule.Owner;
 import io.harness.testlib.RealMongo;
+
+import software.wings.beans.Account;
+import software.wings.security.ThreadLocalUserProvider;
+
+import com.google.common.collect.ImmutableMap;
+import com.google.common.util.concurrent.ServiceManager;
+import com.google.inject.Inject;
+import java.io.File;
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
+import java.util.Map;
+import java.util.concurrent.TimeUnit;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FileUtils;
 import org.awaitility.Awaitility;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
-import software.wings.beans.Account;
-import software.wings.security.ThreadLocalUserProvider;
-
-import java.io.File;
-import java.time.Instant;
-import java.time.temporal.ChronoUnit;
-import java.util.Map;
-import java.util.concurrent.TimeUnit;
 
 @Slf4j
 public class EventServiceApplicationTest extends EventServerTest {

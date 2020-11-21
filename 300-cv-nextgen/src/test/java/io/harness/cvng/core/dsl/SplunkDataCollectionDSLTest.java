@@ -2,13 +2,9 @@ package io.harness.cvng.core.dsl;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.rule.OwnerRule.KAMAL;
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-
-import com.google.common.collect.Sets;
-import com.google.common.io.Resources;
-import com.google.gson.Gson;
-import com.google.gson.reflect.TypeToken;
 
 import io.harness.category.element.UnitTests;
 import io.harness.connector.apis.dto.ConnectorInfoDTO;
@@ -24,12 +20,12 @@ import io.harness.datacollection.impl.DataCollectionServiceImpl;
 import io.harness.delegate.beans.connector.splunkconnector.SplunkConnectorDTO;
 import io.harness.encryption.SecretRefData;
 import io.harness.rule.Owner;
-import io.specto.hoverfly.junit.core.SimulationSource;
-import org.assertj.core.api.Assertions;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
 
+import com.google.common.collect.Sets;
+import com.google.common.io.Resources;
+import com.google.gson.Gson;
+import com.google.gson.reflect.TypeToken;
+import io.specto.hoverfly.junit.core.SimulationSource;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Paths;
@@ -40,6 +36,10 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import org.assertj.core.api.Assertions;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 public class SplunkDataCollectionDSLTest extends HoverflyTest {
   private DataCollectionDSLService dataCollectionDSLService;

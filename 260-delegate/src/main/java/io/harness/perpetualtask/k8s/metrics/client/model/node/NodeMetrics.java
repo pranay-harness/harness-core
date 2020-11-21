@@ -1,9 +1,9 @@
 package io.harness.perpetualtask.k8s.metrics.client.model.node;
 
-import com.google.gson.annotations.SerializedName;
-
 import io.harness.perpetualtask.k8s.metrics.client.model.Usage;
 import io.harness.perpetualtask.k8s.metrics.client.model.common.CustomResource;
+
+import com.google.gson.annotations.SerializedName;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;

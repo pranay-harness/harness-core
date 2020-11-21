@@ -1,18 +1,21 @@
 package io.harness.ccm.setup.graphql;
 
 import static io.harness.rule.OwnerRule.HITESH;
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.when;
 
 import io.harness.category.element.UnitTests;
 import io.harness.ccm.setup.config.CESetUpConfig;
 import io.harness.rule.Owner;
+
+import software.wings.app.MainConfiguration;
+import software.wings.graphql.datafetcher.AbstractDataFetcherTestBase;
+
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import software.wings.app.MainConfiguration;
-import software.wings.graphql.datafetcher.AbstractDataFetcherTestBase;
 
 public class InfraAccountConnectionDataFetcherTest extends AbstractDataFetcherTestBase {
   @InjectMocks InfraAccountConnectionDataFetcher infraAccountConnectionDataFetcher;

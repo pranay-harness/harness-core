@@ -1,6 +1,5 @@
 package software.wings.service.intfc.analysis;
 
-import org.apache.commons.lang3.tuple.Pair;
 import software.wings.service.impl.analysis.CVFeedbackRecord;
 import software.wings.service.impl.analysis.LabeledLogRecord;
 import software.wings.service.impl.analysis.LogDataRecord;
@@ -8,6 +7,7 @@ import software.wings.service.impl.analysis.LogLabel;
 
 import java.util.List;
 import java.util.Map;
+import org.apache.commons.lang3.tuple.Pair;
 
 public interface LogLabelingService {
   List<LogDataRecord> getLogRecordsToClassify(String accountId);

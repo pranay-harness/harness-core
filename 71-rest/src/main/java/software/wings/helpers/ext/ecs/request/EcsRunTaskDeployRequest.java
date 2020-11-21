@@ -2,12 +2,12 @@ package software.wings.helpers.ext.ecs.request;
 
 import static software.wings.helpers.ext.ecs.request.EcsCommandRequest.EcsCommandType.ECS_RUN_TASK_DEPLOY;
 
-import lombok.Builder;
-import lombok.Data;
-import lombok.EqualsAndHashCode;
 import software.wings.beans.AwsConfig;
 
 import java.util.List;
+import lombok.Builder;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
 
 @Data
 @EqualsAndHashCode(callSuper = false)

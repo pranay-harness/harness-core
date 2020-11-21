@@ -8,6 +8,12 @@ import static io.harness.rule.OwnerRule.MATT;
 import static io.harness.rule.OwnerRule.NIKOLA;
 import static io.harness.rule.OwnerRule.ROHITKARELIA;
 import static io.harness.rule.OwnerRule.SRINIVAS;
+
+import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
+import static software.wings.utils.WingsTestConstants.ARTIFACT_STREAM_ID;
+import static software.wings.utils.WingsTestConstants.DELEGATE_ID;
+import static software.wings.utils.WingsTestConstants.STATE_EXECUTION_ID;
+
 import static java.net.URLEncoder.encode;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.Collections.singletonList;
@@ -20,13 +26,6 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.mockito.MockitoAnnotations.initMocks;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
-import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
-import static software.wings.utils.WingsTestConstants.ARTIFACT_STREAM_ID;
-import static software.wings.utils.WingsTestConstants.DELEGATE_ID;
-import static software.wings.utils.WingsTestConstants.STATE_EXECUTION_ID;
-
-import com.google.common.collect.Lists;
-import com.google.protobuf.Any;
 
 import io.harness.artifact.ArtifactCollectionResponseHandler;
 import io.harness.category.element.UnitTests;
@@ -49,18 +48,7 @@ import io.harness.manifest.ManifestCollectionResponseHandler;
 import io.harness.rest.RestResponse;
 import io.harness.rule.Owner;
 import io.harness.serializer.KryoSerializer;
-import lombok.extern.slf4j.Slf4j;
-import org.glassfish.hk2.utilities.binding.AbstractBinder;
-import org.junit.Before;
-import org.junit.ClassRule;
-import org.junit.Ignore;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
-import org.junit.runner.RunWith;
-import org.junit.runners.Parameterized;
-import org.junit.runners.Parameterized.Parameter;
-import org.junit.runners.Parameterized.Parameters;
-import org.mockito.ArgumentCaptor;
+
 import software.wings.beans.Delegate;
 import software.wings.delegatetasks.buildsource.BuildSourceExecutionResponse;
 import software.wings.delegatetasks.buildsource.BuildSourceResponse;
@@ -76,6 +64,8 @@ import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.DelegateService;
 import software.wings.utils.ResourceTestRule;
 
+import com.google.common.collect.Lists;
+import com.google.protobuf.Any;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
@@ -84,6 +74,18 @@ import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.core.GenericType;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+import lombok.extern.slf4j.Slf4j;
+import org.glassfish.hk2.utilities.binding.AbstractBinder;
+import org.junit.Before;
+import org.junit.ClassRule;
+import org.junit.Ignore;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
+import org.junit.runner.RunWith;
+import org.junit.runners.Parameterized;
+import org.junit.runners.Parameterized.Parameter;
+import org.junit.runners.Parameterized.Parameters;
+import org.mockito.ArgumentCaptor;
 
 @RunWith(Parameterized.class)
 @Slf4j

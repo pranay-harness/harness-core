@@ -4,6 +4,18 @@ import static io.harness.beans.ExecutionStatus.FAILED;
 import static io.harness.beans.ExecutionStatus.SKIPPED;
 import static io.harness.beans.ExecutionStatus.SUCCESS;
 import static io.harness.rule.OwnerRule.ANIL;
+
+import static software.wings.beans.Application.Builder.anApplication;
+import static software.wings.beans.AwsAmiInfrastructureMapping.Builder.anAwsAmiInfrastructureMapping;
+import static software.wings.beans.Environment.Builder.anEnvironment;
+import static software.wings.beans.artifact.Artifact.Builder.anArtifact;
+import static software.wings.service.impl.aws.model.AwsConstants.AMI_ALB_SETUP_SWEEPING_OUTPUT_NAME;
+import static software.wings.utils.WingsTestConstants.ACTIVITY_ID;
+import static software.wings.utils.WingsTestConstants.APP_ID;
+import static software.wings.utils.WingsTestConstants.ARTIFACT_ID;
+import static software.wings.utils.WingsTestConstants.ENV_ID;
+import static software.wings.utils.WingsTestConstants.INFRA_MAPPING_ID;
+
 import static java.util.Collections.emptyList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.joor.Reflect.on;
@@ -16,18 +28,6 @@ import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
-import static software.wings.beans.Application.Builder.anApplication;
-import static software.wings.beans.AwsAmiInfrastructureMapping.Builder.anAwsAmiInfrastructureMapping;
-import static software.wings.beans.Environment.Builder.anEnvironment;
-import static software.wings.beans.artifact.Artifact.Builder.anArtifact;
-import static software.wings.service.impl.aws.model.AwsConstants.AMI_ALB_SETUP_SWEEPING_OUTPUT_NAME;
-import static software.wings.utils.WingsTestConstants.ACTIVITY_ID;
-import static software.wings.utils.WingsTestConstants.APP_ID;
-import static software.wings.utils.WingsTestConstants.ARTIFACT_ID;
-import static software.wings.utils.WingsTestConstants.ENV_ID;
-import static software.wings.utils.WingsTestConstants.INFRA_MAPPING_ID;
-
-import com.google.common.collect.ImmutableMap;
 
 import io.harness.beans.DelegateTask;
 import io.harness.beans.EmbeddedUser;
@@ -36,12 +36,7 @@ import io.harness.category.element.UnitTests;
 import io.harness.delegate.beans.DelegateMetaInfo;
 import io.harness.delegate.task.aws.LbDetailsForAlbTrafficShift;
 import io.harness.rule.Owner;
-import org.jetbrains.annotations.NotNull;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
-import org.mockito.ArgumentCaptor;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
+
 import software.wings.WingsBaseTest;
 import software.wings.api.AmiServiceTrafficShiftAlbSetupElement;
 import software.wings.api.AwsAmiTrafficShiftAlbStateExecutionData;
@@ -58,9 +53,16 @@ import software.wings.sm.ExecutionContextImpl;
 import software.wings.sm.ExecutionResponse;
 import software.wings.sm.states.spotinst.SpotInstStateHelper;
 
+import com.google.common.collect.ImmutableMap;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import org.jetbrains.annotations.NotNull;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
+import org.mockito.ArgumentCaptor;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
 
 public class AwsAmiTrafficShiftAlbSwitchRoutesStateTest extends WingsBaseTest {
   @Mock private SpotInstStateHelper spotinstStateHelper;

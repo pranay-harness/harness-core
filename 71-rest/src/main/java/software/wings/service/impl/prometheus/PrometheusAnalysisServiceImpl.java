@@ -3,22 +3,15 @@ package software.wings.service.impl.prometheus;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.delegate.beans.TaskData.DEFAULT_SYNC_CALL_TIMEOUT;
+
 import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static software.wings.service.impl.ThirdPartyApiCallLog.createApiCallLog;
 
-import com.google.common.base.Charsets;
-import com.google.common.base.Preconditions;
-import com.google.common.collect.Lists;
-import com.google.common.io.Resources;
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
-
-import com.fasterxml.jackson.core.type.TypeReference;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.VerificationOperationException;
 import io.harness.serializer.JsonUtils;
 import io.harness.serializer.YamlUtils;
-import lombok.extern.slf4j.Slf4j;
+
 import software.wings.beans.APMValidateCollectorConfig;
 import software.wings.beans.PrometheusConfig;
 import software.wings.beans.SettingAttribute;
@@ -37,12 +30,20 @@ import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.prometheus.PrometheusAnalysisService;
 import software.wings.sm.states.APMVerificationState.Method;
 
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.google.common.base.Charsets;
+import com.google.common.base.Preconditions;
+import com.google.common.collect.Lists;
+import com.google.common.io.Resources;
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import java.io.IOException;
 import java.net.URL;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import javax.validation.executable.ValidateOnExecution;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * Created by Pranjal on 09/02/2018

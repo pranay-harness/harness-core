@@ -5,22 +5,36 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.eraro.ErrorCode.INIT_TIMEOUT;
 import static io.harness.logging.LogLevel.WARN;
 import static io.harness.threading.Morpheus.sleep;
+
+import static software.wings.beans.LogColor.Yellow;
+import static software.wings.beans.LogHelper.color;
+import static software.wings.beans.LogWeight.Bold;
+import static software.wings.service.impl.aws.model.AwsConstants.MAIN_ECS_CONTAINER_NAME_TAG;
+
 import static java.lang.String.format;
 import static java.time.Duration.ofSeconds;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toSet;
-import static software.wings.beans.LogColor.Yellow;
-import static software.wings.beans.LogHelper.color;
-import static software.wings.beans.LogWeight.Bold;
-import static software.wings.service.impl.aws.model.AwsConstants.MAIN_ECS_CONTAINER_NAME_TAG;
 
-import com.google.common.annotations.VisibleForTesting;
-import com.google.common.util.concurrent.TimeLimiter;
-import com.google.common.util.concurrent.UncheckedTimeoutException;
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
+import io.harness.container.ContainerInfo;
+import io.harness.container.ContainerInfo.Status;
+import io.harness.ecs.EcsContainerDetails;
+import io.harness.ecs.EcsContainerDetails.EcsContainerDetailsBuilder;
+import io.harness.exception.ExceptionUtils;
+import io.harness.exception.InvalidRequestException;
+import io.harness.exception.TimeoutException;
+import io.harness.exception.WingsException;
+import io.harness.logging.LogCallback;
+import io.harness.logging.LogLevel;
+import io.harness.security.encryption.EncryptedDataDetail;
+
+import software.wings.beans.AwsConfig;
+import software.wings.beans.SettingAttribute;
+import software.wings.beans.command.ExecutionLogCallback;
+import software.wings.cloudprovider.UpdateServiceCountRequestData;
+import software.wings.service.impl.AwsHelperService;
 
 import com.amazonaws.services.autoscaling.model.AutoScalingGroup;
 import com.amazonaws.services.autoscaling.model.CreateAutoScalingGroupRequest;
@@ -65,27 +79,11 @@ import com.amazonaws.services.ecs.model.UpdateServiceResult;
 import com.amazonaws.services.elasticloadbalancingv2.model.TargetGroup;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import io.harness.container.ContainerInfo;
-import io.harness.container.ContainerInfo.Status;
-import io.harness.ecs.EcsContainerDetails;
-import io.harness.ecs.EcsContainerDetails.EcsContainerDetailsBuilder;
-import io.harness.exception.ExceptionUtils;
-import io.harness.exception.InvalidRequestException;
-import io.harness.exception.TimeoutException;
-import io.harness.exception.WingsException;
-import io.harness.logging.LogCallback;
-import io.harness.logging.LogLevel;
-import io.harness.security.encryption.EncryptedDataDetail;
-import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.collections.CollectionUtils;
-import org.apache.commons.lang3.StringUtils;
-import org.jetbrains.annotations.NotNull;
-import software.wings.beans.AwsConfig;
-import software.wings.beans.SettingAttribute;
-import software.wings.beans.command.ExecutionLogCallback;
-import software.wings.cloudprovider.UpdateServiceCountRequestData;
-import software.wings.service.impl.AwsHelperService;
-
+import com.google.common.annotations.VisibleForTesting;
+import com.google.common.util.concurrent.TimeLimiter;
+import com.google.common.util.concurrent.UncheckedTimeoutException;
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -97,6 +95,10 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.collections.CollectionUtils;
+import org.apache.commons.lang3.StringUtils;
+import org.jetbrains.annotations.NotNull;
 
 /**
  * Created by anubhaw on 12/28/16.

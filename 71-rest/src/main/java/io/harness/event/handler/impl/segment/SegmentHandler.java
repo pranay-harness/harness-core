@@ -37,11 +37,6 @@ import static io.harness.exception.WingsException.USER;
 import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
 import static io.harness.validation.Validator.notNullCheck;
 
-import com.google.common.annotations.VisibleForTesting;
-import com.google.common.collect.Sets;
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
-
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.event.handler.EventHandler;
 import io.harness.event.handler.impl.Utils;
@@ -54,9 +49,7 @@ import io.harness.exception.InvalidRequestException;
 import io.harness.lock.AcquiredLock;
 import io.harness.lock.PersistentLocker;
 import io.harness.logging.AutoLogContext;
-import lombok.experimental.UtilityClass;
-import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.StringUtils;
+
 import software.wings.beans.Account;
 import software.wings.beans.User;
 import software.wings.beans.UserInvite;
@@ -65,6 +58,10 @@ import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.SignupService;
 import software.wings.service.intfc.UserService;
 
+import com.google.common.annotations.VisibleForTesting;
+import com.google.common.collect.Sets;
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import java.io.IOException;
 import java.net.URISyntaxException;
 import java.time.Duration;
@@ -75,6 +72,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
+import lombok.experimental.UtilityClass;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 
 @OwnedBy(PL)
 @Singleton

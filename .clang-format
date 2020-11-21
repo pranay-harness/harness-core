@@ -6,7 +6,7 @@ Language: Cpp
 ---
 Language: Java
 ColumnLimit: 120
-
+JavaImportGroups: ['io.harness', 'software.wings']
 
 ---
 

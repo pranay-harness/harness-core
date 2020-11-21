@@ -1,15 +1,15 @@
 package software.wings.service.impl;
 
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
-
 import io.harness.persistence.HPersistence;
-import org.mongodb.morphia.query.Query;
+
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.SettingAttribute.SettingAttributeKeys;
 import software.wings.beans.SettingAttribute.SettingCategory;
 
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import java.util.List;
+import org.mongodb.morphia.query.Query;
 
 @Singleton
 public class SettingAttributeDao {

@@ -1,11 +1,11 @@
 package software.wings.service.impl.yaml;
 
-import lombok.Data;
-import lombok.experimental.FieldNameConstants;
 import software.wings.beans.GitRepositoryInfo;
 import software.wings.yaml.errorhandling.GitSyncError;
 
 import java.util.List;
+import lombok.Data;
+import lombok.experimental.FieldNameConstants;
 
 @Data
 @FieldNameConstants(innerTypeName = "GitToHarnessErrorCommitStatsKeys")

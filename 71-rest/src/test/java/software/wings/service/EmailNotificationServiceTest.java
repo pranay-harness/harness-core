@@ -1,18 +1,18 @@
 package software.wings.service;
 
-import static com.google.common.collect.Lists.newArrayList;
 import static io.harness.rule.OwnerRule.RUSHABH;
+
+import static software.wings.beans.Application.GLOBAL_APP_ID;
+import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
+import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
+
+import static com.google.common.collect.Lists.newArrayList;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
-import static software.wings.beans.Application.GLOBAL_APP_ID;
-import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
-import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
-
-import com.google.inject.Inject;
 
 import io.harness.beans.DelegateTask;
 import io.harness.category.element.UnitTests;
@@ -20,13 +20,7 @@ import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
 import io.harness.queue.QueuePublisher;
 import io.harness.rule.Owner;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
-import org.junit.rules.Verifier;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
+
 import software.wings.WingsBaseTest;
 import software.wings.app.MainConfiguration;
 import software.wings.beans.alert.AlertType;
@@ -43,8 +37,16 @@ import software.wings.settings.SettingVariableTypes;
 import software.wings.utils.EmailHelperUtils;
 import software.wings.utils.EmailUtils;
 
+import com.google.inject.Inject;
 import java.util.Collections;
 import java.util.List;
+import org.junit.Before;
+import org.junit.Rule;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
+import org.junit.rules.Verifier;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
 
 /**
  * Created by peeyushaggarwal on 5/25/16.

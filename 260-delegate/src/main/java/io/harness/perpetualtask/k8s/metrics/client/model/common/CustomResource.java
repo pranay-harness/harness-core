@@ -1,10 +1,10 @@
 package io.harness.perpetualtask.k8s.metrics.client.model.common;
 
-import com.google.gson.annotations.SerializedName;
+import io.harness.k8s.model.KubernetesObject;
 
 import com.fasterxml.jackson.databind.JsonDeserializer;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
-import io.harness.k8s.model.KubernetesObject;
+import com.google.gson.annotations.SerializedName;
 import io.kubernetes.client.openapi.models.V1ObjectMeta;
 import lombok.Data;
 import lombok.EqualsAndHashCode;

@@ -2,24 +2,17 @@ package io.harness.cistatus.service;
 
 import static java.lang.String.format;
 
-import com.google.common.annotations.VisibleForTesting;
-import com.google.inject.Singleton;
-
-import com.auth0.jwt.JWT;
-import com.auth0.jwt.algorithms.Algorithm;
 import io.harness.cistatus.GithubAppTokenCreationResponse;
 import io.harness.cistatus.GithubStatusCreationResponse;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException.ReportTarget;
 import io.harness.network.Http;
 import io.harness.security.encryption.EncryptedDataDetail;
-import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.codec.binary.Base64;
-import retrofit2.Call;
-import retrofit2.Response;
-import retrofit2.Retrofit;
-import retrofit2.converter.jackson.JacksonConverterFactory;
 
+import com.auth0.jwt.JWT;
+import com.auth0.jwt.algorithms.Algorithm;
+import com.google.common.annotations.VisibleForTesting;
+import com.google.inject.Singleton;
 import java.io.IOException;
 import java.security.GeneralSecurityException;
 import java.security.KeyFactory;
@@ -29,6 +22,12 @@ import java.util.Date;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.codec.binary.Base64;
+import retrofit2.Call;
+import retrofit2.Response;
+import retrofit2.Retrofit;
+import retrofit2.converter.jackson.JacksonConverterFactory;
 
 @Singleton
 @Slf4j

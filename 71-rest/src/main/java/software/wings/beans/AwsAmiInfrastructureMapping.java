@@ -1,21 +1,15 @@
 package software.wings.beans;
 
-import static java.lang.String.format;
-import static java.util.Collections.emptyList;
 import static software.wings.beans.AmiDeploymentType.AWS_ASG;
 import static software.wings.beans.InfrastructureMappingBlueprint.NodeFilteringType.AWS_ASG_AMI;
 
-import com.fasterxml.jackson.annotation.JsonTypeName;
-import com.github.reinert.jjschema.Attributes;
-import com.github.reinert.jjschema.SchemaIgnore;
+import static java.lang.String.format;
+import static java.util.Collections.emptyList;
+
 import io.harness.beans.EmbeddedUser;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.InvalidRequestException;
-import lombok.Data;
-import lombok.EqualsAndHashCode;
-import lombok.NoArgsConstructor;
-import lombok.experimental.FieldNameConstants;
-import org.apache.commons.lang3.StringUtils;
+
 import software.wings.annotation.Blueprint;
 import software.wings.beans.AwsInfrastructureMapping.AwsRegionDataProvider;
 import software.wings.beans.InfrastructureMappingBlueprint.NodeFilteringType;
@@ -23,10 +17,18 @@ import software.wings.stencils.DefaultValue;
 import software.wings.stencils.EnumData;
 import software.wings.utils.Utils;
 
+import com.fasterxml.jackson.annotation.JsonTypeName;
+import com.github.reinert.jjschema.Attributes;
+import com.github.reinert.jjschema.SchemaIgnore;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Optional;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.NoArgsConstructor;
+import lombok.experimental.FieldNameConstants;
+import org.apache.commons.lang3.StringUtils;
 
 /**
  * Created by anubhaw on 12/19/17.

@@ -1,9 +1,8 @@
 package io.harness.ccm.setup.service.support.impl.pojo;
 
+import java.util.List;
 import lombok.Builder;
 import lombok.Value;
-
-import java.util.List;
 
 @Value
 @Builder

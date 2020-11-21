@@ -2,11 +2,12 @@ package io.harness.gitsync.core.dao.api.repositories.YamlChangeSet;
 
 import static org.springframework.data.mongodb.core.query.Query.query;
 
-import com.google.inject.Inject;
-
-import com.mongodb.client.result.UpdateResult;
 import io.harness.gitsync.common.beans.YamlChangeSet;
 import io.harness.gitsync.common.beans.YamlChangeSet.YamlChangeSetKeys;
+
+import com.google.inject.Inject;
+import com.mongodb.client.result.UpdateResult;
+import java.util.List;
 import lombok.AllArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -17,8 +18,6 @@ import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.Update;
 import org.springframework.data.repository.support.PageableExecutionUtils;
-
-import java.util.List;
 
 @AllArgsConstructor(onConstructor = @__({ @Inject }))
 public class YamlChangeSetRepositoryCustomImpl implements YamlChangeSetRepositoryCustom {

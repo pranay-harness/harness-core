@@ -1,5 +1,10 @@
 package software.wings.verification.log;
 
+import software.wings.service.impl.analysis.DataCollectionInfoV2;
+import software.wings.service.impl.splunk.SplunkDataCollectionInfoV2;
+import software.wings.stencils.DefaultValue;
+import software.wings.verification.CVConfiguration;
+
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.github.reinert.jjschema.Attributes;
@@ -9,10 +14,6 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.experimental.FieldNameConstants;
-import software.wings.service.impl.analysis.DataCollectionInfoV2;
-import software.wings.service.impl.splunk.SplunkDataCollectionInfoV2;
-import software.wings.stencils.DefaultValue;
-import software.wings.verification.CVConfiguration;
 
 @Data
 @Builder

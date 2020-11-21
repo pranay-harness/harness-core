@@ -3,11 +3,10 @@ package io.harness.functional.workflow;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.generator.EnvironmentGenerator.Environments.GENERIC_TEST;
 import static io.harness.rule.OwnerRule.POOJA;
-import static org.assertj.core.api.Assertions.assertThat;
+
 import static software.wings.sm.StateType.HTTP;
 
-import com.google.common.collect.ImmutableMap;
-import com.google.inject.Inject;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.category.element.FunctionalTests;
 import io.harness.functional.AbstractFunctionalTest;
@@ -20,9 +19,7 @@ import io.harness.generator.OwnerManager.Owners;
 import io.harness.generator.Randomizer.Seed;
 import io.harness.rule.Owner;
 import io.harness.testframework.restutils.WorkflowRestUtils;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
+
 import software.wings.beans.Application;
 import software.wings.beans.Environment;
 import software.wings.beans.GraphNode;
@@ -32,7 +29,12 @@ import software.wings.beans.artifact.Artifact;
 import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.sm.states.HttpState.HttpStateKeys;
 
+import com.google.common.collect.ImmutableMap;
+import com.google.inject.Inject;
 import java.util.Collections;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 public class HTTPWorkflowFunctionalTest extends AbstractFunctionalTest {
   @Inject private OwnerManager ownerManager;

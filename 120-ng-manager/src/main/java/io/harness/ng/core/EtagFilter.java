@@ -1,6 +1,7 @@
 package io.harness.ng.core;
 
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 import static javax.ws.rs.core.HttpHeaders.ACCEPT_ENCODING;
@@ -10,10 +11,9 @@ import static javax.ws.rs.core.HttpHeaders.IF_NONE_MATCH;
 import static javax.ws.rs.core.Response.Status.NOT_MODIFIED;
 import static jodd.util.StringPool.COMMA;
 
-import com.google.inject.Singleton;
-
 import io.harness.ng.core.dto.SupportsEntityTag;
 
+import com.google.inject.Singleton;
 import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;

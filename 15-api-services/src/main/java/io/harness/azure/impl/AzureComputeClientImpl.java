@@ -23,14 +23,25 @@ import static io.harness.azure.model.AzureConstants.VMSS_IDS_IS_NULL_VALIDATION_
 import static io.harness.azure.model.AzureConstants.VM_INSTANCE_IDS_LIST_EMPTY_VALIDATION_MSG;
 import static io.harness.azure.model.AzureConstants.VM_INSTANCE_IDS_NOT_NUMBERS_VALIDATION_MSG;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
+
 import static java.lang.String.format;
 import static java.util.Objects.isNull;
 import static java.util.stream.Collectors.toMap;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 
+import io.harness.azure.AzureClient;
+import io.harness.azure.client.AzureComputeClient;
+import io.harness.azure.model.AzureConfig;
+import io.harness.azure.model.AzureMachineImageArtifact;
+import io.harness.azure.model.AzureUserAuthVMInstanceData;
+import io.harness.azure.model.AzureVMSSTagsData;
+import io.harness.azure.model.image.AzureMachineImage;
+import io.harness.azure.model.image.AzureMachineImageFactory;
+import io.harness.azure.utility.AzureResourceUtility;
+import io.harness.exception.InvalidRequestException;
+
 import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Singleton;
-
 import com.microsoft.azure.PagedList;
 import com.microsoft.azure.management.Azure;
 import com.microsoft.azure.management.compute.GalleryImage;
@@ -48,19 +59,6 @@ import com.microsoft.azure.management.resources.ResourceGroup;
 import com.microsoft.azure.management.resources.Subscription;
 import com.microsoft.azure.management.resources.fluentcore.arm.models.HasName;
 import io.fabric8.utils.Objects;
-import io.harness.azure.AzureClient;
-import io.harness.azure.client.AzureComputeClient;
-import io.harness.azure.model.AzureConfig;
-import io.harness.azure.model.AzureMachineImageArtifact;
-import io.harness.azure.model.AzureUserAuthVMInstanceData;
-import io.harness.azure.model.AzureVMSSTagsData;
-import io.harness.azure.model.image.AzureMachineImage;
-import io.harness.azure.model.image.AzureMachineImageFactory;
-import io.harness.azure.utility.AzureResourceUtility;
-import io.harness.exception.InvalidRequestException;
-import lombok.extern.slf4j.Slf4j;
-import org.jetbrains.annotations.NotNull;
-
 import java.time.Duration;
 import java.time.Instant;
 import java.util.ArrayList;
@@ -71,6 +69,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
+import lombok.extern.slf4j.Slf4j;
+import org.jetbrains.annotations.NotNull;
 
 @Singleton
 @Slf4j
@@ -138,7 +138,7 @@ public class AzureComputeClientImpl extends AzureClient implements AzureComputeC
       AzureConfig azureConfig, String subscriptionId, String resourceGroupName, String virtualMachineScaleSetName) {
     Optional<VirtualMachineScaleSet> virtualMachineScaleSetOp =
         getVirtualMachineScaleSetByName(azureConfig, subscriptionId, resourceGroupName, virtualMachineScaleSetName);
-    return virtualMachineScaleSetOp.map(this ::getVirtualMachineScaleSetVMs).orElse(Collections.emptyList());
+    return virtualMachineScaleSetOp.map(this::getVirtualMachineScaleSetVMs).orElse(Collections.emptyList());
   }
 
   @Override
@@ -149,7 +149,7 @@ public class AzureComputeClientImpl extends AzureClient implements AzureComputeC
     if (!virtualMachineScaleSetOp.isPresent()) {
       return Collections.emptyList();
     }
-    return virtualMachineScaleSetOp.map(this ::getVirtualMachineScaleSetVMs).orElse(Collections.emptyList());
+    return virtualMachineScaleSetOp.map(this::getVirtualMachineScaleSetVMs).orElse(Collections.emptyList());
   }
 
   @NotNull
@@ -251,7 +251,7 @@ public class AzureComputeClientImpl extends AzureClient implements AzureComputeC
 
     return (numberOfVMInstances == 0 ? vmssInstanceList.isEmpty() : vmssInstanceList.size() == numberOfVMInstances)
         || vmssInstanceList.stream().allMatch(
-               instance -> instance.instanceView().statuses().get(0).displayStatus().equals("Provisioning succeeded"));
+            instance -> instance.instanceView().statuses().get(0).displayStatus().equals("Provisioning succeeded"));
   }
 
   @Override

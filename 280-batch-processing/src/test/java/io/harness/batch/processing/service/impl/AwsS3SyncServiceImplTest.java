@@ -1,6 +1,7 @@
 package io.harness.batch.processing.service.impl;
 
 import static io.harness.rule.OwnerRule.ROHIT;
+
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 import static org.mockito.Mockito.when;
 
@@ -10,6 +11,9 @@ import io.harness.batch.processing.ccm.S3SyncRecord;
 import io.harness.batch.processing.config.BatchMainConfig;
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
+
+import software.wings.security.authentication.AwsS3SyncConfig;
+
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -18,7 +22,6 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Spy;
 import org.mockito.runners.MockitoJUnitRunner;
-import software.wings.security.authentication.AwsS3SyncConfig;
 
 @RunWith(MockitoJUnitRunner.class)
 public class AwsS3SyncServiceImplTest extends CategoryTest {

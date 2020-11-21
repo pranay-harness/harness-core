@@ -2,19 +2,18 @@ package software.wings.resources.governance;
 
 import static software.wings.security.PermissionAttribute.PermissionType.MANAGE_PIPELINE_GOVERNANCE_STANDARDS;
 
-import com.google.inject.Inject;
-
 import io.harness.governance.pipeline.enforce.PipelineReportCard;
 import io.harness.governance.pipeline.service.PipelineGovernanceReportEvaluator;
 import io.harness.governance.pipeline.service.PipelineGovernanceService;
 import io.harness.governance.pipeline.service.model.PipelineGovernanceConfig;
 import io.harness.rest.RestResponse;
-import io.swagger.annotations.Api;
-import org.hibernate.validator.constraints.NotEmpty;
+
 import software.wings.security.PermissionAttribute.ResourceType;
 import software.wings.security.annotations.AuthRule;
 import software.wings.security.annotations.Scope;
 
+import com.google.inject.Inject;
+import io.swagger.annotations.Api;
 import java.util.List;
 import javax.validation.constraints.NotNull;
 import javax.ws.rs.Consumes;
@@ -26,6 +25,7 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
+import org.hibernate.validator.constraints.NotEmpty;
 
 @Api("pipeline-compliance")
 @Path("/compliance/pipeline")

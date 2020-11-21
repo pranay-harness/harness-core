@@ -1,18 +1,17 @@
 package software.wings.beans;
 
-import com.google.common.collect.Lists;
-
 import io.harness.yaml.BaseYaml;
+
+import com.google.common.collect.Lists;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Builder.Default;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
-
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 
 /**
  * Created by sgurubelli on 8/11/17.

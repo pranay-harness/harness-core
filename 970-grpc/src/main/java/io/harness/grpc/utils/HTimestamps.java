@@ -1,15 +1,14 @@
 package io.harness.grpc.utils;
 
+import io.harness.exception.DataFormatException;
+
 import com.google.protobuf.Timestamp;
 import com.google.protobuf.util.Timestamps;
-
-import io.harness.exception.DataFormatException;
-import lombok.experimental.UtilityClass;
-
 import java.text.ParseException;
 import java.time.Instant;
 import java.util.Date;
 import javax.annotation.ParametersAreNonnullByDefault;
+import lombok.experimental.UtilityClass;
 
 /**
  * Utility class to handle mapping between {@link Timestamp} and java timestamp types.

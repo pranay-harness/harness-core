@@ -1,6 +1,5 @@
 package software.wings.service.impl.aws.delegate;
 
-import static com.google.common.base.Joiner.on;
 import static io.harness.beans.ExecutionStatus.FAILED;
 import static io.harness.beans.ExecutionStatus.SUCCESS;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
@@ -9,12 +8,7 @@ import static io.harness.logging.LogLevel.ERROR;
 import static io.harness.logging.LogLevel.INFO;
 import static io.harness.spotinst.model.SpotInstConstants.DOWN_SCALE_STEADY_STATE_WAIT_COMMAND_UNIT;
 import static io.harness.spotinst.model.SpotInstConstants.UP_SCALE_STEADY_STATE_WAIT_COMMAND_UNIT;
-import static java.lang.String.format;
-import static java.util.Collections.emptyList;
-import static java.util.Collections.singletonList;
-import static java.util.stream.Collectors.toList;
-import static org.apache.commons.lang3.StringUtils.isBlank;
-import static org.apache.commons.lang3.StringUtils.isNotBlank;
+
 import static software.wings.beans.LogColor.Yellow;
 import static software.wings.beans.LogHelper.color;
 import static software.wings.beans.LogWeight.Bold;
@@ -28,33 +22,20 @@ import static software.wings.service.impl.aws.model.AwsConstants.MIN_TRAFFIC_SHI
 import static software.wings.service.impl.aws.model.AwsConstants.UP_SCALE_ASG_COMMAND_UNIT;
 import static software.wings.utils.AsgConvention.getRevisionFromTag;
 
-import com.google.common.annotations.VisibleForTesting;
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
+import static com.google.common.base.Joiner.on;
+import static java.lang.String.format;
+import static java.util.Collections.emptyList;
+import static java.util.Collections.singletonList;
+import static java.util.stream.Collectors.toList;
+import static org.apache.commons.lang3.StringUtils.isBlank;
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
-import com.amazonaws.services.autoscaling.model.AutoScalingGroup;
-import com.amazonaws.services.autoscaling.model.BlockDeviceMapping;
-import com.amazonaws.services.autoscaling.model.CreateAutoScalingGroupRequest;
-import com.amazonaws.services.autoscaling.model.CreateLaunchConfigurationRequest;
-import com.amazonaws.services.autoscaling.model.LaunchConfiguration;
-import com.amazonaws.services.autoscaling.model.LaunchTemplate;
-import com.amazonaws.services.autoscaling.model.LaunchTemplateSpecification;
-import com.amazonaws.services.autoscaling.model.MixedInstancesPolicy;
-import com.amazonaws.services.autoscaling.model.Tag;
-import com.amazonaws.services.autoscaling.model.TagDescription;
-import com.amazonaws.services.ec2.model.CreateLaunchTemplateVersionRequest;
-import com.amazonaws.services.ec2.model.CreateLaunchTemplateVersionResult;
-import com.amazonaws.services.ec2.model.Instance;
-import com.amazonaws.services.ec2.model.LaunchTemplateVersion;
-import com.amazonaws.services.ec2.model.RequestLaunchTemplateData;
-import io.fabric8.utils.Lists;
 import io.harness.delegate.task.aws.LbDetailsForAlbTrafficShift;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.InvalidRequestException;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.security.encryption.EncryptedDataDetail;
-import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.StringUtils;
+
 import software.wings.beans.AwsConfig;
 import software.wings.beans.command.ExecutionLogCallback;
 import software.wings.delegatetasks.DelegateLogService;
@@ -79,6 +60,25 @@ import software.wings.service.intfc.aws.delegate.AwsEc2HelperServiceDelegate;
 import software.wings.service.intfc.aws.delegate.AwsElbHelperServiceDelegate;
 import software.wings.utils.AsgConvention;
 
+import com.amazonaws.services.autoscaling.model.AutoScalingGroup;
+import com.amazonaws.services.autoscaling.model.BlockDeviceMapping;
+import com.amazonaws.services.autoscaling.model.CreateAutoScalingGroupRequest;
+import com.amazonaws.services.autoscaling.model.CreateLaunchConfigurationRequest;
+import com.amazonaws.services.autoscaling.model.LaunchConfiguration;
+import com.amazonaws.services.autoscaling.model.LaunchTemplate;
+import com.amazonaws.services.autoscaling.model.LaunchTemplateSpecification;
+import com.amazonaws.services.autoscaling.model.MixedInstancesPolicy;
+import com.amazonaws.services.autoscaling.model.Tag;
+import com.amazonaws.services.autoscaling.model.TagDescription;
+import com.amazonaws.services.ec2.model.CreateLaunchTemplateVersionRequest;
+import com.amazonaws.services.ec2.model.CreateLaunchTemplateVersionResult;
+import com.amazonaws.services.ec2.model.Instance;
+import com.amazonaws.services.ec2.model.LaunchTemplateVersion;
+import com.amazonaws.services.ec2.model.RequestLaunchTemplateData;
+import com.google.common.annotations.VisibleForTesting;
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
+import io.fabric8.utils.Lists;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -89,6 +89,8 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ExecutorService;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 
 @Singleton
 @Slf4j

@@ -1,22 +1,24 @@
 package io.harness.generator.artifactstream;
 
-import static java.util.Arrays.asList;
 import static software.wings.beans.Application.GLOBAL_APP_ID;
 
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
+import static java.util.Arrays.asList;
 
 import io.harness.generator.OwnerManager.Owners;
 import io.harness.generator.Randomizer;
 import io.harness.generator.Randomizer.Seed;
 import io.harness.generator.SettingGenerator;
 import io.harness.generator.SettingGenerator.Settings;
+
 import software.wings.beans.Application;
 import software.wings.beans.Service;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.artifact.ArtifactStream;
 import software.wings.beans.artifact.JenkinsArtifactStream;
 import software.wings.beans.artifact.JenkinsArtifactStream.JenkinsArtifactStreamBuilder;
+
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
 
 @Singleton
 public class JenkinsArtifactStreamStreamsGenerator implements ArtifactStreamsGenerator {
@@ -42,7 +44,9 @@ public class JenkinsArtifactStreamStreamsGenerator implements ArtifactStreamsGen
     return ensureArtifactStream(seed,
         JenkinsArtifactStream.builder()
             .appId(atConnector ? GLOBAL_APP_ID : application.getUuid())
-            .serviceId(atConnector ? settingAttribute.getUuid() : service != null ? service.getUuid() : null)
+            .serviceId(atConnector    ? settingAttribute.getUuid()
+                    : service != null ? service.getUuid()
+                                      : null)
             .autoPopulate(false)
             .metadataOnly(metadataOnly)
             .name(metadataOnly ? "jenkins-harness-samples-metadataOnly" : "jenkins-harness-samples")

@@ -1,6 +1,7 @@
 package io.harness.queue;
 
 import static io.harness.rule.OwnerRule.GEORGE;
+
 import static java.time.Duration.ofSeconds;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -14,8 +15,6 @@ import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
-import com.google.inject.Inject;
-
 import io.harness.PersistenceTestBase;
 import io.harness.category.element.UnitTests;
 import io.harness.maintenance.MaintenanceGuard;
@@ -24,6 +23,11 @@ import io.harness.mongo.queue.MongoQueuePublisher;
 import io.harness.persistence.HPersistence;
 import io.harness.queue.QueueConsumer.Filter;
 import io.harness.rule.Owner;
+
+import com.google.inject.Inject;
+import java.io.IOException;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.After;
 import org.junit.Before;
@@ -31,10 +35,6 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.internal.stubbing.answers.ThrowsException;
 import org.mockito.invocation.InvocationOnMock;
-
-import java.io.IOException;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.TimeUnit;
 
 @Slf4j
 public class QueueListenerTest extends PersistenceTestBase {

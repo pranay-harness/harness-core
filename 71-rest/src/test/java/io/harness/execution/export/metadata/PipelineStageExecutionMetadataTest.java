@@ -1,10 +1,12 @@
 package io.harness.execution.export.metadata;
 
 import static io.harness.rule.OwnerRule.GARVIT;
+
+import static software.wings.beans.PipelineExecution.Builder.aPipelineExecution;
+
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static software.wings.beans.PipelineExecution.Builder.aPipelineExecution;
 
 import io.harness.CategoryTest;
 import io.harness.beans.ExecutionStatus;
@@ -13,8 +15,7 @@ import io.harness.category.element.UnitTests;
 import io.harness.exception.InvalidRequestException;
 import io.harness.execution.export.metadata.MetadataTestUtils.SimpleVisitor;
 import io.harness.rule.Owner;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
+
 import software.wings.api.ApprovalStateExecutionData;
 import software.wings.beans.Pipeline;
 import software.wings.beans.PipelineStage;
@@ -26,6 +27,8 @@ import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.Collections;
 import java.util.List;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 public class PipelineStageExecutionMetadataTest extends CategoryTest {
   @Test

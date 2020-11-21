@@ -1,12 +1,13 @@
 package software.wings.verification;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
+
 import static software.wings.resources.PrometheusResource.validateTransactions;
 
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
-import lombok.extern.slf4j.Slf4j;
+
 import software.wings.beans.yaml.ChangeContext;
 import software.wings.service.impl.analysis.TimeSeries;
 import software.wings.sm.StateType;
@@ -15,6 +16,7 @@ import software.wings.verification.prometheus.PrometheusCVServiceConfiguration.P
 
 import java.util.List;
 import java.util.Map;
+import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class PrometheusCVConfigurationYamlHandler

@@ -3,17 +3,16 @@ package io.harness.encryptors.clients;
 import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 
-import com.google.inject.Singleton;
-
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.encryptors.KmsEncryptor;
 import io.harness.security.SimpleEncryption;
 import io.harness.security.encryption.EncryptedRecord;
 import io.harness.security.encryption.EncryptedRecordData;
 import io.harness.security.encryption.EncryptionConfig;
-import lombok.extern.slf4j.Slf4j;
 
+import com.google.inject.Singleton;
 import javax.validation.executable.ValidateOnExecution;
+import lombok.extern.slf4j.Slf4j;
 
 @ValidateOnExecution
 @Singleton

@@ -5,6 +5,11 @@ import static io.harness.rule.OwnerRule.PRANJAL;
 import static io.harness.rule.OwnerRule.RAGHU;
 import static io.harness.rule.OwnerRule.TMACARI;
 import static io.harness.rule.OwnerRule.UTKARSH;
+
+import static software.wings.beans.HostConnectionAttributes.AuthenticationScheme.SSH_KEY;
+import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
+import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyList;
@@ -18,16 +23,7 @@ import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-import static software.wings.beans.HostConnectionAttributes.AuthenticationScheme.SSH_KEY;
-import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
-import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 
-import com.google.common.collect.Lists;
-import com.google.inject.Inject;
-
-import com.splunk.Job;
-import com.splunk.JobArgs;
-import com.splunk.JobCollection;
 import io.harness.category.element.UnitTests;
 import io.harness.ccm.setup.service.support.intfc.AWSCEConfigValidationService;
 import io.harness.data.structure.UUIDGenerator;
@@ -35,16 +31,7 @@ import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.rule.Owner;
 import io.harness.security.encryption.EncryptedDataDetail;
-import org.apache.commons.lang3.reflect.FieldUtils;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
-import org.junit.rules.ExpectedException;
-import org.mockito.Mock;
-import org.mockito.Mockito;
-import org.mongodb.morphia.query.Query;
-import retrofit2.Call;
+
 import software.wings.WingsBaseTest;
 import software.wings.beans.AppDynamicsConfig;
 import software.wings.beans.DynaTraceConfig;
@@ -82,8 +69,23 @@ import software.wings.service.intfc.newrelic.NewRelicService;
 import software.wings.service.intfc.splunk.SplunkDelegateService;
 import software.wings.service.intfc.sumo.SumoDelegateService;
 
+import com.google.common.collect.Lists;
+import com.google.inject.Inject;
+import com.splunk.Job;
+import com.splunk.JobArgs;
+import com.splunk.JobCollection;
 import java.io.IOException;
 import java.util.ArrayList;
+import org.apache.commons.lang3.reflect.FieldUtils;
+import org.junit.Before;
+import org.junit.Rule;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
+import org.junit.rules.ExpectedException;
+import org.mockito.Mock;
+import org.mockito.Mockito;
+import org.mongodb.morphia.query.Query;
+import retrofit2.Call;
 
 /**
  * Created by Pranjal on 09/14/2018

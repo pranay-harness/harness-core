@@ -1,12 +1,13 @@
 package software.wings.service.impl.instance;
 
-import com.google.inject.Singleton;
-
 import io.harness.exception.WingsException;
-import lombok.extern.slf4j.Slf4j;
+
 import software.wings.beans.InfrastructureMappingType;
 import software.wings.beans.infrastructure.instance.Instance.InstanceBuilder;
 import software.wings.beans.infrastructure.instance.InstanceType;
+
+import com.google.inject.Singleton;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * Common methods needed by both instance and container instance.

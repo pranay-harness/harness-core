@@ -4,16 +4,14 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.delegate.beans.TaskData.DEFAULT_SYNC_CALL_TIMEOUT;
+
 import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static software.wings.service.impl.ThirdPartyApiCallLog.createApiCallLog;
-
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
 
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.VerificationOperationException;
 import io.harness.security.encryption.EncryptedDataDetail;
-import lombok.extern.slf4j.Slf4j;
+
 import software.wings.annotation.EncryptableSetting;
 import software.wings.beans.DynaTraceConfig;
 import software.wings.beans.SettingAttribute;
@@ -27,10 +25,13 @@ import software.wings.service.intfc.dynatrace.DynaTraceDelegateService;
 import software.wings.service.intfc.dynatrace.DynaTraceService;
 import software.wings.service.intfc.security.SecretManager;
 
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * Created by Pranjal on 09/12/2018

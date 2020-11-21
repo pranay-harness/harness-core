@@ -1,8 +1,5 @@
 package software.wings.integration;
 
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
-
 import software.wings.beans.Application;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.EnvironmentService;
@@ -11,6 +8,8 @@ import software.wings.service.intfc.ServiceInstanceService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.ServiceTemplateService;
 
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import java.util.HashMap;
 import java.util.Map;
 

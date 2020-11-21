@@ -2,9 +2,6 @@ package io.harness.cvng.core.entities;
 
 import static io.harness.cvng.core.utils.DateTimeUtils.instantToEpochMinute;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.annotation.HarnessEntity;
 import io.harness.cvng.analysis.beans.LogClusterDTO;
 import io.harness.mongo.index.FdIndex;
@@ -13,6 +10,13 @@ import io.harness.persistence.AccountAccess;
 import io.harness.persistence.CreatedAtAware;
 import io.harness.persistence.PersistentEntity;
 import io.harness.persistence.UuidAware;
+
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.github.reinert.jjschema.SchemaIgnore;
+import java.time.Instant;
+import java.time.OffsetDateTime;
+import java.util.Date;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -20,10 +24,6 @@ import lombok.experimental.FieldNameConstants;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Id;
-
-import java.time.Instant;
-import java.time.OffsetDateTime;
-import java.util.Date;
 
 @Data
 @Builder

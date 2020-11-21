@@ -3,18 +3,10 @@ package software.wings.service.impl.bugsnag;
 import static software.wings.common.VerificationConstants.URL_STRING;
 import static software.wings.service.impl.ThirdPartyApiCallLog.createApiCallLog;
 
-import com.google.common.collect.HashBiMap;
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
-
 import io.harness.exception.WingsException;
 import io.harness.network.Http;
 import io.harness.security.encryption.EncryptedDataDetail;
-import lombok.extern.slf4j.Slf4j;
-import retrofit2.Call;
-import retrofit2.Response;
-import retrofit2.Retrofit;
-import retrofit2.converter.jackson.JacksonConverterFactory;
+
 import software.wings.beans.BugsnagConfig;
 import software.wings.delegatetasks.CustomDataCollectionUtils;
 import software.wings.delegatetasks.DelegateLogService;
@@ -24,6 +16,9 @@ import software.wings.service.impl.ThirdPartyApiCallLog.FieldType;
 import software.wings.service.impl.ThirdPartyApiCallLog.ThirdPartyApiCallField;
 import software.wings.service.intfc.security.EncryptionService;
 
+import com.google.common.collect.HashBiMap;
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import java.io.IOException;
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
@@ -32,6 +27,11 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
 import java.util.concurrent.TimeUnit;
+import lombok.extern.slf4j.Slf4j;
+import retrofit2.Call;
+import retrofit2.Response;
+import retrofit2.Retrofit;
+import retrofit2.converter.jackson.JacksonConverterFactory;
 
 /**
  * Created by Praveen

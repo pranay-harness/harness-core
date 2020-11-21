@@ -3,13 +3,10 @@ package software.wings.service.impl.instance.sync;
 import static io.harness.delegate.beans.TaskData.DEFAULT_SYNC_CALL_TIMEOUT;
 import static io.harness.validation.Validator.notNullCheck;
 
-import com.google.common.collect.Lists;
-import com.google.inject.Inject;
-
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
 import io.harness.security.encryption.EncryptedDataDetail;
-import lombok.extern.slf4j.Slf4j;
+
 import software.wings.annotation.EncryptableSetting;
 import software.wings.beans.Application;
 import software.wings.beans.AzureKubernetesInfrastructureMapping;
@@ -32,10 +29,13 @@ import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.security.SecretManager;
 import software.wings.sm.states.k8s.K8sStateHelper;
 
+import com.google.common.collect.Lists;
+import com.google.inject.Inject;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * Created by brett on 9/6/17

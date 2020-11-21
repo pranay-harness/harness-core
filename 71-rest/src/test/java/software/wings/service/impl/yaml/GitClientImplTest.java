@@ -4,6 +4,12 @@ import static io.harness.git.model.ChangeType.RENAME;
 import static io.harness.rule.OwnerRule.ADWAIT;
 import static io.harness.rule.OwnerRule.ANSHUL;
 import static io.harness.rule.OwnerRule.YOGESH;
+
+import static software.wings.beans.yaml.GitFileChange.Builder.aGitFileChange;
+import static software.wings.core.ssh.executors.SshSessionConfig.Builder.aSshSessionConfig;
+import static software.wings.core.ssh.executors.SshSessionFactory.getSSHSession;
+import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
+
 import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -16,22 +22,38 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-import static software.wings.beans.yaml.GitFileChange.Builder.aGitFileChange;
-import static software.wings.core.ssh.executors.SshSessionConfig.Builder.aSshSessionConfig;
-import static software.wings.core.ssh.executors.SshSessionFactory.getSSHSession;
-import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 
-import com.google.inject.Inject;
-
-import com.jcraft.jsch.JSch;
-import com.jcraft.jsch.JSchException;
-import com.jcraft.jsch.Session;
 import io.harness.category.element.UnitTests;
 import io.harness.data.structure.UUIDGenerator;
 import io.harness.filesystem.FileIo;
 import io.harness.git.model.ChangeType;
 import io.harness.git.model.GitRepositoryType;
 import io.harness.rule.Owner;
+
+import software.wings.WingsBaseTest;
+import software.wings.beans.GitConfig;
+import software.wings.beans.GitOperationContext;
+import software.wings.beans.yaml.GitCommitRequest;
+import software.wings.beans.yaml.GitDiffResult;
+import software.wings.beans.yaml.GitFetchFilesRequest;
+import software.wings.beans.yaml.GitFileChange;
+import software.wings.core.ssh.executors.SshSessionConfig;
+
+import com.google.inject.Inject;
+import com.jcraft.jsch.JSch;
+import com.jcraft.jsch.JSchException;
+import com.jcraft.jsch.Session;
+import java.io.File;
+import java.io.IOException;
+import java.nio.charset.Charset;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.UUID;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
+import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FileUtils;
 import org.eclipse.jgit.api.Git;
@@ -56,26 +78,6 @@ import org.mockito.Spy;
 import org.zeroturnaround.exec.ProcessExecutor;
 import org.zeroturnaround.exec.ProcessResult;
 import org.zeroturnaround.exec.stream.LogOutputStream;
-import software.wings.WingsBaseTest;
-import software.wings.beans.GitConfig;
-import software.wings.beans.GitOperationContext;
-import software.wings.beans.yaml.GitCommitRequest;
-import software.wings.beans.yaml.GitDiffResult;
-import software.wings.beans.yaml.GitFetchFilesRequest;
-import software.wings.beans.yaml.GitFileChange;
-import software.wings.core.ssh.executors.SshSessionConfig;
-
-import java.io.File;
-import java.io.IOException;
-import java.nio.charset.Charset;
-import java.nio.file.Files;
-import java.nio.file.Paths;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.UUID;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
-import java.util.stream.Collectors;
 
 @Slf4j
 public class GitClientImplTest extends WingsBaseTest {

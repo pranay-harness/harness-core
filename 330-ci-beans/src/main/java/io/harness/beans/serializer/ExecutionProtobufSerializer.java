@@ -2,9 +2,6 @@ package io.harness.beans.serializer;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
-
 import io.harness.beans.steps.CIStepInfo;
 import io.harness.beans.steps.stepinfo.PluginStepInfo;
 import io.harness.beans.steps.stepinfo.PublishStepInfo;
@@ -18,13 +15,15 @@ import io.harness.product.ci.engine.proto.UnitStep;
 import io.harness.yaml.core.ExecutionElement;
 import io.harness.yaml.core.ParallelStepElement;
 import io.harness.yaml.core.StepElement;
-import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.codec.binary.Base64;
 
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.codec.binary.Base64;
 
 @Slf4j
 @Singleton
@@ -59,7 +58,7 @@ public class ExecutionProtobufSerializer implements ProtobufSerializer<Execution
                 .stream()
                 .filter(executionWrapperInParallel -> executionWrapperInParallel instanceof StepElement)
                 .map(executionWrapperInParallel -> (StepElement) executionWrapperInParallel)
-                .map(this ::serialiseStep)
+                .map(this::serialiseStep)
                 .filter(Objects::nonNull)
                 .collect(Collectors.toList());
 

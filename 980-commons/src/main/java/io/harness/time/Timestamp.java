@@ -1,8 +1,7 @@
 package io.harness.time;
 
-import lombok.experimental.UtilityClass;
-
 import java.util.concurrent.TimeUnit;
+import lombok.experimental.UtilityClass;
 
 @UtilityClass
 public class Timestamp {

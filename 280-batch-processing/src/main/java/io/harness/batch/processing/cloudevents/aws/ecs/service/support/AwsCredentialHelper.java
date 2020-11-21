@@ -1,14 +1,16 @@
 package io.harness.batch.processing.cloudevents.aws.ecs.service.support;
 
+import io.harness.batch.processing.config.BatchMainConfig;
+
+import software.wings.security.authentication.AwsS3SyncConfig;
+
 import com.amazonaws.auth.AWSCredentialsProvider;
 import com.amazonaws.auth.AWSStaticCredentialsProvider;
 import com.amazonaws.auth.BasicAWSCredentials;
 import com.amazonaws.services.securitytoken.AWSSecurityTokenService;
 import com.amazonaws.services.securitytoken.AWSSecurityTokenServiceClientBuilder;
-import io.harness.batch.processing.config.BatchMainConfig;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
-import software.wings.security.authentication.AwsS3SyncConfig;
 
 @Component
 public class AwsCredentialHelper {

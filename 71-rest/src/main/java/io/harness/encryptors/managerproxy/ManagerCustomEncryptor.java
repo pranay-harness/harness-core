@@ -2,9 +2,6 @@ package io.harness.encryptors.managerproxy;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
 
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
-
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.EncryptedData;
 import io.harness.delegatetasks.ValidateSecretReferenceTaskParameters;
@@ -13,9 +10,12 @@ import io.harness.security.encryption.EncryptedDataParams;
 import io.harness.security.encryption.EncryptedRecord;
 import io.harness.security.encryption.EncryptedRecordData;
 import io.harness.security.encryption.EncryptionConfig;
+
 import software.wings.security.encryption.secretsmanagerconfigs.CustomSecretsManagerConfig;
 import software.wings.service.intfc.security.CustomEncryptedDataDetailBuilder;
 
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import java.util.Set;
 import javax.validation.executable.ValidateOnExecution;
 

@@ -2,8 +2,10 @@ package migrations.all;
 
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 
-import com.google.inject.Inject;
+import software.wings.dl.WingsPersistence;
+import software.wings.verification.CVConfiguration;
 
+import com.google.inject.Inject;
 import com.mongodb.DBCollection;
 import com.mongodb.DBCursor;
 import com.mongodb.DBObject;
@@ -11,8 +13,6 @@ import lombok.extern.slf4j.Slf4j;
 import migrations.Migration;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
-import software.wings.dl.WingsPersistence;
-import software.wings.verification.CVConfiguration;
 
 /**
  * Created by Pranjal on 06/13/2019

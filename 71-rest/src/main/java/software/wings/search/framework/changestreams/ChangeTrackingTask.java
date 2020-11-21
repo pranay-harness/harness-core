@@ -2,6 +2,8 @@ package software.wings.search.framework.changestreams;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
 
+import io.harness.annotations.dev.OwnedBy;
+
 import com.mongodb.DBObject;
 import com.mongodb.MongoClient;
 import com.mongodb.MongoInterruptedException;
@@ -11,15 +13,13 @@ import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoCursor;
 import com.mongodb.client.model.changestream.ChangeStreamDocument;
 import com.mongodb.client.model.changestream.FullDocument;
-import io.harness.annotations.dev.OwnedBy;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
+import java.util.function.Consumer;
 import lombok.Value;
 import lombok.extern.slf4j.Slf4j;
 import org.bson.BsonDocument;
 import org.bson.Document;
-
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.TimeUnit;
-import java.util.function.Consumer;
 
 /**
  * The change tracking task collection class which handles
@@ -85,7 +85,7 @@ class ChangeTrackingTask implements Runnable {
   public void run() {
     try {
       log.info("changeStream opened on {}", collection.getNamespace());
-      openChangeStream(this ::handleChange);
+      openChangeStream(this::handleChange);
     } catch (MongoInterruptedException e) {
       Thread.currentThread().interrupt();
       log.warn("Changestream on {} interrupted", collection.getNamespace(), e);

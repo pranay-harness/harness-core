@@ -1,14 +1,14 @@
 package io.harness.secretmanagerclient.dto;
 
+import io.harness.security.encryption.EncryptionType;
+
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
-import io.harness.security.encryption.EncryptionType;
+import java.util.List;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.experimental.SuperBuilder;
-
-import java.util.List;
 
 @Getter
 @Setter

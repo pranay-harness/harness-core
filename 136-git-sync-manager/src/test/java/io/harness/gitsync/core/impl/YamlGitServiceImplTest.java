@@ -4,6 +4,11 @@ import static io.harness.gitsync.common.YamlProcessingLogContext.WEBHOOK_TOKEN;
 import static io.harness.gitsync.core.impl.YamlGitServiceImpl.WEBHOOK_SUCCESS_MSG;
 import static io.harness.rule.OwnerRule.ABHINAV;
 import static io.harness.waiter.NgOrchestrationNotifyEventListener.NG_ORCHESTRATION;
+
+import static software.wings.beans.trigger.WebhookSource.GITHUB;
+import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
+import static software.wings.utils.WingsTestConstants.SETTING_ID;
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
@@ -13,11 +18,6 @@ import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-import static software.wings.beans.trigger.WebhookSource.GITHUB;
-import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
-import static software.wings.utils.WingsTestConstants.SETTING_ID;
-
-import com.google.inject.Inject;
 
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
@@ -41,6 +41,16 @@ import io.harness.gitsync.gitsyncerror.service.GitSyncErrorService;
 import io.harness.rule.Owner;
 import io.harness.secretmanagerclient.services.api.SecretManagerClientService;
 import io.harness.waiter.WaitNotifyEngine;
+
+import software.wings.beans.SettingAttribute;
+import software.wings.service.impl.trigger.WebhookEventUtils;
+
+import com.google.inject.Inject;
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.util.Collections;
+import java.util.Optional;
+import javax.ws.rs.core.HttpHeaders;
 import org.apache.commons.io.IOUtils;
 import org.junit.Before;
 import org.junit.Test;
@@ -49,14 +59,6 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.mockito.Spy;
-import software.wings.beans.SettingAttribute;
-import software.wings.service.impl.trigger.WebhookEventUtils;
-
-import java.io.IOException;
-import java.nio.charset.StandardCharsets;
-import java.util.Collections;
-import java.util.Optional;
-import javax.ws.rs.core.HttpHeaders;
 
 public class YamlGitServiceImplTest extends CategoryTest {
   public static final String ACCOUNTID = "ACCOUNTID";

@@ -1,6 +1,7 @@
 package io.harness.cvng.client;
 
 import static io.harness.rule.OwnerRule.KAMAL;
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.mock;
@@ -14,6 +15,8 @@ import io.harness.eraro.ResponseMessage;
 import io.harness.rest.RestResponse;
 import io.harness.rule.Owner;
 import io.harness.serializer.JsonUtils;
+
+import java.io.IOException;
 import okhttp3.MediaType;
 import okhttp3.Protocol;
 import okhttp3.Request;
@@ -23,8 +26,6 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import retrofit2.Call;
 import retrofit2.Response;
-
-import java.io.IOException;
 
 public class RequestExecutorTest extends CategoryTest {
   private RequestExecutor requestExecutor;

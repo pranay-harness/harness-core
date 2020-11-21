@@ -1,24 +1,17 @@
 package software.wings.service.impl;
 
 import static io.harness.rule.OwnerRule.SRINIVAS;
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.Mockito.when;
+
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 
-import com.google.inject.Inject;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.when;
 
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
 import io.harness.scm.ScmSecret;
 import io.harness.scm.SecretName;
-import org.apache.commons.lang3.reflect.FieldUtils;
-import org.junit.Before;
-import org.junit.Ignore;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
-import org.mockito.Mock;
-import org.mockito.Mockito;
-import org.mockito.MockitoAnnotations;
+
 import software.wings.WingsBaseTest;
 import software.wings.beans.BambooConfig;
 import software.wings.beans.Service;
@@ -35,11 +28,20 @@ import software.wings.service.intfc.BambooBuildService;
 import software.wings.service.intfc.BuildSourceService;
 import software.wings.utils.ArtifactType;
 
+import com.google.inject.Inject;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
+import org.apache.commons.lang3.reflect.FieldUtils;
+import org.junit.Before;
+import org.junit.Ignore;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
+import org.mockito.Mock;
+import org.mockito.Mockito;
+import org.mockito.MockitoAnnotations;
 
 public class BambooBuildSourceServiceTest extends WingsBaseTest {
   private String accountId;

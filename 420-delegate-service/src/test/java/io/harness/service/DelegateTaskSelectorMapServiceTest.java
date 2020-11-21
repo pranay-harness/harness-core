@@ -3,11 +3,10 @@ package io.harness.service;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.rule.OwnerRule.SANJA;
 import static io.harness.rule.OwnerRule.VUK;
+
 import static java.util.Arrays.asList;
 import static java.util.Collections.singleton;
 import static org.assertj.core.api.Assertions.assertThat;
-
-import com.google.inject.Inject;
 
 import io.harness.DelegateServiceTestBase;
 import io.harness.category.element.UnitTests;
@@ -18,13 +17,14 @@ import io.harness.persistence.HPersistence;
 import io.harness.rule.Owner;
 import io.harness.rule.TestUserProvider;
 import io.harness.service.intfc.DelegateTaskSelectorMapService;
+
+import com.google.inject.Inject;
+import java.util.HashSet;
+import java.util.Set;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
-
-import java.util.HashSet;
-import java.util.Set;
 
 public class DelegateTaskSelectorMapServiceTest extends DelegateServiceTestBase {
   private static final String ACCOUNT_ID = generateUuid();

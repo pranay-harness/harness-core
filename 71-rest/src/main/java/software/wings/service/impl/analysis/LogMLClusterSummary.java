@@ -1,10 +1,10 @@
 package software.wings.service.impl.analysis;
 
-import lombok.Data;
 import software.wings.metrics.RiskLevel;
 
 import java.util.List;
 import java.util.Map;
+import lombok.Data;
 
 /**
  * Created by rsingh on 6/30/17.

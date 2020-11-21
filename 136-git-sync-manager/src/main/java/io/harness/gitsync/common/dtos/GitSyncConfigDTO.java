@@ -1,13 +1,13 @@
 package io.harness.gitsync.common.dtos;
 
 import io.harness.data.validator.Trimmed;
+
+import java.util.List;
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Data;
 import lombok.experimental.FieldDefaults;
 import org.hibernate.validator.constraints.NotEmpty;
-
-import java.util.List;
 
 @Data
 @Builder

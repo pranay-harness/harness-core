@@ -4,10 +4,9 @@ import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.perpetualtask.PerpetualTaskType.DATA_COLLECTION_TASK;
 import static io.harness.rule.OwnerRule.KAMAL;
 import static io.harness.rule.OwnerRule.NEMANJA;
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.MockitoAnnotations.initMocks;
-
-import com.google.inject.Inject;
 
 import io.harness.category.element.UnitTests;
 import io.harness.connector.apis.dto.ConnectorInfoDTO;
@@ -21,14 +20,16 @@ import io.harness.perpetualtask.PerpetualTaskClientContext;
 import io.harness.perpetualtask.PerpetualTaskService;
 import io.harness.perpetualtask.internal.PerpetualTaskRecord;
 import io.harness.rule.Owner;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
+
 import software.wings.WingsBaseTest;
 
+import com.google.inject.Inject;
 import java.time.Duration;
 import java.util.HashMap;
 import java.util.Map;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 public class CVDataCollectionTaskServiceImplTest extends WingsBaseTest {
   @Inject private CVDataCollectionTaskService dataCollectionTaskService;

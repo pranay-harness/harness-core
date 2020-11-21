@@ -2,22 +2,22 @@ package software.wings.search.framework;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
 
-import com.google.common.util.concurrent.ThreadFactoryBuilder;
-import com.google.inject.Inject;
-
 import io.harness.annotations.dev.OwnedBy;
-import lombok.extern.slf4j.Slf4j;
-import org.mongodb.morphia.query.Query;
+
 import software.wings.core.managerConfiguration.ConfigurationController;
 import software.wings.dl.WingsPersistence;
 import software.wings.search.framework.SearchDistributedLock.SearchDistributedLockKeys;
 
+import com.google.common.util.concurrent.ThreadFactoryBuilder;
+import com.google.inject.Inject;
 import java.time.Instant;
 import java.util.Date;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
+import lombok.extern.slf4j.Slf4j;
+import org.mongodb.morphia.query.Query;
 
 /**
  * A lock implementation based on

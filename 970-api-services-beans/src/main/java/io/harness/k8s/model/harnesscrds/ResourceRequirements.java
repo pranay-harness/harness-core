@@ -2,9 +2,8 @@ package io.harness.k8s.model.harnesscrds;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import io.kubernetes.client.custom.Quantity;
-import lombok.Data;
-
 import java.util.Map;
+import lombok.Data;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 @Data

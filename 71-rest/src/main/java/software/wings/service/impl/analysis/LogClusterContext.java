@@ -1,12 +1,12 @@
 package software.wings.service.impl.analysis;
 
+import software.wings.sm.StateType;
+
+import java.util.Set;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import software.wings.sm.StateType;
-
-import java.util.Set;
 
 /**
  * Created by sriram_parthasarathy on 8/29/17.

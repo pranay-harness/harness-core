@@ -2,9 +2,6 @@ package software.wings.resources.stats.model;
 
 import static java.util.stream.Collectors.toList;
 
-import lombok.AllArgsConstructor;
-import lombok.Value;
-import lombok.experimental.NonFinal;
 import software.wings.beans.EntityType;
 import software.wings.beans.infrastructure.instance.InvocationCount.InvocationCountKey;
 import software.wings.beans.infrastructure.instance.stats.ServerlessInstanceStats;
@@ -16,6 +13,9 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 import javax.validation.constraints.NotNull;
+import lombok.AllArgsConstructor;
+import lombok.Value;
+import lombok.experimental.NonFinal;
 
 @Value
 @AllArgsConstructor

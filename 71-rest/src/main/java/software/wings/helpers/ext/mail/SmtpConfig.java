@@ -1,22 +1,14 @@
 package software.wings.helpers.ext.mail;
 
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+
 import static software.wings.audit.ResourceType.COLLABORATION_PROVIDER;
 import static software.wings.yaml.YamlHelper.ENCRYPTED_VALUE_STR;
 
-import com.fasterxml.jackson.annotation.JsonTypeName;
-import com.fasterxml.jackson.annotation.JsonView;
-import com.github.reinert.jjschema.Attributes;
-import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.delegate.task.mixin.SocketConnectivityCapabilityGenerator;
 import io.harness.encryption.Encrypted;
-import lombok.Builder;
-import lombok.Data;
-import lombok.EqualsAndHashCode;
-import lombok.NoArgsConstructor;
-import lombok.ToString;
-import org.hibernate.validator.constraints.NotEmpty;
+
 import software.wings.annotation.EncryptableSetting;
 import software.wings.jersey.JsonViews;
 import software.wings.security.UsageRestrictions;
@@ -25,8 +17,18 @@ import software.wings.settings.SettingVariableTypes;
 import software.wings.stencils.DefaultValue;
 import software.wings.yaml.setting.CollaborationProviderYaml;
 
+import com.fasterxml.jackson.annotation.JsonTypeName;
+import com.fasterxml.jackson.annotation.JsonView;
+import com.github.reinert.jjschema.Attributes;
+import com.github.reinert.jjschema.SchemaIgnore;
 import java.util.Collections;
 import java.util.List;
+import lombok.Builder;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.NoArgsConstructor;
+import lombok.ToString;
+import org.hibernate.validator.constraints.NotEmpty;
 
 /**
  * Created by peeyushaggarwal on 5/20/16.

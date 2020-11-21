@@ -1,17 +1,17 @@
 package io.harness.delegate.task.git;
 
-import static java.lang.String.format;
 import static software.wings.beans.LogColor.Gray;
 import static software.wings.beans.LogColor.White;
 import static software.wings.beans.LogHelper.color;
 import static software.wings.beans.LogWeight.Bold;
 
-import com.google.inject.Singleton;
+import static java.lang.String.format;
 
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.git.model.GitFile;
 import io.harness.logging.LogCallback;
 
+import com.google.inject.Singleton;
 import java.util.List;
 
 @Singleton

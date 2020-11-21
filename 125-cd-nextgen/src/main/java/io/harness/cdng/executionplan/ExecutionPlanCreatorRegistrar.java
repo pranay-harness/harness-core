@@ -1,8 +1,5 @@
 package io.harness.cdng.executionplan;
 
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
-
 import io.harness.cdng.pipeline.plancreators.CDExecutionPlanCreator;
 import io.harness.cdng.pipeline.plancreators.DeploymentStagePlanCreator;
 import io.harness.cdng.pipeline.plancreators.DeploymentStageRollbackPlanCreator;
@@ -20,6 +17,9 @@ import io.harness.executionplan.plancreator.ParallelStagePlanCreator;
 import io.harness.executionplan.plancreator.ParallelStepPlanCreator;
 import io.harness.executionplan.plancreator.StagesPlanCreator;
 import io.harness.executionplan.plancreator.StepGroupPlanCreator;
+
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import lombok.extern.slf4j.Slf4j;
 
 @Singleton

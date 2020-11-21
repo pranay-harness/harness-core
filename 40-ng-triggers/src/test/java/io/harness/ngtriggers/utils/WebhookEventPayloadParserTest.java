@@ -2,6 +2,7 @@ package io.harness.ngtriggers.utils;
 
 import static io.harness.ngtriggers.beans.scm.WebhookEvent.Type.PR;
 import static io.harness.rule.OwnerRule.ADWAIT;
+
 import static org.assertj.core.api.AssertionsForInterfaceTypes.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.doReturn;
@@ -24,13 +25,13 @@ import io.harness.product.ci.scm.proto.Reference;
 import io.harness.product.ci.scm.proto.Repository;
 import io.harness.product.ci.scm.proto.User;
 import io.harness.rule.Owner;
+
+import java.io.IOException;
+import java.util.Arrays;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.Spy;
-
-import java.io.IOException;
-import java.util.Arrays;
 
 public class WebhookEventPayloadParserTest extends CategoryTest {
   @Spy WebhookEventPayloadParser webhookEventPayloadParser;

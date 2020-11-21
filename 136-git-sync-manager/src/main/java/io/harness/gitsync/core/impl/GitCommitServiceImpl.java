@@ -3,16 +3,15 @@ package io.harness.gitsync.core.impl;
 import static io.harness.gitsync.core.beans.GitCommit.GIT_COMMIT_ALL_STATUS_LIST;
 import static io.harness.gitsync.core.beans.GitCommit.GIT_COMMIT_PROCESSED_STATUS;
 
-import com.google.inject.Inject;
-
 import io.harness.gitsync.core.beans.GitCommit;
 import io.harness.gitsync.core.dao.api.repositories.GitCommit.GitCommitRepository;
 import io.harness.gitsync.core.service.GitCommitService;
-import lombok.AllArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 
+import com.google.inject.Inject;
 import java.util.List;
 import java.util.Optional;
+import lombok.AllArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 @AllArgsConstructor(onConstructor = @__({ @Inject }))
 @Slf4j

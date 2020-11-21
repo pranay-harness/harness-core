@@ -2,13 +2,7 @@ package software.wings.integration.service.impl;
 
 import static io.harness.rule.OwnerRule.GARVIT;
 import static io.harness.rule.OwnerRule.SRINIVAS;
-import static java.util.Arrays.asList;
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
-import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.anyObject;
-import static org.mockito.Mockito.when;
-import static org.mockito.MockitoAnnotations.initMocks;
+
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 import static software.wings.beans.SettingAttribute.SettingCategory.CLOUD_PROVIDER;
 import static software.wings.beans.SettingAttribute.SettingCategory.CONNECTOR;
@@ -21,25 +15,21 @@ import static software.wings.utils.WingsTestConstants.HARNESS_DOCKER_REGISTRY;
 import static software.wings.utils.WingsTestConstants.HARNESS_NEXUS;
 import static software.wings.utils.WingsTestConstants.SERVICE_ID;
 
-import com.google.inject.Inject;
+import static java.util.Arrays.asList;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
+import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyObject;
+import static org.mockito.Mockito.when;
+import static org.mockito.MockitoAnnotations.initMocks;
 
-import com.amazonaws.regions.Regions;
 import io.harness.category.element.DeprecatedIntegrationTests;
 import io.harness.exception.WingsException;
 import io.harness.rule.Owner;
 import io.harness.rule.Repeat;
 import io.harness.scm.ScmSecret;
 import io.harness.scm.SecretName;
-import org.apache.commons.lang3.reflect.FieldUtils;
-import org.junit.Before;
-import org.junit.Ignore;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
-import org.junit.runner.RunWith;
-import org.junit.runners.Parameterized;
-import org.junit.runners.Parameterized.Parameter;
-import org.junit.runners.Parameterized.Parameters;
-import org.mockito.Mock;
+
 import software.wings.beans.Application;
 import software.wings.beans.AwsConfig;
 import software.wings.beans.BambooConfig;
@@ -76,11 +66,23 @@ import software.wings.service.intfc.security.SecretManagementDelegateService;
 import software.wings.settings.SettingVariableTypes;
 import software.wings.utils.ArtifactType;
 
+import com.amazonaws.regions.Regions;
+import com.google.inject.Inject;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import org.apache.commons.lang3.reflect.FieldUtils;
+import org.junit.Before;
+import org.junit.Ignore;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
+import org.junit.runner.RunWith;
+import org.junit.runners.Parameterized;
+import org.junit.runners.Parameterized.Parameter;
+import org.junit.runners.Parameterized.Parameters;
+import org.mockito.Mock;
 
 @RunWith(Parameterized.class)
 public class BuildSourceServiceIntegrationTest extends IntegrationTestBase {

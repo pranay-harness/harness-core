@@ -2,15 +2,13 @@ package software.wings.delegatetasks;
 
 import static io.harness.govern.Switch.unhandled;
 import static io.harness.logging.CommandExecutionStatus.FAILURE;
-import static java.lang.String.format;
 
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
+import static java.lang.String.format;
 
 import io.harness.delegate.command.CommandExecutionResult;
 import io.harness.delegate.service.ExecutionConfigOverrideFromFileOnDelegate;
 import io.harness.exception.CommandExecutionException;
-import org.apache.commons.lang3.StringUtils;
+
 import software.wings.beans.delegation.ShellScriptParameters;
 import software.wings.core.local.executors.ShellExecutorFactory;
 import software.wings.core.ssh.executors.ScriptExecutor;
@@ -24,9 +22,12 @@ import software.wings.core.winrm.executors.WinRmSessionConfig;
 import software.wings.helpers.ext.container.ContainerDeploymentDelegateHelper;
 import software.wings.service.intfc.security.EncryptionService;
 
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import org.apache.commons.lang3.StringUtils;
 
 @Singleton
 public class ShellScriptTaskHandler {

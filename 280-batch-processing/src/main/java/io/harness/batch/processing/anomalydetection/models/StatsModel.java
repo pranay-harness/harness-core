@@ -5,14 +5,14 @@ import io.harness.batch.processing.anomalydetection.AnomalyDetectionTimeSeries;
 import io.harness.batch.processing.anomalydetection.TimeSeriesUtils;
 import io.harness.batch.processing.anomalydetection.types.AnomalyDetectionModel;
 import io.harness.batch.processing.anomalydetection.types.AnomalyType;
-import lombok.Builder;
-import org.apache.commons.math3.distribution.NormalDistribution;
-import org.springframework.stereotype.Service;
 
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
+import lombok.Builder;
+import org.apache.commons.math3.distribution.NormalDistribution;
+import org.springframework.stereotype.Service;
 
 @Service
 @Builder

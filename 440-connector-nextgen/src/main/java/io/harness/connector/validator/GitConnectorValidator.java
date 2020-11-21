@@ -1,8 +1,5 @@
 package io.harness.connector.validator;
 
-import com.google.common.collect.Lists;
-import com.google.inject.Singleton;
-
 import io.harness.delegate.beans.connector.ConnectorConfigDTO;
 import io.harness.delegate.beans.connector.ConnectorValidationResult;
 import io.harness.delegate.beans.connector.gitconnector.GitAuthenticationDTO;
@@ -15,10 +12,12 @@ import io.harness.delegate.beans.git.GitCommandType;
 import io.harness.delegate.task.TaskParameters;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.UnknownEnumTypeException;
-import lombok.extern.slf4j.Slf4j;
 
+import com.google.common.collect.Lists;
+import com.google.inject.Singleton;
 import java.util.Objects;
 import java.util.Optional;
+import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Singleton

@@ -2,12 +2,13 @@ package io.harness.checks.mixin;
 
 import com.puppycrawl.tools.checkstyle.api.DetailAST;
 import com.puppycrawl.tools.checkstyle.api.TokenTypes;
-
 import java.util.ArrayList;
 import java.util.List;
 
 public class OperationMixin {
-  public interface AstPredicate { boolean check(DetailAST ast); }
+  public interface AstPredicate {
+    boolean check(DetailAST ast);
+  }
 
   public static List<DetailAST> list(DetailAST ast, int operation) {
     List<DetailAST> result = new ArrayList<>();

@@ -1,15 +1,15 @@
 package io.harness.governance;
 
+import software.wings.beans.Environment.EnvironmentType;
+import software.wings.resources.stats.model.WeeklyRange;
+
 import com.fasterxml.jackson.annotation.JsonProperty;
+import java.util.List;
+import javax.annotation.ParametersAreNonnullByDefault;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
 import org.codehaus.jackson.annotate.JsonCreator;
-import software.wings.beans.Environment.EnvironmentType;
-import software.wings.resources.stats.model.WeeklyRange;
-
-import java.util.List;
-import javax.annotation.ParametersAreNonnullByDefault;
 
 @Getter
 @ToString

@@ -5,6 +5,7 @@ import static io.harness.eraro.ErrorCode.INVALID_ARTIFACT_SOURCE;
 import static io.harness.eraro.ErrorCode.VAULT_OPERATION_ERROR;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.rule.OwnerRule.GEORGE;
+
 import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyObject;
@@ -20,11 +21,13 @@ import io.harness.category.element.UnitTests;
 import io.harness.eraro.MessageManager;
 import io.harness.exception.WingsException;
 import io.harness.rule.Owner;
+
+import software.wings.WingsBaseTest;
+
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.InOrder;
 import org.slf4j.Logger;
-import software.wings.WingsBaseTest;
 
 public class WingsExceptionMapperTest extends WingsBaseTest implements MockableTestMixin {
   @Test
@@ -118,7 +121,6 @@ public class WingsExceptionMapperTest extends WingsBaseTest implements MockableT
 
       final WingsExceptionMapper mapper = new WingsExceptionMapper();
       mapper.toResponse(exception); // should not throw.
-    })
-        .doesNotThrowAnyException();
+    }).doesNotThrowAnyException();
   }
 }

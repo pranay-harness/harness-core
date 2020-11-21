@@ -1,9 +1,5 @@
 package software.wings.yaml.command;
 
-import lombok.Builder;
-import lombok.Data;
-import lombok.EqualsAndHashCode;
-import lombok.NoArgsConstructor;
 import software.wings.beans.NameValuePair;
 import software.wings.beans.command.AbstractCommandUnit;
 import software.wings.beans.command.AbstractCommandUnit.Yaml;
@@ -11,6 +7,10 @@ import software.wings.yaml.BaseEntityYaml;
 
 import java.util.ArrayList;
 import java.util.List;
+import lombok.Builder;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.NoArgsConstructor;
 
 /**
  * ServiceCommand and Command are merged in yaml to provide a simplistic user configuration experience.

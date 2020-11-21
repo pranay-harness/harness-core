@@ -1,14 +1,12 @@
 package io.harness.perpetualtask.k8s.informer.handlers;
 
 import static io.harness.rule.OwnerRule.AVMOHAN;
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.atLeastOnce;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
-
-import com.google.common.collect.ImmutableList;
-import com.google.protobuf.Message;
 
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
@@ -16,16 +14,18 @@ import io.harness.event.client.EventPublisher;
 import io.harness.perpetualtask.k8s.informer.ClusterDetails;
 import io.harness.perpetualtask.k8s.watch.K8sWorkloadSpec;
 import io.harness.rule.Owner;
+
+import com.google.common.collect.ImmutableList;
+import com.google.protobuf.Message;
 import io.kubernetes.client.custom.Quantity;
 import io.kubernetes.client.openapi.models.V1ReplicaSet;
 import io.kubernetes.client.openapi.models.V1ReplicaSetBuilder;
+import java.util.List;
+import java.util.stream.Collectors;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.ArgumentCaptor;
-
-import java.util.List;
-import java.util.stream.Collectors;
 
 public class V1ReplicaSetHandlerTest extends CategoryTest {
   private EventPublisher eventPublisher;

@@ -1,12 +1,11 @@
 package io.harness.threading;
 
-import com.google.inject.AbstractModule;
-
 import io.harness.manage.ManagedExecutorService;
+
+import com.google.inject.AbstractModule;
+import java.util.concurrent.ExecutorService;
 import lombok.Getter;
 import lombok.Setter;
-
-import java.util.concurrent.ExecutorService;
 
 public class ExecutorModule extends AbstractModule {
   private static volatile ExecutorModule instance;

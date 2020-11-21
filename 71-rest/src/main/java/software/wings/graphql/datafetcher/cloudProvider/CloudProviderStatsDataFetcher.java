@@ -2,10 +2,8 @@ package software.wings.graphql.datafetcher.cloudProvider;
 
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
-import com.google.inject.Inject;
-
 import io.harness.exception.WingsException;
-import org.mongodb.morphia.query.Query;
+
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.SettingAttribute.SettingAttributeKeys;
 import software.wings.beans.SettingAttribute.SettingCategory;
@@ -20,10 +18,12 @@ import software.wings.graphql.schema.type.aggregation.cloudprovider.QLCloudProvi
 import software.wings.graphql.schema.type.aggregation.cloudprovider.QLCloudProviderTypeAggregation;
 import software.wings.graphql.utils.nameservice.NameService;
 
+import com.google.inject.Inject;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 import javax.validation.constraints.NotNull;
+import org.mongodb.morphia.query.Query;
 
 public class CloudProviderStatsDataFetcher extends SettingsAttributeStatsDataFetcher<QLNoOpAggregateFunction,
     QLCloudProviderFilter, QLCloudProviderAggregation, QLNoOpSortCriteria> {

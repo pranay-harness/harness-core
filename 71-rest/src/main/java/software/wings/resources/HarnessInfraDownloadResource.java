@@ -2,17 +2,16 @@ package software.wings.resources;
 
 import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
 
-import com.google.inject.Inject;
-
 import io.harness.logging.AccessTokenBean;
 import io.harness.logging.AccountLogContext;
 import io.harness.logging.AutoLogContext;
 import io.harness.rest.RestResponse;
 import io.harness.security.annotations.DelegateAuth;
-import io.swagger.annotations.Api;
-import org.hibernate.validator.constraints.NotEmpty;
+
 import software.wings.service.impl.infra.InfraDownloadService;
 
+import com.google.inject.Inject;
+import io.swagger.annotations.Api;
 import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
@@ -20,6 +19,7 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
+import org.hibernate.validator.constraints.NotEmpty;
 
 @Api("/agent/infra-download")
 @Path("/agent/infra-download")

@@ -3,11 +3,11 @@ package io.harness.ngpipeline.inputset.repository.spring;
 import io.harness.annotation.HarnessRepo;
 import io.harness.ngpipeline.inputset.repository.custom.InputSetRepositoryCustom;
 import io.harness.ngpipeline.overlayinputset.beans.BaseInputSetEntity;
-import org.springframework.data.repository.PagingAndSortingRepository;
 
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
+import org.springframework.data.repository.PagingAndSortingRepository;
 
 @HarnessRepo
 public interface InputSetRepository

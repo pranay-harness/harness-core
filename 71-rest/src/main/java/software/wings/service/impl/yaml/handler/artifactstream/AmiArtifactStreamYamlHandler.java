@@ -2,13 +2,12 @@ package software.wings.service.impl.yaml.handler.artifactstream;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static java.util.stream.Collectors.toList;
 
-import com.google.common.collect.Lists;
-import com.google.inject.Singleton;
+import static java.util.stream.Collectors.toList;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.exception.InvalidRequestException;
+
 import software.wings.beans.NameValuePair;
 import software.wings.beans.artifact.AmiArtifactStream;
 import software.wings.beans.artifact.AmiArtifactStream.FilterClass;
@@ -16,6 +15,8 @@ import software.wings.beans.artifact.AmiArtifactStream.Tag;
 import software.wings.beans.artifact.AmiArtifactStream.Yaml;
 import software.wings.beans.yaml.ChangeContext;
 
+import com.google.common.collect.Lists;
+import com.google.inject.Singleton;
 import java.util.List;
 /**
  * @author rktummala on 10/09/17

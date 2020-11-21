@@ -3,7 +3,6 @@ import com.google.inject.Singleton;
 import com.google.protobuf.Message;
 import com.google.protobuf.Message.Builder;
 import com.google.protobuf.util.JsonFormat;
-
 import com.mongodb.BasicDBObject;
 import lombok.SneakyThrows;
 import org.mongodb.morphia.converters.SimpleValueConverter;

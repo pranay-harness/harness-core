@@ -3,30 +3,17 @@ package software.wings.service.impl;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.delegate.beans.TaskData.DEFAULT_SYNC_CALL_TIMEOUT;
+
 import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static software.wings.common.VerificationConstants.DEFAULT_GROUP_NAME;
 import static software.wings.common.VerificationConstants.STATIC_CLOUD_WATCH_METRIC_URL;
 import static software.wings.service.impl.ThirdPartyApiCallLog.createApiCallLog;
 
-import com.google.common.base.Charsets;
-import com.google.common.base.Preconditions;
-import com.google.common.io.Resources;
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
-
-import com.amazonaws.services.cloudwatch.model.Dimension;
-import com.amazonaws.services.cloudwatch.model.DimensionFilter;
-import com.amazonaws.services.cloudwatch.model.ListMetricsRequest;
-import com.amazonaws.services.cloudwatch.model.Metric;
-import com.amazonaws.services.cloudwatch.model.StandardUnit;
-import com.amazonaws.services.ec2.model.Instance;
-import com.amazonaws.services.ecs.model.Service;
-import com.fasterxml.jackson.core.type.TypeReference;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
 import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.serializer.YamlUtils;
-import lombok.extern.slf4j.Slf4j;
+
 import software.wings.annotation.EncryptableSetting;
 import software.wings.beans.AwsConfig;
 import software.wings.beans.SettingAttribute;
@@ -43,6 +30,19 @@ import software.wings.service.intfc.cloudwatch.CloudWatchDelegateService;
 import software.wings.service.intfc.security.SecretManager;
 import software.wings.verification.cloudwatch.CloudWatchCVServiceConfiguration;
 
+import com.amazonaws.services.cloudwatch.model.Dimension;
+import com.amazonaws.services.cloudwatch.model.DimensionFilter;
+import com.amazonaws.services.cloudwatch.model.ListMetricsRequest;
+import com.amazonaws.services.cloudwatch.model.Metric;
+import com.amazonaws.services.cloudwatch.model.StandardUnit;
+import com.amazonaws.services.ec2.model.Instance;
+import com.amazonaws.services.ecs.model.Service;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.google.common.base.Charsets;
+import com.google.common.base.Preconditions;
+import com.google.common.io.Resources;
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import java.io.IOException;
 import java.net.URL;
 import java.util.ArrayList;
@@ -53,6 +53,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * Created by anubhaw on 12/14/16.

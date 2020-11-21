@@ -1,10 +1,17 @@
 package software.wings.service.impl.instance;
 
-import static io.fabric8.utils.Lists.isNullOrEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.delegate.beans.TaskData.DEFAULT_SYNC_CALL_TIMEOUT;
 import static io.harness.validation.Validator.notNullCheck;
+
+import static software.wings.beans.FeatureName.MOVE_AWS_LAMBDA_INSTANCE_SYNC_TO_PERPETUAL_TASK;
+import static software.wings.beans.FeatureName.STOP_INSTANCE_SYNC_VIA_ITERATOR_FOR_AWS_LAMBDA_DEPLOYMENTS;
+import static software.wings.beans.infrastructure.instance.InvocationCount.InvocationCountKey.INVOCATION_COUNT_KEY_LIST;
+import static software.wings.service.impl.instance.InstanceSyncFlow.NEW_DEPLOYMENT;
+import static software.wings.service.impl.instance.InstanceSyncFlow.PERPETUAL_TASK;
+
+import static io.fabric8.utils.Lists.isNullOrEmpty;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 import static java.util.Objects.isNull;
@@ -14,19 +21,7 @@ import static java.util.stream.Collectors.toSet;
 import static org.apache.commons.collections4.CollectionUtils.emptyIfNull;
 import static org.apache.commons.collections4.ListUtils.emptyIfNull;
 import static org.joda.time.Seconds.secondsBetween;
-import static software.wings.beans.FeatureName.MOVE_AWS_LAMBDA_INSTANCE_SYNC_TO_PERPETUAL_TASK;
-import static software.wings.beans.FeatureName.STOP_INSTANCE_SYNC_VIA_ITERATOR_FOR_AWS_LAMBDA_DEPLOYMENTS;
-import static software.wings.beans.infrastructure.instance.InvocationCount.InvocationCountKey.INVOCATION_COUNT_KEY_LIST;
-import static software.wings.service.impl.instance.InstanceSyncFlow.NEW_DEPLOYMENT;
-import static software.wings.service.impl.instance.InstanceSyncFlow.PERPETUAL_TASK;
 
-import com.google.common.annotations.VisibleForTesting;
-import com.google.common.collect.ImmutableSet;
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
-
-import com.amazonaws.services.cloudwatch.model.Datapoint;
-import com.amazonaws.services.cloudwatch.model.Dimension;
 import io.harness.beans.ExecutionStatus;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
@@ -37,11 +32,7 @@ import io.harness.exception.GeneralException;
 import io.harness.exception.InvalidArgumentsException;
 import io.harness.exception.UnexpectedException;
 import io.harness.security.encryption.EncryptedDataDetail;
-import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.collections4.MapUtils;
-import org.apache.commons.lang3.time.DateUtils;
-import org.apache.commons.lang3.tuple.Pair;
-import org.joda.time.DateTime;
+
 import software.wings.annotation.EncryptableSetting;
 import software.wings.api.AwsLambdaContextElement.FunctionMeta;
 import software.wings.api.CommandStepExecutionSummary;
@@ -88,6 +79,12 @@ import software.wings.service.intfc.aws.manager.AwsLambdaHelperServiceManager;
 import software.wings.service.intfc.instance.ServerlessInstanceService;
 import software.wings.sm.PhaseStepExecutionSummary;
 
+import com.amazonaws.services.cloudwatch.model.Datapoint;
+import com.amazonaws.services.cloudwatch.model.Dimension;
+import com.google.common.annotations.VisibleForTesting;
+import com.google.common.collect.ImmutableSet;
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
@@ -95,6 +92,11 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import javax.validation.constraints.NotNull;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.collections4.MapUtils;
+import org.apache.commons.lang3.time.DateUtils;
+import org.apache.commons.lang3.tuple.Pair;
+import org.joda.time.DateTime;
 
 @Slf4j
 @Singleton

@@ -1,10 +1,8 @@
 package software.wings.graphql.datafetcher.connector;
 
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
-
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
+
 import software.wings.beans.GitConfig;
 import software.wings.beans.SettingAttribute;
 import software.wings.graphql.datafetcher.user.UserController;
@@ -46,6 +44,9 @@ import software.wings.graphql.schema.type.connector.QLSplunkConnector;
 import software.wings.graphql.schema.type.connector.QLSumoConnector;
 import software.wings.helpers.ext.url.SubdomainUrlHelper;
 import software.wings.settings.SettingVariableTypes;
+
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
 
 @Singleton
 public class ConnectorsController {

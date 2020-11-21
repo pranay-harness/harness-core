@@ -3,15 +3,11 @@ package io.harness.ccm.setup.graphql;
 import static io.harness.ccm.billing.preaggregated.PreAggregateConstants.countStringValueConstant;
 import static io.harness.ccm.billing.preaggregated.PreAggregateConstants.entityCloudProviderConst;
 import static io.harness.rule.OwnerRule.ROHIT;
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
-
-import com.google.cloud.bigquery.BigQuery;
-import com.google.cloud.bigquery.FieldValue;
-import com.google.cloud.bigquery.FieldValueList;
-import com.google.cloud.bigquery.TableId;
 
 import io.harness.category.element.UnitTests;
 import io.harness.ccm.billing.bigquery.BigQueryService;
@@ -19,13 +15,7 @@ import io.harness.ccm.setup.config.CESetUpConfig;
 import io.harness.ccm.setup.graphql.QLCEOverviewStatsData.QLCEOverviewStatsDataBuilder;
 import io.harness.rule.Owner;
 import io.harness.timescaledb.TimeScaleDBService;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.Spy;
-import org.mockito.stubbing.Answer;
+
 import software.wings.app.MainConfiguration;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.ce.CEAwsConfig;
@@ -33,6 +23,10 @@ import software.wings.graphql.datafetcher.AbstractDataFetcherTestBase;
 import software.wings.settings.SettingValue;
 import software.wings.settings.SettingVariableTypes;
 
+import com.google.cloud.bigquery.BigQuery;
+import com.google.cloud.bigquery.FieldValue;
+import com.google.cloud.bigquery.FieldValueList;
+import com.google.cloud.bigquery.TableId;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -41,6 +35,13 @@ import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.Arrays;
 import java.util.concurrent.TimeUnit;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.Spy;
+import org.mockito.stubbing.Answer;
 
 public class OverviewPageStatsDataFetcherTest extends AbstractDataFetcherTestBase {
   @Spy @InjectMocks OverviewPageStatsDataFetcher overviewPageStatsDataFetcher;

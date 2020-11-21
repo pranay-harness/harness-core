@@ -4,6 +4,7 @@ import static io.harness.gitsync.common.YamlConstants.EXTENSION_SEPARATOR;
 import static io.harness.gitsync.common.YamlConstants.PATH_DELIMITER;
 import static io.harness.gitsync.common.YamlConstants.YAML_EXTENSION;
 import static io.harness.rule.OwnerRule.ABHINAV;
+
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.CategoryTest;
@@ -13,14 +14,14 @@ import io.harness.delegate.beans.git.YamlGitConfigDTO;
 import io.harness.git.model.GitFileChange;
 import io.harness.gitsync.common.dtos.YamlGitConfigGitFileChangeMap;
 import io.harness.rule.Owner;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
-import org.mockito.MockitoAnnotations;
 
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
+import org.mockito.MockitoAnnotations;
 
 public class YamlGitConfigHelperTest extends CategoryTest {
   @Before

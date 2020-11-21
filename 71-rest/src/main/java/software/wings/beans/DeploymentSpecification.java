@@ -1,12 +1,14 @@
 package software.wings.beans;
 
-import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.mongo.index.FdIndex;
+
+import software.wings.yaml.BaseEntityYaml;
+
+import com.github.reinert.jjschema.SchemaIgnore;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-import software.wings.yaml.BaseEntityYaml;
 
 /**
  * Marker base class for all deployment specifications

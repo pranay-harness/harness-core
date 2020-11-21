@@ -1,6 +1,7 @@
 package io.harness.lock;
 
 import static io.harness.rule.OwnerRule.GEORGE;
+
 import static java.time.Duration.ofMillis;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assumptions.assumeThat;
@@ -12,11 +13,6 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import com.google.inject.Inject;
-
-import com.deftlabs.lock.mongo.DistributedLock;
-import com.deftlabs.lock.mongo.DistributedLockOptions;
-import com.deftlabs.lock.mongo.DistributedLockSvc;
 import io.harness.PersistenceTestBase;
 import io.harness.category.element.UnitTests;
 import io.harness.eraro.MessageManager;
@@ -25,14 +21,18 @@ import io.harness.lock.mongo.AcquiredDistributedLock;
 import io.harness.lock.mongo.MongoPersistentLocker;
 import io.harness.rule.Owner;
 import io.harness.testlib.RealMongo;
+
+import com.deftlabs.lock.mongo.DistributedLock;
+import com.deftlabs.lock.mongo.DistributedLockOptions;
+import com.deftlabs.lock.mongo.DistributedLockSvc;
+import com.google.inject.Inject;
+import java.time.Duration;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.InOrder;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.slf4j.Logger;
-
-import java.time.Duration;
 
 /**
  * The Class PersistentLockerTest.

@@ -1,12 +1,11 @@
 package software.wings.features.api;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
-import lombok.NonNull;
-
 import java.util.AbstractMap;
 import java.util.Collections;
 import java.util.Map;
 import java.util.Set;
+import lombok.NonNull;
 
 public class FeatureRestrictions extends AbstractMap<String, Map<String, Restrictions>> {
   @NonNull private final Map<String, Map<String, Restrictions>> restrictionsByFeature;

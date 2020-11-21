@@ -1,15 +1,14 @@
 package io.harness.waiter;
 
-import static com.google.common.collect.ImmutableMap.of;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.persistence.HQuery.excludeAuthority;
 import static io.harness.rule.OwnerRule.GEORGE;
 import static io.harness.waiter.TestNotifyEventListener.TEST_PUBLISHER;
+
+import static com.google.common.collect.ImmutableMap.of;
 import static java.time.Duration.ofMillis;
 import static java.time.Duration.ofSeconds;
 import static org.assertj.core.api.Assertions.assertThat;
-
-import com.google.inject.Inject;
 
 import io.harness.WaitEngineTestBase;
 import io.harness.category.element.UnitTests;
@@ -23,15 +22,16 @@ import io.harness.serializer.KryoSerializer;
 import io.harness.tasks.ResponseData;
 import io.harness.threading.Concurrent;
 import io.harness.threading.Poller;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
 
+import com.google.inject.Inject;
 import java.io.IOException;
 import java.time.Duration;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 public class WaitNotifyEngineTest extends WaitEngineTestBase {
   private static AtomicInteger callCount;

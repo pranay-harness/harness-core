@@ -2,17 +2,17 @@ package migrations.all;
 
 import static io.harness.persistence.HQuery.excludeAuthority;
 
-import com.google.inject.Inject;
-
 import io.harness.persistence.HIterator;
-import lombok.extern.slf4j.Slf4j;
-import migrations.Migration;
-import org.mongodb.morphia.query.Query;
+
 import software.wings.beans.security.HarnessUserGroup;
 import software.wings.dl.WingsPersistence;
 
+import com.google.inject.Inject;
 import java.util.HashSet;
 import java.util.Set;
+import lombok.extern.slf4j.Slf4j;
+import migrations.Migration;
+import org.mongodb.morphia.query.Query;
 
 /**
  * Create single Harness user group with all members, delete existing groups

@@ -3,18 +3,14 @@ package software.wings.service.impl.notifications;
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
-import static org.apache.commons.lang3.StringUtils.stripToEmpty;
+
 import static software.wings.common.Constants.HARNESS_NAME;
 import static software.wings.common.NotificationMessageResolver.getDecoratedNotificationMessage;
 
-import com.google.api.client.util.Charsets;
-import com.google.common.io.Resources;
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
+import static org.apache.commons.lang3.StringUtils.stripToEmpty;
 
 import io.harness.annotations.dev.OwnedBy;
-import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.text.StrSubstitutor;
+
 import software.wings.beans.FeatureName;
 import software.wings.beans.Notification;
 import software.wings.beans.SettingAttribute;
@@ -25,11 +21,17 @@ import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.SlackNotificationService;
 import software.wings.settings.SettingVariableTypes;
 
+import com.google.api.client.util.Charsets;
+import com.google.common.io.Resources;
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import java.io.IOException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.text.StrSubstitutor;
 
 @OwnedBy(CDC)
 @Singleton

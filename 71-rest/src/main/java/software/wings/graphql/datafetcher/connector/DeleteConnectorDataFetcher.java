@@ -1,13 +1,12 @@
 package software.wings.graphql.datafetcher.connector;
 
-import static org.apache.commons.lang3.StringUtils.isBlank;
 import static software.wings.beans.SettingAttribute.SettingCategory.CONNECTOR;
 import static software.wings.beans.SettingAttribute.SettingCategory.HELM_REPO;
 
-import com.google.inject.Inject;
+import static org.apache.commons.lang3.StringUtils.isBlank;
 
 import io.harness.exception.InvalidRequestException;
-import lombok.extern.slf4j.Slf4j;
+
 import software.wings.beans.SettingAttribute;
 import software.wings.graphql.datafetcher.BaseMutatorDataFetcher;
 import software.wings.graphql.datafetcher.MutationContext;
@@ -16,6 +15,9 @@ import software.wings.graphql.schema.mutation.connector.payload.QLDeleteConnecto
 import software.wings.security.PermissionAttribute;
 import software.wings.security.annotations.AuthRule;
 import software.wings.service.intfc.SettingsService;
+
+import com.google.inject.Inject;
+import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class DeleteConnectorDataFetcher

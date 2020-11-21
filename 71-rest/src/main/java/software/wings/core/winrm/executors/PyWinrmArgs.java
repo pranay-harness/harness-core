@@ -5,12 +5,12 @@ import static java.util.stream.Collectors.joining;
 import static org.apache.commons.lang3.StringUtils.SPACE;
 
 import io.harness.data.structure.EmptyPredicate;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
 
 import java.util.Collections;
 import java.util.Map;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
 
 @Data
 @Builder
@@ -35,7 +35,7 @@ public class PyWinrmArgs {
     return environmentMap.entrySet()
         .stream()
         .map(entry -> String.format("%s=%s", entry.getKey(), entry.getValue()))
-        .map(this ::quoteAndEscapeQuote)
+        .map(this::quoteAndEscapeQuote)
         .collect(joining(SPACE));
   }
 

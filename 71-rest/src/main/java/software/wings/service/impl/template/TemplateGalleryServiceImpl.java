@@ -5,8 +5,7 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.validation.PersistenceValidator.duplicateCheck;
 import static io.harness.validation.Validator.notNullCheck;
-import static java.util.Arrays.asList;
-import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
+
 import static software.wings.beans.Account.GLOBAL_ACCOUNT_ID;
 import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static software.wings.beans.template.TemplateGallery.ACCOUNT_ID_KEY;
@@ -23,19 +22,15 @@ import static software.wings.common.TemplateConstants.TOMCAT_WAR_INSTALL_PATH;
 import static software.wings.common.TemplateConstants.TOMCAT_WAR_START_PATH;
 import static software.wings.common.TemplateConstants.TOMCAT_WAR_STOP_PATH;
 
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
-import com.google.inject.name.Named;
+import static java.util.Arrays.asList;
+import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.scheduler.PersistentScheduler;
 import io.harness.validation.Create;
 import io.harness.validation.Update;
-import lombok.extern.slf4j.Slf4j;
-import org.mongodb.morphia.query.Query;
-import org.mongodb.morphia.query.UpdateOperations;
-import ru.vyarus.guice.validator.group.annotation.ValidationGroups;
+
 import software.wings.beans.Account;
 import software.wings.beans.template.Template;
 import software.wings.beans.template.TemplateFolder;
@@ -50,9 +45,16 @@ import software.wings.service.intfc.template.TemplateFolderService;
 import software.wings.service.intfc.template.TemplateGalleryService;
 import software.wings.service.intfc.template.TemplateService;
 
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
+import com.google.inject.name.Named;
 import java.util.List;
 import java.util.Set;
 import javax.validation.executable.ValidateOnExecution;
+import lombok.extern.slf4j.Slf4j;
+import org.mongodb.morphia.query.Query;
+import org.mongodb.morphia.query.UpdateOperations;
+import ru.vyarus.guice.validator.group.annotation.ValidationGroups;
 
 @Singleton
 @ValidateOnExecution

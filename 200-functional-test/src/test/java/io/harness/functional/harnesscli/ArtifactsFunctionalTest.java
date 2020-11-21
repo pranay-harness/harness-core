@@ -2,9 +2,8 @@ package io.harness.functional.harnesscli;
 
 import static io.harness.generator.ServiceGenerator.Services.K8S_V2_TEST;
 import static io.harness.rule.OwnerRule.ROHIT;
-import static org.assertj.core.api.Assertions.assertThat;
 
-import com.google.inject.Inject;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.category.element.CliFunctionalTests;
 import io.harness.functional.AbstractFunctionalTest;
@@ -17,14 +16,16 @@ import io.harness.generator.ServiceGenerator;
 import io.harness.generator.artifactstream.DockerArtifactStreamStreamsGenerator;
 import io.harness.rule.Owner;
 import io.harness.testframework.restutils.ArtifactRestUtils;
+
+import software.wings.beans.artifact.ArtifactStream;
+
+import com.google.inject.Inject;
+import java.io.IOException;
+import java.util.List;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
-import software.wings.beans.artifact.ArtifactStream;
-
-import java.io.IOException;
-import java.util.List;
 
 @Slf4j
 public class ArtifactsFunctionalTest extends AbstractFunctionalTest {

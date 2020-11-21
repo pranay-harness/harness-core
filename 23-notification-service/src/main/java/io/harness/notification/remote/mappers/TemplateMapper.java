@@ -2,9 +2,9 @@ package io.harness.notification.remote.mappers;
 
 import io.harness.notification.entities.NotificationTemplate;
 import io.harness.notification.remote.bos.TemplateDTO;
-import lombok.experimental.UtilityClass;
 
 import java.util.Optional;
+import lombok.experimental.UtilityClass;
 
 @UtilityClass
 public class TemplateMapper {

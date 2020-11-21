@@ -6,11 +6,11 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.ng.core.invites.entities.Invite;
 import io.harness.ng.core.invites.entities.UserProjectMap;
 import io.harness.ng.core.user.User;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
 
 import java.util.List;
 import java.util.Optional;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 
 @OwnedBy(PL)
 public interface NgUserService {

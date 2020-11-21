@@ -4,9 +4,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.cfg.MapperConfig;
 import com.fasterxml.jackson.databind.introspect.AnnotatedClass;
 import com.fasterxml.jackson.databind.jsontype.NamedType;
-import lombok.experimental.UtilityClass;
-
 import java.util.Collection;
+import lombok.experimental.UtilityClass;
 
 @UtilityClass
 public class DeserializerHelper {

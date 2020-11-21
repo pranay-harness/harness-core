@@ -1,17 +1,18 @@
 package software.wings.beans.template;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static software.wings.beans.VariableType.ARTIFACT;
 
-import com.google.inject.Inject;
+import static software.wings.beans.VariableType.ARTIFACT;
 
 import io.harness.beans.SweepingOutputInstance;
 import io.harness.serializer.KryoSerializer;
+
 import software.wings.beans.Variable;
 import software.wings.beans.artifact.Artifact;
 import software.wings.service.intfc.sweepingoutput.SweepingOutputService;
 import software.wings.sm.ExecutionContext;
 
+import com.google.inject.Inject;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;

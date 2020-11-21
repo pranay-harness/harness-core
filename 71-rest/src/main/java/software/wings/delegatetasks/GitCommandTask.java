@@ -5,10 +5,10 @@ import static io.harness.eraro.ErrorCode.GIT_CONNECTION_ERROR;
 import static io.harness.eraro.ErrorCode.GIT_DIFF_COMMIT_NOT_IN_ORDER;
 import static io.harness.eraro.ErrorCode.GIT_UNSEEN_REMOTE_HEAD_COMMIT;
 import static io.harness.exception.WingsException.USER_ADMIN;
-import static org.apache.commons.lang3.StringUtils.isBlank;
+
 import static software.wings.beans.yaml.YamlConstants.GIT_YAML_LOG_PREFIX;
 
-import com.google.inject.Inject;
+import static org.apache.commons.lang3.StringUtils.isBlank;
 
 import io.harness.delegate.beans.DelegateTaskPackage;
 import io.harness.delegate.beans.DelegateTaskResponse;
@@ -20,8 +20,7 @@ import io.harness.exception.GitConnectionDelegateException;
 import io.harness.exception.WingsException;
 import io.harness.git.model.GitRepositoryType;
 import io.harness.security.encryption.EncryptedDataDetail;
-import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.NotImplementedException;
+
 import software.wings.beans.GitConfig;
 import software.wings.beans.GitOperationContext;
 import software.wings.beans.yaml.GitCommand.GitCommandType;
@@ -38,9 +37,12 @@ import software.wings.service.intfc.GitService;
 import software.wings.service.intfc.security.EncryptionService;
 import software.wings.service.intfc.yaml.GitClient;
 
+import com.google.inject.Inject;
 import java.util.List;
 import java.util.function.BooleanSupplier;
 import java.util.function.Consumer;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.NotImplementedException;
 
 /**
  * Created by anubhaw on 10/26/17.

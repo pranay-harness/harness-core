@@ -1,10 +1,9 @@
 package io.harness.delegate.beans.executioncapability;
 
+import javax.validation.constraints.NotNull;
 import lombok.Builder;
 import lombok.Builder.Default;
 import lombok.Value;
-
-import javax.validation.constraints.NotNull;
 
 @Value
 @Builder

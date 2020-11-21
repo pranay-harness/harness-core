@@ -2,17 +2,20 @@ package io.harness.ccm.billing;
 
 import static io.harness.ccm.billing.graphql.CloudBillingFilter.BILLING_GCP_STARTTIME;
 import static io.harness.rule.OwnerRule.HANTANG;
+
 import static org.assertj.core.api.Assertions.assertThat;
 
-import com.healthmarketscience.sqlbuilder.Condition;
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.ccm.billing.graphql.CloudBillingTimeFilter;
 import io.harness.rule.Owner;
+
+import software.wings.graphql.schema.type.aggregation.QLTimeOperator;
+
+import com.healthmarketscience.sqlbuilder.Condition;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
-import software.wings.graphql.schema.type.aggregation.QLTimeOperator;
 
 public class CloudBillingTimeFilterTest extends CategoryTest {
   private Number value = 0;

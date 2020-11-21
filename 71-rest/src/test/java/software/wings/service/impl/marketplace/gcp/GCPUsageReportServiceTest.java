@@ -1,22 +1,23 @@
 package software.wings.service.impl.marketplace.gcp;
 
 import static io.harness.rule.OwnerRule.HITESH;
-import static org.assertj.core.api.Assertions.assertThat;
 
-import com.google.inject.Inject;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
+
+import software.wings.WingsBaseTest;
+import software.wings.beans.marketplace.gcp.GCPUsageReport;
+
+import com.google.inject.Inject;
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.mockito.Spy;
-import software.wings.WingsBaseTest;
-import software.wings.beans.marketplace.gcp.GCPUsageReport;
-
-import java.time.Instant;
-import java.time.temporal.ChronoUnit;
 
 public class GCPUsageReportServiceTest extends WingsBaseTest {
   private static final String TEST_ACCOUNT_ID = "TEST_ACCOUNT_ID";

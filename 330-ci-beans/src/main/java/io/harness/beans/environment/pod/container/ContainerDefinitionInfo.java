@@ -3,12 +3,12 @@ package io.harness.beans.environment.pod.container;
 import io.harness.beans.yaml.extended.CustomSecretVariable;
 import io.harness.delegate.beans.ci.pod.CIContainerType;
 import io.harness.delegate.beans.ci.pod.ContainerResourceParams;
-import lombok.Builder;
-import lombok.Data;
-import org.hibernate.validator.constraints.NotEmpty;
 
 import java.util.List;
 import java.util.Map;
+import lombok.Builder;
+import lombok.Data;
+import org.hibernate.validator.constraints.NotEmpty;
 
 /**
  * Stores all details require to spawn container

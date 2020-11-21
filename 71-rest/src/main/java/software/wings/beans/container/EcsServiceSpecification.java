@@ -1,15 +1,16 @@
 package software.wings.beans.container;
 
 import io.harness.annotation.HarnessEntity;
+
+import software.wings.beans.DeploymentSpecification;
+
+import javax.validation.constraints.NotNull;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.experimental.FieldNameConstants;
 import org.mongodb.morphia.annotations.Entity;
-import software.wings.beans.DeploymentSpecification;
-
-import javax.validation.constraints.NotNull;
 
 @Data
 @Builder

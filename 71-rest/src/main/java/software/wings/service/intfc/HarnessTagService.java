@@ -4,8 +4,7 @@ import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.persistence.UuidAccess;
 import io.harness.validation.Update;
-import org.hibernate.validator.constraints.NotBlank;
-import ru.vyarus.guice.validator.group.annotation.ValidationGroups;
+
 import software.wings.beans.EntityType;
 import software.wings.beans.HarnessTag;
 import software.wings.beans.HarnessTagLink;
@@ -16,6 +15,8 @@ import java.util.List;
 import java.util.Set;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
+import org.hibernate.validator.constraints.NotBlank;
+import ru.vyarus.guice.validator.group.annotation.ValidationGroups;
 
 public interface HarnessTagService {
   HarnessTag create(HarnessTag tag);

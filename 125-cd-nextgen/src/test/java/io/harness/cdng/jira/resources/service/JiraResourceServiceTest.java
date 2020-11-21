@@ -1,12 +1,11 @@
 package io.harness.cdng.jira.resources.service;
 
 import static io.harness.rule.OwnerRule.ALEXEI;
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.when;
-
-import com.google.common.collect.Lists;
 
 import io.harness.CategoryTest;
 import io.harness.beans.IdentifierRef;
@@ -35,6 +34,11 @@ import io.harness.rule.Owner;
 import io.harness.secretmanagerclient.services.api.SecretManagerClientService;
 import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.service.DelegateGrpcClientWrapper;
+
+import com.google.common.collect.Lists;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
 import net.sf.json.JSONObject;
 import org.junit.Before;
 import org.junit.Test;
@@ -42,10 +46,6 @@ import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
-
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
 
 public class JiraResourceServiceTest extends CategoryTest {
   private static final String ACCOUNT_ID = "accountId";

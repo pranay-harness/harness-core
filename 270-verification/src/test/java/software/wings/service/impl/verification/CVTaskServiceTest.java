@@ -3,6 +3,7 @@ package software.wings.service.impl.verification;
 import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 import static io.harness.rule.OwnerRule.KAMAL;
 import static io.harness.rule.OwnerRule.PRAVEEN;
+
 import static java.lang.Thread.sleep;
 import static org.apache.cxf.ws.addressing.ContextUtils.generateUUID;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -14,9 +15,6 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.mockito.MockitoAnnotations.initMocks;
 
-import com.google.common.collect.Sets;
-import com.google.inject.Inject;
-
 import io.harness.VerificationBaseTest;
 import io.harness.beans.ExecutionStatus;
 import io.harness.beans.PageRequest;
@@ -27,13 +25,7 @@ import io.harness.entities.CVTask.CVTaskKeys;
 import io.harness.managerclient.VerificationManagerClientHelper;
 import io.harness.rule.Owner;
 import io.harness.time.Timestamp;
-import org.apache.commons.lang3.reflect.FieldUtils;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
-import org.mockito.ArgumentCaptor;
-import org.mockito.Mock;
-import org.mockito.Mockito;
+
 import software.wings.dl.WingsPersistence;
 import software.wings.service.impl.analysis.AnalysisComparisonStrategy;
 import software.wings.service.impl.analysis.AnalysisContext;
@@ -47,6 +39,8 @@ import software.wings.service.intfc.verification.CVTaskService;
 import software.wings.verification.VerificationDataAnalysisResponse;
 import software.wings.verification.VerificationStateAnalysisExecutionData;
 
+import com.google.common.collect.Sets;
+import com.google.inject.Inject;
 import java.time.Clock;
 import java.time.Duration;
 import java.time.Instant;
@@ -60,6 +54,13 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
+import org.apache.commons.lang3.reflect.FieldUtils;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
+import org.mockito.ArgumentCaptor;
+import org.mockito.Mock;
+import org.mockito.Mockito;
 
 public class CVTaskServiceTest extends VerificationBaseTest {
   @Inject CVTaskService cvTaskService;

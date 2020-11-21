@@ -1,14 +1,12 @@
 package software.wings.beans.infrastructure.instance;
 
 import com.google.common.collect.ImmutableList;
-
-import lombok.Builder;
-import lombok.Value;
-import lombok.experimental.FieldNameConstants;
-
 import java.time.Instant;
 import java.util.List;
 import java.util.Objects;
+import lombok.Builder;
+import lombok.Value;
+import lombok.experimental.FieldNameConstants;
 
 @Value
 @Builder

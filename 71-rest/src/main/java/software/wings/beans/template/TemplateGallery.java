@@ -2,11 +2,16 @@ package software.wings.beans.template;
 
 import static java.util.Arrays.asList;
 
-import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.annotation.HarnessEntity;
 import io.harness.beans.EmbeddedUser;
 import io.harness.mongo.index.CdIndex;
 import io.harness.mongo.index.Field;
+
+import software.wings.beans.Base;
+import software.wings.beans.entityinterface.KeywordsAware;
+
+import com.github.reinert.jjschema.SchemaIgnore;
+import java.util.Set;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -14,10 +19,6 @@ import lombok.NoArgsConstructor;
 import lombok.experimental.FieldNameConstants;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Entity;
-import software.wings.beans.Base;
-import software.wings.beans.entityinterface.KeywordsAware;
-
-import java.util.Set;
 
 @CdIndex(name = "account_gallery_key_idx", fields = { @Field("accountId")
                                                       , @Field("galleryKey") })

@@ -1,6 +1,7 @@
 package software.wings.delegatetasks;
 
 import static io.harness.expression.SecretString.SECRET_MASK;
+
 import static org.apache.commons.lang3.StringUtils.replaceEach;
 
 import io.harness.data.structure.EmptyPredicate;

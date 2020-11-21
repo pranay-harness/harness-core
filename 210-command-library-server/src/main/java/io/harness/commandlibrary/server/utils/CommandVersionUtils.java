@@ -1,8 +1,9 @@
 package io.harness.commandlibrary.server.utils;
 
-import lombok.experimental.UtilityClass;
 import software.wings.api.commandlibrary.EnrichedCommandVersionDTO.EnrichedCommandVersionDTOBuilder;
 import software.wings.beans.commandlibrary.CommandVersionEntity;
+
+import lombok.experimental.UtilityClass;
 
 @UtilityClass
 public class CommandVersionUtils {

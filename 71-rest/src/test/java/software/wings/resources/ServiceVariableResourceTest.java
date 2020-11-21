@@ -4,6 +4,12 @@ import static io.harness.rule.OwnerRule.ANUBHAW;
 import static io.harness.rule.OwnerRule.GARVIT;
 import static io.harness.rule.OwnerRule.GEORGE;
 import static io.harness.rule.OwnerRule.RAMA;
+
+import static software.wings.beans.Environment.GLOBAL_ENV_ID;
+import static software.wings.service.intfc.ServiceVariableService.EncryptedFieldMode.MASKED;
+import static software.wings.utils.WingsTestConstants.APP_ID;
+import static software.wings.utils.WingsTestConstants.TEMPLATE_ID;
+
 import static java.lang.String.format;
 import static java.util.Arrays.asList;
 import static javax.ws.rs.client.Entity.entity;
@@ -15,10 +21,6 @@ import static org.mockito.Mockito.anyString;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-import static software.wings.beans.Environment.GLOBAL_ENV_ID;
-import static software.wings.service.intfc.ServiceVariableService.EncryptedFieldMode.MASKED;
-import static software.wings.utils.WingsTestConstants.APP_ID;
-import static software.wings.utils.WingsTestConstants.TEMPLATE_ID;
 
 import io.harness.CategoryTest;
 import io.harness.beans.PageRequest;
@@ -26,12 +28,7 @@ import io.harness.beans.PageResponse;
 import io.harness.category.element.UnitTests;
 import io.harness.rest.RestResponse;
 import io.harness.rule.Owner;
-import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.reflect.FieldUtils;
-import org.junit.ClassRule;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
-import org.mockito.AdditionalAnswers;
+
 import software.wings.beans.Application;
 import software.wings.beans.EntityType;
 import software.wings.beans.Service;
@@ -47,6 +44,12 @@ import software.wings.utils.WingsTestConstants;
 import java.util.UUID;
 import javax.ws.rs.core.GenericType;
 import javax.ws.rs.core.Response;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.reflect.FieldUtils;
+import org.junit.ClassRule;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
+import org.mockito.AdditionalAnswers;
 
 /**
  * Created by peeyushaggarwal on 9/27/16.

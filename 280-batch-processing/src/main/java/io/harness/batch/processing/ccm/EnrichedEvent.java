@@ -1,9 +1,9 @@
 package io.harness.batch.processing.ccm;
 
 import io.harness.ccm.commons.beans.HarnessServiceInfo;
-import lombok.Value;
 
 import javax.annotation.Nullable;
+import lombok.Value;
 
 @Value
 public class EnrichedEvent<T> {

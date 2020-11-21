@@ -1,11 +1,10 @@
 package software.wings.service.impl.appdynamics;
 
+import java.util.ArrayList;
+import java.util.List;
 import lombok.Builder;
 import lombok.Builder.Default;
 import lombok.Data;
-
-import java.util.ArrayList;
-import java.util.List;
 
 /**
  * Created by rsingh on 4/19/17.

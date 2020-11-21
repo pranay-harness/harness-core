@@ -1,9 +1,8 @@
 package software.wings.graphql.datafetcher.billing;
 
+import java.math.BigDecimal;
 import lombok.Builder;
 import lombok.Value;
-
-import java.math.BigDecimal;
 
 @Value
 @Builder

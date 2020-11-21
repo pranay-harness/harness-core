@@ -1,21 +1,22 @@
 package io.harness.generator;
 
 import static io.harness.govern.Switch.unhandled;
+
 import static software.wings.beans.Account.GLOBAL_ACCOUNT_ID;
 import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static software.wings.common.TemplateConstants.HARNESS_COMMAND_LIBRARY_GALLERY;
 import static software.wings.common.TemplateConstants.HARNESS_GALLERY;
 
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
-
-import io.github.benas.randombeans.api.EnhancedRandom;
 import software.wings.beans.Account;
 import software.wings.beans.template.Template;
 import software.wings.beans.template.TemplateGallery;
 import software.wings.beans.template.TemplateGallery.TemplateGalleryBuilder;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.template.TemplateGalleryService;
+
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
+import io.github.benas.randombeans.api.EnhancedRandom;
 
 @Singleton
 public class TemplateGalleryGenerator {

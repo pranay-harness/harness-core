@@ -2,15 +2,8 @@ package migrations.all;
 
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
-import com.google.inject.Inject;
-
-import com.mongodb.BasicDBObject;
-import com.mongodb.BulkWriteOperation;
-import com.mongodb.DBCollection;
 import io.harness.persistence.HIterator;
-import lombok.extern.slf4j.Slf4j;
-import migrations.Migration;
-import org.mongodb.morphia.Key;
+
 import software.wings.beans.Account;
 import software.wings.beans.Application;
 import software.wings.beans.Application.ApplicationKeys;
@@ -18,9 +11,16 @@ import software.wings.beans.Base;
 import software.wings.beans.InfrastructureProvisioner;
 import software.wings.dl.WingsPersistence;
 
+import com.google.inject.Inject;
+import com.mongodb.BasicDBObject;
+import com.mongodb.BulkWriteOperation;
+import com.mongodb.DBCollection;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
+import lombok.extern.slf4j.Slf4j;
+import migrations.Migration;
+import org.mongodb.morphia.Key;
 
 /**
  * Add accountId to app child entities like service/env/provisioner/workflow/pipeline.

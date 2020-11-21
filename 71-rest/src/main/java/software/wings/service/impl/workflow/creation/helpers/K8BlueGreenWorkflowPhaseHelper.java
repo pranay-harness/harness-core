@@ -4,20 +4,21 @@ import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.k8s.model.K8sExpressions.primaryServiceNameExpression;
 import static io.harness.k8s.model.K8sExpressions.stageServiceNameExpression;
+
 import static software.wings.beans.PhaseStep.PhaseStepBuilder.aPhaseStep;
 import static software.wings.beans.PhaseStepType.K8S_PHASE_STEP;
 import static software.wings.sm.StateType.K8S_BLUE_GREEN_DEPLOY;
 import static software.wings.sm.StateType.KUBERNETES_SWAP_SERVICE_SELECTORS;
 
-import com.google.common.collect.ImmutableMap;
-
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.ExecutionStatus;
+
 import software.wings.beans.GraphNode;
 import software.wings.beans.PhaseStep;
 import software.wings.common.WorkflowConstants;
 import software.wings.service.impl.workflow.WorkflowServiceHelper;
 
+import com.google.common.collect.ImmutableMap;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;

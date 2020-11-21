@@ -5,10 +5,9 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.validation.Validator.notEmptyCheck;
 import static io.harness.validation.Validator.notNullCheck;
 
-import com.google.inject.Singleton;
-
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.exception.UnsupportedOperationException;
+
 import software.wings.beans.GraphNode;
 import software.wings.beans.PhaseStep;
 import software.wings.beans.workflow.StepSkipStrategy;
@@ -18,6 +17,7 @@ import software.wings.beans.yaml.ChangeContext;
 import software.wings.service.impl.yaml.handler.BaseYamlHandler;
 import software.wings.utils.Utils;
 
+import com.google.inject.Singleton;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;

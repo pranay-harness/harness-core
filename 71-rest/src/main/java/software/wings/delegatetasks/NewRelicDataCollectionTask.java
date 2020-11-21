@@ -2,6 +2,7 @@ package software.wings.delegatetasks;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.threading.Morpheus.sleep;
+
 import static software.wings.common.VerificationConstants.DATA_COLLECTION_RETRY_SLEEP;
 import static software.wings.service.impl.newrelic.NewRelicDelgateServiceImpl.METRIC_NAME_NON_SPECIAL_CHARS;
 import static software.wings.service.impl.newrelic.NewRelicDelgateServiceImpl.METRIC_NAME_SPECIAL_CHARS;
@@ -15,10 +16,6 @@ import static software.wings.service.impl.newrelic.NewRelicMetricValueDefinition
 import static software.wings.service.impl.newrelic.NewRelicMetricValueDefinition.ERROR;
 import static software.wings.service.impl.newrelic.NewRelicMetricValueDefinition.REQUSET_PER_MINUTE;
 
-import com.google.common.collect.Table.Cell;
-import com.google.common.collect.TreeBasedTable;
-import com.google.inject.Inject;
-
 import io.harness.delegate.beans.DelegateTaskPackage;
 import io.harness.delegate.beans.DelegateTaskResponse;
 import io.harness.delegate.beans.logstreaming.ILogStreamingTaskClient;
@@ -27,8 +24,7 @@ import io.harness.exception.ExceptionUtils;
 import io.harness.exception.WingsException;
 import io.harness.serializer.JsonUtils;
 import io.harness.time.Timestamp;
-import lombok.extern.slf4j.Slf4j;
-import org.slf4j.Logger;
+
 import software.wings.beans.TaskType;
 import software.wings.service.impl.ThirdPartyApiCallLog;
 import software.wings.service.impl.analysis.DataCollectionTaskResult;
@@ -48,6 +44,9 @@ import software.wings.service.intfc.analysis.ClusterLevel;
 import software.wings.service.intfc.newrelic.NewRelicDelegateService;
 import software.wings.sm.StateType;
 
+import com.google.common.collect.Table.Cell;
+import com.google.common.collect.TreeBasedTable;
+import com.google.inject.Inject;
 import java.io.IOException;
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
@@ -61,6 +60,8 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.TimeUnit;
 import java.util.function.BooleanSupplier;
 import java.util.function.Consumer;
+import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
 
 /**
  * Created by rsingh on 5/18/17.
@@ -239,8 +240,8 @@ public class NewRelicDataCollectionTask extends AbstractDelegateDataCollectionTa
 
               if (metricDataRecord.getDataCollectionMinute() < 0
                   || (is247Task
-                         && metricDataRecord.getDataCollectionMinute()
-                             < TimeUnit.MILLISECONDS.toMinutes(Timestamp.minuteBoundary(windowStartTimeManager)))) {
+                      && metricDataRecord.getDataCollectionMinute()
+                          < TimeUnit.MILLISECONDS.toMinutes(Timestamp.minuteBoundary(windowStartTimeManager)))) {
                 log.info("New relic sending us data in the past. request start time {}, received time {}",
                     managerAnalysisStartTime, timeStamp);
                 continue;

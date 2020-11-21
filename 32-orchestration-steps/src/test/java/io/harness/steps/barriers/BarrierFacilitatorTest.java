@@ -4,13 +4,11 @@ import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.pms.execution.ExecutionMode.ASYNC;
 import static io.harness.pms.execution.ExecutionMode.SYNC;
 import static io.harness.rule.OwnerRule.ALEXEI;
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.when;
 
-import com.google.inject.Inject;
-
-import io.fabric8.utils.Lists;
 import io.harness.OrchestrationStepsTestBase;
 import io.harness.ambiance.Ambiance;
 import io.harness.category.element.UnitTests;
@@ -20,12 +18,14 @@ import io.harness.rule.Owner;
 import io.harness.serializer.KryoSerializer;
 import io.harness.steps.barriers.beans.BarrierExecutionInstance;
 import io.harness.steps.barriers.service.BarrierService;
+
+import com.google.inject.Inject;
+import io.fabric8.utils.Lists;
+import java.util.Collections;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-
-import java.util.Collections;
 
 public class BarrierFacilitatorTest extends OrchestrationStepsTestBase {
   @Mock private BarrierService barrierService;

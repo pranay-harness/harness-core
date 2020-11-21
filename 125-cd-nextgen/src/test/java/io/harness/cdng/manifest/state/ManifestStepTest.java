@@ -1,6 +1,7 @@
 package io.harness.cdng.manifest.state;
 
 import static io.harness.rule.OwnerRule.ARCHIT;
+
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.CategoryTest;
@@ -16,11 +17,11 @@ import io.harness.cdng.manifest.yaml.kinds.ValuesManifest;
 import io.harness.delegate.beans.storeconfig.FetchType;
 import io.harness.rule.Owner;
 import io.harness.state.io.StepResponse;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
 
 import java.util.Arrays;
 import java.util.Collections;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 public class ManifestStepTest extends CategoryTest {
   private final ManifestStep manifestStep = new ManifestStep();

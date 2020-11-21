@@ -1,22 +1,18 @@
 package software.wings.graphql.datafetcher.artifactSource.batch;
 
 import static io.harness.rule.OwnerRule.AADITI;
+
+import static software.wings.graphql.datafetcher.artifactSource.ArtifactSourceTestHelper.getNexusArtifactStream;
+import static software.wings.graphql.datafetcher.artifactSource.ArtifactSourceTestHelper.getSmbArtifactStream;
+
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.joor.Reflect.on;
 import static org.mockito.Mockito.when;
-import static software.wings.graphql.datafetcher.artifactSource.ArtifactSourceTestHelper.getNexusArtifactStream;
-import static software.wings.graphql.datafetcher.artifactSource.ArtifactSourceTestHelper.getSmbArtifactStream;
-
-import com.google.inject.Inject;
 
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
+
 import software.wings.beans.artifact.NexusArtifactStream;
 import software.wings.beans.artifact.SmbArtifactStream;
 import software.wings.graphql.datafetcher.AbstractDataFetcherTestBase;
@@ -24,11 +20,17 @@ import software.wings.graphql.schema.type.artifactSource.QLArtifactSource;
 import software.wings.graphql.schema.type.artifactSource.QLNexusArtifactSource;
 import software.wings.service.intfc.ArtifactStreamService;
 
+import com.google.inject.Inject;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
 
 public class ArtifactSourceBatchDataLoaderTest extends AbstractDataFetcherTestBase {
   @Mock private ArtifactStreamService artifactStreamService;

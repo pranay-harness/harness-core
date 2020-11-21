@@ -1,10 +1,9 @@
 package io.harness.yaml;
 
 import com.fasterxml.jackson.dataformat.yaml.snakeyaml.DumperOptions;
-import lombok.extern.slf4j.Slf4j;
-
 import java.io.BufferedReader;
 import java.io.StringReader;
+import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class YamlUtils {

@@ -2,7 +2,6 @@ package software.wings.audit;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
 
-import com.fasterxml.jackson.annotation.JsonView;
 import io.harness.annotation.HarnessEntity;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.EmbeddedUser;
@@ -11,12 +10,7 @@ import io.harness.mongo.index.FdIndex;
 import io.harness.mongo.index.Field;
 import io.harness.mongo.index.IndexType;
 import io.harness.persistence.AccountAccess;
-import lombok.EqualsAndHashCode;
-import lombok.Getter;
-import lombok.Setter;
-import lombok.experimental.FieldNameConstants;
-import lombok.experimental.UtilityClass;
-import org.mongodb.morphia.annotations.Entity;
+
 import software.wings.audit.AuditHeader.AuditHeaderKeys;
 import software.wings.beans.Application;
 import software.wings.beans.Base;
@@ -26,7 +20,14 @@ import software.wings.beans.Service;
 import software.wings.beans.User;
 import software.wings.jersey.JsonViews;
 
+import com.fasterxml.jackson.annotation.JsonView;
 import java.util.List;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.Setter;
+import lombok.experimental.FieldNameConstants;
+import lombok.experimental.UtilityClass;
+import org.mongodb.morphia.annotations.Entity;
 
 /**
  * HttpAuditHeader bean class.

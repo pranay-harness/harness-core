@@ -2,15 +2,15 @@ package io.harness.cvng.beans;
 
 import io.harness.cvng.beans.appd.AppDynamicsUtils;
 import io.harness.delegate.beans.connector.appdynamicsconnector.AppDynamicsConnectorDTO;
-import lombok.Builder;
-import lombok.Data;
-import lombok.EqualsAndHashCode;
 
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
+import lombok.Builder;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
 
 @Data
 @Builder

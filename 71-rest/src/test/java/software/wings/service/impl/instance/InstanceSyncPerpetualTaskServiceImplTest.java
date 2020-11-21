@@ -2,29 +2,23 @@ package software.wings.service.impl.instance;
 
 import static io.harness.persistence.HQuery.excludeAuthority;
 import static io.harness.rule.OwnerRule.ANKIT;
+
+import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
+import static software.wings.utils.WingsTestConstants.APP_ID;
+import static software.wings.utils.WingsTestConstants.INFRA_MAPPING_ID;
+
 import static junit.framework.TestCase.assertEquals;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.mockito.Mockito.withSettings;
-import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
-import static software.wings.utils.WingsTestConstants.APP_ID;
-import static software.wings.utils.WingsTestConstants.INFRA_MAPPING_ID;
-
-import com.google.common.collect.ImmutableList;
-import com.google.inject.Inject;
 
 import io.harness.category.element.UnitTests;
 import io.harness.perpetualtask.PerpetualTaskService;
 import io.harness.perpetualtask.internal.PerpetualTaskRecord;
 import io.harness.rule.Owner;
-import org.apache.commons.lang3.reflect.FieldUtils;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
+
 import software.wings.WingsBaseTest;
 import software.wings.api.DeploymentSummary;
 import software.wings.beans.InfrastructureMapping;
@@ -33,7 +27,15 @@ import software.wings.service.InstanceSyncPerpetualTaskCreator;
 import software.wings.service.impl.instance.InstanceSyncPerpetualTaskInfo.InstanceSyncPerpetualTaskInfoKeys;
 import software.wings.service.intfc.instance.InstanceService;
 
+import com.google.common.collect.ImmutableList;
+import com.google.inject.Inject;
 import java.util.Collections;
+import org.apache.commons.lang3.reflect.FieldUtils;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
 
 public class InstanceSyncPerpetualTaskServiceImplTest extends WingsBaseTest {
   private static final String PERPETUAL_TASK_ID_1 = "DummyTaskId1";

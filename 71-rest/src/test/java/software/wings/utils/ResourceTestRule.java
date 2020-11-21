@@ -2,15 +2,24 @@ package software.wings.utils;
 
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
-import com.google.common.base.Preconditions;
+import software.wings.exception.ConstraintViolationExceptionMapper;
+import software.wings.jersey.KryoMessageBodyProvider;
 
 import com.codahale.metrics.MetricRegistry;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.jaxrs.json.JacksonJsonProvider;
+import com.google.common.base.Preconditions;
 import io.dropwizard.jackson.Jackson;
 import io.dropwizard.jersey.DropwizardResourceConfig;
 import io.dropwizard.jersey.jackson.JacksonMessageBodyProvider;
 import io.dropwizard.jersey.validation.Validators;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Set;
+import javax.servlet.ServletConfig;
+import javax.validation.Validator;
+import javax.ws.rs.client.Client;
+import javax.ws.rs.core.Context;
 import lombok.Builder;
 import lombok.Builder.Default;
 import lombok.Getter;
@@ -26,16 +35,6 @@ import org.glassfish.jersey.test.spi.TestContainerFactory;
 import org.junit.rules.TestRule;
 import org.junit.runner.Description;
 import org.junit.runners.model.Statement;
-import software.wings.exception.ConstraintViolationExceptionMapper;
-import software.wings.jersey.KryoMessageBodyProvider;
-
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Set;
-import javax.servlet.ServletConfig;
-import javax.validation.Validator;
-import javax.ws.rs.client.Client;
-import javax.ws.rs.core.Context;
 
 @Getter
 @Builder

@@ -1,10 +1,9 @@
 package io.harness.yaml.core.failurestrategy.retry;
 
+import java.util.List;
+import javax.validation.constraints.NotNull;
 import lombok.Builder;
 import lombok.Value;
-
-import javax.validation.constraints.NotNull;
-import java.util.List;
 
 @Value
 @Builder

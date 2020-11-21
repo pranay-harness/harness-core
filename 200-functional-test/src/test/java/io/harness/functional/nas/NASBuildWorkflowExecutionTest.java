@@ -1,8 +1,7 @@
 package io.harness.functional.nas;
 
 import static io.harness.rule.OwnerRule.AADITI;
-import static java.util.Arrays.asList;
-import static org.assertj.core.api.Assertions.assertThat;
+
 import static software.wings.beans.BuildWorkflow.BuildOrchestrationWorkflowBuilder.aBuildOrchestrationWorkflow;
 import static software.wings.beans.PhaseStep.PhaseStepBuilder.aPhaseStep;
 import static software.wings.beans.PhaseStepType.PREPARE_STEPS;
@@ -10,8 +9,8 @@ import static software.wings.beans.PhaseStepType.WRAP_UP;
 import static software.wings.beans.Workflow.WorkflowBuilder.aWorkflow;
 import static software.wings.beans.WorkflowPhase.WorkflowPhaseBuilder.aWorkflowPhase;
 
-import com.google.common.collect.ImmutableMap;
-import com.google.inject.Inject;
+import static java.util.Arrays.asList;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.beans.ExecutionStatus;
 import io.harness.beans.WorkflowType;
@@ -28,11 +27,7 @@ import io.harness.generator.artifactstream.ArtifactStreamManager;
 import io.harness.rule.Owner;
 import io.harness.testframework.restutils.ArtifactStreamRestUtils;
 import io.harness.testframework.restutils.WorkflowRestUtils;
-import org.hibernate.validator.constraints.NotEmpty;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
+
 import software.wings.beans.Account;
 import software.wings.beans.Application;
 import software.wings.beans.GraphNode;
@@ -48,12 +43,19 @@ import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.sm.StateType;
 import software.wings.utils.RepositoryFormat;
 
+import com.google.common.collect.ImmutableMap;
+import com.google.inject.Inject;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import org.hibernate.validator.constraints.NotEmpty;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 public class NASBuildWorkflowExecutionTest extends AbstractFunctionalTest {
   private static final String WRAP_UP_CONSTANT = "Wrap Up";

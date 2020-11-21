@@ -2,9 +2,6 @@ package io.harness.cvng.dashboard.services.impl;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 
-import com.google.common.base.Preconditions;
-import com.google.inject.Inject;
-
 import io.harness.cvng.activity.entities.Activity;
 import io.harness.cvng.activity.services.api.ActivityService;
 import io.harness.cvng.beans.CVMonitoringCategory;
@@ -18,6 +15,8 @@ import io.harness.cvng.dashboard.beans.TimeSeriesMetricDataDTO;
 import io.harness.cvng.dashboard.services.api.TimeSeriesDashboardService;
 import io.harness.ng.beans.PageResponse;
 
+import com.google.common.base.Preconditions;
+import com.google.inject.Inject;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Arrays;

@@ -3,11 +3,14 @@ package io.harness;
 import static java.util.Collections.singletonList;
 import static java.util.stream.Collectors.toSet;
 
-import com.google.common.collect.ImmutableList;
-import com.google.inject.Singleton;
+import io.harness.grpc.client.GrpcClientConfig;
+import io.harness.grpc.server.GrpcServerConfig;
+import io.harness.mongo.MongoConfig;
 
 import ch.qos.logback.access.spi.IAccessEvent;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.google.common.collect.ImmutableList;
+import com.google.inject.Singleton;
 import io.dropwizard.Configuration;
 import io.dropwizard.jetty.ConnectorFactory;
 import io.dropwizard.jetty.HttpConnectorFactory;
@@ -17,14 +20,6 @@ import io.dropwizard.request.logging.RequestLogFactory;
 import io.dropwizard.server.DefaultServerFactory;
 import io.dropwizard.server.ServerFactory;
 import io.federecio.dropwizard.swagger.SwaggerBundleConfiguration;
-import io.harness.grpc.client.GrpcClientConfig;
-import io.harness.grpc.server.GrpcServerConfig;
-import io.harness.mongo.MongoConfig;
-import lombok.Builder;
-import lombok.Data;
-import lombok.EqualsAndHashCode;
-import org.reflections.Reflections;
-
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -33,6 +28,10 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.logging.Level;
 import javax.ws.rs.Path;
+import lombok.Builder;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
+import org.reflections.Reflections;
 
 @Data
 @EqualsAndHashCode(callSuper = false)

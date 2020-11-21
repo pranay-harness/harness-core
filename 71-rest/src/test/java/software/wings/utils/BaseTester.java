@@ -1,7 +1,8 @@
 package software.wings.utils;
 
-import com.openpojo.validation.test.Tester;
 import io.harness.logging.Misc;
+
+import com.openpojo.validation.test.Tester;
 
 /**
  * Created by peeyushaggarwal on 5/18/16.

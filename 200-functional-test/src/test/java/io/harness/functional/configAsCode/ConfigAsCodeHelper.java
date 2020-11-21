@@ -3,21 +3,22 @@ package io.harness.functional.configAsCode;
 import static software.wings.beans.Application.Builder.anApplication;
 import static software.wings.beans.Environment.Builder.anEnvironment;
 
-import com.google.inject.Inject;
-
 import io.harness.generator.ApplicationGenerator;
 import io.harness.generator.EnvironmentGenerator;
 import io.harness.generator.OwnerManager;
 import io.harness.generator.OwnerManager.Owners;
 import io.harness.generator.Randomizer.Seed;
 import io.harness.testframework.framework.Setup;
-import io.restassured.http.ContentType;
+
 import software.wings.beans.Application;
 import software.wings.beans.EntityType;
 import software.wings.beans.Environment;
 import software.wings.beans.Environment.Builder;
 import software.wings.yaml.gitSync.YamlGitConfig;
 import software.wings.yaml.gitSync.YamlGitConfig.SyncMode;
+
+import com.google.inject.Inject;
+import io.restassured.http.ContentType;
 
 public class ConfigAsCodeHelper {
   @Inject private OwnerManager ownerManager;

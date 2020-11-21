@@ -4,16 +4,16 @@ import static io.harness.batch.processing.ccm.BatchJobBucket.IN_CLUSTER;
 import static io.harness.batch.processing.ccm.BatchJobBucket.IN_CLUSTER_BILLING;
 import static io.harness.batch.processing.ccm.BatchJobBucket.OTHERS;
 import static io.harness.batch.processing.ccm.BatchJobBucket.OUT_OF_CLUSTER;
+
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
-
-import lombok.Getter;
-import org.springframework.batch.core.Job;
 
 import java.time.temporal.ChronoUnit;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import lombok.Getter;
+import org.springframework.batch.core.Job;
 
 @Getter
 public enum BatchJobType {

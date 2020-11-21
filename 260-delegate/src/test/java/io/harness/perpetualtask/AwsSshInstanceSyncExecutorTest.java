@@ -11,12 +11,6 @@ import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
-import com.google.inject.Inject;
-import com.google.protobuf.Any;
-import com.google.protobuf.ByteString;
-
-import com.amazonaws.services.ec2.model.Filter;
-import com.amazonaws.services.ec2.model.Instance;
 import io.harness.DelegateTest;
 import io.harness.beans.ExecutionStatus;
 import io.harness.category.element.UnitTests;
@@ -27,6 +21,20 @@ import io.harness.rest.RestResponse;
 import io.harness.rule.Owner;
 import io.harness.rule.OwnerRule;
 import io.harness.serializer.KryoSerializer;
+
+import software.wings.beans.AwsConfig;
+import software.wings.service.impl.aws.model.AwsEc2ListInstancesResponse;
+import software.wings.service.intfc.aws.delegate.AwsEc2HelperServiceDelegate;
+
+import com.amazonaws.services.ec2.model.Filter;
+import com.amazonaws.services.ec2.model.Instance;
+import com.google.inject.Inject;
+import com.google.protobuf.Any;
+import com.google.protobuf.ByteString;
+import java.io.IOException;
+import java.time.Instant;
+import java.util.ArrayList;
+import java.util.Arrays;
 import org.eclipse.jetty.server.Response;
 import org.junit.Before;
 import org.junit.Test;
@@ -40,14 +48,6 @@ import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
 import org.mockito.runners.MockitoJUnitRunner;
 import retrofit2.Call;
-import software.wings.beans.AwsConfig;
-import software.wings.service.impl.aws.model.AwsEc2ListInstancesResponse;
-import software.wings.service.intfc.aws.delegate.AwsEc2HelperServiceDelegate;
-
-import java.io.IOException;
-import java.time.Instant;
-import java.util.ArrayList;
-import java.util.Arrays;
 
 @RunWith(MockitoJUnitRunner.class)
 public class AwsSshInstanceSyncExecutorTest extends DelegateTest {

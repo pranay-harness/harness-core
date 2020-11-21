@@ -1,12 +1,11 @@
 package software.wings.service.impl.newrelic;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import java.util.List;
+import java.util.Set;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
-
-import java.util.List;
-import java.util.Set;
 
 /**
  * Created by rsingh on 8/30/17.

@@ -2,15 +2,11 @@ package software.wings.graphql.datafetcher.user;
 
 import static io.harness.persistence.HQuery.excludeAuthority;
 
-import com.google.inject.Inject;
-
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.persistence.HIterator;
 import io.harness.persistence.HPersistence;
-import lombok.extern.slf4j.Slf4j;
-import org.mongodb.morphia.query.CriteriaContainer;
-import org.mongodb.morphia.query.Query;
+
 import software.wings.beans.User;
 import software.wings.beans.User.UserKeys;
 import software.wings.graphql.datafetcher.AbstractObjectDataFetcher;
@@ -19,6 +15,11 @@ import software.wings.graphql.schema.type.QLUser;
 import software.wings.graphql.schema.type.QLUser.QLUserBuilder;
 import software.wings.security.PermissionAttribute;
 import software.wings.security.annotations.AuthRule;
+
+import com.google.inject.Inject;
+import lombok.extern.slf4j.Slf4j;
+import org.mongodb.morphia.query.CriteriaContainer;
+import org.mongodb.morphia.query.Query;
 
 @Slf4j
 public class UserDataFetcher extends AbstractObjectDataFetcher<QLUser, QLUserQueryParameters> {

@@ -3,15 +3,17 @@ package software.wings.features.utils;
 import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
-import static java.util.stream.Collectors.toList;
-import static java.util.stream.Collectors.toSet;
+
 import static software.wings.sm.states.ApprovalState.APPROVAL_STATE_TYPE_VARIABLE;
 import static software.wings.sm.states.ApprovalState.ApprovalStateType.USER_GROUP;
 import static software.wings.sm.states.ApprovalState.USER_GROUPS_VARIABLE;
 
+import static java.util.stream.Collectors.toList;
+import static java.util.stream.Collectors.toSet;
+
 import io.harness.beans.PageRequest;
 import io.harness.beans.SearchFilter.Operator;
-import org.apache.commons.lang3.StringUtils;
+
 import software.wings.beans.CanaryOrchestrationWorkflow;
 import software.wings.beans.EntityType;
 import software.wings.beans.GraphNode;
@@ -38,6 +40,7 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
+import org.apache.commons.lang3.StringUtils;
 
 public class WorkflowUtils {
   private WorkflowUtils() {
@@ -98,7 +101,7 @@ public class WorkflowUtils {
 
       if (props.containsKey(APPROVAL_STATE_TYPE_VARIABLE)
           && (approvalStepType == props.get(APPROVAL_STATE_TYPE_VARIABLE)
-                 || approvalStepType.name().equals(props.get(APPROVAL_STATE_TYPE_VARIABLE)))) {
+              || approvalStepType.name().equals(props.get(APPROVAL_STATE_TYPE_VARIABLE)))) {
         return true;
       }
     }

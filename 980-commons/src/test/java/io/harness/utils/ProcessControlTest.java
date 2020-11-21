@@ -2,17 +2,18 @@ package io.harness.utils;
 
 import static io.harness.rule.OwnerRule.AVMOHAN;
 import static io.harness.rule.OwnerRule.GEORGE;
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
 
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
+
+import java.time.Duration;
 import org.joor.Reflect;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
-
-import java.time.Duration;
 
 public class ProcessControlTest extends CategoryTest {
   @Test

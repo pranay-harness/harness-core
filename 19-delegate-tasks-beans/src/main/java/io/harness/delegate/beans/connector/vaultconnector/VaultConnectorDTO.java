@@ -1,13 +1,15 @@
 package io.harness.delegate.beans.connector.vaultconnector;
 
-import static com.fasterxml.jackson.annotation.JsonInclude.Include;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+
+import static com.fasterxml.jackson.annotation.JsonInclude.Include;
+
+import io.harness.delegate.beans.connector.ConnectorConfigDTO;
+import io.harness.security.encryption.AccessType;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
-import io.harness.delegate.beans.connector.ConnectorConfigDTO;
-import io.harness.security.encryption.AccessType;
 import lombok.Builder;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;

@@ -3,10 +3,8 @@ package software.wings.service.impl.instance;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Lists;
-
 import io.harness.beans.ExecutionStatus;
+
 import software.wings.api.AmiStepExecutionSummary;
 import software.wings.api.CommandStepExecutionSummary;
 import software.wings.api.ContainerServiceData;
@@ -32,6 +30,8 @@ import software.wings.sm.PhaseStepExecutionSummary;
 import software.wings.sm.StepExecutionSummary;
 import software.wings.sm.StepExecutionSummary.StepExecutionSummaryBuilder;
 
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Lists;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;

@@ -3,25 +3,22 @@ package software.wings.service.impl.verification;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.persistence.HQuery.excludeAuthority;
-import static java.lang.Math.ceil;
-import static java.lang.Math.min;
+
 import static software.wings.common.VerificationConstants.CRON_POLL_INTERVAL_IN_MINUTES;
 import static software.wings.common.VerificationConstants.LOGS_HIGH_RISK_THRESHOLD;
 import static software.wings.common.VerificationConstants.LOGS_MEDIUM_RISK_THRESHOLD;
 import static software.wings.common.VerificationConstants.PREDECTIVE_HISTORY_MINUTES;
 import static software.wings.service.impl.analysis.ContinuousVerificationServiceImpl.computeHeatMapUnits;
 
-import com.google.common.base.Preconditions;
-import com.google.inject.Inject;
+import static java.lang.Math.ceil;
+import static java.lang.Math.min;
 
 import io.harness.beans.ExecutionStatus;
 import io.harness.delegate.task.DataCollectionExecutorService;
 import io.harness.exception.WingsException;
 import io.harness.persistence.HIterator;
 import io.harness.time.Timestamp;
-import lombok.extern.slf4j.Slf4j;
-import org.mongodb.morphia.query.Query;
-import org.mongodb.morphia.query.Sort;
+
 import software.wings.beans.FeatureName;
 import software.wings.common.VerificationConstants;
 import software.wings.dl.WingsPersistence;
@@ -53,6 +50,8 @@ import software.wings.verification.HeatMapResolution;
 import software.wings.verification.dashboard.HeatMapUnit;
 import software.wings.verification.log.LogsCVConfiguration;
 
+import com.google.common.base.Preconditions;
+import com.google.inject.Inject;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -65,6 +64,9 @@ import java.util.Set;
 import java.util.concurrent.Callable;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
+import lombok.extern.slf4j.Slf4j;
+import org.mongodb.morphia.query.Query;
+import org.mongodb.morphia.query.Sort;
 
 /**
  * @author Praveen
@@ -327,9 +329,10 @@ public class CV24x7DashboardServiceImpl implements CV24x7DashboardService {
           ++lowRiskClusters;
         }
       }
-      riskLevel = highRiskClusters > 0
-          ? RiskLevel.HIGH
-          : mediumRiskCluster > 0 ? RiskLevel.MEDIUM : lowRiskClusters > 0 ? RiskLevel.LOW : RiskLevel.HIGH;
+      riskLevel = highRiskClusters > 0 ? RiskLevel.HIGH
+          : mediumRiskCluster > 0      ? RiskLevel.MEDIUM
+          : lowRiskClusters > 0        ? RiskLevel.LOW
+                                       : RiskLevel.HIGH;
 
       unknownClusters = analysisSummary.getUnknownClusters().size();
       analysisSummary.setHighRiskClusters(highRiskClusters);

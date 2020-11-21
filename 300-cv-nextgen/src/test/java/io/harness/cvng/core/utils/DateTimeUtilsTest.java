@@ -2,16 +2,17 @@ package io.harness.cvng.core.utils;
 
 import static io.harness.rule.OwnerRule.KAMAL;
 import static io.harness.rule.OwnerRule.SOWMYA;
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
 
 import java.time.Instant;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 public class DateTimeUtilsTest extends CategoryTest {
   @Test

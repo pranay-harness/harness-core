@@ -2,17 +2,12 @@ package software.wings.helpers.ext.ecr;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+
 import static java.util.stream.Collectors.toList;
 
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
-
-import com.amazonaws.services.ecr.model.DescribeRepositoriesRequest;
-import com.amazonaws.services.ecr.model.DescribeRepositoriesResult;
-import com.amazonaws.services.ecr.model.ListImagesRequest;
-import com.amazonaws.services.ecr.model.ListImagesResult;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.security.encryption.EncryptedDataDetail;
+
 import software.wings.beans.EcrConfig;
 import software.wings.beans.artifact.EcrArtifactStream;
 import software.wings.common.BuildDetailsComparatorAscending;
@@ -20,6 +15,12 @@ import software.wings.helpers.ext.jenkins.BuildDetails;
 import software.wings.service.impl.AwsHelperService;
 import software.wings.service.intfc.security.EncryptionService;
 
+import com.amazonaws.services.ecr.model.DescribeRepositoriesRequest;
+import com.amazonaws.services.ecr.model.DescribeRepositoriesResult;
+import com.amazonaws.services.ecr.model.ListImagesRequest;
+import com.amazonaws.services.ecr.model.ListImagesResult;
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import java.util.ArrayList;
 import java.util.List;
 

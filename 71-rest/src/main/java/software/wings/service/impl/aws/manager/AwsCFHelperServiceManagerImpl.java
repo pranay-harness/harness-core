@@ -3,11 +3,10 @@ package software.wings.service.impl.aws.manager;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.eraro.ErrorCode.INVALID_ARGUMENT;
 import static io.harness.exception.WingsException.USER;
-import static java.util.Collections.singletonList;
+
 import static software.wings.beans.Application.GLOBAL_APP_ID;
 
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
+import static java.util.Collections.singletonList;
 
 import io.harness.beans.DelegateTask;
 import io.harness.delegate.beans.DelegateResponseData;
@@ -16,6 +15,7 @@ import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.tasks.Cd1SetupFields;
+
 import software.wings.beans.AwsConfig;
 import software.wings.beans.CloudFormationSourceType;
 import software.wings.beans.GitConfig;
@@ -34,6 +34,8 @@ import software.wings.service.intfc.aws.manager.AwsCFHelperServiceManager;
 import software.wings.service.intfc.security.SecretManager;
 import software.wings.utils.GitUtilsManager;
 
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 

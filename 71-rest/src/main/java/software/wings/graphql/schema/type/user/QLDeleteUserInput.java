@@ -1,8 +1,9 @@
 package software.wings.graphql.schema.type.user;
 
+import software.wings.graphql.schema.mutation.QLMutationInput;
+
 import lombok.Builder;
 import lombok.Value;
-import software.wings.graphql.schema.mutation.QLMutationInput;
 
 @Value
 @Builder

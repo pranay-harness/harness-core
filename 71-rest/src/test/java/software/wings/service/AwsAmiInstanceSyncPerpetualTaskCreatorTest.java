@@ -1,5 +1,8 @@
 package software.wings.service;
 
+import static software.wings.service.InstanceSyncConstants.INTERVAL_MINUTES;
+import static software.wings.service.InstanceSyncConstants.TIMEOUT_SECONDS;
+
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
@@ -8,12 +11,6 @@ import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
-import static software.wings.service.InstanceSyncConstants.INTERVAL_MINUTES;
-import static software.wings.service.InstanceSyncConstants.TIMEOUT_SECONDS;
-
-import com.google.common.collect.ImmutableMap;
-import com.google.inject.Inject;
-import com.google.protobuf.util.Durations;
 
 import io.harness.category.element.UnitTests;
 import io.harness.perpetualtask.AwsAmiInstanceSyncPerpetualTaskClient;
@@ -24,11 +21,7 @@ import io.harness.perpetualtask.PerpetualTaskType;
 import io.harness.perpetualtask.internal.PerpetualTaskRecord;
 import io.harness.rule.Owner;
 import io.harness.rule.OwnerRule;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
-import org.mockito.ArgumentCaptor;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
+
 import software.wings.WingsBaseTest;
 import software.wings.api.AwsAutoScalingGroupDeploymentInfo;
 import software.wings.api.DeploymentSummary;
@@ -39,7 +32,15 @@ import software.wings.beans.infrastructure.instance.info.Ec2InstanceInfo;
 import software.wings.service.impl.instance.InstanceSyncTestConstants;
 import software.wings.service.intfc.instance.InstanceService;
 
+import com.google.common.collect.ImmutableMap;
+import com.google.inject.Inject;
+import com.google.protobuf.util.Durations;
 import java.util.List;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
+import org.mockito.ArgumentCaptor;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
 
 public class AwsAmiInstanceSyncPerpetualTaskCreatorTest extends WingsBaseTest {
   @Mock private InstanceService instanceService;

@@ -1,6 +1,7 @@
 package io.harness.azure.impl;
 
 import static io.harness.rule.OwnerRule.IVAN;
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Matchers.any;
@@ -10,8 +11,14 @@ import static org.mockito.Mockito.when;
 import static org.powermock.api.mockito.PowerMockito.mockStatic;
 import static org.powermock.api.mockito.PowerMockito.whenNew;
 
-import com.google.common.util.concurrent.TimeLimiter;
+import io.harness.CategoryTest;
+import io.harness.azure.AzureClient;
+import io.harness.azure.model.AzureConfig;
+import io.harness.category.element.UnitTests;
+import io.harness.network.Http;
+import io.harness.rule.Owner;
 
+import com.google.common.util.concurrent.TimeLimiter;
 import com.microsoft.azure.Page;
 import com.microsoft.azure.PagedList;
 import com.microsoft.azure.credentials.ApplicationTokenCredentials;
@@ -24,12 +31,7 @@ import com.microsoft.azure.management.monitor.ActivityLogs.ActivityLogsQueryDefi
 import com.microsoft.azure.management.monitor.ActivityLogs.ActivityLogsQueryDefinitionStages.WithEventDataStartTimeFilter;
 import com.microsoft.azure.management.monitor.EventData;
 import com.microsoft.rest.LogLevel;
-import io.harness.CategoryTest;
-import io.harness.azure.AzureClient;
-import io.harness.azure.model.AzureConfig;
-import io.harness.category.element.UnitTests;
-import io.harness.network.Http;
-import io.harness.rule.Owner;
+import java.util.List;
 import org.jetbrains.annotations.NotNull;
 import org.joda.time.DateTime;
 import org.junit.Before;
@@ -42,8 +44,6 @@ import org.powermock.api.mockito.PowerMockito;
 import org.powermock.core.classloader.annotations.PowerMockIgnore;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
-
-import java.util.List;
 
 @RunWith(PowerMockRunner.class)
 @PrepareForTest({Azure.class, AzureClient.class, Http.class, TimeLimiter.class})

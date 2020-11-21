@@ -2,6 +2,7 @@ package software.wings.service.prometheus;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.rule.OwnerRule.PRAVEEN;
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Matchers.any;
@@ -15,12 +16,7 @@ import io.harness.deployment.InstanceDetails;
 import io.harness.exception.VerificationOperationException;
 import io.harness.rule.Owner;
 import io.harness.serializer.JsonUtils;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
+
 import software.wings.WingsBaseTest;
 import software.wings.beans.APMValidateCollectorConfig;
 import software.wings.beans.PrometheusConfig;
@@ -42,6 +38,12 @@ import software.wings.service.impl.prometheus.PrometheusSetupTestNodeData;
 import software.wings.service.intfc.SettingsService;
 
 import java.util.Arrays;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
 
 public class PrometheusAnalysisServiceTest extends WingsBaseTest {
   @Mock private SettingsService settingsService;

@@ -3,14 +3,15 @@ package software.wings.service.impl.prometheus;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.delegate.beans.executioncapability.ExecutionCapabilityDemander;
 import io.harness.delegate.task.TaskParameters;
-import lombok.Builder;
-import lombok.Data;
+
 import software.wings.beans.PrometheusConfig;
 import software.wings.service.impl.analysis.TimeSeries;
 import software.wings.service.impl.analysis.TimeSeriesMlAnalysisType;
 
 import java.util.List;
 import java.util.Map;
+import lombok.Builder;
+import lombok.Data;
 
 /**
  * Created by rsingh on 5/18/17.

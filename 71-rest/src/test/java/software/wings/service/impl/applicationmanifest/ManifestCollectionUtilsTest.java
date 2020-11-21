@@ -2,11 +2,7 @@ package software.wings.service.impl.applicationmanifest;
 
 import static io.harness.data.structure.UUIDGenerator.convertBase64UuidToCanonicalForm;
 import static io.harness.rule.OwnerRule.PRABU;
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.anyString;
-import static org.mockito.Mockito.doReturn;
+
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 import static software.wings.utils.WingsTestConstants.APP_ID;
@@ -17,7 +13,11 @@ import static software.wings.utils.WingsTestConstants.SETTING_ID;
 import static software.wings.utils.WingsTestConstants.SETTING_NAME;
 import static software.wings.utils.WingsTestConstants.UUID;
 
-import com.google.inject.Inject;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyString;
+import static org.mockito.Mockito.doReturn;
 
 import io.harness.beans.DelegateTask;
 import io.harness.category.element.UnitTests;
@@ -27,10 +27,7 @@ import io.harness.exception.InvalidRequestException;
 import io.harness.k8s.model.HelmVersion;
 import io.harness.rule.Owner;
 import io.harness.security.encryption.EncryptedDataDetail;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
+
 import software.wings.WingsBaseTest;
 import software.wings.annotation.EncryptableSetting;
 import software.wings.beans.HelmChartConfig;
@@ -49,8 +46,13 @@ import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.applicationmanifest.HelmChartService;
 import software.wings.service.intfc.security.SecretManager;
 
+import com.google.inject.Inject;
 import java.util.Arrays;
 import java.util.List;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
 
 public class ManifestCollectionUtilsTest extends WingsBaseTest {
   private static final String CHART_NAME = "CHART_NAME";

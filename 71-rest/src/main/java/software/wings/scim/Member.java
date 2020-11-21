@@ -1,9 +1,8 @@
 package software.wings.scim;
 
+import java.net.URI;
 import lombok.Getter;
 import lombok.Setter;
-
-import java.net.URI;
 
 @Getter
 @Setter

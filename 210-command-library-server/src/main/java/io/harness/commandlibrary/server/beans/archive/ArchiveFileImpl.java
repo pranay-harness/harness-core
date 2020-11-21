@@ -1,10 +1,9 @@
 package io.harness.commandlibrary.server.beans.archive;
 
-import lombok.Builder;
-
 import java.util.Collection;
 import java.util.Map;
 import java.util.Optional;
+import lombok.Builder;
 
 @Builder
 public class ArchiveFileImpl implements ArchiveFile {

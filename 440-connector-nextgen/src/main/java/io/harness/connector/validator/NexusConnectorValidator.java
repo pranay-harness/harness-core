@@ -1,10 +1,11 @@
 package io.harness.connector.validator;
 
-import com.google.inject.Singleton;
 import io.harness.delegate.beans.connector.ConnectorConfigDTO;
 import io.harness.delegate.beans.connector.ConnectorValidationResult;
 import io.harness.delegate.beans.connector.nexusconnector.NexusConnectorDTO;
 import io.harness.delegate.task.TaskParameters;
+
+import com.google.inject.Singleton;
 
 @Singleton
 public class NexusConnectorValidator

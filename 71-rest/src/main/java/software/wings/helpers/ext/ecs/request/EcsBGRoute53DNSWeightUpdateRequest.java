@@ -2,10 +2,11 @@ package software.wings.helpers.ext.ecs.request;
 
 import static software.wings.helpers.ext.ecs.request.EcsCommandRequest.EcsCommandType.ROUTE53_DNS_WEIGHT_UPDATE;
 
+import software.wings.beans.AwsConfig;
+
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
-import software.wings.beans.AwsConfig;
 
 @Data
 @EqualsAndHashCode(callSuper = false)

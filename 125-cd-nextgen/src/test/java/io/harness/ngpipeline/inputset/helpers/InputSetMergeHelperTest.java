@@ -1,14 +1,12 @@
 package io.harness.ngpipeline.inputset.helpers;
 
 import static io.harness.rule.OwnerRule.NAMAN;
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
-
-import com.google.common.io.Resources;
-import com.google.inject.Inject;
 
 import io.harness.category.element.UnitTests;
 import io.harness.cdng.CDNGBaseTest;
@@ -29,6 +27,15 @@ import io.harness.walktree.visitor.mergeinputset.beans.MergeInputSetErrorRespons
 import io.harness.walktree.visitor.response.VisitorErrorResponseWrapper;
 import io.harness.yaml.utils.JsonPipelineUtils;
 import io.harness.yaml.utils.YamlPipelineUtils;
+
+import com.google.common.io.Resources;
+import com.google.inject.Inject;
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.util.Map;
+import java.util.Objects;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import lombok.extern.slf4j.Slf4j;
 import org.joor.Reflect;
 import org.junit.Before;
@@ -38,13 +45,6 @@ import org.mockito.Mock;
 import org.springframework.data.domain.Page;
 import retrofit2.Call;
 import retrofit2.Response;
-
-import java.io.IOException;
-import java.nio.charset.StandardCharsets;
-import java.util.Map;
-import java.util.Objects;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 @Slf4j
 public class InputSetMergeHelperTest extends CDNGBaseTest {

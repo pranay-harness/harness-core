@@ -1,14 +1,15 @@
 package software.wings.graphql.datafetcher.ce.recommendation.entity;
 
 import static io.harness.rule.OwnerRule.AVMOHAN;
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
-
-import com.google.common.collect.ImmutableMap;
 
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
+
+import com.google.common.collect.ImmutableMap;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
@@ -222,8 +223,7 @@ public class K8sWorkloadRecommendationTest extends CategoryTest {
     assertThatCode(() -> {
       k8sWorkloadRecommendation.postLoad();
       k8sWorkloadRecommendation.prePersist();
-    })
-        .doesNotThrowAnyException();
+    }).doesNotThrowAnyException();
   }
 
   @Test

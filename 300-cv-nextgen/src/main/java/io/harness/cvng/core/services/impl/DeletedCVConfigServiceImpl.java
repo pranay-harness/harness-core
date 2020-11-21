@@ -1,16 +1,15 @@
 package io.harness.cvng.core.services.impl;
 
-import com.google.inject.Inject;
-
 import io.harness.cvng.core.entities.DeletedCVConfig;
 import io.harness.cvng.core.services.api.DataCollectionTaskService;
 import io.harness.cvng.core.services.api.DeletedCVConfigService;
 import io.harness.cvng.core.services.api.VerificationTaskService;
 import io.harness.persistence.HPersistence;
-import lombok.extern.slf4j.Slf4j;
 
+import com.google.inject.Inject;
 import javax.annotation.Nullable;
 import javax.validation.constraints.NotNull;
+import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class DeletedCVConfigServiceImpl implements DeletedCVConfigService {

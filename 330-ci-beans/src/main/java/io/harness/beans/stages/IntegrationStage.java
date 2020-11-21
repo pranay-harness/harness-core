@@ -1,8 +1,5 @@
 package io.harness.beans.stages;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.fasterxml.jackson.annotation.JsonTypeName;
 import io.harness.beans.dependencies.DependencyElement;
 import io.harness.beans.yaml.extended.CustomVariable;
 import io.harness.beans.yaml.extended.container.Container;
@@ -11,12 +8,15 @@ import io.harness.data.validator.EntityIdentifier;
 import io.harness.pipeline.executions.NGStageType;
 import io.harness.yaml.core.ExecutionElement;
 import io.harness.yaml.core.intfc.Connector;
+
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonTypeName;
+import java.util.List;
+import javax.validation.constraints.NotNull;
 import lombok.Builder;
 import lombok.Data;
 import lombok.Getter;
-
-import java.util.List;
-import javax.validation.constraints.NotNull;
 
 /**
  *  This Stage stores steps required for running CI job.

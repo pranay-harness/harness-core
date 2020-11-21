@@ -8,8 +8,7 @@ import io.harness.delegate.beans.executioncapability.SystemEnvCheckerCapability;
 import io.harness.delegate.task.mixin.HttpConnectionExecutionCapabilityGenerator;
 import io.harness.rule.Owner;
 import io.harness.rule.OwnerRule;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
+
 import software.wings.WingsBaseTest;
 import software.wings.beans.AzureConfig;
 import software.wings.beans.GcpConfig;
@@ -17,6 +16,9 @@ import software.wings.beans.KubernetesClusterConfig;
 import software.wings.beans.SettingAttribute;
 import software.wings.delegatetasks.validation.capabilities.ClusterMasterUrlValidationCapability;
 import software.wings.service.impl.ContainerServiceParams;
+
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 public class K8sClusterConfigTest extends WingsBaseTest {
   private static final String MASTER_URL = "http://a.b.c";

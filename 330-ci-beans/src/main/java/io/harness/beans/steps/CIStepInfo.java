@@ -1,10 +1,10 @@
 package io.harness.beans.steps;
 
-import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import io.harness.executionplan.plancreator.beans.GenericStepInfo;
 import io.harness.yaml.core.StepSpecType;
 import io.harness.yaml.core.nonyaml.WithNonYamlInfo;
 
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import java.util.List;
 
 @JsonDeserialize

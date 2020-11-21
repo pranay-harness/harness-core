@@ -2,18 +2,10 @@ package software.wings.scim;
 
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
-import com.google.common.collect.Lists;
-import com.google.inject.Inject;
-
-import com.fasterxml.jackson.core.JsonProcessingException;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
 import io.harness.serializer.JsonUtils;
-import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.StringUtils;
-import org.mongodb.morphia.query.FindOptions;
-import org.mongodb.morphia.query.Query;
-import org.mongodb.morphia.query.UpdateOperations;
+
 import software.wings.beans.User;
 import software.wings.beans.User.UserKeys;
 import software.wings.beans.UserInvite;
@@ -24,6 +16,9 @@ import software.wings.beans.security.UserGroup.UserGroupKeys;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.UserService;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.google.common.collect.Lists;
+import com.google.inject.Inject;
 import java.net.URLDecoder;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -34,6 +29,11 @@ import java.util.stream.Collectors;
 import javax.validation.constraints.NotNull;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
+import org.mongodb.morphia.query.FindOptions;
+import org.mongodb.morphia.query.Query;
+import org.mongodb.morphia.query.UpdateOperations;
 
 @Slf4j
 public class ScimUserServiceImpl implements ScimUserService {
@@ -92,8 +92,8 @@ public class ScimUserServiceImpl implements ScimUserService {
     return user.isDisabled() || !StringUtils.equals(user.getName(), userQuery.getDisplayName())
         || !StringUtils.equals(user.getEmail(), userQuery.getUserName())
         || (userQuery.getName() != null
-               && (!StringUtils.equals(userQuery.getName().get(GIVEN_NAME).asText(), user.getGivenName())
-                      || !StringUtils.equals(userQuery.getName().get(FAMILY_NAME).asText(), user.getFamilyName())));
+            && (!StringUtils.equals(userQuery.getName().get(GIVEN_NAME).asText(), user.getGivenName())
+                || !StringUtils.equals(userQuery.getName().get(FAMILY_NAME).asText(), user.getFamilyName())));
   }
 
   private String getGivenNameFromScimUser(@NotNull ScimUser userQuery) {
@@ -199,7 +199,7 @@ public class ScimUserServiceImpl implements ScimUserService {
       userQuery.field(UserKeys.email).equal(searchQuery);
     }
     List<User> userList = userQuery.asList(new FindOptions().skip(startIndex).limit(count));
-    return userList.stream().map(this ::buildUserResponse).collect(Collectors.toList());
+    return userList.stream().map(this::buildUserResponse).collect(Collectors.toList());
   }
 
   @Override

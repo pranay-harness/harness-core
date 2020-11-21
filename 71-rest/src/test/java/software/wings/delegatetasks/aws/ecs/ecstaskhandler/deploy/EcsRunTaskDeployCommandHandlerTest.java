@@ -1,6 +1,9 @@
 package software.wings.delegatetasks.aws.ecs.ecstaskhandler.deploy;
 
 import static io.harness.rule.OwnerRule.RAGHVENDRA;
+
+import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
+
 import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
@@ -14,24 +17,11 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 
-import com.google.inject.Inject;
-
-import com.amazonaws.services.ecs.model.DesiredStatus;
-import com.amazonaws.services.ecs.model.RunTaskRequest;
-import com.amazonaws.services.ecs.model.RunTaskResult;
-import com.amazonaws.services.ecs.model.Task;
-import com.amazonaws.services.ecs.model.TaskDefinition;
 import io.harness.category.element.UnitTests;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.rule.Owner;
-import org.apache.commons.lang3.StringUtils;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
-import org.mockito.ArgumentCaptor;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
+
 import software.wings.WingsBaseTest;
 import software.wings.beans.AwsConfig;
 import software.wings.beans.command.ExecutionLogCallback;
@@ -39,6 +29,19 @@ import software.wings.helpers.ext.ecs.request.EcsRunTaskDeployRequest;
 import software.wings.helpers.ext.ecs.response.EcsCommandExecutionResponse;
 import software.wings.helpers.ext.ecs.response.EcsRunTaskDeployResponse;
 import software.wings.service.impl.AwsHelperService;
+
+import com.amazonaws.services.ecs.model.DesiredStatus;
+import com.amazonaws.services.ecs.model.RunTaskRequest;
+import com.amazonaws.services.ecs.model.RunTaskResult;
+import com.amazonaws.services.ecs.model.Task;
+import com.amazonaws.services.ecs.model.TaskDefinition;
+import com.google.inject.Inject;
+import org.apache.commons.lang3.StringUtils;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
+import org.mockito.ArgumentCaptor;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
 
 public class EcsRunTaskDeployCommandHandlerTest extends WingsBaseTest {
   @Mock private EcsDeployCommandTaskHelper mockEcsDeployCommandTaskHelper;

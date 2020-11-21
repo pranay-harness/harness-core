@@ -2,10 +2,10 @@ package io.harness.logging;
 
 import io.harness.eraro.MessageManager;
 import io.harness.exception.WingsException;
-import lombok.experimental.UtilityClass;
 
 import java.io.IOException;
 import java.io.InputStream;
+import lombok.experimental.UtilityClass;
 
 @UtilityClass
 public class LoggingInitializer {

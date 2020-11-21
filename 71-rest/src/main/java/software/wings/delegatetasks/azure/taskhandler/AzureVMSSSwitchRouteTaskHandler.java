@@ -17,17 +17,12 @@ import static io.harness.azure.model.AzureConstants.UP_SCALE_COMMAND_UNIT;
 import static io.harness.azure.model.AzureConstants.UP_SCALE_STEADY_STATE_WAIT_COMMAND_UNIT;
 import static io.harness.logging.CommandExecutionStatus.SUCCESS;
 import static io.harness.logging.LogLevel.INFO;
+
 import static java.lang.String.format;
 import static java.util.Objects.isNull;
 import static org.apache.commons.lang3.StringUtils.EMPTY;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 
-import com.google.inject.Singleton;
-
-import com.microsoft.azure.management.compute.VirtualMachineScaleSet;
-import com.microsoft.azure.management.compute.VirtualMachineScaleSetVM;
-import com.microsoft.azure.management.network.LoadBalancer;
-import com.microsoft.azure.management.resources.fluentcore.arm.models.HasName;
 import io.harness.azure.model.AzureConfig;
 import io.harness.delegate.task.azure.AzureVMSSPreDeploymentData;
 import io.harness.delegate.task.azure.request.AzureLoadBalancerDetailForBGDeployment;
@@ -37,14 +32,20 @@ import io.harness.delegate.task.azure.response.AzureVMSSSwitchRoutesResponse;
 import io.harness.delegate.task.azure.response.AzureVMSSTaskExecutionResponse;
 import io.harness.exception.InvalidArgumentsException;
 import io.harness.exception.InvalidRequestException;
-import lombok.NoArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
+
 import software.wings.beans.command.ExecutionLogCallback;
 
+import com.google.inject.Singleton;
+import com.microsoft.azure.management.compute.VirtualMachineScaleSet;
+import com.microsoft.azure.management.compute.VirtualMachineScaleSetVM;
+import com.microsoft.azure.management.network.LoadBalancer;
+import com.microsoft.azure.management.resources.fluentcore.arm.models.HasName;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
+import lombok.NoArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 @Singleton
 @NoArgsConstructor

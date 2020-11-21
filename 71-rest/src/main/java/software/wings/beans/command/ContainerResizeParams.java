@@ -1,11 +1,11 @@
 package software.wings.beans.command;
 
-import lombok.Data;
 import software.wings.api.ContainerServiceData;
 import software.wings.beans.InstanceUnitType;
 import software.wings.beans.ResizeStrategy;
 
 import java.util.List;
+import lombok.Data;
 
 @Data
 public class ContainerResizeParams {

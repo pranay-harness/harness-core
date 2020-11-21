@@ -1,17 +1,20 @@
 package io.harness.functional.ipwhitelisting;
 
 import static io.harness.rule.OwnerRule.NATARAJA;
+
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.category.element.FunctionalTests;
 import io.harness.functional.AbstractFunctionalTest;
 import io.harness.rule.Owner;
 import io.harness.testframework.restutils.IPWhitelistingRestUtils;
+
+import software.wings.beans.security.access.Whitelist;
+import software.wings.beans.security.access.WhitelistStatus;
+
 import lombok.extern.slf4j.Slf4j;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
-import software.wings.beans.security.access.Whitelist;
-import software.wings.beans.security.access.WhitelistStatus;
 
 @Slf4j
 public class IPWhitelistingCRUDTest extends AbstractFunctionalTest {

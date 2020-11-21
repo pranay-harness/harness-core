@@ -2,8 +2,10 @@ package io.harness.batch.processing.cloudevents.aws.ecs.service.support.impl;
 
 import static java.util.Collections.emptyList;
 
-import com.google.common.annotations.VisibleForTesting;
-import com.google.common.collect.Lists;
+import io.harness.batch.processing.cloudevents.aws.ecs.service.support.AwsCredentialHelper;
+import io.harness.batch.processing.cloudevents.aws.ecs.service.support.intfc.AwsEC2HelperService;
+
+import software.wings.beans.AwsCrossAccountAttributes;
 
 import com.amazonaws.auth.AWSCredentialsProvider;
 import com.amazonaws.auth.STSAssumeRoleSessionCredentialsProvider;
@@ -13,17 +15,15 @@ import com.amazonaws.services.ec2.model.DescribeInstancesRequest;
 import com.amazonaws.services.ec2.model.DescribeInstancesResult;
 import com.amazonaws.services.ec2.model.Instance;
 import com.amazonaws.services.securitytoken.AWSSecurityTokenService;
-import io.harness.batch.processing.cloudevents.aws.ecs.service.support.AwsCredentialHelper;
-import io.harness.batch.processing.cloudevents.aws.ecs.service.support.intfc.AwsEC2HelperService;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
-import software.wings.beans.AwsCrossAccountAttributes;
-
+import com.google.common.annotations.VisibleForTesting;
+import com.google.common.collect.Lists;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
 
 @Slf4j
 @Service

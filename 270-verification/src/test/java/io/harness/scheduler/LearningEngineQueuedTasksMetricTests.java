@@ -3,6 +3,7 @@ package io.harness.scheduler;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.rule.OwnerRule.RAGHU;
 import static io.harness.threading.Morpheus.sleep;
+
 import static java.time.Duration.ofSeconds;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
@@ -11,26 +12,26 @@ import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
-import com.google.common.collect.Lists;
-import com.google.inject.Inject;
-
 import io.harness.VerificationBaseTest;
 import io.harness.beans.ExecutionStatus;
 import io.harness.category.element.UnitTests;
 import io.harness.metrics.HarnessMetricRegistry;
 import io.harness.rule.Owner;
+
+import software.wings.dl.WingsPersistence;
+import software.wings.service.impl.analysis.MLAnalysisType;
+import software.wings.service.impl.newrelic.LearningEngineAnalysisTask;
+import software.wings.service.impl.newrelic.LearningEngineExperimentalAnalysisTask;
+
+import com.google.common.collect.Lists;
+import com.google.inject.Inject;
+import java.util.HashSet;
 import org.apache.commons.lang3.reflect.FieldUtils;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
-import software.wings.dl.WingsPersistence;
-import software.wings.service.impl.analysis.MLAnalysisType;
-import software.wings.service.impl.newrelic.LearningEngineAnalysisTask;
-import software.wings.service.impl.newrelic.LearningEngineExperimentalAnalysisTask;
-
-import java.util.HashSet;
 
 public class LearningEngineQueuedTasksMetricTests extends VerificationBaseTest {
   @Inject private ServiceGuardAccountPoller serviceGuardAccountPoller;

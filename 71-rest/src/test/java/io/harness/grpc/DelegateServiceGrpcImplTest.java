@@ -5,6 +5,7 @@ import static io.harness.rule.OwnerRule.ALEKSANDAR;
 import static io.harness.rule.OwnerRule.GEORGE;
 import static io.harness.rule.OwnerRule.MARKO;
 import static io.harness.rule.OwnerRule.SANJA;
+
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -16,16 +17,6 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import com.google.inject.Inject;
-import com.google.protobuf.ByteString;
-import com.google.protobuf.Duration;
-import com.google.protobuf.util.Timestamps;
-
-import io.grpc.Channel;
-import io.grpc.Server;
-import io.grpc.inprocess.InProcessChannelBuilder;
-import io.grpc.inprocess.InProcessServerBuilder;
-import io.grpc.testing.GrpcCleanupRule;
 import io.harness.MockableTestMixin;
 import io.harness.beans.DelegateTask;
 import io.harness.beans.DelegateTask.DelegateTaskKeys;
@@ -69,6 +60,26 @@ import io.harness.service.intfc.DelegateCallbackRegistry;
 import io.harness.service.intfc.DelegateSyncService;
 import io.harness.tasks.Cd1SetupFields;
 import io.harness.tasks.ResponseData;
+
+import software.wings.WingsBaseTest;
+import software.wings.service.intfc.DelegateService;
+
+import com.google.inject.Inject;
+import com.google.protobuf.ByteString;
+import com.google.protobuf.Duration;
+import com.google.protobuf.util.Timestamps;
+import io.grpc.Channel;
+import io.grpc.Server;
+import io.grpc.inprocess.InProcessChannelBuilder;
+import io.grpc.inprocess.InProcessServerBuilder;
+import io.grpc.testing.GrpcCleanupRule;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.function.Consumer;
 import org.apache.commons.lang3.NotImplementedException;
 import org.junit.Before;
 import org.junit.Rule;
@@ -77,16 +88,6 @@ import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
 import org.mockito.runners.MockitoJUnitRunner;
 import org.slf4j.Logger;
-import software.wings.WingsBaseTest;
-import software.wings.service.intfc.DelegateService;
-
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.function.Consumer;
 
 @RunWith(MockitoJUnitRunner.class)
 public class DelegateServiceGrpcImplTest extends WingsBaseTest implements MockableTestMixin {

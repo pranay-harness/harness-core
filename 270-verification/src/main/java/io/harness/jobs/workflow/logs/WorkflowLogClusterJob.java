@@ -3,9 +3,6 @@ package io.harness.jobs.workflow.logs;
 import static software.wings.common.VerificationConstants.GA_PER_MINUTE_CV_STATES;
 import static software.wings.common.VerificationConstants.PER_MINUTE_CV_STATES;
 
-import com.google.common.collect.Sets;
-import com.google.inject.Inject;
-
 import io.harness.beans.ExecutionStatus;
 import io.harness.jobs.LogMLClusterGenerator;
 import io.harness.managerclient.VerificationManagerClient;
@@ -13,11 +10,7 @@ import io.harness.managerclient.VerificationManagerClientHelper;
 import io.harness.mongo.iterator.MongoPersistenceIterator;
 import io.harness.service.intfc.LearningEngineService;
 import io.harness.service.intfc.LogAnalysisService;
-import lombok.AllArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-import org.quartz.DisallowConcurrentExecution;
-import org.quartz.JobExecutionContext;
-import org.quartz.SchedulerException;
+
 import software.wings.service.impl.analysis.AnalysisContext;
 import software.wings.service.impl.analysis.LogRequest;
 import software.wings.service.intfc.DataStoreService;
@@ -25,9 +18,16 @@ import software.wings.service.intfc.analysis.ClusterLevel;
 import software.wings.verification.VerificationDataAnalysisResponse;
 import software.wings.verification.VerificationStateAnalysisExecutionData;
 
+import com.google.common.collect.Sets;
+import com.google.inject.Inject;
 import java.util.Collections;
 import java.util.Optional;
 import java.util.Set;
+import lombok.AllArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.quartz.DisallowConcurrentExecution;
+import org.quartz.JobExecutionContext;
+import org.quartz.SchedulerException;
 
 @DisallowConcurrentExecution
 @Slf4j

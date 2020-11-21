@@ -1,12 +1,8 @@
 package software.wings.service.impl.yaml.handler;
 
-import com.google.common.collect.Lists;
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
-
 import io.harness.exception.GeneralException;
 import io.harness.exception.InvalidRequestException;
-import lombok.extern.slf4j.Slf4j;
+
 import software.wings.api.DeploymentType;
 import software.wings.beans.Application;
 import software.wings.beans.ConfigFile;
@@ -92,11 +88,15 @@ import software.wings.verification.CVConfiguration;
 import software.wings.verification.CVConfigurationYamlHandler;
 import software.wings.yaml.templatelibrary.TemplateYamlConfig;
 
+import com.google.common.collect.Lists;
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * @author rktummala on 10/19/17

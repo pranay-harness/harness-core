@@ -6,12 +6,18 @@ import static io.harness.batch.processing.pricing.aws.athena.AthenaQueryConstant
 import static io.harness.batch.processing.pricing.aws.athena.AthenaQueryConstants.ATHENA_OUTPUT_BUCKET;
 import static io.harness.batch.processing.pricing.aws.athena.AthenaQueryConstants.SLEEP_AMOUNT_IN_MS;
 
-import com.google.common.annotations.VisibleForTesting;
-
 import io.harness.batch.processing.BatchProcessingException;
 import io.harness.batch.processing.pricing.aws.athena.AwsAthenaQueryHelperService;
 import io.harness.batch.processing.pricing.data.AccountComputePricingData;
 import io.harness.batch.processing.pricing.data.AccountFargatePricingData;
+
+import com.google.common.annotations.VisibleForTesting;
+import java.text.SimpleDateFormat;
+import java.time.Instant;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.Iterator;
+import java.util.List;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import software.amazon.awssdk.auth.credentials.ProfileCredentialsProvider;
@@ -30,13 +36,6 @@ import software.amazon.awssdk.services.athena.model.Row;
 import software.amazon.awssdk.services.athena.model.StartQueryExecutionRequest;
 import software.amazon.awssdk.services.athena.model.StartQueryExecutionResponse;
 import software.amazon.awssdk.services.athena.paginators.GetQueryResultsIterable;
-
-import java.text.SimpleDateFormat;
-import java.time.Instant;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.Iterator;
-import java.util.List;
 
 @Slf4j
 @Service

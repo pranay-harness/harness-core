@@ -1,19 +1,22 @@
 package software.wings.beans;
 
-import static com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL;
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+
 import static software.wings.beans.Variable.VariableBuilder.aVariable;
 
-import com.fasterxml.jackson.annotation.JsonInclude;
+import static com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL;
+
 import io.harness.annotations.dev.OwnedBy;
-import lombok.Data;
+
 import software.wings.beans.artifact.ArtifactStreamSummary;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import lombok.Data;
 
 @OwnedBy(CDC)
 @Data

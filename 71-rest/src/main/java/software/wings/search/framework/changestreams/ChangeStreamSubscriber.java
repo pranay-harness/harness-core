@@ -2,9 +2,10 @@ package software.wings.search.framework.changestreams;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
 
+import io.harness.annotations.dev.OwnedBy;
+
 import com.mongodb.DBObject;
 import com.mongodb.client.model.changestream.ChangeStreamDocument;
-import io.harness.annotations.dev.OwnedBy;
 
 @OwnedBy(PL)
 @FunctionalInterface

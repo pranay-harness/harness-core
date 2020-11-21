@@ -1,11 +1,11 @@
 package software.wings.beans.customdeployment;
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import lombok.Builder;
-import lombok.Value;
 import software.wings.beans.Variable;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import java.util.List;
+import lombok.Builder;
+import lombok.Value;
 
 @Value
 @Builder

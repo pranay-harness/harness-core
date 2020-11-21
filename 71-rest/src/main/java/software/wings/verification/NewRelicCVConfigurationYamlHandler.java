@@ -2,9 +2,6 @@ package software.wings.verification;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 
-import com.google.common.base.Preconditions;
-import com.google.inject.Inject;
-
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.yaml.ChangeContext;
 import software.wings.service.impl.newrelic.NewRelicApplication;
@@ -13,6 +10,8 @@ import software.wings.sm.StateType;
 import software.wings.verification.newrelic.NewRelicCVServiceConfiguration;
 import software.wings.verification.newrelic.NewRelicCVServiceConfiguration.NewRelicCVConfigurationYaml;
 
+import com.google.common.base.Preconditions;
+import com.google.inject.Inject;
 import java.util.ArrayList;
 import java.util.List;
 

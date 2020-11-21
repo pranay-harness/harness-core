@@ -5,20 +5,20 @@ import static io.harness.event.model.EventConstants.IS_24X7_ENABLED;
 import static io.harness.event.model.EventConstants.VERIFICATION_STATE_TYPE;
 import static io.harness.event.model.EventType.CV_META_DATA;
 
-import com.google.common.collect.Sets;
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
-
-import com.hazelcast.util.Preconditions;
 import io.harness.event.handler.EventHandler;
 import io.harness.event.listener.EventListener;
 import io.harness.event.model.Event;
 import io.harness.metrics.HarnessMetricRegistry;
-import lombok.extern.slf4j.Slf4j;
+
 import software.wings.common.VerificationConstants;
 import software.wings.service.impl.analysis.ContinuousVerificationService;
 
+import com.google.common.collect.Sets;
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
+import com.hazelcast.util.Preconditions;
 import java.util.Map;
+import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Singleton

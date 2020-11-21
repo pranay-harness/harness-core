@@ -1,9 +1,8 @@
 package io.harness.batch.processing.metrics;
 
 import static io.harness.rule.OwnerRule.HANTANG;
-import static org.assertj.core.api.Assertions.assertThat;
 
-import com.google.inject.Inject;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.batch.processing.BatchProcessingBaseTest;
 import io.harness.category.element.UnitTests;
@@ -11,6 +10,8 @@ import io.harness.ccm.config.GcpBillingAccount;
 import io.harness.ccm.config.GcpBillingAccountDao;
 import io.harness.rule.Owner;
 import io.harness.timescaledb.TimeScaleDBService;
+
+import com.google.inject.Inject;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;

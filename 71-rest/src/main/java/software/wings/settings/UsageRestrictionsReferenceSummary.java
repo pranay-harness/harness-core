@@ -1,10 +1,9 @@
 package software.wings.settings;
 
+import java.util.Set;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
-
-import java.util.Set;
 
 /**
  * This class is used to report the reference summary/statistics of one specified App/Env by usage restrictions of

@@ -1,19 +1,22 @@
 package software.wings.graphql.datafetcher.application;
 
 import static io.harness.rule.OwnerRule.HINGER;
-import static org.assertj.core.api.Assertions.assertThat;
+
 import static software.wings.security.PermissionAttribute.PermissionType.MANAGE_CONFIG_AS_CODE;
+
+import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
+
 import software.wings.graphql.datafetcher.MutationContext;
 import software.wings.graphql.schema.mutation.application.input.QLUpdateApplicationGitSyncConfigInput;
 import software.wings.security.annotations.AuthRule;
 
 import java.lang.reflect.Method;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 public class ApplicationGitSyncConfigTest extends CategoryTest {
   @Test

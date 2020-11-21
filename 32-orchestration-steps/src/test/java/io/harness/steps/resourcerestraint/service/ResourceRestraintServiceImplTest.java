@@ -5,14 +5,12 @@ import static io.harness.distribution.constraint.Consumer.State.ACTIVE;
 import static io.harness.distribution.constraint.Consumer.State.BLOCKED;
 import static io.harness.distribution.constraint.Consumer.State.FINISHED;
 import static io.harness.rule.OwnerRule.ALEXEI;
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.when;
 
-import com.google.inject.Inject;
-
-import io.fabric8.utils.Lists;
 import io.harness.OrchestrationStepsTestBase;
 import io.harness.ambiance.Ambiance;
 import io.harness.category.element.UnitTests;
@@ -26,18 +24,20 @@ import io.harness.plan.PlanNode;
 import io.harness.pms.ambiance.Level;
 import io.harness.pms.execution.ExecutionMode;
 import io.harness.pms.execution.Status;
-import io.harness.rule.Owner;
 import io.harness.pms.steps.StepType;
+import io.harness.rule.Owner;
 import io.harness.steps.resourcerestraint.beans.ResourceRestraintInstance;
 import io.harness.testlib.RealMongo;
+
+import com.google.inject.Inject;
+import io.fabric8.utils.Lists;
+import java.util.Collections;
+import java.util.List;
+import java.util.Optional;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-
-import java.util.Collections;
-import java.util.List;
-import java.util.Optional;
 
 public class ResourceRestraintServiceImplTest extends OrchestrationStepsTestBase {
   private static final String PLAN = "PLAN";

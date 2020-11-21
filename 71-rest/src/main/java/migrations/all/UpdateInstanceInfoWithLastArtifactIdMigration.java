@@ -3,11 +3,8 @@ package migrations.all;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.persistence.HQuery.excludeAuthority;
 
-import com.google.inject.Inject;
-
 import io.harness.persistence.HIterator;
-import lombok.extern.slf4j.Slf4j;
-import migrations.Migration;
+
 import software.wings.beans.Account;
 import software.wings.beans.Application;
 import software.wings.beans.Application.ApplicationKeys;
@@ -20,7 +17,10 @@ import software.wings.beans.infrastructure.instance.info.K8sContainerInfo;
 import software.wings.beans.infrastructure.instance.info.K8sPodInfo;
 import software.wings.dl.WingsPersistence;
 
+import com.google.inject.Inject;
 import java.util.List;
+import lombok.extern.slf4j.Slf4j;
+import migrations.Migration;
 
 @Slf4j
 public class UpdateInstanceInfoWithLastArtifactIdMigration implements Migration {

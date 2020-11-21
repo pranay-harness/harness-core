@@ -2,18 +2,16 @@ package software.wings.graphql.datafetcher.trigger;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.exception.WingsException.USER;
+
 import static software.wings.graphql.schema.type.trigger.QLGitHubAction.packageActions;
 import static software.wings.graphql.schema.type.trigger.QLGitHubAction.pullRequestActions;
 import static software.wings.graphql.schema.type.trigger.QLGitHubAction.releaseActions;
-
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.configuration.DeployMode;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.InvalidRequestException;
-import lombok.extern.slf4j.Slf4j;
+
 import software.wings.app.MainConfiguration;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.artifact.ArtifactStream;
@@ -49,9 +47,12 @@ import software.wings.graphql.schema.type.trigger.QLWebhookSource;
 import software.wings.service.intfc.ArtifactStreamService;
 import software.wings.service.intfc.SettingsService;
 
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import lombok.extern.slf4j.Slf4j;
 
 @OwnedBy(CDC)
 @Singleton

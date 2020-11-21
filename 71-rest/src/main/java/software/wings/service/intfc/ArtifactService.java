@@ -1,13 +1,13 @@
 package software.wings.service.intfc;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
+
 import static software.wings.beans.artifact.Artifact.Status;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
-import org.hibernate.validator.constraints.NotEmpty;
-import org.mongodb.morphia.query.Query;
+
 import software.wings.beans.artifact.Artifact;
 import software.wings.beans.artifact.Artifact.ContentStatus;
 import software.wings.beans.artifact.ArtifactFile;
@@ -20,6 +20,8 @@ import java.util.Collection;
 import java.util.List;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
+import org.hibernate.validator.constraints.NotEmpty;
+import org.mongodb.morphia.query.Query;
 
 /**
  * The Interface ArtifactService.

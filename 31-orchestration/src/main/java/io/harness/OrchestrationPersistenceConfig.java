@@ -1,9 +1,5 @@
 package io.harness;
 
-import com.google.common.collect.ImmutableList;
-import com.google.inject.Inject;
-import com.google.inject.Injector;
-
 import io.harness.annotation.HarnessRepo;
 import io.harness.orchestration.persistence.OrchestrationBasePersistenceConfig;
 import io.harness.serializer.spring.converters.advisers.obtainment.AdviserObtainmentReadConverter;
@@ -27,13 +23,16 @@ import io.harness.serializer.spring.converters.steps.StepTypeWriteConverter;
 import io.harness.serializer.spring.converters.sweepingoutput.SweepingOutputReadMongoConverter;
 import io.harness.serializer.spring.converters.sweepingoutput.SweepingOutputWriteMongoConverter;
 import io.harness.spring.AliasRegistrar;
+
+import com.google.common.collect.ImmutableList;
+import com.google.inject.Inject;
+import com.google.inject.Injector;
+import java.util.List;
+import java.util.Set;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.data.mongodb.repository.config.EnableMongoRepositories;
-
-import java.util.List;
-import java.util.Set;
 
 @Configuration
 @EnableMongoRepositories(basePackages = {"io.harness.engine"},

@@ -2,10 +2,6 @@ package graph;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 
-import com.google.common.annotations.Beta;
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
-
 import io.harness.beans.steps.CIStepInfo;
 import io.harness.yaml.core.Graph;
 import io.harness.yaml.core.ParallelStepElement;
@@ -13,6 +9,9 @@ import io.harness.yaml.core.StepElement;
 import io.harness.yaml.core.StepSpecType;
 import io.harness.yaml.core.auxiliary.intfc.ExecutionWrapper;
 
+import com.google.common.annotations.Beta;
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import java.util.Collection;
 import java.util.List;
 import java.util.Optional;

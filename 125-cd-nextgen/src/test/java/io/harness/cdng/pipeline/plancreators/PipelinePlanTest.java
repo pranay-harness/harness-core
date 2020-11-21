@@ -2,9 +2,8 @@ package io.harness.cdng.pipeline.plancreators;
 
 import static io.harness.rule.OwnerRule.ARCHIT;
 import static io.harness.rule.OwnerRule.VAIBHAV_SI;
-import static org.assertj.core.api.Assertions.assertThat;
 
-import com.google.inject.Inject;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.advisers.fail.OnFailAdviserParameters;
 import io.harness.category.element.UnitTests;
@@ -22,10 +21,8 @@ import io.harness.rule.Owner;
 import io.harness.serializer.KryoSerializer;
 import io.harness.steps.section.chain.SectionChainStepParameters;
 import io.harness.yaml.utils.YamlPipelineUtils;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
 
+import com.google.inject.Inject;
 import java.io.IOException;
 import java.net.URL;
 import java.util.HashMap;
@@ -33,6 +30,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 public class PipelinePlanTest extends CDNGBaseTest {
   @Inject ExecutionPlanCreatorRegistrar executionPlanCreatorRegistrar;

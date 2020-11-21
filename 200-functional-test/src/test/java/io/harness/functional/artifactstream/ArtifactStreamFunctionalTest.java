@@ -2,11 +2,11 @@ package io.harness.functional.artifactstream;
 
 import static io.harness.rule.OwnerRule.AADITI;
 import static io.harness.rule.OwnerRule.DINESH;
-import static java.util.Arrays.asList;
-import static org.assertj.core.api.Assertions.assertThat;
+
 import static software.wings.beans.template.artifactsource.CustomRepositoryMapping.AttributeMapping.builder;
 
-import com.google.inject.Inject;
+import static java.util.Arrays.asList;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.beans.SecretText;
 import io.harness.category.element.FunctionalTests;
@@ -23,11 +23,7 @@ import io.harness.rule.Owner;
 import io.harness.testframework.framework.Setup;
 import io.harness.testframework.framework.utils.SecretsUtils;
 import io.harness.testframework.restutils.SecretsRestUtils;
-import io.restassured.http.ContentType;
-import io.restassured.path.json.JsonPath;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
+
 import software.wings.beans.Application;
 import software.wings.beans.Environment.EnvironmentType;
 import software.wings.beans.Service;
@@ -37,9 +33,15 @@ import software.wings.beans.artifact.CustomArtifactStream;
 import software.wings.beans.artifact.CustomArtifactStream.Script;
 import software.wings.beans.template.artifactsource.CustomRepositoryMapping;
 
+import com.google.inject.Inject;
+import io.restassured.http.ContentType;
+import io.restassured.path.json.JsonPath;
 import java.util.ArrayList;
 import java.util.List;
 import javax.ws.rs.core.GenericType;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 public class ArtifactStreamFunctionalTest extends AbstractFunctionalTest {
   private static final String SCRIPT_STRING = "echo '{\n"

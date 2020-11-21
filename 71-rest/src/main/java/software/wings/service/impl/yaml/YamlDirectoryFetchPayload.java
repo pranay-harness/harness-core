@@ -1,9 +1,10 @@
 package software.wings.service.impl.yaml;
 
+import software.wings.security.UserPermissionInfo;
+
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import lombok.Builder;
 import lombok.Data;
-import software.wings.security.UserPermissionInfo;
 
 @Data
 @Builder

@@ -1,3 +1,5 @@
 package software.wings.infra;
 
-public interface ContainerInfrastructure { String getClusterName(); }
+public interface ContainerInfrastructure {
+  String getClusterName();
+}

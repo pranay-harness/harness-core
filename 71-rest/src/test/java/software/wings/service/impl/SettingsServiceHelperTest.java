@@ -3,6 +3,11 @@ package software.wings.service.impl;
 import static io.harness.rule.OwnerRule.ABOSII;
 import static io.harness.rule.OwnerRule.GARVIT;
 import static io.harness.rule.OwnerRule.RAGHU;
+
+import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
+import static software.wings.beans.SettingAttribute.SettingCategory.CLOUD_PROVIDER;
+import static software.wings.beans.SettingAttribute.SettingCategory.CONNECTOR;
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Matchers.any;
@@ -12,21 +17,12 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
-import static software.wings.beans.SettingAttribute.SettingCategory.CLOUD_PROVIDER;
-import static software.wings.beans.SettingAttribute.SettingCategory.CONNECTOR;
-
-import com.google.inject.Inject;
 
 import io.harness.category.element.UnitTests;
 import io.harness.exception.UnauthorizedUsageRestrictionsException;
 import io.harness.k8s.model.KubernetesClusterAuthType;
 import io.harness.rule.Owner;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
+
 import software.wings.WingsBaseTest;
 import software.wings.beans.APMVerificationConfig;
 import software.wings.beans.AppDynamicsConfig;
@@ -57,8 +53,14 @@ import software.wings.service.intfc.security.ManagerDecryptionService;
 import software.wings.service.intfc.security.SecretManager;
 import software.wings.yaml.YamlHelper;
 
+import com.google.inject.Inject;
 import java.lang.reflect.Field;
 import java.util.List;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
 
 public class SettingsServiceHelperTest extends WingsBaseTest {
   private static final String ACCOUNT_ID = "ACCOUNT_ID";

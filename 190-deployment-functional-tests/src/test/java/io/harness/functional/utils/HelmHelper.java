@@ -1,15 +1,13 @@
 package io.harness.functional.utils;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static java.lang.String.format;
-import static java.util.Collections.singletonList;
+
 import static software.wings.beans.BasicOrchestrationWorkflow.BasicOrchestrationWorkflowBuilder.aBasicOrchestrationWorkflow;
 import static software.wings.beans.Variable.VariableBuilder.aVariable;
 import static software.wings.beans.Workflow.WorkflowBuilder.aWorkflow;
 
-import com.google.common.collect.ImmutableMap;
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
+import static java.lang.String.format;
+import static java.util.Collections.singletonList;
 
 import io.harness.beans.WorkflowType;
 import io.harness.generator.OwnerManager.Owners;
@@ -17,6 +15,7 @@ import io.harness.generator.Randomizer.Seed;
 import io.harness.generator.ServiceGenerator;
 import io.harness.generator.WorkflowGenerator;
 import io.harness.k8s.model.HelmVersion;
+
 import software.wings.api.DeploymentType;
 import software.wings.beans.BasicOrchestrationWorkflow;
 import software.wings.beans.GraphNode;
@@ -32,6 +31,9 @@ import software.wings.service.intfc.ApplicationManifestService;
 import software.wings.service.intfc.WorkflowService;
 import software.wings.utils.ArtifactType;
 
+import com.google.common.collect.ImmutableMap;
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import java.io.File;
 import java.util.Arrays;
 import java.util.List;
@@ -134,7 +136,7 @@ public class HelmHelper {
       for (ApplicationManifest savedApplicationManifest : applicationManifests) {
         if (savedApplicationManifest.getKind() == AppManifestKind.K8S_MANIFEST
             && (savedApplicationManifest.getStoreType() == StoreType.HelmChartRepo
-                   || savedApplicationManifest.getStoreType() == StoreType.Local)) {
+                || savedApplicationManifest.getStoreType() == StoreType.Local)) {
           applicationManifest.setUuid(savedApplicationManifest.getUuid());
           applicationManifestService.update(applicationManifest);
           found = true;

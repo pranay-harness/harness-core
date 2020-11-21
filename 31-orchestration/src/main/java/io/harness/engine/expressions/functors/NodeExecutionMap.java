@@ -2,6 +2,7 @@ package io.harness.engine.expressions.functors;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.execution.NodeExecution.NodeExecutionKeys;
+
 import static java.util.Arrays.asList;
 
 import io.harness.ambiance.Ambiance;
@@ -17,9 +18,6 @@ import io.harness.expression.ExpressionEvaluatorUtils;
 import io.harness.expression.LateBindingMap;
 import io.harness.refObjects.RefObjectUtil;
 import io.harness.state.io.StepParameters;
-import lombok.Builder;
-import lombok.EqualsAndHashCode;
-import lombok.Value;
 
 import java.util.Collections;
 import java.util.List;
@@ -27,6 +25,9 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.function.Function;
+import lombok.Builder;
+import lombok.EqualsAndHashCode;
+import lombok.Value;
 
 /**
  * NodeExecutionMap resolves expressions for a single node execution.
@@ -73,8 +74,8 @@ public class NodeExecutionMap extends LateBindingMap {
       return null;
     }
 
-    return fetchFirst(asList(this ::fetchChild, this ::fetchNodeExecutionField, this ::fetchStepParameters,
-                          this ::fetchOutcomeOrOutput),
+    return fetchFirst(
+        asList(this::fetchChild, this::fetchNodeExecutionField, this::fetchStepParameters, this::fetchOutcomeOrOutput),
         (String) key);
   }
 
@@ -126,7 +127,7 @@ public class NodeExecutionMap extends LateBindingMap {
   private Optional<Object> fetchOutcomeOrOutput(String key) {
     if (nodeExecution == null
         || (!entityTypes.contains(NodeExecutionEntityType.OUTCOME)
-               && !entityTypes.contains(NodeExecutionEntityType.SWEEPING_OUTPUT))) {
+            && !entityTypes.contains(NodeExecutionEntityType.SWEEPING_OUTPUT))) {
       return Optional.empty();
     }
 

@@ -1,18 +1,17 @@
 package io.harness.walktree.visitor;
 
-import com.google.inject.Injector;
-import com.google.inject.Key;
-
 import io.harness.exception.InvalidArgumentsException;
 import io.harness.walktree.beans.VisitElementResult;
-import lombok.Getter;
-import lombok.extern.slf4j.Slf4j;
 
+import com.google.inject.Injector;
+import com.google.inject.Key;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
+import lombok.Getter;
+import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public abstract class SimpleVisitor<T extends DummyVisitableElement> extends Visitor {

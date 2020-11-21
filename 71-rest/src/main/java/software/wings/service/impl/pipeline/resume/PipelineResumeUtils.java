@@ -12,7 +12,7 @@ import static io.harness.beans.WorkflowType.PIPELINE;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.validation.Validator.notNullCheck;
-import static java.lang.String.format;
+
 import static software.wings.sm.StateType.APPROVAL;
 import static software.wings.sm.StateType.APPROVAL_RESUME;
 import static software.wings.sm.StateType.ENV_LOOP_RESUME_STATE;
@@ -20,17 +20,13 @@ import static software.wings.sm.StateType.ENV_LOOP_STATE;
 import static software.wings.sm.StateType.ENV_RESUME_STATE;
 import static software.wings.sm.StateType.ENV_STATE;
 
-import com.google.common.annotations.VisibleForTesting;
-import com.google.common.collect.ImmutableMap;
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
+import static java.lang.String.format;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.PageRequest;
 import io.harness.beans.SearchFilter;
 import io.harness.exception.InvalidRequestException;
-import lombok.extern.slf4j.Slf4j;
-import org.mongodb.morphia.query.UpdateOperations;
+
 import software.wings.api.EnvStateExecutionData;
 import software.wings.beans.ExecutionArgs;
 import software.wings.beans.FeatureName;
@@ -54,6 +50,10 @@ import software.wings.sm.states.EnvResumeState.EnvResumeStateKeys;
 import software.wings.sm.states.EnvState.EnvStateKeys;
 import software.wings.sm.states.ForkState.ForkStateExecutionData;
 
+import com.google.common.annotations.VisibleForTesting;
+import com.google.common.collect.ImmutableMap;
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -62,6 +62,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
+import lombok.extern.slf4j.Slf4j;
+import org.mongodb.morphia.query.UpdateOperations;
 
 @OwnedBy(CDC)
 @Singleton

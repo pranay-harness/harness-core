@@ -4,13 +4,14 @@ import static org.apache.http.entity.mime.MIME.CONTENT_TYPE;
 import static org.springframework.http.MediaType.APPLICATION_JSON_UTF8_VALUE;
 import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 
+import software.wings.service.intfc.MicrosoftTeamsNotificationService;
+
 import lombok.extern.slf4j.Slf4j;
 import okhttp3.MediaType;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.RequestBody;
 import okhttp3.Response;
-import software.wings.service.intfc.MicrosoftTeamsNotificationService;
 
 @Slf4j
 public class MicrosoftTeamsNotificationServiceImpl implements MicrosoftTeamsNotificationService {

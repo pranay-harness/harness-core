@@ -9,16 +9,14 @@ import static io.harness.eraro.ErrorCode.USER_DOES_NOT_EXIST;
 import static io.harness.eraro.ErrorCode.USER_LOCKED;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
-import static org.mindrot.jbcrypt.BCrypt.checkpw;
 
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
+import static org.mindrot.jbcrypt.BCrypt.checkpw;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
 import io.harness.logging.AutoLogContext;
-import lombok.extern.slf4j.Slf4j;
+
 import software.wings.beans.Account;
 import software.wings.beans.User;
 import software.wings.beans.loginSettings.LoginSettingsService;
@@ -27,6 +25,10 @@ import software.wings.security.authentication.recaptcha.FailedLoginAttemptCountC
 import software.wings.security.authentication.recaptcha.MaxLoginAttemptExceededException;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.UserService;
+
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
+import lombok.extern.slf4j.Slf4j;
 
 @OwnedBy(PL)
 @Singleton

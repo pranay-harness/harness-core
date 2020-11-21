@@ -1,6 +1,7 @@
 package software.wings.delegatetasks.aws.ecs.ecstaskhandler;
 
 import static io.harness.rule.OwnerRule.IVAN;
+
 import static java.util.Collections.emptyList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
@@ -9,11 +10,17 @@ import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doThrow;
 import static org.powermock.api.mockito.PowerMockito.whenNew;
 
-import com.google.inject.Injector;
-
 import io.harness.category.element.UnitTests;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.rule.Owner;
+
+import software.wings.WingsBaseTest;
+import software.wings.beans.command.ExecutionLogCallback;
+import software.wings.beans.command.ResizeCommandUnit;
+import software.wings.helpers.ext.ecs.request.EcsServiceDeployRequest;
+import software.wings.helpers.ext.ecs.response.EcsCommandExecutionResponse;
+
+import com.google.inject.Injector;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
@@ -22,11 +29,6 @@ import org.mockito.Mock;
 import org.powermock.core.classloader.annotations.PowerMockIgnore;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
-import software.wings.WingsBaseTest;
-import software.wings.beans.command.ExecutionLogCallback;
-import software.wings.beans.command.ResizeCommandUnit;
-import software.wings.helpers.ext.ecs.request.EcsServiceDeployRequest;
-import software.wings.helpers.ext.ecs.response.EcsCommandExecutionResponse;
 
 @RunWith(PowerMockRunner.class)
 @PrepareForTest({EcsServiceDeployCommandHandler.class})

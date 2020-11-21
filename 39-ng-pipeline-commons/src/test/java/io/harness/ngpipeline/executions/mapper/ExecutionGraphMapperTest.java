@@ -5,6 +5,7 @@ import static io.harness.ngpipeline.pipeline.executions.ExecutionStatus.RUNNING;
 import static io.harness.ngpipeline.pipeline.executions.ExecutionStatus.SUCCESS;
 import static io.harness.ngpipeline.pipeline.executions.ExecutionStatus.WAITING;
 import static io.harness.rule.OwnerRule.VAIBHAV_SI;
+
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.CategoryTest;
@@ -18,14 +19,14 @@ import io.harness.ngpipeline.executions.beans.ExecutionNode;
 import io.harness.ngpipeline.executions.beans.ExecutionNodeAdjacencyList;
 import io.harness.pms.execution.Status;
 import io.harness.rule.Owner;
-import lombok.NonNull;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
 
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
+import lombok.NonNull;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 public class ExecutionGraphMapperTest extends CategoryTest {
   @Test

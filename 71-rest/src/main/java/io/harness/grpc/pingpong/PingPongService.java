@@ -3,7 +3,6 @@ package io.harness.grpc.pingpong;
 import static io.harness.grpc.auth.DelegateAuthServerInterceptor.ACCOUNT_ID_CTX_KEY;
 import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
 
-import io.grpc.stub.StreamObserver;
 import io.harness.delegate.task.DelegateLogContext;
 import io.harness.event.Ping;
 import io.harness.event.PingPongServiceGrpc.PingPongServiceImplBase;
@@ -11,6 +10,8 @@ import io.harness.event.Pong;
 import io.harness.grpc.utils.HTimestamps;
 import io.harness.logging.AccountLogContext;
 import io.harness.logging.AutoLogContext;
+
+import io.grpc.stub.StreamObserver;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j

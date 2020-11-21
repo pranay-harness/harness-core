@@ -1,6 +1,7 @@
 package io.harness.cdng.pipeline.helpers;
 
 import static io.harness.rule.OwnerRule.SAHIL;
+
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.CategoryTest;
@@ -9,13 +10,13 @@ import io.harness.category.element.UnitTests;
 import io.harness.cdng.pipeline.StepCategory;
 import io.harness.cdng.service.beans.ServiceDefinitionType;
 import io.harness.rule.Owner;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
-import org.mockito.InjectMocks;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
+import org.mockito.InjectMocks;
 
 public class CDNGPipelineConfigurationHelperTest extends CategoryTest {
   @InjectMocks

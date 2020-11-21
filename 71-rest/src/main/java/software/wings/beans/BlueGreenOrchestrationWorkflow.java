@@ -2,10 +2,11 @@ package software.wings.beans;
 
 import static software.wings.beans.BlueGreenOrchestrationWorkflow.BlueGreenOrchestrationWorkflowBuilder.aBlueGreenOrchestrationWorkflow;
 
-import com.fasterxml.jackson.annotation.JsonTypeName;
 import io.harness.beans.OrchestrationWorkflowType;
+
 import software.wings.beans.concurrency.ConcurrencyStrategy;
 
+import com.fasterxml.jackson.annotation.JsonTypeName;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;

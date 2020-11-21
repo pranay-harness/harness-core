@@ -2,23 +2,18 @@ package software.wings.service.impl;
 
 import static io.harness.persistence.HQuery.excludeAuthority;
 import static io.harness.rule.OwnerRule.ADWAIT;
+
+import static software.wings.audit.AuditHeader.Builder.anAuditHeader;
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.doReturn;
-import static software.wings.audit.AuditHeader.Builder.anAuditHeader;
-
-import com.google.inject.Inject;
 
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
+
 import software.wings.WingsBaseTest;
 import software.wings.audit.AuditHeader;
 import software.wings.audit.EntityAuditRecord;
@@ -33,7 +28,14 @@ import software.wings.beans.PreferenceType;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.AppService;
 
+import com.google.inject.Inject;
 import java.util.Arrays;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
 
 public class AuditPreferenceHelperTest extends WingsBaseTest {
   public static final String ACCOUNT_ID = "accountId";

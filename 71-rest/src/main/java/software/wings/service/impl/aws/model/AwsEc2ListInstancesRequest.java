@@ -2,14 +2,15 @@ package software.wings.service.impl.aws.model;
 
 import static software.wings.service.impl.aws.model.AwsEc2Request.AwsEc2RequestType.LIST_INSTANCES;
 
-import com.amazonaws.services.ec2.model.Filter;
 import io.harness.security.encryption.EncryptedDataDetail;
+
+import software.wings.beans.AwsConfig;
+
+import com.amazonaws.services.ec2.model.Filter;
+import java.util.List;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
-import software.wings.beans.AwsConfig;
-
-import java.util.List;
 
 @Data
 @EqualsAndHashCode(callSuper = true)

@@ -9,15 +9,16 @@ import io.harness.exception.InvalidArgumentsException;
 import io.harness.logging.LogCallback;
 import io.harness.logging.LogLevel;
 import io.harness.network.SafeHttpCall;
-import lombok.Builder;
-import lombok.extern.slf4j.Slf4j;
-import org.zeroturnaround.exec.stream.LogOutputStream;
+
 import software.wings.beans.command.ExecutionLogCallback;
 import software.wings.delegatetasks.DelegateLogService;
 
 import java.io.OutputStream;
 import java.time.OffsetDateTime;
 import java.util.Arrays;
+import lombok.Builder;
+import lombok.extern.slf4j.Slf4j;
+import org.zeroturnaround.exec.stream.LogOutputStream;
 
 @Builder
 @Slf4j

@@ -8,9 +8,7 @@ import static io.harness.pcf.model.PcfConstants.DEFAULT_PCF_TASK_TIMEOUT_MIN;
 import static io.harness.pcf.model.PcfConstants.INFRA_ROUTE;
 import static io.harness.pcf.model.PcfConstants.PCF_INFRA_ROUTE;
 import static io.harness.validation.Validator.notNullCheck;
-import static java.util.Collections.emptyList;
-import static java.util.stream.Collectors.toList;
-import static org.apache.commons.lang3.StringUtils.isNotBlank;
+
 import static software.wings.beans.FeatureName.IGNORE_PCF_CONNECTION_CONTEXT_CACHE;
 import static software.wings.beans.FeatureName.LIMIT_PCF_THREADS;
 import static software.wings.beans.TaskType.GIT_FETCH_FILES_TASK;
@@ -20,12 +18,10 @@ import static software.wings.beans.command.PcfDummyCommandUnit.FetchFiles;
 import static software.wings.beans.command.PcfDummyCommandUnit.PcfSetup;
 import static software.wings.beans.command.PcfDummyCommandUnit.Wrapup;
 
-import com.google.common.annotations.VisibleForTesting;
-import com.google.common.primitives.Ints;
-import com.google.inject.Inject;
+import static java.util.Collections.emptyList;
+import static java.util.stream.Collectors.toList;
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.github.reinert.jjschema.Attributes;
 import io.harness.beans.DelegateTask;
 import io.harness.beans.ExecutionStatus;
 import io.harness.beans.SweepingOutputInstance.Scope;
@@ -39,8 +35,7 @@ import io.harness.logging.CommandExecutionStatus;
 import io.harness.pcf.model.PcfConstants;
 import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.tasks.ResponseData;
-import lombok.Getter;
-import lombok.Setter;
+
 import software.wings.annotation.EncryptableSetting;
 import software.wings.api.PhaseElement;
 import software.wings.api.ServiceElement;
@@ -95,6 +90,11 @@ import software.wings.stencils.DefaultValue;
 import software.wings.utils.ApplicationManifestUtils;
 import software.wings.utils.ServiceVersionConvention;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.github.reinert.jjschema.Attributes;
+import com.google.common.annotations.VisibleForTesting;
+import com.google.common.primitives.Ints;
+import com.google.inject.Inject;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -104,6 +104,8 @@ import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
+import lombok.Getter;
+import lombok.Setter;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class PcfSetupState extends State {
@@ -411,7 +413,7 @@ public class PcfSetupState extends State {
         String artifactUrl = artifactStreamAttributes.getMetadata().get(URL);
         return "."
             + artifactUrl.substring(artifactUrl.lastIndexOf(artifactStreamAttributes.getJobName())
-                  + artifactStreamAttributes.getJobName().length());
+                + artifactStreamAttributes.getJobName().length());
       default:
         return artifactStreamAttributes.getMetadata().get(URL);
     }
@@ -508,7 +510,7 @@ public class PcfSetupState extends State {
       Environment env, PcfManifestsPackage pcfManifestsPackage) {
     String pcfAppNameSuffix = isNotBlank(pcfAppName) ? normalizeExpression(context.renderExpression(pcfAppName))
                                                      : normalizeExpression(ServiceVersionConvention.getPrefix(
-                                                           app.getName(), serviceElement.getName(), env.getName()));
+                                                         app.getName(), serviceElement.getName(), env.getName()));
 
     pcfAppNameSuffix = pcfStateHelper.fetchPcfApplicationName(pcfManifestsPackage, pcfAppNameSuffix);
     return normalizeExpression(context.renderExpression(pcfAppNameSuffix));

@@ -22,20 +22,13 @@ import static io.harness.spotinst.model.SpotInstConstants.NAME_CONFIG_ELEMENT;
 import static io.harness.spotinst.model.SpotInstConstants.UNIT_INSTANCE;
 import static io.harness.spotinst.model.SpotInstConstants.defaultSteadyStateTimeout;
 import static io.harness.threading.Morpheus.sleep;
+
 import static java.lang.String.format;
 import static java.time.Duration.ofSeconds;
 import static java.util.Collections.emptyList;
 import static java.util.concurrent.TimeUnit.MINUTES;
 import static java.util.stream.Collectors.toList;
 
-import com.google.common.annotations.VisibleForTesting;
-import com.google.common.util.concurrent.TimeLimiter;
-import com.google.common.util.concurrent.UncheckedTimeoutException;
-import com.google.gson.Gson;
-import com.google.gson.reflect.TypeToken;
-import com.google.inject.Inject;
-
-import com.amazonaws.services.ec2.model.Instance;
 import io.harness.delegate.task.aws.AwsElbListener;
 import io.harness.delegate.task.spotinst.request.SpotInstTaskParameters;
 import io.harness.delegate.task.spotinst.response.SpotInstTaskExecutionResponse;
@@ -45,7 +38,7 @@ import io.harness.spotinst.SpotInstHelperServiceDelegate;
 import io.harness.spotinst.model.ElastiGroup;
 import io.harness.spotinst.model.ElastiGroupCapacity;
 import io.harness.spotinst.model.ElastiGroupInstanceHealth;
-import lombok.extern.slf4j.Slf4j;
+
 import software.wings.beans.AwsConfig;
 import software.wings.beans.SpotInstConfig;
 import software.wings.beans.command.ExecutionLogCallback;
@@ -53,9 +46,17 @@ import software.wings.delegatetasks.DelegateLogService;
 import software.wings.service.intfc.aws.delegate.AwsEc2HelperServiceDelegate;
 import software.wings.service.intfc.aws.delegate.AwsElbHelperServiceDelegate;
 
+import com.amazonaws.services.ec2.model.Instance;
+import com.google.common.annotations.VisibleForTesting;
+import com.google.common.util.concurrent.TimeLimiter;
+import com.google.common.util.concurrent.UncheckedTimeoutException;
+import com.google.gson.Gson;
+import com.google.gson.reflect.TypeToken;
+import com.google.inject.Inject;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public abstract class SpotInstTaskHandler {

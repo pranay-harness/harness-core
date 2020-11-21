@@ -1,12 +1,12 @@
 package io.harness.serializer.jackson;
 
+import io.harness.utils.RequestField;
+
 import com.fasterxml.jackson.databind.JavaType;
 import com.fasterxml.jackson.databind.type.ReferenceType;
 import com.fasterxml.jackson.databind.type.TypeBindings;
 import com.fasterxml.jackson.databind.type.TypeFactory;
 import com.fasterxml.jackson.databind.type.TypeModifier;
-import io.harness.utils.RequestField;
-
 import java.lang.reflect.Type;
 
 public class HarnessJacksonTypeModifier extends TypeModifier {

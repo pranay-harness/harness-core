@@ -1,20 +1,12 @@
 package software.wings.delegatetasks.aws.ecs.ecstaskhandler.deploy;
 
 import static io.harness.threading.Morpheus.sleep;
-import static java.lang.String.format;
-import static java.time.Duration.ofSeconds;
+
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 
-import com.google.common.util.concurrent.TimeLimiter;
-import com.google.common.util.concurrent.UncheckedTimeoutException;
-import com.google.inject.Inject;
+import static java.lang.String.format;
+import static java.time.Duration.ofSeconds;
 
-import com.amazonaws.services.ecs.model.DesiredStatus;
-import com.amazonaws.services.ecs.model.RunTaskRequest;
-import com.amazonaws.services.ecs.model.RunTaskResult;
-import com.amazonaws.services.ecs.model.Task;
-import com.amazonaws.services.ecs.model.TaskDefinition;
-import groovy.lang.Singleton;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.InvalidRequestException;
@@ -24,7 +16,7 @@ import io.harness.logging.CommandExecutionStatus;
 import io.harness.logging.LogLevel;
 import io.harness.logging.Misc;
 import io.harness.security.encryption.EncryptedDataDetail;
-import lombok.extern.slf4j.Slf4j;
+
 import software.wings.beans.AwsConfig;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.command.ExecutionLogCallback;
@@ -35,10 +27,20 @@ import software.wings.helpers.ext.ecs.response.EcsCommandExecutionResponse;
 import software.wings.helpers.ext.ecs.response.EcsRunTaskDeployResponse;
 import software.wings.service.impl.AwsHelperService;
 
+import com.amazonaws.services.ecs.model.DesiredStatus;
+import com.amazonaws.services.ecs.model.RunTaskRequest;
+import com.amazonaws.services.ecs.model.RunTaskResult;
+import com.amazonaws.services.ecs.model.Task;
+import com.amazonaws.services.ecs.model.TaskDefinition;
+import com.google.common.util.concurrent.TimeLimiter;
+import com.google.common.util.concurrent.UncheckedTimeoutException;
+import com.google.inject.Inject;
+import groovy.lang.Singleton;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
+import lombok.extern.slf4j.Slf4j;
 
 @Singleton
 @Slf4j

@@ -1,22 +1,24 @@
 package io.harness.limits.checker;
 
 import static io.harness.rule.OwnerRule.UJJAWAL;
-import static org.assertj.core.api.Assertions.assertThat;
 
-import com.google.inject.Inject;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.category.element.DeprecatedIntegrationTests;
 import io.harness.limits.ActionType;
 import io.harness.limits.Counter;
 import io.harness.limits.impl.model.StaticLimit;
 import io.harness.rule.Owner;
+
+import software.wings.dl.WingsPersistence;
+import software.wings.integration.IntegrationTestBase;
+
+import com.google.inject.Inject;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mongodb.morphia.query.Query;
-import software.wings.dl.WingsPersistence;
-import software.wings.integration.IntegrationTestBase;
 
 public class StaticLimitVicinityCheckerMongoImplIntegrationTest extends IntegrationTestBase {
   private static final String NAMESPACE = StaticLimitVicinityCheckerMongoImplIntegrationTest.class.getSimpleName();

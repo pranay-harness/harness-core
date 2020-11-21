@@ -8,10 +8,10 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.ng.core.invites.entities.Invite;
 import io.harness.ng.core.invites.entities.Role;
 import io.harness.ng.core.invites.repositories.custom.InviteRepositoryCustom;
-import org.springframework.data.repository.PagingAndSortingRepository;
 
 import java.util.List;
 import java.util.Optional;
+import org.springframework.data.repository.PagingAndSortingRepository;
 
 @HarnessRepo
 @OwnedBy(PL)

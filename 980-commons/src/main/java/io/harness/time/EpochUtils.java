@@ -1,11 +1,10 @@
 package io.harness.time;
 
-import lombok.experimental.UtilityClass;
-
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZoneId;
 import java.time.temporal.ChronoUnit;
+import lombok.experimental.UtilityClass;
 
 @UtilityClass
 public class EpochUtils {

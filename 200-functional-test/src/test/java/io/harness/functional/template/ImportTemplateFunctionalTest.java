@@ -1,9 +1,8 @@
 package io.harness.functional.template;
 
 import static io.harness.rule.OwnerRule.ABHINAV;
-import static org.assertj.core.api.Assertions.assertThat;
 
-import com.google.inject.Inject;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.category.element.FunctionalTests;
 import io.harness.functional.AbstractFunctionalTest;
@@ -13,16 +12,18 @@ import io.harness.generator.Randomizer;
 import io.harness.rest.RestResponse;
 import io.harness.rule.Owner;
 import io.harness.testframework.framework.Setup;
-import io.restassured.http.ContentType;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
+
 import software.wings.beans.Account;
 import software.wings.beans.Application;
 import software.wings.beans.template.Template;
 import software.wings.service.intfc.template.TemplateService;
 
+import com.google.inject.Inject;
+import io.restassured.http.ContentType;
 import javax.ws.rs.core.GenericType;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 public class ImportTemplateFunctionalTest extends AbstractFunctionalTest {
   @Inject private OwnerManager ownerManager;

@@ -3,11 +3,11 @@ package io.harness.network;
 import static java.lang.String.format;
 
 import io.harness.exception.GeneralException;
+
+import java.io.IOException;
 import lombok.experimental.UtilityClass;
 import retrofit2.Call;
 import retrofit2.Response;
-
-import java.io.IOException;
 
 @UtilityClass
 public class SafeHttpCall {

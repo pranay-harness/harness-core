@@ -1,7 +1,7 @@
 package migrations;
 
 import com.google.common.collect.ImmutableList;
-
+import java.util.List;
 import lombok.experimental.UtilityClass;
 import migrations.timescaledb.AddAccountIdStatusIndexToDeployment;
 import migrations.timescaledb.AddCostEvents;
@@ -40,8 +40,6 @@ import migrations.timescaledb.UpdateServiceGuardSchema;
 import migrations.timescaledb.data.CreateAnomaliesDataV2;
 import migrations.timescaledb.data.CreatePodCountTable;
 import org.apache.commons.lang3.tuple.Pair;
-
-import java.util.List;
 
 @UtilityClass
 public class TimescaleDBMigrationList {

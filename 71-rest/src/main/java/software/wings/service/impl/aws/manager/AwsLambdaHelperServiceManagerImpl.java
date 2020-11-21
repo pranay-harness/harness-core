@@ -1,9 +1,8 @@
 package software.wings.service.impl.aws.manager;
 
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
-import static java.util.Collections.singletonList;
 
-import com.google.inject.Inject;
+import static java.util.Collections.singletonList;
 
 import io.harness.beans.DelegateTask;
 import io.harness.beans.ExecutionStatus;
@@ -14,7 +13,7 @@ import io.harness.exception.GeneralException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.security.encryption.EncryptedDataDetail;
-import lombok.extern.slf4j.Slf4j;
+
 import software.wings.beans.AwsConfig;
 import software.wings.beans.TaskType;
 import software.wings.service.impl.aws.model.AwsLambdaFunctionRequest;
@@ -27,8 +26,10 @@ import software.wings.service.impl.aws.model.response.AwsLambdaDetailsResponse;
 import software.wings.service.intfc.DelegateService;
 import software.wings.service.intfc.aws.manager.AwsLambdaHelperServiceManager;
 
+import com.google.inject.Inject;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * Created by Pranjal on 01/29/2019

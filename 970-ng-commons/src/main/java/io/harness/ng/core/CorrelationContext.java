@@ -1,13 +1,12 @@
 package io.harness.ng.core;
 
-import lombok.experimental.UtilityClass;
-import okhttp3.Interceptor;
-import org.slf4j.MDC;
-
 import java.util.Random;
 import java.util.UUID;
 import java.util.concurrent.ThreadLocalRandom;
 import javax.validation.constraints.NotNull;
+import lombok.experimental.UtilityClass;
+import okhttp3.Interceptor;
+import org.slf4j.MDC;
 
 @UtilityClass
 public class CorrelationContext {

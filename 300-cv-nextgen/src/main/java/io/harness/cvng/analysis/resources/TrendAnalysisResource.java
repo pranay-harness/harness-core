@@ -5,20 +5,18 @@ import static io.harness.cvng.analysis.CVAnalysisConstants.TREND_ANALYSIS_SAVE_P
 import static io.harness.cvng.analysis.CVAnalysisConstants.TREND_ANALYSIS_TEST_DATA;
 import static io.harness.cvng.analysis.CVAnalysisConstants.TREND_METRIC_TEMPLATE;
 
-import com.google.inject.Inject;
-
-import com.codahale.metrics.annotation.ExceptionMetered;
-import com.codahale.metrics.annotation.Timed;
 import io.harness.cvng.analysis.beans.ServiceGuardTimeSeriesAnalysisDTO;
 import io.harness.cvng.analysis.beans.TimeSeriesRecordDTO;
 import io.harness.cvng.analysis.services.api.TrendAnalysisService;
 import io.harness.cvng.core.beans.TimeSeriesMetricDefinition;
 import io.harness.rest.RestResponse;
 import io.harness.security.annotations.LearningEngineAuth;
+
+import com.codahale.metrics.annotation.ExceptionMetered;
+import com.codahale.metrics.annotation.Timed;
+import com.google.inject.Inject;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
-import lombok.extern.slf4j.Slf4j;
-
 import java.time.Instant;
 import java.util.List;
 import javax.validation.constraints.NotNull;
@@ -27,6 +25,7 @@ import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
+import lombok.extern.slf4j.Slf4j;
 
 @Api(TREND_ANALYSIS_RESOURCE)
 @Path(TREND_ANALYSIS_RESOURCE)

@@ -1,17 +1,18 @@
 package software.wings.service.impl.marketplace.gcp;
 
 import static io.harness.rule.OwnerRule.HITESH;
+
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
 
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.concurrent.TimeUnit;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 public class GCPUsageReportTimeProviderTest extends CategoryTest {
   @Test

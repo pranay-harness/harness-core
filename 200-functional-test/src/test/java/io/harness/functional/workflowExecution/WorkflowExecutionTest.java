@@ -3,15 +3,15 @@ package io.harness.functional.workflowExecution;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.rule.OwnerRule.GEORGE;
 import static io.harness.threading.Morpheus.sleep;
-import static java.time.Duration.ofMillis;
-import static org.assertj.core.api.Assertions.assertThat;
+
 import static software.wings.beans.CanaryOrchestrationWorkflow.CanaryOrchestrationWorkflowBuilder.aCanaryOrchestrationWorkflow;
 import static software.wings.beans.PhaseStep.PhaseStepBuilder.aPhaseStep;
 import static software.wings.beans.PhaseStepType.POST_DEPLOYMENT;
 import static software.wings.beans.PhaseStepType.PRE_DEPLOYMENT;
 import static software.wings.beans.Workflow.WorkflowBuilder.aWorkflow;
 
-import com.google.inject.Inject;
+import static java.time.Duration.ofMillis;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.beans.WorkflowType;
 import io.harness.category.element.FunctionalTests;
@@ -22,9 +22,7 @@ import io.harness.generator.Randomizer.Seed;
 import io.harness.generator.WorkflowGenerator;
 import io.harness.persistence.HIterator;
 import io.harness.rule.Owner;
-import org.jetbrains.annotations.NotNull;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
+
 import software.wings.beans.Application;
 import software.wings.beans.Environment;
 import software.wings.beans.Workflow;
@@ -32,7 +30,11 @@ import software.wings.beans.WorkflowExecution;
 import software.wings.beans.artifact.Artifact;
 import software.wings.service.intfc.WorkflowExecutionService;
 
+import com.google.inject.Inject;
 import java.util.Collections;
+import org.jetbrains.annotations.NotNull;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 public class WorkflowExecutionTest extends AbstractFunctionalTest {
   @Inject private OwnerManager ownerManager;

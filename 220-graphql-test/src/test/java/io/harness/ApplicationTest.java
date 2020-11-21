@@ -4,13 +4,12 @@ import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.generator.AccountGenerator.ACCOUNT_ID;
 import static io.harness.rule.OwnerRule.GEORGE;
 import static io.harness.rule.OwnerRule.VARDAN_BANSAL;
-import static org.assertj.core.api.Assertions.assertThat;
+
 import static software.wings.beans.Application.Builder.anApplication;
 import static software.wings.beans.EntityType.APPLICATION;
 
-import com.google.inject.Inject;
+import static org.assertj.core.api.Assertions.assertThat;
 
-import graphql.ExecutionResult;
 import io.harness.beans.EmbeddedUser;
 import io.harness.category.element.UnitTests;
 import io.harness.category.layer.GraphQLTests;
@@ -23,9 +22,7 @@ import io.harness.generator.Randomizer.Seed;
 import io.harness.multiline.MultilineStringMixin;
 import io.harness.rule.Owner;
 import io.harness.testframework.graphql.QLTestObject;
-import lombok.extern.slf4j.Slf4j;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
+
 import software.wings.beans.Application;
 import software.wings.beans.Application.ApplicationKeys;
 import software.wings.beans.HarnessTagLink;
@@ -35,9 +32,14 @@ import software.wings.graphql.schema.type.QLTag.QLTagKeys;
 import software.wings.graphql.schema.type.QLUser.QLUserKeys;
 import software.wings.service.intfc.HarnessTagService;
 
+import com.google.inject.Inject;
+import graphql.ExecutionResult;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import lombok.extern.slf4j.Slf4j;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 @Slf4j
 public class ApplicationTest extends GraphQLTest {

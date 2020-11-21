@@ -1,12 +1,12 @@
 package software.wings.service.impl.analysis;
 
 import static io.harness.rule.OwnerRule.SOWMYA;
+
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
+
 import software.wings.WingsBaseTest;
 import software.wings.metrics.MetricType;
 import software.wings.metrics.Threshold;
@@ -14,6 +14,8 @@ import software.wings.metrics.ThresholdComparisonType;
 import software.wings.metrics.ThresholdType;
 
 import java.util.List;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 public class SupervisedTSThresholdTest extends WingsBaseTest {
   private SupervisedTSThreshold supervisedTSThreshold =

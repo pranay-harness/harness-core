@@ -4,17 +4,7 @@ import static io.harness.delegate.service.DelegateAgentFileService.FileBucket.AR
 import static io.harness.rule.OwnerRule.AADITI;
 import static io.harness.rule.OwnerRule.ANUBHAW;
 import static io.harness.rule.OwnerRule.SAHIL;
-import static java.util.Arrays.asList;
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
-import static org.joor.Reflect.on;
-import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.anyBoolean;
-import static org.mockito.Matchers.anyListOf;
-import static org.mockito.Matchers.anyString;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+
 import static software.wings.beans.BastionConnectionAttributes.Builder.aBastionConnectionAttributes;
 import static software.wings.beans.HostConnectionAttributes.AccessType.USER_PASSWORD;
 import static software.wings.beans.HostConnectionAttributes.AuthenticationScheme.SSH_KEY;
@@ -44,24 +34,24 @@ import static software.wings.utils.WingsTestConstants.PUBLIC_DNS;
 import static software.wings.utils.WingsTestConstants.SSH_USER_NAME;
 import static software.wings.utils.WingsTestConstants.SSH_USER_PASSWORD;
 
-import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.Lists;
-import com.google.common.io.CharStreams;
-import com.google.common.util.concurrent.FakeTimeLimiter;
-import com.google.common.util.concurrent.UncheckedTimeoutException;
-import com.google.inject.Injector;
+import static java.util.Arrays.asList;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
+import static org.joor.Reflect.on;
+import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyBoolean;
+import static org.mockito.Matchers.anyListOf;
+import static org.mockito.Matchers.anyString;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 import io.harness.category.element.UnitTests;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.rule.Owner;
-import org.apache.commons.codec.digest.DigestUtils;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
+
 import software.wings.WingsBaseTest;
 import software.wings.beans.HostConnectionAttributes.AccessType;
 import software.wings.beans.SettingAttribute;
@@ -89,10 +79,22 @@ import software.wings.service.impl.SshCommandUnitExecutorServiceImpl;
 import software.wings.service.intfc.CommandUnitExecutorService;
 import software.wings.utils.WingsTestConstants;
 
+import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Lists;
+import com.google.common.io.CharStreams;
+import com.google.common.util.concurrent.FakeTimeLimiter;
+import com.google.common.util.concurrent.UncheckedTimeoutException;
+import com.google.inject.Injector;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.HashMap;
+import org.apache.commons.codec.digest.DigestUtils;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
 
 /**
  * Created by anubhaw on 5/31/16.

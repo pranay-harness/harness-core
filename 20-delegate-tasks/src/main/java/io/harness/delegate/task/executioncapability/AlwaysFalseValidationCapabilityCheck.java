@@ -1,10 +1,10 @@
 package io.harness.delegate.task.executioncapability;
 
-import com.google.inject.Singleton;
-
 import io.harness.delegate.beans.executioncapability.AlwaysFalseValidationCapability;
 import io.harness.delegate.beans.executioncapability.CapabilityResponse;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
+
+import com.google.inject.Singleton;
 
 @Singleton
 

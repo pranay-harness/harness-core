@@ -1,12 +1,9 @@
 package software.wings.utils;
 import static java.lang.String.format;
 
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
-
 import io.harness.exception.FileReadException;
 import io.harness.security.encryption.EncryptedDataDetail;
-import org.apache.commons.lang3.StringUtils;
+
 import software.wings.beans.GitConfig;
 import software.wings.beans.GitFileConfig;
 import software.wings.beans.GitOperationContext;
@@ -14,11 +11,14 @@ import software.wings.service.impl.yaml.GitClientHelper;
 import software.wings.service.intfc.security.EncryptionService;
 import software.wings.service.intfc.yaml.GitClient;
 
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
+import org.apache.commons.lang3.StringUtils;
 
 @Singleton
 public class GitUtilsDelegate {

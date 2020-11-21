@@ -1,6 +1,7 @@
 package io.harness.delegate.task.artifacts.docker;
 
 import static io.harness.rule.OwnerRule.SAHIL;
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Matchers.any;
@@ -18,6 +19,8 @@ import io.harness.exception.ExceptionUtils;
 import io.harness.exception.GeneralException;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.rule.Owner;
+
+import java.io.IOException;
 import org.apache.commons.lang3.NotImplementedException;
 import org.junit.Before;
 import org.junit.Test;
@@ -25,8 +28,6 @@ import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
-
-import java.io.IOException;
 
 public class DockerArtifactTaskNGTest extends CategoryTest {
   @Mock DockerArtifactTaskHelper dockerArtifactTaskHelper;

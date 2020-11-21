@@ -3,12 +3,11 @@ package software.wings.beans;
 import static software.wings.beans.PreferenceType.AUDIT_PREFERENCE;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
+import java.util.List;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.experimental.FieldNameConstants;
 import lombok.experimental.UtilityClass;
-
-import java.util.List;
 
 /**
  * Audit Preference model

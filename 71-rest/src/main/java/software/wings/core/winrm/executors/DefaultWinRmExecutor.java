@@ -5,9 +5,7 @@ import static io.harness.logging.CommandExecutionStatus.RUNNING;
 import static io.harness.logging.CommandExecutionStatus.SUCCESS;
 import static io.harness.logging.LogLevel.ERROR;
 import static io.harness.logging.LogLevel.INFO;
-import static java.lang.String.format;
-import static org.apache.commons.codec.binary.Base64.encodeBase64String;
-import static org.apache.commons.lang3.StringUtils.isBlank;
+
 import static software.wings.beans.Log.Builder.aLog;
 import static software.wings.beans.LogColor.Gray;
 import static software.wings.beans.LogColor.White;
@@ -15,8 +13,9 @@ import static software.wings.beans.LogHelper.color;
 import static software.wings.beans.LogWeight.Bold;
 import static software.wings.utils.WinRmHelperUtils.buildErrorDetailsFromWinRmClientException;
 
-import com.google.common.annotations.VisibleForTesting;
-import com.google.common.collect.Lists;
+import static java.lang.String.format;
+import static org.apache.commons.codec.binary.Base64.encodeBase64String;
+import static org.apache.commons.lang3.StringUtils.isBlank;
 
 import io.harness.data.encoding.EncodingUtils;
 import io.harness.delegate.command.CommandExecutionResult;
@@ -25,10 +24,7 @@ import io.harness.delegate.service.DelegateAgentFileService.FileBucket;
 import io.harness.eraro.ResponseMessage;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.logging.LogLevel;
-import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.NotImplementedException;
-import org.apache.commons.lang3.tuple.Pair;
-import org.jetbrains.annotations.NotNull;
+
 import software.wings.beans.artifact.ArtifactStreamAttributes;
 import software.wings.beans.command.CopyConfigCommandUnit.ConfigFileMetaData;
 import software.wings.beans.command.ExecutionLogCallback;
@@ -38,6 +34,8 @@ import software.wings.delegatetasks.DelegateFileManager;
 import software.wings.delegatetasks.DelegateLogService;
 import software.wings.utils.ExecutionLogWriter;
 
+import com.google.common.annotations.VisibleForTesting;
+import com.google.common.collect.Lists;
 import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
 import java.io.StringWriter;
@@ -49,6 +47,10 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.regex.Pattern;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.NotImplementedException;
+import org.apache.commons.lang3.tuple.Pair;
+import org.jetbrains.annotations.NotNull;
 
 @Slf4j
 public class DefaultWinRmExecutor implements WinRmExecutor {

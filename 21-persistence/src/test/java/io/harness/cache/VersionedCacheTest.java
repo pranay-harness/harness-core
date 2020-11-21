@@ -1,6 +1,7 @@
 package io.harness.cache;
 
 import static io.harness.rule.OwnerRule.UTKARSH;
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.eq;
@@ -10,19 +11,14 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import com.google.common.collect.Sets;
-import com.google.inject.Inject;
-
-import com.github.benmanes.caffeine.jcache.CacheProxy;
 import io.harness.PersistenceTestBase;
 import io.harness.cache.VersionedEntryProcessor.VersionedMutableEntryWrapper;
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
-import org.mockito.ArgumentCaptor;
 
+import com.github.benmanes.caffeine.jcache.CacheProxy;
+import com.google.common.collect.Sets;
+import com.google.inject.Inject;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
@@ -43,6 +39,10 @@ import javax.cache.integration.CompletionListener;
 import javax.cache.processor.EntryProcessor;
 import javax.cache.processor.EntryProcessorException;
 import javax.cache.processor.MutableEntry;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
+import org.mockito.ArgumentCaptor;
 
 public class VersionedCacheTest extends PersistenceTestBase {
   private static class CacheableEntity {

@@ -8,11 +8,11 @@ import io.harness.delegate.task.mixin.JiraCapabilityGenerator;
 import io.harness.jira.JiraAction;
 import io.harness.jira.JiraCustomFieldValue;
 import io.harness.security.encryption.EncryptedDataDetail;
-import lombok.Builder;
-import lombok.Value;
 
 import java.util.List;
 import java.util.Map;
+import lombok.Builder;
+import lombok.Value;
 
 @Value
 @Builder

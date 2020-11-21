@@ -1,30 +1,30 @@
 package io.harness.mongo;
 
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+
 import static java.lang.String.format;
 import static org.mongodb.morphia.logging.MorphiaLoggerFactory.registerLogger;
+
+import io.harness.exception.UnexpectedException;
+import io.harness.logging.MorphiaLoggerFactory;
+import io.harness.mongo.index.migrator.Migrator;
+import io.harness.morphia.MorphiaModule;
+import io.harness.serializer.KryoModule;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
 import com.google.inject.Singleton;
 import com.google.inject.multibindings.MapBinder;
 import com.google.inject.name.Named;
-
 import com.mongodb.MongoClient;
 import com.mongodb.MongoClientOptions;
 import com.mongodb.MongoClientURI;
-import io.harness.exception.UnexpectedException;
-import io.harness.logging.MorphiaLoggerFactory;
-import io.harness.mongo.index.migrator.Migrator;
-import io.harness.morphia.MorphiaModule;
-import io.harness.serializer.KryoModule;
+import java.util.Map;
+import java.util.Set;
 import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.AdvancedDatastore;
 import org.mongodb.morphia.Morphia;
 import org.mongodb.morphia.ObjectFactory;
-
-import java.util.Map;
-import java.util.Set;
 
 @Slf4j
 public class MongoModule extends AbstractModule {

@@ -2,11 +2,10 @@ package io.harness.dto;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
-import lombok.Builder;
-import lombok.Value;
-
 import java.util.List;
 import java.util.Map;
+import lombok.Builder;
+import lombok.Value;
 
 @Value
 @Builder

@@ -1,24 +1,20 @@
 package migrations.all;
 
 import static io.harness.rule.OwnerRule.ANSHUL;
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.Matchers.anyString;
-import static org.powermock.api.mockito.PowerMockito.when;
+
 import static software.wings.beans.Application.Builder.anApplication;
 import static software.wings.service.impl.instance.InstanceSyncTestConstants.SERVICE_ID;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 import static software.wings.utils.WingsTestConstants.APP_ID;
 import static software.wings.utils.WingsTestConstants.SERVICE_NAME;
 
-import com.google.inject.Inject;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Matchers.anyString;
+import static org.powermock.api.mockito.PowerMockito.when;
 
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
+
 import software.wings.WingsBaseTest;
 import software.wings.api.DeploymentType;
 import software.wings.beans.Account;
@@ -33,6 +29,13 @@ import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ApplicationManifestService;
 import software.wings.utils.ArtifactType;
+
+import com.google.inject.Inject;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
 
 public class ServiceHelmValuesToManifestFileMigrationTest extends WingsBaseTest {
   @Inject private WingsPersistence wingsPersistence;

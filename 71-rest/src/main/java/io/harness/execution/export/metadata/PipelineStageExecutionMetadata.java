@@ -4,24 +4,26 @@ import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.data.structure.CollectionUtils.nullIfEmpty;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
-import static java.lang.String.format;
+
 import static software.wings.sm.StateType.APPROVAL;
 import static software.wings.sm.StateType.APPROVAL_RESUME;
 
-import com.google.common.annotations.VisibleForTesting;
+import static java.lang.String.format;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.ExecutionStatus;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.InvalidRequestException;
-import lombok.Builder;
-import lombok.Value;
+
 import software.wings.beans.PipelineExecution;
 import software.wings.beans.PipelineStage;
 import software.wings.beans.PipelineStageExecution;
 
+import com.google.common.annotations.VisibleForTesting;
 import java.util.ArrayList;
 import java.util.List;
+import lombok.Builder;
+import lombok.Value;
 
 @OwnedBy(CDC)
 @Value

@@ -2,12 +2,15 @@ package io.harness.network;
 
 import static io.harness.rule.OwnerRule.GEORGE;
 import static io.harness.rule.OwnerRule.ROHIT_KUMAR;
+
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
 import io.harness.threading.Concurrent;
+
+import java.io.IOException;
 import okhttp3.OkHttpClient;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -15,8 +18,6 @@ import org.junit.runner.RunWith;
 import org.powermock.core.classloader.annotations.PowerMockIgnore;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
-
-import java.io.IOException;
 
 @RunWith(PowerMockRunner.class)
 @PrepareForTest(Http.class)

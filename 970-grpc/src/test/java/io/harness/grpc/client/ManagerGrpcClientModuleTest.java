@@ -1,6 +1,7 @@
 package io.harness.grpc.client;
 
 import static io.harness.rule.OwnerRule.AVMOHAN;
+
 import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -11,6 +12,7 @@ import io.harness.grpc.client.ManagerGrpcClientModule.Config;
 import io.harness.rule.Owner;
 import io.harness.version.VersionInfo;
 import io.harness.version.VersionInfoManager;
+
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;

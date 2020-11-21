@@ -1,6 +1,7 @@
 package software.wings.resources.stats.model;
 
 import static io.harness.rule.OwnerRule.VARDAN_BANSAL;
+
 import static junit.framework.TestCase.assertTrue;
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -9,16 +10,17 @@ import io.harness.category.element.UnitTests;
 import io.harness.governance.TimeRangeBasedFreezeConfig;
 import io.harness.governance.WeeklyFreezeConfig;
 import io.harness.rule.Owner;
-import org.apache.commons.lang3.RandomStringUtils;
-import org.junit.Ignore;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
+
 import software.wings.beans.Environment.EnvironmentType;
 import software.wings.beans.governance.GovernanceConfig;
 
 import java.util.Calendar;
 import java.util.Collections;
 import java.util.TimeZone;
+import org.apache.commons.lang3.RandomStringUtils;
+import org.junit.Ignore;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 public class WeeklyRangeTest extends CategoryTest {
   private String accountId = "some-account-uuid-" + RandomStringUtils.randomAlphanumeric(5);

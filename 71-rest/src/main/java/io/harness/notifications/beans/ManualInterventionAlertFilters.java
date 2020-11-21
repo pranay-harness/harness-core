@@ -1,10 +1,10 @@
 package io.harness.notifications.beans;
 
 import io.harness.data.structure.CollectionUtils;
-import lombok.Value;
 
 import java.util.List;
 import javax.annotation.Nonnull;
+import lombok.Value;
 
 @Value
 public class ManualInterventionAlertFilters implements io.harness.notifications.conditions.ManualInterventionFilters {

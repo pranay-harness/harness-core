@@ -3,10 +3,9 @@ package software.wings.service.intfc;
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 
-import com.google.common.collect.Lists;
-
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.security.encryption.EncryptedDataDetail;
+
 import software.wings.beans.artifact.ArtifactStreamAttributes;
 import software.wings.beans.settings.azureartifacts.AzureArtifactsConfig;
 import software.wings.helpers.ext.azure.devops.AzureArtifactsFeed;
@@ -19,6 +18,7 @@ import software.wings.utils.ArtifactType;
 import software.wings.utils.RepositoryFormat;
 import software.wings.utils.RepositoryType;
 
+import com.google.common.collect.Lists;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;

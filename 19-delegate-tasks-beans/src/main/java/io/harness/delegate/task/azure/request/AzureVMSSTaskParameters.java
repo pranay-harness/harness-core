@@ -5,13 +5,13 @@ import static com.google.common.collect.Sets.newHashSet;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.delegate.beans.executioncapability.ExecutionCapabilityDemander;
 import io.harness.delegate.task.TaskParameters;
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import org.hibernate.validator.constraints.NotEmpty;
 
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import org.hibernate.validator.constraints.NotEmpty;
 
 @Data
 @AllArgsConstructor

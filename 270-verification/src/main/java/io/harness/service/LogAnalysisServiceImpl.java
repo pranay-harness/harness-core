@@ -6,9 +6,7 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.persistence.HPersistence.upToOne;
 import static io.harness.persistence.HQuery.excludeAuthority;
-import static java.lang.System.currentTimeMillis;
-import static java.util.Arrays.asList;
-import static java.util.Collections.emptySet;
+
 import static software.wings.beans.FeatureName.DISABLE_LOGML_NEURAL_NET;
 import static software.wings.beans.FeatureName.DISABLE_SERVICEGUARD_LOG_ALERTS;
 import static software.wings.common.VerificationConstants.DUMMY_HOST_NAME;
@@ -24,12 +22,10 @@ import static software.wings.service.intfc.analysis.ClusterLevel.L0;
 import static software.wings.service.intfc.analysis.ClusterLevel.L1;
 import static software.wings.service.intfc.analysis.ClusterLevel.L2;
 
-import com.google.common.base.Preconditions;
-import com.google.common.collect.Sets;
-import com.google.inject.Inject;
+import static java.lang.System.currentTimeMillis;
+import static java.util.Arrays.asList;
+import static java.util.Collections.emptySet;
 
-import com.mongodb.BasicDBObject;
-import com.mongodb.DuplicateKeyException;
 import io.harness.beans.ExecutionStatus;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageRequest.PageRequestBuilder;
@@ -45,10 +41,7 @@ import io.harness.persistence.HIterator;
 import io.harness.service.intfc.ContinuousVerificationService;
 import io.harness.service.intfc.LearningEngineService;
 import io.harness.service.intfc.LogAnalysisService;
-import lombok.extern.slf4j.Slf4j;
-import org.mongodb.morphia.query.Query;
-import org.mongodb.morphia.query.Sort;
-import org.mongodb.morphia.query.UpdateResults;
+
 import software.wings.dl.WingsPersistence;
 import software.wings.service.impl.GoogleDataStoreServiceImpl;
 import software.wings.service.impl.analysis.AnalysisComparisonStrategy;
@@ -84,6 +77,11 @@ import software.wings.sm.StateType;
 import software.wings.verification.CVConfiguration;
 import software.wings.verification.log.LogsCVConfiguration;
 
+import com.google.common.base.Preconditions;
+import com.google.common.collect.Sets;
+import com.google.inject.Inject;
+import com.mongodb.BasicDBObject;
+import com.mongodb.DuplicateKeyException;
 import java.security.SecureRandom;
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
@@ -98,6 +96,10 @@ import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
+import lombok.extern.slf4j.Slf4j;
+import org.mongodb.morphia.query.Query;
+import org.mongodb.morphia.query.Sort;
+import org.mongodb.morphia.query.UpdateResults;
 
 /**
  * Created by Praveen

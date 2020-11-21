@@ -1,23 +1,25 @@
 package software.wings.beans;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
+
 import static software.wings.audit.ResourceType.COLLABORATION_PROVIDER;
 
-import com.fasterxml.jackson.annotation.JsonTypeName;
-import com.github.reinert.jjschema.Attributes;
-import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.delegate.task.mixin.HttpConnectionExecutionCapabilityGenerator;
-import lombok.ToString;
-import org.hibernate.validator.constraints.NotEmpty;
+
 import software.wings.beans.notification.SlackNotificationConfiguration;
 import software.wings.settings.SettingValue;
 import software.wings.settings.SettingVariableTypes;
 
+import com.fasterxml.jackson.annotation.JsonTypeName;
+import com.github.reinert.jjschema.Attributes;
+import com.github.reinert.jjschema.SchemaIgnore;
 import java.util.Arrays;
 import java.util.List;
 import javax.annotation.Nullable;
+import lombok.ToString;
+import org.hibernate.validator.constraints.NotEmpty;
 
 /**
  * Created by anubhaw on 12/14/16.

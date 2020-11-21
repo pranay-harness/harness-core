@@ -6,11 +6,6 @@ import static io.harness.gitsync.common.remote.YamlGitConfigMapper.toYamlGitConf
 import static io.harness.gitsync.common.remote.YamlGitConfigMapper.toYamlGitConfigDTOFromFolderConfigWithSameYamlGitConfigId;
 import static io.harness.gitsync.common.remote.YamlGitConfigMapper.toYamlGitFolderConfig;
 
-import com.google.common.collect.Lists;
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
-import com.google.inject.name.Named;
-
 import io.harness.connector.apis.dto.ConnectorInfoDTO;
 import io.harness.connector.apis.dto.ConnectorResponseDTO;
 import io.harness.connector.services.ConnectorService;
@@ -25,9 +20,11 @@ import io.harness.gitsync.common.dao.api.repositories.yamlGitFolderConfig.YamlGi
 import io.harness.gitsync.common.helper.YamlGitConfigDTOComparator;
 import io.harness.gitsync.common.remote.YamlGitConfigMapper;
 import io.harness.gitsync.common.service.YamlGitConfigService;
-import lombok.extern.slf4j.Slf4j;
-import org.jetbrains.annotations.NotNull;
 
+import com.google.common.collect.Lists;
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
+import com.google.inject.name.Named;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -35,6 +32,8 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
+import lombok.extern.slf4j.Slf4j;
+import org.jetbrains.annotations.NotNull;
 
 @Singleton
 @Slf4j

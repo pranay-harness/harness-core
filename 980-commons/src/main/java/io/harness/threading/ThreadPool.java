@@ -2,8 +2,6 @@ package io.harness.threading;
 
 import static io.harness.threading.Morpheus.quietSleep;
 
-import lombok.experimental.UtilityClass;
-
 import java.time.Duration;
 import java.util.concurrent.Callable;
 import java.util.concurrent.Executors;
@@ -11,6 +9,7 @@ import java.util.concurrent.Future;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
+import lombok.experimental.UtilityClass;
 
 /**
  * This is a common threadpool for the entire application.

@@ -2,16 +2,13 @@ package software.wings.sm.states;
 
 import static io.harness.exception.WingsException.USER;
 import static io.harness.validation.Validator.notNullCheck;
-import static java.lang.String.format;
 
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
+import static java.lang.String.format;
 
 import io.harness.context.ContextElementType;
 import io.harness.data.SweepingOutput;
 import io.harness.security.encryption.EncryptedDataDetail;
-import lombok.extern.slf4j.Slf4j;
-import org.jetbrains.annotations.NotNull;
+
 import software.wings.annotation.EncryptableSetting;
 import software.wings.api.PhaseElement;
 import software.wings.beans.Application;
@@ -31,7 +28,11 @@ import software.wings.service.intfc.sweepingoutput.SweepingOutputService;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.WorkflowStandardParams;
 
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import java.util.List;
+import lombok.extern.slf4j.Slf4j;
+import org.jetbrains.annotations.NotNull;
 
 @Slf4j
 @Singleton

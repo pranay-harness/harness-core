@@ -15,8 +15,7 @@ message InitializeSdkRequest {
   map<string, Types> supportedTypes = 2;
 }
 
-message InitializeSdkResponse {
-}
+message InitializeSdkResponse {}
 
 message Types {
   repeated string types = 1;

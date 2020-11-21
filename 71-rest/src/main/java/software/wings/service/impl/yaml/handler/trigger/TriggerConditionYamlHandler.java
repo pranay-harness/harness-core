@@ -2,19 +2,19 @@ package software.wings.service.impl.yaml.handler.trigger;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 
-import com.google.inject.Inject;
-
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
-import lombok.Data;
+
 import software.wings.beans.trigger.TriggerCondition;
 import software.wings.beans.yaml.ChangeContext;
 import software.wings.service.impl.yaml.handler.BaseYamlHandler;
 import software.wings.service.impl.yaml.service.YamlHelper;
 import software.wings.yaml.trigger.TriggerConditionYaml;
 
+import com.google.inject.Inject;
 import java.util.List;
+import lombok.Data;
 
 @OwnedBy(CDC)
 @Data

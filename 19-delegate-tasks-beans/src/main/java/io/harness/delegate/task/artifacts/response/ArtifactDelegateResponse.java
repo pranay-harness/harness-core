@@ -1,6 +1,7 @@
 package io.harness.delegate.task.artifacts.response;
 
 import io.harness.delegate.task.artifacts.ArtifactSourceType;
+
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 

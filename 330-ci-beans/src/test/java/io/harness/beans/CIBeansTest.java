@@ -3,6 +3,7 @@ package io.harness.beans;
 import io.harness.CategoryTest;
 import io.harness.MockableTestMixin;
 import io.harness.rule.LifecycleRule;
+
 import org.junit.Rule;
 import org.mockito.junit.MockitoJUnit;
 import org.mockito.junit.MockitoRule;

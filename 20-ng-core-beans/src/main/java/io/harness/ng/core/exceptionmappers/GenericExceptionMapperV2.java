@@ -5,13 +5,13 @@ import io.harness.eraro.ErrorCode;
 import io.harness.exception.ExceptionUtils;
 import io.harness.ng.core.Status;
 import io.harness.ng.core.dto.ErrorDTO;
-import lombok.extern.slf4j.Slf4j;
 
 import javax.ws.rs.container.ResourceInfo;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.ext.ExceptionMapper;
+import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class GenericExceptionMapperV2 implements ExceptionMapper<Throwable> {
@@ -22,8 +22,8 @@ public class GenericExceptionMapperV2 implements ExceptionMapper<Throwable> {
     return resourceInfo != null
         && ((resourceInfo.getResourceClass() != null
                 && resourceInfo.getResourceClass().isAnnotationPresent(ExposeInternalException.class))
-               || (resourceInfo.getResourceMethod() != null
-                      && resourceInfo.getResourceMethod().isAnnotationPresent(ExposeInternalException.class)));
+            || (resourceInfo.getResourceMethod() != null
+                && resourceInfo.getResourceMethod().isAnnotationPresent(ExposeInternalException.class)));
   }
 
   @Override

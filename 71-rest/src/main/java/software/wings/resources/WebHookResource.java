@@ -2,15 +2,15 @@ package software.wings.resources;
 
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 
-import com.google.inject.Inject;
-
-import com.codahale.metrics.annotation.ExceptionMetered;
-import com.codahale.metrics.annotation.Timed;
 import io.harness.security.annotations.PublicApi;
-import io.swagger.annotations.Api;
+
 import software.wings.beans.WebHookRequest;
 import software.wings.service.intfc.WebHookService;
 
+import com.codahale.metrics.annotation.ExceptionMetered;
+import com.codahale.metrics.annotation.Timed;
+import com.google.inject.Inject;
+import io.swagger.annotations.Api;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;

@@ -1,5 +1,18 @@
 package io.harness.remote.client;
 
+import static io.harness.ng.core.CorrelationContext.getCorrelationIdInterceptor;
+
+import static com.fasterxml.jackson.databind.DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES;
+
+import io.harness.exception.GeneralException;
+import io.harness.exception.InvalidRequestException;
+import io.harness.network.Http;
+import io.harness.security.ServiceTokenGenerator;
+import io.harness.serializer.JsonSubtypeResolver;
+import io.harness.serializer.kryo.KryoConverterFactory;
+
+import software.wings.jersey.JsonViews;
+
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.guava.GuavaModule;
 import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
@@ -7,12 +20,8 @@ import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.hubspot.jackson.datatype.protobuf.ProtobufModule;
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
 import io.github.resilience4j.retrofit.CircuitBreakerCallAdapter;
-import io.harness.exception.GeneralException;
-import io.harness.exception.InvalidRequestException;
-import io.harness.network.Http;
-import io.harness.security.ServiceTokenGenerator;
-import io.harness.serializer.JsonSubtypeResolver;
-import io.harness.serializer.kryo.KryoConverterFactory;
+import java.util.function.Supplier;
+import javax.validation.constraints.NotNull;
 import okhttp3.ConnectionPool;
 import okhttp3.Interceptor;
 import okhttp3.OkHttpClient;
@@ -20,13 +29,6 @@ import okhttp3.Request;
 import org.apache.commons.lang3.StringUtils;
 import retrofit2.Retrofit;
 import retrofit2.converter.jackson.JacksonConverterFactory;
-import software.wings.jersey.JsonViews;
-
-import java.util.function.Supplier;
-import javax.validation.constraints.NotNull;
-
-import static com.fasterxml.jackson.databind.DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES;
-import static io.harness.ng.core.CorrelationContext.getCorrelationIdInterceptor;
 
 public abstract class AbstractHttpClientFactory {
   public static final String NG_MANAGER_CIRCUIT_BREAKER = "ng-manager";
@@ -99,7 +101,7 @@ public abstract class AbstractHttpClientFactory {
 
   @NotNull
   protected Interceptor getAuthorizationInterceptor() {
-    final Supplier<String> secretKeySupplier = this ::getServiceSecret;
+    final Supplier<String> secretKeySupplier = this::getServiceSecret;
     return chain -> {
       String token = tokenGenerator.getServiceToken(secretKeySupplier.get());
       Request request = chain.request();

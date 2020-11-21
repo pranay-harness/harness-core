@@ -5,6 +5,10 @@ import static org.mongodb.morphia.aggregation.Group.grouping;
 import static org.mongodb.morphia.aggregation.Group.id;
 
 import io.harness.persistence.HIterator;
+
+import software.wings.beans.DelegateScope;
+import software.wings.beans.DelegateScope.DelegateScopeKeys;
+
 import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.AdvancedDatastore;
 import org.mongodb.morphia.FindAndModifyOptions;
@@ -12,8 +16,6 @@ import org.mongodb.morphia.aggregation.AggregationPipeline;
 import org.mongodb.morphia.query.MorphiaIterator;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
-import software.wings.beans.DelegateScope;
-import software.wings.beans.DelegateScope.DelegateScopeKeys;
 
 @Slf4j
 public class DelegateScopeNameUniqueInAccountMigration implements Migrator {

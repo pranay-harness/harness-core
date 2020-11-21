@@ -1,12 +1,12 @@
 package migrations.all;
 
-import com.google.inject.Inject;
-
-import com.amazonaws.util.StringUtils;
-import lombok.extern.slf4j.Slf4j;
-import migrations.Migration;
 import software.wings.beans.Account;
 import software.wings.service.intfc.AccountService;
+
+import com.amazonaws.util.StringUtils;
+import com.google.inject.Inject;
+import lombok.extern.slf4j.Slf4j;
+import migrations.Migration;
 
 @Slf4j
 public class MigrateDelegateScopes implements Migration {

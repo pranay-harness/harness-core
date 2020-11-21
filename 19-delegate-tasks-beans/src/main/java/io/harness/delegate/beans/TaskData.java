@@ -1,11 +1,10 @@
 package io.harness.delegate.beans;
 
+import java.util.Map;
+import javax.validation.constraints.NotNull;
 import lombok.Builder;
 import lombok.Data;
 import lombok.experimental.FieldNameConstants;
-
-import java.util.Map;
-import javax.validation.constraints.NotNull;
 
 @Data
 @Builder

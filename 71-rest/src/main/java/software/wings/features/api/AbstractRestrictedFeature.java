@@ -1,10 +1,9 @@
 package software.wings.features.api;
 
-import com.google.inject.Inject;
-
 import software.wings.beans.AccountType;
 import software.wings.service.intfc.AccountService;
 
+import com.google.inject.Inject;
 import java.util.Map;
 
 public abstract class AbstractRestrictedFeature implements RestrictedFeature {

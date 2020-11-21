@@ -2,22 +2,23 @@ package software.wings.exception;
 
 import static io.harness.eraro.ErrorCode.INVALID_ARGUMENT;
 import static io.harness.rest.RestResponse.Builder.aRestResponse;
-import static java.util.stream.Collectors.toList;
 
-import com.google.common.base.Strings;
-import com.google.common.collect.ImmutableList;
+import static java.util.stream.Collectors.toList;
 
 import io.harness.eraro.Level;
 import io.harness.eraro.ResponseMessage;
 import io.harness.rest.RestResponse;
-import lombok.extern.slf4j.Slf4j;
+
 import software.wings.utils.ConstraintViolationHandlerUtils;
 
+import com.google.common.base.Strings;
+import com.google.common.collect.ImmutableList;
 import javax.validation.ConstraintViolationException;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 import javax.ws.rs.ext.ExceptionMapper;
 import javax.ws.rs.ext.Provider;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * Created by peeyushaggarwal on 6/8/16.
@@ -40,7 +41,7 @@ public class ConstraintViolationExceptionMapper implements ExceptionMapper<Const
 
   private RestResponse toRestResponse(ImmutableList<String> errors) {
     return aRestResponse()
-        .withResponseMessages(errors.stream().map(this ::errorMessageToResponseMessage).collect(toList()))
+        .withResponseMessages(errors.stream().map(this::errorMessageToResponseMessage).collect(toList()))
         .build();
   }
 

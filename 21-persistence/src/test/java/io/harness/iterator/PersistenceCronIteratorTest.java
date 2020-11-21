@@ -4,13 +4,12 @@ import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.iterator.PersistenceIterator.ProcessMode.LOOP;
 import static io.harness.mongo.iterator.MongoPersistenceIterator.SchedulingType.IRREGULAR_SKIP_MISSED;
 import static io.harness.rule.OwnerRule.GEORGE;
+
 import static java.time.Duration.ofSeconds;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.joor.Reflect.on;
-
-import com.google.inject.Inject;
 
 import io.harness.PersistenceTestBase;
 import io.harness.category.element.StressTests;
@@ -26,17 +25,18 @@ import io.harness.queue.QueueController;
 import io.harness.rule.Owner;
 import io.harness.threading.Morpheus;
 import io.harness.threading.ThreadPool;
-import lombok.extern.slf4j.Slf4j;
-import org.junit.Ignore;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
 
+import com.google.inject.Inject;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
+import lombok.extern.slf4j.Slf4j;
+import org.junit.Ignore;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 @Slf4j
 public class PersistenceCronIteratorTest extends PersistenceTestBase {
@@ -157,7 +157,6 @@ public class PersistenceCronIteratorTest extends PersistenceTestBase {
         Morpheus.sleep(ofSeconds(300));
         future1.cancel(true);
       }
-    })
-        .doesNotThrowAnyException();
+    }).doesNotThrowAnyException();
   }
 }

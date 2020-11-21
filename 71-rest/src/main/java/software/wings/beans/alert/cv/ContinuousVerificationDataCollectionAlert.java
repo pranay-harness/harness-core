@@ -1,10 +1,12 @@
 package software.wings.beans.alert.cv;
 
 import io.harness.alert.AlertData;
+
+import software.wings.verification.CVConfiguration;
+
 import lombok.Builder;
 import lombok.Data;
 import org.apache.commons.lang3.StringUtils;
-import software.wings.verification.CVConfiguration;
 
 /**
  * Created by rsingh on 11/13/17.

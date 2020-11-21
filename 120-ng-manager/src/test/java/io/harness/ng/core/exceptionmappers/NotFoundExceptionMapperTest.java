@@ -1,6 +1,7 @@
 package io.harness.ng.core.exceptionmappers;
 
 import static io.harness.rule.OwnerRule.KARAN;
+
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.CategoryTest;
@@ -9,12 +10,12 @@ import io.harness.eraro.ErrorCode;
 import io.harness.ng.core.Status;
 import io.harness.ng.core.dto.FailureDTO;
 import io.harness.rule.Owner;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
 
 import javax.ws.rs.NotFoundException;
 import javax.ws.rs.core.Response;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 public class NotFoundExceptionMapperTest extends CategoryTest {
   private NotFoundExceptionMapper notFoundExceptionMapper;

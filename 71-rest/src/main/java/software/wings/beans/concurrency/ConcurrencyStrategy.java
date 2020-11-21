@@ -2,19 +2,20 @@ package software.wings.beans.concurrency;
 
 import static software.wings.common.InfrastructureConstants.INFRA_ID_EXPRESSION;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import io.harness.distribution.constraint.Constraint.Strategy;
 import io.harness.exception.InvalidArgumentsException;
 import io.harness.exception.WingsException;
+
+import software.wings.sm.states.HoldingScope;
+
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import java.util.List;
+import javax.validation.constraints.NotNull;
 import lombok.Builder;
 import lombok.Builder.Default;
 import lombok.Data;
 import lombok.Singular;
 import lombok.experimental.FieldNameConstants;
-import software.wings.sm.states.HoldingScope;
-
-import java.util.List;
-import javax.validation.constraints.NotNull;
 
 @Data
 @Builder

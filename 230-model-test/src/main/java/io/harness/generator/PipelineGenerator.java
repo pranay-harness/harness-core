@@ -5,8 +5,7 @@ import static io.harness.generator.PipelineGenerator.Pipelines.BASIC;
 import static io.harness.generator.PipelineGenerator.Pipelines.BUILD;
 import static io.harness.generator.PipelineGenerator.Pipelines.RESOURCE_CONSTRAINT_WORKFLOW;
 import static io.harness.govern.Switch.unhandled;
-import static java.lang.String.format;
-import static java.util.Arrays.asList;
+
 import static software.wings.beans.BasicOrchestrationWorkflow.BasicOrchestrationWorkflowBuilder.aBasicOrchestrationWorkflow;
 import static software.wings.beans.CanaryOrchestrationWorkflow.CanaryOrchestrationWorkflowBuilder.aCanaryOrchestrationWorkflow;
 import static software.wings.beans.PhaseStep.PhaseStepBuilder.aPhaseStep;
@@ -20,9 +19,8 @@ import static software.wings.sm.StateType.RESOURCE_CONSTRAINT;
 import static software.wings.sm.states.ResourceConstraintState.NotificationEvent.BLOCKED;
 import static software.wings.sm.states.ResourceConstraintState.NotificationEvent.UNBLOCKED;
 
-import com.google.common.collect.ImmutableMap;
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
+import static java.lang.String.format;
+import static java.util.Arrays.asList;
 
 import io.harness.beans.WorkflowType;
 import io.harness.distribution.constraint.Constraint.Strategy;
@@ -32,6 +30,7 @@ import io.harness.generator.ServiceGenerator.Services;
 import io.harness.generator.WorkflowGenerator.PostProcessInfo;
 import io.harness.generator.WorkflowGenerator.Workflows;
 import io.harness.steps.resourcerestraint.beans.ResourceConstraint;
+
 import software.wings.beans.Application;
 import software.wings.beans.GraphNode;
 import software.wings.beans.Pipeline;
@@ -41,6 +40,10 @@ import software.wings.beans.Workflow;
 import software.wings.infra.InfrastructureDefinition;
 import software.wings.service.intfc.PipelineService;
 import software.wings.sm.states.HoldingScope;
+
+import com.google.common.collect.ImmutableMap;
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
 
 @Singleton
 public class PipelineGenerator {

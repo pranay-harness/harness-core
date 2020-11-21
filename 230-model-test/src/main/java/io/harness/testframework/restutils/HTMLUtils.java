@@ -1,11 +1,10 @@
 package io.harness.testframework.restutils;
 
+import java.io.IOException;
+import javax.mail.MessagingException;
 import org.apache.commons.lang3.StringUtils;
 import org.jsoup.Jsoup;
 import org.jsoup.select.Elements;
-
-import java.io.IOException;
-import javax.mail.MessagingException;
 
 public class HTMLUtils {
   public static String retrieveInviteUrlFromEmail(String emailBody, String verificationElement)

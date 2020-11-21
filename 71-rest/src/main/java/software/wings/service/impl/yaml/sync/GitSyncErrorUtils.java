@@ -2,10 +2,11 @@ package software.wings.service.impl.yaml.sync;
 
 import static software.wings.yaml.errorhandling.GitSyncError.GitSyncDirection.GIT_TO_HARNESS;
 
-import lombok.experimental.UtilityClass;
-import lombok.extern.slf4j.Slf4j;
 import software.wings.yaml.errorhandling.GitSyncError;
 import software.wings.yaml.errorhandling.GitToHarnessErrorDetails;
+
+import lombok.experimental.UtilityClass;
+import lombok.extern.slf4j.Slf4j;
 
 @UtilityClass
 @Slf4j

@@ -2,9 +2,8 @@ package software.wings.delegatetasks.azure.appservice;
 
 import static io.harness.azure.model.AzureConstants.UNRECOGNIZED_TASK;
 import static io.harness.logging.CommandExecutionStatus.FAILURE;
-import static java.lang.String.format;
 
-import com.google.inject.Inject;
+import static java.lang.String.format;
 
 import io.harness.azure.model.AzureConfig;
 import io.harness.delegate.beans.DelegateResponseData;
@@ -15,13 +14,15 @@ import io.harness.delegate.task.AbstractDelegateRunnableTask;
 import io.harness.delegate.task.TaskParameters;
 import io.harness.delegate.task.azure.AzureTaskExecutionResponse;
 import io.harness.delegate.task.azure.appservice.AzureAppServiceTaskParameters;
-import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.NotImplementedException;
+
 import software.wings.delegatetasks.azure.AzureSecretHelper;
 import software.wings.service.impl.azure.manager.AzureTaskExecutionRequest;
 
+import com.google.inject.Inject;
 import java.util.function.BooleanSupplier;
 import java.util.function.Consumer;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.NotImplementedException;
 
 @Slf4j
 public class AzureAppServiceTask extends AbstractDelegateRunnableTask {

@@ -1,15 +1,11 @@
 package software.wings.beans.command;
 
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
-import static java.util.Arrays.asList;
+
 import static software.wings.beans.command.Command.Builder.aCommand;
 
-import com.google.common.collect.Lists;
+import static java.util.Arrays.asList;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonTypeName;
-import com.github.reinert.jjschema.Attributes;
-import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.annotation.HarnessEntity;
 import io.harness.beans.EmbeddedUser;
 import io.harness.expression.ExpressionEvaluator;
@@ -18,11 +14,7 @@ import io.harness.mongo.index.FdIndex;
 import io.harness.mongo.index.Field;
 import io.harness.mongo.index.NgUniqueIndex;
 import io.harness.serializer.MapperUtils;
-import lombok.Getter;
-import lombok.Setter;
-import lombok.experimental.FieldNameConstants;
-import org.hibernate.validator.constraints.NotEmpty;
-import org.mongodb.morphia.annotations.Entity;
+
 import software.wings.beans.Base;
 import software.wings.beans.Graph;
 import software.wings.beans.GraphNode;
@@ -36,6 +28,11 @@ import software.wings.stencils.Expand;
 import software.wings.utils.ArtifactType;
 import software.wings.utils.ContainerFamily;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonTypeName;
+import com.github.reinert.jjschema.Attributes;
+import com.github.reinert.jjschema.SchemaIgnore;
+import com.google.common.collect.Lists;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -43,6 +40,11 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
+import lombok.Getter;
+import lombok.Setter;
+import lombok.experimental.FieldNameConstants;
+import org.hibernate.validator.constraints.NotEmpty;
+import org.mongodb.morphia.annotations.Entity;
 
 /**
  * Created by peeyushaggarwal on 5/31/16.

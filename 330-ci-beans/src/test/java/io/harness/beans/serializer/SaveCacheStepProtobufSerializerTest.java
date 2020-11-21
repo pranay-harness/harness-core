@@ -1,10 +1,8 @@
 package io.harness.beans.serializer;
 
 import static io.harness.rule.OwnerRule.ALEKSANDAR;
-import static org.assertj.core.api.Assertions.assertThat;
 
-import com.google.inject.Inject;
-import com.google.protobuf.InvalidProtocolBufferException;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.beans.CIBeansTest;
 import io.harness.beans.steps.stepinfo.SaveCacheStepInfo;
@@ -12,12 +10,14 @@ import io.harness.callback.DelegateCallbackToken;
 import io.harness.category.element.UnitTests;
 import io.harness.product.ci.engine.proto.UnitStep;
 import io.harness.rule.Owner;
+
+import com.google.inject.Inject;
+import com.google.protobuf.InvalidProtocolBufferException;
+import java.util.Arrays;
+import java.util.function.Supplier;
 import org.apache.commons.codec.binary.Base64;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
-
-import java.util.Arrays;
-import java.util.function.Supplier;
 
 public class SaveCacheStepProtobufSerializerTest extends CIBeansTest {
   public static final String SAVE_CACHE = "save-cache";

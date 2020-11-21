@@ -2,7 +2,7 @@ package io.harness.functional.graphRendering;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.rule.OwnerRule.POOJA;
-import static org.assertj.core.api.Assertions.assertThat;
+
 import static software.wings.beans.BasicOrchestrationWorkflow.BasicOrchestrationWorkflowBuilder.aBasicOrchestrationWorkflow;
 import static software.wings.beans.PhaseStep.PhaseStepBuilder.aPhaseStep;
 import static software.wings.beans.PhaseStepType.INFRASTRUCTURE_NODE;
@@ -11,8 +11,7 @@ import static software.wings.beans.WorkflowPhase.WorkflowPhaseBuilder.aWorkflowP
 import static software.wings.service.impl.workflow.WorkflowServiceHelper.SELECT_NODE_NAME;
 import static software.wings.sm.StateType.DC_NODE_SELECT;
 
-import com.google.common.collect.ImmutableMap;
-import com.google.inject.Inject;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.beans.WorkflowType;
 import io.harness.category.element.FunctionalTests;
@@ -33,10 +32,7 @@ import io.harness.rest.RestResponse;
 import io.harness.rule.Owner;
 import io.harness.testframework.framework.Setup;
 import io.harness.testframework.restutils.WorkflowRestUtils;
-import io.restassured.http.ContentType;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
+
 import software.wings.api.DeploymentType;
 import software.wings.beans.Application;
 import software.wings.beans.Environment;
@@ -54,12 +50,18 @@ import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.sm.StateType;
 
+import com.google.common.collect.ImmutableMap;
+import com.google.inject.Inject;
+import io.restassured.http.ContentType;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import javax.ws.rs.core.GenericType;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 public class GraphRenderingFunctionalTest extends AbstractFunctionalTest {
   @Inject private OwnerManager ownerManager;

@@ -2,12 +2,6 @@ package io.harness.batch.processing;
 
 import static org.mockito.Mockito.mock;
 
-import com.google.common.collect.ImmutableSet;
-import com.google.inject.Module;
-import com.google.inject.Provides;
-import com.google.inject.Singleton;
-import com.google.inject.util.Modules;
-
 import io.harness.batch.processing.config.BatchProcessingRegistrarsModule;
 import io.harness.factory.ClosingFactory;
 import io.harness.factory.ClosingFactoryModule;
@@ -18,20 +12,26 @@ import io.harness.serializer.PersistenceRegistrars;
 import io.harness.testlib.module.MongoRuleMixin;
 import io.harness.testlib.module.TestMongoModule;
 import io.harness.timescaledb.TimeScaleDBService;
-import org.junit.rules.MethodRule;
-import org.junit.runners.model.FrameworkMethod;
-import org.junit.runners.model.Statement;
-import org.mongodb.morphia.converters.TypeConverter;
+
 import software.wings.dl.WingsMongoPersistence;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.impl.security.NoOpSecretManagerImpl;
 import software.wings.service.intfc.security.SecretManager;
 
+import com.google.common.collect.ImmutableSet;
+import com.google.inject.Module;
+import com.google.inject.Provides;
+import com.google.inject.Singleton;
+import com.google.inject.util.Modules;
 import java.lang.annotation.Annotation;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
+import org.junit.rules.MethodRule;
+import org.junit.runners.model.FrameworkMethod;
+import org.junit.runners.model.Statement;
+import org.mongodb.morphia.converters.TypeConverter;
 
 public class BatchProcessingRule implements MethodRule, InjectorRuleMixin, MongoRuleMixin {
   private final ClosingFactory closingFactory;

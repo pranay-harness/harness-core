@@ -8,21 +8,17 @@ import static io.harness.beans.SortOrder.OrderType.DESC;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.persistence.HQuery.excludeAuthority;
-import static java.util.Arrays.asList;
+
 import static software.wings.security.PermissionAttribute.ResourceType.APPLICATION;
 
-import com.google.common.base.Preconditions;
-import com.google.inject.Inject;
+import static java.util.Arrays.asList;
 
-import com.codahale.metrics.annotation.ExceptionMetered;
-import com.codahale.metrics.annotation.Timed;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.beans.SortOrder;
 import io.harness.persistence.CreatedAtAware;
 import io.harness.rest.RestResponse;
-import io.swagger.annotations.Api;
-import org.apache.commons.lang3.StringUtils;
+
 import software.wings.beans.Activity;
 import software.wings.beans.Log;
 import software.wings.beans.command.CommandUnitDetails;
@@ -35,6 +31,11 @@ import software.wings.service.intfc.ActivityService;
 import software.wings.service.intfc.DataStoreService;
 import software.wings.service.intfc.LogService;
 
+import com.codahale.metrics.annotation.ExceptionMetered;
+import com.codahale.metrics.annotation.Timed;
+import com.google.common.base.Preconditions;
+import com.google.inject.Inject;
+import io.swagger.annotations.Api;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
@@ -50,6 +51,7 @@ import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.ResponseBuilder;
+import org.apache.commons.lang3.StringUtils;
 
 /**
  * Created by peeyushaggarwal on 5/27/16.

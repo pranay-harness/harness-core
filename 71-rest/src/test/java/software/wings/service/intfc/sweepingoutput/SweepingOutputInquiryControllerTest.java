@@ -2,14 +2,14 @@ package software.wings.service.intfc.sweepingoutput;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.rule.OwnerRule.PRASHANT;
-import static org.assertj.core.api.Assertions.assertThat;
+
 import static software.wings.sm.StateExecutionInstance.Builder.aStateExecutionInstance;
+
+import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
+
 import software.wings.WingsBaseTest;
 import software.wings.api.PhaseElement;
 import software.wings.sm.ContextElement;
@@ -17,6 +17,9 @@ import software.wings.sm.StateExecutionInstance;
 import software.wings.sm.StateType;
 
 import java.util.LinkedList;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 public class SweepingOutputInquiryControllerTest extends WingsBaseTest {
   private final String infraDefinitionId = generateUuid();

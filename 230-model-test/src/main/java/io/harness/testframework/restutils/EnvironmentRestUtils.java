@@ -1,12 +1,8 @@
 package io.harness.testframework.restutils;
 
-import com.google.inject.Singleton;
-
 import io.harness.rest.RestResponse;
 import io.harness.testframework.framework.Setup;
-import io.restassured.http.ContentType;
-import io.restassured.mapper.ObjectMapperType;
-import io.restassured.path.json.JsonPath;
+
 import software.wings.beans.Account;
 import software.wings.beans.AwsInfrastructureMapping;
 import software.wings.beans.EcsInfrastructureMapping;
@@ -14,6 +10,10 @@ import software.wings.beans.Environment;
 import software.wings.beans.GcpKubernetesInfrastructureMapping;
 import software.wings.beans.PhysicalInfrastructureMapping;
 
+import com.google.inject.Singleton;
+import io.restassured.http.ContentType;
+import io.restassured.mapper.ObjectMapperType;
+import io.restassured.path.json.JsonPath;
 import java.util.ArrayList;
 import java.util.HashMap;
 import javax.ws.rs.core.GenericType;

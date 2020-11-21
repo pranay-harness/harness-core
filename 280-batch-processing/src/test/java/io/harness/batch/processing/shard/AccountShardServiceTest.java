@@ -1,10 +1,9 @@
 package io.harness.batch.processing.shard;
 
 import static io.harness.rule.OwnerRule.HITESH;
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.when;
-
-import com.google.common.collect.ImmutableList;
 
 import io.harness.CategoryTest;
 import io.harness.batch.processing.config.BatchMainConfig;
@@ -13,17 +12,19 @@ import io.harness.batch.processing.dao.intfc.AccountShardMappingDao;
 import io.harness.batch.processing.entities.AccountShardMapping;
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
+
+import software.wings.beans.Account;
+import software.wings.service.intfc.instance.CloudToHarnessMappingService;
+
+import com.google.common.collect.ImmutableList;
+import java.util.List;
+import java.util.stream.Collectors;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
-import software.wings.beans.Account;
-import software.wings.service.intfc.instance.CloudToHarnessMappingService;
-
-import java.util.List;
-import java.util.stream.Collectors;
 
 @RunWith(MockitoJUnitRunner.class)
 public class AccountShardServiceTest extends CategoryTest {

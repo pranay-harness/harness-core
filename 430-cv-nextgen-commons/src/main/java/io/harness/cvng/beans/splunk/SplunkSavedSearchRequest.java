@@ -1,7 +1,8 @@
 package io.harness.cvng.beans.splunk;
 
-import com.fasterxml.jackson.annotation.JsonTypeName;
 import io.harness.cvng.beans.DataCollectionRequestType;
+
+import com.fasterxml.jackson.annotation.JsonTypeName;
 import lombok.experimental.SuperBuilder;
 
 @JsonTypeName("SPLUNK_SAVED_SEARCHES")

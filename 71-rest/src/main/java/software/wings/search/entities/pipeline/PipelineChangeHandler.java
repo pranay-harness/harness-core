@@ -2,13 +2,9 @@ package software.wings.search.entities.pipeline;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
 
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
-
-import com.mongodb.DBObject;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.WorkflowType;
-import lombok.extern.slf4j.Slf4j;
+
 import software.wings.audit.AuditHeader;
 import software.wings.audit.AuditHeader.AuditHeaderKeys;
 import software.wings.audit.EntityAuditRecord;
@@ -34,9 +30,13 @@ import software.wings.search.framework.SearchEntityUtils;
 import software.wings.search.framework.changestreams.ChangeEvent;
 import software.wings.search.framework.changestreams.ChangeType;
 
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
+import com.mongodb.DBObject;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * The handler which will maintain the pipeline
@@ -98,7 +98,7 @@ public class PipelineChangeHandler implements ChangeHandler {
           workflowExecution.getCreatedAt(), DAYS_TO_RETAIN);
       result = result
           && searchDao.appendToListInSingleDocument(PipelineSearchEntity.TYPE, fieldToUpdate, documentToUpdate,
-                 deploymentRelatedEntityViewMap, MAX_RUNTIME_ENTITIES);
+              deploymentRelatedEntityViewMap, MAX_RUNTIME_ENTITIES);
     }
     return result;
   }

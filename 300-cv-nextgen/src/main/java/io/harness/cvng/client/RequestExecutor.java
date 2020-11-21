@@ -1,16 +1,15 @@
 package io.harness.cvng.client;
 
-import com.google.inject.Singleton;
-
 import io.harness.eraro.ResponseMessage;
 import io.harness.rest.RestResponse;
 import io.harness.serializer.JsonUtils;
+
+import com.google.inject.Singleton;
+import java.io.IOException;
+import java.util.List;
 import lombok.extern.slf4j.Slf4j;
 import retrofit2.Call;
 import retrofit2.Response;
-
-import java.io.IOException;
-import java.util.List;
 
 @Singleton
 @Slf4j

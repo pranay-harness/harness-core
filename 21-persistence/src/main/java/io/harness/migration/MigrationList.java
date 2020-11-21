@@ -1,12 +1,11 @@
 package io.harness.migration;
 
-import com.google.common.collect.ImmutableMap;
-
 import io.harness.migration.MigrationJob.Metadata;
 import io.harness.persistence.HPersistence;
-import lombok.experimental.UtilityClass;
 
+import com.google.common.collect.ImmutableMap;
 import java.util.Map;
+import lombok.experimental.UtilityClass;
 
 @UtilityClass
 public class MigrationList {

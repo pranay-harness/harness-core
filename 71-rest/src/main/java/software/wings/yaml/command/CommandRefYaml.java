@@ -1,14 +1,14 @@
 package software.wings.yaml.command;
 
-import com.fasterxml.jackson.annotation.JsonTypeName;
-import lombok.Builder;
-import lombok.Data;
-import lombok.EqualsAndHashCode;
 import software.wings.beans.command.AbstractCommandUnit;
 import software.wings.beans.command.CommandUnitType;
 import software.wings.yaml.templatelibrary.TemplateLibraryYaml;
 
+import com.fasterxml.jackson.annotation.JsonTypeName;
 import java.util.List;
+import lombok.Builder;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
 
 /**
  * This yaml is used to represent a command reference. A command could be referred from another command, in that case,

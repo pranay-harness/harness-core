@@ -1,17 +1,15 @@
 package software.wings.service.impl.command;
 
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
-import static java.util.stream.Collectors.toList;
+
 import static software.wings.beans.CommandCategory.CommandUnit;
 import static software.wings.beans.CommandCategory.Type.COMMANDS;
 import static software.wings.beans.CommandCategory.Type.COPY;
 import static software.wings.beans.CommandCategory.Type.SCRIPTS;
 import static software.wings.beans.CommandCategory.Type.VERIFICATIONS;
 
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
+import static java.util.stream.Collectors.toList;
 
-import org.hibernate.validator.constraints.NotEmpty;
 import software.wings.beans.CommandCategory;
 import software.wings.beans.command.CommandUnitType;
 import software.wings.beans.command.ServiceCommand;
@@ -19,8 +17,11 @@ import software.wings.beans.command.ServiceCommand.ServiceCommandKeys;
 import software.wings.dl.WingsPersistence;
 import software.wings.stencils.StencilCategory;
 
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import java.util.ArrayList;
 import java.util.List;
+import org.hibernate.validator.constraints.NotEmpty;
 
 @Singleton
 public class CommandHelper {

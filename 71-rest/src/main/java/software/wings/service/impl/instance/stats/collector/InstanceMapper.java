@@ -1,6 +1,5 @@
 package software.wings.service.impl.instance.stats.collector;
 
-import lombok.AllArgsConstructor;
 import software.wings.beans.EntityType;
 import software.wings.beans.infrastructure.instance.Instance;
 import software.wings.beans.infrastructure.instance.stats.InstanceStatsSnapshot;
@@ -13,6 +12,7 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import lombok.AllArgsConstructor;
 
 @AllArgsConstructor
 class InstanceMapper implements Mapper<Collection<Instance>, InstanceStatsSnapshot> {

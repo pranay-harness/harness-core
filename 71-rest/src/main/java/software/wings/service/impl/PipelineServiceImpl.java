@@ -1,6 +1,5 @@
 package software.wings.service.impl;
 
-import static com.google.common.base.Strings.isNullOrEmpty;
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.beans.OrchestrationWorkflowType.BUILD;
 import static io.harness.beans.OrchestrationWorkflowType.ROLLING;
@@ -16,12 +15,7 @@ import static io.harness.exception.WingsException.USER;
 import static io.harness.mongo.MongoUtils.setUnset;
 import static io.harness.validation.Validator.notEmptyCheck;
 import static io.harness.validation.Validator.notNullCheck;
-import static java.lang.String.format;
-import static java.lang.String.join;
-import static java.util.Arrays.stream;
-import static java.util.stream.Collectors.toList;
-import static java.util.stream.Collectors.toSet;
-import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
+
 import static software.wings.beans.EntityType.APPDYNAMICS_APPID;
 import static software.wings.beans.EntityType.APPDYNAMICS_CONFIGID;
 import static software.wings.beans.EntityType.ARTIFACT;
@@ -44,11 +38,13 @@ import static software.wings.service.impl.pipeline.PipelineServiceValidator.vali
 import static software.wings.sm.StateType.APPROVAL;
 import static software.wings.sm.StateType.ENV_STATE;
 
-import com.google.common.annotations.VisibleForTesting;
-import com.google.common.collect.Lists;
-import com.google.common.collect.Sets;
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
+import static com.google.common.base.Strings.isNullOrEmpty;
+import static java.lang.String.format;
+import static java.lang.String.join;
+import static java.util.Arrays.stream;
+import static java.util.stream.Collectors.toList;
+import static java.util.stream.Collectors.toSet;
+import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.PageRequest;
@@ -67,11 +63,7 @@ import io.harness.limits.counter.service.CounterSyncer;
 import io.harness.persistence.HIterator;
 import io.harness.queue.QueuePublisher;
 import io.harness.validation.Create;
-import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.StringUtils;
-import org.hibernate.validator.constraints.NotEmpty;
-import org.mongodb.morphia.query.UpdateOperations;
-import ru.vyarus.guice.validator.group.annotation.ValidationGroups;
+
 import software.wings.api.DeploymentType;
 import software.wings.beans.AccountEvent;
 import software.wings.beans.AccountEventType;
@@ -119,6 +111,11 @@ import software.wings.service.intfc.ownership.OwnedByPipeline;
 import software.wings.service.intfc.yaml.YamlPushService;
 import software.wings.sm.StateMachine;
 
+import com.google.common.annotations.VisibleForTesting;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -134,6 +131,11 @@ import java.util.regex.Matcher;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import javax.validation.executable.ValidateOnExecution;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
+import org.hibernate.validator.constraints.NotEmpty;
+import org.mongodb.morphia.query.UpdateOperations;
+import ru.vyarus.guice.validator.group.annotation.ValidationGroups;
 
 /**
  * Created by anubhaw on 10/26/16.

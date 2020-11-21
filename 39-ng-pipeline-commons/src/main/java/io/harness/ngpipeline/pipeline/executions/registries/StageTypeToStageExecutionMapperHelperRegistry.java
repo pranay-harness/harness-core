@@ -1,13 +1,12 @@
 package io.harness.ngpipeline.pipeline.executions.registries;
 
-import com.google.inject.Singleton;
-
 import io.harness.ngpipeline.pipeline.StageTypeToStageExecutionSummaryMapper;
 import io.harness.pipeline.executions.NGStageType;
 import io.harness.registries.Registry;
 import io.harness.registries.exceptions.DuplicateRegistryException;
 import io.harness.registries.exceptions.UnregisteredKeyAccessException;
 
+import com.google.inject.Singleton;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 

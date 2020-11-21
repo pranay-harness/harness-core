@@ -1,22 +1,17 @@
 package software.wings.service.impl.infrastructuredefinition;
 
 import static io.harness.rule.OwnerRule.VAIBHAV_SI;
-import static org.assertj.core.api.Assertions.assertThat;
+
 import static software.wings.beans.Application.Builder.anApplication;
 import static software.wings.utils.WingsTestConstants.SETTING_ID;
 
-import com.google.inject.Inject;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.category.element.DeprecatedIntegrationTests;
 import io.harness.category.element.IntegrationTests;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.rule.Owner;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Ignore;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
-import org.mockito.InjectMocks;
+
 import software.wings.api.CloudProviderType;
 import software.wings.api.DeploymentType;
 import software.wings.beans.Application;
@@ -34,10 +29,17 @@ import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.EnvironmentService;
 import software.wings.service.intfc.InfrastructureDefinitionService;
 
+import com.google.inject.Inject;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Ignore;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
+import org.mockito.InjectMocks;
 
 public class InfrastructureDefinitionServiceIntegrationTest extends IntegrationTestBase {
   @InjectMocks @Inject private AppService appService;

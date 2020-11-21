@@ -6,6 +6,7 @@ import static io.harness.beans.OrchestrationWorkflowType.BUILD;
 import static io.harness.beans.OrchestrationWorkflowType.CANARY;
 import static io.harness.beans.OrchestrationWorkflowType.MULTI_SERVICE;
 import static io.harness.beans.OrchestrationWorkflowType.ROLLING;
+
 import static software.wings.beans.InfrastructureMappingType.AWS_AMI;
 import static software.wings.beans.InfrastructureMappingType.AWS_AWS_CODEDEPLOY;
 import static software.wings.beans.InfrastructureMappingType.AWS_AWS_LAMBDA;
@@ -48,8 +49,6 @@ import static software.wings.beans.trigger.TriggerConditionType.NEW_MANIFEST;
 import static software.wings.beans.trigger.TriggerConditionType.PIPELINE_COMPLETION;
 import static software.wings.beans.trigger.TriggerConditionType.SCHEDULED;
 import static software.wings.beans.trigger.TriggerConditionType.WEBHOOK;
-
-import com.google.inject.multibindings.MapBinder;
 
 import software.wings.api.DeploymentType;
 import software.wings.beans.InfrastructureProvisionerType;
@@ -216,6 +215,8 @@ import software.wings.yaml.trigger.ManifestTriggerConditionHandler;
 import software.wings.yaml.trigger.PipelineTriggerConditionHandler;
 import software.wings.yaml.trigger.ScheduledTriggerConditionHandler;
 import software.wings.yaml.trigger.WebhookTriggerConditionHandler;
+
+import com.google.inject.multibindings.MapBinder;
 
 /**
  * Guice Module for initializing all yaml classes.

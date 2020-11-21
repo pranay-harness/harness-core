@@ -3,6 +3,7 @@ package io.harness.connector.mappers.splunkconnectormapper;
 import static io.harness.encryption.Scope.ACCOUNT;
 import static io.harness.encryption.SecretRefData.SECRET_DOT_DELIMINITER;
 import static io.harness.rule.OwnerRule.NEMANJA;
+
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.CategoryTest;
@@ -11,6 +12,7 @@ import io.harness.connector.entities.embedded.splunkconnector.SplunkConnector;
 import io.harness.delegate.beans.connector.splunkconnector.SplunkConnectorDTO;
 import io.harness.encryption.SecretRefData;
 import io.harness.rule.Owner;
+
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;

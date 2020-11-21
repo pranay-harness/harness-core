@@ -1,28 +1,13 @@
 package software.wings.service.impl.slack;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
+
 import static software.wings.security.JWT_CATEGORY.EXTERNAL_SERVICE_SECRET;
 import static software.wings.sm.states.ApprovalState.JSON;
 
-import com.google.api.client.util.Charsets;
-import com.google.common.io.Resources;
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
-
-import com.auth0.jwt.JWT;
-import com.auth0.jwt.JWTVerifier;
-import com.auth0.jwt.algorithms.Algorithm;
-import com.auth0.jwt.exceptions.JWTVerificationException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.rest.RestResponse;
-import lombok.extern.slf4j.Slf4j;
-import okhttp3.OkHttpClient;
-import okhttp3.Request;
-import okhttp3.RequestBody;
-import okhttp3.Response;
-import org.apache.commons.text.StrSubstitutor;
-import org.json.JSONObject;
+
 import software.wings.api.ApprovalStateExecutionData;
 import software.wings.beans.ApprovalDetails;
 import software.wings.beans.approval.SlackApprovalParams;
@@ -30,6 +15,15 @@ import software.wings.security.SecretManager;
 import software.wings.service.impl.notifications.SlackApprovalMessageKeys;
 import software.wings.service.intfc.WorkflowExecutionService;
 
+import com.auth0.jwt.JWT;
+import com.auth0.jwt.JWTVerifier;
+import com.auth0.jwt.algorithms.Algorithm;
+import com.auth0.jwt.exceptions.JWTVerificationException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.api.client.util.Charsets;
+import com.google.common.io.Resources;
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.net.URL;
@@ -37,6 +31,13 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 import javax.ws.rs.core.MultivaluedMap;
+import lombok.extern.slf4j.Slf4j;
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
+import okhttp3.RequestBody;
+import okhttp3.Response;
+import org.apache.commons.text.StrSubstitutor;
+import org.json.JSONObject;
 
 @OwnedBy(CDC)
 @Slf4j

@@ -2,6 +2,7 @@ package io.harness.connector.impl;
 
 import static io.harness.encryption.Scope.ACCOUNT;
 import static io.harness.rule.OwnerRule.ABHINAV;
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.doReturn;
@@ -22,6 +23,7 @@ import io.harness.delegate.beans.git.GitCommandExecutionResponse.GitCommandStatu
 import io.harness.rule.Owner;
 import io.harness.secretmanagerclient.services.api.SecretManagerClientService;
 import io.harness.service.DelegateGrpcClientWrapper;
+
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;

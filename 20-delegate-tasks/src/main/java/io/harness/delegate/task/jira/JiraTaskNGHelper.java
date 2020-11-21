@@ -1,14 +1,15 @@
 package io.harness.delegate.task.jira;
 
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
+import static io.harness.logging.CommandExecutionStatus.FAILURE;
+
 import io.harness.delegate.task.jira.response.JiraTaskNGResponse;
 import io.harness.security.encryption.SecretDecryptionService;
+
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-
-import static io.harness.logging.CommandExecutionStatus.FAILURE;
 
 @AllArgsConstructor(access = AccessLevel.PACKAGE, onConstructor = @__({ @Inject }))
 @Slf4j

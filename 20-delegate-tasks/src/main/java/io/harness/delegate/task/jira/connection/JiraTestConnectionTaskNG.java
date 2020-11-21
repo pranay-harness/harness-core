@@ -1,7 +1,5 @@
 package io.harness.delegate.task.jira.connection;
 
-import com.google.inject.Inject;
-
 import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.delegate.beans.DelegateTaskPackage;
 import io.harness.delegate.beans.DelegateTaskResponse;
@@ -17,10 +15,11 @@ import io.harness.delegate.task.jira.JiraTaskNGParameters;
 import io.harness.delegate.task.jira.response.JiraTaskNGResponse;
 import io.harness.jira.JiraAction;
 import io.harness.logging.CommandExecutionStatus;
-import org.apache.commons.lang3.NotImplementedException;
 
+import com.google.inject.Inject;
 import java.util.function.BooleanSupplier;
 import java.util.function.Consumer;
+import org.apache.commons.lang3.NotImplementedException;
 
 public class JiraTestConnectionTaskNG extends AbstractDelegateRunnableTask {
   @Inject JiraTaskNGHelper jiraTaskNGHelper;

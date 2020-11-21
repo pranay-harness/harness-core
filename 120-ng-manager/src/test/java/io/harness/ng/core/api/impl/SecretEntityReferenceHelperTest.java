@@ -2,6 +2,7 @@ package io.harness.ng.core.api.impl;
 
 import static io.harness.EntityType.CONNECTORS;
 import static io.harness.EntityType.SECRETS;
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
@@ -18,6 +19,8 @@ import io.harness.rule.Owner;
 import io.harness.rule.OwnerRule;
 import io.harness.secretmanagerclient.dto.EncryptedDataDTO;
 import io.harness.utils.FullyQualifiedIdentifierHelper;
+
+import java.util.List;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -25,8 +28,6 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
-
-import java.util.List;
 
 public class SecretEntityReferenceHelperTest extends CategoryTest {
   @InjectMocks SecretEntityReferenceHelper secretEntityReferenceHelper;

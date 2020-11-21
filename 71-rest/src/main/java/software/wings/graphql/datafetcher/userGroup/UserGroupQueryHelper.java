@@ -2,18 +2,17 @@ package software.wings.graphql.datafetcher.userGroup;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
-
-import lombok.extern.slf4j.Slf4j;
-import org.mongodb.morphia.query.FieldEnd;
-import org.mongodb.morphia.query.Query;
 import software.wings.beans.security.UserGroup;
 import software.wings.graphql.datafetcher.DataFetcherUtils;
 import software.wings.graphql.schema.type.aggregation.QLIdFilter;
 import software.wings.graphql.schema.type.usergroup.QLUserGroupFilter;
 
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import java.util.List;
+import lombok.extern.slf4j.Slf4j;
+import org.mongodb.morphia.query.FieldEnd;
+import org.mongodb.morphia.query.Query;
 
 @Singleton
 @Slf4j

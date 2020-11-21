@@ -1,20 +1,19 @@
 package software.wings.graphql.datafetcher;
 
+import software.wings.app.GraphQLModule;
+
 import com.google.inject.Inject;
 import com.google.inject.Injector;
 import com.google.inject.Key;
 import com.google.inject.name.Names;
-
+import java.util.HashMap;
+import java.util.Map;
 import lombok.AccessLevel;
 import lombok.experimental.FieldDefaults;
 import org.dataloader.DataLoader;
 import org.dataloader.DataLoaderOptions;
 import org.dataloader.DataLoaderRegistry;
 import org.dataloader.MappedBatchLoader;
-import software.wings.app.GraphQLModule;
-
-import java.util.HashMap;
-import java.util.Map;
 
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class DataLoaderRegistryHelper {

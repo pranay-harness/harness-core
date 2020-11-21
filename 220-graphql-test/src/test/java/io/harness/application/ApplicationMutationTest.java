@@ -2,9 +2,8 @@ package io.harness.application;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.rule.OwnerRule.ROHIT_KUMAR;
-import static org.assertj.core.api.Assertions.assertThat;
 
-import com.google.inject.Inject;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.GraphQLTest;
 import io.harness.beans.EmbeddedUser;
@@ -18,13 +17,16 @@ import io.harness.generator.SettingGenerator;
 import io.harness.rule.Owner;
 import io.harness.serializer.JsonUtils;
 import io.harness.testframework.graphql.QLTestObject;
-import lombok.Data;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
+
 import software.wings.beans.Application;
 import software.wings.beans.SettingAttribute;
 import software.wings.graphql.schema.type.connector.QLGitConnector;
 import software.wings.service.intfc.HarnessTagService;
+
+import com.google.inject.Inject;
+import lombok.Data;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 public class ApplicationMutationTest extends GraphQLTest {
   @Inject private OwnerManager ownerManager;

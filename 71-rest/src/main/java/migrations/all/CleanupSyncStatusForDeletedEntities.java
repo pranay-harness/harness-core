@@ -2,13 +2,8 @@ package migrations.all;
 
 import static io.harness.persistence.HQuery.excludeAuthority;
 
-import com.google.inject.Inject;
-
 import io.harness.persistence.HIterator;
-import lombok.extern.slf4j.Slf4j;
-import migrations.Migration;
-import org.mongodb.morphia.Key;
-import org.mongodb.morphia.query.Query;
+
 import software.wings.beans.Application;
 import software.wings.beans.Environment;
 import software.wings.beans.InfrastructureMapping;
@@ -17,10 +12,15 @@ import software.wings.beans.infrastructure.instance.SyncStatus;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.instance.InstanceService;
 
+import com.google.inject.Inject;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
+import lombok.extern.slf4j.Slf4j;
+import migrations.Migration;
+import org.mongodb.morphia.Key;
+import org.mongodb.morphia.query.Query;
 
 /**
  * Migration script to cleanup sync status if inframapping/env/service/app was deleted

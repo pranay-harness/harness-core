@@ -12,6 +12,11 @@ import io.harness.mongo.index.NgUniqueIndex;
 import io.harness.persistence.PersistentEntity;
 import io.harness.persistence.UuidAccess;
 import io.harness.pms.ambiance.Level;
+
+import java.time.OffsetDateTime;
+import java.util.Date;
+import java.util.List;
+import javax.validation.constraints.NotNull;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.Singular;
@@ -23,11 +28,6 @@ import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.annotation.Version;
 import org.springframework.data.mongodb.core.mapping.Document;
-
-import java.time.OffsetDateTime;
-import java.util.Date;
-import java.util.List;
-import javax.validation.constraints.NotNull;
 
 @OwnedBy(CDC)
 @Redesign

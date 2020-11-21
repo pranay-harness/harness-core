@@ -1,7 +1,5 @@
 package io.harness.batch.processing.billing.tasklet;
 
-import com.google.inject.Singleton;
-
 import io.harness.batch.processing.billing.tasklet.dao.intfc.DataGeneratedNotificationDao;
 import io.harness.batch.processing.billing.tasklet.entities.DataGeneratedNotification;
 import io.harness.batch.processing.ccm.CCMJobConstants;
@@ -10,13 +8,7 @@ import io.harness.ccm.cluster.entities.CEUserInfo;
 import io.harness.ccm.commons.utils.DataUtils;
 import io.harness.timescaledb.DBUtils;
 import io.harness.timescaledb.TimeScaleDBService;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.batch.core.JobParameters;
-import org.springframework.batch.core.StepContribution;
-import org.springframework.batch.core.scope.context.ChunkContext;
-import org.springframework.batch.core.step.tasklet.Tasklet;
-import org.springframework.batch.repeat.RepeatStatus;
-import org.springframework.beans.factory.annotation.Autowired;
+
 import software.wings.beans.User;
 import software.wings.beans.ce.CEMetadataRecord;
 import software.wings.beans.security.UserGroup;
@@ -24,6 +16,7 @@ import software.wings.helpers.ext.mail.EmailData;
 import software.wings.security.PermissionAttribute.PermissionType;
 import software.wings.service.intfc.instance.CloudToHarnessMappingService;
 
+import com.google.inject.Singleton;
 import java.net.URISyntaxException;
 import java.sql.Connection;
 import java.sql.ResultSet;
@@ -42,6 +35,13 @@ import java.util.Map;
 import java.util.Set;
 import java.util.StringJoiner;
 import java.util.stream.Collectors;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.batch.core.JobParameters;
+import org.springframework.batch.core.StepContribution;
+import org.springframework.batch.core.scope.context.ChunkContext;
+import org.springframework.batch.core.step.tasklet.Tasklet;
+import org.springframework.batch.repeat.RepeatStatus;
+import org.springframework.beans.factory.annotation.Autowired;
 
 @Slf4j
 @Singleton

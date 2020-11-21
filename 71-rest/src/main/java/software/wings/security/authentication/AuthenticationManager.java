@@ -17,11 +17,8 @@ import static io.harness.eraro.ErrorCode.USER_LOCKED;
 import static io.harness.eraro.ErrorCode.USER_NOT_AUTHORIZED;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.exception.WingsException.USER_ADMIN;
-import static org.apache.cxf.common.util.UrlUtils.urlDecode;
 
-import com.google.common.base.Preconditions;
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
+import static org.apache.cxf.common.util.UrlUtils.urlDecode;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.configuration.DeployMode;
@@ -29,7 +26,7 @@ import io.harness.eraro.ErrorCode;
 import io.harness.exception.InvalidCredentialsException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
-import lombok.extern.slf4j.Slf4j;
+
 import software.wings.app.MainConfiguration;
 import software.wings.beans.Account;
 import software.wings.beans.AuthToken;
@@ -46,6 +43,9 @@ import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.AuthService;
 import software.wings.service.intfc.UserService;
 
+import com.google.common.base.Preconditions;
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.Arrays;
@@ -55,6 +55,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import javax.ws.rs.core.Response;
+import lombok.extern.slf4j.Slf4j;
 
 @OwnedBy(PL)
 @Singleton

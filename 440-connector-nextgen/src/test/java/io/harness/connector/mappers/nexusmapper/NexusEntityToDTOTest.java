@@ -1,5 +1,9 @@
 package io.harness.connector.mappers.nexusmapper;
 
+import static io.harness.encryption.Scope.ACCOUNT;
+
+import static org.assertj.core.api.Assertions.assertThat;
+
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.connector.entities.embedded.nexusconnector.NexusConnector;
@@ -11,14 +15,12 @@ import io.harness.delegate.beans.connector.nexusconnector.NexusConnectorDTO;
 import io.harness.delegate.beans.connector.nexusconnector.NexusUsernamePasswordAuthDTO;
 import io.harness.rule.Owner;
 import io.harness.rule.OwnerRule;
+
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.mockito.MockitoAnnotations;
-
-import static io.harness.encryption.Scope.ACCOUNT;
-import static org.assertj.core.api.Assertions.assertThat;
 
 public class NexusEntityToDTOTest extends CategoryTest {
   @InjectMocks NexusEntityToDTO nexusEntityToDTO;

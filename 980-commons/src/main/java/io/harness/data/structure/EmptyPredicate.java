@@ -9,7 +9,9 @@ import java.util.Map;
  */
 
 public class EmptyPredicate {
-  public interface IsEmpty { boolean isEmpty(); }
+  public interface IsEmpty {
+    boolean isEmpty();
+  }
 
   public static <T extends IsEmpty> boolean isEmpty(T structure) {
     return structure == null || structure.isEmpty();

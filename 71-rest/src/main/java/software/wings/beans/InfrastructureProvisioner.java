@@ -1,9 +1,5 @@
 package software.wings.beans;
 
-import com.fasterxml.jackson.annotation.JsonSubTypes;
-import com.fasterxml.jackson.annotation.JsonSubTypes.Type;
-import com.fasterxml.jackson.annotation.JsonTypeInfo;
-import com.fasterxml.jackson.annotation.JsonTypeInfo.Id;
 import io.harness.annotation.HarnessEntity;
 import io.harness.beans.EmbeddedUser;
 import io.harness.data.validator.Trimmed;
@@ -13,6 +9,19 @@ import io.harness.mongo.index.Field;
 import io.harness.mongo.index.IndexType;
 import io.harness.persistence.AccountAccess;
 import io.harness.persistence.NameAccess;
+
+import software.wings.beans.InfrastructureProvisioner.InfrastructureProvisionerKeys;
+import software.wings.beans.entityinterface.ApplicationAccess;
+import software.wings.beans.entityinterface.TagAware;
+import software.wings.beans.shellscript.provisioner.ShellScriptInfrastructureProvisioner;
+import software.wings.yaml.BaseEntityYaml;
+
+import com.fasterxml.jackson.annotation.JsonSubTypes;
+import com.fasterxml.jackson.annotation.JsonSubTypes.Type;
+import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import com.fasterxml.jackson.annotation.JsonTypeInfo.Id;
+import java.util.List;
+import javax.validation.Valid;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
@@ -20,14 +29,6 @@ import lombok.experimental.FieldNameConstants;
 import lombok.experimental.UtilityClass;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Entity;
-import software.wings.beans.InfrastructureProvisioner.InfrastructureProvisionerKeys;
-import software.wings.beans.entityinterface.ApplicationAccess;
-import software.wings.beans.entityinterface.TagAware;
-import software.wings.beans.shellscript.provisioner.ShellScriptInfrastructureProvisioner;
-import software.wings.yaml.BaseEntityYaml;
-
-import java.util.List;
-import javax.validation.Valid;
 
 @Data
 @NoArgsConstructor

@@ -1,9 +1,9 @@
 package io.harness.capability;
 
-import com.google.protobuf.Any;
-
 import io.harness.persistence.PersistentEntity;
 import io.harness.persistence.UpdatedAtAware;
+
+import com.google.protobuf.Any;
 import lombok.Builder;
 import lombok.Data;
 

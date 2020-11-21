@@ -5,18 +5,11 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.delegate.beans.TaskData.DEFAULT_SYNC_CALL_TIMEOUT;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.govern.Switch.unhandled;
+
 import static software.wings.app.ManagerCacheRegistrar.NEW_RELIC_APPLICATION_CACHE;
 import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static software.wings.service.impl.ThirdPartyApiCallLog.createApiCallLog;
 
-import com.google.common.base.Charsets;
-import com.google.common.collect.Sets;
-import com.google.common.io.Resources;
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
-import com.google.inject.name.Named;
-
-import com.fasterxml.jackson.core.type.TypeReference;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.VerificationOperationException;
@@ -24,7 +17,7 @@ import io.harness.exception.WingsException;
 import io.harness.rest.RestResponse;
 import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.serializer.YamlUtils;
-import lombok.extern.slf4j.Slf4j;
+
 import software.wings.APMFetchConfig;
 import software.wings.annotation.EncryptableSetting;
 import software.wings.beans.APMValidateCollectorConfig;
@@ -58,6 +51,13 @@ import software.wings.sm.states.APMVerificationState.Method;
 import software.wings.sm.states.NewRelicState;
 import software.wings.sm.states.NewRelicState.Metric;
 
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.google.common.base.Charsets;
+import com.google.common.collect.Sets;
+import com.google.common.io.Resources;
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
+import com.google.inject.name.Named;
 import java.io.IOException;
 import java.net.URL;
 import java.util.ArrayList;
@@ -71,6 +71,7 @@ import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import javax.cache.Cache;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * Created by rsingh on 8/28/17.

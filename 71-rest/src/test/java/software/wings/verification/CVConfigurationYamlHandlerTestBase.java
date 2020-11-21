@@ -3,9 +3,6 @@ package software.wings.verification;
 import static org.apache.cxf.ws.addressing.ContextUtils.generateUUID;
 import static org.mockito.Mockito.when;
 
-import org.apache.commons.lang3.reflect.FieldUtils;
-import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
 import software.wings.WingsBaseTest;
 import software.wings.beans.Application;
 import software.wings.beans.Environment;
@@ -19,6 +16,10 @@ import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.verification.CVConfigurationService;
 import software.wings.sm.StateType;
 import software.wings.verification.CVConfiguration.CVConfigurationYaml;
+
+import org.apache.commons.lang3.reflect.FieldUtils;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
 
 public class CVConfigurationYamlHandlerTestBase extends WingsBaseTest {
   @Mock YamlHelper yamlHelper;

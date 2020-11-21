@@ -1,17 +1,27 @@
 package software.wings.service.impl.newrelic;
 
 import static io.harness.rule.OwnerRule.SOWMYA;
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import com.google.common.collect.Lists;
-import com.google.inject.Inject;
-
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
+
+import software.wings.WingsBaseTest;
+import software.wings.beans.NewRelicConfig;
+import software.wings.delegatetasks.cv.RequestExecutor;
+import software.wings.service.impl.ThirdPartyApiCallLog;
+import software.wings.service.intfc.newrelic.NewRelicDelegateService;
+
+import com.google.common.collect.Lists;
+import com.google.inject.Inject;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.concurrent.TimeUnit;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.reflect.FieldUtils;
 import org.junit.Before;
@@ -20,15 +30,6 @@ import org.junit.experimental.categories.Category;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import retrofit2.Call;
-import software.wings.WingsBaseTest;
-import software.wings.beans.NewRelicConfig;
-import software.wings.delegatetasks.cv.RequestExecutor;
-import software.wings.service.impl.ThirdPartyApiCallLog;
-import software.wings.service.intfc.newrelic.NewRelicDelegateService;
-
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.concurrent.TimeUnit;
 
 @Slf4j
 public class NewRelicDelgateServiceImplTest extends WingsBaseTest {

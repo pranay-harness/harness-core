@@ -1,8 +1,5 @@
 package io.harness.registrars;
 
-import com.google.inject.Inject;
-import com.google.inject.Injector;
-
 import io.harness.pms.steps.StepType;
 import io.harness.registries.registrar.StepRegistrar;
 import io.harness.state.Step;
@@ -18,9 +15,11 @@ import io.harness.states.PublishStep;
 import io.harness.states.RestoreCacheStep;
 import io.harness.states.RunStep;
 import io.harness.states.SaveCacheStep;
-import org.apache.commons.lang3.tuple.Pair;
 
+import com.google.inject.Inject;
+import com.google.inject.Injector;
 import java.util.Set;
+import org.apache.commons.lang3.tuple.Pair;
 
 public class ExecutionRegistrar implements StepRegistrar {
   @Inject private Injector injector;

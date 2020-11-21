@@ -1,9 +1,5 @@
 package io.harness.delegate.task.aws;
 
-import com.google.common.annotations.VisibleForTesting;
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
-
 import io.harness.aws.AwsAccessKeyCredential;
 import io.harness.aws.AwsConfig;
 import io.harness.aws.CrossAccountAccess;
@@ -15,6 +11,9 @@ import io.harness.encryption.SecretRefData;
 import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.security.encryption.SecretDecryptionService;
 
+import com.google.common.annotations.VisibleForTesting;
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import java.util.List;
 
 @Singleton

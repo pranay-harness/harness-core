@@ -1,9 +1,7 @@
 package software.wings.graphql.schema.type.aggregation.deployment;
 
 import io.harness.exception.InvalidRequestException;
-import lombok.Builder;
-import lombok.Data;
-import lombok.ToString;
+
 import software.wings.graphql.schema.type.aggregation.EntityFilter;
 import software.wings.graphql.schema.type.aggregation.Filter;
 import software.wings.graphql.schema.type.aggregation.QLIdFilter;
@@ -14,6 +12,9 @@ import software.wings.graphql.schema.type.aggregation.environment.QLEnvironmentT
 
 import java.util.HashSet;
 import java.util.Set;
+import lombok.Builder;
+import lombok.Data;
+import lombok.ToString;
 
 @Data
 @Builder

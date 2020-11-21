@@ -5,6 +5,11 @@ import static io.harness.logging.LogLevel.INFO;
 import static io.harness.rule.OwnerRule.ANSHUL;
 import static io.harness.rule.OwnerRule.BOJANA;
 import static io.harness.rule.OwnerRule.YOGESH;
+
+import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
+import static software.wings.utils.WingsTestConstants.LONG_TIMEOUT_INTERVAL;
+import static software.wings.utils.WingsTestConstants.NAMESPACE;
+
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -19,9 +24,6 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
-import static software.wings.utils.WingsTestConstants.LONG_TIMEOUT_INTERVAL;
-import static software.wings.utils.WingsTestConstants.NAMESPACE;
 
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.task.k8s.K8sTaskHelperBase;
@@ -33,13 +35,7 @@ import io.harness.k8s.model.KubernetesConfig;
 import io.harness.k8s.model.KubernetesResourceId;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.rule.Owner;
-import org.joor.Reflect;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
-import org.mockito.ArgumentCaptor;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
+
 import software.wings.WingsBaseTest;
 import software.wings.beans.InstanceUnitType;
 import software.wings.beans.command.ExecutionLogCallback;
@@ -53,6 +49,13 @@ import software.wings.helpers.ext.k8s.response.K8sTaskResponse;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
+import org.joor.Reflect;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
+import org.mockito.ArgumentCaptor;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
 
 public class K8sScaleTaskHandlerTest extends WingsBaseTest {
   @Mock private ContainerDeploymentDelegateHelper containerDeploymentDelegateHelper;

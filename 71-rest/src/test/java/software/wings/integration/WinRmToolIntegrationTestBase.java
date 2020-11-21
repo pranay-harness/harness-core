@@ -2,15 +2,16 @@ package software.wings.integration;
 
 import static java.lang.String.format;
 
+import io.harness.CategoryTest;
+
+import software.wings.rules.Integration;
+
 import io.cloudsoft.winrm4j.client.ShellCommand;
 import io.cloudsoft.winrm4j.client.WinRmClient;
 import io.cloudsoft.winrm4j.client.WinRmClientContext;
 import io.cloudsoft.winrm4j.winrm.WinRmTool;
-import io.harness.CategoryTest;
-import lombok.extern.slf4j.Slf4j;
-import software.wings.rules.Integration;
-
 import java.io.StringWriter;
+import lombok.extern.slf4j.Slf4j;
 
 @Integration
 /*

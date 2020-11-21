@@ -1,13 +1,12 @@
 package migrations.all;
 
-import com.google.inject.Inject;
-
 import io.harness.limits.ActionType;
 import io.harness.limits.configuration.LimitConfigurationService;
 import io.harness.limits.impl.model.RateLimit;
-import migrations.Migration;
 
+import com.google.inject.Inject;
 import java.util.concurrent.TimeUnit;
+import migrations.Migration;
 
 public class OverrideDefaultLimits implements Migration {
   @Inject private LimitConfigurationService limitConfigurationService;

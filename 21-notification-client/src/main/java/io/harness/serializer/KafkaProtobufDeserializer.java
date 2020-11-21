@@ -3,11 +3,9 @@ package io.harness.serializer;
 import com.google.protobuf.InvalidProtocolBufferException;
 import com.google.protobuf.MessageLite;
 import com.google.protobuf.Parser;
-
+import java.util.Map;
 import org.apache.kafka.common.errors.SerializationException;
 import org.apache.kafka.common.serialization.Deserializer;
-
-import java.util.Map;
 
 /**
  * Deserializer for Kafka to deserialize Protocol Buffers messages

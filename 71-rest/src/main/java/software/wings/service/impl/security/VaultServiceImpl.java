@@ -11,15 +11,12 @@ import static io.harness.exception.WingsException.USER_SRE;
 import static io.harness.persistence.HPersistence.upToOne;
 import static io.harness.security.encryption.AccessType.APP_ROLE;
 import static io.harness.threading.Morpheus.sleep;
-import static java.time.Duration.ofMillis;
+
 import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static software.wings.settings.SettingVariableTypes.VAULT;
 
-import com.google.common.base.Preconditions;
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
+import static java.time.Duration.ofMillis;
 
-import com.mongodb.DuplicateKeyException;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.EncryptedData;
 import io.harness.beans.EncryptedData.EncryptedDataKeys;
@@ -40,10 +37,7 @@ import io.harness.persistence.HPersistence;
 import io.harness.security.encryption.EncryptionType;
 import io.harness.serializer.KryoSerializer;
 import io.harness.templatizedsm.RuntimeCredentialsInjector;
-import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.StringUtils;
-import org.mongodb.morphia.query.Query;
-import org.mongodb.morphia.query.UpdateOperations;
+
 import software.wings.beans.SyncTaskContext;
 import software.wings.beans.VaultConfig;
 import software.wings.beans.VaultConfig.VaultConfigKeys;
@@ -53,11 +47,19 @@ import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.security.SecretManagementDelegateService;
 import software.wings.service.intfc.security.VaultService;
 
+import com.google.common.base.Preconditions;
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
+import com.mongodb.DuplicateKeyException;
 import java.time.Duration;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
+import org.mongodb.morphia.query.Query;
+import org.mongodb.morphia.query.UpdateOperations;
 
 /**
  * Created by rsingh on 11/2/17.

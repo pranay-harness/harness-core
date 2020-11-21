@@ -1,8 +1,9 @@
 package software.wings.beans.instance.dashboard;
 
+import software.wings.beans.infrastructure.instance.InvocationCount;
+
 import lombok.Builder;
 import lombok.Data;
-import software.wings.beans.infrastructure.instance.InvocationCount;
 
 /**
  * @author rktummala on 01/03/18

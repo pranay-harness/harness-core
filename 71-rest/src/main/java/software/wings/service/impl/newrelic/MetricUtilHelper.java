@@ -2,19 +2,18 @@ package software.wings.service.impl.newrelic;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 
-import com.google.common.base.Charsets;
-import com.google.common.collect.Sets;
-import com.google.common.io.Resources;
-
-import com.fasterxml.jackson.core.type.TypeReference;
 import io.harness.exception.WingsException;
 import io.harness.serializer.YamlUtils;
-import lombok.extern.slf4j.Slf4j;
+
 import software.wings.common.VerificationConstants;
 import software.wings.metrics.TimeSeriesMetricDefinition;
 import software.wings.sm.states.NewRelicState;
 import software.wings.sm.states.NewRelicState.Metric;
 
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.google.common.base.Charsets;
+import com.google.common.collect.Sets;
+import com.google.common.io.Resources;
 import java.io.IOException;
 import java.net.URL;
 import java.util.Collection;
@@ -23,6 +22,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * @author Vaibhav Tulsyan

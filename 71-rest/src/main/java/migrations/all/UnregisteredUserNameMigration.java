@@ -1,13 +1,14 @@
 package migrations.all;
 
-import com.google.inject.Inject;
-
 import io.harness.persistence.HIterator;
+
+import software.wings.beans.User;
+import software.wings.dl.WingsPersistence;
+
+import com.google.inject.Inject;
 import lombok.extern.slf4j.Slf4j;
 import migrations.Migration;
 import org.mongodb.morphia.query.Query;
-import software.wings.beans.User;
-import software.wings.dl.WingsPersistence;
 
 @Slf4j
 public class UnregisteredUserNameMigration implements Migration {

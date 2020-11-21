@@ -5,13 +5,11 @@ import static java.util.Arrays.asList;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.google.inject.Module;
-
+import java.lang.annotation.Annotation;
+import java.util.List;
 import org.junit.runners.model.FrameworkMethod;
 import org.junit.runners.model.Statement;
 import org.slf4j.LoggerFactory;
-
-import java.lang.annotation.Annotation;
-import java.util.List;
 
 public interface InjectorRuleMixin {
   List<Module> modules(List<Annotation> annotations) throws Exception;

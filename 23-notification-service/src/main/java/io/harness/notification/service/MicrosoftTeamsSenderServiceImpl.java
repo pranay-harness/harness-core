@@ -1,11 +1,11 @@
 package io.harness.notification.service;
 
-import lombok.extern.slf4j.Slf4j;
-import okhttp3.*;
-
 import static org.apache.http.entity.mime.MIME.CONTENT_TYPE;
 import static org.springframework.http.MediaType.APPLICATION_JSON_UTF8_VALUE;
 import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
+
+import lombok.extern.slf4j.Slf4j;
+import okhttp3.*;
 
 @Slf4j
 public class MicrosoftTeamsSenderServiceImpl {

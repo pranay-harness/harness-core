@@ -2,27 +2,27 @@ package io.harness.batch.processing.metrics;
 
 import static io.harness.persistence.HQuery.excludeAuthority;
 import static io.harness.persistence.HQuery.excludeValidate;
-import static java.lang.Math.toIntExact;
-import static java.lang.String.format;
+
 import static software.wings.beans.SettingAttribute.SettingCategory.CE_CONNECTOR;
 import static software.wings.beans.SettingAttribute.SettingCategory.CLOUD_PROVIDER;
 import static software.wings.settings.SettingVariableTypes.AWS;
 import static software.wings.settings.SettingVariableTypes.CE_AWS;
 import static software.wings.settings.SettingVariableTypes.KUBERNETES_CLUSTER;
 
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
+import static java.lang.Math.toIntExact;
+import static java.lang.String.format;
 
 import io.harness.ccm.config.GcpBillingAccount;
 import io.harness.ccm.config.GcpBillingAccount.GcpBillingAccountKeys;
 import io.harness.persistence.HPersistence;
 import io.harness.timescaledb.DBUtils;
 import io.harness.timescaledb.TimeScaleDBService;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
+
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.SettingAttribute.SettingAttributeKeys;
 
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.sql.Connection;
@@ -30,6 +30,8 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.time.Instant;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 
 @Singleton
 @Slf4j

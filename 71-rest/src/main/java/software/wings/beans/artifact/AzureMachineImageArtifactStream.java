@@ -2,21 +2,23 @@ package software.wings.beans.artifact;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.exception.WingsException.USER;
-import static java.lang.String.format;
+
 import static software.wings.beans.artifact.ArtifactStreamType.AZURE_MACHINE_IMAGE;
 
-import com.fasterxml.jackson.annotation.JsonTypeName;
+import static java.lang.String.format;
+
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.EmbeddedUser;
 import io.harness.exception.InvalidRequestException;
+
+import com.fasterxml.jackson.annotation.JsonTypeName;
+import java.util.Set;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import org.apache.commons.lang3.StringUtils;
-
-import java.util.Set;
 
 @OwnedBy(CDC)
 @JsonTypeName("AZURE_MACHINE_IMAGE")

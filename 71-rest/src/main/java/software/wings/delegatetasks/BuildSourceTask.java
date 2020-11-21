@@ -2,11 +2,8 @@ package software.wings.delegatetasks;
 
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.exception.WingsException.ExecutionContext.DELEGATE;
-import static software.wings.beans.artifact.ArtifactStreamType.ARTIFACTORY;
 
-import com.google.inject.Inject;
-import com.google.inject.Injector;
-import com.google.inject.Key;
+import static software.wings.beans.artifact.ArtifactStreamType.ARTIFACTORY;
 
 import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.delegate.beans.DelegateTaskPackage;
@@ -19,8 +16,7 @@ import io.harness.exception.WingsException;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.logging.ExceptionLogger;
 import io.harness.security.encryption.EncryptedDataDetail;
-import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.NotImplementedException;
+
 import software.wings.beans.artifact.ArtifactStreamAttributes;
 import software.wings.beans.artifact.ArtifactStreamType;
 import software.wings.delegatetasks.buildsource.BuildSourceExecutionResponse;
@@ -32,11 +28,16 @@ import software.wings.service.impl.ServiceClassLocator;
 import software.wings.service.intfc.BuildService;
 import software.wings.settings.SettingValue;
 
+import com.google.inject.Inject;
+import com.google.inject.Injector;
+import com.google.inject.Key;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.function.BooleanSupplier;
 import java.util.function.Consumer;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.NotImplementedException;
 
 /**
  * Created by anubhaw on 7/19/18.

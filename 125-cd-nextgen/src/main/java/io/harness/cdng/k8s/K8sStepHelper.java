@@ -3,11 +3,8 @@ package io.harness.cdng.k8s;
 import static io.harness.cdng.infra.yaml.InfrastructureKind.KUBERNETES_DIRECT;
 import static io.harness.connector.ConnectorModule.DEFAULT_CONNECTOR_SERVICE;
 import static io.harness.ngpipeline.common.ParameterFieldHelper.getParameterFieldValue;
-import static java.lang.String.format;
 
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
-import com.google.inject.name.Named;
+import static java.lang.String.format;
 
 import io.harness.ambiance.Ambiance;
 import io.harness.beans.IdentifierRef;
@@ -39,6 +36,7 @@ import io.harness.ngpipeline.common.AmbianceHelper;
 import io.harness.secretmanagerclient.services.api.SecretManagerClientService;
 import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.utils.IdentifierRefHelper;
+
 import software.wings.annotation.EncryptableSetting;
 import software.wings.beans.GitConfig;
 import software.wings.beans.HostConnectionAttributes;
@@ -47,6 +45,9 @@ import software.wings.beans.SettingAttribute;
 import software.wings.helpers.ext.k8s.request.K8sClusterConfig;
 import software.wings.helpers.ext.k8s.request.K8sClusterConfig.K8sClusterConfigBuilder;
 
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
+import com.google.inject.name.Named;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;

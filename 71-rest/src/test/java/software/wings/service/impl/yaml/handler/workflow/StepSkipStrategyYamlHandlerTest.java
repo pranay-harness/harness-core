@@ -1,19 +1,17 @@
 package software.wings.service.impl.yaml.handler.workflow;
 
 import static io.harness.rule.OwnerRule.GARVIT;
-import static org.assertj.core.api.Assertions.assertThat;
+
 import static software.wings.beans.PhaseStep.PhaseStepBuilder.aPhaseStep;
 import static software.wings.beans.workflow.StepSkipStrategy.Scope.ALL_STEPS;
 import static software.wings.beans.workflow.StepSkipStrategy.Scope.SPECIFIC_STEPS;
 import static software.wings.utils.WingsTestConstants.APP_ID;
 
-import com.google.inject.Inject;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
-import org.mockito.InjectMocks;
+
 import software.wings.WingsBaseTest;
 import software.wings.beans.GraphNode;
 import software.wings.beans.PhaseStep;
@@ -23,7 +21,11 @@ import software.wings.beans.yaml.ChangeContext;
 import software.wings.beans.yaml.GitFileChange;
 import software.wings.beans.yaml.YamlType;
 
+import com.google.inject.Inject;
 import java.util.Collections;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
+import org.mockito.InjectMocks;
 
 public class StepSkipStrategyYamlHandlerTest extends WingsBaseTest {
   private static final String ASSERTION_EXPRESSION = "true";

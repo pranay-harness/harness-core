@@ -1,11 +1,10 @@
 package io.harness.ccm.setup.service.impl;
 
 import static io.harness.rule.OwnerRule.HITESH;
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-
-import com.google.common.collect.ImmutableList;
 
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
@@ -14,6 +13,14 @@ import io.harness.ccm.setup.service.intfc.AWSAccountService;
 import io.harness.ccm.setup.service.intfc.AwsEKSClusterService;
 import io.harness.ccm.setup.service.support.intfc.AwsEKSHelperService;
 import io.harness.rule.Owner;
+
+import software.wings.beans.AwsCrossAccountAttributes;
+import software.wings.beans.SettingAttribute;
+import software.wings.beans.ce.CEAwsConfig;
+import software.wings.beans.ce.CECloudAccount;
+
+import com.google.common.collect.ImmutableList;
+import java.util.List;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -24,12 +31,6 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.mockito.runners.MockitoJUnitRunner;
-import software.wings.beans.AwsCrossAccountAttributes;
-import software.wings.beans.SettingAttribute;
-import software.wings.beans.ce.CEAwsConfig;
-import software.wings.beans.ce.CECloudAccount;
-
-import java.util.List;
 
 @RunWith(MockitoJUnitRunner.class)
 public class AwsCEInfraSetupHandlerTest extends CategoryTest {

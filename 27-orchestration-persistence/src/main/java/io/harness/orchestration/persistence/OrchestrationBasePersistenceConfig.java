@@ -1,11 +1,18 @@
 package io.harness.orchestration.persistence;
 
-import com.google.inject.Inject;
-import com.google.inject.Injector;
-
 import io.harness.exception.GeneralException;
 import io.harness.spring.AliasRegistrar;
 import io.harness.springdata.SpringPersistenceConfig;
+
+import com.google.inject.Inject;
+import com.google.inject.Injector;
+import java.lang.reflect.Constructor;
+import java.lang.reflect.InvocationTargetException;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 import org.springframework.context.annotation.Bean;
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.data.convert.TypeInformationMapper;
@@ -16,14 +23,6 @@ import org.springframework.data.mongodb.core.convert.DefaultMongoTypeMapper;
 import org.springframework.data.mongodb.core.convert.MappingMongoConverter;
 import org.springframework.data.mongodb.core.convert.MongoTypeMapper;
 import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
-
-import java.lang.reflect.Constructor;
-import java.lang.reflect.InvocationTargetException;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
 
 public abstract class OrchestrationBasePersistenceConfig extends SpringPersistenceConfig {
   private static final String ORCHESTRATION_TYPE_KEY = "_orchestrationClass";

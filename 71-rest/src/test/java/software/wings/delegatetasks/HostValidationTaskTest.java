@@ -2,27 +2,24 @@ package software.wings.delegatetasks;
 
 import static io.harness.delegate.beans.TaskData.DEFAULT_SYNC_CALL_TIMEOUT;
 import static io.harness.rule.OwnerRule.ROHITKARELIA;
+
+import static software.wings.beans.HostConnectionAttributes.Builder.aHostConnectionAttributes;
+import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
+import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
+import static software.wings.utils.WingsTestConstants.DELEGATE_ID;
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.joor.Reflect.on;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-import static software.wings.beans.HostConnectionAttributes.Builder.aHostConnectionAttributes;
-import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
-import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
-import static software.wings.utils.WingsTestConstants.DELEGATE_ID;
 
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.beans.DelegateTaskPackage;
 import io.harness.delegate.beans.TaskData;
 import io.harness.rule.Owner;
-import jodd.exception.UncheckedException;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
+
 import software.wings.WingsBaseTest;
 import software.wings.beans.HostValidationTaskParameters;
 import software.wings.settings.validation.SshConnectionConnectivityValidationAttributes;
@@ -30,6 +27,12 @@ import software.wings.utils.HostValidationService;
 
 import java.util.Arrays;
 import java.util.Collections;
+import jodd.exception.UncheckedException;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
 
 public class HostValidationTaskTest extends WingsBaseTest {
   private TaskData taskData = prepareTaskData();

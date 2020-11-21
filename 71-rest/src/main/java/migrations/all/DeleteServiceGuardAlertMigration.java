@@ -2,13 +2,10 @@ package migrations.all;
 
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
-import com.google.inject.Inject;
-
 import io.harness.beans.PageRequest.PageRequestBuilder;
 import io.harness.beans.PageResponse;
 import io.harness.beans.SearchFilter.Operator;
-import lombok.extern.slf4j.Slf4j;
-import migrations.Migration;
+
 import software.wings.beans.alert.Alert;
 import software.wings.beans.alert.Alert.AlertKeys;
 import software.wings.beans.alert.AlertType;
@@ -18,10 +15,13 @@ import software.wings.service.intfc.AlertService;
 import software.wings.service.intfc.verification.CVConfigurationService;
 import software.wings.verification.CVConfiguration;
 
+import com.google.inject.Inject;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import lombok.extern.slf4j.Slf4j;
+import migrations.Migration;
 
 @Slf4j
 public class DeleteServiceGuardAlertMigration implements Migration {

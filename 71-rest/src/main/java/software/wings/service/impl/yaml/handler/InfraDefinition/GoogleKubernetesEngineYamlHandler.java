@@ -2,10 +2,8 @@ package software.wings.service.impl.yaml.handler.InfraDefinition;
 
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.validation.Validator.notNullCheck;
-import static java.lang.String.format;
 
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
+import static java.lang.String.format;
 
 import software.wings.beans.InfrastructureType;
 import software.wings.beans.SettingAttribute;
@@ -16,6 +14,8 @@ import software.wings.service.impl.yaml.handler.CloudProviderInfrastructure.Clou
 import software.wings.service.impl.yaml.service.YamlHelper;
 import software.wings.service.intfc.SettingsService;
 
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import java.util.List;
 
 @Singleton

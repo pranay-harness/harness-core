@@ -1,14 +1,13 @@
 package software.wings.beans;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import java.io.Serializable;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.ToString;
 import lombok.experimental.FieldNameConstants;
-
-import java.io.Serializable;
 
 /**
  * @author rktummala on 09/07/2018

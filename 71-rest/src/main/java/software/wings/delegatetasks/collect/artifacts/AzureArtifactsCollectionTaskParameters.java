@@ -8,8 +8,7 @@ import io.harness.delegate.beans.executioncapability.ExecutionCapabilityDemander
 import io.harness.delegate.task.TaskParameters;
 import io.harness.exception.InvalidRequestException;
 import io.harness.security.encryption.EncryptedDataDetail;
-import lombok.Builder;
-import lombok.Value;
+
 import software.wings.beans.artifact.ArtifactStreamAttributes;
 import software.wings.beans.settings.azureartifacts.AzureArtifactsConfig;
 import software.wings.beans.settings.azureartifacts.AzureArtifactsPATConfig;
@@ -18,6 +17,8 @@ import software.wings.delegatetasks.delegatecapability.CapabilityHelper;
 import java.util.List;
 import java.util.Map;
 import javax.validation.constraints.NotNull;
+import lombok.Builder;
+import lombok.Value;
 
 @OwnedBy(CDC)
 @Value

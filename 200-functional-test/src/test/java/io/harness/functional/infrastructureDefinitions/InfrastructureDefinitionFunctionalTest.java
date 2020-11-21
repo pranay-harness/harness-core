@@ -1,10 +1,8 @@
 package io.harness.functional.infrastructureDefinitions;
 
 import static io.harness.rule.OwnerRule.YOGESH;
-import static org.assertj.core.api.Assertions.assertThat;
 
-import com.google.common.collect.ImmutableMap;
-import com.google.inject.Inject;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.beans.WorkflowType;
 import io.harness.category.element.CDFunctionalTests;
@@ -27,12 +25,7 @@ import io.harness.testframework.framework.utils.PipelineUtils;
 import io.harness.testframework.restutils.ArtifactRestUtils;
 import io.harness.testframework.restutils.InfrastructureDefinitionRestUtils;
 import io.harness.testframework.restutils.WorkflowRestUtils;
-import lombok.extern.slf4j.Slf4j;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Ignore;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
+
 import software.wings.api.DeploymentType;
 import software.wings.beans.Application;
 import software.wings.beans.Environment;
@@ -54,11 +47,19 @@ import software.wings.service.intfc.PipelineService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.WorkflowExecutionService;
 
+import com.google.common.collect.ImmutableMap;
+import com.google.inject.Inject;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
+import lombok.extern.slf4j.Slf4j;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Ignore;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 @Slf4j
 public class InfrastructureDefinitionFunctionalTest extends AbstractFunctionalTest {

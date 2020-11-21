@@ -3,10 +3,8 @@ package io.harness.ng.core.activityhistory.impl;
 import static io.harness.ng.core.activityhistory.NGActivityStatus.FAILED;
 import static io.harness.ng.core.activityhistory.NGActivityStatus.SUCCESS;
 import static io.harness.ng.core.activityhistory.NGActivityType.CONNECTIVITY_CHECK;
-import static org.springframework.data.mongodb.core.aggregation.Aggregation.group;
 
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
+import static org.springframework.data.mongodb.core.aggregation.Aggregation.group;
 
 import io.harness.exception.UnexpectedException;
 import io.harness.ng.core.activityhistory.EntityActivityQueryCriteriaHelper;
@@ -20,6 +18,11 @@ import io.harness.ng.core.activityhistory.mapper.NGActivityDTOToEntityMapper;
 import io.harness.ng.core.activityhistory.mapper.NGActivityEntityToDTOMapper;
 import io.harness.ng.core.activityhistory.repository.NGActivityRepository;
 import io.harness.ng.core.activityhistory.service.NGActivityService;
+
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
+import java.util.List;
+import java.util.stream.Collectors;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -35,9 +38,6 @@ import org.springframework.data.mongodb.core.aggregation.GroupOperation;
 import org.springframework.data.mongodb.core.aggregation.MatchOperation;
 import org.springframework.data.mongodb.core.aggregation.ProjectionOperation;
 import org.springframework.data.mongodb.core.query.Criteria;
-
-import java.util.List;
-import java.util.stream.Collectors;
 
 @Singleton
 @AllArgsConstructor(access = AccessLevel.PRIVATE, onConstructor = @__({ @Inject }))

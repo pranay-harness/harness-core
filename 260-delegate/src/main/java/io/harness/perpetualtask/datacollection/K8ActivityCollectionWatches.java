@@ -1,12 +1,11 @@
 package io.harness.perpetualtask.datacollection;
 
-import com.google.inject.Singleton;
-
 import io.harness.perpetualtask.k8s.watch.K8sWatchServiceDelegate.WatcherGroup;
-import lombok.Data;
 
+import com.google.inject.Singleton;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import lombok.Data;
 
 @Singleton
 @Data

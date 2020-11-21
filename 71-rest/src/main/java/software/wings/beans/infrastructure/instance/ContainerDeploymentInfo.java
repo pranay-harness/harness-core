@@ -1,14 +1,16 @@
 package software.wings.beans.infrastructure.instance;
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import io.harness.annotation.HarnessEntity;
 import io.harness.beans.EmbeddedUser;
 import io.harness.mongo.index.FdIndex;
+
+import software.wings.beans.Base;
+
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import org.mongodb.morphia.annotations.Entity;
-import software.wings.beans.Base;
 
 /**
  *

@@ -4,6 +4,14 @@ import static io.harness.delegate.task.k8s.K8sTaskType.APPLY;
 import static io.harness.rule.OwnerRule.ANSHUL;
 import static io.harness.rule.OwnerRule.BOJANA;
 import static io.harness.rule.OwnerRule.YOGESH;
+
+import static software.wings.beans.GcpKubernetesInfrastructureMapping.Builder.aGcpKubernetesInfrastructureMapping;
+import static software.wings.sm.StateExecutionInstance.Builder.aStateExecutionInstance;
+import static software.wings.sm.StateType.K8S_APPLY;
+import static software.wings.sm.states.k8s.K8sApplyState.K8S_APPLY_STATE;
+import static software.wings.utils.WingsTestConstants.ACTIVITY_ID;
+import static software.wings.utils.WingsTestConstants.STATE_NAME;
+
 import static java.util.Collections.emptyMap;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.joor.Reflect.on;
@@ -15,12 +23,6 @@ import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-import static software.wings.beans.GcpKubernetesInfrastructureMapping.Builder.aGcpKubernetesInfrastructureMapping;
-import static software.wings.sm.StateExecutionInstance.Builder.aStateExecutionInstance;
-import static software.wings.sm.StateType.K8S_APPLY;
-import static software.wings.sm.states.k8s.K8sApplyState.K8S_APPLY_STATE;
-import static software.wings.utils.WingsTestConstants.ACTIVITY_ID;
-import static software.wings.utils.WingsTestConstants.STATE_NAME;
 
 import io.harness.beans.ExecutionStatus;
 import io.harness.category.element.UnitTests;
@@ -28,12 +30,7 @@ import io.harness.expression.VariableResolverTracker;
 import io.harness.k8s.K8sCommandUnitConstants;
 import io.harness.rule.Owner;
 import io.harness.tasks.ResponseData;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
-import org.mockito.ArgumentCaptor;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
+
 import software.wings.WingsBaseTest;
 import software.wings.api.k8s.K8sStateExecutionData;
 import software.wings.beans.Application;
@@ -58,6 +55,12 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
+import org.mockito.ArgumentCaptor;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
 
 public class K8sApplyStateTest extends WingsBaseTest {
   private static final String RELEASE_NAME = "releaseName";

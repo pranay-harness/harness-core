@@ -1,3 +1,5 @@
 package io.harness.flag;
 
-public interface PersistentFlag { Boolean isEnabled(); }
+public interface PersistentFlag {
+  Boolean isEnabled();
+}

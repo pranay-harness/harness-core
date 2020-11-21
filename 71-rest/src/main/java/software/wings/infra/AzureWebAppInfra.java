@@ -2,19 +2,20 @@ package software.wings.infra;
 
 import static io.harness.validation.Validator.ensureType;
 import static io.harness.validation.Validator.notNullCheck;
+
 import static software.wings.beans.InfrastructureType.AZURE_WEBAPP;
 
+import software.wings.beans.AzureWebAppInfrastructureMapping;
+import software.wings.beans.InfrastructureMapping;
+
 import com.fasterxml.jackson.annotation.JsonTypeName;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.experimental.FieldNameConstants;
-import software.wings.beans.AzureWebAppInfrastructureMapping;
-import software.wings.beans.InfrastructureMapping;
-
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
 
 @JsonTypeName(AZURE_WEBAPP)
 @Data

@@ -6,14 +6,9 @@ import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.grpc.IdentifierKeys.DELEGATE_ID;
 import static io.harness.grpc.auth.DelegateAuthServerInterceptor.ACCOUNT_ID_CTX_KEY;
 import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
+
 import static java.util.Objects.requireNonNull;
 
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
-
-import io.grpc.Context;
-import io.grpc.Status;
-import io.grpc.stub.StreamObserver;
 import io.harness.delegate.task.DelegateLogContext;
 import io.harness.event.EventPublisherGrpc;
 import io.harness.event.MessageProcessorType;
@@ -26,12 +21,17 @@ import io.harness.grpc.utils.HTimestamps;
 import io.harness.logging.AccountLogContext;
 import io.harness.logging.AutoLogContext;
 import io.harness.persistence.HPersistence;
-import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.StringUtils;
 
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
+import io.grpc.Context;
+import io.grpc.Status;
+import io.grpc.stub.StreamObserver;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 
 @Slf4j
 @Singleton

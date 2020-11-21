@@ -1,12 +1,7 @@
 package migrations.all;
 
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
-
 import io.harness.exception.ExceptionUtils;
-import lombok.extern.slf4j.Slf4j;
-import migrations.Migration;
-import org.apache.commons.lang3.StringUtils;
+
 import software.wings.beans.Account;
 import software.wings.beans.Pipeline;
 import software.wings.beans.PipelineStage;
@@ -17,7 +12,12 @@ import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.PipelineService;
 import software.wings.sm.StateType;
 
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import java.util.List;
+import lombok.extern.slf4j.Slf4j;
+import migrations.Migration;
+import org.apache.commons.lang3.StringUtils;
 
 @Slf4j
 @Singleton

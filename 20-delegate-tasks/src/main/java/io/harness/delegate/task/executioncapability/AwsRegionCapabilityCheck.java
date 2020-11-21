@@ -2,13 +2,13 @@ package io.harness.delegate.task.executioncapability;
 
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
-import com.amazonaws.regions.Regions;
 import io.harness.delegate.beans.executioncapability.AwsRegionCapability;
 import io.harness.delegate.beans.executioncapability.CapabilityResponse;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
-import lombok.extern.slf4j.Slf4j;
 
+import com.amazonaws.regions.Regions;
 import java.io.File;
+import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class AwsRegionCapabilityCheck implements CapabilityCheck {

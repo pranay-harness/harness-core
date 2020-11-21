@@ -2,10 +2,9 @@ package software.wings.beans.trigger;
 
 import static software.wings.security.PermissionAttribute.PermissionType.LOGGED_IN;
 
-import com.google.inject.Inject;
-
 import io.harness.logging.AccountLogContext;
 import io.harness.logging.AutoLogContext;
+
 import software.wings.graphql.datafetcher.BaseMutatorDataFetcher;
 import software.wings.graphql.datafetcher.MutationContext;
 import software.wings.graphql.datafetcher.trigger.TriggerController;
@@ -13,6 +12,8 @@ import software.wings.graphql.schema.type.trigger.QLCreateOrUpdateTriggerInput;
 import software.wings.graphql.schema.type.trigger.QLTriggerPayload;
 import software.wings.security.annotations.AuthRule;
 import software.wings.service.intfc.TriggerService;
+
+import com.google.inject.Inject;
 
 public class UpdateTriggerDataFetcher extends BaseMutatorDataFetcher<QLCreateOrUpdateTriggerInput, QLTriggerPayload> {
   @Inject TriggerController triggerController;

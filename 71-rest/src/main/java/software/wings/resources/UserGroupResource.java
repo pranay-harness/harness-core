@@ -1,15 +1,11 @@
 package software.wings.resources;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
+
 import static software.wings.security.PermissionAttribute.PermissionType.LOGGED_IN;
 import static software.wings.security.PermissionAttribute.PermissionType.USER_PERMISSION_MANAGEMENT;
 import static software.wings.security.PermissionAttribute.PermissionType.USER_PERMISSION_READ;
 
-import com.google.common.collect.Lists;
-import com.google.inject.Inject;
-
-import com.codahale.metrics.annotation.ExceptionMetered;
-import com.codahale.metrics.annotation.Timed;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageRequest.PageRequestBuilder;
 import io.harness.beans.PageResponse;
@@ -18,10 +14,7 @@ import io.harness.beans.SearchFilter.Operator;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.rest.RestResponse;
-import io.swagger.annotations.Api;
-import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.StringUtils;
-import org.hibernate.validator.constraints.NotEmpty;
+
 import software.wings.beans.User;
 import software.wings.beans.notification.NotificationSettings;
 import software.wings.beans.security.UserGroup;
@@ -35,6 +28,11 @@ import software.wings.security.annotations.Scope;
 import software.wings.service.intfc.UserGroupService;
 import software.wings.service.intfc.UserService;
 
+import com.codahale.metrics.annotation.ExceptionMetered;
+import com.codahale.metrics.annotation.Timed;
+import com.google.common.collect.Lists;
+import com.google.inject.Inject;
+import io.swagger.annotations.Api;
 import java.util.List;
 import java.util.stream.Collectors;
 import javax.validation.Valid;
@@ -51,6 +49,9 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
+import org.hibernate.validator.constraints.NotEmpty;
 
 /**
  * Users Resource class.
@@ -173,7 +174,7 @@ public class UserGroupResource {
     if (isEmpty(userGroups)) {
       return new RestResponse<>(pageResponse);
     }
-    userGroups.forEach(this ::setUserSummary);
+    userGroups.forEach(this::setUserSummary);
     return new RestResponse<>(pageResponse);
   }
 

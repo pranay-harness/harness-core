@@ -6,11 +6,6 @@ package io.harness.serializer;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
 
-import lombok.experimental.UtilityClass;
-import lombok.extern.slf4j.Slf4j;
-import org.w3c.dom.Document;
-import org.xml.sax.SAXException;
-
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import javax.xml.XMLConstants;
@@ -20,6 +15,10 @@ import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.xpath.XPath;
 import javax.xml.xpath.XPathExpressionException;
 import javax.xml.xpath.XPathFactory;
+import lombok.experimental.UtilityClass;
+import lombok.extern.slf4j.Slf4j;
+import org.w3c.dom.Document;
+import org.xml.sax.SAXException;
 
 /**
  * The Class XmlUtils.

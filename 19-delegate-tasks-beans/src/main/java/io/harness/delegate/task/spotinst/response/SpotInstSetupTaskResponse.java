@@ -2,10 +2,10 @@ package io.harness.delegate.task.spotinst.response;
 
 import io.harness.delegate.task.aws.LoadBalancerDetailsForBGDeployment;
 import io.harness.spotinst.model.ElastiGroup;
-import lombok.Builder;
-import lombok.Data;
 
 import java.util.List;
+import lombok.Builder;
+import lombok.Data;
 
 @Data
 @Builder

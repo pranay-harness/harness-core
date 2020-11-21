@@ -1,25 +1,18 @@
 package software.wings.beans;
 
-import static com.amazonaws.util.StringUtils.isNullOrEmpty;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
-import static java.lang.String.format;
+
 import static software.wings.beans.InfrastructureMappingBlueprint.NodeFilteringType.AWS_ECS_FARGATE;
 
-import com.google.common.annotations.VisibleForTesting;
+import static com.amazonaws.util.StringUtils.isNullOrEmpty;
+import static java.lang.String.format;
 
-import com.amazonaws.services.ecs.model.LaunchType;
-import com.fasterxml.jackson.annotation.JsonTypeName;
-import com.github.reinert.jjschema.Attributes;
-import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.beans.EmbeddedUser;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
-import lombok.Data;
-import lombok.EqualsAndHashCode;
-import lombok.NoArgsConstructor;
-import lombok.experimental.FieldNameConstants;
+
 import software.wings.annotation.Blueprint;
 import software.wings.beans.AwsInfrastructureMapping.AwsRegionDataProvider;
 import software.wings.beans.InfrastructureMappingBlueprint.NodeFilteringType;
@@ -27,10 +20,19 @@ import software.wings.stencils.DefaultValue;
 import software.wings.stencils.EnumData;
 import software.wings.utils.Utils;
 
+import com.amazonaws.services.ecs.model.LaunchType;
+import com.fasterxml.jackson.annotation.JsonTypeName;
+import com.github.reinert.jjschema.Attributes;
+import com.github.reinert.jjschema.SchemaIgnore;
+import com.google.common.annotations.VisibleForTesting;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Optional;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.NoArgsConstructor;
+import lombok.experimental.FieldNameConstants;
 
 /**
  * Created by anubhaw on 1/10/17.
@@ -97,7 +99,9 @@ public class EcsInfrastructureMapping extends ContainerInfrastructureMapping {
         setSubnetIds(getList(value));
         return true;
       }
-      default: { return false; }
+      default: {
+        return false;
+      }
     }
   }
 

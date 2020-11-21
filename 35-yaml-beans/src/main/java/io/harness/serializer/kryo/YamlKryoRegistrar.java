@@ -1,6 +1,5 @@
 package io.harness.serializer.kryo;
 
-import com.esotericsoftware.kryo.Kryo;
 import io.harness.beans.InputSetValidator;
 import io.harness.beans.InputSetValidatorType;
 import io.harness.beans.ParameterField;
@@ -15,6 +14,8 @@ import io.harness.yaml.core.variables.StringNGVariable;
 import io.harness.yaml.extended.ci.codebase.CodeBase;
 import io.harness.yaml.extended.ci.codebase.CodeBaseType;
 import io.harness.yaml.extended.ci.codebase.impl.GitHubCodeBase;
+
+import com.esotericsoftware.kryo.Kryo;
 
 public class YamlKryoRegistrar implements KryoRegistrar {
   @Override

@@ -1,21 +1,16 @@
 package migrations.timescaledb.data;
 
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
-
-import io.fabric8.utils.Lists;
 import io.harness.timescaledb.DBUtils;
 import io.harness.timescaledb.TimeScaleDBService;
-import lombok.Builder;
-import lombok.Data;
-import lombok.ToString;
-import lombok.extern.slf4j.Slf4j;
-import migrations.TimeScaleDBDataMigration;
+
 import software.wings.beans.EnvSummary;
 import software.wings.beans.WorkflowExecution;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.WorkflowExecutionService;
 
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
+import io.fabric8.utils.Lists;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -27,6 +22,11 @@ import java.util.Date;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
+import lombok.Builder;
+import lombok.Data;
+import lombok.ToString;
+import lombok.extern.slf4j.Slf4j;
+import migrations.TimeScaleDBDataMigration;
 
 @Slf4j
 @Singleton

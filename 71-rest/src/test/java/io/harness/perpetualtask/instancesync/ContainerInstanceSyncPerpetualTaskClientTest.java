@@ -1,11 +1,5 @@
 package io.harness.perpetualtask.instancesync;
 
-import static java.util.Collections.singletonList;
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.Matchers.any;
-import static org.mockito.Mockito.doReturn;
-import static org.powermock.api.mockito.PowerMockito.mockStatic;
-import static org.powermock.api.mockito.PowerMockito.when;
 import static software.wings.service.InstanceSyncConstants.CONTAINER_SERVICE_NAME;
 import static software.wings.service.InstanceSyncConstants.NAMESPACE;
 import static software.wings.service.InstanceSyncConstants.RELEASE_NAME;
@@ -14,8 +8,12 @@ import static software.wings.service.impl.instance.InstanceSyncTestConstants.APP
 import static software.wings.service.impl.instance.InstanceSyncTestConstants.ENV_ID;
 import static software.wings.service.impl.instance.InstanceSyncTestConstants.INFRA_MAPPING_ID;
 
-import com.google.common.collect.ImmutableList;
-import com.google.inject.Inject;
+import static java.util.Collections.singletonList;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Matchers.any;
+import static org.mockito.Mockito.doReturn;
+import static org.powermock.api.mockito.PowerMockito.mockStatic;
+import static org.powermock.api.mockito.PowerMockito.when;
 
 import io.harness.beans.DelegateTask;
 import io.harness.category.element.UnitTests;
@@ -25,17 +23,7 @@ import io.harness.perpetualtask.PerpetualTaskClientContext;
 import io.harness.rule.Owner;
 import io.harness.rule.OwnerRule;
 import io.harness.tasks.Cd1SetupFields;
-import lombok.AccessLevel;
-import lombok.experimental.FieldDefaults;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
-import org.junit.runner.RunWith;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.Mockito;
-import org.powermock.core.classloader.annotations.PowerMockIgnore;
-import org.powermock.core.classloader.annotations.PrepareForTest;
-import org.powermock.modules.junit4.PowerMockRunner;
+
 import software.wings.WingsBaseTest;
 import software.wings.beans.AwsConfig;
 import software.wings.beans.AzureConfig;
@@ -57,10 +45,23 @@ import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.security.SecretManager;
 import software.wings.sm.states.k8s.K8sStateHelper;
 
+import com.google.common.collect.ImmutableList;
+import com.google.inject.Inject;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
+import lombok.AccessLevel;
+import lombok.experimental.FieldDefaults;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
+import org.junit.runner.RunWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.Mockito;
+import org.powermock.core.classloader.annotations.PowerMockIgnore;
+import org.powermock.core.classloader.annotations.PrepareForTest;
+import org.powermock.modules.junit4.PowerMockRunner;
 
 @RunWith(PowerMockRunner.class)
 @PrepareForTest({UUIDGenerator.class, ContainerInstanceSyncPerpetualTaskClient.class})

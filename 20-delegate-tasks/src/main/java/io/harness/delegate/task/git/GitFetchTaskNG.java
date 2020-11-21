@@ -4,8 +4,6 @@ import static io.harness.logging.LogLevel.ERROR;
 import static io.harness.logging.LogLevel.INFO;
 import static io.harness.logging.LogLevel.WARN;
 
-import com.google.inject.Inject;
-
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.delegate.beans.DelegateTaskPackage;
 import io.harness.delegate.beans.DelegateTaskResponse;
@@ -21,15 +19,16 @@ import io.harness.logging.CommandExecutionStatus;
 import io.harness.logging.DummyLogCallbackImpl;
 import io.harness.logging.LogCallback;
 import io.harness.security.encryption.SecretDecryptionService;
-import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.NotImplementedException;
 
+import com.google.inject.Inject;
 import java.nio.file.NoSuchFileException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.function.BooleanSupplier;
 import java.util.function.Consumer;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.NotImplementedException;
 
 @Slf4j
 public class GitFetchTaskNG extends AbstractDelegateRunnableTask {

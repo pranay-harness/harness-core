@@ -2,14 +2,14 @@ package migrations.all;
 
 import static io.harness.persistence.HPersistence.DEFAULT_STORE;
 
-import com.google.inject.Inject;
+import software.wings.dl.WingsPersistence;
 
+import com.google.inject.Inject;
 import com.mongodb.BasicDBObject;
 import com.mongodb.DBCollection;
 import com.mongodb.WriteResult;
 import lombok.extern.slf4j.Slf4j;
 import migrations.Migration;
-import software.wings.dl.WingsPersistence;
 @Slf4j
 public class CVCollectionCronFrequencyMigration implements Migration {
   @Inject private WingsPersistence wingsPersistence;

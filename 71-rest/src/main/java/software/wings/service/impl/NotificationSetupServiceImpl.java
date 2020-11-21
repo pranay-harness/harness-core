@@ -3,16 +3,15 @@ package software.wings.service.impl;
 import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+
+import static software.wings.beans.Application.GLOBAL_APP_ID;
+
 import static java.lang.String.format;
 import static java.lang.String.join;
 import static java.util.Arrays.asList;
 import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.atteo.evo.inflector.English.plural;
-import static software.wings.beans.Application.GLOBAL_APP_ID;
-
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
 
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
@@ -21,6 +20,7 @@ import io.harness.beans.SortOrder;
 import io.harness.exception.InvalidRequestException;
 import io.harness.persistence.HIterator;
 import io.harness.validation.PersistenceValidator;
+
 import software.wings.beans.Application;
 import software.wings.beans.Application.ApplicationKeys;
 import software.wings.beans.Event;
@@ -39,6 +39,8 @@ import software.wings.service.intfc.UserService;
 import software.wings.service.intfc.WorkflowService;
 import software.wings.service.intfc.yaml.YamlPushService;
 
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -184,8 +186,8 @@ public class NotificationSetupServiceImpl implements NotificationSetupService {
             for (Workflow workflow : workflows) {
               if (workflow.getOrchestrationWorkflow() != null
                   && workflow.getOrchestrationWorkflow().getNotificationRules().stream().anyMatch(notificationRule
-                         -> notificationRule.getNotificationGroups().stream().anyMatch(
-                             ng -> ng.getUuid().equals(notificationGroupId)))) {
+                      -> notificationRule.getNotificationGroups().stream().anyMatch(
+                          ng -> ng.getUuid().equals(notificationGroupId)))) {
                 inUse.add(workflow.getName());
               }
             }

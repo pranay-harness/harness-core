@@ -2,23 +2,24 @@ package software.wings.beans.template;
 
 import static com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL;
 
-import com.fasterxml.jackson.annotation.JsonInclude;
 import io.harness.annotation.HarnessEntity;
 import io.harness.mongo.index.CdIndex;
 import io.harness.mongo.index.Field;
 import io.harness.mongo.index.NgUniqueIndex;
 import io.harness.persistence.AccountAccess;
+
+import software.wings.beans.Base;
+import software.wings.beans.Variable;
+
+import com.fasterxml.jackson.annotation.JsonInclude;
+import java.util.List;
+import javax.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import org.mongodb.morphia.annotations.Entity;
-import software.wings.beans.Base;
-import software.wings.beans.Variable;
-
-import java.util.List;
-import javax.validation.constraints.NotNull;
 
 @JsonInclude(NON_NULL)
 @NgUniqueIndex(name = "yaml", fields = { @Field("accountId")

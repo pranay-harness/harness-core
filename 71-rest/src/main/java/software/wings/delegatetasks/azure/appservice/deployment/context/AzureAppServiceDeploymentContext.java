@@ -4,10 +4,10 @@ import io.harness.azure.context.AzureWebClientContext;
 import io.harness.azure.model.AzureAppServiceApplicationSetting;
 import io.harness.azure.model.AzureAppServiceConnectionString;
 import io.harness.delegate.beans.logstreaming.ILogStreamingTaskClient;
-import lombok.AllArgsConstructor;
-import lombok.Data;
 
 import java.util.Map;
+import lombok.AllArgsConstructor;
+import lombok.Data;
 
 @Data
 @AllArgsConstructor

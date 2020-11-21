@@ -2,6 +2,7 @@ package io.harness.cdng.artifact.repository;
 
 import io.harness.annotation.HarnessRepo;
 import io.harness.cdng.artifact.bean.artifactsource.ArtifactSource;
+
 import org.springframework.data.repository.PagingAndSortingRepository;
 
 @HarnessRepo

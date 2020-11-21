@@ -2,13 +2,14 @@ package io.harness.serializer.kryo;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 
-import com.esotericsoftware.kryo.Kryo;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.GraphVertex;
 import io.harness.beans.OrchestrationGraph;
 import io.harness.beans.internal.EdgeListInternal;
 import io.harness.beans.internal.OrchestrationAdjacencyListInternal;
 import io.harness.serializer.KryoRegistrar;
+
+import com.esotericsoftware.kryo.Kryo;
 
 @OwnedBy(CDC)
 public class OrchestrationVisualizationKryoRegistrar implements KryoRegistrar {

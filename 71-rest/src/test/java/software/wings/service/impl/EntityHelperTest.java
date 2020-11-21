@@ -1,13 +1,7 @@
 package software.wings.service.impl;
 
 import static io.harness.rule.OwnerRule.SATYAM;
-import static java.util.Collections.singletonList;
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.anyBoolean;
-import static org.mockito.Matchers.anyString;
-import static org.mockito.Mockito.doReturn;
-import static org.mockito.Mockito.mock;
+
 import static software.wings.beans.Application.Builder.anApplication;
 import static software.wings.beans.Environment.Builder.anEnvironment;
 import static software.wings.beans.appmanifest.StoreType.Local;
@@ -16,15 +10,17 @@ import static software.wings.utils.WingsTestConstants.APP_NAME;
 import static software.wings.utils.WingsTestConstants.ENV_NAME;
 import static software.wings.utils.WingsTestConstants.SERVICE_NAME;
 
-import com.google.inject.Inject;
+import static java.util.Collections.singletonList;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyBoolean;
+import static org.mockito.Matchers.anyString;
+import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.mock;
 
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mongodb.morphia.query.Query;
+
 import software.wings.WingsBaseTest;
 import software.wings.audit.EntityAuditRecord;
 import software.wings.audit.EntityAuditRecord.EntityAuditRecordBuilder;
@@ -34,6 +30,13 @@ import software.wings.beans.appmanifest.ApplicationManifest;
 import software.wings.beans.container.KubernetesContainerTask;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.impl.yaml.service.YamlHelper;
+
+import com.google.inject.Inject;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mongodb.morphia.query.Query;
 
 public class EntityHelperTest extends WingsBaseTest {
   @Mock private WingsPersistence mockWingsPersistence;

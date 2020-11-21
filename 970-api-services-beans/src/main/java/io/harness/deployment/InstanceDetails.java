@@ -1,12 +1,11 @@
 package io.harness.deployment;
 
 import com.amazonaws.services.ec2.model.Instance;
+import java.util.Map;
 import lombok.Builder;
 import lombok.Setter;
 import lombok.Value;
 import lombok.experimental.NonFinal;
-
-import java.util.Map;
 
 @Value
 @Builder

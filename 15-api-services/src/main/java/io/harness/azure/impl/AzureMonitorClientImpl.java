@@ -1,19 +1,19 @@
 package io.harness.azure.impl;
 
 import static io.harness.azure.model.AzureConstants.RESOURCE_ID_NAME_NULL_VALIDATION_MSG;
+
 import static org.apache.commons.lang3.StringUtils.isBlank;
 
-import com.google.inject.Singleton;
-
-import com.microsoft.azure.management.Azure;
-import com.microsoft.azure.management.monitor.EventData;
 import io.harness.azure.AzureClient;
 import io.harness.azure.client.AzureMonitorClient;
 import io.harness.azure.model.AzureConfig;
+
+import com.google.inject.Singleton;
+import com.microsoft.azure.management.Azure;
+import com.microsoft.azure.management.monitor.EventData;
+import java.util.List;
 import lombok.extern.slf4j.Slf4j;
 import org.joda.time.DateTime;
-
-import java.util.List;
 
 @Singleton
 @Slf4j

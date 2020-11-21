@@ -2,9 +2,10 @@ package software.wings.stencils;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 
+import io.harness.annotations.dev.OwnedBy;
+
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.databind.JsonNode;
-import io.harness.annotations.dev.OwnedBy;
 
 /**
  * Created by peeyushaggarwal on 6/28/16.

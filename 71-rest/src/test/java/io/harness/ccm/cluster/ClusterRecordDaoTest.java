@@ -1,9 +1,8 @@
 package io.harness.ccm.cluster;
 
 import static io.harness.rule.OwnerRule.HANTANG;
-import static org.assertj.core.api.Assertions.assertThat;
 
-import com.google.inject.Inject;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.category.element.UnitTests;
 import io.harness.ccm.cluster.dao.ClusterRecordDao;
@@ -11,12 +10,14 @@ import io.harness.ccm.cluster.entities.ClusterRecord;
 import io.harness.ccm.cluster.entities.DirectKubernetesCluster;
 import io.harness.ccm.cluster.entities.EcsCluster;
 import io.harness.rule.Owner;
+
+import software.wings.WingsBaseTest;
+
+import com.google.inject.Inject;
+import java.util.List;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
-import software.wings.WingsBaseTest;
-
-import java.util.List;
 
 public class ClusterRecordDaoTest extends WingsBaseTest {
   private String accountId = "ACCOUNT_ID";

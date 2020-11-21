@@ -2,14 +2,11 @@ package software.wings.service.impl.yaml.handler;
 
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.exception.WingsException.USER;
+
 import static java.lang.String.format;
 
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
-
 import io.harness.exception.WingsException;
-import lombok.extern.slf4j.Slf4j;
-import org.jetbrains.annotations.NotNull;
+
 import software.wings.beans.AllowedValueYaml;
 import software.wings.beans.ArtifactStreamAllowedValueYaml;
 import software.wings.beans.SettingAttribute;
@@ -19,8 +16,12 @@ import software.wings.service.intfc.ArtifactStreamService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.settings.SettingVariableTypes;
 
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import java.util.ArrayList;
 import java.util.List;
+import lombok.extern.slf4j.Slf4j;
+import org.jetbrains.annotations.NotNull;
 
 @Singleton
 @Slf4j

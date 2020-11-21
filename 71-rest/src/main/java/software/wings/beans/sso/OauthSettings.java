@@ -3,17 +3,18 @@ package software.wings.beans.sso;
 import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
+import io.harness.annotations.dev.OwnedBy;
+
+import software.wings.security.authentication.OauthProviderType;
+
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import io.harness.annotations.dev.OwnedBy;
+import java.util.Set;
+import java.util.stream.Collectors;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import org.hibernate.validator.constraints.NotBlank;
-import software.wings.security.authentication.OauthProviderType;
-
-import java.util.Set;
-import java.util.stream.Collectors;
 
 @OwnedBy(PL)
 @Data

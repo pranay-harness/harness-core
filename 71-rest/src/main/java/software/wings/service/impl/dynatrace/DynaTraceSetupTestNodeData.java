@@ -1,12 +1,13 @@
 package software.wings.service.impl.dynatrace;
 
+import software.wings.service.impl.analysis.SetupTestNodeData;
+import software.wings.sm.StateType;
+
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
-import software.wings.service.impl.analysis.SetupTestNodeData;
-import software.wings.sm.StateType;
 
 /**
  * Created by Pranjal on 09/12/2018

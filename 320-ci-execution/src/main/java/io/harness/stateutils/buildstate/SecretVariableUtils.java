@@ -1,10 +1,8 @@
 package io.harness.stateutils.buildstate;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static java.lang.String.format;
 
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
+import static java.lang.String.format;
 
 import io.harness.beans.IdentifierRef;
 import io.harness.beans.yaml.extended.CustomSecretVariable;
@@ -24,10 +22,12 @@ import io.harness.secretmanagerclient.services.api.SecretManagerClientService;
 import io.harness.secrets.remote.SecretNGManagerClient;
 import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.utils.IdentifierRefHelper;
-import lombok.extern.slf4j.Slf4j;
 
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import java.io.IOException;
 import java.util.List;
+import lombok.extern.slf4j.Slf4j;
 
 @Singleton
 @Slf4j

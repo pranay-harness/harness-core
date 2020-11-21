@@ -3,16 +3,12 @@ package io.harness.health;
 import static java.lang.String.format;
 import static java.lang.System.currentTimeMillis;
 
+import com.codahale.metrics.health.HealthCheck;
 import com.google.common.util.concurrent.SimpleTimeLimiter;
 import com.google.common.util.concurrent.TimeLimiter;
 import com.google.common.util.concurrent.UncheckedTimeoutException;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
-
-import com.codahale.metrics.health.HealthCheck;
-import lombok.Builder;
-import lombok.Value;
-
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -20,6 +16,8 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
+import lombok.Builder;
+import lombok.Value;
 
 @Singleton
 public class HealthService extends HealthCheck {

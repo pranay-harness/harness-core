@@ -1,10 +1,13 @@
 package software.wings.helpers.ext.bamboo;
 
+import static io.harness.rule.OwnerRule.AADITI;
+import static io.harness.rule.OwnerRule.ANUBHAW;
+
+import static software.wings.utils.WingsTestConstants.ARTIFACT_PATH;
+
 import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
 import static com.github.tomakehurst.wiremock.client.WireMock.get;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
-import static io.harness.rule.OwnerRule.AADITI;
-import static io.harness.rule.OwnerRule.ANUBHAW;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.data.MapEntry.entry;
@@ -14,26 +17,14 @@ import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-import static software.wings.utils.WingsTestConstants.ARTIFACT_PATH;
 
-import com.google.common.util.concurrent.FakeTimeLimiter;
-import com.google.inject.Inject;
-
-import com.github.tomakehurst.wiremock.http.Fault;
-import com.github.tomakehurst.wiremock.junit.WireMockRule;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.beans.DelegateFile;
 import io.harness.delegate.beans.artifact.ArtifactFileMetadata;
 import io.harness.delegate.task.ListNotifyResponseData;
 import io.harness.exception.ArtifactServerException;
 import io.harness.rule.Owner;
-import org.junit.Before;
-import org.junit.Ignore;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
+
 import software.wings.WingsBaseTest;
 import software.wings.beans.BambooConfig;
 import software.wings.beans.artifact.ArtifactStreamAttributes;
@@ -42,8 +33,19 @@ import software.wings.delegatetasks.collect.artifacts.ArtifactCollectionTaskHelp
 import software.wings.helpers.ext.jenkins.BuildDetails;
 import software.wings.service.intfc.security.EncryptionService;
 
+import com.github.tomakehurst.wiremock.http.Fault;
+import com.github.tomakehurst.wiremock.junit.WireMockRule;
+import com.google.common.util.concurrent.FakeTimeLimiter;
+import com.google.inject.Inject;
 import java.io.FileNotFoundException;
 import java.util.List;
+import org.junit.Before;
+import org.junit.Ignore;
+import org.junit.Rule;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
 
 /**
  * Created by anubhaw on 12/8/16.

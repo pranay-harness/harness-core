@@ -3,10 +3,10 @@ package io.harness;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.rule.OwnerRule.RUSHABH;
 import static io.harness.rule.OwnerRule.SRINIVAS;
-import static org.assertj.core.api.Assertions.assertThat;
+
 import static software.wings.graphql.schema.type.cloudProvider.QLAwsCloudProvider.QLCloudProviderKeys;
 
-import com.google.inject.Inject;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.beans.EmbeddedUser;
 import io.harness.category.element.UnitTests;
@@ -17,12 +17,15 @@ import io.harness.generator.Randomizer.Seed;
 import io.harness.generator.SettingGenerator;
 import io.harness.rule.Owner;
 import io.harness.testframework.graphql.QLTestObject;
-import lombok.extern.slf4j.Slf4j;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
+
 import software.wings.beans.SettingAttribute;
 import software.wings.graphql.schema.type.QLUser.QLUserKeys;
 import software.wings.graphql.schema.type.cloudProvider.QLCloudProviderConnection.QLCloudProviderConnectionKeys;
+
+import com.google.inject.Inject;
+import lombok.extern.slf4j.Slf4j;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 @Slf4j
 public class CloudProviderTest extends GraphQLTest {

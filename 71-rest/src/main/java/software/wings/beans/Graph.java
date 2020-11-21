@@ -4,16 +4,15 @@
 
 package software.wings.beans;
 
+import static software.wings.beans.GraphLink.Builder.aLink;
+import static software.wings.sm.TransitionType.SUCCESS;
+
 import static com.google.common.collect.Lists.newArrayList;
 import static java.util.Arrays.asList;
 import static java.util.function.Function.identity;
 import static java.util.stream.Collectors.toMap;
-import static software.wings.beans.GraphLink.Builder.aLink;
-import static software.wings.sm.TransitionType.SUCCESS;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import org.mongodb.morphia.annotations.Transient;
-
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -21,6 +20,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
+import org.mongodb.morphia.annotations.Transient;
 
 /**
  * The Class Graph.

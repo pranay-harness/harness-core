@@ -1,7 +1,8 @@
 package software.wings.beans.container;
 
-import com.github.reinert.jjschema.Attributes;
 import io.harness.yaml.BaseYaml;
+
+import com.github.reinert.jjschema.Attributes;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;

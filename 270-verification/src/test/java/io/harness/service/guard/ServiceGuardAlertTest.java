@@ -3,22 +3,21 @@ package io.harness.service.guard;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.rule.OwnerRule.RAGHU;
 import static io.harness.threading.Morpheus.sleep;
+
+import static software.wings.beans.Application.Builder.anApplication;
+import static software.wings.common.VerificationConstants.CRON_POLL_INTERVAL;
+import static software.wings.sm.StateType.SUMO;
+
 import static java.time.Duration.ofMillis;
 import static javax.ws.rs.client.Entity.entity;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 import static org.assertj.core.api.Assertions.assertThat;
-import static software.wings.beans.Application.Builder.anApplication;
-import static software.wings.common.VerificationConstants.CRON_POLL_INTERVAL;
-import static software.wings.sm.StateType.SUMO;
 
 import io.harness.VerificationBaseIntegrationTest;
 import io.harness.category.element.DeprecatedIntegrationTests;
 import io.harness.rest.RestResponse;
 import io.harness.rule.Owner;
-import lombok.extern.slf4j.Slf4j;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
+
 import software.wings.alerts.AlertCategory;
 import software.wings.alerts.AlertStatus;
 import software.wings.beans.Environment;
@@ -41,6 +40,10 @@ import java.util.Collections;
 import java.util.List;
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.GenericType;
+import lombok.extern.slf4j.Slf4j;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
 @Slf4j
 public class ServiceGuardAlertTest extends VerificationBaseIntegrationTest {
   @Override

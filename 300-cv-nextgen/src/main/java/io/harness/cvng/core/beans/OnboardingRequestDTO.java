@@ -1,7 +1,8 @@
 package io.harness.cvng.core.beans;
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import io.harness.cvng.beans.DataCollectionRequest;
+
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.experimental.SuperBuilder;

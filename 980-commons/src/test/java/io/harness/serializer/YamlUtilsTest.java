@@ -1,23 +1,23 @@
 package io.harness.serializer;
 
 import static io.harness.rule.OwnerRule.GEORGE;
+
 import static org.assertj.core.api.Assertions.assertThat;
 
-import com.google.common.base.Charsets;
-import com.google.common.io.Resources;
-
-import com.fasterxml.jackson.core.type.TypeReference;
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
 
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.google.common.base.Charsets;
+import com.google.common.io.Resources;
 import java.io.IOException;
 import java.net.URL;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 /**
  * The Class YamlUtilsTest.

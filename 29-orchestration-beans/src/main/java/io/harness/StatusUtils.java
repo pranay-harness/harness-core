@@ -1,11 +1,11 @@
 package io.harness;
 
+import static io.harness.pms.execution.Status.*;
+
 import io.harness.pms.execution.Status;
-import lombok.experimental.UtilityClass;
 
 import java.util.EnumSet;
-
-import static io.harness.pms.execution.Status.*;
+import lombok.experimental.UtilityClass;
 
 @UtilityClass
 public class StatusUtils {

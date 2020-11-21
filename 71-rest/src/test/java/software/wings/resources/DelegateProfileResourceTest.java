@@ -4,6 +4,10 @@ import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.rule.OwnerRule.MARKO;
 import static io.harness.rule.OwnerRule.SANJA;
 import static io.harness.rule.OwnerRule.VUK;
+
+import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
+import static software.wings.utils.WingsTestConstants.DELEGATE_PROFILE_ID;
+
 import static java.util.Arrays.asList;
 import static javax.ws.rs.client.Entity.entity;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -14,8 +18,6 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
-import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
-import static software.wings.utils.WingsTestConstants.DELEGATE_PROFILE_ID;
 
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
@@ -26,12 +28,7 @@ import io.harness.delegate.beans.ScopingRuleDetails;
 import io.harness.delegate.beans.ScopingRules;
 import io.harness.rest.RestResponse;
 import io.harness.rule.Owner;
-import org.glassfish.hk2.utilities.binding.AbstractBinder;
-import org.junit.ClassRule;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
-import org.junit.runners.Parameterized;
-import org.mockito.ArgumentCaptor;
+
 import software.wings.exception.WingsExceptionMapper;
 import software.wings.service.intfc.DelegateProfileManagerService;
 import software.wings.service.intfc.DelegateProfileService;
@@ -44,6 +41,12 @@ import java.util.Set;
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.core.GenericType;
 import javax.ws.rs.core.MediaType;
+import org.glassfish.hk2.utilities.binding.AbstractBinder;
+import org.junit.ClassRule;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
+import org.junit.runners.Parameterized;
+import org.mockito.ArgumentCaptor;
 
 public class DelegateProfileResourceTest {
   private static DelegateProfileService delegateProfileService = mock(DelegateProfileService.class);

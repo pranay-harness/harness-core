@@ -3,16 +3,13 @@ package software.wings.service.impl.personalization;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.persistence.HPersistence.returnNewOptions;
 import static io.harness.persistence.HPersistence.upsertReturnNewOptions;
+
 import static java.lang.String.format;
 import static java.util.Arrays.asList;
 
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
-
 import io.harness.exception.InvalidRequestException;
 import io.harness.persistence.HPersistence;
-import org.mongodb.morphia.query.Query;
-import org.mongodb.morphia.query.UpdateOperations;
+
 import software.wings.beans.peronalization.Personalization;
 import software.wings.beans.peronalization.Personalization.PersonalizationKeys;
 import software.wings.beans.template.Template;
@@ -20,12 +17,16 @@ import software.wings.service.intfc.personalization.PersonalizationService;
 import software.wings.service.intfc.template.TemplateService;
 import software.wings.sm.StateType;
 
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.ExecutorService;
+import org.mongodb.morphia.query.Query;
+import org.mongodb.morphia.query.UpdateOperations;
 
 @Singleton
 public class PersonalizationServiceImpl implements PersonalizationService {

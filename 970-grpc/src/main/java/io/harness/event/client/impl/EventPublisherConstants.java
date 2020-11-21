@@ -1,9 +1,8 @@
 package io.harness.event.client.impl;
 
+import java.time.Duration;
 import lombok.experimental.UtilityClass;
 import net.openhft.chronicle.queue.RollCycles;
-
-import java.time.Duration;
 
 @UtilityClass
 public class EventPublisherConstants {

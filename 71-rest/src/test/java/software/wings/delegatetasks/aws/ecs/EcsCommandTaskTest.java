@@ -1,6 +1,9 @@
 package software.wings.delegatetasks.aws.ecs;
 
 import static io.harness.rule.OwnerRule.ARVIND;
+
+import static software.wings.helpers.ext.ecs.request.EcsCommandRequest.EcsCommandType.BG_SERVICE_SETUP;
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.joor.Reflect.on;
@@ -9,7 +12,6 @@ import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
-import static software.wings.helpers.ext.ecs.request.EcsCommandRequest.EcsCommandType.BG_SERVICE_SETUP;
 
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.beans.DelegateTaskPackage;
@@ -18,11 +20,7 @@ import io.harness.delegate.task.TaskParameters;
 import io.harness.exception.InvalidRequestException;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.rule.Owner;
-import org.apache.commons.lang3.NotImplementedException;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
-import org.mockito.Mock;
+
 import software.wings.WingsBaseTest;
 import software.wings.delegatetasks.aws.ecs.ecstaskhandler.EcsCommandTaskHandler;
 import software.wings.helpers.ext.ecs.request.EcsCommandRequest;
@@ -32,6 +30,11 @@ import software.wings.service.impl.aws.model.AwsEcsRequest;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import org.apache.commons.lang3.NotImplementedException;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
+import org.mockito.Mock;
 
 public class EcsCommandTaskTest extends WingsBaseTest {
   private final EcsCommandTask task = new EcsCommandTask(
@@ -51,8 +54,7 @@ public class EcsCommandTaskTest extends WingsBaseTest {
     assertThatThrownBy(() -> {
       TaskParameters parameters = new AwsEcsRequest(null, null, null, null);
       task.run(parameters);
-    })
-        .isInstanceOf(NotImplementedException.class);
+    }).isInstanceOf(NotImplementedException.class);
   }
 
   @Test

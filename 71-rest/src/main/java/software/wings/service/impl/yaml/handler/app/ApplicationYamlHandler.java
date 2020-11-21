@@ -3,9 +3,6 @@ package software.wings.service.impl.yaml.handler.app;
 import static software.wings.beans.Application.Builder.anApplication;
 import static software.wings.beans.EntityType.APPLICATION;
 
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
-
 import software.wings.beans.Application;
 import software.wings.beans.Application.Yaml;
 import software.wings.beans.EntityType;
@@ -18,6 +15,8 @@ import software.wings.service.intfc.yaml.YamlGitService;
 import software.wings.yaml.gitSync.YamlGitConfig;
 import software.wings.yaml.gitSync.YamlGitConfig.SyncMode;
 
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import java.util.List;
 
 /**

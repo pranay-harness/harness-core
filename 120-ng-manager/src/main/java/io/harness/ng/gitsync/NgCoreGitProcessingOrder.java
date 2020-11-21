@@ -1,11 +1,10 @@
 package io.harness.ng.gitsync;
 
-import com.google.common.collect.Lists;
-
 import io.harness.EntityType;
-import lombok.experimental.UtilityClass;
 
+import com.google.common.collect.Lists;
 import java.util.List;
+import lombok.experimental.UtilityClass;
 
 @UtilityClass
 public class NgCoreGitProcessingOrder {

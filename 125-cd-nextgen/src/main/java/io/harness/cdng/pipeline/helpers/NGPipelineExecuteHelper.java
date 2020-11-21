@@ -1,10 +1,5 @@
 package io.harness.cdng.pipeline.helpers;
 
-import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.Lists;
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
-
 import io.harness.beans.EmbeddedUser;
 import io.harness.cdng.common.beans.SetupAbstractionKeys;
 import io.harness.cdng.pipeline.beans.CDPipelineValidationInfo;
@@ -24,9 +19,14 @@ import io.harness.walktree.visitor.response.VisitorErrorResponse;
 import io.harness.walktree.visitor.response.VisitorErrorResponseWrapper;
 import io.harness.yaml.core.StageElement;
 import io.harness.yaml.utils.JsonPipelineUtils;
+
 import software.wings.beans.User;
 import software.wings.security.UserThreadLocal;
 
+import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Lists;
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.List;

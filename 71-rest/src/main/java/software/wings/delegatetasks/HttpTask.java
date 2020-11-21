@@ -1,7 +1,5 @@
 package software.wings.delegatetasks;
 
-import com.google.inject.Inject;
-
 import io.harness.beans.ExecutionStatus;
 import io.harness.delegate.beans.DelegateTaskPackage;
 import io.harness.delegate.beans.DelegateTaskResponse;
@@ -12,12 +10,14 @@ import io.harness.delegate.task.http.HttpTaskParameters;
 import io.harness.http.HttpService;
 import io.harness.http.beans.HttpInternalConfig;
 import io.harness.http.beans.HttpInternalResponse;
-import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.NotImplementedException;
+
 import software.wings.sm.states.HttpState.HttpStateExecutionResponse;
 
+import com.google.inject.Inject;
 import java.util.function.BooleanSupplier;
 import java.util.function.Consumer;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.NotImplementedException;
 @Slf4j
 public class HttpTask extends AbstractDelegateRunnableTask {
   @Inject private HttpService httpService;

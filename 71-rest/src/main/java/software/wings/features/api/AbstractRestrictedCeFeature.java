@@ -1,8 +1,9 @@
 package software.wings.features.api;
 
-import lombok.extern.slf4j.Slf4j;
 import software.wings.beans.AccountType;
 import software.wings.service.intfc.AccountService;
+
+import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public abstract class AbstractRestrictedCeFeature extends AbstractRestrictedFeature {

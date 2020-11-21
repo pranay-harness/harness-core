@@ -1,11 +1,13 @@
 package io.harness.cvng.core.entities;
 
 import static io.harness.rule.OwnerRule.NEMANJA;
+
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
+
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 

@@ -1,17 +1,16 @@
 package software.wings.backgroundjobs;
 
 import static io.harness.rule.OwnerRule.VOJIN;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.verifyZeroInteractions;
-import static org.mockito.Mockito.when;
+
 import static software.wings.beans.Account.Builder.anAccount;
 import static software.wings.common.Constants.HARNESS_NAME;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 import static software.wings.utils.WingsTestConstants.JOB_NAME;
 
-import com.google.inject.Inject;
-import com.google.inject.name.Named;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyZeroInteractions;
+import static org.mockito.Mockito.when;
 
 import io.harness.category.element.UnitTests;
 import io.harness.perpetualtask.PerpetualTaskService;
@@ -19,19 +18,22 @@ import io.harness.perpetualtask.PerpetualTaskState;
 import io.harness.perpetualtask.internal.PerpetualTaskRecord;
 import io.harness.rule.Owner;
 import io.harness.scheduler.PersistentScheduler;
+
+import software.wings.WingsBaseTest;
+import software.wings.beans.Account;
+import software.wings.beans.AccountStatus;
+import software.wings.service.intfc.AccountService;
+
+import com.google.inject.Inject;
+import com.google.inject.name.Named;
+import java.util.Arrays;
+import java.util.UUID;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.quartz.JobKey;
 import org.quartz.SchedulerException;
-import software.wings.WingsBaseTest;
-import software.wings.beans.Account;
-import software.wings.beans.AccountStatus;
-import software.wings.service.intfc.AccountService;
-
-import java.util.Arrays;
-import java.util.UUID;
 
 public class AccountBackgroundJobServiceImplTest extends WingsBaseTest {
   @InjectMocks @Inject private AccountBackgroundJobServiceImpl accountBackgroundJobService;

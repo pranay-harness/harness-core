@@ -1,7 +1,5 @@
 package io.harness.ngtriggers.beans.entity;
 
-import com.google.common.collect.ImmutableList;
-
 import io.harness.annotation.HarnessEntity;
 import io.harness.data.validator.EntityIdentifier;
 import io.harness.data.validator.EntityName;
@@ -11,6 +9,10 @@ import io.harness.mongo.index.MongoIndex;
 import io.harness.ngtriggers.beans.entity.metadata.NGTriggerMetadata;
 import io.harness.ngtriggers.beans.source.NGTriggerType;
 import io.harness.ngtriggers.beans.target.TargetType;
+
+import com.google.common.collect.ImmutableList;
+import java.util.List;
+import javax.validation.constraints.Size;
 import lombok.Builder;
 import lombok.Data;
 import lombok.experimental.FieldNameConstants;
@@ -18,9 +20,6 @@ import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Entity;
 import org.springframework.data.annotation.*;
 import org.springframework.data.mongodb.core.mapping.Document;
-
-import java.util.List;
-import javax.validation.constraints.Size;
 
 @Data
 @Builder

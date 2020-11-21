@@ -1,10 +1,9 @@
 package software.wings.scheduler.account;
 
 import static io.harness.mongo.iterator.MongoPersistenceIterator.SchedulingType.REGULAR;
+
 import static java.time.Duration.ofMinutes;
 import static java.time.Duration.ofSeconds;
-
-import com.google.inject.Inject;
 
 import io.harness.iterator.PersistenceIteratorFactory;
 import io.harness.iterator.PersistenceIteratorFactory.PumpExecutorOptions;
@@ -12,11 +11,14 @@ import io.harness.mongo.iterator.MongoPersistenceIterator;
 import io.harness.mongo.iterator.MongoPersistenceIterator.Handler;
 import io.harness.mongo.iterator.filter.MorphiaFilterExpander;
 import io.harness.mongo.iterator.provider.MorphiaPersistenceProvider;
-import lombok.extern.slf4j.Slf4j;
+
 import software.wings.app.JobsFrequencyConfig;
 import software.wings.beans.Account;
 import software.wings.beans.Account.AccountKeys;
 import software.wings.licensing.LicenseService;
+
+import com.google.inject.Inject;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * Handler class that checks for license expiry

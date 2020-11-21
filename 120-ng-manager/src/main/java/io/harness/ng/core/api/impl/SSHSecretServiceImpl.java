@@ -3,9 +3,6 @@ package io.harness.ng.core.api.impl;
 import static io.harness.NGConstants.HARNESS_SECRET_MANAGER_IDENTIFIER;
 import static io.harness.remote.client.RestClientUtils.getResponse;
 
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
-
 import io.harness.ng.core.api.SecretModifyService;
 import io.harness.ng.core.dto.secrets.SecretDTOV2;
 import io.harness.secretmanagerclient.SecretType;
@@ -14,6 +11,9 @@ import io.harness.secretmanagerclient.dto.SecretFileDTO;
 import io.harness.secretmanagerclient.dto.SecretFileUpdateDTO;
 import io.harness.secretmanagerclient.remote.SecretManagerClient;
 import io.harness.serializer.JsonUtils;
+
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 

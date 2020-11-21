@@ -1,7 +1,6 @@
 package migrations.all;
 
 import com.google.common.collect.Sets;
-
 import java.util.Set;
 
 public class EntityNameValidationMigration_All_00 extends EntityNameValidationMigration {

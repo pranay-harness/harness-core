@@ -1,18 +1,17 @@
 package io.harness.logserviceclient;
 
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
-
 import io.harness.ci.beans.entities.LogServiceConfig;
 import io.harness.exception.GeneralException;
+
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
+import java.io.IOException;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.jetbrains.annotations.NotNull;
 import retrofit2.Call;
 import retrofit2.Response;
-
-import java.io.IOException;
 
 @Getter
 @Setter

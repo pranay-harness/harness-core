@@ -5,15 +5,12 @@ import static io.harness.beans.WorkflowType.PIPELINE;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.exception.WingsException.ExecutionContext.MANAGER;
 import static io.harness.exception.WingsException.USER;
-import static java.lang.String.format;
+
 import static software.wings.beans.trigger.WebhookSource.BITBUCKET;
 import static software.wings.beans.trigger.WebhookSource.GITHUB;
 
-import com.google.common.annotations.VisibleForTesting;
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
+import static java.lang.String.format;
 
-import com.fasterxml.jackson.core.type.TypeReference;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.ExceptionUtils;
@@ -21,8 +18,7 @@ import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.logging.ExceptionLogger;
 import io.harness.serializer.JsonUtils;
-import lombok.extern.slf4j.Slf4j;
-import org.mongodb.morphia.annotations.Transient;
+
 import software.wings.app.MainConfiguration;
 import software.wings.beans.Application;
 import software.wings.beans.FeatureName;
@@ -53,6 +49,10 @@ import software.wings.service.intfc.TriggerService;
 import software.wings.service.intfc.WebHookService;
 import software.wings.service.intfc.trigger.TriggerExecutionService;
 
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.google.common.annotations.VisibleForTesting;
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -62,6 +62,8 @@ import javax.validation.executable.ValidateOnExecution;
 import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+import lombok.extern.slf4j.Slf4j;
+import org.mongodb.morphia.annotations.Transient;
 
 @OwnedBy(CDC)
 @ValidateOnExecution
@@ -466,7 +468,7 @@ public class WebHookServiceImpl implements WebHookService {
 
       if (triggerCondition.getBitBucketEvents() != null
           && ((triggerCondition.getBitBucketEvents().contains(bitBucketEventType)
-                 || (BitBucketEventType.containsAllEvent(triggerCondition.getBitBucketEvents()))))) {
+              || (BitBucketEventType.containsAllEvent(triggerCondition.getBitBucketEvents()))))) {
         return;
       } else {
         throw new InvalidRequestException(errorMsg, USER);

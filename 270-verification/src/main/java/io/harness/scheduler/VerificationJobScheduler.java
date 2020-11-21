@@ -1,15 +1,14 @@
 package io.harness.scheduler;
 
-import com.google.inject.Inject;
-import com.google.inject.Injector;
-
 import io.harness.app.VerificationServiceConfiguration;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
+
+import com.google.inject.Inject;
+import com.google.inject.Injector;
+import java.util.Properties;
 import lombok.extern.slf4j.Slf4j;
 import org.quartz.SchedulerException;
-
-import java.util.Properties;
 
 @Slf4j
 public class VerificationJobScheduler extends HQuartzScheduler {

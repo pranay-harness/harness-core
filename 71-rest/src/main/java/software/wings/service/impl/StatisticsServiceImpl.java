@@ -6,20 +6,20 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.time.EpochUtils.PST_ZONE_ID;
 import static io.harness.validation.Validator.notNullCheck;
-import static java.util.Comparator.comparing;
-import static java.util.Comparator.reverseOrder;
-import static java.util.stream.Collectors.groupingBy;
-import static java.util.stream.Collectors.toList;
+
 import static software.wings.beans.Environment.EnvironmentType.ALL;
 import static software.wings.beans.Environment.EnvironmentType.NON_PROD;
 import static software.wings.beans.Environment.EnvironmentType.PROD;
 import static software.wings.beans.WorkflowExecution.WorkflowExecutionKeys;
 
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
+import static java.util.Comparator.comparing;
+import static java.util.Comparator.reverseOrder;
+import static java.util.stream.Collectors.groupingBy;
+import static java.util.stream.Collectors.toList;
 
 import io.harness.beans.ExecutionStatus;
 import io.harness.time.EpochUtils;
+
 import software.wings.beans.ElementExecutionSummary;
 import software.wings.beans.Environment.EnvironmentType;
 import software.wings.beans.WorkflowExecution;
@@ -31,6 +31,8 @@ import software.wings.beans.stats.TopConsumer;
 import software.wings.service.intfc.StatisticsService;
 import software.wings.service.intfc.WorkflowExecutionService;
 
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;

@@ -6,6 +6,13 @@ import static io.harness.rule.OwnerRule.ANSHUL;
 import static io.harness.rule.OwnerRule.ARVIND;
 import static io.harness.rule.OwnerRule.DEEPAK;
 import static io.harness.rule.OwnerRule.ROHIT_KUMAR;
+
+import static software.wings.beans.Application.GLOBAL_APP_ID;
+import static software.wings.beans.yaml.GitFileChange.Builder.aGitFileChange;
+import static software.wings.service.impl.yaml.sync.GitSyncErrorUtils.getYamlContentOfError;
+import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
+import static software.wings.yaml.errorhandling.GitSyncError.GitSyncDirection.GIT_TO_HARNESS;
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.joor.Reflect.on;
 import static org.mockito.Matchers.any;
@@ -18,14 +25,6 @@ import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
-import static software.wings.beans.Application.GLOBAL_APP_ID;
-import static software.wings.beans.yaml.GitFileChange.Builder.aGitFileChange;
-import static software.wings.service.impl.yaml.sync.GitSyncErrorUtils.getYamlContentOfError;
-import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
-import static software.wings.yaml.errorhandling.GitSyncError.GitSyncDirection.GIT_TO_HARNESS;
-
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Lists;
 
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
@@ -35,13 +34,7 @@ import io.harness.eraro.ErrorCode;
 import io.harness.git.model.ChangeType;
 import io.harness.rule.Owner;
 import io.harness.tasks.ResponseData;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
-import org.mockito.Spy;
+
 import software.wings.beans.GitCommit;
 import software.wings.beans.alert.AlertType;
 import software.wings.beans.alert.GitConnectionErrorAlert;
@@ -64,11 +57,20 @@ import software.wings.yaml.gitSync.YamlChangeSet;
 import software.wings.yaml.gitSync.YamlChangeSet.Status;
 import software.wings.yaml.gitSync.YamlGitConfig;
 
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Lists;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
+import org.mockito.Spy;
 
 public class GitCommandCallbackTest extends CategoryTest {
   private static final String CHANGESET_ID = "changesetId";

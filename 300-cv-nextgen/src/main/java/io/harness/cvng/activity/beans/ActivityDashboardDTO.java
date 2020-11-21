@@ -1,6 +1,7 @@
 package io.harness.cvng.activity.beans;
 
 import io.harness.cvng.beans.ActivityType;
+
 import lombok.Builder;
 import lombok.Data;
 

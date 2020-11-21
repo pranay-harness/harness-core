@@ -1,11 +1,11 @@
 package software.wings.delegatetasks.buildsource;
 
-import lombok.Builder;
-import lombok.Data;
 import software.wings.helpers.ext.jenkins.BuildDetails;
 
 import java.util.List;
 import java.util.Set;
+import lombok.Builder;
+import lombok.Data;
 
 @Data
 @Builder

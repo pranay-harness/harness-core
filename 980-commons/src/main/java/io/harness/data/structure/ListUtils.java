@@ -3,13 +3,13 @@ package io.harness.data.structure;
 import static io.harness.data.structure.ListUtils.OneAndOnlyOne.MANY;
 import static io.harness.data.structure.ListUtils.OneAndOnlyOne.NONE;
 import static io.harness.data.structure.ListUtils.OneAndOnlyOne.ONE;
-import static java.util.stream.Collectors.toList;
 
-import lombok.experimental.UtilityClass;
+import static java.util.stream.Collectors.toList;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import lombok.experimental.UtilityClass;
 
 @UtilityClass
 public class ListUtils {

@@ -5,11 +5,11 @@ import io.harness.batch.processing.anomalydetection.TimeSeriesSpec;
 import io.harness.batch.processing.anomalydetection.types.EntityType;
 import io.harness.batch.processing.anomalydetection.types.TimeGranularity;
 import io.harness.batch.processing.ccm.CCMJobConstants;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.batch.core.StepExecution;
 
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.batch.core.StepExecution;
 
 @Slf4j
 public class AnomalyDetectionNamespaceTimescaleReader extends AnomalyDetectionTimescaleReader {

@@ -6,19 +6,15 @@ package software.wings.sm.states;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
-import static java.util.stream.Collectors.partitioningBy;
+
 import static software.wings.api.EmailStateExecutionData.Builder.anEmailStateExecutionData;
 
-import com.google.common.base.Splitter;
-import com.google.inject.Inject;
+import static java.util.stream.Collectors.partitioningBy;
 
-import com.github.reinert.jjschema.Attributes;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.ExecutionStatus;
 import io.harness.exception.ExceptionUtils;
-import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.StringUtils;
-import org.mongodb.morphia.annotations.Transient;
+
 import software.wings.api.EmailStateExecutionData;
 import software.wings.beans.User;
 import software.wings.expression.ManagerPreviewExpressionEvaluator;
@@ -32,6 +28,9 @@ import software.wings.sm.ExecutionResponse.ExecutionResponseBuilder;
 import software.wings.sm.State;
 import software.wings.sm.StateType;
 
+import com.github.reinert.jjschema.Attributes;
+import com.google.common.base.Splitter;
+import com.google.inject.Inject;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -39,6 +38,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
+import org.mongodb.morphia.annotations.Transient;
 
 /**
  * The Class EmailState.

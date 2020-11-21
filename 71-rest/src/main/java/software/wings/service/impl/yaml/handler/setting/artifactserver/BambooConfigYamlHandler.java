@@ -2,14 +2,14 @@ package software.wings.service.impl.yaml.handler.setting.artifactserver;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 
-import com.google.inject.Singleton;
-
 import io.harness.annotations.dev.OwnedBy;
+
 import software.wings.beans.BambooConfig;
 import software.wings.beans.BambooConfig.Yaml;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.yaml.ChangeContext;
 
+import com.google.inject.Singleton;
 import java.util.List;
 
 /**

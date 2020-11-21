@@ -2,22 +2,21 @@ package software.wings.service.impl.event;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 
-import com.google.common.collect.HashMultimap;
-import com.google.common.collect.Multimap;
-import com.google.common.collect.Multimaps;
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
-
 import io.harness.event.handler.EventHandler;
 import io.harness.event.listener.EventListener;
 import io.harness.event.model.EventType;
 import io.harness.event.model.GenericEvent;
 import io.harness.queue.QueueConsumer;
 import io.harness.queue.QueueListener;
-import lombok.extern.slf4j.Slf4j;
 
+import com.google.common.collect.HashMultimap;
+import com.google.common.collect.Multimap;
+import com.google.common.collect.Multimaps;
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import java.util.Collection;
 import java.util.Set;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * @author rktummala on 11/20/2018

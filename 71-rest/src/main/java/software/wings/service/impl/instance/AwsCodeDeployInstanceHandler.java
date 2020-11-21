@@ -3,20 +3,18 @@ package software.wings.service.impl.instance;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.validation.Validator.notNullCheck;
-import static java.util.Collections.singletonList;
-import static java.util.function.Function.identity;
+
 import static software.wings.beans.FeatureName.MOVE_AWS_CODE_DEPLOY_INSTANCE_SYNC_TO_PERPETUAL_TASK;
 import static software.wings.beans.FeatureName.STOP_INSTANCE_SYNC_VIA_ITERATOR_FOR_AWS_CODE_DEPLOY_DEPLOYMENTS;
 
-import com.google.common.collect.Sets;
-import com.google.common.collect.Sets.SetView;
-import com.google.inject.Inject;
+import static java.util.Collections.singletonList;
+import static java.util.function.Function.identity;
 
 import io.harness.beans.ExecutionStatus;
 import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.exception.WingsException;
 import io.harness.security.encryption.EncryptedDataDetail;
-import lombok.extern.slf4j.Slf4j;
+
 import software.wings.annotation.EncryptableSetting;
 import software.wings.api.AwsCodeDeployDeploymentInfo;
 import software.wings.api.CommandStepExecutionSummary;
@@ -47,12 +45,16 @@ import software.wings.service.intfc.aws.manager.AwsCodeDeployHelperServiceManage
 import software.wings.sm.PhaseStepExecutionSummary;
 import software.wings.sm.StepExecutionSummary;
 
+import com.google.common.collect.Sets;
+import com.google.common.collect.Sets.SetView;
+import com.google.inject.Inject;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * @author rktummala on 01/30/18
@@ -162,7 +164,7 @@ public class AwsCodeDeployInstanceHandler extends AwsInstanceHandler implements 
         // instancesInDBMap contains all instancesInDB for current appId and infraMapId
         Map<String, Instance> instancesInDBMap = instancesInDB.stream()
                                                      .filter(Objects::nonNull)
-                                                     .collect(Collectors.toMap(this ::getKeyFromInstance, identity()));
+                                                     .collect(Collectors.toMap(this::getKeyFromInstance, identity()));
 
         // This will create filter for "instance-state-name" = "running"
         List<com.amazonaws.services.ec2.model.Instance> latestEc2Instances =

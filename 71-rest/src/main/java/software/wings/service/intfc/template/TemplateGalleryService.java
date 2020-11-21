@@ -2,7 +2,7 @@ package software.wings.service.intfc.template;
 
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
-import org.hibernate.validator.constraints.NotEmpty;
+
 import software.wings.beans.template.Template;
 import software.wings.beans.template.TemplateGallery;
 import software.wings.beans.template.TemplateType;
@@ -10,6 +10,7 @@ import software.wings.service.intfc.ownership.OwnedByAccount;
 
 import java.util.List;
 import javax.validation.Valid;
+import org.hibernate.validator.constraints.NotEmpty;
 
 public interface TemplateGalleryService extends OwnedByAccount {
   /**

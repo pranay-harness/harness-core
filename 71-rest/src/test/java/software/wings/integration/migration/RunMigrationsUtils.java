@@ -2,18 +2,19 @@ package software.wings.integration.migration;
 
 import static io.harness.rule.OwnerRule.BRETT;
 
-import com.google.inject.Inject;
-import com.google.inject.Injector;
-
 import io.harness.category.element.DeprecatedIntegrationTests;
 import io.harness.rule.Owner;
+
+import software.wings.WingsBaseTest;
+import software.wings.rules.Integration;
+import software.wings.service.intfc.MigrationService;
+
+import com.google.inject.Inject;
+import com.google.inject.Injector;
 import migrations.BaseMigration;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
-import software.wings.WingsBaseTest;
-import software.wings.rules.Integration;
-import software.wings.service.intfc.MigrationService;
 
 /**
  * @author brett on 1/24/18

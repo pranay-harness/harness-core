@@ -1,15 +1,11 @@
 package software.wings.service;
 
 import static io.harness.data.structure.CollectionUtils.emptyIfNull;
+
 import static software.wings.service.InstanceSyncConstants.HARNESS_APPLICATION_ID;
 import static software.wings.service.InstanceSyncConstants.INFRASTRUCTURE_MAPPING_ID;
 import static software.wings.service.InstanceSyncConstants.INTERVAL_MINUTES;
 import static software.wings.service.InstanceSyncConstants.TIMEOUT_SECONDS;
-
-import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.Sets;
-import com.google.inject.Inject;
-import com.google.protobuf.util.Durations;
 
 import io.harness.perpetualtask.PerpetualTaskClientContext;
 import io.harness.perpetualtask.PerpetualTaskSchedule;
@@ -18,8 +14,7 @@ import io.harness.perpetualtask.PerpetualTaskType;
 import io.harness.perpetualtask.instancesync.SpotinstAmiInstanceSyncPerpetualTaskClient;
 import io.harness.perpetualtask.instancesync.SpotinstAmiInstanceSyncPerpetualTaskClientParams;
 import io.harness.perpetualtask.internal.PerpetualTaskRecord;
-import lombok.AccessLevel;
-import lombok.experimental.FieldDefaults;
+
 import software.wings.api.DeploymentSummary;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.infrastructure.instance.Instance;
@@ -27,11 +22,17 @@ import software.wings.beans.infrastructure.instance.info.SpotinstAmiInstanceInfo
 import software.wings.beans.infrastructure.instance.key.deployment.SpotinstAmiDeploymentKey;
 import software.wings.service.intfc.instance.InstanceService;
 
+import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Sets;
+import com.google.inject.Inject;
+import com.google.protobuf.util.Durations;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
+import lombok.AccessLevel;
+import lombok.experimental.FieldDefaults;
 
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class SpotinstAmiInstanceSyncPerpetualTaskCreator implements InstanceSyncPerpetualTaskCreator {

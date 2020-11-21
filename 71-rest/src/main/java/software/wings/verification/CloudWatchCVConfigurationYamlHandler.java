@@ -6,9 +6,8 @@ import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.validation.Validator.notNullCheck;
 
-import com.google.inject.Inject;
-
 import io.harness.exception.WingsException;
+
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.yaml.ChangeContext;
 import software.wings.service.impl.cloudwatch.CloudWatchMetric;
@@ -17,6 +16,7 @@ import software.wings.sm.StateType;
 import software.wings.verification.cloudwatch.CloudWatchCVServiceConfiguration;
 import software.wings.verification.cloudwatch.CloudWatchCVServiceConfiguration.CloudWatchCVConfigurationYaml;
 
+import com.google.inject.Inject;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;

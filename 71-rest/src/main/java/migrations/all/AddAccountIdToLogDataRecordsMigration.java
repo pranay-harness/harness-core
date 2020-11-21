@@ -1,7 +1,8 @@
 package migrations.all;
 
-import lombok.extern.slf4j.Slf4j;
 import software.wings.service.impl.analysis.LogDataRecord.LogDataRecordKeys;
+
+import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class AddAccountIdToLogDataRecordsMigration extends AddAccountIdToCollectionUsingAppIdMigration {

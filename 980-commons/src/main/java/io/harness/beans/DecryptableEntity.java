@@ -1,10 +1,10 @@
 package io.harness.beans;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.encryption.SecretReference;
 import io.harness.reflection.ReflectionUtils;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.github.reinert.jjschema.SchemaIgnore;
 import java.lang.reflect.Field;
 import java.util.List;
 

@@ -1,18 +1,10 @@
 package software.wings.beans.command;
 
-import com.google.inject.Inject;
-
-import com.fasterxml.jackson.annotation.JsonTypeName;
 import io.harness.exception.ExceptionUtils;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.logging.Misc;
 import io.harness.security.encryption.EncryptedDataDetail;
-import lombok.Builder;
-import lombok.Data;
-import lombok.EqualsAndHashCode;
-import lombok.extern.slf4j.Slf4j;
-import org.jetbrains.annotations.NotNull;
-import org.mongodb.morphia.annotations.Transient;
+
 import software.wings.api.DeploymentType;
 import software.wings.beans.AwsConfig;
 import software.wings.beans.SettingAttribute;
@@ -24,8 +16,16 @@ import software.wings.helpers.ext.ecs.request.EcsBGRoute53ServiceSetupRequest;
 import software.wings.helpers.ext.ecs.request.EcsBGServiceSetupRequest;
 import software.wings.helpers.ext.ecs.request.EcsServiceSetupRequest;
 
+import com.fasterxml.jackson.annotation.JsonTypeName;
+import com.google.inject.Inject;
 import java.util.List;
 import java.util.Map;
+import lombok.Builder;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.extern.slf4j.Slf4j;
+import org.jetbrains.annotations.NotNull;
+import org.mongodb.morphia.annotations.Transient;
 
 /**
  * Created by brett on 11/18/17

@@ -1,3 +1,5 @@
 package software.wings.service.intfc;
 
-public interface MigrationService { void runMigrations(); }
+public interface MigrationService {
+  void runMigrations();
+}

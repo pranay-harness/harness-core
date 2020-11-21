@@ -3,18 +3,15 @@ package software.wings.filter;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.network.Localhost.getLocalHostAddress;
 import static io.harness.network.Localhost.getLocalHostName;
-import static java.util.Arrays.asList;
 
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
+import static java.util.Arrays.asList;
 
 import io.harness.delegate.service.DelegateAgentFileService.FileBucket;
 import io.harness.exception.WingsException;
 import io.harness.security.annotations.DelegateAuth;
 import io.harness.security.annotations.LearningEngineAuth;
 import io.harness.stream.BoundedInputStream;
-import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.io.IOUtils;
+
 import software.wings.app.MainConfiguration;
 import software.wings.audit.AuditHeader;
 import software.wings.audit.AuditHeader.RequestType;
@@ -23,6 +20,8 @@ import software.wings.beans.HttpMethod;
 import software.wings.common.AuditHelper;
 import software.wings.service.intfc.FileService;
 
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import java.io.IOException;
 import java.nio.charset.Charset;
 import java.util.List;
@@ -36,6 +35,8 @@ import javax.ws.rs.container.ResourceInfo;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.ext.Provider;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.io.IOUtils;
 
 /**
  * AuditRequestFilter preserves the rest endpoint header and payload.

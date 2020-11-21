@@ -4,6 +4,7 @@ import io.harness.azure.model.AzureVMData;
 import io.harness.azure.model.SubscriptionData;
 import io.harness.azure.model.VirtualMachineScaleSetData;
 import io.harness.security.encryption.EncryptedDataDetail;
+
 import software.wings.beans.AzureConfig;
 
 import java.util.List;

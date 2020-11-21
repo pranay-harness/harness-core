@@ -5,21 +5,23 @@ import static io.harness.generator.constants.ArtifactStreamsGeneratorConstants.I
 import static io.harness.generator.constants.ArtifactStreamsGeneratorConstants.LINUX_IMAGE_DEFINITION_NAME;
 import static io.harness.generator.constants.InfraDefinitionGeneratorConstants.AZURE_FUNCTIONAL_TEST_RESOURCE_GROUP;
 import static io.harness.generator.constants.InfraDefinitionGeneratorConstants.AZURE_SUBSCRIPTION_ID;
+
 import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static software.wings.beans.artifact.AzureMachineImageArtifactStream.ImageType.IMAGE_GALLERY;
 import static software.wings.beans.artifact.AzureMachineImageArtifactStream.OSType.LINUX;
 
-import com.google.common.base.Preconditions;
-
 import io.harness.generator.OwnerManager.Owners;
 import io.harness.generator.Randomizer.Seed;
 import io.harness.generator.SettingGenerator;
+
 import software.wings.beans.Application;
 import software.wings.beans.Service;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.artifact.ArtifactStream;
 import software.wings.beans.artifact.AzureMachineImageArtifactStream;
 import software.wings.beans.artifact.AzureMachineImageArtifactStream.ImageDefinition;
+
+import com.google.common.base.Preconditions;
 
 public class AzureMachineImageLinuxGalleryArtifactStreamGenerator extends AzureMachineImageArtifactStreamGenerator {
   @Override

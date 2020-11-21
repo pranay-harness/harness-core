@@ -2,6 +2,7 @@ package io.harness.expression;
 
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
+import java.util.List;
 import lombok.Builder;
 import org.apache.commons.jexl3.JexlBuilder;
 import org.apache.commons.jexl3.JexlContext;
@@ -10,8 +11,6 @@ import org.apache.commons.jexl3.JexlException;
 import org.apache.commons.jexl3.JexlExpression;
 import org.apache.commons.logging.impl.NoOpLog;
 import org.apache.commons.text.StrLookup;
-
-import java.util.List;
 
 @Builder
 public class NormalizeVariableResolver extends StrLookup {

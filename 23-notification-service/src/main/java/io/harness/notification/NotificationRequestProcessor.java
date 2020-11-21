@@ -1,14 +1,14 @@
 package io.harness.notification;
 
-import com.google.inject.Inject;
+import static io.harness.NotificationRequest.ChannelCase;
+
 import io.harness.NotificationRequest;
 import io.harness.notification.service.api.*;
-import lombok.extern.slf4j.Slf4j;
 
+import com.google.inject.Inject;
 import java.util.EnumMap;
 import java.util.Map;
-
-import static io.harness.NotificationRequest.ChannelCase;
+import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class NotificationRequestProcessor {

@@ -1,17 +1,18 @@
 package io.harness.notification.entities;
 
+import static io.harness.Team.OTHER;
+
 import io.harness.Team;
 import io.harness.iterator.PersistentRegularIterable;
 import io.harness.mongo.index.FdIndex;
 import io.harness.persistence.PersistentEntity;
+
 import lombok.Builder;
 import lombok.Data;
 import lombok.experimental.FieldNameConstants;
 import org.mongodb.morphia.annotations.Entity;
 import org.springframework.data.annotation.*;
 import org.springframework.data.mongodb.core.mapping.Document;
-
-import static io.harness.Team.OTHER;
 
 @Data
 @Builder

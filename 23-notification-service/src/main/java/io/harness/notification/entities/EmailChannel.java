@@ -1,14 +1,13 @@
 package io.harness.notification.entities;
 
+import static io.harness.NotificationRequest.*;
+
 import com.fasterxml.jackson.annotation.JsonTypeName;
+import java.util.List;
+import java.util.Map;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
-
-import java.util.List;
-import java.util.Map;
-
-import static io.harness.NotificationRequest.*;
 
 @Data
 @Builder

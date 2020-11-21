@@ -4,22 +4,22 @@ import static io.harness.logging.CommandExecutionStatus.FAILURE;
 import static io.harness.logging.CommandExecutionStatus.RUNNING;
 import static io.harness.logging.CommandExecutionStatus.SUCCESS;
 
-import com.google.inject.Singleton;
-
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.logging.LogLevel;
-import lombok.extern.slf4j.Slf4j;
-import org.zeroturnaround.exec.ProcessExecutor;
-import org.zeroturnaround.exec.ProcessResult;
-import org.zeroturnaround.exec.stream.LogOutputStream;
+
 import software.wings.beans.command.ExecutionLogCallback;
 
+import com.google.inject.Singleton;
 import java.io.File;
 import java.io.IOException;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import javax.annotation.Nonnull;
+import lombok.extern.slf4j.Slf4j;
+import org.zeroturnaround.exec.ProcessExecutor;
+import org.zeroturnaround.exec.ProcessResult;
+import org.zeroturnaround.exec.stream.LogOutputStream;
 
 @Slf4j
 @Singleton

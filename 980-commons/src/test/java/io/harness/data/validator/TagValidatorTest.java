@@ -3,21 +3,22 @@ package io.harness.data.validator;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.data.validator.TagValidator.TAG_MAX_LENGTH;
 import static io.harness.rule.OwnerRule.ANKIT;
+
 import static junit.framework.TestCase.assertEquals;
 import static junit.framework.TestCase.assertFalse;
 import static junit.framework.TestCase.assertTrue;
 
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
-import lombok.Builder;
-import org.apache.commons.lang3.RandomStringUtils;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
 
 import java.util.Random;
 import javax.validation.Validation;
 import javax.validation.Validator;
 import javax.validation.ValidatorFactory;
+import lombok.Builder;
+import org.apache.commons.lang3.RandomStringUtils;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 public class TagValidatorTest {
   @Builder

@@ -1,9 +1,8 @@
 package io.harness.functional.harnesscli;
 
 import static io.harness.rule.OwnerRule.ROHIT;
-import static org.assertj.core.api.Assertions.assertThat;
 
-import com.google.inject.Inject;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.category.element.CliFunctionalTests;
 import io.harness.functional.AbstractFunctionalTest;
@@ -12,15 +11,17 @@ import io.harness.generator.OwnerManager;
 import io.harness.generator.OwnerManager.Owners;
 import io.harness.generator.Randomizer.Seed;
 import io.harness.rule.Owner;
+
+import software.wings.infra.InfrastructureDefinition;
+
+import com.google.inject.Inject;
+import java.io.IOException;
+import java.util.List;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
-import software.wings.infra.InfrastructureDefinition;
-
-import java.io.IOException;
-import java.util.List;
 
 @Slf4j
 public class InfraDefinitionsFunctionalTest extends AbstractFunctionalTest {

@@ -1,9 +1,5 @@
 package io.harness.connector;
 
-import com.google.inject.AbstractModule;
-import com.google.inject.multibindings.MapBinder;
-import com.google.inject.name.Names;
-
 import io.harness.connector.impl.ConnectorActivityServiceImpl;
 import io.harness.connector.impl.DefaultConnectorServiceImpl;
 import io.harness.connector.mappers.ConnectorDTOToEntityMapper;
@@ -48,6 +44,10 @@ import io.harness.connector.validator.KubernetesConnectionValidator;
 import io.harness.connector.validator.NexusConnectorValidator;
 import io.harness.delegate.beans.connector.ConnectorType;
 import io.harness.persistence.HPersistence;
+
+import com.google.inject.AbstractModule;
+import com.google.inject.multibindings.MapBinder;
+import com.google.inject.name.Names;
 
 public class ConnectorModule extends AbstractModule {
   public static final String DEFAULT_CONNECTOR_SERVICE = "defaultConnectorService";

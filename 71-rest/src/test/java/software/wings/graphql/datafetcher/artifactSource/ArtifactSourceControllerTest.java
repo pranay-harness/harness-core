@@ -3,9 +3,7 @@ package software.wings.graphql.datafetcher.artifactSource;
 import static io.harness.rule.OwnerRule.AADITI;
 import static io.harness.rule.OwnerRule.DEEPAK_PUTHRAYA;
 import static io.harness.rule.OwnerRule.PRABU;
-import static java.util.Arrays.asList;
-import static junit.framework.TestCase.assertEquals;
-import static org.assertj.core.api.Assertions.assertThat;
+
 import static software.wings.beans.artifact.ArtifactStreamType.ACR;
 import static software.wings.beans.artifact.ArtifactStreamType.AMAZON_S3;
 import static software.wings.beans.artifact.ArtifactStreamType.AMI;
@@ -32,10 +30,13 @@ import static software.wings.utils.WingsTestConstants.PROJECT_ID;
 import static software.wings.utils.WingsTestConstants.REPO_NAME;
 import static software.wings.utils.WingsTestConstants.SETTING_ID;
 
+import static java.util.Arrays.asList;
+import static junit.framework.TestCase.assertEquals;
+import static org.assertj.core.api.Assertions.assertThat;
+
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
+
 import software.wings.WingsBaseTest;
 import software.wings.beans.artifact.AcrArtifactStream;
 import software.wings.beans.artifact.AmazonS3ArtifactStream;
@@ -80,6 +81,8 @@ import software.wings.graphql.schema.type.artifactSource.QLSMBArtifactSource;
 import software.wings.utils.RepositoryFormat;
 
 import java.util.List;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 public class ArtifactSourceControllerTest extends WingsBaseTest {
   private static final String REGION = "REGION";

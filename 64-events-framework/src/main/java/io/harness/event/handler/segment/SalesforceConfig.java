@@ -2,9 +2,9 @@ package io.harness.event.handler.segment;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
 
-import com.google.inject.Singleton;
-
 import io.harness.annotations.dev.OwnedBy;
+
+import com.google.inject.Singleton;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;

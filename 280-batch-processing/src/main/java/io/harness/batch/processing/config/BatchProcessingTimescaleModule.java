@@ -1,10 +1,10 @@
 package io.harness.batch.processing.config;
 
-import com.google.inject.AbstractModule;
-
 import io.harness.timescaledb.TimeScaleDBConfig;
 import io.harness.timescaledb.TimeScaleDBService;
 import io.harness.timescaledb.TimeScaleDBServiceImpl;
+
+import com.google.inject.AbstractModule;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j

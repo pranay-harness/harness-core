@@ -2,10 +2,8 @@ package io.harness.generator;
 
 import static java.util.stream.Collectors.toList;
 
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
-
 import io.harness.beans.EmbeddedUser;
+
 import software.wings.beans.Account;
 import software.wings.beans.Application;
 import software.wings.beans.Environment;
@@ -16,6 +14,8 @@ import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ServiceTemplateService;
 
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -119,7 +119,9 @@ public class OwnerManager {
       return application;
     }
 
-    public interface Generator<T> { T generate(); }
+    public interface Generator<T> {
+      T generate();
+    }
 
     public Application obtainApplication(Generator<Application> generator) {
       Application application = obtainApplication();

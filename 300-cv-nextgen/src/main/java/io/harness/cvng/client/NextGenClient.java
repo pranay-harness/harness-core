@@ -6,15 +6,15 @@ import io.harness.ng.beans.PageResponse;
 import io.harness.ng.core.dto.ResponseDTO;
 import io.harness.ng.core.environment.dto.EnvironmentResponseDTO;
 import io.harness.ng.core.service.dto.ServiceResponseDTO;
+
+import java.util.List;
+import javax.validation.constraints.NotNull;
 import retrofit2.Call;
 import retrofit2.http.Body;
 import retrofit2.http.GET;
 import retrofit2.http.POST;
 import retrofit2.http.Path;
 import retrofit2.http.Query;
-
-import java.util.List;
-import javax.validation.constraints.NotNull;
 
 public interface NextGenClient {
   String CONNECTOR_BASE_PATH = "connectors";

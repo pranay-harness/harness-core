@@ -2,17 +2,16 @@ package io.harness.gitsync.gitfileactivity.dao.api.repositories.gitFileActivityS
 
 import static org.springframework.data.mongodb.core.query.Query.query;
 
-import com.google.inject.Inject;
-
-import com.mongodb.client.result.DeleteResult;
 import io.harness.gitsync.gitfileactivity.beans.GitFileActivitySummary;
 import io.harness.gitsync.gitfileactivity.beans.GitFileActivitySummary.GitFileActivitySummaryKeys;
+
+import com.google.inject.Inject;
+import com.mongodb.client.result.DeleteResult;
+import java.util.List;
 import lombok.AllArgsConstructor;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
-
-import java.util.List;
 
 @AllArgsConstructor(onConstructor = @__({ @Inject }))
 

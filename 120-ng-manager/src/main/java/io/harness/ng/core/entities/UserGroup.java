@@ -1,7 +1,5 @@
 package io.harness.ng.core.entities;
 
-import com.google.common.collect.ImmutableList;
-
 import io.harness.data.validator.EntityIdentifier;
 import io.harness.data.validator.NGEntityName;
 import io.harness.mongo.index.CompoundMongoIndex;
@@ -9,6 +7,11 @@ import io.harness.mongo.index.MongoIndex;
 import io.harness.ng.core.NGAccountAccess;
 import io.harness.ng.core.common.beans.NGTag;
 import io.harness.persistence.PersistentEntity;
+
+import com.google.common.collect.ImmutableList;
+import java.util.List;
+import javax.validation.constraints.NotNull;
+import javax.validation.constraints.Size;
 import lombok.Builder;
 import lombok.Data;
 import lombok.Singular;
@@ -20,10 +23,6 @@ import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.annotation.TypeAlias;
 import org.springframework.data.annotation.Version;
 import org.springframework.data.mongodb.core.mapping.Document;
-
-import java.util.List;
-import javax.validation.constraints.NotNull;
-import javax.validation.constraints.Size;
 
 @Data
 @Builder

@@ -2,22 +2,16 @@ package software.wings.delegatetasks;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.rule.OwnerRule.PRAVEEN;
+
+import static software.wings.common.VerificationConstants.CV_24x7_STATE_EXECUTION;
+import static software.wings.service.impl.verification.CVConfigurationServiceImplTest.createStackDriverConfig;
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-import static software.wings.common.VerificationConstants.CV_24x7_STATE_EXECUTION;
-import static software.wings.service.impl.verification.CVConfigurationServiceImplTest.createStackDriverConfig;
-
-import com.google.api.services.monitoring.v3.Monitoring;
-import com.google.api.services.monitoring.v3.model.ListTimeSeriesResponse;
-import com.google.api.services.monitoring.v3.model.Point;
-import com.google.api.services.monitoring.v3.model.TimeInterval;
-import com.google.api.services.monitoring.v3.model.TimeSeries;
-import com.google.api.services.monitoring.v3.model.TypedValue;
-import com.google.common.collect.TreeBasedTable;
 
 import io.harness.beans.DelegateTask;
 import io.harness.category.element.UnitTests;
@@ -27,13 +21,7 @@ import io.harness.delegate.task.DataCollectionExecutorService;
 import io.harness.rule.Owner;
 import io.harness.tasks.Cd1SetupFields;
 import io.harness.time.Timestamp;
-import org.apache.commons.lang3.reflect.FieldUtils;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
-import org.mockito.ArgumentCaptor;
-import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
+
 import software.wings.WingsBaseTest;
 import software.wings.beans.GcpConfig;
 import software.wings.beans.TaskType;
@@ -50,6 +38,13 @@ import software.wings.verification.stackdriver.StackDriverMetricCVConfiguration;
 import software.wings.verification.stackdriver.StackDriverMetricDefinition;
 import software.wings.verification.stackdriver.StackDriverMetricDefinition.Aggregation;
 
+import com.google.api.services.monitoring.v3.Monitoring;
+import com.google.api.services.monitoring.v3.model.ListTimeSeriesResponse;
+import com.google.api.services.monitoring.v3.model.Point;
+import com.google.api.services.monitoring.v3.model.TimeInterval;
+import com.google.api.services.monitoring.v3.model.TimeSeries;
+import com.google.api.services.monitoring.v3.model.TypedValue;
+import com.google.common.collect.TreeBasedTable;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
@@ -59,6 +54,13 @@ import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
+import org.apache.commons.lang3.reflect.FieldUtils;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
+import org.mockito.ArgumentCaptor;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
 
 /**
  * @author praveen

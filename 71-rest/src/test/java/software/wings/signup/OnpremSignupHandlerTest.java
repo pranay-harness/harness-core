@@ -1,19 +1,28 @@
 package software.wings.signup;
 
 import static io.harness.rule.OwnerRule.AMAN;
+
+import static software.wings.beans.UserInvite.UserInviteBuilder.anUserInvite;
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-import static software.wings.beans.UserInvite.UserInviteBuilder.anUserInvite;
-
-import com.google.inject.Inject;
 
 import io.harness.category.element.UnitTests;
 import io.harness.configuration.DeployMode;
 import io.harness.event.handler.impl.EventPublishHelper;
 import io.harness.rule.Owner;
+
+import software.wings.WingsBaseTest;
+import software.wings.app.MainConfiguration;
+import software.wings.beans.UserInvite;
+import software.wings.service.intfc.SignupService;
+import software.wings.service.intfc.UserService;
+import software.wings.service.intfc.signup.SignupException;
+
+import com.google.inject.Inject;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.Before;
 import org.junit.Test;
@@ -21,12 +30,6 @@ import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
-import software.wings.WingsBaseTest;
-import software.wings.app.MainConfiguration;
-import software.wings.beans.UserInvite;
-import software.wings.service.intfc.SignupService;
-import software.wings.service.intfc.UserService;
-import software.wings.service.intfc.signup.SignupException;
 
 @Slf4j
 public class OnpremSignupHandlerTest extends WingsBaseTest {

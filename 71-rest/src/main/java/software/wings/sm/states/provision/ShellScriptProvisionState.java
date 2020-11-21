@@ -3,16 +3,13 @@ package software.wings.sm.states.provision;
 import static io.harness.beans.OrchestrationWorkflowType.BUILD;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.delegate.beans.TaskData.DEFAULT_ASYNC_CALL_TIMEOUT;
-import static java.util.Arrays.asList;
-import static org.apache.commons.lang3.StringUtils.isBlank;
+
 import static software.wings.beans.Environment.EnvironmentType.ALL;
 import static software.wings.beans.Environment.GLOBAL_ENV_ID;
 
-import com.google.common.annotations.VisibleForTesting;
-import com.google.inject.Inject;
+import static java.util.Arrays.asList;
+import static org.apache.commons.lang3.StringUtils.isBlank;
 
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import io.harness.beans.DelegateTask;
 import io.harness.beans.ExecutionStatus;
 import io.harness.beans.SweepingOutputInstance;
@@ -23,10 +20,7 @@ import io.harness.exception.WingsException;
 import io.harness.serializer.KryoSerializer;
 import io.harness.tasks.Cd1SetupFields;
 import io.harness.tasks.ResponseData;
-import lombok.Getter;
-import lombok.Setter;
-import lombok.extern.slf4j.Slf4j;
-import org.mongodb.morphia.annotations.Transient;
+
 import software.wings.api.ScriptStateExecutionData;
 import software.wings.api.ShellScriptProvisionerOutputElement;
 import software.wings.api.shellscript.provision.ShellScriptProvisionExecutionData;
@@ -53,6 +47,10 @@ import software.wings.sm.StateType;
 import software.wings.sm.states.ManagerExecutionLogCallback;
 import software.wings.sm.states.mixin.SweepingOutputStateMixin;
 
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.common.annotations.VisibleForTesting;
+import com.google.inject.Inject;
 import java.io.IOException;
 import java.util.Collections;
 import java.util.HashMap;
@@ -63,6 +61,10 @@ import java.util.Map.Entry;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
+import lombok.Getter;
+import lombok.Setter;
+import lombok.extern.slf4j.Slf4j;
+import org.mongodb.morphia.annotations.Transient;
 
 @Slf4j
 public class ShellScriptProvisionState extends State implements SweepingOutputStateMixin {

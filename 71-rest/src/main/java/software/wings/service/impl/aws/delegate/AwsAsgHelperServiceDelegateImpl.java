@@ -1,11 +1,17 @@
 package software.wings.service.impl.aws.delegate;
 
-import static com.google.common.collect.Lists.newArrayList;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.eraro.ErrorCode.INIT_TIMEOUT;
 import static io.harness.logging.LogLevel.ERROR;
 import static io.harness.threading.Morpheus.sleep;
+
+import static software.wings.service.impl.aws.model.AwsConstants.DEFAULT_AMI_ASG_DESIRED_INSTANCES;
+import static software.wings.service.impl.aws.model.AwsConstants.DEFAULT_AMI_ASG_MAX_INSTANCES;
+import static software.wings.service.impl.aws.model.AwsConstants.DEFAULT_AMI_ASG_MIN_INSTANCES;
+import static software.wings.service.impl.aws.model.AwsConstants.DEFAULT_AMI_ASG_NAME;
+
+import static com.google.common.collect.Lists.newArrayList;
 import static java.lang.String.format;
 import static java.time.Duration.ofSeconds;
 import static java.util.Collections.emptyList;
@@ -14,17 +20,19 @@ import static java.util.stream.Collectors.counting;
 import static java.util.stream.Collectors.groupingBy;
 import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.StringUtils.EMPTY;
-import static software.wings.service.impl.aws.model.AwsConstants.DEFAULT_AMI_ASG_DESIRED_INSTANCES;
-import static software.wings.service.impl.aws.model.AwsConstants.DEFAULT_AMI_ASG_MAX_INSTANCES;
-import static software.wings.service.impl.aws.model.AwsConstants.DEFAULT_AMI_ASG_MIN_INSTANCES;
-import static software.wings.service.impl.aws.model.AwsConstants.DEFAULT_AMI_ASG_NAME;
 
-import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Joiner;
-import com.google.common.util.concurrent.TimeLimiter;
-import com.google.common.util.concurrent.UncheckedTimeoutException;
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
+import io.harness.exception.ExceptionUtils;
+import io.harness.exception.InterruptedRuntimeException;
+import io.harness.exception.InvalidRequestException;
+import io.harness.exception.WingsException;
+import io.harness.logging.LogCallback;
+import io.harness.security.encryption.EncryptedDataDetail;
+
+import software.wings.beans.AwsConfig;
+import software.wings.beans.command.ExecutionLogCallback;
+import software.wings.service.impl.aws.model.AwsAsgGetRunningCountData;
+import software.wings.service.intfc.aws.delegate.AwsAsgHelperServiceDelegate;
+import software.wings.service.intfc.aws.delegate.AwsEc2HelperServiceDelegate;
 
 import com.amazonaws.AmazonClientException;
 import com.amazonaws.AmazonServiceException;
@@ -61,19 +69,12 @@ import com.amazonaws.services.autoscaling.model.Tag;
 import com.amazonaws.services.autoscaling.model.UpdateAutoScalingGroupRequest;
 import com.amazonaws.services.ec2.model.Instance;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import io.harness.exception.ExceptionUtils;
-import io.harness.exception.InterruptedRuntimeException;
-import io.harness.exception.InvalidRequestException;
-import io.harness.exception.WingsException;
-import io.harness.logging.LogCallback;
-import io.harness.security.encryption.EncryptedDataDetail;
-import lombok.extern.slf4j.Slf4j;
-import software.wings.beans.AwsConfig;
-import software.wings.beans.command.ExecutionLogCallback;
-import software.wings.service.impl.aws.model.AwsAsgGetRunningCountData;
-import software.wings.service.intfc.aws.delegate.AwsAsgHelperServiceDelegate;
-import software.wings.service.intfc.aws.delegate.AwsEc2HelperServiceDelegate;
-
+import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Joiner;
+import com.google.common.util.concurrent.TimeLimiter;
+import com.google.common.util.concurrent.UncheckedTimeoutException;
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -83,6 +84,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
+import lombok.extern.slf4j.Slf4j;
 
 @Singleton
 @Slf4j

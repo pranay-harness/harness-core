@@ -1,10 +1,10 @@
 package software.wings.beans;
 
-import lombok.Builder;
-import lombok.Data;
 import software.wings.beans.SampleAppEntityStatus.Health;
 
 import java.util.List;
+import lombok.Builder;
+import lombok.Data;
 
 @Data
 @Builder

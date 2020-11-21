@@ -3,23 +3,11 @@ package software.wings.helpers.ext.gcb;
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.network.Http.getOkHttpClientBuilder;
 
-import com.google.api.client.googleapis.auth.oauth2.GoogleCredential;
-import com.google.common.annotations.VisibleForTesting;
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
-
-import com.hazelcast.core.RuntimeInterruptedException;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.network.Http;
 import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.serializer.JsonUtils;
-import lombok.extern.slf4j.Slf4j;
-import okhttp3.OkHttpClient;
-import okhttp3.ResponseBody;
-import org.jetbrains.annotations.NotNull;
-import retrofit2.Response;
-import retrofit2.Retrofit;
-import retrofit2.converter.jackson.JacksonConverterFactory;
+
 import software.wings.beans.GcpConfig;
 import software.wings.beans.TaskType;
 import software.wings.exception.GcbClientException;
@@ -31,12 +19,24 @@ import software.wings.helpers.ext.gcb.models.RepoSource;
 import software.wings.helpers.ext.gcs.GcsRestClient;
 import software.wings.service.impl.GcpHelperService;
 
+import com.google.api.client.googleapis.auth.oauth2.GoogleCredential;
+import com.google.common.annotations.VisibleForTesting;
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
+import com.hazelcast.core.RuntimeInterruptedException;
 import java.io.IOException;
 import java.io.InterruptedIOException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
+import lombok.extern.slf4j.Slf4j;
+import okhttp3.OkHttpClient;
+import okhttp3.ResponseBody;
+import org.jetbrains.annotations.NotNull;
+import retrofit2.Response;
+import retrofit2.Retrofit;
+import retrofit2.converter.jackson.JacksonConverterFactory;
 
 @OwnedBy(CDC)
 @Singleton

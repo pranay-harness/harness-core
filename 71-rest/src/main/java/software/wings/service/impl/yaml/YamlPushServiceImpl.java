@@ -4,14 +4,10 @@ import static io.harness.govern.Switch.unhandled;
 import static io.harness.validation.Validator.notNullCheck;
 import static io.harness.validation.Validator.nullCheck;
 
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
-
 import io.harness.git.model.ChangeType;
 import io.harness.observer.Subject;
 import io.harness.persistence.UuidAware;
-import lombok.Getter;
-import lombok.extern.slf4j.Slf4j;
+
 import software.wings.beans.Application;
 import software.wings.beans.Event.Type;
 import software.wings.service.impl.yaml.service.YamlHelper;
@@ -19,9 +15,13 @@ import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.entitycrud.EntityCrudOperationObserver;
 import software.wings.service.intfc.yaml.YamlPushService;
 
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
 import javax.validation.executable.ValidateOnExecution;
+import lombok.Getter;
+import lombok.extern.slf4j.Slf4j;
 
 @ValidateOnExecution
 @Singleton

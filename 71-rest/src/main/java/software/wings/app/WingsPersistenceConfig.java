@@ -1,12 +1,11 @@
 package software.wings.app;
 
+import io.harness.springdata.SpringPersistenceConfig;
+
 import com.google.inject.Inject;
 import com.google.inject.Injector;
-
-import io.harness.springdata.SpringPersistenceConfig;
-import org.springframework.context.annotation.Configuration;
-
 import java.util.Collections;
+import org.springframework.context.annotation.Configuration;
 
 @Configuration
 public class WingsPersistenceConfig extends SpringPersistenceConfig {

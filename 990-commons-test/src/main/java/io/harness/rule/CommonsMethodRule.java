@@ -1,14 +1,12 @@
 package io.harness.rule;
 
 import com.google.inject.Module;
-
-import org.junit.rules.MethodRule;
-import org.junit.runners.model.FrameworkMethod;
-import org.junit.runners.model.Statement;
-
 import java.lang.annotation.Annotation;
 import java.util.ArrayList;
 import java.util.List;
+import org.junit.rules.MethodRule;
+import org.junit.runners.model.FrameworkMethod;
+import org.junit.runners.model.Statement;
 
 public class CommonsMethodRule implements MethodRule, InjectorRuleMixin {
   @Override

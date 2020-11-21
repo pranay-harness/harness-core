@@ -2,16 +2,7 @@ package software.wings.sm.states.spotinst;
 
 import static io.harness.beans.ExecutionStatus.SUCCESS;
 import static io.harness.rule.OwnerRule.SATYAM;
-import static java.util.Collections.emptyList;
-import static java.util.Collections.singletonList;
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.joor.Reflect.on;
-import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.anyList;
-import static org.mockito.Matchers.anyString;
-import static org.mockito.Mockito.doReturn;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.spy;
+
 import static software.wings.api.InstanceElement.Builder.anInstanceElement;
 import static software.wings.beans.Application.Builder.anApplication;
 import static software.wings.beans.AwsAmiInfrastructureMapping.Builder.anAwsAmiInfrastructureMapping;
@@ -22,9 +13,17 @@ import static software.wings.utils.WingsTestConstants.ENV_ID;
 import static software.wings.utils.WingsTestConstants.INFRA_MAPPING_ID;
 import static software.wings.utils.WingsTestConstants.SERVICE_ID;
 
-import com.google.common.collect.ImmutableMap;
+import static java.util.Collections.emptyList;
+import static java.util.Collections.singletonList;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.joor.Reflect.on;
+import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyList;
+import static org.mockito.Matchers.anyString;
+import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.spy;
 
-import com.amazonaws.services.ec2.model.Instance;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.beans.DelegateMetaInfo;
 import io.harness.delegate.task.spotinst.response.SpotInstTaskExecutionResponse;
@@ -32,8 +31,7 @@ import io.harness.delegate.task.spotinst.response.SpotinstTrafficShiftAlbDeployR
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.rule.Owner;
 import io.harness.spotinst.model.ElastiGroup;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
+
 import software.wings.WingsBaseTest;
 import software.wings.api.InstanceElement;
 import software.wings.api.PhaseElement;
@@ -49,7 +47,11 @@ import software.wings.sm.ExecutionResponse;
 import software.wings.sm.StateExecutionData;
 import software.wings.sm.states.AwsStateHelper;
 
+import com.amazonaws.services.ec2.model.Instance;
+import com.google.common.collect.ImmutableMap;
 import java.util.List;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 public class SpotinstTrafficShiftAlbDeployStateTest extends WingsBaseTest {
   @Test

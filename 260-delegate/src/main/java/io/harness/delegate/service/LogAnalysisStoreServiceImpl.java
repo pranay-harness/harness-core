@@ -2,17 +2,17 @@ package io.harness.delegate.service;
 
 import static io.harness.network.SafeHttpCall.execute;
 
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
-
 import io.harness.managerclient.VerificationServiceClient;
-import lombok.extern.slf4j.Slf4j;
+
 import software.wings.delegatetasks.LogAnalysisStoreService;
 import software.wings.service.impl.analysis.LogElement;
 import software.wings.service.intfc.analysis.ClusterLevel;
 import software.wings.sm.StateType;
 
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import java.util.List;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * Created by rsingh on 06/20/17.

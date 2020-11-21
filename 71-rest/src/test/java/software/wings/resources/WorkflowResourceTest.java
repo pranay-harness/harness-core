@@ -7,6 +7,10 @@ import static io.harness.rule.OwnerRule.ANSHUL;
 import static io.harness.rule.OwnerRule.GEORGE;
 import static io.harness.rule.OwnerRule.POOJA;
 import static io.harness.rule.OwnerRule.SRINIVAS;
+
+import static software.wings.beans.CanaryOrchestrationWorkflow.CanaryOrchestrationWorkflowBuilder.aCanaryOrchestrationWorkflow;
+import static software.wings.beans.Workflow.WorkflowBuilder.aWorkflow;
+
 import static java.lang.String.format;
 import static javax.ws.rs.client.Entity.entity;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -15,10 +19,6 @@ import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-import static software.wings.beans.CanaryOrchestrationWorkflow.CanaryOrchestrationWorkflowBuilder.aCanaryOrchestrationWorkflow;
-import static software.wings.beans.Workflow.WorkflowBuilder.aWorkflow;
-
-import com.google.common.collect.Lists;
 
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
@@ -26,12 +26,7 @@ import io.harness.category.element.UnitTests;
 import io.harness.rest.RestResponse;
 import io.harness.rule.Owner;
 import io.harness.serializer.JsonUtils;
-import lombok.extern.slf4j.Slf4j;
-import org.junit.ClassRule;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
-import org.mockito.ArgumentCaptor;
-import org.mockito.Captor;
+
 import software.wings.WingsBaseTest;
 import software.wings.beans.Workflow;
 import software.wings.beans.stats.CloneMetadata;
@@ -40,8 +35,15 @@ import software.wings.service.intfc.AuthService;
 import software.wings.service.intfc.WorkflowService;
 import software.wings.utils.ResourceTestRule;
 
+import com.google.common.collect.Lists;
 import javax.ws.rs.core.GenericType;
 import javax.ws.rs.core.MediaType;
+import lombok.extern.slf4j.Slf4j;
+import org.junit.ClassRule;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
+import org.mockito.ArgumentCaptor;
+import org.mockito.Captor;
 
 /**
  * Created by rishi on 12/28/16.

@@ -1,8 +1,9 @@
 package software.wings.graphql.schema.type.aggregation.audit;
 
+import software.wings.graphql.schema.type.aggregation.EntityFilter;
+
 import lombok.Builder;
 import lombok.Value;
-import software.wings.graphql.schema.type.aggregation.EntityFilter;
 
 @Value
 @Builder

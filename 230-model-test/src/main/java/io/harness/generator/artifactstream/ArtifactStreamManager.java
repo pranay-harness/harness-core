@@ -1,18 +1,19 @@
 package io.harness.generator.artifactstream;
 
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
-
-import io.github.benas.randombeans.api.EnhancedRandom;
 import io.harness.generator.EnvironmentGenerator;
 import io.harness.generator.OwnerManager.Owners;
 import io.harness.generator.Randomizer;
 import io.harness.generator.Randomizer.Seed;
 import io.harness.generator.ServiceGenerator;
 import io.harness.generator.SettingGenerator;
+
 import software.wings.beans.artifact.ArtifactStream;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.ArtifactStreamService;
+
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
+import io.github.benas.randombeans.api.EnhancedRandom;
 
 @Singleton
 public class ArtifactStreamManager {

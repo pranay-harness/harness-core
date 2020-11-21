@@ -2,14 +2,14 @@ package software.wings.service;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 
-import com.google.inject.Inject;
-
 import io.harness.beans.DelegateTask;
 import io.harness.tasks.TaskExecutor;
-import lombok.NonNull;
+
 import software.wings.service.intfc.DelegateService;
 
+import com.google.inject.Inject;
 import java.util.Map;
+import lombok.NonNull;
 
 public class DelegateTaskExecutor implements TaskExecutor<DelegateTask> {
   @Inject private DelegateService delegateService;

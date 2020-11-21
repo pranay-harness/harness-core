@@ -1,6 +1,7 @@
 package io.harness.cdng.stepGroup;
 
 import static io.harness.rule.OwnerRule.ARCHIT;
+
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.CategoryTest;
@@ -14,12 +15,12 @@ import io.harness.yaml.core.StepGroupElement;
 import io.harness.yaml.core.auxiliary.intfc.ExecutionWrapper;
 import io.harness.yaml.core.auxiliary.intfc.StageElementWrapper;
 import io.harness.yaml.utils.YamlPipelineUtils;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
 
 import java.io.IOException;
 import java.net.URL;
 import java.util.List;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 public class StepGroupYamlTest extends CategoryTest {
   @Test

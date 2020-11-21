@@ -1,22 +1,8 @@
 package software.wings.service.impl;
 
-import com.google.common.annotations.VisibleForTesting;
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
-
-import com.amazonaws.auth.AWSStaticCredentialsProvider;
-import com.amazonaws.auth.BasicAWSCredentials;
-import com.amazonaws.regions.Regions;
-import com.amazonaws.services.marketplaceentitlement.AWSMarketplaceEntitlementClient;
-import com.amazonaws.services.marketplaceentitlement.model.GetEntitlementsRequest;
-import com.amazonaws.services.marketplaceentitlement.model.GetEntitlementsResult;
-import com.amazonaws.services.marketplacemetering.AWSMarketplaceMeteringClientBuilder;
-import com.amazonaws.services.marketplacemetering.model.AWSMarketplaceMeteringException;
-import com.amazonaws.services.marketplacemetering.model.ResolveCustomerRequest;
-import com.amazonaws.services.marketplacemetering.model.ResolveCustomerResult;
 import io.harness.configuration.DeployMode;
 import io.harness.exception.WingsException;
-import lombok.extern.slf4j.Slf4j;
+
 import software.wings.app.MainConfiguration;
 import software.wings.beans.AccountStatus;
 import software.wings.beans.AccountType;
@@ -36,6 +22,19 @@ import software.wings.service.intfc.AwsMarketPlaceApiHandler;
 import software.wings.service.intfc.UserService;
 import software.wings.service.intfc.marketplace.MarketPlaceService;
 
+import com.amazonaws.auth.AWSStaticCredentialsProvider;
+import com.amazonaws.auth.BasicAWSCredentials;
+import com.amazonaws.regions.Regions;
+import com.amazonaws.services.marketplaceentitlement.AWSMarketplaceEntitlementClient;
+import com.amazonaws.services.marketplaceentitlement.model.GetEntitlementsRequest;
+import com.amazonaws.services.marketplaceentitlement.model.GetEntitlementsResult;
+import com.amazonaws.services.marketplacemetering.AWSMarketplaceMeteringClientBuilder;
+import com.amazonaws.services.marketplacemetering.model.AWSMarketplaceMeteringException;
+import com.amazonaws.services.marketplacemetering.model.ResolveCustomerRequest;
+import com.amazonaws.services.marketplacemetering.model.ResolveCustomerResult;
+import com.google.common.annotations.VisibleForTesting;
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import java.io.UnsupportedEncodingException;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -48,6 +47,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import javax.ws.rs.core.Response;
+import lombok.extern.slf4j.Slf4j;
 
 @Singleton
 @Slf4j

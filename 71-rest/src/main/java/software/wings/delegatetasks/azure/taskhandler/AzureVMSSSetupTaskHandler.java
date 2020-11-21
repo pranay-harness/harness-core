@@ -19,22 +19,16 @@ import static io.harness.logging.CommandExecutionStatus.FAILURE;
 import static io.harness.logging.CommandExecutionStatus.SUCCESS;
 import static io.harness.logging.LogLevel.ERROR;
 import static io.harness.logging.LogLevel.INFO;
-import static java.lang.String.format;
-import static java.util.Collections.emptyList;
-import static java.util.stream.Collectors.toList;
-import static org.apache.commons.lang3.StringUtils.isBlank;
+
 import static software.wings.beans.LogColor.Yellow;
 import static software.wings.beans.LogHelper.color;
 import static software.wings.beans.LogWeight.Bold;
 
-import com.google.common.annotations.VisibleForTesting;
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
+import static java.lang.String.format;
+import static java.util.Collections.emptyList;
+import static java.util.stream.Collectors.toList;
+import static org.apache.commons.lang3.StringUtils.isBlank;
 
-import com.microsoft.azure.management.compute.GalleryImage;
-import com.microsoft.azure.management.compute.GalleryImageIdentifier;
-import com.microsoft.azure.management.compute.VirtualMachineScaleSet;
-import com.microsoft.azure.management.network.LoadBalancer;
 import io.harness.azure.model.AzureConfig;
 import io.harness.azure.model.AzureMachineImageArtifact;
 import io.harness.azure.model.AzureMachineImageArtifact.ImageType;
@@ -55,13 +49,16 @@ import io.harness.delegate.task.azure.request.AzureVMSSTaskParameters;
 import io.harness.delegate.task.azure.response.AzureVMSSSetupTaskResponse;
 import io.harness.delegate.task.azure.response.AzureVMSSTaskExecutionResponse;
 import io.harness.exception.InvalidRequestException;
-import lombok.NoArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.StringUtils;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
+
 import software.wings.beans.command.ExecutionLogCallback;
 
+import com.google.common.annotations.VisibleForTesting;
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
+import com.microsoft.azure.management.compute.GalleryImage;
+import com.microsoft.azure.management.compute.GalleryImageIdentifier;
+import com.microsoft.azure.management.compute.VirtualMachineScaleSet;
+import com.microsoft.azure.management.network.LoadBalancer;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.List;
@@ -71,6 +68,11 @@ import java.util.Optional;
 import java.util.StringJoiner;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
+import lombok.NoArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 @Singleton
 @NoArgsConstructor
@@ -122,8 +124,8 @@ public class AzureVMSSSetupTaskHandler extends AzureVMSSTaskHandler {
     AzureLoadBalancerDetailForBGDeployment azureLoadBalancerDetail = setupTaskParameters.getAzureLoadBalancerDetail();
     if (isBlueGreen
         && (azureLoadBalancerDetail == null || isBlank(azureLoadBalancerDetail.getLoadBalancerName())
-               || isBlank(azureLoadBalancerDetail.getStageBackendPool())
-               || isBlank(azureLoadBalancerDetail.getProdBackendPool()))) {
+            || isBlank(azureLoadBalancerDetail.getStageBackendPool())
+            || isBlank(azureLoadBalancerDetail.getProdBackendPool()))) {
       throw new InvalidRequestException(
           format("LoadBalancer pool details are empty or null, azureLoadBalancerDetail: %s",
               azureLoadBalancerDetail == null ? null : azureLoadBalancerDetail.toString()));
@@ -346,7 +348,7 @@ public class AzureVMSSSetupTaskHandler extends AzureVMSSTaskHandler {
   }
 
   private int getHarnessManagedScaleSetsLatestRevision(List<VirtualMachineScaleSet> harnessManagedScaleSets) {
-    return harnessManagedScaleSets.stream().mapToInt(this ::getScaleSetLatestRevision).max().orElse(0);
+    return harnessManagedScaleSets.stream().mapToInt(this::getScaleSetLatestRevision).max().orElse(0);
   }
 
   private int getScaleSetLatestRevision(VirtualMachineScaleSet scaleSet) {

@@ -1,7 +1,5 @@
 package io.harness.ccm.setup;
 
-import com.google.inject.AbstractModule;
-
 import io.harness.ccm.billing.GcpResourceManagerService;
 import io.harness.ccm.billing.GcpResourceManagerServiceImpl;
 import io.harness.ccm.billing.GcpServiceAccountService;
@@ -22,6 +20,8 @@ import io.harness.ccm.setup.service.support.impl.AwsEKSHelperServiceImpl;
 import io.harness.ccm.setup.service.support.intfc.AWSCEConfigValidationService;
 import io.harness.ccm.setup.service.support.intfc.AWSOrganizationHelperService;
 import io.harness.ccm.setup.service.support.intfc.AwsEKSHelperService;
+
+import com.google.inject.AbstractModule;
 
 public class CESetupServiceModule extends AbstractModule {
   private static volatile CESetupServiceModule instance;

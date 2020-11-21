@@ -1,20 +1,23 @@
 package io.harness.execution.export.metadata;
 
 import static io.harness.rule.OwnerRule.GARVIT;
+
+import static software.wings.beans.ElementExecutionSummary.ElementExecutionSummaryBuilder.anElementExecutionSummary;
+
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
-import static software.wings.beans.ElementExecutionSummary.ElementExecutionSummaryBuilder.anElementExecutionSummary;
 
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
+
 import software.wings.api.CloudProviderType;
 import software.wings.api.DeploymentType;
 import software.wings.sm.InfraDefinitionSummary;
 
 import java.util.List;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 public class InfraMetadataTest extends CategoryTest {
   @Test

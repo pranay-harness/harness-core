@@ -10,12 +10,12 @@ import io.harness.walktree.beans.LevelNode;
 import io.harness.walktree.beans.VisitableChildren;
 import io.harness.walktree.visitor.SimpleVisitorHelper;
 import io.harness.walktree.visitor.Visitable;
-import lombok.Builder;
-import lombok.Data;
-import lombok.Singular;
 
 import java.beans.ConstructorProperties;
 import java.util.List;
+import lombok.Builder;
+import lombok.Data;
+import lombok.Singular;
 
 /**
  * This is Yaml POJO class which may contain expressions as well.

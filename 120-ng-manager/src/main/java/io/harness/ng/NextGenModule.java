@@ -2,17 +2,6 @@ package io.harness.ng;
 
 import static io.harness.AuthorizationServiceHeader.NG_MANAGER;
 
-import com.google.common.base.Suppliers;
-import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableSet;
-import com.google.inject.AbstractModule;
-import com.google.inject.Provides;
-import com.google.inject.Singleton;
-import com.google.inject.multibindings.MapBinder;
-import com.google.inject.multibindings.Multibinder;
-import com.google.inject.name.Named;
-import com.google.inject.name.Names;
-
 import io.harness.NGTriggersModule;
 import io.harness.OrchestrationModule;
 import io.harness.OrchestrationModuleConfig;
@@ -76,17 +65,27 @@ import io.harness.tasks.TaskExecutor;
 import io.harness.tasks.TaskMode;
 import io.harness.version.VersionModule;
 import io.harness.waiter.NgOrchestrationNotifyEventListener;
-import lombok.extern.slf4j.Slf4j;
-import org.hibernate.validator.parameternameprovider.ReflectionParameterNameProvider;
-import org.mongodb.morphia.converters.TypeConverter;
-import ru.vyarus.guice.validator.ValidationModule;
 
+import com.google.common.base.Suppliers;
+import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
+import com.google.inject.AbstractModule;
+import com.google.inject.Provides;
+import com.google.inject.Singleton;
+import com.google.inject.multibindings.MapBinder;
+import com.google.inject.multibindings.Multibinder;
+import com.google.inject.name.Named;
+import com.google.inject.name.Names;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.function.Supplier;
 import javax.validation.Validation;
 import javax.validation.ValidatorFactory;
+import lombok.extern.slf4j.Slf4j;
+import org.hibernate.validator.parameternameprovider.ReflectionParameterNameProvider;
+import org.mongodb.morphia.converters.TypeConverter;
+import ru.vyarus.guice.validator.ValidationModule;
 
 @Slf4j
 public class NextGenModule extends AbstractModule {

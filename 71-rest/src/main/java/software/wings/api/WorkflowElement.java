@@ -1,12 +1,12 @@
 package software.wings.api;
 
-import lombok.Builder;
-import lombok.Data;
 import software.wings.beans.ArtifactVariable;
 import software.wings.beans.ManifestVariable;
 
 import java.util.List;
 import java.util.Map;
+import lombok.Builder;
+import lombok.Data;
 
 @Data
 @Builder

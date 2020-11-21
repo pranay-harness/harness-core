@@ -1,6 +1,7 @@
 package software.wings.beans.alert;
 
 import io.harness.alert.AlertData;
+
 import lombok.Builder;
 import lombok.Data;
 import lombok.NonNull;

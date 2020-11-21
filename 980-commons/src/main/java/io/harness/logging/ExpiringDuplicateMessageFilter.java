@@ -1,22 +1,21 @@
 package io.harness.logging;
 
+import static java.util.stream.Collectors.joining;
+import static java.util.stream.Collectors.toList;
+import static org.apache.commons.lang3.StringUtils.*;
+
 import ch.qos.logback.classic.Level;
 import ch.qos.logback.classic.Logger;
 import ch.qos.logback.classic.turbo.TurboFilter;
 import ch.qos.logback.core.spi.FilterReply;
 import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
-import org.slf4j.Marker;
-import org.slf4j.MarkerFactory;
-
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
-
-import static java.util.stream.Collectors.joining;
-import static java.util.stream.Collectors.toList;
-import static org.apache.commons.lang3.StringUtils.*;
+import org.slf4j.Marker;
+import org.slf4j.MarkerFactory;
 
 public class ExpiringDuplicateMessageFilter extends TurboFilter {
   private static final int MAX_KEY_LENGTH = 100;

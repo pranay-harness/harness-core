@@ -1,21 +1,21 @@
 package io.harness.notification.eventbackbone;
 
-import com.google.inject.Inject;
-import io.harness.notification.KafkaBackendConfiguration;
+import static io.harness.NotificationClientConstants.KAFKA_TOPIC_NAME;
+
 import io.harness.NotificationRequest;
+import io.harness.notification.KafkaBackendConfiguration;
 import io.harness.notification.service.api.NotificationService;
 import io.harness.serializer.KafkaProtobufDeserializer;
-import lombok.extern.slf4j.Slf4j;
-import org.apache.kafka.clients.consumer.*;
-import org.apache.kafka.common.TopicPartition;
-import org.apache.kafka.common.serialization.StringDeserializer;
 
+import com.google.inject.Inject;
 import java.time.Duration;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Properties;
-
-import static io.harness.NotificationClientConstants.KAFKA_TOPIC_NAME;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.kafka.clients.consumer.*;
+import org.apache.kafka.common.TopicPartition;
+import org.apache.kafka.common.serialization.StringDeserializer;
 
 @Slf4j
 public class KafkaMessageConsumer implements MessageConsumer {

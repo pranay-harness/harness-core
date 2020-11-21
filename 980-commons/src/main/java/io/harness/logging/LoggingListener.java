@@ -1,7 +1,6 @@
 package io.harness.logging;
 
 import com.google.common.util.concurrent.Service;
-
 import lombok.extern.slf4j.Slf4j;
 
 /**

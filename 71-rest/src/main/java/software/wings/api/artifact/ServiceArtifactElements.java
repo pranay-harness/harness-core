@@ -1,10 +1,10 @@
 package software.wings.api.artifact;
 
 import io.harness.data.SweepingOutput;
-import lombok.Builder;
-import lombok.Value;
 
 import java.util.List;
+import lombok.Builder;
+import lombok.Value;
 
 @Value
 @Builder

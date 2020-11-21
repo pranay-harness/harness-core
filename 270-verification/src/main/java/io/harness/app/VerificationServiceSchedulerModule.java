@@ -1,10 +1,10 @@
 package io.harness.app;
 
-import com.google.inject.AbstractModule;
-import com.google.inject.name.Names;
-
 import io.harness.scheduler.PersistentScheduler;
 import io.harness.scheduler.VerificationJobScheduler;
+
+import com.google.inject.AbstractModule;
+import com.google.inject.name.Names;
 
 /**
  * @author Raghu

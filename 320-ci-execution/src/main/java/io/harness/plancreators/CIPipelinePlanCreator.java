@@ -4,11 +4,8 @@ import static io.harness.common.CIExecutionConstants.CI_PIPELINE_CONFIG;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.executionplan.plancreator.beans.PlanCreatorType.PIPELINE_PLAN_CREATOR;
 import static io.harness.executionplan.plancreator.beans.PlanCreatorType.STAGES_PLAN_CREATOR;
-import static java.util.Collections.singletonList;
 
-import com.google.common.collect.ImmutableMap;
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
+import static java.util.Collections.singletonList;
 
 import io.harness.beans.CIPipelineSetupParameters;
 import io.harness.beans.executionargs.CIExecutionArgs;
@@ -28,9 +25,12 @@ import io.harness.pms.facilitators.FacilitatorObtainment;
 import io.harness.pms.facilitators.FacilitatorType;
 import io.harness.states.CIPipelineSetupStep;
 import io.harness.yaml.core.auxiliary.intfc.StageElementWrapper;
-import lombok.extern.slf4j.Slf4j;
 
+import com.google.common.collect.ImmutableMap;
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import java.util.List;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * CI pipeline plan creator

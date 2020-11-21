@@ -1,6 +1,7 @@
 package software.wings.service.intfc.sumo;
 
 import io.harness.security.encryption.EncryptedDataDetail;
+
 import software.wings.beans.SumoConfig;
 import software.wings.beans.TaskType;
 import software.wings.delegatetasks.DelegateTaskType;

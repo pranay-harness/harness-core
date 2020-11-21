@@ -2,12 +2,11 @@ package io.harness.ng.core.gitsync;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 
-import com.google.inject.Inject;
-
 import io.harness.EntityType;
 import io.harness.exception.UnsupportedOperationException;
 import io.harness.git.model.ChangeType;
 
+import com.google.inject.Inject;
 import java.util.Collection;
 import java.util.List;
 import java.util.Set;

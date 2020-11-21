@@ -1,10 +1,9 @@
 package io.harness.delegate.task.utils;
 
 import com.amazonaws.regions.Regions;
-import lombok.experimental.UtilityClass;
-
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import lombok.experimental.UtilityClass;
 
 /**
  * @author marklu on 2019-07-22

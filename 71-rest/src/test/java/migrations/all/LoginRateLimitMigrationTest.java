@@ -1,9 +1,8 @@
 package migrations.all;
 
 import static io.harness.rule.OwnerRule.UJJAWAL;
-import static org.assertj.core.api.Assertions.assertThat;
 
-import com.google.inject.Inject;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.category.element.UnitTests;
 import io.harness.limits.ActionType;
@@ -12,13 +11,15 @@ import io.harness.limits.configuration.LimitConfigurationService;
 import io.harness.limits.lib.LimitType;
 import io.harness.limits.lib.RateBasedLimit;
 import io.harness.rule.Owner;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
-import org.mockito.InjectMocks;
+
 import software.wings.WingsBaseTest;
 import software.wings.beans.Account;
 
+import com.google.inject.Inject;
 import java.util.concurrent.TimeUnit;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
+import org.mockito.InjectMocks;
 
 public class LoginRateLimitMigrationTest extends WingsBaseTest {
   @Inject LimitConfigurationService limitConfigurationService;

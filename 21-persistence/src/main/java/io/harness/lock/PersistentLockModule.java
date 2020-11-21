@@ -2,19 +2,9 @@ package io.harness.lock;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.lock.mongo.MongoPersistentLocker.LOCKS_COLLECTION;
+
 import static java.util.Arrays.asList;
 
-import com.google.common.util.concurrent.TimeLimiter;
-import com.google.inject.Injector;
-import com.google.inject.Provider;
-import com.google.inject.Provides;
-import com.google.inject.Singleton;
-import com.google.inject.name.Named;
-
-import com.deftlabs.lock.mongo.DistributedLockSvc;
-import com.deftlabs.lock.mongo.DistributedLockSvcFactory;
-import com.deftlabs.lock.mongo.DistributedLockSvcOptions;
-import com.mongodb.MongoClient;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.govern.ProviderModule;
 import io.harness.govern.ServersModule;
@@ -22,10 +12,20 @@ import io.harness.lock.mongo.MongoPersistentLocker;
 import io.harness.lock.noop.PersistentNoopLocker;
 import io.harness.lock.redis.RedisPersistentLocker;
 import io.harness.persistence.HPersistence;
-import lombok.extern.slf4j.Slf4j;
 
+import com.deftlabs.lock.mongo.DistributedLockSvc;
+import com.deftlabs.lock.mongo.DistributedLockSvcFactory;
+import com.deftlabs.lock.mongo.DistributedLockSvcOptions;
+import com.google.common.util.concurrent.TimeLimiter;
+import com.google.inject.Injector;
+import com.google.inject.Provider;
+import com.google.inject.Provides;
+import com.google.inject.Singleton;
+import com.google.inject.name.Named;
+import com.mongodb.MongoClient;
 import java.io.Closeable;
 import java.util.List;
+import lombok.extern.slf4j.Slf4j;
 
 @OwnedBy(PL)
 @Slf4j

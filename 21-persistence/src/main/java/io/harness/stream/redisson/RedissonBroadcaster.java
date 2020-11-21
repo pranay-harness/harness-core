@@ -21,6 +21,9 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.stream.redisson.RedissonFactory.REDIS_ENV_NAMESPACE;
 
 import io.harness.annotations.dev.OwnedBy;
+
+import java.net.URI;
+import java.util.concurrent.atomic.AtomicBoolean;
 import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.atmosphere.cpr.AtmosphereConfig;
@@ -29,9 +32,6 @@ import org.atmosphere.cpr.Broadcaster;
 import org.atmosphere.util.AbstractBroadcasterProxy;
 import org.redisson.api.RTopic;
 import org.redisson.api.RedissonClient;
-
-import java.net.URI;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * Simple {@link org.atmosphere.cpr.Broadcaster} implementation based on Redisson

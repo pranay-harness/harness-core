@@ -1,7 +1,8 @@
 package software.wings.graphql.datafetcher.ce.recommendation.dto;
 
-import lombok.Value;
 import software.wings.graphql.schema.type.QLObject;
+
+import lombok.Value;
 
 @Value(staticConstructor = "of")
 public class QLResourceEntry implements QLObject {

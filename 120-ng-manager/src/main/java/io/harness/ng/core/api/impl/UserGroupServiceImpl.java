@@ -3,11 +3,8 @@ package io.harness.ng.core.api.impl;
 import static io.harness.exception.WingsException.USER_SRE;
 import static io.harness.ng.core.utils.NGUtils.verifyValuesNotChanged;
 import static io.harness.ng.core.utils.UserGroupMapper.toEntity;
-import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
-import com.google.common.collect.Lists;
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 import io.harness.exception.DuplicateFieldException;
 import io.harness.ng.core.api.UserGroupService;
@@ -17,15 +14,18 @@ import io.harness.ng.core.entities.NotificationSettingConfig;
 import io.harness.ng.core.entities.NotificationSettingType;
 import io.harness.ng.core.entities.UserGroup;
 import io.harness.ng.core.entities.UserGroup.UserGroupKeys;
+
+import com.google.common.collect.Lists;
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
+import java.util.HashSet;
+import java.util.Set;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.tuple.Pair;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.mongodb.core.query.Criteria;
-
-import java.util.HashSet;
-import java.util.Set;
 
 @Singleton
 @Slf4j

@@ -2,11 +2,9 @@ package io.harness.jobs.workflow.timeseries;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
+
 import static software.wings.delegatetasks.AbstractDelegateDataCollectionTask.PREDECTIVE_HISTORY_MINUTES;
 import static software.wings.service.impl.newrelic.NewRelicMetricDataRecord.DEFAULT_GROUP_NAME;
-
-import com.google.common.collect.Sets;
-import com.google.inject.Inject;
 
 import io.harness.beans.ExecutionStatus;
 import io.harness.beans.SortOrder.OrderType;
@@ -17,9 +15,7 @@ import io.harness.mongo.iterator.MongoPersistenceIterator.Handler;
 import io.harness.resources.intfc.ExperimentalMetricAnalysisResource;
 import io.harness.service.intfc.LearningEngineService;
 import io.harness.service.intfc.TimeSeriesAnalysisService;
-import lombok.extern.slf4j.Slf4j;
-import org.quartz.DisallowConcurrentExecution;
-import org.quartz.JobExecutionContext;
+
 import software.wings.beans.FeatureName;
 import software.wings.common.VerificationConstants;
 import software.wings.delegatetasks.NewRelicDataCollectionTask;
@@ -44,6 +40,8 @@ import software.wings.service.intfc.verification.CVActivityLogService;
 import software.wings.verification.VerificationDataAnalysisResponse;
 import software.wings.verification.VerificationStateAnalysisExecutionData;
 
+import com.google.common.collect.Sets;
+import com.google.inject.Inject;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
@@ -55,6 +53,9 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.TimeoutException;
+import lombok.extern.slf4j.Slf4j;
+import org.quartz.DisallowConcurrentExecution;
+import org.quartz.JobExecutionContext;
 
 /**
  * Cron to schedule time series processing for workflow verification.
@@ -131,10 +132,10 @@ public class WorkflowTimeSeriesAnalysisJob implements Handler<AnalysisContext> {
       final Set<NewRelicMetricDataRecord> controlRecords =
           context.getComparisonStrategy() == AnalysisComparisonStrategy.COMPARE_WITH_PREVIOUS
           ? analysisService.getPreviousSuccessfulRecords(context.getAppId(), lastSuccessfulWorkflowExecutionIdWithData,
-                groupName, analysisMinute, analysisStartMin, context.getAccountId())
+              groupName, analysisMinute, analysisStartMin, context.getAccountId())
           : analysisService.getRecords(context.getAppId(), context.getStateExecutionId(), groupName,
-                getNodesForGroup(groupName, context.getControlNodes()), analysisMinute, analysisStartMin,
-                context.getAccountId());
+              getNodesForGroup(groupName, context.getControlNodes()), analysisMinute, analysisStartMin,
+              context.getAccountId());
 
       final Set<NewRelicMetricDataRecord> testRecords = analysisService.getRecords(context.getAppId(),
           context.getStateExecutionId(), groupName, getNodesForGroup(groupName, context.getTestNodes()), analysisMinute,

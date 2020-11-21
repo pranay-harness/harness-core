@@ -1,6 +1,7 @@
 package software.wings.delegatetasks.pcf.pcftaskhandler;
 
 import static io.harness.rule.OwnerRule.BOJANA;
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyList;
@@ -9,15 +10,9 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import com.google.inject.Inject;
-
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
-import org.cloudfoundry.operations.applications.ApplicationDetail;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
+
 import software.wings.WingsBaseTest;
 import software.wings.beans.command.ExecutionLogCallback;
 import software.wings.delegatetasks.pcf.PcfCommandTaskHelper;
@@ -27,8 +22,14 @@ import software.wings.helpers.ext.pcf.PivotalClientApiException;
 import software.wings.helpers.ext.pcf.request.PcfCommandRollbackRequest;
 import software.wings.helpers.ext.pcf.response.PcfAppSetupTimeDetails;
 
+import com.google.inject.Inject;
 import java.util.Arrays;
 import java.util.List;
+import org.cloudfoundry.operations.applications.ApplicationDetail;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
 
 public class PcfRollbackCommandTaskHandlerTest extends WingsBaseTest {
   public static final String URL = "URL";
@@ -149,12 +150,10 @@ public class PcfRollbackCommandTaskHandlerTest extends WingsBaseTest {
       boolean downsizeApps, String appName, List<String> urls) {
     return PcfCommandRollbackRequest.builder()
         .isStandardBlueGreenWorkflow(false)
-        .appsToBeDownSized(downsizeApps ? Arrays.asList(PcfAppSetupTimeDetails.builder()
-                                                            .applicationName(appName)
-                                                            .initialInstanceCount(1)
-                                                            .urls(urls)
-                                                            .build())
-                                        : null)
+        .appsToBeDownSized(
+            downsizeApps ? Arrays.asList(
+                PcfAppSetupTimeDetails.builder().applicationName(appName).initialInstanceCount(1).urls(urls).build())
+                         : null)
         .build();
   }
 

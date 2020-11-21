@@ -1,6 +1,7 @@
 package software.wings.delegatetasks.aws.ecs.ecstaskhandler;
 
 import static io.harness.rule.OwnerRule.IVAN;
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyList;
@@ -11,6 +12,14 @@ import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 
+import io.harness.category.element.UnitTests;
+import io.harness.rule.Owner;
+
+import software.wings.WingsBaseTest;
+import software.wings.beans.AwsConfig;
+import software.wings.beans.command.ExecutionLogCallback;
+import software.wings.service.intfc.aws.delegate.AwsAppAutoScalingHelperServiceDelegate;
+
 import com.amazonaws.services.applicationautoscaling.model.Alarm;
 import com.amazonaws.services.applicationautoscaling.model.PutScalingPolicyResult;
 import com.amazonaws.services.applicationautoscaling.model.RegisterScalableTargetResult;
@@ -18,19 +27,12 @@ import com.amazonaws.services.applicationautoscaling.model.ScalableTarget;
 import com.amazonaws.services.applicationautoscaling.model.ScalingPolicy;
 import com.amazonaws.services.cloudwatch.model.MetricAlarm;
 import com.amazonaws.services.cloudwatch.model.PutMetricAlarmResult;
-import io.harness.category.element.UnitTests;
-import io.harness.rule.Owner;
+import java.util.Arrays;
+import java.util.Collections;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import software.wings.WingsBaseTest;
-import software.wings.beans.AwsConfig;
-import software.wings.beans.command.ExecutionLogCallback;
-import software.wings.service.intfc.aws.delegate.AwsAppAutoScalingHelperServiceDelegate;
-
-import java.util.Arrays;
-import java.util.Collections;
 
 public class EcsCommandTaskHelperTest extends WingsBaseTest {
   @Mock private ExecutionLogCallback executionLogCallback;

@@ -1,12 +1,13 @@
 package software.wings.service.impl.gcp;
 
+import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
-import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 
 import io.harness.beans.DelegateTask;
 import io.harness.category.element.UnitTests;
@@ -19,11 +20,7 @@ import io.harness.exception.InvalidRequestException;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.rule.Owner;
 import io.harness.rule.OwnerRule;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
-import org.mockito.ArgumentCaptor;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
+
 import software.wings.WingsBaseTest;
 import software.wings.beans.GcpConfig;
 import software.wings.service.impl.GcpHelperService;
@@ -31,6 +28,11 @@ import software.wings.service.impl.aws.model.AwsEc2ListInstancesResponse;
 import software.wings.service.intfc.DelegateService;
 
 import java.util.Collections;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
+import org.mockito.ArgumentCaptor;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
 
 public class GcpHelperServiceManagerTest extends WingsBaseTest {
   @Mock private GcpHelperService gcpHelperService;

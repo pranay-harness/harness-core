@@ -6,22 +6,18 @@ import static io.harness.rule.OwnerRule.GEORGE;
 import static io.harness.rule.OwnerRule.PUNEET;
 import static io.harness.rule.OwnerRule.UTKARSH;
 import static io.harness.rule.OwnerRule.VAIBHAV_SI;
+
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
-
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
 
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.expression.ExpressionReflectionUtils;
 import io.harness.rule.Owner;
-import lombok.Builder;
-import lombok.EqualsAndHashCode;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
 
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
@@ -34,6 +30,10 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
+import lombok.Builder;
+import lombok.EqualsAndHashCode;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 public class ReflectionUtilsTest extends CategoryTest {
   private static class FieldBase { public String baseField; }
@@ -295,4 +295,4 @@ public class ReflectionUtilsTest extends CategoryTest {
     assertThat(object).isNotNull();
     assertThat((String) object).isEqualTo("val1");
   }
-  }
+}

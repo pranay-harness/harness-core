@@ -8,10 +8,8 @@ import static io.harness.pms.execution.Status.PAUSED;
 import static io.harness.pms.execution.Status.RUNNING;
 import static io.harness.pms.execution.Status.SUCCEEDED;
 import static io.harness.rule.OwnerRule.PRASHANT;
-import static org.assertj.core.api.Assertions.assertThat;
 
-import com.google.inject.Inject;
-import com.google.inject.Injector;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.category.element.UnitTests;
 import io.harness.engine.OrchestrationService;
@@ -26,13 +24,16 @@ import io.harness.registries.state.StepRegistry;
 import io.harness.rule.Owner;
 import io.harness.testlib.RealMongo;
 import io.harness.waiter.OrchestrationNotifyEventListener;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
+
 import software.wings.WingsBaseTest;
 import software.wings.rules.Listeners;
 
+import com.google.inject.Inject;
+import com.google.inject.Injector;
 import java.util.List;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 @Listeners(OrchestrationNotifyEventListener.class)
 public class PauseAndResumeHandlerTest extends WingsBaseTest {

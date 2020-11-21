@@ -1,20 +1,20 @@
 package migrations.all;
 
-import com.google.common.collect.Lists;
-import com.google.inject.Inject;
-
 import io.harness.event.handler.impl.segment.SegmentGroupEventJobService;
-import lombok.extern.slf4j.Slf4j;
-import migrations.Migration;
+
 import software.wings.beans.Account;
 import software.wings.dl.WingsPersistence;
 import software.wings.scheduler.events.segment.SegmentGroupEventJobContext;
 import software.wings.service.intfc.AccountService;
 
+import com.google.common.collect.Lists;
+import com.google.inject.Inject;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.stream.Collectors;
+import lombok.extern.slf4j.Slf4j;
+import migrations.Migration;
 
 @Slf4j
 public class ScheduleSegmentPublishJob implements Migration {

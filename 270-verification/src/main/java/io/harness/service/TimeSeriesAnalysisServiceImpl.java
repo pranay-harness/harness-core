@@ -8,16 +8,12 @@ import static io.harness.govern.Switch.unhandled;
 import static io.harness.logging.Misc.replaceDotWithUnicode;
 import static io.harness.logging.Misc.replaceUnicodeWithDot;
 import static io.harness.persistence.HQuery.excludeAuthority;
-import static java.lang.Integer.max;
+
 import static software.wings.common.VerificationConstants.CRON_POLL_INTERVAL_IN_MINUTES;
 import static software.wings.delegatetasks.AbstractDelegateDataCollectionTask.HARNESS_HEARTBEAT_METRIC_NAME;
 import static software.wings.service.impl.newrelic.NewRelicMetricDataRecord.DEFAULT_GROUP_NAME;
 
-import com.google.common.annotations.VisibleForTesting;
-import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.Sets;
-import com.google.common.collect.TreeBasedTable;
-import com.google.inject.Inject;
+import static java.lang.Integer.max;
 
 import io.harness.app.VerificationServiceConfiguration;
 import io.harness.beans.PageRequest;
@@ -36,10 +32,7 @@ import io.harness.managerclient.VerificationManagerClientHelper;
 import io.harness.service.intfc.ContinuousVerificationService;
 import io.harness.service.intfc.LearningEngineService;
 import io.harness.service.intfc.TimeSeriesAnalysisService;
-import lombok.extern.slf4j.Slf4j;
-import org.mongodb.morphia.query.FindOptions;
-import org.mongodb.morphia.query.Query;
-import org.mongodb.morphia.query.Sort;
+
 import software.wings.common.VerificationConstants;
 import software.wings.dl.WingsPersistence;
 import software.wings.metrics.MetricType;
@@ -87,6 +80,11 @@ import software.wings.service.intfc.verification.CVActivityLogService;
 import software.wings.sm.StateType;
 import software.wings.verification.CVConfiguration;
 
+import com.google.common.annotations.VisibleForTesting;
+import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Sets;
+import com.google.common.collect.TreeBasedTable;
+import com.google.inject.Inject;
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -106,6 +104,10 @@ import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
+import lombok.extern.slf4j.Slf4j;
+import org.mongodb.morphia.query.FindOptions;
+import org.mongodb.morphia.query.Query;
+import org.mongodb.morphia.query.Sort;
 
 /**
  * Created by rsingh on 9/26/17.
@@ -148,7 +150,7 @@ public class TimeSeriesAnalysisServiceImpl implements TimeSeriesAnalysisService 
             .max(Comparator.comparingInt(NewRelicMetricDataRecord::getDataCollectionMinute));
     if (lastHeartBeatRecord.isPresent()
         && checkIfProcessed(lastHeartBeatRecord.get().getStateExecutionId(), lastHeartBeatRecord.get().getGroupName(),
-               lastHeartBeatRecord.get().getDataCollectionMinute())) {
+            lastHeartBeatRecord.get().getDataCollectionMinute())) {
       log.info("for {} minute {} data already exists in db so returning", stateExecutionId,
           lastHeartBeatRecord.get().getDataCollectionMinute());
       return true;
@@ -539,7 +541,7 @@ public class TimeSeriesAnalysisServiceImpl implements TimeSeriesAnalysisService 
             .filter(dataRecord
                 -> dataRecord.getStateType() == stateType && dataRecord.getServiceId().equals(serviceId)
                     && (dataRecord.getGroupName().equals(groupName)
-                           || dataRecord.getGroupName().equals(DEFAULT_GROUP_NAME))
+                        || dataRecord.getGroupName().equals(DEFAULT_GROUP_NAME))
                     && (ClusterLevel.H0 != dataRecord.getLevel() && ClusterLevel.HF != dataRecord.getLevel()))
             .collect(Collectors.toList());
     final List<NewRelicMetricDataRecord> records =

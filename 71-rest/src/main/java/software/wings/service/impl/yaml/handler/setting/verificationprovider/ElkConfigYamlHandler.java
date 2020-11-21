@@ -1,7 +1,5 @@
 package software.wings.service.impl.yaml.handler.setting.verificationprovider;
 
-import com.google.inject.Singleton;
-
 import software.wings.beans.ElkConfig;
 import software.wings.beans.ElkConfig.Yaml;
 import software.wings.beans.SettingAttribute;
@@ -9,6 +7,7 @@ import software.wings.beans.yaml.ChangeContext;
 import software.wings.service.impl.analysis.ElkConnector;
 import software.wings.utils.Utils;
 
+import com.google.inject.Singleton;
 import java.util.List;
 
 /**

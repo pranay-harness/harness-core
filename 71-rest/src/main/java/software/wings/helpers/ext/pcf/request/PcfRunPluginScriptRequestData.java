@@ -1,8 +1,9 @@
 package software.wings.helpers.ext.pcf.request;
 
+import software.wings.helpers.ext.pcf.PcfRequestConfig;
+
 import lombok.Builder;
 import lombok.Data;
-import software.wings.helpers.ext.pcf.PcfRequestConfig;
 
 @Data
 @Builder

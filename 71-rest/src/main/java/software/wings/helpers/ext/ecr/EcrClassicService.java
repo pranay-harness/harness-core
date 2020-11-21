@@ -4,6 +4,7 @@ import static io.harness.annotations.dev.HarnessTeam.CDC;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.security.encryption.EncryptedDataDetail;
+
 import software.wings.beans.EcrConfig;
 import software.wings.beans.artifact.EcrArtifactStream;
 import software.wings.helpers.ext.jenkins.BuildDetails;

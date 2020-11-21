@@ -1,10 +1,9 @@
 package software.wings.graphql.datafetcher.ce.exportData.dto;
 
+import java.util.List;
 import lombok.Builder;
 import lombok.Data;
 import lombok.experimental.FieldNameConstants;
-
-import java.util.List;
 
 @Data
 @Builder

@@ -2,8 +2,6 @@ package io.harness.delegate.task.executioncapability;
 
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
-import com.google.inject.Inject;
-
 import io.harness.delegate.beans.connector.gitconnector.GitConfigDTO;
 import io.harness.delegate.beans.executioncapability.CapabilityResponse;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
@@ -12,9 +10,10 @@ import io.harness.delegate.configuration.DelegateConfiguration;
 import io.harness.delegate.git.NGGitService;
 import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.security.encryption.SecretDecryptionService;
-import lombok.extern.slf4j.Slf4j;
 
+import com.google.inject.Inject;
 import java.util.List;
+import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class GitConnectionNGCapabilityChecker implements CapabilityCheck {

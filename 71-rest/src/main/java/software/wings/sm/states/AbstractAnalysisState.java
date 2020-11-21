@@ -3,7 +3,7 @@ package software.wings.sm.states;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.govern.Switch.noop;
-import static org.apache.commons.lang3.StringUtils.isBlank;
+
 import static software.wings.beans.AccountType.COMMUNITY;
 import static software.wings.beans.AccountType.ESSENTIALS;
 import static software.wings.beans.FeatureName.CV_SUCCEED_FOR_ANOMALY;
@@ -17,22 +17,14 @@ import static software.wings.service.impl.analysis.AnalysisComparisonStrategy.CO
 import static software.wings.service.impl.analysis.AnalysisComparisonStrategy.PREDICTIVE;
 import static software.wings.sm.ExecutionContextImpl.PHASE_PARAM;
 
-import com.google.common.base.Preconditions;
-import com.google.common.collect.Sets;
-import com.google.inject.Inject;
+import static org.apache.commons.lang3.StringUtils.isBlank;
 
-import com.github.reinert.jjschema.Attributes;
-import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.beans.ExecutionStatus;
 import io.harness.context.ContextElementType;
 import io.harness.expression.ExpressionEvaluator;
 import io.harness.time.Timestamp;
 import io.harness.waiter.WaitNotifyEngine;
-import lombok.Builder;
-import lombok.Value;
-import lombok.experimental.FieldNameConstants;
-import org.apache.commons.lang3.StringUtils;
-import org.slf4j.Logger;
+
 import software.wings.api.DeploymentType;
 import software.wings.api.PhaseElement;
 import software.wings.api.instancedetails.InstanceApiResponse;
@@ -78,6 +70,11 @@ import software.wings.stencils.DefaultValue;
 import software.wings.verification.VerificationDataAnalysisResponse;
 import software.wings.verification.VerificationStateAnalysisExecutionData;
 
+import com.github.reinert.jjschema.Attributes;
+import com.github.reinert.jjschema.SchemaIgnore;
+import com.google.common.base.Preconditions;
+import com.google.common.collect.Sets;
+import com.google.inject.Inject;
 import java.security.SecureRandom;
 import java.time.Duration;
 import java.time.Instant;
@@ -90,6 +87,11 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
+import lombok.Builder;
+import lombok.Value;
+import lombok.experimental.FieldNameConstants;
+import org.apache.commons.lang3.StringUtils;
+import org.slf4j.Logger;
 
 /**
  * Created by rsingh on 7/6/17.
@@ -338,7 +340,7 @@ public abstract class AbstractAnalysisState extends State {
   protected boolean isDemoPath(AnalysisContext analysisContext) {
     return featureFlagService.isEnabled(FeatureName.CV_DEMO, analysisContext.getAccountId())
         && (getSettingAttribute(getAnalysisServerConfigId()).getName().toLowerCase().endsWith("dev")
-               || getSettingAttribute(getAnalysisServerConfigId()).getName().toLowerCase().endsWith("prod"));
+            || getSettingAttribute(getAnalysisServerConfigId()).getName().toLowerCase().endsWith("prod"));
   }
 
   protected void generateDemoThirdPartyApiCallLogs(

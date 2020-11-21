@@ -1,17 +1,15 @@
 package software.wings.resources;
 
-import com.google.inject.Inject;
-
-import io.dropwizard.jersey.PATCH;
-import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiOperation;
-import lombok.extern.slf4j.Slf4j;
 import software.wings.beans.scim.ScimUser;
 import software.wings.scim.PatchRequest;
 import software.wings.scim.ScimListResponse;
 import software.wings.scim.ScimUserServiceImpl;
 import software.wings.security.annotations.ScimAPI;
 
+import com.google.inject.Inject;
+import io.dropwizard.jersey.PATCH;
+import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiOperation;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
@@ -23,6 +21,7 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
+import lombok.extern.slf4j.Slf4j;
 
 @Api("scim")
 @Path("/scim/account/{accountId}/")

@@ -2,21 +2,20 @@ package io.harness.batch.processing.metrics;
 
 import static java.lang.String.format;
 
-import com.google.cloud.bigquery.FieldValue;
-import com.google.cloud.bigquery.FieldValueList;
-import com.google.cloud.bigquery.QueryJobConfiguration;
-import com.google.cloud.bigquery.TableResult;
-import com.google.inject.Inject;
-
 import io.harness.batch.processing.config.BatchMainConfig;
 import io.harness.batch.processing.config.BillingDataPipelineConfig;
 import io.harness.batch.processing.dao.intfc.BillingDataPipelineRecordDao;
 import io.harness.ccm.billing.bigquery.BigQueryService;
 import io.harness.ccm.billing.entities.BillingDataPipelineRecord;
+
+import com.google.cloud.bigquery.FieldValue;
+import com.google.cloud.bigquery.FieldValueList;
+import com.google.cloud.bigquery.QueryJobConfiguration;
+import com.google.cloud.bigquery.TableResult;
+import com.google.inject.Inject;
+import java.time.Instant;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
-
-import java.time.Instant;
 
 @Slf4j
 public class CeCloudMetricsServiceImpl implements CeCloudMetricsService {

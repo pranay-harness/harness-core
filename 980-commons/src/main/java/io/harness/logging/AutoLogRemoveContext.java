@@ -2,12 +2,11 @@ package io.harness.logging;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 
-import lombok.extern.slf4j.Slf4j;
-import org.slf4j.MDC;
-
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
+import lombok.extern.slf4j.Slf4j;
+import org.slf4j.MDC;
 
 @Slf4j
 public class AutoLogRemoveContext implements AutoCloseable {

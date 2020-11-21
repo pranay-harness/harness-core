@@ -1,23 +1,25 @@
 package software.wings.service.impl.yaml;
 
 import static io.harness.rule.OwnerRule.DEEPAK;
-import static org.assertj.core.api.Assertions.assertThat;
 
-import com.google.inject.Inject;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.category.element.UnitTests;
 import io.harness.exception.GitConnectionDelegateException;
 import io.harness.git.model.GitRepositoryType;
 import io.harness.rule.Owner;
 import io.harness.rule.OwnerRule;
+
+import software.wings.WingsBaseTest;
+import software.wings.beans.GitConfig;
+import software.wings.beans.GitOperationContext;
+
+import com.google.inject.Inject;
 import org.eclipse.jgit.api.errors.GitAPIException;
 import org.eclipse.jgit.errors.TransportException;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
-import software.wings.WingsBaseTest;
-import software.wings.beans.GitConfig;
-import software.wings.beans.GitOperationContext;
 
 public class GitClientHelperTest extends WingsBaseTest {
   @Inject @InjectMocks GitClientHelper gitClientHelper;

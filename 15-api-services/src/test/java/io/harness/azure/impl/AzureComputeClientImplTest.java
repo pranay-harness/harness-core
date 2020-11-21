@@ -5,6 +5,7 @@ import static io.harness.azure.model.AzureConstants.NAME_TAG;
 import static io.harness.azure.model.AzureConstants.VMSS_CREATED_TIME_STAMP_TAG_NAME;
 import static io.harness.rule.OwnerRule.IVAN;
 import static io.harness.rule.OwnerRule.TATHAGAT;
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
@@ -16,8 +17,15 @@ import static org.powermock.api.mockito.PowerMockito.mockStatic;
 import static org.powermock.api.mockito.PowerMockito.when;
 import static org.powermock.api.mockito.PowerMockito.whenNew;
 
-import com.google.common.util.concurrent.TimeLimiter;
+import io.harness.CategoryTest;
+import io.harness.azure.AzureClient;
+import io.harness.azure.model.AzureConfig;
+import io.harness.azure.model.AzureVMSSTagsData;
+import io.harness.category.element.UnitTests;
+import io.harness.network.Http;
+import io.harness.rule.Owner;
 
+import com.google.common.util.concurrent.TimeLimiter;
 import com.microsoft.azure.Page;
 import com.microsoft.azure.PagedList;
 import com.microsoft.azure.credentials.ApplicationTokenCredentials;
@@ -38,13 +46,11 @@ import com.microsoft.azure.management.resources.Subscription;
 import com.microsoft.azure.management.resources.Subscriptions;
 import com.microsoft.rest.LogLevel;
 import com.microsoft.rest.RestException;
-import io.harness.CategoryTest;
-import io.harness.azure.AzureClient;
-import io.harness.azure.model.AzureConfig;
-import io.harness.azure.model.AzureVMSSTagsData;
-import io.harness.category.element.UnitTests;
-import io.harness.network.Http;
-import io.harness.rule.Owner;
+import java.io.IOException;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 import org.jetbrains.annotations.NotNull;
 import org.junit.Before;
 import org.junit.Test;
@@ -56,12 +62,6 @@ import org.mockito.Mockito;
 import org.powermock.core.classloader.annotations.PowerMockIgnore;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
-
-import java.io.IOException;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
 
 @RunWith(PowerMockRunner.class)
 @PrepareForTest({Azure.class, AzureClient.class, Http.class, TimeLimiter.class})

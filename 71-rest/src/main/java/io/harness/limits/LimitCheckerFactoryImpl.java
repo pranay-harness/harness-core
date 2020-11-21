@@ -1,8 +1,5 @@
 package io.harness.limits;
 
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
-
 import io.harness.limits.checker.MongoStaticLimitChecker;
 import io.harness.limits.checker.rate.MongoSlidingWindowRateLimitChecker;
 import io.harness.limits.configuration.InvalidLimitConfigurationException;
@@ -13,8 +10,11 @@ import io.harness.limits.impl.model.StaticLimit;
 import io.harness.limits.lib.Limit;
 import io.harness.limits.lib.LimitChecker;
 import io.harness.limits.lib.LimitType;
+
 import software.wings.dl.WingsPersistence;
 
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import javax.annotation.Nonnull;
 import javax.annotation.ParametersAreNonnullByDefault;
 

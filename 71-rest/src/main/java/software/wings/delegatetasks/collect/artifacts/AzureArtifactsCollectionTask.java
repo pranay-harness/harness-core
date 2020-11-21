@@ -1,9 +1,8 @@
 package software.wings.delegatetasks.collect.artifacts;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
-import static java.lang.String.format;
 
-import com.google.inject.Inject;
+import static java.lang.String.format;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.data.structure.EmptyPredicate;
@@ -15,16 +14,18 @@ import io.harness.delegate.task.ListNotifyResponseData;
 import io.harness.delegate.task.TaskParameters;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.InvalidArgumentsException;
-import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.tuple.ImmutablePair;
+
 import software.wings.beans.artifact.Artifact.ArtifactMetadataKeys;
 import software.wings.beans.settings.azureartifacts.AzureArtifactsConfig;
 import software.wings.helpers.ext.azure.devops.AzureArtifactsService;
 
+import com.google.inject.Inject;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.function.BooleanSupplier;
 import java.util.function.Consumer;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.tuple.ImmutablePair;
 
 @OwnedBy(CDC)
 @Slf4j

@@ -1,11 +1,12 @@
 package io.harness.serializer.kryo;
 
-import com.esotericsoftware.kryo.Kryo;
 import io.harness.ng.core.NGAccessWithEncryptionConsumer;
 import io.harness.ng.core.entities.Organization;
 import io.harness.ng.core.entities.Project;
 import io.harness.ng.core.entities.SampleEncryptableSettingImplementation;
 import io.harness.serializer.KryoRegistrar;
+
+import com.esotericsoftware.kryo.Kryo;
 
 public class ProjectAndOrgKryoRegistrar implements KryoRegistrar {
   @Override

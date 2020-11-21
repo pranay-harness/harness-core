@@ -1,14 +1,13 @@
 package software.wings.resources;
 
 import static io.harness.rule.OwnerRule.HANTANG;
+
 import static java.lang.String.format;
 import static javax.ws.rs.client.Entity.entity;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-
-import com.google.inject.Provider;
 
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
@@ -17,13 +16,7 @@ import io.harness.rest.RestResponse;
 import io.harness.rule.Owner;
 import io.harness.scheduler.PersistentScheduler;
 import io.harness.seeddata.SampleDataProviderService;
-import org.junit.Before;
-import org.junit.ClassRule;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
-import org.mockito.junit.MockitoJUnit;
-import org.mockito.junit.MockitoRule;
+
 import software.wings.beans.Account;
 import software.wings.features.api.FeatureService;
 import software.wings.licensing.LicenseService;
@@ -33,9 +26,17 @@ import software.wings.service.intfc.UserService;
 import software.wings.utils.AccountPermissionUtils;
 import software.wings.utils.ResourceTestRule;
 
+import com.google.inject.Provider;
 import javax.ws.rs.client.Entity;
 import javax.ws.rs.core.GenericType;
 import javax.ws.rs.core.MediaType;
+import org.junit.Before;
+import org.junit.ClassRule;
+import org.junit.Rule;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
+import org.mockito.junit.MockitoJUnit;
+import org.mockito.junit.MockitoRule;
 
 public class AccountResourceTest extends CategoryTest {
   private String accountId = "ACCOUNT_ID";

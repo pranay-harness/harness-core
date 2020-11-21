@@ -1,6 +1,5 @@
 package io.harness.connector.entities;
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import io.harness.beans.EmbeddedUser;
 import io.harness.data.validator.EntityIdentifier;
 import io.harness.data.validator.EntityName;
@@ -11,6 +10,11 @@ import io.harness.mongo.index.Field;
 import io.harness.mongo.index.NgUniqueIndex;
 import io.harness.ng.core.NGAccountAccess;
 import io.harness.persistence.PersistentEntity;
+
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import java.util.List;
+import javax.validation.constraints.NotNull;
+import javax.validation.constraints.Size;
 import lombok.Data;
 import lombok.Singular;
 import lombok.experimental.FieldNameConstants;
@@ -23,10 +27,6 @@ import org.springframework.data.annotation.LastModifiedBy;
 import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.annotation.Version;
 import org.springframework.data.mongodb.core.mapping.Document;
-
-import java.util.List;
-import javax.validation.constraints.NotNull;
-import javax.validation.constraints.Size;
 
 @Data
 @FieldNameConstants(innerTypeName = "ConnectorKeys")

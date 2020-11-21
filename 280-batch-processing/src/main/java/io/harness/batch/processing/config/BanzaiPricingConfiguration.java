@@ -4,14 +4,14 @@ import static io.harness.network.Http.getOkHttpClientBuilder;
 
 import io.harness.batch.processing.pricing.client.BanzaiPricingClient;
 import io.harness.network.Http;
+
+import java.util.concurrent.TimeUnit;
 import lombok.extern.slf4j.Slf4j;
 import okhttp3.OkHttpClient;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import retrofit2.Retrofit;
 import retrofit2.converter.jackson.JacksonConverterFactory;
-
-import java.util.concurrent.TimeUnit;
 
 @Slf4j
 @Configuration

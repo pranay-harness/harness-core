@@ -2,21 +2,17 @@ package software.wings.service.impl.template;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.persistence.HQuery.excludeAuthority;
-import static java.util.Arrays.asList;
-import static java.util.Collections.singletonList;
+
 import static software.wings.beans.template.TemplateType.ARTIFACT_SOURCE;
 import static software.wings.common.TemplateConstants.LATEST_TAG;
 
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
+import static java.util.Arrays.asList;
+import static java.util.Collections.singletonList;
 
-import de.danielbechler.diff.ObjectDifferBuilder;
-import de.danielbechler.diff.node.DiffNode;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.InvalidRequestException;
 import io.harness.persistence.HIterator;
-import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.NotImplementedException;
+
 import software.wings.beans.EntityType;
 import software.wings.beans.artifact.ArtifactStream;
 import software.wings.beans.artifact.ArtifactStream.ArtifactStreamKeys;
@@ -30,9 +26,15 @@ import software.wings.beans.template.artifactsource.ArtifactSourceTemplate;
 import software.wings.beans.template.artifactsource.CustomArtifactSourceTemplate;
 import software.wings.service.intfc.ArtifactStreamService;
 
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
+import de.danielbechler.diff.ObjectDifferBuilder;
+import de.danielbechler.diff.node.DiffNode;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.NotImplementedException;
 
 @Singleton
 @Slf4j

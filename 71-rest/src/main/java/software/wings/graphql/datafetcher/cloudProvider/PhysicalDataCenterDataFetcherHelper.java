@@ -1,8 +1,5 @@
 package software.wings.graphql.datafetcher.cloudProvider;
 
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
-
 import software.wings.beans.PhysicalDataCenterConfig.Builder;
 import software.wings.beans.SettingAttribute;
 import software.wings.graphql.datafetcher.secrets.UsageScopeController;
@@ -10,6 +7,9 @@ import software.wings.graphql.schema.mutation.cloudProvider.QLPhysicalDataCenter
 import software.wings.graphql.schema.mutation.cloudProvider.QLUpdatePhysicalDataCenterCloudProviderInput;
 import software.wings.graphql.schema.type.secrets.QLUsageScope;
 import software.wings.settings.SettingVariableTypes;
+
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
 
 @Singleton
 public class PhysicalDataCenterDataFetcherHelper {

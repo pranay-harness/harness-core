@@ -1,17 +1,18 @@
 package software.wings.api.commandlibrary;
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import io.harness.commandlibrary.api.dto.CommandVersionDTO;
+
+import software.wings.beans.Variable;
+import software.wings.beans.template.BaseTemplate;
+
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import java.util.List;
+import java.util.Set;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.experimental.FieldNameConstants;
-import software.wings.beans.Variable;
-import software.wings.beans.template.BaseTemplate;
-
-import java.util.List;
-import java.util.Set;
 
 @Data
 @NoArgsConstructor

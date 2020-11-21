@@ -1,9 +1,10 @@
 package software.wings.sm;
 
-import lombok.Builder;
-import lombok.Value;
 import software.wings.api.CloudProviderType;
 import software.wings.api.DeploymentType;
+
+import lombok.Builder;
+import lombok.Value;
 
 @Value
 @Builder

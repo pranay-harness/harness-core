@@ -1,11 +1,9 @@
 package io.harness.app.impl;
 
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+
 import static java.lang.String.format;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
-
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
 
 import io.harness.app.beans.dto.CIBuildFilterDTO;
 import io.harness.app.beans.dto.CIBuildResponseDTO;
@@ -16,17 +14,19 @@ import io.harness.ci.beans.entities.CIBuild;
 import io.harness.ngpipeline.pipeline.beans.entities.NgPipelineEntity;
 import io.harness.ngpipeline.pipeline.beans.yaml.NgPipeline.NgPipelineKeys;
 import io.harness.ngpipeline.pipeline.service.NGPipelineService;
-import lombok.AllArgsConstructor;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.mongodb.core.query.Criteria;
 
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import javax.ws.rs.NotFoundException;
+import lombok.AllArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.mongodb.core.query.Criteria;
 
 @Singleton
 @AllArgsConstructor(onConstructor = @__({ @Inject }))

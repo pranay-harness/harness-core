@@ -3,23 +3,14 @@ package software.wings.beans.command;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.logging.CommandExecutionStatus.FAILURE;
 import static io.harness.logging.LogLevel.ERROR;
-import static org.apache.commons.lang3.StringUtils.isNotBlank;
+
 import static software.wings.beans.Log.Builder.aLog;
 
-import com.google.common.base.MoreObjects;
-import com.google.inject.Inject;
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
-import com.fasterxml.jackson.annotation.JsonTypeName;
-import com.github.reinert.jjschema.Attributes;
 import io.harness.delegate.service.DelegateAgentFileService.FileBucket;
 import io.harness.logging.CommandExecutionStatus;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.EqualsAndHashCode;
-import lombok.NoArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-import org.mongodb.morphia.annotations.Transient;
+
 import software.wings.beans.ConfigFile;
 import software.wings.beans.Log;
 import software.wings.delegatetasks.DelegateConfigService;
@@ -27,10 +18,21 @@ import software.wings.delegatetasks.DelegateFileManager;
 import software.wings.delegatetasks.DelegateLogService;
 import software.wings.stencils.DefaultValue;
 
+import com.fasterxml.jackson.annotation.JsonTypeName;
+import com.github.reinert.jjschema.Attributes;
+import com.google.common.base.MoreObjects;
+import com.google.inject.Inject;
 import java.io.File;
 import java.io.IOException;
 import java.util.List;
 import java.util.Objects;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.NoArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.mongodb.morphia.annotations.Transient;
 
 /**
  * Created by anubhaw on 7/14/16.

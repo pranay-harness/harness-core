@@ -1,17 +1,16 @@
 package io.harness.generator;
 
 import static io.harness.govern.Switch.unhandled;
-import static java.util.Arrays.asList;
+
 import static software.wings.api.DeploymentType.SSH;
 import static software.wings.beans.InfrastructureMappingBlueprint.CloudProviderType.AWS;
 import static software.wings.beans.InfrastructureMappingBlueprint.NodeFilteringType.AWS_INSTANCE_FILTER;
 
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
+import static java.util.Arrays.asList;
 
-import io.github.benas.randombeans.api.EnhancedRandom;
 import io.harness.generator.OwnerManager.Owners;
 import io.harness.generator.SettingGenerator.Settings;
+
 import software.wings.beans.Application;
 import software.wings.beans.BlueprintProperty;
 import software.wings.beans.InfrastructureMappingBlueprint;
@@ -28,6 +27,10 @@ import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.InfrastructureProvisionerService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.security.SecretManager;
+
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
+import io.github.benas.randombeans.api.EnhancedRandom;
 
 @Singleton
 public class InfrastructureProvisionerGenerator {

@@ -1,7 +1,6 @@
 package io.harness.k8s.model.statssummary;
 
 import com.google.gson.annotations.SerializedName;
-
 import lombok.Data;
 import lombok.ToString;
 

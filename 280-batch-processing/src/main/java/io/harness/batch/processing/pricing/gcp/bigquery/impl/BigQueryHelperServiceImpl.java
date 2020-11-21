@@ -8,7 +8,16 @@ import static io.harness.batch.processing.pricing.gcp.bigquery.BigQueryConstants
 import static io.harness.batch.processing.pricing.gcp.bigquery.BigQueryConstants.resourceId;
 import static io.harness.batch.processing.pricing.gcp.bigquery.BigQueryConstants.serviceCode;
 import static io.harness.ccm.billing.GcpServiceAccountServiceImpl.getCredentials;
+
 import static java.lang.String.format;
+
+import io.harness.batch.processing.config.BatchMainConfig;
+import io.harness.batch.processing.config.BillingDataPipelineConfig;
+import io.harness.batch.processing.pricing.data.VMInstanceBillingData;
+import io.harness.batch.processing.pricing.data.VMInstanceServiceBillingData;
+import io.harness.batch.processing.pricing.data.VMInstanceServiceBillingData.VMInstanceServiceBillingDataBuilder;
+import io.harness.batch.processing.pricing.gcp.bigquery.BigQueryConstants;
+import io.harness.batch.processing.pricing.gcp.bigquery.BigQueryHelperService;
 
 import com.google.auth.oauth2.ServiceAccountCredentials;
 import com.google.cloud.bigquery.BigQuery;
@@ -20,18 +29,6 @@ import com.google.cloud.bigquery.FieldValueList;
 import com.google.cloud.bigquery.QueryJobConfiguration;
 import com.google.cloud.bigquery.Schema;
 import com.google.cloud.bigquery.TableResult;
-
-import io.harness.batch.processing.config.BatchMainConfig;
-import io.harness.batch.processing.config.BillingDataPipelineConfig;
-import io.harness.batch.processing.pricing.data.VMInstanceBillingData;
-import io.harness.batch.processing.pricing.data.VMInstanceServiceBillingData;
-import io.harness.batch.processing.pricing.data.VMInstanceServiceBillingData.VMInstanceServiceBillingDataBuilder;
-import io.harness.batch.processing.pricing.gcp.bigquery.BigQueryConstants;
-import io.harness.batch.processing.pricing.gcp.bigquery.BigQueryHelperService;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
-
 import java.text.SimpleDateFormat;
 import java.time.Instant;
 import java.util.ArrayList;
@@ -40,6 +37,9 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
 
 @Slf4j
 @Service

@@ -6,19 +6,17 @@ import static io.harness.generator.SettingGenerator.Settings.ECS_FUNCTIONAL_TEST
 import static io.harness.generator.SettingGenerator.Settings.ECS_FUNCTIONAL_TEST_GIT_REPO;
 import static io.harness.generator.SettingGenerator.Settings.PCF_FUNCTIONAL_TEST_GIT_REPO;
 import static io.harness.govern.Switch.unhandled;
+
 import static software.wings.beans.Service.ServiceBuilder;
 import static software.wings.beans.Service.builder;
 
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
-
-import io.github.benas.randombeans.api.EnhancedRandom;
 import io.harness.generator.ApplicationGenerator.Applications;
 import io.harness.generator.OwnerManager.Owners;
 import io.harness.generator.Randomizer.Seed;
 import io.harness.generator.SettingGenerator.Settings;
 import io.harness.generator.artifactstream.ArtifactStreamManager;
 import io.harness.generator.artifactstream.ArtifactStreamManager.ArtifactStreams;
+
 import software.wings.api.DeploymentType;
 import software.wings.beans.Application;
 import software.wings.beans.GitFileConfig;
@@ -38,6 +36,9 @@ import software.wings.service.intfc.ApplicationManifestService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.utils.ArtifactType;
 
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
+import io.github.benas.randombeans.api.EnhancedRandom;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;

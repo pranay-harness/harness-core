@@ -2,15 +2,11 @@ package io.harness.resources;
 
 import static io.harness.utils.Misc.parseApisVersion;
 
-import com.google.inject.Inject;
-
-import com.codahale.metrics.annotation.ExceptionMetered;
-import com.codahale.metrics.annotation.Timed;
 import io.harness.rest.RestResponse;
 import io.harness.security.annotations.LearningEngineAuth;
 import io.harness.service.LearningEngineError;
 import io.harness.service.intfc.LearningEngineService;
-import io.swagger.annotations.Api;
+
 import software.wings.common.VerificationConstants;
 import software.wings.security.PermissionAttribute.ResourceType;
 import software.wings.security.annotations.Scope;
@@ -18,6 +14,10 @@ import software.wings.service.impl.analysis.MLAnalysisType;
 import software.wings.service.impl.newrelic.LearningEngineAnalysisTask;
 import software.wings.service.impl.newrelic.LearningEngineExperimentalAnalysisTask;
 
+import com.codahale.metrics.annotation.ExceptionMetered;
+import com.codahale.metrics.annotation.Timed;
+import com.google.inject.Inject;
+import io.swagger.annotations.Api;
 import java.util.List;
 import java.util.Optional;
 import javax.validation.Valid;

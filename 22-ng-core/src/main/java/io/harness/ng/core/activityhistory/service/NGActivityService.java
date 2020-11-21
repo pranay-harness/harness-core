@@ -6,6 +6,7 @@ import io.harness.ng.core.activityhistory.dto.NGActivityDTO;
 import io.harness.ng.core.activityhistory.dto.NGActivityListDTO;
 import io.harness.ng.core.activityhistory.dto.NGActivitySummaryDTO;
 import io.harness.ng.core.activityhistory.dto.TimeGroupType;
+
 import org.springframework.data.domain.Page;
 
 public interface NGActivityService {

@@ -1,20 +1,19 @@
 package io.harness.cvng.statemachine.entities;
 
-import com.google.common.base.Preconditions;
-import com.google.inject.Inject;
-
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import io.harness.cvng.analysis.entities.LearningEngineTask.ExecutionStatus;
 import io.harness.cvng.analysis.services.api.LogAnalysisService;
 import io.harness.cvng.statemachine.beans.AnalysisInput;
 import io.harness.cvng.statemachine.beans.AnalysisState;
 import io.harness.cvng.statemachine.beans.AnalysisStatus;
 import io.harness.cvng.statemachine.exception.AnalysisStateMachineException;
-import lombok.Data;
-import lombok.extern.slf4j.Slf4j;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.google.common.base.Preconditions;
+import com.google.inject.Inject;
 import java.util.Arrays;
 import java.util.Map;
+import lombok.Data;
+import lombok.extern.slf4j.Slf4j;
 
 @Data
 @Slf4j

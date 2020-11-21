@@ -1,7 +1,17 @@
 package io.harness.event.app;
 
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+
 import static java.nio.charset.StandardCharsets.UTF_8;
+
+import io.harness.govern.ProviderModule;
+import io.harness.mongo.MongoConfig;
+import io.harness.mongo.MongoModule;
+import io.harness.morphia.MorphiaModule;
+import io.harness.persistence.HPersistence;
+import io.harness.persistence.Store;
+import io.harness.serializer.PersistenceRegistrars;
+import io.harness.serializer.YamlUtils;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -12,23 +22,6 @@ import com.google.inject.Module;
 import com.google.inject.Provides;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
-
-import io.harness.govern.ProviderModule;
-import io.harness.mongo.MongoConfig;
-import io.harness.mongo.MongoModule;
-import io.harness.morphia.MorphiaModule;
-import io.harness.persistence.HPersistence;
-import io.harness.persistence.Store;
-import io.harness.serializer.PersistenceRegistrars;
-import io.harness.serializer.YamlUtils;
-import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.io.FileUtils;
-import org.apache.log4j.LogManager;
-import org.hibernate.validator.parameternameprovider.ReflectionParameterNameProvider;
-import org.mongodb.morphia.converters.TypeConverter;
-import org.slf4j.bridge.SLF4JBridgeHandler;
-import ru.vyarus.guice.validator.ValidationModule;
-
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -38,6 +31,13 @@ import java.util.Set;
 import java.util.logging.Level;
 import javax.validation.Validation;
 import javax.validation.ValidatorFactory;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.io.FileUtils;
+import org.apache.log4j.LogManager;
+import org.hibernate.validator.parameternameprovider.ReflectionParameterNameProvider;
+import org.mongodb.morphia.converters.TypeConverter;
+import org.slf4j.bridge.SLF4JBridgeHandler;
+import ru.vyarus.guice.validator.ValidationModule;
 
 @Slf4j
 public class EventServiceApplication {

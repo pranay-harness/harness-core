@@ -1,12 +1,12 @@
 package io.harness.cdng.artifact.resources.docker.service;
 
 import static io.harness.rule.OwnerRule.SAHIL;
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import io.fabric8.utils.Lists;
 import io.harness.CategoryTest;
 import io.harness.beans.DelegateTaskRequest;
 import io.harness.beans.IdentifierRef;
@@ -31,6 +31,10 @@ import io.harness.rule.Owner;
 import io.harness.secretmanagerclient.services.api.SecretManagerClientService;
 import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.service.DelegateGrpcClientWrapper;
+
+import io.fabric8.utils.Lists;
+import java.util.ArrayList;
+import java.util.Optional;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -39,9 +43,6 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.mockito.Spy;
-
-import java.util.ArrayList;
-import java.util.Optional;
 
 public class DockerResourceServiceImplTest extends CategoryTest {
   private static String ACCOUNT_ID = "accountId";

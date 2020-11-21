@@ -1,6 +1,7 @@
 package software.wings.graphql.datafetcher.trigger;
 
 import static io.harness.rule.OwnerRule.MILAN;
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.when;
 
@@ -8,6 +9,14 @@ import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.exception.InvalidRequestException;
 import io.harness.rule.Owner;
+
+import software.wings.beans.trigger.Trigger;
+import software.wings.graphql.datafetcher.MutationContext;
+import software.wings.graphql.schema.type.trigger.QLDeleteTriggerInput;
+import software.wings.graphql.schema.type.trigger.QLDeleteTriggerPayload;
+import software.wings.service.intfc.AppService;
+import software.wings.service.intfc.TriggerService;
+
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -17,12 +26,6 @@ import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
 import org.mockito.Spy;
-import software.wings.beans.trigger.Trigger;
-import software.wings.graphql.datafetcher.MutationContext;
-import software.wings.graphql.schema.type.trigger.QLDeleteTriggerInput;
-import software.wings.graphql.schema.type.trigger.QLDeleteTriggerPayload;
-import software.wings.service.intfc.AppService;
-import software.wings.service.intfc.TriggerService;
 
 public class DeleteTriggerDataFetcherTest extends CategoryTest {
   @Mock TriggerService triggerService;

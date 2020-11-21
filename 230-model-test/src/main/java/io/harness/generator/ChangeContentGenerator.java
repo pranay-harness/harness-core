@@ -1,12 +1,11 @@
 package io.harness.generator;
 
-import com.google.inject.Inject;
-
 import software.wings.beans.Account;
 import software.wings.beans.EntityYamlRecord;
 import software.wings.beans.EntityYamlRecord.EntityYamlRecordBuilder;
 import software.wings.dl.WingsPersistence;
 
+import com.google.inject.Inject;
 import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;

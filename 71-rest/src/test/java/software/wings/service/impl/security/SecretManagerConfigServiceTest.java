@@ -1,23 +1,20 @@
 package software.wings.service.impl.security;
 
 import static io.harness.rule.OwnerRule.UTKARSH;
+
+import static software.wings.beans.Account.GLOBAL_ACCOUNT_ID;
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-import static software.wings.beans.Account.GLOBAL_ACCOUNT_ID;
-
-import com.google.inject.Inject;
 
 import io.harness.beans.SecretManagerConfig;
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
 import io.harness.secretmanagers.SecretManagerConfigService;
 import io.harness.security.encryption.EncryptionType;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
+
 import software.wings.WingsBaseTest;
 import software.wings.beans.Account;
 import software.wings.beans.AccountType;
@@ -27,7 +24,12 @@ import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.security.GcpSecretsManagerService;
 import software.wings.service.intfc.security.KmsService;
 
+import com.google.inject.Inject;
 import java.util.List;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
 
 public class SecretManagerConfigServiceTest extends WingsBaseTest {
   @Inject WingsPersistence wingsPersistence;

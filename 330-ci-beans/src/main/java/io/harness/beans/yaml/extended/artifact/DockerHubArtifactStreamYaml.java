@@ -1,14 +1,14 @@
 package io.harness.beans.yaml.extended.artifact;
 
-import com.fasterxml.jackson.annotation.JsonTypeName;
 import io.harness.yaml.core.intfc.ArtifactStream;
+
+import com.fasterxml.jackson.annotation.JsonTypeName;
+import javax.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
-
-import javax.validation.constraints.NotNull;
 
 @Data
 @Builder

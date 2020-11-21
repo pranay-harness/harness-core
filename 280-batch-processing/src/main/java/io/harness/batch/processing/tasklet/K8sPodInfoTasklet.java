@@ -28,13 +28,6 @@ import io.harness.ccm.commons.entities.InstanceData;
 import io.harness.event.grpc.PublishedMessage;
 import io.harness.grpc.utils.HTimestamps;
 import io.harness.perpetualtask.k8s.watch.PodInfo;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.batch.core.JobParameters;
-import org.springframework.batch.core.StepContribution;
-import org.springframework.batch.core.scope.context.ChunkContext;
-import org.springframework.batch.core.step.tasklet.Tasklet;
-import org.springframework.batch.repeat.RepeatStatus;
-import org.springframework.beans.factory.annotation.Autowired;
 
 import java.time.Instant;
 import java.util.Collections;
@@ -42,6 +35,13 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.batch.core.JobParameters;
+import org.springframework.batch.core.StepContribution;
+import org.springframework.batch.core.scope.context.ChunkContext;
+import org.springframework.batch.core.step.tasklet.Tasklet;
+import org.springframework.batch.repeat.RepeatStatus;
+import org.springframework.beans.factory.annotation.Autowired;
 
 @Slf4j
 public class K8sPodInfoTasklet implements Tasklet {
@@ -76,7 +76,7 @@ public class K8sPodInfoTasklet implements Tasklet {
         log.info("Started Processing for size: {} {}", publishedMessageList.size(), Instant.now());
       }
       List<InstanceInfo> collect =
-          publishedMessageList.stream().map(this ::processPodInfoMessage).collect(Collectors.toList());
+          publishedMessageList.stream().map(this::processPodInfoMessage).collect(Collectors.toList());
       if (InstanceMetaDataConstants.SLOW_ACCOUNT.equals(accountId)) {
         log.info("Ended Processing for size: {} {}", publishedMessageList.size(), Instant.now());
       }

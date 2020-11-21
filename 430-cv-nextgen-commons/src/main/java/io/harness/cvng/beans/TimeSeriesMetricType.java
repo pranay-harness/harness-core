@@ -1,7 +1,6 @@
 package io.harness.cvng.beans;
 
 import com.google.common.collect.Lists;
-
 import java.util.List;
 
 public enum TimeSeriesMetricType {

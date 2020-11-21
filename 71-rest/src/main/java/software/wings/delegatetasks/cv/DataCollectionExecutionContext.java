@@ -1,10 +1,10 @@
 package software.wings.delegatetasks.cv;
 
-import retrofit2.Call;
 import software.wings.delegatetasks.DelegateCVActivityLogService.Logger;
 import software.wings.service.impl.ThirdPartyApiCallLog;
 
 import java.util.Map;
+import retrofit2.Call;
 
 public interface DataCollectionExecutionContext {
   ThirdPartyApiCallLog createApiCallLog();

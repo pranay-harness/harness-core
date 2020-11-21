@@ -1,12 +1,12 @@
 package software.wings.service.impl.analysis;
 
-import lombok.Builder;
-import lombok.Data;
-import lombok.experimental.FieldNameConstants;
 import software.wings.metrics.RiskLevel;
 import software.wings.service.impl.newrelic.NewRelicMetricAnalysisRecord.NewRelicMetricAnalysis;
 
 import java.util.List;
+import lombok.Builder;
+import lombok.Data;
+import lombok.experimental.FieldNameConstants;
 
 @Data
 @Builder

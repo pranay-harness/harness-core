@@ -1,13 +1,12 @@
 package io.harness.artifact;
 
 import static io.harness.rule.OwnerRule.SRINIVAS;
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Matchers.isA;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-
-import com.google.inject.Inject;
 
 import io.harness.beans.DelegateTask;
 import io.harness.category.element.UnitTests;
@@ -17,6 +16,13 @@ import io.harness.perpetualtask.PerpetualTaskService;
 import io.harness.perpetualtask.PerpetualTaskType;
 import io.harness.perpetualtask.artifact.ArtifactCollectionTaskParams;
 import io.harness.rule.Owner;
+
+import software.wings.WingsBaseTest;
+import software.wings.service.impl.artifact.ArtifactCollectionUtils;
+
+import com.google.inject.Inject;
+import java.util.HashMap;
+import java.util.Map;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -25,11 +31,6 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnit;
 import org.mockito.junit.MockitoRule;
-import software.wings.WingsBaseTest;
-import software.wings.service.impl.artifact.ArtifactCollectionUtils;
-
-import java.util.HashMap;
-import java.util.Map;
 
 public class ArtifactCollectionPTaskServiceClientTest extends WingsBaseTest {
   private String accountId = "ACCOUNT_ID";

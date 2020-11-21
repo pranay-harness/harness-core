@@ -56,7 +56,7 @@ public class VersionedCache<K, V> implements Cache<K, V> {
     if (keys == null) {
       throw new UnexpectedException(String.format(KEYS_CANNOT_BE_NULL_MESSAGE, getName()));
     }
-    Set<VersionedKey<K>> cacheKeys = keys.stream().map(this ::buildVersionedKey).collect(Collectors.toSet());
+    Set<VersionedKey<K>> cacheKeys = keys.stream().map(this::buildVersionedKey).collect(Collectors.toSet());
     Map<VersionedKey<K>, V> cacheResult = jCache.getAll(cacheKeys);
     Map<K, V> result = new HashMap<>();
     cacheResult.keySet().forEach(key -> result.put(key.getKey(), cacheResult.get(key)));
@@ -74,7 +74,7 @@ public class VersionedCache<K, V> implements Cache<K, V> {
     if (keys == null) {
       throw new UnexpectedException("Keys cannot be null");
     }
-    Set<? extends VersionedKey<K>> cacheKeys = keys.stream().map(this ::buildVersionedKey).collect(Collectors.toSet());
+    Set<? extends VersionedKey<K>> cacheKeys = keys.stream().map(this::buildVersionedKey).collect(Collectors.toSet());
     jCache.loadAll(cacheKeys, replaceExistingValues, completionListener);
   }
 
@@ -147,7 +147,7 @@ public class VersionedCache<K, V> implements Cache<K, V> {
     if (keys == null) {
       throw new UnexpectedException(String.format(KEYS_CANNOT_BE_NULL_MESSAGE, getName()));
     }
-    Set<? extends VersionedKey<K>> cacheKeys = keys.stream().map(this ::buildVersionedKey).collect(Collectors.toSet());
+    Set<? extends VersionedKey<K>> cacheKeys = keys.stream().map(this::buildVersionedKey).collect(Collectors.toSet());
     jCache.removeAll(cacheKeys);
   }
 
@@ -183,7 +183,7 @@ public class VersionedCache<K, V> implements Cache<K, V> {
     if (keys == null) {
       throw new UnexpectedException(String.format(KEYS_CANNOT_BE_NULL_MESSAGE, getName()));
     }
-    Set<? extends VersionedKey<K>> cacheKeys = keys.stream().map(this ::buildVersionedKey).collect(Collectors.toSet());
+    Set<? extends VersionedKey<K>> cacheKeys = keys.stream().map(this::buildVersionedKey).collect(Collectors.toSet());
     EntryProcessor<VersionedKey<K>, V, T> cacheEntryProcessor = new VersionedEntryProcessor<>(entryProcessor);
     Map<VersionedKey<K>, EntryProcessorResult<T>> cacheResult =
         jCache.invokeAll(cacheKeys, cacheEntryProcessor, arguments);

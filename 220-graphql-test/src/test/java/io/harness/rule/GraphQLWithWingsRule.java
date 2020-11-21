@@ -1,10 +1,9 @@
 package io.harness.rule;
 
-import com.google.inject.Module;
-
 import software.wings.app.GraphQLModule;
 import software.wings.rules.WingsRule;
 
+import com.google.inject.Module;
 import java.lang.annotation.Annotation;
 import java.util.List;
 

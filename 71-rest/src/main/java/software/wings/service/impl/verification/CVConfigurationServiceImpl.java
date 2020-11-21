@@ -8,6 +8,7 @@ import static io.harness.eraro.ErrorCode.GENERAL_ERROR;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.persistence.HQuery.excludeAuthority;
 import static io.harness.persistence.HQuery.excludeValidate;
+
 import static software.wings.common.VerificationConstants.CRON_POLL_INTERVAL_IN_MINUTES;
 import static software.wings.common.VerificationConstants.CV_24x7_STATE_EXECUTION;
 import static software.wings.common.VerificationConstants.CV_META_DATA;
@@ -16,11 +17,6 @@ import static software.wings.common.VerificationConstants.SERVICE_GUAARD_LIMIT;
 import static software.wings.sm.StateType.STACK_DRIVER_LOG;
 import static software.wings.sm.states.APMVerificationState.metricDefinitions;
 
-import com.google.common.base.Preconditions;
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
-
-import com.mongodb.DuplicateKeyException;
 import io.harness.beans.PageRequest;
 import io.harness.beans.SearchFilter.Operator;
 import io.harness.eraro.ErrorCode;
@@ -28,9 +24,7 @@ import io.harness.exception.VerificationOperationException;
 import io.harness.metrics.HarnessMetricRegistry;
 import io.harness.persistence.HIterator;
 import io.harness.serializer.JsonUtils;
-import lombok.extern.slf4j.Slf4j;
-import org.mongodb.morphia.query.Query;
-import org.mongodb.morphia.query.UpdateOperations;
+
 import software.wings.beans.Account;
 import software.wings.beans.Application;
 import software.wings.beans.Environment;
@@ -95,6 +89,10 @@ import software.wings.verification.prometheus.PrometheusCVServiceConfiguration;
 import software.wings.verification.stackdriver.StackDriverMetricCVConfiguration;
 import software.wings.verification.stackdriver.StackDriverMetricCVConfiguration.StackDriverMetricCVConfigurationKeys;
 
+import com.google.common.base.Preconditions;
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
+import com.mongodb.DuplicateKeyException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -106,6 +104,9 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.stream.Collectors;
+import lombok.extern.slf4j.Slf4j;
+import org.mongodb.morphia.query.Query;
+import org.mongodb.morphia.query.UpdateOperations;
 
 /**
  * @author Vaibhav Tulsyan
@@ -230,8 +231,8 @@ public class CVConfigurationServiceImpl implements CVConfigurationService {
         stackdriverCVConfiguration.setStateType(STACK_DRIVER_LOG);
         if (stackdriverCVConfiguration.isEnabled24x7()
             && !cvValidationService.validateStackdriverQuery(accountId, appId,
-                   stackdriverCVConfiguration.getConnectorId(), stackdriverCVConfiguration.getQuery(),
-                   stackdriverCVConfiguration.getHostnameField(), stackdriverCVConfiguration.getMessageField())) {
+                stackdriverCVConfiguration.getConnectorId(), stackdriverCVConfiguration.getQuery(),
+                stackdriverCVConfiguration.getHostnameField(), stackdriverCVConfiguration.getMessageField())) {
           throw new VerificationOperationException(ErrorCode.STACKDRIVER_CONFIGURATION_ERROR,
               "Invalid Query, Please provide textPayload in query " + stackdriverCVConfiguration.getQuery());
         }
@@ -487,8 +488,8 @@ public class CVConfigurationServiceImpl implements CVConfigurationService {
         updatedConfig.setStateType(STACK_DRIVER_LOG);
         if (stackdriverCVConfiguration.isEnabled24x7()
             && !cvValidationService.validateStackdriverQuery(accountId, appId,
-                   stackdriverCVConfiguration.getConnectorId(), stackdriverCVConfiguration.getQuery(),
-                   stackdriverCVConfiguration.getHostnameField(), stackdriverCVConfiguration.getMessageField())) {
+                stackdriverCVConfiguration.getConnectorId(), stackdriverCVConfiguration.getQuery(),
+                stackdriverCVConfiguration.getHostnameField(), stackdriverCVConfiguration.getMessageField())) {
           throw new VerificationOperationException(ErrorCode.STACKDRIVER_CONFIGURATION_ERROR,
               "Invalid Query, Please provide textPayload in query " + stackdriverCVConfiguration.getQuery());
         }
@@ -593,8 +594,8 @@ public class CVConfigurationServiceImpl implements CVConfigurationService {
 
     if (cvConfiguration.isEnabled24x7()
         && (logsCVConfiguration.getBaselineStartMinute() <= 0 || logsCVConfiguration.getBaselineEndMinute() <= 0
-               || logsCVConfiguration.getBaselineEndMinute()
-                   < logsCVConfiguration.getBaselineStartMinute() + CRON_POLL_INTERVAL_IN_MINUTES - 1)) {
+            || logsCVConfiguration.getBaselineEndMinute()
+                < logsCVConfiguration.getBaselineStartMinute() + CRON_POLL_INTERVAL_IN_MINUTES - 1)) {
       throw new VerificationOperationException(GENERAL_ERROR,
           "Invalid baseline start and end time provided. They both should be positive and the difference should at least be "
               + (CRON_POLL_INTERVAL_IN_MINUTES - 1) + " provided config: " + logsCVConfiguration,

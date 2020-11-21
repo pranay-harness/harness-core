@@ -1,6 +1,7 @@
 package io.harness.connector.mappers;
 
 import io.harness.encryption.SecretRefData;
+
 import lombok.experimental.UtilityClass;
 
 @UtilityClass

@@ -2,11 +2,7 @@ package software.wings.service;
 
 import static io.harness.rule.OwnerRule.ANUBHAW;
 import static io.harness.rule.OwnerRule.RAGHU;
-import static java.util.Arrays.asList;
-import static java.util.Collections.singletonList;
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.Mockito.when;
-import static org.mockito.MockitoAnnotations.initMocks;
+
 import static software.wings.beans.AccountPlugin.Builder.anAccountPlugin;
 import static software.wings.beans.FeatureName.ARTIFACT_STREAM_REFACTOR;
 import static software.wings.beans.PluginCategory.Artifact;
@@ -19,14 +15,16 @@ import static software.wings.beans.PluginCategory.LoadBalancer;
 import static software.wings.beans.PluginCategory.SourceRepo;
 import static software.wings.beans.PluginCategory.Verification;
 
+import static java.util.Arrays.asList;
+import static java.util.Collections.singletonList;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.when;
+import static org.mockito.MockitoAnnotations.initMocks;
+
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
-import org.apache.commons.lang3.reflect.FieldUtils;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
-import org.mockito.Mock;
+
 import software.wings.beans.APMVerificationConfig;
 import software.wings.beans.AppDynamicsConfig;
 import software.wings.beans.AwsConfig;
@@ -72,6 +70,11 @@ import software.wings.settings.SettingVariableTypes;
 import software.wings.sm.StateType;
 
 import java.io.IOException;
+import org.apache.commons.lang3.reflect.FieldUtils;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
+import org.mockito.Mock;
 
 /**
  * Created by peeyushaggarwal on 10/21/16.

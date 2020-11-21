@@ -1,3 +1,5 @@
 package io.harness.notifications;
 
-public interface FilterMatcher { boolean matchesCondition(); }
+public interface FilterMatcher {
+  boolean matchesCondition();
+}

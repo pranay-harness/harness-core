@@ -1,7 +1,7 @@
 package io.harness.functional.winrm;
 
 import static io.harness.rule.OwnerRule.PRABU;
-import static org.assertj.core.api.Assertions.assertThat;
+
 import static software.wings.beans.BuildWorkflow.BuildOrchestrationWorkflowBuilder.aBuildOrchestrationWorkflow;
 import static software.wings.beans.PhaseStep.PhaseStepBuilder.aPhaseStep;
 import static software.wings.beans.PhaseStepType.PREPARE_STEPS;
@@ -9,8 +9,7 @@ import static software.wings.beans.PhaseStepType.WRAP_UP;
 import static software.wings.beans.Workflow.WorkflowBuilder.aWorkflow;
 import static software.wings.beans.WorkflowPhase.WorkflowPhaseBuilder.aWorkflowPhase;
 
-import com.google.common.collect.ImmutableMap;
-import com.google.inject.Inject;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.beans.WorkflowType;
 import io.harness.category.element.FunctionalTests;
@@ -24,11 +23,7 @@ import io.harness.generator.ServiceGenerator;
 import io.harness.generator.WorkflowGenerator;
 import io.harness.rule.Owner;
 import io.harness.testframework.restutils.WorkflowRestUtils;
-import org.hibernate.validator.constraints.NotEmpty;
-import org.junit.Before;
-import org.junit.Ignore;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
+
 import software.wings.beans.EntityType;
 import software.wings.beans.ExecutionArgs;
 import software.wings.beans.GraphNode;
@@ -42,12 +37,19 @@ import software.wings.infra.InfrastructureDefinition;
 import software.wings.infra.PhysicalInfraWinrm;
 import software.wings.sm.StateType;
 
+import com.google.common.collect.ImmutableMap;
+import com.google.inject.Inject;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import org.hibernate.validator.constraints.NotEmpty;
+import org.junit.Before;
+import org.junit.Ignore;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 public class ShellScriptWinRMFunctionalTest extends AbstractFunctionalTest {
   @Inject private WorkflowUtils workflowUtils;

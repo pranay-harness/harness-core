@@ -1,9 +1,8 @@
 package io.harness.git.model;
 
+import java.io.Serializable;
 import lombok.Builder;
 import lombok.Data;
-
-import java.io.Serializable;
 
 @Data
 @Builder

@@ -3,10 +3,10 @@ package io.harness.functional.Connectors;
 import static io.harness.rule.OwnerRule.GARVIT;
 import static io.harness.rule.OwnerRule.MEENAKSHI;
 import static io.harness.rule.OwnerRule.NATARAJA;
-import static org.assertj.core.api.Assertions.assertThat;
+
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 
-import com.google.inject.Inject;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.category.element.FunctionalTests;
 import io.harness.functional.AbstractFunctionalTest;
@@ -17,14 +17,7 @@ import io.harness.scm.SecretName;
 import io.harness.testframework.framework.Retry;
 import io.harness.testframework.framework.matchers.BooleanMatcher;
 import io.harness.testframework.restutils.SettingsUtils;
-import io.restassured.path.json.JsonPath;
-import lombok.extern.slf4j.Slf4j;
-import org.junit.Before;
-import org.junit.FixMethodOrder;
-import org.junit.Ignore;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
-import org.junit.runners.MethodSorters;
+
 import software.wings.beans.BambooConfig;
 import software.wings.beans.DockerConfig;
 import software.wings.beans.JenkinsConfig;
@@ -33,6 +26,16 @@ import software.wings.beans.SettingAttribute.SettingCategory;
 import software.wings.beans.config.ArtifactoryConfig;
 import software.wings.beans.config.NexusConfig;
 import software.wings.beans.settings.azureartifacts.AzureArtifactsPATConfig;
+
+import com.google.inject.Inject;
+import io.restassured.path.json.JsonPath;
+import lombok.extern.slf4j.Slf4j;
+import org.junit.Before;
+import org.junit.FixMethodOrder;
+import org.junit.Ignore;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
+import org.junit.runners.MethodSorters;
 
 @Slf4j
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
@@ -81,7 +84,7 @@ public class ConnectorsArtifactoryTests extends AbstractFunctionalTest {
   @Owner(developers = MEENAKSHI, intermittent = true)
   @Category(FunctionalTests.class)
   public void runNexusConnectorCRUDTests() {
-    retry.executeWithRetry(this ::TC1_createNexusConnector, booleanMatcher, true);
+    retry.executeWithRetry(this::TC1_createNexusConnector, booleanMatcher, true);
     log.info("Created  Nexus Connector with id {}", NexusConnectorId);
     TC2_updateNexusConnector();
     log.info("Updated  Nexus Connector with id {}", NexusConnectorId);
@@ -93,7 +96,7 @@ public class ConnectorsArtifactoryTests extends AbstractFunctionalTest {
   @Owner(developers = MEENAKSHI, intermittent = true)
   @Category(FunctionalTests.class)
   public void runJenkinsConnectorCRUDTests() {
-    retry.executeWithRetry(this ::TC4_createJenkinsConnector, booleanMatcher, true);
+    retry.executeWithRetry(this::TC4_createJenkinsConnector, booleanMatcher, true);
     log.info("Created Jenkins Connector with id {}", JenkinsConnectorId);
     TC5_updateJenkinsConnector();
     log.info("Updated  Jenkins Connector with id {}", JenkinsConnectorId);
@@ -105,7 +108,7 @@ public class ConnectorsArtifactoryTests extends AbstractFunctionalTest {
   @Owner(developers = GARVIT)
   @Category(FunctionalTests.class)
   public void runDockerConnectorCRUDTests() {
-    retry.executeWithRetry(this ::TC7_createDockerConnector, booleanMatcher, true);
+    retry.executeWithRetry(this::TC7_createDockerConnector, booleanMatcher, true);
     log.info("Created Docker Connector with id {}", DockerConnectorId);
     TC8_updateDockerConnector();
     log.info("Updated Docker Connector with id {}", DockerConnectorId);
@@ -117,7 +120,7 @@ public class ConnectorsArtifactoryTests extends AbstractFunctionalTest {
   @Owner(developers = MEENAKSHI, intermittent = true)
   @Category(FunctionalTests.class)
   public void runBambooConnectorCRUDTests() {
-    retry.executeWithRetry(this ::TC10_createBambooConnector, booleanMatcher, true);
+    retry.executeWithRetry(this::TC10_createBambooConnector, booleanMatcher, true);
     log.info("Created  Bamboo Connector with id {}", BambooConnectorId);
     TC11_updateBambooConnector();
     log.info("Updated  Bamboo Connector with id {}", BambooConnectorId);
@@ -129,7 +132,7 @@ public class ConnectorsArtifactoryTests extends AbstractFunctionalTest {
   @Owner(developers = GARVIT)
   @Category(FunctionalTests.class)
   public void runArtifactoryConnectorCRUDTests() {
-    retry.executeWithRetry(this ::TC13_createArtifactoryConnector, booleanMatcher, true);
+    retry.executeWithRetry(this::TC13_createArtifactoryConnector, booleanMatcher, true);
     log.info("Created Artifactory Connector with id {}", ArtifactoryConnectorId);
     TC14_updateArtifactoryConnector();
     log.info("Updated  Artifactory Connector with id {}", ArtifactoryConnectorId);
@@ -142,7 +145,7 @@ public class ConnectorsArtifactoryTests extends AbstractFunctionalTest {
   @Category(FunctionalTests.class)
   @Ignore("TODO: Fix azure artifacts tests - repo config seems to have changed")
   public void runAzureArtifactsConnectorCRUDTests() {
-    retry.executeWithRetry(this ::TC16_createAzureArtifactsConnector, booleanMatcher, true);
+    retry.executeWithRetry(this::TC16_createAzureArtifactsConnector, booleanMatcher, true);
     log.info(String.format("Created Azure Artifacts Connector with id %s", AzureArtifactsConnectorId));
     TC17_updateAzureArtifactsConnector();
     log.info(String.format("Updated Azure Artifacts Connector with id %s", AzureArtifactsConnectorId));

@@ -6,11 +6,10 @@ import static io.harness.cvng.analysis.entities.LearningEngineTask.LearningEngin
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.persistence.HQuery.excludeAuthority;
 import static io.harness.rule.OwnerRule.PRAVEEN;
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.when;
-
-import com.google.inject.Inject;
 
 import io.harness.CvNextGenTest;
 import io.harness.category.element.UnitTests;
@@ -21,6 +20,13 @@ import io.harness.cvng.analysis.exceptions.ServiceGuardAnalysisException;
 import io.harness.cvng.analysis.services.api.LearningEngineTaskService;
 import io.harness.persistence.HPersistence;
 import io.harness.rule.Owner;
+
+import com.google.inject.Inject;
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Map;
 import org.apache.commons.lang3.reflect.FieldUtils;
 import org.assertj.core.util.Sets;
 import org.junit.Before;
@@ -31,12 +37,6 @@ import org.mockito.MockitoAnnotations;
 import org.mongodb.morphia.query.FieldEnd;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
-
-import java.time.Instant;
-import java.time.temporal.ChronoUnit;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
 
 public class LearningEngineTaskServiceImplTest extends CvNextGenTest {
   @Inject HPersistence hPersistence;

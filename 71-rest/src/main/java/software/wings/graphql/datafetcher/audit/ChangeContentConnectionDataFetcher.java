@@ -2,13 +2,9 @@ package software.wings.graphql.datafetcher.audit;
 
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
-import com.google.inject.Inject;
-
-import graphql.schema.DataFetchingEnvironment;
 import io.harness.exception.GraphQLException;
 import io.harness.exception.WingsException;
-import lombok.extern.slf4j.Slf4j;
-import org.mongodb.morphia.query.Query;
+
 import software.wings.graphql.datafetcher.AbstractConnectionV2DataFetcher;
 import software.wings.graphql.datafetcher.Principal;
 import software.wings.graphql.schema.query.QLPageQueryParameters;
@@ -19,7 +15,11 @@ import software.wings.graphql.schema.type.audit.QLChangeContentConnection.QLChan
 import software.wings.security.PermissionAttribute.PermissionType;
 import software.wings.security.annotations.AuthRule;
 
+import com.google.inject.Inject;
+import graphql.schema.DataFetchingEnvironment;
 import java.util.List;
+import lombok.extern.slf4j.Slf4j;
+import org.mongodb.morphia.query.Query;
 
 @Slf4j
 public class ChangeContentConnectionDataFetcher

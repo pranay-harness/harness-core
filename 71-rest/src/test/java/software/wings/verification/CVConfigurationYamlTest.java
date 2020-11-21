@@ -1,19 +1,22 @@
 package software.wings.verification;
 
 import static io.harness.rule.OwnerRule.SOWMYA;
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
+
 import static software.wings.verification.CVConfiguration.CVConfigurationYaml;
 import static software.wings.verification.prometheus.PrometheusCVServiceConfiguration.PrometheusCVConfigurationYaml;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
-import lombok.extern.slf4j.Slf4j;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
+
 import software.wings.WingsBaseTest;
 
 import java.util.ArrayList;
+import lombok.extern.slf4j.Slf4j;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 @Slf4j
 public class CVConfigurationYamlTest extends WingsBaseTest {

@@ -1,8 +1,6 @@
 package io.harness.ccm.views.graphql;
 
 import com.hazelcast.util.Preconditions;
-import lombok.extern.slf4j.Slf4j;
-
 import java.text.NumberFormat;
 import java.time.Instant;
 import java.time.LocalDate;
@@ -12,6 +10,7 @@ import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
 import java.util.Locale;
+import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class ViewsQueryHelper {

@@ -4,10 +4,6 @@ import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.artifacts.docker.service.DockerRegistryServiceImpl.isSuccessful;
 import static io.harness.exception.WingsException.USER;
 
-import com.google.common.annotations.VisibleForTesting;
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
-
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.artifact.ArtifactMetadataKeys;
 import io.harness.artifacts.beans.BuildDetailsInternal;
@@ -23,14 +19,10 @@ import io.harness.exception.InvalidArgumentsException;
 import io.harness.exception.InvalidArtifactServerException;
 import io.harness.expression.RegexFunctor;
 import io.harness.network.Http;
-import lombok.extern.slf4j.Slf4j;
-import net.jodah.expiringmap.ExpirationPolicy;
-import net.jodah.expiringmap.ExpiringMap;
-import okhttp3.Headers;
-import okhttp3.HttpUrl;
-import org.apache.commons.lang3.tuple.ImmutablePair;
-import retrofit2.Response;
 
+import com.google.common.annotations.VisibleForTesting;
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import java.io.IOException;
 import java.util.Collections;
 import java.util.HashMap;
@@ -39,6 +31,13 @@ import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+import lombok.extern.slf4j.Slf4j;
+import net.jodah.expiringmap.ExpirationPolicy;
+import net.jodah.expiringmap.ExpiringMap;
+import okhttp3.Headers;
+import okhttp3.HttpUrl;
+import org.apache.commons.lang3.tuple.ImmutablePair;
+import retrofit2.Response;
 
 @OwnedBy(CDC)
 @Singleton

@@ -2,32 +2,34 @@ package software.wings.service.impl;
 
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.persistence.HPersistence.upToOne;
-import static java.lang.System.currentTimeMillis;
-import static java.util.stream.Collectors.toList;
-import static java.util.stream.Collectors.toSet;
+
 import static software.wings.beans.DelegateConnection.EXPIRY_TIME;
 import static software.wings.beans.DelegateConnection.TTL;
 import static software.wings.beans.ManagerConfiguration.MATCH_ALL_VERSION;
 
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
+import static java.lang.System.currentTimeMillis;
+import static java.util.stream.Collectors.toList;
+import static java.util.stream.Collectors.toSet;
 
 import io.harness.persistence.HPersistence;
-import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.StringUtils;
-import org.mongodb.morphia.query.Query;
-import org.mongodb.morphia.query.UpdateOperations;
+
 import software.wings.beans.DelegateConnection;
 import software.wings.beans.DelegateConnection.DelegateConnectionKeys;
 import software.wings.beans.DelegateStatus;
 import software.wings.beans.ManagerConfiguration;
 
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import java.time.OffsetDateTime;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
+import org.mongodb.morphia.query.Query;
+import org.mongodb.morphia.query.UpdateOperations;
 
 @Slf4j
 @Singleton

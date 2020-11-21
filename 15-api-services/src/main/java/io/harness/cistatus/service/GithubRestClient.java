@@ -2,14 +2,14 @@ package io.harness.cistatus.service;
 
 import io.harness.cistatus.GithubAppTokenCreationResponse;
 import io.harness.cistatus.GithubStatusCreationResponse;
+
+import java.util.Map;
 import retrofit2.Call;
 import retrofit2.http.Body;
 import retrofit2.http.Header;
 import retrofit2.http.Headers;
 import retrofit2.http.POST;
 import retrofit2.http.Path;
-
-import java.util.Map;
 
 public interface GithubRestClient {
   @POST("app/installations/{installation_id}/access_tokens")

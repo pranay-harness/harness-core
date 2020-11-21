@@ -2,6 +2,14 @@ package software.wings.beans.command;
 
 import static io.harness.rule.OwnerRule.ANSHUL;
 import static io.harness.rule.OwnerRule.BRETT;
+
+import static software.wings.beans.InstanceUnitType.COUNT;
+import static software.wings.beans.InstanceUnitType.PERCENTAGE;
+import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
+import static software.wings.beans.command.CommandExecutionContext.Builder.aCommandExecutionContext;
+import static software.wings.beans.command.KubernetesResizeParams.KubernetesResizeParamsBuilder.aKubernetesResizeParams;
+import static software.wings.utils.WingsTestConstants.CLUSTER_NAME;
+
 import static java.util.Collections.emptyList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Fail.fail;
@@ -13,19 +21,7 @@ import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-import static software.wings.beans.InstanceUnitType.COUNT;
-import static software.wings.beans.InstanceUnitType.PERCENTAGE;
-import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
-import static software.wings.beans.command.CommandExecutionContext.Builder.aCommandExecutionContext;
-import static software.wings.beans.command.KubernetesResizeParams.KubernetesResizeParamsBuilder.aKubernetesResizeParams;
-import static software.wings.utils.WingsTestConstants.CLUSTER_NAME;
 
-import com.google.common.collect.ImmutableMap;
-import com.google.inject.Inject;
-
-import io.fabric8.kubernetes.api.KubernetesHelper;
-import io.fabric8.kubernetes.api.model.HorizontalPodAutoscaler;
-import io.fabric8.kubernetes.api.model.ReplicationControllerBuilder;
 import io.harness.category.element.UnitTests;
 import io.harness.container.ContainerInfo;
 import io.harness.container.ContainerInfo.Status;
@@ -33,11 +29,7 @@ import io.harness.k8s.KubernetesContainerService;
 import io.harness.k8s.model.KubernetesConfig;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.rule.Owner;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
+
 import software.wings.WingsBaseTest;
 import software.wings.api.ContainerServiceData;
 import software.wings.beans.GcpConfig;
@@ -49,12 +41,22 @@ import software.wings.beans.command.KubernetesResizeParams.KubernetesResizeParam
 import software.wings.cloudprovider.gke.GkeClusterService;
 import software.wings.service.intfc.WorkflowService;
 
+import com.google.common.collect.ImmutableMap;
+import com.google.inject.Inject;
+import io.fabric8.kubernetes.api.KubernetesHelper;
+import io.fabric8.kubernetes.api.model.HorizontalPodAutoscaler;
+import io.fabric8.kubernetes.api.model.ReplicationControllerBuilder;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
 
 public class KubernetesResizeCommandUnitTest extends WingsBaseTest {
   @Mock private GkeClusterService gkeClusterService;

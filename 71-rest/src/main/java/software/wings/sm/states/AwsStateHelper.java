@@ -3,21 +3,17 @@ package software.wings.sm.states;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.deployment.InstanceDetails.InstanceType.AWS;
-import static java.lang.String.format;
-import static java.util.Collections.emptyList;
-import static java.util.stream.Collectors.toList;
+
 import static software.wings.api.InstanceElement.Builder.anInstanceElement;
 import static software.wings.beans.infrastructure.Host.Builder.aHost;
 
-import com.google.common.primitives.Ints;
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
+import static java.lang.String.format;
+import static java.util.Collections.emptyList;
+import static java.util.stream.Collectors.toList;
 
-import com.amazonaws.services.ec2.model.Instance;
 import io.harness.deployment.InstanceDetails;
 import io.harness.exception.InvalidRequestException;
-import lombok.extern.slf4j.Slf4j;
-import org.jetbrains.annotations.Nullable;
+
 import software.wings.api.AmiServiceSetupElement;
 import software.wings.api.HostElement;
 import software.wings.api.InstanceElement;
@@ -30,9 +26,15 @@ import software.wings.service.intfc.HostService;
 import software.wings.service.intfc.ServiceTemplateService;
 import software.wings.sm.ExecutionContext;
 
+import com.amazonaws.services.ec2.model.Instance;
+import com.google.common.primitives.Ints;
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
+import lombok.extern.slf4j.Slf4j;
+import org.jetbrains.annotations.Nullable;
 
 @Slf4j
 @Singleton

@@ -1,8 +1,7 @@
 package software.wings.sm.states.azure;
 
 import io.harness.security.encryption.EncryptedDataDetail;
-import lombok.Builder;
-import lombok.Data;
+
 import software.wings.beans.Application;
 import software.wings.beans.AzureConfig;
 import software.wings.beans.AzureVMSSInfrastructureMapping;
@@ -11,6 +10,8 @@ import software.wings.beans.Service;
 import software.wings.beans.artifact.Artifact;
 
 import java.util.List;
+import lombok.Builder;
+import lombok.Data;
 
 @Data
 @Builder

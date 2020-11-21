@@ -3,23 +3,23 @@ package software.wings.security;
 import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 
-import com.google.common.collect.Sets;
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
-
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.manage.GlobalContextManager;
-import lombok.extern.slf4j.Slf4j;
-import org.glassfish.jersey.server.ContainerRequest;
+
 import software.wings.beans.HttpMethod;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.AuthService;
 
+import com.google.common.collect.Sets;
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import java.util.Set;
 import javax.ws.rs.container.ContainerRequestContext;
 import javax.ws.rs.container.ContainerResponseContext;
 import javax.ws.rs.container.ContainerResponseFilter;
 import javax.ws.rs.core.MultivaluedMap;
+import lombok.extern.slf4j.Slf4j;
+import org.glassfish.jersey.server.ContainerRequest;
 
 /**
  * Created by anubhaw on 4/20/16.
@@ -84,7 +84,7 @@ public class AuthResponseFilter implements ContainerResponseFilter {
       }
     } else if (HttpMethod.POST.name().equals(httpMethod)
         && (restResourcesCreateURIs.contains(resourcePath)
-               || restResourcesCloneURIs.stream().anyMatch(resourcePath::matches))) {
+            || restResourcesCloneURIs.stream().anyMatch(resourcePath::matches))) {
       if (resourcePath.equals(RESOURCE_URI_CREATE_APP) || resourcePath.equals(RESOURCE_URI_CREATE_ENVIRONMENT)
           || resourcePath.matches(RESOURCE_URI_CLONE_ENVIRONMENT)) {
         evictPermissionsAndRestrictions(requestContext, resourcePath, true, true);

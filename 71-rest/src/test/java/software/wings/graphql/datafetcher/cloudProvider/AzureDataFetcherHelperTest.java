@@ -1,18 +1,14 @@
 package software.wings.graphql.datafetcher.cloudProvider;
 
 import static io.harness.rule.OwnerRule.IGOR;
+
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.category.element.UnitTests;
 import io.harness.exception.InvalidRequestException;
 import io.harness.rule.Owner;
 import io.harness.utils.RequestField;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
+
 import software.wings.WingsBaseTest;
 import software.wings.beans.AzureConfig;
 import software.wings.beans.SettingAttribute;
@@ -21,6 +17,12 @@ import software.wings.graphql.schema.mutation.cloudProvider.QLAzureCloudProvider
 import software.wings.graphql.schema.mutation.cloudProvider.QLUpdateAzureCloudProviderInput;
 
 import java.sql.SQLException;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
 
 public class AzureDataFetcherHelperTest extends WingsBaseTest {
   private static final String NAME = "NAME";

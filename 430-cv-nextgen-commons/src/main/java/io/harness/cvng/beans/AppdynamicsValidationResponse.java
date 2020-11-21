@@ -1,11 +1,10 @@
 package io.harness.cvng.beans;
 
+import java.util.List;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.Singular;
-
-import java.util.List;
 
 @Data
 @Builder

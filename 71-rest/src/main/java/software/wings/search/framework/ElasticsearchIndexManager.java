@@ -2,9 +2,16 @@ package software.wings.search.framework;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
 
-import com.google.inject.Inject;
-
 import io.harness.annotations.dev.OwnedBy;
+
+import software.wings.app.MainConfiguration;
+import software.wings.dl.WingsPersistence;
+
+import com.google.inject.Inject;
+import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Set;
 import lombok.extern.slf4j.Slf4j;
 import org.elasticsearch.action.admin.indices.alias.IndicesAliasesRequest;
 import org.elasticsearch.action.admin.indices.alias.IndicesAliasesRequest.AliasActions;
@@ -15,13 +22,6 @@ import org.elasticsearch.client.indices.CreateIndexRequest;
 import org.elasticsearch.client.indices.CreateIndexResponse;
 import org.elasticsearch.client.indices.GetIndexRequest;
 import org.elasticsearch.common.xcontent.XContentType;
-import software.wings.app.MainConfiguration;
-import software.wings.dl.WingsPersistence;
-
-import java.io.IOException;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Set;
 
 /**
  * Class for managing elasticsearch indexes

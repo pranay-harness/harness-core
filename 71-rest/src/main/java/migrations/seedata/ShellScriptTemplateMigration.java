@@ -1,6 +1,5 @@
 package migrations.seedata;
 
-import static java.util.Arrays.asList;
 import static software.wings.beans.Account.GLOBAL_ACCOUNT_ID;
 import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static software.wings.common.TemplateConstants.HARNESS_GALLERY;
@@ -8,10 +7,8 @@ import static software.wings.common.TemplateConstants.PATH_DELIMITER;
 import static software.wings.common.TemplateConstants.SHELL_SCRIPTS;
 import static software.wings.common.TemplateConstants.SHELL_SCRIPT_EXAMPLE;
 
-import com.google.inject.Inject;
+import static java.util.Arrays.asList;
 
-import lombok.extern.slf4j.Slf4j;
-import migrations.SeedDataMigration;
 import software.wings.beans.template.TemplateFolder;
 import software.wings.beans.template.TemplateGallery;
 import software.wings.beans.template.TemplateType;
@@ -19,6 +16,10 @@ import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.template.TemplateFolderService;
 import software.wings.service.intfc.template.TemplateGalleryService;
 import software.wings.service.intfc.template.TemplateService;
+
+import com.google.inject.Inject;
+import lombok.extern.slf4j.Slf4j;
+import migrations.SeedDataMigration;
 
 @Slf4j
 public class ShellScriptTemplateMigration implements SeedDataMigration {

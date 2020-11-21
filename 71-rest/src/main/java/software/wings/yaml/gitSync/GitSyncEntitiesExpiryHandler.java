@@ -3,12 +3,11 @@ package software.wings.yaml.gitSync;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.mongo.iterator.MongoPersistenceIterator.SchedulingType.REGULAR;
-import static java.time.Duration.ofHours;
-import static java.time.Duration.ofMinutes;
+
 import static software.wings.beans.Account.AccountKeys;
 
-import com.google.common.annotations.VisibleForTesting;
-import com.google.inject.Inject;
+import static java.time.Duration.ofHours;
+import static java.time.Duration.ofMinutes;
 
 import io.harness.beans.PageRequest.PageRequestBuilder;
 import io.harness.beans.PageResponse;
@@ -19,11 +18,7 @@ import io.harness.mongo.iterator.MongoPersistenceIterator.Handler;
 import io.harness.mongo.iterator.filter.MorphiaFilterExpander;
 import io.harness.mongo.iterator.provider.MorphiaPersistenceProvider;
 import io.harness.workers.background.AccountLevelEntityProcessController;
-import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.tuple.Pair;
-import org.mongodb.morphia.query.FindOptions;
-import org.mongodb.morphia.query.Query;
-import org.mongodb.morphia.query.Sort;
+
 import software.wings.beans.Account;
 import software.wings.beans.GitCommit;
 import software.wings.beans.GitFileActivitySummary;
@@ -37,11 +32,18 @@ import software.wings.yaml.errorhandling.GitSyncError;
 import software.wings.yaml.errorhandling.GitSyncError.GitSyncErrorKeys;
 import software.wings.yaml.gitSync.GitFileActivity.GitFileActivityKeys;
 
+import com.google.common.annotations.VisibleForTesting;
+import com.google.inject.Inject;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.tuple.Pair;
+import org.mongodb.morphia.query.FindOptions;
+import org.mongodb.morphia.query.Query;
+import org.mongodb.morphia.query.Sort;
 
 @Slf4j
 public class GitSyncEntitiesExpiryHandler implements Handler<Account> {

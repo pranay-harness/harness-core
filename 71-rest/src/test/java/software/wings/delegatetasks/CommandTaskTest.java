@@ -2,8 +2,7 @@ package software.wings.delegatetasks;
 
 import static io.harness.delegate.beans.TaskData.DEFAULT_ASYNC_CALL_TIMEOUT;
 import static io.harness.rule.OwnerRule.SAHIL;
-import static junit.framework.TestCase.assertEquals;
-import static org.mockito.Mockito.when;
+
 import static software.wings.beans.SSHExecutionCredential.Builder.aSSHExecutionCredential;
 import static software.wings.beans.artifact.ArtifactFile.Builder.anArtifactFile;
 import static software.wings.beans.command.Command.Builder.aCommand;
@@ -18,8 +17,8 @@ import static software.wings.utils.WingsTestConstants.HOST_NAME;
 import static software.wings.utils.WingsTestConstants.PUBLIC_DNS;
 import static software.wings.utils.WingsTestConstants.SSH_USER_NAME;
 
-import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.Lists;
+import static junit.framework.TestCase.assertEquals;
+import static org.mockito.Mockito.when;
 
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.beans.DelegateTaskPackage;
@@ -27,15 +26,19 @@ import io.harness.delegate.beans.TaskData;
 import io.harness.delegate.command.CommandExecutionResult;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.rule.Owner;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
+
 import software.wings.WingsBaseTest;
 import software.wings.beans.command.Command;
 import software.wings.beans.command.CommandExecutionContext;
 import software.wings.beans.infrastructure.Host;
 import software.wings.service.intfc.ServiceCommandExecutorService;
+
+import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Lists;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
 
 public class CommandTaskTest extends WingsBaseTest {
   @Mock ServiceCommandExecutorService serviceCommandExecutorService;

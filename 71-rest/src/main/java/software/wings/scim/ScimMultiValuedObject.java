@@ -1,11 +1,10 @@
 package software.wings.scim;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import java.net.URI;
 import lombok.AccessLevel;
 import lombok.Data;
 import lombok.experimental.FieldDefaults;
-
-import java.net.URI;
 
 @Data
 @FieldDefaults(level = AccessLevel.PRIVATE)

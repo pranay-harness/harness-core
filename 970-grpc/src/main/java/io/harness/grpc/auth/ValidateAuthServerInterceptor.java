@@ -1,9 +1,11 @@
 package io.harness.grpc.auth;
 
+import io.harness.grpc.InterceptorPriority;
+import io.harness.grpc.utils.GrpcAuthUtils;
+
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
-
 import io.grpc.Context;
 import io.grpc.Contexts;
 import io.grpc.Metadata;
@@ -12,11 +14,8 @@ import io.grpc.ServerCall.Listener;
 import io.grpc.ServerCallHandler;
 import io.grpc.ServerInterceptor;
 import io.grpc.Status;
-import io.harness.grpc.InterceptorPriority;
-import io.harness.grpc.utils.GrpcAuthUtils;
-import lombok.extern.slf4j.Slf4j;
-
 import java.util.Set;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * ensures that the request is validated by some auth interceptors

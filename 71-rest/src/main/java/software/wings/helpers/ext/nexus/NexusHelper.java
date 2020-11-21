@@ -2,22 +2,24 @@ package software.wings.helpers.ext.nexus;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
-import static java.util.stream.Collectors.toList;
+
 import static software.wings.helpers.ext.jenkins.BuildDetails.Builder.aBuildDetails;
 
-import com.google.inject.Singleton;
+import static java.util.stream.Collectors.toList;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.delegate.beans.artifact.ArtifactFileMetadata;
-import lombok.extern.slf4j.Slf4j;
-import org.jetbrains.annotations.NotNull;
+
 import software.wings.beans.artifact.Artifact.ArtifactMetadataKeys;
 import software.wings.common.AlphanumComparator;
 import software.wings.helpers.ext.jenkins.BuildDetails;
 
+import com.google.inject.Singleton;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import lombok.extern.slf4j.Slf4j;
+import org.jetbrains.annotations.NotNull;
 
 @OwnedBy(CDC)
 @Singleton

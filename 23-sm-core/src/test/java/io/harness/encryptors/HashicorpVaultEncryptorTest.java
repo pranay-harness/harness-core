@@ -1,6 +1,7 @@
 package io.harness.encryptors;
 
 import static io.harness.rule.OwnerRule.UTKARSH;
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.fail;
 import static org.mockito.Matchers.anyString;
@@ -8,8 +9,6 @@ import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 import static org.powermock.api.mockito.PowerMockito.mockStatic;
-
-import com.google.common.util.concurrent.SimpleTimeLimiter;
 
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
@@ -22,6 +21,11 @@ import io.harness.rule.Owner;
 import io.harness.security.encryption.EncryptedRecord;
 import io.harness.security.encryption.EncryptedRecordData;
 import io.harness.security.encryption.EncryptionType;
+
+import software.wings.beans.VaultConfig;
+
+import com.google.common.util.concurrent.SimpleTimeLimiter;
+import java.io.IOException;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.Before;
 import org.junit.Test;
@@ -31,9 +35,6 @@ import org.powermock.api.mockito.PowerMockito;
 import org.powermock.core.classloader.annotations.PowerMockIgnore;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
-import software.wings.beans.VaultConfig;
-
-import java.io.IOException;
 
 @Slf4j
 @RunWith(PowerMockRunner.class)

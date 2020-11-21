@@ -11,13 +11,10 @@ import static io.harness.exception.WingsException.USER;
 import static io.harness.persistence.HPersistence.returnNewOptions;
 import static io.harness.security.encryption.EncryptionType.LOCAL;
 import static io.harness.security.encryption.EncryptionType.VAULT;
+
 import static software.wings.beans.Account.GLOBAL_ACCOUNT_ID;
 import static software.wings.beans.LocalEncryptionConfig.HARNESS_DEFAULT_SECRET_MANAGER;
 import static software.wings.service.intfc.security.SecretManager.CREATED_AT_KEY;
-
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
-import com.google.inject.name.Named;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.EncryptedData;
@@ -32,10 +29,7 @@ import io.harness.secrets.SecretService;
 import io.harness.secrets.SecretsDao;
 import io.harness.security.encryption.EncryptionType;
 import io.harness.templatizedsm.RuntimeCredentialsInjector;
-import lombok.extern.slf4j.Slf4j;
-import org.mongodb.morphia.query.Query;
-import org.mongodb.morphia.query.Sort;
-import org.mongodb.morphia.query.UpdateOperations;
+
 import software.wings.beans.Account;
 import software.wings.beans.AwsSecretsManagerConfig;
 import software.wings.beans.AzureVaultConfig;
@@ -56,6 +50,9 @@ import software.wings.service.intfc.security.KmsService;
 import software.wings.service.intfc.security.LocalSecretManagerService;
 import software.wings.service.intfc.security.VaultService;
 
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
+import com.google.inject.name.Named;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -63,6 +60,10 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 import javax.validation.executable.ValidateOnExecution;
+import lombok.extern.slf4j.Slf4j;
+import org.mongodb.morphia.query.Query;
+import org.mongodb.morphia.query.Sort;
+import org.mongodb.morphia.query.UpdateOperations;
 
 /**
  * @author marklu on 2019-05-31
@@ -455,7 +456,7 @@ public class SecretManagerConfigServiceImpl implements SecretManagerConfigServic
       for (SecretManagerConfig secretManagerConfig : secretManagerConfigList) {
         if ((secretManagerConfig.isGlobalKms() && !includeGlobalSecretManager)
             || (!secretManagerConfig.isGlobalKms()
-                   && !secretsManagerRBACService.hasAccessToReadSM(accountId, secretManagerConfig, null, null))) {
+                && !secretsManagerRBACService.hasAccessToReadSM(accountId, secretManagerConfig, null, null))) {
           continue;
         }
         if (encryptionType == null || secretManagerConfig.getEncryptionType() == encryptionType) {

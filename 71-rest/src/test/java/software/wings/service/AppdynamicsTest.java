@@ -1,30 +1,20 @@
 package software.wings.service;
 
 import static io.harness.rule.OwnerRule.RAGHU;
+
+import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyObject;
 import static org.mockito.Mockito.when;
 import static org.mockito.MockitoAnnotations.initMocks;
-import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
-
-import com.google.inject.Inject;
 
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
 import io.harness.scm.ScmSecret;
 import io.harness.scm.SecretName;
-import io.specto.hoverfly.junit.core.HoverflyConfig;
-import io.specto.hoverfly.junit.core.SimulationSource;
-import io.specto.hoverfly.junit.rule.HoverflyRule;
-import org.apache.commons.lang3.reflect.FieldUtils;
-import org.junit.Before;
-import org.junit.ClassRule;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
-import org.junit.rules.ExpectedException;
-import org.mockito.Mock;
+
 import software.wings.WingsBaseTest;
 import software.wings.beans.AppDynamicsConfig;
 import software.wings.beans.SettingAttribute;
@@ -42,12 +32,24 @@ import software.wings.service.intfc.newrelic.NewRelicService;
 import software.wings.service.intfc.security.EncryptionService;
 import software.wings.sm.StateType;
 
+import com.google.inject.Inject;
+import io.specto.hoverfly.junit.core.HoverflyConfig;
+import io.specto.hoverfly.junit.core.SimulationSource;
+import io.specto.hoverfly.junit.rule.HoverflyRule;
 import java.nio.file.Paths;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
+import org.apache.commons.lang3.reflect.FieldUtils;
+import org.junit.Before;
+import org.junit.ClassRule;
+import org.junit.Rule;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
+import org.junit.rules.ExpectedException;
+import org.mockito.Mock;
 
 /**
  * Created by rsingh on 10/10/17.

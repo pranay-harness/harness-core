@@ -14,6 +14,10 @@ import io.harness.ng.RsqlQueryable;
 import io.harness.ng.core.NGAccountAccess;
 import io.harness.ng.core.entities.Project.ProjectKeys;
 import io.harness.persistence.PersistentEntity;
+
+import java.util.List;
+import javax.validation.constraints.NotNull;
+import javax.validation.constraints.Size;
 import lombok.Builder;
 import lombok.Data;
 import lombok.Singular;
@@ -27,10 +31,6 @@ import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.annotation.TypeAlias;
 import org.springframework.data.annotation.Version;
 import org.springframework.data.mongodb.core.mapping.Document;
-
-import java.util.List;
-import javax.validation.constraints.NotNull;
-import javax.validation.constraints.Size;
 
 @Data
 @Builder

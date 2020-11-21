@@ -1,9 +1,8 @@
 package io.harness.functional.rbac;
 
 import static io.harness.rule.OwnerRule.NATARAJA;
-import static org.assertj.core.api.Assertions.assertThat;
 
-import com.google.gson.JsonObject;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.category.element.FunctionalTests;
 import io.harness.functional.AbstractFunctionalTest;
@@ -13,12 +12,15 @@ import io.harness.testframework.framework.utils.AccessManagementUtils;
 import io.harness.testframework.framework.utils.UserGroupUtils;
 import io.harness.testframework.framework.utils.UserUtils;
 import io.harness.testframework.restutils.UserGroupRestUtils;
+
+import software.wings.beans.User;
+import software.wings.beans.security.UserGroup;
+
+import com.google.gson.JsonObject;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.http.HttpStatus;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
-import software.wings.beans.User;
-import software.wings.beans.security.UserGroup;
 
 @Slf4j
 public class AccessManagementNPTest extends AbstractFunctionalTest {

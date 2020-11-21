@@ -1,15 +1,16 @@
 package software.wings.beans.notification;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import io.harness.data.structure.CollectionUtils;
-import lombok.Value;
+
 import software.wings.beans.NotificationChannelType;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import javax.annotation.Nonnull;
 import javax.validation.constraints.NotNull;
+import lombok.Value;
 
 @Value
 public class NotificationSettings {

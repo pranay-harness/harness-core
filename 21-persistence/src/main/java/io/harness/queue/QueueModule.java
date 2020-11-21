@@ -2,14 +2,13 @@ package io.harness.queue;
 
 import static java.util.Arrays.asList;
 
+import io.harness.govern.ServersModule;
+
 import com.google.inject.AbstractModule;
 import com.google.inject.Injector;
-
-import io.harness.govern.ServersModule;
-import lombok.extern.slf4j.Slf4j;
-
 import java.io.Closeable;
 import java.util.List;
+import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class QueueModule extends AbstractModule implements ServersModule {

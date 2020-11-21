@@ -3,8 +3,6 @@ package io.harness.batch.processing.pricing.service.impl;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.apache.commons.codec.digest.DigestUtils.md5Hex;
 
-import com.github.benmanes.caffeine.cache.Cache;
-import com.github.benmanes.caffeine.cache.Caffeine;
 import io.harness.batch.processing.pricing.aws.athena.AwsAthenaQueryHelperService;
 import io.harness.batch.processing.pricing.data.AccountComputePricingData;
 import io.harness.batch.processing.pricing.data.AccountFargatePricingData;
@@ -16,16 +14,18 @@ import io.harness.batch.processing.service.impl.SettingValueServiceImpl;
 import io.harness.batch.processing.writer.constants.InstanceMetaDataConstants;
 import io.harness.ccm.commons.entities.InstanceData;
 import io.harness.persistence.HPersistence;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
 
+import com.github.benmanes.caffeine.cache.Cache;
+import com.github.benmanes.caffeine.cache.Caffeine;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
 
 @Service
 @Slf4j
@@ -156,7 +156,7 @@ public class AwsCustomPricingServiceImpl implements AwsCustomPricingService {
   String getVMCacheKey(String billingAccountId, String instanceType, String region, String operatingSystem) {
     return "id_"
         + md5Hex(
-              ("b_" + billingAccountId + "i_" + instanceType + "r_" + region + "o_" + operatingSystem).getBytes(UTF_8));
+            ("b_" + billingAccountId + "i_" + instanceType + "r_" + region + "o_" + operatingSystem).getBytes(UTF_8));
   }
 
   String getFargateCacheKey(String billingAccountId, String region) {

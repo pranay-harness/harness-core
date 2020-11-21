@@ -1,10 +1,9 @@
 package io.harness.common;
 
-import lombok.experimental.UtilityClass;
-
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import lombok.experimental.UtilityClass;
 
 @UtilityClass
 public class CIExecutionConstants {

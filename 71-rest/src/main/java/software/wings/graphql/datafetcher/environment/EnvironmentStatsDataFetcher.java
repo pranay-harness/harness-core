@@ -2,11 +2,8 @@ package software.wings.graphql.datafetcher.environment;
 
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
-import com.google.inject.Inject;
-
 import io.harness.exception.InvalidRequestException;
-import lombok.extern.slf4j.Slf4j;
-import org.mongodb.morphia.query.Query;
+
 import software.wings.beans.EntityType;
 import software.wings.beans.Environment;
 import software.wings.graphql.datafetcher.RealTimeStatsDataFetcherWithTags;
@@ -20,8 +17,11 @@ import software.wings.graphql.schema.type.aggregation.environment.QLEnvironmentT
 import software.wings.graphql.schema.type.aggregation.environment.QLEnvironmentTagType;
 import software.wings.graphql.utils.nameservice.NameService;
 
+import com.google.inject.Inject;
 import java.util.ArrayList;
 import java.util.List;
+import lombok.extern.slf4j.Slf4j;
+import org.mongodb.morphia.query.Query;
 
 @Slf4j
 public class EnvironmentStatsDataFetcher

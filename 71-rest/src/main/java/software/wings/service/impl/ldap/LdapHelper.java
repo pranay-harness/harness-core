@@ -2,10 +2,27 @@ package software.wings.service.impl.ldap;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
 
-import com.google.common.collect.Lists;
-
-import de.danielbechler.util.Collections;
 import io.harness.annotations.dev.OwnedBy;
+
+import software.wings.beans.sso.LdapGroupSettings;
+import software.wings.beans.sso.LdapSearchConfig;
+import software.wings.beans.sso.LdapUserSettings;
+import software.wings.helpers.ext.ldap.LdapConnectionConfig;
+import software.wings.helpers.ext.ldap.LdapConstants;
+import software.wings.helpers.ext.ldap.LdapGroupConfig;
+import software.wings.helpers.ext.ldap.LdapResponse;
+import software.wings.helpers.ext.ldap.LdapResponse.Status;
+import software.wings.helpers.ext.ldap.LdapSearch;
+import software.wings.helpers.ext.ldap.LdapUserConfig;
+
+import com.google.common.collect.Lists;
+import de.danielbechler.util.Collections;
+import java.time.Duration;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 import lombok.AccessLevel;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
@@ -29,23 +46,6 @@ import org.ldaptive.auth.SearchDnResolver;
 import org.ldaptive.ssl.AllowAnyHostnameVerifier;
 import org.ldaptive.ssl.AllowAnyTrustManager;
 import org.ldaptive.ssl.SslConfig;
-import software.wings.beans.sso.LdapGroupSettings;
-import software.wings.beans.sso.LdapSearchConfig;
-import software.wings.beans.sso.LdapUserSettings;
-import software.wings.helpers.ext.ldap.LdapConnectionConfig;
-import software.wings.helpers.ext.ldap.LdapConstants;
-import software.wings.helpers.ext.ldap.LdapGroupConfig;
-import software.wings.helpers.ext.ldap.LdapResponse;
-import software.wings.helpers.ext.ldap.LdapResponse.Status;
-import software.wings.helpers.ext.ldap.LdapSearch;
-import software.wings.helpers.ext.ldap.LdapUserConfig;
-
-import java.time.Duration;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.function.Function;
-import java.util.stream.Collectors;
 
 @OwnedBy(PL)
 @FieldDefaults(level = AccessLevel.PRIVATE)
@@ -168,7 +168,7 @@ public class LdapHelper {
     if (ldapListGroupsResponses != null) {
       if (Status.FAILURE == ldapListGroupsResponses.getLdapResponse().getStatus()
           || (ldapListGroupsResponses.getSearchResult() != null
-                 && ldapListGroupsResponses.getSearchResult().size() == 0)) {
+              && ldapListGroupsResponses.getSearchResult().size() == 0)) {
         message = LdapConstants.GROUP_CONFIG_FAILURE;
       } else {
         status = Status.SUCCESS;

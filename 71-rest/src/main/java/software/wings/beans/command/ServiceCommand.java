@@ -3,28 +3,28 @@ package software.wings.beans.command;
 import static software.wings.beans.EntityVersion.Builder.anEntityVersion;
 import static software.wings.beans.command.ServiceCommand.Builder.aServiceCommand;
 
-import com.google.common.base.MoreObjects;
-
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonProperty;
-import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.annotation.HarnessEntity;
 import io.harness.beans.EmbeddedUser;
 import io.harness.mongo.index.FdIndex;
-import lombok.Getter;
-import lombok.Setter;
-import lombok.experimental.FieldNameConstants;
-import org.mongodb.morphia.annotations.Entity;
-import org.mongodb.morphia.annotations.Transient;
+
 import software.wings.beans.Base;
 import software.wings.beans.EntityVersion;
 import software.wings.beans.template.TemplateMetadata;
 import software.wings.beans.template.dto.ImportedTemplateDetails;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.github.reinert.jjschema.SchemaIgnore;
+import com.google.common.base.MoreObjects;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import lombok.Getter;
+import lombok.Setter;
+import lombok.experimental.FieldNameConstants;
+import org.mongodb.morphia.annotations.Entity;
+import org.mongodb.morphia.annotations.Transient;
 
 /**
  * Created by peeyushaggarwal on 11/16/16.

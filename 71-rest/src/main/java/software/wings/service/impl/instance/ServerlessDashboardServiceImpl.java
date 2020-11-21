@@ -5,6 +5,11 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.eraro.ErrorCode.NO_APPS_ASSIGNED;
 import static io.harness.persistence.CreatedAtAware.CREATED_AT_KEY;
+
+import static software.wings.beans.EntityType.APPLICATION;
+import static software.wings.beans.EntityType.ARTIFACT;
+import static software.wings.beans.instance.dashboard.InstanceSummaryStats.Builder.anInstanceSummaryStats;
+
 import static java.util.Collections.emptyList;
 import static java.util.stream.Collectors.toList;
 import static org.apache.commons.collections4.SetUtils.emptyIfNull;
@@ -13,30 +18,13 @@ import static org.mongodb.morphia.aggregation.Group.grouping;
 import static org.mongodb.morphia.aggregation.Projection.projection;
 import static org.mongodb.morphia.query.Sort.ascending;
 import static org.mongodb.morphia.query.Sort.descending;
-import static software.wings.beans.EntityType.APPLICATION;
-import static software.wings.beans.EntityType.ARTIFACT;
-import static software.wings.beans.instance.dashboard.InstanceSummaryStats.Builder.anInstanceSummaryStats;
-
-import com.google.common.annotations.VisibleForTesting;
-import com.google.common.collect.Lists;
-import com.google.common.collect.Sets;
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
 
 import io.harness.beans.PageResponse;
 import io.harness.exception.GeneralException;
 import io.harness.exception.NoResultFoundException;
 import io.harness.persistence.HIterator;
 import io.harness.persistence.HPersistence;
-import lombok.Data;
-import lombok.NoArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.collections4.ListUtils;
-import org.mongodb.morphia.aggregation.AggregationPipeline;
-import org.mongodb.morphia.aggregation.Group;
-import org.mongodb.morphia.annotations.Id;
-import org.mongodb.morphia.query.Query;
-import org.mongodb.morphia.query.Sort;
+
 import software.wings.beans.Application;
 import software.wings.beans.EntityType;
 import software.wings.beans.Environment.EnvironmentType;
@@ -70,6 +58,11 @@ import software.wings.service.intfc.UserService;
 import software.wings.service.intfc.instance.ServerlessDashboardService;
 import software.wings.service.intfc.instance.ServerlessInstanceService;
 
+import com.google.common.annotations.VisibleForTesting;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -80,6 +73,15 @@ import java.util.Set;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Collectors;
 import javax.annotation.Nonnull;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.collections4.ListUtils;
+import org.mongodb.morphia.aggregation.AggregationPipeline;
+import org.mongodb.morphia.aggregation.Group;
+import org.mongodb.morphia.annotations.Id;
+import org.mongodb.morphia.query.Query;
+import org.mongodb.morphia.query.Sort;
 
 @Singleton
 @Slf4j
@@ -343,7 +345,7 @@ public class ServerlessDashboardServiceImpl implements ServerlessDashboardServic
   PageResponse<InstanceSummaryStatsByService> constructInstanceSummaryStatsByService(
       List<ServiceInstanceCount> serviceInstanceCountList, int offset, int limit) {
     List<InstanceSummaryStatsByService> instanceSummaryStatsByServiceList =
-        serviceInstanceCountList.stream().map(this ::getInstanceSummaryStatsByService).collect(toList());
+        serviceInstanceCountList.stream().map(this::getInstanceSummaryStatsByService).collect(toList());
     return aPageResponse()
         .withResponse(instanceSummaryStatsByServiceList)
         .withOffset(Integer.toString(offset))

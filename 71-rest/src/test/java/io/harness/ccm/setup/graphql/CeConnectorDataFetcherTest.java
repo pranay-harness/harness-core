@@ -1,15 +1,12 @@
 package io.harness.ccm.setup.graphql;
 
 import static io.harness.rule.OwnerRule.HITESH;
-import static org.assertj.core.api.Assertions.assertThat;
 
-import com.google.inject.Inject;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
+
 import software.wings.beans.AwsCrossAccountAttributes;
 import software.wings.beans.AwsS3BucketDetails;
 import software.wings.beans.User;
@@ -20,9 +17,13 @@ import software.wings.graphql.schema.type.aggregation.QLIdOperator;
 import software.wings.security.UserThreadLocal;
 import software.wings.settings.SettingValue;
 
+import com.google.inject.Inject;
 import java.sql.SQLException;
 import java.util.Arrays;
 import java.util.List;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 public class CeConnectorDataFetcherTest extends AbstractDataFetcherTestBase {
   @Inject CeConnectorDataFetcher ceConnectorDataFetcher;

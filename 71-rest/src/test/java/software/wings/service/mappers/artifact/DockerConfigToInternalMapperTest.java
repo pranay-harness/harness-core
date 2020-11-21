@@ -1,16 +1,19 @@
 package software.wings.service.mappers.artifact;
 
 import static io.harness.rule.OwnerRule.ARCHIT;
+
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.CategoryTest;
 import io.harness.artifacts.docker.beans.DockerInternalConfig;
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
+
+import software.wings.beans.DockerConfig;
+
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
-import software.wings.beans.DockerConfig;
 
 public class DockerConfigToInternalMapperTest extends CategoryTest {
   DockerConfig dockerConfig;

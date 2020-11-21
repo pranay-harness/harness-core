@@ -2,18 +2,18 @@ package software.wings.delegatetasks;
 
 import static io.harness.rule.OwnerRule.AMAN;
 import static io.harness.rule.OwnerRule.GEORGE;
-import static org.assertj.core.api.Assertions.assertThat;
 
-import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Sets;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
 
+import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Sets;
 import java.util.HashMap;
 import java.util.Set;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 public class LogSanitizerTest {
   private static final String TEST_VALUE = "testValue";

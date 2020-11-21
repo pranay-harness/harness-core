@@ -3,19 +3,19 @@ package migrations.all;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.persistence.HQuery.excludeAuthority;
 
-import com.google.inject.Inject;
-
 import io.harness.persistence.HIterator;
-import lombok.extern.slf4j.Slf4j;
-import migrations.Migration;
-import org.mongodb.morphia.query.Query;
+
 import software.wings.beans.Account;
 import software.wings.beans.TechStack;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.AccountService;
 
+import com.google.inject.Inject;
 import java.util.HashSet;
 import java.util.Set;
+import lombok.extern.slf4j.Slf4j;
+import migrations.Migration;
+import org.mongodb.morphia.query.Query;
 
 /**
  * Migration script to add dummy tech stack to all existing accounts. This will allow UI to show new trial experience

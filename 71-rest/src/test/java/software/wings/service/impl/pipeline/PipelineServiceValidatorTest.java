@@ -2,28 +2,24 @@ package software.wings.service.impl.pipeline;
 
 import static io.harness.rule.OwnerRule.DHRUV;
 import static io.harness.rule.OwnerRule.POOJA;
-import static java.util.Arrays.asList;
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.mockito.Matchers.any;
-import static org.mockito.Mockito.when;
+
 import static software.wings.beans.EntityType.USER_GROUP;
 import static software.wings.beans.PipelineStage.PipelineStageElement;
 import static software.wings.beans.PipelineStage.PipelineStageElement.builder;
 import static software.wings.beans.Variable.VariableBuilder.aVariable;
 import static software.wings.service.impl.pipeline.PipelineServiceValidator.validateTemplateExpressions;
 
-import com.google.common.collect.ImmutableMap;
-import com.google.inject.Inject;
+import static java.util.Arrays.asList;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.Matchers.any;
+import static org.mockito.Mockito.when;
 
 import io.harness.category.element.UnitTests;
 import io.harness.exception.InvalidRequestException;
 import io.harness.interrupts.RepairActionCode;
 import io.harness.rule.Owner;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
+
 import software.wings.WingsBaseTest;
 import software.wings.beans.EntityType;
 import software.wings.beans.Pipeline;
@@ -33,10 +29,16 @@ import software.wings.beans.Variable;
 import software.wings.beans.security.UserGroup;
 import software.wings.service.intfc.UserGroupService;
 
+import com.google.common.collect.ImmutableMap;
+import com.google.inject.Inject;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
 
 public class PipelineServiceValidatorTest extends WingsBaseTest {
   @Mock UserGroupService userGroupService;

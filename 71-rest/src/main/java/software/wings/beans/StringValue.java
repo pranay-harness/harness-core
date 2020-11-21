@@ -2,12 +2,13 @@ package software.wings.beans;
 
 import static java.util.Collections.emptyList;
 
-import com.fasterxml.jackson.annotation.JsonTypeName;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
+
 import software.wings.audit.ResourceType;
 import software.wings.settings.SettingValue;
 import software.wings.settings.SettingVariableTypes;
 
+import com.fasterxml.jackson.annotation.JsonTypeName;
 import java.util.List;
 import java.util.Objects;
 

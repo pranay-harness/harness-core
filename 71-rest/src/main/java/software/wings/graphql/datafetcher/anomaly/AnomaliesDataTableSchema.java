@@ -4,11 +4,10 @@ import com.healthmarketscience.sqlbuilder.dbspec.basic.DbColumn;
 import com.healthmarketscience.sqlbuilder.dbspec.basic.DbSchema;
 import com.healthmarketscience.sqlbuilder.dbspec.basic.DbSpec;
 import com.healthmarketscience.sqlbuilder.dbspec.basic.DbTable;
-import lombok.Value;
-import lombok.experimental.UtilityClass;
-
 import java.util.Arrays;
 import java.util.List;
+import lombok.Value;
+import lombok.experimental.UtilityClass;
 
 @Value
 @UtilityClass

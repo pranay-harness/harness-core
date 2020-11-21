@@ -1,12 +1,16 @@
 package io.harness.mongo.iterator.provider;
 
 import static io.harness.govern.Switch.unhandled;
+
 import static java.lang.System.currentTimeMillis;
 
-import com.mongodb.BasicDBObject;
 import io.harness.iterator.PersistentIterable;
 import io.harness.mongo.iterator.MongoPersistenceIterator.SchedulingType;
 import io.harness.mongo.iterator.filter.SpringFilterExpander;
+
+import com.mongodb.BasicDBObject;
+import java.time.Duration;
+import java.util.List;
 import org.apache.commons.lang3.NotImplementedException;
 import org.mongodb.morphia.query.FilterOperator;
 import org.springframework.data.domain.Sort;
@@ -16,9 +20,6 @@ import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.Update;
-
-import java.time.Duration;
-import java.util.List;
 
 public class SpringPersistenceRequiredProvider<T extends PersistentIterable>
     implements PersistenceProvider<T, SpringFilterExpander> {

@@ -10,15 +10,16 @@ import io.harness.persistence.CreatedAtAware;
 import io.harness.persistence.PersistentEntity;
 import io.harness.persistence.UpdatedAtAware;
 import io.harness.persistence.UuidAware;
+
+import software.wings.beans.GitRepositoryInfo;
+
+import javax.ws.rs.DefaultValue;
 import lombok.Builder;
 import lombok.Data;
 import lombok.experimental.FieldNameConstants;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Id;
 import org.mongodb.morphia.annotations.Transient;
-import software.wings.beans.GitRepositoryInfo;
-
-import javax.ws.rs.DefaultValue;
 
 /**
  * @author vardanb

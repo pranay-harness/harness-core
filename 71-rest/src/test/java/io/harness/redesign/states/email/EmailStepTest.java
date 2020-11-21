@@ -1,12 +1,10 @@
 package io.harness.redesign.states.email;
 
 import static io.harness.rule.OwnerRule.ALEXEI;
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.when;
-
-import com.google.common.collect.ImmutableMap;
-import com.google.inject.Inject;
 
 import io.harness.ambiance.Ambiance;
 import io.harness.category.element.UnitTests;
@@ -14,12 +12,16 @@ import io.harness.pms.execution.Status;
 import io.harness.rule.Owner;
 import io.harness.state.io.StepInputPackage;
 import io.harness.state.io.StepResponse;
+
+import software.wings.WingsBaseTest;
+import software.wings.service.intfc.EmailNotificationService;
+
+import com.google.common.collect.ImmutableMap;
+import com.google.inject.Inject;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import software.wings.WingsBaseTest;
-import software.wings.service.intfc.EmailNotificationService;
 
 public class EmailStepTest extends WingsBaseTest {
   @Mock private EmailNotificationService emailNotificationService;

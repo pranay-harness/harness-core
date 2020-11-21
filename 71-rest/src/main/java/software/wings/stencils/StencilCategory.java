@@ -6,10 +6,10 @@ package software.wings.stencils;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 
-import com.google.common.base.CaseFormat;
+import io.harness.annotations.dev.OwnedBy;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
-import io.harness.annotations.dev.OwnedBy;
+import com.google.common.base.CaseFormat;
 import lombok.Getter;
 
 /**

@@ -3,13 +3,9 @@ package software.wings.service.impl.notifications;
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
-import com.google.inject.name.Named;
-
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.event.model.EventType;
-import lombok.extern.slf4j.Slf4j;
+
 import software.wings.beans.Notification;
 import software.wings.common.NotificationMessageResolver;
 import software.wings.common.NotificationMessageResolver.PagerDutyTemplate;
@@ -17,7 +13,11 @@ import software.wings.features.PagerDutyNotificationFeature;
 import software.wings.features.api.PremiumFeature;
 import software.wings.service.intfc.pagerduty.PagerDutyService;
 
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
+import com.google.inject.name.Named;
 import java.util.List;
+import lombok.extern.slf4j.Slf4j;
 
 @OwnedBy(CDC)
 @Singleton

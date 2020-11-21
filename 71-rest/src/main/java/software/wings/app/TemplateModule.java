@@ -1,8 +1,5 @@
 package software.wings.app;
 
-import com.google.inject.AbstractModule;
-import com.google.inject.multibindings.MapBinder;
-
 import software.wings.beans.template.TemplateType;
 import software.wings.service.impl.template.AbstractTemplateProcessor;
 import software.wings.service.impl.template.ArtifactSourceTemplateProcessor;
@@ -21,6 +18,9 @@ import software.wings.service.intfc.template.TemplateFolderService;
 import software.wings.service.intfc.template.TemplateGalleryService;
 import software.wings.service.intfc.template.TemplateService;
 import software.wings.service.intfc.template.TemplateVersionService;
+
+import com.google.inject.AbstractModule;
+import com.google.inject.multibindings.MapBinder;
 
 public class TemplateModule extends AbstractModule {
   @Override

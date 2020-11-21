@@ -2,14 +2,9 @@ package software.wings.graphql.datafetcher.audit;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
-
 import io.harness.exception.GraphQLException;
 import io.harness.exception.WingsException;
-import lombok.extern.slf4j.Slf4j;
-import org.mongodb.morphia.query.FieldEnd;
-import org.mongodb.morphia.query.Query;
+
 import software.wings.audit.AuditHeader;
 import software.wings.graphql.datafetcher.DataFetcherUtils;
 import software.wings.graphql.schema.type.aggregation.QLTimeFilter;
@@ -20,8 +15,13 @@ import software.wings.graphql.schema.type.aggregation.audit.QLRelativeTimeRange;
 import software.wings.graphql.schema.type.aggregation.audit.QLTimeUnit;
 import software.wings.utils.TimeUtils;
 
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import java.util.Date;
 import java.util.List;
+import lombok.extern.slf4j.Slf4j;
+import org.mongodb.morphia.query.FieldEnd;
+import org.mongodb.morphia.query.Query;
 
 /**
  * @author vardan

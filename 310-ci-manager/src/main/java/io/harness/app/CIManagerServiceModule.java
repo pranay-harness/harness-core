@@ -1,15 +1,5 @@
 package io.harness.app;
 
-import com.google.common.base.Suppliers;
-import com.google.common.util.concurrent.ThreadFactoryBuilder;
-import com.google.inject.AbstractModule;
-import com.google.inject.Provides;
-import com.google.inject.Singleton;
-import com.google.inject.TypeLiteral;
-import com.google.inject.multibindings.MapBinder;
-import com.google.inject.name.Named;
-import com.google.inject.name.Names;
-
 import io.harness.CIExecutionServiceModule;
 import io.harness.app.impl.CIBuildInfoServiceImpl;
 import io.harness.app.impl.YAMLToObjectImpl;
@@ -39,12 +29,21 @@ import io.harness.states.CIDelegateTaskExecutor;
 import io.harness.tasks.TaskExecutor;
 import io.harness.tasks.TaskMode;
 import io.harness.threading.ThreadPool;
-import lombok.extern.slf4j.Slf4j;
 
+import com.google.common.base.Suppliers;
+import com.google.common.util.concurrent.ThreadFactoryBuilder;
+import com.google.inject.AbstractModule;
+import com.google.inject.Provides;
+import com.google.inject.Singleton;
+import com.google.inject.TypeLiteral;
+import com.google.inject.multibindings.MapBinder;
+import com.google.inject.name.Named;
+import com.google.inject.name.Names;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
+import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class CIManagerServiceModule extends AbstractModule {

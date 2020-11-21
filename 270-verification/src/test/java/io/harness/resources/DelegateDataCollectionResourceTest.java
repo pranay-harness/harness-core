@@ -2,27 +2,28 @@ package io.harness.resources;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.rule.OwnerRule.KAMAL;
+
 import static javax.ws.rs.client.Entity.entity;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 import static org.assertj.core.api.Assertions.assertThat;
 
-import com.google.inject.Inject;
-
 import io.harness.VerificationBaseIntegrationTest;
 import io.harness.category.element.DeprecatedIntegrationTests;
 import io.harness.rule.Owner;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
+
 import software.wings.service.intfc.verification.CVActivityLogService;
 import software.wings.verification.CVActivityLog;
 import software.wings.verification.CVActivityLog.LogLevel;
 
+import com.google.inject.Inject;
 import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.Response;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 public class DelegateDataCollectionResourceTest extends VerificationBaseIntegrationTest {
   @Inject CVActivityLogService cvActivityLogService;

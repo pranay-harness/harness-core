@@ -1,17 +1,12 @@
 package software.wings.sm;
 
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
-import static java.util.Collections.singletonList;
-import static org.apache.commons.lang3.StringUtils.isNotBlank;
+
 import static software.wings.beans.Application.GLOBAL_APP_ID;
 
-import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.Maps;
-import com.google.common.primitives.Ints;
-import com.google.inject.Inject;
+import static java.util.Collections.singletonList;
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
-import com.github.reinert.jjschema.Attributes;
-import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.beans.DelegateTask;
 import io.harness.beans.ExecutionStatus;
 import io.harness.context.ContextElementType;
@@ -20,8 +15,7 @@ import io.harness.exception.ExceptionUtils;
 import io.harness.exception.WingsException;
 import io.harness.tasks.Cd1SetupFields;
 import io.harness.tasks.ResponseData;
-import lombok.extern.slf4j.Slf4j;
-import org.mongodb.morphia.annotations.Transient;
+
 import software.wings.api.AwsLambdaContextElement.FunctionMeta;
 import software.wings.api.AwsLambdaExecutionData;
 import software.wings.api.AwsLambdaFunctionElement;
@@ -46,11 +40,19 @@ import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.security.SecretManager;
 import software.wings.utils.LambdaConvention;
 
+import com.github.reinert.jjschema.Attributes;
+import com.github.reinert.jjschema.SchemaIgnore;
+import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Maps;
+import com.google.common.primitives.Ints;
+import com.google.inject.Inject;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
+import lombok.extern.slf4j.Slf4j;
+import org.mongodb.morphia.annotations.Transient;
 
 @Slf4j
 public class AwsLambdaVerification extends State {
@@ -98,8 +100,8 @@ public class AwsLambdaVerification extends State {
       ImmutableMap<String, LambdaTestEvent> functionNameMap = lambdaTestEvents == null
           ? ImmutableMap.of()
           : Maps.uniqueIndex(lambdaTestEvents,
-                lambdaTestEvent
-                -> LambdaConvention.normalizeFunctionName(context.renderExpression(lambdaTestEvent.getFunctionName())));
+              lambdaTestEvent
+              -> LambdaConvention.normalizeFunctionName(context.renderExpression(lambdaTestEvent.getFunctionName())));
 
       LambdaTestEvent lambdaTestEvent =
           functionNameMap.getOrDefault(functionMeta.getFunctionName(), LambdaTestEvent.builder().build());

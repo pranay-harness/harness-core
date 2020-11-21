@@ -2,10 +2,10 @@ package io.harness.ngtriggers.beans.config;
 
 import io.harness.ngtriggers.beans.source.NGTriggerSource;
 import io.harness.ngtriggers.beans.target.NGTriggerTarget;
-import lombok.Builder;
-import lombok.Data;
 
 import javax.validation.constraints.NotNull;
+import lombok.Builder;
+import lombok.Data;
 
 @Data
 @Builder

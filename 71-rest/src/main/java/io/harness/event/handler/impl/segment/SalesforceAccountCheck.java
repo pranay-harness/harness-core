@@ -2,14 +2,15 @@ package io.harness.event.handler.impl.segment;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
 
+import io.harness.annotations.dev.OwnedBy;
+
+import software.wings.beans.Account;
+
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
-
-import io.harness.annotations.dev.OwnedBy;
 import lombok.AccessLevel;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
-import software.wings.beans.Account;
 
 @OwnedBy(PL)
 @Slf4j

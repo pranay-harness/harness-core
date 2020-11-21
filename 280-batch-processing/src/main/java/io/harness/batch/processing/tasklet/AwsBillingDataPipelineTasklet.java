@@ -3,20 +3,12 @@ package io.harness.batch.processing.tasklet;
 import static io.harness.batch.processing.service.impl.BillingDataPipelineServiceImpl.preAggQueryKey;
 import static io.harness.batch.processing.service.impl.BillingDataPipelineServiceImpl.scheduledQueryKey;
 
-import com.google.inject.Singleton;
-
 import io.harness.batch.processing.ccm.CCMJobConstants;
 import io.harness.batch.processing.dao.intfc.BillingDataPipelineRecordDao;
 import io.harness.batch.processing.pricing.data.CloudProvider;
 import io.harness.batch.processing.service.intfc.BillingDataPipelineService;
 import io.harness.ccm.billing.entities.BillingDataPipelineRecord;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.batch.core.JobParameters;
-import org.springframework.batch.core.StepContribution;
-import org.springframework.batch.core.scope.context.ChunkContext;
-import org.springframework.batch.core.step.tasklet.Tasklet;
-import org.springframework.batch.repeat.RepeatStatus;
-import org.springframework.beans.factory.annotation.Autowired;
+
 import software.wings.beans.Account;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.SettingAttribute.SettingCategory;
@@ -24,9 +16,17 @@ import software.wings.beans.ce.CEAwsConfig;
 import software.wings.service.intfc.instance.CloudToHarnessMappingService;
 import software.wings.settings.SettingVariableTypes;
 
+import com.google.inject.Singleton;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.List;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.batch.core.JobParameters;
+import org.springframework.batch.core.StepContribution;
+import org.springframework.batch.core.scope.context.ChunkContext;
+import org.springframework.batch.core.step.tasklet.Tasklet;
+import org.springframework.batch.repeat.RepeatStatus;
+import org.springframework.beans.factory.annotation.Autowired;
 
 @Slf4j
 @Singleton

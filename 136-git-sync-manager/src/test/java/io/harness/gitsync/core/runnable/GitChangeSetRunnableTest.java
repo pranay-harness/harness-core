@@ -3,6 +3,10 @@ package io.harness.gitsync.core.runnable;
 import static io.harness.gitsync.common.beans.YamlChangeSet.Status.QUEUED;
 import static io.harness.rule.OwnerRule.ABHINAV;
 import static io.harness.rule.OwnerRule.ADWAIT;
+
+import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
+import static software.wings.utils.WingsTestConstants.SETTING_ID;
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyList;
@@ -12,10 +16,6 @@ import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
-import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
-import static software.wings.utils.WingsTestConstants.SETTING_ID;
-
-import com.google.inject.Inject;
 
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.beans.git.YamlGitConfigDTO;
@@ -27,6 +27,12 @@ import io.harness.gitsync.core.beans.GitSyncMetadata;
 import io.harness.gitsync.core.impl.YamlChangeSetServiceImpl;
 import io.harness.gitsync.core.service.YamlGitService;
 import io.harness.rule.Owner;
+
+import software.wings.utils.WingsTestConstants;
+
+import com.google.inject.Inject;
+import java.util.Arrays;
+import java.util.List;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.ArgumentCaptor;
@@ -34,10 +40,6 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.mockito.Spy;
-import software.wings.utils.WingsTestConstants;
-
-import java.util.Arrays;
-import java.util.List;
 
 public class GitChangeSetRunnableTest extends GitSyncBaseTest {
   @Inject YamlGitConfigService yamlGitConfigService;

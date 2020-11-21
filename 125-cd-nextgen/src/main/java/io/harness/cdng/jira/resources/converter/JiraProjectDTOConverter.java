@@ -2,10 +2,10 @@ package io.harness.cdng.jira.resources.converter;
 
 import io.harness.cdng.jira.resources.response.dto.JiraProjectDTO;
 import io.harness.jira.JiraProjectData;
-import lombok.experimental.UtilityClass;
 
 import java.util.function.Function;
 import java.util.stream.Collectors;
+import lombok.experimental.UtilityClass;
 
 @UtilityClass
 public class JiraProjectDTOConverter {

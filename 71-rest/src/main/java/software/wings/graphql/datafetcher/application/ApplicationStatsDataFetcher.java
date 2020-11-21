@@ -1,6 +1,5 @@
 package software.wings.graphql.datafetcher.application;
 
-import org.mongodb.morphia.query.Query;
 import software.wings.beans.Application;
 import software.wings.graphql.datafetcher.RealTimeStatsDataFetcher;
 import software.wings.graphql.schema.type.aggregation.QLData;
@@ -11,6 +10,7 @@ import software.wings.graphql.schema.type.aggregation.application.QLApplicationF
 import software.wings.graphql.utils.nameservice.NameService;
 
 import java.util.List;
+import org.mongodb.morphia.query.Query;
 
 public class ApplicationStatsDataFetcher extends RealTimeStatsDataFetcher<QLNoOpAggregateFunction, QLApplicationFilter,
     QLApplicationAggregation, QLNoOpSortCriteria> {

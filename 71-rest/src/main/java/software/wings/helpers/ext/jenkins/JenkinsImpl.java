@@ -7,16 +7,33 @@ import static io.harness.exception.WingsException.USER;
 import static io.harness.stream.StreamUtils.getInputStreamSize;
 import static io.harness.threading.Morpheus.quietSleep;
 import static io.harness.threading.Morpheus.sleep;
+
+import static software.wings.helpers.ext.jenkins.BuildDetails.Builder.aBuildDetails;
+import static software.wings.helpers.ext.jenkins.JenkinsJobPathBuilder.constructParentJobPath;
+import static software.wings.helpers.ext.jenkins.JenkinsJobPathBuilder.getJenkinsJobPath;
+import static software.wings.helpers.ext.jenkins.JenkinsJobPathBuilder.getJobPathFromJenkinsJobUrl;
+
 import static java.lang.String.format;
 import static java.time.Duration.ofMillis;
 import static java.time.Duration.ofSeconds;
 import static java.util.Collections.singletonList;
 import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.StringUtils.isBlank;
-import static software.wings.helpers.ext.jenkins.BuildDetails.Builder.aBuildDetails;
-import static software.wings.helpers.ext.jenkins.JenkinsJobPathBuilder.constructParentJobPath;
-import static software.wings.helpers.ext.jenkins.JenkinsJobPathBuilder.getJenkinsJobPath;
-import static software.wings.helpers.ext.jenkins.JenkinsJobPathBuilder.getJobPathFromJenkinsJobUrl;
+
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.delegate.beans.artifact.ArtifactFileMetadata;
+import io.harness.exception.ArtifactServerException;
+import io.harness.exception.ExceptionUtils;
+import io.harness.exception.InvalidArtifactServerException;
+import io.harness.exception.InvalidRequestException;
+import io.harness.exception.WingsException;
+import io.harness.network.Http;
+import io.harness.serializer.JsonUtils;
+
+import software.wings.beans.JenkinsConfig;
+import software.wings.beans.command.JenkinsTaskParams;
+import software.wings.common.BuildDetailsComparator;
+import software.wings.helpers.ext.jenkins.BuildDetails.BuildStatus;
 
 import com.google.common.base.Charsets;
 import com.google.common.collect.Lists;
@@ -24,7 +41,6 @@ import com.google.common.util.concurrent.TimeLimiter;
 import com.google.inject.Inject;
 import com.google.inject.assistedinject.Assisted;
 import com.google.inject.assistedinject.AssistedInject;
-
 import com.jayway.jsonpath.DocumentContext;
 import com.offbytwo.jenkins.model.Artifact;
 import com.offbytwo.jenkins.model.Build;
@@ -37,28 +53,6 @@ import com.offbytwo.jenkins.model.Job;
 import com.offbytwo.jenkins.model.JobWithDetails;
 import com.offbytwo.jenkins.model.QueueItem;
 import com.offbytwo.jenkins.model.QueueReference;
-import io.harness.annotations.dev.OwnedBy;
-import io.harness.delegate.beans.artifact.ArtifactFileMetadata;
-import io.harness.exception.ArtifactServerException;
-import io.harness.exception.ExceptionUtils;
-import io.harness.exception.InvalidArtifactServerException;
-import io.harness.exception.InvalidRequestException;
-import io.harness.exception.WingsException;
-import io.harness.network.Http;
-import io.harness.serializer.JsonUtils;
-import lombok.Data;
-import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.NotImplementedException;
-import org.apache.commons.lang3.tuple.ImmutablePair;
-import org.apache.commons.lang3.tuple.Pair;
-import org.apache.http.client.HttpResponseException;
-import org.apache.http.client.config.RequestConfig;
-import org.apache.http.impl.client.HttpClientBuilder;
-import software.wings.beans.JenkinsConfig;
-import software.wings.beans.command.JenkinsTaskParams;
-import software.wings.common.BuildDetailsComparator;
-import software.wings.helpers.ext.jenkins.BuildDetails.BuildStatus;
-
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
@@ -80,6 +74,14 @@ import java.util.concurrent.TimeUnit;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import javax.net.ssl.HostnameVerifier;
+import lombok.Data;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.NotImplementedException;
+import org.apache.commons.lang3.tuple.ImmutablePair;
+import org.apache.commons.lang3.tuple.Pair;
+import org.apache.http.client.HttpResponseException;
+import org.apache.http.client.config.RequestConfig;
+import org.apache.http.impl.client.HttpClientBuilder;
 
 /**
  * The Class JenkinsImpl.

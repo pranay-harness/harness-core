@@ -1,18 +1,18 @@
 package io.harness.testframework.restutils;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import io.harness.scm.ScmSecret;
 import io.harness.scm.SecretName;
 import io.harness.testframework.framework.Retry;
 import io.harness.testframework.framework.Setup;
 import io.harness.testframework.framework.git.GitData;
 import io.harness.testframework.framework.matchers.GitResponseMatcher;
-import org.json.JSONArray;
-import org.json.JSONObject;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import org.json.JSONArray;
+import org.json.JSONObject;
 
 public class GitRestUtils {
   static final int MAX_RETRIES = 60;

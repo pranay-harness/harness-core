@@ -7,7 +7,7 @@ import static io.harness.generator.TemplateFolderGenerator.TemplateFolders.TEMPL
 import static io.harness.generator.TemplateFolderGenerator.TemplateFolders.TEMPLATE_FOLDER_SHELL_SCRIPTS;
 import static io.harness.generator.TemplateGalleryGenerator.TemplateGalleries.HARNESS_GALLERY;
 import static io.harness.govern.Switch.unhandled;
-import static java.util.Arrays.asList;
+
 import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static software.wings.beans.Variable.VariableBuilder.aVariable;
 import static software.wings.beans.VariableType.ARTIFACT;
@@ -18,11 +18,10 @@ import static software.wings.beans.command.ExecCommandUnit.Builder.anExecCommand
 import static software.wings.beans.command.ScpCommandUnit.Builder.aScpCommandUnit;
 import static software.wings.beans.command.ScpCommandUnit.ScpFileCategory.ARTIFACTS;
 
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
+import static java.util.Arrays.asList;
 
-import io.github.benas.randombeans.api.EnhancedRandom;
 import io.harness.delegate.task.shell.ScriptType;
+
 import software.wings.beans.Account;
 import software.wings.beans.Variable;
 import software.wings.beans.command.Command;
@@ -39,6 +38,9 @@ import software.wings.beans.template.deploymenttype.CustomDeploymentTypeTemplate
 import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.template.TemplateService;
 
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
+import io.github.benas.randombeans.api.EnhancedRandom;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;

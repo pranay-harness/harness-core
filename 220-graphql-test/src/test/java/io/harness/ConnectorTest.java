@@ -2,9 +2,8 @@ package io.harness;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.rule.OwnerRule.POOJA;
-import static org.assertj.core.api.Assertions.assertThat;
 
-import com.google.inject.Inject;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.beans.EmbeddedUser;
 import io.harness.category.element.UnitTests;
@@ -15,12 +14,15 @@ import io.harness.generator.Randomizer.Seed;
 import io.harness.generator.SettingGenerator;
 import io.harness.rule.Owner;
 import io.harness.testframework.graphql.QLTestObject;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
+
 import software.wings.beans.SettingAttribute;
 import software.wings.graphql.schema.type.QLUser.QLUserKeys;
 import software.wings.graphql.schema.type.connector.QLConnectorsConnection.QLConnectorsConnectionKeys;
 import software.wings.graphql.schema.type.connector.QLJiraConnector.QLJiraConnectorKeys;
+
+import com.google.inject.Inject;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 public class ConnectorTest extends GraphQLTest {
   @Inject private OwnerManager ownerManager;

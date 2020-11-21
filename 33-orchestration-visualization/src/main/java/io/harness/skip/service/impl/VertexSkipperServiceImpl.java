@@ -1,7 +1,5 @@
 package io.harness.skip.service.impl;
 
-import com.google.inject.Inject;
-
 import io.harness.beans.EphemeralOrchestrationGraph;
 import io.harness.beans.GraphVertex;
 import io.harness.pms.steps.SkipType;
@@ -9,6 +7,7 @@ import io.harness.skip.factory.VertexSkipperFactory;
 import io.harness.skip.service.VertexSkipperService;
 import io.harness.skip.skipper.VertexSkipper;
 
+import com.google.inject.Inject;
 import java.util.Comparator;
 import java.util.Map;
 import java.util.stream.Collectors;

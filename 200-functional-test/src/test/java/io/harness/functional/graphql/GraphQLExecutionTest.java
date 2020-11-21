@@ -3,8 +3,7 @@ package io.harness.functional.graphql;
 import static io.harness.beans.WorkflowType.PIPELINE;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.rule.OwnerRule.GEORGE;
-import static java.util.Arrays.asList;
-import static org.assertj.core.api.Assertions.assertThat;
+
 import static software.wings.beans.CanaryOrchestrationWorkflow.CanaryOrchestrationWorkflowBuilder.aCanaryOrchestrationWorkflow;
 import static software.wings.beans.PhaseStep.PhaseStepBuilder.aPhaseStep;
 import static software.wings.beans.PhaseStepType.POST_DEPLOYMENT;
@@ -12,8 +11,8 @@ import static software.wings.beans.PhaseStepType.PRE_DEPLOYMENT;
 import static software.wings.beans.Workflow.WorkflowBuilder.aWorkflow;
 import static software.wings.sm.StateType.ENV_STATE;
 
-import com.google.common.collect.ImmutableMap;
-import com.google.inject.Inject;
+import static java.util.Arrays.asList;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.beans.WorkflowType;
 import io.harness.category.element.FunctionalTests;
@@ -27,9 +26,7 @@ import io.harness.generator.WorkflowGenerator;
 import io.harness.persistence.HPersistence;
 import io.harness.rule.Owner;
 import io.harness.testframework.graphql.QLTestObject;
-import org.jetbrains.annotations.NotNull;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
+
 import software.wings.beans.Application;
 import software.wings.beans.Environment;
 import software.wings.beans.ExecutionArgs;
@@ -52,6 +49,12 @@ import software.wings.graphql.schema.type.QLPipelineExecution.QLPipelineExecutio
 import software.wings.graphql.schema.type.QLUser.QLUserKeys;
 import software.wings.graphql.schema.type.QLWorkflow.QLWorkflowKeys;
 import software.wings.graphql.schema.type.QLWorkflowExecution.QLWorkflowExecutionKeys;
+
+import com.google.common.collect.ImmutableMap;
+import com.google.inject.Inject;
+import org.jetbrains.annotations.NotNull;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 public class GraphQLExecutionTest extends AbstractFunctionalTest {
   public static final String NOTES = "execution test";

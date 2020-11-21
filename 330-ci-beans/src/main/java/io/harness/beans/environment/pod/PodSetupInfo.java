@@ -1,15 +1,15 @@
 package io.harness.beans.environment.pod;
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import io.harness.beans.environment.pod.container.ContainerDefinitionInfo;
 import io.harness.delegate.beans.ci.pod.PVCParams;
-import lombok.Builder;
-import lombok.Data;
-import org.hibernate.validator.constraints.NotEmpty;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import java.util.List;
 import java.util.Map;
 import javax.validation.constraints.NotNull;
+import lombok.Builder;
+import lombok.Data;
+import org.hibernate.validator.constraints.NotEmpty;
 
 /**
  * Stores all details require to spawn pod

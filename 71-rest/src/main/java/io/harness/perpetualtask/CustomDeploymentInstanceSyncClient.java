@@ -2,16 +2,11 @@ package io.harness.perpetualtask;
 
 import static software.wings.sm.states.customdeployment.InstanceFetchState.OUTPUT_PATH_KEY;
 
-import com.google.common.collect.ImmutableMap;
-import com.google.inject.Inject;
-import com.google.protobuf.Message;
-
 import io.harness.beans.DelegateTask;
 import io.harness.delegate.beans.TaskData;
 import io.harness.perpetualtask.instancesync.CustomDeploymentInstanceSyncTaskParams;
 import io.harness.tasks.Cd1SetupFields;
-import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.StringUtils;
+
 import software.wings.api.CustomDeploymentTypeInfo;
 import software.wings.api.DeploymentSummary;
 import software.wings.beans.TaskType;
@@ -25,9 +20,14 @@ import software.wings.service.intfc.instance.DeploymentService;
 import software.wings.service.intfc.security.ManagerDecryptionService;
 import software.wings.service.intfc.security.SecretManager;
 
+import com.google.common.collect.ImmutableMap;
+import com.google.inject.Inject;
+import com.google.protobuf.Message;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 
 @Slf4j
 public class CustomDeploymentInstanceSyncClient implements PerpetualTaskServiceClient {

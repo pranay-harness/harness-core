@@ -1,14 +1,11 @@
 package software.wings.beans;
 
-import static java.util.Arrays.asList;
 import static software.wings.beans.Environment.Builder.anEnvironment;
 import static software.wings.beans.Environment.EnvironmentType.NON_PROD;
 import static software.wings.yaml.YamlHelper.trimYaml;
 
-import com.google.common.collect.ImmutableList;
+import static java.util.Arrays.asList;
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.annotation.HarnessEntity;
 import io.harness.beans.EmbeddedUser;
 import io.harness.data.validator.EntityName;
@@ -19,6 +16,21 @@ import io.harness.mongo.index.MongoIndex;
 import io.harness.mongo.index.SortCompoundMongoIndex;
 import io.harness.persistence.AccountAccess;
 import io.harness.persistence.NameAccess;
+
+import software.wings.beans.entityinterface.ApplicationAccess;
+import software.wings.beans.entityinterface.KeywordsAware;
+import software.wings.beans.entityinterface.TagAware;
+import software.wings.infra.InfrastructureDefinition;
+import software.wings.yaml.BaseEntityYaml;
+
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.github.reinert.jjschema.SchemaIgnore;
+import com.google.common.collect.ImmutableList;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import javax.validation.constraints.NotNull;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
@@ -27,17 +39,6 @@ import lombok.experimental.UtilityClass;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Transient;
-import software.wings.beans.entityinterface.ApplicationAccess;
-import software.wings.beans.entityinterface.KeywordsAware;
-import software.wings.beans.entityinterface.TagAware;
-import software.wings.infra.InfrastructureDefinition;
-import software.wings.yaml.BaseEntityYaml;
-
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import javax.validation.constraints.NotNull;
 
 @Data
 @JsonIgnoreProperties(ignoreUnknown = true)

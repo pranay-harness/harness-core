@@ -2,14 +2,13 @@ package io.harness.cvng.core.services.impl;
 
 import static io.harness.persistence.HQuery.excludeAuthority;
 
-import com.google.inject.Inject;
-
 import io.harness.cvng.beans.HostRecordDTO;
 import io.harness.cvng.core.entities.HostRecord;
 import io.harness.cvng.core.entities.HostRecord.HostRecordKeys;
 import io.harness.cvng.core.services.api.HostRecordService;
 import io.harness.persistence.HPersistence;
 
+import com.google.inject.Inject;
 import java.time.Instant;
 import java.util.List;
 import java.util.Set;
@@ -25,7 +24,7 @@ public class HostRecordServiceImpl implements HostRecordService {
 
   @Override
   public void save(List<HostRecordDTO> hostRecordDTOs) {
-    saveRecords(hostRecordDTOs.stream().map(this ::toHostRecord).collect(Collectors.toList()));
+    saveRecords(hostRecordDTOs.stream().map(this::toHostRecord).collect(Collectors.toList()));
   }
 
   @Override

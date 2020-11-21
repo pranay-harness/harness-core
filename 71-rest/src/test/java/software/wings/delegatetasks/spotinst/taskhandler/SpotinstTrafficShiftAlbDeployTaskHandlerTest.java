@@ -2,6 +2,7 @@ package software.wings.delegatetasks.spotinst.taskhandler;
 
 import static io.harness.logging.CommandExecutionStatus.SUCCESS;
 import static io.harness.rule.OwnerRule.SATYAM;
+
 import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
@@ -11,7 +12,6 @@ import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.spy;
 
-import com.amazonaws.services.ec2.model.Instance;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.task.spotinst.request.SpotinstTrafficShiftAlbDeployParameters;
 import io.harness.delegate.task.spotinst.response.SpotInstTaskExecutionResponse;
@@ -19,11 +19,14 @@ import io.harness.delegate.task.spotinst.response.SpotInstTaskResponse;
 import io.harness.delegate.task.spotinst.response.SpotinstTrafficShiftAlbDeployResponse;
 import io.harness.rule.Owner;
 import io.harness.spotinst.model.ElastiGroup;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
+
 import software.wings.WingsBaseTest;
 import software.wings.beans.AwsConfig;
 import software.wings.beans.SpotInstConfig;
+
+import com.amazonaws.services.ec2.model.Instance;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 public class SpotinstTrafficShiftAlbDeployTaskHandlerTest extends WingsBaseTest {
   @Test

@@ -41,5 +41,4 @@ message HeartbeatRequest {
   string response_message = 4;
 }
 
-message HeartbeatResponse {
-}
+message HeartbeatResponse {}

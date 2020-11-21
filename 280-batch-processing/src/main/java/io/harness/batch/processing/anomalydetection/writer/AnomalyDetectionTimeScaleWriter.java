@@ -2,14 +2,14 @@ package io.harness.batch.processing.anomalydetection.writer;
 
 import io.harness.batch.processing.anomalydetection.Anomaly;
 import io.harness.batch.processing.anomalydetection.service.impl.AnomalyDetectionTimescaleDataServiceImpl;
+
+import java.util.List;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.batch.core.ExitStatus;
 import org.springframework.batch.core.StepExecution;
 import org.springframework.batch.core.StepExecutionListener;
 import org.springframework.batch.item.ItemWriter;
 import org.springframework.beans.factory.annotation.Autowired;
-
-import java.util.List;
 
 @Slf4j
 public class AnomalyDetectionTimeScaleWriter implements ItemWriter<Anomaly>, StepExecutionListener {

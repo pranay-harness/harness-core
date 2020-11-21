@@ -1,6 +1,5 @@
 package io.harness.cdng.infra.yaml;
 
-import com.fasterxml.jackson.annotation.JsonTypeName;
 import io.harness.beans.ParameterField;
 import io.harness.cdng.infra.beans.InfraMapping;
 import io.harness.cdng.infra.beans.K8sDirectInfraMapping;
@@ -10,6 +9,8 @@ import io.harness.common.SwaggerConstants;
 import io.harness.walktree.beans.LevelNode;
 import io.harness.walktree.visitor.SimpleVisitorHelper;
 import io.harness.walktree.visitor.Visitable;
+
+import com.fasterxml.jackson.annotation.JsonTypeName;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Builder;
 import lombok.Value;

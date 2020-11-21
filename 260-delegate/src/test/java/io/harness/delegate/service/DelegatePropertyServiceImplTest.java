@@ -1,13 +1,12 @@
 package io.harness.delegate.service;
 
 import static io.harness.rule.OwnerRule.MATT;
+
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-
-import com.google.inject.Inject;
 
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
@@ -16,6 +15,10 @@ import io.harness.managerclient.GetDelegatePropertiesRequest;
 import io.harness.managerclient.GetDelegatePropertiesResponse;
 import io.harness.rest.RestResponse;
 import io.harness.rule.Owner;
+
+import com.google.inject.Inject;
+import java.io.IOException;
+import java.util.concurrent.ExecutionException;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -27,9 +30,6 @@ import org.mockito.junit.MockitoJUnit;
 import org.mockito.junit.MockitoRule;
 import retrofit2.Call;
 import retrofit2.Response;
-
-import java.io.IOException;
-import java.util.concurrent.ExecutionException;
 
 public class DelegatePropertyServiceImplTest extends CategoryTest {
   private static final String ACCOUNT_ID = "account_id";

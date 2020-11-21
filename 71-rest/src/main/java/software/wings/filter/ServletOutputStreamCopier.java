@@ -1,12 +1,11 @@
 package software.wings.filter;
 
-import lombok.extern.slf4j.Slf4j;
-
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import javax.servlet.ServletOutputStream;
 import javax.servlet.WriteListener;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * HttpServletResponseCopier that creates a copy of the http response payload. Based on

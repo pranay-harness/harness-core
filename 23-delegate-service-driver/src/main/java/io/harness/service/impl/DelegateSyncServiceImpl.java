@@ -2,12 +2,9 @@ package io.harness.service.impl;
 
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.persistence.HQuery.excludeAuthority;
+
 import static java.lang.System.currentTimeMillis;
 import static java.util.stream.Collectors.toList;
-
-import com.google.common.annotations.VisibleForTesting;
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
 
 import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.delegate.beans.DelegateSyncTaskResponse;
@@ -16,14 +13,17 @@ import io.harness.exception.InvalidArgumentsException;
 import io.harness.persistence.HPersistence;
 import io.harness.serializer.KryoSerializer;
 import io.harness.service.intfc.DelegateSyncService;
-import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.tuple.Pair;
 
+import com.google.common.annotations.VisibleForTesting;
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import java.time.Duration;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.atomic.AtomicLong;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.tuple.Pair;
 
 @Singleton
 @Slf4j

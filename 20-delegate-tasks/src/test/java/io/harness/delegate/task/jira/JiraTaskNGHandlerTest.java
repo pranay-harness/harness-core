@@ -1,5 +1,18 @@
 package io.harness.delegate.task.jira;
 
+import static io.harness.delegate.task.jira.JiraTaskNGHandler.JIRA_APPROVAL_FIELD_KEY;
+import static io.harness.delegate.task.jira.JiraTaskNGHandler.ORIGINAL_ESTIMATE;
+import static io.harness.delegate.task.jira.JiraTaskNGHandler.REMAINING_ESTIMATE;
+import static io.harness.rule.OwnerRule.AGORODETKI;
+import static io.harness.rule.OwnerRule.ALEXEI;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyInt;
+import static org.mockito.Matchers.eq;
+import static org.mockito.Mockito.when;
+import static org.powermock.api.mockito.PowerMockito.mock;
+
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.beans.connector.jira.JiraConnectorDTO;
@@ -9,6 +22,14 @@ import io.harness.encryption.SecretRefData;
 import io.harness.jira.JiraCustomFieldValue;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.rule.Owner;
+
+import java.io.IOException;
+import java.net.URI;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import net.rcarz.jiraclient.Field;
 import net.rcarz.jiraclient.Issue;
 import net.rcarz.jiraclient.Issue.FluentCreate;
@@ -29,26 +50,6 @@ import org.powermock.api.mockito.PowerMockito;
 import org.powermock.core.classloader.annotations.PowerMockIgnore;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
-
-import java.io.IOException;
-import java.net.URI;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
-import static io.harness.delegate.task.jira.JiraTaskNGHandler.JIRA_APPROVAL_FIELD_KEY;
-import static io.harness.delegate.task.jira.JiraTaskNGHandler.ORIGINAL_ESTIMATE;
-import static io.harness.delegate.task.jira.JiraTaskNGHandler.REMAINING_ESTIMATE;
-import static io.harness.rule.OwnerRule.AGORODETKI;
-import static io.harness.rule.OwnerRule.ALEXEI;
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.anyInt;
-import static org.mockito.Matchers.eq;
-import static org.mockito.Mockito.when;
-import static org.powermock.api.mockito.PowerMockito.mock;
 
 @RunWith(PowerMockRunner.class)
 @PrepareForTest({JiraClient.class, FluentCreate.class, Issue.class, JiraTaskNGHandler.class})

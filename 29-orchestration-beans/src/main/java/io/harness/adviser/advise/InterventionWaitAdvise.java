@@ -2,10 +2,10 @@ package io.harness.adviser.advise;
 
 import io.harness.adviser.Advise;
 import io.harness.adviser.AdviseType;
-import lombok.Builder;
-import lombok.Value;
 
 import java.time.Duration;
+import lombok.Builder;
+import lombok.Value;
 
 @Value
 @Builder

@@ -1,10 +1,9 @@
 package software.wings.beans.trigger;
 
-import lombok.Getter;
-
 import java.util.Arrays;
 import java.util.Map;
 import java.util.stream.Collectors;
+import lombok.Getter;
 
 public enum WebhookCustomExpression {
   BIT_BUCKET_PULL_REQUEST_ID("Pull Request Id", "${pullrequest.id}", WebhookSource.BITBUCKET),

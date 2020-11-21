@@ -6,27 +6,15 @@ import static io.harness.eraro.ErrorCode.GENERAL_ERROR;
 import static io.harness.eraro.ErrorCode.INVALID_EMAIL;
 import static io.harness.eraro.ErrorCode.PASSWORD_STRENGTH_CHECK_FAILED;
 import static io.harness.exception.WingsException.USER;
+
 import static org.apache.commons.lang3.StringUtils.EMPTY;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 
-import com.google.common.collect.ImmutableList;
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
-
-import com.auth0.jwt.JWT;
-import com.auth0.jwt.JWTVerifier;
-import com.auth0.jwt.algorithms.Algorithm;
-import com.auth0.jwt.exceptions.JWTVerificationException;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.eraro.Level;
 import io.harness.exception.InvalidArgumentsException;
 import io.harness.exception.WingsException;
-import lombok.AccessLevel;
-import lombok.experimental.FieldDefaults;
-import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.validator.routines.EmailValidator;
-import org.apache.commons.validator.routines.RegexValidator;
-import org.apache.http.client.utils.URIBuilder;
+
 import software.wings.app.MainConfiguration;
 import software.wings.beans.UserInvite;
 import software.wings.beans.UserInvite.UserInviteKeys;
@@ -38,6 +26,13 @@ import software.wings.service.intfc.EmailNotificationService;
 import software.wings.service.intfc.SignupService;
 import software.wings.service.intfc.signup.SignupException;
 
+import com.auth0.jwt.JWT;
+import com.auth0.jwt.JWTVerifier;
+import com.auth0.jwt.algorithms.Algorithm;
+import com.auth0.jwt.exceptions.JWTVerificationException;
+import com.google.common.collect.ImmutableList;
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import java.io.UnsupportedEncodingException;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
@@ -49,6 +44,12 @@ import java.util.List;
 import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import lombok.AccessLevel;
+import lombok.experimental.FieldDefaults;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.validator.routines.EmailValidator;
+import org.apache.commons.validator.routines.RegexValidator;
+import org.apache.http.client.utils.URIBuilder;
 
 @OwnedBy(PL)
 @Slf4j

@@ -1,14 +1,14 @@
 package io.harness.gitsync.gitsyncerror.dao.api.repositories.gitSyncError;
 
-import com.mongodb.client.result.DeleteResult;
-import com.mongodb.client.result.UpdateResult;
 import io.harness.git.model.ChangeType;
 import io.harness.gitsync.gitsyncerror.beans.GitSyncError;
 import io.harness.gitsync.gitsyncerror.beans.GitSyncErrorDetails;
+
+import com.mongodb.client.result.DeleteResult;
+import com.mongodb.client.result.UpdateResult;
+import java.util.List;
 import org.springframework.data.mongodb.core.aggregation.Aggregation;
 import org.springframework.data.mongodb.core.aggregation.AggregationResults;
-
-import java.util.List;
 
 public interface GitSyncErrorRepositoryCustom {
   <C> AggregationResults aggregate(Aggregation aggregation, Class<C> castClass);

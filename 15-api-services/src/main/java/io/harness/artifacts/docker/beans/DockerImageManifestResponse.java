@@ -3,15 +3,15 @@ package io.harness.artifacts.docker.beans;
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.serializer.JsonUtils;
-import lombok.Data;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
+import lombok.Data;
 
 @OwnedBy(CDC)
 @Data

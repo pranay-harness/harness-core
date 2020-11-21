@@ -1,9 +1,7 @@
 package software.wings.cloudprovider.aws;
 
-import com.google.common.base.MoreObjects;
-
 import com.fasterxml.jackson.annotation.JsonProperty;
-
+import com.google.common.base.MoreObjects;
 import java.util.List;
 
 /**

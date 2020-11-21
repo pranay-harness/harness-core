@@ -1,8 +1,5 @@
 package io.harness.event.usagemetrics;
 
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
-
 import io.harness.event.handler.EventHandler;
 import io.harness.event.harnessmetrics.CV247Metric;
 import io.harness.event.harnessmetrics.HarnessMetricsEvent;
@@ -11,6 +8,8 @@ import io.harness.event.model.Event;
 import io.harness.event.model.EventType;
 import io.harness.metrics.HarnessMetricRegistry;
 
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import java.util.HashMap;
 import java.util.Map;
 

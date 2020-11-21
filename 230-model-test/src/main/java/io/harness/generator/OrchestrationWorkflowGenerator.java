@@ -4,13 +4,13 @@ import static software.wings.beans.CustomOrchestrationWorkflow.CustomOrchestrati
 import static software.wings.beans.Graph.Builder.aGraph;
 import static software.wings.beans.GraphLink.Builder.aLink;
 
-import com.google.common.collect.ImmutableMap;
-import com.google.inject.Singleton;
-
 import software.wings.beans.Graph;
 import software.wings.beans.GraphNode;
 import software.wings.beans.OrchestrationWorkflow;
 import software.wings.sm.StateType;
+
+import com.google.common.collect.ImmutableMap;
+import com.google.inject.Singleton;
 
 @Singleton
 public class OrchestrationWorkflowGenerator {

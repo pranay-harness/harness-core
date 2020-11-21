@@ -1,7 +1,5 @@
 package io.harness.cdng.pipeline.executions;
 
-import com.google.inject.Inject;
-
 import io.harness.ambiance.Ambiance;
 import io.harness.cdng.environment.EnvironmentOutcome;
 import io.harness.cdng.infra.steps.InfrastructureStep;
@@ -18,6 +16,7 @@ import io.harness.ngpipeline.common.AmbianceHelper;
 import io.harness.plan.PlanNode;
 import io.harness.pms.execution.Status;
 
+import com.google.inject.Inject;
 import java.util.Objects;
 import java.util.Optional;
 

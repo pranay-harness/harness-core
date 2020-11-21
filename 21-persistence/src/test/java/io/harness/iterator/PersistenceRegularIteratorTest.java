@@ -5,14 +5,13 @@ import static io.harness.iterator.PersistenceIterator.ProcessMode.LOOP;
 import static io.harness.iterator.PersistenceIterator.ProcessMode.PUMP;
 import static io.harness.mongo.iterator.MongoPersistenceIterator.SchedulingType.REGULAR;
 import static io.harness.rule.OwnerRule.GEORGE;
+
 import static java.lang.System.currentTimeMillis;
 import static java.time.Duration.ofMillis;
 import static java.time.Duration.ofSeconds;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.joor.Reflect.on;
-
-import com.google.inject.Inject;
 
 import io.harness.PersistenceTestBase;
 import io.harness.category.element.StressTests;
@@ -28,15 +27,16 @@ import io.harness.queue.QueueController;
 import io.harness.rule.Owner;
 import io.harness.threading.Morpheus;
 import io.harness.threading.ThreadPool;
-import lombok.extern.slf4j.Slf4j;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
 
+import com.google.inject.Inject;
 import java.io.IOException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
+import lombok.extern.slf4j.Slf4j;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 @Slf4j
 public class PersistenceRegularIteratorTest extends PersistenceTestBase {
@@ -106,8 +106,7 @@ public class PersistenceRegularIteratorTest extends PersistenceTestBase {
       Future<?> future1 = executorService.submit(() -> loopIterator.process());
       Morpheus.sleep(ofMillis(300));
       future1.cancel(true);
-    })
-        .doesNotThrowAnyException();
+    }).doesNotThrowAnyException();
   }
 
   @Test

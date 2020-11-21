@@ -1,6 +1,7 @@
 package software.wings.integration.security;
 
 import static io.harness.rule.OwnerRule.UTKARSH;
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.fail;
 
@@ -9,10 +10,7 @@ import io.harness.category.element.DeprecatedIntegrationTests;
 import io.harness.expression.SecretString;
 import io.harness.rule.Owner;
 import io.harness.security.encryption.EncryptionType;
-import org.junit.Before;
-import org.junit.Ignore;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
+
 import software.wings.beans.Account;
 import software.wings.beans.GcpConfig;
 import software.wings.beans.LocalEncryptionConfig;
@@ -23,6 +21,10 @@ import software.wings.settings.SettingValue;
 
 import java.lang.reflect.Field;
 import java.util.List;
+import org.junit.Before;
+import org.junit.Ignore;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 /**
  * Created by rsingh on 9/21/18.

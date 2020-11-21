@@ -4,24 +4,23 @@ import static io.harness.eraro.ErrorCode.RESOURCE_NOT_FOUND;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.maintenance.MaintenanceController.getMaintenanceFlag;
 
-import com.google.inject.Inject;
-
-import com.codahale.metrics.annotation.ExceptionMetered;
-import com.codahale.metrics.annotation.Timed;
-import com.codahale.metrics.health.HealthCheck;
 import io.harness.exception.WingsException;
 import io.harness.health.HealthException;
 import io.harness.health.HealthService;
 import io.harness.rest.RestResponse;
 import io.harness.security.annotations.PublicApi;
-import io.swagger.annotations.Api;
-import lombok.extern.slf4j.Slf4j;
 
+import com.codahale.metrics.annotation.ExceptionMetered;
+import com.codahale.metrics.annotation.Timed;
+import com.codahale.metrics.health.HealthCheck;
+import com.google.inject.Inject;
+import io.swagger.annotations.Api;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * Created by Praveen

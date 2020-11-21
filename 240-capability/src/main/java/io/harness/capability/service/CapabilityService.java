@@ -1,9 +1,9 @@
 package io.harness.capability.service;
 
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
-import org.apache.commons.lang3.tuple.Pair;
 
 import java.util.Set;
+import org.apache.commons.lang3.tuple.Pair;
 
 public interface CapabilityService {
   // returns all the valid delegates that can execute all the required capabilities according to

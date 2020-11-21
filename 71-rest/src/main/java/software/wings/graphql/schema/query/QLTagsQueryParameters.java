@@ -1,7 +1,8 @@
 package software.wings.graphql.schema.query;
 
-import lombok.Value;
 import software.wings.graphql.schema.type.aggregation.EntityFilter;
+
+import lombok.Value;
 
 @Value
 public class QLTagsQueryParameters implements EntityFilter {

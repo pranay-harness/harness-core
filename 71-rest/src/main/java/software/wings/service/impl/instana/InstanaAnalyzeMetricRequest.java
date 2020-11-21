@@ -1,9 +1,8 @@
 package software.wings.service.impl.instana;
 
+import java.util.List;
 import lombok.Builder;
 import lombok.Data;
-
-import java.util.List;
 
 // this request class can be used for both trace and call metrics.
 // https://instana.github.io/openapi/#operation/getCallGroup

@@ -2,8 +2,6 @@ package io.harness.data.structure;
 
 import static java.util.stream.Collectors.toSet;
 
-import lombok.experimental.UtilityClass;
-
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -15,6 +13,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Stream;
+import lombok.experimental.UtilityClass;
 
 /**
  * Created by rsingh on 6/1/18.

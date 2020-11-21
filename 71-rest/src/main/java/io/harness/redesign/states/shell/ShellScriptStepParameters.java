@@ -2,7 +2,6 @@ package io.harness.redesign.states.shell;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 
-import com.github.reinert.jjschema.Attributes;
 import io.harness.annotations.Redesign;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.data.structure.EmptyPredicate;
@@ -11,20 +10,22 @@ import io.harness.state.io.StepParameters;
 import io.harness.timeout.TimeoutObtainment;
 import io.harness.timeout.trackers.absolute.AbsoluteTimeoutParameters;
 import io.harness.timeout.trackers.absolute.AbsoluteTimeoutTrackerFactory;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
-import org.hibernate.validator.constraints.NotEmpty;
-import org.mongodb.morphia.annotations.Property;
+
 import software.wings.service.impl.SSHKeyDataProvider;
 import software.wings.service.impl.WinRmConnectionAttributesDataProvider;
 import software.wings.sm.states.ShellScriptState;
 import software.wings.stencils.DefaultValue;
 import software.wings.stencils.EnumData;
 
+import com.github.reinert.jjschema.Attributes;
 import java.util.Collections;
 import java.util.List;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+import org.hibernate.validator.constraints.NotEmpty;
+import org.mongodb.morphia.annotations.Property;
 
 @OwnedBy(CDC)
 @Redesign

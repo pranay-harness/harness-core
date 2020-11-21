@@ -3,13 +3,12 @@ package software.wings.delegatetasks.aws.ecs.ecstaskhandler;
 import static io.harness.logging.CommandExecutionStatus.FAILURE;
 import static io.harness.logging.CommandExecutionStatus.SUCCESS;
 import static io.harness.logging.LogLevel.ERROR;
-import static java.lang.String.format;
 
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
+import static java.lang.String.format;
 
 import io.harness.exception.ExceptionUtils;
 import io.harness.security.encryption.EncryptedDataDetail;
+
 import software.wings.beans.command.ExecutionLogCallback;
 import software.wings.cloudprovider.aws.EcsContainerService;
 import software.wings.helpers.ext.ecs.request.EcsBGRoute53DNSWeightUpdateRequest;
@@ -19,6 +18,8 @@ import software.wings.helpers.ext.ecs.response.EcsCommandExecutionResponse;
 import software.wings.service.intfc.aws.delegate.AwsRoute53HelperServiceDelegate;
 import software.wings.service.intfc.aws.delegate.AwsServiceDiscoveryHelperServiceDelegate;
 
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import java.util.List;
 
 @Singleton

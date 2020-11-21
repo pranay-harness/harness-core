@@ -2,17 +2,16 @@ package io.harness.perpetualtask.example;
 
 import static java.lang.Thread.sleep;
 
-import com.google.inject.Singleton;
-
 import io.harness.grpc.utils.AnyUtils;
 import io.harness.perpetualtask.PerpetualTaskExecutionParams;
 import io.harness.perpetualtask.PerpetualTaskExecutor;
 import io.harness.perpetualtask.PerpetualTaskId;
 import io.harness.perpetualtask.PerpetualTaskResponse;
-import lombok.extern.slf4j.Slf4j;
 
+import com.google.inject.Singleton;
 import java.time.Instant;
 import java.util.concurrent.ThreadLocalRandom;
+import lombok.extern.slf4j.Slf4j;
 
 @Singleton
 @Slf4j

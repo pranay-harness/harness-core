@@ -1,6 +1,7 @@
 package io.harness.cdng.artifact;
 
 import static io.harness.rule.OwnerRule.ARCHIT;
+
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.CategoryTest;
@@ -17,12 +18,12 @@ import io.harness.rule.Owner;
 import io.harness.yaml.core.StageElement;
 import io.harness.yaml.core.auxiliary.intfc.StageElementWrapper;
 import io.harness.yaml.utils.YamlPipelineUtils;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
 
 import java.io.IOException;
 import java.net.URL;
 import java.util.Arrays;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 public class ArtifactYamlTest extends CategoryTest {
   @Test

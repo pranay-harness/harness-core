@@ -1,13 +1,18 @@
 package software.wings.service.impl.aws.delegate;
 
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 
-import com.google.common.annotations.VisibleForTesting;
-import com.google.common.collect.Sets;
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
+import io.harness.security.encryption.EncryptedDataDetail;
+
+import software.wings.beans.AwsConfig;
+import software.wings.beans.AwsInfrastructureMapping;
+import software.wings.service.impl.AwsUtils;
+import software.wings.service.impl.aws.model.AwsCodeDeployS3LocationData;
+import software.wings.service.intfc.aws.delegate.AwsCodeDeployHelperServiceDelegate;
+import software.wings.service.intfc.aws.delegate.AwsEc2HelperServiceDelegate;
 
 import com.amazonaws.AmazonClientException;
 import com.amazonaws.AmazonServiceException;
@@ -29,14 +34,10 @@ import com.amazonaws.services.codedeploy.model.ListDeploymentInstancesResult;
 import com.amazonaws.services.codedeploy.model.RevisionLocation;
 import com.amazonaws.services.codedeploy.model.S3Location;
 import com.amazonaws.services.ec2.model.Instance;
-import io.harness.security.encryption.EncryptedDataDetail;
-import software.wings.beans.AwsConfig;
-import software.wings.beans.AwsInfrastructureMapping;
-import software.wings.service.impl.AwsUtils;
-import software.wings.service.impl.aws.model.AwsCodeDeployS3LocationData;
-import software.wings.service.intfc.aws.delegate.AwsCodeDeployHelperServiceDelegate;
-import software.wings.service.intfc.aws.delegate.AwsEc2HelperServiceDelegate;
-
+import com.google.common.annotations.VisibleForTesting;
+import com.google.common.collect.Sets;
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;

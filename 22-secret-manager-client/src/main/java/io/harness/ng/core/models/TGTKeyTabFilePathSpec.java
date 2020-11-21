@@ -1,8 +1,9 @@
 package io.harness.ng.core.models;
 
-import com.fasterxml.jackson.annotation.JsonTypeName;
 import io.harness.ng.core.dto.secrets.TGTGenerationSpecDTO;
 import io.harness.ng.core.dto.secrets.TGTKeyTabFilePathSpecDTO;
+
+import com.fasterxml.jackson.annotation.JsonTypeName;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;

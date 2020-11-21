@@ -2,15 +2,10 @@ package software.wings.search.entities.workflow;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
 
-import com.google.common.collect.Sets;
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
-
-import com.mongodb.DBObject;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.WorkflowType;
 import io.harness.data.structure.EmptyPredicate;
-import lombok.extern.slf4j.Slf4j;
+
 import software.wings.audit.AuditHeader;
 import software.wings.audit.AuditHeader.AuditHeaderKeys;
 import software.wings.audit.EntityAuditRecord;
@@ -39,12 +34,17 @@ import software.wings.search.framework.SearchEntityUtils;
 import software.wings.search.framework.changestreams.ChangeEvent;
 import software.wings.search.framework.changestreams.ChangeType;
 
+import com.google.common.collect.Sets;
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
+import com.mongodb.DBObject;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * The handler which will maintain the workflow document
@@ -89,7 +89,7 @@ public class WorkflowChangeHandler implements ChangeHandler {
       if (EmptyPredicate.isNotEmpty(toBeDeletedWorkflowIds)) {
         result = result
             && searchDao.removeFromListInMultipleDocuments(
-                   WorkflowSearchEntity.TYPE, fieldToUpdate, toBeDeletedWorkflowIds, pipeline.getUuid());
+                WorkflowSearchEntity.TYPE, fieldToUpdate, toBeDeletedWorkflowIds, pipeline.getUuid());
       }
     }
     if (changeEvent.getChanges().containsField(WorkflowKeys.name)) {
@@ -100,7 +100,7 @@ public class WorkflowChangeHandler implements ChangeHandler {
       String fieldToUpdate = WorkflowKeys.name;
       result = result
           && searchDao.updateListInMultipleDocuments(
-                 WorkflowSearchEntity.TYPE, entityType, newValue, documentToUpdate, fieldToUpdate);
+              WorkflowSearchEntity.TYPE, entityType, newValue, documentToUpdate, fieldToUpdate);
     }
     return result;
   }
@@ -143,10 +143,10 @@ public class WorkflowChangeHandler implements ChangeHandler {
               relatedAuditViewBuilder.getAuditRelatedEntityViewMap(auditHeader, entityAuditRecord);
           result = result
               && searchDao.addTimestamp(WorkflowSearchEntity.TYPE, auditTimestampField, documentToUpdate,
-                     auditHeader.getCreatedAt(), DAYS_TO_RETAIN);
+                  auditHeader.getCreatedAt(), DAYS_TO_RETAIN);
           result = result
               && searchDao.appendToListInSingleDocument(WorkflowSearchEntity.TYPE, fieldToUpdate, documentToUpdate,
-                     auditRelatedEntityViewMap, MAX_RUNTIME_ENTITIES);
+                  auditRelatedEntityViewMap, MAX_RUNTIME_ENTITIES);
           isAffectedResourceHandled.put(entityAuditRecord.getAffectedResourceId(), true);
         }
       }
@@ -169,7 +169,7 @@ public class WorkflowChangeHandler implements ChangeHandler {
 
       result = result
           && searchDao.appendToListInMultipleDocuments(WorkflowSearchEntity.TYPE, fieldToUpdate, documentsToUpdate,
-                 deploymentRelatedEntityViewMap, MAX_RUNTIME_ENTITIES);
+              deploymentRelatedEntityViewMap, MAX_RUNTIME_ENTITIES);
     }
     return result;
   }
@@ -194,7 +194,7 @@ public class WorkflowChangeHandler implements ChangeHandler {
         String fieldToUpdate = DeploymentRelatedEntityViewKeys.pipelineExecutionId;
         result = result
             && searchDao.updateListInMultipleDocuments(
-                   WorkflowSearchEntity.TYPE, entityType, newNameValue, documentToUpdate, fieldToUpdate);
+                WorkflowSearchEntity.TYPE, entityType, newNameValue, documentToUpdate, fieldToUpdate);
       }
     }
     return result;

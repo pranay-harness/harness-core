@@ -3,10 +3,7 @@ package software.wings.service.impl.elk;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.delegate.beans.executioncapability.ExecutionCapabilityDemander;
 import io.harness.security.encryption.EncryptedDataDetail;
-import lombok.Builder;
-import lombok.Data;
-import lombok.EqualsAndHashCode;
-import lombok.ToString;
+
 import software.wings.beans.ElkConfig;
 import software.wings.delegatetasks.delegatecapability.CapabilityHelper;
 import software.wings.service.impl.analysis.LogDataCollectionInfo;
@@ -14,6 +11,10 @@ import software.wings.sm.StateType;
 
 import java.util.List;
 import java.util.Set;
+import lombok.Builder;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.ToString;
 
 /**
  * Elk Data collection Info that is shared for while initiating Data collection task

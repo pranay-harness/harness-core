@@ -1,12 +1,11 @@
 package io.harness.functional.yaml;
 
 import static io.harness.generator.AccountGenerator.ACCOUNT_ID;
-import static javax.ws.rs.core.MediaType.MULTIPART_FORM_DATA;
-import static org.assertj.core.api.Assertions.assertThat;
+
 import static software.wings.beans.Application.GLOBAL_APP_ID;
 
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
+import static javax.ws.rs.core.MediaType.MULTIPART_FORM_DATA;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.InvalidRequestException;
@@ -16,13 +15,7 @@ import io.harness.resource.Project;
 import io.harness.scm.ScmSecret;
 import io.harness.scm.SecretName;
 import io.harness.testframework.framework.Setup;
-import io.restassured.http.ContentType;
-import io.restassured.mapper.ObjectMapperType;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.util.ResourceUtils;
-import org.zeroturnaround.exec.ProcessExecutor;
-import org.zeroturnaround.exec.ProcessResult;
-import org.zeroturnaround.exec.stream.LogOutputStream;
+
 import software.wings.beans.Application;
 import software.wings.beans.EntityType;
 import software.wings.beans.GcpConfig;
@@ -40,6 +33,10 @@ import software.wings.settings.SettingVariableTypes;
 import software.wings.yaml.gitSync.YamlGitConfig;
 import software.wings.yaml.gitSync.YamlGitConfig.SyncMode;
 
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
+import io.restassured.http.ContentType;
+import io.restassured.mapper.ObjectMapperType;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -54,6 +51,11 @@ import java.util.Map.Entry;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.stream.Stream;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.util.ResourceUtils;
+import org.zeroturnaround.exec.ProcessExecutor;
+import org.zeroturnaround.exec.ProcessResult;
+import org.zeroturnaround.exec.stream.LogOutputStream;
 
 @Singleton
 @Slf4j

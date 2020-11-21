@@ -2,15 +2,14 @@ package software.wings.service.impl.ldap;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
 
-import com.google.common.util.concurrent.ThreadFactoryBuilder;
-
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.threading.ThreadPool;
-import lombok.Getter;
-import lombok.experimental.FieldNameConstants;
 
+import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
+import lombok.Getter;
+import lombok.experimental.FieldNameConstants;
 
 /***
  * This is singleton class for re-using the executor service

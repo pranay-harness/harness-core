@@ -1,14 +1,13 @@
 package software.wings.service.impl.instance.stats.collector;
 
 import static io.harness.rule.OwnerRule.ROHIT_KUMAR;
+
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
+
 import software.wings.beans.infrastructure.instance.InvocationCount;
 import software.wings.beans.infrastructure.instance.InvocationCount.InvocationCountKey;
 import software.wings.beans.infrastructure.instance.ServerlessInstance;
@@ -20,6 +19,9 @@ import java.time.Instant;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 public class ServerlessInstanceMapperTest extends CategoryTest {
   @Before

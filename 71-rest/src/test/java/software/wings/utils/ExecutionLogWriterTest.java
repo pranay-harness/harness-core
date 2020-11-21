@@ -3,6 +3,7 @@ package software.wings.utils;
 import static io.harness.logging.CommandExecutionStatus.RUNNING;
 import static io.harness.logging.LogLevel.INFO;
 import static io.harness.rule.OwnerRule.PUNEET;
+
 import static software.wings.beans.Log.Builder.aLog;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 import static software.wings.utils.WingsTestConstants.APP_ID;
@@ -12,13 +13,15 @@ import static software.wings.utils.WingsTestConstants.WORKFLOW_EXECUTION_ID;
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
+
+import software.wings.delegatetasks.DelegateLogService;
+
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
-import software.wings.delegatetasks.DelegateLogService;
 
 public class ExecutionLogWriterTest extends CategoryTest {
   @Mock private DelegateLogService logService;

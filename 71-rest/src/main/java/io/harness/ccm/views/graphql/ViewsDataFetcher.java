@@ -1,12 +1,13 @@
 package io.harness.ccm.views.graphql;
 
-import com.google.inject.Inject;
-
 import io.harness.ccm.views.service.CEViewService;
+
 import software.wings.graphql.datafetcher.AbstractObjectDataFetcher;
 import software.wings.graphql.schema.query.QLNoOpQueryParameters;
 import software.wings.security.PermissionAttribute;
 import software.wings.security.annotations.AuthRule;
+
+import com.google.inject.Inject;
 
 public class ViewsDataFetcher extends AbstractObjectDataFetcher<QLCEViewsData, QLNoOpQueryParameters> {
   @Inject private CEViewService viewService;

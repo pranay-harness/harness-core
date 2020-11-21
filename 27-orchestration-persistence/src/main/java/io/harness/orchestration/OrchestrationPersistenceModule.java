@@ -1,14 +1,13 @@
 package io.harness.orchestration;
 
+import io.harness.spring.AliasRegistrar;
+import io.harness.testing.TestExecution;
+
 import com.google.inject.AbstractModule;
 import com.google.inject.Key;
 import com.google.inject.Provider;
 import com.google.inject.TypeLiteral;
 import com.google.inject.multibindings.MapBinder;
-
-import io.harness.spring.AliasRegistrar;
-import io.harness.testing.TestExecution;
-
 import java.util.Set;
 
 public class OrchestrationPersistenceModule extends AbstractModule {

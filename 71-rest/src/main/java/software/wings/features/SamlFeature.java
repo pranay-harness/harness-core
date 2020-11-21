@@ -1,8 +1,5 @@
 package software.wings.features;
 
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
-
 import software.wings.beans.AccountType;
 import software.wings.beans.sso.SamlSettings;
 import software.wings.features.api.AbstractPremiumFeature;
@@ -15,6 +12,8 @@ import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.SSOService;
 import software.wings.service.intfc.SSOSettingService;
 
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.EnumSet;

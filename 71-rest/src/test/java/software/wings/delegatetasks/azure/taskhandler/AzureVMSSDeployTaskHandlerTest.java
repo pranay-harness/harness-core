@@ -3,6 +3,7 @@ package software.wings.delegatetasks.azure.taskhandler;
 import static io.harness.logging.CommandExecutionStatus.FAILURE;
 import static io.harness.logging.CommandExecutionStatus.SUCCESS;
 import static io.harness.rule.OwnerRule.ANIL;
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyInt;
@@ -13,9 +14,20 @@ import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
+import io.harness.azure.client.AzureAutoScaleSettingsClient;
+import io.harness.azure.client.AzureComputeClient;
+import io.harness.azure.model.AzureConfig;
+import io.harness.category.element.UnitTests;
+import io.harness.delegate.task.azure.AzureVMSSPreDeploymentData;
+import io.harness.delegate.task.azure.request.AzureVMSSDeployTaskParameters;
+import io.harness.delegate.task.azure.response.AzureVMSSDeployTaskResponse;
+import io.harness.delegate.task.azure.response.AzureVMSSTaskExecutionResponse;
+import io.harness.rule.Owner;
+
+import software.wings.WingsBaseTest;
+
 import com.google.common.util.concurrent.TimeLimiter;
 import com.google.inject.Inject;
-
 import com.microsoft.azure.Page;
 import com.microsoft.azure.PagedList;
 import com.microsoft.azure.management.compute.VirtualMachineScaleSet;
@@ -29,15 +41,9 @@ import com.microsoft.azure.management.network.VirtualMachineScaleSetNicIPConfigu
 import com.microsoft.azure.management.network.implementation.NetworkInterfaceIPConfigurationInner;
 import com.microsoft.azure.management.network.implementation.PublicIPAddressInner;
 import com.microsoft.rest.RestException;
-import io.harness.azure.client.AzureAutoScaleSettingsClient;
-import io.harness.azure.client.AzureComputeClient;
-import io.harness.azure.model.AzureConfig;
-import io.harness.category.element.UnitTests;
-import io.harness.delegate.task.azure.AzureVMSSPreDeploymentData;
-import io.harness.delegate.task.azure.request.AzureVMSSDeployTaskParameters;
-import io.harness.delegate.task.azure.response.AzureVMSSDeployTaskResponse;
-import io.harness.delegate.task.azure.response.AzureVMSSTaskExecutionResponse;
-import io.harness.rule.Owner;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Optional;
 import org.assertj.core.util.Arrays;
 import org.junit.Before;
 import org.junit.Test;
@@ -46,11 +52,6 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Spy;
 import rx.Observable;
-import software.wings.WingsBaseTest;
-
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Optional;
 
 public class AzureVMSSDeployTaskHandlerTest extends WingsBaseTest {
   @Mock private AzureComputeClient azureComputeClient;

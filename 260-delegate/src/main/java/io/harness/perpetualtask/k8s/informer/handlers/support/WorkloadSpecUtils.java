@@ -1,17 +1,17 @@
 package io.harness.perpetualtask.k8s.informer.handlers.support;
 
 import io.harness.perpetualtask.k8s.watch.K8sWorkloadSpec;
+
 import io.kubernetes.client.custom.Quantity;
 import io.kubernetes.client.openapi.models.V1Container;
 import io.kubernetes.client.openapi.models.V1ResourceRequirements;
-import lombok.experimental.UtilityClass;
-
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 import javax.annotation.Nullable;
+import lombok.experimental.UtilityClass;
 
 @UtilityClass
 public class WorkloadSpecUtils {

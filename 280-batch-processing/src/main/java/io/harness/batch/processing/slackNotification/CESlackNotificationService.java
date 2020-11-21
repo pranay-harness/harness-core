@@ -1,16 +1,15 @@
 package io.harness.batch.processing.slackNotification;
 
-import com.google.inject.Singleton;
-
-import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.StringUtils;
-import org.springframework.beans.factory.annotation.Autowired;
 import software.wings.beans.SlackMessage;
 import software.wings.beans.notification.SlackNotificationConfiguration;
 import software.wings.beans.notification.SlackNotificationSetting;
 import software.wings.service.intfc.SlackMessageSender;
 
+import com.google.inject.Singleton;
 import java.util.Objects;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
+import org.springframework.beans.factory.annotation.Autowired;
 
 @Slf4j
 @Singleton

@@ -2,16 +2,15 @@ package io.harness.cvng.verificationjob.services.impl;
 
 import static io.harness.cvng.verificationjob.beans.VerificationJobType.HEALTH;
 
-import com.google.common.base.Preconditions;
-import com.google.inject.Inject;
-
-import com.mongodb.BasicDBObject;
 import io.harness.cvng.verificationjob.beans.VerificationJobDTO;
 import io.harness.cvng.verificationjob.entities.VerificationJob;
 import io.harness.cvng.verificationjob.entities.VerificationJob.VerificationJobKeys;
 import io.harness.cvng.verificationjob.services.api.VerificationJobService;
 import io.harness.persistence.HPersistence;
 
+import com.google.common.base.Preconditions;
+import com.google.inject.Inject;
+import com.mongodb.BasicDBObject;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;

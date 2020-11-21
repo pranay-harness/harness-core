@@ -2,15 +2,13 @@ package software.wings.sm.states;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static java.util.stream.Collectors.toList;
+
 import static software.wings.beans.artifact.Artifact.ContentStatus;
 import static software.wings.beans.artifact.Artifact.ContentStatus.DOWNLOADED;
 import static software.wings.beans.artifact.Artifact.ContentStatus.FAILED;
 import static software.wings.beans.artifact.Artifact.ContentStatus.METADATA_ONLY;
 
-import com.google.common.base.Preconditions;
-import com.google.common.collect.ImmutableMap;
-import com.google.inject.Inject;
+import static java.util.stream.Collectors.toList;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.ExecutionStatus;
@@ -18,7 +16,7 @@ import io.harness.context.ContextElementType;
 import io.harness.delay.DelayEventHelper;
 import io.harness.delay.DelayEventNotifyData;
 import io.harness.tasks.ResponseData;
-import lombok.extern.slf4j.Slf4j;
+
 import software.wings.beans.artifact.Artifact;
 import software.wings.beans.artifact.Artifact.Status;
 import software.wings.service.intfc.ArtifactService;
@@ -28,9 +26,13 @@ import software.wings.sm.State;
 import software.wings.sm.StateType;
 import software.wings.sm.WorkflowStandardParams;
 
+import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableMap;
+import com.google.inject.Inject;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import lombok.extern.slf4j.Slf4j;
 
 @OwnedBy(CDC)
 @Slf4j

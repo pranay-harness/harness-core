@@ -1,13 +1,8 @@
 package software.wings.resources;
 
-import com.google.inject.Inject;
-
-import com.codahale.metrics.annotation.ExceptionMetered;
-import com.codahale.metrics.annotation.Timed;
 import io.harness.event.handler.impl.EventPublishHelper;
 import io.harness.rest.RestResponse;
-import io.swagger.annotations.Api;
-import retrofit2.http.Body;
+
 import software.wings.security.PermissionAttribute.ResourceType;
 import software.wings.security.annotations.Scope;
 import software.wings.service.intfc.verification.CVConfigurationService;
@@ -15,6 +10,10 @@ import software.wings.sm.StateType;
 import software.wings.verification.CVConfiguration;
 import software.wings.verification.log.LogsCVConfiguration;
 
+import com.codahale.metrics.annotation.ExceptionMetered;
+import com.codahale.metrics.annotation.Timed;
+import com.google.inject.Inject;
+import io.swagger.annotations.Api;
 import java.util.List;
 import javax.validation.Valid;
 import javax.ws.rs.DELETE;
@@ -25,6 +24,7 @@ import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
+import retrofit2.http.Body;
 
 /**
  * @author Vaibhav Tulsyan

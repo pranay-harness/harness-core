@@ -4,11 +4,9 @@ import static java.util.Arrays.stream;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 import com.google.inject.Inject;
-
+import java.lang.annotation.Annotation;
 import org.aopalliance.intercept.MethodInterceptor;
 import org.aopalliance.intercept.MethodInvocation;
-
-import java.lang.annotation.Annotation;
 
 /**
  * Created by peeyushaggarwal on 3/22/17.

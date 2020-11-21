@@ -2,6 +2,7 @@ package io.harness.states;
 
 import static io.harness.rule.OwnerRule.ALEKSANDAR;
 import static io.harness.rule.OwnerRule.SHUBHAM;
+
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
@@ -41,15 +42,15 @@ import io.harness.tasks.TaskMode;
 import io.harness.yaml.core.ExecutionElement;
 import io.harness.yaml.core.ParallelStepElement;
 import io.harness.yaml.core.StepElement;
+
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Map;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.Map;
 
 public class LiteEngineTaskStepTest extends CIExecutionTest {
   @Mock private BuildSetupUtils buildSetupUtils;

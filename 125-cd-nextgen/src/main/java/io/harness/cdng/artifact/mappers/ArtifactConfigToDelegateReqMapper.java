@@ -6,9 +6,9 @@ import io.harness.delegate.beans.connector.docker.DockerConnectorDTO;
 import io.harness.delegate.task.artifacts.ArtifactSourceType;
 import io.harness.delegate.task.artifacts.docker.DockerArtifactDelegateRequest;
 import io.harness.security.encryption.EncryptedDataDetail;
-import lombok.experimental.UtilityClass;
 
 import java.util.List;
+import lombok.experimental.UtilityClass;
 
 @UtilityClass
 public class ArtifactConfigToDelegateReqMapper {

@@ -1,9 +1,7 @@
 package software.wings.integration.setup.rest;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static javax.ws.rs.client.Entity.entity;
-import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
-import static org.assertj.core.api.Assertions.assertThat;
+
 import static software.wings.beans.Environment.EnvironmentType.NON_PROD;
 import static software.wings.beans.PhysicalInfrastructureMapping.Builder.aPhysicalInfrastructureMapping;
 import static software.wings.integration.SeedData.randomText;
@@ -14,12 +12,14 @@ import static software.wings.utils.WingsIntegrationTestConstants.SEED_FAKE_HOSTS
 import static software.wings.utils.WingsIntegrationTestConstants.SEED_FAKE_HOSTS_DC_INFRA_KEY;
 import static software.wings.utils.WingsIntegrationTestConstants.SEED_FAKE_HOSTS_INFRA_NAME;
 
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
+import static javax.ws.rs.client.Entity.entity;
+import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.beans.PageResponse;
 import io.harness.exception.WingsException;
 import io.harness.rest.RestResponse;
+
 import software.wings.api.DeploymentType;
 import software.wings.beans.Environment;
 import software.wings.beans.InfrastructureMapping;
@@ -28,6 +28,8 @@ import software.wings.beans.ServiceTemplate;
 import software.wings.integration.UserResourceRestClient;
 import software.wings.settings.SettingVariableTypes;
 
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
 import java.util.Arrays;

@@ -7,16 +7,16 @@ import static io.harness.beans.SecretManagerCapabilities.CREATE_REFERENCE_SECRET
 import static io.harness.eraro.ErrorCode.SECRET_MANAGEMENT_ERROR;
 import static io.harness.rule.OwnerRule.UTKARSH;
 import static io.harness.security.SimpleEncryption.CHARSET;
+
+import static software.wings.settings.SettingVariableTypes.CONFIG_FILE;
+import static software.wings.settings.SettingVariableTypes.SECRET_TEXT;
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.fail;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-import static software.wings.settings.SettingVariableTypes.CONFIG_FILE;
-import static software.wings.settings.SettingVariableTypes.SECRET_TEXT;
-
-import com.google.common.collect.Sets;
 
 import io.harness.CategoryTest;
 import io.harness.beans.EncryptedData;
@@ -31,14 +31,15 @@ import io.harness.rule.Owner;
 import io.harness.secrets.SecretsDao;
 import io.harness.security.encryption.EncryptedDataParams;
 import io.harness.security.encryption.EncryptionType;
+
+import com.google.common.collect.Sets;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.Optional;
 import org.assertj.core.util.Lists;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
-
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.Optional;
 
 public class BaseSecretValidatorTest extends CategoryTest {
   private BaseSecretValidator baseSecretValidator;

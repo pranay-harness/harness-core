@@ -2,10 +2,8 @@ package io.harness.functional.workflow;
 
 import static io.harness.rule.OwnerRule.ROHIT_KUMAR;
 import static io.harness.rule.OwnerRule.YOGESH;
-import static org.assertj.core.api.Assertions.assertThat;
 
-import com.google.common.collect.ImmutableList;
-import com.google.inject.Inject;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.beans.ExecutionStatus;
 import io.harness.category.element.CDFunctionalTests;
@@ -23,9 +21,7 @@ import io.harness.rule.Owner;
 import io.harness.testframework.restutils.ArtifactRestUtils;
 import io.harness.testframework.restutils.InfrastructureDefinitionRestUtils;
 import io.harness.testframework.restutils.WorkflowRestUtils;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
+
 import software.wings.beans.Application;
 import software.wings.beans.AwsAmiInfrastructureMapping;
 import software.wings.beans.Environment;
@@ -41,7 +37,12 @@ import software.wings.infra.InfrastructureDefinition;
 import software.wings.service.impl.aws.model.AwsAsgGetRunningCountData;
 import software.wings.service.intfc.InfrastructureMappingService;
 
+import com.google.common.collect.ImmutableList;
+import com.google.inject.Inject;
 import java.util.List;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 public class AmiWorkflowFunctionalTest extends AbstractFunctionalTest {
   @Inject private OwnerManager ownerManager;

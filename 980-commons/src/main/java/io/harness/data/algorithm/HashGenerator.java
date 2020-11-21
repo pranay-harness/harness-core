@@ -1,9 +1,8 @@
 package io.harness.data.algorithm;
 
-import com.google.common.hash.Hashing;
-
 import io.harness.data.structure.UUIDGenerator;
 
+import com.google.common.hash.Hashing;
 import java.nio.charset.StandardCharsets;
 
 public class HashGenerator {

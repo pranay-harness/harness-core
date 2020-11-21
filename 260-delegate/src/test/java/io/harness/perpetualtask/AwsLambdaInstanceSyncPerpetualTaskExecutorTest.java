@@ -2,6 +2,7 @@ package io.harness.perpetualtask;
 
 import static io.harness.beans.ExecutionStatus.FAILED;
 import static io.harness.beans.ExecutionStatus.SUCCESS;
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.joor.Reflect.on;
 import static org.mockito.Matchers.any;
@@ -11,10 +12,6 @@ import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
-
-import com.google.inject.Inject;
-import com.google.protobuf.Any;
-import com.google.protobuf.ByteString;
 
 import io.harness.DelegateTest;
 import io.harness.beans.ExecutionStatus;
@@ -26,6 +23,22 @@ import io.harness.rest.RestResponse;
 import io.harness.rule.Owner;
 import io.harness.rule.OwnerRule;
 import io.harness.serializer.KryoSerializer;
+
+import software.wings.beans.AwsConfig;
+import software.wings.service.impl.aws.model.request.AwsCloudWatchStatisticsRequest;
+import software.wings.service.impl.aws.model.request.AwsLambdaDetailsRequest;
+import software.wings.service.impl.aws.model.response.AwsCloudWatchStatisticsResponse;
+import software.wings.service.impl.aws.model.response.AwsLambdaDetailsMetricsResponse;
+import software.wings.service.impl.aws.model.response.AwsLambdaDetailsResponse;
+import software.wings.service.intfc.aws.delegate.AwsCloudWatchHelperServiceDelegate;
+import software.wings.service.intfc.aws.delegate.AwsLambdaHelperServiceDelegate;
+
+import com.google.inject.Inject;
+import com.google.protobuf.Any;
+import com.google.protobuf.ByteString;
+import java.io.IOException;
+import java.time.Instant;
+import java.util.ArrayList;
 import org.eclipse.jetty.server.Response;
 import org.junit.Before;
 import org.junit.Test;
@@ -36,18 +49,6 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
 import retrofit2.Call;
-import software.wings.beans.AwsConfig;
-import software.wings.service.impl.aws.model.request.AwsCloudWatchStatisticsRequest;
-import software.wings.service.impl.aws.model.request.AwsLambdaDetailsRequest;
-import software.wings.service.impl.aws.model.response.AwsCloudWatchStatisticsResponse;
-import software.wings.service.impl.aws.model.response.AwsLambdaDetailsMetricsResponse;
-import software.wings.service.impl.aws.model.response.AwsLambdaDetailsResponse;
-import software.wings.service.intfc.aws.delegate.AwsCloudWatchHelperServiceDelegate;
-import software.wings.service.intfc.aws.delegate.AwsLambdaHelperServiceDelegate;
-
-import java.io.IOException;
-import java.time.Instant;
-import java.util.ArrayList;
 
 @RunWith(MockitoJUnitRunner.class)
 public class AwsLambdaInstanceSyncPerpetualTaskExecutorTest extends DelegateTest {

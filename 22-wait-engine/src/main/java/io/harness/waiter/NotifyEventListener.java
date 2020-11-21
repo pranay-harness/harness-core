@@ -3,10 +3,6 @@ package io.harness.waiter;
 import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
 import static io.harness.persistence.HQuery.excludeAuthority;
 
-import com.google.inject.Inject;
-import com.google.inject.Injector;
-
-import com.mongodb.WriteConcern;
 import io.harness.logging.AutoLogContext;
 import io.harness.persistence.HIterator;
 import io.harness.persistence.HPersistence;
@@ -16,14 +12,17 @@ import io.harness.serializer.KryoSerializer;
 import io.harness.tasks.ResponseData;
 import io.harness.waiter.NotifyResponse.NotifyResponseKeys;
 import io.harness.waiter.WaitInstance.WaitInstanceKeys;
+
+import com.google.inject.Inject;
+import com.google.inject.Injector;
+import com.mongodb.WriteConcern;
+import java.time.Duration;
+import java.util.HashMap;
+import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.FindAndModifyOptions;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
-
-import java.time.Duration;
-import java.util.HashMap;
-import java.util.Map;
 
 @Slf4j
 public class NotifyEventListener extends QueueListener<NotifyEvent> {

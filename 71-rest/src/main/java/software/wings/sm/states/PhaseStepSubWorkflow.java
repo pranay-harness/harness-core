@@ -10,18 +10,15 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.govern.Switch.noop;
 import static io.harness.govern.Switch.unhandled;
 import static io.harness.validation.Validator.notNullCheck;
+
+import static software.wings.api.PhaseStepExecutionData.PhaseStepExecutionDataBuilder.aPhaseStepExecutionData;
+import static software.wings.api.ServiceInstanceIdsParam.ServiceInstanceIdsParamBuilder.aServiceInstanceIdsParam;
+
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 import static java.util.stream.Collectors.toList;
-import static software.wings.api.PhaseStepExecutionData.PhaseStepExecutionDataBuilder.aPhaseStepExecutionData;
-import static software.wings.api.ServiceInstanceIdsParam.ServiceInstanceIdsParamBuilder.aServiceInstanceIdsParam;
 
-import com.google.common.annotations.VisibleForTesting;
-import com.google.common.collect.Lists;
-import com.google.inject.Inject;
-
-import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.ExecutionStatus;
 import io.harness.beans.ExecutionStatusResponseData;
@@ -30,7 +27,7 @@ import io.harness.context.ContextElementType;
 import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.exception.InvalidRequestException;
 import io.harness.tasks.ResponseData;
-import org.mongodb.morphia.annotations.Transient;
+
 import software.wings.api.AmiServiceSetupElement;
 import software.wings.api.AmiServiceTrafficShiftAlbSetupElement;
 import software.wings.api.AmiStepExecutionSummary;
@@ -88,10 +85,15 @@ import software.wings.sm.states.azure.AzureVMSSSetupContextElement;
 import software.wings.sm.states.spotinst.SpotInstSetupContextElement;
 import software.wings.sm.states.spotinst.SpotinstTrafficShiftAlbSetupElement;
 
+import com.github.reinert.jjschema.SchemaIgnore;
+import com.google.common.annotations.VisibleForTesting;
+import com.google.common.collect.Lists;
+import com.google.inject.Inject;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import org.mongodb.morphia.annotations.Transient;
 
 /**
  * Created by rishi on 1/12/17.
@@ -681,7 +683,7 @@ public class PhaseStepSubWorkflow extends SubWorkflowState {
     if (isEmpty(elements)) {
       return;
     }
-    contextElements.addAll(elements.stream().filter(this ::isProvisionerElement).collect(toList()));
+    contextElements.addAll(elements.stream().filter(this::isProvisionerElement).collect(toList()));
   }
 
   private boolean isProvisionerElement(ContextElement element) {

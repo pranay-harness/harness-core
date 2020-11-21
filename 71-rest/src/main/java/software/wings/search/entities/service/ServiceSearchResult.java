@@ -4,9 +4,7 @@ import static io.harness.annotations.dev.HarnessTeam.PL;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.data.structure.EmptyPredicate;
-import lombok.Data;
-import lombok.EqualsAndHashCode;
-import lombok.NoArgsConstructor;
+
 import software.wings.api.DeploymentType;
 import software.wings.search.entities.related.audit.RelatedAuditView;
 import software.wings.search.entities.related.deployment.RelatedDeploymentView;
@@ -19,6 +17,9 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.NoArgsConstructor;
 @OwnedBy(PL)
 @Data
 @NoArgsConstructor

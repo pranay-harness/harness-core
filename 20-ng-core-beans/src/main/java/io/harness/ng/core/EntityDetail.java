@@ -1,9 +1,10 @@
 package io.harness.ng.core;
 
-import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import io.harness.EntityType;
 import io.harness.common.EntityReference;
 import io.harness.ng.core.deserializer.EntityDetailDeserializer;
+
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;

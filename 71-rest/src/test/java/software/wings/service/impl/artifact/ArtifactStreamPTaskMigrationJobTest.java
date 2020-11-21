@@ -1,6 +1,13 @@
 package software.wings.service.impl.artifact;
 
 import static io.harness.persistence.HQuery.excludeAuthority;
+
+import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
+import static software.wings.utils.WingsTestConstants.APP_ID;
+import static software.wings.utils.WingsTestConstants.ARTIFACT_STREAM_ID;
+import static software.wings.utils.WingsTestConstants.SERVICE_ID;
+import static software.wings.utils.WingsTestConstants.SETTING_ID;
+
 import static java.util.Arrays.asList;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyBoolean;
@@ -10,13 +17,6 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
-import static software.wings.utils.WingsTestConstants.APP_ID;
-import static software.wings.utils.WingsTestConstants.ARTIFACT_STREAM_ID;
-import static software.wings.utils.WingsTestConstants.SERVICE_ID;
-import static software.wings.utils.WingsTestConstants.SETTING_ID;
-
-import com.google.inject.Inject;
 
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
@@ -24,6 +24,15 @@ import io.harness.lock.AcquiredLock;
 import io.harness.lock.PersistentLocker;
 import io.harness.rule.Owner;
 import io.harness.rule.OwnerRule;
+
+import software.wings.beans.FeatureName;
+import software.wings.beans.artifact.ArtifactStream;
+import software.wings.beans.artifact.DockerArtifactStream;
+import software.wings.dl.WingsPersistence;
+import software.wings.service.intfc.FeatureFlagService;
+
+import com.google.inject.Inject;
+import java.util.Collections;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -35,13 +44,6 @@ import org.mockito.junit.MockitoRule;
 import org.mongodb.morphia.query.FieldEnd;
 import org.mongodb.morphia.query.FindOptions;
 import org.mongodb.morphia.query.Query;
-import software.wings.beans.FeatureName;
-import software.wings.beans.artifact.ArtifactStream;
-import software.wings.beans.artifact.DockerArtifactStream;
-import software.wings.dl.WingsPersistence;
-import software.wings.service.intfc.FeatureFlagService;
-
-import java.util.Collections;
 
 public class ArtifactStreamPTaskMigrationJobTest extends CategoryTest {
   @Mock private ArtifactStreamPTaskHelper artifactStreamPTaskHelper;

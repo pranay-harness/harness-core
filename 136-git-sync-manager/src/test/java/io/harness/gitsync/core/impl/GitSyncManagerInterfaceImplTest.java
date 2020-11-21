@@ -4,11 +4,10 @@ import static io.harness.gitsync.common.YamlConstants.EXTENSION_SEPARATOR;
 import static io.harness.gitsync.common.YamlConstants.PATH_DELIMITER;
 import static io.harness.gitsync.common.YamlConstants.YAML_EXTENSION;
 import static io.harness.rule.OwnerRule.ABHINAV;
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.doReturn;
-
-import com.google.inject.Inject;
 
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.beans.git.YamlGitConfigDTO;
@@ -19,16 +18,17 @@ import io.harness.gitsync.common.beans.YamlChangeSet;
 import io.harness.gitsync.common.service.YamlGitConfigService;
 import io.harness.gitsync.core.service.YamlChangeSetService;
 import io.harness.rule.Owner;
+
+import com.google.inject.Inject;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Optional;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
-
-import java.util.Arrays;
-import java.util.List;
-import java.util.Optional;
 
 public class GitSyncManagerInterfaceImplTest extends GitSyncBaseTest {
   public static final String ACCOUNT_ID = "accountId";

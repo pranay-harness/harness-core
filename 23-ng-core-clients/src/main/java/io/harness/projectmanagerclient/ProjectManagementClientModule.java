@@ -1,14 +1,14 @@
 package io.harness.projectmanagerclient;
 
-import com.google.inject.AbstractModule;
-import com.google.inject.Provides;
-import com.google.inject.Scopes;
-
 import io.harness.projectmanagerclient.remote.ProjectManagerClient;
 import io.harness.projectmanagerclient.remote.ProjectManagerHttpClientFactory;
 import io.harness.remote.client.ServiceHttpClientConfig;
 import io.harness.security.ServiceTokenGenerator;
 import io.harness.serializer.kryo.KryoConverterFactory;
+
+import com.google.inject.AbstractModule;
+import com.google.inject.Provides;
+import com.google.inject.Scopes;
 
 public class ProjectManagementClientModule extends AbstractModule {
   private final ServiceHttpClientConfig projectManagerClientConfig;

@@ -2,14 +2,13 @@ package io.harness.iterator;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 
+import java.util.List;
 import lombok.Builder;
 import lombok.Data;
 import lombok.experimental.FieldNameConstants;
 import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Id;
-
-import java.util.List;
 
 @Data
 @Builder

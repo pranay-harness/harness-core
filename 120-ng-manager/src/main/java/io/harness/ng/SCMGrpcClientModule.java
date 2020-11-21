@@ -2,14 +2,13 @@ package io.harness.ng;
 
 import static io.harness.product.ci.scm.proto.SCMGrpc.newBlockingStub;
 
-import com.google.inject.Provides;
-import com.google.inject.Singleton;
-
-import io.grpc.Channel;
-import io.grpc.netty.shaded.io.grpc.netty.NettyChannelBuilder;
 import io.harness.govern.ProviderModule;
 import io.harness.product.ci.scm.proto.SCMGrpc;
 
+import com.google.inject.Provides;
+import com.google.inject.Singleton;
+import io.grpc.Channel;
+import io.grpc.netty.shaded.io.grpc.netty.NettyChannelBuilder;
 import javax.net.ssl.SSLException;
 
 public class SCMGrpcClientModule extends ProviderModule {

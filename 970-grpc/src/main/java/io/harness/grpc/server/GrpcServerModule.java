@@ -1,5 +1,9 @@
 package io.harness.grpc.server;
 
+import io.harness.grpc.auth.ServiceAuthServerInterceptor;
+import io.harness.grpc.auth.ServiceInfo;
+import io.harness.grpc.auth.ValidateAuthServerInterceptor;
+
 import com.google.common.util.concurrent.Service;
 import com.google.inject.AbstractModule;
 import com.google.inject.Provider;
@@ -7,17 +11,12 @@ import com.google.inject.Singleton;
 import com.google.inject.multibindings.MapBinder;
 import com.google.inject.multibindings.Multibinder;
 import com.google.inject.name.Names;
-
 import io.grpc.BindableService;
 import io.grpc.ServerInterceptor;
 import io.grpc.health.v1.HealthGrpc;
 import io.grpc.protobuf.services.ProtoReflectionService;
 import io.grpc.reflection.v1alpha.ServerReflectionGrpc;
 import io.grpc.services.HealthStatusManager;
-import io.harness.grpc.auth.ServiceAuthServerInterceptor;
-import io.harness.grpc.auth.ServiceInfo;
-import io.harness.grpc.auth.ValidateAuthServerInterceptor;
-
 import java.util.List;
 import java.util.Set;
 

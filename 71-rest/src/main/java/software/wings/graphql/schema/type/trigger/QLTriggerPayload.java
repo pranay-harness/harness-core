@@ -1,8 +1,9 @@
 package software.wings.graphql.schema.type.trigger;
 
-import lombok.Builder;
 import software.wings.security.PermissionAttribute;
 import software.wings.security.annotations.Scope;
+
+import lombok.Builder;
 
 @Scope(PermissionAttribute.ResourceType.SETTING)
 @Builder

@@ -2,13 +2,11 @@ package migrations.all;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.persistence.HQuery.excludeAuthority;
+
 import static software.wings.beans.Application.ApplicationKeys;
 
-import com.google.inject.Inject;
-
 import io.harness.persistence.HIterator;
-import lombok.extern.slf4j.Slf4j;
-import migrations.Migration;
+
 import software.wings.beans.Application;
 import software.wings.beans.security.AppPermission;
 import software.wings.beans.security.UserGroup;
@@ -17,9 +15,12 @@ import software.wings.dl.WingsPersistence;
 import software.wings.security.GenericEntityFilter;
 import software.wings.service.intfc.UserGroupService;
 
+import com.google.inject.Inject;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.stream.Collectors;
+import lombok.extern.slf4j.Slf4j;
+import migrations.Migration;
 
 /**
  * Migration script to cleanup orphan app ids from user groups

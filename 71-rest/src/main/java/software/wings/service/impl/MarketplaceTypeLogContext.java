@@ -1,6 +1,7 @@
 package software.wings.service.impl;
 
 import io.harness.logging.AutoLogContext;
+
 import software.wings.beans.marketplace.MarketPlaceType;
 
 public class MarketplaceTypeLogContext extends AutoLogContext {

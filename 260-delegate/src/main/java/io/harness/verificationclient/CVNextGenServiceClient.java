@@ -13,13 +13,13 @@ import io.harness.cvng.beans.KubernetesActivityDTO;
 import io.harness.cvng.beans.LogRecordDTO;
 import io.harness.cvng.beans.TimeSeriesDataCollectionRecord;
 import io.harness.rest.RestResponse;
+
+import java.util.List;
 import retrofit2.Call;
 import retrofit2.http.Body;
 import retrofit2.http.GET;
 import retrofit2.http.POST;
 import retrofit2.http.Query;
-
-import java.util.List;
 
 /**
  * Created by raghu on 09/17/18.

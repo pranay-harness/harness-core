@@ -1,6 +1,5 @@
 package software.wings.helpers.ext.pcf;
 
-import static com.google.common.base.Charsets.UTF_8;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.logging.LogLevel.ERROR;
@@ -24,25 +23,20 @@ import static io.harness.pcf.model.PcfConstants.PIVOTAL_CLOUD_FOUNDRY_LOG_PREFIX
 import static io.harness.pcf.model.PcfConstants.SYS_VAR_CF_PLUGIN_HOME;
 import static io.harness.pcf.model.PcfRouteType.PCF_ROUTE_TYPE_HTTP;
 import static io.harness.pcf.model.PcfRouteType.PCF_ROUTE_TYPE_TCP;
-import static java.lang.String.format;
-import static java.lang.String.join;
-import static java.util.Collections.emptyList;
-import static java.util.stream.Collectors.toList;
-import static java.util.stream.Collectors.toSet;
-import static org.apache.commons.lang3.StringUtils.EMPTY;
+
 import static software.wings.beans.LogColor.Green;
 import static software.wings.beans.LogColor.Red;
 import static software.wings.beans.LogColor.White;
 import static software.wings.beans.LogHelper.color;
 import static software.wings.beans.LogWeight.Bold;
 
-import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Charsets;
-import com.google.common.cache.CacheBuilder;
-import com.google.common.cache.CacheLoader;
-import com.google.common.cache.LoadingCache;
-import com.google.common.cache.RemovalListener;
-import com.google.inject.Singleton;
+import static com.google.common.base.Charsets.UTF_8;
+import static java.lang.String.format;
+import static java.lang.String.join;
+import static java.util.Collections.emptyList;
+import static java.util.stream.Collectors.toList;
+import static java.util.stream.Collectors.toSet;
+import static org.apache.commons.lang3.StringUtils.EMPTY;
 
 import io.harness.delegate.task.pcf.PcfManifestFileData;
 import io.harness.exception.ExceptionUtils;
@@ -51,6 +45,47 @@ import io.harness.k8s.kubectl.Utils;
 import io.harness.network.Http;
 import io.harness.pcf.model.PcfRouteInfo;
 import io.harness.pcf.model.PcfRouteInfo.PcfRouteInfoBuilder;
+
+import software.wings.beans.AwsConfig;
+import software.wings.beans.DockerConfig;
+import software.wings.beans.GcpConfig;
+import software.wings.beans.SettingAttribute;
+import software.wings.beans.artifact.ArtifactStreamAttributes;
+import software.wings.beans.command.ExecutionLogCallback;
+import software.wings.beans.config.ArtifactoryConfig;
+import software.wings.beans.config.NexusConfig;
+import software.wings.helpers.ext.pcf.request.PcfAppAutoscalarRequestData;
+import software.wings.helpers.ext.pcf.request.PcfCreateApplicationRequestData;
+import software.wings.helpers.ext.pcf.request.PcfRunPluginScriptRequestData;
+
+import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Charsets;
+import com.google.common.cache.CacheBuilder;
+import com.google.common.cache.CacheLoader;
+import com.google.common.cache.LoadingCache;
+import com.google.common.cache.RemovalListener;
+import com.google.inject.Singleton;
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.time.Duration;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.Optional;
+import java.util.Set;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.io.FileUtils;
@@ -96,39 +131,6 @@ import org.zeroturnaround.exec.ProcessExecutor;
 import org.zeroturnaround.exec.ProcessResult;
 import org.zeroturnaround.exec.StartedProcess;
 import org.zeroturnaround.exec.stream.LogOutputStream;
-import software.wings.beans.AwsConfig;
-import software.wings.beans.DockerConfig;
-import software.wings.beans.GcpConfig;
-import software.wings.beans.SettingAttribute;
-import software.wings.beans.artifact.ArtifactStreamAttributes;
-import software.wings.beans.command.ExecutionLogCallback;
-import software.wings.beans.config.ArtifactoryConfig;
-import software.wings.beans.config.NexusConfig;
-import software.wings.helpers.ext.pcf.request.PcfAppAutoscalarRequestData;
-import software.wings.helpers.ext.pcf.request.PcfCreateApplicationRequestData;
-import software.wings.helpers.ext.pcf.request.PcfRunPluginScriptRequestData;
-
-import java.io.File;
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.time.Duration;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
-import java.util.Optional;
-import java.util.Set;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
-import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.stream.Collectors;
 
 @Singleton
 @Slf4j
@@ -1193,7 +1195,7 @@ public class PcfClientImpl implements PcfClient {
       throws PivotalClientApiException, InterruptedException {
     List<Route> routes = getAllRoutesForSpace(pcfRequestConfig);
     if (!CollectionUtils.isEmpty(routes)) {
-      return routes.stream().map(this ::getPathFromRouteMap).collect(toList());
+      return routes.stream().map(this::getPathFromRouteMap).collect(toList());
     }
 
     return Collections.EMPTY_LIST;
@@ -1808,7 +1810,7 @@ public class PcfClientImpl implements PcfClient {
   @VisibleForTesting
   List<String> findRoutesNeedToBeCreated(List<String> routes, List<Route> routeList) {
     if (isNotEmpty(routes)) {
-      Set<String> routesExisting = routeList.stream().map(this ::getPathFromRouteMap).collect(toSet());
+      Set<String> routesExisting = routeList.stream().map(this::getPathFromRouteMap).collect(toSet());
       return routes.stream().filter(route -> !routesExisting.contains(route)).collect(toList());
     }
 

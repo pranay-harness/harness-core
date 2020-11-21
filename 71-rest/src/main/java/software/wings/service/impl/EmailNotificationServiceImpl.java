@@ -2,10 +2,8 @@ package software.wings.service.impl;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.microservice.NotifyEngineTarget.GENERAL;
-import static software.wings.beans.Application.GLOBAL_APP_ID;
 
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
+import static software.wings.beans.Application.GLOBAL_APP_ID;
 
 import io.harness.beans.DelegateTask;
 import io.harness.delegate.beans.TaskData;
@@ -14,7 +12,7 @@ import io.harness.queue.QueuePublisher;
 import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.tasks.Cd1SetupFields;
 import io.harness.waiter.WaitNotifyEngine;
-import lombok.extern.slf4j.Slf4j;
+
 import software.wings.app.MainConfiguration;
 import software.wings.beans.TaskType;
 import software.wings.beans.alert.AlertType;
@@ -31,9 +29,12 @@ import software.wings.service.intfc.security.SecretManager;
 import software.wings.utils.EmailHelperUtils;
 import software.wings.utils.EmailUtils;
 
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * Created by peeyushaggarwal on 5/23/16.

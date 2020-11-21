@@ -1,11 +1,11 @@
 package software.wings.beans.infrastructure.instance.info;
 
-import lombok.Data;
-import lombok.experimental.FieldNameConstants;
 import software.wings.beans.infrastructure.instance.InvocationCount;
 import software.wings.beans.infrastructure.instance.InvocationCount.InvocationCountKey;
 
 import java.util.Map;
+import lombok.Data;
+import lombok.experimental.FieldNameConstants;
 
 @Data
 @FieldNameConstants(innerTypeName = "ServerlessInstanceInfoKeys")

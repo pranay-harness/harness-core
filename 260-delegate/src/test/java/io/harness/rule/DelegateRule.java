@@ -1,11 +1,5 @@
 package io.harness.rule;
 
-import com.google.common.collect.ImmutableSet;
-import com.google.inject.Injector;
-import com.google.inject.Module;
-import com.google.inject.Provides;
-import com.google.inject.Singleton;
-
 import io.harness.factory.ClosingFactory;
 import io.harness.govern.ProviderModule;
 import io.harness.govern.ServersModule;
@@ -15,18 +9,23 @@ import io.harness.serializer.KryoRegistrar;
 import io.harness.testing.ComponentTestsModule;
 import io.harness.threading.CurrentThreadExecutor;
 import io.harness.threading.ExecutorModule;
+
+import com.google.common.collect.ImmutableSet;
+import com.google.inject.Injector;
+import com.google.inject.Module;
+import com.google.inject.Provides;
+import com.google.inject.Singleton;
+import java.io.Closeable;
+import java.lang.annotation.Annotation;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Set;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.rules.MethodRule;
 import org.junit.runners.model.FrameworkMethod;
 import org.junit.runners.model.Statement;
 import org.mongodb.morphia.ObjectFactory;
 import org.mongodb.morphia.mapping.DefaultCreator;
-
-import java.io.Closeable;
-import java.lang.annotation.Annotation;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Set;
 
 @Slf4j
 public class DelegateRule implements MethodRule, InjectorRuleMixin {

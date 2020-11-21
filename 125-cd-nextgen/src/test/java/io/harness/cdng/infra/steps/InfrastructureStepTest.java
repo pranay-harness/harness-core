@@ -1,6 +1,7 @@
 package io.harness.cdng.infra.steps;
 
 import static io.harness.rule.OwnerRule.VAIBHAV_SI;
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.doReturn;
 
@@ -20,6 +21,9 @@ import io.harness.ng.core.environment.beans.Environment;
 import io.harness.ng.core.environment.beans.EnvironmentType;
 import io.harness.ng.core.environment.services.EnvironmentService;
 import io.harness.rule.Owner;
+
+import java.util.Collections;
+import java.util.HashMap;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -27,9 +31,6 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnit;
 import org.mockito.junit.MockitoRule;
-
-import java.util.Collections;
-import java.util.HashMap;
 
 public class InfrastructureStepTest extends CategoryTest {
   @Rule public MockitoRule mockitoRule = MockitoJUnit.rule();

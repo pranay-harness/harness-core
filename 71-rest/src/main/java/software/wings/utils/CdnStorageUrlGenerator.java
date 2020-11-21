@@ -2,20 +2,19 @@ package software.wings.utils;
 
 import static software.wings.utils.SignedUrls.signUrl;
 
-import com.google.inject.Singleton;
-
-import lombok.AccessLevel;
-import lombok.experimental.FieldDefaults;
-import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.StringUtils;
 import software.wings.cdn.CdnConfig;
 
+import com.google.inject.Singleton;
 import java.net.URI;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.util.Base64;
 import java.util.Calendar;
 import java.util.Date;
+import lombok.AccessLevel;
+import lombok.experimental.FieldDefaults;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 
 @Singleton
 @Slf4j

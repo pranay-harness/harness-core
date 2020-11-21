@@ -2,8 +2,10 @@ package software.wings.service.mappers.artifact;
 
 import io.harness.artifacts.docker.beans.DockerInternalConfig;
 import io.harness.data.structure.EmptyPredicate;
-import lombok.experimental.UtilityClass;
+
 import software.wings.beans.DockerConfig;
+
+import lombok.experimental.UtilityClass;
 
 @UtilityClass
 public class DockerConfigToInternalMapper {

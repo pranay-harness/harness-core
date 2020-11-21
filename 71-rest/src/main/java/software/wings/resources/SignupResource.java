@@ -1,20 +1,17 @@
 package software.wings.resources;
 
 import static io.harness.eraro.ErrorCode.INVALID_REQUEST;
+
 import static software.wings.security.PermissionAttribute.PermissionType.LOGGED_IN;
 import static software.wings.signup.BugsnagConstants.CLUSTER_TYPE;
 import static software.wings.signup.BugsnagConstants.FREEMIUM;
 import static software.wings.signup.BugsnagConstants.ONBOARDING;
 
-import com.google.inject.Inject;
-
 import io.harness.eraro.Level;
 import io.harness.exception.WingsException;
 import io.harness.rest.RestResponse;
 import io.harness.security.annotations.PublicApi;
-import io.swagger.annotations.Api;
-import lombok.extern.slf4j.Slf4j;
-import org.hibernate.validator.constraints.NotEmpty;
+
 import software.wings.beans.BugsnagTab;
 import software.wings.beans.ErrorData;
 import software.wings.beans.User;
@@ -29,6 +26,8 @@ import software.wings.service.intfc.signup.SignupException;
 import software.wings.service.intfc.signup.SignupService;
 import software.wings.signup.BugsnagErrorReporter;
 
+import com.google.inject.Inject;
+import io.swagger.annotations.Api;
 import java.util.Collections;
 import java.util.List;
 import javax.ws.rs.Consumes;
@@ -41,6 +40,8 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+import lombok.extern.slf4j.Slf4j;
+import org.hibernate.validator.constraints.NotEmpty;
 
 @Api("signup")
 @Path("/signup")

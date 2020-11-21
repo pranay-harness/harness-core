@@ -1,5 +1,7 @@
 package com.google.devtools.coverageoutputgenerator;
 
+import static java.nio.charset.StandardCharsets.UTF_8;
+
 import java.io.BufferedWriter;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -9,8 +11,6 @@ import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
-
-import static java.nio.charset.StandardCharsets.UTF_8;
 
 class SonarQubeCoverageReportPrinter {
   private static final Logger log = Logger.getLogger(SonarQubeCoverageReportPrinter.class.getName());

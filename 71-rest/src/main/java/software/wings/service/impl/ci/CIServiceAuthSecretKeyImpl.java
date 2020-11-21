@@ -3,12 +3,13 @@ package software.wings.service.impl.ci;
 import static io.harness.cvng.core.services.CVNextGenConstants.VERIFICATION_SERVICE_SECRET;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
-import com.google.inject.Inject;
-
 import io.harness.entity.ServiceSecretKey;
 import io.harness.entity.ServiceSecretKey.ServiceSecretKeyKeys;
 import io.harness.persistence.Store;
+
 import software.wings.dl.WingsPersistence;
+
+import com.google.inject.Inject;
 
 public class CIServiceAuthSecretKeyImpl implements CIServiceAuthSecretKey {
   @Inject private WingsPersistence wingsPersistence;

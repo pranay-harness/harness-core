@@ -2,22 +2,22 @@ package software.wings.beans.infrastructure;
 
 import static software.wings.beans.infrastructure.Host.HostKeys;
 
-import com.google.common.base.MoreObjects;
-
-import com.amazonaws.services.ec2.model.Instance;
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import io.harness.annotation.HarnessEntity;
 import io.harness.beans.EmbeddedUser;
 import io.harness.mongo.index.CdIndex;
 import io.harness.mongo.index.FdIndex;
 import io.harness.mongo.index.Field;
+
+import software.wings.beans.Base;
+
+import com.amazonaws.services.ec2.model.Instance;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.google.common.base.MoreObjects;
+import java.util.Map;
+import java.util.Objects;
 import lombok.experimental.FieldNameConstants;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Entity;
-import software.wings.beans.Base;
-
-import java.util.Map;
-import java.util.Objects;
 
 /**
  * The Class Host.
@@ -238,7 +238,7 @@ public class Host extends Base {
   public int hashCode() {
     return 31 * super.hashCode()
         + Objects.hash(envId, serviceTemplateId, infraMappingId, computeProviderId, hostName, hostConnAttr,
-              bastionConnAttr, winrmConnAttr);
+            bastionConnAttr, winrmConnAttr);
   }
 
   @Override

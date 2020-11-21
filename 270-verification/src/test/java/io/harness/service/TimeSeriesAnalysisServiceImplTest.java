@@ -9,6 +9,10 @@ import static io.harness.rule.OwnerRule.KAMAL;
 import static io.harness.rule.OwnerRule.PRAVEEN;
 import static io.harness.rule.OwnerRule.RAGHU;
 import static io.harness.rule.OwnerRule.SOWMYA;
+
+import static software.wings.common.VerificationConstants.CV_24x7_STATE_EXECUTION;
+import static software.wings.service.impl.newrelic.NewRelicMetricDataRecord.DEFAULT_GROUP_NAME;
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
@@ -16,14 +20,6 @@ import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.when;
-import static software.wings.common.VerificationConstants.CV_24x7_STATE_EXECUTION;
-import static software.wings.service.impl.newrelic.NewRelicMetricDataRecord.DEFAULT_GROUP_NAME;
-
-import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.Sets;
-import com.google.common.collect.TreeBasedTable;
-import com.google.gson.JsonParser;
-import com.google.inject.Inject;
 
 import io.harness.VerificationBaseTest;
 import io.harness.beans.ExecutionStatus;
@@ -42,15 +38,7 @@ import io.harness.serializer.JsonUtils;
 import io.harness.service.intfc.LearningEngineService;
 import io.harness.service.intfc.TimeSeriesAnalysisService;
 import io.harness.time.Timestamp;
-import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.reflect.FieldUtils;
-import org.assertj.core.util.Lists;
-import org.intellij.lang.annotations.Language;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
-import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
+
 import software.wings.dl.WingsPersistence;
 import software.wings.metrics.MetricType;
 import software.wings.metrics.RiskLevel;
@@ -78,6 +66,11 @@ import software.wings.service.intfc.analysis.ClusterLevel;
 import software.wings.sm.StateType;
 import software.wings.verification.CVConfiguration;
 
+import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Sets;
+import com.google.common.collect.TreeBasedTable;
+import com.google.gson.JsonParser;
+import com.google.inject.Inject;
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -92,6 +85,15 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.IntStream;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.reflect.FieldUtils;
+import org.assertj.core.util.Lists;
+import org.intellij.lang.annotations.Language;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
 
 @Slf4j
 public class TimeSeriesAnalysisServiceImplTest extends VerificationBaseTest {

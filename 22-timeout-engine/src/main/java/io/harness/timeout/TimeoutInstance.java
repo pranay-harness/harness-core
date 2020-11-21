@@ -1,6 +1,7 @@
 package io.harness.timeout;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
+
 import static java.time.Duration.ofDays;
 
 import io.harness.annotations.dev.OwnedBy;
@@ -8,6 +9,11 @@ import io.harness.iterator.PersistentRegularIterable;
 import io.harness.mongo.index.FdIndex;
 import io.harness.mongo.index.FdTtlIndex;
 import io.harness.persistence.UuidAccess;
+
+import java.time.Duration;
+import java.time.OffsetDateTime;
+import java.util.Date;
+import javax.validation.constraints.NotNull;
 import lombok.Builder;
 import lombok.Data;
 import lombok.experimental.FieldNameConstants;
@@ -17,11 +23,6 @@ import org.springframework.data.annotation.Id;
 import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.annotation.Version;
 import org.springframework.data.mongodb.core.mapping.Document;
-
-import java.time.Duration;
-import java.time.OffsetDateTime;
-import java.util.Date;
-import javax.validation.constraints.NotNull;
 
 @OwnedBy(CDC)
 @Data

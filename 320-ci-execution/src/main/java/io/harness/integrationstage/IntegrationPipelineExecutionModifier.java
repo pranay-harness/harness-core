@@ -1,7 +1,5 @@
 package io.harness.integrationstage;
 
-import com.google.inject.Singleton;
-
 import io.harness.beans.stages.IntegrationStage;
 import io.harness.beans.yaml.extended.infrastrucutre.Infrastructure;
 import io.harness.beans.yaml.extended.infrastrucutre.UseFromStageInfraYaml;
@@ -12,11 +10,12 @@ import io.harness.yaml.core.ParallelStageElement;
 import io.harness.yaml.core.StageElement;
 import io.harness.yaml.core.auxiliary.intfc.StageElementWrapper;
 import io.harness.yaml.core.intfc.StageType;
-import lombok.extern.slf4j.Slf4j;
 
+import com.google.inject.Singleton;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Singleton

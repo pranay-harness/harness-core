@@ -1,24 +1,26 @@
 package software.wings.integration.setup.rest;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
+
+import static software.wings.utils.WingsIntegrationTestConstants.API_BASE;
+
 import static javax.ws.rs.client.Entity.entity;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 import static org.assertj.core.api.Assertions.assertThat;
-import static software.wings.utils.WingsIntegrationTestConstants.API_BASE;
-
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
 
 import io.harness.beans.PageResponse;
 import io.harness.rest.RestResponse;
-import lombok.extern.slf4j.Slf4j;
+
 import software.wings.beans.Account;
 
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
 import javax.ws.rs.client.Client;
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.GenericType;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * @author rktummala on 09/25/18

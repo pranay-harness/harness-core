@@ -1,12 +1,12 @@
 package io.harness.governance.pipeline.service.model;
 
 import io.harness.data.structure.CollectionUtils;
-import lombok.Value;
 
 import java.util.Collections;
 import java.util.List;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
+import lombok.Value;
 
 /**
  * Associates a weight with a set of tags.

@@ -1,6 +1,5 @@
 package io.harness.batch.processing.dummydata;
 
-import com.amazonaws.services.ecs.model.LaunchType;
 import io.harness.batch.processing.ccm.ClusterType;
 import io.harness.batch.processing.dao.intfc.InstanceDataDao;
 import io.harness.batch.processing.pricing.data.CloudProvider;
@@ -10,10 +9,8 @@ import io.harness.ccm.commons.beans.InstanceState;
 import io.harness.ccm.commons.beans.InstanceType;
 import io.harness.ccm.commons.beans.Resource;
 import io.harness.ccm.commons.entities.InstanceData;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.stereotype.Service;
 
+import com.amazonaws.services.ecs.model.LaunchType;
 import java.security.SecureRandom;
 import java.time.Instant;
 import java.util.ArrayList;
@@ -22,6 +19,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.IntStream;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.stereotype.Service;
 
 @Service
 @Qualifier("EcsDummyInstanceDataGenerator")

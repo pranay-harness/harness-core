@@ -1,8 +1,5 @@
 package io.harness.ccm.views.service.impl;
 
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
-
 import io.harness.ccm.views.dao.CEViewDao;
 import io.harness.ccm.views.entities.CEView;
 import io.harness.ccm.views.entities.ViewChartType;
@@ -14,11 +11,13 @@ import io.harness.ccm.views.entities.ViewVisualization;
 import io.harness.ccm.views.graphql.QLCEView;
 import io.harness.ccm.views.service.CEViewService;
 import io.harness.exception.InvalidRequestException;
-import lombok.extern.slf4j.Slf4j;
 
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Singleton

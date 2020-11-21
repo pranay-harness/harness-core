@@ -3,15 +3,8 @@ package software.wings.sm.states;
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.validation.Validator.notNullCheck;
 
-import com.google.inject.Inject;
-
-import com.github.reinert.jjschema.Attributes;
-import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.annotations.dev.OwnedBy;
-import lombok.Setter;
-import lombok.experimental.FieldNameConstants;
-import lombok.extern.slf4j.Slf4j;
-import org.mongodb.morphia.annotations.Transient;
+
 import software.wings.api.ForkElement;
 import software.wings.beans.LoopEnvResumeStateParams;
 import software.wings.sm.ExecutionContext;
@@ -24,10 +17,17 @@ import software.wings.sm.StateExecutionInstanceHelper;
 import software.wings.sm.StateType;
 import software.wings.sm.resume.ResumeStateUtils;
 
+import com.github.reinert.jjschema.Attributes;
+import com.github.reinert.jjschema.SchemaIgnore;
+import com.google.inject.Inject;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import lombok.Setter;
+import lombok.experimental.FieldNameConstants;
+import lombok.extern.slf4j.Slf4j;
+import org.mongodb.morphia.annotations.Transient;
 
 @OwnedBy(CDC)
 @Attributes(title = "EnvLoopResume")

@@ -4,19 +4,20 @@ import static io.harness.cvng.analysis.entities.TimeSeriesCumulativeSums.MetricS
 import static io.harness.cvng.analysis.entities.TimeSeriesCumulativeSums.TransactionMetricSums;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.rule.OwnerRule.PRAVEEN;
+
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 public class TimeSeriesCumulativeSumsTest extends CategoryTest {
   @Test

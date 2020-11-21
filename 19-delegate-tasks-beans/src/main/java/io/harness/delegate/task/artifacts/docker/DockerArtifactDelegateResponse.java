@@ -3,6 +3,7 @@ package io.harness.delegate.task.artifacts.docker;
 import io.harness.delegate.task.artifacts.ArtifactSourceType;
 import io.harness.delegate.task.artifacts.response.ArtifactBuildDetailsNG;
 import io.harness.delegate.task.artifacts.response.ArtifactDelegateResponse;
+
 import lombok.Builder;
 import lombok.EqualsAndHashCode;
 import lombok.Value;

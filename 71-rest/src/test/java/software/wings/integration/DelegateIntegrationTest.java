@@ -1,6 +1,7 @@
 package software.wings.integration;
 
 import static io.harness.rule.OwnerRule.BRETT;
+
 import static java.util.Arrays.asList;
 import static java.util.stream.Collectors.toList;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -9,6 +10,17 @@ import static org.awaitility.Awaitility.await;
 import io.harness.category.element.DeprecatedIntegrationTests;
 import io.harness.network.Http;
 import io.harness.rule.Owner;
+
+import software.wings.beans.Delegate;
+
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Set;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FileUtils;
 import org.awaitility.Duration;
@@ -20,16 +32,6 @@ import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.zeroturnaround.exec.ProcessExecutor;
-import software.wings.beans.Delegate;
-
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Set;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
 
 /**
  * Created by anubhaw on 6/21/17.

@@ -11,7 +11,6 @@ import com.codahale.metrics.Timer;
 import io.prometheus.client.Collector;
 import io.prometheus.client.Collector.Describable;
 import io.prometheus.client.Collector.MetricFamilySamples.Sample;
-
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Iterator;

@@ -1,8 +1,5 @@
 package io.harness.cvng.analysis.services.impl;
 
-import com.google.common.base.Preconditions;
-import com.google.inject.Inject;
-
 import io.harness.cvng.analysis.entities.HealthVerificationPeriod;
 import io.harness.cvng.analysis.entities.LogAnalysisResult;
 import io.harness.cvng.analysis.entities.TimeSeriesRiskSummary;
@@ -17,9 +14,11 @@ import io.harness.cvng.dashboard.services.api.HealthVerificationHeatMapService;
 import io.harness.cvng.statemachine.beans.AnalysisStatus;
 import io.harness.cvng.verificationjob.entities.VerificationJobInstance;
 import io.harness.cvng.verificationjob.services.api.VerificationJobInstanceService;
-import lombok.extern.slf4j.Slf4j;
 
+import com.google.common.base.Preconditions;
+import com.google.inject.Inject;
 import java.time.Instant;
+import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class HealthVerificationServiceImpl implements HealthVerificationService {

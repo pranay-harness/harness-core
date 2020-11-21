@@ -1,10 +1,11 @@
 package software.wings.yaml.setting;
 
+import software.wings.security.UsageRestrictions;
+import software.wings.settings.SettingValue;
+
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
-import software.wings.security.UsageRestrictions;
-import software.wings.settings.SettingValue;
 
 @Data
 @NoArgsConstructor

@@ -2,14 +2,9 @@ package software.wings.search.entities.service;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
 
-import com.google.common.collect.Sets;
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
-
-import com.mongodb.DBObject;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.data.structure.EmptyPredicate;
-import lombok.extern.slf4j.Slf4j;
+
 import software.wings.audit.AuditHeader;
 import software.wings.audit.AuditHeader.AuditHeaderKeys;
 import software.wings.audit.EntityAuditRecord;
@@ -35,12 +30,17 @@ import software.wings.search.framework.SearchEntityUtils;
 import software.wings.search.framework.changestreams.ChangeEvent;
 import software.wings.search.framework.changestreams.ChangeType;
 
+import com.google.common.collect.Sets;
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
+import com.mongodb.DBObject;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import lombok.extern.slf4j.Slf4j;
 
 @OwnedBy(PL)
 @Slf4j
@@ -93,7 +93,7 @@ public class ServiceChangeHandler implements ChangeHandler {
       if (!toBeDeletedServiceIds.isEmpty()) {
         result = result
             && searchDao.removeFromListInMultipleDocuments(
-                   ServiceSearchEntity.TYPE, fieldToUpdate, toBeDeletedServiceIds, workflow.getUuid());
+                ServiceSearchEntity.TYPE, fieldToUpdate, toBeDeletedServiceIds, workflow.getUuid());
       }
     }
     if (changeEvent.getChanges().containsField(WorkflowKeys.name)) {
@@ -104,7 +104,7 @@ public class ServiceChangeHandler implements ChangeHandler {
       String fieldToUpdate = WorkflowKeys.name;
       result = result
           && searchDao.updateListInMultipleDocuments(
-                 ServiceSearchEntity.TYPE, entityType, newValue, documentToUpdate, fieldToUpdate);
+              ServiceSearchEntity.TYPE, entityType, newValue, documentToUpdate, fieldToUpdate);
     }
     return result;
   }
@@ -150,7 +150,7 @@ public class ServiceChangeHandler implements ChangeHandler {
       if (EmptyPredicate.isNotEmpty(toBeDeletedServiceIds)) {
         result = result
             && searchDao.removeFromListInMultipleDocuments(
-                   ServiceSearchEntity.TYPE, fieldToUpdate, toBeDeletedServiceIds, pipeline.getUuid());
+                ServiceSearchEntity.TYPE, fieldToUpdate, toBeDeletedServiceIds, pipeline.getUuid());
       }
     }
     if (changeEvent.getChanges().containsField(WorkflowKeys.name)) {
@@ -161,7 +161,7 @@ public class ServiceChangeHandler implements ChangeHandler {
       String fieldToUpdate = PipelineKeys.name;
       result = result
           && searchDao.updateListInMultipleDocuments(
-                 ServiceSearchEntity.TYPE, entityType, newValue, documentToUpdate, fieldToUpdate);
+              ServiceSearchEntity.TYPE, entityType, newValue, documentToUpdate, fieldToUpdate);
     }
     return result;
   }
@@ -198,7 +198,7 @@ public class ServiceChangeHandler implements ChangeHandler {
           workflowExecution.getCreatedAt(), DAYS_TO_RETAIN);
       result = result
           && searchDao.appendToListInMultipleDocuments(ServiceSearchEntity.TYPE, fieldToUpdate, documentsToUpdate,
-                 deploymentRelatedEntityViewMap, MAX_RUNTIME_ENTITIES);
+              deploymentRelatedEntityViewMap, MAX_RUNTIME_ENTITIES);
     }
     return result;
   }
@@ -247,10 +247,10 @@ public class ServiceChangeHandler implements ChangeHandler {
               relatedAuditViewBuilder.getAuditRelatedEntityViewMap(auditHeader, entityAuditRecord);
           result = result
               && searchDao.addTimestamp(ServiceSearchEntity.TYPE, auditTimestampField, documentToUpdate,
-                     auditHeader.getCreatedAt(), DAYS_TO_RETAIN);
+                  auditHeader.getCreatedAt(), DAYS_TO_RETAIN);
           result = result
               && searchDao.appendToListInSingleDocument(ServiceSearchEntity.TYPE, fieldToUpdate, documentToUpdate,
-                     auditRelatedEntityViewMap, MAX_RUNTIME_ENTITIES);
+                  auditRelatedEntityViewMap, MAX_RUNTIME_ENTITIES);
           isAffectedResourceHandled.put(entityAuditRecord.getAffectedResourceId(), true);
         }
       }

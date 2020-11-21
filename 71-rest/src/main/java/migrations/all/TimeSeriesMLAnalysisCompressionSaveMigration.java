@@ -2,20 +2,22 @@ package migrations.all;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+
 import static java.lang.Integer.max;
 
-import com.google.inject.Inject;
-
-import com.mongodb.BasicDBObject;
-import com.mongodb.BulkWriteOperation;
-import com.mongodb.DBCollection;
 import io.harness.persistence.HIterator;
-import lombok.extern.slf4j.Slf4j;
-import migrations.Migration;
+
 import software.wings.dl.WingsPersistence;
 import software.wings.service.impl.analysis.TimeSeriesMLAnalysisRecord;
 import software.wings.service.impl.analysis.TimeSeriesMLMetricSummary;
 import software.wings.service.impl.analysis.TimeSeriesMLTxnSummary;
+
+import com.google.inject.Inject;
+import com.mongodb.BasicDBObject;
+import com.mongodb.BulkWriteOperation;
+import com.mongodb.DBCollection;
+import lombok.extern.slf4j.Slf4j;
+import migrations.Migration;
 @Slf4j
 public class TimeSeriesMLAnalysisCompressionSaveMigration implements Migration {
   private static final int BATCH_SIZE = 50;

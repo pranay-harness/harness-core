@@ -1,15 +1,14 @@
 package io.harness.yaml;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static java.util.Arrays.asList;
 
-import com.google.common.collect.Lists;
+import static java.util.Arrays.asList;
 
 import com.fasterxml.jackson.dataformat.yaml.snakeyaml.introspector.Property;
 import com.fasterxml.jackson.dataformat.yaml.snakeyaml.nodes.NodeTuple;
 import com.fasterxml.jackson.dataformat.yaml.snakeyaml.nodes.Tag;
 import com.fasterxml.jackson.dataformat.yaml.snakeyaml.representer.Representer;
-
+import com.google.common.collect.Lists;
 import java.beans.Transient;
 import java.lang.reflect.Field;
 import java.util.Collection;

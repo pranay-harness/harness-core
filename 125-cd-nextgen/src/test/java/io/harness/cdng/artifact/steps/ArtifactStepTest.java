@@ -1,6 +1,7 @@
 package io.harness.cdng.artifact.steps;
 
 import static io.harness.rule.OwnerRule.ARCHIT;
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.when;
@@ -27,6 +28,11 @@ import io.harness.rule.Owner;
 import io.harness.state.io.StepResponse.StepOutcome;
 import io.harness.tasks.ResponseData;
 import io.harness.tasks.Task;
+
+import software.wings.beans.TaskType;
+
+import java.util.HashMap;
+import java.util.Map;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -37,10 +43,6 @@ import org.mockito.Mock;
 import org.mockito.Spy;
 import org.mockito.junit.MockitoJUnit;
 import org.mockito.junit.MockitoRule;
-import software.wings.beans.TaskType;
-
-import java.util.HashMap;
-import java.util.Map;
 
 public class ArtifactStepTest extends CategoryTest {
   @Rule public MockitoRule mockitoRule = MockitoJUnit.rule();

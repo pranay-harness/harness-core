@@ -2,9 +2,6 @@ package io.harness.gitsync.core.impl;
 
 import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
 
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
-
 import io.harness.git.model.GitFileChange;
 import io.harness.gitsync.common.beans.YamlChangeSet;
 import io.harness.gitsync.core.beans.GitSuccessFulChangeDetail;
@@ -13,10 +10,12 @@ import io.harness.gitsync.core.beans.YamlSuccessfulChange;
 import io.harness.gitsync.core.dao.api.repositories.YamlSuccessfulChange.YamlSuccessfulChangeRepository;
 import io.harness.gitsync.core.service.YamlSuccessfulChangeService;
 import io.harness.logging.AccountLogContext;
+
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
+import java.util.Optional;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.ListUtils;
-
-import java.util.Optional;
 
 @Singleton
 @Slf4j

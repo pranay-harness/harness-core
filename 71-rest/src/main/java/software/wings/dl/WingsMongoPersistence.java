@@ -8,18 +8,14 @@ import static io.harness.encryption.EncryptionReflectUtils.isSecretReference;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.persistence.HQuery.allChecks;
 import static io.harness.persistence.HQuery.excludeAuthority;
-import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
+
 import static software.wings.utils.WingsReflectionUtils.buildSecretIdsToParentsMap;
 import static software.wings.utils.WingsReflectionUtils.fetchSecretParentsUpdateDetailList;
 import static software.wings.utils.WingsReflectionUtils.getEncryptableSetting;
 import static software.wings.utils.WingsReflectionUtils.isSetByYaml;
 
-import com.google.common.collect.Lists;
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
-import com.google.inject.name.Named;
+import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 
-import io.dropwizard.lifecycle.Managed;
 import io.harness.beans.EncryptedData;
 import io.harness.beans.EncryptedDataParent;
 import io.harness.beans.PageRequest;
@@ -40,13 +36,7 @@ import io.harness.persistence.HQuery.QueryChecks;
 import io.harness.persistence.PersistentEntity;
 import io.harness.persistence.UuidAware;
 import io.harness.reflection.ReflectionUtils;
-import lombok.NonNull;
-import org.apache.commons.collections.CollectionUtils;
-import org.mongodb.morphia.AdvancedDatastore;
-import org.mongodb.morphia.DatastoreImpl;
-import org.mongodb.morphia.mapping.Mapper;
-import org.mongodb.morphia.query.Query;
-import org.mongodb.morphia.query.UpdateOperations;
+
 import software.wings.annotation.EncryptableSetting;
 import software.wings.beans.Base;
 import software.wings.beans.ServiceVariable;
@@ -60,6 +50,11 @@ import software.wings.security.UserThreadLocal;
 import software.wings.service.intfc.security.SecretManager;
 import software.wings.settings.SettingVariableTypes;
 
+import com.google.common.collect.Lists;
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
+import com.google.inject.name.Named;
+import io.dropwizard.lifecycle.Managed;
 import java.lang.reflect.Field;
 import java.util.Collections;
 import java.util.HashMap;
@@ -71,6 +66,13 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.Callable;
+import lombok.NonNull;
+import org.apache.commons.collections.CollectionUtils;
+import org.mongodb.morphia.AdvancedDatastore;
+import org.mongodb.morphia.DatastoreImpl;
+import org.mongodb.morphia.mapping.Mapper;
+import org.mongodb.morphia.query.Query;
+import org.mongodb.morphia.query.UpdateOperations;
 
 /**
  * The Class WingsMongoPersistence.

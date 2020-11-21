@@ -2,15 +2,14 @@ package io.harness.registries;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 
-import com.google.inject.Injector;
-
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.reflection.CodeUtils;
-import org.apache.commons.lang3.tuple.Pair;
 
+import com.google.inject.Injector;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.stream.Collectors;
+import org.apache.commons.lang3.tuple.Pair;
 
 @OwnedBy(CDC)
 public interface Registrar<K, T> {

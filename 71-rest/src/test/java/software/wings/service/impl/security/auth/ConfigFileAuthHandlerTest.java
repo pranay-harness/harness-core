@@ -2,6 +2,11 @@ package software.wings.service.impl.security.auth;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.rule.OwnerRule.UJJAWAL;
+
+import static software.wings.beans.EntityType.ENVIRONMENT;
+import static software.wings.beans.EntityType.SERVICE;
+import static software.wings.beans.EntityType.SERVICE_TEMPLATE;
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyList;
@@ -10,22 +15,11 @@ import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.when;
-import static software.wings.beans.EntityType.ENVIRONMENT;
-import static software.wings.beans.EntityType.SERVICE;
-import static software.wings.beans.EntityType.SERVICE_TEMPLATE;
-
-import com.google.inject.Inject;
 
 import io.harness.category.element.UnitTests;
 import io.harness.eraro.ErrorCode;
 import io.harness.rule.Owner;
-import lombok.AccessLevel;
-import lombok.experimental.FieldDefaults;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
+
 import software.wings.WingsBaseTest;
 import software.wings.beans.ConfigFile;
 import software.wings.beans.ServiceTemplate;
@@ -34,6 +28,15 @@ import software.wings.security.UserRequestContext;
 import software.wings.security.UserThreadLocal;
 import software.wings.service.intfc.AuthService;
 import software.wings.service.intfc.ServiceTemplateService;
+
+import com.google.inject.Inject;
+import lombok.AccessLevel;
+import lombok.experimental.FieldDefaults;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
 
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class ConfigFileAuthHandlerTest extends WingsBaseTest {

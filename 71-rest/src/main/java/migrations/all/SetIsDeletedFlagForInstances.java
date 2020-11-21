@@ -2,19 +2,18 @@ package migrations.all;
 
 import static io.harness.mongo.MongoUtils.setUnset;
 
-import com.google.inject.Inject;
+import software.wings.beans.infrastructure.instance.Instance;
+import software.wings.dl.WingsPersistence;
 
+import com.google.inject.Inject;
+import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 import migrations.Migration;
 import org.mongodb.morphia.Key;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
-import software.wings.beans.infrastructure.instance.Instance;
-import software.wings.dl.WingsPersistence;
-
-import java.util.List;
-import java.util.Set;
-import java.util.stream.Collectors;
 
 /**
  * Migration script to set the field isDeleted as false for all active instances.

@@ -1,11 +1,7 @@
 package software.wings.api.pcf;
 
 import io.harness.delegate.beans.DelegateTaskNotifyResponseData;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.EqualsAndHashCode;
-import lombok.NoArgsConstructor;
+
 import software.wings.api.ExecutionDataValue;
 import software.wings.sm.InstanceStatusSummary;
 import software.wings.sm.StateExecutionData;
@@ -13,6 +9,11 @@ import software.wings.sm.StepExecutionSummary;
 
 import java.util.List;
 import java.util.Map;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.NoArgsConstructor;
 
 @Data
 @Builder

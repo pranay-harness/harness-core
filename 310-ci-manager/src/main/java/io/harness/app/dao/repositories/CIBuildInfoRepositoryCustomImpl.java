@@ -1,8 +1,10 @@
 package io.harness.app.dao.repositories;
 
-import com.google.inject.Inject;
-
 import io.harness.ci.beans.entities.CIBuild;
+
+import com.google.inject.Inject;
+import java.util.List;
+import java.util.Optional;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -11,9 +13,6 @@ import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.repository.support.PageableExecutionUtils;
-
-import java.util.List;
-import java.util.Optional;
 
 @AllArgsConstructor(onConstructor = @__({ @Inject }))
 @Slf4j

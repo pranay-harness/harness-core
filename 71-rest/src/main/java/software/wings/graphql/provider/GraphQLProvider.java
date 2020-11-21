@@ -1,20 +1,5 @@
 package software.wings.graphql.provider;
 
-import com.google.common.io.Resources;
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
-
-import graphql.GraphQL;
-import graphql.execution.instrumentation.ChainedInstrumentation;
-import graphql.execution.instrumentation.dataloader.DataLoaderDispatcherInstrumentation;
-import graphql.execution.instrumentation.dataloader.DataLoaderDispatcherInstrumentationOptions;
-import graphql.schema.GraphQLSchema;
-import graphql.schema.idl.RuntimeWiring;
-import graphql.schema.idl.SchemaGenerator;
-import graphql.schema.idl.SchemaParser;
-import graphql.schema.idl.TypeDefinitionRegistry;
-import org.reflections.Reflections;
-import org.reflections.scanners.ResourcesScanner;
 import software.wings.graphql.directive.DataFetcherDirective;
 import software.wings.graphql.instrumentation.QLAuditInstrumentation;
 import software.wings.graphql.instrumentation.QueryDepthInstrumentation;
@@ -24,11 +9,25 @@ import software.wings.graphql.scalar.NumberScalar;
 import software.wings.graphql.schema.TypeResolverManager;
 import software.wings.service.intfc.FeatureFlagService;
 
+import com.google.common.io.Resources;
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
+import graphql.GraphQL;
+import graphql.execution.instrumentation.ChainedInstrumentation;
+import graphql.execution.instrumentation.dataloader.DataLoaderDispatcherInstrumentation;
+import graphql.execution.instrumentation.dataloader.DataLoaderDispatcherInstrumentationOptions;
+import graphql.schema.GraphQLSchema;
+import graphql.schema.idl.RuntimeWiring;
+import graphql.schema.idl.SchemaGenerator;
+import graphql.schema.idl.SchemaParser;
+import graphql.schema.idl.TypeDefinitionRegistry;
 import java.io.IOException;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.regex.Pattern;
+import org.reflections.Reflections;
+import org.reflections.scanners.ResourcesScanner;
 
 @Singleton
 public class GraphQLProvider implements QueryLanguageProvider<GraphQL> {

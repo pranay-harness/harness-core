@@ -1,7 +1,5 @@
 package io.harness.connector.mappers.artifactorymapper;
 
-import com.google.inject.Singleton;
-
 import io.harness.connector.entities.embedded.artifactoryconnector.ArtifactoryConnector;
 import io.harness.connector.entities.embedded.artifactoryconnector.ArtifactoryUserNamePasswordAuthentication;
 import io.harness.connector.mappers.ConnectorEntityToDTOMapper;
@@ -10,6 +8,8 @@ import io.harness.delegate.beans.connector.artifactoryconnector.ArtifactoryAuthT
 import io.harness.delegate.beans.connector.artifactoryconnector.ArtifactoryAuthenticationDTO;
 import io.harness.delegate.beans.connector.artifactoryconnector.ArtifactoryConnectorDTO;
 import io.harness.delegate.beans.connector.artifactoryconnector.ArtifactoryUsernamePasswordAuthDTO;
+
+import com.google.inject.Singleton;
 
 @Singleton
 public class ArtifactoryEntityToDTO implements ConnectorEntityToDTOMapper<ArtifactoryConnector> {

@@ -2,8 +2,6 @@ package io.harness.engine.events;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 
-import com.google.inject.Inject;
-
 import io.harness.ambiance.Ambiance;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.data.structure.EmptyPredicate;
@@ -14,6 +12,7 @@ import io.harness.execution.events.OrchestrationEvent;
 import io.harness.timeout.TimeoutEngine;
 import io.harness.timeout.trackers.events.StatusUpdateTimeoutEvent;
 
+import com.google.inject.Inject;
 import java.util.List;
 
 @OwnedBy(CDC)

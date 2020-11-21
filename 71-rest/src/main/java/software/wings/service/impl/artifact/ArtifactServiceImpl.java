@@ -14,11 +14,7 @@ import static io.harness.mongo.MongoUtils.setUnset;
 import static io.harness.persistence.HPersistence.DEFAULT_STORE;
 import static io.harness.persistence.HQuery.excludeAuthority;
 import static io.harness.validation.Validator.notNullCheck;
-import static java.util.Arrays.asList;
-import static java.util.Collections.singletonList;
-import static java.util.regex.Pattern.compile;
-import static java.util.stream.Collectors.toList;
-import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
+
 import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static software.wings.beans.Base.CREATED_AT_KEY;
 import static software.wings.beans.artifact.Artifact.ContentStatus.DELETED;
@@ -42,13 +38,12 @@ import static software.wings.collect.CollectEvent.Builder.aCollectEvent;
 import static software.wings.service.impl.artifact.ArtifactCollectionUtils.getArtifactKeyFn;
 import static software.wings.utils.ArtifactType.DOCKER;
 
-import com.google.common.base.Preconditions;
-import com.google.common.io.Files;
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
-import com.google.inject.name.Named;
+import static java.util.Arrays.asList;
+import static java.util.Collections.singletonList;
+import static java.util.regex.Pattern.compile;
+import static java.util.stream.Collectors.toList;
+import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 
-import com.mongodb.BasicDBObject;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
@@ -59,12 +54,7 @@ import io.harness.queue.QueuePublisher;
 import io.harness.scheduler.PersistentScheduler;
 import io.harness.validation.Create;
 import io.harness.validation.Update;
-import lombok.extern.slf4j.Slf4j;
-import org.mongodb.morphia.query.FindOptions;
-import org.mongodb.morphia.query.Query;
-import org.mongodb.morphia.query.Sort;
-import org.mongodb.morphia.query.UpdateOperations;
-import ru.vyarus.guice.validator.group.annotation.ValidationGroups;
+
 import software.wings.beans.BaseFile;
 import software.wings.beans.FeatureName;
 import software.wings.beans.artifact.Artifact;
@@ -91,6 +81,12 @@ import software.wings.utils.ArtifactType;
 import software.wings.utils.RepositoryFormat;
 import software.wings.utils.RepositoryType;
 
+import com.google.common.base.Preconditions;
+import com.google.common.io.Files;
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
+import com.google.inject.name.Named;
+import com.mongodb.BasicDBObject;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -103,6 +99,12 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 import javax.validation.Valid;
 import javax.validation.executable.ValidateOnExecution;
+import lombok.extern.slf4j.Slf4j;
+import org.mongodb.morphia.query.FindOptions;
+import org.mongodb.morphia.query.Query;
+import org.mongodb.morphia.query.Sort;
+import org.mongodb.morphia.query.UpdateOperations;
+import ru.vyarus.guice.validator.group.annotation.ValidationGroups;
 
 /**
  * The Class ArtifactServiceImpl.

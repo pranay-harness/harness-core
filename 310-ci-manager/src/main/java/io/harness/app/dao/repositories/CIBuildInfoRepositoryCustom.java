@@ -1,11 +1,11 @@
 package io.harness.app.dao.repositories;
 
 import io.harness.ci.beans.entities.CIBuild;
+
+import java.util.Optional;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.mongodb.core.query.Criteria;
-
-import java.util.Optional;
 
 public interface CIBuildInfoRepositoryCustom {
   Page<CIBuild> findAll(Criteria criteria, Pageable pageable);

@@ -1,13 +1,12 @@
 package software.wings.service.impl.yaml.handler.tag;
 
-import com.google.inject.Inject;
-
 import software.wings.beans.HarnessTag;
 import software.wings.beans.HarnessTag.Yaml;
 import software.wings.beans.yaml.ChangeContext;
 import software.wings.service.impl.yaml.handler.BaseYamlHandler;
 import software.wings.service.intfc.HarnessTagService;
 
+import com.google.inject.Inject;
 import java.util.List;
 
 public class HarnessTagYamlHandler extends BaseYamlHandler<Yaml, List<HarnessTag>> {

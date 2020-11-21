@@ -1,14 +1,13 @@
 package io.harness.walktree.registries.visitorfield;
 
-import com.google.inject.Singleton;
-
 import io.harness.registries.Registry;
 import io.harness.registries.exceptions.DuplicateRegistryException;
 import io.harness.registries.exceptions.UnregisteredKeyAccessException;
-import lombok.NonNull;
 
+import com.google.inject.Singleton;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import lombok.NonNull;
 
 @Singleton
 public class VisitorFieldRegistry implements Registry<VisitorFieldType, VisitableFieldProcessor<?>> {

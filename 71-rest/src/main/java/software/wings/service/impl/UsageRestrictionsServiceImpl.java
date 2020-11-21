@@ -4,13 +4,10 @@ import static io.harness.beans.SearchFilter.Operator.EQ;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.exception.WingsException.USER;
-import static java.util.Collections.emptySet;
+
 import static software.wings.beans.Application.GLOBAL_APP_ID;
 
-import com.google.common.annotations.VisibleForTesting;
-import com.google.common.collect.Sets;
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
+import static java.util.Collections.emptySet;
 
 import io.harness.beans.EncryptedData;
 import io.harness.beans.EncryptedData.EncryptedDataKeys;
@@ -25,7 +22,7 @@ import io.harness.exception.UsageRestrictionException;
 import io.harness.exception.WingsException;
 import io.harness.persistence.HIterator;
 import io.harness.serializer.JsonUtils;
-import lombok.extern.slf4j.Slf4j;
+
 import software.wings.beans.Application;
 import software.wings.beans.Base;
 import software.wings.beans.EntityReference;
@@ -70,6 +67,10 @@ import software.wings.settings.SettingVariableTypes;
 import software.wings.settings.UsageRestrictionsReferenceSummary;
 import software.wings.settings.UsageRestrictionsReferenceSummary.IdNameReference;
 
+import com.google.common.annotations.VisibleForTesting;
+import com.google.common.collect.Sets;
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -80,6 +81,7 @@ import java.util.Map.Entry;
 import java.util.Set;
 import java.util.stream.Collectors;
 import javax.validation.executable.ValidateOnExecution;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * @author rktummala on 06/10/18
@@ -224,7 +226,7 @@ public class UsageRestrictionsServiceImpl implements UsageRestrictionsService {
     return (hasAllEnvAccessOfType(restrictionsFromEntity, appId, FilterType.PROD)
                && hasAllEnvAccessOfType(restrictionsFromUserPermissions, appId, FilterType.PROD))
         || (hasAllEnvAccessOfType(restrictionsFromEntity, appId, FilterType.NON_PROD)
-               && hasAllEnvAccessOfType(restrictionsFromUserPermissions, appId, FilterType.NON_PROD));
+            && hasAllEnvAccessOfType(restrictionsFromUserPermissions, appId, FilterType.NON_PROD));
   }
 
   private boolean hasAnyCommonEnv(
@@ -232,7 +234,7 @@ public class UsageRestrictionsServiceImpl implements UsageRestrictionsService {
     return (hasAllEnvAccessOfType(restrictionsFromEntity, FilterType.PROD)
                && hasAllEnvAccessOfType(restrictionsFromUserPermissions, FilterType.PROD))
         || (hasAllEnvAccessOfType(restrictionsFromEntity, FilterType.NON_PROD)
-               && hasAllEnvAccessOfType(restrictionsFromUserPermissions, FilterType.NON_PROD));
+            && hasAllEnvAccessOfType(restrictionsFromUserPermissions, FilterType.NON_PROD));
   }
 
   private boolean hasAllCommonEnv(
@@ -989,7 +991,7 @@ public class UsageRestrictionsServiceImpl implements UsageRestrictionsService {
     Map<String, Set<String>> newAppEnvMap = newUsageRestrictions == null
         ? new HashMap<>()
         : getAppEnvMap(
-              newUsageRestrictions.getAppEnvRestrictions(), environmentService.getAppIdEnvMap(appsByAccountId));
+            newUsageRestrictions.getAppEnvRestrictions(), environmentService.getAppIdEnvMap(appsByAccountId));
 
     for (Entry<String, Set<String>> setupUsage : setupUsages.entrySet()) {
       String appId = setupUsage.getKey();

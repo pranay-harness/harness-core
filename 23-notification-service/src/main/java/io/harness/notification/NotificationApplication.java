@@ -1,16 +1,11 @@
 package io.harness.notification;
 
-import com.codahale.metrics.MetricRegistry;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.inject.Guice;
-import com.google.inject.Injector;
-import io.dropwizard.Application;
-import io.dropwizard.configuration.EnvironmentVariableSubstitutor;
-import io.dropwizard.configuration.SubstitutingSourceProvider;
-import io.dropwizard.setup.Bootstrap;
-import io.dropwizard.setup.Environment;
-import io.federecio.dropwizard.swagger.SwaggerBundle;
-import io.federecio.dropwizard.swagger.SwaggerBundleConfiguration;
+import static io.harness.logging.LoggingInitializer.initializeLogging;
+import static io.harness.notification.NotificationConfiguration.getResourceClasses;
+
+import static com.google.common.collect.ImmutableMap.of;
+import static java.util.stream.Collectors.toSet;
+
 import io.harness.AuthorizationServiceHeader;
 import io.harness.maintenance.MaintenanceController;
 import io.harness.metrics.MetricRegistryModule;
@@ -27,23 +22,29 @@ import io.harness.queue.QueueListenerController;
 import io.harness.remote.CharsetResponseFilter;
 import io.harness.remote.NGObjectMapperHelper;
 import io.harness.security.JWTAuthenticationFilter;
+
+import com.codahale.metrics.MetricRegistry;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.inject.Guice;
+import com.google.inject.Injector;
+import io.dropwizard.Application;
+import io.dropwizard.configuration.EnvironmentVariableSubstitutor;
+import io.dropwizard.configuration.SubstitutingSourceProvider;
+import io.dropwizard.setup.Bootstrap;
+import io.dropwizard.setup.Environment;
+import io.federecio.dropwizard.swagger.SwaggerBundle;
+import io.federecio.dropwizard.swagger.SwaggerBundleConfiguration;
+import java.util.*;
+import java.util.function.Predicate;
+import javax.servlet.DispatcherType;
+import javax.servlet.FilterRegistration;
+import javax.ws.rs.container.ContainerRequestContext;
+import javax.ws.rs.container.ResourceInfo;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.tuple.Pair;
 import org.eclipse.jetty.servlets.CrossOriginFilter;
 import org.glassfish.jersey.media.multipart.MultiPartFeature;
 import org.glassfish.jersey.server.model.Resource;
-
-import javax.servlet.DispatcherType;
-import javax.servlet.FilterRegistration;
-import javax.ws.rs.container.ContainerRequestContext;
-import javax.ws.rs.container.ResourceInfo;
-import java.util.*;
-import java.util.function.Predicate;
-
-import static com.google.common.collect.ImmutableMap.of;
-import static io.harness.logging.LoggingInitializer.initializeLogging;
-import static io.harness.notification.NotificationConfiguration.getResourceClasses;
-import static java.util.stream.Collectors.toSet;
 
 @Slf4j
 public class NotificationApplication extends Application<NotificationConfiguration> {

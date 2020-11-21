@@ -1,3 +1,5 @@
 package io.harness.ng.core;
 
-public interface ProjectAccess extends OrganizationAccess { String getProjectId(); }
+public interface ProjectAccess extends OrganizationAccess {
+  String getProjectId();
+}

@@ -1,12 +1,12 @@
 package software.wings.graphql.datafetcher.cloudefficiencyevents;
 
+import software.wings.graphql.schema.type.aggregation.QLFilterKind;
+
+import java.util.List;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import software.wings.graphql.schema.type.aggregation.QLFilterKind;
-
-import java.util.List;
 
 @Data
 @Builder

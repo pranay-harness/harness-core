@@ -1,19 +1,18 @@
 package software.wings.features.api;
 
+import software.wings.beans.AccountType;
+import software.wings.service.intfc.AccountService;
+
 import com.google.common.base.Stopwatch;
 import com.google.inject.Inject;
 import com.google.inject.Provider;
 import com.google.inject.Singleton;
-
-import lombok.extern.slf4j.Slf4j;
-import software.wings.beans.AccountType;
-import software.wings.service.intfc.AccountService;
-
 import java.util.Collections;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
+import lombok.extern.slf4j.Slf4j;
 
 @Singleton
 @Slf4j

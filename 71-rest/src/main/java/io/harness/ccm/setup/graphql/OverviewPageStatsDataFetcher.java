@@ -4,14 +4,6 @@ import static io.harness.ccm.billing.preaggregated.PreAggregateConstants.countSt
 import static io.harness.ccm.billing.preaggregated.PreAggregateConstants.entityCloudProviderConst;
 import static io.harness.persistence.HQuery.excludeValidate;
 
-import com.google.cloud.bigquery.BigQuery;
-import com.google.cloud.bigquery.FieldValueList;
-import com.google.cloud.bigquery.QueryJobConfiguration;
-import com.google.cloud.bigquery.Table;
-import com.google.cloud.bigquery.TableId;
-import com.google.cloud.bigquery.TableResult;
-import com.google.inject.Inject;
-
 import io.harness.ccm.billing.bigquery.BigQueryService;
 import io.harness.ccm.setup.config.CESetUpConfig;
 import io.harness.ccm.setup.graphql.QLCEOverviewStatsData.QLCEOverviewStatsDataBuilder;
@@ -19,7 +11,7 @@ import io.harness.exception.InvalidRequestException;
 import io.harness.persistence.HPersistence;
 import io.harness.timescaledb.DBUtils;
 import io.harness.timescaledb.TimeScaleDBService;
-import lombok.extern.slf4j.Slf4j;
+
 import software.wings.app.MainConfiguration;
 import software.wings.beans.FeatureName;
 import software.wings.beans.SettingAttribute;
@@ -33,6 +25,13 @@ import software.wings.security.annotations.AuthRule;
 import software.wings.service.intfc.FeatureFlagService;
 import software.wings.settings.SettingVariableTypes;
 
+import com.google.cloud.bigquery.BigQuery;
+import com.google.cloud.bigquery.FieldValueList;
+import com.google.cloud.bigquery.QueryJobConfiguration;
+import com.google.cloud.bigquery.Table;
+import com.google.cloud.bigquery.TableId;
+import com.google.cloud.bigquery.TableResult;
+import com.google.inject.Inject;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -41,6 +40,7 @@ import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
+import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class OverviewPageStatsDataFetcher

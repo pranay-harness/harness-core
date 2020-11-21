@@ -1,6 +1,12 @@
 package software.wings.delegatetasks.k8s.taskhandler;
 
 import static io.harness.logging.CommandExecutionStatus.SUCCESS;
+
+import static software.wings.delegatetasks.k8s.K8sTestHelper.deployment;
+import static software.wings.delegatetasks.k8s.K8sTestHelper.deploymentConfig;
+import static software.wings.delegatetasks.k8s.K8sTestHelper.namespace;
+import static software.wings.delegatetasks.k8s.K8sTestHelper.service;
+
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
@@ -12,12 +18,6 @@ import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
-import static software.wings.delegatetasks.k8s.K8sTestHelper.deployment;
-import static software.wings.delegatetasks.k8s.K8sTestHelper.deploymentConfig;
-import static software.wings.delegatetasks.k8s.K8sTestHelper.namespace;
-import static software.wings.delegatetasks.k8s.K8sTestHelper.service;
-
-import com.google.common.collect.ImmutableList;
 
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.task.k8s.K8sTaskHelperBase;
@@ -29,12 +29,7 @@ import io.harness.k8s.model.KubernetesResourceId;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.rule.Owner;
 import io.harness.rule.OwnerRule;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
-import org.mockito.ArgumentCaptor;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
+
 import software.wings.WingsBaseTest;
 import software.wings.beans.command.ExecutionLogCallback;
 import software.wings.delegatetasks.k8s.K8sTaskHelper;
@@ -46,8 +41,15 @@ import software.wings.helpers.ext.k8s.request.K8sDeleteTaskParameters;
 import software.wings.helpers.ext.k8s.response.K8sDeleteResponse;
 import software.wings.helpers.ext.k8s.response.K8sTaskExecutionResponse;
 
+import com.google.common.collect.ImmutableList;
 import java.util.List;
 import java.util.stream.Collectors;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
+import org.mockito.ArgumentCaptor;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
 
 public class K8sDeleteTaskHandlerTest extends WingsBaseTest {
   @Mock private K8sTaskHelper k8sTaskHelper;

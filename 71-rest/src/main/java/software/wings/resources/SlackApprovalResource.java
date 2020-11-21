@@ -1,13 +1,12 @@
 package software.wings.resources;
 
-import com.google.inject.Inject;
-
 import io.harness.rest.RestResponse;
 import io.harness.security.annotations.PublicApi;
-import io.swagger.annotations.Api;
-import lombok.extern.slf4j.Slf4j;
+
 import software.wings.service.impl.slack.SlackApprovalUtils;
 
+import com.google.inject.Inject;
+import io.swagger.annotations.Api;
 import java.io.IOException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -18,6 +17,7 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedMap;
+import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Api("slack")

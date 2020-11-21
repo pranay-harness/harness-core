@@ -2,23 +2,24 @@ package software.wings.delegatetasks.delegatecapability;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
-import static java.util.stream.Collectors.toList;
 
-import com.google.inject.Inject;
+import static java.util.stream.Collectors.toList;
 
 import io.harness.delegate.beans.DelegateTaskPackage;
 import io.harness.delegate.beans.executioncapability.CapabilityResponse;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.delegate.beans.executioncapability.ExecutionCapabilityDemander;
 import io.harness.delegate.task.executioncapability.CapabilityCheck;
-import lombok.extern.slf4j.Slf4j;
+
 import software.wings.delegatetasks.validation.AbstractDelegateValidateTask;
 import software.wings.delegatetasks.validation.DelegateConnectionResult;
 
+import com.google.inject.Inject;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.function.Consumer;
+import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class CapabilityCheckController extends AbstractDelegateValidateTask {

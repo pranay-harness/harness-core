@@ -3,11 +3,8 @@ package io.harness.connector.mappers;
 import static io.harness.connector.entities.Connector.Scope.ACCOUNT;
 import static io.harness.connector.entities.Connector.Scope.ORGANIZATION;
 import static io.harness.connector.entities.Connector.Scope.PROJECT;
-import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
-import com.google.common.annotations.VisibleForTesting;
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 import io.harness.connector.apis.dto.ConnectorDTO;
 import io.harness.connector.apis.dto.ConnectorInfoDTO;
@@ -21,10 +18,13 @@ import io.harness.connector.mappers.kubernetesMapper.KubernetesDTOToEntity;
 import io.harness.connector.mappers.kubernetesMapper.KubernetesEntityToDTO;
 import io.harness.delegate.beans.connector.ConnectorConfigDTO;
 import io.harness.utils.FullyQualifiedIdentifierHelper;
+
+import com.google.common.annotations.VisibleForTesting;
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
+import java.util.Map;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
-
-import java.util.Map;
 
 @Singleton
 @AllArgsConstructor(access = AccessLevel.PRIVATE, onConstructor = @__({ @Inject }))

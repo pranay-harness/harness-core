@@ -1,7 +1,5 @@
 package io.harness.batch.processing.tasklet;
 
-import com.google.common.collect.Lists;
-
 import io.harness.batch.processing.billing.writer.support.ClusterDataGenerationValidator;
 import io.harness.batch.processing.ccm.CCMJobConstants;
 import io.harness.batch.processing.ccm.InstanceEvent;
@@ -14,6 +12,10 @@ import io.harness.batch.processing.writer.constants.EventTypeConstants;
 import io.harness.event.grpc.PublishedMessage;
 import io.harness.grpc.utils.HTimestamps;
 import io.harness.perpetualtask.k8s.watch.PodEvent;
+
+import com.google.common.collect.Lists;
+import java.util.List;
+import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.batch.core.JobParameters;
 import org.springframework.batch.core.StepContribution;
@@ -21,9 +23,6 @@ import org.springframework.batch.core.scope.context.ChunkContext;
 import org.springframework.batch.core.step.tasklet.Tasklet;
 import org.springframework.batch.repeat.RepeatStatus;
 import org.springframework.beans.factory.annotation.Autowired;
-
-import java.util.List;
-import java.util.stream.Collectors;
 
 @Slf4j
 public class K8sPodEventTasklet implements Tasklet {
@@ -48,7 +47,7 @@ public class K8sPodEventTasklet implements Tasklet {
     do {
       publishedMessageList = publishedMessageReader.getNext();
       List<InstanceEvent> instanceEvents = publishedMessageList.stream()
-                                               .map(this ::processPodEventMessage)
+                                               .map(this::processPodEventMessage)
                                                .filter(instanceInfo -> null != instanceInfo.getAccountId())
                                                .collect(Collectors.toList());
       Lists.partition(instanceEvents, 100)

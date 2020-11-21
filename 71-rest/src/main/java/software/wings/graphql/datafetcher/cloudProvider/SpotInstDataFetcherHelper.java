@@ -1,14 +1,14 @@
 package software.wings.graphql.datafetcher.cloudProvider;
 
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
-
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.SpotInstConfig;
 import software.wings.beans.SpotInstConfig.SpotInstConfigBuilder;
 import software.wings.graphql.datafetcher.secrets.UsageScopeController;
 import software.wings.graphql.schema.mutation.cloudProvider.QLSpotInstCloudProviderInput;
 import software.wings.graphql.schema.mutation.cloudProvider.QLUpdateSpotInstCloudProviderInput;
+
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
 
 @Singleton
 public class SpotInstDataFetcherHelper {

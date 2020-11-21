@@ -1,14 +1,12 @@
 package software.wings.service.intfc.signup;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
-import static org.mindrot.jbcrypt.BCrypt.hashpw;
 
-import com.google.inject.Inject;
+import static org.mindrot.jbcrypt.BCrypt.hashpw;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.event.handler.impl.EventPublishHelper;
-import lombok.extern.slf4j.Slf4j;
-import org.mindrot.jbcrypt.BCrypt;
+
 import software.wings.beans.User;
 import software.wings.beans.UserInvite;
 import software.wings.beans.UserInviteSource;
@@ -18,8 +16,11 @@ import software.wings.service.intfc.SignupHandler;
 import software.wings.service.intfc.SignupService;
 import software.wings.service.intfc.UserService;
 
+import com.google.inject.Inject;
 import java.util.HashMap;
 import java.util.Map;
+import lombok.extern.slf4j.Slf4j;
+import org.mindrot.jbcrypt.BCrypt;
 
 @OwnedBy(PL)
 @Slf4j

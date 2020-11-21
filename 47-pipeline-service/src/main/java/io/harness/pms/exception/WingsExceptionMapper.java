@@ -3,6 +3,7 @@ package io.harness.pms.exception;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.exception.WingsException.ExecutionContext.MANAGER;
 import static io.harness.exception.WingsException.ReportTarget.REST_API;
+
 import static javax.ws.rs.core.Response.Status.INTERNAL_SERVER_ERROR;
 
 import io.harness.eraro.ErrorCode;
@@ -11,7 +12,6 @@ import io.harness.exception.WingsException;
 import io.harness.logging.ExceptionLogger;
 import io.harness.ng.core.Status;
 import io.harness.ng.core.dto.ErrorDTO;
-import lombok.extern.slf4j.Slf4j;
 
 import java.util.List;
 import javax.ws.rs.container.ResourceInfo;
@@ -19,6 +19,7 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.ext.ExceptionMapper;
 import javax.ws.rs.ext.Provider;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * The Class GenericExceptionMapper.

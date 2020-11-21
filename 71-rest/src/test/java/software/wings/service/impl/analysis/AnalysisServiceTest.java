@@ -3,16 +3,15 @@ package software.wings.service.impl.analysis;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.rule.OwnerRule.KAMAL;
 import static io.harness.rule.OwnerRule.PRAVEEN;
+
+import static software.wings.beans.ElementExecutionSummary.ElementExecutionSummaryBuilder.anElementExecutionSummary;
+import static software.wings.beans.Workflow.WorkflowBuilder.aWorkflow;
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.anyObject;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
-import static software.wings.beans.ElementExecutionSummary.ElementExecutionSummaryBuilder.anElementExecutionSummary;
-import static software.wings.beans.Workflow.WorkflowBuilder.aWorkflow;
-
-import com.google.common.collect.Lists;
-import com.google.inject.Inject;
 
 import io.harness.beans.ExecutionStatus;
 import io.harness.category.element.UnitTests;
@@ -20,12 +19,7 @@ import io.harness.deployment.InstanceDetails;
 import io.harness.exception.WingsException;
 import io.harness.jira.JiraAction;
 import io.harness.rule.Owner;
-import org.apache.commons.lang3.reflect.FieldUtils;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
-import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
+
 import software.wings.WingsBaseTest;
 import software.wings.api.DeploymentType;
 import software.wings.api.jira.JiraExecutionData;
@@ -41,9 +35,17 @@ import software.wings.service.intfc.sweepingoutput.SweepingOutputService;
 import software.wings.sm.StateType;
 import software.wings.verification.CVConfiguration;
 
+import com.google.common.collect.Lists;
+import com.google.inject.Inject;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import org.apache.commons.lang3.reflect.FieldUtils;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
 
 public class AnalysisServiceTest extends WingsBaseTest {
   @Inject WingsPersistence wingsPersistence;

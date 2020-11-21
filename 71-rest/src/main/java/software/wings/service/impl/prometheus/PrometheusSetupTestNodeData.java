@@ -1,15 +1,15 @@
 package software.wings.service.impl.prometheus;
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import lombok.Builder;
-import lombok.Data;
-import lombok.EqualsAndHashCode;
-import lombok.NoArgsConstructor;
 import software.wings.service.impl.analysis.SetupTestNodeData;
 import software.wings.service.impl.analysis.TimeSeries;
 import software.wings.sm.StateType;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import java.util.List;
+import lombok.Builder;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.NoArgsConstructor;
 
 /**
  * Prometheus request payload for TestNodeData.

@@ -2,10 +2,8 @@ package software.wings.service.intfc.signup;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
 
-import com.google.inject.Inject;
-
 import io.harness.annotations.dev.OwnedBy;
-import lombok.extern.slf4j.Slf4j;
+
 import software.wings.beans.User;
 import software.wings.beans.UserInvite;
 import software.wings.beans.UserInviteSource.SourceType;
@@ -14,11 +12,13 @@ import software.wings.security.authentication.AuthenticationUtils;
 import software.wings.security.authentication.SimpleUrlBuilder;
 import software.wings.signup.OnpremSignupHandler;
 
+import com.google.inject.Inject;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import javax.ws.rs.core.Response;
+import lombok.extern.slf4j.Slf4j;
 
 @OwnedBy(PL)
 @Slf4j

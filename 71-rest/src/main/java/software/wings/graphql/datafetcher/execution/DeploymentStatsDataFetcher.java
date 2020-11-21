@@ -2,36 +2,15 @@ package software.wings.graphql.datafetcher.execution;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+
 import static java.util.Arrays.asList;
 
-import com.google.common.collect.Sets;
-import com.google.inject.Inject;
-
-import com.healthmarketscience.common.util.AppendableExt;
-import com.healthmarketscience.sqlbuilder.BinaryCondition;
-import com.healthmarketscience.sqlbuilder.ComboCondition;
-import com.healthmarketscience.sqlbuilder.ComboCondition.Op;
-import com.healthmarketscience.sqlbuilder.Converter;
-import com.healthmarketscience.sqlbuilder.CustomCondition;
-import com.healthmarketscience.sqlbuilder.CustomExpression;
-import com.healthmarketscience.sqlbuilder.CustomSql;
-import com.healthmarketscience.sqlbuilder.FunctionCall;
-import com.healthmarketscience.sqlbuilder.InCondition;
-import com.healthmarketscience.sqlbuilder.OrderObject;
-import com.healthmarketscience.sqlbuilder.OrderObject.Dir;
-import com.healthmarketscience.sqlbuilder.SelectQuery;
-import com.healthmarketscience.sqlbuilder.SqlObject;
-import com.healthmarketscience.sqlbuilder.UnaryCondition;
-import com.healthmarketscience.sqlbuilder.ValidationContext;
-import com.healthmarketscience.sqlbuilder.dbspec.basic.DbColumn;
-import io.fabric8.utils.Lists;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.timescaledb.DBUtils;
 import io.harness.timescaledb.TimeScaleDBService;
-import lombok.Data;
-import lombok.extern.slf4j.Slf4j;
+
 import software.wings.beans.EntityType;
 import software.wings.graphql.datafetcher.AbstractStatsDataFetcherWithTags;
 import software.wings.graphql.datafetcher.execution.DeploymentStatsQueryMetaData.DeploymentMetaDataFields;
@@ -90,6 +69,26 @@ import software.wings.graphql.schema.type.aggregation.environment.QLEnvironmentT
 import software.wings.graphql.schema.type.aggregation.tag.QLTagInput;
 import software.wings.graphql.utils.nameservice.NameService;
 
+import com.google.common.collect.Sets;
+import com.google.inject.Inject;
+import com.healthmarketscience.common.util.AppendableExt;
+import com.healthmarketscience.sqlbuilder.BinaryCondition;
+import com.healthmarketscience.sqlbuilder.ComboCondition;
+import com.healthmarketscience.sqlbuilder.ComboCondition.Op;
+import com.healthmarketscience.sqlbuilder.Converter;
+import com.healthmarketscience.sqlbuilder.CustomCondition;
+import com.healthmarketscience.sqlbuilder.CustomExpression;
+import com.healthmarketscience.sqlbuilder.CustomSql;
+import com.healthmarketscience.sqlbuilder.FunctionCall;
+import com.healthmarketscience.sqlbuilder.InCondition;
+import com.healthmarketscience.sqlbuilder.OrderObject;
+import com.healthmarketscience.sqlbuilder.OrderObject.Dir;
+import com.healthmarketscience.sqlbuilder.SelectQuery;
+import com.healthmarketscience.sqlbuilder.SqlObject;
+import com.healthmarketscience.sqlbuilder.UnaryCondition;
+import com.healthmarketscience.sqlbuilder.ValidationContext;
+import com.healthmarketscience.sqlbuilder.dbspec.basic.DbColumn;
+import io.fabric8.utils.Lists;
 import java.io.IOException;
 import java.sql.Connection;
 import java.sql.ResultSet;
@@ -108,6 +107,8 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 import javax.validation.constraints.NotNull;
+import lombok.Data;
+import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class DeploymentStatsDataFetcher extends AbstractStatsDataFetcherWithTags<QLDeploymentAggregationFunction,

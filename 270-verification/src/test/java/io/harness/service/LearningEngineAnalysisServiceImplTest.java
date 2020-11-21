@@ -7,12 +7,11 @@ import static io.harness.rule.OwnerRule.NANDAN;
 import static io.harness.rule.OwnerRule.PARNIAN;
 import static io.harness.rule.OwnerRule.PRAVEEN;
 import static io.harness.rule.OwnerRule.SOWMYA;
-import static org.apache.cxf.ws.addressing.ContextUtils.generateUUID;
-import static org.assertj.core.api.Assertions.assertThat;
+
 import static software.wings.service.impl.newrelic.LearningEngineAnalysisTask.TIME_SERIES_ANALYSIS_TASK_TIME_OUT;
 
-import com.google.common.collect.Lists;
-import com.google.inject.Inject;
+import static org.apache.cxf.ws.addressing.ContextUtils.generateUUID;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.VerificationBaseTest;
 import io.harness.beans.ExecutionStatus;
@@ -21,11 +20,7 @@ import io.harness.managerclient.VerificationManagerClientHelper;
 import io.harness.rule.Owner;
 import io.harness.service.intfc.LearningEngineService;
 import io.harness.version.ServiceApiVersion;
-import org.apache.commons.lang3.reflect.FieldUtils;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
-import org.mockito.Mock;
+
 import software.wings.api.PhaseElement;
 import software.wings.api.ServiceElement;
 import software.wings.dl.WingsPersistence;
@@ -41,6 +36,8 @@ import software.wings.service.intfc.analysis.ClusterLevel;
 import software.wings.sm.ContextElement;
 import software.wings.sm.StateExecutionInstance;
 
+import com.google.common.collect.Lists;
+import com.google.inject.Inject;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedList;
@@ -48,6 +45,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
+import org.apache.commons.lang3.reflect.FieldUtils;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
+import org.mockito.Mock;
 
 public class LearningEngineAnalysisServiceImplTest extends VerificationBaseTest {
   @Inject private WingsPersistence wingsPersistence;

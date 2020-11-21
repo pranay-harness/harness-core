@@ -1,10 +1,10 @@
 package io.harness.ngpipeline.pipeline.executions.beans;
 
+import io.harness.interrupts.ExecutionInterruptType;
+
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonValue;
-import io.harness.interrupts.ExecutionInterruptType;
-
 import java.util.Arrays;
 
 public enum PipelineExecutionInterruptType {

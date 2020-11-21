@@ -8,6 +8,7 @@ import static io.harness.rule.OwnerRule.HANTANG;
 import static io.harness.rule.OwnerRule.MATT;
 import static io.harness.rule.OwnerRule.SANJA;
 import static io.harness.rule.OwnerRule.VUK;
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.anyLong;
 import static org.mockito.Matchers.anyString;
@@ -34,6 +35,14 @@ import io.harness.perpetualtask.PerpetualTaskServiceClientRegistry;
 import io.harness.perpetualtask.PerpetualTaskType;
 import io.harness.perpetualtask.k8s.watch.K8sWatchPerpetualTaskServiceClient;
 import io.harness.rule.Owner;
+
+import software.wings.beans.alert.AlertType;
+import software.wings.beans.alert.PerpetualTaskAlert;
+import software.wings.service.intfc.AlertService;
+import software.wings.service.intfc.DelegateService;
+
+import java.util.HashMap;
+import java.util.Map;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -42,13 +51,6 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnit;
 import org.mockito.junit.MockitoRule;
-import software.wings.beans.alert.AlertType;
-import software.wings.beans.alert.PerpetualTaskAlert;
-import software.wings.service.intfc.AlertService;
-import software.wings.service.intfc.DelegateService;
-
-import java.util.HashMap;
-import java.util.Map;
 
 public class PerpetualTaskRecordHandlerTest extends CategoryTest {
   private String accountId = "ACCOUNT_ID";

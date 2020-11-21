@@ -1,17 +1,19 @@
 package software.wings.beans.template.deploymenttype;
 
-import static com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL;
 import static software.wings.common.TemplateConstants.CUSTOM_DEPLOYMENT_TYPE;
+
+import static com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL;
+
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
+
+import software.wings.beans.template.BaseTemplate;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonTypeName;
-import io.harness.annotations.dev.HarnessTeam;
-import io.harness.annotations.dev.OwnedBy;
+import java.util.Map;
 import lombok.Builder;
 import lombok.Value;
-import software.wings.beans.template.BaseTemplate;
-
-import java.util.Map;
 
 @Value
 @Builder

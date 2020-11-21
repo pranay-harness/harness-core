@@ -1,11 +1,11 @@
 package io.harness;
 
-import com.google.inject.AbstractModule;
-import com.google.inject.multibindings.MapBinder;
-
 import io.harness.registrars.WalkTreeVisitorFieldRegistrar;
 import io.harness.walktree.registries.VisitorRegistryModule;
 import io.harness.walktree.registries.registrars.VisitableFieldRegistrar;
+
+import com.google.inject.AbstractModule;
+import com.google.inject.multibindings.MapBinder;
 
 public class WalkTreeModule extends AbstractModule {
   private static volatile WalkTreeModule instance;

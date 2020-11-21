@@ -1,6 +1,5 @@
 package software.wings.service.impl.workflow;
 
-import static com.google.common.collect.Maps.newHashMap;
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.beans.ExecutionStatus.SUCCESS;
 import static io.harness.beans.OrchestrationWorkflowType.BASIC;
@@ -14,11 +13,7 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.validation.Validator.notNullCheck;
-import static java.lang.String.format;
-import static java.util.Arrays.asList;
-import static java.util.stream.Collectors.toList;
-import static org.apache.commons.lang3.StringUtils.isBlank;
-import static org.apache.commons.lang3.StringUtils.isNotBlank;
+
 import static software.wings.api.DeploymentType.AMI;
 import static software.wings.api.DeploymentType.AWS_CODEDEPLOY;
 import static software.wings.api.DeploymentType.AZURE_VMSS;
@@ -91,20 +86,20 @@ import static software.wings.sm.StateType.ROLLING_NODE_SELECT;
 import static software.wings.sm.states.ElasticLoadBalancerState.Operation.Disable;
 import static software.wings.sm.states.ElasticLoadBalancerState.Operation.Enable;
 
-import com.google.common.annotations.VisibleForTesting;
-import com.google.common.collect.ImmutableMap;
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
+import static com.google.common.collect.Maps.newHashMap;
+import static java.lang.String.format;
+import static java.util.Arrays.asList;
+import static java.util.stream.Collectors.toList;
+import static org.apache.commons.lang3.StringUtils.isBlank;
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
-import io.fabric8.kubernetes.api.KubernetesHelper;
-import io.fabric8.kubernetes.api.model.HorizontalPodAutoscaler;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.azure.model.AzureConstants;
 import io.harness.beans.OrchestrationWorkflowType;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.InvalidRequestException;
 import io.harness.expression.ExpressionEvaluator;
-import lombok.extern.slf4j.Slf4j;
+
 import software.wings.api.DeploymentType;
 import software.wings.beans.AmiDeploymentType;
 import software.wings.beans.AwsInfrastructureMapping;
@@ -157,6 +152,12 @@ import software.wings.sm.StateType;
 import software.wings.sm.states.AwsCodeDeployState;
 import software.wings.sm.states.customdeployment.InstanceFetchState.InstanceFetchStateKeys;
 
+import com.google.common.annotations.VisibleForTesting;
+import com.google.common.collect.ImmutableMap;
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
+import io.fabric8.kubernetes.api.KubernetesHelper;
+import io.fabric8.kubernetes.api.model.HorizontalPodAutoscaler;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -174,6 +175,7 @@ import java.util.stream.Collectors;
 import javax.validation.Validation;
 import javax.validation.Validator;
 import javax.validation.ValidatorFactory;
+import lombok.extern.slf4j.Slf4j;
 
 @OwnedBy(CDC)
 @Singleton
@@ -1646,13 +1648,13 @@ public class WorkflowServiceHelper {
     return (infrastructureMapping instanceof PhysicalInfrastructureMappingBase
                && isNotBlank(((PhysicalInfrastructureMappingBase) infrastructureMapping).getLoadBalancerId()))
         || (infrastructureMapping instanceof AwsInfrastructureMapping
-               && isNotBlank(((AwsInfrastructureMapping) infrastructureMapping).getLoadBalancerId()));
+            && isNotBlank(((AwsInfrastructureMapping) infrastructureMapping).getLoadBalancerId()));
   }
 
   private boolean attachElbSteps(CloudProviderInfrastructure infrastructure) {
     return (infrastructure instanceof PhysicalInfra && isNotBlank(((PhysicalInfra) infrastructure).getLoadBalancerId()))
         || (infrastructure instanceof AwsInstanceInfrastructure
-               && isNotBlank(((AwsInstanceInfrastructure) infrastructure).getLoadBalancerId()));
+            && isNotBlank(((AwsInstanceInfrastructure) infrastructure).getLoadBalancerId()));
   }
 
   public WorkflowPhase generateRollbackWorkflowPhaseForPCF(WorkflowPhase workflowPhase) {

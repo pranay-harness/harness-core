@@ -3,24 +3,24 @@ package io.harness.batch.processing.writer;
 import static software.wings.beans.SettingAttribute.SettingCategory.CE_CONNECTOR;
 import static software.wings.settings.SettingVariableTypes.CE_AWS;
 
-import com.google.inject.Singleton;
-
 import io.harness.batch.processing.ccm.CCMJobConstants;
 import io.harness.batch.processing.ccm.S3SyncRecord;
 import io.harness.batch.processing.ccm.S3SyncRecord.S3SyncRecordBuilder;
 import io.harness.batch.processing.service.impl.AwsS3SyncServiceImpl;
+
+import software.wings.beans.AwsCrossAccountAttributes;
+import software.wings.beans.AwsS3BucketDetails;
+import software.wings.beans.SettingAttribute;
+import software.wings.beans.ce.CEAwsConfig;
+
+import com.google.inject.Singleton;
+import java.util.List;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.batch.core.JobParameters;
 import org.springframework.batch.core.StepExecution;
 import org.springframework.batch.core.annotation.BeforeStep;
 import org.springframework.batch.item.ItemWriter;
 import org.springframework.beans.factory.annotation.Autowired;
-import software.wings.beans.AwsCrossAccountAttributes;
-import software.wings.beans.AwsS3BucketDetails;
-import software.wings.beans.SettingAttribute;
-import software.wings.beans.ce.CEAwsConfig;
-
-import java.util.List;
 
 @Slf4j
 @Singleton

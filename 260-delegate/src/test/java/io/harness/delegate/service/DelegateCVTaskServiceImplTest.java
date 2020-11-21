@@ -1,6 +1,7 @@
 package io.harness.delegate.service;
 
 import static io.harness.rule.OwnerRule.KAMAL;
+
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyBoolean;
@@ -13,14 +14,19 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.mockito.MockitoAnnotations.initMocks;
 
-import com.google.common.util.concurrent.FakeTimeLimiter;
-import com.google.common.util.concurrent.TimeLimiter;
-import com.google.common.util.concurrent.UncheckedTimeoutException;
-
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.managerclient.VerificationServiceClient;
 import io.harness.rule.Owner;
+
+import software.wings.service.impl.analysis.DataCollectionTaskResult;
+
+import com.google.common.util.concurrent.FakeTimeLimiter;
+import com.google.common.util.concurrent.TimeLimiter;
+import com.google.common.util.concurrent.UncheckedTimeoutException;
+import java.io.IOException;
+import java.time.Duration;
+import java.util.concurrent.TimeoutException;
 import org.apache.commons.lang3.reflect.FieldUtils;
 import org.junit.Before;
 import org.junit.Test;
@@ -29,11 +35,6 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import retrofit2.Call;
 import retrofit2.Response;
-import software.wings.service.impl.analysis.DataCollectionTaskResult;
-
-import java.io.IOException;
-import java.time.Duration;
-import java.util.concurrent.TimeoutException;
 
 public class DelegateCVTaskServiceImplTest extends CategoryTest {
   @Mock private VerificationServiceClient verificationClient;

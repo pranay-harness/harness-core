@@ -1,12 +1,11 @@
 package io.harness.ccm.views.entities;
 
+import java.util.List;
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.EqualsAndHashCode;
 import lombok.Value;
 import lombok.experimental.FieldDefaults;
-
-import java.util.List;
 
 @Value
 @Builder

@@ -1,13 +1,12 @@
 package software.wings.features;
 
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
-
 import software.wings.features.api.AbstractRestrictedFeature;
 import software.wings.features.api.FeatureRestrictions;
 import software.wings.features.api.FeatureUsageComplianceReport;
 import software.wings.service.intfc.AccountService;
 
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import java.util.Optional;
 
 @Singleton

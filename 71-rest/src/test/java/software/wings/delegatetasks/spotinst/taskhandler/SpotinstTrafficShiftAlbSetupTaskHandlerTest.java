@@ -1,6 +1,7 @@
 package software.wings.delegatetasks.spotinst.taskhandler;
 
 import static io.harness.rule.OwnerRule.SATYAM;
+
 import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.joor.Reflect.on;
@@ -20,9 +21,7 @@ import io.harness.delegate.task.spotinst.response.SpotInstTaskExecutionResponse;
 import io.harness.rule.Owner;
 import io.harness.spotinst.SpotInstHelperServiceDelegate;
 import io.harness.spotinst.model.ElastiGroup;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
-import org.mockito.ArgumentCaptor;
+
 import software.wings.WingsBaseTest;
 import software.wings.beans.AwsConfig;
 import software.wings.beans.SpotInstConfig;
@@ -30,6 +29,9 @@ import software.wings.beans.command.ExecutionLogCallback;
 import software.wings.service.intfc.aws.delegate.AwsElbHelperServiceDelegate;
 
 import java.util.Optional;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
+import org.mockito.ArgumentCaptor;
 
 public class SpotinstTrafficShiftAlbSetupTaskHandlerTest extends WingsBaseTest {
   private final String INIT_JSON = "{\n"

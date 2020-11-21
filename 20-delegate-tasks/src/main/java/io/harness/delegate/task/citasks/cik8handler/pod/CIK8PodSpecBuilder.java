@@ -4,14 +4,6 @@ package io.harness.delegate.task.citasks.cik8handler.pod;
  * This class generates K8 pod spec for setting up CI build environment.
  */
 
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
-
-import io.fabric8.kubernetes.api.model.Container;
-import io.fabric8.kubernetes.api.model.ContainerBuilder;
-import io.fabric8.kubernetes.api.model.PodBuilder;
-import io.fabric8.kubernetes.api.model.PodFluent;
-import io.fabric8.kubernetes.api.model.Volume;
 import io.harness.delegate.beans.ci.pod.CIK8PodParams;
 import io.harness.delegate.beans.ci.pod.ConnectorDetails;
 import io.harness.delegate.beans.ci.pod.ContainerParams;
@@ -21,10 +13,17 @@ import io.harness.delegate.task.citasks.cik8handler.container.GitCloneContainerS
 import io.harness.delegate.task.citasks.cik8handler.params.CIConstants;
 import io.harness.delegate.task.citasks.cik8handler.params.GitCloneContainerParams;
 import io.harness.exception.InvalidRequestException;
-import lombok.extern.slf4j.Slf4j;
 
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
+import io.fabric8.kubernetes.api.model.Container;
+import io.fabric8.kubernetes.api.model.ContainerBuilder;
+import io.fabric8.kubernetes.api.model.PodBuilder;
+import io.fabric8.kubernetes.api.model.PodFluent;
+import io.fabric8.kubernetes.api.model.Volume;
 import java.util.ArrayList;
 import java.util.List;
+import lombok.extern.slf4j.Slf4j;
 
 @Singleton
 @Slf4j

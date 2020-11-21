@@ -1,5 +1,6 @@
 package software.wings.helpers.ext.ldap;
 
+import javax.validation.constraints.NotNull;
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Builder.Default;
@@ -20,8 +21,6 @@ import org.ldaptive.SearchScope;
 import org.ldaptive.auth.SearchDnResolver;
 import org.ldaptive.handler.RecursiveEntryHandler;
 import org.ldaptive.referral.SearchReferralHandler;
-
-import javax.validation.constraints.NotNull;
 
 // TODO: Move these to  portal/rest/src/main/java/software/wings/security
 @Getter

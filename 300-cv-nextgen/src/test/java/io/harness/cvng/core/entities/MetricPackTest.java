@@ -1,9 +1,8 @@
 package io.harness.cvng.core.entities;
 
 import static io.harness.rule.OwnerRule.KAMAL;
-import static org.assertj.core.api.Assertions.assertThat;
 
-import com.google.common.collect.Sets;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
@@ -12,10 +11,11 @@ import io.harness.cvng.beans.MetricPackDTO;
 import io.harness.cvng.beans.MetricPackDTO.MetricDefinitionDTO;
 import io.harness.cvng.core.entities.MetricPack.MetricDefinition;
 import io.harness.rule.Owner;
+
+import com.google.common.collect.Sets;
+import java.util.stream.Collectors;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
-
-import java.util.stream.Collectors;
 
 public class MetricPackTest extends CategoryTest {
   @Test

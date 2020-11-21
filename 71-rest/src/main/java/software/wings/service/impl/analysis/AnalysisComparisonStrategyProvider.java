@@ -1,9 +1,8 @@
 package software.wings.service.impl.analysis;
 
-import com.google.inject.Singleton;
-
 import software.wings.stencils.DataProvider;
 
+import com.google.inject.Singleton;
 import java.util.HashMap;
 import java.util.Map;
 

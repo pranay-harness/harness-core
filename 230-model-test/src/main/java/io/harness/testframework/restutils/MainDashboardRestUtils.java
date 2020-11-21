@@ -1,14 +1,14 @@
 package io.harness.testframework.restutils;
 
-import com.google.inject.Singleton;
-
 import io.harness.exception.WingsException;
 import io.harness.rest.RestResponse;
 import io.harness.testframework.framework.Setup;
-import io.restassured.http.ContentType;
+
 import software.wings.beans.stats.DeploymentStatistics;
 import software.wings.beans.stats.ServiceInstanceStatistics;
 
+import com.google.inject.Singleton;
+import io.restassured.http.ContentType;
 import javax.ws.rs.core.GenericType;
 
 @Singleton

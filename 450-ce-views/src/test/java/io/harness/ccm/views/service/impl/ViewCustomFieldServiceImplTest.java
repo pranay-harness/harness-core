@@ -1,12 +1,10 @@
 package io.harness.ccm.views.service.impl;
 
 import static io.harness.rule.OwnerRule.HITESH;
+
 import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 import static org.mockito.Mockito.doReturn;
-
-import com.google.cloud.bigquery.BigQuery;
-import com.google.inject.Inject;
 
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
@@ -16,6 +14,9 @@ import io.harness.ccm.views.entities.ViewField;
 import io.harness.ccm.views.entities.ViewFieldIdentifier;
 import io.harness.exception.InvalidRequestException;
 import io.harness.rule.Owner;
+
+import com.google.cloud.bigquery.BigQuery;
+import com.google.inject.Inject;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;

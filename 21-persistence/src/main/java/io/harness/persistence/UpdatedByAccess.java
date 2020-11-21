@@ -2,4 +2,6 @@ package io.harness.persistence;
 
 import io.harness.beans.EmbeddedUser;
 
-public interface UpdatedByAccess { EmbeddedUser getLastUpdatedBy(); }
+public interface UpdatedByAccess {
+  EmbeddedUser getLastUpdatedBy();
+}

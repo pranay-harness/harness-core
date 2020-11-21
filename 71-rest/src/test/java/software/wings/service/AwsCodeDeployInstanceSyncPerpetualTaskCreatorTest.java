@@ -1,6 +1,13 @@
 package software.wings.service;
 
 import static io.harness.rule.OwnerRule.ABOSII;
+
+import static software.wings.beans.CodeDeployInfrastructureMapping.CodeDeployInfrastructureMappingBuilder.aCodeDeployInfrastructureMapping;
+import static software.wings.service.InstanceSyncConstants.HARNESS_APPLICATION_ID;
+import static software.wings.service.impl.instance.InstanceSyncTestConstants.ACCOUNT_ID;
+import static software.wings.service.impl.instance.InstanceSyncTestConstants.APP_ID;
+import static software.wings.service.impl.instance.InstanceSyncTestConstants.INFRA_MAPPING_ID;
+
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -11,14 +18,6 @@ import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
-import static software.wings.beans.CodeDeployInfrastructureMapping.CodeDeployInfrastructureMappingBuilder.aCodeDeployInfrastructureMapping;
-import static software.wings.service.InstanceSyncConstants.HARNESS_APPLICATION_ID;
-import static software.wings.service.impl.instance.InstanceSyncTestConstants.ACCOUNT_ID;
-import static software.wings.service.impl.instance.InstanceSyncTestConstants.APP_ID;
-import static software.wings.service.impl.instance.InstanceSyncTestConstants.INFRA_MAPPING_ID;
-
-import com.google.common.collect.ImmutableMap;
-import com.google.inject.Inject;
 
 import io.harness.category.element.UnitTests;
 import io.harness.perpetualtask.AwsCodeDeployInstanceSyncPerpetualTaskClient;
@@ -26,17 +25,20 @@ import io.harness.perpetualtask.AwsCodeDeployInstanceSyncPerpetualTaskClientPara
 import io.harness.perpetualtask.PerpetualTaskClientContext;
 import io.harness.perpetualtask.internal.PerpetualTaskRecord;
 import io.harness.rule.Owner;
+
+import software.wings.WingsBaseTest;
+import software.wings.api.DeploymentSummary;
+import software.wings.beans.CodeDeployInfrastructureMapping;
+
+import com.google.common.collect.ImmutableMap;
+import com.google.inject.Inject;
+import java.util.List;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import software.wings.WingsBaseTest;
-import software.wings.api.DeploymentSummary;
-import software.wings.beans.CodeDeployInfrastructureMapping;
-
-import java.util.List;
 
 public class AwsCodeDeployInstanceSyncPerpetualTaskCreatorTest extends WingsBaseTest {
   @Mock AwsCodeDeployInstanceSyncPerpetualTaskClient perpetualTaskClient;

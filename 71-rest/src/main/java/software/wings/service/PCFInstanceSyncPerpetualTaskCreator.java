@@ -3,25 +3,21 @@ package software.wings.service;
 import static io.harness.data.structure.CollectionUtils.emptyIfNull;
 import static io.harness.perpetualtask.PerpetualTaskType.PCF_INSTANCE_SYNC;
 import static io.harness.perpetualtask.instancesync.PcfInstanceSyncPerpetualTaskClient.PCF_APPLICATION_NAME;
-import static java.util.stream.Collectors.toSet;
+
 import static software.wings.service.InstanceSyncConstants.HARNESS_ACCOUNT_ID;
 import static software.wings.service.InstanceSyncConstants.HARNESS_APPLICATION_ID;
 import static software.wings.service.InstanceSyncConstants.INFRASTRUCTURE_MAPPING_ID;
 import static software.wings.service.InstanceSyncConstants.INTERVAL_MINUTES;
 import static software.wings.service.InstanceSyncConstants.TIMEOUT_SECONDS;
 
-import com.google.common.collect.Sets;
-import com.google.inject.Inject;
-import com.google.protobuf.util.Durations;
+import static java.util.stream.Collectors.toSet;
 
 import io.harness.perpetualtask.PerpetualTaskClientContext;
 import io.harness.perpetualtask.PerpetualTaskSchedule;
 import io.harness.perpetualtask.PerpetualTaskService;
 import io.harness.perpetualtask.instancesync.PcfInstanceSyncPerpetualTaskClientParams;
 import io.harness.perpetualtask.internal.PerpetualTaskRecord;
-import lombok.AccessLevel;
-import lombok.experimental.FieldDefaults;
-import lombok.extern.slf4j.Slf4j;
+
 import software.wings.api.DeploymentSummary;
 import software.wings.api.PcfDeploymentInfo;
 import software.wings.beans.InfrastructureMapping;
@@ -29,11 +25,17 @@ import software.wings.beans.infrastructure.instance.Instance;
 import software.wings.beans.infrastructure.instance.info.PcfInstanceInfo;
 import software.wings.service.intfc.instance.InstanceService;
 
+import com.google.common.collect.Sets;
+import com.google.inject.Inject;
+import com.google.protobuf.util.Durations;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import lombok.AccessLevel;
+import lombok.experimental.FieldDefaults;
+import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @FieldDefaults(level = AccessLevel.PRIVATE)

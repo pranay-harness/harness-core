@@ -4,6 +4,13 @@ import static io.harness.delegate.beans.TaskData.DEFAULT_ASYNC_CALL_TIMEOUT;
 import static io.harness.rule.OwnerRule.BOJANA;
 import static io.harness.rule.OwnerRule.SATYAM;
 import static io.harness.rule.OwnerRule.VAIBHAV_SI;
+
+import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
+import static software.wings.utils.WingsTestConstants.COMMIT_REFERENCE;
+import static software.wings.utils.WingsTestConstants.ENTITY_ID;
+import static software.wings.utils.WingsTestConstants.SOURCE_REPO_SETTINGS_ID;
+import static software.wings.utils.WingsTestConstants.WORKSPACE;
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.joor.Reflect.on;
 import static org.mockito.Matchers.any;
@@ -16,13 +23,6 @@ import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.when;
 import static org.mockito.internal.verification.VerificationModeFactory.atLeastOnce;
-import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
-import static software.wings.utils.WingsTestConstants.COMMIT_REFERENCE;
-import static software.wings.utils.WingsTestConstants.ENTITY_ID;
-import static software.wings.utils.WingsTestConstants.SOURCE_REPO_SETTINGS_ID;
-import static software.wings.utils.WingsTestConstants.WORKSPACE;
-
-import com.google.common.collect.ImmutableMap;
 
 import io.harness.beans.ExecutionStatus;
 import io.harness.beans.FileData;
@@ -36,13 +36,7 @@ import io.harness.rule.Owner;
 import io.harness.rule.OwnerRule;
 import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.security.encryption.EncryptedRecordData;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
-import org.mockito.ArgumentCaptor;
-import org.mockito.Mock;
-import org.mockito.Mockito;
-import org.zeroturnaround.exec.stream.LogOutputStream;
+
 import software.wings.WingsBaseTest;
 import software.wings.api.TerraformExecutionData;
 import software.wings.beans.GitConfig;
@@ -56,6 +50,7 @@ import software.wings.service.intfc.security.EncryptionService;
 import software.wings.service.intfc.yaml.GitClient;
 import software.wings.utils.WingsTestConstants;
 
+import com.google.common.collect.ImmutableMap;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -67,6 +62,13 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
+import org.mockito.ArgumentCaptor;
+import org.mockito.Mock;
+import org.mockito.Mockito;
+import org.zeroturnaround.exec.stream.LogOutputStream;
 
 public class TerraformProvisionTaskTest extends WingsBaseTest {
   @Mock private EncryptionService mockEncryptionService;

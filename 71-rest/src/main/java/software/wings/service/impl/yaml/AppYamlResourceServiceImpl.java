@@ -2,10 +2,8 @@ package software.wings.service.impl.yaml;
 
 import static software.wings.beans.yaml.YamlConstants.YAML_EXTENSION;
 
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
-
 import io.harness.rest.RestResponse;
+
 import software.wings.beans.Application;
 import software.wings.beans.yaml.YamlType;
 import software.wings.service.impl.yaml.handler.YamlHandlerFactory;
@@ -17,6 +15,9 @@ import software.wings.service.intfc.yaml.YamlHistoryService;
 import software.wings.service.intfc.yaml.sync.YamlService;
 import software.wings.yaml.YamlHelper;
 import software.wings.yaml.YamlPayload;
+
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
 
 @Singleton
 public class AppYamlResourceServiceImpl implements AppYamlResourceService {

@@ -1,13 +1,14 @@
 package io.harness.notification.modules;
 
-import com.google.inject.AbstractModule;
-import com.google.inject.Provides;
-import com.google.inject.Scopes;
 import io.harness.notification.remote.UserGroupClient;
 import io.harness.notification.remote.UserGroupHttpClientFactory;
 import io.harness.remote.client.ServiceHttpClientConfig;
 import io.harness.security.ServiceTokenGenerator;
 import io.harness.serializer.kryo.KryoConverterFactory;
+
+import com.google.inject.AbstractModule;
+import com.google.inject.Provides;
+import com.google.inject.Scopes;
 
 public class UserGroupClientModule extends AbstractModule {
   private final ServiceHttpClientConfig serviceHttpClientConfig;

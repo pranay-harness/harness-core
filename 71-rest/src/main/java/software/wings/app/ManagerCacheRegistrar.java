@@ -2,18 +2,10 @@ package software.wings.app;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
 
-import com.google.inject.AbstractModule;
-import com.google.inject.Key;
-import com.google.inject.Provides;
-import com.google.inject.Singleton;
-import com.google.inject.TypeLiteral;
-import com.google.inject.multibindings.MapBinder;
-import com.google.inject.name.Named;
-import com.google.inject.name.Names;
-
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.cache.HarnessCacheManager;
 import io.harness.version.VersionInfoManager;
+
 import software.wings.beans.ApiKeyEntry;
 import software.wings.beans.AuthToken;
 import software.wings.beans.User;
@@ -22,6 +14,14 @@ import software.wings.security.UserPermissionInfo;
 import software.wings.security.UserRestrictionInfo;
 import software.wings.service.impl.newrelic.NewRelicApplication.NewRelicApplications;
 
+import com.google.inject.AbstractModule;
+import com.google.inject.Key;
+import com.google.inject.Provides;
+import com.google.inject.Singleton;
+import com.google.inject.TypeLiteral;
+import com.google.inject.multibindings.MapBinder;
+import com.google.inject.name.Named;
+import com.google.inject.name.Names;
 import javax.cache.Cache;
 import javax.cache.expiry.AccessedExpiryPolicy;
 import javax.cache.expiry.Duration;

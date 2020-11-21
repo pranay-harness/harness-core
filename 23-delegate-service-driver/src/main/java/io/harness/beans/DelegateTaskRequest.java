@@ -1,14 +1,14 @@
 package io.harness.beans;
 
 import io.harness.delegate.task.TaskParameters;
-import lombok.Builder;
-import lombok.Singular;
-import lombok.Value;
 
 import java.time.Duration;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import lombok.Builder;
+import lombok.Singular;
+import lombok.Value;
 
 @Value
 @Builder

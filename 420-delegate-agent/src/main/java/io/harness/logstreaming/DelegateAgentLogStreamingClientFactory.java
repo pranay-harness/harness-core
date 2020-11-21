@@ -1,21 +1,15 @@
 package io.harness.logstreaming;
 
-import com.google.inject.Inject;
-import com.google.inject.Provider;
+import io.harness.network.Http;
+import io.harness.serializer.kryo.KryoConverterFactory;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.datatype.guava.GuavaModule;
 import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
-import io.harness.network.Http;
-import io.harness.serializer.kryo.KryoConverterFactory;
-import okhttp3.ConnectionPool;
-import okhttp3.OkHttpClient;
-import org.apache.commons.lang3.StringUtils;
-import retrofit2.Retrofit;
-import retrofit2.converter.jackson.JacksonConverterFactory;
-
+import com.google.inject.Inject;
+import com.google.inject.Provider;
 import java.io.IOException;
 import java.io.InputStream;
 import java.security.KeyStore;
@@ -29,6 +23,11 @@ import javax.net.ssl.SSLContext;
 import javax.net.ssl.TrustManager;
 import javax.net.ssl.TrustManagerFactory;
 import javax.net.ssl.X509TrustManager;
+import okhttp3.ConnectionPool;
+import okhttp3.OkHttpClient;
+import org.apache.commons.lang3.StringUtils;
+import retrofit2.Retrofit;
+import retrofit2.converter.jackson.JacksonConverterFactory;
 
 public class DelegateAgentLogStreamingClientFactory implements Provider<DelegateAgentLogStreamingClient> {
   @Inject private KryoConverterFactory kryoConverterFactory;

@@ -1,16 +1,14 @@
 package software.wings.resources;
 
-import com.google.inject.Inject;
-
-import com.codahale.metrics.annotation.ExceptionMetered;
-import com.codahale.metrics.annotation.Timed;
 import io.harness.beans.ClientType;
 import io.harness.metrics.HarnessMetricRegistry;
 import io.harness.security.annotations.HarnessApiKeyAuth;
+
+import com.codahale.metrics.annotation.ExceptionMetered;
+import com.codahale.metrics.annotation.Timed;
+import com.google.inject.Inject;
 import io.prometheus.client.exporter.common.TextFormat;
 import io.swagger.annotations.Api;
-import lombok.extern.slf4j.Slf4j;
-
 import java.io.IOException;
 import java.io.StringWriter;
 import javax.ws.rs.Consumes;
@@ -18,6 +16,7 @@ import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * Rest End point to expose all the metrics in HarnessMetricRegistry

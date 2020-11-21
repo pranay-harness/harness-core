@@ -1,9 +1,8 @@
 package io.harness.gitsync.common.remote;
 
 import static io.harness.rule.OwnerRule.ABHINAV;
-import static org.assertj.core.api.Assertions.assertThat;
 
-import com.google.inject.Inject;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.EntityType;
 import io.harness.ModuleType;
@@ -18,13 +17,14 @@ import io.harness.gitsync.core.dao.api.repositories.GitFileLocation.GitFileLocat
 import io.harness.ng.beans.PageResponse;
 import io.harness.ng.core.dto.ResponseDTO;
 import io.harness.rule.Owner;
+
+import com.google.inject.Inject;
+import java.util.Arrays;
+import java.util.stream.Collectors;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.MockitoAnnotations;
-
-import java.util.Arrays;
-import java.util.stream.Collectors;
 
 public class GitEntityResourceTest extends GitSyncBaseTest {
   @Inject GitEntityResource gitEntityResource;

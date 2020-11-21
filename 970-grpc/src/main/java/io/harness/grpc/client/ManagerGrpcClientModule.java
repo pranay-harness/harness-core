@@ -1,9 +1,14 @@
 package io.harness.grpc.client;
 
+import io.harness.govern.ProviderModule;
+import io.harness.grpc.auth.DelegateAuthCallCredentials;
+import io.harness.security.TokenGenerator;
+import io.harness.version.VersionInfo;
+import io.harness.version.VersionInfoManager;
+
 import com.google.inject.Provides;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
-
 import io.grpc.CallCredentials;
 import io.grpc.Channel;
 import io.grpc.internal.GrpcUtil;
@@ -11,16 +16,10 @@ import io.grpc.netty.shaded.io.grpc.netty.GrpcSslContexts;
 import io.grpc.netty.shaded.io.grpc.netty.NettyChannelBuilder;
 import io.grpc.netty.shaded.io.netty.handler.ssl.SslContext;
 import io.grpc.netty.shaded.io.netty.handler.ssl.util.InsecureTrustManagerFactory;
-import io.harness.govern.ProviderModule;
-import io.harness.grpc.auth.DelegateAuthCallCredentials;
-import io.harness.security.TokenGenerator;
-import io.harness.version.VersionInfo;
-import io.harness.version.VersionInfoManager;
+import javax.net.ssl.SSLException;
 import lombok.Builder;
 import lombok.Value;
 import lombok.extern.slf4j.Slf4j;
-
-import javax.net.ssl.SSLException;
 
 /**
  * Defines plumbing to connect to manager via grpc.

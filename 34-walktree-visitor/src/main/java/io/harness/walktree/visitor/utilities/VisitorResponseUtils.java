@@ -9,10 +9,10 @@ import io.harness.walktree.registries.visitorfield.VisitorFieldType;
 import io.harness.walktree.registries.visitorfield.VisitorFieldWrapper;
 import io.harness.walktree.visitor.WithMetadata;
 import io.harness.walktree.visitor.response.VisitorResponse;
-import lombok.experimental.UtilityClass;
 
 import java.lang.reflect.Field;
 import java.util.Map;
+import lombok.experimental.UtilityClass;
 
 @UtilityClass
 public class VisitorResponseUtils {

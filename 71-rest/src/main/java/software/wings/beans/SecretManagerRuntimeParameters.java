@@ -2,12 +2,13 @@ package software.wings.beans;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.mongo.index.FdIndex;
 import io.harness.persistence.AccountAccess;
 import io.harness.persistence.PersistentEntity;
 import io.harness.persistence.UuidAware;
+
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;

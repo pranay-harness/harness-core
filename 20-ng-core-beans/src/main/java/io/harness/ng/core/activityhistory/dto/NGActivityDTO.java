@@ -6,14 +6,14 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.ng.core.EntityDetail;
 import io.harness.ng.core.activityhistory.NGActivityStatus;
 import io.harness.ng.core.activityhistory.NGActivityType;
+
 import io.swagger.annotations.ApiModel;
+import javax.validation.constraints.NotNull;
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Value;
 import lombok.experimental.FieldDefaults;
 import org.hibernate.validator.constraints.NotBlank;
-
-import javax.validation.constraints.NotNull;
 
 @Value
 @Builder

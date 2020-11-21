@@ -10,10 +10,10 @@ import io.harness.ngpipeline.pipeline.executions.beans.dto.CDStageExecutionSumma
 import io.harness.ngpipeline.pipeline.executions.beans.dto.ParallelStageExecutionSummaryDTO;
 import io.harness.ngpipeline.pipeline.executions.beans.dto.PipelineExecutionSummaryDTO;
 import io.harness.ngpipeline.pipeline.executions.beans.dto.StageExecutionSummaryDTO;
-import lombok.experimental.UtilityClass;
 
 import java.util.List;
 import java.util.stream.Collectors;
+import lombok.experimental.UtilityClass;
 
 @UtilityClass
 public class ExecutionToDtoMapper {

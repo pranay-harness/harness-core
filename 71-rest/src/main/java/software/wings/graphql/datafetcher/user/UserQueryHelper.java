@@ -2,17 +2,16 @@ package software.wings.graphql.datafetcher.user;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
-
-import org.mongodb.morphia.query.FieldEnd;
-import org.mongodb.morphia.query.Query;
 import software.wings.beans.User;
 import software.wings.graphql.datafetcher.DataFetcherUtils;
 import software.wings.graphql.schema.type.aggregation.QLIdFilter;
 import software.wings.graphql.schema.type.aggregation.user.QLUserFilter;
 
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import java.util.List;
+import org.mongodb.morphia.query.FieldEnd;
+import org.mongodb.morphia.query.Query;
 
 @Singleton
 public class UserQueryHelper {

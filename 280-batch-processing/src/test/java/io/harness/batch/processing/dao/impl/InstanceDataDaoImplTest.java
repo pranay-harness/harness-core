@@ -1,11 +1,9 @@
 package io.harness.batch.processing.dao.impl;
 
 import static io.harness.rule.OwnerRule.HITESH;
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.verify;
-
-import com.google.common.collect.ImmutableMap;
-import com.google.inject.Inject;
 
 import io.harness.batch.processing.BatchProcessingBaseTest;
 import io.harness.batch.processing.ccm.InstanceEvent;
@@ -22,13 +20,9 @@ import io.harness.ccm.commons.beans.Resource;
 import io.harness.ccm.commons.entities.InstanceData;
 import io.harness.ccm.commons.entities.InstanceData.InstanceDataKeys;
 import io.harness.rule.Owner;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
-import org.mockito.ArgumentCaptor;
-import org.mockito.Captor;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
 
+import com.google.common.collect.ImmutableMap;
+import com.google.inject.Inject;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
@@ -36,6 +30,12 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
+import org.mockito.ArgumentCaptor;
+import org.mockito.Captor;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
 
 public class InstanceDataDaoImplTest extends BatchProcessingBaseTest {
   @Inject @InjectMocks private InstanceDataDaoImpl instanceDataDao;

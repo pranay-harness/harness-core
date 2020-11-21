@@ -1,11 +1,11 @@
 package io.harness.cvng.dashboard.beans;
 
 import io.harness.cvng.beans.CVMonitoringCategory;
+
+import java.util.List;
 import lombok.Builder;
 import lombok.Data;
 import lombok.Value;
-
-import java.util.List;
 
 @Value
 @Builder

@@ -1,9 +1,9 @@
 package io.harness.threading;
 
 import io.harness.exception.InterruptedRuntimeException;
-import lombok.experimental.UtilityClass;
 
 import java.time.Duration;
+import lombok.experimental.UtilityClass;
 
 @UtilityClass
 public class Morpheus {

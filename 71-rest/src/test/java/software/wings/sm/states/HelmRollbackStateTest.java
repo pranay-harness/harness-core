@@ -9,10 +9,7 @@ import io.harness.k8s.model.HelmVersion;
 import io.harness.k8s.model.ImageDetails;
 import io.harness.rule.Owner;
 import io.harness.rule.OwnerRule;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
+
 import software.wings.WingsBaseTest;
 import software.wings.beans.GitConfig;
 import software.wings.beans.container.HelmChartSpecification;
@@ -24,6 +21,10 @@ import software.wings.utils.ApplicationManifestUtils;
 import software.wings.utils.WingsTestConstants;
 
 import java.util.Collections;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
 
 public class HelmRollbackStateTest extends WingsBaseTest {
   @Mock private ExecutionContext executionContext;

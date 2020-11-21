@@ -6,10 +6,9 @@ package software.wings.beans;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.beans.WorkflowType.PIPELINE;
+
 import static java.util.Arrays.asList;
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.annotation.HarnessEntity;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.EmbeddedUser;
@@ -21,6 +20,24 @@ import io.harness.mongo.index.Field;
 import io.harness.mongo.index.IndexType;
 import io.harness.persistence.AccountAccess;
 import io.harness.persistence.NameAccess;
+
+import software.wings.api.DeploymentType;
+import software.wings.beans.Pipeline.PipelineKeys;
+import software.wings.beans.entityinterface.ApplicationAccess;
+import software.wings.beans.entityinterface.KeywordsAware;
+import software.wings.beans.entityinterface.TagAware;
+import software.wings.yaml.BaseEntityYaml;
+
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.github.reinert.jjschema.SchemaIgnore;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import javax.annotation.Nonnull;
+import javax.validation.Valid;
+import javax.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -30,21 +47,6 @@ import lombok.experimental.FieldNameConstants;
 import lombok.experimental.UtilityClass;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Transient;
-import software.wings.api.DeploymentType;
-import software.wings.beans.Pipeline.PipelineKeys;
-import software.wings.beans.entityinterface.ApplicationAccess;
-import software.wings.beans.entityinterface.KeywordsAware;
-import software.wings.beans.entityinterface.TagAware;
-import software.wings.yaml.BaseEntityYaml;
-
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import javax.annotation.Nonnull;
-import javax.validation.Valid;
-import javax.validation.constraints.NotNull;
 
 /**
  * The Class Pipeline.

@@ -1,8 +1,9 @@
 package software.wings.api;
 
+import software.wings.sm.StepExecutionSummary;
+
 import lombok.Getter;
 import lombok.Setter;
-import software.wings.sm.StepExecutionSummary;
 
 public class ResourceConstraintStepExecutionSummary extends StepExecutionSummary {
   @Getter @Setter private String resourceConstraintName;

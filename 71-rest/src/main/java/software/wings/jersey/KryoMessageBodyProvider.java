@@ -1,12 +1,10 @@
 package software.wings.jersey;
 
+import io.harness.serializer.KryoSerializer;
+
 import com.google.common.io.ByteStreams;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
-
-import io.harness.serializer.KryoSerializer;
-import lombok.extern.slf4j.Slf4j;
-
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -20,6 +18,7 @@ import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.ext.MessageBodyReader;
 import javax.ws.rs.ext.MessageBodyWriter;
 import javax.ws.rs.ext.Provider;
+import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Provider

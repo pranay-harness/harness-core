@@ -1,7 +1,5 @@
 package io.harness.gitsync.core.beans;
 
-import com.google.common.collect.ImmutableList;
-
 import io.harness.beans.EmbeddedUser;
 import io.harness.gitsync.gitfileactivity.beans.GitFileProcessingSummary;
 import io.harness.mongo.index.FdIndex;
@@ -12,6 +10,9 @@ import io.harness.persistence.PersistentEntity;
 import io.harness.persistence.UpdatedAtAware;
 import io.harness.persistence.UpdatedByAware;
 import io.harness.persistence.UuidAware;
+
+import com.google.common.collect.ImmutableList;
+import java.util.List;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -26,8 +27,6 @@ import org.springframework.data.annotation.LastModifiedBy;
 import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.annotation.TypeAlias;
 import org.springframework.data.mongodb.core.mapping.Document;
-
-import java.util.List;
 
 @Data
 @Builder

@@ -5,6 +5,16 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.eraro.ErrorCode.INVALID_CLOUD_PROVIDER;
 import static io.harness.exception.WingsException.USER;
 
+import io.harness.exception.InvalidRequestException;
+import io.harness.exception.WingsException;
+import io.harness.security.encryption.EncryptedDataDetail;
+import io.harness.serializer.JsonUtils;
+
+import software.wings.beans.GcpConfig;
+import software.wings.beans.TaskType;
+import software.wings.exception.GcbClientException;
+import software.wings.service.intfc.security.EncryptionService;
+
 import com.google.api.client.googleapis.auth.oauth2.GoogleCredential;
 import com.google.api.client.googleapis.javanet.GoogleNetHttpTransport;
 import com.google.api.client.http.javanet.NetHttpTransport;
@@ -17,26 +27,16 @@ import com.google.api.services.monitoring.v3.Monitoring;
 import com.google.api.services.storage.Storage;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
-
-import io.harness.exception.InvalidRequestException;
-import io.harness.exception.WingsException;
-import io.harness.security.encryption.EncryptedDataDetail;
-import io.harness.serializer.JsonUtils;
-import lombok.extern.slf4j.Slf4j;
-import okhttp3.OkHttpClient;
-import okhttp3.Request;
-import org.apache.commons.io.IOUtils;
-import software.wings.beans.GcpConfig;
-import software.wings.beans.TaskType;
-import software.wings.exception.GcbClientException;
-import software.wings.service.intfc.security.EncryptionService;
-
 import java.io.IOException;
 import java.nio.charset.Charset;
 import java.security.GeneralSecurityException;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
+import lombok.extern.slf4j.Slf4j;
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
+import org.apache.commons.io.IOUtils;
 
 /**
  * Created by bzane on 2/22/17

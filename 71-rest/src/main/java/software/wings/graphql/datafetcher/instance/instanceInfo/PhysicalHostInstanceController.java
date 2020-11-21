@@ -1,12 +1,12 @@
 package software.wings.graphql.datafetcher.instance.instanceInfo;
 
-import com.google.inject.Inject;
-
 import software.wings.beans.infrastructure.instance.Instance;
 import software.wings.beans.infrastructure.instance.info.PhysicalHostInstanceInfo;
 import software.wings.graphql.datafetcher.instance.InstanceControllerUtils;
 import software.wings.graphql.schema.type.instance.QLInstanceType;
 import software.wings.graphql.schema.type.instance.QLPhysicalHostInstance;
+
+import com.google.inject.Inject;
 
 public class PhysicalHostInstanceController implements InstanceController<QLPhysicalHostInstance> {
   @Inject InstanceControllerUtils util;

@@ -1,15 +1,15 @@
 package software.wings.collect;
 
-import com.google.common.base.MoreObjects;
-import com.google.common.base.Objects;
-
 import io.harness.annotation.HarnessEntity;
 import io.harness.queue.Queuable;
-import org.mongodb.morphia.annotations.Entity;
-import org.mongodb.morphia.annotations.Reference;
+
 import software.wings.beans.artifact.Artifact;
 
+import com.google.common.base.MoreObjects;
+import com.google.common.base.Objects;
 import java.util.Date;
+import org.mongodb.morphia.annotations.Entity;
+import org.mongodb.morphia.annotations.Reference;
 
 @Entity(value = "collectorQueue2", noClassnameStored = true)
 @HarnessEntity(exportable = false)

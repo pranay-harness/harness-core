@@ -1,11 +1,11 @@
 package io.harness.ngpipeline.pipeline.executions.beans;
 
-import io.harness.ngpipeline.pipeline.executions.ExecutionStatus;
 import io.harness.ng.core.environment.beans.EnvironmentType;
-import lombok.Builder;
-import lombok.Value;
+import io.harness.ngpipeline.pipeline.executions.ExecutionStatus;
 
 import java.util.List;
+import lombok.Builder;
+import lombok.Value;
 
 @Value
 @Builder

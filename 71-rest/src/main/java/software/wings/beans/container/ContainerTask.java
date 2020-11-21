@@ -2,24 +2,25 @@ package software.wings.beans.container;
 
 import static software.wings.yaml.YamlHelper.trimYaml;
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.fasterxml.jackson.annotation.JsonTypeInfo;
-import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.annotation.HarnessEntity;
 import io.harness.beans.EmbeddedUser;
 import io.harness.mongo.index.Field;
 import io.harness.mongo.index.NgUniqueIndex;
 import io.harness.persistence.AccountAccess;
+
+import software.wings.beans.DeploymentSpecification;
+
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import com.github.reinert.jjschema.SchemaIgnore;
+import java.util.List;
+import java.util.regex.Pattern;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.experimental.FieldNameConstants;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Entity;
-import software.wings.beans.DeploymentSpecification;
-
-import java.util.List;
-import java.util.regex.Pattern;
 
 /**
  * Created by anubhaw on 2/6/17.

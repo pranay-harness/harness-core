@@ -1,11 +1,11 @@
 package io.harness.ccm.cluster.dao;
 
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
-
 import io.harness.ccm.cluster.entities.BatchJobInterval;
 import io.harness.ccm.cluster.entities.BatchJobInterval.BatchJobIntervalKeys;
 import io.harness.persistence.HPersistence;
+
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
 
 @Singleton
 public class BatchJobIntervalDao {

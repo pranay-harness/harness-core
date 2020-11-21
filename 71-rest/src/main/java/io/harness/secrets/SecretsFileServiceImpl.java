@@ -4,15 +4,15 @@ import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.delegate.service.DelegateAgentFileService.FileBucket.CONFIGS;
 import static io.harness.security.SimpleEncryption.CHARSET;
 
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
-
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.data.structure.UUIDGenerator;
+
 import software.wings.app.MainConfiguration;
 import software.wings.beans.BaseFile;
 import software.wings.service.intfc.FileService;
 
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.nio.ByteBuffer;

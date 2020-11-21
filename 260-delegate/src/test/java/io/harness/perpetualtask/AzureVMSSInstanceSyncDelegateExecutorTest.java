@@ -1,6 +1,7 @@
 package io.harness.perpetualtask;
 
 import static io.harness.rule.OwnerRule.SATYAM;
+
 import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.joor.Reflect.on;
@@ -11,10 +12,6 @@ import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-
-import com.google.inject.Inject;
-import com.google.protobuf.Any;
-import com.google.protobuf.ByteString;
 
 import io.harness.DelegateTest;
 import io.harness.azure.model.AzureVMData;
@@ -29,6 +26,16 @@ import io.harness.perpetualtask.instancesync.AzureVmssInstanceSyncPerpetualTaskP
 import io.harness.rest.RestResponse;
 import io.harness.rule.Owner;
 import io.harness.serializer.KryoSerializer;
+
+import software.wings.beans.AzureConfig;
+import software.wings.delegatetasks.azure.taskhandler.AzureVMSSSyncTaskHandler;
+import software.wings.service.intfc.security.EncryptionService;
+
+import com.google.inject.Inject;
+import com.google.protobuf.Any;
+import com.google.protobuf.ByteString;
+import java.time.Instant;
+import java.util.ArrayList;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -38,12 +45,6 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
 import retrofit2.Call;
-import software.wings.beans.AzureConfig;
-import software.wings.delegatetasks.azure.taskhandler.AzureVMSSSyncTaskHandler;
-import software.wings.service.intfc.security.EncryptionService;
-
-import java.time.Instant;
-import java.util.ArrayList;
 
 @RunWith(MockitoJUnitRunner.class)
 public class AzureVMSSInstanceSyncDelegateExecutorTest extends DelegateTest {

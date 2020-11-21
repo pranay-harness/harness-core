@@ -1,10 +1,9 @@
 package io.harness.batch.processing.reader;
 
 import static io.harness.rule.OwnerRule.SHUBHANSHU;
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.when;
-
-import com.google.inject.Inject;
 
 import io.harness.batch.processing.BatchProcessingBaseTest;
 import io.harness.batch.processing.billing.timeseries.service.impl.ActualIdleBillingDataServiceImpl;
@@ -14,6 +13,13 @@ import io.harness.batch.processing.ccm.BatchJobType;
 import io.harness.batch.processing.ccm.CCMJobConstants;
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
+
+import com.google.inject.Inject;
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
+import java.util.Collections;
+import java.util.List;
+import java.util.concurrent.atomic.AtomicBoolean;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -23,12 +29,6 @@ import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.mockito.runners.MockitoJUnitRunner;
 import org.springframework.batch.core.JobParameters;
-
-import java.time.Instant;
-import java.time.temporal.ChronoUnit;
-import java.util.Collections;
-import java.util.List;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 @RunWith(MockitoJUnitRunner.class)
 public class ActualIdleBillingDataReaderTest extends BatchProcessingBaseTest {

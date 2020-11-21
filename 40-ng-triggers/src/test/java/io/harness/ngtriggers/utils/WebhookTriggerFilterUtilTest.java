@@ -2,6 +2,7 @@ package io.harness.ngtriggers.utils;
 
 import static io.harness.ngtriggers.beans.source.webhook.WebhookEvent.MERGE_REQUEST;
 import static io.harness.rule.OwnerRule.ADWAIT;
+
 import static java.util.Collections.emptyList;
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -15,11 +16,11 @@ import io.harness.ngtriggers.beans.scm.WebhookPayloadData;
 import io.harness.ngtriggers.beans.source.webhook.WebhookPayloadCondition;
 import io.harness.ngtriggers.beans.source.webhook.WebhookTriggerSpec;
 import io.harness.rule.Owner;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
 
 import java.util.Arrays;
 import java.util.Map;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 public class WebhookTriggerFilterUtilTest extends CategoryTest {
   private String payload = "    {\n"

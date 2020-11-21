@@ -2,21 +2,17 @@ package software.wings.beans.alert;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
-import static java.util.stream.Collectors.toList;
-import static org.apache.commons.lang3.StringUtils.isNotBlank;
+
 import static software.wings.beans.Application.GLOBAL_APP_ID;
 
-import com.google.inject.Inject;
+import static java.util.stream.Collectors.toList;
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
-import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.alert.AlertData;
 import io.harness.delegate.beans.TaskGroup;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.delegate.beans.executioncapability.SelectorCapability;
-import lombok.Builder;
-import lombok.Data;
-import org.apache.commons.lang3.StringUtils;
-import org.mongodb.morphia.annotations.Transient;
+
 import software.wings.beans.Application;
 import software.wings.beans.CatalogItem;
 import software.wings.beans.Environment;
@@ -27,9 +23,15 @@ import software.wings.service.intfc.CatalogService;
 import software.wings.service.intfc.EnvironmentService;
 import software.wings.service.intfc.InfrastructureMappingService;
 
+import com.github.reinert.jjschema.SchemaIgnore;
+import com.google.inject.Inject;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
+import lombok.Builder;
+import lombok.Data;
+import org.apache.commons.lang3.StringUtils;
+import org.mongodb.morphia.annotations.Transient;
 
 @Data
 @Builder
@@ -56,9 +58,9 @@ public class NoEligibleDelegatesAlert implements AlertData {
         && StringUtils.equals(envId, otherAlertData.getEnvId())
         && StringUtils.equals(infraMappingId, otherAlertData.getInfraMappingId())
         && ((isEmpty(executionCapabilities) && isEmpty(otherAlertData.getExecutionCapabilities()))
-               || (isNotEmpty(executionCapabilities) && isNotEmpty(otherAlertData.getExecutionCapabilities())
-                      && executionCapabilities.containsAll(otherAlertData.getExecutionCapabilities())
-                      && otherAlertData.getExecutionCapabilities().containsAll(executionCapabilities)));
+            || (isNotEmpty(executionCapabilities) && isNotEmpty(otherAlertData.getExecutionCapabilities())
+                && executionCapabilities.containsAll(otherAlertData.getExecutionCapabilities())
+                && otherAlertData.getExecutionCapabilities().containsAll(executionCapabilities)));
   }
 
   @Override

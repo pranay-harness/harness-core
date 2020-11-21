@@ -1,15 +1,16 @@
 package software.wings.beans;
 
+import io.harness.beans.EmbeddedUser;
+
+import software.wings.annotation.Blueprint;
+
 import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
-import io.harness.beans.EmbeddedUser;
+import java.util.Map;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.experimental.FieldNameConstants;
-import software.wings.annotation.Blueprint;
-
-import java.util.Map;
 
 /**
  * Created by rishi on 5/18/17.

@@ -3,9 +3,10 @@ package io.harness.ccm.budget.entities;
 import static io.harness.ccm.budget.entities.BudgetScopeType.APPLICATION;
 import static io.harness.ccm.budget.entities.BudgetScopeType.CLUSTER;
 
+import software.wings.graphql.schema.type.aggregation.billing.QLBillingDataFilter;
+
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
-import software.wings.graphql.schema.type.aggregation.billing.QLBillingDataFilter;
 
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "type")
 @JsonSubTypes({

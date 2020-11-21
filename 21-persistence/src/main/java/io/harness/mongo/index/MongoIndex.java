@@ -1,12 +1,12 @@
 package io.harness.mongo.index;
 
-import com.mongodb.BasicDBObject;
 import io.harness.mongo.IndexCreator.IndexCreatorBuilder;
 import io.harness.mongo.IndexManagerInspectException;
+
+import com.mongodb.BasicDBObject;
+import java.util.List;
 import lombok.extern.slf4j.Slf4j;
 import org.slf4j.Logger;
-
-import java.util.List;
 
 public interface MongoIndex {
   String NAME = "name";

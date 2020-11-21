@@ -2,8 +2,7 @@ package software.wings.sm.states;
 
 import io.harness.beans.EmbeddedUser;
 import io.harness.security.encryption.EncryptedDataDetail;
-import lombok.Builder;
-import lombok.Data;
+
 import software.wings.beans.Application;
 import software.wings.beans.AwsAmiInfrastructureMapping;
 import software.wings.beans.AwsConfig;
@@ -12,6 +11,8 @@ import software.wings.beans.Service;
 import software.wings.beans.artifact.Artifact;
 
 import java.util.List;
+import lombok.Builder;
+import lombok.Data;
 
 @Data
 @Builder

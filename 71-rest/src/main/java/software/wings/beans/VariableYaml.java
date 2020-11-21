@@ -3,13 +3,14 @@ package software.wings.beans;
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 
 import io.harness.annotations.dev.OwnedBy;
+
+import software.wings.yaml.BaseYamlWithType;
+
+import java.util.List;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
-import software.wings.yaml.BaseYamlWithType;
-
-import java.util.List;
 
 @OwnedBy(CDC)
 @Data

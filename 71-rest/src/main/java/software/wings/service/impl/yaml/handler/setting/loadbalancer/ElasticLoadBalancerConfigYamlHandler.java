@@ -1,14 +1,13 @@
 package software.wings.service.impl.yaml.handler.setting.loadbalancer;
 
-import com.google.inject.Singleton;
-
-import com.amazonaws.regions.Regions;
 import software.wings.beans.ElasticLoadBalancerConfig;
 import software.wings.beans.ElasticLoadBalancerConfig.Yaml;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.yaml.ChangeContext;
 import software.wings.utils.Utils;
 
+import com.amazonaws.regions.Regions;
+import com.google.inject.Singleton;
 import java.util.List;
 
 /**

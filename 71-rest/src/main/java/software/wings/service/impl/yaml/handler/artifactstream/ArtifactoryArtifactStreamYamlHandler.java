@@ -3,13 +3,14 @@ package software.wings.service.impl.yaml.handler.artifactstream;
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
-import com.google.inject.Singleton;
-
 import io.harness.annotations.dev.OwnedBy;
+
 import software.wings.beans.artifact.ArtifactoryArtifactStream;
 import software.wings.beans.artifact.ArtifactoryArtifactStream.Yaml;
 import software.wings.beans.yaml.ChangeContext;
 import software.wings.utils.RepositoryType;
+
+import com.google.inject.Singleton;
 
 /**
  * @author rktummala on 10/09/17

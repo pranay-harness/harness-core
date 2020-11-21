@@ -2,14 +2,7 @@ package software.wings.graphql.datafetcher.connector;
 
 import static io.harness.rule.OwnerRule.MILOS;
 import static io.harness.rule.OwnerRule.TMACARI;
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.isA;
-import static org.mockito.Mockito.doNothing;
-import static org.mockito.Mockito.doReturn;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
+
 import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static software.wings.graphql.datafetcher.connector.utils.ConnectorConstants.ACCOUNT_ID;
 import static software.wings.graphql.datafetcher.connector.utils.ConnectorConstants.AUTHOR;
@@ -30,19 +23,21 @@ import static software.wings.graphql.datafetcher.connector.utils.Utility.getQlNe
 import static software.wings.graphql.datafetcher.connector.utils.Utility.getQlUpdateGitConnectorInputBuilder;
 import static software.wings.security.PermissionAttribute.PermissionType.MANAGE_CONNECTORS;
 
-import com.google.inject.Inject;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.isA;
+import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
 
 import io.harness.beans.EncryptedData;
 import io.harness.category.element.UnitTests;
 import io.harness.exception.InvalidRequestException;
 import io.harness.rule.Owner;
 import io.harness.utils.RequestField;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
+
 import software.wings.beans.DockerConfig;
 import software.wings.beans.GitConfig;
 import software.wings.beans.SettingAttribute;
@@ -72,8 +67,15 @@ import software.wings.service.impl.SettingServiceHelper;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.security.SecretManager;
 
+import com.google.inject.Inject;
 import java.lang.reflect.Method;
 import java.sql.SQLException;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
 
 public class UpdateConnectorDataFetcherTest extends AbstractDataFetcherTestBase {
   @Mock private SettingsService settingsService;

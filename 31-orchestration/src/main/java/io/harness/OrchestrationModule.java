@@ -2,14 +2,6 @@ package io.harness;
 
 import static java.util.Arrays.asList;
 
-import com.google.common.util.concurrent.ThreadFactoryBuilder;
-import com.google.inject.AbstractModule;
-import com.google.inject.Injector;
-import com.google.inject.Provides;
-import com.google.inject.Singleton;
-import com.google.inject.multibindings.MapBinder;
-import com.google.inject.name.Named;
-
 import io.harness.engine.EngineObtainmentHelper;
 import io.harness.engine.NoopTaskExecutor;
 import io.harness.engine.OrchestrationService;
@@ -44,6 +36,13 @@ import io.harness.tasks.TaskMode;
 import io.harness.threading.ThreadPool;
 import io.harness.waiter.WaiterModule;
 
+import com.google.common.util.concurrent.ThreadFactoryBuilder;
+import com.google.inject.AbstractModule;
+import com.google.inject.Injector;
+import com.google.inject.Provides;
+import com.google.inject.Singleton;
+import com.google.inject.multibindings.MapBinder;
+import com.google.inject.name.Named;
 import java.io.Closeable;
 import java.util.List;
 import java.util.concurrent.ExecutorService;

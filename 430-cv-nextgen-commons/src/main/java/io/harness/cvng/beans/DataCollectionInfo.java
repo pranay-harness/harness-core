@@ -1,12 +1,12 @@
 package io.harness.cvng.beans;
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import io.harness.cvng.models.VerificationType;
 import io.harness.delegate.beans.connector.ConnectorConfigDTO;
-import lombok.Data;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import java.util.Map;
+import lombok.Data;
 
 @Data
 @JsonTypeInfo(use = JsonTypeInfo.Id.CLASS, property = "@class")

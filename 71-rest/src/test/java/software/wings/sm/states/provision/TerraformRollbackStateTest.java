@@ -2,6 +2,17 @@ package software.wings.sm.states.provision;
 
 import static io.harness.rule.OwnerRule.ARCHIT;
 import static io.harness.rule.OwnerRule.BOJANA;
+
+import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
+import static software.wings.utils.WingsTestConstants.ACTIVITY_ID;
+import static software.wings.utils.WingsTestConstants.APP_ID;
+import static software.wings.utils.WingsTestConstants.ENV_ID;
+import static software.wings.utils.WingsTestConstants.PORTAL_URL;
+import static software.wings.utils.WingsTestConstants.PROVISIONER_ID;
+import static software.wings.utils.WingsTestConstants.UUID;
+import static software.wings.utils.WingsTestConstants.WORKFLOW_EXECUTION_ID;
+import static software.wings.utils.WingsTestConstants.WORKSPACE;
+
 import static java.util.stream.Collectors.toMap;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
@@ -15,17 +26,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
-import static software.wings.utils.WingsTestConstants.ACTIVITY_ID;
-import static software.wings.utils.WingsTestConstants.APP_ID;
-import static software.wings.utils.WingsTestConstants.ENV_ID;
-import static software.wings.utils.WingsTestConstants.PORTAL_URL;
-import static software.wings.utils.WingsTestConstants.PROVISIONER_ID;
-import static software.wings.utils.WingsTestConstants.UUID;
-import static software.wings.utils.WingsTestConstants.WORKFLOW_EXECUTION_ID;
-import static software.wings.utils.WingsTestConstants.WORKSPACE;
 
-import com.mongodb.DBCursor;
 import io.harness.beans.DelegateTask;
 import io.harness.beans.ExecutionStatus;
 import io.harness.beans.SweepingOutputInstance;
@@ -34,17 +35,7 @@ import io.harness.delegate.service.DelegateAgentFileService;
 import io.harness.rule.Owner;
 import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.tasks.ResponseData;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
-import org.mockito.Answers;
-import org.mockito.ArgumentCaptor;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.stubbing.Answer;
-import org.mongodb.morphia.query.MorphiaIterator;
-import org.mongodb.morphia.query.Query;
-import org.mongodb.morphia.query.Sort;
+
 import software.wings.WingsBaseTest;
 import software.wings.api.ScriptStateExecutionData;
 import software.wings.api.TerraformApplyMarkerParam;
@@ -70,12 +61,24 @@ import software.wings.sm.ExecutionResponse;
 import software.wings.sm.states.ManagerExecutionLogCallback;
 import software.wings.utils.GitUtilsManager;
 
+import com.mongodb.DBCursor;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.function.BiFunction;
 import java.util.stream.Collector;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
+import org.mockito.Answers;
+import org.mockito.ArgumentCaptor;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.stubbing.Answer;
+import org.mongodb.morphia.query.MorphiaIterator;
+import org.mongodb.morphia.query.Query;
+import org.mongodb.morphia.query.Sort;
 
 public class TerraformRollbackStateTest extends WingsBaseTest {
   @Mock TerraformConfig configParameter;

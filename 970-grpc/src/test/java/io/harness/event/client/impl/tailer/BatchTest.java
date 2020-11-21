@@ -1,6 +1,7 @@
 package io.harness.event.client.impl.tailer;
 
 import static io.harness.rule.OwnerRule.AVMOHAN;
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatIllegalStateException;
 
@@ -9,6 +10,7 @@ import io.harness.category.element.UnitTests;
 import io.harness.data.structure.UUIDGenerator;
 import io.harness.event.PublishMessage;
 import io.harness.rule.Owner;
+
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 

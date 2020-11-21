@@ -1,17 +1,16 @@
 package software.wings.resources.stats.model;
 
-import com.google.common.base.Preconditions;
+import io.harness.time.CalendarUtils;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import io.harness.time.CalendarUtils;
-import lombok.Value;
-import lombok.extern.slf4j.Slf4j;
-
+import com.google.common.base.Preconditions;
 import java.util.Calendar;
 import java.util.TimeZone;
 import javax.annotation.Nullable;
+import lombok.Value;
+import lombok.extern.slf4j.Slf4j;
 
 @Value
 @Slf4j

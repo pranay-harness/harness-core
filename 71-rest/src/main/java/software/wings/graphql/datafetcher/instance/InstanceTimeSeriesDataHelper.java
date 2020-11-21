@@ -2,18 +2,14 @@ package software.wings.graphql.datafetcher.instance;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
-import static software.wings.graphql.datafetcher.AbstractStatsDataFetcher.MAX_RETRY;
 
-import com.google.common.collect.HashMultimap;
-import com.google.common.collect.Multimap;
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
+import static software.wings.graphql.datafetcher.AbstractStatsDataFetcher.MAX_RETRY;
 
 import io.harness.exception.WingsException;
 import io.harness.timescaledb.DBUtils;
 import io.harness.timescaledb.TimeScaleDBConfig;
 import io.harness.timescaledb.TimeScaleDBService;
-import lombok.extern.slf4j.Slf4j;
+
 import software.wings.graphql.schema.type.aggregation.QLDataPoint;
 import software.wings.graphql.schema.type.aggregation.QLIdFilter;
 import software.wings.graphql.schema.type.aggregation.QLNoOpAggregateFunction;
@@ -31,6 +27,10 @@ import software.wings.graphql.schema.type.aggregation.instance.QLInstanceFilter;
 import software.wings.graphql.utils.nameservice.NameResult;
 import software.wings.graphql.utils.nameservice.NameService;
 
+import com.google.common.collect.HashMultimap;
+import com.google.common.collect.Multimap;
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -39,6 +39,7 @@ import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.List;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * Helper class that contains all the methods required to fetch instance time series data

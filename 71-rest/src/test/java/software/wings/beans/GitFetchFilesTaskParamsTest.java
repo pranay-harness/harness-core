@@ -1,15 +1,16 @@
 package software.wings.beans;
 
 import static io.harness.rule.OwnerRule.ANSHUL;
-import static org.assertj.core.api.Assertions.assertThat;
+
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
+
+import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.delegate.beans.executioncapability.HttpConnectionExecutionCapability;
 import io.harness.rule.Owner;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
+
 import software.wings.WingsBaseTest;
 import software.wings.delegatetasks.validation.capabilities.GitConnectionCapability;
 import software.wings.service.impl.ContainerServiceParams;
@@ -18,6 +19,8 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 public class GitFetchFilesTaskParamsTest extends WingsBaseTest {
   @Test

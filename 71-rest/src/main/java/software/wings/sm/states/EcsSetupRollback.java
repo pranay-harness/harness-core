@@ -4,11 +4,9 @@ import static io.harness.beans.ExecutionStatus.FAILED;
 import static io.harness.beans.ExecutionStatus.SUCCESS;
 import static io.harness.exception.ExceptionUtils.getMessage;
 import static io.harness.state.StateConstants.DEFAULT_STEADY_STATE_TIMEOUT;
+
 import static java.util.Collections.singletonList;
 
-import com.google.inject.Inject;
-
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import io.harness.beans.ExecutionStatus;
 import io.harness.context.ContextElementType;
 import io.harness.eraro.ErrorCode;
@@ -17,8 +15,7 @@ import io.harness.exception.WingsException;
 import io.harness.k8s.model.ImageDetails;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.tasks.ResponseData;
-import lombok.Getter;
-import lombok.Setter;
+
 import software.wings.api.CommandStateExecutionData;
 import software.wings.api.ContainerRollbackRequestElement;
 import software.wings.api.ContainerServiceElement;
@@ -46,7 +43,11 @@ import software.wings.sm.ExecutionResponse;
 import software.wings.sm.State;
 import software.wings.sm.StateType;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.google.inject.Inject;
 import java.util.Map;
+import lombok.Getter;
+import lombok.Setter;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class EcsSetupRollback extends State {

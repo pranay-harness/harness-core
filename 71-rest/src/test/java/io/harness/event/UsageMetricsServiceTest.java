@@ -3,13 +3,7 @@ package io.harness.event;
 import static io.harness.persistence.HQuery.excludeAuthority;
 import static io.harness.rule.OwnerRule.PRAVEEN;
 import static io.harness.rule.OwnerRule.SOWMYA;
-import static org.apache.cxf.ws.addressing.ContextUtils.generateUUID;
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.anyInt;
-import static org.mockito.Mockito.doNothing;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
+
 import static software.wings.beans.AccountStatus.ACTIVE;
 import static software.wings.beans.AccountType.COMMUNITY;
 import static software.wings.beans.AccountType.PAID;
@@ -19,8 +13,13 @@ import static software.wings.common.VerificationConstants.CV_META_DATA;
 import static software.wings.common.VerificationConstants.VERIFICATION_PROVIDER_TYPE_LOG;
 import static software.wings.common.VerificationConstants.VERIFICATION_PROVIDER_TYPE_METRIC;
 
-import com.google.common.collect.Lists;
-import com.google.inject.Inject;
+import static org.apache.cxf.ws.addressing.ContextUtils.generateUUID;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyInt;
+import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
 
 import io.harness.category.element.UnitTests;
 import io.harness.event.handler.impl.EventPublishHelper;
@@ -28,13 +27,7 @@ import io.harness.event.model.GenericEvent;
 import io.harness.event.usagemetrics.UsageMetricsService;
 import io.harness.metrics.HarnessMetricRegistry;
 import io.harness.rule.Owner;
-import org.apache.commons.lang3.reflect.FieldUtils;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
-import org.mockito.ArgumentCaptor;
-import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
+
 import software.wings.WingsBaseTest;
 import software.wings.beans.Account;
 import software.wings.beans.Account.Builder;
@@ -48,9 +41,18 @@ import software.wings.verification.CVConfiguration;
 import software.wings.verification.datadog.DatadogCVServiceConfiguration;
 import software.wings.verification.newrelic.NewRelicCVServiceConfiguration;
 
+import com.google.common.collect.Lists;
+import com.google.inject.Inject;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import org.apache.commons.lang3.reflect.FieldUtils;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
+import org.mockito.ArgumentCaptor;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
 
 public class UsageMetricsServiceTest extends WingsBaseTest {
   @Mock private HarnessMetricRegistry harnessMetricRegistry;

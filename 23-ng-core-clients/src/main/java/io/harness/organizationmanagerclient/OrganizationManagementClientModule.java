@@ -1,14 +1,14 @@
 package io.harness.organizationmanagerclient;
 
-import com.google.inject.AbstractModule;
-import com.google.inject.Provides;
-import com.google.inject.Scopes;
-
 import io.harness.organizationmanagerclient.remote.OrganizationManagerClient;
 import io.harness.organizationmanagerclient.remote.OrganizationManagerHttpClientFactory;
 import io.harness.remote.client.ServiceHttpClientConfig;
 import io.harness.security.ServiceTokenGenerator;
 import io.harness.serializer.kryo.KryoConverterFactory;
+
+import com.google.inject.AbstractModule;
+import com.google.inject.Provides;
+import com.google.inject.Scopes;
 
 public class OrganizationManagementClientModule extends AbstractModule {
   private final ServiceHttpClientConfig organizationManagerClientConfig;

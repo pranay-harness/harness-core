@@ -6,6 +6,12 @@ import static io.harness.rule.OwnerRule.RAMA;
 import static io.harness.rule.OwnerRule.RUSHABH;
 import static io.harness.rule.OwnerRule.SATYAM;
 import static io.harness.rule.OwnerRule.VIKAS;
+
+import static software.wings.security.AuthenticationFilter.API_KEY_HEADER;
+import static software.wings.security.AuthenticationFilter.NEXT_GEN_MANAGER_PREFIX;
+import static software.wings.security.AuthenticationFilter.USER_IDENTITY_HEADER;
+import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -19,21 +25,13 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-import static software.wings.security.AuthenticationFilter.API_KEY_HEADER;
-import static software.wings.security.AuthenticationFilter.NEXT_GEN_MANAGER_PREFIX;
-import static software.wings.security.AuthenticationFilter.USER_IDENTITY_HEADER;
-import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
 import io.harness.rule.Owner;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
+
 import software.wings.app.MainConfiguration;
 import software.wings.app.PortalConfig;
 import software.wings.beans.AuthToken;
@@ -61,6 +59,11 @@ import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MultivaluedHashMap;
 import javax.ws.rs.core.SecurityContext;
 import javax.ws.rs.core.UriInfo;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
 
 public class AuthenticationFilterTest extends CategoryTest {
   @Mock ResourceInfo resourceInfo = mock(ResourceInfo.class);

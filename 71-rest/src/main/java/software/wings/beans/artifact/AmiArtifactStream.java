@@ -3,28 +3,30 @@ package software.wings.beans.artifact;
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+
+import static software.wings.beans.artifact.ArtifactStreamType.AMI;
+
 import static java.lang.String.format;
 import static java.util.function.Function.identity;
 import static java.util.stream.Collectors.toList;
-import static software.wings.beans.artifact.ArtifactStreamType.AMI;
 
-import com.google.common.base.Joiner;
-
-import com.fasterxml.jackson.annotation.JsonTypeName;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.EmbeddedUser;
-import lombok.Builder;
-import lombok.Data;
-import lombok.EqualsAndHashCode;
-import lombok.NoArgsConstructor;
+
 import software.wings.beans.NameValuePair;
 
+import com.fasterxml.jackson.annotation.JsonTypeName;
+import com.google.common.base.Joiner;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
+import lombok.Builder;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.NoArgsConstructor;
 
 @OwnedBy(CDC)
 @JsonTypeName("AMI")

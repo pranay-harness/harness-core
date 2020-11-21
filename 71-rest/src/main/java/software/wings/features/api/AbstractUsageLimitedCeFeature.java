@@ -1,8 +1,8 @@
 package software.wings.features.api;
 
-import com.google.inject.Inject;
-
 import software.wings.service.intfc.AccountService;
+
+import com.google.inject.Inject;
 
 public abstract class AbstractUsageLimitedCeFeature extends AbstractRestrictedCeFeature implements UsageLimitedFeature {
   @Inject

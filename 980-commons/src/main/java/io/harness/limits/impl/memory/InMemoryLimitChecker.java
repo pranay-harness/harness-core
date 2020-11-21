@@ -2,12 +2,12 @@ package io.harness.limits.impl.memory;
 
 import io.harness.limits.lib.StaticLimit;
 import io.harness.limits.lib.StaticLimitChecker;
+
+import java.util.concurrent.atomic.AtomicInteger;
 import lombok.Getter;
 import net.jcip.annotations.ThreadSafe;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * In memory implementation of a Static Limit Checker.

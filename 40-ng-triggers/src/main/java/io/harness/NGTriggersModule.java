@@ -1,10 +1,9 @@
 package io.harness;
 
-import com.google.inject.AbstractModule;
-
 import io.harness.ngtriggers.service.NGTriggerService;
 import io.harness.ngtriggers.service.impl.NGTriggerServiceImpl;
 
+import com.google.inject.AbstractModule;
 import java.util.concurrent.atomic.AtomicReference;
 
 public class NGTriggersModule extends AbstractModule {

@@ -8,11 +8,13 @@ import static software.wings.alerts.AlertSeverity.Error;
 import static software.wings.alerts.AlertSeverity.Warning;
 
 import io.harness.alert.AlertData;
-import lombok.Getter;
+
 import software.wings.alerts.AlertCategory;
 import software.wings.alerts.AlertSeverity;
 import software.wings.beans.alert.cv.ContinuousVerificationAlertData;
 import software.wings.beans.alert.cv.ContinuousVerificationDataCollectionAlert;
+
+import lombok.Getter;
 
 public enum AlertType {
   ApprovalNeeded(Approval, Warning, ApprovalNeededAlert.class),

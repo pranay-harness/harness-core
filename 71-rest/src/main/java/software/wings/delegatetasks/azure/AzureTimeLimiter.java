@@ -2,26 +2,27 @@ package software.wings.delegatetasks.azure;
 
 import static io.harness.logging.CommandExecutionStatus.FAILURE;
 import static io.harness.threading.Morpheus.sleep;
-import static java.lang.String.format;
-import static java.time.Duration.ofSeconds;
+
 import static software.wings.delegatetasks.azure.DefaultCompletableSubscriber.CompletableSubscriberStatus.COMPLETED;
 import static software.wings.delegatetasks.azure.DefaultCompletableSubscriber.CompletableSubscriberStatus.ERROR;
 import static software.wings.delegatetasks.azure.DefaultCompletableSubscriber.CompletableSubscriberStatus.SUBSCRIBED;
+
+import static java.lang.String.format;
+import static java.time.Duration.ofSeconds;
+
+import io.harness.exception.InvalidRequestException;
+import io.harness.logging.LogCallback;
+import io.harness.logging.LogLevel;
 
 import com.google.common.util.concurrent.TimeLimiter;
 import com.google.common.util.concurrent.UncheckedExecutionException;
 import com.google.common.util.concurrent.UncheckedTimeoutException;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
-
-import io.harness.exception.InvalidRequestException;
-import io.harness.logging.LogCallback;
-import io.harness.logging.LogLevel;
-import lombok.NoArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-
 import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
+import lombok.NoArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 @Singleton
 @NoArgsConstructor

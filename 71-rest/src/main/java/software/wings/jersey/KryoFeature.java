@@ -2,7 +2,6 @@ package software.wings.jersey;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
-
 import javax.ws.rs.core.Configuration;
 import javax.ws.rs.core.Feature;
 import javax.ws.rs.core.FeatureContext;

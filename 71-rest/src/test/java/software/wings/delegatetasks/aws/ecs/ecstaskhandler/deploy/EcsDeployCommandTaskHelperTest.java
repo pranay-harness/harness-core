@@ -1,6 +1,10 @@
 package software.wings.delegatetasks.aws.ecs.ecstaskhandler.deploy;
 
 import static io.harness.rule.OwnerRule.SATYAM;
+
+import static software.wings.beans.InstanceUnitType.COUNT;
+import static software.wings.beans.command.EcsResizeParams.EcsResizeParamsBuilder.anEcsResizeParams;
+
 import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
@@ -10,24 +14,11 @@ import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
-import static software.wings.beans.InstanceUnitType.COUNT;
-import static software.wings.beans.command.EcsResizeParams.EcsResizeParamsBuilder.anEcsResizeParams;
 import static wiremock.com.google.common.collect.Lists.newArrayList;
 
-import com.google.inject.Inject;
-
-import com.amazonaws.services.applicationautoscaling.model.DeregisterScalableTargetRequest;
-import com.amazonaws.services.applicationautoscaling.model.DescribeScalableTargetsResult;
-import com.amazonaws.services.applicationautoscaling.model.ScalableTarget;
-import com.amazonaws.services.ecs.model.Service;
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
-import org.mockito.ArgumentCaptor;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.Spy;
+
 import software.wings.WingsBaseTest;
 import software.wings.api.ContainerServiceData;
 import software.wings.beans.AwsConfig;
@@ -41,10 +32,21 @@ import software.wings.service.impl.AwsHelperService;
 import software.wings.service.intfc.aws.delegate.AwsAppAutoScalingHelperServiceDelegate;
 import software.wings.service.intfc.aws.delegate.AwsEcsHelperServiceDelegate;
 
+import com.amazonaws.services.applicationautoscaling.model.DeregisterScalableTargetRequest;
+import com.amazonaws.services.applicationautoscaling.model.DescribeScalableTargetsResult;
+import com.amazonaws.services.applicationautoscaling.model.ScalableTarget;
+import com.amazonaws.services.ecs.model.Service;
+import com.google.inject.Inject;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
+import org.mockito.ArgumentCaptor;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.Spy;
 
 public class EcsDeployCommandTaskHelperTest extends WingsBaseTest {
   @Mock private AwsClusterService mockAwsClusterService;

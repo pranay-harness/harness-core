@@ -3,6 +3,7 @@ package software.wings.delegatetasks.aws;
 import static io.harness.delegate.beans.TaskData.DEFAULT_ASYNC_CALL_TIMEOUT;
 import static io.harness.rule.OwnerRule.IVAN;
 import static io.harness.rule.OwnerRule.SATYAM;
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 import static org.joor.Reflect.on;
@@ -13,18 +14,13 @@ import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.verify;
 
-import com.amazonaws.services.ecs.model.Service;
 import io.harness.beans.ExecutionStatus;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.beans.DelegateTaskPackage;
 import io.harness.delegate.beans.TaskData;
 import io.harness.exception.InvalidRequestException;
 import io.harness.rule.Owner;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
+
 import software.wings.WingsBaseTest;
 import software.wings.service.impl.aws.model.AwsEcsListClusterServicesRequest;
 import software.wings.service.impl.aws.model.AwsEcsListClusterServicesResponse;
@@ -33,7 +29,13 @@ import software.wings.service.impl.aws.model.AwsEcsRequest;
 import software.wings.service.impl.aws.model.AwsResponse;
 import software.wings.service.intfc.aws.delegate.AwsEcsHelperServiceDelegate;
 
+import com.amazonaws.services.ecs.model.Service;
 import java.util.Collections;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
 
 public class AwsEcsTaskTest extends WingsBaseTest {
   @Mock private AwsEcsHelperServiceDelegate mockEcsHelperServiceDelegate;

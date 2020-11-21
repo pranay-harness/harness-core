@@ -3,11 +3,6 @@ package software.wings.infra;
 import static software.wings.beans.InfrastructureType.PHYSICAL_INFRA_WINRM;
 import static software.wings.beans.PhysicalInfrastructureMappingWinRm.Builder.aPhysicalInfrastructureMappingWinRm;
 
-import com.fasterxml.jackson.annotation.JsonTypeName;
-import lombok.Builder;
-import lombok.Data;
-import lombok.EqualsAndHashCode;
-import org.mongodb.morphia.annotations.Transient;
 import software.wings.api.CloudProviderType;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.InfrastructureMappingType;
@@ -15,7 +10,12 @@ import software.wings.beans.PhysicalInfrastructureMappingWinRm;
 import software.wings.beans.infrastructure.Host;
 import software.wings.service.impl.yaml.handler.InfraDefinition.CloudProviderInfrastructureYaml;
 
+import com.fasterxml.jackson.annotation.JsonTypeName;
 import java.util.List;
+import lombok.Builder;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
+import org.mongodb.morphia.annotations.Transient;
 
 @JsonTypeName("PHYSICAL_DATA_CENTER_WINRM")
 @Data

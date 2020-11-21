@@ -2,24 +2,23 @@ package software.wings.verification;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 
-import com.google.inject.Inject;
+import software.wings.api.ExecutionDataValue;
+import software.wings.dl.WingsPersistence;
+import software.wings.service.impl.analysis.AnalysisComparisonStrategy;
+import software.wings.sm.StateExecutionData;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.google.inject.Inject;
+import java.util.Iterator;
+import java.util.Map;
+import java.util.Set;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.experimental.FieldNameConstants;
-import software.wings.api.ExecutionDataValue;
-import software.wings.dl.WingsPersistence;
-import software.wings.service.impl.analysis.AnalysisComparisonStrategy;
-import software.wings.sm.StateExecutionData;
-
-import java.util.Iterator;
-import java.util.Map;
-import java.util.Set;
 
 @Data
 @Builder

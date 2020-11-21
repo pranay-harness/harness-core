@@ -6,11 +6,9 @@ import static io.harness.delegatetasks.UpsertSecretTaskType.RENAME;
 import static io.harness.delegatetasks.UpsertSecretTaskType.UPDATE;
 import static io.harness.eraro.ErrorCode.SECRET_MANAGEMENT_ERROR;
 import static io.harness.exception.WingsException.USER;
+
 import static software.wings.beans.TaskType.DELETE_SECRET;
 import static software.wings.beans.TaskType.UPSERT_SECRET;
-
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.DelegateTask;
@@ -27,8 +25,11 @@ import io.harness.exception.SecretManagementException;
 import io.harness.security.encryption.EncryptedRecord;
 import io.harness.security.encryption.EncryptedRecordData;
 import io.harness.security.encryption.EncryptionConfig;
+
 import software.wings.service.intfc.DelegateService;
 
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import javax.validation.executable.ValidateOnExecution;
 
 @ValidateOnExecution

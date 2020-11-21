@@ -1,13 +1,13 @@
 package software.wings.graphql.datafetcher.billing;
 
 import static io.harness.rule.OwnerRule.HANTANG;
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.when;
 
-import graphql.GraphQLContext;
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.ccm.billing.graphql.GcpBillingAccountQueryArguments;
@@ -15,6 +15,12 @@ import io.harness.ccm.config.GcpBillingAccount;
 import io.harness.ccm.config.GcpBillingAccountDTO;
 import io.harness.ccm.config.GcpBillingAccountService;
 import io.harness.rule.Owner;
+
+import software.wings.service.intfc.ce.CeAccountExpirationChecker;
+
+import graphql.GraphQLContext;
+import java.util.Arrays;
+import java.util.List;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -23,10 +29,6 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnit;
 import org.mockito.junit.MockitoRule;
-import software.wings.service.intfc.ce.CeAccountExpirationChecker;
-
-import java.util.Arrays;
-import java.util.List;
 
 public class GcpBillingAccountDataFetcherTest extends CategoryTest {
   private String accountId = "ACCOUNT_ID";

@@ -24,13 +24,11 @@ import static io.harness.event.handler.impl.MarketoHandler.Constants.UTM_CONTENT
 import static io.harness.event.handler.impl.MarketoHandler.Constants.UTM_MEDIUM;
 import static io.harness.event.handler.impl.MarketoHandler.Constants.UTM_SOURCE;
 import static io.harness.event.handler.impl.MarketoHandler.Constants.UTM_TERM;
+
 import static software.wings.beans.security.UserGroup.DEFAULT_ACCOUNT_ADMIN_USER_GROUP_NAME;
 import static software.wings.beans.security.UserGroup.DEFAULT_NON_PROD_SUPPORT_USER_GROUP_NAME;
 import static software.wings.beans.security.UserGroup.DEFAULT_PROD_SUPPORT_USER_GROUP_NAME;
 import static software.wings.beans.security.UserGroup.DEFAULT_READ_ONLY_USER_GROUP_NAME;
-
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.EmbeddedUser;
@@ -44,8 +42,7 @@ import io.harness.event.model.Event;
 import io.harness.event.model.EventData;
 import io.harness.event.model.EventType;
 import io.harness.event.publisher.EventPublisher;
-import lombok.NonNull;
-import lombok.extern.slf4j.Slf4j;
+
 import software.wings.beans.Account;
 import software.wings.beans.AccountEvent;
 import software.wings.beans.AccountEventType;
@@ -85,6 +82,8 @@ import software.wings.service.intfc.WorkflowService;
 import software.wings.service.intfc.verification.CVConfigurationService;
 import software.wings.verification.CVConfiguration;
 
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -92,6 +91,8 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import javax.annotation.Nullable;
+import lombok.NonNull;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * Publishes event if all the criteria is met. MarketoHandler handles the event and converts it into a marketo campaign.

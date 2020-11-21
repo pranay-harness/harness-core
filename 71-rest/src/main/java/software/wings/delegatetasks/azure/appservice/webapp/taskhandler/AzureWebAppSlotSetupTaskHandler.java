@@ -4,13 +4,9 @@ import static io.harness.azure.model.AzureConstants.ACR_ACCESS_KEYS_BLANK_VALIDA
 import static io.harness.azure.model.AzureConstants.ACR_USERNAME_BLANK_VALIDATION_MSG;
 import static io.harness.azure.model.AzureConstants.DOCKER_REGISTRY_SERVER_SECRET_PROPERTY_NAME;
 import static io.harness.azure.model.AzureConstants.DOCKER_REGISTRY_SERVER_USERNAME_PROPERTY_NAME;
+
 import static org.apache.commons.lang3.StringUtils.isBlank;
 
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
-
-import com.microsoft.azure.management.containerregistry.AccessKeyType;
-import com.microsoft.azure.management.containerregistry.RegistryCredentials;
 import io.harness.azure.context.AzureWebClientContext;
 import io.harness.azure.model.AzureAppServiceDockerSetting;
 import io.harness.azure.model.AzureConfig;
@@ -27,14 +23,19 @@ import io.harness.delegate.task.azure.appservice.AzureAppServiceTaskResponse;
 import io.harness.delegate.task.azure.appservice.webapp.request.AzureWebAppSlotSetupParameters;
 import io.harness.delegate.task.azure.appservice.webapp.response.AzureWebAppSlotSetupResponse;
 import io.harness.exception.InvalidArgumentsException;
-import lombok.NoArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-import org.jetbrains.annotations.NotNull;
+
 import software.wings.delegatetasks.azure.appservice.deployment.AzureAppServiceDeploymentService;
 import software.wings.delegatetasks.azure.appservice.deployment.context.AzureAppServiceDockerDeploymentContext;
 import software.wings.delegatetasks.azure.appservice.webapp.AbstractAzureWebAppTaskHandler;
 
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
+import com.microsoft.azure.management.containerregistry.AccessKeyType;
+import com.microsoft.azure.management.containerregistry.RegistryCredentials;
 import java.util.Map;
+import lombok.NoArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.jetbrains.annotations.NotNull;
 
 @Singleton
 @NoArgsConstructor

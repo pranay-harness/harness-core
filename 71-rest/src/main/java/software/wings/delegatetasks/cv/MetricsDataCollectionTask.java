@@ -2,13 +2,10 @@ package software.wings.delegatetasks.cv;
 
 import static software.wings.delegatetasks.AbstractDelegateDataCollectionTask.HARNESS_HEARTBEAT_METRIC_NAME;
 
-import com.google.common.collect.Iterables;
-import com.google.inject.Inject;
-
 import io.harness.delegate.beans.DelegateTaskPackage;
 import io.harness.delegate.beans.DelegateTaskResponse;
 import io.harness.delegate.beans.logstreaming.ILogStreamingTaskClient;
-import lombok.extern.slf4j.Slf4j;
+
 import software.wings.delegatetasks.MetricDataStoreService;
 import software.wings.service.impl.analysis.DataCollectionInfoV2;
 import software.wings.service.impl.analysis.MetricElement;
@@ -16,6 +13,8 @@ import software.wings.service.impl.analysis.MetricsDataCollectionInfo;
 import software.wings.service.impl.newrelic.NewRelicMetricDataRecord;
 import software.wings.service.intfc.analysis.ClusterLevel;
 
+import com.google.common.collect.Iterables;
+import com.google.inject.Inject;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -27,6 +26,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.function.BooleanSupplier;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
+import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class MetricsDataCollectionTask<T extends MetricsDataCollectionInfo> extends AbstractDataCollectionTask<T> {
   private MetricsDataCollector<T> metricsDataCollector;
@@ -118,11 +118,10 @@ public class MetricsDataCollectionTask<T extends MetricsDataCollectionInfo> exte
         if (metricsDataCollectionInfo.getDataCollectionStartTime() != null) {
           // unfortunately there is a inconsistency between how heartbeat is created for workflow and how it's created
           // for service guard.
-          dataCollectionMinute =
-              (int) ((dataCollectionMinute
-                         - TimeUnit.MILLISECONDS.toMinutes(
-                               metricsDataCollectionInfo.getDataCollectionStartTime().toEpochMilli()))
-                  - 1);
+          dataCollectionMinute = (int) ((dataCollectionMinute
+                                            - TimeUnit.MILLISECONDS.toMinutes(
+                                                metricsDataCollectionInfo.getDataCollectionStartTime().toEpochMilli()))
+              - 1);
           log.info("dataCollectionMinute min: " + dataCollectionMinute);
         }
         newRelicMetrics.add(NewRelicMetricDataRecord.builder()

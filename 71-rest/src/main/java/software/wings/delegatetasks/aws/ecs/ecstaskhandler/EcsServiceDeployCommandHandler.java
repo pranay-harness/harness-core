@@ -3,15 +3,13 @@ package software.wings.delegatetasks.aws.ecs.ecstaskhandler;
 import static io.harness.exception.ExceptionUtils.getMessage;
 import static io.harness.logging.CommandExecutionStatus.FAILURE;
 import static io.harness.logging.LogLevel.ERROR;
+
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 import static software.wings.beans.command.CommandExecutionContext.Builder.aCommandExecutionContext;
 
-import com.google.inject.Inject;
-import com.google.inject.Injector;
-import com.google.inject.Singleton;
-
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.security.encryption.EncryptedDataDetail;
+
 import software.wings.api.DeploymentType;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.command.CommandExecutionContext;
@@ -23,6 +21,9 @@ import software.wings.helpers.ext.ecs.request.EcsServiceDeployRequest;
 import software.wings.helpers.ext.ecs.response.EcsCommandExecutionResponse;
 import software.wings.helpers.ext.ecs.response.EcsServiceDeployResponse;
 
+import com.google.inject.Inject;
+import com.google.inject.Injector;
+import com.google.inject.Singleton;
 import java.util.List;
 
 @Deprecated

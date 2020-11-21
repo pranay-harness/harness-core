@@ -1,6 +1,5 @@
 package io.harness.ccm.billing.preaggregated;
 
-import static com.google.cloud.bigquery.FieldValue.Attribute.PRIMITIVE;
 import static io.harness.ccm.billing.preaggregated.PreAggregateConstants.entityCloudProviderConst;
 import static io.harness.ccm.billing.preaggregated.PreAggregateConstants.entityConstantAwsBlendedCost;
 import static io.harness.ccm.billing.preaggregated.PreAggregateConstants.entityConstantAwsInstanceType;
@@ -27,11 +26,26 @@ import static io.harness.ccm.billing.preaggregated.PreAggregateConstants.entityN
 import static io.harness.ccm.billing.preaggregated.PreAggregateConstants.maxPreAggStartTimeConstant;
 import static io.harness.ccm.billing.preaggregated.PreAggregateConstants.minPreAggStartTimeConstant;
 import static io.harness.rule.OwnerRule.ROHIT;
+
+import static com.google.cloud.bigquery.FieldValue.Attribute.PRIMITIVE;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyDouble;
 import static org.mockito.Mockito.doCallRealMethod;
 import static org.mockito.Mockito.when;
+
+import io.harness.CategoryTest;
+import io.harness.category.element.UnitTests;
+import io.harness.ccm.billing.graphql.CloudBillingFilter;
+import io.harness.ccm.billing.graphql.CloudBillingIdFilter;
+import io.harness.ccm.billing.graphql.CloudBillingTimeFilter;
+import io.harness.ccm.billing.preaggregated.PreAggregatedCostData.PreAggregatedCostDataBuilder;
+import io.harness.rule.Owner;
+
+import software.wings.graphql.datafetcher.billing.BillingDataHelper;
+import software.wings.graphql.schema.type.aggregation.QLIdOperator;
+import software.wings.graphql.schema.type.aggregation.QLTimeOperator;
+import software.wings.graphql.schema.type.aggregation.billing.QLBillingStatsInfo;
 
 import com.google.cloud.Timestamp;
 import com.google.cloud.bigquery.Field;
@@ -40,32 +54,11 @@ import com.google.cloud.bigquery.FieldValue;
 import com.google.cloud.bigquery.FieldValueList;
 import com.google.cloud.bigquery.StandardSQLTypeName;
 import com.google.cloud.bigquery.TableResult;
-
 import com.healthmarketscience.sqlbuilder.BinaryCondition;
 import com.healthmarketscience.sqlbuilder.Condition;
 import com.healthmarketscience.sqlbuilder.FunctionCall;
 import com.healthmarketscience.sqlbuilder.SelectQuery;
 import com.healthmarketscience.sqlbuilder.SqlObject;
-import io.harness.CategoryTest;
-import io.harness.category.element.UnitTests;
-import io.harness.ccm.billing.graphql.CloudBillingFilter;
-import io.harness.ccm.billing.graphql.CloudBillingIdFilter;
-import io.harness.ccm.billing.graphql.CloudBillingTimeFilter;
-import io.harness.ccm.billing.preaggregated.PreAggregatedCostData.PreAggregatedCostDataBuilder;
-import io.harness.rule.Owner;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.junit.MockitoJUnit;
-import org.mockito.junit.MockitoRule;
-import software.wings.graphql.datafetcher.billing.BillingDataHelper;
-import software.wings.graphql.schema.type.aggregation.QLIdOperator;
-import software.wings.graphql.schema.type.aggregation.QLTimeOperator;
-import software.wings.graphql.schema.type.aggregation.billing.QLBillingStatsInfo;
-
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -75,6 +68,14 @@ import java.util.GregorianCalendar;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import org.junit.Before;
+import org.junit.Rule;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.MockitoJUnit;
+import org.mockito.junit.MockitoRule;
 
 public class PreAggregatedBillingDataHelperTest extends CategoryTest {
   @Mock FieldValueList row;

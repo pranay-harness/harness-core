@@ -1,17 +1,19 @@
 package software.wings.service.impl.yaml.sync;
 
 import static io.harness.rule.OwnerRule.DEEPAK;
-import static org.assertj.core.api.Assertions.assertThat;
 
-import com.google.inject.Inject;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
+
+import software.wings.yaml.errorhandling.GitSyncError;
+import software.wings.yaml.errorhandling.GitToHarnessErrorDetails;
+
+import com.google.inject.Inject;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
-import software.wings.yaml.errorhandling.GitSyncError;
-import software.wings.yaml.errorhandling.GitToHarnessErrorDetails;
 
 public class GitSyncErrorUtilsTest {
   @InjectMocks @Inject GitSyncErrorUtils gitSyncErrorUtils;

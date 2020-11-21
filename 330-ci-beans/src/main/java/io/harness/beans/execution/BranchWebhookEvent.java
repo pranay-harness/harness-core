@@ -3,10 +3,9 @@ package io.harness.beans.execution;
 import static io.harness.beans.execution.WebhookEvent.Type.BRANCH;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
+import java.util.List;
 import lombok.Builder;
 import lombok.Value;
-
-import java.util.List;
 
 @Value
 @Builder

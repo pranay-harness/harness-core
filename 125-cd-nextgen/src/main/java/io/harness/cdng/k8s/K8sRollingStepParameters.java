@@ -1,17 +1,17 @@
 package io.harness.cdng.k8s;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import io.harness.beans.ParameterField;
 import io.harness.common.SwaggerConstants;
 import io.harness.executionplan.stepsdependency.StepDependencySpec;
 import io.harness.state.io.StepParameters;
+
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import io.swagger.annotations.ApiModelProperty;
+import java.util.Map;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-
-import java.util.Map;
 
 @Data
 @Builder

@@ -2,14 +2,15 @@ package migrations.all;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 
-import com.google.inject.Inject;
-
 import io.harness.persistence.HIterator;
+
+import software.wings.beans.Preference;
+import software.wings.dl.WingsPersistence;
+
+import com.google.inject.Inject;
 import lombok.extern.slf4j.Slf4j;
 import migrations.Migration;
 import org.mongodb.morphia.query.Query;
-import software.wings.beans.Preference;
-import software.wings.dl.WingsPersistence;
 
 @Slf4j
 public class PreferenceUserIdRemoveDollarSignMigration implements Migration {

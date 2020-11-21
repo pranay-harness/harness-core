@@ -4,10 +4,7 @@ import io.harness.batch.processing.cloudevents.aws.ecs.service.CEClusterDao;
 import io.harness.batch.processing.cloudevents.aws.ecs.service.intfc.AwsECSClusterService;
 import io.harness.batch.processing.cloudevents.aws.ecs.service.support.intfc.AwsECSHelperService;
 import io.harness.batch.processing.cloudevents.aws.ecs.service.support.intfc.AwsHelperResourceService;
-import lombok.Value;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
+
 import software.wings.beans.AwsCrossAccountAttributes;
 import software.wings.beans.NameValuePair;
 import software.wings.beans.ce.CEAwsConfig;
@@ -19,6 +16,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+import lombok.Value;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
 
 @Slf4j
 @Service

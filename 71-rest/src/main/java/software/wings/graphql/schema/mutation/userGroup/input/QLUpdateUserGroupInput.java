@@ -1,9 +1,7 @@
 package software.wings.graphql.schema.mutation.userGroup.input;
 
 import io.harness.utils.RequestField;
-import lombok.Builder;
-import lombok.Value;
-import lombok.experimental.FieldNameConstants;
+
 import software.wings.graphql.schema.mutation.QLMutationInput;
 import software.wings.graphql.schema.type.permissions.QLUserGroupPermissions;
 import software.wings.graphql.schema.type.usergroup.QLNotificationSettings;
@@ -12,6 +10,9 @@ import software.wings.security.PermissionAttribute;
 import software.wings.security.annotations.Scope;
 
 import java.util.List;
+import lombok.Builder;
+import lombok.Value;
+import lombok.experimental.FieldNameConstants;
 
 @Value
 @Builder

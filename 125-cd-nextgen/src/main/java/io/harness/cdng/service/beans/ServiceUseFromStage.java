@@ -10,14 +10,14 @@ import io.harness.walktree.beans.VisitableChild;
 import io.harness.walktree.beans.VisitableChildren;
 import io.harness.walktree.visitor.SimpleVisitorHelper;
 import io.harness.walktree.visitor.Visitable;
+
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
-import lombok.Builder;
-import lombok.Data;
-
 import java.io.Serializable;
 import java.util.Collections;
 import javax.validation.constraints.NotNull;
+import lombok.Builder;
+import lombok.Data;
 
 @Data
 @Builder

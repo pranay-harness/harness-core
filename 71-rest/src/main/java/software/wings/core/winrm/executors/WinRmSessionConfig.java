@@ -1,18 +1,19 @@
 package software.wings.core.winrm.executors;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.encryption.Encrypted;
-import lombok.Builder;
-import lombok.Data;
-import lombok.ToString;
-import org.hibernate.validator.constraints.NotEmpty;
+
 import software.wings.annotation.EncryptableSetting;
 import software.wings.beans.WinRmConnectionAttributes.AuthenticationScheme;
 import software.wings.settings.SettingVariableTypes;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.github.reinert.jjschema.SchemaIgnore;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
+import lombok.Builder;
+import lombok.Data;
+import lombok.ToString;
+import org.hibernate.validator.constraints.NotEmpty;
 
 @Data
 @Builder

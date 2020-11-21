@@ -2,23 +2,12 @@ package software.wings.scheduler;
 
 import static io.harness.mongo.MongoUtils.setUnset;
 import static io.harness.persistence.HQuery.excludeAuthority;
-import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 
-import com.google.inject.Inject;
+import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 
 import io.harness.persistence.HIterator;
 import io.harness.scheduler.PersistentScheduler;
-import lombok.extern.slf4j.Slf4j;
-import org.mongodb.morphia.query.Query;
-import org.mongodb.morphia.query.UpdateOperations;
-import org.quartz.CronScheduleBuilder;
-import org.quartz.DisallowConcurrentExecution;
-import org.quartz.Job;
-import org.quartz.JobBuilder;
-import org.quartz.JobDetail;
-import org.quartz.JobExecutionContext;
-import org.quartz.Trigger;
-import org.quartz.TriggerBuilder;
+
 import software.wings.beans.Account;
 import software.wings.beans.User;
 import software.wings.beans.loginSettings.LoginSettings;
@@ -30,8 +19,20 @@ import software.wings.service.impl.UserServiceImpl;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.FeatureFlagService;
 
+import com.google.inject.Inject;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
+import lombok.extern.slf4j.Slf4j;
+import org.mongodb.morphia.query.Query;
+import org.mongodb.morphia.query.UpdateOperations;
+import org.quartz.CronScheduleBuilder;
+import org.quartz.DisallowConcurrentExecution;
+import org.quartz.Job;
+import org.quartz.JobBuilder;
+import org.quartz.JobDetail;
+import org.quartz.JobExecutionContext;
+import org.quartz.Trigger;
+import org.quartz.TriggerBuilder;
 
 /**
  * Have to add the password expiration double check case.

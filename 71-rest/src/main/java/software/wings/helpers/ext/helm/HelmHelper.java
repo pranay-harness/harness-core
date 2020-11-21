@@ -7,17 +7,15 @@ import static io.harness.govern.Switch.unhandled;
 import static io.harness.helm.HelmConstants.HELM_DOCKER_IMAGE_NAME_PLACEHOLDER;
 import static io.harness.helm.HelmConstants.HELM_DOCKER_IMAGE_TAG_PLACEHOLDER;
 import static io.harness.helm.HelmConstants.HELM_NAMESPACE_PLACEHOLDER;
+
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
-
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
 
 import io.harness.delegate.service.ExecutionConfigOverrideFromFileOnDelegate;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
 import io.harness.expression.ExpressionEvaluator;
-import org.apache.commons.io.LineIterator;
+
 import software.wings.beans.HelmExecutionSummary;
 import software.wings.beans.appmanifest.ManifestFile;
 import software.wings.beans.appmanifest.StoreType;
@@ -30,10 +28,13 @@ import software.wings.helpers.ext.helm.request.HelmChartConfigParams;
 import software.wings.helpers.ext.helm.response.HelmChartInfo;
 import software.wings.helpers.ext.k8s.request.K8sDelegateManifestConfig;
 
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import java.io.IOException;
 import java.io.StringReader;
 import java.util.HashSet;
 import java.util.Set;
+import org.apache.commons.io.LineIterator;
 
 @Singleton
 public class HelmHelper {
@@ -96,7 +97,7 @@ public class HelmHelper {
     ExpressionEvaluator.updateServiceArtifactVariableNames(helmValueYamlFile, serviceArtifactVariableNames);
     if (!serviceArtifactVariableNames.contains(ExpressionEvaluator.DEFAULT_ARTIFACT_VARIABLE_NAME)
         && (checkStringPresentInHelmValueYaml(helmValueYamlFile, HELM_DOCKER_IMAGE_NAME_PLACEHOLDER)
-               || checkStringPresentInHelmValueYaml(helmValueYamlFile, HELM_DOCKER_IMAGE_TAG_PLACEHOLDER))) {
+            || checkStringPresentInHelmValueYaml(helmValueYamlFile, HELM_DOCKER_IMAGE_TAG_PLACEHOLDER))) {
       serviceArtifactVariableNames.add(ExpressionEvaluator.DEFAULT_ARTIFACT_VARIABLE_NAME);
     }
   }

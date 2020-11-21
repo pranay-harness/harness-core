@@ -1,14 +1,10 @@
 package io.harness.batch.processing.service;
 
-import com.google.inject.Singleton;
-
 import io.harness.batch.processing.dao.intfc.BillingDataPipelineRecordDao;
 import io.harness.batch.processing.service.intfc.AccountExpiryService;
 import io.harness.ccm.billing.entities.BillingDataPipelineRecord;
 import io.harness.ccm.license.CeLicenseInfo;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
+
 import software.wings.beans.Account;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.ce.CEGcpConfig;
@@ -17,10 +13,14 @@ import software.wings.service.intfc.instance.CloudToHarnessMappingService;
 import software.wings.settings.SettingValue;
 import software.wings.settings.SettingVariableTypes;
 
+import com.google.inject.Singleton;
 import java.time.Instant;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
 
 @Slf4j
 @Singleton

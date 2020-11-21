@@ -1,9 +1,8 @@
 package io.harness.functional.graphQLAPIs.artifactSources;
 
 import static io.harness.rule.OwnerRule.POOJA;
-import static org.assertj.core.api.Assertions.assertThat;
 
-import com.google.inject.Inject;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.category.element.FunctionalTests;
 import io.harness.functional.AbstractFunctionalTest;
@@ -13,9 +12,7 @@ import io.harness.generator.ServiceGenerator;
 import io.harness.rule.Owner;
 import io.harness.testframework.restutils.ArtifactRestUtils;
 import io.harness.testframework.restutils.GraphQLRestUtils;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
+
 import software.wings.beans.FeatureName;
 import software.wings.beans.Service;
 import software.wings.beans.artifact.Artifact;
@@ -23,7 +20,11 @@ import software.wings.beans.artifact.ArtifactStream;
 import software.wings.service.intfc.ArtifactStreamService;
 import software.wings.service.intfc.FeatureFlagService;
 
+import com.google.inject.Inject;
 import java.util.Map;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 public class GetArtifactSourceConnectionFromArtifactFunctionalTest extends AbstractFunctionalTest {
   @Inject private OwnerManager ownerManager;

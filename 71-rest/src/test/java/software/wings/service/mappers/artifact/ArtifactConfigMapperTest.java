@@ -1,19 +1,21 @@
 package software.wings.service.mappers.artifact;
 
 import static io.harness.rule.OwnerRule.ARCHIT;
+
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.CategoryTest;
 import io.harness.artifacts.beans.BuildDetailsInternal;
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
+
 import software.wings.helpers.ext.jenkins.BuildDetails;
 
 import java.util.HashMap;
 import java.util.Map;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 public class ArtifactConfigMapperTest extends CategoryTest {
   BuildDetailsInternal buildDetailsInternal;

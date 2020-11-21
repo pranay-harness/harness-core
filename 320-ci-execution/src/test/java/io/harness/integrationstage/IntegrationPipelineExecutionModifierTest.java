@@ -2,10 +2,9 @@ package io.harness.integrationstage;
 
 import static io.harness.beans.yaml.extended.infrastrucutre.Infrastructure.Type.KUBERNETES_DIRECT;
 import static io.harness.rule.OwnerRule.ALEKSANDAR;
+
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
-
-import com.google.inject.Inject;
 
 import io.harness.beans.stages.IntegrationStage;
 import io.harness.beans.yaml.extended.infrastrucutre.K8sDirectInfraYaml;
@@ -18,10 +17,11 @@ import io.harness.rule.Owner;
 import io.harness.yaml.core.ParallelStageElement;
 import io.harness.yaml.core.StageElement;
 import io.harness.yaml.core.auxiliary.intfc.StageElementWrapper;
+
+import com.google.inject.Inject;
+import java.util.List;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
-
-import java.util.List;
 
 public class IntegrationPipelineExecutionModifierTest extends CIExecutionTest {
   @Inject IntegrationPipelineExecutionModifier integrationPipelineExecutionModifier;

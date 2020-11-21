@@ -1,9 +1,5 @@
 package software.wings.graphql.datafetcher.execution;
 
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
-
-import lombok.extern.slf4j.Slf4j;
 import software.wings.beans.Application;
 import software.wings.beans.Environment;
 import software.wings.beans.Pipeline;
@@ -15,6 +11,10 @@ import software.wings.beans.trigger.Trigger;
 import software.wings.dl.WingsPersistence;
 import software.wings.graphql.datafetcher.execution.DeploymentStatsQueryMetaData.DeploymentMetaDataFields;
 import software.wings.graphql.utils.nameservice.NameResult;
+
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
+import lombok.extern.slf4j.Slf4j;
 
 @Singleton
 @Slf4j

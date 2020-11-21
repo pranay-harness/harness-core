@@ -2,9 +2,9 @@ package io.harness.ng.core.api.repositories.custom;
 
 import static io.harness.ng.core.utils.NGUtils.getPaginatedResult;
 
-import com.google.inject.Inject;
-
 import io.harness.ng.core.entities.UserGroup;
+
+import com.google.inject.Inject;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import org.springframework.data.domain.Page;

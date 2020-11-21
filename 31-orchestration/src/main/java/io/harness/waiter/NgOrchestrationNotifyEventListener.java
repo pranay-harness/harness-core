@@ -3,13 +3,13 @@ package io.harness.waiter;
 import static java.time.Duration.ofSeconds;
 import static java.util.Arrays.asList;
 
-import com.google.inject.Inject;
-import com.google.inject.Injector;
-import com.google.inject.Singleton;
-
 import io.harness.config.PublisherConfiguration;
 import io.harness.mongo.queue.QueueFactory;
 import io.harness.version.VersionInfoManager;
+
+import com.google.inject.Inject;
+import com.google.inject.Injector;
+import com.google.inject.Singleton;
 
 @Singleton
 public final class NgOrchestrationNotifyEventListener extends NotifyEventListener {

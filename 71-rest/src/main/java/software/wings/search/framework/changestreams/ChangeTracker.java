@@ -1,11 +1,17 @@
 package software.wings.search.framework.changestreams;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
+
 import static software.wings.dl.exportimport.WingsMongoExportImport.getCollectionName;
+
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.mongo.MongoModule;
+import io.harness.persistence.PersistentEntity;
+
+import software.wings.app.MainConfiguration;
 
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.google.inject.Inject;
-
 import com.mongodb.ClientSessionOptions;
 import com.mongodb.DBObject;
 import com.mongodb.MongoClient;
@@ -20,18 +26,13 @@ import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
 import com.mongodb.client.model.changestream.ChangeStreamDocument;
 import com.mongodb.client.model.changestream.OperationType;
-import io.harness.annotations.dev.OwnedBy;
-import io.harness.mongo.MongoModule;
-import io.harness.persistence.PersistentEntity;
-import lombok.extern.slf4j.Slf4j;
-import software.wings.app.MainConfiguration;
-
 import java.util.HashSet;
 import java.util.Set;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * Mongo Change Stream Manager, provides the functionality

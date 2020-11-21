@@ -1,12 +1,12 @@
 package io.harness.gitsync.common.dtos;
 
 import io.harness.ModuleType;
+
+import java.util.List;
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Data;
 import lombok.experimental.FieldDefaults;
-
-import java.util.List;
 
 @Data
 @Builder

@@ -1,11 +1,11 @@
 package software.wings.api;
 
-import lombok.Getter;
-import lombok.Setter;
 import software.wings.sm.StateExecutionData;
 import software.wings.sm.StepExecutionSummary;
 
 import java.util.Map;
+import lombok.Getter;
+import lombok.Setter;
 
 public class BarrierExecutionData extends StateExecutionData {
   @Getter @Setter private String identifier;

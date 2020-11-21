@@ -1,10 +1,10 @@
 package software.wings.service.impl.yaml.handler.artifactstream;
 
-import com.google.inject.Singleton;
-
 import software.wings.beans.artifact.CustomArtifactStream;
 import software.wings.beans.artifact.CustomArtifactStream.Yaml;
 import software.wings.beans.yaml.ChangeContext;
+
+import com.google.inject.Singleton;
 
 @Singleton
 public class CustomArtifactStreamYamlHandler

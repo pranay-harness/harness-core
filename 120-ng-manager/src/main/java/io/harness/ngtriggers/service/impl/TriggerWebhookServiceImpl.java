@@ -1,10 +1,8 @@
 package io.harness.ngtriggers.service.impl;
 
 import static io.harness.mongo.iterator.MongoPersistenceIterator.SchedulingType.REGULAR;
-import static java.time.Duration.ofSeconds;
 
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
+import static java.time.Duration.ofSeconds;
 
 import io.harness.iterator.PersistenceIterator;
 import io.harness.iterator.PersistenceIteratorFactory;
@@ -18,6 +16,9 @@ import io.harness.ngtriggers.beans.entity.TriggerWebhookEvent.TriggerWebhookEven
 import io.harness.ngtriggers.helpers.NGTriggerWebhookExecutionHelper;
 import io.harness.ngtriggers.service.NGTriggerService;
 import io.harness.ngtriggers.service.TriggerWebhookService;
+
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.query.Criteria;

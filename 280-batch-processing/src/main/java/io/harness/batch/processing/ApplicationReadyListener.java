@@ -1,16 +1,20 @@
 package io.harness.batch.processing;
 
-import static com.google.common.base.Verify.verify;
 import static io.harness.event.app.EventServiceApplication.EVENTS_STORE;
 
-import com.google.common.util.concurrent.SimpleTimeLimiter;
-import com.google.common.util.concurrent.TimeLimiter;
-import com.google.common.util.concurrent.UncheckedTimeoutException;
+import static com.google.common.base.Verify.verify;
 
 import io.harness.batch.processing.config.BatchMainConfig;
 import io.harness.mongo.IndexManager;
 import io.harness.persistence.HPersistence;
 import io.harness.timescaledb.TimeScaleDBService;
+
+import com.google.common.util.concurrent.SimpleTimeLimiter;
+import com.google.common.util.concurrent.TimeLimiter;
+import com.google.common.util.concurrent.UncheckedTimeoutException;
+import java.io.File;
+import java.io.IOException;
+import java.util.concurrent.TimeUnit;
 import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.AdvancedDatastore;
 import org.mongodb.morphia.Morphia;
@@ -21,10 +25,6 @@ import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
 import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Component;
-
-import java.io.File;
-import java.io.IOException;
-import java.util.concurrent.TimeUnit;
 
 @Component
 @Profile("!test")

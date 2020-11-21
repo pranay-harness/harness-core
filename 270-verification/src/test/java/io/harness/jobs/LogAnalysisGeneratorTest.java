@@ -2,14 +2,14 @@ package io.harness.jobs;
 
 import static io.harness.rule.OwnerRule.NANDAN;
 import static io.harness.rule.OwnerRule.PRAVEEN;
+
+import static software.wings.service.impl.analysis.AnalysisComparisonStrategy.COMPARE_WITH_PREVIOUS;
+import static software.wings.service.impl.newrelic.NewRelicMetricDataRecord.DEFAULT_GROUP_NAME;
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-import static software.wings.service.impl.analysis.AnalysisComparisonStrategy.COMPARE_WITH_PREVIOUS;
-import static software.wings.service.impl.newrelic.NewRelicMetricDataRecord.DEFAULT_GROUP_NAME;
-
-import com.google.common.collect.ImmutableMap;
 
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
@@ -19,18 +19,20 @@ import io.harness.rest.RestResponse;
 import io.harness.rule.Owner;
 import io.harness.service.intfc.LearningEngineService;
 import io.harness.service.intfc.LogAnalysisService;
+
+import software.wings.service.impl.analysis.AnalysisContext;
+import software.wings.service.impl.analysis.MLAnalysisType;
+import software.wings.service.impl.newrelic.LearningEngineAnalysisTask;
+import software.wings.sm.StateType;
+
+import com.google.common.collect.ImmutableMap;
+import java.util.UUID;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
-import software.wings.service.impl.analysis.AnalysisContext;
-import software.wings.service.impl.analysis.MLAnalysisType;
-import software.wings.service.impl.newrelic.LearningEngineAnalysisTask;
-import software.wings.sm.StateType;
-
-import java.util.UUID;
 
 public class LogAnalysisGeneratorTest extends CategoryTest {
   private String accountId;

@@ -1,10 +1,8 @@
 package io.harness.event.model;
 
 import com.google.common.collect.ImmutableSet;
-
-import lombok.experimental.UtilityClass;
-
 import java.util.Set;
+import lombok.experimental.UtilityClass;
 
 @UtilityClass
 public class EventsMorphiaClasses {

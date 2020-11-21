@@ -1,9 +1,8 @@
 package io.harness.managerclient;
 
+import java.io.IOException;
 import retrofit2.Call;
 import retrofit2.Response;
-
-import java.io.IOException;
 
 public class SafeHttpCall {
   public static <T> T execute(Call<T> call) throws IOException {

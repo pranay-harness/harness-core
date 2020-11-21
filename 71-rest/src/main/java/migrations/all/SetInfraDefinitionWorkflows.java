@@ -2,15 +2,12 @@ package migrations.all;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.validation.Validator.notNullCheck;
-import static software.wings.beans.EntityType.INFRASTRUCTURE_DEFINITION;
 
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
+import static software.wings.beans.EntityType.INFRASTRUCTURE_DEFINITION;
 
 import io.harness.beans.OrchestrationWorkflowType;
 import io.harness.exception.ExceptionUtils;
-import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.StringUtils;
+
 import software.wings.beans.Account;
 import software.wings.beans.CanaryOrchestrationWorkflow;
 import software.wings.beans.InfrastructureMapping;
@@ -28,9 +25,13 @@ import software.wings.service.intfc.InfrastructureDefinitionService;
 import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.WorkflowService;
 
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 
 @Slf4j
 @Singleton

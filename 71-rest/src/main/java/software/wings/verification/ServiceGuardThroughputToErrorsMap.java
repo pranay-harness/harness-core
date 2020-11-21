@@ -1,12 +1,11 @@
 package software.wings.verification;
 
-import lombok.Builder;
-import lombok.Data;
-
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import javax.annotation.Nullable;
+import lombok.Builder;
+import lombok.Data;
 
 @Data
 @Builder

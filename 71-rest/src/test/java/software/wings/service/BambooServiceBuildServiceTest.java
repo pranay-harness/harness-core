@@ -2,26 +2,26 @@ package software.wings.service;
 
 import static io.harness.rule.OwnerRule.ANUBHAW;
 
-import com.google.inject.Inject;
-
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
 import io.harness.scm.ScmSecret;
 import io.harness.scm.SecretName;
-import lombok.extern.slf4j.Slf4j;
-import org.junit.Before;
-import org.junit.Ignore;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
+
 import software.wings.WingsBaseTest;
 import software.wings.beans.BambooConfig;
 import software.wings.beans.SettingAttribute;
 import software.wings.helpers.ext.bamboo.BambooService;
 import software.wings.service.intfc.SettingsService;
 
+import com.google.inject.Inject;
 import java.util.Arrays;
+import lombok.extern.slf4j.Slf4j;
+import org.junit.Before;
+import org.junit.Ignore;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 @Slf4j
 public class BambooServiceBuildServiceTest extends WingsBaseTest {

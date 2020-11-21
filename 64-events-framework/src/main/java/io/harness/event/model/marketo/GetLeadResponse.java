@@ -1,10 +1,9 @@
 package io.harness.event.model.marketo;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import java.util.List;
 import lombok.Builder;
 import lombok.Data;
-
-import java.util.List;
 
 /**
  * @author rktummala on 02/20/19

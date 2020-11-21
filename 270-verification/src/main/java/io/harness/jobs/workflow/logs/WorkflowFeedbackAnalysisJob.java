@@ -1,7 +1,5 @@
 package io.harness.jobs.workflow.logs;
 
-import com.google.inject.Inject;
-
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.jobs.LogMLAnalysisGenerator;
 import io.harness.managerclient.VerificationManagerClient;
@@ -9,12 +7,7 @@ import io.harness.managerclient.VerificationManagerClientHelper;
 import io.harness.mongo.iterator.MongoPersistenceIterator;
 import io.harness.service.intfc.LearningEngineService;
 import io.harness.service.intfc.LogAnalysisService;
-import lombok.AllArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-import org.mongodb.morphia.annotations.Transient;
-import org.quartz.DisallowConcurrentExecution;
-import org.quartz.JobExecutionContext;
-import org.quartz.SchedulerException;
+
 import software.wings.beans.FeatureName;
 import software.wings.service.impl.analysis.AnalysisContext;
 import software.wings.service.impl.analysis.CVFeedbackRecord;
@@ -24,9 +17,16 @@ import software.wings.service.impl.analysis.MLAnalysisType;
 import software.wings.service.intfc.DataStoreService;
 import software.wings.service.intfc.verification.CVActivityLogService;
 
+import com.google.inject.Inject;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.Callable;
+import lombok.AllArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.mongodb.morphia.annotations.Transient;
+import org.quartz.DisallowConcurrentExecution;
+import org.quartz.JobExecutionContext;
+import org.quartz.SchedulerException;
 
 @DisallowConcurrentExecution
 @Slf4j

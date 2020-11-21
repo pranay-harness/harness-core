@@ -6,6 +6,13 @@ import static io.harness.rule.OwnerRule.MEHUL;
 import static io.harness.rule.OwnerRule.MOHIT;
 import static io.harness.rule.OwnerRule.RAMA;
 import static io.harness.rule.OwnerRule.UNKNOWN;
+
+import static software.wings.beans.User.Builder.anUser;
+import static software.wings.beans.UserInvite.UserInviteBuilder.anUserInvite;
+import static software.wings.signup.BugsnagConstants.CLUSTER_TYPE;
+import static software.wings.signup.BugsnagConstants.FREEMIUM;
+import static software.wings.signup.BugsnagConstants.ONBOARDING;
+
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
@@ -17,13 +24,6 @@ import static org.mockito.Mockito.reset;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-import static software.wings.beans.User.Builder.anUser;
-import static software.wings.beans.UserInvite.UserInviteBuilder.anUserInvite;
-import static software.wings.signup.BugsnagConstants.CLUSTER_TYPE;
-import static software.wings.signup.BugsnagConstants.FREEMIUM;
-import static software.wings.signup.BugsnagConstants.ONBOARDING;
-
-import com.google.inject.Inject;
 
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
@@ -31,13 +31,7 @@ import io.harness.category.element.UnitTests;
 import io.harness.data.structure.UUIDGenerator;
 import io.harness.rest.RestResponse;
 import io.harness.rule.Owner;
-import org.glassfish.jersey.media.multipart.MultiPartFeature;
-import org.junit.Before;
-import org.junit.ClassRule;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
+
 import software.wings.WingsBaseTest;
 import software.wings.app.MainConfiguration;
 import software.wings.beans.BugsnagTab;
@@ -59,6 +53,7 @@ import software.wings.signup.BugsnagErrorReporter;
 import software.wings.utils.AccountPermissionUtils;
 import software.wings.utils.ResourceTestRule;
 
+import com.google.inject.Inject;
 import java.io.IOException;
 import java.util.Base64;
 import java.util.Collections;
@@ -67,6 +62,13 @@ import java.util.Map;
 import javax.cache.Cache;
 import javax.ws.rs.BadRequestException;
 import javax.ws.rs.core.GenericType;
+import org.glassfish.jersey.media.multipart.MultiPartFeature;
+import org.junit.Before;
+import org.junit.ClassRule;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
 
 /**
  * Created by peeyushaggarwal on 4/1/16.

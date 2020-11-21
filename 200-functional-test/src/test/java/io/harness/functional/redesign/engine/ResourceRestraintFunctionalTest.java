@@ -3,10 +3,8 @@ package io.harness.functional.redesign.engine;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.pms.execution.Status.SUCCEEDED;
 import static io.harness.rule.OwnerRule.ALEXEI;
-import static org.assertj.core.api.Assertions.assertThat;
 
-import com.google.inject.Inject;
-import com.google.protobuf.ByteString;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.StatusUtils;
 import io.harness.adviser.OrchestrationAdviserTypes;
@@ -37,13 +35,16 @@ import io.harness.steps.resourcerestraint.ResourceRestraintStepParameters;
 import io.harness.steps.resourcerestraint.beans.AcquireMode;
 import io.harness.steps.resourcerestraint.beans.HoldingScope.HoldingScopeBuilder;
 import io.harness.steps.resourcerestraint.beans.ResourceConstraint;
+
+import software.wings.beans.Application;
+
+import com.google.inject.Inject;
+import com.google.protobuf.ByteString;
+import java.util.concurrent.TimeUnit;
 import org.awaitility.Awaitility;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
-import software.wings.beans.Application;
-
-import java.util.concurrent.TimeUnit;
 
 public class ResourceRestraintFunctionalTest extends AbstractFunctionalTest {
   @Inject private OwnerManager ownerManager;

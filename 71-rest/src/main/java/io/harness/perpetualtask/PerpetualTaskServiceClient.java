@@ -1,8 +1,8 @@
 package io.harness.perpetualtask;
 
-import com.google.protobuf.Message;
-
 import io.harness.beans.DelegateTask;
+
+import com.google.protobuf.Message;
 
 /**
  * Used on the manager side to handle CRUD of a specific type of perpetual tasks.

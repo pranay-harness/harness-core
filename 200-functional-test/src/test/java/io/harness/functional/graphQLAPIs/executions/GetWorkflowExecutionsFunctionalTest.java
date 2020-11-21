@@ -2,9 +2,8 @@ package io.harness.functional.graphQLAPIs.executions;
 
 import static io.harness.generator.EnvironmentGenerator.Environments.GENERIC_TEST;
 import static io.harness.rule.OwnerRule.POOJA;
-import static org.assertj.core.api.Assertions.assertThat;
 
-import com.google.inject.Inject;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.beans.WorkflowType;
 import io.harness.category.element.FunctionalTests;
@@ -20,9 +19,7 @@ import io.harness.rule.Owner;
 import io.harness.testframework.restutils.ArtifactRestUtils;
 import io.harness.testframework.restutils.GraphQLRestUtils;
 import io.harness.testframework.restutils.WorkflowRestUtils;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
+
 import software.wings.beans.Application;
 import software.wings.beans.Environment;
 import software.wings.beans.ExecutionArgs;
@@ -35,9 +32,13 @@ import software.wings.beans.artifact.Artifact;
 import software.wings.infra.InfrastructureDefinition;
 import software.wings.service.intfc.FeatureFlagService;
 
+import com.google.inject.Inject;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 public class GetWorkflowExecutionsFunctionalTest extends AbstractFunctionalTest {
   @Inject private OwnerManager ownerManager;

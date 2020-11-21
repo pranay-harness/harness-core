@@ -3,13 +3,13 @@ package io.harness.redesign.services;
 import static io.harness.pms.execution.Status.RUNNING;
 import static io.harness.rule.OwnerRule.ALEXEI;
 import static io.harness.rule.OwnerRule.GARVIT;
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.Matchers.any;
-import static org.powermock.api.mockito.PowerMockito.when;
+
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 import static software.wings.utils.WingsTestConstants.APP_ID;
 
-import com.google.inject.Inject;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Matchers.any;
+import static org.powermock.api.mockito.PowerMockito.when;
 
 import io.harness.category.element.UnitTests;
 import io.harness.config.MockServerConfig;
@@ -19,17 +19,20 @@ import io.harness.plan.Plan;
 import io.harness.pms.execution.Status;
 import io.harness.rule.Owner;
 import io.harness.service.GraphGenerationService;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
+
 import software.wings.WingsBaseTest;
 import software.wings.app.MainConfiguration;
 import software.wings.beans.Account;
 import software.wings.beans.User;
 import software.wings.events.TestUtils;
 import software.wings.security.UserThreadLocal;
+
+import com.google.inject.Inject;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
 
 /**
  * Test class for {@link CustomExecutionServiceImpl}

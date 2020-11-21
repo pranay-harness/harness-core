@@ -1,5 +1,8 @@
 package software.wings.verification.log;
 
+import software.wings.stencils.DefaultValue;
+import software.wings.verification.CVConfiguration;
+
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.github.reinert.jjschema.Attributes;
 import lombok.AllArgsConstructor;
@@ -8,8 +11,6 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.experimental.FieldNameConstants;
-import software.wings.stencils.DefaultValue;
-import software.wings.verification.CVConfiguration;
 
 /**
  * Created by Pranjal on 06/04/2019

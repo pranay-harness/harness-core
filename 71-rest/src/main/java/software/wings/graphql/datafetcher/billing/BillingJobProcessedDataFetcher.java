@@ -1,15 +1,16 @@
 package software.wings.graphql.datafetcher.billing;
 
-import com.google.inject.Inject;
-
 import io.harness.ccm.cluster.dao.BatchJobScheduledDataDao;
 import io.harness.ccm.cluster.entities.BatchJobScheduledData;
-import lombok.extern.slf4j.Slf4j;
+
 import software.wings.graphql.datafetcher.AbstractObjectDataFetcher;
 import software.wings.graphql.schema.query.QLNoOpQueryParameters;
 import software.wings.graphql.schema.type.aggregation.billing.QLBatchLastProcessedData;
 import software.wings.security.PermissionAttribute;
 import software.wings.security.annotations.AuthRule;
+
+import com.google.inject.Inject;
+import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class BillingJobProcessedDataFetcher

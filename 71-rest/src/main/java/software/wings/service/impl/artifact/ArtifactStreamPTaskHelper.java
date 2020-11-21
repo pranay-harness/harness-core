@@ -3,11 +3,8 @@ package software.wings.service.impl.artifact;
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
-import static java.lang.String.format;
 
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
-import com.google.protobuf.util.Durations;
+import static java.lang.String.format;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.artifact.ArtifactCollectionPTaskClientParams;
@@ -19,13 +16,17 @@ import io.harness.perpetualtask.PerpetualTaskSchedule;
 import io.harness.perpetualtask.PerpetualTaskService;
 import io.harness.perpetualtask.PerpetualTaskType;
 import io.harness.validation.Validator;
-import lombok.extern.slf4j.Slf4j;
+
 import software.wings.beans.artifact.ArtifactStream;
 import software.wings.delegatetasks.buildsource.ArtifactStreamLogContext;
 import software.wings.service.intfc.ArtifactStreamService;
 
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
+import com.google.protobuf.util.Durations;
 import java.util.HashMap;
 import java.util.Map;
+import lombok.extern.slf4j.Slf4j;
 
 @OwnedBy(CDC)
 @Slf4j

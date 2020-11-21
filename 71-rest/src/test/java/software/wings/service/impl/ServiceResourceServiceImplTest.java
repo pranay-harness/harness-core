@@ -13,6 +13,20 @@ import static io.harness.rule.OwnerRule.POOJA;
 import static io.harness.rule.OwnerRule.RAMA;
 import static io.harness.rule.OwnerRule.VAIBHAV_SI;
 import static io.harness.rule.OwnerRule.YOGESH;
+
+import static software.wings.api.DeploymentType.AWS_CODEDEPLOY;
+import static software.wings.api.DeploymentType.CUSTOM;
+import static software.wings.api.DeploymentType.HELM;
+import static software.wings.api.DeploymentType.KUBERNETES;
+import static software.wings.api.DeploymentType.SSH;
+import static software.wings.beans.command.Command.Builder.aCommand;
+import static software.wings.beans.command.ServiceCommand.Builder.aServiceCommand;
+import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
+import static software.wings.utils.WingsTestConstants.APP_ID;
+import static software.wings.utils.WingsTestConstants.SERVICE_ID;
+import static software.wings.utils.WingsTestConstants.SERVICE_NAME;
+import static software.wings.utils.WingsTestConstants.TEMPLATE_ID;
+
 import static java.util.Arrays.asList;
 import static junit.framework.TestCase.assertTrue;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -27,20 +41,6 @@ import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-import static software.wings.api.DeploymentType.AWS_CODEDEPLOY;
-import static software.wings.api.DeploymentType.CUSTOM;
-import static software.wings.api.DeploymentType.HELM;
-import static software.wings.api.DeploymentType.KUBERNETES;
-import static software.wings.api.DeploymentType.SSH;
-import static software.wings.beans.command.Command.Builder.aCommand;
-import static software.wings.beans.command.ServiceCommand.Builder.aServiceCommand;
-import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
-import static software.wings.utils.WingsTestConstants.APP_ID;
-import static software.wings.utils.WingsTestConstants.SERVICE_ID;
-import static software.wings.utils.WingsTestConstants.SERVICE_NAME;
-import static software.wings.utils.WingsTestConstants.TEMPLATE_ID;
-
-import com.google.inject.Inject;
 
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
@@ -53,16 +53,7 @@ import io.harness.limits.ActionType;
 import io.harness.limits.LimitCheckerFactory;
 import io.harness.reflection.ReflectionUtils;
 import io.harness.rule.Owner;
-import org.apache.commons.lang3.RandomStringUtils;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
-import org.mockito.ArgumentCaptor;
-import org.mockito.Captor;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.Mockito;
-import org.mongodb.morphia.query.UpdateOperations;
+
 import software.wings.WingsBaseTest;
 import software.wings.api.DeploymentType;
 import software.wings.beans.EntityType;
@@ -91,6 +82,7 @@ import software.wings.service.intfc.yaml.YamlPushService;
 import software.wings.utils.ArtifactType;
 import software.wings.utils.WingsTestConstants.MockChecker;
 
+import com.google.inject.Inject;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -100,6 +92,16 @@ import java.util.Map;
 import java.util.stream.Collectors;
 import javax.ws.rs.core.AbstractMultivaluedMap;
 import javax.ws.rs.core.UriInfo;
+import org.apache.commons.lang3.RandomStringUtils;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
+import org.mockito.ArgumentCaptor;
+import org.mockito.Captor;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.Mockito;
+import org.mongodb.morphia.query.UpdateOperations;
 
 public class ServiceResourceServiceImplTest extends WingsBaseTest {
   @Inject private WingsPersistence wingsPersistence;

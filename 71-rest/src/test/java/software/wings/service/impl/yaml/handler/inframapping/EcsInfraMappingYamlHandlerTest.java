@@ -2,13 +2,7 @@ package software.wings.service.impl.yaml.handler.inframapping;
 
 import static io.harness.exception.WingsException.ReportTarget.REST_API;
 import static io.harness.rule.OwnerRule.ADWAIT;
-import static java.util.Arrays.asList;
-import static junit.framework.TestCase.fail;
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.anyObject;
-import static org.mockito.Matchers.anyString;
-import static org.mockito.Mockito.when;
+
 import static software.wings.beans.EcsInfrastructureMapping.Builder.anEcsInfrastructureMapping;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 import static software.wings.utils.WingsTestConstants.ACCESS_KEY;
@@ -21,24 +15,21 @@ import static software.wings.utils.WingsTestConstants.SECRET_KEY;
 import static software.wings.utils.WingsTestConstants.SERVICE_ID;
 import static software.wings.utils.WingsTestConstants.SETTING_ID;
 
-import com.google.inject.Inject;
-import com.google.inject.name.Named;
+import static java.util.Arrays.asList;
+import static junit.framework.TestCase.fail;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyObject;
+import static org.mockito.Matchers.anyString;
+import static org.mockito.Mockito.when;
 
-import com.amazonaws.services.ecs.model.LaunchType;
 import io.harness.category.element.UnitTests;
 import io.harness.exception.WingsException;
 import io.harness.logging.ExceptionLogger;
 import io.harness.rule.Owner;
 import io.harness.scheduler.PersistentScheduler;
 import io.harness.yaml.BaseYaml;
-import org.assertj.core.api.Assertions;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
-import org.mongodb.morphia.Key;
+
 import software.wings.beans.Application;
 import software.wings.beans.AwsConfig;
 import software.wings.beans.EcsInfrastructureMapping;
@@ -66,6 +57,18 @@ import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.yaml.YamlDirectoryService;
 import software.wings.utils.ArtifactType;
 import software.wings.yaml.handler.YamlHandlerTestBase;
+
+import com.amazonaws.services.ecs.model.LaunchType;
+import com.google.inject.Inject;
+import com.google.inject.name.Named;
+import org.assertj.core.api.Assertions;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
+import org.mongodb.morphia.Key;
 
 public class EcsInfraMappingYamlHandlerTest extends YamlHandlerTestBase {
   @Mock protected SettingsService settingsService;

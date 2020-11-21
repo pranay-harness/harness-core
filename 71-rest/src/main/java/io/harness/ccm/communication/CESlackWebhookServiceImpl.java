@@ -1,9 +1,9 @@
 package io.harness.ccm.communication;
 
+import io.harness.ccm.communication.entities.CESlackWebhook;
+
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
-
-import io.harness.ccm.communication.entities.CESlackWebhook;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j

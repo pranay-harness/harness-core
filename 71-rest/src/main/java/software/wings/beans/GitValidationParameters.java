@@ -3,12 +3,13 @@ package software.wings.beans;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.delegate.beans.executioncapability.ExecutionCapabilityDemander;
 import io.harness.security.encryption.EncryptedDataDetail;
-import lombok.Builder;
-import lombok.Value;
+
 import software.wings.delegatetasks.validation.capabilities.GitConnectionCapability;
 
 import java.util.Collections;
 import java.util.List;
+import lombok.Builder;
+import lombok.Value;
 
 @Value
 @Builder

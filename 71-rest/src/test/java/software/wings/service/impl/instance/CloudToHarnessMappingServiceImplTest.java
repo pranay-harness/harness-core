@@ -2,18 +2,14 @@ package software.wings.service.impl.instance;
 
 import static io.harness.rule.OwnerRule.HITESH;
 import static io.harness.rule.OwnerRule.ROHIT;
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.when;
-
-import com.google.inject.Inject;
 
 import io.harness.category.element.UnitTests;
 import io.harness.ccm.commons.beans.HarnessServiceInfo;
 import io.harness.rule.Owner;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
+
 import software.wings.WingsBaseTest;
 import software.wings.api.ContainerDeploymentInfoWithNames;
 import software.wings.api.DeploymentSummary;
@@ -23,10 +19,15 @@ import software.wings.beans.infrastructure.instance.key.deployment.ContainerDepl
 import software.wings.service.intfc.instance.DeploymentService;
 import software.wings.settings.SettingVariableTypes;
 
+import com.google.inject.Inject;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.Optional;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
 
 public class CloudToHarnessMappingServiceImplTest extends WingsBaseTest {
   @InjectMocks @Inject private CloudToHarnessMappingServiceImpl cloudToHarnessMappingService;

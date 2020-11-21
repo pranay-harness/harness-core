@@ -1,8 +1,7 @@
 package io.harness.batch.processing.billing.service;
 
-import lombok.Value;
-
 import java.math.BigDecimal;
+import lombok.Value;
 
 @Value
 public class SystemCostData {

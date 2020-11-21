@@ -1,15 +1,15 @@
 package software.wings.scheduler;
 
 import static io.harness.rule.OwnerRule.GARVIT;
+
+import static software.wings.utils.WingsTestConstants.SETTING_ID;
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyZeroInteractions;
 import static org.mockito.Mockito.when;
-import static software.wings.utils.WingsTestConstants.SETTING_ID;
-
-import com.google.inject.Inject;
 
 import io.harness.category.element.UnitTests;
 import io.harness.eraro.ErrorCode;
@@ -19,6 +19,13 @@ import io.harness.exception.WingsException;
 import io.harness.iterator.PersistenceIteratorFactory;
 import io.harness.rule.Owner;
 import io.harness.workers.background.iterator.SettingAttributeValidateConnectivityHandler;
+
+import software.wings.WingsBaseTest;
+import software.wings.beans.SettingAttribute;
+import software.wings.service.impl.SettingValidationService;
+import software.wings.service.intfc.SettingsService;
+
+import com.google.inject.Inject;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
@@ -28,10 +35,6 @@ import org.mockito.Mockito;
 import org.powermock.core.classloader.annotations.PowerMockIgnore;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
-import software.wings.WingsBaseTest;
-import software.wings.beans.SettingAttribute;
-import software.wings.service.impl.SettingValidationService;
-import software.wings.service.intfc.SettingsService;
 
 @RunWith(PowerMockRunner.class)
 @PrepareForTest(PersistenceIteratorFactory.class)

@@ -4,29 +4,26 @@ import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
-import static java.lang.String.format;
-import static java.util.stream.Collectors.toList;
+
 import static software.wings.beans.Graph.Builder.aGraph;
 import static software.wings.beans.GraphLink.Builder.aLink;
 import static software.wings.beans.WorkflowPhase.WorkflowPhaseBuilder.aWorkflowPhase;
 import static software.wings.sm.StateType.PHASE;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
+import static java.lang.String.format;
+import static java.util.stream.Collectors.toList;
+
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.data.structure.NullSafeImmutableMap;
 import io.harness.persistence.UuidAccess;
-import lombok.Data;
-import lombok.EqualsAndHashCode;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
-import org.mongodb.morphia.annotations.Transient;
+
 import software.wings.api.DeploymentType;
 import software.wings.beans.Graph.Builder;
 import software.wings.service.impl.workflow.WorkflowServiceTemplateHelper;
 import software.wings.sm.TransitionType;
 import software.wings.yaml.BaseYamlWithType;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -34,6 +31,12 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Collectors;
 import javax.validation.Valid;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+import org.mongodb.morphia.annotations.Transient;
 
 @OwnedBy(CDC)
 public class WorkflowPhase implements UuidAccess {
@@ -373,7 +376,7 @@ public class WorkflowPhase implements UuidAccess {
   private boolean checkFieldTemplatized(String fieldName) {
     return templateExpressions != null
         && templateExpressions.stream().anyMatch(
-               templateExpression -> templateExpression.getFieldName().equals(fieldName));
+            templateExpression -> templateExpression.getFieldName().equals(fieldName));
   }
 
   public TemplateExpression fetchServiceTemplateExpression() {

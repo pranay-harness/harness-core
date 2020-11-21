@@ -1,21 +1,19 @@
 package software.wings.service.impl.template.integration;
 
 import static io.harness.rule.OwnerRule.AADITI;
-import static org.assertj.core.api.Assertions.assertThat;
+
 import static software.wings.beans.Account.GLOBAL_ACCOUNT_ID;
 import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static software.wings.beans.Variable.VariableBuilder.aVariable;
 import static software.wings.beans.VariableType.TEXT;
 import static software.wings.common.TemplateConstants.HARNESS_GALLERY;
 
-import com.google.inject.Inject;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.category.element.DeprecatedIntegrationTests;
 import io.harness.exception.WingsException;
 import io.harness.rule.Owner;
-import org.junit.Ignore;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
+
 import software.wings.WingsBaseTest;
 import software.wings.beans.template.Template;
 import software.wings.beans.template.TemplateFolder;
@@ -27,8 +25,12 @@ import software.wings.service.intfc.template.TemplateFolderService;
 import software.wings.service.intfc.template.TemplateGalleryService;
 import software.wings.service.intfc.template.TemplateService;
 
+import com.google.inject.Inject;
 import java.util.Arrays;
 import java.util.UUID;
+import org.junit.Ignore;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 @Integration
 @SetupScheduler

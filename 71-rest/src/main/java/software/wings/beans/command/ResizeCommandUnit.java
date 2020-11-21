@@ -2,23 +2,11 @@ package software.wings.beans.command;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+
 import static org.apache.commons.lang3.StringUtils.substringBefore;
 
-import com.google.inject.Inject;
-
-import com.amazonaws.services.applicationautoscaling.model.DeregisterScalableTargetRequest;
-import com.amazonaws.services.applicationautoscaling.model.DescribeScalableTargetsRequest;
-import com.amazonaws.services.applicationautoscaling.model.DescribeScalableTargetsResult;
-import com.amazonaws.services.applicationautoscaling.model.ScalableTarget;
-import com.amazonaws.services.applicationautoscaling.model.ServiceNamespace;
-import com.amazonaws.services.ecs.model.Service;
-import com.fasterxml.jackson.annotation.JsonTypeName;
 import io.harness.container.ContainerInfo;
-import lombok.Builder;
-import lombok.Data;
-import lombok.EqualsAndHashCode;
-import org.apache.commons.lang3.StringUtils;
-import org.mongodb.morphia.annotations.Transient;
+
 import software.wings.api.ContainerServiceData;
 import software.wings.api.DeploymentType;
 import software.wings.beans.AwsConfig;
@@ -28,11 +16,24 @@ import software.wings.delegatetasks.aws.ecs.ecstaskhandler.EcsCommandTaskHelper;
 import software.wings.service.impl.AwsHelperService;
 import software.wings.service.intfc.aws.delegate.AwsAppAutoScalingHelperServiceDelegate;
 
+import com.amazonaws.services.applicationautoscaling.model.DeregisterScalableTargetRequest;
+import com.amazonaws.services.applicationautoscaling.model.DescribeScalableTargetsRequest;
+import com.amazonaws.services.applicationautoscaling.model.DescribeScalableTargetsResult;
+import com.amazonaws.services.applicationautoscaling.model.ScalableTarget;
+import com.amazonaws.services.applicationautoscaling.model.ServiceNamespace;
+import com.amazonaws.services.ecs.model.Service;
+import com.fasterxml.jackson.annotation.JsonTypeName;
+import com.google.inject.Inject;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import lombok.Builder;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
+import org.apache.commons.lang3.StringUtils;
+import org.mongodb.morphia.annotations.Transient;
 
 @JsonTypeName("RESIZE")
 public class ResizeCommandUnit extends ContainerResizeCommandUnit {

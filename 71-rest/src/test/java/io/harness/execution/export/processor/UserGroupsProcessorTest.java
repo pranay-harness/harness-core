@@ -1,6 +1,7 @@
 package io.harness.execution.export.processor;
 
 import static io.harness.rule.OwnerRule.GARVIT;
+
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
@@ -16,17 +17,18 @@ import io.harness.execution.export.metadata.PipelineExecutionMetadata;
 import io.harness.execution.export.metadata.PipelineStageExecutionMetadata;
 import io.harness.execution.export.metadata.WorkflowExecutionMetadata;
 import io.harness.rule.Owner;
+
+import software.wings.beans.security.UserGroup;
+import software.wings.service.intfc.UserGroupService;
+import software.wings.sm.StateType;
+
+import java.util.Collections;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnit;
 import org.mockito.junit.MockitoRule;
-import software.wings.beans.security.UserGroup;
-import software.wings.service.intfc.UserGroupService;
-import software.wings.sm.StateType;
-
-import java.util.Collections;
 
 public class UserGroupsProcessorTest extends CategoryTest {
   @Mock private UserGroupService userGroupService;

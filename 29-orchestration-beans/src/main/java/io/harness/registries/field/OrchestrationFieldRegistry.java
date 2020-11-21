@@ -2,8 +2,6 @@ package io.harness.registries.field;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 
-import com.google.inject.Singleton;
-
 import io.harness.annotations.Redesign;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.expression.field.OrchestrationFieldProcessor;
@@ -12,11 +10,12 @@ import io.harness.registries.Registry;
 import io.harness.registries.RegistryType;
 import io.harness.registries.exceptions.DuplicateRegistryException;
 import io.harness.registries.exceptions.UnregisteredKeyAccessException;
-import lombok.NonNull;
 
+import com.google.inject.Singleton;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import javax.validation.Valid;
+import lombok.NonNull;
 
 @OwnedBy(CDC)
 @Redesign

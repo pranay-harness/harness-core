@@ -2,21 +2,11 @@ package software.wings.yaml.gitSync;
 
 import static software.wings.settings.SettingVariableTypes.YAML_GIT_SYNC;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.fasterxml.jackson.annotation.JsonView;
-import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.annotation.HarnessEntity;
 import io.harness.data.validator.Trimmed;
 import io.harness.mongo.index.Field;
 import io.harness.mongo.index.NgUniqueIndex;
-import lombok.Builder;
-import lombok.Data;
-import lombok.EqualsAndHashCode;
-import lombok.experimental.FieldNameConstants;
-import org.hibernate.validator.constraints.NotEmpty;
-import org.mongodb.morphia.annotations.Entity;
-import org.mongodb.morphia.annotations.Transient;
+
 import software.wings.annotation.EncryptableSetting;
 import software.wings.beans.Base;
 import software.wings.beans.EntityType;
@@ -25,8 +15,19 @@ import software.wings.beans.SettingAttribute;
 import software.wings.jersey.JsonViews;
 import software.wings.settings.SettingVariableTypes;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonView;
+import com.github.reinert.jjschema.SchemaIgnore;
 import javax.annotation.Nullable;
 import javax.validation.constraints.NotNull;
+import lombok.Builder;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.experimental.FieldNameConstants;
+import org.hibernate.validator.constraints.NotEmpty;
+import org.mongodb.morphia.annotations.Entity;
+import org.mongodb.morphia.annotations.Transient;
 
 @NgUniqueIndex(name = "locate", fields = { @Field("accountId")
                                            , @Field("entityId"), @Field("entityType") })

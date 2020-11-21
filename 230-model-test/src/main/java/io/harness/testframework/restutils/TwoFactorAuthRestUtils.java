@@ -6,15 +6,16 @@ import io.harness.rest.RestResponse;
 import io.harness.testframework.framework.Retry;
 import io.harness.testframework.framework.Setup;
 import io.harness.testframework.framework.matchers.LoginMatcher;
-import io.restassured.http.ContentType;
-import io.restassured.mapper.ObjectMapperType;
-import org.jboss.aerogear.security.otp.Totp;
+
 import software.wings.beans.LoginRequest;
 import software.wings.beans.User;
 import software.wings.security.authentication.TwoFactorAuthenticationSettings;
 
+import io.restassured.http.ContentType;
+import io.restassured.mapper.ObjectMapperType;
 import java.nio.charset.StandardCharsets;
 import javax.ws.rs.core.GenericType;
+import org.jboss.aerogear.security.otp.Totp;
 
 public class TwoFactorAuthRestUtils {
   /**
