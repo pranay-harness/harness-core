@@ -18,6 +18,7 @@ import static io.harness.testframework.framework.utils.SettingUtils.createEcsFun
 import static io.harness.testframework.framework.utils.SettingUtils.createGitHubRepoSetting;
 import static io.harness.testframework.framework.utils.SettingUtils.createPCFFunctionalTestGitRepoSetting;
 import static io.harness.testframework.framework.utils.SettingUtils.createTerraformCityGitRepoSetting;
+import static io.harness.testframework.framework.utils.SettingUtils.createTerraformMainGitAcSetting;
 import static io.harness.testframework.framework.utils.SettingUtils.createTerraformMainGitRepoSetting;
 
 import static software.wings.beans.Application.GLOBAL_APP_ID;
@@ -301,59 +302,63 @@ public class SettingGenerator {
 
   private SettingAttribute ensurePcfConnector(Seed seed, Owners owners) {
     final Account account = accountGenerator.ensurePredefined(seed, owners, Accounts.GENERIC_TEST);
-    SettingAttribute settingAttribute =
-        aSettingAttribute()
-            .withName(PCF_CONNECTOR)
-            .withCategory(CONNECTOR)
-            .withAccountId(account.getUuid())
-            .withValue(PcfConfig.builder()
-                           .accountId(account.getUuid())
-                           .username(PCF_USERNAME.toCharArray())
-                           .endpointUrl(PCF_END_POINT)
-                           .password(scmSecret.decryptToCharArray(new SecretName(PCF_KEY)))
-                           .build())
-            .withUsageRestrictions(getAllAppAllEnvUsageRestrictions())
-            .build();
+    final String password = secretGenerator.ensureStored(owners, SecretName.builder().value(PCF_KEY).build());
+    SettingAttribute settingAttribute = aSettingAttribute()
+                                            .withName(PCF_CONNECTOR)
+                                            .withCategory(CONNECTOR)
+                                            .withAccountId(account.getUuid())
+                                            .withValue(PcfConfig.builder()
+                                                           .accountId(account.getUuid())
+                                                           .username(PCF_USERNAME.toCharArray())
+                                                           .endpointUrl(PCF_END_POINT)
+                                                           .password(password.toCharArray())
+                                                           .build())
+                                            .withUsageRestrictions(getAllAppAllEnvUsageRestrictions())
+                                            .build();
     return ensureSettingAttribute(seed, settingAttribute, owners);
   }
 
   private SettingAttribute ensureServiceNowConnector(Seed seed, Owners owners) {
     final Account account = accountGenerator.ensurePredefined(seed, owners, Accounts.GENERIC_TEST);
+    final String password = secretGenerator.ensureStored(owners, SecretName.builder().value("snow_connector").build());
 
-    SettingAttribute settingAttribute =
-        aSettingAttribute()
-            .withName(SNOW_CONNECTOR)
-            .withCategory(CONNECTOR)
-            .withAccountId(account.getUuid())
-            .withValue(ServiceNowConfig.builder()
-                           .accountId(account.getUuid())
-                           .baseUrl("https://ven03171.service-now.com")
-                           .username(ADMIN)
-                           .password(scmSecret.decryptToCharArray(new SecretName("snow_connector")))
-                           .build())
-            .withUsageRestrictions(getAllAppAllEnvUsageRestrictions())
-            .build();
+    SettingAttribute settingAttribute = aSettingAttribute()
+                                            .withName(SNOW_CONNECTOR)
+                                            .withCategory(CONNECTOR)
+                                            .withAccountId(account.getUuid())
+                                            .withValue(ServiceNowConfig.builder()
+                                                           .accountId(account.getUuid())
+                                                           .baseUrl("https://ven03171.service-now.com")
+                                                           .username(ADMIN)
+                                                           .password(password.toCharArray())
+                                                           .build())
+                                            .withUsageRestrictions(getAllAppAllEnvUsageRestrictions())
+                                            .build();
     return ensureSettingAttribute(seed, settingAttribute, owners);
   }
 
   private SettingAttribute ensureTerraformMainGitRepo(Seed seed, Owners owners) {
     SettingAttribute githubKey = ensurePredefined(seed, owners, GITHUB_TEST_CONNECTOR);
 
-    char[] password = scmSecret.decryptToCharArray(new SecretName("terraform_password"));
-    SettingAttribute settingAttribute = createTerraformMainGitRepoSetting(githubKey, password);
+    final String password =
+        secretGenerator.ensureStored(owners, SecretName.builder().value("terraform_password").build());
+    SettingAttribute settingAttribute = createTerraformMainGitRepoSetting(githubKey, password.toCharArray());
     return ensureSettingAttribute(seed, settingAttribute, owners);
   }
 
   private SettingAttribute ensureTerraformMainGitAc(Seed seed, Owners owners) {
     SettingAttribute githubKey = ensurePredefined(seed, owners, GITHUB_TEST_CONNECTOR);
 
-    String password = secretGenerator.ensureStored(owners, new SecretName("terraform_password"));
-    SettingAttribute settingAttribute = createTerraformMainGitRepoSetting(githubKey, password);
+    final String password =
+        secretGenerator.ensureStored(owners, SecretName.builder().value("terraform_password").build());
+    SettingAttribute settingAttribute = createTerraformMainGitAcSetting(githubKey, password.toCharArray());
     return ensureSettingAttribute(seed, settingAttribute, owners);
   }
 
   public SettingAttribute ensureAzureTestCloudProvider(Randomizer.Seed seed, Owners owners) {
     final Account account = accountGenerator.ensurePredefined(seed, owners, Accounts.GENERIC_TEST);
+    final String azure_key = secretGenerator.ensureStored(owners, SecretName.builder().value("azure_key").build());
+
     SettingAttribute settingAttribute =
         aSettingAttribute()
             .withCategory(CLOUD_PROVIDER)
@@ -365,7 +370,7 @@ public class SettingGenerator {
                            .accountId(account.getUuid())
                            .clientId(scmSecret.decryptToString(new SecretName("azure_client_id")))
                            .tenantId(scmSecret.decryptToString(new SecretName("azure_tenant_id")))
-                           .key(scmSecret.decryptToCharArray(new SecretName("azure_key")))
+                           .key(azure_key.toCharArray())
                            .build())
             .withUsageRestrictions(getAllAppAllEnvUsageRestrictions())
             .build();
@@ -374,6 +379,7 @@ public class SettingGenerator {
 
   private SettingAttribute ensureSpotinstTestCloudProvider(Randomizer.Seed seed, Owners owners) {
     final Account account = accountGenerator.ensurePredefined(seed, owners, Accounts.GENERIC_TEST);
+    final String spotInstToken = secretGenerator.ensureStored(owners, SecretName.builder().value("secret_key").build());
     SettingAttribute settingAttribute = aSettingAttribute()
                                             .withCategory(CLOUD_PROVIDER)
                                             .withName("Test Spotinst Cloud Provider")
@@ -383,7 +389,7 @@ public class SettingGenerator {
                                             .withValue(SpotInstConfig.builder()
                                                            .accountId(account.getUuid())
                                                            .spotInstAccountId("act-d48a11cf")
-                                                           .encryptedSpotInstToken("o3j27am9QlygpJqDaKvkYQ")
+                                                           .encryptedSpotInstToken(spotInstToken)
                                                            .build())
                                             .withUsageRestrictions(getAllAppAllEnvUsageRestrictions())
                                             .build();
@@ -392,6 +398,8 @@ public class SettingGenerator {
 
   public SettingAttribute ensureWinRmTestConnector(Randomizer.Seed seed, Owners owners) {
     final Account account = accountGenerator.ensurePredefined(seed, owners, Accounts.GENERIC_TEST);
+    final String password =
+        secretGenerator.ensureStored(owners, SecretName.builder().value("user_admin_password").build());
     SettingAttribute settingAttribute = aSettingAttribute()
                                             .withCategory(SETTING)
                                             .withName("Test WinRM Connection")
@@ -402,7 +410,7 @@ public class SettingGenerator {
                                                            .accountId(account.getUuid())
                                                            .authenticationScheme(AuthenticationScheme.NTLM)
                                                            .username("harnessadmin")
-                                                           .password("H@rnessH@rness".toCharArray())
+                                                           .password(password.toCharArray())
                                                            .port(5986)
                                                            .useSSL(true)
                                                            .skipCertChecks(true)
@@ -430,6 +438,8 @@ public class SettingGenerator {
 
   public SettingAttribute ensureAwsTest(Randomizer.Seed seed, Owners owners) {
     final Account account = accountGenerator.ensurePredefined(seed, owners, Accounts.GENERIC_TEST);
+    final String secretKey =
+        secretGenerator.ensureStored(owners, SecretName.builder().value("aws_qa_setup_secret_key").build());
     SettingAttribute settingAttribute =
         aSettingAttribute()
             .withCategory(CLOUD_PROVIDER)
@@ -439,7 +449,7 @@ public class SettingGenerator {
             .withAccountId(account.getUuid())
             .withValue(AwsConfig.builder()
                            .accessKey(scmSecret.decryptToCharArray(new SecretName("aws_qa_setup_access_key")))
-                           .secretKey(scmSecret.decryptToCharArray(new SecretName("aws_qa_setup_secret_key")))
+                           .secretKey(secretKey.toCharArray())
                            .accountId(account.getUuid())
                            .build())
             .withUsageRestrictions(getAllAppAllEnvUsageRestrictions())
@@ -449,6 +459,8 @@ public class SettingGenerator {
 
   private SettingAttribute ensureAwsSpotinstTest(Randomizer.Seed seed, Owners owners) {
     final Account account = accountGenerator.ensurePredefined(seed, owners, Accounts.GENERIC_TEST);
+    final String secretKey =
+        secretGenerator.ensureStored(owners, SecretName.builder().value("aws_playground_secret_key").build());
     SettingAttribute settingAttribute =
         aSettingAttribute()
             .withCategory(CLOUD_PROVIDER)
@@ -460,7 +472,7 @@ public class SettingGenerator {
                            .accessKey(/*scmSecret.decryptToString(new SecretName("aws_playground_access_key")*/
                                "AKIA4GYQC5QTQPI2UHMY".toCharArray())
                            .secretKey(/*scmSecret.decryptToCharArray(new SecretName("aws_playground_secret_key")*/
-                               "bw/H3t2Sm079NnnX/Xs2BhNJkKa3PJAME8PDlCEK".toCharArray())
+                               secretKey.toCharArray())
                            .accountId(account.getUuid())
                            .build())
             .withUsageRestrictions(getAllAppAllEnvUsageRestrictions())
@@ -470,6 +482,8 @@ public class SettingGenerator {
 
   public SettingAttribute ensureAwsDeploymentFunctionalTestsCloudProvider(Randomizer.Seed seed, Owners owners) {
     final Account account = accountGenerator.ensurePredefined(seed, owners, Accounts.GENERIC_TEST);
+    final String secretKey =
+        secretGenerator.ensureStored(owners, SecretName.builder().value("aws_qa_setup_secret_key").build());
     SettingAttribute settingAttribute =
         aSettingAttribute()
             .withCategory(CLOUD_PROVIDER)
@@ -479,7 +493,7 @@ public class SettingGenerator {
             .withAccountId(account.getUuid())
             .withValue(AwsConfig.builder()
                            .accessKey(scmSecret.decryptToCharArray(new SecretName("aws_qa_setup_access_key")))
-                           .secretKey(scmSecret.decryptToCharArray(new SecretName("aws_qa_setup_secret_key")))
+                           .secretKey(secretKey.toCharArray())
                            .accountId(account.getUuid())
                            .build())
             .withUsageRestrictions(getAllAppAllEnvUsageRestrictions())
@@ -489,28 +503,29 @@ public class SettingGenerator {
 
   private SettingAttribute ensureDevTest(Randomizer.Seed seed, Owners owners) {
     final Account account = accountGenerator.ensureRandom(seed, owners);
-
-    final SettingAttribute settingAttribute =
-        aSettingAttribute()
-            .withCategory(SETTING)
-            .withAccountId(account.getUuid())
-            .withAppId(GLOBAL_APP_ID)
-            .withEnvId(GLOBAL_ENV_ID)
-            .withName(DEV_TEST_CONNECTOR.name())
-            .withValue(aHostConnectionAttributes()
-                           .withConnectionType(SSH)
-                           .withAccessType(KEY)
-                           .withAccountId(account.getUuid())
-                           .withUserName("ubuntu")
-                           .withKey(scmSecret.decryptToCharArray(new SecretName("ubuntu_private_key")))
-                           .build())
-            .withUsageRestrictions(getAllAppAllEnvUsageRestrictions())
-            .build();
+    final String secretId = secretGenerator.ensureStored(account.getUuid(), new SecretName("ubuntu_private_key"));
+    final SettingAttribute settingAttribute = aSettingAttribute()
+                                                  .withCategory(SETTING)
+                                                  .withAccountId(account.getUuid())
+                                                  .withAppId(GLOBAL_APP_ID)
+                                                  .withEnvId(GLOBAL_ENV_ID)
+                                                  .withName(DEV_TEST_CONNECTOR.name())
+                                                  .withValue(aHostConnectionAttributes()
+                                                                 .withConnectionType(SSH)
+                                                                 .withAccessType(KEY)
+                                                                 .withAccountId(account.getUuid())
+                                                                 .withUserName("ubuntu")
+                                                                 .withKey(secretId.toCharArray())
+                                                                 .build())
+                                                  .withUsageRestrictions(getAllAppAllEnvUsageRestrictions())
+                                                  .build();
     return ensureSettingAttribute(seed, settingAttribute, owners);
   }
 
   private SettingAttribute ensureWinrmDevTest(Seed seed, Owners owners) {
     final Account account = accountGenerator.ensurePredefined(seed, owners, Accounts.GENERIC_TEST);
+    final String password =
+        secretGenerator.ensureStored(owners, SecretName.builder().value("user_admin_password").build());
     SettingAttribute settingAttribute = aSettingAttribute()
                                             .withCategory(SETTING)
                                             .withName("Test Aws WinRM Connection")
@@ -521,7 +536,7 @@ public class SettingGenerator {
                                                            .accountId(account.getUuid())
                                                            .authenticationScheme(AuthenticationScheme.NTLM)
                                                            .username("Administrator")
-                                                           .password("H@rnessH@rness".toCharArray())
+                                                           .password(password.toCharArray())
                                                            .port(5986)
                                                            .useSSL(true)
                                                            .skipCertChecks(true)
@@ -534,30 +549,35 @@ public class SettingGenerator {
   private SettingAttribute ensureGithubTest(Seed seed, Owners owners) {
     final Account account = accountGenerator.ensurePredefined(seed, owners, Accounts.GENERIC_TEST);
 
-    char[] key = scmSecret.decryptToCharArray(new SecretName("playground_private_key"));
-    final SettingAttribute settingAttribute = createGitHubRepoSetting(account.getUuid(), key);
+    final String key =
+        secretGenerator.ensureStored(owners, SecretName.builder().value("playground_private_key").build());
+    final SettingAttribute settingAttribute = createGitHubRepoSetting(account.getUuid(), key.toCharArray());
     return ensureSettingAttribute(seed, settingAttribute, owners);
   }
 
   private SettingAttribute ensureTerraformCityGitRepo(Randomizer.Seed seed, Owners owners) {
     SettingAttribute githubKey = ensurePredefined(seed, owners, GITHUB_TEST_CONNECTOR);
 
-    char[] password = scmSecret.decryptToCharArray(new SecretName("terraform_password"));
-    SettingAttribute settingAttribute = createTerraformCityGitRepoSetting(githubKey, password);
+    final String password =
+        secretGenerator.ensureStored(owners, SecretName.builder().value("terraform_password").build());
+    SettingAttribute settingAttribute = createTerraformCityGitRepoSetting(githubKey, password.toCharArray());
     return ensureSettingAttribute(seed, settingAttribute, owners);
   }
 
   private SettingAttribute ensurePCFGitRepo(Randomizer.Seed seed, Owners owners) {
     SettingAttribute githubKey = ensurePredefined(seed, owners, GITHUB_TEST_CONNECTOR);
 
-    char[] password = scmSecret.decryptToCharArray(new SecretName("terraform_password"));
-    SettingAttribute settingAttribute = createPCFFunctionalTestGitRepoSetting(githubKey, password);
+    final String password =
+        secretGenerator.ensureStored(owners, SecretName.builder().value("terraform_password").build());
+    SettingAttribute settingAttribute = createPCFFunctionalTestGitRepoSetting(githubKey, password.toCharArray());
     return ensureSettingAttribute(seed, settingAttribute, owners);
   }
 
-  private SettingAttribute ensureEcsGitRepo(Randomizer.Seed seed, Owners owners) {
+  public SettingAttribute ensureEcsGitRepo(Randomizer.Seed seed, Owners owners) {
     SettingAttribute githubKey = ensurePredefined(seed, owners, GITHUB_TEST_CONNECTOR);
-    SettingAttribute settingAttribute = createEcsFunctionalTestGitRepoSetting(githubKey);
+    final String password =
+        secretGenerator.ensureStored(owners, SecretName.builder().value("git_automation_password").build());
+    SettingAttribute settingAttribute = createEcsFunctionalTestGitRepoSetting(githubKey, password.toCharArray());
     return ensureSettingAttribute(seed, settingAttribute, owners);
   }
 
@@ -569,127 +589,132 @@ public class SettingGenerator {
 
   private SettingAttribute ensureHarnessJenkins(Randomizer.Seed seed, Owners owners) {
     final Account account = accountGenerator.ensurePredefined(seed, owners, Accounts.GENERIC_TEST);
+    final String password = secretGenerator.ensureStored(owners, SecretName.builder().value("harness_jenkins").build());
 
-    SettingAttribute settingAttribute =
-        aSettingAttribute()
-            .withName(HARNESS_JENKINS)
-            .withCategory(CONNECTOR)
-            .withAccountId(account.getUuid())
-            .withValue(JenkinsConfig.builder()
-                           .accountId(account.getUuid())
-                           .jenkinsUrl("https://jenkinsint.harness.io")
-                           .username("wingsbuild")
-                           .password(scmSecret.decryptToCharArray(new SecretName("harness_jenkins")))
-                           .authMechanism(JenkinsConfig.USERNAME_DEFAULT_TEXT)
-                           .build())
-            .withUsageRestrictions(getAllAppAllEnvUsageRestrictions())
-            .build();
+    SettingAttribute settingAttribute = aSettingAttribute()
+                                            .withName(HARNESS_JENKINS)
+                                            .withCategory(CONNECTOR)
+                                            .withAccountId(account.getUuid())
+                                            .withValue(JenkinsConfig.builder()
+                                                           .accountId(account.getUuid())
+                                                           .jenkinsUrl("https://jenkinsint.harness.io")
+                                                           .username("wingsbuild")
+                                                           .password(password.toCharArray())
+                                                           .authMechanism(JenkinsConfig.USERNAME_DEFAULT_TEXT)
+                                                           .build())
+                                            .withUsageRestrictions(getAllAppAllEnvUsageRestrictions())
+                                            .build();
     return ensureSettingAttribute(seed, settingAttribute, owners);
   }
 
   private SettingAttribute ensureHarnessJenkinsDev(Randomizer.Seed seed, Owners owners) {
     final Account account = accountGenerator.ensurePredefined(seed, owners, Accounts.GENERIC_TEST);
+    final String password =
+        secretGenerator.ensureStored(owners, SecretName.builder().value("harness_jenkins_dev").build());
 
-    SettingAttribute settingAttribute =
-        aSettingAttribute()
-            .withName(HARNESS_JENKINS_DEV)
-            .withCategory(CONNECTOR)
-            .withAccountId(account.getUuid())
-            .withValue(JenkinsConfig.builder()
-                           .accountId(account.getUuid())
-                           .jenkinsUrl("https://jenkins.dev.harness.io")
-                           .username("harnessadmin")
-                           .password(scmSecret.decryptToCharArray(new SecretName("harness_jenkins_dev")))
-                           .authMechanism(JenkinsConfig.USERNAME_DEFAULT_TEXT)
-                           .build())
-            .withUsageRestrictions(getAllAppAllEnvUsageRestrictions())
-            .build();
+    SettingAttribute settingAttribute = aSettingAttribute()
+                                            .withName(HARNESS_JENKINS_DEV)
+                                            .withCategory(CONNECTOR)
+                                            .withAccountId(account.getUuid())
+                                            .withValue(JenkinsConfig.builder()
+                                                           .accountId(account.getUuid())
+                                                           .jenkinsUrl("https://jenkins.dev.harness.io")
+                                                           .username("harnessadmin")
+                                                           .password(password.toCharArray())
+                                                           .authMechanism(JenkinsConfig.USERNAME_DEFAULT_TEXT)
+                                                           .build())
+                                            .withUsageRestrictions(getAllAppAllEnvUsageRestrictions())
+                                            .build();
     return ensureSettingAttribute(seed, settingAttribute, owners);
   }
 
   public SettingAttribute ensureHarnessJira(Randomizer.Seed seed, Owners owners) {
     final Account account = accountGenerator.ensurePredefined(seed, owners, Accounts.GENERIC_TEST);
-
-    char[] password = scmSecret.decryptToCharArray(new SecretName("harness_jira"));
-    SettingAttribute settingAttribute = SettingUtils.createHarnessJIRASetting(account.getUuid(), password);
+    owners.add(account);
+    final String password = secretGenerator.ensureStored(owners, SecretName.builder().value("harness_jira").build());
+    SettingAttribute settingAttribute =
+        SettingUtils.createHarnessJIRASetting(account.getUuid(), password.toCharArray());
     return ensureSettingAttribute(seed, settingAttribute, owners);
   }
 
   private SettingAttribute ensureHarnessBamboo(Randomizer.Seed seed, Owners owners) {
     final Account account = accountGenerator.ensurePredefined(seed, owners, Accounts.GENERIC_TEST);
-    SettingAttribute bambooSettingAttribute =
-        aSettingAttribute()
-            .withName(HARNESS_BAMBOO)
-            .withCategory(CONNECTOR)
-            .withAccountId(account.getUuid())
-            .withValue(BambooConfig.builder()
-                           .accountId(account.getUuid())
-                           .bambooUrl("http://cdteam-bamboo.harness.io:8085/")
-                           .username("wingsbuild")
-                           .password(scmSecret.decryptToCharArray(new SecretName("harness_bamboo")))
-                           .build())
-            .withUsageRestrictions(getAllAppAllEnvUsageRestrictions())
-            .build();
+    final String password = secretGenerator.ensureStored(owners, SecretName.builder().value("harness_bamboo").build());
+    SettingAttribute bambooSettingAttribute = aSettingAttribute()
+                                                  .withName(HARNESS_BAMBOO)
+                                                  .withCategory(CONNECTOR)
+                                                  .withAccountId(account.getUuid())
+                                                  .withValue(BambooConfig.builder()
+                                                                 .accountId(account.getUuid())
+                                                                 .bambooUrl("http://cdteam-bamboo.harness.io:8085/")
+                                                                 .username("wingsbuild")
+                                                                 .password(password.toCharArray())
+                                                                 .build())
+                                                  .withUsageRestrictions(getAllAppAllEnvUsageRestrictions())
+                                                  .build();
     return ensureSettingAttribute(seed, bambooSettingAttribute, owners);
   }
 
   private SettingAttribute ensureHarnessNexus(Randomizer.Seed seed, Owners owners) {
     final Account account = accountGenerator.ensurePredefined(seed, owners, Accounts.GENERIC_TEST);
-    SettingAttribute nexusSettingAttribute =
-        aSettingAttribute()
-            .withName(HARNESS_NEXUS)
-            .withCategory(CONNECTOR)
-            .withAccountId(account.getUuid())
-            .withValue(NexusConfig.builder()
-                           .accountId(account.getUuid())
-                           .nexusUrl("https://nexus2.harness.io")
-                           .username(ADMIN)
-                           .password(scmSecret.decryptToCharArray(new SecretName("harness_nexus")))
-                           .build())
-            .withUsageRestrictions(getAllAppAllEnvUsageRestrictions())
-            .build();
+    final String password = secretGenerator.ensureStored(owners, SecretName.builder().value("harness_nexus").build());
+    SettingAttribute nexusSettingAttribute = aSettingAttribute()
+                                                 .withName(HARNESS_NEXUS)
+                                                 .withCategory(CONNECTOR)
+                                                 .withAccountId(account.getUuid())
+                                                 .withValue(NexusConfig.builder()
+                                                                .accountId(account.getUuid())
+                                                                .nexusUrl("https://nexus2.harness.io")
+                                                                .username(ADMIN)
+                                                                .password(password.toCharArray())
+                                                                .build())
+                                                 .withUsageRestrictions(getAllAppAllEnvUsageRestrictions())
+                                                 .build();
     return ensureSettingAttribute(seed, nexusSettingAttribute, owners);
   }
 
   private SettingAttribute ensureHarnessNexus2(Randomizer.Seed seed, Owners owners) {
     final Account account = accountGenerator.ensurePredefined(seed, owners, Accounts.GENERIC_TEST);
-    SettingAttribute nexusSettingAttribute =
-        aSettingAttribute()
-            .withName(HARNESS_NEXUS_2)
-            .withCategory(CONNECTOR)
-            .withAccountId(account.getUuid())
-            .withValue(NexusConfig.builder()
-                           .accountId(account.getUuid())
-                           .nexusUrl("https://nexus2.dev.harness.io")
-                           .username(HARNESS_ADMIN)
-                           .password(scmSecret.decryptToCharArray(new SecretName("harness_admin_nexus")))
-                           .build())
-            .withUsageRestrictions(getAllAppAllEnvUsageRestrictions())
-            .build();
+    final String password =
+        secretGenerator.ensureStored(owners, SecretName.builder().value("harness_admin_nexus").build());
+    SettingAttribute nexusSettingAttribute = aSettingAttribute()
+                                                 .withName(HARNESS_NEXUS_2)
+                                                 .withCategory(CONNECTOR)
+                                                 .withAccountId(account.getUuid())
+                                                 .withValue(NexusConfig.builder()
+                                                                .accountId(account.getUuid())
+                                                                .nexusUrl("https://nexus2.dev.harness.io")
+                                                                .username(HARNESS_ADMIN)
+                                                                .password(password.toCharArray())
+                                                                .build())
+                                                 .withUsageRestrictions(getAllAppAllEnvUsageRestrictions())
+                                                 .build();
     return ensureSettingAttribute(seed, nexusSettingAttribute, owners);
   }
 
   private SettingAttribute ensureHarnessNexus3(Randomizer.Seed seed, Owners owners) {
     final Account account = accountGenerator.ensurePredefined(seed, owners, Accounts.GENERIC_TEST);
-    SettingAttribute nexus3SettingAttribute =
-        aSettingAttribute()
-            .withName(HARNESS_NEXUS_THREE)
-            .withCategory(CONNECTOR)
-            .withAccountId(account.getUuid())
-            .withValue(NexusConfig.builder()
-                           .accountId(account.getUuid())
-                           .nexusUrl("https://nexus3.harness.io")
-                           .username(ADMIN)
-                           .password(scmSecret.decryptToCharArray(new SecretName("harness_nexus")))
-                           .version("3.x")
-                           .build())
-            .withUsageRestrictions(getAllAppAllEnvUsageRestrictions())
-            .build();
+    final String password = secretGenerator.ensureStored(owners, SecretName.builder().value("harness_nexus").build());
+    SettingAttribute nexus3SettingAttribute = aSettingAttribute()
+                                                  .withName(HARNESS_NEXUS_THREE)
+                                                  .withCategory(CONNECTOR)
+                                                  .withAccountId(account.getUuid())
+                                                  .withValue(NexusConfig.builder()
+                                                                 .accountId(account.getUuid())
+                                                                 .nexusUrl("https://nexus3.harness.io")
+                                                                 .username(ADMIN)
+                                                                 .password(password.toCharArray())
+                                                                 .version("3.x")
+                                                                 .build())
+                                                  .withUsageRestrictions(getAllAppAllEnvUsageRestrictions())
+                                                  .build();
     return ensureSettingAttribute(seed, nexus3SettingAttribute, owners);
   }
 
   private SettingAttribute ensureHarnessArtifactory(Randomizer.Seed seed, Owners owners) {
     final Account account = accountGenerator.ensurePredefined(seed, owners, Accounts.GENERIC_TEST);
+    final String password =
+        secretGenerator.ensureStored(owners, SecretName.builder().value("harness_artifactory").build());
     SettingAttribute artifactorySettingAttribute =
         aSettingAttribute()
             .withName(HARNESS_ARTIFACTORY)
@@ -699,7 +724,7 @@ public class SettingGenerator {
                            .accountId(account.getUuid())
                            .artifactoryUrl("https://harness.jfrog.io/harness")
                            .username(ADMIN)
-                           .password(scmSecret.decryptToCharArray(new SecretName("harness_artifactory")))
+                           .password(password.toCharArray())
                            .build())
             .withUsageRestrictions(getAllAppAllEnvUsageRestrictions())
             .build();
@@ -724,13 +749,15 @@ public class SettingGenerator {
 
   private SettingAttribute ensureGcpPlayground(Randomizer.Seed seed, Owners owners) {
     final Account account = accountGenerator.ensurePredefined(seed, owners, Accounts.GENERIC_TEST);
+    final String gcpPlaygroundKey =
+        secretGenerator.ensureStored(owners, SecretName.builder().value("gcp_playground").build());
     SettingAttribute gcpSettingAttribute =
         aSettingAttribute()
             .withName(GCP_PLAYGROUND)
             .withCategory(SettingCategory.CLOUD_PROVIDER)
             .withAccountId(account.getUuid())
             .withValue(GcpConfig.builder()
-                           .serviceAccountKeyFileContent(scmSecret.decryptToCharArray(new SecretName("gcp_playground")))
+                           .serviceAccountKeyFileContent(gcpPlaygroundKey.toCharArray())
                            .accountId(account.getUuid())
                            .build())
             .withUsageRestrictions(getAllAppAllEnvUsageRestrictions())
@@ -740,14 +767,15 @@ public class SettingGenerator {
 
   private SettingAttribute ensurePaidSMTPSettings(Randomizer.Seed seed, Owners owners) {
     final Account account = accountGenerator.ensurePredefined(seed, owners, Accounts.GENERIC_TEST);
-    String secret = scmSecret.decryptToString(new SecretName("smtp_paid_sendgrid_config_password"));
+    final String password =
+        secretGenerator.ensureStored(owners, SecretName.builder().value("smtp_paid_sendgrid_config_password").build());
     SmtpConfig smtpConfig = SmtpConfig.builder()
                                 .host("smtp.sendgrid.net")
                                 .port(465)
                                 .useSSL(true)
                                 .fromAddress("automation@harness.io")
                                 .username("apikey")
-                                .password(secret.toCharArray())
+                                .password(password.toCharArray())
                                 .accountId(account.getUuid())
                                 .build();
 
@@ -795,24 +823,26 @@ public class SettingGenerator {
 
   private SettingAttribute ensureAzureArtifactsSetting(Seed seed, Owners owners) {
     final Account account = accountGenerator.ensurePredefined(seed, owners, Accounts.GENERIC_TEST);
+    final String password = secretGenerator.ensureStored(account.getUuid(), new SecretName("harness_azure_devops_pat"));
 
-    SettingAttribute settingAttribute =
-        aSettingAttribute()
-            .withName(HARNESS_AZURE_ARTIFACTS)
-            .withCategory(AZURE_ARTIFACTS)
-            .withAccountId(account.getUuid())
-            .withValue(AzureArtifactsPATConfig.builder()
-                           .accountId(account.getUuid())
-                           .azureDevopsUrl("https://dev.azure.com/garvit-test")
-                           .pat(scmSecret.decryptToCharArray(new SecretName("harness_azure_devops_pat")))
-                           .build())
-            .withUsageRestrictions(getAllAppAllEnvUsageRestrictions())
-            .build();
+    SettingAttribute settingAttribute = aSettingAttribute()
+                                            .withName(HARNESS_AZURE_ARTIFACTS)
+                                            .withCategory(AZURE_ARTIFACTS)
+                                            .withAccountId(account.getUuid())
+                                            .withValue(AzureArtifactsPATConfig.builder()
+                                                           .accountId(account.getUuid())
+                                                           .azureDevopsUrl("https://dev.azure.com/garvit-test")
+                                                           .pat(password.toCharArray())
+                                                           .build())
+                                            .withUsageRestrictions(getAllAppAllEnvUsageRestrictions())
+                                            .build();
     return ensureSettingAttribute(seed, settingAttribute, owners);
   }
 
   private SettingAttribute ensureAccountLevelGitConnector(Seed seed, Owners owners) {
     final Account account = accountGenerator.ensurePredefined(seed, owners, Accounts.GENERIC_TEST);
+    final String password =
+        secretGenerator.ensureStored(owners, SecretName.builder().value("git_automation_password").build());
 
     SettingAttribute settingAttribute =
         aSettingAttribute()
@@ -827,7 +857,7 @@ public class SettingGenerator {
                            .authenticationScheme(HostConnectionAttributes.AuthenticationScheme.HTTP_PASSWORD)
                            .username(String.valueOf(
                                new ScmSecret().decryptToCharArray(new SecretName("git_automation_username"))))
-                           .password(new ScmSecret().decryptToCharArray(new SecretName("git_automation_password")))
+                           .password(password.toCharArray())
                            .build())
             .build();
 
@@ -836,23 +866,23 @@ public class SettingGenerator {
 
   private SettingAttribute ensureAzureVMSSSSHPublicKey(Seed seed, Owners owners) {
     final Account account = accountGenerator.ensureRandom(seed, owners);
-
-    final SettingAttribute settingAttribute =
-        aSettingAttribute()
-            .withCategory(SETTING)
-            .withAccountId(account.getUuid())
-            .withAppId(GLOBAL_APP_ID)
-            .withEnvId(GLOBAL_ENV_ID)
-            .withName(AZURE_VMSS_SSH_PUBLIC_KEY_CONNECTOR.name())
-            .withValue(aHostConnectionAttributes()
-                           .withConnectionType(SSH)
-                           .withAccessType(KEY)
-                           .withAccountId(account.getUuid())
-                           .withUserName(AZURE_VMSS_VM_USERNAME)
-                           .withKey(scmSecret.decryptToCharArray(new SecretName("azure_new_vm_ssh_public_key")))
-                           .build())
-            .withUsageRestrictions(getAllAppAllEnvUsageRestrictions())
-            .build();
+    final String secretId =
+        secretGenerator.ensureStored(account.getUuid(), new SecretName("azure_new_vm_ssh_public_key"));
+    final SettingAttribute settingAttribute = aSettingAttribute()
+                                                  .withCategory(SETTING)
+                                                  .withAccountId(account.getUuid())
+                                                  .withAppId(GLOBAL_APP_ID)
+                                                  .withEnvId(GLOBAL_ENV_ID)
+                                                  .withName(AZURE_VMSS_SSH_PUBLIC_KEY_CONNECTOR.name())
+                                                  .withValue(aHostConnectionAttributes()
+                                                                 .withConnectionType(SSH)
+                                                                 .withAccessType(KEY)
+                                                                 .withAccountId(account.getUuid())
+                                                                 .withUserName(AZURE_VMSS_VM_USERNAME)
+                                                                 .withKey(secretId.toCharArray())
+                                                                 .build())
+                                                  .withUsageRestrictions(getAllAppAllEnvUsageRestrictions())
+                                                  .build();
     return ensureSettingAttribute(seed, settingAttribute, owners);
   }
 

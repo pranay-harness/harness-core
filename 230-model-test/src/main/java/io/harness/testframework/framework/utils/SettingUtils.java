@@ -77,7 +77,7 @@ public class SettingUtils {
         .build();
   }
 
-  public static SettingAttribute createEcsFunctionalTestGitRepoSetting(SettingAttribute githubKey) {
+  public static SettingAttribute createEcsFunctionalTestGitRepoSetting(SettingAttribute githubKey, char[] password) {
     return aSettingAttribute()
         .withCategory(CONNECTOR)
         .withName("ecs-git-ops-functional-test")
@@ -88,7 +88,7 @@ public class SettingUtils {
             GitConfig.builder()
                 .repoUrl("https://github.com/wings-software/arvind-test.git")
                 .username(String.valueOf(new ScmSecret().decryptToCharArray(new SecretName("git_automation_username"))))
-                .password(new ScmSecret().decryptToCharArray(new SecretName("git_automation_password")))
+                .password(password)
                 .branch("master")
                 .accountId(githubKey.getAccountId())
                 .build())
@@ -133,7 +133,7 @@ public class SettingUtils {
         .build();
   }
 
-  public static SettingAttribute createTerraformMainGitRepoSetting(SettingAttribute githubKey, String password) {
+  public static SettingAttribute createTerraformMainGitAcSetting(SettingAttribute githubKey, char[] password) {
     return aSettingAttribute()
         .withCategory(CONNECTOR)
         .withName(TERRAFORM_MAIN_GIT_AC.name())
@@ -144,7 +144,7 @@ public class SettingUtils {
                        .urlType(GitConfig.UrlType.ACCOUNT)
                        .repoUrl("https://github.com/wings-software/")
                        .username("bot-harness")
-                       .encryptedPassword(password)
+                       .password(password)
                        .branch("master")
                        .accountId(githubKey.getAccountId())
                        .build())

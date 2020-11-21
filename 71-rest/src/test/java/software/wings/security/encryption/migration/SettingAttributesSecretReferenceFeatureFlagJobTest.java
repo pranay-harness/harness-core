@@ -3,7 +3,6 @@ package software.wings.security.encryption.migration;
 import static io.harness.rule.OwnerRule.UTKARSH;
 
 import static software.wings.beans.FeatureName.CONNECTORS_REF_SECRETS;
-import static software.wings.beans.FeatureName.CONNECTORS_REF_SECRETS_MIGRATION;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -62,7 +61,6 @@ public class SettingAttributesSecretReferenceFeatureFlagJobTest extends WingsBas
   public void testMigrationWhenMigrationIsGloballyEnabled_shouldNotEnableFeatureFlag() {
     Account account = wingsPersistence.get(Account.class, wingsPersistence.save(getAccount(AccountType.PAID)));
     createSettingAttribute(account);
-    featureFlagService.enableGlobally(CONNECTORS_REF_SECRETS_MIGRATION);
     settingAttributesSecretReferenceFeatureFlagJob.run();
     assertThat(featureFlagService.isGlobalEnabled(CONNECTORS_REF_SECRETS)).isFalse();
   }
@@ -75,37 +73,7 @@ public class SettingAttributesSecretReferenceFeatureFlagJobTest extends WingsBas
     SettingAttribute settingAttribute = createSettingAttribute(account);
     settingAttribute.setSecretsMigrated(true);
     wingsPersistence.save(settingAttribute);
-    featureFlagService.enableGlobally(CONNECTORS_REF_SECRETS_MIGRATION);
     settingAttributesSecretReferenceFeatureFlagJob.run();
     assertThat(featureFlagService.isGlobalEnabled(CONNECTORS_REF_SECRETS)).isTrue();
-  }
-
-  @Test
-  @Owner(developers = UTKARSH)
-  @Category(UnitTests.class)
-  public void testMigrationWhenMigrationIsEnabledForMultipleAccounts() {
-    Account account1 = wingsPersistence.get(Account.class, wingsPersistence.save(getAccount(AccountType.PAID)));
-    Account account2 = wingsPersistence.get(Account.class, wingsPersistence.save(getAccount(AccountType.PAID)));
-    Account account3 = wingsPersistence.get(Account.class, wingsPersistence.save(getAccount(AccountType.PAID)));
-
-    featureFlagService.enableAccount(CONNECTORS_REF_SECRETS_MIGRATION, account1.getUuid());
-    featureFlagService.enableAccount(CONNECTORS_REF_SECRETS_MIGRATION, account2.getUuid());
-    featureFlagService.enableAccount(CONNECTORS_REF_SECRETS_MIGRATION, account3.getUuid());
-
-    SettingAttribute settingAttribute1 = createSettingAttribute(account1);
-    settingAttribute1.setSecretsMigrated(true);
-    wingsPersistence.save(settingAttribute1);
-
-    SettingAttribute settingAttribute2 = createSettingAttribute(account2);
-    settingAttribute2.setSecretsMigrated(false);
-    wingsPersistence.save(settingAttribute2);
-
-    createSettingAttribute(account3);
-
-    settingAttributesSecretReferenceFeatureFlagJob.run();
-
-    assertThat(featureFlagService.isEnabled(CONNECTORS_REF_SECRETS, account1.getUuid())).isTrue();
-    assertThat(featureFlagService.isEnabled(CONNECTORS_REF_SECRETS, account2.getUuid())).isFalse();
-    assertThat(featureFlagService.isEnabled(CONNECTORS_REF_SECRETS, account3.getUuid())).isFalse();
   }
 }

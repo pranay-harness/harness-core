@@ -6,7 +6,6 @@ import static io.harness.rule.OwnerRule.RAGHU;
 import static io.harness.rule.OwnerRule.UTKARSH;
 import static io.harness.security.encryption.EncryptionType.KMS;
 
-import static software.wings.beans.FeatureName.CONNECTORS_REF_SECRETS_MIGRATION;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 import static software.wings.beans.SettingAttribute.VALUE_TYPE_KEY;
 import static software.wings.service.impl.SettingServiceHelper.ATTRIBUTES_USING_REFERENCES;
@@ -144,7 +143,6 @@ public class SettingAttributesSecretsMigrationHandlerTest extends WingsBaseTest 
   @Category(UnitTests.class)
   public void testHandle_shouldSucceed() {
     createSettingAttribute();
-    featureFlagService.enableAccount(CONNECTORS_REF_SECRETS_MIGRATION, settingAttribute.getAccountId());
     settingAttributesSecretsMigrationHandler.handle(settingAttribute);
     SettingAttribute updatedSettingAttribute = wingsPersistence.get(SettingAttribute.class, settingAttribute.getUuid());
     assertThat(updatedSettingAttribute).isNotNull();
@@ -161,27 +159,8 @@ public class SettingAttributesSecretsMigrationHandlerTest extends WingsBaseTest 
   @Test
   @Owner(developers = UTKARSH)
   @Category(UnitTests.class)
-  public void testHandle_shouldFail_FeatureFlagDisabled() {
-    createSettingAttribute();
-    settingAttributesSecretsMigrationHandler.handle(settingAttribute);
-    SettingAttribute updatedSettingAttribute = wingsPersistence.get(SettingAttribute.class, settingAttribute.getUuid());
-    assertThat(updatedSettingAttribute).isNotNull();
-    assertThat(updatedSettingAttribute.isSecretsMigrated()).isFalse();
-
-    EncryptedData updatedEncryptedData = wingsPersistence.get(EncryptedData.class, encryptedData.getUuid());
-    assertThat(updatedEncryptedData).isNotNull();
-    assertThat(updatedEncryptedData.getType()).isEqualTo(APP_DYNAMICS);
-    assertThat(updatedEncryptedData.getUsageRestrictions()).isNull();
-    assertThat(updatedEncryptedData.getName()).isEqualTo(encryptedData.getName());
-    assertThat(updatedEncryptedData.getParents()).hasSize(1);
-  }
-
-  @Test
-  @Owner(developers = UTKARSH)
-  @Category(UnitTests.class)
   public void testHandle_shouldPass_secretAlreadyMigrated() {
     createSettingAttribute();
-    featureFlagService.enableAccount(CONNECTORS_REF_SECRETS_MIGRATION, settingAttribute.getAccountId());
     encryptedData.setType(SECRET_TEXT);
     encryptedData.setHideFromListing(false);
     wingsPersistence.save(encryptedData);
@@ -204,7 +183,6 @@ public class SettingAttributesSecretsMigrationHandlerTest extends WingsBaseTest 
   @Category(UnitTests.class)
   public void testHandle_shouldPass_secretNotFound() {
     createSettingAttribute();
-    featureFlagService.enableAccount(CONNECTORS_REF_SECRETS_MIGRATION, settingAttribute.getAccountId());
     ((AppDynamicsConfig) settingAttribute.getValue()).setEncryptedPassword(generateUuid());
     wingsPersistence.save(settingAttribute);
 
@@ -305,7 +283,6 @@ public class SettingAttributesSecretsMigrationHandlerTest extends WingsBaseTest 
     assertThat(keyValues.getEncryptedValue()).isNull();
     assertThat(keyValues.isEncrypted()).isFalse();
 
-    featureFlagService.enableAccount(CONNECTORS_REF_SECRETS_MIGRATION, settingAttribute.getAccountId());
     settingAttributesSecretsMigrationHandler.handle(savedSettingAttribute);
 
     encryptedDataList = wingsPersistence.createQuery(EncryptedData.class, excludeAuthority).asList();
