@@ -52,15 +52,18 @@ build_bazel_module() {
   module=$1
   bazel ${bazelrc} build //${module}:module ${GCP} ${BAZEL_ARGUMENTS} --experimental_remote_download_outputs=all
 
-  mvn -B install:install-file \
-   -Dfile=${BAZEL_DIRS}/bin/${module}/libmodule.jar \
-   -DgroupId=software.wings \
-   -DartifactId=${module} \
-   -Dversion=0.0.1-SNAPSHOT \
-   -Dpackaging=jar \
-   -DgeneratePom=true \
-   -DpomFile=${module}/pom.xml \
-   -DlocalRepositoryPath=${local_repo}
+  if ! cmp -s "${local_repo}/software/wings/${module}/0.0.1-SNAPSHOT/${module}-0.0.1-SNAPSHOT.jar" "${BAZEL_DIRS}/bin/${module}/libmodule.jar"
+  then
+    mvn -B install:install-file \
+     -Dfile=${BAZEL_DIRS}/bin/${module}/libmodule.jar \
+     -DgroupId=software.wings \
+     -DartifactId=${module} \
+     -Dversion=0.0.1-SNAPSHOT \
+     -Dpackaging=jar \
+     -DgeneratePom=true \
+     -DpomFile=${module}/pom.xml \
+     -DlocalRepositoryPath=${local_repo}
+  fi
 }
 
 build_bazel_tests() {
@@ -68,43 +71,51 @@ build_bazel_tests() {
 
   bazel ${bazelrc} build //${module}:supporter-test ${GCP} ${BAZEL_ARGUMENTS} --experimental_remote_download_outputs=all
 
-  mvn -B install:install-file \
-   -Dfile=${BAZEL_DIRS}/bin/${module}/libsupporter-test.jar \
-   -DgroupId=software.wings \
-   -DartifactId=${module} \
-   -Dversion=0.0.1-SNAPSHOT \
-   -Dclassifier=tests \
-   -Dpackaging=jar \
-   -DgeneratePom=true \
-   -DpomFile=${module}/pom.xml \
-   -DlocalRepositoryPath=${local_repo}
+  if ! cmp -s "${local_repo}/software/wings/${module}/0.0.1-SNAPSHOT/${module}-0.0.1-SNAPSHOT-tests.jar" "${BAZEL_DIRS}/bin/${module}/libsupporter-test.jar"
+  then
+    mvn -B install:install-file \
+     -Dfile=${BAZEL_DIRS}/bin/${module}/libsupporter-test.jar \
+     -DgroupId=software.wings \
+     -DartifactId=${module} \
+     -Dversion=0.0.1-SNAPSHOT \
+     -Dclassifier=tests \
+     -Dpackaging=jar \
+     -DgeneratePom=true \
+     -DpomFile=${module}/pom.xml \
+     -DlocalRepositoryPath=${local_repo}
+  fi
 }
 
 build_bazel_application() {
   module=$1
-  bazel ${bazelrc} build //${module}:module ${GCP} ${BAZEL_ARGUMENTS}
-  bazel ${bazelrc} build //${module}:module_deploy.jar ${GCP} ${BAZEL_ARGUMENTS}
+  bazel ${bazelrc} build //${module}:module //${module}:module_deploy.jar ${GCP} ${BAZEL_ARGUMENTS}
 
-  mvn -B install:install-file \
-   -Dfile=${BAZEL_DIRS}/bin/${module}/module.jar \
-   -DgroupId=software.wings \
-   -DartifactId=${module} \
-   -Dversion=0.0.1-SNAPSHOT \
-   -Dpackaging=jar \
-   -DgeneratePom=true \
-   -DpomFile=${module}/pom.xml \
-   -DlocalRepositoryPath=${local_repo}
+  if ! cmp -s "${local_repo}/software/wings/${module}/0.0.1-SNAPSHOT/${module}-0.0.1-SNAPSHOT.jar" "${BAZEL_DIRS}/bin/${module}/module.jar"
+  then
+    mvn -B install:install-file \
+     -Dfile=${BAZEL_DIRS}/bin/${module}/module.jar \
+     -DgroupId=software.wings \
+     -DartifactId=${module} \
+     -Dversion=0.0.1-SNAPSHOT \
+     -Dpackaging=jar \
+     -DgeneratePom=true \
+     -DpomFile=${module}/pom.xml \
+     -DlocalRepositoryPath=${local_repo}
+  fi
 
-  mvn -B install:install-file \
-   -Dfile=${BAZEL_DIRS}/bin/${module}/module_deploy.jar \
-   -DgroupId=software.wings \
-   -DartifactId=${module} \
-   -Dversion=0.0.1-SNAPSHOT \
-   -Dclassifier=capsule \
-   -Dpackaging=jar \
-   -DgeneratePom=true \
-   -DpomFile=${module}/pom.xml \
-   -DlocalRepositoryPath=${local_repo}
+  if ! cmp -s "${local_repo}/software/wings/${module}/0.0.1-SNAPSHOT/${module}-0.0.1-SNAPSHOT-capsule.jar" "${BAZEL_DIRS}/bin/${module}/module_deploy.jar"
+  then
+    mvn -B install:install-file \
+     -Dfile=${BAZEL_DIRS}/bin/${module}/module_deploy.jar \
+     -DgroupId=software.wings \
+     -DartifactId=${module} \
+     -Dversion=0.0.1-SNAPSHOT \
+     -Dclassifier=capsule \
+     -Dpackaging=jar \
+     -DgeneratePom=true \
+     -DpomFile=${module}/pom.xml \
+     -DlocalRepositoryPath=${local_repo}
+  fi
 }
 
 build_java_proto_module() {
@@ -121,15 +132,18 @@ build_proto_module() {
 
   bazel_library=`echo ${module} | tr '-' '_'`
 
-  mvn -B install:install-file \
-   -Dfile=${BAZEL_DIRS}/bin/${modulePath}/lib${bazel_library}_java_proto.jar \
-   -DgroupId=software.wings \
-   -DartifactId=${module}-proto \
-   -Dversion=0.0.1-SNAPSHOT \
-   -Dpackaging=jar \
-   -DgeneratePom=true \
-   -DlocalRepositoryPath=${local_repo} \
-   -f scripts/bazel/proto_pom.xml
+  if ! cmp -s "${local_repo}/software/wings/${module}-proto/0.0.1-SNAPSHOT/${module}-proto-0.0.1-SNAPSHOT.jar" "${BAZEL_DIRS}/bin/${modulePath}/lib${bazel_library}_java_proto.jar"
+  then
+    mvn -B install:install-file \
+     -Dfile=${BAZEL_DIRS}/bin/${modulePath}/lib${bazel_library}_java_proto.jar \
+     -DgroupId=software.wings \
+     -DartifactId=${module}-proto \
+     -Dversion=0.0.1-SNAPSHOT \
+     -Dpackaging=jar \
+     -DgeneratePom=true \
+     -DlocalRepositoryPath=${local_repo} \
+     -f scripts/bazel/proto_pom.xml
+  fi
 }
 
 build_bazel_module 15-api-services
