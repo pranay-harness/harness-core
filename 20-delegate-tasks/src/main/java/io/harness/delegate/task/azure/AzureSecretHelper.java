@@ -1,4 +1,4 @@
-package software.wings.delegatetasks.azure;
+package io.harness.delegate.task.azure;
 
 import io.harness.azure.model.AzureConfig;
 import io.harness.beans.DecryptableEntity;
