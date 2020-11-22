@@ -219,8 +219,8 @@ cd to `portal` directory
 
 ### Editing setup
 
-1. Install [clang-format](https://clang.llvm.org/docs/ClangFormat.html) (7.0.0)
-Download the clang 7.0.0 tar from [this page](https://releases.llvm.org/download.html)
+1. Install [clang-format](https://clang.llvm.org/docs/ClangFormat.html) (11.0.0)
+Download the clang 11.0.0 tar from [this page](https://releases.llvm.org/download.html)
 Untar the downloaded file and add it to your PATH in `~/.bashrc` or `~/.zshrc`
 
 ```
