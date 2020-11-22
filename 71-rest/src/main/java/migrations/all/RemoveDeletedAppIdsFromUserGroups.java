@@ -45,7 +45,7 @@ public class RemoveDeletedAppIdsFromUserGroups implements Migration {
 
       try (HIterator<UserGroup> userGroupIterator =
                new HIterator<>(persistence.createQuery(UserGroup.class, excludeAuthority)
-                                   .project(UserGroup.ID_KEY, true)
+                                   .project(UserGroup.ID_KEY2, true)
                                    .project(UserGroupKeys.accountId, true)
                                    .project(UserGroupKeys.appPermissions, true)
                                    .fetch())) {

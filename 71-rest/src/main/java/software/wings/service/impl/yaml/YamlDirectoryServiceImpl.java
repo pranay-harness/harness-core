@@ -2160,7 +2160,7 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
         templateService
             .list(aPageRequest()
                       .addFilter(Template.APP_ID_KEY, Operator.EQ, appId)
-                      .addFilter(Template.ACCOUNT_ID_KEY, Operator.EQ, accountId)
+                      .addFilter(Template.ACCOUNT_ID_KEY2, Operator.EQ, accountId)
                       .withLimit(UNLIMITED)
                       .build(),
                 Collections.singletonList(templateGalleryService.getAccountGalleryKey().name()), accountId, false)

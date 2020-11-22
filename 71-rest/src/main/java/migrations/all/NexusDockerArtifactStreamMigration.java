@@ -52,7 +52,7 @@ public class NexusDockerArtifactStreamMigration implements Migration {
                 nexusArtifactStream.getDockerPort(), nexusArtifactStream.getDockerRegistryUrl());
             bulkWriteOperation
                 .find(wingsPersistence.createQuery(ArtifactStream.class)
-                          .filter(ArtifactStream.ID_KEY, nexusArtifactStream.getUuid())
+                          .filter(ArtifactStream.ID_KEY2, nexusArtifactStream.getUuid())
                           .getQueryObject())
                 .updateOne(new BasicDBObject(
                     "$set", new BasicDBObject(NexusArtifactStream.DOCKER_REGISTRY_URL_KEY, dockerRegistryUrl)));

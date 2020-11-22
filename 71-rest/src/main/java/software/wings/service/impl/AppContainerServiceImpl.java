@@ -68,7 +68,7 @@ public class AppContainerServiceImpl implements AppContainerService {
   @Override
   public AppContainer get(String accountId, String platformId) {
     return wingsPersistence.createQuery(AppContainer.class)
-        .filter(AppContainer.ACCOUNT_ID_KEY, accountId)
+        .filter(AppContainer.ACCOUNT_ID_KEY2, accountId)
         .filter(Mapper.ID_KEY, platformId)
         .get();
   }
@@ -79,7 +79,7 @@ public class AppContainerServiceImpl implements AppContainerService {
   @Override
   public AppContainer getByName(String accountId, String appContainerName) {
     return wingsPersistence.createQuery(AppContainer.class)
-        .filter(AppContainer.ACCOUNT_ID_KEY, accountId)
+        .filter(AppContainer.ACCOUNT_ID_KEY2, accountId)
         .filter("name", appContainerName)
         .get();
   }
@@ -197,7 +197,7 @@ public class AppContainerServiceImpl implements AppContainerService {
   @Override
   public void deleteByAccountId(String accountId) {
     List<AppContainer> appContainerList =
-        wingsPersistence.createQuery(AppContainer.class).filter(AppContainer.ACCOUNT_ID_KEY, accountId).asList();
+        wingsPersistence.createQuery(AppContainer.class).filter(AppContainer.ACCOUNT_ID_KEY2, accountId).asList();
     for (AppContainer appContainer : appContainerList) {
       delete(accountId, appContainer.getUuid());
     }

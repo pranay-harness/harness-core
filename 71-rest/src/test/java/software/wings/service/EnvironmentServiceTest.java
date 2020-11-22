@@ -526,8 +526,8 @@ public class EnvironmentServiceTest extends WingsBaseTest {
     when(query.project(EnvironmentKeys.name, true)).thenReturn(query);
     when(query.project(EnvironmentKeys.appId, true)).thenReturn(query);
     when(query.project(EnvironmentKeys.environmentType, true)).thenReturn(query);
-    when(query.project(Environment.ID_KEY, true)).thenReturn(query);
-    when(query.field(Environment.ID_KEY)).thenReturn(end);
+    when(query.project(Environment.ID_KEY2, true)).thenReturn(query);
+    when(query.field(Environment.ID_KEY2)).thenReturn(end);
     when(end.in(asList(ENV_ID))).thenReturn(query);
     when(query.asList())
         .thenReturn(asList(Environment.Builder.anEnvironment().appId(APP_ID).uuid(ENV_ID).name(ENV_NAME).build()));

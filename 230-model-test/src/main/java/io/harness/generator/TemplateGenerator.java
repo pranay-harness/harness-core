@@ -387,8 +387,8 @@ public class TemplateGenerator {
     //        template.getAccountId(), template.getName(), template.getFolderId());
     return wingsPersistence.createQuery(Template.class)
         .project(Template.NAME_KEY, true)
-        .project(Template.ACCOUNT_ID_KEY, true)
-        .filter(Template.ACCOUNT_ID_KEY, template.getAccountId())
+        .project(Template.ACCOUNT_ID_KEY2, true)
+        .filter(Template.ACCOUNT_ID_KEY2, template.getAccountId())
         .filter(Template.NAME_KEY, template.getName())
         .filter(Template.FOLDER_ID_KEY, template.getFolderId())
         .get();

@@ -33,10 +33,10 @@ public class ServiceUtils {
 
   public static PageRequest<Service> getServicesPageRequest(@NotNull String accountId, List<String> serviceIdList) {
     PageRequestBuilder pageRequestBuilder =
-        aPageRequest().withLimit(PageRequest.UNLIMITED).addFilter(Service.ACCOUNT_ID_KEY, Operator.EQ, accountId);
+        aPageRequest().withLimit(PageRequest.UNLIMITED).addFilter(Service.ACCOUNT_ID_KEY2, Operator.EQ, accountId);
 
     if (isNotEmpty(serviceIdList)) {
-      pageRequestBuilder.addFilter(Service.ID_KEY, Operator.IN, serviceIdList.toArray());
+      pageRequestBuilder.addFilter(Service.ID_KEY2, Operator.IN, serviceIdList.toArray());
     }
 
     return (PageRequest<Service>) pageRequestBuilder.build();

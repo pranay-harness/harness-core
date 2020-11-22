@@ -90,7 +90,7 @@ public class TemplateGalleryGenerator {
 
   public TemplateGallery exists(TemplateGallery templateGallery) {
     return wingsPersistence.createQuery(TemplateGallery.class)
-        .filter(TemplateGallery.ACCOUNT_ID_KEY, templateGallery.getAccountId())
+        .filter(TemplateGallery.ACCOUNT_ID_KEY2, templateGallery.getAccountId())
         .filter(Template.NAME_KEY, templateGallery.getName())
         .get();
   }

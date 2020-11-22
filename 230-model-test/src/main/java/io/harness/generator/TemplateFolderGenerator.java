@@ -134,7 +134,7 @@ public class TemplateFolderGenerator {
 
   public TemplateFolder exists(TemplateFolder template) {
     return wingsPersistence.createQuery(TemplateFolder.class)
-        .filter(TemplateFolder.ACCOUNT_ID_KEY, template.getAccountId())
+        .filter(TemplateFolder.ACCOUNT_ID_KEY2, template.getAccountId())
         .filter(TemplateFolder.NAME_KEY, template.getName())
         .get();
   }

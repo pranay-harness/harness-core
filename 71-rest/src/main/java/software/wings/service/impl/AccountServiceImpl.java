@@ -18,7 +18,7 @@ import static io.harness.validation.Validator.notNullCheck;
 import static software.wings.beans.Account.GLOBAL_ACCOUNT_ID;
 import static software.wings.beans.AppContainer.Builder.anAppContainer;
 import static software.wings.beans.Application.GLOBAL_APP_ID;
-import static software.wings.beans.Base.ID_KEY;
+import static software.wings.beans.Base.ID_KEY2;
 import static software.wings.beans.NotificationGroup.NotificationGroupBuilder.aNotificationGroup;
 import static software.wings.beans.Role.Builder.aRole;
 import static software.wings.beans.RoleType.ACCOUNT_ADMIN;
@@ -526,7 +526,7 @@ public class AccountServiceImpl implements AccountService {
 
   @Override
   public boolean getTwoFactorEnforceInfo(String accountId) {
-    Query<Account> getQuery = wingsPersistence.createQuery(Account.class).filter(ID_KEY, accountId);
+    Query<Account> getQuery = wingsPersistence.createQuery(Account.class).filter(ID_KEY2, accountId);
     return getQuery.get().isTwoFactorAdminEnforced();
   }
 
@@ -892,7 +892,7 @@ public class AccountServiceImpl implements AccountService {
   @Override
   public List<Account> listAllAccountWithDefaultsWithoutLicenseInfo() {
     return wingsPersistence.createQuery(Account.class, excludeAuthorityCount)
-        .project(ID_KEY, true)
+        .project(ID_KEY2, true)
         .project(AccountKeys.accountName, true)
         .project(AccountKeys.companyName, true)
         .filter(ApplicationKeys.appId, GLOBAL_APP_ID)
@@ -901,7 +901,7 @@ public class AccountServiceImpl implements AccountService {
 
   public Set<String> getAccountsWithDisabledHarnessUserGroupAccess() {
     return wingsPersistence.createQuery(Account.class, excludeAuthority)
-        .project(ID_KEY, true)
+        .project(ID_KEY2, true)
         .filter(AccountKeys.isHarnessSupportAccessAllowed, Boolean.FALSE)
         .asList()
         .stream()
@@ -936,7 +936,7 @@ public class AccountServiceImpl implements AccountService {
     Account account = wingsPersistence.createQuery(Account.class)
                           .project(AccountKeys.accountName, true)
                           .project(AccountKeys.companyName, true)
-                          .filter(ID_KEY, accountId)
+                          .filter(ID_KEY2, accountId)
                           .get();
     if (account != null) {
       account.setDefaults(settingsService.listAccountDefaults(accountId));
@@ -1291,7 +1291,7 @@ public class AccountServiceImpl implements AccountService {
   private void createSystemAppContainers(Account account) {
     List<SystemCatalog> systemCatalogs =
         systemCatalogService.list(aPageRequest()
-                                      .addFilter(SystemCatalog.APP_ID_KEY, EQ, GLOBAL_APP_ID)
+                                      .addFilter(SystemCatalog.APP_ID_KEY2, EQ, GLOBAL_APP_ID)
                                       .addFilter("catalogType", EQ, APPSTACK)
                                       .build());
     log.debug("Creating default system app containers  ");

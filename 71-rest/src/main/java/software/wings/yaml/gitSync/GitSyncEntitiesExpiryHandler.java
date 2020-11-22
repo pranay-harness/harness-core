@@ -200,7 +200,7 @@ public class GitSyncEntitiesExpiryHandler implements Handler<Account> {
     List<String> gitCommitIds;
     do {
       Query<GitCommit> gitCommitsQuery = wingsPersistence.createQuery(GitCommit.class)
-                                             .filter(GitCommit.ACCOUNT_ID_KEY, account.getUuid())
+                                             .filter(GitCommit.ACCOUNT_ID_KEY2, account.getUuid())
                                              .order(Sort.descending(GitCommit.CREATED_AT_KEY));
       gitCommitsQuery.criteria(GitCommit.CREATED_AT_KEY).lessThan(expiryMillis);
       List<GitCommit> gitCommits = gitCommitsQuery.asList(new FindOptions().limit(1000));
@@ -225,8 +225,8 @@ public class GitSyncEntitiesExpiryHandler implements Handler<Account> {
       }
       gitCommitIds = gitCommitsToBeDeleted.stream().map(GitCommit::getUuid).collect(Collectors.toList());
       boolean deleted = wingsPersistence.delete(wingsPersistence.createQuery(GitCommit.class)
-                                                    .filter(GitCommit.ACCOUNT_ID_KEY, account.getUuid())
-                                                    .field(GitCommit.ID_KEY)
+                                                    .filter(GitCommit.ACCOUNT_ID_KEY2, account.getUuid())
+                                                    .field(GitCommit.ID_KEY2)
                                                     .in(gitCommitIds));
       if (deleted) {
         log.info("Deleted expired Git Commit for account {}. Expired Ids are: {} ", account.getUuid(), gitCommitIds);

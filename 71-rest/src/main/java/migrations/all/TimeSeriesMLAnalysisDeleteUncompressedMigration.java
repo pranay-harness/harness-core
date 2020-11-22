@@ -29,7 +29,7 @@ public class TimeSeriesMLAnalysisDeleteUncompressedMigration implements Migratio
         log.info("saving " + mlAnalysisRecord.getUuid());
         bulkWriteOperation
             .find(wingsPersistence.createQuery(TimeSeriesMLAnalysisRecord.class)
-                      .filter(TimeSeriesMLAnalysisRecord.ID_KEY, mlAnalysisRecord.getUuid())
+                      .filter(TimeSeriesMLAnalysisRecord.ID_KEY2, mlAnalysisRecord.getUuid())
                       .getQueryObject())
             .updateOne(new BasicDBObject("$unset", new BasicDBObject("transactions", "")));
         batched++;

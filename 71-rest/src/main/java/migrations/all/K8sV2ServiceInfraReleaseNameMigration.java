@@ -92,7 +92,7 @@ public class K8sV2ServiceInfraReleaseNameMigration implements Migration {
             .set(RELEASE_NAME_KEY, INFRA_KUBERNETES_INFRAID_EXPRESSION);
 
     Query<InfrastructureMapping> query = wingsPersistence.createQuery(InfrastructureMapping.class)
-                                             .filter(InfrastructureMapping.ID_KEY, infraMapping.getUuid());
+                                             .filter(InfrastructureMapping.ID_KEY2, infraMapping.getUuid());
 
     wingsPersistence.update(query, updateOperations);
   }

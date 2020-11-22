@@ -247,11 +247,11 @@ public class GitChangeSetHandler {
   public List<String> obtainYamlGitConfigIds(
       String accountId, String branchName, String repositoryName, String gitConnectorId) {
     return wingsPersistence.createQuery(YamlGitConfig.class)
-        .filter(YamlGitConfig.ACCOUNT_ID_KEY, accountId)
+        .filter(YamlGitConfig.ACCOUNT_ID_KEY2, accountId)
         .filter(GIT_CONNECTOR_ID_KEY, gitConnectorId)
         .filter(REPOSITORY_NAME_KEY, repositoryName)
         .filter(BRANCH_NAME_KEY, branchName)
-        .project(YamlGitConfig.ID_KEY, true)
+        .project(YamlGitConfig.ID_KEY2, true)
         .asList()
         .stream()
         .map(Base::getUuid)

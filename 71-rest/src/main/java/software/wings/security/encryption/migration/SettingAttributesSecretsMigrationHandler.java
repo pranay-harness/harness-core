@@ -6,7 +6,7 @@ import static io.harness.mongo.iterator.MongoPersistenceIterator.SchedulingType.
 import static io.harness.persistence.HPersistence.returnNewOptions;
 import static io.harness.persistence.UpdatedAtAware.LAST_UPDATED_AT_KEY;
 
-import static software.wings.beans.Base.ID_KEY;
+import static software.wings.beans.Base.ID_KEY2;
 import static software.wings.beans.SettingAttribute.VALUE_TYPE_KEY;
 import static software.wings.service.impl.SettingServiceHelper.ATTRIBUTES_USING_REFERENCES;
 import static software.wings.settings.SettingVariableTypes.APM_VERIFICATION;
@@ -113,7 +113,7 @@ public class SettingAttributesSecretsMigrationHandler implements Handler<Setting
 
   private boolean updateSettingAttribute(@NonNull SettingAttribute settingAttribute) {
     Query<SettingAttribute> query = wingsPersistence.createQuery(SettingAttribute.class)
-                                        .field(ID_KEY)
+                                        .field(ID_KEY2)
                                         .equal(settingAttribute.getUuid())
                                         .field(LAST_UPDATED_AT_KEY)
                                         .equal(settingAttribute.getLastUpdatedAt());
@@ -167,7 +167,7 @@ public class SettingAttributesSecretsMigrationHandler implements Handler<Setting
         new EncryptedDataParent(settingAttribute.getUuid(), settingValue.getSettingType(), encryptedFieldName));
 
     Query<EncryptedData> query = wingsPersistence.createQuery(EncryptedData.class)
-                                     .field(ID_KEY)
+                                     .field(ID_KEY2)
                                      .equal(secret.getUuid())
                                      .field(LAST_UPDATED_AT_KEY)
                                      .equal(secret.getLastUpdatedAt());

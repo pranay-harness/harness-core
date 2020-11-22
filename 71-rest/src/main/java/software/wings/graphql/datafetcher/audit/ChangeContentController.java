@@ -147,7 +147,7 @@ public class ChangeContentController {
 
   private AuditHeader getAuditHeaderById(@NotNull String changeSetId) {
     return wingsPersistence.createQuery(AuditHeader.class)
-        .filter(AuditHeader.ID_KEY, changeSetId)
+        .filter(AuditHeader.ID_KEY2, changeSetId)
         .project("entityAuditRecords", true)
         .get();
   }

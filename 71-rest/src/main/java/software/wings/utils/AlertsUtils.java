@@ -17,7 +17,7 @@ public class AlertsUtils {
   @Inject private WingsPersistence wingsPersistence;
   public void closeAlertIfApplicable(String accountId) {
     final long errorCount =
-        wingsPersistence.createQuery(GitSyncError.class).filter(GitSyncError.ACCOUNT_ID_KEY, accountId).count();
+        wingsPersistence.createQuery(GitSyncError.class).filter(GitSyncError.ACCOUNT_ID_KEY2, accountId).count();
     if (errorCount == 0) {
       alertService.closeAlert(accountId, GLOBAL_APP_ID, AlertType.GitSyncError, getGitSyncErrorAlert(accountId));
     }

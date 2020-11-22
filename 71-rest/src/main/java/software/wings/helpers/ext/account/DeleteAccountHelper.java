@@ -4,7 +4,7 @@ import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.persistence.HQuery.excludeAuthority;
 
-import static software.wings.beans.Base.ACCOUNT_ID_KEY;
+import static software.wings.beans.Base.ACCOUNT_ID_KEY2;
 
 import static java.lang.reflect.Modifier.isAbstract;
 
@@ -128,7 +128,7 @@ public class DeleteAccountHelper {
         log.info("Deleting account level collection {}", collectionName);
         Class<? extends PersistentEntity> persistentEntity = entity.asSubclass(PersistentEntity.class);
         hPersistence.delete(
-            hPersistence.createQuery(persistentEntity, excludeAuthority).filter(ACCOUNT_ID_KEY, accountId));
+            hPersistence.createQuery(persistentEntity, excludeAuthority).filter(ACCOUNT_ID_KEY2, accountId));
       }
     } catch (Exception e) {
       log.error("Exception while deleting AccountAccess collection {} for accountId {}", collectionName, accountId, e);

@@ -214,14 +214,14 @@ public class LearningEngineAnalysisServiceImpl implements LearningEngineService 
 
     query.or(query.criteria(LearningEngineAnalysisTaskKeys.executionStatus).equal(ExecutionStatus.QUEUED),
         query.and(query.criteria(LearningEngineAnalysisTaskKeys.executionStatus).equal(ExecutionStatus.RUNNING),
-            query.criteria(LearningEngineAnalysisTask.LAST_UPDATED_AT_KEY)
+            query.criteria(LearningEngineAnalysisTask.LAST_UPDATED_AT_KEY2)
                 .lessThan(System.currentTimeMillis() - TIME_SERIES_ANALYSIS_TASK_TIME_OUT)));
     query = query.order(LearningEngineAnalysisTaskKeys.priority + "," + BaseKeys.createdAt);
     UpdateOperations<LearningEngineAnalysisTask> updateOperations =
         wingsPersistence.createUpdateOperations(LearningEngineAnalysisTask.class)
             .set(LearningEngineAnalysisTaskKeys.executionStatus, ExecutionStatus.RUNNING)
             .inc(LearningEngineAnalysisTaskKeys.retry)
-            .set(LearningEngineAnalysisTask.LAST_UPDATED_AT_KEY, System.currentTimeMillis());
+            .set(LearningEngineAnalysisTask.LAST_UPDATED_AT_KEY2, System.currentTimeMillis());
     LearningEngineAnalysisTask task =
         wingsPersistence.findAndModify(query, updateOperations, new FindAndModifyOptions());
     if (task != null && task.getRetry() > LearningEngineAnalysisTask.RETRIES) {
@@ -291,13 +291,13 @@ public class LearningEngineAnalysisServiceImpl implements LearningEngineService 
     query.or(query.criteria(LearningEngineExperimentalAnalysisTaskKeys.executionStatus).equal(ExecutionStatus.QUEUED),
         query.and(
             query.criteria(LearningEngineExperimentalAnalysisTaskKeys.executionStatus).equal(ExecutionStatus.RUNNING),
-            query.criteria(LearningEngineExperimentalAnalysisTask.LAST_UPDATED_AT_KEY)
+            query.criteria(LearningEngineExperimentalAnalysisTask.LAST_UPDATED_AT_KEY2)
                 .lessThan(System.currentTimeMillis() - TIME_SERIES_ANALYSIS_TASK_TIME_OUT)));
     UpdateOperations<LearningEngineExperimentalAnalysisTask> updateOperations =
         wingsPersistence.createUpdateOperations(LearningEngineExperimentalAnalysisTask.class)
             .set(LearningEngineExperimentalAnalysisTaskKeys.executionStatus, ExecutionStatus.RUNNING)
             .inc(LearningEngineExperimentalAnalysisTaskKeys.retry)
-            .set(LearningEngineExperimentalAnalysisTask.LAST_UPDATED_AT_KEY, System.currentTimeMillis());
+            .set(LearningEngineExperimentalAnalysisTask.LAST_UPDATED_AT_KEY2, System.currentTimeMillis());
     return wingsPersistence.findAndModify(query, updateOperations, new FindAndModifyOptions());
   }
 
@@ -428,13 +428,13 @@ public class LearningEngineAnalysisServiceImpl implements LearningEngineService 
                                        .lessThan(LearningEngineAnalysisTask.RETRIES);
     query.or(query.criteria("executionStatus").equal(ExecutionStatus.QUEUED),
         query.and(query.criteria("executionStatus").equal(ExecutionStatus.RUNNING),
-            query.criteria(AnalysisContext.LAST_UPDATED_AT_KEY)
+            query.criteria(AnalysisContext.LAST_UPDATED_AT_KEY2)
                 .lessThan(System.currentTimeMillis() - TimeUnit.SECONDS.toMillis(30))));
     UpdateOperations<AnalysisContext> updateOperations =
         wingsPersistence.createUpdateOperations(AnalysisContext.class)
             .set("executionStatus", ExecutionStatus.RUNNING)
             .inc("retry")
-            .set(AnalysisContext.LAST_UPDATED_AT_KEY, System.currentTimeMillis());
+            .set(AnalysisContext.LAST_UPDATED_AT_KEY2, System.currentTimeMillis());
     return wingsPersistence.findAndModify(query, updateOperations, new FindAndModifyOptions());
   }
 
@@ -455,7 +455,7 @@ public class LearningEngineAnalysisServiceImpl implements LearningEngineService 
     query.or(query.criteria(LearningEngineAnalysisTaskKeys.executionStatus).equal(ExecutionStatus.FAILED),
         query.and(query.criteria(LearningEngineAnalysisTaskKeys.executionStatus).equal(ExecutionStatus.RUNNING),
             query.criteria(LearningEngineAnalysisTaskKeys.retry).greaterThanOrEq(1),
-            query.criteria(LearningEngineAnalysisTask.LAST_UPDATED_AT_KEY)
+            query.criteria(LearningEngineAnalysisTask.LAST_UPDATED_AT_KEY2)
                 .greaterThanOrEq(System.currentTimeMillis() - TIME_SERIES_ANALYSIS_TASK_TIME_OUT)));
 
     UpdateOperations<LearningEngineAnalysisTask> updateOperations =

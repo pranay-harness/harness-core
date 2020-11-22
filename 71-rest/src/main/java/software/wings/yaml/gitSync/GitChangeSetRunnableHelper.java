@@ -30,7 +30,7 @@ public class GitChangeSetRunnableHelper {
         .field("accountId")
         .in(runningAccountIdList)
         .filter(YamlChangeSetKeys.status, Status.RUNNING.name())
-        .field(YamlChangeSet.LAST_UPDATED_AT_KEY)
+        .field(YamlChangeSet.LAST_UPDATED_AT_KEY2)
         .lessThan(System.currentTimeMillis() - TimeUnit.MINUTES.toMillis(TIMEOUT_FOR_RUNNING_CHANGESET))
         .project("_id", true)
         .project("accountId", true)

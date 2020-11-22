@@ -461,8 +461,8 @@ public class ArtifactServiceTest extends WingsBaseTest {
 
     List<Artifact> artifacts =
         artifactService.listArtifactsForService(aPageRequest()
-                                                    .addFilter(Artifact.APP_ID_KEY, EQ, GLOBAL_APP_ID)
-                                                    .addFilter(Artifact.ACCOUNT_ID_KEY, EQ, ACCOUNT_ID)
+                                                    .addFilter(Artifact.APP_ID_KEY2, EQ, GLOBAL_APP_ID)
+                                                    .addFilter(Artifact.ACCOUNT_ID_KEY2, EQ, ACCOUNT_ID)
                                                     .addFilter(ArtifactKeys.artifactStreamId, EQ, ARTIFACT_STREAM_ID)
                                                     .addFilter(ArtifactKeys.settingId, EQ, SETTING_ID)
                                                     .build());
@@ -481,7 +481,7 @@ public class ArtifactServiceTest extends WingsBaseTest {
     constructArtifacts();
 
     List<Artifact> artifacts = artifactService.listArtifactsForService(
-        APP_ID, null, aPageRequest().addFilter(Artifact.APP_ID_KEY, EQ, APP_ID).build());
+        APP_ID, null, aPageRequest().addFilter(Artifact.APP_ID_KEY2, EQ, APP_ID).build());
 
     assertThat(artifacts)
         .hasSize(4)
@@ -497,7 +497,7 @@ public class ArtifactServiceTest extends WingsBaseTest {
     constructArtifacts();
 
     List<Artifact> artifacts = artifactService.listArtifactsForService(
-        APP_ID, SERVICE_ID, aPageRequest().addFilter(Artifact.APP_ID_KEY, EQ, APP_ID).build());
+        APP_ID, SERVICE_ID, aPageRequest().addFilter(Artifact.APP_ID_KEY2, EQ, APP_ID).build());
 
     assertThat(artifacts).isEmpty();
   }

@@ -4,7 +4,7 @@ import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 import static io.harness.beans.SearchFilter.Operator.IN;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 
-import static software.wings.beans.Base.ID_KEY;
+import static software.wings.beans.Base.ID_KEY2;
 
 import io.harness.beans.PageRequest;
 import io.harness.beans.SearchFilter;
@@ -137,7 +137,7 @@ public class YamlGitConfigServiceImpl implements YamlGitConfigService {
 
   public Set<String> getAppIdsForYamlGitConfig(List<String> yamlGitConfigIds) {
     List<YamlGitConfig> yamlGitConfigs = wingsPersistence.createQuery(YamlGitConfig.class)
-                                             .field(ID_KEY)
+                                             .field(ID_KEY2)
                                              .in(yamlGitConfigIds)
                                              .project(ApplicationKeys.appId, true)
                                              .asList();

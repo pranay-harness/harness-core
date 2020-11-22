@@ -279,7 +279,7 @@ public class InstanceServiceImpl implements InstanceService {
   @Override
   public boolean purgeDeletedUpTo(Instant timestamp) {
     try (HIterator<Account> accounts =
-             new HIterator<>(wingsPersistence.createQuery(Account.class).project(Account.ID_KEY, true).fetch())) {
+             new HIterator<>(wingsPersistence.createQuery(Account.class).project(Account.ID_KEY2, true).fetch())) {
       while (accounts.hasNext()) {
         final Account account = accounts.next();
         Query<Instance> query = wingsPersistence.createQuery(Instance.class)
@@ -347,7 +347,7 @@ public class InstanceServiceImpl implements InstanceService {
 
   private SyncStatus getSyncStatus(String appId, String serviceId, String envId, String infraMappingId) {
     return wingsPersistence.createQuery(SyncStatus.class)
-        .filter(SyncStatus.APP_ID_KEY, appId)
+        .filter(SyncStatus.APP_ID_KEY2, appId)
         .filter(SyncStatus.SERVICE_ID_KEY, serviceId)
         .filter(SyncStatus.ENV_ID_KEY, envId)
         .filter(SyncStatus.INFRA_MAPPING_ID_KEY, infraMappingId)
@@ -416,7 +416,7 @@ public class InstanceServiceImpl implements InstanceService {
   @Override
   public List<Boolean> getManualSyncJobsStatus(String accountId, Set<String> manualJobIdSet) {
     List<Key<ManualSyncJob>> keyList = wingsPersistence.createQuery(ManualSyncJob.class)
-                                           .filter(ManualSyncJob.ACCOUNT_ID_KEY, accountId)
+                                           .filter(ManualSyncJob.ACCOUNT_ID_KEY2, accountId)
                                            .field("_id")
                                            .in(manualJobIdSet)
                                            .asKeyList();

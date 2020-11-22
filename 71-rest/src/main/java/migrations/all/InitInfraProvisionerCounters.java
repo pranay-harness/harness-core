@@ -42,7 +42,7 @@ public class InitInfraProvisionerCounters implements Migration {
         }
 
         long infraProvisionerCount = wingsPersistence.createQuery(InfrastructureProvisioner.class)
-                                         .field(InfrastructureProvisioner.ACCOUNT_ID_KEY)
+                                         .field(InfrastructureProvisioner.ACCOUNT_ID_KEY2)
                                          .equal(accountId)
                                          .count();
 

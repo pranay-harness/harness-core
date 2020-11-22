@@ -147,7 +147,7 @@ public class GitSyncErrorServiceImpl implements GitSyncErrorService {
   @Override
   public long getGitSyncErrorCount(String accountId, boolean followRBAC) {
     Query<GitSyncError> query =
-        wingsPersistence.createQuery(GitSyncError.class).filter(GitSyncError.ACCOUNT_ID_KEY, accountId);
+        wingsPersistence.createQuery(GitSyncError.class).filter(GitSyncError.ACCOUNT_ID_KEY2, accountId);
     if (followRBAC) {
       Boolean userHasAtleastOneGitConfigPerm = addAppFilterAndReturnTrueIfUserHasAnyAppAccess(query, null, accountId);
       if (!userHasAtleastOneGitConfigPerm) {
@@ -558,7 +558,7 @@ public class GitSyncErrorServiceImpl implements GitSyncErrorService {
 
   private <T extends Change> void upsertHarnessToGitError(T failedChange, String errorMessage, boolean fullSyncPath) {
     Query<GitSyncError> fetchQuery = wingsPersistence.createQuery(GitSyncError.class)
-                                         .filter(GitSyncError.ACCOUNT_ID_KEY, failedChange.getAccountId())
+                                         .filter(GitSyncError.ACCOUNT_ID_KEY2, failedChange.getAccountId())
                                          .filter(GitSyncErrorKeys.yamlFilePath, failedChange.getFilePath());
     addHarnessToGitErrorFilter(fetchQuery);
 
@@ -567,8 +567,8 @@ public class GitSyncErrorServiceImpl implements GitSyncErrorService {
     GitFileChange failedGitFileChange = (GitFileChange) failedChange;
     UpdateOperations<GitSyncError> failedUpdateOperations =
         wingsPersistence.createUpdateOperations(GitSyncError.class)
-            .setOnInsert(GitSyncError.ID_KEY, generateUuid())
-            .set(GitSyncError.ACCOUNT_ID_KEY, failedChange.getAccountId())
+            .setOnInsert(GitSyncError.ID_KEY2, generateUuid())
+            .set(GitSyncError.ACCOUNT_ID_KEY2, failedChange.getAccountId())
             .set(GitSyncErrorKeys.gitSyncDirection, HARNESS_TO_GIT.name())
             .set(GitSyncErrorKeys.yamlFilePath, failedChange.getFilePath())
             .set(GitSyncErrorKeys.changeType, failedChange.getChangeType().name())
@@ -578,13 +578,13 @@ public class GitSyncErrorServiceImpl implements GitSyncErrorService {
                 GitSyncErrorKeys.additionalErrorDetails, getHarnessToGitErrorDetails(failedGitFileChange, fullSyncPath))
             .set(APP_ID_KEY, appId);
     populateGitDetails(failedUpdateOperations, failedGitFileChange, appId);
-    fetchQuery.project(GitSyncError.ID_KEY, true);
+    fetchQuery.project(GitSyncError.ID_KEY2, true);
     wingsPersistence.upsert(fetchQuery, failedUpdateOperations);
   }
 
   private <T extends Change> void upsertGitToHarnessError(T failedChange, String errorMessage) {
     Query<GitSyncError> fetchQuery = wingsPersistence.createQuery(GitSyncError.class)
-                                         .filter(GitSyncError.ACCOUNT_ID_KEY, failedChange.getAccountId())
+                                         .filter(GitSyncError.ACCOUNT_ID_KEY2, failedChange.getAccountId())
                                          .filter(GitSyncErrorKeys.yamlFilePath, failedChange.getFilePath());
     addGitToHarnessErrorFilter(fetchQuery);
 
@@ -594,8 +594,8 @@ public class GitSyncErrorServiceImpl implements GitSyncErrorService {
 
     UpdateOperations<GitSyncError> failedUpdateOperations =
         wingsPersistence.createUpdateOperations(GitSyncError.class)
-            .setOnInsert(GitSyncError.ID_KEY, generateUuid())
-            .set(GitSyncError.ACCOUNT_ID_KEY, failedChange.getAccountId())
+            .setOnInsert(GitSyncError.ID_KEY2, generateUuid())
+            .set(GitSyncError.ACCOUNT_ID_KEY2, failedChange.getAccountId())
             .set(GitSyncErrorKeys.gitSyncDirection, GIT_TO_HARNESS.name())
             .set(GitSyncErrorKeys.yamlFilePath, failedChange.getFilePath())
             .set(GitSyncErrorKeys.changeType, failedChange.getChangeType().name())
@@ -637,7 +637,7 @@ public class GitSyncErrorServiceImpl implements GitSyncErrorService {
       gitToHarnessErrorDetails.setPreviousCommitIdsWithError(Collections.emptyList());
     }
     failedUpdateOperations.set(GitSyncErrorKeys.additionalErrorDetails, gitToHarnessErrorDetails);
-    fetchQuery.project(GitSyncError.ID_KEY, true);
+    fetchQuery.project(GitSyncError.ID_KEY2, true);
     wingsPersistence.upsert(fetchQuery, failedUpdateOperations);
   }
 

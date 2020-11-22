@@ -401,7 +401,7 @@ public class CVConfigurationServiceImpl implements CVConfigurationService {
                                       .filter(CVConfigurationKeys.isWorkflowConfig, false);
 
     if (isNotEmpty(appIds)) {
-      configurationQuery = configurationQuery.field(CVConfiguration.APP_ID_KEY).in(appIds);
+      configurationQuery = configurationQuery.field(CVConfiguration.APP_ID_KEY2).in(appIds);
     }
 
     if (isNotEmpty(envIds)) {
@@ -646,13 +646,13 @@ public class CVConfigurationServiceImpl implements CVConfigurationService {
   @Override
   public <T extends CVConfiguration> List<T> listConfigurations(String accountId) {
     return (List<T>) wingsPersistence.createQuery(CVConfiguration.class)
-        .filter(CVConfiguration.ACCOUNT_ID_KEY, accountId)
+        .filter(CVConfiguration.ACCOUNT_ID_KEY2, accountId)
         .asList();
   }
 
   @Override
   public List<CVConfiguration> listConfigurations(String accountId, PageRequest<CVConfiguration> pageRequest) {
-    pageRequest.addFilter(CVConfiguration.ACCOUNT_ID_KEY, Operator.EQ, accountId);
+    pageRequest.addFilter(CVConfiguration.ACCOUNT_ID_KEY2, Operator.EQ, accountId);
     return wingsPersistence.query(CVConfiguration.class, pageRequest).getResponse();
   }
 
@@ -1040,7 +1040,7 @@ public class CVConfigurationServiceImpl implements CVConfigurationService {
   @Override
   public void deleteByAccountId(String accountId) {
     wingsPersistence.delete(
-        wingsPersistence.createQuery(CVConfiguration.class).filter(CVConfiguration.ACCOUNT_ID_KEY, accountId));
+        wingsPersistence.createQuery(CVConfiguration.class).filter(CVConfiguration.ACCOUNT_ID_KEY2, accountId));
   }
 
   @Override

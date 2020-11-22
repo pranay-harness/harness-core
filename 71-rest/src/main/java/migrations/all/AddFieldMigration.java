@@ -1,6 +1,6 @@
 package migrations.all;
 
-import static software.wings.beans.Base.ID_KEY;
+import static software.wings.beans.Base.ID_KEY2;
 
 import software.wings.dl.WingsPersistence;
 
@@ -34,7 +34,7 @@ public abstract class AddFieldMigration implements Migration {
       DBObject record = dataRecords.next();
 
       String uuId = (String) record.get("_id");
-      bulkWriteOperation.find(wingsPersistence.createQuery(getCollectionClass()).filter(ID_KEY, uuId).getQueryObject())
+      bulkWriteOperation.find(wingsPersistence.createQuery(getCollectionClass()).filter(ID_KEY2, uuId).getQueryObject())
           .updateOne(new BasicDBObject("$set", new BasicDBObject(getFieldName(), getFieldValue(record))));
       updated++;
       batched++;

@@ -1184,7 +1184,7 @@ public class UserServiceImpl implements UserService {
 
   @Override
   public List<UserInvite> getInvitesFromAccountId(String accountId) {
-    return wingsPersistence.createQuery(UserInvite.class).filter(UserInvite.ACCOUNT_ID_KEY, accountId).asList();
+    return wingsPersistence.createQuery(UserInvite.class).filter(UserInvite.ACCOUNT_ID_KEY2, accountId).asList();
   }
 
   @Override

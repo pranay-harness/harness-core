@@ -92,7 +92,7 @@ public class SSOSettingServiceImpl implements SSOSettingService {
   @Override
   public SamlSettings getSamlSettingsByAccountId(String accountId) {
     return wingsPersistence.createQuery(SamlSettings.class)
-        .field(SamlSettings.ACCOUNT_ID_KEY)
+        .field(SamlSettings.ACCOUNT_ID_KEY2)
         .equal(accountId)
         .field("type")
         .equal(SSOType.SAML)
@@ -288,7 +288,7 @@ public class SSOSettingServiceImpl implements SSOSettingService {
   @Override
   public LdapSettings getLdapSettingsByAccountId(@NotBlank String accountId) {
     return wingsPersistence.createQuery(LdapSettings.class)
-        .field(LdapSettings.ACCOUNT_ID_KEY)
+        .field(LdapSettings.ACCOUNT_ID_KEY2)
         .equal(accountId)
         .field("type")
         .equal(SSOType.LDAP)
@@ -397,14 +397,14 @@ public class SSOSettingServiceImpl implements SSOSettingService {
   public void deleteByAccountId(String accountId) {
     wingsPersistence.delete(wingsPersistence.createQuery(SSOSettings.class)
                                 .disableValidation()
-                                .filter(SSOSettings.ACCOUNT_ID_KEY, accountId));
+                                .filter(SSOSettings.ACCOUNT_ID_KEY2, accountId));
   }
 
   @Override
   public List<SSOSettings> getAllSsoSettings(String accountId) {
     return wingsPersistence.createQuery(SSOSettings.class)
         .disableValidation()
-        .filter(SSOSettings.ACCOUNT_ID_KEY, accountId)
+        .filter(SSOSettings.ACCOUNT_ID_KEY2, accountId)
         .asList();
   }
 }

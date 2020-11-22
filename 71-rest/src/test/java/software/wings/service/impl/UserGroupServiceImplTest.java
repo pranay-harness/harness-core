@@ -914,7 +914,7 @@ public class UserGroupServiceImplTest extends WingsBaseTest {
 
     UserGroup prunedGroup = wingsPersistence.createQuery(UserGroup.class, excludeAuthority)
                                 .filter(UserGroupKeys.accountId, accountId)
-                                .filter(UserGroup.ID_KEY, userGroupId)
+                                .filter(UserGroup.ID_KEY2, userGroupId)
                                 .get();
 
     Set<String> prunedAppIds = getAppIds(prunedGroup);
@@ -951,7 +951,7 @@ public class UserGroupServiceImplTest extends WingsBaseTest {
 
     UserGroup prunedGroup = wingsPersistence.createQuery(UserGroup.class, excludeAuthority)
                                 .filter(UserGroupKeys.accountId, accountId)
-                                .filter(UserGroup.ID_KEY, userGroupId)
+                                .filter(UserGroup.ID_KEY2, userGroupId)
                                 .get();
 
     Set<String> appIds = getAppIds(prunedGroup);
@@ -984,7 +984,7 @@ public class UserGroupServiceImplTest extends WingsBaseTest {
 
     UserGroup prunedGroup = wingsPersistence.createQuery(UserGroup.class, excludeAuthority)
                                 .filter(UserGroupKeys.accountId, accountId)
-                                .filter(UserGroup.ID_KEY, userGroupId)
+                                .filter(UserGroup.ID_KEY2, userGroupId)
                                 .get();
 
     assertThat(prunedGroup.getAppPermissions()).isNull();
@@ -1013,7 +1013,7 @@ public class UserGroupServiceImplTest extends WingsBaseTest {
 
     UserGroup prunedGroup = wingsPersistence.createQuery(UserGroup.class, excludeAuthority)
                                 .filter(UserGroupKeys.accountId, accountId)
-                                .filter(UserGroup.ID_KEY, userGroupId)
+                                .filter(UserGroup.ID_KEY2, userGroupId)
                                 .get();
 
     assertThat(prunedGroup.getAppPermissions().size()).isEqualTo(3);
@@ -1047,7 +1047,7 @@ public class UserGroupServiceImplTest extends WingsBaseTest {
 
     UserGroup cleanedGroup = wingsPersistence.createQuery(UserGroup.class, excludeAuthority)
                                  .filter(UserGroupKeys.accountId, accountId)
-                                 .filter(UserGroup.ID_KEY, userGroupId)
+                                 .filter(UserGroup.ID_KEY2, userGroupId)
                                  .get();
 
     Set<String> appIds = getAppIds(cleanedGroup);

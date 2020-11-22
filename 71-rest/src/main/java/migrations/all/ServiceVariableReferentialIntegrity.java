@@ -2,7 +2,7 @@ package migrations.all;
 
 import static io.harness.persistence.HQuery.excludeAuthority;
 
-import static software.wings.beans.Base.ID_KEY;
+import static software.wings.beans.Base.ID_KEY2;
 import static software.wings.common.Constants.ACCOUNT_ID_KEY;
 import static software.wings.common.Constants.APP_ID_KEY;
 
@@ -48,7 +48,7 @@ public class ServiceVariableReferentialIntegrity implements Migration {
           String parentId = var.getParentServiceVariableId();
           ServiceVariable parent = wingsPersistence.createQuery(ServiceVariable.class)
                                        .filter(APP_ID_KEY, app.getUuid())
-                                       .filter(ID_KEY, parentId)
+                                       .filter(ID_KEY2, parentId)
                                        .get();
           if (parent == null) {
             log.info("    Clearing invalid parent reference in {}", var.getName());

@@ -2,7 +2,7 @@ package migrations.all;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 
-import static software.wings.beans.Base.ID_KEY;
+import static software.wings.beans.Base.ID_KEY2;
 
 import software.wings.dl.WingsPersistence;
 import software.wings.service.impl.analysis.LogDataRecord;
@@ -42,7 +42,7 @@ public class LogDataRecordsMigration implements Migration {
       if (isEmpty(appId)) {
         continue;
       }
-      bulkWriteOperation.find(wingsPersistence.createQuery(LogDataRecord.class).filter(ID_KEY, uuId).getQueryObject())
+      bulkWriteOperation.find(wingsPersistence.createQuery(LogDataRecord.class).filter(ID_KEY2, uuId).getQueryObject())
           .updateOne(new BasicDBObject("$set", new BasicDBObject("appId", appId)));
       updated++;
       batched++;

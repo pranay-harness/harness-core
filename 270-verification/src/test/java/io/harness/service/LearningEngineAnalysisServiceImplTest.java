@@ -238,14 +238,14 @@ public class LearningEngineAnalysisServiceImplTest extends VerificationBaseTest 
       assertThat(analysisTask.getExecutionStatus()).isEqualTo(ExecutionStatus.RUNNING);
 
       assertThat(wingsPersistence.createQuery(LearningEngineAnalysisTask.class, excludeAuthority)
-                     .field(LearningEngineAnalysisTask.LAST_UPDATED_AT_KEY)
+                     .field(LearningEngineAnalysisTask.LAST_UPDATED_AT_KEY2)
                      .greaterThan(startTime)
                      .filter("retry", 0)
                      .asList()
                      .size())
           .isEqualTo(numOfTasks - i);
       assertThat(wingsPersistence.createQuery(LearningEngineAnalysisTask.class, excludeAuthority)
-                     .field(LearningEngineAnalysisTask.LAST_UPDATED_AT_KEY)
+                     .field(LearningEngineAnalysisTask.LAST_UPDATED_AT_KEY2)
                      .greaterThan(startTime)
                      .filter("retry", 1)
                      .asList()

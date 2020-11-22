@@ -347,7 +347,7 @@ public class TriggerServiceImpl implements TriggerService {
 
   @Override
   public void pruneByApplication(String appId) {
-    wingsPersistence.createQuery(Trigger.class).filter(Trigger.APP_ID_KEY, appId).asList().forEach(trigger -> {
+    wingsPersistence.createQuery(Trigger.class).filter(Trigger.APP_ID_KEY2, appId).asList().forEach(trigger -> {
       delete(appId, trigger.getUuid());
       auditServiceHelper.reportDeleteForAuditing(appId, trigger);
       harnessTagService.pruneTagLinks(appService.getAccountIdByAppId(appId), trigger.getUuid());

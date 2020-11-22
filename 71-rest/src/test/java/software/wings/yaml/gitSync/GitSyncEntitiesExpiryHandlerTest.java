@@ -161,7 +161,7 @@ public class GitSyncEntitiesExpiryHandlerTest extends WingsBaseTest {
   private void testGitCommitsForExpiredCommits(Account account, int expectedNotDeletedCount, long expiryTime) {
     gitSyncEntitiesExpiryHandler.handleGitCommits(account, expiryTime);
     List<GitCommit> postDeletedCommits =
-        wingsPersistence.createQuery(GitCommit.class).filter(GitCommit.ACCOUNT_ID_KEY, account.getUuid()).asList();
+        wingsPersistence.createQuery(GitCommit.class).filter(GitCommit.ACCOUNT_ID_KEY2, account.getUuid()).asList();
     assertThat(postDeletedCommits.size()).isEqualTo(expectedNotDeletedCount);
   }
 

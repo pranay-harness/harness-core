@@ -410,13 +410,13 @@ public class CloudToHarnessMappingServiceImpl implements CloudToHarnessMappingSe
   public UserGroup getUserGroup(String accountId, String userGroupId, boolean loadUsers) {
     return wingsPersistence.createQuery(UserGroup.class)
         .filter(UserGroupKeys.accountId, accountId)
-        .filter(UserGroup.ID_KEY, userGroupId)
+        .filter(UserGroup.ID_KEY2, userGroupId)
         .get();
   }
 
   @Override
   public User getUser(String userId) {
-    User user = wingsPersistence.createQuery(User.class).filter(UserGroup.ID_KEY, userId).get();
+    User user = wingsPersistence.createQuery(User.class).filter(UserGroup.ID_KEY2, userId).get();
     if (user == null) {
       throw new UnauthorizedException(EXC_MSG_USER_DOESNT_EXIST, USER);
     }

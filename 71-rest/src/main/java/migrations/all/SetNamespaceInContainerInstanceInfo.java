@@ -43,10 +43,10 @@ public class SetNamespaceInContainerInstanceInfo implements Migration {
   @Override
   public void migrate() {
     for (Account account :
-        wingsPersistence.createQuery(Account.class, excludeAuthority).project(Account.ID_KEY, true)) {
+        wingsPersistence.createQuery(Account.class, excludeAuthority).project(Account.ID_KEY2, true)) {
       for (Application app : wingsPersistence.createQuery(Application.class)
-                                 .filter(Application.ACCOUNT_ID_KEY, account.getUuid())
-                                 .project(Application.ID_KEY, true)) {
+                                 .filter(Application.ACCOUNT_ID_KEY2, account.getUuid())
+                                 .project(Application.ID_KEY2, true)) {
         String appId = app.getUuid();
         try {
           log.info("Fixing instances for appId:" + appId);

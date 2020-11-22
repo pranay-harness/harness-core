@@ -51,7 +51,7 @@ public class PipelineUtils {
   public static PageRequest<Pipeline> getPipelinesPageRequest(String accountId) {
     return (PageRequest<Pipeline>) aPageRequest()
         .withLimit(PageRequest.UNLIMITED)
-        .addFilter(Pipeline.ACCOUNT_ID_KEY, EQ, accountId)
+        .addFilter(Pipeline.ACCOUNT_ID_KEY2, EQ, accountId)
         .build();
   }
 
@@ -62,7 +62,7 @@ public class PipelineUtils {
       workflowPageRequest = aPageRequest()
                                 .addFilter(WorkflowKeys.appId, EQ, pipeline.getAppId())
                                 .addFilter(WorkflowKeys.workflowType, Operator.EQ, WorkflowType.ORCHESTRATION)
-                                .addFilter(Workflow.ID_KEY, IN, workflowIds.toArray())
+                                .addFilter(Workflow.ID_KEY2, IN, workflowIds.toArray())
                                 .build();
     }
     return workflowPageRequest;
