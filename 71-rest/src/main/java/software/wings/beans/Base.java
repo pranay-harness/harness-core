@@ -50,10 +50,10 @@ import org.mongodb.morphia.annotations.Transient;
 // To implement these interfaces simply define the respective field
 public class Base implements PersistentEntity, UuidAware, CreatedAtAware, CreatedByAware, UpdatedAtAware,
                              UpdatedByAware, ApplicationAccess {
-  public static final String ID_KEY = "_id";
-  public static final String APP_ID_KEY = "appId";
-  public static final String ACCOUNT_ID_KEY = "accountId";
-  public static final String LAST_UPDATED_AT_KEY = "lastUpdatedAt";
+  @Deprecated public static final String ID_KEY2 = "_id";
+  @Deprecated public static final String APP_ID_KEY2 = "appId";
+  @Deprecated public static final String ACCOUNT_ID_KEY2 = "accountId";
+  @Deprecated public static final String LAST_UPDATED_AT_KEY2 = "lastUpdatedAt";
 
   @Id @NotNull(groups = {Update.class}) @SchemaIgnore private String uuid;
   @FdIndex @NotNull @SchemaIgnore protected String appId;

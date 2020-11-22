@@ -25,7 +25,7 @@ public class AddOrchestrationToWorkflows implements Migration {
              new HIterator<>(wingsPersistence.createQuery(Workflow.class, excludeAuthority)
                                  .field(Workflow.ORCHESTRATION_KEY)
                                  .doesNotExist()
-                                 .project(Workflow.ID_KEY, true)
+                                 .project(Workflow.ID_KEY2, true)
                                  .project(WorkflowKeys.appId, true)
                                  .fetch())) {
       for (Workflow workflow : workflowIterator) {

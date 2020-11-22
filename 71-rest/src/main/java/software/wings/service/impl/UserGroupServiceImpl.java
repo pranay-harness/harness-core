@@ -329,7 +329,7 @@ public class UserGroupServiceImpl implements UserGroupService {
   public UserGroup get(String accountId, String userGroupId, boolean loadUsers) {
     UserGroup userGroup = wingsPersistence.createQuery(UserGroup.class)
                               .filter(UserGroupKeys.accountId, accountId)
-                              .filter(UserGroup.ID_KEY, userGroupId)
+                              .filter(UserGroup.ID_KEY2, userGroupId)
                               .get();
     if (userGroup == null) {
       return null;
@@ -670,13 +670,13 @@ public class UserGroupServiceImpl implements UserGroupService {
     if (isNotBlank(accountId)) {
       userGroupList = wingsPersistence.createQuery(UserGroup.class)
                           .filter(UserGroupKeys.accountId, accountId)
-                          .field(UserGroup.ID_KEY)
+                          .field(UserGroup.ID_KEY2)
                           .in(userGroupIds)
                           .project(UserGroupKeys.memberIds, true)
                           .asList();
     } else {
       userGroupList = wingsPersistence.createQuery(UserGroup.class, excludeAuthority)
-                          .field(UserGroup.ID_KEY)
+                          .field(UserGroup.ID_KEY2)
                           .in(userGroupIds)
                           .project(UserGroupKeys.memberIds, true)
                           .asList();
@@ -695,10 +695,10 @@ public class UserGroupServiceImpl implements UserGroupService {
     }
 
     return wingsPersistence.createQuery(UserGroup.class, excludeAuthority)
-        .field(UserGroup.ID_KEY)
+        .field(UserGroup.ID_KEY2)
         .in(userGroupIds)
         .project(UserGroupKeys.name, true)
-        .project(UserGroup.ID_KEY, true)
+        .project(UserGroup.ID_KEY2, true)
         .asList()
         .stream()
         .filter(userGroup -> !isEmpty(userGroup.getName()))
@@ -712,10 +712,10 @@ public class UserGroupServiceImpl implements UserGroupService {
     }
 
     return wingsPersistence.createQuery(UserGroup.class, excludeAuthority)
-        .field(UserGroup.ID_KEY)
+        .field(UserGroup.ID_KEY2)
         .in(userGroupIds)
         .project(UserGroupKeys.name, true)
-        .project(UserGroup.ID_KEY, true)
+        .project(UserGroup.ID_KEY2, true)
         .asList(new FindOptions().readPreference(ReadPreference.secondaryPreferred()))
         .stream()
         .filter(userGroup -> !isEmpty(userGroup.getName()))
@@ -919,7 +919,7 @@ public class UserGroupServiceImpl implements UserGroupService {
     if (isEmpty(userIds)) {
       return emptyList();
     }
-    PageRequestBuilder pageRequest = aPageRequest().addFilter(UserGroup.ID_KEY, Operator.IN, userIds);
+    PageRequestBuilder pageRequest = aPageRequest().addFilter(UserGroup.ID_KEY2, Operator.IN, userIds);
     return list(userInvite.getAccountId(), pageRequest.build(), true).getResponse();
   }
 
@@ -962,7 +962,7 @@ public class UserGroupServiceImpl implements UserGroupService {
 
     try (HIterator<UserGroup> userGroupIterator =
              new HIterator<>(wingsPersistence.createQuery(UserGroup.class, excludeAuthority)
-                                 .project(UserGroup.ID_KEY, true)
+                                 .project(UserGroup.ID_KEY2, true)
                                  .project(UserGroupKeys.accountId, true)
                                  .project(UserGroupKeys.appPermissions, true)
                                  .fetch())) {

@@ -51,7 +51,7 @@ public class EntityVersionServiceImpl implements EntityVersionService {
   @Override
   public EntityVersion lastEntityVersion(String appId, EntityType entityType, String entityUuid, String parentUuid) {
     final Query<EntityVersionCollection> query = wingsPersistence.createQuery(EntityVersionCollection.class)
-                                                     .filter(EntityVersionCollection.APP_ID_KEY, appId)
+                                                     .filter(EntityVersionCollection.APP_ID_KEY2, appId)
                                                      .filter(EntityVersionKeys.entityType, entityType)
                                                      .filter(EntityVersionKeys.entityUuid, entityUuid)
                                                      .order(Sort.descending(EntityVersionKeys.version));

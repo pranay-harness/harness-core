@@ -2427,7 +2427,7 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
                               .build());
     testTriggerTimeSeriesAnalysisHappyCase();
     CVConfiguration cvConfiguration = wingsPersistence.createQuery(CVConfiguration.class)
-                                          .filter(CVConfiguration.ACCOUNT_ID_KEY, accountId)
+                                          .filter(CVConfiguration.ACCOUNT_ID_KEY2, accountId)
                                           .filter(CVConfigurationKeys.stateType, StateType.DATA_DOG)
                                           .get();
     LearningEngineExperimentalAnalysisTask expTask =
@@ -2550,7 +2550,7 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
   public void testTriggerLogAnalysisBaseline() throws Exception {
     long currentMinute = TimeUnit.MILLISECONDS.toMinutes(Timestamp.currentMinuteBoundary());
     CVConfiguration sumoConfig = wingsPersistence.createQuery(CVConfiguration.class)
-                                     .filter(CVConfiguration.ACCOUNT_ID_KEY, accountId)
+                                     .filter(CVConfiguration.ACCOUNT_ID_KEY2, accountId)
                                      .filter(CVConfigurationKeys.stateType, StateType.SUMO)
                                      .get();
 
@@ -2599,7 +2599,7 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
   public void testTriggerLogAnalysisAfterBaseline() throws Exception {
     long currentMinute = TimeUnit.MILLISECONDS.toMinutes(Timestamp.currentMinuteBoundary());
     CVConfiguration sumoConfig = wingsPersistence.createQuery(CVConfiguration.class)
-                                     .filter(CVConfiguration.ACCOUNT_ID_KEY, accountId)
+                                     .filter(CVConfiguration.ACCOUNT_ID_KEY2, accountId)
                                      .filter(CVConfigurationKeys.stateType, StateType.SUMO)
                                      .get();
 
@@ -2658,7 +2658,7 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
     testTriggerLogAnalysisBaseline();
 
     CVConfiguration sumoConfig = wingsPersistence.createQuery(CVConfiguration.class)
-                                     .filter(CVConfiguration.ACCOUNT_ID_KEY, accountId)
+                                     .filter(CVConfiguration.ACCOUNT_ID_KEY2, accountId)
                                      .filter(CVConfigurationKeys.stateType, StateType.SUMO)
                                      .get();
 
@@ -2682,7 +2682,7 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
   public void testTriggerLogAnalysisBaselineMoreThan2HrsAgo() throws Exception {
     long currentMinute = TimeUnit.MILLISECONDS.toMinutes(Timestamp.currentMinuteBoundary());
     CVConfiguration sumoConfig = wingsPersistence.createQuery(CVConfiguration.class)
-                                     .filter(CVConfiguration.ACCOUNT_ID_KEY, accountId)
+                                     .filter(CVConfiguration.ACCOUNT_ID_KEY2, accountId)
                                      .filter(CVConfigurationKeys.stateType, StateType.SUMO)
                                      .get();
 
@@ -2732,7 +2732,7 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
   public void testTriggerLogAnalysisAfterBaselineMoreThan2hrs() throws Exception {
     long currentMinute = TimeUnit.MILLISECONDS.toMinutes(Timestamp.currentMinuteBoundary());
     CVConfiguration sumoConfig = wingsPersistence.createQuery(CVConfiguration.class)
-                                     .filter(CVConfiguration.ACCOUNT_ID_KEY, accountId)
+                                     .filter(CVConfiguration.ACCOUNT_ID_KEY2, accountId)
                                      .filter(CVConfigurationKeys.stateType, StateType.SUMO)
                                      .get();
 
@@ -2788,7 +2788,7 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
   public void testTriggerLogAnalysis_whenLastAnalysisMinuteIsLessThanBaselineStartMinute() throws Exception {
     long currentMinute = TimeUnit.MILLISECONDS.toMinutes(Timestamp.currentMinuteBoundary());
     CVConfiguration sumoConfig = wingsPersistence.createQuery(CVConfiguration.class)
-                                     .filter(CVConfiguration.ACCOUNT_ID_KEY, accountId)
+                                     .filter(CVConfiguration.ACCOUNT_ID_KEY2, accountId)
                                      .filter(CVConfigurationKeys.stateType, StateType.SUMO)
                                      .get();
 
@@ -2842,7 +2842,7 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
   public void testTriggerLogAnalysis_firstAnalysisAfterBaseline() throws Exception {
     long currentMinute = TimeUnit.MILLISECONDS.toMinutes(Timestamp.currentMinuteBoundary());
     CVConfiguration sumoConfig = wingsPersistence.createQuery(CVConfiguration.class)
-                                     .filter(CVConfiguration.ACCOUNT_ID_KEY, accountId)
+                                     .filter(CVConfiguration.ACCOUNT_ID_KEY2, accountId)
                                      .filter(CVConfigurationKeys.stateType, StateType.SUMO)
                                      .get();
 
@@ -2899,7 +2899,7 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
   public void testTriggerLogAnalysis_firstAnalysisAfterMoreThan2Hours() throws Exception {
     long currentMinute = TimeUnit.MILLISECONDS.toMinutes(Timestamp.currentMinuteBoundary());
     CVConfiguration sumoConfig = wingsPersistence.createQuery(CVConfiguration.class)
-                                     .filter(CVConfiguration.ACCOUNT_ID_KEY, accountId)
+                                     .filter(CVConfiguration.ACCOUNT_ID_KEY2, accountId)
                                      .filter(CVConfigurationKeys.stateType, StateType.SUMO)
                                      .get();
 
@@ -2957,7 +2957,7 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
   public void testTrigger247LogDataV2Analysis() throws Exception {
     long currentMinute = TimeUnit.MILLISECONDS.toMinutes(Timestamp.currentMinuteBoundary());
     CVConfiguration sumoConfig = wingsPersistence.createQuery(CVConfiguration.class)
-                                     .filter(CVConfiguration.ACCOUNT_ID_KEY, accountId)
+                                     .filter(CVConfiguration.ACCOUNT_ID_KEY2, accountId)
                                      .filter(CVConfigurationKeys.stateType, StateType.SUMO)
                                      .get();
 
@@ -3017,7 +3017,7 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
   public void testTrigger247LogDataV2AnalysisWithNoNewL2RecordsInLastTwoHrs() throws Exception {
     long currentMinute = TimeUnit.MILLISECONDS.toMinutes(Timestamp.currentMinuteBoundary());
     CVConfiguration sumoConfig = wingsPersistence.createQuery(CVConfiguration.class)
-                                     .filter(CVConfiguration.ACCOUNT_ID_KEY, accountId)
+                                     .filter(CVConfiguration.ACCOUNT_ID_KEY2, accountId)
                                      .filter(CVConfigurationKeys.stateType, StateType.SUMO)
                                      .get();
 
@@ -3071,7 +3071,7 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
   public void testTrigger247LogDataV2Analysis_analysisTaskCreatedWithinBaselinePeriod() throws Exception {
     long currentMinute = TimeUnit.MILLISECONDS.toMinutes(Timestamp.currentMinuteBoundary());
     CVConfiguration sumoConfig = wingsPersistence.createQuery(CVConfiguration.class)
-                                     .filter(CVConfiguration.ACCOUNT_ID_KEY, accountId)
+                                     .filter(CVConfiguration.ACCOUNT_ID_KEY2, accountId)
                                      .filter(CVConfigurationKeys.stateType, StateType.SUMO)
                                      .get();
 
@@ -3127,7 +3127,7 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
     testTrigger247LogDataV2Analysis();
 
     CVConfiguration sumoConfig = wingsPersistence.createQuery(CVConfiguration.class)
-                                     .filter(CVConfiguration.ACCOUNT_ID_KEY, accountId)
+                                     .filter(CVConfiguration.ACCOUNT_ID_KEY2, accountId)
                                      .filter(CVConfigurationKeys.stateType, StateType.SUMO)
                                      .get();
 
@@ -3510,7 +3510,7 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
   public void testTriggerLogAnalysis_l1StillPresent() throws Exception {
     long currentMinute = TimeUnit.MILLISECONDS.toMinutes(Timestamp.currentMinuteBoundary());
     CVConfiguration sumoConfig = wingsPersistence.createQuery(CVConfiguration.class)
-                                     .filter(CVConfiguration.ACCOUNT_ID_KEY, accountId)
+                                     .filter(CVConfiguration.ACCOUNT_ID_KEY2, accountId)
                                      .filter(CVConfigurationKeys.stateType, StateType.SUMO)
                                      .get();
 
@@ -3572,7 +3572,7 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
   public void testTriggerLogAnalysis_l0StillPresent() throws Exception {
     long currentMinute = TimeUnit.MILLISECONDS.toMinutes(Timestamp.currentMinuteBoundary());
     CVConfiguration sumoConfig = wingsPersistence.createQuery(CVConfiguration.class)
-                                     .filter(CVConfiguration.ACCOUNT_ID_KEY, accountId)
+                                     .filter(CVConfiguration.ACCOUNT_ID_KEY2, accountId)
                                      .filter(CVConfigurationKeys.stateType, StateType.SUMO)
                                      .get();
 
@@ -3634,7 +3634,7 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
   public void testTriggerLogAnalysis_within2hourWindowWithBuffer() throws Exception {
     long currentMinute = TimeUnit.MILLISECONDS.toMinutes(Timestamp.currentMinuteBoundary());
     CVConfiguration sumoConfig = wingsPersistence.createQuery(CVConfiguration.class)
-                                     .filter(CVConfiguration.ACCOUNT_ID_KEY, accountId)
+                                     .filter(CVConfiguration.ACCOUNT_ID_KEY2, accountId)
                                      .filter(CVConfigurationKeys.stateType, StateType.SUMO)
                                      .get();
 

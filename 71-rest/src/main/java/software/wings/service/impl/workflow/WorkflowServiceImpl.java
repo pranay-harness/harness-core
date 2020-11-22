@@ -998,7 +998,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     Set<String> keywords = workflowServiceHelper.getKeywords(workflow);
     wingsPersistence.update(wingsPersistence.createQuery(Workflow.class)
                                 .filter(WorkflowKeys.appId, workflow.getAppId())
-                                .filter(Workflow.ID_KEY, workflow.getUuid()),
+                                .filter(Workflow.ID_KEY2, workflow.getUuid()),
         wingsPersistence.createUpdateOperations(Workflow.class)
             .set("keywords", keywords)
             .set("linkedTemplateUuids", linkedTemplateUuids));
@@ -1013,7 +1013,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
 
     wingsPersistence.update(wingsPersistence.createQuery(Workflow.class)
                                 .filter(WorkflowKeys.appId, workflow.getAppId())
-                                .filter(Workflow.ID_KEY, workflow.getUuid()),
+                                .filter(Workflow.ID_KEY2, workflow.getUuid()),
         wingsPersistence.createUpdateOperations(Workflow.class)
             .set("linkedArtifactStreamIds", linkedArtifactStreamIds));
     workflow.setLinkedTemplateUuids(linkedArtifactStreamIds);
@@ -3705,7 +3705,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     Workflow workflow = wingsPersistence.createQuery(Workflow.class)
                             .project(Workflow.NAME_KEY, true)
                             .filter(WorkflowKeys.appId, appId)
-                            .filter(Pipeline.ID_KEY, workflowId)
+                            .filter(Pipeline.ID_KEY2, workflowId)
                             .get();
     notNullCheck("Workflow does not exist", workflow, USER);
     return workflow.getName();

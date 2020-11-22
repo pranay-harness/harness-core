@@ -521,7 +521,7 @@ public class ConfigServiceTest extends WingsBaseTest {
                                               .build();
 
     when(wingsPersistence.createQuery(ConfigFile.class)).thenReturn(query);
-    when(query.filter(ConfigFile.APP_ID_KEY, APP_ID)).thenReturn(query);
+    when(query.filter(ConfigFile.APP_ID_KEY2, APP_ID)).thenReturn(query);
     when(query.filter(eq(ID_KEY), anyString())).thenReturn(query);
     when(query.get()).thenReturn(encryptedConfigFile);
     when(wingsPersistence.query(ConfigFile.class, pageRequest)).thenReturn(pageResponse);

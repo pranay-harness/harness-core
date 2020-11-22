@@ -1037,8 +1037,8 @@ public class TemplateServiceTest extends TemplateBaseTestHelper {
     // Verify the template versions deleted
     PageRequest templateVersionPageRequest =
         aPageRequest()
-            .addFilter(TemplateVersion.ACCOUNT_ID_KEY, EQ, savedTemplate.getAccountId())
-            .addFilter(TemplateVersion.APP_ID_KEY, EQ, appId)
+            .addFilter(TemplateVersion.ACCOUNT_ID_KEY2, EQ, savedTemplate.getAccountId())
+            .addFilter(TemplateVersion.APP_ID_KEY2, EQ, appId)
             .addFilter(TemplateVersion.TEMPLATE_UUID_KEY, EQ, savedTemplate.getUuid())
             .build();
     assertThat(templateVersionService.listTemplateVersions(templateVersionPageRequest).getResponse()).isEmpty();

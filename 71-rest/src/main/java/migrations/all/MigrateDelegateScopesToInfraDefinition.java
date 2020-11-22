@@ -47,8 +47,8 @@ public class MigrateDelegateScopesToInfraDefinition {
       // Using wings persistence here as no appId present
       List<InfrastructureMapping> infrastructureMappings =
           wingsPersistence.createQuery(InfrastructureMapping.class)
-              .filter(InfrastructureMapping.ACCOUNT_ID_KEY, account.getUuid())
-              .field(InfrastructureMapping.ID_KEY)
+              .filter(InfrastructureMapping.ACCOUNT_ID_KEY2, account.getUuid())
+              .field(InfrastructureMapping.ID_KEY2)
               .in(infraMappingIds)
               .asList();
 

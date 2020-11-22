@@ -49,7 +49,7 @@ public class UsageMetricsHelper {
     Application application = wingsPersistence.createQuery(Application.class)
                                   .project(ApplicationKeys.accountId, true)
                                   .project(ApplicationKeys.name, true)
-                                  .filter(Application.ID_KEY, appId)
+                                  .filter(Application.ID_KEY2, appId)
                                   .get();
     notNullCheck("Application does not exist", application, USER);
     return application;
@@ -59,7 +59,7 @@ public class UsageMetricsHelper {
     Service service = wingsPersistence.createQuery(Service.class)
                           .project(Workflow.NAME_KEY, true)
                           .filter(ServiceKeys.appId, appId)
-                          .filter(Service.ID_KEY, serviceId)
+                          .filter(Service.ID_KEY2, serviceId)
                           .get();
     notNullCheck("Service does not exist", service, USER);
     return service.getName();
@@ -69,7 +69,7 @@ public class UsageMetricsHelper {
     Environment environment = wingsPersistence.createQuery(Environment.class)
                                   .project(EnvironmentKeys.name, true)
                                   .filter(EnvironmentKeys.appId, appId)
-                                  .filter(Environment.ID_KEY, environmentId)
+                                  .filter(Environment.ID_KEY2, environmentId)
                                   .get();
     notNullCheck("Environment does not exist", environment, USER);
     return environment.getName();
@@ -77,7 +77,7 @@ public class UsageMetricsHelper {
 
   public List<Account> listAllAccountsWithDefaults() {
     PageRequest<Account> pageRequest = aPageRequest()
-                                           .addFieldsIncluded(Account.ID_KEY, AccountKeys.accountName)
+                                           .addFieldsIncluded(Account.ID_KEY2, AccountKeys.accountName)
                                            .addFilter(EnvironmentKeys.appId, Operator.EQ, GLOBAL_APP_ID)
                                            .build();
     return wingsPersistence.getAllEntities(pageRequest, () -> wingsPersistence.query(Account.class, pageRequest));
@@ -102,7 +102,7 @@ public class UsageMetricsHelper {
     CVConfiguration cvConfiguration = wingsPersistence.createQuery(CVConfiguration.class)
                                           .project(CVConfigurationKeys.name, true)
                                           .project(CVConfigurationKeys.serviceId, true)
-                                          .filter(CVConfiguration.ID_KEY, cvConfigId)
+                                          .filter(CVConfiguration.ID_KEY2, cvConfigId)
                                           .get();
     notNullCheck("CV Config does not exist", cvConfiguration, USER);
     return cvConfiguration;

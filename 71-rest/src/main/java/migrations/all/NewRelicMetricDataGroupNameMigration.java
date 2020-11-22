@@ -1,6 +1,6 @@
 package migrations.all;
 
-import static software.wings.beans.Base.ID_KEY;
+import static software.wings.beans.Base.ID_KEY2;
 import static software.wings.service.impl.newrelic.NewRelicMetricDataRecord.DEFAULT_GROUP_NAME;
 
 import io.harness.persistence.HIterator;
@@ -35,7 +35,7 @@ public class NewRelicMetricDataGroupNameMigration implements Migration {
 
         bulkWriteOperation
             .find(wingsPersistence.createQuery(NewRelicMetricDataRecord.class)
-                      .filter(ID_KEY, metricDataRecord.getUuid())
+                      .filter(ID_KEY2, metricDataRecord.getUuid())
                       .getQueryObject())
             .updateOne(new BasicDBObject("$set", new BasicDBObject("groupName", DEFAULT_GROUP_NAME)));
         updated++;

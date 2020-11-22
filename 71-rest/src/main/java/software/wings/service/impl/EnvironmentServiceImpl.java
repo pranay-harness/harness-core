@@ -431,7 +431,7 @@ public class EnvironmentServiceImpl implements EnvironmentService, DataProvider 
                                          .project(EnvironmentKeys.environmentType, true)
                                          .project(EnvironmentKeys.appId, true)
                                          .filter(EnvironmentKeys.appId, appId)
-                                         .field(Environment.ID_KEY)
+                                         .field(Environment.ID_KEY2)
                                          .in(envIds)
                                          .asList();
 

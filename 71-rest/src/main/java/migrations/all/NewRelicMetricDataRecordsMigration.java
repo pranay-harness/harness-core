@@ -42,7 +42,7 @@ public class NewRelicMetricDataRecordsMigration implements Migration {
       }
       bulkWriteOperation
           .find(wingsPersistence.createQuery(NewRelicMetricDataRecord.class)
-                    .filter(NewRelicMetricDataRecord.ID_KEY, uuId)
+                    .filter(NewRelicMetricDataRecord.ID_KEY2, uuId)
                     .getQueryObject())
           .updateOne(new BasicDBObject("$set", new BasicDBObject("appId", appId)));
       updated++;

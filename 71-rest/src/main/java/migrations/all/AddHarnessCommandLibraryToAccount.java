@@ -26,7 +26,7 @@ public class AddHarnessCommandLibraryToAccount implements Migration {
         Account account = accounts.next();
         if (wingsPersistence.createQuery(TemplateGallery.class)
                 .filter(TemplateGallery.GALLERY_KEY, TemplateGallery.GalleryKey.HARNESS_COMMAND_LIBRARY_GALLERY)
-                .filter(TemplateGallery.ACCOUNT_ID_KEY, account.getUuid())
+                .filter(TemplateGallery.ACCOUNT_ID_KEY2, account.getUuid())
                 .get()
             == null) {
           try {

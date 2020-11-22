@@ -193,7 +193,7 @@ public class AuditServiceImpl implements AuditService {
     }
 
     AuditHeader header = wingsPersistence.createQuery(AuditHeader.class)
-                             .filter(AuditHeader.ID_KEY, headerId)
+                             .filter(AuditHeader.ID_KEY2, headerId)
                              .project("entityAuditRecords", true)
                              .get();
 

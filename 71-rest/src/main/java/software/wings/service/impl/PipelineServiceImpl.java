@@ -438,7 +438,7 @@ public class PipelineServiceImpl implements PipelineService {
     Pipeline pipeline = wingsPersistence.createQuery(Pipeline.class)
                             .project(Pipeline.NAME_KEY, true)
                             .filter(PipelineKeys.appId, appId)
-                            .filter(Pipeline.ID_KEY, pipelineId)
+                            .filter(Pipeline.ID_KEY2, pipelineId)
                             .get();
     notNullCheck("Pipeline does not exist", pipeline, USER);
     return pipeline.getName();

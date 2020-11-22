@@ -224,7 +224,7 @@ public class ConfigServiceImpl implements ConfigService {
     }
 
     return query.filter(columnName, entityId)
-        .filter(ConfigFile.APP_ID_KEY, appId)
+        .filter(ConfigFile.APP_ID_KEY2, appId)
         .filter(ConfigFileKeys.relativeFilePath, relativeFilePath)
         .get();
   }
@@ -448,7 +448,7 @@ public class ConfigServiceImpl implements ConfigService {
     // TODO: migrate to prune pattern
 
     Query<ConfigFile> query =
-        wingsPersistence.createQuery(ConfigFile.class).filter(ConfigFile.APP_ID_KEY, appId).filter(ID_KEY, configId);
+        wingsPersistence.createQuery(ConfigFile.class).filter(ConfigFile.APP_ID_KEY2, appId).filter(ID_KEY, configId);
     ConfigFile configFile = query.get();
     if (configFile == null) {
       return;
@@ -468,7 +468,7 @@ public class ConfigServiceImpl implements ConfigService {
       }
 
       List<ConfigFile> configFiles = wingsPersistence.createQuery(ConfigFile.class)
-                                         .filter(ConfigFile.APP_ID_KEY, appId)
+                                         .filter(ConfigFile.APP_ID_KEY2, appId)
                                          .filter(ConfigFileKeys.parentConfigFileId, configId)
                                          .asList();
       if (!configFiles.isEmpty()) {
@@ -483,7 +483,7 @@ public class ConfigServiceImpl implements ConfigService {
   @Override
   public void delete(String appId, String entityId, EntityType entityType, String configFileName) {
     ConfigFile configFile = wingsPersistence.createQuery(ConfigFile.class)
-                                .filter(ConfigFile.APP_ID_KEY, appId)
+                                .filter(ConfigFile.APP_ID_KEY2, appId)
                                 .filter(ConfigFileKeys.entityType, entityType.name())
                                 .filter(ConfigFileKeys.entityId, entityId)
                                 .filter(ConfigFileKeys.relativeFilePath, configFileName)
@@ -603,7 +603,7 @@ public class ConfigServiceImpl implements ConfigService {
   public ConfigFile getConfigFileForEntityByRelativeFilePath(
       String appId, String templateId, String entityId, String envId, String relativeFilePath) {
     return wingsPersistence.createQuery(ConfigFile.class)
-        .filter(ConfigFile.APP_ID_KEY, appId)
+        .filter(ConfigFile.APP_ID_KEY2, appId)
         .filter(ConfigFileKeys.templateId, templateId)
         .filter(ConfigFileKeys.entityId, entityId)
         .filter(ConfigFileKeys.relativeFilePath, relativeFilePath)

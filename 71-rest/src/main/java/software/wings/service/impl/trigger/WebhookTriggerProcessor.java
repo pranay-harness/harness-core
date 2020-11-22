@@ -63,7 +63,7 @@ public class WebhookTriggerProcessor {
   public TriggerExecution fetchLastExecutionForContentChanged(Trigger trigger) {
     WebHookTriggerCondition webHookTriggerCondition = (WebHookTriggerCondition) trigger.getCondition();
     return wingsPersistence.createQuery(TriggerExecution.class)
-        .filter(TriggerExecution.APP_ID_KEY, trigger.getAppId())
+        .filter(TriggerExecution.APP_ID_KEY2, trigger.getAppId())
         .filter(TriggerExecution.TRIGGER_ID_KEY, trigger.getUuid())
         .filter(TriggerExecution.WEBHOOK_TOKEN_KEY, trigger.getWebHookToken())
         .filter(TriggerExecution.WORKFLOW_ID_KEY, trigger.getWorkflowId())

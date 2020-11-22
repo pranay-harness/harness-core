@@ -248,7 +248,7 @@ public class AccountGenerator {
     UpdateOperations<Role> roleUpdateOperations = wingsPersistence.createUpdateOperations(Role.class);
     roleUpdateOperations.set("accountId", ACCOUNT_ID);
     wingsPersistence.update(
-        wingsPersistence.createQuery(Role.class).filter(Role.ACCOUNT_ID_KEY, account.getUuid()), roleUpdateOperations);
+        wingsPersistence.createQuery(Role.class).filter(Role.ACCOUNT_ID_KEY2, account.getUuid()), roleUpdateOperations);
 
     User adminUser =
         ensureUser(adminUserUuid, adminUserName, adminUserEmail, scmSecret.decryptToCharArray(adminPassword), account);

@@ -69,7 +69,7 @@ public class InstanceStatServiceImpl implements InstanceStatService {
   @Override
   public boolean purgeUpTo(Instant timestamp) {
     try (HIterator<Account> accounts =
-             new HIterator<>(persistence.createQuery(Account.class).project(Account.ID_KEY, true).fetch())) {
+             new HIterator<>(persistence.createQuery(Account.class).project(Account.ID_KEY2, true).fetch())) {
       while (accounts.hasNext()) {
         final Account account = accounts.next();
         Query<InstanceStatsSnapshot> query = persistence.createQuery(InstanceStatsSnapshot.class)

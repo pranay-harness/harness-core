@@ -452,7 +452,7 @@ public class InfrastructureProvisionerServiceImplTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void shouldGetIdToServiceMapping() {
     PageRequest<Service> servicePageRequest = new PageRequest<>();
-    servicePageRequest.addFilter(Service.APP_ID_KEY, Operator.EQ, APP_ID);
+    servicePageRequest.addFilter(Service.APP_ID_KEY2, Operator.EQ, APP_ID);
     Set<String> serviceIds = Sets.newHashSet(asList("id1", "id2"));
     servicePageRequest.addFilter(ServiceKeys.uuid, Operator.IN, serviceIds.toArray());
     PageResponse<Service> services = new PageResponse<>();

@@ -1305,7 +1305,7 @@ public class YamlGitServiceImpl implements YamlGitService {
       // Delete yamlGitConfig documents whose gitConnectorId is not among
       // the list of selected git connectors
       wingsPersistence.delete(wingsPersistence.createQuery(YamlGitConfig.class)
-                                  .filter(YamlGitConfig.ACCOUNT_ID_KEY, accountId)
+                                  .filter(YamlGitConfig.ACCOUNT_ID_KEY2, accountId)
                                   .field(YamlGitConfig.GIT_CONNECTOR_ID_KEY)
                                   .hasNoneOf(selectedGitConnectors));
       return true;

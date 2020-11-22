@@ -1717,7 +1717,7 @@ public class LogMLAnalysisServiceTest extends VerificationBaseTest {
             .filter(LearningEngineAnalysisTaskKeys.state_execution_id, stateExecutionId + "-retry-1234");
     UpdateOperations<LearningEngineAnalysisTask> updateOperations =
         wingsPersistence.createUpdateOperations(LearningEngineAnalysisTask.class)
-            .set(LearningEngineAnalysisTask.LAST_UPDATED_AT_KEY,
+            .set(LearningEngineAnalysisTask.LAST_UPDATED_AT_KEY2,
                 System.currentTimeMillis() - TimeUnit.HOURS.toMillis(4));
     datastore.update(taskQuery, updateOperations);
 

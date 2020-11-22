@@ -478,7 +478,7 @@ public class AppServiceImpl implements AppService {
   @Override
   public void deleteByAccountId(String accountId) {
     wingsPersistence.createQuery(Application.class)
-        .filter(Application.ACCOUNT_ID_KEY, accountId)
+        .filter(Application.ACCOUNT_ID_KEY2, accountId)
         .asKeyList()
         .forEach(key -> delete(key.getId().toString()));
   }

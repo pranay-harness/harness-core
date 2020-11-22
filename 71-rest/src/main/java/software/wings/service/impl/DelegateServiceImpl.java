@@ -3387,8 +3387,8 @@ public class DelegateServiceImpl implements DelegateService {
 
     return delegateSequenceConfigQuery.project(ID_KEY, true)
         .project(DelegateSequenceConfigKeys.sequenceNum, true)
-        .project(DelegateSequenceConfig.LAST_UPDATED_AT_KEY, true)
-        .project(DelegateSequenceConfig.ACCOUNT_ID_KEY, true)
+        .project(DelegateSequenceConfig.LAST_UPDATED_AT_KEY2, true)
+        .project(DelegateSequenceConfig.ACCOUNT_ID_KEY2, true)
         .project(DelegateSequenceConfigKeys.hostName, true)
         .project(DelegateSequenceConfigKeys.delegateToken, true)
         .asList();
@@ -3398,13 +3398,13 @@ public class DelegateServiceImpl implements DelegateService {
   DelegateSequenceConfig addNewDelegateSequenceConfigRecord(Delegate delegate) {
     Query<DelegateSequenceConfig> delegateSequenceConfigQuery =
         wingsPersistence.createQuery(DelegateSequenceConfig.class)
-            .filter(DelegateSequenceConfig.ACCOUNT_ID_KEY, delegate.getAccountId())
+            .filter(DelegateSequenceConfig.ACCOUNT_ID_KEY2, delegate.getAccountId())
             .filter(DelegateSequenceConfigKeys.hostName, delegate.getHostName());
 
     List<DelegateSequenceConfig> existingDelegateSequenceConfigs =
         delegateSequenceConfigQuery.project(DelegateSequenceConfigKeys.sequenceNum, true)
-            .project(DelegateSequenceConfig.LAST_UPDATED_AT_KEY, true)
-            .project(DelegateSequenceConfig.ACCOUNT_ID_KEY, true)
+            .project(DelegateSequenceConfig.LAST_UPDATED_AT_KEY2, true)
+            .project(DelegateSequenceConfig.ACCOUNT_ID_KEY2, true)
             .project(DelegateSequenceConfigKeys.hostName, true)
             .project(DelegateSequenceConfigKeys.delegateToken, true)
             .asList();

@@ -116,7 +116,7 @@ public class ApplicationManifestServiceTest extends WingsBaseTest {
     assertThat(savedManifest.getStoreType()).isEqualTo(Local);
 
     ApplicationManifest manifest = wingsPersistence.createQuery(ApplicationManifest.class)
-                                       .filter(ApplicationManifest.APP_ID_KEY, APP_ID)
+                                       .filter(ApplicationManifest.APP_ID_KEY2, APP_ID)
                                        .filter(ApplicationManifestKeys.serviceId, SERVICE_ID)
                                        .get();
 
@@ -135,7 +135,7 @@ public class ApplicationManifestServiceTest extends WingsBaseTest {
     applicationManifestService.update(savedManifest);
 
     ApplicationManifest manifest = wingsPersistence.createQuery(ApplicationManifest.class)
-                                       .filter(ApplicationManifest.APP_ID_KEY, APP_ID)
+                                       .filter(ApplicationManifest.APP_ID_KEY2, APP_ID)
                                        .filter(ApplicationManifestKeys.serviceId, SERVICE_ID)
                                        .get();
 

@@ -39,13 +39,13 @@ public class TimeSeriesMLAnalysisCompressionSaveMigration implements Migration {
         log.info("saving " + mlAnalysisRecord.getUuid());
         bulkWriteOperation
             .find(wingsPersistence.createQuery(TimeSeriesMLAnalysisRecord.class)
-                      .filter(TimeSeriesMLAnalysisRecord.ID_KEY, mlAnalysisRecord.getUuid())
+                      .filter(TimeSeriesMLAnalysisRecord.ID_KEY2, mlAnalysisRecord.getUuid())
                       .getQueryObject())
             .updateOne(new BasicDBObject("$set",
                 new BasicDBObject("transactionsCompressedJson", mlAnalysisRecord.getTransactionsCompressedJson())));
         bulkWriteOperation
             .find(wingsPersistence.createQuery(TimeSeriesMLAnalysisRecord.class)
-                      .filter(TimeSeriesMLAnalysisRecord.ID_KEY, mlAnalysisRecord.getUuid())
+                      .filter(TimeSeriesMLAnalysisRecord.ID_KEY2, mlAnalysisRecord.getUuid())
                       .getQueryObject())
             .updateOne(new BasicDBObject("$set", new BasicDBObject("aggregatedRisk", aggregatedRisk)));
         batched++;

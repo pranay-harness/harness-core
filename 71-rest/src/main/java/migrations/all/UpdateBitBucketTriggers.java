@@ -47,13 +47,13 @@ public class UpdateBitBucketTriggers implements Migration {
       eventList.add("REPO");
       while (triggers.hasNext()) {
         DBObject object = triggers.next();
-        String uuId = (String) object.get(Trigger.ID_KEY);
+        String uuId = (String) object.get(Trigger.ID_KEY2);
         bulkWriteOperation
-            .find(wingsPersistence.createQuery(Trigger.class).filter(Trigger.ID_KEY, uuId).getQueryObject())
+            .find(wingsPersistence.createQuery(Trigger.class).filter(Trigger.ID_KEY2, uuId).getQueryObject())
             .updateOne(new BasicDBObject("$set", new BasicDBObject("condition.bitBucketEvents", basicDBList)));
 
         bulkWriteOperation
-            .find(wingsPersistence.createQuery(Trigger.class).filter(Trigger.ID_KEY, uuId).getQueryObject())
+            .find(wingsPersistence.createQuery(Trigger.class).filter(Trigger.ID_KEY2, uuId).getQueryObject())
             .updateOne(new BasicDBObject("$set", new BasicDBObject("condition.eventTypes", eventList)));
 
         if (processedDocsCount % BATCH_SIZE == 0) {
@@ -93,9 +93,9 @@ public class UpdateBitBucketTriggers implements Migration {
 
       while (triggers.hasNext()) {
         DBObject object = triggers.next();
-        String uuId = (String) object.get(Trigger.ID_KEY);
+        String uuId = (String) object.get(Trigger.ID_KEY2);
         bulkWriteOperation
-            .find(wingsPersistence.createQuery(Trigger.class).filter(Trigger.ID_KEY, uuId).getQueryObject())
+            .find(wingsPersistence.createQuery(Trigger.class).filter(Trigger.ID_KEY2, uuId).getQueryObject())
             .updateOne(new BasicDBObject("$set", new BasicDBObject("condition.bitBucketEvents", basicDBList)));
 
         if (processedDocsCount % BATCH_SIZE == 0) {

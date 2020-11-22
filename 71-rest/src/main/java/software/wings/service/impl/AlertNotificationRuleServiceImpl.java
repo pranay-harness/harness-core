@@ -96,7 +96,7 @@ public class AlertNotificationRuleServiceImpl implements AlertNotificationRuleSe
   private Optional<AlertNotificationRule> getById(String accountId, String ruleId) {
     List<AlertNotificationRule> rules = wingsPersistence.createQuery(AlertNotificationRule.class)
                                             .filter(AlertNotificationRulekeys.accountId, accountId)
-                                            .filter(AlertNotificationRule.ID_KEY, ruleId)
+                                            .filter(AlertNotificationRule.ID_KEY2, ruleId)
                                             .asList();
     return rules.isEmpty() ? Optional.empty() : Optional.of(rules.get(0));
   }
@@ -117,7 +117,7 @@ public class AlertNotificationRuleServiceImpl implements AlertNotificationRuleSe
     }
     wingsPersistence.delete(wingsPersistence.createQuery(AlertNotificationRule.class)
                                 .filter(AlertNotificationRulekeys.accountId, accountId)
-                                .filter(AlertNotificationRule.ID_KEY, ruleId));
+                                .filter(AlertNotificationRule.ID_KEY2, ruleId));
   }
 
   @Override

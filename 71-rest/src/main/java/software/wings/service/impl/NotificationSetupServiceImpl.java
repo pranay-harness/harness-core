@@ -87,7 +87,7 @@ public class NotificationSetupServiceImpl implements NotificationSetupService {
   @Override
   public List<NotificationGroup> listNotificationGroups(String accountId) {
     return listNotificationGroups(aPageRequest()
-                                      .addFilter(NotificationGroup.ACCOUNT_ID_KEY, Operator.EQ, accountId)
+                                      .addFilter(NotificationGroup.ACCOUNT_ID_KEY2, Operator.EQ, accountId)
                                       .addOrder(NotificationGroup.NAME_KEY, SortOrder.OrderType.ASC)
                                       .build())
         .getResponse();
@@ -96,7 +96,7 @@ public class NotificationSetupServiceImpl implements NotificationSetupService {
   @Override
   public List<NotificationGroup> listNotificationGroups(String accountId, Role role, String name) {
     return listNotificationGroups(aPageRequest()
-                                      .addFilter(NotificationGroup.ACCOUNT_ID_KEY, Operator.EQ, accountId)
+                                      .addFilter(NotificationGroup.ACCOUNT_ID_KEY2, Operator.EQ, accountId)
                                       .addFilter("roles", Operator.IN, role)
                                       .addFilter("name", Operator.EQ, name)
                                       .build())
@@ -116,8 +116,8 @@ public class NotificationSetupServiceImpl implements NotificationSetupService {
   @Override
   public List<NotificationGroup> readNotificationGroups(String accountId, List<String> notificationGroupIds) {
     return wingsPersistence.createQuery(NotificationGroup.class)
-        .filter(NotificationGroup.ACCOUNT_ID_KEY, accountId)
-        .field(NotificationGroup.ID_KEY)
+        .filter(NotificationGroup.ACCOUNT_ID_KEY2, accountId)
+        .field(NotificationGroup.ID_KEY2)
         .in(notificationGroupIds)
         .asList();
   }
@@ -125,7 +125,7 @@ public class NotificationSetupServiceImpl implements NotificationSetupService {
   @Override
   public NotificationGroup readNotificationGroupByName(String accountId, String notificationGroupName) {
     return wingsPersistence.createQuery(NotificationGroup.class)
-        .filter(NotificationGroup.ACCOUNT_ID_KEY, accountId)
+        .filter(NotificationGroup.ACCOUNT_ID_KEY2, accountId)
         .filter(NotificationGroup.NAME_KEY, notificationGroupName)
         .get();
   }
@@ -176,7 +176,7 @@ public class NotificationSetupServiceImpl implements NotificationSetupService {
     List<String> inUse = new ArrayList<>();
 
     wingsPersistence.createQuery(Application.class)
-        .filter(Application.ACCOUNT_ID_KEY, accountId)
+        .filter(Application.ACCOUNT_ID_KEY2, accountId)
         .asKeyList()
         .stream()
         .map(key -> key.getId().toString())
@@ -206,7 +206,7 @@ public class NotificationSetupServiceImpl implements NotificationSetupService {
   @Override
   public List<NotificationGroup> listNotificationGroups(String accountId, String name) {
     return listNotificationGroups(aPageRequest()
-                                      .addFilter(NotificationGroup.ACCOUNT_ID_KEY, Operator.EQ, accountId)
+                                      .addFilter(NotificationGroup.ACCOUNT_ID_KEY2, Operator.EQ, accountId)
                                       .addFilter("name", Operator.EQ, name)
                                       .build())
         .getResponse();
@@ -215,7 +215,7 @@ public class NotificationSetupServiceImpl implements NotificationSetupService {
   @Override
   public List<NotificationGroup> listDefaultNotificationGroup(String accountId) {
     return listNotificationGroups(aPageRequest()
-                                      .addFilter(NotificationGroup.ACCOUNT_ID_KEY, Operator.EQ, accountId)
+                                      .addFilter(NotificationGroup.ACCOUNT_ID_KEY2, Operator.EQ, accountId)
                                       .addFilter("defaultNotificationGroupForAccount", Operator.EQ, true)
                                       .build())
         .getResponse();
@@ -295,6 +295,6 @@ public class NotificationSetupServiceImpl implements NotificationSetupService {
   @Override
   public void deleteByAccountId(String accountId) {
     wingsPersistence.delete(
-        wingsPersistence.createQuery(NotificationGroup.class).filter(NotificationGroup.ACCOUNT_ID_KEY, accountId));
+        wingsPersistence.createQuery(NotificationGroup.class).filter(NotificationGroup.ACCOUNT_ID_KEY2, accountId));
   }
 }

@@ -47,7 +47,7 @@ public class TriggerExecutionServiceImpl implements TriggerExecutionService {
   @Override
   public TriggerExecution fetchLastSuccessOrRunningExecution(String appId, String triggerId, String webhookToken) {
     return wingsPersistence.createQuery(TriggerExecution.class)
-        .filter(TriggerExecution.APP_ID_KEY, appId)
+        .filter(TriggerExecution.APP_ID_KEY2, appId)
         .filter(TriggerExecution.TRIGGER_ID_KEY, triggerId)
         .filter(TriggerExecution.WEBHOOK_TOKEN_KEY, webhookToken)
         .field(WorkflowExecutionKeys.status)
@@ -60,7 +60,7 @@ public class TriggerExecutionServiceImpl implements TriggerExecutionService {
   public void updateStatus(String appId, String triggerExecutionId, Status status, String message) {
     Query<TriggerExecution> query = wingsPersistence.createQuery(TriggerExecution.class)
                                         .filter("appId", appId)
-                                        .filter(TriggerExecution.ID_KEY, triggerExecutionId);
+                                        .filter(TriggerExecution.ID_KEY2, triggerExecutionId);
 
     UpdateOperations<TriggerExecution> updateOps =
         wingsPersistence.createUpdateOperations(TriggerExecution.class).set("status", status).set("message", message);

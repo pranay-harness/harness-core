@@ -137,7 +137,7 @@ public class TemplateHelper {
     long templatesOfType = wingsPersistence.createQuery(Template.class)
                                .field(TYPE_KEY)
                                .equal(templateType.name())
-                               .field(Template.ID_KEY)
+                               .field(Template.ID_KEY2)
                                .in(templateUuids)
                                .count(upToOne);
 

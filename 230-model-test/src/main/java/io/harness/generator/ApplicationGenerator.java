@@ -63,7 +63,7 @@ public class ApplicationGenerator {
 
   public Application exists(Application application) {
     return wingsPersistence.createQuery(Application.class)
-        .filter(Application.ACCOUNT_ID_KEY, application.getAccountId())
+        .filter(Application.ACCOUNT_ID_KEY2, application.getAccountId())
         .filter(ApplicationKeys.name, application.getName())
         .get();
   }

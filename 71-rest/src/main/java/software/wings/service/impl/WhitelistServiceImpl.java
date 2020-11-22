@@ -92,16 +92,16 @@ public class WhitelistServiceImpl implements WhitelistService {
 
   @Override
   public PageResponse<Whitelist> list(String accountId, PageRequest<Whitelist> req) {
-    notNullCheck(Whitelist.ACCOUNT_ID_KEY, accountId);
-    req.addFilter(Whitelist.ACCOUNT_ID_KEY, EQ, accountId);
+    notNullCheck(Whitelist.ACCOUNT_ID_KEY2, accountId);
+    req.addFilter(Whitelist.ACCOUNT_ID_KEY2, EQ, accountId);
     return wingsPersistence.query(Whitelist.class, req);
   }
 
   @Override
   public Whitelist get(String accountId, String whitelistId) {
     return wingsPersistence.createQuery(Whitelist.class)
-        .filter(Whitelist.ACCOUNT_ID_KEY, accountId)
-        .filter(Whitelist.ID_KEY, whitelistId)
+        .filter(Whitelist.ACCOUNT_ID_KEY2, accountId)
+        .filter(Whitelist.ID_KEY2, whitelistId)
         .get();
   }
 
@@ -231,7 +231,7 @@ public class WhitelistServiceImpl implements WhitelistService {
 
     Query<Whitelist> query = wingsPersistence.createQuery(Whitelist.class)
                                  .filter(ID_KEY, whitelist.getUuid())
-                                 .filter(Whitelist.ACCOUNT_ID_KEY, whitelist.getAccountId());
+                                 .filter(Whitelist.ACCOUNT_ID_KEY2, whitelist.getAccountId());
     wingsPersistence.update(query, operations);
     evictWhitelistConfigCache(whitelist.getAccountId());
     log.info("Updated whitelist config {} for account {}", whitelist.getUuid(), whitelist.getAccountId());
@@ -244,7 +244,7 @@ public class WhitelistServiceImpl implements WhitelistService {
     Whitelist whitelist = get(accountId, whitelistId);
     notNullCheck("whitelist", whitelist);
     Query<Whitelist> whitelistQuery = wingsPersistence.createQuery(Whitelist.class)
-                                          .filter(Whitelist.ACCOUNT_ID_KEY, accountId)
+                                          .filter(Whitelist.ACCOUNT_ID_KEY2, accountId)
                                           .filter(ID_KEY, whitelistId);
     boolean delete = wingsPersistence.delete(whitelistQuery);
     if (delete) {
@@ -264,7 +264,7 @@ public class WhitelistServiceImpl implements WhitelistService {
   @Override
   public void deleteByAccountId(String accountId) {
     List<Whitelist> whitelists =
-        wingsPersistence.createQuery(Whitelist.class).filter(Whitelist.ACCOUNT_ID_KEY, accountId).asList();
+        wingsPersistence.createQuery(Whitelist.class).filter(Whitelist.ACCOUNT_ID_KEY2, accountId).asList();
     for (Whitelist whitelist : whitelists) {
       delete(accountId, whitelist.getUuid());
     }
