@@ -21,6 +21,7 @@ import io.harness.delegate.configuration.DelegateConfiguration;
 import io.harness.delegate.message.MessageService;
 import io.harness.delegate.service.DelegateAgentService;
 import io.harness.delegate.task.citasks.CITaskFactoryModule;
+import io.harness.delegate.task.k8s.apiclient.KubernetesApiClientFactoryModule;
 import io.harness.event.client.EventPublisher;
 import io.harness.event.client.impl.EventPublisherConstants;
 import io.harness.event.client.impl.appender.AppenderModule;
@@ -42,7 +43,6 @@ import io.harness.threading.ExecutorModule;
 import io.harness.threading.ThreadPool;
 import io.harness.utils.ProcessControl;
 
-import software.wings.delegatetasks.k8s.apiclient.KubernetesApiClientFactoryModule;
 import software.wings.delegatetasks.k8s.client.KubernetesClientFactoryModule;
 
 import ch.qos.logback.classic.LoggerContext;
