@@ -6,11 +6,10 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
+import io.harness.delegate.task.k8s.apiclient.KubernetesApiClientFactoryModule;
 import io.harness.k8s.apiclient.ApiClientFactory;
 import io.harness.k8s.apiclient.ApiClientFactoryImpl;
 import io.harness.rule.Owner;
-
-import software.wings.delegatetasks.k8s.apiclient.KubernetesApiClientFactoryModule;
 
 import com.google.inject.Guice;
 import com.google.inject.Injector;
