@@ -50,6 +50,7 @@ import migrations.all.AuditRecordMigration;
 import migrations.all.AuditViewerPermissionMigration;
 import migrations.all.AuthTokenTtlMigration;
 import migrations.all.AwsAmiAsgDesiredInstancesMigration;
+import migrations.all.AwsConfigEc2IamRoleMigration;
 import migrations.all.CVCollectionCronFrequencyMigration;
 import migrations.all.CleanUpDatadogCallLogMigration;
 import migrations.all.CleanupOrphanInstances;
@@ -407,6 +408,7 @@ public class MigrationList {
         .add(Pair.of(349, ManageCustomDashboardPermissionMigration.class))
         .add(Pair.of(350, CreateCustomDashboardPermissionMigration.class))
         .add(Pair.of(351, AddRestrictionsToSecretManagerConfig.class))
+        .add(Pair.of(352, AwsConfigEc2IamRoleMigration.class))
         .build();
   }
 }
