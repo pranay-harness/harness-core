@@ -398,7 +398,8 @@ public class WorkflowExecutionServiceHelper {
           args.setWorkflowVariables(new HashMap<>());
         }
         Map<String, String> resolvedVariablesValues = pipelineStageElement.getWorkflowVariables();
-        return getRuntimeVariablesForStage(args, runtimeInputsConfig, variables, vars, resolvedVariablesValues);
+        return CanaryOrchestrationWorkflow.reorderUserVariables(
+            getRuntimeVariablesForStage(args, runtimeInputsConfig, variables, vars, resolvedVariablesValues));
       }
     }
     throw new InvalidRequestException(
