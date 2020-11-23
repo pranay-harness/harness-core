@@ -13,11 +13,13 @@ import io.harness.ng.core.dto.FailureDTO;
 import io.harness.ng.core.dto.ResponseDTO;
 import io.harness.pms.beans.entities.PipelineEntity;
 import io.harness.pms.beans.entities.PipelineEntity.PipelineEntityKeys;
+import io.harness.pms.beans.resources.PMSPipelineFilterRequestDTO;
 import io.harness.pms.beans.resources.PMSPipelineResponseDTO;
 import io.harness.pms.beans.resources.PMSPipelineSummaryResponseDTO;
 import io.harness.pms.mappers.PMSPipelineDtoMapper;
 import io.harness.pms.mappers.PMSPipelineFilterHelper;
 import io.harness.pms.service.PMSPipelineService;
+import io.harness.serializer.JsonUtils;
 import io.harness.utils.PageUtils;
 
 import com.google.inject.Inject;
@@ -141,9 +143,13 @@ public class PipelineResource {
       @QueryParam("size") @DefaultValue("25") int size, @QueryParam("sort") List<String> sort,
       @QueryParam(NGResourceFilterConstants.SEARCH_TERM_KEY) String searchTerm) {
     log.info("Get List of pipelines");
+    PMSPipelineFilterRequestDTO pmsPipelineFilterRequestDTO = null;
 
-    Criteria criteria =
-        PMSPipelineFilterHelper.createCriteriaForGetList(accountId, orgId, projectId, searchTerm, false);
+    if (EmptyPredicate.isNotEmpty(filterQuery)) {
+      pmsPipelineFilterRequestDTO = JsonUtils.asObject(filterQuery, PMSPipelineFilterRequestDTO.class);
+    }
+    Criteria criteria = PMSPipelineFilterHelper.createCriteriaForGetList(
+        accountId, orgId, projectId, pmsPipelineFilterRequestDTO, searchTerm, false);
     Pageable pageRequest;
     if (EmptyPredicate.isEmpty(sort)) {
       pageRequest = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, PipelineEntityKeys.createdAt));
