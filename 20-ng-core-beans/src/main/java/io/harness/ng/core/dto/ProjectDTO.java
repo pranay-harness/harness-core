@@ -12,6 +12,7 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import java.util.List;
+import java.util.Map;
 import javax.validation.constraints.Size;
 import lombok.AccessLevel;
 import lombok.Builder;
@@ -26,14 +27,13 @@ import lombok.experimental.FieldDefaults;
 @ApiModel(value = "Project")
 public class ProjectDTO {
   String accountIdentifier;
-  @ApiModelProperty(required = true) @EntityIdentifier String orgIdentifier;
-  @ApiModelProperty(required = true) @EntityIdentifier String identifier;
+  @EntityIdentifier String orgIdentifier;
+  @ApiModelProperty(required = true) @EntityIdentifier(allowBlank = false) String identifier;
   @ApiModelProperty(required = true) @NGEntityName String name;
   String color;
   @Size(max = 1024) List<ModuleType> modules;
   @Size(max = 1024) String description;
-  @Size(max = 128) List<String> owners;
-  @Size(max = 128) List<String> tags;
+  @Size(max = 128) Map<String, String> tags;
   Long lastModifiedAt;
   @JsonIgnore Long version;
 }

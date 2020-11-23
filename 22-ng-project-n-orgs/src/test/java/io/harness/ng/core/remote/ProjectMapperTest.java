@@ -3,6 +3,7 @@ package io.harness.ng.core.remote;
 import static io.harness.rule.OwnerRule.KARAN;
 
 import static java.util.Collections.emptyList;
+import static java.util.Collections.emptyMap;
 import static java.util.Collections.singletonList;
 import static junit.framework.TestCase.assertEquals;
 import static junit.framework.TestCase.assertNotNull;
@@ -38,7 +39,6 @@ public class ProjectMapperTest {
                   .color(randomAlphabetic(10))
                   .description("")
                   .tags(emptyList())
-                  .owners(singletonList(randomAlphabetic(10)))
                   .modules(emptyList())
                   .lastModifiedAt(10L)
                   .build();
@@ -57,7 +57,6 @@ public class ProjectMapperTest {
     assertNotNull(fromDTO.getModules());
     assertEquals(HARNESS_BLUE, fromDTO.getColor());
     assertNotNull(fromDTO.getTags());
-    assertNotNull(fromDTO.getOwners());
     assertNotNull(fromDTO.getDescription());
   }
 
@@ -72,8 +71,7 @@ public class ProjectMapperTest {
     assertEquals(project.getName(), fromProject.getName());
     assertEquals(project.getColor(), fromProject.getColor());
     assertEquals(project.getDescription(), fromProject.getDescription());
-    assertEquals(project.getTags(), fromProject.getTags());
-    assertEquals(project.getOwners(), fromProject.getOwners());
+    assertEquals(emptyMap(), fromProject.getTags());
     assertEquals(project.getLastModifiedAt(), fromProject.getLastModifiedAt());
     assertEquals(project.getModules(), fromProject.getModules());
   }

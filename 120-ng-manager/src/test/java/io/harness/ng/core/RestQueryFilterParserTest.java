@@ -60,7 +60,7 @@ public class RestQueryFilterParserTest extends CategoryTest {
   @Owner(developers = VIKAS)
   @Category(UnitTests.class)
   public void testGetCriteriaFromFilterQuery_For_InValidQueries() {
-    String filterQuery = "owners=in===(vikas,nikhil)";
+    String filterQuery = "modules=in===(CD,CV)";
     RestQueryFilterParser restQueryFilterParser = new RestQueryFilterParser();
     restQueryFilterParser.getCriteriaFromFilterQuery(filterQuery, Project.class);
   }
@@ -69,7 +69,7 @@ public class RestQueryFilterParserTest extends CategoryTest {
   @Owner(developers = KARAN)
   @Category(UnitTests.class)
   public void testGetCriteriaFromFilterQuery_For_NonQueryable() {
-    String filterQuery = "owners=in=(ab,virat)";
+    String filterQuery = "name==AB";
     RestQueryFilterParser restQueryFilterParser = new RestQueryFilterParser();
     restQueryFilterParser.getCriteriaFromFilterQuery(filterQuery, Project.class);
   }

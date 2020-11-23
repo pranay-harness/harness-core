@@ -15,10 +15,9 @@ import static io.harness.ng.core.utils.NGUtils.verifyValuesNotChanged;
 
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
-import io.harness.NGCommonEntityConstants;
+import io.harness.ModuleType;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.connector.services.ConnectorService;
-import io.harness.data.validator.EntityNameValidator;
 import io.harness.exception.DuplicateFieldException;
 import io.harness.exception.InvalidArgumentsException;
 import io.harness.exception.InvalidRequestException;
@@ -40,15 +39,17 @@ import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.tuple.Pair;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.mongodb.core.query.Criteria;
-import org.springframework.data.mongodb.core.query.Query;
-import org.springframework.data.mongodb.core.query.Update;
 
 @OwnedBy(PL)
 @Singleton
@@ -122,52 +123,33 @@ public class ProjectServiceImpl implements ProjectService {
   public Project update(String accountIdentifier, @OrgIdentifier String orgIdentifier,
       @ProjectIdentifier String identifier, ProjectDTO projectDTO) {
     validateUpdateProjectRequest(accountIdentifier, orgIdentifier, identifier, projectDTO);
-    Criteria criteria = Criteria.where(ProjectKeys.accountIdentifier)
-                            .is(accountIdentifier)
-                            .and(ProjectKeys.orgIdentifier)
-                            .is(orgIdentifier)
-                            .and(ProjectKeys.identifier)
-                            .is(identifier)
-                            .and(ProjectKeys.deleted)
-                            .ne(Boolean.TRUE);
-    if (projectDTO.getVersion() != null) {
-      criteria.and(ProjectKeys.version).is(projectDTO.getVersion());
+    Optional<Project> optionalProject = get(accountIdentifier, orgIdentifier, identifier);
+
+    if (optionalProject.isPresent()) {
+      Project existingProject = optionalProject.get();
+      Project project = toProject(projectDTO);
+      project.setAccountIdentifier(accountIdentifier);
+      project.setOrgIdentifier(orgIdentifier);
+      project.setId(existingProject.getId());
+
+      List<ModuleType> moduleTypeList = verifyModulesNotRemoved(existingProject.getModules(), project.getModules());
+      project.setModules(moduleTypeList);
+      validate(project);
+      return projectRepository.save(project);
     }
-    Query query = new Query(criteria);
-    Update update = getUpdate(projectDTO);
-    projectDTO.setAccountIdentifier(accountIdentifier);
-    projectDTO.setOrgIdentifier(orgIdentifier);
-    projectDTO.setIdentifier(identifier);
-    projectDTO.setName(Optional.ofNullable(projectDTO.getName()).orElse(NGCommonEntityConstants.NAME_KEY));
-    validate(toProject(projectDTO));
-    Project project = projectRepository.update(query, update);
-    if (project == null) {
-      throw new InvalidRequestException("Resource not found or your resource version might be older", USER);
-    }
-    return project;
+    throw new InvalidRequestException(
+        String.format("Project with identifier [%s] and orgIdentifier [%s] not found", identifier, orgIdentifier),
+        USER);
   }
 
-  private Update getUpdate(ProjectDTO projectDTO) {
-    Update update = new Update();
-    if (isNotBlank(projectDTO.getName()) && EntityNameValidator.isValid(projectDTO.getName())) {
-      update.set(ProjectKeys.name, projectDTO.getName());
+  private List<ModuleType> verifyModulesNotRemoved(List<ModuleType> oldList, List<ModuleType> newList) {
+    Set<ModuleType> oldSet = new HashSet<>(oldList);
+    Set<ModuleType> newSet = new HashSet<>(newList);
+
+    if (newSet.containsAll(oldSet)) {
+      return new ArrayList<>(newSet);
     }
-    if (isNotBlank(projectDTO.getColor())) {
-      update.set(ProjectKeys.color, projectDTO.getColor());
-    }
-    if (projectDTO.getDescription() != null) {
-      update.set(ProjectKeys.description, projectDTO.getDescription());
-    }
-    if (projectDTO.getTags() != null) {
-      update.set(ProjectKeys.tags, projectDTO.getTags());
-    }
-    if (projectDTO.getOwners() != null) {
-      update.set(ProjectKeys.owners, projectDTO.getOwners());
-    }
-    if (projectDTO.getModules() != null) {
-      update.set(ProjectKeys.modules, projectDTO.getModules());
-    }
-    return update;
+    throw new InvalidRequestException("Modules cannot be removed from a project");
   }
 
   @Override
@@ -224,9 +206,9 @@ public class ProjectServiceImpl implements ProjectService {
 
   private void validateUpdateProjectRequest(
       String accountIdentifier, String orgIdentifier, String identifier, ProjectDTO project) {
-    verifyValuesNotChanged(
-        Lists.newArrayList(Pair.of(accountIdentifier, project.getAccountIdentifier()),
-            Pair.of(orgIdentifier, project.getOrgIdentifier()), Pair.of(identifier, project.getIdentifier())),
+    verifyValuesNotChanged(Lists.newArrayList(Pair.of(accountIdentifier, project.getAccountIdentifier()),
+                               Pair.of(orgIdentifier, project.getOrgIdentifier())),
         true);
+    verifyValuesNotChanged(Lists.newArrayList(Pair.of(identifier, project.getIdentifier())), false);
   }
 }

@@ -6,12 +6,12 @@ import static io.harness.mongo.CollationStrength.PRIMARY;
 import io.harness.ModuleType;
 import io.harness.data.validator.EntityIdentifier;
 import io.harness.data.validator.NGEntityName;
-import io.harness.data.validator.Trimmed;
 import io.harness.mongo.index.CdIndex;
 import io.harness.mongo.index.CdUniqueIndexWithCollation;
 import io.harness.mongo.index.Field;
 import io.harness.ng.RsqlQueryable;
 import io.harness.ng.core.NGAccountAccess;
+import io.harness.ng.core.common.beans.NGTag;
 import io.harness.ng.core.entities.Project.ProjectKeys;
 import io.harness.persistence.PersistentEntity;
 
@@ -50,16 +50,15 @@ import org.springframework.data.mongodb.core.mapping.Document;
 @TypeAlias("projects")
 public class Project implements PersistentEntity, NGAccountAccess {
   @Wither @Id @org.mongodb.morphia.annotations.Id String id;
-  @Trimmed String accountIdentifier;
-  @Trimmed @EntityIdentifier String identifier;
-  @Trimmed @EntityIdentifier String orgIdentifier;
+  String accountIdentifier;
+  @EntityIdentifier(allowBlank = false) String identifier;
+  @EntityIdentifier(allowBlank = false) String orgIdentifier;
 
   @NGEntityName String name;
-  @Trimmed @NotEmpty String color;
+  @NotEmpty String color;
   @NotNull @Singular @Size(max = 1024) List<ModuleType> modules;
   @NotNull @Size(max = 1024) String description;
-  @Singular @Size(min = 1, max = 128) List<String> owners;
-  @NotNull @Singular @Size(max = 128) List<String> tags;
+  @NotNull @Singular @Size(max = 128) List<NGTag> tags;
 
   @Wither @CreatedDate Long createdAt;
   @Wither @LastModifiedDate Long lastModifiedAt;

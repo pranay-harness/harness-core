@@ -28,7 +28,7 @@ import static software.wings.beans.RoleType.PROD_SUPPORT;
 import static software.wings.beans.SystemCatalog.CatalogType.APPSTACK;
 
 import static java.util.Arrays.asList;
-import static java.util.Collections.emptyList;
+import static java.util.Collections.emptyMap;
 import static java.util.Collections.singletonList;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 
@@ -413,9 +413,8 @@ public class AccountServiceImpl implements AccountService {
   private void createDefaultOrganization(String accountId) {
     OrganizationDTO createOrganizationDTO = OrganizationDTO.builder().build();
     createOrganizationDTO.setIdentifier(DEFAULT_ORG_IDENTIFIER);
-    createOrganizationDTO.setColor("#05a660");
     createOrganizationDTO.setName("Default");
-    createOrganizationDTO.setTags(emptyList());
+    createOrganizationDTO.setTags(emptyMap());
     createOrganizationDTO.setDescription("Default Organization");
     try {
       organizationManagerClient.createOrganization(accountId, createOrganizationDTO).execute();
