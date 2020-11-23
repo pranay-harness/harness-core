@@ -7,7 +7,10 @@ import io.harness.NGResourceFilterConstants;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.pms.beans.entities.PipelineEntity;
 import io.harness.pms.beans.entities.PipelineEntity.PipelineEntityKeys;
+import io.harness.pms.beans.resources.PMSPipelineFilterRequestDTO;
 
+import java.util.List;
+import java.util.Map;
 import lombok.experimental.UtilityClass;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Update;
@@ -32,8 +35,8 @@ public class PMSPipelineFilterHelper {
     return update;
   }
 
-  public Criteria createCriteriaForGetList(
-      String accountId, String orgIdentifier, String projectIdentifier, String searchTerm, boolean deleted) {
+  public Criteria createCriteriaForGetList(String accountId, String orgIdentifier, String projectIdentifier,
+      PMSPipelineFilterRequestDTO filter, String searchTerm, boolean deleted) {
     Criteria criteria = new Criteria();
     if (isNotEmpty(accountId)) {
       criteria.and(PipelineEntityKeys.accountId).is(accountId);
@@ -45,6 +48,12 @@ public class PMSPipelineFilterHelper {
       criteria.and(PipelineEntityKeys.projectIdentifier).is(projectIdentifier);
     }
     criteria.and(PipelineEntityKeys.deleted).is(deleted);
+
+    if (filter != null && EmptyPredicate.isNotEmpty(filter.getFilters())) {
+      for (Map.Entry<String, List<String>> filters : filter.getFilters().entrySet()) {
+        criteria.and(filters.getKey()).in(filters.getValue());
+      }
+    }
 
     if (EmptyPredicate.isNotEmpty(searchTerm)) {
       Criteria searchCriteria =
