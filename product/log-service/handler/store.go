@@ -15,7 +15,8 @@ func HandleUpload(store store.Store) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
 
-		key := r.FormValue("key")
+		accountID := r.FormValue(accountIDParam)
+		key := CreateAccountSeparatedKey(accountID, r.FormValue(keyParam))
 
 		if err := store.Upload(ctx, key, r.Body); err != nil {
 			WriteInternalError(w, err)
@@ -36,7 +37,8 @@ func HandleUploadLink(store store.Store) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
 
-		key := r.FormValue("key")
+		accountID := r.FormValue(accountIDParam)
+		key := CreateAccountSeparatedKey(accountID, r.FormValue(keyParam))
 		expires := time.Hour
 
 		link, err := store.UploadLink(ctx, key, expires)
@@ -64,7 +66,8 @@ func HandleDownload(store store.Store) http.HandlerFunc {
 		h.Set("Access-Control-Allow-Origin", "*")
 		ctx := r.Context()
 
-		key := r.FormValue("key")
+		accountID := r.FormValue(accountIDParam)
+		key := CreateAccountSeparatedKey(accountID, r.FormValue(keyParam))
 
 		out, err := store.Download(ctx, key)
 		if out != nil {
@@ -89,7 +92,8 @@ func HandleDownloadLink(store store.Store) http.HandlerFunc {
 		h.Set("Access-Control-Allow-Origin", "*")
 		ctx := r.Context()
 
-		key := r.FormValue("key")
+		accountID := r.FormValue(accountIDParam)
+		key := CreateAccountSeparatedKey(accountID, r.FormValue(keyParam))
 		expires := time.Hour
 
 		link, err := store.DownloadLink(ctx, key, expires)
@@ -117,7 +121,8 @@ func HandleDelete(store store.Store) http.HandlerFunc {
 		h.Set("Access-Control-Allow-Origin", "*")
 		ctx := r.Context()
 
-		key := r.FormValue("key")
+		accountID := r.FormValue(accountIDParam)
+		key := CreateAccountSeparatedKey(accountID, r.FormValue(keyParam))
 
 		if err := store.Delete(ctx, key); err != nil {
 			WriteNotFound(w, err)

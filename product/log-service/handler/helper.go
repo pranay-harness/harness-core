@@ -5,6 +5,11 @@ import (
 	"net/http"
 )
 
+const (
+	accountIDParam = "accountID"
+	keyParam = "key"
+)
+
 // writeBadRequest writes the json-encoded error message
 // to the response with a 400 bad request status code.
 func WriteBadRequest(w http.ResponseWriter, err error) {
@@ -21,6 +26,10 @@ func WriteNotFound(w http.ResponseWriter, err error) {
 // to the response with a 500 internal server error.
 func WriteInternalError(w http.ResponseWriter, err error) {
 	writeError(w, err, 500)
+}
+
+func CreateAccountSeparatedKey(accountID string, key string) string {
+	return accountID + "/" + key
 }
 
 // writeJSON writes the json-encoded representation of v to

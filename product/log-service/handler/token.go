@@ -17,7 +17,7 @@ func HandleToken(config config.Config) http.HandlerFunc {
 		h := w.Header()
 		h.Set("Access-Control-Allow-Origin", "*")
 		secret := []byte(config.Secrets.LogSecret)
-		accountID := r.FormValue("accountID")
+		accountID := r.FormValue(accountIDParam)
 		cookie := authcookie.NewSinceNow(accountID, defaultTokenExpiryTime, secret)
 		io.WriteString(w, cookie)
 	}

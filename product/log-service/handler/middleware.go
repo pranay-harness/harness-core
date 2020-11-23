@@ -17,7 +17,7 @@ func TokenGenerationMiddleware(config config.Config, validateAccount bool) func(
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			if validateAccount {
-				accountID := r.FormValue("accountID")
+				accountID := r.FormValue(accountIDParam)
 				if accountID == "" {
 					WriteBadRequest(w, errors.New("no account ID in query params"))
 					return
@@ -52,7 +52,7 @@ func AuthMiddleware(config config.Config) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 
-			accountID := r.FormValue("accountID")
+			accountID := r.FormValue(accountIDParam)
 			if accountID == "" {
 				WriteBadRequest(w, errors.New("no account ID in query params"))
 				return
@@ -77,7 +77,7 @@ func AuthMiddleware(config config.Config) func(http.Handler) http.Handler {
 			}
 
 			// Validate that a key is present in the request
-			key := r.FormValue("key")
+			key := r.FormValue(keyParam)
 			if key == "" {
 				WriteBadRequest(w, errors.New("no key exists in the URL"))
 				return
