@@ -16,6 +16,8 @@ import software.wings.helpers.ext.cli.CliResponse;
 
 import com.fasterxml.jackson.dataformat.yaml.snakeyaml.DumperOptions;
 import com.fasterxml.jackson.dataformat.yaml.snakeyaml.Yaml;
+import com.fasterxml.jackson.dataformat.yaml.snakeyaml.constructor.SafeConstructor;
+import com.fasterxml.jackson.dataformat.yaml.snakeyaml.representer.Representer;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import java.io.IOException;
@@ -60,7 +62,7 @@ public class OpenShiftDelegateService {
     StringBuilder resultYaml = new StringBuilder();
     DumperOptions options = new DumperOptions();
     options.setDefaultFlowStyle(DumperOptions.FlowStyle.BLOCK);
-    Yaml yaml = new Yaml(options);
+    Yaml yaml = new Yaml(new SafeConstructor(), new Representer(), options);
 
     Object obj = yaml.load(processedTemplateFile);
     if (obj instanceof Map) {

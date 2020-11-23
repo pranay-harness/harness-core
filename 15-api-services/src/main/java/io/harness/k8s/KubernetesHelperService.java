@@ -37,6 +37,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import com.fasterxml.jackson.dataformat.yaml.snakeyaml.Yaml;
+import com.fasterxml.jackson.dataformat.yaml.snakeyaml.constructor.SafeConstructor;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -428,7 +429,7 @@ public class KubernetesHelperService {
   }
 
   public static String toDisplayYaml(Object entity) {
-    Yaml yaml = new Yaml(new YamlRepresenter(true), YamlUtils.getDumperOptions());
+    Yaml yaml = new Yaml(new SafeConstructor(), new YamlRepresenter(true), YamlUtils.getDumperOptions());
     return YamlUtils.cleanupYaml(yaml.dump(entity));
   }
 

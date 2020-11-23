@@ -92,6 +92,8 @@ import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import com.fasterxml.jackson.dataformat.yaml.snakeyaml.DumperOptions;
 import com.fasterxml.jackson.dataformat.yaml.snakeyaml.DumperOptions.FlowStyle;
 import com.fasterxml.jackson.dataformat.yaml.snakeyaml.Yaml;
+import com.fasterxml.jackson.dataformat.yaml.snakeyaml.constructor.SafeConstructor;
+import com.fasterxml.jackson.dataformat.yaml.snakeyaml.representer.Representer;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
@@ -132,7 +134,7 @@ public class PcfCommandTaskHelper {
     DumperOptions options = new DumperOptions();
     options.setDefaultFlowStyle(FlowStyle.BLOCK);
     options.setExplicitStart(true);
-    yaml = new Yaml(options);
+    yaml = new Yaml(new SafeConstructor(), new Representer(), options);
   }
 
   public static final String DELIMITER = "__";
