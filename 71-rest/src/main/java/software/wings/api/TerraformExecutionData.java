@@ -2,6 +2,7 @@ package software.wings.api;
 
 import io.harness.beans.ExecutionStatus;
 import io.harness.delegate.beans.DelegateTaskNotifyResponseData;
+import io.harness.provision.TfVarSource;
 
 import software.wings.beans.NameValuePair;
 import software.wings.beans.delegation.TerraformProvisionParameters.TerraformCommand;
@@ -34,6 +35,7 @@ public class TerraformExecutionData extends StateExecutionData implements Delega
   private String sourceRepoReference;
   private List<String> targets;
   private List<String> tfVarFiles;
+  private TfVarSource tfVarSource;
 
   private String planLogFileId;
   private String workspace;

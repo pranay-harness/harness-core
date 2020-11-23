@@ -183,6 +183,9 @@ public class TerraformRollbackState extends TerraformProvisionState {
           terraformProvisioner.getAppId(), activityId, commandUnit().name());
       executionLogCallback.saveExecutionLog(rollbackMessage.toString());
 
+      setTfVarGitFileConfig(configParameter.getTfVarGitFileConfig());
+      setTfVarFiles(configParameter.getTfVarFiles());
+
       TerraformProvisionParameters parameters =
           TerraformProvisionParameters.builder()
               .timeoutInMillis(defaultIfNullTimeout(TimeUnit.MINUTES.toMillis(TIMEOUT_IN_MINUTES)))
@@ -208,6 +211,7 @@ public class TerraformRollbackState extends TerraformProvisionState {
               .targets(targets)
               .runPlanOnly(false)
               .tfVarFiles(configParameter.getTfVarFiles())
+              .tfVarSource(getTfVarSource(context))
               .workspace(workspace)
               .delegateTag(configParameter.getDelegateTag())
               .build();

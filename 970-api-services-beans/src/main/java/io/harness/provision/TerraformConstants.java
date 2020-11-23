@@ -12,6 +12,13 @@ public final class TerraformConstants {
   public static final String ENVIRONMENT_VARS_KEY = "environment_variables";
   public static final String TARGETS_KEY = "targets";
   public static final String TF_VAR_FILES_KEY = "tf_var_files";
+  public static final String TF_VAR_FILES_GIT_CONNECTOR_ID_KEY = "tf_var_files_git_connector_id";
+  public static final String TF_VAR_FILES_GIT_COMMIT_ID_KEY = "tf_var_files_git_commit_id";
+  public static final String TF_VAR_FILES_GIT_BRANCH_KEY = "tf_var_files_git_branch";
+  public static final String TF_VAR_FILES_GIT_FILE_PATH_KEY = "tf_var_files_git_file_path";
+  public static final String TF_VAR_FILES_GIT_REPO_NAME_KEY = "tf_var_files_git_repo_name";
+  public static final String TF_VAR_FILES_GIT_USE_BRANCH_KEY = "tf_var_files_git_use_branch";
+
   public static final String WORKSPACE_KEY = "tf_workspace";
   public static final String ENCRYPTED_VARIABLES_KEY = "encrypted_variables";
   public static final String ENCRYPTED_BACKEND_CONFIGS_KEY = "encrypted_backend_configs";

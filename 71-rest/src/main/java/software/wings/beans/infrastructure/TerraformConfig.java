@@ -8,6 +8,7 @@ import io.harness.persistence.PersistentEntity;
 import io.harness.persistence.UuidAware;
 import io.harness.validation.Update;
 
+import software.wings.beans.GitFileConfig;
 import software.wings.beans.NameValuePair;
 import software.wings.beans.delegation.TerraformProvisionParameters.TerraformCommand;
 
@@ -48,6 +49,7 @@ public class TerraformConfig implements PersistentEntity, UuidAware, CreatedAtAw
   private final List<NameValuePair> environmentVariables;
   private final List<String> targets;
   private final List<String> tfVarFiles;
+  private final GitFileConfig tfVarGitFileConfig;
   private final TerraformCommand command;
 
   @FdIndex private final String entityId;
