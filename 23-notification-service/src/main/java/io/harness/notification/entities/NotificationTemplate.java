@@ -1,9 +1,11 @@
 package io.harness.notification.entities;
 
 import io.harness.Team;
-import io.harness.mongo.index.*;
-import io.harness.notification.entities.NotificationTemplate.TemplateKeys;
+import io.harness.mongo.index.CompoundMongoIndex;
+import io.harness.mongo.index.MongoIndex;
 
+import com.google.common.collect.ImmutableList;
+import java.util.List;
 import lombok.Builder;
 import lombok.Data;
 import lombok.experimental.FieldNameConstants;
@@ -18,11 +20,18 @@ import org.springframework.data.mongodb.core.mapping.Document;
 @Document("notificationTemplates")
 @Entity("notificationTemplates")
 @TypeAlias("notificationTemplate")
-@NgUniqueIndex(
-    name = "unique_identifier_team_idx", fields = { @Field(TemplateKeys.identifier)
-                                                    , @Field(TemplateKeys.team) })
-@CdIndex(name = "team_idx", fields = { @Field(TemplateKeys.team) })
 public class NotificationTemplate {
+  public static List<MongoIndex> mongoIndexes() {
+    return ImmutableList.<MongoIndex>builder()
+        .add(CompoundMongoIndex.builder()
+                 .name("unique_identifier_team_idx")
+                 .unique(true)
+                 .field(TemplateKeys.identifier)
+                 .field(TemplateKeys.team)
+                 .build())
+        .add(CompoundMongoIndex.builder().name("team_idx").field(TemplateKeys.team).build())
+        .build();
+  }
   @Id @org.mongodb.morphia.annotations.Id private String id;
   private String identifier;
   @CreatedDate private long createdAt;
