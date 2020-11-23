@@ -197,9 +197,17 @@ public class GraphRendererTest extends WingsBaseTest {
     String delegateId = generateUuid();
     String delegateName = "name";
     String delegateHostname = "hostname";
+
+    Map<String, String> setupAbstractions = new HashMap<>();
+    setupAbstractions.put("key1", "value1");
+    setupAbstractions.put("key2", "value2");
+
     List<DelegateTaskDetails> delegateTaskDetailsList = new ArrayList<>();
-    delegateTaskDetailsList.add(
-        DelegateTaskDetails.builder().delegateTaskId(taskId).taskDescription("description").build());
+    delegateTaskDetailsList.add(DelegateTaskDetails.builder()
+                                    .delegateTaskId(taskId)
+                                    .taskDescription("description")
+                                    .setupAbstractions(setupAbstractions)
+                                    .build());
 
     DelegateSelectionLogParams delegateSelectionLogParams = DelegateSelectionLogParams.builder()
                                                                 .delegateId(delegateId)

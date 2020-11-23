@@ -1,5 +1,6 @@
 package io.harness.delegate.beans;
 
+import java.util.Map;
 import lombok.Builder;
 import lombok.Data;
 import lombok.experimental.FieldNameConstants;
@@ -13,6 +14,7 @@ public class DelegateTaskDetails {
   private String selectedDelegateId;
   private String selectedDelegateName;
   private String selectedDelegateHostName;
+  private Map<String, String> setupAbstractions;
   /**
    * @deprecated Use taskDescription instead.
    */
