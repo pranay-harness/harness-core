@@ -203,14 +203,6 @@ public class EventJobScheduler {
   private void runJob(String accountId, Job job, boolean runningMode) {
     try {
       BatchJobType batchJobType = BatchJobType.fromJob(job);
-      if (BatchJobType.CLUSTER_DATA_TO_BIG_QUERY == batchJobType
-          && !ImmutableSet
-                  .of("wFHXHD0RRQWoO8tIZT5YVw", "kmpySmUISimoRrJL6NL73w", "zEaak-FLS425IEO7OLzMUg",
-                      "TlKfvX4wQNmRmxkZrPXEgQ", "WhejVM7NTJe2fZ99Pdo2YA", "ctRbnV9aTXisj2xkIRquYQ",
-                      "3vgRlwVBSPKxGMtmH4uOYQ", "gXXkcdUdSaKDCh2ktXGrkA")
-                  .contains(accountId)) {
-        return;
-      }
       if (BatchJobType.INSTANCE_BILLING_AGGREGATION == batchJobType
           && !ImmutableSet
                   .of("wFHXHD0RRQWoO8tIZT5YVw", "kmpySmUISimoRrJL6NL73w", "zEaak-FLS425IEO7OLzMUg",
