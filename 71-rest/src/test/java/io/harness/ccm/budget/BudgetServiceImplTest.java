@@ -338,7 +338,7 @@ public class BudgetServiceImplTest extends CategoryTest {
   @Owner(developers = SHUBHANSHU)
   @Category(UnitTests.class)
   public void shouldGetBudgetDetails() {
-    when(statsHelper.getEntityName(any(), any())).thenReturn(entityName);
+    when(statsHelper.getEntityName(any(), any(), anyString())).thenReturn(entityName);
     QLBudgetTableData budgetDetails = budgetService.getBudgetDetails(mockBudget("APPLICATION"));
     assertThat(budgetDetails.getName()).isEqualTo(budgetName);
     assertThat(budgetDetails.getId()).isEqualTo(budgetId1);
