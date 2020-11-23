@@ -19,6 +19,7 @@ import io.harness.jira.JiraCreateMetaResponse;
 import io.harness.jira.JiraCustomFieldValue;
 import io.harness.jira.JiraField;
 import io.harness.logging.CommandExecutionStatus;
+import io.harness.network.Http;
 
 import software.wings.api.jira.JiraExecutionData;
 import software.wings.api.jira.JiraExecutionData.JiraIssueData;
@@ -62,6 +63,13 @@ import net.sf.json.JSONObject;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.NotImplementedException;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.http.HttpHost;
+import org.apache.http.auth.AuthScope;
+import org.apache.http.auth.UsernamePasswordCredentials;
+import org.apache.http.client.CredentialsProvider;
+import org.apache.http.client.HttpClient;
+import org.apache.http.impl.client.BasicCredentialsProvider;
+import org.apache.http.impl.client.HttpClientBuilder;
 
 @OwnedBy(CDC)
 @Slf4j
@@ -650,7 +658,27 @@ public class JiraTask extends AbstractDelegateRunnableTask {
     BasicCredentials creds = new BasicCredentials(jiraConfig.getUsername(), new String(jiraConfig.getPassword()));
     String baseUrl =
         jiraConfig.getBaseUrl().endsWith("/") ? jiraConfig.getBaseUrl() : jiraConfig.getBaseUrl().concat("/");
-    return new JiraClient(baseUrl, creds);
+    if (Http.getProxyHostName() != null && !Http.shouldUseNonProxy(baseUrl)) {
+      log.info("Get Proxy enabled jira client", baseUrl);
+      return new JiraClient(getProxyEnabledHttpClientForJira(), baseUrl, creds);
+    } else {
+      return new JiraClient(baseUrl, creds);
+    }
+  }
+
+  private HttpClient getProxyEnabledHttpClientForJira() {
+    HttpHost proxyHost =
+        new HttpHost(Http.getProxyHostName(), Integer.parseInt(Http.getProxyPort()), Http.getProxyScheme());
+
+    if (Http.getProxyUserName() != null && Http.getProxyPassword() != null) {
+      CredentialsProvider credentialsProvider = new BasicCredentialsProvider();
+      credentialsProvider.setCredentials(
+          new AuthScope(proxyHost), new UsernamePasswordCredentials(Http.getProxyUserName(), Http.getProxyPassword()));
+
+      log.info("Proxy enable jira client with authentication");
+      return HttpClientBuilder.create().setProxy(proxyHost).setDefaultCredentialsProvider(credentialsProvider).build();
+    }
+    return HttpClientBuilder.create().setProxy(proxyHost).build();
   }
 
   private DelegateResponseData fetchIssue(JiraTaskParameters parameters) {
