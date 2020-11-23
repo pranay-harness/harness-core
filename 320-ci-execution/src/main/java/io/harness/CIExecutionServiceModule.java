@@ -60,6 +60,7 @@ public class CIExecutionServiceModule extends AbstractModule {
     return OrchestrationModuleConfig.builder()
         .expressionEvaluatorProvider(new AmbianceExpressionEvaluatorProvider())
         .publisherName(OrchestrationNotifyEventListener.ORCHESTRATION)
+        .maxPoolSize(10)
         .build();
   }
 }
