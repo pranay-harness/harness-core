@@ -1,7 +1,6 @@
 package io.harness.integrationstage;
 
 import static io.harness.common.CICommonPodConstants.MOUNT_PATH;
-import static io.harness.common.CICommonPodConstants.POD_NAME;
 import static io.harness.common.CICommonPodConstants.STEP_EXEC;
 import static io.harness.common.CIExecutionConstants.IMAGE_PATH_SPLIT_REGEX;
 import static io.harness.common.CIExecutionConstants.PLUGIN_ENV_PREFIX;
@@ -67,16 +66,16 @@ public class BuildJobEnvInfoBuilder {
   @Inject private CIExecutionServiceConfig ciExecutionServiceConfig;
 
   public BuildJobEnvInfo getCIBuildJobEnvInfo(IntegrationStage integrationStage, CIExecutionArgs ciExecutionArgs,
-      List<ExecutionWrapper> steps, boolean isFirstPod, String buildNumber) {
-    log.info("Creating CI Build Job info for integration stage {} and build number {}",
-        integrationStage.getIdentifier(), buildNumber);
+      List<ExecutionWrapper> steps, boolean isFirstPod, String podName) {
+    log.info("Creating CI Build Job info for integration stage {} and pod name {}", integrationStage.getIdentifier(),
+        podName);
     // TODO Only kubernetes is supported currently
     if (integrationStage.getInfrastructure() == null) {
       throw new IllegalArgumentException("Input infrastructure is not set");
     }
     if (integrationStage.getInfrastructure().getType() == Infrastructure.Type.KUBERNETES_DIRECT) {
       return K8BuildJobEnvInfo.builder()
-          .podsSetupInfo(getCIPodsSetupInfo(integrationStage, ciExecutionArgs, steps, isFirstPod, buildNumber))
+          .podsSetupInfo(getCIPodsSetupInfo(integrationStage, ciExecutionArgs, steps, isFirstPod, podName))
           .workDir(getWorkingDirectory(integrationStage))
           .publishStepConnectorIdentifier(getPublishStepConnectorRefs(integrationStage))
           .build();
@@ -86,9 +85,8 @@ public class BuildJobEnvInfoBuilder {
   }
 
   private K8BuildJobEnvInfo.PodsSetupInfo getCIPodsSetupInfo(IntegrationStage integrationStage,
-      CIExecutionArgs ciExecutionArgs, List<ExecutionWrapper> steps, boolean isFirstPod, String buildNumber) {
+      CIExecutionArgs ciExecutionArgs, List<ExecutionWrapper> steps, boolean isFirstPod, String podName) {
     List<PodSetupInfo> pods = new ArrayList<>();
-    String podName = generatePodName(integrationStage);
 
     Set<Integer> usedPorts = new HashSet<>();
     PortFinder portFinder = PortFinder.builder().startingPort(PORT_STARTING_RANGE).usedPorts(usedPorts).build();
@@ -111,7 +109,7 @@ public class BuildJobEnvInfoBuilder {
                  .podSetupParams(
                      PodSetupInfo.PodSetupParams.builder().containerDefinitionInfos(containerDefinitionInfos).build())
                  .name(podName)
-                 .pvcParamsList(createPVCParams(isFirstPod, buildNumber, volumeToMountPath))
+                 .pvcParamsList(createPVCParams(isFirstPod, podName, volumeToMountPath))
                  .volumeToMountPath(volumeToMountPath)
                  .stageCpuRequest(stageCpuRequest)
                  .stageMemoryRequest(stageMemoryRequest)
@@ -122,14 +120,13 @@ public class BuildJobEnvInfoBuilder {
     return K8BuildJobEnvInfo.PodsSetupInfo.builder().podSetupInfoList(pods).build();
   }
 
-  private List<PVCParams> createPVCParams(
-      boolean isFirstPod, String buildNumber, Map<String, String> volumeToMountPath) {
+  private List<PVCParams> createPVCParams(boolean isFirstPod, String podName, Map<String, String> volumeToMountPath) {
     List<PVCParams> pvcParamsList = new ArrayList<>();
 
     for (String volumeName : volumeToMountPath.keySet()) {
       // TODO: Fix the claim name to make it unique for different stages in a build and same build number across
       // different account
-      String claimName = String.format("%s-%s", buildNumber, volumeName);
+      String claimName = String.format("%s-%s", podName, volumeName);
       pvcParamsList.add(PVCParams.builder()
                             .claimName(claimName)
                             .volumeName(volumeName)
@@ -309,11 +306,6 @@ public class BuildJobEnvInfoBuilder {
         .resourceLimitMilliCpu(getContainerCpuLimit(resource))
         .resourceLimitMemoryMiB(getContainerMemoryLimit(resource))
         .build();
-  }
-
-  private String generatePodName(IntegrationStage integrationStage) {
-    // TODO Use better pod naming strategy after discussion with PM, attach build number in future
-    return POD_NAME + "-" + integrationStage.getIdentifier() + random.nextInt(100000000);
   }
 
   private List<CustomSecretVariable> getSecretVariables(IntegrationStage integrationStage) {

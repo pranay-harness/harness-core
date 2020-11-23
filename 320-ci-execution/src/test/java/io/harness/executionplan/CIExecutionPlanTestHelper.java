@@ -315,7 +315,7 @@ public class CIExecutionPlanTestHelper {
                  .name("")
                  .pvcParamsList(Arrays.asList(PVCParams.builder()
                                                   .volumeName("step-exec")
-                                                  .claimName("buildnumber22850-step-exec")
+                                                  .claimName("buildnumber22850-2-step-exec")
                                                   .isPresent(true)
                                                   .sizeMib(PVC_DEFAULT_STORAGE_SIZE)
                                                   .storageClass(CIExecutionConstants.PVC_DEFAULT_STORAGE_CLASS)

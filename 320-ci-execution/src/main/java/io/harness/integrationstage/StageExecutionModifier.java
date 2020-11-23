@@ -17,5 +17,5 @@ public interface StageExecutionModifier {
    * @return modified execution
    */
   ExecutionElement modifyExecutionPlan(
-      ExecutionElement execution, StageType stageType, ExecutionPlanCreationContext context);
+      ExecutionElement execution, StageType stageType, ExecutionPlanCreationContext context, String podName);
 }

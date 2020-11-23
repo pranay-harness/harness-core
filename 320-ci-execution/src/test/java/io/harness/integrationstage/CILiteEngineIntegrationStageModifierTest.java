@@ -36,7 +36,7 @@ public class CILiteEngineIntegrationStageModifierTest extends CIExecutionTest {
     ExecutionPlanCreationContextImpl executionPlanCreationContextWithExecutionArgs =
         ciExecutionPlanTestHelper.getExecutionPlanCreationContextWithExecutionArgs();
     ExecutionElement modifiedExecution = stageExecutionModifier.modifyExecutionPlan(
-        stage.getExecution(), stage, executionPlanCreationContextWithExecutionArgs);
+        stage.getExecution(), stage, executionPlanCreationContextWithExecutionArgs, "podName");
     assertThat(modifiedExecution).isNotNull();
     assertThat(modifiedExecution.getSteps()).isNotNull();
     StepElement step = (StepElement) modifiedExecution.getSteps().get(0);

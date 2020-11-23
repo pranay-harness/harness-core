@@ -116,7 +116,7 @@ public class GitBuildStatusUtility {
   }
 
   private String generateDesc(String identifier, String status) {
-    return String.format("Stage %s execution status %s  ", identifier, status);
+    return String.format("Execution status of stage %s:  %s  ", identifier, status);
   }
 
   private String getGitStatus(Status status) {

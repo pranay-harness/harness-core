@@ -1,11 +1,14 @@
 package io.harness.plancreators;
 
-import static io.harness.common.CICommonPodConstants.POD_NAME;
+import static io.harness.common.CICommonPodConstants.POD_NAME_PREFIX;
 import static io.harness.common.CIExecutionConstants.CI_PIPELINE_CONFIG;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.executionplan.CIPlanCreatorType.EXECUTION_PLAN_CREATOR;
 import static io.harness.executionplan.plancreator.beans.PlanCreatorType.STAGE_PLAN_CREATOR;
 import static io.harness.states.IntegrationStageStep.CHILD_PLAN_START_NODE;
+
+import static java.lang.Character.toLowerCase;
+import static org.apache.commons.lang3.CharUtils.isAsciiAlphanumeric;
 
 import io.harness.beans.execution.BranchWebhookEvent;
 import io.harness.beans.execution.ExecutionSource;
@@ -50,7 +53,8 @@ public class IntegrationStagePlanCreator implements SupportDefinedExecutorPlanCr
   public static final String GROUP_NAME = "INTEGRATION_STAGE";
   public static final String FAILED_STATUS = "failure";
   public static final String SUCCESS_STATUS = "success";
-
+  static final String SOURCE = "123456789bcdfghjklmnpqrstvwxyz";
+  static final Integer RANDOM_LENGTH = 8;
   @Inject private ExecutionPlanCreatorHelper executionPlanCreatorHelper;
   @Inject private KryoSerializer kryoSerializer;
   @Inject private CILiteEngineIntegrationStageModifier ciLiteEngineIntegrationStageModifier;
@@ -72,7 +76,7 @@ public class IntegrationStagePlanCreator implements SupportDefinedExecutorPlanCr
 
     ExecutionElement execution = integrationStage.getExecution();
     ExecutionElement modifiedExecutionPlan =
-        ciLiteEngineIntegrationStageModifier.modifyExecutionPlan(execution, integrationStage, context);
+        ciLiteEngineIntegrationStageModifier.modifyExecutionPlan(execution, integrationStage, context, podName);
 
     integrationStage.setExecution(modifiedExecutionPlan);
     if (ciExecutionArgs.getExecutionSource() != null
@@ -81,10 +85,9 @@ public class IntegrationStagePlanCreator implements SupportDefinedExecutorPlanCr
 
       String connectorRef = retrieveConnectorRef(context);
       return createExecutionPlanForWebhookExecution(
-          integrationStage, modifiedExecutionPlan, context, buildNumber, podName, sha, connectorRef);
+          integrationStage, modifiedExecutionPlan, context, buildNumber, sha, connectorRef);
     } else {
-      return createExecutionPlanForManualExecution(
-          integrationStage, modifiedExecutionPlan, context, buildNumber, podName);
+      return createExecutionPlanForManualExecution(integrationStage, modifiedExecutionPlan, context, buildNumber);
     }
   }
 
@@ -113,13 +116,13 @@ public class IntegrationStagePlanCreator implements SupportDefinedExecutorPlanCr
 
   private ExecutionPlanCreatorResponse createExecutionPlanForManualExecution(IntegrationStage integrationStage,
       ExecutionElement modifiedExecutionPlan, ExecutionPlanCreationContext context,
-      BuildNumberDetails buildNumberDetails, String podName) {
+      BuildNumberDetails buildNumberDetails) {
     final ExecutionPlanCreatorResponse planForExecution = createPlanForExecution(modifiedExecutionPlan, context);
 
     ArrayList<AdviserObtainment> adviserObtainments = new ArrayList<>();
     // No need to send status to git in case of manual execution
-    final PlanNode integrationStageNode = prepareIntegrationStageNode(
-        integrationStage, planForExecution, podName, buildNumberDetails, adviserObtainments, null);
+    final PlanNode integrationStageNode =
+        prepareIntegrationStageNode(integrationStage, planForExecution, buildNumberDetails, adviserObtainments, null);
 
     return ExecutionPlanCreatorResponse.builder()
         .planNode(integrationStageNode)
@@ -130,7 +133,7 @@ public class IntegrationStagePlanCreator implements SupportDefinedExecutorPlanCr
 
   private ExecutionPlanCreatorResponse createExecutionPlanForWebhookExecution(IntegrationStage integrationStage,
       ExecutionElement modifiedExecutionPlan, ExecutionPlanCreationContext context,
-      BuildNumberDetails buildNumberDetails, String podName, String sha, String connectorRef) {
+      BuildNumberDetails buildNumberDetails, String sha, String connectorRef) {
     BuildStatusUpdateParameter buildStatusUpdateParameter = BuildStatusUpdateParameter.builder()
                                                                 .sha(sha)
                                                                 .connectorIdentifier(connectorRef)
@@ -140,8 +143,8 @@ public class IntegrationStagePlanCreator implements SupportDefinedExecutorPlanCr
 
     ArrayList<AdviserObtainment> adviserObtainments = new ArrayList<>();
 
-    final PlanNode integrationStageNode = prepareIntegrationStageNode(integrationStage, planForExecution, podName,
-        buildNumberDetails, adviserObtainments, buildStatusUpdateParameter);
+    final PlanNode integrationStageNode = prepareIntegrationStageNode(
+        integrationStage, planForExecution, buildNumberDetails, adviserObtainments, buildStatusUpdateParameter);
 
     // TODO Harsh Check whether we also have to add pending status
     return ExecutionPlanCreatorResponse.builder()
@@ -161,7 +164,7 @@ public class IntegrationStagePlanCreator implements SupportDefinedExecutorPlanCr
   }
 
   private PlanNode prepareIntegrationStageNode(IntegrationStage integrationStage,
-      ExecutionPlanCreatorResponse planForExecution, String podName, BuildNumberDetails buildNumberDetails,
+      ExecutionPlanCreatorResponse planForExecution, BuildNumberDetails buildNumberDetails,
       ArrayList<AdviserObtainment> adviserObtainments, BuildStatusUpdateParameter buildStatusUpdateParameter) {
     final String deploymentStageUid = generateUuid();
 
@@ -174,7 +177,6 @@ public class IntegrationStagePlanCreator implements SupportDefinedExecutorPlanCr
         .stepParameters(
             IntegrationStageStepParameters.builder()
                 .buildNumberDetails(buildNumberDetails)
-                .podName(podName)
                 .buildStatusUpdateParameter(buildStatusUpdateParameter)
                 .integrationStage(integrationStage)
                 .fieldToExecutionNodeIdMap(ImmutableMap.of(CHILD_PLAN_START_NODE, planForExecution.getStartingNodeId()))
@@ -199,7 +201,28 @@ public class IntegrationStagePlanCreator implements SupportDefinedExecutorPlanCr
   }
 
   private String generatePodName(IntegrationStage integrationStage) {
-    // TODO Use better pod naming strategy after discussion with PM, attach build number in future
-    return POD_NAME + "-" + integrationStage.getIdentifier() + random.nextInt(100000000);
+    return POD_NAME_PREFIX + "-" + getK8PodIdentifier(integrationStage.getIdentifier()) + "-"
+        + generateRandomAlphaNumbericString(RANDOM_LENGTH);
+  }
+
+  public String getK8PodIdentifier(String identifier) {
+    StringBuilder sb = new StringBuilder(15);
+    for (char c : identifier.toCharArray()) {
+      if (isAsciiAlphanumeric(c)) {
+        sb.append(toLowerCase(c));
+      }
+      if (sb.length() == 15) {
+        return sb.toString();
+      }
+    }
+    return sb.toString();
+  }
+
+  public static String generateRandomAlphaNumbericString(int length) {
+    StringBuilder sb = new StringBuilder(length);
+    for (int i = 0; i < length; i++) {
+      sb.append(SOURCE.charAt(random.nextInt(SOURCE.length())));
+    }
+    return sb.toString();
   }
 }
