@@ -20,6 +20,7 @@ import io.harness.beans.steps.stepinfo.PublishStepInfo;
 import io.harness.beans.steps.stepinfo.RestoreCacheStepInfo;
 import io.harness.beans.steps.stepinfo.RunStepInfo;
 import io.harness.beans.steps.stepinfo.SaveCacheStepInfo;
+import io.harness.beans.steps.stepinfo.TestIntelligenceStepInfo;
 import io.harness.beans.steps.stepinfo.TestStepInfo;
 import io.harness.beans.steps.stepinfo.publish.artifact.DockerFileArtifact;
 import io.harness.beans.steps.stepinfo.publish.artifact.DockerImageArtifact;
@@ -100,5 +101,6 @@ public class CIBeansAliasRegistrar implements AliasRegistrar {
     orchestrationElements.put("dependencyOutcome", DependencyOutcome.class);
     orchestrationElements.put("serviceDependency", ServiceDependency.class);
     orchestrationElements.put("serviceDependency_status", ServiceDependency.Status.class);
+    orchestrationElements.put("testIntelligenceStepInfo", TestIntelligenceStepInfo.class);
   }
 }

@@ -8,6 +8,7 @@ import io.harness.beans.steps.stepinfo.PublishStepInfo;
 import io.harness.beans.steps.stepinfo.RestoreCacheStepInfo;
 import io.harness.beans.steps.stepinfo.RunStepInfo;
 import io.harness.beans.steps.stepinfo.SaveCacheStepInfo;
+import io.harness.beans.steps.stepinfo.TestIntelligenceStepInfo;
 import io.harness.product.ci.engine.proto.Execution;
 import io.harness.product.ci.engine.proto.ParallelStep;
 import io.harness.product.ci.engine.proto.Step;
@@ -33,6 +34,7 @@ public class ExecutionProtobufSerializer implements ProtobufSerializer<Execution
   @Inject private SaveCacheStepProtobufSerializer saveCacheStepProtobufSerializer;
   @Inject private RestoreCacheStepProtobufSerializer restoreCacheStepProtobufSerializer;
   @Inject private PluginStepProtobufSerializer pluginStepProtobufSerializer;
+  @Inject private TestIntelligenceStepProtobufSerializer testIntelligenceStepProtobufSerializer;
 
   @Override
   public String serialize(ExecutionElement object) {
@@ -87,6 +89,9 @@ public class ExecutionProtobufSerializer implements ProtobufSerializer<Execution
           return restoreCacheStepProtobufSerializer.convertRestoreCacheStepInfo((RestoreCacheStepInfo) ciStepInfo);
         case PUBLISH:
           return publishStepProtobufSerializer.convertRestoreCacheStepInfo((PublishStepInfo) ciStepInfo);
+        case TEST_INTELLIGENCE:
+          return testIntelligenceStepProtobufSerializer.convertTestIntelligenceStepInfo(
+              (TestIntelligenceStepInfo) ciStepInfo);
         case CLEANUP:
         case TEST:
         case BUILD:

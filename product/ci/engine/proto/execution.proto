@@ -17,6 +17,14 @@ message PublishArtifactsStep {
   repeated BuildPublishImage images = 2;
 }
 
+message TestIntelligenceStep {
+  string goals = 1;
+  string language = 2;   // repo language for running tests. Java | Python | Go etc.
+  string buildTool = 3;  // build tool used for running tests. maven | bazel | gradle.
+  StepContext context = 4;
+  uint32 container_port = 5;  // Port of the container on which run step needs to be executed.
+}
+
 message RunStep {
   repeated string commands = 1;
   StepContext context = 2;
@@ -51,6 +59,7 @@ message UnitStep {
     RestoreCacheStep restore_cache = 5;
     PublishArtifactsStep publish_artifacts = 6;
     PluginStep plugin = 9;
+    TestIntelligenceStep testIntelligence = 10;
   }
   string callback_token = 7;
   string task_id = 8;

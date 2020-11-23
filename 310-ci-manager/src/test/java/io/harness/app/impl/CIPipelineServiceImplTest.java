@@ -11,6 +11,7 @@ import static org.mockito.Mockito.when;
 import io.harness.app.beans.dto.CIPipelineFilterDTO;
 import io.harness.beans.ParameterField;
 import io.harness.beans.stages.IntegrationStage;
+import io.harness.beans.steps.stepinfo.TestIntelligenceStepInfo;
 import io.harness.category.element.UnitTests;
 import io.harness.entitysetupusageclient.remote.EntitySetupUsageClient;
 import io.harness.ngpipeline.pipeline.beans.entities.NgPipelineEntity;
@@ -21,6 +22,7 @@ import io.harness.ngpipeline.pipeline.service.NGPipelineServiceImpl;
 import io.harness.rule.Owner;
 import io.harness.yaml.core.ExecutionElement;
 import io.harness.yaml.core.StageElement;
+import io.harness.yaml.core.StepElement;
 
 import com.google.inject.Inject;
 import java.util.Arrays;
@@ -103,7 +105,17 @@ public class CIPipelineServiceImplTest extends CIManagerTest {
 
     ExecutionElement execution = integrationStage.getExecution();
     assertThat(execution).isNotNull();
-    assertThat(execution.getSteps()).hasSize(5);
+
+    // Assert testIntelligence spec
+    StepElement stepElement = (StepElement) execution.getSteps().get(4);
+    assertThat(stepElement.getType()).isEqualTo("testIntelligence");
+    assertThat(stepElement.getIdentifier()).isEqualTo("runUnitTestsIntelligently");
+    TestIntelligenceStepInfo testIntelligenceStepInfo = (TestIntelligenceStepInfo) stepElement.getStepSpecType();
+    assertThat(testIntelligenceStepInfo.getGoals()).isEqualTo("echo \"Running test\"");
+    assertThat(testIntelligenceStepInfo.getBuildTool()).isEqualTo("maven");
+    assertThat(testIntelligenceStepInfo.getLanguage()).isEqualTo("java");
+
+    assertThat(execution.getSteps()).hasSize(6);
   }
 
   @Test

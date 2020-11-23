@@ -6,7 +6,8 @@ public enum CIContainerType {
   RUN(CIContainerSource.HARNESS_WORKER),
   PLUGIN(CIContainerSource.HARNESS_WORKER),
   SERVICE(CIContainerSource.HARNESS_WORKER),
-  LITE_ENGINE(CIContainerSource.HARNESS_WORKER);
+  LITE_ENGINE(CIContainerSource.HARNESS_WORKER),
+  TEST_INTELLIGENCE(CIContainerSource.HARNESS_WORKER);
 
   CIContainerSource ciContainerSource;
 

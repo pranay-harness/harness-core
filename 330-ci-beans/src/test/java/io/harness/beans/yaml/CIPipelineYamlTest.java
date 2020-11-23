@@ -12,6 +12,7 @@ import io.harness.beans.stages.IntegrationStage;
 import io.harness.beans.steps.stepinfo.GitCloneStepInfo;
 import io.harness.beans.steps.stepinfo.PublishStepInfo;
 import io.harness.beans.steps.stepinfo.RunStepInfo;
+import io.harness.beans.steps.stepinfo.TestIntelligenceStepInfo;
 import io.harness.beans.steps.stepinfo.publish.artifact.DockerFileArtifact;
 import io.harness.beans.steps.stepinfo.publish.artifact.connectors.GcrConnector;
 import io.harness.beans.yaml.extended.CustomSecretVariable;
@@ -111,16 +112,28 @@ public class CIPipelineYamlTest extends CIBeansTest {
                                                                                    .build())
                                                                  .build(),
                                                 StepElement.builder()
-                                                    .identifier("runUnitTests")
+                                                    .identifier("runAllUnitTests")
                                                     .type("run")
                                                     .stepSpecType(
                                                         RunStepInfo.builder()
-                                                            .identifier("runUnitTests")
+                                                            .identifier("runAllUnitTests")
                                                             .retry(2)
                                                             .timeout(30)
                                                             .command(singletonList(
                                                                 "mvn -U clean package -Dbuild.number=${BUILD_NUMBER} -DgitBranch=master -DforkMode=perthread -DthreadCount=3 -DargLine=\"-Xmx2048m\""))
                                                             .build())
+                                                    .build(),
+                                                StepElement.builder()
+                                                    .identifier("runUnitTestsIntelligently")
+                                                    .type("testIntelligence")
+                                                    .stepSpecType(TestIntelligenceStepInfo.builder()
+                                                                      .identifier("runUnitTestsIntelligently")
+                                                                      .buildTool("maven")
+                                                                      .goals("echo \"Running test\"")
+                                                                      .language("java")
+                                                                      .retry(2)
+                                                                      .timeout(30)
+                                                                      .build())
                                                     .build()
 
                                                     ))
