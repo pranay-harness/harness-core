@@ -27,9 +27,9 @@ resource "google_logging_metric" "ce_delayed_batch_job" {
 }
 
 resource "google_monitoring_alert_policy" "ce_delayed_batch_job_alert_policy" {
-  notification_channels = ((var.deployment == "prod" || var.deployment == "freemium" || var.deployment == "prod_failover") ? ["${local.slack_prod_channel}"] :
-    ((var.deployment == "qa" || var.deployment == "qa_free" || var.deployment == "stress") ? ["${local.slack_qa_channel}"] :
-  ["${local.slack_dev_channel}"]))
+  notification_channels = ((var.deployment == "prod" || var.deployment == "freemium" || var.deployment == "prod_failover") ? ["${local.slack_prod_channel}", "${local.email_prod_channel}"] :
+    ((var.deployment == "qa" || var.deployment == "qa_free" || var.deployment == "stress") ? ["${local.slack_qa_channel}", "${local.email_qa_channel}"] :
+  ["${local.slack_dev_channel}", "${local.email_dev_channel}"]))
 
   display_name = join("_", [local.name_prefix, "ce_delayed_batch_jobs"])
   combiner     = "OR"
@@ -41,7 +41,7 @@ resource "google_monitoring_alert_policy" "ce_delayed_batch_job_alert_policy" {
       duration        = "180s"
       comparison      = "COMPARISON_GT"
       aggregations {
-        group_by_fields      = ["metric.labels.batchJobType", "metric.labels.accountId"]
+        group_by_fields      = ["metric.labels.batchJobType", "metric.labels.accountId", "resource.label.project_id"]
         alignment_period     = "300s"
         per_series_aligner   = "ALIGN_SUM"
         cross_series_reducer = "REDUCE_SUM"
@@ -49,12 +49,5 @@ resource "google_monitoring_alert_policy" "ce_delayed_batch_job_alert_policy" {
     }
   }
 
-  documentation {
-    content = <<EOF
-    To troubleshoot: https://harness.atlassian.net/wiki/spaces/CE/pages/962724257/CE+Troubleshooting
-    EOF
-
-    mime_type = "text/markdown"
-  }
 
 }
