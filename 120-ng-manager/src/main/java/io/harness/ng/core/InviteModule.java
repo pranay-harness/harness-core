@@ -64,7 +64,7 @@ public class InviteModule extends AbstractModule {
   }
 
   @Provides
-  @Named("userVerificatonSecret")
+  @Named("userVerificationSecret")
   @Singleton
   protected String getUserVerificationSecret(NextGenConfiguration nextGenConfiguration) {
     return nextGenConfiguration.getNextGenConfig().getUserVerificationSecret();

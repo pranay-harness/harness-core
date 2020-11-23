@@ -47,7 +47,6 @@ import net.jodah.failsafe.RetryPolicy;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.mongodb.MongoTransactionManager;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Update;
 import org.springframework.transaction.TransactionException;
@@ -59,7 +58,8 @@ import org.springframework.transaction.support.TransactionTemplate;
 public class InvitesServiceImpl implements InvitesService {
   private static final int INVITATION_VALIDITY_IN_DAYS = 30;
   private static final int LINK_VALIDITY_IN_DAYS = 7;
-  private static final String MAIL_SUBJECT_FORMAT = "Invitation for project %s on Harness";
+  private static final String MAIL_SUBJECT_FORMAT_FOR_PROJECT = "Invitation for project %s on Harness";
+  private static final String MAIL_SUBJECT_FORMAT_FOR_ORGANIZATION = "Invitation for organisation %s on Harness";
   private final String jwtPasswordSecret;
   private final JWTGeneratorUtils jwtGeneratorUtils;
   private final MailUtils mailUtils;
@@ -75,7 +75,7 @@ public class InvitesServiceImpl implements InvitesService {
           ImmutableList.of(TransactionException.class), Duration.ofSeconds(1), 3, log);
 
   @Inject
-  public InvitesServiceImpl(@Named("baseUrl") String baseURL, @Named("userVerificatonSecret") String jwtPasswordSecret,
+  public InvitesServiceImpl(@Named("baseUrl") String baseURL, @Named("userVerificationSecret") String jwtPasswordSecret,
       MongoConfig mongoConfig, JWTGeneratorUtils jwtGeneratorUtils, MailUtils mailUtils, NgUserService ngUserService,
       TransactionTemplate transactionTemplate, InvitesRepository invitesRepository) {
     this.jwtPasswordSecret = jwtPasswordSecret;
@@ -129,9 +129,12 @@ public class InvitesServiceImpl implements InvitesService {
       return InviteOperationResponse.USER_INVITE_RESENT;
 
     } catch (DuplicateKeyException ex) {
-      throw new DuplicateFieldException(
-          String.format("Invite [%s] under account [%s], organizatino [%s] and project [%s] already exists",
-              invite.getId(), invite.getAccountIdentifier(), invite.getOrgIdentifier(), invite.getProjectIdentifier()),
+      throw new DuplicateFieldException((invite.getProjectIdentifier() == null)
+              ? String.format("Invite [%s] under account [%s] and organization [%s] already exists", invite.getId(),
+                  invite.getAccountIdentifier(), invite.getOrgIdentifier())
+              : String.format("Invite [%s] under account [%s], organization [%s] and project [%s] already exists",
+                  invite.getId(), invite.getAccountIdentifier(), invite.getOrgIdentifier(),
+                  invite.getProjectIdentifier()),
           USER_SRE, ex);
     }
   }
@@ -223,10 +226,19 @@ public class InvitesServiceImpl implements InvitesService {
   private boolean sendInvitationMail(Invite invite) {
     updateJWTTokenInInvite(invite);
     String url = String.format(verificationBaseUrl, invite.getInviteToken(), invite.getAccountIdentifier());
-    String subject = String.format(MAIL_SUBJECT_FORMAT, invite.getProjectIdentifier());
+    String subject;
+    if (invite.getProjectIdentifier() == null) {
+      subject = String.format(MAIL_SUBJECT_FORMAT_FOR_ORGANIZATION, invite.getOrgIdentifier());
+    } else {
+      subject = String.format(MAIL_SUBJECT_FORMAT_FOR_PROJECT, invite.getProjectIdentifier());
+    }
     EmailData emailData = EmailData.builder().to(ImmutableList.of(invite.getEmail())).subject(subject).build();
     emailData.setTemplateName("invite");
-    emailData.setTemplateModel(ImmutableMap.of("projectname", invite.getProjectIdentifier(), "url", url));
+    if (invite.getProjectIdentifier() == null) {
+      emailData.setTemplateModel(ImmutableMap.of("organizationname", invite.getOrgIdentifier(), "url", url));
+    } else {
+      emailData.setTemplateModel(ImmutableMap.of("projectname", invite.getProjectIdentifier(), "url", url));
+    }
     emailData.setRetries(2);
     emailData.setAccountId(invite.getAccountIdentifier());
     mailUtils.sendMailAsync(emailData);

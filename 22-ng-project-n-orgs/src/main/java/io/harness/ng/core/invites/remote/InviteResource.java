@@ -71,16 +71,17 @@ import org.springframework.data.mongodb.core.query.Criteria;
 @OwnedBy(HarnessTeam.PL)
 public class InviteResource {
   private static final String PROJECT_URL_FORMAT = "/organizations/%s/projects/%s";
+  private static final String ORG_URL_FORMAT = "/organizations/%s";
   private static final String SIGN_UP_URL = "/#/login";
   private final InvitesService invitesService;
   private final NgUserService ngUserService;
 
   @GET
-  @ApiOperation(value = "Get all invites for the queried project", nickname = "getInvites")
+  @ApiOperation(value = "Get all invites for the queried project/organization", nickname = "getInvites")
   public ResponseDTO<PageResponse<InviteDTO>> getInvites(
       @QueryParam("accountIdentifier") @NotEmpty String accountIdentifier,
       @QueryParam("orgIdentifier") @NotEmpty String orgIdentifier,
-      @QueryParam("projectIdentifier") @NotEmpty String projectIdentifier, @BeanParam PageRequest pageRequest) {
+      @QueryParam("projectIdentifier") String projectIdentifier, @BeanParam PageRequest pageRequest) {
     if (isEmpty(pageRequest.getSortOrders())) {
       SortOrder order =
           SortOrder.Builder.aSortOrder().withField(InviteKeys.createdAt, SortOrder.OrderType.DESC).build();
@@ -103,11 +104,11 @@ public class InviteResource {
   }
 
   @POST
-  @ApiOperation(value = "Add a new invite for the specified project", nickname = "sendInvite")
+  @ApiOperation(value = "Add a new invite for the specified project/organization", nickname = "sendInvite")
   public ResponseDTO<List<InviteOperationResponse>> createInvitations(
       @QueryParam("accountIdentifier") @NotNull String accountIdentifier,
       @QueryParam("orgIdentifier") @NotNull String orgIdentifier,
-      @QueryParam("projectIdentifier") @NotNull String projectIdentifier,
+      @QueryParam("projectIdentifier") String projectIdentifier,
       @NotNull @Valid CreateInviteListDTO createInviteListDTO) {
     NGAccess ngAccess = BaseNGAccess.builder()
                             .accountIdentifier(accountIdentifier)
@@ -146,13 +147,26 @@ public class InviteResource {
     if (inviteOpt.isPresent()) {
       Invite invite = inviteOpt.get();
       //      TODO @Ankush when user signup, check if he has any pending approved invites
-      URI redirectURI = invite.getDeleted()
-          ? URI.create(String.format(PROJECT_URL_FORMAT, invite.getOrgIdentifier(), invite.getProjectIdentifier()))
-          : URI.create(SIGN_UP_URL);
+      URI redirectURI = getRedirectURI(invite);
       return Response.seeOther(redirectURI).build();
     }
     FailureDTO failureDto = FailureDTO.toBody(Status.FAILURE, ErrorCode.INVALID_REQUEST, "Bad Request", null);
     return Response.status(Response.Status.BAD_REQUEST).entity(failureDto).type(MediaType.APPLICATION_JSON).build();
+  }
+
+  private URI getRedirectURI(Invite invite) {
+    URI redirectURI;
+    if (Boolean.TRUE.equals(invite.getDeleted())) {
+      if (invite.getProjectIdentifier() == null) {
+        redirectURI = URI.create(String.format(ORG_URL_FORMAT, invite.getOrgIdentifier()));
+      } else {
+        redirectURI =
+            URI.create(String.format(PROJECT_URL_FORMAT, invite.getOrgIdentifier(), invite.getProjectIdentifier()));
+      }
+    } else {
+      redirectURI = URI.create(SIGN_UP_URL);
+    }
+    return redirectURI;
   }
 
   @PUT
@@ -170,7 +184,7 @@ public class InviteResource {
   @DELETE
   @Path("/{inviteId}")
   @Consumes()
-  @ApiOperation(value = "Delete a invite for the specified project", nickname = "deleteInvite")
+  @ApiOperation(value = "Delete a invite for the specified project/organization", nickname = "deleteInvite")
   public ResponseDTO<Optional<InviteDTO>> delete(
       @PathParam("inviteId") @NotNull String inviteId, @QueryParam("accountIdentifier") String accountIdentifier) {
     Optional<Invite> inviteOptional = invitesService.deleteInvite(inviteId);
