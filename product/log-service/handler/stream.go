@@ -19,7 +19,8 @@ func HandleOpen(stream stream.Stream) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
 
-		key := r.FormValue("key")
+		accountID := r.FormValue(accountIDParam)
+		key := CreateAccountSeparatedKey(accountID, r.FormValue(keyParam))
 
 		if err := stream.Create(ctx, key); err != nil {
 			WriteInternalError(w, err)
@@ -40,7 +41,8 @@ func HandleClose(stream stream.Stream) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
 
-		key := r.FormValue("key")
+		accountID := r.FormValue(accountIDParam)
+		key := CreateAccountSeparatedKey(accountID, r.FormValue(keyParam))
 
 		if err := stream.Delete(ctx, key); err != nil {
 			WriteInternalError(w, err)
@@ -61,7 +63,8 @@ func HandleWrite(s stream.Stream) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
 
-		key := r.FormValue("key")
+		accountID := r.FormValue(accountIDParam)
+		key := CreateAccountSeparatedKey(accountID, r.FormValue(keyParam))
 
 		in := []*stream.Line{}
 		if err := json.NewDecoder(r.Body).Decode(&in); err != nil {
@@ -92,7 +95,8 @@ func HandleWrite(s stream.Stream) http.HandlerFunc {
 // the live stream.
 func HandleTail(s stream.Stream) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		key := r.FormValue("key")
+		accountID := r.FormValue(accountIDParam)
+		key := CreateAccountSeparatedKey(accountID, r.FormValue(keyParam))
 
 		h := w.Header()
 		h.Set("Content-Type", "text/event-stream")
