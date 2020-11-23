@@ -42,10 +42,8 @@ public class CILiteEngineStepGroupUtils {
   @Inject private LiteEngineTaskStepGenerator liteEngineTaskStepGenerator;
   private static final SecureRandom random = new SecureRandom();
 
-  public List<ExecutionWrapper> createExecutionWrapperWithLiteEngineSteps(
-      IntegrationStage integrationStage, CIExecutionArgs ciExecutionArgs, CodeBase ciCodebase, String accountId) {
-    String buildNumber = BUILD_NUMBER + random.nextInt(100000); // TODO Have incremental build number
-
+  public List<ExecutionWrapper> createExecutionWrapperWithLiteEngineSteps(IntegrationStage integrationStage,
+      CIExecutionArgs ciExecutionArgs, CodeBase ciCodebase, String accountId, String podName) {
     List<ExecutionWrapper> mainEngineExecutionSections = new ArrayList<>();
 
     if (integrationStage.getExecution() == null || isEmpty(integrationStage.getExecution().getSteps())) {
@@ -73,7 +71,7 @@ public class CILiteEngineStepGroupUtils {
           liteEngineCounter++;
           ExecutionWrapper liteEngineStepExecutionWrapper =
               fetchLiteEngineStepExecutionWrapper(liteEngineExecutionSections, liteEngineCounter, integrationStage,
-                  ciExecutionArgs, ciCodebase, buildNumber, usePVC, accountId);
+                  ciExecutionArgs, ciCodebase, podName, usePVC, accountId);
 
           mainEngineExecutionSections.add(liteEngineStepExecutionWrapper);
           // Also execute each lite engine step individually on main engine
@@ -89,7 +87,7 @@ public class CILiteEngineStepGroupUtils {
     if (isNotEmpty(liteEngineExecutionSections)) {
       liteEngineCounter++;
       ExecutionWrapper liteEngineStepExecutionWrapper = fetchLiteEngineStepExecutionWrapper(liteEngineExecutionSections,
-          liteEngineCounter, integrationStage, ciExecutionArgs, ciCodebase, buildNumber, usePVC, accountId);
+          liteEngineCounter, integrationStage, ciExecutionArgs, ciCodebase, podName, usePVC, accountId);
 
       mainEngineExecutionSections.add(liteEngineStepExecutionWrapper);
       // Also execute each lite engine step individually on main engine
@@ -104,10 +102,10 @@ public class CILiteEngineStepGroupUtils {
 
   private ExecutionWrapper fetchLiteEngineStepExecutionWrapper(List<ExecutionWrapper> liteEngineExecutionSections,
       Integer liteEngineCounter, IntegrationStage integrationStage, CIExecutionArgs ciExecutionArgs,
-      CodeBase ciCodebase, String buildNumber, boolean usePVC, String accountId) {
+      CodeBase ciCodebase, String podName, boolean usePVC, String accountId) {
     LiteEngineTaskStepInfo liteEngineTaskStepInfo = liteEngineTaskStepGenerator.createLiteEngineTaskStepInfo(
         ExecutionElement.builder().steps(liteEngineExecutionSections).build(), ciCodebase, integrationStage,
-        ciExecutionArgs, buildNumber, liteEngineCounter, usePVC, accountId);
+        ciExecutionArgs, podName, liteEngineCounter, usePVC, accountId);
 
     return StepElement.builder()
         .identifier(LITE_ENGINE_TASK + liteEngineCounter)

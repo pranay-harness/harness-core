@@ -30,7 +30,7 @@ public class CILiteEngineStepGroupUtilsTest extends CIExecutionTest {
     CIExecutionArgs ciExecutionArgs = ciExecutionPlanTestHelper.getCIExecutionArgs();
     List<ExecutionWrapper> executionWrapperWithLiteEngineSteps =
         ciLiteEngineStepGroupUtils.createExecutionWrapperWithLiteEngineSteps(
-            ciExecutionPlanTestHelper.getIntegrationStage(), ciExecutionArgs, null, "accountId");
+            ciExecutionPlanTestHelper.getIntegrationStage(), ciExecutionArgs, null, "accountId", "podName");
 
     List<ExecutionWrapper> expectedExecutionWrapper = ciExecutionPlanTestHelper.getExpectedExecutionWrappers();
     expectedExecutionWrapper.addAll(ciExecutionPlanTestHelper.getExpectedExecutionElement(false).getSteps());

@@ -58,7 +58,6 @@ public class IntegrationStageStepTest extends CIExecutionTest {
     IntegrationStageStepParameters stateParameters =
         IntegrationStageStepParameters.builder()
             .integrationStage(integrationStage)
-            .podName("podname")
             .buildNumberDetails(BuildNumberDetails.builder().accountIdentifier("accountId").build())
             .fieldToExecutionNodeIdMap(fieldToExecutionNodeIdMap)
             .build();

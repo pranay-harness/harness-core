@@ -13,7 +13,6 @@ import lombok.Data;
 public class IntegrationStageStepParameters implements StepParameters {
   private IntegrationStage integrationStage;
   private BuildNumberDetails buildNumberDetails;
-  private String podName;
   private BuildStatusUpdateParameter buildStatusUpdateParameter;
   private Map<String, String> fieldToExecutionNodeIdMap;
 }

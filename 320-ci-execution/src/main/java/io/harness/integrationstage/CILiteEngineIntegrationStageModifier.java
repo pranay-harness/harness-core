@@ -28,7 +28,7 @@ public class CILiteEngineIntegrationStageModifier implements StageExecutionModif
 
   @Override
   public ExecutionElement modifyExecutionPlan(
-      ExecutionElement execution, StageType stageType, ExecutionPlanCreationContext context) {
+      ExecutionElement execution, StageType stageType, ExecutionPlanCreationContext context, String podName) {
     IntegrationStage integrationStage = (IntegrationStage) stageType;
     log.info(
         "Modifying execution plan to add lite entine step for integration stage {}", integrationStage.getIdentifier());
@@ -45,14 +45,14 @@ public class CILiteEngineIntegrationStageModifier implements StageExecutionModif
                                  "Pipeline config is empty for pipeline execution " + context.getAccountId()));
 
     return getCILiteEngineTaskExecution(
-        integrationStage, ciExecutionArgs, pipeline.getCiCodebase(), context.getAccountId());
+        integrationStage, ciExecutionArgs, pipeline.getCiCodebase(), context.getAccountId(), podName);
   }
 
-  private ExecutionElement getCILiteEngineTaskExecution(
-      IntegrationStage integrationStage, CIExecutionArgs ciExecutionArgs, CodeBase ciCodebase, String accountId) {
+  private ExecutionElement getCILiteEngineTaskExecution(IntegrationStage integrationStage,
+      CIExecutionArgs ciExecutionArgs, CodeBase ciCodebase, String accountId, String podName) {
     return ExecutionElement.builder()
         .steps(ciLiteEngineStepGroupUtils.createExecutionWrapperWithLiteEngineSteps(
-            integrationStage, ciExecutionArgs, ciCodebase, accountId))
+            integrationStage, ciExecutionArgs, ciCodebase, accountId, podName))
         .build();
   }
 }
