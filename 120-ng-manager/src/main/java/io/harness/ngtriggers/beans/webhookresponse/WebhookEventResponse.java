@@ -23,4 +23,5 @@ public class WebhookEventResponse {
   private String message;
   private String planExecutionId;
   private boolean exceptionOccurred;
+  private String triggerIdentifier;
 }

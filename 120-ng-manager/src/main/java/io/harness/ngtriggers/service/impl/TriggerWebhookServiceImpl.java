@@ -16,6 +16,8 @@ import io.harness.ngtriggers.beans.entity.TriggerWebhookEvent.TriggerWebhookEven
 import io.harness.ngtriggers.beans.webhookresponse.WebhookEventResponse;
 import io.harness.ngtriggers.beans.webhookresponse.WebhookEventResponse.FinalStatus;
 import io.harness.ngtriggers.helpers.NGTriggerWebhookExecutionHelper;
+import io.harness.ngtriggers.helpers.WebhookEventResponseHelper;
+import io.harness.ngtriggers.repository.TriggerEventHistoryRepository;
 import io.harness.ngtriggers.service.NGTriggerService;
 import io.harness.ngtriggers.service.TriggerWebhookService;
 
@@ -35,6 +37,7 @@ public class TriggerWebhookServiceImpl
   @Inject private HarnessMetricRegistry harnessMetricRegistry;
   @Inject private MorphiaPersistenceRequiredProvider<TriggerWebhookEvent> persistenceProvider;
   @Inject private NGTriggerService ngTriggerService;
+  @Inject private TriggerEventHistoryRepository triggerEventHistoryRepository;
 
   @Override
   public void registerIterators() {
@@ -66,6 +69,9 @@ public class TriggerWebhookServiceImpl
       event.setAttemptCount(event.getAttemptCount() + 1);
       ngTriggerService.updateTriggerWebhookEvent(event);
     } else {
+      if (WebhookEventResponseHelper.isFinalStatusAnEvent(response.getFinalStatus())) {
+        triggerEventHistoryRepository.save(WebhookEventResponseHelper.toEntity(response));
+      }
       ngTriggerService.deleteTriggerWebhookEvent(event);
     }
   }
