@@ -1,5 +1,7 @@
 package io.harness.connector.impl;
 
+import static io.harness.NGConstants.CONNECTOR_HEARTBEAT_LOG_PREFIX;
+import static io.harness.NGConstants.CONNECTOR_STRING;
 import static io.harness.connector.entities.ConnectivityStatus.FAILURE;
 import static io.harness.connector.entities.ConnectivityStatus.SUCCESS;
 import static io.harness.utils.RestCallToNGManagerClientUtils.execute;
@@ -9,7 +11,10 @@ import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 import io.harness.beans.IdentifierRef;
 import io.harness.connector.ConnectorFilterHelper;
-import io.harness.connector.apis.dto.*;
+import io.harness.connector.apis.dto.ConnectorCatalogueResponseDTO;
+import io.harness.connector.apis.dto.ConnectorDTO;
+import io.harness.connector.apis.dto.ConnectorInfoDTO;
+import io.harness.connector.apis.dto.ConnectorResponseDTO;
 import io.harness.connector.entities.Connector;
 import io.harness.connector.entities.Connector.ConnectorKeys;
 import io.harness.connector.entities.ConnectorConnectivityDetails;
@@ -30,7 +35,9 @@ import io.harness.utils.FullyQualifiedIdentifierHelper;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
-import java.util.*;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DuplicateKeyException;
@@ -39,6 +46,8 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.mongodb.core.query.Criteria;
+import org.springframework.data.mongodb.core.query.Query;
+import org.springframework.data.mongodb.core.query.Update;
 
 @Singleton
 @AllArgsConstructor(onConstructor = @__({ @Inject }))
@@ -239,5 +248,24 @@ public class DefaultConnectorServiceImpl implements ConnectorService {
     return ConnectorCatalogueResponseDTO.builder()
         .catalogue(catalogueHelper.getConnectorTypeToCategoryMapping())
         .build();
+  }
+
+  @Override
+  public void updateConnectorEntityWithPerpetualtaskId(
+      String accountIdentifier, ConnectorInfoDTO connector, String perpetualTaskId) {
+    try {
+      String fqn = FullyQualifiedIdentifierHelper.getFullyQualifiedIdentifier(
+          accountIdentifier, connector.getOrgIdentifier(), connector.getProjectIdentifier(), connector.getIdentifier());
+      Criteria criteria = new Criteria();
+      criteria.and(ConnectorKeys.fullyQualifiedIdentifier).is(fqn);
+      Update update = new Update();
+      update.set(ConnectorKeys.heartbeatPerpetualTaskId, perpetualTaskId);
+      connectorRepository.update(new Query(criteria), update);
+    } catch (Exception ex) {
+      log.info("{} Exception while saving perpetual task id for the {}", CONNECTOR_HEARTBEAT_LOG_PREFIX,
+          String.format(CONNECTOR_STRING, connector.getIdentifier(), accountIdentifier, connector.getOrgIdentifier(),
+              connector.getProjectIdentifier()),
+          ex);
+    }
   }
 }

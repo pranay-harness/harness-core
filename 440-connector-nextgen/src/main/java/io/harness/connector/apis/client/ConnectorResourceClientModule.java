@@ -10,14 +10,14 @@ import com.google.inject.Provides;
 import com.google.inject.Scopes;
 
 public class ConnectorResourceClientModule extends AbstractModule {
-  private final ServiceHttpClientConfig secretManagerConfig;
+  private final ServiceHttpClientConfig ngManagerClientConfig;
   private final String serviceSecret;
   private final String clientId;
 
   @Inject
   public ConnectorResourceClientModule(
-      ServiceHttpClientConfig secretManagerConfig, String serviceSecret, String clientId) {
-    this.secretManagerConfig = secretManagerConfig;
+      ServiceHttpClientConfig ngManagerClientConfig, String serviceSecret, String clientId) {
+    this.ngManagerClientConfig = ngManagerClientConfig;
     this.serviceSecret = serviceSecret;
     this.clientId = clientId;
   }
@@ -25,7 +25,7 @@ public class ConnectorResourceClientModule extends AbstractModule {
   @Provides
   private ConnectorResourceHttpClientFactory secretManagerHttpClientFactory(KryoConverterFactory kryoConverterFactory) {
     return new ConnectorResourceHttpClientFactory(
-        this.secretManagerConfig, this.serviceSecret, new ServiceTokenGenerator(), kryoConverterFactory, clientId);
+        this.ngManagerClientConfig, this.serviceSecret, new ServiceTokenGenerator(), kryoConverterFactory, clientId);
   }
 
   @Override

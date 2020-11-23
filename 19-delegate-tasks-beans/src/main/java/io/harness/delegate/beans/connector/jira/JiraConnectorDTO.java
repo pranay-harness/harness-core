@@ -41,4 +41,9 @@ public class JiraConnectorDTO extends ConnectorConfigDTO implements ExecutionCap
     return Collections.singletonList(HttpConnectionExecutionCapabilityGenerator.buildHttpConnectionExecutionCapability(
         jiraUrl.endsWith("/") ? jiraUrl : jiraUrl.concat("/")));
   }
+
+  @Override
+  public DecryptableEntity getDecryptableEntity() {
+    return this;
+  }
 }

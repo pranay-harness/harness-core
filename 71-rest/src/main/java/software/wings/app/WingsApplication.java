@@ -71,6 +71,7 @@ import io.harness.perpetualtask.PerpetualTaskService;
 import io.harness.perpetualtask.PerpetualTaskServiceClientRegistry;
 import io.harness.perpetualtask.PerpetualTaskServiceImpl;
 import io.harness.perpetualtask.PerpetualTaskType;
+import io.harness.perpetualtask.connector.ConnectorHeartbeatPerpetualTaskClient;
 import io.harness.perpetualtask.ecs.EcsPerpetualTaskServiceClient;
 import io.harness.perpetualtask.example.SamplePerpetualTaskServiceClient;
 import io.harness.perpetualtask.instancesync.AwsLambdaInstanceSyncPerpetualTaskClient;
@@ -620,6 +621,8 @@ public class WingsApplication extends Application<MainConfiguration> {
         injector.getInstance(CustomDeploymentInstanceSyncClient.class));
     clientRegistry.registerClient(
         PerpetualTaskType.MANIFEST_COLLECTION, injector.getInstance(ManifestCollectionPTaskServiceClient.class));
+    clientRegistry.registerClient(
+        PerpetualTaskType.CONNECTOR_TEST_CONNECTION, injector.getInstance(ConnectorHeartbeatPerpetualTaskClient.class));
   }
 
   private void registerDatadogPublisherIfEnabled(MainConfiguration configuration) {

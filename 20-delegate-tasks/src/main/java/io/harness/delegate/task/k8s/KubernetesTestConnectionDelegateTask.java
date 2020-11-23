@@ -1,22 +1,20 @@
-package io.harness.cdng.connector.tasks;
+package io.harness.delegate.task.k8s;
 
 import io.harness.delegate.beans.DelegateTaskPackage;
 import io.harness.delegate.beans.DelegateTaskResponse;
-import io.harness.delegate.beans.connector.k8Connector.KubernetesAuthCredentialDTO;
+import io.harness.delegate.beans.connector.ConnectorConfigDTO;
+import io.harness.delegate.beans.connector.ConnectorValidationResult;
 import io.harness.delegate.beans.connector.k8Connector.KubernetesClusterConfigDTO;
-import io.harness.delegate.beans.connector.k8Connector.KubernetesClusterDetailsDTO;
 import io.harness.delegate.beans.connector.k8Connector.KubernetesConnectionTaskParams;
 import io.harness.delegate.beans.connector.k8Connector.KubernetesConnectionTaskResponse;
-import io.harness.delegate.beans.connector.k8Connector.KubernetesCredentialType;
 import io.harness.delegate.beans.logstreaming.ILogStreamingTaskClient;
 import io.harness.delegate.task.AbstractDelegateRunnableTask;
 import io.harness.delegate.task.TaskParameters;
-import io.harness.delegate.task.k8s.K8sYamlToDelegateDTOMapper;
 import io.harness.k8s.KubernetesContainerService;
-import io.harness.k8s.model.KubernetesConfig;
-import io.harness.security.encryption.SecretDecryptionService;
+import io.harness.security.encryption.EncryptedDataDetail;
 
 import com.google.inject.Inject;
+import java.util.List;
 import java.util.function.BooleanSupplier;
 import java.util.function.Consumer;
 import lombok.extern.slf4j.Slf4j;
@@ -24,9 +22,8 @@ import org.apache.commons.lang3.NotImplementedException;
 
 @Slf4j
 public class KubernetesTestConnectionDelegateTask extends AbstractDelegateRunnableTask {
-  @Inject private SecretDecryptionService secretDecryptionService;
-  @Inject private K8sYamlToDelegateDTOMapper k8sYamlToDelegateDTOMapper;
   @Inject private KubernetesContainerService kubernetesContainerService;
+  @Inject private KubernetesValidationHandler kubernetesValidationHandler;
   private static final String EMPTY_STR = "";
 
   public KubernetesTestConnectionDelegateTask(DelegateTaskPackage delegateTaskPackage,
@@ -39,36 +36,24 @@ public class KubernetesTestConnectionDelegateTask extends AbstractDelegateRunnab
   public KubernetesConnectionTaskResponse run(TaskParameters parameters) {
     KubernetesConnectionTaskParams kubernetesConnectionTaskParams = (KubernetesConnectionTaskParams) parameters;
     KubernetesClusterConfigDTO kubernetesClusterConfig = kubernetesConnectionTaskParams.getKubernetesClusterConfig();
-    if (kubernetesClusterConfig.getCredential().getKubernetesCredentialType()
-        == KubernetesCredentialType.MANUAL_CREDENTIALS) {
-      KubernetesAuthCredentialDTO kubernetesCredentialAuth = getKubernetesCredentialsAuth(
-          (KubernetesClusterDetailsDTO) kubernetesClusterConfig.getCredential().getConfig());
-      secretDecryptionService.decrypt(kubernetesCredentialAuth, kubernetesConnectionTaskParams.getEncryptionDetails());
-    }
-    Exception execptionInProcessing = null;
-    boolean validCredentials = false;
-    KubernetesConfig kubernetesConfig =
-        k8sYamlToDelegateDTOMapper.createKubernetesConfigFromClusterConfig(kubernetesClusterConfig);
-    try {
-      kubernetesContainerService.validate(kubernetesConfig);
-      validCredentials = true;
-    } catch (Exception ex) {
-      log.info("Exception while validating kubernetes credentials", ex);
-      execptionInProcessing = ex;
-    }
+    ConnectorValidationResult connectorValidationResult = kubernetesValidationHandler.validate(
+        kubernetesClusterConfig, getAccountId(), ((KubernetesConnectionTaskParams) parameters).getEncryptionDetails());
     return KubernetesConnectionTaskResponse.builder()
-        .connectionSuccessFul(validCredentials)
-        .errorMessage(execptionInProcessing != null ? execptionInProcessing.getMessage() : EMPTY_STR)
+        .connectionSuccessFul(connectorValidationResult.isValid())
+        .errorMessage(connectorValidationResult.getErrorMessage())
         .build();
-  }
-
-  private KubernetesAuthCredentialDTO getKubernetesCredentialsAuth(
-      KubernetesClusterDetailsDTO kubernetesClusterConfigDTO) {
-    return kubernetesClusterConfigDTO.getAuth().getCredentials();
   }
 
   @Override
   public KubernetesConnectionTaskResponse run(Object[] parameters) {
     throw new NotImplementedException("not implemented");
+  }
+
+  public static class KubernetesValidationHandler extends ConnectorValidationHandler {
+    @Inject private K8sTaskHelperBase k8sTaskHelperBase;
+    public ConnectorValidationResult validate(
+        ConnectorConfigDTO connector, String accountIdentifier, List<EncryptedDataDetail> encryptionDetailList) {
+      return k8sTaskHelperBase.validate(connector, accountIdentifier, encryptionDetailList);
+    }
   }
 }

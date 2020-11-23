@@ -2,6 +2,7 @@ package io.harness.connector.apis.dto;
 
 import io.harness.delegate.beans.connector.ConnectorConfigDTO;
 import io.harness.delegate.beans.connector.ConnectorType;
+import io.harness.delegate.beans.connector.ExecutionCapabilityDemanderWithScope;
 import io.harness.delegate.beans.connector.appdynamicsconnector.AppDynamicsConnectorDTO;
 import io.harness.delegate.beans.connector.artifactoryconnector.ArtifactoryConnectorDTO;
 import io.harness.delegate.beans.connector.awsconnector.AwsConnectorDTO;
@@ -14,6 +15,8 @@ import io.harness.delegate.beans.connector.localconnector.LocalConnectorDTO;
 import io.harness.delegate.beans.connector.nexusconnector.NexusConnectorDTO;
 import io.harness.delegate.beans.connector.splunkconnector.SplunkConnectorDTO;
 import io.harness.delegate.beans.connector.vaultconnector.VaultConnectorDTO;
+import io.harness.delegate.beans.executioncapability.ExecutionCapability;
+import io.harness.delegate.beans.executioncapability.ExecutionCapabilityDemander;
 import io.harness.secretmanagerclient.dto.GcpKmsConfigDTO;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
@@ -76,5 +79,16 @@ public class ConnectorInfoDTO {
     this.tags = tags;
     this.connectorType = connectorType;
     this.connectorConfig = connectorConfig;
+  }
+
+  public List<ExecutionCapability> fetchRequiredExecutionCapabilitiesForConnector(String accountIdentifier) {
+    if (this.connectorConfig instanceof ExecutionCapabilityDemanderWithScope) {
+      return ((ExecutionCapabilityDemanderWithScope) this.connectorConfig)
+          .fetchRequiredExecutionCapabilities(accountIdentifier, orgIdentifier, projectIdentifier);
+    } else if (this.connectorConfig instanceof ExecutionCapabilityDemander) {
+      return ((ExecutionCapabilityDemander) this.connectorConfig).fetchRequiredExecutionCapabilities();
+    }
+    throw new UnsupportedOperationException(
+        "The execution capability is not defined for the connector type " + connectorType);
   }
 }

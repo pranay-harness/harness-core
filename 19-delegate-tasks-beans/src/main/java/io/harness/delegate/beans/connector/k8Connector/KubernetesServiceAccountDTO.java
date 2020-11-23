@@ -8,9 +8,11 @@ import io.swagger.annotations.ApiModelProperty;
 import javax.validation.constraints.NotNull;
 import lombok.Builder;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 
 @Data
 @Builder
+@EqualsAndHashCode(callSuper = false)
 @JsonTypeName(KubernetesConfigConstants.SERVICE_ACCOUNT)
 public class KubernetesServiceAccountDTO extends KubernetesAuthCredentialDTO {
   @ApiModelProperty(dataType = "string") @NotNull @SecretReference SecretRefData serviceAccountTokenRef;

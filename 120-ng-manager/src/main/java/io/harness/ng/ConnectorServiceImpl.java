@@ -1,15 +1,21 @@
 package io.harness.ng;
 
+import static io.harness.NGConstants.CONNECTOR_HEARTBEAT_LOG_PREFIX;
 import static io.harness.NGConstants.HARNESS_SECRET_MANAGER_IDENTIFIER;
 import static io.harness.connector.ConnectorModule.DEFAULT_CONNECTOR_SERVICE;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.ng.NextGenModule.SECRET_MANAGER_CONNECTOR_SERVICE;
 
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
+
 import io.harness.connector.apis.dto.ConnectorCatalogueResponseDTO;
 import io.harness.connector.apis.dto.ConnectorDTO;
 import io.harness.connector.apis.dto.ConnectorInfoDTO;
 import io.harness.connector.apis.dto.ConnectorResponseDTO;
+import io.harness.connector.entities.Connector;
+import io.harness.connector.repositories.base.ConnectorRepository;
 import io.harness.connector.services.ConnectorActivityService;
+import io.harness.connector.services.ConnectorHeartbeatService;
 import io.harness.connector.services.ConnectorService;
 import io.harness.delegate.beans.connector.ConnectorCategory;
 import io.harness.delegate.beans.connector.ConnectorType;
@@ -34,14 +40,19 @@ public class ConnectorServiceImpl implements ConnectorService {
   private final ConnectorService defaultConnectorService;
   private final ConnectorService secretManagerConnectorService;
   private final ConnectorActivityService connectorActivityService;
+  private final ConnectorHeartbeatService connectorHeartbeatService;
+  private final ConnectorRepository connectorRepository;
 
   @Inject
   public ConnectorServiceImpl(@Named(DEFAULT_CONNECTOR_SERVICE) ConnectorService defaultConnectorService,
       @Named(SECRET_MANAGER_CONNECTOR_SERVICE) ConnectorService secretManagerConnectorService,
-      ConnectorActivityService connectorActivityService) {
+      ConnectorActivityService connectorActivityService, ConnectorHeartbeatService connectorHeartbeatService,
+      ConnectorRepository connectorRepository) {
     this.defaultConnectorService = defaultConnectorService;
     this.secretManagerConnectorService = secretManagerConnectorService;
     this.connectorActivityService = connectorActivityService;
+    this.connectorHeartbeatService = connectorHeartbeatService;
+    this.connectorRepository = connectorRepository;
   }
 
   private ConnectorService getConnectorService(ConnectorType connectorType) {
@@ -78,6 +89,7 @@ public class ConnectorServiceImpl implements ConnectorService {
         getConnectorService(connectorInfo.getConnectorType()).create(connector, accountIdentifier);
     ConnectorInfoDTO savedConnector = connectorResponse.getConnector();
     createConnectorCreationActivity(accountIdentifier, savedConnector);
+    connectorHeartbeatService.createConnectorHeatbeatTask(accountIdentifier, savedConnector);
     return connectorResponse;
   }
 
@@ -116,16 +128,17 @@ public class ConnectorServiceImpl implements ConnectorService {
     if (HARNESS_SECRET_MANAGER_IDENTIFIER.equals(connectorIdentifier)) {
       throw new InvalidRequestException("Delete operation not supported for Harness Secret Manager", USER);
     }
-    Optional<ConnectorResponseDTO> connectorDTO =
-        get(accountIdentifier, orgIdentifier, projectIdentifier, connectorIdentifier);
-    if (connectorDTO.isPresent()) {
-      ConnectorResponseDTO connectorResponse = connectorDTO.get();
-      ConnectorInfoDTO connectorInfoDTO = connectorResponse.getConnector();
+    String fullyQualifiedIdentifier = FullyQualifiedIdentifierHelper.getFullyQualifiedIdentifier(
+        accountIdentifier, orgIdentifier, projectIdentifier, connectorIdentifier);
+    Optional<Connector> connectorOptional =
+        connectorRepository.findByFullyQualifiedIdentifierAndDeletedNot(fullyQualifiedIdentifier, true);
+    if (connectorOptional.isPresent()) {
+      Connector connector = connectorOptional.get();
       boolean isConnectorDeleted =
-          getConnectorService(connectorInfoDTO.getConnectorType())
+          getConnectorService(connector.getType())
               .delete(accountIdentifier, orgIdentifier, projectIdentifier, connectorIdentifier);
-      String fullyQualifiedIdentifier = FullyQualifiedIdentifierHelper.getFullyQualifiedIdentifier(
-          accountIdentifier, orgIdentifier, projectIdentifier, connectorIdentifier);
+      deleteConnectorHeartbeatTask(
+          accountIdentifier, fullyQualifiedIdentifier, connector.getHeartbeatPerpetualTaskId());
       deleteConnectorActivities(accountIdentifier, fullyQualifiedIdentifier);
       return isConnectorDeleted;
     }
@@ -138,6 +151,16 @@ public class ConnectorServiceImpl implements ConnectorService {
     } catch (Exception ex) {
       log.info("Error while deleting connector activity", ex);
     }
+  }
+
+  private void deleteConnectorHeartbeatTask(String accountIdentifier, String connectorFQN, String heartbeatTaskId) {
+    if (isNotBlank(heartbeatTaskId)) {
+      connectorHeartbeatService.deletePerpetualTask(accountIdentifier, heartbeatTaskId, connectorFQN);
+    } else {
+      log.info("{} The perpetual task id is empty for the connector {}", CONNECTOR_HEARTBEAT_LOG_PREFIX, connectorFQN);
+    }
+    log.info(
+        "{} Deleted the heartbeat perpetual task for the connector {}", CONNECTOR_HEARTBEAT_LOG_PREFIX, connectorFQN);
   }
 
   @Override
@@ -164,6 +187,12 @@ public class ConnectorServiceImpl implements ConnectorService {
           .testConnection(accountIdentifier, orgIdentifier, projectIdentifier, connectorIdentifier);
     }
     throw new InvalidRequestException("No such connector found", USER);
+  }
+
+  @Override
+  public void updateConnectorEntityWithPerpetualtaskId(
+      String accountIdentifier, ConnectorInfoDTO connector, String perpetualTaskId) {
+    defaultConnectorService.updateConnectorEntityWithPerpetualtaskId(accountIdentifier, connector, perpetualTaskId);
   }
 
   @Override

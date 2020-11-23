@@ -157,4 +157,10 @@ public class SecretManagerConnectorServiceImpl implements ConnectorService {
   public ConnectorCatalogueResponseDTO getConnectorCatalogue() {
     return defaultConnectorService.getConnectorCatalogue();
   }
+
+  @Override
+  public void updateConnectorEntityWithPerpetualtaskId(
+      String accountIdentifier, ConnectorInfoDTO connector, String perpetualTaskId) {
+    defaultConnectorService.updateConnectorEntityWithPerpetualtaskId(accountIdentifier, connector, perpetualTaskId);
+  }
 }

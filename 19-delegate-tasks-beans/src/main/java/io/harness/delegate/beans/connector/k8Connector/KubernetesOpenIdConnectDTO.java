@@ -7,10 +7,12 @@ import com.fasterxml.jackson.annotation.JsonTypeName;
 import io.swagger.annotations.ApiModelProperty;
 import javax.validation.constraints.NotNull;
 import lombok.Builder;
+import lombok.EqualsAndHashCode;
 import lombok.Value;
 
 @Value
 @Builder
+@EqualsAndHashCode(callSuper = false)
 @JsonTypeName(KubernetesConfigConstants.OPENID_CONNECT)
 public class KubernetesOpenIdConnectDTO extends KubernetesAuthCredentialDTO {
   @NotNull String oidcIssuerUrl;

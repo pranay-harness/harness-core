@@ -6,6 +6,7 @@ import io.harness.delegate.beans.connector.gitconnector.GitAuthType;
 import io.harness.delegate.beans.connector.gitconnector.GitConnectionType;
 
 import lombok.Builder;
+import lombok.EqualsAndHashCode;
 import lombok.Value;
 import lombok.experimental.FieldNameConstants;
 import org.mongodb.morphia.annotations.Entity;
@@ -16,6 +17,7 @@ import org.springframework.data.annotation.TypeAlias;
 @Builder
 @FieldNameConstants(innerTypeName = "GitConfigKeys")
 @Entity(value = "connectors", noClassnameStored = true)
+@EqualsAndHashCode(callSuper = true)
 @TypeAlias("io.harness.connector.entities.embedded.gitconnector.GitConfig")
 @Persistent
 public class GitConfig extends Connector {

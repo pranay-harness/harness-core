@@ -18,6 +18,7 @@ import io.harness.delegate.beans.DelegateScripts;
 import io.harness.delegate.beans.DelegateTaskEvent;
 import io.harness.delegate.beans.DelegateTaskPackage;
 import io.harness.delegate.beans.DelegateTaskResponse;
+import io.harness.delegate.beans.connector.ConnectorHeartbeatDelegateResponse;
 import io.harness.delegate.task.DelegateLogContext;
 import io.harness.delegate.task.TaskLogContext;
 import io.harness.exception.WingsException;
@@ -30,6 +31,7 @@ import io.harness.managerclient.HttpsCertRequirement;
 import io.harness.managerclient.WatcherVersion;
 import io.harness.manifest.ManifestCollectionResponseHandler;
 import io.harness.perpetualtask.PerpetualTaskLogContext;
+import io.harness.perpetualtask.connector.ConnectorHearbeatPublisher;
 import io.harness.rest.RestResponse;
 import io.harness.security.annotations.DelegateAuth;
 import io.harness.serializer.KryoSerializer;
@@ -85,6 +87,7 @@ public class DelegateAgentResource {
   private ArtifactCollectionResponseHandler artifactCollectionResponseHandler;
   private InstanceHelper instanceHelper;
   private ManifestCollectionResponseHandler manifestCollectionResponseHandler;
+  private ConnectorHearbeatPublisher connectorHearbeatPublisher;
   private KryoSerializer kryoSerializer;
 
   @Inject
@@ -92,7 +95,7 @@ public class DelegateAgentResource {
       WingsPersistence wingsPersistence, DelegateRequestRateLimiter delegateRequestRateLimiter,
       SubdomainUrlHelperIntfc subdomainUrlHelper, ArtifactCollectionResponseHandler artifactCollectionResponseHandler,
       InstanceHelper instanceHelper, ManifestCollectionResponseHandler manifestCollectionResponseHandler,
-      KryoSerializer kryoSerializer) {
+      ConnectorHearbeatPublisher connectorHearbeatPublisher, KryoSerializer kryoSerializer) {
     this.instanceHelper = instanceHelper;
     this.delegateService = delegateService;
     this.accountService = accountService;
@@ -101,6 +104,7 @@ public class DelegateAgentResource {
     this.subdomainUrlHelper = subdomainUrlHelper;
     this.artifactCollectionResponseHandler = artifactCollectionResponseHandler;
     this.manifestCollectionResponseHandler = manifestCollectionResponseHandler;
+    this.connectorHearbeatPublisher = connectorHearbeatPublisher;
     this.kryoSerializer = kryoSerializer;
   }
 
@@ -421,5 +425,18 @@ public class DelegateAgentResource {
       manifestCollectionResponseHandler.handleManifestCollectionResponse(accountId, perpetualTaskId, executionResponse);
     }
     return new RestResponse<>(Boolean.TRUE);
+  }
+
+  @DelegateAuth
+  @POST
+  @Path("connectors/{perpetualTaskId}")
+  public RestResponse<Boolean> publishNGConnectorHeartbeatResult(
+      @PathParam("perpetualTaskId") @NotEmpty String perpetualTaskId,
+      @QueryParam("accountId") @NotEmpty String accountId, ConnectorHeartbeatDelegateResponse validationResult) {
+    try (AutoLogContext ignore1 = new AccountLogContext(accountId, OVERRIDE_ERROR);
+         AutoLogContext ignore2 = new PerpetualTaskLogContext(perpetualTaskId, OVERRIDE_ERROR)) {
+      connectorHearbeatPublisher.pushConnectivityCheckActivity(accountId, validationResult);
+    }
+    return new RestResponse<>(true);
   }
 }

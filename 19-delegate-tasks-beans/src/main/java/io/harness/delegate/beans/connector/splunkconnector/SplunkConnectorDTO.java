@@ -45,4 +45,9 @@ public class SplunkConnectorDTO extends ConnectorConfigDTO implements Decryptabl
     return Arrays.asList(
         HttpConnectionExecutionCapabilityGenerator.buildHttpConnectionExecutionCapability(getSplunkUrl()));
   }
+
+  @Override
+  public DecryptableEntity getDecryptableEntity() {
+    return this;
+  }
 }

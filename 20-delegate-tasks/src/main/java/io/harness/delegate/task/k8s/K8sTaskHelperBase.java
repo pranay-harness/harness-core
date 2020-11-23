@@ -36,6 +36,7 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.time.Duration.ofMinutes;
 import static java.time.Duration.ofSeconds;
 import static java.util.Collections.emptyList;
+import static java.util.Objects.isNull;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toSet;
 import static org.apache.commons.lang3.StringUtils.EMPTY;
@@ -44,6 +45,12 @@ import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 import io.harness.beans.FileData;
 import io.harness.container.ContainerInfo;
+import io.harness.delegate.beans.connector.ConnectorConfigDTO;
+import io.harness.delegate.beans.connector.ConnectorValidationResult;
+import io.harness.delegate.beans.connector.k8Connector.KubernetesAuthCredentialDTO;
+import io.harness.delegate.beans.connector.k8Connector.KubernetesClusterConfigDTO;
+import io.harness.delegate.beans.connector.k8Connector.KubernetesClusterDetailsDTO;
+import io.harness.delegate.beans.connector.k8Connector.KubernetesCredentialType;
 import io.harness.delegate.beans.storeconfig.FetchType;
 import io.harness.delegate.beans.storeconfig.GitStoreDelegateConfig;
 import io.harness.delegate.expression.DelegateExpressionEvaluator;
@@ -88,6 +95,8 @@ import io.harness.logging.CommandExecutionStatus;
 import io.harness.logging.DummyLogCallbackImpl;
 import io.harness.logging.LogCallback;
 import io.harness.logging.LogLevel;
+import io.harness.security.encryption.EncryptedDataDetail;
+import io.harness.security.encryption.SecretDecryptionService;
 import io.harness.serializer.YamlUtils;
 
 import com.google.common.annotations.VisibleForTesting;
@@ -162,6 +171,9 @@ public class K8sTaskHelperBase {
   @Inject private KubernetesHelperService kubernetesHelperService;
   @Inject private ExecutionConfigOverrideFromFileOnDelegate delegateLocalConfigService;
   @Inject private NGGitService ngGitService;
+  @Inject private SecretDecryptionService secretDecryptionService;
+  @Inject private K8sYamlToDelegateDTOMapper k8sYamlToDelegateDTOMapper;
+
   private DelegateExpressionEvaluator delegateExpressionEvaluator = new DelegateExpressionEvaluator();
 
   public static final String ISTIO_DESTINATION_TEMPLATE = "host: $ISTIO_DESTINATION_HOST_NAME\n"
@@ -1994,5 +2006,36 @@ public class K8sTaskHelperBase {
 
     gitStoreDelegateConfig.getPaths().stream().collect(
         Collectors.joining(System.lineSeparator(), "\nFetching manifest files at path: ", System.lineSeparator()));
+  }
+
+  public ConnectorValidationResult validate(
+      ConnectorConfigDTO connector, String accountIdentifier, List<EncryptedDataDetail> encryptionDetailList) {
+    KubernetesClusterConfigDTO kubernetesClusterConfig = (KubernetesClusterConfigDTO) connector;
+    if (kubernetesClusterConfig.getCredential().getKubernetesCredentialType()
+        == KubernetesCredentialType.MANUAL_CREDENTIALS) {
+      KubernetesAuthCredentialDTO kubernetesCredentialAuth = getKubernetesCredentialsAuth(
+          (KubernetesClusterDetailsDTO) kubernetesClusterConfig.getCredential().getConfig());
+      secretDecryptionService.decrypt(kubernetesCredentialAuth, encryptionDetailList);
+    }
+    Exception exceptionInProcessing = null;
+    boolean isCredentialsValid = false;
+    KubernetesConfig kubernetesConfig =
+        k8sYamlToDelegateDTOMapper.createKubernetesConfigFromClusterConfig(kubernetesClusterConfig);
+    try {
+      kubernetesContainerService.validate(kubernetesConfig);
+      isCredentialsValid = true;
+    } catch (Exception ex) {
+      log.info("Exception while validating kubernetes credentials", ex);
+      exceptionInProcessing = ex;
+    }
+    return ConnectorValidationResult.builder()
+        .errorMessage(isNull(exceptionInProcessing) ? null : exceptionInProcessing.getMessage())
+        .valid(isCredentialsValid)
+        .build();
+  }
+
+  private KubernetesAuthCredentialDTO getKubernetesCredentialsAuth(
+      KubernetesClusterDetailsDTO kubernetesClusterConfigDTO) {
+    return kubernetesClusterConfigDTO.getAuth().getCredentials();
   }
 }

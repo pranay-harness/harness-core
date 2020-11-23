@@ -3,6 +3,8 @@ package io.harness.perpetualtask;
 import io.harness.perpetualtask.PerpetualTaskServiceGrpc.PerpetualTaskServiceBlockingStub;
 import io.harness.perpetualtask.artifact.ArtifactCollectionTaskParams;
 import io.harness.perpetualtask.artifact.ArtifactPerpetualTaskExecutor;
+import io.harness.perpetualtask.connector.ConnectorHeartbeatPerpetualTaskExecutor;
+import io.harness.perpetualtask.connector.ConnectorHeartbeatTaskParams;
 import io.harness.perpetualtask.datacollection.DataCollectionPerpetualTaskExecutor;
 import io.harness.perpetualtask.datacollection.DataCollectionPerpetualTaskParams;
 import io.harness.perpetualtask.datacollection.K8ActivityCollectionPerpetualTaskExecutor;
@@ -72,7 +74,8 @@ public class PerpetualTaskWorkerModule extends AbstractModule {
     mapBinder.addBinding(CustomDeploymentInstanceSyncTaskParams.class.getSimpleName())
         .to(CustomDeploymentPerpetualTaskExecutor.class);
     mapBinder.addBinding(ManifestCollectionTaskParams.class.getSimpleName()).to(ManifestPerpetualTaskExecutor.class);
-
+    mapBinder.addBinding(ConnectorHeartbeatTaskParams.class.getSimpleName())
+        .to(ConnectorHeartbeatPerpetualTaskExecutor.class);
     install(new FactoryModuleBuilder()
                 .implement(PodWatcher.class, PodWatcher.class)
                 .implement(NodeWatcher.class, NodeWatcher.class)

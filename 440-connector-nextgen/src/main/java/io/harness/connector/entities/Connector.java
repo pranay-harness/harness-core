@@ -55,6 +55,7 @@ public abstract class Connector implements PersistentEntity, NGAccountAccess {
   @Version Long version;
   ConnectorConnectivityDetails status;
   Boolean deleted = Boolean.FALSE;
+  String heartbeatPerpetualTaskId;
 
   public enum Scope { ACCOUNT, ORGANIZATION, PROJECT }
 

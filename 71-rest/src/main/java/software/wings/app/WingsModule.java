@@ -38,6 +38,7 @@ import io.harness.ccm.views.service.impl.CEViewServiceImpl;
 import io.harness.ccm.views.service.impl.ViewCustomFieldServiceImpl;
 import io.harness.ccm.views.service.impl.ViewsBillingServiceImpl;
 import io.harness.config.PipelineConfig;
+import io.harness.connector.apis.client.ConnectorResourceClientModule;
 import io.harness.cvng.CVNextGenCommonsServiceModule;
 import io.harness.cvng.perpetualtask.CVDataCollectionTaskService;
 import io.harness.cvng.perpetualtask.CVDataCollectionTaskServiceImpl;
@@ -64,6 +65,7 @@ import io.harness.encryptors.managerproxy.ManagerCustomEncryptor;
 import io.harness.encryptors.managerproxy.ManagerKmsEncryptor;
 import io.harness.encryptors.managerproxy.ManagerVaultEncryptor;
 import io.harness.engine.expressions.AmbianceExpressionEvaluatorProvider;
+import io.harness.entityactivity.EntityActivityClientModule;
 import io.harness.event.handler.impl.segment.SegmentGroupEventJobService;
 import io.harness.event.handler.impl.segment.SegmentGroupEventJobServiceImpl;
 import io.harness.event.reconciliation.service.DeploymentReconService;
@@ -1190,6 +1192,10 @@ public class WingsModule extends AbstractModule implements ServersModule {
     install(new PerpetualTaskServiceModule());
     install(new CESetupServiceModule());
     install(new CVNextGenCommonsServiceModule());
+    install(new EntityActivityClientModule(configuration.getNgManagerServiceHttpClientConfig(),
+        configuration.getPortal().getJwtNextGenManagerSecret(), MANAGER.getServiceId()));
+    install(new ConnectorResourceClientModule(configuration.getNgManagerServiceHttpClientConfig(),
+        configuration.getPortal().getJwtNextGenManagerSecret(), MANAGER.getServiceId()));
     install(new OrganizationManagementClientModule(configuration.getNgManagerServiceHttpClientConfig(),
         configuration.getPortal().getJwtNextGenManagerSecret(), MANAGER.getServiceId()));
 

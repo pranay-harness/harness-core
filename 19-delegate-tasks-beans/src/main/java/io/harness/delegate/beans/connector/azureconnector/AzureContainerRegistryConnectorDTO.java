@@ -1,5 +1,6 @@
 package io.harness.delegate.beans.connector.azureconnector;
 
+import io.harness.beans.DecryptableEntity;
 import io.harness.delegate.beans.connector.ConnectorConfigDTO;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.delegate.beans.executioncapability.ExecutionCapabilityDemander;
@@ -34,5 +35,10 @@ public class AzureContainerRegistryConnectorDTO extends ConnectorConfigDTO imple
   public List<ExecutionCapability> fetchRequiredExecutionCapabilities() {
     return Collections.singletonList(HttpConnectionExecutionCapabilityGenerator.buildHttpConnectionExecutionCapability(
         azureRegistryLoginServer.endsWith("/") ? azureRegistryLoginServer : azureRegistryLoginServer.concat("/")));
+  }
+
+  @Override
+  public DecryptableEntity getDecryptableEntity() {
+    return null;
   }
 }

@@ -1,6 +1,5 @@
 package io.harness.delegate.task.git;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.eraro.ErrorCode.GIT_CONNECTION_ERROR;
 import static io.harness.eraro.ErrorCode.GIT_DIFF_COMMIT_NOT_IN_ORDER;
 import static io.harness.eraro.ErrorCode.GIT_UNSEEN_REMOTE_HEAD_COMMIT;
@@ -9,6 +8,8 @@ import static io.harness.git.Constants.GIT_YAML_LOG_PREFIX;
 import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.delegate.beans.DelegateTaskPackage;
 import io.harness.delegate.beans.DelegateTaskResponse;
+import io.harness.delegate.beans.connector.ConnectorConfigDTO;
+import io.harness.delegate.beans.connector.ConnectorValidationResult;
 import io.harness.delegate.beans.connector.gitconnector.GitConfigDTO;
 import io.harness.delegate.beans.git.GitCommandExecutionResponse;
 import io.harness.delegate.beans.git.GitCommandExecutionResponse.GitCommandStatus;
@@ -18,6 +19,7 @@ import io.harness.delegate.beans.logstreaming.ILogStreamingTaskClient;
 import io.harness.delegate.git.NGGitService;
 import io.harness.delegate.task.AbstractDelegateRunnableTask;
 import io.harness.delegate.task.TaskParameters;
+import io.harness.delegate.task.k8s.ConnectorValidationHandler;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
 import io.harness.git.model.CommitAndPushRequest;
@@ -37,6 +39,7 @@ import org.apache.commons.lang3.NotImplementedException;
 public class NGGitCommandTask extends AbstractDelegateRunnableTask {
   @Inject private SecretDecryptionService decryptionService;
   @Inject private NGGitService gitService;
+  @Inject private GitCommandTaskHandler gitCommandTaskHandler;
 
   public NGGitCommandTask(DelegateTaskPackage delegateTaskPackage, ILogStreamingTaskClient logStreamingTaskClient,
       Consumer<DelegateTaskResponse> consumer, BooleanSupplier preExecute) {
@@ -60,7 +63,7 @@ public class NGGitCommandTask extends AbstractDelegateRunnableTask {
     try {
       switch (gitCommandType) {
         case VALIDATE:
-          return handleValidateTask(gitConfig);
+          return gitCommandTaskHandler.handleValidateTask(gitConfig, getAccountId());
         case COMMIT_AND_PUSH:
           return handleCommitAndPush(gitCommandParams, gitConfig);
         default:
@@ -92,19 +95,6 @@ public class NGGitCommandTask extends AbstractDelegateRunnableTask {
         .build();
   }
 
-  private DelegateResponseData handleValidateTask(GitConfigDTO gitConfig) {
-    log.info("Processing Git command: VALIDATE");
-    String errorMessage = gitService.validate(gitConfig, getAccountId());
-    if (isEmpty(errorMessage)) {
-      return GitCommandExecutionResponse.builder().gitCommandStatus(GitCommandStatus.SUCCESS).build();
-    } else {
-      return GitCommandExecutionResponse.builder()
-          .gitCommandStatus(GitCommandStatus.FAILURE)
-          .errorMessage(errorMessage)
-          .build();
-    }
-  }
-
   private ErrorCode getErrorCode(Exception ex) {
     if (ex instanceof WingsException) {
       final WingsException we = (WingsException) ex;
@@ -120,5 +110,14 @@ public class NGGitCommandTask extends AbstractDelegateRunnableTask {
       }
     }
     return null;
+  }
+
+  public static class GitValidationHandler extends ConnectorValidationHandler {
+    @Inject private GitCommandTaskHandler gitCommandTaskHandler;
+    public ConnectorValidationResult validate(
+        ConnectorConfigDTO connector, String accountIdentifier, List<EncryptedDataDetail> encryptionDetailList) {
+      return gitCommandTaskHandler.validateGitCredentials(
+          (GitConfigDTO) connector, accountIdentifier, encryptionDetailList);
+    }
   }
 }
