@@ -65,12 +65,12 @@ managerClientConfig:
 
 smtp:
   type: SMTP
-  host: smtp.sendgrid.net
+  host: host_placeholder
   port: 465
-  fromAddress: ankush.shaw@harness.io
+  fromAddress: noreply@harness.io
   useSSL: true
-  username: apikey
-  password: "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"
+  username: smtp_username_placeholder
+  password: "smtp_password_placeholder"
 
 notificationClient:
   messageBroker:

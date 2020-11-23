@@ -16,6 +16,7 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import java.io.IOException;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import javax.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
@@ -76,16 +77,14 @@ public class NotificationTemplateServiceImpl implements NotificationTemplateServ
   @Override
   public Optional<String> getTemplateAsString(String identifier, Team team) {
     Optional<NotificationTemplate> templateOptional = getByIdentifierAndTeam(identifier, team);
+    if (Objects.nonNull(team) && !templateOptional.isPresent()) {
+      templateOptional = getPredefinedTemplate(identifier);
+    }
     if (templateOptional.isPresent()) {
       NotificationTemplate template = templateOptional.get();
       return Optional.of(new String(template.getFile()));
     }
     return Optional.empty();
-  }
-
-  @Override
-  public Optional<String> getTemplateAsString(String identifier) {
-    return getTemplateAsString(identifier, null);
   }
 
   @Override
@@ -98,5 +97,10 @@ public class NotificationTemplateServiceImpl implements NotificationTemplateServ
   @Override
   public void dropPredefinedTemplates() {
     notificationTemplateRepository.deleteByTeam(null);
+  }
+
+  @Override
+  public Optional<NotificationTemplate> getPredefinedTemplate(String identifier) {
+    return notificationTemplateRepository.findByIdentifierAndTeamExists(identifier, false);
   }
 }

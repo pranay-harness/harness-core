@@ -14,5 +14,7 @@ public interface NotificationTemplateRepository extends PagingAndSortingReposito
 
   Optional<NotificationTemplate> findByIdentifierAndTeam(String identifier, Team team);
 
+  Optional<NotificationTemplate> findByIdentifierAndTeamExists(String identifier, boolean teamExists);
+
   void deleteByTeam(Team team);
 }

@@ -1,7 +1,0 @@
-*Approval Required*
->*Approval Step*: <${workflowUrl}|${pausedStageName}>
->*Workflow* : ${workflowExecutionName}
->*Application* : ${appName}
->*Services* : ${services}
->*Environments* : ${environments}
->*Artifacts* : ${artifacts}
