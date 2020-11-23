@@ -3,6 +3,7 @@ package io.harness.pms.beans.resources;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import io.swagger.annotations.ApiModel;
+import java.util.List;
 import java.util.Map;
 import lombok.Builder;
 import lombok.Value;
@@ -19,4 +20,7 @@ public class PMSPipelineSummaryResponseDTO {
   String description;
   Map<String, String> tags;
   @Version Long version;
+  int numOfStages;
+  int numOfErrors; // total number of errors in the last ten days
+  List<Integer> deployments; // no of deployments for each of the last 10 days, most recent first
 }
