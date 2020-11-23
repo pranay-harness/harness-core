@@ -1,9 +1,9 @@
 package io.harness.notification.eventbackbone;
 
 import io.harness.NotificationRequest;
-import io.harness.mongo.queue.NGMongoQueueConsumer;
 import io.harness.ng.MongoNotificationRequest;
 import io.harness.notification.service.api.NotificationService;
+import io.harness.queue.QueueConsumer;
 import io.harness.queue.QueueListener;
 
 import com.google.inject.Inject;
@@ -15,7 +15,7 @@ public class MongoMessageConsumer extends QueueListener<MongoNotificationRequest
   @Inject private NotificationService notificationService;
 
   @Inject
-  public MongoMessageConsumer(NGMongoQueueConsumer<MongoNotificationRequest> queueConsumer) {
+  public MongoMessageConsumer(QueueConsumer<MongoNotificationRequest> queueConsumer) {
     super(queueConsumer, true);
   }
 

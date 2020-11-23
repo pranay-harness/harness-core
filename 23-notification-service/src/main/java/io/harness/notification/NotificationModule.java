@@ -65,6 +65,14 @@ public class NotificationModule extends AbstractModule {
 
       @Provides
       @Singleton
+      @Named("notification-channel")
+      MongoBackendConfiguration getMongoBackendConfiguration(NotificationConfiguration notificationConfiguration) {
+        return (MongoBackendConfiguration) notificationConfiguration.getNotificationClientConfiguration()
+            .getNotificationClientBackendConfiguration();
+      }
+
+      @Provides
+      @Singleton
       Set<Class<? extends MorphiaRegistrar>> morphiaRegistrars() {
         return ImmutableSet.<Class<? extends MorphiaRegistrar>>builder()
             .addAll(NotificationRegistrars.morphiaRegistrars)
