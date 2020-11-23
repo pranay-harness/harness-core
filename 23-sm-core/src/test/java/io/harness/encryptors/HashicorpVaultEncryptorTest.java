@@ -119,7 +119,7 @@ public class HashicorpVaultEncryptorTest extends CategoryTest {
       hashicorpVaultEncryptor.createSecret(vaultConfig.getAccountId(), name, plainText, vaultConfig);
       fail("Create Secret should fail");
     } catch (SecretManagementDelegateException e) {
-      assertThat(e.getMessage()).isEqualTo("Encryption request for " + name + " was not successful.");
+      assertThat(e.getMessage()).isEqualTo("encryption failed after 3 retries for vault secret " + name);
     }
   }
 
@@ -184,7 +184,7 @@ public class HashicorpVaultEncryptorTest extends CategoryTest {
       hashicorpVaultEncryptor.updateSecret(vaultConfig.getAccountId(), name, plainText, oldRecord, vaultConfig);
       fail("Update Secret should fail");
     } catch (SecretManagementDelegateException e) {
-      assertThat(e.getMessage()).isEqualTo("Encryption request for " + name + " was not successful.");
+      assertThat(e.getMessage()).isEqualTo("encryption failed after 3 retries for vault secret " + name);
     }
   }
 
@@ -227,9 +227,7 @@ public class HashicorpVaultEncryptorTest extends CategoryTest {
     try {
       hashicorpVaultEncryptor.renameSecret(vaultConfig.getAccountId(), name, oldRecord, vaultConfig);
     } catch (SecretManagementDelegateException e) {
-      assertThat(e.getMessage())
-          .isEqualTo(
-              "Secret key path '" + vaultConfig.getBasePath() + "/" + oldRecord.getEncryptionKey() + "' is invalid.");
+      assertThat(e.getMessage()).isEqualTo("encryption failed after 3 retries for vault secret " + name);
     }
   }
 
@@ -300,8 +298,7 @@ public class HashicorpVaultEncryptorTest extends CategoryTest {
       fail("Fetch secret should throw exception");
     } catch (SecretManagementDelegateException e) {
       assertThat(e.getMessage())
-          .isEqualTo(
-              "Secret key path '" + vaultConfig.getBasePath() + "/" + record.getEncryptionKey() + "' is invalid.");
+          .isEqualTo("Decryption failed after 3 retries for secret " + record.getEncryptionKey() + " or path null");
     }
   }
 }
