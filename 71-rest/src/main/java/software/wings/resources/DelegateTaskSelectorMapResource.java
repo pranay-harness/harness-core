@@ -43,7 +43,6 @@ public class DelegateTaskSelectorMapResource {
   @GET
   @Timed
   @ExceptionMetered
-  @AuthRule(permissionType = MANAGE_DELEGATES)
   public RestResponse<List<TaskSelectorMap>> list(@QueryParam("accountId") @NotEmpty String accountId) {
     return new RestResponse<>(selectorMapService.list(accountId));
   }
