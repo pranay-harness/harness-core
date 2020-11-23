@@ -29,4 +29,5 @@ public class QLStartExecutionInput implements QLMutationInput {
   boolean excludeHostsWithSameArtifact;
   boolean targetToSpecificHosts;
   List<String> specificHosts;
+  boolean continueWithDefaultValues;
 }

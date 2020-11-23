@@ -1,0 +1,43 @@
+{
+  "clientMutationId": null,
+  "applicationId": "nCLN8c84SqWPr44sqg65JQ",
+  "pipelineExecutionId": "ANWw9-y4QO67own792ab1g",
+  "pipelineStageElementId": "KZPqXENuRbKqkuISe07JAQ",
+  "variableInputs": [
+    {
+      "name": "env",
+      "variableValue": {
+        "type": "NAME",
+        "value": "Production"
+      }
+    },
+    {
+      "name": "infra",
+      "variableValue": {
+        "type": "NAME",
+        "value": "prod"
+      }
+    },
+    {
+      "name": "service",
+      "variableValue": {
+        "type": "NAME",
+        "value": "hello"
+      }
+    }
+  ],
+  "serviceInputs": [
+    {
+      "name": "hello",
+      "artifactValueInput": {
+        "valueType": "BUILD_NUMBER",
+        "artifactId": null,
+        "buildNumber": {
+          "artifactSourceName": "deepakputhraya_python-hello",
+          "buildNumber": "v3.0"
+        },
+        "parameterizedArtifactSource": null
+      }
+    }
+  ]
+}

@@ -147,7 +147,7 @@
         "stateUuid" : "KZPqXENuRbKqkuISe07JAQ",
         "stateName" : "template-wf",
         "stateType" : "ENV_STATE",
-        "status" : "FAILED",
+        "status" : "PAUSED",
         "startTs" : 1602885441641,
         "expiryTs" : 9223372036854775807,
         "endTs" : 1602885444642,

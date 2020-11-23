@@ -22,4 +22,5 @@ public class QLPipelineAction implements QLTriggerAction {
   String pipelineName;
   List<QLTriggerVariableValue> variables;
   List<QLArtifactSelection> artifactSelections;
+  private Boolean continueWithDefaultValues;
 }

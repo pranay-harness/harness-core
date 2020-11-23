@@ -1062,7 +1062,10 @@ public class TriggerServiceImpl implements TriggerService {
     if (templatizedEnvName != null) {
       log.info("One of the environment is parameterized in the pipeline and Variable name {}", templatizedEnvName);
       String envNameOrId = triggerWorkflowVariableValues.get(templatizedEnvName);
-      if (envNameOrId == null) {
+      if (envNameOrId == null
+          && pipelineVariables.stream()
+                 .filter(v -> Boolean.TRUE.equals(v.getRuntimeInput()))
+                 .noneMatch(v -> v.getName().equals(templatizedEnvName))) {
         String msg = "Pipeline contains environment as variable [" + templatizedEnvName
             + "]. However, there is no mapping associated in the trigger."
             + " Please update the trigger";
@@ -1073,7 +1076,9 @@ public class TriggerServiceImpl implements TriggerService {
     }
 
     resolveServices(trigger, triggerWorkflowVariableValues, pipelineVariables);
-    resolveInfraDefinitions(trigger.getAppId(), triggerWorkflowVariableValues, envId, pipelineVariables);
+    if (StringUtils.isNotBlank(envId)) {
+      resolveInfraDefinitions(trigger.getAppId(), triggerWorkflowVariableValues, envId, pipelineVariables);
+    }
 
     executionArgs.setWorkflowVariables(triggerWorkflowVariableValues);
 
@@ -1092,6 +1097,12 @@ public class TriggerServiceImpl implements TriggerService {
     List<String> serviceWorkflowVariables = getServiceWorkflowVariables(variables);
     for (String serviceVarName : serviceWorkflowVariables) {
       String serviceIdOrName = triggerVariableValues.get(serviceVarName);
+      if (serviceIdOrName == null
+          && variables.stream()
+                 .filter(v -> Boolean.TRUE.equals(v.getRuntimeInput()))
+                 .anyMatch(v -> v.getName().equals(serviceVarName))) {
+        continue;
+      }
       notNullCheck("There is no corresponding Workflow Variable associated to service", serviceIdOrName);
       log.info("Checking  service {} can be found by id first.", serviceIdOrName);
       Service service = serviceResourceService.get(trigger.getAppId(), serviceIdOrName, false);
@@ -1106,6 +1117,9 @@ public class TriggerServiceImpl implements TriggerService {
 
   private String resolveEnvId(Trigger trigger, String envNameOrId) {
     Environment environment;
+    if (StringUtils.isBlank(envNameOrId)) {
+      return envNameOrId;
+    }
     log.info("Checking  environment {} can be found by id first.", envNameOrId);
     environment = environmentService.get(trigger.getAppId(), envNameOrId);
     if (environment == null) {
@@ -2244,7 +2258,10 @@ public class TriggerServiceImpl implements TriggerService {
       }
       String envId = workflowVariables.get(templatizedEnvVariableName);
       if (isEmpty(envId)) {
-        if (existing) {
+        if (existing
+            || variables.stream()
+                   .filter(variable -> Boolean.TRUE.equals(variable.getRuntimeInput()))
+                   .anyMatch(v -> v.getName().equals(templatizedEnvVariableName))) {
           return;
         }
         throw new WingsException("Environment is parameterized. Please select a value in the format ${varName}.", USER);

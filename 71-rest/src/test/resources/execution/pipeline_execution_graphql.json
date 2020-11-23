@@ -1,0 +1,278 @@
+{
+  "uuid": "ANWw9-y4QO67own792ab1g",
+  "appId": "nCLN8c84SqWPr44sqg65JQ",
+  "createdBy": {
+    "uuid": "lv0euRhKRCyiXWzS7pOg6g",
+    "name": "Admin",
+    "email": "admin@harness.io"
+  },
+  "createdByType": "USER",
+  "createdAt": 1605858500706,
+  "accountId": "kmpySmUISimoRrJL6NL73w",
+  "workflowId": "nYTmfZAITqeRj67IUo7vxw",
+  "stateMachineId": null,
+  "envId": null,
+  "envIds": null,
+  "workflowIds": [
+    "9zhGmY7FTlSnj2ALPvPTOQ"
+  ],
+  "cloudProviderIds": null,
+  "serviceIds": null,
+  "infraMappingIds": null,
+  "infraDefinitionIds": null,
+  "appName": "Puthraya App",
+  "envName": null,
+  "envType": null,
+  "workflowType": "PIPELINE",
+  "status": "PAUSED",
+  "graph": null,
+  "executionNode": null,
+  "pipelineExecution": {
+    "uuid": null,
+    "appId": null,
+    "createdBy": null,
+    "createdAt": 0,
+    "pipelineId": "nYTmfZAITqeRj67IUo7vxw",
+    "workflowExecutionId": null,
+    "stateMachineId": null,
+    "pipeline": {
+      "name": "template-pipe",
+      "description": null,
+      "pipelineStages": [
+        {
+          "name": "STAGE 2",
+          "parallel": false,
+          "pipelineStageElements": [
+            {
+              "uuid": "KZPqXENuRbKqkuISe07JAQ",
+              "name": "template-wf",
+              "type": "ENV_LOOP_STATE",
+              "parallelIndex": 1,
+              "properties": {
+                "workflowVariables": {
+                  "Environment": "${env}",
+                  "ServiceId": "${service}",
+                  "InfraDefinition_KUBERNETES": "${infra}",
+                  "message": "Hello Harness! This is a test message",
+                  "buildNumber": "",
+                  "xxz": ""
+                },
+                "pipelineStageElementId": "KZPqXENuRbKqkuISe07JAQ",
+                "timeoutAction": "END_EXECUTION",
+                "envId": "${env}",
+                "pipelineStageParallelIndex": 1,
+                "userGroupIds": [
+                  "8u4n0jVISS2zv8LFRuj2uw"
+                ],
+                "timeout": 86400000,
+                "pipelineId": "nYTmfZAITqeRj67IUo7vxw",
+                "runtimeInputVariables": [
+                  "InfraDefinition_KUBERNETES",
+                  "Environment",
+                  "ServiceId"
+                ],
+                "loopedValues": [
+                  "${infra}"
+                ],
+                "stageName": "STAGE 2",
+                "disable": false,
+                "loopedVarName": "InfraDefinition_KUBERNETES",
+                "disableAssertion": null,
+                "workflowId": "9zhGmY7FTlSnj2ALPvPTOQ"
+              },
+              "workflowVariables": {
+                "Environment": "${env}",
+                "InfraDefinition_KUBERNETES": "${infra}",
+                "xxz": "",
+                "message": "Hello Harness! This is a test message",
+                "buildNumber": "",
+                "ServiceId": "${service}"
+              },
+              "runtimeInputsConfig": {
+                "runtimeInputVariables": [
+                  "InfraDefinition_KUBERNETES",
+                  "Environment",
+                  "ServiceId"
+                ],
+                "timeout": 86400000,
+                "userGroupIds": [
+                  "8u4n0jVISS2zv8LFRuj2uw"
+                ],
+                "timeoutAction": "END_EXECUTION"
+              },
+              "disable": false,
+              "disableAssertion": null,
+              "valid": true,
+              "validationMessage": null
+            }
+          ],
+          "valid": true,
+          "validationMessage": null,
+          "looped": false,
+          "loopedVarName": null
+        }
+      ],
+      "stateEtaMap": {
+        "9vo3SDyvR3GkxvjWZqNc1Q": 20405,
+        "WWnrrBOhQ56zEUumOFR3eQ": 16014,
+        "Amf4goKQRMyyZURDFNlIDA": 17019,
+        "A7gb8lOJShGMxh-2v3PTDg": 13964,
+        "6QUnyRu_RD26tK3ufYBA4g": 13995
+      },
+      "services": [],
+      "workflowExecutions": [],
+      "valid": true,
+      "validationMessage": null,
+      "templatized": false,
+      "hasSshInfraMapping": false,
+      "failureStrategies": [],
+      "pipelineVariables": [],
+      "envIds": [],
+      "workflowIds": [],
+      "envParameterized": false,
+      "deploymentTypes": [],
+      "envSummaries": [],
+      "hasBuildWorkflow": false,
+      "infraMappingIds": [],
+      "infraDefinitionIds": [],
+      "keywords": [
+        "pipeline",
+        "template-rolling-k8s-wf",
+        "template-pipe",
+        "admin@harness.io",
+        "admin"
+      ],
+      "accountId": "kmpySmUISimoRrJL6NL73w",
+      "sample": false,
+      "tagLinks": null,
+      "uuid": "2uSlW1nhT6ec0fZ5-BWM4g_embedded",
+      "appId": "nCLN8c84SqWPr44sqg65JQ",
+      "createdBy": {
+        "uuid": "lv0euRhKRCyiXWzS7pOg6g",
+        "name": "Admin",
+        "email": "admin@harness.io"
+      },
+      "createdAt": 1598928200572,
+      "lastUpdatedAt": 1605858501739
+    },
+    "pipelineStageExecutions": [
+      {
+        "pipelineStageElementId": "KZPqXENuRbKqkuISe07JAQ",
+        "stateUuid": "KZPqXENuRbKqkuISe07JAQ",
+        "stateName": "template-wf",
+        "stateType": "ENV_LOOP_STATE",
+        "status": "PAUSED",
+        "startTs": 1605858501157,
+        "expiryTs": 1605944901666,
+        "endTs": null,
+        "estimatedTime": null,
+        "workflowExecutions": [],
+        "stateExecutionData": null,
+        "message": null,
+        "looped": false,
+        "waitingForInputs": true,
+        "parallelInfo": {
+          "groupIndex": 1
+        },
+        "triggeredBy": {
+          "uuid": "lv0euRhKRCyiXWzS7pOg6g",
+          "name": "Admin",
+          "email": "admin@harness.io"
+        }
+      }
+    ],
+    "appName": null,
+    "workflowType": null,
+    "status": "PAUSED",
+    "name": null,
+    "startTs": null,
+    "endTs": null,
+    "estimatedTime": 300000
+  },
+  "pipelineExecutionId": null,
+  "stageName": null,
+  "errorStrategy": null,
+  "name": "template-pipe",
+  "releaseNo": "190",
+  "total": 0,
+  "breakdown": null,
+  "executionArgs": {
+    "workflowType": "PIPELINE",
+    "serviceId": null,
+    "commandName": null,
+    "executionStrategy": null,
+    "artifacts": null,
+    "artifactIdNames": null,
+    "orchestrationId": null,
+    "serviceInstances": null,
+    "serviceInstanceIdNames": null,
+    "executionCredential": null,
+    "errorStrategy": null,
+    "triggeredFromPipeline": false,
+    "pipelineId": "nYTmfZAITqeRj67IUo7vxw",
+    "pipelinePhaseElementId": null,
+    "pipelinePhaseParallelIndex": 0,
+    "stageName": null,
+    "workflowVariables": null,
+    "notes": null,
+    "triggeredBy": null,
+    "createdByType": "USER",
+    "triggeringApiKeyId": null,
+    "excludeHostsWithSameArtifact": false,
+    "notifyTriggeredUserOnly": false,
+    "artifactVariables": null,
+    "targetToSpecificHosts": false,
+    "hosts": null,
+    "continueWithDefaultValues": false,
+    "helmCharts": null,
+    "manifestVariables": null,
+    "helmChartIdNames": null
+  },
+  "serviceExecutionSummaries": null,
+  "statusInstanceBreakdownMap": null,
+  "startTs": 1605858500976,
+  "rollbackStartTs": null,
+  "endTs": null,
+  "duration": null,
+  "rollbackDuration": null,
+  "triggeredBy": {
+    "uuid": "lv0euRhKRCyiXWzS7pOg6g",
+    "name": "Admin",
+    "email": "admin@harness.io"
+  },
+  "pipelineSummary": {
+    "pipelineId": "nYTmfZAITqeRj67IUo7vxw",
+    "pipelineName": "template-pipe"
+  },
+  "environments": null,
+  "deployedEnvironments": null,
+  "deployedServices": null,
+  "deployedCloudProviders": null,
+  "buildExecutionSummaries": null,
+  "orchestrationType": null,
+  "deploymentTriggerId": null,
+  "triggeringApiKeyInfo": null,
+  "artifacts": null,
+  "helmCharts": null,
+  "keywords": [
+    "pipeline",
+    "template-pipe",
+    "admin@harness.io",
+    "puthraya app",
+    "admin"
+  ],
+  "onDemandRollback": false,
+  "useSweepingOutputs": false,
+  "originalExecution": null,
+  "helmExecutionSummary": null,
+  "awsLambdaExecutionSummaries": null,
+  "concurrencyStrategy": null,
+  "pipelineResumeId": null,
+  "latestPipelineResume": false,
+  "cdPageCandidate": true,
+  "nextIteration": 1605858809128,
+  "tags": null,
+  "message": null,
+  "validUntil": 1621496900483,
+  "baseline": false
+}

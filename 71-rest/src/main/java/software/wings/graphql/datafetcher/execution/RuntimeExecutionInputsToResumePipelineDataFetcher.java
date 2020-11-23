@@ -1,6 +1,7 @@
 package software.wings.graphql.datafetcher.execution;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
+import static io.harness.validation.Validator.notBlankCheck;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.exception.InvalidRequestException;
@@ -34,6 +35,7 @@ public class RuntimeExecutionInputsToResumePipelineDataFetcher
 
   private void validateAppBelongsToAccount(QLExecutionInputsToResumePipelineQueryParams params, String accountId) {
     String accountIdFromApp = appService.getAccountIdByAppId(params.getApplicationId());
+    notBlankCheck("No account for the given application " + params.getApplicationId(), accountIdFromApp);
     if (!accountIdFromApp.equals(accountId)) {
       throw new InvalidRequestException(APPLICATION_DOES_NOT_EXIST_MSG, WingsException.USER);
     }

@@ -6,6 +6,7 @@ artifactSelections:
   regex: false
   serviceName: k8s
   type: LAST_COLLECTED
+continueWithDefaultValues: false
 executionName: w1
 executionType: Workflow
 triggerCondition:

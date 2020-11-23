@@ -158,6 +158,7 @@ public class TriggerYamlHandler extends BaseYamlHandler<Yaml, Trigger> {
                     .artifactSelections(artifactSelectionList)
                     .manifestSelections(manifestSelectionList)
                     .harnessApiVersion(getHarnessApiVersion())
+                    .continueWithDefaultValues(bean.isContinueWithDefaultValues())
                     .build();
 
     updateYamlWithAdditionalInfo(bean, appId, yaml);
@@ -266,6 +267,7 @@ public class TriggerYamlHandler extends BaseYamlHandler<Yaml, Trigger> {
                                  .uuid(uuid)
                                  .artifactSelections(artifactSelectionList)
                                  .manifestSelections(manifestSelections)
+                                 .continueWithDefaultValues(yaml.isContinueWithDefaultValues())
                                  .build();
 
     if (workflowType == ORCHESTRATION) {
