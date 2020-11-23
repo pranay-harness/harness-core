@@ -64,6 +64,7 @@
         <!--<module>440-connector-nextgen</module>-->
         <!--<module>450-ce-views</module>-->
         <!--<module>490-ce-commons</module>-->
+        <!--<module>900-yaml-sdk</module>-->
         <!--<module>970-api-services-beans</module>-->
         <!--<module>970-grpc</module>-->
         <!--<module>970-ng-commons</module>-->

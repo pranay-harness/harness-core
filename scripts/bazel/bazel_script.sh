@@ -193,6 +193,7 @@ build_bazel_module 430-cv-nextgen-commons
 build_bazel_module 440-connector-nextgen
 build_bazel_module 450-ce-views
 build_bazel_module 490-ce-commons
+build_bazel_module 900-yaml-sdk
 build_bazel_module 970-api-services-beans
 build_bazel_module 970-grpc
 build_bazel_module 970-ng-commons

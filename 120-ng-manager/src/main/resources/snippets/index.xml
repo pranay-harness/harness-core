@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<YamlSnippets>
+    <yamlSnippetMetaDataList>
+        <!--Repeating unit-->
+        <YamlSnippetMetaData>
+            <name>Kubernetes client</name>
+            <version>1.0</version>
+            <description>Kubernetes client key based</description>
+            <tags>
+                <tag>k8s</tag>
+                <tag>connector</tag>
+            </tags>
+            <resourcePath>snippets/k8s/clientKey.yaml</resourcePath>
+        </YamlSnippetMetaData>
+        <!--/Repeating unit-->
+    </yamlSnippetMetaDataList>
+</YamlSnippets>

@@ -37,6 +37,7 @@ public class DXCodeCoverage extends CategoryTest {
     classes.addAll(reflectionsWings.getTypesAnnotatedWith(OwnedBy.class));
 
     List<String> modulesByDX = new ArrayList<>();
+    modulesByDX.add("900-yaml-sdk");
     modulesByDX.add("440-connector-nextgen");
     modulesByDX.add("136-git-sync-manager");
 

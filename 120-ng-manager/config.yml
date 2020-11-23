@@ -113,3 +113,5 @@ pmsGrpcClientConfig:
   authority: localhost
 
 shouldConfigureWithPMS: false
+
+yamlSnippetMetadataResourcePath: snippets/index.xml

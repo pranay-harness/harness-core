@@ -1213,7 +1213,7 @@ maven_install(
         "com.fasterxml.jackson.core:jackson-databind:2.7.9.7",
         "com.fasterxml.jackson.dataformat:jackson-dataformat-cbor:2.9.10",
         "com.fasterxml.jackson.dataformat:jackson-dataformat-smile:2.9.10",
-        "com.fasterxml.jackson.dataformat:jackson-dataformat-xml:2.10.5",
+        "com.fasterxml.jackson.dataformat:jackson-dataformat-xml:2.9.10",
         "com.fasterxml.jackson.dataformat:jackson-dataformat-yaml:2.7.9",
         "com.fasterxml.jackson.datatype:jackson-datatype-guava:2.7.9",
         "com.fasterxml.jackson.datatype:jackson-datatype-jdk8:2.7.9",
