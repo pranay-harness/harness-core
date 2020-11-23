@@ -106,7 +106,7 @@ public class CEViewServiceImpl implements CEViewService {
   @Override
   public CEView get(String uuid) {
     CEView view = ceViewDao.get(uuid);
-    if (view.getViewRules() == null) {
+    if (view != null && view.getViewRules() == null) {
       view.setViewRules(Collections.emptyList());
     }
     return view;
