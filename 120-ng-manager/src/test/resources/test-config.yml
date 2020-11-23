@@ -97,3 +97,5 @@ pmsSdkGrpcServerConfig:
 pmsGrpcClientConfig:
   target: localhost:12011
   authority: localhost
+
+yamlSnippetMetadataResourcePath: snippets/index.xml

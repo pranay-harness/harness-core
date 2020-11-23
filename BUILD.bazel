@@ -88,6 +88,7 @@ modules = [
     "//420-delegate-service",
     "//450-ce-views",
     "//490-ce-commons",
+    "//900-yaml-sdk",
     "//970-api-services-beans",
     "//970-grpc",
     "//970-ng-commons",

@@ -45,6 +45,8 @@ import io.harness.waiter.NotifierScheduledExecutorService;
 import io.harness.waiter.NotifyEvent;
 import io.harness.waiter.NotifyQueuePublisherRegister;
 import io.harness.waiter.NotifyResponseCleaner;
+import io.harness.yaml.YamlSdkConfiguration;
+import io.harness.yaml.YamlSdkModule;
 
 import software.wings.app.CharsetResponseFilter;
 
@@ -64,6 +66,7 @@ import io.dropwizard.setup.Bootstrap;
 import io.dropwizard.setup.Environment;
 import io.federecio.dropwizard.swagger.SwaggerBundle;
 import io.federecio.dropwizard.swagger.SwaggerBundleConfiguration;
+import java.io.InputStream;
 import java.security.SecureRandom;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -161,6 +164,11 @@ public class NextGenApplication extends Application<NextGenConfiguration> {
                                           .build();
       PmsSdkModule.initializeDefaultInstance(sdkConfig);
     }
+
+    final InputStream snippetIndexFile =
+        getClass().getClassLoader().getResourceAsStream(appConfig.getYamlSnippetMetadataResourcePath());
+    YamlSdkConfiguration yamlSdkConfiguration = YamlSdkConfiguration.builder().snippetIndex(snippetIndexFile).build();
+    YamlSdkModule.initializeDefaultInstance(yamlSdkConfiguration);
 
     MaintenanceController.forceMaintenance(false);
   }

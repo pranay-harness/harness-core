@@ -92,6 +92,11 @@
         </dependency>
         <dependency>
             <groupId>software.wings</groupId>
+            <artifactId>900-yaml-sdk</artifactId>
+            <version>${project.parent.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>software.wings</groupId>
             <artifactId>ciscm-proto</artifactId>
             <version>${project.parent.version}</version>
         </dependency>

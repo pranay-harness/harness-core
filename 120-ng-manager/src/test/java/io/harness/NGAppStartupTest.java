@@ -8,6 +8,7 @@ import io.harness.category.element.UnitTests;
 import io.harness.ng.NextGenApplication;
 import io.harness.ng.NextGenConfiguration;
 import io.harness.rule.Owner;
+import io.harness.yaml.YamlSdkModule;
 
 import com.mongodb.ServerAddress;
 import de.bwaldvogel.mongo.MongoServer;
@@ -30,7 +31,7 @@ import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
 
 @RunWith(PowerMockRunner.class)
-@PrepareForTest({PmsSdkModule.class})
+@PrepareForTest({PmsSdkModule.class, YamlSdkModule.class})
 @PowerMockIgnore({"javax.security.*", "javax.net.*", "javax.management.*"})
 public class NGAppStartupTest extends CategoryTest {
   public static MongoServer MONGO_SERVER;
@@ -58,6 +59,7 @@ public class NGAppStartupTest extends CategoryTest {
   public static void beforeClass() {
     MONGO_SERVER = startMongoServer();
     PowerMockito.mockStatic(PmsSdkModule.class);
+    PowerMockito.mockStatic(YamlSdkModule.class);
     //    initializeDefaultInstance(any());
     SUPPORT = new DropwizardTestSupport<NextGenConfiguration>(NextGenApplication.class,
         ResourceHelpers.resourceFilePath("test-config.yml"), ConfigOverride.config("mongo.uri", getMongoUri()));
