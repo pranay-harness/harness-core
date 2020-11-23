@@ -20,7 +20,6 @@ import static io.harness.provision.TerraformConstants.TF_BASE_DIR;
 import static io.harness.provision.TerraformConstants.TF_SCRIPT_DIR;
 import static io.harness.provision.TerraformConstants.TF_VAR_FILES_DIR;
 import static io.harness.provision.TerraformConstants.USER_DIR_KEY;
-import static io.harness.provision.TerraformConstants.VAR_FILE_FORMAT;
 import static io.harness.provision.TerraformConstants.WORKSPACE_DESTROY_PLAN_FILE_PATH_FORMAT;
 import static io.harness.provision.TerraformConstants.WORKSPACE_DIR_BASE;
 import static io.harness.provision.TerraformConstants.WORKSPACE_PLAN_FILE_PATH_FORMAT;
@@ -31,6 +30,7 @@ import static io.harness.threading.Morpheus.sleep;
 import static software.wings.beans.Log.Builder.aLog;
 import static software.wings.beans.delegation.TerraformProvisionParameters.TerraformCommand.APPLY;
 import static software.wings.beans.delegation.TerraformProvisionParameters.TerraformCommand.DESTROY;
+import static software.wings.delegatetasks.validation.terraform.TerraformTaskUtils.fetchAllTfVarFilesArgument;
 
 import static com.google.common.base.Joiner.on;
 import static java.lang.String.format;
@@ -159,17 +159,6 @@ public class TerraformProvisionTask extends AbstractDelegateRunnableTask {
     writer.write(format("%s = \"%s\" %n", key, value.replaceAll("\"", "\\\"")));
   }
 
-  private String getAllTfVarFilesArgument(String userDir, String gitDir, List<String> tfVarFiles) {
-    StringBuffer buffer = new StringBuffer();
-    if (isNotEmpty(tfVarFiles)) {
-      tfVarFiles.forEach(file -> {
-        String pathForFile = Paths.get(userDir, gitDir, file).toString();
-        buffer.append(String.format(VAR_FILE_FORMAT, pathForFile));
-      });
-    }
-    return buffer.toString();
-  }
-
   private TerraformExecutionData run(TerraformProvisionParameters parameters) {
     GitConfig gitConfig = parameters.getSourceRepo();
     String sourceRepoSettingId = parameters.getSourceRepoSettingId();
@@ -213,7 +202,7 @@ public class TerraformProvisionTask extends AbstractDelegateRunnableTask {
       copyFilesToWorkingDirectory(gitClientHelper.getRepoDirectory(gitOperationContext), workingDir);
     } catch (Exception ex) {
       log.error("Exception in copying files to provisioner specific directory", ex);
-      FileUtils.deleteQuietly(new File(workingDir));
+      FileUtils.deleteQuietly(new File(baseDir));
       return TerraformExecutionData.builder()
           .executionStatus(ExecutionStatus.FAILED)
           .errorMessage(ExceptionUtils.getMessage(ex))
@@ -270,8 +259,11 @@ public class TerraformProvisionTask extends AbstractDelegateRunnableTask {
       File tfOutputsFile =
           Paths.get(scriptDirectory, format(TERRAFORM_VARIABLES_FILE_NAME, parameters.getEntityId())).toFile();
       String targetArgs = getTargetArgs(parameters.getTargets());
-      String tfVarFiles =
-          getAllTfVarFilesArgument(System.getProperty(USER_DIR_KEY), workingDir, parameters.getTfVarFiles());
+
+      String tfVarFiles = null == parameters.getTfVarSource()
+          ? StringUtils.EMPTY
+          : fetchAllTfVarFilesArgument(
+              System.getProperty(USER_DIR_KEY), parameters.getTfVarSource(), workingDir, tfVarDirectory);
       varParams = format("%s %s", tfVarFiles, varParams);
       uiLogs = format("%s %s", tfVarFiles, uiLogs);
 
@@ -467,6 +459,7 @@ public class TerraformProvisionTask extends AbstractDelegateRunnableTask {
               .environmentVariables(environmentVars)
               .targets(parameters.getTargets())
               .tfVarFiles(parameters.getTfVarFiles())
+              .tfVarSource(parameters.getTfVarSource())
               .delegateTag(parameters.getDelegateTag())
               .executionStatus(code == 0 ? ExecutionStatus.SUCCESS : ExecutionStatus.FAILED)
               .errorMessage(code == 0 ? null : "The terraform command exited with code " + code)
@@ -491,9 +484,7 @@ public class TerraformProvisionTask extends AbstractDelegateRunnableTask {
     } catch (Exception ex) {
       return logErrorAndGetFailureResponse(parameters, ex, "Failed to complete Terraform Task");
     } finally {
-      FileUtils.deleteQuietly(tfVariablesFile);
-      FileUtils.deleteQuietly(tfBackendConfigsFile);
-      FileUtils.deleteQuietly(new File(workingDir));
+      FileUtils.deleteQuietly(new File(baseDir));
     }
   }
 

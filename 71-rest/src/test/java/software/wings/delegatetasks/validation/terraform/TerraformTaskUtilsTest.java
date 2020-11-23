@@ -1,17 +1,24 @@
 package software.wings.delegatetasks.validation.terraform;
 
 import static io.harness.exception.WingsException.USER;
+import static io.harness.rule.OwnerRule.ARVIND;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import io.harness.category.element.UnitTests;
 import io.harness.exception.InvalidRequestException;
+import io.harness.provision.TfVarScriptRepositorySource;
+import io.harness.provision.TfVarSource;
 import io.harness.rule.Owner;
 import io.harness.rule.OwnerRule;
 
 import software.wings.WingsBaseTest;
+import software.wings.api.terraform.TfVarGitSource;
+import software.wings.beans.GitFileConfig;
 
 import java.io.IOException;
+import java.util.Arrays;
 import org.eclipse.jgit.api.errors.JGitInternalException;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -31,5 +38,36 @@ public class TerraformTaskUtilsTest extends WingsBaseTest {
 
     ex = new InvalidRequestException("msg", USER);
     assertThat(TerraformTaskUtils.getGitExceptionMessageIfExists(ex)).isEqualTo("Invalid request: msg");
+  }
+
+  @Test
+  @Owner(developers = ARVIND)
+  @Category(UnitTests.class)
+  public void testFetchAllTfVarFilesArgument() {
+    String userDir = "/u/";
+    String workDir = "/w/";
+    String tfVarDir = "/t/";
+
+    assertThatThrownBy(() -> TerraformTaskUtils.fetchAllTfVarFilesArgument(userDir, null, workDir, tfVarDir))
+        .isInstanceOf(NullPointerException.class);
+    TfVarSource tfVarSource;
+
+    TfVarScriptRepositorySource source1 =
+        TfVarScriptRepositorySource.builder().tfVarFilePaths(Arrays.asList("p1/f1", "p2/f2")).build();
+
+    String output1 = " -var-file=\"/u/w/p1/f1\"  -var-file=\"/u/w/p2/f2\" ";
+
+    tfVarSource = source1;
+    assertThat(TerraformTaskUtils.fetchAllTfVarFilesArgument(userDir, tfVarSource, workDir, tfVarDir))
+        .isEqualTo(output1);
+
+    TfVarSource source2 =
+        TfVarGitSource.builder()
+            .gitFileConfig(GitFileConfig.builder().filePathList(Arrays.asList("p3/f3", "p4/f3")).build())
+            .build();
+    String output2 = " -var-file=\"/u/t/p3/f3\"  -var-file=\"/u/t/p4/f3\" ";
+    tfVarSource = source2;
+    assertThat(TerraformTaskUtils.fetchAllTfVarFilesArgument(userDir, tfVarSource, workDir, tfVarDir))
+        .isEqualTo(output2);
   }
 }

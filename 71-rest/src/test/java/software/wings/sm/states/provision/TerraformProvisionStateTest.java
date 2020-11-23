@@ -1075,7 +1075,6 @@ public class TerraformProvisionStateTest extends WingsBaseTest {
     TfVarGitSource source = spyState.fetchTfVarGitSource(context);
     assertThat(source).isNotNull();
     assertThat(source.getGitConfig()).isEqualTo(gitConfig);
-    assertThat(source.getGitFileConfig().getFilePath()).isNull();
     assertThat(source.getGitFileConfig().getFilePathList())
         .containsExactlyInAnyOrder(expectedList.get(0), expectedList.get(1));
     assertThat(source.getEncryptedDataDetails()).hasSize(0);

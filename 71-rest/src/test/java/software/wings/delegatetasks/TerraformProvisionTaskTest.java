@@ -1,4 +1,4 @@
-package software.wings.delegatetasks.terraform;
+package software.wings.delegatetasks;
 
 import static io.harness.delegate.beans.TaskData.DEFAULT_ASYNC_CALL_TIMEOUT;
 import static io.harness.rule.OwnerRule.BOJANA;
@@ -42,9 +42,6 @@ import software.wings.api.TerraformExecutionData;
 import software.wings.beans.GitConfig;
 import software.wings.beans.GitOperationContext;
 import software.wings.beans.delegation.TerraformProvisionParameters;
-import software.wings.delegatetasks.DelegateFileManager;
-import software.wings.delegatetasks.DelegateLogService;
-import software.wings.delegatetasks.TerraformProvisionTask;
 import software.wings.service.impl.yaml.GitClientHelper;
 import software.wings.service.intfc.security.EncryptionService;
 import software.wings.service.intfc.yaml.GitClient;

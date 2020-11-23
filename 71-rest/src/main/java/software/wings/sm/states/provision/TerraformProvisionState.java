@@ -19,6 +19,12 @@ import static io.harness.provision.TerraformConstants.TF_APPLY_VAR_NAME;
 import static io.harness.provision.TerraformConstants.TF_DESTROY_NAME_PREFIX;
 import static io.harness.provision.TerraformConstants.TF_DESTROY_VAR_NAME;
 import static io.harness.provision.TerraformConstants.TF_NAME_PREFIX;
+import static io.harness.provision.TerraformConstants.TF_VAR_FILES_GIT_BRANCH_KEY;
+import static io.harness.provision.TerraformConstants.TF_VAR_FILES_GIT_COMMIT_ID_KEY;
+import static io.harness.provision.TerraformConstants.TF_VAR_FILES_GIT_CONNECTOR_ID_KEY;
+import static io.harness.provision.TerraformConstants.TF_VAR_FILES_GIT_FILE_PATH_KEY;
+import static io.harness.provision.TerraformConstants.TF_VAR_FILES_GIT_REPO_NAME_KEY;
+import static io.harness.provision.TerraformConstants.TF_VAR_FILES_GIT_USE_BRANCH_KEY;
 import static io.harness.provision.TerraformConstants.TF_VAR_FILES_KEY;
 import static io.harness.provision.TerraformConstants.VARIABLES_KEY;
 import static io.harness.provision.TerraformConstants.WORKSPACE_KEY;
@@ -53,6 +59,7 @@ import io.harness.delegate.service.DelegateAgentFileService.FileBucket;
 import io.harness.exception.InvalidRequestException;
 import io.harness.provision.TfVarScriptRepositorySource;
 import io.harness.provision.TfVarSource;
+import io.harness.provision.TfVarSource.TfVarSourceType;
 import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.serializer.JsonUtils;
 import io.harness.tasks.Cd1SetupFields;
@@ -248,6 +255,7 @@ public abstract class TerraformProvisionState extends State {
             .targets(terraformExecutionData.getTargets())
             .delegateTag(terraformExecutionData.getDelegateTag())
             .tfVarFiles(terraformExecutionData.getTfVarFiles())
+            .tfVarSource(terraformExecutionData.getTfVarSource())
             .sourceRepoSettingId(terraformProvisioner.getSourceRepoSettingId())
             .sourceRepoReference(terraformExecutionData.getSourceRepoReference())
             .variables(terraformExecutionData.getVariables())
@@ -432,6 +440,7 @@ public abstract class TerraformProvisionState extends State {
           ENCRYPTED_ENVIRONMENT_VARS_KEY, false);
 
       List<String> tfVarFiles = terraformExecutionData.getTfVarFiles();
+      TfVarSource tfVarSource = terraformExecutionData.getTfVarSource();
       List<String> targets = terraformExecutionData.getTargets();
 
       if (isNotEmpty(targets)) {
@@ -440,6 +449,18 @@ public abstract class TerraformProvisionState extends State {
 
       if (isNotEmpty(tfVarFiles)) {
         others.put(TF_VAR_FILES_KEY, tfVarFiles);
+      }
+
+      if (null != tfVarSource) {
+        if (tfVarSource.getTfVarSourceType() == TfVarSourceType.GIT) {
+          GitFileConfig gitFileConfig = ((TfVarGitSource) tfVarSource).getGitFileConfig();
+          others.put(TF_VAR_FILES_GIT_BRANCH_KEY, gitFileConfig.getBranch());
+          others.put(TF_VAR_FILES_GIT_CONNECTOR_ID_KEY, gitFileConfig.getConnectorId());
+          others.put(TF_VAR_FILES_GIT_COMMIT_ID_KEY, gitFileConfig.getCommitId());
+          others.put(TF_VAR_FILES_GIT_FILE_PATH_KEY, gitFileConfig.getFilePath());
+          others.put(TF_VAR_FILES_GIT_REPO_NAME_KEY, gitFileConfig.getRepoName());
+          others.put(TF_VAR_FILES_GIT_USE_BRANCH_KEY, gitFileConfig.isUseBranch());
+        }
       }
 
       if (isNotEmpty(workspace)) {
@@ -618,6 +639,7 @@ public abstract class TerraformProvisionState extends State {
             .encryptedEnvironmentVariables(encryptedEnvVars)
             .targets(targets)
             .tfVarFiles(element.getTfVarFiles())
+            .tfVarSource(element.getTfVarSource())
             .runPlanOnly(false)
             .exportPlanToApplyStep(false)
             .terraformPlan(getTerraformPlanFromSecretManager(context))
@@ -765,6 +787,20 @@ public abstract class TerraformProvisionState extends State {
           if (isNotEmpty(tfVarFiles)) {
             setTfVarFiles(tfVarFiles);
           }
+
+          String tfVarGitFileConnectorId = (String) fileMetadata.getMetadata().get(TF_VAR_FILES_GIT_CONNECTOR_ID_KEY);
+          if (isNotEmpty(tfVarGitFileConnectorId)) {
+            GitFileConfig gitFileConfig =
+                GitFileConfig.builder()
+                    .connectorId(tfVarGitFileConnectorId)
+                    .filePath((String) fileMetadata.getMetadata().get(TF_VAR_FILES_GIT_FILE_PATH_KEY))
+                    .branch((String) fileMetadata.getMetadata().get(TF_VAR_FILES_GIT_BRANCH_KEY))
+                    .commitId((String) fileMetadata.getMetadata().get(TF_VAR_FILES_GIT_COMMIT_ID_KEY))
+                    .useBranch((boolean) fileMetadata.getMetadata().get(TF_VAR_FILES_GIT_USE_BRANCH_KEY))
+                    .repoName((String) fileMetadata.getMetadata().get(TF_VAR_FILES_GIT_REPO_NAME_KEY))
+                    .build();
+            setTfVarGitFileConfig(gitFileConfig);
+          }
         }
       }
     }
@@ -823,6 +859,16 @@ public abstract class TerraformProvisionState extends State {
     return createAndRunTask(activityId, executionContext, parameters, delegateTag);
   }
 
+  protected TfVarSource getTfVarSource(ExecutionContext context) {
+    TfVarSource tfVarSource = null;
+    if (isNotEmpty(tfVarFiles)) {
+      tfVarSource = fetchTfVarScriptRepositorySource(context);
+    } else if (null != tfVarGitFileConfig) {
+      tfVarSource = fetchTfVarGitSource(context);
+    }
+    return tfVarSource;
+  }
+
   @VisibleForTesting
   TfVarScriptRepositorySource fetchTfVarScriptRepositorySource(ExecutionContext context) {
     return TfVarScriptRepositorySource.builder().tfVarFilePaths(getRenderedTfVarFiles(tfVarFiles, context)).build();
@@ -840,8 +886,8 @@ public abstract class TerraformProvisionState extends State {
         secretManager.getEncryptionDetails(tfVarGitConfig, GLOBAL_APP_ID, context.getWorkflowExecutionId());
 
     String filePath = tfVarGitFileConfig.getFilePath();
-    if (filePath != null) {
-      tfVarGitFileConfig.setFilePath(null);
+
+    if (isNotEmpty(filePath)) {
       List<String> multipleFiles = splitCommaSeparatedFilePath(filePath);
       tfVarGitFileConfig.setFilePathList(multipleFiles);
     }
@@ -923,6 +969,11 @@ public abstract class TerraformProvisionState extends State {
 
   protected void saveTerraformConfig(
       ExecutionContext context, TerraformInfrastructureProvisioner provisioner, TerraformExecutionData executionData) {
+    TfVarSource tfVarSource = executionData.getTfVarSource();
+    GitFileConfig gitFileConfig = null != tfVarSource && tfVarSource.getTfVarSourceType() == TfVarSourceType.GIT
+        ? ((TfVarGitSource) tfVarSource).getGitFileConfig()
+        : null;
+
     TerraformConfig terraformConfig = TerraformConfig.builder()
                                           .entityId(generateEntityId(context, executionData.getWorkspace()))
                                           .sourceRepoSettingId(provisioner.getSourceRepoSettingId())
@@ -932,6 +983,7 @@ public abstract class TerraformProvisionState extends State {
                                           .backendConfigs(executionData.getBackendConfigs())
                                           .environmentVariables(executionData.getEnvironmentVariables())
                                           .tfVarFiles(executionData.getTfVarFiles())
+                                          .tfVarGitFileConfig(gitFileConfig)
                                           .workflowExecutionId(context.getWorkflowExecutionId())
                                           .targets(executionData.getTargets())
                                           .command(executionData.getCommandExecuted())

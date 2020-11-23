@@ -1,6 +1,7 @@
 package software.wings.api.terraform;
 
 import io.harness.context.ContextElementType;
+import io.harness.provision.TfVarSource;
 
 import software.wings.beans.NameValuePair;
 import software.wings.sm.ContextElement;
@@ -20,6 +21,7 @@ public class TerraformProvisionInheritPlanElement implements ContextElement {
   private String provisionerId;
   private List<String> targets;
   private List<String> tfVarFiles;
+  private TfVarSource tfVarSource;
   private String sourceRepoSettingId;
   private String sourceRepoReference;
   private List<NameValuePair> variables;
