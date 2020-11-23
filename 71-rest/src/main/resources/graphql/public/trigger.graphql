@@ -107,6 +107,8 @@ type PipelineAction implements TriggerAction {
   pipelineName: String
   variables: [TriggerVariableValue]
   artifactSelections: [ArtifactSelection]
+  # Beta: Coninue with default values as defined in pipeline
+  continueWithDefaultValues: Boolean
 }
 
 type TriggerVariableValue {

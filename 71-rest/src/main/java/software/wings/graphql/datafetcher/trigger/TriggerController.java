@@ -88,6 +88,8 @@ public class TriggerController {
     triggerBuilder.workflowId(qlCreateOrUpdateTriggerInput.getAction().getEntityId());
 
     triggerBuilder.workflowType(triggerActionController.resolveWorkflowType(qlCreateOrUpdateTriggerInput));
+    triggerBuilder.continueWithDefaultValues(
+        triggerActionController.resolveContinueWithDefault(qlCreateOrUpdateTriggerInput));
 
     Boolean excludeHostsWithSameArtifact = qlCreateOrUpdateTriggerInput.getAction().getExcludeHostsWithSameArtifact();
     if (excludeHostsWithSameArtifact != null) {
@@ -115,6 +117,7 @@ public class TriggerController {
         triggerBuilder.workflowVariables(resolvedWorkflowVariables);
         validateAndSetArtifactSelectionsWorkflow(
             resolvedWorkflowVariables, qlCreateOrUpdateTriggerInput, workflow, triggerBuilder);
+        triggerBuilder.continueWithDefaultValues(false);
         break;
       case PIPELINE:
         String pipelineId = qlCreateOrUpdateTriggerInput.getAction().getEntityId();

@@ -108,7 +108,8 @@ public class Trigger extends Base implements NameAccess, TagAware, ApplicationAc
       TriggerCondition condition, String pipelineId, String pipelineName, String workflowId, String workflowName,
       List<ArtifactSelection> artifactSelections, List<ManifestSelection> manifestSelections, String webHookToken,
       WorkflowType workflowType, Map<String, String> workflowVariables,
-      List<ServiceInfraWorkflow> serviceInfraWorkflows, boolean excludeHostsWithSameArtifact) {
+      List<ServiceInfraWorkflow> serviceInfraWorkflows, boolean excludeHostsWithSameArtifact,
+      boolean continueWithDefaultValues) {
     super(uuid, appId, createdBy, createdAt, lastUpdatedBy, lastUpdatedAt, entityYamlPath);
     this.name = name;
     this.description = description;
@@ -125,6 +126,7 @@ public class Trigger extends Base implements NameAccess, TagAware, ApplicationAc
     this.excludeHostsWithSameArtifact = excludeHostsWithSameArtifact;
     this.manifestSelections = manifestSelections;
     this.accountId = accountId;
+    this.continueWithDefaultValues = continueWithDefaultValues;
   }
 
   public void setPipelineId(String pipelineId) {
@@ -180,6 +182,7 @@ public class Trigger extends Base implements NameAccess, TagAware, ApplicationAc
     @NotEmpty List<TriggerConditionYaml> triggerCondition = new ArrayList<>();
     private String executionType;
     private String executionName;
+    private boolean continueWithDefaultValues = false;
     private List<ArtifactSelection.Yaml> artifactSelections = new ArrayList<>();
     private List<ManifestSelection.Yaml> manifestSelections = new ArrayList<>();
     private List<TriggerVariable> workflowVariables = new ArrayList<>();
@@ -187,8 +190,10 @@ public class Trigger extends Base implements NameAccess, TagAware, ApplicationAc
     @lombok.Builder
     public Yaml(String harnessApiVersion, String description, String executionType, String executionName,
         List<TriggerVariable> workflowVariables, List<TriggerConditionYaml> triggerCondition,
-        List<ArtifactSelection.Yaml> artifactSelections, List<ManifestSelection.Yaml> manifestSelections) {
+        List<ArtifactSelection.Yaml> artifactSelections, List<ManifestSelection.Yaml> manifestSelections,
+        boolean continueWithDefaultValues) {
       super(EntityType.TRIGGER.name(), harnessApiVersion);
+      this.continueWithDefaultValues = continueWithDefaultValues;
       this.setHarnessApiVersion(harnessApiVersion);
       this.description = description;
       this.executionType = executionType;

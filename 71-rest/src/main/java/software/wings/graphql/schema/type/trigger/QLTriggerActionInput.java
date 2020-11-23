@@ -20,4 +20,5 @@ public class QLTriggerActionInput {
   List<QLVariableInput> variables;
   List<QLArtifactSelectionInput> artifactSelections;
   Boolean excludeHostsWithSameArtifact;
+  private Boolean continueWithDefaultValues;
 }

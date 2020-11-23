@@ -6,6 +6,7 @@ artifactSelections:
   regex: true
   serviceName: k8s
   type: LAST_COLLECTED
+continueWithDefaultValues: false
 executionName: tp_1
 executionType: Pipeline
 triggerCondition:

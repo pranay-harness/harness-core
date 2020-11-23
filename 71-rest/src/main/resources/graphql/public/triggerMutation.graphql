@@ -192,6 +192,8 @@ input TriggerActionInput {
   artifactSelections: [ArtifactSelectionInput]
   #Skip deployment on the host, if the same artifact is already deployed
   excludeHostsWithSameArtifact: Boolean
+  # Beta: Coninue with default values as defined in pipeline
+  continueWithDefaultValues: Boolean
 }
 
 input ArtifactSelectionInput {

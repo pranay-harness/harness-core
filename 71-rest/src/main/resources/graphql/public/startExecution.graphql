@@ -43,6 +43,8 @@ input StartExecutionInput {
   targetToSpecificHosts: Boolean
   #List of hostnames, if targeted to a specific host
   specificHosts: [String]
+  #Beta: Continue with default values in case of pipelines with runtime variables
+  continueWithDefaultValues: Boolean
 }
 
 enum ExecutionType {

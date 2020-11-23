@@ -240,7 +240,7 @@ public class WorkflowExecutionController {
 
     List<Artifact> artifacts = new ArrayList<>();
     executionController.getArtifactsFromServiceInputs(
-        serviceInputs, workflow.getAppId(), artifactNeededServiceIds, artifacts);
+        serviceInputs, workflow.getAppId(), artifactNeededServiceIds, artifacts, new ArrayList<>());
     return artifacts;
   }
 

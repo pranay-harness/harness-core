@@ -133,6 +133,7 @@ public class TriggerActionController {
                           .pipelineName(trigger.getWorkflowName())
                           .artifactSelections(artifactSelections)
                           .variables(variableValues)
+                          .continueWithDefaultValues(trigger.isContinueWithDefaultValues())
                           .build();
     } else {
       triggerAction = QLWorkflowAction.builder()
@@ -286,6 +287,14 @@ public class TriggerActionController {
       workflowType = WorkflowType.PIPELINE;
     }
     return workflowType;
+  }
+
+  boolean resolveContinueWithDefault(QLCreateOrUpdateTriggerInput qlCreateOrUpdateTriggerInput) {
+    if (resolveWorkflowType(qlCreateOrUpdateTriggerInput) == WorkflowType.PIPELINE) {
+      Boolean continueWithDefault = qlCreateOrUpdateTriggerInput.getAction().getContinueWithDefaultValues();
+      return Boolean.TRUE.equals(continueWithDefault);
+    }
+    return false;
   }
 
   Map<String, String> validateAndResolvePipelineVariables(

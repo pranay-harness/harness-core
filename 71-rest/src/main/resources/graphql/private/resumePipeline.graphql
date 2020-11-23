@@ -21,7 +21,7 @@ input RuntimeExecutionInputsToResumePipeline {
 
 type ContinueExecutionPayload {
   clientMutationId: String
-  execution: PipelineExecution
+  status: Boolean
 }
 
 extend type Query {

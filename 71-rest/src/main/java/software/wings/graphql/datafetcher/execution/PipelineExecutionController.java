@@ -16,6 +16,7 @@ import io.harness.beans.ExecutionStatus;
 import io.harness.beans.WorkflowType;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.UnexpectedException;
+import io.harness.expression.ExpressionEvaluator;
 import io.harness.logging.AutoLogContext;
 
 import software.wings.beans.EntityType;
@@ -61,6 +62,7 @@ import software.wings.security.PermissionAttribute;
 import software.wings.service.impl.AppLogContext;
 import software.wings.service.impl.WorkflowLogContext;
 import software.wings.service.impl.security.auth.AuthHandler;
+import software.wings.service.impl.workflow.WorkflowServiceTemplateHelper;
 import software.wings.service.intfc.AuthService;
 import software.wings.service.intfc.EnvironmentService;
 import software.wings.service.intfc.FeatureFlagService;
@@ -80,6 +82,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 import javax.validation.constraints.NotNull;
 import lombok.extern.slf4j.Slf4j;
@@ -231,7 +234,7 @@ public class PipelineExecutionController {
       Pipeline pipeline = pipelineService.readPipeline(appId, pipelineId, true);
       notNullCheck("Pipeline " + pipelineId + " doesn't exist in the specified application " + appId, pipeline, USER);
 
-      String envId = resolveEnvId(pipeline, variableInputs);
+      String envId = resolveEnvId(pipeline, variableInputs, true);
       authService.checkIfUserAllowedToDeployPipelineToEnv(appId, envId);
 
       List<String> extraVariables = new ArrayList<>();
@@ -241,6 +244,7 @@ public class PipelineExecutionController {
       ExecutionArgs executionArgs = new ExecutionArgs();
       executionArgs.setWorkflowType(WorkflowType.PIPELINE);
       executionArgs.setPipelineId(triggerExecutionInput.getEntityId());
+      executionArgs.setContinueWithDefaultValues(triggerExecutionInput.isContinueWithDefaultValues());
       executionController.populateExecutionArgs(
           variableValues, artifacts, triggerExecutionInput, mutationContext, executionArgs);
       WorkflowExecution workflowExecution =
@@ -275,7 +279,23 @@ public class PipelineExecutionController {
     }
   }
 
+  public String resolveEnvId(WorkflowExecution execution, Pipeline pipeline, List<QLVariableInput> variableInputs) {
+    String envId = null;
+    Variable envVariable = WorkflowServiceTemplateHelper.getEnvVariable(pipeline.getPipelineVariables());
+    if (envVariable != null && !Boolean.TRUE.equals(envVariable.getRuntimeInput())) {
+      String key = envVariable.getName();
+      envId = execution.getExecutionArgs().getWorkflowVariables().get(key);
+    } else {
+      envId = resolveEnvId(pipeline, variableInputs);
+    }
+    return envId;
+  }
+
   public String resolveEnvId(Pipeline pipeline, List<QLVariableInput> variableInputs) {
+    return resolveEnvId(pipeline, variableInputs, false);
+  }
+
+  public String resolveEnvId(Pipeline pipeline, List<QLVariableInput> variableInputs, boolean skipRuntimeVars) {
     List<Variable> pipelineVariables = pipeline.getPipelineVariables();
     String templatizedEnvName = getTemplatizedEnvVariableName(pipelineVariables);
     if (templatizedEnvName == null) {
@@ -287,6 +307,7 @@ public class PipelineExecutionController {
           variableInputs.stream().filter(t -> templatizedEnvName.equals(t.getName())).findFirst().orElse(null);
       if (envVarInput != null) {
         QLVariableValue envVarValue = envVarInput.getVariableValue();
+        notNullCheck(envVarInput.getName() + " has no variable value present", envVarValue, USER);
         switch (envVarValue.getType()) {
           case ID:
             return envVarValue.getValue();
@@ -300,6 +321,14 @@ public class PipelineExecutionController {
             throw new UnsupportedOperationException("Value Type " + envVarValue.getType() + " Not supported");
         }
       }
+    }
+    boolean isRuntime = pipeline.getPipelineVariables()
+                            .stream()
+                            .filter(v -> v.getName().equals(templatizedEnvName))
+                            .anyMatch(v -> Boolean.TRUE.equals(v.getRuntimeInput()));
+    if (isRuntime && skipRuntimeVars) {
+      log.info("Environment is runtime in pipeline {} ", pipeline.getUuid());
+      return null;
     }
     throw new InvalidRequestException(
         "Pipeline [" + pipeline.getName() + "] has environment parameterized. However, the value not supplied", USER);
@@ -319,9 +348,8 @@ public class PipelineExecutionController {
     }
 
     List<Artifact> artifacts = new ArrayList<>();
-    // TODO
     executionController.getArtifactsFromServiceInputs(
-        serviceInputs, pipeline.getAppId(), artifactNeededServiceIds, artifacts);
+        serviceInputs, pipeline.getAppId(), artifactNeededServiceIds, artifacts, new ArrayList<>());
     return artifacts;
   }
 
@@ -363,6 +391,46 @@ public class PipelineExecutionController {
       }
     }
     return pipelineVariableValues;
+  }
+
+  public Map<String, String> validateAndResolveRuntimePipelineStageVars(Pipeline pipeline,
+      List<QLVariableInput> variableInputs, String envId, List<String> extraVariables, String pipelineStageElementId,
+      boolean isTriggerFlow) {
+    PipelineStageElement pipelineStageElement =
+        pipeline.getPipelineStages()
+            .stream()
+            .flatMap(pipelineStage -> pipelineStage.getPipelineStageElements().stream())
+            .filter(stageElement -> stageElement.getUuid().equals(pipelineStageElementId))
+            .findFirst()
+            .orElse(null);
+
+    if (pipelineStageElement == null) {
+      throw new InvalidRequestException(
+          "No stage found for the given pipeline stage ID " + pipelineStageElementId, USER);
+    }
+
+    if (pipelineStageElement.getRuntimeInputsConfig() == null
+        || pipelineStageElement.getRuntimeInputsConfig().getRuntimeInputVariables() == null) {
+      return new HashMap<>();
+    }
+
+    Set<String> stageVariables = pipelineStageElement.getWorkflowVariables()
+                                     .values()
+                                     .stream()
+                                     .filter(ExpressionEvaluator::matchesVariablePattern)
+                                     .map(ExpressionEvaluator::getName)
+                                     .collect(Collectors.toSet());
+
+    List<Variable> pipelineVariables = pipeline.getPipelineVariables()
+                                           .stream()
+                                           .filter(variable -> stageVariables.contains(variable.getName()))
+
+                                           .collect(Collectors.toList());
+    if (isEmpty(pipelineVariables)) {
+      return new HashMap<>();
+    }
+    validateRuntimeReqVars(variableInputs, pipelineVariables);
+    return resolvePipelineVariables(pipeline, variableInputs, envId, extraVariables, isTriggerFlow);
   }
 
   public Map<String, String> validateAndResolvePipelineVariables(Pipeline pipeline,
@@ -432,17 +500,31 @@ public class PipelineExecutionController {
     return String.join(",", infraValues);
   }
 
-  private void validateRequiredVarsPresent(List<QLVariableInput> variableInputs, List<Variable> workflowVariables) {
-    List<String> requiredVariables = workflowVariables.stream()
-                                         .filter(t -> t.isMandatory() && !t.isFixed())
-                                         .map(Variable::getName)
-                                         .collect(Collectors.toList());
-    List<String> variablesPresent = variableInputs.stream().map(QLVariableInput::getName).collect(Collectors.toList());
-    if (!variablesPresent.containsAll(requiredVariables)) {
-      requiredVariables.removeAll(variablesPresent);
+  private void validateRuntimeReqVars(List<QLVariableInput> variableInputs, List<Variable> workflowVariables) {
+    List<String> requiredVariables =
+        workflowVariables.stream()
+            .filter(t -> t.isMandatory() && !t.isFixed() && Boolean.TRUE.equals(t.getRuntimeInput()))
+            .map(Variable::getName)
+            .collect(Collectors.toList());
+    validateRequiredVars(requiredVariables, variableInputs);
+  }
+
+  private void validateRequiredVars(List<String> required, List<QLVariableInput> present) {
+    List<String> variablesPresent = present.stream().map(QLVariableInput::getName).collect(Collectors.toList());
+    if (!variablesPresent.containsAll(required)) {
+      required.removeAll(variablesPresent);
       throw new InvalidRequestException(
-          "Value not provided for required variable: [" + StringUtils.join(requiredVariables, ",") + "]");
+          "Value not provided for required variable: [" + StringUtils.join(required, ",") + "]");
     }
+  }
+
+  private void validateRequiredVarsPresent(List<QLVariableInput> variableInputs, List<Variable> workflowVariables) {
+    List<String> requiredVariables =
+        workflowVariables.stream()
+            .filter(t -> t.isMandatory() && !t.isFixed() && !Boolean.TRUE.equals(t.getRuntimeInput()))
+            .map(Variable::getName)
+            .collect(Collectors.toList());
+    validateRequiredVars(requiredVariables, variableInputs);
   }
 
   public void handleAuthentication(String appId, Pipeline pipeline) {

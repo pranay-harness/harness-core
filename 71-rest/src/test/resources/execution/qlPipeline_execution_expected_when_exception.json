@@ -27,7 +27,7 @@
       "pipelineStepName": "template-wf",
       "pipelineStageName": "STAGE 2",
       "workflowExecutionId": null,
-      "runtimeInputVariables": [],
+      "runtimeInputVariables": null,
       "status": "PAUSED"
     },
     {

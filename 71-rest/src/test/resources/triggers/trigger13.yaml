@@ -5,6 +5,7 @@ artifactSelections:
   serviceName: SSH
   type: LAST_DEPLOYED
   workflowName: w1
+continueWithDefaultValues: false
 executionName: w1
 executionType: Workflow
 triggerCondition:

@@ -96,7 +96,8 @@ public class ExecutionControllerTest extends AbstractDataFetcherTestBase {
         .thenReturn(null);
     when(artifactCollectionServiceAsync.collectNewArtifacts(anyString(), any(), anyString(), any()))
         .thenReturn(Artifact.Builder.anArtifact().withUuid(ARTIFACT_ID).build());
-    executionController.getArtifactsFromServiceInputs(serviceInputs, APP_ID, asList(SERVICE_ID), artifacts);
+    executionController.getArtifactsFromServiceInputs(
+        serviceInputs, APP_ID, asList(SERVICE_ID), artifacts, new ArrayList<>());
     assertThat(artifacts.size()).isEqualTo(1);
     assertThat(artifacts.get(0)).extracting(Artifact::getUuid).isEqualTo(ARTIFACT_ID);
   }

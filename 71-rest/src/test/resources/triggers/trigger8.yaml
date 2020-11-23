@@ -4,6 +4,7 @@ artifactSelections:
 - regex: false
   serviceName: k8s
   type: ARTIFACT_SOURCE
+continueWithDefaultValues: false
 executionName: w1
 executionType: Workflow
 triggerCondition:

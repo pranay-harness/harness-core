@@ -17,6 +17,8 @@ import io.harness.beans.ExecutionStatus;
 import io.harness.exception.InvalidRequestException;
 import io.harness.govern.Switch;
 
+import software.wings.beans.ArtifactVariable;
+import software.wings.beans.EntityType;
 import software.wings.beans.ExecutionArgs;
 import software.wings.beans.Service;
 import software.wings.beans.artifact.Artifact;
@@ -280,7 +282,7 @@ public class ExecutionController {
   }
 
   public void getArtifactsFromServiceInputs(List<QLServiceInput> serviceInputs, String appId,
-      List<String> artifactNeededServiceIds, List<Artifact> artifacts) {
+      List<String> artifactNeededServiceIds, List<Artifact> artifacts, List<ArtifactVariable> artifactVariables) {
     for (String serviceId : artifactNeededServiceIds) {
       Service service = serviceResourceService.get(appId, serviceId);
       notNullCheck(
@@ -294,29 +296,38 @@ public class ExecutionController {
       notNullCheck("ArtifactValueInput is required for the service Input: " + serviceName, artifactValueInput, USER);
 
       QLArtifactInputType type = artifactValueInput.getValueType();
+      Artifact artifact;
       switch (type) {
         case ARTIFACT_ID:
           notNullCheck(
               "ArtifactIdInput is required for the service Input: " + serviceName + "for value type as ARTIFACT_ID",
               artifactValueInput.getArtifactId(), USER);
-          artifacts.add(getArtifactFromId(artifactValueInput.getArtifactId(), service));
-          continue;
+          artifact = getArtifactFromId(artifactValueInput.getArtifactId(), service);
+          artifacts.add(artifact);
+          break;
         case BUILD_NUMBER:
           notNullCheck(
               "BuildNumberInput is required for the service Input: " + serviceName + "for value type as BUILD_NUMBER",
               artifactValueInput.getBuildNumber(), USER);
-          artifacts.add(getArtifactFromBuildNumber(artifactValueInput.getBuildNumber(), service));
-          continue;
+          artifact = getArtifactFromBuildNumber(artifactValueInput.getBuildNumber(), service);
+          artifacts.add(artifact);
+          break;
         case PARAMETERIZED_ARTIFACT_SOURCE:
           notNullCheck("ParameterizedArtifactSourceInput is required for the service Input: " + serviceName
                   + "for value type as PARAMETERIZED_ARTIFACT_SOURCE",
               artifactValueInput.getParameterizedArtifactSource(), USER);
-          artifacts.add(
-              getArtifactFromBuildNumberAndParameters(artifactValueInput.getParameterizedArtifactSource(), service));
-          continue;
+          artifact =
+              getArtifactFromBuildNumberAndParameters(artifactValueInput.getParameterizedArtifactSource(), service);
+          artifacts.add(artifact);
+          break;
         default:
           throw new UnsupportedOperationException("Unexpected artifact value type: " + type);
       }
+      artifactVariables.add(ArtifactVariable.builder()
+                                .entityType(EntityType.SERVICE)
+                                .entityId(service.getUuid())
+                                .value(artifact.getUuid())
+                                .build());
     }
   }
 }

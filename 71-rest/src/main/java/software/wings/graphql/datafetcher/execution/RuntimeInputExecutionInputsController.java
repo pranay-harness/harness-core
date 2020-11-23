@@ -5,6 +5,9 @@ import static io.harness.beans.SearchFilter.Operator.EQ;
 import static io.harness.beans.SearchFilter.Operator.IN;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.exception.WingsException.USER;
+import static io.harness.validation.Validator.notBlankCheck;
+import static io.harness.validation.Validator.notNullCheck;
 
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
@@ -30,7 +33,6 @@ import software.wings.service.intfc.WorkflowExecutionService;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -48,16 +50,20 @@ public class RuntimeInputExecutionInputsController {
 
   public QLExecutionInputs fetch(QLExecutionInputsToResumePipelineQueryParams parameters, String accountId) {
     try (AutoLogContext ignore0 = new AccountLogContext(accountId, AutoLogContext.OverrideBehavior.OVERRIDE_ERROR)) {
-      // TODO: Test cases
       String appId = parameters.getApplicationId();
+      notBlankCheck("Invalid app id", appId);
+      notBlankCheck("Invalid pipeline execution", parameters.getPipelineExecutionId());
+      notBlankCheck("Invalid pipeline stage ", parameters.getPipelineStageElementId());
 
       WorkflowExecution pipelineExecution =
           workflowExecutionService.getWorkflowExecution(appId, parameters.getPipelineExecutionId());
+      notNullCheck("No pipeline execution for the given execution id " + parameters.getPipelineExecutionId(),
+          pipelineExecution, USER);
       String pipelineId = pipelineExecution.getWorkflowId();
       Pipeline pipeline = pipelineService.readPipeline(appId, pipelineId, true);
       pipelineExecutionController.handleAuthentication(appId, pipeline);
       // Validate Required changes
-      List<String> serviceIds = getArtifactNeededServices(appId, parameters, pipeline);
+      List<String> serviceIds = getArtifactNeededServices(appId, parameters, pipeline, pipelineExecution);
       if (isEmpty(serviceIds)) {
         return QLExecutionInputs.builder().serviceInputs(new ArrayList<>()).build();
       }
@@ -75,19 +81,18 @@ public class RuntimeInputExecutionInputsController {
     }
   }
 
-  private List<String> getArtifactNeededServices(
-      String appId, QLExecutionInputsToResumePipelineQueryParams params, Pipeline pipeline) {
+  private List<String> getArtifactNeededServices(String appId, QLExecutionInputsToResumePipelineQueryParams params,
+      Pipeline pipeline, WorkflowExecution execution) {
     String pipelineId = pipeline.getUuid();
     List<QLVariableInput> variableInputs = params.getVariableInputs();
     if (variableInputs == null) {
       variableInputs = new ArrayList<>();
     }
-    String envId = pipelineExecutionController.resolveEnvId(pipeline, variableInputs);
+    String envId = pipelineExecutionController.resolveEnvId(execution, pipeline, variableInputs);
     List<String> extraVariables = new ArrayList<>();
 
-    Map<String, String> variableValues = pipelineExecutionController.validateAndResolvePipelineVariables(
-        pipeline, variableInputs, envId, extraVariables, false);
-    Map<String, String> workflowVariables = new HashMap<>();
+    Map<String, String> workflowVariables = pipelineExecutionController.validateAndResolveRuntimePipelineStageVars(
+        pipeline, variableInputs, envId, extraVariables, params.getPipelineStageElementId(), false);
     DeploymentMetadata finalDeploymentMetadata = workflowExecutionService.fetchDeploymentMetadataRunningPipeline(
         appId, workflowVariables, false, params.getPipelineExecutionId(), params.getPipelineStageElementId());
     if (finalDeploymentMetadata != null) {

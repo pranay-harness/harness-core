@@ -3,7 +3,6 @@ package software.wings.graphql.schema.mutation.pipeline.payload;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 
-import software.wings.beans.PipelineExecution;
 import software.wings.security.PermissionAttribute;
 import software.wings.security.annotations.Scope;
 
@@ -19,5 +18,4 @@ import lombok.NoArgsConstructor;
 public class QLContinueExecutionPayload {
   private String clientMutationId;
   private boolean status;
-  private PipelineExecution pipelineExecution;
 }

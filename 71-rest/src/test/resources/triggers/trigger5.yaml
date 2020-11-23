@@ -5,6 +5,7 @@ artifactSelections:
   regex: false
   serviceName: k8s
   type: WEBHOOK_VARIABLE
+continueWithDefaultValues: false
 executionName: tp_1
 executionType: Pipeline
 triggerCondition:
