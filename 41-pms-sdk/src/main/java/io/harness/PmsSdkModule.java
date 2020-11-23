@@ -9,6 +9,8 @@ import io.harness.pms.plan.PmsServiceGrpc.PmsServiceBlockingStub;
 import io.harness.pms.plan.Types;
 import io.harness.pms.sdk.creator.PartialPlanCreator;
 import io.harness.pms.sdk.creator.PlanCreatorProvider;
+import io.harness.pms.sdk.creator.filters.FilterCreationResponseMerger;
+import io.harness.pms.sdk.creator.filters.FilterCreatorProvider;
 import io.harness.serializer.KryoRegistrar;
 import io.harness.serializer.PmsSdkModuleRegistrars;
 import io.harness.spring.AliasRegistrar;
@@ -97,6 +99,18 @@ public class PmsSdkModule {
       @Singleton
       public PlanCreatorProvider planCreatorProvider() {
         return config.getPlanCreatorProvider();
+      }
+
+      @Provides
+      @Singleton
+      public FilterCreatorProvider filterCreatorProvider() {
+        return config.getFilterCreatorProvider();
+      }
+
+      @Provides
+      @Singleton
+      public FilterCreationResponseMerger filterCreationResponseMerger() {
+        return config.getFilterCreationResponseMerger();
       }
 
       @Provides

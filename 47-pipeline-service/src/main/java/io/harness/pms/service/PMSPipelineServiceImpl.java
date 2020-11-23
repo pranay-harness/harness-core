@@ -1,21 +1,27 @@
 package io.harness.pms.service;
 
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.exception.WingsException.USER_SRE;
+
+import static java.lang.String.format;
 
 import io.harness.exception.DuplicateFieldException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.pms.beans.entities.PipelineEntity;
 import io.harness.pms.beans.entities.PipelineEntity.PipelineEntityKeys;
+import io.harness.pms.creator.FilterCreatorMergeService;
 import io.harness.pms.repository.spring.PMSPipelineRepository;
 
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.mongodb.client.result.UpdateResult;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import javax.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
+import org.bson.Document;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -25,6 +31,7 @@ import org.springframework.data.mongodb.core.query.Criteria;
 @Slf4j
 public class PMSPipelineServiceImpl implements PMSPipelineService {
   @Inject private PMSPipelineRepository pmsPipelineRepository;
+  @Inject private FilterCreatorMergeService filterCreatorMergeService;
 
   private static final String DUP_KEY_EXP_FORMAT_STRING =
       "Pipeline [%s] under Project[%s], Organization [%s] already exists";
@@ -41,10 +48,13 @@ public class PMSPipelineServiceImpl implements PMSPipelineService {
     try {
       validatePresenceOfRequiredFields(pipelineEntity.getAccountId(), pipelineEntity.getOrgIdentifier(),
           pipelineEntity.getProjectIdentifier(), pipelineEntity.getIdentifier(), pipelineEntity.getIdentifier());
+
+      updateFilters(pipelineEntity);
+
       PipelineEntity createdEntity = pmsPipelineRepository.save(pipelineEntity);
       return createdEntity;
     } catch (DuplicateKeyException ex) {
-      throw new DuplicateFieldException(String.format(DUP_KEY_EXP_FORMAT_STRING, pipelineEntity.getIdentifier(),
+      throw new DuplicateFieldException(format(DUP_KEY_EXP_FORMAT_STRING, pipelineEntity.getIdentifier(),
                                             pipelineEntity.getProjectIdentifier(), pipelineEntity.getOrgIdentifier()),
           USER_SRE, ex);
     }
@@ -65,7 +75,7 @@ public class PMSPipelineServiceImpl implements PMSPipelineService {
     Criteria criteria = getPipelineEqualityCriteria(pipelineEntity, pipelineEntity.getDeleted());
     PipelineEntity updateResult = pmsPipelineRepository.update(criteria, pipelineEntity);
     if (updateResult == null) {
-      throw new InvalidRequestException(String.format(
+      throw new InvalidRequestException(format(
           "Pipeline [%s] under Project[%s], Organization [%s] couldn't be updated or doesn't exist.",
           pipelineEntity.getIdentifier(), pipelineEntity.getProjectIdentifier(), pipelineEntity.getOrgIdentifier()));
     }
@@ -111,7 +121,7 @@ public class PMSPipelineServiceImpl implements PMSPipelineService {
     UpdateResult updateResult = pmsPipelineRepository.delete(criteria);
     if (!updateResult.wasAcknowledged() || updateResult.getModifiedCount() != 1) {
       throw new InvalidRequestException(
-          String.format("Pipeline [%s] under Project[%s], Organization [%s] couldn't be deleted.", pipelineIdentifier,
+          format("Pipeline [%s] under Project[%s], Organization [%s] couldn't be deleted.", pipelineIdentifier,
               projectIdentifier, orgIdentifier));
     }
     return true;
@@ -120,5 +130,17 @@ public class PMSPipelineServiceImpl implements PMSPipelineService {
   @Override
   public Page<PipelineEntity> list(Criteria criteria, Pageable pageable) {
     return pmsPipelineRepository.findAll(criteria, pageable);
+  }
+
+  private void updateFilters(PipelineEntity pipelineEntity) {
+    try {
+      Map<String, String> filters = filterCreatorMergeService.getFilters(pipelineEntity.getYaml());
+      if (isNotEmpty(filters)) {
+        filters.forEach((key, value) -> pipelineEntity.getFilters().put(key, Document.parse(value)));
+      }
+    } catch (Exception ex) {
+      throw new InvalidRequestException(
+          format("Error happened while creating filters for pipeline: %s", ex.getMessage(), ex));
+    }
   }
 }
