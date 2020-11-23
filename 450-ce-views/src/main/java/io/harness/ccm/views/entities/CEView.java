@@ -36,6 +36,7 @@ public class CEView implements PersistentEntity, UuidAware, CreatedAtAware, Upda
 
   ViewTimeRange viewTimeRange;
   List<ViewRule> viewRules;
+  List<ViewFieldIdentifier> dataSources;
   ViewVisualization viewVisualization;
   ViewType viewType = ViewType.CUSTOMER;
 

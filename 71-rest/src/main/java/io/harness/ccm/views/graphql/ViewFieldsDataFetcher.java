@@ -1,16 +1,22 @@
 package io.harness.ccm.views.graphql;
 
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+
+import io.harness.ccm.setup.CEMetadataRecordDao;
+import io.harness.ccm.views.entities.CEView;
 import io.harness.ccm.views.entities.ViewField;
 import io.harness.ccm.views.entities.ViewFieldIdentifier;
+import io.harness.ccm.views.service.CEViewService;
 import io.harness.ccm.views.service.ViewCustomFieldService;
 import io.harness.ccm.views.utils.ViewFieldUtils;
 
+import software.wings.beans.ce.CEMetadataRecord;
 import software.wings.graphql.datafetcher.AbstractFieldsDataFetcher;
 import software.wings.security.PermissionAttribute;
 import software.wings.security.annotations.AuthRule;
 
-import com.google.common.collect.ImmutableList;
 import com.google.inject.Inject;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -19,27 +25,71 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class ViewFieldsDataFetcher extends AbstractFieldsDataFetcher<QLCEViewFieldsData, QLCEViewFilterWrapper> {
   @Inject private ViewCustomFieldService viewCustomFieldService;
+  @Inject private CEMetadataRecordDao metadataRecordDao;
+  @Inject private CEViewService ceViewService;
 
   @Override
   @AuthRule(permissionType = PermissionAttribute.PermissionType.LOGGED_IN)
   protected QLCEViewFieldsData fetch(String accountId, List<QLCEViewFilterWrapper> filters) {
-    List<ViewField> customFields;
+    List<ViewField> customFields = new ArrayList<>();
     Optional<QLCEViewFilterWrapper> viewMetadataFilter = getViewMetadataFilter(filters);
+    boolean isExplorerQuery = false;
+    String viewId = null;
     if (viewMetadataFilter.isPresent()) {
       QLCEViewMetadataFilter metadataFilter = viewMetadataFilter.get().getViewMetadataFilter();
-      final String viewId = metadataFilter.getViewId();
+      isExplorerQuery = !metadataFilter.isPreview();
+      viewId = metadataFilter.getViewId();
       customFields = viewCustomFieldService.getCustomFieldsPerView(viewId);
-    } else {
-      customFields = viewCustomFieldService.getCustomFields(accountId);
     }
 
-    return QLCEViewFieldsData.builder()
-        .fieldIdentifierData(ImmutableList.of(getViewField(ViewFieldUtils.getAwsFields(), ViewFieldIdentifier.AWS),
-            getViewField(ViewFieldUtils.getGcpFields(), ViewFieldIdentifier.GCP),
-            getViewField(ViewFieldUtils.getClusterFields(), ViewFieldIdentifier.CLUSTER),
-            getViewField(ViewFieldUtils.getCommonFields(), ViewFieldIdentifier.COMMON),
-            getViewCustomField(customFields)))
-        .build();
+    List<QLCEViewFieldIdentifierData> fieldIdentifierData = new ArrayList<>();
+    fieldIdentifierData.add(getViewField(ViewFieldUtils.getCommonFields(), ViewFieldIdentifier.COMMON));
+    fieldIdentifierData.add(getViewCustomField(customFields));
+
+    if (isExplorerQuery) {
+      CEView ceView = ceViewService.get(viewId);
+      if (ceView.getDataSources() != null && isNotEmpty(ceView.getDataSources())) {
+        for (ViewFieldIdentifier viewFieldIdentifier : ceView.getDataSources()) {
+          if (viewFieldIdentifier == ViewFieldIdentifier.AWS) {
+            fieldIdentifierData.add(getViewField(ViewFieldUtils.getAwsFields(), viewFieldIdentifier));
+          } else if (viewFieldIdentifier == ViewFieldIdentifier.GCP) {
+            fieldIdentifierData.add(getViewField(ViewFieldUtils.getGcpFields(), viewFieldIdentifier));
+          } else if (viewFieldIdentifier == ViewFieldIdentifier.CLUSTER) {
+            fieldIdentifierData.add(getViewField(ViewFieldUtils.getClusterFields(), viewFieldIdentifier));
+          }
+        }
+      } else {
+        fieldIdentifierData.addAll(getFieldIdentifierDataFromCEMetadataRecord(accountId));
+      }
+    } else {
+      fieldIdentifierData.addAll(getFieldIdentifierDataFromCEMetadataRecord(accountId));
+    }
+    return QLCEViewFieldsData.builder().fieldIdentifierData(fieldIdentifierData).build();
+  }
+
+  private List<QLCEViewFieldIdentifierData> getFieldIdentifierDataFromCEMetadataRecord(String accountId) {
+    List<QLCEViewFieldIdentifierData> fieldIdentifierData = new ArrayList<>();
+    CEMetadataRecord ceMetadataRecord = metadataRecordDao.getByAccountId(accountId);
+    Boolean clusterDataConfigured = true;
+    Boolean awsConnectorConfigured = true;
+    Boolean gcpConnectorConfigured = true;
+
+    if (ceMetadataRecord != null) {
+      clusterDataConfigured = ceMetadataRecord.getClusterDataConfigured();
+      awsConnectorConfigured = ceMetadataRecord.getAwsConnectorConfigured();
+      gcpConnectorConfigured = ceMetadataRecord.getGcpConnectorConfigured();
+    }
+
+    if (clusterDataConfigured == null || clusterDataConfigured) {
+      fieldIdentifierData.add(getViewField(ViewFieldUtils.getClusterFields(), ViewFieldIdentifier.CLUSTER));
+    }
+    if (awsConnectorConfigured == null || awsConnectorConfigured) {
+      fieldIdentifierData.add(getViewField(ViewFieldUtils.getAwsFields(), ViewFieldIdentifier.AWS));
+    }
+    if (gcpConnectorConfigured == null || gcpConnectorConfigured) {
+      fieldIdentifierData.add(getViewField(ViewFieldUtils.getGcpFields(), ViewFieldIdentifier.GCP));
+    }
+    return fieldIdentifierData;
   }
 
   private QLCEViewFieldIdentifierData getViewField(
