@@ -156,4 +156,23 @@ public class PipelineResource {
 
     return ResponseDTO.newResponse(pipelines);
   }
+
+  @GET
+  @Path("/summary/{pipelineIdentifier}")
+  @ApiOperation(value = "Gets Pipeline Summary of a pipeline", nickname = "getPipelineSummary")
+  public ResponseDTO<PMSPipelineSummaryResponseDTO> getPipelineSummary(
+      @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountId,
+      @NotNull @QueryParam(NGCommonEntityConstants.ORG_KEY) String orgId,
+      @NotNull @QueryParam(NGCommonEntityConstants.PROJECT_KEY) String projectId,
+      @PathParam(NGCommonEntityConstants.PIPELINE_KEY) String pipelineId) {
+    log.info("Get pipeline Summary");
+
+    PMSPipelineSummaryResponseDTO pipelineSummary = PMSPipelineDtoMapper.preparePipelineSummary(
+        pmsPipelineService.get(accountId, orgId, projectId, pipelineId, false)
+            .orElseThrow(()
+                             -> new InvalidRequestException(
+                                 String.format("Pipeline with the given ID: %s does not exisit", pipelineId))));
+
+    return ResponseDTO.newResponse(pipelineSummary);
+  }
 }
