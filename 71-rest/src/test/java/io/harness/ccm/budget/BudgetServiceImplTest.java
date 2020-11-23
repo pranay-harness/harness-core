@@ -148,6 +148,7 @@ public class BudgetServiceImplTest extends CategoryTest {
     when(budgetDao.get(budget1.getUuid())).thenReturn(budget1);
     when(budgetDao.get(budget2.getUuid())).thenReturn(budget1);
     doNothing().when(accountChecker).checkIsCeEnabled(anyString());
+    when(statsHelper.validateIds(any(), any(), any())).thenReturn(true);
     resetValues();
     mockResultSet();
   }

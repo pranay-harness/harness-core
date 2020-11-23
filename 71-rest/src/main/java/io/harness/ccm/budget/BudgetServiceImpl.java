@@ -69,6 +69,8 @@ public class BudgetServiceImpl implements BudgetService {
       "Error in creating budget. The budget amount should be positive and less than 100 million dollars.";
   private String BUDGET_NAME_EXISTS_EXCEPTION = "Error in creating budget. Budget with given name already exists";
   private String BUDGET_NAME_NOT_PROVIDED_EXCEPTION = "Please provide a name for clone budget.";
+  private String INVALID_ENTITY_ID_EXCEPTION =
+      "Error in create/update budget operation. Some of the appliesTo ids are invalid.";
   private String UNDEFINED_BUDGET = "undefined";
 
   private static final long CACHE_SIZE = 10000;
@@ -84,6 +86,7 @@ public class BudgetServiceImpl implements BudgetService {
     accountChecker.checkIsCeEnabled(budget.getAccountId());
     validateBudget(budget, true);
     removeEmailDuplicates(budget);
+    validateAppliesToField(budget);
     return budgetDao.save(budget);
   }
 
@@ -121,6 +124,7 @@ public class BudgetServiceImpl implements BudgetService {
     }
     validateBudget(budget, false);
     removeEmailDuplicates(budget);
+    validateAppliesToField(budget);
     budgetDao.update(budgetId, budget);
   }
 
@@ -416,6 +420,26 @@ public class BudgetServiceImpl implements BudgetService {
       return 0;
     }
     return data.getData().get(data.getData().size() - 1).getActualCost();
+  }
+
+  private void validateAppliesToField(Budget budget) {
+    BudgetScope scope = budget.getScope();
+    String[] entityIds = {};
+    boolean valid = false;
+    if (scope == null) {
+      return;
+    }
+    entityIds = getAppliesToIds(scope);
+    if (scope.getBudgetScopeFilter().getCluster() != null) {
+      valid = statsHelper.validateIds(
+          BillingDataMetaDataFields.CLUSTERID, new HashSet<>(Arrays.asList(entityIds)), budget.getAccountId());
+    } else if (scope.getBudgetScopeFilter().getApplication() != null) {
+      valid = statsHelper.validateIds(
+          BillingDataMetaDataFields.APPID, new HashSet<>(Arrays.asList(entityIds)), budget.getAccountId());
+    }
+    if (!valid) {
+      throw new InvalidRequestException(INVALID_ENTITY_ID_EXCEPTION);
+    }
   }
 
   @Override
