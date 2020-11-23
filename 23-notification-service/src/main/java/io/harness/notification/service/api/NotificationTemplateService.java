@@ -21,7 +21,7 @@ public interface NotificationTemplateService {
 
   Optional<String> getTemplateAsString(String identifier, Team team);
 
-  Optional<String> getTemplateAsString(String identifier);
+  Optional<NotificationTemplate> getPredefinedTemplate(String identifier);
 
   boolean delete(String templateIdentifier, Team team);
 

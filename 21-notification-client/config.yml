@@ -35,7 +35,7 @@ notificationClient:
     maxConnectionIdleTime: 600000
     connectionsPerHost: 300
   httpClient:
-    baseUrl: http://localhost:9005/
+    baseUrl: http://localhost:9005/api/
     connectTimeOutSeconds: 15
     readTimeOutSeconds: 15
   secrets:
