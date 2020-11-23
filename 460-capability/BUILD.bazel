@@ -1,0 +1,76 @@
+load("@rules_java//java:defs.bzl", "java_binary")
+load("//:tools/bazel/GenTestRules.bzl", "run_tests")
+load("//tools/checkstyle:rules.bzl", "checkstyle")
+load("//:macros.bzl", "sources")
+load("//:macros.bzl", "sonarqube_test")
+load("//:macros.bzl", "test_targets_list")
+load("//tools/bazel/pmd:defs.bzl", "pmd")
+
+sources()
+
+java_library(
+    name = "maven_deps",
+    visibility = ["//visibility:public"],
+    exports = [
+        "//21-persistence:module",
+        "@maven//:com_google_protobuf_protobuf_java",
+    ],
+)
+
+java_library(
+    name = "module",
+    srcs = glob(["src/main/**/*.java"]),
+    visibility = ["//visibility:public"],
+    deps = [
+        "maven_deps",
+        "//:lombok",
+        "//19-delegate-tasks-beans:module",
+        "//460-capability/src/main/proto:240_capability_java_proto",
+        "//460-capability/src/main/proto:240_capability_proto",
+    ],
+)
+
+java_library(
+    name = "test_deps",
+    exports = [
+        "//21-persistence:supporter-test",
+        "//990-commons-test:module",
+        "@maven//:ch_qos_logback_logback_classic",
+        "@maven//:ch_qos_logback_logback_core",
+        "@maven//:de_flapdoodle_embed_de_flapdoodle_embed_process",
+        "@maven//:junit_junit",
+        "@maven//:org_assertj_assertj_core",
+        "@maven//:org_mockito_mockito_core",
+        "@maven//:org_springframework_spring_beans",
+    ],
+)
+
+java_library(
+    name = "tests",
+    srcs = glob(["src/test/**/*.java"]),
+    resources = [
+        "//22-ng-core/src/test/resources:resource",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [
+        "maven_deps",
+        "module",
+        "test_deps",
+        "//:lombok",
+    ],
+)
+
+run_tests()
+
+checkstyle()
+
+sonarqube_test(
+    name = "sq_mycomponent",
+    srcs = ["sources"],
+    targets = [
+        ":maven_deps",
+        ":module",
+    ],
+)
+
+pmd()

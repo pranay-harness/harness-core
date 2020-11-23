@@ -5,5 +5,11 @@ package io.harness.capability;
 option java_multiple_files = true;
 option go_package = "240_capability";
 
+message CapabilityParameters {
+  oneof capability {
+    TestingCapability testing_capability = 1;
+  }
+}
+
 // A testing method for capabilities
 message TestingCapability {}
