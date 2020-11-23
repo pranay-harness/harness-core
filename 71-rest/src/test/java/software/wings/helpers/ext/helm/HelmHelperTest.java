@@ -19,6 +19,8 @@ import io.harness.category.element.UnitTests;
 import io.harness.delegate.service.ExecutionConfigOverrideFromFileOnDelegate;
 import io.harness.exception.WingsException;
 import io.harness.helm.HelmConstants;
+import io.harness.k8s.manifest.ManifestHelper;
+import io.harness.k8s.model.KubernetesResource;
 import io.harness.rule.Owner;
 
 import software.wings.WingsBaseTest;
@@ -34,7 +36,10 @@ import software.wings.beans.settings.helm.HttpHelmRepoConfig;
 import software.wings.helpers.ext.helm.request.HelmChartConfigParams;
 import software.wings.helpers.ext.k8s.request.K8sDelegateManifestConfig;
 
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -266,5 +271,41 @@ public class HelmHelperTest extends WingsBaseTest {
     HelmHelper.updateArtifactVariableNamesReferencedInValuesYaml(
         "imageTag: " + HelmConstants.HELM_DOCKER_IMAGE_TAG_PLACEHOLDER, serviceArtifactVariableNames);
     assertThat(serviceArtifactVariableNames).contains(DEFAULT_ARTIFACT_VARIABLE_NAME);
+  }
+
+  @Test
+  @Owner(developers = ABOSII)
+  @Category(UnitTests.class)
+  public void testFilterWorkloads() {
+    List<KubernetesResource> kubernetesResourceList = Arrays.asList(
+        createK8sResource("Job", "hook-job", Arrays.asList("helm.sh/hook: post-install", "helm.sh/hook-weight: 5")),
+        createK8sResource("Job", "simple-job", Collections.emptyList()),
+        createK8sResource("Deployment", "deployment-no-annotations", null));
+
+    assertThat(
+        HelmHelper.filterWorkloads(kubernetesResourceList).stream().map(resource -> resource.getField("metadata.name")))
+        .containsExactlyInAnyOrder("simple-job", "deployment-no-annotations");
+  }
+
+  private KubernetesResource createK8sResource(String kind, String name, List<String> annotations) {
+    String templateSpec = "apiVersion: v1\n"
+        + "kind: ${kind}\n"
+        + "metadata:\n"
+        + "  name: ${name}\n"
+        + "  ${annotations}\n"
+        + "spec:\n"
+        + "  template:\n"
+        + "    metadata:\n"
+        + "      name: some-name \n";
+    String annotationsValue;
+    if (annotations == null) {
+      annotationsValue = "";
+    } else {
+      annotationsValue = "annotations:\n";
+      annotationsValue += annotations.stream().reduce("", (value, annotation) -> value + "    " + annotation + "\n");
+    }
+
+    return ManifestHelper.getKubernetesResourceFromSpec(
+        templateSpec.replace("${kind}", kind).replace("${annotations}", annotationsValue).replace("${name}", name));
   }
 }

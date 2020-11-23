@@ -15,6 +15,9 @@ import io.harness.delegate.service.ExecutionConfigOverrideFromFileOnDelegate;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
 import io.harness.expression.ExpressionEvaluator;
+import io.harness.helm.HelmConstants;
+import io.harness.k8s.manifest.ManifestHelper;
+import io.harness.k8s.model.KubernetesResource;
 
 import software.wings.beans.HelmExecutionSummary;
 import software.wings.beans.appmanifest.ManifestFile;
@@ -33,7 +36,9 @@ import com.google.inject.Singleton;
 import java.io.IOException;
 import java.io.StringReader;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 import org.apache.commons.io.LineIterator;
 
 @Singleton
@@ -184,5 +189,16 @@ public class HelmHelper {
   public void replaceManifestPlaceholdersWithLocalConfig(ManifestFile manifestFile) {
     manifestFile.setFileContent(
         delegateLocalConfigService.replacePlaceholdersWithLocalConfig(manifestFile.getFileContent()));
+  }
+
+  public static List<KubernetesResource> filterWorkloads(List<KubernetesResource> allWorkloads) {
+    List<KubernetesResource> eligibleWorkloads = ManifestHelper.getEligibleWorkloads(allWorkloads);
+    return eligibleWorkloads
+        .stream()
+        // Helm hooks are managed by helm and trying to handle them on our side could lead to some issues
+        // i.e. hooks that are deleted after they succeed or that are executed only on install/upgrade
+        // will fail our steady check due to missing resource
+        .filter(resource -> resource.getMetadataAnnotationValue(HelmConstants.HELM_HOOK_ANNOTATION) == null)
+        .collect(Collectors.toList());
   }
 }

@@ -4,9 +4,10 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.helm.HelmConstants.DEFAULT_TILLER_CONNECTION_TIMEOUT_MILLIS;
-import static io.harness.k8s.manifest.ManifestHelper.getEligibleWorkloads;
 import static io.harness.logging.LogLevel.INFO;
 import static io.harness.validation.Validator.notNullCheck;
+
+import static software.wings.helpers.ext.helm.HelmHelper.filterWorkloads;
 
 import static java.lang.String.format;
 import static org.apache.commons.lang3.StringUtils.isBlank;
@@ -292,7 +293,7 @@ public class HelmDeployServiceImpl implements HelmDeployService {
     k8sTaskHelperBase.setNamespaceToKubernetesResourcesIfRequired(
         resources, commandRequest.getContainerServiceParams().getNamespace());
 
-    return getEligibleWorkloads(resources).stream().map(KubernetesResource::getResourceId).collect(Collectors.toList());
+    return filterWorkloads(resources).stream().map(KubernetesResource::getResourceId).collect(Collectors.toList());
   }
 
   private void prepareRepoAndCharts(HelmCommandRequest commandRequest, long timeoutInMillis) throws Exception {
