@@ -51,17 +51,13 @@ public class HashicorpVaultEncryptor implements VaultEncryptor {
         return timeLimiter.callWithTimeout(
             () -> upsertSecretInternal(name, plaintext, accountId, null, vaultConfig), 15, TimeUnit.SECONDS, true);
       } catch (Exception e) {
-        if (e instanceof SecretManagementDelegateException) {
-          throw(SecretManagementDelegateException) e;
-        } else {
-          failedAttempts++;
-          log.warn("encryption failed. trial num: {}", failedAttempts, e);
-          if (failedAttempts == NUM_OF_RETRIES) {
-            String message = "encryption failed after " + NUM_OF_RETRIES + " retries for vault secret " + name;
-            throw new SecretManagementDelegateException(VAULT_OPERATION_ERROR, message, e, USER);
-          }
-          sleep(ofMillis(1000));
+        failedAttempts++;
+        log.warn("encryption failed. trial num: {}", failedAttempts, e);
+        if (failedAttempts == NUM_OF_RETRIES) {
+          String message = "encryption failed after " + NUM_OF_RETRIES + " retries for vault secret " + name;
+          throw new SecretManagementDelegateException(VAULT_OPERATION_ERROR, message, e, USER);
         }
+        sleep(ofMillis(1000));
       }
     }
   }
@@ -78,17 +74,13 @@ public class HashicorpVaultEncryptor implements VaultEncryptor {
                 -> upsertSecretInternal(name, plaintext, accountId, existingRecord, vaultConfig),
             5, TimeUnit.SECONDS, true);
       } catch (Exception e) {
-        if (e instanceof SecretManagementDelegateException) {
-          throw(SecretManagementDelegateException) e;
-        } else {
-          failedAttempts++;
-          log.warn("encryption failed. trial num: {}", failedAttempts, e);
-          if (failedAttempts == NUM_OF_RETRIES) {
-            String message = "encryption failed after " + NUM_OF_RETRIES + " retries for vault secret " + name;
-            throw new SecretManagementDelegateException(VAULT_OPERATION_ERROR, message, e, USER);
-          }
-          sleep(ofMillis(1000));
+        failedAttempts++;
+        log.warn("encryption failed. trial num: {}", failedAttempts, e);
+        if (failedAttempts == NUM_OF_RETRIES) {
+          String message = "encryption failed after " + NUM_OF_RETRIES + " retries for vault secret " + name;
+          throw new SecretManagementDelegateException(VAULT_OPERATION_ERROR, message, e, USER);
         }
+        sleep(ofMillis(1000));
       }
     }
   }
@@ -103,17 +95,13 @@ public class HashicorpVaultEncryptor implements VaultEncryptor {
         return timeLimiter.callWithTimeout(
             () -> renameSecretInternal(name, accountId, existingRecord, vaultConfig), 15, TimeUnit.SECONDS, true);
       } catch (Exception e) {
-        if (e instanceof SecretManagementDelegateException) {
-          throw(SecretManagementDelegateException) e;
-        } else {
-          failedAttempts++;
-          log.warn("encryption failed. trial num: {}", failedAttempts, e);
-          if (failedAttempts == NUM_OF_RETRIES) {
-            String message = "encryption failed after " + NUM_OF_RETRIES + " retries for vault secret " + name;
-            throw new SecretManagementDelegateException(VAULT_OPERATION_ERROR, message, e, USER);
-          }
-          sleep(ofMillis(1000));
+        failedAttempts++;
+        log.warn("encryption failed. trial num: {}", failedAttempts, e);
+        if (failedAttempts == NUM_OF_RETRIES) {
+          String message = "encryption failed after " + NUM_OF_RETRIES + " retries for vault secret " + name;
+          throw new SecretManagementDelegateException(VAULT_OPERATION_ERROR, message, e, USER);
         }
+        sleep(ofMillis(1000));
       }
     }
   }
@@ -184,16 +172,12 @@ public class HashicorpVaultEncryptor implements VaultEncryptor {
       } catch (Exception e) {
         failedAttempts++;
         log.warn("decryption failed. trial num: {}", failedAttempts, e);
-        if (e instanceof SecretManagementDelegateException) {
-          throw(SecretManagementDelegateException) e;
-        } else {
-          if (failedAttempts == NUM_OF_RETRIES) {
-            String message = "Decryption failed after " + NUM_OF_RETRIES + " retries for secret "
-                + encryptedRecord.getEncryptionKey() + " or path " + encryptedRecord.getPath();
-            throw new SecretManagementDelegateException(VAULT_OPERATION_ERROR, message, e, USER);
-          }
-          sleep(ofMillis(1000));
+        if (failedAttempts == NUM_OF_RETRIES) {
+          String message = "Decryption failed after " + NUM_OF_RETRIES + " retries for secret "
+              + encryptedRecord.getEncryptionKey() + " or path " + encryptedRecord.getPath();
+          throw new SecretManagementDelegateException(VAULT_OPERATION_ERROR, message, e, USER);
         }
+        sleep(ofMillis(1000));
       }
     }
   }
