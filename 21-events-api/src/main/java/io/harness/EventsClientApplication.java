@@ -24,6 +24,7 @@ import io.dropwizard.setup.Bootstrap;
 import io.dropwizard.setup.Environment;
 import java.io.UnsupportedEncodingException;
 import java.util.Map;
+import java.util.Random;
 import java.util.SortedSet;
 import java.util.TreeSet;
 import lombok.extern.slf4j.Slf4j;
@@ -79,73 +80,11 @@ public class EventsClientApplication extends Application<EventsClientApplication
 
     // ----------------- Perform operations -----------------
     client.createConsumerGroup(channel, groupName);
-    //    publishMessages(client, channel);
-    readViaConsumerGroups(client, channel, "group1", "cons3");
-    //    readViaPubSub(client, channel);
-  }
 
-  private void publishMessages(RedisStreamClient client, StreamChannel channel) throws InterruptedException {
-    int count = 0;
-    while (true) {
-      Event projectEvent =
-          Event.newBuilder()
-              .setAccountId("account2")
-              .setPayload(Any.pack(
-                  ProjectUpdate.newBuilder().setProjectId(String.valueOf(count)).setDescription("updated").build()))
-              .build();
-      client.publishEvent(channel, projectEvent);
-      count += 1;
-      Thread.sleep(1000);
-    }
-  }
-  private void readViaConsumerGroups(RedisStreamClient client, StreamChannel channel, String groupName,
-      String consumerName) throws InterruptedException {
-    Map<String, Event> getValue;
-    SortedSet<String> sortedKeys;
-    while (true) {
-      getValue = client.readEvent(channel, groupName, consumerName);
-      sortedKeys = new TreeSet<String>(getValue.keySet());
-
-      for (String key : sortedKeys) {
-        try {
-          ProjectUpdate p = getValue.get(key).getPayload().unpack(ProjectUpdate.class);
-          log.info("Received from redis - " + consumerName + " - pid: " + p.getProjectId()
-              + ", description: " + p.getDescription());
-        } catch (InvalidProtocolBufferException e) {
-          log.error("Exception in unpacking data for key " + key, e);
-        }
-        client.acknowledge(channel, groupName, key);
-      }
-
-      StreamInfo info = client.getStreamInfo(channel);
-      log.info("Total stream length: " + info.getLength());
-      log.info("--------------------");
-      Thread.sleep(1000);
-    }
-  }
-
-  private void readViaPubSub(RedisStreamClient client, StreamChannel channel) throws InterruptedException {
-    Map<String, Event> getValue;
-    SortedSet<String> sortedKeys;
-    String lastId = "$";
-    while (true) {
-      getValue = client.readEvent(channel, lastId);
-      sortedKeys = new TreeSet<String>(getValue.keySet());
-      for (String key : sortedKeys) {
-        try {
-          ProjectUpdate p = getValue.get(key).getPayload().unpack(ProjectUpdate.class);
-          log.info("Received from redis " + p.getProjectId());
-        } catch (InvalidProtocolBufferException e) {
-          log.error("Exception in unpacking data for key " + key, e);
-        }
-        lastId = key;
-      }
-
-      StreamInfo info = client.getStreamInfo(channel);
-      log.info("Total stream length: " + info.getLength());
-      log.info("--------------------");
-      Thread.sleep(1000);
-    }
+    new Thread(new MessagePublisher(client, channel)).start();
+    new Thread(new MessageConsumer("consumerGroups", client, channel, groupName, "cons1")).start();
+    new Thread(new MessageConsumer("consumerGroups", client, channel, groupName, "cons2")).start();
+    new Thread(new MessageConsumer("pubSub", client, channel)).start();
   }
 
   private void registerJerseyFeatures(Environment environment) {

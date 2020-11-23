@@ -58,7 +58,6 @@ public class RedisStreamClient {
   }
 
   public void publishEvent(StreamChannel channel, Event event) {
-    log.info("pushing " + Base64.getEncoder().encodeToString(event.toByteArray()) + " in redis");
     getStream(channel).addAll(
         ImmutableMap.of(REDIS_STREAM_INTERNAL_KEY, Base64.getEncoder().encodeToString(event.toByteArray())), 100000,
         false);
@@ -122,7 +121,7 @@ public class RedisStreamClient {
         try {
           return Event.parseFrom(Base64.getDecoder().decode(entry.getValue().get(REDIS_STREAM_INTERNAL_KEY)));
         } catch (InvalidProtocolBufferException e) {
-          log.info("Protobuf parsing failed for redis stream - " + entry.getValue() + " error: " + e);
+          log.error("Protobuf parsing failed for redis stream - " + entry.getValue(), e);
           return Event.newBuilder().build();
         }
       }));
