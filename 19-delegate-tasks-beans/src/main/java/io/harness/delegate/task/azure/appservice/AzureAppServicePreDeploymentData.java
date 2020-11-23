@@ -13,6 +13,7 @@ import lombok.Data;
 public class AzureAppServicePreDeploymentData {
   private String appName;
   private String slotName;
+  private double trafficWeight;
   private Map<String, AzureAppServiceApplicationSetting> appSettings;
   private Map<String, AzureAppServiceConnectionString> connSettings;
   private Map<String, AzureAppServiceDockerSetting> dockerSettings;

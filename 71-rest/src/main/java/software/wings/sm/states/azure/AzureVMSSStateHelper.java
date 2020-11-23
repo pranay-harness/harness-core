@@ -19,6 +19,7 @@ import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 import io.harness.beans.EncryptedData;
 import io.harness.beans.ExecutionStatus;
+import io.harness.beans.SweepingOutputInstance;
 import io.harness.beans.TriggeredBy;
 import io.harness.context.ContextElementType;
 import io.harness.data.encoding.EncodingUtils;
@@ -41,6 +42,7 @@ import io.harness.security.encryption.EncryptedDataDetail;
 import software.wings.annotation.EncryptableSetting;
 import software.wings.api.InstanceElement;
 import software.wings.api.PhaseElement;
+import software.wings.api.instancedetails.InstanceInfoVariables;
 import software.wings.beans.Activity;
 import software.wings.beans.Activity.ActivityBuilder;
 import software.wings.beans.Application;
@@ -69,6 +71,7 @@ import software.wings.service.intfc.LogService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.security.SecretManager;
+import software.wings.service.intfc.sweepingoutput.SweepingOutputService;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.InstanceStatusSummary;
 import software.wings.sm.WorkflowStandardParams;
@@ -98,6 +101,7 @@ public class AzureVMSSStateHelper {
   @Inject private SecretManager secretManager;
   @Inject private ArtifactStreamService artifactStreamService;
   @Inject private LogService logService;
+  @Inject private SweepingOutputService sweepingOutputService;
 
   public boolean isBlueGreenWorkflow(ExecutionContext context) {
     return BLUE_GREEN == context.getOrchestrationWorkflowType();
@@ -297,6 +301,15 @@ public class AzureVMSSStateHelper {
     return (AzureConfig) settingAttribute.getValue();
   }
 
+  public Integer getStateTimeOutFromContext(ExecutionContext context, ContextElementType elementType) {
+    AzureVMSSSetupContextElement azureVMSSSetupContextElement = context.getContextElement(elementType);
+    return Optional.ofNullable(azureVMSSSetupContextElement)
+        .map(AzureVMSSSetupContextElement::getAutoScalingSteadyStateVMSSTimeout)
+        .filter(timeout -> timeout > 0)
+        .map(timeout -> Ints.checkedCast(TimeUnit.MINUTES.toMillis(timeout.longValue())))
+        .orElse(null);
+  }
+
   public Integer getAzureVMSSStateTimeoutFromContext(ExecutionContext context) {
     AzureVMSSSetupContextElement azureVMSSSetupContextElement =
         context.getContextElement(ContextElementType.AZURE_VMSS_SETUP);
@@ -341,9 +354,17 @@ public class AzureVMSSStateHelper {
                                                                                            : ExecutionStatus.FAILED;
   }
 
-  public ExecutionStatus getAppServieExecutionStatus(AzureTaskExecutionResponse executionResponse) {
+  public ExecutionStatus getAppServiceExecutionStatus(AzureTaskExecutionResponse executionResponse) {
     return executionResponse.getCommandExecutionStatus() == CommandExecutionStatus.SUCCESS ? ExecutionStatus.SUCCESS
                                                                                            : ExecutionStatus.FAILED;
+  }
+
+  public void saveInstanceInfoToSweepingOutput(ExecutionContext context, int trafficShift) {
+    sweepingOutputService.save(
+        context.prepareSweepingOutputBuilder(SweepingOutputInstance.Scope.WORKFLOW)
+            .name(context.appendStateExecutionId(InstanceInfoVariables.SWEEPING_OUTPUT_NAME))
+            .value(InstanceInfoVariables.builder().newInstanceTrafficPercent(trafficShift).build())
+            .build());
   }
 
   public AzureVMSSStateData populateStateData(ExecutionContext context) {

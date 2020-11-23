@@ -20,7 +20,8 @@ import static software.wings.sm.states.azure.AzureVMSSDeployState.AZURE_VMSS_DEP
 import static software.wings.sm.states.azure.AzureVMSSSetupState.AZURE_VMSS_SETUP_COMMAND_NAME;
 import static software.wings.sm.states.azure.AzureVMSSSwitchRoutesState.AZURE_VMSS_SWAP_ROUTE;
 import static software.wings.sm.states.azure.appservices.AzureWebAppSlotSetup.APP_SERVICE_SLOT_SETUP;
-import static software.wings.sm.states.azure.appservices.AzureWebAppSlotShiftTraffic.APP_SERVICE_SLOT_TRAFFIC_SHIT;
+import static software.wings.sm.states.azure.appservices.AzureWebAppSlotShiftTraffic.APP_SERVICE_SLOT_TRAFFIC_SHIFT;
+import static software.wings.sm.states.azure.appservices.AzureWebAppSlotSwap.APP_SERVICE_SLOT_SWAP;
 import static software.wings.sm.states.customdeployment.InstanceFetchState.FETCH_INSTANCE_COMMAND_UNIT;
 import static software.wings.sm.states.pcf.MapRouteState.PCF_MAP_ROUTE_COMMAND;
 import static software.wings.sm.states.pcf.PcfDeployState.PCF_RESIZE_COMMAND;
@@ -86,8 +87,8 @@ public class CommandUnitDetails {
     AZURE_VMSS_DEPLOY(AZURE_VMSS_DEPLOY_COMMAND_NAME),
     AZURE_VMSS_SWAP(AZURE_VMSS_SWAP_ROUTE),
     AZURE_APP_SERVICE_SLOT_SETUP(APP_SERVICE_SLOT_SETUP),
-    AZURE_APP_SERVICE_SLOT_TRAFFIC_SHIFT(APP_SERVICE_SLOT_TRAFFIC_SHIT),
-    AZURE_APP_SERVICE_SLOT_SWAP(APP_SERVICE_SLOT_SETUP),
+    AZURE_APP_SERVICE_SLOT_TRAFFIC_SHIFT(APP_SERVICE_SLOT_TRAFFIC_SHIFT),
+    AZURE_APP_SERVICE_SLOT_SWAP(APP_SERVICE_SLOT_SWAP),
     CUSTOM_DEPLOYMENT_FETCH_INSTANCES(FETCH_INSTANCE_COMMAND_UNIT);
 
     private String name;

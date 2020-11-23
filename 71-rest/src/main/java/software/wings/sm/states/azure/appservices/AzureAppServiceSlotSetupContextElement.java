@@ -26,6 +26,7 @@ public class AzureAppServiceSlotSetupContextElement implements ContextElement {
   private String commandName;
   private String webApp;
   private String deploymentSlot;
+  private String targetSlot;
   private Integer appServiceSlotSetupTimeOut;
   private String infraMappingId;
   private AzureAppServicePreDeploymentData preDeploymentData;
