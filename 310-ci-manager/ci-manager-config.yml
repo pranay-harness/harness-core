@@ -79,3 +79,13 @@ ciExecutionServiceConfig:
   defaultInternalImageConnector: account.harnessimage
   pvcDefaultStorageSize: 25600
   delegateServiceEndpointVariableValue: "delegate-service:8080"
+
+pmsSdkGrpcServerConfig:
+  connectors:
+    - port: 12101
+
+pmsGrpcClientConfig:
+  target: localhost:12011
+  authority: localhost
+
+shouldConfigureWithPMS: false

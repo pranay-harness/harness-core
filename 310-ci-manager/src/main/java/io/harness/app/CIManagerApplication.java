@@ -7,6 +7,9 @@ import static io.harness.waiter.OrchestrationNotifyEventListener.ORCHESTRATION;
 import static java.util.Collections.singletonList;
 
 import io.harness.AuthorizationServiceHeader;
+import io.harness.PmsSdkConfiguration;
+import io.harness.PmsSdkModule;
+import io.harness.ci.plan.creator.CIPlanCreatorProvider;
 import io.harness.delegate.beans.DelegateAsyncTaskResponse;
 import io.harness.delegate.beans.DelegateSyncTaskResponse;
 import io.harness.delegate.beans.DelegateTaskProgressResponse;
@@ -222,6 +225,9 @@ public class CIManagerApplication extends Application<CIManagerConfiguration> {
     });
 
     Injector injector = Guice.createInjector(modules);
+    if (configuration.getShouldConfigureWithPMS() != null && configuration.getShouldConfigureWithPMS()) {
+      registerPMSSDK(configuration);
+    }
     registerResources(environment, injector);
     registerWaitEnginePublishers(injector);
     registerManagedBeans(environment, injector);
@@ -260,6 +266,14 @@ public class CIManagerApplication extends Application<CIManagerConfiguration> {
         environment.jersey().register(injector.getInstance(resource));
       }
     }
+  }
+  private void registerPMSSDK(CIManagerConfiguration config) {
+    PmsSdkConfiguration sdkConfig = PmsSdkConfiguration.builder()
+                                        .grpcServerConfig(config.getPmsSdkGrpcServerConfig())
+                                        .pmsGrpcClientConfig(config.getPmsGrpcClientConfig())
+                                        .planCreatorProvider(new CIPlanCreatorProvider())
+                                        .build();
+    PmsSdkModule.initializeDefaultInstance(sdkConfig);
   }
 
   private void scheduleJobs(Injector injector) {

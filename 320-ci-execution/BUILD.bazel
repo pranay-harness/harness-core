@@ -41,6 +41,7 @@ java_library(
         "//35-yaml-beans:module",
         "//38-execution-plan:module",
         "//39-ng-pipeline-commons:module",
+        "//41-pms-sdk:module",
         "//440-connector-nextgen:module",
         "//970-api-services-beans:module",
         "//970-grpc:module",
