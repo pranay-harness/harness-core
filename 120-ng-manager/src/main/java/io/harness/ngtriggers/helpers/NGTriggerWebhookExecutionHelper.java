@@ -47,34 +47,36 @@ public class NGTriggerWebhookExecutionHelper {
       webhookPayloadData = parseEventData(triggerWebhookEvent);
     } catch (StatusRuntimeException e) {
       if (e.getStatus().getCode() == Status.Code.UNAVAILABLE) {
-        return WebhookEventResponseHelper.toResponse(FinalStatus.SCM_SERVICE_DOWN, triggerWebhookEvent, null);
+        return WebhookEventResponseHelper.toResponse(FinalStatus.SCM_SERVICE_DOWN, triggerWebhookEvent, null, "");
       }
-      return WebhookEventResponseHelper.toResponse(FinalStatus.INVALID_PAYLOAD, triggerWebhookEvent, null);
+      return WebhookEventResponseHelper.toResponse(FinalStatus.INVALID_PAYLOAD, triggerWebhookEvent, null, "");
     }
 
     List<NGTriggerEntity> triggersForRepo =
         retrieveTriggersConfiguredForRepo(triggerWebhookEvent, webhookPayloadData.getRepository().getLink());
     if (EmptyPredicate.isEmpty(triggersForRepo)) {
-      return WebhookEventResponseHelper.toResponse(FinalStatus.NO_MATCHING_TRIGGER, triggerWebhookEvent, null);
+      return WebhookEventResponseHelper.toResponse(FinalStatus.NO_MATCHING_TRIGGER, triggerWebhookEvent, null, "");
     }
     Optional<TriggerDetails> optionalEntity = applyFilters(webhookPayloadData, triggersForRepo);
     if (optionalEntity.isPresent()) {
       TriggerDetails triggerDetails = optionalEntity.get();
+      String triggerIdentifier = triggerDetails.getNgTriggerEntity().getIdentifier();
       try {
         NGPipelineExecutionResponseDTO response =
             resolveRuntimeInputAndSubmitExecutionRequest(triggerDetails, triggerWebhookEvent.getPayload());
         if (response.isErrorResponse()) {
           return WebhookEventResponseHelper.toResponse(
-              FinalStatus.TARGET_DID_NOT_EXECUTE, triggerWebhookEvent, response);
+              FinalStatus.TARGET_DID_NOT_EXECUTE, triggerWebhookEvent, response, triggerIdentifier);
         } else {
           return WebhookEventResponseHelper.toResponse(
-              FinalStatus.TARGET_EXECUTION_REQUESTED, triggerWebhookEvent, response);
+              FinalStatus.TARGET_EXECUTION_REQUESTED, triggerWebhookEvent, response, triggerIdentifier);
         }
       } catch (Exception e) {
-        return WebhookEventResponseHelper.toResponse(FinalStatus.INVALID_RUNTIME_INPUT_YAML, triggerWebhookEvent, null);
+        return WebhookEventResponseHelper.toResponse(
+            FinalStatus.INVALID_RUNTIME_INPUT_YAML, triggerWebhookEvent, null, triggerIdentifier);
       }
     }
-    return WebhookEventResponseHelper.toResponse(FinalStatus.NO_MATCHING_TRIGGER, triggerWebhookEvent, null);
+    return WebhookEventResponseHelper.toResponse(FinalStatus.NO_MATCHING_TRIGGER, triggerWebhookEvent, null, "");
   }
 
   // Add error handling
