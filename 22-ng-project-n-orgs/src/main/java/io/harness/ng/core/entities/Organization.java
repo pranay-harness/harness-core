@@ -5,10 +5,10 @@ import static io.harness.mongo.CollationStrength.PRIMARY;
 
 import io.harness.data.validator.EntityIdentifier;
 import io.harness.data.validator.NGEntityName;
-import io.harness.data.validator.Trimmed;
 import io.harness.mongo.index.CdUniqueIndexWithCollation;
 import io.harness.mongo.index.Field;
 import io.harness.ng.core.NGAccountAccess;
+import io.harness.ng.core.common.beans.NGTag;
 import io.harness.ng.core.entities.Organization.OrganizationKeys;
 import io.harness.persistence.PersistentEntity;
 
@@ -41,14 +41,13 @@ import org.springframework.data.mongodb.core.mapping.Document;
     strength = PRIMARY)
 public class Organization implements PersistentEntity, NGAccountAccess {
   @Wither @Id @org.mongodb.morphia.annotations.Id String id;
-  @Trimmed String accountIdentifier;
-  @Trimmed @EntityIdentifier String identifier;
+  String accountIdentifier;
+  @EntityIdentifier(allowBlank = false) String identifier;
 
   @NGEntityName String name;
 
-  @Trimmed @NotEmpty String color;
   @NotNull @Size(max = 1024) String description;
-  @NotNull @Singular @Size(max = 128) List<String> tags;
+  @NotNull @Singular @Size(max = 128) List<NGTag> tags;
 
   @Wither @CreatedDate Long createdAt;
   @Wither @LastModifiedDate Long lastModifiedAt;

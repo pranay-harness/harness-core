@@ -34,6 +34,7 @@ import io.harness.rule.Owner;
 import io.harness.secretmanagerclient.dto.GcpKmsConfigDTO;
 
 import io.dropwizard.jersey.validation.JerseyViolationException;
+import java.util.Optional;
 import org.bson.Document;
 import org.junit.Before;
 import org.junit.Test;
@@ -63,7 +64,6 @@ public class OrganizationServiceImplTest extends CategoryTest {
         .accountIdentifier(accountIdentifier)
         .identifier(identifier)
         .name(randomAlphabetic(10))
-        .color(randomAlphabetic(10))
         .build();
   }
 
@@ -110,7 +110,8 @@ public class OrganizationServiceImplTest extends CategoryTest {
     organization.setAccountIdentifier(accountIdentifier);
     organization.setIdentifier(identifier);
 
-    when(organizationRepository.update(any(), any())).thenReturn(organization);
+    when(organizationRepository.save(any())).thenReturn(organization);
+    when(organizationService.get(accountIdentifier, identifier)).thenReturn(Optional.of(organization));
 
     Organization updatedOrganization = organizationService.update(accountIdentifier, identifier, organizationDTO);
 
@@ -129,6 +130,8 @@ public class OrganizationServiceImplTest extends CategoryTest {
     organization.setAccountIdentifier(accountIdentifier);
     organization.setIdentifier(identifier);
     organization.setName(randomAlphabetic(10));
+    when(organizationService.get(accountIdentifier, identifier)).thenReturn(Optional.of(organization));
+
     organizationService.update(accountIdentifier, identifier, organizationDTO);
   }
 
@@ -143,7 +146,7 @@ public class OrganizationServiceImplTest extends CategoryTest {
     organization.setAccountIdentifier(accountIdentifier);
     organization.setIdentifier(identifier);
 
-    when(organizationRepository.update(any(), any())).thenReturn(null);
+    when(organizationService.get(accountIdentifier, identifier)).thenReturn(Optional.empty());
 
     Organization updatedOrganization = organizationService.update(accountIdentifier, identifier, organizationDTO);
 

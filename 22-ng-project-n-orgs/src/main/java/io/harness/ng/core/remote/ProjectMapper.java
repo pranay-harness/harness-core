@@ -1,6 +1,8 @@
 package io.harness.ng.core.remote;
 
 import static io.harness.NGConstants.HARNESS_BLUE;
+import static io.harness.ng.core.mapper.TagMapper.convertToList;
+import static io.harness.ng.core.mapper.TagMapper.convertToMap;
 
 import static java.util.Collections.emptyList;
 
@@ -21,9 +23,9 @@ public class ProjectMapper {
         .identifier(createProjectDTO.getIdentifier())
         .name(createProjectDTO.getName())
         .description(Optional.ofNullable(createProjectDTO.getDescription()).orElse(""))
-        .owners(Optional.ofNullable(createProjectDTO.getOwners()).orElse(emptyList()))
         .color(Optional.ofNullable(createProjectDTO.getColor()).orElse(HARNESS_BLUE))
-        .tags(Optional.ofNullable(createProjectDTO.getTags()).orElse(emptyList()))
+        .tags(convertToList(createProjectDTO.getTags()))
+        .version(createProjectDTO.getVersion())
         .modules(Optional.ofNullable(createProjectDTO.getModules()).orElse(emptyList()))
         .build();
   }
@@ -35,9 +37,8 @@ public class ProjectMapper {
         .identifier(project.getIdentifier())
         .name(project.getName())
         .description(project.getDescription())
-        .owners(project.getOwners())
         .color(project.getColor())
-        .tags(project.getTags())
+        .tags(convertToMap(project.getTags()))
         .modules(project.getModules())
         .lastModifiedAt(project.getLastModifiedAt())
         .build();

@@ -48,7 +48,6 @@ public class OrganizationRepositoryCustomImplTest {
                                     .accountIdentifier(randomAlphabetic(10))
                                     .identifier(randomAlphabetic(10))
                                     .name(randomAlphabetic(10))
-                                    .color(randomAlphabetic(10))
                                     .build();
     Pageable pageable = Pageable.unpaged();
 

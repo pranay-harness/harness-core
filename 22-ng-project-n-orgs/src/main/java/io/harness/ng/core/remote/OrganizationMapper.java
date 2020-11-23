@@ -1,8 +1,7 @@
 package io.harness.ng.core.remote;
 
-import static io.harness.NGConstants.HARNESS_BLUE;
-
-import static java.util.Collections.emptyList;
+import static io.harness.ng.core.mapper.TagMapper.convertToList;
+import static io.harness.ng.core.mapper.TagMapper.convertToMap;
 
 import io.harness.ng.core.dto.OrganizationDTO;
 import io.harness.ng.core.entities.Organization;
@@ -17,22 +16,21 @@ public class OrganizationMapper {
   public static Organization toOrganization(OrganizationDTO dto) {
     return Organization.builder()
         .accountIdentifier(dto.getAccountIdentifier())
-        .tags(Optional.ofNullable(dto.getTags()).orElse(emptyList()))
-        .color(Optional.ofNullable(dto.getColor()).orElse(HARNESS_BLUE))
+        .tags(convertToList(dto.getTags()))
         .description(Optional.ofNullable(dto.getDescription()).orElse(""))
         .identifier(dto.getIdentifier())
         .name(dto.getName())
+        .version(dto.getVersion())
         .build();
   }
 
   public static OrganizationDTO writeDto(Organization organization) {
     return OrganizationDTO.builder()
-        .color(organization.getColor())
         .description(organization.getDescription())
         .identifier(organization.getIdentifier())
         .accountIdentifier(organization.getAccountIdentifier())
         .name(organization.getName())
-        .tags(organization.getTags())
+        .tags(convertToMap(organization.getTags()))
         .lastModifiedAt(organization.getLastModifiedAt())
         .build();
   }

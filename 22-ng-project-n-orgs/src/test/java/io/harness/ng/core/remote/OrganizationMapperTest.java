@@ -3,6 +3,7 @@ package io.harness.ng.core.remote;
 import static io.harness.rule.OwnerRule.KARAN;
 
 import static java.util.Collections.emptyList;
+import static java.util.Collections.emptyMap;
 import static junit.framework.TestCase.assertEquals;
 import static junit.framework.TestCase.assertNotNull;
 import static org.apache.commons.lang3.RandomStringUtils.randomAlphabetic;
@@ -31,7 +32,6 @@ public class OrganizationMapperTest {
                        .accountIdentifier(randomAlphabetic(10))
                        .identifier(randomAlphabetic(10))
                        .name(randomAlphabetic(10))
-                       .color(randomAlphabetic(10))
                        .description("")
                        .tags(emptyList())
                        .lastModifiedAt(10L)
@@ -59,9 +59,8 @@ public class OrganizationMapperTest {
     assertEquals(organization.getAccountIdentifier(), fromOrganization.getAccountIdentifier());
     assertEquals(organization.getIdentifier(), fromOrganization.getIdentifier());
     assertEquals(organization.getName(), fromOrganization.getName());
-    assertEquals(organization.getColor(), fromOrganization.getColor());
     assertEquals(organization.getDescription(), fromOrganization.getDescription());
-    assertEquals(organization.getTags(), fromOrganization.getTags());
+    assertEquals(emptyMap(), fromOrganization.getTags());
     assertEquals(organization.getLastModifiedAt(), fromOrganization.getLastModifiedAt());
   }
 }

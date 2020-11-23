@@ -8,7 +8,6 @@ import static io.harness.utils.PageTestUtils.getPage;
 
 import static io.github.benas.randombeans.api.EnhancedRandom.random;
 import static java.util.Collections.emptyList;
-import static java.util.Collections.singletonList;
 import static junit.framework.TestCase.assertEquals;
 import static junit.framework.TestCase.assertNull;
 import static junit.framework.TestCase.assertTrue;
@@ -73,7 +72,6 @@ public class ProjectServiceImplTest extends CategoryTest {
         .identifier(identifier)
         .name(randomAlphabetic(10))
         .color(randomAlphabetic(10))
-        .owners(singletonList(randomAlphabetic(10)))
         .build();
   }
 
@@ -127,7 +125,8 @@ public class ProjectServiceImplTest extends CategoryTest {
     project.setOrgIdentifier(orgIdentifier);
     project.setIdentifier(identifier);
 
-    when(projectRepository.update(any(), any())).thenReturn(project);
+    when(projectRepository.save(any())).thenReturn(project);
+    when(projectService.get(accountIdentifier, orgIdentifier, identifier)).thenReturn(Optional.of(project));
 
     Project updatedProject = projectService.update(accountIdentifier, orgIdentifier, identifier, projectDTO);
 
@@ -147,6 +146,8 @@ public class ProjectServiceImplTest extends CategoryTest {
     project.setAccountIdentifier(accountIdentifier);
     project.setOrgIdentifier(orgIdentifier);
     project.setName(randomAlphabetic(10));
+    when(projectService.get(accountIdentifier, orgIdentifier, identifier)).thenReturn(Optional.of(project));
+
     projectService.update(accountIdentifier, orgIdentifier, identifier, projectDTO);
   }
 
@@ -163,7 +164,7 @@ public class ProjectServiceImplTest extends CategoryTest {
     project.setOrgIdentifier(orgIdentifier);
     project.setIdentifier(identifier);
 
-    when(projectRepository.update(any(), any())).thenReturn(null);
+    when(projectService.get(accountIdentifier, orgIdentifier, identifier)).thenReturn(Optional.empty());
 
     Project updatedProject = projectService.update(accountIdentifier, orgIdentifier, identifier, projectDTO);
 
