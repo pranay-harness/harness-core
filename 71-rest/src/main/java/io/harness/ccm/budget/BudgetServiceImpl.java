@@ -249,7 +249,7 @@ public class BudgetServiceImpl implements BudgetService {
         .id(budget.getUuid())
         .type(budget.getType().toString())
         .scopeType(scopeType)
-        .appliesTo(getAppliesTo(scope))
+        .appliesTo(getAppliesTo(scope, budget.getAccountId()))
         .appliesToIds(getAppliesToIds(scope))
         .environment(environment)
         .alertAt(alertAt.toArray(new Double[0]))
@@ -337,7 +337,7 @@ public class BudgetServiceImpl implements BudgetService {
     return scopeType;
   }
 
-  private String[] getAppliesTo(BudgetScope scope) {
+  private String[] getAppliesTo(BudgetScope scope, String accountId) {
     String[] entityIds = {};
     if (scope == null) {
       return entityIds;
@@ -350,7 +350,7 @@ public class BudgetServiceImpl implements BudgetService {
       entityType = BillingDataQueryMetadata.BillingDataMetaDataFields.APPID;
     }
     for (String entityId : entityIds) {
-      entityNames.add(statsHelper.getEntityName(entityType, entityId));
+      entityNames.add(statsHelper.getEntityName(entityType, entityId, accountId));
     }
     return entityNames.toArray(new String[0]);
   }
