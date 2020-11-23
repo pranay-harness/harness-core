@@ -1,11 +1,14 @@
 package software.wings.service;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
+import static io.harness.tasks.Cd1SetupFields.APP_ID_FIELD;
+import static io.harness.tasks.Cd1SetupFields.ENV_ID_FIELD;
+import static io.harness.tasks.Cd1SetupFields.SERVICE_ID_FIELD;
 
 import static software.wings.beans.Application.Builder.anApplication;
-import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 import static software.wings.utils.WingsTestConstants.APP_ID;
 import static software.wings.utils.WingsTestConstants.APP_NAME;
+import static software.wings.utils.WingsTestConstants.ENV_ID;
 
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -36,9 +39,13 @@ import io.harness.tasks.Cd1SetupFields;
 
 import software.wings.WingsBaseTest;
 import software.wings.beans.Application;
+import software.wings.beans.Environment;
+import software.wings.beans.Service;
 import software.wings.service.impl.DelegateProfileManagerServiceImpl;
 import software.wings.service.intfc.AppService;
 
+import com.google.inject.Inject;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -58,8 +65,8 @@ public class DelegateProfileManagerServiceTest extends WingsBaseTest {
   private Application app = anApplication().uuid(APP_ID).name(APP_NAME).accountId(ACCOUNT_ID).build();
 
   @Mock private DelegateProfileServiceGrpcClient delegateProfileServiceGrpcClient;
-  @InjectMocks private DelegateProfileManagerServiceImpl delegateProfileManagerService;
   @Mock private AppService appService;
+  @InjectMocks @Inject private DelegateProfileManagerServiceImpl delegateProfileManagerService;
 
   @Rule public ExpectedException thrown = ExpectedException.none();
 
@@ -117,8 +124,7 @@ public class DelegateProfileManagerServiceTest extends WingsBaseTest {
   public void shouldUpdate() {
     Map<String, ScopingValues> scopingEntities = new HashMap<>();
     scopingEntities.put(Cd1SetupFields.APP_ID_FIELD, ScopingValues.newBuilder().addValue("appId").build());
-    scopingEntities.put(
-        Cd1SetupFields.ENV_ID_FIELD, ScopingValues.newBuilder().addAllValue(Arrays.asList("env1", "env2")).build());
+    scopingEntities.put(ENV_ID_FIELD, ScopingValues.newBuilder().addAllValue(Arrays.asList("env1", "env2")).build());
 
     DelegateProfileDetails profileDetail = DelegateProfileDetails.builder()
                                                .accountId(ACCOUNT_ID)
@@ -201,8 +207,7 @@ public class DelegateProfileManagerServiceTest extends WingsBaseTest {
   public void shouldAdd() {
     Map<String, ScopingValues> scopingEntities = new HashMap<>();
     scopingEntities.put(Cd1SetupFields.APP_ID_FIELD, ScopingValues.newBuilder().addValue("appId").build());
-    scopingEntities.put(
-        Cd1SetupFields.ENV_ID_FIELD, ScopingValues.newBuilder().addAllValue(Arrays.asList("env1", "env2")).build());
+    scopingEntities.put(ENV_ID_FIELD, ScopingValues.newBuilder().addAllValue(Arrays.asList("env1", "env2")).build());
 
     DelegateProfileDetails profileDetail = DelegateProfileDetails.builder()
                                                .accountId(ACCOUNT_ID)
@@ -347,16 +352,87 @@ public class DelegateProfileManagerServiceTest extends WingsBaseTest {
   @Owner(developers = OwnerRule.VUK)
   @Category(UnitTests.class)
   public void shouldGenerateScopingRuleDescription() {
-    ScopingValues scopingValuesAppId = ScopingValues.newBuilder().addValue("appId").build();
-    ScopingValues scopingValuesEnvTypeId = ScopingValues.newBuilder().addValue("envTypeId").build();
+    List<String> serviceNames = Arrays.asList("service1, service2");
+
+    ScopingValues scopingValuesEnvTypeId = ScopingValues.newBuilder().addAllValue(serviceNames).build();
+
+    ScopingValues scopingValuesAppId = ScopingValues.newBuilder().addValue("Harness App").build();
+
+    Application application = Application.Builder.anApplication().name(APP_NAME).uuid(APP_ID).build();
+    wingsPersistence.save(application);
 
     Map<String, ScopingValues> scopingEntities = new HashMap<>();
-    scopingEntities.put("applicationId", scopingValuesAppId);
-    scopingEntities.put("environmentTypeId", scopingValuesEnvTypeId);
+    scopingEntities.put(APP_ID_FIELD, scopingValuesAppId);
+    scopingEntities.put(SERVICE_ID_FIELD, scopingValuesEnvTypeId);
 
     String description = delegateProfileManagerService.generateScopingRuleDescription(scopingEntities);
 
     Assertions.assertThat(description).isNotNull();
-    Assertions.assertThat(description).isEqualTo("environmentTypeId: envTypeId; applicationId: appId; ");
+    Assertions.assertThat(description).isEqualTo("Application: Harness App; Service: service1, service2; ");
+  }
+
+  @Test
+  @Owner(developers = OwnerRule.VUK)
+  @Category(UnitTests.class)
+  public void shouldRetrieveScopingRuleApplicationEntityName() {
+    List<String> scopingEntitiesIds = new ArrayList<>();
+
+    Application application = Application.Builder.anApplication().name(APP_NAME).uuid(APP_ID).build();
+    wingsPersistence.save(application);
+
+    Application retrievedApplication = wingsPersistence.get(Application.class, application.getUuid());
+
+    scopingEntitiesIds.add(retrievedApplication.getName());
+
+    List<String> retrieveScopingRuleEntitiesNames =
+        delegateProfileManagerService.retrieveScopingRuleEntitiesNames(APP_ID_FIELD, scopingEntitiesIds);
+
+    Assertions.assertThat(retrieveScopingRuleEntitiesNames).isNotNull();
+    Assertions.assertThat(retrieveScopingRuleEntitiesNames).containsExactly(APP_NAME);
+  }
+
+  @Test
+  @Owner(developers = OwnerRule.VUK)
+  @Category(UnitTests.class)
+  public void shouldRetrieveScopingRuleServiceEntityNames() {
+    List<String> scopingEntitiesIds = new ArrayList<>();
+
+    Service service1 = Service.builder().uuid("SERVICE_ID1").name("To-Do List K8s").build();
+    wingsPersistence.save(service1);
+
+    Service service2 = Service.builder().uuid("SERVICE_ID2").name("To-Do List Docker").build();
+    wingsPersistence.save(service2);
+
+    Service retrievedService1 = wingsPersistence.get(Service.class, service1.getUuid());
+    Service retrievedService2 = wingsPersistence.get(Service.class, service2.getUuid());
+
+    scopingEntitiesIds.add(retrievedService1.getName());
+    scopingEntitiesIds.add(retrievedService2.getName());
+
+    List<String> retrieveScopingRuleEntitiesNames =
+        delegateProfileManagerService.retrieveScopingRuleEntitiesNames(SERVICE_ID_FIELD, scopingEntitiesIds);
+
+    Assertions.assertThat(retrieveScopingRuleEntitiesNames).isNotNull();
+    Assertions.assertThat(retrieveScopingRuleEntitiesNames).containsExactly("To-Do List K8s", "To-Do List Docker");
+  }
+
+  @Test
+  @Owner(developers = OwnerRule.VUK)
+  @Category(UnitTests.class)
+  public void shouldRetrieveScopingRuleEnvEntityName() {
+    List<String> scopingEntitiesIds = new ArrayList<>();
+
+    Environment environment = Environment.Builder.anEnvironment().uuid(ENV_ID).name("qa").build();
+    wingsPersistence.save(environment);
+
+    Environment retrievedEnvironment = wingsPersistence.get(Environment.class, environment.getUuid());
+
+    scopingEntitiesIds.add(retrievedEnvironment.getName());
+
+    List<String> retrieveScopingRuleEntitiesNames =
+        delegateProfileManagerService.retrieveScopingRuleEntitiesNames(ENV_ID_FIELD, scopingEntitiesIds);
+
+    Assertions.assertThat(retrieveScopingRuleEntitiesNames).isNotNull();
+    Assertions.assertThat(retrieveScopingRuleEntitiesNames).containsExactly("qa");
   }
 }
