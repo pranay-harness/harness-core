@@ -362,6 +362,7 @@ public abstract class State {
           DelegateTaskDetails.builder()
               .delegateTaskId(delegateTask.getUuid())
               .taskDescription(delegateTask.calcDescription())
+              .setupAbstractions(delegateTask.getSetupAbstractions())
               .build());
     }
   }

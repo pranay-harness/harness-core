@@ -359,10 +359,15 @@ public class StateExecutionServiceImplTest extends WingsBaseTest {
     stateExecutionInstance.setDelegateTaskId(generateUuid());
     stateExecutionInstance.setSelectionLogsTrackingForTasksEnabled(true);
 
+    Map<String, String> setupAbstractions = new HashMap<>();
+    setupAbstractions.put("key1", "value1");
+    setupAbstractions.put("key2", "value2");
+
     List<DelegateTaskDetails> delegateTaskDetailsList = new ArrayList<>();
     delegateTaskDetailsList.add(DelegateTaskDetails.builder()
                                     .delegateTaskId(generateUuid())
                                     .taskDescription("description")
+                                    .setupAbstractions(setupAbstractions)
                                     .taskType("type")
                                     .build());
     stateExecutionInstance.setDelegateTasksDetails(delegateTaskDetailsList);
@@ -394,10 +399,15 @@ public class StateExecutionServiceImplTest extends WingsBaseTest {
     StateExecutionInstance instance = createStateExecutionInstance();
     String id = wingsPersistence.save(instance);
 
+    Map<String, String> setupAbstractions = new HashMap<>();
+    setupAbstractions.put("key3", "value3");
+    setupAbstractions.put("key4", "value4");
+
     stateExecutionService.appendDelegateTaskDetails(id,
         DelegateTaskDetails.builder()
             .delegateTaskId(generateUuid())
             .taskDescription("description")
+            .setupAbstractions(setupAbstractions)
             .taskType("type")
             .build());
 
