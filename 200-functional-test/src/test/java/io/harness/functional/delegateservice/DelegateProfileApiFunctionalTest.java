@@ -66,7 +66,7 @@ public class DelegateProfileApiFunctionalTest extends AbstractFunctionalTest {
     assertThat(updateScopingRulesRestResponse.getResource().getScopingRules()).isNotEmpty();
     assertThat(updateScopingRulesRestResponse.getResource().getScopingRules().get(0)).isNotNull();
     assertThat(updateScopingRulesRestResponse.getResource().getScopingRules().get(0).getDescription())
-        .isEqualTo("envType: envType1; appId: appId; envId: env2,env1; serviceId: srv1,srv2; ");
+        .isEqualTo("Application: appId; Service: srv1,srv2; Environment: env2,env1; ");
     assertThat(updateScopingRulesRestResponse.getResource().getScopingRules().get(0).getApplicationId())
         .isEqualTo("appId");
     assertThat(updateScopingRulesRestResponse.getResource().getScopingRules().get(0).getEnvironmentTypeId())
@@ -136,7 +136,7 @@ public class DelegateProfileApiFunctionalTest extends AbstractFunctionalTest {
     assertThat(updateProfileRestResponse.getResource().getScopingRules()).isNotEmpty();
     assertThat(updateProfileRestResponse.getResource().getScopingRules().get(0)).isNotNull();
     assertThat(updateProfileRestResponse.getResource().getScopingRules().get(0).getDescription())
-        .isEqualTo("envType: envTypeId; appId: appId; envId: env2,env1; serviceId: srv1,srv2; ");
+        .isEqualTo("Application: appId; Service: srv1,srv2; Environment: env2,env1; ");
     assertThat(updateProfileRestResponse.getResource().getScopingRules().get(0).getApplicationId()).isEqualTo("appId");
     assertThat(updateProfileRestResponse.getResource().getScopingRules().get(0).getEnvironmentTypeId())
         .isEqualTo("envTypeId");
@@ -183,7 +183,7 @@ public class DelegateProfileApiFunctionalTest extends AbstractFunctionalTest {
     assertThat(addProfileRestResponse.getResource().getScopingRules()).isNotEmpty();
     assertThat(addProfileRestResponse.getResource().getScopingRules().get(0)).isNotNull();
     assertThat(addProfileRestResponse.getResource().getScopingRules().get(0).getDescription())
-        .isEqualTo("envType: envTypeId; appId: appId; envId: env2,env1; serviceId: srv1,srv2; ");
+        .isEqualTo("Application: appId; Service: srv1,srv2; Environment: env2,env1; ");
     assertThat(addProfileRestResponse.getResource().getScopingRules().get(0).getApplicationId()).isEqualTo("appId");
     assertThat(addProfileRestResponse.getResource().getScopingRules().get(0).getEnvironmentTypeId())
         .isEqualTo("envTypeId");

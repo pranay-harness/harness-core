@@ -3,6 +3,10 @@ package software.wings.service.impl;
 import static io.harness.beans.PageResponse.PageResponseBuilder;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.tasks.Cd1SetupFields.APP_ID_FIELD;
+import static io.harness.tasks.Cd1SetupFields.ENV_ID_FIELD;
+import static io.harness.tasks.Cd1SetupFields.ENV_TYPE_FIELD;
+import static io.harness.tasks.Cd1SetupFields.SERVICE_ID_FIELD;
 
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
@@ -24,9 +28,13 @@ import io.harness.delegateprofile.ScopingValues;
 import io.harness.exception.InvalidArgumentsException;
 import io.harness.grpc.DelegateProfileServiceGrpcClient;
 import io.harness.paging.PageRequestGrpc;
-import io.harness.tasks.Cd1SetupFields;
 
+import software.wings.beans.Application;
+import software.wings.beans.Environment;
+import software.wings.beans.Environment.EnvironmentType;
+import software.wings.beans.Service;
 import software.wings.beans.User;
+import software.wings.dl.WingsPersistence;
 import software.wings.security.UserThreadLocal;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.DelegateProfileManagerService;
@@ -34,6 +42,7 @@ import software.wings.service.intfc.DelegateProfileManagerService;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -44,13 +53,20 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import javax.validation.executable.ValidateOnExecution;
 import lombok.extern.slf4j.Slf4j;
-
 @Singleton
 @ValidateOnExecution
 @Slf4j
 public class DelegateProfileManagerServiceImpl implements DelegateProfileManagerService {
+  public static final String APPLICATION = "Application";
+  public static final String SERVICE = "Service";
+  public static final String ENVIRONMENT_TYPE = "Environment Type";
+  public static final String ENVIRONMENT = "Environment";
+  public static final String PRODUCTION = "Production";
+  public static final String NON_PRODUCTION = "Non-Production";
+
   @Inject private DelegateProfileServiceGrpcClient delegateProfileServiceGrpcClient;
   @Inject private AppService appService;
+  @Inject private WingsPersistence wingsPersistence;
 
   @Override
   public PageResponse<DelegateProfileDetails> list(String accountId, PageRequest<DelegateProfileDetails> pageRequest) {
@@ -143,12 +159,89 @@ public class DelegateProfileManagerServiceImpl implements DelegateProfileManager
   public String generateScopingRuleDescription(Map<String, ScopingValues> scopingEntities) {
     StringBuilder descriptionBuilder = new StringBuilder();
 
-    for (Map.Entry<String, ScopingValues> entry : scopingEntities.entrySet()) {
-      String join = String.join(",", entry.getValue().getValueList());
+    generateDescriptionFromScopingEntities(scopingEntities, descriptionBuilder, APPLICATION, APP_ID_FIELD);
 
-      descriptionBuilder.append(entry.getKey()).append(": ").append(join).append("; ");
-    }
+    generateDescriptionFromScopingEntities(scopingEntities, descriptionBuilder, SERVICE, SERVICE_ID_FIELD);
+
+    generateDescriptionFromScopingEntities(scopingEntities, descriptionBuilder, ENVIRONMENT_TYPE, ENV_TYPE_FIELD);
+
+    generateDescriptionFromScopingEntities(scopingEntities, descriptionBuilder, ENVIRONMENT, ENV_ID_FIELD);
+
     return descriptionBuilder.toString();
+  }
+
+  private void generateDescriptionFromScopingEntities(Map<String, ScopingValues> scopingEntities,
+      StringBuilder descriptionBuilder, String entityName, String entityKey) {
+    ScopingValues scopingValues = scopingEntities.get(entityKey);
+
+    if (scopingValues != null) {
+      String entityValues = String.join(",", retrieveScopingRuleEntitiesNames(entityKey, scopingValues.getValueList()));
+
+      if (isNotEmpty(entityValues)) {
+        descriptionBuilder.append(entityName).append(": ").append(entityValues).append("; ");
+      }
+    }
+  }
+
+  @VisibleForTesting
+  public List<String> retrieveScopingRuleEntitiesNames(String key, List<String> scopingEntitiesIds) {
+    List<String> entitiesNames = new ArrayList<>();
+
+    for (String entityId : scopingEntitiesIds) {
+      switch (key) {
+        case APP_ID_FIELD:
+          entitiesNames.add(fetchApplicationName(entityId));
+          break;
+        case SERVICE_ID_FIELD:
+          entitiesNames.add(fetchServiceName(entityId));
+          break;
+        case ENV_ID_FIELD:
+          entitiesNames.add(fetchEnvName(entityId));
+          break;
+        case ENV_TYPE_FIELD:
+          entitiesNames.add(fetchEnvType(entityId));
+          break;
+        default:
+          throw new RuntimeException("Invalid key " + key);
+      }
+    }
+
+    return entitiesNames;
+  }
+
+  private String fetchApplicationName(String applicationId) {
+    Application application = wingsPersistence.get(Application.class, applicationId);
+    if (application != null) {
+      return application.getName();
+    } else {
+      return applicationId;
+    }
+  }
+
+  private String fetchServiceName(String serviceId) {
+    Service service = wingsPersistence.get(Service.class, serviceId);
+    if (service != null) {
+      return service.getName();
+    }
+    return serviceId;
+  }
+
+  private String fetchEnvName(String environmentId) {
+    Environment environment = wingsPersistence.get(Environment.class, environmentId);
+    if (environment != null) {
+      return environment.getName();
+    }
+    return environmentId;
+  }
+
+  private String fetchEnvType(String environmentTypeId) {
+    if (environmentTypeId.equals(EnvironmentType.PROD.name())) {
+      return PRODUCTION;
+    } else if (environmentTypeId.equals(EnvironmentType.NON_PROD.name())) {
+      return NON_PRODUCTION;
+    } else {
+      return "";
+    }
   }
 
   private List<ProfileSelector> convertToProfileSelector(List<String> selectors) {
@@ -225,23 +318,22 @@ public class DelegateProfileManagerServiceImpl implements DelegateProfileManager
     Map<String, ScopingValues> scopingEntities = new HashMap<>();
 
     if (isNotBlank(scopingRule.getApplicationId())) {
-      scopingEntities.put(
-          Cd1SetupFields.APP_ID_FIELD, ScopingValues.newBuilder().addValue(scopingRule.getApplicationId()).build());
+      scopingEntities.put(APP_ID_FIELD, ScopingValues.newBuilder().addValue(scopingRule.getApplicationId()).build());
     }
 
     if (isNotBlank(scopingRule.getEnvironmentTypeId())) {
-      scopingEntities.put(Cd1SetupFields.ENV_TYPE_FIELD,
-          ScopingValues.newBuilder().addValue(scopingRule.getEnvironmentTypeId()).build());
+      scopingEntities.put(
+          ENV_TYPE_FIELD, ScopingValues.newBuilder().addValue(scopingRule.getEnvironmentTypeId()).build());
     }
 
     if (isNotEmpty(scopingRule.getEnvironmentIds())) {
       scopingEntities.put(
-          Cd1SetupFields.ENV_ID_FIELD, ScopingValues.newBuilder().addAllValue(scopingRule.getEnvironmentIds()).build());
+          ENV_ID_FIELD, ScopingValues.newBuilder().addAllValue(scopingRule.getEnvironmentIds()).build());
     }
 
     if (isNotEmpty(scopingRule.getServiceIds())) {
       scopingEntities.put(
-          Cd1SetupFields.SERVICE_ID_FIELD, ScopingValues.newBuilder().addAllValue(scopingRule.getServiceIds()).build());
+          SERVICE_ID_FIELD, ScopingValues.newBuilder().addAllValue(scopingRule.getServiceIds()).build());
     }
 
     return scopingEntities;
@@ -288,14 +380,11 @@ public class DelegateProfileManagerServiceImpl implements DelegateProfileManager
               .map(grpcScopingRule
                   -> ScopingRuleDetails.builder()
                          .description(grpcScopingRule.getDescription())
-                         .applicationId(extractScopingEntityId(
-                             grpcScopingRule.getScopingEntitiesMap(), Cd1SetupFields.APP_ID_FIELD))
-                         .environmentTypeId(extractScopingEntityId(
-                             grpcScopingRule.getScopingEntitiesMap(), Cd1SetupFields.ENV_TYPE_FIELD))
-                         .environmentIds(extractScopingEntityIds(
-                             grpcScopingRule.getScopingEntitiesMap(), Cd1SetupFields.ENV_ID_FIELD))
-                         .serviceIds(extractScopingEntityIds(
-                             grpcScopingRule.getScopingEntitiesMap(), Cd1SetupFields.SERVICE_ID_FIELD))
+                         .applicationId(extractScopingEntityId(grpcScopingRule.getScopingEntitiesMap(), APP_ID_FIELD))
+                         .environmentTypeId(
+                             extractScopingEntityId(grpcScopingRule.getScopingEntitiesMap(), ENV_TYPE_FIELD))
+                         .environmentIds(extractScopingEntityIds(grpcScopingRule.getScopingEntitiesMap(), ENV_ID_FIELD))
+                         .serviceIds(extractScopingEntityIds(grpcScopingRule.getScopingEntitiesMap(), SERVICE_ID_FIELD))
                          .build())
               .collect(Collectors.toList()));
     }
