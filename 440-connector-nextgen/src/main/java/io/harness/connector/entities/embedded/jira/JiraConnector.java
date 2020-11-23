@@ -4,6 +4,7 @@ import io.harness.connector.entities.Connector;
 
 import lombok.AccessLevel;
 import lombok.Builder;
+import lombok.EqualsAndHashCode;
 import lombok.Value;
 import lombok.experimental.FieldDefaults;
 import lombok.experimental.FieldNameConstants;
@@ -17,6 +18,7 @@ import org.springframework.data.annotation.TypeAlias;
 @Entity(value = "connectors", noClassnameStored = true)
 @Persistent
 @FieldDefaults(level = AccessLevel.PRIVATE)
+@EqualsAndHashCode(callSuper = true)
 @TypeAlias("io.harness.connector.entities.embedded.jira.JiraConnector")
 public class JiraConnector extends Connector {
   String jiraUrl;

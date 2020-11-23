@@ -8,9 +8,11 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.mongodb.core.FindAndModifyOptions;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
+import org.springframework.data.mongodb.core.query.Update;
 import org.springframework.data.repository.support.PageableExecutionUtils;
 
 @HarnessRepo
@@ -28,5 +30,10 @@ public class ConnectorCustomRepositoryImpl implements ConnectorCustomRepository 
     List<Connector> connectors = mongoTemplate.find(query, Connector.class);
     return PageableExecutionUtils.getPage(
         connectors, pageable, () -> mongoTemplate.count(Query.of(query).limit(-1).skip(-1), Connector.class));
+  }
+
+  @Override
+  public Connector update(Query query, Update update) {
+    return mongoTemplate.findAndModify(query, update, new FindAndModifyOptions().returnNew(true), Connector.class);
   }
 }

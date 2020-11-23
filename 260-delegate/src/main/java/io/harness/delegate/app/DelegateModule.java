@@ -18,7 +18,6 @@ import io.harness.azure.impl.AzureContainerRegistryClientImpl;
 import io.harness.azure.impl.AzureMonitorClientImpl;
 import io.harness.azure.impl.AzureNetworkClientImpl;
 import io.harness.azure.impl.AzureWebClientImpl;
-import io.harness.cdng.connector.tasks.KubernetesTestConnectionDelegateTask;
 import io.harness.cdng.secrets.tasks.SSHConfigValidationDelegateTask;
 import io.harness.cistatus.service.GithubService;
 import io.harness.cistatus.service.GithubServiceImpl;
@@ -27,6 +26,7 @@ import io.harness.cvng.K8InfoDataServiceImpl;
 import io.harness.cvng.connectiontask.CVNGConnectorValidationDelegateTask;
 import io.harness.datacollection.DataCollectionDSLService;
 import io.harness.datacollection.impl.DataCollectionServiceImpl;
+import io.harness.delegate.beans.connector.ConnectorType;
 import io.harness.delegate.git.NGGitService;
 import io.harness.delegate.git.NGGitServiceImpl;
 import io.harness.delegate.k8s.K8sRequestHandler;
@@ -59,15 +59,20 @@ import io.harness.delegate.task.citasks.CIBuildCommandTask;
 import io.harness.delegate.task.citasks.CICleanupTask;
 import io.harness.delegate.task.citasks.ExecuteCommandTask;
 import io.harness.delegate.task.docker.DockerTestConnectionDelegateTask;
+import io.harness.delegate.task.docker.DockerTestConnectionDelegateTask.DockerValidationHandler;
 import io.harness.delegate.task.gcp.GcpTask;
 import io.harness.delegate.task.gcp.request.GcpRequest;
 import io.harness.delegate.task.gcp.taskHandlers.GcpValidationTaskHandler;
 import io.harness.delegate.task.gcp.taskHandlers.TaskHandler;
 import io.harness.delegate.task.git.GitFetchTaskNG;
 import io.harness.delegate.task.git.NGGitCommandTask;
+import io.harness.delegate.task.git.NGGitCommandTask.GitValidationHandler;
 import io.harness.delegate.task.jira.JiraTaskNG;
+import io.harness.delegate.task.k8s.ConnectorValidationHandler;
 import io.harness.delegate.task.k8s.K8sTaskNG;
 import io.harness.delegate.task.k8s.K8sTaskType;
+import io.harness.delegate.task.k8s.KubernetesTestConnectionDelegateTask;
+import io.harness.delegate.task.k8s.KubernetesTestConnectionDelegateTask.KubernetesValidationHandler;
 import io.harness.delegate.task.stepstatus.StepStatusTask;
 import io.harness.delegatetasks.DeleteSecretTask;
 import io.harness.delegatetasks.EncryptSecretTask;
@@ -867,6 +872,7 @@ public class DelegateModule extends AbstractModule {
         .to(AzureWebAppSlotSetupTaskHandler.class);
 
     registerSecretManagementBindings();
+    registerConnectorValidatorsBindings();
   }
 
   private void bindDelegateTasks() {
@@ -1203,5 +1209,16 @@ public class DelegateModule extends AbstractModule {
         .bind(CustomEncryptor.class)
         .annotatedWith(Names.named(Encryptors.CUSTOM_ENCRYPTOR.getName()))
         .to(CustomSecretsManagerEncryptor.class);
+  }
+
+  private void registerConnectorValidatorsBindings() {
+    MapBinder<String, ConnectorValidationHandler> connectorTypeToConnectorValidationHandlerMap =
+        MapBinder.newMapBinder(binder(), String.class, ConnectorValidationHandler.class);
+    connectorTypeToConnectorValidationHandlerMap.addBinding(ConnectorType.KUBERNETES_CLUSTER.getDisplayName())
+        .to(KubernetesValidationHandler.class);
+    connectorTypeToConnectorValidationHandlerMap.addBinding(ConnectorType.GIT.getDisplayName())
+        .to(GitValidationHandler.class);
+    connectorTypeToConnectorValidationHandlerMap.addBinding(ConnectorType.DOCKER.getDisplayName())
+        .to(DockerValidationHandler.class);
   }
 }

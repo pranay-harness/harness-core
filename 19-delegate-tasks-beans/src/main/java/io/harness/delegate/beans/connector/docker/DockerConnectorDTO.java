@@ -1,5 +1,6 @@
 package io.harness.delegate.beans.connector.docker;
 
+import io.harness.beans.DecryptableEntity;
 import io.harness.delegate.beans.connector.ConnectorConfigDTO;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.delegate.beans.executioncapability.ExecutionCapabilityDemander;
@@ -33,5 +34,10 @@ public class DockerConnectorDTO extends ConnectorConfigDTO implements ExecutionC
   public List<ExecutionCapability> fetchRequiredExecutionCapabilities() {
     return Collections.singletonList(HttpConnectionExecutionCapabilityGenerator.buildHttpConnectionExecutionCapability(
         dockerRegistryUrl.endsWith("/") ? dockerRegistryUrl : dockerRegistryUrl.concat("/")));
+  }
+
+  @Override
+  public DecryptableEntity getDecryptableEntity() {
+    return auth.getCredentials();
   }
 }

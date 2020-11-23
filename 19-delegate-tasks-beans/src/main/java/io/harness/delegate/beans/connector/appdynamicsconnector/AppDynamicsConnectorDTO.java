@@ -49,4 +49,9 @@ public class AppDynamicsConnectorDTO
     return Arrays.asList(
         HttpConnectionExecutionCapabilityGenerator.buildHttpConnectionExecutionCapability(getControllerUrl()));
   }
+
+  @Override
+  public DecryptableEntity getDecryptableEntity() {
+    return this;
+  }
 }

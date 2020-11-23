@@ -46,6 +46,7 @@ import io.harness.delegate.beans.ci.pod.PodParams;
 import io.harness.delegate.beans.ci.pod.SecretVariableDTO;
 import io.harness.delegate.beans.ci.pod.SecretVariableDetails;
 import io.harness.delegate.beans.ci.status.BuildStatusPushResponse;
+import io.harness.delegate.beans.connector.ConnectorHeartbeatDelegateResponse;
 import io.harness.delegate.beans.connector.ConnectorType;
 import io.harness.delegate.beans.connector.ConnectorValidationResult;
 import io.harness.delegate.beans.connector.appdynamicsconnector.AppDynamicsConnectionTaskParams;
@@ -484,5 +485,6 @@ public class DelegateTasksBeansKryoRegister implements KryoRegistrar {
     kryo.register(PodStatus.Status.class, 19424);
     kryo.register(CIContainerStatus.class, 19425);
     kryo.register(CIContainerStatus.Status.class, 19426);
+    kryo.register(ConnectorHeartbeatDelegateResponse.class, 19427);
   }
 }

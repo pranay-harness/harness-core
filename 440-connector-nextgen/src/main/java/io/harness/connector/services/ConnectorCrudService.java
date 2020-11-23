@@ -2,6 +2,7 @@ package io.harness.connector.services;
 
 import io.harness.connector.apis.dto.ConnectorCatalogueResponseDTO;
 import io.harness.connector.apis.dto.ConnectorDTO;
+import io.harness.connector.apis.dto.ConnectorInfoDTO;
 import io.harness.connector.apis.dto.ConnectorResponseDTO;
 import io.harness.delegate.beans.connector.ConnectorCategory;
 import io.harness.delegate.beans.connector.ConnectorType;
@@ -23,4 +24,6 @@ public interface ConnectorCrudService {
   boolean delete(String accountIdentifier, String orgIdentifier, String projectIdentifier, String connectorIdentifier);
 
   ConnectorCatalogueResponseDTO getConnectorCatalogue();
+
+  void updateConnectorEntityWithPerpetualtaskId(String accountIdentifier, ConnectorInfoDTO connector, String id);
 }

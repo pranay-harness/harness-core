@@ -8,10 +8,12 @@ import io.swagger.annotations.ApiModelProperty;
 import javax.validation.constraints.NotNull;
 import lombok.Builder;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 
 @Data
 @Builder
 @JsonTypeName(KubernetesConfigConstants.CLIENT_KEY_CERT)
+@EqualsAndHashCode(callSuper = false)
 public class KubernetesClientKeyCertDTO extends KubernetesAuthCredentialDTO {
   @ApiModelProperty(dataType = "string") @SecretReference SecretRefData caCertRef;
   @ApiModelProperty(dataType = "string") @NotNull @SecretReference SecretRefData clientCertRef;

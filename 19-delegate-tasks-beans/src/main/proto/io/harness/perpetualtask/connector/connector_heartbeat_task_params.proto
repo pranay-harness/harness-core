@@ -1,0 +1,11 @@
+syntax = "proto3";
+
+package io.harness.perpetualtask.connector;
+
+option java_multiple_files = true;
+
+message ConnectorHeartbeatTaskParams {
+  string account_identifier = 1;
+  bytes connector = 2;
+  bytes encryption_details = 3;
+}

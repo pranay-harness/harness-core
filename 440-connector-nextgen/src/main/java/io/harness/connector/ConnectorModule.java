@@ -1,6 +1,7 @@
 package io.harness.connector;
 
 import io.harness.connector.impl.ConnectorActivityServiceImpl;
+import io.harness.connector.impl.ConnectorHeartbeatServiceImpl;
 import io.harness.connector.impl.DefaultConnectorServiceImpl;
 import io.harness.connector.mappers.ConnectorDTOToEntityMapper;
 import io.harness.connector.mappers.ConnectorEntityToDTOMapper;
@@ -31,6 +32,7 @@ import io.harness.connector.mappers.secretmanagermapper.VaultEntityToDTO;
 import io.harness.connector.mappers.splunkconnectormapper.SplunkDTOToEntity;
 import io.harness.connector.mappers.splunkconnectormapper.SplunkEntityToDTO;
 import io.harness.connector.services.ConnectorActivityService;
+import io.harness.connector.services.ConnectorHeartbeatService;
 import io.harness.connector.services.ConnectorService;
 import io.harness.connector.validator.ArtifactoryConnectionValidator;
 import io.harness.connector.validator.AwsConnectorValidator;
@@ -111,6 +113,7 @@ public class ConnectorModule extends AbstractModule {
         .annotatedWith(Names.named(DEFAULT_CONNECTOR_SERVICE))
         .to(DefaultConnectorServiceImpl.class);
     bind(ConnectorActivityService.class).to(ConnectorActivityServiceImpl.class);
+    bind(ConnectorHeartbeatService.class).to(ConnectorHeartbeatServiceImpl.class);
   }
 
   private void registerRequiredBindings() {

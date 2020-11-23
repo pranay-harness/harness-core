@@ -4,6 +4,7 @@ import io.harness.connector.entities.Connector;
 import io.harness.delegate.beans.connector.k8Connector.KubernetesCredentialType;
 
 import lombok.Builder;
+import lombok.EqualsAndHashCode;
 import lombok.Value;
 import lombok.experimental.FieldNameConstants;
 import org.mongodb.morphia.annotations.Entity;
@@ -15,6 +16,7 @@ import org.springframework.data.annotation.TypeAlias;
 @FieldNameConstants(innerTypeName = "KubernetesClusterConfigKeys")
 @Entity(value = "connectors", noClassnameStored = true)
 @Persistent
+@EqualsAndHashCode(callSuper = true)
 @TypeAlias("io.harness.connector.entities.embedded.kubernetescluster.KubernetesClusterConfig")
 public class KubernetesClusterConfig extends Connector {
   KubernetesCredentialType credentialType;

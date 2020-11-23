@@ -3,6 +3,7 @@ package io.harness.connector.entities.embedded.splunkconnector;
 import io.harness.connector.entities.Connector;
 
 import lombok.Builder;
+import lombok.EqualsAndHashCode;
 import lombok.Value;
 import lombok.experimental.FieldNameConstants;
 import org.mongodb.morphia.annotations.Entity;
@@ -14,6 +15,7 @@ import org.springframework.data.annotation.TypeAlias;
 @FieldNameConstants(innerTypeName = "SplunkConnectorKeys")
 @Entity(value = "connectors", noClassnameStored = true)
 @Persistent
+@EqualsAndHashCode(callSuper = true)
 @TypeAlias("io.harness.connector.entities.embedded.splunkconnector.SplunkConnector")
 public class SplunkConnector extends Connector {
   private String username;

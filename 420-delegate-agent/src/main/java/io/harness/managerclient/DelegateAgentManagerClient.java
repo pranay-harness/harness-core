@@ -9,6 +9,7 @@ import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.delegate.beans.DelegateScripts;
 import io.harness.delegate.beans.DelegateTaskEvent;
 import io.harness.delegate.beans.DelegateTaskResponse;
+import io.harness.delegate.beans.connector.ConnectorHeartbeatDelegateResponse;
 import io.harness.delegate.service.DelegateAgentFileService.FileBucket;
 import io.harness.logging.AccessTokenBean;
 import io.harness.rest.RestResponse;
@@ -111,4 +112,8 @@ public interface DelegateAgentManagerClient {
   @POST("agent/delegates/manifest-collection/{perpetualTaskId}")
   Call<RestResponse<Boolean>> publishManifestCollectionResult(@Path("perpetualTaskId") String perpetualTaskId,
       @Query("accountId") String accountId, @Body RequestBody manifestCollectionExecutionResponse);
+
+  @POST("agent/delegates/connectors/{perpetualTaskId}")
+  Call<RestResponse<Boolean>> publishConnectorHeartbeatResult(@Path("perpetualTaskId") String perpetualTaskId,
+      @Query("accountId") String accountId, @Body ConnectorHeartbeatDelegateResponse responseData);
 }

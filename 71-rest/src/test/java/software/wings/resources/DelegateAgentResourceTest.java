@@ -4,6 +4,7 @@ import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.delegate.beans.DelegateTaskEvent.DelegateTaskEventBuilder;
 import static io.harness.logging.CommandExecutionStatus.SUCCESS;
 import static io.harness.rule.OwnerRule.ANKIT;
+import static io.harness.rule.OwnerRule.DEEPAK;
 import static io.harness.rule.OwnerRule.MATT;
 import static io.harness.rule.OwnerRule.NIKOLA;
 import static io.harness.rule.OwnerRule.ROHITKARELIA;
@@ -40,11 +41,13 @@ import io.harness.delegate.beans.DelegateScripts;
 import io.harness.delegate.beans.DelegateTaskEvent;
 import io.harness.delegate.beans.DelegateTaskPackage;
 import io.harness.delegate.beans.DelegateTaskResponse;
+import io.harness.delegate.beans.connector.ConnectorHeartbeatDelegateResponse;
 import io.harness.managerclient.GetDelegatePropertiesRequest;
 import io.harness.managerclient.GetDelegatePropertiesResponse;
 import io.harness.managerclient.WatcherVersion;
 import io.harness.managerclient.WatcherVersionQuery;
 import io.harness.manifest.ManifestCollectionResponseHandler;
+import io.harness.perpetualtask.connector.ConnectorHearbeatPublisher;
 import io.harness.rest.RestResponse;
 import io.harness.rule.Owner;
 import io.harness.serializer.KryoSerializer;
@@ -103,6 +106,7 @@ public class DelegateAgentResourceTest {
       mock(ArtifactCollectionResponseHandler.class);
   private static ManifestCollectionResponseHandler manifestCollectionResponseHandler =
       mock(ManifestCollectionResponseHandler.class);
+  private static ConnectorHearbeatPublisher connectorHearbeatPublisher = mock(ConnectorHearbeatPublisher.class);
   private static KryoSerializer kryoSerializer = mock(KryoSerializer.class);
 
   @Parameter public String apiUrl;
@@ -115,9 +119,10 @@ public class DelegateAgentResourceTest {
   @ClassRule
   public static final ResourceTestRule RESOURCES =
       ResourceTestRule.builder()
-          .instance(new DelegateAgentResource(delegateService, accountService, wingsPersistence,
-              delegateRequestRateLimiter, subdomainUrlHelper, artifactCollectionResponseHandler,
-              instanceSyncResponseHandler, manifestCollectionResponseHandler, kryoSerializer))
+          .instance(
+              new DelegateAgentResource(delegateService, accountService, wingsPersistence, delegateRequestRateLimiter,
+                  subdomainUrlHelper, artifactCollectionResponseHandler, instanceSyncResponseHandler,
+                  manifestCollectionResponseHandler, connectorHearbeatPublisher, kryoSerializer))
           .instance(new AbstractBinder() {
             @Override
             protected void configure() {
@@ -497,5 +502,20 @@ public class DelegateAgentResourceTest {
             .request()
             .put(entity(taskResponse, "application/x-kryo"), Response.class);
     verify(delegateService, atLeastOnce()).acquireDelegateTask(ACCOUNT_ID, DELEGATE_ID, taskId);
+  }
+
+  @Test
+  @Owner(developers = DEEPAK)
+  @Category(UnitTests.class)
+  public void shouldPublishNGConnectorHeartbeatResult() {
+    String taskId = generateUuid();
+    ConnectorHeartbeatDelegateResponse taskResponse =
+        ConnectorHeartbeatDelegateResponse.builder().accountIdentifier(ACCOUNT_ID).build();
+    RestResponse<Boolean> response =
+        RESOURCES.client()
+            .target("/agent/delegates/connectors/" + taskId + "?accountId=" + ACCOUNT_ID)
+            .request()
+            .post(entity(taskResponse, MediaType.APPLICATION_JSON), new GenericType<RestResponse<Boolean>>() {});
+    verify(connectorHearbeatPublisher, atLeastOnce()).pushConnectivityCheckActivity(ACCOUNT_ID, taskResponse);
   }
 }
