@@ -82,6 +82,11 @@
         </dependency>
         <dependency>
             <groupId>software.wings</groupId>
+            <artifactId>41-pms-sdk</artifactId>
+            <version>${project.parent.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>software.wings</groupId>
             <artifactId>440-connector-nextgen</artifactId>
             <version>${project.parent.version}</version>
         </dependency>

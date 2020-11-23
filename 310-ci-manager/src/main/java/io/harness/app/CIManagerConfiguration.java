@@ -5,6 +5,8 @@ import static java.util.stream.Collectors.toSet;
 
 import io.harness.ci.beans.entities.LogServiceConfig;
 import io.harness.ci.config.CIExecutionServiceConfig;
+import io.harness.grpc.client.GrpcClientConfig;
+import io.harness.grpc.server.GrpcServerConfig;
 import io.harness.mongo.MongoConfig;
 import io.harness.remote.client.ServiceHttpClientConfig;
 
@@ -49,6 +51,10 @@ public class CIManagerConfiguration extends Configuration implements AssetsBundl
   private String managerTarget;
   private String managerAuthority;
   private CIExecutionServiceConfig ciExecutionServiceConfig;
+
+  @JsonProperty("pmsSdkGrpcServerConfig") private GrpcServerConfig pmsSdkGrpcServerConfig;
+  @JsonProperty("pmsGrpcClientConfig") private GrpcClientConfig pmsGrpcClientConfig;
+  @JsonProperty("shouldConfigureWithPMS") private Boolean shouldConfigureWithPMS;
 
   public SwaggerBundleConfiguration getSwaggerBundleConfiguration() {
     SwaggerBundleConfiguration defaultSwaggerBundleConfiguration = new SwaggerBundleConfiguration();
