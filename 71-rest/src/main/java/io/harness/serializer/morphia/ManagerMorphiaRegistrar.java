@@ -727,6 +727,10 @@ import software.wings.sm.states.azure.AzureVMSSSwitchRoutesState;
 import software.wings.sm.states.azure.appservices.AzureAppServiceSlotSetupContextElement;
 import software.wings.sm.states.azure.appservices.AzureAppServiceSlotSetupExecutionData;
 import software.wings.sm.states.azure.appservices.AzureAppServiceSlotSetupExecutionSummary;
+import software.wings.sm.states.azure.appservices.AzureAppServiceSlotShiftTrafficExecutionData;
+import software.wings.sm.states.azure.appservices.AzureAppServiceSlotShiftTrafficExecutionSummary;
+import software.wings.sm.states.azure.appservices.AzureAppServiceSlotSwapExecutionData;
+import software.wings.sm.states.azure.appservices.AzureAppServiceSlotSwapExecutionSummary;
 import software.wings.sm.states.azure.appservices.AzureWebAppSlotResize;
 import software.wings.sm.states.azure.appservices.AzureWebAppSlotRollback;
 import software.wings.sm.states.azure.appservices.AzureWebAppSlotSetup;
@@ -1613,6 +1617,14 @@ public class ManagerMorphiaRegistrar implements MorphiaRegistrar {
         AzureAppServiceSlotSetupExecutionData.class);
     w.put("sm.states.azure.appservices.AzureAppServiceSlotSetupExecutionSummary",
         AzureAppServiceSlotSetupExecutionSummary.class);
+    w.put("sm.states.azure.appservices.AzureAppServiceSlotShiftTrafficExecutionData",
+        AzureAppServiceSlotShiftTrafficExecutionData.class);
+    w.put("sm.states.azure.appservices.AzureAppServiceSlotShiftTrafficExecutionSummary",
+        AzureAppServiceSlotShiftTrafficExecutionSummary.class);
+    w.put(
+        "sm.states.azure.appservices.AzureAppServiceSlotSwapExecutionData", AzureAppServiceSlotSwapExecutionData.class);
+    w.put("sm.states.azure.appservices.AzureAppServiceSlotSwapExecutionSummary",
+        AzureAppServiceSlotSwapExecutionSummary.class);
     w.put("sm.WorkflowStandardParams", WorkflowStandardParams.class);
     w.put("verification.apm.APMCVServiceConfiguration", APMCVServiceConfiguration.class);
     w.put("verification.appdynamics.AppDynamicsCVServiceConfiguration", AppDynamicsCVServiceConfiguration.class);

@@ -147,7 +147,7 @@ public class AzureWebAppSlotSetupTest extends WingsBaseTest {
   public void testSlotSetupHandleAsyncResponse() {
     ExecutionContextImpl context = mock(ExecutionContextImpl.class);
     doNothing().when(azureVMSSStateHelper).updateActivityStatus(anyString(), anyString(), any());
-    doReturn(SUCCESS).when(azureVMSSStateHelper).getAppServieExecutionStatus(any());
+    doReturn(SUCCESS).when(azureVMSSStateHelper).getAppServiceExecutionStatus(any());
     Map<String, ResponseData> responseMap = ImmutableMap.of(ACTIVITY_ID,
         AzureTaskExecutionResponse.builder()
             .azureTaskResponse(AzureWebAppSlotSetupResponse.builder()

@@ -786,6 +786,10 @@ import software.wings.sm.states.azure.AzureVMSSSetupStateExecutionData;
 import software.wings.sm.states.azure.appservices.AzureAppServiceSlotSetupContextElement;
 import software.wings.sm.states.azure.appservices.AzureAppServiceSlotSetupExecutionData;
 import software.wings.sm.states.azure.appservices.AzureAppServiceSlotSetupExecutionSummary;
+import software.wings.sm.states.azure.appservices.AzureAppServiceSlotShiftTrafficExecutionData;
+import software.wings.sm.states.azure.appservices.AzureAppServiceSlotShiftTrafficExecutionSummary;
+import software.wings.sm.states.azure.appservices.AzureAppServiceSlotSwapExecutionData;
+import software.wings.sm.states.azure.appservices.AzureAppServiceSlotSwapExecutionSummary;
 import software.wings.sm.states.gcbconfigs.GcbOptions;
 import software.wings.sm.states.gcbconfigs.GcbRemoteBuildSpec;
 import software.wings.sm.states.gcbconfigs.GcbTriggerBuildSpec;
@@ -1731,5 +1735,9 @@ public class ManagerKryoRegistrar implements KryoRegistrar {
     kryo.register(AzureAppServiceSlotSetupContextElement.class, 8098);
     kryo.register(AzureAppServiceSlotSetupExecutionData.class, 8099);
     kryo.register(AzureAppServiceSlotSetupExecutionSummary.class, 8110);
+    kryo.register(AzureAppServiceSlotShiftTrafficExecutionData.class, 8111);
+    kryo.register(AzureAppServiceSlotShiftTrafficExecutionSummary.class, 8112);
+    kryo.register(AzureAppServiceSlotSwapExecutionData.class, 8113);
+    kryo.register(AzureAppServiceSlotSwapExecutionSummary.class, 8114);
   }
 }
