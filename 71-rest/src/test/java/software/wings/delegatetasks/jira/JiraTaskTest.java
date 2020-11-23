@@ -28,6 +28,8 @@ import java.util.Map;
 import net.rcarz.jiraclient.Field;
 import net.rcarz.jiraclient.Issue.FluentCreate;
 import net.rcarz.jiraclient.Issue.FluentUpdate;
+import net.rcarz.jiraclient.JiraClient;
+import net.rcarz.jiraclient.JiraException;
 import net.rcarz.jiraclient.TimeTracking;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -45,6 +47,8 @@ import org.powermock.modules.junit4.PowerMockRunner;
 @PrepareForTest({FluentCreate.class, FluentUpdate.class})
 @PowerMockIgnore({"javax.net.ssl.*", "javax.security.auth.x500.X500Principal"})
 public class JiraTaskTest extends CategoryTest {
+  private static final String BASE_URL = "http://jira.com";
+
   @Inject
   @InjectMocks
   JiraTask jiraTask =
@@ -55,6 +59,9 @@ public class JiraTaskTest extends CategoryTest {
   @Captor ArgumentCaptor<String> fieldArgumentCaptor;
   @Captor ArgumentCaptor<TimeTracking> timeTrackingArgumentCaptor;
   @Captor ArgumentCaptor<Object> valuesArgumentCaptor;
+
+  private JiraConfig jiraConfig =
+      JiraConfig.builder().baseUrl(BASE_URL).username("username").password(new char['p']).build();
 
   @Test
   @Owner(developers = AGORODETKI)
@@ -159,9 +166,37 @@ public class JiraTaskTest extends CategoryTest {
     assertThat(jiraExecutionData.getExecutionStatus()).isEqualTo(ExecutionStatus.PAUSED);
   }
 
+  @Test
+  @Owner(developers = ROHITKARELIA)
+  @Category({UnitTests.class})
+  public void shouldGetProxyEnabledJiraClient() throws JiraException {
+    JiraTaskParameters jiraTaskParameters = getJiraTaskParametersForAUTH();
+
+    System.setProperty("http.proxyHost", "testProxyHost");
+    System.setProperty("http.proxyPort", "80");
+    JiraClient jiraClient = jiraTask.getJiraClient(jiraTaskParameters);
+    assertThat(jiraClient.getRestClient().getHttpClient()).isNotNull();
+  }
+
+  @Test
+  @Owner(developers = ROHITKARELIA)
+  @Category({UnitTests.class})
+  public void shouldGetProxyEnabledJiraClientWithAuth() throws JiraException {
+    JiraTaskParameters jiraTaskParameters = getJiraTaskParametersForAUTH();
+
+    System.setProperty("http.proxyHost", "testProxyHost");
+    System.setProperty("http.proxyPort", "80");
+    System.setProperty("http.proxyUser", "user");
+    System.setProperty("http.proxyPassword", "user");
+    JiraClient jiraClient = jiraTask.getJiraClient(jiraTaskParameters);
+    assertThat(jiraClient.getRestClient().getHttpClient()).isNotNull();
+  }
+
+  private JiraTaskParameters getJiraTaskParametersForAUTH() {
+    return JiraTaskParameters.builder().jiraAction(JiraAction.AUTH).jiraConfig(jiraConfig).build();
+  }
+
   private JiraTaskParameters getJiraTaskParametersForApproval() {
-    String baseURL = "http://jira.com";
-    JiraConfig jiraConfig = JiraConfig.builder().baseUrl(baseURL).username("username").password(new char['p']).build();
     return JiraTaskParameters.builder()
         .jiraAction(JiraAction.CHECK_APPROVAL)
         .issueId("ISSUE-10012")
