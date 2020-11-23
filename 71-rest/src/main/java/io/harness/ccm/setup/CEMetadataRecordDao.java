@@ -41,4 +41,8 @@ public class CEMetadataRecordDao {
     FindAndModifyOptions findAndModifyOptions = new FindAndModifyOptions().upsert(true).returnNew(true);
     return persistence.upsert(query, updateOperations, findAndModifyOptions);
   }
+
+  public CEMetadataRecord getByAccountId(String accountId) {
+    return persistence.createQuery(CEMetadataRecord.class).field(CEMetadataRecordKeys.accountId).equal(accountId).get();
+  }
 }

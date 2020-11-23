@@ -46,10 +46,23 @@ type View {
   chartType: ViewChartType
   viewType: ViewType
   viewState: ViewState
+  groupBy: viewField
+  timeRange: ViewTimeRangeType
+  dataSources: [ViewFieldIdentifier]
+  isReportScheduledConfigured: Boolean
+}
+
+enum ViewTimeRangeType {
+  LAST_7
+  LAST_30
+  LAST_MONTH
+  CURRENT_MONTH
+  CUSTOM
 }
 
 enum ViewChartType {
   STACKED_TIME_SERIES
+  STACKED_LINE_CHART
 }
 
 enum ViewType {

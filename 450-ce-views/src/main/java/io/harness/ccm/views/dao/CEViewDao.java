@@ -36,7 +36,8 @@ public class CEViewDao {
                                                     .set(CEViewKeys.viewRules, ceView.getViewRules())
                                                     .set(CEViewKeys.viewVisualization, ceView.getViewVisualization())
                                                     .set(CEViewKeys.viewType, ceView.getViewType())
-                                                    .set(CEViewKeys.viewState, ViewState.COMPLETED);
+                                                    .set(CEViewKeys.viewState, ViewState.COMPLETED)
+                                                    .set(CEViewKeys.dataSources, ceView.getDataSources());
     hPersistence.update(query, updateOperations);
     log.info(query.toString());
     return (CEView) query.asList().get(0);

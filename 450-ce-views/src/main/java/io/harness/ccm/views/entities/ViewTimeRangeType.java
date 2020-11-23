@@ -3,10 +3,11 @@ package io.harness.ccm.views.entities;
 import lombok.Getter;
 
 public enum ViewTimeRangeType {
-  CUSTOM("custom"),
   LAST_7("last7"),
   LAST_30("last30"),
-  LAST_MONTH("lastMonth");
+  LAST_MONTH("lastMonth"),
+  CURRENT_MONTH("currentMonth"),
+  CUSTOM("custom");
 
   @Getter private final String name;
 

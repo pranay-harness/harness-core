@@ -49,6 +49,7 @@ import migrations.all.AddValidUntilToSecretUsageLogs;
 import migrations.all.AddValidUntilToWorkflowExecution;
 import migrations.all.AmendCorruptedEncryptedServiceVariable;
 import migrations.all.ApiKeysSetNameMigration;
+import migrations.all.CEViewsMigration;
 import migrations.all.CleanUpDirectK8sInfraMappingEncryptedFieldsMigration;
 import migrations.all.CleanupOrphanInstances;
 import migrations.all.CleanupSyncStatusForDeletedEntities;
@@ -295,6 +296,7 @@ public class MigrationBackgroundList {
         .add(Pair.of(179, LicenseExpiryReminderTimeMigration.class))
         .add(Pair.of(180, BaseMigration.class))
         .add(Pair.of(181, GCPMarketplaceCustomerMigration.class))
+        .add(Pair.of(182, CEViewsMigration.class))
         .build();
   }
 }
