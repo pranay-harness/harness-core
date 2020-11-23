@@ -150,46 +150,73 @@ public class CloudBillingFilter {
   }
 
   public CloudBillingIdFilter getProject() {
+    if (projectId == null) {
+      return null;
+    }
     projectId.setVariable(BILLING_GCP_PROJECT);
     return projectId;
   }
 
   public CloudBillingIdFilter getProduct() {
+    if (product == null) {
+      return null;
+    }
     product.setVariable(BILLING_GCP_PRODUCT);
     return product;
   }
 
   public CloudBillingIdFilter getSku() {
+    if (sku == null) {
+      return null;
+    }
     sku.setVariable(BILLING_GCP_SKU);
     return sku;
   }
 
   public CloudBillingIdFilter getBillingAccountId() {
+    if (billingAccountId == null) {
+      return null;
+    }
     billingAccountId.setVariable(BILLING_GCP_BILLING_ACCOUNT_ID);
     return billingAccountId;
   }
 
   public CloudBillingIdFilter getRegion() {
+    if (region == null) {
+      return null;
+    }
     region.setVariable(BILLING_REGION);
     return region;
   }
 
   public CloudBillingIdFilter getService() {
+    if (awsService == null) {
+      return null;
+    }
     awsService.setVariable(BILLING_AWS_SERVICE);
     return awsService;
   }
 
   public CloudBillingIdFilter getUsageType() {
+    if (awsUsageType == null) {
+      return null;
+    }
     awsUsageType.setVariable(BILLING_AWS_USAGE_TYPE);
     return awsUsageType;
   }
 
   public CloudBillingIdFilter getInstanceType() {
+    if (awsInstanceType == null) {
+      return null;
+    }
     awsInstanceType.setVariable(BILLING_AWS_INSTANCE_TYPE);
     return awsInstanceType;
   }
 
   public CloudBillingIdFilter getLinkedAccount() {
+    if (awsLinkedAccount == null) {
+      return null;
+    }
     awsLinkedAccount.setVariable(BILLING_AWS_LINKED_ACCOUNT);
     return awsLinkedAccount;
   }

@@ -18,6 +18,7 @@ enum DataFetcherEnum {
   ceConnector
   ceHealthStatus
   ceActivePodCount
+  cloudAnomalies
   cloudEntityStats
   cloudFilterValues
   cloudOverview
@@ -57,6 +58,7 @@ enum DataFetcherEnum {
   instanceConnection
   instanceCount
   instanceStats
+  k8sAnomalies
   k8sEventYamlDiff
   k8sLabelConnection
   k8sWorkloadRecommendations
@@ -89,6 +91,7 @@ enum DataFetcherEnum {
   deleteApplication
   updateUserGroupPermissions
   createUser
+  updateAnomaly
   updateUser
   deleteUser
   userGroup

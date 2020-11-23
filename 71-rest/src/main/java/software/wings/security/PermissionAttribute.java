@@ -241,6 +241,8 @@ public class PermissionAttribute {
 
     K8S_RECOMMENDATION(ACCOUNT),
 
+    CE_ANOMALIES(ACCOUNT),
+
     CE_CLUSTER(ACCOUNT),
 
     CE_CONNECTOR(ACCOUNT),

@@ -7,6 +7,7 @@ import migrations.timescaledb.AddAccountIdStatusIndexToDeployment;
 import migrations.timescaledb.AddCostEvents;
 import migrations.timescaledb.AddDeploymentTagsToDeployment;
 import migrations.timescaledb.AddExplorerV2Indices;
+import migrations.timescaledb.AddFeedbackToAnomalies;
 import migrations.timescaledb.AddFieldsToServiceGuardStats;
 import migrations.timescaledb.AddFieldsToWorkflowCVMetrics;
 import migrations.timescaledb.AddIdleUnallocatedColumns;
@@ -81,6 +82,7 @@ public class TimescaleDBMigrationList {
         .add(Pair.of(34, CreateAggregatedBillingTable.class))
         .add(Pair.of(35, CreateAnomaliesDataV2.class))
         .add(Pair.of(36, AddAccountIdStatusIndexToDeployment.class))
+        .add(Pair.of(37, AddFeedbackToAnomalies.class))
         .build();
   }
 }
