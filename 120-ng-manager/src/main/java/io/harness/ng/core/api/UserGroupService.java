@@ -3,6 +3,7 @@ package io.harness.ng.core.api;
 import io.harness.ng.core.dto.UserGroupDTO;
 import io.harness.ng.core.entities.UserGroup;
 
+import java.util.List;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
@@ -11,4 +12,6 @@ public interface UserGroupService {
 
   Page<UserGroup> list(
       String accountIdentifier, String orgIdentifier, String projectIdentifier, String searchTerm, Pageable pageable);
+
+  Page<UserGroup> list(List<String> userGroupIds);
 }

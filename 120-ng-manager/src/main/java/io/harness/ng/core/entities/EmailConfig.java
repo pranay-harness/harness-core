@@ -9,8 +9,8 @@ import lombok.EqualsAndHashCode;
 @Data
 @Builder
 @EqualsAndHashCode(callSuper = true)
-@JsonTypeName("Slack")
+@JsonTypeName("Email")
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class SlackConfig extends NotificationSettingConfig {
-  String slackWebhookUrl;
+public class EmailConfig extends NotificationSettingConfig {
+  String groupEmail;
 }

@@ -6,10 +6,14 @@ import static io.harness.ng.core.mapper.TagMapper.convertToMap;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.emptyMap;
 
+import io.harness.ng.core.dto.EmailConfigDTO;
+import io.harness.ng.core.dto.MicrosoftTeamsConfigDTO;
 import io.harness.ng.core.dto.NotificationSettingConfigDTO;
 import io.harness.ng.core.dto.PagerDutyConfigDTO;
 import io.harness.ng.core.dto.SlackConfigDTO;
 import io.harness.ng.core.dto.UserGroupDTO;
+import io.harness.ng.core.entities.EmailConfig;
+import io.harness.ng.core.entities.MicrosoftTeamsConfig;
 import io.harness.ng.core.entities.NotificationSettingConfig;
 import io.harness.ng.core.entities.PagerDutyConfig;
 import io.harness.ng.core.entities.SlackConfig;
@@ -64,9 +68,15 @@ public class UserGroupMapper {
     }
     switch (dto.getType()) {
       case Slack:
-        return SlackConfig.builder().slackId(((SlackConfigDTO) dto).getSlackId()).build();
+        return SlackConfig.builder().slackWebhookUrl(((SlackConfigDTO) dto).getSlackWebhookUrl()).build();
       case PagerDuty:
-        return PagerDutyConfig.builder().pagerDutyId(((PagerDutyConfigDTO) dto).getPagerDutyId()).build();
+        return PagerDutyConfig.builder().pagerDutyKey(((PagerDutyConfigDTO) dto).getPagerDutyKey()).build();
+      case MicrosoftTeams:
+        return MicrosoftTeamsConfig.builder()
+            .microsoftTeamsWebhookUrl(((MicrosoftTeamsConfigDTO) dto).getMicrosoftTeamsWebhookUrl())
+            .build();
+      case Email:
+        return EmailConfig.builder().groupEmail(((EmailConfigDTO) dto).getGroupEmail()).build();
       default:
         throw new IllegalArgumentException("This is not a valid Notification Setting Type: " + dto.getType());
     }
@@ -78,9 +88,15 @@ public class UserGroupMapper {
     }
     switch (entity.getType()) {
       case Slack:
-        return SlackConfigDTO.builder().slackId(((SlackConfig) entity).getSlackId()).build();
+        return SlackConfigDTO.builder().slackWebhookUrl(((SlackConfig) entity).getSlackWebhookUrl()).build();
       case PagerDuty:
-        return PagerDutyConfigDTO.builder().pagerDutyId(((PagerDutyConfig) entity).getPagerDutyId()).build();
+        return PagerDutyConfigDTO.builder().pagerDutyKey(((PagerDutyConfig) entity).getPagerDutyKey()).build();
+      case MicrosoftTeams:
+        return MicrosoftTeamsConfigDTO.builder()
+            .microsoftTeamsWebhookUrl(((MicrosoftTeamsConfig) entity).getMicrosoftTeamsWebhookUrl())
+            .build();
+      case Email:
+        return EmailConfigDTO.builder().groupEmail(((EmailConfig) entity).getGroupEmail()).build();
       default:
         throw new IllegalArgumentException("This is not a valid Notification Setting Type: " + entity.getType());
     }

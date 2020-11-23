@@ -9,7 +9,7 @@ import lombok.EqualsAndHashCode;
 @Data
 @Builder
 @EqualsAndHashCode(callSuper = true)
-@JsonTypeName("Slack")
-public class SlackConfigDTO extends NotificationSettingConfigDTO {
-  @NotNull String slackId;
+@JsonTypeName("MicrosoftTeams")
+public class MicrosoftTeamsConfigDTO extends NotificationSettingConfigDTO {
+  @NotNull String microsoftTeamsWebhookUrl;
 }
