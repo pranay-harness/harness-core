@@ -1,5 +1,7 @@
 package io.harness.ng.core.entities;
 
+import io.harness.ng.core.dto.NotificationSettingType;
+
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import javax.validation.constraints.NotNull;
 import lombok.Data;

@@ -9,9 +9,9 @@ import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import io.harness.exception.DuplicateFieldException;
 import io.harness.ng.core.api.UserGroupService;
 import io.harness.ng.core.api.repositories.spring.UserGroupRepository;
+import io.harness.ng.core.dto.NotificationSettingType;
 import io.harness.ng.core.dto.UserGroupDTO;
 import io.harness.ng.core.entities.NotificationSettingConfig;
-import io.harness.ng.core.entities.NotificationSettingType;
 import io.harness.ng.core.entities.UserGroup;
 import io.harness.ng.core.entities.UserGroup.UserGroupKeys;
 
@@ -19,6 +19,7 @@ import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.tuple.Pair;
@@ -67,6 +68,12 @@ public class UserGroupServiceImpl implements UserGroupService {
       String accountIdentifier, String orgIdentifier, String projectIdentifier, String searchTerm, Pageable pageable) {
     return userGroupRepository.findAll(
         createUserGroupFilterCriteria(accountIdentifier, orgIdentifier, projectIdentifier, searchTerm), pageable);
+  }
+
+  @Override
+  public Page<UserGroup> list(List<String> userGroupIds) {
+    Criteria criteria = Criteria.where(UserGroupKeys.id).in(userGroupIds).and(UserGroupKeys.deleted).ne(Boolean.TRUE);
+    return userGroupRepository.findAll(criteria, Pageable.unpaged());
   }
 
   private void validateCreateUserGroupRequest(

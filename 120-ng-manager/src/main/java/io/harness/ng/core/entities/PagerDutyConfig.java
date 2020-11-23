@@ -12,5 +12,5 @@ import lombok.EqualsAndHashCode;
 @JsonTypeName("PagerDuty")
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class PagerDutyConfig extends NotificationSettingConfig {
-  String pagerDutyId;
+  String pagerDutyKey;
 }
