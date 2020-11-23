@@ -14,6 +14,7 @@ import io.harness.ccm.health.CEClusterDao;
 import io.harness.exception.InvalidRequestException;
 
 import software.wings.beans.Application;
+import software.wings.beans.Application.ApplicationKeys;
 import software.wings.beans.Environment;
 import software.wings.beans.Service;
 import software.wings.beans.SettingAttribute;
@@ -28,6 +29,8 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.List;
+import java.util.Set;
 import lombok.Value;
 import lombok.extern.slf4j.Slf4j;
 
@@ -270,5 +273,57 @@ public class QLBillingStatsHelper {
       return entityId;
     }
     return entityId;
+  }
+
+  public boolean validateIds(BillingDataMetaDataFields field, Set<String> entityIds, String accountId) {
+    switch (field) {
+      case APPID:
+        return validateAppIds(entityIds, accountId);
+      case CLUSTERID:
+        return validateClusterIds(entityIds, accountId);
+      default:
+        throw new InvalidRequestException("Invalid EntityType " + field);
+    }
+  }
+
+  private boolean validateAppIds(Set<String> entityIds, String accountId) {
+    List<Application> applications = wingsPersistence.createQuery(Application.class)
+                                         .field(ApplicationKeys.accountId)
+                                         .equal(accountId)
+                                         .field(ApplicationKeys.uuid)
+                                         .in(entityIds)
+                                         .asList();
+    if (entityIds.size() != applications.size()) {
+      return false;
+    }
+    return true;
+  }
+
+  private boolean validateClusterIds(Set<String> entityIds, String accountId) {
+    try {
+      for (String entityId : entityIds) {
+        boolean valid = false;
+        CECluster ceCluster = ceClusterDao.getCECluster(entityId);
+        if (null != ceCluster && ceCluster.getAccountId().equals(accountId)) {
+          valid = true;
+        }
+        ClusterRecord clusterRecord = clusterRecordService.get(entityId);
+        Cluster cluster = null;
+        String clusterAccountId = "";
+        if (clusterRecord != null) {
+          cluster = clusterRecord.getCluster();
+          clusterAccountId = clusterRecord.getAccountId();
+        }
+        if (cluster != null && clusterAccountId.equals(accountId)) {
+          valid = true;
+        }
+        if (!valid) {
+          return false;
+        }
+      }
+    } catch (Exception e) {
+      return false;
+    }
+    return true;
   }
 }
