@@ -4,9 +4,13 @@ import static io.harness.Team.OTHER;
 
 import io.harness.Team;
 import io.harness.iterator.PersistentRegularIterable;
+import io.harness.mongo.index.CompoundMongoIndex;
 import io.harness.mongo.index.FdIndex;
+import io.harness.mongo.index.MongoIndex;
 import io.harness.persistence.PersistentEntity;
 
+import com.google.common.collect.ImmutableList;
+import java.util.List;
 import lombok.Builder;
 import lombok.Data;
 import lombok.experimental.FieldNameConstants;
@@ -21,6 +25,20 @@ import org.springframework.data.mongodb.core.mapping.Document;
 @Document("notifications")
 @TypeAlias("notifications")
 public class Notification implements PersistentRegularIterable, PersistentEntity {
+  public static List<MongoIndex> mongoIndexes() {
+    return ImmutableList.<MongoIndex>builder()
+        .add(CompoundMongoIndex.builder()
+                 .name("unique_notification_idx")
+                 .unique(true)
+                 .field(NotificationKeys.id)
+                 .build())
+        .add(CompoundMongoIndex.builder()
+                 .name("notification_retries_sent")
+                 .field(NotificationKeys.sent)
+                 .field(NotificationKeys.retries)
+                 .build())
+        .build();
+  }
   @Id @org.mongodb.morphia.annotations.Id String uuid;
   String id;
   String accountIdentifier;
