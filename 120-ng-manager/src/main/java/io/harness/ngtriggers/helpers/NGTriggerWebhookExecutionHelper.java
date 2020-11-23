@@ -15,6 +15,8 @@ import io.harness.ngtriggers.beans.source.webhook.WebhookTriggerConfig;
 import io.harness.ngtriggers.beans.source.webhook.WebhookTriggerSpec;
 import io.harness.ngtriggers.beans.target.TargetSpec;
 import io.harness.ngtriggers.beans.target.pipeline.PipelineTargetSpec;
+import io.harness.ngtriggers.beans.webhookresponse.WebhookEventResponse;
+import io.harness.ngtriggers.beans.webhookresponse.WebhookEventResponse.FinalStatus;
 import io.harness.ngtriggers.mapper.NGTriggerElementMapper;
 import io.harness.ngtriggers.service.NGTriggerService;
 import io.harness.ngtriggers.utils.WebhookEventPayloadParser;
@@ -22,6 +24,8 @@ import io.harness.ngtriggers.utils.WebhookTriggerFilterUtil;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Inject;
+import io.grpc.Status;
+import io.grpc.StatusRuntimeException;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
@@ -37,13 +41,21 @@ public class NGTriggerWebhookExecutionHelper {
   private final NGPipelineExecuteHelper ngPipelineExecuteHelper;
   private final WebhookEventPayloadParser webhookEventPayloadParser;
 
-  public boolean handleTriggerWebhookEvent(TriggerWebhookEvent triggerWebhookEvent) {
-    WebhookPayloadData webhookPayloadData = parseEventData(triggerWebhookEvent);
+  public WebhookEventResponse handleTriggerWebhookEvent(TriggerWebhookEvent triggerWebhookEvent) {
+    WebhookPayloadData webhookPayloadData;
+    try {
+      webhookPayloadData = parseEventData(triggerWebhookEvent);
+    } catch (StatusRuntimeException e) {
+      if (e.getStatus().getCode() == Status.Code.UNAVAILABLE) {
+        return WebhookEventResponseHelper.toResponse(FinalStatus.SCM_SERVICE_DOWN, triggerWebhookEvent, null);
+      }
+      return WebhookEventResponseHelper.toResponse(FinalStatus.INVALID_PAYLOAD, triggerWebhookEvent, null);
+    }
 
     List<NGTriggerEntity> triggersForRepo =
         retrieveTriggersConfiguredForRepo(triggerWebhookEvent, webhookPayloadData.getRepository().getLink());
     if (EmptyPredicate.isEmpty(triggersForRepo)) {
-      return true;
+      return WebhookEventResponseHelper.toResponse(FinalStatus.NO_MATCHING_TRIGGER, triggerWebhookEvent, null);
     }
     Optional<TriggerDetails> optionalEntity = applyFilters(webhookPayloadData, triggersForRepo);
     if (optionalEntity.isPresent()) {
@@ -51,12 +63,18 @@ public class NGTriggerWebhookExecutionHelper {
       try {
         NGPipelineExecutionResponseDTO response =
             resolveRuntimeInputAndSubmitExecutionRequest(triggerDetails, triggerWebhookEvent.getPayload());
-        return !response.isErrorResponse();
+        if (response.isErrorResponse()) {
+          return WebhookEventResponseHelper.toResponse(
+              FinalStatus.TARGET_DID_NOT_EXECUTE, triggerWebhookEvent, response);
+        } else {
+          return WebhookEventResponseHelper.toResponse(
+              FinalStatus.TARGET_EXECUTION_REQUESTED, triggerWebhookEvent, response);
+        }
       } catch (Exception e) {
-        return false;
+        return WebhookEventResponseHelper.toResponse(FinalStatus.INVALID_RUNTIME_INPUT_YAML, triggerWebhookEvent, null);
       }
     }
-    return false;
+    return WebhookEventResponseHelper.toResponse(FinalStatus.NO_MATCHING_TRIGGER, triggerWebhookEvent, null);
   }
 
   // Add error handling

@@ -13,6 +13,8 @@ import io.harness.mongo.iterator.provider.MorphiaPersistenceRequiredProvider;
 import io.harness.mongo.iterator.provider.SpringPersistenceProvider;
 import io.harness.ngtriggers.beans.entity.TriggerWebhookEvent;
 import io.harness.ngtriggers.beans.entity.TriggerWebhookEvent.TriggerWebhookEventsKeys;
+import io.harness.ngtriggers.beans.webhookresponse.WebhookEventResponse;
+import io.harness.ngtriggers.beans.webhookresponse.WebhookEventResponse.FinalStatus;
 import io.harness.ngtriggers.helpers.NGTriggerWebhookExecutionHelper;
 import io.harness.ngtriggers.service.NGTriggerService;
 import io.harness.ngtriggers.service.TriggerWebhookService;
@@ -41,13 +43,13 @@ public class TriggerWebhookServiceImpl
             PersistenceIteratorFactory.PumpExecutorOptions.builder()
                 .name("WebhookEventProcessor")
                 .poolSize(1)
-                .interval(ofSeconds(100))
+                .interval(ofSeconds(15))
                 .build(),
             TriggerWebhookService.class,
             MongoPersistenceIterator.<TriggerWebhookEvent, SpringFilterExpander>builder()
                 .clazz(TriggerWebhookEvent.class)
                 .fieldName(TriggerWebhookEventsKeys.nextIteration)
-                .targetInterval(ofSeconds(100))
+                .targetInterval(ofSeconds(15))
                 .acceptableNoAlertDelay(ofSeconds(30))
                 .handler(this)
                 .filterExpander(
@@ -59,18 +61,12 @@ public class TriggerWebhookServiceImpl
 
   @Override
   public void handle(TriggerWebhookEvent event) {
-    try {
-      // ideally hangit reset -dleTriggerWebhookEvent should return response, with some info:
-      // retryNeeded or not.
-      // payload parsing failed: no rety
-      // scm service couldt be reached: retry
-      // no trigger found for repo, trigger found but triggerConditions fail : no retry
-      //
-      ngTriggerWebhookExecutionHelper.handleTriggerWebhookEvent(event);
-      ngTriggerService.deleteTriggerWebhookEvent(event);
-    } catch (Exception e) {
+    WebhookEventResponse response = ngTriggerWebhookExecutionHelper.handleTriggerWebhookEvent(event);
+    if (response.getFinalStatus() == FinalStatus.SCM_SERVICE_DOWN) {
       event.setAttemptCount(event.getAttemptCount() + 1);
       ngTriggerService.updateTriggerWebhookEvent(event);
+    } else {
+      ngTriggerService.deleteTriggerWebhookEvent(event);
     }
   }
 }
