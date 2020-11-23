@@ -11,11 +11,8 @@ import com.google.common.io.Files;
 import java.io.File;
 import java.io.IOException;
 import java.io.OutputStream;
-import java.nio.ByteBuffer;
-import java.nio.CharBuffer;
 import java.nio.charset.Charset;
 import java.security.SecureRandom;
-import java.util.Arrays;
 import lombok.experimental.UtilityClass;
 
 /**
@@ -45,12 +42,7 @@ public class EncryptionUtils {
   }
 
   public static byte[] toBytes(char[] chars, Charset charset) {
-    CharBuffer charBuffer = CharBuffer.wrap(chars);
-    ByteBuffer byteBuffer = charset.encode(charBuffer);
-    byte[] bytes = Arrays.copyOfRange(byteBuffer.array(), byteBuffer.position(), byteBuffer.limit());
-    Arrays.fill(charBuffer.array(), '\u0000');
-    Arrays.fill(byteBuffer.array(), (byte) 0);
-    return bytes;
+    return new String(chars).getBytes(charset);
   }
 
   public static byte[] encrypt(byte[] content, String containerId) {

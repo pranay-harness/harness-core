@@ -8,15 +8,13 @@ import io.harness.rule.Owner;
 import io.harness.rule.OwnerRule;
 
 import com.google.common.base.Charsets;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
 public class EncryptionUtilsTest extends CategoryTest {
   @Test
-  @Owner(developers = OwnerRule.VIKAS)
+  @Owner(developers = OwnerRule.UTKARSH)
   @Category(UnitTests.class)
-  @Ignore("Please fix this")
   public void toBytes() {
     final char[] src = "input-array".toCharArray();
     final byte[] bytes = EncryptionUtils.toBytes(src, Charsets.UTF_8);
