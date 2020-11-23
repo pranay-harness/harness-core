@@ -154,6 +154,13 @@ public class InfrastructureProvisionerGenerator {
           builder.sourceRepoBranch("master");
         }
 
+        if (terraformInfrastructureProvisioner.getCommitId() != null) {
+          builder.commitId(terraformInfrastructureProvisioner.getCommitId());
+          builder.sourceRepoBranch(null);
+        }
+
+        builder.skipRefreshBeforeApplyingPlan(terraformInfrastructureProvisioner.isSkipRefreshBeforeApplyingPlan());
+
         if (infrastructureProvisioner.getMappingBlueprints() != null) {
           builder.mappingBlueprints(infrastructureProvisioner.getMappingBlueprints());
         } else {
@@ -170,6 +177,14 @@ public class InfrastructureProvisionerGenerator {
 
         if (terraformInfrastructureProvisioner.getVariables() != null) {
           builder.variables(terraformInfrastructureProvisioner.getVariables());
+        }
+
+        if (terraformInfrastructureProvisioner.getBackendConfigs() != null) {
+          builder.backendConfigs(terraformInfrastructureProvisioner.getBackendConfigs());
+        }
+
+        if (terraformInfrastructureProvisioner.getEnvironmentVariables() != null) {
+          builder.environmentVariables(terraformInfrastructureProvisioner.getEnvironmentVariables());
         }
 
         newInfrastructureProvisioner = builder.build();
