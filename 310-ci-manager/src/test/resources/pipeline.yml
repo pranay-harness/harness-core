@@ -75,6 +75,15 @@ pipeline:
                   command:
                     - mvn clean install
             - step:
+                identifier: runUnitTestsIntelligently
+                type: testIntelligence
+                spec:
+                  retry: 2
+                  timeout: 30
+                  goals: echo "Running test"
+                  buildTool: maven
+                  language: java
+            - step:
                 identifier: uploadArtifact
                 type: publishArtifacts
                 spec:

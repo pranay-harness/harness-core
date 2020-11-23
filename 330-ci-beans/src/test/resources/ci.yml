@@ -51,13 +51,22 @@ pipeline:
                       command:
                         - ./run lint
                 - step:
-                    identifier: runUnitTests
+                    identifier: runAllUnitTests
                     type: run
                     spec:
                       retry: 2
                       timeout: 30
                       command:
                         - mvn -U clean package -Dbuild.number=${BUILD_NUMBER} -DgitBranch=master -DforkMode=perthread -DthreadCount=3 -DargLine="-Xmx2048m"
+                - step:
+                    identifier: runUnitTestsIntelligently
+                    type: testIntelligence
+                    spec:
+                      retry: 2
+                      timeout: 30
+                      goals: echo "Running test"
+                      buildTool: maven
+                      language: java
             - step:
                 identifier: generateReport
                 type: run

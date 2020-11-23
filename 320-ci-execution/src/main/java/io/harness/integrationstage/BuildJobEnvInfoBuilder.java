@@ -27,6 +27,7 @@ import io.harness.beans.steps.CIStepInfo;
 import io.harness.beans.steps.stepinfo.PluginStepInfo;
 import io.harness.beans.steps.stepinfo.PublishStepInfo;
 import io.harness.beans.steps.stepinfo.RunStepInfo;
+import io.harness.beans.steps.stepinfo.TestIntelligenceStepInfo;
 import io.harness.beans.steps.stepinfo.publish.artifact.Artifact;
 import io.harness.beans.yaml.extended.CustomSecretVariable;
 import io.harness.beans.yaml.extended.CustomTextVariable;
@@ -205,6 +206,9 @@ public class BuildJobEnvInfoBuilder {
             (RunStepInfo) ciStepInfo, integrationStage, ciExecutionArgs, portFinder, stepIndex);
       case PLUGIN:
         return createPluginStepContainerDefinition((PluginStepInfo) ciStepInfo, ciExecutionArgs, portFinder, stepIndex);
+      case TEST_INTELLIGENCE:
+        return createTestIntelligenceStepContainerDefinition(
+            (TestIntelligenceStepInfo) ciStepInfo, integrationStage, ciExecutionArgs, portFinder, stepIndex);
       default:
         return null;
     }
@@ -237,6 +241,33 @@ public class BuildJobEnvInfoBuilder {
         .containerType(CIContainerType.RUN)
         .stepIdentifier(runStepInfo.getIdentifier())
         .stepName(runStepInfo.getName())
+        .build();
+  }
+
+  private ContainerDefinitionInfo createTestIntelligenceStepContainerDefinition(
+      TestIntelligenceStepInfo testIntelligenceStepInfo, IntegrationStage integrationStage,
+      CIExecutionArgs ciExecutionArgs, PortFinder portFinder, int stepIndex) {
+    Integer port = portFinder.getNextPort();
+    testIntelligenceStepInfo.setPort(port);
+
+    String containerName = String.format("%s%d", STEP_PREFIX, stepIndex);
+    Map<String, String> stepEnvVars = new HashMap<>();
+    stepEnvVars.putAll(getEnvVariables(integrationStage));
+    stepEnvVars.putAll(BuildEnvironmentUtils.getBuildEnvironmentVariables(ciExecutionArgs));
+
+    return ContainerDefinitionInfo.builder()
+        .name(containerName)
+        .commands(StepContainerUtils.getCommand())
+        .args(StepContainerUtils.getArguments(port))
+        .envVars(stepEnvVars)
+        .secretVariables(getSecretVariables(integrationStage))
+        .containerImageDetails(ContainerImageDetails.builder()
+                                   .imageDetails(getImageInfo(testIntelligenceStepInfo.getImage()))
+                                   .connectorIdentifier(testIntelligenceStepInfo.getConnector())
+                                   .build())
+        .containerResourceParams(getStepContainerResource(testIntelligenceStepInfo.getResources()))
+        .ports(Collections.singletonList(port))
+        .containerType(CIContainerType.TEST_INTELLIGENCE)
         .build();
   }
 
@@ -417,6 +448,8 @@ public class BuildJobEnvInfoBuilder {
         return getContainerMemoryLimit(((RunStepInfo) ciStepInfo).getResources());
       case PLUGIN:
         return getContainerMemoryLimit(((PluginStepInfo) ciStepInfo).getResources());
+      case TEST_INTELLIGENCE:
+        return getContainerMemoryLimit(((TestIntelligenceStepInfo) ciStepInfo).getResources());
       default:
         return zeroMemory;
     }
@@ -462,6 +495,8 @@ public class BuildJobEnvInfoBuilder {
         return getContainerCpuLimit(((RunStepInfo) ciStepInfo).getResources());
       case PLUGIN:
         return getContainerCpuLimit(((PluginStepInfo) ciStepInfo).getResources());
+      case TEST_INTELLIGENCE:
+        return getContainerCpuLimit(((TestIntelligenceStepInfo) ciStepInfo).getResources());
       default:
         return zeroCpu;
     }

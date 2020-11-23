@@ -35,6 +35,7 @@ import io.harness.beans.steps.stepinfo.PublishStepInfo;
 import io.harness.beans.steps.stepinfo.RestoreCacheStepInfo;
 import io.harness.beans.steps.stepinfo.RunStepInfo;
 import io.harness.beans.steps.stepinfo.SaveCacheStepInfo;
+import io.harness.beans.steps.stepinfo.TestIntelligenceStepInfo;
 import io.harness.beans.steps.stepinfo.TestStepInfo;
 import io.harness.beans.steps.stepinfo.publish.artifact.DockerFileArtifact;
 import io.harness.beans.steps.stepinfo.publish.artifact.connectors.DockerhubConnector;
@@ -145,5 +146,6 @@ public class CIBeansKryoRegistrar implements KryoRegistrar {
     kryo.register(DependencyOutcome.class, 100072);
     kryo.register(ServiceDependency.class, 100073);
     kryo.register(ServiceDependency.Status.class, 100074);
+    kryo.register(TestIntelligenceStepInfo.class, 100075);
   }
 }

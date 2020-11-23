@@ -16,6 +16,7 @@ public enum CIStepInfoType {
   GIT_CLONE(CI_LITE_ENGINE),
   LITE_ENGINE_TASK(CI_LITE_ENGINE),
   SAVE_CACHE(CI_LITE_ENGINE),
+  TEST_INTELLIGENCE(CI_LITE_ENGINE),
   RESTORE_CACHE(CI_LITE_ENGINE);
 
   @Getter private CIStepExecEnvironment ciStepExecEnvironment;

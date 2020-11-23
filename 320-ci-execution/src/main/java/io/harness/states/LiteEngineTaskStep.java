@@ -13,6 +13,7 @@ import io.harness.beans.steps.stepinfo.PublishStepInfo;
 import io.harness.beans.steps.stepinfo.RestoreCacheStepInfo;
 import io.harness.beans.steps.stepinfo.RunStepInfo;
 import io.harness.beans.steps.stepinfo.SaveCacheStepInfo;
+import io.harness.beans.steps.stepinfo.TestIntelligenceStepInfo;
 import io.harness.beans.sweepingoutputs.StepTaskDetails;
 import io.harness.delegate.beans.TaskData;
 import io.harness.delegate.beans.ci.CIBuildSetupTaskParams;
@@ -216,6 +217,13 @@ public class LiteEngineTaskStep implements Step, TaskExecutable<LiteEngineTaskSt
       String taskId = queueDelegateTask(ambiance, restoreCacheStepInfo.getTimeout(), accountId, executor);
       restoreCacheStepInfo.setCallbackId(taskId);
       taskIds.put(restoreCacheStepInfo.getIdentifier(), taskId);
+    }
+
+    if (stepElement.getType().equals("testIntelligence")) {
+      TestIntelligenceStepInfo runStepInfo = (TestIntelligenceStepInfo) stepElement.getStepSpecType();
+      String taskId = queueDelegateTask(ambiance, runStepInfo.getTimeout(), accountId, executor);
+      runStepInfo.setCallbackId(taskId);
+      taskIds.put(runStepInfo.getIdentifier(), taskId);
     }
   }
 
