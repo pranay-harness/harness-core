@@ -17,10 +17,10 @@ connector:
             # Root certificate used to validate client certificates presented to the API server. Optional
             caCertRef: "acc.kubeClusterCacert"
             # Client certificate for the cluster. Required
-            clientCert: "secretRef:k8s_cluster_client"
+            clientCertRef: "secretRef:k8s_cluster_client"
             # Client key for the client certificate. Required
-            clientKey: "secretRef:k8s_client_key"
+            clientKeyRef: "secretRef:k8s_client_key"
             # Client key passphrase Required
-            clientKeyPassphrase: "secretRef:k8s_client_key_passphrase"
+            clientKeyPassphraseRef: "secretRef:k8s_client_key_passphrase"
             # Encryption algorithm used when the certificate was created. Typically, RSA
             clientKeyAlgo: "RSA"

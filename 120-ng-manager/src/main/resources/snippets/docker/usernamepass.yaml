@@ -1,0 +1,17 @@
+connector:
+  name: SampleDockerConnector
+  identifier: SampleDockerConnectorId
+  description: Sample Docker Connector
+  orgIdentifier: orgId
+  projectIdentifier: projectId
+  tags:
+    - tag1
+    - tag2
+  type: DockerRegistry
+  spec:
+    dockerRegistryUrl: somedockerregistryurl
+    auth:
+      type: UsernamePassword
+      spec:
+        username: someuser
+        passwordRef: somepasswordref

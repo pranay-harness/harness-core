@@ -3,14 +3,118 @@
     <yamlSnippetMetaDataList>
         <!--Repeating unit-->
         <YamlSnippetMetaData>
-            <name>Kubernetes client</name>
-            <version>1.0</version>
-            <description>Kubernetes client key based</description>
+            <name>K8s Cluster with Client Key Cert</name>
+            <version>0.1</version>
+            <description>K8s Cluster with Client Key Cert</description>
             <tags>
                 <tag>k8s</tag>
                 <tag>connector</tag>
             </tags>
             <resourcePath>snippets/k8s/clientKey.yaml</resourcePath>
+        </YamlSnippetMetaData>
+        <!--/Repeating unit-->
+
+        <!--Repeating unit-->
+        <YamlSnippetMetaData>
+            <name>K8s Cluster with Username and Password</name>
+            <version>0.1</version>
+            <description>K8s Cluster with Username and Password</description>
+            <tags>
+                <tag>k8s</tag>
+                <tag>connector</tag>
+            </tags>
+            <resourcePath>snippets/k8s/usernamePass.yaml</resourcePath>
+        </YamlSnippetMetaData>
+        <!--/Repeating unit-->
+
+        <!--Repeating unit-->
+        <YamlSnippetMetaData>
+            <name>K8s Cluster with Open Id Connect</name>
+            <version>0.1</version>
+            <description>K8s Cluster with Open Id Connect</description>
+            <tags>
+                <tag>k8s</tag>
+                <tag>connector</tag>
+            </tags>
+            <resourcePath>snippets/k8s/openIdConnect.yaml</resourcePath>
+        </YamlSnippetMetaData>
+        <!--/Repeating unit-->
+
+        <!--Repeating unit-->
+        <YamlSnippetMetaData>
+            <name>K8s Inherit from Delegate</name>
+            <version>0.1</version>
+            <description>K8s Inherit from Delegate</description>
+            <tags>
+                <tag>k8s</tag>
+                <tag>connector</tag>
+            </tags>
+            <resourcePath>snippets/k8s/inheritFromDelegate.yaml</resourcePath>
+        </YamlSnippetMetaData>
+        <!--/Repeating unit-->
+
+        <!--Repeating unit-->
+        <YamlSnippetMetaData>
+            <name>K8s Cluster with Service Account</name>
+            <version>0.1</version>
+            <description>K8s Cluster with Service Account</description>
+            <tags>
+                <tag>k8s</tag>
+                <tag>connector</tag>
+            </tags>
+            <resourcePath>snippets/k8s/serviceAccountKey.yaml</resourcePath>
+        </YamlSnippetMetaData>
+        <!--/Repeating unit-->
+
+        <!--Repeating unit-->
+        <YamlSnippetMetaData>
+            <name>Docker with Username and Password</name>
+            <version>0.1</version>
+            <description>Docker with Username and Password</description>
+            <tags>
+                <tag>docker</tag>
+                <tag>connector</tag>
+            </tags>
+            <resourcePath>snippets/docker/usernamepass.yaml</resourcePath>
+        </YamlSnippetMetaData>
+        <!--/Repeating unit-->
+
+        <!--Repeating unit-->
+        <YamlSnippetMetaData>
+            <name>Git with HTTP</name>
+            <version>0.1</version>
+            <description>GIT connector with HTTP</description>
+            <tags>
+                <tag>git</tag>
+                <tag>connector</tag>
+            </tags>
+            <resourcePath>snippets/git/http.yaml</resourcePath>
+        </YamlSnippetMetaData>
+        <!--/Repeating unit-->
+
+        <!--Repeating unit-->
+        <YamlSnippetMetaData>
+            <name>Git with SSH</name>
+            <version>0.1</version>
+            <description>GIT connector with SSH</description>
+            <tags>
+                <tag>git</tag>
+                <tag>connector</tag>
+            </tags>
+            <resourcePath>snippets/git/ssh.yaml</resourcePath>
+        </YamlSnippetMetaData>
+        <!--/Repeating unit-->
+
+        <!--Repeating unit-->
+        <YamlSnippetMetaData>
+            <name>Hashicorp Vault Secret Manager</name>
+            <version>0.1</version>
+            <description>Hashicorp Vault Secret Manager</description>
+            <tags>
+                <tag>secretmanager</tag>
+                <tag>connector</tag>
+            </tags>
+            <resourcePath>snippets/secretManager/hashicorp.yaml</resourcePath>
         </YamlSnippetMetaData>
         <!--/Repeating unit-->
     </yamlSnippetMetaDataList>

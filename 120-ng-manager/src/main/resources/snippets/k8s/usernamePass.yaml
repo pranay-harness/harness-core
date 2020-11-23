@@ -1,0 +1,20 @@
+connector:
+  # Connector typ to access kubernetes cluster
+  # Name of the connector Required
+  name: "My k8s Cluster"
+  # Non-changeable identifier of the connector, can not contain spaces or special chars. REQUIRED
+  identifier: "my_k8s_cluster"
+  type: K8sCluster
+  spec:
+    credential:
+      # Options are ManualConfig and InheritFromDelegate
+      type: ManualConfig
+      spec:
+        masterUrl: "k8s master url"
+        auth:
+          type: UserPassword
+          spec:
+            # Username for the Kubernetes cluster. Requried
+            username:  "admin"
+            # Password Ref for the Kubernetes cluster. Reference to secret (either secret name or identifier). Required
+            passwordRef: "acc.kube_cluster_password"
