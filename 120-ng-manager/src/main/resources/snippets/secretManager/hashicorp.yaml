@@ -1,0 +1,18 @@
+connector:
+  name: name
+  identifier: identifier
+  description: "description"
+  # Org ID
+  orgIdentifier: "Devops"
+  # Project ID
+  projectIdentifer: "Harness_Sample_App"
+  tags:
+    - tag1
+  type: Vault
+  spec:
+    vaultUrl: vaultUrl
+    renewIntervalHours: 0
+    secretEngineName: secret
+    secretEngineVersion: 2
+    default: false
+    readOnly: false
