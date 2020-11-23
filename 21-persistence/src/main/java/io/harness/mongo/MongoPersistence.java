@@ -37,6 +37,7 @@ import com.mongodb.DuplicateKeyException;
 import com.mongodb.WriteResult;
 import java.time.Duration;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -44,6 +45,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
+import java.util.stream.StreamSupport;
 import lombok.Builder;
 import lombok.Value;
 import lombok.extern.slf4j.Slf4j;
@@ -260,6 +262,22 @@ public class MongoPersistence implements HPersistence {
       ids.add(save(entity));
     }
     return ids;
+  }
+
+  @Override
+  public <T extends PersistentEntity> List<String> saveBatch(List<T> ts) {
+    ts.removeIf(Objects::isNull);
+    if (ts.size() == 0) {
+      return Arrays.asList();
+    }
+    for (T entity : ts) {
+      onSave(entity);
+    }
+    AdvancedDatastore datastore = getDatastore(ts.get(0));
+    return HPersistence.retry(()
+                                  -> StreamSupport.stream(datastore.insert(ts).spliterator(), false)
+                                         .map(key -> key.getId().toString())
+                                         .collect(toList()));
   }
 
   @Override
