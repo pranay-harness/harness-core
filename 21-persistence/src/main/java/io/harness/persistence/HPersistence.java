@@ -192,6 +192,14 @@ public interface HPersistence extends HealthMonitor {
   <T extends PersistentEntity> List<String> save(List<T> entityList);
 
   /**
+   * Save list in one go using a batch.
+   *
+   * @param entityList list of entities to save
+   * @return list of keys
+   */
+  <T extends PersistentEntity> List<String> saveBatch(List<T> entityList);
+
+  /**
    * Save ignoring duplicate key errors.
    * This saves any new records and skips existing records
    *
