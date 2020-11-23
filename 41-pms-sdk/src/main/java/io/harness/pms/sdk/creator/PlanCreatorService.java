@@ -4,15 +4,19 @@ import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.UnexpectedException;
 import io.harness.pms.creator.PlanCreatorUtils;
+import io.harness.pms.plan.FilterCreationBlobRequest;
+import io.harness.pms.plan.FilterCreationBlobResponse;
 import io.harness.pms.plan.PlanCreationBlobRequest;
 import io.harness.pms.plan.PlanCreationBlobResponse;
 import io.harness.pms.plan.PlanCreationServiceGrpc.PlanCreationServiceImplBase;
 import io.harness.pms.plan.YamlFieldBlob;
+import io.harness.pms.sdk.creator.filters.FilterCreatorService;
 import io.harness.pms.utils.CompletableFutures;
 import io.harness.pms.yaml.YamlField;
 import io.harness.pms.yaml.YamlUtils;
 
 import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import io.grpc.stub.StreamObserver;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -26,14 +30,18 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import javax.validation.constraints.NotNull;
 
+@Singleton
 public class PlanCreatorService extends PlanCreationServiceImplBase {
   private final Executor executor = Executors.newFixedThreadPool(2);
 
+  private final FilterCreatorService filterCreatorService;
   private final List<PartialPlanCreator<?>> planCreators;
 
   @Inject
-  public PlanCreatorService(@NotNull PlanCreatorProvider planCreatorProvider) {
+  public PlanCreatorService(
+      @NotNull PlanCreatorProvider planCreatorProvider, @NotNull FilterCreatorService filterCreatorService) {
     this.planCreators = planCreatorProvider.getPlanCreators();
+    this.filterCreatorService = filterCreatorService;
   }
 
   @Override
@@ -136,5 +144,13 @@ public class PlanCreatorService extends PlanCreationServiceImplBase {
           return PlanCreatorUtils.supportsField(supportedTypes, field);
         })
         .findFirst();
+  }
+
+  @Override
+  public void createFilter(
+      FilterCreationBlobRequest request, StreamObserver<FilterCreationBlobResponse> responseObserver) {
+    FilterCreationBlobResponse response = filterCreatorService.createFilterBlobResponse(request);
+    responseObserver.onNext(response);
+    responseObserver.onCompleted();
   }
 }

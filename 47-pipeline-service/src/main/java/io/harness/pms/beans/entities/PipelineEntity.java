@@ -16,7 +16,9 @@ import io.harness.persistence.UuidAware;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.github.reinert.jjschema.SchemaIgnore;
 import com.google.common.collect.ImmutableList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 import lombok.Builder;
@@ -70,6 +72,7 @@ public class PipelineEntity implements PersistentEntity, AccountAccess, UuidAwar
   @Singular @Size(max = 128) List<NGTag> tags;
 
   @Version Long version;
+  @Builder.Default Map<String, org.bson.Document> filters = new HashMap<>();
 
   @Override
   public String getAccountId() {

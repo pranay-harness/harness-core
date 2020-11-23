@@ -7,6 +7,8 @@ import io.harness.PmsSdkModule;
 import io.harness.maintenance.MaintenanceController;
 import io.harness.persistence.HPersistence;
 import io.harness.pms.sample.cd.creator.CdPlanCreatorProvider;
+import io.harness.pms.sample.cd.creator.filters.CDFilterCreationResponseMerger;
+import io.harness.pms.sample.cd.creator.filters.CDFilterCreatorProvider;
 
 import com.google.inject.Guice;
 import com.google.inject.Injector;
@@ -59,6 +61,8 @@ public class CdServiceApplication extends Application<CdServiceConfiguration> {
                                         .grpcServerConfig(config.getPmsSdkGrpcServerConfig())
                                         .pmsGrpcClientConfig(config.getPmsGrpcClientConfig())
                                         .planCreatorProvider(new CdPlanCreatorProvider())
+                                        .filterCreatorProvider(new CDFilterCreatorProvider())
+                                        .filterCreationResponseMerger(new CDFilterCreationResponseMerger())
                                         .build();
     PmsSdkModule.initializeDefaultInstance(sdkConfig);
 

@@ -7,6 +7,8 @@ import io.harness.PmsSdkModule;
 import io.harness.maintenance.MaintenanceController;
 import io.harness.persistence.HPersistence;
 import io.harness.pms.sample.cv.creator.CvPlanCreatorProvider;
+import io.harness.pms.sample.cv.creator.filters.CVFilterCreationResponseMerger;
+import io.harness.pms.sample.cv.creator.filters.CVFilterCreatorProvider;
 
 import com.google.inject.Guice;
 import com.google.inject.Injector;
@@ -58,7 +60,9 @@ public class CvServiceApplication extends Application<CvServiceConfiguration> {
     PmsSdkConfiguration sdkConfig = PmsSdkConfiguration.builder()
                                         .grpcServerConfig(config.getPmsSdkGrpcServerConfig())
                                         .pmsGrpcClientConfig(config.getPmsGrpcClientConfig())
+                                        .filterCreatorProvider(new CVFilterCreatorProvider())
                                         .planCreatorProvider(new CvPlanCreatorProvider())
+                                        .filterCreationResponseMerger(new CVFilterCreationResponseMerger())
                                         .build();
     PmsSdkModule.initializeDefaultInstance(sdkConfig);
 
