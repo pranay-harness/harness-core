@@ -25,10 +25,11 @@ public class AnomaliesDataTableSchema {
     EXPECTED_COST("expectedcost", DataType.DOUBLE),
     REGION("region", DataType.STRING),
     NOTE("note", DataType.STRING),
+    FEED_BACK("feedback", DataType.STRING),
     ANOMALY_TIME("anomalytime", DataType.TIMESTAMP),
     TIME_GRANULARITY("timegranularity", DataType.STRING),
-    CLUSTER_ID("clsuterid", DataType.STRING),
-    CLUSTER_NAME("clsutername", DataType.STRING),
+    CLUSTER_ID("clusterid", DataType.STRING),
+    CLUSTER_NAME("clustername", DataType.STRING),
     NAMESPACE("namespace", DataType.STRING),
     WORKLOAD_TYPE("workloadtype", DataType.STRING),
     WORKLOAD_NAME("workloadname", DataType.STRING),
@@ -74,6 +75,7 @@ public class AnomaliesDataTableSchema {
   public DbColumn timeGranularity;
 
   public DbColumn note;
+  public DbColumn feedBack;
 
   public DbColumn clusterId;
   public DbColumn clusterName;
@@ -113,6 +115,7 @@ public class AnomaliesDataTableSchema {
     timeGranularity = table.addColumn("timegranularity");
 
     note = table.addColumn("note");
+    feedBack = table.addColumn("feedback");
     region = table.addColumn("region");
 
     clusterId = table.addColumn("clusterid");

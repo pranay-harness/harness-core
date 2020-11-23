@@ -1,0 +1,57 @@
+extend type Mutation {
+  updateAnomaly(input: AnomalyInput!): UpdateAnomalyPayload @dataFetcher(name: updateAnomaly)
+}
+
+extend type Query {
+  k8sAnomalies(filters: [CCMFilter], groupBy: [CCMGroupBy]): AnomalyDataList @dataFetcher(name: k8sAnomalies)
+
+  cloudAnomalies(filters: [CloudBillingFilter], groupBy: [CloudBillingGroupBy]): AnomalyDataList
+    @dataFetcher(name: cloudAnomalies)
+}
+
+type AnomalyDataList {
+  data: [AnomalyData]
+}
+
+type AnomalyData {
+  id: String!
+  time: DateTime
+  entity: EntityInfo
+  comment: String
+  anomalyScore: Number
+  actualAmount: Number
+  expectedAmount: Number
+  percentageRaise: Number
+  userFeedback: AnomalyFeedback
+}
+
+type UpdateAnomalyPayload {
+  clientMutationId: String
+  anomaly: AnomalyData
+}
+
+input AnomalyInput {
+  anomalyId: String!
+  userFeedback: AnomalyFeedback
+  comment: String
+}
+
+enum AnomalyFeedback {
+  TRUE_ANOMALY
+  FALSE_ANOMALY
+  NOT_RESPONDED
+}
+
+type EntityInfo {
+  clusterName: String
+  clusterId: String
+  namespace: String
+  workloadName: String
+  workloadType: String
+  gcpProduct: String
+  gcpProject: String
+  gcpSKUId: String
+  gcpSKUDescription: String
+  awsAccount: String
+  awsService: String
+}

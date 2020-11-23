@@ -22,6 +22,9 @@ import software.wings.beans.infrastructure.instance.info.PcfInstanceInfo;
 import software.wings.beans.infrastructure.instance.info.PhysicalHostInstanceInfo;
 import software.wings.beans.trigger.UpdateTriggerDataFetcher;
 import software.wings.graphql.datafetcher.DataLoaderRegistryHelper;
+import software.wings.graphql.datafetcher.anomaly.CloudAnomaliesDataFetcher;
+import software.wings.graphql.datafetcher.anomaly.K8sAnomaliesDataFetcher;
+import software.wings.graphql.datafetcher.anomaly.UpdateAnomalyDataFetcher;
 import software.wings.graphql.datafetcher.application.ApplicationConnectionDataFetcher;
 import software.wings.graphql.datafetcher.application.ApplicationDataFetcher;
 import software.wings.graphql.datafetcher.application.ApplicationGitSyncConfigDataFetcher;
@@ -270,6 +273,7 @@ public class GraphQLModule extends AbstractModule {
     bindDataFetcherWithAnnotation(CeConnectorDataFetcher.class);
     bindDataFetcherWithAnnotation(CeActivePodCountDataFetcher.class);
     bindDataFetcherWithAnnotation(ConnectorStatsDataFetcher.class);
+    bindDataFetcherWithAnnotation(CloudAnomaliesDataFetcher.class);
     bindDataFetcherWithAnnotation(CloudFilterValuesDataFetcher.class);
     bindDataFetcherWithAnnotation(CloudProviderStatsDataFetcher.class);
     bindDataFetcherWithAnnotation(CloudOverviewDataFetcher.class);
@@ -300,6 +304,7 @@ public class GraphQLModule extends AbstractModule {
     bindDataFetcherWithAnnotation(InstanceCountDataFetcher.class);
     bindDataFetcherWithAnnotation(InstanceStatsDataFetcher.class);
     bindDataFetcherWithAnnotation(LinkedAccountStatsDataFetcher.class);
+    bindDataFetcherWithAnnotation(K8sAnomaliesDataFetcher.class);
     bindDataFetcherWithAnnotation(K8sEventYamlDiffDataFetcher.class);
     bindDataFetcherWithAnnotation(K8sLabelConnectionDataFetcher.class);
     bindDataFetcherWithAnnotation(K8sWorkloadRecommendationsDataFetcher.class);
@@ -356,6 +361,7 @@ public class GraphQLModule extends AbstractModule {
     bindDataFetcherWithAnnotation(EventsStatsDataFetcher.class);
     bindDataFetcherWithAnnotation(UpdateApplicationGitSyncConfigDataFetcher.class);
     bindDataFetcherWithAnnotation(RemoveApplicationGitSyncConfigDataFetcher.class);
+    bindDataFetcherWithAnnotation(UpdateAnomalyDataFetcher.class);
     bindDataFetcherWithAnnotation(UpdateApplicationGitSyncConfigStatusDataFetcher.class);
     bindDataFetcherWithAnnotation(ApplicationGitSyncConfigDataFetcher.class);
     bindDataFetcherWithAnnotation(SsoProviderDataFetcher.class);

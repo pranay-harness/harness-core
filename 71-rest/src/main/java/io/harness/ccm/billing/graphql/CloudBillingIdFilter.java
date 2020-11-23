@@ -39,7 +39,7 @@ import lombok.Data;
 
 @Data
 @Builder
-public class CloudBillingIdFilter implements Filter {
+public class CloudBillingIdFilter implements Filter<QLIdOperator, String> {
   private QLIdOperator operator;
   private String variable;
   private String[] values;
@@ -54,12 +54,7 @@ public class CloudBillingIdFilter implements Filter {
       PreAggregateConstants.entityNoCloudProviderConst};
 
   @Override
-  public Object getOperator() {
-    return null;
-  }
-
-  @Override
-  public Object[] getValues() {
+  public String[] getValues() {
     return values.clone();
   }
 
