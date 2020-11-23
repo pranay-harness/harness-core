@@ -41,7 +41,11 @@ public class CEViewsMigration implements Migration {
 
       List<CEView> ceViewList = wingsPersistence.createQuery(CEView.class, excludeValidate).asList();
       for (CEView ceView : ceViewList) {
-        migrateCEView(ceView);
+        try {
+          migrateCEView(ceView);
+        } catch (Exception e) {
+          log.info("Migration Failed for Account {}, ViewId {}", ceView.getAccountId(), ceView.getUuid());
+        }
       }
     } catch (Exception e) {
       log.error("Failure occurred in CEViewsMigration", e);
@@ -53,19 +57,21 @@ public class CEViewsMigration implements Migration {
     ceView.setViewTimeRange(ViewTimeRange.builder().viewTimeRangeType(ViewTimeRangeType.LAST_7).build());
 
     Set<ViewFieldIdentifier> viewFieldIdentifierSet = new HashSet<>();
-    for (ViewRule rule : ceView.getViewRules()) {
-      for (ViewCondition condition : rule.getViewConditions()) {
-        if (((ViewIdCondition) condition).getViewField().getIdentifier() == ViewFieldIdentifier.CLUSTER) {
-          viewFieldIdentifierSet.add(ViewFieldIdentifier.CLUSTER);
-        }
-        if (((ViewIdCondition) condition).getViewField().getIdentifier() == ViewFieldIdentifier.AWS) {
-          viewFieldIdentifierSet.add(ViewFieldIdentifier.AWS);
-        }
-        if (((ViewIdCondition) condition).getViewField().getIdentifier() == ViewFieldIdentifier.GCP) {
-          viewFieldIdentifierSet.add(ViewFieldIdentifier.GCP);
-        }
-        if (((ViewIdCondition) condition).getViewField().getIdentifier() == ViewFieldIdentifier.CUSTOM) {
-          viewFieldIdentifierSet.add(ViewFieldIdentifier.CUSTOM);
+    if (ceView.getViewRules() != null) {
+      for (ViewRule rule : ceView.getViewRules()) {
+        for (ViewCondition condition : rule.getViewConditions()) {
+          if (((ViewIdCondition) condition).getViewField().getIdentifier() == ViewFieldIdentifier.CLUSTER) {
+            viewFieldIdentifierSet.add(ViewFieldIdentifier.CLUSTER);
+          }
+          if (((ViewIdCondition) condition).getViewField().getIdentifier() == ViewFieldIdentifier.AWS) {
+            viewFieldIdentifierSet.add(ViewFieldIdentifier.AWS);
+          }
+          if (((ViewIdCondition) condition).getViewField().getIdentifier() == ViewFieldIdentifier.GCP) {
+            viewFieldIdentifierSet.add(ViewFieldIdentifier.GCP);
+          }
+          if (((ViewIdCondition) condition).getViewField().getIdentifier() == ViewFieldIdentifier.CUSTOM) {
+            viewFieldIdentifierSet.add(ViewFieldIdentifier.CUSTOM);
+          }
         }
       }
     }

@@ -163,6 +163,9 @@ public class ClusterDataToBigQueryTasklet implements Tasklet {
     clusterBillingData.setCpuactualidlecost(instanceBillingData.getCpuActualIdleCost().doubleValue());
     clusterBillingData.setMemoryactualidlecost(instanceBillingData.getMemoryActualIdleCost().doubleValue());
     clusterBillingData.setNetworkcost(instanceBillingData.getNetworkCost());
+    clusterBillingData.setUnallocatedcost(instanceBillingData.getUnallocatedCost().doubleValue());
+    clusterBillingData.setCpuunallocatedcost(instanceBillingData.getCpuUnallocatedCost().doubleValue());
+    clusterBillingData.setMemoryunallocatedcost(instanceBillingData.getMemoryUnallocatedCost().doubleValue());
 
     clusterBillingData.setMaxcpuutilization(instanceBillingData.getMaxCpuUtilization());
     clusterBillingData.setMaxmemoryutilization(instanceBillingData.getMaxMemoryUtilization());

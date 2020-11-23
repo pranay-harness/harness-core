@@ -78,8 +78,8 @@ public class CEViewServiceImpl implements CEViewService {
       ceView.setViewTimeRange(ViewTimeRange.builder().viewTimeRangeType(ViewTimeRangeType.LAST_7).build());
     }
 
+    Set<ViewFieldIdentifier> viewFieldIdentifierSet = new HashSet<>();
     if (ceView.getViewRules() != null) {
-      Set<ViewFieldIdentifier> viewFieldIdentifierSet = new HashSet<>();
       for (ViewRule rule : ceView.getViewRules()) {
         for (ViewCondition condition : rule.getViewConditions()) {
           if (((ViewIdCondition) condition).getViewField().getIdentifier() == ViewFieldIdentifier.CLUSTER) {
@@ -96,11 +96,11 @@ public class CEViewServiceImpl implements CEViewService {
           }
         }
       }
-
-      List<ViewFieldIdentifier> viewFieldIdentifierList = new ArrayList<>();
-      viewFieldIdentifierList.addAll(viewFieldIdentifierSet);
-      ceView.setDataSources(viewFieldIdentifierList);
     }
+
+    List<ViewFieldIdentifier> viewFieldIdentifierList = new ArrayList<>();
+    viewFieldIdentifierList.addAll(viewFieldIdentifierSet);
+    ceView.setDataSources(viewFieldIdentifierList);
   }
 
   @Override
