@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"context"
 	"fmt"
-	"os"
 	"os/exec"
 	"testing"
 
@@ -36,11 +35,11 @@ func TestPluginSuccess(t *testing.T) {
 		procWriter:        &buf,
 	}
 
-	oldImgMetadata := getPublicImgMetadata
-	getPublicImgMetadata = func(image string) ([]string, []string, error) {
+	oldImgMetadata := getImgMetadata
+	getImgMetadata = func(ctx context.Context, id, image, secret string, log *zap.SugaredLogger) ([]string, []string, error) {
 		return commands, nil, nil
 	}
-	defer func() { getPublicImgMetadata = oldImgMetadata }()
+	defer func() { getImgMetadata = oldImgMetadata }()
 
 	cmdFactory.EXPECT().CmdContextWithSleep(gomock.Any(), cmdExitWaitTime, gomock.Any()).Return(cmd)
 	cmd.EXPECT().WithStdout(&buf).Return(cmd)
@@ -73,11 +72,11 @@ func TestPluginNonZeroStatus(t *testing.T) {
 		procWriter:        &buf,
 	}
 
-	oldImgMetadata := getPublicImgMetadata
-	getPublicImgMetadata = func(image string) ([]string, []string, error) {
+	oldImgMetadata := getImgMetadata
+	getImgMetadata = func(ctx context.Context, id, image, secret string, log *zap.SugaredLogger) ([]string, []string, error) {
 		return commands, nil, nil
 	}
-	defer func() { getPublicImgMetadata = oldImgMetadata }()
+	defer func() { getImgMetadata = oldImgMetadata }()
 
 	cmdFactory.EXPECT().CmdContextWithSleep(gomock.Any(), cmdExitWaitTime, gomock.Any()).Return(cmd)
 	cmd.EXPECT().WithStdout(&buf).Return(cmd)
@@ -123,11 +122,11 @@ func TestPluginEntrypointErr(t *testing.T) {
 		},
 	}
 
-	oldImgMetadata := getPublicImgMetadata
-	getPublicImgMetadata = func(image string) ([]string, []string, error) {
+	oldImgMetadata := getImgMetadata
+	getImgMetadata = func(ctx context.Context, id, image, secret string, log *zap.SugaredLogger) ([]string, []string, error) {
 		return nil, nil, fmt.Errorf("entrypoint not found")
 	}
-	defer func() { getPublicImgMetadata = oldImgMetadata }()
+	defer func() { getImgMetadata = oldImgMetadata }()
 
 	var buf bytes.Buffer
 	executor := NewPluginTask(step, log.Sugar(), &buf)
@@ -149,61 +148,11 @@ func TestPluginEmptyEntrypointErr(t *testing.T) {
 		},
 	}
 
-	oldImgMetadata := getPublicImgMetadata
-	getPublicImgMetadata = func(image string) ([]string, []string, error) {
+	oldImgMetadata := getImgMetadata
+	getImgMetadata = func(ctx context.Context, id, image, secret string, log *zap.SugaredLogger) ([]string, []string, error) {
 		return nil, nil, nil
 	}
-	defer func() { getPublicImgMetadata = oldImgMetadata }()
-
-	var buf bytes.Buffer
-	executor := NewPluginTask(step, log.Sugar(), &buf)
-	_, err := executor.Run(ctx)
-	assert.NotNil(t, err)
-}
-
-func TestPrivatePluginEnvNotFoundErr(t *testing.T) {
-	ctrl, ctx := gomock.WithContext(context.Background(), t)
-	defer ctrl.Finish()
-
-	imgSecretEnv := "DOCKER_CONFIG"
-	log, _ := logs.GetObservedLogger(zap.InfoLevel)
-	step := &pb.UnitStep{
-		Id: "test",
-		Step: &pb.UnitStep_Plugin{
-			Plugin: &pb.PluginStep{
-				Image:          "plugin/drone-git",
-				ImageSecretEnv: imgSecretEnv,
-			},
-		},
-	}
-
-	var buf bytes.Buffer
-	executor := NewPluginTask(step, log.Sugar(), &buf)
-	_, err := executor.Run(ctx)
-	assert.NotNil(t, err)
-}
-
-func TestPrivatePluginErr(t *testing.T) {
-	ctrl, ctx := gomock.WithContext(context.Background(), t)
-	defer ctrl.Finish()
-
-	imgSecretEnv := "DOCKER_CONFIG"
-	imgSecret := "test"
-	log, _ := logs.GetObservedLogger(zap.InfoLevel)
-	step := &pb.UnitStep{
-		Id: "test",
-		Step: &pb.UnitStep_Plugin{
-			Plugin: &pb.PluginStep{
-				Image:          "plugin/drone-git",
-				ImageSecretEnv: imgSecretEnv,
-			},
-		},
-	}
-
-	if err := os.Setenv(imgSecretEnv, imgSecret); err != nil {
-		t.Fatalf("failed to set environment variable")
-	}
-	defer os.Unsetenv(imgSecretEnv)
+	defer func() { getImgMetadata = oldImgMetadata }()
 
 	var buf bytes.Buffer
 	executor := NewPluginTask(step, log.Sugar(), &buf)

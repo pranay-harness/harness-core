@@ -7,10 +7,10 @@ import (
 	"os"
 	"time"
 
-	"github.com/pkg/errors"
 	"github.com/wings-software/portal/commons/go/lib/exec"
+	"github.com/wings-software/portal/commons/go/lib/images"
 	"github.com/wings-software/portal/commons/go/lib/utils"
-	"github.com/wings-software/portal/product/ci/addon/images"
+	"github.com/wings-software/portal/product/ci/addon/imageutil"
 	pb "github.com/wings-software/portal/product/ci/engine/proto"
 	"go.uber.org/zap"
 )
@@ -24,8 +24,7 @@ const (
 )
 
 var (
-	getPublicImgMetadata  = images.PublicMetadata
-	getPrivateImgMetadata = images.PrivateMetadata
+	getImgMetadata = imageutil.GetEntrypoint
 )
 
 // PluginTask represents interface to execute a plugin step
@@ -86,7 +85,7 @@ func (e *pluginTask) execute(ctx context.Context, retryCount int32) error {
 	ctx, cancel := context.WithTimeout(ctx, time.Second*time.Duration(e.timeoutSecs))
 	defer cancel()
 
-	commands, err := e.getEntrypoint()
+	commands, err := e.getEntrypoint(ctx)
 	if err != nil {
 		logPluginErr(e.log, "failed to find entrypoint for plugin", e.id, commands, retryCount, start, err)
 		return err
@@ -119,18 +118,9 @@ func (e *pluginTask) execute(ctx context.Context, retryCount int32) error {
 	return nil
 }
 
-func (e *pluginTask) getEntrypoint() ([]string, error) {
-	if e.imageSecretEnv == "" {
-		return e.combinedEntrypoint(getPublicImgMetadata(e.image))
-	}
-
-	imageSecretEnv, ok := os.LookupEnv(e.imageSecretEnv)
-	if !ok {
-		return nil, errors.New(
-			fmt.Sprintf("%s environment variable storing image secret is not set", e.imageSecretEnv))
-	}
-
-	return e.combinedEntrypoint(getPrivateImgMetadata(e.image, imageSecretEnv))
+func (e *pluginTask) getEntrypoint(ctx context.Context) ([]string, error) {
+	imageSecretEnv, _ := os.LookupEnv(e.imageSecretEnv)
+	return e.combinedEntrypoint(getImgMetadata(ctx, e.id, e.image, imageSecretEnv, e.log))
 }
 
 func (e *pluginTask) combinedEntrypoint(ep, cmds []string, err error) ([]string, error) {

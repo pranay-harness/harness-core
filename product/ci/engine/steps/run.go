@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"time"
 
+	grpc_retry "github.com/grpc-ecosystem/go-grpc-middleware/retry"
 	"github.com/pkg/errors"
 	"github.com/wings-software/portal/commons/go/lib/utils"
 	caddon "github.com/wings-software/portal/product/ci/addon/grpc/client"
@@ -19,6 +20,7 @@ import (
 
 const (
 	outputEnvSuffix string = "output"
+	maxAddonRetries        = 2000 // max retry time of 200 seconds
 )
 
 var (
@@ -118,7 +120,7 @@ func (e *runStep) execute(ctx context.Context) (*output.StepOutput, int32, error
 
 	c := addonClient.Client()
 	arg := e.getExecuteStepArg()
-	ret, err := c.ExecuteStep(ctx, arg)
+	ret, err := c.ExecuteStep(ctx, arg, grpc_retry.WithMax(maxAddonRetries))
 	if err != nil {
 		e.log.Errorw("Execute run step RPC failed", "step_id", e.id, "elapsed_time_ms", utils.TimeSince(st), zap.Error(err))
 		return nil, int32(1), err

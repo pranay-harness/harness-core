@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"context"
 	"fmt"
-	"os"
 	"os/exec"
 	"testing"
 
@@ -106,11 +105,11 @@ func TestServiceEntrypointErr(t *testing.T) {
 	svcID := "git-clone"
 	image := "alpine-git"
 
-	oldImgMetadata := getPublicImgMetadata
-	getPublicImgMetadata = func(image string) ([]string, []string, error) {
+	oldImgMetadata := getImgMetadata
+	getImgMetadata = func(ctx context.Context, id, image, secret string, log *zap.SugaredLogger) ([]string, []string, error) {
 		return nil, nil, fmt.Errorf("entrypoint not found")
 	}
-	defer func() { getPublicImgMetadata = oldImgMetadata }()
+	defer func() { getImgMetadata = oldImgMetadata }()
 
 	var buf bytes.Buffer
 	executor := NewIntegrationSvc(svcID, image, entrypoint, args, log.Sugar(), &buf)
@@ -128,33 +127,11 @@ func TestServiceEmptyEntrypointErr(t *testing.T) {
 	svcID := "git-clone"
 	image := "alpine-git"
 
-	oldImgMetadata := getPublicImgMetadata
-	getPublicImgMetadata = func(image string) ([]string, []string, error) {
-		return []string{}, []string{}, nil
+	oldImgMetadata := getImgMetadata
+	getImgMetadata = func(ctx context.Context, id, image, secret string, log *zap.SugaredLogger) ([]string, []string, error) {
+		return nil, nil, nil
 	}
-	defer func() { getPublicImgMetadata = oldImgMetadata }()
-
-	var buf bytes.Buffer
-	executor := NewIntegrationSvc(svcID, image, entrypoint, args, log.Sugar(), &buf)
-	err := executor.Run()
-	assert.NotNil(t, err)
-}
-
-func TestPrivateServiceErr(t *testing.T) {
-	ctrl, _ := gomock.WithContext(context.Background(), t)
-	defer ctrl.Finish()
-
-	imgSecret := "test"
-	entrypoint := []string{}
-	args := []string{}
-	svcID := "git-clone"
-	image := "alpine-git"
-	log, _ := logs.GetObservedLogger(zap.InfoLevel)
-
-	if err := os.Setenv(imageSecretEnv, imgSecret); err != nil {
-		t.Fatalf("failed to set environment variable")
-	}
-	defer os.Unsetenv(imageSecretEnv)
+	defer func() { getImgMetadata = oldImgMetadata }()
 
 	var buf bytes.Buffer
 	executor := NewIntegrationSvc(svcID, image, entrypoint, args, log.Sugar(), &buf)

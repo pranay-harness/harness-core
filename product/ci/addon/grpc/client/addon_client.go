@@ -15,7 +15,7 @@ import (
 
 const (
 	backoffTime = 100 * time.Millisecond
-	maxRetries  = 9
+	maxRetries  = 20 // Max retry time of 2 seconds
 )
 
 //AddonClient implements a GRPC client to communicate with CI addon
@@ -35,10 +35,10 @@ type addonClient struct {
 func NewAddonClient(port uint, log *zap.SugaredLogger) (AddonClient, error) {
 	// Default gRPC Call options - can be made configurable if the need arises
 	// Retries are ENABLED by default for all RPCs on the below codes. To disable retries, pass in a zero value
-	// Example: client.PublishArtifacts(ctx, req, grpc_retry.WithMax(0))
-	// With this configuration, total retry time is approximately 25 seconds
+	// Example: client.ExecuteStep(ctx, req, grpc_retry.WithMax(0))
+	// With default configuration, total retry time is approximately 2 seconds
 	opts := []grpc_retry.CallOption{
-		grpc_retry.WithBackoff(grpc_retry.BackoffExponential(backoffTime)),
+		grpc_retry.WithBackoff(grpc_retry.BackoffLinear(backoffTime)),
 		grpc_retry.WithCodes(codes.ResourceExhausted, codes.Unavailable),
 		grpc_retry.WithMax(maxRetries),
 	}

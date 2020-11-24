@@ -11,10 +11,10 @@ go_library(
     deps = [
         "//commons/go/lib/exec:go_default_library",
         "//commons/go/lib/filesystem:go_default_library",
+        "//commons/go/lib/images:go_default_library",
         "//commons/go/lib/utils:go_default_library",
-        "//product/ci/addon/images:go_default_library",
+        "//product/ci/addon/imageutil:go_default_library",
         "//product/ci/engine/proto:go_default_library",
-        "@com_github_pkg_errors//:go_default_library",
         "@org_uber_go_zap//:go_default_library",
     ],
 )
