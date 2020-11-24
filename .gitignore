@@ -11,6 +11,7 @@ portal.iml
 /.ijwb
 /target
 /repository
+/.m2
 jacoco-it.exec
 
 *.ipr
