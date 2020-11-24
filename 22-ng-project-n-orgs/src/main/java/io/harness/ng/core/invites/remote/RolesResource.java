@@ -44,22 +44,31 @@ public class RolesResource {
   @ApiOperation(value = "Get all roles for the queried project", nickname = "getRoles")
   public ResponseDTO<Optional<List<RoleDTO>>> get(@QueryParam("accountIdentifier") @NotNull String accountIdentifier,
       @QueryParam("orgIdentifier") @NotNull String orgIdentifier,
-      @QueryParam("projectIdentifier") @NotNull String projectIdentifier) {
+      @QueryParam("projectIdentifier") String projectIdentifier) {
     List<Role> rolesList = getRolesList(accountIdentifier, orgIdentifier, projectIdentifier);
     return ResponseDTO.newResponse(Optional.of(rolesList.stream().map(RoleMapper::writeDTO).collect(toList())));
   }
 
   List<Role> getRolesList(String accountIdentifier, String orgIdentifier, String projectIdentifier) {
     List<Role> rolesList = new ArrayList<>();
-    List<String> roleNames = Arrays.asList("Project Admin", "Project Member", "Project Viewer");
-    for (String roleName : roleNames) {
-      Role role = Role.builder()
-                      .accountIdentifier(accountIdentifier)
-                      .orgIdentifier(orgIdentifier)
-                      .projectIdentifier(projectIdentifier)
-                      .name(roleName)
-                      .build();
-      rolesList.add(role);
+    List<String> projectRolesList = Arrays.asList("Project Admin", "Project Member", "Project Viewer");
+    List<String> orgRolesList = Arrays.asList("Organization Admin", "Organization Member", "Organization Viewer");
+    if (projectIdentifier == null) {
+      for (String roleName : orgRolesList) {
+        Role role =
+            Role.builder().accountIdentifier(accountIdentifier).orgIdentifier(orgIdentifier).name(roleName).build();
+        rolesList.add(role);
+      }
+    } else {
+      for (String roleName : projectRolesList) {
+        Role role = Role.builder()
+                        .accountIdentifier(accountIdentifier)
+                        .orgIdentifier(orgIdentifier)
+                        .projectIdentifier(projectIdentifier)
+                        .name(roleName)
+                        .build();
+        rolesList.add(role);
+      }
     }
     return rolesList;
   }

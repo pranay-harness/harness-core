@@ -131,6 +131,9 @@ public class ProjectServiceImpl implements ProjectService {
       project.setAccountIdentifier(accountIdentifier);
       project.setOrgIdentifier(orgIdentifier);
       project.setId(existingProject.getId());
+      if (project.getVersion() == null) {
+        project.setVersion(existingProject.getVersion());
+      }
 
       List<ModuleType> moduleTypeList = verifyModulesNotRemoved(existingProject.getModules(), project.getModules());
       project.setModules(moduleTypeList);
