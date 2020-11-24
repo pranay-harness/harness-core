@@ -17,13 +17,13 @@ public interface AzureContainerRegistryClient {
   Optional<RegistryCredentials> getContainerRegistryCredentials(AzureContainerRegistryClientContext context);
 
   /**
-   * Filter registry by name on entire subscription. This is cost operation, try to avoid usage if it possible.
+   * Find registry by name on entire subscription. This is cost operation, try to avoid usage if it possible.
    *
    * @param azureConfig
    * @param subscriptionId
    * @param registryName
    * @return
    */
-  Optional<Registry> filterSubsriptionByContainerRegistryName(
+  Optional<Registry> findFirstContainerRegistryByNameOnSubscription(
       AzureConfig azureConfig, String subscriptionId, String registryName);
 }

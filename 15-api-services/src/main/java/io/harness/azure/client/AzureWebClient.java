@@ -210,15 +210,6 @@ public interface AzureWebClient {
   void deleteDeploymentSlotDockerImageNameAndTagSettings(AzureWebClientContext context, String slotName);
 
   /**
-   * Update deployment slot traffic.
-   *
-   * @param context
-   * @param slotName
-   * @param trafficReroutePercentage
-   */
-  void updateDeploymentSlotTraffic(AzureWebClientContext context, String slotName, double trafficReroutePercentage);
-
-  /**
    * Swap deployment slot with production slot.
    *
    * @param context
@@ -262,4 +253,14 @@ public interface AzureWebClient {
    * @return
    */
   WebAppHostingOS getWebAppHostingOS(AzureWebClientContext azureWebClientContext);
+
+  /**
+   * Reroute production slot traffic to target slot in percentage.
+   *
+   * @param context
+   * @param targetRerouteSlotName
+   * @param trafficReroutePercentage
+   */
+  void rerouteProductionSlotTraffic(
+      AzureWebClientContext context, String targetRerouteSlotName, double trafficReroutePercentage);
 }

@@ -1,5 +1,6 @@
 package io.harness.azure.impl;
 
+import static io.harness.azure.model.AzureConstants.RESOURCE_GROUP_NAME_NULL_VALIDATION_MSG;
 import static io.harness.azure.model.AzureConstants.RESOURCE_ID_NAME_NULL_VALIDATION_MSG;
 
 import static org.apache.commons.lang3.StringUtils.isBlank;
@@ -27,14 +28,34 @@ public class AzureMonitorClientImpl extends AzureClient implements AzureMonitorC
 
     Azure azure = getAzureClient(azureConfig, subscriptionId);
 
-    log.debug("Start listing event data with all properties for resourceId {}, startTime {}, endTime: {}", resourceId,
-        startTime.toDateTime(), endTime.toDateTime());
+    log.debug("Start listing activity log event data with all properties for resourceId {}, startTime {}, endTime: {}",
+        resourceId, startTime.toDateTime(), endTime.toDateTime());
     return azure.activityLogs()
         .defineQuery()
         .startingFrom(startTime)
         .endsBefore(endTime)
         .withAllPropertiesInResponse()
         .filterByResource(resourceId)
+        .execute();
+  }
+
+  public List<EventData> listEventDataWithAllPropertiesByResourceGroupName(
+      AzureConfig azureConfig, String subscriptionId, String resourceGroupName, DateTime startTime, DateTime endTime) {
+    if (isBlank(resourceGroupName)) {
+      throw new IllegalArgumentException(RESOURCE_GROUP_NAME_NULL_VALIDATION_MSG);
+    }
+
+    Azure azure = getAzureClient(azureConfig, subscriptionId);
+
+    log.debug(
+        "Start listing activity log event data with all properties by resourceGroupName {}, startTime {}, endTime: {}",
+        resourceGroupName, startTime.toDateTime(), endTime.toDateTime());
+    return azure.activityLogs()
+        .defineQuery()
+        .startingFrom(startTime)
+        .endsBefore(endTime)
+        .withAllPropertiesInResponse()
+        .filterByResourceGroup(resourceGroupName)
         .execute();
   }
 }

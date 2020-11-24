@@ -35,6 +35,7 @@ import software.wings.sm.State;
 import software.wings.sm.StateExecutionData;
 import software.wings.sm.StateType;
 import software.wings.sm.states.ManagerExecutionLogCallback;
+import software.wings.sm.states.azure.AzureSweepingOutputServiceHelper;
 import software.wings.sm.states.azure.AzureVMSSStateHelper;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
@@ -50,6 +51,7 @@ import org.jetbrains.annotations.NotNull;
 public abstract class AbstractAzureAppServiceState extends State {
   @Inject protected transient DelegateService delegateService;
   @Inject protected transient AzureVMSSStateHelper azureVMSSStateHelper;
+  @Inject protected transient AzureSweepingOutputServiceHelper azureSweepingOutputServiceHelper;
   @Inject protected ActivityService activityService;
 
   public AbstractAzureAppServiceState(String name, StateType stateType) {

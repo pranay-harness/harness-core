@@ -354,32 +354,6 @@ public class AzureWebClientImpl extends AzureClient implements AzureWebClient {
   }
 
   @Override
-  public void updateDeploymentSlotTraffic(
-      AzureWebClientContext context, final String slotName, double trafficReroutePercentage) {
-    String resourceGroupName = context.getResourceGroupName();
-    String webAppName = context.getAppName();
-    Azure azure = getAzureClientByContext(context);
-
-    DeploymentSlot deploymentSlot = getDeploymentSlot(context, slotName);
-    String defaultHostName = deploymentSlot.defaultHostName();
-
-    List<RampUpRule> rampUpRules = new ArrayList<>();
-    RampUpRule rampUpRule = new RampUpRule();
-    rampUpRule.withActionHostName(defaultHostName);
-    rampUpRule.withName(slotName);
-    rampUpRule.withReroutePercentage(trafficReroutePercentage);
-    rampUpRules.add(rampUpRule);
-    Experiments experiments = new Experiments();
-    experiments.withRampUpRules(rampUpRules);
-    SiteConfigResourceInner siteConfig = azure.webApps().inner().getConfiguration(resourceGroupName, webAppName);
-    siteConfig.withExperiments(experiments);
-
-    log.debug("Start updating slot traffic by slotName: {}, context: {}, defaultHostName: {}", slotName, context,
-        defaultHostName);
-    azure.webApps().inner().updateConfiguration(resourceGroupName, webAppName, siteConfig);
-  }
-
-  @Override
   public void swapDeploymentSlotWithProduction(AzureWebClientContext context, final String sourceSlotName) {
     String resourceGroupName = context.getResourceGroupName();
     String webAppName = context.getAppName();
@@ -460,5 +434,47 @@ public class AzureWebClientImpl extends AzureClient implements AzureWebClient {
     }
 
     return isNotBlank(config.windowsFxVersion()) ? WebAppHostingOS.WINDOWS : WebAppHostingOS.LINUX;
+  }
+
+  public void rerouteProductionSlotTraffic(
+      AzureWebClientContext context, String targetRerouteSlotName, double trafficReroutePercentage) {
+    String resourceGroupName = context.getResourceGroupName();
+    String webAppName = context.getAppName();
+    Azure azure = getAzureClientByContext(context);
+    DeploymentSlot targetRouteSlot = getDeploymentSlot(context, targetRerouteSlotName);
+
+    List<RampUpRule> rampUpRules = createRampUpRules(targetRouteSlot, trafficReroutePercentage);
+    Experiments experiments = createExperiments(rampUpRules);
+
+    log.debug("Start getting wen app configuration settings, targetRerouteSlotName: {}, context: {}",
+        targetRerouteSlotName, context);
+    SiteConfigResourceInner siteConfig = azure.webApps().inner().getConfiguration(resourceGroupName, webAppName);
+    siteConfig.withExperiments(experiments);
+
+    log.debug("Start rerouting slot traffic, targetRerouteSlotName: {}, context: {}", targetRerouteSlotName, context);
+    azure.webApps().inner().updateConfiguration(resourceGroupName, webAppName, siteConfig);
+  }
+
+  @NotNull
+  private List<RampUpRule> createRampUpRules(DeploymentSlot targetRerouteSlot, double trafficReroutePercentage) {
+    String defaultHostName = targetRerouteSlot.defaultHostName();
+    String targetRerouteSlotName = targetRerouteSlot.name();
+
+    RampUpRule rampUpRule = new RampUpRule();
+    rampUpRule.withActionHostName(defaultHostName);
+    rampUpRule.withName(targetRerouteSlotName);
+    rampUpRule.withReroutePercentage(trafficReroutePercentage);
+
+    List<RampUpRule> rampUpRules = new ArrayList<>();
+    rampUpRules.add(rampUpRule);
+
+    return rampUpRules;
+  }
+
+  @NotNull
+  private Experiments createExperiments(List<RampUpRule> rampUpRules) {
+    Experiments experiments = new Experiments();
+    experiments.withRampUpRules(rampUpRules);
+    return experiments;
   }
 }

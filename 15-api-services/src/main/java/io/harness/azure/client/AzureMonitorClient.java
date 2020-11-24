@@ -19,4 +19,17 @@ public interface AzureMonitorClient {
    */
   List<EventData> listEventDataWithAllPropertiesByResourceId(
       AzureConfig azureConfig, String subscriptionId, DateTime startTime, DateTime endTime, String resourceId);
+
+  /**
+   * List event data with all properties by resource group name.
+   *
+   * @param azureConfig
+   * @param subscriptionId
+   * @param resourceGroupName
+   * @param startTime
+   * @param endTime
+   * @return
+   */
+  List<EventData> listEventDataWithAllPropertiesByResourceGroupName(
+      AzureConfig azureConfig, String subscriptionId, String resourceGroupName, DateTime startTime, DateTime endTime);
 }

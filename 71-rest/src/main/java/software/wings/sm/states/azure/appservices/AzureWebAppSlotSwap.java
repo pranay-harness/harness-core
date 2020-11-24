@@ -1,8 +1,6 @@
 package software.wings.sm.states.azure.appservices;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.delegate.task.azure.appservice.AzureAppServiceTaskParameters.AzureAppServiceTaskType.SLOT_SWAP;
-import static io.harness.delegate.task.azure.appservice.AzureAppServiceTaskParameters.AzureAppServiceType.WEB_APP;
 
 import static software.wings.beans.command.CommandUnitDetails.CommandUnitType.AZURE_APP_SERVICE_SLOT_SWAP;
 import static software.wings.sm.StateType.AZURE_WEBAPP_SLOT_SWAP;
@@ -137,14 +135,12 @@ public class AzureWebAppSlotSwap extends AbstractAzureAppServiceState {
         .appId(azureAppServiceStateData.getApplication().getAppId())
         .activityId(activity.getUuid())
         .commandName(APP_SERVICE_SLOT_SWAP)
-        .appServiceType(WEB_APP)
-        .commandType(SLOT_SWAP)
         .timeoutIntervalInMin(contextElement.getAppServiceSlotSetupTimeOut())
         .subscriptionId(azureAppServiceStateData.getSubscriptionId())
         .resourceGroupName(azureAppServiceStateData.getResourceGroup())
-        .webApp(azureAppServiceStateData.getAppService())
-        .deploymentSlot(contextElement.getDeploymentSlot())
-        .targetSlot(azureAppServiceStateData.getDeploymentSlot())
+        .webAppName(azureAppServiceStateData.getAppService())
+        .sourceSlotName(contextElement.getDeploymentSlot())
+        .targetSlotName(azureAppServiceStateData.getDeploymentSlot())
         .preDeploymentData(contextElement.getPreDeploymentData())
         .build();
   }
