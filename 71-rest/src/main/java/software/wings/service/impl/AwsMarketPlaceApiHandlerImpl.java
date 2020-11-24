@@ -4,9 +4,6 @@ import io.harness.configuration.DeployMode;
 import io.harness.exception.WingsException;
 
 import software.wings.app.MainConfiguration;
-import software.wings.beans.AccountStatus;
-import software.wings.beans.AccountType;
-import software.wings.beans.LicenseInfo;
 import software.wings.beans.MarketPlace;
 import software.wings.beans.UserInvite;
 import software.wings.beans.marketplace.MarketPlaceConstants;
@@ -109,7 +106,8 @@ public class AwsMarketPlaceApiHandlerImpl implements AwsMarketPlaceApiHandler {
     String customerIdentifierCode = resolveCustomerResult.getCustomerIdentifier();
     String productCode = resolveCustomerResult.getProductCode();
 
-    if (!marketPlaceConfig.getAwsMarketPlaceProductCode().equals(productCode)) {
+    if (!marketPlaceConfig.getAwsMarketPlaceProductCode().equals(productCode)
+        && !marketPlaceConfig.getAwsMarketPlaceCeProductCode().equals(productCode)) {
       final String message =
           "Customer order from AWS could not be resolved, please contact Harness at support@harness.io";
       log.error("Invalid AWS productcode received:[{}],", productCode);
@@ -157,6 +155,7 @@ public class AwsMarketPlaceApiHandlerImpl implements AwsMarketPlaceApiHandler {
                         .token(token)
                         .orderQuantity(orderQuantity)
                         .expirationDate(expirationDate)
+                        .productCode(productCode)
                         .build();
       wingsPersistence.save(marketPlace);
     }
@@ -170,13 +169,8 @@ public class AwsMarketPlaceApiHandlerImpl implements AwsMarketPlaceApiHandler {
       /**
        * This is an update to an existing order, treat this as an update
        */
-      licenseService.updateAccountLicense(marketPlace.getAccountId(),
-          LicenseInfo.builder()
-              .accountType(AccountType.PAID)
-              .licenseUnits(orderQuantity)
-              .accountStatus(AccountStatus.ACTIVE)
-              .expiryTime(expirationDate.getTime())
-              .build());
+      licenseService.updateLicenseForProduct(
+          marketPlace.getProductCode(), marketPlace.getAccountId(), orderQuantity, expirationDate.getTime());
 
       marketPlace.setOrderQuantity(orderQuantity);
       wingsPersistence.save(marketPlace);

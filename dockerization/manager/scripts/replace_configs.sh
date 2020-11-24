@@ -453,6 +453,10 @@ if [[ "" != "$AWS_MARKETPLACE_PRODUCTCODE" ]]; then
   yq write -i $CONFIG_FILE mktPlaceConfig.awsMarketPlaceProductCode "$AWS_MARKETPLACE_PRODUCTCODE"
 fi
 
+if [[ "" != "$AWS_MARKETPLACE_CE_PRODUCTCODE" ]]; then
+  yq write -i $CONFIG_FILE mktPlaceConfig.awsMarketPlaceCeProductCode "$AWS_MARKETPLACE_CE_PRODUCTCODE"
+fi
+
 if [[ "" != "$ALLOW_BLACKLISTED_EMAIL_DOMAINS" ]]; then
   yq write -i $CONFIG_FILE blacklistedEmailDomainsAllowed "$ALLOW_BLACKLISTED_EMAIL_DOMAINS"
 fi

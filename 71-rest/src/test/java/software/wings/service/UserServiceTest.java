@@ -129,6 +129,7 @@ import software.wings.security.authentication.AuthenticationManager;
 import software.wings.security.authentication.AuthenticationMechanism;
 import software.wings.security.authentication.AuthenticationUtils;
 import software.wings.security.authentication.LogoutResponse;
+import software.wings.security.authentication.MarketPlaceConfig;
 import software.wings.security.authentication.TOTPAuthHandler;
 import software.wings.service.impl.AuditServiceHelper;
 import software.wings.service.impl.AwsMarketPlaceApiHandlerImpl;
@@ -318,6 +319,8 @@ public class UserServiceTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void testMarketPlaceSignUp() {
     when(configuration.getPortal().getJwtMarketPlaceSecret()).thenReturn("TESTSECRET");
+    when(configuration.getMarketPlaceConfig())
+        .thenReturn(MarketPlaceConfig.builder().awsMarketPlaceProductCode("CD").build());
     UserInvite testInvite = anUserInvite().withUuid(USER_INVITE_ID).withEmail(USER_EMAIL).build();
     testInvite.setPassword("TestPassword".toCharArray());
     MarketPlace marketPlace = MarketPlace.builder()
@@ -325,6 +328,7 @@ public class UserServiceTest extends WingsBaseTest {
                                   .type(MarketPlaceType.AWS)
                                   .orderQuantity(10)
                                   .expirationDate(new Date())
+                                  .productCode("CD")
                                   .build();
     String token = marketPlaceService.getMarketPlaceToken(marketPlace, testInvite);
 
@@ -387,6 +391,15 @@ public class UserServiceTest extends WingsBaseTest {
     when(userGroupService.list(anyString(), any(PageRequest.class), anyBoolean())).thenReturn(aPageResponse().build());
     when(authenticationManager.defaultLogin(USER_EMAIL, "TestPassword")).thenReturn(savedUser);
     User user = userService.completeMarketPlaceSignup(savedUser, testInvite, MarketPlaceType.AWS);
+    assertThat(user).isEqualTo(savedUser);
+
+    // AWS marketplace signUp for CE
+    when(configuration.getMarketPlaceConfig())
+        .thenReturn(MarketPlaceConfig.builder().awsMarketPlaceProductCode("").build());
+    when(configuration.getMarketPlaceConfig())
+        .thenReturn(MarketPlaceConfig.builder().awsMarketPlaceCeProductCode("CE").build());
+    marketPlace.setProductCode("CE");
+    user = userService.completeMarketPlaceSignup(savedUser, testInvite, MarketPlaceType.AWS);
     assertThat(user).isEqualTo(savedUser);
   }
 
