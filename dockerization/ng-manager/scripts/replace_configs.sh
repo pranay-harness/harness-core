@@ -96,6 +96,10 @@ if [[ "" != "$SMTP_USERNAME" ]]; then
   yq write -i $CONFIG_FILE smtp.username "$SMTP_USERNAME"
 fi
 
+if [[ "" != "$SCM_SERVICE_URI" ]]; then
+  yq write -i $CONFIG_FILE scmConnectionConfig.url "$SCM_SERVICE_URI"
+fi
+
 if [[ "" != "$SMTP_PASSWORD" ]]; then
   yq write -i $CONFIG_FILE smtp.password "$SMTP_PASSWORD"
 fi

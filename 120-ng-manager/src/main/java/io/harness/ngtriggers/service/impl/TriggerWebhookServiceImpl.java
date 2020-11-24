@@ -65,14 +65,19 @@ public class TriggerWebhookServiceImpl
   @Override
   public void handle(TriggerWebhookEvent event) {
     WebhookEventResponse response = ngTriggerWebhookExecutionHelper.handleTriggerWebhookEvent(event);
-    if (response.getFinalStatus() == SCM_SERVICE_CONNECTION_FAILED) {
-      event.setAttemptCount(event.getAttemptCount() + 1);
-      ngTriggerService.updateTriggerWebhookEvent(event);
-    } else {
-      if (WebhookEventResponseHelper.isFinalStatusAnEvent(response.getFinalStatus())) {
-        triggerEventHistoryRepository.save(WebhookEventResponseHelper.toEntity(response));
+    try {
+      if (response.getFinalStatus() == SCM_SERVICE_CONNECTION_FAILED) {
+        event.setAttemptCount(event.getAttemptCount() + 1);
+        ngTriggerService.updateTriggerWebhookEvent(event);
+      } else {
+        if (WebhookEventResponseHelper.isFinalStatusAnEvent(response.getFinalStatus())) {
+          triggerEventHistoryRepository.save(WebhookEventResponseHelper.toEntity(response));
+        }
+        ngTriggerService.deleteTriggerWebhookEvent(event);
       }
-      ngTriggerService.deleteTriggerWebhookEvent(event);
+    } catch (Exception e) {
+      log.error(
+          "Exception while handling webhook event. Shouldnt have been handled gracefully before this. Please check", e);
     }
   }
 }
