@@ -2152,7 +2152,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
 
   @VisibleForTesting
   public LastDeployedHelmChartInformation fetchLastDeployedHelmChart(Workflow workflow, String serviceId) {
-    WorkflowExecution lastWorkflowExecution = getLastSuccessfulWorkflowExecution(workflow);
+    WorkflowExecution lastWorkflowExecution = getLastSuccessfulWorkflowExecutionForService(workflow, serviceId);
     if (lastWorkflowExecution == null || isEmpty(lastWorkflowExecution.getHelmCharts())) {
       return null;
     }
@@ -2206,7 +2206,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
   @VisibleForTesting
   public LastDeployedArtifactInformation fetchLastDeployedArtifact(
       Workflow workflow, List<String> allowedArtifactStreams, String serviceId) {
-    WorkflowExecution lastWorkflowExecution = getLastSuccessfulWorkflowExecution(workflow);
+    WorkflowExecution lastWorkflowExecution = getLastSuccessfulWorkflowExecutionForService(workflow, serviceId);
 
     if (lastWorkflowExecution != null) {
       List<Artifact> lastArtifacts = lastWorkflowExecution.getArtifacts();
@@ -2219,11 +2219,13 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     return null;
   }
 
-  private WorkflowExecution getLastSuccessfulWorkflowExecution(Workflow workflow) {
+  private WorkflowExecution getLastSuccessfulWorkflowExecutionForService(Workflow workflow, String serviceId) {
     return wingsPersistence.createQuery(WorkflowExecution.class)
         .filter(WorkflowExecutionKeys.accountId, workflow.getAccountId())
         .filter(WorkflowExecutionKeys.appId, workflow.getAppId())
         .filter(WorkflowExecutionKeys.workflowId, workflow.getUuid())
+        .field(WorkflowExecutionKeys.serviceIds)
+        .contains(serviceId)
         .filter(WorkflowExecutionKeys.status, SUCCESS)
         .order(Sort.descending(WorkflowExecutionKeys.createdAt))
         .get();
