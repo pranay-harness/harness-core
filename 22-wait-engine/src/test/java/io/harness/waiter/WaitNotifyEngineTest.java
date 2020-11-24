@@ -3,6 +3,7 @@ package io.harness.waiter;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.persistence.HQuery.excludeAuthority;
 import static io.harness.rule.OwnerRule.GEORGE;
+import static io.harness.rule.OwnerRule.SANJA;
 import static io.harness.waiter.TestNotifyEventListener.TEST_PUBLISHER;
 
 import static com.google.common.collect.ImmutableMap.of;
@@ -19,23 +20,33 @@ import io.harness.queue.QueueConsumer.Filter;
 import io.harness.queue.QueueListenerController;
 import io.harness.rule.Owner;
 import io.harness.serializer.KryoSerializer;
+import io.harness.tasks.ProgressData;
 import io.harness.tasks.ResponseData;
 import io.harness.threading.Concurrent;
 import io.harness.threading.Poller;
+import io.harness.waiter.ProgressUpdate.ProgressUpdateKeys;
 
 import com.google.inject.Inject;
 import java.io.IOException;
 import java.time.Duration;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
+import lombok.extern.slf4j.Slf4j;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
+import org.mongodb.morphia.query.Sort;
 
+@Slf4j
 public class WaitNotifyEngineTest extends WaitEngineTestBase {
   private static AtomicInteger callCount;
+  private static AtomicInteger progressCallCount;
   private static Map<String, ResponseData> responseMap;
+  private static List<ProgressData> progressDataList;
 
   @Inject private WaitNotifyEngine waitNotifyEngine;
   @Inject private HPersistence persistence;
@@ -52,6 +63,8 @@ public class WaitNotifyEngineTest extends WaitEngineTestBase {
   public void setupResponseMap() {
     callCount = new AtomicInteger(0);
     responseMap = new HashMap<>();
+    progressCallCount = new AtomicInteger(0);
+    progressDataList = new ArrayList<>();
     queueListenerController.register(notifyEventListener, 1);
   }
 
@@ -236,6 +249,56 @@ public class WaitNotifyEngineTest extends WaitEngineTestBase {
     }
   }
 
+  /**
+   * Should wait for progress on correlation id.
+   */
+  @Test
+  @Owner(developers = SANJA)
+  @Category(UnitTests.class)
+  public void shouldWaitForProgressOnCorrelationId() throws InterruptedException {
+    String uuid = generateUuid();
+    try (MaintenanceGuard guard = new MaintenanceGuard(false)) {
+      String waitInstanceId =
+          waitNotifyEngine.waitForAllOn(TEST_PUBLISHER, new TestNotifyCallback(), new TestProgressCallback(), uuid);
+
+      assertThat(persistence.get(WaitInstance.class, waitInstanceId)).isNotNull();
+      StringNotifyProgressData data1 = StringNotifyProgressData.builder().data("progress1-" + uuid).build();
+      waitNotifyEngine.progressOn(uuid, data1);
+
+      ProgressUpdate progressUpdate = persistence.createQuery(ProgressUpdate.class, excludeAuthority)
+                                          .filter(ProgressUpdateKeys.correlationId, uuid)
+                                          .get();
+      assertThat(progressUpdate).isNotNull();
+      ProgressData progressDataResult =
+          (ProgressData) kryoSerializer.asInflatedObject(progressUpdate.getProgressData());
+      assertThat(progressDataResult).isEqualTo(data1);
+
+      StringNotifyProgressData data2 = StringNotifyProgressData.builder().data("progress2-" + uuid).build();
+      waitNotifyEngine.progressOn(uuid, data2);
+
+      List<ProgressUpdate> progressUpdate2 = persistence.createQuery(ProgressUpdate.class, excludeAuthority)
+                                                 .filter(ProgressUpdateKeys.correlationId, uuid)
+                                                 .order(Sort.ascending(ProgressUpdateKeys.createdAt))
+                                                 .asList();
+      assertThat(progressUpdate2).hasSize(2);
+      ProgressData progressDataResult2 =
+          (ProgressData) kryoSerializer.asInflatedObject(progressUpdate2.get(1).getProgressData());
+      assertThat(progressDataResult2).isEqualTo(data2);
+
+      while (progressCallCount.get() < 2) {
+        Thread.yield();
+      }
+
+      StringNotifyProgressData result1 = (StringNotifyProgressData) progressDataList.get(0);
+      StringNotifyProgressData result2 = (StringNotifyProgressData) progressDataList.get(1);
+
+      assertThat(progressDataList).hasSize(2);
+      assertThat(Arrays.asList(result1.getData(), result2.getData()))
+          .containsExactlyInAnyOrder(data1.getData(), data2.getData());
+      assertThat(progressCallCount.get()).isEqualTo(2);
+    }
+  }
+
   @Test
   @Owner(developers = GEORGE)
   @Category(UnitTests.class)
@@ -262,6 +325,14 @@ public class WaitNotifyEngineTest extends WaitEngineTestBase {
     @Override
     public void notifyError(Map<String, ResponseData> response) {
       // Do Nothing.
+    }
+  }
+
+  public static class TestProgressCallback implements ProgressCallback {
+    @Override
+    public void notify(String correlationId, ProgressData progressData) {
+      progressCallCount.incrementAndGet();
+      progressDataList.add(progressData);
     }
   }
 }

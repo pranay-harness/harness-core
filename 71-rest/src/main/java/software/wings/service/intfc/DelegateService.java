@@ -8,6 +8,7 @@ import io.harness.delegate.beans.DelegateApproval;
 import io.harness.delegate.beans.DelegateConnectionHeartbeat;
 import io.harness.delegate.beans.DelegateParams;
 import io.harness.delegate.beans.DelegateProfileParams;
+import io.harness.delegate.beans.DelegateProgressData;
 import io.harness.delegate.beans.DelegateRegisterResponse;
 import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.delegate.beans.DelegateScripts;
@@ -132,7 +133,7 @@ public interface DelegateService extends OwnedByAccount {
       String accountId, String delegateId, String taskId, @Valid DelegateTaskResponse response);
 
   void publishTaskProgressResponse(
-      String accountId, String driverId, String delegateTaskId, DelegateResponseData responseData);
+      String accountId, String driverId, String delegateTaskId, DelegateProgressData responseData);
 
   boolean filter(String accountId, String delegateId);
 

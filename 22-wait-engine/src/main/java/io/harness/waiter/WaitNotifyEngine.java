@@ -15,6 +15,7 @@ import io.harness.logging.AutoLogRemoveContext;
 import io.harness.persistence.HPersistence;
 import io.harness.serializer.KryoSerializer;
 import io.harness.tasks.ErrorResponseData;
+import io.harness.tasks.ProgressData;
 import io.harness.tasks.ResponseData;
 import io.harness.waiter.NotifyResponse.NotifyResponseKeys;
 import io.harness.waiter.WaitInstance.WaitInstanceBuilder;
@@ -30,7 +31,9 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
+import org.mongodb.morphia.Key;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
 
@@ -45,15 +48,23 @@ public class WaitNotifyEngine {
   @Inject private KryoSerializer kryoSerializer;
   @Inject private NotifyQueuePublisherRegister publisherRegister;
 
-  public String waitForAllOn(String publisherName, NotifyCallback callback, String... correlationIds) {
+  public String waitForAllOn(String publisherName, NotifyCallback notifyCallback, String... correlationIds) {
+    return waitForAllOn(publisherName, notifyCallback, null, correlationIds);
+  }
+
+  public String waitForAllOn(
+      String publisherName, NotifyCallback callback, ProgressCallback progressCallback, String... correlationIds) {
     Preconditions.checkArgument(isNotEmpty(correlationIds), "correlationIds are null or empty");
 
     if (log.isDebugEnabled()) {
       log.debug("Received waitForAll on - correlationIds : {}", Arrays.toString(correlationIds));
     }
 
-    final WaitInstanceBuilder waitInstanceBuilder =
-        WaitInstance.builder().uuid(generateUuid()).callback(callback).publisher(publisherName);
+    final WaitInstanceBuilder waitInstanceBuilder = WaitInstance.builder()
+                                                        .uuid(generateUuid())
+                                                        .callback(callback)
+                                                        .progressCallback(progressCallback)
+                                                        .publisher(publisherName);
 
     final List<String> list;
     if (correlationIds.length == 1) {
@@ -98,6 +109,25 @@ public class WaitNotifyEngine {
     return waitInstanceId;
   }
 
+  public void progressOn(String correlationId, ProgressData progressData) {
+    Preconditions.checkArgument(isNotBlank(correlationId), "correlationId is null or empty");
+
+    if (log.isDebugEnabled()) {
+      log.debug("notify request received for the correlationId : {}", correlationId);
+    }
+
+    try {
+      persistence.save(ProgressUpdate.builder()
+                           .uuid(generateUuid())
+                           .correlationId(correlationId)
+                           .createdAt(currentTimeMillis())
+                           .progressData(kryoSerializer.asDeflatedBytes(progressData))
+                           .build());
+    } catch (Exception exception) {
+      log.error("Failed to notify for progress of type " + progressData.getClass().getSimpleName(), exception);
+    }
+  }
+
   public String doneWith(String correlationId, ResponseData response) {
     return doneWith(correlationId, response, response instanceof ErrorResponseData);
   }
@@ -130,12 +160,6 @@ public class WaitNotifyEngine {
     try (AutoLogRemoveContext ignore = new AutoLogRemoveContext(WaitInstanceLogContext.ID)) {
       String publisher = waitInstance.getPublisher();
 
-      // TODO: remove after 15/01/20202
-      // this is temporary to handle the transition for wait instances without publisher {{
-      if (publisher == null) {
-        publisher = "general";
-      }
-      // }}
       final NotifyQueuePublisher notifyQueuePublisher = publisherRegister.obtain(waitInstance.getPublisher());
 
       if (notifyQueuePublisher == null) {

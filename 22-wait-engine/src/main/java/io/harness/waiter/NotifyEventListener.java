@@ -9,6 +9,7 @@ import io.harness.persistence.HPersistence;
 import io.harness.queue.QueueConsumer;
 import io.harness.queue.QueueListener;
 import io.harness.serializer.KryoSerializer;
+import io.harness.tasks.ProgressData;
 import io.harness.tasks.ResponseData;
 import io.harness.waiter.NotifyResponse.NotifyResponseKeys;
 import io.harness.waiter.WaitInstance.WaitInstanceKeys;
@@ -21,36 +22,22 @@ import java.util.HashMap;
 import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.FindAndModifyOptions;
+import org.mongodb.morphia.query.FindOptions;
+import org.mongodb.morphia.query.MorphiaIterator;
 import org.mongodb.morphia.query.Query;
+import org.mongodb.morphia.query.Sort;
 import org.mongodb.morphia.query.UpdateOperations;
 
 @Slf4j
 public class NotifyEventListener extends QueueListener<NotifyEvent> {
-  private static final Duration MAX_CALLBACK_PROCESSING_TIME = Duration.ofMinutes(1);
-
   @Inject private Injector injector;
   @Inject private HPersistence persistence;
   @Inject private KryoSerializer kryoSerializer;
+  @Inject private WaitInstanceService waitInstanceService;
 
   @Inject
   public NotifyEventListener(QueueConsumer<NotifyEvent> queueConsumer) {
     super(queueConsumer, false);
-  }
-
-  FindAndModifyOptions findAndModifyOptions =
-      new FindAndModifyOptions().writeConcern(WriteConcern.MAJORITY).upsert(false).returnNew(false);
-
-  private WaitInstance fetchForProcessingWaitInstance(String waitInstanceId, long now) {
-    final Query<WaitInstance> waitInstanceQuery = persistence.createQuery(WaitInstance.class)
-                                                      .filter(WaitInstanceKeys.uuid, waitInstanceId)
-                                                      .field(WaitInstanceKeys.callbackProcessingAt)
-                                                      .lessThan(now);
-
-    final UpdateOperations<WaitInstance> updateOperations =
-        persistence.createUpdateOperations(WaitInstance.class)
-            .set(WaitInstanceKeys.callbackProcessingAt, now + MAX_CALLBACK_PROCESSING_TIME.toMillis());
-
-    return persistence.findAndModify(waitInstanceQuery, updateOperations, findAndModifyOptions);
   }
 
   @Override
@@ -59,28 +46,34 @@ public class NotifyEventListener extends QueueListener<NotifyEvent> {
 
     try (AutoLogContext ignore = new WaitInstanceLogContext(message.getWaitInstanceId(), OVERRIDE_ERROR)) {
       final long now = System.currentTimeMillis();
-      WaitInstance waitInstance = fetchForProcessingWaitInstance(waitInstanceId, now);
+      WaitInstance waitInstance = waitInstanceService.fetchForProcessingWaitInstance(waitInstanceId, now);
 
       if (waitInstance == null) {
-        log.error("Double notification");
+        log.error("WaitInstance was already handled!");
         return;
       }
 
       boolean isError = false;
       Map<String, ResponseData> responseMap = new HashMap<>();
 
-      try (HIterator<NotifyResponse> notifyResponses =
-               new HIterator(persistence.createQuery(NotifyResponse.class, excludeAuthority)
-                                 .field(NotifyResponseKeys.uuid)
-                                 .in(waitInstance.getCorrelationIds())
-                                 .fetch())) {
+      Query<NotifyResponse> query = persistence.createQuery(NotifyResponse.class, excludeAuthority)
+                                        .field(NotifyResponseKeys.uuid)
+                                        .in(waitInstance.getCorrelationIds());
+
+      if (waitInstance.getProgressCallback() != null) {
+        query.order(Sort.ascending(NotifyResponseKeys.createdAt));
+      }
+
+      try (HIterator<NotifyResponse> notifyResponses = new HIterator(query.fetch())) {
         for (NotifyResponse notifyResponse : notifyResponses) {
           if (notifyResponse.isError()) {
             log.info("Failed notification response {}", notifyResponse.getUuid());
             isError = true;
           }
-          responseMap.put(notifyResponse.getUuid(),
-              (ResponseData) kryoSerializer.asInflatedObject(notifyResponse.getResponseData()));
+          if (notifyResponse.getResponseData() != null) {
+            responseMap.put(notifyResponse.getUuid(),
+                (ResponseData) kryoSerializer.asInflatedObject(notifyResponse.getResponseData()));
+          }
         }
       }
 
@@ -105,11 +98,7 @@ public class NotifyEventListener extends QueueListener<NotifyEvent> {
         log.error("Failed to delete WaitInstance", exception);
       }
 
-      final long passed = System.currentTimeMillis() - now;
-      if (passed > MAX_CALLBACK_PROCESSING_TIME.toMillis()) {
-        log.error("It took more than {} ms before we processed the callback. THIS IS VERY BAD!!!",
-            MAX_CALLBACK_PROCESSING_TIME.toMillis());
-      }
+      waitInstanceService.checkProcessingTime(now);
     }
   }
 }
