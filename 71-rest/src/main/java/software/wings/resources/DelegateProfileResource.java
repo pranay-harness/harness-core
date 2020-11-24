@@ -107,6 +107,19 @@ public class DelegateProfileResource {
     return new RestResponse<>(delegateProfileService.add(delegateProfile));
   }
 
+  @PUT
+  @Path("{delegateProfileId}/selectors")
+  @Timed
+  @ExceptionMetered
+  @AuthRule(permissionType = ACCOUNT_MANAGEMENT)
+  @AuthRule(permissionType = MANAGE_DELEGATE_PROFILES)
+  public RestResponse<DelegateProfile> updateSelectors(
+      @PathParam("delegateProfileId") @NotEmpty String delegateProfileId,
+      @QueryParam("accountId") @NotEmpty String accountId, List<String> selectors) {
+    return new RestResponse<>(
+        delegateProfileService.updateDelegateProfileSelectors(delegateProfileId, accountId, selectors));
+  }
+
   @GET
   @Path("/v2/{delegateProfileId}")
   @Timed
