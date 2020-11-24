@@ -614,11 +614,9 @@ public class HelmDeployServiceImpl implements HelmDeployService {
         "Checking if the repository has already been added", LogLevel.INFO, CommandExecutionStatus.RUNNING);
 
     HelmCliResponse cliResponse = helmClient.getHelmRepoList(commandRequest);
-    if (cliResponse.getCommandExecutionStatus() == CommandExecutionStatus.FAILURE) {
-      throw new InvalidRequestException(cliResponse.getOutput());
-    }
-
-    List<RepoListInfo> repoListInfos = parseHelmAddRepoOutput(cliResponse.getOutput());
+    List<RepoListInfo> repoListInfos = (cliResponse.getCommandExecutionStatus() == CommandExecutionStatus.SUCCESS)
+        ? parseHelmAddRepoOutput(cliResponse.getOutput())
+        : Collections.emptyList();
 
     boolean repoAlreadyAdded = repoListInfos.stream().anyMatch(
         repoListInfo -> repoListInfo.getRepoUrl().equals(commandRequest.getChartSpecification().getChartUrl()));
@@ -1008,11 +1006,10 @@ public class HelmDeployServiceImpl implements HelmDeployService {
     }
 
     HelmCliResponse cliResponse = helmClient.getHelmRepoList(request);
-    if (cliResponse.getCommandExecutionStatus() == CommandExecutionStatus.FAILURE) {
-      return null;
-    }
+    List<RepoListInfo> repoListInfos = (cliResponse.getCommandExecutionStatus() == CommandExecutionStatus.SUCCESS)
+        ? parseHelmAddRepoOutput(cliResponse.getOutput())
+        : Collections.emptyList();
 
-    List<RepoListInfo> repoListInfos = parseHelmAddRepoOutput(cliResponse.getOutput());
     Optional<RepoListInfo> repoListInfo =
         repoListInfos.stream()
             .filter(repoListInfoObject
