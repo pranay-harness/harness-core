@@ -6,7 +6,7 @@
         <artifactId>portal</artifactId>
         <version>0.0.1-SNAPSHOT</version>
     </parent>
-    <artifactId>15-api-services</artifactId>
+    <artifactId>960-api-services</artifactId>
     <dependencies>
         <dependency>
             <groupId>com.amazonaws</groupId>

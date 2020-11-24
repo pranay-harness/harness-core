@@ -13,7 +13,7 @@ java_library(
     exports = [
         "@maven//:com_google_guava_guava",
         #order of dependency is important. Comment is added so that running buildifer does not change the order
-        "//15-api-services:module",
+        "//960-api-services:module",
         "//19-delegate-tasks-beans:module",
         "//19-delegate-tasks-beans/src/main/proto:19_delegate_tasks_beans_java_proto",
         "//19-delegate-tasks-beans/src/main/proto:19_delegate_tasks_beans_proto",

@@ -1,5 +1,4 @@
 directories:
-  15-api-services
   16-expression-service
   19-delegate-tasks-beans
   20-delegate-tasks
@@ -49,6 +48,7 @@ directories:
   450-ce-views
   490-ce-commons
   900-yaml-sdk
+  960-api-services
   970-api-services-beans
   970-grpc
   970-ng-commons

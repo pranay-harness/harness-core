@@ -47,7 +47,7 @@ public class DockerPublicRegistryProcessorTest extends CategoryTest {
   @Rule public MockitoRule mockitoRule = MockitoJUnit.rule();
   @Rule
   public WireMockRule wireMockRule = new WireMockRule(
-      WireMockConfiguration.wireMockConfig().usingFilesUnderDirectory("15-api-services/src/test/resources").port(0));
+      WireMockConfiguration.wireMockConfig().usingFilesUnderDirectory("960-api-services/src/test/resources").port(0));
 
   @Mock private DockerRestClientFactory dockerRestClientFactory;
   @Mock private DockerRegistryUtils dockerRegistryUtils;
