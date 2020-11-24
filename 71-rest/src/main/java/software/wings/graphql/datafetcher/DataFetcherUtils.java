@@ -1,6 +1,7 @@
 package software.wings.graphql.datafetcher;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
 import static java.lang.String.format;
 
@@ -10,6 +11,7 @@ import io.harness.persistence.HIterator;
 import io.harness.timescaledb.DBUtils;
 import io.harness.timescaledb.TimeScaleDBService;
 
+import software.wings.app.MainConfiguration;
 import software.wings.beans.FeatureName;
 import software.wings.beans.SettingAttribute.SettingAttributeKeys;
 import software.wings.dl.WingsPersistence;
@@ -71,25 +73,17 @@ public class DataFetcherUtils {
       "SELECT * FROM BILLING_DATA WHERE accountid = '%s' AND clusterid IS NOT NULL LIMIT 1";
 
   @Inject private TimeScaleDBService timeScaleDBService;
+  @Inject private MainConfiguration configuration;
   @Inject protected FeatureFlagService featureFlagService;
+
   private final LoadingCache<String, Boolean> isClusterDataPresentCache =
       Caffeine.newBuilder().expireAfterAccess(15, TimeUnit.SECONDS).build(this::isAnyClusterDataPresent);
-
-  public static String SAMPLE_ACCOUNT_ID =
-      "Sy3KVuK1SZy2Z7OLhbKlNg"; // Sy3KVuK1SZy2Z7OLhbKlNg belongs to "harness-demo" in Free Cluster
-
-  static {
-    String clusterType = System.getenv("CLUSTER_TYPE");
-    if (StringUtils.equals(clusterType, "premium")) {
-      SAMPLE_ACCOUNT_ID = "jDOmhrFmSOGZJ1C91UC_hg"; // "jDOmhrFmSOGZJ1C91UC_hg" belongs to "Harness-CS" in Paid Cluster
-    }
-  }
 
   public String fetchSampleAccountIdIfNoClusterData(@NotNull String accountId) {
     if (featureFlagService.isEnabledReloadCache(FeatureName.CE_SAMPLE_DATA_GENERATION, accountId)) {
       log.info("feature flag CE_SAMPLE_DATA_GENERATION enabled: true");
       if (Boolean.FALSE.equals(isClusterDataPresentCache.get(accountId))) {
-        return SAMPLE_ACCOUNT_ID;
+        return configuration.getCeSetUpConfig().getSampleAccountId();
       }
     }
     log.info("feature flag CE_SAMPLE_DATA_GENERATION enabled: false");
@@ -105,7 +99,8 @@ public class DataFetcherUtils {
   }
 
   public boolean isSampleClusterDataPresent() {
-    return isAnyClusterDataPresent(SAMPLE_ACCOUNT_ID);
+    String sampleAccountId = configuration.getCeSetUpConfig().getSampleAccountId();
+    return isNotEmpty(sampleAccountId) && isAnyClusterDataPresent(sampleAccountId);
   }
 
   private Integer getCount(String query, String accountId) {

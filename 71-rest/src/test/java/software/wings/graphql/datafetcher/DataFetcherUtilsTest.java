@@ -9,9 +9,11 @@ import static org.mockito.Mockito.when;
 
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
+import io.harness.ccm.setup.config.CESetUpConfig;
 import io.harness.rule.Owner;
 import io.harness.timescaledb.TimeScaleDBService;
 
+import software.wings.app.MainConfiguration;
 import software.wings.beans.FeatureName;
 import software.wings.service.intfc.FeatureFlagService;
 
@@ -28,8 +30,11 @@ import org.mockito.MockitoAnnotations;
 
 public class DataFetcherUtilsTest extends CategoryTest {
   private static final String ACCOUNT_ID = "account_id";
+  private static final String SAMPLE_ACCOUNT_ID = "sample_account_id";
+
   @Mock FeatureFlagService featureFlagService;
   @Mock TimeScaleDBService timeScaleDBService;
+  @Mock MainConfiguration configuration;
   @Mock Connection connection;
   @Mock Statement statement;
   @Mock ResultSet resultSet;
@@ -44,6 +49,8 @@ public class DataFetcherUtilsTest extends CategoryTest {
     when(timeScaleDBService.getDBConnection()).thenReturn(connection);
     when(connection.createStatement()).thenReturn(statement);
     when(statement.executeQuery(any())).thenReturn(resultSet);
+    when(configuration.getCeSetUpConfig())
+        .thenReturn(CESetUpConfig.builder().sampleAccountId(SAMPLE_ACCOUNT_ID).build());
   }
 
   @Test
@@ -65,8 +72,7 @@ public class DataFetcherUtilsTest extends CategoryTest {
         .thenReturn(true);
     when(resultSet.next()).thenReturn(false);
 
-    assertThat(dataFetcherUtils.fetchSampleAccountIdIfNoClusterData(ACCOUNT_ID))
-        .isEqualTo(DataFetcherUtils.SAMPLE_ACCOUNT_ID);
+    assertThat(dataFetcherUtils.fetchSampleAccountIdIfNoClusterData(ACCOUNT_ID)).isEqualTo(SAMPLE_ACCOUNT_ID);
   }
 
   @Test
