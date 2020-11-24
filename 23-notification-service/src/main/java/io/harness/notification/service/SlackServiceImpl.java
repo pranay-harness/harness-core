@@ -3,17 +3,21 @@ package io.harness.notification.service;
 import static io.harness.NotificationRequest.Slack;
 import static io.harness.NotificationServiceConstants.TEST_SLACK_TEMPLATE;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.eraro.ErrorCode.DEFAULT_ERROR_CODE;
+import static io.harness.exception.WingsException.USER;
 
+import static org.apache.commons.lang3.StringUtils.stripToNull;
 import static org.apache.commons.lang3.StringUtils.trimToNull;
 
 import io.harness.NotificationRequest;
 import io.harness.Team;
 import io.harness.notification.NotificationChannelType;
+import io.harness.notification.exception.NotificationException;
 import io.harness.notification.remote.dto.NotificationSettingDTO;
 import io.harness.notification.remote.dto.SlackSettingDTO;
+import io.harness.notification.service.api.ChannelService;
 import io.harness.notification.service.api.NotificationSettingsService;
 import io.harness.notification.service.api.NotificationTemplateService;
-import io.harness.notification.service.api.SlackService;
 
 import com.google.inject.Inject;
 import java.util.*;
@@ -24,7 +28,7 @@ import org.apache.commons.text.StrSubstitutor;
 
 @AllArgsConstructor(onConstructor = @__({ @Inject }))
 @Slf4j
-public class SlackServiceImpl implements SlackService {
+public class SlackServiceImpl implements ChannelService {
   public static final MediaType APPLICATION_JSON = MediaType.parse("application/json; charset=utf-8");
 
   private final NotificationSettingsService notificationSettingsService;
@@ -59,18 +63,19 @@ public class SlackServiceImpl implements SlackService {
   @Override
   public boolean sendTestNotification(NotificationSettingDTO notificationSettingDTO) {
     SlackSettingDTO slackSettingDTO = (SlackSettingDTO) notificationSettingDTO;
-    return send(Collections.singletonList(slackSettingDTO.getRecipient()), TEST_SLACK_TEMPLATE, Collections.emptyMap(),
+    String webhookUrl = slackSettingDTO.getRecipient();
+    if (Objects.isNull(stripToNull(webhookUrl))) {
+      throw new NotificationException("Malformed webhook Url " + webhookUrl, DEFAULT_ERROR_CODE, USER);
+    }
+    boolean sent = send(Collections.singletonList(webhookUrl), TEST_SLACK_TEMPLATE, Collections.emptyMap(),
         slackSettingDTO.getNotificationId(), null);
+    if (!sent) {
+      throw new NotificationException("Invalid webhook url " + webhookUrl, DEFAULT_ERROR_CODE, USER);
+    }
+    return true;
   }
 
-  @Override
-  public boolean send(
-      List<String> slackWebhookUrls, String templateId, Map<String, String> templateData, String notificationId) {
-    return send(slackWebhookUrls, templateId, templateData, notificationId, null);
-  }
-
-  @Override
-  public boolean send(List<String> slackWebhookUrls, String templateId, Map<String, String> templateData,
+  private boolean send(List<String> slackWebhookUrls, String templateId, Map<String, String> templateData,
       String notificationId, Team team) {
     Optional<String> templateOpt = notificationTemplateService.getTemplateAsString(templateId, team);
     if (!templateOpt.isPresent()) {

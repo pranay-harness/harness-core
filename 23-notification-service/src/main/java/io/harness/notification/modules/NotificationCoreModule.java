@@ -1,5 +1,7 @@
 package io.harness.notification.modules;
 
+import static io.harness.NotificationServiceConstants.*;
+
 import static java.time.Duration.ofSeconds;
 
 import io.harness.mongo.queue.NGMongoQueueConsumer;
@@ -20,6 +22,7 @@ import com.google.inject.Injector;
 import com.google.inject.Provides;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
+import com.google.inject.name.Names;
 import java.util.ArrayList;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.mongodb.core.MongoTemplate;
@@ -39,10 +42,10 @@ public class NotificationCoreModule extends AbstractModule {
     bind(NotificationTemplateService.class).to(NotificationTemplateServiceImpl.class);
     bind(NotificationSettingsService.class).to(NotificationSettingsServiceImpl.class);
     bind(SeedDataPopulaterService.class).to(SeedDataPopulaterServiceImpl.class);
-    bind(MailService.class).to(MailServiceImpl.class);
-    bind(SlackService.class).to(SlackServiceImpl.class);
-    bind(PagerDutyService.class).to(PagerDutyServiceImpl.class);
-    bind(MSTeamsService.class).to(MSTeamsServiceImpl.class);
+    bind(ChannelService.class).annotatedWith(Names.named(MAILSERVICE)).to(MailServiceImpl.class);
+    bind(ChannelService.class).annotatedWith(Names.named(SLACKSERVICE)).to(SlackServiceImpl.class);
+    bind(ChannelService.class).annotatedWith(Names.named(PAGERDUTYSERVICE)).to(PagerDutyServiceImpl.class);
+    bind(ChannelService.class).annotatedWith(Names.named(MSTEAMSSERVICE)).to(MSTeamsServiceImpl.class);
     bind(NotificationService.class).to(NotificationServiceImpl.class);
     bindMessageConsumer();
   }

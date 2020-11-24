@@ -1,10 +1,11 @@
 package io.harness.notification.service;
 
 import io.harness.NotificationRequest;
-import io.harness.notification.NotificationRequestProcessor;
 import io.harness.notification.entities.Notification;
+import io.harness.notification.exception.NotificationException;
 import io.harness.notification.remote.mappers.NotificationMapper;
 import io.harness.notification.repositories.NotificationRepository;
+import io.harness.notification.service.api.ChannelService;
 import io.harness.notification.service.api.NotificationService;
 
 import com.google.inject.Inject;
@@ -16,7 +17,7 @@ import lombok.extern.slf4j.Slf4j;
 @AllArgsConstructor(onConstructor = @__({ @Inject }))
 @Slf4j
 public class NotificationServiceImpl implements NotificationService {
-  private final NotificationRequestProcessor notificationRequestProcessor;
+  private final ChannelService channelService;
   private final NotificationRepository notificationRepository;
 
   @Override
@@ -41,7 +42,12 @@ public class NotificationServiceImpl implements NotificationService {
     }
 
     notificationRepository.save(notification);
-    boolean sent = notificationRequestProcessor.process(notificationRequest);
+    boolean sent = false;
+    try {
+      sent = channelService.send(notificationRequest);
+    } catch (NotificationException e) {
+      log.error("Could not send notification.", e);
+    }
     notification.setSent(sent);
     notification.setRetries(1);
     notificationRepository.save(notification);
@@ -58,7 +64,12 @@ public class NotificationServiceImpl implements NotificationService {
       return;
     }
     log.info("Retrying sending notification {}", notificationRequest.getId());
-    boolean sent = notificationRequestProcessor.process(notificationRequest);
+    boolean sent = false;
+    try {
+      sent = channelService.send(notificationRequest);
+    } catch (NotificationException e) {
+      log.error("Could not send notification.", e);
+    }
     notification.setSent(sent);
     notification.setRetries(notification.getRetries() + 1);
     notificationRepository.save(notification);

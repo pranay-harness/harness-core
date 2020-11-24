@@ -4,17 +4,20 @@ import static io.harness.NotificationClientConstants.HARNESS_NAME;
 import static io.harness.NotificationRequest.PagerDuty;
 import static io.harness.NotificationServiceConstants.TEST_PD_TEMPLATE;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.eraro.ErrorCode.DEFAULT_ERROR_CODE;
+import static io.harness.exception.WingsException.USER;
 
 import static org.apache.commons.lang3.StringUtils.stripToNull;
 
 import io.harness.NotificationRequest;
 import io.harness.Team;
 import io.harness.notification.NotificationChannelType;
+import io.harness.notification.exception.NotificationException;
 import io.harness.notification.remote.dto.NotificationSettingDTO;
 import io.harness.notification.remote.dto.PagerDutySettingDTO;
+import io.harness.notification.service.api.ChannelService;
 import io.harness.notification.service.api.NotificationSettingsService;
 import io.harness.notification.service.api.NotificationTemplateService;
-import io.harness.notification.service.api.PagerDutyService;
 import io.harness.serializer.YamlUtils;
 
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -37,7 +40,7 @@ import org.json.JSONObject;
 
 @AllArgsConstructor(onConstructor = @__({ @Inject }))
 @Slf4j
-public class PagerDutyServiceImpl implements PagerDutyService {
+public class PagerDutyServiceImpl implements ChannelService {
   private final NotificationSettingsService notificationSettingsService;
   private final NotificationTemplateService notificationTemplateService;
   private final YamlUtils yamlUtils;
@@ -70,18 +73,19 @@ public class PagerDutyServiceImpl implements PagerDutyService {
   @Override
   public boolean sendTestNotification(NotificationSettingDTO notificationSettingDTO) {
     PagerDutySettingDTO pagerDutySettingDTO = (PagerDutySettingDTO) notificationSettingDTO;
-    return send(Collections.singletonList(pagerDutySettingDTO.getRecipient()), TEST_PD_TEMPLATE, Collections.emptyMap(),
+    String pagerdutyKey = pagerDutySettingDTO.getRecipient();
+    if (Objects.isNull(stripToNull(pagerdutyKey))) {
+      throw new NotificationException("Malformed pagerduty key " + pagerdutyKey, DEFAULT_ERROR_CODE, USER);
+    }
+    boolean sent = send(Collections.singletonList(pagerdutyKey), TEST_PD_TEMPLATE, Collections.emptyMap(),
         pagerDutySettingDTO.getNotificationId(), null);
+    if (!sent) {
+      throw new NotificationException("Invalid pagerduty key " + pagerdutyKey, DEFAULT_ERROR_CODE, USER);
+    }
+    return true;
   }
 
-  @Override
-  public boolean send(
-      List<String> pagerDutyKeys, String templateId, Map<String, String> templateData, String notificationId) {
-    return send(pagerDutyKeys, templateId, templateData, notificationId, null);
-  }
-
-  @Override
-  public boolean send(List<String> pagerDutyKeys, String templateId, Map<String, String> templateData,
+  private boolean send(List<String> pagerDutyKeys, String templateId, Map<String, String> templateData,
       String notificationId, Team team) {
     Optional<PagerDutyTemplate> templateOpt = getTemplate(templateId, team);
     if (!templateOpt.isPresent()) {
