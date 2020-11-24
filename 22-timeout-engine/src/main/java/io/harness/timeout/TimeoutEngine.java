@@ -15,12 +15,12 @@ import io.harness.mongo.iterator.MongoPersistenceIterator;
 import io.harness.mongo.iterator.MongoPersistenceIterator.Handler;
 import io.harness.mongo.iterator.filter.SpringFilterExpander;
 import io.harness.mongo.iterator.provider.SpringPersistenceRequiredProvider;
+import io.harness.repositories.TimeoutInstanceRepository;
 import io.harness.timeout.TimeoutInstance.TimeoutInstanceKeys;
 
 import com.google.inject.Inject;
 import com.google.inject.Injector;
 import com.google.inject.Singleton;
-import com.google.inject.name.Named;
 import java.time.Duration;
 import java.util.List;
 import javax.validation.constraints.NotNull;
@@ -35,7 +35,7 @@ public class TimeoutEngine implements Handler<TimeoutInstance> {
 
   @Inject private TimeoutInstanceRepository timeoutInstanceRepository;
   @Inject private PersistenceIteratorFactory persistenceIteratorFactory;
-  @Inject @Named("timeoutEngineMongoTemplate") private MongoTemplate mongoTemplate;
+  @Inject private MongoTemplate mongoTemplate;
   @Inject private Injector injector;
 
   private PersistenceIterator<TimeoutInstance> iterator;

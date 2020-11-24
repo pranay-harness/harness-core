@@ -15,11 +15,11 @@ import io.harness.encryption.Scope;
 import io.harness.exception.InvalidRequestException;
 import io.harness.gitsync.common.beans.YamlGitConfig;
 import io.harness.gitsync.common.beans.YamlGitFolderConfig;
-import io.harness.gitsync.common.dao.api.repositories.yamlGitConfig.YamlGitConfigRepository;
-import io.harness.gitsync.common.dao.api.repositories.yamlGitFolderConfig.YamlGitFolderConfigRepository;
 import io.harness.gitsync.common.helper.YamlGitConfigDTOComparator;
 import io.harness.gitsync.common.remote.YamlGitConfigMapper;
 import io.harness.gitsync.common.service.YamlGitConfigService;
+import io.harness.repositories.repositories.yamlGitConfig.YamlGitConfigRepository;
+import io.harness.repositories.repositories.yamlGitFolderConfig.YamlGitFolderConfigRepository;
 
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;

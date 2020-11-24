@@ -12,11 +12,13 @@ import io.harness.serializer.KryoModule;
 import io.harness.serializer.KryoRegistrar;
 import io.harness.serializer.PersistenceRegistrars;
 import io.harness.serializer.TimeoutEngineRegistrars;
+import io.harness.springdata.SpringPersistenceModule;
 import io.harness.testlib.module.MongoRuleMixin;
 import io.harness.testlib.module.TestMongoModule;
 import io.harness.threading.CurrentThreadExecutor;
 import io.harness.threading.ExecutorModule;
 
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.inject.AbstractModule;
 import com.google.inject.Injector;
@@ -33,6 +35,7 @@ import org.junit.rules.MethodRule;
 import org.junit.runners.model.FrameworkMethod;
 import org.junit.runners.model.Statement;
 import org.mongodb.morphia.converters.TypeConverter;
+import org.springframework.core.convert.converter.Converter;
 
 @Slf4j
 public class TimeoutEngineRule implements MethodRule, InjectorRuleMixin, MongoRuleMixin {
@@ -73,6 +76,14 @@ public class TimeoutEngineRule implements MethodRule, InjectorRuleMixin, MongoRu
             .addAll(PersistenceRegistrars.morphiaConverters)
             .build();
       }
+
+      @Provides
+      @Singleton
+      List<Class<? extends Converter<?, ?>>> springConverters() {
+        return ImmutableList.<Class<? extends Converter<?, ?>>>builder()
+            .addAll(TimeoutEngineRegistrars.springConverters)
+            .build();
+      }
     });
 
     modules.add(mongoTypeModule(annotations));
@@ -83,7 +94,7 @@ public class TimeoutEngineRule implements MethodRule, InjectorRuleMixin, MongoRu
       }
     });
     modules.add(TestMongoModule.getInstance());
-    modules.add(new TimeoutEnginePersistenceTestModule());
+    modules.add(new SpringPersistenceModule());
     modules.add(new TimeoutEngineModule());
     return modules;
   }

@@ -17,11 +17,11 @@ import io.harness.gitsync.core.beans.GitSuccessFulChangeDetail;
 import io.harness.gitsync.core.beans.HarnessSuccessFulChangeDetail;
 import io.harness.gitsync.core.beans.YamlSuccessfulChange;
 import io.harness.gitsync.core.beans.YamlSuccessfulChange.YamlSuccessfulChangeBuilder;
-import io.harness.gitsync.core.dao.api.repositories.YamlChangeSet.YamlChangeSetRepository;
-import io.harness.gitsync.core.dao.api.repositories.YamlSuccessfulChange.YamlSuccessfulChangeRepository;
 import io.harness.gitsync.core.dtos.YamlFilterResult;
 import io.harness.gitsync.core.service.YamlChangeSetService;
 import io.harness.gitsync.core.service.YamlSuccessfulChangeService;
+import io.harness.repositories.yamlChangeSet.YamlChangeSetRepository;
+import io.harness.repositories.yamlSuccessfulChange.YamlSuccessfulChangeRepository;
 import io.harness.rule.Owner;
 import io.harness.rule.OwnerRule;
 

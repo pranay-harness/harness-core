@@ -1,7 +1,5 @@
 package io.harness.app.impl;
 
-import static org.mockito.Mockito.mock;
-
 import io.harness.app.CIManagerConfiguration;
 import io.harness.app.CIManagerServiceModule;
 import io.harness.app.SCMGrpcClientModule;
@@ -13,8 +11,6 @@ import io.harness.factory.ClosingFactoryModule;
 import io.harness.govern.ProviderModule;
 import io.harness.govern.ServersModule;
 import io.harness.morphia.MorphiaRegistrar;
-import io.harness.ngpipeline.inputset.repository.spring.InputSetRepository;
-import io.harness.ngpipeline.pipeline.repository.spring.NgPipelineRepository;
 import io.harness.queue.QueueController;
 import io.harness.remote.client.ServiceHttpClientConfig;
 import io.harness.rule.InjectorRuleMixin;
@@ -26,11 +22,13 @@ import io.harness.serializer.OrchestrationBeansRegistrars;
 import io.harness.serializer.PersistenceRegistrars;
 import io.harness.serializer.YamlBeansModuleRegistrars;
 import io.harness.spring.AliasRegistrar;
+import io.harness.springdata.SpringPersistenceModule;
 import io.harness.testlib.module.MongoRuleMixin;
 import io.harness.testlib.module.TestMongoModule;
 import io.harness.threading.CurrentThreadExecutor;
 import io.harness.threading.ExecutorModule;
 
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.inject.AbstractModule;
 import com.google.inject.Injector;
@@ -46,6 +44,7 @@ import org.junit.rules.MethodRule;
 import org.junit.runners.model.FrameworkMethod;
 import org.junit.runners.model.Statement;
 import org.mongodb.morphia.converters.TypeConverter;
+import org.springframework.core.convert.converter.Converter;
 
 public class CIManagerRule implements MethodRule, InjectorRuleMixin, MongoRuleMixin {
   ClosingFactory closingFactory;
@@ -96,6 +95,14 @@ public class CIManagerRule implements MethodRule, InjectorRuleMixin, MongoRuleMi
             .addAll(OrchestrationBeansRegistrars.morphiaConverters)
             .build();
       }
+
+      @Provides
+      @Singleton
+      List<Class<? extends Converter<?, ?>>> springConverters() {
+        return ImmutableList.<Class<? extends Converter<?, ?>>>builder()
+            .addAll(CiExecutionRegistrars.springConverters)
+            .build();
+      }
     });
 
     CIManagerConfiguration configuration =
@@ -126,8 +133,6 @@ public class CIManagerRule implements MethodRule, InjectorRuleMixin, MongoRuleMi
     modules.add(new AbstractModule() {
       @Override
       protected void configure() {
-        bind(NgPipelineRepository.class).toInstance(mock(NgPipelineRepository.class));
-        bind(InputSetRepository.class).toInstance(mock(InputSetRepository.class));
         bind(QueueController.class).toInstance(new QueueController() {
           @Override
           public boolean isPrimary() {
@@ -142,7 +147,7 @@ public class CIManagerRule implements MethodRule, InjectorRuleMixin, MongoRuleMi
       }
     });
     modules.add(TestMongoModule.getInstance());
-    modules.add(new CIManagerPersistenceTestModule());
+    modules.add(new SpringPersistenceModule());
     modules.add(new CIManagerServiceModule(configuration));
     return modules;
   }

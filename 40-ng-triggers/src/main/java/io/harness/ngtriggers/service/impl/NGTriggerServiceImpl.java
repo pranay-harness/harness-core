@@ -8,9 +8,9 @@ import io.harness.ngtriggers.beans.entity.NGTriggerEntity.NGTriggerEntityKeys;
 import io.harness.ngtriggers.beans.entity.TriggerWebhookEvent;
 import io.harness.ngtriggers.beans.entity.TriggerWebhookEvent.TriggerWebhookEventsKeys;
 import io.harness.ngtriggers.mapper.TriggerFilterHelper;
-import io.harness.ngtriggers.repository.spring.NGTriggerRepository;
-import io.harness.ngtriggers.repository.spring.TriggerWebhookEventRepository;
 import io.harness.ngtriggers.service.NGTriggerService;
+import io.harness.repositories.ng.core.spring.NGTriggerRepository;
+import io.harness.repositories.ng.core.spring.TriggerWebhookEventRepository;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;

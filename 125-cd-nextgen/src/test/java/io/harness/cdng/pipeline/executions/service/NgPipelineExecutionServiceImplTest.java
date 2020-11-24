@@ -23,7 +23,6 @@ import io.harness.category.element.UnitTests;
 import io.harness.cdng.pipeline.beans.CDPipelineSetupParameters;
 import io.harness.cdng.pipeline.executions.PipelineExecutionHelper;
 import io.harness.cdng.pipeline.executions.beans.PipelineExecutionDetail;
-import io.harness.cdng.pipeline.executions.repositories.PipelineExecutionRepository;
 import io.harness.dto.OrchestrationGraphDTO;
 import io.harness.engine.OrchestrationService;
 import io.harness.engine.executions.node.NodeExecutionService;
@@ -49,6 +48,7 @@ import io.harness.ngpipeline.pipeline.executions.beans.PipelineExecutionSummaryF
 import io.harness.ngpipeline.pipeline.service.NGPipelineService;
 import io.harness.plan.Plan;
 import io.harness.plan.PlanNode;
+import io.harness.repositories.pipeline.PipelineExecutionRepository;
 import io.harness.rule.Owner;
 import io.harness.service.GraphGenerationService;
 

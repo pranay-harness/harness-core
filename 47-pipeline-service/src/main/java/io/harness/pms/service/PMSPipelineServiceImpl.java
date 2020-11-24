@@ -10,7 +10,7 @@ import io.harness.exception.InvalidRequestException;
 import io.harness.pms.beans.entities.PipelineEntity;
 import io.harness.pms.beans.entities.PipelineEntity.PipelineEntityKeys;
 import io.harness.pms.creator.FilterCreatorMergeService;
-import io.harness.pms.repository.spring.PMSPipelineRepository;
+import io.harness.repositories.spring.PMSPipelineRepository;
 
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;

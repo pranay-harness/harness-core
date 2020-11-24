@@ -13,7 +13,6 @@ import io.harness.cdng.pipeline.executions.PipelineExecutionHelper;
 import io.harness.cdng.pipeline.executions.PipelineExecutionHelper.StageIndex;
 import io.harness.cdng.pipeline.executions.beans.PipelineExecutionDetail;
 import io.harness.cdng.pipeline.executions.beans.PipelineExecutionDetail.PipelineExecutionDetailBuilder;
-import io.harness.cdng.pipeline.executions.repositories.PipelineExecutionRepository;
 import io.harness.cdng.pipeline.mappers.ExecutionToDtoMapper;
 import io.harness.cdng.service.beans.ServiceOutcome;
 import io.harness.dto.OrchestrationGraphDTO;
@@ -40,6 +39,7 @@ import io.harness.ngpipeline.pipeline.executions.beans.PipelineExecutionSummaryF
 import io.harness.ngpipeline.pipeline.executions.beans.ServiceExecutionSummary;
 import io.harness.ngpipeline.pipeline.executions.beans.dto.PipelineExecutionInterruptDTO;
 import io.harness.ngpipeline.pipeline.service.NGPipelineService;
+import io.harness.repositories.pipeline.PipelineExecutionRepository;
 import io.harness.service.GraphGenerationService;
 
 import com.google.inject.Inject;

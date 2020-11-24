@@ -34,6 +34,7 @@ import io.harness.mongo.iterator.filter.SpringFilterExpander;
 import io.harness.mongo.iterator.provider.SpringPersistenceProvider;
 import io.harness.persistence.HPersistence;
 import io.harness.pms.execution.Status;
+import io.harness.repositories.BarrierNodeRepository;
 import io.harness.steps.barriers.BarrierStep;
 import io.harness.steps.barriers.beans.BarrierExecutionInstance;
 import io.harness.steps.barriers.beans.BarrierExecutionInstance.BarrierExecutionInstanceKeys;
@@ -42,7 +43,6 @@ import io.harness.waiter.WaitNotifyEngine;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
-import com.google.inject.name.Named;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -63,7 +63,7 @@ public class BarrierServiceImpl implements BarrierService, ForceProctor {
 
   @Inject private PersistenceIteratorFactory persistenceIteratorFactory;
   @Inject private BarrierNodeRepository barrierNodeRepository;
-  @Inject @Named("orchestrationMongoTemplate") private MongoTemplate mongoTemplate;
+  @Inject private MongoTemplate mongoTemplate;
   @Inject private PlanExecutionService planExecutionService;
   @Inject private WaitNotifyEngine waitNotifyEngine;
 

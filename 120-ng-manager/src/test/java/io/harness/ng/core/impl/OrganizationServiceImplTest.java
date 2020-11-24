@@ -25,11 +25,11 @@ import io.harness.connector.apis.dto.ConnectorResponseDTO;
 import io.harness.connector.services.ConnectorService;
 import io.harness.exception.InvalidRequestException;
 import io.harness.ng.core.api.NGSecretManagerService;
-import io.harness.ng.core.api.repositories.spring.OrganizationRepository;
 import io.harness.ng.core.dto.OrganizationDTO;
 import io.harness.ng.core.dto.OrganizationFilterDTO;
 import io.harness.ng.core.entities.Organization;
 import io.harness.ng.core.entities.Organization.OrganizationKeys;
+import io.harness.repositories.core.spring.OrganizationRepository;
 import io.harness.rule.Owner;
 import io.harness.secretmanagerclient.dto.GcpKmsConfigDTO;
 

@@ -18,12 +18,12 @@ import io.harness.exception.DuplicateFieldException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.SecretManagementException;
 import io.harness.ng.core.api.NGSecretManagerService;
-import io.harness.ng.core.api.repositories.spring.OrganizationRepository;
 import io.harness.ng.core.dto.OrganizationDTO;
 import io.harness.ng.core.dto.OrganizationFilterDTO;
 import io.harness.ng.core.entities.Organization;
 import io.harness.ng.core.entities.Organization.OrganizationKeys;
 import io.harness.ng.core.services.OrganizationService;
+import io.harness.repositories.core.spring.OrganizationRepository;
 import io.harness.secretmanagerclient.dto.SecretManagerConfigDTO;
 
 import com.google.common.collect.Lists;

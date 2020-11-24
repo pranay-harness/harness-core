@@ -1,7 +1,5 @@
 package io.harness.executionplan.rule;
 
-import static org.mockito.Mockito.mock;
-
 import io.harness.CIExecutionServiceModule;
 import io.harness.CIExecutionTestModule;
 import io.harness.callback.DelegateCallbackToken;
@@ -11,14 +9,13 @@ import io.harness.factory.ClosingFactory;
 import io.harness.factory.ClosingFactoryModule;
 import io.harness.govern.ServersModule;
 import io.harness.mongo.MongoPersistence;
-import io.harness.ngpipeline.inputset.repository.spring.InputSetRepository;
-import io.harness.ngpipeline.pipeline.repository.spring.NgPipelineRepository;
 import io.harness.persistence.HPersistence;
 import io.harness.queue.QueueController;
 import io.harness.remote.client.ServiceHttpClientConfig;
 import io.harness.rule.InjectorRuleMixin;
 import io.harness.serializer.CiExecutionRegistrars;
 import io.harness.spring.AliasRegistrar;
+import io.harness.springdata.SpringPersistenceModule;
 import io.harness.testlib.module.MongoRuleMixin;
 import io.harness.testlib.module.TestMongoModule;
 import io.harness.threading.CurrentThreadExecutor;
@@ -73,8 +70,6 @@ public class CIExecutionRule implements MethodRule, InjectorRuleMixin, MongoRule
     modules.add(new AbstractModule() {
       @Override
       protected void configure() {
-        bind(NgPipelineRepository.class).toInstance(mock(NgPipelineRepository.class));
-        bind(InputSetRepository.class).toInstance(mock(InputSetRepository.class));
         bind(QueueController.class).toInstance(new QueueController() {
           @Override
           public boolean isPrimary() {
@@ -99,7 +94,7 @@ public class CIExecutionRule implements MethodRule, InjectorRuleMixin, MongoRule
       }
     });
     modules.add(TestMongoModule.getInstance());
-    modules.add(new CIExecutionPersistenceTestModule());
+    modules.add(new SpringPersistenceModule());
     modules.add(new CIExecutionServiceModule(CIExecutionServiceConfig.builder()
                                                  .addonImageTag("v1.4-alpha")
                                                  .defaultCPULimit(200)

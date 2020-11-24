@@ -16,9 +16,9 @@ import io.harness.engine.interrupts.handlers.ResumeAllInterruptHandler;
 import io.harness.exception.InvalidRequestException;
 import io.harness.interrupts.Interrupt;
 import io.harness.interrupts.Interrupt.InterruptKeys;
+import io.harness.repositories.InterruptRepository;
 
 import com.google.inject.Inject;
-import com.google.inject.name.Named;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -32,7 +32,7 @@ import org.springframework.data.mongodb.core.query.Update;
 @Slf4j
 public class InterruptServiceImpl implements InterruptService {
   @Inject private InterruptRepository interruptRepository;
-  @Inject @Named("orchestrationMongoTemplate") private MongoTemplate mongoTemplate;
+  @Inject private MongoTemplate mongoTemplate;
   @Inject private PauseAllInterruptHandler pauseAllInterruptHandler;
   @Inject private ResumeAllInterruptHandler resumeAllInterruptHandler;
 

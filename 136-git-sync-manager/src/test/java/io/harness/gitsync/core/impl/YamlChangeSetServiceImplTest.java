@@ -8,7 +8,7 @@ import io.harness.category.element.UnitTests;
 import io.harness.gitsync.GitSyncBaseTest;
 import io.harness.gitsync.common.beans.YamlChangeSet;
 import io.harness.gitsync.common.beans.YamlChangeSet.Status;
-import io.harness.gitsync.core.dao.api.repositories.YamlChangeSet.YamlChangeSetRepository;
+import io.harness.repositories.yamlChangeSet.YamlChangeSetRepository;
 import io.harness.rule.Owner;
 
 import com.google.inject.Inject;

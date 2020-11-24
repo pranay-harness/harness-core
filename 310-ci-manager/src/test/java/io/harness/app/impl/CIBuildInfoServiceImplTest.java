@@ -17,12 +17,12 @@ import static org.mockito.Mockito.when;
 
 import io.harness.app.beans.dto.CIBuildFilterDTO;
 import io.harness.app.beans.dto.CIBuildResponseDTO;
-import io.harness.app.dao.repositories.CIBuildInfoRepository;
 import io.harness.app.mappers.BuildDtoMapper;
 import io.harness.category.element.UnitTests;
 import io.harness.ci.beans.entities.CIBuild;
 import io.harness.ngpipeline.pipeline.beans.entities.NgPipelineEntity;
 import io.harness.ngpipeline.pipeline.service.NGPipelineService;
+import io.harness.repositories.CIBuildInfoRepository;
 import io.harness.rule.Owner;
 
 import java.util.Arrays;

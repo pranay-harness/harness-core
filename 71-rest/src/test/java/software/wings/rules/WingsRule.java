@@ -51,6 +51,7 @@ import io.harness.serializer.morphia.ManagerTestMorphiaRegistrar;
 import io.harness.serializer.spring.WingsTestSpringAliasRegistrar;
 import io.harness.service.DelegateServiceModule;
 import io.harness.spring.AliasRegistrar;
+import io.harness.springdata.SpringPersistenceModule;
 import io.harness.testlib.RealMongo;
 import io.harness.testlib.module.MongoRuleMixin;
 import io.harness.testlib.module.TestMongoModule;
@@ -84,6 +85,7 @@ import software.wings.security.authentication.MarketPlaceConfig;
 import software.wings.service.impl.EventEmitter;
 
 import com.codahale.metrics.MetricRegistry;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
 import com.google.inject.AbstractModule;
@@ -114,6 +116,7 @@ import org.junit.rules.MethodRule;
 import org.junit.runners.model.FrameworkMethod;
 import org.junit.runners.model.Statement;
 import org.mongodb.morphia.converters.TypeConverter;
+import org.springframework.core.convert.converter.Converter;
 import ru.vyarus.guice.validator.ValidationModule;
 
 @Slf4j
@@ -205,6 +208,14 @@ public class WingsRule implements MethodRule, InjectorRuleMixin, MongoRuleMixin 
       Set<Class<? extends TypeConverter>> morphiaConverters() {
         return ImmutableSet.<Class<? extends TypeConverter>>builder()
             .addAll(ManagerRegistrars.morphiaConverters)
+            .build();
+      }
+
+      @Provides
+      @Singleton
+      List<Class<? extends Converter<?, ?>>> springConverters() {
+        return ImmutableList.<Class<? extends Converter<?, ?>>>builder()
+            .addAll(ManagerRegistrars.springConverters)
             .build();
       }
     });
@@ -351,7 +362,7 @@ public class WingsRule implements MethodRule, InjectorRuleMixin, MongoRuleMixin 
     modules.add(new LicenseModule());
     modules.add(new ValidationModule(validatorFactory));
     modules.add(TestMongoModule.getInstance());
-    modules.add(new WingsPersistenceTestModule());
+    modules.add(new SpringPersistenceModule());
     modules.add(new DelegateServiceModule());
     modules.add(new WingsModule((MainConfiguration) configuration));
     modules.add(new IndexMigratorModule());

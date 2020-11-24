@@ -7,7 +7,7 @@ import io.harness.pms.plan.InitializeSdkRequest;
 import io.harness.pms.plan.InitializeSdkResponse;
 import io.harness.pms.plan.PmsServiceGrpc.PmsServiceImplBase;
 import io.harness.pms.plan.Types;
-import io.harness.pms.repository.spring.PmsSdkInstanceRepository;
+import io.harness.repositories.spring.PmsSdkInstanceRepository;
 
 import com.google.inject.Inject;
 import io.grpc.stub.StreamObserver;

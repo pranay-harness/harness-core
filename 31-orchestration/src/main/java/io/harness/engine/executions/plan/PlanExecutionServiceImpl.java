@@ -12,9 +12,9 @@ import io.harness.exception.InvalidRequestException;
 import io.harness.execution.PlanExecution;
 import io.harness.execution.PlanExecution.PlanExecutionKeys;
 import io.harness.pms.execution.Status;
+import io.harness.repositories.PlanExecutionRepository;
 
 import com.google.inject.Inject;
-import com.google.inject.name.Named;
 import java.util.EnumSet;
 import java.util.function.Consumer;
 import lombok.NonNull;
@@ -28,7 +28,7 @@ import org.springframework.data.mongodb.core.query.Update;
 @Slf4j
 public class PlanExecutionServiceImpl implements PlanExecutionService {
   @Inject private PlanExecutionRepository planExecutionRepository;
-  @Inject @Named("orchestrationMongoTemplate") private MongoTemplate mongoTemplate;
+  @Inject private MongoTemplate mongoTemplate;
 
   @Override
   public PlanExecution save(PlanExecution planExecution) {

@@ -44,6 +44,7 @@ import io.harness.service.impl.DelegateAsyncServiceImpl;
 import io.harness.service.impl.DelegateProgressServiceImpl;
 import io.harness.service.impl.DelegateSyncServiceImpl;
 import io.harness.spring.AliasRegistrar;
+import io.harness.springdata.SpringPersistenceModule;
 import io.harness.waiter.NotifierScheduledExecutorService;
 import io.harness.waiter.NotifyEvent;
 import io.harness.waiter.NotifyQueuePublisherRegister;
@@ -52,6 +53,7 @@ import io.harness.waiter.OrchestrationNotifyEventListener;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.module.SimpleModule;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.inject.AbstractModule;
@@ -93,6 +95,7 @@ import org.glassfish.jersey.server.model.Resource;
 import org.hibernate.validator.parameternameprovider.ReflectionParameterNameProvider;
 import org.mongodb.morphia.converters.TypeConverter;
 import org.reflections.Reflections;
+import org.springframework.core.convert.converter.Converter;
 import ru.vyarus.guice.validator.ValidationModule;
 
 @Slf4j
@@ -190,6 +193,14 @@ public class CIManagerApplication extends Application<CIManagerConfiguration> {
             .addAll(OrchestrationRegistrars.morphiaConverters)
             .build();
       }
+
+      @Provides
+      @Singleton
+      List<Class<? extends Converter<?, ?>>> springConverters() {
+        return ImmutableList.<Class<? extends Converter<?, ?>>>builder()
+            .addAll(OrchestrationRegistrars.springConverters)
+            .build();
+      }
     });
 
     modules.add(new ProviderModule() {
@@ -201,7 +212,7 @@ public class CIManagerApplication extends Application<CIManagerConfiguration> {
     });
 
     modules.add(MongoModule.getInstance());
-    modules.add(new CIPersistenceModule());
+    modules.add(new SpringPersistenceModule());
     addGuiceValidationModule(modules);
     modules.add(new CIManagerServiceModule(configuration));
 

@@ -37,7 +37,7 @@ import org.springframework.data.mongodb.core.query.Update;
 @OwnedBy(CDC)
 @Slf4j
 public class NodeExecutionServiceImpl implements NodeExecutionService {
-  @Inject @Named("orchestrationMongoTemplate") private MongoTemplate mongoTemplate;
+  @Inject private MongoTemplate mongoTemplate;
   @Inject private OrchestrationEventEmitter eventEmitter;
 
   @Override

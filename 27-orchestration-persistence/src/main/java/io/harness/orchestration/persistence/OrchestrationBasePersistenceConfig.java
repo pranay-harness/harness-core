@@ -30,7 +30,7 @@ public abstract class OrchestrationBasePersistenceConfig extends SpringPersisten
 
   @Inject
   public OrchestrationBasePersistenceConfig(Injector injector, Set<Class<? extends AliasRegistrar>> aliasRegistrars,
-      List<Class<? extends Converter>> converters) {
+      List<Class<? extends Converter<?, ?>>> converters) {
     super(injector, converters);
     this.aliasRegistrars = aliasRegistrars;
   }

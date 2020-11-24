@@ -7,8 +7,8 @@ import static org.mockito.Mockito.verify;
 
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
-import io.harness.gitsync.gitsyncerror.dao.api.repositories.gitSyncError.GitSyncErrorRepository;
 import io.harness.gitsync.gitsyncerror.impl.GitSyncErrorServiceImpl;
+import io.harness.repositories.gitSyncError.GitSyncErrorRepository;
 import io.harness.rule.Owner;
 
 import com.google.inject.Inject;

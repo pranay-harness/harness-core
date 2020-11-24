@@ -13,11 +13,11 @@ import io.harness.exception.UnexpectedException;
 import io.harness.ng.core.EntityDetail;
 import io.harness.ng.core.entitysetupusage.dto.EntitySetupUsageDTO;
 import io.harness.ngpipeline.inputset.beans.entities.InputSetEntity;
-import io.harness.ngpipeline.inputset.repository.spring.InputSetRepository;
 import io.harness.ngpipeline.inputset.services.InputSetEntityService;
 import io.harness.ngpipeline.overlayinputset.beans.BaseInputSetEntity;
 import io.harness.ngpipeline.overlayinputset.beans.BaseInputSetEntity.BaseInputSetEntityKeys;
 import io.harness.ngpipeline.pipeline.beans.yaml.NgPipeline;
+import io.harness.repositories.inputset.spring.InputSetRepository;
 import io.harness.walktree.visitor.SimpleVisitorFactory;
 import io.harness.walktree.visitor.entityreference.EntityReferenceExtractorVisitor;
 

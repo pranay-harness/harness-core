@@ -26,9 +26,9 @@ import io.harness.gitsync.gitfileactivity.beans.GitFileActivity.TriggeredBy;
 import io.harness.gitsync.gitfileactivity.beans.GitFileActivitySummary;
 import io.harness.gitsync.gitfileactivity.beans.GitFileActivitySummary.GitFileActivitySummaryBuilder;
 import io.harness.gitsync.gitfileactivity.beans.GitFileProcessingSummary;
-import io.harness.gitsync.gitfileactivity.dao.api.repositories.gitFileActivity.GitFileActivityRepository;
-import io.harness.gitsync.gitfileactivity.dao.api.repositories.gitFileActivitySummary.GitFileActivitySummaryRepository;
 import io.harness.gitsync.gitfileactivity.service.GitSyncService;
+import io.harness.repositories.gitFileActivity.GitFileActivityRepository;
+import io.harness.repositories.gitFileActivitySummary.GitFileActivitySummaryRepository;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Inject;

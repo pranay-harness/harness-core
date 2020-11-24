@@ -26,6 +26,7 @@ import io.harness.serializer.KryoRegistrar;
 import io.harness.serializer.ManagerRegistrars;
 import io.harness.service.DelegateServiceModule;
 import io.harness.spring.AliasRegistrar;
+import io.harness.springdata.SpringPersistenceModule;
 import io.harness.stream.AtmosphereBroadcaster;
 import io.harness.stream.StreamModule;
 import io.harness.threading.ExecutorModule;
@@ -49,6 +50,7 @@ import software.wings.service.impl.DelegateProfileServiceImpl;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.DelegateProfileService;
 
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.inject.AbstractModule;
@@ -74,6 +76,7 @@ import org.eclipse.jetty.server.Connector;
 import org.eclipse.jetty.server.ServerConnector;
 import org.hibernate.validator.parameternameprovider.ReflectionParameterNameProvider;
 import org.mongodb.morphia.converters.TypeConverter;
+import org.springframework.core.convert.converter.Converter;
 import ru.vyarus.guice.validator.ValidationModule;
 
 @Slf4j
@@ -101,7 +104,7 @@ public class DataGenApplication extends Application<MainConfiguration> {
 
     List<Module> modules = new ArrayList<>();
     modules.add(MongoModule.getInstance());
-    modules.add(new DataGenPersistenceModule());
+    modules.add(new SpringPersistenceModule());
     modules.add(new ProviderModule() {
       @Provides
       @Singleton
@@ -130,6 +133,14 @@ public class DataGenApplication extends Application<MainConfiguration> {
       Set<Class<? extends TypeConverter>> morphiaConverters() {
         return ImmutableSet.<Class<? extends TypeConverter>>builder()
             .addAll(ManagerRegistrars.morphiaConverters)
+            .build();
+      }
+
+      @Provides
+      @Singleton
+      List<Class<? extends Converter<?, ?>>> springConverters() {
+        return ImmutableList.<Class<? extends Converter<?, ?>>>builder()
+            .addAll(ManagerRegistrars.springConverters)
             .build();
       }
     });

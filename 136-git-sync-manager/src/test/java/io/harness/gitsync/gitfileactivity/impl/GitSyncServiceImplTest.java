@@ -18,8 +18,8 @@ import io.harness.gitsync.gitfileactivity.beans.GitFileActivity;
 import io.harness.gitsync.gitfileactivity.beans.GitFileActivity.Status;
 import io.harness.gitsync.gitfileactivity.beans.GitFileActivity.TriggeredBy;
 import io.harness.gitsync.gitfileactivity.beans.GitFileActivitySummary;
-import io.harness.gitsync.gitfileactivity.dao.api.repositories.gitFileActivity.GitFileActivityRepository;
-import io.harness.gitsync.gitfileactivity.dao.api.repositories.gitFileActivitySummary.GitFileActivitySummaryRepository;
+import io.harness.repositories.gitFileActivity.GitFileActivityRepository;
+import io.harness.repositories.gitFileActivitySummary.GitFileActivitySummaryRepository;
 import io.harness.rule.Owner;
 
 import com.google.inject.Inject;

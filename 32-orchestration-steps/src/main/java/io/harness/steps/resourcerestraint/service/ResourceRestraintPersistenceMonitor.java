@@ -32,7 +32,7 @@ import org.springframework.data.mongodb.core.MongoTemplate;
 public class ResourceRestraintPersistenceMonitor implements Handler<ResourceRestraintInstance> {
   @Inject private PersistenceIteratorFactory persistenceIteratorFactory;
   @Inject private ResourceRestraintService resourceRestraintService;
-  @Inject @Named("orchestrationMongoTemplate") MongoTemplate mongoTemplate;
+  @Inject MongoTemplate mongoTemplate;
 
   public void registerIterators() {
     PumpExecutorOptions executorOptions = PumpExecutorOptions.builder()

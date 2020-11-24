@@ -13,9 +13,9 @@ import io.harness.gitsync.common.beans.GitFileLocation;
 import io.harness.gitsync.common.dtos.GitSyncEntityListDTO;
 import io.harness.gitsync.common.dtos.GitSyncProductDTO;
 import io.harness.gitsync.common.impl.GitEntityServiceImpl;
-import io.harness.gitsync.core.dao.api.repositories.GitFileLocation.GitFileLocationRepository;
 import io.harness.ng.beans.PageResponse;
 import io.harness.ng.core.dto.ResponseDTO;
+import io.harness.repositories.gitFileLocation.GitFileLocationRepository;
 import io.harness.rule.Owner;
 
 import com.google.inject.Inject;

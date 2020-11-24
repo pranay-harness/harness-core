@@ -4,8 +4,8 @@ import static io.harness.gitsync.core.beans.GitCommit.GIT_COMMIT_ALL_STATUS_LIST
 import static io.harness.gitsync.core.beans.GitCommit.GIT_COMMIT_PROCESSED_STATUS;
 
 import io.harness.gitsync.core.beans.GitCommit;
-import io.harness.gitsync.core.dao.api.repositories.GitCommit.GitCommitRepository;
 import io.harness.gitsync.core.service.GitCommitService;
+import io.harness.repositories.gitCommit.GitCommitRepository;
 
 import com.google.inject.Inject;
 import java.util.List;

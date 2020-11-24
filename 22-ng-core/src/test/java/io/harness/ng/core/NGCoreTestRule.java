@@ -9,12 +9,14 @@ import io.harness.serializer.KryoModule;
 import io.harness.serializer.KryoRegistrar;
 import io.harness.serializer.NGCoreRegistrars;
 import io.harness.serializer.PersistenceRegistrars;
+import io.harness.springdata.SpringPersistenceModule;
 import io.harness.testlib.module.MongoRuleMixin;
 import io.harness.testlib.module.TestMongoModule;
 import io.harness.threading.CurrentThreadExecutor;
 import io.harness.threading.ExecutorModule;
 import io.harness.time.TimeModule;
 
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.inject.AbstractModule;
 import com.google.inject.Module;
@@ -29,6 +31,7 @@ import org.junit.rules.MethodRule;
 import org.junit.runners.model.FrameworkMethod;
 import org.junit.runners.model.Statement;
 import org.mongodb.morphia.converters.TypeConverter;
+import org.springframework.core.convert.converter.Converter;
 
 public class NGCoreTestRule implements InjectorRuleMixin, MethodRule, MongoRuleMixin {
   @Override
@@ -63,6 +66,14 @@ public class NGCoreTestRule implements InjectorRuleMixin, MethodRule, MongoRuleM
             .addAll(PersistenceRegistrars.morphiaConverters)
             .build();
       }
+
+      @Provides
+      @Singleton
+      List<Class<? extends Converter<?, ?>>> springConverters() {
+        return ImmutableList.<Class<? extends Converter<?, ?>>>builder()
+            .addAll(NGCoreRegistrars.springConverters)
+            .build();
+      }
     });
 
     modules.add(new AbstractModule() {
@@ -74,7 +85,7 @@ public class NGCoreTestRule implements InjectorRuleMixin, MethodRule, MongoRuleM
     modules.add(TimeModule.getInstance());
     modules.add(NGCoreModule.getInstance());
     modules.add(TestMongoModule.getInstance());
-    modules.add(new NGCorePersistenceTestModule());
+    modules.add(new SpringPersistenceModule());
     modules.add(mongoTypeModule(annotations));
     return modules;
   }

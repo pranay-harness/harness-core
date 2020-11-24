@@ -14,15 +14,19 @@ import io.harness.security.ServiceTokenGenerator;
 import io.harness.serializer.CiExecutionRegistrars;
 import io.harness.serializer.KryoRegistrar;
 import io.harness.serializer.OrchestrationBeansRegistrars;
+import io.harness.serializer.OrchestrationRegistrars;
 import io.harness.serializer.PersistenceRegistrars;
 
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
+import java.util.List;
 import java.util.Set;
 import org.mongodb.morphia.converters.TypeConverter;
+import org.springframework.core.convert.converter.Converter;
 
 public class CIExecutionTestModule extends AbstractModule {
   @Provides
@@ -45,6 +49,14 @@ public class CIExecutionTestModule extends AbstractModule {
     return ImmutableSet.<Class<? extends TypeConverter>>builder()
         .addAll(PersistenceRegistrars.morphiaConverters)
         .addAll(OrchestrationBeansRegistrars.morphiaConverters)
+        .build();
+  }
+
+  @Provides
+  @Singleton
+  List<Class<? extends Converter<?, ?>>> springConverters() {
+    return ImmutableList.<Class<? extends Converter<?, ?>>>builder()
+        .addAll(OrchestrationRegistrars.springConverters)
         .build();
   }
 

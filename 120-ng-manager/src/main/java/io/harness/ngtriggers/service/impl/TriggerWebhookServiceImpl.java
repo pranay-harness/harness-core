@@ -17,9 +17,9 @@ import io.harness.ngtriggers.beans.entity.TriggerWebhookEvent.TriggerWebhookEven
 import io.harness.ngtriggers.beans.webhookresponse.WebhookEventResponse;
 import io.harness.ngtriggers.helpers.NGTriggerWebhookExecutionHelper;
 import io.harness.ngtriggers.helpers.WebhookEventResponseHelper;
-import io.harness.ngtriggers.repository.TriggerEventHistoryRepository;
 import io.harness.ngtriggers.service.NGTriggerService;
 import io.harness.ngtriggers.service.TriggerWebhookService;
+import io.harness.repositories.ngtriggers.TriggerEventHistoryRepository;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;

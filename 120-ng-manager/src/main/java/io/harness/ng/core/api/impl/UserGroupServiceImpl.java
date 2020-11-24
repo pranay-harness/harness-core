@@ -8,12 +8,12 @@ import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 import io.harness.exception.DuplicateFieldException;
 import io.harness.ng.core.api.UserGroupService;
-import io.harness.ng.core.api.repositories.spring.UserGroupRepository;
 import io.harness.ng.core.dto.NotificationSettingType;
 import io.harness.ng.core.dto.UserGroupDTO;
 import io.harness.ng.core.entities.NotificationSettingConfig;
 import io.harness.ng.core.entities.UserGroup;
 import io.harness.ng.core.entities.UserGroup.UserGroupKeys;
+import io.harness.repositories.ng.core.spring.UserGroupRepository;
 
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;

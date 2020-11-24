@@ -10,6 +10,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import io.harness.OrchestrationStepsTestBase;
 import io.harness.category.element.UnitTests;
 import io.harness.exception.InvalidRequestException;
+import io.harness.repositories.BarrierNodeRepository;
 import io.harness.rule.Owner;
 import io.harness.steps.barriers.beans.BarrierExecutionInstance;
 import io.harness.testlib.RealMongo;

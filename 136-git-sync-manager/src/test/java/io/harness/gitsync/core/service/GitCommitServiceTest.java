@@ -9,8 +9,8 @@ import static org.mockito.Mockito.verify;
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.gitsync.core.beans.GitCommit;
-import io.harness.gitsync.core.dao.api.repositories.GitCommit.GitCommitRepository;
 import io.harness.gitsync.core.impl.GitCommitServiceImpl;
+import io.harness.repositories.gitCommit.GitCommitRepository;
 import io.harness.rule.Owner;
 
 import com.google.inject.Inject;

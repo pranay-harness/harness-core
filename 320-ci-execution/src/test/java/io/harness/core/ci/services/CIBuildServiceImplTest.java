@@ -9,8 +9,8 @@ import static org.mockito.Mockito.when;
 
 import io.harness.category.element.UnitTests;
 import io.harness.ci.beans.entities.CIBuild;
-import io.harness.ci.execution.dao.CIBuildRepository;
 import io.harness.executionplan.CIExecutionTest;
+import io.harness.repositories.CIBuildRepository;
 import io.harness.rule.Owner;
 
 import org.junit.Test;
