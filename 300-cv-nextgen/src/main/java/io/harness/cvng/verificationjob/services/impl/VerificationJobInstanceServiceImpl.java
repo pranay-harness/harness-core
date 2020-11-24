@@ -17,6 +17,7 @@ import io.harness.cvng.activity.beans.DeploymentActivityResultDTO.DeploymentResu
 import io.harness.cvng.activity.beans.DeploymentActivityResultDTO.DeploymentVerificationJobInstanceSummary;
 import io.harness.cvng.activity.beans.DeploymentActivityVerificationResultDTO;
 import io.harness.cvng.analysis.services.api.DeploymentAnalysisService;
+import io.harness.cvng.beans.DataCollectionConnectorBundle;
 import io.harness.cvng.beans.DataCollectionInfo;
 import io.harness.cvng.beans.DataCollectionType;
 import io.harness.cvng.client.NextGenService;
@@ -201,7 +202,8 @@ public class VerificationJobInstanceServiceImpl implements VerificationJobInstan
       params.put(DataCollectionTaskKeys.dataCollectionWorkerId, dataCollectionWorkerId);
       params.put(CVConfigKeys.connectorIdentifier, connectorIdentifier);
       perpetualTaskIds.add(verificationManagerService.createDataCollectionTask(verificationJobInstance.getAccountId(),
-          verificationJob.getOrgIdentifier(), verificationJob.getProjectIdentifier(), DataCollectionType.CV, params));
+          verificationJob.getOrgIdentifier(), verificationJob.getProjectIdentifier(),
+          DataCollectionConnectorBundle.builder().params(params).dataCollectionType(DataCollectionType.CV).build()));
     });
     createDataCollectionTasks(verificationJobInstance, verificationJob, cvConfigs);
     markRunning(verificationJobInstance.getUuid());

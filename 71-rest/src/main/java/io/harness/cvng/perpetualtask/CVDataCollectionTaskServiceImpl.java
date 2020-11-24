@@ -9,8 +9,6 @@ import io.harness.cvng.beans.CVDataCollectionInfo;
 import io.harness.cvng.beans.DataCollectionConnectorBundle;
 import io.harness.cvng.beans.DataCollectionRequest;
 import io.harness.cvng.beans.K8ActivityDataCollectionInfo;
-import io.harness.cvng.beans.KubernetesActivitySourceDTO;
-import io.harness.cvng.beans.KubernetesActivitySourceDTO.KubernetesActivitySourceDTOKeys;
 import io.harness.delegate.Capability;
 import io.harness.delegate.beans.connector.k8Connector.KubernetesClusterConfigDTO;
 import io.harness.delegate.beans.connector.k8Connector.KubernetesClusterDetailsDTO;
@@ -114,11 +112,7 @@ public class CVDataCollectionTaskServiceImpl implements CVDataCollectionTaskServ
             .connectorConfigDTO(bundle.getConnectorDTO().getConnectorConfig())
             .encryptedDataDetails(encryptedDataDetailList)
             .dataCollectionType(bundle.getDataCollectionType())
-            .activitySourceDTO(KubernetesActivitySourceDTO.builder()
-                                   .namespace(bundle.getParams().get(KubernetesActivitySourceDTOKeys.namespace))
-                                   .clusterName(bundle.getParams().get(KubernetesActivitySourceDTOKeys.clusterName))
-                                   .workloadName(bundle.getParams().get(KubernetesActivitySourceDTOKeys.workloadName))
-                                   .build())
+            .activitySourceDTO(bundle.getActivitySourceDTO())
             .build();
     List<ExecutionCapability> executionCapabilities = Collections.emptyList();
     K8ActivityCollectionPerpetualTaskParams params =

@@ -3,9 +3,9 @@ package io.harness.cvng.activity.resources;
 import static io.harness.cvng.core.services.CVNextGenConstants.KUBERNETES_RESOURCE;
 
 import io.harness.annotations.ExposeInternalException;
-import io.harness.cvng.activity.beans.KubernetesActivitySourceDTO;
 import io.harness.cvng.activity.services.api.KubernetesActivitySourceService;
 import io.harness.cvng.beans.KubernetesActivityDTO;
+import io.harness.cvng.beans.activity.KubernetesActivitySourceDTO;
 import io.harness.ng.beans.PageResponse;
 import io.harness.rest.RestResponse;
 import io.harness.security.annotations.DelegateAuth;
@@ -19,6 +19,7 @@ import io.swagger.annotations.ApiOperation;
 import java.util.List;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
+import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
@@ -47,18 +48,31 @@ public class KubernetesActivityResource {
         accountId, orgIdentifier, projectIdentifier, activitySourceDTO));
   }
 
-  @POST
+  @GET
   @Timed
   @ExceptionMetered
   @NextGenManagerAuth
-  @Path("/sources")
-  @ApiOperation(value = "register a list of kubernetes event sources", nickname = "registerKubernetesSources")
-  public RestResponse<List<String>> registerKubernetesSources(@QueryParam("accountId") @NotNull String accountId,
+  @Path("/source")
+  @ApiOperation(value = "lists all kubernetes event sources", nickname = "listKubernetesSources")
+  public RestResponse<List<KubernetesActivitySourceDTO>> listKubernetesSources(
+      @QueryParam("accountId") @NotNull String accountId, @QueryParam("orgIdentifier") @NotNull String orgIdentifier,
+      @QueryParam("projectIdentifier") @NotNull String projectIdentifier) {
+    return new RestResponse<>(
+        kubernetesActivitySourceService.listKubernetesSources(accountId, orgIdentifier, projectIdentifier));
+  }
+
+  @DELETE
+  @Timed
+  @ExceptionMetered
+  @NextGenManagerAuth
+  @Path("/source")
+  @ApiOperation(value = "deletes a kubernetes event source", nickname = "deleteKubernetesSource")
+  public RestResponse<Boolean> deleteKubernetesSource(@QueryParam("accountId") @NotNull String accountId,
       @QueryParam("orgIdentifier") @NotNull String orgIdentifier,
       @QueryParam("projectIdentifier") @NotNull String projectIdentifier,
-      @Body @NotNull List<KubernetesActivitySourceDTO> activitySourceDTOs) {
-    return new RestResponse<>(kubernetesActivitySourceService.saveKubernetesSources(
-        accountId, orgIdentifier, projectIdentifier, activitySourceDTOs));
+      @QueryParam("identifier") @NotNull String identifier) {
+    return new RestResponse<>(kubernetesActivitySourceService.deleteKubernetesSource(
+        accountId, orgIdentifier, projectIdentifier, identifier));
   }
 
   @POST

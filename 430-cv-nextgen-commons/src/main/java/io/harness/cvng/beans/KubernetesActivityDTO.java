@@ -12,9 +12,9 @@ import lombok.experimental.SuperBuilder;
 @JsonTypeName("INFRASTRUCTURE")
 @EqualsAndHashCode(callSuper = true)
 public class KubernetesActivityDTO extends ActivityDTO {
-  String clusterName;
-  String activityDescription;
+  String message;
   String activitySourceConfigId;
+  String json;
 
   @Override
   public ActivityType getType() {

@@ -21,21 +21,22 @@ import lombok.experimental.FieldNameConstants;
 @AllArgsConstructor
 @EqualsAndHashCode(callSuper = true)
 public class KubernetesActivity extends InfrastructureActivity {
-  private String clusterName;
-  private String activityDescription;
+  private String message;
+  private String json;
 
   @Override
   public void fromDTO(ActivityDTO activityDTO) {
     Preconditions.checkState(activityDTO instanceof KubernetesActivityDTO);
     KubernetesActivityDTO kubernetesActivityDTO = (KubernetesActivityDTO) activityDTO;
-    setClusterName(kubernetesActivityDTO.getClusterName());
-    setActivityDescription(kubernetesActivityDTO.getActivityDescription());
+    setMessage(kubernetesActivityDTO.getMessage());
+    setJson(kubernetesActivityDTO.getJson());
     setType(ActivityType.INFRASTRUCTURE);
     addCommonFileds(activityDTO);
   }
 
   @Override
   public void validateActivityParams() {
-    Preconditions.checkNotNull(clusterName, generateErrorMessageFromParam(KubernetesActivityKeys.clusterName));
+    Preconditions.checkNotNull(message, generateErrorMessageFromParam(KubernetesActivityKeys.message));
+    Preconditions.checkNotNull(json, generateErrorMessageFromParam(KubernetesActivityKeys.json));
   }
 }

@@ -1,5 +1,7 @@
 package io.harness.cvng.beans;
 
+import io.harness.cvng.beans.activity.KubernetesActivitySourceDTO;
+
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
