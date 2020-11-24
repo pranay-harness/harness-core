@@ -28,7 +28,7 @@ public class YamlSnippetProvider {
 
   /**
    * @param tags
-   * @return metadata which contains all the tags.
+   * @return metadata {@link YamlSnippetMetaDataDTO} which contains all the tags.
    */
   public YamlSnippetsDTO getYamlSnippetMetaData(List<String> tags) {
     Set<YamlSnippetMetaData> yamlSnippetMetaData = getYamlSnippetMetaDataContainingTag(tags);
@@ -44,6 +44,7 @@ public class YamlSnippetProvider {
                        .version(snippet.getVersion())
                        .identifier(yamlSnippetHelper.getIdentifier(snippet))
                        .tags(snippet.getTags())
+                       .iconTag(snippet.getIconTag())
                        .build())
             .collect(Collectors.toList());
     return YamlSnippetsDTO.builder().yamlSnippets(yamlSnippetMetaDataDTOS).build();
@@ -68,7 +69,7 @@ public class YamlSnippetProvider {
 
   /**
    * @param identifier {@link YamlSnippetMetaDataDTO}
-   * @return Snippet
+   * @return Snippet as plain string reading resource file given in XML config.
    */
   public String getYamlSnippet(String identifier) {
     final Map<String, YamlSnippetMetaData> identifierSnippetMap = yamlSnippetHelper.getIdentifierSnippetMap();

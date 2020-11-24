@@ -31,7 +31,7 @@ public class NextGenConfiguration extends Configuration {
   public static final String CDNG_RESOURCES_PACKAGE = "io.harness.cdng";
   public static final String OVERLAY_INPUT_SET_RESOURCE_PACKAGE = "io.harness.ngpipeline";
   public static final String NG_TRIGGER_RESOURCE_PACKAGE = "io.harness.ngtriggers";
-  public static final String YAML_SNIPPET_PACKAGE = "io.harness.yaml";
+  public static final String YAML_SNIPPET_PACKAGE = "io.harness.yaml.snippets";
   @JsonProperty("swagger") private SwaggerBundleConfiguration swaggerBundleConfiguration;
   @JsonProperty("mongo") private MongoConfig mongoConfig;
   @JsonProperty("allowedOrigins") private List<String> allowedOrigins = Lists.newArrayList();
@@ -47,8 +47,6 @@ public class NextGenConfiguration extends Configuration {
   @JsonProperty("pmsSdkGrpcServerConfig") private GrpcServerConfig pmsSdkGrpcServerConfig;
   @JsonProperty("pmsGrpcClientConfig") private GrpcClientConfig pmsGrpcClientConfig;
   @JsonProperty("shouldConfigureWithPMS") private Boolean shouldConfigureWithPMS;
-
-  @JsonProperty("yamlSnippetMetadataResourcePath") private String yamlSnippetMetadataResourcePath;
 
   private ScmConnectionConfig scmConnectionConfig;
   // [secondary-db]: Uncomment this and the corresponding config in yaml file if you want to connect to another database

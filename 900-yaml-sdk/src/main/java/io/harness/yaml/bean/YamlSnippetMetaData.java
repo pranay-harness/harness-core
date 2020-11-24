@@ -32,4 +32,8 @@ public class YamlSnippetMetaData {
    * Resource Path of Yaml Snippet.
    */
   String resourcePath;
+  /**
+   * icon for the tag which UI will display.
+   */
+  String iconTag;
 }

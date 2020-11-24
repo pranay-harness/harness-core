@@ -10,6 +10,7 @@
                 <tag>k8s</tag>
                 <tag>connector</tag>
             </tags>
+            <iconTag>k8s</iconTag>
             <resourcePath>snippets/k8s/clientKey.yaml</resourcePath>
         </YamlSnippetMetaData>
         <!--/Repeating unit-->
@@ -23,6 +24,7 @@
                 <tag>k8s</tag>
                 <tag>connector</tag>
             </tags>
+            <iconTag>k8s</iconTag>
             <resourcePath>snippets/k8s/usernamePass.yaml</resourcePath>
         </YamlSnippetMetaData>
         <!--/Repeating unit-->
@@ -36,6 +38,7 @@
                 <tag>k8s</tag>
                 <tag>connector</tag>
             </tags>
+            <iconTag>k8s</iconTag>
             <resourcePath>snippets/k8s/openIdConnect.yaml</resourcePath>
         </YamlSnippetMetaData>
         <!--/Repeating unit-->
@@ -49,6 +52,7 @@
                 <tag>k8s</tag>
                 <tag>connector</tag>
             </tags>
+            <iconTag>k8s</iconTag>
             <resourcePath>snippets/k8s/inheritFromDelegate.yaml</resourcePath>
         </YamlSnippetMetaData>
         <!--/Repeating unit-->
@@ -62,6 +66,7 @@
                 <tag>k8s</tag>
                 <tag>connector</tag>
             </tags>
+            <iconTag>k8s</iconTag>
             <resourcePath>snippets/k8s/serviceAccountKey.yaml</resourcePath>
         </YamlSnippetMetaData>
         <!--/Repeating unit-->
@@ -75,6 +80,7 @@
                 <tag>docker</tag>
                 <tag>connector</tag>
             </tags>
+            <iconTag>docker</iconTag>
             <resourcePath>snippets/docker/usernamepass.yaml</resourcePath>
         </YamlSnippetMetaData>
         <!--/Repeating unit-->
@@ -88,6 +94,7 @@
                 <tag>git</tag>
                 <tag>connector</tag>
             </tags>
+            <iconTag>git</iconTag>
             <resourcePath>snippets/git/http.yaml</resourcePath>
         </YamlSnippetMetaData>
         <!--/Repeating unit-->
@@ -101,6 +108,7 @@
                 <tag>git</tag>
                 <tag>connector</tag>
             </tags>
+            <iconTag>git</iconTag>
             <resourcePath>snippets/git/ssh.yaml</resourcePath>
         </YamlSnippetMetaData>
         <!--/Repeating unit-->
@@ -114,6 +122,7 @@
                 <tag>secretmanager</tag>
                 <tag>connector</tag>
             </tags>
+            <iconTag>secretmanager</iconTag>
             <resourcePath>snippets/secretManager/hashicorp.yaml</resourcePath>
         </YamlSnippetMetaData>
         <!--/Repeating unit-->
