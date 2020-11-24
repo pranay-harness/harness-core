@@ -10,6 +10,7 @@ import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyListOf;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
+import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
@@ -21,7 +22,7 @@ import io.harness.context.ContextElementType;
 import io.harness.delegate.beans.DelegateMetaInfo;
 import io.harness.delegate.task.azure.AzureTaskExecutionResponse;
 import io.harness.delegate.task.azure.appservice.AzureAppServicePreDeploymentData;
-import io.harness.delegate.task.azure.appservice.webapp.response.AzureWebAppSlotResizeResponse;
+import io.harness.delegate.task.azure.appservice.webapp.response.AzureWebAppSlotShiftTrafficResponse;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.rule.Owner;
 import io.harness.security.encryption.EncryptedDataDetail;
@@ -58,6 +59,7 @@ import org.mockito.stubbing.Answer;
 public class AzureWebAppSlotShiftTrafficTest extends WingsBaseTest {
   @Mock protected transient DelegateService delegateService;
   @Mock protected transient AzureVMSSStateHelper azureVMSSStateHelper;
+  @Mock protected transient AzureSweepingOutputServiceHelper azureSweepingOutputServiceHelper;
   @Mock protected ActivityService activityService;
   @Spy @InjectMocks AzureWebAppSlotShiftTraffic state = new AzureWebAppSlotShiftTraffic("Slot Traffic shift state");
 
@@ -168,6 +170,7 @@ public class AzureWebAppSlotShiftTrafficTest extends WingsBaseTest {
         .when(azureVMSSStateHelper)
         .createAndSaveActivity(any(), any(), anyString(), anyString(), any(), anyListOf(CommandUnit.class));
     doReturn(managerExecutionLogCallback).when(azureVMSSStateHelper).getExecutionLogCallback(activity);
+    doNothing().when(azureSweepingOutputServiceHelper).saveInstanceInfoToSweepingOutput(mockContext, 20);
 
     if (contextElement) {
       doReturn(trafficShiftContextElement)
@@ -194,15 +197,15 @@ public class AzureWebAppSlotShiftTrafficTest extends WingsBaseTest {
   }
 
   private AzureTaskExecutionResponse initializeDelegateResponse(boolean isSuccess) {
-    AzureWebAppSlotResizeResponse appSlotResizeResponse =
-        AzureWebAppSlotResizeResponse.builder()
+    AzureWebAppSlotShiftTrafficResponse alotShiftTrafficResponse =
+        AzureWebAppSlotShiftTrafficResponse.builder()
             .preDeploymentData(AzureAppServicePreDeploymentData.builder().build())
             .build();
     AzureTaskExecutionResponse taskExecutionResponse =
         AzureTaskExecutionResponse.builder()
             .delegateMetaInfo(DelegateMetaInfo.builder().build())
             .commandExecutionStatus(isSuccess ? CommandExecutionStatus.SUCCESS : CommandExecutionStatus.FAILURE)
-            .azureTaskResponse(appSlotResizeResponse)
+            .azureTaskResponse(alotShiftTrafficResponse)
             .build();
     doReturn(isSuccess ? SUCCESS : FAILED)
         .when(azureVMSSStateHelper)

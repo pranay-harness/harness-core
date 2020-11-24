@@ -1,16 +1,13 @@
 package software.wings.sm.states.azure.appservices;
 
-import static io.harness.delegate.task.azure.appservice.AzureAppServiceTaskParameters.AzureAppServiceTaskType.SLOT_TRAFFIC_SHIFT;
-import static io.harness.delegate.task.azure.appservice.AzureAppServiceTaskParameters.AzureAppServiceType.WEB_APP;
-
 import static software.wings.beans.command.CommandUnitDetails.CommandUnitType.AZURE_APP_SERVICE_SLOT_TRAFFIC_SHIFT;
 import static software.wings.sm.StateType.AZURE_WEBAPP_SLOT_SHIFT_TRAFFIC;
 
 import io.harness.beans.ExecutionStatus;
 import io.harness.delegate.task.azure.AzureTaskExecutionResponse;
 import io.harness.delegate.task.azure.appservice.AzureAppServicePreDeploymentData;
-import io.harness.delegate.task.azure.appservice.webapp.request.AzureWebAppSlotResizeParameters;
-import io.harness.delegate.task.azure.appservice.webapp.response.AzureWebAppSlotResizeResponse;
+import io.harness.delegate.task.azure.appservice.webapp.request.AzureWebAppSlotShiftTrafficParameters;
+import io.harness.delegate.task.azure.appservice.webapp.response.AzureWebAppSlotShiftTrafficResponse;
 
 import software.wings.beans.Activity;
 import software.wings.beans.command.CommandUnit;
@@ -41,13 +38,13 @@ public class AzureWebAppSlotShiftTraffic extends AbstractAzureAppServiceState {
   @Override
   protected void emitAnyDataForExternalConsumption(
       ExecutionContext context, AzureTaskExecutionResponse executionResponse) {
-    azureVMSSStateHelper.saveInstanceInfoToSweepingOutput(context, renderTrafficWeight(context));
+    azureSweepingOutputServiceHelper.saveInstanceInfoToSweepingOutput(context, renderTrafficWeight(context));
   }
 
   @Override
   protected AzureTaskExecutionRequest buildTaskExecutionRequest(
       ExecutionContext context, AzureAppServiceStateData azureAppServiceStateData, Activity activity) {
-    AzureWebAppSlotResizeParameters trafficShiftParams =
+    AzureWebAppSlotShiftTrafficParameters trafficShiftParams =
         buildTrafficShiftParams(context, azureAppServiceStateData, activity);
 
     return AzureTaskExecutionRequest.builder()
@@ -72,8 +69,8 @@ public class AzureWebAppSlotShiftTraffic extends AbstractAzureAppServiceState {
   @Override
   protected StateExecutionData buildPostStateExecutionData(
       ExecutionContext context, AzureTaskExecutionResponse executionResponse, ExecutionStatus executionStatus) {
-    AzureWebAppSlotResizeResponse slotSetupTaskResponse =
-        (AzureWebAppSlotResizeResponse) executionResponse.getAzureTaskResponse();
+    AzureWebAppSlotShiftTrafficResponse slotSetupTaskResponse =
+        (AzureWebAppSlotShiftTrafficResponse) executionResponse.getAzureTaskResponse();
 
     AzureAppServiceSlotShiftTrafficExecutionData stateExecutionData = context.getStateExecutionData();
     stateExecutionData.setStatus(executionStatus);
@@ -86,8 +83,8 @@ public class AzureWebAppSlotShiftTraffic extends AbstractAzureAppServiceState {
 
   @Override
   protected ContextElement buildContextElement(ExecutionContext context, AzureTaskExecutionResponse executionResponse) {
-    AzureWebAppSlotResizeResponse slotTrafficShiftResponse =
-        (AzureWebAppSlotResizeResponse) executionResponse.getAzureTaskResponse();
+    AzureWebAppSlotShiftTrafficResponse slotTrafficShiftResponse =
+        (AzureWebAppSlotShiftTrafficResponse) executionResponse.getAzureTaskResponse();
     AzureAppServiceSlotShiftTrafficExecutionData stateExecutionData = context.getStateExecutionData();
     AzureAppServicePreDeploymentData preDeploymentData = slotTrafficShiftResponse.getPreDeploymentData();
 
@@ -128,23 +125,21 @@ public class AzureWebAppSlotShiftTraffic extends AbstractAzureAppServiceState {
     return "No Azure App service setup context element found. Skipping traffic shifting";
   }
 
-  private AzureWebAppSlotResizeParameters buildTrafficShiftParams(
+  private AzureWebAppSlotShiftTrafficParameters buildTrafficShiftParams(
       ExecutionContext context, AzureAppServiceStateData azureAppServiceStateData, Activity activity) {
     AzureAppServiceSlotSetupContextElement contextElement = getContextElement(context);
 
-    return AzureWebAppSlotResizeParameters.builder()
+    return AzureWebAppSlotShiftTrafficParameters.builder()
         .accountId(azureAppServiceStateData.getApplication().getAccountId())
         .appId(azureAppServiceStateData.getApplication().getAppId())
         .activityId(activity.getUuid())
         .commandName(APP_SERVICE_SLOT_TRAFFIC_SHIFT)
-        .appServiceType(WEB_APP)
-        .commandType(SLOT_TRAFFIC_SHIFT)
         .timeoutIntervalInMin(contextElement.getAppServiceSlotSetupTimeOut())
         .subscriptionId(azureAppServiceStateData.getSubscriptionId())
         .resourceGroupName(azureAppServiceStateData.getResourceGroup())
         .webAppName(azureAppServiceStateData.getAppService())
-        .slotName(azureAppServiceStateData.getDeploymentSlot())
-        .trafficWeight(renderTrafficWeight(context))
+        .shiftTrafficSlotName(azureAppServiceStateData.getDeploymentSlot())
+        .trafficWeightInPercentage(renderTrafficWeight(context))
         .isRollback(isRollback())
         .preDeploymentData(contextElement.getPreDeploymentData())
         .build();

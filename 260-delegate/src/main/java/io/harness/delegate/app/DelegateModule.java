@@ -203,6 +203,8 @@ import software.wings.delegatetasks.azure.appservice.AzureAppServiceTask;
 import software.wings.delegatetasks.azure.appservice.webapp.taskhandler.AzureWebAppListWebAppDeploymentSlotNamesTaskHandler;
 import software.wings.delegatetasks.azure.appservice.webapp.taskhandler.AzureWebAppListWebAppNamesTaskHandler;
 import software.wings.delegatetasks.azure.appservice.webapp.taskhandler.AzureWebAppSlotSetupTaskHandler;
+import software.wings.delegatetasks.azure.appservice.webapp.taskhandler.AzureWebAppSlotShiftTrafficTaskHandler;
+import software.wings.delegatetasks.azure.appservice.webapp.taskhandler.AzureWebAppSlotSwapTaskHandler;
 import software.wings.delegatetasks.cloudformation.CloudFormationCommandTask;
 import software.wings.delegatetasks.collect.artifacts.AmazonS3CollectionTask;
 import software.wings.delegatetasks.collect.artifacts.ArtifactoryCollectionTask;
@@ -870,6 +872,10 @@ public class DelegateModule extends AbstractModule {
         .to(AzureWebAppListWebAppDeploymentSlotNamesTaskHandler.class);
     azureAppServiceTaskTypeToTaskHandlerMap.addBinding(AzureAppServiceTaskType.SLOT_SETUP.name())
         .to(AzureWebAppSlotSetupTaskHandler.class);
+    azureAppServiceTaskTypeToTaskHandlerMap.addBinding(AzureAppServiceTaskType.SLOT_SHIFT_TRAFFIC.name())
+        .to(AzureWebAppSlotShiftTrafficTaskHandler.class);
+    azureAppServiceTaskTypeToTaskHandlerMap.addBinding(AzureAppServiceTaskType.SLOT_SWAP.name())
+        .to(AzureWebAppSlotSwapTaskHandler.class);
 
     registerSecretManagementBindings();
     registerConnectorValidatorsBindings();

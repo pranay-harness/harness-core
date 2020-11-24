@@ -217,10 +217,10 @@ public class AzureAppServiceDeploymentService {
     startLogCallback.saveExecutionLog("Request sent successfully");
 
     startLogCallback.saveExecutionLog(format("Starting [%s] deployment slot", deploymentSlot.name()));
-    Supplier<String> getSlotStatus = () -> {
+    Supplier<Void> getSlotStatus = () -> {
       String slotState = deploymentSlot.state();
       startLogCallback.saveExecutionLog(format("Current [%s] deployment slot state [%s]", slotName, slotState));
-      return slotState;
+      return null;
     };
 
     azureTimeLimiter.waitUntilCompleteWithTimeout(slotStartingSteadyStateTimeoutInMinutes,
@@ -239,10 +239,10 @@ public class AzureAppServiceDeploymentService {
     stopLogCallback.saveExecutionLog("Request sent successfully");
 
     stopLogCallback.saveExecutionLog(format("Stopping [%s] deployment slot", slotName));
-    Supplier<String> getSlotStatus = () -> {
+    Supplier<Void> getSlotStatus = () -> {
       String slotState = deploymentSlot.state();
       stopLogCallback.saveExecutionLog(format("Current [%s] deployment slot state [%s]", slotName, slotState));
-      return slotState;
+      return null;
     };
 
     azureTimeLimiter.waitUntilCompleteWithTimeout(slotStartingSteadyStateTimeoutInMinutes,
@@ -297,7 +297,7 @@ public class AzureAppServiceDeploymentService {
       log.info(
           "Resource group name is blank, start filtering subscription by container registry name: {}, subscriptionId: {}",
           azureRegistryName, subscriptionId);
-      Optional<Registry> registryOp = azureContainerRegistryClient.filterSubsriptionByContainerRegistryName(
+      Optional<Registry> registryOp = azureContainerRegistryClient.findFirstContainerRegistryByNameOnSubscription(
           azureConfig, subscriptionId, azureRegistryName);
       Registry registry =
           registryOp.orElseThrow(()

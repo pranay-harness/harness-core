@@ -128,8 +128,6 @@ public interface AzureConstants {
   String ACR_ACCESS_KEYS_BLANK_VALIDATION_MSG = "Primary and secondary ACR access keys cannot be null or empty";
   String DOCKER_REGISTRY_URL_BLANK_VALIDATION_MSG = "Parameter dockerRegistryUrl cannot be empty or null";
   String ACR_REGISTRY_NAME_BLANK_VALIDATION_MSG = "Parameter registryName cannot be empty or null";
-
-  // Azure App Service Deployment Slots
   String DEPLOYMENT_SLOT_PRODUCTION_NAME = "production";
   String DOCKER_REGISTRY_SERVER_URL_PROPERTY_NAME = "DOCKER_REGISTRY_SERVER_URL";
   String DOCKER_REGISTRY_SERVER_USERNAME_PROPERTY_NAME = "DOCKER_REGISTRY_SERVER_USERNAME";
@@ -140,12 +138,24 @@ public interface AzureConstants {
   String WEB_APP_NAME_BLANK_ERROR_MSG = "Parameter webAppName cannot be null or empty";
   String SLOT_NAME_BLANK_ERROR_MSG = "Parameter slotName cannot be null or empty";
   String IMAGE_AND_TAG_BLANK_ERROR_MSG = "Parameter imageAndTag cannot be null or empty";
+  String SHIFT_TRAFFIC_SLOT_NAME_BLANK_ERROR_MSG = "Parameter shiftTrafficSlotName cannot be null or empty";
+  String TRAFFIC_WEIGHT_IN_PERCENTAGE_INVALID_ERROR_MSG =
+      "Parameter trafficWeightInPercentage cannot be less then 0% or higher then 100%";
+  String SOURCE_SLOT_NAME_BLANK_ERROR_MSG = "Parameter sourceSlotName cannot be null or empty";
+  String TARGET_SLOT_NAME_BLANK_ERROR_MSG = "Parameter targetSlotName cannot be null or empty";
+  String ACTIVITY_LOG_EVENT_DATA_TEMPLATE = "Operation name : [%s]%n"
+      + "Event initiated by : [%s]%n"
+      + "Status : [%s]%n"
+      + "Description : [%s]";
+  String SLOT_SWAP_JOB_PROCESSOR_STR = "SlotSwapJobProcessor";
 
   // Azure App Service Command Units
   String STOP_DEPLOYMENT_SLOT = "Stop Slot";
   String UPDATE_DEPLOYMENT_SLOT_CONFIGURATION_SETTINGS = "Update Slot Configuration Settings";
   String UPDATE_DEPLOYMENT_SLOT_CONTAINER_SETTINGS = "Update Slot Container Settings";
   String START_DEPLOYMENT_SLOT = "Start Slot";
+  String SLOT_TRAFFIC_WEIGHT = "Update Slot Traffic Weight";
+  String SLOT_SWAP = "Swap Slots";
   long SLOT_STARTING_STATUS_CHECK_INTERVAL = TimeUnit.SECONDS.toSeconds(15);
   long SLOT_STOPPING_STATUS_CHECK_INTERVAL = TimeUnit.SECONDS.toSeconds(15);
 

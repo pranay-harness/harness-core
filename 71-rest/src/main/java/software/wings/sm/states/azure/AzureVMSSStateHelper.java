@@ -17,9 +17,9 @@ import static org.apache.commons.lang3.StringUtils.EMPTY;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
+import io.harness.beans.DecryptableEntity;
 import io.harness.beans.EncryptedData;
 import io.harness.beans.ExecutionStatus;
-import io.harness.beans.SweepingOutputInstance;
 import io.harness.beans.TriggeredBy;
 import io.harness.context.ContextElementType;
 import io.harness.data.encoding.EncodingUtils;
@@ -37,12 +37,13 @@ import io.harness.encryption.SecretRefData;
 import io.harness.exception.InvalidRequestException;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.logging.Misc;
+import io.harness.ng.core.BaseNGAccess;
+import io.harness.ng.core.NGAccess;
 import io.harness.security.encryption.EncryptedDataDetail;
 
 import software.wings.annotation.EncryptableSetting;
 import software.wings.api.InstanceElement;
 import software.wings.api.PhaseElement;
-import software.wings.api.instancedetails.InstanceInfoVariables;
 import software.wings.beans.Activity;
 import software.wings.beans.Activity.ActivityBuilder;
 import software.wings.beans.Application;
@@ -70,13 +71,14 @@ import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.LogService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.SettingsService;
+import software.wings.service.intfc.security.NGSecretService;
 import software.wings.service.intfc.security.SecretManager;
-import software.wings.service.intfc.sweepingoutput.SweepingOutputService;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.InstanceStatusSummary;
 import software.wings.sm.WorkflowStandardParams;
 import software.wings.sm.states.ManagerExecutionLogCallback;
 import software.wings.sm.states.azure.appservices.AzureAppServiceStateData;
+import software.wings.sm.states.azure.artifact.ArtifactStreamMapper;
 import software.wings.utils.ServiceVersionConvention;
 
 import com.google.common.primitives.Ints;
@@ -101,7 +103,7 @@ public class AzureVMSSStateHelper {
   @Inject private SecretManager secretManager;
   @Inject private ArtifactStreamService artifactStreamService;
   @Inject private LogService logService;
-  @Inject private SweepingOutputService sweepingOutputService;
+  @Inject private NGSecretService ngSecretService;
 
   public boolean isBlueGreenWorkflow(ExecutionContext context) {
     return BLUE_GREEN == context.getOrchestrationWorkflowType();
@@ -359,14 +361,6 @@ public class AzureVMSSStateHelper {
                                                                                            : ExecutionStatus.FAILED;
   }
 
-  public void saveInstanceInfoToSweepingOutput(ExecutionContext context, int trafficShift) {
-    sweepingOutputService.save(
-        context.prepareSweepingOutputBuilder(SweepingOutputInstance.Scope.WORKFLOW)
-            .name(context.appendStateExecutionId(InstanceInfoVariables.SWEEPING_OUTPUT_NAME))
-            .value(InstanceInfoVariables.builder().newInstanceTrafficPercent(trafficShift).build())
-            .build());
-  }
-
   public AzureVMSSStateData populateStateData(ExecutionContext context) {
     Application application = getApplication(context);
     Service service = getServiceByAppId(context, application.getUuid());
@@ -514,5 +508,21 @@ public class AzureVMSSStateHelper {
         .azureEncryptedDataDetails(encryptionDetails)
         .currentUser(workflowStandardParams.getCurrentUser())
         .build();
+  }
+
+  public ArtifactStreamMapper getConnectorMapper(Artifact artifact) {
+    String artifactStreamId = artifact.getArtifactStreamId();
+    ArtifactStream artifactStream = getArtifactStream(artifactStreamId);
+    return ArtifactStreamMapper.getArtifactStreamMapper(artifactStream);
+  }
+
+  public List<EncryptedDataDetail> getConnectorAuthEncryptedDataDetails(
+      final String accountId, DecryptableEntity connectorAuthCredentials) {
+    NGAccess ngAccess = buildNgAccess(accountId);
+    return ngSecretService.getEncryptionDetails(ngAccess, connectorAuthCredentials);
+  }
+
+  private NGAccess buildNgAccess(final String accountId) {
+    return BaseNGAccess.builder().accountIdentifier(accountId).build();
   }
 }

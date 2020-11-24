@@ -114,4 +114,12 @@ public class AzureSweepingOutputServiceHelper {
                                               .build())
                                    .build());
   }
+
+  public void saveInstanceInfoToSweepingOutput(ExecutionContext context, int trafficShift) {
+    sweepingOutputService.save(
+        context.prepareSweepingOutputBuilder(SweepingOutputInstance.Scope.WORKFLOW)
+            .name(context.appendStateExecutionId(InstanceInfoVariables.SWEEPING_OUTPUT_NAME))
+            .value(InstanceInfoVariables.builder().newInstanceTrafficPercent(trafficShift).build())
+            .build());
+  }
 }

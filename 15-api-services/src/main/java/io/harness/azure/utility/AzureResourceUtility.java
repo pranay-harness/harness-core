@@ -1,16 +1,19 @@
 package io.harness.azure.utility;
 
+import static io.harness.azure.model.AzureConstants.ACTIVITY_LOG_EVENT_DATA_TEMPLATE;
 import static io.harness.azure.model.AzureConstants.DOCKER_CUSTOM_IMAGE_NAME_PROPERTY_NAME;
 import static io.harness.azure.model.AzureConstants.DOCKER_IMAGE_AND_TAG_PATH_PATTERN;
 import static io.harness.azure.model.AzureConstants.DOCKER_IMAGE_FULL_PATH_PATTERN;
 import static io.harness.azure.model.AzureConstants.DOCKER_REGISTRY_SERVER_SECRET_PROPERTY_NAME;
 import static io.harness.azure.model.AzureConstants.DOCKER_REGISTRY_SERVER_URL_PROPERTY_NAME;
 import static io.harness.azure.model.AzureConstants.DOCKER_REGISTRY_SERVER_USERNAME_PROPERTY_NAME;
+import static io.harness.azure.model.AzureConstants.SLOT_SWAP_JOB_PROCESSOR_STR;
 
 import static java.lang.String.format;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 import com.microsoft.azure.CloudException;
+import com.microsoft.azure.management.monitor.EventData;
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -18,6 +21,7 @@ import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 import java.util.SimpleTimeZone;
+import java.util.stream.Collectors;
 import lombok.experimental.UtilityClass;
 
 @UtilityClass
@@ -87,5 +91,18 @@ public class AzureResourceUtility {
       message = format("%s, %nAzure Cloud Exception Message: %s", message, cloudExMsg);
     }
     return message;
+  }
+
+  public String activityLogEventDataToString(List<EventData> eventData) {
+    return eventData.stream()
+        .filter(AzureResourceUtility::isSlotSwapJobProcessor)
+        .map(ev
+            -> format(ACTIVITY_LOG_EVENT_DATA_TEMPLATE, ev.operationName().localizedValue(), ev.caller(),
+                ev.status().localizedValue(), ev.description()))
+        .collect(Collectors.joining("\n"));
+  }
+
+  public boolean isSlotSwapJobProcessor(EventData ev) {
+    return ev != null && SLOT_SWAP_JOB_PROCESSOR_STR.equals(ev.caller());
   }
 }

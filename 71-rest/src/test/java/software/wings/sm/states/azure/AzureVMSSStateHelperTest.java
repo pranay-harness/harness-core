@@ -10,6 +10,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import io.harness.beans.DecryptableEntity;
 import io.harness.beans.EmbeddedUser;
 import io.harness.beans.ExecutionStatus;
 import io.harness.category.element.UnitTests;
@@ -17,6 +18,7 @@ import io.harness.context.ContextElementType;
 import io.harness.exception.InvalidRequestException;
 import io.harness.rule.Owner;
 import io.harness.rule.OwnerRule;
+import io.harness.security.encryption.EncryptedDataDetail;
 
 import software.wings.WingsBaseTest;
 import software.wings.api.PhaseElement;
@@ -40,6 +42,7 @@ import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.LogService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.SettingsService;
+import software.wings.service.intfc.security.NGSecretService;
 import software.wings.service.intfc.security.SecretManager;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionContextImpl;
@@ -47,6 +50,7 @@ import software.wings.sm.WorkflowStandardParams;
 
 import com.google.inject.Inject;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -63,6 +67,7 @@ public class AzureVMSSStateHelperTest extends WingsBaseTest {
   @Mock private SettingsService settingsService;
   @Mock private SecretManager secretManager;
   @Mock private LogService logService;
+  @Mock private NGSecretService ngSecretService;
 
   @Spy @Inject @InjectMocks AzureVMSSStateHelper azureVMSSStateHelper;
 
@@ -485,5 +490,18 @@ public class AzureVMSSStateHelperTest extends WingsBaseTest {
     assertThat(result).isNotNull();
     assertThat(result.getUuid()).isEqualTo(activityId);
     assertThat(result.getStatus()).isEqualTo(ExecutionStatus.RUNNING);
+  }
+
+  @Test
+  @Owner(developers = OwnerRule.IVAN)
+  @Category(UnitTests.class)
+  public void testGetConnectorAuthEncryptedDataDetails() {
+    DecryptableEntity mockDecryptableEntity = mock(DecryptableEntity.class);
+    doReturn(Collections.emptyList()).when(ngSecretService).getEncryptionDetails(any(), any());
+
+    List<EncryptedDataDetail> connectorAuthEncryptedDataDetails =
+        azureVMSSStateHelper.getConnectorAuthEncryptedDataDetails("accountId", mockDecryptableEntity);
+
+    assertThat(connectorAuthEncryptedDataDetails).isNotNull();
   }
 }

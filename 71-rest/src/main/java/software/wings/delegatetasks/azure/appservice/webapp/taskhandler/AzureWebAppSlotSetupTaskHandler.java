@@ -93,16 +93,6 @@ public class AzureWebAppSlotSetupTaskHandler extends AbstractAzureWebAppTaskHand
         .build();
   }
 
-  private AzureWebClientContext buildAzureWebClientContext(
-      AzureWebAppSlotSetupParameters azureWebAppSlotSetupParameters, AzureConfig azureConfig) {
-    return AzureWebClientContext.builder()
-        .azureConfig(azureConfig)
-        .appName(azureWebAppSlotSetupParameters.getWebAppName())
-        .subscriptionId(azureWebAppSlotSetupParameters.getSubscriptionId())
-        .resourceGroupName(azureWebAppSlotSetupParameters.getResourceGroupName())
-        .build();
-  }
-
   private Map<String, AzureAppServiceDockerSetting> getAzureAppServiceDockerSettings(
       ConnectorConfigDTO connectorConfigDTO, AzureRegistryType azureRegistryType, AzureConfig azureConfig) {
     AzureRegistry azureRegistry = AzureRegistryFactory.getAzureRegistry(azureRegistryType);

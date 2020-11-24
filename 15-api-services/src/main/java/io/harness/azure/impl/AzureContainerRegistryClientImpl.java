@@ -33,7 +33,7 @@ public class AzureContainerRegistryClientImpl extends AzureClient implements Azu
   }
 
   @Override
-  public Optional<Registry> filterSubsriptionByContainerRegistryName(
+  public Optional<Registry> findFirstContainerRegistryByNameOnSubscription(
       AzureConfig azureConfig, String subscriptionId, String registryName) {
     if (isBlank(registryName)) {
       throw new IllegalArgumentException(ACR_REGISTRY_NAME_BLANK_VALIDATION_MSG);

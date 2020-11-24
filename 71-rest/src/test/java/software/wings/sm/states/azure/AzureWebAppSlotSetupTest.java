@@ -16,8 +16,11 @@ import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 
+import io.harness.beans.DecryptableEntity;
 import io.harness.beans.ExecutionStatus;
 import io.harness.category.element.UnitTests;
+import io.harness.delegate.beans.azure.registry.AzureRegistryType;
+import io.harness.delegate.beans.connector.ConnectorConfigDTO;
 import io.harness.delegate.task.azure.AzureTaskExecutionResponse;
 import io.harness.delegate.task.azure.appservice.AzureAppServicePreDeploymentData;
 import io.harness.delegate.task.azure.appservice.webapp.response.AzureWebAppSlotSetupResponse;
@@ -44,12 +47,14 @@ import software.wings.sm.states.azure.appservices.AzureAppServiceSlotSetupContex
 import software.wings.sm.states.azure.appservices.AzureAppServiceSlotSetupExecutionData;
 import software.wings.sm.states.azure.appservices.AzureAppServiceStateData;
 import software.wings.sm.states.azure.appservices.AzureWebAppSlotSetup;
+import software.wings.sm.states.azure.artifact.ArtifactStreamMapper;
 
 import com.google.common.collect.ImmutableMap;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
@@ -111,6 +116,8 @@ public class AzureWebAppSlotSetupTest extends WingsBaseTest {
         .createAndSaveActivity(any(), any(), anyString(), anyString(), any(), anyListOf(CommandUnit.class));
     doReturn(managerExecutionLogCallback).when(azureVMSSStateHelper).getExecutionLogCallback(activity);
 
+    mockArtifactStreamMapper();
+
     doReturn(delegateResult).when(delegateService).queueTask(any());
     ExecutionResponse result = state.execute(context);
 
@@ -121,6 +128,48 @@ public class AzureWebAppSlotSetupTest extends WingsBaseTest {
     assertThat(result.getStateExecutionData()).isInstanceOf(AzureAppServiceSlotSetupExecutionData.class);
     assertThat(((AzureAppServiceSlotSetupExecutionData) result.getStateExecutionData()).getActivityId())
         .isEqualTo(activityId);
+  }
+
+  private void mockArtifactStreamMapper() {
+    ArtifactStreamMapper mockArtifactStreamMapper = mockGetArtifactStreamMapper();
+    mockGetAzureRegistryType(mockArtifactStreamMapper);
+    ConnectorConfigDTO mockConnectorConfigDTO = mockGetConnectorConfigDTO(mockArtifactStreamMapper);
+    mockGetConnectorDTOAuthCredentials(mockArtifactStreamMapper, mockConnectorConfigDTO);
+    mockGetConnectorAuthEncryptedDataDetails();
+  }
+
+  private ArtifactStreamMapper mockGetArtifactStreamMapper() {
+    ArtifactStreamMapper mockArtifactStreamMapper = mock(ArtifactStreamMapper.class);
+    doReturn(mockArtifactStreamMapper).when(azureVMSSStateHelper).getConnectorMapper(any());
+    return mockArtifactStreamMapper;
+  }
+
+  private void mockGetAzureRegistryType(ArtifactStreamMapper mockArtifactStreamMapper) {
+    AzureRegistryType azureRegistryType = AzureRegistryType.DOCKER_HUB_PUBLIC;
+    doReturn(azureRegistryType).when(mockArtifactStreamMapper).getAzureRegistryType();
+  }
+
+  private ConnectorConfigDTO mockGetConnectorConfigDTO(ArtifactStreamMapper mockArtifactStreamMapper) {
+    ConnectorConfigDTO mockConnectorConfigDTO = mock(ConnectorConfigDTO.class);
+    doReturn(mockConnectorConfigDTO).when(mockArtifactStreamMapper).getConnectorDTO();
+    return mockConnectorConfigDTO;
+  }
+
+  private void mockGetConnectorDTOAuthCredentials(
+      ArtifactStreamMapper mockArtifactStreamMapper, ConnectorConfigDTO mockConnectorConfigDTO) {
+    DecryptableEntity mockDecryptableEntity = mock(DecryptableEntity.class);
+    doReturn(Optional.of(mockDecryptableEntity))
+        .when(mockArtifactStreamMapper)
+        .getConnectorDTOAuthCredentials(mockConnectorConfigDTO);
+  }
+
+  private void mockGetConnectorAuthEncryptedDataDetails() {
+    List<EncryptedDataDetail> encryptedDataDetailList = new ArrayList<>();
+    EncryptedDataDetail mockEncryptedDataDetail = mock(EncryptedDataDetail.class);
+    encryptedDataDetailList.add(mockEncryptedDataDetail);
+    doReturn(encryptedDataDetailList)
+        .when(azureVMSSStateHelper)
+        .getConnectorAuthEncryptedDataDetails(anyString(), any());
   }
 
   @Test

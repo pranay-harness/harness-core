@@ -31,7 +31,7 @@ public class AzureTimeLimiter {
   @Inject protected TimeLimiter timeLimiter;
 
   public void waitUntilCompleteWithTimeout(long steadyCheckTimeoutInMinutes, long statusCheckIntervalInSeconds,
-      DefaultCompletableSubscriber subscriber, Supplier<String> pollAction, LogCallback errorLogCallback,
+      DefaultCompletableSubscriber subscriber, Supplier<Void> pollAction, LogCallback errorLogCallback,
       String commandUnitName) {
     try {
       timeLimiter.callWithTimeout(() -> {
