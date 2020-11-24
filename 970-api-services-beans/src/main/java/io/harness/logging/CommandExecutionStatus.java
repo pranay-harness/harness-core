@@ -26,4 +26,8 @@ public enum CommandExecutionStatus {
    *  Skipped execution status
    * */
   SKIPPED;
+
+  public static boolean isTerminalStatus(CommandExecutionStatus commandExecutionStatus) {
+    return commandExecutionStatus == SUCCESS || commandExecutionStatus == FAILURE;
+  }
 }
