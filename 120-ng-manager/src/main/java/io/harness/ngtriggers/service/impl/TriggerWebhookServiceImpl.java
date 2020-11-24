@@ -1,6 +1,7 @@
 package io.harness.ngtriggers.service.impl;
 
 import static io.harness.mongo.iterator.MongoPersistenceIterator.SchedulingType.REGULAR;
+import static io.harness.ngtriggers.beans.webhookresponse.WebhookEventResponse.FinalStatus.SCM_SERVICE_CONNECTION_FAILED;
 
 import static java.time.Duration.ofSeconds;
 
@@ -14,7 +15,6 @@ import io.harness.mongo.iterator.provider.SpringPersistenceProvider;
 import io.harness.ngtriggers.beans.entity.TriggerWebhookEvent;
 import io.harness.ngtriggers.beans.entity.TriggerWebhookEvent.TriggerWebhookEventsKeys;
 import io.harness.ngtriggers.beans.webhookresponse.WebhookEventResponse;
-import io.harness.ngtriggers.beans.webhookresponse.WebhookEventResponse.FinalStatus;
 import io.harness.ngtriggers.helpers.NGTriggerWebhookExecutionHelper;
 import io.harness.ngtriggers.helpers.WebhookEventResponseHelper;
 import io.harness.ngtriggers.repository.TriggerEventHistoryRepository;
@@ -65,7 +65,7 @@ public class TriggerWebhookServiceImpl
   @Override
   public void handle(TriggerWebhookEvent event) {
     WebhookEventResponse response = ngTriggerWebhookExecutionHelper.handleTriggerWebhookEvent(event);
-    if (response.getFinalStatus() == FinalStatus.SCM_SERVICE_DOWN) {
+    if (response.getFinalStatus() == SCM_SERVICE_CONNECTION_FAILED) {
       event.setAttemptCount(event.getAttemptCount() + 1);
       ngTriggerService.updateTriggerWebhookEvent(event);
     } else {
