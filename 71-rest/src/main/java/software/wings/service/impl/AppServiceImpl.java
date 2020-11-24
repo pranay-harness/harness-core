@@ -17,6 +17,7 @@ import static software.wings.beans.RoleType.APPLICATION_ADMIN;
 import static software.wings.beans.RoleType.NON_PROD_SUPPORT;
 import static software.wings.beans.RoleType.PROD_SUPPORT;
 
+import static java.lang.String.format;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 import static java.util.function.Function.identity;
@@ -391,6 +392,8 @@ public class AppServiceImpl implements AppService {
       return;
     }
 
+    ensureSafeToDelete(appId, application.getName());
+
     String accountId = this.getAccountIdByAppId(appId);
     StaticLimitCheckerWithDecrement checker = (StaticLimitCheckerWithDecrement) limitCheckerFactory.getInstance(
         new io.harness.limits.Action(accountId, ActionType.CREATE_APPLICATION));
@@ -420,6 +423,16 @@ public class AppServiceImpl implements AppService {
       // probably they will retry. This is why there is no reason for us to regenerate it at this
       // point. We should have the necessary APIs elsewhere, if we find the users want it.
     });
+  }
+
+  private void ensureSafeToDelete(String appId, String appName) {
+    List<String> runningExecutionNames = workflowExecutionService.runningExecutionsForApplication(appId);
+    if (isNotEmpty(runningExecutionNames)) {
+      throw new InvalidRequestException(
+          format("Application:[%s] couldn't be deleted. [%d] Running executions present: [%s]", appName,
+              runningExecutionNames.size(), String.join(", ", runningExecutionNames)),
+          USER);
+    }
   }
 
   @Override

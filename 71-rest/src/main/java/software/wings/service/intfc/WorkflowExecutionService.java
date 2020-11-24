@@ -274,6 +274,10 @@ public interface WorkflowExecutionService extends StateStatusUpdate {
 
   List<String> runningExecutionsForEnvironment(String appId, String environmentId);
 
+  List<String> runningExecutionsForApplication(String appId);
+
+  List<String> runningExecutionsForService(String appId, String serviceId);
+
   List<WorkflowExecution> getRunningExecutionsForInfraDef(@NotEmpty String appId, @NotEmpty String infraDefinitionId);
 
   List<HelmChart> obtainLastGoodDeployedHelmCharts(String appId, String workflowId);

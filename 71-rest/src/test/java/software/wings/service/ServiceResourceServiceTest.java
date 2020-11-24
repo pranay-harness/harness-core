@@ -14,6 +14,7 @@ import static io.harness.rule.OwnerRule.GARVIT;
 import static io.harness.rule.OwnerRule.GEORGE;
 import static io.harness.rule.OwnerRule.INDER;
 import static io.harness.rule.OwnerRule.POOJA;
+import static io.harness.rule.OwnerRule.PRABU;
 import static io.harness.rule.OwnerRule.RUSHABH;
 import static io.harness.rule.OwnerRule.SRINIVAS;
 import static io.harness.rule.OwnerRule.YOGESH;
@@ -67,6 +68,7 @@ import static software.wings.utils.WingsTestConstants.APP_ID;
 import static software.wings.utils.WingsTestConstants.ARTIFACT_STREAM_ID;
 import static software.wings.utils.WingsTestConstants.COMMAND_NAME;
 import static software.wings.utils.WingsTestConstants.ENV_ID;
+import static software.wings.utils.WingsTestConstants.PIPELINE_EXECUTION_ID;
 import static software.wings.utils.WingsTestConstants.REFERENCED_WORKFLOW;
 import static software.wings.utils.WingsTestConstants.SERVICE_COMMAND_ID;
 import static software.wings.utils.WingsTestConstants.SERVICE_ID;
@@ -74,6 +76,7 @@ import static software.wings.utils.WingsTestConstants.SERVICE_NAME;
 import static software.wings.utils.WingsTestConstants.SERVICE_VARIABLE_ID;
 import static software.wings.utils.WingsTestConstants.TARGET_APP_ID;
 import static software.wings.utils.WingsTestConstants.TEMPLATE_VERSION;
+import static software.wings.utils.WingsTestConstants.WORKFLOW_EXECUTION_ID;
 import static software.wings.utils.WingsTestConstants.WORKFLOW_NAME;
 
 import static java.lang.String.format;
@@ -189,6 +192,7 @@ import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.ServiceTemplateService;
 import software.wings.service.intfc.ServiceVariableService;
 import software.wings.service.intfc.TriggerService;
+import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.service.intfc.WorkflowService;
 import software.wings.service.intfc.customdeployment.CustomDeploymentTypeService;
 import software.wings.service.intfc.template.TemplateService;
@@ -267,6 +271,7 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
   @Mock private EntityVersionService entityVersionService;
   @Mock private CommandService commandService;
   @Mock private WorkflowService workflowService;
+  @Mock private WorkflowExecutionService workflowExecutionService;
   @Mock private WingsPersistence mockWingsPersistence;
   @Mock private ServiceTemplateService serviceTemplateService;
   @Mock private ConfigService configService;
@@ -2721,5 +2726,18 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
           return command;
         });
     srs.addCommand(APP_ID, SERVICE_ID, serviceCommand, false);
+  }
+
+  @Test
+  @Owner(developers = PRABU)
+  @Category(UnitTests.class)
+  public void shouldCheckForRunningExecutionsBeforeDelete() {
+    when(mockWingsPersistence.getWithAppId(Service.class, APP_ID, SERVICE_ID))
+        .thenReturn(Service.builder().name(SERVICE_NAME).appId(APP_ID).uuid(SERVICE_ID).build());
+    when(workflowExecutionService.runningExecutionsForService(APP_ID, SERVICE_ID))
+        .thenReturn(asList(PIPELINE_EXECUTION_ID, WORKFLOW_EXECUTION_ID));
+    when(limitCheckerFactory.getInstance(new Action(Mockito.anyString(), ActionType.CREATE_SERVICE)))
+        .thenReturn(new MockChecker(true, ActionType.CREATE_SERVICE));
+    assertThatThrownBy(() -> srs.delete(APP_ID, SERVICE_ID)).isInstanceOf(InvalidRequestException.class);
   }
 }
