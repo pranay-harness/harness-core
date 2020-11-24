@@ -27,7 +27,7 @@ import lombok.experimental.FieldDefaults;
 @ApiModel(value = "Project")
 public class ProjectDTO {
   String accountIdentifier;
-  @EntityIdentifier String orgIdentifier;
+  @EntityIdentifier(allowBlank = true) String orgIdentifier;
   @ApiModelProperty(required = true) @EntityIdentifier(allowBlank = false) String identifier;
   @ApiModelProperty(required = true) @NGEntityName String name;
   String color;

@@ -106,9 +106,13 @@ public class OrganizationServiceImpl implements OrganizationService {
     Optional<Organization> optionalOrganization = get(accountIdentifier, identifier);
 
     if (optionalOrganization.isPresent()) {
+      Organization existingOrganization = optionalOrganization.get();
       Organization organization = toOrganization(organizationDTO);
       organization.setAccountIdentifier(accountIdentifier);
-      organization.setId(optionalOrganization.get().getId());
+      organization.setId(existingOrganization.getId());
+      if (organization.getVersion() == null) {
+        organization.setVersion(existingOrganization.getVersion());
+      }
 
       validate(organization);
       return organizationRepository.save(organization);
