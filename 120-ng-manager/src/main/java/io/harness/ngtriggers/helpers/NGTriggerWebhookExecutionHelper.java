@@ -62,6 +62,7 @@ public class NGTriggerWebhookExecutionHelper {
     List<NGTriggerEntity> triggersForRepo =
         retrieveTriggersConfiguredForRepo(triggerWebhookEvent, webhookPayloadData.getRepository().getLink());
     if (EmptyPredicate.isEmpty(triggersForRepo)) {
+      log.info("No trigger found for repoUrl:" + webhookPayloadData.getRepository().getLink());
       return WebhookEventResponseHelper.toResponse(NO_MATCHING_TRIGGER_FOR_REPO, triggerWebhookEvent, null, EMPTY,
           "No Trigger was configured for Repo: " + webhookPayloadData.getRepository().getLink());
     }
@@ -69,11 +70,13 @@ public class NGTriggerWebhookExecutionHelper {
     // 3. Apply Event, Action and Condition filters
     Optional<TriggerDetails> optionalEntity = applyFilters(webhookPayloadData, triggersForRepo);
     if (!optionalEntity.isPresent()) {
+      log.info("No trigger matched payload after condition evaluation:");
       return WebhookEventResponseHelper.toResponse(
           NO_MATCHING_TRIGGER, triggerWebhookEvent, null, EMPTY, "No Trigger matched for payload event");
     }
 
     // 4. Request Execution if trigger is available
+    log.info("Preparing for pipeline execution request");
     return triggerPipelineExecution(triggerWebhookEvent, optionalEntity.get());
   }
 
@@ -84,13 +87,35 @@ public class NGTriggerWebhookExecutionHelper {
       NGPipelineExecutionResponseDTO response =
           resolveRuntimeInputAndSubmitExecutionRequest(triggerDetails, triggerWebhookEvent.getPayload());
       if (response.isErrorResponse()) {
+        log.warn(new StringBuilder(128)
+                     .append(ngTriggerEntity.getTargetType())
+                     .append(" execution failed to start : ")
+                     .append(ngTriggerEntity.getTargetIdentifier())
+                     .append(", using trigger: ")
+                     .append(ngTriggerEntity.getIdentifier())
+                     .toString());
         return WebhookEventResponseHelper.toResponse(
             TARGET_DID_NOT_EXECUTE, triggerWebhookEvent, response, ngTriggerEntity.getIdentifier(), EMPTY);
       } else {
+        log.info(new StringBuilder(128)
+                     .append(ngTriggerEntity.getTargetType())
+                     .append(" execution was requested successfully for Pipeline: ")
+                     .append(ngTriggerEntity.getTargetIdentifier())
+                     .append(", using trigger: ")
+                     .append(ngTriggerEntity.getIdentifier())
+                     .toString());
         return WebhookEventResponseHelper.toResponse(TARGET_EXECUTION_REQUESTED, triggerWebhookEvent, response,
             ngTriggerEntity.getIdentifier(), "Pipeline execution was requested successfully");
       }
     } catch (Exception e) {
+      log.info(new StringBuilder(128)
+                   .append(" Exception occured while requesting ")
+                   .append(ngTriggerEntity.getTargetType())
+                   .append(" execution. Identifier: ")
+                   .append(ngTriggerEntity.getTargetIdentifier())
+                   .append(", using trigger: ")
+                   .append(ngTriggerEntity.getIdentifier())
+                   .toString());
       return WebhookEventResponseHelper.toResponse(
           INVALID_RUNTIME_INPUT_YAML, triggerWebhookEvent, null, ngTriggerEntity.getIdentifier(), e.getMessage());
     }
@@ -98,11 +123,12 @@ public class NGTriggerWebhookExecutionHelper {
 
   // Add error handling
   private ParsePayloadResponse parseEventData(TriggerWebhookEvent triggerWebhookEvent) {
-    ParsePayloadResponseBuilder builder = ParsePayloadResponse.builder();
+    ParsePayloadResponseBuilder builder = ParsePayloadResponse.builder().originalEvent(triggerWebhookEvent);
     try {
       WebhookPayloadData webhookPayloadData = webhookEventPayloadParser.parseEvent(triggerWebhookEvent);
       builder.webhookPayloadData(webhookPayloadData).build();
     } catch (Exception e) {
+      log.error("Exception while invoking SCM service for webhook trigger payload parsing", e);
       builder.exceptionOccured(true).exception(e).build();
     }
 
