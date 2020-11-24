@@ -84,8 +84,6 @@ public class CloudFormationCreateStackHandler extends CloudFormationCommandTaskH
           new UpdateStackRequest().withStackName(stack.getStackName()).withParameters(getCfParams(updateRequest));
       if (EmptyPredicate.isNotEmpty(updateRequest.getCloudFormationRoleArn())) {
         updateStackRequest.withRoleARN(updateRequest.getCloudFormationRoleArn());
-        executionLogCallback.saveExecutionLog(
-            format("Using the cloudformation role arn: [%s]", updateRequest.getCloudFormationRoleArn()));
       } else {
         executionLogCallback.saveExecutionLog(
             "No specific cloudformation role provided will use the default permissions on delegate.");
@@ -160,8 +158,6 @@ public class CloudFormationCreateStackHandler extends CloudFormationCommandTaskH
           new CreateStackRequest().withStackName(stackName).withParameters(getCfParams(createRequest));
       if (EmptyPredicate.isNotEmpty(createRequest.getCloudFormationRoleArn())) {
         createStackRequest.withRoleARN(createRequest.getCloudFormationRoleArn());
-        executionLogCallback.saveExecutionLog(
-            format("Using the cloudformation role arn: [%s]", createRequest.getCloudFormationRoleArn()));
       } else {
         executionLogCallback.saveExecutionLog(
             "No specific cloudformation role provided will use the default permissions on delegate.");

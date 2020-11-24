@@ -2,7 +2,6 @@ package software.wings.delegatetasks.cloudformation.cloudformationtaskhandler;
 
 import static io.harness.threading.Morpheus.sleep;
 
-import static java.lang.String.format;
 import static java.time.Duration.ofSeconds;
 
 import io.harness.data.structure.EmptyPredicate;
@@ -56,8 +55,6 @@ public class CloudFormationDeleteStackHandler extends CloudFormationCommandTaskH
       DeleteStackRequest deleteStackRequest = new DeleteStackRequest().withStackName(stackId);
       if (EmptyPredicate.isNotEmpty(cloudFormationDeleteStackRequest.getCloudFormationRoleArn())) {
         deleteStackRequest.withRoleARN(cloudFormationDeleteStackRequest.getCloudFormationRoleArn());
-        executionLogCallback.saveExecutionLog(format(
-            "Using the cloudformation role arn: [%s]", cloudFormationDeleteStackRequest.getCloudFormationRoleArn()));
       } else {
         executionLogCallback.saveExecutionLog(
             "No specific cloudformation role provided will use the default permissions on delegate.");
