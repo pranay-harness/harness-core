@@ -15,7 +15,7 @@ import io.harness.DelegateTest;
 import io.harness.category.element.UnitTests;
 import io.harness.data.structure.UUIDGenerator;
 import io.harness.logging.CommandExecutionStatus;
-import io.harness.managerclient.ManagerClient;
+import io.harness.managerclient.DelegateAgentManagerClient;
 import io.harness.perpetualtask.PerpetualTaskExecutionParams;
 import io.harness.perpetualtask.PerpetualTaskId;
 import io.harness.perpetualtask.PerpetualTaskResponse;
@@ -39,6 +39,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import okhttp3.MediaType;
+import okhttp3.RequestBody;
 import okhttp3.ResponseBody;
 import org.junit.Before;
 import org.junit.Test;
@@ -58,7 +59,7 @@ public class ArtifactPerpetualTaskExecutorTest extends DelegateTest {
   @Inject KryoSerializer kryoSerializer;
 
   @Mock private ArtifactRepositoryServiceImpl artifactRepositoryService;
-  @Mock private ManagerClient managerClient;
+  @Mock private DelegateAgentManagerClient delegateAgentManagerClient;
   @Mock private Call<RestResponse<Boolean>> call;
 
   private PerpetualTaskId perpetualTaskId;
@@ -66,7 +67,7 @@ public class ArtifactPerpetualTaskExecutorTest extends DelegateTest {
   @Before
   public void setUp() throws Exception {
     artifactPerpetualTaskExecutor =
-        new ArtifactPerpetualTaskExecutor(artifactRepositoryService, managerClient, kryoSerializer);
+        new ArtifactPerpetualTaskExecutor(artifactRepositoryService, delegateAgentManagerClient, kryoSerializer);
     perpetualTaskId = PerpetualTaskId.newBuilder().setId(UUIDGenerator.generateUuid()).build();
   }
 
@@ -80,8 +81,8 @@ public class ArtifactPerpetualTaskExecutorTest extends DelegateTest {
     verify(artifactRepositoryService, times(1)).publishCollectedArtifacts(any(BuildSourceParameters.class), any());
 
     // Build details are published 3 time: 1 time for cleanup and then 2 times for collection because of batching.
-    verify(managerClient, times(3))
-        .publishArtifactCollectionResult(anyString(), anyString(), any(BuildSourceExecutionResponse.class));
+    verify(delegateAgentManagerClient, times(3))
+        .publishArtifactCollectionResult(anyString(), anyString(), any(RequestBody.class));
     verify(call, times(3)).execute();
   }
 
@@ -95,8 +96,8 @@ public class ArtifactPerpetualTaskExecutorTest extends DelegateTest {
     verify(artifactRepositoryService, times(1)).publishCollectedArtifacts(any(BuildSourceParameters.class), any());
 
     // Build details are published 1 time: 1 time for cleanup and then exit early because of exception.
-    verify(managerClient, times(1))
-        .publishArtifactCollectionResult(anyString(), anyString(), any(BuildSourceExecutionResponse.class));
+    verify(delegateAgentManagerClient, times(1))
+        .publishArtifactCollectionResult(anyString(), anyString(), any(RequestBody.class));
     verify(call, times(1)).execute();
   }
 
@@ -111,8 +112,7 @@ public class ArtifactPerpetualTaskExecutorTest extends DelegateTest {
                                                                     .setArtifactStreamId(ARTIFACT_STREAM_ID)
                                                                     .setBuildSourceParams(bytes)
                                                                     .build();
-    when(managerClient.publishArtifactCollectionResult(
-             anyString(), anyString(), any(BuildSourceExecutionResponse.class)))
+    when(delegateAgentManagerClient.publishArtifactCollectionResult(anyString(), anyString(), any(RequestBody.class)))
         .thenReturn(call);
     when(call.execute())
         .thenReturn(throwErrorWhilePublishing

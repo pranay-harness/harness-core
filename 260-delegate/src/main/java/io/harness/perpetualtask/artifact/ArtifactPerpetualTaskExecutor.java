@@ -7,7 +7,7 @@ import static java.lang.String.format;
 
 import io.harness.grpc.utils.AnyUtils;
 import io.harness.logging.CommandExecutionStatus;
-import io.harness.managerclient.ManagerClient;
+import io.harness.managerclient.DelegateAgentManagerClient;
 import io.harness.perpetualtask.PerpetualTaskExecutionParams;
 import io.harness.perpetualtask.PerpetualTaskExecutor;
 import io.harness.perpetualtask.PerpetualTaskId;
@@ -29,6 +29,8 @@ import java.util.List;
 import java.util.Set;
 import java.util.function.Function;
 import lombok.extern.slf4j.Slf4j;
+import okhttp3.MediaType;
+import okhttp3.RequestBody;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 
 @Singleton
@@ -39,17 +41,17 @@ public class ArtifactPerpetualTaskExecutor implements PerpetualTaskExecutor {
   private static final long INTERNAL_TIMEOUT_IN_MS = 90L * 1000;
 
   private final ArtifactRepositoryServiceImpl artifactRepositoryService;
-  private final ManagerClient managerClient;
+  private final DelegateAgentManagerClient delegateAgentManagerClient;
   private final KryoSerializer kryoSerializer;
 
   private final Cache<String, ArtifactsPublishedCache<BuildDetails>> cache = Caffeine.newBuilder().build();
 
   @Inject
   public ArtifactPerpetualTaskExecutor(ArtifactRepositoryServiceImpl artifactRepositoryService,
-      ManagerClient managerClient, KryoSerializer kryoSerializer) {
+      DelegateAgentManagerClient delegateAgentManagerClient, KryoSerializer kryoSerializer) {
     this.artifactRepositoryService = artifactRepositoryService;
-    this.managerClient = managerClient;
     this.kryoSerializer = kryoSerializer;
+    this.delegateAgentManagerClient = delegateAgentManagerClient;
   }
 
   @Override
@@ -190,8 +192,10 @@ public class ArtifactPerpetualTaskExecutor implements PerpetualTaskExecutor {
   private boolean publishToManager(String accountId, String artifactStreamId, PerpetualTaskId taskId,
       BuildSourceExecutionResponse buildSourceExecutionResponse) {
     try {
-      executeWithExceptions(
-          managerClient.publishArtifactCollectionResult(taskId.getId(), accountId, buildSourceExecutionResponse));
+      byte[] responseSerialized = kryoSerializer.asBytes(buildSourceExecutionResponse);
+
+      executeWithExceptions(delegateAgentManagerClient.publishArtifactCollectionResult(taskId.getId(), accountId,
+          RequestBody.create(MediaType.parse("application/octet-stream"), responseSerialized)));
       return true;
     } catch (Exception ex) {
       log.error(

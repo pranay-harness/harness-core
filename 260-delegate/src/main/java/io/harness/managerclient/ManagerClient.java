@@ -6,11 +6,9 @@ import io.harness.serializer.kryo.KryoResponse;
 
 import software.wings.beans.ConfigFile;
 import software.wings.beans.Delegate;
-import software.wings.delegatetasks.buildsource.BuildSourceExecutionResponse;
 import software.wings.delegatetasks.validation.DelegateConnectionResult;
 
 import java.util.List;
-import okhttp3.RequestBody;
 import retrofit2.Call;
 import retrofit2.http.Body;
 import retrofit2.http.GET;
@@ -25,13 +23,6 @@ public interface ManagerClient {
       @Query("accountId") String accountId, @Query("appId") String appId, @Query("envId") String envId,
       @Query("hostId") String hostId);
 
-  @POST("logs/activity/{activityId}/unit/{unitName}/batched")
-  Call<RestResponse> saveCommandUnitLogs(@Path("activityId") String activityId, @Path("unitName") String unitName,
-      @Query("accountId") String accountId, @Body RequestBody logObject);
-
-  @POST("agent/delegates/{delegateId}/state-executions")
-  Call<RestResponse> saveApiCallLogs(
-      @Path("delegateId") String delegateId, @Query("accountId") String accountId, @Body RequestBody logObject);
   @KryoResponse
   @PUT("agent/delegates/{delegateId}/tasks/{taskId}/acquire")
   Call<DelegateTaskPackage> acquireTask(
@@ -44,8 +35,4 @@ public interface ManagerClient {
 
   @POST("agent/delegates/heartbeat-with-polling")
   Call<RestResponse<Delegate>> delegateHeartbeat(@Query("accountId") String accountId, @Body Delegate delegate);
-
-  @POST("agent/delegates/artifact-collection/{perpetualTaskId}")
-  Call<RestResponse<Boolean>> publishArtifactCollectionResult(@Path("perpetualTaskId") String perpetualTaskId,
-      @Query("accountId") String accountId, @Body BuildSourceExecutionResponse buildSourceExecutionResponse);
 }
