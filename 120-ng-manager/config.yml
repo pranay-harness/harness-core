@@ -104,6 +104,20 @@ smtp:
   username: smtp_username_placeholder
   password: "smtp_password_placeholder"
 
+eventsFramework:
+  redis:
+    sentinel: false
+    masterName: "mymaster"
+    redisUrl: "dummyRedisUrl"
+    sentinelUrls:
+      - "redis://localhost:26379"
+      - "redis://localhost:26380"
+      - "redis://localhost:26381"
+    envNamespace: ""
+    readMode: MASTER
+    nettyThreads: 16
+    useScriptCache: true
+
 pmsSdkGrpcServerConfig:
   connectors:
     - port: 12101

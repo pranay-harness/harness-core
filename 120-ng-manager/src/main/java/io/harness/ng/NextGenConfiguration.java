@@ -2,6 +2,7 @@ package io.harness.ng;
 
 import static java.util.stream.Collectors.toSet;
 
+import io.harness.EventsFrameworkConfiguration;
 import io.harness.grpc.client.GrpcClientConfig;
 import io.harness.grpc.server.GrpcServerConfig;
 import io.harness.mongo.MongoConfig;
@@ -39,6 +40,7 @@ public class NextGenConfiguration extends Configuration {
   @JsonProperty("grpcServer") private GrpcServerConfig grpcServerConfig;
   @JsonProperty("nextGen") private NextGenConfig nextGenConfig;
   @JsonProperty("ngManagerClientConfig") private ServiceHttpClientConfig ngManagerClientConfig;
+  @JsonProperty("eventsFramework") private EventsFrameworkConfiguration eventsFrameworkConfiguration;
   @JsonProperty(value = "enableAuth", defaultValue = "true") private boolean enableAuth;
   @JsonProperty("smtp") private SmtpConfig smtpConfig;
 

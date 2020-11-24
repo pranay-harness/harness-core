@@ -32,7 +32,7 @@ public class MessagePublisher implements Runnable {
       Event projectEvent =
           Event.newBuilder()
               .setAccountId("account1")
-              .setPayload(Any.pack(ProjectUpdate.newBuilder().setProjectId(String.valueOf(count)).build()))
+              .setPayload(Any.pack(ProjectUpdate.newBuilder().setProjectIdentifier(String.valueOf(count)).build()))
               .build();
       log.info("\u001B[33m"
           + "pushing " + Base64.getEncoder().encodeToString(projectEvent.toByteArray()) + " in redis"

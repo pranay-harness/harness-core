@@ -3,6 +3,7 @@ package io.harness.eventsframework;
 import io.harness.redis.RedisConfig;
 
 import com.google.common.collect.ImmutableMap;
+import com.google.inject.Inject;
 import com.google.protobuf.InvalidProtocolBufferException;
 import java.util.Base64;
 import java.util.Collections;
@@ -14,7 +15,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.redisson.Redisson;
 import org.redisson.api.RStream;
 import org.redisson.api.RedissonClient;
-import org.redisson.api.StreamInfo;
 import org.redisson.api.StreamMessageId;
 import org.redisson.client.RedisException;
 import org.redisson.client.codec.StringCodec;
@@ -22,12 +22,13 @@ import org.redisson.config.Config;
 import org.redisson.config.ReadMode;
 
 @Slf4j
-public class RedisStreamClient {
+public class RedisStreamClient implements EventDrivenClient {
   // Keeping this as small as possible
   private static final String REDIS_STREAM_INTERNAL_KEY = "o";
   private final RedissonClient redissonClient;
   private final long redisBlockTime;
 
+  @Inject
   public RedisStreamClient(@NotNull RedisConfig redisConfig) {
     Config config = new Config();
     if (!redisConfig.isSentinel()) {
@@ -47,6 +48,7 @@ public class RedisStreamClient {
     this.redisBlockTime = 200L;
   }
 
+  @Override
   public boolean createConsumerGroup(StreamChannel channel, String groupName) {
     try {
       getStream(channel).createGroup(groupName);
@@ -57,24 +59,28 @@ public class RedisStreamClient {
     }
   }
 
+  @Override
   public void publishEvent(StreamChannel channel, Event event) {
     getStream(channel).addAll(
         ImmutableMap.of(REDIS_STREAM_INTERNAL_KEY, Base64.getEncoder().encodeToString(event.toByteArray())), 100000,
         false);
   }
 
+  @Override
   public Map<String, Event> readEvent(StreamChannel channel) {
     Map<StreamMessageId, Map<String, String>> redisVal =
         getStream(channel).read(1, this.redisBlockTime, TimeUnit.MILLISECONDS, StreamMessageId.NEWEST);
     return createEventMap(redisVal);
   }
 
+  @Override
   public Map<String, Event> readEvent(StreamChannel channel, String lastId) {
     Map<StreamMessageId, Map<String, String>> redisVal =
         getStream(channel).read(1, this.redisBlockTime, TimeUnit.MILLISECONDS, getStreamId(lastId));
     return createEventMap(redisVal);
   }
 
+  @Override
   public Map<String, Event> readEvent(StreamChannel channel, String groupName, String consumerName) {
     // This performs XREADGROUP with id ">" for a particular consumer in a consumer group
     Map<StreamMessageId, Map<String, String>> redisVal =
@@ -82,38 +88,17 @@ public class RedisStreamClient {
     return createEventMap(redisVal);
   }
 
+  @Override
   public Map<String, Event> readEvent(StreamChannel channel, String groupName, String consumerName, String lastId) {
     Map<StreamMessageId, Map<String, String>> redisVal = getStream(channel).readGroup(
         groupName, consumerName, 1, this.redisBlockTime, TimeUnit.MILLISECONDS, getStreamId(lastId));
     return createEventMap(redisVal);
   }
 
+  @Override
   public void acknowledge(StreamChannel channel, String groupName, String messageId) {
     getStream(channel).ack(groupName, getStreamId(messageId));
   }
-
-  public long getPendingInfo(StreamChannel channel, String groupName) {
-    return getStream(channel).getPendingInfo(groupName).getTotal();
-  }
-
-  public StreamInfo getStreamInfo(StreamChannel channel) {
-    return getStream(channel).getInfo();
-  }
-
-  //  public void listen(StreamChannel channel, Integer count) {
-  //    RStream<String, String> stream = this.redissonClient.getStream(channel);
-  //    StreamMessageId last = new StreamMessageId(0);
-  //    while (true) {
-  //      Map<StreamMessageId, Map<String, String>> messages = stream.read(count, this.redisBlockTime,
-  //      TimeUnit.MILLISECONDS, last); if (messages == null) {
-  //        continue;
-  //      }
-  //      for (Map.Entry<StreamMessageId, Map<String, String>> entry : messages.entrySet()) {
-  //        Map<String, String> msg = entry.getValue();
-  //        last = entry.getKey();
-  //      }
-  //    }
-  //  }
 
   private Map<String, Event> createEventMap(Map<StreamMessageId, Map<String, String>> redisVal) {
     if (redisVal != null && redisVal.size() != 0) {

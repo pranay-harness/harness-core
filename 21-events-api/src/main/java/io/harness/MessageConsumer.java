@@ -57,7 +57,8 @@ public class MessageConsumer implements Runnable {
         try {
           ProjectUpdate p = getValue.get(key).getPayload().unpack(ProjectUpdate.class);
           log.info("\u001B[36m"
-              + "Received from redis as ConsumerGroup - " + consumerName + " - pid: " + p.getProjectId() + "\u001B[0m");
+              + "Received from redis as ConsumerGroup - " + consumerName + " - pid: " + p.getProjectIdentifier()
+              + "\u001B[0m");
         } catch (InvalidProtocolBufferException e) {
           log.error("\u001B[36m"
                   + "Exception in unpacking data for key " + key + "\u001B[0m",
@@ -80,7 +81,7 @@ public class MessageConsumer implements Runnable {
         try {
           ProjectUpdate p = getValue.get(key).getPayload().unpack(ProjectUpdate.class);
           log.info("\u001B[32m"
-              + "Received from redis as PubSub - pid: " + p.getProjectId() + "\u001B[0m");
+              + "Received from redis as PubSub - pid: " + p.getProjectIdentifier() + "\u001B[0m");
         } catch (InvalidProtocolBufferException e) {
           log.error("\u001B[32m"
                   + "Exception in unpacking data for key " + key + "\u001B[0m",

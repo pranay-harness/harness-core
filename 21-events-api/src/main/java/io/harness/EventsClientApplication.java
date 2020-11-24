@@ -2,8 +2,6 @@ package io.harness;
 
 import static io.harness.logging.LoggingInitializer.initializeLogging;
 
-import io.harness.eventsframework.Event;
-import io.harness.eventsframework.ProjectUpdate;
 import io.harness.eventsframework.RedisStreamClient;
 import io.harness.eventsframework.StreamChannel;
 import io.harness.maintenance.MaintenanceController;
@@ -15,7 +13,6 @@ import com.codahale.metrics.MetricRegistry;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
-import com.google.protobuf.Any;
 import com.google.protobuf.InvalidProtocolBufferException;
 import io.dropwizard.Application;
 import io.dropwizard.configuration.EnvironmentVariableSubstitutor;
@@ -23,13 +20,8 @@ import io.dropwizard.configuration.SubstitutingSourceProvider;
 import io.dropwizard.setup.Bootstrap;
 import io.dropwizard.setup.Environment;
 import java.io.UnsupportedEncodingException;
-import java.util.Map;
-import java.util.Random;
-import java.util.SortedSet;
-import java.util.TreeSet;
 import lombok.extern.slf4j.Slf4j;
 import org.glassfish.jersey.media.multipart.MultiPartFeature;
-import org.redisson.api.StreamInfo;
 
 @Slf4j
 public class EventsClientApplication extends Application<EventsClientApplicationConfiguration> {
@@ -67,8 +59,8 @@ public class EventsClientApplication extends Application<EventsClientApplication
       throws InvalidProtocolBufferException, UnsupportedEncodingException, InterruptedException {
     log.info("Starting Next Gen Application ...");
     MaintenanceController.forceMaintenance(true);
-    Injector injector =
-        Guice.createInjector(new EventsClientApplicationModule(appConfig), new MetricRegistryModule(metricRegistry));
+    Injector injector = Guice.createInjector(
+        new io.harness.EventsClientApplicationModule(appConfig), new MetricRegistryModule(metricRegistry));
 
     registerJerseyFeatures(environment);
     registerManagedBeans(environment, injector);

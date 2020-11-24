@@ -50,6 +50,20 @@ mongo:
   connectionsPerHost: 300
   indexManagerMode: AUTO
 
+eventsFramework:
+  redis:
+    sentinel: false
+    masterName: "mymaster"
+    redisUrl: "dummyRedisUrl"
+    sentinelUrls:
+      - "redis://localhost:26379"
+      - "redis://localhost:26380"
+      - "redis://localhost:26381"
+    envNamespace: ""
+    readMode: MASTER
+    nettyThreads: 16
+    useScriptCache: true
+
 # [secondary-db]: Uncomment the following if you want to connect to another database
 #secondary-mongo:
 #  uri: mongodb://localhost:27017/cd-nextgen-secondary
