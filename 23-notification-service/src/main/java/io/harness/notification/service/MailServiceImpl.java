@@ -2,6 +2,8 @@ package io.harness.notification.service;
 
 import static io.harness.NotificationClientConstants.HARNESS_NAME;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.eraro.ErrorCode.DEFAULT_ERROR_CODE;
+import static io.harness.exception.WingsException.USER;
 
 import static freemarker.template.Configuration.VERSION_2_3_23;
 import static org.apache.commons.lang3.StringUtils.stripToNull;
@@ -11,9 +13,10 @@ import io.harness.Team;
 import io.harness.exception.ExceptionUtils;
 import io.harness.notification.NotificationChannelType;
 import io.harness.notification.SmtpConfig;
+import io.harness.notification.exception.NotificationException;
 import io.harness.notification.remote.dto.EmailSettingDTO;
 import io.harness.notification.remote.dto.NotificationSettingDTO;
-import io.harness.notification.service.api.MailService;
+import io.harness.notification.service.api.ChannelService;
 import io.harness.notification.service.api.NotificationSettingsService;
 import io.harness.notification.service.api.NotificationTemplateService;
 import io.harness.serializer.YamlUtils;
@@ -38,10 +41,11 @@ import org.apache.commons.mail.DefaultAuthenticator;
 import org.apache.commons.mail.Email;
 import org.apache.commons.mail.EmailException;
 import org.apache.commons.mail.HtmlEmail;
+import org.apache.commons.validator.routines.EmailValidator;
 
 @AllArgsConstructor(onConstructor = @__({ @Inject }))
 @Slf4j
-public class MailServiceImpl implements MailService {
+public class MailServiceImpl implements ChannelService {
   private final Configuration cfg = new Configuration(VERSION_2_3_23);
   private final SmtpConfig smtpConfig;
   private final NotificationSettingsService notificationSettingsService;
@@ -74,7 +78,21 @@ public class MailServiceImpl implements MailService {
   }
 
   @Override
-  public boolean send(
+  public boolean sendTestNotification(NotificationSettingDTO notificationSettingDTO) {
+    EmailSettingDTO emailSettingDTO = (EmailSettingDTO) notificationSettingDTO;
+    String email = emailSettingDTO.getRecipient();
+    if (Objects.isNull(stripToNull(email)) || !EmailValidator.getInstance().isValid(email)) {
+      throw new NotificationException("Malformed webhook Url " + email, DEFAULT_ERROR_CODE, USER);
+    }
+    boolean sent =
+        send(Collections.singletonList(email), emailSettingDTO.getSubject(), emailSettingDTO.getBody(), email);
+    if (!sent) {
+      throw new NotificationException("Failed to send email. Check SMTP configuration", DEFAULT_ERROR_CODE, USER);
+    }
+    return true;
+  }
+
+  private boolean send(
       List<String> emailIds, String templateId, Map<String, String> templateData, String notificationId, Team team) {
     try {
       String subject = null;
@@ -91,7 +109,7 @@ public class MailServiceImpl implements MailService {
       subject = processTemplate(templateId + "-subject", emailTemplate.getSubject(), templateData);
       body = processTemplate(templateId + "-body", emailTemplate.getBody(), templateData);
 
-      return this.send(emailIds, subject, body, notificationId, team);
+      return this.send(emailIds, subject, body, notificationId);
     } catch (Exception e) {
       log.error("Failed to send email. Check template details for notificationId: {}\n{}", notificationId,
           ExceptionUtils.getMessage(e));
@@ -99,20 +117,7 @@ public class MailServiceImpl implements MailService {
     }
   }
 
-  @Override
-  public boolean send(
-      List<String> emailIds, String templateId, Map<String, String> templateData, String notificationId) {
-    return send(emailIds, templateId, templateData, notificationId, null);
-  }
-
-  @Override
-  public boolean sendTestNotification(NotificationSettingDTO notificationSettingDTO) {
-    EmailSettingDTO emailSettingDTO = (EmailSettingDTO) notificationSettingDTO;
-    return send(Collections.singletonList(emailSettingDTO.getRecipient()), emailSettingDTO.getSubject(),
-        emailSettingDTO.getBody(), emailSettingDTO.getNotificationId(), null);
-  }
-
-  private boolean send(List<String> emailIds, String subject, String body, String notificationId, Team team) {
+  private boolean send(List<String> emailIds, String subject, String body, String notificationId) {
     try {
       if (Objects.isNull(stripToNull(body))) {
         log.error("No email body available. Aborting notification request {}", notificationId);

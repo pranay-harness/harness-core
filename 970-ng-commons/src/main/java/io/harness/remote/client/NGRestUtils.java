@@ -28,7 +28,7 @@ public class NGRestUtils {
           ErrorDTO restResponse = JsonUtils.asObject(response.errorBody().string(), new TypeReference<ErrorDTO>() {});
           errorMessage = restResponse.getMessage();
         } catch (Exception e) {
-          log.debug("Error while converting error received from 71 rest manager", e);
+          log.debug("Error while converting rest response to ErrorDTO", e);
         }
         throw new InvalidRequestException(
             StringUtils.isEmpty(errorMessage) ? "Error occurred while performing this operation" : errorMessage);

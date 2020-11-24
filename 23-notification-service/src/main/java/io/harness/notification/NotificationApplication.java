@@ -16,6 +16,7 @@ import io.harness.ng.core.exceptionmappers.WingsExceptionMapperV2;
 import io.harness.notification.annotations.NotificationMicroserviceAuth;
 import io.harness.notification.eventbackbone.MessageConsumer;
 import io.harness.notification.eventbackbone.MongoMessageConsumer;
+import io.harness.notification.exception.NotificationExceptionMapper;
 import io.harness.notification.service.api.SeedDataPopulaterService;
 import io.harness.persistence.HPersistence;
 import io.harness.queue.QueueListenerController;
@@ -143,6 +144,7 @@ public class NotificationApplication extends Application<NotificationConfigurati
   }
 
   private void registerJerseyProviders(Environment environment) {
+    environment.jersey().register(NotificationExceptionMapper.class);
     environment.jersey().register(JerseyViolationExceptionMapperV2.class);
     environment.jersey().register(WingsExceptionMapperV2.class);
     environment.jersey().register(GenericExceptionMapperV2.class);

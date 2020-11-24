@@ -1,21 +1,26 @@
 package io.harness.notification.service;
 
+import static io.harness.NotificationServiceConstants.*;
+
 import io.harness.NotificationRequest;
 import io.harness.notification.NotificationChannelType;
 import io.harness.notification.remote.dto.NotificationSettingDTO;
-import io.harness.notification.service.api.*;
+import io.harness.notification.service.api.ChannelService;
 
 import com.google.inject.Inject;
-import java.util.HashMap;
+import com.google.inject.name.Named;
+import java.util.EnumMap;
 import java.util.Map;
 
 public class ChannelServiceImpl implements ChannelService {
-  Map<NotificationChannelType, ChannelService> implementationMapping = new HashMap<>();
-  Map<NotificationRequest.ChannelCase, ChannelService> protoImplementationMapping = new HashMap<>();
+  Map<NotificationChannelType, ChannelService> implementationMapping = new EnumMap<>(NotificationChannelType.class);
+  Map<NotificationRequest.ChannelCase, ChannelService> protoImplementationMapping =
+      new EnumMap<>(NotificationRequest.ChannelCase.class);
 
   @Inject
-  public ChannelServiceImpl(MailService mailService, SlackService slackService, PagerDutyService pagerDutyService,
-      MSTeamsService msTeamsService) {
+  public ChannelServiceImpl(@Named(MAILSERVICE) ChannelService mailService,
+      @Named(SLACKSERVICE) ChannelService slackService, @Named(PAGERDUTYSERVICE) ChannelService pagerDutyService,
+      @Named(MSTEAMSSERVICE) ChannelService msTeamsService) {
     implementationMapping.put(NotificationChannelType.EMAIL, mailService);
     implementationMapping.put(NotificationChannelType.PAGERDUTY, pagerDutyService);
     implementationMapping.put(NotificationChannelType.SLACK, slackService);

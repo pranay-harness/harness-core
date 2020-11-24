@@ -4,6 +4,8 @@ import static io.harness.NotificationConstants.*;
 import static io.harness.NotificationRequest.MSTeam;
 import static io.harness.NotificationServiceConstants.TEST_MICROSOFTTEAMS_TEMPLATE;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.eraro.ErrorCode.DEFAULT_ERROR_CODE;
+import static io.harness.exception.WingsException.USER;
 
 import static java.lang.String.format;
 import static java.lang.String.join;
@@ -12,9 +14,10 @@ import static org.apache.commons.lang3.StringUtils.*;
 import io.harness.NotificationRequest;
 import io.harness.Team;
 import io.harness.notification.NotificationChannelType;
+import io.harness.notification.exception.NotificationException;
 import io.harness.notification.remote.dto.MSTeamSettingDTO;
 import io.harness.notification.remote.dto.NotificationSettingDTO;
-import io.harness.notification.service.api.MSTeamsService;
+import io.harness.notification.service.api.ChannelService;
 import io.harness.notification.service.api.NotificationSettingsService;
 import io.harness.notification.service.api.NotificationTemplateService;
 
@@ -32,7 +35,7 @@ import org.apache.commons.validator.routines.UrlValidator;
 @Singleton
 @AllArgsConstructor(onConstructor = @__({ @Inject }))
 @Slf4j
-public class MSTeamsServiceImpl implements MSTeamsService {
+public class MSTeamsServiceImpl implements ChannelService {
   private static final String ARTIFACTS = "ARTIFACTS";
   private static final String ASTERISK = "\\*";
   private static final String ASTERISK_REPLACEMENT = "**";
@@ -84,18 +87,19 @@ public class MSTeamsServiceImpl implements MSTeamsService {
   @Override
   public boolean sendTestNotification(NotificationSettingDTO notificationSettingDTO) {
     MSTeamSettingDTO msTeamSettingDTO = (MSTeamSettingDTO) notificationSettingDTO;
-    return send(Collections.singletonList(msTeamSettingDTO.getRecipient()), TEST_MICROSOFTTEAMS_TEMPLATE,
-        Collections.emptyMap(), msTeamSettingDTO.getNotificationId(), null);
+    String webhookUrl = msTeamSettingDTO.getRecipient();
+    if (Objects.isNull(stripToNull(webhookUrl))) {
+      throw new NotificationException("Malformed webhook Url " + webhookUrl, DEFAULT_ERROR_CODE, USER);
+    }
+    boolean sent = send(Collections.singletonList(webhookUrl), TEST_MICROSOFTTEAMS_TEMPLATE, Collections.emptyMap(),
+        msTeamSettingDTO.getNotificationId(), null);
+    if (!sent) {
+      throw new NotificationException("Invalid webhook url " + webhookUrl, DEFAULT_ERROR_CODE, USER);
+    }
+    return true;
   }
 
-  @Override
-  public boolean send(List<String> microsoftTeamsWebhookUrls, String templateId, Map<String, String> templateData,
-      String notificationId) {
-    return send(microsoftTeamsWebhookUrls, templateId, templateData, notificationId, null);
-  }
-
-  @Override
-  public boolean send(List<String> microsoftTeamsWebhookUrls, String templateId, Map<String, String> templateData,
+  private boolean send(List<String> microsoftTeamsWebhookUrls, String templateId, Map<String, String> templateData,
       String notificationId, Team team) {
     Optional<String> templateOpt = notificationTemplateService.getTemplateAsString(templateId, team);
     if (!templateOpt.isPresent()) {
