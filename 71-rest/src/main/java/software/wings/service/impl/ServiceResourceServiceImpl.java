@@ -100,6 +100,8 @@ import software.wings.beans.FeatureName;
 import software.wings.beans.GraphNode;
 import software.wings.beans.HarnessTagLink;
 import software.wings.beans.HarnessTagType;
+import software.wings.beans.HelmCommandFlagConstants;
+import software.wings.beans.HelmCommandFlagConstants.HelmSubCommand;
 import software.wings.beans.InformationNotification;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.LambdaSpecification;
@@ -3058,5 +3060,13 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
         .project(ServiceKeys.name, true)
         .project(ServiceKeys.appId, true)
         .asList(new FindOptions().limit(limit));
+  }
+
+  @Override
+  public Set<HelmSubCommand> getHelmCommandFlags(HelmVersion version, String appId, String serviceId) {
+    if (null == version) {
+      version = getHelmVersionWithDefault(appId, serviceId);
+    }
+    return HelmCommandFlagConstants.getHelmSubCommands(version);
   }
 }
