@@ -2,12 +2,12 @@ package io.harness.yaml;
 
 import java.io.InputStream;
 import lombok.Builder;
-import lombok.Value;
+import lombok.Data;
 
 /**
  * Configuration required to use SDK
  */
-@Value
+@Data
 @Builder
 public class YamlSdkConfiguration {
   /**

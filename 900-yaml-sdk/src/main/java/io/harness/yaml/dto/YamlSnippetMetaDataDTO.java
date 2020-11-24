@@ -20,4 +20,5 @@ public class YamlSnippetMetaDataDTO {
    */
   String identifier;
   List<String> tags;
+  String iconTag;
 }

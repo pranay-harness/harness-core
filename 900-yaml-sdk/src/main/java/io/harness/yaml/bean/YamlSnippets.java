@@ -20,6 +20,7 @@ import lombok.experimental.FieldDefaults;
  *                 <tag>tag 1</tag>
  *                 <tag>tag 2</tag>
  *             </tags>
+ *             <iconTag>tag1</icontag>
  *             <resourcePath>snippets/snippet.yaml<resourcePath>
  *         </YamlSnippetMetaData>
  *     </yamlSnippetMetaDataList>

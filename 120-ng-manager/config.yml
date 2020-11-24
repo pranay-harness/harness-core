@@ -128,4 +128,3 @@ pmsGrpcClientConfig:
 
 shouldConfigureWithPMS: false
 
-yamlSnippetMetadataResourcePath: snippets/index.xml
