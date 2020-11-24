@@ -26,7 +26,6 @@ import io.harness.rule.OwnerRule;
 import io.harness.serializer.KryoSerializer;
 
 import software.wings.beans.appmanifest.HelmChart;
-import software.wings.delegatetasks.buildsource.BuildSourceExecutionResponse;
 import software.wings.delegatetasks.manifest.ManifestCollectionExecutionResponse;
 import software.wings.helpers.ext.helm.request.HelmChartCollectionParams;
 
@@ -182,8 +181,8 @@ public class ManifestPerpetualTaskExecutorTest extends DelegateTest {
     verify(manifestRepositoryService, times(1)).collectManifests(any(ManifestCollectionParams.class));
 
     // Build details are published 1 time: 1 time for cleanup and then exit early because of exception.
-    verify(managerClient, never())
-        .publishArtifactCollectionResult(anyString(), anyString(), any(BuildSourceExecutionResponse.class));
+    verify(delegateAgentManagerClient, never())
+        .publishArtifactCollectionResult(anyString(), anyString(), any(RequestBody.class));
     verify(call, never()).execute();
   }
 

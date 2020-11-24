@@ -78,6 +78,7 @@ import javax.ws.rs.core.GenericType;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import lombok.extern.slf4j.Slf4j;
+import okhttp3.RequestBody;
 import org.glassfish.hk2.utilities.binding.AbstractBinder;
 import org.junit.Before;
 import org.junit.ClassRule;
@@ -93,21 +94,24 @@ import org.mockito.ArgumentCaptor;
 @RunWith(Parameterized.class)
 @Slf4j
 public class DelegateAgentResourceTest {
-  private static DelegateService delegateService = mock(DelegateService.class);
+  private static final DelegateService delegateService = mock(DelegateService.class);
 
-  private static HttpServletRequest httpServletRequest = mock(HttpServletRequest.class);
+  private static final HttpServletRequest httpServletRequest = mock(HttpServletRequest.class);
 
-  private static AccountService accountService = mock(AccountService.class);
-  private static WingsPersistence wingsPersistence = mock(WingsPersistence.class);
-  private static DelegateRequestRateLimiter delegateRequestRateLimiter = mock(DelegateRequestRateLimiter.class);
-  private static SubdomainUrlHelperIntfc subdomainUrlHelper = mock(SubdomainUrlHelperIntfc.class);
-  private static InstanceHelper instanceSyncResponseHandler = mock(InstanceHelper.class);
-  private static ArtifactCollectionResponseHandler artifactCollectionResponseHandler =
-      mock(ArtifactCollectionResponseHandler.class);
-  private static ManifestCollectionResponseHandler manifestCollectionResponseHandler =
+  private static final AccountService accountService = mock(AccountService.class);
+  private static final WingsPersistence wingsPersistence = mock(WingsPersistence.class);
+  private static final DelegateRequestRateLimiter delegateRequestRateLimiter = mock(DelegateRequestRateLimiter.class);
+  private static final SubdomainUrlHelperIntfc subdomainUrlHelper = mock(SubdomainUrlHelperIntfc.class);
+  private static final InstanceHelper instanceSyncResponseHandler = mock(InstanceHelper.class);
+  private static final ArtifactCollectionResponseHandler artifactCollectionResponseHandler;
+
+  static {
+    artifactCollectionResponseHandler = mock(ArtifactCollectionResponseHandler.class);
+  }
+  private static final ManifestCollectionResponseHandler manifestCollectionResponseHandler =
       mock(ManifestCollectionResponseHandler.class);
-  private static ConnectorHearbeatPublisher connectorHearbeatPublisher = mock(ConnectorHearbeatPublisher.class);
-  private static KryoSerializer kryoSerializer = mock(KryoSerializer.class);
+  private static final ConnectorHearbeatPublisher connectorHearbeatPublisher = mock(ConnectorHearbeatPublisher.class);
+  private static final KryoSerializer kryoSerializer = mock(KryoSerializer.class);
 
   @Parameter public String apiUrl;
 
@@ -185,12 +189,12 @@ public class DelegateAgentResourceTest {
   @Category(UnitTests.class)
   public void shouldGetConnectionHeartbeat() {
     DelegateConnectionHeartbeat delegateConnectionHeartbeat = DelegateConnectionHeartbeat.builder().build();
-    RestResponse<String> restResponse = RESOURCES.client()
-                                            .target("/agent/delegates/connectionHeartbeat/" + DELEGATE_ID
-                                                + "?delegateId=" + DELEGATE_ID + "&accountId=" + ACCOUNT_ID)
-                                            .request()
-                                            .post(entity(delegateConnectionHeartbeat, MediaType.APPLICATION_JSON),
-                                                new GenericType<RestResponse<String>>() {});
+    RESOURCES.client()
+        .target("/agent/delegates/connectionHeartbeat/" + DELEGATE_ID + "?delegateId=" + DELEGATE_ID
+            + "&accountId=" + ACCOUNT_ID)
+        .request()
+        .post(entity(delegateConnectionHeartbeat, MediaType.APPLICATION_JSON),
+            new GenericType<RestResponse<String>>() {});
     verify(delegateService, atLeastOnce())
         .registerHeartbeat(ACCOUNT_ID, DELEGATE_ID, delegateConnectionHeartbeat, ConnectionMode.POLLING);
   }
@@ -203,12 +207,11 @@ public class DelegateAgentResourceTest {
     when(delegateService.update(any(Delegate.class)))
         .thenAnswer(invocation -> invocation.getArgumentAt(0, Delegate.class));
 
-    RestResponse<Delegate> restResponse =
-        RESOURCES.client()
-            .target("/agent/delegates/" + DELEGATE_ID + "/clear-cache?delegateId=" + DELEGATE_ID
-                + "&accountId=" + ACCOUNT_ID)
-            .request()
-            .put(entity(delegate, MediaType.APPLICATION_JSON), new GenericType<RestResponse<Delegate>>() {});
+    RESOURCES.client()
+        .target(
+            "/agent/delegates/" + DELEGATE_ID + "/clear-cache?delegateId=" + DELEGATE_ID + "&accountId=" + ACCOUNT_ID)
+        .request()
+        .put(entity(delegate, MediaType.APPLICATION_JSON), new GenericType<RestResponse<Delegate>>() {});
     verify(delegateService, atLeastOnce()).clearCache(ACCOUNT_ID, DELEGATE_ID);
   }
 
@@ -262,12 +265,14 @@ public class DelegateAgentResourceTest {
             .buildSourceResponse(BuildSourceResponse.builder().build())
             .build();
 
-    RestResponse<Boolean> restResponse =
-        RESOURCES.client()
-            .target("/agent/delegates/artifact-collection/12345679?accountId=" + ACCOUNT_ID)
-            .request()
-            .post(entity(buildSourceExecutionResponse, MediaType.APPLICATION_JSON),
-                new GenericType<RestResponse<Boolean>>() {});
+    when(kryoSerializer.asObject(any(byte[].class))).thenReturn(buildSourceExecutionResponse);
+
+    RequestBody requestBody = RequestBody.create(okhttp3.MediaType.parse("application/octet-stream"), "");
+
+    RESOURCES.client()
+        .target("/agent/delegates/artifact-collection/12345679?accountId=" + ACCOUNT_ID)
+        .request()
+        .post(entity(requestBody, "application/x-kryo"), new GenericType<RestResponse<Boolean>>() {});
 
     verify(artifactCollectionResponseHandler, atLeastOnce())
         .processArtifactCollectionResult(ACCOUNT_ID, "12345679", buildSourceExecutionResponse);
@@ -280,11 +285,10 @@ public class DelegateAgentResourceTest {
     DelegateResponseData responseData = PcfCommandExecutionResponse.builder().commandExecutionStatus(SUCCESS).build();
     String perpetualTaskId = "12345679";
 
-    RestResponse<Boolean> restResponse =
-        RESOURCES.client()
-            .target("/agent/delegates/instance-sync/12345679?accountId=" + ACCOUNT_ID)
-            .request()
-            .post(entity(responseData, MediaType.APPLICATION_JSON), new GenericType<RestResponse<Boolean>>() {});
+    RESOURCES.client()
+        .target("/agent/delegates/instance-sync/12345679?accountId=" + ACCOUNT_ID)
+        .request()
+        .post(entity(responseData, MediaType.APPLICATION_JSON), new GenericType<RestResponse<Boolean>>() {});
 
     verify(instanceSyncResponseHandler, atLeastOnce())
         .processInstanceSyncResponseFromPerpetualTask(perpetualTaskId, responseData);
@@ -430,12 +434,11 @@ public class DelegateAgentResourceTest {
 
     when(kryoSerializer.asObject(any(byte[].class))).thenReturn(apiCallLogs);
 
-    RestResponse<String> restResponse =
-        RESOURCES.client()
-            .target("/agent/delegates/" + DELEGATE_ID + "/state-executions?delegateId=" + DELEGATE_ID
-                + "&accountId=" + ACCOUNT_ID)
-            .request()
-            .post(entity(apiCallLogs, MediaType.APPLICATION_JSON), new GenericType<RestResponse<String>>() {});
+    RESOURCES.client()
+        .target("/agent/delegates/" + DELEGATE_ID + "/state-executions?delegateId=" + DELEGATE_ID
+            + "&accountId=" + ACCOUNT_ID)
+        .request()
+        .post(entity(apiCallLogs, MediaType.APPLICATION_JSON), new GenericType<RestResponse<String>>() {});
 
     verify(wingsPersistence, atLeastOnce()).save(apiCallLogs);
   }
@@ -445,11 +448,10 @@ public class DelegateAgentResourceTest {
   @Category(UnitTests.class)
   public void shouldFailIfAllDelegatesFailed() {
     String taskId = generateUuid();
-    RestResponse<String> response =
-        RESOURCES.client()
-            .target("/agent/delegates/" + DELEGATE_ID + "/tasks/" + taskId + "/fail?accountId=" + ACCOUNT_ID)
-            .request()
-            .get(new GenericType<RestResponse<String>>() {});
+    RESOURCES.client()
+        .target("/agent/delegates/" + DELEGATE_ID + "/tasks/" + taskId + "/fail?accountId=" + ACCOUNT_ID)
+        .request()
+        .get(new GenericType<RestResponse<String>>() {});
     verify(delegateService, atLeastOnce()).failIfAllDelegatesFailed(ACCOUNT_ID, DELEGATE_ID, taskId);
   }
 
@@ -466,12 +468,10 @@ public class DelegateAgentResourceTest {
                                                                          .criteria("aaa")
                                                                          .validated(true)
                                                                          .build());
-    RestResponse<DelegateTaskPackage> restResponse =
-        RESOURCES.client()
-            .target("/agent/delegates/" + DELEGATE_ID + "/tasks/" + taskId + "/report?accountId=" + ACCOUNT_ID)
-            .request()
-            .post(entity(connectionResults, "application/x-kryo"),
-                new GenericType<RestResponse<DelegateTaskPackage>>() {});
+    RESOURCES.client()
+        .target("/agent/delegates/" + DELEGATE_ID + "/tasks/" + taskId + "/report?accountId=" + ACCOUNT_ID)
+        .request()
+        .post(entity(connectionResults, "application/x-kryo"), new GenericType<RestResponse<DelegateTaskPackage>>() {});
     verify(delegateService, atLeastOnce()).reportConnectionResults(ACCOUNT_ID, DELEGATE_ID, taskId, connectionResults);
   }
 
@@ -482,11 +482,10 @@ public class DelegateAgentResourceTest {
   public void shouldUpdateTaskResponse() {
     String taskId = generateUuid();
     DelegateTaskResponse taskResponse = DelegateTaskResponse.builder().build();
-    RestResponse<String> response =
-        RESOURCES.client()
-            .target("/agent/delegates/" + DELEGATE_ID + "/tasks/" + taskId + "?accountId=" + ACCOUNT_ID)
-            .request()
-            .post(entity(taskResponse, "application/x-kryo"), new GenericType<RestResponse<String>>() {});
+    RESOURCES.client()
+        .target("/agent/delegates/" + DELEGATE_ID + "/tasks/" + taskId + "?accountId=" + ACCOUNT_ID)
+        .request()
+        .post(entity(taskResponse, "application/x-kryo"), new GenericType<RestResponse<String>>() {});
     verify(delegateService, atLeastOnce()).processDelegateResponse(ACCOUNT_ID, DELEGATE_ID, taskId, taskResponse);
   }
 
@@ -496,11 +495,10 @@ public class DelegateAgentResourceTest {
   public void shouldAcquireDelegateTask() {
     String taskId = generateUuid();
     DelegateTaskResponse taskResponse = DelegateTaskResponse.builder().build();
-    Response response =
-        RESOURCES.client()
-            .target("/agent/delegates/" + DELEGATE_ID + "/tasks/" + taskId + "/acquire?accountId=" + ACCOUNT_ID)
-            .request()
-            .put(entity(taskResponse, "application/x-kryo"), Response.class);
+    RESOURCES.client()
+        .target("/agent/delegates/" + DELEGATE_ID + "/tasks/" + taskId + "/acquire?accountId=" + ACCOUNT_ID)
+        .request()
+        .put(entity(taskResponse, "application/x-kryo"), Response.class);
     verify(delegateService, atLeastOnce()).acquireDelegateTask(ACCOUNT_ID, DELEGATE_ID, taskId);
   }
 

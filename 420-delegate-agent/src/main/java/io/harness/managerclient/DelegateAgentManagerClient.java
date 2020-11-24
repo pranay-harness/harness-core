@@ -116,4 +116,8 @@ public interface DelegateAgentManagerClient {
   @POST("agent/delegates/connectors/{perpetualTaskId}")
   Call<RestResponse<Boolean>> publishConnectorHeartbeatResult(@Path("perpetualTaskId") String perpetualTaskId,
       @Query("accountId") String accountId, @Body ConnectorHeartbeatDelegateResponse responseData);
+
+  @POST("agent/delegates/artifact-collection/{perpetualTaskId}")
+  Call<RestResponse<Boolean>> publishArtifactCollectionResult(@Path("perpetualTaskId") String perpetualTaskId,
+      @Query("accountId") String accountId, @Body RequestBody buildSourceExecutionResponse);
 }
