@@ -7,8 +7,9 @@ import lombok.Data;
 @Builder
 public class WebhookEventResponse {
   public enum FinalStatus {
-    SCM_SERVICE_DOWN,
+    SCM_SERVICE_CONNECTION_FAILED,
     INVALID_PAYLOAD,
+    NO_MATCHING_TRIGGER_FOR_REPO,
     NO_MATCHING_TRIGGER,
     INVALID_RUNTIME_INPUT_YAML,
     TARGET_DID_NOT_EXECUTE,
