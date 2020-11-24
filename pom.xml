@@ -2216,6 +2216,9 @@
                         <configuration>
                             <executable>bash</executable>
                             <commandlineArgs>${basedir}/scripts/bazel/bazel_script.sh</commandlineArgs>
+                            <environmentVariables>
+                                <OVERRIDE_LOCAL_M2>${maven.repo.local}</OVERRIDE_LOCAL_M2>
+                            </environmentVariables>
                         </configuration>
                     </execution>
                 </executions>
