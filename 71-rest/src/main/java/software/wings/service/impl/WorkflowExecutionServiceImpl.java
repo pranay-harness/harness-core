@@ -2895,6 +2895,37 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
   }
 
   @Override
+  public List<String> runningExecutionsForApplication(String appId) {
+    List<WorkflowExecution> executions = wingsPersistence.createQuery(WorkflowExecution.class)
+                                             .filter(WorkflowExecutionKeys.appId, appId)
+                                             .field(WorkflowExecutionKeys.status)
+                                             .in(ExecutionStatus.activeStatuses())
+                                             .project(WorkflowExecutionKeys.uuid, true)
+                                             .project(WorkflowExecutionKeys.name, true)
+                                             .asList();
+    if (isEmpty(executions)) {
+      return Collections.emptyList();
+    }
+    return executions.stream().map(WorkflowExecution::getName).collect(Collectors.toList());
+  }
+
+  @Override
+  public List<String> runningExecutionsForService(String appId, String serviceId) {
+    List<WorkflowExecution> executions = wingsPersistence.createQuery(WorkflowExecution.class)
+                                             .filter(WorkflowExecutionKeys.appId, appId)
+                                             .filter(WorkflowExecutionKeys.serviceIds, serviceId)
+                                             .field(WorkflowExecutionKeys.status)
+                                             .in(ExecutionStatus.activeStatuses())
+                                             .project(WorkflowExecutionKeys.uuid, true)
+                                             .project(WorkflowExecutionKeys.name, true)
+                                             .asList();
+    if (isEmpty(executions)) {
+      return Collections.emptyList();
+    }
+    return executions.stream().map(WorkflowExecution::getName).collect(Collectors.toList());
+  }
+
+  @Override
   public List<WorkflowExecution> getRunningExecutionsForInfraDef(String appId, String infraDefinitionId) {
     return wingsPersistence.createQuery(WorkflowExecution.class)
         .filter(WorkflowExecutionKeys.appId, appId)

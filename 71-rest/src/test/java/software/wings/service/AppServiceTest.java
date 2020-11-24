@@ -9,6 +9,7 @@ import static io.harness.persistence.HQuery.excludeAuthority;
 import static io.harness.rule.OwnerRule.AGORODETKI;
 import static io.harness.rule.OwnerRule.ANUBHAW;
 import static io.harness.rule.OwnerRule.GEORGE;
+import static io.harness.rule.OwnerRule.PRABU;
 import static io.harness.rule.OwnerRule.SRINIVAS;
 
 import static software.wings.api.DeploymentType.CUSTOM;
@@ -22,8 +23,10 @@ import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 import static software.wings.utils.WingsTestConstants.APP_ID;
 import static software.wings.utils.WingsTestConstants.APP_NAME;
 import static software.wings.utils.WingsTestConstants.NOTIFICATION_ID;
+import static software.wings.utils.WingsTestConstants.PIPELINE_EXECUTION_ID;
 import static software.wings.utils.WingsTestConstants.SERVICE_ID;
 import static software.wings.utils.WingsTestConstants.TEMPLATE_ID;
+import static software.wings.utils.WingsTestConstants.WORKFLOW_EXECUTION_ID;
 import static software.wings.utils.WingsTestConstants.mockChecker;
 
 import static java.util.Arrays.asList;
@@ -73,6 +76,7 @@ import software.wings.service.intfc.ResourceLookupService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.TriggerService;
+import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.service.intfc.WorkflowService;
 import software.wings.service.intfc.instance.InstanceService;
 import software.wings.service.intfc.template.TemplateService;
@@ -140,6 +144,7 @@ public class AppServiceTest extends WingsBaseTest {
   @Mock private SettingsService settingsService;
   @Mock private TriggerService triggerService;
   @Mock private WorkflowService workflowService;
+  @Mock private WorkflowExecutionService workflowExecutionService;
   @Mock private YamlGitService yamlGitService;
   @Mock private TemplateService templateService;
 
@@ -445,5 +450,16 @@ public class AppServiceTest extends WingsBaseTest {
     when(wingsPersistence.get(Application.class, APP_ID)).thenReturn(null);
     String accountIdByAppId = appService.getAccountIdByAppId(APP_ID);
     assertThat(accountIdByAppId).isNull();
+  }
+
+  @Test
+  @Owner(developers = PRABU)
+  @Category(UnitTests.class)
+  public void shouldCheckForRunningExecutionsBeforeDelete() {
+    when(wingsPersistence.get(Application.class, APP_ID))
+        .thenReturn(anApplication().name(APP_NAME).uuid(APP_ID).build());
+    when(workflowExecutionService.runningExecutionsForApplication(APP_ID))
+        .thenReturn(asList(PIPELINE_EXECUTION_ID, WORKFLOW_EXECUTION_ID));
+    assertThatThrownBy(() -> appService.delete(APP_ID, false)).isInstanceOf(InvalidRequestException.class);
   }
 }

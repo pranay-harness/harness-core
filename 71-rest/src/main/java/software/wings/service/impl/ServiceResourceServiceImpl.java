@@ -1245,6 +1245,15 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
               service.getName()),
           USER);
     }
+
+    List<String> runningExecutions =
+        workflowExecutionService.runningExecutionsForService(service.getAppId(), service.getUuid());
+    if (isNotEmpty(runningExecutions)) {
+      throw new InvalidRequestException(
+          format("Service:[%s] couldn't be deleted. [%d] Running executions present: [%s]", service.getName(),
+              runningExecutions.size(), String.join(", ", runningExecutions)),
+          USER);
+    }
   }
 
   /**
