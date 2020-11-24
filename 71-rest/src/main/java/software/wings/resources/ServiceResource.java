@@ -10,9 +10,11 @@ import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.exception.InvalidRequestException;
+import io.harness.k8s.model.HelmVersion;
 import io.harness.rest.RestResponse;
 
 import software.wings.beans.CommandCategory;
+import software.wings.beans.HelmCommandFlagConstants.HelmSubCommand;
 import software.wings.beans.LambdaSpecification;
 import software.wings.beans.Service;
 import software.wings.beans.Setup.SetupStatus;
@@ -47,6 +49,7 @@ import com.google.inject.Inject;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiParam;
 import java.util.List;
+import java.util.Set;
 import javax.validation.constraints.NotNull;
 import javax.ws.rs.BeanParam;
 import javax.ws.rs.Consumes;
@@ -829,5 +832,14 @@ public class ServiceResource {
     service.setUuid(serviceId);
     service.setAppId(appId);
     return new RestResponse<>(serviceResourceService.updateServiceWithHelmVersion(service));
+  }
+
+  @GET
+  @Path("{serviceId}/helm-command-flag")
+  @Timed
+  @ExceptionMetered
+  public RestResponse<Set<HelmSubCommand>> getHelmCommandFlags(@QueryParam("appId") String appId,
+      @QueryParam("version") HelmVersion version, @PathParam("serviceId") String serviceId) {
+    return new RestResponse<>(serviceResourceService.getHelmCommandFlags(version, appId, serviceId));
   }
 }

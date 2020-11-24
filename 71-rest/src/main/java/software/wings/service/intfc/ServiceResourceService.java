@@ -11,6 +11,7 @@ import io.harness.validation.Update;
 
 import software.wings.api.DeploymentType;
 import software.wings.beans.CommandCategory;
+import software.wings.beans.HelmCommandFlagConstants.HelmSubCommand;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.LambdaSpecification;
 import software.wings.beans.Service;
@@ -562,4 +563,6 @@ public interface ServiceResourceService extends OwnedByApplication {
 
   List<Service> listByCustomDeploymentTypeId(
       @NotBlank String accountId, @Nonnull List<String> deploymentTemplateIds, int limit);
+
+  Set<HelmSubCommand> getHelmCommandFlags(HelmVersion version, String appId, String serviceId);
 }
