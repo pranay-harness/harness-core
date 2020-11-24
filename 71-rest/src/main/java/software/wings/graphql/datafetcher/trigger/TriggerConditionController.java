@@ -1,6 +1,7 @@
 package software.wings.graphql.datafetcher.trigger;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.exception.WingsException.USER;
 
 import static software.wings.graphql.schema.type.trigger.QLGitHubAction.packageActions;
@@ -9,7 +10,6 @@ import static software.wings.graphql.schema.type.trigger.QLGitHubAction.releaseA
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.configuration.DeployMode;
-import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.InvalidRequestException;
 
 import software.wings.app.MainConfiguration;
@@ -174,9 +174,13 @@ public class TriggerConditionController {
 
     if (GitHubEventType.PULL_REQUEST.getValue().equals(eventType)
         || (GitHubEventType.PACKAGE.getValue().equals(eventType))) {
-      action = ((WebHookTriggerCondition) triggerCondition).getActions().get(0).getValue();
+      if (!isEmpty(((WebHookTriggerCondition) triggerCondition).getActions())) {
+        action = ((WebHookTriggerCondition) triggerCondition).getActions().get(0).getValue();
+      }
     } else if (GitHubEventType.RELEASE.getValue().equals(eventType)) {
-      action = ((WebHookTriggerCondition) triggerCondition).getReleaseActions().get(0).getValue();
+      if (!isEmpty(((WebHookTriggerCondition) triggerCondition).getReleaseActions())) {
+        action = ((WebHookTriggerCondition) triggerCondition).getReleaseActions().get(0).getValue();
+      }
     }
 
     return QLWebhookEvent.builder().action(action).event(eventType).build();
@@ -294,7 +298,7 @@ public class TriggerConditionController {
     }
     String artifactSourceId = triggerConditionInput.getArtifactConditionInput().getArtifactSourceId();
 
-    if (EmptyPredicate.isEmpty(artifactSourceId)) {
+    if (isEmpty(artifactSourceId)) {
       throw new InvalidRequestException("ArtifactSource must not be null nor empty", USER);
     }
 
