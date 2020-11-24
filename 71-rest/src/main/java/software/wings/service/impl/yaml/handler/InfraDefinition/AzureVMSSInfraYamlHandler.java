@@ -29,9 +29,8 @@ public class AzureVMSSInfraYamlHandler extends CloudProviderInfrastructureYamlHa
 
     String hostConnectionAttributeName = null;
     if (SSH_PUBLIC_KEY == bean.getVmssAuthType()) {
-      SettingAttribute attribute = settingsService.get(bean.getHostConnectionAttrs());
-      notNullCheck("Public Key is NULL", attribute);
-      hostConnectionAttributeName = attribute.getName();
+      notNullCheck("Public Key Name is NULL", bean.getHostConnectionAttrs());
+      hostConnectionAttributeName = bean.getHostConnectionAttrs();
     }
 
     String passwordSecretTextName = null;
@@ -70,11 +69,9 @@ public class AzureVMSSInfraYamlHandler extends CloudProviderInfrastructureYamlHa
     notNullCheck("Resource Group Name is NULL", yaml.getResourceGroupName());
     notNullCheck("Base Scale Set Name is NULL", yaml.getBaseVMSSName());
 
-    String hostConnectionAttributeId = null;
     if (SSH_PUBLIC_KEY == yaml.getVmssAuthType()) {
       SettingAttribute attribute = settingsService.getSettingAttributeByName(accountId, yaml.getHostConnectionAttrs());
       notNullCheck("Public Key is NULL", attribute);
-      hostConnectionAttributeId = attribute.getUuid();
     }
 
     String passwordSecretTextName = null;
@@ -84,7 +81,7 @@ public class AzureVMSSInfraYamlHandler extends CloudProviderInfrastructureYamlHa
     }
 
     bean.setCloudProviderId(cloudProvider.getUuid());
-    bean.setHostConnectionAttrs(hostConnectionAttributeId);
+    bean.setHostConnectionAttrs(yaml.getHostConnectionAttrs());
     bean.setPasswordSecretTextName(yaml.getPasswordSecretTextName());
     bean.setBaseVMSSName(yaml.getBaseVMSSName());
     bean.setUserName(yaml.getUserName());
