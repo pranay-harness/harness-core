@@ -30,4 +30,6 @@ public interface LicenseService {
   void validateLicense(String accountId, String operation);
 
   void setLicense(Account account);
+
+  boolean updateLicenseForProduct(String productCode, String accountId, Integer orderQuantity, long expirationTime);
 }

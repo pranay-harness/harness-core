@@ -23,6 +23,7 @@ import software.wings.beans.security.UserGroup;
 import software.wings.dl.GenericDbCache;
 import software.wings.dl.WingsPersistence;
 import software.wings.helpers.ext.mail.EmailData;
+import software.wings.security.authentication.MarketPlaceConfig;
 import software.wings.service.impl.AccountDao;
 import software.wings.service.impl.LicenseUtils;
 import software.wings.service.intfc.AccountService;
@@ -555,5 +556,27 @@ public class LicenseServiceImpl implements LicenseService {
     }
 
     account.getLicenseInfo().setExpiryTime(System.currentTimeMillis() + licenseList.get(0).getExpiryDuration());
+  }
+
+  @Override
+  public boolean updateLicenseForProduct(
+      String productCode, String accountId, Integer orderQuantity, long expirationTime) {
+    final MarketPlaceConfig marketPlaceConfig = mainConfiguration.getMarketPlaceConfig();
+    if (marketPlaceConfig.getAwsMarketPlaceProductCode().equals(productCode)) {
+      updateAccountLicense(accountId,
+          LicenseInfo.builder()
+              .accountType(AccountType.PAID)
+              .licenseUnits(orderQuantity)
+              .accountStatus(AccountStatus.ACTIVE)
+              .expiryTime(expirationTime)
+              .build());
+    } else if (marketPlaceConfig.getAwsMarketPlaceCeProductCode().equals(productCode)) {
+      updateCeLicense(
+          accountId, CeLicenseInfo.builder().expiryTime(expirationTime).licenseType(CeLicenseType.PAID).build());
+    } else {
+      log.error("Invalid AWS productcode received:[{}],", productCode);
+      return false;
+    }
+    return true;
   }
 }

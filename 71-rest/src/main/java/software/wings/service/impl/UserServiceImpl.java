@@ -47,6 +47,8 @@ import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.beans.SearchFilter;
 import io.harness.beans.SearchFilter.Operator;
+import io.harness.ccm.license.CeLicenseInfo;
+import io.harness.ccm.license.CeLicenseType;
 import io.harness.data.encoding.EncodingUtils;
 import io.harness.eraro.ErrorCode;
 import io.harness.event.handler.impl.EventPublishHelper;
@@ -110,6 +112,7 @@ import software.wings.beans.sso.SamlSettings;
 import software.wings.dl.WingsPersistence;
 import software.wings.helpers.ext.mail.EmailData;
 import software.wings.helpers.ext.url.SubdomainUrlHelperIntfc;
+import software.wings.licensing.LicenseService;
 import software.wings.security.AccountPermissionSummary;
 import software.wings.security.JWT_CATEGORY;
 import software.wings.security.PermissionAttribute.Action;
@@ -233,6 +236,7 @@ public class UserServiceImpl implements UserService {
   private static final String INVITE_URL_FORMAT = "/invite?email=%s&inviteId=%s";
   private static final String LOGIN_URL_FORMAT = "/login?company=%s&account=%s&email=%s";
   private static final String HARNESS_ISSUER = "Harness Inc";
+  private static final int MINIMAL_ORDER_QUANTITY = 1;
 
   /**
    * The Executor service.
@@ -265,6 +269,7 @@ public class UserServiceImpl implements UserService {
   @Inject private SubdomainUrlHelperIntfc subdomainUrlHelper;
   @Inject private TOTPAuthHandler totpAuthHandler;
   @Inject private KryoSerializer kryoSerializer;
+  @Inject private LicenseService licenseService;
 
   /* (non-Javadoc)
    * @see software.wings.service.intfc.UserService#register(software.wings.beans.User)
@@ -1354,13 +1359,7 @@ public class UserServiceImpl implements UserService {
       if (marketPlace == null) {
         throw new GeneralException(String.format("No MarketPlace found with marketPlaceID=[{%s}]", marketPlaceID));
       }
-      licenseInfo = LicenseInfo.builder()
-                        .accountType(AccountType.PAID)
-                        .licenseUnits(marketPlace.getOrderQuantity())
-                        .expiryTime(marketPlace.getExpirationDate().getTime())
-                        .accountStatus(AccountStatus.ACTIVE)
-                        .build();
-      String accountId = setupAccountForUser(user, userInvite, licenseInfo);
+      String accountId = setupAccountBasedOnProduct(user, userInvite, marketPlace);
 
       marketPlace.setAccountId(accountId);
       wingsPersistence.save(marketPlace);
@@ -3030,5 +3029,30 @@ public class UserServiceImpl implements UserService {
     map.put(UserKeys.name, userInvite.getName().trim());
     map.put(UserKeys.passwordHash, hashpw(new String(userInvite.getPassword()), BCrypt.gensalt()));
     wingsPersistence.updateFields(User.class, existingUser.getUuid(), map);
+  }
+
+  private String setupAccountBasedOnProduct(User user, UserInvite userInvite, MarketPlace marketPlace) {
+    LicenseInfo licenseInfo = LicenseInfo.builder()
+                                  .accountType(AccountType.PAID)
+                                  .licenseUnits(marketPlace.getOrderQuantity())
+                                  .expiryTime(marketPlace.getExpirationDate().getTime())
+                                  .accountStatus(AccountStatus.ACTIVE)
+                                  .build();
+    if (marketPlace.getProductCode().equals(configuration.getMarketPlaceConfig().getAwsMarketPlaceProductCode())) {
+      return setupAccountForUser(user, userInvite, licenseInfo);
+    } else if (marketPlace.getProductCode().equals(
+                   configuration.getMarketPlaceConfig().getAwsMarketPlaceCeProductCode())) {
+      licenseInfo.setAccountType(AccountType.TRIAL);
+      licenseInfo.setLicenseUnits(MINIMAL_ORDER_QUANTITY);
+      String accountId = setupAccountForUser(user, userInvite, licenseInfo);
+      licenseService.updateCeLicense(accountId,
+          CeLicenseInfo.builder()
+              .expiryTime(marketPlace.getExpirationDate().getTime())
+              .licenseType(CeLicenseType.PAID)
+              .build());
+      return accountId;
+    } else {
+      throw new InvalidRequestException("Cannot resolve AWS marketplace order");
+    }
   }
 }

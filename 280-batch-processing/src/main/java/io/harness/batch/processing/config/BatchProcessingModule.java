@@ -19,9 +19,11 @@ import io.harness.persistence.HPersistence;
 
 import software.wings.dl.WingsMongoPersistence;
 import software.wings.dl.WingsPersistence;
+import software.wings.service.impl.ce.CeAccountExpirationCheckerImpl;
 import software.wings.service.impl.instance.CloudToHarnessMappingServiceImpl;
 import software.wings.service.impl.instance.DeploymentServiceImpl;
 import software.wings.service.impl.security.NoOpSecretManagerImpl;
+import software.wings.service.intfc.ce.CeAccountExpirationChecker;
 import software.wings.service.intfc.instance.CloudToHarnessMappingService;
 import software.wings.service.intfc.instance.DeploymentService;
 import software.wings.service.intfc.security.SecretManager;
@@ -47,6 +49,7 @@ public class BatchProcessingModule extends AbstractModule {
     bind(CEViewService.class).to(CEViewServiceImpl.class);
     bind(ViewsBillingService.class).to(ViewsBillingServiceImpl.class);
     bind(ViewCustomFieldService.class).to(ViewCustomFieldServiceImpl.class);
+    bind(CeAccountExpirationChecker.class).to(CeAccountExpirationCheckerImpl.class);
   }
 
   @Provides
