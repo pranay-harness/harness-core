@@ -35,7 +35,6 @@ import io.harness.testframework.framework.Setup;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.inject.Inject;
-import com.google.inject.name.Named;
 import io.restassured.config.ObjectMapperConfig;
 import io.restassured.config.RestAssuredConfig;
 import io.restassured.config.SSLConfig;
@@ -52,7 +51,7 @@ import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.query.Query;
 
 public class OrchestrationEngineTestSetupHelper {
-  @Inject @Named("orchestrationMongoTemplate") private MongoTemplate mongoTemplate;
+  @Inject private MongoTemplate mongoTemplate;
 
   public RequestSpecification getPortalRequestSpecification(String bearerToken) {
     return Setup.portal()

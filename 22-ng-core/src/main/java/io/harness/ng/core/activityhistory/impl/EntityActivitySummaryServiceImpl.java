@@ -16,8 +16,8 @@ import io.harness.ng.core.activityhistory.dto.NGActivitySummaryDTO;
 import io.harness.ng.core.activityhistory.dto.NGActivitySummaryDTO.NGActivitySummaryKeys;
 import io.harness.ng.core.activityhistory.dto.TimeGroupType;
 import io.harness.ng.core.activityhistory.entity.NGActivity.ActivityHistoryEntityKeys;
-import io.harness.ng.core.activityhistory.repository.NGActivityRepository;
 import io.harness.ng.core.activityhistory.service.EntityActivitySummaryService;
+import io.harness.repositories.activityhistory.NGActivityRepository;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -28,7 +28,6 @@ import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
-import org.springframework.data.domain.Sort;
 import org.springframework.data.mongodb.core.aggregation.Aggregation;
 import org.springframework.data.mongodb.core.aggregation.ArithmeticOperators.Add;
 import org.springframework.data.mongodb.core.aggregation.BooleanOperators.And;
@@ -39,7 +38,6 @@ import org.springframework.data.mongodb.core.aggregation.Fields;
 import org.springframework.data.mongodb.core.aggregation.GroupOperation;
 import org.springframework.data.mongodb.core.aggregation.MatchOperation;
 import org.springframework.data.mongodb.core.aggregation.ProjectionOperation;
-import org.springframework.data.mongodb.core.aggregation.SortOperation;
 import org.springframework.data.mongodb.core.query.Criteria;
 
 @Singleton

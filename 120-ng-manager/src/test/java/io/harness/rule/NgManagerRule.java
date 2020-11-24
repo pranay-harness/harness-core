@@ -9,7 +9,6 @@ import io.harness.govern.ServersModule;
 import io.harness.mongo.MongoPersistence;
 import io.harness.morphia.MorphiaRegistrar;
 import io.harness.ng.core.CoreModule;
-import io.harness.ng.core.CorePersistenceTestModule;
 import io.harness.ng.core.SecretManagementModule;
 import io.harness.persistence.HPersistence;
 import io.harness.remote.client.ServiceHttpClientConfig;
@@ -20,11 +19,13 @@ import io.harness.serializer.ManagerRegistrars;
 import io.harness.serializer.NextGenRegistrars;
 import io.harness.service.DelegateGrpcClientWrapper;
 import io.harness.spring.AliasRegistrar;
+import io.harness.springdata.SpringPersistenceModule;
 import io.harness.testlib.module.MongoRuleMixin;
 import io.harness.testlib.module.TestMongoModule;
 import io.harness.threading.CurrentThreadExecutor;
 import io.harness.threading.ExecutorModule;
 
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.inject.AbstractModule;
 import com.google.inject.Injector;
@@ -41,6 +42,7 @@ import org.junit.rules.MethodRule;
 import org.junit.runners.model.FrameworkMethod;
 import org.junit.runners.model.Statement;
 import org.mongodb.morphia.converters.TypeConverter;
+import org.springframework.core.convert.converter.Converter;
 
 @Slf4j
 public class NgManagerRule implements MethodRule, InjectorRuleMixin, MongoRuleMixin {
@@ -75,7 +77,7 @@ public class NgManagerRule implements MethodRule, InjectorRuleMixin, MongoRuleMi
     modules.add(mongoTypeModule(annotations));
     modules.add(new CoreModule());
     modules.add(TestMongoModule.getInstance());
-    modules.add(new CorePersistenceTestModule());
+    modules.add(new SpringPersistenceModule());
     modules.add(KryoModule.getInstance());
     modules.add(new SecretManagementModule());
     modules.add(new SecretManagementClientModule(
@@ -106,6 +108,14 @@ public class NgManagerRule implements MethodRule, InjectorRuleMixin, MongoRuleMi
       Set<Class<? extends TypeConverter>> morphiaConverters() {
         return ImmutableSet.<Class<? extends TypeConverter>>builder()
             .addAll(ManagerRegistrars.morphiaConverters)
+            .build();
+      }
+
+      @Provides
+      @Singleton
+      List<Class<? extends Converter<?, ?>>> springConverters() {
+        return ImmutableList.<Class<? extends Converter<?, ?>>>builder()
+            .addAll(ManagerRegistrars.springConverters)
             .build();
       }
     });

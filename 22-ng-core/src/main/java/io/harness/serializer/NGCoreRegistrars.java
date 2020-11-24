@@ -5,9 +5,11 @@ import io.harness.serializer.kryo.NGCoreKryoRegistrar;
 import io.harness.serializer.morphia.NGCoreMorphiaClassesRegistrar;
 import io.harness.spring.AliasRegistrar;
 
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import io.serializer.registrars.NGCommonsRegistrars;
 import lombok.experimental.UtilityClass;
+import org.springframework.core.convert.converter.Converter;
 
 @UtilityClass
 public class NGCoreRegistrars {
@@ -30,4 +32,7 @@ public class NGCoreRegistrars {
           .addAll(NGCoreBeansRegistrars.aliasRegistrars)
           .addAll(PersistenceRegistrars.aliasRegistrars)
           .build();
+
+  public static final ImmutableList<Class<? extends Converter<?, ?>>> springConverters =
+      ImmutableList.<Class<? extends Converter<?, ?>>>builder().build();
 }

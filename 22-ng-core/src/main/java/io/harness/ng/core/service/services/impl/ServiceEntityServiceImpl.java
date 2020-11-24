@@ -14,8 +14,8 @@ import io.harness.ng.core.entitysetupusage.dto.EntitySetupUsageDTO;
 import io.harness.ng.core.entitysetupusage.service.EntitySetupUsageService;
 import io.harness.ng.core.service.entity.ServiceEntity;
 import io.harness.ng.core.service.entity.ServiceEntity.ServiceEntityKeys;
-import io.harness.ng.core.service.respositories.spring.ServiceRepository;
 import io.harness.ng.core.service.services.ServiceEntityService;
+import io.harness.repositories.service.spring.ServiceRepository;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;

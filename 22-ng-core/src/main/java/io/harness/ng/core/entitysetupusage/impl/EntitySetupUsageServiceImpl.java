@@ -9,8 +9,8 @@ import io.harness.ng.core.entitysetupusage.entity.EntitySetupUsage;
 import io.harness.ng.core.entitysetupusage.entity.EntitySetupUsage.EntitySetupUsageKeys;
 import io.harness.ng.core.entitysetupusage.mappers.EntitySetupUsageDTOtoEntity;
 import io.harness.ng.core.entitysetupusage.mappers.EntitySetupUsageEntityToDTO;
-import io.harness.ng.core.entitysetupusage.repositories.EntitySetupUsageRepository;
 import io.harness.ng.core.entitysetupusage.service.EntitySetupUsageService;
+import io.harness.repositories.entitysetupusage.EntitySetupUsageRepository;
 import io.harness.utils.FullyQualifiedIdentifierHelper;
 
 import com.google.inject.Inject;

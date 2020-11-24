@@ -14,7 +14,7 @@ import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.query.Query;
 
 public class EngineTestHelper {
-  @Inject @Named("orchestrationMongoTemplate") MongoTemplate mongoTemplate;
+  @Inject MongoTemplate mongoTemplate;
 
   public void waitForPlanCompletion(String uuid) {
     final String finalStatusEnding = "ED";

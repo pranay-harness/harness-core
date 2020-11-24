@@ -17,6 +17,7 @@ import io.harness.serializer.KryoRegistrar;
 import io.harness.serializer.NGPipelineRegistrars;
 import io.harness.serializer.OrchestrationBeansRegistrars;
 import io.harness.spring.AliasRegistrar;
+import io.harness.springdata.SpringPersistenceModule;
 import io.harness.testlib.module.MongoRuleMixin;
 import io.harness.testlib.module.TestMongoModule;
 import io.harness.threading.CurrentThreadExecutor;
@@ -24,6 +25,7 @@ import io.harness.threading.ExecutorModule;
 import io.harness.time.TimeModule;
 import io.harness.version.VersionModule;
 
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.inject.AbstractModule;
 import com.google.inject.Injector;
@@ -39,6 +41,7 @@ import org.junit.rules.MethodRule;
 import org.junit.runners.model.FrameworkMethod;
 import org.junit.runners.model.Statement;
 import org.mongodb.morphia.converters.TypeConverter;
+import org.springframework.core.convert.converter.Converter;
 
 public class NGPipelineCommonsTestRule implements MethodRule, InjectorRuleMixin, MongoRuleMixin {
   ClosingFactory closingFactory;
@@ -96,6 +99,14 @@ public class NGPipelineCommonsTestRule implements MethodRule, InjectorRuleMixin,
             .addAll(OrchestrationBeansRegistrars.morphiaConverters)
             .build();
       }
+
+      @Provides
+      @Singleton
+      List<Class<? extends Converter<?, ?>>> springConverters() {
+        return ImmutableList.<Class<? extends Converter<?, ?>>>builder()
+            .addAll(NGPipelineRegistrars.springConverters)
+            .build();
+      }
     });
 
     modules.add(mongoTypeModule(annotations));
@@ -127,7 +138,7 @@ public class NGPipelineCommonsTestRule implements MethodRule, InjectorRuleMixin,
     modules.add(new VersionModule());
     modules.add(TimeModule.getInstance());
     modules.add(TestMongoModule.getInstance());
-    modules.add(new NGPipelinePersistenceTestModule());
+    modules.add(new SpringPersistenceModule());
     modules.add(NGPipelineCommonsModule.getInstance());
 
     return modules;

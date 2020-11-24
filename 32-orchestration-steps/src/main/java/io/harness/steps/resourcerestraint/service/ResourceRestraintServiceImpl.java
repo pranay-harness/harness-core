@@ -26,7 +26,7 @@ import io.harness.exception.InvalidRequestException;
 import io.harness.execution.NodeExecution;
 import io.harness.execution.PlanExecution;
 import io.harness.persistence.HPersistence;
-import io.harness.pms.execution.Status;
+import io.harness.repositories.ResourceRestraintInstanceRepository;
 import io.harness.steps.resourcerestraint.beans.ResourceRestraint;
 import io.harness.steps.resourcerestraint.beans.ResourceRestraintInstance;
 import io.harness.steps.resourcerestraint.beans.ResourceRestraintInstance.ResourceRestraintInstanceKeys;
@@ -35,7 +35,6 @@ import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
-import com.google.inject.name.Named;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
@@ -52,7 +51,7 @@ public class ResourceRestraintServiceImpl implements ResourceRestraintService {
   private static final String PLAN = "PLAN";
 
   @Inject private ResourceRestraintInstanceRepository restraintInstanceRepository;
-  @Inject @Named("orchestrationMongoTemplate") private MongoTemplate mongoTemplate;
+  @Inject private MongoTemplate mongoTemplate;
   @Inject private PlanExecutionService planExecutionService;
   @Inject private ResourceRestraintRegistry resourceRestraintRegistry;
   @Inject private RestraintService restraintService;

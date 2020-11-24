@@ -27,6 +27,7 @@ import io.harness.serializer.KryoModule;
 import io.harness.serializer.KryoRegistrar;
 import io.harness.serializer.ManagerRegistrars;
 import io.harness.spring.AliasRegistrar;
+import io.harness.springdata.SpringPersistenceModule;
 import io.harness.testlib.module.MongoRuleMixin;
 import io.harness.testlib.module.TestMongoModule;
 import io.harness.threading.CurrentThreadExecutor;
@@ -34,6 +35,7 @@ import io.harness.threading.ExecutorModule;
 import io.harness.time.TimeModule;
 
 import com.google.common.base.Suppliers;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.inject.AbstractModule;
 import com.google.inject.Injector;
@@ -53,6 +55,7 @@ import org.junit.runners.model.FrameworkMethod;
 import org.junit.runners.model.Statement;
 import org.mockito.Mockito;
 import org.mongodb.morphia.converters.TypeConverter;
+import org.springframework.core.convert.converter.Converter;
 
 public class CDNGTestRule implements InjectorRuleMixin, MethodRule, MongoRuleMixin {
   ClosingFactory closingFactory;
@@ -103,6 +106,14 @@ public class CDNGTestRule implements InjectorRuleMixin, MethodRule, MongoRuleMix
             .addAll(ManagerRegistrars.morphiaConverters)
             .build();
       }
+
+      @Provides
+      @Singleton
+      List<Class<? extends Converter<?, ?>>> springConverters() {
+        return ImmutableList.<Class<? extends Converter<?, ?>>>builder()
+            .addAll(ManagerRegistrars.springConverters)
+            .build();
+      }
     });
     modules.add(new AbstractModule() {
       @Override
@@ -121,7 +132,7 @@ public class CDNGTestRule implements InjectorRuleMixin, MethodRule, MongoRuleMix
     modules.add(TimeModule.getInstance());
     modules.add(NGModule.getInstance());
     modules.add(TestMongoModule.getInstance());
-    modules.add(new CDNGPersistenceTestModule());
+    modules.add(new SpringPersistenceModule());
     modules.add(OrchestrationModule.getInstance());
     modules.add(ExecutionPlanModule.getInstance());
     modules.add(mongoTypeModule(annotations));

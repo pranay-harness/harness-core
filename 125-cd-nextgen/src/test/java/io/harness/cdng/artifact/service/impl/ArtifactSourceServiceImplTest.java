@@ -9,7 +9,7 @@ import static org.mockito.Mockito.verify;
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.cdng.artifact.bean.artifactsource.ArtifactSource;
-import io.harness.cdng.artifact.repository.ArtifactSourceDao;
+import io.harness.repositories.artifact.ArtifactSourceDao;
 import io.harness.rule.Owner;
 
 import org.junit.Before;

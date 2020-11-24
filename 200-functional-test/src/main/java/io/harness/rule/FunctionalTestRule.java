@@ -5,15 +5,11 @@ import static io.harness.mongo.MongoModule.defaultMongoClientOptions;
 
 import static org.mockito.Mockito.mock;
 
-import io.harness.OrchestrationPersistenceConfig;
 import io.harness.OrchestrationStepsModule;
-import io.harness.OrchestrationStepsPersistenceConfig;
-import io.harness.TimeoutEnginePersistenceConfig;
 import io.harness.cache.CacheConfig;
 import io.harness.cache.CacheModule;
 import io.harness.commandlibrary.client.CommandLibraryServiceHttpClient;
 import io.harness.configuration.ConfigurationType;
-import io.harness.connector.ConnectorPersistenceConfig;
 import io.harness.delegate.beans.DelegateAsyncTaskResponse;
 import io.harness.delegate.beans.DelegateSyncTaskResponse;
 import io.harness.delegate.beans.DelegateTaskProgressResponse;
@@ -47,6 +43,7 @@ import io.harness.serializer.morphia.BatchProcessingMorphiaRegistrar;
 import io.harness.serializer.morphia.EventServerMorphiaRegistrar;
 import io.harness.service.DelegateServiceModule;
 import io.harness.spring.AliasRegistrar;
+import io.harness.springdata.SpringPersistenceModule;
 import io.harness.testframework.framework.ManagerExecutor;
 import io.harness.testframework.framework.Setup;
 import io.harness.testlib.module.MongoRuleMixin;
@@ -65,7 +62,6 @@ import software.wings.app.SearchModule;
 import software.wings.app.SignupModule;
 import software.wings.app.TemplateModule;
 import software.wings.app.WingsModule;
-import software.wings.app.WingsPersistenceConfig;
 import software.wings.app.YamlModule;
 import software.wings.graphql.provider.QueryLanguageProvider;
 import software.wings.search.framework.ElasticsearchConfig;
@@ -73,6 +69,7 @@ import software.wings.security.ThreadLocalUserProvider;
 import software.wings.service.impl.EventEmitter;
 
 import com.codahale.metrics.MetricRegistry;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.inject.AbstractModule;
@@ -109,8 +106,7 @@ import org.junit.runners.model.Statement;
 import org.mongodb.morphia.AdvancedDatastore;
 import org.mongodb.morphia.Morphia;
 import org.mongodb.morphia.converters.TypeConverter;
-import org.springframework.guice.module.BeanFactoryProvider;
-import org.springframework.guice.module.SpringModule;
+import org.springframework.core.convert.converter.Converter;
 import ru.vyarus.guice.validator.ValidationModule;
 
 public class FunctionalTestRule implements MethodRule, InjectorRuleMixin, MongoRuleMixin {
@@ -225,14 +221,20 @@ public class FunctionalTestRule implements MethodRule, InjectorRuleMixin, MongoR
             .addAll(ManagerRegistrars.morphiaConverters)
             .build();
       }
+
+      @Provides
+      @Singleton
+      List<Class<? extends Converter<?, ?>>> springConverters() {
+        return ImmutableList.<Class<? extends Converter<?, ?>>>builder()
+            .addAll(ManagerRegistrars.springConverters)
+            .build();
+      }
     });
 
     modules.add(new ProviderModule() {
       @Override
       public void configure() {
-        install(new SpringModule(BeanFactoryProvider.from(TimeoutEnginePersistenceConfig.class,
-            OrchestrationPersistenceConfig.class, OrchestrationStepsPersistenceConfig.class,
-            ConnectorPersistenceConfig.class, WingsPersistenceConfig.class)));
+        install(new SpringPersistenceModule());
       }
 
       @Provides

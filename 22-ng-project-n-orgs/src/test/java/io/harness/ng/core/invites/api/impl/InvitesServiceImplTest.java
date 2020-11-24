@@ -34,9 +34,9 @@ import io.harness.ng.core.invites.entities.Role;
 import io.harness.ng.core.invites.entities.UserProjectMap;
 import io.harness.ng.core.invites.ext.mail.EmailData;
 import io.harness.ng.core.invites.ext.mail.MailUtils;
-import io.harness.ng.core.invites.repositories.spring.InvitesRepository;
 import io.harness.ng.core.user.User;
 import io.harness.ng.core.user.services.api.NgUserService;
+import io.harness.repositories.invites.spring.InvitesRepository;
 import io.harness.rule.Owner;
 
 import com.auth0.jwt.interfaces.Claim;

@@ -6,11 +6,11 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.PageResponse;
 import io.harness.ng.core.invites.entities.Invite;
 import io.harness.ng.core.invites.entities.UserProjectMap;
-import io.harness.ng.core.invites.repositories.spring.UserProjectMapRepository;
 import io.harness.ng.core.user.User;
 import io.harness.ng.core.user.remote.UserClient;
 import io.harness.ng.core.user.services.api.NgUserService;
 import io.harness.remote.client.RestClientUtils;
+import io.harness.repositories.invites.spring.UserProjectMapRepository;
 
 import com.google.common.collect.ImmutableList;
 import com.google.inject.Inject;

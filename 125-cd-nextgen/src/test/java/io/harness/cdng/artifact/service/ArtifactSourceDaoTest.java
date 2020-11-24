@@ -8,7 +8,7 @@ import io.harness.category.element.UnitTests;
 import io.harness.cdng.CDNGBaseTest;
 import io.harness.cdng.artifact.bean.artifactsource.ArtifactSource;
 import io.harness.cdng.artifact.bean.artifactsource.DockerArtifactSource;
-import io.harness.cdng.artifact.repository.ArtifactSourceDao;
+import io.harness.repositories.artifact.ArtifactSourceDao;
 import io.harness.rule.Owner;
 
 import com.google.inject.Inject;

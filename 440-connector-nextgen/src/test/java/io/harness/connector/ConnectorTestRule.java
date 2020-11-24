@@ -19,13 +19,16 @@ import io.harness.persistence.HPersistence;
 import io.harness.remote.client.ServiceHttpClientConfig;
 import io.harness.rule.InjectorRuleMixin;
 import io.harness.secretmanagerclient.services.api.SecretManagerClientService;
+import io.harness.serializer.ConnectorNextGenRegistrars;
 import io.harness.serializer.KryoModule;
 import io.harness.serializer.KryoRegistrar;
 import io.harness.serializer.OrchestrationBeansRegistrars;
+import io.harness.springdata.SpringPersistenceModule;
 import io.harness.testlib.module.MongoRuleMixin;
 import io.harness.testlib.module.TestMongoModule;
 
 import com.google.common.base.Suppliers;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.inject.AbstractModule;
 import com.google.inject.Injector;
@@ -43,6 +46,7 @@ import org.junit.rules.MethodRule;
 import org.junit.runners.model.FrameworkMethod;
 import org.junit.runners.model.Statement;
 import org.mongodb.morphia.converters.TypeConverter;
+import org.springframework.core.convert.converter.Converter;
 
 public class ConnectorTestRule implements InjectorRuleMixin, MethodRule, MongoRuleMixin {
   ClosingFactory closingFactory;
@@ -70,7 +74,7 @@ public class ConnectorTestRule implements InjectorRuleMixin, MethodRule, MongoRu
     });
     modules.add(mongoTypeModule(annotations));
     modules.add(TestMongoModule.getInstance());
-    modules.add(new ConnectorPersistenceTestModule());
+    modules.add(new SpringPersistenceModule());
     modules.add(new ConnectorModule());
     modules.add(KryoModule.getInstance());
     modules.add(new EntitySetupUsageClientModule(
@@ -93,6 +97,14 @@ public class ConnectorTestRule implements InjectorRuleMixin, MethodRule, MongoRu
       Set<Class<? extends TypeConverter>> morphiaConverters() {
         return ImmutableSet.<Class<? extends TypeConverter>>builder()
             .addAll(OrchestrationBeansRegistrars.morphiaConverters)
+            .build();
+      }
+
+      @Provides
+      @Singleton
+      List<Class<? extends Converter<?, ?>>> springConverters() {
+        return ImmutableList.<Class<? extends Converter<?, ?>>>builder()
+            .addAll(ConnectorNextGenRegistrars.springConverters)
             .build();
       }
     });

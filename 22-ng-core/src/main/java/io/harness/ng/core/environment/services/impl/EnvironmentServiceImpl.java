@@ -13,8 +13,8 @@ import io.harness.ng.core.entitysetupusage.dto.EntitySetupUsageDTO;
 import io.harness.ng.core.entitysetupusage.service.EntitySetupUsageService;
 import io.harness.ng.core.environment.beans.Environment;
 import io.harness.ng.core.environment.beans.Environment.EnvironmentKeys;
-import io.harness.ng.core.environment.respositories.spring.EnvironmentRepository;
 import io.harness.ng.core.environment.services.EnvironmentService;
+import io.harness.repositories.environment.spring.EnvironmentRepository;
 
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;

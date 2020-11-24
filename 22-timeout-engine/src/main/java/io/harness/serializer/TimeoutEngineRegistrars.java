@@ -5,8 +5,10 @@ import io.harness.serializer.morphia.TimeoutEngineMorphiaRegistrar;
 import io.harness.serializer.spring.TimeoutEngineAliasRegistrar;
 import io.harness.spring.AliasRegistrar;
 
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import lombok.experimental.UtilityClass;
+import org.springframework.core.convert.converter.Converter;
 
 @UtilityClass
 public class TimeoutEngineRegistrars {
@@ -21,4 +23,7 @@ public class TimeoutEngineRegistrars {
 
   public static final ImmutableSet<Class<? extends AliasRegistrar>> aliasRegistrars =
       ImmutableSet.<Class<? extends AliasRegistrar>>builder().add(TimeoutEngineAliasRegistrar.class).build();
+
+  public static final ImmutableList<Class<? extends Converter<?, ?>>> springConverters =
+      ImmutableList.<Class<? extends Converter<?, ?>>>builder().build();
 }

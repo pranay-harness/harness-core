@@ -1,7 +1,7 @@
 package io.harness.core.ci.services;
 
 import io.harness.ci.beans.entities.CIBuild;
-import io.harness.ci.execution.dao.CIBuildRepository;
+import io.harness.repositories.CIBuildRepository;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;

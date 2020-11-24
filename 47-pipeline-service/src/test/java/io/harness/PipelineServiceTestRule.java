@@ -13,12 +13,14 @@ import io.harness.serializer.KryoModule;
 import io.harness.serializer.KryoRegistrar;
 import io.harness.serializer.PipelineServiceModuleRegistrars;
 import io.harness.spring.AliasRegistrar;
+import io.harness.springdata.SpringPersistenceModule;
 import io.harness.testlib.module.MongoRuleMixin;
 import io.harness.testlib.module.TestMongoModule;
 import io.harness.threading.CurrentThreadExecutor;
 import io.harness.threading.ExecutorModule;
 import io.harness.time.TimeModule;
 
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.inject.AbstractModule;
 import com.google.inject.Injector;
@@ -34,6 +36,7 @@ import org.junit.rules.MethodRule;
 import org.junit.runners.model.FrameworkMethod;
 import org.junit.runners.model.Statement;
 import org.mongodb.morphia.converters.TypeConverter;
+import org.springframework.core.convert.converter.Converter;
 
 public class PipelineServiceTestRule implements InjectorRuleMixin, MethodRule, MongoRuleMixin {
   ClosingFactory closingFactory;
@@ -88,6 +91,14 @@ public class PipelineServiceTestRule implements InjectorRuleMixin, MethodRule, M
             .addAll(PipelineServiceModuleRegistrars.morphiaConverters)
             .build();
       }
+
+      @Provides
+      @Singleton
+      List<Class<? extends Converter<?, ?>>> springConverters() {
+        return ImmutableList.<Class<? extends Converter<?, ?>>>builder()
+            .addAll(PipelineServiceModuleRegistrars.springConverters)
+            .build();
+      }
     });
 
     modules.add(new AbstractModule() {
@@ -99,7 +110,7 @@ public class PipelineServiceTestRule implements InjectorRuleMixin, MethodRule, M
 
     modules.add(TimeModule.getInstance());
     modules.add(TestMongoModule.getInstance());
-    modules.add(new PipelineServicePersistenceTestModule());
+    modules.add(new SpringPersistenceModule());
     modules.add(OrchestrationModule.getInstance());
     modules.add(mongoTypeModule(annotations));
 

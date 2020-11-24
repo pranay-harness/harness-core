@@ -21,7 +21,6 @@ import io.harness.connector.entities.ConnectorConnectivityDetails;
 import io.harness.connector.entities.ConnectorConnectivityDetails.ConnectorConnectivityDetailsBuilder;
 import io.harness.connector.helper.CatalogueHelper;
 import io.harness.connector.mappers.ConnectorMapper;
-import io.harness.connector.repositories.base.ConnectorRepository;
 import io.harness.connector.services.ConnectorService;
 import io.harness.connector.validator.ConnectionValidator;
 import io.harness.delegate.beans.connector.ConnectorCategory;
@@ -31,6 +30,7 @@ import io.harness.entitysetupusageclient.remote.EntitySetupUsageClient;
 import io.harness.exception.DuplicateFieldException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.UnexpectedException;
+import io.harness.repositories.ConnectorRepository;
 import io.harness.utils.FullyQualifiedIdentifierHelper;
 
 import com.google.inject.Inject;

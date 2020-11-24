@@ -17,11 +17,11 @@ import io.harness.gitsync.common.beans.YamlChangeSet;
 import io.harness.gitsync.common.beans.YamlChangeSet.Status;
 import io.harness.gitsync.common.beans.YamlChangeSet.YamlChangeSetKeys;
 import io.harness.gitsync.core.beans.GitSyncMetadata;
-import io.harness.gitsync.core.dao.api.repositories.YamlChangeSet.YamlChangeSetRepository;
 import io.harness.gitsync.core.service.YamlChangeSetService;
 import io.harness.gitsync.core.service.YamlGitService;
 import io.harness.gitsync.core.service.YamlSuccessfulChangeService;
 import io.harness.logging.ExceptionLogger;
+import io.harness.repositories.yamlChangeSet.YamlChangeSetRepository;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;

@@ -1,9 +1,9 @@
 package io.harness.cdng.artifact.service.impl;
 
 import io.harness.cdng.artifact.bean.artifactsource.ArtifactSource;
-import io.harness.cdng.artifact.repository.ArtifactRepository;
-import io.harness.cdng.artifact.repository.ArtifactSourceDao;
 import io.harness.cdng.artifact.service.ArtifactSourceService;
+import io.harness.repositories.artifact.ArtifactRepository;
+import io.harness.repositories.artifact.ArtifactSourceDao;
 import io.harness.validation.Create;
 
 import com.google.inject.Inject;

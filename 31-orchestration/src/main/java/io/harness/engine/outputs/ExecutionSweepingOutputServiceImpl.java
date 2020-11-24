@@ -38,7 +38,7 @@ import org.springframework.data.mongodb.core.query.Query;
 public class ExecutionSweepingOutputServiceImpl implements ExecutionSweepingOutputService {
   @Inject private ExpressionEvaluatorProvider expressionEvaluatorProvider;
   @Inject private Injector injector;
-  @Inject @Named("orchestrationMongoTemplate") private MongoTemplate mongoTemplate;
+  @Inject private MongoTemplate mongoTemplate;
   @Inject private AmbianceUtils ambianceUtils;
 
   @Override

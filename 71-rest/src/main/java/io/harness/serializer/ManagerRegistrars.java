@@ -23,10 +23,12 @@ import io.harness.serializer.morphia.ViewsMorphiaRegistrar;
 import io.harness.serializer.spring.WingsAliasRegistrar;
 import io.harness.spring.AliasRegistrar;
 
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import io.serializer.registrars.NGCommonsRegistrars;
 import lombok.experimental.UtilityClass;
 import org.mongodb.morphia.converters.TypeConverter;
+import org.springframework.core.convert.converter.Converter;
 
 @UtilityClass
 public class ManagerRegistrars {
@@ -90,5 +92,10 @@ public class ManagerRegistrars {
       ImmutableSet.<Class<? extends TypeConverter>>builder()
           .addAll(PersistenceRegistrars.morphiaConverters)
           .addAll(OrchestrationRegistrars.morphiaConverters)
+          .build();
+
+  public static final ImmutableList<Class<? extends Converter<?, ?>>> springConverters =
+      ImmutableList.<Class<? extends Converter<?, ?>>>builder()
+          .addAll(OrchestrationRegistrars.springConverters)
           .build();
 }

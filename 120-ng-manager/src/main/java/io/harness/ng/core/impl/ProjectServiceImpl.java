@@ -26,13 +26,13 @@ import io.harness.ng.core.DefaultOrganization;
 import io.harness.ng.core.OrgIdentifier;
 import io.harness.ng.core.ProjectIdentifier;
 import io.harness.ng.core.api.NGSecretManagerService;
-import io.harness.ng.core.api.repositories.spring.ProjectRepository;
 import io.harness.ng.core.dto.ProjectDTO;
 import io.harness.ng.core.dto.ProjectFilterDTO;
 import io.harness.ng.core.entities.Project;
 import io.harness.ng.core.entities.Project.ProjectKeys;
 import io.harness.ng.core.services.OrganizationService;
 import io.harness.ng.core.services.ProjectService;
+import io.harness.repositories.core.spring.ProjectRepository;
 import io.harness.secretmanagerclient.dto.SecretManagerConfigDTO;
 
 import com.google.common.collect.Lists;

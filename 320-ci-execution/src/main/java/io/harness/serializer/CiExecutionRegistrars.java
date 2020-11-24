@@ -3,8 +3,10 @@ package io.harness.serializer;
 import io.harness.morphia.MorphiaRegistrar;
 import io.harness.spring.AliasRegistrar;
 
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import lombok.experimental.UtilityClass;
+import org.springframework.core.convert.converter.Converter;
 
 @UtilityClass
 public class CiExecutionRegistrars {
@@ -40,5 +42,10 @@ public class CiExecutionRegistrars {
           .addAll(ApiServicesRegistrars.aliasRegistrars)
           .addAll(SMCoreRegistrars.aliasRegistrars)
           .addAll(ConnectorNextGenRegistrars.aliasRegistrars)
+          .build();
+
+  public static final ImmutableList<Class<? extends Converter<?, ?>>> springConverters =
+      ImmutableList.<Class<? extends Converter<?, ?>>>builder()
+          .addAll(OrchestrationRegistrars.springConverters)
           .build();
 }

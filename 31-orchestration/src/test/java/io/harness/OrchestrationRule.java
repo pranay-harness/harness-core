@@ -21,6 +21,7 @@ import io.harness.serializer.OrchestrationRegistrars;
 import io.harness.serializer.kryo.OrchestrationTestKryoRegistrar;
 import io.harness.serializer.spring.OrchestrationTestSpringAliasRegistrar;
 import io.harness.spring.AliasRegistrar;
+import io.harness.springdata.SpringPersistenceModule;
 import io.harness.testlib.module.MongoRuleMixin;
 import io.harness.testlib.module.TestMongoModule;
 import io.harness.threading.CurrentThreadExecutor;
@@ -33,6 +34,7 @@ import io.harness.waiter.NotifyQueuePublisherRegister;
 import io.harness.waiter.NotifyResponseCleaner;
 import io.harness.waiter.OrchestrationNotifyEventListener;
 
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.inject.AbstractModule;
 import com.google.inject.Injector;
@@ -55,6 +57,7 @@ import org.junit.rules.MethodRule;
 import org.junit.runners.model.FrameworkMethod;
 import org.junit.runners.model.Statement;
 import org.mongodb.morphia.converters.TypeConverter;
+import org.springframework.core.convert.converter.Converter;
 
 @Slf4j
 public class OrchestrationRule implements MethodRule, InjectorRuleMixin, MongoRuleMixin {
@@ -113,6 +116,14 @@ public class OrchestrationRule implements MethodRule, InjectorRuleMixin, MongoRu
             .addAll(OrchestrationRegistrars.morphiaConverters)
             .build();
       }
+
+      @Provides
+      @Singleton
+      List<Class<? extends Converter<?, ?>>> springConverters() {
+        return ImmutableList.<Class<? extends Converter<?, ?>>>builder()
+            .addAll(OrchestrationRegistrars.springConverters)
+            .build();
+      }
     });
 
     modules.add(mongoTypeModule(annotations));
@@ -143,7 +154,7 @@ public class OrchestrationRule implements MethodRule, InjectorRuleMixin, MongoRu
     modules.add(new VersionModule());
     modules.add(TimeModule.getInstance());
     modules.add(TestMongoModule.getInstance());
-    modules.add(new OrchestrationPersistenceTestModule());
+    modules.add(new SpringPersistenceModule());
     modules.add(OrchestrationModule.getInstance());
     return modules;
   }

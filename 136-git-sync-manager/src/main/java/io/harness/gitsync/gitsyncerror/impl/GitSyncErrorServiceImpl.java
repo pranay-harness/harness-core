@@ -17,8 +17,8 @@ import io.harness.gitsync.gitfileactivity.service.GitSyncService;
 import io.harness.gitsync.gitsyncerror.beans.GitSyncError;
 import io.harness.gitsync.gitsyncerror.beans.GitToHarnessErrorDetails;
 import io.harness.gitsync.gitsyncerror.beans.HarnessToGitErrorDetails;
-import io.harness.gitsync.gitsyncerror.dao.api.repositories.gitSyncError.GitSyncErrorRepository;
 import io.harness.gitsync.gitsyncerror.service.GitSyncErrorService;
+import io.harness.repositories.gitSyncError.GitSyncErrorRepository;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;

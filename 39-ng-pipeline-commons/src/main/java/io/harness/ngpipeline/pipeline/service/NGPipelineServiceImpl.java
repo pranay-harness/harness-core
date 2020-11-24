@@ -19,7 +19,7 @@ import io.harness.ngpipeline.inputset.services.InputSetEntityService;
 import io.harness.ngpipeline.pipeline.beans.entities.NgPipelineEntity;
 import io.harness.ngpipeline.pipeline.beans.entities.NgPipelineEntity.PipelineNGKeys;
 import io.harness.ngpipeline.pipeline.beans.yaml.NgPipeline;
-import io.harness.ngpipeline.pipeline.repository.spring.NgPipelineRepository;
+import io.harness.repositories.pipeline.spring.NgPipelineRepository;
 import io.harness.utils.IdentifierRefHelper;
 import io.harness.walktree.visitor.SimpleVisitorFactory;
 import io.harness.walktree.visitor.entityreference.EntityReferenceExtractorVisitor;

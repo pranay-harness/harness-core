@@ -7,13 +7,13 @@ import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 import io.harness.app.beans.dto.CIBuildFilterDTO;
 import io.harness.app.beans.dto.CIBuildResponseDTO;
-import io.harness.app.dao.repositories.CIBuildInfoRepository;
 import io.harness.app.intfc.CIBuildInfoService;
 import io.harness.app.mappers.BuildDtoMapper;
 import io.harness.ci.beans.entities.CIBuild;
 import io.harness.ngpipeline.pipeline.beans.entities.NgPipelineEntity;
 import io.harness.ngpipeline.pipeline.beans.yaml.NgPipeline.NgPipelineKeys;
 import io.harness.ngpipeline.pipeline.service.NGPipelineService;
+import io.harness.repositories.CIBuildInfoRepository;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;

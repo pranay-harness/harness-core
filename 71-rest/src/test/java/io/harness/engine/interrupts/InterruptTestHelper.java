@@ -8,14 +8,13 @@ import io.harness.execution.PlanExecution.PlanExecutionKeys;
 import io.harness.pms.execution.Status;
 
 import com.google.inject.Inject;
-import com.google.inject.name.Named;
 import java.util.concurrent.TimeUnit;
 import org.awaitility.Awaitility;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.query.Query;
 
 public class InterruptTestHelper {
-  @Inject @Named("orchestrationMongoTemplate") private MongoTemplate mongoTemplate;
+  @Inject private MongoTemplate mongoTemplate;
 
   public void waitForPlanStatus(String uuid, Status status) {
     Awaitility.await().atMost(1, TimeUnit.MINUTES).pollInterval(5, TimeUnit.SECONDS).until(() -> {

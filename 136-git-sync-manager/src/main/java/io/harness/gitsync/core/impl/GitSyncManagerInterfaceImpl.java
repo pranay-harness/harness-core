@@ -11,9 +11,9 @@ import io.harness.gitsync.common.beans.YamlChangeSet;
 import io.harness.gitsync.common.beans.YamlChangeSet.Status;
 import io.harness.gitsync.common.helper.GitFileLocationHelper;
 import io.harness.gitsync.common.service.YamlGitConfigService;
-import io.harness.gitsync.core.dao.api.repositories.GitFileLocation.GitFileLocationRepository;
 import io.harness.gitsync.core.service.YamlChangeSetService;
 import io.harness.ng.core.gitsync.GitSyncManagerInterface;
+import io.harness.repositories.gitFileLocation.GitFileLocationRepository;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;

@@ -16,8 +16,8 @@ import io.harness.ng.core.activityhistory.entity.NGActivity;
 import io.harness.ng.core.activityhistory.entity.NGActivity.ActivityHistoryEntityKeys;
 import io.harness.ng.core.activityhistory.mapper.NGActivityDTOToEntityMapper;
 import io.harness.ng.core.activityhistory.mapper.NGActivityEntityToDTOMapper;
-import io.harness.ng.core.activityhistory.repository.NGActivityRepository;
 import io.harness.ng.core.activityhistory.service.NGActivityService;
+import io.harness.repositories.activityhistory.NGActivityRepository;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;

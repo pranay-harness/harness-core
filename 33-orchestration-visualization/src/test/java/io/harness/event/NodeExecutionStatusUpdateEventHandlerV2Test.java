@@ -59,7 +59,7 @@ public class NodeExecutionStatusUpdateEventHandlerV2Test extends OrchestrationVi
 
   @Inject private NodeExecutionService nodeExecutionService;
   @Inject @Spy private GraphGenerationService graphGenerationService;
-  @Inject @Named("orchestrationMongoTemplate") private MongoTemplate mongoTemplate;
+  @Inject private MongoTemplate mongoTemplate;
   @Inject private NodeExecutionStatusUpdateEventHandlerV2 eventHandlerV2;
 
   @Test

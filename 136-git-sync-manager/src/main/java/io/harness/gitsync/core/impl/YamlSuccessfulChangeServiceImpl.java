@@ -7,9 +7,9 @@ import io.harness.gitsync.common.beans.YamlChangeSet;
 import io.harness.gitsync.core.beans.GitSuccessFulChangeDetail;
 import io.harness.gitsync.core.beans.HarnessSuccessFulChangeDetail;
 import io.harness.gitsync.core.beans.YamlSuccessfulChange;
-import io.harness.gitsync.core.dao.api.repositories.YamlSuccessfulChange.YamlSuccessfulChangeRepository;
 import io.harness.gitsync.core.service.YamlSuccessfulChangeService;
 import io.harness.logging.AccountLogContext;
+import io.harness.repositories.yamlSuccessfulChange.YamlSuccessfulChangeRepository;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
