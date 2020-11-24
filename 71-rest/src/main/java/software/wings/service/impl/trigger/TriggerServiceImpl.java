@@ -38,6 +38,7 @@ import static software.wings.service.impl.workflow.WorkflowServiceTemplateHelper
 
 import static java.time.Duration.ofHours;
 import static java.time.Duration.ofSeconds;
+import static java.util.Objects.isNull;
 import static java.util.regex.Pattern.compile;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toMap;
@@ -261,6 +262,9 @@ public class TriggerServiceImpl implements TriggerService {
   @Override
   public Trigger get(String appId, String triggerId) {
     Trigger trigger = wingsPersistence.getWithAppId(Trigger.class, appId, triggerId);
+    if (isNull(trigger)) {
+      return null;
+    }
     TriggerCondition condition = trigger.getCondition();
     if (condition.getConditionType() == NEW_MANIFEST) {
       ManifestTriggerCondition manifestTriggerCondition = (ManifestTriggerCondition) condition;
