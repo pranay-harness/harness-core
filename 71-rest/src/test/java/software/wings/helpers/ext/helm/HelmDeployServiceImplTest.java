@@ -1463,7 +1463,7 @@ public class HelmDeployServiceImplTest extends WingsBaseTest {
     doReturn(HelmCliResponse.builder().output(searchChartResponse).build())
         .when(helmClient)
         .searchChart(any(HelmInstallCommandRequest.class), anyString());
-    doReturn(HelmCliResponse.builder().output(helmRepoListResponse).build())
+    doReturn(HelmCliResponse.builder().commandExecutionStatus(SUCCESS).output(helmRepoListResponse).build())
         .when(helmClient)
         .getHelmRepoList(helmInstallCommandRequest);
 
