@@ -1,5 +1,6 @@
 package io.harness.delegate.k8s;
 
+import io.harness.delegate.beans.logstreaming.ILogStreamingTaskClient;
 import io.harness.delegate.task.k8s.K8sDeployRequest;
 import io.harness.delegate.task.k8s.K8sDeployResponse;
 import io.harness.exception.ExceptionUtils;
@@ -13,10 +14,11 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public abstract class K8sRequestHandler {
-  public K8sDeployResponse executeTask(K8sDeployRequest k8sDeployRequest, K8sDelegateTaskParams k8SDelegateTaskParams) {
+  public K8sDeployResponse executeTask(K8sDeployRequest k8sDeployRequest, K8sDelegateTaskParams k8SDelegateTaskParams,
+      ILogStreamingTaskClient logStreamingTaskClient) {
     K8sDeployResponse result;
     try {
-      result = executeTaskInternal(k8sDeployRequest, k8SDelegateTaskParams);
+      result = executeTaskInternal(k8sDeployRequest, k8SDelegateTaskParams, logStreamingTaskClient);
     } catch (IOException ex) {
       logError(k8sDeployRequest, ex);
       result = K8sDeployResponse.builder()
@@ -52,8 +54,8 @@ public abstract class K8sRequestHandler {
     return result;
   }
 
-  protected abstract K8sDeployResponse executeTaskInternal(
-      K8sDeployRequest k8sDeployRequest, K8sDelegateTaskParams k8SDelegateTaskParams) throws Exception;
+  protected abstract K8sDeployResponse executeTaskInternal(K8sDeployRequest k8sDeployRequest,
+      K8sDelegateTaskParams k8SDelegateTaskParams, ILogStreamingTaskClient logStreamingTaskClient) throws Exception;
 
   private void logError(K8sDeployRequest k8sDeployRequest, Throwable ex) {
     log.error("Exception in processing K8s task [{}]",

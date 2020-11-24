@@ -63,7 +63,7 @@ public class K8sTaskNG extends AbstractDelegateRunnableTask {
     if (k8sDeployRequest.getTaskType() == K8sTaskType.INSTANCE_SYNC) {
       try {
         return k8sTaskTypeToRequestHandler.get(k8sDeployRequest.getTaskType().name())
-            .executeTask(k8sDeployRequest, null);
+            .executeTask(k8sDeployRequest, null, getLogStreamingTaskClient());
       } catch (Exception ex) {
         log.error("Exception in processing k8s task [{}]", k8sDeployRequest.toString(), ex);
         return K8sDeployResponse.builder()
@@ -102,7 +102,7 @@ public class K8sTaskNG extends AbstractDelegateRunnableTask {
         logK8sVersion(k8sDeployRequest, k8SDelegateTaskParams);
 
         return k8sTaskTypeToRequestHandler.get(k8sDeployRequest.getTaskType().name())
-            .executeTask(k8sDeployRequest, k8SDelegateTaskParams);
+            .executeTask(k8sDeployRequest, k8SDelegateTaskParams, getLogStreamingTaskClient());
       } catch (Exception ex) {
         log.error("Exception in processing k8s task [{}]", k8sDeployRequest.toString(), ex);
         return K8sDeployResponse.builder()
@@ -117,7 +117,8 @@ public class K8sTaskNG extends AbstractDelegateRunnableTask {
 
   private void logK8sVersion(K8sDeployRequest k8sDeployRequest, K8sDelegateTaskParams k8sDelegateTaskParams) {
     try {
-      k8sTaskTypeToRequestHandler.get(K8sTaskType.VERSION.name()).executeTask(k8sDeployRequest, k8sDelegateTaskParams);
+      k8sTaskTypeToRequestHandler.get(K8sTaskType.VERSION.name())
+          .executeTask(k8sDeployRequest, k8sDelegateTaskParams, getLogStreamingTaskClient());
     } catch (Exception ex) {
       log.error("Error fetching K8s Server Version: ", ex);
     }

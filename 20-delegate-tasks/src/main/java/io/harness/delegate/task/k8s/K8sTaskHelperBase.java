@@ -51,6 +51,8 @@ import io.harness.delegate.beans.connector.k8Connector.KubernetesAuthCredentialD
 import io.harness.delegate.beans.connector.k8Connector.KubernetesClusterConfigDTO;
 import io.harness.delegate.beans.connector.k8Connector.KubernetesClusterDetailsDTO;
 import io.harness.delegate.beans.connector.k8Connector.KubernetesCredentialType;
+import io.harness.delegate.beans.logstreaming.ILogStreamingTaskClient;
+import io.harness.delegate.beans.logstreaming.NGLogCallback;
 import io.harness.delegate.beans.storeconfig.FetchType;
 import io.harness.delegate.beans.storeconfig.GitStoreDelegateConfig;
 import io.harness.delegate.expression.DelegateExpressionEvaluator;
@@ -92,7 +94,6 @@ import io.harness.k8s.model.KubernetesResourceId;
 import io.harness.k8s.model.Release;
 import io.harness.k8s.model.ReleaseHistory;
 import io.harness.logging.CommandExecutionStatus;
-import io.harness.logging.DummyLogCallbackImpl;
 import io.harness.logging.LogCallback;
 import io.harness.logging.LogLevel;
 import io.harness.security.encryption.EncryptedDataDetail;
@@ -1923,9 +1924,8 @@ public class K8sTaskHelperBase {
     return kubernetesContainerService.fetchReleaseHistoryFromSecretsFabric8(kubernetesConfig, releaseName);
   }
 
-  public LogCallback getExecutionLogCallback(K8sRollingDeployRequest k8sRollingDeployRequest, String commandUnitName) {
-    // TODO Vaibhav/Anshul: integrate with NG Execution LogCallback when available
-    return new DummyLogCallbackImpl();
+  public LogCallback getExecutionLogCallback(ILogStreamingTaskClient logStreamingTaskClient, String commandUnitName) {
+    return new NGLogCallback(logStreamingTaskClient, commandUnitName);
   }
 
   public List<FileData> renderTemplate(K8sDelegateTaskParams k8sDelegateTaskParams,
