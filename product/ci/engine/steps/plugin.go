@@ -4,6 +4,7 @@ import (
 	"context"
 	"time"
 
+	grpc_retry "github.com/grpc-ecosystem/go-grpc-middleware/retry"
 	"github.com/pkg/errors"
 	"github.com/wings-software/portal/commons/go/lib/utils"
 	addonpb "github.com/wings-software/portal/product/ci/addon/proto"
@@ -75,7 +76,7 @@ func (e *pluginStep) execute(ctx context.Context) (int32, error) {
 
 	c := addonClient.Client()
 	arg := e.getExecuteStepArg()
-	ret, err := c.ExecuteStep(ctx, arg)
+	ret, err := c.ExecuteStep(ctx, arg, grpc_retry.WithMax(maxAddonRetries))
 	if err != nil {
 		e.log.Errorw("Plugin step RPC failed", "step_id", e.id, "elapsed_time_ms", utils.TimeSince(st), zap.Error(err))
 		return int32(1), err

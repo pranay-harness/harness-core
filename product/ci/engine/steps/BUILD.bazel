@@ -25,6 +25,7 @@ go_library(
         "//product/ci/engine/proto:go_default_library",
         "@com_github_cenkalti_backoff_v4//:go_default_library",
         "@com_github_cespare_xxhash//:go_default_library",
+        "@com_github_grpc_ecosystem_go_grpc_middleware//retry:go_default_library",
         "@com_github_minio_minio_go_v6//:go_default_library",
         "@com_github_pkg_errors//:go_default_library",
         "@org_uber_go_zap//:go_default_library",

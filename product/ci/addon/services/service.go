@@ -1,14 +1,16 @@
 package services
 
 import (
+	"context"
 	"fmt"
 	"io"
 	"os"
 	"time"
 
 	"github.com/wings-software/portal/commons/go/lib/exec"
+	"github.com/wings-software/portal/commons/go/lib/images"
 	"github.com/wings-software/portal/commons/go/lib/utils"
-	"github.com/wings-software/portal/product/ci/addon/images"
+	"github.com/wings-software/portal/product/ci/addon/imageutil"
 	"go.uber.org/zap"
 )
 
@@ -19,8 +21,7 @@ const (
 )
 
 var (
-	getPublicImgMetadata  = images.PublicMetadata
-	getPrivateImgMetadata = images.PrivateMetadata
+	getImgMetadata = imageutil.GetEntrypoint
 )
 
 // IntegrationSvc represents interface to execute an integration service
@@ -54,7 +55,8 @@ func NewIntegrationSvc(svcID, image string, entrypoint, args []string, log *zap.
 // Runs integration test service
 func (s *integrationSvc) Run() error {
 	start := time.Now()
-	commands, err := s.getEntrypoint()
+	ctx := context.Background()
+	commands, err := s.getEntrypoint(ctx)
 	if err != nil {
 		logErr(s.log, "failed to find entrypoint for plugin", s.id, commands, start, err)
 		return err
@@ -83,22 +85,18 @@ func (s *integrationSvc) Run() error {
 	return nil
 }
 
-func (s *integrationSvc) getEntrypoint() ([]string, error) {
+func (s *integrationSvc) getEntrypoint(ctx context.Context) ([]string, error) {
 	if len(s.entrypoint) != 0 && len(s.args) != 0 {
 		return images.CombinedEntrypoint(s.entrypoint, s.args), nil
 	}
 
-	imageSecret, ok := os.LookupEnv(imageSecretEnv)
-	if ok && imageSecret != "" {
-		return s.combineEntrypoint(getPrivateImgMetadata(s.image, imageSecret))
-	}
-
-	return s.combineEntrypoint(getPublicImgMetadata(s.image))
+	imageSecret, _ := os.LookupEnv(imageSecretEnv)
+	return s.combinedEntrypoint(getImgMetadata(ctx, s.id, s.image, imageSecret, s.log))
 }
 
 // combines the entrypoint & commands and returns the combined entrypoint for a docker image.
 // It gives priority to user specified entrypoint & args over image entrypoint & commands.
-func (s *integrationSvc) combineEntrypoint(imgEndpoint, imgCmds []string, err error) ([]string, error) {
+func (s *integrationSvc) combinedEntrypoint(imgEndpoint, imgCmds []string, err error) ([]string, error) {
 	if err != nil {
 		return nil, err
 	}

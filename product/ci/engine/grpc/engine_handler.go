@@ -1,12 +1,18 @@
 package grpc
 
 import (
+	"github.com/wings-software/portal/commons/go/lib/images"
 	pb "github.com/wings-software/portal/product/ci/engine/proto"
 	"github.com/wings-software/portal/product/ci/engine/state"
 	"go.uber.org/zap"
 	"golang.org/x/net/context"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
+)
+
+var (
+	getPublicImgMetadata  = images.PublicMetadata
+	getPrivateImgMetadata = images.PrivateMetadata
 )
 
 // handler is used to implement EngineServer
@@ -23,8 +29,8 @@ func NewEngineHandler(log *zap.SugaredLogger) pb.LiteEngineServer {
 // If required state is resume, it sets the execution state to running and sends a signal via resume channel to resume the paused execution.
 func (h *engineHandler) UpdateState(ctx context.Context, in *pb.UpdateStateRequest) (*pb.UpdateStateResponse, error) {
 	if in.GetAction() == pb.UpdateStateRequest_UNKNOWN {
-		h.log.Errorw("Unknown action in incoming request")
-		return &pb.UpdateStateResponse{}, status.Error(codes.InvalidArgument, "Unknown action")
+		h.log.Errorw("unknown action in incoming request")
+		return &pb.UpdateStateResponse{}, status.Error(codes.InvalidArgument, "unknown action")
 	}
 
 	s := state.ExecutionState()
@@ -38,4 +44,31 @@ func (h *engineHandler) UpdateState(ctx context.Context, in *pb.UpdateStateReque
 		ch <- true
 	}
 	return &pb.UpdateStateResponse{}, nil
+}
+
+// GetImageEntrypoint returns entrypoint of an image.
+func (h *engineHandler) GetImageEntrypoint(ctx context.Context, in *pb.GetImageEntrypointRequest) (*pb.GetImageEntrypointResponse, error) {
+	if in.GetImage() == "" {
+		h.log.Errorw("image is not set", "request_arg", in.String())
+		return &pb.GetImageEntrypointResponse{}, status.Error(codes.InvalidArgument, "image is not set")
+	}
+
+	var err error
+	var entrypoint, args []string
+	if in.GetSecret() == "" {
+		entrypoint, args, err = getPublicImgMetadata(in.GetImage())
+	} else {
+		entrypoint, args, err = getPrivateImgMetadata(in.GetImage(), in.GetSecret())
+	}
+
+	if err != nil {
+		h.log.Errorw("failed to find image entrypoint", "request_arg", in.String(), zap.Error(err))
+		return &pb.GetImageEntrypointResponse{}, err
+	}
+
+	response := &pb.GetImageEntrypointResponse{
+		Entrypoint: entrypoint,
+		Args:       args,
+	}
+	return response, nil
 }

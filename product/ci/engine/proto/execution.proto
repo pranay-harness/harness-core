@@ -94,7 +94,21 @@ message UpdateStateRequest {
 
 message UpdateStateResponse {}
 
+message GetImageEntrypointRequest {
+  string id = 1;
+  string image = 2;
+  string secret = 3;  // docker config secret for image
+}
+
+message GetImageEntrypointResponse {
+  repeated string entrypoint = 1;
+  repeated string args = 2;
+}
+
 service LiteEngine {
   // Synchronous RPC to execute a step
   rpc UpdateState(UpdateStateRequest) returns (UpdateStateResponse);
+
+  // Synchronous RPC to fetch image entrypoint
+  rpc GetImageEntrypoint(GetImageEntrypointRequest) returns (GetImageEntrypointResponse);
 }

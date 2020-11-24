@@ -16,7 +16,7 @@ require (
 	github.com/vdemeester/k8s-pkg-credentialprovider v1.17.4
 	github.com/wings-software/portal/commons/go/lib v0.0.0-00010101000000-000000000000
 	go.uber.org/zap v1.16.0
-	golang.org/x/net v0.0.0-20200904194848-62affa334b73
+	golang.org/x/net v0.0.0-20201031054903-ff519b6c9102
 	google.golang.org/grpc v1.32.0
 	k8s.io/api v0.17.4
 )
