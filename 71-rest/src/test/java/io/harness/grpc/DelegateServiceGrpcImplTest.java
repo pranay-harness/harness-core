@@ -39,7 +39,7 @@ import io.harness.delegate.TaskLogAbstractions;
 import io.harness.delegate.TaskMode;
 import io.harness.delegate.TaskSetupAbstractions;
 import io.harness.delegate.TaskType;
-import io.harness.delegate.beans.DelegateStringResponseData;
+import io.harness.delegate.beans.DelegateStringProgressData;
 import io.harness.delegate.beans.executioncapability.SystemEnvCheckerCapability;
 import io.harness.delegate.task.shell.ScriptType;
 import io.harness.exception.DelegateServiceDriverException;
@@ -59,7 +59,7 @@ import io.harness.service.intfc.DelegateAsyncService;
 import io.harness.service.intfc.DelegateCallbackRegistry;
 import io.harness.service.intfc.DelegateSyncService;
 import io.harness.tasks.Cd1SetupFields;
-import io.harness.tasks.ResponseData;
+import io.harness.tasks.ProgressData;
 
 import software.wings.WingsBaseTest;
 import software.wings.service.intfc.DelegateService;
@@ -361,7 +361,7 @@ public class DelegateServiceGrpcImplTest extends WingsBaseTest implements Mockab
     when(delegateCallbackRegistry.ensureCallback(delegateCallback)).thenReturn("token");
     DelegateCallbackToken token = delegateServiceGrpcClient.registerCallback(delegateCallback);
 
-    ResponseData testData = DelegateStringResponseData.builder().data("Example").build();
+    ProgressData testData = DelegateStringProgressData.builder().data("Example").build();
     byte[] testDataBytes = kryoSerializer.asDeflatedBytes(testData);
     assertThat(delegateServiceGrpcLiteClient.sendTaskProgressUpdate(AccountId.newBuilder().setId(accountId).build(),
                    TaskId.newBuilder().setId(taskId).build(), token, testDataBytes))

@@ -18,7 +18,8 @@ import org.mongodb.morphia.annotations.Id;
 @FieldNameConstants(innerTypeName = "DelegateTaskProgressResponseKeys")
 public class DelegateTaskProgressResponse implements PersistentEntity {
   @Id private String uuid;
-  private byte[] responseData;
+  private String correlationId;
+  private byte[] progressData;
   @FdIndex private long processAfter;
 
   @FdTtlIndex @Builder.Default private Date validUntil = Date.from(OffsetDateTime.now().plusHours(2).toInstant());

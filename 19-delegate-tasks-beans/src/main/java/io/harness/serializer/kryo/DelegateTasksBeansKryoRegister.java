@@ -1,6 +1,7 @@
 package io.harness.serializer.kryo;
 
 import io.harness.delegate.beans.DelegateMetaInfo;
+import io.harness.delegate.beans.DelegateStringProgressData;
 import io.harness.delegate.beans.DelegateStringResponseData;
 import io.harness.delegate.beans.DelegateTaskDetails;
 import io.harness.delegate.beans.DelegateTaskNotifyResponseData;
@@ -486,5 +487,6 @@ public class DelegateTasksBeansKryoRegister implements KryoRegistrar {
     kryo.register(CIContainerStatus.class, 19425);
     kryo.register(CIContainerStatus.Status.class, 19426);
     kryo.register(ConnectorHeartbeatDelegateResponse.class, 19427);
+    kryo.register(DelegateStringProgressData.class, 19428);
   }
 }

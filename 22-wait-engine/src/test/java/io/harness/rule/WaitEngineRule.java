@@ -32,6 +32,7 @@ import io.harness.waiter.NotifierScheduledExecutorService;
 import io.harness.waiter.NotifyEvent;
 import io.harness.waiter.NotifyQueuePublisherRegister;
 import io.harness.waiter.NotifyResponseCleaner;
+import io.harness.waiter.ProgressUpdateService;
 import io.harness.waiter.TestNotifyEventListener;
 import io.harness.waiter.WaiterModule;
 
@@ -173,6 +174,8 @@ public class WaitEngineRule implements MethodRule, InjectorRuleMixin, MongoRuleM
         injector.getInstance(NotifierScheduledExecutorService.class);
     notifierScheduledExecutorService.scheduleWithFixedDelay(
         injector.getInstance(NotifyResponseCleaner.class), 0L, 1000L, TimeUnit.MILLISECONDS);
+    notifierScheduledExecutorService.scheduleWithFixedDelay(
+        injector.getInstance(ProgressUpdateService.class), 0L, 1000L, TimeUnit.MILLISECONDS);
     closingFactory.addServer(new Closeable() {
       @Override
       public void close() throws IOException {

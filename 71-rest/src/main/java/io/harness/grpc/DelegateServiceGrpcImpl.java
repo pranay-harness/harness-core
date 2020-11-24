@@ -40,6 +40,7 @@ import io.harness.delegate.TaskProgressResponse;
 import io.harness.delegate.TaskProgressUpdatesRequest;
 import io.harness.delegate.TaskProgressUpdatesResponse;
 import io.harness.delegate.TaskSelector;
+import io.harness.delegate.beans.DelegateProgressData;
 import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.delegate.beans.DelegateTaskResponse;
 import io.harness.delegate.beans.TaskData;
@@ -217,7 +218,7 @@ public class DelegateServiceGrpcImpl extends DelegateServiceImplBase {
     try {
       delegateService.publishTaskProgressResponse(request.getAccountId().getId(), request.getCallbackToken().getToken(),
           request.getTaskId().getId(),
-          (DelegateResponseData) kryoSerializer.asInflatedObject(
+          (DelegateProgressData) kryoSerializer.asInflatedObject(
               request.getTaskResponseData().getKryoResultsData().toByteArray()));
       responseObserver.onNext(SendTaskProgressResponse.newBuilder().setSuccess(true).build());
       responseObserver.onCompleted();

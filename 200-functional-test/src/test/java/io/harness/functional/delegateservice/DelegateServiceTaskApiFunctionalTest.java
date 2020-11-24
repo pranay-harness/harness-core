@@ -1,5 +1,6 @@
 package io.harness.functional.delegateservice;
 
+import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.delegate.DelegateServiceGrpc.DelegateServiceBlockingStub;
 import static io.harness.rule.OwnerRule.MARKO;
 import static io.harness.rule.OwnerRule.SANJA;
@@ -9,10 +10,6 @@ import static software.wings.sm.states.HttpState.HttpStateExecutionResponse;
 import static java.util.Collections.emptyList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.mockito.Matchers.eq;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
 
 import io.harness.callback.DelegateCallback;
 import io.harness.callback.DelegateCallbackToken;
@@ -27,7 +24,7 @@ import io.harness.delegate.TaskMode;
 import io.harness.delegate.TaskSetupAbstractions;
 import io.harness.delegate.TaskType;
 import io.harness.delegate.beans.DelegateResponseData;
-import io.harness.delegate.beans.DelegateStringResponseData;
+import io.harness.delegate.beans.DelegateStringProgressData;
 import io.harness.delegate.beans.ErrorNotifyResponseData;
 import io.harness.delegate.beans.RemoteMethodReturnValueData;
 import io.harness.delegate.task.http.HttpTaskParameters;
@@ -38,14 +35,17 @@ import io.harness.grpc.DelegateServiceGrpcClient;
 import io.harness.grpc.DelegateServiceGrpcLiteClient;
 import io.harness.rule.Owner;
 import io.harness.serializer.KryoSerializer;
-import io.harness.service.impl.DelegateProgressServiceImpl;
 import io.harness.service.intfc.DelegateAsyncService;
 import io.harness.service.intfc.DelegateProgressService;
 import io.harness.service.intfc.DelegateSyncService;
+import io.harness.tasks.ProgressData;
 import io.harness.tasks.ResponseData;
 import io.harness.threading.Poller;
+import io.harness.waiter.NotifyCallback;
 import io.harness.waiter.NotifyResponse;
-import io.harness.waiter.WaitNotifyEngineV2;
+import io.harness.waiter.ProgressCallback;
+import io.harness.waiter.ProgressUpdateService;
+import io.harness.waiter.WaitNotifyEngine;
 
 import software.wings.app.MainConfiguration;
 import software.wings.dl.WingsPersistence;
@@ -53,14 +53,17 @@ import software.wings.dl.WingsPersistence;
 import com.google.inject.Inject;
 import com.google.protobuf.ByteString;
 import java.time.Duration;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
+import java.util.Map;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
-import org.mockito.Mockito;
 
 @Slf4j
 public class DelegateServiceTaskApiFunctionalTest extends AbstractFunctionalTest {
@@ -70,8 +73,14 @@ public class DelegateServiceTaskApiFunctionalTest extends AbstractFunctionalTest
   @Inject private KryoSerializer kryoSerializer;
   @Inject private DelegateSyncService delegateSyncService;
   @Inject private DelegateAsyncService delegateAsyncService;
+  @Inject private DelegateProgressService delegateProgressService;
   @Inject private MainConfiguration configuration;
   @Inject private WingsPersistence wingsPersistence;
+  @Inject private WaitNotifyEngine waitNotifyEngine;
+  @Inject private ProgressUpdateService progressUpdateService;
+
+  private static AtomicInteger progressCallCount = new AtomicInteger(0);
+  private static List<ProgressData> progressDataList = new ArrayList<>();
 
   @Test
   @Owner(developers = MARKO)
@@ -349,13 +358,13 @@ public class DelegateServiceTaskApiFunctionalTest extends AbstractFunctionalTest
   @Test
   @Owner(developers = SANJA)
   @Category(FunctionalTests.class)
-  public void testTaskProgressUpdate() throws InterruptedException {
-    WaitNotifyEngineV2 waitNotifyMock = Mockito.mock(WaitNotifyEngineV2.class);
+  public void testTaskProgressUpdate() {
+    progressCallCount.set(0);
+    progressDataList.clear();
 
-    DelegateProgressService progressService =
-        new DelegateProgressServiceImpl(wingsPersistence, kryoSerializer, waitNotifyMock);
     ScheduledExecutorService scheduledExecutorService = Executors.newSingleThreadScheduledExecutor();
-    scheduledExecutorService.scheduleWithFixedDelay(progressService, 0L, 2L, TimeUnit.SECONDS);
+    scheduledExecutorService.scheduleWithFixedDelay(delegateProgressService, 0L, 2L, TimeUnit.SECONDS);
+    scheduledExecutorService.scheduleWithFixedDelay(progressUpdateService, 0L, 2L, TimeUnit.SECONDS);
 
     DelegateServiceGrpcClient delegateServiceGrpcClient = new DelegateServiceGrpcClient(
         delegateServiceBlockingStub, delegateAsyncService, kryoSerializer, delegateSyncService);
@@ -373,21 +382,44 @@ public class DelegateServiceTaskApiFunctionalTest extends AbstractFunctionalTest
     assertThat(callbackToken).isNotNull();
     assertThat(callbackToken.getToken()).isNotBlank();
 
-    TaskId taskId = TaskId.newBuilder().setId("12").build();
-    ResponseData testData = DelegateStringResponseData.builder().data("Example").build();
+    String taskUuid = generateUuid();
+    TaskId taskId = TaskId.newBuilder().setId(taskUuid).build();
+    ProgressData testData = DelegateStringProgressData.builder().data("Progress1").build();
     byte[] testDataBytes = kryoSerializer.asDeflatedBytes(testData);
+    ProgressData testData2 = DelegateStringProgressData.builder().data("Progress2").build();
+    byte[] testDataBytes2 = kryoSerializer.asDeflatedBytes(testData2);
+
+    waitNotifyEngine.waitForAllOn("general", new TestNotifyCallback(), new TestProgressCallback(), taskUuid);
 
     delegateServiceGrpcLiteClient.sendTaskProgressUpdate(
         AccountId.newBuilder().setId(getAccount().getUuid()).build(), taskId, callbackToken, testDataBytes);
+    delegateServiceGrpcLiteClient.sendTaskProgressUpdate(
+        AccountId.newBuilder().setId(getAccount().getUuid()).build(), taskId, callbackToken, testDataBytes2);
 
-    final boolean[] notifierInvoked = new boolean[1];
-    notifierInvoked[0] = false;
-    when(waitNotifyMock.progressUpdate(eq(taskId.getId()), eq(testData))).then(invocation -> {
-      notifierInvoked[0] = true;
-      return null;
-    });
-    Poller.pollFor(Duration.ofMinutes(3), Duration.ofSeconds(5), () -> notifierInvoked[0]);
+    Poller.pollFor(Duration.ofMinutes(3), Duration.ofSeconds(5), () -> { return progressCallCount.get() == 2; });
 
-    verify(waitNotifyMock, times(1)).progressUpdate(eq(taskId.getId()), eq(testData));
+    assertThat(progressCallCount.get()).isEqualTo(2);
+    assertThat(progressDataList.size()).isEqualTo(2);
+    DelegateStringProgressData result1 = (DelegateStringProgressData) progressDataList.get(0);
+    DelegateStringProgressData result2 = (DelegateStringProgressData) progressDataList.get(1);
+    assertThat(Arrays.asList(result1.getData(), result2.getData())).containsExactlyInAnyOrder("Progress1", "Progress2");
+  }
+
+  public static class TestNotifyCallback implements NotifyCallback {
+    @Override
+    public void notify(Map<String, ResponseData> response) {}
+
+    @Override
+    public void notifyError(Map<String, ResponseData> response) {
+      // Do Nothing.
+    }
+  }
+
+  public static class TestProgressCallback implements ProgressCallback {
+    @Override
+    public void notify(String correlationId, ProgressData progressData) {
+      progressCallCount.incrementAndGet();
+      progressDataList.add(progressData);
+    }
   }
 }

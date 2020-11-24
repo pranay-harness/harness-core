@@ -76,12 +76,13 @@ public class MongoDelegateCallbackService implements DelegateCallbackService {
   }
 
   @Override
-  public void publishTaskProgressResponse(String delegateTaskId, byte[] responseData) {
-    Bson filter = Filters.eq(ID_FIELD_NAME, delegateTaskId);
+  public void publishTaskProgressResponse(String delegateTaskId, String uuid, byte[] responseData) {
+    Bson filter = Filters.eq(ID_FIELD_NAME, uuid);
 
     Document document = new Document();
-    document.put(ID_FIELD_NAME, delegateTaskId);
-    document.put(DelegateTaskProgressResponseKeys.responseData, responseData);
+    document.put(ID_FIELD_NAME, uuid);
+    document.put(DelegateTaskProgressResponseKeys.correlationId, delegateTaskId);
+    document.put(DelegateTaskProgressResponseKeys.progressData, responseData);
     document.put(DelegateTaskProgressResponseKeys.processAfter, 0);
 
     Bson update = new Document("$set", document);

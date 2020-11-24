@@ -7,11 +7,13 @@ import static io.harness.persistence.HQuery.excludeAuthority;
 import static java.lang.System.currentTimeMillis;
 
 import io.harness.delegate.beans.DelegateResponseData;
+import io.harness.delegate.beans.DelegateStringProgressData;
 import io.harness.delegate.beans.DelegateTaskProgressResponse;
 import io.harness.persistence.HPersistence;
 import io.harness.serializer.KryoSerializer;
 import io.harness.service.intfc.DelegateProgressService;
-import io.harness.waiter.WaitNotifyEngineV2;
+import io.harness.tasks.ProgressData;
+import io.harness.waiter.WaitNotifyEngine;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -24,49 +26,45 @@ import org.mongodb.morphia.query.UpdateOperations;
 @Singleton
 @Slf4j
 public class DelegateProgressServiceImpl implements DelegateProgressService {
-  private HPersistence persistence;
-  private KryoSerializer kryoSerializer;
-  private WaitNotifyEngineV2 waitNotifyEngine;
+  @Inject private HPersistence persistence;
+  @Inject private KryoSerializer kryoSerializer;
+  @Inject private WaitNotifyEngine waitNotifyEngine;
   private static final int DELETE_TRESHOLD = 1000;
   private static final long MAX_PROCESSING_DURATION_MILLIS = 60000L;
-
-  @Inject
-  public DelegateProgressServiceImpl(
-      HPersistence persistence, KryoSerializer kryoSerializer, WaitNotifyEngineV2 waitNotifyEngine) {
-    this.persistence = persistence;
-    this.kryoSerializer = kryoSerializer;
-    this.waitNotifyEngine = waitNotifyEngine;
-  }
 
   @Override
   public void run() {
     Set<String> responsesToBeDeleted = new HashSet<>();
 
     while (true) {
-      Query<DelegateTaskProgressResponse> taskResponseQuery =
-          persistence.createQuery(DelegateTaskProgressResponse.class, excludeAuthority)
-              .field(DelegateTaskProgressResponseKeys.processAfter)
-              .lessThan(currentTimeMillis() - MAX_PROCESSING_DURATION_MILLIS);
+      try {
+        Query<DelegateTaskProgressResponse> taskResponseQuery =
+            persistence.createQuery(DelegateTaskProgressResponse.class, excludeAuthority)
+                .field(DelegateTaskProgressResponseKeys.processAfter)
+                .lessThan(currentTimeMillis() - MAX_PROCESSING_DURATION_MILLIS);
 
-      UpdateOperations<DelegateTaskProgressResponse> updateOperations =
-          persistence.createUpdateOperations(DelegateTaskProgressResponse.class)
-              .set(DelegateTaskProgressResponseKeys.processAfter, currentTimeMillis());
+        UpdateOperations<DelegateTaskProgressResponse> updateOperations =
+            persistence.createUpdateOperations(DelegateTaskProgressResponse.class)
+                .set(DelegateTaskProgressResponseKeys.processAfter, currentTimeMillis());
 
-      DelegateTaskProgressResponse lockedTaskProgressResponse =
-          persistence.findAndModify(taskResponseQuery, updateOperations, HPersistence.returnNewOptions);
+        DelegateTaskProgressResponse lockedTaskProgressResponse =
+            persistence.findAndModify(taskResponseQuery, updateOperations, HPersistence.returnNewOptions);
 
-      if (lockedTaskProgressResponse == null) {
-        break;
-      }
+        if (lockedTaskProgressResponse == null) {
+          break;
+        }
 
-      log.info("Process won the task progress response {}.", lockedTaskProgressResponse.getUuid());
+        log.info("Process won the task progress response {}.", lockedTaskProgressResponse.getUuid());
+        ProgressData data =
+            (ProgressData) kryoSerializer.asInflatedObject(lockedTaskProgressResponse.getProgressData());
+        waitNotifyEngine.progressOn(lockedTaskProgressResponse.getCorrelationId(), data);
 
-      waitNotifyEngine.progressUpdate(lockedTaskProgressResponse.getUuid(),
-          (DelegateResponseData) kryoSerializer.asInflatedObject(lockedTaskProgressResponse.getResponseData()));
-
-      responsesToBeDeleted.add(lockedTaskProgressResponse.getUuid());
-      if (responsesToBeDeleted.size() >= DELETE_TRESHOLD) {
-        deleteProcessedResponses(responsesToBeDeleted);
+        responsesToBeDeleted.add(lockedTaskProgressResponse.getUuid());
+        if (responsesToBeDeleted.size() >= DELETE_TRESHOLD) {
+          deleteProcessedResponses(responsesToBeDeleted);
+        }
+      } catch (Exception e) {
+        log.error("Exception occurred why processing the progress response", e);
       }
     }
 

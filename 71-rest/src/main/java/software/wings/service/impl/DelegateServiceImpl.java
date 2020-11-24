@@ -79,6 +79,7 @@ import io.harness.delegate.beans.DelegateConnectionHeartbeat;
 import io.harness.delegate.beans.DelegateParams;
 import io.harness.delegate.beans.DelegateProfile;
 import io.harness.delegate.beans.DelegateProfileParams;
+import io.harness.delegate.beans.DelegateProgressData;
 import io.harness.delegate.beans.DelegateRegisterResponse;
 import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.delegate.beans.DelegateScripts;
@@ -2774,12 +2775,13 @@ public class DelegateServiceImpl implements DelegateService {
 
   @Override
   public void publishTaskProgressResponse(
-      String accountId, String driverId, String delegateTaskId, DelegateResponseData responseData) {
+      String accountId, String driverId, String delegateTaskId, DelegateProgressData responseData) {
     DelegateCallbackService delegateCallbackService = delegateCallbackRegistry.obtainDelegateCallbackService(driverId);
     if (delegateCallbackService == null) {
       return;
     }
-    delegateCallbackService.publishTaskProgressResponse(delegateTaskId, kryoSerializer.asDeflatedBytes(responseData));
+    delegateCallbackService.publishTaskProgressResponse(
+        delegateTaskId, generateUuid(), kryoSerializer.asDeflatedBytes(responseData));
   }
 
   @Override
