@@ -5,6 +5,7 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.delegate.beans.TaskData.DEFAULT_ASYNC_CALL_TIMEOUT;
 import static io.harness.eraro.ErrorCode.COMMAND_DOES_NOT_EXIST;
+import static io.harness.eraro.ErrorCode.SSH_CONNECTION_ERROR;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.logging.CommandExecutionStatus.SUCCESS;
 import static io.harness.validation.Validator.notNullCheck;
@@ -278,87 +279,193 @@ public class CommandState extends State {
     return super.getTimeoutMillis();
   }
 
+  // Entry function for execution of Command State (for both Service linked and Template library linked)
   @Override
   public ExecutionResponse execute(ExecutionContext context) {
-    if (getTemplateUuid() != null) {
-      return executeLinkedCommand(context);
+    try {
+      return executeInternal(context);
+    } catch (WingsException ex) {
+      throw ex;
+    } catch (Exception ex) {
+      throw new InvalidRequestException(ExceptionUtils.getMessage(ex), ex);
     }
-    return executeCommand(context);
   }
 
-  private ExecutionResponse executeCommand(ExecutionContext context) {
+  public ExecutionResponse executeInternal(ExecutionContext context) {
     CommandStateExecutionData.Builder executionDataBuilder = aCommandStateExecutionData();
-    String activityId = null;
-
     WorkflowStandardParams workflowStandardParams = context.getContextElement(ContextElementType.STANDARD);
     String appId = workflowStandardParams.getAppId();
     String envId = workflowStandardParams.getEnvId();
+    String activityId = null;
 
+    Host host = null;
     InstanceElement instanceElement = context.getContextElement(ContextElementType.INSTANCE);
-
+    ServiceTemplate serviceTemplate = null;
     String infrastructureMappingId = context.fetchInfraMappingId();
-    InfrastructureMapping infrastructureMapping = infrastructureMappingService.get(appId, infrastructureMappingId);
+    InfrastructureMapping infrastructureMapping = null;
+    Service service = null;
+    ServiceInstance serviceInstance = null;
+    DeploymentType deploymentType = null;
+
+    if (instanceElement != null) {
+      String serviceTemplateId = instanceElement.getServiceTemplateElement().getUuid();
+      serviceTemplate = serviceTemplateService.get(appId, serviceTemplateId);
+    }
+
+    if (infrastructureMappingId != null) {
+      infrastructureMapping = infrastructureMappingService.get(appId, infrastructureMappingId);
+      if (infrastructureMapping != null) {
+        service = serviceResourceService.getWithDetails(appId, infrastructureMapping.getServiceId());
+        if (service != null && getTemplateUuid() == null) {
+          deploymentType = serviceResourceService.getDeploymentType(infrastructureMapping, service, null);
+        }
+        if (instanceElement == null) {
+          serviceTemplate = serviceTemplateHelper.fetchServiceTemplate(infrastructureMapping);
+        }
+      }
+    }
+
+    // if execute on delegate then no need for host resolution else we need to
+    if (executeOnDelegate) {
+      deploymentType = DeploymentType.SSH;
+      executionDataBuilder.withServiceId(service != null ? service.getUuid() : null)
+          .withServiceName(service != null ? service.getName() : null)
+          .withTemplateId(serviceTemplate != null ? serviceTemplate.getUuid() : null)
+          .withTemplateName(instanceElement != null ? instanceElement.getServiceTemplateElement().getName() : null)
+          .withAppId(appId);
+    } else {
+      // If the service command is linked via service then we get the host using Select nodes step as before. Else if
+      // the service command is linked via Template library then we build the host using connection details received
+      // through the UI
+      if (getHost() == null) {
+        if (getTemplateUuid() == null) {
+          // get host details using service instance details
+          if (instanceElement != null) {
+            serviceInstance = serviceInstanceService.get(appId, envId, instanceElement.getUuid());
+            if (serviceInstance != null) {
+              host = hostService.getHostByEnv(appId, envId, serviceInstance.getHostId());
+              if (host == null) {
+                throw new ShellScriptException("Host cannot be empty", SSH_CONNECTION_ERROR, Level.ERROR, USER);
+              }
+            } else {
+              throw new InvalidRequestException("Unable to find service instance", USER);
+            }
+          } else {
+            throw new InvalidRequestException("Unable to find instance element from context", USER);
+          }
+        } else {
+          // If execute on delegate is false, host is not given and service command is linked via template library,
+          // throw Exception
+          throw new ShellScriptException("Host cannot be empty", SSH_CONNECTION_ERROR, Level.ERROR, USER);
+        }
+      } else {
+        // host can contain either ${instance.name} or some valid host name/ip
+        // Deployment type is taken as SSH
+        if (connectionType == null || connectionType == ConnectionType.SSH) {
+          deploymentType = DeploymentType.SSH;
+
+          if (!isEmpty(getTemplateExpressions())) {
+            TemplateExpression sshConfigExp =
+                templateExpressionProcessor.getTemplateExpression(getTemplateExpressions(), "sshKeyRef");
+            if (sshConfigExp != null) {
+              sshKeyRef = templateExpressionProcessor.resolveTemplateExpression(context, sshConfigExp);
+            }
+          }
+          if (isEmpty(sshKeyRef)) {
+            throw new ShellScriptException("SSH Connection Attribute not provided in Command Step",
+                ErrorCode.SSH_CONNECTION_ERROR, Level.ERROR, WingsException.USER);
+          }
+          SettingAttribute keySettingAttribute = settingsService.get(sshKeyRef);
+          if (keySettingAttribute == null) {
+            keySettingAttribute = settingsService.getSettingAttributeByName(context.getApp().getAccountId(), sshKeyRef);
+            if (keySettingAttribute == null) {
+              throw new ShellScriptException("SSH Connection Attribute provided in Shell Script Step not found",
+                  ErrorCode.SSH_CONNECTION_ERROR, Level.ERROR, WingsException.USER);
+            }
+            sshKeyRef = keySettingAttribute.getUuid();
+          }
+
+          String hostName = context.renderExpression(getHost());
+          host = Host.Builder.aHost()
+                     .withHostName(hostName)
+                     .withPublicDns(hostName)
+                     .withAppId(appId)
+                     .withHostConnAttr(sshKeyRef)
+                     .build();
+          executionDataBuilder.withServiceId(service != null ? service.getUuid() : null)
+              .withTemplateId(serviceTemplate != null ? serviceTemplate.getUuid() : null)
+              .withTemplateName(instanceElement != null ? instanceElement.getServiceTemplateElement().getName() : null)
+              .withHostName(hostName)
+              .withPublicDns(hostName)
+              .withAppId(appId);
+
+        } else if (connectionType == ConnectionType.WINRM) {
+          deploymentType = DeploymentType.WINRM;
+          if (!isEmpty(getTemplateExpressions())) {
+            TemplateExpression winRmConfigExp =
+                templateExpressionProcessor.getTemplateExpression(getTemplateExpressions(), "connectionAttributes");
+            if (winRmConfigExp != null) {
+              connectionAttributes = templateExpressionProcessor.resolveTemplateExpression(context, winRmConfigExp);
+            }
+          }
+          if (isEmpty(connectionAttributes)) {
+            throw new ShellScriptException("WinRM Connection Attribute not provided in Shell Script Step",
+                ErrorCode.SSH_CONNECTION_ERROR, Level.ERROR, WingsException.USER);
+          }
+          SettingAttribute keySettingAttribute = settingsService.get(connectionAttributes);
+          if (keySettingAttribute == null) {
+            keySettingAttribute =
+                settingsService.getSettingAttributeByName(context.getApp().getAccountId(), connectionAttributes);
+            notNullCheck("Winrm Connection Attribute provided in Shell Script Step not found", keySettingAttribute);
+            connectionAttributes = keySettingAttribute.getUuid();
+          }
+
+          WinRmConnectionAttributes winRmConnectionAttributes =
+              (WinRmConnectionAttributes) keySettingAttribute.getValue();
+
+          if (winRmConnectionAttributes == null) {
+            throw new ShellScriptException("Winrm Connection Attribute provided in Shell Script Step not found",
+                ErrorCode.SSH_CONNECTION_ERROR, Level.ERROR, WingsException.USER);
+          }
+
+          String hostName = context.renderExpression(getHost());
+          host = Host.Builder.aHost()
+                     .withHostName(hostName)
+                     .withPublicDns(hostName)
+                     .withAppId(appId)
+                     .withWinrmConnAttr(connectionAttributes)
+                     .build();
+
+          executionDataBuilder.withServiceId(service != null ? service.getUuid() : null)
+              .withTemplateId(serviceTemplate != null ? serviceTemplate.getUuid() : null)
+              .withTemplateName(instanceElement != null ? instanceElement.getServiceTemplateElement().getName() : null)
+              .withHostName(hostName)
+              .withPublicDns(hostName)
+              .withAppId(appId);
+        }
+      }
+    }
 
     updateWorkflowExecutionStatsInProgress(context);
 
+    // need command.setGraph = null?
+
     String delegateTaskId;
     try {
-      if (instanceElement == null) {
-        throw new WingsException("No InstanceElement present in context");
-      }
-
-      ServiceInstance serviceInstance = serviceInstanceService.get(appId, envId, instanceElement.getUuid());
-
-      if (serviceInstance == null) {
-        throw new WingsException("Unable to find service instance");
-      }
-
-      String serviceTemplateId = instanceElement.getServiceTemplateElement().getUuid();
-      ServiceTemplate serviceTemplate = serviceTemplateService.get(appId, serviceTemplateId);
-      Service service = serviceResourceService.getWithDetails(appId, serviceTemplate.getServiceId());
-      Host host =
-          hostService.getHostByEnv(serviceInstance.getAppId(), serviceInstance.getEnvId(), serviceInstance.getHostId());
-
-      executionDataBuilder.withServiceId(service.getUuid())
-          .withServiceName(service.getName())
-          .withTemplateId(serviceTemplateId)
-          .withTemplateName(instanceElement.getServiceTemplateElement().getName())
-          .withHostId(host.getUuid())
-          .withHostName(host.getHostName())
-          .withPublicDns(host.getPublicDns())
-          .withAppId(appId);
-
-      String actualCommand = commandName;
-      try {
-        actualCommand = context.renderExpression(commandName);
-      } catch (Exception e) {
-        log.error("", e);
-      }
-
-      executionDataBuilder.withCommandName(actualCommand);
-      ServiceCommand serviceCommand =
-          serviceResourceService.getCommandByName(appId, service.getUuid(), envId, actualCommand);
-      if (serviceCommand == null || serviceCommand.getCommand() == null) {
-        throw new WingsException(format(""
-                                         + "Unable to find command %s for service %s",
-                                     actualCommand, service.getName()),
-            WingsException.USER);
-      }
-      Command command = serviceCommand.getCommand();
-
-      List<Variable> commandTemplateVariables = command.getTemplateVariables();
-      if (serviceCommand.getTemplateUuid()
-          != null) { // If linked in service we are overriding command from template to support referenced commands
-        command = getCommandFromTemplate(serviceCommand.getTemplateUuid(), serviceCommand.getTemplateVersion());
-      }
-
-      command.setGraph(null);
-
-      Application application = appService.get(serviceInstance.getAppId());
+      Application application = appService.get(appId);
       String accountId = application.getAccountId();
       Artifact artifact = null;
       Map<String, Artifact> multiArtifacts = null;
+
+      Command command = null;
+
+      // Get the command object for both types of service commands
+      command = extractCommand(context, executionDataBuilder, appId, envId, service);
+
       if (command.isArtifactNeeded()) {
+        if (service == null) {
+          throw new ShellScriptException("Linked command needs artifact but service is not found", null, null, USER);
+        }
         if (!featureFlagService.isEnabled(FeatureName.ARTIFACT_STREAM_REFACTOR, accountId)) {
           artifact = findArtifact(service.getUuid(), context);
         } else {
@@ -376,8 +483,6 @@ public class CommandState extends State {
         safeDisplayServiceVariables.replaceAll((name, value) -> context.renderExpression(value));
       }
 
-      DeploymentType deploymentType = serviceResourceService.getDeploymentType(infrastructureMapping, service, null);
-
       String backupPath = getEvaluatedSettingValue(context, accountId, appId, envId, BACKUP_PATH);
       String runtimePath = getEvaluatedSettingValue(context, accountId, appId, envId, RUNTIME_PATH);
       String stagingPath = getEvaluatedSettingValue(context, accountId, appId, envId, STAGING_PATH);
@@ -387,7 +492,6 @@ public class CommandState extends State {
           aCommandExecutionContext()
               .appId(appId)
               .envId(envId)
-              .deploymentType(deploymentType.name())
               .backupPath(backupPath)
               .runtimePath(runtimePath)
               .stagingPath(stagingPath)
@@ -395,114 +499,136 @@ public class CommandState extends State {
               .executionCredential(workflowStandardParams.getExecutionCredential())
               .serviceVariables(serviceVariables)
               .safeDisplayServiceVariables(safeDisplayServiceVariables)
+              .serviceTemplateId(serviceTemplate != null ? serviceTemplate.getUuid() : null)
+              .appContainer(service != null ? service.getAppContainer() : null)
               .host(host)
-              .serviceTemplateId(serviceTemplateId)
-              .appContainer(service.getAppContainer())
               .accountId(accountId)
               .timeout(getTimeoutMillis())
+              .executeOnDelegate(executeOnDelegate)
+              .deploymentType(deploymentType != null ? deploymentType.name() : null)
               .delegateSelectors(getDelegateSelectors(context));
 
-      getHostConnectionDetails(context, host, commandExecutionContextBuilder);
-
-      boolean isInExpectedFormat = false;
-      if (serviceCommand.getTemplateUuid() != null) {
-        Template template = templateService.get(serviceCommand.getTemplateUuid(), serviceCommand.getTemplateVersion());
-        if (template != null) {
-          SshCommandTemplate sshCommandTemplate = (SshCommandTemplate) template.getTemplateObject();
-          // check if template in new format, If yes, do the new flow else old
-          if (isNotEmpty(sshCommandTemplate.getReferencedTemplateList())) {
-            isInExpectedFormat = true;
-            expandCommand(
-                command, serviceCommand.getTemplateUuid(), serviceCommand.getTemplateVersion(), command.getName());
-            resolveTemplateVariablesInLinkedCommands(
-                command, sshCommandTemplate.getReferencedTemplateList(), commandTemplateVariables);
-            command.setTemplateVariables(commandTemplateVariables);
-            if (!featureFlagService.isEnabled(FeatureName.ARTIFACT_STREAM_REFACTOR, accountId)) {
-              renderCommandString(command, context, executionDataBuilder.build(), artifact, true);
-            } else {
-              renderCommandString(command, context, executionDataBuilder.build(), true);
-            }
-          } else {
-            expandCommand(serviceInstance, command, service.getUuid(), envId);
-            executionDataBuilder.withTemplateVariable(
-                templateUtils.processTemplateVariables(context, commandTemplateVariables));
-            if (!featureFlagService.isEnabled(FeatureName.ARTIFACT_STREAM_REFACTOR, accountId)) {
-              renderCommandString(command, context, executionDataBuilder.build(), artifact);
-            } else {
-              renderCommandString(command, context, executionDataBuilder.build());
-            }
-          }
-        }
-      } else {
-        expandCommand(serviceInstance, command, service.getUuid(), envId);
-        executionDataBuilder.withTemplateVariable(
-            templateUtils.processTemplateVariables(context, commandTemplateVariables));
-        if (!featureFlagService.isEnabled(FeatureName.ARTIFACT_STREAM_REFACTOR, accountId)) {
-          renderCommandString(command, context, executionDataBuilder.build(), artifact);
-        } else {
-          renderCommandString(command, context, executionDataBuilder.build());
-        }
+      if (host != null) {
+        getHostConnectionDetails(context, host, commandExecutionContextBuilder);
       }
+
+      // handle both types of service commands
+      processTemplateVariables(
+          context, executionDataBuilder, appId, envId, instanceElement, service, accountId, artifact, command);
 
       Map<String, String> flattenedTemplateVariables = new HashMap<>();
       flattenTemplateVariables(command, flattenedTemplateVariables);
       addArtifactTemplateVariablesToContext(flattenedTemplateVariables, multiArtifacts, context);
 
-      if (!featureFlagService.isEnabled(FeatureName.ARTIFACT_STREAM_REFACTOR, accountId)) {
-        if (artifact != null) {
-          getArtifactDetails(
-              context, executionDataBuilder, service, accountId, artifact, commandExecutionContextBuilder);
-        } else if (command.isArtifactNeeded()) {
-          throw new WingsException(
-              format("Unable to find artifact for service %s", service.getName()), WingsException.USER);
-        }
-      } else {
-        if (isNotEmpty(multiArtifacts)) {
-          getMultiArtifactDetails(
-              context, executionDataBuilder, service, accountId, multiArtifacts, commandExecutionContextBuilder);
-        } else if (command.isArtifactNeeded()) {
-          throw new WingsException(
-              format("Unable to find artifact for service %s", service.getName()), WingsException.USER);
-        }
-      }
+      // get artifact details for both types of artifacts
+      fetchArtifactDetails(context, executionDataBuilder, service, accountId, artifact, multiArtifacts, command,
+          commandExecutionContextBuilder);
 
       List<CommandUnit> flattenCommandUnits;
-      if (serviceCommand.getTemplateUuid() != null) {
-        if (isInExpectedFormat) {
-          flattenCommandUnits =
-              getFlattenCommandUnits(appId, envId, service, deploymentType.name(), accountId, command, true);
-        } else {
-          flattenCommandUnits =
-              getFlattenCommandUnits(appId, envId, service, deploymentType.name(), accountId, command, false);
-        }
+      if (getTemplateUuid() != null) {
+        flattenCommandUnits =
+            getFlattenCommandUnits(appId, envId, service, deploymentType.name(), accountId, command, true);
+        executionDataBuilder.withTemplateVariable(
+            templateUtils.processTemplateVariables(context, command.getTemplateVariables()));
       } else {
         flattenCommandUnits =
             getFlattenCommandUnits(appId, envId, service, deploymentType.name(), accountId, command, false);
       }
 
-      Activity activity;
-      if (!featureFlagService.isEnabled(FeatureName.ARTIFACT_STREAM_REFACTOR, accountId)) {
-        activity = activityHelperService.createAndSaveActivity(context, Type.Command, command.getName(),
-            command.getCommandUnitType().name(), flattenCommandUnits, artifact);
-      } else {
-        activity = activityHelperService.createAndSaveActivity(
-            context, Type.Command, command.getName(), command.getCommandUnitType().name(), flattenCommandUnits, null);
-      }
+      // need multiartifact check??
+      Activity activity = activityHelperService.createAndSaveActivity(
+          context, Type.Command, command.getName(), command.getCommandUnitType().name(), flattenCommandUnits, artifact);
       activityId = activity.getUuid();
       executionDataBuilder.withActivityId(activityId);
 
       setPropertiesFromFeatureFlags(accountId, commandExecutionContextBuilder);
+
       CommandExecutionContext commandExecutionContext =
           commandExecutionContextBuilder.activityId(activityId).deploymentType(deploymentType.name()).build();
 
       delegateTaskId = queueDelegateTask(
           activityId, envId, infrastructureMappingId, command, accountId, commandExecutionContext, context);
       log.info("DelegateTaskId [{}] sent for activityId [{}]", delegateTaskId, activityId);
-    } catch (Exception e) {
-      return handleException(context, executionDataBuilder, activityId, appId, e);
+
+    } catch (WingsException ex) {
+      return handleException(context, executionDataBuilder, activityId, appId, ex);
     }
 
     return getExecutionResponse(executionDataBuilder, activityId, delegateTaskId);
+  }
+
+  private void fetchArtifactDetails(ExecutionContext context, CommandStateExecutionData.Builder executionDataBuilder,
+      Service service, String accountId, Artifact artifact, Map<String, Artifact> multiArtifacts, Command command,
+      CommandExecutionContext.Builder commandExecutionContextBuilder) {
+    if (!featureFlagService.isEnabled(FeatureName.ARTIFACT_STREAM_REFACTOR, accountId)) {
+      if (artifact != null) {
+        getArtifactDetails(context, executionDataBuilder, service, accountId, artifact, commandExecutionContextBuilder);
+      } else if (command.isArtifactNeeded()) {
+        throw new ShellScriptException(
+            format("Unable to find artifact for service %s", service.getName()), null, null, WingsException.USER);
+      }
+    } else {
+      if (isNotEmpty(multiArtifacts)) {
+        getMultiArtifactDetails(
+            context, executionDataBuilder, service, accountId, multiArtifacts, commandExecutionContextBuilder);
+      } else if (command.isArtifactNeeded()) {
+        throw new ShellScriptException(
+            format("Unable to find artifact for service %s", service.getName()), null, null, WingsException.USER);
+      }
+    }
+  }
+
+  private void processTemplateVariables(ExecutionContext context,
+      CommandStateExecutionData.Builder executionDataBuilder, String appId, String envId,
+      InstanceElement instanceElement, Service service, String accountId, Artifact artifact, Command command) {
+    if (getTemplateUuid() != null) {
+      String templateId = getTemplateUuid();
+      String templateVersion = getTemplateVersion();
+      expandCommand(command, templateId, templateVersion, command.getName());
+      Template template = templateService.get(templateId, templateVersion);
+      if (template != null) {
+        SshCommandTemplate sshCommandTemplate = (SshCommandTemplate) template.getTemplateObject();
+        resolveTemplateVariablesInLinkedCommands(
+            command, sshCommandTemplate.getReferencedTemplateList(), getTemplateVariables());
+      }
+    } else {
+      if (instanceElement != null) {
+        ServiceInstance serviceInstance = serviceInstanceService.get(appId, envId, instanceElement.getUuid());
+        expandCommand(serviceInstance, command, service.getUuid(), envId);
+      }
+      executionDataBuilder.withTemplateVariable(
+          templateUtils.processTemplateVariables(context, command.getTemplateVariables()));
+      if (!featureFlagService.isEnabled(FeatureName.ARTIFACT_STREAM_REFACTOR, accountId)) {
+        renderCommandString(command, context, executionDataBuilder.build(), artifact);
+      } else {
+        renderCommandString(command, context, executionDataBuilder.build());
+      }
+    }
+  }
+
+  private Command extractCommand(ExecutionContext context, CommandStateExecutionData.Builder executionDataBuilder,
+      String appId, String envId, Service service) {
+    Command command;
+    if (getTemplateUuid() != null) {
+      command = getCommandFromTemplate(getTemplateUuid(), getTemplateVersion());
+      executionDataBuilder.withCommandName(command.getName());
+    } else {
+      String actualCommand = context.renderExpression(commandName);
+
+      if (service == null) {
+        throw new ShellScriptException(
+            format("Command %s is linked via service but service is not found", actualCommand), null, null, USER);
+      }
+      ServiceCommand serviceCommand =
+          serviceResourceService.getCommandByName(appId, service.getUuid(), envId, actualCommand);
+      if (serviceCommand == null || serviceCommand.getCommand() == null) {
+        throw new ShellScriptException(
+            format("Unable to find Command %s for Service %s", actualCommand, service.getName()), null, null,
+            WingsException.USER);
+      }
+      command = serviceCommand.getCommand();
+    }
+    return command;
   }
 
   private ExecutionResponse getExecutionResponse(
@@ -725,259 +851,6 @@ public class CommandState extends State {
       commandExecutionContextBuilder.winrmConnectionEncryptedDataDetails(secretManager.getEncryptionDetails(
           winrmConnectionAttribute, context.getAppId(), context.getWorkflowExecutionId()));
     }
-  }
-
-  private ExecutionResponse executeLinkedCommand(ExecutionContext context) {
-    CommandStateExecutionData.Builder executionDataBuilder = aCommandStateExecutionData();
-    String activityId = null;
-
-    WorkflowStandardParams workflowStandardParams = context.getContextElement(ContextElementType.STANDARD);
-    String appId = workflowStandardParams.getAppId();
-    String envId = workflowStandardParams.getEnvId();
-    Host host = null;
-    InstanceElement instanceElement = context.getContextElement(ContextElementType.INSTANCE);
-    ServiceTemplate serviceTemplate = null;
-    if (instanceElement != null) {
-      String serviceTemplateId = instanceElement.getServiceTemplateElement().getUuid();
-      serviceTemplate = serviceTemplateService.get(appId, serviceTemplateId);
-    }
-
-    String infrastructureMappingId = context.fetchInfraMappingId();
-    InfrastructureMapping infrastructureMapping = null;
-    Service service = null;
-    if (infrastructureMappingId != null) {
-      infrastructureMapping = infrastructureMappingService.get(appId, infrastructureMappingId);
-      if (infrastructureMapping != null) {
-        service = serviceResourceService.getWithDetails(appId, infrastructureMapping.getServiceId());
-        if (instanceElement == null) {
-          serviceTemplate = serviceTemplateHelper.fetchServiceTemplate(infrastructureMapping);
-        }
-      }
-    }
-
-    DeploymentType deploymentType = null;
-    if (executeOnDelegate) {
-      deploymentType = DeploymentType.SSH;
-      executionDataBuilder.withServiceId(service != null ? service.getUuid() : null)
-          .withServiceName(service != null ? service.getName() : null)
-          .withTemplateId(serviceTemplate != null ? serviceTemplate.getUuid() : null)
-          .withTemplateName(instanceElement != null ? instanceElement.getServiceTemplateElement().getName() : null)
-          .withAppId(appId);
-    } else {
-      if (getHost() == null) {
-        throw new ShellScriptException("Host cannot be empty", null, null, null);
-      } else { // host can contain either ${instance.hostName} or some hostname/ip
-        // take user provided value for host
-        if (connectionType == null || connectionType == ConnectionType.SSH) {
-          deploymentType = DeploymentType.SSH;
-          if (!isEmpty(getTemplateExpressions())) {
-            TemplateExpression sshConfigExp =
-                templateExpressionProcessor.getTemplateExpression(getTemplateExpressions(), "sshKeyRef");
-            if (sshConfigExp != null) {
-              sshKeyRef = templateExpressionProcessor.resolveTemplateExpression(context, sshConfigExp);
-            }
-          }
-          if (isEmpty(sshKeyRef)) {
-            throw new ShellScriptException("SSH Connection Attribute not provided in Command Step",
-                ErrorCode.SSH_CONNECTION_ERROR, Level.ERROR, WingsException.USER);
-          }
-          SettingAttribute keySettingAttribute = settingsService.get(sshKeyRef);
-          if (keySettingAttribute == null) {
-            keySettingAttribute = settingsService.getSettingAttributeByName(context.getApp().getAccountId(), sshKeyRef);
-            if (keySettingAttribute == null) {
-              throw new ShellScriptException("SSH Connection Attribute provided in Shell Script Step not found",
-                  ErrorCode.SSH_CONNECTION_ERROR, Level.ERROR, WingsException.USER);
-            }
-            sshKeyRef = keySettingAttribute.getUuid();
-          }
-
-          String hostName = context.renderExpression(getHost());
-          host = Host.Builder.aHost()
-                     .withHostName(hostName)
-                     .withPublicDns(hostName)
-                     .withAppId(appId)
-                     .withHostConnAttr(sshKeyRef)
-                     .build();
-          executionDataBuilder.withServiceId(service != null ? service.getUuid() : null)
-              .withTemplateId(serviceTemplate != null ? serviceTemplate.getUuid() : null)
-              .withTemplateName(instanceElement != null ? instanceElement.getServiceTemplateElement().getName() : null)
-              .withHostName(hostName)
-              .withPublicDns(hostName)
-              .withAppId(appId);
-        } else if (connectionType == ConnectionType.WINRM) {
-          deploymentType = DeploymentType.WINRM;
-          if (!isEmpty(getTemplateExpressions())) {
-            TemplateExpression winRmConfigExp =
-                templateExpressionProcessor.getTemplateExpression(getTemplateExpressions(), "connectionAttributes");
-            if (winRmConfigExp != null) {
-              connectionAttributes = templateExpressionProcessor.resolveTemplateExpression(context, winRmConfigExp);
-            }
-          }
-          if (isEmpty(connectionAttributes)) {
-            throw new ShellScriptException("WinRM Connection Attribute not provided in Shell Script Step",
-                ErrorCode.SSH_CONNECTION_ERROR, Level.ERROR, WingsException.USER);
-          }
-          SettingAttribute keySettingAttribute = settingsService.get(connectionAttributes);
-          if (keySettingAttribute == null) {
-            keySettingAttribute =
-                settingsService.getSettingAttributeByName(context.getApp().getAccountId(), connectionAttributes);
-            notNullCheck("Winrm Connection Attribute provided in Shell Script Step not found", keySettingAttribute);
-            connectionAttributes = keySettingAttribute.getUuid();
-          }
-
-          WinRmConnectionAttributes winRmConnectionAttributes =
-              (WinRmConnectionAttributes) keySettingAttribute.getValue();
-
-          if (winRmConnectionAttributes == null) {
-            throw new ShellScriptException("Winrm Connection Attribute provided in Shell Script Step not found",
-                ErrorCode.SSH_CONNECTION_ERROR, Level.ERROR, WingsException.USER);
-          }
-
-          String hostName = context.renderExpression(getHost());
-          host = Host.Builder.aHost()
-                     .withHostName(hostName)
-                     .withPublicDns(hostName)
-                     .withAppId(appId)
-                     .withWinrmConnAttr(connectionAttributes)
-                     .build();
-          executionDataBuilder.withServiceId(service != null ? service.getUuid() : null)
-              .withTemplateId(serviceTemplate != null ? serviceTemplate.getUuid() : null)
-              .withTemplateName(instanceElement != null ? instanceElement.getServiceTemplateElement().getName() : null)
-              .withHostName(hostName)
-              .withPublicDns(hostName)
-              .withAppId(appId);
-        }
-      }
-    }
-    updateWorkflowExecutionStatsInProgress(context);
-
-    String delegateTaskId;
-    try {
-      Command command = getCommandFromTemplate(getTemplateUuid(), getTemplateVersion());
-      executionDataBuilder.withCommandName(command.getName());
-
-      Application application = appService.get(appId);
-      String accountId = application.getAccountId();
-      Artifact artifact = null;
-      Map<String, Artifact> multiArtifacts = null;
-
-      if (command.isArtifactNeeded()) {
-        if (service == null) {
-          throw new WingsException("Linked Command needs artifact but service is not found", USER);
-        }
-        if (!featureFlagService.isEnabled(FeatureName.ARTIFACT_STREAM_REFACTOR, accountId)) {
-          artifact = findArtifact(service.getUuid(), context);
-        } else {
-          multiArtifacts = findArtifacts(service.getUuid(), context);
-        }
-      }
-
-      Map<String, String> serviceVariables = context.getServiceVariables().entrySet().stream().collect(
-          Collectors.toMap(Entry::getKey, e -> e.getValue().toString()));
-      Map<String, String> safeDisplayServiceVariables = context.getSafeDisplayServiceVariables();
-
-      if (serviceVariables != null) {
-        serviceVariables.replaceAll((name, value) -> context.renderExpression(value));
-      }
-
-      if (safeDisplayServiceVariables != null) {
-        safeDisplayServiceVariables.replaceAll((name, value) -> context.renderExpression(value));
-      }
-
-      String backupPath = getEvaluatedSettingValue(context, accountId, appId, envId, BACKUP_PATH);
-      String runtimePath = getEvaluatedSettingValue(context, accountId, appId, envId, RUNTIME_PATH);
-      String stagingPath = getEvaluatedSettingValue(context, accountId, appId, envId, STAGING_PATH);
-      String windowsRuntimePath = getEvaluatedSettingValue(context, accountId, appId, envId, WINDOWS_RUNTIME_PATH);
-
-      CommandExecutionContext.Builder commandExecutionContextBuilder =
-          aCommandExecutionContext()
-              .appId(appId)
-              .envId(envId)
-              .backupPath(backupPath)
-              .runtimePath(runtimePath)
-              .stagingPath(stagingPath)
-              .windowsRuntimePath(windowsRuntimePath)
-              .executionCredential(workflowStandardParams.getExecutionCredential())
-              .serviceVariables(serviceVariables)
-              .safeDisplayServiceVariables(safeDisplayServiceVariables)
-              .serviceTemplateId(serviceTemplate != null ? serviceTemplate.getUuid() : null)
-              .appContainer(service != null ? service.getAppContainer() : null)
-              .host(host)
-              .accountId(accountId)
-              .timeout(getTimeoutMillis())
-              .executeOnDelegate(executeOnDelegate)
-              .deploymentType(deploymentType != null ? deploymentType.name() : null)
-              .delegateSelectors(getDelegateSelectors(context));
-
-      if (host != null) {
-        getHostConnectionDetails(context, host, commandExecutionContextBuilder);
-      }
-
-      String templateId = getTemplateUuid();
-      String templateVersion = getTemplateVersion();
-      expandCommand(command, templateId, templateVersion, command.getName());
-      Template template = templateService.get(templateId, templateVersion);
-      if (template != null) {
-        SshCommandTemplate sshCommandTemplate = (SshCommandTemplate) template.getTemplateObject();
-        resolveTemplateVariablesInLinkedCommands(
-            command, sshCommandTemplate.getReferencedTemplateList(), getTemplateVariables());
-      }
-
-      if (!featureFlagService.isEnabled(FeatureName.ARTIFACT_STREAM_REFACTOR, accountId)) {
-        renderCommandString(command, context, executionDataBuilder.build(), artifact, true);
-      } else {
-        renderCommandString(command, context, executionDataBuilder.build(), true);
-      }
-
-      Map<String, String> flattenedTemplateVariables = new HashMap<>();
-      flattenTemplateVariables(command, flattenedTemplateVariables);
-      addArtifactTemplateVariablesToContext(flattenedTemplateVariables, multiArtifacts, context);
-
-      if (!featureFlagService.isEnabled(FeatureName.ARTIFACT_STREAM_REFACTOR, accountId)) {
-        if (artifact != null) {
-          getArtifactDetails(
-              context, executionDataBuilder, service, accountId, artifact, commandExecutionContextBuilder);
-        } else if (command.isArtifactNeeded()) {
-          if (service != null) {
-            throw new WingsException(
-                format("Unable to find artifact for service %s", service.getName()), WingsException.USER);
-          }
-          throw new WingsException("Command needs artifact. However, service not found.", USER);
-        }
-      } else {
-        if (isNotEmpty(multiArtifacts)) {
-          getMultiArtifactDetails(
-              context, executionDataBuilder, service, accountId, multiArtifacts, commandExecutionContextBuilder);
-        } else if (command.isArtifactNeeded()) {
-          if (service != null) {
-            throw new WingsException(
-                format("Unable to find artifact for service %s", service.getName()), WingsException.USER);
-          }
-          throw new WingsException("Command needs artifact. However, service not found.", USER);
-        }
-      }
-
-      List<CommandUnit> flattenCommandUnits =
-          getFlattenCommandUnits(appId, envId, service, deploymentType.name(), accountId, command, true);
-      Activity activity = activityHelperService.createAndSaveActivity(
-          context, Type.Command, command.getName(), command.getCommandUnitType().name(), flattenCommandUnits, artifact);
-      activityId = activity.getUuid();
-
-      executionDataBuilder.withActivityId(activityId);
-      executionDataBuilder.withTemplateVariable(
-          templateUtils.processTemplateVariables(context, command.getTemplateVariables()));
-      setPropertiesFromFeatureFlags(accountId, commandExecutionContextBuilder);
-      CommandExecutionContext commandExecutionContext =
-          commandExecutionContextBuilder.activityId(activityId).deploymentType(deploymentType.name()).build();
-
-      delegateTaskId = queueDelegateTask(
-          activityId, envId, infrastructureMappingId, command, accountId, commandExecutionContext, context);
-      log.info("DelegateTaskId [{}] sent for activityId [{}]", delegateTaskId, activityId);
-    } catch (Exception e) {
-      return handleException(context, executionDataBuilder, activityId, appId, e);
-    }
-
-    return getExecutionResponse(executionDataBuilder, activityId, delegateTaskId);
   }
 
   @NotNull

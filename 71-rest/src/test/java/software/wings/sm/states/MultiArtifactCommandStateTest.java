@@ -190,11 +190,20 @@ public class MultiArtifactCommandStateTest extends CategoryTest {
   private static final String ARTIFACT_STREAM_ID_2 = "ARTIFACT_STREAM_ID_2";
   private static final String SETTING_ID_1 = "SETTING_ID_1";
   private static final String SETTING_ID_2 = "SETTING_ID_2";
+  private static final String GLOBAL_APP_ID = "GLOBAL_APP_ID";
 
   @Test
   @Owner(developers = AADITI)
   @Category(UnitTests.class)
   public void testExecuteCommandCreatedInServiceWithMultipleArtifacts() {
+    commandState.setHost(HOST_NAME);
+    commandState.setSshKeyRef("ssh_key_ref");
+    SettingAttribute settingAttribute = new SettingAttribute();
+    settingAttribute.setValue(HostConnectionAttributes.Builder.aHostConnectionAttributes().build());
+    settingAttribute.setAppId(GLOBAL_APP_ID);
+    when(settingsService.get("ssh_key_ref")).thenReturn(settingAttribute);
+    when(serviceResourceService.getWithDetails(APP_ID, null)).thenReturn(SERVICE);
+
     on(commandState).set("templateUtils", templateUtils);
     when(executionContext.getContextElement(ContextElementType.STANDARD)).thenReturn(workflowStandardParams);
     when(workflowStandardParams.getAppId()).thenReturn(APP_ID);
@@ -217,7 +226,6 @@ public class MultiArtifactCommandStateTest extends CategoryTest {
     ServiceTemplate serviceTemplate = aServiceTemplate().withUuid(TEMPLATE_ID).withServiceId(SERVICE.getUuid()).build();
     when(serviceTemplateService.get(APP_ID, TEMPLATE_ID)).thenReturn(serviceTemplate);
     when(serviceResourceService.getWithDetails(APP_ID, SERVICE_ID)).thenReturn(SERVICE);
-    when(hostService.getHostByEnv(APP_ID, ENV_ID, HOST_ID)).thenReturn(HOST);
     when(serviceResourceService.getCommandByName(APP_ID, SERVICE_ID, ENV_ID, COMMAND_NAME))
         .thenReturn(aServiceCommand().withTargetToAllEnv(true).withCommand(command).build());
     when(featureFlagService.isEnabled(FeatureName.ARTIFACT_STREAM_REFACTOR, ACCOUNT_ID)).thenReturn(true);
@@ -275,10 +283,10 @@ public class MultiArtifactCommandStateTest extends CategoryTest {
     verify(executionContext, times(1)).getContextElement(ContextElementType.INSTANCE);
     verify(executionContext, times(1)).fetchInfraMappingId();
     verify(executionContext, times(1)).getContextElementList(ContextElementType.PARAM);
-    verify(executionContext, times(5)).renderExpression(anyString());
+    verify(executionContext, times(6)).renderExpression(anyString());
     verify(executionContext, times(1)).getServiceVariables();
     verify(executionContext, times(1)).getSafeDisplayServiceVariables();
-    verify(executionContext, times(5)).getAppId();
+    verify(executionContext, times(4)).getAppId();
 
     verify(settingsService, times(4)).getByName(eq(ACCOUNT_ID), eq(APP_ID), eq(ENV_ID), anyString());
     verify(settingsService, times(4)).get(anyString());
