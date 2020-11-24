@@ -105,7 +105,7 @@ java_library(
     name = "tests",
     srcs = glob(["src/test/**/*.java"]),
     data = [
-        "//15-api-services/src/test/resources:resource",
+        "//960-api-services/src/test/resources:resource",
     ],
     visibility = ["//visibility:private"],
     deps = [

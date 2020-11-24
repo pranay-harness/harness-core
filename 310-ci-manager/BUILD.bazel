@@ -11,7 +11,6 @@ java_library(
     name = "maven_deps",
     visibility = ["//visibility:public"],
     exports = [
-        "//15-api-services:module",
         "//19-delegate-tasks-beans:module",
         "//19-delegate-tasks-beans/src/main/proto:19_delegate_tasks_beans_java_proto",
         "//20-delegate-beans:module",
@@ -44,6 +43,7 @@ java_library(
         "//38-execution-plan:module",
         "//39-ng-pipeline-commons:module",
         "//440-connector-nextgen:module",
+        "//960-api-services:module",
         "//970-api-services-beans:module",
         "//970-grpc:module",
         "//970-grpc/src/main/proto:970_grpc_proto",

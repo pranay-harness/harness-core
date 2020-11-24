@@ -132,7 +132,6 @@ build_proto_module() {
   fi
 }
 
-build_bazel_module 15-api-services
 build_bazel_module 16-expression-service
 build_bazel_module 19-delegate-tasks-beans
 build_bazel_module 20-delegate-beans
@@ -180,6 +179,7 @@ build_bazel_module 440-connector-nextgen
 build_bazel_module 450-ce-views
 build_bazel_module 490-ce-commons
 build_bazel_module 900-yaml-sdk
+build_bazel_module 960-api-services
 build_bazel_module 970-api-services-beans
 build_bazel_module 970-grpc
 build_bazel_module 970-ng-commons

@@ -6,7 +6,6 @@
     <version>0.0.1-SNAPSHOT</version>
     <packaging>pom</packaging>
     <modules>
-        <!--<module>15-api-services</module>-->
         <!--<module>16-expression-service</module>-->
         <!--<module>19-delegate-tasks-beans</module>-->
         <!--<module>20-delegate-beans</module>-->
@@ -66,6 +65,7 @@
         <!--<module>450-ce-views</module>-->
         <!--<module>490-ce-commons</module>-->
         <!--<module>900-yaml-sdk</module>-->
+        <!--<module>960-api-services</module>-->
         <!--<module>970-api-services-beans</module>-->
         <!--<module>970-grpc</module>-->
         <!--<module>970-ng-commons</module>-->

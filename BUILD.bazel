@@ -51,7 +51,7 @@ java_library(
 )
 
 modules = [
-    "//15-api-services",
+    "//960-api-services",
     "//16-expression-service",
     "//19-delegate-tasks-beans",
     "//20-delegate-tasks",
