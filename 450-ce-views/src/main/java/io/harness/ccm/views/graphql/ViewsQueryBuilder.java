@@ -168,7 +168,9 @@ public class ViewsQueryBuilder {
     }
 
     for (QLCEViewFilter filter : filters) {
-      customFieldLists.add(getViewField(filter.getField()));
+      if (filter.getField().getIdentifier().equals(ViewFieldIdentifier.CUSTOM)) {
+        customFieldLists.add(getViewField(filter.getField()));
+      }
     }
 
     return customFieldLists;
