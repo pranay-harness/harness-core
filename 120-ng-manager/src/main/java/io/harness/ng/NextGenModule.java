@@ -20,6 +20,9 @@ import io.harness.delegate.beans.DelegateAsyncTaskResponse;
 import io.harness.delegate.beans.DelegateSyncTaskResponse;
 import io.harness.delegate.beans.DelegateTaskProgressResponse;
 import io.harness.entitysetupusageclient.EntitySetupUsageClientModule;
+import io.harness.eventsframework.EventDrivenClient;
+import io.harness.eventsframework.NoOpEventClient;
+import io.harness.eventsframework.RedisStreamClient;
 import io.harness.executionplan.ExecutionPlanModule;
 import io.harness.gitsync.GitSyncModule;
 import io.harness.gitsync.core.impl.GitSyncManagerInterfaceImpl;
@@ -54,6 +57,7 @@ import io.harness.ngtriggers.service.impl.TriggerWebhookServiceImpl;
 import io.harness.queue.QueueController;
 import io.harness.redesign.services.CustomExecutionService;
 import io.harness.redesign.services.CustomExecutionServiceImpl;
+import io.harness.redis.RedisConfig;
 import io.harness.registries.registrar.StepRegistrar;
 import io.harness.secretmanagerclient.SecretManagementClientModule;
 import io.harness.serializer.KryoRegistrar;
@@ -243,7 +247,6 @@ public class NextGenModule extends AbstractModule {
     MapBinder<String, StepRegistrar> stepRegistrarMapBinder =
         MapBinder.newMapBinder(binder(), String.class, StepRegistrar.class);
     stepRegistrarMapBinder.addBinding(NgStepRegistrar.class.getName()).to(NgStepRegistrar.class);
-
     bind(ProjectService.class).to(ProjectServiceImpl.class);
     bind(OrganizationService.class).to(OrganizationServiceImpl.class);
     bind(NGSecretServiceV2.class).to(NGSecretServiceV2Impl.class);
@@ -260,6 +263,17 @@ public class NextGenModule extends AbstractModule {
     bindYamlHandlers();
     bind(YamlBaseUrlService.class).to(YamlBaseUrlServiceImpl.class);
     bind(TriggerWebhookService.class).to(TriggerWebhookServiceImpl.class);
+  }
+
+  @Provides
+  @Singleton
+  public EventDrivenClient getEventDrivenClient() {
+    RedisConfig config = this.appConfig.getEventsFrameworkConfiguration().getRedisConfig();
+    if (config.getRedisUrl().equals("dummyRedisUrl")) {
+      return new NoOpEventClient();
+    } else {
+      return new RedisStreamClient(config);
+    }
   }
 
   @Provides

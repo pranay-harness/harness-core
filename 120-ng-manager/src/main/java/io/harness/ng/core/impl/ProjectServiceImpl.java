@@ -18,6 +18,10 @@ import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import io.harness.ModuleType;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.connector.services.ConnectorService;
+import io.harness.eventsframework.Event;
+import io.harness.eventsframework.EventDrivenClient;
+import io.harness.eventsframework.ProjectUpdate;
+import io.harness.eventsframework.StreamChannel;
 import io.harness.exception.DuplicateFieldException;
 import io.harness.exception.InvalidArgumentsException;
 import io.harness.exception.InvalidRequestException;
@@ -39,6 +43,7 @@ import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
+import com.google.protobuf.Any;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -59,15 +64,18 @@ public class ProjectServiceImpl implements ProjectService {
   private final OrganizationService organizationService;
   private final NGSecretManagerService ngSecretManagerService;
   private final ConnectorService secretManagerConnectorService;
+  private final EventDrivenClient eventDrivenClient;
 
   @Inject
   public ProjectServiceImpl(ProjectRepository projectRepository, OrganizationService organizationService,
       NGSecretManagerService ngSecretManagerService,
-      @Named(SECRET_MANAGER_CONNECTOR_SERVICE) ConnectorService secretManagerConnectorService) {
+      @Named(SECRET_MANAGER_CONNECTOR_SERVICE) ConnectorService secretManagerConnectorService,
+      EventDrivenClient eventDrivenClient) {
     this.projectRepository = projectRepository;
     this.organizationService = organizationService;
     this.ngSecretManagerService = ngSecretManagerService;
     this.secretManagerConnectorService = secretManagerConnectorService;
+    this.eventDrivenClient = eventDrivenClient;
   }
 
   @Override
@@ -138,11 +146,23 @@ public class ProjectServiceImpl implements ProjectService {
       List<ModuleType> moduleTypeList = verifyModulesNotRemoved(existingProject.getModules(), project.getModules());
       project.setModules(moduleTypeList);
       validate(project);
+      publishUpdates(project);
       return projectRepository.save(project);
     }
     throw new InvalidRequestException(
         String.format("Project with identifier [%s] and orgIdentifier [%s] not found", identifier, orgIdentifier),
         USER);
+  }
+
+  private void publishUpdates(Project project) {
+    eventDrivenClient.publishEvent(StreamChannel.PROJECT_UPDATE,
+        Event.newBuilder()
+            .setAccountId(project.getAccountIdentifier())
+            .setPayload(Any.pack(ProjectUpdate.newBuilder()
+                                     .setProjectIdentifier(project.getIdentifier())
+                                     .setOrgIdentifier(project.getOrgIdentifier())
+                                     .build()))
+            .build());
   }
 
   private List<ModuleType> verifyModulesNotRemoved(List<ModuleType> oldList, List<ModuleType> newList) {

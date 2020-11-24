@@ -32,22 +32,6 @@ then
   # 71-rest and 260-delegate modules are excluded.
 fi
 
-build_bazel_application() {
-  module=$1
-  bazel ${bazelrc} build //${module}:module ${GCP} ${BAZEL_ARGUMENTS}
-  bazel ${bazelrc} build //${module}:module_deploy.jar ${GCP} ${BAZEL_ARGUMENTS}
-
-  mvn -B install:install-file \
-   -Dfile=${BAZEL_DIRS}/bin/${module}/module.jar \
-   -DgroupId=software.wings \
-   -DartifactId=${module} \
-   -Dversion=0.0.1-SNAPSHOT \
-   -Dpackaging=jar \
-   -DgeneratePom=true \
-   -DpomFile=${module}/pom.xml \
-   -DlocalRepositoryPath=${local_repo}
-}
-
 build_bazel_module() {
   module=$1
   bazel ${bazelrc} build //${module}:module ${GCP} ${BAZEL_ARGUMENTS} --experimental_remote_download_outputs=all

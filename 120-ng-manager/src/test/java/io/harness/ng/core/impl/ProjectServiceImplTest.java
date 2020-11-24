@@ -25,6 +25,10 @@ import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.connector.apis.dto.ConnectorResponseDTO;
 import io.harness.connector.services.ConnectorService;
+import io.harness.eventsframework.Event;
+import io.harness.eventsframework.EventDrivenClient;
+import io.harness.eventsframework.NoOpEventClient;
+import io.harness.eventsframework.StreamChannel;
 import io.harness.exception.InvalidRequestException;
 import io.harness.ng.core.api.NGSecretManagerService;
 import io.harness.ng.core.dto.ProjectDTO;
@@ -54,6 +58,7 @@ public class ProjectServiceImplTest extends CategoryTest {
   private NGSecretManagerService ngSecretManagerService;
   private ConnectorService secretManagerConnectorService;
   private ProjectServiceImpl projectService;
+  private EventDrivenClient eventDrivenClient;
 
   @Before
   public void setup() {
@@ -61,8 +66,9 @@ public class ProjectServiceImplTest extends CategoryTest {
     organizationService = mock(OrganizationService.class);
     ngSecretManagerService = mock(NGSecretManagerService.class);
     secretManagerConnectorService = mock(ConnectorService.class);
-    projectService = spy(new ProjectServiceImpl(
-        projectRepository, organizationService, ngSecretManagerService, secretManagerConnectorService));
+    eventDrivenClient = mock(NoOpEventClient.class);
+    projectService = spy(new ProjectServiceImpl(projectRepository, organizationService, ngSecretManagerService,
+        secretManagerConnectorService, eventDrivenClient));
   }
 
   private ProjectDTO createProjectDTO(String accountIdentifier, String orgIdentifier, String identifier) {
@@ -119,16 +125,21 @@ public class ProjectServiceImplTest extends CategoryTest {
     String accountIdentifier = randomAlphabetic(10);
     String orgIdentifier = randomAlphabetic(10);
     String identifier = randomAlphabetic(10);
+    String id = randomAlphabetic(10);
     ProjectDTO projectDTO = createProjectDTO(accountIdentifier, orgIdentifier, identifier);
     Project project = toProject(projectDTO);
     project.setAccountIdentifier(accountIdentifier);
     project.setOrgIdentifier(orgIdentifier);
     project.setIdentifier(identifier);
+    project.setId(id);
 
     when(projectRepository.save(any())).thenReturn(project);
     when(projectService.get(accountIdentifier, orgIdentifier, identifier)).thenReturn(Optional.of(project));
 
     Project updatedProject = projectService.update(accountIdentifier, orgIdentifier, identifier, projectDTO);
+
+    ArgumentCaptor<Event> eventCaptor = ArgumentCaptor.forClass(Event.class);
+    verify(eventDrivenClient, times(1)).publishEvent(eq(StreamChannel.PROJECT_UPDATE), eventCaptor.capture());
 
     assertEquals(project, updatedProject);
   }
@@ -146,8 +157,8 @@ public class ProjectServiceImplTest extends CategoryTest {
     project.setAccountIdentifier(accountIdentifier);
     project.setOrgIdentifier(orgIdentifier);
     project.setName(randomAlphabetic(10));
+    project.setId(randomAlphabetic(10));
     when(projectService.get(accountIdentifier, orgIdentifier, identifier)).thenReturn(Optional.of(project));
-
     projectService.update(accountIdentifier, orgIdentifier, identifier, projectDTO);
   }
 

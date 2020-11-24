@@ -72,6 +72,16 @@
         </dependency>
         <dependency>
             <groupId>software.wings</groupId>
+            <artifactId>21-events-api</artifactId>
+            <version>${project.parent.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>software.wings</groupId>
+            <artifactId>21-events-api-proto</artifactId>
+            <version>${project.parent.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>software.wings</groupId>
             <artifactId>22-secret-manager-client</artifactId>
             <version>${project.parent.version}</version>
         </dependency>
