@@ -714,7 +714,7 @@ public class SecretServiceImpl implements SecretService {
       PageRequest<EncryptedData> batchPageRequest = pageRequest.copy();
       batchPageRequest.setOffset(String.valueOf(batchOffset));
       batchPageRequest.setLimit(String.valueOf(batchPageSize));
-      PageResponse<EncryptedData> batchPageResponse = secretsDao.listSecrets(pageRequest);
+      PageResponse<EncryptedData> batchPageResponse = secretsDao.listSecrets(batchPageRequest);
       List<EncryptedData> encryptedDataList = batchPageResponse.getResponse();
       numRecordsReturnedCurrentBatch = encryptedDataList.size();
       filterSecreteDataBasedOnUsageRestrictions(accountId, appId, envId, encryptedDataList, filteredEncryptedDataList);
