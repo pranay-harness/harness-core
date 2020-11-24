@@ -83,6 +83,7 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mongodb.morphia.query.FieldEnd;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.Sort;
 
@@ -99,6 +100,7 @@ public class WorkflowServiceImplTest extends WingsBaseTest {
   @InjectMocks @Inject private WorkflowService workflowService;
   @Mock private Query<WorkflowExecution> query;
   @Mock private Query<WorkflowExecution> emptyQuery;
+  @Mock private FieldEnd fieldEnd;
 
   @Before
   public void setUp() {
@@ -142,6 +144,8 @@ public class WorkflowServiceImplTest extends WingsBaseTest {
     when(query.filter(WorkflowExecutionKeys.accountId, workflow.getAccountId())).thenReturn(query);
     when(query.filter(WorkflowExecutionKeys.appId, workflow.getAppId())).thenReturn(query);
     when(query.filter(WorkflowExecutionKeys.workflowId, workflow.getUuid())).thenReturn(query);
+    when(query.field(any())).thenReturn(fieldEnd);
+    when(fieldEnd.contains(any())).thenReturn(query);
     when(query.filter(WorkflowExecutionKeys.status, SUCCESS)).thenReturn(query);
     when(query.order(any(Sort.class))).thenReturn(query);
     when(query.get()).thenReturn(workflowExecution);
@@ -185,7 +189,9 @@ public class WorkflowServiceImplTest extends WingsBaseTest {
     when(query.filter(WorkflowExecutionKeys.accountId, workflow.getAccountId())).thenReturn(query);
     when(query.filter(WorkflowExecutionKeys.appId, workflow.getAppId())).thenReturn(query);
     when(query.filter(WorkflowExecutionKeys.workflowId, workflow.getUuid())).thenReturn(query);
-    when(query.filter(WorkflowExecutionKeys.status, SUCCESS)).thenReturn(emptyQuery);
+    when(emptyQuery.filter(WorkflowExecutionKeys.status, SUCCESS)).thenReturn(emptyQuery);
+    when(query.field(WorkflowExecutionKeys.serviceIds)).thenReturn(fieldEnd);
+    when(fieldEnd.contains(any())).thenReturn(emptyQuery);
     when(emptyQuery.order(any(Sort.class))).thenReturn(emptyQuery);
     when(emptyQuery.get()).thenReturn(null);
     WorkflowServiceImpl workflowServiceImpl = (WorkflowServiceImpl) workflowService;
@@ -219,6 +225,8 @@ public class WorkflowServiceImplTest extends WingsBaseTest {
 
     when(wingsPersistence.createQuery(WorkflowExecution.class)).thenReturn(query);
     when(query.filter(any(), any())).thenReturn(query);
+    when(query.field(any())).thenReturn(fieldEnd);
+    when(fieldEnd.contains(any())).thenReturn(query);
     when(query.order(any(Sort.class))).thenReturn(query);
     when(query.get()).thenReturn(workflowExecution);
     WorkflowServiceImpl workflowServiceImpl = (WorkflowServiceImpl) workflowService;
@@ -266,6 +274,8 @@ public class WorkflowServiceImplTest extends WingsBaseTest {
     when(query.filter(WorkflowExecutionKeys.accountId, workflow.getAccountId())).thenReturn(query);
     when(query.filter(WorkflowExecutionKeys.appId, workflow.getAppId())).thenReturn(query);
     when(query.filter(WorkflowExecutionKeys.workflowId, workflow.getUuid())).thenReturn(query);
+    when(query.field(any())).thenReturn(fieldEnd);
+    when(fieldEnd.contains(any())).thenReturn(query);
     when(query.filter(WorkflowExecutionKeys.status, SUCCESS)).thenReturn(query);
     when(query.order(any(Sort.class))).thenReturn(query);
     when(query.get()).thenReturn(workflowExecution);
@@ -526,5 +536,84 @@ public class WorkflowServiceImplTest extends WingsBaseTest {
     manifestSummary = manifestVariable.getApplicationManifestSummary().getDefaultManifest();
     assertThat(manifestSummary.getUuid()).isEqualTo(HELM_CHART_ID + 1);
     assertThat(manifestSummary.getVersionNo()).isEqualTo(VERSION + 1);
+  }
+
+  @Test
+  @Owner(developers = PRABU)
+  @Category(UnitTests.class)
+  public void shouldGetLastDeployedArtifactFromDifferentServices() {
+    Workflow workflow =
+        WorkflowBuilder.aWorkflow().name(WORKFLOW_NAME).uuid(WORKFLOW_ID).accountId(ACCOUNT_ID).appId(APP_ID).build();
+
+    List<Artifact> artifacts =
+        asList(anArtifact()
+                   .withUuid(ARTIFACT_ID)
+                   .withArtifactSourceName(ARTIFACT_SOURCE_NAME)
+                   .withArtifactStreamId(ARTIFACT_STREAM_ID)
+                   .withMetadata(Collections.singletonMap(ArtifactMetadataKeys.buildNo, BUILD_NO))
+                   .build());
+
+    List<HelmChart> helmCharts = asList(HelmChart.builder()
+                                            .uuid(HELM_CHART_ID)
+                                            .serviceId(SERVICE_ID)
+                                            .name(CHART_NAME)
+                                            .applicationManifestId(MANIFEST_ID)
+                                            .version(VERSION)
+                                            .build());
+    WorkflowExecution workflowExecution =
+        WorkflowExecution.builder()
+            .artifacts(artifacts)
+            .helmCharts(helmCharts)
+            .appId(APP_ID)
+            .pipelineResumeId(PIPELINE_EXECUTION_ID)
+            .pipelineExecutionId(PIPELINE_EXECUTION_ID)
+            .pipelineSummary(PipelineSummary.builder().pipelineId(PIPELINE_ID).pipelineName(PIPELINE_NAME).build())
+            .build();
+
+    when(wingsPersistence.createQuery(WorkflowExecution.class)).thenReturn(query);
+    when(query.filter(WorkflowExecutionKeys.accountId, workflow.getAccountId())).thenReturn(query);
+    when(query.filter(WorkflowExecutionKeys.appId, workflow.getAppId())).thenReturn(query);
+    when(query.filter(WorkflowExecutionKeys.workflowId, workflow.getUuid())).thenReturn(query);
+    when(query.field(WorkflowExecutionKeys.serviceIds)).thenReturn(fieldEnd);
+    when(fieldEnd.contains(SERVICE_ID)).thenReturn(query);
+    when(query.filter(WorkflowExecutionKeys.status, SUCCESS)).thenReturn(query);
+    when(query.order(any(Sort.class))).thenReturn(query);
+    when(query.get()).thenReturn(workflowExecution);
+    PageResponse<Artifact> pageResponse = new PageResponse<>();
+    pageResponse.setResponse(artifacts);
+    when(artifactService.listArtifactsForService(APP_ID, SERVICE_ID, new PageRequest<>())).thenReturn(pageResponse);
+    WorkflowServiceImpl workflowServiceImpl = (WorkflowServiceImpl) workflowService;
+    LastDeployedArtifactInformation artifactInformation = workflowServiceImpl.fetchLastDeployedArtifact(
+        workflow, asList(ARTIFACT_STREAM_ID, ARTIFACT_STREAM_ID_ARTIFACTORY), SERVICE_ID);
+    assertThat(artifactInformation).isNotNull();
+    assertThat(artifactInformation.getArtifact().getArtifactSourceName()).isEqualTo(ARTIFACT_SOURCE_NAME);
+    assertThat(artifactInformation.getArtifact().getBuildNo()).isEqualTo(BUILD_NO);
+    assertThat(artifactInformation.getExecutionId()).isEqualTo(PIPELINE_EXECUTION_ID);
+    assertThat(artifactInformation.getExecutionEntityId()).isEqualTo(PIPELINE_ID);
+    assertThat(artifactInformation.getExecutionEntityType()).isEqualTo(WorkflowType.PIPELINE);
+    assertThat(artifactInformation.getExecutionEntityName()).isEqualTo(PIPELINE_NAME);
+
+    PageResponse<HelmChart> pageResponse2 = new PageResponse<>();
+    pageResponse2.setResponse(helmCharts);
+    when(helmChartService.listHelmChartsForService(APP_ID, SERVICE_ID, new PageRequest<>())).thenReturn(pageResponse2);
+
+    LastDeployedHelmChartInformation helmChartInformation =
+        workflowServiceImpl.fetchLastDeployedHelmChart(workflow, SERVICE_ID);
+    assertThat(helmChartInformation).isNotNull();
+    assertThat(helmChartInformation.getHelmchart().getName()).isEqualTo(CHART_NAME);
+    assertThat(helmChartInformation.getHelmchart().getVersion()).isEqualTo(VERSION);
+    assertThat(helmChartInformation.getExecutionId()).isEqualTo(PIPELINE_EXECUTION_ID);
+    assertThat(helmChartInformation.getExecutionEntityId()).isEqualTo(PIPELINE_ID);
+    assertThat(helmChartInformation.getExecutionEntityType()).isEqualTo(WorkflowType.PIPELINE);
+    assertThat(helmChartInformation.getExecutionEntityName()).isEqualTo(PIPELINE_NAME);
+
+    when(fieldEnd.contains(SERVICE_ID + 2)).thenReturn(emptyQuery);
+    when(emptyQuery.filter(WorkflowExecutionKeys.status, SUCCESS)).thenReturn(emptyQuery);
+    when(emptyQuery.order(any(Sort.class))).thenReturn(emptyQuery);
+    when(query.get()).thenReturn(null);
+
+    artifactInformation = workflowServiceImpl.fetchLastDeployedArtifact(
+        workflow, asList(ARTIFACT_STREAM_ID, ARTIFACT_STREAM_ID_ARTIFACTORY), SERVICE_ID);
+    assertThat(artifactInformation).isNull();
   }
 }
