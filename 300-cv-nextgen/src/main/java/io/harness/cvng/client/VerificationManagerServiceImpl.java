@@ -5,14 +5,12 @@ import static io.harness.cvng.beans.DataCollectionType.KUBERNETES;
 import io.harness.connector.apis.dto.ConnectorInfoDTO;
 import io.harness.cvng.beans.DataCollectionConnectorBundle;
 import io.harness.cvng.beans.DataCollectionRequest;
-import io.harness.cvng.beans.DataCollectionType;
 import io.harness.cvng.core.entities.CVConfig.CVConfigKeys;
 
 import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
 import java.util.Collections;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 import javax.ws.rs.InternalServerErrorException;
 
@@ -21,22 +19,18 @@ public class VerificationManagerServiceImpl implements VerificationManagerServic
   @Inject private RequestExecutor requestExecutor;
   @Inject private NextGenService nextGenService;
   @Override
-  public String createDataCollectionTask(String accountId, String orgIdentifier, String projectIdentifier,
-      DataCollectionType dataCollectionType, Map<String, String> params) {
+  public String createDataCollectionTask(
+      String accountId, String orgIdentifier, String projectIdentifier, DataCollectionConnectorBundle bundle) {
     // Need to write this to handle retries, exception etc in a proper way.
-    Preconditions.checkState(params.containsKey(CVConfigKeys.connectorIdentifier));
-    Optional<ConnectorInfoDTO> connectorDTO =
-        nextGenService.get(accountId, params.get(CVConfigKeys.connectorIdentifier), orgIdentifier, projectIdentifier);
+    Preconditions.checkState(bundle.getParams().containsKey(CVConfigKeys.connectorIdentifier));
+    Optional<ConnectorInfoDTO> connectorDTO = nextGenService.get(
+        accountId, bundle.getParams().get(CVConfigKeys.connectorIdentifier), orgIdentifier, projectIdentifier);
     if (!connectorDTO.isPresent()) {
       throw new InternalServerErrorException(
-          "Failed to retrieve connector with id: " + params.get(CVConfigKeys.connectorIdentifier));
+          "Failed to retrieve connector with id: " + bundle.getParams().get(CVConfigKeys.connectorIdentifier));
     }
 
-    DataCollectionConnectorBundle bundle = DataCollectionConnectorBundle.builder()
-                                               .connectorDTO(connectorDTO.get())
-                                               .params(params)
-                                               .dataCollectionType(dataCollectionType)
-                                               .build();
+    bundle.setConnectorDTO(connectorDTO.get());
 
     return requestExecutor
         .execute(verificationManagerClient.createDataCollectionPerpetualTask(

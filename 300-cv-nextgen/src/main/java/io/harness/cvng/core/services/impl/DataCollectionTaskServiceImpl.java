@@ -3,6 +3,7 @@ package io.harness.cvng.core.services.impl;
 import static io.harness.cvng.core.entities.DataCollectionTask.Type.SERVICE_GUARD;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 
+import io.harness.cvng.beans.DataCollectionConnectorBundle;
 import io.harness.cvng.beans.DataCollectionExecutionStatus;
 import io.harness.cvng.beans.DataCollectionTaskDTO;
 import io.harness.cvng.beans.DataCollectionTaskDTO.DataCollectionTaskResult;
@@ -261,7 +262,8 @@ public class DataCollectionTaskServiceImpl implements DataCollectionTaskService 
     params.put(CVConfigKeys.connectorIdentifier, cvConfig.getConnectorIdentifier());
 
     String dataCollectionTaskId = verificationManagerService.createDataCollectionTask(cvConfig.getAccountId(),
-        cvConfig.getOrgIdentifier(), cvConfig.getProjectIdentifier(), DataCollectionType.CV, params);
+        cvConfig.getOrgIdentifier(), cvConfig.getProjectIdentifier(),
+        DataCollectionConnectorBundle.builder().params(params).dataCollectionType(DataCollectionType.CV).build());
     save(dataCollectionTask);
     cvConfigService.setCollectionTaskId(cvConfig.getUuid(), dataCollectionTaskId);
 

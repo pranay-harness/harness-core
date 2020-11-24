@@ -27,7 +27,7 @@ import io.harness.cvng.activity.beans.DeploymentActivityResultDTO.DeploymentResu
 import io.harness.cvng.activity.beans.DeploymentActivityVerificationResultDTO;
 import io.harness.cvng.analysis.beans.CanaryDeploymentAdditionalInfo;
 import io.harness.cvng.beans.CVMonitoringCategory;
-import io.harness.cvng.beans.DataCollectionType;
+import io.harness.cvng.beans.DataCollectionConnectorBundle;
 import io.harness.cvng.beans.DataSourceType;
 import io.harness.cvng.client.NextGenService;
 import io.harness.cvng.client.VerificationManagerService;
@@ -126,8 +126,7 @@ public class VerificationJobInstanceServiceImplTest extends CvNextGenTest {
     FieldUtils.writeField(
         verificationJobInstanceService, "verificationManagerService", verificationManagerService, true);
     FieldUtils.writeField(verificationJobInstanceService, "nextGenService", nextGenService, true);
-    when(verificationManagerService.createDataCollectionTask(any(), any(), any(), any(), any()))
-        .thenReturn(perpetualTaskId);
+    when(verificationManagerService.createDataCollectionTask(any(), any(), any(), any())).thenReturn(perpetualTaskId);
 
     when(nextGenService.getEnvironment("dev", accountId, orgIdentifier, projectIdentifier))
         .thenReturn(EnvironmentResponseDTO.builder()
@@ -245,7 +244,7 @@ public class VerificationJobInstanceServiceImplTest extends CvNextGenTest {
     params.put(CVConfigKeys.connectorIdentifier, connectorId);
     verify(verificationManagerService)
         .createDataCollectionTask(
-            eq(accountId), eq(orgIdentifier), eq(projectIdentifier), eq(DataCollectionType.CV), eq(params));
+            eq(accountId), eq(orgIdentifier), eq(projectIdentifier), any(DataCollectionConnectorBundle.class));
     VerificationJobInstance saved = verificationJobInstanceService.getVerificationJobInstance(verificationTaskId);
     assertThat(saved.getPerpetualTaskIds()).isEqualTo(Lists.newArrayList(perpetualTaskId));
   }
@@ -305,7 +304,7 @@ public class VerificationJobInstanceServiceImplTest extends CvNextGenTest {
     params.put(CVConfigKeys.connectorIdentifier, connectorId);
     verify(verificationManagerService)
         .createDataCollectionTask(
-            eq(accountId), eq(orgIdentifier), eq(projectIdentifier), eq(DataCollectionType.CV), eq(params));
+            eq(accountId), eq(orgIdentifier), eq(projectIdentifier), any(DataCollectionConnectorBundle.class));
     VerificationJobInstance saved = verificationJobInstanceService.getVerificationJobInstance(verificationTaskId);
     assertThat(saved.getPerpetualTaskIds()).isEqualTo(Lists.newArrayList(perpetualTaskId));
   }

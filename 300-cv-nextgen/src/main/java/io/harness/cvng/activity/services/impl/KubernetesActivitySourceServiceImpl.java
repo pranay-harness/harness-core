@@ -1,16 +1,17 @@
 package io.harness.cvng.activity.services.impl;
 
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.persistence.HQuery.excludeAuthority;
 
-import io.harness.cvng.activity.beans.KubernetesActivitySourceDTO;
 import io.harness.cvng.activity.entities.Activity;
 import io.harness.cvng.activity.entities.KubernetesActivitySource;
 import io.harness.cvng.activity.entities.KubernetesActivitySource.KubernetesActivitySourceKeys;
 import io.harness.cvng.activity.services.api.ActivityService;
 import io.harness.cvng.activity.services.api.KubernetesActivitySourceService;
+import io.harness.cvng.beans.DataCollectionConnectorBundle;
 import io.harness.cvng.beans.DataCollectionType;
 import io.harness.cvng.beans.KubernetesActivityDTO;
-import io.harness.cvng.beans.KubernetesActivitySourceDTO.KubernetesActivitySourceDTOKeys;
+import io.harness.cvng.beans.activity.KubernetesActivitySourceDTO;
 import io.harness.cvng.client.VerificationManagerService;
 import io.harness.cvng.core.entities.CVConfig.CVConfigKeys;
 import io.harness.cvng.core.entities.DataCollectionTask.DataCollectionTaskKeys;
@@ -44,39 +45,59 @@ public class KubernetesActivitySourceServiceImpl implements KubernetesActivitySo
   @Override
   public String saveKubernetesSource(
       String accountId, String orgIdentifier, String projectIdentifier, KubernetesActivitySourceDTO activitySourceDTO) {
+    if (isNotEmpty(activitySourceDTO.getUuid())) {
+      update(activitySourceDTO);
+    }
     return hPersistence.save(KubernetesActivitySource.builder()
+                                 .uuid(activitySourceDTO.getUuid())
                                  .accountId(accountId)
                                  .orgIdentifier(orgIdentifier)
                                  .projectIdentifier(projectIdentifier)
                                  .uuid(activitySourceDTO.getUuid())
+                                 .identifier(activitySourceDTO.getIdentifier())
+                                 .name(activitySourceDTO.getName())
                                  .connectorIdentifier(activitySourceDTO.getConnectorIdentifier())
-                                 .serviceIdentifier(activitySourceDTO.getServiceIdentifier())
-                                 .envIdentifier(activitySourceDTO.getEnvIdentifier())
-                                 .namespace(activitySourceDTO.getNamespace())
-                                 .clusterName(activitySourceDTO.getClusterName())
-                                 .workloadName(activitySourceDTO.getWorkloadName())
+                                 .activitySourceConfigs(activitySourceDTO.getActivitySourceConfigs())
                                  .build());
   }
 
+  private void update(KubernetesActivitySourceDTO activitySourceDTO) {
+    KubernetesActivitySource kubernetesActivitySource =
+        hPersistence.get(KubernetesActivitySource.class, activitySourceDTO.getUuid());
+    if (isNotEmpty(kubernetesActivitySource.getDataCollectionTaskId())) {
+      verificationManagerService.deletePerpetualTask(
+          kubernetesActivitySource.getAccountId(), kubernetesActivitySource.getDataCollectionTaskId());
+    }
+    hPersistence.update(hPersistence.get(KubernetesActivitySource.class, activitySourceDTO.getUuid()),
+        hPersistence.createUpdateOperations(KubernetesActivitySource.class)
+            .set(KubernetesActivitySourceKeys.name, activitySourceDTO.getName())
+            .set(KubernetesActivitySourceKeys.connectorIdentifier, activitySourceDTO.getConnectorIdentifier())
+            .set(KubernetesActivitySourceKeys.activitySourceConfigs, activitySourceDTO.getActivitySourceConfigs())
+            .unset(KubernetesActivitySourceKeys.dataCollectionTaskId));
+  }
+
   @Override
-  public List<String> saveKubernetesSources(String accountId, String orgIdentifier, String projectIdentifier,
-      List<KubernetesActivitySourceDTO> activitySourceDTOs) {
-    Preconditions.checkState(isNotEmpty(activitySourceDTOs));
-    List<KubernetesActivitySource> kubernetesActivitySources = new ArrayList<>();
-    activitySourceDTOs.forEach(activitySourceDTO
-        -> kubernetesActivitySources.add(KubernetesActivitySource.builder()
-                                             .accountId(accountId)
-                                             .orgIdentifier(orgIdentifier)
-                                             .projectIdentifier(projectIdentifier)
-                                             .uuid(activitySourceDTO.getUuid())
-                                             .connectorIdentifier(activitySourceDTO.getConnectorIdentifier())
-                                             .serviceIdentifier(activitySourceDTO.getServiceIdentifier())
-                                             .envIdentifier(activitySourceDTO.getEnvIdentifier())
-                                             .namespace(activitySourceDTO.getNamespace())
-                                             .clusterName(activitySourceDTO.getClusterName())
-                                             .workloadName(activitySourceDTO.getWorkloadName())
-                                             .build()));
-    return hPersistence.save(kubernetesActivitySources);
+  public List<KubernetesActivitySourceDTO> listKubernetesSources(
+      String accountId, String orgIdentifier, String projectIdentifier) {
+    List<KubernetesActivitySource> kubernetesActivitySources =
+        hPersistence.createQuery(KubernetesActivitySource.class, excludeAuthority)
+            .filter(KubernetesActivitySourceKeys.accountId, accountId)
+            .filter(KubernetesActivitySourceKeys.orgIdentifier, orgIdentifier)
+            .filter(KubernetesActivitySourceKeys.projectIdentifier, projectIdentifier)
+            .asList();
+    return kubernetesActivitySources.stream()
+        .map(kubernetesActivitySource -> kubernetesActivitySource.toDTO())
+        .collect(Collectors.toList());
+  }
+
+  @Override
+  public boolean deleteKubernetesSource(
+      String accountId, String orgIdentifier, String projectIdentifier, String identifier) {
+    return hPersistence.delete(hPersistence.createQuery(KubernetesActivitySource.class, excludeAuthority)
+                                   .filter(KubernetesActivitySourceKeys.accountId, accountId)
+                                   .filter(KubernetesActivitySourceKeys.orgIdentifier, orgIdentifier)
+                                   .filter(KubernetesActivitySourceKeys.projectIdentifier, projectIdentifier)
+                                   .filter(KubernetesActivitySourceKeys.identifier, identifier));
   }
 
   @Override
@@ -88,8 +109,6 @@ public class KubernetesActivitySourceServiceImpl implements KubernetesActivitySo
       activity.setAccountIdentifier(accountId);
       activity.setOrgIdentifier(activitySource.getOrgIdentifier());
       activity.setProjectIdentifier(activitySource.getProjectIdentifier());
-      activity.setServiceIdentifier(activitySource.getServiceIdentifier());
-      activity.setEnvironmentIdentifier(activitySource.getEnvIdentifier());
     });
 
     List<Activity> kubernetesActivities =
@@ -107,13 +126,13 @@ public class KubernetesActivitySourceServiceImpl implements KubernetesActivitySo
     Map<String, String> params = new HashMap<>();
     params.put(CVConfigKeys.connectorIdentifier, activitySource.getConnectorIdentifier());
     params.put(DataCollectionTaskKeys.dataCollectionWorkerId, activitySource.getUuid());
-    params.put(KubernetesActivitySourceDTOKeys.namespace, activitySource.getNamespace());
-    params.put(KubernetesActivitySourceDTOKeys.clusterName, activitySource.getClusterName());
-    params.put(KubernetesActivitySourceDTOKeys.workloadName, activitySource.getWorkloadName());
-
+    DataCollectionConnectorBundle dataCollectionConnectorBundle = DataCollectionConnectorBundle.builder()
+                                                                      .dataCollectionType(DataCollectionType.KUBERNETES)
+                                                                      .params(params)
+                                                                      .activitySourceDTO(activitySource.toDTO())
+                                                                      .build();
     String dataCollectionTaskId = verificationManagerService.createDataCollectionTask(activitySource.getAccountId(),
-        activitySource.getOrgIdentifier(), activitySource.getProjectIdentifier(), DataCollectionType.KUBERNETES,
-        params);
+        activitySource.getOrgIdentifier(), activitySource.getProjectIdentifier(), dataCollectionConnectorBundle);
 
     UpdateOperations<KubernetesActivitySource> updateOperations =
         hPersistence.createUpdateOperations(KubernetesActivitySource.class)
@@ -146,7 +165,7 @@ public class KubernetesActivitySourceServiceImpl implements KubernetesActivitySo
     scopeIdentifiersFilter.put("$and", conditions);
     List<String> serviceIdentifiers =
         hPersistence.getCollection(KubernetesActivitySource.class)
-            .distinct(KubernetesActivitySourceKeys.serviceIdentifier, scopeIdentifiersFilter);
+            .distinct(KubernetesActivitySource.SERVICE_IDENTIFIER_KEY, scopeIdentifiersFilter);
     return serviceIdentifiers.size();
   }
 

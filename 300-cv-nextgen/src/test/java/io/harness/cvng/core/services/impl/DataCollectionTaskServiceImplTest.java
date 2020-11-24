@@ -22,11 +22,11 @@ import io.harness.CvNextGenTest;
 import io.harness.category.element.UnitTests;
 import io.harness.cvng.beans.AppDynamicsDataCollectionInfo;
 import io.harness.cvng.beans.CVMonitoringCategory;
+import io.harness.cvng.beans.DataCollectionConnectorBundle;
 import io.harness.cvng.beans.DataCollectionExecutionStatus;
 import io.harness.cvng.beans.DataCollectionInfo;
 import io.harness.cvng.beans.DataCollectionTaskDTO;
 import io.harness.cvng.beans.DataCollectionTaskDTO.DataCollectionTaskResult;
-import io.harness.cvng.beans.DataCollectionType;
 import io.harness.cvng.beans.DataSourceType;
 import io.harness.cvng.beans.SplunkDataCollectionInfo;
 import io.harness.cvng.client.VerificationManagerService;
@@ -516,7 +516,7 @@ public class DataCollectionTaskServiceImplTest extends CvNextGenTest {
     FieldUtils.writeField(dataCollectionTaskService, "verificationManagerService", verificationManagerService, true);
 
     when(verificationManagerService.createDataCollectionTask(
-             eq(accountId), eq("orgIdentifier"), eq("projectIdentifier"), eq(DataCollectionType.CV), any()))
+             eq(accountId), eq("orgIdentifier"), eq("projectIdentifier"), any(DataCollectionConnectorBundle.class)))
         .thenReturn(taskId);
     AppDynamicsCVConfig cvConfig = getCVConfig();
 
@@ -553,7 +553,7 @@ public class DataCollectionTaskServiceImplTest extends CvNextGenTest {
     FieldUtils.writeField(dataCollectionTaskService, "verificationManagerService", verificationManagerService, true);
 
     when(verificationManagerService.createDataCollectionTask(
-             eq(accountId), eq("orgIdentifier"), eq("projectIdentifier"), eq(DataCollectionType.CV), any()))
+             eq(accountId), eq("orgIdentifier"), eq("projectIdentifier"), any(DataCollectionConnectorBundle.class)))
         .thenReturn(taskId);
     SplunkCVConfig cvConfig = getSplunkCVConfig();
 

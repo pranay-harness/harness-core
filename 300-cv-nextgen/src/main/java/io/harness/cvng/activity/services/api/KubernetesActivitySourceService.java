@@ -1,8 +1,8 @@
 package io.harness.cvng.activity.services.api;
 
-import io.harness.cvng.activity.beans.KubernetesActivitySourceDTO;
 import io.harness.cvng.activity.entities.KubernetesActivitySource;
 import io.harness.cvng.beans.KubernetesActivityDTO;
+import io.harness.cvng.beans.activity.KubernetesActivitySourceDTO;
 import io.harness.ng.beans.PageResponse;
 
 import java.util.List;
@@ -12,8 +12,9 @@ public interface KubernetesActivitySourceService {
   KubernetesActivitySource getActivitySource(@NotNull String activitySourceId);
   String saveKubernetesSource(
       String accountId, String orgIdentifier, String projectIdentifier, KubernetesActivitySourceDTO activitySourceDTO);
-  List<String> saveKubernetesSources(String accountId, String orgIdentifier, String projectIdentifier,
-      List<KubernetesActivitySourceDTO> activitySourceDTOs);
+  List<KubernetesActivitySourceDTO> listKubernetesSources(
+      String accountId, String orgIdentifier, String projectIdentifier);
+  boolean deleteKubernetesSource(String accountId, String orgIdentifier, String projectIdentifier, String identifier);
   boolean saveKubernetesActivities(String accountId, String activitySourceId, List<KubernetesActivityDTO> activities);
   void enqueueDataCollectionTask(KubernetesActivitySource activitySource);
   boolean doesAActivitySourceExistsForThisProject(String accountId, String orgIdentifier, String projectIdentifier);

@@ -138,7 +138,7 @@ public class ActivityServiceImplTest extends CvNextGenTest {
   @Owner(developers = PRAVEEN)
   @Category(UnitTests.class)
   public void testRegisterActivity_kubernetesActivityNoClusterName() {
-    ActivityDTO activityDTO = KubernetesActivityDTO.builder().activityDescription("pod restarts").build();
+    ActivityDTO activityDTO = KubernetesActivityDTO.builder().message("pod restarts").build();
     activityDTO.setAccountIdentifier(accountId);
     activityDTO.setProjectIdentifier(projectIdentifier);
     activityDTO.setOrgIdentifier(orgIdentifier);
@@ -149,7 +149,7 @@ public class ActivityServiceImplTest extends CvNextGenTest {
 
     assertThatThrownBy(() -> activityService.register(accountId, generateUuid(), activityDTO))
         .isInstanceOf(NullPointerException.class)
-        .hasMessage(KubernetesActivityKeys.clusterName + " should not be null");
+        .hasMessage(KubernetesActivityKeys.json + " should not be null");
   }
 
   @Test
@@ -635,15 +635,15 @@ public class ActivityServiceImplTest extends CvNextGenTest {
   }
 
   private KubernetesActivityDTO getKubernetesActivity(VerificationJob verificationJob) {
-    KubernetesActivityDTO activityDTO = KubernetesActivityDTO.builder().activityDescription("pod restarts").build();
+    KubernetesActivityDTO activityDTO = KubernetesActivityDTO.builder().message("pod restarts").build();
     activityDTO.setAccountIdentifier(accountId);
     activityDTO.setProjectIdentifier(projectIdentifier);
     activityDTO.setOrgIdentifier(orgIdentifier);
     activityDTO.setActivityStartTime(Instant.now().toEpochMilli());
     activityDTO.setEnvironmentIdentifier(envIdentifier);
     activityDTO.setName("Pod restart activity");
-    activityDTO.setClusterName("harness");
     activityDTO.setServiceIdentifier(generateUuid());
+    activityDTO.setJson(generateUuid());
 
     Map<String, String> runtimeParams = new HashMap<>();
     runtimeParams.put(JOB_IDENTIFIER_KEY, verificationJob.getIdentifier());

@@ -62,40 +62,46 @@ public class K8ActivityCollectionPerpetualTaskExecutor implements PerpetualTaskE
               .getAuth()
               .getCredentials();
       secretDecryptionService.decrypt(kubernetesCredentialAuth, dataCollectionInfo.getEncryptedDataDetails());
-      KubernetesConfig kubernetesConfig = k8sYamlToDelegateDTOMapper.createKubernetesConfigFromClusterConfig(
-          kubernetesClusterConfig, dataCollectionInfo.getActivitySourceDTO().getNamespace());
-      ApiClient apiClient = apiClientFactory.getClient(kubernetesConfig);
-      CoreV1Api coreV1Api = new CoreV1Api(apiClient);
       SharedInformerFactory factory = new SharedInformerFactory();
-      SharedIndexInformer<V1Event> nodeInformer = factory.sharedIndexInformerFor(
-          (CallGeneratorParams generatorParams)
-              -> coreV1Api.listNamespacedEventCall(dataCollectionInfo.getActivitySourceDTO().getNamespace(), null, null,
-                  null, null, null, null, generatorParams.resourceVersion, generatorParams.timeoutSeconds,
-                  generatorParams.watch, null),
-          V1Event.class, V1EventList.class);
+      dataCollectionInfo.getActivitySourceDTO().getActivitySourceConfigs().forEach(activitySourceConfig -> {
+        KubernetesConfig kubernetesConfig = k8sYamlToDelegateDTOMapper.createKubernetesConfigFromClusterConfig(
+            kubernetesClusterConfig, activitySourceConfig.getNamespace());
+        ApiClient apiClient = apiClientFactory.getClient(kubernetesConfig);
+        CoreV1Api coreV1Api = new CoreV1Api(apiClient);
+        SharedIndexInformer<V1Event> nodeInformer = factory.sharedIndexInformerFor(
+            (CallGeneratorParams generatorParams)
+                -> coreV1Api.listNamespacedEventCall(activitySourceConfig.getNamespace(), null, null, null, null, null,
+                    null, generatorParams.resourceVersion, generatorParams.timeoutSeconds, generatorParams.watch, null),
+            V1Event.class, V1EventList.class);
 
-      nodeInformer.addEventHandler(new ResourceEventHandler<V1Event>() {
-        @Override
-        public void onAdd(V1Event v1Event) {
-          kubernetesActivitiesStoreService.save(taskParams.getAccountId(),
-              KubernetesActivityDTO.builder()
-                  .activityDescription(v1Event.getMessage())
-                  .activitySourceConfigId(activitySourceConfigId)
-                  .name(v1Event.getInvolvedObject().getUid())
-                  .activityStartTime(v1Event.getFirstTimestamp().getMillis())
-                  .activityEndTime(v1Event.getLastTimestamp().getMillis())
-                  .build());
-        }
+        nodeInformer.addEventHandler(new ResourceEventHandler<V1Event>() {
+          @Override
+          public void onAdd(V1Event v1Event) {
+            if (v1Event.getInvolvedObject().getName().contains(activitySourceConfig.getWorkloadName())) {
+              kubernetesActivitiesStoreService.save(taskParams.getAccountId(),
+                  KubernetesActivityDTO.builder()
+                      .message(v1Event.getMessage())
+                      .json(v1Event.toString())
+                      .activitySourceConfigId(activitySourceConfigId)
+                      .name(v1Event.getInvolvedObject().getUid())
+                      .activityStartTime(v1Event.getFirstTimestamp().getMillis())
+                      .activityEndTime(v1Event.getLastTimestamp().getMillis())
+                      .environmentIdentifier(activitySourceConfig.getEnvIdentifier())
+                      .serviceIdentifier(activitySourceConfig.getEnvIdentifier())
+                      .build());
+            }
+          }
 
-        @Override
-        public void onUpdate(V1Event v1Event, V1Event apiType1) {
-          // no updates
-        }
+          @Override
+          public void onUpdate(V1Event v1Event, V1Event apiType1) {
+            // no updates
+          }
 
-        @Override
-        public void onDelete(V1Event v1Event, boolean b) {
-          // no deletes
-        }
+          @Override
+          public void onDelete(V1Event v1Event, boolean b) {
+            // no deletes
+          }
+        });
       });
 
       factory.startAllRegisteredInformers();

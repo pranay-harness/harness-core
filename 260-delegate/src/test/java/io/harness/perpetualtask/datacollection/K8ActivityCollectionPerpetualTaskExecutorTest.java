@@ -12,7 +12,7 @@ import io.harness.DelegateTest;
 import io.harness.category.element.UnitTests;
 import io.harness.cvng.beans.DataCollectionType;
 import io.harness.cvng.beans.K8ActivityDataCollectionInfo;
-import io.harness.cvng.beans.KubernetesActivitySourceDTO;
+import io.harness.cvng.beans.activity.KubernetesActivitySourceDTO;
 import io.harness.datacollection.entity.RuntimeParameters;
 import io.harness.delegate.beans.connector.k8Connector.KubernetesAuthDTO;
 import io.harness.delegate.beans.connector.k8Connector.KubernetesAuthType;
@@ -35,6 +35,7 @@ import io.harness.security.encryption.SecretDecryptionService;
 import io.harness.serializer.KryoSerializer;
 
 import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 import com.google.protobuf.Any;
 import com.google.protobuf.ByteString;
@@ -111,9 +112,11 @@ public class K8ActivityCollectionPerpetualTaskExecutorTest extends DelegateTest 
             .encryptedDataDetails(Lists.newArrayList())
             .dataCollectionType(DataCollectionType.KUBERNETES)
             .activitySourceDTO(KubernetesActivitySourceDTO.builder()
-                                   .namespace(generateUuid())
-                                   .clusterName(generateUuid())
-                                   .workloadName(generateUuid())
+                                   .activitySourceConfigs(Sets.newHashSet(
+                                       KubernetesActivitySourceDTO.KubernetesActivitySourceConfig.builder()
+                                           .namespace(generateUuid())
+                                           .workloadName(generateUuid())
+                                           .build()))
                                    .build())
             .build();
     ByteString bytes = ByteString.copyFrom(kryoSerializer.asBytes(k8ActivityDataCollectionInfo));

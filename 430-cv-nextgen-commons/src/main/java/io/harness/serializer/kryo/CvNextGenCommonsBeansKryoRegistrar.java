@@ -13,7 +13,6 @@ import io.harness.cvng.beans.DataCollectionRequestType;
 import io.harness.cvng.beans.DataCollectionType;
 import io.harness.cvng.beans.DataSourceType;
 import io.harness.cvng.beans.K8ActivityDataCollectionInfo;
-import io.harness.cvng.beans.KubernetesActivitySourceDTO;
 import io.harness.cvng.beans.MetricPackDTO;
 import io.harness.cvng.beans.MetricPackDTO.MetricDefinitionDTO;
 import io.harness.cvng.beans.SplunkSavedSearch;
@@ -27,6 +26,8 @@ import io.harness.cvng.beans.TimeSeriesThresholdComparisonType;
 import io.harness.cvng.beans.TimeSeriesThresholdCriteria;
 import io.harness.cvng.beans.TimeSeriesThresholdDTO;
 import io.harness.cvng.beans.TimeSeriesThresholdType;
+import io.harness.cvng.beans.activity.KubernetesActivitySourceDTO;
+import io.harness.cvng.beans.activity.KubernetesActivitySourceDTO.KubernetesActivitySourceConfig;
 import io.harness.cvng.beans.appd.AppDynamicsApplication;
 import io.harness.cvng.beans.appd.AppDynamicsTier;
 import io.harness.cvng.beans.splunk.SplunkDataCollectionRequest;
@@ -69,9 +70,10 @@ public class CvNextGenCommonsBeansKryoRegistrar implements KryoRegistrar {
     kryo.register(CVDataCollectionInfo.class, 9029);
     kryo.register(K8ActivityDataCollectionInfo.class, 9030);
     kryo.register(KubernetesActivitySourceDTO.class, 9031);
-    kryo.register(DataCollectionRequest.class, 9032);
-    kryo.register(SplunkDataCollectionRequest.class, 9033);
-    kryo.register(SplunkSavedSearchRequest.class, 9034);
-    kryo.register(DataCollectionRequestType.class, 9035);
+    kryo.register(KubernetesActivitySourceConfig.class, 9032);
+    kryo.register(DataCollectionRequest.class, 9033);
+    kryo.register(SplunkDataCollectionRequest.class, 9034);
+    kryo.register(SplunkSavedSearchRequest.class, 9035);
+    kryo.register(DataCollectionRequestType.class, 9036);
   }
 }
