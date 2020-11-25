@@ -1,5 +1,4 @@
 directories:
-  19-delegate-tasks-beans
   20-delegate-tasks
   20-ng-core-beans
   20-notification-beans
@@ -47,6 +46,7 @@ directories:
   450-ce-views
   490-ce-commons
   900-yaml-sdk
+  950-delegate-tasks-beans
   960-api-services
   960-expression-service
   970-api-services-beans

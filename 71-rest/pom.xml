@@ -705,11 +705,6 @@
         </dependency>
         <dependency>
             <groupId>software.wings</groupId>
-            <artifactId>19-delegate-tasks-beans</artifactId>
-            <version>${project.parent.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>software.wings</groupId>
             <artifactId>20-delegate-beans</artifactId>
             <version>${project.parent.version}</version>
         </dependency>
@@ -806,6 +801,11 @@
         <dependency>
             <groupId>software.wings</groupId>
             <artifactId>64-events-framework</artifactId>
+            <version>${project.parent.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>software.wings</groupId>
+            <artifactId>950-delegate-tasks-beans</artifactId>
             <version>${project.parent.version}</version>
         </dependency>
         <dependency>

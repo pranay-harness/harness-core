@@ -32,8 +32,8 @@ java_library(
     deps = [
         "maven_deps",
         "//:lombok",
-        "//19-delegate-tasks-beans/src/main/proto:19_delegate_tasks_beans_java_proto",
-        "//19-delegate-tasks-beans/src/main/proto:19_delegate_tasks_beans_proto",
+        "//950-delegate-tasks-beans/src/main/proto:950_delegate_tasks_beans_java_proto",
+        "//950-delegate-tasks-beans/src/main/proto:950_delegate_tasks_beans_proto",
         "//970-api-services-beans:module",
     ],
 )
