@@ -186,7 +186,7 @@ function checkAndCreateMongoFiles() {
 function setUpTimeScaleDB(){
   echo "#############################Setting up TimeScale DB ##########################################"
   printf "\n\n\n\n"
-  docker run -d --name harness-timescaledb -v $runtime_dir/timescaledb/data:/var/lib/postgresql/data -p $timescaledb_port:5432 --rm -e POSTGRES_USER=$timescaledb_username -e POSTGRES_DB=$timescale_db -e POSTGRES_PASSWORD=$timescaledb_password timescale/timescaledb:$TIMESCALE_VERSION
+  docker run -d --name harness-timescaledb -v $runtime_dir/timescaledb/data:/var/lib/postgresql/data:Z -p $timescaledb_port:5432 --rm -e POSTGRES_USER=$timescaledb_username -e POSTGRES_DB=$timescale_db -e POSTGRES_PASSWORD=$timescaledb_password timescale/timescaledb:$TIMESCALE_VERSION
 
   if [[ $(checkDockerImageRunning "harness-timescaledb") -eq 1 ]]; then
       echo "TimescaleDB is not running"
@@ -200,7 +200,7 @@ function setUpMongoDBFirstTime(){
 
     printf "\n\n\n\n"
 
-    docker run -p $mongodb_port:$mongodb_port --name mongoContainer -d -v $runtime_dir/mongo/data/db:/data/db -v $runtime_dir/mongo/scripts:/scripts --rm harness/mongo:$MONGO_VERSION --port $mongodb_port
+    docker run -p $mongodb_port:$mongodb_port --name mongoContainer -d -v $runtime_dir/mongo/data/db:/data/db:Z -v $runtime_dir/mongo/scripts:/scripts:Z --rm harness/mongo:$MONGO_VERSION --port $mongodb_port
 
     mongoContainerId=$(docker ps -q -f name=mongoContainer)
 
@@ -226,7 +226,7 @@ function setUpMongoDB(){
     echo "################################Starting up MongoDB################################"
     mv config/mongo/mongod.conf $runtime_dir/mongo
 
-    docker run -p $mongodb_port:$mongodb_port --name mongoContainer -d -v "$runtime_dir/mongo/mongod.conf":/etc/mongod.conf -v $runtime_dir/mongo/data/db:/data/db -v $runtime_dir/mongo/scripts:/scripts --rm harness/mongo:$MONGO_VERSION -f /etc/mongod.conf
+    docker run -p $mongodb_port:$mongodb_port --name mongoContainer -d -v "$runtime_dir/mongo/mongod.conf":/etc/mongod.conf:Z -v $runtime_dir/mongo/data/db:/data/db:Z -v $runtime_dir/mongo/scripts:/scripts:Z --rm harness/mongo:$MONGO_VERSION -f /etc/mongod.conf
 
     mongoContainerId=$(docker ps -q -f name=mongoContainer)
 
@@ -289,7 +289,7 @@ function populateEnvironmentVariablesFromMongo(){
 function setUpProxy(){
     echo "################################ Setting up proxy ################################"
 
-    docker run -d --name harness-proxy --rm -p $proxyPort:7143 -e MANAGER1=$MANAGER1 -e VERIFICATION1=$VERIFICATION1 -e UI1=$UI1 -v  $WWW_DIR_LOCATION:/www  harness/proxy-signed:$PROXY_VERSION
+    docker run -d --name harness-proxy --rm -p $proxyPort:7143 -e MANAGER1=$MANAGER1 -e VERIFICATION1=$VERIFICATION1 -e UI1=$UI1 -v  $WWW_DIR_LOCATION:/www:Z  harness/proxy-signed:$PROXY_VERSION
     sleep 5
 
     if [[ $(checkDockerImageRunning "harness-proxy") -eq 1 ]]; then
@@ -314,8 +314,6 @@ function setupManager(){
     WATCHER_METADATA_URL=$LOAD_BALANCER_URL/storage/wingswatchers/watcherprod.txt
     HAZELCAST_PORT=$(getProperty "config_template/manager/manager.properties" "HAZELCAST_PORT")
     managerVersion=$(getProperty "version.properties" "MANAGER_VERSION")
-    DELEGATE_SERVICE_TARGET=$host1:$proxyPort
-    DELEGATE_SERVICE_AUTHORITY=manager-grpc-$host1
 
 #    echo $LOAD_BALANCER_URL
 #    echo $ALLOWED_ORIGINS
@@ -336,7 +334,7 @@ function setupManager(){
   mkdir -p $runtime_dir/manager/logs
   chmod -R 777 $runtime_dir/manager
 
- docker run -d -u 0:0 --net=host --rm -p $SERVER_PORT:$SERVER_PORT --name harnessManager -e LOGGING_LEVEL=$LOGGING_LEVEL -e MEMORY=$MEMORY -e WATCHER_METADATA_URL=$WATCHER_METADATA_URL -e LICENSE_INFO=$licenseInfo -e ALLOWED_ORIGINS=$ALLOWED_ORIGINS -e CAPSULE_JAR=$CAPSULE_JAR -e DELEGATE_METADATA_URL=$DELEGATE_METADATA_URL -e HZ_CLUSTER_NAME=docker-manager-onprem -e SERVER_PORT=$SERVER_PORT -e UI_SERVER_URL=$UI_SERVER_URL -e MONGO_URI="$MONGO_URI" -e DEPLOY_MODE=$DEPLOY_MODE -e TCP_HOSTS_DETAILS=$TCP_HOSTS_DETAILS -e CIDR=127.0.0.1 -e API_URL=$LOAD_BALANCER_URL -e HAZELCAST_PORT=$HAZELCAST_PORT -e jwtPasswordSecret=$jwtPasswordSecret -e jwtExternalServiceSecret=$jwtExternalServiceSecret -e jwtZendeskSecret=$jwtZendeskSecret -e jwtMultiAuthSecret=$jwtMultiAuthSecret -e jwtSsoRedirectSecret=$jwtSsoRedirectSecret -e FEATURES=$FEATURES -e SKIP_LOGS=true -e TIMESCALEDB_URI=$TIMESCALEDB_URI -e TIMESCALEDB_USERNAME=$timescaledb_username -e TIMESCALEDB_PASSWORD=$timescaledb_password -e DELEGATE_SERVICE_TARGET=$DELEGATE_SERVICE_TARGET -e DELEGATE_SERVICE_AUTHORITY=$DELEGATE_SERVICE_AUTHORITY -v $runtime_dir/manager/logs:/opt/harness/logs  harness/manager-signed:$managerVersion
+ docker run -d --security-opt=no-new-privileges --read-only --rm -p $SERVER_PORT:$SERVER_PORT --name harnessManager -e LOGGING_LEVEL=$LOGGING_LEVEL -e MEMORY=$MEMORY -e WATCHER_METADATA_URL=$WATCHER_METADATA_URL -e LICENSE_INFO=$licenseInfo -e ALLOWED_ORIGINS=$ALLOWED_ORIGINS -e CAPSULE_JAR=$CAPSULE_JAR -e DELEGATE_METADATA_URL=$DELEGATE_METADATA_URL -e HZ_CLUSTER_NAME=docker-manager-onprem -e SERVER_PORT=$SERVER_PORT -e UI_SERVER_URL=$UI_SERVER_URL -e MONGO_URI="$MONGO_URI" -e DEPLOY_MODE=$DEPLOY_MODE -e TCP_HOSTS_DETAILS=$TCP_HOSTS_DETAILS -e CIDR=127.0.0.1 -e API_URL=$LOAD_BALANCER_URL -e HAZELCAST_PORT=$HAZELCAST_PORT -e jwtPasswordSecret=$jwtPasswordSecret -e jwtExternalServiceSecret=$jwtExternalServiceSecret -e jwtZendeskSecret=$jwtZendeskSecret -e jwtMultiAuthSecret=$jwtMultiAuthSecret -e jwtSsoRedirectSecret=$jwtSsoRedirectSecret -e FEATURES=$FEATURES -e SKIP_LOGS=true -e TIMESCALEDB_URI=$TIMESCALEDB_URI -e TIMESCALEDB_USERNAME=$timescaledb_username -e TIMESCALEDB_PASSWORD=$timescaledb_password -v $runtime_dir/manager/logs:/opt/harness/logs:Z -v /tmp -v /opt/harness  harness/manager-signed:$managerVersion
 
  sleep 10
 
@@ -352,8 +350,8 @@ function setUpVerificationService(){
    env=$(getProperty "version.properties" "ENV")
    mkdir -p $runtime_dir/verification/logs
    chmod -R 777 $runtime_dir/verification
-   docker run -d -u 0:0    --rm --name verificationService -e MANAGER_URL=$LOAD_BALANCER_URL/api/ -e MONGO_URI="$MONGO_URI" -e ENV=$env -e VERIFICATION_PORT=$verificationport -p $verificationport:$verificationport -v $runtime_dir/verification/logs:/opt/harness/logs harness/verification-service-signed:$verificationServiceVersion
 
+   docker run -d --security-opt=no-new-privileges --read-only --rm --name verificationService -e MANAGER_URL=$LOAD_BALANCER_URL/api/ -e MONGO_URI="$MONGO_URI" -e ENV=$env -e VERIFICATION_PORT=$verificationport -p $verificationport:$verificationport -v $runtime_dir/verification/logs:/opt/harness/logs:Z -v /tmp -v /opt/harness harness/verification-service-signed:$verificationServiceVersion
     if [[ $(checkDockerImageRunning "verificationService") -eq 1 ]]; then
         echo "Verification service is not running"
     fi
@@ -424,8 +422,7 @@ function setupUI(){
    echo "################################ Setting up UI ################################"
    ui_version=$(getProperty "version.properties" "UI_VERSION")
    UI_PORT=$(getProperty "config_template/ui/ui.properties" "ui_port")
-   docker run -d --name harness_ui -p $UI_PORT:8080 --rm -e API_URL="$LOAD_BALANCER_URL" -e HARNESS_ENABLE_EXTERNAL_SCRIPTS_PLACEHOLDER=false harness/ui-signed:$ui_version
-
+   docker run -d --security-opt=no-new-privileges --read-only --name harness_ui -p $UI_PORT:8080 --rm -e API_URL="$LOAD_BALANCER_URL" -e HARNESS_ENABLE_EXTERNAL_SCRIPTS_PLACEHOLDER=false -v /tmp -v /opt/ui/static harness/ui-signed:$ui_version
    if [[ $(checkDockerImageRunning "harness_ui") -eq 1 ]]; then
       echo "Harness UI is not running"
    fi
@@ -436,8 +433,7 @@ function setUpLearningEngine(){
    echo "################################ Setting up Learning Engine ################################"
    learningEngineVersion=$(getProperty "version.properties" "LEARNING_ENGINE_VERSION")
    https_port=$(getProperty "config_template/learning_engine/learning_engine.properties" "https_port")
-   docker run -d --rm --name learningEngine -e learning_env=on_prem -e https_port=$https_port -e server_url=$LOAD_BALANCER_URL -e service_secret=$learningengine_secret harness/learning-engine-onprem-signed:$learningEngineVersion
-
+   docker run -d --security-opt=no-new-privileges --read-only --rm --name learningEngine -e learning_env=on_prem -e https_port=$https_port -e server_url=$LOAD_BALANCER_URL -e service_secret=$learningengine_secret -v /tmp -v /home/harness harness/learning-engine-onprem-signed:$learningEngineVersion
     if [[ $(checkDockerImageRunning "learningEngine") -eq 1 ]]; then
         echo "LearningEngine is not running"
     fi
@@ -461,14 +457,16 @@ function setupDelegateJars(){
     cp images/delegate.jar ${STORAGE_DIR_LOCATION}/wingsdelegates/jobs/deploy-prod-delegate/${DELEGATE_VERSION}/
 
     echo "1.0.${DELEGATE_VERSION} jobs/deploy-prod-delegate/${DELEGATE_VERSION}/delegate.jar" > delegateprod.txt
-
-    mv delegateprod.txt ${STORAGE_DIR_LOCATION}/wingsdelegates
+    cp delegateprod.txt ${STORAGE_DIR_LOCATION}/wingsdelegates/
+    rm -rf delegateprod.txt
 
     rm -rf ${STORAGE_DIR_LOCATION}/wingswatchers/jobs/deploy-prod-watcher/*
     mkdir -p  ${STORAGE_DIR_LOCATION}/wingswatchers/jobs/deploy-prod-watcher/${WATCHER_VERSION}
     cp images/watcher.jar ${STORAGE_DIR_LOCATION}/wingswatchers/jobs/deploy-prod-watcher/${WATCHER_VERSION}/
+
     echo "1.0.${WATCHER_VERSION} jobs/deploy-prod-watcher/${WATCHER_VERSION}/watcher.jar" > watcherprod.txt
-    mv watcherprod.txt ${STORAGE_DIR_LOCATION}/wingswatchers
+    cp watcherprod.txt ${STORAGE_DIR_LOCATION}/wingswatchers/
+    rm -rf watcherprod.txt
 
 }
 
