@@ -132,6 +132,7 @@ public class ClusterRecordHandler
 
   @Override
   public void onDeleted(SettingAttribute settingAttribute) {
+    cePerpetualTaskManager.deletePerpetualTasks(settingAttribute);
     deactivateClusterRecords(settingAttribute);
   }
 
