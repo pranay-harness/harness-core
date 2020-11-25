@@ -16,7 +16,6 @@ import io.harness.persistence.GoogleDataStoreAware;
 
 import software.wings.beans.Log;
 import software.wings.dl.WingsPersistence;
-import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.DataStoreService;
 
 import com.google.cloud.datastore.Datastore;
@@ -36,7 +35,6 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import java.io.File;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -52,16 +50,14 @@ public class GoogleDataStoreServiceImpl implements DataStoreService {
   private static final String GOOGLE_APPLICATION_CREDENTIALS_PATH = "GOOGLE_APPLICATION_CREDENTIALS";
   private final Datastore datastore = DatastoreOptions.getDefaultInstance().getService();
   private DataStoreService mongoDataStoreService;
-  private AccountService accountService;
 
   @Inject
-  public GoogleDataStoreServiceImpl(WingsPersistence wingsPersistence, AccountService accountService) {
+  public GoogleDataStoreServiceImpl(WingsPersistence wingsPersistence) {
     String googleCredentialsPath = System.getenv(GOOGLE_APPLICATION_CREDENTIALS_PATH);
     if (isEmpty(googleCredentialsPath) || !new File(googleCredentialsPath).exists()) {
       throw new WingsException("Invalid credentials found at " + googleCredentialsPath);
     }
     mongoDataStoreService = new MongoDataStoreServiceImpl(wingsPersistence);
-    this.accountService = accountService;
   }
 
   @Override
@@ -164,7 +160,36 @@ public class GoogleDataStoreServiceImpl implements DataStoreService {
     reflections = new Reflections("io.harness");
     dataStoreClasses.addAll(reflections.getSubTypesOf(GoogleDataStoreAware.class));
 
-    Map<String, Long> accounts = new HashMap<>();
+    dataStoreClasses.forEach(dataStoreClass -> {
+      if (AccountDataRetentionEntity.class.isAssignableFrom(dataStoreClass)) {
+        return;
+      }
+
+      long now = currentTimeMillis();
+      String collectionName = dataStoreClass.getAnnotation(org.mongodb.morphia.annotations.Entity.class).value();
+      log.info("cleaning up {}", collectionName);
+      List<Key> keysToDelete = new ArrayList<>();
+
+      Query<Key> query =
+          Query.newKeyQueryBuilder().setKind(collectionName).setFilter(PropertyFilter.lt("validUntil", now)).build();
+      datastore.run(query).forEachRemaining(keysToDelete::add);
+
+      log.info("Total keys to delete {} for {}", keysToDelete.size(), collectionName);
+      final List<List<Key>> keyBatches = Lists.partition(keysToDelete, DATA_STORE_BATCH_SIZE);
+      keyBatches.forEach(keys -> {
+        log.info("purging {} records from {}", keys.size(), collectionName);
+        datastore.delete(keys.stream().toArray(Key[] ::new));
+      });
+    });
+  }
+
+  @Override
+  public void purgeDataRetentionOlderRecords(Map<String, Long> accounts) {
+    Reflections reflections = new Reflections("software.wings");
+    Set<Class<? extends GoogleDataStoreAware>> dataStoreClasses = reflections.getSubTypesOf(GoogleDataStoreAware.class);
+    reflections = new Reflections("io.harness");
+    dataStoreClasses.addAll(reflections.getSubTypesOf(GoogleDataStoreAware.class));
+
     dataStoreClasses.forEach(dataStoreClass -> {
       long now = currentTimeMillis();
       String collectionName = dataStoreClass.getAnnotation(org.mongodb.morphia.annotations.Entity.class).value();
@@ -172,10 +197,6 @@ public class GoogleDataStoreServiceImpl implements DataStoreService {
       List<Key> keysToDelete = new ArrayList<>();
 
       if (AccountDataRetentionEntity.class.isAssignableFrom(dataStoreClass)) {
-        if (accounts.isEmpty()) {
-          accounts.putAll(accountService.obtainAccountDataRetentionMap());
-        }
-
         ProjectionEntityQuery query =
             Query.newProjectionEntityQueryBuilder()
                 .setKind(collectionName)

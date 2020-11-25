@@ -52,6 +52,7 @@ import com.codahale.metrics.annotation.ExceptionMetered;
 import com.codahale.metrics.annotation.Timed;
 import com.google.inject.Inject;
 import com.google.inject.Provider;
+import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 import io.dropwizard.jersey.PATCH;
 import io.swagger.annotations.Api;
@@ -86,6 +87,7 @@ import retrofit2.http.Body;
 @Path("/account")
 @Produces(MediaType.APPLICATION_JSON)
 @Slf4j
+@Singleton
 public class AccountResource {
   private final AccountService accountService;
   private final UserService userService;
