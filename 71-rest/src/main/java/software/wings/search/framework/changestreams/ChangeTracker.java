@@ -2,8 +2,6 @@ package software.wings.search.framework.changestreams;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
 
-import static software.wings.dl.exportimport.WingsMongoExportImport.getCollectionName;
-
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.mongo.MongoModule;
 import io.harness.persistence.PersistentEntity;
@@ -33,6 +31,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import lombok.extern.slf4j.Slf4j;
+import org.mongodb.morphia.annotations.Entity;
 
 /**
  * Mongo Change Stream Manager, provides the functionality
@@ -54,6 +53,10 @@ public class ChangeTracker {
   private MongoClient mongoClient;
   private ReadPreference readPreference;
   private ClientSession clientSession;
+
+  private String getCollectionName(Class<? extends PersistentEntity> clazz) {
+    return clazz.getAnnotation(Entity.class).value();
+  }
 
   private MongoClientURI mongoClientUri() {
     final String mongoClientUrl = mainConfiguration.getMongoConnectionFactory().getUri();

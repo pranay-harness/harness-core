@@ -184,7 +184,6 @@ import software.wings.common.WingsExpressionProcessorFactory;
 import software.wings.core.managerConfiguration.ConfigurationController;
 import software.wings.dl.WingsMongoPersistence;
 import software.wings.dl.WingsPersistence;
-import software.wings.dl.exportimport.WingsMongoExportImport;
 import software.wings.features.ApiKeysFeature;
 import software.wings.features.ApprovalFlowFeature;
 import software.wings.features.AuditTrailFeature;
@@ -990,8 +989,6 @@ public class WingsModule extends AbstractModule implements ServersModule {
     bind(HealthStatusService.class).to(HealthStatusServiceImpl.class);
     bind(GcpBillingService.class).to(GcpBillingServiceImpl.class);
     bind(PreAggregateBillingService.class).to(PreAggregateBillingServiceImpl.class);
-
-    bind(WingsMongoExportImport.class);
 
     bind(InstanceUsageLimitChecker.class).to(InstanceUsageLimitCheckerImpl.class);
     bind(InstanceUsageLimitExcessHandler.class).to(InstanceUsageLimitExcessHandlerImpl.class);
