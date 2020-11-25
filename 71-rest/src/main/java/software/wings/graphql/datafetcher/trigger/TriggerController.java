@@ -125,7 +125,7 @@ public class TriggerController {
         validatePipeline(appId, pipelineId, pipeline);
         deploymentAuthHandler.authorizePipelineExecution(appId, pipelineId);
 
-        envId = pipelineExecutionController.resolveEnvId(pipeline, variables);
+        envId = pipelineExecutionController.resolveEnvId(pipeline, variables, true);
         authService.checkIfUserAllowedToDeployPipelineToEnv(appId, envId);
 
         resolvedWorkflowVariables =
