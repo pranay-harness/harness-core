@@ -10,9 +10,9 @@ import io.harness.batch.processing.ccm.CCMJobConstants;
 import io.harness.batch.processing.ccm.ClusterType;
 import io.harness.batch.processing.ccm.InstanceInfo;
 import io.harness.batch.processing.config.BatchMainConfig;
-import io.harness.batch.processing.dao.intfc.InstanceDataDao;
 import io.harness.batch.processing.dao.intfc.PublishedMessageDao;
 import io.harness.batch.processing.pricing.data.CloudProvider;
+import io.harness.batch.processing.service.intfc.InstanceDataBulkWriteService;
 import io.harness.batch.processing.service.intfc.InstanceDataService;
 import io.harness.batch.processing.service.intfc.WorkloadRepository;
 import io.harness.batch.processing.tasklet.reader.PublishedMessageReader;
@@ -24,12 +24,10 @@ import io.harness.ccm.commons.beans.HarnessServiceInfo;
 import io.harness.ccm.commons.beans.InstanceState;
 import io.harness.ccm.commons.beans.InstanceType;
 import io.harness.ccm.commons.beans.Resource;
-import io.harness.ccm.commons.entities.InstanceData;
 import io.harness.event.grpc.PublishedMessage;
 import io.harness.grpc.utils.HTimestamps;
 import io.harness.perpetualtask.k8s.watch.PodInfo;
 
-import java.time.Instant;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -46,12 +44,13 @@ import org.springframework.beans.factory.annotation.Autowired;
 @Slf4j
 public class K8sPodInfoTasklet implements Tasklet {
   @Autowired private BatchMainConfig config;
-  @Autowired private InstanceDataDao instanceDataDao;
   @Autowired private WorkloadRepository workloadRepository;
   @Autowired private InstanceDataService instanceDataService;
   @Autowired private PublishedMessageDao publishedMessageDao;
   @Autowired private HarnessServiceInfoFetcher harnessServiceInfoFetcher;
   @Autowired private ClusterDataGenerationValidator clusterDataGenerationValidator;
+  @Autowired private InstanceDataBulkWriteService instanceDataBulkWriteService;
+
   private static final String POD = "Pod";
   private static final String KUBE_SYSTEM_NAMESPACE = "kube-system";
   private static final String KUBE_PROXY_POD_PREFIX = "kube-proxy";
@@ -72,20 +71,13 @@ public class K8sPodInfoTasklet implements Tasklet {
         new PublishedMessageReader(publishedMessageDao, accountId, messageType, startTime, endTime, batchSize);
     do {
       publishedMessageList = publishedMessageReader.getNext();
-      if (InstanceMetaDataConstants.SLOW_ACCOUNT.equals(accountId)) {
-        log.info("Started Processing for size: {} {}", publishedMessageList.size(), Instant.now());
-      }
-      List<InstanceInfo> collect =
-          publishedMessageList.stream().map(this::processPodInfoMessage).collect(Collectors.toList());
-      if (InstanceMetaDataConstants.SLOW_ACCOUNT.equals(accountId)) {
-        log.info("Ended Processing for size: {} {}", publishedMessageList.size(), Instant.now());
-      }
-      collect.stream()
-          .filter(instanceInfo -> instanceInfo.getMetaData().containsKey(InstanceMetaDataConstants.INSTANCE_CATEGORY))
-          .forEach(instanceInfo -> instanceDataDao.upsert(instanceInfo));
-      if (InstanceMetaDataConstants.SLOW_ACCOUNT.equals(accountId)) {
-        log.info("Ended upsert for size: {} {}", publishedMessageList.size(), Instant.now());
-      }
+
+      List<InstanceInfo> instanceInfoList = publishedMessageList.stream()
+                                                .map(this::processPodInfoMessage)
+                                                .filter(instanceInfo -> null != instanceInfo.getAccountId())
+                                                .collect(Collectors.toList());
+
+      instanceDataBulkWriteService.updateList(instanceInfoList);
     } while (publishedMessageList.size() == batchSize);
     return null;
   }
@@ -106,11 +98,6 @@ public class K8sPodInfoTasklet implements Tasklet {
     String clusterId = podInfo.getClusterId();
 
     if (!clusterDataGenerationValidator.shouldGenerateClusterData(accountId, clusterId)) {
-      return InstanceInfo.builder().metaData(Collections.emptyMap()).build();
-    }
-
-    InstanceData existingInstanceData = instanceDataService.fetchInstanceData(accountId, clusterId, podUid);
-    if (null != existingInstanceData) {
       return InstanceInfo.builder().metaData(Collections.emptyMap()).build();
     }
 
@@ -183,8 +170,6 @@ public class K8sPodInfoTasklet implements Tasklet {
       resourceLimit = K8sResourceUtils.getResource(podInfo.getTotalResource().getLimitsMap());
     }
 
-    Map<String, String> namespaceLabels = encodeDotsInKey(podInfo.getNamespaceLabelsMap());
-
     return InstanceInfo.builder()
         .accountId(accountId)
         .settingId(podInfo.getCloudProviderId())
@@ -199,8 +184,8 @@ public class K8sPodInfoTasklet implements Tasklet {
         .resourceLimit(resourceLimit)
         .allocatableResource(resource)
         .metaData(metaData)
-        .labels(labelsMap)
-        .namespaceLabels(namespaceLabels)
+        .labels(encodeDotsInKey(labelsMap))
+        .namespaceLabels(encodeDotsInKey(podInfo.getNamespaceLabelsMap()))
         .harnessServiceInfo(harnessServiceInfo)
         .build();
   }

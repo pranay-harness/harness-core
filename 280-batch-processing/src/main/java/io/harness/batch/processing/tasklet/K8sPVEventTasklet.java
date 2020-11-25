@@ -5,6 +5,7 @@ import io.harness.batch.processing.ccm.InstanceEvent;
 import io.harness.batch.processing.config.BatchMainConfig;
 import io.harness.batch.processing.dao.intfc.InstanceDataDao;
 import io.harness.batch.processing.dao.intfc.PublishedMessageDao;
+import io.harness.batch.processing.service.intfc.InstanceDataBulkWriteService;
 import io.harness.batch.processing.tasklet.reader.PublishedMessageReader;
 import io.harness.batch.processing.writer.constants.EventTypeConstants;
 import io.harness.event.grpc.PublishedMessage;
@@ -12,6 +13,7 @@ import io.harness.grpc.utils.HTimestamps;
 import io.harness.perpetualtask.k8s.watch.PVEvent;
 
 import java.util.List;
+import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.batch.core.JobParameters;
 import org.springframework.batch.core.StepContribution;
@@ -25,6 +27,7 @@ public class K8sPVEventTasklet implements Tasklet {
   @Autowired private BatchMainConfig config;
   @Autowired protected InstanceDataDao instanceDataDao;
   @Autowired private PublishedMessageDao publishedMessageDao;
+  @Autowired private InstanceDataBulkWriteService instanceDataBulkWriteService;
 
   @Override
   public RepeatStatus execute(StepContribution stepContribution, ChunkContext chunkContext) {
@@ -42,10 +45,13 @@ public class K8sPVEventTasklet implements Tasklet {
       publishedMessageList = publishedMessageReader.getNext();
       // change logger to debug in future
       log.info("Processing publishedMessage of size: {}", publishedMessageList.size());
-      publishedMessageList.stream()
-          .map(this::processPVEventMessage)
-          .filter(instanceEvent -> null != instanceEvent.getAccountId())
-          .forEach(instanceEvent -> instanceDataDao.upsert(instanceEvent));
+      List<InstanceEvent> instanceEventList = publishedMessageList.stream()
+                                                  .map(this::processPVEventMessage)
+                                                  .filter(instanceEvent -> null != instanceEvent.getAccountId())
+                                                  .collect(Collectors.toList());
+
+      instanceDataBulkWriteService.updateList(instanceEventList);
+
     } while (publishedMessageList.size() == batchSize);
     return null;
   }

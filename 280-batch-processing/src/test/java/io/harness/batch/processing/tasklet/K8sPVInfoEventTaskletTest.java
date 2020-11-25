@@ -18,6 +18,7 @@ import io.harness.batch.processing.ccm.InstanceInfo;
 import io.harness.batch.processing.config.BatchMainConfig;
 import io.harness.batch.processing.dao.intfc.InstanceDataDao;
 import io.harness.batch.processing.dao.intfc.PublishedMessageDao;
+import io.harness.batch.processing.service.intfc.InstanceDataBulkWriteService;
 import io.harness.batch.processing.service.intfc.InstanceDataService;
 import io.harness.batch.processing.writer.constants.EventTypeConstants;
 import io.harness.category.element.UnitTests;
@@ -76,6 +77,7 @@ public class K8sPVInfoEventTaskletTest extends CategoryTest {
   @Mock private HPersistence hPersistence;
   @Mock private InstanceDataDao instanceDataDao;
   @Mock private InstanceDataService instanceDataService;
+  @Mock private InstanceDataBulkWriteService instanceDataBulkWriteService;
   @Mock private PublishedMessageDao publishedMessageDao;
   @InjectMocks private K8sPVEventTasklet k8sPVEventTasklet;
   @InjectMocks private K8sPVInfoTasklet k8sPVInfoTasklet;
@@ -95,6 +97,7 @@ public class K8sPVInfoEventTaskletTest extends CategoryTest {
     when(parameters.getString(CCMJobConstants.JOB_START_DATE)).thenReturn(String.valueOf(START_TIME_MILLIS));
     when(parameters.getString(CCMJobConstants.ACCOUNT_ID)).thenReturn(ACCOUNT_ID);
     when(parameters.getString(CCMJobConstants.JOB_END_DATE)).thenReturn(String.valueOf(END_TIME_MILLIS));
+    when(instanceDataBulkWriteService.updateList(any())).thenReturn(true);
   }
 
   @Test

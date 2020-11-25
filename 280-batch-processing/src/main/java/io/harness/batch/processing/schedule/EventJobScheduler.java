@@ -27,6 +27,8 @@ import io.harness.logging.AutoLogContext;
 import software.wings.service.intfc.instance.CloudToHarnessMappingService;
 
 import com.google.common.collect.ImmutableSet;
+import java.time.Duration;
+import java.time.Instant;
 import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Stream;
@@ -216,7 +218,10 @@ public class EventJobScheduler {
            AutoLogContext ignore1 = new BatchJobBucketLogContext(batchJobBucket.name(), OVERRIDE_ERROR);
            AutoLogContext ignore2 = new BatchJobTypeLogContext(batchJobType.name(), OVERRIDE_ERROR);
            AutoLogContext ignore3 = new BatchJobRunningModeContext(runningMode, OVERRIDE_ERROR)) {
+        Instant startedAt = Instant.now();
         batchJobRunner.runJob(accountId, job, runningMode);
+        log.info(
+            "BatchJobType: {} took {} s", batchJobType.name(), Duration.between(startedAt, Instant.now()).getSeconds());
       }
     } catch (Exception ex) {
       log.error("Exception while running job {}", job);

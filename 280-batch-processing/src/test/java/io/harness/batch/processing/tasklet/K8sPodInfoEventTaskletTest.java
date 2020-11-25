@@ -19,6 +19,7 @@ import io.harness.batch.processing.ccm.InstanceInfo;
 import io.harness.batch.processing.config.BatchMainConfig;
 import io.harness.batch.processing.dao.intfc.InstanceDataDao;
 import io.harness.batch.processing.dao.intfc.PublishedMessageDao;
+import io.harness.batch.processing.service.intfc.InstanceDataBulkWriteService;
 import io.harness.batch.processing.service.intfc.InstanceDataService;
 import io.harness.batch.processing.service.intfc.WorkloadRepository;
 import io.harness.batch.processing.tasklet.support.HarnessServiceInfoFetcher;
@@ -27,7 +28,6 @@ import io.harness.batch.processing.writer.constants.K8sCCMConstants;
 import io.harness.category.element.UnitTests;
 import io.harness.ccm.commons.beans.HarnessServiceInfo;
 import io.harness.ccm.commons.beans.InstanceType;
-import io.harness.ccm.commons.entities.InstanceData;
 import io.harness.event.grpc.PublishedMessage;
 import io.harness.grpc.utils.HTimestamps;
 import io.harness.perpetualtask.k8s.watch.PodEvent;
@@ -47,7 +47,6 @@ import com.google.protobuf.Timestamp;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
@@ -74,6 +73,7 @@ public class K8sPodInfoEventTaskletTest extends CategoryTest {
   @Mock private InstanceDataDao instanceDataDao;
   @Mock private WorkloadRepository workloadRepository;
   @Mock private InstanceDataService instanceDataService;
+  @Mock private InstanceDataBulkWriteService instanceDataBulkWriteService;
   @Mock private PublishedMessageDao publishedMessageDao;
   @Mock private HarnessServiceInfoFetcher harnessServiceInfoFetcher;
   @Mock private ClusterDataGenerationValidator clusterDataGenerationValidator;
@@ -111,6 +111,7 @@ public class K8sPodInfoEventTaskletTest extends CategoryTest {
     MockitoAnnotations.initMocks(this);
     when(config.getBatchQueryConfig()).thenReturn(BatchQueryConfig.builder().queryBatchSize(50).build());
     when(clusterDataGenerationValidator.shouldGenerateClusterData(any(), any())).thenReturn(true);
+    when(instanceDataBulkWriteService.updateList(any())).thenReturn(true);
   }
 
   @Test
@@ -200,7 +201,7 @@ public class K8sPodInfoEventTaskletTest extends CategoryTest {
         POD_UID, CLOUD_PROVIDER_ID, CLUSTER_ID, ACCOUNT_ID, EventType.EVENT_TYPE_UNSPECIFIED, START_TIMESTAMP);
     InstanceEvent instanceEvent = k8sPodEventTasklet.process(k8sNodeEventMessage);
     assertThat(instanceEvent).isNotNull();
-    assertThat(instanceEvent.getType()).isNull();
+    assertThat(instanceEvent.getType()).isEqualTo(InstanceEvent.EventType.UNKNOWN);
   }
 
   @Test
@@ -211,19 +212,6 @@ public class K8sPodInfoEventTaskletTest extends CategoryTest {
         POD_UID, CLOUD_PROVIDER_ID, CLUSTER_ID, ACCOUNT_ID, EventType.EVENT_TYPE_TERMINATED, START_TIMESTAMP);
     InstanceEvent instanceEvent = k8sPodEventTasklet.process(k8sNodeEventMessage);
     assertThat(instanceEvent).isNotNull();
-  }
-
-  @Test
-  @Owner(developers = HITESH)
-  @Category(UnitTests.class)
-  public void shouldCreateEmptyInstancePodInfo() throws Exception {
-    InstanceData instanceData = InstanceData.builder().build();
-    when(instanceDataService.fetchInstanceData(ACCOUNT_ID, CLUSTER_ID, POD_UID)).thenReturn(instanceData);
-    PublishedMessage k8sPodInfoMessage = getK8sPodInfoMessage(POD_UID, POD_NAME, NODE_NAME, CLOUD_PROVIDER_ID,
-        ACCOUNT_ID, CLUSTER_ID, CLUSTER_NAME, NAMESPACE, Collections.emptyMap(), Collections.emptyMap(),
-        Resource.newBuilder().build(), START_TIMESTAMP, WORKLOAD_NAME, WORKLOAD_TYPE, WORKLOAD_ID);
-    InstanceInfo instanceInfo = k8sPodInfoTasklet.process(k8sPodInfoMessage);
-    assertThat(instanceInfo.getInstanceId()).isNull();
   }
 
   @Test

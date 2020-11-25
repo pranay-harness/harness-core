@@ -7,10 +7,10 @@ import io.harness.batch.processing.ccm.ClusterType;
 import io.harness.batch.processing.ccm.InstanceCategory;
 import io.harness.batch.processing.ccm.InstanceInfo;
 import io.harness.batch.processing.config.BatchMainConfig;
-import io.harness.batch.processing.dao.intfc.InstanceDataDao;
 import io.harness.batch.processing.dao.intfc.PublishedMessageDao;
 import io.harness.batch.processing.pricing.data.CloudProvider;
 import io.harness.batch.processing.service.intfc.CloudProviderService;
+import io.harness.batch.processing.service.intfc.InstanceDataBulkWriteService;
 import io.harness.batch.processing.service.intfc.InstanceDataService;
 import io.harness.batch.processing.service.intfc.InstanceResourceService;
 import io.harness.batch.processing.tasklet.reader.PublishedMessageReader;
@@ -22,13 +22,11 @@ import io.harness.batch.processing.writer.constants.K8sCCMConstants;
 import io.harness.ccm.commons.beans.InstanceState;
 import io.harness.ccm.commons.beans.InstanceType;
 import io.harness.ccm.commons.beans.Resource;
-import io.harness.ccm.commons.entities.InstanceData;
 import io.harness.event.grpc.PublishedMessage;
 import io.harness.grpc.utils.HTimestamps;
 import io.harness.perpetualtask.k8s.watch.NodeInfo;
 
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.collect.ImmutableSet;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -46,11 +44,11 @@ import org.springframework.beans.factory.annotation.Autowired;
 public class K8sNodeInfoTasklet implements Tasklet {
   private JobParameters parameters;
   @Autowired private BatchMainConfig config;
-  @Autowired private InstanceDataDao instanceDataDao;
   @Autowired private InstanceDataService instanceDataService;
   @Autowired private PublishedMessageDao publishedMessageDao;
   @Autowired private CloudProviderService cloudProviderService;
   @Autowired private InstanceResourceService instanceResourceService;
+  @Autowired private InstanceDataBulkWriteService instanceDataBulkWriteService;
 
   private static final String AWS_SPOT_INSTANCE = "spot";
   private static final String AZURE_SPOT_INSTANCE = "spot";
@@ -70,10 +68,15 @@ public class K8sNodeInfoTasklet implements Tasklet {
     List<PublishedMessage> publishedMessageList;
     do {
       publishedMessageList = publishedMessageReader.getNext();
-      publishedMessageList.stream()
-          .map(this::processNodeInfoMessage)
-          .filter(instanceInfo -> instanceInfo.getMetaData().containsKey(InstanceMetaDataConstants.INSTANCE_CATEGORY))
-          .forEach(instanceInfo -> instanceDataDao.upsert(instanceInfo));
+      List<InstanceInfo> instanceInfoList =
+          publishedMessageList.stream()
+              .map(this::processNodeInfoMessage)
+              .filter(instanceInfo -> null != instanceInfo.getAccountId())
+              .filter(
+                  instanceInfo -> instanceInfo.getMetaData().containsKey(InstanceMetaDataConstants.INSTANCE_CATEGORY))
+              .collect(Collectors.toList());
+
+      instanceDataBulkWriteService.updateList(instanceInfoList);
     } while (publishedMessageList.size() == batchSize);
     return null;
   }
@@ -92,14 +95,6 @@ public class K8sNodeInfoTasklet implements Tasklet {
     String accountId = publishedMessage.getAccountId();
     String clusterId = nodeInfo.getClusterId();
     String nodeUid = nodeInfo.getNodeUid();
-
-    if (!UPDATE_OLD_NODE_DATA) {
-      InstanceData existingInstanceData = instanceDataService.fetchInstanceData(accountId, clusterId, nodeUid);
-      if (null != existingInstanceData
-          && !ImmutableSet.of("kmpySmUISimoRrJL6NL73w", "ng2HGKFpStaPsVqGr3B3gA").contains(accountId)) {
-        return InstanceInfo.builder().metaData(Collections.emptyMap()).build();
-      }
-    }
 
     Map<String, String> labelsMap = nodeInfo.getLabelsMap();
     Map<String, String> metaData = new HashMap<>();
