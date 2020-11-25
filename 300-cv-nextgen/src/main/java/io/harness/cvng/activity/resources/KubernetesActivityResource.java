@@ -53,6 +53,20 @@ public class KubernetesActivityResource {
   @ExceptionMetered
   @NextGenManagerAuth
   @Path("/source")
+  @ApiOperation(value = "gets a kubernetes event source by identifier", nickname = "getKubernetesSource")
+  public RestResponse<KubernetesActivitySourceDTO> getKubernetesSource(
+      @QueryParam("accountId") @NotNull String accountId, @QueryParam("orgIdentifier") @NotNull String orgIdentifier,
+      @QueryParam("projectIdentifier") @NotNull String projectIdentifier,
+      @QueryParam("identifier") @NotNull String identifier) {
+    return new RestResponse<>(
+        kubernetesActivitySourceService.getKubernetesSource(accountId, orgIdentifier, projectIdentifier, identifier));
+  }
+
+  @GET
+  @Timed
+  @ExceptionMetered
+  @NextGenManagerAuth
+  @Path("/sources")
   @ApiOperation(value = "lists all kubernetes event sources", nickname = "listKubernetesSources")
   public RestResponse<List<KubernetesActivitySourceDTO>> listKubernetesSources(
       @QueryParam("accountId") @NotNull String accountId, @QueryParam("orgIdentifier") @NotNull String orgIdentifier,

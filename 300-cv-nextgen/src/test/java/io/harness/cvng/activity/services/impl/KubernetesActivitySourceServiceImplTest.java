@@ -66,9 +66,10 @@ public class KubernetesActivitySourceServiceImplTest extends CvNextGenTest {
   @Owner(developers = RAGHU)
   @Category({UnitTests.class})
   public void testCreateAndGetKubernetesSource() {
+    String identifier = generateUuid();
     KubernetesActivitySourceDTO kubernetesActivitySourceDTO =
         KubernetesActivitySourceDTO.builder()
-            .identifier(generateUuid())
+            .identifier(identifier)
             .name(generateUuid())
             .connectorIdentifier(generateUuid())
             .activitySourceConfigs(Sets.newHashSet(KubernetesActivitySourceConfig.builder()
@@ -95,6 +96,16 @@ public class KubernetesActivitySourceServiceImplTest extends CvNextGenTest {
         kubernetesActivitySourceService.listKubernetesSources(accountId, orgIdentifier, projectIdentifier);
     assertThat(kubernetesActivitySourceDTOS.size()).isEqualTo(1);
     KubernetesActivitySourceDTO activitySourceDTO = kubernetesActivitySourceDTOS.get(0);
+    assertThat(activitySourceDTO.getConnectorIdentifier())
+        .isEqualTo(kubernetesActivitySourceDTO.getConnectorIdentifier());
+    assertThat(activitySourceDTO.getIdentifier()).isEqualTo(kubernetesActivitySourceDTO.getIdentifier());
+    assertThat(activitySourceDTO.getName()).isEqualTo(kubernetesActivitySourceDTO.getName());
+    assertThat(activitySourceDTO.getActivitySourceConfigs())
+        .isEqualTo(kubernetesActivitySourceDTO.getActivitySourceConfigs());
+
+    // get call
+    activitySourceDTO =
+        kubernetesActivitySourceService.getKubernetesSource(accountId, orgIdentifier, projectIdentifier, identifier);
     assertThat(activitySourceDTO.getConnectorIdentifier())
         .isEqualTo(kubernetesActivitySourceDTO.getConnectorIdentifier());
     assertThat(activitySourceDTO.getIdentifier()).isEqualTo(kubernetesActivitySourceDTO.getIdentifier());
