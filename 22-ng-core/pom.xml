@@ -19,7 +19,7 @@
         </dependency>
         <dependency>
             <groupId>software.wings</groupId>
-            <artifactId>20-ng-core-beans</artifactId>
+            <artifactId>960-ng-core-beans</artifactId>
             <version>${project.parent.version}</version>
         </dependency>
         <dependency>

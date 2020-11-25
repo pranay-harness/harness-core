@@ -67,7 +67,7 @@
         </dependency>
         <dependency>
             <groupId>software.wings</groupId>
-            <artifactId>20-notification-beans</artifactId>
+            <artifactId>960-notification-beans</artifactId>
             <version>${project.parent.version}</version>
             <scope>compile</scope>
         </dependency>

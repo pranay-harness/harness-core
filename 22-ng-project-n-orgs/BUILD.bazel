@@ -11,8 +11,8 @@ java_library(
     name = "maven_deps",
     visibility = ["//visibility:public"],
     exports = [
-        "//20-ng-core-beans:module",
         "//21-persistence:module",
+        "//960-ng-core-beans:module",
         "@maven//:com_auth0_java_jwt",
         "@maven//:com_esotericsoftware_kryo",
         "@maven//:com_fasterxml_jackson_core_jackson_annotations",

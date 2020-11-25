@@ -6,7 +6,7 @@
         <artifactId>portal</artifactId>
         <version>0.0.1-SNAPSHOT</version>
     </parent>
-    <artifactId>20-notification-beans</artifactId>
+    <artifactId>960-notification-beans</artifactId>
     <properties>
         <protobuf.version>3.6.0</protobuf.version>
     </properties>
