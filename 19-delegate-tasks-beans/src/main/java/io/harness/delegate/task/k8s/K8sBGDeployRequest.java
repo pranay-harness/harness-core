@@ -6,7 +6,7 @@ import lombok.Value;
 
 @Value
 @Builder
-public class K8sRollingDeployRequest implements K8sDeployRequest {
+public class K8sBGDeployRequest implements K8sDeployRequest {
   boolean skipDryRun;
   String releaseName;
   String commandName;
@@ -15,8 +15,6 @@ public class K8sRollingDeployRequest implements K8sDeployRequest {
   List<String> valuesYamlList;
   K8sInfraDelegateConfig k8sInfraDelegateConfig;
   ManifestDelegateConfig manifestDelegateConfig;
-  boolean inCanaryWorkflow;
-  boolean localOverrideFeatureFlag;
-  String accountId;
   boolean deprecateFabric8Enabled;
+  String accountId;
 }

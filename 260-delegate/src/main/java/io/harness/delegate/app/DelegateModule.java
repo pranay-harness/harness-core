@@ -29,6 +29,7 @@ import io.harness.datacollection.impl.DataCollectionServiceImpl;
 import io.harness.delegate.beans.connector.ConnectorType;
 import io.harness.delegate.git.NGGitService;
 import io.harness.delegate.git.NGGitServiceImpl;
+import io.harness.delegate.k8s.K8sBGRequestHandler;
 import io.harness.delegate.k8s.K8sRequestHandler;
 import io.harness.delegate.k8s.K8sRollingRequestHandler;
 import io.harness.delegate.message.MessageService;
@@ -845,6 +846,7 @@ public class DelegateModule extends AbstractModule {
     MapBinder<String, K8sRequestHandler> k8sTaskTypeToRequestHandler =
         MapBinder.newMapBinder(binder(), String.class, K8sRequestHandler.class);
     k8sTaskTypeToRequestHandler.addBinding(K8sTaskType.DEPLOYMENT_ROLLING.name()).to(K8sRollingRequestHandler.class);
+    k8sTaskTypeToRequestHandler.addBinding(K8sTaskType.BLUE_GREEN_DEPLOY.name()).to(K8sBGRequestHandler.class);
 
     bind(DockerRegistryService.class).to(DockerRegistryServiceImpl.class);
     bind(HttpService.class).to(HttpServiceImpl.class);
