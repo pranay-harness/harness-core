@@ -6,9 +6,9 @@ import io.harness.batch.processing.ccm.CCMJobConstants;
 import io.harness.batch.processing.ccm.ClusterType;
 import io.harness.batch.processing.ccm.InstanceInfo;
 import io.harness.batch.processing.config.BatchMainConfig;
-import io.harness.batch.processing.dao.intfc.InstanceDataDao;
 import io.harness.batch.processing.dao.intfc.PublishedMessageDao;
 import io.harness.batch.processing.pricing.data.CloudProvider;
+import io.harness.batch.processing.service.intfc.InstanceDataBulkWriteService;
 import io.harness.batch.processing.service.intfc.InstanceDataService;
 import io.harness.batch.processing.tasklet.reader.PublishedMessageReader;
 import io.harness.batch.processing.tasklet.util.K8sResourceUtils;
@@ -17,7 +17,6 @@ import io.harness.batch.processing.writer.constants.InstanceMetaDataConstants;
 import io.harness.ccm.commons.beans.InstanceState;
 import io.harness.ccm.commons.beans.InstanceType;
 import io.harness.ccm.commons.beans.StorageResource;
-import io.harness.ccm.commons.entities.InstanceData;
 import io.harness.event.grpc.PublishedMessage;
 import io.harness.grpc.utils.HTimestamps;
 import io.harness.perpetualtask.k8s.watch.PVInfo;
@@ -28,6 +27,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.batch.core.JobParameters;
 import org.springframework.batch.core.StepContribution;
@@ -39,10 +39,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 @Slf4j
 public class K8sPVInfoTasklet implements Tasklet {
   @Autowired private BatchMainConfig config;
-  @Autowired private InstanceDataDao instanceDataDao;
 
   @Autowired private InstanceDataService instanceDataService;
   @Autowired private PublishedMessageDao publishedMessageDao;
+  @Autowired private InstanceDataBulkWriteService instanceDataBulkWriteService;
 
   private static final Set<String> ACCOUNTS_WITH_OLD_DATA = ImmutableSet.of("kmpySmUISimoRrJL6NL73w");
 
@@ -60,12 +60,13 @@ public class K8sPVInfoTasklet implements Tasklet {
         new PublishedMessageReader(publishedMessageDao, accountId, messageType, startTime, endTime, batchSize);
     do {
       publishedMessageList = publishedMessageReader.getNext();
-      // change logger to debug in future
-      log.info("Processing publishedMessage of size: {}", publishedMessageList.size());
-      publishedMessageList.stream()
-          .map(this::processPVInfoMessage)
-          .filter(instanceInfo -> instanceInfo.getAccountId() != null)
-          .forEach(instanceInfo -> instanceDataDao.upsert(instanceInfo));
+
+      List<InstanceInfo> instanceInfoList = publishedMessageList.stream()
+                                                .map(this::processPVInfoMessage)
+                                                .filter(instanceInfo -> instanceInfo.getAccountId() != null)
+                                                .collect(Collectors.toList());
+
+      instanceDataBulkWriteService.updateList(instanceInfoList);
     } while (publishedMessageList.size() == batchSize);
     return null;
   }
@@ -84,11 +85,6 @@ public class K8sPVInfoTasklet implements Tasklet {
     PVInfo pvInfo = (PVInfo) publishedMessage.getMessage();
     String pvUid = pvInfo.getPvUid();
     String clusterId = pvInfo.getClusterId();
-
-    InstanceData existingInstanceData = instanceDataService.fetchInstanceData(accountId, clusterId, pvUid);
-    if (null != existingInstanceData && !ACCOUNTS_WITH_OLD_DATA.contains(accountId)) {
-      return InstanceInfo.builder().metaData(Collections.emptyMap()).build();
-    }
 
     Map<String, String> metaData = new HashMap<>();
     metaData.put(InstanceMetaDataConstants.CLOUD_PROVIDER, CloudProvider.GCP.name());

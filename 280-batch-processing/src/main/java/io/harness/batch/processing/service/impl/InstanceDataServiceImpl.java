@@ -10,6 +10,8 @@ import io.harness.ccm.commons.beans.InstanceState;
 import io.harness.ccm.commons.entities.InstanceData;
 import io.harness.ccm.commons.entities.InstanceData.InstanceDataKeys;
 
+import software.wings.dl.WingsPersistence;
+
 import com.github.benmanes.caffeine.cache.Caffeine;
 import com.github.benmanes.caffeine.cache.LoadingCache;
 import java.time.Instant;
@@ -29,6 +31,7 @@ import org.springframework.stereotype.Service;
 @Slf4j
 public class InstanceDataServiceImpl extends CacheUtils implements InstanceDataService {
   @Autowired private InstanceDataDao instanceDataDao;
+  @Autowired private WingsPersistence wingsPersistence;
 
   private final LoadingCache<CacheKey, PrunedInstanceData> instanceDataCache =
       Caffeine.newBuilder()

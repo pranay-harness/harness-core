@@ -13,12 +13,13 @@ import io.harness.CategoryTest;
 import io.harness.batch.processing.ccm.CCMJobConstants;
 import io.harness.batch.processing.config.BatchMainConfig;
 import io.harness.batch.processing.dao.intfc.PublishedMessageDao;
+import io.harness.batch.processing.service.intfc.InstanceDataBulkWriteService;
 import io.harness.batch.processing.service.intfc.InstanceDataService;
 import io.harness.batch.processing.tasklet.K8SSyncEventTasklet;
 import io.harness.category.element.UnitTests;
-import io.harness.ccm.commons.beans.InstanceState;
 import io.harness.ccm.commons.entities.InstanceData;
 import io.harness.event.grpc.PublishedMessage;
+import io.harness.event.payloads.Lifecycle;
 import io.harness.grpc.utils.HTimestamps;
 import io.harness.perpetualtask.k8s.watch.K8SClusterSyncEvent;
 import io.harness.persistence.HPersistence;
@@ -30,7 +31,9 @@ import com.google.common.collect.ImmutableSet;
 import com.google.protobuf.Any;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -56,15 +59,13 @@ public class K8SSyncEventWriterTest extends CategoryTest {
       "K8S_INSTANCE_INFO_ACTIVE_INSTANCE_ID_" + this.getClass().getSimpleName();
   private static final String ACCOUNT_ID = "account_id";
 
-  @InjectMocks private K8SSyncEventTasklet k8SSyncEventTasklet;
-
   @Mock private BatchMainConfig config;
-
-  @Mock private InstanceDataService instanceDataService;
-
   @Mock private HPersistence hPersistence;
-
   @Mock private PublishedMessageDao publishedMessageDao;
+  @Mock private InstanceDataService instanceDataService;
+  @Mock private InstanceDataBulkWriteService instanceDataBulkWriteService;
+
+  @InjectMocks private K8SSyncEventTasklet k8SSyncEventTasklet;
 
   private final Instant NOW = Instant.now();
   private final Instant INSTANCE_STOP_TIMESTAMP = NOW.minus(1, ChronoUnit.DAYS);
@@ -102,15 +103,17 @@ public class K8SSyncEventWriterTest extends CategoryTest {
         .thenReturn(getInstanceData(TEST_INSTANCE_ID_NODE_RUNNING));
 
     k8SSyncEventTasklet.execute(null, chunkContext);
-    ArgumentCaptor<InstanceData> instanceDataArgumentCaptor = ArgumentCaptor.forClass(InstanceData.class);
-    ArgumentCaptor<Instant> instantArgumentCaptor = ArgumentCaptor.forClass(Instant.class);
-    ArgumentCaptor<InstanceState> instanceStateArgumentCaptor = ArgumentCaptor.forClass(InstanceState.class);
-    verify(instanceDataService)
-        .updateInstanceState(instanceDataArgumentCaptor.capture(), instantArgumentCaptor.capture(),
-            instanceStateArgumentCaptor.capture());
-    InstanceData instanceData = instanceDataArgumentCaptor.getValue();
-    assertThat(instanceData.getInstanceId()).isEqualTo(TEST_INSTANCE_ID_NODE_RUNNING);
-    assertThat(instanceStateArgumentCaptor.getValue()).isEqualTo(InstanceState.STOPPED);
+
+    ArgumentCaptor<ArrayList<?>> lifecycleArgumentCaptor =
+        ArgumentCaptor.forClass((Class<ArrayList<?>>) (Class) ArrayList.class);
+    verify(instanceDataBulkWriteService).updateList(lifecycleArgumentCaptor.capture());
+
+    List<?> lifecycleList = lifecycleArgumentCaptor.getValue();
+    assertThat(lifecycleList).isNotEmpty();
+    assertThat(lifecycleList.get(0)).isInstanceOf(Lifecycle.class);
+    Lifecycle lifecycle = (Lifecycle) lifecycleList.get(0);
+    assertThat(lifecycle.getInstanceId()).isEqualTo(TEST_INSTANCE_ID_NODE_RUNNING);
+    assertThat(lifecycle.getType()).isEqualTo(Lifecycle.EventType.EVENT_TYPE_STOP);
   }
 
   private InstanceData getInstanceData(String instanceId) {

@@ -5,15 +5,14 @@ import io.harness.batch.processing.ccm.CCMJobConstants;
 import io.harness.batch.processing.ccm.InstanceEvent;
 import io.harness.batch.processing.ccm.InstanceEvent.EventType;
 import io.harness.batch.processing.config.BatchMainConfig;
-import io.harness.batch.processing.dao.intfc.InstanceDataDao;
 import io.harness.batch.processing.dao.intfc.PublishedMessageDao;
+import io.harness.batch.processing.service.intfc.InstanceDataBulkWriteService;
 import io.harness.batch.processing.tasklet.reader.PublishedMessageReader;
 import io.harness.batch.processing.writer.constants.EventTypeConstants;
 import io.harness.event.grpc.PublishedMessage;
 import io.harness.grpc.utils.HTimestamps;
 import io.harness.perpetualtask.k8s.watch.PodEvent;
 
-import com.google.common.collect.Lists;
 import java.util.List;
 import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
@@ -28,9 +27,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 public class K8sPodEventTasklet implements Tasklet {
   private JobParameters parameters;
   @Autowired private BatchMainConfig config;
-  @Autowired protected InstanceDataDao instanceDataDao;
   @Autowired private PublishedMessageDao publishedMessageDao;
   @Autowired private ClusterDataGenerationValidator clusterDataGenerationValidator;
+  @Autowired private InstanceDataBulkWriteService instanceDataBulkWriteService;
 
   @Override
   public RepeatStatus execute(StepContribution stepContribution, ChunkContext chunkContext) {
@@ -46,12 +45,12 @@ public class K8sPodEventTasklet implements Tasklet {
         new PublishedMessageReader(publishedMessageDao, accountId, messageType, startTime, endTime, batchSize);
     do {
       publishedMessageList = publishedMessageReader.getNext();
-      List<InstanceEvent> instanceEvents = publishedMessageList.stream()
-                                               .map(this::processPodEventMessage)
-                                               .filter(instanceInfo -> null != instanceInfo.getAccountId())
-                                               .collect(Collectors.toList());
-      Lists.partition(instanceEvents, 100)
-          .forEach(instanceEventPartitioned -> instanceDataDao.upsert(instanceEventPartitioned));
+
+      List<InstanceEvent> instanceEventList = publishedMessageList.stream()
+                                                  .map(this::processPodEventMessage)
+                                                  .filter(instanceEvent -> null != instanceEvent.getAccountId())
+                                                  .collect(Collectors.toList());
+      instanceDataBulkWriteService.updateList(instanceEventList);
     } while (publishedMessageList.size() == batchSize);
     return null;
   }
@@ -72,7 +71,7 @@ public class K8sPodEventTasklet implements Tasklet {
     if (!clusterDataGenerationValidator.shouldGenerateClusterData(accountId, clusterId)) {
       return InstanceEvent.builder().build();
     }
-    EventType type = null;
+    EventType type;
     switch (podEvent.getType()) {
       case EVENT_TYPE_TERMINATED:
         type = EventType.STOP;
@@ -81,6 +80,7 @@ public class K8sPodEventTasklet implements Tasklet {
         type = EventType.START;
         break;
       default:
+        type = EventType.UNKNOWN;
         break;
     }
 

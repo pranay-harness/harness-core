@@ -18,10 +18,10 @@ import io.harness.batch.processing.ccm.InstanceCategory;
 import io.harness.batch.processing.ccm.InstanceEvent;
 import io.harness.batch.processing.ccm.InstanceInfo;
 import io.harness.batch.processing.config.BatchMainConfig;
-import io.harness.batch.processing.dao.intfc.InstanceDataDao;
 import io.harness.batch.processing.dao.intfc.PublishedMessageDao;
 import io.harness.batch.processing.pricing.data.CloudProvider;
 import io.harness.batch.processing.service.intfc.CloudProviderService;
+import io.harness.batch.processing.service.intfc.InstanceDataBulkWriteService;
 import io.harness.batch.processing.service.intfc.InstanceDataService;
 import io.harness.batch.processing.service.intfc.InstanceResourceService;
 import io.harness.batch.processing.writer.constants.InstanceMetaDataConstants;
@@ -71,8 +71,8 @@ public class K8sNodeInfoEventTaskletTest extends CategoryTest {
   @Mock private CloudProviderService cloudProviderService;
   @Mock private InstanceResourceService instanceResourceService;
   @Mock private InstanceDataService instanceDataService;
+  @Mock private InstanceDataBulkWriteService instanceDataBulkWriteService;
   @Mock private PublishedMessageDao publishedMessageDao;
-  @Mock private InstanceDataDao instanceDataDao;
   @Mock private BatchMainConfig config;
 
   private static final String NODE_UID = "node_uid";
@@ -93,6 +93,7 @@ public class K8sNodeInfoEventTaskletTest extends CategoryTest {
   public void setup() {
     MockitoAnnotations.initMocks(this);
     when(config.getBatchQueryConfig()).thenReturn(BatchQueryConfig.builder().queryBatchSize(50).build());
+    when(instanceDataBulkWriteService.updateList(any())).thenReturn(true);
   }
 
   @Test
@@ -177,7 +178,7 @@ public class K8sNodeInfoEventTaskletTest extends CategoryTest {
         NODE_UID, CLOUD_PROVIDER_ID, ACCOUNT_ID, EventType.EVENT_TYPE_UNSPECIFIED, START_TIMESTAMP);
     InstanceEvent instanceEvent = k8sNodeEventTasklet.process(k8sNodeEventMessage);
     assertThat(instanceEvent).isNotNull();
-    assertThat(instanceEvent.getType()).isNull();
+    assertThat(instanceEvent.getType()).isEqualTo(InstanceEvent.EventType.UNKNOWN);
   }
 
   @Test

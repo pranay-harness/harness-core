@@ -2,8 +2,8 @@ package io.harness.batch.processing.tasklet;
 
 import io.harness.batch.processing.ccm.CCMJobConstants;
 import io.harness.batch.processing.config.BatchMainConfig;
-import io.harness.batch.processing.dao.intfc.InstanceDataDao;
 import io.harness.batch.processing.dao.intfc.PublishedMessageDao;
+import io.harness.batch.processing.service.intfc.InstanceDataBulkWriteService;
 import io.harness.batch.processing.tasklet.reader.PublishedMessageReader;
 import io.harness.batch.processing.writer.EventWriter;
 import io.harness.batch.processing.writer.constants.EventTypeConstants;
@@ -16,9 +16,11 @@ import io.harness.perpetualtask.k8s.watch.K8SClusterSyncEvent;
 import com.google.common.collect.Sets;
 import com.google.common.collect.Sets.SetView;
 import com.google.protobuf.Timestamp;
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.batch.core.JobParameters;
 import org.springframework.batch.core.StepContribution;
@@ -32,7 +34,7 @@ public class K8SSyncEventTasklet extends EventWriter implements Tasklet {
   private JobParameters parameters;
   @Autowired private BatchMainConfig config;
   @Autowired private PublishedMessageDao publishedMessageDao;
-  @Autowired protected InstanceDataDao instanceDataDao;
+  @Autowired private InstanceDataBulkWriteService instanceDataBulkWriteService;
 
   @Override
   public RepeatStatus execute(StepContribution stepContribution, ChunkContext chunkContext) {
@@ -51,29 +53,36 @@ public class K8SSyncEventTasklet extends EventWriter implements Tasklet {
     List<PublishedMessage> publishedMessageList;
     do {
       publishedMessageList = publishedMessageReader.getNext();
-      processK8SSyncEventMessage(publishedMessageList);
+      List<Lifecycle> lifecycleList = processK8SSyncEventMessage(publishedMessageList);
+
+      instanceDataBulkWriteService.updateList(lifecycleList);
     } while (publishedMessageList.size() == batchSize);
     return null;
   }
 
-  private void processK8SSyncEventMessage(List<PublishedMessage> publishedMessages) {
+  private List<Lifecycle> processK8SSyncEventMessage(List<PublishedMessage> publishedMessages) {
     try {
-      process(publishedMessages);
+      return process(publishedMessages);
     } catch (Exception ex) {
-      log.error("K8sNodeEventTasklet Exception ", ex);
+      log.error("K8SSyncEventTasklet Exception ", ex);
     }
+    return new ArrayList<>();
   }
 
-  public void process(List<PublishedMessage> publishedMessages) {
+  public List<Lifecycle> process(List<PublishedMessage> publishedMessages) {
     log.info("Published batch size is K8SSyncEventTasklet {} ", publishedMessages.size());
+    List<Lifecycle> lifecycleList = new ArrayList<>();
+
     publishedMessages.forEach(publishedMessage -> {
       K8SClusterSyncEvent k8SClusterSyncEvent = (K8SClusterSyncEvent) publishedMessage.getMessage();
       log.info("K8S sync event {} ", k8SClusterSyncEvent);
+
       String accountId = publishedMessage.getAccountId();
       String clusterId = k8SClusterSyncEvent.getClusterId();
       Timestamp lastProcessedTimestamp = k8SClusterSyncEvent.getLastProcessedTimestamp();
       Set<String> activeInstanceIds =
           fetchActiveInstanceAtTime(accountId, clusterId, HTimestamps.toInstant(lastProcessedTimestamp));
+
       log.info("Active K8S instances before {} time {}", lastProcessedTimestamp, activeInstanceIds.size());
 
       Set<String> activeInstanceArns = new HashSet<>();
@@ -82,11 +91,16 @@ public class K8SSyncEventTasklet extends EventWriter implements Tasklet {
       activeInstanceArns.addAll(k8SClusterSyncEvent.getActivePvUidsList());
 
       SetView<String> inactiveInstanceArns = Sets.difference(activeInstanceIds, activeInstanceArns);
+
       log.info("Inactive K8S instance arns {}", inactiveInstanceArns.toString());
 
-      inactiveInstanceArns.forEach(inactiveInstanceArn
-          -> handleLifecycleEvent(accountId, createLifecycle(inactiveInstanceArn, clusterId, lastProcessedTimestamp)));
+      lifecycleList.addAll(
+          inactiveInstanceArns.stream()
+              .map(inactiveInstanceArn -> createLifecycle(inactiveInstanceArn, clusterId, lastProcessedTimestamp))
+              .collect(Collectors.toList()));
     });
+
+    return lifecycleList;
   }
 
   private Lifecycle createLifecycle(String instanceId, String clusterId, Timestamp lastProcessedTimestamp) {

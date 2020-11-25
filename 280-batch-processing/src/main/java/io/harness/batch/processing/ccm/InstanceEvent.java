@@ -14,5 +14,5 @@ public class InstanceEvent {
   String instanceName;
   Instant timestamp;
   EventType type;
-  public enum EventType { STOP, START }
+  public enum EventType { STOP, START, UNKNOWN }
 }
