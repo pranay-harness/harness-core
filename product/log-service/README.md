@@ -1,107 +1,66 @@
 # Log Service for Harness
 
-This branch provides a sample log storage and streming service using code extracted from Drone. The service uses an embedded bolt database for blob storage and an embedded in-memory stream. The blog storage engine can be replaced with s3 or any s3 compatible storage server.
+Harness Log service. Used for live streaming logs as well as object store uploads.
 
-This repository also includes a Go client for integrating with the server, and command line tools that can be used during local development for testing purposes.
+# Generating the binary
 
-# Server
-
-Start the log server
-
+Mac:
 ```
-$ log-service server
+$ bazel build //product/log-service/...
 ```
 
-# Storage
-
-Upload a log file to the log server
-
+Linux-based:
 ```
-$ log-server cistore upload <projectID> <buildID> <stageID> <stepID> [<path>]
-$ log-server cistore upload 1 2 3 4 /path/to/logs.json
+$ bazel build //product/log-service/...
+$ bazel build --platforms=@io_bazel_rules_go//go/toolchain:linux_amd64 //product/log-service/...
 ```
 
-Download a log file from the log server
+# Accessing the binary
 
+Mac:
 ```
-$ log-server cistore download <projectID> <buildID> <stageID> <stepID>
-$ log-server cistore download 1 2 3 4
-```
-
-Create a download link (S3 only)
-
-```
-$ log-server cistore download-link <projectID> <buildID> <stageID> <stepID>
-$ log-server cistore download-link 1 2 3 4
+$ $(bazel info bazel-bin)/product/log-service/darwin_amd64_stripped/log-service
 ```
 
-Create an upload link (S3 only)
-
+Linux-based:
 ```
-$ log-server cistore upload-link <projectID> <buildID> <stageID> <stepID>
-$ log-server cistore upload-link 1 2 3 4
+$ $(bazel info bazel-bin)/product/log-service/linux_amd64_pure_stripped/log-service
 ```
 
-_Note that upload and download links can be a secure, scalable alternative to directly uploading files through the service. Also note that we prefer REST for uploading and downloading blobs. GRPC is less efficient when it comes to transferring blobs due to message size limits and having to serialize / deserialize contents._
+# Env variables for auth
 
-# Streaming
-
-Create a log stream:
-
+The values for the below can be anything (as long as they are consistent with the next steps). These values are used for authentication/token generation with the log server.
 ```
-$ log-server cistream open <projectID> <buildID> <stageID> <stepID>
+$ export LOG_SERVICE_GLOBAL_TOKEN=token
+$ export LOG_SERVICE_SECRET=secret
 ```
 
-Publish a log entry to the log stream:
+# Other env variables
 
+## Streaming:
+If no env variables are specified, the log service will use an in memory stream.
+To use redis instead, install redis locally and set the following env variables to talk to it
 ```
-$ log-server cistream push [<flags>] <projectID> <buildID> <stageID> <stepID> [<message>]
-$ log-server cistream push 1 2 3 4 "echo hello"
-$ log-server cistream push 1 2 3 4 "echo world"
-```
-
-Subscribe to a log stream:
-
-```
-$ log-server cistream tail <projectID> <buildID> <stageID> <stepID>
-$ log-server cistream tail 1 2 3 4
+export LOG_SERVICE_REDIS_ENDPOINT=localhost:6379
+export LOG_SERVICE_REDIS_PASSWORD=***
 ```
 
-Close the log stream:
-
+## Store:
+If no env variables are specified, the log service will use an in memory store (bolt DB).
+To use S3 instead, set up the following env variables:
 ```
-$ log-server cistream close <projectID> <buildID> <stageID> <stepID>
-$ log-server cistream close 1 2 3 4
+export LOG_SERVICE_S3_BUCKET=logs
+export LOG_SERVICE_S3_PREFIX=
+export LOG_SERVICE_S3_ENDPOINT=http://localhost:9000
+export LOG_SERVICE_S3_PATH_STYLE=true
+export LOG_SERVICE_S3_ACCESS_KEY_ID=***
+export LOG_SERVICE_S3_SECRET_ACCESS_KEY=***
+export LOG_SERVICE_S3_REGION=us-east-1
 ```
+The above is compatible with GCS as well (you can setup access and secret keys for a service account in the settings and use those)
 
-Gather information about all active log streams, including the size of the stream and the number of connected subscribers:
-
+Run minio locally using:
 ```
-$ log-server cistream info
-```
-
-# Adding API endpoints
-To add your own API endpoints for interacting with the log service, add them in handler/service similar to handler/ci and update handler/handler.go to include the new routes.
-Optionally, add a client for them under client/service to enable interaction/testing with the CLI in case a Golang client is needed.
-
-# S3 Backend
-
-The S3 backend can be enabled and configured by setting the following environment variables. _Note that the service can read environment variables from an .env file in the working directory_.
-
-```text
-LOG_SERVICE_MINIO_BUCKET=logs
-LOG_SERVICE_MINIO_PREFIX=
-LOG_SERVICE_MINIO_ENDPOINT=http://localhost:9000
-LOG_SERVICE_MINIO_PATH_STYLE=true
-
-AWS_ACCESS_KEY_ID=AKIAIOSFODNN7EXAMPLE
-AWS_SECRET_ACCESS_KEY=wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY
-AWS_REGION=us-east-1
-```
-
-_You can test the Minio engine locally by running Minio in Docker. Be sure to login to Minio and create the default bucket.
-
-```text
 docker run -p 9000:9000 \
   --name minio1 \
   -v /tmp/minio:/data \
@@ -110,10 +69,81 @@ docker run -p 9000:9000 \
   minio/minio server /data
 ```
 
+# Using the CLI
+
+Get all options for the CLI:
+```
+$ <path-to-binary> help
+``` 
+
+# Server
+
+Start the log server
+
+```
+$ <path-to-binary> server
+```
+
+# Token Generation
+
+Replace the token and the endpoint with whatever values you’re using. Should be the same if you’re following the steps here. The token received is a per account token so all calls to the service need to use that token and the same account ID specified as above. This token will expire every 48 hours.
+
+```
+curl  -H "X-Harness-Token: token" -v GET http://localhost:8079/token\?accountID\=blah
+```
+
+# Storage
+
+## Write to store
+
+There are two ways to do this:
+
+i) Generate an upload link and use that to upload (only for S3)
+```
+curl  -H "X-Harness-Token: <token-received-above>" -v POST http://localhost:8079/blob/link/upload?accountID\=blah\&key=sample
+```
+
+ii) Use the log service directly to upload
+```
+curl  -H "X-Harness-Token: <token-received-above>" -v POST http://localhost:8079/blob?accountID\=blah\&key=sample (with the request body)
+```
+
+_Note that upload and download links can be a secure, scalable alternative to directly uploading files through the service. Also note that we prefer REST for uploading and downloading blobs. GRPC is less efficient when it comes to transferring blobs due to message size limits and having to serialize / deserialize contents._
+
+# Streaming
+
+## Open a log stream:
+
+```
+$ curl -H "X-Harness-Token: <account-token>" -v -X POST http://localhost:8079/stream\?accountID\=blah\&key\=sample
+```
+
+## Write to stream:
+
+Run same command as opening a log stream but with the above request body and use PUT
+```
+Request body example: 
+[
+{"level":"INFO","pos":1,"out":"Will be cloning..\n","time":"2020-09-23T12:38:18.308525+05:30","args":{}},
+{"level":"INFO","pos":2,"out":"Cloning into 'small-test-repo'...\n","time":"2020-09-23T12:38:28.327238+05:30","args":{}},
+]
+```
+
+## Tail a stream:
+
+Format is server-sent events https://developer.mozilla.org/en-US/docs/Web/API/Server-sent_events/Using_server-sent_events
+```
+$ curl  -H "X-Harness-Token: <account-token>" -v GET http://localhost:8079/stream\?accountID\=blah\&key=sample
+
+```
+
+Close a stream:
+
+```
+curl -H "X-Harness-Token: <account-token>" -v -X DELETE http://localhost:8079/stream\?accountID\=blah\&key\=sample
+```
+
 # TODO
 
-- Implement authentication mechanism
 - Improve the ring buffer efficiency
-- Improve the stream push endpoint to accept multiple log entries
-- Implement a more scalable streaming backend (redis, etc)
 - Implement a grpc client and server for the stream service only

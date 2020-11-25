@@ -7,7 +7,7 @@ import (
 
 const (
 	accountIDParam = "accountID"
-	keyParam = "key"
+	keyParam       = "key"
 )
 
 // writeBadRequest writes the json-encoded error message

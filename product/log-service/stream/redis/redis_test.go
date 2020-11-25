@@ -66,9 +66,10 @@ func TestCreate_Error(t *testing.T) {
 	var client *redis.Client
 	mock := redismock.NewNiceMock(client)
 	args := &redis.XAddArgs{
-		Stream: key,
-		ID:     "*",
-		Values: map[string]interface{}{"lines": []byte{}},
+		Stream:       key,
+		ID:           "*",
+		MaxLenApprox: maxStreamSize,
+		Values:       map[string]interface{}{"lines": []byte{}},
 	}
 	mock.On("Exists", []string{key}).Return(redis.NewIntResult(1, nil))
 	mock.On("Del", []string{key}).Return(redis.NewIntResult(1, nil))
@@ -140,9 +141,10 @@ func TestWrite(t *testing.T) {
 	lines := []*stream.Line{line1, line2}
 	bytes, _ := json.Marshal(&lines)
 	args := &redis.XAddArgs{
-		Stream: key,
-		ID:     "*",
-		Values: map[string]interface{}{"lines": bytes},
+		Stream:       key,
+		ID:           "*",
+		MaxLenApprox: maxStreamSize,
+		Values:       map[string]interface{}{"lines": bytes},
 	}
 	mock.On("Exists", []string{key}).Return(redis.NewIntResult(1, nil))
 	mock.On("XAdd", args).Return(redis.NewStringResult("success", nil))
@@ -166,7 +168,7 @@ func TestTail_Single_Success(t *testing.T) {
 	bytes, _ := json.Marshal(&lines)
 	args := &redis.XReadArgs{
 		Streams: append([]string{key}, "0"),
-		Block:   redisWaitTime,
+		Block:   readPollTime,
 	}
 
 	stream := []redis.XStream{
@@ -207,11 +209,11 @@ func TestTail_Multiple(t *testing.T) {
 
 	args1 := &redis.XReadArgs{
 		Streams: append([]string{key}, "0"),
-		Block:   redisWaitTime,
+		Block:   readPollTime,
 	}
 	args2 := &redis.XReadArgs{
 		Streams: append([]string{key}, "1"),
-		Block:   redisWaitTime,
+		Block:   readPollTime,
 	}
 
 	stream := []redis.XStream{
@@ -254,7 +256,7 @@ func TestTail_Failure(t *testing.T) {
 	bytes, _ := json.Marshal(&lines)
 	args := &redis.XReadArgs{
 		Streams: append([]string{key}, "0"),
-		Block:   redisWaitTime,
+		Block:   readPollTime,
 	}
 
 	stream := []redis.XStream{

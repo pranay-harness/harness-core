@@ -3,7 +3,7 @@ load("@io_bazel_rules_go//go:def.bzl", "go_library")
 go_library(
     name = "go_default_library",
     srcs = ["client_mock.go"],
-    importpath = "github.com/wings-software/portal/commons/go/lib/960-expression-service/grpc/mocks",
+    importpath = "github.com/wings-software/portal/commons/go/lib/expression-service/grpc/mocks",
     visibility = ["//visibility:public"],
     deps = [
         "//960-expression-service/src/main/proto/io/harness/expression/service:go_default_library",

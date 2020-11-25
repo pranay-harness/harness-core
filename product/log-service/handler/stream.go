@@ -12,6 +12,7 @@ import (
 )
 
 var pingInterval = time.Second * 30
+var tailMaxTime = time.Hour * 1
 
 // HandleOpen returns an http.HandlerFunc that opens
 // the live stream.
@@ -121,20 +122,25 @@ func HandleTail(s stream.Stream) http.HandlerFunc {
 		enc := json.NewEncoder(w)
 		linec, errc := s.Tail(ctx, key)
 		if errc == nil {
-			io.WriteString(w, "event: error\ndata: eof\n\n")
+			io.WriteString(w, "event: error\ndata: eof\n")
 			return
 		}
 
+		tailMaxTimeTimer := time.After(tailMaxTime)
+		msgDelayTimer := time.NewTimer(pingInterval) // if time b/w messages takes longer, send a ping
+		defer msgDelayTimer.Stop()
+
 	L:
 		for {
+			msgDelayTimer.Reset(pingInterval)
 			select {
 			case <-ctx.Done():
 				break L
 			case <-errc:
 				break L
-			case <-time.After(time.Hour):
+			case <-tailMaxTimeTimer:
 				break L
-			case <-time.After(pingInterval):
+			case <-msgDelayTimer.C:
 				io.WriteString(w, ": ping\n")
 				f.Flush()
 			case line := <-linec:
@@ -145,7 +151,7 @@ func HandleTail(s stream.Stream) http.HandlerFunc {
 			}
 		}
 
-		io.WriteString(w, "event: error\ndata: eof\n\n")
+		io.WriteString(w, "event: error\ndata: eof\n")
 		f.Flush()
 	}
 }
