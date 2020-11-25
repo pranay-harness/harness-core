@@ -16,7 +16,7 @@ import io.harness.data.structure.UUIDGenerator;
 import io.harness.delegate.beans.DelegateTaskPackage;
 import io.harness.delegate.beans.SecretDetail;
 import io.harness.delegate.beans.TaskData;
-import io.harness.managerclient.ManagerClient;
+import io.harness.managerclient.DelegateAgentManagerClient;
 import io.harness.rule.Owner;
 import io.harness.security.encryption.DelegateDecryptionService;
 import io.harness.security.encryption.EncryptionConfig;
@@ -40,7 +40,7 @@ import retrofit2.Call;
 public class DelegateAgentServiceImplTest extends CategoryTest {
   @Rule public MockitoRule mockitoRule = MockitoJUnit.rule();
 
-  @Mock private ManagerClient managerClient;
+  @Mock private DelegateAgentManagerClient delegateAgentManagerClient;
   @Mock private Call<DelegateTaskPackage> delegatePackageCall;
   @Mock private DelegateDecryptionService delegateDecryptionService;
 
@@ -48,7 +48,7 @@ public class DelegateAgentServiceImplTest extends CategoryTest {
 
   @Before
   public void setUp() {
-    when(managerClient.acquireTask(Matchers.anyString(), Matchers.anyString(), Matchers.anyString()))
+    when(delegateAgentManagerClient.acquireTask(Matchers.anyString(), Matchers.anyString(), Matchers.anyString()))
         .thenReturn(delegatePackageCall);
   }
 

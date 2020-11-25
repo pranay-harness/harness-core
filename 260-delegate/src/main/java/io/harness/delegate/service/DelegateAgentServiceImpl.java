@@ -1686,7 +1686,7 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
       log.info("Try to acquire DelegateTask - accountId: {}", accountId);
 
       DelegateTaskPackage delegateTaskPackage =
-          delegateExecute(managerClient.acquireTask(delegateId, delegateTaskId, accountId));
+          delegateExecute(delegateAgentManagerClient.acquireTask(delegateId, delegateTaskId, accountId));
       if (delegateTaskPackage == null || delegateTaskPackage.getData() == null) {
         log.info("Delegate task data not available - accountId: {}", delegateTaskEvent.getAccountId());
         return;
