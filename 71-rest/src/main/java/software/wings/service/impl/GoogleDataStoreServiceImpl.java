@@ -5,14 +5,18 @@ import static io.harness.beans.PageResponse.PageResponseBuilder.aPageResponse;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
+import static java.lang.System.currentTimeMillis;
+
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.beans.SearchFilter;
+import io.harness.dataretention.AccountDataRetentionEntity;
 import io.harness.exception.WingsException;
 import io.harness.persistence.GoogleDataStoreAware;
 
 import software.wings.beans.Log;
 import software.wings.dl.WingsPersistence;
+import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.DataStoreService;
 
 import com.google.cloud.datastore.Datastore;
@@ -20,6 +24,7 @@ import com.google.cloud.datastore.DatastoreOptions;
 import com.google.cloud.datastore.Entity;
 import com.google.cloud.datastore.EntityQuery.Builder;
 import com.google.cloud.datastore.Key;
+import com.google.cloud.datastore.ProjectionEntityQuery;
 import com.google.cloud.datastore.Query;
 import com.google.cloud.datastore.QueryResults;
 import com.google.cloud.datastore.StructuredQuery.CompositeFilter;
@@ -31,7 +36,9 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import java.io.File;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import lombok.extern.slf4j.Slf4j;
 import org.jetbrains.annotations.Nullable;
@@ -45,14 +52,16 @@ public class GoogleDataStoreServiceImpl implements DataStoreService {
   private static final String GOOGLE_APPLICATION_CREDENTIALS_PATH = "GOOGLE_APPLICATION_CREDENTIALS";
   private final Datastore datastore = DatastoreOptions.getDefaultInstance().getService();
   private DataStoreService mongoDataStoreService;
+  private AccountService accountService;
 
   @Inject
-  public GoogleDataStoreServiceImpl(WingsPersistence wingsPersistence) {
+  public GoogleDataStoreServiceImpl(WingsPersistence wingsPersistence, AccountService accountService) {
     String googleCredentialsPath = System.getenv(GOOGLE_APPLICATION_CREDENTIALS_PATH);
     if (isEmpty(googleCredentialsPath) || !new File(googleCredentialsPath).exists()) {
       throw new WingsException("Invalid credentials found at " + googleCredentialsPath);
     }
     mongoDataStoreService = new MongoDataStoreServiceImpl(wingsPersistence);
+    this.accountService = accountService;
   }
 
   @Override
@@ -155,15 +164,51 @@ public class GoogleDataStoreServiceImpl implements DataStoreService {
     reflections = new Reflections("io.harness");
     dataStoreClasses.addAll(reflections.getSubTypesOf(GoogleDataStoreAware.class));
 
+    Map<String, Long> accounts = new HashMap<>();
     dataStoreClasses.forEach(dataStoreClass -> {
+      long now = currentTimeMillis();
       String collectionName = dataStoreClass.getAnnotation(org.mongodb.morphia.annotations.Entity.class).value();
       log.info("cleaning up {}", collectionName);
-      Query<Key> query = Query.newKeyQueryBuilder()
-                             .setKind(collectionName)
-                             .setFilter(PropertyFilter.lt("validUntil", System.currentTimeMillis()))
-                             .build();
       List<Key> keysToDelete = new ArrayList<>();
-      datastore.run(query).forEachRemaining(keysToDelete::add);
+
+      if (AccountDataRetentionEntity.class.isAssignableFrom(dataStoreClass)) {
+        if (accounts.isEmpty()) {
+          accounts.putAll(accountService.obtainAccountDataRetentionMap());
+        }
+
+        ProjectionEntityQuery query =
+            Query.newProjectionEntityQueryBuilder()
+                .setKind(collectionName)
+                .setFilter(PropertyFilter.lt(AccountDataRetentionEntity.VALID_UNTIL_KEY, now))
+                .setProjection(AccountDataRetentionEntity.ACCOUNT_ID_KEY, AccountDataRetentionEntity.CREATED_AT_KEY)
+                .build();
+
+        datastore.run(query).forEachRemaining(entity -> {
+          String accountId = entity.getString(AccountDataRetentionEntity.ACCOUNT_ID_KEY);
+          long createdAt = entity.getLong(AccountDataRetentionEntity.CREATED_AT_KEY);
+
+          Long retentionData = accounts.get(accountId);
+          if (retentionData != null) {
+            long correctValidUntil = createdAt + retentionData;
+            // if the correct valid until is in the future lets update and bail
+            if (correctValidUntil >= now) {
+              log.warn("Updating entity in gcp datastore is expensive. "
+                  + "Make sure you have the right validUntil at first place");
+              Entity updatedEntity = Entity.newBuilder(datastore.get(entity.getKey()))
+                                         .set(AccountDataRetentionEntity.VALID_UNTIL_KEY, correctValidUntil)
+                                         .build();
+              datastore.update(updatedEntity);
+              return;
+            }
+          }
+          keysToDelete.add(entity.getKey());
+        });
+      } else {
+        Query<Key> query =
+            Query.newKeyQueryBuilder().setKind(collectionName).setFilter(PropertyFilter.lt("validUntil", now)).build();
+        datastore.run(query).forEachRemaining(keysToDelete::add);
+      }
+
       log.info("Total keys to delete {} for {}", keysToDelete.size(), collectionName);
       final List<List<Key>> keyBatches = Lists.partition(keysToDelete, DATA_STORE_BATCH_SIZE);
       keyBatches.forEach(keys -> {

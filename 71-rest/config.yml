@@ -56,6 +56,7 @@ trialRegistrationAllowedForBugathon: false
 blacklistedEmailDomainsAllowed: true
 pwnedPasswordsAllowed: true
 executionLogStorageMode: MONGO
+#                        GOOGLE_CLOUD_DATA_STORE
 fileStorageMode: MONGO
 clusterName: ""
 bugsnagApiKey: ""

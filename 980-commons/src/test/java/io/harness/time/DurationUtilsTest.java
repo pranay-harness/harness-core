@@ -1,8 +1,12 @@
 package io.harness.time;
 
 import static io.harness.rule.OwnerRule.AVMOHAN;
+import static io.harness.rule.OwnerRule.GEORGE;
+import static io.harness.time.DurationUtils.durationTillDayTime;
 import static io.harness.time.DurationUtils.truncate;
 
+import static java.time.Duration.ofDays;
+import static java.time.Duration.ofHours;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.CategoryTest;
@@ -18,11 +22,21 @@ public class DurationUtilsTest extends CategoryTest {
   @Owner(developers = AVMOHAN)
   @Category(UnitTests.class)
   public void testTruncate() throws Exception {
-    Duration duration = Duration.ofDays(7).plusHours(3).plusSeconds(33).plusMillis(23);
-    assertThat(truncate(duration, Duration.ofDays(1))).isEqualTo(Duration.ofDays(7));
-    assertThat(truncate(duration, Duration.ofDays(2))).isEqualTo(Duration.ofDays(6));
-    assertThat(truncate(duration, Duration.ofHours(2))).isEqualTo(Duration.ofDays(7).plusHours(2));
-    assertThat(truncate(duration, Duration.ofHours(1))).isEqualTo(Duration.ofDays(7).plusHours(3));
-    assertThat(truncate(duration, Duration.ofSeconds(10))).isEqualTo(Duration.ofDays(7).plusHours(3).plusSeconds(30));
+    Duration duration = ofDays(7).plusHours(3).plusSeconds(33).plusMillis(23);
+    assertThat(truncate(duration, ofDays(1))).isEqualTo(ofDays(7));
+    assertThat(truncate(duration, ofDays(2))).isEqualTo(ofDays(6));
+    assertThat(truncate(duration, ofHours(2))).isEqualTo(ofDays(7).plusHours(2));
+    assertThat(truncate(duration, ofHours(1))).isEqualTo(ofDays(7).plusHours(3));
+    assertThat(truncate(duration, Duration.ofSeconds(10))).isEqualTo(ofDays(7).plusHours(3).plusSeconds(30));
+  }
+
+  @Test
+  @Owner(developers = GEORGE)
+  @Category(UnitTests.class)
+  public void testDurationTill() {
+    assertThat(durationTillDayTime(1606003200000L, ofHours(3))).hasMillis(ofHours(3).toMillis());
+    assertThat(durationTillDayTime(1606010400000L, ofHours(3))).hasMillis(ofHours(1).toMillis());
+    assertThat(durationTillDayTime(1606014000000L, ofHours(3))).hasMillis(0);
+    assertThat(durationTillDayTime(1606053600000L, ofHours(3))).hasMillis(ofHours(13).toMillis());
   }
 }

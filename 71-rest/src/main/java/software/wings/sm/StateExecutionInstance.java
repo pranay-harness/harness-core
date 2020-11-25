@@ -9,6 +9,7 @@ import io.harness.beans.ExecutionStatus;
 import io.harness.beans.OrchestrationWorkflowType;
 import io.harness.beans.WorkflowType;
 import io.harness.context.ContextElementType;
+import io.harness.dataretention.AccountDataRetentionEntity;
 import io.harness.delegate.beans.DelegateTaskDetails;
 import io.harness.interrupts.RepairActionCode;
 import io.harness.mongo.index.CdIndex;
@@ -71,8 +72,8 @@ import org.simpleframework.xml.Transient;
     })
 @Entity(value = "stateExecutionInstances", noClassnameStored = true)
 @HarnessEntity(exportable = false)
-public class StateExecutionInstance
-    implements PersistentEntity, UuidAware, CreatedAtAware, UpdatedAtAware, ApplicationAccess {
+public class StateExecutionInstance implements PersistentEntity, AccountDataRetentionEntity, UuidAware, CreatedAtAware,
+                                               UpdatedAtAware, ApplicationAccess {
   @Id private String uuid;
   @FdIndex protected String appId;
   @FdIndex private long createdAt;

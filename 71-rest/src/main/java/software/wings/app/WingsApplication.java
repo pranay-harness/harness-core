@@ -6,6 +6,7 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.lock.mongo.MongoPersistentLocker.LOCKS_STORE;
 import static io.harness.logging.LoggingInitializer.initializeLogging;
 import static io.harness.microservice.NotifyEngineTarget.GENERAL;
+import static io.harness.time.DurationUtils.durationTillDayTime;
 import static io.harness.waiter.OrchestrationNotifyEventListener.ORCHESTRATION;
 
 import static software.wings.beans.FeatureName.GLOBAL_DISABLE_HEALTH_CHECK;
@@ -16,6 +17,7 @@ import static software.wings.common.VerificationConstants.VERIFICATION_METRIC_LA
 
 import static com.google.common.collect.ImmutableMap.of;
 import static com.google.inject.matcher.Matchers.not;
+import static java.time.Duration.ofHours;
 import static java.time.Duration.ofSeconds;
 import static java.util.Arrays.asList;
 
@@ -34,6 +36,7 @@ import io.harness.config.WorkersConfiguration;
 import io.harness.configuration.DeployMode;
 import io.harness.cvng.client.CVNGClientModule;
 import io.harness.cvng.core.services.api.VerificationServiceSecretManager;
+import io.harness.dataretention.AccountDataRetentionEntity;
 import io.harness.delay.DelayEventListener;
 import io.harness.delegate.beans.DelegateAsyncTaskResponse;
 import io.harness.delegate.beans.DelegateSyncTaskResponse;
@@ -121,7 +124,10 @@ import io.harness.workers.background.iterator.InstanceSyncHandler;
 import io.harness.workers.background.iterator.SettingAttributeValidateConnectivityHandler;
 
 import software.wings.app.MainConfiguration.AssetsConfigurationMixin;
+import software.wings.beans.Activity;
+import software.wings.beans.Log;
 import software.wings.beans.User;
+import software.wings.beans.WorkflowExecution;
 import software.wings.beans.alert.AlertReconciliationHandler;
 import software.wings.collect.ArtifactCollectEventListener;
 import software.wings.core.managerConfiguration.ConfigurationController;
@@ -188,6 +194,7 @@ import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.ApplicationManifestService;
 import software.wings.service.intfc.ArtifactStreamService;
 import software.wings.service.intfc.AuditService;
+import software.wings.service.intfc.DataStoreService;
 import software.wings.service.intfc.DelegateProfileService;
 import software.wings.service.intfc.DelegateService;
 import software.wings.service.intfc.FeatureFlagService;
@@ -198,6 +205,7 @@ import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.service.intfc.WorkflowService;
 import software.wings.service.intfc.yaml.YamlPushService;
+import software.wings.sm.StateExecutionInstance;
 import software.wings.sm.StateMachineExecutor;
 import software.wings.yaml.gitSync.GitChangeSetRunnable;
 import software.wings.yaml.gitSync.GitSyncEntitiesExpiryHandler;
@@ -778,6 +786,9 @@ public class WingsApplication extends Application<MainConfiguration> {
 
   private void scheduleJobs(Injector injector, MainConfiguration configuration) {
     log.info("Initializing scheduled jobs...");
+    ScheduledExecutorService taskPollExecutor =
+        injector.getInstance(Key.get(ScheduledExecutorService.class, Names.named("taskPollExecutor")));
+
     injector.getInstance(NotifierScheduledExecutorService.class)
         .scheduleWithFixedDelay(
             injector.getInstance(NotifyResponseCleaner.class), random.nextInt(300), 300L, TimeUnit.SECONDS);
@@ -786,26 +797,37 @@ public class WingsApplication extends Application<MainConfiguration> {
     injector.getInstance(Key.get(ScheduledExecutorService.class, Names.named("gitChangeSet")))
         .scheduleWithFixedDelay(
             injector.getInstance(GitChangeSetRunnable.class), random.nextInt(4), 4L, TimeUnit.SECONDS);
-    injector.getInstance(Key.get(ScheduledExecutorService.class, Names.named("taskPollExecutor")))
-        .scheduleWithFixedDelay(injector.getInstance(DelegateSyncServiceImpl.class), 0L, 2L, TimeUnit.SECONDS);
+    taskPollExecutor.scheduleWithFixedDelay(
+        injector.getInstance(DelegateSyncServiceImpl.class), 0L, 2L, TimeUnit.SECONDS);
     if (configuration.getDistributedLockImplementation() == DistributedLockImplementation.MONGO) {
-      injector.getInstance(Key.get(ScheduledExecutorService.class, Names.named("taskPollExecutor")))
-          .scheduleWithFixedDelay(
-              injector.getInstance(PersistentLockCleanup.class), random.nextInt(60), 60L, TimeUnit.MINUTES);
+      taskPollExecutor.scheduleWithFixedDelay(
+          injector.getInstance(PersistentLockCleanup.class), random.nextInt(60), 60L, TimeUnit.MINUTES);
     }
     injector.getInstance(DeploymentReconExecutorService.class)
         .scheduleWithFixedDelay(
             injector.getInstance(DeploymentReconTask.class), random.nextInt(60), 15 * 60L, TimeUnit.SECONDS);
 
-    injector.getInstance(Key.get(ScheduledExecutorService.class, Names.named("taskPollExecutor")))
-        .scheduleWithFixedDelay(()
-                                    -> injector.getInstance(PerpetualTaskServiceImpl.class).broadcastToDelegate(),
-            0L, 10L, TimeUnit.SECONDS);
+    taskPollExecutor.scheduleWithFixedDelay(
+        () -> injector.getInstance(PerpetualTaskServiceImpl.class).broadcastToDelegate(), 0L, 10L, TimeUnit.SECONDS);
 
-    injector.getInstance(Key.get(ScheduledExecutorService.class, Names.named("taskPollExecutor")))
-        .scheduleWithFixedDelay(new Schedulable("Failed updating delegate connection disconnected flag to true",
-                                    injector.getInstance(PollingModeDelegateDisconnectedDetector.class)),
-            0L, 60L, TimeUnit.SECONDS);
+    taskPollExecutor.scheduleWithFixedDelay(
+        new Schedulable("Failed updating delegate connection disconnected flag to true",
+            injector.getInstance(PollingModeDelegateDisconnectedDetector.class)),
+        0L, 60L, TimeUnit.SECONDS);
+
+    ImmutableList<Class<? extends AccountDataRetentionEntity>> classes =
+        ImmutableList.<Class<? extends AccountDataRetentionEntity>>builder()
+            .add(WorkflowExecution.class)
+            .add(StateExecutionInstance.class)
+            .add(Activity.class)
+            .add(Log.class)
+            .build();
+
+    taskPollExecutor.scheduleWithFixedDelay(
+        new Schedulable("Failed ensure data retention",
+            () -> { injector.getInstance(AccountService.class).ensureDataRetention(classes); }),
+        durationTillDayTime(System.currentTimeMillis(), ofHours(10)).toMillis(), ofHours(24).toMillis(),
+        TimeUnit.MILLISECONDS);
   }
 
   public static void registerObservers(Injector injector) {
@@ -944,6 +966,8 @@ public class WingsApplication extends Application<MainConfiguration> {
       QuartzCleaner.cleanup(datastore, "quartz");
       QuartzCleaner.cleanup(datastore, "quartz_verification");
     }).start();
+
+    injector.getInstance(DataStoreService.class).purgeOlderRecords();
   }
 
   private void registerJerseyProviders(Environment environment, Injector injector) {
