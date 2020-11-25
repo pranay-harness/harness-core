@@ -32,8 +32,8 @@ public class K8sClusterConfigFactory {
   public K8sClusterConfig getK8sClusterConfig(String clusterId) {
     ClusterRecord clusterRecord = clusterRecordService.get(clusterId);
     SettingAttribute settingAttribute = settingsService.get(clusterRecord.getCluster().getCloudProviderId());
-    List<EncryptedDataDetail> encryptionDetails =
-        secretManager.getEncryptionDetails((EncryptableSetting) settingAttribute.getValue());
+    EncryptableSetting encryptableSetting = (EncryptableSetting) settingAttribute.getValue();
+    List<EncryptedDataDetail> encryptionDetails = secretManager.getEncryptionDetails(encryptableSetting);
     KubernetesCluster kubernetesCluster = (KubernetesCluster) clusterRecord.getCluster();
     return kubernetesCluster.toK8sClusterConfig(settingAttribute.getValue(), encryptionDetails);
   }
