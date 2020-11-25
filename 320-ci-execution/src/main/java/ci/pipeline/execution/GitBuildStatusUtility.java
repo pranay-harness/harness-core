@@ -1,6 +1,5 @@
 package ci.pipeline.execution;
 
-import io.harness.ambiance.Ambiance;
 import io.harness.beans.DelegateTaskRequest;
 import io.harness.beans.stages.IntegrationStageStepParameters;
 import io.harness.delegate.beans.ci.pod.ConnectorDetails;
@@ -12,6 +11,7 @@ import io.harness.ng.core.NGAccess;
 import io.harness.ngpipeline.common.AmbianceHelper;
 import io.harness.ngpipeline.status.BuildStatusUpdateParameter;
 import io.harness.plancreators.IntegrationStagePlanCreator;
+import io.harness.pms.ambiance.Ambiance;
 import io.harness.pms.execution.Status;
 import io.harness.serializer.JsonUtils;
 import io.harness.service.DelegateGrpcClientWrapper;

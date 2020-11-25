@@ -22,7 +22,6 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static java.util.Collections.singletonList;
 import static java.util.stream.Collectors.toList;
 
-import io.harness.ambiance.Ambiance;
 import io.harness.beans.environment.K8BuildJobEnvInfo;
 import io.harness.beans.environment.pod.PodSetupInfo;
 import io.harness.beans.environment.pod.container.ContainerDefinitionInfo;
@@ -57,6 +56,7 @@ import io.harness.exception.WingsException;
 import io.harness.logserviceclient.CILogServiceUtils;
 import io.harness.ng.core.NGAccess;
 import io.harness.ngpipeline.common.AmbianceHelper;
+import io.harness.pms.ambiance.Ambiance;
 import io.harness.product.ci.engine.proto.Execution;
 import io.harness.refObjects.RefObjectUtil;
 import io.harness.stateutils.buildstate.providers.InternalContainerParamsProvider;

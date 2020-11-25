@@ -8,12 +8,12 @@ import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.when;
 
 import io.harness.OrchestrationTestBase;
-import io.harness.ambiance.Ambiance;
 import io.harness.category.element.UnitTests;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.engine.executions.plan.PlanExecutionService;
 import io.harness.engine.expressions.AmbianceExpressionEvaluator;
 import io.harness.expression.field.dummy.DummyOrchestrationField;
+import io.harness.pms.ambiance.Ambiance;
 import io.harness.rule.Owner;
 
 import com.google.common.collect.ImmutableList;
@@ -195,7 +195,7 @@ public class AmbianceExpressionEvaluatorTest extends OrchestrationTestBase {
 
   public static class SampleEngineExpressionEvaluator extends AmbianceExpressionEvaluator {
     public SampleEngineExpressionEvaluator() {
-      super(null, Ambiance.builder().build(), null, false);
+      super(null, Ambiance.newBuilder().build(), null, false);
     }
 
     @Override

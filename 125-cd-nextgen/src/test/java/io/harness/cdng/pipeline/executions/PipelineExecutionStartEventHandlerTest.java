@@ -8,7 +8,6 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import io.harness.CategoryTest;
-import io.harness.ambiance.Ambiance;
 import io.harness.category.element.UnitTests;
 import io.harness.cdng.pipeline.beans.CDPipelineSetupParameters;
 import io.harness.cdng.pipeline.executions.service.NgPipelineExecutionService;
@@ -20,6 +19,7 @@ import io.harness.executionplan.plancreator.beans.StepOutcomeGroup;
 import io.harness.ngpipeline.pipeline.beans.yaml.NgPipeline;
 import io.harness.plan.Plan;
 import io.harness.plan.PlanNode;
+import io.harness.pms.ambiance.Ambiance;
 import io.harness.pms.ambiance.Level;
 import io.harness.rule.Owner;
 
@@ -50,11 +50,11 @@ public class PipelineExecutionStartEventHandlerTest extends CategoryTest {
   public void testHandleEvent() {
     OrchestrationEvent orchestrationEvent =
         OrchestrationEvent.builder()
-            .ambiance(Ambiance.builder()
-                          .setupAbstractions(Maps.of("accountId", "accountId", "projectIdentifier", "projectIdentfier",
-                              "orgIdentifier", "orgIdentifier"))
-                          .levels(Lists.newArrayList(Level.newBuilder().setRuntimeId("node1").build()))
-                          .planExecutionId("executionId")
+            .ambiance(Ambiance.newBuilder()
+                          .putAllSetupAbstractions(Maps.of("accountId", "accountId", "projectIdentifier",
+                              "projectIdentfier", "orgIdentifier", "orgIdentifier"))
+                          .addAllLevels(Lists.newArrayList(Level.newBuilder().setRuntimeId("node1").build()))
+                          .setPlanExecutionId("executionId")
                           .build())
             .build();
     PlanNode planNode =
@@ -80,11 +80,11 @@ public class PipelineExecutionStartEventHandlerTest extends CategoryTest {
   public void testHandleEventStagesGroup() {
     OrchestrationEvent orchestrationEvent =
         OrchestrationEvent.builder()
-            .ambiance(Ambiance.builder()
-                          .setupAbstractions(Maps.of("accountId", "accountId", "projectIdentifier", "projectIdentfier",
-                              "orgIdentifier", "orgIdentifier"))
-                          .levels(Lists.newArrayList(Level.newBuilder().setRuntimeId("node1").build()))
-                          .planExecutionId("executionId")
+            .ambiance(Ambiance.newBuilder()
+                          .putAllSetupAbstractions(Maps.of("accountId", "accountId", "projectIdentifier",
+                              "projectIdentfier", "orgIdentifier", "orgIdentifier"))
+                          .addAllLevels(Lists.newArrayList(Level.newBuilder().setRuntimeId("node1").build()))
+                          .setPlanExecutionId("executionId")
                           .build())
             .build();
     PlanNode planNode =
@@ -107,11 +107,11 @@ public class PipelineExecutionStartEventHandlerTest extends CategoryTest {
   public void testHandleEventNullGroup() {
     OrchestrationEvent orchestrationEvent =
         OrchestrationEvent.builder()
-            .ambiance(Ambiance.builder()
-                          .setupAbstractions(Maps.of("accountId", "accountId", "projectIdentifier", "projectIdentfier",
-                              "orgIdentifier", "orgIdentifier"))
-                          .levels(Lists.newArrayList(Level.newBuilder().setRuntimeId("node1").build()))
-                          .planExecutionId("executionId")
+            .ambiance(Ambiance.newBuilder()
+                          .putAllSetupAbstractions(Maps.of("accountId", "accountId", "projectIdentifier",
+                              "projectIdentfier", "orgIdentifier", "orgIdentifier"))
+                          .addAllLevels(Lists.newArrayList(Level.newBuilder().setRuntimeId("node1").build()))
+                          .setPlanExecutionId("executionId")
                           .build())
             .build();
     PlanNode planNode =

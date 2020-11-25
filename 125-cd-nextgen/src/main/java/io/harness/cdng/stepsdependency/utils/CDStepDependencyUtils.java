@@ -1,6 +1,5 @@
 package io.harness.cdng.stepsdependency.utils;
 
-import io.harness.ambiance.Ambiance;
 import io.harness.cdng.executionplan.CDStepDependencyKey;
 import io.harness.cdng.infra.beans.InfrastructureOutcome;
 import io.harness.cdng.k8s.K8sRollingOutcome;
@@ -13,6 +12,7 @@ import io.harness.executionplan.stepsdependency.StepDependencyService;
 import io.harness.executionplan.stepsdependency.StepDependencySpec;
 import io.harness.executionplan.stepsdependency.resolvers.StepDependencyResolverContextImpl;
 import io.harness.executionplan.utils.ParentPathInfoUtils;
+import io.harness.pms.ambiance.Ambiance;
 import io.harness.state.io.ResolvedRefInput;
 import io.harness.state.io.StepInputPackage;
 import io.harness.state.io.StepParameters;

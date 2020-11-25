@@ -5,10 +5,10 @@ import static io.harness.rule.OwnerRule.PRASHANT;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.OrchestrationTestBase;
-import io.harness.ambiance.Ambiance;
 import io.harness.category.element.UnitTests;
 import io.harness.facilitator.DefaultFacilitatorParams;
 import io.harness.facilitator.FacilitatorResponse;
+import io.harness.pms.ambiance.Ambiance;
 import io.harness.pms.execution.ExecutionMode;
 import io.harness.rule.Owner;
 import io.harness.serializer.KryoSerializer;
@@ -26,7 +26,7 @@ public class SyncFacilitatorTest extends OrchestrationTestBase {
   @Owner(developers = PRASHANT)
   @Category(UnitTests.class)
   public void shouldTestFacilitate() {
-    Ambiance ambiance = Ambiance.builder().build();
+    Ambiance ambiance = Ambiance.newBuilder().build();
     byte[] parameters = kryoSerializer.asBytes(DefaultFacilitatorParams.builder().build());
     FacilitatorResponse response = syncFacilitator.facilitate(ambiance, null, parameters, null);
     assertThat(response).isNotNull();

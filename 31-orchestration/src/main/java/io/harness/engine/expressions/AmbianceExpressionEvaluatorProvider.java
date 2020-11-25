@@ -2,11 +2,11 @@ package io.harness.engine.expressions;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 
-import io.harness.ambiance.Ambiance;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.engine.expressions.functors.NodeExecutionEntityType;
 import io.harness.expression.EngineExpressionEvaluator;
 import io.harness.expression.VariableResolverTracker;
+import io.harness.pms.ambiance.Ambiance;
 
 import java.util.Set;
 

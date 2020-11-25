@@ -4,17 +4,16 @@ import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 
+import io.harness.AmbianceUtils;
 import io.harness.LevelUtils;
-import io.harness.ambiance.Ambiance;
-import io.harness.ambiance.AmbianceUtils;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.engine.ExecutionEngineDispatcher;
 import io.harness.engine.OrchestrationEngine;
 import io.harness.engine.executions.node.NodeExecutionService;
 import io.harness.execution.NodeExecution;
 import io.harness.plan.PlanNode;
+import io.harness.pms.ambiance.Ambiance;
 import io.harness.pms.execution.Status;
-import io.harness.serializer.KryoSerializer;
 import io.harness.state.io.StepParameters;
 
 import com.google.common.base.Preconditions;
@@ -31,15 +30,13 @@ public class RetryHelper {
   @Inject private NodeExecutionService nodeExecutionService;
   @Inject private OrchestrationEngine engine;
   @Inject @Named("EngineExecutorService") private ExecutorService executorService;
-  @Inject private AmbianceUtils ambianceUtils;
-  @Inject private KryoSerializer kryoSerializer;
 
   public void retryNodeExecution(String nodeExecutionId, StepParameters parameters) {
     NodeExecution nodeExecution = Preconditions.checkNotNull(nodeExecutionService.get(nodeExecutionId));
     PlanNode node = nodeExecution.getNode();
     String newUuid = generateUuid();
-    Ambiance ambiance = ambianceUtils.cloneForFinish(nodeExecution.getAmbiance());
-    ambiance.addLevel(LevelUtils.buildLevelFromPlanNode(newUuid, node));
+    Ambiance ambiance = AmbianceUtils.cloneForFinish(nodeExecution.getAmbiance());
+    ambiance = ambiance.toBuilder().addLevels(LevelUtils.buildLevelFromPlanNode(newUuid, node)).build();
     NodeExecution newNodeExecution = cloneForRetry(nodeExecution, parameters, newUuid, ambiance);
     NodeExecution savedNodeExecution = nodeExecutionService.save(newNodeExecution);
     nodeExecutionService.updateRelationShipsForRetryNode(nodeExecution.getUuid(), savedNodeExecution.getUuid());

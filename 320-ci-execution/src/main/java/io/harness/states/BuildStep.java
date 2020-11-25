@@ -7,7 +7,6 @@ import static io.harness.common.CICommonPodConstants.REL_STDOUT_FILE_PATH;
 
 import static java.util.stream.Collectors.toList;
 
-import io.harness.ambiance.Ambiance;
 import io.harness.beans.DelegateTaskRequest;
 import io.harness.beans.script.ScriptInfo;
 import io.harness.beans.steps.stepinfo.BuildStepInfo;
@@ -24,6 +23,7 @@ import io.harness.facilitator.modes.sync.SyncExecutable;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.ng.core.NGAccess;
 import io.harness.ngpipeline.common.AmbianceHelper;
+import io.harness.pms.ambiance.Ambiance;
 import io.harness.pms.execution.Status;
 import io.harness.pms.steps.StepType;
 import io.harness.refObjects.RefObjectUtil;
@@ -91,7 +91,7 @@ public class BuildStep implements SyncExecutable<BuildStepInfo> {
 
       DelegateTaskRequest delegateTaskRequest = DelegateTaskRequest.builder()
                                                     .accountId(ngAccess.getAccountIdentifier())
-                                                    .taskSetupAbstractions(ambiance.getSetupAbstractions())
+                                                    .taskSetupAbstractions(ambiance.getSetupAbstractionsMap())
                                                     .executionTimeout(Duration.ofSeconds(buildStepInfo.getTimeout()))
                                                     .taskType(TASK_TYPE)
                                                     .taskParameters(k8ExecuteCommandTaskParams)

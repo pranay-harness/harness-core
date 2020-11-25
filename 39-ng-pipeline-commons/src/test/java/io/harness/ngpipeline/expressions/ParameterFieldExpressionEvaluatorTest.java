@@ -7,12 +7,12 @@ import static org.joor.Reflect.on;
 import static org.mockito.Mockito.when;
 
 import io.harness.NGPipelineTestBase;
-import io.harness.ambiance.Ambiance;
 import io.harness.beans.ParameterField;
 import io.harness.category.element.UnitTests;
 import io.harness.engine.executions.plan.PlanExecutionService;
 import io.harness.engine.expressions.AmbianceExpressionEvaluator;
 import io.harness.expression.EngineExpressionEvaluator;
+import io.harness.pms.ambiance.Ambiance;
 import io.harness.registries.field.OrchestrationFieldRegistry;
 import io.harness.rule.Owner;
 import io.harness.serializer.jackson.NGHarnessJacksonModule;
@@ -127,7 +127,7 @@ public class ParameterFieldExpressionEvaluatorTest extends NGPipelineTestBase {
     Map<String, Object> contextMap;
 
     SampleEngineExpressionEvaluator(Map<String, Object> contextMap) {
-      super(null, Ambiance.builder().planExecutionId("PLAN_ID").build(), null, false);
+      super(null, Ambiance.newBuilder().setPlanExecutionId("PLAN_ID").build(), null, false);
       this.contextMap = contextMap;
     }
 

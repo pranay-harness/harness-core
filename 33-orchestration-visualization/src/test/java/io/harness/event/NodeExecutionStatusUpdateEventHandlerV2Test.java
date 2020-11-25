@@ -11,7 +11,6 @@ import static org.mockito.Mockito.verify;
 
 import io.harness.LevelUtils;
 import io.harness.OrchestrationVisualizationTestBase;
-import io.harness.ambiance.Ambiance;
 import io.harness.beans.GraphVertex;
 import io.harness.beans.OrchestrationGraph;
 import io.harness.beans.internal.EdgeListInternal;
@@ -25,6 +24,7 @@ import io.harness.execution.NodeExecution;
 import io.harness.execution.PlanExecution;
 import io.harness.execution.events.OrchestrationEvent;
 import io.harness.plan.PlanNode;
+import io.harness.pms.ambiance.Ambiance;
 import io.harness.pms.ambiance.Level;
 import io.harness.pms.execution.ExecutionMode;
 import io.harness.pms.execution.Status;
@@ -70,9 +70,9 @@ public class NodeExecutionStatusUpdateEventHandlerV2Test extends OrchestrationVi
   public void shouldDoNothingIfRuntimeIdIsNull() {
     String planExecutionId = generateUuid();
     OrchestrationEvent event = OrchestrationEvent.builder()
-                                   .ambiance(Ambiance.builder()
-                                                 .planExecutionId(planExecutionId)
-                                                 .levels(Collections.singletonList(Level.newBuilder().build()))
+                                   .ambiance(Ambiance.newBuilder()
+                                                 .setPlanExecutionId(planExecutionId)
+                                                 .addAllLevels(Collections.singletonList(Level.newBuilder().build()))
                                                  .build())
                                    .eventType(NODE_EXECUTION_STATUS_UPDATE)
                                    .build();
@@ -94,7 +94,7 @@ public class NodeExecutionStatusUpdateEventHandlerV2Test extends OrchestrationVi
     // creating NodeExecution
     NodeExecution dummyStart = NodeExecution.builder()
                                    .uuid(generateUuid())
-                                   .ambiance(Ambiance.builder().planExecutionId(planExecution.getUuid()).build())
+                                   .ambiance(Ambiance.newBuilder().setPlanExecutionId(planExecution.getUuid()).build())
                                    .mode(ExecutionMode.SYNC)
                                    .node(PlanNode.builder()
                                              .uuid(generateUuid())
@@ -123,15 +123,14 @@ public class NodeExecutionStatusUpdateEventHandlerV2Test extends OrchestrationVi
     mongoStore.upsert(cachedGraph, Duration.ofDays(10));
 
     // creating event
-    OrchestrationEvent event =
-        OrchestrationEvent.builder()
-            .ambiance(
-                Ambiance.builder()
-                    .planExecutionId(planExecution.getUuid())
-                    .levels(Collections.singletonList(Level.newBuilder().setRuntimeId(dummyStart.getUuid()).build()))
-                    .build())
-            .eventType(NODE_EXECUTION_STATUS_UPDATE)
-            .build();
+    OrchestrationEvent event = OrchestrationEvent.builder()
+                                   .ambiance(Ambiance.newBuilder()
+                                                 .setPlanExecutionId(planExecution.getUuid())
+                                                 .addAllLevels(Collections.singletonList(
+                                                     Level.newBuilder().setRuntimeId(dummyStart.getUuid()).build()))
+                                                 .build())
+                                   .eventType(NODE_EXECUTION_STATUS_UPDATE)
+                                   .build();
     eventHandlerV2.handleEvent(event);
 
     Awaitility.await().atMost(2, TimeUnit.SECONDS).pollInterval(500, TimeUnit.MILLISECONDS).until(() -> {
@@ -164,7 +163,7 @@ public class NodeExecutionStatusUpdateEventHandlerV2Test extends OrchestrationVi
     // creating NodeExecution
     NodeExecution dummyStart = NodeExecution.builder()
                                    .uuid(generateUuid())
-                                   .ambiance(Ambiance.builder().planExecutionId(planExecution.getUuid()).build())
+                                   .ambiance(Ambiance.newBuilder().setPlanExecutionId(planExecution.getUuid()).build())
                                    .mode(ExecutionMode.SYNC)
                                    .status(SUCCEEDED)
                                    .node(PlanNode.builder()
@@ -209,15 +208,14 @@ public class NodeExecutionStatusUpdateEventHandlerV2Test extends OrchestrationVi
     mongoTemplate.insert(outcome);
 
     // creating event
-    OrchestrationEvent event =
-        OrchestrationEvent.builder()
-            .ambiance(
-                Ambiance.builder()
-                    .planExecutionId(planExecution.getUuid())
-                    .levels(Collections.singletonList(Level.newBuilder().setRuntimeId(dummyStart.getUuid()).build()))
-                    .build())
-            .eventType(NODE_EXECUTION_STATUS_UPDATE)
-            .build();
+    OrchestrationEvent event = OrchestrationEvent.builder()
+                                   .ambiance(Ambiance.newBuilder()
+                                                 .setPlanExecutionId(planExecution.getUuid())
+                                                 .addAllLevels(Collections.singletonList(
+                                                     Level.newBuilder().setRuntimeId(dummyStart.getUuid()).build()))
+                                                 .build())
+                                   .eventType(NODE_EXECUTION_STATUS_UPDATE)
+                                   .build();
     eventHandlerV2.handleEvent(event);
 
     Awaitility.await().atMost(2, TimeUnit.SECONDS).pollInterval(500, TimeUnit.MILLISECONDS).until(() -> {

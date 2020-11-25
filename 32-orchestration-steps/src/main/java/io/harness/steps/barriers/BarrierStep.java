@@ -3,16 +3,16 @@ package io.harness.steps.barriers;
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.distribution.barrier.Barrier.State.DOWN;
 
-import io.harness.ambiance.Ambiance;
+import io.harness.AmbianceUtils;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.facilitator.PassThroughData;
 import io.harness.facilitator.modes.async.AsyncExecutable;
 import io.harness.facilitator.modes.async.AsyncExecutableResponse;
 import io.harness.facilitator.modes.sync.SyncExecutable;
+import io.harness.pms.ambiance.Ambiance;
 import io.harness.pms.execution.Status;
 import io.harness.pms.steps.StepType;
 import io.harness.springdata.HMongoTemplate;
-import io.harness.state.Step;
 import io.harness.state.io.FailureInfo;
 import io.harness.state.io.StepInputPackage;
 import io.harness.state.io.StepResponse;
@@ -49,7 +49,7 @@ public class BarrierStep implements SyncExecutable<BarrierStepParameters>, Async
     log.warn("There is only one barrier present for planExecution [{}] with [{}] identifier, passing through it...",
         ambiance.getPlanExecutionId(), identifier);
     BarrierExecutionInstance barrierExecutionInstance =
-        barrierService.findByPlanNodeId(ambiance.obtainCurrentLevel().getSetupId());
+        barrierService.findByPlanNodeId(AmbianceUtils.obtainCurrentSetupId(ambiance));
     barrierExecutionInstance.setBarrierState(DOWN);
     HMongoTemplate.retry(() -> barrierService.save(barrierExecutionInstance));
     return StepResponse.builder()
@@ -69,11 +69,11 @@ public class BarrierStep implements SyncExecutable<BarrierStepParameters>, Async
   public AsyncExecutableResponse executeAsync(
       Ambiance ambiance, BarrierStepParameters barrierStepParameters, StepInputPackage inputPackage) {
     BarrierExecutionInstance barrierExecutionInstance =
-        barrierService.findByPlanNodeId(ambiance.obtainCurrentLevel().getSetupId());
+        barrierService.findByPlanNodeId(AmbianceUtils.obtainCurrentSetupId(ambiance));
 
     log.info(
         "Barrier Step getting executed. RuntimeId: [{}], barrierUuid [{}], barrierIdentifier [{}], barrierGroupId [{}]",
-        ambiance.obtainCurrentLevel().getRuntimeId(), barrierExecutionInstance.getUuid(),
+        AmbianceUtils.obtainCurrentRuntimeId(ambiance), barrierExecutionInstance.getUuid(),
         barrierStepParameters.getIdentifier(), barrierExecutionInstance.getBarrierGroupId());
 
     barrierService.update(barrierExecutionInstance);
@@ -86,7 +86,7 @@ public class BarrierStep implements SyncExecutable<BarrierStepParameters>, Async
       Ambiance ambiance, BarrierStepParameters barrierStepParameters, Map<String, ResponseData> responseDataMap) {
     // if barrier is still in STANDING => update barrier state
     BarrierExecutionInstance barrierExecutionInstance =
-        updateBarrierExecutionInstance(ambiance.obtainCurrentLevel().getSetupId());
+        updateBarrierExecutionInstance(AmbianceUtils.obtainCurrentSetupId(ambiance));
 
     StepResponseBuilder stepResponseBuilder = StepResponse.builder();
     BarrierResponseData responseData =
@@ -109,7 +109,7 @@ public class BarrierStep implements SyncExecutable<BarrierStepParameters>, Async
   @Override
   public void handleAbort(
       Ambiance ambiance, BarrierStepParameters stateParameters, AsyncExecutableResponse executableResponse) {
-    updateBarrierExecutionInstance(ambiance.obtainCurrentLevel().getSetupId());
+    updateBarrierExecutionInstance(AmbianceUtils.obtainCurrentSetupId(ambiance));
   }
 
   private BarrierExecutionInstance updateBarrierExecutionInstance(String planNodeId) {

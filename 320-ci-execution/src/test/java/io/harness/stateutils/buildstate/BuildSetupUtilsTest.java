@@ -12,7 +12,6 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.mockito.internal.verification.VerificationModeFactory.times;
 
-import io.harness.ambiance.Ambiance;
 import io.harness.beans.sweepingoutputs.K8PodDetails;
 import io.harness.category.element.UnitTests;
 import io.harness.ci.beans.entities.BuildNumberDetails;
@@ -26,6 +25,7 @@ import io.harness.executionplan.CIExecutionPlanTestHelper;
 import io.harness.executionplan.CIExecutionTest;
 import io.harness.logserviceclient.CILogServiceUtils;
 import io.harness.ng.core.dto.ResponseDTO;
+import io.harness.pms.ambiance.Ambiance;
 import io.harness.rule.Owner;
 
 import com.google.inject.Inject;
@@ -44,7 +44,6 @@ public class BuildSetupUtilsTest extends CIExecutionTest {
   @Mock private ConnectorUtils connectorUtils;
   @Mock private SecretVariableUtils secretVariableUtils;
   @Mock private EngineExpressionService engineExpressionService;
-  @Mock private Ambiance ambiance;
   @Mock private ExecutionSweepingOutputService executionSweepingOutputResolver;
   @Mock CILogServiceUtils logServiceUtils;
 
@@ -63,6 +62,7 @@ public class BuildSetupUtilsTest extends CIExecutionTest {
   @Owner(developers = HARSH)
   @Category(UnitTests.class)
   public void shouldFetBuildSetupTaskParams() throws Exception {
+    Ambiance ambiance = Ambiance.newBuilder().build();
     BuildNumberDetails buildNumberDetails = BuildNumberDetails.builder().buildNumber(1L).build();
     Call<ResponseDTO<Optional<ConnectorDTO>>> connectorRequest = mock(Call.class);
     when(connectorRequest.execute())

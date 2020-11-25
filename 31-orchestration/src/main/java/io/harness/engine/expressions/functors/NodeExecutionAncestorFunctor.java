@@ -2,13 +2,14 @@ package io.harness.engine.expressions.functors;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 
-import io.harness.ambiance.Ambiance;
+import io.harness.AmbianceUtils;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.engine.expressions.NodeExecutionsCache;
 import io.harness.engine.outcomes.OutcomeService;
 import io.harness.engine.outputs.ExecutionSweepingOutputService;
 import io.harness.execution.NodeExecution;
 import io.harness.expression.LateBindingMap;
+import io.harness.pms.ambiance.Ambiance;
 
 import java.util.Map;
 import java.util.Set;
@@ -52,7 +53,7 @@ public class NodeExecutionAncestorFunctor extends LateBindingMap {
       return findStartNodeExecutionByGroup(groupAliases.get(key));
     }
 
-    String nodeExecutionId = ambiance.obtainCurrentRuntimeId();
+    String nodeExecutionId = AmbianceUtils.obtainCurrentRuntimeId(ambiance);
     if (nodeExecutionId == null) {
       return null;
     }
@@ -68,7 +69,7 @@ public class NodeExecutionAncestorFunctor extends LateBindingMap {
   }
 
   private NodeExecution findStartNodeExecutionByGroup(String groupName) {
-    String nodeExecutionId = ambiance.obtainCurrentRuntimeId();
+    String nodeExecutionId = AmbianceUtils.obtainCurrentRuntimeId(ambiance);
     if (nodeExecutionId == null) {
       return null;
     }

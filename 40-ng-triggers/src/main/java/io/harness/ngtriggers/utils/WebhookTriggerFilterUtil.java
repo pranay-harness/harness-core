@@ -2,12 +2,7 @@ package io.harness.ngtriggers.utils;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 
-import io.harness.ambiance.Ambiance;
-import io.harness.engine.expressions.AmbianceExpressionEvaluator;
-import io.harness.exception.InvalidRequestException;
 import io.harness.expression.ExpressionEvaluator;
-import io.harness.expression.JsonFunctor;
-import io.harness.ngpipeline.common.AmbianceHelper;
 import io.harness.ngtriggers.beans.scm.WebhookBaseAttributes;
 import io.harness.ngtriggers.beans.scm.WebhookPayloadData;
 import io.harness.ngtriggers.beans.source.webhook.WebhookAction;
@@ -16,10 +11,9 @@ import io.harness.ngtriggers.beans.source.webhook.WebhookPayloadCondition;
 import io.harness.ngtriggers.beans.source.webhook.WebhookTriggerSpec;
 import io.harness.ngtriggers.conditionchecker.ConditionEvaluator;
 import io.harness.ngtriggers.functor.EventPayloadFunctor;
-import io.harness.yaml.utils.JsonPipelineUtils;
+import io.harness.pms.ambiance.Ambiance;
 
 import com.google.common.annotations.VisibleForTesting;
-import java.io.IOException;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -117,7 +111,7 @@ public class WebhookTriggerFilterUtil {
   @VisibleForTesting
   Map<String, Object> generateContext(String payload) {
     EventPayloadFunctor eventPayloadFunctor = new EventPayloadFunctor(
-        Ambiance.builder().setupAbstractions(Collections.singletonMap("eventPayload", payload)).build());
+        Ambiance.newBuilder().putAllSetupAbstractions(Collections.singletonMap("eventPayload", payload)).build());
 
     Map<String, Object> context = new HashMap<>();
     context.put("eventPayload", eventPayloadFunctor);

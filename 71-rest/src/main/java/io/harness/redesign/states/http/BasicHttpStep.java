@@ -4,7 +4,6 @@ import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.delegate.beans.TaskData.DEFAULT_ASYNC_CALL_TIMEOUT;
 
-import io.harness.ambiance.Ambiance;
 import io.harness.annotations.Redesign;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.DelegateTask;
@@ -13,6 +12,7 @@ import io.harness.delegate.beans.ErrorNotifyResponseData;
 import io.harness.delegate.beans.TaskData;
 import io.harness.delegate.task.http.HttpTaskParameters;
 import io.harness.facilitator.modes.task.TaskExecutable;
+import io.harness.pms.ambiance.Ambiance;
 import io.harness.pms.execution.Status;
 import io.harness.pms.steps.StepType;
 import io.harness.state.io.FailureInfo;
@@ -56,7 +56,7 @@ public class BasicHttpStep implements TaskExecutable<BasicHttpStepParameters> {
     String waitId = generateUuid();
     DelegateTaskBuilder delegateTaskBuilder =
         DelegateTask.builder()
-            .accountId(ambiance.getSetupAbstractions().get("accountId"))
+            .accountId(ambiance.getSetupAbstractionsMap().get("accountId"))
             .waitId(waitId)
             .data(TaskData.builder()
                       .taskType(TaskType.HTTP.name())
@@ -64,7 +64,7 @@ public class BasicHttpStep implements TaskExecutable<BasicHttpStepParameters> {
                       .timeout(DEFAULT_ASYNC_CALL_TIMEOUT)
                       .build())
             .setupAbstraction(Cd1SetupFields.INFRASTRUCTURE_MAPPING_ID_FIELD, waitId);
-    String appId = ambiance.getSetupAbstractions().get("appId");
+    String appId = ambiance.getSetupAbstractionsMap().get("appId");
     if (appId != null) {
       delegateTaskBuilder.setupAbstraction(Cd1SetupFields.APP_ID_FIELD, appId);
     }

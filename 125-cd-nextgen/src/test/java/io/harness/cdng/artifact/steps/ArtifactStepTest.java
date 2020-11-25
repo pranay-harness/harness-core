@@ -7,7 +7,6 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.when;
 
 import io.harness.CategoryTest;
-import io.harness.ambiance.Ambiance;
 import io.harness.beans.ParameterField;
 import io.harness.category.element.UnitTests;
 import io.harness.cdng.artifact.bean.ArtifactConfig;
@@ -24,6 +23,7 @@ import io.harness.delegate.task.artifacts.request.ArtifactTaskParameters;
 import io.harness.delegate.task.artifacts.response.ArtifactTaskExecutionResponse;
 import io.harness.delegate.task.artifacts.response.ArtifactTaskResponse;
 import io.harness.logging.CommandExecutionStatus;
+import io.harness.pms.ambiance.Ambiance;
 import io.harness.rule.Owner;
 import io.harness.state.io.StepResponse.StepOutcome;
 import io.harness.tasks.ResponseData;
@@ -31,13 +31,13 @@ import io.harness.tasks.Task;
 
 import software.wings.beans.TaskType;
 
+import com.google.common.collect.ImmutableMap;
 import java.util.HashMap;
 import java.util.Map;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
-import org.mockito.Answers;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Spy;
@@ -47,7 +47,6 @@ import org.mockito.junit.MockitoRule;
 public class ArtifactStepTest extends CategoryTest {
   @Rule public MockitoRule mockitoRule = MockitoJUnit.rule();
 
-  @Mock(answer = Answers.RETURNS_DEEP_STUBS) Ambiance ambiance;
   @Mock ArtifactStepHelper artifactStepHelper;
   @Spy @InjectMocks ArtifactStep artifactStep;
 
@@ -56,13 +55,14 @@ public class ArtifactStepTest extends CategoryTest {
   @Before
   public void beforeClass() {
     responseDataMap = new HashMap<>();
-    when(ambiance.getSetupAbstractions().get("accountId")).thenReturn("ACCOUNT_ID");
   }
 
   @Test
   @Owner(developers = ARCHIT)
   @Category(UnitTests.class)
   public void testObtainingArtifactTaskForDocker() {
+    Ambiance ambiance =
+        Ambiance.newBuilder().putAllSetupAbstractions(ImmutableMap.of("accountId", "ACCOUNT_ID")).build();
     ArtifactStepParameters stepParameters = getStepParametersForDocker();
     when(artifactStepHelper.toSourceDelegateRequest(artifactStep.applyArtifactsOverlay(stepParameters), ambiance))
         .thenReturn(getDelegateRequest());

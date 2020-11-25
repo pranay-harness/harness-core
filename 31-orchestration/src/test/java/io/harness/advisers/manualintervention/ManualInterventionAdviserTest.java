@@ -6,17 +6,18 @@ import static io.harness.rule.OwnerRule.PRASHANT;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.when;
 
+import io.harness.AmbianceUtils;
 import io.harness.OrchestrationTestBase;
 import io.harness.adviser.Advise;
 import io.harness.adviser.AdvisingEvent;
 import io.harness.adviser.AdvisingEvent.AdvisingEventBuilder;
 import io.harness.adviser.advise.InterventionWaitAdvise;
-import io.harness.ambiance.Ambiance;
 import io.harness.category.element.UnitTests;
 import io.harness.engine.executions.node.NodeExecutionService;
 import io.harness.exception.FailureType;
 import io.harness.execution.NodeExecution;
 import io.harness.plan.PlanNode;
+import io.harness.pms.ambiance.Ambiance;
 import io.harness.pms.ambiance.Level;
 import io.harness.pms.execution.Status;
 import io.harness.pms.steps.StepType;
@@ -50,12 +51,14 @@ public class ManualInterventionAdviserTest extends OrchestrationTestBase {
   @Before
   public void setup() {
     ambiance = AmbianceTestUtils.buildAmbiance();
-    ambiance.addLevel(Level.newBuilder()
-                          .setSetupId(NODE_SETUP_ID)
-                          .setRuntimeId(NODE_EXECUTION_ID)
-                          .setIdentifier(NODE_IDENTIFIER)
-                          .setStepType(DUMMY_STEP_TYPE)
-                          .build());
+    ambiance = ambiance.toBuilder()
+                   .addLevels(Level.newBuilder()
+                                  .setSetupId(NODE_SETUP_ID)
+                                  .setRuntimeId(NODE_EXECUTION_ID)
+                                  .setIdentifier(NODE_IDENTIFIER)
+                                  .setStepType(DUMMY_STEP_TYPE)
+                                  .build())
+                   .build();
   }
 
   @Test
@@ -74,7 +77,7 @@ public class ManualInterventionAdviserTest extends OrchestrationTestBase {
                                       .startTs(System.currentTimeMillis())
                                       .status(Status.FAILED)
                                       .build();
-    when(nodeExecutionService.get(ambiance.obtainCurrentRuntimeId())).thenReturn(nodeExecution);
+    when(nodeExecutionService.get(AmbianceUtils.obtainCurrentRuntimeId(ambiance))).thenReturn(nodeExecution);
     AdvisingEvent advisingEvent =
         AdvisingEvent.<ManualInterventionAdviserParameters>builder()
             .ambiance(ambiance)

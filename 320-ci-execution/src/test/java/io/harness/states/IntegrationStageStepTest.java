@@ -8,7 +8,6 @@ import static org.joor.Reflect.on;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.when;
 
-import io.harness.ambiance.Ambiance;
 import io.harness.beans.stages.IntegrationStage;
 import io.harness.beans.stages.IntegrationStageStepParameters;
 import io.harness.category.element.UnitTests;
@@ -17,6 +16,7 @@ import io.harness.engine.outputs.ExecutionSweepingOutputService;
 import io.harness.executionplan.CIExecutionPlanTestHelper;
 import io.harness.executionplan.CIExecutionTest;
 import io.harness.facilitator.modes.child.ChildExecutableResponse;
+import io.harness.pms.ambiance.Ambiance;
 import io.harness.pms.execution.Status;
 import io.harness.rule.Owner;
 import io.harness.state.io.StepInputPackage;
@@ -52,7 +52,7 @@ public class IntegrationStageStepTest extends CIExecutionTest {
   @Category(UnitTests.class)
   public void shouldObtainChild() {
     when(executionSweepingOutputResolver.consume(any(), any(), any(), any())).thenReturn("namespace");
-    Ambiance ambiance = Ambiance.builder().build();
+    Ambiance ambiance = Ambiance.newBuilder().build();
     Map<String, String> fieldToExecutionNodeIdMap = new HashMap<>();
     fieldToExecutionNodeIdMap.put("io/harness/beans/execution", CHILD_ID);
     IntegrationStageStepParameters stateParameters =
@@ -71,7 +71,7 @@ public class IntegrationStageStepTest extends CIExecutionTest {
   @Owner(developers = ALEKSANDAR)
   @Category(UnitTests.class)
   public void handleChildResponse() {
-    Ambiance ambiance = Ambiance.builder().build();
+    Ambiance ambiance = Ambiance.newBuilder().build();
     Map<String, String> fieldToExecutionNodeIdMap = new HashMap<>();
     fieldToExecutionNodeIdMap.put("io/harness/beans/execution", CHILD_ID);
     IntegrationStageStepParameters stateParameters = IntegrationStageStepParameters.builder()

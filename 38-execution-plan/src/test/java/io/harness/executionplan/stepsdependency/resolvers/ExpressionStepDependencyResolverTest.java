@@ -6,11 +6,11 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.doReturn;
 
 import io.harness.CategoryTest;
-import io.harness.ambiance.Ambiance;
 import io.harness.category.element.UnitTests;
 import io.harness.engine.expressions.EngineExpressionService;
 import io.harness.executionplan.stepsdependency.StepDependencyResolverContext;
 import io.harness.executionplan.stepsdependency.StepDependencySpec;
+import io.harness.pms.ambiance.Ambiance;
 import io.harness.rule.Owner;
 
 import java.util.Optional;
@@ -33,7 +33,7 @@ public class ExpressionStepDependencyResolverTest extends CategoryTest {
   @Category(UnitTests.class)
   public void testResolve() {
     StepDependencySpec spec = StepDependencySpec.defaultBuilder().key("TEST").build();
-    Ambiance ambiance = Ambiance.builder().build();
+    Ambiance ambiance = Ambiance.newBuilder().build();
     StepDependencyResolverContext resolverContext =
         StepDependencyResolverContext.defaultBuilder().ambiance(ambiance).build();
 

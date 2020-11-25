@@ -7,7 +7,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.when;
 
-import io.harness.ambiance.Ambiance;
 import io.harness.beans.steps.CiStepOutcome;
 import io.harness.beans.steps.stepinfo.RunStepInfo;
 import io.harness.beans.sweepingoutputs.StepTaskDetails;
@@ -20,6 +19,7 @@ import io.harness.engine.outputs.ExecutionSweepingOutputService;
 import io.harness.exception.FailureType;
 import io.harness.executionplan.CIExecutionTest;
 import io.harness.facilitator.modes.async.AsyncExecutableResponse;
+import io.harness.pms.ambiance.Ambiance;
 import io.harness.pms.execution.Status;
 import io.harness.pms.refobjects.RefObject;
 import io.harness.refObjects.RefObjectUtil;
@@ -59,7 +59,7 @@ public class RunStepTest extends CIExecutionTest {
 
   @Before
   public void setUp() {
-    ambiance = Ambiance.builder().build();
+    ambiance = Ambiance.newBuilder().build();
     stepInfo = RunStepInfo.builder().identifier(STEP_ID).build();
     stepInputPackage = StepInputPackage.builder().build();
     refObject = RefObjectUtil.getSweepingOutputRefObject(CALLBACK_IDS);

@@ -4,7 +4,6 @@ import static io.harness.annotations.dev.HarnessTeam.CDC;
 
 import static java.util.Arrays.asList;
 
-import io.harness.ambiance.Ambiance;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.engine.expressions.NodeExecutionsCache;
@@ -12,6 +11,7 @@ import io.harness.engine.outcomes.OutcomeService;
 import io.harness.engine.outputs.ExecutionSweepingOutputService;
 import io.harness.execution.NodeExecution;
 import io.harness.expression.LateBindingValue;
+import io.harness.pms.ambiance.Ambiance;
 
 import java.util.HashMap;
 import java.util.List;

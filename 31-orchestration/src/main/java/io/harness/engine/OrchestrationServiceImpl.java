@@ -2,7 +2,6 @@ package io.harness.engine;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 
-import io.harness.ambiance.Ambiance;
 import io.harness.annotations.Redesign;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
@@ -16,9 +15,11 @@ import io.harness.execution.events.OrchestrationEventType;
 import io.harness.interrupts.Interrupt;
 import io.harness.plan.Plan;
 import io.harness.plan.PlanNode;
+import io.harness.pms.ambiance.Ambiance;
 import io.harness.pms.execution.Status;
 
 import com.google.inject.Inject;
+import java.util.HashMap;
 import java.util.Map;
 import javax.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
@@ -34,7 +35,7 @@ public class OrchestrationServiceImpl implements OrchestrationService {
 
   @Override
   public PlanExecution startExecution(Plan plan) {
-    return startExecution(plan, null);
+    return startExecution(plan, new HashMap<>());
   }
 
   @Override
@@ -53,14 +54,16 @@ public class OrchestrationServiceImpl implements OrchestrationService {
     }
     PlanExecution savedPlanExecution = planExecutionService.save(planExecution);
     eventEmitter.emitEvent(OrchestrationEvent.builder()
-                               .ambiance(Ambiance.builder()
-                                             .planExecutionId(savedPlanExecution.getUuid())
-                                             .setupAbstractions(savedPlanExecution.getSetupAbstractions())
+                               .ambiance(Ambiance.newBuilder()
+                                             .setPlanExecutionId(savedPlanExecution.getUuid())
+                                             .putAllSetupAbstractions(savedPlanExecution.getSetupAbstractions())
                                              .build())
                                .eventType(OrchestrationEventType.ORCHESTRATION_START)
                                .build());
-    Ambiance ambiance =
-        Ambiance.builder().setupAbstractions(setupAbstractions).planExecutionId(savedPlanExecution.getUuid()).build();
+    Ambiance ambiance = Ambiance.newBuilder()
+                            .putAllSetupAbstractions(setupAbstractions)
+                            .setPlanExecutionId(savedPlanExecution.getUuid())
+                            .build();
     orchestrationEngine.triggerExecution(ambiance, planNode);
     return savedPlanExecution;
   }
@@ -68,7 +71,7 @@ public class OrchestrationServiceImpl implements OrchestrationService {
   @Override
   public PlanExecution rerunExecution(String planExecutionId, Map<String, String> setupAbstractions) {
     PlanExecution planExecution = planExecutionService.get(planExecutionId);
-    return startExecution(planExecution.getPlan(), setupAbstractions);
+    return startExecution(planExecution.getPlan(), setupAbstractions == null ? new HashMap<>() : setupAbstractions);
   }
 
   @Override

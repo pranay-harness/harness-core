@@ -6,11 +6,10 @@ import static io.harness.pms.execution.Status.ABORTED;
 import static io.harness.pms.execution.Status.QUEUED;
 import static io.harness.pms.execution.Status.SUSPENDED;
 
+import io.harness.AmbianceUtils;
 import io.harness.LevelUtils;
 import io.harness.OrchestrationPublisherName;
 import io.harness.StatusUtils;
-import io.harness.ambiance.Ambiance;
-import io.harness.ambiance.AmbianceUtils;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.engine.EngineObtainmentHelper;
 import io.harness.engine.ExecutionEngineDispatcher;
@@ -29,6 +28,7 @@ import io.harness.facilitator.modes.chain.child.ChildChainExecutable;
 import io.harness.facilitator.modes.chain.child.ChildChainResponse;
 import io.harness.plan.Plan;
 import io.harness.plan.PlanNode;
+import io.harness.pms.ambiance.Ambiance;
 import io.harness.registries.state.StepRegistry;
 import io.harness.state.io.StepInputPackage;
 import io.harness.state.io.StepResponse;
@@ -50,7 +50,6 @@ public class ChildChainStrategy implements ExecuteStrategy {
   @Inject private WaitNotifyEngine waitNotifyEngine;
   @Inject private NodeExecutionService nodeExecutionService;
   @Inject private PlanExecutionService planExecutionService;
-  @Inject private AmbianceUtils ambianceUtils;
   @Inject private InvocationHelper invocationHelper;
   @Inject private StepRegistry stepRegistry;
   @Inject private EngineObtainmentHelper engineObtainmentHelper;
@@ -103,7 +102,7 @@ public class ChildChainStrategy implements ExecuteStrategy {
 
   private void handleResponse(Ambiance ambiance, ChildChainResponse childChainResponse) {
     PlanExecution planExecution = planExecutionService.get(ambiance.getPlanExecutionId());
-    NodeExecution nodeExecution = nodeExecutionService.get(ambiance.obtainCurrentRuntimeId());
+    NodeExecution nodeExecution = nodeExecutionService.get(AmbianceUtils.obtainCurrentRuntimeId(ambiance));
     if (childChainResponse.isSuspend()) {
       suspendChain(childChainResponse, nodeExecution);
     } else {
@@ -116,8 +115,8 @@ public class ChildChainStrategy implements ExecuteStrategy {
     String childInstanceId = generateUuid();
     Plan plan = planExecution.getPlan();
     PlanNode node = plan.fetchNode(childChainResponse.getNextChildId());
-    Ambiance clonedAmbiance = ambianceUtils.cloneForChild(ambiance);
-    clonedAmbiance.addLevel(LevelUtils.buildLevelFromPlanNode(childInstanceId, node));
+    Ambiance clonedAmbiance =
+        AmbianceUtils.cloneForChild(ambiance, LevelUtils.buildLevelFromPlanNode(childInstanceId, node));
     NodeExecution childNodeExecution = NodeExecution.builder()
                                            .uuid(childInstanceId)
                                            .node(node)

@@ -1,6 +1,5 @@
 package io.harness.states;
 
-import io.harness.ambiance.Ambiance;
 import io.harness.beans.DelegateTaskRequest;
 import io.harness.beans.steps.stepinfo.CleanupStepInfo;
 import io.harness.beans.sweepingoutputs.ContextElement;
@@ -14,6 +13,7 @@ import io.harness.facilitator.modes.sync.SyncExecutable;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.ng.core.NGAccess;
 import io.harness.ngpipeline.common.AmbianceHelper;
+import io.harness.pms.ambiance.Ambiance;
 import io.harness.pms.execution.Status;
 import io.harness.pms.steps.StepType;
 import io.harness.refObjects.RefObjectUtil;
@@ -70,7 +70,7 @@ public class CleanupStep implements SyncExecutable<CleanupStepInfo> {
 
       DelegateTaskRequest delegateTaskRequest = DelegateTaskRequest.builder()
                                                     .accountId(ngAccess.getAccountIdentifier())
-                                                    .taskSetupAbstractions(ambiance.getSetupAbstractions())
+                                                    .taskSetupAbstractions(ambiance.getSetupAbstractionsMap())
                                                     .executionTimeout(Duration.ofSeconds(cleanupStepInfo.getTimeout()))
                                                     .taskType(TASK_TYPE)
                                                     .taskParameters(cik8CleanupTaskParams)

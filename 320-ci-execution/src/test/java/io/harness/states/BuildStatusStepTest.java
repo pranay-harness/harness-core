@@ -8,7 +8,6 @@ import static org.joor.Reflect.on;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.when;
 
-import io.harness.ambiance.Ambiance;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.beans.ci.pod.ConnectorDetails;
 import io.harness.delegate.beans.connector.gitconnector.GitAuthType;
@@ -17,6 +16,7 @@ import io.harness.delegate.beans.connector.gitconnector.GitHTTPAuthenticationDTO
 import io.harness.encryption.SecretRefData;
 import io.harness.executionplan.CIExecutionTest;
 import io.harness.ngpipeline.status.BuildStatusUpdateParameter;
+import io.harness.pms.ambiance.Ambiance;
 import io.harness.rule.Owner;
 import io.harness.stateutils.buildstate.ConnectorUtils;
 
@@ -45,7 +45,7 @@ public class BuildStatusStepTest extends CIExecutionTest {
     setupAbstractions.put("accountId", "accountId");
     setupAbstractions.put("projectId", "projectId");
     setupAbstractions.put("orgId", "orgId");
-    Ambiance ambiance = Ambiance.builder().setupAbstractions(setupAbstractions).build();
+    Ambiance ambiance = Ambiance.newBuilder().putAllSetupAbstractions(setupAbstractions).build();
     GitConfigDTO gitConfigDTO = GitConfigDTO.builder()
                                     .url("https://github.com/wings-software/portal.git")
                                     .gitAuth(GitHTTPAuthenticationDTO.builder()

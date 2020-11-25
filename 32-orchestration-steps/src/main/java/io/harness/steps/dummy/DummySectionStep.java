@@ -2,10 +2,10 @@ package io.harness.steps.dummy;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 
-import io.harness.ambiance.Ambiance;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.facilitator.modes.child.ChildExecutable;
 import io.harness.facilitator.modes.child.ChildExecutableResponse;
+import io.harness.pms.ambiance.Ambiance;
 import io.harness.pms.steps.StepType;
 import io.harness.state.Step;
 import io.harness.state.io.StepInputPackage;

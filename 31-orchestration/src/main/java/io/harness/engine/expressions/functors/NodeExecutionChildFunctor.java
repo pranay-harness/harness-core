@@ -2,13 +2,14 @@ package io.harness.engine.expressions.functors;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 
-import io.harness.ambiance.Ambiance;
+import io.harness.AmbianceUtils;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.engine.expressions.NodeExecutionsCache;
 import io.harness.engine.outcomes.OutcomeService;
 import io.harness.engine.outputs.ExecutionSweepingOutputService;
 import io.harness.execution.NodeExecution;
 import io.harness.expression.LateBindingValue;
+import io.harness.pms.ambiance.Ambiance;
 
 import java.util.Set;
 import lombok.Builder;
@@ -26,7 +27,7 @@ public class NodeExecutionChildFunctor implements LateBindingValue {
 
   @Override
   public Object bind() {
-    String nodeExecutionId = ambiance.obtainCurrentRuntimeId();
+    String nodeExecutionId = AmbianceUtils.obtainCurrentRuntimeId(ambiance);
     if (nodeExecutionId == null) {
       return null;
     }

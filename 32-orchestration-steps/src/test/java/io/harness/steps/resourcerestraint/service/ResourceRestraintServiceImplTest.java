@@ -12,7 +12,6 @@ import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.when;
 
 import io.harness.OrchestrationStepsTestBase;
-import io.harness.ambiance.Ambiance;
 import io.harness.category.element.UnitTests;
 import io.harness.distribution.constraint.Consumer.State;
 import io.harness.engine.executions.node.NodeExecutionService;
@@ -21,6 +20,7 @@ import io.harness.exception.InvalidRequestException;
 import io.harness.execution.NodeExecution;
 import io.harness.execution.PlanExecution;
 import io.harness.plan.PlanNode;
+import io.harness.pms.ambiance.Ambiance;
 import io.harness.pms.ambiance.Level;
 import io.harness.pms.execution.ExecutionMode;
 import io.harness.pms.execution.Status;
@@ -193,9 +193,9 @@ public class ResourceRestraintServiceImplTest extends OrchestrationStepsTestBase
   @Category(UnitTests.class)
   @RealMongo
   public void shouldUpdateActiveConstraintsForInstance_ForOther() {
-    Ambiance ambiance = Ambiance.builder()
-                            .planExecutionId(generateUuid())
-                            .levels(Collections.singletonList(
+    Ambiance ambiance = Ambiance.newBuilder()
+                            .setPlanExecutionId(generateUuid())
+                            .addAllLevels(Collections.singletonList(
                                 Level.newBuilder().setRuntimeId(generateUuid()).setSetupId(generateUuid()).build()))
                             .build();
     ResourceRestraintInstance instance = saveInstance(BLOCKED, OTHER);

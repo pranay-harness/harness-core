@@ -11,7 +11,6 @@ import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.when;
 
 import io.harness.OrchestrationStepsTestBase;
-import io.harness.ambiance.Ambiance;
 import io.harness.category.element.UnitTests;
 import io.harness.distribution.constraint.Constraint;
 import io.harness.distribution.constraint.ConstraintId;
@@ -19,6 +18,7 @@ import io.harness.distribution.constraint.Consumer;
 import io.harness.engine.expressions.EngineExpressionService;
 import io.harness.facilitator.DefaultFacilitatorParams;
 import io.harness.facilitator.FacilitatorResponse;
+import io.harness.pms.ambiance.Ambiance;
 import io.harness.pms.ambiance.Level;
 import io.harness.rule.Owner;
 import io.harness.serializer.KryoSerializer;
@@ -77,11 +77,11 @@ public class ResourceRestraintFacilitatorTest extends OrchestrationStepsTestBase
     String uuid = generateUuid();
     String planNodeId = generateUuid();
     HoldingScope holdingScope = HoldingScopeBuilder.aPlan().build();
-    Ambiance ambiance =
-        Ambiance.builder()
-            .planExecutionId(generateUuid())
-            .levels(Collections.singletonList(Level.newBuilder().setRuntimeId(uuid).setSetupId(planNodeId).build()))
-            .build();
+    Ambiance ambiance = Ambiance.newBuilder()
+                            .setPlanExecutionId(generateUuid())
+                            .addAllLevels(Collections.singletonList(
+                                Level.newBuilder().setRuntimeId(uuid).setSetupId(planNodeId).build()))
+                            .build();
     byte[] parameters = kryoSerializer.asBytes(DefaultFacilitatorParams.builder().build());
     ResourceRestraintStepParameters stepParameters = ResourceRestraintStepParameters.builder()
                                                          .resourceRestraintId(RESOURCE_RESTRAINT_ID)
@@ -113,11 +113,11 @@ public class ResourceRestraintFacilitatorTest extends OrchestrationStepsTestBase
     String uuid = generateUuid();
     String planNodeId = generateUuid();
     HoldingScope holdingScope = HoldingScopeBuilder.aPlan().build();
-    Ambiance ambiance =
-        Ambiance.builder()
-            .planExecutionId(generateUuid())
-            .levels(Collections.singletonList(Level.newBuilder().setRuntimeId(uuid).setSetupId(planNodeId).build()))
-            .build();
+    Ambiance ambiance = Ambiance.newBuilder()
+                            .setPlanExecutionId(generateUuid())
+                            .addAllLevels(Collections.singletonList(
+                                Level.newBuilder().setRuntimeId(uuid).setSetupId(planNodeId).build()))
+                            .build();
     byte[] parameters = kryoSerializer.asBytes(DefaultFacilitatorParams.builder().build());
     ResourceRestraintStepParameters stepParameters = ResourceRestraintStepParameters.builder()
                                                          .resourceRestraintId(RESOURCE_RESTRAINT_ID)

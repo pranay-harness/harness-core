@@ -7,12 +7,12 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.doReturn;
 
 import io.harness.CategoryTest;
-import io.harness.ambiance.Ambiance;
 import io.harness.category.element.UnitTests;
 import io.harness.cdng.common.beans.SetupAbstractionKeys;
 import io.harness.connector.apis.dto.ConnectorInfoDTO;
 import io.harness.connector.apis.dto.ConnectorResponseDTO;
 import io.harness.connector.services.ConnectorService;
+import io.harness.pms.ambiance.Ambiance;
 import io.harness.rule.Owner;
 
 import java.util.HashMap;
@@ -89,6 +89,6 @@ public class K8sStepHelperTest extends CategoryTest {
     setupAbstractions.put(SetupAbstractionKeys.orgIdentifier, "org1");
     setupAbstractions.put(SetupAbstractionKeys.projectIdentifier, "project1");
 
-    return Ambiance.builder().setupAbstractions(setupAbstractions).build();
+    return Ambiance.newBuilder().putAllSetupAbstractions(setupAbstractions).build();
   }
 }

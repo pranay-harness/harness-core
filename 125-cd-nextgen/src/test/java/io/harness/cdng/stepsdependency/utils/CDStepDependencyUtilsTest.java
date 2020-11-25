@@ -7,7 +7,6 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.doReturn;
 
 import io.harness.CategoryTest;
-import io.harness.ambiance.Ambiance;
 import io.harness.category.element.UnitTests;
 import io.harness.cdng.infra.beans.InfrastructureOutcome;
 import io.harness.cdng.infra.beans.K8sDirectInfrastructureOutcome;
@@ -23,6 +22,7 @@ import io.harness.executionplan.stepsdependency.StepDependencyResolverContext;
 import io.harness.executionplan.stepsdependency.StepDependencyService;
 import io.harness.executionplan.stepsdependency.StepDependencySpec;
 import io.harness.executionplan.utils.ParentPathInfoUtils;
+import io.harness.pms.ambiance.Ambiance;
 import io.harness.refObjects.RefObjectUtil;
 import io.harness.rule.Owner;
 import io.harness.state.io.ResolvedRefInput;
@@ -110,7 +110,7 @@ public class CDStepDependencyUtilsTest extends CategoryTest {
     StepDependencySpec spec = StepDependencySpec.defaultBuilder().key("TEST").build();
     StepInputPackage inputPackage = StepInputPackage.builder().build();
     StepParameters stepParameters = DummyStepParameters.builder().build();
-    Ambiance ambiance = Ambiance.builder().build();
+    Ambiance ambiance = Ambiance.newBuilder().build();
     ServiceOutcome serviceOutcome = ServiceOutcome.builder().build();
 
     StepDependencyResolverContext resolverContext =
@@ -134,7 +134,7 @@ public class CDStepDependencyUtilsTest extends CategoryTest {
     StepDependencySpec spec = StepDependencySpec.defaultBuilder().key("TEST").build();
     StepInputPackage inputPackage = StepInputPackage.builder().build();
     StepParameters stepParameters = DummyStepParameters.builder().build();
-    Ambiance ambiance = Ambiance.builder().build();
+    Ambiance ambiance = Ambiance.newBuilder().build();
     InfrastructureOutcome infrastructureOutcome = K8sDirectInfrastructureOutcome.builder().build();
 
     StepDependencyResolverContext resolverContext =
@@ -158,7 +158,7 @@ public class CDStepDependencyUtilsTest extends CategoryTest {
     StepDependencySpec spec = StepDependencySpec.defaultBuilder().key("TEST").build();
     StepInputPackage inputPackage = StepInputPackage.builder().build();
     StepParameters stepParameters = DummyStepParameters.builder().build();
-    Ambiance ambiance = Ambiance.builder().build();
+    Ambiance ambiance = Ambiance.newBuilder().build();
     K8sRollingOutcome k8sRollingOutcome = K8sRollingOutcome.builder().build();
 
     StepDependencyResolverContext resolverContext =

@@ -7,8 +7,7 @@ import static java.lang.String.format;
 import static org.springframework.data.mongodb.core.query.Criteria.where;
 import static org.springframework.data.mongodb.core.query.Query.query;
 
-import io.harness.ambiance.Ambiance;
-import io.harness.ambiance.AmbianceUtils;
+import io.harness.AmbianceUtils;
 import io.harness.annotations.Redesign;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.data.ExecutionSweepingOutputInstance;
@@ -18,13 +17,13 @@ import io.harness.data.structure.EmptyPredicate;
 import io.harness.engine.expressions.ExpressionEvaluatorProvider;
 import io.harness.engine.expressions.functors.NodeExecutionEntityType;
 import io.harness.expression.EngineExpressionEvaluator;
+import io.harness.pms.ambiance.Ambiance;
 import io.harness.pms.refobjects.RefObject;
 import io.harness.resolvers.ResolverUtils;
 
 import com.google.inject.Inject;
 import com.google.inject.Injector;
 import com.google.inject.Singleton;
-import com.google.inject.name.Named;
 import com.mongodb.DuplicateKeyException;
 import java.util.Comparator;
 import java.util.EnumSet;
@@ -39,12 +38,11 @@ public class ExecutionSweepingOutputServiceImpl implements ExecutionSweepingOutp
   @Inject private ExpressionEvaluatorProvider expressionEvaluatorProvider;
   @Inject private Injector injector;
   @Inject private MongoTemplate mongoTemplate;
-  @Inject private AmbianceUtils ambianceUtils;
 
   @Override
   public String consumeInternal(Ambiance ambiance, String name, SweepingOutput value, int levelsToKeep) {
     if (levelsToKeep >= 0) {
-      ambiance = ambianceUtils.clone(ambiance, levelsToKeep);
+      ambiance = AmbianceUtils.clone(ambiance, levelsToKeep);
     }
 
     try {
@@ -52,10 +50,10 @@ public class ExecutionSweepingOutputServiceImpl implements ExecutionSweepingOutp
           mongoTemplate.insert(ExecutionSweepingOutputInstance.builder()
                                    .uuid(generateUuid())
                                    .planExecutionId(ambiance.getPlanExecutionId())
-                                   .levels(ambiance.getLevels())
+                                   .levels(ambiance.getLevelsList())
                                    .name(name)
                                    .value(value)
-                                   .levelRuntimeIdIdx(ResolverUtils.prepareLevelRuntimeIdIdx(ambiance.getLevels()))
+                                   .levelRuntimeIdIdx(ResolverUtils.prepareLevelRuntimeIdIdx(ambiance.getLevelsList()))
                                    .build());
       return instance.getUuid();
     } catch (DuplicateKeyException ex) {

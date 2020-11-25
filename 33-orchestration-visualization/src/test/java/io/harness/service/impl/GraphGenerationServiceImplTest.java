@@ -6,7 +6,6 @@ import static io.harness.rule.OwnerRule.ALEXEI;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.OrchestrationVisualizationTestBase;
-import io.harness.ambiance.Ambiance;
 import io.harness.beans.EdgeList;
 import io.harness.beans.GraphVertex;
 import io.harness.beans.OrchestrationGraph;
@@ -23,6 +22,7 @@ import io.harness.engine.executions.plan.PlanExecutionService;
 import io.harness.execution.NodeExecution;
 import io.harness.execution.PlanExecution;
 import io.harness.plan.PlanNode;
+import io.harness.pms.ambiance.Ambiance;
 import io.harness.pms.ambiance.Level;
 import io.harness.pms.execution.ExecutionMode;
 import io.harness.pms.execution.Status;
@@ -64,9 +64,9 @@ public class GraphGenerationServiceImplTest extends OrchestrationVisualizationTe
     PlanExecution planExecution = planExecutionService.save(PlanExecution.builder().build());
     NodeExecution dummyStart =
         NodeExecution.builder()
-            .ambiance(Ambiance.builder()
-                          .planExecutionId(planExecution.getUuid())
-                          .levels(Collections.singletonList(Level.newBuilder().setSetupId("node1_plan").build()))
+            .ambiance(Ambiance.newBuilder()
+                          .setPlanExecutionId(planExecution.getUuid())
+                          .addAllLevels(Collections.singletonList(Level.newBuilder().setSetupId("node1_plan").build()))
                           .build())
             .mode(ExecutionMode.SYNC)
             .node(PlanNode.builder()
@@ -100,9 +100,9 @@ public class GraphGenerationServiceImplTest extends OrchestrationVisualizationTe
     PlanExecution planExecution = planExecutionService.save(PlanExecution.builder().build());
     NodeExecution dummyStart =
         NodeExecution.builder()
-            .ambiance(Ambiance.builder()
-                          .planExecutionId(planExecution.getUuid())
-                          .levels(Collections.singletonList(Level.newBuilder().setSetupId("node1_plan").build()))
+            .ambiance(Ambiance.newBuilder()
+                          .setPlanExecutionId(planExecution.getUuid())
+                          .addAllLevels(Collections.singletonList(Level.newBuilder().setSetupId("node1_plan").build()))
                           .build())
             .mode(ExecutionMode.SYNC)
             .node(PlanNode.builder()
@@ -149,9 +149,9 @@ public class GraphGenerationServiceImplTest extends OrchestrationVisualizationTe
     PlanExecution planExecution = planExecutionService.save(PlanExecution.builder().build());
     NodeExecution dummyStart =
         NodeExecution.builder()
-            .ambiance(Ambiance.builder()
-                          .planExecutionId(planExecution.getUuid())
-                          .levels(Collections.singletonList(Level.newBuilder().setSetupId("node1_plan").build()))
+            .ambiance(Ambiance.newBuilder()
+                          .setPlanExecutionId(planExecution.getUuid())
+                          .addAllLevels(Collections.singletonList(Level.newBuilder().setSetupId("node1_plan").build()))
                           .build())
             .mode(ExecutionMode.SYNC)
             .node(PlanNode.builder()
@@ -185,9 +185,9 @@ public class GraphGenerationServiceImplTest extends OrchestrationVisualizationTe
     PlanExecution planExecution = planExecutionService.save(PlanExecution.builder().build());
     NodeExecution dummyStart =
         NodeExecution.builder()
-            .ambiance(Ambiance.builder()
-                          .planExecutionId(planExecution.getUuid())
-                          .levels(Collections.singletonList(Level.newBuilder().setSetupId("node1_plan").build()))
+            .ambiance(Ambiance.newBuilder()
+                          .setPlanExecutionId(planExecution.getUuid())
+                          .addAllLevels(Collections.singletonList(Level.newBuilder().setSetupId("node1_plan").build()))
                           .build())
             .mode(ExecutionMode.SYNC)
             .node(PlanNode.builder()
@@ -201,9 +201,9 @@ public class GraphGenerationServiceImplTest extends OrchestrationVisualizationTe
 
     NodeExecution dummyEnd =
         NodeExecution.builder()
-            .ambiance(Ambiance.builder()
-                          .planExecutionId(planExecution.getUuid())
-                          .levels(Collections.singletonList(Level.newBuilder().setSetupId("node2_plan").build()))
+            .ambiance(Ambiance.newBuilder()
+                          .setPlanExecutionId(planExecution.getUuid())
+                          .addAllLevels(Collections.singletonList(Level.newBuilder().setSetupId("node2_plan").build()))
                           .build())
             .mode(ExecutionMode.SYNC)
             .node(PlanNode.builder()
@@ -259,10 +259,10 @@ public class GraphGenerationServiceImplTest extends OrchestrationVisualizationTe
   public void shouldReturnPartialOrchestrationGraph() {
     GraphVertex dummyStart = GraphVertex.builder()
                                  .uuid(generateUuid())
-                                 .ambiance(Ambiance.builder()
-                                               .planExecutionId("")
-                                               .levels(new ArrayList<>())
-                                               .setupAbstractions(new HashMap<>())
+                                 .ambiance(Ambiance.newBuilder()
+                                               .setPlanExecutionId("")
+                                               .addAllLevels(new ArrayList<>())
+                                               .putAllSetupAbstractions(new HashMap<>())
                                                .build())
                                  .planNodeId("node1_plan")
                                  .name("dummyStart")
@@ -271,10 +271,10 @@ public class GraphGenerationServiceImplTest extends OrchestrationVisualizationTe
                                  .build();
     GraphVertex dummyFinish = GraphVertex.builder()
                                   .uuid(generateUuid())
-                                  .ambiance(Ambiance.builder()
-                                                .planExecutionId("")
-                                                .levels(new ArrayList<>())
-                                                .setupAbstractions(new HashMap<>())
+                                  .ambiance(Ambiance.newBuilder()
+                                                .setPlanExecutionId("")
+                                                .addAllLevels(new ArrayList<>())
+                                                .putAllSetupAbstractions(new HashMap<>())
                                                 .build())
                                   .planNodeId("node2_plan")
                                   .name("dummyFinish")
@@ -308,10 +308,10 @@ public class GraphGenerationServiceImplTest extends OrchestrationVisualizationTe
   public void shouldReturnPartialOrchestrationGraphFromIdentifier() {
     GraphVertex dummyStart = GraphVertex.builder()
                                  .uuid(generateUuid())
-                                 .ambiance(Ambiance.builder()
-                                               .planExecutionId("")
-                                               .levels(new ArrayList<>())
-                                               .setupAbstractions(new HashMap<>())
+                                 .ambiance(Ambiance.newBuilder()
+                                               .setPlanExecutionId("")
+                                               .addAllLevels(new ArrayList<>())
+                                               .putAllSetupAbstractions(new HashMap<>())
                                                .build())
                                  .planNodeId("node1_plan")
                                  .name("dummyStart")
@@ -321,10 +321,10 @@ public class GraphGenerationServiceImplTest extends OrchestrationVisualizationTe
                                  .build();
     GraphVertex dummyFinish = GraphVertex.builder()
                                   .uuid(generateUuid())
-                                  .ambiance(Ambiance.builder()
-                                                .planExecutionId("")
-                                                .levels(new ArrayList<>())
-                                                .setupAbstractions(new HashMap<>())
+                                  .ambiance(Ambiance.newBuilder()
+                                                .setPlanExecutionId("")
+                                                .addAllLevels(new ArrayList<>())
+                                                .putAllSetupAbstractions(new HashMap<>())
                                                 .build())
                                   .planNodeId("node2_plan")
                                   .identifier(generateUuid())

@@ -2,7 +2,7 @@ package io.harness.utils;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 
-import io.harness.ambiance.Ambiance;
+import io.harness.pms.ambiance.Ambiance;
 import io.harness.pms.ambiance.Level;
 import io.harness.pms.steps.StepType;
 
@@ -35,10 +35,10 @@ public class AmbianceTestUtils {
     List<Level> levels = new ArrayList<>();
     levels.add(phaseLevel);
     levels.add(sectionLevel);
-    return Ambiance.builder()
-        .planExecutionId(EXECUTION_INSTANCE_ID)
-        .setupAbstractions(ImmutableMap.of("accountId", ACCOUNT_ID, "appId", APP_ID))
-        .levels(levels)
+    return Ambiance.newBuilder()
+        .setPlanExecutionId(EXECUTION_INSTANCE_ID)
+        .putAllSetupAbstractions(ImmutableMap.of("accountId", ACCOUNT_ID, "appId", APP_ID))
+        .addAllLevels(levels)
         .build();
   }
 }

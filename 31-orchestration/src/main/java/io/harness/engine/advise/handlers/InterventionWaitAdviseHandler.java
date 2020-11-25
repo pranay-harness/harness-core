@@ -1,13 +1,14 @@
 package io.harness.engine.advise.handlers;
 
+import io.harness.AmbianceUtils;
 import io.harness.adviser.advise.InterventionWaitAdvise;
-import io.harness.ambiance.Ambiance;
 import io.harness.engine.advise.AdviseHandler;
 import io.harness.engine.events.OrchestrationEventEmitter;
 import io.harness.engine.executions.node.NodeExecutionService;
 import io.harness.engine.executions.plan.PlanExecutionService;
 import io.harness.execution.events.OrchestrationEvent;
 import io.harness.execution.events.OrchestrationEventType;
+import io.harness.pms.ambiance.Ambiance;
 import io.harness.pms.execution.Status;
 
 import com.google.inject.Inject;
@@ -25,7 +26,7 @@ public class InterventionWaitAdviseHandler implements AdviseHandler<Intervention
                                .ambiance(ambiance)
                                .build());
 
-    nodeExecutionService.updateStatus(ambiance.obtainCurrentRuntimeId(), Status.INTERVENTION_WAITING);
+    nodeExecutionService.updateStatus(AmbianceUtils.obtainCurrentRuntimeId(ambiance), Status.INTERVENTION_WAITING);
     planExecutionService.updateStatus(ambiance.getPlanExecutionId(), Status.INTERVENTION_WAITING);
   }
 }

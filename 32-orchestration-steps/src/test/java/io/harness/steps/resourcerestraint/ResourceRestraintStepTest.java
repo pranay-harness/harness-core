@@ -14,7 +14,6 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import io.harness.OrchestrationStepsTestBase;
-import io.harness.ambiance.Ambiance;
 import io.harness.category.element.UnitTests;
 import io.harness.distribution.constraint.Constraint;
 import io.harness.distribution.constraint.ConstraintId;
@@ -22,6 +21,7 @@ import io.harness.distribution.constraint.Consumer;
 import io.harness.engine.expressions.EngineExpressionService;
 import io.harness.exception.InvalidRequestException;
 import io.harness.facilitator.modes.async.AsyncExecutableResponse;
+import io.harness.pms.ambiance.Ambiance;
 import io.harness.pms.ambiance.Level;
 import io.harness.rule.Owner;
 import io.harness.state.io.StepInputPackage;
@@ -82,11 +82,11 @@ public class ResourceRestraintStepTest extends OrchestrationStepsTestBase {
     String uuid = generateUuid();
     String planNodeId = generateUuid();
     HoldingScope holdingScope = HoldingScopeBuilder.aPlan().build();
-    Ambiance ambiance =
-        Ambiance.builder()
-            .planExecutionId(generateUuid())
-            .levels(Collections.singletonList(Level.newBuilder().setRuntimeId(uuid).setSetupId(planNodeId).build()))
-            .build();
+    Ambiance ambiance = Ambiance.newBuilder()
+                            .setPlanExecutionId(generateUuid())
+                            .addAllLevels(Collections.singletonList(
+                                Level.newBuilder().setRuntimeId(uuid).setSetupId(planNodeId).build()))
+                            .build();
     StepInputPackage stepInputPackage = StepInputPackage.builder().build();
     ResourceRestraintStepParameters stepParameters = ResourceRestraintStepParameters.builder()
                                                          .resourceRestraintId(RESOURCE_RESTRAINT_ID)
@@ -117,11 +117,11 @@ public class ResourceRestraintStepTest extends OrchestrationStepsTestBase {
   public void shouldTestExecuteAsync_InvalidRequestException() {
     String uuid = generateUuid();
     String planNodeId = generateUuid();
-    Ambiance ambiance =
-        Ambiance.builder()
-            .planExecutionId(generateUuid())
-            .levels(Collections.singletonList(Level.newBuilder().setRuntimeId(uuid).setSetupId(planNodeId).build()))
-            .build();
+    Ambiance ambiance = Ambiance.newBuilder()
+                            .setPlanExecutionId(generateUuid())
+                            .addAllLevels(Collections.singletonList(
+                                Level.newBuilder().setRuntimeId(uuid).setSetupId(planNodeId).build()))
+                            .build();
     StepInputPackage stepInputPackage = StepInputPackage.builder().build();
     ResourceRestraintStepParameters stepParameters = ResourceRestraintStepParameters.builder()
                                                          .resourceRestraintId(RESOURCE_RESTRAINT_ID)
@@ -147,11 +147,11 @@ public class ResourceRestraintStepTest extends OrchestrationStepsTestBase {
   public void shouldTestExecuteSync() {
     String uuid = generateUuid();
     String planNodeId = generateUuid();
-    Ambiance ambiance =
-        Ambiance.builder()
-            .planExecutionId(generateUuid())
-            .levels(Collections.singletonList(Level.newBuilder().setRuntimeId(uuid).setSetupId(planNodeId).build()))
-            .build();
+    Ambiance ambiance = Ambiance.newBuilder()
+                            .setPlanExecutionId(generateUuid())
+                            .addAllLevels(Collections.singletonList(
+                                Level.newBuilder().setRuntimeId(uuid).setSetupId(planNodeId).build()))
+                            .build();
     StepInputPackage stepInputPackage = StepInputPackage.builder().build();
     ResourceRestraintStepParameters stepParameters = ResourceRestraintStepParameters.builder()
                                                          .resourceRestraintId(RESOURCE_RESTRAINT_ID)
@@ -178,11 +178,11 @@ public class ResourceRestraintStepTest extends OrchestrationStepsTestBase {
   public void shouldTestExecuteSync_InvalidRequestException() {
     String uuid = generateUuid();
     String planNodeId = generateUuid();
-    Ambiance ambiance =
-        Ambiance.builder()
-            .planExecutionId(generateUuid())
-            .levels(Collections.singletonList(Level.newBuilder().setRuntimeId(uuid).setSetupId(planNodeId).build()))
-            .build();
+    Ambiance ambiance = Ambiance.newBuilder()
+                            .setPlanExecutionId(generateUuid())
+                            .addAllLevels(Collections.singletonList(
+                                Level.newBuilder().setRuntimeId(uuid).setSetupId(planNodeId).build()))
+                            .build();
     StepInputPackage stepInputPackage = StepInputPackage.builder().build();
     ResourceRestraintStepParameters stepParameters = ResourceRestraintStepParameters.builder()
                                                          .resourceRestraintId(RESOURCE_RESTRAINT_ID)
@@ -213,11 +213,11 @@ public class ResourceRestraintStepTest extends OrchestrationStepsTestBase {
   public void shouldTestHandleAsyncResponse() {
     String uuid = generateUuid();
     String planNodeId = generateUuid();
-    Ambiance ambiance =
-        Ambiance.builder()
-            .planExecutionId(generateUuid())
-            .levels(Collections.singletonList(Level.newBuilder().setRuntimeId(uuid).setSetupId(planNodeId).build()))
-            .build();
+    Ambiance ambiance = Ambiance.newBuilder()
+                            .setPlanExecutionId(generateUuid())
+                            .addAllLevels(Collections.singletonList(
+                                Level.newBuilder().setRuntimeId(uuid).setSetupId(planNodeId).build()))
+                            .build();
     ResourceRestraintStepParameters stepParameters = ResourceRestraintStepParameters.builder()
                                                          .resourceRestraintId(RESOURCE_RESTRAINT_ID)
                                                          .resourceUnit(RESOURCE_UNIT)
@@ -244,11 +244,11 @@ public class ResourceRestraintStepTest extends OrchestrationStepsTestBase {
   public void shouldHandleAbort() {
     String uuid = generateUuid();
     String planNodeId = generateUuid();
-    Ambiance ambiance =
-        Ambiance.builder()
-            .planExecutionId(generateUuid())
-            .levels(Collections.singletonList(Level.newBuilder().setRuntimeId(uuid).setSetupId(planNodeId).build()))
-            .build();
+    Ambiance ambiance = Ambiance.newBuilder()
+                            .setPlanExecutionId(generateUuid())
+                            .addAllLevels(Collections.singletonList(
+                                Level.newBuilder().setRuntimeId(uuid).setSetupId(planNodeId).build()))
+                            .build();
     ResourceRestraintStepParameters stepParameters = ResourceRestraintStepParameters.builder()
                                                          .resourceRestraintId(RESOURCE_RESTRAINT_ID)
                                                          .resourceUnit(RESOURCE_UNIT)
@@ -272,11 +272,11 @@ public class ResourceRestraintStepTest extends OrchestrationStepsTestBase {
   public void shouldHandleAbort_ThrowException() {
     String uuid = generateUuid();
     String planNodeId = generateUuid();
-    Ambiance ambiance =
-        Ambiance.builder()
-            .planExecutionId(generateUuid())
-            .levels(Collections.singletonList(Level.newBuilder().setRuntimeId(uuid).setSetupId(planNodeId).build()))
-            .build();
+    Ambiance ambiance = Ambiance.newBuilder()
+                            .setPlanExecutionId(generateUuid())
+                            .addAllLevels(Collections.singletonList(
+                                Level.newBuilder().setRuntimeId(uuid).setSetupId(planNodeId).build()))
+                            .build();
     ResourceRestraintStepParameters stepParameters = ResourceRestraintStepParameters.builder()
                                                          .resourceRestraintId(RESOURCE_RESTRAINT_ID)
                                                          .resourceUnit(RESOURCE_UNIT)

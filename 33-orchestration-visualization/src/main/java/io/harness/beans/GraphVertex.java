@@ -2,10 +2,10 @@ package io.harness.beans;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 
-import io.harness.ambiance.Ambiance;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.data.Outcome;
 import io.harness.interrupts.InterruptEffect;
+import io.harness.pms.ambiance.Ambiance;
 import io.harness.pms.execution.ExecutionMode;
 import io.harness.pms.execution.Status;
 import io.harness.pms.steps.SkipType;

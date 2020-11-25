@@ -1,6 +1,5 @@
 package io.harness.ngpipeline.expressions;
 
-import io.harness.ambiance.Ambiance;
 import io.harness.beans.InputSetValidator;
 import io.harness.beans.ParameterField;
 import io.harness.engine.expressions.EngineExpressionService;
@@ -10,6 +9,7 @@ import io.harness.expression.field.ProcessorResult;
 import io.harness.ngpipeline.inputset.validators.InputSetValidatorFactory;
 import io.harness.ngpipeline.inputset.validators.RuntimeValidator;
 import io.harness.ngpipeline.inputset.validators.RuntimeValidatorResponse;
+import io.harness.pms.ambiance.Ambiance;
 
 import com.google.inject.Inject;
 

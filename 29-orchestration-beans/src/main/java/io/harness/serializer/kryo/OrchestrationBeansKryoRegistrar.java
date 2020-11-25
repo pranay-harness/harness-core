@@ -2,7 +2,6 @@ package io.harness.serializer.kryo;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 
-import io.harness.ambiance.Ambiance;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.data.OutcomeInstance;
 import io.harness.data.SweepingOutput;
@@ -40,7 +39,6 @@ public class OrchestrationBeansKryoRegistrar implements KryoRegistrar {
   public void register(Kryo kryo) {
     // Add new Classes Here
     kryo.register(StatusNotifyResponseData.class, 2502);
-    kryo.register(Ambiance.class, 2503);
     kryo.register(NodeExecution.class, 2506);
     kryo.register(PlanNode.class, 2508);
     kryo.register(DefaultFacilitatorParams.class, 2515);

@@ -7,13 +7,13 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.OrchestrationTestBase;
 import io.harness.adviser.advise.RetryAdvise;
-import io.harness.ambiance.Ambiance;
 import io.harness.category.element.UnitTests;
 import io.harness.engine.executions.node.NodeExecutionService;
 import io.harness.engine.executions.plan.PlanExecutionService;
 import io.harness.execution.NodeExecution;
 import io.harness.execution.PlanExecution;
 import io.harness.plan.PlanNode;
+import io.harness.pms.ambiance.Ambiance;
 import io.harness.pms.ambiance.Level;
 import io.harness.pms.execution.Status;
 import io.harness.pms.steps.StepType;
@@ -45,9 +45,9 @@ public class RetryAdviseHandlerTest extends OrchestrationTestBase {
 
   @Before
   public void setup() {
-    ambiance = Ambiance.builder()
-                   .planExecutionId(PLAN_EXECUTION_ID)
-                   .levels(Collections.singletonList(
+    ambiance = Ambiance.newBuilder()
+                   .setPlanExecutionId(PLAN_EXECUTION_ID)
+                   .addAllLevels(Collections.singletonList(
                        Level.newBuilder().setRuntimeId(NODE_EXECUTION_ID).setSetupId(NODE_SETUP_ID).build()))
                    .build();
 

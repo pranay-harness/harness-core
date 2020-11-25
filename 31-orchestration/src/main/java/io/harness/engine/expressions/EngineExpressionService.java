@@ -2,8 +2,8 @@ package io.harness.engine.expressions;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 
-import io.harness.ambiance.Ambiance;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.pms.ambiance.Ambiance;
 
 @OwnedBy(CDC)
 public interface EngineExpressionService {

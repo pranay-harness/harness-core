@@ -2,11 +2,11 @@ package io.harness.cdng.pipeline.steps;
 
 import static io.harness.ngpipeline.orchestration.StepUtils.createStepResponseFromChildResponse;
 
-import io.harness.ambiance.Ambiance;
 import io.harness.cdng.pipeline.beans.DeploymentStageStepParameters;
 import io.harness.executions.steps.ExecutionNodeType;
 import io.harness.facilitator.modes.child.ChildExecutable;
 import io.harness.facilitator.modes.child.ChildExecutableResponse;
+import io.harness.pms.ambiance.Ambiance;
 import io.harness.pms.steps.StepType;
 import io.harness.state.io.StepInputPackage;
 import io.harness.state.io.StepResponse;

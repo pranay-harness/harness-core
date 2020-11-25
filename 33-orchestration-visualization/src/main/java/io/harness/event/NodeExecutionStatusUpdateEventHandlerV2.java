@@ -2,8 +2,8 @@ package io.harness.event;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 
+import io.harness.AmbianceUtils;
 import io.harness.StatusUtils;
-import io.harness.ambiance.Ambiance;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.GraphVertex;
 import io.harness.beans.OrchestrationGraph;
@@ -14,6 +14,7 @@ import io.harness.execution.NodeExecution;
 import io.harness.execution.events.AsyncOrchestrationEventHandler;
 import io.harness.execution.events.OrchestrationEvent;
 import io.harness.generator.OrchestrationAdjacencyListGenerator;
+import io.harness.pms.ambiance.Ambiance;
 import io.harness.service.GraphGenerationService;
 
 import com.google.inject.Inject;
@@ -31,7 +32,7 @@ public class NodeExecutionStatusUpdateEventHandlerV2 implements AsyncOrchestrati
   @Override
   public void handleEvent(OrchestrationEvent event) {
     Ambiance ambiance = event.getAmbiance();
-    String nodeExecutionId = ambiance.obtainCurrentRuntimeId();
+    String nodeExecutionId = AmbianceUtils.obtainCurrentRuntimeId(ambiance);
     if (nodeExecutionId == null) {
       return;
     }

@@ -6,7 +6,6 @@ import static io.harness.ngpipeline.common.ParameterFieldHelper.getParameterFiel
 
 import static java.lang.String.format;
 
-import io.harness.ambiance.Ambiance;
 import io.harness.beans.IdentifierRef;
 import io.harness.cdng.infra.beans.InfrastructureOutcome;
 import io.harness.cdng.infra.beans.K8sDirectInfrastructureOutcome;
@@ -33,6 +32,7 @@ import io.harness.exception.WingsException;
 import io.harness.k8s.model.KubernetesClusterAuthType;
 import io.harness.ng.core.NGAccess;
 import io.harness.ngpipeline.common.AmbianceHelper;
+import io.harness.pms.ambiance.Ambiance;
 import io.harness.secretmanagerclient.services.api.SecretManagerClientService;
 import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.utils.IdentifierRefHelper;

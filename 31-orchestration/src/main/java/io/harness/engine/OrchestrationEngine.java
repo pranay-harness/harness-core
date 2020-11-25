@@ -14,6 +14,7 @@ import static io.harness.springdata.SpringDataMongoUtils.setUnset;
 
 import static java.lang.String.format;
 
+import io.harness.AmbianceUtils;
 import io.harness.LevelUtils;
 import io.harness.OrchestrationPublisherName;
 import io.harness.StatusUtils;
@@ -21,8 +22,6 @@ import io.harness.adviser.Advise;
 import io.harness.adviser.AdviseType;
 import io.harness.adviser.Adviser;
 import io.harness.adviser.AdvisingEvent;
-import io.harness.ambiance.Ambiance;
-import io.harness.ambiance.AmbianceUtils;
 import io.harness.annotations.Redesign;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.data.Outcome;
@@ -32,7 +31,6 @@ import io.harness.engine.advise.AdviseHandlerFactory;
 import io.harness.engine.events.OrchestrationEventEmitter;
 import io.harness.engine.executables.ExecutableProcessor;
 import io.harness.engine.executables.ExecutableProcessorFactory;
-import io.harness.engine.executables.InvocationHelper;
 import io.harness.engine.executables.InvokerPackage;
 import io.harness.engine.executions.node.NodeExecutionService;
 import io.harness.engine.executions.node.NodeExecutionTimeoutCallback;
@@ -54,6 +52,7 @@ import io.harness.facilitator.FacilitatorResponse;
 import io.harness.logging.AutoLogContext;
 import io.harness.plan.PlanNode;
 import io.harness.pms.advisers.AdviserObtainment;
+import io.harness.pms.ambiance.Ambiance;
 import io.harness.pms.execution.Status;
 import io.harness.pms.facilitators.FacilitatorObtainment;
 import io.harness.registries.adviser.AdviserRegistry;
@@ -119,8 +118,6 @@ public class OrchestrationEngine {
   @Inject private PlanExecutionService planExecutionService;
   @Inject private EngineExpressionService engineExpressionService;
   @Inject private InterruptService interruptService;
-  @Inject private AmbianceUtils ambianceUtils;
-  @Inject private InvocationHelper invocationHelper;
   @Inject private TimeoutEngine timeoutEngine;
   @Inject @Named(OrchestrationPublisherName.PUBLISHER_NAME) String publisherName;
   @Inject private OrchestrationEventEmitter eventEmitter;
@@ -131,16 +128,16 @@ public class OrchestrationEngine {
   }
 
   public void startNodeExecution(Ambiance ambiance) {
-    NodeExecution nodeExecution = nodeExecutionService.get(ambiance.obtainCurrentRuntimeId());
+    NodeExecution nodeExecution = nodeExecutionService.get(AmbianceUtils.obtainCurrentRuntimeId(ambiance));
     facilitateAndStartStep(ambiance, nodeExecution);
   }
 
   public void triggerExecution(Ambiance ambiance, PlanNode node) {
     String uuid = generateUuid();
     NodeExecution previousNodeExecution = null;
-    if (ambiance.obtainCurrentRuntimeId() != null) {
+    if (AmbianceUtils.obtainCurrentRuntimeId(ambiance) != null) {
       previousNodeExecution = nodeExecutionService.update(
-          ambiance.obtainCurrentRuntimeId(), ops -> ops.set(NodeExecutionKeys.nextId, uuid));
+          AmbianceUtils.obtainCurrentRuntimeId(ambiance), ops -> ops.set(NodeExecutionKeys.nextId, uuid));
     }
     Ambiance cloned = reBuildAmbiance(ambiance, node, uuid);
     NodeExecution nodeExecution =
@@ -158,17 +155,18 @@ public class OrchestrationEngine {
   }
 
   private Ambiance reBuildAmbiance(Ambiance ambiance, PlanNode node, String uuid) {
-    Ambiance cloned = ambiance.obtainCurrentRuntimeId() == null ? ambiance : ambianceUtils.cloneForFinish(ambiance);
-    cloned.addLevel(LevelUtils.buildLevelFromPlanNode(uuid, node));
+    Ambiance cloned =
+        AmbianceUtils.obtainCurrentRuntimeId(ambiance) == null ? ambiance : AmbianceUtils.cloneForFinish(ambiance);
+    cloned = cloned.toBuilder().addLevels(LevelUtils.buildLevelFromPlanNode(uuid, node)).build();
     return cloned;
   }
 
   // Start to Facilitators
   private void facilitateAndStartStep(Ambiance ambiance, NodeExecution nodeExecution) {
-    try (AutoLogContext ignore = ambiance.autoLogContext()) {
+    try (AutoLogContext ignore = AmbianceUtils.autoLogContext(ambiance)) {
       log.info("Checking Interrupts before Node Start");
       InterruptCheck check = interruptService.checkAndHandleInterruptsBeforeNodeStart(
-          ambiance.getPlanExecutionId(), ambiance.obtainCurrentRuntimeId());
+          ambiance.getPlanExecutionId(), AmbianceUtils.obtainCurrentRuntimeId(ambiance));
       if (!check.isProceed()) {
         log.info("Suspending Execution. Reason : {}", check.getReason());
         return;
@@ -211,7 +209,7 @@ public class OrchestrationEngine {
       FacilitatorResponse finalFacilitatorResponse = facilitatorResponse;
       // Update Status
       Preconditions.checkNotNull(
-          nodeExecutionService.updateStatusWithOps(ambiance.obtainCurrentRuntimeId(), Status.TIMED_WAITING,
+          nodeExecutionService.updateStatusWithOps(AmbianceUtils.obtainCurrentRuntimeId(ambiance), Status.TIMED_WAITING,
               ops -> ops.set(NodeExecutionKeys.initialWaitDuration, finalFacilitatorResponse.getInitialWait())));
       String resumeId =
           delayEventHelper.delay(finalFacilitatorResponse.getInitialWait().getSeconds(), Collections.emptyMap());
@@ -265,9 +263,9 @@ public class OrchestrationEngine {
   }
 
   private NodeExecution prepareNodeExecutionForInvocation(Ambiance ambiance, FacilitatorResponse facilitatorResponse) {
-    NodeExecution nodeExecution = nodeExecutionService.get(ambiance.obtainCurrentRuntimeId());
-    return Preconditions.checkNotNull(
-        nodeExecutionService.updateStatusWithOps(ambiance.obtainCurrentRuntimeId(), Status.RUNNING, ops -> {
+    NodeExecution nodeExecution = nodeExecutionService.get(AmbianceUtils.obtainCurrentRuntimeId(ambiance));
+    return Preconditions.checkNotNull(nodeExecutionService.updateStatusWithOps(
+        AmbianceUtils.obtainCurrentRuntimeId(ambiance), Status.RUNNING, ops -> {
           ops.set(NodeExecutionKeys.mode, facilitatorResponse.getExecutionMode());
           ops.set(NodeExecutionKeys.startTs, System.currentTimeMillis());
           setUnset(ops, NodeExecutionKeys.timeoutInstanceIds, registerTimeouts(nodeExecution));
@@ -362,9 +360,9 @@ public class OrchestrationEngine {
     PlanExecution planExecution = planExecutionService.updateStatus(
         ambiance.getPlanExecutionId(), status, ops -> ops.set(PlanExecutionKeys.endTs, System.currentTimeMillis()));
     eventEmitter.emitEvent(OrchestrationEvent.builder()
-                               .ambiance(Ambiance.builder()
-                                             .planExecutionId(planExecution.getUuid())
-                                             .setupAbstractions(planExecution.getSetupAbstractions())
+                               .ambiance(Ambiance.newBuilder()
+                                             .setPlanExecutionId(planExecution.getUuid())
+                                             .putAllSetupAbstractions(planExecution.getSetupAbstractions())
                                              .build())
                                .eventType(OrchestrationEventType.ORCHESTRATION_END)
                                .build());
@@ -399,7 +397,7 @@ public class OrchestrationEngine {
   public void resume(String nodeExecutionId, Map<String, ResponseData> response, boolean asyncError) {
     NodeExecution nodeExecution = nodeExecutionService.get(nodeExecutionId);
     Ambiance ambiance = nodeExecution.getAmbiance();
-    try (AutoLogContext ignore = ambiance.autoLogContext()) {
+    try (AutoLogContext ignore = AmbianceUtils.autoLogContext(ambiance)) {
       if (!StatusUtils.resumableStatuses().contains(nodeExecution.getStatus())) {
         log.warn("NodeExecution is no longer in RESUMABLE state Uuid: {} Status {} ", nodeExecution.getUuid(),
             nodeExecution.getStatus());
@@ -429,7 +427,7 @@ public class OrchestrationEngine {
                                                    .failureTypes(ExceptionUtils.getFailureTypes(exception))
                                                    .build())
                                   .build();
-      handleStepResponse(ambiance.obtainCurrentRuntimeId(), response);
+      handleStepResponse(AmbianceUtils.obtainCurrentRuntimeId(ambiance), response);
     } catch (RuntimeException ex) {
       log.error("Error when trying to obtain the advice ", ex);
     }

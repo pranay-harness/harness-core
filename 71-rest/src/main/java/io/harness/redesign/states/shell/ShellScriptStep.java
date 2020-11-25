@@ -15,7 +15,6 @@ import static com.google.common.collect.Lists.newArrayList;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 
-import io.harness.ambiance.Ambiance;
 import io.harness.annotations.Redesign;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.DelegateTask;
@@ -30,6 +29,7 @@ import io.harness.eraro.ErrorCode;
 import io.harness.eraro.Level;
 import io.harness.exception.WingsException;
 import io.harness.facilitator.modes.task.TaskExecutable;
+import io.harness.pms.ambiance.Ambiance;
 import io.harness.pms.execution.Status;
 import io.harness.pms.steps.StepType;
 import io.harness.resolvers.ResolverUtils;
@@ -232,7 +232,7 @@ public class ShellScriptStep implements TaskExecutable<ShellScriptStepParameters
                   .taskType(TaskType.SCRIPT.name())
                   .parameters(new Object[] {shellScriptParameters.build()})
                   .timeout(DEFAULT_ASYNC_CALL_TIMEOUT)
-                  .expressionFunctorToken(ambiance.getExpressionFunctorToken())
+                  //                  .expressionFunctorToken(ambiance.getExpressionFunctorToken())
                   .build())
         .setupAbstraction(Cd1SetupFields.ENV_ID_FIELD, environment == null ? null : environment.getUuid())
         .setupAbstraction(Cd1SetupFields.INFRASTRUCTURE_MAPPING_ID_FIELD,
@@ -322,15 +322,15 @@ public class ShellScriptStep implements TaskExecutable<ShellScriptStepParameters
   }
 
   private String getAccountId(Ambiance ambiance) {
-    return ambiance.getSetupAbstractions().get("accountId");
+    return ambiance.getSetupAbstractionsMap().get("accountId");
   }
 
   private String getAppId(Ambiance ambiance) {
-    return ambiance.getSetupAbstractions().get("appId");
+    return ambiance.getSetupAbstractionsMap().get("appId");
   }
 
   private String createActivity(Ambiance ambiance) {
-    String appId = ambiance.getSetupAbstractions().get("appId");
+    String appId = ambiance.getSetupAbstractionsMap().get("appId");
     return activityService
         .save(Activity.builder()
                   .appId(appId)

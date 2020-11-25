@@ -3,7 +3,6 @@ package io.harness.states;
 import static io.harness.ngpipeline.orchestration.StepUtils.createStepResponseFromChildResponse;
 import static io.harness.resolvers.ResolverUtils.GLOBAL_GROUP_SCOPE;
 
-import io.harness.ambiance.Ambiance;
 import io.harness.beans.CIPipelineSetupParameters;
 import io.harness.ci.stdvars.BuildStandardVariables;
 import io.harness.ci.utils.CIPipelineStandardVariablesUtils;
@@ -12,6 +11,7 @@ import io.harness.facilitator.PassThroughData;
 import io.harness.facilitator.modes.child.ChildExecutable;
 import io.harness.facilitator.modes.child.ChildExecutableResponse;
 import io.harness.facilitator.modes.sync.SyncExecutable;
+import io.harness.pms.ambiance.Ambiance;
 import io.harness.pms.execution.Status;
 import io.harness.pms.steps.StepType;
 import io.harness.state.io.StepInputPackage;

@@ -2,7 +2,6 @@ package io.harness.cdng.pipeline.steps;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 
-import io.harness.ambiance.Ambiance;
 import io.harness.annotations.Redesign;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.delegate.beans.ErrorNotifyResponseData;
@@ -11,6 +10,7 @@ import io.harness.delegate.task.http.HttpTaskParameters;
 import io.harness.executions.steps.ExecutionNodeType;
 import io.harness.facilitator.modes.task.TaskExecutable;
 import io.harness.ngpipeline.orchestration.StepUtils;
+import io.harness.pms.ambiance.Ambiance;
 import io.harness.pms.execution.Status;
 import io.harness.pms.steps.StepType;
 import io.harness.redesign.states.http.BasicHttpStepParameters;
@@ -58,7 +58,7 @@ public class HttpStep implements TaskExecutable<BasicHttpStepParameters> {
                                   .parameters(new Object[] {httpTaskParameters})
                                   .build();
     return StepUtils.prepareDelegateTaskInput(
-        ambiance.getSetupAbstractions().get("accountId"), taskData, ambiance.getSetupAbstractions());
+        ambiance.getSetupAbstractionsMap().get("accountId"), taskData, ambiance.getSetupAbstractionsMap());
   }
 
   @Override

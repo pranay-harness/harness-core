@@ -5,10 +5,11 @@ import static io.harness.rule.OwnerRule.PRASHANT;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import io.harness.AmbianceUtils;
 import io.harness.OrchestrationTestBase;
-import io.harness.ambiance.Ambiance;
 import io.harness.category.element.UnitTests;
 import io.harness.data.Outcome;
+import io.harness.pms.ambiance.Ambiance;
 import io.harness.refObjects.RefObjectUtil;
 import io.harness.rule.Owner;
 import io.harness.testlib.RealMongo;
@@ -37,7 +38,7 @@ public class OutcomeServiceImplTest extends OrchestrationTestBase {
 
     // Resolve with producer id
     DummyOutcome savedOutcome = (DummyOutcome) outcomeService.resolve(
-        ambiance, RefObjectUtil.getOutcomeRefObject(outcomeName, ambiance.obtainCurrentLevel().getSetupId(), null));
+        ambiance, RefObjectUtil.getOutcomeRefObject(outcomeName, AmbianceUtils.obtainCurrentSetupId(ambiance), null));
     assertThat(savedOutcome).isNotNull();
     assertThat(savedOutcome.getTest()).isEqualTo("test");
 
@@ -73,8 +74,8 @@ public class OutcomeServiceImplTest extends OrchestrationTestBase {
     outcomeService.consume(ambiance, outcomeName, DummyOutcome.builder().test("test").build(), null);
     outcomeService.consume(ambiance1, outcomeName1, DummyOutcome.builder().test("test1").build(), null);
 
-    List<Outcome> outcomes =
-        outcomeService.findAllByRuntimeId(ambiance.getPlanExecutionId(), ambiance.obtainCurrentRuntimeId());
+    List<Outcome> outcomes = outcomeService.findAllByRuntimeId(
+        ambiance.getPlanExecutionId(), AmbianceUtils.obtainCurrentRuntimeId(ambiance));
     assertThat(outcomes.size()).isEqualTo(2);
   }
 

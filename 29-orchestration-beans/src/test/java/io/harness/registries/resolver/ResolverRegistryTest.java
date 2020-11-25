@@ -6,8 +6,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import io.harness.OrchestrationBeansTestBase;
-import io.harness.ambiance.Ambiance;
 import io.harness.category.element.UnitTests;
+import io.harness.pms.ambiance.Ambiance;
 import io.harness.pms.refobjects.RefObject;
 import io.harness.pms.refobjects.RefType;
 import io.harness.references.OrchestrationRefType;

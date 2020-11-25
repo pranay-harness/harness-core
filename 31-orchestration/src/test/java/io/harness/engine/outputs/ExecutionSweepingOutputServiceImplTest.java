@@ -6,11 +6,11 @@ import static io.harness.rule.OwnerRule.GARVIT;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
+import io.harness.AmbianceUtils;
 import io.harness.OrchestrationTestBase;
-import io.harness.ambiance.Ambiance;
-import io.harness.ambiance.AmbianceUtils;
 import io.harness.category.element.UnitTests;
 import io.harness.data.SweepingOutput;
+import io.harness.pms.ambiance.Ambiance;
 import io.harness.pms.ambiance.Level;
 import io.harness.pms.steps.StepType;
 import io.harness.refObjects.RefObjectUtil;
@@ -30,7 +30,6 @@ public class ExecutionSweepingOutputServiceImplTest extends OrchestrationTestBas
   private static final String STEP_SETUP_ID = generateUuid();
 
   @Inject private ExecutionSweepingOutputService executionSweepingOutputService;
-  @Inject private AmbianceUtils ambianceUtils;
 
   @Test
   @RealMongo
@@ -38,7 +37,7 @@ public class ExecutionSweepingOutputServiceImplTest extends OrchestrationTestBas
   @Category(UnitTests.class)
   public void testConsumeAndFind() {
     Ambiance ambianceSection = AmbianceTestUtils.buildAmbiance();
-    Ambiance ambiancePhase = ambianceUtils.cloneForFinish(ambianceSection);
+    Ambiance ambiancePhase = AmbianceUtils.cloneForFinish(ambianceSection);
     Ambiance ambianceStep = prepareStepAmbiance(ambianceSection);
 
     String outputName = "outputName";
@@ -64,7 +63,7 @@ public class ExecutionSweepingOutputServiceImplTest extends OrchestrationTestBas
   @Category(UnitTests.class)
   public void testSaveWithLevelsToKeepAndFind() {
     Ambiance ambianceSection = AmbianceTestUtils.buildAmbiance();
-    Ambiance ambiancePhase = ambianceUtils.cloneForFinish(ambianceSection);
+    Ambiance ambiancePhase = AmbianceUtils.cloneForFinish(ambianceSection);
     Ambiance ambianceStep = prepareStepAmbiance(ambianceSection);
 
     String outputName = "outputName";
@@ -90,7 +89,7 @@ public class ExecutionSweepingOutputServiceImplTest extends OrchestrationTestBas
   @Category(UnitTests.class)
   public void testSaveAtScopeAndFind() {
     Ambiance ambianceSection = AmbianceTestUtils.buildAmbiance();
-    Ambiance ambiancePhase = ambianceUtils.cloneForFinish(ambianceSection);
+    Ambiance ambiancePhase = AmbianceUtils.cloneForFinish(ambianceSection);
     Ambiance ambianceStep = prepareStepAmbiance(ambianceSection);
 
     String outputName = "outputName";
@@ -124,13 +123,12 @@ public class ExecutionSweepingOutputServiceImplTest extends OrchestrationTestBas
   }
 
   private Ambiance prepareStepAmbiance(Ambiance ambianceSection) {
-    Ambiance ambianceStep = ambianceUtils.cloneForChild(ambianceSection);
-    ambianceStep.addLevel(Level.newBuilder()
-                              .setRuntimeId(STEP_RUNTIME_ID)
-                              .setSetupId(STEP_SETUP_ID)
-                              .setStepType(StepType.newBuilder().setType("SHELL_SCRIPT").build())
-                              .build());
-    return ambianceStep;
+    return AmbianceUtils.cloneForChild(ambianceSection,
+        Level.newBuilder()
+            .setRuntimeId(STEP_RUNTIME_ID)
+            .setSetupId(STEP_SETUP_ID)
+            .setStepType(StepType.newBuilder().setType("SHELL_SCRIPT").build())
+            .build());
   }
 
   @Test

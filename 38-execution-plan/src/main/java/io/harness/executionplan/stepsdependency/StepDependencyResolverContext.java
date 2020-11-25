@@ -1,8 +1,8 @@
 package io.harness.executionplan.stepsdependency;
 
-import io.harness.ambiance.Ambiance;
 import io.harness.executionplan.stepsdependency.resolvers.StepDependencyResolverContextImpl;
 import io.harness.executionplan.stepsdependency.resolvers.StepDependencyResolverContextImpl.StepDependencyResolverContextImplBuilder;
+import io.harness.pms.ambiance.Ambiance;
 import io.harness.state.io.ResolvedRefInput;
 import io.harness.state.io.StepInputPackage;
 import io.harness.state.io.StepParameters;
