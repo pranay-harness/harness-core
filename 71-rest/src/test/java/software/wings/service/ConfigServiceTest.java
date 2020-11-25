@@ -309,6 +309,7 @@ public class ConfigServiceTest extends WingsBaseTest {
         .thenReturn(EncryptedData.builder().encryptedValue("csd".toCharArray()).build());
     when(wingsPersistence.getWithAppId(ConfigFile.class, APP_ID, FILE_ID)).thenReturn(configFile);
     BoundedInputStream boundedInputStream = new BoundedInputStream(this.inputStream);
+    when(query.get()).thenReturn(configFile);
     configService.update(configFile, boundedInputStream);
     ArgumentCaptor<Map> argumentCaptor = ArgumentCaptor.forClass(Map.class);
     verify(wingsPersistence).updateFields(eq(ConfigFile.class), eq(FILE_ID), argumentCaptor.capture());

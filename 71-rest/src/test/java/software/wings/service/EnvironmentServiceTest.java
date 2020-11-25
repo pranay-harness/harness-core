@@ -12,6 +12,7 @@ import static io.harness.rule.OwnerRule.RAMA;
 import static io.harness.rule.OwnerRule.ROHITKARELIA;
 import static io.harness.rule.OwnerRule.SRINIVAS;
 
+import static software.wings.beans.ConfigFile.DEFAULT_TEMPLATE_ID;
 import static software.wings.beans.Environment.Builder.anEnvironment;
 import static software.wings.beans.Environment.EnvironmentType.PROD;
 import static software.wings.beans.Environment.GLOBAL_ENV_ID;
@@ -74,6 +75,7 @@ import io.harness.rule.Owner;
 
 import software.wings.WingsBaseTest;
 import software.wings.beans.Application;
+import software.wings.beans.ConfigFile;
 import software.wings.beans.EntityType;
 import software.wings.beans.EnvSummary;
 import software.wings.beans.Environment;
@@ -116,6 +118,7 @@ import software.wings.service.intfc.yaml.YamlDirectoryService;
 import software.wings.service.intfc.yaml.YamlPushService;
 
 import com.google.inject.Inject;
+import java.io.File;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -339,6 +342,17 @@ public class EnvironmentServiceTest extends WingsBaseTest {
         .when(infrastructureDefinitionService)
         .cloneInfrastructureDefinitions(eq(APP_ID), eq(ENV_ID), eq(APP_ID), any());
 
+    ConfigFile configFile = ConfigFile.builder()
+                                .entityId(ENV_ID)
+                                .templateId(DEFAULT_TEMPLATE_ID)
+                                .envId(GLOBAL_ENV_ID)
+                                .entityType(EntityType.ENVIRONMENT)
+                                .build();
+    configFile.setAppId(APP_ID);
+    when(configService.getConfigFilesForEntity(eq(APP_ID), eq(DEFAULT_TEMPLATE_ID), eq(ENV_ID)))
+        .thenReturn(Collections.singletonList(configFile));
+    when(configService.download(eq(APP_ID), anyString())).thenReturn(new File("file"));
+
     clonedEnvironment = environmentService.cloneEnvironment(APP_ID, ENV_ID, cloneMetadata);
 
     verify(wingsPersistence).getWithAppId(Environment.class, APP_ID, ENV_ID);
@@ -348,6 +362,7 @@ public class EnvironmentServiceTest extends WingsBaseTest {
     verify(serviceTemplateService).get(APP_ID, serviceTemplate.getEnvId(), serviceTemplate.getUuid(), true, MASKED);
     verify(infrastructureDefinitionService, times(1))
         .cloneInfrastructureDefinitions(APP_ID, ENV_ID, APP_ID, clonedEnvironment.getUuid());
+    verify(configService, times(1)).download(eq(APP_ID), anyString());
   }
 
   @Test

@@ -699,6 +699,10 @@ public class EnvironmentServiceImpl implements EnvironmentService, DataProvider 
           }
         }
       }
+
+      List<ConfigFile> configFiles = configService.getConfigFilesForEntity(appId, DEFAULT_TEMPLATE_ID, envId);
+      cloneConfigFiles(clonedEnvironment, null, configFiles, null, null);
+
       // Clone ALL service variable overrides
       PageRequest<ServiceVariable> serviceVariablePageRequest = aPageRequest()
                                                                     .withLimit(UNLIMITED)
@@ -799,6 +803,9 @@ public class EnvironmentServiceImpl implements EnvironmentService, DataProvider 
         cloneAppManifests(clonedEnvironment.getAppId(), clonedEnvironment.getUuid(), envId);
         log.info("Cloning environment from appId {} to appId {}", appId, targetAppId);
       }
+
+      List<ConfigFile> configFiles = configService.getConfigFilesForEntity(appId, DEFAULT_TEMPLATE_ID, envId);
+      cloneConfigFiles(clonedEnvironment, null, configFiles, targetAppId, null);
       return clonedEnvironment;
     }
   }
@@ -859,6 +866,9 @@ public class EnvironmentServiceImpl implements EnvironmentService, DataProvider 
         }
         if (clonedConfigFile.getEntityType() == SERVICE && targetServiceId != null) {
           clonedConfigFile.setEntityId(targetServiceId);
+        }
+        if (clonedConfigFile.getEntityType() == ENVIRONMENT) {
+          clonedConfigFile.setEntityId(clonedEnvironment.getUuid());
         }
         try {
           File file = configService.download(configFile.getAppId(), configFile.getUuid());

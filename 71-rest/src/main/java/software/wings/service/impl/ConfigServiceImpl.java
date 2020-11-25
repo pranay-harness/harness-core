@@ -10,6 +10,7 @@ import static io.harness.validation.Validator.notNullCheck;
 import static software.wings.beans.ConfigFile.DEFAULT_TEMPLATE_ID;
 import static software.wings.beans.EntityType.ENVIRONMENT;
 import static software.wings.beans.EntityType.SERVICE;
+import static software.wings.beans.EntityType.SERVICE_TEMPLATE;
 import static software.wings.beans.Environment.GLOBAL_ENV_ID;
 
 import static java.util.stream.Collectors.toList;
@@ -211,19 +212,12 @@ public class ConfigServiceImpl implements ConfigService {
 
   @Override
   public ConfigFile get(String appId, String entityId, EntityType entityType, String relativeFilePath) {
-    Query<ConfigFile> query = wingsPersistence.createQuery(ConfigFile.class);
-
-    String columnName;
-    if (EntityType.SERVICE == entityType) {
-      columnName = ConfigFileKeys.entityId;
-      query.filter(ConfigFileKeys.entityType, entityType.name());
-    } else if (EntityType.ENVIRONMENT == entityType) {
-      columnName = ConfigFileKeys.envId;
-    } else {
+    if (entityType != SERVICE && entityType != SERVICE_TEMPLATE && entityType != ENVIRONMENT) {
       return null;
     }
 
-    return query.filter(columnName, entityId)
+    Query<ConfigFile> query = wingsPersistence.createQuery(ConfigFile.class);
+    return query.filter(ConfigFileKeys.entityId, entityId)
         .filter(ConfigFile.APP_ID_KEY2, appId)
         .filter(ConfigFileKeys.relativeFilePath, relativeFilePath)
         .get();
