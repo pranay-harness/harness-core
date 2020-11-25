@@ -21,8 +21,13 @@ import io.harness.tasks.ResponseData;
 import java.util.Map;
 
 @OwnedBy(CDC)
-public class SectionChainStep implements Step, ChildChainExecutable<SectionChainStepParameters> {
+public class SectionChainStep implements ChildChainExecutable<SectionChainStepParameters> {
   public static final StepType STEP_TYPE = StepType.newBuilder().setType(OrchestrationStepTypes.SECTION_CHAIN).build();
+
+  @Override
+  public Class<SectionChainStepParameters> getStepParametersClass() {
+    return SectionChainStepParameters.class;
+  }
 
   @Override
   public ChildChainResponse executeFirstChild(

@@ -17,10 +17,15 @@ import io.harness.waiter.WaitNotifyEngine;
 import com.google.inject.Inject;
 import java.util.Map;
 
-public class TestAsyncStep implements Step, AsyncExecutable<TestStepParameters> {
+public class TestAsyncStep implements AsyncExecutable<TestStepParameters> {
   public static final StepType ASYNC_STEP_TYPE = StepType.newBuilder().setType("TEST_STATE_PLAN_ASYNC").build();
 
   @Inject private transient WaitNotifyEngine waitNotifyEngine;
+
+  @Override
+  public Class<TestStepParameters> getStepParametersClass() {
+    return TestStepParameters.class;
+  }
 
   @Override
   public AsyncExecutableResponse executeAsync(

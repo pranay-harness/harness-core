@@ -6,6 +6,7 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.execution.NodeExecution;
 import io.harness.interrupts.ExecutionInterruptType;
 import io.harness.pms.execution.Status;
+import io.harness.state.io.StepParameters;
 
 import java.util.EnumSet;
 import java.util.List;
@@ -56,4 +57,8 @@ public interface NodeExecutionService {
   Optional<NodeExecution> getByNodeIdentifier(@NonNull String nodeIdentifier, @NonNull String planExecutionId);
 
   List<NodeExecution> findByParentIdAndStatusIn(String parentId, EnumSet<Status> flowingStatuses);
+
+  StepParameters extractStepParameters(NodeExecution nodeExecution);
+
+  StepParameters extractResolvedStepParameters(NodeExecution nodeExecution);
 }

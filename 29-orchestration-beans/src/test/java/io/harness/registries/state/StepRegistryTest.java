@@ -13,6 +13,7 @@ import io.harness.registries.exceptions.DuplicateRegistryException;
 import io.harness.registries.exceptions.UnregisteredKeyAccessException;
 import io.harness.rule.Owner;
 import io.harness.state.Step;
+import io.harness.state.io.EmptyStepParameters;
 
 import com.google.inject.Inject;
 import lombok.Builder;
@@ -48,5 +49,10 @@ public class StepRegistryTest extends OrchestrationBeansTestBase {
 
   @Value
   @Builder
-  private static class DummyStep implements Step {}
+  private static class DummyStep implements Step<EmptyStepParameters> {
+    @Override
+    public Class<EmptyStepParameters> getStepParametersClass() {
+      return EmptyStepParameters.class;
+    }
+  }
 }

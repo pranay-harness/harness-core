@@ -10,7 +10,6 @@ import io.harness.pms.execution.ExecutionMode;
 import io.harness.pms.execution.Status;
 import io.harness.pms.steps.SkipType;
 import io.harness.state.io.FailureInfo;
-import io.harness.state.io.StepParameters;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import java.io.Serializable;
@@ -41,7 +40,7 @@ public class GraphVertex implements Serializable {
   private String stepType;
   private Status status;
   private FailureInfo failureInfo;
-  private StepParameters stepParameters;
+  private Map<String, Object> stepParameters;
   private ExecutionMode mode;
 
   private List<Map<String, String>> executableResponsesMetadata;

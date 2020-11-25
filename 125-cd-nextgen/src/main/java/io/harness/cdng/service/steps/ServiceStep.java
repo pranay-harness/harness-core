@@ -32,7 +32,6 @@ import io.harness.ng.core.service.services.ServiceEntityService;
 import io.harness.ngpipeline.common.AmbianceHelper;
 import io.harness.pms.execution.Status;
 import io.harness.pms.steps.StepType;
-import io.harness.state.Step;
 import io.harness.state.io.StepInputPackage;
 import io.harness.state.io.StepResponse;
 import io.harness.state.io.StepResponse.StepOutcome;
@@ -51,13 +50,18 @@ import lombok.Singular;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class ServiceStep implements Step, TaskChainExecutable<ServiceStepParameters> {
+public class ServiceStep implements TaskChainExecutable<ServiceStepParameters> {
   public static final StepType STEP_TYPE = StepType.newBuilder().setType(ExecutionNodeType.SERVICE.getName()).build();
 
   @Inject private OutcomeService outcomeService;
   @Inject private ServiceEntityService serviceEntityService;
   @Inject private ArtifactStep artifactStep;
   @Inject private ManifestStep manifestStep;
+
+  @Override
+  public Class<ServiceStepParameters> getStepParametersClass() {
+    return ServiceStepParameters.class;
+  }
 
   @Override
   public TaskChainResponse startChainLink(

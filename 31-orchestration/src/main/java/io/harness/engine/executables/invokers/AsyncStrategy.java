@@ -47,7 +47,7 @@ public class AsyncStrategy implements ExecuteStrategy {
     Ambiance ambiance = nodeExecution.getAmbiance();
     AsyncExecutable asyncExecutable = extractAsyncExecutable(invokerPackage.getNodeExecution());
     AsyncExecutableResponse asyncExecutableResponse = asyncExecutable.executeAsync(
-        ambiance, nodeExecution.getResolvedStepParameters(), invokerPackage.getInputPackage());
+        ambiance, nodeExecutionService.extractResolvedStepParameters(nodeExecution), invokerPackage.getInputPackage());
     handleResponse(ambiance, asyncExecutableResponse);
   }
 
@@ -56,8 +56,8 @@ public class AsyncStrategy implements ExecuteStrategy {
     NodeExecution nodeExecution = resumePackage.getNodeExecution();
     Ambiance ambiance = nodeExecution.getAmbiance();
     AsyncExecutable asyncExecutable = extractAsyncExecutable(nodeExecution);
-    StepResponse stepResponse = asyncExecutable.handleAsyncResponse(
-        ambiance, nodeExecution.getResolvedStepParameters(), resumePackage.getResponseDataMap());
+    StepResponse stepResponse = asyncExecutable.handleAsyncResponse(ambiance,
+        nodeExecutionService.extractResolvedStepParameters(nodeExecution), resumePackage.getResponseDataMap());
     engine.handleStepResponse(nodeExecution.getUuid(), stepResponse);
   }
 

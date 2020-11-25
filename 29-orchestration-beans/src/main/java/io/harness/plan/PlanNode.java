@@ -9,6 +9,7 @@ import io.harness.pms.facilitators.FacilitatorObtainment;
 import io.harness.pms.refobjects.RefObject;
 import io.harness.pms.steps.SkipType;
 import io.harness.pms.steps.StepType;
+import io.harness.serializer.JsonUtils;
 import io.harness.state.io.StepParameters;
 
 import java.util.List;
@@ -17,6 +18,7 @@ import lombok.Builder;
 import lombok.Singular;
 import lombok.Value;
 import lombok.experimental.FieldNameConstants;
+import org.bson.Document;
 
 @Value
 @Builder
@@ -32,7 +34,7 @@ public class PlanNode {
   String group;
 
   // Input/Outputs
-  StepParameters stepParameters;
+  Document stepParameters;
   @Singular List<RefObject> refObjects;
 
   // Hooks
@@ -57,5 +59,12 @@ public class PlanNode {
         .facilitatorObtainments(facilitatorObtainments)
         .skipExpressionChain(skipExpressionChain)
         .build();
+  }
+
+  public static class PlanNodeBuilder {
+    public PlanNodeBuilder stepParameters(final StepParameters stepParameters) {
+      this.stepParameters = stepParameters == null ? null : Document.parse(JsonUtils.asJson(stepParameters));
+      return this;
+    }
   }
 }

@@ -64,7 +64,7 @@ public class ChildChainStrategy implements ExecuteStrategy {
     Ambiance ambiance = nodeExecution.getAmbiance();
     ChildChainResponse childChainResponse;
     childChainResponse = childChainExecutable.executeFirstChild(
-        ambiance, nodeExecution.getResolvedStepParameters(), invokerPackage.getInputPackage());
+        ambiance, nodeExecutionService.extractResolvedStepParameters(nodeExecution), invokerPackage.getInputPackage());
     handleResponse(ambiance, childChainResponse);
   }
 
@@ -82,16 +82,16 @@ public class ChildChainStrategy implements ExecuteStrategy {
     }
     if (lastChildChainExecutableResponse.isLastLink() || lastChildChainExecutableResponse.isSuspend()
         || isBroken(accumulatedResponse) || isAborted(accumulatedResponse)) {
-      StepResponse stepResponse =
-          childChainExecutable.finalizeExecution(ambiance, nodeExecution.getResolvedStepParameters(),
-              lastChildChainExecutableResponse.getPassThroughData(), accumulatedResponse);
+      StepResponse stepResponse = childChainExecutable.finalizeExecution(ambiance,
+          nodeExecutionService.extractResolvedStepParameters(nodeExecution),
+          lastChildChainExecutableResponse.getPassThroughData(), accumulatedResponse);
       engine.handleStepResponse(nodeExecution.getUuid(), stepResponse);
     } else {
       StepInputPackage inputPackage = engineObtainmentHelper.obtainInputPackage(
           ambiance, nodeExecution.getNode().getRefObjects(), nodeExecution.getAdditionalInputs());
-      ChildChainResponse chainResponse =
-          childChainExecutable.executeNextChild(ambiance, nodeExecution.getResolvedStepParameters(), inputPackage,
-              lastChildChainExecutableResponse.getPassThroughData(), accumulatedResponse);
+      ChildChainResponse chainResponse = childChainExecutable.executeNextChild(ambiance,
+          nodeExecutionService.extractResolvedStepParameters(nodeExecution), inputPackage,
+          lastChildChainExecutableResponse.getPassThroughData(), accumulatedResponse);
       handleResponse(ambiance, chainResponse);
     }
   }

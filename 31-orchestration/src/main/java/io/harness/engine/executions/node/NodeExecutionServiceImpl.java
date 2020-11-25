@@ -18,6 +18,10 @@ import io.harness.execution.events.OrchestrationEventType;
 import io.harness.interrupts.ExecutionInterruptType;
 import io.harness.interrupts.InterruptEffect;
 import io.harness.pms.execution.Status;
+import io.harness.registries.state.StepRegistry;
+import io.harness.serializer.JsonUtils;
+import io.harness.state.Step;
+import io.harness.state.io.StepParameters;
 
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
@@ -28,6 +32,7 @@ import java.util.Optional;
 import java.util.function.Consumer;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
+import org.bson.Document;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.domain.Sort.Direction;
 import org.springframework.data.mongodb.core.MongoTemplate;
@@ -39,6 +44,7 @@ import org.springframework.data.mongodb.core.query.Update;
 public class NodeExecutionServiceImpl implements NodeExecutionService {
   @Inject private MongoTemplate mongoTemplate;
   @Inject private OrchestrationEventEmitter eventEmitter;
+  @Inject private StepRegistry stepRegistry;
 
   @Override
   public NodeExecution get(String nodeExecutionId) {
@@ -235,5 +241,23 @@ public class NodeExecutionServiceImpl implements NodeExecutionService {
       return false;
     }
     return true;
+  }
+
+  @Override
+  public StepParameters extractStepParameters(NodeExecution nodeExecution) {
+    return extractStepParametersInternal(nodeExecution, nodeExecution.getNode().getStepParameters());
+  }
+
+  @Override
+  public StepParameters extractResolvedStepParameters(NodeExecution nodeExecution) {
+    return extractStepParametersInternal(nodeExecution, nodeExecution.getResolvedStepParameters());
+  }
+
+  private StepParameters extractStepParametersInternal(NodeExecution nodeExecution, Document stepParameters) {
+    Step step = stepRegistry.obtain(nodeExecution.getNode().getStepType());
+    if (stepParameters == null) {
+      return null;
+    }
+    return (StepParameters) JsonUtils.asObject(stepParameters.toJson(), step.getStepParametersClass());
   }
 }

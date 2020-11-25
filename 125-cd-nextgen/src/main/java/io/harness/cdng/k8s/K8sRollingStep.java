@@ -48,7 +48,6 @@ import io.harness.ngpipeline.common.AmbianceHelper;
 import io.harness.pms.execution.Status;
 import io.harness.pms.steps.StepType;
 import io.harness.security.encryption.EncryptedDataDetail;
-import io.harness.state.Step;
 import io.harness.state.io.FailureInfo;
 import io.harness.state.io.StepInputPackage;
 import io.harness.state.io.StepResponse;
@@ -69,13 +68,18 @@ import java.util.stream.Collectors;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.jetbrains.annotations.NotNull;
 
-public class K8sRollingStep implements Step, TaskChainExecutable<K8sRollingStepParameters> {
+public class K8sRollingStep implements TaskChainExecutable<K8sRollingStepParameters> {
   public static final StepType STEP_TYPE =
       StepType.newBuilder().setType(ExecutionNodeType.K8S_ROLLING.getName()).build();
 
   @Inject private EngineExpressionService engineExpressionService;
   @Inject private K8sStepHelper k8sStepHelper;
   @Inject private StepDependencyService stepDependencyService;
+
+  @Override
+  public Class<K8sRollingStepParameters> getStepParametersClass() {
+    return K8sRollingStepParameters.class;
+  }
 
   @Override
   public TaskChainResponse startChainLink(

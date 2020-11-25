@@ -31,7 +31,6 @@ import io.harness.ngpipeline.orchestration.StepUtils;
 import io.harness.plancreators.IntegrationStagePlanCreator;
 import io.harness.pms.execution.Status;
 import io.harness.pms.steps.StepType;
-import io.harness.state.Step;
 import io.harness.state.io.StepInputPackage;
 import io.harness.state.io.StepResponse;
 import io.harness.stateutils.buildstate.BuildSetupUtils;
@@ -55,7 +54,7 @@ import lombok.extern.slf4j.Slf4j;
  */
 
 @Slf4j
-public class LiteEngineTaskStep implements Step, TaskExecutable<LiteEngineTaskStepInfo> {
+public class LiteEngineTaskStep implements TaskExecutable<LiteEngineTaskStepInfo> {
   public static final String TASK_TYPE_CI_BUILD = "CI_BUILD";
   public static final String LE_STATUS_TASK_TYPE = "CI_LE_STATUS";
   @Inject private BuildSetupUtils buildSetupUtils;
@@ -64,6 +63,11 @@ public class LiteEngineTaskStep implements Step, TaskExecutable<LiteEngineTaskSt
 
   private static final String DEPENDENCY_OUTCOME = "dependencies";
   public static final StepType STEP_TYPE = LiteEngineTaskStepInfo.typeInfo.getStepType();
+
+  @Override
+  public Class<LiteEngineTaskStepInfo> getStepParametersClass() {
+    return LiteEngineTaskStepInfo.class;
+  }
 
   @Override
   public Task obtainTask(Ambiance ambiance, LiteEngineTaskStepInfo stepParameters, StepInputPackage inputPackage) {

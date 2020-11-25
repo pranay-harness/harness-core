@@ -6,7 +6,6 @@ import io.harness.pms.execution.ExecutionMode;
 import io.harness.pms.execution.Status;
 import io.harness.pms.steps.SkipType;
 import io.harness.state.io.FailureInfo;
-import io.harness.state.io.StepParameters;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
@@ -33,7 +32,7 @@ public class GraphVertexDTO {
   String stepType;
   Status status;
   FailureInfo failureInfo;
-  StepParameters stepParameters;
+  Map<String, Object> stepParameters;
   ExecutionMode mode;
 
   List<Map<String, String>> executableResponsesMetadata;

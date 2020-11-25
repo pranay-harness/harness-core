@@ -7,6 +7,7 @@ import io.harness.engine.executions.plan.PlanExecutionService;
 import io.harness.execution.PlanExecution;
 import io.harness.execution.events.OrchestrationEvent;
 import io.harness.execution.events.SyncOrchestrationEventHandler;
+import io.harness.serializer.JsonUtils;
 import io.harness.steps.barriers.beans.BarrierExecutionInstance;
 import io.harness.steps.barriers.service.BarrierService;
 
@@ -30,16 +31,19 @@ public class BarrierInitializer implements SyncOrchestrationEventHandler {
             .getNodes()
             .stream()
             .filter(planNode -> planNode.getStepType().equals(BarrierStep.STEP_TYPE))
-            .map(planNode
-                -> BarrierExecutionInstance.builder()
-                       .uuid(generateUuid())
-                       .name(planNode.getName())
-                       .planNodeId(planNode.getUuid())
-                       .identifier(((BarrierStepParameters) planNode.getStepParameters()).getIdentifier())
-                       .planExecutionId(planExecution.getUuid())
-                       .barrierState(Barrier.State.STANDING)
-                       .expiredIn(((BarrierStepParameters) planNode.getStepParameters()).getTimeoutInMillis())
-                       .build())
+            .map(planNode -> {
+              BarrierStepParameters stepParameters =
+                  JsonUtils.asObject(planNode.getStepParameters().toJson(), BarrierStepParameters.class);
+              return BarrierExecutionInstance.builder()
+                  .uuid(generateUuid())
+                  .name(planNode.getName())
+                  .planNodeId(planNode.getUuid())
+                  .identifier(stepParameters.getIdentifier())
+                  .planExecutionId(planExecution.getUuid())
+                  .barrierState(Barrier.State.STANDING)
+                  .expiredIn(stepParameters.getTimeoutInMillis())
+                  .build();
+            })
             .collect(Collectors.groupingBy(BarrierExecutionInstance::getIdentifier));
 
     // for each instance with the same identifier we set the barrierGroupId, which will be used with Wait Notify Engine

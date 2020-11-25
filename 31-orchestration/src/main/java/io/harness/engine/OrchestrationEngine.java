@@ -59,8 +59,10 @@ import io.harness.pms.facilitators.FacilitatorObtainment;
 import io.harness.registries.adviser.AdviserRegistry;
 import io.harness.registries.facilitator.FacilitatorRegistry;
 import io.harness.registries.resolver.ResolverRegistry;
+import io.harness.registries.state.StepRegistry;
 import io.harness.registries.timeout.TimeoutRegistry;
 import io.harness.resolvers.Resolver;
+import io.harness.serializer.JsonUtils;
 import io.harness.serializer.KryoSerializer;
 import io.harness.state.io.FailureInfo;
 import io.harness.state.io.StepInputPackage;
@@ -90,6 +92,7 @@ import java.util.stream.Collectors;
 import javax.validation.constraints.NotNull;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
+import org.bson.Document;
 
 /**
  * Please do not use this class outside of orchestration module. All the interactions with engine must be done via
@@ -103,6 +106,7 @@ public class OrchestrationEngine {
   @Inject private WaitNotifyEngine waitNotifyEngine;
   @Inject @Named("EngineExecutorService") private ExecutorService executorService;
   @Inject private KryoSerializer kryoSerializer;
+  @Inject private StepRegistry stepRegistry;
   @Inject private AdviserRegistry adviserRegistry;
   @Inject private FacilitatorRegistry facilitatorRegistry;
   @Inject private ResolverRegistry resolverRegistry;
@@ -175,8 +179,11 @@ public class OrchestrationEngine {
       // Facilitate and execute
       StepInputPackage inputPackage = engineObtainmentHelper.obtainInputPackage(
           ambiance, node.getRefObjects(), nodeExecution.getAdditionalInputs());
-      StepParameters resolvedStepParameters =
-          (StepParameters) engineExpressionService.resolve(ambiance, node.getStepParameters());
+      String stepParameters = node.getStepParameters() == null ? null : node.getStepParameters().toJson();
+      Object obj = stepParameters == null
+          ? null
+          : engineExpressionService.resolve(ambiance, nodeExecutionService.extractStepParameters(nodeExecution));
+      Document resolvedStepParameters = obj == null ? null : Document.parse(JsonUtils.asJson(obj));
       NodeExecution updatedNodeExecution =
           Preconditions.checkNotNull(nodeExecutionService.update(nodeExecution.getUuid(),
               ops -> setUnset(ops, NodeExecutionKeys.resolvedStepParameters, resolvedStepParameters)));
@@ -191,8 +198,9 @@ public class OrchestrationEngine {
     FacilitatorResponse facilitatorResponse = null;
     for (FacilitatorObtainment obtainment : node.getFacilitatorObtainments()) {
       Facilitator facilitator = facilitatorRegistry.obtain(obtainment.getType());
-      facilitatorResponse = facilitator.facilitate(
-          ambiance, nodeExecution.getResolvedStepParameters(), obtainment.getParameters().toByteArray(), inputPackage);
+      facilitatorResponse =
+          facilitator.facilitate(ambiance, nodeExecutionService.extractResolvedStepParameters(nodeExecution),
+              obtainment.getParameters().toByteArray(), inputPackage);
       if (facilitatorResponse != null) {
         break;
       }
@@ -231,7 +239,7 @@ public class OrchestrationEngine {
   }
 
   private List<String> registerTimeouts(NodeExecution nodeExecution) {
-    StepParameters resolvedStepParameters = nodeExecution.getResolvedStepParameters();
+    StepParameters resolvedStepParameters = nodeExecutionService.extractResolvedStepParameters(nodeExecution);
     List<TimeoutObtainment> timeoutObtainmentList;
     if (resolvedStepParameters != null) {
       timeoutObtainmentList = resolvedStepParameters.fetchTimeouts();

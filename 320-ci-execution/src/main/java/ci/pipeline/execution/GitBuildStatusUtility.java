@@ -13,6 +13,7 @@ import io.harness.ngpipeline.common.AmbianceHelper;
 import io.harness.ngpipeline.status.BuildStatusUpdateParameter;
 import io.harness.plancreators.IntegrationStagePlanCreator;
 import io.harness.pms.execution.Status;
+import io.harness.serializer.JsonUtils;
 import io.harness.service.DelegateGrpcClientWrapper;
 import io.harness.stateutils.buildstate.ConnectorUtils;
 
@@ -40,7 +41,7 @@ public class GitBuildStatusUtility {
 
   public void sendStatusToGit(NodeExecution nodeExecution, Ambiance ambiance, String accountId) {
     IntegrationStageStepParameters integrationStageStepParameters =
-        (IntegrationStageStepParameters) nodeExecution.getResolvedStepParameters();
+        JsonUtils.asObject(nodeExecution.getResolvedStepParameters().toJson(), IntegrationStageStepParameters.class);
     BuildStatusUpdateParameter buildStatusUpdateParameter =
         integrationStageStepParameters.getBuildStatusUpdateParameter();
 

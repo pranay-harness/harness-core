@@ -19,7 +19,6 @@ import io.harness.facilitator.modes.chain.task.TaskChainResponse;
 import io.harness.pms.execution.Status;
 import io.harness.pms.steps.StepType;
 import io.harness.redesign.states.http.BasicHttpStepParameters;
-import io.harness.state.Step;
 import io.harness.state.io.StepInputPackage;
 import io.harness.state.io.StepResponse;
 import io.harness.tasks.Cd1SetupFields;
@@ -33,9 +32,14 @@ import org.jetbrains.annotations.NotNull;
 @Redesign
 @ExcludeRedesign
 @OwnedBy(HarnessTeam.CDC)
-public class BasicHttpChainStep implements Step, TaskChainExecutable<BasicHttpChainStepParameters> {
+public class BasicHttpChainStep implements TaskChainExecutable<BasicHttpChainStepParameters> {
   public static final StepType STEP_TYPE = StepType.newBuilder().setType("HTTP_CHAIN").build();
   private static final int socketTimeoutMillis = 10000;
+
+  @Override
+  public Class<BasicHttpChainStepParameters> getStepParametersClass() {
+    return BasicHttpChainStepParameters.class;
+  }
 
   @Override
   public TaskChainResponse startChainLink(

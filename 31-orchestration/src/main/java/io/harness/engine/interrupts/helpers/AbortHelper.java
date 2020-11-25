@@ -56,7 +56,9 @@ public class AbortHelper {
         }
       }
       if (currentState instanceof Abortable) {
-        ((Abortable) currentState).handleAbort(ambiance, nodeExecution.getResolvedStepParameters(), executableResponse);
+        ((Abortable) currentState)
+            .handleAbort(
+                ambiance, nodeExecutionService.extractResolvedStepParameters(nodeExecution), executableResponse);
       }
 
       NodeExecution updatedNodeExecution = nodeExecutionService.updateStatusWithOps(

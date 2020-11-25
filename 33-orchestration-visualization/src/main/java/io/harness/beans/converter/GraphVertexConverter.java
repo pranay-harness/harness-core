@@ -7,6 +7,7 @@ import io.harness.data.Outcome;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.execution.NodeExecution;
 import io.harness.facilitator.modes.ExecutableResponse;
+import io.harness.serializer.JsonUtils;
 
 import java.util.Collections;
 import java.util.List;
@@ -31,7 +32,9 @@ public class GraphVertexConverter {
         .stepType(nodeExecution.getNode().getStepType().getType())
         .status(nodeExecution.getStatus())
         .failureInfo(nodeExecution.getFailureInfo())
-        .stepParameters(nodeExecution.getResolvedStepParameters())
+        .stepParameters(nodeExecution.getResolvedStepParameters() == null
+                ? null
+                : JsonUtils.asMap(nodeExecution.getResolvedStepParameters().toJson()))
         .mode(nodeExecution.getMode())
         .executableResponsesMetadata(getExecutableResponsesMetadata(nodeExecution))
         .interruptHistories(nodeExecution.getInterruptHistories())
@@ -54,7 +57,9 @@ public class GraphVertexConverter {
         .stepType(nodeExecution.getNode().getStepType().getType())
         .status(nodeExecution.getStatus())
         .failureInfo(nodeExecution.getFailureInfo())
-        .stepParameters(nodeExecution.getResolvedStepParameters())
+        .stepParameters(nodeExecution.getResolvedStepParameters() == null
+                ? null
+                : JsonUtils.asMap(nodeExecution.getResolvedStepParameters().toJson()))
         .mode(nodeExecution.getMode())
         .executableResponsesMetadata(getExecutableResponsesMetadata(nodeExecution))
         .interruptHistories(nodeExecution.getInterruptHistories())

@@ -17,7 +17,6 @@ import io.harness.execution.NodeExecution;
 import io.harness.expression.ExpressionEvaluatorUtils;
 import io.harness.expression.LateBindingMap;
 import io.harness.refObjects.RefObjectUtil;
-import io.harness.state.io.StepParameters;
 
 import java.util.Collections;
 import java.util.List;
@@ -117,11 +116,7 @@ public class NodeExecutionMap extends LateBindingMap {
     if (nodeExecution == null || !entityTypes.contains(NodeExecutionEntityType.STEP_PARAMETERS)) {
       return Optional.empty();
     }
-
-    StepParameters stepParameters = nodeExecution.getResolvedStepParameters() == null
-        ? nodeExecution.getNode().getStepParameters()
-        : nodeExecution.getResolvedStepParameters();
-    return ExpressionEvaluatorUtils.fetchField(stepParameters, key);
+    return ExpressionEvaluatorUtils.fetchField(nodeExecutionsCache.extractFinalStepParameters(nodeExecution), key);
   }
 
   private Optional<Object> fetchOutcomeOrOutput(String key) {

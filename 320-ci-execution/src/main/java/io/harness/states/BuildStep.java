@@ -28,7 +28,6 @@ import io.harness.pms.execution.Status;
 import io.harness.pms.steps.StepType;
 import io.harness.refObjects.RefObjectUtil;
 import io.harness.service.DelegateGrpcClientWrapper;
-import io.harness.state.Step;
 import io.harness.state.io.StepInputPackage;
 import io.harness.state.io.StepResponse;
 import io.harness.stateutils.buildstate.ConnectorUtils;
@@ -44,12 +43,17 @@ import lombok.extern.slf4j.Slf4j;
  */
 
 @Slf4j
-public class BuildStep implements Step, SyncExecutable<BuildStepInfo> {
+public class BuildStep implements SyncExecutable<BuildStepInfo> {
   public static final StepType STEP_TYPE = BuildStepInfo.typeInfo.getStepType();
   public static final String TASK_TYPE = "EXECUTE_COMMAND";
   @Inject ExecutionSweepingOutputService executionSweepingOutputResolver;
   @Inject private ConnectorUtils connectorUtils;
   @Inject private DelegateGrpcClientWrapper delegateGrpcClientWrapper;
+
+  @Override
+  public Class<BuildStepInfo> getStepParametersClass() {
+    return BuildStepInfo.class;
+  }
 
   // TODO Async can not be supported at this point. We have to build polling framework on CI manager.
   //     Async will be supported once we will have delegate microservice ready.

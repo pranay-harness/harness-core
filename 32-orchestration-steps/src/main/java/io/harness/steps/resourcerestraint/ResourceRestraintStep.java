@@ -45,7 +45,7 @@ import lombok.extern.slf4j.Slf4j;
 @OwnedBy(CDC)
 @Slf4j
 public class ResourceRestraintStep
-    implements Step, SyncExecutable<ResourceRestraintStepParameters>, AsyncExecutable<ResourceRestraintStepParameters> {
+    implements SyncExecutable<ResourceRestraintStepParameters>, AsyncExecutable<ResourceRestraintStepParameters> {
   public static final StepType STEP_TYPE =
       StepType.newBuilder().setType(OrchestrationStepTypes.RESOURCE_RESTRAINT).build();
   private static final String PLAN = "PLAN";
@@ -54,6 +54,11 @@ public class ResourceRestraintStep
   @Inject private RestraintService restraintService;
   @Inject private ResourceRestraintRegistry resourceRestraintRegistry;
   @Inject private EngineExpressionService engineExpressionService;
+
+  @Override
+  public Class<ResourceRestraintStepParameters> getStepParametersClass() {
+    return ResourceRestraintStepParameters.class;
+  }
 
   @Override
   public StepResponse executeSync(Ambiance ambiance, ResourceRestraintStepParameters stepParameters,

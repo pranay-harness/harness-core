@@ -55,7 +55,7 @@ public class TaskStrategy implements TaskExecuteStrategy {
     TaskExecutable taskExecutable = extractTaskExecutable(nodeExecution);
     Ambiance ambiance = nodeExecution.getAmbiance();
     Task task = taskExecutable.obtainTask(
-        ambiance, nodeExecution.getResolvedStepParameters(), invokerPackage.getInputPackage());
+        ambiance, nodeExecutionService.extractResolvedStepParameters(nodeExecution), invokerPackage.getInputPackage());
     handleResponse(ambiance, task);
   }
 
@@ -64,8 +64,8 @@ public class TaskStrategy implements TaskExecuteStrategy {
     NodeExecution nodeExecution = resumePackage.getNodeExecution();
     Ambiance ambiance = nodeExecution.getAmbiance();
     TaskExecutable taskExecutable = extractTaskExecutable(nodeExecution);
-    StepResponse stepResponse = taskExecutable.handleTaskResult(
-        ambiance, nodeExecution.getResolvedStepParameters(), resumePackage.getResponseDataMap());
+    StepResponse stepResponse = taskExecutable.handleTaskResult(ambiance,
+        nodeExecutionService.extractResolvedStepParameters(nodeExecution), resumePackage.getResponseDataMap());
     engine.handleStepResponse(nodeExecution.getUuid(), stepResponse);
   }
 

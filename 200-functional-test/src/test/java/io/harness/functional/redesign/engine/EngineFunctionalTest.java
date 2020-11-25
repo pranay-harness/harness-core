@@ -24,6 +24,7 @@ import io.harness.interrupts.Interrupt;
 import io.harness.redesign.states.http.BasicHttpStep;
 import io.harness.redesign.states.shell.ShellScriptStepParameters;
 import io.harness.rule.Owner;
+import io.harness.serializer.JsonUtils;
 import io.harness.steps.section.chain.SectionChainStep;
 import io.harness.testframework.framework.MockServerExecutor;
 
@@ -322,8 +323,9 @@ public class EngineFunctionalTest extends AbstractFunctionalTest {
         nodeExecutions.stream().filter(ne -> name.equals(ne.getNode().getName())).findFirst().orElse(null);
     assertThat(nodeExecution).isNotNull();
 
-    ShellScriptStepParameters shellScriptStepParameters =
-        (ShellScriptStepParameters) nodeExecution.getResolvedStepParameters();
+    ShellScriptStepParameters shellScriptStepParameters = nodeExecution.getResolvedStepParameters() == null
+        ? null
+        : JsonUtils.asObject(nodeExecution.getResolvedStepParameters().toJson(), ShellScriptStepParameters.class);
     assertThat(shellScriptStepParameters).isNotNull();
     return shellScriptStepParameters.getScriptString();
   }

@@ -11,7 +11,6 @@ import io.harness.facilitator.PassThroughData;
 import io.harness.facilitator.modes.sync.SyncExecutable;
 import io.harness.pms.execution.Status;
 import io.harness.pms.steps.StepType;
-import io.harness.state.Step;
 import io.harness.state.io.FailureInfo;
 import io.harness.state.io.StepInputPackage;
 import io.harness.state.io.StepResponse;
@@ -30,13 +29,18 @@ import org.mongodb.morphia.annotations.Transient;
 @OwnedBy(CDC)
 @Redesign
 @Slf4j
-public class EmailStep implements Step, SyncExecutable<EmailStepParameters> {
+public class EmailStep implements SyncExecutable<EmailStepParameters> {
   public static final StepType STEP_TYPE = StepType.newBuilder().setType("EMAIL").build();
 
   private static final Splitter COMMA_SPLITTER = Splitter.on(",").omitEmptyStrings().trimResults();
   private static final String ACCOUNT_ID = "accountId";
 
   @Transient @Inject private EmailNotificationService emailNotificationService;
+
+  @Override
+  public Class<EmailStepParameters> getStepParametersClass() {
+    return EmailStepParameters.class;
+  }
 
   @Override
   public StepResponse executeSync(Ambiance ambiance, EmailStepParameters emailStepParameters,

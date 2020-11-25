@@ -8,6 +8,7 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.engine.executions.node.NodeExecutionService;
 import io.harness.execution.NodeExecution;
+import io.harness.state.io.StepParameters;
 
 import java.util.Collections;
 import java.util.HashMap;
@@ -81,5 +82,13 @@ public class NodeExecutionsCache {
     childExecutions.forEach(childExecution -> map.put(childExecution.getUuid(), childExecution));
     childrenMap.put(parentId, childExecutions.stream().map(NodeExecution::getUuid).collect(Collectors.toList()));
     return childExecutions;
+  }
+
+  public StepParameters extractFinalStepParameters(NodeExecution nodeExecution) {
+    StepParameters stepParameters = nodeExecutionService.extractResolvedStepParameters(nodeExecution);
+    if (stepParameters != null) {
+      return stepParameters;
+    }
+    return nodeExecutionService.extractStepParameters(nodeExecution);
   }
 }

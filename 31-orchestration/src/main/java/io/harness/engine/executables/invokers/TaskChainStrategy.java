@@ -57,7 +57,7 @@ public class TaskChainStrategy implements TaskExecuteStrategy {
     Ambiance ambiance = nodeExecution.getAmbiance();
     TaskChainResponse taskChainResponse;
     taskChainResponse = taskChainExecutable.startChainLink(
-        ambiance, nodeExecution.getResolvedStepParameters(), invokerPackage.getInputPackage());
+        ambiance, nodeExecutionService.extractResolvedStepParameters(nodeExecution), invokerPackage.getInputPackage());
     handleResponse(ambiance, nodeExecution, taskChainResponse);
   }
 
@@ -69,16 +69,16 @@ public class TaskChainStrategy implements TaskExecuteStrategy {
     TaskChainExecutableResponse lastLinkResponse =
         Preconditions.checkNotNull((TaskChainExecutableResponse) nodeExecution.obtainLatestExecutableResponse());
     if (lastLinkResponse.isChainEnd()) {
-      StepResponse stepResponse =
-          taskChainExecutable.finalizeExecution(ambiance, nodeExecution.getResolvedStepParameters(),
-              lastLinkResponse.getPassThroughData(), resumePackage.getResponseDataMap());
+      StepResponse stepResponse = taskChainExecutable.finalizeExecution(ambiance,
+          nodeExecutionService.extractResolvedStepParameters(nodeExecution), lastLinkResponse.getPassThroughData(),
+          resumePackage.getResponseDataMap());
       engine.handleStepResponse(nodeExecution.getUuid(), stepResponse);
     } else {
       StepInputPackage inputPackage = engineObtainmentHelper.obtainInputPackage(
           ambiance, nodeExecution.getNode().getRefObjects(), nodeExecution.getAdditionalInputs());
-      TaskChainResponse chainResponse =
-          taskChainExecutable.executeNextLink(ambiance, nodeExecution.getResolvedStepParameters(), inputPackage,
-              lastLinkResponse.getPassThroughData(), resumePackage.getResponseDataMap());
+      TaskChainResponse chainResponse = taskChainExecutable.executeNextLink(ambiance,
+          nodeExecutionService.extractResolvedStepParameters(nodeExecution), inputPackage,
+          lastLinkResponse.getPassThroughData(), resumePackage.getResponseDataMap());
       handleResponse(ambiance, nodeExecution, chainResponse);
     }
   }
@@ -102,8 +102,9 @@ public class TaskChainStrategy implements TaskExecuteStrategy {
                   .passThroughData(taskChainResponse.getPassThroughData())
                   .metadata(taskChainResponse.getMetadata())
                   .build()));
-      StepResponse stepResponse = taskChainExecutable.finalizeExecution(
-          ambiance, nodeExecution.getResolvedStepParameters(), taskChainResponse.getPassThroughData(), null);
+      StepResponse stepResponse = taskChainExecutable.finalizeExecution(ambiance,
+          nodeExecutionService.extractResolvedStepParameters(nodeExecution), taskChainResponse.getPassThroughData(),
+          null);
       engine.handleStepResponse(nodeExecution.getUuid(), stepResponse);
       return;
     }
