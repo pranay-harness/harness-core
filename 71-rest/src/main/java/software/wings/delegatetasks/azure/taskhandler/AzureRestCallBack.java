@@ -7,6 +7,7 @@ import static java.lang.String.format;
 
 import software.wings.beans.command.ExecutionLogCallback;
 
+import com.microsoft.azure.CloudException;
 import com.microsoft.rest.ServiceCallback;
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -39,5 +40,25 @@ public class AzureRestCallBack<T> implements ServiceCallback<T> {
 
   public String failureMessage() {
     return throwable.getMessage();
+  }
+
+  public String getBodyMessage() {
+    if (throwable instanceof CloudException) {
+      CloudException cloudException = (CloudException) throwable;
+      if (cloudException.body() != null) {
+        return cloudException.body().message();
+      }
+    }
+    return null;
+  }
+
+  public String getErrorMessage() {
+    String failureMessage = failureMessage();
+    String bodyMessage = getBodyMessage();
+    if (bodyMessage == null) {
+      return failureMessage;
+    } else {
+      return format("%: %", failureMessage, bodyMessage);
+    }
   }
 }
