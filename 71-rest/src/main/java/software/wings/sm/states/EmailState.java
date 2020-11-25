@@ -81,6 +81,9 @@ public class EmailState extends State {
     EmailStateExecutionData emailStateExecutionData;
     String accountId = context.getAccountId();
 
+    toAddress = renderExpression(toAddress, context);
+    ccAddress = renderExpression(ccAddress, context);
+
     Map<Boolean, List<String>> toAddressMap = getEmailAddressMap(toAddress, accountId);
     Map<Boolean, List<String>> ccAddressMap = getEmailAddressMap(ccAddress, accountId);
     toAddress = StringUtils.join(toAddressMap.get(true), ",");
@@ -102,9 +105,6 @@ public class EmailState extends State {
       }
 
       if (StringUtils.isNotBlank(toAddress) || StringUtils.isNotBlank(ccAddress)) {
-        String evaluatedTo = null;
-        String evaluatedCc;
-
         emailStateExecutionData.setSubject(expressionEvaluator.substitute(subject, Collections.emptyMap()));
         emailStateExecutionData.setBody(expressionEvaluator.substitute(body, Collections.emptyMap()));
         String evaluatedSubject = context.renderExpression(subject);
@@ -114,18 +114,15 @@ public class EmailState extends State {
         if (StringUtils.isNotBlank(toAddress)) {
           emailStateExecutionData.setToAddress(expressionEvaluator.substitute(toAddress, Collections.emptyMap()));
           emailStateExecutionData.setCcAddress(expressionEvaluator.substitute(ccAddress, Collections.emptyMap()));
-          evaluatedTo = context.renderExpression(toAddress);
-          evaluatedCc = context.renderExpression(ccAddress);
 
           emailNotificationService.send(getEmailData(
-              evaluatedTo, evaluatedCc, evaluatedSubject, evaluatedBody, accountId, context.getWorkflowExecutionId()));
+              toAddress, ccAddress, evaluatedSubject, evaluatedBody, accountId, context.getWorkflowExecutionId()));
 
         } else if (StringUtils.isNotBlank(ccAddress)) {
           emailStateExecutionData.setCcAddress(expressionEvaluator.substitute(ccAddress, Collections.emptyMap()));
-          evaluatedCc = context.renderExpression(ccAddress);
 
           emailNotificationService.send(getEmailData(
-              evaluatedTo, evaluatedCc, evaluatedSubject, evaluatedBody, accountId, context.getWorkflowExecutionId()));
+              toAddress, ccAddress, evaluatedSubject, evaluatedBody, accountId, context.getWorkflowExecutionId()));
         }
         executionResponseBuilder.executionStatus(ExecutionStatus.SUCCESS);
 
@@ -140,6 +137,13 @@ public class EmailState extends State {
     }
     executionResponseBuilder.stateExecutionData(emailStateExecutionData);
     return executionResponseBuilder.build();
+  }
+
+  private String renderExpression(String addresses, ExecutionContext context) {
+    if (StringUtils.isNotBlank(addresses)) {
+      return context.renderExpression(addresses);
+    }
+    return null;
   }
 
   private EmailStateExecutionData getEmailStateExecutionData(
