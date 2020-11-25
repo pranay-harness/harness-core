@@ -2,7 +2,6 @@ package io.harness.stream;
 
 import static io.harness.stream.AtmosphereBroadcaster.HAZELCAST;
 import static io.harness.stream.AtmosphereBroadcaster.REDIS;
-import static io.harness.stream.redisson.RedissonFactory.setInitParameters;
 
 import io.harness.hazelcast.HazelcastModule;
 import io.harness.redis.RedisConfig;
@@ -56,7 +55,6 @@ public class StreamModule extends AbstractModule {
       HazelcastBroadcaster.HAZELCAST_INSTANCE.set(hazelcastInstanceProvider.get());
     } else if (atmosphereBroadcaster == REDIS) {
       broadcasterName = RedissonBroadcaster.class.getName();
-      setInitParameters(atmosphereServlet, redisConfigProvider.get());
     } else {
       broadcasterName = DefaultBroadcaster.class.getName();
     }
