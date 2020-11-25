@@ -116,6 +116,7 @@ import software.wings.sm.states.AzureNodeSelectState;
 import software.wings.sm.states.BambooState;
 import software.wings.sm.states.BarrierState;
 import software.wings.sm.states.BugsnagState;
+import software.wings.sm.states.CVNGState;
 import software.wings.sm.states.CloudWatchState;
 import software.wings.sm.states.CommandState;
 import software.wings.sm.states.CustomLogVerificationState;
@@ -356,6 +357,8 @@ public enum StateType implements StateTypeDescriptor {
    * DatadogLog state type.
    */
   DATA_DOG_LOG(DatadogLogState.class, VERIFICATIONS, 13, "Datadog Log", asList(K8S_PHASE_STEP), ORCHESTRATION_STENCILS),
+
+  CVNG(CVNGState.class, VERIFICATIONS, 13, "CVNG verification", asList(K8S_PHASE_STEP), ORCHESTRATION_STENCILS),
 
   /**
    * Cloud watch state type.

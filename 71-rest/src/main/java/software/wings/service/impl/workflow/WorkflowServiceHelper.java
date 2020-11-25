@@ -286,6 +286,7 @@ public class WorkflowServiceHelper {
   public static final String SUMO_LOGIC = "Sumo Logic";
   public static final String LOGZ = "LOGZ";
   public static final String CUSTOM_LOG_VERIFICATION = "Custom Log Verification";
+  public static final String CVNG_STATE = "CVNG verification";
   public static final String AWS_SELECT_NODES = "AWS Select Nodes";
   public static final String ELB = "Elastic Load Balancer";
   public static final String AZURE_SELECT_NODES = "Azure Select Nodes";

@@ -3806,12 +3806,12 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     List<StepType> filteredStepTypes = filterSelectNodesStep(stepTypesList, filteredSelectNode);
 
     StepType[] stepTypes = filteredStepTypes.stream().toArray(StepType[] ::new);
-    return calculateCategorySteps(favorites, recent, stepTypes, workflowPhase, workflow.getAppId(),
-        workflow.getOrchestrationWorkflow().getOrchestrationWorkflowType());
+    return calculateCategorySteps(workflow.getAccountId(), favorites, recent, stepTypes, workflowPhase,
+        workflow.getAppId(), workflow.getOrchestrationWorkflow().getOrchestrationWorkflowType());
   }
 
-  public WorkflowCategorySteps calculateCategorySteps(Set<String> favorites, LinkedList<String> recent,
-      StepType[] stepTypes, WorkflowPhase workflowPhase, String appId,
+  public WorkflowCategorySteps calculateCategorySteps(String accountId, Set<String> favorites,
+      LinkedList<String> recent, StepType[] stepTypes, WorkflowPhase workflowPhase, String appId,
       OrchestrationWorkflowType orchestrationWorkflowType) {
     Map<String, WorkflowStepMeta> steps = new HashMap<>();
     DeploymentType workflowPhaseDeploymentType = workflowPhase != null ? workflowPhase.getDeploymentType() : null;
@@ -3822,7 +3822,10 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
                                         .favorite(isNotEmpty(favorites) && favorites.contains(step.getType()))
                                         .available(true)
                                         .build();
-        steps.put(step.getType(), stepMeta);
+        if (!step.getType().equals(StateType.CVNG.name())
+            || featureFlagService.isEnabled(FeatureName.ENABLE_CVNG_INTEGRATION, accountId)) {
+          steps.put(step.getType(), stepMeta);
+        }
       }
     }
 

@@ -1,5 +1,6 @@
 package io.harness.cvng.activity.beans;
 
+import io.harness.cvng.beans.activity.ActivityVerificationStatus;
 import io.harness.cvng.verificationjob.beans.AdditionalInfo;
 
 import java.util.List;
@@ -29,7 +30,6 @@ public class DeploymentActivityResultDTO {
     String verificationJobInstanceId;
     String activityId;
     long activityStartTime;
-    long durationInSeconds;
     ActivityVerificationStatus status;
     AdditionalInfo additionalInfo;
   }

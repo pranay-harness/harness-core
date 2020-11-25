@@ -32,6 +32,7 @@ import io.harness.config.DatadogConfig;
 import io.harness.config.PublisherConfiguration;
 import io.harness.config.WorkersConfiguration;
 import io.harness.configuration.DeployMode;
+import io.harness.cvng.client.CVNGClientModule;
 import io.harness.cvng.core.services.api.VerificationServiceSecretManager;
 import io.harness.delay.DelayEventListener;
 import io.harness.delegate.beans.DelegateAsyncTaskResponse;
@@ -434,6 +435,7 @@ public class WingsApplication extends Application<MainConfiguration> {
     modules.add(new ValidationModule(validatorFactory));
     modules.add(new DelegateServiceModule());
     modules.add(new WingsModule(configuration));
+    modules.add(new CVNGClientModule(configuration.getCvngClientConfig()));
     modules.add(new ProviderModule() {
       @Provides
       @Singleton

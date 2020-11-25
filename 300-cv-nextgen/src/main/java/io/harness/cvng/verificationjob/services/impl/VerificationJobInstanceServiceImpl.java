@@ -10,7 +10,6 @@ import static io.harness.persistence.HQuery.excludeAuthority;
 
 import static java.util.stream.Collectors.groupingBy;
 
-import io.harness.cvng.activity.beans.ActivityVerificationStatus;
 import io.harness.cvng.activity.beans.ActivityVerificationSummary;
 import io.harness.cvng.activity.beans.DeploymentActivityPopoverResultDTO;
 import io.harness.cvng.activity.beans.DeploymentActivityResultDTO.DeploymentResultSummary;
@@ -20,6 +19,7 @@ import io.harness.cvng.analysis.services.api.DeploymentAnalysisService;
 import io.harness.cvng.beans.DataCollectionConnectorBundle;
 import io.harness.cvng.beans.DataCollectionInfo;
 import io.harness.cvng.beans.DataCollectionType;
+import io.harness.cvng.beans.activity.ActivityVerificationStatus;
 import io.harness.cvng.client.NextGenService;
 import io.harness.cvng.client.VerificationManagerService;
 import io.harness.cvng.core.beans.TimeRange;

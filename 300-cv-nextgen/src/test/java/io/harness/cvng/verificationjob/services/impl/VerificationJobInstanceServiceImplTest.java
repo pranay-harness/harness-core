@@ -18,7 +18,6 @@ import static org.mockito.Mockito.when;
 
 import io.harness.CvNextGenTest;
 import io.harness.category.element.UnitTests;
-import io.harness.cvng.activity.beans.ActivityVerificationStatus;
 import io.harness.cvng.activity.beans.ActivityVerificationSummary;
 import io.harness.cvng.activity.beans.DeploymentActivityPopoverResultDTO;
 import io.harness.cvng.activity.beans.DeploymentActivityPopoverResultDTO.DeploymentPopoverSummary;
@@ -29,6 +28,7 @@ import io.harness.cvng.analysis.beans.CanaryDeploymentAdditionalInfo;
 import io.harness.cvng.beans.CVMonitoringCategory;
 import io.harness.cvng.beans.DataCollectionConnectorBundle;
 import io.harness.cvng.beans.DataSourceType;
+import io.harness.cvng.beans.activity.ActivityVerificationStatus;
 import io.harness.cvng.client.NextGenService;
 import io.harness.cvng.client.VerificationManagerService;
 import io.harness.cvng.core.entities.CVConfig;

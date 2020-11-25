@@ -1,4 +1,4 @@
-package io.harness.cvng.activity.beans;
+package io.harness.cvng.beans.activity;
 
 public enum ActivityVerificationStatus {
   NOT_STARTED,
