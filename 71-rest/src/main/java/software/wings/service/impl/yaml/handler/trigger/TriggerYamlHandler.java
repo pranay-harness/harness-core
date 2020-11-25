@@ -14,6 +14,7 @@ import static software.wings.beans.EntityType.INFRASTRUCTURE_MAPPING;
 import static software.wings.beans.trigger.ManifestSelection.ManifestSelectionType;
 import static software.wings.beans.yaml.YamlConstants.PATH_DELIMITER;
 
+import static java.lang.Boolean.TRUE;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 
 import io.harness.annotations.dev.OwnedBy;
@@ -317,7 +318,7 @@ public class TriggerYamlHandler extends BaseYamlHandler<Yaml, Trigger> {
       String variableName = variable.getName();
       String variableValue = variable.getValue();
       Variable variableOrg = variables.stream().filter(t -> t.getName().equals(variableName)).findFirst().orElse(null);
-      if (variableOrg == null) {
+      if (variableOrg == null || (isBlank(variableValue) && TRUE.equals(variableOrg.getRuntimeInput()))) {
         continue;
       }
       String valueForBean = null;
@@ -358,6 +359,10 @@ public class TriggerYamlHandler extends BaseYamlHandler<Yaml, Trigger> {
         TriggerVariable envVarInTrigger =
             triggerVariables.stream().filter(t -> t.getName().equals(var.getName())).findFirst().orElse(null);
         if (envVarInTrigger != null) {
+          if (TRUE.equals(var.getRuntimeInput()) && isBlank(envVarInTrigger.getValue())) {
+            return null;
+          }
+
           if (matchesVariablePattern(envVarInTrigger.getValue())) {
             log.info("Environment parameterized in Trigger and the value is {}", envVarInTrigger.getValue());
             if (!matchesVariablePattern(variable.getValue())) {

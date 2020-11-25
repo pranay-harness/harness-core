@@ -9,6 +9,7 @@ import static org.mockito.Matchers.anyBoolean;
 import static org.mockito.Matchers.anyList;
 import static org.mockito.Matchers.anyMap;
 import static org.mockito.Matchers.anyString;
+import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.spy;
@@ -399,7 +400,7 @@ public class TriggerControllerTest extends CategoryTest {
     verify(triggerController, times(1)).validateTrigger(any(QLCreateOrUpdateTriggerInput.class), anyString());
     verify(pipelineService, times(1)).readPipeline(anyString(), anyString(), anyBoolean());
     verify(triggerController, times(1)).validatePipeline(anyString(), anyString(), any(Pipeline.class));
-    verify(pipelineExecutionController, times(1)).resolveEnvId(any(Pipeline.class), anyList());
+    verify(pipelineExecutionController, times(1)).resolveEnvId(any(Pipeline.class), anyList(), eq(true));
     verify(deploymentAuthHandler, times(1)).authorizePipelineExecution(anyString(), anyString());
     verify(triggerActionController, times(1))
         .validateAndResolvePipelineVariables(anyList(), any(Pipeline.class), anyString());

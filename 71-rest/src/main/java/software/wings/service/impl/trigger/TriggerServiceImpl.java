@@ -1682,6 +1682,23 @@ public class TriggerServiceImpl implements TriggerService {
     });
   }
 
+  private void validateContinueWithDefault(Trigger trigger, Pipeline pipeline) {
+    if (isNotEmpty(pipeline.getPipelineVariables())) {
+      Set<String> reqVariables = pipeline.getPipelineVariables()
+                                     .stream()
+                                     .filter(Variable::isMandatory)
+                                     .map(Variable::getName)
+                                     .collect(toSet());
+      Map<String, String> wfVars = trigger.getWorkflowVariables();
+      if ((!reqVariables.isEmpty() && isEmpty(wfVars)) || !wfVars.keySet().containsAll(reqVariables)) {
+        throw new InvalidRequestException("default value absent for mandatory variable(s)", USER);
+      }
+      if (reqVariables.stream().anyMatch(key -> !wfVars.containsKey(key) || isEmpty(wfVars.get(key)))) {
+        throw new InvalidRequestException("default value absent for mandatory variable(s)", USER);
+      }
+    }
+  }
+
   private void validateAndSetManifestSelections(Trigger trigger, List<Service> services) {
     List<ManifestSelection> manifestSelections = trigger.getManifestSelections();
     if (isEmpty(manifestSelections)) {
@@ -1819,6 +1836,10 @@ public class TriggerServiceImpl implements TriggerService {
       validateAndSetArtifactSelections(trigger, services);
       if (featureFlagService.isEnabled(FeatureName.HELM_CHART_AS_ARTIFACT, trigger.getAccountId())) {
         validateAndSetManifestSelections(trigger, services);
+      }
+      if (featureFlagService.isEnabled(FeatureName.RUNTIME_INPUT_PIPELINE, trigger.getAccountId())
+          && trigger.isContinueWithDefaultValues()) {
+        validateContinueWithDefault(trigger, executePipeline);
       }
     } else if (ORCHESTRATION == trigger.getWorkflowType()) {
       Workflow workflow = workflowService.readWorkflow(trigger.getAppId(), trigger.getWorkflowId());
