@@ -11,11 +11,11 @@ java_library(
     name = "maven_deps",
     visibility = ["//visibility:public"],
     exports = [
-        "//19-delegate-tasks-beans:module",
         "//22-ng-project-n-orgs:module",
         "//23-ng-core-clients:module",
         "//33-orchestration-visualization:module",
         "//35-yaml-beans:module",
+        "//950-delegate-tasks-beans:module",
         "@maven//:com_esotericsoftware_kryo",
         "@maven//:com_fasterxml_jackson_core_jackson_annotations",
         "@maven//:com_fasterxml_jackson_core_jackson_core",

@@ -52,7 +52,7 @@ java_library(
     deps = [
         "maven_deps",
         "//:lombok",
-        "//19-delegate-tasks-beans:module",
+        "//950-delegate-tasks-beans:module",
         "//960-api-services:module",
     ],
 )
@@ -65,7 +65,7 @@ java_library(
         "maven_deps",
         "module",
         "//:lombok",
-        "//19-delegate-tasks-beans:module",
+        "//950-delegate-tasks-beans:module",
         "//960-api-services:module",
         "//990-commons-test:module",
         "@maven//:com_google_guava_guava",

@@ -24,9 +24,9 @@ java_library(
     deps = [
         "maven_deps",
         "//:lombok",
-        "//19-delegate-tasks-beans:module",
         "//460-capability/src/main/proto:240_capability_java_proto",
         "//460-capability/src/main/proto:240_capability_proto",
+        "//950-delegate-tasks-beans:module",
     ],
 )
 

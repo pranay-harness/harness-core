@@ -6,7 +6,7 @@
         <artifactId>portal</artifactId>
         <version>0.0.1-SNAPSHOT</version>
     </parent>
-    <artifactId>19-delegate-tasks-beans</artifactId>
+    <artifactId>950-delegate-tasks-beans</artifactId>
     <dependencies>
         <dependency>
             <groupId>com.fasterxml.jackson.core</groupId>
@@ -60,7 +60,7 @@
         </dependency>
         <dependency>
             <groupId>software.wings</groupId>
-            <artifactId>19-delegate-tasks-beans-proto</artifactId>
+            <artifactId>950-delegate-tasks-beans-proto</artifactId>
             <version>${project.parent.version}</version>
         </dependency>
         <dependency>

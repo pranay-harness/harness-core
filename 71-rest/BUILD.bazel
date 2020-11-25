@@ -14,9 +14,9 @@ java_library(
         "@maven//:com_google_guava_guava",
         #order of dependency is important. Comment is added so that running buildifer does not change the order
         "//960-api-services:module",
-        "//19-delegate-tasks-beans:module",
-        "//19-delegate-tasks-beans/src/main/proto:19_delegate_tasks_beans_java_proto",
-        "//19-delegate-tasks-beans/src/main/proto:19_delegate_tasks_beans_proto",
+        "//950-delegate-tasks-beans:module",
+        "//950-delegate-tasks-beans/src/main/proto:950_delegate_tasks_beans_java_proto",
+        "//950-delegate-tasks-beans/src/main/proto:950_delegate_tasks_beans_proto",
         "//20-delegate-beans/src/main/proto:20_delegate_beans_java_proto",
         "//20-delegate-tasks:module",
         "//20-ng-core-beans:module",

@@ -14,17 +14,17 @@
         </dependency>
         <dependency>
             <groupId>software.wings</groupId>
-            <artifactId>19-delegate-tasks-beans</artifactId>
-            <version>${project.parent.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>software.wings</groupId>
             <artifactId>21-persistence</artifactId>
             <version>${project.parent.version}</version>
         </dependency>
         <dependency>
             <groupId>software.wings</groupId>
             <artifactId>71-rest</artifactId>
+            <version>${project.parent.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>software.wings</groupId>
+            <artifactId>950-delegate-tasks-beans</artifactId>
             <version>${project.parent.version}</version>
         </dependency>
         <dependency>

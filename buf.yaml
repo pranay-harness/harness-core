@@ -1,6 +1,6 @@
 build:
   roots:
-    - 19-delegate-tasks-beans/src/main/proto
+    - 950-delegate-tasks-beans/src/main/proto
 lint:
   use:
     - DEFAULT
