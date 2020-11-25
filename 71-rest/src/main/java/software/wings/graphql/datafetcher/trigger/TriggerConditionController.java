@@ -2,6 +2,7 @@ package software.wings.graphql.datafetcher.trigger;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.exception.WingsException.USER;
 
 import static software.wings.graphql.schema.type.trigger.QLGitHubAction.packageActions;
@@ -170,7 +171,10 @@ public class TriggerConditionController {
 
   private QLWebhookEvent populateGithubEvent(TriggerCondition triggerCondition) {
     String action = null;
-    String eventType = ((WebHookTriggerCondition) triggerCondition).getEventTypes().get(0).getValue();
+    String eventType = null;
+    if (isNotEmpty(((WebHookTriggerCondition) triggerCondition).getEventTypes())) {
+      eventType = ((WebHookTriggerCondition) triggerCondition).getEventTypes().get(0).getValue();
+    }
 
     if (GitHubEventType.PULL_REQUEST.getValue().equals(eventType)
         || (GitHubEventType.PACKAGE.getValue().equals(eventType))) {
@@ -187,15 +191,22 @@ public class TriggerConditionController {
   }
 
   private QLWebhookEvent populateGitlabEvent(TriggerCondition triggerCondition) {
-    return QLWebhookEvent.builder()
-        .event(((WebHookTriggerCondition) triggerCondition).getEventTypes().get(0).getValue())
-        .build();
+    List<WebhookEventType> eventTypes = ((WebHookTriggerCondition) triggerCondition).getEventTypes();
+    String event = null;
+    if (isNotEmpty(eventTypes)) {
+      event = eventTypes.get(0).getValue();
+    }
+    return QLWebhookEvent.builder().event(event).build();
   }
 
   private QLWebhookEvent populateBitbucketEvent(TriggerCondition triggerCondition) {
+    List<BitBucketEventType> bitBucketEvents = ((WebHookTriggerCondition) triggerCondition).getBitBucketEvents();
+    if (isEmpty(bitBucketEvents)) {
+      return QLWebhookEvent.builder().build();
+    }
     String eventType;
     String action = null;
-    BitBucketEventType bitBucketEventType = ((WebHookTriggerCondition) triggerCondition).getBitBucketEvents().get(0);
+    BitBucketEventType bitBucketEventType = bitBucketEvents.get(0);
 
     if (bitBucketEventType == BitBucketEventType.ANY || bitBucketEventType == BitBucketEventType.PING) {
       eventType = bitBucketEventType.getValue();
