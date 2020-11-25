@@ -6,7 +6,7 @@
         <artifactId>portal</artifactId>
         <version>0.0.1-SNAPSHOT</version>
     </parent>
-    <artifactId>20-delegate-beans</artifactId>
+    <artifactId>940-delegate-beans</artifactId>
     <dependencies>
         <dependency>
             <groupId>com.google.protobuf</groupId>
@@ -23,7 +23,7 @@
         </dependency>
         <dependency>
             <groupId>software.wings</groupId>
-            <artifactId>20-delegate-beans-proto</artifactId>
+            <artifactId>940-delegate-beans-proto</artifactId>
             <version>${project.parent.version}</version>
         </dependency>
         <dependency>

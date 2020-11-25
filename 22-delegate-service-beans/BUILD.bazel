@@ -11,9 +11,9 @@ java_library(
     name = "maven_deps",
     visibility = ["//visibility:public"],
     exports = [
-        "//20-delegate-beans:module",
         "//21-persistence:module",
         "//22-delegate-service-beans/src/main/proto:22_delegate_service_beans_java_proto",
+        "//940-delegate-beans:module",
         "//950-delegate-tasks-beans:module",
         "//980-commons:module",
         "@maven//:com_fasterxml_jackson_core_jackson_annotations",

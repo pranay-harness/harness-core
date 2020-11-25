@@ -5,7 +5,7 @@ package io.harness.delegateprofile;
 option java_multiple_files = true;
 option go_package = "22_delegate_service_beans";
 
-import "20-delegate-beans/src/main/proto/io/harness/delegate/account.proto";
+import "940-delegate-beans/src/main/proto/io/harness/delegate/account.proto";
 import "22-delegate-service-beans/src/main/proto/io/harness/paging/paging.proto";
 
 // Profile global unique identifier

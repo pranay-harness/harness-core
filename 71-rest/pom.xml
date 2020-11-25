@@ -705,11 +705,6 @@
         </dependency>
         <dependency>
             <groupId>software.wings</groupId>
-            <artifactId>20-delegate-beans</artifactId>
-            <version>${project.parent.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>software.wings</groupId>
             <artifactId>21-delegate-agent-beans</artifactId>
             <version>${project.parent.version}</version>
         </dependency>
@@ -801,6 +796,11 @@
         <dependency>
             <groupId>software.wings</groupId>
             <artifactId>64-events-framework</artifactId>
+            <version>${project.parent.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>software.wings</groupId>
+            <artifactId>940-delegate-beans</artifactId>
             <version>${project.parent.version}</version>
         </dependency>
         <dependency>

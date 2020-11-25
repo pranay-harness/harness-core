@@ -3,7 +3,7 @@ syntax = "proto3";
 package io.harness.delegate;
 
 option java_multiple_files = true;
-option go_package = "20_delegate_beans";
+option go_package = "940_delegate_beans";
 
 message DelegateId {
   string id = 1;

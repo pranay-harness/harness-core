@@ -51,8 +51,6 @@ java_library(
 )
 
 modules = [
-    "//950-delegate-tasks-beans",
-    "//20-delegate-tasks",
     "//20-ng-core-beans",
     "//21-delegate-agent-beans",
     "//21-persistence",
@@ -87,6 +85,8 @@ modules = [
     "//460-capability",
     "//490-ce-commons",
     "//900-yaml-sdk",
+    "//930-delegate-tasks",
+    "//950-delegate-tasks-beans",
     "//960-api-services",
     "//960-expression-service",
     "//970-api-services-beans",

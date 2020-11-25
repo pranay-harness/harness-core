@@ -62,11 +62,6 @@
         </dependency>
         <dependency>
             <groupId>software.wings</groupId>
-            <artifactId>20-delegate-tasks</artifactId>
-            <version>${project.parent.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>software.wings</groupId>
             <artifactId>21-persistence</artifactId>
             <version>${project.parent.version}</version>
         </dependency>
@@ -83,6 +78,11 @@
         <dependency>
             <groupId>software.wings</groupId>
             <artifactId>39-ng-pipeline-commons</artifactId>
+            <version>${project.parent.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>software.wings</groupId>
+            <artifactId>930-delegate-tasks</artifactId>
             <version>${project.parent.version}</version>
         </dependency>
         <dependency>

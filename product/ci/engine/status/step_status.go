@@ -10,7 +10,7 @@ import (
 	"github.com/gogo/protobuf/jsonpb"
 	"github.com/golang/protobuf/ptypes"
 	"github.com/pkg/errors"
-	delegatepb "github.com/wings-software/portal/20-delegate-beans/src/main/proto/io/harness/delegate"
+	delegatepb "github.com/wings-software/portal/940-delegate-beans/src/main/proto/io/harness/delegate"
 	callbackpb "github.com/wings-software/portal/22-delegate-service-beans/src/main/proto/io/harness/callback"
 	delegateSvcpb "github.com/wings-software/portal/22-delegate-service-beans/src/main/proto/io/harness/delegate"
 	pb "github.com/wings-software/portal/50-delegate-task-grpc-service/src/main/proto/io/harness/task/service"

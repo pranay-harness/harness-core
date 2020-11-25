@@ -132,8 +132,6 @@ build_proto_module() {
   fi
 }
 
-build_bazel_module 20-delegate-beans
-build_bazel_module 20-delegate-tasks
 build_bazel_module 20-ng-core-beans
 build_bazel_module 20-notification-beans
 build_bazel_module 21-delegate-agent-beans
@@ -177,6 +175,8 @@ build_bazel_module 440-connector-nextgen
 build_bazel_module 450-ce-views
 build_bazel_module 490-ce-commons
 build_bazel_module 900-yaml-sdk
+build_bazel_module 930-delegate-tasks
+build_bazel_module 940-delegate-beans
 build_bazel_module 950-delegate-tasks-beans
 build_bazel_module 960-api-services
 build_bazel_module 960-expression-service
@@ -186,13 +186,13 @@ build_bazel_module 970-ng-commons
 build_bazel_module 980-commons
 build_bazel_module 990-commons-test
 
-build_java_proto_module 20-delegate-beans
 build_java_proto_module 21-events-api
 build_java_proto_module 20-notification-beans
 build_java_proto_module 21-delegate-agent-beans
 build_java_proto_module 22-delegate-service-beans
 build_java_proto_module 26-pms-contracts
 build_java_proto_module 50-delegate-task-grpc-service proto
+build_java_proto_module 940-delegate-beans
 build_java_proto_module 950-delegate-tasks-beans
 
 build_proto_module 960-expression-service 960-expression-service/src/main/proto/io/harness/expression/service

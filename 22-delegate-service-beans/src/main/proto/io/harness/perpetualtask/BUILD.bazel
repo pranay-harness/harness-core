@@ -10,9 +10,9 @@ proto_library(
     ],
     visibility = ["//visibility:public"],
     deps = [
-        "//20-delegate-beans/src/main/proto/io/harness/delegate:20_delegate_beans_proto",
-        "//20-delegate-beans/src/main/proto/io/harness/perpetualtask:20_delegate_beans_proto",
         "//22-delegate-service-beans/src/main/proto/io/harness/callback:22_delegate_service_beans_proto",
+        "//940-delegate-beans/src/main/proto/io/harness/delegate:940_delegate_beans_proto",
+        "//940-delegate-beans/src/main/proto/io/harness/perpetualtask:940_delegate_beans_proto",
         "@com_google_protobuf//:any_proto",
         "@com_google_protobuf//:timestamp_proto",
     ],
@@ -25,9 +25,9 @@ go_proto_library(
     proto = ":22_delegate_service_beans_proto",
     visibility = ["//visibility:public"],
     deps = [
-        "//20-delegate-beans/src/main/proto/io/harness/delegate:go_default_library",
-        "//20-delegate-beans/src/main/proto/io/harness/perpetualtask:go_default_library",
         "//22-delegate-service-beans/src/main/proto/io/harness/callback:go_default_library",
+        "//940-delegate-beans/src/main/proto/io/harness/delegate:go_default_library",
+        "//940-delegate-beans/src/main/proto/io/harness/perpetualtask:go_default_library",
     ],
 )
 

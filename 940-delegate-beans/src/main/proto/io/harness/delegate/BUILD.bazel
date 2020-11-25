@@ -3,7 +3,7 @@ load("@io_bazel_rules_go//go:def.bzl", "go_library")
 load("@io_bazel_rules_go//proto:def.bzl", "go_proto_library")
 
 proto_library(
-    name = "20_delegate_beans_proto",
+    name = "940_delegate_beans_proto",
     srcs = [
         "account.proto",
         "capability.proto",
@@ -13,15 +13,15 @@ proto_library(
 )
 
 go_proto_library(
-    name = "20_delegate_beans_go_proto",
-    importpath = "github.com/wings-software/portal/20-delegate-beans/src/main/proto/io/harness/delegate",
-    proto = ":20_delegate_beans_proto",
+    name = "940_delegate_beans_go_proto",
+    importpath = "github.com/wings-software/portal/940-delegate-beans/src/main/proto/io/harness/delegate",
+    proto = ":940_delegate_beans_proto",
     visibility = ["//visibility:public"],
 )
 
 go_library(
     name = "go_default_library",
-    embed = [":20_delegate_beans_go_proto"],
-    importpath = "github.com/wings-software/portal/20-delegate-beans/src/main/proto/io/harness/delegate",
+    embed = [":940_delegate_beans_go_proto"],
+    importpath = "github.com/wings-software/portal/940-delegate-beans/src/main/proto/io/harness/delegate",
     visibility = ["//visibility:public"],
 )

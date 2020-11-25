@@ -11,11 +11,11 @@ java_library(
     name = "maven_deps",
     visibility = ["//visibility:public"],
     exports = [
-        "//20-delegate-tasks:module",
         "//22-wait-engine:module",
         "//26-pms-contracts:module",
         "//27-orchestration-persistence:module",
         "//29-orchestration-beans:module",
+        "//930-delegate-tasks:module",
         "@maven//:com_esotericsoftware_kryo",
         "@maven//:com_fasterxml_jackson_core_jackson_annotations",
         "@maven//:com_google_code_findbugs_annotations",
