@@ -58,7 +58,6 @@ import software.wings.core.ssh.executors.SshSessionConfig;
 import software.wings.service.intfc.yaml.GitClient;
 
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.jcraft.jsch.JSchException;
@@ -1087,8 +1086,12 @@ public class GitClientImpl implements GitClient {
                      .getPrincipal(); // set principal as username
     }
     if (HTTP_PASSWORD == gitConfig.getAuthenticationScheme()) {
-      Preconditions.checkState(EmptyPredicate.isNotEmpty(username), "The user name is null in the git config");
-      Preconditions.checkState(EmptyPredicate.isNotEmpty(password), "The password is null in the git config");
+      if (EmptyPredicate.isEmpty(username)) {
+        log.info(String.format("The user name is null in the git config. Account id: %s", gitConfig.getAccountId()));
+      }
+      if (EmptyPredicate.isEmpty(password)) {
+        log.info(String.format("The password is null in the git config. Account id: %s", gitConfig.getAccountId()));
+      }
     }
     gitCommand.setCredentialsProvider(new UsernamePasswordCredentialsProviderWithSkipSslVerify(username, password));
   }
