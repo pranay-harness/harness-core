@@ -120,6 +120,7 @@ import software.wings.common.WorkflowConstants;
 import software.wings.service.impl.workflow.WorkflowServiceHelper;
 import software.wings.service.impl.yaml.handler.workflow.ApprovalStepCompletionYamlValidator;
 import software.wings.service.impl.yaml.handler.workflow.GcbStepCompletionYamlValidator;
+import software.wings.service.impl.yaml.handler.workflow.ShellScriptStepYamlValidator;
 import software.wings.service.impl.yaml.handler.workflow.StepCompletionYamlValidator;
 import software.wings.sm.states.APMVerificationState;
 import software.wings.sm.states.AppDynamicsState;
@@ -657,7 +658,7 @@ public enum StepType {
   // Utility
   SHELL_SCRIPT(ShellScriptState.class, WorkflowServiceHelper.SHELL_SCRIPT, asList(UTILITY),
       asList(PhaseStepType.values()), asList(DeploymentType.values()),
-      asList(PhaseType.NON_ROLLBACK, PhaseType.ROLLBACK)),
+      asList(PhaseType.NON_ROLLBACK, PhaseType.ROLLBACK), ShellScriptStepYamlValidator.class),
   HTTP(HttpState.class, WorkflowServiceHelper.HTTP, asList(UTILITY), asList(PhaseStepType.values()),
       asList(DeploymentType.values()), asList(PhaseType.NON_ROLLBACK, PhaseType.ROLLBACK)),
   NEW_RELIC_DEPLOYMENT_MARKER(NewRelicDeploymentMarkerState.class, WorkflowServiceHelper.NEW_RELIC_DEPLOYMENT_MARKER,
