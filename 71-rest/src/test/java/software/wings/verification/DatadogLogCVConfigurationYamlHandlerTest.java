@@ -102,8 +102,8 @@ public class DatadogLogCVConfigurationYamlHandlerTest extends CategoryTest {
     yaml.setServiceName(serviceName);
     yaml.setConnectorName(connectorName);
     yaml.setQuery("query1");
-    yaml.setBaselineStartMinute(16);
-    yaml.setBaselineEndMinute(30);
+    yaml.setBaselineStartMinute(16L);
+    yaml.setBaselineEndMinute(30L);
     yaml.setHostnameField("hostName1");
     yaml.setAlertPriority(FeedbackPriority.P5.name());
     return yaml;

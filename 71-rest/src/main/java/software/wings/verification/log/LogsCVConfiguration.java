@@ -84,8 +84,8 @@ public class LogsCVConfiguration extends CVConfiguration {
   @JsonPropertyOrder({"type", "harnessApiVersion"})
   public static class LogsCVConfigurationYaml extends CVConfigurationYaml {
     private String query;
-    private long baselineStartMinute;
-    private long baselineEndMinute;
+    private Long baselineStartMinute;
+    private Long baselineEndMinute;
     private String alertPriority;
   }
 }

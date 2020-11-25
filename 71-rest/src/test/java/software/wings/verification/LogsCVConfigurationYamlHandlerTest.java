@@ -2,6 +2,7 @@ package software.wings.verification;
 
 import static io.harness.rule.OwnerRule.NANDAN;
 import static io.harness.rule.OwnerRule.RAGHU;
+import static io.harness.rule.OwnerRule.SOWMYA;
 
 import static org.apache.cxf.ws.addressing.ContextUtils.generateUUID;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -100,8 +101,8 @@ public class LogsCVConfigurationYamlHandlerTest extends CategoryTest {
     yaml.setServiceName(serviceName);
     yaml.setConnectorName(connectorName);
     yaml.setQuery("query");
-    yaml.setBaselineStartMinute(16);
-    yaml.setBaselineEndMinute(30);
+    yaml.setBaselineStartMinute(16L);
+    yaml.setBaselineEndMinute(30L);
     yaml.setAlertPriority(FeedbackPriority.P5.name());
     return yaml;
   }
@@ -124,6 +125,28 @@ public class LogsCVConfigurationYamlHandlerTest extends CategoryTest {
     assertThat(yaml.getQuery()).isEqualTo(cvServiceConfiguration.getQuery());
     assertThat(yaml.getBaselineStartMinute()).isEqualTo(cvServiceConfiguration.getBaselineStartMinute());
     assertThat(yaml.getBaselineEndMinute()).isEqualTo(cvServiceConfiguration.getBaselineEndMinute());
+    assertThat(yaml.getAlertPriority()).isEqualTo(cvServiceConfiguration.getAlertPriority().name());
+  }
+
+  @Test
+  @Owner(developers = SOWMYA)
+  @Category(UnitTests.class)
+  public void testToYaml_disabledConfig() {
+    final String appId = "appId";
+    LogsCVConfiguration cvServiceConfiguration = new LogsCVConfiguration();
+    setBasicInfo(cvServiceConfiguration);
+    cvServiceConfiguration.setEnabled24x7(false);
+    cvServiceConfiguration.setQuery(generateUUID());
+    cvServiceConfiguration.setBaselineStartMinute(16);
+    cvServiceConfiguration.setBaselineEndMinute(30);
+    cvServiceConfiguration.setAlertPriority(FeedbackPriority.P5);
+
+    LogsCVConfigurationYaml yaml = yamlHandler.toYaml(cvServiceConfiguration, appId);
+
+    assertThat(yaml.getServiceName()).isEqualTo(serviceName);
+    assertThat(yaml.getQuery()).isEqualTo(cvServiceConfiguration.getQuery());
+    assertThat(yaml.getBaselineStartMinute()).isNull();
+    assertThat(yaml.getBaselineEndMinute()).isNull();
     assertThat(yaml.getAlertPriority()).isEqualTo(cvServiceConfiguration.getAlertPriority().name());
   }
 

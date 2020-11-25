@@ -16,6 +16,7 @@ import software.wings.verification.log.LogsCVConfiguration.LogsCVConfigurationYa
 import software.wings.verification.log.SplunkCVConfiguration.SplunkCVConfigurationYaml;
 import software.wings.verification.log.StackdriverCVConfiguration.StackdriverCVConfigurationYaml;
 
+import com.google.common.base.Preconditions;
 import java.util.List;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
@@ -55,8 +56,10 @@ public class LogsCVConfigurationYamlHandler
 
     super.toYaml(yaml, bean);
     yaml.setQuery(bean.getQuery());
-    yaml.setBaselineStartMinute(bean.getBaselineStartMinute());
-    yaml.setBaselineEndMinute(bean.getBaselineEndMinute());
+    if (yaml.isEnabled24x7()) {
+      yaml.setBaselineStartMinute(bean.getBaselineStartMinute());
+      yaml.setBaselineEndMinute(bean.getBaselineEndMinute());
+    }
     yaml.setType(bean.getStateType().name());
     yaml.setAlertPriority(bean.getAlertPriority().name());
     return yaml;
@@ -108,8 +111,17 @@ public class LogsCVConfigurationYamlHandler
     String yamlFilePath = changeContext.getChange().getFilePath();
     super.toBean(changeContext, bean, appId, yamlFilePath);
     bean.setQuery(yaml.getQuery());
-    bean.setBaselineStartMinute(yaml.getBaselineStartMinute());
-    bean.setBaselineEndMinute(yaml.getBaselineEndMinute());
+    if (bean.isEnabled24x7()) {
+      Preconditions.checkNotNull(
+          yaml.getBaselineStartMinute(), "Baseline start minute not set for service guard config");
+      Preconditions.checkNotNull(yaml.getBaselineEndMinute(), "Baseline end minute not set for service guard config");
+    }
+    if (yaml.getBaselineStartMinute() != null) {
+      bean.setBaselineStartMinute(yaml.getBaselineStartMinute());
+    }
+    if (yaml.getBaselineEndMinute() != null) {
+      bean.setBaselineEndMinute(yaml.getBaselineEndMinute());
+    }
     bean.setStateType(StateType.valueOf(yaml.getType()));
     try {
       bean.setAlertPriority(FeedbackPriority.valueOf(yaml.getAlertPriority()));
