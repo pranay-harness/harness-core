@@ -9,7 +9,7 @@ import io.harness.serializer.KryoModule;
 import io.harness.serializer.KryoRegistrar;
 import io.harness.serializer.NGCoreRegistrars;
 import io.harness.serializer.PersistenceRegistrars;
-import io.harness.springdata.SpringPersistenceModule;
+import io.harness.springdata.SpringPersistenceTestModule;
 import io.harness.testlib.module.MongoRuleMixin;
 import io.harness.testlib.module.TestMongoModule;
 import io.harness.threading.CurrentThreadExecutor;
@@ -85,7 +85,7 @@ public class NGCoreTestRule implements InjectorRuleMixin, MethodRule, MongoRuleM
     modules.add(TimeModule.getInstance());
     modules.add(NGCoreModule.getInstance());
     modules.add(TestMongoModule.getInstance());
-    modules.add(new SpringPersistenceModule());
+    modules.add(new SpringPersistenceTestModule());
     modules.add(mongoTypeModule(annotations));
     return modules;
   }

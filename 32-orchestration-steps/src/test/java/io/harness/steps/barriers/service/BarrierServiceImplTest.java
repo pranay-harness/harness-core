@@ -38,9 +38,6 @@ public class BarrierServiceImplTest extends OrchestrationStepsTestBase {
 
     assertThat(savedBarrierExecutionInstance).isNotNull();
     assertThat(savedBarrierExecutionInstance.getUuid()).isEqualTo(uuid);
-    assertThat(savedBarrierExecutionInstance.getCreatedAt()).isNotNull();
-    assertThat(savedBarrierExecutionInstance.getLastUpdatedAt()).isNotNull();
-    assertThat(savedBarrierExecutionInstance.getVersion()).isNotNull();
   }
 
   @Test
@@ -58,9 +55,6 @@ public class BarrierServiceImplTest extends OrchestrationStepsTestBase {
 
     assertThat(savedBarrierExecutionInstance).isNotNull();
     assertThat(savedBarrierExecutionInstance.getUuid()).isEqualTo(uuid);
-    assertThat(savedBarrierExecutionInstance.getCreatedAt()).isNotNull();
-    assertThat(savedBarrierExecutionInstance.getLastUpdatedAt()).isNotNull();
-    assertThat(savedBarrierExecutionInstance.getVersion()).isNotNull();
   }
 
   @Test

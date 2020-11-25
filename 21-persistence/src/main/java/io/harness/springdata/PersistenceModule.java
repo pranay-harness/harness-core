@@ -15,5 +15,5 @@ public abstract class PersistenceModule extends AbstractModule {
     install(new SpringModule(BeanFactoryProvider.from(getConfigClasses())));
   }
 
-  protected abstract Class<? extends SpringPersistenceConfig>[] getConfigClasses();
+  protected abstract Class<?>[] getConfigClasses();
 }

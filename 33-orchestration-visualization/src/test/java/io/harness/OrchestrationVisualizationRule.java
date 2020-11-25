@@ -21,7 +21,7 @@ import io.harness.serializer.OrchestrationBeansRegistrars;
 import io.harness.serializer.OrchestrationVisualizationModuleRegistrars;
 import io.harness.serializer.kryo.OrchestrationVisualizationTestKryoRegistrar;
 import io.harness.spring.AliasRegistrar;
-import io.harness.springdata.SpringPersistenceModule;
+import io.harness.springdata.SpringPersistenceTestModule;
 import io.harness.testlib.module.MongoRuleMixin;
 import io.harness.testlib.module.TestMongoModule;
 import io.harness.threading.CurrentThreadExecutor;
@@ -150,7 +150,7 @@ public class OrchestrationVisualizationRule implements MethodRule, InjectorRuleM
     modules.add(new VersionModule());
     modules.add(TimeModule.getInstance());
     modules.add(TestMongoModule.getInstance());
-    modules.add(new SpringPersistenceModule());
+    modules.add(new SpringPersistenceTestModule());
     modules.add(OrchestrationModule.getInstance());
     modules.add(OrchestrationVisualizationModule.getInstance());
     return modules;

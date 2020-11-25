@@ -19,7 +19,6 @@ import org.springframework.context.annotation.Primary;
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.data.convert.CustomConversions;
 import org.springframework.data.mongodb.config.AbstractMongoConfiguration;
-import org.springframework.data.mongodb.config.EnableMongoAuditing;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.convert.MongoCustomConversions;
 import org.springframework.data.mongodb.repository.config.EnableMongoRepositories;
@@ -29,13 +28,12 @@ import org.springframework.guice.annotation.GuiceModule;
 @GuiceModule
 @EnableMongoRepositories(basePackages = {"io.harness.repositories"},
     includeFilters = @ComponentScan.Filter(HarnessRepo.class), mongoTemplateRef = "primary")
-@EnableMongoAuditing
-public class SpringPersistenceConfig extends AbstractMongoConfiguration {
+public class SpringPersistenceTestConfig extends AbstractMongoConfiguration {
   protected final Injector injector;
   protected final AdvancedDatastore advancedDatastore;
   protected final List<Class<? extends Converter<?, ?>>> springConverters;
 
-  public SpringPersistenceConfig(Injector injector, List<Class<? extends Converter<?, ?>>> springConverters) {
+  public SpringPersistenceTestConfig(Injector injector, List<Class<? extends Converter<?, ?>>> springConverters) {
     this.injector = injector;
     this.advancedDatastore = injector.getProvider(get(AdvancedDatastore.class, named("primaryDatastore"))).get();
     this.springConverters = springConverters;
@@ -59,7 +57,7 @@ public class SpringPersistenceConfig extends AbstractMongoConfiguration {
 
   @Override
   protected Collection<String> getMappingBasePackages() {
-    return Collections.singleton("io.harness");
+    return Collections.emptyList();
   }
 
   @Bean

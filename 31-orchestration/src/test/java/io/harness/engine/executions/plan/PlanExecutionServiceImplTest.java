@@ -26,7 +26,5 @@ public class PlanExecutionServiceImplTest extends OrchestrationTestBase {
     String planExecutionId = generateUuid();
     PlanExecution savedExecution = planExecutionService.save(PlanExecution.builder().uuid(planExecutionId).build());
     assertThat(savedExecution.getUuid()).isEqualTo(planExecutionId);
-    assertThat(savedExecution.getCreatedAt()).isNotNull();
-    assertThat(savedExecution.getVersion()).isEqualTo(0);
   }
 }

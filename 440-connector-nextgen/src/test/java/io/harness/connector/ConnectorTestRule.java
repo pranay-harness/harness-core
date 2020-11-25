@@ -23,7 +23,7 @@ import io.harness.serializer.ConnectorNextGenRegistrars;
 import io.harness.serializer.KryoModule;
 import io.harness.serializer.KryoRegistrar;
 import io.harness.serializer.OrchestrationBeansRegistrars;
-import io.harness.springdata.SpringPersistenceModule;
+import io.harness.springdata.SpringPersistenceTestModule;
 import io.harness.testlib.module.MongoRuleMixin;
 import io.harness.testlib.module.TestMongoModule;
 
@@ -74,7 +74,7 @@ public class ConnectorTestRule implements InjectorRuleMixin, MethodRule, MongoRu
     });
     modules.add(mongoTypeModule(annotations));
     modules.add(TestMongoModule.getInstance());
-    modules.add(new SpringPersistenceModule());
+    modules.add(new SpringPersistenceTestModule());
     modules.add(new ConnectorModule());
     modules.add(KryoModule.getInstance());
     modules.add(new EntitySetupUsageClientModule(

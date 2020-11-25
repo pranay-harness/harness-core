@@ -104,8 +104,8 @@ public class EntitySetupUsageServiceImplTest extends NGCoreTestBase {
     Page<EntitySetupUsageDTO> entityReferenceDTOPage =
         entitySetupUsageService.listAllEntityUsage(0, 10, accountIdentifier, referredEntityFQN, null);
     assertThat(entityReferenceDTOPage.getTotalElements()).isEqualTo(2);
-    verifyTheValuesAreCorrect(entityReferenceDTOPage.getContent().get(0), setupUsages.get(1));
-    verifyTheValuesAreCorrect(entityReferenceDTOPage.getContent().get(1), setupUsages.get(0));
+    verifyTheValuesAreCorrect(entityReferenceDTOPage.getContent().get(0), setupUsages.get(0));
+    verifyTheValuesAreCorrect(entityReferenceDTOPage.getContent().get(1), setupUsages.get(1));
   }
 
   @Test
@@ -138,8 +138,6 @@ public class EntitySetupUsageServiceImplTest extends NGCoreTestBase {
         .isEqualTo(expectedEntitySetupUsageDTO.getReferredByEntity().getType());
     assertThat(actualEntitySetupUsageDTO.getReferredByEntity().getName())
         .isEqualTo(expectedEntitySetupUsageDTO.getReferredByEntity().getName());
-
-    assertThat(actualEntitySetupUsageDTO.getCreatedAt()).isNotNull();
   }
 
   private EntitySetupUsageDTO saveEntitySetupUsage() {

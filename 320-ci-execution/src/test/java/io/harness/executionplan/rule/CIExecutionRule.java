@@ -15,7 +15,7 @@ import io.harness.remote.client.ServiceHttpClientConfig;
 import io.harness.rule.InjectorRuleMixin;
 import io.harness.serializer.CiExecutionRegistrars;
 import io.harness.spring.AliasRegistrar;
-import io.harness.springdata.SpringPersistenceModule;
+import io.harness.springdata.SpringPersistenceTestModule;
 import io.harness.testlib.module.MongoRuleMixin;
 import io.harness.testlib.module.TestMongoModule;
 import io.harness.threading.CurrentThreadExecutor;
@@ -94,7 +94,7 @@ public class CIExecutionRule implements MethodRule, InjectorRuleMixin, MongoRule
       }
     });
     modules.add(TestMongoModule.getInstance());
-    modules.add(new SpringPersistenceModule());
+    modules.add(new SpringPersistenceTestModule());
     modules.add(new CIExecutionServiceModule(CIExecutionServiceConfig.builder()
                                                  .addonImageTag("v1.4-alpha")
                                                  .defaultCPULimit(200)
