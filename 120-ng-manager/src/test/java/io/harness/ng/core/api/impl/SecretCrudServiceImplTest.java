@@ -125,11 +125,11 @@ public class SecretCrudServiceImplTest extends CategoryTest {
   public void testUpdate() {
     SecretDTOV2 secretDTOV2 = SecretDTOV2.builder().type(SecretType.SecretText).build();
     when(secretTextService.update(any(), any())).thenReturn(true);
-    when(ngSecretServiceV2.update(any(), any(), eq(false))).thenReturn(true);
+    when(ngSecretServiceV2.update(any(), any(), eq(false))).thenReturn(Secret.builder().build());
 
-    boolean success = secretCrudService.update("account", secretDTOV2);
+    SecretResponseWrapper updatedSecret = secretCrudService.update("account", secretDTOV2);
 
-    assertThat(success).isTrue();
+    assertThat(updatedSecret).isNotNull();
   }
 
   @Test
@@ -186,11 +186,12 @@ public class SecretCrudServiceImplTest extends CategoryTest {
                                   .build();
     when(secretManagerClient.updateSecretFile(any(), any(), any(), any(), any(), any()).execute())
         .thenReturn(Response.success(new RestResponse<>(true)));
-    when(ngSecretServiceV2.update(any(), any(), eq(false))).thenReturn(true);
+    when(ngSecretServiceV2.update(any(), any(), eq(false))).thenReturn(Secret.builder().build());
 
-    boolean success = secretCrudService.updateFile("account", secretDTOV2, new StringInputStream("string"));
+    SecretResponseWrapper updatedFile =
+        secretCrudService.updateFile("account", secretDTOV2, new StringInputStream("string"));
 
-    assertThat(success).isTrue();
+    assertThat(updatedFile).isNotNull();
     verify(secretManagerClient, atLeastOnce()).getSecret(any(), any(), any(), any());
     verify(secretManagerClient, atLeastOnce()).updateSecretFile(any(), any(), any(), any(), any(), any());
     verify(ngSecretServiceV2).update(any(), any(), eq(false));

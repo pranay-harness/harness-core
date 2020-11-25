@@ -127,7 +127,7 @@ public class NGSecretResourceV2 {
   @Path("{identifier}")
   @ApiOperation(value = "Update a secret", nickname = "putSecret")
   @Consumes({"application/json"})
-  public ResponseDTO<Boolean> updateSecret(
+  public ResponseDTO<SecretResponseWrapper> updateSecret(
       @PathParam(NGCommonEntityConstants.IDENTIFIER_KEY) @NotEmpty String identifier,
       @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) @NotNull String accountIdentifier,
       @Valid SecretRequestWrapper dto) {
@@ -138,7 +138,7 @@ public class NGSecretResourceV2 {
   @Path("{identifier}/yaml")
   @Consumes({"application/yaml"})
   @ApiOperation(value = "Update a secret via yaml", nickname = "putSecretViaYaml")
-  public ResponseDTO<Boolean> updateSecretViaYaml(
+  public ResponseDTO<SecretResponseWrapper> updateSecretViaYaml(
       @PathParam(NGCommonEntityConstants.IDENTIFIER_KEY) @NotEmpty String identifier,
       @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) @NotNull String accountIdentifier,
       @Valid SecretRequestWrapper dto) {
@@ -149,7 +149,7 @@ public class NGSecretResourceV2 {
   @Path("files/{identifier}")
   @ApiOperation(value = "Update a secret file", nickname = "putSecretFileV2")
   @Consumes(MediaType.MULTIPART_FORM_DATA)
-  public ResponseDTO<Boolean> updateSecretFile(@PathParam("identifier") String identifier,
+  public ResponseDTO<SecretResponseWrapper> updateSecretFile(@PathParam("identifier") String identifier,
       @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) @NotNull String accountIdentifier,
       @FormDataParam("file") InputStream uploadedInputStream, @FormDataParam("spec") String spec) {
     SecretRequestWrapper dto = JsonUtils.asObject(spec, SecretRequestWrapper.class);

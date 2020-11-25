@@ -38,11 +38,11 @@ public interface SecretCrudService {
 
   SecretResponseWrapper createFile(String accountIdentifier, SecretDTOV2 dto, InputStream inputStream);
 
-  boolean updateFile(String accountIdentifier, SecretDTOV2 dto, InputStream inputStream);
+  SecretResponseWrapper updateFile(String accountIdentifier, SecretDTOV2 dto, InputStream inputStream);
 
-  boolean update(String accountIdentifier, SecretDTOV2 dto);
+  SecretResponseWrapper update(String accountIdentifier, SecretDTOV2 dto);
 
-  boolean updateViaYaml(String accountIdentifier, SecretDTOV2 dto);
+  SecretResponseWrapper updateViaYaml(String accountIdentifier, SecretDTOV2 dto);
 
   SecretValidationResultDTO validateSecret(String accountIdentifier, String orgIdentifier, String projectIdentifier,
       String identifier, SecretValidationMetaData metadata);

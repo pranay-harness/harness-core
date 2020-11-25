@@ -4,6 +4,7 @@ import io.harness.ng.core.models.SecretSpec;
 
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import java.util.Optional;
 
 @JsonTypeInfo(
     use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.EXTERNAL_PROPERTY, property = "type", visible = true)
@@ -14,7 +15,7 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo;
           @JsonSubTypes.Type(value = SSHKeySpecDTO.class, name = "SSHKey"),
     })
 public abstract class SecretSpecDTO {
-  public abstract boolean isValidYaml();
+  public abstract Optional<String> getErrorMessageForInvalidYaml();
 
   public abstract SecretSpec toEntity();
 }

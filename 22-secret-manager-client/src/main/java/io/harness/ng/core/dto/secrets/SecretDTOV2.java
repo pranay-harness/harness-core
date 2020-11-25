@@ -2,6 +2,7 @@ package io.harness.ng.core.dto.secrets;
 
 import io.harness.data.validator.EntityIdentifier;
 import io.harness.data.validator.EntityName;
+import io.harness.data.validator.NGEntityName;
 import io.harness.ng.core.models.Secret;
 import io.harness.secretmanagerclient.SecretType;
 
@@ -24,7 +25,7 @@ import lombok.NoArgsConstructor;
 @JsonInclude(Include.NON_NULL)
 public class SecretDTOV2 {
   @NotNull private SecretType type;
-  @NotNull @EntityName private String name;
+  @NotNull @NGEntityName private String name;
   @NotNull @EntityIdentifier private String identifier;
   @EntityIdentifier(allowBlank = true) private String orgIdentifier;
   @EntityIdentifier(allowBlank = true) private String projectIdentifier;

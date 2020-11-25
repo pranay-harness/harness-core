@@ -6,6 +6,7 @@ import io.harness.ng.core.models.SecretSpec;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonTypeName;
+import java.util.Optional;
 import javax.validation.constraints.NotNull;
 import lombok.Builder;
 import lombok.Data;
@@ -21,8 +22,8 @@ public class SecretFileSpecDTO extends SecretSpecDTO {
 
   @Override
   @JsonIgnore
-  public boolean isValidYaml() {
-    return true;
+  public Optional<String> getErrorMessageForInvalidYaml() {
+    return Optional.empty();
   }
 
   @Override

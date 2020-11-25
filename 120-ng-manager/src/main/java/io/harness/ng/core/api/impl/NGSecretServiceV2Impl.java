@@ -1,5 +1,7 @@
 package io.harness.ng.core.api.impl;
 
+import static io.harness.exception.WingsException.USER_SRE;
+
 import static java.util.Collections.emptyList;
 
 import io.harness.beans.DelegateTaskRequest;
@@ -7,6 +9,7 @@ import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.delegate.beans.RemoteMethodReturnValueData;
 import io.harness.delegate.beans.SSHTaskParams;
 import io.harness.delegate.beans.secrets.SSHConfigValidationTaskResponse;
+import io.harness.exception.InvalidRequestException;
 import io.harness.ng.core.BaseNGAccess;
 import io.harness.ng.core.api.NGSecretServiceV2;
 import io.harness.ng.core.dto.secrets.KerberosConfigDTO;
@@ -77,7 +80,7 @@ public class NGSecretServiceV2Impl implements NGSecretServiceV2 {
   }
 
   @Override
-  public boolean update(String accountIdentifier, SecretDTOV2 dto, boolean draft) {
+  public Secret update(String accountIdentifier, SecretDTOV2 dto, boolean draft) {
     Optional<Secret> secretOptional =
         get(accountIdentifier, dto.getOrgIdentifier(), dto.getProjectIdentifier(), dto.getIdentifier());
     if (secretOptional.isPresent()) {
@@ -90,9 +93,9 @@ public class NGSecretServiceV2Impl implements NGSecretServiceV2 {
       oldSecret.setDraft(oldSecret.isDraft() && draft);
       oldSecret.setType(newSecret.getType());
       secretRepository.save(oldSecret);
-      return true;
+      return oldSecret;
     }
-    return false;
+    throw new InvalidRequestException("No such secret found", USER_SRE);
   }
 
   @Override
