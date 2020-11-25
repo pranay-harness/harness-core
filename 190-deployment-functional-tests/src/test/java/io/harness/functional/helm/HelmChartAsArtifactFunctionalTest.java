@@ -1,5 +1,6 @@
 package io.harness.functional.helm;
 
+import static io.harness.generator.InfrastructureDefinitionGenerator.InfrastructureDefinitions.K8S_ROLLING_TEST;
 import static io.harness.k8s.model.HelmVersion.V3;
 import static io.harness.rule.OwnerRule.ABOSII;
 
@@ -126,8 +127,8 @@ public class HelmChartAsArtifactFunctionalTest extends AbstractFunctionalTest {
     Service service = createK8sHelmService();
     // Will simulate background job to not be dependent external environment
     HelmChart helmChartToDeploy = createHelmChartsAndGetWithVersion(service, DEPLOY_HELM_CHART_VERSION);
-    InfrastructureDefinition infraDefinition = infrastructureDefinitionGenerator.ensurePredefined(
-        seed, owners, InfrastructureDefinitionGenerator.InfrastructureDefinitions.GCP_HELM);
+    InfrastructureDefinition infraDefinition =
+        infrastructureDefinitionGenerator.ensurePredefined(seed, owners, K8S_ROLLING_TEST);
     Workflow workflow = K8SUtils.createWorkflow(application.getUuid(), infraDefinition.getEnvId(), service.getUuid(),
         infraDefinition.getUuid(), K8S_HELM_WORKFLOW_NAME, OrchestrationWorkflowType.ROLLING, bearerToken,
         getAccount().getUuid());
