@@ -60,7 +60,7 @@ public class Base implements PersistentEntity, UuidAware, CreatedAtAware, Create
   @SchemaIgnore private EmbeddedUser createdBy;
   @SchemaIgnore @FdIndex private long createdAt;
 
-  @JsonIgnore @SchemaIgnore private EmbeddedUser lastUpdatedBy;
+  @SchemaIgnore private EmbeddedUser lastUpdatedBy;
   @SchemaIgnore @NotNull private long lastUpdatedAt;
 
   /**
