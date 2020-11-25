@@ -64,7 +64,10 @@ import software.wings.helpers.ext.helm.request.HelmInstallCommandRequest;
 import software.wings.helpers.ext.helm.response.HelmChartInfo;
 import software.wings.service.intfc.security.EncryptionService;
 import software.wings.settings.SettingValue;
+import software.wings.utils.JsonUtils;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.google.common.collect.ImmutableMap;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
@@ -75,9 +78,11 @@ import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.TimeoutException;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
+import org.jetbrains.annotations.NotNull;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -755,32 +760,28 @@ public class HelmTaskHelperTest extends WingsBaseTest {
     doAnswer(invocationOnMock -> invocationOnMock.getArgumentAt(0, String.class))
         .when(helmTaskHelper)
         .createDirectory("dir");
-    doReturn("NAME\tCHART VERSION\tAPP VERSION\tDESCRIPTION\n"
-        + "repoName/chartName\t1\t0\tdesc\n"
-        + "repoName/chartName\t2\t0\tdesc")
+    doReturn(getHelmCollectionResult(""))
         .when(helmTaskHelper)
-        .executeCommandWithLogOutput(eq("v3/helm search repo repoName/chartName -l"), eq("dir"), anyString());
+        .executeCommandWithLogOutput(eq("v3/helm search repo repoName/chartName -l -o json"), eq("dir"), anyString());
 
     List<HelmChart> helmCharts = helmTaskHelper.fetchChartVersions(helmChartCollectionParams, "dir", 10000);
     assertThat(helmCharts.size()).isEqualTo(2);
     assertThat(helmCharts.get(0).getAccountId()).isEqualTo(ACCOUNT_ID);
     assertThat(helmCharts.get(0).getAppId()).isEqualTo(APP_ID);
     assertThat(helmCharts.get(0).getApplicationManifestId()).isEqualTo(MANIFEST_ID);
-    assertThat(helmCharts.get(0).getVersion()).isEqualTo("1");
-    assertThat(helmCharts.get(1).getVersion()).isEqualTo("2");
+    assertThat(helmCharts.get(0).getVersion()).isEqualTo("1.0.2");
+    assertThat(helmCharts.get(1).getVersion()).isEqualTo("1.0.1");
     verify(processExecutor, times(2)).execute();
 
-    doReturn("WARNING: LONG_SINGLE_LINE_WARNING_MESSAGE.NAME\tCHART VERSION\tAPP VERSION\tDESCRIPTION\n"
-        + "chartName\t3\t0\tdesc\n"
-        + "chartName\t4\t0\tdesc\nchartNameOne\t5\t0\tdesc")
+    doReturn(getHelmCollectionResult("11.0.1"))
         .when(helmTaskHelper)
-        .executeCommandWithLogOutput(eq("v3/helm search repo repoName/chartName -l"), eq("dir"), anyString());
+        .executeCommandWithLogOutput(eq("v3/helm search repo repoName/chartName -l -o json"), eq("dir"), anyString());
     helmCharts = helmTaskHelper.fetchChartVersions(helmChartCollectionParams, "dir", 10000);
     assertThat(helmCharts).hasSize(2);
-    assertThat(helmCharts.get(0).getDescription()).isEqualTo("desc");
-    assertThat(helmCharts.get(0).getAppVersion()).isEqualTo("0");
-    assertThat(helmCharts.get(0).getVersion()).isEqualTo("3");
-    assertThat(helmCharts.get(1).getVersion()).isEqualTo("4");
+    assertThat(helmCharts.get(0).getDescription()).isEqualTo("Deploys harness delegate");
+    assertThat(helmCharts.get(0).getAppVersion()).isEqualTo("11.0.1");
+    assertThat(helmCharts.get(0).getVersion()).isEqualTo("1.0.2");
+    assertThat(helmCharts.get(1).getVersion()).isEqualTo("1.0.1");
   }
 
   @Test
@@ -807,23 +808,39 @@ public class HelmTaskHelperTest extends WingsBaseTest {
     doAnswer(invocationOnMock -> invocationOnMock.getArgumentAt(0, String.class))
         .when(helmTaskHelper)
         .createNewDirectoryAtPath(HelmTaskHelper.RESOURCE_DIR_BASE);
-    doReturn("NAME\tCHART VERSION\tAPP VERSION\tDESCRIPTION\n"
-        + "chartName\t1\t0\tdesc\n"
-        + "chartName\t2\t0\tdesc\nsuccess")
+    doReturn(getHelmCollectionResult(""))
         .when(helmTaskHelper)
-        .executeCommandWithLogOutput(eq("v3/helm search repo repoName/chartName -l"), eq("dir"), anyString());
+        .executeCommandWithLogOutput(eq("v3/helm search repo repoName/chartName -l -o json"), eq("dir"), anyString());
 
     List<HelmChart> helmCharts = helmTaskHelper.fetchChartVersions(helmChartCollectionParams, "dir", 10000);
     assertThat(helmCharts.size()).isEqualTo(2);
     assertThat(helmCharts.get(0).getAccountId()).isEqualTo(ACCOUNT_ID);
     assertThat(helmCharts.get(0).getAppId()).isEqualTo(APP_ID);
     assertThat(helmCharts.get(0).getApplicationManifestId()).isEqualTo(MANIFEST_ID);
-    assertThat(helmCharts.get(0).getVersion()).isEqualTo("1");
-    assertThat(helmCharts.get(1).getVersion()).isEqualTo("2");
+    assertThat(helmCharts.get(0).getVersion()).isEqualTo("1.0.2");
+    assertThat(helmCharts.get(1).getVersion()).isEqualTo("1.0.1");
     verify(processExecutor, times(1)).execute();
     verify(chartMuseumClient, times(1))
         .startChartMuseumServer(gcsHelmRepoConfig, helmChartConfigParams.getConnectorConfig(),
             HelmTaskHelper.RESOURCE_DIR_BASE, helmChartConfigParams.getBasePath());
+  }
+
+  @NotNull
+  private String getHelmCollectionResult(String appVersion) {
+    Map<String, String> helmChart = generateHelmChart(appVersion, "1.0.2");
+    Map<String, String> helmChart2 = generateHelmChart(appVersion, "1.0.1");
+    List<Map<String, String>> helmChartDetails = Arrays.asList(helmChart, helmChart2);
+    JsonNode jsonNode = JsonUtils.toJsonNode(helmChartDetails);
+    return jsonNode.toString();
+  }
+
+  private ImmutableMap<String, String> generateHelmChart(String appVersion, String version) {
+    return ImmutableMap.<String, String>builder()
+        .put("name", "repoName/chartName")
+        .put("version", version)
+        .put("app_version", appVersion)
+        .put("description", "Deploys harness delegate")
+        .build();
   }
 
   @Test
@@ -848,21 +865,19 @@ public class HelmTaskHelperTest extends WingsBaseTest {
         .createDirectory("dir");
     doAnswer(invocationOnMock -> invocationOnMock.getArgumentAt(0, String.class))
         .when(helmTaskHelper)
-        .applyHelmHomePath("v2/helm search repoName/chartName -l ${HELM_HOME_PATH_FLAG}", "dir");
-    doReturn("NAME\tCHART VERSION\tAPP VERSION\tDESCRIPTION\n"
-        + "chartName\t1\t0\tdesc\n"
-        + "chartName\t2\t0\tdesc")
+        .applyHelmHomePath("v2/helm search repoName/chartName -l ${HELM_HOME_PATH_FLAG} -o json", "dir");
+    doReturn(getHelmCollectionResult(""))
         .when(helmTaskHelper)
         .executeCommandWithLogOutput(
-            eq("v2/helm search repoName/chartName -l ${HELM_HOME_PATH_FLAG}"), eq("dir"), anyString());
+            eq("v2/helm search repoName/chartName -l ${HELM_HOME_PATH_FLAG} -o json"), eq("dir"), anyString());
 
     List<HelmChart> helmCharts = helmTaskHelper.fetchChartVersions(helmChartCollectionParams, "dir", 10000);
     assertThat(helmCharts.size()).isEqualTo(2);
     assertThat(helmCharts.get(0).getAccountId()).isEqualTo(ACCOUNT_ID);
     assertThat(helmCharts.get(0).getAppId()).isEqualTo(APP_ID);
     assertThat(helmCharts.get(0).getApplicationManifestId()).isEqualTo(MANIFEST_ID);
-    assertThat(helmCharts.get(0).getVersion()).isEqualTo("1");
-    assertThat(helmCharts.get(1).getVersion()).isEqualTo("2");
+    assertThat(helmCharts.get(0).getVersion()).isEqualTo("1.0.2");
+    assertThat(helmCharts.get(1).getVersion()).isEqualTo("1.0.1");
     // For helm version 2, we execute another command for helm init apart from add repo
     verify(processExecutor, times(3)).execute();
     verify(helmTaskHelper, times(1)).initHelm("dir", V2, 10000);
@@ -905,7 +920,8 @@ public class HelmTaskHelperTest extends WingsBaseTest {
         .execute();
     doReturn(processExecutor)
         .when(helmTaskHelper)
-        .createProcessExecutorWithRedirectOutput(eq("v3/helm search repo repoName/chartName -l"), eq("dir"), any());
+        .createProcessExecutorWithRedirectOutput(
+            eq("v3/helm search repo repoName/chartName -l -o json"), eq("dir"), any());
 
     assertThatThrownBy(() -> helmTaskHelper.fetchChartVersions(helmChartCollectionParams, "dir", 10000))
         .isInstanceOf(HelmClientException.class)
