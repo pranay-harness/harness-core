@@ -13,7 +13,9 @@ import static com.google.common.collect.ImmutableMap.of;
 
 import io.harness.PmsSdkConfiguration;
 import io.harness.PmsSdkModule;
-import io.harness.cdng.creator.NGPlanCreatorProvider;
+import io.harness.cdng.creator.CDNGPlanCreatorProvider;
+import io.harness.cdng.creator.filters.CDNGFilterCreationResponseMerger;
+import io.harness.cdng.creator.filters.CDNGFilterCreatorProvider;
 import io.harness.cdng.executionplan.ExecutionPlanCreatorRegistrar;
 import io.harness.engine.events.OrchestrationEventListener;
 import io.harness.gitsync.core.runnable.GitChangeSetRunnable;
@@ -162,7 +164,9 @@ public class NextGenApplication extends Application<NextGenConfiguration> {
       PmsSdkConfiguration sdkConfig = PmsSdkConfiguration.builder()
                                           .grpcServerConfig(appConfig.getPmsSdkGrpcServerConfig())
                                           .pmsGrpcClientConfig(appConfig.getPmsGrpcClientConfig())
-                                          .planCreatorProvider(new NGPlanCreatorProvider())
+                                          .planCreatorProvider(new CDNGPlanCreatorProvider())
+                                          .filterCreationResponseMerger(new CDNGFilterCreationResponseMerger())
+                                          .filterCreatorProvider(new CDNGFilterCreatorProvider())
                                           .build();
       PmsSdkModule.initializeDefaultInstance(sdkConfig);
     }

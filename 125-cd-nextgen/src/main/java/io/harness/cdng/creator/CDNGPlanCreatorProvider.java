@@ -6,10 +6,10 @@ import io.harness.pms.sdk.creator.PlanCreatorProvider;
 import java.util.LinkedList;
 import java.util.List;
 
-public class NGPlanCreatorProvider implements PlanCreatorProvider {
+public class CDNGPlanCreatorProvider implements PlanCreatorProvider {
   @Override
   public String getServiceName() {
-    return "CD";
+    return "cd";
   }
 
   @Override

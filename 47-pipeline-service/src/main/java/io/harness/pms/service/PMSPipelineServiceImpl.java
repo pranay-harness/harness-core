@@ -49,7 +49,8 @@ public class PMSPipelineServiceImpl implements PMSPipelineService {
       validatePresenceOfRequiredFields(pipelineEntity.getAccountId(), pipelineEntity.getOrgIdentifier(),
           pipelineEntity.getProjectIdentifier(), pipelineEntity.getIdentifier(), pipelineEntity.getIdentifier());
 
-      updateFilters(pipelineEntity);
+      // Todo: Uncomment when we have the CD Service integration with NextGenApp.
+      // updateFilters(pipelineEntity);
 
       PipelineEntity createdEntity = pmsPipelineRepository.save(pipelineEntity);
       return createdEntity;
