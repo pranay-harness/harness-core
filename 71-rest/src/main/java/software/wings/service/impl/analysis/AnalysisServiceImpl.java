@@ -157,33 +157,33 @@ public class AnalysisServiceImpl implements AnalysisService {
   @Override
   public void cleanUpForLogRetry(String stateExecutionId) {
     // delete log data records
-    wingsPersistence.delete(
-        wingsPersistence.createQuery(LogDataRecord.class).filter(LogDataRecordKeys.stateExecutionId, stateExecutionId));
+    wingsPersistence.delete(wingsPersistence.createQuery(LogDataRecord.class, excludeAuthority)
+                                .filter(LogDataRecordKeys.stateExecutionId, stateExecutionId));
 
     // delete log analysis records
-    wingsPersistence.delete(wingsPersistence.createQuery(LogMLAnalysisRecord.class)
+    wingsPersistence.delete(wingsPersistence.createQuery(LogMLAnalysisRecord.class, excludeAuthority)
                                 .filter(LogMLAnalysisRecordKeys.stateExecutionId, stateExecutionId));
 
     // delete cv dashboard execution data
     wingsPersistence.delete(
-        wingsPersistence.createQuery(ContinuousVerificationExecutionMetaData.class)
+        wingsPersistence.createQuery(ContinuousVerificationExecutionMetaData.class, excludeAuthority)
             .filter(ContinuousVerificationExecutionMetaDataKeys.stateExecutionId, stateExecutionId));
 
     // delete learning engine tasks
-    wingsPersistence.delete(wingsPersistence.createQuery(LearningEngineAnalysisTask.class)
+    wingsPersistence.delete(wingsPersistence.createQuery(LearningEngineAnalysisTask.class, excludeAuthority)
                                 .filter(LearningEngineAnalysisTaskKeys.state_execution_id, stateExecutionId));
 
     // delete experimental learning engine tasks
     wingsPersistence.delete(
-        wingsPersistence.createQuery(LearningEngineExperimentalAnalysisTask.class)
+        wingsPersistence.createQuery(LearningEngineExperimentalAnalysisTask.class, excludeAuthority)
             .filter(LearningEngineExperimentalAnalysisTaskKeys.state_execution_id, stateExecutionId));
 
     // delete experimental log analysis records
-    wingsPersistence.delete(wingsPersistence.createQuery(ExperimentalLogMLAnalysisRecord.class)
+    wingsPersistence.delete(wingsPersistence.createQuery(ExperimentalLogMLAnalysisRecord.class, excludeAuthority)
                                 .filter(ExperimentalLogMLAnalysisRecordKeys.stateExecutionId, stateExecutionId));
 
     // delete verification service tasks
-    wingsPersistence.delete(wingsPersistence.createQuery(AnalysisContext.class)
+    wingsPersistence.delete(wingsPersistence.createQuery(AnalysisContext.class, excludeAuthority)
                                 .filter(AnalysisContextKeys.stateExecutionId, stateExecutionId));
   }
 
