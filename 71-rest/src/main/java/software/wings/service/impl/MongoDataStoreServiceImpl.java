@@ -22,6 +22,7 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.FindAndModifyOptions;
 import org.mongodb.morphia.query.Query;
@@ -130,6 +131,11 @@ public class MongoDataStoreServiceImpl implements DataStoreService {
 
   @Override
   public void purgeOlderRecords() {
+    // do nothing
+  }
+
+  @Override
+  public void purgeDataRetentionOlderRecords(Map<String, Long> accounts) {
     // do nothing
   }
 

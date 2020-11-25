@@ -828,6 +828,11 @@ public class WingsApplication extends Application<MainConfiguration> {
             () -> { injector.getInstance(AccountService.class).ensureDataRetention(classes); }),
         durationTillDayTime(System.currentTimeMillis(), ofHours(10)).toMillis(), ofHours(24).toMillis(),
         TimeUnit.MILLISECONDS);
+
+    taskPollExecutor.scheduleAtFixedRate(new Schedulable("Failed ensure data retention", () -> {
+      Map<String, Long> dataRetentionMap = injector.getInstance(AccountService.class).obtainAccountDataRetentionMap();
+      injector.getInstance(DataStoreService.class).purgeDataRetentionOlderRecords(dataRetentionMap);
+    }), 0, 60L, TimeUnit.MINUTES);
   }
 
   public static void registerObservers(Injector injector) {
@@ -966,8 +971,6 @@ public class WingsApplication extends Application<MainConfiguration> {
       QuartzCleaner.cleanup(datastore, "quartz");
       QuartzCleaner.cleanup(datastore, "quartz_verification");
     }).start();
-
-    injector.getInstance(DataStoreService.class).purgeOlderRecords();
   }
 
   private void registerJerseyProviders(Environment environment, Injector injector) {

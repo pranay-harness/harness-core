@@ -5,6 +5,7 @@ import io.harness.beans.PageResponse;
 import io.harness.persistence.GoogleDataStoreAware;
 
 import java.util.List;
+import java.util.Map;
 
 public interface DataStoreService {
   <T extends GoogleDataStoreAware> void save(Class<T> clazz, List<T> records, boolean ignoreDuplicate);
@@ -22,6 +23,7 @@ public interface DataStoreService {
   void purgeByActivity(String appId, String activityId);
 
   void purgeOlderRecords();
+  void purgeDataRetentionOlderRecords(Map<String, Long> accounts);
 
   boolean supportsInOperator();
 
