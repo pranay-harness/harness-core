@@ -110,9 +110,7 @@ eventsFramework:
     masterName: "mymaster"
     redisUrl: "dummyRedisUrl"
     sentinelUrls:
-      - "redis://localhost:26379"
-      - "redis://localhost:26380"
-      - "redis://localhost:26381"
+      - redis://localhost:26379
     envNamespace: ""
     readMode: MASTER
     nettyThreads: 16
