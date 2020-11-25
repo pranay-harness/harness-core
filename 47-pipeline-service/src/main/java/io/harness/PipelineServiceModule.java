@@ -11,7 +11,7 @@ import io.harness.pms.service.PMSPipelineServiceImpl;
 import io.harness.serializer.KryoRegistrar;
 import io.harness.serializer.PipelineServiceModuleRegistrars;
 import io.harness.spring.AliasRegistrar;
-import io.harness.springdata.SpringPersistenceModule;
+import io.harness.springdata.SpringPersistenceTestModule;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -40,7 +40,7 @@ public class PipelineServiceModule extends AbstractModule {
   protected void configure() {
     install(MongoModule.getInstance());
     install(PipelineServiceGrpcModule.getInstance());
-    install(new SpringPersistenceModule());
+    install(new SpringPersistenceTestModule());
 
     bind(HPersistence.class).to(MongoPersistence.class);
     bind(PMSPipelineService.class).to(PMSPipelineServiceImpl.class);

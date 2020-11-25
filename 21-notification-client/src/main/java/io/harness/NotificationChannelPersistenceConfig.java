@@ -4,7 +4,6 @@ import io.harness.annotation.HarnessRepo;
 import io.harness.notification.MongoBackendConfiguration;
 import io.harness.springdata.HMongoTemplate;
 
-import com.google.common.collect.ImmutableList;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
 import com.google.inject.Key;
@@ -12,39 +11,20 @@ import com.mongodb.MongoClient;
 import com.mongodb.MongoClientOptions;
 import com.mongodb.MongoClientURI;
 import com.mongodb.ReadPreference;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.Set;
-import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.ClassPathScanningCandidateComponentProvider;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.core.type.filter.AnnotationTypeFilter;
-import org.springframework.data.annotation.Persistent;
 import org.springframework.data.mongodb.MongoDbFactory;
 import org.springframework.data.mongodb.MongoTransactionManager;
-import org.springframework.data.mongodb.config.MongoConfigurationSupport;
+import org.springframework.data.mongodb.config.AbstractMongoConfiguration;
 import org.springframework.data.mongodb.core.MongoTemplate;
-import org.springframework.data.mongodb.core.SimpleMongoDbFactory;
-import org.springframework.data.mongodb.core.convert.DbRefResolver;
-import org.springframework.data.mongodb.core.convert.DefaultDbRefResolver;
-import org.springframework.data.mongodb.core.convert.MappingMongoConverter;
-import org.springframework.data.mongodb.core.mapping.Document;
-import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
-import org.springframework.data.mongodb.core.mapping.MongoSimpleTypes;
 import org.springframework.data.mongodb.repository.config.EnableMongoRepositories;
-import org.springframework.util.ClassUtils;
-import org.springframework.util.StringUtils;
 
 @Configuration
 @EnableMongoRepositories(basePackages = {"io.harness.notification"},
     includeFilters = @ComponentScan.Filter(HarnessRepo.class), mongoTemplateRef = "notification-channel")
-public class NotificationChannelPersistenceConfig {
+public class NotificationChannelPersistenceConfig extends AbstractMongoConfiguration {
   private final MongoBackendConfiguration mongoBackendConfiguration;
-
-  private static final Collection<String> BASE_PACKAGES = ImmutableList.of("io.harness");
 
   @Inject
   public NotificationChannelPersistenceConfig(Injector injector) {
@@ -54,17 +34,7 @@ public class NotificationChannelPersistenceConfig {
             .getNotificationClientBackendConfiguration();
   }
 
-  @Bean
-  MongoTransactionManager transactionManager(MongoDbFactory dbFactory) {
-    return new MongoTransactionManager(dbFactory);
-  }
-
-  @Bean(name = "notification-channel")
-  public MongoTemplate mongoTemplate() throws Exception {
-    return new HMongoTemplate(mongoDbFactory(), mappingMongoConverter());
-  }
-
-  @Bean
+  @Override
   public MongoClient mongoClient() {
     MongoClientOptions primaryMongoClientOptions =
         MongoClientOptions.builder()
@@ -80,57 +50,18 @@ public class NotificationChannelPersistenceConfig {
     return new MongoClient(uri);
   }
 
-  @Bean
-  public MongoMappingContext mongoMappingContext() throws ClassNotFoundException {
-    MongoMappingContext mappingContext = new MongoMappingContext();
-    mappingContext.setInitialEntitySet(getInitialEntitySet());
-    mappingContext.setSimpleTypeHolder(MongoSimpleTypes.HOLDER);
-    mappingContext.setFieldNamingStrategy(null);
-    mappingContext.setAutoIndexCreation(false);
-    return mappingContext;
+  @Override
+  protected String getDatabaseName() {
+    return new MongoClientURI(mongoBackendConfiguration.getUri()).getDatabase();
   }
 
   @Bean
-  public MappingMongoConverter mappingMongoConverter() throws Exception {
-    DbRefResolver dbRefResolver = new DefaultDbRefResolver(mongoDbFactory());
-    MappingMongoConverter converter = new MappingMongoConverter(dbRefResolver, mongoMappingContext());
-    converter.setCodecRegistryProvider(mongoDbFactory());
-    converter.afterPropertiesSet();
-    return converter;
+  MongoTransactionManager transactionManager(MongoDbFactory dbFactory) {
+    return new MongoTransactionManager(dbFactory);
   }
 
-  @Bean
-  public MongoDbFactory mongoDbFactory() {
-    return new SimpleMongoDbFactory(new MongoClientURI(mongoBackendConfiguration.getUri()));
-  }
-
-  protected Set<Class<?>> getInitialEntitySet() throws ClassNotFoundException {
-    Set<Class<?>> initialEntitySet = new HashSet<Class<?>>();
-    for (String basePackage : NotificationChannelPersistenceConfig.BASE_PACKAGES) {
-      initialEntitySet.addAll(scanForEntities(basePackage));
-    }
-    return initialEntitySet;
-  }
-
-  protected Set<Class<?>> scanForEntities(String basePackage) throws ClassNotFoundException {
-    if (!StringUtils.hasText(basePackage)) {
-      return Collections.emptySet();
-    }
-
-    Set<Class<?>> initialEntitySet = new HashSet<Class<?>>();
-
-    if (StringUtils.hasText(basePackage)) {
-      ClassPathScanningCandidateComponentProvider componentProvider =
-          new ClassPathScanningCandidateComponentProvider(false);
-      componentProvider.addIncludeFilter(new AnnotationTypeFilter(Document.class));
-      componentProvider.addIncludeFilter(new AnnotationTypeFilter(Persistent.class));
-
-      for (BeanDefinition candidate : componentProvider.findCandidateComponents(basePackage)) {
-        initialEntitySet.add(
-            ClassUtils.forName(candidate.getBeanClassName(), MongoConfigurationSupport.class.getClassLoader()));
-      }
-    }
-
-    return initialEntitySet;
+  @Bean(name = "notification-channel")
+  public MongoTemplate mongoTemplate() throws Exception {
+    return new HMongoTemplate(mongoDbFactory(), mappingMongoConverter());
   }
 }

@@ -56,7 +56,7 @@ public class GitChangeSetRunnableTest extends GitSyncBaseTest {
   }
 
   @Test
-  @Owner(developers = ABHINAV)
+  @Owner(developers = ABHINAV, intermittent = true)
   @Category(UnitTests.class)
   public void test_run() {
     doReturn(2).when(gitChangeSetRunnable).getMaxRunningChangesetsForAccount();

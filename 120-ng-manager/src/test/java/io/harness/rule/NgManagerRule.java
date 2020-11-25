@@ -19,7 +19,7 @@ import io.harness.serializer.ManagerRegistrars;
 import io.harness.serializer.NextGenRegistrars;
 import io.harness.service.DelegateGrpcClientWrapper;
 import io.harness.spring.AliasRegistrar;
-import io.harness.springdata.SpringPersistenceModule;
+import io.harness.springdata.SpringPersistenceTestModule;
 import io.harness.testlib.module.MongoRuleMixin;
 import io.harness.testlib.module.TestMongoModule;
 import io.harness.threading.CurrentThreadExecutor;
@@ -77,7 +77,7 @@ public class NgManagerRule implements MethodRule, InjectorRuleMixin, MongoRuleMi
     modules.add(mongoTypeModule(annotations));
     modules.add(new CoreModule());
     modules.add(TestMongoModule.getInstance());
-    modules.add(new SpringPersistenceModule());
+    modules.add(new SpringPersistenceTestModule());
     modules.add(KryoModule.getInstance());
     modules.add(new SecretManagementModule());
     modules.add(new SecretManagementClientModule(

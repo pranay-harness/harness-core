@@ -9,9 +9,9 @@ import io.harness.facilitator.PassThroughData;
 import io.harness.facilitator.modes.async.AsyncExecutable;
 import io.harness.facilitator.modes.async.AsyncExecutableResponse;
 import io.harness.facilitator.modes.sync.SyncExecutable;
-import io.harness.orchestration.persistence.OrchestrationMongoTemplate;
 import io.harness.pms.execution.Status;
 import io.harness.pms.steps.StepType;
+import io.harness.springdata.HMongoTemplate;
 import io.harness.state.Step;
 import io.harness.state.io.FailureInfo;
 import io.harness.state.io.StepInputPackage;
@@ -51,7 +51,7 @@ public class BarrierStep implements SyncExecutable<BarrierStepParameters>, Async
     BarrierExecutionInstance barrierExecutionInstance =
         barrierService.findByPlanNodeId(ambiance.obtainCurrentLevel().getSetupId());
     barrierExecutionInstance.setBarrierState(DOWN);
-    OrchestrationMongoTemplate.retry(() -> barrierService.save(barrierExecutionInstance));
+    HMongoTemplate.retry(() -> barrierService.save(barrierExecutionInstance));
     return StepResponse.builder()
         .status(Status.SUCCEEDED)
         .stepOutcome(

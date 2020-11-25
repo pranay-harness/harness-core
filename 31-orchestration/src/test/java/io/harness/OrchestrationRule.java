@@ -21,7 +21,7 @@ import io.harness.serializer.OrchestrationRegistrars;
 import io.harness.serializer.kryo.OrchestrationTestKryoRegistrar;
 import io.harness.serializer.spring.OrchestrationTestSpringAliasRegistrar;
 import io.harness.spring.AliasRegistrar;
-import io.harness.springdata.SpringPersistenceModule;
+import io.harness.springdata.SpringPersistenceTestModule;
 import io.harness.testlib.module.MongoRuleMixin;
 import io.harness.testlib.module.TestMongoModule;
 import io.harness.threading.CurrentThreadExecutor;
@@ -154,7 +154,7 @@ public class OrchestrationRule implements MethodRule, InjectorRuleMixin, MongoRu
     modules.add(new VersionModule());
     modules.add(TimeModule.getInstance());
     modules.add(TestMongoModule.getInstance());
-    modules.add(new SpringPersistenceModule());
+    modules.add(new SpringPersistenceTestModule());
     modules.add(OrchestrationModule.getInstance());
     return modules;
   }

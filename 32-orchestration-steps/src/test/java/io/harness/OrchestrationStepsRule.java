@@ -20,7 +20,7 @@ import io.harness.serializer.KryoRegistrar;
 import io.harness.serializer.OrchestrationBeansRegistrars;
 import io.harness.serializer.OrchestrationStepsModuleRegistrars;
 import io.harness.spring.AliasRegistrar;
-import io.harness.springdata.SpringPersistenceModule;
+import io.harness.springdata.SpringPersistenceTestModule;
 import io.harness.testlib.module.MongoRuleMixin;
 import io.harness.testlib.module.TestMongoModule;
 import io.harness.threading.CurrentThreadExecutor;
@@ -150,7 +150,7 @@ public class OrchestrationStepsRule implements MethodRule, InjectorRuleMixin, Mo
     modules.add(new VersionModule());
     modules.add(TestMongoModule.getInstance());
     modules.add(TimeModule.getInstance());
-    modules.add(new SpringPersistenceModule());
+    modules.add(new SpringPersistenceTestModule());
     modules.add(OrchestrationModule.getInstance());
     modules.add(OrchestrationStepsModule.getInstance());
     return modules;

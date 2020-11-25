@@ -51,7 +51,7 @@ import io.harness.serializer.morphia.ManagerTestMorphiaRegistrar;
 import io.harness.serializer.spring.WingsTestSpringAliasRegistrar;
 import io.harness.service.DelegateServiceModule;
 import io.harness.spring.AliasRegistrar;
-import io.harness.springdata.SpringPersistenceModule;
+import io.harness.springdata.SpringPersistenceTestModule;
 import io.harness.testlib.RealMongo;
 import io.harness.testlib.module.MongoRuleMixin;
 import io.harness.testlib.module.TestMongoModule;
@@ -362,7 +362,7 @@ public class WingsRule implements MethodRule, InjectorRuleMixin, MongoRuleMixin 
     modules.add(new LicenseModule());
     modules.add(new ValidationModule(validatorFactory));
     modules.add(TestMongoModule.getInstance());
-    modules.add(new SpringPersistenceModule());
+    modules.add(new SpringPersistenceTestModule());
     modules.add(new DelegateServiceModule());
     modules.add(new WingsModule((MainConfiguration) configuration));
     modules.add(new IndexMigratorModule());

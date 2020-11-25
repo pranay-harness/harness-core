@@ -42,7 +42,5 @@ public class NodeExecutionServiceImplTest extends OrchestrationTestBase {
                                       .build();
     NodeExecution savedExecution = nodeExecutionService.save(nodeExecution);
     assertThat(savedExecution.getUuid()).isEqualTo(nodeExecutionId);
-    assertThat(savedExecution.getCreatedAt()).isNotNull();
-    assertThat(savedExecution.getVersion()).isEqualTo(0);
   }
 }

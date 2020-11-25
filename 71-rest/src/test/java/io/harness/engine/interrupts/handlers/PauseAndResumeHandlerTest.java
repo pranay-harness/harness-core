@@ -83,7 +83,7 @@ public class PauseAndResumeHandlerTest extends WingsBaseTest {
 
     assertThat(allInterrupts).isNotEmpty();
     assertThat(allInterrupts).hasSize(2);
-    assertThat(allInterrupts.stream().map(Interrupt::getState)).containsExactly(PROCESSING, PROCESSED_SUCCESSFULLY);
+    assertThat(allInterrupts.stream().map(Interrupt::getState)).containsExactly(PROCESSED_SUCCESSFULLY, PROCESSING);
 
     PlanExecution resumedExecution = interruptTestHelper.fetchPlanExecutionStatus(execution.getUuid());
     assertThat(resumedExecution).isNotNull();
