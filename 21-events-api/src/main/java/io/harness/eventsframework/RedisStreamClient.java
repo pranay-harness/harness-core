@@ -5,17 +5,13 @@ import io.harness.redis.RedisConfig;
 import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
 import com.google.protobuf.InvalidProtocolBufferException;
-import java.util.Base64;
-import java.util.Collections;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import javax.validation.constraints.NotNull;
 import lombok.extern.slf4j.Slf4j;
 import org.redisson.Redisson;
-import org.redisson.api.RStream;
-import org.redisson.api.RedissonClient;
-import org.redisson.api.StreamMessageId;
+import org.redisson.api.*;
 import org.redisson.client.RedisException;
 import org.redisson.client.codec.StringCodec;
 import org.redisson.config.Config;
@@ -44,8 +40,7 @@ public class RedisStreamClient implements EventDrivenClient {
     config.setUseScriptCache(redisConfig.isUseScriptCache());
 
     this.redissonClient = Redisson.create(config);
-    // @Todo(Raj): This is not respected
-    this.redisBlockTime = 200L;
+    this.redisBlockTime = 1000L;
   }
 
   @Override
@@ -62,7 +57,7 @@ public class RedisStreamClient implements EventDrivenClient {
   @Override
   public void publishEvent(StreamChannel channel, Event event) {
     getStream(channel).addAll(
-        ImmutableMap.of(REDIS_STREAM_INTERNAL_KEY, Base64.getEncoder().encodeToString(event.toByteArray())), 100000,
+        ImmutableMap.of(REDIS_STREAM_INTERNAL_KEY, Base64.getEncoder().encodeToString(event.toByteArray())), 10000,
         false);
   }
 
@@ -98,6 +93,22 @@ public class RedisStreamClient implements EventDrivenClient {
   @Override
   public void acknowledge(StreamChannel channel, String groupName, String messageId) {
     getStream(channel).ack(groupName, getStreamId(messageId));
+  }
+
+  @Override
+  public long deleteMessages(StreamChannel channel, List<String> messageIds) {
+    if (messageIds.size() == 0)
+      return 0;
+    StreamMessageId[] streamMessageIds = messageIds.stream().map(this::getStreamId).toArray(StreamMessageId[] ::new);
+    return getStream(channel).remove(streamMessageIds);
+  }
+
+  public PendingResult getPendingInfo(StreamChannel channel, String groupName) {
+    return getStream(channel).getPendingInfo(groupName);
+  }
+
+  public StreamInfo getStreamInfo(StreamChannel channel) {
+    return getStream(channel).getInfo();
   }
 
   private Map<String, Event> createEventMap(Map<StreamMessageId, Map<String, String>> redisVal) {

@@ -11,13 +11,15 @@ import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class MessagePublisher implements Runnable {
+public class MessageProducer implements Runnable {
   RedisStreamClient client;
   StreamChannel channel;
+  String color;
 
-  public MessagePublisher(RedisStreamClient client, StreamChannel channel) {
+  public MessageProducer(RedisStreamClient client, StreamChannel channel, String color) {
     this.client = client;
     this.channel = channel;
+    this.color = color;
   }
 
   @SneakyThrows
@@ -34,9 +36,7 @@ public class MessagePublisher implements Runnable {
               .setAccountId("account1")
               .setPayload(Any.pack(ProjectUpdate.newBuilder().setProjectIdentifier(String.valueOf(count)).build()))
               .build();
-      log.info("\u001B[33m"
-          + "pushing " + Base64.getEncoder().encodeToString(projectEvent.toByteArray()) + " in redis"
-          + "\u001B[0m");
+      log.info("{}Pushing pid: {} in redis{}", color, count, ColorConstants.TEXT_RESET);
       client.publishEvent(channel, projectEvent);
       count += 1;
       Thread.sleep(500);

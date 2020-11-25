@@ -4,6 +4,7 @@ import static io.harness.logging.LoggingInitializer.initializeLogging;
 
 import io.harness.eventsframework.RedisStreamClient;
 import io.harness.eventsframework.StreamChannel;
+import io.harness.lock.redis.RedisPersistentLocker;
 import io.harness.maintenance.MaintenanceController;
 import io.harness.metrics.MetricRegistryModule;
 import io.harness.queue.QueueListenerController;
@@ -67,16 +68,45 @@ public class EventsClientApplication extends Application<EventsClientApplication
     MaintenanceController.forceMaintenance(false);
 
     RedisStreamClient client = new RedisStreamClient(appConfig.getEventsFrameworkConfiguration().getRedisConfig());
-    String groupName = "group1";
     StreamChannel channel = StreamChannel.PROJECT_UPDATE;
 
-    // ----------------- Perform operations -----------------
-    client.createConsumerGroup(channel, groupName);
+    RedisPersistentLocker redisLocker = injector.getInstance(RedisPersistentLocker.class);
+    /* ----------------- Perform operations ----------------- */
+    client.createConsumerGroup(channel, "group1");
+    client.createConsumerGroup(channel, "group2");
 
-    new Thread(new MessagePublisher(client, channel)).start();
-    new Thread(new MessageConsumer("consumerGroups", client, channel, groupName, "cons1")).start();
-    new Thread(new MessageConsumer("consumerGroups", client, channel, groupName, "cons2")).start();
-    new Thread(new MessageConsumer("pubSub", client, channel)).start();
+    /* Push messages to redis channel */
+    new Thread(new MessageProducer(client, channel, ColorConstants.TEXT_YELLOW)).start();
+
+    /* Read via Consumer groups - order is important - Sync processing usecase (Gitsync) */
+    new Thread(new MessageConsumer(redisLocker, "serialConsumerGroups", client, channel, "group1", "cons1", 3000,
+                   ColorConstants.TEXT_BLUE))
+        .start();
+    new Thread(new MessageConsumer(redisLocker, "serialConsumerGroups", client, channel, "group1", "cons2", 1000,
+                   ColorConstants.TEXT_CYAN))
+        .start();
+    new Thread(new MessageConsumer(redisLocker, "serialConsumerGroups", client, channel, "group1", "cons3", 500,
+                   ColorConstants.TEXT_PURPLE))
+        .start();
+
+    /* Read via Consumer groups - order is not important - Load balancing usecase */
+    //        new Thread(new MessageConsumer(
+    //                "consumerGroups", client, channel, "group2",
+    //                "cons3",
+    //                1000, ColorConstants.TEXT_BLUE)).start();
+    //        new Thread(new MessageConsumer(
+    //                "consumerGroups", client, channel, "group2",
+    //                "cons4",
+    //                4000, ColorConstants.TEXT_PURPLE)).start();
+
+    /* Read via  pubsub usecase */
+    //        new Thread(new MessageConsumer("pubSub", client, channel, ColorConstants.TEXT_BLUE)).start();
+    //        new Thread(new MessageConsumer("pubSub", client, channel, ColorConstants.TEXT_CYAN)).start();
+
+    // Added so that we can spawn multiple of these applications without port exception
+    while (true) {
+      Thread.sleep(10000);
+    }
   }
 
   private void registerJerseyFeatures(Environment environment) {
