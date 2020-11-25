@@ -41,6 +41,8 @@ import io.harness.cvng.beans.CVMonitoringCategory;
 import io.harness.cvng.beans.DataSourceType;
 import io.harness.cvng.beans.DeploymentActivityDTO;
 import io.harness.cvng.beans.KubernetesActivityDTO;
+import io.harness.cvng.beans.activity.ActivityStatusDTO;
+import io.harness.cvng.beans.activity.ActivityVerificationStatus;
 import io.harness.cvng.client.NextGenService;
 import io.harness.cvng.core.services.api.VerificationTaskService;
 import io.harness.cvng.core.services.api.WebhookService;
@@ -593,6 +595,29 @@ public class ActivityServiceImplTest extends CvNextGenTest {
     assertThat(deploymentVerificationJobInstanceSummary.getActivityId()).isEqualTo(activityId);
     assertThat(deploymentVerificationJobInstanceSummary.getActivityStartTime())
         .isEqualTo(deploymentActivityDTO.getActivityStartTime());
+  }
+
+  @Test
+  @Owner(developers = KAMAL)
+  @Category(UnitTests.class)
+  public void testGetActivityStatus() {
+    VerificationJob verificationJob = createVerificationJob();
+    when(verificationJobService.getVerificationJob(accountId, verificationJob.getIdentifier()))
+        .thenReturn(verificationJob);
+    DeploymentActivityDTO deploymentActivityDTO = getDeploymentActivity(verificationJob);
+    String activityId = activityService.register(accountId, generateUuid(), deploymentActivityDTO);
+    DeploymentActivityResultDTO.DeploymentVerificationJobInstanceSummary deploymentVerificationJobInstanceSummary =
+        DeploymentActivityResultDTO.DeploymentVerificationJobInstanceSummary.builder()
+            .durationMs(verificationJob.getDuration().toMillis())
+            .status(ActivityVerificationStatus.NOT_STARTED)
+            .build();
+    when(verificationJobInstanceService.getDeploymentVerificationJobInstanceSummary(anyList()))
+        .thenReturn(deploymentVerificationJobInstanceSummary);
+    assertThat(deploymentVerificationJobInstanceSummary.getActivityId()).isNull();
+    ActivityStatusDTO activityStatusDTO = activityService.getActivityStatus(accountId, activityId);
+    assertThat(activityStatusDTO.getActivityId()).isEqualTo(activityId);
+    assertThat(activityStatusDTO.getDurationMs()).isEqualTo(verificationJob.getDuration().toMillis());
+    assertThat(activityStatusDTO.getStatus()).isEqualTo(ActivityVerificationStatus.NOT_STARTED);
   }
 
   private DeploymentActivityDTO getDeploymentActivity(VerificationJob verificationJob) {

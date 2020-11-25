@@ -45,9 +45,9 @@ public class ActivityResource {
   @PublicApi
   @Path("{webHookToken}")
   @ApiOperation(value = "registers an activity", nickname = "registerActivity")
-  public void registerActivity(@NotNull @PathParam("webHookToken") String webHookToken,
+  public RestResponse<String> registerActivity(@NotNull @PathParam("webHookToken") String webHookToken,
       @NotNull @QueryParam("accountId") @Valid final String accountId, @Body ActivityDTO activityDTO) {
-    activityService.register(accountId, webHookToken, activityDTO);
+    return new RestResponse<>(activityService.register(accountId, webHookToken, activityDTO));
   }
 
   @GET

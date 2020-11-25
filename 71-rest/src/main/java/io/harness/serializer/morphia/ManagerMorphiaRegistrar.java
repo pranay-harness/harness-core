@@ -644,6 +644,7 @@ import software.wings.sm.states.AzureNodeSelectState;
 import software.wings.sm.states.BambooState;
 import software.wings.sm.states.BarrierState;
 import software.wings.sm.states.BugsnagState;
+import software.wings.sm.states.CVNGState;
 import software.wings.sm.states.CloudWatchState;
 import software.wings.sm.states.CommandState;
 import software.wings.sm.states.CustomLogVerificationState;
@@ -1589,6 +1590,7 @@ public class ManagerMorphiaRegistrar implements MorphiaRegistrar {
     w.put("sm.states.ShellScriptState", ShellScriptState.class);
     w.put("sm.states.SplunkState", SplunkState.class);
     w.put("sm.states.SplunkV2State", SplunkV2State.class);
+    w.put("sm.states.CVNGState", CVNGState.class);
     w.put("sm.states.StackDriverLogState", StackDriverLogState.class);
     w.put("sm.states.StackDriverState", StackDriverState.class);
     w.put("sm.states.StagingOriginalExecution", StagingOriginalExecution.class);

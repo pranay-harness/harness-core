@@ -263,7 +263,7 @@ public class VerificationApplication extends Application<VerificationConfigurati
             .persistenceProvider(injector.getInstance(MorphiaPersistenceProvider.class))
             .build();
     injector.injectMembers(analysisOrchestrationIterator);
-    workflowVerificationExecutor.scheduleAtFixedRate(
+    workflowVerificationExecutor.scheduleWithFixedDelay(
         () -> analysisOrchestrationIterator.process(), 0, 20, TimeUnit.SECONDS);
   }
 
@@ -290,7 +290,7 @@ public class VerificationApplication extends Application<VerificationConfigurati
             .persistenceProvider(injector.getInstance(MorphiaPersistenceProvider.class))
             .build();
     injector.injectMembers(analysisOrchestrationIterator);
-    workflowVerificationExecutor.scheduleAtFixedRate(
+    workflowVerificationExecutor.scheduleWithFixedDelay(
         () -> analysisOrchestrationIterator.process(), 0, 20, TimeUnit.SECONDS);
   }
 
@@ -317,7 +317,7 @@ public class VerificationApplication extends Application<VerificationConfigurati
             .redistribute(true)
             .build();
     injector.injectMembers(dataCollectionIterator);
-    dataCollectionExecutor.scheduleAtFixedRate(() -> dataCollectionIterator.process(), 0, 30, TimeUnit.SECONDS);
+    dataCollectionExecutor.scheduleWithFixedDelay(() -> dataCollectionIterator.process(), 0, 30, TimeUnit.SECONDS);
 
     K8ActivityCollectionHandler k8ActivityCollectionHandler = injector.getInstance(K8ActivityCollectionHandler.class);
     PersistenceIterator activityCollectionIterator =
@@ -336,7 +336,7 @@ public class VerificationApplication extends Application<VerificationConfigurati
             .redistribute(true)
             .build();
     injector.injectMembers(activityCollectionIterator);
-    dataCollectionExecutor.scheduleAtFixedRate(() -> activityCollectionIterator.process(), 0, 30, TimeUnit.SECONDS);
+    dataCollectionExecutor.scheduleWithFixedDelay(() -> activityCollectionIterator.process(), 0, 30, TimeUnit.SECONDS);
   }
 
   private void registerDeleteDataCollectionWorkersIterator(Injector injector) {
@@ -364,7 +364,7 @@ public class VerificationApplication extends Application<VerificationConfigurati
             .redistribute(true)
             .build();
     injector.injectMembers(dataCollectionIterator);
-    verificationTaskExecutor.scheduleAtFixedRate(() -> dataCollectionIterator.process(), 0, 30, TimeUnit.SECONDS);
+    verificationTaskExecutor.scheduleWithFixedDelay(() -> dataCollectionIterator.process(), 0, 30, TimeUnit.SECONDS);
   }
 
   private void registerVerificationJobInstanceDataCollectionTaskIterator(Injector injector) {
@@ -390,7 +390,7 @@ public class VerificationApplication extends Application<VerificationConfigurati
             .redistribute(true)
             .build();
     injector.injectMembers(dataCollectionIterator);
-    verificationTaskExecutor.scheduleAtFixedRate(() -> dataCollectionIterator.process(), 0, 30, TimeUnit.SECONDS);
+    verificationTaskExecutor.scheduleWithFixedDelay(() -> dataCollectionIterator.process(), 0, 30, TimeUnit.SECONDS);
   }
   private void registerCVConfigCleanupIterator(Injector injector) {
     ScheduledThreadPoolExecutor dataCollectionExecutor = new ScheduledThreadPoolExecutor(
@@ -412,7 +412,7 @@ public class VerificationApplication extends Application<VerificationConfigurati
             .redistribute(true)
             .build();
     injector.injectMembers(dataCollectionIterator);
-    dataCollectionExecutor.scheduleAtFixedRate(() -> dataCollectionIterator.process(), 0, 30, TimeUnit.SECONDS);
+    dataCollectionExecutor.scheduleWithFixedDelay(() -> dataCollectionIterator.process(), 0, 30, TimeUnit.SECONDS);
   }
 
   private void registerHealthChecks(Environment environment, Injector injector) {

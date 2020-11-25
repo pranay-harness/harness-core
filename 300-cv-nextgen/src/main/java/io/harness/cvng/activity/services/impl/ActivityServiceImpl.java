@@ -7,7 +7,6 @@ import static io.harness.persistence.HQuery.excludeAuthority;
 import io.harness.cvng.activity.beans.ActivityDashboardDTO;
 import io.harness.cvng.activity.beans.ActivityVerificationResultDTO;
 import io.harness.cvng.activity.beans.ActivityVerificationResultDTO.CategoryRisk;
-import io.harness.cvng.activity.beans.ActivityVerificationStatus;
 import io.harness.cvng.activity.beans.ActivityVerificationSummary;
 import io.harness.cvng.activity.beans.DeploymentActivityPopoverResultDTO;
 import io.harness.cvng.activity.beans.DeploymentActivityResultDTO;
@@ -24,6 +23,8 @@ import io.harness.cvng.activity.services.api.ActivityService;
 import io.harness.cvng.analysis.entities.HealthVerificationPeriod;
 import io.harness.cvng.beans.ActivityDTO;
 import io.harness.cvng.beans.ActivityType;
+import io.harness.cvng.beans.activity.ActivityStatusDTO;
+import io.harness.cvng.beans.activity.ActivityVerificationStatus;
 import io.harness.cvng.client.NextGenService;
 import io.harness.cvng.core.services.api.WebhookService;
 import io.harness.cvng.dashboard.services.api.HealthVerificationHeatMapService;
@@ -83,6 +84,11 @@ public class ActivityServiceImpl implements ActivityService {
   public String register(String accountId, String webhookToken, ActivityDTO activityDTO) {
     webhookService.validateWebhookToken(
         webhookToken, activityDTO.getProjectIdentifier(), activityDTO.getOrgIdentifier());
+    return register(accountId, activityDTO);
+  }
+
+  @Override
+  public String register(String accountId, ActivityDTO activityDTO) {
     Preconditions.checkNotNull(activityDTO);
     Activity activity = getActivityFromDTO(activityDTO);
     activity.validate();
@@ -186,6 +192,20 @@ public class ActivityServiceImpl implements ActivityService {
     deploymentVerificationJobInstanceSummary.setActivityId(activity.getUuid());
     deploymentVerificationJobInstanceSummary.setActivityStartTime(activity.getActivityStartTime().toEpochMilli());
     return deploymentVerificationJobInstanceSummary;
+  }
+
+  @Override
+  public ActivityStatusDTO getActivityStatus(String accountId, String activityId) {
+    DeploymentVerificationJobInstanceSummary deploymentVerificationJobInstanceSummary =
+        getDeploymentSummary(activityId);
+    ActivityStatusDTO activityStatusDTO =
+        ActivityStatusDTO.builder()
+            .durationMs(deploymentVerificationJobInstanceSummary.getDurationMs())
+            .progressPercentage(deploymentVerificationJobInstanceSummary.getProgressPercentage())
+            .activityId(activityId)
+            .status(deploymentVerificationJobInstanceSummary.getStatus())
+            .build();
+    return activityStatusDTO;
   }
 
   @Override

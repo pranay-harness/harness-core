@@ -2,6 +2,7 @@ package io.harness.cvng.activity.beans;
 
 import io.harness.cvng.beans.ActivityType;
 import io.harness.cvng.beans.CVMonitoringCategory;
+import io.harness.cvng.beans.activity.ActivityVerificationStatus;
 
 import java.util.Set;
 import lombok.Builder;

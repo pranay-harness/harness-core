@@ -47,6 +47,7 @@ import static software.wings.service.impl.workflow.WorkflowServiceHelper.CLOUDWA
 import static software.wings.service.impl.workflow.WorkflowServiceHelper.COMMAND_NAME;
 import static software.wings.service.impl.workflow.WorkflowServiceHelper.CUSTOM_LOG_VERIFICATION;
 import static software.wings.service.impl.workflow.WorkflowServiceHelper.CUSTOM_METRICS;
+import static software.wings.service.impl.workflow.WorkflowServiceHelper.CVNG_STATE;
 import static software.wings.service.impl.workflow.WorkflowServiceHelper.DATADOG_LOG;
 import static software.wings.service.impl.workflow.WorkflowServiceHelper.DATADOG_METRICS;
 import static software.wings.service.impl.workflow.WorkflowServiceHelper.DYNATRACE;
@@ -143,6 +144,7 @@ import software.wings.sm.states.AzureNodeSelectState;
 import software.wings.sm.states.BambooState;
 import software.wings.sm.states.BarrierState;
 import software.wings.sm.states.BugsnagState;
+import software.wings.sm.states.CVNGState;
 import software.wings.sm.states.CloudWatchState;
 import software.wings.sm.states.CommandState;
 import software.wings.sm.states.CustomLogVerificationState;
@@ -614,6 +616,10 @@ public enum StepType {
       asList(VERIFY_SERVICE, K8S_PHASE_STEP, CUSTOM_DEPLOYMENT_PHASE_STEP), asList(DeploymentType.values()),
       asList(PhaseType.ROLLBACK, PhaseType.NON_ROLLBACK)),
   LOG_VERIFICATION(CustomLogVerificationState.class, CUSTOM_LOG_VERIFICATION, asList(LOG),
+      asList(VERIFY_SERVICE, K8S_PHASE_STEP, CUSTOM_DEPLOYMENT_PHASE_STEP), asList(DeploymentType.values()),
+      asList(PhaseType.ROLLBACK, PhaseType.NON_ROLLBACK)),
+  // cvng
+  CVNG(CVNGState.class, CVNG_STATE, asList(LOG, APM),
       asList(VERIFY_SERVICE, K8S_PHASE_STEP, CUSTOM_DEPLOYMENT_PHASE_STEP), asList(DeploymentType.values()),
       asList(PhaseType.ROLLBACK, PhaseType.NON_ROLLBACK)),
 
