@@ -2,10 +2,10 @@ package io.harness.resolvers;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 
-import io.harness.ambiance.Ambiance;
 import io.harness.annotations.Redesign;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.data.structure.EmptyPredicate;
+import io.harness.pms.ambiance.Ambiance;
 import io.harness.pms.ambiance.Level;
 import io.harness.pms.refobjects.RefObject;
 import io.harness.state.io.StepTransput;
@@ -28,11 +28,11 @@ public interface Resolver<T extends StepTransput> {
       return consumeInternal(ambiance, name, value, 0);
     }
 
-    if (EmptyPredicate.isEmpty(ambiance.getLevels())) {
+    if (EmptyPredicate.isEmpty(ambiance.getLevelsList())) {
       throw new GroupNotFoundException(groupName);
     }
 
-    List<Level> levels = ambiance.getLevels();
+    List<Level> levels = ambiance.getLevelsList();
     for (int i = levels.size() - 1; i >= 0; i--) {
       Level level = levels.get(i);
       if (groupName.equals(level.getGroup())) {

@@ -3,7 +3,6 @@ package io.harness.states;
 import static io.harness.beans.steps.stepinfo.LiteEngineTaskStepInfo.CALLBACK_IDS;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 
-import io.harness.ambiance.Ambiance;
 import io.harness.beans.dependencies.ServiceDependency;
 import io.harness.beans.environment.pod.container.ContainerDefinitionInfo;
 import io.harness.beans.outcomes.DependencyOutcome;
@@ -29,6 +28,7 @@ import io.harness.k8s.model.ImageDetails;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.ngpipeline.orchestration.StepUtils;
 import io.harness.plancreators.IntegrationStagePlanCreator;
+import io.harness.pms.ambiance.Ambiance;
 import io.harness.pms.execution.Status;
 import io.harness.pms.steps.StepType;
 import io.harness.state.io.StepInputPackage;
@@ -170,7 +170,7 @@ public class LiteEngineTaskStep implements TaskExecutable<LiteEngineTaskStepInfo
 
   private void addCallBackId(ExecutionWrapper executionWrapper, Ambiance ambiance, Map<String, String> taskIds) {
     TaskExecutor<HDelegateTask> executor = taskExecutorMap.get(TaskMode.DELEGATE_TASK_V3.name());
-    final String accountId = ambiance.getSetupAbstractions().get("accountId");
+    final String accountId = ambiance.getSetupAbstractionsMap().get("accountId");
 
     if (executionWrapper != null) {
       if (executionWrapper instanceof StepElement) {
@@ -242,8 +242,8 @@ public class LiteEngineTaskStep implements TaskExecutable<LiteEngineTaskStepInfo
                                   .build();
 
     HDelegateTask task =
-        (HDelegateTask) StepUtils.prepareDelegateTaskInput(accountId, taskData, ambiance.getSetupAbstractions());
+        (HDelegateTask) StepUtils.prepareDelegateTaskInput(accountId, taskData, ambiance.getSetupAbstractionsMap());
 
-    return executor.queueTask(ambiance.getSetupAbstractions(), task);
+    return executor.queueTask(ambiance.getSetupAbstractionsMap(), task);
   }
 }

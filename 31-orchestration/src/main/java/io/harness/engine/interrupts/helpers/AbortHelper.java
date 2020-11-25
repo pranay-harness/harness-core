@@ -6,7 +6,6 @@ import static io.harness.interrupts.ExecutionInterruptType.ABORT_ALL;
 
 import static java.util.stream.Collectors.toList;
 
-import io.harness.ambiance.Ambiance;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.engine.OrchestrationEngine;
 import io.harness.engine.executions.node.NodeExecutionService;
@@ -19,6 +18,7 @@ import io.harness.facilitator.modes.ExecutableResponse;
 import io.harness.facilitator.modes.TaskSpawningExecutableResponse;
 import io.harness.interrupts.Interrupt;
 import io.harness.plan.PlanNode;
+import io.harness.pms.ambiance.Ambiance;
 import io.harness.pms.execution.Status;
 import io.harness.registries.state.StepRegistry;
 import io.harness.state.Step;
@@ -49,7 +49,7 @@ public class AbortHelper {
       if (executableResponse != null && nodeExecution.isTaskSpawningMode()) {
         TaskSpawningExecutableResponse taskExecutableResponse = (TaskSpawningExecutableResponse) executableResponse;
         TaskExecutor executor = taskExecutorMap.get(taskExecutableResponse.getTaskMode().name());
-        boolean aborted = executor.abortTask(ambiance.getSetupAbstractions(), taskExecutableResponse.getTaskId());
+        boolean aborted = executor.abortTask(ambiance.getSetupAbstractionsMap(), taskExecutableResponse.getTaskId());
         if (!aborted) {
           log.error("Delegate Task Cannot be aborted : TaskId: {}, NodeExecutionId: {}",
               taskExecutableResponse.getTaskId(), nodeExecution.getUuid());

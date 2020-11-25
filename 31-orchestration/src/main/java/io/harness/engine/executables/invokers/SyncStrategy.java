@@ -2,7 +2,7 @@ package io.harness.engine.executables.invokers;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 
-import io.harness.ambiance.Ambiance;
+import io.harness.AmbianceUtils;
 import io.harness.annotations.Redesign;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.engine.OrchestrationEngine;
@@ -12,6 +12,7 @@ import io.harness.engine.executions.node.NodeExecutionService;
 import io.harness.execution.NodeExecution;
 import io.harness.facilitator.modes.sync.SyncExecutable;
 import io.harness.plan.PlanNode;
+import io.harness.pms.ambiance.Ambiance;
 import io.harness.registries.state.StepRegistry;
 import io.harness.state.io.StepResponse;
 
@@ -35,7 +36,7 @@ public class SyncStrategy implements ExecuteStrategy {
     StepResponse stepResponse =
         syncExecutable.executeSync(ambiance, nodeExecutionService.extractResolvedStepParameters(nodeExecution),
             invokerPackage.getInputPackage(), invokerPackage.getPassThroughData());
-    engine.handleStepResponse(ambiance.obtainCurrentRuntimeId(), stepResponse);
+    engine.handleStepResponse(AmbianceUtils.obtainCurrentRuntimeId(ambiance), stepResponse);
   }
 
   SyncExecutable extractSyncExecutable(NodeExecution nodeExecution) {

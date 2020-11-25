@@ -4,7 +4,6 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.ngpipeline.orchestration.StepUtils.prepareDelegateTaskInput;
 
-import io.harness.ambiance.Ambiance;
 import io.harness.cdng.executionplan.CDStepDependencyKey;
 import io.harness.cdng.infra.beans.InfrastructureOutcome;
 import io.harness.cdng.manifest.ManifestStoreType;
@@ -45,6 +44,7 @@ import io.harness.git.model.FetchFilesResult;
 import io.harness.git.model.GitFile;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.ngpipeline.common.AmbianceHelper;
+import io.harness.pms.ambiance.Ambiance;
 import io.harness.pms.execution.Status;
 import io.harness.pms.steps.StepType;
 import io.harness.security.encryption.EncryptedDataDetail;
@@ -152,7 +152,7 @@ public class K8sRollingStep implements TaskChainExecutable<K8sRollingStepParamet
                                   .build();
 
     final Task delegateTask =
-        prepareDelegateTaskInput(accountId, taskData, ambiance.getSetupAbstractions(), new LinkedHashMap<>());
+        prepareDelegateTaskInput(accountId, taskData, ambiance.getSetupAbstractionsMap(), new LinkedHashMap<>());
 
     K8sRollingStepPassThroughData k8sRollingStepPassThroughData = K8sRollingStepPassThroughData.builder()
                                                                       .k8sManifest(k8sManifest)
@@ -208,7 +208,7 @@ public class K8sRollingStep implements TaskChainExecutable<K8sRollingStepParamet
     logAbstractions.put("key1", "val1");
 
     final Task delegateTask =
-        prepareDelegateTaskInput(accountId, taskData, ambiance.getSetupAbstractions(), logAbstractions);
+        prepareDelegateTaskInput(accountId, taskData, ambiance.getSetupAbstractionsMap(), logAbstractions);
 
     return TaskChainResponse.builder().task(delegateTask).chainEnd(true).passThroughData(infrastructure).build();
   }

@@ -6,9 +6,9 @@ import static io.harness.rule.OwnerRule.PRASHANT;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.OrchestrationStepsTestBase;
-import io.harness.ambiance.Ambiance;
 import io.harness.category.element.UnitTests;
 import io.harness.facilitator.modes.children.ChildrenExecutableResponse;
+import io.harness.pms.ambiance.Ambiance;
 import io.harness.pms.execution.Status;
 import io.harness.rule.Owner;
 import io.harness.state.io.StepInputPackage;
@@ -34,7 +34,7 @@ public class ForkStepTest extends OrchestrationStepsTestBase {
   @Owner(developers = PRASHANT)
   @Category(UnitTests.class)
   public void shouldTestObtainChildren() {
-    Ambiance ambiance = Ambiance.builder().build();
+    Ambiance ambiance = Ambiance.newBuilder().build();
     StepInputPackage inputPackage = StepInputPackage.builder().build();
     ForkStepParameters stateParameters =
         ForkStepParameters.builder().parallelNodeId(FIRST_CHILD_ID).parallelNodeId(SECOND_CHILD_ID).build();
@@ -54,7 +54,7 @@ public class ForkStepTest extends OrchestrationStepsTestBase {
   @Owner(developers = PRASHANT)
   @Category(UnitTests.class)
   public void shouldTestHandleChildrenResponse() {
-    Ambiance ambiance = Ambiance.builder().build();
+    Ambiance ambiance = Ambiance.newBuilder().build();
     ForkStepParameters stateParameters =
         ForkStepParameters.builder().parallelNodeId(FIRST_CHILD_ID).parallelNodeId(SECOND_CHILD_ID).build();
 

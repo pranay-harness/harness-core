@@ -2,10 +2,8 @@ package io.harness.engine.expressions;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 
-import io.harness.ambiance.Ambiance;
 import io.harness.annotations.Redesign;
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.data.algorithm.HashGenerator;
 import io.harness.engine.executions.node.NodeExecutionService;
 import io.harness.engine.executions.plan.PlanExecutionService;
 import io.harness.engine.expressions.functors.ExecutionSweepingOutputFunctor;
@@ -31,6 +29,7 @@ import io.harness.expression.field.OrchestrationField;
 import io.harness.expression.field.OrchestrationFieldProcessor;
 import io.harness.expression.field.OrchestrationFieldType;
 import io.harness.expression.field.ProcessorResult;
+import io.harness.pms.ambiance.Ambiance;
 import io.harness.registries.field.OrchestrationFieldRegistry;
 
 import com.google.common.collect.ImmutableList;
@@ -74,9 +73,9 @@ public class AmbianceExpressionEvaluator extends EngineExpressionEvaluator {
       Set<NodeExecutionEntityType> entityTypes, boolean refObjectSpecific) {
     super(variableResolverTracker);
     this.ambiance = ambiance;
-    if (ambiance.getExpressionFunctorToken() == 0) {
-      ambiance.setExpressionFunctorToken(HashGenerator.generateIntegerHash());
-    }
+    //    if (ambiance.getExpressionFunctorToken() == 0) {
+    //      ambiance.setExpressionFunctorToken(HashGenerator.generateIntegerHash());
+    //    }
 
     this.entityTypes = entityTypes == null ? NodeExecutionEntityType.allEntities() : entityTypes;
     this.refObjectSpecific = refObjectSpecific;

@@ -8,7 +8,6 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import io.harness.ambiance.Ambiance;
 import io.harness.beans.stages.IntegrationStageStepParameters;
 import io.harness.category.element.UnitTests;
 import io.harness.execution.NodeExecution;
@@ -18,6 +17,7 @@ import io.harness.git.GitClientHelper;
 import io.harness.ngpipeline.status.BuildStatusUpdateParameter;
 import io.harness.plan.PlanNode;
 import io.harness.plancreators.IntegrationStagePlanCreator;
+import io.harness.pms.ambiance.Ambiance;
 import io.harness.pms.execution.Status;
 import io.harness.rule.Owner;
 import io.harness.service.DelegateGrpcClientWrapper;
@@ -40,8 +40,8 @@ public class GitBuildStatusUtilityTest extends CIExecutionTest {
   @Inject private CIExecutionPlanTestHelper ciExecutionPlanTestHelper;
   @Mock private DelegateGrpcClientWrapper delegateGrpcClientWrapper;
   @InjectMocks private GitBuildStatusUtility gitBuildStatusUtility;
-  private Ambiance ambiance = Ambiance.builder()
-                                  .setupAbstractions(Maps.of("accountId", "accountId", "projectIdentifier",
+  private Ambiance ambiance = Ambiance.newBuilder()
+                                  .putAllSetupAbstractions(Maps.of("accountId", "accountId", "projectIdentifier",
                                       "projectIdentfier", "orgIdentifier", "orgIdentifier"))
                                   .build();
 

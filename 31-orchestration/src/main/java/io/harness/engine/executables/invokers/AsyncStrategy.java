@@ -3,8 +3,8 @@ package io.harness.engine.executables.invokers;
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 
+import io.harness.AmbianceUtils;
 import io.harness.OrchestrationPublisherName;
-import io.harness.ambiance.Ambiance;
 import io.harness.annotations.Redesign;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.engine.OrchestrationEngine;
@@ -19,6 +19,7 @@ import io.harness.execution.NodeExecution.NodeExecutionKeys;
 import io.harness.facilitator.modes.async.AsyncExecutable;
 import io.harness.facilitator.modes.async.AsyncExecutableResponse;
 import io.harness.plan.PlanNode;
+import io.harness.pms.ambiance.Ambiance;
 import io.harness.pms.execution.Status;
 import io.harness.registries.state.StepRegistry;
 import io.harness.state.io.StepResponse;
@@ -63,7 +64,7 @@ public class AsyncStrategy implements ExecuteStrategy {
 
   private void handleResponse(Ambiance ambiance, AsyncExecutableResponse response) {
     NodeExecution nodeExecution =
-        Preconditions.checkNotNull(nodeExecutionService.get(ambiance.obtainCurrentRuntimeId()));
+        Preconditions.checkNotNull(nodeExecutionService.get(AmbianceUtils.obtainCurrentRuntimeId(ambiance)));
     PlanNode node = nodeExecution.getNode();
     if (isEmpty(response.getCallbackIds())) {
       log.error("StepResponse has no callbackIds - currentState : " + node.getName()

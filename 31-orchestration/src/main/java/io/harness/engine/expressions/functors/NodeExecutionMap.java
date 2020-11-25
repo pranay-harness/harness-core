@@ -5,7 +5,6 @@ import static io.harness.execution.NodeExecution.NodeExecutionKeys;
 
 import static java.util.Arrays.asList;
 
-import io.harness.ambiance.Ambiance;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.engine.expressions.NodeExecutionsCache;
@@ -16,6 +15,7 @@ import io.harness.engine.outputs.SweepingOutputException;
 import io.harness.execution.NodeExecution;
 import io.harness.expression.ExpressionEvaluatorUtils;
 import io.harness.expression.LateBindingMap;
+import io.harness.pms.ambiance.Ambiance;
 import io.harness.refObjects.RefObjectUtil;
 
 import java.util.Collections;

@@ -4,6 +4,7 @@ import static io.harness.StatusUtils.retryableStatuses;
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 
+import io.harness.AmbianceUtils;
 import io.harness.adviser.Advise;
 import io.harness.adviser.Adviser;
 import io.harness.adviser.AdvisingEvent;
@@ -12,12 +13,12 @@ import io.harness.adviser.advise.EndPlanAdvise;
 import io.harness.adviser.advise.InterventionWaitAdvise;
 import io.harness.adviser.advise.NextStepAdvise;
 import io.harness.adviser.advise.RetryAdvise;
-import io.harness.ambiance.Ambiance;
 import io.harness.annotations.Redesign;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.engine.executions.node.NodeExecutionService;
 import io.harness.execution.NodeExecution;
 import io.harness.pms.advisers.AdviserType;
+import io.harness.pms.ambiance.Ambiance;
 import io.harness.serializer.KryoSerializer;
 import io.harness.state.io.FailureInfo;
 
@@ -41,7 +42,7 @@ public class RetryAdviser implements Adviser {
     RetryAdviserParameters parameters = extractParameters(advisingEvent);
     Ambiance ambiance = advisingEvent.getAmbiance();
     NodeExecution nodeExecution =
-        Preconditions.checkNotNull(nodeExecutionService.get(ambiance.obtainCurrentRuntimeId()));
+        Preconditions.checkNotNull(nodeExecutionService.get(AmbianceUtils.obtainCurrentRuntimeId(ambiance)));
     if (nodeExecution.retryCount() < parameters.getRetryCount()) {
       int waitInterval = calculateWaitInterval(parameters.getWaitIntervalList(), nodeExecution.retryCount());
       return RetryAdvise.builder().retryNodeExecutionId(nodeExecution.getUuid()).waitInterval(waitInterval).build();

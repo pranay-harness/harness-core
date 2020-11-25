@@ -8,7 +8,6 @@ import static org.joor.Reflect.on;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.when;
 
-import io.harness.ambiance.Ambiance;
 import io.harness.beans.CIPipelineSetupParameters;
 import io.harness.beans.executionargs.CIExecutionArgs;
 import io.harness.category.element.UnitTests;
@@ -18,6 +17,7 @@ import io.harness.executionplan.CIExecutionPlanTestHelper;
 import io.harness.executionplan.CIExecutionTest;
 import io.harness.facilitator.modes.child.ChildExecutableResponse;
 import io.harness.ngpipeline.pipeline.beans.entities.NgPipelineEntity;
+import io.harness.pms.ambiance.Ambiance;
 import io.harness.pms.execution.Status;
 import io.harness.rule.Owner;
 import io.harness.state.io.StepInputPackage;
@@ -51,7 +51,7 @@ public class CIPipelineSetupStepTest extends CIExecutionTest {
   @Owner(developers = HARSH)
   @Category(UnitTests.class)
   public void shouldObtainChild() {
-    Ambiance ambiance = Ambiance.builder().build();
+    Ambiance ambiance = Ambiance.newBuilder().build();
     when(executionSweepingOutputResolver.consume(any(), any(), any(), any())).thenReturn("namespace");
     Map<String, String> fieldToExecutionNodeIdMap = new HashMap<>();
     fieldToExecutionNodeIdMap.put("stages", CHILD_ID);
@@ -72,7 +72,7 @@ public class CIPipelineSetupStepTest extends CIExecutionTest {
   @Owner(developers = HARSH)
   @Category(UnitTests.class)
   public void shouldHandleChildResponse() {
-    Ambiance ambiance = Ambiance.builder().build();
+    Ambiance ambiance = Ambiance.newBuilder().build();
     Map<String, String> fieldToExecutionNodeIdMap = new HashMap<>();
     fieldToExecutionNodeIdMap.put("stages", CHILD_ID);
     CIPipelineSetupParameters stateParameters = CIPipelineSetupParameters.builder()
@@ -92,7 +92,7 @@ public class CIPipelineSetupStepTest extends CIExecutionTest {
   @Owner(developers = HARSH)
   @Category(UnitTests.class)
   public void shouldExecuteSync() {
-    Ambiance ambiance = Ambiance.builder().build();
+    Ambiance ambiance = Ambiance.newBuilder().build();
     Map<String, String> fieldToExecutionNodeIdMap = new HashMap<>();
     fieldToExecutionNodeIdMap.put("stages", CHILD_ID);
     CIPipelineSetupParameters stateParameters = CIPipelineSetupParameters.builder()

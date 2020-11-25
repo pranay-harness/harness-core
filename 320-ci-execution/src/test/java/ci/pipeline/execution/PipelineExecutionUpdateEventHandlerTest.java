@@ -7,7 +7,6 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import io.harness.CategoryTest;
-import io.harness.ambiance.Ambiance;
 import io.harness.beans.stages.IntegrationStageStepParameters;
 import io.harness.category.element.UnitTests;
 import io.harness.engine.executions.node.NodeExecutionServiceImpl;
@@ -15,6 +14,7 @@ import io.harness.execution.NodeExecution;
 import io.harness.execution.events.OrchestrationEvent;
 import io.harness.plan.PlanNode;
 import io.harness.plancreators.IntegrationStagePlanCreator;
+import io.harness.pms.ambiance.Ambiance;
 import io.harness.pms.ambiance.Level;
 import io.harness.pms.execution.Status;
 import io.harness.rule.Owner;
@@ -44,10 +44,10 @@ public class PipelineExecutionUpdateEventHandlerTest extends CategoryTest {
   public void testHandleEvent() {
     OrchestrationEvent orchestrationEvent =
         OrchestrationEvent.builder()
-            .ambiance(Ambiance.builder()
-                          .setupAbstractions(Maps.of("accountId", "accountId", "projectIdentifier", "projectIdentfier",
-                              "orgIdentifier", "orgIdentifier"))
-                          .levels(Lists.newArrayList(Level.newBuilder().setRuntimeId("node1").build()))
+            .ambiance(Ambiance.newBuilder()
+                          .putAllSetupAbstractions(Maps.of("accountId", "accountId", "projectIdentifier",
+                              "projectIdentfier", "orgIdentifier", "orgIdentifier"))
+                          .addAllLevels(Lists.newArrayList(Level.newBuilder().setRuntimeId("node1").build()))
                           .build())
             .build();
     NodeExecution nodeExecution = NodeExecution.builder()

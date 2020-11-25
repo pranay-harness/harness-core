@@ -3,7 +3,6 @@ package io.harness.execution;
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 
-import io.harness.ambiance.Ambiance;
 import io.harness.annotations.Redesign;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.facilitator.modes.ExecutableResponse;
@@ -13,6 +12,7 @@ import io.harness.persistence.PersistentEntity;
 import io.harness.persistence.UuidAware;
 import io.harness.plan.PlanNode;
 import io.harness.plan.PlanNode.PlanNodeKeys;
+import io.harness.pms.ambiance.Ambiance;
 import io.harness.pms.execution.ExecutionMode;
 import io.harness.pms.execution.Status;
 import io.harness.serializer.JsonUtils;

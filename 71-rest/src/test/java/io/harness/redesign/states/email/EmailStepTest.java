@@ -6,8 +6,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.when;
 
-import io.harness.ambiance.Ambiance;
 import io.harness.category.element.UnitTests;
+import io.harness.pms.ambiance.Ambiance;
 import io.harness.pms.execution.Status;
 import io.harness.rule.Owner;
 import io.harness.state.io.StepInputPackage;
@@ -59,7 +59,8 @@ public class EmailStepTest extends WingsBaseTest {
   }
 
   private void testEmailState(boolean ignoreDeliveryFailure, Status expectedStatus) {
-    Ambiance ambiance = Ambiance.builder().setupAbstractions(ImmutableMap.of("accountId", "accountIdValue")).build();
+    Ambiance ambiance =
+        Ambiance.newBuilder().putAllSetupAbstractions(ImmutableMap.of("accountId", "accountIdValue")).build();
     EmailStepParameters emailStepParameters = EmailStepParameters.builder()
                                                   .body("body")
                                                   .toAddress("toAddress1, toAddress2")

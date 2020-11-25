@@ -1,6 +1,6 @@
 package io.harness.cdng.pipeline.executions;
 
-import io.harness.ambiance.Ambiance;
+import io.harness.AmbianceUtils;
 import io.harness.cdng.environment.EnvironmentOutcome;
 import io.harness.cdng.infra.steps.InfrastructureStep;
 import io.harness.cdng.pipeline.executions.service.NgPipelineExecutionService;
@@ -14,6 +14,7 @@ import io.harness.execution.events.OrchestrationEvent;
 import io.harness.executionplan.plancreator.beans.StepOutcomeGroup;
 import io.harness.ngpipeline.common.AmbianceHelper;
 import io.harness.plan.PlanNode;
+import io.harness.pms.ambiance.Ambiance;
 import io.harness.pms.execution.Status;
 
 import com.google.inject.Inject;
@@ -31,7 +32,7 @@ public class PipelineExecutionUpdateEventHandler implements AsyncOrchestrationEv
     String accountId = AmbianceHelper.getAccountId(ambiance);
     String orgId = AmbianceHelper.getOrgIdentifier(ambiance);
     String projectId = AmbianceHelper.getProjectIdentifier(ambiance);
-    String nodeExecutionId = ambiance.obtainCurrentRuntimeId();
+    String nodeExecutionId = AmbianceUtils.obtainCurrentRuntimeId(ambiance);
     String planExecutionId = ambiance.getPlanExecutionId();
     NodeExecution nodeExecution = nodeExecutionService.get(nodeExecutionId);
     if (isServiceNodeAndCompleted(nodeExecution.getNode(), nodeExecution.getStatus())) {

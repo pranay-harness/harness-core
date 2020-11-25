@@ -3,7 +3,6 @@ package io.harness.cdng.infra.steps;
 import static io.harness.ng.core.mapper.TagMapper.convertToList;
 import static io.harness.ngpipeline.common.ParameterFieldHelper.getParameterFieldValue;
 
-import io.harness.ambiance.Ambiance;
 import io.harness.cdng.environment.EnvironmentMapper;
 import io.harness.cdng.environment.EnvironmentOutcome;
 import io.harness.cdng.environment.yaml.EnvironmentYaml;
@@ -21,6 +20,7 @@ import io.harness.facilitator.modes.sync.SyncExecutable;
 import io.harness.ng.core.environment.beans.Environment;
 import io.harness.ng.core.environment.services.EnvironmentService;
 import io.harness.ngpipeline.common.AmbianceHelper;
+import io.harness.pms.ambiance.Ambiance;
 import io.harness.pms.execution.Status;
 import io.harness.pms.steps.StepType;
 import io.harness.state.io.StepInputPackage;

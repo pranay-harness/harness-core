@@ -1,9 +1,9 @@
 package io.harness.states;
 
-import io.harness.ambiance.Ambiance;
 import io.harness.beans.steps.stepinfo.GitCloneStepInfo;
 import io.harness.facilitator.PassThroughData;
 import io.harness.facilitator.modes.sync.SyncExecutable;
+import io.harness.pms.ambiance.Ambiance;
 import io.harness.pms.execution.Status;
 import io.harness.pms.steps.StepType;
 import io.harness.state.io.StepInputPackage;

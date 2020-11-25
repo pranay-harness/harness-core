@@ -2,13 +2,14 @@ package io.harness.engine.events;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 
-import io.harness.ambiance.Ambiance;
+import io.harness.AmbianceUtils;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.engine.executions.node.NodeExecutionService;
 import io.harness.execution.NodeExecution;
 import io.harness.execution.events.AsyncOrchestrationEventHandler;
 import io.harness.execution.events.OrchestrationEvent;
+import io.harness.pms.ambiance.Ambiance;
 import io.harness.timeout.TimeoutEngine;
 import io.harness.timeout.trackers.events.StatusUpdateTimeoutEvent;
 
@@ -23,12 +24,12 @@ public class NodeExecutionStatusUpdateEventHandler implements AsyncOrchestration
   @Override
   public void handleEvent(OrchestrationEvent event) {
     Ambiance ambiance = event.getAmbiance();
-    String nodeExecutionId = ambiance.obtainCurrentRuntimeId();
+    String nodeExecutionId = AmbianceUtils.obtainCurrentRuntimeId(ambiance);
     if (nodeExecutionId == null) {
       return;
     }
 
-    NodeExecution nodeExecution = nodeExecutionService.get(ambiance.obtainCurrentRuntimeId());
+    NodeExecution nodeExecution = nodeExecutionService.get(AmbianceUtils.obtainCurrentRuntimeId(ambiance));
     if (nodeExecution == null) {
       return;
     }

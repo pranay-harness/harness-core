@@ -1,18 +1,18 @@
-package io.harness.ambiance;
+package io.harness;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.rule.OwnerRule.PRASHANT;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import io.harness.OrchestrationBeansTestBase;
 import io.harness.category.element.UnitTests;
+import io.harness.pms.ambiance.Ambiance;
 import io.harness.pms.ambiance.Level;
 import io.harness.pms.steps.StepType;
 import io.harness.rule.Owner;
 
 import com.google.common.collect.ImmutableMap;
-import com.google.inject.Inject;
+import com.google.protobuf.InvalidProtocolBufferException;
 import java.util.ArrayList;
 import java.util.List;
 import org.junit.Test;
@@ -27,18 +27,16 @@ public class AmbianceUtilsTest extends OrchestrationBeansTestBase {
   private static final String SECTION_RUNTIME_ID = generateUuid();
   private static final String SECTION_SETUP_ID = generateUuid();
 
-  @Inject AmbianceUtils ambianceUtils;
-
   @Test
   @Owner(developers = PRASHANT)
   @Category(UnitTests.class)
   public void cloneForFinish() {
     Ambiance ambiance = buildAmbiance();
-    assertThat(ambiance.getLevels()).hasSize(2);
+    assertThat(ambiance.getLevelsList()).hasSize(2);
 
-    Ambiance clonedAmbiance = ambianceUtils.cloneForFinish(ambiance);
+    Ambiance clonedAmbiance = AmbianceUtils.cloneForFinish(ambiance);
     assertThat(clonedAmbiance).isNotNull();
-    assertThat(clonedAmbiance.getLevels()).hasSize(1);
+    assertThat(clonedAmbiance.getLevelsList()).hasSize(1);
     assertThat(clonedAmbiance.getPlanExecutionId()).isEqualTo(EXECUTION_INSTANCE_ID);
   }
 
@@ -47,11 +45,11 @@ public class AmbianceUtilsTest extends OrchestrationBeansTestBase {
   @Category(UnitTests.class)
   public void cloneForChild() {
     Ambiance ambiance = buildAmbiance();
-    assertThat(ambiance.getLevels()).hasSize(2);
+    assertThat(ambiance.getLevelsList()).hasSize(2);
 
-    Ambiance clonedAmbiance = ambianceUtils.cloneForChild(ambiance);
+    Ambiance clonedAmbiance = AmbianceUtils.cloneForChild(ambiance);
     assertThat(clonedAmbiance).isNotNull();
-    assertThat(clonedAmbiance.getLevels()).hasSize(2);
+    assertThat(clonedAmbiance.getLevelsList()).hasSize(2);
     assertThat(clonedAmbiance.getPlanExecutionId()).isEqualTo(EXECUTION_INSTANCE_ID);
   }
 
@@ -60,40 +58,41 @@ public class AmbianceUtilsTest extends OrchestrationBeansTestBase {
   @Category(UnitTests.class)
   public void shouldTestClone() {
     Ambiance ambiance = buildAmbiance();
-    assertThat(ambiance.getLevels()).hasSize(2);
+    assertThat(ambiance.getLevelsList()).hasSize(2);
 
-    Ambiance clonedAmbiance = ambianceUtils.clone(ambiance, 0);
+    Ambiance clonedAmbiance = AmbianceUtils.clone(ambiance, 0);
     assertThat(clonedAmbiance).isNotNull();
-    assertThat(clonedAmbiance.getLevels()).hasSize(0);
+    assertThat(clonedAmbiance.getLevelsList()).hasSize(0);
     assertThat(clonedAmbiance.getPlanExecutionId()).isEqualTo(EXECUTION_INSTANCE_ID);
 
-    clonedAmbiance = ambianceUtils.clone(ambiance, 1);
+    clonedAmbiance = AmbianceUtils.clone(ambiance, 1);
     assertThat(clonedAmbiance).isNotNull();
-    assertThat(clonedAmbiance.getLevels()).hasSize(1);
+    assertThat(clonedAmbiance.getLevelsList()).hasSize(1);
     assertThat(clonedAmbiance.getPlanExecutionId()).isEqualTo(EXECUTION_INSTANCE_ID);
 
-    clonedAmbiance = ambianceUtils.clone(ambiance, 2);
+    clonedAmbiance = AmbianceUtils.clone(ambiance, 2);
     assertThat(clonedAmbiance).isNotNull();
-    assertThat(clonedAmbiance.getLevels()).hasSize(2);
+    assertThat(clonedAmbiance.getLevelsList()).hasSize(2);
     assertThat(clonedAmbiance.getPlanExecutionId()).isEqualTo(EXECUTION_INSTANCE_ID);
 
-    clonedAmbiance = ambianceUtils.clone(ambiance, 3);
+    clonedAmbiance = AmbianceUtils.clone(ambiance, 3);
     assertThat(clonedAmbiance).isNotNull();
-    assertThat(clonedAmbiance.getLevels()).hasSize(2);
+    assertThat(clonedAmbiance.getLevelsList()).hasSize(2);
     assertThat(clonedAmbiance.getPlanExecutionId()).isEqualTo(EXECUTION_INSTANCE_ID);
   }
 
   @Test
   @Owner(developers = PRASHANT)
   @Category(UnitTests.class)
-  public void shouldTestDeepCopy() {
+  public void shouldTestDeepCopy() throws InvalidProtocolBufferException {
     Ambiance ambiance = buildAmbiance();
-    Ambiance copy = ambianceUtils.deepCopy(ambiance);
+    Ambiance copy = AmbianceUtils.deepCopy(ambiance);
 
     assertThat(copy).isNotNull();
-    assertThat(System.identityHashCode(copy.getLevels())).isNotEqualTo(System.identityHashCode(ambiance.getLevels()));
-    assertThat(copy.getSetupAbstractions()).isEqualTo(ambiance.getSetupAbstractions());
-    assertThat(copy.getLevels()).isEqualTo(ambiance.getLevels());
+    assertThat(System.identityHashCode(copy.getLevelsList()))
+        .isNotEqualTo(System.identityHashCode(ambiance.getLevelsList()));
+    assertThat(copy.getSetupAbstractionsMap()).isEqualTo(ambiance.getSetupAbstractionsMap());
+    assertThat(copy.getLevelsList()).isEqualTo(ambiance.getLevelsList());
   }
 
   private Ambiance buildAmbiance() {
@@ -110,10 +109,10 @@ public class AmbianceUtilsTest extends OrchestrationBeansTestBase {
     List<Level> levels = new ArrayList<>();
     levels.add(phaseLevel);
     levels.add(sectionLevel);
-    return Ambiance.builder()
-        .planExecutionId(EXECUTION_INSTANCE_ID)
-        .setupAbstractions(ImmutableMap.of("accountId", ACCOUNT_ID, "appId", APP_ID))
-        .levels(levels)
+    return Ambiance.newBuilder()
+        .setPlanExecutionId(EXECUTION_INSTANCE_ID)
+        .putAllSetupAbstractions(ImmutableMap.of("accountId", ACCOUNT_ID, "appId", APP_ID))
+        .addAllLevels(levels)
         .build();
   }
 }

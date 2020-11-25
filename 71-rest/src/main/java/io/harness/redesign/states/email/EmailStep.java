@@ -3,12 +3,12 @@ package io.harness.redesign.states.email;
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
-import io.harness.ambiance.Ambiance;
 import io.harness.annotations.Redesign;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.exception.ExceptionUtils;
 import io.harness.facilitator.PassThroughData;
 import io.harness.facilitator.modes.sync.SyncExecutable;
+import io.harness.pms.ambiance.Ambiance;
 import io.harness.pms.execution.Status;
 import io.harness.pms.steps.StepType;
 import io.harness.state.io.FailureInfo;
@@ -54,7 +54,7 @@ public class EmailStep implements SyncExecutable<EmailStepParameters> {
                                         .cc(getEmailAddressList(emailStepParameters.getCcAddress()))
                                         .subject(emailStepParameters.getSubject())
                                         .body(emailStepParameters.getBody())
-                                        .accountId(ambiance.getSetupAbstractions().get(ACCOUNT_ID))
+                                        .accountId(ambiance.getSetupAbstractionsMap().get(ACCOUNT_ID))
                                         .build());
       stepResponseBuilder.status(Status.SUCCEEDED);
     } catch (Exception e) {

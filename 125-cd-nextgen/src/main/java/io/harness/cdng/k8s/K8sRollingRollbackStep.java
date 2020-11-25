@@ -1,6 +1,5 @@
 package io.harness.cdng.k8s;
 
-import io.harness.ambiance.Ambiance;
 import io.harness.cdng.executionplan.CDStepDependencyKey;
 import io.harness.cdng.infra.beans.InfrastructureOutcome;
 import io.harness.cdng.stepsdependency.utils.CDStepDependencyUtils;
@@ -15,6 +14,7 @@ import io.harness.facilitator.modes.task.TaskExecutable;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.ngpipeline.common.AmbianceHelper;
 import io.harness.ngpipeline.orchestration.StepUtils;
+import io.harness.pms.ambiance.Ambiance;
 import io.harness.pms.execution.Status;
 import io.harness.pms.steps.StepType;
 import io.harness.state.io.StepInputPackage;
@@ -73,7 +73,7 @@ public class K8sRollingRollbackStep implements TaskExecutable<K8sRollingRollback
             .taskType(NGTaskType.K8S_COMMAND_TASK.name())
             .parameters(new Object[] {taskParameters})
             .build(),
-        ambiance.getSetupAbstractions());
+        ambiance.getSetupAbstractionsMap());
   }
 
   @Override

@@ -10,10 +10,10 @@ import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.when;
 
 import io.harness.OrchestrationStepsTestBase;
-import io.harness.ambiance.Ambiance;
 import io.harness.category.element.UnitTests;
 import io.harness.facilitator.DefaultFacilitatorParams;
 import io.harness.facilitator.FacilitatorResponse;
+import io.harness.pms.ambiance.Ambiance;
 import io.harness.rule.Owner;
 import io.harness.serializer.KryoSerializer;
 import io.harness.steps.barriers.beans.BarrierExecutionInstance;
@@ -37,7 +37,7 @@ public class BarrierFacilitatorTest extends OrchestrationStepsTestBase {
   @Category(UnitTests.class)
   public void shouldTestFacilitateForSyncResponse() {
     when(barrierService.findByIdentifierAndPlanExecutionId(any(), any())).thenReturn(Collections.emptyList());
-    Ambiance ambiance = Ambiance.builder().build();
+    Ambiance ambiance = Ambiance.newBuilder().build();
     byte[] parameters = kryoSerializer.asBytes(DefaultFacilitatorParams.builder().build());
     BarrierStepParameters stepParameters = BarrierStepParameters.builder().identifier("someString").build();
     FacilitatorResponse response = barrierFacilitator.facilitate(ambiance, stepParameters, parameters, null);
@@ -62,7 +62,7 @@ public class BarrierFacilitatorTest extends OrchestrationStepsTestBase {
                 .identifier(identifier)
                 .planExecutionId(planExecutionId)
                 .build()));
-    Ambiance ambiance = Ambiance.builder().build();
+    Ambiance ambiance = Ambiance.newBuilder().build();
     byte[] parameters = kryoSerializer.asBytes(DefaultFacilitatorParams.builder().build());
     BarrierStepParameters stepParameters = BarrierStepParameters.builder().identifier(identifier).build();
     FacilitatorResponse response = barrierFacilitator.facilitate(ambiance, stepParameters, parameters, null);

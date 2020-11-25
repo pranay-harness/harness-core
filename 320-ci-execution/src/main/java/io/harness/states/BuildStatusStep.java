@@ -1,6 +1,5 @@
 package io.harness.states;
 
-import io.harness.ambiance.Ambiance;
 import io.harness.delegate.beans.TaskData;
 import io.harness.delegate.beans.ci.pod.ConnectorDetails;
 import io.harness.delegate.beans.ci.status.BuildStatusPushResponse;
@@ -12,6 +11,7 @@ import io.harness.ng.core.NGAccess;
 import io.harness.ngpipeline.common.AmbianceHelper;
 import io.harness.ngpipeline.orchestration.StepUtils;
 import io.harness.ngpipeline.status.BuildStatusUpdateParameter;
+import io.harness.pms.ambiance.Ambiance;
 import io.harness.pms.execution.Status;
 import io.harness.pms.steps.StepType;
 import io.harness.state.io.StepInputPackage;

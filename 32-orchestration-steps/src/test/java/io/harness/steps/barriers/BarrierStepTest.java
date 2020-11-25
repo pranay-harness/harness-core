@@ -11,9 +11,9 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import io.harness.OrchestrationStepsTestBase;
-import io.harness.ambiance.Ambiance;
 import io.harness.category.element.UnitTests;
 import io.harness.facilitator.modes.async.AsyncExecutableResponse;
+import io.harness.pms.ambiance.Ambiance;
 import io.harness.pms.ambiance.Level;
 import io.harness.pms.execution.Status;
 import io.harness.rule.Owner;
@@ -54,10 +54,10 @@ public class BarrierStepTest extends OrchestrationStepsTestBase {
                                                   .identifier(barrierIdentifier)
                                                   .barrierState(DOWN)
                                                   .build();
-    Ambiance ambiance =
-        Ambiance.builder()
-            .levels(Collections.singletonList(Level.newBuilder().setRuntimeId(uuid).setSetupId(planNodeId).build()))
-            .build();
+    Ambiance ambiance = Ambiance.newBuilder()
+                            .addAllLevels(Collections.singletonList(
+                                Level.newBuilder().setRuntimeId(uuid).setSetupId(planNodeId).build()))
+                            .build();
     StepInputPackage stepInputPackage = StepInputPackage.builder().build();
     BarrierStepParameters stepParameters =
         BarrierStepParameters.builder().identifier(barrierIdentifier).timeoutInMillis(1000).build();
@@ -92,10 +92,10 @@ public class BarrierStepTest extends OrchestrationStepsTestBase {
                                            .barrierState(STANDING)
                                            .barrierGroupId(barrierGroupId)
                                            .build();
-    Ambiance ambiance =
-        Ambiance.builder()
-            .levels(Collections.singletonList(Level.newBuilder().setRuntimeId(uuid).setSetupId(planNodeId).build()))
-            .build();
+    Ambiance ambiance = Ambiance.newBuilder()
+                            .addAllLevels(Collections.singletonList(
+                                Level.newBuilder().setRuntimeId(uuid).setSetupId(planNodeId).build()))
+                            .build();
     StepInputPackage stepInputPackage = StepInputPackage.builder().build();
     BarrierStepParameters stepParameters =
         BarrierStepParameters.builder().identifier(barrierIdentifier).timeoutInMillis(1000).build();
@@ -127,10 +127,10 @@ public class BarrierStepTest extends OrchestrationStepsTestBase {
                                            .barrierState(STANDING)
                                            .barrierGroupId(barrierGroupId)
                                            .build();
-    Ambiance ambiance =
-        Ambiance.builder()
-            .levels(Collections.singletonList(Level.newBuilder().setRuntimeId(uuid).setSetupId(planNodeId).build()))
-            .build();
+    Ambiance ambiance = Ambiance.newBuilder()
+                            .addAllLevels(Collections.singletonList(
+                                Level.newBuilder().setRuntimeId(uuid).setSetupId(planNodeId).build()))
+                            .build();
     BarrierStepParameters stepParameters =
         BarrierStepParameters.builder().identifier(barrierIdentifier).timeoutInMillis(1000).build();
 
@@ -160,10 +160,10 @@ public class BarrierStepTest extends OrchestrationStepsTestBase {
                                            .identifier(barrierIdentifier)
                                            .barrierState(STANDING)
                                            .build();
-    Ambiance ambiance =
-        Ambiance.builder()
-            .levels(Collections.singletonList(Level.newBuilder().setRuntimeId(uuid).setSetupId(planNodeId).build()))
-            .build();
+    Ambiance ambiance = Ambiance.newBuilder()
+                            .addAllLevels(Collections.singletonList(
+                                Level.newBuilder().setRuntimeId(uuid).setSetupId(planNodeId).build()))
+                            .build();
     BarrierStepParameters stepParameters =
         BarrierStepParameters.builder().identifier(barrierIdentifier).timeoutInMillis(1000).build();
 

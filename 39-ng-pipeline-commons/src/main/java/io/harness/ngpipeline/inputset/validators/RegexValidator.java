@@ -1,8 +1,8 @@
 package io.harness.ngpipeline.inputset.validators;
 
-import io.harness.ambiance.Ambiance;
 import io.harness.common.NGExpressionUtils;
 import io.harness.engine.expressions.EngineExpressionService;
+import io.harness.pms.ambiance.Ambiance;
 
 import java.util.regex.Pattern;
 

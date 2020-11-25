@@ -2,7 +2,6 @@ package io.harness.states;
 
 import static io.harness.beans.steps.stepinfo.LiteEngineTaskStepInfo.CALLBACK_IDS;
 
-import io.harness.ambiance.Ambiance;
 import io.harness.beans.steps.CIStepInfo;
 import io.harness.beans.steps.CiStepOutcome;
 import io.harness.beans.sweepingoutputs.StepTaskDetails;
@@ -13,6 +12,7 @@ import io.harness.engine.outputs.ExecutionSweepingOutputService;
 import io.harness.exception.FailureType;
 import io.harness.facilitator.modes.async.AsyncExecutable;
 import io.harness.facilitator.modes.async.AsyncExecutableResponse;
+import io.harness.pms.ambiance.Ambiance;
 import io.harness.pms.execution.Status;
 import io.harness.refObjects.RefObjectUtil;
 import io.harness.state.io.FailureInfo;

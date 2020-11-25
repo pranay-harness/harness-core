@@ -4,7 +4,6 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.delegate.beans.TaskData.DEFAULT_ASYNC_CALL_TIMEOUT;
 
-import io.harness.ambiance.Ambiance;
 import io.harness.annotations.Redesign;
 import io.harness.annotations.dev.ExcludeRedesign;
 import io.harness.annotations.dev.HarnessTeam;
@@ -16,6 +15,7 @@ import io.harness.exception.InvalidRequestException;
 import io.harness.facilitator.PassThroughData;
 import io.harness.facilitator.modes.chain.task.TaskChainExecutable;
 import io.harness.facilitator.modes.chain.task.TaskChainResponse;
+import io.harness.pms.ambiance.Ambiance;
 import io.harness.pms.execution.Status;
 import io.harness.pms.steps.StepType;
 import io.harness.redesign.states.http.BasicHttpStepParameters;
@@ -76,9 +76,9 @@ public class BasicHttpChainStep implements TaskChainExecutable<BasicHttpChainSte
 
     String waitId = generateUuid();
     return DelegateTask.builder()
-        .accountId(ambiance.getSetupAbstractions().get("accountId"))
+        .accountId(ambiance.getSetupAbstractionsMap().get("accountId"))
         .waitId(waitId)
-        .setupAbstraction(Cd1SetupFields.APP_ID_FIELD, ambiance.getSetupAbstractions().get("appId"))
+        .setupAbstraction(Cd1SetupFields.APP_ID_FIELD, ambiance.getSetupAbstractionsMap().get("appId"))
         .data(TaskData.builder()
                   .taskType(TaskType.HTTP.name())
                   .parameters(new Object[] {httpTaskParameters})

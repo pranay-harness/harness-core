@@ -10,7 +10,6 @@ import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-import io.harness.ambiance.Ambiance;
 import io.harness.beans.environment.pod.container.ContainerDefinitionInfo;
 import io.harness.beans.environment.pod.container.ContainerImageDetails;
 import io.harness.beans.steps.stepinfo.LiteEngineTaskStepInfo;
@@ -30,6 +29,7 @@ import io.harness.engine.outputs.ExecutionSweepingOutputService;
 import io.harness.executionplan.CIExecutionTest;
 import io.harness.k8s.model.ImageDetails;
 import io.harness.logging.CommandExecutionStatus;
+import io.harness.pms.ambiance.Ambiance;
 import io.harness.pms.execution.Status;
 import io.harness.rule.Owner;
 import io.harness.state.io.StepInputPackage;
@@ -65,7 +65,7 @@ public class LiteEngineTaskStepTest extends CIExecutionTest {
   public void setUp() {
     Map<String, String> setupAbstractions = new HashMap<>();
     setupAbstractions.put("accountId", "accountId");
-    ambiance = Ambiance.builder().setupAbstractions(setupAbstractions).build();
+    ambiance = Ambiance.newBuilder().putAllSetupAbstractions(setupAbstractions).build();
     liteEngineTaskStepInfo =
         LiteEngineTaskStepInfo.builder()
             .steps(
@@ -98,7 +98,8 @@ public class LiteEngineTaskStepTest extends CIExecutionTest {
   public void shouldObtainTask() {
     TaskExecutor<HDelegateTask> executor = mock(TaskExecutor.class);
     when(taskExecutorMap.get(TaskMode.DELEGATE_TASK_V3.name())).thenReturn(executor);
-    when(executor.queueTask(eq(ambiance.getSetupAbstractions()), any())).thenReturn("taskId");
+    when(executor.queueTask(eq(ambiance.getSetupAbstractionsMap()), any())).thenReturn("taskId");
+
     when(buildSetupUtils.getBuildSetupTaskParams(eq(liteEngineTaskStepInfo), eq(ambiance)))
         .thenReturn(CIK8BuildTaskParams.builder().build());
 

@@ -1,6 +1,5 @@
 package io.harness.serializer.spring;
 
-import io.harness.ambiance.Ambiance;
 import io.harness.data.ExecutionSweepingOutputInstance;
 import io.harness.data.OutcomeInstance;
 import io.harness.execution.NodeExecution;
@@ -28,7 +27,6 @@ import java.util.Map;
 public class OrchestrationBeansAliasRegistrar implements AliasRegistrar {
   @Override
   public void register(Map<String, Class<?>> orchestrationElements) {
-    orchestrationElements.put("ambiance", Ambiance.class);
     orchestrationElements.put("planNode", PlanNode.class);
     orchestrationElements.put("plan", Plan.class);
     orchestrationElements.put("asyncExecutableResponse", AsyncExecutableResponse.class);

@@ -1,6 +1,5 @@
 package io.harness.cdng.pipeline.executions;
 
-import io.harness.ambiance.Ambiance;
 import io.harness.cdng.pipeline.beans.CDPipelineSetupParameters;
 import io.harness.cdng.pipeline.executions.service.NgPipelineExecutionService;
 import io.harness.engine.executions.plan.PlanExecutionService;
@@ -10,6 +9,7 @@ import io.harness.execution.events.OrchestrationEvent;
 import io.harness.executionplan.plancreator.beans.StepOutcomeGroup;
 import io.harness.ngpipeline.common.AmbianceHelper;
 import io.harness.plan.PlanNode;
+import io.harness.pms.ambiance.Ambiance;
 import io.harness.serializer.JsonUtils;
 
 import com.google.inject.Inject;

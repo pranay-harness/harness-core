@@ -3,7 +3,6 @@ package io.harness.engine.executables.invokers;
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 
 import io.harness.OrchestrationPublisherName;
-import io.harness.ambiance.Ambiance;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.engine.EngineObtainmentHelper;
 import io.harness.engine.OrchestrationEngine;
@@ -18,6 +17,7 @@ import io.harness.facilitator.modes.chain.task.TaskChainExecutable;
 import io.harness.facilitator.modes.chain.task.TaskChainExecutableResponse;
 import io.harness.facilitator.modes.chain.task.TaskChainResponse;
 import io.harness.plan.PlanNode;
+import io.harness.pms.ambiance.Ambiance;
 import io.harness.pms.execution.Status;
 import io.harness.registries.state.StepRegistry;
 import io.harness.state.io.StepInputPackage;
@@ -110,7 +110,7 @@ public class TaskChainStrategy implements TaskExecuteStrategy {
     }
     TaskExecutor taskExecutor = taskExecutorMap.get(mode.name());
     String taskId = Preconditions.checkNotNull(
-        taskExecutor.queueTask(ambiance.getSetupAbstractions(), taskChainResponse.getTask()));
+        taskExecutor.queueTask(ambiance.getSetupAbstractionsMap(), taskChainResponse.getTask()));
     // Update Execution Node Instance state to TASK_WAITING
     nodeExecutionService.updateStatusWithOps(nodeExecution.getUuid(), Status.TASK_WAITING,
         ops

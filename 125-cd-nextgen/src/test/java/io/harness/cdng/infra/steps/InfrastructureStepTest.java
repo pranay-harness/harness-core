@@ -6,7 +6,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.doReturn;
 
 import io.harness.CategoryTest;
-import io.harness.ambiance.Ambiance;
 import io.harness.beans.ParameterField;
 import io.harness.category.element.UnitTests;
 import io.harness.cdng.common.beans.SetupAbstractionKeys;
@@ -20,6 +19,7 @@ import io.harness.cdng.pipeline.PipelineInfrastructure;
 import io.harness.ng.core.environment.beans.Environment;
 import io.harness.ng.core.environment.beans.EnvironmentType;
 import io.harness.ng.core.environment.services.EnvironmentService;
+import io.harness.pms.ambiance.Ambiance;
 import io.harness.rule.Owner;
 
 import java.util.Collections;
@@ -69,7 +69,7 @@ public class InfrastructureStepTest extends CategoryTest {
     setupAbstractions.put(SetupAbstractionKeys.accountId, "accountId");
     setupAbstractions.put(SetupAbstractionKeys.projectIdentifier, "projectId");
     setupAbstractions.put(SetupAbstractionKeys.orgIdentifier, "orgId");
-    Ambiance ambiance = Ambiance.builder().setupAbstractions(setupAbstractions).build();
+    Ambiance ambiance = Ambiance.newBuilder().putAllSetupAbstractions(setupAbstractions).build();
 
     EnvironmentYaml environmentYaml = EnvironmentYaml.builder()
                                           .identifier(ParameterField.createValueField("test-id"))

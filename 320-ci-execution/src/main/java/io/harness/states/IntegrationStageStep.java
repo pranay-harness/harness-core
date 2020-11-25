@@ -2,7 +2,6 @@ package io.harness.states;
 
 import static io.harness.ngpipeline.orchestration.StepUtils.createStepResponseFromChildResponse;
 
-import io.harness.ambiance.Ambiance;
 import io.harness.beans.stages.IntegrationStageStepParameters;
 import io.harness.beans.sweepingoutputs.ContextElement;
 import io.harness.beans.sweepingoutputs.K8PodDetails;
@@ -12,6 +11,7 @@ import io.harness.ci.beans.entities.BuildNumberDetails;
 import io.harness.engine.outputs.ExecutionSweepingOutputService;
 import io.harness.facilitator.modes.child.ChildExecutable;
 import io.harness.facilitator.modes.child.ChildExecutableResponse;
+import io.harness.pms.ambiance.Ambiance;
 import io.harness.pms.steps.StepType;
 import io.harness.state.io.StepInputPackage;
 import io.harness.state.io.StepResponse;

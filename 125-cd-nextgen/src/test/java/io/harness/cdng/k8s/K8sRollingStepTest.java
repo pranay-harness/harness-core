@@ -7,7 +7,6 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.doReturn;
 
 import io.harness.CategoryTest;
-import io.harness.ambiance.Ambiance;
 import io.harness.category.element.UnitTests;
 import io.harness.cdng.executionplan.CDStepDependencyKey;
 import io.harness.cdng.manifest.yaml.ManifestAttributes;
@@ -20,6 +19,7 @@ import io.harness.executionplan.stepsdependency.StepDependencyResolverContext;
 import io.harness.executionplan.stepsdependency.StepDependencyService;
 import io.harness.executionplan.stepsdependency.StepDependencySpec;
 import io.harness.executionplan.stepsdependency.bean.KeyAwareStepDependencySpec;
+import io.harness.pms.ambiance.Ambiance;
 import io.harness.rule.Owner;
 import io.harness.state.io.StepInputPackage;
 
@@ -57,7 +57,7 @@ public class K8sRollingStepTest extends CategoryTest {
     K8sRollingStepInfo k8sRollingStepInfo =
         K8sRollingStepInfo.infoBuilder().stepDependencySpecs(stepDependencySpecs).build();
 
-    Ambiance ambiance = Ambiance.builder().build();
+    Ambiance ambiance = Ambiance.newBuilder().build();
     StepInputPackage stepInputPackage = StepInputPackage.builder().build();
     StepDependencyResolverContext resolverContext =
         CDStepDependencyUtils.getStepDependencyResolverContext(stepInputPackage, k8sRollingStepInfo, ambiance);

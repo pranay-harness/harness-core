@@ -3,7 +3,6 @@ package io.harness.functional.redesign;
 import static org.springframework.data.mongodb.core.query.Criteria.where;
 import static org.springframework.data.mongodb.core.query.Query.query;
 
-import io.harness.ambiance.Ambiance;
 import io.harness.data.Outcome;
 import io.harness.execution.NodeExecution;
 import io.harness.execution.NodeExecution.NodeExecutionKeys;
@@ -23,6 +22,7 @@ import io.harness.interrupts.Interrupt;
 import io.harness.interrupts.Interrupt.InterruptKeys;
 import io.harness.pms.advisers.AdviserObtainment;
 import io.harness.pms.advisers.AdviserType;
+import io.harness.pms.ambiance.Ambiance;
 import io.harness.pms.facilitators.FacilitatorObtainment;
 import io.harness.pms.facilitators.FacilitatorType;
 import io.harness.pms.refobjects.RefObject;

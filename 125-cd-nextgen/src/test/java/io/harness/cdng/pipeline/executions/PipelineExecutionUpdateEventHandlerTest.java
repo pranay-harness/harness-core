@@ -1,5 +1,6 @@
 package io.harness.cdng.pipeline.executions;
 
+import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.rule.OwnerRule.SAHIL;
 
 import static org.mockito.Matchers.any;
@@ -9,7 +10,6 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import io.harness.CategoryTest;
-import io.harness.ambiance.Ambiance;
 import io.harness.category.element.UnitTests;
 import io.harness.cdng.environment.EnvironmentOutcome;
 import io.harness.cdng.infra.steps.InfrastructureStep;
@@ -22,6 +22,7 @@ import io.harness.execution.NodeExecution;
 import io.harness.execution.events.OrchestrationEvent;
 import io.harness.executionplan.plancreator.beans.StepOutcomeGroup;
 import io.harness.plan.PlanNode;
+import io.harness.pms.ambiance.Ambiance;
 import io.harness.pms.ambiance.Level;
 import io.harness.pms.execution.Status;
 import io.harness.rule.Owner;
@@ -51,22 +52,24 @@ public class PipelineExecutionUpdateEventHandlerTest extends CategoryTest {
   @Owner(developers = SAHIL)
   @Category(UnitTests.class)
   public void testHandleEvent() {
-    OrchestrationEvent orchestrationEvent =
-        OrchestrationEvent.builder()
-            .ambiance(Ambiance.builder()
-                          .setupAbstractions(Maps.of("accountId", "accountId", "projectIdentifier", "projectIdentfier",
-                              "orgIdentifier", "orgIdentifier"))
-                          .levels(Lists.newArrayList(Level.newBuilder().setRuntimeId("node1").build()))
-                          .build())
-            .build();
-    NodeExecution nodeExecution =
-        NodeExecution.builder().node(PlanNode.builder().group(StepOutcomeGroup.STAGE.name()).build()).build();
+    Ambiance ambiance = Ambiance.newBuilder()
+                            .putAllSetupAbstractions(Maps.of("accountId", "accountId", "projectIdentifier",
+                                "projectIdentfier", "orgIdentifier", "orgIdentifier"))
+                            .addAllLevels(Lists.newArrayList(Level.newBuilder().setRuntimeId("node1").build()))
+                            .setPlanExecutionId(generateUuid())
+                            .build();
+    OrchestrationEvent orchestrationEvent = OrchestrationEvent.builder().ambiance(ambiance).build();
+    NodeExecution nodeExecution = NodeExecution.builder()
+                                      .ambiance(ambiance)
+                                      .node(PlanNode.builder().group(StepOutcomeGroup.STAGE.name()).build())
+                                      .build();
     when(nodeExecutionService.get("node1")).thenReturn(nodeExecution);
     pipelineExecutionUpdateEventHandler.handleEvent(orchestrationEvent);
 
     verify(nodeExecutionService).get("node1");
     verify(ngPipelineExecutionService)
-        .updateStatusForGivenNode("accountId", "orgIdentifier", "projectIdentfier", null, nodeExecution);
+        .updateStatusForGivenNode(
+            "accountId", "orgIdentifier", "projectIdentfier", ambiance.getPlanExecutionId(), nodeExecution);
   }
 
   @Test
@@ -75,10 +78,10 @@ public class PipelineExecutionUpdateEventHandlerTest extends CategoryTest {
   public void testHandleEventNullGroup() {
     OrchestrationEvent orchestrationEvent =
         OrchestrationEvent.builder()
-            .ambiance(Ambiance.builder()
-                          .setupAbstractions(Maps.of("accountId", "accountId", "projectIdentifier", "projectIdentfier",
-                              "orgIdentifier", "orgIdentifier"))
-                          .levels(Lists.newArrayList(Level.newBuilder().setRuntimeId("node1").build()))
+            .ambiance(Ambiance.newBuilder()
+                          .putAllSetupAbstractions(Maps.of("accountId", "accountId", "projectIdentifier",
+                              "projectIdentfier", "orgIdentifier", "orgIdentifier"))
+                          .addAllLevels(Lists.newArrayList(Level.newBuilder().setRuntimeId("node1").build()))
                           .build())
             .build();
     NodeExecution nodeExecution = NodeExecution.builder().node(PlanNode.builder().group(null).build()).build();
@@ -94,10 +97,10 @@ public class PipelineExecutionUpdateEventHandlerTest extends CategoryTest {
   public void testHandleEventService() {
     OrchestrationEvent orchestrationEvent =
         OrchestrationEvent.builder()
-            .ambiance(Ambiance.builder()
-                          .setupAbstractions(Maps.of("accountId", "accountId", "projectIdentifier", "projectIdentfier",
-                              "orgIdentifier", "orgIdentifier"))
-                          .levels(Lists.newArrayList(Level.newBuilder().setRuntimeId("node1").build()))
+            .ambiance(Ambiance.newBuilder()
+                          .putAllSetupAbstractions(Maps.of("accountId", "accountId", "projectIdentifier",
+                              "projectIdentfier", "orgIdentifier", "orgIdentifier"))
+                          .addAllLevels(Lists.newArrayList(Level.newBuilder().setRuntimeId("node1").build()))
                           .build())
             .build();
     NodeExecution nodeExecution = NodeExecution.builder()
@@ -121,10 +124,10 @@ public class PipelineExecutionUpdateEventHandlerTest extends CategoryTest {
   public void testHandleEventEnvironment() {
     OrchestrationEvent orchestrationEvent =
         OrchestrationEvent.builder()
-            .ambiance(Ambiance.builder()
-                          .setupAbstractions(Maps.of("accountId", "accountId", "projectIdentifier", "projectIdentfier",
-                              "orgIdentifier", "orgIdentifier"))
-                          .levels(Lists.newArrayList(Level.newBuilder().setRuntimeId("node1").build()))
+            .ambiance(Ambiance.newBuilder()
+                          .putAllSetupAbstractions(Maps.of("accountId", "accountId", "projectIdentifier",
+                              "projectIdentfier", "orgIdentifier", "orgIdentifier"))
+                          .addAllLevels(Lists.newArrayList(Level.newBuilder().setRuntimeId("node1").build()))
                           .build())
             .build();
     NodeExecution nodeExecution = NodeExecution.builder()

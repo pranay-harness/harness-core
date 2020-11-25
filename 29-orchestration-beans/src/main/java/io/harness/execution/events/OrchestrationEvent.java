@@ -2,11 +2,12 @@ package io.harness.execution.events;
 
 import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_NESTS;
 
-import io.harness.ambiance.Ambiance;
+import io.harness.AmbianceUtils;
 import io.harness.annotation.HarnessEntity;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.logging.AutoLogContext;
+import io.harness.pms.ambiance.Ambiance;
 import io.harness.queue.Queuable;
 
 import java.util.Map;
@@ -30,7 +31,7 @@ public class OrchestrationEvent extends Queuable {
   OrchestrationEventType eventType;
 
   public AutoLogContext autoLogContext() {
-    Map<String, String> logContext = ambiance.logContextMap();
+    Map<String, String> logContext = AmbianceUtils.logContextMap(ambiance);
     logContext.put(OrchestrationEventKeys.eventType, eventType.getType());
     return new AutoLogContext(logContext, OVERRIDE_NESTS);
   }

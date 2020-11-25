@@ -7,7 +7,6 @@ import static io.harness.ngpipeline.common.ParameterFieldHelper.getParameterFiel
 
 import static java.util.stream.Collectors.toList;
 
-import io.harness.ambiance.Ambiance;
 import io.harness.cdng.artifact.bean.ArtifactOutcome;
 import io.harness.cdng.artifact.steps.ArtifactStep;
 import io.harness.cdng.artifact.steps.ArtifactStepParameters;
@@ -30,6 +29,7 @@ import io.harness.facilitator.modes.chain.task.TaskChainResponse;
 import io.harness.ng.core.service.entity.ServiceEntity;
 import io.harness.ng.core.service.services.ServiceEntityService;
 import io.harness.ngpipeline.common.AmbianceHelper;
+import io.harness.pms.ambiance.Ambiance;
 import io.harness.pms.execution.Status;
 import io.harness.pms.steps.StepType;
 import io.harness.state.io.StepInputPackage;

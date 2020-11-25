@@ -3,10 +3,9 @@ package io.harness.engine.executables.invokers;
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 
+import io.harness.AmbianceUtils;
 import io.harness.LevelUtils;
 import io.harness.OrchestrationPublisherName;
-import io.harness.ambiance.Ambiance;
-import io.harness.ambiance.AmbianceUtils;
 import io.harness.annotations.Redesign;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.engine.ExecutionEngineDispatcher;
@@ -25,6 +24,7 @@ import io.harness.facilitator.modes.child.ChildExecutable;
 import io.harness.facilitator.modes.child.ChildExecutableResponse;
 import io.harness.plan.Plan;
 import io.harness.plan.PlanNode;
+import io.harness.pms.ambiance.Ambiance;
 import io.harness.pms.execution.Status;
 import io.harness.registries.state.StepRegistry;
 import io.harness.state.io.StepResponse;
@@ -46,7 +46,6 @@ public class ChildStrategy implements ExecuteStrategy {
   @Inject private PlanExecutionService planExecutionService;
   @Inject private OrchestrationEngine engine;
   @Inject private StepRegistry stepRegistry;
-  @Inject private AmbianceUtils ambianceUtils;
   @Inject private InvocationHelper invocationHelper;
   @Inject @Named("EngineExecutorService") private ExecutorService executorService;
   @Inject @Named(OrchestrationPublisherName.PUBLISHER_NAME) String publisherName;
@@ -81,11 +80,11 @@ public class ChildStrategy implements ExecuteStrategy {
   private void handleResponse(Ambiance ambiance, ChildExecutableResponse response) {
     String childInstanceId = generateUuid();
     PlanExecution planExecution = planExecutionService.get(ambiance.getPlanExecutionId());
-    NodeExecution nodeExecution = nodeExecutionService.get(ambiance.obtainCurrentRuntimeId());
+    NodeExecution nodeExecution = nodeExecutionService.get(AmbianceUtils.obtainCurrentRuntimeId(ambiance));
     Plan plan = planExecution.getPlan();
     PlanNode node = plan.fetchNode(response.getChildNodeId());
-    Ambiance clonedAmbiance = ambianceUtils.cloneForChild(ambiance);
-    clonedAmbiance.addLevel(LevelUtils.buildLevelFromPlanNode(childInstanceId, node));
+    Ambiance clonedAmbiance =
+        AmbianceUtils.cloneForChild(ambiance, LevelUtils.buildLevelFromPlanNode(childInstanceId, node));
     NodeExecution childNodeExecution = NodeExecution.builder()
                                            .uuid(childInstanceId)
                                            .node(node)

@@ -3,7 +3,6 @@ package io.harness.engine;
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 
-import io.harness.ambiance.Ambiance;
 import io.harness.annotations.Redesign;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.engine.executions.plan.PlanExecutionService;
@@ -11,6 +10,7 @@ import io.harness.exception.InvalidRequestException;
 import io.harness.execution.PlanExecution;
 import io.harness.plan.Plan;
 import io.harness.plan.PlanNode;
+import io.harness.pms.ambiance.Ambiance;
 import io.harness.pms.refobjects.RefObject;
 import io.harness.registries.resolver.ResolverRegistry;
 import io.harness.resolvers.Resolver;

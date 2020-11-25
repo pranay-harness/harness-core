@@ -5,7 +5,7 @@ import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.distribution.constraint.Consumer.State.ACTIVE;
 import static io.harness.distribution.constraint.Consumer.State.BLOCKED;
 
-import io.harness.ambiance.Ambiance;
+import io.harness.AmbianceUtils;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.distribution.constraint.Constraint;
 import io.harness.distribution.constraint.ConstraintUnit;
@@ -20,6 +20,7 @@ import io.harness.facilitator.PassThroughData;
 import io.harness.facilitator.modes.async.AsyncExecutable;
 import io.harness.facilitator.modes.async.AsyncExecutableResponse;
 import io.harness.facilitator.modes.sync.SyncExecutable;
+import io.harness.pms.ambiance.Ambiance;
 import io.harness.pms.execution.Status;
 import io.harness.pms.steps.StepType;
 import io.harness.state.Step;
@@ -128,7 +129,7 @@ public class ResourceRestraintStep
     resourceRestraintService.finishInstance(
         Preconditions.checkNotNull(executableResponse.getCallbackIds().get(0),
             "CallbackId should not be null in handleAbort() for nodeExecution with id %s",
-            ambiance.obtainCurrentLevel().getRuntimeId()),
+            AmbianceUtils.obtainCurrentRuntimeId(ambiance)),
         stepParameters.getResourceUnit());
   }
 
@@ -153,7 +154,7 @@ public class ResourceRestraintStep
         throw new InvalidRequestException("The state should be ACTIVE for consumer with id [" + consumerId + "].");
       }
     } catch (InvalidPermitsException | UnableToRegisterConsumerException | PermanentlyBlockedConsumerException e) {
-      log.error("Exception on ResourceRestraintStep for id [{}]", ambiance.obtainCurrentRuntimeId(), e);
+      log.error("Exception on ResourceRestraintStep for id [{}]", AmbianceUtils.obtainCurrentRuntimeId(ambiance), e);
     }
 
     return consumerId;

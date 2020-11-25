@@ -1,7 +1,7 @@
 package io.harness.dto.converter;
 
-import io.harness.ambiance.Ambiance;
 import io.harness.dto.AmbianceDTO;
+import io.harness.pms.ambiance.Ambiance;
 
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -12,7 +12,7 @@ public class AmbianceDTOConverter {
   public Function<Ambiance, AmbianceDTO> toAmbianceDTO = ambiance
       -> AmbianceDTO.builder()
              .planExecutionId(ambiance.getPlanExecutionId())
-             .setupAbstractions(ambiance.getSetupAbstractions())
-             .levels(ambiance.getLevels().stream().map(LevelDTOConverter.toLevelDTO).collect(Collectors.toList()))
+             .setupAbstractions(ambiance.getSetupAbstractionsMap())
+             .levels(ambiance.getLevelsList().stream().map(LevelDTOConverter.toLevelDTO).collect(Collectors.toList()))
              .build();
 }
