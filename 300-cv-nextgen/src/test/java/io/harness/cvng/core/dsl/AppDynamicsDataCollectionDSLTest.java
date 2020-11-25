@@ -91,7 +91,7 @@ public class AppDynamicsDataCollectionDSLTest extends HoverflyCVNextGenTest {
                                               .baseUrl("https://harness-test.saas.appdynamics.com/controller/")
                                               .build();
     List<TimeSeriesRecord> timeSeriesRecords =
-        (List<TimeSeriesRecord>) dataCollectionDSLService.execute(code, runtimeParameters);
+        (List<TimeSeriesRecord>) dataCollectionDSLService.execute(code, runtimeParameters, callDetails -> {});
     assertThat(Sets.newHashSet(timeSeriesRecords))
         .isEqualTo(new Gson().fromJson(readJson("performance-service-guard-expectation.json"),
             new TypeToken<Set<TimeSeriesRecord>>() {}.getType()));
@@ -178,7 +178,7 @@ public class AppDynamicsDataCollectionDSLTest extends HoverflyCVNextGenTest {
                                               .baseUrl("https://harness-test.saas.appdynamics.com/controller/")
                                               .build();
     List<TimeSeriesRecord> timeSeriesRecords =
-        (List<TimeSeriesRecord>) dataCollectionDSLService.execute(code, runtimeParameters);
+        (List<TimeSeriesRecord>) dataCollectionDSLService.execute(code, runtimeParameters, callDetails -> {});
     assertThat(Sets.newHashSet(timeSeriesRecords))
         .isEqualTo(new Gson().fromJson(
             readJson("quality-service-guard-expectation.json"), new TypeToken<Set<TimeSeriesRecord>>() {}.getType()));
@@ -223,7 +223,7 @@ public class AppDynamicsDataCollectionDSLTest extends HoverflyCVNextGenTest {
                                               .baseUrl("https://harness-test.saas.appdynamics.com/controller/")
                                               .build();
     List<TimeSeriesRecord> timeSeriesRecords =
-        (List<TimeSeriesRecord>) dataCollectionDSLService.execute(code, runtimeParameters);
+        (List<TimeSeriesRecord>) dataCollectionDSLService.execute(code, runtimeParameters, callDetails -> {});
     assertThat(Sets.newHashSet(timeSeriesRecords))
         .isEqualTo(new Gson().fromJson(readJson("quality-collection-hosts-expectation.json"),
             new TypeToken<Set<TimeSeriesRecord>>() {}.getType()));
@@ -257,7 +257,7 @@ public class AppDynamicsDataCollectionDSLTest extends HoverflyCVNextGenTest {
                                               .commonHeaders(appDynamicsConnectorValidationInfo.collectionHeaders())
                                               .baseUrl(appDynamicsConnectorValidationInfo.getBaseUrl())
                                               .build();
-    String isValid = (String) dataCollectionDSLService.execute(code, runtimeParameters);
+    String isValid = (String) dataCollectionDSLService.execute(code, runtimeParameters, callDetails -> {});
     assertThat(isValid).isEqualTo("true");
   }
 
@@ -289,7 +289,7 @@ public class AppDynamicsDataCollectionDSLTest extends HoverflyCVNextGenTest {
                                               .commonHeaders(appDynamicsConnectorValidationInfo.collectionHeaders())
                                               .baseUrl(appDynamicsConnectorValidationInfo.getBaseUrl())
                                               .build();
-    assertThatThrownBy(() -> dataCollectionDSLService.execute(code, runtimeParameters))
+    assertThatThrownBy(() -> dataCollectionDSLService.execute(code, runtimeParameters, callDetails -> {}))
         .hasMessage(
             "io.harness.datacollection.exception.DataCollectionException: io.harness.datacollection.exception.DataCollectionException: Response code: 404 Error: Response{protocol=http/1.1, code=404, message=Not Found, url=https://harness-test.saas.appdynamics.com/controllerr/rest/applications?output=json}");
   }

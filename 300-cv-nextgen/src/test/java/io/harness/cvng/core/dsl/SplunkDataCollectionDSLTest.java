@@ -60,7 +60,7 @@ public class SplunkDataCollectionDSLTest extends HoverflyTest {
 
     final RuntimeParameters runtimeParameters = getRuntimeParameters(Instant.parse("2020-08-28T11:06:44.711Z"));
     List<LogDataRecord> logDataRecords =
-        (List<LogDataRecord>) dataCollectionDSLService.execute(code, runtimeParameters);
+        (List<LogDataRecord>) dataCollectionDSLService.execute(code, runtimeParameters, callDetails -> {});
     Assertions.assertThat(logDataRecords).isNotNull();
     assertThat(logDataRecords).hasSize(6);
     assertThat(logDataRecords.get(0).getHostname()).isEqualTo("harness-test-appd-deployment-5bd684f655-cslds");
@@ -79,7 +79,8 @@ public class SplunkDataCollectionDSLTest extends HoverflyTest {
     // HOVERFLY_RULE.capture(filePath);
     code = readDSL("splunk_host_collection.datacollection");
     final RuntimeParameters runtimeParameters = getRuntimeParameters(Instant.parse("2020-11-18T08:52:57.079Z"));
-    Set<String> hosts = new HashSet<>((Collection<String>) dataCollectionDSLService.execute(code, runtimeParameters));
+    Set<String> hosts = new HashSet<>(
+        (Collection<String>) dataCollectionDSLService.execute(code, runtimeParameters, callDetails -> {}));
     assertThat(hosts).hasSize(3);
     assertThat(hosts).isEqualTo(Sets.newHashSet("harness-test-appd-deployment-canary-5bb85ff9f4-9lpl9",
         "harness-test-appd-deployment-77b974d77-m4w7x", "harness-test-appd-deployment-77b974d77-f7hlb"));
@@ -94,7 +95,8 @@ public class SplunkDataCollectionDSLTest extends HoverflyTest {
     // HOVERFLY_RULE.capture(filePath);
     code = readDSL("splunk_host_collection.datacollection");
     final RuntimeParameters runtimeParameters = getRuntimeParameters(Instant.parse("2020-08-28T11:06:44.711Z"));
-    Set<String> hosts = new HashSet<>((Collection<String>) dataCollectionDSLService.execute(code, runtimeParameters));
+    Set<String> hosts = new HashSet<>(
+        (Collection<String>) dataCollectionDSLService.execute(code, runtimeParameters, callDetails -> {}));
     assertThat(hosts).isEmpty();
   }
 
@@ -121,7 +123,7 @@ public class SplunkDataCollectionDSLTest extends HoverflyTest {
                                               .commonHeaders(splunkConnectorValidationInfo.collectionHeaders())
                                               .baseUrl(splunkConnectorValidationInfo.getBaseUrl())
                                               .build();
-    String isValid = (String) dataCollectionDSLService.execute(code, runtimeParameters);
+    String isValid = (String) dataCollectionDSLService.execute(code, runtimeParameters, callDetails -> {});
     assertThat(isValid).isEqualTo("true");
   }
 
@@ -148,7 +150,7 @@ public class SplunkDataCollectionDSLTest extends HoverflyTest {
                                               .commonHeaders(splunkConnectorValidationInfo.collectionHeaders())
                                               .baseUrl(splunkConnectorValidationInfo.getBaseUrl())
                                               .build();
-    assertThatThrownBy(() -> dataCollectionDSLService.execute(code, runtimeParameters))
+    assertThatThrownBy(() -> dataCollectionDSLService.execute(code, runtimeParameters, callDetails -> {}))
         .hasMessage(
             "io.harness.datacollection.exception.DataCollectionException: io.harness.datacollection.exception.DataCollectionException: Response code: 405 Error: Response{protocol=http/1.1, code=405, message=Method Not Allowed, url=https://splunk.dev.harness.io:8089/invalid/services/search/jobs/?output_mode=json&exec_mode=blocking}");
   }
@@ -181,7 +183,8 @@ public class SplunkDataCollectionDSLTest extends HoverflyTest {
                                               .commonHeaders(splunkSavedSearchRequest.collectionHeaders())
                                               .baseUrl(splunkSavedSearchRequest.getBaseUrl())
                                               .build();
-    List<?> result = (List<?>) dataCollectionDSLService.execute(splunkSavedSearchRequest.getDSL(), runtimeParameters);
+    List<?> result = (List<?>) dataCollectionDSLService.execute(
+        splunkSavedSearchRequest.getDSL(), runtimeParameters, callDetails -> {});
     assertThat(result).hasSize(8);
     assertThat(result).isEqualTo(
         new Gson().fromJson(readJson("saved-searches-expectation.json"), new TypeToken<List<Map>>() {}.getType()));
