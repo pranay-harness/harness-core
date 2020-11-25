@@ -18,7 +18,7 @@ public class TaskChainResponse {
   boolean chainEnd;
   PassThroughData passThroughData;
   Task task;
-  Map<String, String> metadata;
+  Map<String, Object> metadata;
 
   public static class TaskChainResponseBuilder {
     public TaskChainResponse build() {

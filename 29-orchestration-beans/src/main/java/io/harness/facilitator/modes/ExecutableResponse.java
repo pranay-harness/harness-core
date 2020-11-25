@@ -9,7 +9,7 @@ import java.util.Map;
 
 @OwnedBy(CDC)
 public interface ExecutableResponse {
-  default Map<String, String> getMetadata() {
+  default Map<String, Object> getMetadata() {
     return Collections.emptyMap();
   }
 }

@@ -69,7 +69,7 @@ public class GraphVertexConverter {
         .build();
   }
 
-  private List<Map<String, String>> getExecutableResponsesMetadata(NodeExecution nodeExecution) {
+  private List<Map<String, Object>> getExecutableResponsesMetadata(NodeExecution nodeExecution) {
     if (EmptyPredicate.isEmpty(nodeExecution.getExecutableResponses())) {
       return Collections.emptyList();
     }
