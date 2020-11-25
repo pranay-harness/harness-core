@@ -7,7 +7,7 @@ go_library(
     visibility = ["//visibility:public"],
     deps = [
         "//960-expression-service/src/main/proto/io/harness/expression/service:go_default_library",
-        "//commons/go/lib/960-expression-service/grpc:go_default_library",
+        "//commons/go/lib/expression-service/grpc:go_default_library",
         "//commons/go/lib/utils:go_default_library",
         "//product/ci/engine/output:go_default_library",
         "@com_github_pkg_errors//:go_default_library",
@@ -22,8 +22,8 @@ go_test(
     embed = [":go_default_library"],
     deps = [
         "//960-expression-service/src/main/proto/io/harness/expression/service:go_default_library",
-        "//commons/go/lib/960-expression-service/grpc:go_default_library",
-        "//commons/go/lib/960-expression-service/grpc/mocks:go_default_library",
+        "//commons/go/lib/expression-service/grpc:go_default_library",
+        "//commons/go/lib/expression-service/grpc/mocks:go_default_library",
         "//commons/go/lib/logs:go_default_library",
         "//product/ci/engine/output:go_default_library",
         "@com_github_golang_mock//gomock:go_default_library",

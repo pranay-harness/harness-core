@@ -16,12 +16,17 @@ import (
 	"github.com/wings-software/portal/product/log-service/stream"
 )
 
-// this is how long each key exists in Redis.
 const (
-	keyExpiryTimeSeconds = 5 * 60 * 60 * (time.Second)
-	redisWaitTime        = 10 * time.Second
-	tailMaxTime          = 1 * time.Hour
-	bufferSize           = 50
+	keyExpiryTimeSeconds = 5 * 60 * 60 * (time.Second) // How long each key exists in redis
+	// Polling time for each thread to wait for read before getting freed up. This should not be too large to avoid
+	// redis clients getting occupied for long.
+	readPollTime  = 100 * time.Millisecond
+	tailMaxTime   = 1 * time.Hour // maximum duration a tail can last
+	bufferSize    = 50            // buffer for slow consumers
+	maxStreamSize = 5000          // Maximum number of entries in each stream (ring buffer)
+	// max. number of concurrent connections that Redis can handle. This limit is set to 10k by default on the latest
+	// Redis servers. To increase it, make sure it gets increased on the server side as well.
+	connectionPool = 5000
 )
 
 type Redis struct {
@@ -33,6 +38,7 @@ func New(endpoint, password string) *Redis {
 		Addr:     endpoint,
 		Password: password,
 		DB:       0,
+		PoolSize: connectionPool,
 	})
 	return &Redis{
 		Client: rdb,
@@ -45,10 +51,15 @@ func (r *Redis) Create(ctx context.Context, key string) error {
 	r.Delete(ctx, key)
 
 	// Insert a dummy entry into the stream
+	// Trimming with MaxLen can be expensive. We use MaxLenApprox here -
+	// trimming is done in the radix tree only when we can remove a whole
+	// macro node. MaxLen will always be >= 5000 but can be a few tens of entries
+	// more as well.
 	args := &redis.XAddArgs{
-		Stream: key,
-		ID:     "*",
-		Values: map[string]interface{}{"lines": []byte{}},
+		Stream:       key,
+		ID:           "*",
+		MaxLenApprox: maxStreamSize,
+		Values:       map[string]interface{}{"lines": []byte{}},
 	}
 	resp := r.Client.XAdd(args)
 	if err := resp.Err(); err != nil {
@@ -91,10 +102,12 @@ func (r *Redis) Write(ctx context.Context, key string, lines ...*stream.Line) er
 
 	// Write input to redis stream. "*" tells Redis to auto-generate a unique incremental ID.
 	args := &redis.XAddArgs{
-		Stream: key,
-		Values: map[string]interface{}{"lines": bytes},
-		ID:     "*",
+		Stream:       key,
+		Values:       map[string]interface{}{"lines": bytes},
+		MaxLenApprox: maxStreamSize,
+		ID:           "*",
 	}
+
 	resp := r.Client.XAdd(args)
 	if err := resp.Err(); err != nil {
 		return errors.Wrap(err, fmt.Sprintf("could not write to stream with key: %s", key))
@@ -115,17 +128,18 @@ func (r *Redis) Tail(ctx context.Context, key string) (<-chan *stream.Line, <-ch
 		lastID := "0"
 		defer close(err)
 		defer close(handler)
+		tailMaxTimeTimer := time.After(tailMaxTime) // polling should not last for longer than tailMaxTime
 	L:
 		for {
 			select {
 			case <-ctx.Done():
 				break L
-			case <-time.After(tailMaxTime):
+			case <-tailMaxTimeTimer:
 				break L
 			default:
 				args := &redis.XReadArgs{
 					Streams: append([]string{key}, lastID),
-					Block:   redisWaitTime, // periodically check for ctx.Done
+					Block:   readPollTime, // periodically check for ctx.Done
 				}
 
 				resp := r.Client.XRead(args)
@@ -164,6 +178,8 @@ func (r *Redis) Tail(ctx context.Context, key string) (<-chan *stream.Line, <-ch
 }
 
 // Info returns back information like TTL, size of a stream
+// NOTE: This is super slow for Redis and hogs up all the resources.
+// TODO: (vistaar) Return only top x entries
 func (r *Redis) Info(ctx context.Context) *stream.Info {
 	resp := r.Client.Keys("*") // Get all keys
 	info := &stream.Info{

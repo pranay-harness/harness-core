@@ -240,15 +240,17 @@ func (b *RemoteWriter) stopped() bool {
 
 // Start starts a periodic loop to flush logs to the live stream
 func (b *RemoteWriter) Start() error {
+	intervalTimer := time.NewTimer(b.interval)
 	for {
 		select {
 		case <-b.close:
 			return nil
 		case <-b.ready:
+			intervalTimer.Reset(b.interval)
 			select {
 			case <-b.close:
 				return nil
-			case <-time.After(b.interval):
+			case <-intervalTimer.C:
 				// we intentionally ignore errors. log streams
 				// are ephemeral and are considered low priority
 				b.flush()
