@@ -153,8 +153,9 @@ public abstract class AzureVMSSTaskHandler {
             format("Checking the status of VMSS: [%s] VM instances", virtualMachineScaleSet.name()), INFO);
         while (true) {
           if (restCallBack.updateFailed()) {
-            logCallBack.saveExecutionLog(restCallBack.failureMessage(), ERROR, FAILURE);
-            throw new InvalidRequestException(restCallBack.failureMessage());
+            String errorMessage = restCallBack.getErrorMessage();
+            logCallBack.saveExecutionLog(errorMessage, ERROR, FAILURE);
+            throw new InvalidRequestException(errorMessage);
           }
           if (checkAllVMSSInstancesProvisioned(virtualMachineScaleSet, capacity, logCallBack)) {
             return Boolean.TRUE;
