@@ -5,11 +5,16 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.pms.execution.Status.PAUSED;
 
 import io.harness.StatusUtils;
+import io.harness.ambiance.Ambiance;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.engine.events.OrchestrationEventEmitter;
 import io.harness.engine.executions.node.NodeExecutionService;
 import io.harness.engine.executions.plan.PlanExecutionService;
 import io.harness.execution.NodeExecution;
 import io.harness.execution.NodeExecution.NodeExecutionKeys;
+import io.harness.execution.PlanExecution;
+import io.harness.execution.events.OrchestrationEvent;
+import io.harness.execution.events.OrchestrationEventType;
 import io.harness.interrupts.ExecutionInterruptType;
 import io.harness.interrupts.InterruptEffect;
 
@@ -20,12 +25,21 @@ import java.util.List;
 public class PausedStepStatusUpdate implements StepStatusUpdate {
   @Inject private NodeExecutionService nodeExecutionService;
   @Inject private PlanExecutionService planExecutionService;
+  @Inject private OrchestrationEventEmitter eventEmitter;
 
   @Override
   public void onStepStatusUpdate(StepStatusUpdateInfo stepStatusUpdateInfo) {
     boolean pausePlan = pauseParents(stepStatusUpdateInfo.getNodeExecutionId(), stepStatusUpdateInfo.getInterruptId());
     if (pausePlan) {
-      planExecutionService.updateStatus(stepStatusUpdateInfo.getPlanExecutionId(), PAUSED);
+      PlanExecution planExecution = planExecutionService.get(stepStatusUpdateInfo.getPlanExecutionId());
+      planExecutionService.updateStatus(planExecution.getUuid(), PAUSED);
+      eventEmitter.emitEvent(OrchestrationEvent.builder()
+                                 .ambiance(Ambiance.builder()
+                                               .planExecutionId(planExecution.getUuid())
+                                               .setupAbstractions(planExecution.getSetupAbstractions())
+                                               .build())
+                                 .eventType(OrchestrationEventType.PLAN_EXECUTION_STATUS_UPDATE)
+                                 .build());
     }
   }
 
