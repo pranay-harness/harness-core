@@ -1,6 +1,21 @@
 package io.harness;
 
-import static io.harness.pms.execution.Status.*;
+import static io.harness.pms.execution.Status.ABORTED;
+import static io.harness.pms.execution.Status.ASYNC_WAITING;
+import static io.harness.pms.execution.Status.DISCONTINUING;
+import static io.harness.pms.execution.Status.ERRORED;
+import static io.harness.pms.execution.Status.EXPIRED;
+import static io.harness.pms.execution.Status.FAILED;
+import static io.harness.pms.execution.Status.INTERVENTION_WAITING;
+import static io.harness.pms.execution.Status.PAUSED;
+import static io.harness.pms.execution.Status.PAUSING;
+import static io.harness.pms.execution.Status.QUEUED;
+import static io.harness.pms.execution.Status.RUNNING;
+import static io.harness.pms.execution.Status.SKIPPED;
+import static io.harness.pms.execution.Status.SUCCEEDED;
+import static io.harness.pms.execution.Status.SUSPENDED;
+import static io.harness.pms.execution.Status.TASK_WAITING;
+import static io.harness.pms.execution.Status.TIMED_WAITING;
 
 import io.harness.pms.execution.Status;
 
@@ -10,8 +25,8 @@ import lombok.experimental.UtilityClass;
 @UtilityClass
 public class StatusUtils {
   // Status Groups
-  private final EnumSet<Status> FINALIZABLE_STATUSES = EnumSet.of(
-      QUEUED, RUNNING, PAUSED, ASYNC_WAITING, INTERVENTION_WAITING, TASK_WAITING, TIMED_WAITING, DISCONTINUING);
+  private final EnumSet<Status> FINALIZABLE_STATUSES = EnumSet.of(QUEUED, RUNNING, PAUSED, ASYNC_WAITING,
+      INTERVENTION_WAITING, TASK_WAITING, TIMED_WAITING, DISCONTINUING, PAUSING);
 
   private final EnumSet<Status> POSITIVE_STATUSES = EnumSet.of(SUCCEEDED, SKIPPED, SUSPENDED);
 
@@ -65,14 +80,17 @@ public class StatusUtils {
       case TIMED_WAITING:
       case ASYNC_WAITING:
       case TASK_WAITING:
-      case PAUSED:
+      case PAUSING:
         return EnumSet.of(QUEUED, RUNNING);
+      case PAUSED:
+        return EnumSet.of(QUEUED, RUNNING, PAUSING);
       case DISCONTINUING:
-        return EnumSet.of(QUEUED, RUNNING, ASYNC_WAITING, TASK_WAITING, TIMED_WAITING, INTERVENTION_WAITING, PAUSED);
+        return EnumSet.of(
+            QUEUED, RUNNING, ASYNC_WAITING, TASK_WAITING, TIMED_WAITING, INTERVENTION_WAITING, PAUSED, PAUSING);
       case SKIPPED:
         return EnumSet.of(QUEUED);
       case QUEUED:
-        return EnumSet.of(PAUSED);
+        return EnumSet.of(PAUSED, PAUSING);
       case ABORTED:
       case SUCCEEDED:
       case ERRORED:

@@ -12,6 +12,7 @@ enum Status {
   ASYNC_WAITING = 3;
   TASK_WAITING = 4;
   DISCONTINUING = 5;
+  PAUSING = 15;
 
   // Final Statuses : All the final statuses named with ed in the end
   QUEUED = 6;

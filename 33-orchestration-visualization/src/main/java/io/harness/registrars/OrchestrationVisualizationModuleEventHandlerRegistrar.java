@@ -1,11 +1,14 @@
 package io.harness.registrars;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
+import static io.harness.execution.events.OrchestrationEventType.*;
+import static io.harness.execution.events.OrchestrationEventType.NODE_EXECUTION_STATUS_UPDATE;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.event.NodeExecutionStatusUpdateEventHandlerV2;
 import io.harness.event.OrchestrationEndEventHandler;
 import io.harness.event.OrchestrationStartEventHandler;
+import io.harness.event.PlanExecutionStatusUpdateEventHandler;
 import io.harness.execution.events.OrchestrationEventHandler;
 import io.harness.execution.events.OrchestrationEventType;
 import io.harness.registries.registrar.OrchestrationEventHandlerRegistrar;
@@ -21,11 +24,11 @@ public class OrchestrationVisualizationModuleEventHandlerRegistrar implements Or
 
   @Override
   public void register(Set<Pair<OrchestrationEventType, OrchestrationEventHandler>> handlerClasses) {
-    handlerClasses.add(Pair.of(OrchestrationEventType.NODE_EXECUTION_STATUS_UPDATE,
-        injector.getInstance(NodeExecutionStatusUpdateEventHandlerV2.class)));
-    handlerClasses.add(Pair.of(
-        OrchestrationEventType.ORCHESTRATION_START, injector.getInstance(OrchestrationStartEventHandler.class)));
     handlerClasses.add(
-        Pair.of(OrchestrationEventType.ORCHESTRATION_END, injector.getInstance(OrchestrationEndEventHandler.class)));
+        Pair.of(NODE_EXECUTION_STATUS_UPDATE, injector.getInstance(NodeExecutionStatusUpdateEventHandlerV2.class)));
+    handlerClasses.add(Pair.of(ORCHESTRATION_START, injector.getInstance(OrchestrationStartEventHandler.class)));
+    handlerClasses.add(Pair.of(ORCHESTRATION_END, injector.getInstance(OrchestrationEndEventHandler.class)));
+    handlerClasses.add(
+        Pair.of(PLAN_EXECUTION_STATUS_UPDATE, injector.getInstance(PlanExecutionStatusUpdateEventHandler.class)));
   }
 }

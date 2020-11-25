@@ -12,8 +12,11 @@ import static io.harness.interrupts.Interrupt.State.PROCESSED_SUCCESSFULLY;
 import static io.harness.interrupts.Interrupt.State.PROCESSING;
 
 import io.harness.OrchestrationPublisherName;
+import io.harness.ambiance.Ambiance;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.engine.events.OrchestrationEventEmitter;
 import io.harness.engine.executions.node.NodeExecutionService;
+import io.harness.engine.executions.plan.PlanExecutionService;
 import io.harness.engine.interrupts.InterruptHandler;
 import io.harness.engine.interrupts.InterruptService;
 import io.harness.engine.resume.EngineResumeAllCallback;
@@ -21,6 +24,9 @@ import io.harness.engine.status.PausedStepStatusUpdate;
 import io.harness.engine.status.StepStatusUpdateInfo;
 import io.harness.exception.InvalidRequestException;
 import io.harness.execution.NodeExecution.NodeExecutionKeys;
+import io.harness.execution.PlanExecution;
+import io.harness.execution.events.OrchestrationEvent;
+import io.harness.execution.events.OrchestrationEventType;
 import io.harness.interrupts.Interrupt;
 import io.harness.interrupts.InterruptEffect;
 import io.harness.pms.execution.Status;
@@ -34,9 +40,11 @@ import java.util.List;
 public class PauseAllInterruptHandler implements InterruptHandler {
   @Inject private InterruptService interruptService;
   @Inject private NodeExecutionService nodeExecutionService;
+  @Inject private PlanExecutionService planExecutionService;
   @Inject private WaitNotifyEngine waitNotifyEngine;
   @Inject private PausedStepStatusUpdate pausedStepStatusUpdate;
   @Inject @Named(OrchestrationPublisherName.PUBLISHER_NAME) String publisherName;
+  @Inject private OrchestrationEventEmitter eventEmitter;
 
   @Override
   public Interrupt registerInterrupt(Interrupt interrupt) {
@@ -48,6 +56,17 @@ public class PauseAllInterruptHandler implements InterruptHandler {
     if (isPresent(interrupts, presentInterrupt -> presentInterrupt.getType() == PAUSE_ALL)) {
       throw new InvalidRequestException("Execution already has PAUSE_ALL interrupt", PAUSE_ALL_ALREADY, USER);
     }
+
+    PlanExecution planExecution = planExecutionService.get(interrupt.getPlanExecutionId());
+    planExecutionService.updateStatus(planExecution.getUuid(), Status.PAUSING);
+    eventEmitter.emitEvent(OrchestrationEvent.builder()
+                               .ambiance(Ambiance.builder()
+                                             .planExecutionId(planExecution.getUuid())
+                                             .setupAbstractions(planExecution.getSetupAbstractions())
+                                             .build())
+                               .eventType(OrchestrationEventType.PLAN_EXECUTION_STATUS_UPDATE)
+                               .build());
+
     interrupt.setState(PROCESSING);
     if (isEmpty(interrupts)) {
       return interruptService.save(interrupt);
