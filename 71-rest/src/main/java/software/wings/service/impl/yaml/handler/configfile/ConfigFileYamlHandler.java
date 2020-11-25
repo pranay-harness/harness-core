@@ -10,7 +10,7 @@ import static java.util.stream.Collectors.toList;
 
 import io.harness.beans.ChecksumType;
 import io.harness.beans.EncryptedData;
-import io.harness.exception.WingsException;
+import io.harness.exception.InvalidRequestException;
 import io.harness.serializer.JsonUtils;
 import io.harness.stream.BoundedInputStream;
 
@@ -159,8 +159,10 @@ public class ConfigFileYamlHandler extends BaseYamlHandler<Yaml, ConfigFile> {
           String fileContent = fileContext.getChange().getFileContent();
           inputStream = new BoundedInputStream(new ByteArrayInputStream(fileContent.getBytes(Charsets.UTF_8)));
         } else {
-          log.error("Could not locate file: " + yaml.getFileName());
-          throw new WingsException("Could not locate file: " + yaml.getFileName());
+          if (previous == null || previous.getFileUuid() == null) {
+            log.error("Could not locate file: " + yaml.getFileName());
+            throw new InvalidRequestException("Could not locate file: " + yaml.getFileName());
+          }
         }
       }
     }

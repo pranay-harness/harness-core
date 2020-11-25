@@ -1,6 +1,5 @@
 package software.wings.service.impl.yaml.handler.configfile;
 
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.validation.Validator.notNullCheck;
 
@@ -11,24 +10,21 @@ import static software.wings.beans.yaml.YamlConstants.PATH_DELIMITER;
 import static com.google.common.base.Charsets.UTF_8;
 
 import io.harness.beans.ChecksumType;
-import io.harness.exception.HarnessException;
-import io.harness.exception.WingsException;
+import io.harness.beans.EncryptedData;
+import io.harness.exception.InvalidRequestException;
 import io.harness.stream.BoundedInputStream;
 
 import software.wings.beans.Application;
 import software.wings.beans.ConfigFile;
-import software.wings.beans.ConfigFile.ConfigOverrideType;
 import software.wings.beans.ConfigFile.OverrideYaml;
 import software.wings.beans.EntityType;
 import software.wings.beans.Environment;
 import software.wings.beans.Service;
-import software.wings.beans.ServiceTemplate;
 import software.wings.beans.yaml.ChangeContext;
 import software.wings.service.impl.yaml.handler.BaseYamlHandler;
 import software.wings.service.impl.yaml.service.YamlHelper;
 import software.wings.service.intfc.ConfigService;
-import software.wings.service.intfc.ServiceResourceService;
-import software.wings.service.intfc.ServiceTemplateService;
+import software.wings.service.intfc.security.SecretManager;
 import software.wings.utils.Utils;
 
 import com.google.inject.Inject;
@@ -45,8 +41,7 @@ import lombok.extern.slf4j.Slf4j;
 public class ConfigFileOverrideYamlHandler extends BaseYamlHandler<OverrideYaml, ConfigFile> {
   @Inject private YamlHelper yamlHelper;
   @Inject private ConfigService configService;
-  @Inject private ServiceResourceService serviceResourceService;
-  @Inject private ServiceTemplateService serviceTemplateService;
+  @Inject private SecretManager secretManager;
 
   @Override
   public void delete(ChangeContext<OverrideYaml> changeContext) {
@@ -81,35 +76,19 @@ public class ConfigFileOverrideYamlHandler extends BaseYamlHandler<OverrideYaml,
 
   @Override
   public OverrideYaml toYaml(ConfigFile bean, String appId) {
+    if (bean.getEntityType() != EntityType.SERVICE_TEMPLATE && bean.getEntityType() != EntityType.ENVIRONMENT) {
+      throw new InvalidRequestException("Unknown entity type: " + bean.getEntityType());
+    }
+
     String fileName;
     if (bean.isEncrypted()) {
-      //      try {
-      //        fileName = secretManager.getEncryptedYamlRef(bean);
-      //      } catch (IllegalAccessException e) {
-      //        throw new WingsException(e);
-      //      }
-      fileName = bean.getEncryptedFileId();
+      fileName = secretManager.getEncryptedYamlRef(bean.getAccountId(), bean.getEncryptedFileId());
     } else {
       fileName = Utils.normalize(bean.getRelativeFilePath());
     }
 
-    String serviceName = null;
-    if (EntityType.SERVICE_TEMPLATE == bean.getEntityType()) {
-      ServiceTemplate serviceTemplate = serviceTemplateService.get(appId, bean.getTemplateId());
-      notNullCheck("Service template is null for the given id:" + bean.getTemplateId(), serviceTemplate, USER);
-      String serviceId = serviceTemplate.getServiceId();
-      Service service = serviceResourceService.getWithDetails(appId, serviceId);
-      notNullCheck("Service is null for the given id:" + serviceId, service, USER);
-      serviceName = service.getName();
-    } else {
-      if (EntityType.ENVIRONMENT != bean.getEntityType()) {
-        throw new WingsException("Unknown entity type: " + bean.getEntityType());
-      }
-    }
-
     return ConfigFile.OverrideYaml.builder()
         .targetFilePath(bean.getRelativeFilePath())
-        .serviceName(serviceName)
         .fileName(fileName)
         .checksum(bean.getChecksum())
         .checksumType(Utils.getStringFromEnum(bean.getChecksumType()))
@@ -119,8 +98,7 @@ public class ConfigFileOverrideYamlHandler extends BaseYamlHandler<OverrideYaml,
   }
 
   @Override
-  public ConfigFile upsertFromYaml(ChangeContext<OverrideYaml> changeContext, List<ChangeContext> changeSetContext)
-      throws HarnessException {
+  public ConfigFile upsertFromYaml(ChangeContext<OverrideYaml> changeContext, List<ChangeContext> changeSetContext) {
     String accountId = changeContext.getChange().getAccountId();
     String yamlFilePath = changeContext.getChange().getFilePath();
     String appId = yamlHelper.getAppId(accountId, yamlFilePath);
@@ -128,6 +106,8 @@ public class ConfigFileOverrideYamlHandler extends BaseYamlHandler<OverrideYaml,
     String envId = yamlHelper.getEnvironmentId(appId, yamlFilePath);
     notNullCheck("Invalid Environment for the yaml file:" + yamlFilePath, envId, USER);
     String configFileName = yamlHelper.getNameFromYamlFilePath(yamlFilePath);
+
+    String serviceName = yamlHelper.getServiceNameForFileOverride(yamlFilePath);
 
     OverrideYaml yaml = changeContext.getYaml();
 
@@ -150,6 +130,11 @@ public class ConfigFileOverrideYamlHandler extends BaseYamlHandler<OverrideYaml,
           ChangeContext fileContext = contentChangeContext.get();
           String fileContent = fileContext.getChange().getFileContent();
           inputStream = new BoundedInputStream(new ByteArrayInputStream(fileContent.getBytes(UTF_8)));
+        } else {
+          if (previous == null || previous.getFileUuid() == null) {
+            log.error("Could not locate file: " + yaml.getFileName());
+            throw new InvalidRequestException("Could not locate file: " + yaml.getFileName());
+          }
         }
       }
     }
@@ -160,7 +145,8 @@ public class ConfigFileOverrideYamlHandler extends BaseYamlHandler<OverrideYaml,
     configFile.setName(configFileName);
     configFile.setFileName(configFileName);
     if (yaml.isEncrypted()) {
-      configFile.setEncryptedFileId(yaml.getFileName());
+      EncryptedData encryptedDataFromYamlRef = secretManager.getEncryptedDataFromYamlRef(yaml.getFileName(), accountId);
+      configFile.setEncryptedFileId(encryptedDataFromYamlRef.getUuid());
     } else {
       configFile.setEncryptedFileId("");
 
@@ -170,22 +156,20 @@ public class ConfigFileOverrideYamlHandler extends BaseYamlHandler<OverrideYaml,
       configFile.setChecksumType(checksumType);
     }
 
-    if (isNotEmpty(yaml.getServiceName())) {
-      String serviceName = yaml.getServiceName();
-      if (serviceName == null) {
-        configFile.setEntityType(EntityType.ENVIRONMENT);
-        configFile.setEntityId(envId);
-        configFile.setEnvId(GLOBAL_ENV_ID);
-        configFile.setTemplateId(ConfigFile.DEFAULT_TEMPLATE_ID);
-      } else {
-        String serviceTemplateId = yamlHelper.getServiceTemplateId(appId, envId, serviceName);
+    if (serviceName.equals(GLOBAL_SERVICE_NAME_FOR_YAML)) {
+      configFile.setEntityType(EntityType.ENVIRONMENT);
+      configFile.setEntityId(envId);
+      configFile.setEnvId(GLOBAL_ENV_ID);
+      configFile.setTemplateId(ConfigFile.DEFAULT_TEMPLATE_ID);
+    } else {
+      Service service = yamlHelper.getServiceByName(appId, serviceName);
+      notNullCheck("Service " + serviceName + " associated with file override might be deleted.", service);
+      String serviceTemplateId = yamlHelper.getServiceTemplateId(appId, envId, serviceName);
 
-        configFile.setEntityId(serviceTemplateId);
-        configFile.setTemplateId(serviceTemplateId);
-        configFile.setEntityType(EntityType.SERVICE_TEMPLATE);
-        configFile.setConfigOverrideType(ConfigOverrideType.ALL);
-        configFile.setEnvId(envId);
-      }
+      configFile.setEntityId(serviceTemplateId);
+      configFile.setTemplateId(serviceTemplateId);
+      configFile.setEntityType(EntityType.SERVICE_TEMPLATE);
+      configFile.setEnvId(envId);
     }
 
     configFile.setEncrypted(yaml.isEncrypted());
@@ -215,6 +199,13 @@ public class ConfigFileOverrideYamlHandler extends BaseYamlHandler<OverrideYaml,
     String envId = yamlHelper.getEnvironmentId(appId, yamlFilePath);
     notNullCheck("Invalid Environment for the yaml file:" + yamlFilePath, envId, USER);
     String relativeFilePath = yamlHelper.getNameFromYamlFilePath(yamlFilePath);
-    return configService.get(appId, envId, EntityType.ENVIRONMENT, relativeFilePath);
+    String serviceName = yamlHelper.getServiceNameForFileOverride(yamlFilePath);
+    if (serviceName.equals(GLOBAL_SERVICE_NAME_FOR_YAML)) {
+      return configService.get(appId, envId, EntityType.ENVIRONMENT, relativeFilePath);
+    }
+    Service service = yamlHelper.getServiceByName(appId, serviceName);
+    notNullCheck("Service " + serviceName + " associated with file override might be deleted.", service);
+    String serviceTemplateId = yamlHelper.getServiceTemplateId(appId, envId, service.getName());
+    return configService.get(appId, serviceTemplateId, EntityType.SERVICE_TEMPLATE, relativeFilePath);
   }
 }

@@ -32,6 +32,7 @@ import software.wings.api.DeploymentType;
 import software.wings.beans.Application;
 import software.wings.beans.Base;
 import software.wings.beans.ConfigFile;
+import software.wings.beans.EntityType;
 import software.wings.beans.Environment;
 import software.wings.beans.HarnessTag;
 import software.wings.beans.InfrastructureMapping;
@@ -649,10 +650,10 @@ public class YamlResourceServiceImpl implements YamlResourceService {
   private RestResponse<YamlPayload> getConfigFileYaml(String accountId, ConfigFile configFile) {
     String appId = configFile.getAppId();
 
-    if (configFile.getConfigOverrideType() != null) {
-      return getConfigFileOverrideYaml(accountId, appId, configFile);
-    } else {
+    if (configFile.getEntityType() == EntityType.SERVICE) {
       return getConfigFileYaml(accountId, appId, configFile);
+    } else {
+      return getConfigFileOverrideYaml(accountId, appId, configFile);
     }
   }
 
