@@ -13,7 +13,6 @@ import retrofit2.Call;
 import retrofit2.http.Body;
 import retrofit2.http.GET;
 import retrofit2.http.POST;
-import retrofit2.http.PUT;
 import retrofit2.http.Path;
 import retrofit2.http.Query;
 
@@ -22,11 +21,6 @@ public interface ManagerClient {
   Call<RestResponse<List<ConfigFile>>> getConfigFiles(@Path("templateId") String templateId,
       @Query("accountId") String accountId, @Query("appId") String appId, @Query("envId") String envId,
       @Query("hostId") String hostId);
-
-  @KryoResponse
-  @PUT("agent/delegates/{delegateId}/tasks/{taskId}/acquire")
-  Call<DelegateTaskPackage> acquireTask(
-      @Path("delegateId") String delegateId, @Path("taskId") String uuid, @Query("accountId") String accountId);
 
   @KryoResponse
   @POST("agent/delegates/{delegateId}/tasks/{taskId}/report")
