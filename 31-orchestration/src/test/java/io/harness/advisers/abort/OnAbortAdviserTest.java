@@ -9,13 +9,12 @@ import io.harness.OrchestrationTestBase;
 import io.harness.adviser.Advise;
 import io.harness.adviser.AdvisingEvent;
 import io.harness.adviser.advise.EndPlanAdvise;
-import io.harness.ambiance.Ambiance;
 import io.harness.category.element.UnitTests;
+import io.harness.pms.ambiance.Ambiance;
 import io.harness.pms.ambiance.Level;
 import io.harness.pms.execution.Status;
 import io.harness.pms.steps.StepType;
 import io.harness.rule.Owner;
-import io.harness.serializer.KryoSerializer;
 import io.harness.utils.AmbianceTestUtils;
 
 import com.google.inject.Inject;
@@ -36,12 +35,14 @@ public class OnAbortAdviserTest extends OrchestrationTestBase {
   @Before
   public void setup() {
     ambiance = AmbianceTestUtils.buildAmbiance();
-    ambiance.addLevel(Level.newBuilder()
-                          .setSetupId(NODE_SETUP_ID)
-                          .setRuntimeId(NODE_EXECUTION_ID)
-                          .setIdentifier(NODE_IDENTIFIER)
-                          .setStepType(DUMMY_STEP_TYPE)
-                          .build());
+    ambiance = ambiance.toBuilder()
+                   .addLevels(Level.newBuilder()
+                                  .setSetupId(NODE_SETUP_ID)
+                                  .setRuntimeId(NODE_EXECUTION_ID)
+                                  .setIdentifier(NODE_IDENTIFIER)
+                                  .setStepType(DUMMY_STEP_TYPE)
+                                  .build())
+                   .build();
   }
 
   @Test

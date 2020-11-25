@@ -8,7 +8,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import io.harness.OrchestrationVisualizationTestBase;
-import io.harness.ambiance.Ambiance;
 import io.harness.beans.OrchestrationGraph;
 import io.harness.cache.SpringMongoStore;
 import io.harness.category.element.UnitTests;
@@ -16,6 +15,7 @@ import io.harness.engine.executions.plan.PlanExecutionService;
 import io.harness.exception.InvalidRequestException;
 import io.harness.execution.PlanExecution;
 import io.harness.execution.events.OrchestrationEvent;
+import io.harness.pms.ambiance.Ambiance;
 import io.harness.pms.execution.Status;
 import io.harness.rule.Owner;
 import io.harness.service.GraphGenerationService;
@@ -43,7 +43,7 @@ public class PlanExecutionStatusUpdateEventHandlerTest extends OrchestrationVisu
   public void shouldThrowInvalidRequestException() {
     String planExecutionId = generateUuid();
     OrchestrationEvent event = OrchestrationEvent.builder()
-                                   .ambiance(Ambiance.builder().planExecutionId(planExecutionId).build())
+                                   .ambiance(Ambiance.newBuilder().setPlanExecutionId(planExecutionId).build())
                                    .eventType(PLAN_EXECUTION_STATUS_UPDATE)
                                    .build();
 
@@ -65,7 +65,7 @@ public class PlanExecutionStatusUpdateEventHandlerTest extends OrchestrationVisu
     planExecutionService.save(planExecution);
 
     OrchestrationEvent event = OrchestrationEvent.builder()
-                                   .ambiance(Ambiance.builder().planExecutionId(planExecution.getUuid()).build())
+                                   .ambiance(Ambiance.newBuilder().setPlanExecutionId(planExecution.getUuid()).build())
                                    .eventType(PLAN_EXECUTION_STATUS_UPDATE)
                                    .build();
 

@@ -4,8 +4,8 @@ import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.pms.execution.Status.PAUSED;
 
+import io.harness.AmbianceUtils;
 import io.harness.StatusUtils;
-import io.harness.ambiance.Ambiance;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.engine.events.OrchestrationEventEmitter;
 import io.harness.engine.executions.node.NodeExecutionService;
@@ -34,10 +34,7 @@ public class PausedStepStatusUpdate implements StepStatusUpdate {
       PlanExecution planExecution = planExecutionService.get(stepStatusUpdateInfo.getPlanExecutionId());
       planExecutionService.updateStatus(planExecution.getUuid(), PAUSED);
       eventEmitter.emitEvent(OrchestrationEvent.builder()
-                                 .ambiance(Ambiance.builder()
-                                               .planExecutionId(planExecution.getUuid())
-                                               .setupAbstractions(planExecution.getSetupAbstractions())
-                                               .build())
+                                 .ambiance(AmbianceUtils.buildFromPlanExecution(planExecution))
                                  .eventType(OrchestrationEventType.PLAN_EXECUTION_STATUS_UPDATE)
                                  .build());
     }

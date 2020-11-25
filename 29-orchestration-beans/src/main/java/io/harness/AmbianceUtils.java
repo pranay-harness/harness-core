@@ -3,6 +3,7 @@ package io.harness;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_NESTS;
 
+import io.harness.execution.PlanExecution;
 import io.harness.logging.AutoLogContext;
 import io.harness.pms.ambiance.Ambiance;
 import io.harness.pms.ambiance.Level;
@@ -84,5 +85,13 @@ public class AmbianceUtils {
       logContext.put("setupId", level.getSetupId());
     }
     return logContext;
+  }
+
+  public static Ambiance buildFromPlanExecution(PlanExecution planExecution) {
+    return Ambiance.newBuilder()
+        .setPlanExecutionId(planExecution.getUuid())
+        .putAllSetupAbstractions(
+            isEmpty(planExecution.getSetupAbstractions()) ? new HashMap<>() : planExecution.getSetupAbstractions())
+        .build();
   }
 }
