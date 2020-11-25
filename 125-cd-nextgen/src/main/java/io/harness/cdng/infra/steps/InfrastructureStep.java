@@ -23,7 +23,6 @@ import io.harness.ng.core.environment.services.EnvironmentService;
 import io.harness.ngpipeline.common.AmbianceHelper;
 import io.harness.pms.execution.Status;
 import io.harness.pms.steps.StepType;
-import io.harness.state.Step;
 import io.harness.state.io.StepInputPackage;
 import io.harness.state.io.StepResponse;
 import io.harness.state.io.StepResponse.StepOutcome;
@@ -31,11 +30,16 @@ import io.harness.state.io.StepResponse.StepOutcome;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Inject;
 
-public class InfrastructureStep implements Step, SyncExecutable<InfraStepParameters> {
+public class InfrastructureStep implements SyncExecutable<InfraStepParameters> {
   public static final StepType STEP_TYPE =
       StepType.newBuilder().setType(ExecutionNodeType.INFRASTRUCTURE.getName()).build();
 
   @Inject private EnvironmentService environmentService;
+
+  @Override
+  public Class<InfraStepParameters> getStepParametersClass() {
+    return InfraStepParameters.class;
+  }
 
   InfraMapping createInfraMappingObject(String serviceIdentifier, Infrastructure infrastructureSpec) {
     InfraMapping infraMapping = infrastructureSpec.getInfraMapping();

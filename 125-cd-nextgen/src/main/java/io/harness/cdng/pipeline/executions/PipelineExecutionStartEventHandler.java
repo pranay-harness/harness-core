@@ -10,6 +10,7 @@ import io.harness.execution.events.OrchestrationEvent;
 import io.harness.executionplan.plancreator.beans.StepOutcomeGroup;
 import io.harness.ngpipeline.common.AmbianceHelper;
 import io.harness.plan.PlanNode;
+import io.harness.serializer.JsonUtils;
 
 import com.google.inject.Inject;
 import java.util.Objects;
@@ -31,7 +32,8 @@ public class PipelineExecutionStartEventHandler implements AsyncOrchestrationEve
     if (!Objects.equals(planNode.getGroup(), StepOutcomeGroup.PIPELINE.name())) {
       return;
     }
-    CDPipelineSetupParameters cdPipelineSetupParameters = (CDPipelineSetupParameters) planNode.getStepParameters();
+    CDPipelineSetupParameters cdPipelineSetupParameters =
+        JsonUtils.asObject(planNode.getStepParameters().toJson(), CDPipelineSetupParameters.class);
 
     ngPipelineExecutionService.createPipelineExecutionSummary(
         accountId, orgId, projectId, planExecution, cdPipelineSetupParameters);

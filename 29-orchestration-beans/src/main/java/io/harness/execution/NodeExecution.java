@@ -15,6 +15,7 @@ import io.harness.plan.PlanNode;
 import io.harness.plan.PlanNode.PlanNodeKeys;
 import io.harness.pms.execution.ExecutionMode;
 import io.harness.pms.execution.Status;
+import io.harness.serializer.JsonUtils;
 import io.harness.state.io.FailureInfo;
 import io.harness.state.io.StepOutcomeRef;
 import io.harness.state.io.StepParameters;
@@ -56,7 +57,7 @@ public final class NodeExecution implements PersistentEntity, UuidAware {
   private Duration initialWaitDuration;
 
   // Resolved StepParameters stored just before invoking step.
-  StepParameters resolvedStepParameters;
+  org.bson.Document resolvedStepParameters;
 
   // For Wait Notify
   String notifyId;
@@ -119,5 +120,13 @@ public final class NodeExecution implements PersistentEntity, UuidAware {
 
     public static final String planNodeId = NodeExecutionKeys.node + "." + PlanNodeKeys.uuid;
     public static final String planNodeIdentifier = NodeExecutionKeys.node + "." + PlanNodeKeys.identifier;
+  }
+
+  public static class NodeExecutionBuilder {
+    public NodeExecutionBuilder resolvedStepParameters(StepParameters stepParameters) {
+      this.resolvedStepParameters =
+          stepParameters == null ? null : org.bson.Document.parse(JsonUtils.asJson(stepParameters));
+      return this;
+    }
   }
 }

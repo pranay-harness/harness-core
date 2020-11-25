@@ -23,8 +23,13 @@ import java.util.Map;
 
 @OwnedBy(CDC)
 @Redesign
-public class ForkStep implements Step, ChildrenExecutable<ForkStepParameters> {
+public class ForkStep implements ChildrenExecutable<ForkStepParameters> {
   public static final StepType STEP_TYPE = StepType.newBuilder().setType(OrchestrationStepTypes.FORK).build();
+
+  @Override
+  public Class<ForkStepParameters> getStepParametersClass() {
+    return ForkStepParameters.class;
+  }
 
   @Override
   public ChildrenExecutableResponse obtainChildren(

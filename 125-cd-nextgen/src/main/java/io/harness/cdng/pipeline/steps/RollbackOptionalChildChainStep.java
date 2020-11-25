@@ -9,7 +9,6 @@ import io.harness.facilitator.modes.chain.child.ChildChainExecutable;
 import io.harness.facilitator.modes.chain.child.ChildChainResponse;
 import io.harness.pms.execution.Status;
 import io.harness.pms.steps.StepType;
-import io.harness.state.Step;
 import io.harness.state.io.StepInputPackage;
 import io.harness.state.io.StepResponse;
 import io.harness.state.io.StepResponseNotifyData;
@@ -19,11 +18,15 @@ import io.harness.tasks.ResponseData;
 import com.google.inject.Inject;
 import java.util.Map;
 
-public class RollbackOptionalChildChainStep
-    implements Step, ChildChainExecutable<RollbackOptionalChildChainStepParameters> {
+public class RollbackOptionalChildChainStep implements ChildChainExecutable<RollbackOptionalChildChainStepParameters> {
   public static final StepType STEP_TYPE = StepType.newBuilder().setType("ROLLBACK_OPTIONAL_CHILD_CHAIN").build();
 
   @Inject private PlanCreatorHelper planCreatorHelper;
+
+  @Override
+  public Class<RollbackOptionalChildChainStepParameters> getStepParametersClass() {
+    return RollbackOptionalChildChainStepParameters.class;
+  }
 
   @Override
   public ChildChainResponse executeFirstChild(

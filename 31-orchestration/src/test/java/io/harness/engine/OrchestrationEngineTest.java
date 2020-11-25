@@ -35,9 +35,8 @@ import io.harness.registries.adviser.AdviserRegistry;
 import io.harness.registries.state.StepRegistry;
 import io.harness.rule.Owner;
 import io.harness.serializer.KryoSerializer;
-import io.harness.state.Step;
+import io.harness.state.io.EmptyStepParameters;
 import io.harness.state.io.StepInputPackage;
-import io.harness.state.io.StepParameters;
 import io.harness.state.io.StepResponse;
 import io.harness.utils.steps.TestAsyncStep;
 import io.harness.utils.steps.TestStepParameters;
@@ -245,10 +244,15 @@ public class OrchestrationEngineTest extends OrchestrationTestBase {
     }
   }
 
-  private static class TestSyncStep implements Step, SyncExecutable {
+  private static class TestSyncStep implements SyncExecutable<EmptyStepParameters> {
     @Override
-    public StepResponse executeSync(Ambiance ambiance, StepParameters stepParameters, StepInputPackage inputPackage,
-        PassThroughData passThroughData) {
+    public Class<EmptyStepParameters> getStepParametersClass() {
+      return EmptyStepParameters.class;
+    }
+
+    @Override
+    public StepResponse executeSync(Ambiance ambiance, EmptyStepParameters stepParameters,
+        StepInputPackage inputPackage, PassThroughData passThroughData) {
       return StepResponse.builder().status(SUCCEEDED).build();
     }
   }

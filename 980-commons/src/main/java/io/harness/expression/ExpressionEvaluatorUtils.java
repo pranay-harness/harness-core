@@ -152,7 +152,7 @@ public class ExpressionEvaluatorUtils {
 
     try {
       Object retObj = engine.getProperty(obj, field);
-      return Optional.of(retObj);
+      return Optional.ofNullable(retObj);
     } catch (JexlException ex) {
       log.debug(format("Could not fetch field '%s'", field), ex);
       return Optional.empty();

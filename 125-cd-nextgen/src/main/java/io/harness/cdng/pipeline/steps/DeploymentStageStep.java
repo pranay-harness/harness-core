@@ -8,7 +8,6 @@ import io.harness.executions.steps.ExecutionNodeType;
 import io.harness.facilitator.modes.child.ChildExecutable;
 import io.harness.facilitator.modes.child.ChildExecutableResponse;
 import io.harness.pms.steps.StepType;
-import io.harness.state.Step;
 import io.harness.state.io.StepInputPackage;
 import io.harness.state.io.StepResponse;
 import io.harness.tasks.ResponseData;
@@ -17,9 +16,14 @@ import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class DeploymentStageStep implements Step, ChildExecutable<DeploymentStageStepParameters> {
+public class DeploymentStageStep implements ChildExecutable<DeploymentStageStepParameters> {
   public static final StepType STEP_TYPE =
       StepType.newBuilder().setType(ExecutionNodeType.DEPLOYMENT_STAGE_STEP.getName()).build();
+
+  @Override
+  public Class<DeploymentStageStepParameters> getStepParametersClass() {
+    return DeploymentStageStepParameters.class;
+  }
 
   @Override
   public ChildExecutableResponse obtainChild(

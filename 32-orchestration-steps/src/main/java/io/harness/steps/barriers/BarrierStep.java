@@ -30,13 +30,17 @@ import lombok.extern.slf4j.Slf4j;
 
 @OwnedBy(CDC)
 @Slf4j
-public class BarrierStep
-    implements Step, SyncExecutable<BarrierStepParameters>, AsyncExecutable<BarrierStepParameters> {
+public class BarrierStep implements SyncExecutable<BarrierStepParameters>, AsyncExecutable<BarrierStepParameters> {
   public static final StepType STEP_TYPE = StepType.newBuilder().setType(OrchestrationStepTypes.BARRIER).build();
 
   private static final String BARRIER = "barrier";
 
   @Inject private BarrierService barrierService;
+
+  @Override
+  public Class<BarrierStepParameters> getStepParametersClass() {
+    return BarrierStepParameters.class;
+  }
 
   @Override
   public StepResponse executeSync(Ambiance ambiance, BarrierStepParameters barrierStepParameters,

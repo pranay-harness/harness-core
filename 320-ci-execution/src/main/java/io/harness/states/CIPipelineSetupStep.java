@@ -14,9 +14,7 @@ import io.harness.facilitator.modes.child.ChildExecutableResponse;
 import io.harness.facilitator.modes.sync.SyncExecutable;
 import io.harness.pms.execution.Status;
 import io.harness.pms.steps.StepType;
-import io.harness.state.Step;
 import io.harness.state.io.StepInputPackage;
-import io.harness.state.io.StepParameters;
 import io.harness.state.io.StepResponse;
 import io.harness.tasks.ResponseData;
 
@@ -25,9 +23,15 @@ import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class CIPipelineSetupStep implements Step, ChildExecutable<CIPipelineSetupParameters>, SyncExecutable {
+public class CIPipelineSetupStep
+    implements ChildExecutable<CIPipelineSetupParameters>, SyncExecutable<CIPipelineSetupParameters> {
   public static final StepType STEP_TYPE = StepType.newBuilder().setType("CI_PIPELINE_SETUP").build();
   @Inject ExecutionSweepingOutputService executionSweepingOutputResolver;
+
+  @Override
+  public Class<CIPipelineSetupParameters> getStepParametersClass() {
+    return CIPipelineSetupParameters.class;
+  }
 
   @Override
   public ChildExecutableResponse obtainChild(
@@ -54,8 +58,8 @@ public class CIPipelineSetupStep implements Step, ChildExecutable<CIPipelineSetu
   }
 
   @Override
-  public StepResponse executeSync(Ambiance ambiance, StepParameters stepParameters, StepInputPackage inputPackage,
-      PassThroughData passThroughData) {
+  public StepResponse executeSync(Ambiance ambiance, CIPipelineSetupParameters stepParameters,
+      StepInputPackage inputPackage, PassThroughData passThroughData) {
     return StepResponse.builder().status(Status.SUCCEEDED).build();
   }
 }

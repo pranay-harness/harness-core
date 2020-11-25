@@ -18,7 +18,6 @@ import io.harness.pms.execution.Status;
 import io.harness.pms.steps.StepType;
 import io.harness.refObjects.RefObjectUtil;
 import io.harness.service.DelegateGrpcClientWrapper;
-import io.harness.state.Step;
 import io.harness.state.io.StepInputPackage;
 import io.harness.state.io.StepResponse;
 import io.harness.stateutils.buildstate.ConnectorUtils;
@@ -34,12 +33,17 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 // TODO Cleanup Support for other types (Non K8)
-public class CleanupStep implements Step, SyncExecutable<CleanupStepInfo> {
+public class CleanupStep implements SyncExecutable<CleanupStepInfo> {
   public static final StepType STEP_TYPE = CleanupStepInfo.typeInfo.getStepType();
   public static final String TASK_TYPE = "EXECUTE_COMMAND";
   @Inject ExecutionSweepingOutputService executionSweepingOutputResolver;
   @Inject private ConnectorUtils connectorUtils;
   @Inject private DelegateGrpcClientWrapper delegateGrpcClientWrapper;
+
+  @Override
+  public Class<CleanupStepInfo> getStepParametersClass() {
+    return CleanupStepInfo.class;
+  }
 
   // TODO Async can not be supported at this point. We have to build polling framework on CI manager.
   //     Async will be supported once we will have delegate microservice ready.

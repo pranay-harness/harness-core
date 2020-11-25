@@ -8,6 +8,7 @@ import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.PropertyNamingStrategy;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.ser.impl.SimpleFilterProvider;
@@ -22,6 +23,7 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonParser;
+import com.hubspot.jackson.datatype.protobuf.ProtobufModule;
 import com.jayway.jsonpath.Configuration;
 import com.jayway.jsonpath.DocumentContext;
 import com.jayway.jsonpath.JsonPath;
@@ -36,6 +38,7 @@ import java.net.URL;
 import java.util.Collection;
 import java.util.EnumSet;
 import java.util.HashMap;
+import java.util.Map;
 import java.util.Set;
 import lombok.experimental.UtilityClass;
 import lombok.extern.slf4j.Slf4j;
@@ -79,9 +82,11 @@ public class JsonUtils {
     mapper.disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES);
     mapper.setSerializationInclusion(Include.NON_NULL);
     mapper.setSubtypeResolver(new JsonSubtypeResolver(mapper.getSubtypeResolver()));
+    mapper.registerModule(new ProtobufModule());
     mapper.registerModule(new Jdk8Module());
     mapper.registerModule(new GuavaModule());
     mapper.registerModule(new JavaTimeModule());
+    mapper.setPropertyNamingStrategy(PropertyNamingStrategy.LOWER_CAMEL_CASE);
 
     mapperForCloning = new ObjectMapper();
     mapperForCloning.disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES);
@@ -89,18 +94,22 @@ public class JsonUtils {
     mapperForCloning.setSerializationInclusion(Include.NON_NULL);
     mapperForCloning.enableDefaultTyping();
     mapperForCloning.setSubtypeResolver(new JsonSubtypeResolver(mapperForCloning.getSubtypeResolver()));
+    mapperForCloning.registerModule(new ProtobufModule());
     mapperForCloning.registerModule(new Jdk8Module());
     mapperForCloning.registerModule(new GuavaModule());
     mapperForCloning.registerModule(new JavaTimeModule());
+    mapperForCloning.setPropertyNamingStrategy(PropertyNamingStrategy.LOWER_CAMEL_CASE);
 
     mapperForInternalUse = new ObjectMapper();
     mapperForInternalUse.disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES);
     mapperForInternalUse.setSerializationInclusion(Include.NON_NULL);
     mapperForInternalUse.enableDefaultTyping();
     mapperForInternalUse.setSubtypeResolver(new JsonSubtypeResolver(mapperForCloning.getSubtypeResolver()));
+    mapperForInternalUse.registerModule(new ProtobufModule());
     mapperForInternalUse.registerModule(new Jdk8Module());
     mapperForInternalUse.registerModule(new GuavaModule());
     mapperForInternalUse.registerModule(new JavaTimeModule());
+    mapperForInternalUse.setPropertyNamingStrategy(PropertyNamingStrategy.LOWER_CAMEL_CASE);
   }
 
   /**
@@ -275,6 +284,15 @@ public class JsonUtils {
   public static <T> T asList(String jsonString, TypeReference<T> valueTypeRef) {
     try {
       return mapper.readValue(jsonString, valueTypeRef);
+    } catch (Exception exception) {
+      throw new RuntimeException(exception);
+    }
+  }
+
+  @JsonDeserialize
+  public static Map<String, Object> asMap(String jsonString) {
+    try {
+      return mapper.readValue(jsonString, new TypeReference<Map<String, Object>>() {});
     } catch (Exception exception) {
       throw new RuntimeException(exception);
     }

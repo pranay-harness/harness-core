@@ -12,7 +12,6 @@ import io.harness.facilitator.modes.async.AsyncExecutable;
 import io.harness.facilitator.modes.async.AsyncExecutableResponse;
 import io.harness.pms.execution.Status;
 import io.harness.pms.steps.StepType;
-import io.harness.state.Step;
 import io.harness.state.io.StatusNotifyResponseData;
 import io.harness.state.io.StepInputPackage;
 import io.harness.state.io.StepResponse;
@@ -31,11 +30,16 @@ import org.mongodb.morphia.annotations.Transient;
 
 @OwnedBy(CDC)
 @Redesign
-public class WaitStep implements Step, AsyncExecutable<WaitStepParameters> {
+public class WaitStep implements AsyncExecutable<WaitStepParameters> {
   public static final StepType STEP_TYPE = StepType.newBuilder().setType("WAIT_STATE").build();
 
   @Inject @Named("waitStateResumer") @Transient private ScheduledExecutorService executorService;
   @Transient @Inject private WaitNotifyEngine waitNotifyEngine;
+
+  @Override
+  public Class<WaitStepParameters> getStepParametersClass() {
+    return WaitStepParameters.class;
+  }
 
   @Override
   public AsyncExecutableResponse executeAsync(

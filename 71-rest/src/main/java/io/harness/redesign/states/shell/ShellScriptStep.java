@@ -34,7 +34,6 @@ import io.harness.pms.execution.Status;
 import io.harness.pms.steps.StepType;
 import io.harness.resolvers.ResolverUtils;
 import io.harness.security.encryption.EncryptedDataDetail;
-import io.harness.state.Step;
 import io.harness.state.io.FailureInfo;
 import io.harness.state.io.ResolvedRefInput;
 import io.harness.state.io.StepInputPackage;
@@ -77,7 +76,7 @@ import org.apache.commons.lang3.StringUtils;
 @OwnedBy(CDC)
 @Redesign
 @Slf4j
-public class ShellScriptStep implements Step, TaskExecutable<ShellScriptStepParameters> {
+public class ShellScriptStep implements TaskExecutable<ShellScriptStepParameters> {
   public static final StepType STEP_TYPE = StepType.newBuilder().setType(SHELL_SCRIPT.name()).build();
 
   @Inject private ActivityService activityService;
@@ -87,6 +86,11 @@ public class ShellScriptStep implements Step, TaskExecutable<ShellScriptStepPara
   @Inject private ServiceTemplateHelper serviceTemplateHelper;
   @Inject private ExecutionSweepingOutputService executionSweepingOutputService;
   @Inject private FeatureFlagService featureFlagService;
+
+  @Override
+  public Class<ShellScriptStepParameters> getStepParametersClass() {
+    return ShellScriptStepParameters.class;
+  }
 
   @Override
   public Task obtainTask(Ambiance ambiance, ShellScriptStepParameters stepParameters, StepInputPackage inputPackage) {

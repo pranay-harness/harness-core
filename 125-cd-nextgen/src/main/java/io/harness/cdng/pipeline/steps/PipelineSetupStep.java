@@ -11,9 +11,7 @@ import io.harness.facilitator.modes.child.ChildExecutableResponse;
 import io.harness.facilitator.modes.sync.SyncExecutable;
 import io.harness.pms.execution.Status;
 import io.harness.pms.steps.StepType;
-import io.harness.state.Step;
 import io.harness.state.io.StepInputPackage;
-import io.harness.state.io.StepParameters;
 import io.harness.state.io.StepResponse;
 import io.harness.tasks.ResponseData;
 
@@ -21,13 +19,19 @@ import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class PipelineSetupStep implements Step, SyncExecutable, ChildExecutable<CDPipelineSetupParameters> {
+public class PipelineSetupStep
+    implements SyncExecutable<CDPipelineSetupParameters>, ChildExecutable<CDPipelineSetupParameters> {
   public static final StepType STEP_TYPE =
       StepType.newBuilder().setType(ExecutionNodeType.PIPELINE_SETUP.getName()).build();
 
   @Override
-  public StepResponse executeSync(Ambiance ambiance, StepParameters stepParameters, StepInputPackage inputPackage,
-      PassThroughData passThroughData) {
+  public Class<CDPipelineSetupParameters> getStepParametersClass() {
+    return CDPipelineSetupParameters.class;
+  }
+
+  @Override
+  public StepResponse executeSync(Ambiance ambiance, CDPipelineSetupParameters stepParameters,
+      StepInputPackage inputPackage, PassThroughData passThroughData) {
     return StepResponse.builder().status(Status.SUCCEEDED).build();
   }
 

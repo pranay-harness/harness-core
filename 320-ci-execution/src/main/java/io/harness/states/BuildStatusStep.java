@@ -14,7 +14,6 @@ import io.harness.ngpipeline.orchestration.StepUtils;
 import io.harness.ngpipeline.status.BuildStatusUpdateParameter;
 import io.harness.pms.execution.Status;
 import io.harness.pms.steps.StepType;
-import io.harness.state.Step;
 import io.harness.state.io.StepInputPackage;
 import io.harness.state.io.StepResponse;
 import io.harness.stateutils.buildstate.ConnectorUtils;
@@ -26,11 +25,16 @@ import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class BuildStatusStep implements Step, TaskExecutable<BuildStatusUpdateParameter> {
+public class BuildStatusStep implements TaskExecutable<BuildStatusUpdateParameter> {
   public static final StepType STEP_TYPE = StepType.newBuilder().setType("COMMIT_STATUS").build();
   private static final int socketTimeoutMillis = 10000;
   @Inject GitClientHelper gitClientHelper;
   @Inject private ConnectorUtils connectorUtils;
+
+  @Override
+  public Class<BuildStatusUpdateParameter> getStepParametersClass() {
+    return BuildStatusUpdateParameter.class;
+  }
 
   @Override
   public Task obtainTask(Ambiance ambiance, BuildStatusUpdateParameter stepParameters, StepInputPackage inputPackage) {

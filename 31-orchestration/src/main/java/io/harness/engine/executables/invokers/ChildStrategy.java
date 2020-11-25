@@ -57,7 +57,7 @@ public class ChildStrategy implements ExecuteStrategy {
     Ambiance ambiance = nodeExecution.getAmbiance();
     ChildExecutable childExecutable = extractChildExecutable(nodeExecution);
     ChildExecutableResponse response = childExecutable.obtainChild(
-        ambiance, nodeExecution.getResolvedStepParameters(), invokerPackage.getInputPackage());
+        ambiance, nodeExecutionService.extractResolvedStepParameters(nodeExecution), invokerPackage.getInputPackage());
     handleResponse(ambiance, response);
   }
 
@@ -68,8 +68,8 @@ public class ChildStrategy implements ExecuteStrategy {
     ChildExecutable childExecutable = extractChildExecutable(nodeExecution);
     Map<String, ResponseData> accumulateResponses = invocationHelper.accumulateResponses(
         ambiance.getPlanExecutionId(), resumePackage.getResponseDataMap().keySet().iterator().next());
-    StepResponse stepResponse =
-        childExecutable.handleChildResponse(ambiance, nodeExecution.getResolvedStepParameters(), accumulateResponses);
+    StepResponse stepResponse = childExecutable.handleChildResponse(
+        ambiance, nodeExecutionService.extractResolvedStepParameters(nodeExecution), accumulateResponses);
     engine.handleStepResponse(nodeExecution.getUuid(), stepResponse);
   }
 

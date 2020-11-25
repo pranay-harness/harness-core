@@ -15,7 +15,6 @@ import io.harness.facilitator.modes.async.AsyncExecutable;
 import io.harness.facilitator.modes.async.AsyncExecutableResponse;
 import io.harness.pms.execution.Status;
 import io.harness.refObjects.RefObjectUtil;
-import io.harness.state.Step;
 import io.harness.state.io.FailureInfo;
 import io.harness.state.io.StepInputPackage;
 import io.harness.state.io.StepResponse;
@@ -27,8 +26,14 @@ import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public abstract class AbstractStepExecutable implements Step, AsyncExecutable<CIStepInfo> {
+public abstract class AbstractStepExecutable implements AsyncExecutable<CIStepInfo> {
   @Inject private ExecutionSweepingOutputService executionSweepingOutputResolver;
+
+  @Override
+  public Class<CIStepInfo> getStepParametersClass() {
+    return CIStepInfo.class;
+  }
+
   @Override
   public AsyncExecutableResponse executeAsync(
       Ambiance ambiance, CIStepInfo stepParameters, StepInputPackage inputPackage) {

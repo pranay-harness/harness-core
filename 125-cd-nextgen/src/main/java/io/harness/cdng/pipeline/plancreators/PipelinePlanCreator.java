@@ -91,7 +91,6 @@ public class PipelinePlanCreator
                             .inputSetPipelineYaml(inputSetPipelineYaml)
                             .fieldToExecutionNodeIdMap(ImmutableMap.of("stages", planForStages.getStartingNodeId()))
                             .build())
-
         .facilitatorObtainment(
             FacilitatorObtainment.newBuilder()
                 .setType(FacilitatorType.newBuilder().setType(OrchestrationFacilitatorType.CHILD).build())

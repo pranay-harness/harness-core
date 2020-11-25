@@ -18,8 +18,13 @@ import io.harness.tasks.ResponseData;
 import java.util.Map;
 
 @OwnedBy(CDC)
-public class DummySectionStep implements Step, ChildExecutable<DummySectionStepParameters> {
+public class DummySectionStep implements ChildExecutable<DummySectionStepParameters> {
   public static final StepType STEP_TYPE = StepType.newBuilder().setType(OrchestrationStepTypes.DUMMY_SECTION).build();
+
+  @Override
+  public Class<DummySectionStepParameters> getStepParametersClass() {
+    return DummySectionStepParameters.class;
+  }
 
   @Override
   public ChildExecutableResponse obtainChild(

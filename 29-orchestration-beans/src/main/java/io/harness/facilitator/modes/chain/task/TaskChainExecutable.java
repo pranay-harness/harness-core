@@ -6,6 +6,7 @@ import io.harness.ambiance.Ambiance;
 import io.harness.annotations.Redesign;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.facilitator.PassThroughData;
+import io.harness.state.Step;
 import io.harness.state.io.StepInputPackage;
 import io.harness.state.io.StepParameters;
 import io.harness.state.io.StepResponse;
@@ -37,7 +38,7 @@ import java.util.Map;
 
 @OwnedBy(CDC)
 @Redesign
-public interface TaskChainExecutable<T extends StepParameters> {
+public interface TaskChainExecutable<T extends StepParameters> extends Step<T> {
   TaskChainResponse startChainLink(Ambiance ambiance, T stepParameters, StepInputPackage inputPackage);
 
   TaskChainResponse executeNextLink(Ambiance ambiance, T stepParameters, StepInputPackage inputPackage,

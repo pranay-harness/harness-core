@@ -15,7 +15,6 @@ import io.harness.delegate.task.http.HttpTaskParameters;
 import io.harness.facilitator.modes.task.TaskExecutable;
 import io.harness.pms.execution.Status;
 import io.harness.pms.steps.StepType;
-import io.harness.state.Step;
 import io.harness.state.io.FailureInfo;
 import io.harness.state.io.StepInputPackage;
 import io.harness.state.io.StepResponse;
@@ -34,9 +33,14 @@ import lombok.extern.slf4j.Slf4j;
 @OwnedBy(CDC)
 @Redesign
 @Slf4j
-public class BasicHttpStep implements Step, TaskExecutable<BasicHttpStepParameters> {
+public class BasicHttpStep implements TaskExecutable<BasicHttpStepParameters> {
   public static final StepType STEP_TYPE = StepType.newBuilder().setType("BASIC_HTTP").build();
   private static final int socketTimeoutMillis = 10000;
+
+  @Override
+  public Class<BasicHttpStepParameters> getStepParametersClass() {
+    return BasicHttpStepParameters.class;
+  }
 
   @Override
   public DelegateTask obtainTask(

@@ -8,6 +8,7 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.engine.OrchestrationEngine;
 import io.harness.engine.executables.ExecuteStrategy;
 import io.harness.engine.executables.InvokerPackage;
+import io.harness.engine.executions.node.NodeExecutionService;
 import io.harness.execution.NodeExecution;
 import io.harness.facilitator.modes.sync.SyncExecutable;
 import io.harness.plan.PlanNode;
@@ -24,14 +25,16 @@ import lombok.extern.slf4j.Slf4j;
 public class SyncStrategy implements ExecuteStrategy {
   @Inject private OrchestrationEngine engine;
   @Inject private StepRegistry stepRegistry;
+  @Inject private NodeExecutionService nodeExecutionService;
 
   @Override
   public void start(InvokerPackage invokerPackage) {
     NodeExecution nodeExecution = invokerPackage.getNodeExecution();
     Ambiance ambiance = nodeExecution.getAmbiance();
     SyncExecutable syncExecutable = extractSyncExecutable(nodeExecution);
-    StepResponse stepResponse = syncExecutable.executeSync(ambiance, nodeExecution.getResolvedStepParameters(),
-        invokerPackage.getInputPackage(), invokerPackage.getPassThroughData());
+    StepResponse stepResponse =
+        syncExecutable.executeSync(ambiance, nodeExecutionService.extractResolvedStepParameters(nodeExecution),
+            invokerPackage.getInputPackage(), invokerPackage.getPassThroughData());
     engine.handleStepResponse(ambiance.obtainCurrentRuntimeId(), stepResponse);
   }
 
