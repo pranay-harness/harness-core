@@ -35,7 +35,7 @@ public class GraphVertexDTO {
   Map<String, Object> stepParameters;
   ExecutionMode mode;
 
-  List<Map<String, String>> executableResponsesMetadata;
+  List<Map<String, Object>> executableResponsesMetadata;
   List<InterruptEffect> interruptHistories;
   List<Outcome> outcomes;
   List<String> retryIds;

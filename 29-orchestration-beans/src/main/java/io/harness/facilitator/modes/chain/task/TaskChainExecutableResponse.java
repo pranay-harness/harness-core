@@ -21,5 +21,5 @@ public class TaskChainExecutableResponse implements TaskSpawningExecutableRespon
   TaskMode taskMode;
   boolean chainEnd;
   PassThroughData passThroughData;
-  Map<String, String> metadata;
+  Map<String, Object> metadata;
 }

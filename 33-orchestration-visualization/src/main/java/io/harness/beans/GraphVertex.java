@@ -43,7 +43,7 @@ public class GraphVertex implements Serializable {
   private Map<String, Object> stepParameters;
   private ExecutionMode mode;
 
-  private List<Map<String, String>> executableResponsesMetadata;
+  private List<Map<String, Object>> executableResponsesMetadata;
   private List<InterruptEffect> interruptHistories;
   private List<Outcome> outcomes;
   private List<String> retryIds;
