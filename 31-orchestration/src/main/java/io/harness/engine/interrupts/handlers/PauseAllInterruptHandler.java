@@ -11,8 +11,8 @@ import static io.harness.interrupts.Interrupt.State.DISCARDED;
 import static io.harness.interrupts.Interrupt.State.PROCESSED_SUCCESSFULLY;
 import static io.harness.interrupts.Interrupt.State.PROCESSING;
 
+import io.harness.AmbianceUtils;
 import io.harness.OrchestrationPublisherName;
-import io.harness.ambiance.Ambiance;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.engine.events.OrchestrationEventEmitter;
 import io.harness.engine.executions.node.NodeExecutionService;
@@ -60,10 +60,7 @@ public class PauseAllInterruptHandler implements InterruptHandler {
     PlanExecution planExecution = planExecutionService.get(interrupt.getPlanExecutionId());
     planExecutionService.updateStatus(planExecution.getUuid(), Status.PAUSING);
     eventEmitter.emitEvent(OrchestrationEvent.builder()
-                               .ambiance(Ambiance.builder()
-                                             .planExecutionId(planExecution.getUuid())
-                                             .setupAbstractions(planExecution.getSetupAbstractions())
-                                             .build())
+                               .ambiance(AmbianceUtils.buildFromPlanExecution(planExecution))
                                .eventType(OrchestrationEventType.PLAN_EXECUTION_STATUS_UPDATE)
                                .build());
 
