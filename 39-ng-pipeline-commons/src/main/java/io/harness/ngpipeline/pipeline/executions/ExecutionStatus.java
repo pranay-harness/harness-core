@@ -10,16 +10,15 @@ import java.util.Arrays;
 import java.util.Set;
 
 public enum ExecutionStatus {
-  @JsonProperty("Running") RUNNING(Sets.newHashSet(Status.RUNNING), "Running"),
+  @JsonProperty("Running")
+  RUNNING(Sets.newHashSet(Status.RUNNING, Status.ASYNC_WAITING, Status.TASK_WAITING, Status.TIMED_WAITING), "Running"),
   @JsonProperty("Failed") FAILED(Sets.newHashSet(Status.ERRORED, Status.FAILED), "Failed"),
   @JsonProperty("NotStarted") NOT_STARTED(Sets.newHashSet(), "NotStarted"),
   @JsonProperty("Expired") EXPIRED(Sets.newHashSet(Status.EXPIRED), "Expired"),
   @JsonProperty("Aborted") ABORTED(Sets.newHashSet(Status.ABORTED), "Aborted"),
   @JsonProperty("Queued") QUEUED(Sets.newHashSet(Status.QUEUED), "Queued"),
   @JsonProperty("Paused") PAUSED(Sets.newHashSet(Status.PAUSED), "Paused"),
-  @JsonProperty("Waiting")
-  WAITING(Sets.newHashSet(Status.ASYNC_WAITING, Status.TASK_WAITING, Status.INTERVENTION_WAITING, Status.TIMED_WAITING),
-      "Waiting"),
+  @JsonProperty("Waiting") WAITING(Sets.newHashSet(Status.INTERVENTION_WAITING), "Waiting"),
   @JsonProperty("Success") SUCCESS(Sets.newHashSet(Status.SUCCEEDED), "Success"),
   @JsonProperty("Suspended") SUSPENDED(Sets.newHashSet(Status.SUSPENDED), "Suspended");
 

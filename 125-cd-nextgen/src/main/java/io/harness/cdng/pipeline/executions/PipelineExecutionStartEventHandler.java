@@ -5,8 +5,8 @@ import io.harness.cdng.pipeline.beans.CDPipelineSetupParameters;
 import io.harness.cdng.pipeline.executions.service.NgPipelineExecutionService;
 import io.harness.engine.executions.plan.PlanExecutionService;
 import io.harness.execution.PlanExecution;
+import io.harness.execution.events.AsyncOrchestrationEventHandler;
 import io.harness.execution.events.OrchestrationEvent;
-import io.harness.execution.events.SyncOrchestrationEventHandler;
 import io.harness.executionplan.plancreator.beans.StepOutcomeGroup;
 import io.harness.ngpipeline.common.AmbianceHelper;
 import io.harness.plan.PlanNode;
@@ -16,7 +16,7 @@ import java.util.Objects;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class PipelineExecutionStartEventHandler implements SyncOrchestrationEventHandler {
+public class PipelineExecutionStartEventHandler implements AsyncOrchestrationEventHandler {
   @Inject private NgPipelineExecutionService ngPipelineExecutionService;
   @Inject private PlanExecutionService planExecutionService;
 

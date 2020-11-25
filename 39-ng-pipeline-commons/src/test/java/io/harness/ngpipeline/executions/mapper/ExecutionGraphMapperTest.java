@@ -1,9 +1,6 @@
 package io.harness.ngpipeline.executions.mapper;
 
-import static io.harness.ngpipeline.pipeline.executions.ExecutionStatus.FAILED;
-import static io.harness.ngpipeline.pipeline.executions.ExecutionStatus.RUNNING;
-import static io.harness.ngpipeline.pipeline.executions.ExecutionStatus.SUCCESS;
-import static io.harness.ngpipeline.pipeline.executions.ExecutionStatus.WAITING;
+import static io.harness.ngpipeline.pipeline.executions.ExecutionStatus.*;
 import static io.harness.rule.OwnerRule.VAIBHAV_SI;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -44,7 +41,7 @@ public class ExecutionGraphMapperTest extends CategoryTest {
     ExecutionNode executionNode1 = ExecutionNode.builder().name("node1").uuid("id1").status(RUNNING).build();
     ExecutionNode executionNode2 = ExecutionNode.builder().name("node2").uuid("id2").status(FAILED).build();
     ExecutionNode executionNode3 = ExecutionNode.builder().name("node3").uuid("id3").status(SUCCESS).build();
-    ExecutionNode executionNode4 = ExecutionNode.builder().name("node4").uuid("id4").status(WAITING).build();
+    ExecutionNode executionNode4 = ExecutionNode.builder().name("node4").uuid("id4").status(RUNNING).build();
 
     Map<String, ExecutionNode> executionNodeMap = new HashMap<>();
     executionNodeMap.put("id1", executionNode1);

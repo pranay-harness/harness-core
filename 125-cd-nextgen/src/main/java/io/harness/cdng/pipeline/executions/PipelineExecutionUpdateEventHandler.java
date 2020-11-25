@@ -9,8 +9,8 @@ import io.harness.cdng.service.steps.ServiceStep;
 import io.harness.engine.executions.node.NodeExecutionServiceImpl;
 import io.harness.engine.outcomes.OutcomeService;
 import io.harness.execution.NodeExecution;
+import io.harness.execution.events.AsyncOrchestrationEventHandler;
 import io.harness.execution.events.OrchestrationEvent;
-import io.harness.execution.events.SyncOrchestrationEventHandler;
 import io.harness.executionplan.plancreator.beans.StepOutcomeGroup;
 import io.harness.ngpipeline.common.AmbianceHelper;
 import io.harness.plan.PlanNode;
@@ -20,7 +20,7 @@ import com.google.inject.Inject;
 import java.util.Objects;
 import java.util.Optional;
 
-public class PipelineExecutionUpdateEventHandler implements SyncOrchestrationEventHandler {
+public class PipelineExecutionUpdateEventHandler implements AsyncOrchestrationEventHandler {
   @Inject private NgPipelineExecutionService ngPipelineExecutionService;
   @Inject private NodeExecutionServiceImpl nodeExecutionService;
   @Inject private OutcomeService outcomeService;
