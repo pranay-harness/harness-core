@@ -5,6 +5,7 @@ import io.harness.beans.EmbeddedUser;
 import io.harness.beans.ExecutionStatus;
 import io.harness.beans.TriggeredBy;
 import io.harness.beans.WorkflowType;
+import io.harness.dataretention.AccountDataRetentionEntity;
 import io.harness.mongo.index.CdIndex;
 import io.harness.mongo.index.FdIndex;
 import io.harness.mongo.index.FdTtlIndex;
@@ -57,8 +58,8 @@ import org.mongodb.morphia.annotations.Version;
       , @Field(value = ActivityKeys.serviceInstanceId), @Field(value = ActivityKeys.status),
           @Field(value = ActivityKeys.createdAt, type = IndexType.DESC)
     })
-public class Activity implements PersistentEntity, UuidAware, CreatedAtAware, CreatedByAware, UpdatedAtAware,
-                                 UpdatedByAware, ApplicationAccess {
+public class Activity implements PersistentEntity, AccountDataRetentionEntity, UuidAware, CreatedAtAware,
+                                 CreatedByAware, UpdatedAtAware, UpdatedByAware, ApplicationAccess {
   @Id @NotNull(groups = {Update.class}) @SchemaIgnore private String uuid;
   @FdIndex @NotNull @SchemaIgnore protected String appId;
   @SchemaIgnore private EmbeddedUser createdBy;

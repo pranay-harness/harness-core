@@ -1,5 +1,6 @@
 package io.harness.serializer.morphia;
 
+import io.harness.dataretention.AccountDataRetentionTestEntity;
 import io.harness.iterator.TestCronIterableEntity;
 import io.harness.iterator.TestFibonacciIterableEntity;
 import io.harness.iterator.TestIrregularIterableEntity;
@@ -21,18 +22,19 @@ import java.util.Set;
 public class TestPersistenceMorphiaRegistrar implements MorphiaRegistrar {
   @Override
   public void registerClasses(Set<Class> set) {
+    set.add(AccountDataRetentionTestEntity.class);
+    set.add(DurationTestEntity.class);
+    set.add(ObjectArrayTestEntity.class);
     set.add(TestCronIterableEntity.class);
     set.add(TestFibonacciIterableEntity.class);
     set.add(TestHolderEntity.class);
+    set.add(TestIndexEntity.class);
     set.add(TestInternalEntity.class);
     set.add(TestIrregularIterableEntity.class);
     set.add(TestIterableEntity.class);
     set.add(TestNoTopicQueuableObject.class);
     set.add(TestRegularIterableEntity.class);
     set.add(TestTopicQueuableObject.class);
-    set.add(TestIndexEntity.class);
-    set.add(DurationTestEntity.class);
-    set.add(ObjectArrayTestEntity.class);
   }
 
   @Override

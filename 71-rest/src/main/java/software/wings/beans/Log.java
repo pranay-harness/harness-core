@@ -14,6 +14,7 @@ import static java.lang.System.currentTimeMillis;
 
 import io.harness.annotation.HarnessEntity;
 import io.harness.beans.EmbeddedUser;
+import io.harness.dataretention.AccountDataRetentionEntity;
 import io.harness.exception.GeneralException;
 import io.harness.exception.WingsException;
 import io.harness.logging.CommandExecutionStatus;
@@ -61,8 +62,8 @@ import org.mongodb.morphia.annotations.Id;
 @FieldNameConstants(innerTypeName = "LogKeys")
 @Entity(value = "commandLogs", noClassnameStored = true)
 @HarnessEntity(exportable = false)
-public class Log implements GoogleDataStoreAware, PersistentEntity, UuidAware, CreatedAtAware, CreatedByAware,
-                            UpdatedAtAware, UpdatedByAware, ApplicationAccess {
+public class Log implements GoogleDataStoreAware, PersistentEntity, AccountDataRetentionEntity, UuidAware,
+                            CreatedAtAware, CreatedByAware, UpdatedAtAware, UpdatedByAware, ApplicationAccess {
   public static List<MongoIndex> mongoIndexes() {
     return ImmutableList.<MongoIndex>builder()
         .add(CompoundMongoIndex.builder()

@@ -2,6 +2,7 @@ package io.harness.serializer.morphia;
 
 import io.harness.cache.CacheEntity;
 import io.harness.cache.SpringCacheEntity;
+import io.harness.dataretention.AccountDataRetentionEntity;
 import io.harness.iterator.PersistentCronIterable;
 import io.harness.iterator.PersistentFibonacciIterable;
 import io.harness.iterator.PersistentIrregularIterable;
@@ -25,6 +26,7 @@ import io.harness.persistence.UpdatedByAccess;
 import io.harness.persistence.UpdatedByAware;
 import io.harness.persistence.UuidAccess;
 import io.harness.persistence.UuidAware;
+import io.harness.persistence.ValidUntilAccess;
 import io.harness.queue.Queuable;
 
 import java.util.Set;
@@ -33,6 +35,7 @@ public class PersistenceMorphiaRegistrar implements MorphiaRegistrar {
   @Override
   public void registerClasses(Set<Class> set) {
     set.add(AccountAccess.class);
+    set.add(AccountDataRetentionEntity.class);
     set.add(CacheEntity.class);
     set.add(CreatedAtAccess.class);
     set.add(CreatedAtAware.class);
@@ -49,13 +52,14 @@ public class PersistenceMorphiaRegistrar implements MorphiaRegistrar {
     set.add(PersistentIterable.class);
     set.add(PersistentRegularIterable.class);
     set.add(Queuable.class);
+    set.add(SpringCacheEntity.class);
     set.add(UpdatedAtAccess.class);
     set.add(UpdatedAtAware.class);
     set.add(UpdatedByAccess.class);
     set.add(UpdatedByAware.class);
     set.add(UuidAccess.class);
     set.add(UuidAware.class);
-    set.add(SpringCacheEntity.class);
+    set.add(ValidUntilAccess.class);
   }
 
   @Override

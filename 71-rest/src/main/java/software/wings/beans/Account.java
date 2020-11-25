@@ -66,6 +66,8 @@ public class Account extends Base implements PersistentRegularIterable {
 
   private String licenseId;
 
+  @Getter @Setter private long dataRetentionDurationMs;
+
   private List<String> salesContacts;
 
   @Getter @Setter private LicenseInfo licenseInfo;

@@ -27,6 +27,9 @@ import static software.wings.beans.RoleType.NON_PROD_SUPPORT;
 import static software.wings.beans.RoleType.PROD_SUPPORT;
 import static software.wings.beans.SystemCatalog.CatalogType.APPSTACK;
 
+import static java.lang.System.currentTimeMillis;
+import static java.time.Duration.ofDays;
+import static java.time.Duration.ofHours;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyMap;
 import static java.util.Collections.singletonList;
@@ -43,6 +46,8 @@ import io.harness.ccm.license.CeLicenseInfo;
 import io.harness.cvng.beans.ServiceGuardLimitDTO;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.data.structure.UUIDGenerator;
+import io.harness.dataretention.AccountDataRetentionEntity;
+import io.harness.dataretention.AccountDataRetentionService;
 import io.harness.delegate.beans.DelegateConfiguration;
 import io.harness.eraro.ErrorCode;
 import io.harness.eraro.Level;
@@ -57,6 +62,8 @@ import io.harness.exception.InvalidArgumentsException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.UnauthorizedException;
 import io.harness.exception.WingsException;
+import io.harness.lock.AcquiredLock;
+import io.harness.lock.PersistentLocker;
 import io.harness.logging.AccountLogContext;
 import io.harness.logging.AutoLogContext;
 import io.harness.managerclient.HttpsCertRequirement.CertRequirement;
@@ -153,6 +160,7 @@ import java.net.SocketTimeoutException;
 import java.security.SecureRandom;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Calendar;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
@@ -162,6 +170,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.TimeZone;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
@@ -243,6 +252,8 @@ public class AccountServiceImpl implements AccountService {
   @Inject private DeleteAccountHelper deleteAccountHelper;
   @Inject private OrganizationManagerClient organizationManagerClient;
   @Inject private AccountDao accountDao;
+  @Inject private AccountDataRetentionService accountDataRetentionService;
+  @Inject private PersistentLocker persistentLocker;
 
   @Inject @Named("BackgroundJobScheduler") private PersistentScheduler jobScheduler;
   @Inject private GovernanceFeature governanceFeature;
@@ -1512,6 +1523,7 @@ public class AccountServiceImpl implements AccountService {
 
   /**
    * Checks whether the subdomain URL is taken by any other account or not
+   *
    * @param subdomainUrl Object of type SubdomainUrl
    * @return true if subdomain URL is duplicate otherwise false
    */
@@ -1523,6 +1535,7 @@ public class AccountServiceImpl implements AccountService {
   /**
    * Takes a User ID and does the following checks before adding subdomainUrl to the account
    * Sanity check on Url provided
+   *
    * @param subdomainUrl subdomain URL object
    * @return boolean
    */
@@ -1536,7 +1549,8 @@ public class AccountServiceImpl implements AccountService {
 
   /**
    * Function to set subdomain Url of the account
-   * @param account Account Object
+   *
+   * @param account      Account Object
    * @param subdomainUrl Subdomain URL
    */
   @Override
@@ -1548,6 +1562,7 @@ public class AccountServiceImpl implements AccountService {
 
   /**
    * Function to add subdomain URL
+   *
    * @param userId
    * @param accountId
    * @param subDomainUrl
@@ -1616,5 +1631,49 @@ public class AccountServiceImpl implements AccountService {
     } else {
       return CertRequirement.CERTIFICATE_REQUIRED;
     }
+  }
+
+  @Override
+  public void ensureDataRetention(List<Class<? extends AccountDataRetentionEntity>> entityClasses) {
+    try (AcquiredLock acquiredLock =
+             persistentLocker.acquireLock(AccountService.class, "ensureDataRetention", ofHours(6))) {
+      if (acquiredLock == null) {
+        log.info("We did not get the lock, bail");
+        return;
+      }
+
+      long now = currentTimeMillis();
+
+      Map<String, Long> accounts = obtainAccountDataRetentionMap();
+
+      Calendar calendar = Calendar.getInstance(TimeZone.getTimeZone("UTC"));
+
+      long assureInterval = ofDays(2).toMillis();
+      if (calendar.get(Calendar.DAY_OF_WEEK) == Calendar.SATURDAY) {
+        assureInterval = ofDays(10).toMillis();
+      } else if (Calendar.DAY_OF_WEEK == Calendar.SUNDAY) {
+        assureInterval = ofDays(30).toMillis();
+      }
+
+      long assureTo = now + assureInterval;
+      log.info("Correct valid until values if needed for the next {}", assureTo);
+      entityClasses.forEach(clz -> accountDataRetentionService.corectValidUntilAccount(clz, accounts, now, assureTo));
+    }
+  }
+
+  @Override
+  public Map<String, Long> obtainAccountDataRetentionMap() {
+    List<Account> accountList = wingsPersistence.createQuery(Account.class, excludeAuthority)
+                                    .project(AccountKeys.uuid, true)
+                                    .project(AccountKeys.dataRetentionDurationMs, true)
+                                    .asList();
+
+    Map<String, Long> accounts = new HashMap<>();
+
+    accountList.forEach(account -> {
+      accounts.put(account.getUuid(),
+          account.getDataRetentionDurationMs() == 0 ? ofDays(183).toMillis() : account.getDataRetentionDurationMs());
+    });
+    return accounts;
   }
 }

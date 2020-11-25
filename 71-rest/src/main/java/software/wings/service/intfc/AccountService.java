@@ -4,6 +4,7 @@ import io.harness.account.ProvisionStep;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.cvng.beans.ServiceGuardLimitDTO;
+import io.harness.dataretention.AccountDataRetentionEntity;
 import io.harness.delegate.beans.DelegateConfiguration;
 import io.harness.managerclient.HttpsCertRequirement.CertRequirement;
 import io.harness.validation.Create;
@@ -22,6 +23,7 @@ import software.wings.service.impl.analysis.CVEnabledService;
 
 import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import javax.validation.Valid;
@@ -193,4 +195,8 @@ public interface AccountService {
   void updateBackgroundJobsDisabled(String accountId, boolean isDisabled);
 
   CertRequirement getHttpsCertificateRequirement(String accountId);
+
+  Map<String, Long> obtainAccountDataRetentionMap();
+
+  void ensureDataRetention(List<Class<? extends AccountDataRetentionEntity>> entityClasses);
 }
