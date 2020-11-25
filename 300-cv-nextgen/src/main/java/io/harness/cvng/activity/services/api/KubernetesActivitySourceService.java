@@ -12,6 +12,8 @@ public interface KubernetesActivitySourceService {
   KubernetesActivitySource getActivitySource(@NotNull String activitySourceId);
   String saveKubernetesSource(
       String accountId, String orgIdentifier, String projectIdentifier, KubernetesActivitySourceDTO activitySourceDTO);
+  KubernetesActivitySourceDTO getKubernetesSource(
+      String accountId, String orgIdentifier, String projectIdentifier, String identifier);
   List<KubernetesActivitySourceDTO> listKubernetesSources(
       String accountId, String orgIdentifier, String projectIdentifier);
   boolean deleteKubernetesSource(String accountId, String orgIdentifier, String projectIdentifier, String identifier);
@@ -21,6 +23,7 @@ public interface KubernetesActivitySourceService {
   int getNumberOfServicesSetup(String accountId, String orgIdentifier, String projectIdentifier);
   PageResponse<String> getKubernetesNamespaces(String accountId, String orgIdentifier, String projectIdentifier,
       String connectorIdentifier, int offset, int pageSize, String filter);
+
   PageResponse<String> getKubernetesWorkloads(String accountId, String orgIdentifier, String projectIdentifier,
       String connectorIdentifier, String namespace, int offset, int pageSize, String filter);
 }

@@ -77,6 +77,22 @@ public class KubernetesActivitySourceServiceImpl implements KubernetesActivitySo
   }
 
   @Override
+  public KubernetesActivitySourceDTO getKubernetesSource(
+      String accountId, String orgIdentifier, String projectIdentifier, String identifier) {
+    KubernetesActivitySource kubernetesActivitySource =
+        hPersistence.createQuery(KubernetesActivitySource.class, excludeAuthority)
+            .filter(KubernetesActivitySourceKeys.accountId, accountId)
+            .filter(KubernetesActivitySourceKeys.orgIdentifier, orgIdentifier)
+            .filter(KubernetesActivitySourceKeys.projectIdentifier, projectIdentifier)
+            .filter(KubernetesActivitySourceKeys.identifier, identifier)
+            .get();
+    if (kubernetesActivitySource == null) {
+      return null;
+    }
+    return kubernetesActivitySource.toDTO();
+  }
+
+  @Override
   public List<KubernetesActivitySourceDTO> listKubernetesSources(
       String accountId, String orgIdentifier, String projectIdentifier) {
     List<KubernetesActivitySource> kubernetesActivitySources =
