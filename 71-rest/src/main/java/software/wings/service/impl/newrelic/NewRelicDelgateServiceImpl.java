@@ -6,7 +6,6 @@ import static io.harness.network.Http.getOkHttpClientBuilder;
 import static io.harness.threading.Morpheus.sleep;
 
 import static software.wings.common.VerificationConstants.URL_STRING;
-import static software.wings.service.impl.ThirdPartyApiCallLog.PAYLOAD;
 import static software.wings.service.impl.ThirdPartyApiCallLog.createApiCallLog;
 import static software.wings.service.intfc.security.SecretManagementDelegateService.NUM_OF_RETRIES;
 
@@ -574,8 +573,7 @@ public class NewRelicDelgateServiceImpl implements NewRelicDelegateService {
 
   @Override
   public String postDeploymentMarker(NewRelicConfig config, List<EncryptedDataDetail> encryptedDataDetails,
-      long newRelicApplicationId, NewRelicDeploymentMarkerPayload body, ThirdPartyApiCallLog apiCallLog)
-      throws IOException {
+      long newRelicApplicationId, NewRelicDeploymentMarkerPayload body, ThirdPartyApiCallLog apiCallLog) {
     if (apiCallLog == null) {
       apiCallLog = createApiCallLog(config.getAccountId(), null);
     }
@@ -583,36 +581,11 @@ public class NewRelicDelgateServiceImpl implements NewRelicDelegateService {
         config.getNewRelicUrl().endsWith("/") ? config.getNewRelicUrl() : config.getNewRelicUrl() + "/";
     final String url = baseUrl + "v2/applications/" + newRelicApplicationId + "/deployments.json";
     apiCallLog.setTitle("Posting deployment marker to " + config.getNewRelicUrl());
-    apiCallLog.addFieldToRequest(
-        ThirdPartyApiCallField.builder().name(URL_STRING).value(url).type(FieldType.URL).build());
-    apiCallLog.addFieldToRequest(
-        ThirdPartyApiCallField.builder().name(PAYLOAD).value(JsonUtils.asJson(body)).type(FieldType.JSON).build());
-    apiCallLog.setRequestTimeStamp(OffsetDateTime.now().toInstant().toEpochMilli());
     final Call<Object> request =
         getNewRelicRestClient(config).postDeploymentMarker(getApiKey(config, encryptedDataDetails), url, body);
 
-    Response<Object> response;
-    try {
-      response = request.execute();
-    } catch (Exception e) {
-      apiCallLog.setResponseTimeStamp(OffsetDateTime.now().toInstant().toEpochMilli());
-      apiCallLog.addFieldToResponse(HttpStatus.SC_BAD_REQUEST, ExceptionUtils.getStackTrace(e), FieldType.TEXT);
-      delegateLogService.save(config.getAccountId(), apiCallLog);
-      throw new WingsException("Unsuccessful response while fetching data from NewRelic. Error message: "
-          + e.getMessage() + " Request: " + url);
-    }
-    apiCallLog.setResponseTimeStamp(OffsetDateTime.now().toInstant().toEpochMilli());
-    if (response.isSuccessful()) {
-      apiCallLog.addFieldToResponse(response.code(), response.body(), FieldType.JSON);
-      delegateLogService.save(config.getAccountId(), apiCallLog);
-      return "Successfully posted deployment marker to NewRelic";
-    }
-
-    apiCallLog.addFieldToResponse(response.code(), response.errorBody(), FieldType.TEXT);
-    delegateLogService.save(config.getAccountId(), apiCallLog);
-    String errMsg = "Unsuccessful response from NewRelic. Response Code " + response.code()
-        + " Error: " + response.errorBody().string();
-    throw new WingsException(ErrorCode.NEWRELIC_ERROR, errMsg, EnumSet.of(ReportTarget.UNIVERSAL));
+    requestExecutor.executeRequest(apiCallLog, request);
+    return "Successfully posted deployment marker to NewRelic";
   }
 
   @Override

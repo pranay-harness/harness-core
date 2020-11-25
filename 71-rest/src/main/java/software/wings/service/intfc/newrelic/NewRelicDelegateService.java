@@ -47,8 +47,7 @@ public interface NewRelicDelegateService {
 
   @DelegateTaskType(TaskType.NEWRELIC_POST_DEPLOYMENT_MARKER)
   String postDeploymentMarker(NewRelicConfig config, List<EncryptedDataDetail> encryptedDataDetails,
-      long newRelicApplicationId, NewRelicDeploymentMarkerPayload body, ThirdPartyApiCallLog apiCallLog)
-      throws IOException;
+      long newRelicApplicationId, NewRelicDeploymentMarkerPayload body, ThirdPartyApiCallLog apiCallLog);
 
   Set<NewRelicMetric> getTxnNameToCollect(NewRelicConfig newRelicConfig, List<EncryptedDataDetail> encryptedDataDetails,
       long newRelicAppId, ThirdPartyApiCallLog thirdPartyApiCallLog) throws IOException;
