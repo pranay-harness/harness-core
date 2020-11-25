@@ -2,6 +2,7 @@ package software.wings.service.impl.yaml.handler.workflow;
 
 import static io.harness.rule.OwnerRule.AADITI;
 import static io.harness.rule.OwnerRule.HINGER;
+import static io.harness.rule.OwnerRule.PRABU;
 
 import static software.wings.beans.Account.GLOBAL_ACCOUNT_ID;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
@@ -13,6 +14,7 @@ import static software.wings.utils.WingsTestConstants.TEMPLATE_ID;
 
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.when;
 
@@ -227,5 +229,43 @@ public class StepYamlHandlerTest extends YamlHandlerTestBase {
     StepYaml yaml = stepYamlHandler.toYaml(aStep, APP_ID);
     assertThat(yaml).isNotNull();
     assertThat(yaml.getProperties().get("commandType")).isEqualTo(CommandType.OTHER.name());
+  }
+
+  @Test
+  @Owner(developers = PRABU)
+  @Category(UnitTests.class)
+  public void shouldThrowExceptionForToYamlWithEmptyName() {
+    ChangeContext<StepYaml> changeContext =
+        ChangeContext.Builder.aChangeContext()
+            .withYamlType(YamlType.WORKFLOW)
+            .withYaml(StepYaml.builder().type("STEP_TYPE").name("").build())
+            .withChange(GitFileChange.Builder.aGitFileChange()
+                            .withFilePath("Setup/Applications/a1/Workflows/build.yaml")
+                            .withAccountId(ACCOUNT_ID)
+                            .build())
+            .build();
+
+    assertThatThrownBy(() -> stepYamlHandler.upsertFromYaml(changeContext, null))
+        .isInstanceOf(InvalidRequestException.class)
+        .hasMessage("Step name is empty for STEP_TYPE step");
+  }
+
+  @Test
+  @Owner(developers = PRABU)
+  @Category(UnitTests.class)
+  public void shouldThrowExceptionForYamlWithDotInShellScriptName() {
+    ChangeContext<StepYaml> changeContext =
+        ChangeContext.Builder.aChangeContext()
+            .withYamlType(YamlType.WORKFLOW)
+            .withYaml(StepYaml.builder().name("a.b").type(StepType.SHELL_SCRIPT.name()).build())
+            .withChange(GitFileChange.Builder.aGitFileChange()
+                            .withFilePath("Setup/Applications/a1/Workflows/build.yaml")
+                            .withAccountId(ACCOUNT_ID)
+                            .build())
+            .build();
+
+    assertThatThrownBy(() -> stepYamlHandler.upsertFromYaml(changeContext, null))
+        .isInstanceOf(InvalidRequestException.class)
+        .hasMessage("Shell script step [a.b] has '.' in its name");
   }
 }
