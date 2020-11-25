@@ -6,6 +6,7 @@ import io.harness.govern.ServersModule;
 import io.harness.serializer.DelegateRegistrars;
 import io.harness.serializer.KryoModule;
 import io.harness.serializer.KryoRegistrar;
+import io.harness.serializer.kryo.TestManagerKryoRegistrar;
 import io.harness.testing.ComponentTestsModule;
 import io.harness.threading.CurrentThreadExecutor;
 import io.harness.threading.ExecutorModule;
@@ -57,7 +58,10 @@ public class DelegateRule implements MethodRule, InjectorRuleMixin {
       @Provides
       @Singleton
       Set<Class<? extends KryoRegistrar>> registrars() {
-        return ImmutableSet.<Class<? extends KryoRegistrar>>builder().addAll(DelegateRegistrars.kryoRegistrars).build();
+        return ImmutableSet.<Class<? extends KryoRegistrar>>builder()
+            .addAll(DelegateRegistrars.kryoRegistrars)
+            .add(TestManagerKryoRegistrar.class)
+            .build();
       }
     });
     modules.add(new ProviderModule() {
