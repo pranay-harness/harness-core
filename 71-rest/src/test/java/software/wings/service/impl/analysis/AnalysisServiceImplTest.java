@@ -13,6 +13,8 @@ import io.harness.rule.Owner;
 
 import software.wings.WingsBaseTest;
 import software.wings.dl.WingsPersistence;
+import software.wings.service.impl.newrelic.LearningEngineAnalysisTask;
+import software.wings.service.impl.newrelic.LearningEngineExperimentalAnalysisTask;
 import software.wings.service.intfc.analysis.AnalysisService;
 import software.wings.sm.StateType;
 
@@ -60,5 +62,35 @@ public class AnalysisServiceImplTest extends WingsBaseTest {
     assertThat(analysisRecord.getAnalysisSummaryMessage()).isEqualTo(message);
     assertThat(analysisRecord.getAccountId()).isEqualTo(accountId);
     assertThat(analysisRecord.getAnalysisStatus()).isEqualTo(LE_ANALYSIS_COMPLETE);
+  }
+
+  @Test
+  @Owner(developers = SOWMYA)
+  @Category(UnitTests.class)
+  public void testCleanUpForLogRetry() {
+    LogDataRecord logDataRecord = LogDataRecord.builder().stateExecutionId(stateExecutionId).build();
+    wingsPersistence.save(logDataRecord);
+    LogMLAnalysisRecord logMLAnalysisRecord = LogMLAnalysisRecord.builder().stateExecutionId(stateExecutionId).build();
+    wingsPersistence.save(logMLAnalysisRecord);
+    LearningEngineAnalysisTask analysisTask =
+        LearningEngineAnalysisTask.builder().state_execution_id(stateExecutionId).build();
+    wingsPersistence.save(analysisTask);
+    LearningEngineExperimentalAnalysisTask experimentalAnalysisTask =
+        LearningEngineExperimentalAnalysisTask.builder().state_execution_id(stateExecutionId).build();
+    wingsPersistence.save(experimentalAnalysisTask);
+
+    analysisService.cleanUpForLogRetry(stateExecutionId);
+
+    LogDataRecord record = wingsPersistence.createQuery(LogDataRecord.class, excludeAuthority).get();
+    assertThat(record).isNull();
+    LogMLAnalysisRecord mlAnalysisRecord =
+        wingsPersistence.createQuery(LogMLAnalysisRecord.class, excludeAuthority).get();
+    assertThat(mlAnalysisRecord).isNull();
+    LearningEngineAnalysisTask task =
+        wingsPersistence.createQuery(LearningEngineAnalysisTask.class, excludeAuthority).get();
+    assertThat(task).isNull();
+    LearningEngineExperimentalAnalysisTask expTask =
+        wingsPersistence.createQuery(LearningEngineExperimentalAnalysisTask.class, excludeAuthority).get();
+    assertThat(expTask).isNull();
   }
 }
