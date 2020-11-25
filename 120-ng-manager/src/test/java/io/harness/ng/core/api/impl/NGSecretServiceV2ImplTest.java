@@ -120,8 +120,8 @@ public class NGSecretServiceV2ImplTest extends CategoryTest {
     doReturn(Optional.of(secret)).when(secretServiceV2Spy).get(any(), any(), any(), any());
     SecretDTOV2 secretDTOV2 = getSecretDTO();
     when(secretRepository.save(any())).thenReturn(secret);
-    boolean success = secretServiceV2Spy.update("account", secretDTOV2, false);
-    assertThat(success).isTrue();
+    Secret success = secretServiceV2Spy.update("account", secretDTOV2, false);
+    assertThat(success).isNotNull();
     verify(secretServiceV2Spy).get(any(), any(), any(), any());
     verify(secretRepository).save(any());
   }

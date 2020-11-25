@@ -7,6 +7,7 @@ import io.harness.secretmanagerclient.ValueType;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonTypeName;
+import java.util.Optional;
 import javax.validation.constraints.NotNull;
 import lombok.Builder;
 import lombok.Data;
@@ -24,8 +25,11 @@ public class SecretTextSpecDTO extends SecretSpecDTO {
 
   @Override
   @JsonIgnore
-  public boolean isValidYaml() {
-    return valueType == ValueType.Reference || (valueType == ValueType.Inline && value == null);
+  public Optional<String> getErrorMessageForInvalidYaml() {
+    if (valueType == ValueType.Inline && value != null) {
+      return Optional.of("Inline secret text cannot be provided in YAML.");
+    }
+    return Optional.empty();
   }
 
   @Override

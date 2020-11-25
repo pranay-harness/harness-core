@@ -105,8 +105,8 @@ public class SecretCrudServiceImpl implements SecretCrudService {
 
   @Override
   public SecretResponseWrapper createViaYaml(@NotNull String accountIdentifier, SecretDTOV2 dto) {
-    if (!dto.getSpec().isValidYaml()) {
-      throw new InvalidRequestException("Yaml not valid.", USER);
+    if (dto.getSpec().getErrorMessageForInvalidYaml().isPresent()) {
+      throw new InvalidRequestException(dto.getSpec().getErrorMessageForInvalidYaml().get(), USER);
     }
     EncryptedDataDTO encryptedData = getService(dto.getType()).create(accountIdentifier, dto);
     if (Optional.ofNullable(encryptedData).isPresent()) {
@@ -172,14 +172,14 @@ public class SecretCrudServiceImpl implements SecretCrudService {
   }
 
   @Override
-  public boolean update(String accountIdentifier, SecretDTOV2 dto) {
+  public SecretResponseWrapper update(String accountIdentifier, SecretDTOV2 dto) {
     boolean remoteUpdateSuccess = getService(dto.getType()).update(accountIdentifier, dto);
-    boolean localUpdateSuccess = false;
+    Secret updatedSecret = null;
     if (remoteUpdateSuccess) {
-      localUpdateSuccess = ngSecretService.update(accountIdentifier, dto, false);
+      updatedSecret = ngSecretService.update(accountIdentifier, dto, false);
     }
-    if (remoteUpdateSuccess && localUpdateSuccess) {
-      return true;
+    if (remoteUpdateSuccess && updatedSecret != null) {
+      return getResponseWrapper(updatedSecret);
     }
     if (!remoteUpdateSuccess) {
       throw new SecretManagementException(SECRET_MANAGEMENT_ERROR, "Unable to update secret remotely", USER);
@@ -190,17 +190,17 @@ public class SecretCrudServiceImpl implements SecretCrudService {
   }
 
   @Override
-  public boolean updateViaYaml(String accountIdentifier, SecretDTOV2 dto) {
-    if (!dto.getSpec().isValidYaml()) {
-      throw new InvalidRequestException("Invalid Yaml", USER);
+  public SecretResponseWrapper updateViaYaml(String accountIdentifier, SecretDTOV2 dto) {
+    if (dto.getSpec().getErrorMessageForInvalidYaml().isPresent()) {
+      throw new InvalidRequestException(dto.getSpec().getErrorMessageForInvalidYaml().get(), USER);
     }
     boolean remoteUpdateSuccess = getService(dto.getType()).update(accountIdentifier, dto);
-    boolean localUpdateSuccess = false;
+    Secret updatedSecret = null;
     if (remoteUpdateSuccess) {
-      localUpdateSuccess = ngSecretService.update(accountIdentifier, dto, true);
+      updatedSecret = ngSecretService.update(accountIdentifier, dto, true);
     }
-    if (remoteUpdateSuccess && localUpdateSuccess) {
-      return true;
+    if (remoteUpdateSuccess && updatedSecret != null) {
+      return getResponseWrapper(updatedSecret);
     }
     if (!remoteUpdateSuccess) {
       throw new SecretManagementException(SECRET_MANAGEMENT_ERROR, "Unable to update secret remotely", USER);
@@ -240,7 +240,7 @@ public class SecretCrudServiceImpl implements SecretCrudService {
 
   @SneakyThrows
   @Override
-  public boolean updateFile(String accountIdentifier, SecretDTOV2 dto, @NotNull InputStream inputStream) {
+  public SecretResponseWrapper updateFile(String accountIdentifier, SecretDTOV2 dto, @NotNull InputStream inputStream) {
     EncryptedDataDTO encryptedDataDTO = getResponse(secretManagerClient.getSecret(
         dto.getIdentifier(), accountIdentifier, dto.getOrgIdentifier(), dto.getProjectIdentifier()));
     SecretFileSpecDTO specDTO = (SecretFileSpecDTO) dto.getSpec();
@@ -258,7 +258,7 @@ public class SecretCrudServiceImpl implements SecretCrudService {
     boolean success = getResponse(secretManagerClient.updateSecretFile(
         dto.getIdentifier(), accountIdentifier, dto.getOrgIdentifier(), dto.getProjectIdentifier(), file, metadata));
     if (success) {
-      return ngSecretService.update(accountIdentifier, dto, false);
+      return getResponseWrapper(ngSecretService.update(accountIdentifier, dto, false));
     }
     throw new SecretManagementException(SECRET_MANAGEMENT_ERROR, "Unable to update secret file remotely", USER);
   }
