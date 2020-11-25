@@ -11,10 +11,10 @@ java_library(
     name = "maven_deps",
     visibility = ["//visibility:public"],
     exports = [
-        "//20-ng-core-beans:module",
-        "//20-notification-beans:module",
         "//21-notification-client:module",
         "//21-persistence:module",
+        "//960-ng-core-beans:module",
+        "//960-notification-beans:module",
         "//970-api-services-beans:module",
         "//970-ng-commons:module",
         "//980-commons:module",
@@ -380,7 +380,7 @@ java_binary(
         # keeping guava on top of maven_deps for right version resoulution
         "maven_deps",
         "//:lombok",
-        "//20-notification-beans/src/main/proto:20_notification_beans_java_proto",
+        "//960-notification-beans/src/main/proto:960_notification_beans_java_proto",
     ],
 )
 

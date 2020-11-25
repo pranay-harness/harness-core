@@ -11,7 +11,7 @@ java_library(
     name = "maven_deps",
     visibility = ["//visibility:public"],
     exports = [
-        "//20-ng-core-beans:module",
+        "//960-ng-core-beans:module",
         "//21-persistence:module",
         "//22-secret-manager-client:module",
         #        "@maven//:net_jodah_failsafe",

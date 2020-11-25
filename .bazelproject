@@ -1,6 +1,4 @@
 directories:
-  20-ng-core-beans
-  20-notification-beans
   21-delegate-agent-beans
   21-events-api
   21-persistence
@@ -50,6 +48,8 @@ directories:
   950-delegate-tasks-beans
   960-api-services
   960-expression-service
+  960-ng-core-beans
+  960-notification-beans
   970-api-services-beans
   970-grpc
   970-ng-commons
