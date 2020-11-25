@@ -97,8 +97,8 @@ public class CustomLogsCVConfigurationYamlHandlerTest extends CVConfigurationYam
                                                        .timestampJsonPath("time")
                                                        .build())
                                   .build());
-    yaml.setBaselineStartMinute(16);
-    yaml.setBaselineEndMinute(30);
+    yaml.setBaselineStartMinute(16L);
+    yaml.setBaselineEndMinute(30L);
     yaml.setAlertPriority(FeedbackPriority.P5.name());
     yaml.setType(StateType.LOG_VERIFICATION.name());
     changeContext.setYaml(yaml);
@@ -139,8 +139,8 @@ public class CustomLogsCVConfigurationYamlHandlerTest extends CVConfigurationYam
                                                        .timestampJsonPath("time")
                                                        .build())
                                   .build());
-    yaml.setBaselineStartMinute(16);
-    yaml.setBaselineEndMinute(30);
+    yaml.setBaselineStartMinute(16L);
+    yaml.setBaselineEndMinute(30L);
     yaml.setAlertPriority(FeedbackPriority.P5.name());
     yaml.setType(StateType.LOG_VERIFICATION.name());
     changeContext.setYaml(yaml);

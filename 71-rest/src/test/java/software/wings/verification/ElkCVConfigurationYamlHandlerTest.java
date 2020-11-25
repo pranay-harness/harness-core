@@ -105,8 +105,8 @@ public class ElkCVConfigurationYamlHandlerTest extends CategoryTest {
     yaml.setServiceName(serviceName);
     yaml.setConnectorName(connectorName);
     yaml.setQuery("query1");
-    yaml.setBaselineStartMinute(16);
-    yaml.setBaselineEndMinute(30);
+    yaml.setBaselineStartMinute(16L);
+    yaml.setBaselineEndMinute(30L);
     yaml.setIndex("index1");
     yaml.setHostnameField("hostName1");
     yaml.setMessageField("message1");
