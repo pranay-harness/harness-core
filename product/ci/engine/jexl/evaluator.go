@@ -9,8 +9,8 @@ import (
 	"time"
 
 	"github.com/pkg/errors"
-	pb "github.com/wings-software/portal/16-expression-service/src/main/proto/io/harness/expression/service"
-	"github.com/wings-software/portal/commons/go/lib/16-expression-service/grpc"
+	pb "github.com/wings-software/portal/960-expression-service/src/main/proto/io/harness/expression/service"
+	"github.com/wings-software/portal/commons/go/lib/960-expression-service/grpc"
 	"github.com/wings-software/portal/commons/go/lib/utils"
 	"github.com/wings-software/portal/product/ci/engine/output"
 	"go.uber.org/zap"

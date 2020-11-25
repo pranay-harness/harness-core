@@ -5,7 +5,7 @@ import (
 	"time"
 
 	grpc_retry "github.com/grpc-ecosystem/go-grpc-middleware/retry"
-	pb "github.com/wings-software/portal/16-expression-service/src/main/proto/io/harness/expression/service"
+	pb "github.com/wings-software/portal/960-expression-service/src/main/proto/io/harness/expression/service"
 	"go.uber.org/zap"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"

@@ -6,7 +6,7 @@
         <artifactId>portal</artifactId>
         <version>0.0.1-SNAPSHOT</version>
     </parent>
-    <artifactId>16-expression-service</artifactId>
+    <artifactId>960-expression-service</artifactId>
     <dependencies>
         <dependency>
             <groupId>com.google.inject</groupId>
@@ -39,7 +39,7 @@
         </dependency>
         <dependency>
             <groupId>software.wings</groupId>
-            <artifactId>16-expression-service-proto</artifactId>
+            <artifactId>960-expression-service-proto</artifactId>
             <version>${project.parent.version}</version>
         </dependency>
         <dependency>
