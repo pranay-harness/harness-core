@@ -18,10 +18,12 @@ package io.harness.stream.redisson;
 import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
-import static io.harness.stream.redisson.RedissonFactory.REDIS_ENV_NAMESPACE;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.redis.RedisConfig;
 
+import com.google.inject.Inject;
+import com.google.inject.name.Named;
 import java.net.URI;
 import java.util.concurrent.atomic.AtomicBoolean;
 import lombok.NoArgsConstructor;
@@ -43,10 +45,17 @@ import org.redisson.api.RedissonClient;
 @Slf4j
 public class RedissonBroadcaster extends AbstractBroadcasterProxy {
   private static volatile RedissonClient redissonClient;
+  private RedisConfig redisAtmosphereConfig;
   private final AtomicBoolean isClosed = new AtomicBoolean();
   private RTopic topic;
   private Integer messageListenerRegistrationId;
   private static final String BROADCASTER_PREFIX = "hStreams";
+
+  @Inject
+  public RedissonBroadcaster(@Named("atmosphere") RedisConfig redisAtmosphereConfig) {
+    super();
+    this.redisAtmosphereConfig = redisAtmosphereConfig;
+  }
 
   @Override
   public Broadcaster initialize(String id, AtmosphereConfig config) {
@@ -62,11 +71,11 @@ public class RedissonBroadcaster extends AbstractBroadcasterProxy {
 
   private synchronized void setUp() {
     if (redissonClient == null) {
-      redissonClient = RedissonFactory.getRedissonClient(config);
+      redissonClient = RedissonFactory.getRedissonClient(redisAtmosphereConfig);
     }
-    String broadcasterNamespace = isEmpty(config.getServletConfig().getInitParameter(REDIS_ENV_NAMESPACE))
+    String broadcasterNamespace = isEmpty(redisAtmosphereConfig.getEnvNamespace())
         ? BROADCASTER_PREFIX
-        : config.getServletConfig().getInitParameter(REDIS_ENV_NAMESPACE).concat(":").concat(BROADCASTER_PREFIX);
+        : redisAtmosphereConfig.getEnvNamespace().concat(":").concat(BROADCASTER_PREFIX);
     String topicName = String.format("%s:%s", broadcasterNamespace, getID());
     topic = redissonClient.getTopic(topicName, redissonClient.getConfig().getCodec());
     config.shutdownHook(() -> {
