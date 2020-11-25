@@ -55,13 +55,13 @@ public class K8SUtils {
       String name, String bearerToken, String accountId) {
     List<PhaseStep> phaseSteps = new ArrayList<>();
     Map<String, Object> defaultDeleteProperties = new HashMap<>();
-    defaultDeleteProperties.put("resources", "Namespace/${infra.kubernetes.namespace}");
+    defaultDeleteProperties.put("resources", "*");
 
     phaseSteps.add(aPhaseStep(K8S_PHASE_STEP, "Cleanup")
                        .addStep(GraphNode.builder()
                                     .id(generateUuid())
                                     .type(K8S_DELETE.name())
-                                    .name("Delete Namespace")
+                                    .name("Delete Resources")
                                     .properties(defaultDeleteProperties)
                                     .build())
                        .build());
