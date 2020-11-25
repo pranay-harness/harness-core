@@ -7,8 +7,8 @@ option go_package = "21_delegate_agent_beans";
 
 import "google/protobuf/timestamp.proto";
 
-import "20-delegate-beans/src/main/proto/io/harness/delegate/delegate.proto";
-import "20-delegate-beans/src/main/proto/io/harness/perpetualtask/perpetual_task.proto";
+import "940-delegate-beans/src/main/proto/io/harness/delegate/delegate.proto";
+import "940-delegate-beans/src/main/proto/io/harness/perpetualtask/perpetual_task.proto";
 
 import "21-delegate-agent-beans/src/main/proto/io/harness/perpetualtask/perpetual_task_execution.proto";
 

@@ -8,7 +8,7 @@ option go_package = "22_delegate_service_beans";
 import "google/protobuf/timestamp.proto";
 
 import "22-delegate-service-beans/src/main/proto/io/harness/callback/http_entrypoint.proto";
-import "20-delegate-beans/src/main/proto/io/harness/perpetualtask/perpetual_task.proto";
+import "940-delegate-beans/src/main/proto/io/harness/perpetualtask/perpetual_task.proto";
 
 message TaskClientParams {
   map<string, string> params = 1;

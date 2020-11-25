@@ -7,8 +7,8 @@ option go_package = "22_delegate_service_beans";
 
 import "google/protobuf/any.proto";
 
-import "20-delegate-beans/src/main/proto/io/harness/delegate/capability.proto";
-import "20-delegate-beans/src/main/proto/io/harness/perpetualtask/perpetual_task.proto";
+import "940-delegate-beans/src/main/proto/io/harness/delegate/capability.proto";
+import "940-delegate-beans/src/main/proto/io/harness/perpetualtask/perpetual_task.proto";
 
 service PerpetualTaskClientService {
   rpc ObtainTaskCapabilities(ObtainTaskCapabilitiesRequest) returns (ObtainTaskCapabilitiesResponse);

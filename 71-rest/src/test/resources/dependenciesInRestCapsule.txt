@@ -600,9 +600,9 @@ software.wings:970-api-services-beans:jar:0.0.1-SNAPSHOT
 software.wings:960-api-services:jar:0.0.1-SNAPSHOT
 software.wings:950-delegate-tasks-beans-proto:jar:0.0.1-SNAPSHOT
 software.wings:950-delegate-tasks-beans:jar:0.0.1-SNAPSHOT
-software.wings:20-delegate-beans-proto:jar:0.0.1-SNAPSHOT
-software.wings:20-delegate-beans:jar:0.0.1-SNAPSHOT
-software.wings:20-delegate-tasks:jar:0.0.1-SNAPSHOT
+software.wings:940-delegate-beans-proto:jar:0.0.1-SNAPSHOT
+software.wings:940-delegate-beans:jar:0.0.1-SNAPSHOT
+software.wings:930-delegate-tasks:jar:0.0.1-SNAPSHOT
 software.wings:20-ng-core-beans:jar:0.0.1-SNAPSHOT
 software.wings:21-delegate-agent-beans-proto:jar:0.0.1-SNAPSHOT
 software.wings:21-delegate-agent-beans:jar:0.0.1-SNAPSHOT

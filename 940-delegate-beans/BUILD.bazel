@@ -16,7 +16,7 @@ java_library(
 java_library(
     name = "module",
     data = [
-        "//20-delegate-beans/src/main/proto:20_delegate_beans_java_proto",
+        "//940-delegate-beans/src/main/proto:940_delegate_beans_java_proto",
     ],
     visibility = ["//visibility:public"],
 )

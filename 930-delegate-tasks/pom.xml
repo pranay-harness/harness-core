@@ -6,7 +6,7 @@
         <artifactId>portal</artifactId>
         <version>0.0.1-SNAPSHOT</version>
     </parent>
-    <artifactId>20-delegate-tasks</artifactId>
+    <artifactId>930-delegate-tasks</artifactId>
     <dependencies>
         <dependency>
             <groupId>com.amazonaws</groupId>

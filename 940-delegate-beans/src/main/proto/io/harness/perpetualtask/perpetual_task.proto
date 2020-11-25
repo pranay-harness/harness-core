@@ -3,12 +3,12 @@ syntax = "proto3";
 package io.harness.perpetualtask;
 
 option java_multiple_files = true;
-option go_package = "20_delegate_beans";
+option go_package = "940_delegate_beans";
 
 import "google/protobuf/any.proto";
 import "google/protobuf/duration.proto";
 
-import "20-delegate-beans/src/main/proto/io/harness/delegate/capability.proto";
+import "940-delegate-beans/src/main/proto/io/harness/delegate/capability.proto";
 
 message PerpetualTaskId {
   string id = 1;
