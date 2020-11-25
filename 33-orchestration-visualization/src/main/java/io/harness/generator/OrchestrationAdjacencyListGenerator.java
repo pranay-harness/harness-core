@@ -96,7 +96,7 @@ public class OrchestrationAdjacencyListGenerator {
                                                                    .graphVertexMap(new HashMap<>())
                                                                    .adjacencyMap(new HashMap<>())
                                                                    .build();
-    populateAdjacencyListStartingFrom(startingId, cachedAdjacencyList, adjacencyListInternal);
+    populateAdjacencyListWithEdgesStartingFrom(startingId, cachedAdjacencyList, adjacencyListInternal);
 
     return adjacencyListInternal;
   }
@@ -146,23 +146,38 @@ public class OrchestrationAdjacencyListGenerator {
     edgeList.getNextIds().add(nextId);
   }
 
-  private void populateAdjacencyListStartingFrom(String startingId, OrchestrationAdjacencyListInternal listToTraverse,
-      OrchestrationAdjacencyListInternal listToPopulate) {
+  private void populateAdjacencyListWithEdgesStartingFrom(String startingId,
+      OrchestrationAdjacencyListInternal listToTraverse, OrchestrationAdjacencyListInternal listToPopulate) {
     EdgeListInternal edgeListInternal = listToTraverse.getAdjacencyMap().get(startingId);
     if (edgeListInternal == null) {
       return;
     }
 
     for (String edgeId : edgeListInternal.getEdges()) {
-      populateAdjacencyListStartingFrom(edgeId, listToTraverse, listToPopulate);
-    }
-
-    for (String nextId : edgeListInternal.getNextIds()) {
-      populateAdjacencyListStartingFrom(nextId, listToTraverse, listToPopulate);
+      populateAdjacencyListFor(edgeId, listToTraverse, listToPopulate);
     }
 
     listToPopulate.getGraphVertexMap().put(startingId, listToTraverse.getGraphVertexMap().get(startingId));
     listToPopulate.getAdjacencyMap().put(startingId, listToTraverse.getAdjacencyMap().get(startingId));
+  }
+
+  private void populateAdjacencyListFor(String currentId, OrchestrationAdjacencyListInternal listToTraverse,
+      OrchestrationAdjacencyListInternal listToPopulate) {
+    EdgeListInternal edgeListInternal = listToTraverse.getAdjacencyMap().get(currentId);
+    if (edgeListInternal == null) {
+      return;
+    }
+
+    for (String edgeId : edgeListInternal.getEdges()) {
+      populateAdjacencyListFor(edgeId, listToTraverse, listToPopulate);
+    }
+
+    for (String nextId : edgeListInternal.getNextIds()) {
+      populateAdjacencyListFor(nextId, listToTraverse, listToPopulate);
+    }
+
+    listToPopulate.getGraphVertexMap().put(currentId, listToTraverse.getGraphVertexMap().get(currentId));
+    listToPopulate.getAdjacencyMap().put(currentId, listToTraverse.getAdjacencyMap().get(currentId));
   }
 
   private class GraphGeneratorSession {
