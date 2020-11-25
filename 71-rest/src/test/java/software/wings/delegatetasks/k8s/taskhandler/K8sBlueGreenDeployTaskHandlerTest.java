@@ -45,6 +45,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import io.harness.category.element.UnitTests;
+import io.harness.delegate.k8s.K8sBGBaseHandler;
 import io.harness.delegate.task.k8s.K8sTaskHelperBase;
 import io.harness.delegate.task.k8s.K8sTaskType;
 import io.harness.exception.InvalidArgumentsException;
@@ -105,6 +106,10 @@ public class K8sBlueGreenDeployTaskHandlerTest extends WingsBaseTest {
   @Mock private ExecutionLogCallback executionLogCallback;
   @Mock private ReleaseHistory releaseHistory;
   @Mock private Kubectl client;
+  @Mock private K8sBGBaseHandler mockedK8sBGBaseHandler;
+
+  @InjectMocks private K8sBGBaseHandler k8sBGBaseHandler;
+  @InjectMocks private K8sBlueGreenDeployTaskHandler k8sBlueGreenDeployTaskHandler;
 
   @Test
   @Owner(developers = YOGESH)
@@ -186,8 +191,6 @@ public class K8sBlueGreenDeployTaskHandlerTest extends WingsBaseTest {
         .saveReleaseHistoryInConfigMap(any(KubernetesConfig.class), eq("releaseName-apply"), anyString(), eq(false));
   }
 
-  @InjectMocks private K8sBlueGreenDeployTaskHandler k8sBlueGreenDeployTaskHandler;
-
   @Test
   @Owner(developers = ANSHUL)
   @Category(UnitTests.class)
@@ -253,6 +256,7 @@ public class K8sBlueGreenDeployTaskHandlerTest extends WingsBaseTest {
     resources.addAll(ManifestHelper.processYaml(PRIMARY_SERVICE_YAML));
     resources.addAll(ManifestHelper.processYaml(STAGE_SERVICE_YAML));
     on(k8sBlueGreenDeployTaskHandler).set("resources", resources);
+    on(k8sBlueGreenDeployTaskHandler).set("k8sBGBaseHandler", k8sBGBaseHandler);
     V1Service primaryService = new V1ServiceBuilder()
                                    .withNewSpec()
                                    .withSelector(ImmutableMap.of(HarnessLabels.color, HarnessLabelValues.colorGreen))
@@ -303,6 +307,7 @@ public class K8sBlueGreenDeployTaskHandlerTest extends WingsBaseTest {
 
     on(k8sBlueGreenDeployTaskHandler).set("resources", kubernetesResources);
     on(k8sBlueGreenDeployTaskHandler).set("releaseHistory", releaseHistory);
+    on(k8sBlueGreenDeployTaskHandler).set("k8sBGBaseHandler", k8sBGBaseHandler);
 
     when(kubernetesContainerService.getService(null, "servicename")).thenReturn(service);
 
@@ -347,6 +352,7 @@ public class K8sBlueGreenDeployTaskHandlerTest extends WingsBaseTest {
 
     on(k8sBlueGreenDeployTaskHandler).set("resources", kubernetesResources);
     on(k8sBlueGreenDeployTaskHandler).set("releaseHistory", releaseHistory);
+    on(k8sBlueGreenDeployTaskHandler).set("k8sBGBaseHandler", k8sBGBaseHandler);
 
     when(kubernetesContainerService.getServiceFabric8(null, "servicename")).thenReturn(service);
 
@@ -368,10 +374,12 @@ public class K8sBlueGreenDeployTaskHandlerTest extends WingsBaseTest {
   public void testCleanupForBlueGreenForNPE() throws Exception {
     K8sDelegateTaskParams delegateTaskParams = K8sDelegateTaskParams.builder().build();
 
+    Release currentRelease = Release.builder().number(1).build();
+
     on(k8sBlueGreenDeployTaskHandler).set("client", client);
     on(k8sBlueGreenDeployTaskHandler).set("primaryColor", "blue");
     on(k8sBlueGreenDeployTaskHandler).set("stageColor", "green");
-    on(k8sBlueGreenDeployTaskHandler).set("currentRelease", Release.builder().number(1).build());
+    on(k8sBlueGreenDeployTaskHandler).set("currentRelease", currentRelease);
 
     KubernetesResource kubernetesResource = ManifestHelper.processYaml(DEPLOYMENT_YAML).get(0);
     Release release = Release.builder()
@@ -385,14 +393,16 @@ public class K8sBlueGreenDeployTaskHandlerTest extends WingsBaseTest {
     ReleaseHistory releaseHistory = ReleaseHistory.createNew();
     releaseHistory.setReleases(new ArrayList<>(asList(release)));
 
-    k8sBlueGreenDeployTaskHandler.cleanupForBlueGreen(delegateTaskParams, releaseHistory, executionLogCallback);
+    k8sBGBaseHandler.cleanupForBlueGreen(
+        delegateTaskParams, releaseHistory, executionLogCallback, "blue", "green", currentRelease, client);
 
     kubernetesResource.getResourceId().setName("deployment-green");
     kubernetesResource.getResourceId().setVersioned(true);
     release.setManagedWorkload(kubernetesResource.getResourceId());
     release.setManagedWorkloadRevision("2");
     release.setManagedWorkloads(null);
-    k8sBlueGreenDeployTaskHandler.cleanupForBlueGreen(delegateTaskParams, releaseHistory, executionLogCallback);
+    k8sBGBaseHandler.cleanupForBlueGreen(
+        delegateTaskParams, releaseHistory, executionLogCallback, "blue", "green", currentRelease, client);
     verify(k8sTaskHelperBase, times(1))
         .delete(client, delegateTaskParams, asList(kubernetesResource.getResourceId()), executionLogCallback, true);
   }
@@ -423,6 +433,8 @@ public class K8sBlueGreenDeployTaskHandlerTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void prepareIfOnlyPrimaryServiceGiven() throws IOException {
     on(k8sBlueGreenDeployTaskHandler).set("resources", new ArrayList<>(asList(primaryService(), deployment())));
+    on(k8sBlueGreenDeployTaskHandler).set("k8sBGBaseHandler", k8sBGBaseHandler);
+
     k8sBlueGreenDeployTaskHandler.prepareForBlueGreen(K8sBlueGreenDeployTaskParameters.builder().build(),
         K8sDelegateTaskParams.builder().build(), executionLogCallback);
 
@@ -442,6 +454,7 @@ public class K8sBlueGreenDeployTaskHandlerTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void prepareIfOnlyStageServiceGiven() throws IOException {
     on(k8sBlueGreenDeployTaskHandler).set("resources", new ArrayList<>(asList(stageService(), deployment())));
+    on(k8sBlueGreenDeployTaskHandler).set("k8sBGBaseHandler", k8sBGBaseHandler);
     k8sBlueGreenDeployTaskHandler.prepareForBlueGreen(K8sBlueGreenDeployTaskParameters.builder().build(),
         K8sDelegateTaskParams.builder().build(), executionLogCallback);
 
@@ -460,6 +473,8 @@ public class K8sBlueGreenDeployTaskHandlerTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void prepareIfPrimarySecondaryServiceNotGiven() throws IOException {
     on(k8sBlueGreenDeployTaskHandler).set("resources", new ArrayList<>(asList(service(), deployment())));
+    on(k8sBlueGreenDeployTaskHandler).set("k8sBGBaseHandler", k8sBGBaseHandler);
+
     k8sBlueGreenDeployTaskHandler.prepareForBlueGreen(K8sBlueGreenDeployTaskParameters.builder().build(),
         K8sDelegateTaskParams.builder().build(), executionLogCallback);
 
@@ -489,6 +504,7 @@ public class K8sBlueGreenDeployTaskHandlerTest extends WingsBaseTest {
         .set("resources", new ArrayList<>(asList(primaryService(), stageService(), deployment())));
     on(k8sBlueGreenDeployTaskHandler).set("releaseHistory", ReleaseHistory.createNew());
     on(k8sBlueGreenDeployTaskHandler).set("releaseName", "release-name");
+    on(k8sBlueGreenDeployTaskHandler).set("k8sBGBaseHandler", k8sBGBaseHandler);
 
     k8sBlueGreenDeployTaskHandler.prepareForBlueGreen(K8sBlueGreenDeployTaskParameters.builder().build(),
         K8sDelegateTaskParams.builder().build(), executionLogCallback);
@@ -592,6 +608,7 @@ public class K8sBlueGreenDeployTaskHandlerTest extends WingsBaseTest {
     on(k8sBlueGreenDeployTaskHandler).set("stageColor", "stageColor");
     on(k8sBlueGreenDeployTaskHandler).set("primaryColor", "primaryColor");
     on(k8sBlueGreenDeployTaskHandler).set("isDeprecateFabric8Enabled", true);
+    on(k8sBlueGreenDeployTaskHandler).set("k8sBGBaseHandler", k8sBGBaseHandler);
 
     testGetAllPodsWithStageAndPrimary();
     testGetAllPodsWitNoPrimary();
@@ -605,7 +622,9 @@ public class K8sBlueGreenDeployTaskHandlerTest extends WingsBaseTest {
              any(KubernetesConfig.class), anyString(), anyString(), eq("primaryColor"), anyLong()))
         .thenReturn(emptyList());
 
-    final List<K8sPod> allPods = k8sBlueGreenDeployTaskHandler.getAllPods(LONG_TIMEOUT_INTERVAL);
+    final List<K8sPod> allPods = k8sBGBaseHandler.getAllPods(LONG_TIMEOUT_INTERVAL, KubernetesConfig.builder().build(),
+        KubernetesResource.builder().resourceId(KubernetesResourceId.builder().build()).build(), "primaryColor",
+        "stageColor", "releaseName", true);
 
     assertThat(allPods).hasSize(2);
     assertThat(allPods.stream().filter(K8sPod::isNewPod).count()).isEqualTo(2);
@@ -619,7 +638,9 @@ public class K8sBlueGreenDeployTaskHandlerTest extends WingsBaseTest {
              any(KubernetesConfig.class), anyString(), anyString(), eq("primaryColor"), anyLong()))
         .thenReturn(asList(podWithName("primary-1"), podWithName("primary-2")));
 
-    final List<K8sPod> allPods = k8sBlueGreenDeployTaskHandler.getAllPods(LONG_TIMEOUT_INTERVAL);
+    final List<K8sPod> allPods = k8sBGBaseHandler.getAllPods(LONG_TIMEOUT_INTERVAL, KubernetesConfig.builder().build(),
+        KubernetesResource.builder().resourceId(KubernetesResourceId.builder().build()).build(), "primaryColor",
+        "stageColor", "releaseName", true);
 
     assertThat(allPods).hasSize(4);
     assertThat(allPods.stream().filter(K8sPod::isNewPod).map(K8sPod::getName).collect(Collectors.toList()))
