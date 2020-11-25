@@ -8,6 +8,19 @@ xxxxxxxx
       port: 8002
       maxRequestHeaderSize: 100KiB
 
+redisLockConfig:
+  sentinel: false
+  masterName: "mymaster"
+  redisUrl: "redis://localhost:6379"
+  sentinelUrls:
+    - "redis://localhost:26379"
+    - "redis://localhost:26380"
+    - "redis://localhost:26381"
+  envNamespace: "edframework"
+  readMode: MASTER
+  nettyThreads: 16
+  useScriptCache: true
+
 eventsFramework:
   redis:
     sentinel: false

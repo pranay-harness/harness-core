@@ -1,5 +1,6 @@
 package io.harness.eventsframework;
 
+import java.util.List;
 import java.util.Map;
 
 public interface EventDrivenClient {
@@ -10,4 +11,5 @@ public interface EventDrivenClient {
   Map<String, Event> readEvent(StreamChannel channel, String groupName, String consumerName);
   Map<String, Event> readEvent(StreamChannel channel, String groupName, String consumerName, String lastId);
   void acknowledge(StreamChannel channel, String groupName, String messageId);
+  long deleteMessages(StreamChannel channel, List<String> messageIds);
 }

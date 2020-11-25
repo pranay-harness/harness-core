@@ -1,5 +1,7 @@
 package io.harness.eventsframework;
 
+import java.util.Collections;
+import java.util.List;
 import java.util.Map;
 
 public class NoOpEventClient implements EventDrivenClient {
@@ -13,24 +15,29 @@ public class NoOpEventClient implements EventDrivenClient {
 
   @Override
   public Map<String, Event> readEvent(StreamChannel channel) {
-    return null;
+    return Collections.emptyMap();
   }
 
   @Override
   public Map<String, Event> readEvent(StreamChannel channel, String lastId) {
-    return null;
+    return Collections.emptyMap();
   }
 
   @Override
   public Map<String, Event> readEvent(StreamChannel channel, String groupName, String consumerName) {
-    return null;
+    return Collections.emptyMap();
   }
 
   @Override
   public Map<String, Event> readEvent(StreamChannel channel, String groupName, String consumerName, String lastId) {
-    return null;
+    return Collections.emptyMap();
   }
 
   @Override
   public void acknowledge(StreamChannel channel, String groupName, String messageId) {}
+
+  @Override
+  public long deleteMessages(StreamChannel channel, List<String> messageIds) {
+    return 0;
+  }
 }

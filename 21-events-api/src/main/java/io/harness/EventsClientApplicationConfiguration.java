@@ -1,5 +1,7 @@
 package io.harness;
 
+import io.harness.redis.RedisConfig;
+
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import io.dropwizard.Configuration;
@@ -15,6 +17,7 @@ public class EventsClientApplicationConfiguration extends Configuration {
   public static final String BASE_PACKAGE = "io.harness.eventsframework";
   public static final String RESOURCE_PACKAGE = "io.harness.eventsframework.resources";
   @JsonProperty("eventsFramework") private EventsFrameworkConfiguration eventsFrameworkConfiguration;
+  @JsonProperty("redisLockConfig") private RedisConfig redisLockConfig;
 
   public static Collection<Class<?>> getResourceClasses() {
     Reflections reflections = new Reflections(RESOURCE_PACKAGE);
