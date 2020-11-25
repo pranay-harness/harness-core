@@ -22,7 +22,7 @@ jobs:
       - name: Building expression service code
         run: |
           echo "Building golang expression service protobuf using bazel..."
-          bazel build //16-expression-service/src/main/proto/... --javacopt=' -XepDisableAllChecks'
+          bazel build //960-expression-service/src/main/proto/... --javacopt=' -XepDisableAllChecks'
 
       - name: Building commons code
         run: |

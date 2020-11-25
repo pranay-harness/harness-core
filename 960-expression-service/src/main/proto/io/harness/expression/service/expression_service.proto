@@ -2,7 +2,7 @@ syntax = "proto3";
 package io.harness.expression.service;
 
 option java_multiple_files = true;
-option go_package = "16_expression_service";
+option go_package = "960_expression_service";
 
 message ExpressionRequest {
   repeated ExpressionQuery queries = 1;
