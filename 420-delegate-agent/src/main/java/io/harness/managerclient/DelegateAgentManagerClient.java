@@ -1,5 +1,6 @@
 package io.harness.managerclient;
 
+import io.harness.beans.DelegateHeartbeatResponse;
 import io.harness.delegate.beans.DelegateConnectionHeartbeat;
 import io.harness.delegate.beans.DelegateFile;
 import io.harness.delegate.beans.DelegateParams;
@@ -127,4 +128,8 @@ public interface DelegateAgentManagerClient {
   @PUT("agent/delegates/{delegateId}/tasks/{taskId}/acquire")
   Call<DelegateTaskPackage> acquireTask(
       @Path("delegateId") String delegateId, @Path("taskId") String uuid, @Query("accountId") String accountId);
+
+  @POST("agent/delegates/heartbeat-with-polling")
+  Call<RestResponse<DelegateHeartbeatResponse>> delegateHeartbeat(
+      @Query("accountId") String accountId, @Body DelegateParams delegateParams);
 }

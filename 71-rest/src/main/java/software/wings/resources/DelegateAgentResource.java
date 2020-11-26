@@ -7,6 +7,7 @@ import static software.wings.security.PermissionAttribute.ResourceType.DELEGATE;
 import static java.util.stream.Collectors.toList;
 
 import io.harness.artifact.ArtifactCollectionResponseHandler;
+import io.harness.beans.DelegateHeartbeatResponse;
 import io.harness.delegate.beans.ConnectionMode;
 import io.harness.delegate.beans.DelegateConfiguration;
 import io.harness.delegate.beans.DelegateConnectionHeartbeat;
@@ -55,7 +56,6 @@ import com.google.inject.Inject;
 import com.google.protobuf.Any;
 import com.google.protobuf.TextFormat;
 import com.google.protobuf.TextFormat.ParseException;
-import freemarker.template.TemplateException;
 import io.swagger.annotations.Api;
 import java.io.IOException;
 import java.util.List;
@@ -301,7 +301,7 @@ public class DelegateAgentResource {
   @ExceptionMetered
   public RestResponse<DelegateScripts> checkForUpgrade(@Context HttpServletRequest request,
       @HeaderParam("Version") String version, @PathParam("delegateId") @NotEmpty String delegateId,
-      @QueryParam("accountId") @NotEmpty String accountId) throws IOException, TemplateException {
+      @QueryParam("accountId") @NotEmpty String accountId) throws IOException {
     try (AutoLogContext ignore1 = new AccountLogContext(accountId, OVERRIDE_ERROR);
          AutoLogContext ignore2 = new DelegateLogContext(delegateId, OVERRIDE_ERROR)) {
       return new RestResponse<>(delegateService.getDelegateScripts(
@@ -316,7 +316,7 @@ public class DelegateAgentResource {
   @ExceptionMetered
   public RestResponse<DelegateScripts> getDelegateScripts(@Context HttpServletRequest request,
       @QueryParam("accountId") @NotEmpty String accountId,
-      @QueryParam("delegateVersion") @NotEmpty String delegateVersion) throws IOException, TemplateException {
+      @QueryParam("delegateVersion") @NotEmpty String delegateVersion) throws IOException {
     try (AutoLogContext ignore1 = new AccountLogContext(accountId, OVERRIDE_ERROR)) {
       return new RestResponse<>(delegateService.getDelegateScripts(accountId, delegateVersion,
           subdomainUrlHelper.getManagerUrl(request, accountId), getVerificationUrl(request)));
@@ -341,16 +341,18 @@ public class DelegateAgentResource {
   @Path("heartbeat-with-polling")
   @Timed
   @ExceptionMetered
-  public RestResponse<Delegate> updateDelegateHB(
-      @QueryParam("accountId") @NotEmpty String accountId, Delegate delegate) {
+  public RestResponse<DelegateHeartbeatResponse> updateDelegateHB(
+      @QueryParam("accountId") @NotEmpty String accountId, DelegateParams delegateParams) {
     try (AutoLogContext ignore1 = new AccountLogContext(accountId, OVERRIDE_ERROR);
-         AutoLogContext ignore2 = new DelegateLogContext(delegate.getUuid(), OVERRIDE_ERROR)) {
-      // delegate.isPolllingModeEnabled() will be true here.
-      if ("ECS".equals(delegate.getDelegateType())) {
-        Delegate registeredDelegate = delegateService.handleEcsDelegateRequest(delegate);
-        return new RestResponse<>(registeredDelegate);
+         AutoLogContext ignore2 = new DelegateLogContext(delegateParams.getDelegateId(), OVERRIDE_ERROR)) {
+      // delegate.isPollingModeEnabled() will be true here.
+      if ("ECS".equals(delegateParams.getDelegateType())) {
+        Delegate registeredDelegate = delegateService.handleEcsDelegateRequest(buildDelegateFromParams(delegateParams));
+
+        return new RestResponse<>(buildDelegateHBResponse(registeredDelegate));
       } else {
-        return new RestResponse<>(delegateService.updateHeartbeatForDelegateWithPollingEnabled(delegate));
+        return new RestResponse<>(buildDelegateHBResponse(
+            delegateService.updateHeartbeatForDelegateWithPollingEnabled(buildDelegateFromParams(delegateParams))));
       }
     }
   }
@@ -440,5 +442,39 @@ public class DelegateAgentResource {
       connectorHearbeatPublisher.pushConnectivityCheckActivity(accountId, validationResult);
     }
     return new RestResponse<>(true);
+  }
+
+  private DelegateHeartbeatResponse buildDelegateHBResponse(Delegate delegate) {
+    return DelegateHeartbeatResponse.builder()
+        .delegateId(delegate.getUuid())
+        .delegateRandomToken(delegate.getDelegateRandomToken())
+        .jreVersion(delegate.getUseJreVersion())
+        .sequenceNumber(delegate.getSequenceNum())
+        .status(delegate.getStatus().toString())
+        .useCdn(delegate.isUseCdn())
+        .build();
+  }
+
+  private Delegate buildDelegateFromParams(DelegateParams delegateParams) {
+    return Delegate.builder()
+        .uuid(delegateParams.getDelegateId())
+        .accountId(delegateParams.getAccountId())
+        .description(delegateParams.getDescription())
+        .ip(delegateParams.getIp())
+        .hostName(delegateParams.getHostName())
+        .delegateGroupName(delegateParams.getDelegateGroupName())
+        .delegateName(delegateParams.getDelegateName())
+        .delegateProfileId(delegateParams.getDelegateProfileId())
+        .lastHeartBeat(delegateParams.getLastHeartBeat())
+        .version(delegateParams.getVersion())
+        .sequenceNum(delegateParams.getSequenceNum())
+        .delegateType(delegateParams.getDelegateType())
+        .delegateRandomToken(delegateParams.getDelegateRandomToken())
+        .keepAlivePacket(delegateParams.isKeepAlivePacket())
+        .polllingModeEnabled(delegateParams.isPollingModeEnabled())
+        .sampleDelegate(delegateParams.isSampleDelegate())
+        .currentlyExecutingDelegateTasks(delegateParams.getCurrentlyExecutingDelegateTasks())
+        .location(delegateParams.getLocation())
+        .build();
   }
 }

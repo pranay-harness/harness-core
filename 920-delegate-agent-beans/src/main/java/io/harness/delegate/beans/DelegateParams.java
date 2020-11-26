@@ -27,7 +27,7 @@ public class DelegateParams {
 
   boolean sampleDelegate;
   boolean keepAlivePacket;
-  boolean polllingModeEnabled;
+  boolean pollingModeEnabled;
   boolean proxy;
   boolean ceEnabled;
 

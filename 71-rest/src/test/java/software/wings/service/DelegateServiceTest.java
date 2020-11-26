@@ -710,7 +710,7 @@ public class DelegateServiceTest extends WingsBaseTest {
                                 .delegateGroupName(DELEGATE_GROUP_NAME)
                                 .version(VERSION)
                                 .proxy(true)
-                                .polllingModeEnabled(true)
+                                .pollingModeEnabled(true)
                                 .sampleDelegate(true)
                                 .build();
 
@@ -729,7 +729,7 @@ public class DelegateServiceTest extends WingsBaseTest {
     assertThat(delegateFromDb.getDelegateGroupName()).isEqualTo(params.getDelegateGroupName());
     assertThat(delegateFromDb.getVersion()).isEqualTo(params.getVersion());
     assertThat(delegateFromDb.isProxy()).isEqualTo(params.isProxy());
-    assertThat(delegateFromDb.isPolllingModeEnabled()).isEqualTo(params.isPolllingModeEnabled());
+    assertThat(delegateFromDb.isPolllingModeEnabled()).isEqualTo(params.isPollingModeEnabled());
     assertThat(delegateFromDb.isSampleDelegate()).isEqualTo(params.isSampleDelegate());
   }
 
@@ -747,7 +747,7 @@ public class DelegateServiceTest extends WingsBaseTest {
                                 .delegateGroupName(DELEGATE_GROUP_NAME)
                                 .version(VERSION)
                                 .proxy(true)
-                                .polllingModeEnabled(true)
+                                .pollingModeEnabled(true)
                                 .sampleDelegate(false)
                                 .build();
     DelegateProfile profile = createDelegateProfileBuilder().accountId(accountId).primary(true).build();
@@ -765,7 +765,7 @@ public class DelegateServiceTest extends WingsBaseTest {
     assertThat(delegateFromDb.getDelegateGroupName()).isEqualTo(params.getDelegateGroupName());
     assertThat(delegateFromDb.getVersion()).isEqualTo(params.getVersion());
     assertThat(delegateFromDb.isProxy()).isEqualTo(params.isProxy());
-    assertThat(delegateFromDb.isPolllingModeEnabled()).isEqualTo(params.isPolllingModeEnabled());
+    assertThat(delegateFromDb.isPolllingModeEnabled()).isEqualTo(params.isPollingModeEnabled());
     assertThat(delegateFromDb.isSampleDelegate()).isEqualTo(params.isSampleDelegate());
   }
 
@@ -826,7 +826,7 @@ public class DelegateServiceTest extends WingsBaseTest {
                                 .delegateGroupName(DELEGATE_GROUP_NAME + "UPDATED")
                                 .version(VERSION + "UPDATED")
                                 .proxy(true)
-                                .polllingModeEnabled(true)
+                                .pollingModeEnabled(true)
                                 .sampleDelegate(false)
                                 .build();
 
@@ -841,7 +841,7 @@ public class DelegateServiceTest extends WingsBaseTest {
     assertThat(delegateFromDb.getDelegateGroupName()).isEqualTo(params.getDelegateGroupName());
     assertThat(delegateFromDb.getVersion()).isEqualTo(params.getVersion());
     assertThat(delegateFromDb.isProxy()).isEqualTo(params.isProxy());
-    assertThat(delegateFromDb.isPolllingModeEnabled()).isEqualTo(params.isPolllingModeEnabled());
+    assertThat(delegateFromDb.isPolllingModeEnabled()).isEqualTo(params.isPollingModeEnabled());
     assertThat(delegateFromDb.isSampleDelegate()).isEqualTo(params.isSampleDelegate());
   }
 
@@ -882,7 +882,7 @@ public class DelegateServiceTest extends WingsBaseTest {
                                 .delegateRandomToken("13")
                                 .version(VERSION + "UPDATED")
                                 .proxy(true)
-                                .polllingModeEnabled(true)
+                                .pollingModeEnabled(true)
                                 .sampleDelegate(false)
                                 .build();
 
@@ -896,7 +896,7 @@ public class DelegateServiceTest extends WingsBaseTest {
     assertThat(delegateFromDb.getDelegateGroupName()).isEqualTo(params.getDelegateGroupName());
     assertThat(delegateFromDb.getVersion()).isEqualTo(params.getVersion());
     assertThat(delegateFromDb.isProxy()).isEqualTo(params.isProxy());
-    assertThat(delegateFromDb.isPolllingModeEnabled()).isEqualTo(params.isPolllingModeEnabled());
+    assertThat(delegateFromDb.isPolllingModeEnabled()).isEqualTo(params.isPollingModeEnabled());
     assertThat(delegateFromDb.isSampleDelegate()).isEqualTo(params.isSampleDelegate());
   }
 
@@ -1057,7 +1057,7 @@ public class DelegateServiceTest extends WingsBaseTest {
                                 .hostName(HOST_NAME + "UPDATED")
                                 .version(VERSION + "UPDATED")
                                 .proxy(true)
-                                .polllingModeEnabled(true)
+                                .pollingModeEnabled(true)
                                 .sampleDelegate(false)
                                 .build();
 
@@ -1072,7 +1072,7 @@ public class DelegateServiceTest extends WingsBaseTest {
     assertThat(delegateFromDb.getDelegateGroupName()).isEqualTo(params.getDelegateGroupName());
     assertThat(delegateFromDb.getVersion()).isEqualTo(params.getVersion());
     assertThat(delegateFromDb.isProxy()).isEqualTo(params.isProxy());
-    assertThat(delegateFromDb.isPolllingModeEnabled()).isEqualTo(params.isPolllingModeEnabled());
+    assertThat(delegateFromDb.isPolllingModeEnabled()).isEqualTo(params.isPollingModeEnabled());
     assertThat(delegateFromDb.isSampleDelegate()).isEqualTo(params.isSampleDelegate());
   }
 

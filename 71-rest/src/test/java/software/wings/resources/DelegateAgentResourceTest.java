@@ -339,13 +339,15 @@ public class DelegateAgentResourceTest {
   @Owner(developers = NIKOLA)
   @Category(UnitTests.class)
   public void shouldUpdateDelegateHB() {
+    DelegateParams delegateParams = DelegateParams.builder().pollingModeEnabled(true).build();
+
     Delegate delegate = Delegate.builder().polllingModeEnabled(true).build();
     when(delegateService.updateHeartbeatForDelegateWithPollingEnabled(any(Delegate.class))).thenReturn(delegate);
     RestResponse<Delegate> restResponse =
         RESOURCES.client()
             .target("/agent/delegates/heartbeat-with-polling?accountId=" + ACCOUNT_ID)
             .request()
-            .post(entity(delegate, MediaType.APPLICATION_JSON), new GenericType<RestResponse<Delegate>>() {});
+            .post(entity(delegateParams, MediaType.APPLICATION_JSON), new GenericType<RestResponse<Delegate>>() {});
     verify(delegateService, atLeastOnce()).updateHeartbeatForDelegateWithPollingEnabled(delegate);
     assertThat(restResponse.getResource()).isInstanceOf(Delegate.class).isNotNull();
   }
@@ -354,13 +356,19 @@ public class DelegateAgentResourceTest {
   @Owner(developers = NIKOLA)
   @Category(UnitTests.class)
   public void shouldUpdateECSDelegateHB() {
-    Delegate delegate = Delegate.builder().polllingModeEnabled(true).delegateType("ECS").build();
+    String delegateType = "ECS";
+
+    DelegateParams delegateParams =
+        DelegateParams.builder().pollingModeEnabled(true).delegateType(delegateType).build();
+
+    Delegate delegate = Delegate.builder().polllingModeEnabled(true).delegateType(delegateType).build();
+
     when(delegateService.handleEcsDelegateRequest(any(Delegate.class))).thenReturn(delegate);
     RestResponse<Delegate> restResponse =
         RESOURCES.client()
             .target("/agent/delegates/heartbeat-with-polling?accountId=" + ACCOUNT_ID)
             .request()
-            .post(entity(delegate, MediaType.APPLICATION_JSON), new GenericType<RestResponse<Delegate>>() {});
+            .post(entity(delegateParams, MediaType.APPLICATION_JSON), new GenericType<RestResponse<Delegate>>() {});
     verify(delegateService, atLeastOnce()).handleEcsDelegateRequest(delegate);
     assertThat(restResponse.getResource()).isInstanceOf(Delegate.class).isNotNull();
   }
