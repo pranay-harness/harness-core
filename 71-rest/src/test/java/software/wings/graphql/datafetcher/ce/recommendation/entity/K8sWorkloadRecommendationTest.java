@@ -41,6 +41,11 @@ public class K8sWorkloadRecommendationTest extends CategoryTest {
                                                                  .limit("cpu", "1m")
                                                                  .limit("example.com/foo", "1")
                                                                  .build())
+                                                  .recommended(ResourceRequirement.builder()
+                                                                   .request("cpu", "1m")
+                                                                   .request("example.com/foo", "1")
+                                                                   .limit("example.com/foo", "1")
+                                                                   .build())
                                                   .build())
                                           .put("ctr2",
                                               ContainerRecommendation.builder()
@@ -62,6 +67,11 @@ public class K8sWorkloadRecommendationTest extends CategoryTest {
                                                                  .limit("cpu", "1m")
                                                                  .limit("example.com/foo", "2")
                                                                  .build())
+                                                  .recommended(ResourceRequirement.builder()
+                                                                   .request("cpu", "1m")
+                                                                   .request("example.com/foo", "2")
+                                                                   .limit("example.com/foo", "2")
+                                                                   .build())
                                                   .build())
                                           .build())
             .build();
@@ -88,6 +98,11 @@ public class K8sWorkloadRecommendationTest extends CategoryTest {
                                               .limit("cpu", "1m")
                                               .limit("example~com/foo", "1")
                                               .build())
+                               .recommended(ResourceRequirement.builder()
+                                                .request("cpu", "1m")
+                                                .request("example~com/foo", "1")
+                                                .limit("example~com/foo", "1")
+                                                .build())
                                .build())
                        .put("ctr2",
                            ContainerRecommendation.builder()
@@ -109,6 +124,11 @@ public class K8sWorkloadRecommendationTest extends CategoryTest {
                                               .limit("cpu", "1m")
                                               .limit("example~com/foo", "2")
                                               .build())
+                               .recommended(ResourceRequirement.builder()
+                                                .request("cpu", "1m")
+                                                .request("example~com/foo", "2")
+                                                .limit("example~com/foo", "2")
+                                                .build())
                                .build())
                        .build());
   }
@@ -140,6 +160,11 @@ public class K8sWorkloadRecommendationTest extends CategoryTest {
                                                                  .limit("cpu", "1m")
                                                                  .limit("example~com/foo", "1")
                                                                  .build())
+                                                  .recommended(ResourceRequirement.builder()
+                                                                   .request("cpu", "1m")
+                                                                   .request("example~com/foo", "1")
+                                                                   .limit("example~com/foo", "1")
+                                                                   .build())
                                                   .build())
                                           .put("ctr2",
                                               ContainerRecommendation.builder()
@@ -161,6 +186,11 @@ public class K8sWorkloadRecommendationTest extends CategoryTest {
                                                                  .limit("cpu", "1m")
                                                                  .limit("example~com/foo", "2")
                                                                  .build())
+                                                  .recommended(ResourceRequirement.builder()
+                                                                   .request("cpu", "1m")
+                                                                   .request("example~com/foo", "2")
+                                                                   .limit("example~com/foo", "2")
+                                                                   .build())
                                                   .build())
                                           .build())
             .build();
@@ -187,6 +217,11 @@ public class K8sWorkloadRecommendationTest extends CategoryTest {
                                               .limit("cpu", "1m")
                                               .limit("example.com/foo", "1")
                                               .build())
+                               .recommended(ResourceRequirement.builder()
+                                                .request("cpu", "1m")
+                                                .request("example.com/foo", "1")
+                                                .limit("example.com/foo", "1")
+                                                .build())
                                .build())
                        .put("ctr2",
                            ContainerRecommendation.builder()
@@ -208,6 +243,11 @@ public class K8sWorkloadRecommendationTest extends CategoryTest {
                                               .limit("cpu", "1m")
                                               .limit("example.com/foo", "2")
                                               .build())
+                               .recommended(ResourceRequirement.builder()
+                                                .request("cpu", "1m")
+                                                .request("example.com/foo", "2")
+                                                .limit("example.com/foo", "2")
+                                                .build())
                                .build())
                        .build());
   }
@@ -303,6 +343,11 @@ public class K8sWorkloadRecommendationTest extends CategoryTest {
                                                                                       .limit("cpu", "1")
                                                                                       .limit("memory", "1G")
                                                                                       .build())
+                                                                      .recommended(ResourceRequirement.builder()
+                                                                                       .request("cpu", "1")
+                                                                                       .request("memory", "1G")
+                                                                                       .limit("memory", "1G")
+                                                                                       .build())
                                                                       .build())
                                                               .containerRecommendation("ctr2",
                                                                   ContainerRecommendation.builder()
@@ -324,6 +369,11 @@ public class K8sWorkloadRecommendationTest extends CategoryTest {
                                                                                       .limit("cpu", "250m")
                                                                                       .limit("memory", "1G")
                                                                                       .build())
+                                                                      .recommended(ResourceRequirement.builder()
+                                                                                       .request("cpu", "250m")
+                                                                                       .request("memory", "1G")
+                                                                                       .limit("memory", "1G")
+                                                                                       .build())
                                                                       .build())
                                                               .build();
     k8sWorkloadRecommendation.prePersist();
@@ -355,6 +405,11 @@ public class K8sWorkloadRecommendationTest extends CategoryTest {
                                                                                       .limit("cpu", "1")
                                                                                       .limit("memory", "1G")
                                                                                       .build())
+                                                                      .recommended(ResourceRequirement.builder()
+                                                                                       .request("cpu", "1")
+                                                                                       .request("memory", "1G")
+                                                                                       .limit("memory", "1G")
+                                                                                       .build())
                                                                       .build())
                                                               .containerRecommendation("ctr2",
                                                                   ContainerRecommendation.builder()
@@ -376,6 +431,11 @@ public class K8sWorkloadRecommendationTest extends CategoryTest {
                                                                                       .limit("cpu", "500m")
                                                                                       .limit("memory", "2G")
                                                                                       .build())
+                                                                      .recommended(ResourceRequirement.builder()
+                                                                                       .request("cpu", "500m")
+                                                                                       .request("memory", "2G")
+                                                                                       .limit("memory", "2G")
+                                                                                       .build())
                                                                       .build())
                                                               .build();
     k8sWorkloadRecommendation.prePersist();
