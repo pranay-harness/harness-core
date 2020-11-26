@@ -20,6 +20,13 @@ indexes:
 
 - kind: commandLogs
   properties:
+    - name: activityId
+    - name: commandUnitName
+    - name: createdAt
+      direction: desc
+
+- kind: commandLogs
+  properties:
     - name: validUntil
     - name: accountId
     - name: createdAt
