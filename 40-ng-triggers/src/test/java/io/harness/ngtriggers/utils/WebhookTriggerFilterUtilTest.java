@@ -1,5 +1,7 @@
 package io.harness.ngtriggers.utils;
 
+import static io.harness.ngtriggers.beans.source.webhook.WebhookAction.CLOSED;
+import static io.harness.ngtriggers.beans.source.webhook.WebhookAction.OPENED;
 import static io.harness.ngtriggers.beans.source.webhook.WebhookEvent.MERGE_REQUEST;
 import static io.harness.rule.OwnerRule.ADWAIT;
 
@@ -10,14 +12,20 @@ import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.ngtriggers.beans.entity.TriggerWebhookEvent;
 import io.harness.ngtriggers.beans.scm.PRWebhookEvent;
+import io.harness.ngtriggers.beans.scm.PRWebhookEvent.PRWebhookEventBuilder;
 import io.harness.ngtriggers.beans.scm.WebhookBaseAttributes;
+import io.harness.ngtriggers.beans.scm.WebhookBaseAttributes.WebhookBaseAttributesBuilder;
 import io.harness.ngtriggers.beans.scm.WebhookEvent.Type;
 import io.harness.ngtriggers.beans.scm.WebhookPayloadData;
+import io.harness.ngtriggers.beans.scm.WebhookPayloadData.WebhookPayloadDataBuilder;
+import io.harness.ngtriggers.beans.source.webhook.WebhookAction;
 import io.harness.ngtriggers.beans.source.webhook.WebhookPayloadCondition;
 import io.harness.ngtriggers.beans.source.webhook.WebhookTriggerSpec;
 import io.harness.rule.Owner;
 
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 import java.util.Map;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -78,6 +86,40 @@ public class WebhookTriggerFilterUtilTest extends CategoryTest {
         .isEqualTo("https://secure.gravatar.com/avatar/8e");
     assertThat(WebhookTriggerFilterUtil.readFromPayload("${eventPayload.user.email}", context))
         .isEqualTo("cgrant@gmail.com");
+  }
+
+  @Test
+  @Owner(developers = ADWAIT)
+  @Category(UnitTests.class)
+  public void checkIfActionMatchesTest() {
+    WebhookBaseAttributesBuilder baseAttributesBuilder = WebhookBaseAttributes.builder().action("open");
+    PRWebhookEventBuilder prWebhookEventBuilder =
+        PRWebhookEvent.builder().baseAttributes(baseAttributesBuilder.build());
+    WebhookPayloadDataBuilder webhookPayloadDataBuilder =
+        WebhookPayloadData.builder()
+            .originalEvent(TriggerWebhookEvent.builder().payload(payload).build())
+            .webhookEvent(prWebhookEventBuilder.build());
+
+    List<WebhookAction> webhookActions = new ArrayList<>();
+    webhookActions.add(OPENED);
+    WebhookTriggerSpec webhookTriggerSpec = WebhookTriggerSpec.builder().actions(webhookActions).build();
+    assertThat(WebhookTriggerFilterUtil.checkIfActionMatches(webhookPayloadDataBuilder.build(), webhookTriggerSpec))
+        .isTrue();
+
+    webhookActions.clear();
+    assertThat(WebhookTriggerFilterUtil.checkIfActionMatches(webhookPayloadDataBuilder.build(), webhookTriggerSpec))
+        .isTrue();
+    webhookActions.add(CLOSED);
+    assertThat(WebhookTriggerFilterUtil.checkIfActionMatches(webhookPayloadDataBuilder.build(), webhookTriggerSpec))
+        .isFalse();
+
+    baseAttributesBuilder.action("close");
+    webhookPayloadDataBuilder.webhookEvent(prWebhookEventBuilder.baseAttributes(baseAttributesBuilder.build()).build())
+        .build();
+    webhookActions.clear();
+    webhookActions.add(CLOSED);
+    assertThat(WebhookTriggerFilterUtil.checkIfActionMatches(webhookPayloadDataBuilder.build(), webhookTriggerSpec))
+        .isTrue();
   }
 
   @Test

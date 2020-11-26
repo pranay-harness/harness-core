@@ -2,8 +2,9 @@ package io.harness.ngtriggers.utils;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 
+import static java.util.stream.Collectors.toSet;
+
 import io.harness.expression.ExpressionEvaluator;
-import io.harness.ngtriggers.beans.scm.WebhookBaseAttributes;
 import io.harness.ngtriggers.beans.scm.WebhookPayloadData;
 import io.harness.ngtriggers.beans.source.webhook.WebhookAction;
 import io.harness.ngtriggers.beans.source.webhook.WebhookEvent;
@@ -14,11 +15,10 @@ import io.harness.ngtriggers.functor.EventPayloadFunctor;
 import io.harness.pms.ambiance.Ambiance;
 
 import com.google.common.annotations.VisibleForTesting;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
+import java.util.Set;
 import lombok.experimental.UtilityClass;
 import lombok.extern.slf4j.Slf4j;
 
@@ -48,23 +48,15 @@ public class WebhookTriggerFilterUtil {
 
   public boolean checkIfActionMatches(
       WebhookPayloadData webhookPayloadData, WebhookTriggerSpec webhookTriggerConfigSpec) {
-    WebhookBaseAttributes baseAttributes = webhookPayloadData.getWebhookEvent().getBaseAttributes();
-
     List<WebhookAction> actions = webhookTriggerConfigSpec.getActions();
-
     // No filter means any actions is valid for trigger invocation
     if (isEmpty(actions)) {
       return true;
     }
 
+    Set<String> parsedActionValueSet = actions.stream().map(action -> action.getParsedValue()).collect(toSet());
     String eventActionReceived = webhookPayloadData.getWebhookEvent().getBaseAttributes().getAction();
-    Optional<WebhookAction> optionalWebhookAction =
-        webhookTriggerConfigSpec.getActions()
-            .stream()
-            .filter(action -> action.name().equalsIgnoreCase(eventActionReceived))
-            .findAny();
-
-    return optionalWebhookAction.isPresent();
+    return parsedActionValueSet.contains(eventActionReceived);
   }
 
   public boolean checkIfPayloadConditionsMatch(
@@ -110,8 +102,8 @@ public class WebhookTriggerFilterUtil {
 
   @VisibleForTesting
   Map<String, Object> generateContext(String payload) {
-    EventPayloadFunctor eventPayloadFunctor = new EventPayloadFunctor(
-        Ambiance.newBuilder().putAllSetupAbstractions(Collections.singletonMap("eventPayload", payload)).build());
+    EventPayloadFunctor eventPayloadFunctor =
+        new EventPayloadFunctor(Ambiance.newBuilder().putSetupAbstractions("eventPayload", payload).build());
 
     Map<String, Object> context = new HashMap<>();
     context.put("eventPayload", eventPayloadFunctor);
