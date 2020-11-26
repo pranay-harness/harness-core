@@ -76,7 +76,7 @@ func (s *restoreCacheStep) unarchiveFiles(archivePath string) error {
 func (s *restoreCacheStep) resolveJEXL(ctx context.Context) error {
 	// JEXL expressions are only present in key for restore cache
 	key := s.key
-	resolvedExprs, err := evaluateJEXL(ctx, []string{key}, s.stageOutput, s.log)
+	resolvedExprs, err := evaluateJEXL(ctx, s.id, []string{key}, s.stageOutput, s.log)
 	if err != nil {
 		return err
 	}

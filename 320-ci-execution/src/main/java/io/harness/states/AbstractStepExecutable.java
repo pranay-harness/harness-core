@@ -63,6 +63,8 @@ public abstract class AbstractStepExecutable implements AsyncExecutable<CIStepIn
                            .name(stepParameters.getIdentifier())
                            .build())
           .build();
+    } else if (stepStatus.getStepExecutionStatus() == StepExecutionStatus.SKIPPED) {
+      return StepResponse.builder().status(Status.SKIPPED).build();
     } else {
       return StepResponse.builder()
           .status(Status.FAILED)

@@ -63,6 +63,7 @@ message UnitStep {
   }
   string callback_token = 7;
   string task_id = 8;
+  string skip_condition = 11;
 }
 
 message ParallelStep {

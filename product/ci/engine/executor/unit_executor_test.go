@@ -9,6 +9,7 @@ import (
 	"github.com/golang/mock/gomock"
 	"github.com/pkg/errors"
 	"github.com/stretchr/testify/assert"
+	statuspb "github.com/wings-software/portal/50-delegate-task-grpc-service/src/main/proto/io/harness/task/service"
 	"github.com/wings-software/portal/commons/go/lib/filesystem"
 	"github.com/wings-software/portal/commons/go/lib/logs"
 	caddon "github.com/wings-software/portal/product/ci/addon/grpc/client"
@@ -112,7 +113,7 @@ func TestStepValidations(t *testing.T) {
 	oldSendStepStatus := sendStepStatus
 	defer func() { sendStepStatus = oldSendStepStatus }()
 	sendStepStatus = func(ctx context.Context, stepID, accountID, callbackToken, taskID string, numRetries int32, timeTaken time.Duration,
-		stepOutput *output.StepOutput, stepErr error, log *zap.SugaredLogger) error {
+		status statuspb.StepExecutionStatus, errMsg string, stepOutput *output.StepOutput, log *zap.SugaredLogger) error {
 		return nil
 	}
 	for _, tc := range tests {
@@ -153,7 +154,7 @@ func TestStepRunError(t *testing.T) {
 	oldSendStepStatus := sendStepStatus
 	defer func() { sendStepStatus = oldSendStepStatus }()
 	sendStepStatus = func(ctx context.Context, stepID, accountID, callbackToken, taskID string, numRetries int32, timeTaken time.Duration,
-		stepOutput *output.StepOutput, stepErr error, log *zap.SugaredLogger) error {
+		status statuspb.StepExecutionStatus, errMsg string, stepOutput *output.StepOutput, log *zap.SugaredLogger) error {
 		return nil
 	}
 
@@ -202,7 +203,7 @@ func TestStepRunSuccess(t *testing.T) {
 	oldSendStepStatus := sendStepStatus
 	defer func() { sendStepStatus = oldSendStepStatus }()
 	sendStepStatus = func(ctx context.Context, stepID, accountID, callbackToken, taskID string, numRetries int32, timeTaken time.Duration,
-		stepOutput *output.StepOutput, stepErr error, log *zap.SugaredLogger) error {
+		status statuspb.StepExecutionStatus, errMsg string, stepOutput *output.StepOutput, log *zap.SugaredLogger) error {
 		return nil
 	}
 
@@ -248,7 +249,7 @@ func TestStepPluginSuccess(t *testing.T) {
 	oldSendStepStatus := sendStepStatus
 	defer func() { sendStepStatus = oldSendStepStatus }()
 	sendStepStatus = func(ctx context.Context, stepID, accountID, callbackToken, taskID string, numRetries int32, timeTaken time.Duration,
-		stepOutput *output.StepOutput, stepErr error, log *zap.SugaredLogger) error {
+		status statuspb.StepExecutionStatus, errMsg string, stepOutput *output.StepOutput, log *zap.SugaredLogger) error {
 		return nil
 	}
 
@@ -294,7 +295,7 @@ func TestStepSaveCacheError(t *testing.T) {
 	oldSendStepStatus := sendStepStatus
 	defer func() { sendStepStatus = oldSendStepStatus }()
 	sendStepStatus = func(ctx context.Context, stepID, accountID, callbackToken, taskID string, numRetries int32, timeTaken time.Duration,
-		stepOutput *output.StepOutput, stepErr error, log *zap.SugaredLogger) error {
+		status statuspb.StepExecutionStatus, errMsg string, stepOutput *output.StepOutput, log *zap.SugaredLogger) error {
 		return nil
 	}
 
@@ -350,7 +351,7 @@ func TestStepSaveCacheSuccess(t *testing.T) {
 	oldSendStepStatus := sendStepStatus
 	defer func() { sendStepStatus = oldSendStepStatus }()
 	sendStepStatus = func(ctx context.Context, stepID, accountID, callbackToken, taskID string, numRetries int32, timeTaken time.Duration,
-		stepOutput *output.StepOutput, stepErr error, log *zap.SugaredLogger) error {
+		status statuspb.StepExecutionStatus, errMsg string, stepOutput *output.StepOutput, log *zap.SugaredLogger) error {
 		return nil
 	}
 
@@ -399,7 +400,7 @@ func TestStepRestoreCacheErr(t *testing.T) {
 	oldSendStepStatus := sendStepStatus
 	defer func() { sendStepStatus = oldSendStepStatus }()
 	sendStepStatus = func(ctx context.Context, stepID, accountID, callbackToken, taskID string, numRetries int32, timeTaken time.Duration,
-		stepOutput *output.StepOutput, stepErr error, log *zap.SugaredLogger) error {
+		status statuspb.StepExecutionStatus, errMsg string, stepOutput *output.StepOutput, log *zap.SugaredLogger) error {
 		return nil
 	}
 
@@ -448,7 +449,7 @@ func TestStepRestoreCacheSuccess(t *testing.T) {
 	oldSendStepStatus := sendStepStatus
 	defer func() { sendStepStatus = oldSendStepStatus }()
 	sendStepStatus = func(ctx context.Context, stepID, accountID, callbackToken, taskID string, numRetries int32, timeTaken time.Duration,
-		stepOutput *output.StepOutput, stepErr error, log *zap.SugaredLogger) error {
+		status statuspb.StepExecutionStatus, errMsg string, stepOutput *output.StepOutput, log *zap.SugaredLogger) error {
 		return nil
 	}
 
@@ -498,7 +499,7 @@ func TestPublishArtifactsSuccess(t *testing.T) {
 	oldSendStepStatus := sendStepStatus
 	defer func() { sendStepStatus = oldSendStepStatus }()
 	sendStepStatus = func(ctx context.Context, stepID, accountID, callbackToken, taskID string, numRetries int32, timeTaken time.Duration,
-		stepOutput *output.StepOutput, stepErr error, log *zap.SugaredLogger) error {
+		status statuspb.StepExecutionStatus, errMsg string, stepOutput *output.StepOutput, log *zap.SugaredLogger) error {
 		return nil
 	}
 
@@ -548,7 +549,7 @@ func TestPublishArtifactsErr(t *testing.T) {
 	oldSendStepStatus := sendStepStatus
 	defer func() { sendStepStatus = oldSendStepStatus }()
 	sendStepStatus = func(ctx context.Context, stepID, accountID, callbackToken, taskID string, numRetries int32, timeTaken time.Duration,
-		stepOutput *output.StepOutput, stepErr error, log *zap.SugaredLogger) error {
+		status statuspb.StepExecutionStatus, errMsg string, stepOutput *output.StepOutput, log *zap.SugaredLogger) error {
 		return nil
 	}
 
@@ -714,4 +715,166 @@ func TestCleanupNotRunStepSuccess(t *testing.T) {
 	e := NewUnitExecutor(tmpPath, log.Sugar())
 	err := e.Cleanup(ctx, step)
 	assert.Nil(t, err)
+}
+
+func TestStepSkipSuccess(t *testing.T) {
+	ctrl, ctx := gomock.WithContext(context.Background(), t)
+	defer ctrl.Finish()
+
+	accountID := "test"
+	taskID := "taskID"
+	callbackToken := "token"
+	log, _ := logs.GetObservedLogger(zap.InfoLevel)
+
+	tmpFilePath := "/tmp"
+	stepProto := &pb.UnitStep{
+		Id: "test2",
+		Step: &pb.UnitStep_Run{
+			Run: &pb.RunStep{
+				Commands:      []string{"ls"},
+				ContainerPort: uint32(8000),
+			},
+		},
+		CallbackToken: callbackToken,
+		TaskId:        taskID,
+		SkipCondition: "true",
+	}
+
+	evaluateJEXL = func(ctx context.Context, stepID string, expressions []string, o output.StageOutput,
+		log *zap.SugaredLogger) (map[string]string, error) {
+		return nil, nil
+	}
+
+	oldSendStepStatus := sendStepStatus
+	defer func() { sendStepStatus = oldSendStepStatus }()
+	sendStepStatus = func(ctx context.Context, stepID, accountID, callbackToken, taskID string, numRetries int32, timeTaken time.Duration,
+		status statuspb.StepExecutionStatus, errMsg string, stepOutput *output.StepOutput, log *zap.SugaredLogger) error {
+		return nil
+	}
+
+	e := NewUnitExecutor(tmpFilePath, log.Sugar())
+	_, err := e.Run(ctx, stepProto, nil, accountID)
+	assert.Equal(t, err, nil)
+}
+
+func TestStepInvalidSkipCondition(t *testing.T) {
+	ctrl, ctx := gomock.WithContext(context.Background(), t)
+	defer ctrl.Finish()
+
+	log, _ := logs.GetObservedLogger(zap.InfoLevel)
+	accountID := "test"
+	taskID := "taskID"
+	callbackToken := "token"
+
+	tmpFilePath := "/tmp"
+	stepProto := &pb.UnitStep{
+		Id: "test2",
+		Step: &pb.UnitStep_Run{
+			Run: &pb.RunStep{
+				Commands:      []string{"ls"},
+				ContainerPort: uint32(8000),
+			},
+		},
+		CallbackToken: callbackToken,
+		TaskId:        taskID,
+		SkipCondition: "foo",
+	}
+
+	evaluateJEXL = func(ctx context.Context, stepID string, expressions []string, o output.StageOutput,
+		log *zap.SugaredLogger) (map[string]string, error) {
+		return nil, nil
+	}
+
+	oldSendStepStatus := sendStepStatus
+	defer func() { sendStepStatus = oldSendStepStatus }()
+	sendStepStatus = func(ctx context.Context, stepID, accountID, callbackToken, taskID string, numRetries int32, timeTaken time.Duration,
+		status statuspb.StepExecutionStatus, errMsg string, stepOutput *output.StepOutput, log *zap.SugaredLogger) error {
+		return nil
+	}
+
+	e := NewUnitExecutor(tmpFilePath, log.Sugar())
+	_, err := e.Run(ctx, stepProto, nil, accountID)
+	assert.NotEqual(t, err, nil)
+}
+
+func TestStepInvalidJEXLSkipCondition(t *testing.T) {
+	ctrl, ctx := gomock.WithContext(context.Background(), t)
+	defer ctrl.Finish()
+
+	log, _ := logs.GetObservedLogger(zap.InfoLevel)
+	accountID := "test"
+	taskID := "taskID"
+	callbackToken := "token"
+
+	tmpFilePath := "/tmp"
+	stepProto := &pb.UnitStep{
+		Id: "test2",
+		Step: &pb.UnitStep_Run{
+			Run: &pb.RunStep{
+				Commands:      []string{"ls"},
+				ContainerPort: uint32(8000),
+			},
+		},
+		CallbackToken: callbackToken,
+		TaskId:        taskID,
+		SkipCondition: "${foo.bar${}",
+	}
+
+	evaluateJEXL = func(ctx context.Context, stepID string, expressions []string, o output.StageOutput,
+		log *zap.SugaredLogger) (map[string]string, error) {
+		return nil, fmt.Errorf("Invalid JEXL")
+	}
+
+	oldSendStepStatus := sendStepStatus
+	defer func() { sendStepStatus = oldSendStepStatus }()
+	sendStepStatus = func(ctx context.Context, stepID, accountID, callbackToken, taskID string, numRetries int32, timeTaken time.Duration,
+		status statuspb.StepExecutionStatus, errMsg string, stepOutput *output.StepOutput, log *zap.SugaredLogger) error {
+		return nil
+	}
+
+	e := NewUnitExecutor(tmpFilePath, log.Sugar())
+	_, err := e.Run(ctx, stepProto, nil, accountID)
+	assert.NotEqual(t, err, nil)
+}
+
+func TestStepJEXLSkipCondition(t *testing.T) {
+	ctrl, ctx := gomock.WithContext(context.Background(), t)
+	defer ctrl.Finish()
+
+	log, _ := logs.GetObservedLogger(zap.InfoLevel)
+	accountID := "test"
+	taskID := "taskID"
+	callbackToken := "token"
+	expr := "${foo.bar}"
+	tmpFilePath := "/tmp"
+	stepProto := &pb.UnitStep{
+		Id: "test2",
+		Step: &pb.UnitStep_Run{
+			Run: &pb.RunStep{
+				Commands:      []string{"ls"},
+				ContainerPort: uint32(8000),
+			},
+		},
+		CallbackToken: callbackToken,
+		TaskId:        taskID,
+		SkipCondition: expr,
+	}
+
+	evaluateJEXL = func(ctx context.Context, stepID string, expressions []string, o output.StageOutput,
+		log *zap.SugaredLogger) (map[string]string, error) {
+		m := make(map[string]string)
+		m[expr] = "true"
+		return m, nil
+	}
+
+	oldSendStepStatus := sendStepStatus
+	defer func() { sendStepStatus = oldSendStepStatus }()
+	sendStepStatus = func(ctx context.Context, stepID, accountID, callbackToken, taskID string, numRetries int32, timeTaken time.Duration,
+		status statuspb.StepExecutionStatus, errMsg string, stepOutput *output.StepOutput, log *zap.SugaredLogger) error {
+		return nil
+	}
+
+	e := NewUnitExecutor(tmpFilePath, log.Sugar())
+	_, err := e.Run(ctx, stepProto, nil, accountID)
+	assert.Equal(t, err, nil)
 }

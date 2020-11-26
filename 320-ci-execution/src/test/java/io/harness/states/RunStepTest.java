@@ -2,6 +2,7 @@ package io.harness.states;
 
 import static io.harness.beans.steps.stepinfo.LiteEngineTaskStepInfo.CALLBACK_IDS;
 import static io.harness.rule.OwnerRule.ALEKSANDAR;
+import static io.harness.rule.OwnerRule.SHUBHAM;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.eq;
@@ -127,5 +128,18 @@ public class RunStepTest extends CIExecutionTest {
                                         .failureTypes(EnumSet.of(FailureType.APPLICATION_ERROR))
                                         .build())
                        .build());
+  }
+
+  @Test
+  @Owner(developers = SHUBHAM)
+  @Category(UnitTests.class)
+  public void shouldHandleSkippedAsyncResponse() {
+    responseDataMap.put(STEP_RESPONSE,
+        StepStatusTaskResponseData.builder()
+            .stepStatus(StepStatus.builder().stepExecutionStatus(StepExecutionStatus.SKIPPED).build())
+            .build());
+    StepResponse stepResponse = runStep.handleAsyncResponse(ambiance, stepInfo, responseDataMap);
+
+    assertThat(stepResponse).isEqualTo(StepResponse.builder().status(Status.SKIPPED).build());
   }
 }

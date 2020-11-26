@@ -39,36 +39,30 @@ var (
 
 // SendStepStatus sends the step status to delegate task service.
 func SendStepStatus(ctx context.Context, stepID, accountID, callbackToken, taskID string, numRetries int32, timeTaken time.Duration,
-	stepOutput *output.StepOutput, stepErr error, log *zap.SugaredLogger) error {
+	status pb.StepExecutionStatus, errMsg string, stepOutput *output.StepOutput, log *zap.SugaredLogger) error {
 	start := time.Now()
-	arg := getRequestArg(stepID, accountID, callbackToken, taskID, numRetries, timeTaken, stepOutput, stepErr, log)
+	arg := getRequestArg(stepID, accountID, callbackToken, taskID, numRetries, timeTaken, status, errMsg, stepOutput, log)
 	err := sendStatusWithRetries(ctx, arg, log)
 	if err != nil {
 		log.Errorw(
 			"Failed to send/execute delegate task status",
 			"callback_token", callbackToken,
 			"step_output", stepOutput,
-			"step_error", stepErr,
+			"step_status", status.String(),
+			"step_error", errMsg,
 			"elapsed_time_ms", utils.TimeSince(start),
 			"step_id", stepID,
 			zap.Error(err),
 		)
 		return err
 	}
-	log.Infow("Successfully sent the step status", "step_id", stepID, "elapsed_time_ms", utils.TimeSince(start))
+	log.Infow("Successfully sent the step status", "step_id", stepID, "step_status", status.String(), "elapsed_time_ms", utils.TimeSince(start))
 	return nil
 }
 
 // getRequestArg returns arguments for send status rpc
 func getRequestArg(stepID, accountID, callbackToken, taskID string, numRetries int32, timeTaken time.Duration,
-	stepOutput *output.StepOutput, stepErr error, log *zap.SugaredLogger) *pb.SendTaskStatusRequest {
-	var stepErrMsg string
-	stepStatus := pb.StepExecutionStatus_SUCCESS
-	if stepErr != nil {
-		stepStatus = pb.StepExecutionStatus_FAILURE
-		stepErrMsg = stepErr.Error()
-	}
-
+	status pb.StepExecutionStatus, errMsg string, stepOutput *output.StepOutput, log *zap.SugaredLogger) *pb.SendTaskStatusRequest {
 	var stepOutputMap map[string]string
 	if stepOutput != nil {
 		stepOutputMap = stepOutput.Output
@@ -88,8 +82,8 @@ func getRequestArg(stepID, accountID, callbackToken, taskID string, numRetries i
 				StepStatus: &pb.StepStatus{
 					NumRetries:          numRetries,
 					TotalTimeTaken:      ptypes.DurationProto(timeTaken),
-					StepExecutionStatus: stepStatus,
-					ErrorMessage:        stepErrMsg,
+					StepExecutionStatus: status,
+					ErrorMessage:        errMsg,
 					Output: &pb.StepStatus_StepOutput{
 						StepOutput: &pb.StepMapOutput{
 							Output: stepOutputMap,
@@ -99,7 +93,7 @@ func getRequestArg(stepID, accountID, callbackToken, taskID string, numRetries i
 			},
 		},
 	}
-	log.Infow("Sending step status", "step_id", stepID, "status", stepStatus.String(), "arg", msgToStr(req, log))
+	log.Infow("Sending step status", "step_id", stepID, "status", status.String(), "request_arg", msgToStr(req, log))
 	return req
 }
 

@@ -322,7 +322,7 @@ func Test_GetRequestArgResolveJEXL(t *testing.T) {
 			log:         log.Sugar(),
 		}
 		// Initialize a mock CI addon
-		evaluateJEXL = func(ctx context.Context, expressions []string, o output.StageOutput,
+		evaluateJEXL = func(ctx context.Context, stepID string, expressions []string, o output.StageOutput,
 			log *zap.SugaredLogger) (map[string]string, error) {
 			return tc.jexlEvalRet, tc.jexlEvalErr
 		}

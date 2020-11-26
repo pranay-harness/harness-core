@@ -10,11 +10,13 @@ go_library(
     importpath = "github.com/wings-software/portal/product/ci/engine/executor",
     visibility = ["//visibility:public"],
     deps = [
+        "//50-delegate-task-grpc-service/src/main/proto/io/harness/task/service:go_default_library",
         "//commons/go/lib/filesystem:go_default_library",
         "//commons/go/lib/logs:go_default_library",
         "//commons/go/lib/utils:go_default_library",
         "//product/ci/addon/grpc/client:go_default_library",
         "//product/ci/addon/proto:go_default_library",
+        "//product/ci/engine/jexl:go_default_library",
         "//product/ci/engine/logutil:go_default_library",
         "//product/ci/engine/output:go_default_library",
         "//product/ci/engine/proto:go_default_library",
@@ -37,6 +39,7 @@ go_test(
     ],
     embed = [":go_default_library"],
     deps = [
+        "//50-delegate-task-grpc-service/src/main/proto/io/harness/task/service:go_default_library",
         "//commons/go/lib/filesystem:go_default_library",
         "//commons/go/lib/logs:go_default_library",
         "//product/ci/addon/grpc/client:go_default_library",
