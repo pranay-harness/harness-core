@@ -7,6 +7,7 @@ import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.rule.OwnerRule.KAMAL;
 import static io.harness.rule.OwnerRule.NEMANJA;
 import static io.harness.rule.OwnerRule.PRAVEEN;
+import static io.harness.rule.OwnerRule.VUK;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -50,6 +51,7 @@ import io.harness.cvng.dashboard.services.api.HealthVerificationHeatMapService;
 import io.harness.cvng.verificationjob.beans.Sensitivity;
 import io.harness.cvng.verificationjob.entities.CanaryVerificationJob;
 import io.harness.cvng.verificationjob.entities.VerificationJob;
+import io.harness.cvng.verificationjob.entities.VerificationJobInstance;
 import io.harness.cvng.verificationjob.services.api.VerificationJobInstanceService;
 import io.harness.cvng.verificationjob.services.api.VerificationJobService;
 import io.harness.ng.core.service.dto.ServiceResponseDTO;
@@ -75,6 +77,7 @@ import org.jetbrains.annotations.NotNull;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
+import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
@@ -131,9 +134,29 @@ public class ActivityServiceImplTest extends CvNextGenTest {
                             .filter(ActivityKeys.projectIdentifier, projectIdentifier)
                             .filter(ActivityKeys.orgIdentifier, orgIdentifier)
                             .get();
+
     assertThat(activity).isNotNull();
     assertThat(activity.getType().name()).isEqualTo(ActivityType.INFRASTRUCTURE.name());
     assertThat(activity.getActivityName()).isEqualTo("Pod restart activity");
+  }
+
+  @Test
+  @Owner(developers = VUK)
+  @Category(UnitTests.class)
+  public void testRegister_resolveJobUuidShouldBeNull() {
+    VerificationJob verificationJob = createVerificationJob();
+    when(verificationJobService.getVerificationJob(accountId, verificationJob.getIdentifier()))
+        .thenReturn(verificationJob);
+    when(verificationJobInstanceService.create(anyList())).thenReturn(Arrays.asList("taskId1"));
+
+    activityService.register(accountId, generateUuid(), getKubernetesActivity(verificationJob));
+
+    ArgumentCaptor<List> argumentCaptor = ArgumentCaptor.forClass(List.class);
+    verify(verificationJobInstanceService).create(argumentCaptor.capture());
+
+    List<VerificationJobInstance> verificationJobInstanceList = argumentCaptor.getValue();
+
+    assertThat(verificationJobInstanceList.get(0).getResolvedJob().getUuid()).isNull();
   }
 
   @Test
@@ -686,6 +709,7 @@ public class ActivityServiceImplTest extends CvNextGenTest {
 
   private VerificationJob createVerificationJob() {
     CanaryVerificationJob testVerificationJob = new CanaryVerificationJob();
+    testVerificationJob.setUuid(generateUuid());
     testVerificationJob.setAccountId(accountId);
     testVerificationJob.setIdentifier("identifier");
     testVerificationJob.setJobName(generateUuid());
