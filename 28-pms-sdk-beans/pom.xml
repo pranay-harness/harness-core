@@ -6,7 +6,7 @@
         <artifactId>portal</artifactId>
         <version>0.0.1-SNAPSHOT</version>
     </parent>
-    <artifactId>41-pms-sdk</artifactId>
+    <artifactId>28-pms-sdk-beans</artifactId>
     <dependencies>
         <dependency>
             <groupId>de.bwaldvogel</groupId>
@@ -30,32 +30,7 @@
         </dependency>
         <dependency>
             <groupId>software.wings</groupId>
-            <artifactId>980-commons</artifactId>
-            <version>${project.parent.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>software.wings</groupId>
-            <artifactId>960-persistence</artifactId>
-            <version>${project.parent.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>software.wings</groupId>
-            <artifactId>22-timeout-engine</artifactId>
-            <version>${project.parent.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>software.wings</groupId>
             <artifactId>26-pms-contracts-proto</artifactId>
-            <version>${project.parent.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>software.wings</groupId>
-            <artifactId>27-pms-commons</artifactId>
-            <version>${project.parent.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>software.wings</groupId>
-            <artifactId>28-pms-sdk-beans</artifactId>
             <version>${project.parent.version}</version>
         </dependency>
         <dependency>
@@ -77,13 +52,6 @@
             <groupId>software.wings</groupId>
             <artifactId>990-commons-test</artifactId>
             <version>${project.parent.version}</version>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>software.wings</groupId>
-            <artifactId>960-persistence</artifactId>
-            <version>${project.parent.version}</version>
-            <type>test-jar</type>
             <scope>test</scope>
         </dependency>
     </dependencies>

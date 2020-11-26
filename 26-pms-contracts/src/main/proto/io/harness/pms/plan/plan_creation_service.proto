@@ -4,7 +4,7 @@ package io.harness.pms.plan;
 
 option java_multiple_files = true;
 
-import "io/harness/pms/plan/plan_node.proto";
+import "io/harness/pms/plan/plan_node_proto.proto";
 
 service PlanCreationService {
   rpc createPlan(PlanCreationBlobRequest) returns (PlanCreationBlobResponse);

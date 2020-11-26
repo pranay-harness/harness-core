@@ -1,4 +1,4 @@
-package io.harness.pms.sdk.beans;
+package io.harness.pms.plan;
 
 import io.harness.pms.beans.JsonSerializable;
 

@@ -1,6 +1,5 @@
-package io.harness.pms.sdk.io;
+package io.harness.pms.plan;
 
-import io.harness.pms.sdk.beans.StepParameters;
 import io.harness.serializer.JsonUtils;
 
 import java.util.HashMap;

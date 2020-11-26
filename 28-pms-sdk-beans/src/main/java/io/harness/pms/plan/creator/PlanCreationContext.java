@@ -1,4 +1,4 @@
-package io.harness.pms.sdk.creator;
+package io.harness.pms.plan.creator;
 
 import lombok.Value;
 
