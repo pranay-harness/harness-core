@@ -1,7 +1,7 @@
 package io.harness.ngtriggers.helpers;
 
 import static io.harness.ngtriggers.beans.webhookresponse.WebhookEventResponse.FinalStatus.INVALID_RUNTIME_INPUT_YAML;
-import static io.harness.ngtriggers.beans.webhookresponse.WebhookEventResponse.FinalStatus.NO_MATCHING_TRIGGER;
+import static io.harness.ngtriggers.beans.webhookresponse.WebhookEventResponse.FinalStatus.NO_MATCHING_TRIGGER_FOR_PAYLOAD_CONDITIONS;
 import static io.harness.ngtriggers.beans.webhookresponse.WebhookEventResponse.FinalStatus.NO_MATCHING_TRIGGER_FOR_REPO;
 import static io.harness.ngtriggers.beans.webhookresponse.WebhookEventResponse.FinalStatus.TARGET_DID_NOT_EXECUTE;
 import static io.harness.ngtriggers.beans.webhookresponse.WebhookEventResponse.FinalStatus.TARGET_EXECUTION_REQUESTED;
@@ -25,6 +25,7 @@ import io.harness.ngtriggers.beans.source.webhook.WebhookTriggerConfig;
 import io.harness.ngtriggers.beans.source.webhook.WebhookTriggerSpec;
 import io.harness.ngtriggers.beans.target.TargetSpec;
 import io.harness.ngtriggers.beans.target.pipeline.PipelineTargetSpec;
+import io.harness.ngtriggers.beans.target.pipeline.TargetExecutionSummary;
 import io.harness.ngtriggers.beans.webhookresponse.WebhookEventResponse;
 import io.harness.ngtriggers.mapper.NGTriggerElementMapper;
 import io.harness.ngtriggers.service.NGTriggerService;
@@ -64,15 +65,15 @@ public class NGTriggerWebhookExecutionHelper {
     if (EmptyPredicate.isEmpty(triggersForRepo)) {
       log.info("No trigger found for repoUrl:" + webhookPayloadData.getRepository().getLink());
       return WebhookEventResponseHelper.toResponse(NO_MATCHING_TRIGGER_FOR_REPO, triggerWebhookEvent, null, EMPTY,
-          "No Trigger was configured for Repo: " + webhookPayloadData.getRepository().getLink());
+          "No Trigger was configured for Repo: " + webhookPayloadData.getRepository().getLink(), null);
     }
 
     // 3. Apply Event, Action and Condition filters
     Optional<TriggerDetails> optionalEntity = applyFilters(webhookPayloadData, triggersForRepo);
     if (!optionalEntity.isPresent()) {
       log.info("No trigger matched payload after condition evaluation:");
-      return WebhookEventResponseHelper.toResponse(
-          NO_MATCHING_TRIGGER, triggerWebhookEvent, null, EMPTY, "No Trigger matched for payload event");
+      return WebhookEventResponseHelper.toResponse(NO_MATCHING_TRIGGER_FOR_PAYLOAD_CONDITIONS, triggerWebhookEvent,
+          null, EMPTY, "No Trigger matched for payload event", null);
     }
 
     // 4. Request Execution if trigger is available
@@ -83,9 +84,15 @@ public class NGTriggerWebhookExecutionHelper {
   private WebhookEventResponse triggerPipelineExecution(
       TriggerWebhookEvent triggerWebhookEvent, TriggerDetails triggerDetails) {
     NGTriggerEntity ngTriggerEntity = triggerDetails.getNgTriggerEntity();
+    String runtimeInputYaml =
+        ((PipelineTargetSpec) triggerDetails.getNgTriggerConfig().getTarget().getSpec()).getRuntimeInputYaml();
+
     try {
       NGPipelineExecutionResponseDTO response =
           resolveRuntimeInputAndSubmitExecutionRequest(triggerDetails, triggerWebhookEvent.getPayload());
+
+      TargetExecutionSummary targetExecutionSummary =
+          WebhookEventResponseHelper.prepareTargetExecutionSummary(response, triggerDetails, runtimeInputYaml);
       if (response.isErrorResponse()) {
         log.warn(new StringBuilder(128)
                      .append(ngTriggerEntity.getTargetType())
@@ -94,8 +101,8 @@ public class NGTriggerWebhookExecutionHelper {
                      .append(", using trigger: ")
                      .append(ngTriggerEntity.getIdentifier())
                      .toString());
-        return WebhookEventResponseHelper.toResponse(
-            TARGET_DID_NOT_EXECUTE, triggerWebhookEvent, response, ngTriggerEntity.getIdentifier(), EMPTY);
+        return WebhookEventResponseHelper.toResponse(TARGET_DID_NOT_EXECUTE, triggerWebhookEvent, response,
+            ngTriggerEntity.getIdentifier(), EMPTY, targetExecutionSummary);
       } else {
         log.info(new StringBuilder(128)
                      .append(ngTriggerEntity.getTargetType())
@@ -105,19 +112,21 @@ public class NGTriggerWebhookExecutionHelper {
                      .append(ngTriggerEntity.getIdentifier())
                      .toString());
         return WebhookEventResponseHelper.toResponse(TARGET_EXECUTION_REQUESTED, triggerWebhookEvent, response,
-            ngTriggerEntity.getIdentifier(), "Pipeline execution was requested successfully");
+            ngTriggerEntity.getIdentifier(), "Pipeline execution was requested successfully", targetExecutionSummary);
       }
     } catch (Exception e) {
       log.info(new StringBuilder(128)
-                   .append(" Exception occured while requesting ")
+                   .append(" Exception occurred while requesting ")
                    .append(ngTriggerEntity.getTargetType())
                    .append(" execution. Identifier: ")
                    .append(ngTriggerEntity.getTargetIdentifier())
                    .append(", using trigger: ")
                    .append(ngTriggerEntity.getIdentifier())
                    .toString());
-      return WebhookEventResponseHelper.toResponse(
-          INVALID_RUNTIME_INPUT_YAML, triggerWebhookEvent, null, ngTriggerEntity.getIdentifier(), e.getMessage());
+      TargetExecutionSummary targetExecutionSummary =
+          WebhookEventResponseHelper.prepareTargetExecutionSummary(null, triggerDetails, runtimeInputYaml);
+      return WebhookEventResponseHelper.toResponse(INVALID_RUNTIME_INPUT_YAML, triggerWebhookEvent, null,
+          ngTriggerEntity.getIdentifier(), e.getMessage(), targetExecutionSummary);
     }
   }
 

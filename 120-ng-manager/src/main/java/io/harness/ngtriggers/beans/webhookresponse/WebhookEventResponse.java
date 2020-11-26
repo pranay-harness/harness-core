@@ -1,5 +1,7 @@
 package io.harness.ngtriggers.beans.webhookresponse;
 
+import io.harness.ngtriggers.beans.target.pipeline.TargetExecutionSummary;
+
 import lombok.Builder;
 import lombok.Data;
 
@@ -10,7 +12,7 @@ public class WebhookEventResponse {
     SCM_SERVICE_CONNECTION_FAILED,
     INVALID_PAYLOAD,
     NO_MATCHING_TRIGGER_FOR_REPO,
-    NO_MATCHING_TRIGGER,
+    NO_MATCHING_TRIGGER_FOR_PAYLOAD_CONDITIONS,
     INVALID_RUNTIME_INPUT_YAML,
     TARGET_DID_NOT_EXECUTE,
     TARGET_EXECUTION_REQUESTED
@@ -25,4 +27,5 @@ public class WebhookEventResponse {
   private String planExecutionId;
   private boolean exceptionOccurred;
   private String triggerIdentifier;
+  private TargetExecutionSummary targetExecutionSummary;
 }

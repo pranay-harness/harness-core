@@ -5,7 +5,6 @@ import static io.harness.ngtriggers.beans.webhookresponse.WebhookEventResponse.F
 
 import static java.time.Duration.ofSeconds;
 
-import io.harness.iterator.PersistenceIterator;
 import io.harness.iterator.PersistenceIteratorFactory;
 import io.harness.metrics.HarnessMetricRegistry;
 import io.harness.mongo.iterator.MongoPersistenceIterator;
@@ -41,25 +40,23 @@ public class TriggerWebhookServiceImpl
 
   @Override
   public void registerIterators() {
-    PersistenceIterator<TriggerWebhookEvent> iterator =
-        persistenceIteratorFactory.createPumpIteratorWithDedicatedThreadPool(
-            PersistenceIteratorFactory.PumpExecutorOptions.builder()
-                .name("WebhookEventProcessor")
-                .poolSize(1)
-                .interval(ofSeconds(15))
-                .build(),
-            TriggerWebhookService.class,
-            MongoPersistenceIterator.<TriggerWebhookEvent, SpringFilterExpander>builder()
-                .clazz(TriggerWebhookEvent.class)
-                .fieldName(TriggerWebhookEventsKeys.nextIteration)
-                .targetInterval(ofSeconds(15))
-                .acceptableNoAlertDelay(ofSeconds(30))
-                .handler(this)
-                .filterExpander(
-                    query -> query.addCriteria(Criteria.where(TriggerWebhookEventsKeys.attemptCount).lte(2)))
-                .schedulingType(REGULAR)
-                .persistenceProvider(new SpringPersistenceProvider<>(mongoTemplate))
-                .redistribute(true));
+    persistenceIteratorFactory.createPumpIteratorWithDedicatedThreadPool(
+        PersistenceIteratorFactory.PumpExecutorOptions.builder()
+            .name("WebhookEventProcessor")
+            .poolSize(1)
+            .interval(ofSeconds(15))
+            .build(),
+        TriggerWebhookService.class,
+        MongoPersistenceIterator.<TriggerWebhookEvent, SpringFilterExpander>builder()
+            .clazz(TriggerWebhookEvent.class)
+            .fieldName(TriggerWebhookEventsKeys.nextIteration)
+            .targetInterval(ofSeconds(15))
+            .acceptableNoAlertDelay(ofSeconds(30))
+            .handler(this)
+            .filterExpander(query -> query.addCriteria(Criteria.where(TriggerWebhookEventsKeys.attemptCount).lte(2)))
+            .schedulingType(REGULAR)
+            .persistenceProvider(new SpringPersistenceProvider<>(mongoTemplate))
+            .redistribute(true));
   }
 
   @Override
@@ -77,7 +74,7 @@ public class TriggerWebhookServiceImpl
       }
     } catch (Exception e) {
       log.error(
-          "Exception while handling webhook event. Shouldnt have been handled gracefully before this. Please check", e);
+          "Exception while handling webhook event. Should have been handled gracefully before this. Please check", e);
     }
   }
 }
