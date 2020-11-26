@@ -16,6 +16,7 @@ directories:
   23-sm-core
   24-common-entities
   26-pms-contracts
+  27-pms-commons
   27-orchestration-persistence
   29-orchestration-beans
   31-orchestration
@@ -26,7 +27,6 @@ directories:
   38-execution-plan
   39-ng-pipeline-commons
   40-ng-triggers
-  40-pms-commons
   41-pms-sdk
   47-pipeline-service
   50-delegate-task-grpc-service

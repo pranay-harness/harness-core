@@ -14,16 +14,14 @@ import org.mongodb.morphia.converters.TypeConverter;
 @UtilityClass
 public class PmsSdkModuleRegistrars {
   public final ImmutableSet<Class<? extends KryoRegistrar>> kryoRegistrars =
-      ImmutableSet.<Class<? extends KryoRegistrar>>builder().addAll(OrchestrationRegistrars.kryoRegistrars).build();
+      ImmutableSet.<Class<? extends KryoRegistrar>>builder().build();
 
   public final ImmutableSet<Class<? extends MorphiaRegistrar>> morphiaRegistrars =
-      ImmutableSet.<Class<? extends MorphiaRegistrar>>builder()
-          .addAll(OrchestrationRegistrars.morphiaRegistrars)
-          .build();
+      ImmutableSet.<Class<? extends MorphiaRegistrar>>builder().build();
 
   public final ImmutableSet<Class<? extends AliasRegistrar>> aliasRegistrars =
-      ImmutableSet.<Class<? extends AliasRegistrar>>builder().addAll(OrchestrationRegistrars.aliasRegistrars).build();
+      ImmutableSet.<Class<? extends AliasRegistrar>>builder().build();
 
   public final ImmutableSet<Class<? extends TypeConverter>> morphiaConverters =
-      ImmutableSet.<Class<? extends TypeConverter>>builder().addAll(OrchestrationRegistrars.morphiaConverters).build();
+      ImmutableSet.<Class<? extends TypeConverter>>builder().build();
 }

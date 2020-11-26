@@ -50,12 +50,7 @@
         </dependency>
         <dependency>
             <groupId>software.wings</groupId>
-            <artifactId>31-orchestration</artifactId>
-            <version>${project.parent.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>software.wings</groupId>
-            <artifactId>40-pms-commons</artifactId>
+            <artifactId>27-pms-commons</artifactId>
             <version>${project.parent.version}</version>
         </dependency>
         <dependency>

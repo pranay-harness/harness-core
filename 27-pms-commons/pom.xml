@@ -6,7 +6,7 @@
         <artifactId>portal</artifactId>
         <version>0.0.1-SNAPSHOT</version>
     </parent>
-    <artifactId>40-pms-commons</artifactId>
+    <artifactId>27-pms-commons</artifactId>
     <dependencies>
         <dependency>
             <groupId>de.bwaldvogel</groupId>
@@ -46,11 +46,6 @@
         <dependency>
             <groupId>software.wings</groupId>
             <artifactId>26-pms-contracts-proto</artifactId>
-            <version>${project.parent.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>software.wings</groupId>
-            <artifactId>31-orchestration</artifactId>
             <version>${project.parent.version}</version>
         </dependency>
         <dependency>
