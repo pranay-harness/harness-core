@@ -67,6 +67,8 @@ public class GitClientHelper {
   private static final Pattern GIT_URL = Pattern.compile(GIT_URL_REGEX);
   private static final Integer OWNER_GROUP = 4;
   private static final Integer REPO_GROUP = 5;
+  private static final Integer USER_GROUP = 1;
+  private static final Integer SCM_GROUP = 2;
 
   private static final LoadingCache<String, Object> cache = CacheBuilder.newBuilder()
                                                                 .maximumSize(2000)
@@ -81,7 +83,7 @@ public class GitClientHelper {
   public static String getGitRepo(String url) {
     Matcher m = GIT_URL.matcher(url);
     try {
-      if (m.find() == true) {
+      if (m.find()) {
         return m.toMatchResult().group(REPO_GROUP);
       } else {
         throw new GitClientException(format("Invalid git repo url  %s", url), SRE);
@@ -95,8 +97,22 @@ public class GitClientHelper {
   public static String getGitOwner(String url) {
     Matcher m = GIT_URL.matcher(url);
     try {
-      if (m.find() == true) {
+      if (m.find()) {
         return m.toMatchResult().group(OWNER_GROUP);
+      } else {
+        throw new GitClientException(format("Invalid git repo url  %s", url), SRE);
+      }
+
+    } catch (Exception e) {
+      throw new GitClientException(format("Failed to parse repo from git url  %s", url), SRE);
+    }
+  }
+
+  public static String getGitSCM(String url) {
+    Matcher m = GIT_URL.matcher(url);
+    try {
+      if (m.find()) {
+        return m.toMatchResult().group(SCM_GROUP);
       } else {
         throw new GitClientException(format("Invalid git repo url  %s", url), SRE);
       }

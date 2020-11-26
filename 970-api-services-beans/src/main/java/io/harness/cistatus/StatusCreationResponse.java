@@ -7,4 +7,4 @@ import lombok.Value;
 @Value
 @Builder
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class GithubStatusCreationResponse {}
+public class StatusCreationResponse {}

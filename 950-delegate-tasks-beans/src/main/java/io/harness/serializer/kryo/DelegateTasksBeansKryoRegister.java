@@ -187,6 +187,7 @@ import io.harness.delegate.task.azure.response.AzureVMSSTaskResponse;
 import io.harness.delegate.task.ci.CIBuildPushParameters;
 import io.harness.delegate.task.ci.CIBuildPushParameters.CIBuildPushTaskType;
 import io.harness.delegate.task.ci.CIBuildStatusPushParameters;
+import io.harness.delegate.task.ci.GitSCMType;
 import io.harness.delegate.task.gcp.request.GcpRequest;
 import io.harness.delegate.task.gcp.request.GcpValidationRequest;
 import io.harness.delegate.task.gcp.response.GcpValidationTaskResponse;
@@ -488,5 +489,6 @@ public class DelegateTasksBeansKryoRegister implements KryoRegistrar {
     kryo.register(CIContainerStatus.Status.class, 19426);
     kryo.register(ConnectorHeartbeatDelegateResponse.class, 19427);
     kryo.register(DelegateStringProgressData.class, 19428);
+    kryo.register(GitSCMType.class, 19429);
   }
 }

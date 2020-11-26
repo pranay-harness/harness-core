@@ -203,6 +203,20 @@ public class CIExecutionPlanTestHelper {
 
   public ConnectorDetails getGitConnector() {
     ConnectorInfoDTO connectorInfo = getGitConnectorDTO().getConnectorInfo();
+    return buildConnector(connectorInfo);
+  }
+
+  public ConnectorDetails getGitLabConnector() {
+    ConnectorInfoDTO connectorInfo = getGitLabConnectorDTO().getConnectorInfo();
+    return buildConnector(connectorInfo);
+  }
+
+  public ConnectorDetails getBitBucketConnector() {
+    ConnectorInfoDTO connectorInfo = getBitbucketConnectorDTO().getConnectorInfo();
+    return buildConnector(connectorInfo);
+  }
+
+  private ConnectorDetails buildConnector(ConnectorInfoDTO connectorInfo) {
     return ConnectorDetails.builder()
         .connectorConfig(connectorInfo.getConnectorConfig())
         .connectorType(connectorInfo.getConnectorType())
@@ -972,6 +986,52 @@ public class CIExecutionPlanTestHelper {
                                   .build())
                         .build())
                 .build())
+        .build();
+  }
+
+  public ConnectorDTO getGitLabConnectorDTO() {
+    return ConnectorDTO.builder()
+        .connectorInfo(ConnectorInfoDTO.builder()
+                           .name("gitLabConnector")
+                           .identifier("gitLabConnector")
+                           .connectorType(ConnectorType.GIT)
+                           .connectorConfig(GitConfigDTO.builder()
+                                                .url("https://gitlab.com/harshjain123/springboot.git")
+                                                .branchName("master")
+                                                .gitAuthType(GitAuthType.HTTP)
+                                                .gitAuth(GitHTTPAuthenticationDTO.builder()
+                                                             .username("username")
+                                                             .passwordRef(SecretRefData.builder()
+                                                                              .identifier("gitPassword")
+                                                                              .scope(Scope.ACCOUNT)
+                                                                              .decryptedValue("password".toCharArray())
+                                                                              .build())
+                                                             .build())
+                                                .build())
+                           .build())
+        .build();
+  }
+
+  public ConnectorDTO getBitbucketConnectorDTO() {
+    return ConnectorDTO.builder()
+        .connectorInfo(ConnectorInfoDTO.builder()
+                           .name("bitBucketConnector")
+                           .identifier("bitBucketConnector")
+                           .connectorType(ConnectorType.GIT)
+                           .connectorConfig(GitConfigDTO.builder()
+                                                .url("https://harshjain12@bitbucket.org/harshjain12/springboot.git")
+                                                .branchName("master")
+                                                .gitAuthType(GitAuthType.HTTP)
+                                                .gitAuth(GitHTTPAuthenticationDTO.builder()
+                                                             .username("username")
+                                                             .passwordRef(SecretRefData.builder()
+                                                                              .identifier("gitPassword")
+                                                                              .scope(Scope.ACCOUNT)
+                                                                              .decryptedValue("password".toCharArray())
+                                                                              .build())
+                                                             .build())
+                                                .build())
+                           .build())
         .build();
   }
 
