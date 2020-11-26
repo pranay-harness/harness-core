@@ -1,5 +1,6 @@
 package io.harness.delegate.beans.azure;
 
+import io.harness.azure.AzureEnvironmentType;
 import io.harness.beans.DecryptableEntity;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.delegate.beans.executioncapability.ExecutionCapabilityDemander;
@@ -25,14 +26,17 @@ public class AzureConfigDTO implements DecryptableEntity, ExecutionCapabilityDem
   private static final String AZURE_URL = "https://azure.microsoft.com/";
   private String clientId;
   private String tenantId;
+  private AzureEnvironmentType azureEnvironmentType;
 
   @ApiModelProperty(dataType = "string") @NotNull @SecretReference SecretRefData key;
 
   @Builder
-  public AzureConfigDTO(String clientId, String tenantId, SecretRefData key) {
+  public AzureConfigDTO(
+      String clientId, String tenantId, SecretRefData key, AzureEnvironmentType azureEnvironmentType) {
     this.clientId = clientId;
     this.tenantId = tenantId;
     this.key = key;
+    this.azureEnvironmentType = azureEnvironmentType;
   }
 
   @Override

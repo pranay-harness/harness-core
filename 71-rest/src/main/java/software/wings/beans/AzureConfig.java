@@ -1,6 +1,6 @@
 package software.wings.beans;
 
-import io.harness.beans.AzureEnvironmentType;
+import io.harness.azure.AzureEnvironmentType;
 import io.harness.ccm.config.CCMConfig;
 import io.harness.ccm.config.CloudCostAware;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;

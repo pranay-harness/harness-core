@@ -390,6 +390,7 @@ public class AzureVMSSStateHelper {
         .clientId(azureConfig.getClientId())
         .key(new SecretRefData(azureConfig.getEncryptedKey(), Scope.ACCOUNT, null))
         .tenantId(azureConfig.getTenantId())
+        .azureEnvironmentType(azureConfig.getAzureEnvironmentType())
         .build();
   }
 

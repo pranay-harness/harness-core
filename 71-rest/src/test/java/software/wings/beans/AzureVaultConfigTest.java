@@ -4,7 +4,7 @@ import static io.harness.rule.OwnerRule.ANSHUL;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import io.harness.beans.AzureEnvironmentType;
+import io.harness.azure.AzureEnvironmentType;
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
 

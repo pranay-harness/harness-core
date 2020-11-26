@@ -1,7 +1,7 @@
 package software.wings.helpers.ext.azure;
 
-import static io.harness.beans.AzureEnvironmentType.AZURE;
-import static io.harness.beans.AzureEnvironmentType.AZURE_US_GOVERNMENT;
+import static io.harness.azure.AzureEnvironmentType.AZURE;
+import static io.harness.azure.AzureEnvironmentType.AZURE_US_GOVERNMENT;
 import static io.harness.data.encoding.EncodingUtils.encodeBase64;
 import static io.harness.rule.OwnerRule.ABOSII;
 import static io.harness.rule.OwnerRule.AGORODETKI;
@@ -26,7 +26,7 @@ import static org.powermock.api.mockito.PowerMockito.mock;
 import static org.powermock.api.mockito.PowerMockito.when;
 import static org.powermock.api.mockito.PowerMockito.whenNew;
 
-import io.harness.beans.AzureEnvironmentType;
+import io.harness.azure.AzureEnvironmentType;
 import io.harness.category.element.UnitTests;
 import io.harness.exception.InvalidRequestException;
 import io.harness.k8s.model.KubernetesConfig;

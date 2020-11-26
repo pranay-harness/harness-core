@@ -1,5 +1,5 @@
 package io.harness.serializer.kryo;
-import io.harness.beans.AzureEnvironmentType;
+import io.harness.azure.AzureEnvironmentType;
 import io.harness.beans.EncryptedData;
 import io.harness.beans.EncryptedDataParent;
 import io.harness.beans.SecretChangeLog;
@@ -36,7 +36,6 @@ public class SMCoreKryoRegistrar implements KryoRegistrar {
   public void register(Kryo kryo) {
     kryo.register(AwsSecretsManagerConfig.class, 7178);
     kryo.register(AWSSecretsManagerException.class, 7184);
-    kryo.register(AzureEnvironmentType.class, 7365);
     kryo.register(AzureVaultConfig.class, 7205);
     kryo.register(CyberArkConfig.class, 7228);
     kryo.register(EncryptedData.class, 5124);
