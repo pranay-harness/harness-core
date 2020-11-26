@@ -1,8 +1,8 @@
-package io.harness.pms.sdk.mappers;
+package io.harness.pms.plan.mappers;
 
 import io.harness.data.structure.CollectionUtils;
+import io.harness.pms.plan.PlanNode;
 import io.harness.pms.plan.PlanNodeProto;
-import io.harness.pms.sdk.beans.PlanNode;
 
 import lombok.experimental.UtilityClass;
 

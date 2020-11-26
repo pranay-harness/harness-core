@@ -9,7 +9,7 @@ import "google/protobuf/duration.proto";
 import "google/protobuf/any.proto";
 
 import "io/harness/pms/ambiance/ambiance.proto";
-import "io/harness/pms/plan/plan_node.proto";
+import "io/harness/pms/plan/plan_node_proto.proto";
 import "io/harness/pms/execution/execution_mode.proto";
 import "io/harness/pms/execution/failure/failure_info.proto";
 import "io/harness/pms/execution/status.proto";

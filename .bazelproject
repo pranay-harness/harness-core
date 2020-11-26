@@ -16,8 +16,9 @@ directories:
   23-sm-core
   24-common-entities
   26-pms-contracts
-  27-pms-commons
   27-orchestration-persistence
+  27-pms-commons
+  28-pms-sdk-beans
   29-orchestration-beans
   31-orchestration
   32-orchestration-steps

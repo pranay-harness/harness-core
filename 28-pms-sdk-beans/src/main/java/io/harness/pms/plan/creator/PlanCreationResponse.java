@@ -1,11 +1,11 @@
-package io.harness.pms.sdk.creator;
+package io.harness.pms.plan.creator;
 
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.InvalidRequestException;
 import io.harness.pms.plan.PlanCreationBlobResponse;
+import io.harness.pms.plan.PlanNode;
 import io.harness.pms.plan.PlanNodeProto;
-import io.harness.pms.sdk.beans.PlanNode;
-import io.harness.pms.sdk.mappers.PlanNodeProtoMapper;
+import io.harness.pms.plan.mappers.PlanNodeProtoMapper;
 import io.harness.pms.yaml.YamlField;
 
 import java.util.HashMap;

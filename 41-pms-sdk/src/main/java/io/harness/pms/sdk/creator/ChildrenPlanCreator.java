@@ -1,7 +1,9 @@
 package io.harness.pms.sdk.creator;
 
 import io.harness.data.structure.EmptyPredicate;
-import io.harness.pms.sdk.beans.PlanNode;
+import io.harness.pms.plan.PlanNode;
+import io.harness.pms.plan.creator.PlanCreationContext;
+import io.harness.pms.plan.creator.PlanCreationResponse;
 
 import java.util.HashSet;
 import java.util.Map;
