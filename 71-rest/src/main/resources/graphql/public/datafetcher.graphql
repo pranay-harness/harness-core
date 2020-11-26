@@ -65,6 +65,7 @@ enum DataFetcherEnum {
   nodeAndPodDetails
   linkedAccountStats
   outcomeConnection
+  overviewAnomalies
   overviewPageStats
   pipeline
   pipelineConnection
