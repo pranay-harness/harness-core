@@ -8,9 +8,8 @@ import io.harness.pms.plan.InitializeSdkRequest;
 import io.harness.pms.plan.PmsServiceGrpc.PmsServiceBlockingStub;
 import io.harness.pms.plan.Types;
 import io.harness.pms.sdk.creator.PartialPlanCreator;
-import io.harness.pms.sdk.creator.PlanCreatorProvider;
+import io.harness.pms.sdk.creator.PipelineServiceInfoProvider;
 import io.harness.pms.sdk.creator.filters.FilterCreationResponseMerger;
-import io.harness.pms.sdk.creator.filters.FilterCreatorProvider;
 import io.harness.serializer.KryoRegistrar;
 import io.harness.serializer.PmsSdkModuleRegistrars;
 import io.harness.spring.AliasRegistrar;
@@ -97,14 +96,8 @@ public class PmsSdkModule {
 
       @Provides
       @Singleton
-      public PlanCreatorProvider planCreatorProvider() {
-        return config.getPlanCreatorProvider();
-      }
-
-      @Provides
-      @Singleton
-      public FilterCreatorProvider filterCreatorProvider() {
-        return config.getFilterCreatorProvider();
+      public PipelineServiceInfoProvider pipelineServiceInfoProvider() {
+        return config.getPipelineServiceInfoProvider();
       }
 
       @Provides
@@ -126,16 +119,16 @@ public class PmsSdkModule {
     serviceManager.awaitHealthy();
     Runtime.getRuntime().addShutdownHook(new Thread(() -> serviceManager.stopAsync().awaitStopped()));
 
-    PlanCreatorProvider planCreatorProvider = config.getPlanCreatorProvider();
+    PipelineServiceInfoProvider pipelineServiceInfoProvider = config.getPipelineServiceInfoProvider();
     PmsServiceBlockingStub pmsClient = injector.getInstance(PmsServiceBlockingStub.class);
     pmsClient.initializeSdk(InitializeSdkRequest.newBuilder()
-                                .setName(planCreatorProvider.getServiceName())
-                                .putAllSupportedTypes(calculateSupportedTypes(planCreatorProvider))
+                                .setName(pipelineServiceInfoProvider.getServiceName())
+                                .putAllSupportedTypes(calculateSupportedTypes(pipelineServiceInfoProvider))
                                 .build());
   }
 
-  private Map<String, Types> calculateSupportedTypes(PlanCreatorProvider planCreatorProvider) {
-    List<PartialPlanCreator<?>> planCreators = planCreatorProvider.getPlanCreators();
+  private Map<String, Types> calculateSupportedTypes(PipelineServiceInfoProvider pipelineServiceInfoProvider) {
+    List<PartialPlanCreator<?>> planCreators = pipelineServiceInfoProvider.getPlanCreators();
     if (EmptyPredicate.isEmpty(planCreators)) {
       return Collections.emptyMap();
     }

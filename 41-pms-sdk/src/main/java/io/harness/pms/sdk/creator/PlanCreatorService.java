@@ -40,9 +40,9 @@ public class PlanCreatorService extends PlanCreationServiceImplBase {
   private final List<PartialPlanCreator<?>> planCreators;
 
   @Inject
-  public PlanCreatorService(
-      @NotNull PlanCreatorProvider planCreatorProvider, @NotNull FilterCreatorService filterCreatorService) {
-    this.planCreators = planCreatorProvider.getPlanCreators();
+  public PlanCreatorService(@NotNull PipelineServiceInfoProvider pipelineServiceInfoProvider,
+      @NotNull FilterCreatorService filterCreatorService) {
+    this.planCreators = pipelineServiceInfoProvider.getPlanCreators();
     this.filterCreatorService = filterCreatorService;
   }
 
