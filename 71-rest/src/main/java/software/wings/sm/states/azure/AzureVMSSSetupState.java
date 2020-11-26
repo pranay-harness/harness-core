@@ -56,10 +56,12 @@ import software.wings.sm.ExecutionResponse;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.google.common.collect.ImmutableList;
+import com.google.common.primitives.Ints;
 import com.google.inject.Inject;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
@@ -94,7 +96,7 @@ public class AzureVMSSSetupState extends AbstractAzureState {
 
   @Override
   public Integer getTimeoutMillis(ExecutionContext context) {
-    return getTimeOut(context);
+    return Ints.checkedCast(TimeUnit.MINUTES.toMillis(getTimeOut(context)));
   }
 
   @NotNull

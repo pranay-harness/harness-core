@@ -5,6 +5,7 @@ import static io.harness.exception.WingsException.USER;
 
 import static org.apache.commons.lang3.StringUtils.isBlank;
 
+import io.harness.azure.AzureEnvironmentType;
 import io.harness.azure.context.AzureClientContext;
 import io.harness.azure.model.AzureConfig;
 import io.harness.exception.ExceptionUtils;
@@ -30,8 +31,9 @@ public class AzureClient {
 
   protected Azure getAzureClientWithDefaultSubscription(AzureConfig azureConfig) {
     try {
-      ApplicationTokenCredentials credentials = new ApplicationTokenCredentials(azureConfig.getClientId(),
-          azureConfig.getTenantId(), String.valueOf(azureConfig.getKey()), AzureEnvironment.AZURE);
+      ApplicationTokenCredentials credentials =
+          new ApplicationTokenCredentials(azureConfig.getClientId(), azureConfig.getTenantId(),
+              String.valueOf(azureConfig.getKey()), getAzureEnvironment(azureConfig.getAzureEnvironmentType()));
 
       return Azure.configure().withLogLevel(LogLevel.NONE).authenticate(credentials).withDefaultSubscription();
     } catch (Exception e) {
@@ -46,13 +48,29 @@ public class AzureClient {
     }
 
     try {
-      ApplicationTokenCredentials credentials = new ApplicationTokenCredentials(azureConfig.getClientId(),
-          azureConfig.getTenantId(), String.valueOf(azureConfig.getKey()), AzureEnvironment.AZURE);
+      ApplicationTokenCredentials credentials =
+          new ApplicationTokenCredentials(azureConfig.getClientId(), azureConfig.getTenantId(),
+              String.valueOf(azureConfig.getKey()), getAzureEnvironment(azureConfig.getAzureEnvironmentType()));
 
       return Azure.configure().withLogLevel(LogLevel.NONE).authenticate(credentials).withSubscription(subscriptionId);
     } catch (Exception e) {
       handleAzureAuthenticationException(e);
       throw new InvalidRequestException("Failed to connect to Azure cluster. " + ExceptionUtils.getMessage(e), USER);
+    }
+  }
+
+  private AzureEnvironment getAzureEnvironment(AzureEnvironmentType azureEnvironmentType) {
+    if (azureEnvironmentType == null) {
+      return AzureEnvironment.AZURE;
+    }
+
+    switch (azureEnvironmentType) {
+      case AZURE_US_GOVERNMENT:
+        return AzureEnvironment.AZURE_US_GOVERNMENT;
+
+      case AZURE:
+      default:
+        return AzureEnvironment.AZURE;
     }
   }
 

@@ -3,6 +3,7 @@ package io.harness.serializer.kryo;
 import io.harness.aws.AwsAccessKeyCredential;
 import io.harness.aws.AwsConfig;
 import io.harness.aws.CrossAccountAccess;
+import io.harness.azure.AzureEnvironmentType;
 import io.harness.azure.model.AzureVMData;
 import io.harness.azure.model.SubscriptionData;
 import io.harness.azure.model.VirtualMachineScaleSetData;
@@ -213,6 +214,7 @@ public class ApiServiceBeansKryoRegister implements KryoRegistrar {
     kryo.register(AwsConfig.class, 1428);
     kryo.register(CrossAccountAccess.class, 1429);
     kryo.register(AwsAccessKeyCredential.class, 1430);
+    kryo.register(AzureEnvironmentType.class, 1436);
 
     kryo.register(JiraStatus.class, 1431);
     kryo.register(JiraStatusCategory.class, 1432);

@@ -20,7 +20,7 @@ import static java.util.stream.Collectors.toSet;
 import static org.apache.commons.codec.binary.Base64.encodeBase64String;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
-import io.harness.beans.AzureEnvironmentType;
+import io.harness.azure.AzureEnvironmentType;
 import io.harness.beans.PageResponse;
 import io.harness.exception.AzureServiceException;
 import io.harness.exception.ClusterNotFoundException;

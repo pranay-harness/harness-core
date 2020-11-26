@@ -87,6 +87,11 @@ public class AzureVMSSInstanceSyncDelegateExecutor implements PerpetualTaskExecu
     String clientId = azureConfig.getClientId();
     String tenantId = azureConfig.getTenantId();
     char[] key = azureConfig.getKey();
-    return AzureConfig.builder().clientId(clientId).tenantId(tenantId).key(key).build();
+    return AzureConfig.builder()
+        .clientId(clientId)
+        .tenantId(tenantId)
+        .key(key)
+        .azureEnvironmentType(azureConfig.getAzureEnvironmentType())
+        .build();
   }
 }

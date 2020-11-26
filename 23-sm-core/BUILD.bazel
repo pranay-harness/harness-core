@@ -14,6 +14,7 @@ java_library(
         "//22-rbac-core:module",
         "//22-secret-manager-client:module",
         "//930-delegate-tasks:module",
+        "//970-api-services-beans:module",
         "@maven//:com_amazonaws_aws_java_sdk_core",
         "@maven//:com_amazonaws_aws_java_sdk_kms",
         "@maven//:com_amazonaws_aws_java_sdk_secretsmanager",

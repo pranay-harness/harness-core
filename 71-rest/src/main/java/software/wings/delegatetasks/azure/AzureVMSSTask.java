@@ -115,7 +115,12 @@ public class AzureVMSSTask extends AbstractDelegateRunnableTask {
     String clientId = azureConfigDTO.getClientId();
     String tenantId = azureConfigDTO.getTenantId();
     char[] key = azureConfigDTO.getKey().getDecryptedValue();
-    return AzureConfig.builder().clientId(clientId).tenantId(tenantId).key(key).build();
+    return AzureConfig.builder()
+        .clientId(clientId)
+        .tenantId(tenantId)
+        .key(key)
+        .azureEnvironmentType(azureConfigDTO.getAzureEnvironmentType())
+        .build();
   }
 
   private void decryptTaskParameters(AzureVMSSTaskParameters azureVMSSTaskParameters) {
