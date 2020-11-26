@@ -16,6 +16,7 @@ import lombok.Data;
 @Builder
 public class FilterCreationResponse {
   PipelineFilter pipelineFilter;
+  int stageCount;
   @Default Map<String, YamlField> dependencies = new HashMap<>();
   @Default Map<String, YamlField> resolvedDependencies = new HashMap<>();
 
@@ -77,6 +78,7 @@ public class FilterCreationResponse {
         finalBlobResponseBuilder.putResolvedDependencies(dependency.getKey(), dependency.getValue().toFieldBlob());
       }
     }
+    finalBlobResponseBuilder.setStageCount(stageCount);
 
     return finalBlobResponseBuilder.build();
   }

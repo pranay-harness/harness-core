@@ -50,16 +50,8 @@ public class PMSPipelineDtoMapper {
         .version(pipelineEntity.getVersion())
         .deployments(getNumberOfDeployments(pipelineEntity))
         .numOfErrors(getNumberOfErrorsLast10Days(pipelineEntity))
-        .numOfStages(getNumberOfStages(pipelineEntity))
+        .numOfStages(pipelineEntity.getStageCount())
         .build();
-  }
-
-  // TODO: Save as part of pipeline Entity.
-  private int getNumberOfStages(PipelineEntity pipeline) {
-    int min = 0;
-    int maxPlusOne = 3;
-    SecureRandom r = new SecureRandom();
-    return r.ints(min, maxPlusOne).findFirst().getAsInt();
   }
 
   // TODO: Implement after implementation of executions

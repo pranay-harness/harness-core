@@ -7,7 +7,6 @@ import static io.harness.pms.creator.PlanCreatorUtils.supportsField;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.InvalidRequestException;
 import io.harness.pms.filter.FilterCreationResponse;
-import io.harness.pms.filter.PipelineFilter;
 import io.harness.pms.plan.FilterCreationBlobRequest;
 import io.harness.pms.plan.FilterCreationBlobResponse;
 import io.harness.pms.plan.YamlFieldBlob;
@@ -105,7 +104,7 @@ public class FilterCreatorService {
         finalResponse.addDependency(yamlField);
         continue;
       }
-
+      finalResponse.setStageCount(finalResponse.getStageCount() + response.getStageCount());
       filterCreationResponseMerger.mergeFilterCreationResponse(finalResponse, response);
       finalResponse.addResolvedDependency(yamlField);
       if (isNotEmpty(response.getDependencies())) {
