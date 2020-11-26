@@ -49,7 +49,7 @@ java_library(
     name = "tests",
     srcs = glob(["src/test/**/*.java"]),
     resources = [
-        "//22-ng-core/src/test/resources:resource",
+        "//950-ng-core/src/test/resources:resource",
     ],
     visibility = ["//visibility:public"],
     deps = [

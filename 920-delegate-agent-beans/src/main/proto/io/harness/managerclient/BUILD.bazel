@@ -3,7 +3,7 @@ load("@io_bazel_rules_go//go:def.bzl", "go_library")
 load("@io_bazel_rules_go//proto:def.bzl", "go_proto_library")
 
 proto_library(
-    name = "21_delegate_agent_beans_proto",
+    name = "920_delegate_agent_beans_proto",
     srcs = [
         "manager_client_execution.proto",
         "manager_client_service.proto",

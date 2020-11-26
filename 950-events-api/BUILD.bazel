@@ -297,8 +297,8 @@ java_binary(
     deps = [
         "maven_deps",
         "//:lombok",
-        "//21-events-api/src/main/proto:21_events_api_java_proto",
-        "//21-events-api/src/main/proto:21_events_api_proto",
+        "//950-events-api/src/main/proto:950_events_api_java_proto",
+        "//950-events-api/src/main/proto:950_events_api_proto",
     ],
 )
 

@@ -6,7 +6,7 @@
         <artifactId>portal</artifactId>
         <version>0.0.1-SNAPSHOT</version>
     </parent>
-    <artifactId>21-delegate-agent-beans</artifactId>
+    <artifactId>920-delegate-agent-beans</artifactId>
     <dependencies>
         <dependency>
             <groupId>org.projectlombok</groupId>
@@ -19,7 +19,7 @@
         </dependency>
         <dependency>
             <groupId>software.wings</groupId>
-            <artifactId>21-delegate-agent-beans-proto</artifactId>
+            <artifactId>920-delegate-agent-beans-proto</artifactId>
             <version>${project.parent.version}</version>
         </dependency>
         <dependency>

@@ -2,7 +2,7 @@ load("@rules_proto//proto:defs.bzl", "proto_library")
 load("@rules_proto_grpc//java:defs.bzl", "java_proto_library")
 
 proto_library(
-    name = "21_events_api_proto",
+    name = "950_events_api_proto",
     srcs = glob(["**/*.proto"]),
     strip_import_prefix = "",
     visibility = ["//visibility:public"],
@@ -15,9 +15,9 @@ proto_library(
 )
 
 java_proto_library(
-    name = "21_events_api_java_proto",
+    name = "950_events_api_java_proto",
     visibility = ["//visibility:public"],
     deps = [
-        ":21_events_api_proto",
+        ":950_events_api_proto",
     ],
 )

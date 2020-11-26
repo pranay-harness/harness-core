@@ -30,7 +30,7 @@
         </dependency>
         <dependency>
             <groupId>software.wings</groupId>
-            <artifactId>21-delegate-agent-beans</artifactId>
+            <artifactId>920-delegate-agent-beans</artifactId>
             <version>${project.parent.version}</version>
         </dependency>
         <dependency>
