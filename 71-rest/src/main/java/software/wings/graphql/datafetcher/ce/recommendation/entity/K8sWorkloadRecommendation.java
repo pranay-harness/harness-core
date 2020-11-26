@@ -106,6 +106,12 @@ public final class K8sWorkloadRecommendation
                                .limits(SANITIZER.decodeDotsInKey(cr.getGuaranteed().getLimits()))
                                .build());
         }
+        if (cr.getRecommended() != null) {
+          cr.setRecommended(ResourceRequirement.builder()
+                                .requests(SANITIZER.decodeDotsInKey(cr.getRecommended().getRequests()))
+                                .limits(SANITIZER.decodeDotsInKey(cr.getRecommended().getLimits()))
+                                .build());
+        }
       }
     }
   }
@@ -143,6 +149,17 @@ public final class K8sWorkloadRecommendation
                                .limits(SANITIZER.encodeDotsInKey(cr.getGuaranteed().getLimits()))
                                .build());
           if (!Objects.equals(cr.getCurrent(), cr.getGuaranteed())) {
+            noDiffInAllContainers = false;
+          }
+        }
+        if (isEmpty(cr.getRecommended())) {
+          validRecommendation = false;
+        } else {
+          cr.setRecommended(ResourceRequirement.builder()
+                                .requests(SANITIZER.encodeDotsInKey(cr.getRecommended().getRequests()))
+                                .limits(SANITIZER.encodeDotsInKey(cr.getRecommended().getLimits()))
+                                .build());
+          if (!Objects.equals(cr.getCurrent(), cr.getRecommended())) {
             noDiffInAllContainers = false;
           }
         }
