@@ -10,6 +10,6 @@ public class OrchestrationTestSpringAliasRegistrar implements AliasRegistrar {
   @Override
   public void register(Map<String, Class<?>> orchestrationElements) {
     orchestrationElements.put("dummyOutcome25", DummyOutcome.class);
-    orchestrationElements.put("TestStepParameters25", TestStepParameters.class);
+    orchestrationElements.put("testStepParameters25", TestStepParameters.class);
   }
 }

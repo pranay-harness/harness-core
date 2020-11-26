@@ -15,11 +15,13 @@ import io.swagger.annotations.ApiModelProperty;
 import lombok.Builder;
 import lombok.Value;
 import lombok.experimental.Wither;
+import org.springframework.data.annotation.TypeAlias;
 
 @Value
 @Builder
 @JsonTypeName(InfrastructureKind.KUBERNETES_DIRECT)
 @SimpleVisitorHelper(helperClass = K8SDirectInfrastructureVisitorHelper.class)
+@TypeAlias("k8sDirectInfrastructure")
 public class K8SDirectInfrastructure implements Infrastructure, Visitable {
   @ApiModelProperty(dataType = SwaggerConstants.STRING_CLASSPATH) @Wither ParameterField<String> connectorRef;
   @ApiModelProperty(dataType = SwaggerConstants.STRING_CLASSPATH) @Wither ParameterField<String> namespace;

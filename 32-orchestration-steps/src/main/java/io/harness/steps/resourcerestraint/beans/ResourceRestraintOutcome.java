@@ -7,10 +7,12 @@ import io.harness.data.Outcome;
 
 import lombok.Builder;
 import lombok.Value;
+import org.springframework.data.annotation.TypeAlias;
 
 @OwnedBy(CDC)
 @Value
 @Builder
+@TypeAlias("resourceRestraintOutcome")
 public class ResourceRestraintOutcome implements Outcome {
   String name;
   int capacity;

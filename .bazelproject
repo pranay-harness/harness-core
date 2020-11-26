@@ -17,7 +17,6 @@ directories:
   24-common-entities
   26-pms-contracts
   27-orchestration-persistence
-  28-pms-beans
   29-orchestration-beans
   31-orchestration
   32-orchestration-steps

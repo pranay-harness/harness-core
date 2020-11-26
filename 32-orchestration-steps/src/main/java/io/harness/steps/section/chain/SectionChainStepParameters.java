@@ -9,10 +9,12 @@ import java.util.List;
 import lombok.Builder;
 import lombok.Singular;
 import lombok.Value;
+import org.springframework.data.annotation.TypeAlias;
 
 @OwnedBy(CDC)
 @Value
 @Builder
+@TypeAlias("sectionChainStepParameters")
 public class SectionChainStepParameters implements StepParameters {
   @Singular List<String> childNodeIds;
 }

@@ -19,11 +19,13 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.experimental.FieldDefaults;
+import org.springframework.data.annotation.TypeAlias;
 
 @Data
 @NoArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @SimpleVisitorHelper(helperClass = ArtifactSpecWrapperVisitorHelper.class)
+@TypeAlias("artifactSpecWrapper")
 public class ArtifactSpecWrapper implements Visitable {
   @NotNull @JsonProperty("type") ArtifactSourceType sourceType;
   @JsonProperty("spec")

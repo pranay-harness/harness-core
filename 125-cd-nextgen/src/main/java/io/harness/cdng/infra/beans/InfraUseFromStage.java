@@ -15,10 +15,12 @@ import java.io.Serializable;
 import javax.validation.constraints.NotNull;
 import lombok.Builder;
 import lombok.Data;
+import org.springframework.data.annotation.TypeAlias;
 
 @Data
 @Builder
 @SimpleVisitorHelper(helperClass = InfraUseFromStageVisitorHelper.class)
+@TypeAlias("infraUseFromStage")
 public class InfraUseFromStage implements Serializable, Visitable {
   // Stage identifier of the stage to select from.
   @NotNull String stage;
@@ -43,6 +45,7 @@ public class InfraUseFromStage implements Serializable, Visitable {
   @Builder
   @ApiModel(value = "InfraOverrides")
   @SimpleVisitorHelper(helperClass = InfraUseFromOverridesVisitorHelper.class)
+  @TypeAlias("infraUseFromStage_overrides")
   public static class Overrides implements Serializable, Visitable {
     EnvironmentYaml environment;
     InfrastructureDef infrastructureDefinition;

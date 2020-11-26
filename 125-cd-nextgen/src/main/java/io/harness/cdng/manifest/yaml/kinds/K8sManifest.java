@@ -25,6 +25,7 @@ import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.experimental.FieldDefaults;
 import lombok.experimental.Wither;
+import org.springframework.data.annotation.TypeAlias;
 
 @Data
 @Builder
@@ -32,6 +33,7 @@ import lombok.experimental.Wither;
 @JsonTypeName(ManifestType.K8Manifest)
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @SimpleVisitorHelper(helperClass = K8sManifestVisitorHelper.class)
+@TypeAlias("k8sManifest")
 public class K8sManifest implements ManifestAttributes, ValuesPathProvider, Visitable {
   @EntityIdentifier String identifier;
   @Getter(onMethod = @__(@JsonIgnore)) @JsonIgnore @Wither ParameterField<List<String>> valuesFilePaths;

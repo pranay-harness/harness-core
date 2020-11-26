@@ -14,6 +14,7 @@ import java.util.Optional;
 import lombok.Builder;
 import lombok.Data;
 import org.hibernate.validator.constraints.NotEmpty;
+import org.springframework.data.annotation.TypeAlias;
 
 /**
  * Execution represents list of steps that can be used within stage
@@ -24,6 +25,7 @@ import org.hibernate.validator.constraints.NotEmpty;
 @Data
 @Builder
 @SimpleVisitorHelper(helperClass = ExecutionElementVisitorHelper.class)
+@TypeAlias("io.harness.yaml.core.executionElement")
 public class ExecutionElement implements Visitable {
   @NotEmpty List<ExecutionWrapper> steps;
   List<ExecutionWrapper> rollbackSteps;

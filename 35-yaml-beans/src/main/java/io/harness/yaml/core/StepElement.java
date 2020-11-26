@@ -21,11 +21,13 @@ import java.util.List;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.springframework.data.annotation.TypeAlias;
 
 @Data
 @NoArgsConstructor
 @JsonTypeName("step")
 @SimpleVisitorHelper(helperClass = StepElementVisitorHelper.class)
+@TypeAlias("io.harness.yaml.core.stepElement")
 public class StepElement implements ExecutionWrapper, WithIdentifier, Visitable {
   @EntityIdentifier String identifier;
   @EntityName String name;

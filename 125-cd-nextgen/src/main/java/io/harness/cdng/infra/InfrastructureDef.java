@@ -16,10 +16,12 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.springframework.data.annotation.TypeAlias;
 
 @Data
 @NoArgsConstructor
 @SimpleVisitorHelper(helperClass = InfrastructureDefVisitorHelper.class)
+@TypeAlias("infrastructureDef")
 public class InfrastructureDef implements Visitable {
   String type;
   @JsonProperty("spec")

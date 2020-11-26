@@ -11,11 +11,13 @@ import io.harness.tasks.TaskMode;
 import java.util.Map;
 import lombok.Builder;
 import lombok.Value;
+import org.springframework.data.annotation.TypeAlias;
 
 @OwnedBy(CDC)
 @Redesign
 @Value
 @Builder
+@TypeAlias("taskChainExecutableResponse")
 public class TaskChainExecutableResponse implements TaskSpawningExecutableResponse {
   String taskId;
   TaskMode taskMode;

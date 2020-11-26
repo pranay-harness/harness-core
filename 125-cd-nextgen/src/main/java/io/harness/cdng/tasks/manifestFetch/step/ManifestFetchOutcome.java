@@ -8,9 +8,11 @@ import java.util.List;
 import lombok.Builder;
 import lombok.Data;
 import lombok.Value;
+import org.springframework.data.annotation.TypeAlias;
 
 @Value
 @Builder
+@TypeAlias("manifestFetchOutcome")
 public class ManifestFetchOutcome implements Outcome {
   private List<ManifestDataDetails> manifestDataDetailsForSpec;
   private List<ManifestDataDetails> manifestDataDetailsForOverrides;

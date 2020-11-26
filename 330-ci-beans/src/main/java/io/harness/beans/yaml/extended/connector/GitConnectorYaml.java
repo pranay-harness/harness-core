@@ -9,12 +9,14 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.springframework.data.annotation.TypeAlias;
 
 @Data
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
 @JsonTypeName("git")
+@TypeAlias("gitConnectorYaml")
 public class GitConnectorYaml implements Connector {
   @NotNull private String type;
   @NotNull @EntityIdentifier private String identifier;

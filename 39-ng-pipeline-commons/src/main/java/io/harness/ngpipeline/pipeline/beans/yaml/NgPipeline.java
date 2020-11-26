@@ -17,7 +17,6 @@ import io.harness.walktree.visitor.validation.annotations.Required;
 import io.harness.walktree.visitor.validation.modes.PostInputSet;
 import io.harness.walktree.visitor.validation.modes.PreInputSet;
 import io.harness.yaml.core.auxiliary.intfc.StageElementWrapper;
-import io.harness.yaml.core.failurestrategy.FailureStrategyConfig;
 import io.harness.yaml.core.intfc.Pipeline;
 import io.harness.yaml.core.variables.NGVariable;
 import io.harness.yaml.extended.ci.codebase.CodeBase;
@@ -30,6 +29,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.Singular;
 import lombok.experimental.FieldNameConstants;
+import org.springframework.data.annotation.TypeAlias;
 
 @Data
 @Builder
@@ -41,6 +41,7 @@ import lombok.experimental.FieldNameConstants;
           @Field(NgPipelineKeys.stages)
     })
 @SimpleVisitorHelper(helperClass = NgPipelineVisitorHelper.class)
+@TypeAlias("ngPipeline")
 public class NgPipeline implements Pipeline, Visitable {
   @NotNull(groups = PreInputSet.class) @Required(groups = PostInputSet.class) @EntityName String name;
   @NotNull(groups = PreInputSet.class) @Required(groups = PostInputSet.class) @EntityIdentifier String identifier;

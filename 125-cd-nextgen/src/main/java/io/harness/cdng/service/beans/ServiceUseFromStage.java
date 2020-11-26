@@ -18,10 +18,12 @@ import java.util.Collections;
 import javax.validation.constraints.NotNull;
 import lombok.Builder;
 import lombok.Data;
+import org.springframework.data.annotation.TypeAlias;
 
 @Data
 @Builder
 @SimpleVisitorHelper(helperClass = ServiceUseFromStageVisitorHelper.class)
+@TypeAlias("serviceUseFromStage")
 public class ServiceUseFromStage implements Serializable, Visitable {
   // Stage identifier of the stage to select from.
   @ApiModelProperty(dataType = SwaggerConstants.STRING_CLASSPATH) @NotNull ParameterField<String> stage;
@@ -45,6 +47,7 @@ public class ServiceUseFromStage implements Serializable, Visitable {
   @Builder
   @ApiModel(value = "ServiceOverrides")
   @SimpleVisitorHelper(helperClass = ServiceUseFromOverridesVisitorHelper.class)
+  @TypeAlias("serviceUseFromStage_overrides")
   public static class Overrides implements Visitable {
     @ApiModelProperty(dataType = SwaggerConstants.STRING_CLASSPATH) ParameterField<String> name;
     @ApiModelProperty(dataType = SwaggerConstants.STRING_CLASSPATH) ParameterField<String> description;

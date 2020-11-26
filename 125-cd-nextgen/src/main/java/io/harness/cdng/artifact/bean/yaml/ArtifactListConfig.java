@@ -16,6 +16,7 @@ import java.util.List;
 import lombok.Builder;
 import lombok.Data;
 import lombok.Singular;
+import org.springframework.data.annotation.TypeAlias;
 
 /**
  * This is Yaml POJO class which may contain expressions as well.
@@ -24,6 +25,7 @@ import lombok.Singular;
 @Data
 @Builder
 @SimpleVisitorHelper(helperClass = ArtifactListConfigVisitorHelper.class)
+@TypeAlias("artifactListConfig")
 public class ArtifactListConfig implements Visitable {
   ArtifactSpecWrapper primary;
   @Singular List<SidecarArtifactWrapper> sidecars;

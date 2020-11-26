@@ -21,11 +21,13 @@ import java.util.List;
 import lombok.Builder;
 import lombok.Data;
 import lombok.Getter;
+import org.springframework.data.annotation.TypeAlias;
 
 @Data
 @Builder
 @JsonTypeName("Deployment")
 @SimpleVisitorHelper(helperClass = DeploymentStageVisitorHelper.class)
+@TypeAlias("deploymentStage")
 public class DeploymentStage implements CDStage, Visitable {
   @JsonIgnore public static String DEPLOYMENT_NAME = "Deployment";
   @JsonIgnore public static NGStageType DEPLOYMENT_STAGE_TYPE = NGStageType.builder().type(DEPLOYMENT_NAME).build();

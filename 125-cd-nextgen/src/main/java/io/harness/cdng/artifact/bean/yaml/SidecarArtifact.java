@@ -21,11 +21,13 @@ import javax.validation.constraints.NotNull;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.springframework.data.annotation.TypeAlias;
 
 @Data
 @NoArgsConstructor
 @JsonTypeName("sidecar")
 @SimpleVisitorHelper(helperClass = SidecarArtifactVisitorHelper.class)
+@TypeAlias("sidecarArtifact")
 public class SidecarArtifact implements SidecarArtifactWrapper, Visitable {
   @EntityIdentifier String identifier;
   @NotNull @JsonProperty("type") ArtifactSourceType sourceType;

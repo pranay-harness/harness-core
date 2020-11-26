@@ -19,12 +19,14 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
+import org.springframework.data.annotation.TypeAlias;
 
 @Data
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = true)
 @JsonTypeName(StepSpecTypeConstants.HTTP)
 @SimpleVisitorHelper(helperClass = HttpStepInfoVisitorHelper.class)
+@TypeAlias("httpStepInfo")
 public class HttpStepInfo extends BasicHttpStepParameters implements CDStepInfo, Visitable {
   @JsonIgnore String name;
   @JsonIgnore String identifier;

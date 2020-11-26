@@ -16,6 +16,7 @@ import javax.validation.constraints.NotNull;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.springframework.data.annotation.TypeAlias;
 
 /**
  * Parallel structure is special list of steps that can be executed in parallel.
@@ -26,6 +27,7 @@ import lombok.NoArgsConstructor;
 @JsonTypeName("parallel")
 @JsonSerialize(using = ParallelStepElementSerializer.class)
 @SimpleVisitorHelper(helperClass = ParallelStepElementVisitorHelper.class)
+@TypeAlias("io.harness.yaml.core.parallelStepElement")
 public class ParallelStepElement implements ExecutionWrapper, Visitable {
   @NotNull List<ExecutionWrapper> sections;
 

@@ -22,6 +22,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.experimental.Wither;
+import org.springframework.data.annotation.TypeAlias;
 
 /**
  * This is Yaml POJO class which may contain expressions as well.
@@ -32,6 +33,7 @@ import lombok.experimental.Wither;
 @EqualsAndHashCode(callSuper = false)
 @JsonTypeName(GCR_NAME)
 @SimpleVisitorHelper(helperClass = GcrArtifactConfigVisitorHelper.class)
+@TypeAlias("gcrArtifactConfig")
 public class GcrArtifactConfig implements ArtifactConfig, Visitable {
   /**
    * GCP connector to connect to Google Container Registry.

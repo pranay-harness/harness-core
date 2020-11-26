@@ -15,10 +15,12 @@ import java.util.List;
 import javax.validation.constraints.NotNull;
 import lombok.Builder;
 import lombok.Value;
+import org.springframework.data.annotation.TypeAlias;
 
 @OwnedBy(CDC)
 @Value
 @Builder
+@TypeAlias("resourceRestraintStepParameters")
 public class ResourceRestraintStepParameters implements StepParameters {
   @NotNull String resourceRestraintId;
   @NotNull String resourceUnit;

@@ -9,6 +9,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.Value;
 import org.hibernate.validator.constraints.NotEmpty;
+import org.springframework.data.annotation.TypeAlias;
 
 /**
  * Stores K8 specific data to setup Pod for running CI job
@@ -17,6 +18,7 @@ import org.hibernate.validator.constraints.NotEmpty;
 @Data
 @Value
 @Builder
+@TypeAlias("k8BuildJobEnvInfo")
 public class K8BuildJobEnvInfo implements BuildJobEnvInfo {
   @NotEmpty private PodsSetupInfo podsSetupInfo;
   @NotEmpty private String workDir;

@@ -8,8 +8,10 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.springframework.data.annotation.TypeAlias;
 
 @Data
+@TypeAlias("resource")
 public class ContainerResource {
   public static final int MEM_LIMIT_DEFAULT = 200;
   public static final int CPU_MILLI_LIMIT_DEFAULT = 200;
@@ -26,6 +28,7 @@ public class ContainerResource {
   @Builder
   @NoArgsConstructor
   @AllArgsConstructor
+  @TypeAlias("resource_limit")
   public static class Limit {
     @Builder.Default @Min(0) private int memory = MEM_LIMIT_DEFAULT;
     @Builder.Default @Min(0) private int cpu = CPU_MILLI_LIMIT_DEFAULT;

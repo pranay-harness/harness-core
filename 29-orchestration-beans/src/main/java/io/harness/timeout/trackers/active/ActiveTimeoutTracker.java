@@ -10,7 +10,10 @@ import io.harness.timeout.TimeoutEvent;
 import io.harness.timeout.trackers.PausableTimeoutTracker;
 import io.harness.timeout.trackers.events.StatusUpdateTimeoutEvent;
 
+import org.springframework.data.annotation.TypeAlias;
+
 @OwnedBy(CDC)
+@TypeAlias("activeTimeoutTracker")
 public class ActiveTimeoutTracker extends PausableTimeoutTracker {
   public ActiveTimeoutTracker(long timeoutMillis, boolean running) {
     super(timeoutMillis, running);

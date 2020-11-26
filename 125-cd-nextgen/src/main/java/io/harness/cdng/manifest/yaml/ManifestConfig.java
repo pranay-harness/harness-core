@@ -17,11 +17,13 @@ import com.fasterxml.jackson.annotation.JsonTypeName;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.springframework.data.annotation.TypeAlias;
 
 @Data
 @NoArgsConstructor
 @JsonTypeName(YamlTypes.MANIFEST_CONFIG)
 @SimpleVisitorHelper(helperClass = ManifestConfigVisitorHelper.class)
+@TypeAlias("manifestConfig")
 public class ManifestConfig implements ManifestConfigWrapper, Visitable {
   @EntityIdentifier String identifier;
   String type;

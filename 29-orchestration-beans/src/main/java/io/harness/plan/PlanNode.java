@@ -19,12 +19,14 @@ import lombok.Singular;
 import lombok.Value;
 import lombok.experimental.FieldNameConstants;
 import org.bson.Document;
+import org.springframework.data.annotation.TypeAlias;
 
 @Value
 @Builder
 @OwnedBy(CDC)
 @Redesign
 @FieldNameConstants(innerTypeName = "PlanNodeKeys")
+@TypeAlias("planNode")
 public class PlanNode {
   // Identifiers
   @NotNull String uuid;

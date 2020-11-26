@@ -7,7 +7,10 @@ import io.harness.timeout.Dimension;
 import io.harness.timeout.TimeoutTracker;
 import io.harness.timeout.TimeoutTrackerState;
 
+import org.springframework.data.annotation.TypeAlias;
+
 @OwnedBy(CDC)
+@TypeAlias("absoluteTimeoutTracker")
 public class AbsoluteTimeoutTracker implements TimeoutTracker {
   private long timeoutMillis;
   private long startTimeMillis;

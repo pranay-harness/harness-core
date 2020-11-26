@@ -7,9 +7,11 @@ import io.harness.state.io.StepParameters;
 import java.util.Map;
 import lombok.Builder;
 import lombok.Data;
+import org.springframework.data.annotation.TypeAlias;
 
 @Data
 @Builder
+@TypeAlias("integrationStageStepParameters")
 public class IntegrationStageStepParameters implements StepParameters {
   private IntegrationStage integrationStage;
   private BuildNumberDetails buildNumberDetails;

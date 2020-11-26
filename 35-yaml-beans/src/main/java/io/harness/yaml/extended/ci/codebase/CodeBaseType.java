@@ -3,7 +3,9 @@ package io.harness.yaml.extended.ci.codebase;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonValue;
+import org.springframework.data.annotation.TypeAlias;
 
+@TypeAlias("io.harness.yaml.extended.ci.CodeBaseType")
 public enum CodeBaseType {
   @JsonProperty("GitHub") GIT_HUB("GitHub");
 

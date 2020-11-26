@@ -7,10 +7,12 @@ import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import javax.validation.constraints.NotNull;
 import lombok.Builder;
 import lombok.Data;
+import org.springframework.data.annotation.TypeAlias;
 
 @Data
 @Builder
 @JsonDeserialize
+@TypeAlias("DockerImageArtifact")
 public class DockerImageArtifact implements Artifact, WithImageConnector {
   @NotNull private String dockerImage;
   @NotNull private String tag;

@@ -15,12 +15,14 @@ import lombok.Builder;
 import lombok.Data;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Id;
+import org.springframework.data.annotation.TypeAlias;
 
 @Data
 @Builder
 @JsonIgnoreProperties(ignoreUnknown = true)
 @Entity(value = "podDetails")
 @HarnessEntity(exportable = true)
+@TypeAlias("k8PodDetails")
 public class K8PodDetails implements PersistentEntity, UuidAware, ContextElement, AccountAccess {
   private String namespace;
   private BuildNumberDetails buildNumberDetails;

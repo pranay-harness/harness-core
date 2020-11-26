@@ -15,8 +15,10 @@ import io.harness.timeout.TimeoutInstance;
 
 import com.google.inject.Inject;
 import org.springframework.data.annotation.Transient;
+import org.springframework.data.annotation.TypeAlias;
 
 @OwnedBy(CDC)
+@TypeAlias("nodeExecutionTimeoutCallback")
 public class NodeExecutionTimeoutCallback implements TimeoutCallback {
   @Inject @Transient private transient NodeExecutionService nodeExecutionService;
   @Inject @Transient private transient InterruptManager interruptManager;

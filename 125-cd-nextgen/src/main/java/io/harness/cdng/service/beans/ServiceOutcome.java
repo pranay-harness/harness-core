@@ -10,9 +10,11 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.Singular;
 import lombok.Value;
+import org.springframework.data.annotation.TypeAlias;
 
 @Value
 @Builder
+@TypeAlias("serviceOutcome")
 public class ServiceOutcome implements Outcome {
   String identifier;
   String displayName;
@@ -23,6 +25,7 @@ public class ServiceOutcome implements Outcome {
 
   @Data
   @Builder
+  @TypeAlias("serviceOutcome_artifactsOutcome")
   public static class ArtifactsOutcome implements Outcome {
     private ArtifactOutcome primary;
     @Singular private Map<String, ArtifactOutcome> sidecars;

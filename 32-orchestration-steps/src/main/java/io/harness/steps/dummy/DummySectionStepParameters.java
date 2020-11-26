@@ -8,10 +8,12 @@ import io.harness.state.io.StepParameters;
 import java.util.Map;
 import lombok.Builder;
 import lombok.Value;
+import org.springframework.data.annotation.TypeAlias;
 
 @OwnedBy(CDC)
 @Value
 @Builder
+@TypeAlias("dummySectionStepParameters")
 public class DummySectionStepParameters implements StepParameters {
   String childNodeId;
   Map<String, String> data;

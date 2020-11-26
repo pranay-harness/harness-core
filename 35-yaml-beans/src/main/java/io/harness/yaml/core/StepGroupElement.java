@@ -18,12 +18,14 @@ import javax.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
+import org.springframework.data.annotation.TypeAlias;
 
 @Data
 @Builder
 @AllArgsConstructor
 @JsonTypeName("stepGroup")
 @SimpleVisitorHelper(helperClass = StepGroupElementVisitorHelper.class)
+@TypeAlias("io.harness.yaml.core.stepGroupElement")
 public class StepGroupElement implements ExecutionWrapper, WithIdentifier, Visitable {
   @EntityIdentifier String identifier;
   @EntityName String name;

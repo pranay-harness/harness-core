@@ -6,6 +6,7 @@ import io.harness.yaml.core.nonyaml.NonYamlInfo;
 import javax.validation.constraints.NotNull;
 import lombok.Builder;
 import lombok.Value;
+import org.springframework.data.annotation.TypeAlias;
 
 /**
  * Each stepInfo will bind to some step
@@ -13,6 +14,7 @@ import lombok.Value;
  */
 @Value
 @Builder
+@TypeAlias("typeInfo")
 public class TypeInfo implements NonYamlInfo {
   @NotNull CIStepInfoType stepInfoType;
   @NotNull StepType stepType;

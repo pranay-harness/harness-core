@@ -5,10 +5,12 @@ import io.harness.cdng.infra.yaml.InfrastructureKind;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import lombok.Builder;
 import lombok.Value;
+import org.springframework.data.annotation.TypeAlias;
 
 @Value
 @Builder
 @JsonTypeName(InfrastructureKind.KUBERNETES_DIRECT)
+@TypeAlias("cdng.infra.beans.K8sDirectInfrastructureOutcome")
 public class K8sDirectInfrastructureOutcome implements InfrastructureOutcome {
   String connectorRef;
   String namespace;

@@ -11,11 +11,13 @@ import java.util.EnumSet;
 import java.util.Set;
 import lombok.Builder;
 import lombok.Value;
+import org.springframework.data.annotation.TypeAlias;
 
 @OwnedBy(CDC)
 @Value
 @Builder
 @Redesign
+@TypeAlias("ignoreAdviserParameters")
 public class IgnoreAdviserParameters implements WithFailureTypes {
   String nextNodeId;
   @Builder.Default Set<FailureType> applicableFailureTypes = EnumSet.noneOf(FailureType.class);

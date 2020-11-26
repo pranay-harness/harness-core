@@ -11,11 +11,13 @@ import lombok.Builder;
 import lombok.NonNull;
 import lombok.Singular;
 import lombok.Value;
+import org.springframework.data.annotation.TypeAlias;
 
 @OwnedBy(CDC)
 @Value
 @Builder
 @Redesign
+@TypeAlias("asyncExecutableResponse")
 public class AsyncExecutableResponse implements ExecutableResponse {
   @NonNull @Singular List<String> callbackIds;
 }

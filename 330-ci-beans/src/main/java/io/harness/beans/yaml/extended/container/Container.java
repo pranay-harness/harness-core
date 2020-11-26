@@ -10,8 +10,10 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.springframework.data.annotation.TypeAlias;
 
 @Data
+@TypeAlias("container")
 public class Container implements WithIdentifier {
   public static final int MEM_RESERVE_DEFAULT = 9000;
   public static final int MEM_LIMIT_DEFAULT = 9000;
@@ -36,6 +38,7 @@ public class Container implements WithIdentifier {
   @Builder
   @NoArgsConstructor
   @AllArgsConstructor
+  @TypeAlias("container_resources")
   public static class Resources {
     @Builder.Default Limit limit = Limit.builder().build();
     @Builder.Default Reserve reserve = Reserve.builder().build();
@@ -45,6 +48,7 @@ public class Container implements WithIdentifier {
   @Builder
   @NoArgsConstructor
   @AllArgsConstructor
+  @TypeAlias("container_limit")
   public static class Limit {
     @Builder.Default @Min(0) private int memory = MEM_LIMIT_DEFAULT;
     @Builder.Default @Min(0) private int cpu = CPU_MILLI_LIMIT_DEFAULT;
@@ -54,6 +58,7 @@ public class Container implements WithIdentifier {
   @Builder
   @NoArgsConstructor
   @AllArgsConstructor
+  @TypeAlias("container_reserve")
   public static class Reserve {
     @Builder.Default @Min(0) private int memory = MEM_RESERVE_DEFAULT;
     @Builder.Default @Min(0) private int cpu = CPU_MILLI_RESERVE_DEFAULT;

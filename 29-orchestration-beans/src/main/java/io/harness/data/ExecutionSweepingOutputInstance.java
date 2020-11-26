@@ -26,6 +26,7 @@ import lombok.experimental.Wither;
 import org.mongodb.morphia.annotations.Entity;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.Id;
+import org.springframework.data.annotation.TypeAlias;
 import org.springframework.data.annotation.Version;
 import org.springframework.data.mongodb.core.mapping.Document;
 
@@ -42,6 +43,7 @@ import org.springframework.data.mongodb.core.mapping.Document;
 @Entity(value = "executionSweepingOutput")
 @Document("executionSweepingOutput")
 @FieldNameConstants(innerTypeName = "ExecutionSweepingOutputKeys")
+@TypeAlias("executionSweepingOutput")
 public class ExecutionSweepingOutputInstance implements PersistentEntity, UuidAccess {
   @Wither @Id @org.mongodb.morphia.annotations.Id String uuid;
   @NotNull String planExecutionId;

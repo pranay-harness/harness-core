@@ -29,11 +29,13 @@ import javax.validation.constraints.NotNull;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.springframework.data.annotation.TypeAlias;
 
 @Data
 @NoArgsConstructor
 @JsonTypeName("stage")
 @SimpleVisitorHelper(helperClass = StageElementHelper.class)
+@TypeAlias("io.harness.yaml.core.stageElement")
 public class StageElement implements StageElementWrapper, WithIdentifier, Visitable {
   @NotNull(groups = PreInputSet.class) @Required(groups = PostInputSet.class) @EntityIdentifier String identifier;
   @EntityName String name;

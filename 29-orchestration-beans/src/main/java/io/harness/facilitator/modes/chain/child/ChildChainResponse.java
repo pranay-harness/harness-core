@@ -12,10 +12,12 @@ import java.util.List;
 import lombok.Builder;
 import lombok.Singular;
 import lombok.Value;
+import org.springframework.data.annotation.TypeAlias;
 
 @OwnedBy(CDC)
 @Value
 @Builder(buildMethodName = "internalBuild")
+@TypeAlias("childChainResponse")
 public class ChildChainResponse implements ExecutableResponse {
   String nextChildId;
   String previousChildId;
