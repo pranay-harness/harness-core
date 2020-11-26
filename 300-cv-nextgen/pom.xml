@@ -35,11 +35,6 @@
         </dependency>
         <dependency>
             <groupId>software.wings</groupId>
-            <artifactId>21-persistence</artifactId>
-            <version>${project.parent.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>software.wings</groupId>
             <artifactId>22-secret-manager-client</artifactId>
             <version>${project.parent.version}</version>
         </dependency>
@@ -53,6 +48,11 @@
             <artifactId>440-connector-nextgen</artifactId>
             <version>${project.parent.version}</version>
             <scope>compile</scope>
+        </dependency>
+        <dependency>
+            <groupId>software.wings</groupId>
+            <artifactId>960-persistence</artifactId>
+            <version>${project.parent.version}</version>
         </dependency>
         <dependency>
             <groupId>software.wings</groupId>
@@ -91,7 +91,7 @@
         </dependency>
         <dependency>
             <groupId>software.wings</groupId>
-            <artifactId>21-persistence</artifactId>
+            <artifactId>960-persistence</artifactId>
             <version>${project.parent.version}</version>
             <type>test-jar</type>
             <scope>test</scope>

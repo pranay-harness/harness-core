@@ -135,9 +135,9 @@ build_proto_module() {
 build_bazel_module 21-delegate-agent-beans
 build_bazel_application 21-events-api
 build_bazel_application 21-notification-client
-build_bazel_module 21-persistence
-build_bazel_tests 21-persistence
-build_bazel_module 22-delegate-service-beans
+build_bazel_module 960-persistence
+build_bazel_tests 960-persistence
+build_bazel_module 920-delegate-service-beans
 build_bazel_module 22-ng-core
 build_bazel_module 22-ng-project-n-orgs
 build_bazel_module 22-rbac-core
@@ -187,7 +187,7 @@ build_bazel_module 990-commons-test
 
 build_java_proto_module 21-events-api
 build_java_proto_module 21-delegate-agent-beans
-build_java_proto_module 22-delegate-service-beans
+build_java_proto_module 920-delegate-service-beans
 build_java_proto_module 26-pms-contracts
 build_java_proto_module 50-delegate-task-grpc-service proto
 build_java_proto_module 940-delegate-beans

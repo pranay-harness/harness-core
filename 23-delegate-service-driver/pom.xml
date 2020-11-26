@@ -19,7 +19,7 @@
         </dependency>
         <dependency>
             <groupId>software.wings</groupId>
-            <artifactId>22-delegate-service-beans</artifactId>
+            <artifactId>920-delegate-service-beans</artifactId>
             <version>${project.parent.version}</version>
         </dependency>
         <dependency>

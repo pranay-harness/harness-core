@@ -60,8 +60,8 @@ java_library(
 java_library(
     name = "test_deps",
     exports = [
-        "//21-persistence:supporter-test",
         "//22-timeout-engine:module",
+        "//960-persistence:supporter-test",
         "//990-commons-test:module",
         "@maven//:com_fasterxml_jackson_dataformat_jackson_dataformat_yaml",
         "@maven//:junit_junit",

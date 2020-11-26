@@ -606,9 +606,9 @@ software.wings:930-delegate-tasks:jar:0.0.1-SNAPSHOT
 software.wings:960-ng-core-beans:jar:0.0.1-SNAPSHOT
 software.wings:21-delegate-agent-beans-proto:jar:0.0.1-SNAPSHOT
 software.wings:21-delegate-agent-beans:jar:0.0.1-SNAPSHOT
-software.wings:21-persistence:jar:0.0.1-SNAPSHOT
-software.wings:22-delegate-service-beans-proto:jar:0.0.1-SNAPSHOT
-software.wings:22-delegate-service-beans:jar:0.0.1-SNAPSHOT
+software.wings:960-persistence:jar:0.0.1-SNAPSHOT
+software.wings:920-delegate-service-beans-proto:jar:0.0.1-SNAPSHOT
+software.wings:920-delegate-service-beans:jar:0.0.1-SNAPSHOT
 software.wings:22-ng-core:jar:0.0.1-SNAPSHOT
 software.wings:22-ng-project-n-orgs:jar:0.0.1-SNAPSHOT
 software.wings:22-rbac-core:jar:0.0.1-SNAPSHOT

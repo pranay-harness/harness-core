@@ -11,7 +11,7 @@ java_library(
     name = "maven_deps",
     visibility = ["//visibility:public"],
     exports = [
-        "//21-persistence:module",
+        "//960-persistence:module",
         "//980-commons:module",
         "@maven//:com_google_code_findbugs_annotations",
         "@maven//:com_google_guava_guava",
@@ -43,7 +43,7 @@ java_library(
 java_library(
     name = "test_deps",
     exports = [
-        "//21-persistence:supporter-test",
+        "//960-persistence:supporter-test",
         "//990-commons-test:module",
         "@maven//:junit_junit",
         "@maven//:org_assertj_assertj_core",

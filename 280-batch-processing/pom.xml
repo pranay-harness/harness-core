@@ -93,17 +93,17 @@
         </dependency>
         <dependency>
             <groupId>software.wings</groupId>
-            <artifactId>21-persistence</artifactId>
-            <version>${project.parent.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>software.wings</groupId>
             <artifactId>350-event-server</artifactId>
             <version>${project.parent.version}</version>
         </dependency>
         <dependency>
             <groupId>software.wings</groupId>
             <artifactId>490-ce-commons</artifactId>
+            <version>${project.parent.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>software.wings</groupId>
+            <artifactId>960-persistence</artifactId>
             <version>${project.parent.version}</version>
         </dependency>
         <dependency>
@@ -128,13 +128,6 @@
         </dependency>
         <dependency>
             <groupId>software.wings</groupId>
-            <artifactId>21-persistence</artifactId>
-            <version>${project.parent.version}</version>
-            <type>test-jar</type>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>software.wings</groupId>
             <artifactId>71-rest</artifactId>
             <version>${project.parent.version}</version>
             <type>test-jar</type>
@@ -145,6 +138,13 @@
                     <artifactId>spring-web</artifactId>
                 </exclusion>
             </exclusions>
+        </dependency>
+        <dependency>
+            <groupId>software.wings</groupId>
+            <artifactId>960-persistence</artifactId>
+            <version>${project.parent.version}</version>
+            <type>test-jar</type>
+            <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>software.wings</groupId>

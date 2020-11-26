@@ -11,7 +11,7 @@ java_library(
     name = "maven_deps",
     visibility = ["//visibility:public"],
     exports = [
-        "//21-persistence:module",
+        "//960-persistence:module",
         "@maven//:com_google_code_findbugs_annotations",
         "@maven//:org_hibernate_hibernate_validator",
         "@maven//:org_mongodb_morphia_morphia",

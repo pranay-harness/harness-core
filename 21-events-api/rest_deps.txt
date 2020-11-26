@@ -269,4 +269,4 @@ org.yaml:snakeyaml:1.26
 org.zeroturnaround:zt-exec:1.9
 software.wings:12-commons:0.0.1-SNAPSHOT
 software.wings:13-ng-commons:0.0.1-SNAPSHOT
-software.wings:21-persistence:0.0.1-SNAPSHOT
+software.wings:960-persistence:0.0.1-SNAPSHOT
