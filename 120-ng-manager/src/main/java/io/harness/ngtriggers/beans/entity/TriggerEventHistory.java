@@ -1,6 +1,7 @@
 package io.harness.ngtriggers.beans.entity;
 
 import io.harness.annotation.HarnessEntity;
+import io.harness.ngtriggers.beans.target.pipeline.TargetExecutionSummary;
 import io.harness.ngtriggers.beans.webhookresponse.WebhookEventResponse;
 import io.harness.persistence.PersistentEntity;
 
@@ -31,6 +32,7 @@ public class TriggerEventHistory implements PersistentEntity {
   String planExecutionId;
   boolean exceptionOccurred;
   String triggerIdentifier;
+  TargetExecutionSummary targetExecutionSummary;
 
   @CreatedDate Long createdAt;
 }

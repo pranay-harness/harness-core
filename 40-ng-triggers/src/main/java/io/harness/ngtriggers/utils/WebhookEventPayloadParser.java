@@ -34,7 +34,6 @@ public class WebhookEventPayloadParser {
   public WebhookPayloadData parseEvent(TriggerWebhookEvent triggerWebhookEvent) {
     ParseWebhookResponse parseWebhookResponse = invokeScmService(triggerWebhookEvent);
 
-    log.info(parseWebhookResponse.toString());
     return convertWebhookResponse(parseWebhookResponse, triggerWebhookEvent);
   }
 
@@ -55,7 +54,7 @@ public class WebhookEventPayloadParser {
                                                               .setProvider(gitProvider)
                                                               .setHeader(header.build())
                                                               .build());
-      log.info("This is a parseWebhookResponse:");
+      log.info("Finished parsing webhook payload");
     } catch (StatusRuntimeException e) {
       log.error("Failed to parse webhook payload {}", triggerWebhookEvent.getPayload());
       throw e;
