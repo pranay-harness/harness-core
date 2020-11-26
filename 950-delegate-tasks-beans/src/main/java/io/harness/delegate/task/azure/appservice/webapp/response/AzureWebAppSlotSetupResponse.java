@@ -10,4 +10,5 @@ import lombok.Data;
 @Builder
 public class AzureWebAppSlotSetupResponse implements AzureAppServiceTaskResponse {
   private AzureAppServicePreDeploymentData preDeploymentData;
+  private String errorMsg;
 }

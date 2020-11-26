@@ -2,6 +2,7 @@ package io.harness.azure.utility;
 
 import static io.harness.azure.model.AzureConstants.ACTIVITY_LOG_EVENT_DATA_TEMPLATE;
 import static io.harness.azure.model.AzureConstants.DOCKER_CUSTOM_IMAGE_NAME_PROPERTY_NAME;
+import static io.harness.azure.model.AzureConstants.DOCKER_FX_IMAGE_PREFIX;
 import static io.harness.azure.model.AzureConstants.DOCKER_IMAGE_AND_TAG_PATH_PATTERN;
 import static io.harness.azure.model.AzureConstants.DOCKER_IMAGE_FULL_PATH_PATTERN;
 import static io.harness.azure.model.AzureConstants.DOCKER_REGISTRY_SERVER_SECRET_PROPERTY_NAME;
@@ -10,6 +11,7 @@ import static io.harness.azure.model.AzureConstants.DOCKER_REGISTRY_SERVER_USERN
 import static io.harness.azure.model.AzureConstants.SLOT_SWAP_JOB_PROCESSOR_STR;
 
 import static java.lang.String.format;
+import static org.apache.commons.lang3.StringUtils.EMPTY;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 import com.microsoft.azure.CloudException;
@@ -23,6 +25,7 @@ import java.util.List;
 import java.util.SimpleTimeZone;
 import java.util.stream.Collectors;
 import lombok.experimental.UtilityClass;
+import org.jetbrains.annotations.NotNull;
 
 @UtilityClass
 public class AzureResourceUtility {
@@ -104,5 +107,10 @@ public class AzureResourceUtility {
 
   public boolean isSlotSwapJobProcessor(EventData ev) {
     return ev != null && SLOT_SWAP_JOB_PROCESSOR_STR.equals(ev.caller());
+  }
+
+  @NotNull
+  public String removeDockerFxImagePrefix(String windowsFxVersion) {
+    return windowsFxVersion.replace(DOCKER_FX_IMAGE_PREFIX, EMPTY);
   }
 }

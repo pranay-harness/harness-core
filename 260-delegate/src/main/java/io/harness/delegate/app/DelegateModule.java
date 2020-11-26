@@ -203,6 +203,7 @@ import software.wings.delegatetasks.azure.appservice.AbstractAzureAppServiceTask
 import software.wings.delegatetasks.azure.appservice.AzureAppServiceTask;
 import software.wings.delegatetasks.azure.appservice.webapp.taskhandler.AzureWebAppListWebAppDeploymentSlotNamesTaskHandler;
 import software.wings.delegatetasks.azure.appservice.webapp.taskhandler.AzureWebAppListWebAppNamesTaskHandler;
+import software.wings.delegatetasks.azure.appservice.webapp.taskhandler.AzureWebAppRollbackTaskHandler;
 import software.wings.delegatetasks.azure.appservice.webapp.taskhandler.AzureWebAppSlotSetupTaskHandler;
 import software.wings.delegatetasks.azure.appservice.webapp.taskhandler.AzureWebAppSlotShiftTrafficTaskHandler;
 import software.wings.delegatetasks.azure.appservice.webapp.taskhandler.AzureWebAppSlotSwapTaskHandler;
@@ -878,6 +879,8 @@ public class DelegateModule extends AbstractModule {
         .to(AzureWebAppSlotShiftTrafficTaskHandler.class);
     azureAppServiceTaskTypeToTaskHandlerMap.addBinding(AzureAppServiceTaskType.SLOT_SWAP.name())
         .to(AzureWebAppSlotSwapTaskHandler.class);
+    azureAppServiceTaskTypeToTaskHandlerMap.addBinding(AzureAppServiceTaskType.ROLLBACK.name())
+        .to(AzureWebAppRollbackTaskHandler.class);
 
     registerSecretManagementBindings();
     registerConnectorValidatorsBindings();

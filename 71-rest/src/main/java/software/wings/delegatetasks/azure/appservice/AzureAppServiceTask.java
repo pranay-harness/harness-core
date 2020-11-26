@@ -12,10 +12,10 @@ import io.harness.delegate.beans.DelegateTaskResponse;
 import io.harness.delegate.beans.logstreaming.ILogStreamingTaskClient;
 import io.harness.delegate.task.AbstractDelegateRunnableTask;
 import io.harness.delegate.task.TaskParameters;
-import io.harness.delegate.task.azure.AzureSecretHelper;
 import io.harness.delegate.task.azure.AzureTaskExecutionResponse;
 import io.harness.delegate.task.azure.appservice.AzureAppServiceTaskParameters;
 
+import software.wings.delegatetasks.azure.AzureSecretHelper;
 import software.wings.service.impl.azure.manager.AzureTaskExecutionRequest;
 
 import com.google.inject.Inject;
@@ -59,6 +59,10 @@ public class AzureAppServiceTask extends AbstractDelegateRunnableTask {
     AbstractAzureAppServiceTaskHandler azureAppServiceTask =
         azureAppServiceTaskFactory.getAzureAppServiceTask(azureAppServiceTaskParameters.getCommandType().name());
 
-    return azureAppServiceTask.executeTask(azureAppServiceTaskParameters, azureConfig, logStreamingTaskClient);
+    AzureTaskExecutionResponse azureTaskExecutionResponse =
+        azureAppServiceTask.executeTask(azureAppServiceTaskParameters, azureConfig, logStreamingTaskClient);
+
+    azureSecretHelper.encryptAzureTaskResponseParams(azureTaskExecutionResponse.getAzureTaskResponse());
+    return azureTaskExecutionResponse;
   }
 }
