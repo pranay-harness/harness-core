@@ -16,7 +16,7 @@ import io.harness.executionplan.plancreator.GenericStepPlanCreator;
 import io.harness.facilitator.OrchestrationFacilitatorType;
 import io.harness.plan.PlanNode;
 import io.harness.rule.Owner;
-import io.harness.serializer.JsonUtils;
+import io.harness.serializer.json.JsonOrchestrationUtils;
 import io.harness.yaml.core.StepElement;
 
 import com.google.inject.Inject;
@@ -63,7 +63,7 @@ public class GenericStepPlanCreatorTest extends CIExecutionTest {
 
     GitCloneStepInfo gotStepInfo = planNode.getStepParameters() == null
         ? null
-        : JsonUtils.asObject(planNode.getStepParameters().toJson(), GitCloneStepInfo.class);
+        : JsonOrchestrationUtils.asObject(planNode.getStepParameters().toJson(), GitCloneStepInfo.class);
     assertThat(gotStepInfo).isNotNull();
     assertThat(gotStepInfo.getBranch()).isEqualTo("testBranch");
     assertThat(planNode.getFacilitatorObtainments().get(0).getType().getType())

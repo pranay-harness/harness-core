@@ -63,6 +63,7 @@ import io.harness.registries.timeout.TimeoutRegistry;
 import io.harness.resolvers.Resolver;
 import io.harness.serializer.JsonUtils;
 import io.harness.serializer.KryoSerializer;
+import io.harness.serializer.json.JsonOrchestrationUtils;
 import io.harness.state.io.FailureInfo;
 import io.harness.state.io.StepInputPackage;
 import io.harness.state.io.StepOutcomeRef;
@@ -181,7 +182,7 @@ public class OrchestrationEngine {
       Object obj = stepParameters == null
           ? null
           : engineExpressionService.resolve(ambiance, nodeExecutionService.extractStepParameters(nodeExecution));
-      Document resolvedStepParameters = obj == null ? null : Document.parse(JsonUtils.asJson(obj));
+      Document resolvedStepParameters = obj == null ? null : Document.parse(JsonOrchestrationUtils.asJson(obj));
       NodeExecution updatedNodeExecution =
           Preconditions.checkNotNull(nodeExecutionService.update(nodeExecution.getUuid(),
               ops -> setUnset(ops, NodeExecutionKeys.resolvedStepParameters, resolvedStepParameters)));
