@@ -10,6 +10,7 @@ import io.harness.pms.filter.FilterCreationResponse;
 import io.harness.pms.plan.FilterCreationBlobRequest;
 import io.harness.pms.plan.FilterCreationBlobResponse;
 import io.harness.pms.plan.YamlFieldBlob;
+import io.harness.pms.sdk.creator.PipelineServiceInfoProvider;
 import io.harness.pms.yaml.YamlField;
 import io.harness.pms.yaml.YamlUtils;
 
@@ -26,13 +27,13 @@ import javax.validation.constraints.NotNull;
 
 @Singleton
 public class FilterCreatorService {
-  private final FilterCreatorProvider filterCreatorProvider;
+  private final PipelineServiceInfoProvider pipelineServiceInfoProvider;
   private final FilterCreationResponseMerger filterCreationResponseMerger;
 
   @Inject
-  public FilterCreatorService(@NotNull FilterCreatorProvider filterCreatorProvider,
+  public FilterCreatorService(@NotNull PipelineServiceInfoProvider pipelineServiceInfoProvider,
       @NotNull FilterCreationResponseMerger filterCreationResponseMerger) {
-    this.filterCreatorProvider = filterCreatorProvider;
+    this.pipelineServiceInfoProvider = pipelineServiceInfoProvider;
     this.filterCreationResponseMerger = filterCreationResponseMerger;
   }
 
@@ -79,7 +80,7 @@ public class FilterCreatorService {
 
     for (YamlField yamlField : dependenciesList) {
       Optional<FilterJsonCreator> filterCreatorOptional =
-          findFilterCreator(filterCreatorProvider.getFilterJsonCreators(), yamlField);
+          findFilterCreator(pipelineServiceInfoProvider.getFilterJsonCreators(), yamlField);
 
       if (!filterCreatorOptional.isPresent()) {
         finalResponse.addDependency(yamlField);

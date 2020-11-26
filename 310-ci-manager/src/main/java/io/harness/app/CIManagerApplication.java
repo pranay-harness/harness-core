@@ -9,7 +9,7 @@ import static java.util.Collections.singletonList;
 import io.harness.AuthorizationServiceHeader;
 import io.harness.PmsSdkConfiguration;
 import io.harness.PmsSdkModule;
-import io.harness.ci.plan.creator.CIPlanCreatorProvider;
+import io.harness.ci.plan.creator.CIPipelineServiceInfoProvider;
 import io.harness.delegate.beans.DelegateAsyncTaskResponse;
 import io.harness.delegate.beans.DelegateSyncTaskResponse;
 import io.harness.delegate.beans.DelegateTaskProgressResponse;
@@ -283,7 +283,7 @@ public class CIManagerApplication extends Application<CIManagerConfiguration> {
     PmsSdkConfiguration sdkConfig = PmsSdkConfiguration.builder()
                                         .grpcServerConfig(config.getPmsSdkGrpcServerConfig())
                                         .pmsGrpcClientConfig(config.getPmsGrpcClientConfig())
-                                        .planCreatorProvider(new CIPlanCreatorProvider())
+                                        .pipelineServiceInfoProvider(new CIPipelineServiceInfoProvider())
                                         .build();
     PmsSdkModule.initializeDefaultInstance(sdkConfig);
   }

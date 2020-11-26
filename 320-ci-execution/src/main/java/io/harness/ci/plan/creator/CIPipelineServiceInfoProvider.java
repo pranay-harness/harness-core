@@ -1,4 +1,4 @@
-package io.harness.cdng.creator;
+package io.harness.ci.plan.creator;
 
 import io.harness.pms.sdk.creator.PartialPlanCreator;
 import io.harness.pms.sdk.creator.PipelineServiceInfoProvider;
@@ -8,10 +8,10 @@ import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 
-public class CDNGPlanCreatorProvider implements PipelineServiceInfoProvider {
+public class CIPipelineServiceInfoProvider implements PipelineServiceInfoProvider {
   @Override
   public String getServiceName() {
-    return "cd";
+    return "CI";
   }
 
   @Override
