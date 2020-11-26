@@ -9,7 +9,7 @@ import io.harness.pms.facilitators.FacilitatorObtainment;
 import io.harness.pms.refobjects.RefObject;
 import io.harness.pms.steps.SkipType;
 import io.harness.pms.steps.StepType;
-import io.harness.serializer.JsonUtils;
+import io.harness.serializer.json.JsonOrchestrationUtils;
 import io.harness.state.io.StepParameters;
 
 import java.util.List;
@@ -65,7 +65,8 @@ public class PlanNode {
 
   public static class PlanNodeBuilder {
     public PlanNodeBuilder stepParameters(final StepParameters stepParameters) {
-      this.stepParameters = stepParameters == null ? null : Document.parse(JsonUtils.asJson(stepParameters));
+      this.stepParameters =
+          stepParameters == null ? null : Document.parse(JsonOrchestrationUtils.asJson(stepParameters));
       return this;
     }
   }

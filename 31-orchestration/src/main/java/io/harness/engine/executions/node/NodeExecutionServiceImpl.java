@@ -19,12 +19,11 @@ import io.harness.interrupts.ExecutionInterruptType;
 import io.harness.interrupts.InterruptEffect;
 import io.harness.pms.execution.Status;
 import io.harness.registries.state.StepRegistry;
-import io.harness.serializer.JsonUtils;
+import io.harness.serializer.json.JsonOrchestrationUtils;
 import io.harness.state.Step;
 import io.harness.state.io.StepParameters;
 
 import com.google.inject.Inject;
-import com.google.inject.name.Named;
 import com.mongodb.client.result.UpdateResult;
 import java.util.EnumSet;
 import java.util.List;
@@ -258,6 +257,6 @@ public class NodeExecutionServiceImpl implements NodeExecutionService {
     if (stepParameters == null) {
       return null;
     }
-    return (StepParameters) JsonUtils.asObject(stepParameters.toJson(), step.getStepParametersClass());
+    return (StepParameters) JsonOrchestrationUtils.asObject(stepParameters.toJson(), step.getStepParametersClass());
   }
 }

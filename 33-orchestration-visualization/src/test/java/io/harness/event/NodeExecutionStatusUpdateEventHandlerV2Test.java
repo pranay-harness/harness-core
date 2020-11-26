@@ -31,6 +31,7 @@ import io.harness.pms.execution.Status;
 import io.harness.pms.steps.StepType;
 import io.harness.rule.Owner;
 import io.harness.serializer.JsonUtils;
+import io.harness.serializer.json.JsonOrchestrationUtils;
 import io.harness.service.GraphGenerationService;
 import io.harness.testlib.RealMongo;
 import io.harness.utils.DummyOutcome;
@@ -253,7 +254,7 @@ public class NodeExecutionStatusUpdateEventHandlerV2Test extends OrchestrationVi
         .failureInfo(nodeExecution.getFailureInfo())
         .stepParameters(nodeExecution.getResolvedStepParameters() == null
                 ? null
-                : JsonUtils.asMap(nodeExecution.getResolvedStepParameters().toJson()))
+                : JsonOrchestrationUtils.asMap(nodeExecution.getResolvedStepParameters().toJson()))
         .mode(nodeExecution.getMode())
         .interruptHistories(nodeExecution.getInterruptHistories())
         .retryIds(nodeExecution.getRetryIds())
