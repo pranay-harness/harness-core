@@ -19,11 +19,13 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.experimental.Wither;
+import org.springframework.data.annotation.TypeAlias;
 
 @Data
 @NoArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @SimpleVisitorHelper(helperClass = StoreConfigWrapperVisitorHelper.class)
+@TypeAlias("storeConfigWrapper")
 public class StoreConfigWrapper implements OverridesApplier<StoreConfigWrapper>, Visitable {
   String type;
   @JsonProperty("spec")

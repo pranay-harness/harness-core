@@ -18,6 +18,7 @@ import org.mongodb.morphia.annotations.Entity;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.annotation.LastModifiedDate;
+import org.springframework.data.annotation.TypeAlias;
 import org.springframework.data.annotation.Version;
 import org.springframework.data.mongodb.core.mapping.Document;
 
@@ -28,6 +29,7 @@ import org.springframework.data.mongodb.core.mapping.Document;
 @FieldNameConstants(innerTypeName = "ResourceRestraintInstanceKeys")
 @Entity(value = "resourceRestraintInstances")
 @Document("resourceRestraintInstances")
+@TypeAlias("resourceRestraintInstance")
 public class ResourceRestraintInstance implements PersistentEntity, UuidAccess, PersistentRegularIterable {
   @Id @org.mongodb.morphia.annotations.Id String uuid;
   String claimant;

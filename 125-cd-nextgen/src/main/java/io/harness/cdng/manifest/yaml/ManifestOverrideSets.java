@@ -14,12 +14,14 @@ import com.fasterxml.jackson.annotation.JsonTypeName;
 import java.util.List;
 import lombok.Builder;
 import lombok.Value;
+import org.springframework.data.annotation.TypeAlias;
 
 @Value
 @Builder
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonTypeName("overrideSet")
 @SimpleVisitorHelper(helperClass = ManifestOverridesVisitorHelper.class)
+@TypeAlias("manifestOverrideSets")
 public class ManifestOverrideSets implements OverrideSetsWrapper, Visitable {
   @EntityIdentifier String identifier;
   List<ManifestConfigWrapper> manifests;

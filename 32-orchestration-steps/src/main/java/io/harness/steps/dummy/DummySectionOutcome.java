@@ -8,10 +8,12 @@ import io.harness.data.Outcome;
 import java.util.Map;
 import lombok.Builder;
 import lombok.Value;
+import org.springframework.data.annotation.TypeAlias;
 
 @OwnedBy(CDC)
 @Value
 @Builder
+@TypeAlias("dummySectionOutcome")
 public class DummySectionOutcome implements Outcome {
   Map<String, String> map;
 }

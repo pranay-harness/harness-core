@@ -15,6 +15,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.springframework.data.annotation.TypeAlias;
 
 @Data
 @Builder
@@ -22,6 +23,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @JsonTypeName(NGVariableConstants.STRING_TYPE)
 @SimpleVisitorHelper(helperClass = StringVariableVisitorHelper.class)
+@TypeAlias("io.harness.yaml.core.variables.StringNGVariable")
 public class StringNGVariable implements NGVariable {
   String name;
   @Builder.Default NGVariableType type = NGVariableType.STRING;

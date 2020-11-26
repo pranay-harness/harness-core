@@ -19,11 +19,13 @@ import com.fasterxml.jackson.annotation.JsonTypeName;
 import java.util.List;
 import lombok.Builder;
 import lombok.Value;
+import org.springframework.data.annotation.TypeAlias;
 
 @Value
 @Builder
 @JsonTypeName(ServiceSpecType.KUBERNETES)
 @SimpleVisitorHelper(helperClass = KubernetesServiceSpecVisitorHelper.class)
+@TypeAlias("kubernetesServiceSpec")
 public class KubernetesServiceSpec implements ServiceSpec, Visitable {
   List<NGVariable> variables;
   ArtifactListConfig artifacts;

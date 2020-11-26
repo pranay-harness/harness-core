@@ -151,7 +151,6 @@ build_bazel_module 23-sm-core
 build_bazel_module 24-common-entities
 build_bazel_module 26-pms-contracts
 build_bazel_module 27-orchestration-persistence
-build_bazel_module 28-pms-beans
 build_bazel_module 29-orchestration-beans
 build_bazel_module 31-orchestration
 build_bazel_module 32-orchestration-steps

@@ -11,11 +11,13 @@ import javax.validation.constraints.Size;
 import lombok.Builder;
 import lombok.Singular;
 import lombok.Value;
+import org.springframework.data.annotation.TypeAlias;
 
 @OwnedBy(CDC)
 @Value
 @Builder
 @Redesign
+@TypeAlias("forkStepParameters")
 public class ForkStepParameters implements StepParameters {
   @Singular @Size(min = 2) List<String> parallelNodeIds;
 }

@@ -16,6 +16,7 @@ import lombok.EqualsAndHashCode;
 import lombok.Value;
 import lombok.experimental.FieldNameConstants;
 import org.mongodb.morphia.annotations.Entity;
+import org.springframework.data.annotation.TypeAlias;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 @OwnedBy(HarnessTeam.CDC)
@@ -26,6 +27,7 @@ import org.springframework.data.mongodb.core.mapping.Document;
 @Entity(value = "orchestrationEventQueue")
 @Document("orchestrationEventQueue")
 @HarnessEntity(exportable = false)
+@TypeAlias("orchestrationEvent")
 public class OrchestrationEvent extends Queuable {
   Ambiance ambiance;
   OrchestrationEventType eventType;

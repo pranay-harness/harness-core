@@ -13,12 +13,14 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import lombok.Builder;
 import lombok.Value;
+import org.springframework.data.annotation.TypeAlias;
 
 @Value
 @Builder
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonTypeName("overrideSet")
 @SimpleVisitorHelper(helperClass = ArtifactOverridesVisitorHelper.class)
+@TypeAlias("artifactOverrideSets")
 public class ArtifactOverrideSets implements OverrideSetsWrapper, Visitable {
   @EntityIdentifier String identifier;
   ArtifactListConfig artifacts;

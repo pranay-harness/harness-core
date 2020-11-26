@@ -11,11 +11,13 @@ import java.util.List;
 import java.util.Set;
 import lombok.Builder;
 import lombok.Value;
+import org.springframework.data.annotation.TypeAlias;
 
 @OwnedBy(CDC)
 @Value
 @Builder
 @Redesign
+@TypeAlias("retryAdviserParameters")
 public class RetryAdviserParameters {
   List<Integer> waitIntervalList;
   int retryCount;

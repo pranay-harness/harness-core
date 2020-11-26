@@ -8,10 +8,12 @@ import io.harness.data.SweepingOutput;
 import java.util.Map;
 import lombok.Builder;
 import lombok.Value;
+import org.springframework.data.annotation.TypeAlias;
 
 @OwnedBy(CDC)
 @Value
 @Builder
+@TypeAlias("dummySectionStepTransput")
 public class DummySectionStepTransput implements SweepingOutput {
   Map<String, String> map;
 }

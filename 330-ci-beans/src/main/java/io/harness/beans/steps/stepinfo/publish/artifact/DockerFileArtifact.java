@@ -9,10 +9,12 @@ import javax.validation.constraints.NotNull;
 import lombok.Builder;
 import lombok.Data;
 import lombok.Value;
+import org.springframework.data.annotation.TypeAlias;
 
 @Data
 @Builder
 @JsonDeserialize
+@TypeAlias("dockerFileArtifact")
 public class DockerFileArtifact implements Artifact, WithImageConnector {
   @NotNull private String dockerFile;
   @NotNull private String context;

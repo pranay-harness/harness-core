@@ -12,6 +12,7 @@ import javax.validation.constraints.NotNull;
 import lombok.Builder;
 import lombok.Data;
 import lombok.Getter;
+import org.springframework.data.annotation.TypeAlias;
 
 /**
  *  This stores specification for integration test services.
@@ -21,6 +22,7 @@ import lombok.Getter;
 @Builder
 @JsonTypeName("service")
 @JsonIgnoreProperties(ignoreUnknown = true)
+@TypeAlias("ciServiceInfo")
 public class CIServiceInfo implements DependencySpecType {
   @JsonIgnore public static final CIDependencyType type = CIDependencyType.SERVICE;
 

@@ -18,11 +18,13 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.experimental.FieldDefaults;
+import org.springframework.data.annotation.TypeAlias;
 
 @Data
 @NoArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @SimpleVisitorHelper(helperClass = ServiceDefinitionVisitorHelper.class)
+@TypeAlias("serviceDefinition")
 public class ServiceDefinition implements Visitable {
   String type;
   @JsonProperty("spec")

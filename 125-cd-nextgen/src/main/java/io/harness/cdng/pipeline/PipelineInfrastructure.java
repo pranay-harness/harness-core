@@ -13,10 +13,12 @@ import io.harness.walktree.visitor.Visitable;
 import lombok.Builder;
 import lombok.Data;
 import lombok.experimental.Wither;
+import org.springframework.data.annotation.TypeAlias;
 
 @Data
 @Builder
 @SimpleVisitorHelper(helperClass = PipelineInfrastructureVisitorHelper.class)
+@TypeAlias("pipelineInfrastructure")
 public class PipelineInfrastructure implements Visitable {
   private InfrastructureDef infrastructureDefinition;
   @Wither private InfraUseFromStage useFromStage;

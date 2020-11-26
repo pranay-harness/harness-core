@@ -5,9 +5,11 @@ import io.harness.delegate.task.stepstatus.StepOutput;
 
 import lombok.Builder;
 import lombok.Data;
+import org.springframework.data.annotation.TypeAlias;
 
 @Data
 @Builder
+@TypeAlias("ciStepOutcome")
 public class CiStepOutcome implements Outcome {
   StepOutput output;
 }

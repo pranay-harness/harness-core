@@ -23,6 +23,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.experimental.Wither;
+import org.springframework.data.annotation.TypeAlias;
 
 /**
  * This is Yaml POJO class which may contain expressions as well.
@@ -34,6 +35,7 @@ import lombok.experimental.Wither;
 @EqualsAndHashCode(callSuper = false)
 @JsonTypeName(DOCKER_HUB_NAME)
 @SimpleVisitorHelper(helperClass = DockerHubArtifactConfigVisitorHelper.class)
+@TypeAlias("dockerHubArtifactConfig")
 public class DockerHubArtifactConfig implements ArtifactConfig, Visitable {
   /**
    * Docker hub registry connector.

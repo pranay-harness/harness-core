@@ -20,10 +20,12 @@ import javax.validation.constraints.Min;
 import javax.validation.constraints.NotNull;
 import lombok.Builder;
 import lombok.Data;
+import org.springframework.data.annotation.TypeAlias;
 
 @Data
 @JsonTypeName("setupEnv")
 @JsonIgnoreProperties(ignoreUnknown = true)
+@TypeAlias("buildEnvSetupStepInfo")
 public class BuildEnvSetupStepInfo implements CIStepInfo {
   public static final int DEFAULT_RETRY = 0;
   public static final int DEFAULT_TIMEOUT = 1200;

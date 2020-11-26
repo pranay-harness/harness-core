@@ -16,10 +16,12 @@ import java.util.Map;
 import lombok.Builder;
 import lombok.Data;
 import lombok.experimental.Wither;
+import org.springframework.data.annotation.TypeAlias;
 
 @Data
 @Builder
 @SimpleVisitorHelper(helperClass = EnvironmentYamlVisitorHelper.class)
+@TypeAlias("environmentYaml")
 public class EnvironmentYaml implements OverridesApplier<EnvironmentYaml>, Visitable {
   @ApiModelProperty(dataType = SwaggerConstants.STRING_CLASSPATH) @Wither ParameterField<String> name;
   @ApiModelProperty(dataType = SwaggerConstants.STRING_CLASSPATH) @Wither ParameterField<String> identifier;

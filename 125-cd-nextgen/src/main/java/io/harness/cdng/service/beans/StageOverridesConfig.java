@@ -17,10 +17,12 @@ import io.swagger.annotations.ApiModelProperty;
 import java.util.List;
 import lombok.Builder;
 import lombok.Value;
+import org.springframework.data.annotation.TypeAlias;
 
 @Value
 @Builder
 @SimpleVisitorHelper(helperClass = StageOverridesVisitorHelper.class)
+@TypeAlias("stageOverridesConfig")
 public class StageOverridesConfig implements Visitable {
   List<NGVariable> variables;
   @ApiModelProperty(dataType = SwaggerConstants.STRING_LIST_CLASSPATH)

@@ -17,12 +17,14 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.experimental.Wither;
+import org.springframework.data.annotation.TypeAlias;
 
 @Data
 @Builder
 @EqualsAndHashCode(callSuper = false)
 @JsonTypeName(ManifestStoreType.GIT)
 @SimpleVisitorHelper(helperClass = GitStoreVisitorHelper.class)
+@TypeAlias("gitStore")
 public class GitStore implements StoreConfig, Visitable {
   @ApiModelProperty(dataType = SwaggerConstants.STRING_CLASSPATH) @Wither private ParameterField<String> connectorRef;
 

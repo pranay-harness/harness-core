@@ -22,10 +22,12 @@ import javax.validation.constraints.NotNull;
 import lombok.Builder;
 import lombok.Data;
 import org.hibernate.validator.constraints.NotEmpty;
+import org.springframework.data.annotation.TypeAlias;
 
 @Data
 @JsonTypeName("test")
 @JsonIgnoreProperties(ignoreUnknown = true)
+@TypeAlias("testStepInfo")
 public class TestStepInfo implements CIStepInfo {
   public static final int DEFAULT_RETRY = 0;
   public static final int DEFAULT_TIMEOUT = 1200;

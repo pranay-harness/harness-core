@@ -14,6 +14,7 @@ import lombok.Data;
 import lombok.experimental.FieldNameConstants;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Id;
+import org.springframework.data.annotation.TypeAlias;
 import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.core.mapping.Field;
 
@@ -25,6 +26,7 @@ import org.springframework.data.mongodb.core.mapping.Field;
 @StoreIn("harnessci")
 @Document("buildNumberDetails")
 @HarnessEntity(exportable = true)
+@TypeAlias("buildNumberDetails")
 public class BuildNumberDetails implements PersistentEntity {
   @Field("pipeline_identifier") private String pipelineIdentifier;
   @Builder.Default private Long buildNumber = 0L;

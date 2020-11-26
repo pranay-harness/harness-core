@@ -7,10 +7,12 @@ import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import javax.validation.constraints.NotNull;
 import lombok.Builder;
 import lombok.Data;
+import org.springframework.data.annotation.TypeAlias;
 
 @Data
 @Builder
 @JsonDeserialize
+@TypeAlias("filePatternArtifact")
 public class FilePatternArtifact implements Artifact, WithFileConnector {
   @NotNull private String filePattern;
   @NotNull private ArtifactConnector connector;

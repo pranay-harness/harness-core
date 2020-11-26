@@ -6,10 +6,12 @@ import io.harness.ngpipeline.pipeline.executions.beans.DockerArtifactSummary;
 import lombok.Builder;
 import lombok.EqualsAndHashCode;
 import lombok.Value;
+import org.springframework.data.annotation.TypeAlias;
 
 @Value
 @Builder
 @EqualsAndHashCode(callSuper = false)
+@TypeAlias("dockerArtifactOutcome")
 public class DockerArtifactOutcome implements ArtifactOutcome {
   /** Docker hub registry connector. */
   String connectorRef;

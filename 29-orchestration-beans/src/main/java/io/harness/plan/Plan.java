@@ -17,6 +17,7 @@ import lombok.Builder;
 import lombok.Singular;
 import lombok.Value;
 import lombok.experimental.FieldNameConstants;
+import org.springframework.data.annotation.TypeAlias;
 
 /**
  * This is the plan we want to execute during the execution
@@ -36,6 +37,7 @@ import lombok.experimental.FieldNameConstants;
 @Builder(buildMethodName = "internalBuild")
 @Redesign
 @FieldNameConstants(innerTypeName = "PlanKeys")
+@TypeAlias("plan")
 public class Plan implements PersistentEntity {
   @Singular List<PlanNode> nodes;
 

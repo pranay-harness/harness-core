@@ -11,11 +11,13 @@ import java.util.List;
 import lombok.Builder;
 import lombok.Singular;
 import lombok.Value;
+import org.springframework.data.annotation.TypeAlias;
 
 @OwnedBy(CDC)
 @Value
 @Builder
 @Redesign
+@TypeAlias("childExecutableResponse")
 public class ChildExecutableResponse implements ExecutableResponse {
   String childNodeId;
   @Singular List<StepTransput> additionalInputs;

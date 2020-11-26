@@ -23,10 +23,12 @@ import javax.validation.constraints.Min;
 import javax.validation.constraints.NotNull;
 import lombok.Builder;
 import lombok.Data;
+import org.springframework.data.annotation.TypeAlias;
 
 @Data
 @JsonTypeName("run")
 @JsonIgnoreProperties(ignoreUnknown = true)
+@TypeAlias("runStepInfo")
 public class RunStepInfo implements CIStepInfo {
   public static final int DEFAULT_RETRY = 1;
   public static final int DEFAULT_TIMEOUT = 60 * 60 * 2; // 2 hour

@@ -17,6 +17,7 @@ import javax.validation.constraints.NotNull;
 import lombok.Builder;
 import lombok.Data;
 import lombok.Getter;
+import org.springframework.data.annotation.TypeAlias;
 
 /**
  *  This Stage stores steps required for running CI job.
@@ -28,6 +29,7 @@ import lombok.Getter;
 @Builder
 @JsonTypeName("ci")
 @JsonIgnoreProperties(ignoreUnknown = true)
+@TypeAlias("integrationStage")
 public class IntegrationStage implements CIStage {
   @JsonIgnore public static final CIStageType type = CIStageType.INTEGRATION;
   @JsonIgnore

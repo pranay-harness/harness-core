@@ -22,12 +22,14 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
+import org.springframework.data.annotation.TypeAlias;
 
 @Data
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = true)
 @JsonTypeName(StepSpecTypeConstants.SHELL_SCRIPT)
 @SimpleVisitorHelper(helperClass = ShellScriptStepInfoVisitorHelper.class)
+@TypeAlias("shellScriptStepInfo")
 public class ShellScriptStepInfo extends ShellScriptStepParameters implements CDStepInfo, Visitable {
   @JsonIgnore String name;
   @JsonIgnore String identifier;

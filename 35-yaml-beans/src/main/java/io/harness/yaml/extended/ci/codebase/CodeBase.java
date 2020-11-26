@@ -12,11 +12,13 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.experimental.FieldDefaults;
+import org.springframework.data.annotation.TypeAlias;
 
 @Data
 @NoArgsConstructor
 @JsonIgnoreProperties(ignoreUnknown = true)
 @FieldDefaults(level = AccessLevel.PRIVATE)
+@TypeAlias("io.harness.yaml.extended.ci.CodeBase")
 public class CodeBase {
   @NotNull @JsonProperty("type") CodeBaseType codeBaseType;
 

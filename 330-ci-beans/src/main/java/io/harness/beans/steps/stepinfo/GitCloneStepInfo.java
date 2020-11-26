@@ -19,10 +19,12 @@ import javax.validation.constraints.Min;
 import javax.validation.constraints.NotNull;
 import lombok.Builder;
 import lombok.Data;
+import org.springframework.data.annotation.TypeAlias;
 
 @Data
 @JsonTypeName("gitClone")
 @JsonIgnoreProperties(ignoreUnknown = true)
+@TypeAlias("gitCloneStepInfo")
 public class GitCloneStepInfo implements CIStepInfo {
   public static final int DEFAULT_RETRY = 0;
   public static final int DEFAULT_TIMEOUT = 1200;

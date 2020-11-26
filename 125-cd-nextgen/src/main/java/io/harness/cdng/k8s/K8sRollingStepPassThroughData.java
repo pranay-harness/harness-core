@@ -8,9 +8,11 @@ import io.harness.facilitator.PassThroughData;
 import java.util.List;
 import lombok.Builder;
 import lombok.Value;
+import org.springframework.data.annotation.TypeAlias;
 
 @Value
 @Builder
+@TypeAlias("k8sRollingStepPassThroughData")
 public class K8sRollingStepPassThroughData implements PassThroughData {
   K8sManifest k8sManifest;
   List<ValuesManifest> valuesManifests;

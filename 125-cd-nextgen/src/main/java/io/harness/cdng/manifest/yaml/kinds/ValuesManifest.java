@@ -19,6 +19,7 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.experimental.FieldDefaults;
 import lombok.experimental.Wither;
+import org.springframework.data.annotation.TypeAlias;
 
 @Data
 @Builder
@@ -26,6 +27,7 @@ import lombok.experimental.Wither;
 @JsonTypeName(ManifestType.VALUES)
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @SimpleVisitorHelper(helperClass = ValuesManifestVisitorHelper.class)
+@TypeAlias("valuesManifest")
 public class ValuesManifest implements ManifestAttributes, Visitable {
   String identifier;
   @Wither @JsonProperty("store") StoreConfigWrapper storeConfigWrapper;

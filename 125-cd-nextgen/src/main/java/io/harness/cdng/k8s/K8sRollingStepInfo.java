@@ -28,12 +28,14 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
+import org.springframework.data.annotation.TypeAlias;
 
 @Data
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = true)
 @JsonTypeName(StepSpecTypeConstants.K8S_ROLLING_DEPLOY)
 @SimpleVisitorHelper(helperClass = K8sRollingStepInfoVisitorHelper.class)
+@TypeAlias("k8sRollingStepInfo")
 public class K8sRollingStepInfo extends K8sRollingStepParameters implements CDStepInfo, Visitable {
   @JsonIgnore private String name;
   @JsonIgnore private String identifier;

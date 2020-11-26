@@ -12,10 +12,12 @@ import java.util.Collections;
 import java.util.List;
 import lombok.Builder;
 import lombok.Value;
+import org.springframework.data.annotation.TypeAlias;
 
 @OwnedBy(CDC)
 @Value
 @Builder
+@TypeAlias("barrierStepParameters")
 public class BarrierStepParameters implements StepParameters {
   String identifier;
   long timeoutInMillis;

@@ -8,9 +8,11 @@ import javax.validation.constraints.NotNull;
 import lombok.Builder;
 import lombok.Value;
 import org.mongodb.morphia.annotations.Id;
+import org.springframework.data.annotation.TypeAlias;
 
 @Value
 @Builder
+@TypeAlias("stepTaskDetails")
 public class BuildStandardVariables implements SweepingOutput {
   public static final String BUILD_VARIABLE = "build";
   private GitVariables git;

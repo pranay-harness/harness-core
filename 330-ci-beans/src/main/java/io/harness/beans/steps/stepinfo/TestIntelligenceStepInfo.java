@@ -19,9 +19,11 @@ import javax.validation.constraints.Min;
 import javax.validation.constraints.NotNull;
 import lombok.Builder;
 import lombok.Data;
+import org.springframework.data.annotation.TypeAlias;
 
 @Data
 @JsonTypeName("testIntelligence")
+@TypeAlias("testIntelligenceStepInfo")
 public class TestIntelligenceStepInfo implements CIStepInfo {
   public static final int DEFAULT_RETRY = 0;
   // Keeping the timeout to a day as its a test step and might take lot of time
