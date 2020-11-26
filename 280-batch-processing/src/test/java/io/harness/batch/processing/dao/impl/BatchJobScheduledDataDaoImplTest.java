@@ -36,7 +36,7 @@ public class BatchJobScheduledDataDaoImplTest extends BatchProcessingBaseTest {
         batchJobScheduledDataDao.create(batchJobScheduledData(PREV_START_INSTANT, START_INSTANT));
     boolean createSecondEntry = batchJobScheduledDataDao.create(batchJobScheduledData(START_INSTANT, END_INSTANT));
     BatchJobScheduledData batchJobScheduledData =
-        batchJobScheduledDataDao.fetchLastBatchJobScheduledData(ACCOUNT_ID, BatchJobType.ECS_EVENT);
+        batchJobScheduledDataDao.fetchLastBatchJobScheduledData(ACCOUNT_ID, BatchJobType.K8S_EVENT);
     assertThat(createFirstEntry).isTrue();
     assertThat(createSecondEntry).isTrue();
     assertThat(batchJobScheduledData.getStartAt()).isEqualTo(START_INSTANT);
@@ -44,6 +44,6 @@ public class BatchJobScheduledDataDaoImplTest extends BatchProcessingBaseTest {
   }
 
   private BatchJobScheduledData batchJobScheduledData(Instant startInstant, Instant endInstant) {
-    return new BatchJobScheduledData(ACCOUNT_ID, BatchJobType.ECS_EVENT.name(), 1, startInstant, endInstant);
+    return new BatchJobScheduledData(ACCOUNT_ID, BatchJobType.K8S_EVENT.name(), 1, startInstant, endInstant);
   }
 }

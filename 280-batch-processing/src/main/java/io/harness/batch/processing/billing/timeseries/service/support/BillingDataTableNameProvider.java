@@ -3,7 +3,6 @@ package io.harness.batch.processing.billing.timeseries.service.support;
 import static io.harness.batch.processing.ccm.BatchJobType.ACTUAL_IDLE_COST_BILLING_HOURLY;
 import static io.harness.batch.processing.ccm.BatchJobType.INSTANCE_BILLING_AGGREGATION;
 import static io.harness.batch.processing.ccm.BatchJobType.INSTANCE_BILLING_HOURLY;
-import static io.harness.batch.processing.ccm.BatchJobType.UNALLOCATED_BILLING_HOURLY;
 
 import io.harness.batch.processing.ccm.BatchJobType;
 
@@ -24,8 +23,7 @@ public class BillingDataTableNameProvider {
 
   public static String getTableName(BatchJobType batchJobType) {
     String tableName = DAILY_BILLING_DATA_TABLE;
-    if (ImmutableSet.of(INSTANCE_BILLING_HOURLY, ACTUAL_IDLE_COST_BILLING_HOURLY, UNALLOCATED_BILLING_HOURLY)
-            .contains(batchJobType)) {
+    if (ImmutableSet.of(INSTANCE_BILLING_HOURLY, ACTUAL_IDLE_COST_BILLING_HOURLY).contains(batchJobType)) {
       tableName = HOURLY_BILLING_DATA_TABLE;
     } else if (batchJobType == INSTANCE_BILLING_AGGREGATION) {
       tableName = DAILY_BILLING_DATA_AGGREGATED_TABLE;
