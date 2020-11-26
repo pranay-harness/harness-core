@@ -7,6 +7,8 @@ extend type Query {
 
   cloudAnomalies(filters: [CloudBillingFilter], groupBy: [CloudBillingGroupBy]): AnomalyDataList
     @dataFetcher(name: cloudAnomalies)
+
+  overviewAnomalies(filters: [CCMFilter]): AnomalyDataList @dataFetcher(name: overviewAnomalies)
 }
 
 type AnomalyDataList {

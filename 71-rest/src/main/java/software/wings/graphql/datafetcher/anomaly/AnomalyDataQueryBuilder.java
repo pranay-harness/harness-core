@@ -71,6 +71,16 @@ public class AnomalyDataQueryBuilder {
     return query.validate().toString();
   }
 
+  public String overviewQuery(String accountId, List<QLBillingDataFilter> filters) {
+    filters = new ArrayList<QLBillingDataFilter>(filters);
+
+    SelectQuery query = new SelectQuery();
+    query.addAllTableColumns(AnomaliesDataTableSchema.table);
+    decorateK8SQueryWithFilters(query, filters);
+    query.addOrdering(AnomaliesDataTableSchema.anomalyTime, OrderObject.Dir.ASCENDING);
+    return query.toString();
+  }
+
   public String formK8SQuery(String accountId, List<QLBillingDataFilter> filters, List<QLCCMGroupBy> groupBy) {
     filters = new ArrayList<QLBillingDataFilter>(filters);
 

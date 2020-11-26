@@ -24,6 +24,7 @@ import software.wings.beans.trigger.UpdateTriggerDataFetcher;
 import software.wings.graphql.datafetcher.DataLoaderRegistryHelper;
 import software.wings.graphql.datafetcher.anomaly.CloudAnomaliesDataFetcher;
 import software.wings.graphql.datafetcher.anomaly.K8sAnomaliesDataFetcher;
+import software.wings.graphql.datafetcher.anomaly.OverviewAnomaliesDataFetcher;
 import software.wings.graphql.datafetcher.anomaly.UpdateAnomalyDataFetcher;
 import software.wings.graphql.datafetcher.application.ApplicationConnectionDataFetcher;
 import software.wings.graphql.datafetcher.application.ApplicationDataFetcher;
@@ -299,6 +300,7 @@ public class GraphQLModule extends AbstractModule {
     bindDataFetcherWithAnnotation(GcpOrganizationDataFetcher.class);
     bindDataFetcherWithAnnotation(GcpServiceAccountDataFetcher.class);
     bindDataFetcherWithAnnotation(IdleCostTrendStatsDataFetcher.class);
+    bindDataFetcherWithAnnotation(OverviewAnomaliesDataFetcher.class);
     bindDataFetcherWithAnnotation(OverviewPageStatsDataFetcher.class);
     bindDataFetcherWithAnnotation(InstanceConnectionDataFetcher.class);
     bindDataFetcherWithAnnotation(InstanceCountDataFetcher.class);
