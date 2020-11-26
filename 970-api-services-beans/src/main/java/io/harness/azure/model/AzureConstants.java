@@ -134,6 +134,7 @@ public interface AzureConstants {
   String DOCKER_REGISTRY_SERVER_SECRET_PROPERTY_NAME = "DOCKER_REGISTRY_SERVER_PASSWORD";
   String DOCKER_CUSTOM_IMAGE_NAME_PROPERTY_NAME = "DOCKER_CUSTOM_IMAGE_NAME";
   String DOCKER_IMAGE_FULL_PATH_PATTERN = "DOCKER|%s";
+  String DOCKER_FX_IMAGE_PREFIX = "DOCKER|";
   String DOCKER_IMAGE_AND_TAG_PATH_PATTERN = "%s:%s";
   String WEB_APP_NAME_BLANK_ERROR_MSG = "Parameter webAppName cannot be null or empty";
   String SLOT_NAME_BLANK_ERROR_MSG = "Parameter slotName cannot be null or empty";
@@ -148,6 +149,7 @@ public interface AzureConstants {
       + "Status : [%s]%n"
       + "Description : [%s]";
   String SLOT_SWAP_JOB_PROCESSOR_STR = "SlotSwapJobProcessor";
+  String SUCCESS_REQUEST = "Request sent successfully";
 
   // Azure App Service Command Units
   String STOP_DEPLOYMENT_SLOT = "Stop Slot";

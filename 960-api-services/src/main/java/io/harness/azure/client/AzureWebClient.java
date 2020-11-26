@@ -255,12 +255,51 @@ public interface AzureWebClient {
   WebAppHostingOS getWebAppHostingOS(AzureWebClientContext azureWebClientContext);
 
   /**
+   * Get docker image name and tag.
+   *
+   * @param context
+   * @return
+   */
+  Optional<String> getDockerImageNameAndTag(AzureWebClientContext context);
+
+  /**
    * Reroute production slot traffic to target slot in percentage.
    *
    * @param context
    * @param targetRerouteSlotName
    * @param trafficReroutePercentage
+   * @return
    */
   void rerouteProductionSlotTraffic(
       AzureWebClientContext context, String targetRerouteSlotName, double trafficReroutePercentage);
+
+  /**
+   * Delete deployment slot application settings.
+   *
+   * @param context
+   * @param slotName
+   * @param appSettingsToRemove
+   */
+  DeploymentSlot deleteDeploymentSlotAppSettings(AzureWebClientContext context, String slotName,
+      Map<String, AzureAppServiceApplicationSetting> appSettingsToRemove);
+
+  /**
+   * Delete deployment slot connections settings.
+   *
+   * @param context
+   * @param slotName
+   * @param connSettingsToRemove
+   * @return
+   */
+  DeploymentSlot deleteDeploymentSlotConnectionSettings(AzureWebClientContext context, String slotName,
+      Map<String, AzureAppServiceConnectionString> connSettingsToRemove);
+
+  /**
+   * Get deployment slot current traffic weight.
+   *
+   * @param context
+   * @param slotName
+   * @return
+   */
+  double getDeploymentSlotTrafficWeight(AzureWebClientContext context, String slotName);
 }

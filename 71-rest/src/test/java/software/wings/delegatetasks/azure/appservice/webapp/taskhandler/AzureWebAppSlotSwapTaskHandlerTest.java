@@ -1,6 +1,5 @@
 package software.wings.delegatetasks.azure.appservice.webapp.taskhandler;
 
-import static io.harness.azure.model.AzureConstants.SLOT_SWAP;
 import static io.harness.azure.model.AzureConstants.SLOT_TRAFFIC_WEIGHT;
 import static io.harness.azure.model.AzureConstants.SOURCE_SLOT_NAME_BLANK_ERROR_MSG;
 import static io.harness.azure.model.AzureConstants.TARGET_SLOT_NAME_BLANK_ERROR_MSG;
@@ -11,7 +10,6 @@ import static com.cronutils.utils.StringUtils.EMPTY;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.anyLong;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.doNothing;
@@ -30,15 +28,14 @@ import io.harness.rule.Owner;
 
 import software.wings.WingsBaseTest;
 import software.wings.delegatetasks.azure.AzureTimeLimiter;
+import software.wings.delegatetasks.azure.appservice.deployment.AzureAppServiceDeploymentService;
 
-import java.util.Collections;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Spy;
-import rx.Observable;
 
 public class AzureWebAppSlotSwapTaskHandlerTest extends WingsBaseTest {
   public static final String SUBSCRIPTION_ID = "subscriptionId";
@@ -52,6 +49,7 @@ public class AzureWebAppSlotSwapTaskHandlerTest extends WingsBaseTest {
   @Mock private AzureTimeLimiter azureTimeLimiter;
   @Mock private ILogStreamingTaskClient mockLogStreamingTaskClient;
   @Mock private LogCallback mockLogCallback;
+  @Mock private AzureAppServiceDeploymentService azureAppServiceDeploymentService;
 
   @Spy @InjectMocks AzureWebAppSlotSwapTaskHandler slotSwapTaskHandler;
 
@@ -70,9 +68,7 @@ public class AzureWebAppSlotSwapTaskHandlerTest extends WingsBaseTest {
     AzureWebAppSwapSlotsParameters azureWebAppSlotSwapParameters = buildAzureWebAppSlotSwapParameters();
     AzureConfig azureConfig = buildAzureConfig();
 
-    mockSwapDeploymentSlotsAsync();
-    mockListEventDataWithAllPropertiesByResourceGroupName();
-    mockWaitUntilCompleteWithTimeout();
+    mockSwapSlots();
 
     AzureAppServiceTaskResponse azureAppServiceTaskResponse =
         slotSwapTaskHandler.executeTaskInternal(azureWebAppSlotSwapParameters, azureConfig, mockLogStreamingTaskClient);
@@ -147,23 +143,7 @@ public class AzureWebAppSlotSwapTaskHandlerTest extends WingsBaseTest {
     return AzureConfig.builder().clientId("clientId").key("key".toCharArray()).tenantId("tenantId").build();
   }
 
-  private void mockSwapDeploymentSlotsAsync() {
-    Observable<Void> mockObservable = Observable.empty();
-    doReturn(mockObservable)
-        .when(mockAzureWebClient)
-        .swapDeploymentSlotsAsync(any(), eq(SOURCE_SLOT_NAME), eq(TARGET_SLOT_NAME));
-  }
-
-  private void mockListEventDataWithAllPropertiesByResourceGroupName() {
-    doReturn(Collections.emptyList())
-        .when(mockAzureMonitorClient)
-        .listEventDataWithAllPropertiesByResourceGroupName(
-            any(), eq(SUBSCRIPTION_ID), eq(RESOURCE_GROUP_NAME), any(), any());
-  }
-
-  private void mockWaitUntilCompleteWithTimeout() {
-    doNothing()
-        .when(azureTimeLimiter)
-        .waitUntilCompleteWithTimeout(anyLong(), anyLong(), any(), any(), any(), eq(SLOT_SWAP));
+  private void mockSwapSlots() {
+    doNothing().when(azureAppServiceDeploymentService).swapSlots(any(), eq(TARGET_SLOT_NAME), any());
   }
 }

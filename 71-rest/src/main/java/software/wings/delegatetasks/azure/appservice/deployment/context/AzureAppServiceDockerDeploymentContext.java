@@ -5,7 +5,6 @@ import io.harness.azure.model.AzureAppServiceApplicationSetting;
 import io.harness.azure.model.AzureAppServiceConnectionString;
 import io.harness.azure.model.AzureAppServiceDockerSetting;
 import io.harness.delegate.beans.logstreaming.ILogStreamingTaskClient;
-import io.harness.delegate.task.azure.appservice.deployment.context.AzureAppServiceDeploymentContext;
 
 import java.util.Map;
 import lombok.Builder;
@@ -19,12 +18,15 @@ public class AzureAppServiceDockerDeploymentContext extends AzureAppServiceDeplo
   private Map<String, AzureAppServiceDockerSetting> dockerSettings;
 
   @Builder
-  AzureAppServiceDockerDeploymentContext(AzureWebClientContext azureWebClientContext,
-      ILogStreamingTaskClient logStreamingTaskClient, Map<String, AzureAppServiceApplicationSetting> appSettings,
-      Map<String, AzureAppServiceConnectionString> connSettings,
-      Map<String, AzureAppServiceDockerSetting> dockerSettings, String slotName, String imagePathAndTag,
+  public AzureAppServiceDockerDeploymentContext(AzureWebClientContext azureWebClientContext,
+      ILogStreamingTaskClient logStreamingTaskClient, Map<String, AzureAppServiceApplicationSetting> appSettingsToAdd,
+      Map<String, AzureAppServiceApplicationSetting> appSettingsToRemove,
+      Map<String, AzureAppServiceConnectionString> connSettingsToAdd,
+      Map<String, AzureAppServiceConnectionString> connSettingsToRemove,
+      Map<String, AzureAppServiceDockerSetting> dockerSettings, String imagePathAndTag, String slotName,
       int steadyStateTimeoutInMin) {
-    super(azureWebClientContext, logStreamingTaskClient, appSettings, connSettings, slotName, steadyStateTimeoutInMin);
+    super(azureWebClientContext, logStreamingTaskClient, appSettingsToAdd, appSettingsToRemove, connSettingsToAdd,
+        connSettingsToRemove, slotName, steadyStateTimeoutInMin);
     this.dockerSettings = dockerSettings;
     this.imagePathAndTag = imagePathAndTag;
   }
