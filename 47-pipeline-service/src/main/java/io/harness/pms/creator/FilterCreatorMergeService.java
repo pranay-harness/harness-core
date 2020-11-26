@@ -9,6 +9,7 @@ import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.UnexpectedException;
 import io.harness.pms.beans.filters.FilterCreationResponseWrapper;
+import io.harness.pms.beans.filters.FilterCreatorMergeServiceResponse;
 import io.harness.pms.plan.FilterCreationBlobRequest;
 import io.harness.pms.plan.FilterCreationBlobResponse;
 import io.harness.pms.plan.PlanCreationServiceGrpc.PlanCreationServiceBlockingStub;
@@ -49,7 +50,7 @@ public class FilterCreatorMergeService {
     this.pmsSdkInstanceService = pmsSdkInstanceService;
   }
 
-  public Map<String, String> getFilters(@NotNull String yaml) throws IOException {
+  public FilterCreatorMergeServiceResponse getFiltersAndStageCount(@NotNull String yaml) throws IOException {
     Map<String, Map<String, Set<String>>> sdkInstances = pmsSdkInstanceService.getSdkInstancesMap();
     Map<String, PlanCreatorServiceInfo> services = new HashMap<>();
     if (EmptyPredicate.isNotEmpty(planCreatorServices) && EmptyPredicate.isNotEmpty(sdkInstances)) {
@@ -71,7 +72,7 @@ public class FilterCreatorMergeService {
     FilterCreationBlobResponse response = obtainFiltersRecursively(services, dependencies, filters);
     validateFilterCreationBlobResponse(response);
 
-    return filters;
+    return FilterCreatorMergeServiceResponse.builder().filters(filters).stageCount(response.getStageCount()).build();
   }
 
   private void validateFilterCreationBlobResponse(FilterCreationBlobResponse response) {
@@ -100,6 +101,7 @@ public class FilterCreatorMergeService {
             "Some YAML nodes could not be parsed: %s", responseBuilder.getDependenciesMap().keySet().toString()));
       }
       mergeDependencies(responseBuilder, currIterResponse);
+      updateStageCount(responseBuilder, currIterResponse);
     }
 
     return responseBuilder.build();
@@ -144,6 +146,12 @@ public class FilterCreatorMergeService {
     mergeResolvedDependencies(builder, response.getResponse());
     mergeDependencies(builder, response.getResponse());
     mergeFilters(response, filters);
+    updateStageCount(builder, response.getResponse());
+  }
+
+  private void updateStageCount(
+      FilterCreationBlobResponse.Builder builder, FilterCreationBlobResponse filterCreationBlobResponse) {
+    builder.setStageCount(filterCreationBlobResponse.getStageCount());
   }
 
   private void mergeFilters(FilterCreationResponseWrapper response, Map<String, String> filters) {

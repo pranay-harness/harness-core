@@ -50,6 +50,7 @@ public class DeploymentStageFilterCreator implements FilterJsonCreator<Deploymen
     }
 
     creationResponse.setPipelineFilter(cdFilter);
+    creationResponse.setStageCount(1);
     return creationResponse;
   }
 }

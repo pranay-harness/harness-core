@@ -9,6 +9,7 @@ import io.harness.exception.DuplicateFieldException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.pms.beans.entities.PipelineEntity;
 import io.harness.pms.beans.entities.PipelineEntity.PipelineEntityKeys;
+import io.harness.pms.beans.filters.FilterCreatorMergeServiceResponse;
 import io.harness.pms.creator.FilterCreatorMergeService;
 import io.harness.repositories.spring.PMSPipelineRepository;
 
@@ -50,7 +51,7 @@ public class PMSPipelineServiceImpl implements PMSPipelineService {
           pipelineEntity.getProjectIdentifier(), pipelineEntity.getIdentifier(), pipelineEntity.getIdentifier());
 
       // Todo: Uncomment when we have the CD Service integration with NextGenApp.
-      // updateFilters(pipelineEntity);
+      // updateFiltersAndStageCount(pipelineEntity);
 
       PipelineEntity createdEntity = pmsPipelineRepository.save(pipelineEntity);
       return createdEntity;
@@ -133,11 +134,14 @@ public class PMSPipelineServiceImpl implements PMSPipelineService {
     return pmsPipelineRepository.findAll(criteria, pageable);
   }
 
-  private void updateFilters(PipelineEntity pipelineEntity) {
+  private void updateFiltersAndStageCount(PipelineEntity pipelineEntity) {
     try {
-      Map<String, String> filters = filterCreatorMergeService.getFilters(pipelineEntity.getYaml());
-      if (isNotEmpty(filters)) {
-        filters.forEach((key, value) -> pipelineEntity.getFilters().put(key, Document.parse(value)));
+      FilterCreatorMergeServiceResponse filtersAndStageCount =
+          filterCreatorMergeService.getFiltersAndStageCount(pipelineEntity.getYaml());
+      pipelineEntity.setStageCount(filtersAndStageCount.getStageCount());
+      if (isNotEmpty(filtersAndStageCount.getFilters())) {
+        filtersAndStageCount.getFilters().forEach(
+            (key, value) -> pipelineEntity.getFilters().put(key, Document.parse(value)));
       }
     } catch (Exception ex) {
       throw new InvalidRequestException(
