@@ -53,8 +53,8 @@ java_library(
 modules = [
     "//960-ng-core-beans",
     "//21-delegate-agent-beans",
-    "//21-persistence",
-    "//22-delegate-service-beans",
+    "//960-persistence",
+    "//920-delegate-service-beans",
     "//22-ng-core",
     "//22-ng-project-n-orgs",
     "//22-secret-manager-client",

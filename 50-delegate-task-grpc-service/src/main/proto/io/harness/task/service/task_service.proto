@@ -6,10 +6,10 @@ option java_multiple_files = true;
 option go_package = "50_delegate_task_grpc_service";
 
 import "940-delegate-beans/src/main/proto/io/harness/delegate/account.proto";
-import "22-delegate-service-beans/src/main/proto/io/harness/delegate/progress.proto";
-import "22-delegate-service-beans/src/main/proto/io/harness/delegate/task.proto";
+import "920-delegate-service-beans/src/main/proto/io/harness/delegate/progress.proto";
+import "920-delegate-service-beans/src/main/proto/io/harness/delegate/task.proto";
 
-import "22-delegate-service-beans/src/main/proto/io/harness/callback/callback.proto";
+import "920-delegate-service-beans/src/main/proto/io/harness/callback/callback.proto";
 
 import "google/protobuf/duration.proto";
 

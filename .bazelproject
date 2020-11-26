@@ -1,9 +1,9 @@
 directories:
   21-delegate-agent-beans
   21-events-api
-  21-persistence
+  960-persistence
   21-notification-client
-  22-delegate-service-beans
+  920-delegate-service-beans
   22-ng-core
   22-ng-project-n-orgs
   22-rbac-core

@@ -11,10 +11,10 @@ java_library(
     name = "maven_deps",
     visibility = ["//visibility:public"],
     exports = [
-        "//21-persistence:module",
         "//22-timeout-engine:module",
         "//26-pms-contracts/src/main/proto:26_pms_contracts_java_proto",
         "//31-orchestration:module",
+        "//960-persistence:module",
         "//980-commons:module",
     ],
 )

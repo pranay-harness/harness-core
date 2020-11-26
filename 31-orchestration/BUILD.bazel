@@ -47,7 +47,7 @@ java_library(
 java_library(
     name = "test_deps",
     exports = [
-        "//21-persistence:supporter-test",
+        "//960-persistence:supporter-test",
         "//990-commons-test:module",
         "@maven//:commons_codec_commons_codec",
         "@maven//:commons_logging_commons_logging",

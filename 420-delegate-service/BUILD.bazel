@@ -11,9 +11,9 @@ java_library(
     name = "maven_deps",
     visibility = ["//visibility:public"],
     exports = [
-        "//22-delegate-service-beans:module",
-        "//22-delegate-service-beans/src/main/proto:22_delegate_service_beans_java_proto",
         "//31-orchestration:module",
+        "//920-delegate-service-beans:module",
+        "//920-delegate-service-beans/src/main/proto:920_delegate_service_beans_java_proto",
         "//970-grpc:module",
         "@maven//:com_esotericsoftware_kryo",
         "@maven//:com_fasterxml_jackson_core_jackson_annotations",
@@ -45,8 +45,8 @@ java_library(
 java_library(
     name = "test_deps",
     exports = [
-        "//21-persistence:supporter-test",
         "//22-wait-engine:module",
+        "//960-persistence:supporter-test",
         "//990-commons-test:module",
         "@maven//:ch_qos_logback_logback_classic",
         "@maven//:ch_qos_logback_logback_core",

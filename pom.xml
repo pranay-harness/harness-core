@@ -8,8 +8,8 @@
     <modules>
         <!--<module>21-delegate-agent-beans</module>-->
         <!--<module>21-events-api</module>-->
-        <!--<module>21-persistence</module>-->
-        <!--<module>22-delegate-service-beans</module>-->
+        <!--<module>960-persistence</module>-->
+        <!--<module>920-delegate-service-beans</module>-->
         <!--<module>22-ng-core</module>-->
         <!--<module>22-ng-project-n-orgs</module>-->
         <!--<module>22-rbac-core</module>-->

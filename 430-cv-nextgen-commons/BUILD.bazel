@@ -49,7 +49,7 @@ java_library(
         "//430-cv-nextgen-commons/src/main/resources:resource",
     ],
     exports = [
-        "//21-persistence:supporter-test",
+        "//960-persistence:supporter-test",
         "//990-commons-test:module",
         "@maven//:junit_junit",
         "@maven//:org_assertj_assertj_core",

@@ -46,7 +46,7 @@ java_library(
 java_library(
     name = "test_deps",
     exports = [
-        "//21-persistence:supporter-test",
+        "//960-persistence:supporter-test",
         "//990-commons-test:module",
         "@maven//:io_fabric8_fabric8_utils",
         "@maven//:junit_junit",

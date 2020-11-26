@@ -6,9 +6,9 @@ go_library(
     importpath = "github.com/wings-software/portal/product/ci/engine/status",
     visibility = ["//visibility:public"],
     deps = [
-        "//22-delegate-service-beans/src/main/proto/io/harness/callback:go_default_library",
-        "//22-delegate-service-beans/src/main/proto/io/harness/delegate:go_default_library",
         "//50-delegate-task-grpc-service/src/main/proto/io/harness/task/service:go_default_library",
+        "//920-delegate-service-beans/src/main/proto/io/harness/callback:go_default_library",
+        "//920-delegate-service-beans/src/main/proto/io/harness/delegate:go_default_library",
         "//940-delegate-beans/src/main/proto/io/harness/delegate:go_default_library",
         "//commons/go/lib/50-delegate-task-grpc-service/grpc:go_default_library",
         "//commons/go/lib/utils:go_default_library",
