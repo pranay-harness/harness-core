@@ -11,7 +11,6 @@ java_library(
     name = "maven_deps",
     visibility = ["//visibility:public"],
     exports = [
-        "//22-ng-core:module",
         "//22-ng-project-n-orgs:module",
         "//22-rbac-core:module",
         "//22-secret-manager-client:module",
@@ -41,6 +40,7 @@ java_library(
         "//940-delegate-beans/src/main/proto:940_delegate_beans_java_proto",
         "//950-delegate-tasks-beans:module",
         "//950-delegate-tasks-beans/src/main/proto:950_delegate_tasks_beans_java_proto",
+        "//950-ng-core:module",
         "//960-api-services:module",
         "//960-ng-core-beans:module",
         "//960-persistence:module",

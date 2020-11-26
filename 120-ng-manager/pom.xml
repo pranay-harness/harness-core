@@ -67,16 +67,6 @@
         </dependency>
         <dependency>
             <groupId>software.wings</groupId>
-            <artifactId>21-events-api</artifactId>
-            <version>${project.parent.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>software.wings</groupId>
-            <artifactId>21-events-api-proto</artifactId>
-            <version>${project.parent.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>software.wings</groupId>
             <artifactId>22-secret-manager-client</artifactId>
             <version>${project.parent.version}</version>
         </dependency>
@@ -98,6 +88,16 @@
         <dependency>
             <groupId>software.wings</groupId>
             <artifactId>900-yaml-sdk</artifactId>
+            <version>${project.parent.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>software.wings</groupId>
+            <artifactId>950-events-api</artifactId>
+            <version>${project.parent.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>software.wings</groupId>
+            <artifactId>950-events-api-proto</artifactId>
             <version>${project.parent.version}</version>
         </dependency>
         <dependency>

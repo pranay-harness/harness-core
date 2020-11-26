@@ -6,7 +6,7 @@
         <artifactId>portal</artifactId>
         <version>0.0.1-SNAPSHOT</version>
     </parent>
-    <artifactId>22-ng-core</artifactId>
+    <artifactId>950-ng-core</artifactId>
     <dependencies>
         <dependency>
             <groupId>net.jodah</groupId>

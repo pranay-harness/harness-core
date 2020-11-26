@@ -11,7 +11,7 @@ java_library(
     name = "maven_deps",
     visibility = ["//visibility:public"],
     exports = [
-        "//21-notification-client:module",
+        "//940-notification-client:module",
         "//960-ng-core-beans:module",
         "//960-notification-beans:module",
         "//960-persistence:module",

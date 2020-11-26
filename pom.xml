@@ -6,11 +6,11 @@
     <version>0.0.1-SNAPSHOT</version>
     <packaging>pom</packaging>
     <modules>
-        <!--<module>21-delegate-agent-beans</module>-->
-        <!--<module>21-events-api</module>-->
+        <!--<module>920-delegate-agent-beans</module>-->
+        <!--<module>950-events-api</module>-->
         <!--<module>960-persistence</module>-->
         <!--<module>920-delegate-service-beans</module>-->
-        <!--<module>22-ng-core</module>-->
+        <!--<module>950-ng-core</module>-->
         <!--<module>22-ng-project-n-orgs</module>-->
         <!--<module>22-rbac-core</module>-->
         <!--<module>22-secret-manager-client</module>-->

@@ -62,11 +62,6 @@
         </dependency>
         <dependency>
             <groupId>software.wings</groupId>
-            <artifactId>21-delegate-agent-beans</artifactId>
-            <version>${project.parent.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>software.wings</groupId>
             <artifactId>420-delegate-agent</artifactId>
             <version>${project.parent.version}</version>
         </dependency>
@@ -78,6 +73,11 @@
         <dependency>
             <groupId>software.wings</groupId>
             <artifactId>71-rest</artifactId>
+            <version>${project.parent.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>software.wings</groupId>
+            <artifactId>920-delegate-agent-beans</artifactId>
             <version>${project.parent.version}</version>
         </dependency>
         <dependency>
