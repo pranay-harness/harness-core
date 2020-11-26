@@ -17,6 +17,7 @@ public class NGHarnessJacksonModule extends Module {
   @Override
   public void setupModule(SetupContext context) {
     context.addDeserializers(new NGHarnessDeserializers());
+    context.addSerializers(new NGHarnessSerializers());
     context.addTypeModifier(new NGHarnessJacksonTypeModifier());
   }
 }
