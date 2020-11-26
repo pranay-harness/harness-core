@@ -98,7 +98,7 @@ func TestEvaluateJEXLErr(t *testing.T) {
 				}
 			}
 		}
-		_, got := EvaluateJEXL(ctx, expressions, so, log.Sugar())
+		_, got := EvaluateJEXL(ctx, stepID, expressions, so, log.Sugar())
 		if tc.expectedErr == (got == nil) {
 			t.Fatalf("%s: expected error: %v, got: %v", tc.name, tc.expectedErr, got)
 		}
@@ -144,7 +144,7 @@ func TestEvaluateJEXLClientCreateErr(t *testing.T) {
 	testSetEnv(delegateSvcEndpointEnv, "1.1.1.1", t)
 	testSetEnv(delegateSvcTokenEnv, token, t)
 	testSetEnv(delegateSvcIDEnv, svcID, t)
-	_, err := EvaluateJEXL(ctx, expressions, so, log.Sugar())
+	_, err := EvaluateJEXL(ctx, stepID, expressions, so, log.Sugar())
 	assert.NotNil(t, err)
 	testUnsetEnv(delegateSvcEndpointEnv, t)
 	testUnsetEnv(delegateSvcTokenEnv, t)
@@ -202,7 +202,7 @@ func TestEvaluateJEXLSuccess(t *testing.T) {
 	testSetEnv(delegateSvcEndpointEnv, "1.1.1.1", t)
 	testSetEnv(delegateSvcTokenEnv, token, t)
 	testSetEnv(delegateSvcIDEnv, svcID, t)
-	ret, err := EvaluateJEXL(ctx, expressions, so, log.Sugar())
+	ret, err := EvaluateJEXL(ctx, stepID, expressions, so, log.Sugar())
 	assert.Nil(t, err)
 	assert.Equal(t, ret[expr1], envVal1)
 	assert.Equal(t, ret[expr2], envVal2)
@@ -250,7 +250,7 @@ func TestEvaluateJEXLServerErr(t *testing.T) {
 	testSetEnv(delegateSvcEndpointEnv, "1.1.1.1", t)
 	testSetEnv(delegateSvcTokenEnv, token, t)
 	testSetEnv(delegateSvcIDEnv, svcID, t)
-	_, err := EvaluateJEXL(ctx, expressions, so, log.Sugar())
+	_, err := EvaluateJEXL(ctx, stepID, expressions, so, log.Sugar())
 	assert.NotNil(t, err)
 	testUnsetEnv(delegateSvcEndpointEnv, t)
 	testUnsetEnv(delegateSvcTokenEnv, t)
@@ -309,7 +309,7 @@ func TestEvaluateJEXLInvalidExpression(t *testing.T) {
 	testSetEnv(delegateSvcEndpointEnv, "1.1.1.1", t)
 	testSetEnv(delegateSvcTokenEnv, token, t)
 	testSetEnv(delegateSvcIDEnv, svcID, t)
-	_, err := EvaluateJEXL(ctx, expressions, so, log.Sugar())
+	_, err := EvaluateJEXL(ctx, stepID, expressions, so, log.Sugar())
 	assert.NotNil(t, err)
 	testUnsetEnv(delegateSvcEndpointEnv, t)
 	testUnsetEnv(delegateSvcTokenEnv, t)

@@ -73,7 +73,7 @@ func (s *saveCacheStep) resolveJEXL(ctx context.Context) error {
 		exprsToResolve = append(exprsToResolve, path)
 	}
 
-	resolvedExprs, err := evaluateJEXL(ctx, exprsToResolve, s.stageOutput, s.log)
+	resolvedExprs, err := evaluateJEXL(ctx, s.id, exprsToResolve, s.stageOutput, s.log)
 	if err != nil {
 		return err
 	}

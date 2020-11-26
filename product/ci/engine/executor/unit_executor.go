@@ -3,13 +3,17 @@ package executor
 import (
 	"context"
 	"fmt"
+	"strconv"
+	"strings"
 	"time"
 
 	"github.com/pkg/errors"
+	statuspb "github.com/wings-software/portal/50-delegate-task-grpc-service/src/main/proto/io/harness/task/service"
 	"github.com/wings-software/portal/commons/go/lib/filesystem"
 	"github.com/wings-software/portal/commons/go/lib/logs"
 	caddon "github.com/wings-software/portal/product/ci/addon/grpc/client"
 	addonpb "github.com/wings-software/portal/product/ci/addon/proto"
+	"github.com/wings-software/portal/product/ci/engine/jexl"
 	"github.com/wings-software/portal/product/ci/engine/logutil"
 	"github.com/wings-software/portal/product/ci/engine/output"
 	pb "github.com/wings-software/portal/product/ci/engine/proto"
@@ -27,6 +31,7 @@ var (
 	sendStepStatus       = status.SendStepStatus
 	newRemoteLogger      = logutil.GetGrpcRemoteLogger
 	newAddonClient       = caddon.NewAddonClient
+	evaluateJEXL         = jexl.EvaluateJEXL
 )
 
 //go:generate mockgen -source unit_executor.go -package=executor -destination mocks/unit_executor_mock.go UnitExecutor
@@ -73,18 +78,75 @@ func (e *unitExecutor) validate(step *pb.UnitStep) error {
 func (e *unitExecutor) Run(ctx context.Context, step *pb.UnitStep, so output.StageOutput,
 	accountID string) (*output.StepOutput, error) {
 	start := time.Now()
-	stepOutput, numRetries, err := e.execute(ctx, step, so)
-	timeTaken := time.Since(start)
+	e.log.Infow("Step info", "step", step.String(), "step_id", step.GetId())
+	skip, err := e.skipStep(ctx, step, so)
+	if err != nil {
+		e.log.Errorw("failed to evaluate skip condition", zap.Error(err))
+		e.updateStepStatus(ctx, step, statuspb.StepExecutionStatus_FAILURE, "", int32(1), nil, accountID, time.Since(start))
+		return nil, err
+	}
 
-	callbackToken := step.GetCallbackToken()
-	taskID := step.GetTaskId()
-	statusErr := sendStepStatus(ctx, step.GetId(), accountID, callbackToken, taskID, numRetries, timeTaken,
-		stepOutput, err, e.log)
+	if skip {
+		e.log.Infow("Skipping the step", "step_id", step.GetId())
+		statusErr := e.updateStepStatus(ctx, step, statuspb.StepExecutionStatus_SKIPPED, "", int32(1), nil,
+			accountID, time.Since(start))
+		return nil, statusErr
+	}
+
+	stepOutput, numRetries, err := e.execute(ctx, step, so)
+	stepStatus := statuspb.StepExecutionStatus_SUCCESS
+	errMsg := ""
+	if err != nil {
+		stepStatus = statuspb.StepExecutionStatus_FAILURE
+		errMsg = err.Error()
+	}
+	statusErr := e.updateStepStatus(ctx, step, stepStatus, errMsg, numRetries, stepOutput, accountID, time.Since(start))
 	if statusErr != nil {
-		e.log.Errorw("Failed to send step status. Bailing out stage execution", "step_id", step.GetId(), zap.Error(err))
 		return nil, statusErr
 	}
 	return stepOutput, err
+}
+
+func (e *unitExecutor) updateStepStatus(ctx context.Context, step *pb.UnitStep, stepStatus statuspb.StepExecutionStatus,
+	errMsg string, numRetries int32, so *output.StepOutput, accountID string, timeTaken time.Duration) error {
+	callbackToken := step.GetCallbackToken()
+	taskID := step.GetTaskId()
+	stepID := step.GetId()
+
+	err := sendStepStatus(ctx, stepID, accountID, callbackToken, taskID, numRetries, timeTaken,
+		stepStatus, errMsg, so, e.log)
+	if err != nil {
+		e.log.Errorw("Failed to send step status. Bailing out stage execution", "step_id", stepID, zap.Error(err))
+		return err
+	}
+	return nil
+}
+
+// skipStep checks whether a step needs to be skipped.
+// Returns true if a step needs to be skipped. Else false.
+func (e *unitExecutor) skipStep(ctx context.Context, step *pb.UnitStep, so output.StageOutput) (bool, error) {
+	skipCondition := step.GetSkipCondition()
+	if skipCondition == "" {
+		return false, nil
+	}
+
+	e.log.Infow("Evaluating skip condition", "condition", skipCondition)
+	ret, err := evaluateJEXL(ctx, step.GetId(), []string{skipCondition}, so, e.log)
+	if err != nil {
+		return false, errors.Wrap(err, fmt.Sprintf("failed to evalue skip condition: %s", skipCondition))
+	}
+
+	resolvedExpr := skipCondition
+	if val, ok := ret[skipCondition]; ok {
+		resolvedExpr = val
+	}
+
+	skip, err := strconv.ParseBool(strings.ToLower(resolvedExpr))
+	if err != nil {
+		return false, fmt.Errorf("invalid skip condition: %s, resolved expression value: %s", skipCondition, resolvedExpr)
+	}
+
+	return skip, nil
 }
 
 func (e *unitExecutor) execute(ctx context.Context, step *pb.UnitStep,

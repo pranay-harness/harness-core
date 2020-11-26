@@ -10,6 +10,7 @@ go_library(
         "//commons/go/lib/expression-service/grpc:go_default_library",
         "//commons/go/lib/utils:go_default_library",
         "//product/ci/engine/output:go_default_library",
+        "@com_github_gogo_protobuf//jsonpb:go_default_library",
         "@com_github_pkg_errors//:go_default_library",
         "@org_golang_google_grpc//metadata:go_default_library",
         "@org_uber_go_zap//:go_default_library",

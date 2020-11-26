@@ -38,6 +38,7 @@ public class RunStepProtobufSerializer implements ProtobufSerializer<RunStepInfo
         .setCallbackToken(delegateCallbackTokenSupplier.get().getToken())
         .setDisplayName(Optional.ofNullable(runStepInfo.getDisplayName()).orElse(""))
         .setRun(runStepBuilder.build())
+        .setSkipCondition(Optional.ofNullable(runStepInfo.getSkipCondition()).orElse(""))
         .build();
   }
 }

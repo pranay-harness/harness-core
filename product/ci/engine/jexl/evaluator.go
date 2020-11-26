@@ -8,6 +8,7 @@ import (
 	"regexp"
 	"time"
 
+	"github.com/gogo/protobuf/jsonpb"
 	"github.com/pkg/errors"
 	pb "github.com/wings-software/portal/960-expression-service/src/main/proto/io/harness/expression/service"
 	"github.com/wings-software/portal/commons/go/lib/expression-service/grpc"
@@ -38,13 +39,14 @@ func isJEXLExpression(input string) (bool, error) {
 
 // EvaluateJEXL evaluates list of JEXL expressions based on outputs. It does nothing if expression is not JEXL.
 // Returns a map with key as JEXL expression and value as evaluated value of JEXL expression
-func EvaluateJEXL(ctx context.Context, expressions []string, o output.StageOutput, log *zap.SugaredLogger) (
+func EvaluateJEXL(ctx context.Context, stepID string, expressions []string, o output.StageOutput, log *zap.SugaredLogger) (
 	map[string]string, error) {
 	start := time.Now()
-	arg, err := getRequestArg(expressions, o)
+	arg, err := getRequestArg(stepID, expressions, o, log)
 	if err != nil {
 		log.Errorw(
 			"Failed to create arguments for JEXL evaluation",
+			"step_id", stepID,
 			"expressions", expressions,
 			"stage_output", o,
 			"elapsed_time_ms", utils.TimeSince(start),
@@ -53,6 +55,7 @@ func EvaluateJEXL(ctx context.Context, expressions []string, o output.StageOutpu
 		return nil, err
 	}
 	if len(arg.Queries) == 0 {
+		log.Infow("No JEXL expression to evaluate", "step_id", stepID, "expressions", expressions)
 		return nil, nil
 	}
 
@@ -60,6 +63,7 @@ func EvaluateJEXL(ctx context.Context, expressions []string, o output.StageOutpu
 	if err != nil {
 		log.Errorw(
 			"Failed to execute expression evaluation",
+			"step_id", stepID,
 			"expressions", expressions,
 			"stage_output", o,
 			"elapsed_time_ms", utils.TimeSince(start),
@@ -72,6 +76,7 @@ func EvaluateJEXL(ctx context.Context, expressions []string, o output.StageOutpu
 		if val.GetStatusCode() != pb.ExpressionValue_SUCCESS {
 			log.Errorw(
 				"Failed to evaluate expression",
+				"step_id", stepID,
 				"expression", val.GetJexl(),
 				"stage_output", o,
 				"error_msg", val.GetErrorMessage(),
@@ -80,11 +85,14 @@ func EvaluateJEXL(ctx context.Context, expressions []string, o output.StageOutpu
 		}
 		result[val.GetJexl()] = val.GetValue()
 	}
+	log.Infow("Successfully evaulated jexl expression", "step_id", stepID, "response", response,
+		"parsed_result", result, "elapsed_time_ms", utils.TimeSince(start))
 	return result, nil
 }
 
 // getRequestArg returns arguments for expression service request to evaluate JEXL expression
-func getRequestArg(expressions []string, o output.StageOutput) (*pb.ExpressionRequest, error) {
+func getRequestArg(stepID string, expressions []string, o output.StageOutput, log *zap.SugaredLogger) (
+	*pb.ExpressionRequest, error) {
 	data, err := json.Marshal(o)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to marshal stage output")
@@ -107,6 +115,8 @@ func getRequestArg(expressions []string, o output.StageOutput) (*pb.ExpressionRe
 	req := &pb.ExpressionRequest{
 		Queries: queries,
 	}
+	log.Infow("Arguments for JEXL evaluation", "step_id", stepID, "request_arg", msgToStr(req, log),
+		"expressions", expressions)
 	return req, nil
 }
 
@@ -145,4 +155,14 @@ func sendRequest(ctx context.Context, request *pb.ExpressionRequest, log *zap.Su
 		return nil, errors.Wrap(err, "Could not evaluate JEXL expression")
 	}
 	return response, nil
+}
+
+func msgToStr(msg *pb.ExpressionRequest, log *zap.SugaredLogger) string {
+	m := jsonpb.Marshaler{}
+	jsonMsg, err := m.MarshalToString(msg)
+	if err != nil {
+		log.Errorw("failed to convert task status request to json", "message", msg, zap.Error(err))
+		return msg.String()
+	}
+	return jsonMsg
 }

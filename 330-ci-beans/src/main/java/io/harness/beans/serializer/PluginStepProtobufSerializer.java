@@ -36,6 +36,7 @@ public class PluginStepProtobufSerializer implements ProtobufSerializer<PluginSt
         .setTaskId(pluginStepInfo.getCallbackId())
         .setCallbackToken(delegateCallbackTokenSupplier.get().getToken())
         .setDisplayName(Optional.ofNullable(pluginStepInfo.getDisplayName()).orElse(""))
+        .setSkipCondition(Optional.ofNullable(pluginStepInfo.getSkipCondition()).orElse(""))
         .setPlugin(pluginStep)
         .build();
   }

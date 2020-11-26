@@ -11,6 +11,7 @@ import (
 	"github.com/golang/protobuf/proto"
 	"github.com/pkg/errors"
 	"github.com/stretchr/testify/assert"
+	statuspb "github.com/wings-software/portal/50-delegate-task-grpc-service/src/main/proto/io/harness/task/service"
 	"github.com/wings-software/portal/commons/go/lib/logs"
 	caddon "github.com/wings-software/portal/product/ci/addon/grpc/client"
 	amgrpc "github.com/wings-software/portal/product/ci/addon/grpc/client/mocks"
@@ -148,7 +149,7 @@ func TestStageRun(t *testing.T) {
 	oldSendStepStatus := sendStepStatus
 	defer func() { sendStepStatus = oldSendStepStatus }()
 	sendStepStatus = func(ctx context.Context, stepID, accountID, callbackToken, taskID string, numRetries int32, timeTaken time.Duration,
-		stepOutput *output.StepOutput, stepErr error, log *zap.SugaredLogger) error {
+		status statuspb.StepExecutionStatus, errMsg string, stepOutput *output.StepOutput, log *zap.SugaredLogger) error {
 		return nil
 	}
 

@@ -85,7 +85,7 @@ func (s *publishArtifactsStep) resolveExpressions(ctx context.Context) (
 		exprsToResolve = append(exprsToResolve, image.GetDestination().GetDestinationUrl())
 	}
 
-	resolvedExprs, err := evaluateJEXL(ctx, exprsToResolve, s.stageOutput, s.log)
+	resolvedExprs, err := evaluateJEXL(ctx, s.id, exprsToResolve, s.stageOutput, s.log)
 	if err != nil {
 		return nil, nil, err
 	}
