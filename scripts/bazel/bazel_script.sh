@@ -151,6 +151,7 @@ build_bazel_module 23-sm-core
 build_bazel_module 24-common-entities
 build_bazel_module 26-pms-contracts
 build_bazel_module 27-orchestration-persistence
+build_bazel_module 27-pms-commons
 build_bazel_module 29-orchestration-beans
 build_bazel_module 31-orchestration
 build_bazel_module 32-orchestration-steps
@@ -160,7 +161,6 @@ build_bazel_module 35-yaml-beans
 build_bazel_module 38-execution-plan
 build_bazel_module 39-ng-pipeline-commons
 build_bazel_module 40-ng-triggers
-build_bazel_module 40-pms-commons
 build_bazel_module 41-pms-sdk
 build_bazel_module 50-delegate-task-grpc-service
 build_bazel_module 57-command-library-common

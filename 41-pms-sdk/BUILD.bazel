@@ -13,9 +13,9 @@ java_library(
     exports = [
         "//22-timeout-engine:module",
         "//26-pms-contracts/src/main/proto:26_pms_contracts_java_proto",
-        "//31-orchestration:module",
-        "//40-pms-commons:module",
+        "//27-pms-commons:module",
         "//960-persistence:module",
+        "//970-grpc:module",
         "//980-commons:module",
     ],
 )
