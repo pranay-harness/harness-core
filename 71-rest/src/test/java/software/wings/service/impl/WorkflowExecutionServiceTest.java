@@ -53,8 +53,10 @@ import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.assertj.core.api.Assertions.failBecauseExceptionWasNotThrown;
 import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyBoolean;
 import static org.mockito.Matchers.anyList;
 import static org.mockito.Matchers.anyLong;
+import static org.mockito.Matchers.anyMap;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.doNothing;
@@ -1072,6 +1074,43 @@ public class WorkflowExecutionServiceTest extends WingsBaseTest {
     verify(workflowService)
         .fetchDeploymentMetadata(eq(appID), eq(workflow), eq(expectedWFVars), eq(emptyList), eq(emptyList), eq(true),
             eq(workflowExecution), eq(ENVIRONMENT), eq(ARTIFACT_SERVICE), eq(DEPLOYMENT_TYPE));
+  }
+
+  @Test
+  @Owner(developers = DEEPAK_PUTHRAYA)
+  @Category(UnitTests.class)
+  public void testDeploymentMetadataRunningPipelineWithBuildWF() {
+    final String appID = "nCLN8c84SqWPr44sqg65JQ";
+    final String pipelineStageElementId = "iibzVUjNTlWsv23lQIrkWw";
+    final String pipelineExecutionId = "3v2FfeZUTvqSnz7djyGMqQ";
+    final Map<String, String> wfVariables = new HashMap<>();
+    wfVariables.put("pipelineInfra", "62pv3U26RnmaLYFiZxjiTg");
+    wfVariables.put("service2", "NA2uRPKLTqm9VU3dPENb-g");
+
+    WorkflowExecution workflowExecution =
+        JsonUtils.readResourceFile("./execution/runtime_pipeline_execution_stage2.json", WorkflowExecution.class);
+    Pipeline pipelineWithResolvedVars =
+        JsonUtils.readResourceFile("./pipeline/k8s_two_stage_pipeline_resolved_vars.json", Pipeline.class);
+    pipelineWithResolvedVars.setHasBuildWorkflow(true);
+    Pipeline pipeline =
+        JsonUtils.readResourceFile("./pipeline/k8s_two_stage_pipeline_without_vars.json", Pipeline.class);
+    // Set pipeline as buildPipeline
+    List<String> emptyList = null;
+
+    when(wingsPersistence.getWithAppId(eq(WorkflowExecution.class), eq(appID), eq(pipelineExecutionId)))
+        .thenReturn(workflowExecution);
+    when(pipelineService.readPipelineResolvedVariablesLoopedInfo(eq(appID), anyString(), any(Map.class)))
+        .thenReturn(pipelineWithResolvedVars);
+    when(pipelineService.getPipeline(eq(appID), anyString())).thenReturn(pipeline);
+    DeploymentMetadata actual = workflowExecutionService.fetchDeploymentMetadataRunningPipeline(
+        appID, wfVariables, true, pipelineExecutionId, pipelineStageElementId);
+
+    assertThat(actual).isEqualTo(DeploymentMetadata.builder().build());
+    verify(workflowService, never()).readWorkflow(anyString(), anyString());
+
+    verify(workflowService, never())
+        .fetchDeploymentMetadata(
+            anyString(), any(), anyMap(), anyList(), eq(emptyList), anyBoolean(), any(), any(), any(), any());
   }
 
   @Test
