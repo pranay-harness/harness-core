@@ -22,6 +22,8 @@ public class WebhookConfigHelper {
       return new ArrayList<>(WebhookAction.getGithubActionForEvent(event));
     } else if (sourceRepo == WebhookSourceRepo.BITBUCKET) {
       return new ArrayList<>(WebhookAction.getBitbucketActionForEvent(event));
+    } else if (sourceRepo == WebhookSourceRepo.GITLAB) {
+      return new ArrayList<>(WebhookAction.getGitLabActionForEvent(event));
     } else {
       return Collections.emptyList();
     }

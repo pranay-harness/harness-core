@@ -43,7 +43,7 @@ public class TriggerWebhookServiceImpl
     persistenceIteratorFactory.createPumpIteratorWithDedicatedThreadPool(
         PersistenceIteratorFactory.PumpExecutorOptions.builder()
             .name("WebhookEventProcessor")
-            .poolSize(1)
+            .poolSize(2)
             .interval(ofSeconds(15))
             .build(),
         TriggerWebhookService.class,
