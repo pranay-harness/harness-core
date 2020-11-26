@@ -177,6 +177,13 @@ public abstract class VerificationJob
       });
     }
     this.resolveJobParams(runtimeParameters);
+    /* Null is set on uuid because morphia is loading the value from verificationJobs collection if uuid is present in
+    some cases.
+
+    VerificationJobInstanceServiceImpl.class
+    hPersistence.createQuery(VerificationJobInstance.class,excludeAuthority).field(VerificationJobInstanceKeys.uuid).in(verificationJobInstanceIds).asList()
+     */
+    setUuid(null);
     return this;
   }
 
