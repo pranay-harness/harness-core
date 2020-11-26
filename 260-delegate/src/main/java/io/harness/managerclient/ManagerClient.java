@@ -5,7 +5,6 @@ import io.harness.rest.RestResponse;
 import io.harness.serializer.kryo.KryoResponse;
 
 import software.wings.beans.ConfigFile;
-import software.wings.beans.Delegate;
 import software.wings.delegatetasks.validation.DelegateConnectionResult;
 
 import java.util.List;
@@ -26,7 +25,4 @@ public interface ManagerClient {
   @POST("agent/delegates/{delegateId}/tasks/{taskId}/report")
   Call<DelegateTaskPackage> reportConnectionResults(@Path("delegateId") String delegateId, @Path("taskId") String uuid,
       @Query("accountId") String accountId, @Body List<DelegateConnectionResult> results);
-
-  @POST("agent/delegates/heartbeat-with-polling")
-  Call<RestResponse<Delegate>> delegateHeartbeat(@Query("accountId") String accountId, @Body Delegate delegate);
 }

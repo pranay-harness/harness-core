@@ -1814,7 +1814,7 @@ public class DelegateServiceImpl implements DelegateService {
                             .delegateType(delegateParams.getDelegateType())
                             .delegateRandomToken(delegateParams.getDelegateRandomToken())
                             .keepAlivePacket(delegateParams.isKeepAlivePacket())
-                            .polllingModeEnabled(delegateParams.isPolllingModeEnabled())
+                            .polllingModeEnabled(delegateParams.isPollingModeEnabled())
                             .proxy(delegateParams.isProxy())
                             .sampleDelegate(delegateParams.isSampleDelegate())
                             .currentlyExecutingDelegateTasks(delegateParams.getCurrentlyExecutingDelegateTasks())

@@ -74,6 +74,7 @@ import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.apache.commons.lang3.StringUtils.substringBefore;
 
+import io.harness.beans.DelegateHeartbeatResponse;
 import io.harness.configuration.DeployMode;
 import io.harness.data.structure.HarnessStringUtils;
 import io.harness.data.structure.NullSafeImmutableMap;
@@ -429,7 +430,7 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
                                           .version(getVersion())
                                           .delegateType(DELEGATE_TYPE)
                                           //.proxy(set to true if there is a system proxy)
-                                          .polllingModeEnabled(delegateConfiguration.isPollForTasks())
+                                          .pollingModeEnabled(delegateConfiguration.isPollForTasks())
                                           .sampleDelegate(isSample)
                                           .location(Paths.get("").toAbsolutePath().toString())
                                           .ceEnabled(Boolean.parseBoolean(System.getenv("ENABlE_CE")));
@@ -893,7 +894,7 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
                                             .delegateType(DELEGATE_TYPE)
                                             .description(delegateConfiguration.getDescription())
                                             //.proxy(set to true if there is a system proxy)
-                                            .polllingModeEnabled(delegateConfiguration.isPollForTasks())
+                                            .pollingModeEnabled(delegateConfiguration.isPollForTasks())
                                             .ceEnabled(Boolean.parseBoolean(System.getenv("ENABlE_CE")))
                                             .build();
         restResponse = delegateExecute(delegateAgentManagerClient.registerDelegate(accountId, delegateParams));
@@ -1421,7 +1422,7 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
           builder.build()
               .toBuilder()
               .lastHeartBeat(clock.millis())
-              .polllingModeEnabled(delegateConfiguration.isPollForTasks())
+              .pollingModeEnabled(delegateConfiguration.isPollForTasks())
               .currentlyExecutingDelegateTasks(currentlyExecutingTasks.values()
                                                    .stream()
                                                    .map(DelegateTaskPackage::getDelegateTaskId)
@@ -1478,7 +1479,7 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
           builder.build()
               .toBuilder()
               .keepAlivePacket(false)
-              .polllingModeEnabled(true)
+              .pollingModeEnabled(true)
               .currentlyExecutingDelegateTasks(currentlyExecutingTasks.values()
                                                    .stream()
                                                    .map(DelegateTaskPackage::getDelegateTaskId)
@@ -1486,46 +1487,30 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
               .location(Paths.get("").toAbsolutePath().toString())
               .build();
       lastHeartbeatSentAt.set(clock.millis());
-      Delegate delegate = Delegate.builder()
-                              .uuid(delegateParams.getDelegateId())
-                              .accountId(delegateParams.getAccountId())
-                              .description(delegateParams.getDescription())
-                              .ip(delegateParams.getIp())
-                              .hostName(delegateParams.getHostName())
-                              .delegateGroupName(delegateParams.getDelegateGroupName())
-                              .delegateName(delegateParams.getDelegateName())
-                              .delegateProfileId(delegateParams.getDelegateProfileId())
-                              .lastHeartBeat(delegateParams.getLastHeartBeat())
-                              .version(delegateParams.getVersion())
-                              .sequenceNum(delegateParams.getSequenceNum())
-                              .delegateType(delegateParams.getDelegateType())
-                              .delegateRandomToken(delegateParams.getDelegateRandomToken())
-                              .keepAlivePacket(delegateParams.isKeepAlivePacket())
-                              .polllingModeEnabled(delegateParams.isPolllingModeEnabled())
-                              .sampleDelegate(delegateParams.isSampleDelegate())
-                              .currentlyExecutingDelegateTasks(delegateParams.getCurrentlyExecutingDelegateTasks())
-                              .location(delegateParams.getLocation())
-                              .build();
-      RestResponse<Delegate> delegateResponse = execute(managerClient.delegateHeartbeat(accountId, delegate));
+
+      RestResponse<DelegateHeartbeatResponse> delegateParamsResponse =
+          execute(delegateAgentManagerClient.delegateHeartbeat(accountId, delegateParams));
       long now = clock.millis();
       log.info("Delegate {} received heartbeat response {} after sending. {} since last response.", delegateId,
           getDurationString(lastHeartbeatSentAt.get(), now), getDurationString(lastHeartbeatReceivedAt.get(), now));
       lastHeartbeatReceivedAt.set(now);
 
-      Delegate delegateReceived = delegateResponse.getResource();
-      if (delegateId.equals(delegateReceived.getUuid())) {
-        if (Status.DELETED == delegateReceived.getStatus()) {
+      DelegateHeartbeatResponse receivedDelegateResponse = delegateParamsResponse.getResource();
+
+      if (delegateId.equals(receivedDelegateResponse.getDelegateId())) {
+        if (Status.DELETED == Status.valueOf(receivedDelegateResponse.getStatus())) {
           initiateSelfDestruct();
         } else {
-          builder.delegateId(delegateReceived.getUuid());
+          builder.delegateId(receivedDelegateResponse.getDelegateId());
         }
         lastHeartbeatSentAt.set(clock.millis());
         lastHeartbeatReceivedAt.set(clock.millis());
-        updateTokenAndSeqNumFromPollingResponse(delegateReceived);
+        updateTokenAndSeqNumFromPollingResponse(
+            receivedDelegateResponse.getDelegateRandomToken(), receivedDelegateResponse.getSequenceNumber());
       }
 
-      setSwitchStorage(delegateReceived.isUseCdn());
-      updateJreVersion(delegateReceived.getUseJreVersion());
+      setSwitchStorage(receivedDelegateResponse.isUseCdn());
+      updateJreVersion(receivedDelegateResponse.getJreVersion());
 
       timeLimiter.callWithTimeout(()
                                       -> delegateExecute(delegateAgentManagerClient.doConnectionHeartbeat(
@@ -1556,7 +1541,7 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
     try {
       updateBuilderIfEcsDelegate(builder);
       DelegateParams delegateParams =
-          builder.build().toBuilder().keepAlivePacket(true).polllingModeEnabled(true).build();
+          builder.build().toBuilder().keepAlivePacket(true).pollingModeEnabled(true).build();
       delegateExecute(delegateAgentManagerClient.registerDelegate(accountId, delegateParams));
     } catch (UncheckedTimeoutException ex) {
       log.warn("Timed out sending Keep Alive Request", ex);
@@ -1565,9 +1550,9 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
     }
   }
 
-  private void updateTokenAndSeqNumFromPollingResponse(Delegate delegate) {
+  private void updateTokenAndSeqNumFromPollingResponse(String delegateRandomToken, String sequenceNumber) {
     if (isEcsDelegate()) {
-      handleEcsDelegateSpecificMessage(TOKEN + delegate.getDelegateRandomToken() + SEQ + delegate.getSequenceNum());
+      handleEcsDelegateSpecificMessage(TOKEN + delegateRandomToken + SEQ + sequenceNumber);
     }
   }
 
