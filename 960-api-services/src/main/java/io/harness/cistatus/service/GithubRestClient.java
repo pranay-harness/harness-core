@@ -1,7 +1,7 @@
 package io.harness.cistatus.service;
 
 import io.harness.cistatus.GithubAppTokenCreationResponse;
-import io.harness.cistatus.GithubStatusCreationResponse;
+import io.harness.cistatus.StatusCreationResponse;
 
 import java.util.Map;
 import retrofit2.Call;
@@ -19,7 +19,6 @@ public interface GithubRestClient {
 
   @POST("repos/{owner}/{repo}/statuses/{sha}")
   @Headers("Accept: application/vnd.github.v3+json")
-  Call<GithubStatusCreationResponse> createStatus(@Header("Authorization") String authorization,
-      @Path("owner") String owner, @Path("repo") String repo, @Path("sha") String sha,
-      @Body Map<String, Object> parameters);
+  Call<StatusCreationResponse> createStatus(@Header("Authorization") String authorization, @Path("owner") String owner,
+      @Path("repo") String repo, @Path("sha") String sha, @Body Map<String, Object> parameters);
 }

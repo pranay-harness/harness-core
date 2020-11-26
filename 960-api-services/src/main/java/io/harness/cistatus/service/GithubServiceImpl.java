@@ -3,7 +3,7 @@ package io.harness.cistatus.service;
 import static java.lang.String.format;
 
 import io.harness.cistatus.GithubAppTokenCreationResponse;
-import io.harness.cistatus.GithubStatusCreationResponse;
+import io.harness.cistatus.StatusCreationResponse;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException.ReportTarget;
 import io.harness.network.Http;
@@ -56,7 +56,7 @@ public class GithubServiceImpl implements GithubService {
     log.info("Sending status for sha {}", sha);
 
     try {
-      Response<GithubStatusCreationResponse> githubStatusCreationResponseResponse =
+      Response<StatusCreationResponse> githubStatusCreationResponseResponse =
           getGithubClient(githubAppConfig, encryptionDetails)
               .createStatus(getAuthToken(token), owner, repo, sha, bodyObjectMap)
               .execute();

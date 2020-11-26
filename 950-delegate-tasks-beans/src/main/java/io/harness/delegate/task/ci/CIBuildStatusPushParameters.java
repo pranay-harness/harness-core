@@ -13,8 +13,9 @@ public class CIBuildStatusPushParameters extends CIBuildPushParameters {
 
   @Builder
   public CIBuildStatusPushParameters(String buildNumber, String repo, String owner, String sha, String identifier,
-      String target_url, String key, String installId, String appId, String title, String desc, String state) {
-    super(buildNumber, repo, owner, sha, identifier, target_url, key, installId, appId);
+      String target_url, String key, String installId, String appId, String title, String desc, String state,
+      String token, String userName, GitSCMType gitSCMType) {
+    super(buildNumber, repo, owner, sha, identifier, target_url, key, installId, appId, token, userName, gitSCMType);
     this.title = title;
     this.desc = desc;
     this.state = state;

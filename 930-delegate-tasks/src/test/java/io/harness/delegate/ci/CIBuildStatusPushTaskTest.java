@@ -15,15 +15,20 @@ import static org.mockito.Mockito.when;
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.cistatus.GithubAppTokenCreationResponse;
-import io.harness.cistatus.GithubStatusCreationResponse;
+import io.harness.cistatus.StatusCreationResponse;
 import io.harness.cistatus.service.GithubRestClient;
 import io.harness.cistatus.service.GithubServiceImpl;
+import io.harness.cistatus.service.bitbucket.BitbucketRestClient;
+import io.harness.cistatus.service.bitbucket.BitbucketServiceImpl;
+import io.harness.cistatus.service.gitlab.GitlabRestClient;
+import io.harness.cistatus.service.gitlab.GitlabServiceImpl;
 import io.harness.delegate.beans.DelegateTaskPackage;
 import io.harness.delegate.beans.TaskData;
 import io.harness.delegate.beans.ci.status.BuildStatusPushResponse;
 import io.harness.delegate.beans.ci.status.BuildStatusPushResponse.Status;
 import io.harness.delegate.task.ci.CIBuildStatusPushParameters;
 import io.harness.delegate.task.ci.CIBuildStatusPushTask;
+import io.harness.delegate.task.ci.GitSCMType;
 import io.harness.rule.Owner;
 
 import java.io.IOException;
@@ -41,7 +46,13 @@ import retrofit2.Response;
 
 public class CIBuildStatusPushTaskTest extends CategoryTest {
   private GithubRestClient githubRestClient;
-  private GithubServiceImpl githubService;
+  private GitlabRestClient gitlabRestClient;
+  private BitbucketRestClient bitbucketRestClient;
+
+  private GithubServiceImpl githubServiceImpl;
+  private GitlabServiceImpl gitlabServiceImpl;
+  private BitbucketServiceImpl bitbucketServiceImpl;
+
   private final String APP_ID = "APP_ID";
   private final String DESC = "desc";
   private final String STATE = "success";
@@ -49,6 +60,8 @@ public class CIBuildStatusPushTaskTest extends CategoryTest {
   private final String TITLE = "title";
   private final String REPO = "repo";
   private final String OWNER = "owner";
+  private final String USERNAME = "user";
+  private final String TOKEN = "token";
   private final String SHA = "e9a0d31c5ac677ec1e06fb3ab69cd1d2cc62a74a";
   private final String IDENTIFIER = "stageIdentifier";
   private final String INSTALL_ID = "123";
@@ -87,9 +100,17 @@ public class CIBuildStatusPushTaskTest extends CategoryTest {
   @Before
   public void setUp() throws IllegalAccessException {
     githubRestClient = Mockito.mock(GithubRestClient.class);
-    githubService = spy(new GithubServiceImpl());
-    doReturn(githubRestClient).when(githubService).getGithubClient(any(), any());
-    on(ciBuildStatusPushTask).set("githubService", githubService);
+    gitlabRestClient = Mockito.mock(GitlabRestClient.class);
+    bitbucketRestClient = Mockito.mock(BitbucketRestClient.class);
+    githubServiceImpl = spy(new GithubServiceImpl());
+    gitlabServiceImpl = spy(new GitlabServiceImpl());
+    bitbucketServiceImpl = spy(new BitbucketServiceImpl());
+    doReturn(githubRestClient).when(githubServiceImpl).getGithubClient(any(), any());
+    doReturn(gitlabRestClient).when(gitlabServiceImpl).getGitlabRestClient(any(), any());
+    doReturn(bitbucketRestClient).when(bitbucketServiceImpl).getBitbucketClient(any(), any());
+    on(ciBuildStatusPushTask).set("githubService", githubServiceImpl);
+    on(ciBuildStatusPushTask).set("gitlabService", gitlabServiceImpl);
+    on(ciBuildStatusPushTask).set("bitbucketService", bitbucketServiceImpl);
   }
 
   @Test
@@ -103,9 +124,9 @@ public class CIBuildStatusPushTaskTest extends CategoryTest {
 
     when(githubRestClient.createAccessToken(anyString(), anyString())).thenReturn(githubAppTokenCreationResponseCall);
 
-    GithubStatusCreationResponse githubStatusCreationResponse = GithubStatusCreationResponse.builder().build();
-    Call<GithubStatusCreationResponse> githubStatusCreationResponseCall = mock(Call.class);
-    when(githubStatusCreationResponseCall.execute()).thenReturn(Response.success(githubStatusCreationResponse));
+    StatusCreationResponse statusCreationResponse = StatusCreationResponse.builder().build();
+    Call<StatusCreationResponse> githubStatusCreationResponseCall = mock(Call.class);
+    when(githubStatusCreationResponseCall.execute()).thenReturn(Response.success(statusCreationResponse));
 
     when(githubRestClient.createStatus(anyString(), anyString(), anyString(), anyString(), anyMap()))
         .thenReturn(githubStatusCreationResponseCall);
@@ -118,6 +139,7 @@ public class CIBuildStatusPushTaskTest extends CategoryTest {
                                                                 .identifier(IDENTIFIER)
                                                                 .buildNumber(BUILD_NUMBER)
                                                                 .installId(INSTALL_ID)
+                                                                .gitSCMType(GitSCMType.GITHUB)
                                                                 .owner(OWNER)
                                                                 .repo(REPO)
                                                                 .state(STATE)
@@ -127,6 +149,154 @@ public class CIBuildStatusPushTaskTest extends CategoryTest {
                                                                 .build());
 
     assertThat(buildStatusPushResponse.getStatus()).isEqualTo(Status.SUCCESS);
+  }
+
+  @Test
+  @Owner(developers = HARSH)
+  @Category(UnitTests.class)
+  public void testDelegatePushStatusForBitbucket() throws IOException {
+    StatusCreationResponse statusCreationResponse = StatusCreationResponse.builder().build();
+    Call<StatusCreationResponse> statusCreationResponseCall = mock(Call.class);
+    when(statusCreationResponseCall.execute()).thenReturn(Response.success(statusCreationResponse));
+
+    when(bitbucketRestClient.createStatus(anyString(), anyString(), anyString(), anyString(), anyMap()))
+        .thenReturn(statusCreationResponseCall);
+
+    BuildStatusPushResponse buildStatusPushResponse =
+        (BuildStatusPushResponse) ciBuildStatusPushTask.run(CIBuildStatusPushParameters.builder()
+                                                                .appId(APP_ID)
+                                                                .sha(SHA)
+                                                                .key(KEY)
+                                                                .identifier(IDENTIFIER)
+                                                                .buildNumber(BUILD_NUMBER)
+                                                                .installId(INSTALL_ID)
+                                                                .owner(OWNER)
+                                                                .userName(USERNAME)
+                                                                .gitSCMType(GitSCMType.BITBUCKET)
+                                                                .token(TOKEN)
+                                                                .repo(REPO)
+                                                                .state(STATE)
+                                                                .title(TITLE)
+                                                                .target_url(TARGET_URL)
+                                                                .desc(DESC)
+                                                                .build());
+
+    assertThat(buildStatusPushResponse.getStatus()).isEqualTo(Status.SUCCESS);
+  }
+
+  @Test
+  @Owner(developers = HARSH)
+  @Category(UnitTests.class)
+  public void testErrorStatePushStatusForBitbucket() throws IOException {
+    StatusCreationResponse statusCreationResponse = StatusCreationResponse.builder().build();
+    Call<StatusCreationResponse> statusCreationResponseCall = mock(Call.class);
+    when(statusCreationResponseCall.execute())
+        .thenReturn(Response.error(ResponseBody.create(MediaType.parse("text/plain"), "MSG"),
+            new okhttp3.Response
+                .Builder() //
+                .code(401)
+                .protocol(Protocol.HTTP_1_1)
+                .request(new Request.Builder().url("http://localhost/").build())
+                .message("err")
+                .build()));
+
+    when(bitbucketRestClient.createStatus(anyString(), anyString(), anyString(), anyString(), anyMap()))
+        .thenReturn(statusCreationResponseCall);
+
+    BuildStatusPushResponse buildStatusPushResponse =
+        (BuildStatusPushResponse) ciBuildStatusPushTask.run(CIBuildStatusPushParameters.builder()
+                                                                .appId(APP_ID)
+                                                                .sha(SHA)
+                                                                .key(KEY)
+                                                                .identifier(IDENTIFIER)
+                                                                .buildNumber(BUILD_NUMBER)
+                                                                .installId(INSTALL_ID)
+                                                                .owner(OWNER)
+                                                                .userName(USERNAME)
+                                                                .gitSCMType(GitSCMType.BITBUCKET)
+                                                                .token(TOKEN)
+                                                                .repo(REPO)
+                                                                .state(STATE)
+                                                                .title(TITLE)
+                                                                .target_url(TARGET_URL)
+                                                                .desc(DESC)
+                                                                .build());
+
+    assertThat(buildStatusPushResponse.getStatus()).isEqualTo(Status.ERROR);
+  }
+
+  @Test
+  @Owner(developers = HARSH)
+  @Category(UnitTests.class)
+  public void testDelegatePushStatusForGitlab() throws IOException {
+    StatusCreationResponse statusCreationResponse = StatusCreationResponse.builder().build();
+    Call<StatusCreationResponse> statusCreationResponseCall = mock(Call.class);
+    when(statusCreationResponseCall.execute()).thenReturn(Response.success(statusCreationResponse));
+
+    when(gitlabRestClient.createStatus(anyString(), anyString(), anyString(), anyString(), anyString(), anyString()))
+        .thenReturn(statusCreationResponseCall);
+
+    BuildStatusPushResponse buildStatusPushResponse =
+        (BuildStatusPushResponse) ciBuildStatusPushTask.run(CIBuildStatusPushParameters.builder()
+                                                                .appId(APP_ID)
+                                                                .sha(SHA)
+                                                                .key(KEY)
+                                                                .identifier(IDENTIFIER)
+                                                                .buildNumber(BUILD_NUMBER)
+                                                                .installId(INSTALL_ID)
+                                                                .owner(OWNER)
+                                                                .userName(USERNAME)
+                                                                .gitSCMType(GitSCMType.GITLAB)
+                                                                .token(TOKEN)
+                                                                .repo(REPO)
+                                                                .state(STATE)
+                                                                .title(TITLE)
+                                                                .target_url(TARGET_URL)
+                                                                .desc(DESC)
+                                                                .build());
+
+    assertThat(buildStatusPushResponse.getStatus()).isEqualTo(Status.SUCCESS);
+  }
+
+  @Test
+  @Owner(developers = HARSH)
+  @Category(UnitTests.class)
+  public void testErrorStatePushStatusForGitlab() throws IOException {
+    StatusCreationResponse statusCreationResponse = StatusCreationResponse.builder().build();
+    Call<StatusCreationResponse> statusCreationResponseCall = mock(Call.class);
+    when(statusCreationResponseCall.execute())
+        .thenReturn(Response.error(ResponseBody.create(MediaType.parse("text/plain"), "MSG"),
+            new okhttp3.Response
+                .Builder() //
+                .code(401)
+                .protocol(Protocol.HTTP_1_1)
+                .request(new Request.Builder().url("http://localhost/").build())
+                .message("err")
+                .build()));
+
+    when(gitlabRestClient.createStatus(anyString(), anyString(), anyString(), anyString(), anyString(), anyString()))
+        .thenReturn(statusCreationResponseCall);
+
+    BuildStatusPushResponse buildStatusPushResponse =
+        (BuildStatusPushResponse) ciBuildStatusPushTask.run(CIBuildStatusPushParameters.builder()
+                                                                .appId(APP_ID)
+                                                                .sha(SHA)
+                                                                .key(KEY)
+                                                                .identifier(IDENTIFIER)
+                                                                .buildNumber(BUILD_NUMBER)
+                                                                .installId(INSTALL_ID)
+                                                                .owner(OWNER)
+                                                                .userName(USERNAME)
+                                                                .gitSCMType(GitSCMType.GITLAB)
+                                                                .token(TOKEN)
+                                                                .repo(REPO)
+                                                                .state(STATE)
+                                                                .title(TITLE)
+                                                                .target_url(TARGET_URL)
+                                                                .desc(DESC)
+                                                                .build());
+
+    assertThat(buildStatusPushResponse.getStatus()).isEqualTo(Status.ERROR);
   }
 
   @Test
@@ -157,6 +327,7 @@ public class CIBuildStatusPushTaskTest extends CategoryTest {
                                                                 .installId(INSTALL_ID)
                                                                 .owner(OWNER)
                                                                 .repo(REPO)
+                                                                .gitSCMType(GitSCMType.GITHUB)
                                                                 .state(STATE)
                                                                 .title(TITLE)
                                                                 .target_url(TARGET_URL)

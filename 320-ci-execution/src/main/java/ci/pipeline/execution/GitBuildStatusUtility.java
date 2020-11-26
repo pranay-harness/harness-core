@@ -1,10 +1,17 @@
 package ci.pipeline.execution;
 
+import static io.harness.delegate.beans.connector.gitconnector.GitAuthType.HTTP;
+import static io.harness.delegate.beans.connector.gitconnector.GitAuthType.SSH;
+import static io.harness.govern.Switch.unhandled;
+
 import io.harness.beans.DelegateTaskRequest;
 import io.harness.beans.stages.IntegrationStageStepParameters;
 import io.harness.delegate.beans.ci.pod.ConnectorDetails;
 import io.harness.delegate.beans.connector.gitconnector.GitConfigDTO;
+import io.harness.delegate.beans.connector.gitconnector.GitHTTPAuthenticationDTO;
 import io.harness.delegate.task.ci.CIBuildStatusPushParameters;
+import io.harness.delegate.task.ci.GitSCMType;
+import io.harness.exception.InvalidRequestException;
 import io.harness.execution.NodeExecution;
 import io.harness.git.GitClientHelper;
 import io.harness.ng.core.NGAccess;
@@ -30,6 +37,14 @@ public class GitBuildStatusUtility {
   private static final String GITHUB_SUCCESS = "success";
   private static final String GITHUB_FAILED = "failure";
   private static final String GITHUB_PENDING = "pending";
+  private static final String BITBUCKET_FAILED = "FAILED";
+  private static final String BITBUCKET_SUCCESS = "SUCCESSFUL";
+  private static final String BITBUCKET_STOPPED = "STOPPED";
+  private static final String BITBUCKET_PENDING = "INPROGRESS";
+  private static final String GITLAB_FAILED = "failed";
+  private static final String GITLAB_CANCELED = "canceled";
+  private static final String GITLAB_PENDING = "pending";
+  private static final String GITLAB_SUCCESS = "success";
 
   @Inject GitClientHelper gitClientHelper;
   @Inject private ConnectorUtils connectorUtils;
@@ -45,40 +60,58 @@ public class GitBuildStatusUtility {
     BuildStatusUpdateParameter buildStatusUpdateParameter =
         integrationStageStepParameters.getBuildStatusUpdateParameter();
 
-    String gitStatus = getGitStatus(nodeExecution.getStatus());
-    if (gitStatus != UNSUPPORTED && buildStatusUpdateParameter != null) {
+    if (buildStatusUpdateParameter != null) {
       CIBuildStatusPushParameters ciBuildStatusPushParameters =
-          getCIBuildStatusPushParams(ambiance, buildStatusUpdateParameter, nodeExecution.getStatus(), gitStatus);
-      DelegateTaskRequest delegateTaskRequest = DelegateTaskRequest.builder()
-                                                    .accountId(accountId)
-                                                    .taskSetupAbstractions(ambiance.getSetupAbstractions())
-                                                    .executionTimeout(java.time.Duration.ofSeconds(60))
-                                                    .taskType("BUILD_STATUS")
-                                                    .taskParameters(ciBuildStatusPushParameters)
-                                                    .taskDescription("CI git build status task")
-                                                    .build();
+          getCIBuildStatusPushParams(ambiance, buildStatusUpdateParameter, nodeExecution.getStatus());
+      if (ciBuildStatusPushParameters.getState() != UNSUPPORTED) {
+        DelegateTaskRequest delegateTaskRequest = DelegateTaskRequest.builder()
+                                                      .accountId(accountId)
+                                                      .taskSetupAbstractions(ambiance.getSetupAbstractions())
+                                                      .executionTimeout(java.time.Duration.ofSeconds(60))
+                                                      .taskType("BUILD_STATUS")
+                                                      .taskParameters(ciBuildStatusPushParameters)
+                                                      .taskDescription("CI git build status task")
+                                                      .build();
 
-      String taskId = delegateGrpcClientWrapper.submitAsyncTask(delegateTaskRequest);
-      log.info("Submitted git status update request for stage {}, planId {}, commitId {}, status {} with taskId {}",
-          buildStatusUpdateParameter.getIdentifier(), nodeExecution.getStatus().name(),
-          buildStatusUpdateParameter.getSha(), buildStatusUpdateParameter.getState(), taskId);
+        String taskId = delegateGrpcClientWrapper.submitAsyncTask(delegateTaskRequest);
+        log.info("Submitted git status update request for stage {}, planId {}, commitId {}, status {} with taskId {}",
+            buildStatusUpdateParameter.getIdentifier(), nodeExecution.getStatus().name(),
+            buildStatusUpdateParameter.getSha(), buildStatusUpdateParameter.getState(), taskId);
+      } else {
+        log.info("Skipping git status update request for stage {}, planId {}, commitId {}, status {}, scm type",
+            buildStatusUpdateParameter.getIdentifier(), nodeExecution.getStatus().name(),
+            buildStatusUpdateParameter.getSha(), buildStatusUpdateParameter.getState(),
+            ciBuildStatusPushParameters.getGitSCMType());
+      }
     }
   }
 
   private CIBuildStatusPushParameters getCIBuildStatusPushParams(
-      Ambiance ambiance, BuildStatusUpdateParameter buildStatusUpdateParameter, Status status, String gitStatus) {
+      Ambiance ambiance, BuildStatusUpdateParameter buildStatusUpdateParameter, Status status) {
     NGAccess ngAccess = AmbianceHelper.getNgAccess(ambiance);
     ConnectorDetails gitConnector = getGitConnector(ngAccess, buildStatusUpdateParameter.getConnectorIdentifier());
-    GitConfigDTO gitConfigDTO = (GitConfigDTO) gitConnector.getConnectorConfig();
 
+    GitConfigDTO gitConfigDTO = (GitConfigDTO) gitConnector.getConnectorConfig();
+    String userName = "";
+    if (gitConfigDTO.getGitAuthType() == HTTP) {
+      GitHTTPAuthenticationDTO gitAuth = (GitHTTPAuthenticationDTO) gitConfigDTO.getGitAuth();
+      userName = gitAuth.getUsername();
+    } else if (gitConfigDTO.getGitAuthType() == SSH) {
+      // TODO Require UserName in git ssh DTO
+    }
+
+    GitSCMType gitSCMType = retrieveSCMType(gitConfigDTO.getUrl());
     CIBuildStatusPushParameters ciBuildPushStatusParameters =
         CIBuildStatusPushParameters.builder()
             .desc(generateDesc(buildStatusUpdateParameter.getIdentifier(), status.name()))
             .sha(buildStatusUpdateParameter.getSha())
+            .gitSCMType(gitSCMType)
+            .token(retrieveAuthToken(gitSCMType))
+            .userName(userName)
             .owner(gitClientHelper.getGitOwner(gitConfigDTO.getUrl()))
             .repo(gitClientHelper.getGitRepo(gitConfigDTO.getUrl()))
             .identifier(buildStatusUpdateParameter.getIdentifier())
-            .state(gitStatus)
+            .state(retrieveBuildStatusState(gitSCMType, status))
             .build();
 
     ciBuildPushStatusParameters.setKey("-----BEGIN PRIVATE KEY-----\n"
@@ -120,7 +153,50 @@ public class GitBuildStatusUtility {
     return String.format("Execution status of stage %s:  %s  ", identifier, status);
   }
 
-  private String getGitStatus(Status status) {
+  // TODO Change it via proper grouping
+  private GitSCMType retrieveSCMType(String url) {
+    String scmType = gitClientHelper.getGitSCM(url);
+
+    if (url.contains("github")) {
+      return GitSCMType.GITHUB;
+    } else if (url.contains("bitbucket")) {
+      return GitSCMType.BITBUCKET;
+    } else if (url.contains("gitlab")) {
+      return GitSCMType.GITLAB;
+    } else {
+      throw new InvalidRequestException("scmType " + scmType + "is not supported");
+    }
+  }
+
+  private String retrieveBuildStatusState(GitSCMType gitSCMType, Status status) {
+    switch (gitSCMType) {
+      case GITHUB:
+        return getGitHubStatus(status);
+      case GITLAB:
+        return getGitLabStatus(status);
+      case BITBUCKET:
+        return getBitBucketStatus(status);
+      default:
+        unhandled(gitSCMType);
+        return UNSUPPORTED;
+    }
+  }
+
+  private String retrieveAuthToken(GitSCMType gitSCMType) {
+    switch (gitSCMType) {
+      case GITHUB:
+        return ""; // It does not require token because auth occur via github app
+      case GITLAB:
+        return "p_wmFaUMEL8zZAe8hcM_";
+      case BITBUCKET:
+        return "c9yZThYsTMQFHXWDjD8j";
+      default:
+        unhandled(gitSCMType);
+        return UNSUPPORTED;
+    }
+  }
+
+  private String getGitHubStatus(Status status) {
     if (status == Status.ERRORED) {
       return GITHUB_ERROR;
     }
@@ -132,6 +208,40 @@ public class GitBuildStatusUtility {
     }
     if (status == Status.RUNNING) {
       return GITHUB_PENDING;
+    }
+
+    return UNSUPPORTED;
+  }
+
+  private String getGitLabStatus(Status status) {
+    if (status == Status.ERRORED || status == Status.FAILED) {
+      return GITLAB_FAILED;
+    }
+    if (status == Status.ABORTED) {
+      return GITLAB_CANCELED;
+    }
+    if (status == Status.SUCCEEDED) {
+      return GITLAB_SUCCESS;
+    }
+    if (status == Status.RUNNING) {
+      return GITLAB_PENDING;
+    }
+
+    return UNSUPPORTED;
+  }
+
+  private String getBitBucketStatus(Status status) {
+    if (status == Status.ERRORED) {
+      return BITBUCKET_FAILED;
+    }
+    if (status == Status.ABORTED || status == Status.FAILED) {
+      return BITBUCKET_STOPPED;
+    }
+    if (status == Status.SUCCEEDED) {
+      return BITBUCKET_SUCCESS;
+    }
+    if (status == Status.RUNNING) {
+      return BITBUCKET_PENDING;
     }
 
     return UNSUPPORTED;

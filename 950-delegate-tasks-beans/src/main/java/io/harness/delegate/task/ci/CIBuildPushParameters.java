@@ -1,5 +1,6 @@
 package io.harness.delegate.task.ci;
 
+import io.harness.delegate.beans.ci.pod.ConnectorDetails;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.delegate.beans.executioncapability.ExecutionCapabilityDemander;
 import io.harness.delegate.task.TaskParameters;
@@ -24,11 +25,16 @@ public abstract class CIBuildPushParameters implements TaskParameters, Execution
   private String key; // TODO it will come via github app connector with encrypted details
   private String installId; // TODO it will come via github app connector with encrypted details
   private String appId; //  TODO it will come via github app connector
+  private String token; //  TODO it will come via bitbucket/gitlab  connector details
+  private String userName; //  TODO it will come via bitbucket/gitlab connector details
+  private ConnectorDetails connectorDetails; // Use connectorDetails to retrieve all information
+  private GitSCMType gitSCMType;
   @NotEmpty CIBuildPushTaskType commandType;
   public enum CIBuildPushTaskType { STATUS, CHECKS }
 
   public CIBuildPushParameters(String buildNumber, String repo, String owner, String sha, String identifier,
-      String target_url, String key, String installId, String appId) {
+      String target_url, String key, String installId, String appId, String token, String userName,
+      GitSCMType gitSCMType) {
     this.buildNumber = buildNumber;
     this.repo = repo;
     this.owner = owner;
@@ -38,6 +44,9 @@ public abstract class CIBuildPushParameters implements TaskParameters, Execution
     this.key = key;
     this.installId = installId;
     this.appId = appId;
+    this.gitSCMType = gitSCMType;
+    this.token = token;
+    this.userName = userName;
   }
   @Override
   public List<ExecutionCapability> fetchRequiredExecutionCapabilities() {

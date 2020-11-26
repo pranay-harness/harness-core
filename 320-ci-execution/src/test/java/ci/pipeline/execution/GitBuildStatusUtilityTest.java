@@ -66,9 +66,61 @@ public class GitBuildStatusUtilityTest extends CIExecutionTest {
   @Test
   @Owner(developers = HARSH)
   @Category(UnitTests.class)
+  public void testRunningHandleEventForBitBucket() throws IOException {
+    NodeExecution nodeExecution = getNodeExecution(Status.RUNNING);
+
+    when(connectorUtils.getConnectorDetails(any(), any())).thenReturn(ciExecutionPlanTestHelper.getGitLabConnector());
+
+    gitBuildStatusUtility.sendStatusToGit(nodeExecution, ambiance, accountId);
+    assertThat(gitBuildStatusUtility.shouldSendStatus(nodeExecution)).isEqualTo(true);
+    verify(delegateGrpcClientWrapper).submitAsyncTask(any());
+  }
+
+  @Test
+  @Owner(developers = HARSH)
+  @Category(UnitTests.class)
+  public void testRunningHandleEventForGitlab() throws IOException {
+    NodeExecution nodeExecution = getNodeExecution(Status.RUNNING);
+
+    when(connectorUtils.getConnectorDetails(any(), any()))
+        .thenReturn(ciExecutionPlanTestHelper.getBitBucketConnector());
+
+    gitBuildStatusUtility.sendStatusToGit(nodeExecution, ambiance, accountId);
+    assertThat(gitBuildStatusUtility.shouldSendStatus(nodeExecution)).isEqualTo(true);
+    verify(delegateGrpcClientWrapper).submitAsyncTask(any());
+  }
+
+  @Test
+  @Owner(developers = HARSH)
+  @Category(UnitTests.class)
   public void testHandleEventForSuccess() throws IOException {
     NodeExecution nodeExecution = getNodeExecution(Status.SUCCEEDED);
     when(connectorUtils.getConnectorDetails(any(), any())).thenReturn(ciExecutionPlanTestHelper.getGitConnector());
+
+    gitBuildStatusUtility.sendStatusToGit(nodeExecution, ambiance, accountId);
+    assertThat(gitBuildStatusUtility.shouldSendStatus(nodeExecution)).isEqualTo(true);
+    verify(delegateGrpcClientWrapper).submitAsyncTask(any());
+  }
+
+  @Test
+  @Owner(developers = HARSH)
+  @Category(UnitTests.class)
+  public void testGitlabHandleEventForSuccess() throws IOException {
+    NodeExecution nodeExecution = getNodeExecution(Status.SUCCEEDED);
+    when(connectorUtils.getConnectorDetails(any(), any())).thenReturn(ciExecutionPlanTestHelper.getGitLabConnector());
+
+    gitBuildStatusUtility.sendStatusToGit(nodeExecution, ambiance, accountId);
+    assertThat(gitBuildStatusUtility.shouldSendStatus(nodeExecution)).isEqualTo(true);
+    verify(delegateGrpcClientWrapper).submitAsyncTask(any());
+  }
+
+  @Test
+  @Owner(developers = HARSH)
+  @Category(UnitTests.class)
+  public void testBitbucketHandleEventForSuccess() throws IOException {
+    NodeExecution nodeExecution = getNodeExecution(Status.SUCCEEDED);
+    when(connectorUtils.getConnectorDetails(any(), any()))
+        .thenReturn(ciExecutionPlanTestHelper.getBitBucketConnector());
 
     gitBuildStatusUtility.sendStatusToGit(nodeExecution, ambiance, accountId);
     assertThat(gitBuildStatusUtility.shouldSendStatus(nodeExecution)).isEqualTo(true);
@@ -89,6 +141,29 @@ public class GitBuildStatusUtilityTest extends CIExecutionTest {
   @Test
   @Owner(developers = HARSH)
   @Category(UnitTests.class)
+  public void testGitlabHandleEventForError() throws IOException {
+    when(connectorUtils.getConnectorDetails(any(), any())).thenReturn(ciExecutionPlanTestHelper.getGitLabConnector());
+    NodeExecution nodeExecution = getNodeExecution(Status.ERRORED);
+    gitBuildStatusUtility.sendStatusToGit(nodeExecution, ambiance, accountId);
+    assertThat(gitBuildStatusUtility.shouldSendStatus(nodeExecution)).isEqualTo(true);
+    verify(delegateGrpcClientWrapper).submitAsyncTask(any());
+  }
+
+  @Test
+  @Owner(developers = HARSH)
+  @Category(UnitTests.class)
+  public void testBitbucketHandleEventForError() throws IOException {
+    when(connectorUtils.getConnectorDetails(any(), any()))
+        .thenReturn(ciExecutionPlanTestHelper.getBitBucketConnector());
+    NodeExecution nodeExecution = getNodeExecution(Status.ERRORED);
+    gitBuildStatusUtility.sendStatusToGit(nodeExecution, ambiance, accountId);
+    assertThat(gitBuildStatusUtility.shouldSendStatus(nodeExecution)).isEqualTo(true);
+    verify(delegateGrpcClientWrapper).submitAsyncTask(any());
+  }
+
+  @Test
+  @Owner(developers = HARSH)
+  @Category(UnitTests.class)
   public void testHandleEventForAborted() throws IOException {
     when(connectorUtils.getConnectorDetails(any(), any())).thenReturn(ciExecutionPlanTestHelper.getGitConnector());
     NodeExecution nodeExecution = getNodeExecution(Status.ABORTED);
@@ -100,8 +175,54 @@ public class GitBuildStatusUtilityTest extends CIExecutionTest {
   @Test
   @Owner(developers = HARSH)
   @Category(UnitTests.class)
+  public void testGitlabHandleEventForAborted() throws IOException {
+    when(connectorUtils.getConnectorDetails(any(), any())).thenReturn(ciExecutionPlanTestHelper.getGitLabConnector());
+    NodeExecution nodeExecution = getNodeExecution(Status.ABORTED);
+    gitBuildStatusUtility.sendStatusToGit(nodeExecution, ambiance, accountId);
+    assertThat(gitBuildStatusUtility.shouldSendStatus(nodeExecution)).isEqualTo(true);
+    verify(delegateGrpcClientWrapper).submitAsyncTask(any());
+  }
+
+  @Test
+  @Owner(developers = HARSH)
+  @Category(UnitTests.class)
+  public void testBitbucketHandleEventForAborted() throws IOException {
+    when(connectorUtils.getConnectorDetails(any(), any()))
+        .thenReturn(ciExecutionPlanTestHelper.getBitBucketConnector());
+    NodeExecution nodeExecution = getNodeExecution(Status.ABORTED);
+    gitBuildStatusUtility.sendStatusToGit(nodeExecution, ambiance, accountId);
+    assertThat(gitBuildStatusUtility.shouldSendStatus(nodeExecution)).isEqualTo(true);
+    verify(delegateGrpcClientWrapper).submitAsyncTask(any());
+  }
+
+  @Test
+  @Owner(developers = HARSH)
+  @Category(UnitTests.class)
   public void testHandleEventForUNSUPPORTED() throws IOException {
     when(connectorUtils.getConnectorDetails(any(), any())).thenReturn(ciExecutionPlanTestHelper.getGitConnector());
+    NodeExecution nodeExecution = getNodeExecution(Status.QUEUED);
+    gitBuildStatusUtility.sendStatusToGit(nodeExecution, ambiance, accountId);
+    assertThat(gitBuildStatusUtility.shouldSendStatus(nodeExecution)).isEqualTo(true);
+    verify(delegateGrpcClientWrapper, never()).submitAsyncTask(any());
+  }
+
+  @Test
+  @Owner(developers = HARSH)
+  @Category(UnitTests.class)
+  public void testGitlabHandleEventForUNSUPPORTED() throws IOException {
+    when(connectorUtils.getConnectorDetails(any(), any())).thenReturn(ciExecutionPlanTestHelper.getGitLabConnector());
+    NodeExecution nodeExecution = getNodeExecution(Status.QUEUED);
+    gitBuildStatusUtility.sendStatusToGit(nodeExecution, ambiance, accountId);
+    assertThat(gitBuildStatusUtility.shouldSendStatus(nodeExecution)).isEqualTo(true);
+    verify(delegateGrpcClientWrapper, never()).submitAsyncTask(any());
+  }
+
+  @Test
+  @Owner(developers = HARSH)
+  @Category(UnitTests.class)
+  public void testBitbucketHandleEventForUNSUPPORTED() throws IOException {
+    when(connectorUtils.getConnectorDetails(any(), any()))
+        .thenReturn(ciExecutionPlanTestHelper.getBitBucketConnector());
     NodeExecution nodeExecution = getNodeExecution(Status.QUEUED);
     gitBuildStatusUtility.sendStatusToGit(nodeExecution, ambiance, accountId);
     assertThat(gitBuildStatusUtility.shouldSendStatus(nodeExecution)).isEqualTo(true);
