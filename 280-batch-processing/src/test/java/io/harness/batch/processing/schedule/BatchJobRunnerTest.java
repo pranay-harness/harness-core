@@ -37,8 +37,6 @@ public class BatchJobRunnerTest extends CategoryTest {
   @Owner(developers = HITESH)
   @Category(UnitTests.class)
   public void shouldReturnTrueIfAllDependentJobFinished() {
-    when(batchJobScheduledDataService.fetchLastDependentBatchJobScheduledTime(ACCOUNT_ID, BatchJobType.ECS_UTILIZATION))
-        .thenReturn(NOW.minus(2, ChronoUnit.DAYS));
     when(batchJobScheduledDataService.fetchLastDependentBatchJobScheduledTime(ACCOUNT_ID, BatchJobType.K8S_UTILIZATION))
         .thenReturn(NOW.minus(2, ChronoUnit.DAYS));
     BatchJobType batchJobType = BatchJobType.INSTANCE_BILLING;
@@ -51,8 +49,6 @@ public class BatchJobRunnerTest extends CategoryTest {
   @Owner(developers = HITESH)
   @Category(UnitTests.class)
   public void shouldReturnFalseIfAllDependentJobNotFinished() {
-    when(batchJobScheduledDataService.fetchLastDependentBatchJobScheduledTime(ACCOUNT_ID, BatchJobType.ECS_UTILIZATION))
-        .thenReturn(NOW.minus(2, ChronoUnit.DAYS));
     when(batchJobScheduledDataService.fetchLastDependentBatchJobScheduledTime(ACCOUNT_ID, BatchJobType.K8S_UTILIZATION))
         .thenReturn(NOW.minus(4, ChronoUnit.DAYS));
     BatchJobType batchJobType = BatchJobType.INSTANCE_BILLING;
