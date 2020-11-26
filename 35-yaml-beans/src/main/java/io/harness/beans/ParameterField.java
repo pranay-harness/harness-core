@@ -7,7 +7,6 @@ import io.harness.expression.field.OrchestrationFieldType;
 import io.harness.walktree.registries.visitorfield.VisitorFieldType;
 import io.harness.walktree.registries.visitorfield.VisitorFieldWrapper;
 
-import com.fasterxml.jackson.annotation.JsonValue;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
@@ -88,7 +87,6 @@ public class ParameterField<T> implements OrchestrationField, VisitorFieldWrappe
     value = (T) newValue;
   }
 
-  @JsonValue
   public Object getJsonFieldValue() {
     if (isExpression) {
       StringBuilder result = new StringBuilder(expressionValue);
