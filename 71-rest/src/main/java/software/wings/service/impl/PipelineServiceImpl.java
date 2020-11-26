@@ -672,6 +672,8 @@ public class PipelineServiceImpl implements PipelineService {
           } else {
             resolveEnvIds(envIds, resolvedWorkflowStepVariables, workflow);
           }
+        } else {
+          pipeline.setHasBuildWorkflow(true);
         }
         if (!workflowIds.contains(workflowId)) {
           workflowIds.add(workflowId);

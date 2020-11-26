@@ -2807,6 +2807,9 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
           throw new InvalidRequestException(
               "Could find a workflow associated with given PipelineStage: " + pipelineStageElementId);
         }
+        if (pipeline.isHasBuildWorkflow()) {
+          return DeploymentMetadata.builder().build();
+        }
         String workflowId = (String) pipelineStageElement.getProperties().get("workflowId");
         Workflow workflow = workflowService.readWorkflow(appId, workflowId);
         notNullCheck(
