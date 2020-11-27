@@ -3,7 +3,6 @@ package io.harness;
 import io.harness.eventsframework.Event;
 import io.harness.eventsframework.ProjectUpdate;
 import io.harness.eventsframework.RedisStreamClient;
-import io.harness.eventsframework.StreamChannel;
 import io.harness.lock.AcquiredLock;
 import io.harness.lock.redis.RedisPersistentLocker;
 
@@ -20,20 +19,20 @@ public class MessageConsumer implements Runnable {
   String color;
   String readVia;
   RedisStreamClient client;
-  StreamChannel channel;
+  String channel;
   String groupName;
   String consumerName;
   Integer processingTime;
   RedisPersistentLocker redisLocker;
 
-  public MessageConsumer(String readVia, RedisStreamClient client, StreamChannel channel, String color) {
+  public MessageConsumer(String readVia, RedisStreamClient client, String channel, String color) {
     this.readVia = readVia;
     this.client = client;
     this.channel = channel;
     this.color = color;
   }
 
-  public MessageConsumer(String readVia, RedisStreamClient client, StreamChannel channel, String groupName,
+  public MessageConsumer(String readVia, RedisStreamClient client, String channel, String groupName,
       String consumerName, Integer processingTime, String color) {
     this(readVia, client, channel, color);
     this.groupName = groupName;
@@ -41,8 +40,8 @@ public class MessageConsumer implements Runnable {
     this.processingTime = processingTime;
   }
 
-  public MessageConsumer(RedisPersistentLocker redisLocker, String readVia, RedisStreamClient client,
-      StreamChannel channel, String groupName, String consumerName, Integer processingTime, String color) {
+  public MessageConsumer(RedisPersistentLocker redisLocker, String readVia, RedisStreamClient client, String channel,
+      String groupName, String consumerName, Integer processingTime, String color) {
     this(readVia, client, channel, groupName, consumerName, processingTime, color);
     this.redisLocker = redisLocker;
   }

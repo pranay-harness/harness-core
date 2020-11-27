@@ -44,7 +44,7 @@ public class RedisStreamClient implements EventDrivenClient {
   }
 
   @Override
-  public boolean createConsumerGroup(StreamChannel channel, String groupName) {
+  public boolean createConsumerGroup(String channel, String groupName) {
     try {
       getStream(channel).createGroup(groupName);
       return true;
@@ -55,28 +55,28 @@ public class RedisStreamClient implements EventDrivenClient {
   }
 
   @Override
-  public void publishEvent(StreamChannel channel, Event event) {
+  public void publishEvent(String channel, Event event) {
     getStream(channel).addAll(
         ImmutableMap.of(REDIS_STREAM_INTERNAL_KEY, Base64.getEncoder().encodeToString(event.toByteArray())), 10000,
         false);
   }
 
   @Override
-  public Map<String, Event> readEvent(StreamChannel channel) {
+  public Map<String, Event> readEvent(String channel) {
     Map<StreamMessageId, Map<String, String>> redisVal =
         getStream(channel).read(1, this.redisBlockTime, TimeUnit.MILLISECONDS, StreamMessageId.NEWEST);
     return createEventMap(redisVal);
   }
 
   @Override
-  public Map<String, Event> readEvent(StreamChannel channel, String lastId) {
+  public Map<String, Event> readEvent(String channel, String lastId) {
     Map<StreamMessageId, Map<String, String>> redisVal =
         getStream(channel).read(1, this.redisBlockTime, TimeUnit.MILLISECONDS, getStreamId(lastId));
     return createEventMap(redisVal);
   }
 
   @Override
-  public Map<String, Event> readEvent(StreamChannel channel, String groupName, String consumerName) {
+  public Map<String, Event> readEvent(String channel, String groupName, String consumerName) {
     // This performs XREADGROUP with id ">" for a particular consumer in a consumer group
     Map<StreamMessageId, Map<String, String>> redisVal =
         getStream(channel).readGroup(groupName, consumerName, 1, this.redisBlockTime, TimeUnit.MILLISECONDS);
@@ -84,30 +84,30 @@ public class RedisStreamClient implements EventDrivenClient {
   }
 
   @Override
-  public Map<String, Event> readEvent(StreamChannel channel, String groupName, String consumerName, String lastId) {
+  public Map<String, Event> readEvent(String channel, String groupName, String consumerName, String lastId) {
     Map<StreamMessageId, Map<String, String>> redisVal = getStream(channel).readGroup(
         groupName, consumerName, 1, this.redisBlockTime, TimeUnit.MILLISECONDS, getStreamId(lastId));
     return createEventMap(redisVal);
   }
 
   @Override
-  public void acknowledge(StreamChannel channel, String groupName, String messageId) {
+  public void acknowledge(String channel, String groupName, String messageId) {
     getStream(channel).ack(groupName, getStreamId(messageId));
   }
 
   @Override
-  public long deleteMessages(StreamChannel channel, List<String> messageIds) {
+  public long deleteMessages(String channel, List<String> messageIds) {
     if (messageIds.size() == 0)
       return 0;
     StreamMessageId[] streamMessageIds = messageIds.stream().map(this::getStreamId).toArray(StreamMessageId[] ::new);
     return getStream(channel).remove(streamMessageIds);
   }
 
-  public PendingResult getPendingInfo(StreamChannel channel, String groupName) {
+  public PendingResult getPendingInfo(String channel, String groupName) {
     return getStream(channel).getPendingInfo(groupName);
   }
 
-  public StreamInfo getStreamInfo(StreamChannel channel) {
+  public StreamInfo getStreamInfo(String channel) {
     return getStream(channel).getInfo();
   }
 
@@ -126,12 +126,12 @@ public class RedisStreamClient implements EventDrivenClient {
     }
   }
 
-  private RStream getStream(StreamChannel channel) {
+  private RStream getStream(String channel) {
     return this.redissonClient.getStream(getStreamName(channel), new StringCodec("UTF-8"));
   }
 
-  private String getStreamName(StreamChannel channel) {
-    return "streams:" + channel.name().toLowerCase();
+  private String getStreamName(String channel) {
+    return "streams:" + channel;
   }
 
   private StreamMessageId getStreamId(String messageId) {

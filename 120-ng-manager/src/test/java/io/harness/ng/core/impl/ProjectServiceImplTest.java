@@ -27,8 +27,8 @@ import io.harness.connector.apis.dto.ConnectorResponseDTO;
 import io.harness.connector.services.ConnectorService;
 import io.harness.eventsframework.Event;
 import io.harness.eventsframework.EventDrivenClient;
+import io.harness.eventsframework.EventFrameworkConstants;
 import io.harness.eventsframework.NoOpEventClient;
-import io.harness.eventsframework.StreamChannel;
 import io.harness.exception.InvalidRequestException;
 import io.harness.ng.core.api.NGSecretManagerService;
 import io.harness.ng.core.dto.ProjectDTO;
@@ -139,7 +139,8 @@ public class ProjectServiceImplTest extends CategoryTest {
     Project updatedProject = projectService.update(accountIdentifier, orgIdentifier, identifier, projectDTO);
 
     ArgumentCaptor<Event> eventCaptor = ArgumentCaptor.forClass(Event.class);
-    verify(eventDrivenClient, times(1)).publishEvent(eq(StreamChannel.PROJECT_UPDATE), eventCaptor.capture());
+    verify(eventDrivenClient, times(1))
+        .publishEvent(eq(EventFrameworkConstants.PROJECT_UPDATE_CHANNEL), eventCaptor.capture());
 
     assertEquals(project, updatedProject);
   }
