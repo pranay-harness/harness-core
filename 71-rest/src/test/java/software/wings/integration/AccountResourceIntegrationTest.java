@@ -12,7 +12,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import io.harness.beans.PageResponse;
 import io.harness.category.element.DeprecatedIntegrationTests;
 import io.harness.eraro.ErrorCode;
-import io.harness.exception.WingsException;
 import io.harness.rest.RestResponse;
 import io.harness.rule.Owner;
 
@@ -86,41 +85,6 @@ public class AccountResourceIntegrationTest extends IntegrationTestBase {
 
     alertResponse = getAccountAlerts(accountId);
     assertThat(alertResponse.getStatus()).isEqualTo(Status.OK.getStatusCode());
-  }
-
-  @Test
-  @Owner(developers = RAMA)
-  @Category(DeprecatedIntegrationTests.class)
-  @Ignore("skipping the integration test")
-  public void shallCreateAndDeleteAccount() {
-    Account account = new Account();
-    account.setLicenseInfo(getLicenseInfo());
-    long timeMillis = System.currentTimeMillis();
-    String randomString = "" + timeMillis;
-    account.setCompanyName(randomString);
-    account.setAccountName(randomString);
-    account.setAccountKey(randomString);
-    account.setCloudCostEnabled(true);
-
-    WebTarget target = client.target(API_BASE + "/users/account");
-    Response response = getRequestBuilderWithAuthHeader(target).post(entity(account, APPLICATION_JSON));
-    if (response.getStatus() != Status.OK.getStatusCode()) {
-      log.error("Non-ok-status. Headers: {}", response.getHeaders());
-    }
-    assertThat(response.getStatus()).isEqualTo(Status.OK.getStatusCode());
-    RestResponse<Account> restResponse = response.readEntity(new GenericType<RestResponse<Account>>() {});
-    Account createdAccount = restResponse.getResource();
-    assertThat(restResponse.getResource().getAccountName()).isEqualTo(randomString);
-
-    target = client.target(API_BASE + "/account/delete/" + createdAccount.getUuid());
-    getRequestBuilderWithAuthHeader(target).delete(new GenericType<RestResponse>() {});
-    assertThat(response).isNotNull();
-    if (response.getStatus() != Status.OK.getStatusCode()) {
-      log.error("Non-ok-status. Headers: {}", response.getHeaders());
-    }
-
-    thrown.expect(WingsException.class);
-    accountService.get(createdAccount.getUuid());
   }
 
   @Test
