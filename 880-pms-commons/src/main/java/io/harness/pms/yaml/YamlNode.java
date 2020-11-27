@@ -1,9 +1,7 @@
 package io.harness.pms.yaml;
 
 import com.fasterxml.jackson.databind.JsonNode;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 import javax.validation.constraints.NotNull;
 import lombok.Value;
 
@@ -14,47 +12,108 @@ public class YamlNode {
   public static final String TYPE_FIELD_NAME = "type";
   public static final String NAME_FIELD_NAME = "name";
 
-  @NotNull JsonNode currNode;
+  YamlNode parentNode;
+  @NotNull JsonNode currJsonNode;
 
-  public YamlNode(JsonNode currNode) {
-    this.currNode = currNode;
+  public YamlNode(JsonNode currJsonNode) {
+    this.currJsonNode = currJsonNode;
+    this.parentNode = null;
   }
 
-  public YamlNode(JsonNode currNode, YamlNode parentNode) {
-    this.currNode = currNode;
+  public YamlNode(JsonNode currJsonNode, YamlNode parentNode) {
+    this.currJsonNode = currJsonNode;
+    this.parentNode = parentNode;
   }
 
   @Override
   public String toString() {
-    return currNode.toString();
+    return currJsonNode.toString();
   }
 
   public boolean isObject() {
-    return currNode.isObject();
+    return currJsonNode.isObject();
   }
 
   public boolean isArray() {
-    return currNode.isArray();
+    return currJsonNode.isArray();
   }
 
   public String asText() {
-    return currNode.asText();
+    return currJsonNode.asText();
+  }
+
+  public YamlField nextSiblingFromParentArray(String currentFieldName, List<String> possibleSiblingFieldNames) {
+    if (parentNode == null || parentNode.parentNode == null || parentNode.parentNode.isObject()) {
+      return null;
+    }
+    List<YamlNode> yamlNodes = parentNode.parentNode.asArray();
+    for (int i = 0; i < yamlNodes.size(); i++) {
+      YamlField givenNode = yamlNodes.get(i).getField(currentFieldName);
+      if (givenNode != null && givenNode.getNode().getUuid() != null) {
+        if (givenNode.getNode().getUuid().equals(this.getUuid())) {
+          return getMatchingFieldNameFromParent(yamlNodes.get(i + 1), new HashSet<>(possibleSiblingFieldNames));
+        }
+      }
+    }
+    return null;
+  }
+
+  public YamlField nextSiblingNodeFromParentObject(String siblingFieldName) {
+    if (parentNode == null || parentNode.isArray()) {
+      return null;
+    }
+    return getMatchingFieldNameFromParent(parentNode, Collections.singleton(siblingFieldName));
+  }
+
+  private YamlField getMatchingFieldNameFromParent(YamlNode parent, Set<String> fieldNames) {
+    for (YamlField field : parent.fields()) {
+      if (fieldNames.contains(field.getName())) {
+        return field;
+      }
+    }
+    return null;
   }
 
   public List<YamlNode> asArray() {
     List<YamlNode> entries = new ArrayList<>();
-    currNode.elements().forEachRemaining(el -> entries.add(new YamlNode(el)));
+    currJsonNode.elements().forEachRemaining(el -> entries.add(new YamlNode(el, this)));
     return entries;
   }
 
   public List<YamlField> fields() {
     List<YamlField> entries = new ArrayList<>();
-    currNode.fields().forEachRemaining(el -> entries.add(new YamlField(el.getKey(), new YamlNode(el.getValue()))));
+    currJsonNode.fields().forEachRemaining(
+        el -> entries.add(new YamlField(el.getKey(), new YamlNode(el.getValue(), this))));
     return entries;
   }
 
   public String getUuid() {
-    return getStringValue(UUID_FIELD_NAME);
+    String uuidValue = getStringValue(UUID_FIELD_NAME);
+    if (uuidValue == null && parentNode != null) {
+      // This means that current node is of array type
+      if (parentNode.isObject()) {
+        List<YamlField> childFields = parentNode.fields();
+        for (YamlField childField : childFields) {
+          if (compareFirstChildOfArrayNode(childField.getNode(), this)) {
+            return parentNode.getUuid() + childField.getName();
+          }
+        }
+        return null;
+      }
+    }
+    return uuidValue;
+  }
+
+  private boolean compareFirstChildOfArrayNode(YamlNode firstParent, YamlNode secondParent) {
+    List<YamlNode> firstParentChildNodes = firstParent.asArray();
+    List<YamlNode> secondParentChildNodes = secondParent.asArray();
+    if (firstParentChildNodes.size() == 0 || secondParentChildNodes.size() == 0) {
+      return false;
+    }
+    if (firstParentChildNodes.get(0).getUuid().equals(secondParentChildNodes.get(0).getUuid())) {
+      return true;
+    }
+    return false;
   }
 
   public String getIdentifier() {
@@ -80,11 +139,11 @@ public class YamlNode {
 
   public YamlField getField(String name) {
     JsonNode value = getValueInternal(name);
-    return value == null ? null : new YamlField(name, new YamlNode(currNode.findValue(name)));
+    return value == null ? null : new YamlField(name, new YamlNode(currJsonNode.findValue(name), this));
   }
 
   private JsonNode getValueInternal(String key) {
-    JsonNode value = !currNode.isObject() ? null : currNode.get(key);
+    JsonNode value = !currJsonNode.isObject() ? null : currJsonNode.get(key);
     if (value != null && value.isNull()) {
       value = null;
     }

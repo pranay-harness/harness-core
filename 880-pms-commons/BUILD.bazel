@@ -32,6 +32,23 @@ java_library(
     ],
 )
 
+java_library(
+    name = "tests",
+    srcs = glob(["src/test/**/*.java"]),
+    resources = ["//880-pms-commons/src/test/resources:resource"],
+    visibility = ["//visibility:public"],
+    deps = [
+        "maven_deps",
+        "module",
+        "//:lombok",
+        "//960-persistence:module",
+        "//990-commons-test:module",
+        "@maven//:junit_junit",
+        "@maven//:org_assertj_assertj_core",
+        "@maven//:org_mockito_mockito_core",
+    ],
+)
+
 run_tests()
 
 checkstyle()
