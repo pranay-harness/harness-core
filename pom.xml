@@ -16,11 +16,11 @@
         <!--<module>940-secret-manager-client</module>-->
         <!--<module>950-timeout-engine</module>-->
         <!--<module>950-wait-engine</module>-->
-        <!--<module>23-ng-core-clients</module>-->
+        <!--<module>930-ng-core-clients</module>-->
         <!--<module>910-delegate-service-driver</module>-->
-        <!--<module>23-sm-core</module>-->
-        <!--<module>24-common-entities</module>-->
-        <!--<module>27-orchestration-persistence</module>-->
+        <!--<module>890-sm-core</module>-->
+        <!--<module>950-common-entities</module>-->
+        <!--<module>890-orchestration-persistence</module>-->
         <!--<module>29-orchestration-beans</module>-->
         <!--<module>31-orchestration</module>-->
         <!--<module>32-orchestration-steps</module>-->

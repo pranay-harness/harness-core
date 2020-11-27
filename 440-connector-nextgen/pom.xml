@@ -39,7 +39,7 @@
         </dependency>
         <dependency>
             <groupId>software.wings</groupId>
-            <artifactId>23-ng-core-clients</artifactId>
+            <artifactId>930-ng-core-clients</artifactId>
             <version>${project.parent.version}</version>
             <scope>compile</scope>
         </dependency>

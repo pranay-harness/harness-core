@@ -10,15 +10,15 @@ directories:
   940-secret-manager-client
   950-timeout-engine
   950-wait-engine
-  23-ng-core-clients
+  930-ng-core-clients
   910-delegate-service-driver
-  23-notification-service
-  23-sm-core
-  24-common-entities
-  26-pms-contracts
-  27-orchestration-persistence
-  27-pms-commons
-  28-pms-sdk-beans
+  930-notification-service
+  890-sm-core
+  950-common-entities
+  890-pms-contracts
+  890-orchestration-persistence
+  880-pms-commons
+  870-pms-sdk-beans
   29-orchestration-beans
   31-orchestration
   32-orchestration-steps

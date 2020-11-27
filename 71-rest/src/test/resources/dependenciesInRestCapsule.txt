@@ -616,12 +616,12 @@ software.wings:940-secret-manager-client:jar:0.0.1-SNAPSHOT
 software.wings:950-timeout-engine:jar:0.0.1-SNAPSHOT
 software.wings:950-wait-engine:jar:0.0.1-SNAPSHOT
 software.wings:910-delegate-service-driver:jar:0.0.1-SNAPSHOT
-software.wings:23-ng-core-clients:jar:0.0.1-SNAPSHOT
-software.wings:23-sm-core:jar:0.0.1-SNAPSHOT
-software.wings:24-common-entities:jar:0.0.1-SNAPSHOT
+software.wings:930-ng-core-clients:jar:0.0.1-SNAPSHOT
+software.wings:890-sm-core:jar:0.0.1-SNAPSHOT
+software.wings:950-common-entities:jar:0.0.1-SNAPSHOT
 software.wings:24-manager-delegate-service-beans:jar:0.0.1-SNAPSHOT
 software.wings:25-manager-delegate-service-driver:jar:0.0.1-SNAPSHOT
-software.wings:27-orchestration-persistence:jar:0.0.1-SNAPSHOT
+software.wings:890-orchestration-persistence:jar:0.0.1-SNAPSHOT
 software.wings:29-orchestration-beans:jar:0.0.1-SNAPSHOT
 software.wings:31-orchestration:jar:0.0.1-SNAPSHOT
 software.wings:32-orchestration-steps:jar:0.0.1-SNAPSHOT

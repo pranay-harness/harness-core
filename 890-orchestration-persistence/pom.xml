@@ -6,7 +6,7 @@
         <artifactId>portal</artifactId>
         <version>0.0.1-SNAPSHOT</version>
     </parent>
-    <artifactId>27-orchestration-persistence</artifactId>
+    <artifactId>890-orchestration-persistence</artifactId>
     <dependencies>
         <dependency>
             <groupId>com.google.guava</groupId>

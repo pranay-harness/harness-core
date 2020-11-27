@@ -1,8 +1,8 @@
 136-git-sync-manager
-23-ng-core-clients/src/main/java/io/harness/entityactivity/EntityActivityClientModule.java
-23-ng-core-clients/src/main/java/io/harness/entityactivity/remote/EntityActivityHttpClientFactory.java
-23-ng-core-clients/src/main/java/io/harness/entitysetupusageclient/EntitySetupUsageClientModule.java
-23-ng-core-clients/src/main/java/io/harness/entitysetupusageclient/remote/EntitySetupUsageHttpClientFactory.java
+930-ng-core-clients/src/main/java/io/harness/entityactivity/EntityActivityClientModule.java
+930-ng-core-clients/src/main/java/io/harness/entityactivity/remote/EntityActivityHttpClientFactory.java
+930-ng-core-clients/src/main/java/io/harness/entitysetupusageclient/EntitySetupUsageClientModule.java
+930-ng-core-clients/src/main/java/io/harness/entitysetupusageclient/remote/EntitySetupUsageHttpClientFactory.java
 440-connector-nextgen
 900-yaml-sdk
 960-ng-core-beans/src/main/java/io/harness/ng/core/activityhistory/dto/NGActivityDTO.java

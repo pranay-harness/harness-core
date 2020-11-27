@@ -46,17 +46,17 @@
         </dependency>
         <dependency>
             <groupId>software.wings</groupId>
-            <artifactId>24-common-entities</artifactId>
-            <version>${project.parent.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>software.wings</groupId>
             <artifactId>320-ci-execution</artifactId>
             <version>0.0.1-SNAPSHOT</version>
         </dependency>
         <dependency>
             <groupId>software.wings</groupId>
             <artifactId>330-ci-beans</artifactId>
+            <version>${project.parent.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>software.wings</groupId>
+            <artifactId>950-common-entities</artifactId>
             <version>${project.parent.version}</version>
         </dependency>
         <dependency>

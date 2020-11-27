@@ -26,11 +26,6 @@
         </dependency>
         <dependency>
             <groupId>software.wings</groupId>
-            <artifactId>23-sm-core</artifactId>
-            <version>${project.parent.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>software.wings</groupId>
             <artifactId>38-execution-plan</artifactId>
             <version>${project.parent.version}</version>
         </dependency>
@@ -57,6 +52,11 @@
         <dependency>
             <groupId>software.wings</groupId>
             <artifactId>71-rest</artifactId>
+            <version>${project.parent.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>software.wings</groupId>
+            <artifactId>890-sm-core</artifactId>
             <version>${project.parent.version}</version>
         </dependency>
         <dependency>

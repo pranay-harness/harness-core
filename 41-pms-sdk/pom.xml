@@ -45,17 +45,17 @@
         </dependency>
         <dependency>
             <groupId>software.wings</groupId>
-            <artifactId>26-pms-contracts-proto</artifactId>
+            <artifactId>890-pms-contracts-proto</artifactId>
             <version>${project.parent.version}</version>
         </dependency>
         <dependency>
             <groupId>software.wings</groupId>
-            <artifactId>27-pms-commons</artifactId>
+            <artifactId>880-pms-commons</artifactId>
             <version>${project.parent.version}</version>
         </dependency>
         <dependency>
             <groupId>software.wings</groupId>
-            <artifactId>28-pms-sdk-beans</artifactId>
+            <artifactId>870-pms-sdk-beans</artifactId>
             <version>${project.parent.version}</version>
         </dependency>
         <dependency>

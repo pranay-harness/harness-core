@@ -11,9 +11,9 @@ java_library(
     name = "maven_deps",
     visibility = ["//visibility:public"],
     exports = [
-        "//26-pms-contracts:module",
-        "//27-pms-commons:module",
         "//31-orchestration:module",
+        "//880-pms-commons:module",
+        "//890-pms-contracts:module",
         "//950-timeout-engine:module",
         "//960-ng-core-beans:module",
         "//960-persistence:module",

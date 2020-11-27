@@ -144,15 +144,15 @@ build_bazel_module 970-rbac-core
 build_bazel_module 940-secret-manager-client
 build_bazel_module 950-timeout-engine
 build_bazel_module 950-wait-engine
-build_bazel_module 23-ng-core-clients
+build_bazel_module 930-ng-core-clients
 build_bazel_module 910-delegate-service-driver
-build_bazel_application 23-notification-service
-build_bazel_module 23-sm-core
-build_bazel_module 24-common-entities
-build_bazel_module 26-pms-contracts
-build_bazel_module 27-orchestration-persistence
-build_bazel_module 27-pms-commons
-build_bazel_module 28-pms-sdk-beans
+build_bazel_application 930-notification-service
+build_bazel_module 890-sm-core
+build_bazel_module 950-common-entities
+build_bazel_module 890-pms-contracts
+build_bazel_module 890-orchestration-persistence
+build_bazel_module 880-pms-commons
+build_bazel_module 870-pms-sdk-beans
 build_bazel_module 29-orchestration-beans
 build_bazel_module 31-orchestration
 build_bazel_module 32-orchestration-steps
@@ -189,7 +189,7 @@ build_bazel_module 990-commons-test
 build_java_proto_module 950-events-api
 build_java_proto_module 920-delegate-agent-beans
 build_java_proto_module 920-delegate-service-beans
-build_java_proto_module 26-pms-contracts
+build_java_proto_module 890-pms-contracts
 build_java_proto_module 50-delegate-task-grpc-service proto
 build_java_proto_module 940-delegate-beans
 build_java_proto_module 950-delegate-tasks-beans
