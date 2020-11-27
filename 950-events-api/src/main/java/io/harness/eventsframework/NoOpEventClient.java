@@ -6,38 +6,38 @@ import java.util.Map;
 
 public class NoOpEventClient implements EventDrivenClient {
   @Override
-  public boolean createConsumerGroup(StreamChannel channel, String groupName) {
+  public boolean createConsumerGroup(String channel, String groupName) {
     return false;
   }
 
   @Override
-  public void publishEvent(StreamChannel channel, Event event) {}
+  public void publishEvent(String channel, Event event) {}
 
   @Override
-  public Map<String, Event> readEvent(StreamChannel channel) {
+  public Map<String, Event> readEvent(String channel) {
     return Collections.emptyMap();
   }
 
   @Override
-  public Map<String, Event> readEvent(StreamChannel channel, String lastId) {
+  public Map<String, Event> readEvent(String channel, String lastId) {
     return Collections.emptyMap();
   }
 
   @Override
-  public Map<String, Event> readEvent(StreamChannel channel, String groupName, String consumerName) {
+  public Map<String, Event> readEvent(String channel, String groupName, String consumerName) {
     return Collections.emptyMap();
   }
 
   @Override
-  public Map<String, Event> readEvent(StreamChannel channel, String groupName, String consumerName, String lastId) {
+  public Map<String, Event> readEvent(String channel, String groupName, String consumerName, String lastId) {
     return Collections.emptyMap();
   }
 
   @Override
-  public void acknowledge(StreamChannel channel, String groupName, String messageId) {}
+  public void acknowledge(String channel, String groupName, String messageId) {}
 
   @Override
-  public long deleteMessages(StreamChannel channel, List<String> messageIds) {
+  public long deleteMessages(String channel, List<String> messageIds) {
     return 0;
   }
 }

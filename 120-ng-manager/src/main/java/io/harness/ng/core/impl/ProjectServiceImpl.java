@@ -20,8 +20,8 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.connector.services.ConnectorService;
 import io.harness.eventsframework.Event;
 import io.harness.eventsframework.EventDrivenClient;
+import io.harness.eventsframework.EventFrameworkConstants;
 import io.harness.eventsframework.ProjectUpdate;
-import io.harness.eventsframework.StreamChannel;
 import io.harness.exception.DuplicateFieldException;
 import io.harness.exception.InvalidArgumentsException;
 import io.harness.exception.InvalidRequestException;
@@ -155,7 +155,7 @@ public class ProjectServiceImpl implements ProjectService {
   }
 
   private void publishUpdates(Project project) {
-    eventDrivenClient.publishEvent(StreamChannel.PROJECT_UPDATE,
+    eventDrivenClient.publishEvent(EventFrameworkConstants.PROJECT_UPDATE_CHANNEL,
         Event.newBuilder()
             .setAccountId(project.getAccountIdentifier())
             .setPayload(Any.pack(ProjectUpdate.newBuilder()

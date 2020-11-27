@@ -4,12 +4,12 @@ import java.util.List;
 import java.util.Map;
 
 public interface EventDrivenClient {
-  boolean createConsumerGroup(StreamChannel channel, String groupName);
-  void publishEvent(StreamChannel channel, Event event);
-  Map<String, Event> readEvent(StreamChannel channel);
-  Map<String, Event> readEvent(StreamChannel channel, String lastId);
-  Map<String, Event> readEvent(StreamChannel channel, String groupName, String consumerName);
-  Map<String, Event> readEvent(StreamChannel channel, String groupName, String consumerName, String lastId);
-  void acknowledge(StreamChannel channel, String groupName, String messageId);
-  long deleteMessages(StreamChannel channel, List<String> messageIds);
+  boolean createConsumerGroup(String channel, String groupName);
+  void publishEvent(String channel, Event event);
+  Map<String, Event> readEvent(String channel);
+  Map<String, Event> readEvent(String channel, String lastId);
+  Map<String, Event> readEvent(String channel, String groupName, String consumerName);
+  Map<String, Event> readEvent(String channel, String groupName, String consumerName, String lastId);
+  void acknowledge(String channel, String groupName, String messageId);
+  long deleteMessages(String channel, List<String> messageIds);
 }

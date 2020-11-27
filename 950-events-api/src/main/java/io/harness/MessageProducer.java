@@ -3,20 +3,18 @@ package io.harness;
 import io.harness.eventsframework.Event;
 import io.harness.eventsframework.ProjectUpdate;
 import io.harness.eventsframework.RedisStreamClient;
-import io.harness.eventsframework.StreamChannel;
 
 import com.google.protobuf.Any;
-import java.util.Base64;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class MessageProducer implements Runnable {
   RedisStreamClient client;
-  StreamChannel channel;
+  String channel;
   String color;
 
-  public MessageProducer(RedisStreamClient client, StreamChannel channel, String color) {
+  public MessageProducer(RedisStreamClient client, String channel, String color) {
     this.client = client;
     this.channel = channel;
     this.color = color;

@@ -2,8 +2,8 @@ package io.harness;
 
 import static io.harness.logging.LoggingInitializer.initializeLogging;
 
+import io.harness.eventsframework.EventFrameworkConstants;
 import io.harness.eventsframework.RedisStreamClient;
-import io.harness.eventsframework.StreamChannel;
 import io.harness.lock.redis.RedisPersistentLocker;
 import io.harness.maintenance.MaintenanceController;
 import io.harness.metrics.MetricRegistryModule;
@@ -68,7 +68,7 @@ public class EventsClientApplication extends Application<EventsClientApplication
     MaintenanceController.forceMaintenance(false);
 
     RedisStreamClient client = new RedisStreamClient(appConfig.getEventsFrameworkConfiguration().getRedisConfig());
-    StreamChannel channel = StreamChannel.PROJECT_UPDATE;
+    String channel = EventFrameworkConstants.PROJECT_UPDATE_CHANNEL;
 
     RedisPersistentLocker redisLocker = injector.getInstance(RedisPersistentLocker.class);
     /* ----------------- Perform operations ----------------- */
