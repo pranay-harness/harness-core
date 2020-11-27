@@ -5,11 +5,12 @@ import io.harness.azure.model.AzureConfig;
 import io.harness.delegate.beans.logstreaming.ILogStreamingTaskClient;
 import io.harness.delegate.task.azure.appservice.AzureAppServicePreDeploymentData;
 import io.harness.delegate.task.azure.appservice.AzureAppServiceTaskParameters;
+import io.harness.delegate.task.azure.appservice.AzureAppServiceTaskParameters.AzureAppServiceTaskType;
 import io.harness.delegate.task.azure.appservice.AzureAppServiceTaskResponse;
 import io.harness.delegate.task.azure.appservice.webapp.request.AzureWebAppRollbackParameters;
 import io.harness.delegate.task.azure.appservice.webapp.response.AzureWebAppRollbackResponse;
 
-import software.wings.delegatetasks.azure.appservice.deployment.context.AzureAppServiceDeploymentContext;
+import software.wings.delegatetasks.azure.appservice.deployment.context.AzureAppServiceDockerDeploymentContext;
 import software.wings.delegatetasks.azure.appservice.webapp.AbstractAzureWebAppTaskHandler;
 
 import com.google.inject.Singleton;
@@ -27,37 +28,43 @@ public class AzureWebAppRollbackTaskHandler extends AbstractAzureWebAppTaskHandl
     AzureAppServicePreDeploymentData preDeploymentData = rollbackParameters.getPreDeploymentData();
     AzureWebClientContext azureWebClientContext = buildAzureWebClientContext(rollbackParameters, azureConfig);
     Integer steadyTimeoutIntervalInMin = rollbackParameters.getTimeoutIntervalInMin();
+    AzureAppServiceTaskType failedStep = preDeploymentData.getFailedStep();
 
-    setupSlot(preDeploymentData, azureWebClientContext, steadyTimeoutIntervalInMin, logStreamingTaskClient);
-    updateSlotTrafficWeight(preDeploymentData, azureWebClientContext, logStreamingTaskClient);
+    rollbackSetupSlot(preDeploymentData, azureWebClientContext, steadyTimeoutIntervalInMin, logStreamingTaskClient);
+
+    if (AzureAppServiceTaskType.SLOT_SHIFT_TRAFFIC == failedStep || AzureAppServiceTaskType.SLOT_SWAP == failedStep) {
+      rollbackUpdateSlotTrafficWeight(preDeploymentData, azureWebClientContext, logStreamingTaskClient);
+    }
 
     return AzureWebAppRollbackResponse.builder().build();
   }
 
-  private void setupSlot(AzureAppServicePreDeploymentData preDeploymentData,
+  private void rollbackSetupSlot(AzureAppServicePreDeploymentData preDeploymentData,
       AzureWebClientContext azureWebClientContext, Integer steadyTimeoutIntervalInMin,
       ILogStreamingTaskClient logStreamingTaskClient) {
-    AzureAppServiceDeploymentContext deploymentContext = toAzureAppServiceDeploymentContext(
+    AzureAppServiceDockerDeploymentContext dockerDeploymentContext = toAzureAppServiceDockerDeploymentContext(
         preDeploymentData, azureWebClientContext, steadyTimeoutIntervalInMin, logStreamingTaskClient);
-    azureAppServiceDeploymentService.setupSlot(deploymentContext);
+    azureAppServiceDeploymentService.deployDockerImage(dockerDeploymentContext);
   }
 
-  private AzureAppServiceDeploymentContext toAzureAppServiceDeploymentContext(
+  private AzureAppServiceDockerDeploymentContext toAzureAppServiceDockerDeploymentContext(
       AzureAppServicePreDeploymentData preDeploymentData, AzureWebClientContext azureWebClientContext,
       Integer steadyTimeoutIntervalInMin, ILogStreamingTaskClient logStreamingTaskClient) {
-    AzureAppServiceDeploymentContext azureAppServiceDeploymentContext = new AzureAppServiceDeploymentContext();
-    azureAppServiceDeploymentContext.setAzureWebClientContext(azureWebClientContext);
-    azureAppServiceDeploymentContext.setLogStreamingTaskClient(logStreamingTaskClient);
-    azureAppServiceDeploymentContext.setSlotName(preDeploymentData.getSlotName());
-    azureAppServiceDeploymentContext.setAppSettingsToAdd(preDeploymentData.getAppSettingsToAdd());
-    azureAppServiceDeploymentContext.setAppSettingsToRemove(preDeploymentData.getAppSettingsToRemove());
-    azureAppServiceDeploymentContext.setConnSettingsToAdd(preDeploymentData.getConnSettingsToAdd());
-    azureAppServiceDeploymentContext.setConnSettingsToRemove(preDeploymentData.getConnSettingsToRemove());
-    azureAppServiceDeploymentContext.setSteadyStateTimeoutInMin(steadyTimeoutIntervalInMin);
-    return azureAppServiceDeploymentContext;
+    return AzureAppServiceDockerDeploymentContext.builder()
+        .logStreamingTaskClient(logStreamingTaskClient)
+        .appSettingsToAdd(preDeploymentData.getAppSettingsToAdd())
+        .appSettingsToRemove(preDeploymentData.getAppSettingsToRemove())
+        .connSettingsToAdd(preDeploymentData.getConnSettingsToAdd())
+        .connSettingsToRemove(preDeploymentData.getConnSettingsToRemove())
+        .dockerSettings(preDeploymentData.getDockerSettingsToAdd())
+        .imagePathAndTag(preDeploymentData.getImageNameAndTag())
+        .slotName(preDeploymentData.getSlotName())
+        .azureWebClientContext(azureWebClientContext)
+        .steadyStateTimeoutInMin(steadyTimeoutIntervalInMin)
+        .build();
   }
 
-  private void updateSlotTrafficWeight(AzureAppServicePreDeploymentData preDeploymentData,
+  private void rollbackUpdateSlotTrafficWeight(AzureAppServicePreDeploymentData preDeploymentData,
       AzureWebClientContext azureWebClientContext, ILogStreamingTaskClient logStreamingTaskClient) {
     double trafficWeight = preDeploymentData.getTrafficWeight();
     String slotName = preDeploymentData.getSlotName();

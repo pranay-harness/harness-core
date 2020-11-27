@@ -1,6 +1,6 @@
 package io.harness.delegate.task.azure.appservice.webapp.request;
 
-import static io.harness.delegate.task.azure.appservice.AzureAppServiceTaskParameters.AzureAppServiceTaskType.ROLLBACK;
+import static io.harness.delegate.task.azure.appservice.AzureAppServiceTaskParameters.AzureAppServiceTaskType.SLOT_ROLLBACK;
 import static io.harness.delegate.task.azure.appservice.AzureAppServiceTaskParameters.AzureAppServiceType.WEB_APP;
 
 import io.harness.delegate.task.azure.appservice.AzureAppServicePreDeploymentData;
@@ -20,7 +20,7 @@ public class AzureWebAppRollbackParameters extends AzureAppServiceTaskParameters
       String resourceGroupName, String appName, AzureAppServicePreDeploymentData preDeploymentData, String commandName,
       Integer timeoutIntervalInMin) {
     super(appId, accountId, activityId, subscriptionId, resourceGroupName, appName, commandName, timeoutIntervalInMin,
-        ROLLBACK, WEB_APP);
+        SLOT_ROLLBACK, WEB_APP);
     this.preDeploymentData = preDeploymentData;
   }
 }

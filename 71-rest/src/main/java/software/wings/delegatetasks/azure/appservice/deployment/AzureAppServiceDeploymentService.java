@@ -33,6 +33,7 @@ import io.harness.azure.utility.AzureResourceUtility;
 import io.harness.delegate.beans.connector.azureconnector.AzureContainerRegistryConnectorDTO;
 import io.harness.delegate.beans.logstreaming.ILogStreamingTaskClient;
 import io.harness.delegate.task.azure.appservice.AzureAppServicePreDeploymentData;
+import io.harness.delegate.task.azure.appservice.AzureAppServiceTaskParameters;
 import io.harness.exception.InvalidRequestException;
 import io.harness.logging.LogCallback;
 
@@ -318,7 +319,7 @@ public class AzureAppServiceDeploymentService {
         azureWebClient.listDeploymentSlotAppSettings(azureWebClientContext, slotName);
     Map<String, AzureAppServiceApplicationSetting> appSettingsNeedBeDeletedInRollback =
         getAppSettingsNeedBeDeletedInRollback(userAddedAppSettings, existingAppSettingsOnSlot);
-    Map<String, AzureAppServiceApplicationSetting> appSettingsNeedToBeUpdatedInRollback =
+    Map<String, AzureAppServiceApplicationSetting> appSettingsNeedBeUpdatedInRollback =
         getAppSettingsNeedToBeUpdatedInRollback(userAddedAppSettings, existingAppSettingsOnSlot);
 
     // connection settings
@@ -329,18 +330,22 @@ public class AzureAppServiceDeploymentService {
     Map<String, AzureAppServiceConnectionString> connSettingsNeedBeUpdatedInRollback =
         getConnSettingsNeedBeUpdatedInRollback(userAddedConnSettings, existingConnSettingsOnSlot);
 
+    Map<String, AzureAppServiceDockerSetting> dockerSettingsNeedBeUpdatedInRollback =
+        azureWebClient.listDeploymentSlotDockerSettings(azureWebClientContext, slotName);
     String dockerImageNameAndTag = azureWebClient.getDockerImageNameAndTag(azureWebClientContext).orElse(EMPTY);
     double slotTrafficWeight = azureWebClient.getDeploymentSlotTrafficWeight(azureWebClientContext, slotName);
 
     return AzureAppServicePreDeploymentData.builder()
         .appSettingsToRemove(appSettingsNeedBeDeletedInRollback)
-        .appSettingsToAdd(appSettingsNeedToBeUpdatedInRollback)
+        .appSettingsToAdd(appSettingsNeedBeUpdatedInRollback)
         .connSettingsToRemove(connSettingsNeedBeDeletedInRollback)
         .connSettingsToAdd(connSettingsNeedBeUpdatedInRollback)
+        .dockerSettingsToAdd(dockerSettingsNeedBeUpdatedInRollback)
         .slotName(slotName)
         .appName(azureWebClientContext.getAppName())
         .imageNameAndTag(dockerImageNameAndTag)
         .trafficWeight(slotTrafficWeight)
+        .failedStep(AzureAppServiceTaskParameters.AzureAppServiceTaskType.SLOT_SWAP)
         .build();
   }
 
