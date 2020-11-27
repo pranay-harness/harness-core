@@ -25,6 +25,8 @@ import io.harness.cvng.analysis.services.impl.LogClusterServiceImpl;
 import io.harness.cvng.analysis.services.impl.TimeSeriesAnalysisServiceImpl;
 import io.harness.cvng.analysis.services.impl.TrendAnalysisServiceImpl;
 import io.harness.cvng.beans.DataSourceType;
+import io.harness.cvng.cd10.services.api.CD10MappingService;
+import io.harness.cvng.cd10.services.impl.CD10MappingServiceImpl;
 import io.harness.cvng.client.NextGenService;
 import io.harness.cvng.client.NextGenServiceImpl;
 import io.harness.cvng.client.VerificationManagerService;
@@ -192,6 +194,7 @@ public class CVServiceModule extends AbstractModule {
       bind(OnboardingService.class).to(OnboardingServiceImpl.class);
       bind(CVSetupService.class).to(CVSetupServiceImpl.class);
       bindTheMonitoringSourceImportStatusCreators();
+      bind(CD10MappingService.class).to(CD10MappingServiceImpl.class);
     } catch (IOException e) {
       throw new IllegalStateException("Could not load versionInfo.yaml", e);
     }
