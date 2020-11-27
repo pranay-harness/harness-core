@@ -36,6 +36,7 @@ import io.harness.config.WorkersConfiguration;
 import io.harness.configuration.DeployMode;
 import io.harness.cvng.client.CVNGClientModule;
 import io.harness.cvng.core.services.api.VerificationServiceSecretManager;
+import io.harness.cvng.state.CVNGVerificationTaskHandler;
 import io.harness.dataretention.AccountDataRetentionEntity;
 import io.harness.delay.DelayEventListener;
 import io.harness.delegate.beans.DelegateAsyncTaskResponse;
@@ -540,6 +541,7 @@ public class WingsApplication extends Application<MainConfiguration> {
     if (configuration.isEnableIterators()) {
       registerIterators(injector);
     }
+    registerCVNGVerificationTaskIterator(injector);
 
     environment.lifecycle().addServerLifecycleListener(server -> {
       for (Connector connector : server.getConnectors()) {
@@ -597,6 +599,10 @@ public class WingsApplication extends Application<MainConfiguration> {
 
     log.info("Starting app done");
     log.info("Manager is running on JRE: {}", System.getProperty("java.version"));
+  }
+
+  private void registerCVNGVerificationTaskIterator(Injector injector) {
+    injector.getInstance(CVNGVerificationTaskHandler.class).registerIterator();
   }
 
   private void registerAtmosphereStreams(Environment environment, Injector injector) {

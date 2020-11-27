@@ -17,6 +17,20 @@ import java.lang.annotation.RetentionPolicy;
 @Retention(RetentionPolicy.RUNTIME)
 @Repeatable(CdUniqueIndexesWithCollation.class)
 @Deprecated
+/**
+ * create a static method named mongoIndexes instead.
+ * Ex:
+ * public static List<MongoIndex> mongoIndexes() {
+ *     return ImmutableList.<MongoIndex>builder()
+ *         .add(CompoundMongoIndex.builder()
+ *                  .name("iterator")
+ *                  .unique(false)
+ *                  .field(CVNGVerificationTaskKeys.status)
+ *                  .field(CVNGVerificationTaskKeys.cvngVerificationTaskIteration)
+ *                  .build())
+ *         .build();
+ *   }
+ */
 public @interface CdUniqueIndexWithCollation {
   String name();
   Field[] fields();

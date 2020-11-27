@@ -15,6 +15,7 @@ import io.harness.azure.impl.AzureComputeClientImpl;
 import io.harness.azure.impl.AzureMonitorClientImpl;
 import io.harness.azure.impl.AzureNetworkClientImpl;
 import io.harness.cache.HarnessCacheManager;
+import io.harness.cvng.client.CVNGServiceClient;
 import io.harness.exception.WingsException;
 import io.harness.git.GitClientV2;
 import io.harness.git.GitClientV2Impl;
@@ -166,6 +167,8 @@ public class WingsTestModule extends AbstractModule {
   @Override
   protected void configure() {
     DelegateFileManager mockDelegateFileManager = mock(DelegateFileManager.class);
+    CVNGServiceClient mockCVNGServiceClient = mock(CVNGServiceClient.class);
+    bind(CVNGServiceClient.class).toInstance(mockCVNGServiceClient);
     bind(DelegateFileManager.class).toInstance(mockDelegateFileManager);
     bind(AmazonS3BuildService.class).to(AmazonS3BuildServiceImpl.class);
     bind(AmazonS3Service.class).to(AmazonS3ServiceImpl.class);

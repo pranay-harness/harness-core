@@ -3,6 +3,7 @@ package io.harness.serializer.kryo;
 import io.harness.ccm.config.CCMConfig;
 import io.harness.ccm.license.CeLicenseInfo;
 import io.harness.ccm.license.CeLicenseType;
+import io.harness.cvng.state.CVNGVerificationTask;
 import io.harness.delegate.beans.executioncapability.KustomizeCapability;
 import io.harness.delegate.task.ListNotifyResponseData;
 import io.harness.perpetualtask.internal.AssignmentTaskResponse;
@@ -767,6 +768,7 @@ import software.wings.sm.states.APMVerificationState;
 import software.wings.sm.states.ApprovalState;
 import software.wings.sm.states.ApprovalState.ApprovalStateType;
 import software.wings.sm.states.BambooState;
+import software.wings.sm.states.CVNGState.CVNGStateResponseData;
 import software.wings.sm.states.CustomLogVerificationState;
 import software.wings.sm.states.EcsRunTaskDataBag;
 import software.wings.sm.states.EnvState.EnvExecutionResponseData;
@@ -1739,5 +1741,7 @@ public class ManagerKryoRegistrar implements KryoRegistrar {
     kryo.register(AzureAppServiceSlotShiftTrafficExecutionSummary.class, 8112);
     kryo.register(AzureAppServiceSlotSwapExecutionData.class, 8113);
     kryo.register(AzureAppServiceSlotSwapExecutionSummary.class, 8114);
+    kryo.register(CVNGStateResponseData.class, 8115);
+    kryo.register(CVNGVerificationTask.Status.class, 8117);
   }
 }

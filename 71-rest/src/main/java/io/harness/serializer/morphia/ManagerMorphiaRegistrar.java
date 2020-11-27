@@ -22,6 +22,7 @@ import io.harness.ccm.config.GcpBillingAccount;
 import io.harness.ccm.config.GcpOrganization;
 import io.harness.ccm.config.GcpServiceAccount;
 import io.harness.ccm.health.CeExceptionRecord;
+import io.harness.cvng.state.CVNGVerificationTask;
 import io.harness.dashboard.DashboardSettings;
 import io.harness.delegate.task.ListNotifyResponseData;
 import io.harness.event.reconciliation.deployment.DeploymentReconRecord;
@@ -1093,6 +1094,7 @@ public class ManagerMorphiaRegistrar implements MorphiaRegistrar {
     set.add(HelmChart.class);
     set.add(GCPMarketplaceCustomer.class);
     set.add(DeletedEntity.class);
+    set.add(CVNGVerificationTask.class);
   }
 
   @Override

@@ -26,6 +26,8 @@ import io.harness.cvng.beans.TimeSeriesThresholdComparisonType;
 import io.harness.cvng.beans.TimeSeriesThresholdCriteria;
 import io.harness.cvng.beans.TimeSeriesThresholdDTO;
 import io.harness.cvng.beans.TimeSeriesThresholdType;
+import io.harness.cvng.beans.activity.ActivityStatusDTO;
+import io.harness.cvng.beans.activity.ActivityVerificationStatus;
 import io.harness.cvng.beans.activity.KubernetesActivitySourceDTO;
 import io.harness.cvng.beans.activity.KubernetesActivitySourceDTO.KubernetesActivitySourceConfig;
 import io.harness.cvng.beans.appd.AppDynamicsApplication;
@@ -75,5 +77,7 @@ public class CvNextGenCommonsBeansKryoRegistrar implements KryoRegistrar {
     kryo.register(SplunkDataCollectionRequest.class, 9034);
     kryo.register(SplunkSavedSearchRequest.class, 9035);
     kryo.register(DataCollectionRequestType.class, 9036);
+    kryo.register(ActivityStatusDTO.class, 9037);
+    kryo.register(ActivityVerificationStatus.class, 9038);
   }
 }
