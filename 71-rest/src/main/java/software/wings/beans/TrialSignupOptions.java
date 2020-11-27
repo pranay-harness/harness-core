@@ -1,43 +1,62 @@
 package software.wings.beans;
 
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import lombok.AllArgsConstructor;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 @NoArgsConstructor
-@AllArgsConstructor
 public class TrialSignupOptions {
   @Getter @Setter private List<Products> productsSelected = new ArrayList<>();
 
   @Getter @Setter private Boolean assistedOption;
 
-  public void populateProducts(List<String> freemiumProducts) {
-    List<Products> products = new ArrayList<>();
-
-    if (freemiumProducts == null) {
-      products = Arrays.asList(Products.CD, Products.CE, Products.CI);
+  public TrialSignupOptions(List<Products> freemiumProducts, Boolean assistedOption) {
+    if (isEmpty(freemiumProducts)) {
+      this.productsSelected = getDefaultProducts();
     } else {
-      if (freemiumProducts.contains("CD - Continuous Delivery") || freemiumProducts.contains("CD")) {
-        products.add(Products.CD);
-      }
-      if (freemiumProducts.contains("CE - Continuous Efficiency") || freemiumProducts.contains("CE")) {
-        products.add(Products.CE);
-      }
-      if (freemiumProducts.contains("CI - Continuous Integration") || freemiumProducts.contains("CI")) {
-        products.add(Products.CI);
-      }
+      this.productsSelected = freemiumProducts;
     }
 
-    this.productsSelected = products;
+    if (assistedOption == null) {
+      this.assistedOption = true;
+    } else {
+      this.assistedOption = assistedOption;
+    }
   }
 
-  public void populateProducts() {
-    this.productsSelected = Arrays.asList(Products.CD, Products.CE, Products.CI);
+  private static List<Products> getDefaultProducts() {
+    return Arrays.asList(Products.CD, Products.CE, Products.CI);
   }
 
-  public enum Products { CD, CE, CI }
+  public static TrialSignupOptions getDefaultTrialSignupOptions() {
+    TrialSignupOptions trialSignupOptions = new TrialSignupOptions();
+    trialSignupOptions.setAssistedOption(true);
+    trialSignupOptions.setProductsSelected(getDefaultProducts());
+    return trialSignupOptions;
+  }
+
+  public enum Products {
+    CD("CD - Continuous Delivery"),
+    CE("CE - Continuous Efficiency"),
+    CI("CI - Continuous Integration");
+
+    @Getter private final String fullName;
+
+    Products(String fullName) {
+      this.fullName = fullName;
+    }
+
+    public static List<Products> getProductsFromFullNames(List<String> fullNames) {
+      return Stream.of(Products.values())
+          .filter(product -> fullNames.contains(product.getFullName()))
+          .collect(Collectors.toList());
+    }
+  }
 }
