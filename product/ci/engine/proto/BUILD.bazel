@@ -1,7 +1,7 @@
 load("@rules_proto//proto:defs.bzl", "proto_library")
 load("@io_bazel_rules_go//go:def.bzl", "go_library")
 load("@io_bazel_rules_go//proto:def.bzl", "go_proto_library")
-load("@rules_proto_grpc//java:defs.bzl", "java_grpc_library")
+load("//:tools/bazel/protos/harness_grpc_library.bzl", "harness_grpc_library")
 
 proto_library(
     name = "cienginepb_proto",
@@ -28,7 +28,7 @@ go_library(
     visibility = ["//visibility:public"],
 )
 
-java_grpc_library(
+harness_grpc_library(
     name = "ciengine_java_proto",
     visibility = ["//visibility:public"],
     deps = [

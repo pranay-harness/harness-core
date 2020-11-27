@@ -14,6 +14,7 @@ java_library(
         "//:lombok",
         "//26-pms-contracts/src/main/proto:26_pms_contracts_java_proto",
         "//26-pms-contracts/src/main/proto:26_pms_contracts_proto",
+        "@maven//:com_google_guava_guava",
     ],
 )
 

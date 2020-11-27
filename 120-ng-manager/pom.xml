@@ -67,11 +67,6 @@
         </dependency>
         <dependency>
             <groupId>software.wings</groupId>
-            <artifactId>22-secret-manager-client</artifactId>
-            <version>${project.parent.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>software.wings</groupId>
             <artifactId>40-ng-triggers</artifactId>
             <version>${project.parent.version}</version>
         </dependency>
@@ -88,6 +83,11 @@
         <dependency>
             <groupId>software.wings</groupId>
             <artifactId>900-yaml-sdk</artifactId>
+            <version>${project.parent.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>software.wings</groupId>
+            <artifactId>940-secret-manager-client</artifactId>
             <version>${project.parent.version}</version>
         </dependency>
         <dependency>

@@ -27,11 +27,18 @@ def harness_grpc_library(**kwargs):
     )
 
 GRPC_DEPS = [
-    "@com_google_guava_guava//jar",
-    "@com_google_protobuf//:protobuf_java",
-    "@com_google_protobuf//:protobuf_java_util",
-    "@javax_annotation_javax_annotation_api//jar",
-    "@io_grpc_grpc_java//core",
-    "@io_grpc_grpc_java//protobuf",
-    "@io_grpc_grpc_java//stub",
+    "@maven//:com_google_guava_guava",
+    "@maven//:com_google_protobuf_protobuf_java",
+    "@maven//:com_google_protobuf_protobuf_java_util",
+    "@maven//:javax_annotation_javax_annotation_api",
+    "@maven//:io_grpc_grpc_core",
+    "@maven//:io_grpc_grpc_protobuf",
+    "@maven//:io_grpc_grpc_stub",
+    "@maven//:io_grpc_grpc_alts",
+    "@maven//:io_grpc_grpc_api",
+    "@maven//:io_grpc_grpc_auth",
+    "@maven//:io_grpc_grpc_context",
+    "@maven//:io_grpc_grpc_grpclb",
+    "@maven//:io_grpc_grpc_netty_shaded",
+    "@maven//:io_grpc_grpc_protobuf_lite",
 ]

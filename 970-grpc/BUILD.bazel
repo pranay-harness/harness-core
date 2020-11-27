@@ -3,7 +3,7 @@ load("//tools/checkstyle:rules.bzl", "checkstyle")
 load("//:macros.bzl", "sources")
 load("//:macros.bzl", "sonarqube_test")
 load("//tools/bazel/pmd:defs.bzl", "pmd")
-load("@rules_proto_grpc//java:defs.bzl", "java_grpc_library")
+load("//:tools/bazel/protos/harness_grpc_library.bzl", "harness_grpc_library")
 
 sources()
 
@@ -30,7 +30,7 @@ java_library(
     ],
 )
 
-java_grpc_library(
+harness_grpc_library(
     name = "970_grpc_java_proto",
     visibility = ["//visibility:private"],
     deps = [
@@ -45,16 +45,6 @@ java_library(
         ":970_grpc_java_proto",
     ],
     visibility = ["//visibility:public"],
-    exports = [
-        "@maven//:com_google_guava_guava",
-        "@maven//:com_google_protobuf_protobuf_java",
-        "@maven//:io_grpc_grpc_context",
-        "@maven//:io_grpc_grpc_core",
-        "@maven//:io_grpc_grpc_netty_shaded",
-        "@maven//:io_grpc_grpc_protobuf",
-        "@maven//:io_grpc_grpc_services",
-        "@maven//:io_grpc_grpc_stub",
-    ],
     deps = [
         ":970_grpc_java_proto",
         ":maven_deps",

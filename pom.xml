@@ -11,13 +11,13 @@
         <!--<module>960-persistence</module>-->
         <!--<module>920-delegate-service-beans</module>-->
         <!--<module>950-ng-core</module>-->
-        <!--<module>22-ng-project-n-orgs</module>-->
-        <!--<module>22-rbac-core</module>-->
-        <!--<module>22-secret-manager-client</module>-->
-        <!--<module>22-timeout-engine</module>-->
-        <!--<module>22-wait-engine</module>-->
+        <!--<module>950-ng-project-n-orgs</module>-->
+        <!--<module>970-rbac-core</module>-->
+        <!--<module>940-secret-manager-client</module>-->
+        <!--<module>950-timeout-engine</module>-->
+        <!--<module>950-wait-engine</module>-->
         <!--<module>23-ng-core-clients</module>-->
-        <!--<module>23-delegate-service-driver</module>-->
+        <!--<module>910-delegate-service-driver</module>-->
         <!--<module>23-sm-core</module>-->
         <!--<module>24-common-entities</module>-->
         <!--<module>27-orchestration-persistence</module>-->
@@ -95,8 +95,8 @@
         <generated.repo.code>${basedir}/src/generated/java</generated.repo.code>
         <gitBranch>default</gitBranch>
         <gitCommitId>default</gitCommitId>
-        <grpc-testing.version>1.30.2</grpc-testing.version>
-        <grpc.version>1.30.2</grpc.version>
+        <grpc-testing.version>1.33.1</grpc-testing.version>
+        <grpc.version>1.33.1</grpc.version>
         <guice.version>4.2.3</guice.version>
         <ibatis.core.version>3.0</ibatis.core.version>
         <jacoco.filename>jacoco</jacoco.filename>

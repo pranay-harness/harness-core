@@ -11,8 +11,8 @@ java_library(
     name = "maven_deps",
     visibility = ["//visibility:public"],
     exports = [
-        "//22-timeout-engine:module",
         "//26-pms-contracts/src/main/proto:26_pms_contracts_java_proto",
+        "//950-timeout-engine:module",
         "//960-persistence:module",
         "//980-commons:module",
     ],

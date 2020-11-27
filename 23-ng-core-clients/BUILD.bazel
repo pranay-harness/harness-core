@@ -13,7 +13,7 @@ java_library(
     exports = [
         "//960-ng-core-beans:module",
         "//960-persistence:module",
-        "//22-secret-manager-client:module",
+        "//940-secret-manager-client:module",
         #        "@maven//:net_jodah_failsafe",
         "@maven//:com_fasterxml_jackson_core_jackson_databind",
         "@maven//:com_fasterxml_jackson_datatype_jackson_datatype_guava",

@@ -45,7 +45,7 @@
         </dependency>
         <dependency>
             <groupId>software.wings</groupId>
-            <artifactId>23-delegate-service-driver</artifactId>
+            <artifactId>910-delegate-service-driver</artifactId>
             <version>0.0.1-SNAPSHOT</version>
             <scope>compile</scope>
         </dependency>
