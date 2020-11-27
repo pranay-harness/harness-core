@@ -2,8 +2,8 @@ package io.harness.serializer.morphia;
 
 import io.harness.morphia.MorphiaRegistrar;
 import io.harness.morphia.MorphiaRegistrarHelperPut;
-import io.harness.pms.beans.entities.PipelineEntity;
-import io.harness.pms.beans.entities.PmsSdkInstance;
+import io.harness.pms.pipeline.PipelineEntity;
+import io.harness.pms.sdk.PmsSdkInstance;
 
 import java.util.Set;
 
