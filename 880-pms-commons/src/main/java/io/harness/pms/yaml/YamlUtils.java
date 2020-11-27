@@ -36,13 +36,13 @@ public class YamlUtils {
 
   public YamlField readTree(String content) throws IOException {
     JsonNode rootJsonNode = mapper.readTree(content);
-    YamlNode rootYamlNode = new YamlNode(rootJsonNode);
+    YamlNode rootYamlNode = new YamlNode(rootJsonNode, null);
     return new YamlField(rootYamlNode);
   }
 
   public YamlField toByteString(String content) throws IOException {
     JsonNode rootJsonNode = mapper.readTree(content);
-    YamlNode rootYamlNode = new YamlNode(rootJsonNode);
+    YamlNode rootYamlNode = new YamlNode(rootJsonNode, null);
     return new YamlField(rootYamlNode);
   }
 
