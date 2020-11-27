@@ -87,6 +87,7 @@ import software.wings.beans.LicenseInfo;
 import software.wings.beans.MarketPlace;
 import software.wings.beans.Role;
 import software.wings.beans.TrialSignupOptions;
+import software.wings.beans.TrialSignupOptions.Products;
 import software.wings.beans.User;
 import software.wings.beans.User.Builder;
 import software.wings.beans.User.UserKeys;
@@ -458,8 +459,8 @@ public class UserServiceImpl implements UserService {
 
   @Override
   public Account addAccount(Account account, User user, boolean addUser) {
+    LicenseInfo licenseInfo = account.getLicenseInfo();
     if (!configuration.isTrialRegistrationAllowed()) {
-      LicenseInfo licenseInfo = account.getLicenseInfo();
       if (licenseInfo != null && (AccountType.TRIAL.equals(licenseInfo.getAccountType()))) {
         throw new InvalidRequestException("Cannot create a trial account in this cluster.");
       }
@@ -470,6 +471,11 @@ public class UserServiceImpl implements UserService {
 
     if (isNotBlank(account.getCompanyName())) {
       account.setCompanyName(account.getCompanyName().trim());
+    }
+
+    if (licenseInfo != null && AccountType.TRIAL.equals(licenseInfo.getAccountType())
+        && account.getTrialSignupOptions() == null) {
+      account.setTrialSignupOptions(TrialSignupOptions.getDefaultTrialSignupOptions());
     }
 
     account = setupAccount(account);
@@ -1443,9 +1449,9 @@ public class UserServiceImpl implements UserService {
                           .withLicenseInfo(licenseInfo)
                           .build();
 
-    TrialSignupOptions trialSignupOptions = new TrialSignupOptions();
-    trialSignupOptions.setAssistedOption(existingInvite.getFreemiumAssistedOption());
-    trialSignupOptions.populateProducts(existingInvite.getFreemiumProducts());
+    TrialSignupOptions trialSignupOptions =
+        new TrialSignupOptions(Products.getProductsFromFullNames(existingInvite.getFreemiumProducts()),
+            existingInvite.getFreemiumAssistedOption());
     account.setTrialSignupOptions(trialSignupOptions);
 
     // Create an trial account which license expires in 15 days.
@@ -1504,13 +1510,8 @@ public class UserServiceImpl implements UserService {
 
     throwExceptionIfUserIsAlreadyRegistered(user.getEmail());
 
-    TrialSignupOptions trialSignupOptions = new TrialSignupOptions();
-    trialSignupOptions.setAssistedOption(userInfo.getFreemiumAssistedOption());
-    if (userInfo.getFreemiumProducts() != null) {
-      trialSignupOptions.setProductsSelected(userInfo.getFreemiumProducts());
-    } else {
-      trialSignupOptions.populateProducts();
-    }
+    TrialSignupOptions trialSignupOptions =
+        new TrialSignupOptions(userInfo.getFreemiumProducts(), userInfo.getFreemiumAssistedOption());
 
     // Create a trial account whose license expires in 15 days.
     Account account = createAccountWithTrialLicense(user, trialSignupOptions);
