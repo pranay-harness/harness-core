@@ -2,7 +2,6 @@ package software.wings.integration;
 
 import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 import static io.harness.rule.OwnerRule.RAGHU;
-import static io.harness.rule.OwnerRule.RAMA;
 import static io.harness.rule.OwnerRule.UTKARSH;
 
 import static software.wings.beans.User.Builder.anUser;
@@ -27,9 +26,6 @@ import software.wings.app.MainConfiguration;
 import software.wings.app.PortalConfig;
 import software.wings.beans.Account;
 import software.wings.beans.Account.AccountKeys;
-import software.wings.beans.AccountStatus;
-import software.wings.beans.AccountType;
-import software.wings.beans.LicenseInfo;
 import software.wings.beans.Role;
 import software.wings.beans.RoleType;
 import software.wings.beans.User;
@@ -37,7 +33,6 @@ import software.wings.beans.User.UserKeys;
 import software.wings.beans.UserInvite;
 import software.wings.beans.UserInvite.UserInviteBuilder;
 import software.wings.beans.UserInvite.UserInviteKeys;
-import software.wings.beans.security.HarnessUserGroup;
 import software.wings.resources.UserResource.ResendInvitationEmailRequest;
 import software.wings.security.AuthenticationFilter;
 import software.wings.security.JWT_CATEGORY;
@@ -45,17 +40,14 @@ import software.wings.security.SecretManager;
 import software.wings.security.authentication.AuthenticationMechanism;
 import software.wings.security.authentication.LoginTypeResponse;
 import software.wings.service.impl.UserServiceImpl;
-import software.wings.service.intfc.instance.licensing.InstanceLimitProvider;
 
 import com.fasterxml.jackson.core.type.TypeReference;
-import com.google.common.collect.Sets;
 import com.google.common.io.ByteStreams;
 import com.google.inject.Inject;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.HashMap;
 import java.util.List;
-import java.util.UUID;
 import javax.ws.rs.BadRequestException;
 import javax.ws.rs.ClientErrorException;
 import javax.ws.rs.NotAuthorizedException;
@@ -613,40 +605,6 @@ public class UserServiceIntegrationTest extends IntegrationTestBase {
       assertThat(restResponse.getResponseMessages()).hasSize(1);
       assertThat(restResponse.getResponseMessages().get(0).getCode()).isEqualTo(ErrorCode.USER_ALREADY_REGISTERED);
     }
-  }
-
-  @Test
-  @Owner(developers = RAMA)
-  @Category(DeprecatedIntegrationTests.class)
-  @Ignore("skippingg the integration test")
-  public void testAccountCreationWithKms() {
-    loginAdminUser();
-    User user = wingsPersistence.createQuery(User.class).filter(UserKeys.email, "admin@harness.io").get();
-
-    HarnessUserGroup harnessUserGroup = HarnessUserGroup.builder().memberIds(Sets.newHashSet(user.getUuid())).build();
-    wingsPersistence.save(harnessUserGroup);
-
-    Account account = Account.Builder.anAccount()
-                          .withAccountName(UUID.randomUUID().toString())
-                          .withCompanyName(UUID.randomUUID().toString())
-                          .withLicenseInfo(LicenseInfo.builder()
-                                               .accountType(AccountType.PAID)
-                                               .accountStatus(AccountStatus.ACTIVE)
-                                               .licenseUnits(InstanceLimitProvider.defaults(AccountType.PAID))
-                                               .build())
-
-                          .build();
-
-    assertThat(accountService.exists(account.getAccountName())).isFalse();
-    assertThat(accountService.getByName(account.getCompanyName())).isNull();
-
-    WebTarget target = client.target(API_BASE + "/users/account");
-    RestResponse<Account> response = getRequestBuilderWithAuthHeader(target).post(
-        entity(account, APPLICATION_JSON), new GenericType<RestResponse<Account>>() {});
-
-    assertThat(response.getResource()).isNotNull();
-    assertThat(accountService.exists(account.getAccountName())).isTrue();
-    assertThat(accountService.getByName(account.getCompanyName())).isNotNull();
   }
 
   @Test

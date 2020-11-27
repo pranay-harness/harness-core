@@ -260,27 +260,6 @@ public class UserResource {
     }
   }
 
-  @POST
-  @Path("account")
-  @Timed
-  @ExceptionMetered
-  public RestResponse<Account> addAccount(
-      Account account, @QueryParam("addUser") @DefaultValue("true") boolean addUser) {
-    User existingUser = UserThreadLocal.get();
-    if (existingUser == null) {
-      throw new InvalidRequestException("Invalid User");
-    }
-
-    if (harnessUserGroupService.isHarnessSupportUser(existingUser.getUuid())) {
-      return new RestResponse<>(userService.addAccount(account, existingUser, addUser));
-    } else {
-      return Builder.aRestResponse()
-          .withResponseMessages(
-              Lists.newArrayList(ResponseMessage.builder().message("User not allowed to add account").build()))
-          .build();
-    }
-  }
-
   /**
    * Update User group
    *
