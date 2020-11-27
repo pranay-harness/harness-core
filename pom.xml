@@ -21,14 +21,14 @@
         <!--<module>890-sm-core</module>-->
         <!--<module>950-common-entities</module>-->
         <!--<module>890-orchestration-persistence</module>-->
-        <!--<module>29-orchestration-beans</module>-->
-        <!--<module>31-orchestration</module>-->
-        <!--<module>32-orchestration-steps</module>-->
-        <!--<module>33-orchestration-visualization</module>-->
-        <!--<module>34-walktree-visitor</module>-->
-        <!--<module>35-yaml-beans</module>-->
-        <!--<module>38-execution-plan</module>-->
-        <!--<module>39-ng-pipeline-commons</module>-->
+        <!--<module>880-orchestration-beans</module>-->
+        <!--<module>870-orchestration</module>-->
+        <!--<module>860-orchestration-steps</module>-->
+        <!--<module>860-orchestration-visualization</module>-->
+        <!--<module>950-walktree-visitor</module>-->
+        <!--<module>860-yaml-beans</module>-->
+        <!--<module>850-execution-plan</module>-->
+        <!--<module>850-ng-pipeline-commons</module>-->
         <!--<module>40-pipeline-service</module>-->
         <!--<module>50-delegate-task-grpc-service</module>-->
         <!--<module>57-command-library-common</module>-->

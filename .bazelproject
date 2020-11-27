@@ -19,17 +19,17 @@ directories:
   890-orchestration-persistence
   880-pms-commons
   870-pms-sdk-beans
-  29-orchestration-beans
-  31-orchestration
-  32-orchestration-steps
-  33-orchestration-visualization
-  34-walktree-visitor
-  35-yaml-beans
-  38-execution-plan
-  39-ng-pipeline-commons
-  40-ng-triggers
-  41-pms-sdk
-  47-pipeline-service
+  880-orchestration-beans
+  870-orchestration
+  860-orchestration-steps
+  860-orchestration-visualization
+  950-walktree-visitor
+  860-yaml-beans
+  850-execution-plan
+  850-ng-pipeline-commons
+  840-ng-triggers
+  860-pms-sdk
+  800-pipeline-service
   50-delegate-task-grpc-service
   57-command-library-common
   64-events-framework

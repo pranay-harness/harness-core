@@ -6,7 +6,10 @@
         <artifactId>portal</artifactId>
         <version>0.0.1-SNAPSHOT</version>
     </parent>
-    <artifactId>330-ci-beans</artifactId>
+    <artifactId>870-orchestration</artifactId>
+    <properties>
+        <graphviz.version>0.16.3</graphviz.version>
+    </properties>
     <dependencies>
         <dependency>
             <groupId>com.google.code.findbugs</groupId>
@@ -29,12 +32,26 @@
             <artifactId>de.flapdoodle.embed.mongo</artifactId>
         </dependency>
         <dependency>
+            <groupId>guru.nidi</groupId>
+            <artifactId>graphviz-java</artifactId>
+            <version>${graphviz.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>guru.nidi</groupId>
+            <artifactId>graphviz-rough</artifactId>
+            <version>${graphviz.version}</version>
+        </dependency>
+        <dependency>
             <groupId>junit</groupId>
             <artifactId>junit</artifactId>
         </dependency>
         <dependency>
             <groupId>org.apache.commons</groupId>
             <artifactId>commons-lang3</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.awaitility</groupId>
+            <artifactId>awaitility</artifactId>
         </dependency>
         <dependency>
             <groupId>org.eclipse.jgit</groupId>
@@ -57,37 +74,18 @@
             <artifactId>slf4j-api</artifactId>
         </dependency>
         <dependency>
-            <groupId>ru.vyarus</groupId>
-            <artifactId>guice-validator</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>software.wings</groupId>
-            <artifactId>850-execution-plan</artifactId>
-            <version>${project.parent.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>software.wings</groupId>
-            <artifactId>850-ng-pipeline-commons</artifactId>
-            <version>${project.parent.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>software.wings</groupId>
-            <artifactId>920-delegate-service-beans-proto</artifactId>
-            <version>${project.parent.version}</version>
-        </dependency>
-        <dependency>
             <groupId>software.wings</groupId>
             <artifactId>930-delegate-tasks</artifactId>
             <version>${project.parent.version}</version>
         </dependency>
         <dependency>
             <groupId>software.wings</groupId>
-            <artifactId>960-persistence</artifactId>
+            <artifactId>950-wait-engine</artifactId>
             <version>${project.parent.version}</version>
         </dependency>
         <dependency>
             <groupId>software.wings</groupId>
-            <artifactId>ciengine-proto</artifactId>
+            <artifactId>880-orchestration-beans</artifactId>
             <version>${project.parent.version}</version>
         </dependency>
         <dependency>

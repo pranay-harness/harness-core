@@ -705,21 +705,6 @@
         </dependency>
         <dependency>
             <groupId>software.wings</groupId>
-            <artifactId>31-orchestration</artifactId>
-            <version>${project.parent.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>software.wings</groupId>
-            <artifactId>32-orchestration-steps</artifactId>
-            <version>${project.parent.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>software.wings</groupId>
-            <artifactId>33-orchestration-visualization</artifactId>
-            <version>${project.parent.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>software.wings</groupId>
             <artifactId>420-delegate-agent</artifactId>
             <version>${project.parent.version}</version>
         </dependency>
@@ -751,6 +736,21 @@
         <dependency>
             <groupId>software.wings</groupId>
             <artifactId>64-events-framework</artifactId>
+            <version>${project.parent.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>software.wings</groupId>
+            <artifactId>860-orchestration-steps</artifactId>
+            <version>${project.parent.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>software.wings</groupId>
+            <artifactId>860-orchestration-visualization</artifactId>
+            <version>${project.parent.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>software.wings</groupId>
+            <artifactId>870-orchestration</artifactId>
             <version>${project.parent.version}</version>
         </dependency>
         <dependency>

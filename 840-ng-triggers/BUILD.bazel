@@ -11,24 +11,13 @@ java_library(
     name = "maven_deps",
     visibility = ["//visibility:public"],
     exports = [
-        "//870-orchestration:module",
-        "//920-delegate-service-beans:module",
-        "//920-delegate-service-beans/src/main/proto:920_delegate_service_beans_java_proto",
-        "//970-grpc:module",
-        "@maven//:com_esotericsoftware_kryo",
-        "@maven//:com_fasterxml_jackson_core_jackson_annotations",
-        "@maven//:com_github_reinert_jjschema",
-        "@maven//:com_google_code_findbugs_annotations",
-        "@maven//:com_google_guava_guava",
-        "@maven//:com_google_inject_guice",
-        "@maven//:com_google_protobuf_protobuf_java",
-        "@maven//:commons_codec_commons_codec",
-        "@maven//:javax_validation_validation_api",
+        "//850-ng-pipeline-commons:module",
+        "//860-yaml-beans:module",
+        "//970-ng-commons:module",
+        "//product/ci/scm/proto:ciscm_java_proto",
+        "@maven//:net_jodah_failsafe",
         "@maven//:org_apache_commons_commons_lang3",
-        "@maven//:org_hibernate_hibernate_validator",
-        "@maven//:org_mongodb_mongo_java_driver",
-        "@maven//:org_mongodb_morphia_morphia",
-        "@maven//:org_slf4j_slf4j_api",
+        "@maven//:org_springframework_data_spring_data_commons",
     ],
 )
 
@@ -45,23 +34,18 @@ java_library(
 java_library(
     name = "test_deps",
     exports = [
-        "//950-wait-engine:module",
-        "//960-persistence:supporter-test",
         "//990-commons-test:module",
-        "@maven//:ch_qos_logback_logback_classic",
-        "@maven//:ch_qos_logback_logback_core",
-        "@maven//:de_bwaldvogel_mongo_java_server_core",
-        "@maven//:de_bwaldvogel_mongo_java_server_memory_backend",
-        "@maven//:de_flapdoodle_embed_de_flapdoodle_embed_process",
         "@maven//:junit_junit",
         "@maven//:org_assertj_assertj_core",
         "@maven//:org_mockito_mockito_core",
+        "@maven//:org_reflections_reflections",
     ],
 )
 
 java_library(
     name = "tests",
     srcs = glob(["src/test/**/*.java"]),
+    resources = ["//840-ng-triggers/src/test/resources:resource"],
     visibility = ["//visibility:public"],
     deps = [
         "maven_deps",
