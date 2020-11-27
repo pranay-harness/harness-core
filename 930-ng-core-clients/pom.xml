@@ -6,7 +6,7 @@
         <artifactId>portal</artifactId>
         <version>0.0.1-SNAPSHOT</version>
     </parent>
-    <artifactId>23-ng-core-clients</artifactId>
+    <artifactId>930-ng-core-clients</artifactId>
     <dependencies>
         <dependency>
             <groupId>io.github.resilience4j</groupId>

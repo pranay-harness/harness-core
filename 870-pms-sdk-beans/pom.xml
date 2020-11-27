@@ -6,35 +6,36 @@
         <artifactId>portal</artifactId>
         <version>0.0.1-SNAPSHOT</version>
     </parent>
-    <artifactId>430-cv-nextgen-commons</artifactId>
+    <artifactId>870-pms-sdk-beans</artifactId>
     <dependencies>
+        <dependency>
+            <groupId>de.bwaldvogel</groupId>
+            <artifactId>mongo-java-server-core</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>de.bwaldvogel</groupId>
+            <artifactId>mongo-java-server-memory-backend</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>de.flapdoodle.embed</groupId>
+            <artifactId>de.flapdoodle.embed.mongo</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.google.inject</groupId>
+            <artifactId>guice</artifactId>
+        </dependency>
         <dependency>
             <groupId>org.projectlombok</groupId>
             <artifactId>lombok</artifactId>
         </dependency>
         <dependency>
             <groupId>software.wings</groupId>
-            <artifactId>950-common-entities</artifactId>
+            <artifactId>890-pms-contracts-proto</artifactId>
             <version>${project.parent.version}</version>
         </dependency>
         <dependency>
-            <groupId>software.wings</groupId>
-            <artifactId>440-connector-nextgen</artifactId>
-            <version>${project.parent.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>de.bwaldvogel</groupId>
-            <artifactId>mongo-java-server</artifactId>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>de.bwaldvogel</groupId>
-            <artifactId>mongo-java-server-core</artifactId>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>de.bwaldvogel</groupId>
-            <artifactId>mongo-java-server-memory-backend</artifactId>
+            <groupId>junit</groupId>
+            <artifactId>junit</artifactId>
             <scope>test</scope>
         </dependency>
         <dependency>
@@ -43,10 +44,8 @@
             <scope>test</scope>
         </dependency>
         <dependency>
-            <groupId>software.wings</groupId>
-            <artifactId>960-persistence</artifactId>
-            <version>${project.parent.version}</version>
-            <type>test-jar</type>
+            <groupId>org.mockito</groupId>
+            <artifactId>mockito-core</artifactId>
             <scope>test</scope>
         </dependency>
         <dependency>

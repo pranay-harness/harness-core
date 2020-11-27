@@ -11,8 +11,8 @@ java_library(
     name = "maven_deps",
     visibility = ["//visibility:public"],
     exports = [
-        "//24-common-entities:module",
         "//440-connector-nextgen:module",
+        "//950-common-entities:module",
         "@maven//:com_auth0_java_jwt",
         "@maven//:com_esotericsoftware_kryo",
         "@maven//:com_fasterxml_jackson_core_jackson_annotations",

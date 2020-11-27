@@ -366,11 +366,11 @@ java_binary(
     data = ["//:resource"],
     main_class = "io.harness.notification.NotificationApplication",
     resources = [
-        "//23-notification-service/src/main/resources:resource",
+        "//930-notification-service/src/main/resources:resource",
     ],
     visibility = ["//visibility:public"],
     runtime_deps = [
-        "//23-notification-service/src/main/resources",
+        "//930-notification-service/src/main/resources",
         "@maven//:javax_ws_rs_javax_ws_rs_api",
     ],
     deps = [

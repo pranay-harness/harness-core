@@ -11,9 +11,9 @@ java_library(
     name = "maven_deps",
     visibility = ["//visibility:public"],
     exports = [
-        "//23-ng-core-clients:module",
         "//33-orchestration-visualization:module",
         "//35-yaml-beans:module",
+        "//930-ng-core-clients:module",
         "//950-delegate-tasks-beans:module",
         "//950-ng-project-n-orgs:module",
         "@maven//:com_esotericsoftware_kryo",

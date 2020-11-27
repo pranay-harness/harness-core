@@ -47,16 +47,6 @@
         </dependency>
         <dependency>
             <groupId>software.wings</groupId>
-            <artifactId>23-ng-core-clients</artifactId>
-            <version>${project.parent.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>software.wings</groupId>
-            <artifactId>23-sm-core</artifactId>
-            <version>${project.parent.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>software.wings</groupId>
             <artifactId>29-orchestration-beans</artifactId>
             <version>${project.parent.version}</version>
         </dependency>
@@ -87,7 +77,17 @@
         </dependency>
         <dependency>
             <groupId>software.wings</groupId>
+            <artifactId>890-sm-core</artifactId>
+            <version>${project.parent.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>software.wings</groupId>
             <artifactId>910-delegate-service-driver</artifactId>
+            <version>${project.parent.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>software.wings</groupId>
+            <artifactId>930-ng-core-clients</artifactId>
             <version>${project.parent.version}</version>
         </dependency>
         <dependency>

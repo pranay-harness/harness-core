@@ -6,23 +6,33 @@
         <artifactId>portal</artifactId>
         <version>0.0.1-SNAPSHOT</version>
     </parent>
-    <artifactId>27-pms-commons</artifactId>
+    <artifactId>890-sm-core</artifactId>
     <dependencies>
         <dependency>
-            <groupId>de.bwaldvogel</groupId>
-            <artifactId>mongo-java-server-core</artifactId>
+            <groupId>com.amazonaws</groupId>
+            <artifactId>aws-java-sdk-kms</artifactId>
         </dependency>
         <dependency>
-            <groupId>de.bwaldvogel</groupId>
-            <artifactId>mongo-java-server-memory-backend</artifactId>
+            <groupId>com.amazonaws</groupId>
+            <artifactId>aws-java-sdk-secretsmanager</artifactId>
         </dependency>
         <dependency>
-            <groupId>de.flapdoodle.embed</groupId>
-            <artifactId>de.flapdoodle.embed.mongo</artifactId>
+            <groupId>com.google.cloud</groupId>
+            <artifactId>google-cloud-kms</artifactId>
         </dependency>
         <dependency>
-            <groupId>com.google.inject</groupId>
-            <artifactId>guice</artifactId>
+            <groupId>com.microsoft.azure</groupId>
+            <artifactId>adal4j</artifactId>
+            <version>1.6.4</version>
+        </dependency>
+        <dependency>
+            <groupId>com.microsoft.azure</groupId>
+            <artifactId>azure-keyvault</artifactId>
+            <version>1.2.4</version>
+        </dependency>
+        <dependency>
+            <groupId>org.mongodb.morphia</groupId>
+            <artifactId>morphia</artifactId>
         </dependency>
         <dependency>
             <groupId>org.projectlombok</groupId>
@@ -30,27 +40,27 @@
         </dependency>
         <dependency>
             <groupId>software.wings</groupId>
-            <artifactId>980-commons</artifactId>
+            <artifactId>930-delegate-tasks</artifactId>
             <version>${project.parent.version}</version>
         </dependency>
         <dependency>
             <groupId>software.wings</groupId>
-            <artifactId>960-persistence</artifactId>
+            <artifactId>970-rbac-core</artifactId>
             <version>${project.parent.version}</version>
         </dependency>
         <dependency>
             <groupId>software.wings</groupId>
-            <artifactId>950-timeout-engine</artifactId>
+            <artifactId>940-secret-manager-client</artifactId>
             <version>${project.parent.version}</version>
         </dependency>
         <dependency>
             <groupId>software.wings</groupId>
-            <artifactId>26-pms-contracts-proto</artifactId>
+            <artifactId>990-commons-test</artifactId>
             <version>${project.parent.version}</version>
         </dependency>
         <dependency>
-            <groupId>junit</groupId>
-            <artifactId>junit</artifactId>
+            <groupId>de.bwaldvogel</groupId>
+            <artifactId>mongo-java-server</artifactId>
             <scope>test</scope>
         </dependency>
         <dependency>
@@ -59,14 +69,13 @@
             <scope>test</scope>
         </dependency>
         <dependency>
-            <groupId>org.mockito</groupId>
-            <artifactId>mockito-core</artifactId>
+            <groupId>org.powermock</groupId>
+            <artifactId>powermock-api-mockito</artifactId>
             <scope>test</scope>
         </dependency>
         <dependency>
-            <groupId>software.wings</groupId>
-            <artifactId>990-commons-test</artifactId>
-            <version>${project.parent.version}</version>
+            <groupId>org.powermock</groupId>
+            <artifactId>powermock-module-junit4</artifactId>
             <scope>test</scope>
         </dependency>
         <dependency>

@@ -6,7 +6,7 @@
         <artifactId>portal</artifactId>
         <version>0.0.1-SNAPSHOT</version>
     </parent>
-    <artifactId>26-pms-contracts</artifactId>
+    <artifactId>890-pms-contracts</artifactId>
     <dependencies>
         <dependency>
             <groupId>com.google.protobuf</groupId>
@@ -18,7 +18,7 @@
         </dependency>
         <dependency>
             <groupId>software.wings</groupId>
-            <artifactId>26-pms-contracts-proto</artifactId>
+            <artifactId>890-pms-contracts-proto</artifactId>
             <version>${project.parent.version}</version>
         </dependency>
     </dependencies>

@@ -68,12 +68,12 @@
         </dependency>
         <dependency>
             <groupId>software.wings</groupId>
-            <artifactId>26-pms-contracts-proto</artifactId>
+            <artifactId>890-pms-contracts-proto</artifactId>
             <version>${project.parent.version}</version>
         </dependency>
         <dependency>
             <groupId>software.wings</groupId>
-            <artifactId>27-orchestration-persistence</artifactId>
+            <artifactId>890-orchestration-persistence</artifactId>
             <version>${project.parent.version}</version>
             <scope>compile</scope>
         </dependency>
