@@ -5,6 +5,7 @@ import static org.apache.commons.lang3.StringUtils.isBlank;
 import io.harness.delegate.beans.logstreaming.ILogStreamingTaskClient;
 import io.harness.delegate.beans.logstreaming.LogLine;
 import io.harness.delegate.beans.logstreaming.LogStreamingSanitizer;
+import io.harness.delegate.beans.taskprogress.ITaskProgressClient;
 import io.harness.exception.InvalidArgumentsException;
 import io.harness.logging.LogCallback;
 import io.harness.logging.LogLevel;
@@ -33,6 +34,8 @@ public class LogStreamingTaskClient implements ILogStreamingTaskClient {
   private final String baseLogKey;
   @Deprecated private final String appId;
   @Deprecated private final String activityId;
+
+  private final ITaskProgressClient taskProgressClient;
 
   @Override
   public void openStream(String baseLogKeySuffix) {
@@ -99,5 +102,10 @@ public class LogStreamingTaskClient implements ILogStreamingTaskClient {
     }
 
     return new ExecutionLogCallback(logService, accountId, appId, activityId, commandName);
+  }
+
+  @Override
+  public ITaskProgressClient obtainTaskProgressClient() {
+    return taskProgressClient;
   }
 }

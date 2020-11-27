@@ -1,5 +1,6 @@
 package io.harness.delegate.beans.logstreaming;
 
+import io.harness.delegate.beans.taskprogress.ITaskProgressClient;
 import io.harness.logging.LogCallback;
 import io.harness.logging.LogLevel;
 
@@ -34,4 +35,14 @@ public interface ILogStreamingTaskClient {
    * io.harness.delegate.task.ActivityAccess} interfaces.
    */
   LogCallback obtainLogCallback(String commandName);
+
+  /**
+   *
+   * Provides an instance of ITaskProgressClient interface implementation that should be used to send task progress
+   * updates.
+   *
+   * @return instance of taskProgressClient or null if the task was submitted to the delegate service without the
+   *     delegateCallbackToken
+   */
+  ITaskProgressClient obtainTaskProgressClient();
 }

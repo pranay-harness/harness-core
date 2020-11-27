@@ -2614,7 +2614,8 @@ public class DelegateServiceImpl implements DelegateService {
                                                                   .delegateId(delegateTask.getDelegateId())
                                                                   .delegateTaskId(delegateTask.getUuid())
                                                                   .data(delegateTask.getData())
-                                                                  .executionCapabilities(executionCapabilityList);
+                                                                  .executionCapabilities(executionCapabilityList)
+                                                                  .delegateCallbackToken(delegateTask.getDriverId());
 
       if (featureFlagService.isEnabled(FeatureName.LOG_STREAMING_INTEGRATION, delegateTask.getAccountId())) {
         try {
