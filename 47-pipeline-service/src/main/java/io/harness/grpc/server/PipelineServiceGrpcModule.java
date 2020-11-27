@@ -4,7 +4,7 @@ import io.harness.PipelineServiceConfiguration;
 import io.harness.grpc.client.GrpcClientConfig;
 import io.harness.pms.plan.PlanCreationServiceGrpc;
 import io.harness.pms.plan.PlanCreationServiceGrpc.PlanCreationServiceBlockingStub;
-import io.harness.pms.service.PmsSdkInstanceService;
+import io.harness.pms.sdk.PmsSdkInstanceService;
 
 import com.google.common.util.concurrent.Service;
 import com.google.common.util.concurrent.ServiceManager;
