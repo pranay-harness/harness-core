@@ -18,23 +18,19 @@ public class EncryptedDataDetail {
   private String fieldName;
 
   public SecretUniqueIdentifier getIdentifier() {
+    String kmsId = isNotEmpty(encryptionConfig.getUuid()) ? encryptionConfig.getUuid() : encryptedData.getKmsId();
+
     if (encryptionConfig.getEncryptionType() == CUSTOM) {
       return ParameterizedSecretUniqueIdentifier.builder()
           .parameters(encryptedData.getParameters())
-          .kmsId(encryptionConfig.getUuid())
+          .kmsId(kmsId)
           .build();
     }
 
     if (isNotEmpty(encryptedData.getPath())) {
-      return ReferencedSecretUniqueIdentifier.builder()
-          .path(encryptedData.getPath())
-          .kmsId(encryptionConfig.getUuid())
-          .build();
+      return ReferencedSecretUniqueIdentifier.builder().path(encryptedData.getPath()).kmsId(kmsId).build();
     }
 
-    return InlineSecretUniqueIdentifier.builder()
-        .encryptionKey(encryptedData.getEncryptionKey())
-        .kmsId(encryptionConfig.getUuid())
-        .build();
+    return InlineSecretUniqueIdentifier.builder().encryptionKey(encryptedData.getEncryptionKey()).kmsId(kmsId).build();
   }
 }
