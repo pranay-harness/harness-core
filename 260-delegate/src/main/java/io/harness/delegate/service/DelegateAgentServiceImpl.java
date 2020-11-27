@@ -108,9 +108,11 @@ import io.harness.delegate.task.TaskParameters;
 import io.harness.exception.UnexpectedException;
 import io.harness.expression.ExpressionReflectionUtils;
 import io.harness.filesystem.FileIo;
+import io.harness.grpc.DelegateServiceGrpcLiteClient;
 import io.harness.logging.AutoLogContext;
 import io.harness.logstreaming.DelegateAgentLogStreamingClient;
 import io.harness.logstreaming.LogStreamingTaskClient;
+import io.harness.logstreaming.LogStreamingTaskClient.LogStreamingTaskClientBuilder;
 import io.harness.managerclient.DelegateAgentManagerClient;
 import io.harness.managerclient.ManagerClient;
 import io.harness.managerclient.ManagerClientFactory;
@@ -124,6 +126,8 @@ import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.security.encryption.EncryptedRecord;
 import io.harness.security.encryption.EncryptionConfig;
 import io.harness.serializer.JsonUtils;
+import io.harness.serializer.KryoSerializer;
+import io.harness.taskprogress.TaskProgressClient;
 import io.harness.threading.Schedulable;
 import io.harness.utils.ProcessControl;
 import io.harness.version.VersionInfoManager;
@@ -292,6 +296,8 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
   @Inject(optional = true) @Nullable private PerpetualTaskWorker perpetualTaskWorker;
   @Inject(optional = true) @Nullable private DelegateAgentLogStreamingClient delegateAgentLogStreamingClient;
   @Inject DelegateTaskFactory delegateTaskFactory;
+  @Inject(optional = true) @Nullable private DelegateServiceGrpcLiteClient delegateServiceGrpcLiteClient;
+  @Inject private KryoSerializer kryoSerializer;
 
   private final AtomicBoolean waiter = new AtomicBoolean(true);
 
@@ -1865,16 +1871,28 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
       logBaseKey.append(entry.getKey() + ":" + entry.getValue());
     }
 
-    return LogStreamingTaskClient.builder()
-        .delegateAgentLogStreamingClient(delegateAgentLogStreamingClient)
-        .accountId(delegateTaskPackage.getAccountId())
-        .token(delegateTaskPackage.getLogStreamingToken())
-        .logStreamingSanitizer(LogStreamingSanitizer.builder().secrets(activitySecrets.getRight()).build())
-        .baseLogKey(logBaseKey.toString())
-        .logService(delegateLogService)
-        .appId(appId)
-        .activityId(activityId)
-        .build();
+    LogStreamingTaskClientBuilder taskClientBuilder =
+        LogStreamingTaskClient.builder()
+            .delegateAgentLogStreamingClient(delegateAgentLogStreamingClient)
+            .accountId(delegateTaskPackage.getAccountId())
+            .token(delegateTaskPackage.getLogStreamingToken())
+            .logStreamingSanitizer(LogStreamingSanitizer.builder().secrets(activitySecrets.getRight()).build())
+            .baseLogKey(logBaseKey.toString())
+            .logService(delegateLogService)
+            .appId(appId)
+            .activityId(activityId);
+
+    if (isNotBlank(delegateTaskPackage.getDelegateCallbackToken()) && delegateServiceGrpcLiteClient != null) {
+      taskClientBuilder.taskProgressClient(TaskProgressClient.builder()
+                                               .accountId(delegateTaskPackage.getAccountId())
+                                               .taskId(delegateTaskPackage.getDelegateTaskId())
+                                               .delegateCallbackToken(delegateTaskPackage.getDelegateCallbackToken())
+                                               .delegateServiceGrpcLiteClient(delegateServiceGrpcLiteClient)
+                                               .kryoSerializer(kryoSerializer)
+                                               .build());
+    }
+
+    return taskClientBuilder.build();
   }
 
   private Optional<LogSanitizer> getLogSanitizer(Pair<String, Set<String>> activitySecrets) {

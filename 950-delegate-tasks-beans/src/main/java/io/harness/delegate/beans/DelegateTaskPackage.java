@@ -22,6 +22,7 @@ public class DelegateTaskPackage {
   private String delegateTaskId;
   private String delegateId;
   private String logStreamingToken;
+  private String delegateCallbackToken;
 
   private TaskData data;
 
