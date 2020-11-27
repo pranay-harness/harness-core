@@ -885,7 +885,7 @@ public class DelegateModule extends AbstractModule {
         .to(AzureWebAppSlotShiftTrafficTaskHandler.class);
     azureAppServiceTaskTypeToTaskHandlerMap.addBinding(AzureAppServiceTaskType.SLOT_SWAP.name())
         .to(AzureWebAppSlotSwapTaskHandler.class);
-    azureAppServiceTaskTypeToTaskHandlerMap.addBinding(AzureAppServiceTaskType.ROLLBACK.name())
+    azureAppServiceTaskTypeToTaskHandlerMap.addBinding(AzureAppServiceTaskType.SLOT_ROLLBACK.name())
         .to(AzureWebAppRollbackTaskHandler.class);
 
     registerSecretManagementBindings();

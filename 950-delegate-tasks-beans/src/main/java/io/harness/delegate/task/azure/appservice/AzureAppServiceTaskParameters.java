@@ -39,7 +39,7 @@ public class AzureAppServiceTaskParameters extends AzureTaskParameters {
     SLOT_SETUP,
     SLOT_SHIFT_TRAFFIC,
     SLOT_SWAP,
-    ROLLBACK
+    SLOT_ROLLBACK
   }
 
   public enum AzureAppServiceType { WEB_APP, FUNCTION_APP, API_APP }

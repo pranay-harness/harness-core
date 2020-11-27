@@ -2,6 +2,7 @@ package software.wings.delegatetasks.azure;
 
 import io.harness.azure.model.AzureAppServiceApplicationSetting;
 import io.harness.azure.model.AzureAppServiceConnectionString;
+import io.harness.azure.model.AzureAppServiceDockerSetting;
 import io.harness.azure.model.AzureConfig;
 import io.harness.beans.DecryptableEntity;
 import io.harness.delegate.beans.azure.AzureConfigDTO;
@@ -59,7 +60,7 @@ public class AzureSecretHelper {
       decryptAzureWebAppSlotSetupParameters((AzureWebAppSlotSetupParameters) azureAppServiceTaskParameters);
     }
 
-    if (AzureAppServiceTaskParameters.AzureAppServiceTaskType.ROLLBACK
+    if (AzureAppServiceTaskParameters.AzureAppServiceTaskType.SLOT_ROLLBACK
         == azureAppServiceTaskParameters.getCommandType()) {
       decryptAzureWebAppRollbackParameters((AzureWebAppRollbackParameters) azureAppServiceTaskParameters);
     }
@@ -84,12 +85,12 @@ public class AzureSecretHelper {
     preDeploymentData.setConnSettingsToRemove(decryptConnSettings(preDeploymentData.getConnSettingsToRemove()));
   }
 
-  public Map<String, AzureAppServiceApplicationSetting> encryptAppSettings(
+  public Map<String, AzureAppServiceApplicationSetting> decryptAppSettings(
       Map<String, AzureAppServiceApplicationSetting> appSettings) {
     return appSettings;
   }
 
-  public Map<String, AzureAppServiceConnectionString> encryptConnSettings(
+  public Map<String, AzureAppServiceConnectionString> decryptConnSettings(
       Map<String, AzureAppServiceConnectionString> connSettings) {
     return connSettings;
   }
@@ -106,15 +107,21 @@ public class AzureSecretHelper {
     preDeploymentData.setAppSettingsToAdd(encryptAppSettings(preDeploymentData.getAppSettingsToAdd()));
     preDeploymentData.setConnSettingsToRemove(encryptConnSettings(preDeploymentData.getConnSettingsToRemove()));
     preDeploymentData.setConnSettingsToAdd(encryptConnSettings(preDeploymentData.getConnSettingsToAdd()));
+    preDeploymentData.setDockerSettingsToAdd(encryptDockerSettings(preDeploymentData.getDockerSettingsToAdd()));
   }
 
-  public Map<String, AzureAppServiceApplicationSetting> decryptAppSettings(
+  public Map<String, AzureAppServiceApplicationSetting> encryptAppSettings(
       Map<String, AzureAppServiceApplicationSetting> appSettings) {
     return appSettings;
   }
 
-  public Map<String, AzureAppServiceConnectionString> decryptConnSettings(
+  public Map<String, AzureAppServiceConnectionString> encryptConnSettings(
       Map<String, AzureAppServiceConnectionString> connSettings) {
     return connSettings;
+  }
+
+  public Map<String, AzureAppServiceDockerSetting> encryptDockerSettings(
+      Map<String, AzureAppServiceDockerSetting> dockerSettings) {
+    return dockerSettings;
   }
 }
