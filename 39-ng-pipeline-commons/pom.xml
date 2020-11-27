@@ -37,7 +37,7 @@
         </dependency>
         <dependency>
             <groupId>software.wings</groupId>
-            <artifactId>22-ng-project-n-orgs</artifactId>
+            <artifactId>950-ng-project-n-orgs</artifactId>
             <version>${project.parent.version}</version>
         </dependency>
         <dependency>

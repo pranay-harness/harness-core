@@ -5,13 +5,13 @@ directories:
   940-notification-client
   920-delegate-service-beans
   950-ng-core
-  22-ng-project-n-orgs
-  22-rbac-core
-  22-secret-manager-client
-  22-timeout-engine
-  22-wait-engine
+  950-ng-project-n-orgs
+  970-rbac-core
+  940-secret-manager-client
+  950-timeout-engine
+  950-wait-engine
   23-ng-core-clients
-  23-delegate-service-driver
+  910-delegate-service-driver
   23-notification-service
   23-sm-core
   24-common-entities

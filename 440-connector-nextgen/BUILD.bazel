@@ -11,9 +11,9 @@ java_library(
     name = "maven_deps",
     visibility = ["//visibility:public"],
     exports = [
-        "//23-delegate-service-driver:module",
         "//23-ng-core-clients:module",
         "//35-yaml-beans:module",
+        "//910-delegate-service-driver:module",
         "//950-ng-core:module",
         "@maven//:com_esotericsoftware_kryo",
         "@maven//:com_fasterxml_jackson_core_jackson_annotations",

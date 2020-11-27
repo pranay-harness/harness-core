@@ -78,11 +78,6 @@
         </dependency>
         <dependency>
             <groupId>software.wings</groupId>
-            <artifactId>23-delegate-service-driver</artifactId>
-            <version>${project.parent.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>software.wings</groupId>
             <artifactId>230-model-test</artifactId>
             <version>${project.parent.version}</version>
         </dependency>
@@ -94,6 +89,11 @@
         <dependency>
             <groupId>software.wings</groupId>
             <artifactId>71-rest</artifactId>
+            <version>${project.parent.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>software.wings</groupId>
+            <artifactId>910-delegate-service-driver</artifactId>
             <version>${project.parent.version}</version>
         </dependency>
         <dependency>

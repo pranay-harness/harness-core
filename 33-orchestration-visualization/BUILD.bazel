@@ -39,8 +39,8 @@ java_library(
 java_library(
     name = "test_deps",
     exports = [
-        "//22-timeout-engine:module",
-        "//22-wait-engine:module",
+        "//950-timeout-engine:module",
+        "//950-wait-engine:module",
         "//960-persistence:supporter-test",
         "//990-commons-test:module",
         "@maven//:junit_junit",

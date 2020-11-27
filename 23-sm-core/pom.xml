@@ -45,12 +45,12 @@
         </dependency>
         <dependency>
             <groupId>software.wings</groupId>
-            <artifactId>22-rbac-core</artifactId>
+            <artifactId>970-rbac-core</artifactId>
             <version>${project.parent.version}</version>
         </dependency>
         <dependency>
             <groupId>software.wings</groupId>
-            <artifactId>22-secret-manager-client</artifactId>
+            <artifactId>940-secret-manager-client</artifactId>
             <version>${project.parent.version}</version>
         </dependency>
         <dependency>

@@ -45,7 +45,7 @@ java_library(
 java_library(
     name = "test_deps",
     exports = [
-        "//22-wait-engine:module",
+        "//950-wait-engine:module",
         "//960-persistence:supporter-test",
         "//990-commons-test:module",
         "@maven//:ch_qos_logback_logback_classic",

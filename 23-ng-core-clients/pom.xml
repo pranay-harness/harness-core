@@ -32,7 +32,7 @@
         </dependency>
         <dependency>
             <groupId>software.wings</groupId>
-            <artifactId>22-secret-manager-client</artifactId>
+            <artifactId>940-secret-manager-client</artifactId>
             <version>${project.parent.version}</version>
         </dependency>
         <dependency>
