@@ -12,6 +12,20 @@ import java.lang.annotation.Target;
 @Retention(RetentionPolicy.RUNTIME)
 @Target({ElementType.TYPE})
 @Deprecated
+/**
+ * create a static method named mongoIndexes instead.
+ * Ex:
+ * public static List<MongoIndex> mongoIndexes() {
+ *     return ImmutableList.<MongoIndex>builder()
+ *         .add(CompoundMongoIndex.builder()
+ *                  .name("iterator")
+ *                  .unique(false)
+ *                  .field(CVNGVerificationTaskKeys.status)
+ *                  .field(CVNGVerificationTaskKeys.cvngVerificationTaskIteration)
+ *                  .build())
+ *         .build();
+ *   }
+ */
 public @interface CdIndexes {
   CdIndex[] value();
 }

@@ -40,8 +40,12 @@ import io.harness.ccm.views.service.impl.ViewsBillingServiceImpl;
 import io.harness.config.PipelineConfig;
 import io.harness.connector.apis.client.ConnectorResourceClientModule;
 import io.harness.cvng.CVNextGenCommonsServiceModule;
+import io.harness.cvng.client.CVNGService;
+import io.harness.cvng.client.CVNGServiceImpl;
 import io.harness.cvng.perpetualtask.CVDataCollectionTaskService;
 import io.harness.cvng.perpetualtask.CVDataCollectionTaskServiceImpl;
+import io.harness.cvng.state.CVNGVerificationTaskService;
+import io.harness.cvng.state.CVNGVerificationTaskServiceImpl;
 import io.harness.dashboard.DashboardSettingsService;
 import io.harness.dashboard.DashboardSettingsServiceImpl;
 import io.harness.datahandler.services.AdminAccountService;
@@ -999,6 +1003,8 @@ public class WingsModule extends AbstractModule implements ServersModule {
     bind(ExperimentalMetricAnalysisRecordService.class).to(ExperimentalMetricAnalysisRecordServiceImpl.class);
     bind(GitSyncService.class).to(GitSyncServiceImpl.class);
     bind(SecretDecryptionService.class).to(SecretDecryptionServiceImpl.class);
+    bind(CVNGVerificationTaskService.class).to(CVNGVerificationTaskServiceImpl.class);
+    bind(CVNGService.class).to(CVNGServiceImpl.class);
 
     MapBinder<String, InfrastructureProvider> infrastructureProviderMapBinder =
         MapBinder.newMapBinder(binder(), String.class, InfrastructureProvider.class);

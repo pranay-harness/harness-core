@@ -3,7 +3,12 @@ package software.wings.sm.states;
 import io.harness.beans.ExecutionStatus;
 import io.harness.cvng.beans.ActivityDTO;
 import io.harness.cvng.beans.DeploymentActivityDTO;
-import io.harness.cvng.client.CVNGServiceClient;
+import io.harness.cvng.beans.activity.ActivityStatusDTO;
+import io.harness.cvng.client.CVNGService;
+import io.harness.cvng.state.CVNGVerificationTask;
+import io.harness.cvng.state.CVNGVerificationTask.Status;
+import io.harness.cvng.state.CVNGVerificationTaskService;
+import io.harness.tasks.ResponseData;
 
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionResponse;
@@ -11,18 +16,22 @@ import software.wings.sm.State;
 import software.wings.sm.StateExecutionData;
 import software.wings.sm.StateType;
 
+import com.github.reinert.jjschema.SchemaIgnore;
+import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
-import java.io.IOException;
+import java.time.Instant;
 import java.util.Collections;
+import java.util.Map;
+import java.util.UUID;
 import lombok.Builder;
 import lombok.Data;
 import lombok.Value;
 import lombok.extern.slf4j.Slf4j;
-import retrofit2.Call;
-import retrofit2.Response;
 @Data
 @Slf4j
 public class CVNGState extends State {
+  @SchemaIgnore @Inject private CVNGVerificationTaskService cvngVerificationTaskService;
+  @Inject private CVNGService cvngService;
   private String deploymentTag;
   private String duration;
   private String webhookURL;
@@ -33,58 +42,73 @@ public class CVNGState extends State {
   private String projectIdentifier;
   private String verificationJobIdentifier;
 
-  @Inject private CVNGServiceClient cvngServiceClient;
-
   public CVNGState(String name) {
     super(name, StateType.CVNG.name());
   }
   @Override
   public ExecutionResponse execute(ExecutionContext context) {
-    long now = System.currentTimeMillis();
-    ActivityDTO activityDTO = DeploymentActivityDTO.builder()
-                                  .deploymentTag(deploymentTag)
-                                  .environmentIdentifier(envIdentifier)
-                                  .orgIdentifier(orgIdentifier)
-                                  .projectIdentifier(projectIdentifier)
-                                  .activityStartTime(now)
-                                  .verificationStartTime(now + initialDelay)
-                                  .name(context.getWorkflowExecutionName())
-                                  .accountIdentifier(context.getAccountId())
-                                  .verificationJobRuntimeDetails(Collections.singletonList(
-                                      ActivityDTO.VerificationJobRuntimeDetails.builder()
-                                          .verificationJobIdentifier(verificationJobIdentifier)
-                                          .runtimeValues(Collections.emptyMap())
-                                          .build()))
-                                  .build();
+    try {
+      long now = System.currentTimeMillis();
+      ActivityDTO activityDTO = DeploymentActivityDTO.builder()
+                                    .deploymentTag(deploymentTag)
+                                    .environmentIdentifier(envIdentifier)
+                                    .orgIdentifier(orgIdentifier)
+                                    .projectIdentifier(projectIdentifier)
+                                    .activityStartTime(now)
+                                    .verificationStartTime(now + initialDelay)
+                                    .name(context.getWorkflowExecutionName())
+                                    .accountIdentifier(context.getAccountId())
+                                    .verificationJobRuntimeDetails(Collections.singletonList(
+                                        ActivityDTO.VerificationJobRuntimeDetails.builder()
+                                            .verificationJobIdentifier(verificationJobIdentifier)
+                                            .runtimeValues(Collections.emptyMap())
+                                            .build()))
+                                    .build();
 
-    String activityId = execute(cvngServiceClient.registerActivity(context.getAccountId(), activityDTO)).getResource();
-    CVNGStateExecutionData cvngStateExecutionData = CVNGStateExecutionData.builder().activityId(activityId).build();
-    return ExecutionResponse.builder()
-        .async(true)
-        .correlationIds(Collections.singletonList(cvngStateExecutionData.getCorrelationId()))
-        .executionStatus(ExecutionStatus.RUNNING)
-        // .errorMessage(responseMessage)
-        .stateExecutionData(cvngStateExecutionData)
-        .build();
+      String activityId = cvngService.registerActivity(context.getAccountId(), activityDTO);
+      String correlationId = UUID.randomUUID().toString();
+      CVNGStateExecutionData cvngStateExecutionData =
+          CVNGStateExecutionData.builder()
+              .stateExecutionInstanceId(context.getStateExecutionInstanceId())
+              .activityId(activityId)
+              .status(ExecutionStatus.RUNNING)
+              .build();
+      CVNGVerificationTask cvngVerificationTask = CVNGVerificationTask.builder()
+                                                      .accountId(context.getAccountId())
+                                                      .status(Status.IN_PROGRESS)
+                                                      .activityId(activityId)
+                                                      .startTime(Instant.ofEpochMilli(now))
+                                                      .correlationId(correlationId)
+                                                      .build();
+      cvngVerificationTaskService.create(cvngVerificationTask);
+      return ExecutionResponse.builder()
+          .async(true)
+          .correlationIds(Collections.singletonList(correlationId))
+          .executionStatus(ExecutionStatus.RUNNING)
+          .stateExecutionData(cvngStateExecutionData)
+          .build();
+    } catch (Exception e) {
+      return ExecutionResponse.builder()
+          .async(false)
+          .executionStatus(ExecutionStatus.FAILED)
+          .errorMessage(e.getMessage())
+          .build();
+    }
   }
 
   @Override
   public void handleAbortEvent(ExecutionContext context) {}
 
-  // TODO: We are just calling one API now. possibly need to move requestExecutor to common module.
-  public <U> U execute(Call<U> request) {
-    try {
-      Response<U> response = request.clone().execute();
-      if (response.isSuccessful()) {
-        return response.body();
-      } else {
-        String errorBody = response.errorBody().string();
-        throw new IllegalStateException(
-            "Code: " + response.code() + ", message: " + response.message() + ", body: " + errorBody);
-      }
-    } catch (IOException e) {
-      throw new IllegalStateException(e);
-    }
+  @Override
+  public ExecutionResponse handleAsyncResponse(ExecutionContext executionContext, Map<String, ResponseData> response) {
+    Preconditions.checkState(response.size() == 1, "Should only have one element");
+    CVNGStateResponseData responseData = (CVNGStateResponseData) response.values().iterator().next();
+    CVNGStateExecutionData cvngStateExecutionData = executionContext.getStateExecutionData();
+    cvngStateExecutionData.setStatus(responseData.getExecutionStatus());
+    return ExecutionResponse.builder()
+        .executionStatus(responseData.getExecutionStatus())
+        .stateExecutionData(cvngStateExecutionData)
+        .build();
   }
 
   @Value
@@ -92,5 +116,45 @@ public class CVNGState extends State {
   public static class CVNGStateExecutionData extends StateExecutionData {
     private String activityId;
     private String correlationId;
+    private ExecutionStatus status;
+    private String stateExecutionInstanceId;
+  }
+
+  @Value
+  public static class CVNGStateResponseData implements ResponseData {
+    private String activityId;
+    private String correlationId;
+    private ActivityStatusDTO activityStatusDTO;
+    private Status status;
+    private ExecutionStatus executionStatus;
+    @Builder
+    public CVNGStateResponseData(String activityId, String correlationId, ActivityStatusDTO activityStatusDTO,
+        Status status, ExecutionStatus executionStatus) {
+      this.activityId = activityId;
+      this.correlationId = correlationId;
+      this.activityStatusDTO = activityStatusDTO;
+      this.status = status;
+      if (executionStatus == null) {
+        this.executionStatus = setExecutionUsingStatus();
+      } else {
+        this.executionStatus = executionStatus;
+      }
+    }
+
+    private ExecutionStatus setExecutionUsingStatus() {
+      switch (activityStatusDTO.getStatus()) {
+        case VERIFICATION_PASSED:
+          return ExecutionStatus.SUCCESS;
+        case IN_PROGRESS:
+        case NOT_STARTED:
+          return ExecutionStatus.RUNNING;
+        case VERIFICATION_FAILED:
+          return ExecutionStatus.FAILED;
+        case ERROR:
+          return ExecutionStatus.ERROR;
+        default:
+          throw new IllegalStateException("Unhandled status value: " + activityStatusDTO.getStatus());
+      }
+    }
   }
 }

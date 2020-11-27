@@ -10,6 +10,7 @@ import io.harness.cache.CacheConfig;
 import io.harness.cache.CacheConfig.CacheConfigBuilder;
 import io.harness.cache.CacheModule;
 import io.harness.commandlibrary.client.CommandLibraryServiceHttpClient;
+import io.harness.cvng.client.CVNGServiceClient;
 import io.harness.event.EventsModule;
 import io.harness.event.handler.marketo.MarketoConfig;
 import io.harness.event.handler.segment.SegmentConfig;
@@ -209,6 +210,8 @@ public class GraphQLRule implements MethodRule, InjectorRuleMixin, MongoRuleMixi
       protected void configure() {
         bind(BroadcasterFactory.class).toInstance(mock(BroadcasterFactory.class));
         bind(CommandLibraryServiceHttpClient.class).toInstance(mock(CommandLibraryServiceHttpClient.class));
+        CVNGServiceClient mockCVNGServiceClient = mock(CVNGServiceClient.class);
+        bind(CVNGServiceClient.class).toInstance(mockCVNGServiceClient);
       }
     });
 

@@ -193,6 +193,7 @@ public class VerificationJobInstanceServiceImpl implements VerificationJobInstan
     VerificationJob verificationJob = verificationJobInstance.getResolvedJob();
     Preconditions.checkNotNull(verificationJob);
     List<CVConfig> cvConfigs = getCVConfigsRelatedToVerificationJob(verificationJob);
+    // TODO: handle if we have zero cvConfigs matching this.
     Set<String> connectorIdentifiers =
         cvConfigs.stream().map(CVConfig::getConnectorIdentifier).collect(Collectors.toSet());
     List<String> perpetualTaskIds = new ArrayList<>();
