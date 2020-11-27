@@ -28,7 +28,7 @@
         </dependency>
         <dependency>
             <groupId>software.wings</groupId>
-            <artifactId>31-orchestration</artifactId>
+            <artifactId>870-orchestration</artifactId>
             <version>${project.parent.version}</version>
         </dependency>
         <dependency>

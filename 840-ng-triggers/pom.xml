@@ -6,42 +6,54 @@
         <artifactId>portal</artifactId>
         <version>0.0.1-SNAPSHOT</version>
     </parent>
-    <artifactId>190-deployment-functional-tests</artifactId>
+    <artifactId>840-ng-triggers</artifactId>
+
     <dependencies>
+        <dependency>
+            <groupId>com.google.guava</groupId>
+            <artifactId>guava</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>junit</groupId>
+            <artifactId>junit</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.commons</groupId>
+            <artifactId>commons-lang3</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.projectlombok</groupId>
+            <artifactId>lombok</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-api</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>ru.vyarus</groupId>
+            <artifactId>guice-validator</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>software.wings</groupId>
+            <artifactId>970-ng-commons</artifactId>
+            <version>${project.parent.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.assertj</groupId>
+            <artifactId>assertj-core</artifactId>
+            <scope>test</scope>
+        </dependency>
         <dependency>
             <groupId>software.wings</groupId>
             <artifactId>990-commons-test</artifactId>
             <version>${project.parent.version}</version>
-            <scope>compile</scope>
-        </dependency>
-        <dependency>
-            <groupId>com.google.inject</groupId>
-            <artifactId>guice</artifactId>
             <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>software.wings</groupId>
-            <artifactId>200-functional-test</artifactId>
+            <artifactId>ciscm-proto</artifactId>
             <version>${project.parent.version}</version>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>software.wings</groupId>
-            <artifactId>230-model-test</artifactId>
-            <version>${project.parent.version}</version>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>software.wings</groupId>
-            <artifactId>71-rest</artifactId>
-            <version>${project.parent.version}</version>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>software.wings</groupId>
-            <artifactId>870-orchestration</artifactId>
-            <version>${project.parent.version}</version>
-            <scope>test</scope>
         </dependency>
     </dependencies>
+
 </project>
