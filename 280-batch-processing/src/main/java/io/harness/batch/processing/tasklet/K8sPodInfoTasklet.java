@@ -1,5 +1,6 @@
 package io.harness.batch.processing.tasklet;
 
+import static io.harness.batch.processing.tasklet.util.InstanceMetaDataUtils.getValueForKeyFromInstanceMetaData;
 import static io.harness.batch.processing.tasklet.util.InstanceMetaDataUtils.populateNodePoolNameFromLabel;
 import static io.harness.ccm.cluster.entities.K8sWorkload.encodeDotsInKey;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
@@ -72,10 +73,15 @@ public class K8sPodInfoTasklet implements Tasklet {
     do {
       publishedMessageList = publishedMessageReader.getNext();
 
-      List<InstanceInfo> instanceInfoList = publishedMessageList.stream()
-                                                .map(this::processPodInfoMessage)
-                                                .filter(instanceInfo -> null != instanceInfo.getAccountId())
-                                                .collect(Collectors.toList());
+      List<InstanceInfo> instanceInfoList =
+          publishedMessageList.stream()
+              .map(this::processPodInfoMessage)
+              .filter(instanceInfo
+                  -> null != instanceInfo.getAccountId()
+                      && getValueForKeyFromInstanceMetaData(
+                             InstanceMetaDataConstants.INSTANCE_CATEGORY, instanceInfo.getMetaData())
+                          != null)
+              .collect(Collectors.toList());
 
       instanceDataBulkWriteService.updateList(instanceInfoList);
     } while (publishedMessageList.size() == batchSize);
