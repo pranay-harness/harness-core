@@ -29,6 +29,11 @@
         </dependency>
         <dependency>
             <groupId>software.wings</groupId>
+            <artifactId>970-grpc</artifactId>
+            <version>${project.parent.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>software.wings</groupId>
             <artifactId>920-delegate-service-beans-proto</artifactId>
             <version>${project.parent.version}</version>
         </dependency>
