@@ -658,6 +658,8 @@ public class ArtifactCollectionUtils {
     BuildSourceRequestType requestType =
         getBuildSourceRequestType(artifactStream, multiArtifact, artifactStreamAttributes);
 
+    int failedCronAttempts = artifactStream.getFailedCronAttempts();
+
     BuildSourceParametersBuilder buildSourceParametersBuilder =
         BuildSourceParameters.builder()
             .accountId(settingAttribute.getAccountId())
@@ -669,7 +671,9 @@ public class ArtifactCollectionUtils {
             .encryptedDataDetails(encryptedDataDetails)
             .buildSourceRequestType(requestType)
             .limit(getLimit(artifactStream.getArtifactStreamType(), requestType))
-            .isCollection(isCollection);
+            .isCollection(isCollection)
+            .shouldFetchSecretFromCache(failedCronAttempts < 2 || failedCronAttempts % 5 != 0);
+
     if (withSavedBuildDetailsKeys) {
       buildSourceParametersBuilder.savedBuildDetailsKeys(getArtifactsKeys(artifactStream, artifactStreamAttributes));
     }
