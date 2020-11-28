@@ -15,6 +15,7 @@ import io.harness.logging.CommandExecutionStatus;
 import io.harness.logging.ExceptionLogger;
 import io.harness.security.encryption.EncryptedDataDetail;
 
+import software.wings.annotation.EncryptableSetting;
 import software.wings.beans.artifact.ArtifactStreamAttributes;
 import software.wings.beans.artifact.ArtifactStreamType;
 import software.wings.delegatetasks.buildsource.BuildSourceExecutionResponse;
@@ -24,6 +25,7 @@ import software.wings.delegatetasks.buildsource.BuildSourceResponse;
 import software.wings.helpers.ext.jenkins.BuildDetails;
 import software.wings.service.impl.ServiceClassLocator;
 import software.wings.service.intfc.BuildService;
+import software.wings.service.intfc.security.EncryptionService;
 import software.wings.settings.SettingValue;
 
 import com.google.inject.Inject;
@@ -45,6 +47,7 @@ public class BuildSourceTask extends AbstractDelegateRunnableTask {
   @Inject private Map<Class<? extends SettingValue>, Class<? extends BuildService>> buildServiceMap;
   @Inject private ServiceClassLocator serviceLocator;
   @Inject private Injector injector;
+  @Inject private EncryptionService encryptionService;
 
   public BuildSourceTask(DelegateTaskPackage delegateTaskPackage, ILogStreamingTaskClient logStreamingTaskClient,
       Consumer<DelegateTaskResponse> consumer, BooleanSupplier preExecute) {
@@ -74,6 +77,16 @@ public class BuildSourceTask extends AbstractDelegateRunnableTask {
       BuildSourceRequestType buildSourceRequestType = buildSourceRequest.getBuildSourceRequestType();
 
       List<BuildDetails> buildDetails = new ArrayList<>();
+
+      // if artifact collection is working fine with cache credentials then we continue fetching from
+      if (settingValue instanceof EncryptableSetting) {
+        if (buildSourceRequest.isShouldFetchSecretFromCache()) {
+          encryptionService.decrypt((EncryptableSetting) settingValue, encryptedDataDetails, true);
+        } else {
+          encryptionService.decrypt((EncryptableSetting) settingValue, encryptedDataDetails, false);
+        }
+      }
+
       if (buildSourceRequestType == BuildSourceRequestType.GET_BUILDS) {
         if (ArtifactStreamType.CUSTOM.name().equals(artifactStreamType)) {
           buildDetails = service.getBuilds(artifactStreamAttributes);

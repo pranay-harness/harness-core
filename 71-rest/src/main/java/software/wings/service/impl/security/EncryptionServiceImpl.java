@@ -158,6 +158,7 @@ public class EncryptionServiceImpl implements EncryptionService {
     EncryptedRecord record = encryptedDataDetail.getEncryptedData();
     EncryptionConfig config = encryptedDataDetail.getEncryptionConfig();
     char[] decryptedValue;
+
     if (config.getType().equals(KMS)) {
       KmsEncryptor kmsEncryptor = kmsEncryptorsRegistry.getKmsEncryptor(config);
       decryptedValue = kmsEncryptor.fetchSecretValue(config.getAccountId(), record, config);

@@ -39,6 +39,7 @@ public class BuildSourceParameters implements TaskParameters, ExecutionCapabilit
   @NotEmpty private String artifactStreamType;
   private String artifactStreamId;
   private int limit;
+  private boolean shouldFetchSecretFromCache;
 
   // These fields are used only during artifact collection and cleanup.
   private boolean isCollection;
