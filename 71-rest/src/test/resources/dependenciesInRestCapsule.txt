@@ -630,8 +630,8 @@ software.wings:950-walktree-visitor:jar:0.0.1-SNAPSHOT
 software.wings:860-yaml-beans:jar:0.0.1-SNAPSHOT
 software.wings:850-execution-plan:jar:0.0.1-SNAPSHOT
 software.wings:450-ce-views:jar:0.0.1-SNAPSHOT
-software.wings:57-command-library-common:jar:0.0.1-SNAPSHOT
-software.wings:64-events-framework:jar:0.0.1-SNAPSHOT
+software.wings:950-command-library-common:jar:0.0.1-SNAPSHOT
+software.wings:950-events-framework:jar:0.0.1-SNAPSHOT
 software.wings:420-delegate-agent:jar:0.0.1-SNAPSHOT
 software.wings:420-delegate-service:jar:0.0.1-SNAPSHOT
 software.wings:430-cv-nextgen-commons:jar:0.0.1-SNAPSHOT

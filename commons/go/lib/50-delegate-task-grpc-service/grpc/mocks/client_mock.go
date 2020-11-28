@@ -6,7 +6,7 @@ package grpc
 
 import (
 	gomock "github.com/golang/mock/gomock"
-	service "github.com/wings-software/portal/50-delegate-task-grpc-service/src/main/proto/io/harness/task/service"
+	service "github.com/wings-software/portal/910-delegate-task-grpc-service/src/main/proto/io/harness/task/service"
 	reflect "reflect"
 )
 

@@ -67,12 +67,12 @@
         </dependency>
         <dependency>
             <groupId>software.wings</groupId>
-            <artifactId>50-delegate-task-grpc-service</artifactId>
+            <artifactId>71-rest</artifactId>
             <version>${project.parent.version}</version>
         </dependency>
         <dependency>
             <groupId>software.wings</groupId>
-            <artifactId>71-rest</artifactId>
+            <artifactId>910-delegate-task-grpc-service</artifactId>
             <version>${project.parent.version}</version>
         </dependency>
         <dependency>

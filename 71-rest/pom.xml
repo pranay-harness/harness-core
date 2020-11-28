@@ -730,16 +730,6 @@
         </dependency>
         <dependency>
             <groupId>software.wings</groupId>
-            <artifactId>57-command-library-common</artifactId>
-            <version>${project.parent.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>software.wings</groupId>
-            <artifactId>64-events-framework</artifactId>
-            <version>${project.parent.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>software.wings</groupId>
             <artifactId>860-orchestration-steps</artifactId>
             <version>${project.parent.version}</version>
         </dependency>
@@ -785,12 +775,22 @@
         </dependency>
         <dependency>
             <groupId>software.wings</groupId>
+            <artifactId>950-command-library-common</artifactId>
+            <version>${project.parent.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>software.wings</groupId>
             <artifactId>950-common-entities</artifactId>
             <version>${project.parent.version}</version>
         </dependency>
         <dependency>
             <groupId>software.wings</groupId>
             <artifactId>950-delegate-tasks-beans</artifactId>
+            <version>${project.parent.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>software.wings</groupId>
+            <artifactId>950-events-framework</artifactId>
             <version>${project.parent.version}</version>
         </dependency>
         <dependency>

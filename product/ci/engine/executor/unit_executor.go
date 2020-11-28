@@ -8,7 +8,7 @@ import (
 	"time"
 
 	"github.com/pkg/errors"
-	statuspb "github.com/wings-software/portal/50-delegate-task-grpc-service/src/main/proto/io/harness/task/service"
+	statuspb "github.com/wings-software/portal/910-delegate-task-grpc-service/src/main/proto/io/harness/task/service"
 	"github.com/wings-software/portal/commons/go/lib/filesystem"
 	"github.com/wings-software/portal/commons/go/lib/logs"
 	caddon "github.com/wings-software/portal/product/ci/addon/grpc/client"

@@ -30,9 +30,9 @@
         <!--<module>850-execution-plan</module>-->
         <!--<module>850-ng-pipeline-commons</module>-->
         <!--<module>40-pipeline-service</module>-->
-        <!--<module>50-delegate-task-grpc-service</module>-->
-        <!--<module>57-command-library-common</module>-->
-        <!--<module>64-events-framework</module>-->
+        <!--<module>910-delegate-task-grpc-service</module>-->
+        <!--<module>950-command-library-common</module>-->
+        <!--<module>950-events-framework</module>-->
         <module>71-rest</module>
         <!--The following modules are in the new order-->
         <module>120-ng-manager</module>

@@ -3,7 +3,7 @@ syntax = "proto3";
 package io.harness.task.service;
 
 option java_multiple_files = true;
-option go_package = "50_delegate_task_grpc_service";
+option go_package = "910_delegate_task_grpc_service";
 
 import "940-delegate-beans/src/main/proto/io/harness/delegate/account.proto";
 import "920-delegate-service-beans/src/main/proto/io/harness/delegate/progress.proto";

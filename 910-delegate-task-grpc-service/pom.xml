@@ -6,7 +6,7 @@
         <artifactId>portal</artifactId>
         <version>0.0.1-SNAPSHOT</version>
     </parent>
-    <artifactId>50-delegate-task-grpc-service</artifactId>
+    <artifactId>910-delegate-task-grpc-service</artifactId>
     <dependencies>
         <dependency>
             <groupId>com.google.inject</groupId>
@@ -45,7 +45,7 @@
         </dependency>
         <dependency>
             <groupId>software.wings</groupId>
-            <artifactId>50-delegate-task-grpc-service-proto</artifactId>
+            <artifactId>910-delegate-task-grpc-service-proto</artifactId>
             <version>${project.parent.version}</version>
         </dependency>
         <dependency>
