@@ -43,6 +43,7 @@ import io.harness.delegate.beans.DelegateStringProgressData;
 import io.harness.delegate.beans.executioncapability.SystemEnvCheckerCapability;
 import io.harness.delegate.task.shell.ScriptType;
 import io.harness.exception.DelegateServiceDriverException;
+import io.harness.exception.DelegateServiceLiteException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.perpetualtask.PerpetualTaskClientContext;
 import io.harness.perpetualtask.PerpetualTaskClientContextDetails;
@@ -294,7 +295,7 @@ public class DelegateServiceGrpcImplTest extends WingsBaseTest implements Mockab
         ()
             -> delegateServiceGrpcLiteClient.executeParkedTask(
                 AccountId.newBuilder().setId(accountId).build(), TaskId.newBuilder().setId(taskId).build()))
-        .isInstanceOf(DelegateServiceDriverException.class)
+        .isInstanceOf(DelegateServiceLiteException.class)
         .hasMessage("Unexpected error occurred while executing parked task.");
   }
 
@@ -325,7 +326,7 @@ public class DelegateServiceGrpcImplTest extends WingsBaseTest implements Mockab
             -> delegateServiceGrpcLiteClient.fetchParkedTaskStatus(AccountId.newBuilder().setId(accountId).build(),
                 TaskId.newBuilder().setId(taskId).build(),
                 DelegateCallbackToken.newBuilder().setToken(driverId).build()))
-        .isInstanceOf(DelegateServiceDriverException.class)
+        .isInstanceOf(DelegateServiceLiteException.class)
         .hasMessage("Unexpected error occurred fetching parked task results.");
   }
 

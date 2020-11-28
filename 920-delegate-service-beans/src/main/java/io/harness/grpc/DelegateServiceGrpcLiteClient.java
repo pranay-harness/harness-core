@@ -16,7 +16,7 @@ import io.harness.delegate.TaskId;
 import io.harness.delegate.TaskProgressRequest;
 import io.harness.delegate.TaskProgressResponse;
 import io.harness.delegate.TaskResponseData;
-import io.harness.exception.DelegateServiceDriverException;
+import io.harness.exception.DelegateServiceLiteException;
 
 import com.google.inject.Inject;
 import com.google.protobuf.ByteString;
@@ -36,7 +36,7 @@ public class DelegateServiceGrpcLiteClient {
       return delegateServiceBlockingStub.withDeadlineAfter(30, TimeUnit.SECONDS)
           .executeParkedTask(ExecuteParkedTaskRequest.newBuilder().setTaskId(taskId).setAccountId(accountId).build());
     } catch (StatusRuntimeException ex) {
-      throw new DelegateServiceDriverException("Unexpected error occurred while executing parked task.", ex);
+      throw new DelegateServiceLiteException("Unexpected error occurred while executing parked task.", ex);
     }
   }
 
@@ -50,7 +50,7 @@ public class DelegateServiceGrpcLiteClient {
                                      .setCallbackToken(delegateCallbackToken)
                                      .build());
     } catch (StatusRuntimeException ex) {
-      throw new DelegateServiceDriverException("Unexpected error occurred fetching parked task results.", ex);
+      throw new DelegateServiceLiteException("Unexpected error occurred fetching parked task results.", ex);
     }
   }
 
@@ -62,7 +62,7 @@ public class DelegateServiceGrpcLiteClient {
 
       return response.getCurrentlyAtStage();
     } catch (StatusRuntimeException ex) {
-      throw new DelegateServiceDriverException("Unexpected error occurred while checking task progress.", ex);
+      throw new DelegateServiceLiteException("Unexpected error occurred while checking task progress.", ex);
     }
   }
 
@@ -82,7 +82,7 @@ public class DelegateServiceGrpcLiteClient {
 
       return response.getSuccess();
     } catch (StatusRuntimeException ex) {
-      throw new DelegateServiceDriverException("Unexpected error occurred while checking task progress.", ex);
+      throw new DelegateServiceLiteException("Unexpected error occurred while checking task progress.", ex);
     }
   }
 
@@ -102,7 +102,7 @@ public class DelegateServiceGrpcLiteClient {
 
       return response.getSuccess();
     } catch (StatusRuntimeException ex) {
-      throw new DelegateServiceDriverException("Unexpected error occurred while sending task progress update.", ex);
+      throw new DelegateServiceLiteException("Unexpected error occurred while sending task progress update.", ex);
     }
   }
 }
