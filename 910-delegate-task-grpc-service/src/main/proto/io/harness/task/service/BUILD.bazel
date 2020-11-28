@@ -3,7 +3,7 @@ load("@io_bazel_rules_go//go:def.bzl", "go_library")
 load("@io_bazel_rules_go//proto:def.bzl", "go_proto_library")
 
 proto_library(
-    name = "50_delegate_task_grpc_service_proto",
+    name = "910_delegate_task_grpc_service_proto",
     srcs = ["task_service.proto"],
     visibility = ["//visibility:public"],
     deps = [
@@ -15,10 +15,10 @@ proto_library(
 )
 
 go_proto_library(
-    name = "50_delegate_task_grpc_service_go_proto",
+    name = "910_delegate_task_grpc_service_go_proto",
     compilers = ["@io_bazel_rules_go//proto:go_grpc"],
-    importpath = "github.com/wings-software/portal/50-delegate-task-grpc-service/src/main/proto/io/harness/task/service",
-    proto = ":50_delegate_task_grpc_service_proto",
+    importpath = "github.com/wings-software/portal/910-delegate-task-grpc-service/src/main/proto/io/harness/task/service",
+    proto = ":910_delegate_task_grpc_service_proto",
     visibility = ["//visibility:public"],
     deps = [
         "//920-delegate-service-beans/src/main/proto/io/harness/callback:go_default_library",
@@ -29,7 +29,7 @@ go_proto_library(
 
 go_library(
     name = "go_default_library",
-    embed = [":50_delegate_task_grpc_service_go_proto"],
-    importpath = "github.com/wings-software/portal/50-delegate-task-grpc-service/src/main/proto/io/harness/task/service",
+    embed = [":910_delegate_task_grpc_service_go_proto"],
+    importpath = "github.com/wings-software/portal/910-delegate-task-grpc-service/src/main/proto/io/harness/task/service",
     visibility = ["//visibility:public"],
 )

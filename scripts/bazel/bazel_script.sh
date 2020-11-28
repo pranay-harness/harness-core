@@ -163,9 +163,9 @@ build_bazel_module 850-execution-plan
 build_bazel_module 850-ng-pipeline-commons
 build_bazel_module 840-ng-triggers
 build_bazel_module 860-pms-sdk
-build_bazel_module 50-delegate-task-grpc-service
-build_bazel_module 57-command-library-common
-build_bazel_module 64-events-framework
+build_bazel_module 910-delegate-task-grpc-service
+build_bazel_module 950-command-library-common
+build_bazel_module 950-events-framework
 build_bazel_module 420-delegate-agent
 build_bazel_module 420-delegate-service
 build_bazel_module 430-cv-nextgen-commons
@@ -190,7 +190,7 @@ build_java_proto_module 950-events-api
 build_java_proto_module 920-delegate-agent-beans
 build_java_proto_module 920-delegate-service-beans
 build_java_proto_module 890-pms-contracts
-build_java_proto_module 50-delegate-task-grpc-service proto
+build_java_proto_module 910-delegate-task-grpc-service proto
 build_java_proto_module 940-delegate-beans
 build_java_proto_module 950-delegate-tasks-beans
 build_java_proto_module 960-notification-beans

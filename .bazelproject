@@ -30,9 +30,9 @@ directories:
   840-ng-triggers
   860-pms-sdk
   800-pipeline-service
-  50-delegate-task-grpc-service
-  57-command-library-common
-  64-events-framework
+  910-delegate-task-grpc-service
+  950-command-library-common
+  950-events-framework
   310-ci-manager
   320-ci-execution
   330-ci-beans

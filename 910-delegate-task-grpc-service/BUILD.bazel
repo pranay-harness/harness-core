@@ -11,7 +11,7 @@ java_library(
     name = "maven_deps",
     visibility = ["//visibility:public"],
     exports = [
-        "//50-delegate-task-grpc-service/src/main/proto:50_delegate_task_grpc_service_java_proto",
+        "//910-delegate-task-grpc-service/src/main/proto:910_delegate_task_grpc_service_java_proto",
         "//920-delegate-service-beans:module",
         "//950-delegate-tasks-beans:module",
         "//970-grpc:module",
