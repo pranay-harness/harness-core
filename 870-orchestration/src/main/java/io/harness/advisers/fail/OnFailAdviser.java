@@ -12,8 +12,8 @@ import io.harness.adviser.advise.NextStepAdvise;
 import io.harness.annotations.Redesign;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.pms.advisers.AdviserType;
+import io.harness.pms.execution.failure.FailureInfo;
 import io.harness.serializer.KryoSerializer;
-import io.harness.state.io.FailureInfo;
 
 import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
@@ -42,8 +42,9 @@ public class OnFailAdviser implements Adviser {
     }
     boolean canAdvise = StatusUtils.brokeStatuses().contains(advisingEvent.getToStatus());
     FailureInfo failureInfo = advisingEvent.getFailureInfo();
-    if (failureInfo != null && !isEmpty(failureInfo.getFailureTypes())) {
-      return canAdvise && !Collections.disjoint(parameters.getApplicableFailureTypes(), failureInfo.getFailureTypes());
+    if (failureInfo != null && !isEmpty(failureInfo.getFailureTypesList())) {
+      return canAdvise
+          && !Collections.disjoint(parameters.getApplicableFailureTypes(), failureInfo.getFailureTypesList());
     }
     return canAdvise;
   }

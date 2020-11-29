@@ -1,7 +1,7 @@
 package io.harness.ngpipeline.executions.beans;
 
 import io.harness.ngpipeline.pipeline.executions.ExecutionStatus;
-import io.harness.state.io.FailureInfo;
+import io.harness.pms.execution.failure.FailureInfo;
 
 import lombok.Builder;
 import lombok.Value;

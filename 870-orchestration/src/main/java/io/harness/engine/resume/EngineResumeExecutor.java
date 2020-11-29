@@ -5,12 +5,13 @@ import static io.harness.annotations.dev.HarnessTeam.CDC;
 import io.harness.annotations.Redesign;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.delegate.beans.ErrorNotifyResponseData;
+import io.harness.engine.EngineExceptionUtils;
 import io.harness.engine.OrchestrationEngine;
 import io.harness.engine.executables.ExecutableProcessor;
 import io.harness.engine.executables.ResumePackage;
 import io.harness.execution.NodeExecution;
 import io.harness.pms.execution.Status;
-import io.harness.state.io.FailureInfo;
+import io.harness.pms.execution.failure.FailureInfo;
 import io.harness.state.io.StepResponse;
 import io.harness.tasks.ResponseData;
 
@@ -39,9 +40,10 @@ public class EngineResumeExecutor implements Runnable {
         ErrorNotifyResponseData errorNotifyResponseData = (ErrorNotifyResponseData) response.values().iterator().next();
         StepResponse stepResponse = StepResponse.builder()
                                         .status(Status.ERRORED)
-                                        .failureInfo(FailureInfo.builder()
-                                                         .failureTypes(errorNotifyResponseData.getFailureTypes())
-                                                         .errorMessage(errorNotifyResponseData.getErrorMessage())
+                                        .failureInfo(FailureInfo.newBuilder()
+                                                         .addAllFailureTypes(EngineExceptionUtils.transformFailureTypes(
+                                                             errorNotifyResponseData.getFailureTypes()))
+                                                         .setErrorMessage(errorNotifyResponseData.getErrorMessage())
                                                          .build())
                                         .build();
         orchestrationEngine.handleStepResponse(nodeExecution.getUuid(), stepResponse);

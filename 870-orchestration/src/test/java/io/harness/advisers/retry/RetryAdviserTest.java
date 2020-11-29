@@ -15,17 +15,17 @@ import io.harness.adviser.advise.NextStepAdvise;
 import io.harness.adviser.advise.RetryAdvise;
 import io.harness.category.element.UnitTests;
 import io.harness.engine.executions.node.NodeExecutionService;
-import io.harness.exception.FailureType;
 import io.harness.execution.NodeExecution;
 import io.harness.interrupts.RepairActionCode;
 import io.harness.plan.PlanNode;
 import io.harness.pms.ambiance.Ambiance;
 import io.harness.pms.ambiance.Level;
 import io.harness.pms.execution.Status;
+import io.harness.pms.execution.failure.FailureInfo;
+import io.harness.pms.execution.failure.FailureType;
 import io.harness.pms.steps.StepType;
 import io.harness.rule.Owner;
 import io.harness.serializer.KryoSerializer;
-import io.harness.state.io.FailureInfo;
 import io.harness.utils.AmbianceTestUtils;
 
 import com.google.common.collect.ImmutableList;
@@ -166,19 +166,20 @@ public class RetryAdviserTest extends OrchestrationTestBase {
             .toStatus(Status.FAILED)
             .adviserParameters(kryoSerializer.asBytes(getRetryParamsWithIgnore()));
 
-    AdvisingEvent authFailEvent = advisingEventBuilder
-                                      .failureInfo(FailureInfo.builder()
-                                                       .errorMessage("Auth Error")
-                                                       .failureTypes(EnumSet.of(FailureType.AUTHENTICATION))
-                                                       .build())
-                                      .build();
+    AdvisingEvent authFailEvent =
+        advisingEventBuilder
+            .failureInfo(FailureInfo.newBuilder()
+                             .setErrorMessage("Auth Error")
+                             .addAllFailureTypes(EnumSet.of(FailureType.AUTHENTICATION_FAILURE))
+                             .build())
+            .build();
     boolean canAdvise = retryAdviser.canAdvise(authFailEvent);
     assertThat(canAdvise).isTrue();
 
     AdvisingEvent appFailEvent = advisingEventBuilder
-                                     .failureInfo(FailureInfo.builder()
-                                                      .errorMessage("Application Error")
-                                                      .failureTypes(EnumSet.of(FailureType.APPLICATION_ERROR))
+                                     .failureInfo(FailureInfo.newBuilder()
+                                                      .setErrorMessage("Application Error")
+                                                      .addAllFailureTypes(EnumSet.of(FailureType.APPLICATION_FAILURE))
                                                       .build())
                                      .build();
     canAdvise = retryAdviser.canAdvise(appFailEvent);
@@ -191,7 +192,7 @@ public class RetryAdviserTest extends OrchestrationTestBase {
         .waitIntervalList(ImmutableList.of(2, 5))
         .repairActionCodeAfterRetry(RepairActionCode.IGNORE)
         .nextNodeId(DUMMY_NODE_ID)
-        .applicableFailureTypes(EnumSet.of(FailureType.AUTHENTICATION))
+        .applicableFailureTypes(EnumSet.of(FailureType.AUTHENTICATION_FAILURE))
         .build();
   }
 }

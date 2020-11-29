@@ -16,8 +16,8 @@ import io.harness.interrupts.Interrupt;
 import io.harness.interrupts.InterruptEffect;
 import io.harness.plan.Plan;
 import io.harness.plan.PlanNode;
+import io.harness.pms.execution.failure.FailureInfo;
 import io.harness.spring.AliasRegistrar;
-import io.harness.state.io.FailureInfo;
 import io.harness.state.io.StepOutcomeRef;
 import io.harness.timeout.TimeoutDetails;
 import io.harness.timeout.trackers.active.ActiveTimeoutTracker;
@@ -34,7 +34,6 @@ public class OrchestrationBeansAliasRegistrar implements AliasRegistrar {
     orchestrationElements.put("childExecutableResponse", ChildExecutableResponse.class);
     orchestrationElements.put("childrenExecutableResponse", ChildrenExecutableResponse.class);
     orchestrationElements.put("defaultFacilitatorParams", DefaultFacilitatorParams.class);
-    orchestrationElements.put("failureInfo", FailureInfo.class);
     orchestrationElements.put("interrupt", Interrupt.class);
     orchestrationElements.put("interruptEffect", InterruptEffect.class);
     orchestrationElements.put("nodeExecution", NodeExecution.class);

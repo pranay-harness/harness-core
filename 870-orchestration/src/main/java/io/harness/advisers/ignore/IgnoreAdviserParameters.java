@@ -5,7 +5,7 @@ import static io.harness.annotations.dev.HarnessTeam.CDC;
 import io.harness.adviser.advise.WithFailureTypes;
 import io.harness.annotations.Redesign;
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.exception.FailureType;
+import io.harness.pms.execution.failure.FailureType;
 
 import java.util.EnumSet;
 import java.util.Set;

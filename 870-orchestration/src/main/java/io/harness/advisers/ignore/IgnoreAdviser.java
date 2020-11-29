@@ -11,8 +11,8 @@ import io.harness.adviser.advise.NextStepAdvise;
 import io.harness.annotations.Redesign;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.pms.advisers.AdviserType;
+import io.harness.pms.execution.failure.FailureInfo;
 import io.harness.serializer.KryoSerializer;
-import io.harness.state.io.FailureInfo;
 
 import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
@@ -37,8 +37,8 @@ public class IgnoreAdviser implements Adviser {
   public boolean canAdvise(AdvisingEvent advisingEvent) {
     IgnoreAdviserParameters parameters = extractParameters(advisingEvent);
     FailureInfo failureInfo = advisingEvent.getFailureInfo();
-    if (failureInfo != null && !isEmpty(failureInfo.getFailureTypes())) {
-      return !Collections.disjoint(parameters.getApplicableFailureTypes(), failureInfo.getFailureTypes());
+    if (failureInfo != null && !isEmpty(failureInfo.getFailureTypesList())) {
+      return !Collections.disjoint(parameters.getApplicableFailureTypes(), failureInfo.getFailureTypesList());
     }
     return true;
   }

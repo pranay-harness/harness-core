@@ -10,8 +10,8 @@ import io.harness.facilitator.PassThroughData;
 import io.harness.facilitator.modes.sync.SyncExecutable;
 import io.harness.pms.ambiance.Ambiance;
 import io.harness.pms.execution.Status;
+import io.harness.pms.execution.failure.FailureInfo;
 import io.harness.pms.steps.StepType;
-import io.harness.state.io.FailureInfo;
 import io.harness.state.io.StepInputPackage;
 import io.harness.state.io.StepResponse;
 import io.harness.state.io.StepResponse.StepResponseBuilder;
@@ -59,9 +59,9 @@ public class EmailStep implements SyncExecutable<EmailStepParameters> {
       stepResponseBuilder.status(Status.SUCCEEDED);
     } catch (Exception e) {
       stepResponseBuilder
-          .failureInfo(FailureInfo.builder()
-                           .errorMessage(e.getCause() == null ? ExceptionUtils.getMessage(e)
-                                                              : ExceptionUtils.getMessage(e.getCause()))
+          .failureInfo(FailureInfo.newBuilder()
+                           .setErrorMessage(e.getCause() == null ? ExceptionUtils.getMessage(e)
+                                                                 : ExceptionUtils.getMessage(e.getCause()))
                            .build())
           .status(emailStepParameters.isIgnoreDeliveryFailure() ? Status.SUCCEEDED : Status.FAILED);
       log.error("Exception while sending email", e);

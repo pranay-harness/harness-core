@@ -19,8 +19,8 @@ import io.harness.engine.executions.node.NodeExecutionService;
 import io.harness.execution.NodeExecution;
 import io.harness.pms.advisers.AdviserType;
 import io.harness.pms.ambiance.Ambiance;
+import io.harness.pms.execution.failure.FailureInfo;
 import io.harness.serializer.KryoSerializer;
-import io.harness.state.io.FailureInfo;
 
 import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
@@ -55,8 +55,9 @@ public class RetryAdviser implements Adviser {
     boolean canAdvise = retryableStatuses().contains(advisingEvent.getToStatus());
     FailureInfo failureInfo = advisingEvent.getFailureInfo();
     RetryAdviserParameters parameters = extractParameters(advisingEvent);
-    if (failureInfo != null && !isEmpty(failureInfo.getFailureTypes())) {
-      return canAdvise && !Collections.disjoint(parameters.getApplicableFailureTypes(), failureInfo.getFailureTypes());
+    if (failureInfo != null && !isEmpty(failureInfo.getFailureTypesList())) {
+      return canAdvise
+          && !Collections.disjoint(parameters.getApplicableFailureTypes(), failureInfo.getFailureTypesList());
     }
     return canAdvise;
   }

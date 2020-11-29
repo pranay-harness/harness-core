@@ -1,7 +1,7 @@
 package io.harness.advisers.manualintervention;
 
 import io.harness.adviser.advise.WithFailureTypes;
-import io.harness.exception.FailureType;
+import io.harness.pms.execution.failure.FailureType;
 
 import java.util.EnumSet;
 import java.util.Set;

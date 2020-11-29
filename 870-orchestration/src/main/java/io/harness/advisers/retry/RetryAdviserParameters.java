@@ -2,10 +2,11 @@ package io.harness.advisers.retry;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 
+import io.harness.adviser.advise.WithFailureTypes;
 import io.harness.annotations.Redesign;
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.exception.FailureType;
 import io.harness.interrupts.RepairActionCode;
+import io.harness.pms.execution.failure.FailureType;
 
 import java.util.List;
 import java.util.Set;
@@ -18,7 +19,7 @@ import org.springframework.data.annotation.TypeAlias;
 @Builder
 @Redesign
 @TypeAlias("retryAdviserParameters")
-public class RetryAdviserParameters {
+public class RetryAdviserParameters implements WithFailureTypes {
   List<Integer> waitIntervalList;
   int retryCount;
   RepairActionCode repairActionCodeAfterRetry;

@@ -14,16 +14,16 @@ import io.harness.adviser.AdvisingEvent.AdvisingEventBuilder;
 import io.harness.adviser.advise.InterventionWaitAdvise;
 import io.harness.category.element.UnitTests;
 import io.harness.engine.executions.node.NodeExecutionService;
-import io.harness.exception.FailureType;
 import io.harness.execution.NodeExecution;
 import io.harness.plan.PlanNode;
 import io.harness.pms.ambiance.Ambiance;
 import io.harness.pms.ambiance.Level;
 import io.harness.pms.execution.Status;
+import io.harness.pms.execution.failure.FailureInfo;
+import io.harness.pms.execution.failure.FailureType;
 import io.harness.pms.steps.StepType;
 import io.harness.rule.Owner;
 import io.harness.serializer.KryoSerializer;
-import io.harness.state.io.FailureInfo;
 import io.harness.utils.AmbianceTestUtils;
 
 import com.google.inject.Inject;
@@ -99,23 +99,24 @@ public class ManualInterventionAdviserTest extends OrchestrationTestBase {
             .fromStatus(Status.RUNNING)
             .adviserParameters(
                 kryoSerializer.asBytes(ManualInterventionAdviserParameters.builder()
-                                           .applicableFailureTypes(EnumSet.of(FailureType.AUTHENTICATION))
+                                           .applicableFailureTypes(EnumSet.of(FailureType.AUTHENTICATION_FAILURE))
                                            .build()));
 
-    AdvisingEvent authFailEvent = advisingEventBuilder
-                                      .failureInfo(FailureInfo.builder()
-                                                       .errorMessage("Auth Error")
-                                                       .failureTypes(EnumSet.of(FailureType.AUTHENTICATION))
-                                                       .build())
-                                      .build();
+    AdvisingEvent authFailEvent =
+        advisingEventBuilder
+            .failureInfo(FailureInfo.newBuilder()
+                             .setErrorMessage("Auth Error")
+                             .addAllFailureTypes(EnumSet.of(FailureType.AUTHENTICATION_FAILURE))
+                             .build())
+            .build();
 
     boolean canAdvise = manualInterventionAdviser.canAdvise(authFailEvent);
     assertThat(canAdvise).isTrue();
 
     AdvisingEvent appFailEvent = advisingEventBuilder
-                                     .failureInfo(FailureInfo.builder()
-                                                      .errorMessage("Application Error")
-                                                      .failureTypes(EnumSet.of(FailureType.APPLICATION_ERROR))
+                                     .failureInfo(FailureInfo.newBuilder()
+                                                      .setErrorMessage("Application Error")
+                                                      .addAllFailureTypes(EnumSet.of(FailureType.APPLICATION_FAILURE))
                                                       .build())
                                      .build();
     canAdvise = manualInterventionAdviser.canAdvise(appFailEvent);
@@ -133,7 +134,7 @@ public class ManualInterventionAdviserTest extends OrchestrationTestBase {
             .fromStatus(Status.INTERVENTION_WAITING)
             .adviserParameters(
                 kryoSerializer.asBytes(ManualInterventionAdviserParameters.builder()
-                                           .applicableFailureTypes(EnumSet.of(FailureType.AUTHENTICATION))
+                                           .applicableFailureTypes(EnumSet.of(FailureType.AUTHENTICATION_FAILURE))
                                            .build()));
 
     boolean canAdvise = manualInterventionAdviser.canAdvise(advisingEventBuilder.build());
