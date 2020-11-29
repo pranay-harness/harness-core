@@ -19,6 +19,7 @@ import io.harness.category.element.UnitTests;
 import io.harness.managerclient.VerificationManagerClientHelper;
 import io.harness.rule.Owner;
 import io.harness.service.intfc.LearningEngineService;
+import io.harness.threading.Poller;
 import io.harness.version.ServiceApiVersion;
 
 import software.wings.api.PhaseElement;
@@ -38,6 +39,7 @@ import software.wings.sm.StateExecutionInstance;
 
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
+import java.time.Duration;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedList;
@@ -50,6 +52,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.Mock;
+import org.mongodb.morphia.query.Query;
 
 public class LearningEngineAnalysisServiceImplTest extends VerificationBaseTest {
   @Inject private WingsPersistence wingsPersistence;
@@ -292,23 +295,27 @@ public class LearningEngineAnalysisServiceImplTest extends VerificationBaseTest 
 
     assertThat(wingsPersistence.createQuery(LearningEngineAnalysisTask.class).count()).isEqualTo(numOfTasks);
 
+    Query<LearningEngineAnalysisTask> query1 =
+        wingsPersistence.createQuery(LearningEngineAnalysisTask.class, excludeAuthority)
+            .filter("executionStatus", ExecutionStatus.QUEUED)
+            .filter("retry", 0);
+
+    Query<LearningEngineAnalysisTask> query2 =
+        wingsPersistence.createQuery(LearningEngineAnalysisTask.class, excludeAuthority)
+            .filter("executionStatus", ExecutionStatus.RUNNING)
+            .filter("retry", 1);
+
     for (int i = 1; i <= numOfTasks; i++) {
       LearningEngineAnalysisTask leTask = learningEngineService.getNextLearningEngineAnalysisTask(
           ServiceApiVersion.V1, Optional.of("false"), Optional.empty());
       assertThat(leTask.getExecutionStatus()).isEqualTo(ExecutionStatus.RUNNING);
 
-      assertThat(wingsPersistence.createQuery(LearningEngineAnalysisTask.class, excludeAuthority)
-                     .filter("executionStatus", ExecutionStatus.QUEUED)
-                     .filter("retry", 0)
-                     .asList()
-                     .size())
-          .isEqualTo(numOfTasks - i);
-      assertThat(wingsPersistence.createQuery(LearningEngineAnalysisTask.class, excludeAuthority)
-                     .filter("executionStatus", ExecutionStatus.RUNNING)
-                     .filter("retry", 1)
-                     .asList()
-                     .size())
-          .isEqualTo(i);
+      int expected = numOfTasks - i;
+
+      Poller.pollFor(Duration.ofSeconds(5), Duration.ofMillis(10), () -> query1.count() == expected);
+      assertThat(query1.count()).isEqualTo(expected);
+
+      assertThat(query2.count()).isEqualTo(i);
     }
   }
 
