@@ -152,7 +152,7 @@ build_bazel_module 950-common-entities
 build_bazel_module 890-pms-contracts
 build_bazel_module 890-orchestration-persistence
 build_bazel_module 880-pms-commons
-build_bazel_module 870-pms-sdk-beans
+build_bazel_module 870-pms-sdk-utils
 build_bazel_module 880-orchestration-beans
 build_bazel_module 870-orchestration
 build_bazel_module 860-orchestration-steps
@@ -162,7 +162,7 @@ build_bazel_module 860-yaml-beans
 build_bazel_module 850-execution-plan
 build_bazel_module 850-ng-pipeline-commons
 build_bazel_module 840-ng-triggers
-build_bazel_module 860-pms-sdk
+build_bazel_module 850-pms-sdk
 build_bazel_module 910-delegate-task-grpc-service
 build_bazel_module 950-command-library-common
 build_bazel_module 950-events-framework

@@ -12,6 +12,7 @@ java_library(
     visibility = ["//visibility:public"],
     exports = [
         "//870-orchestration:module",
+        "//870-pms-sdk-utils:module",
         "@maven//:com_esotericsoftware_kryo",
         "@maven//:com_fasterxml_jackson_core_jackson_annotations",
         "@maven//:com_github_reinert_jjschema",
