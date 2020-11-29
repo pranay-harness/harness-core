@@ -3,11 +3,15 @@ package io.harness.rule;
 import io.harness.factory.ClosingFactory;
 import io.harness.govern.ProviderModule;
 import io.harness.govern.ServersModule;
+import io.harness.morphia.MorphiaRegistrar;
 import io.harness.serializer.DelegateRegistrars;
 import io.harness.serializer.KryoModule;
 import io.harness.serializer.KryoRegistrar;
+import io.harness.serializer.PersistenceRegistrars;
 import io.harness.serializer.kryo.TestManagerKryoRegistrar;
 import io.harness.testing.ComponentTestsModule;
+import io.harness.testlib.module.MongoRuleMixin;
+import io.harness.testlib.module.TestMongoModule;
 import io.harness.threading.CurrentThreadExecutor;
 import io.harness.threading.ExecutorModule;
 
@@ -25,8 +29,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.junit.rules.MethodRule;
 import org.junit.runners.model.FrameworkMethod;
 import org.junit.runners.model.Statement;
-import org.mongodb.morphia.ObjectFactory;
-import org.mongodb.morphia.mapping.DefaultCreator;
+import org.mongodb.morphia.converters.TypeConverter;
 
 @Slf4j
 public class DelegateRule implements MethodRule, InjectorRuleMixin {
@@ -59,18 +62,44 @@ public class DelegateRule implements MethodRule, InjectorRuleMixin {
       @Singleton
       Set<Class<? extends KryoRegistrar>> registrars() {
         return ImmutableSet.<Class<? extends KryoRegistrar>>builder()
+            .addAll(PersistenceRegistrars.kryoRegistrars)
             .addAll(DelegateRegistrars.kryoRegistrars)
             .add(TestManagerKryoRegistrar.class)
             .build();
       }
-    });
-    modules.add(new ProviderModule() {
+
       @Provides
       @Singleton
-      ObjectFactory objectFactory() {
-        return new DefaultCreator();
+      Set<Class<? extends MorphiaRegistrar>> morphiaRegistrars() {
+        return ImmutableSet.<Class<? extends MorphiaRegistrar>>builder()
+            .addAll(PersistenceRegistrars.morphiaRegistrars)
+            .build();
+      }
+
+      @Provides
+      @Singleton
+      Set<Class<? extends TypeConverter>> morphiaConverters() {
+        return ImmutableSet.<Class<? extends TypeConverter>>builder()
+            .addAll(PersistenceRegistrars.morphiaConverters)
+            .build();
+      }
+
+      @Provides
+      @Singleton
+      MongoRuleMixin.MongoType provideMongoType() {
+        return MongoRuleMixin.MongoType.FAKE;
       }
     });
+
+    modules.add(TestMongoModule.getInstance());
+
+    //    modules.add(new ProviderModule() {
+    //      @Provides
+    //      @Singleton
+    //      ObjectFactory objectFactory() {
+    //        return new DefaultCreator();
+    //      }
+    //    });
     return modules;
   }
 
