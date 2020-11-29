@@ -67,7 +67,7 @@ modules = [
     "//890-pms-contracts",
     "//890-orchestration-persistence",
     "//880-pms-commons",
-    "//870-pms-sdk-beans",
+    "//870-pms-sdk-utils",
     "//880-orchestration-beans",
     "//870-orchestration",
     "//860-orchestration-steps",

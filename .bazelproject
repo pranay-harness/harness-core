@@ -18,7 +18,7 @@ directories:
   890-pms-contracts
   890-orchestration-persistence
   880-pms-commons
-  870-pms-sdk-beans
+  870-pms-sdk-utils
   880-orchestration-beans
   870-orchestration
   860-orchestration-steps
@@ -27,8 +27,8 @@ directories:
   860-yaml-beans
   850-execution-plan
   850-ng-pipeline-commons
+  850-pms-sdk
   840-ng-triggers
-  860-pms-sdk
   800-pipeline-service
   910-delegate-task-grpc-service
   950-command-library-common

@@ -1,7 +1,7 @@
 package io.harness.cdng.creator.filters;
 
 import io.harness.pms.filter.FilterCreationResponse;
-import io.harness.pms.sdk.creator.filters.FilterCreationResponseMerger;
+import io.harness.pms.plan.creator.filters.FilterCreationResponseMerger;
 
 public class CDNGFilterCreationResponseMerger implements FilterCreationResponseMerger {
   @Override
