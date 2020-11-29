@@ -54,6 +54,7 @@ import io.harness.plan.PlanNode;
 import io.harness.pms.advisers.AdviserObtainment;
 import io.harness.pms.ambiance.Ambiance;
 import io.harness.pms.execution.Status;
+import io.harness.pms.execution.failure.FailureInfo;
 import io.harness.pms.facilitators.FacilitatorObtainment;
 import io.harness.registries.adviser.AdviserRegistry;
 import io.harness.registries.facilitator.FacilitatorRegistry;
@@ -64,7 +65,6 @@ import io.harness.resolvers.Resolver;
 import io.harness.serializer.JsonUtils;
 import io.harness.serializer.KryoSerializer;
 import io.harness.serializer.json.JsonOrchestrationUtils;
-import io.harness.state.io.FailureInfo;
 import io.harness.state.io.StepInputPackage;
 import io.harness.state.io.StepOutcomeRef;
 import io.harness.state.io.StepParameters;
@@ -421,13 +421,14 @@ public class OrchestrationEngine {
 
   public void handleError(Ambiance ambiance, Exception exception) {
     try {
-      StepResponse response = StepResponse.builder()
-                                  .status(Status.FAILED)
-                                  .failureInfo(FailureInfo.builder()
-                                                   .errorMessage(ExceptionUtils.getMessage(exception))
-                                                   .failureTypes(ExceptionUtils.getFailureTypes(exception))
-                                                   .build())
-                                  .build();
+      StepResponse response =
+          StepResponse.builder()
+              .status(Status.FAILED)
+              .failureInfo(FailureInfo.newBuilder()
+                               .setErrorMessage(ExceptionUtils.getMessage(exception))
+                               .addAllFailureTypes(EngineExceptionUtils.getOrchestrationFailureTypes(exception))
+                               .build())
+              .build();
       handleStepResponse(AmbianceUtils.obtainCurrentRuntimeId(ambiance), response);
     } catch (RuntimeException ex) {
       log.error("Error when trying to obtain the advice ", ex);

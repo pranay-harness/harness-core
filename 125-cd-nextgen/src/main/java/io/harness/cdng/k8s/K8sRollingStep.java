@@ -46,9 +46,9 @@ import io.harness.logging.CommandExecutionStatus;
 import io.harness.ngpipeline.common.AmbianceHelper;
 import io.harness.pms.ambiance.Ambiance;
 import io.harness.pms.execution.Status;
+import io.harness.pms.execution.failure.FailureInfo;
 import io.harness.pms.steps.StepType;
 import io.harness.security.encryption.EncryptedDataDetail;
-import io.harness.state.io.FailureInfo;
 import io.harness.state.io.StepInputPackage;
 import io.harness.state.io.StepResponse;
 import io.harness.tasks.ResponseData;
@@ -348,7 +348,7 @@ public class K8sRollingStep implements TaskChainExecutable<K8sRollingStepParamet
     } else {
       return StepResponse.builder()
           .status(Status.FAILED)
-          .failureInfo(FailureInfo.builder().errorMessage(k8sTaskExecutionResponse.getErrorMessage()).build())
+          .failureInfo(FailureInfo.newBuilder().setErrorMessage(k8sTaskExecutionResponse.getErrorMessage()).build())
           .build();
     }
   }

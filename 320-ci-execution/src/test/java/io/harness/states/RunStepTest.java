@@ -17,15 +17,15 @@ import io.harness.delegate.task.stepstatus.StepMapOutput;
 import io.harness.delegate.task.stepstatus.StepStatus;
 import io.harness.delegate.task.stepstatus.StepStatusTaskResponseData;
 import io.harness.engine.outputs.ExecutionSweepingOutputService;
-import io.harness.exception.FailureType;
 import io.harness.executionplan.CIExecutionTest;
 import io.harness.facilitator.modes.async.AsyncExecutableResponse;
 import io.harness.pms.ambiance.Ambiance;
 import io.harness.pms.execution.Status;
+import io.harness.pms.execution.failure.FailureInfo;
+import io.harness.pms.execution.failure.FailureType;
 import io.harness.pms.refobjects.RefObject;
 import io.harness.refObjects.RefObjectUtil;
 import io.harness.rule.Owner;
-import io.harness.state.io.FailureInfo;
 import io.harness.state.io.StepInputPackage;
 import io.harness.state.io.StepResponse;
 import io.harness.tasks.ResponseData;
@@ -123,9 +123,9 @@ public class RunStepTest extends CIExecutionTest {
     assertThat(stepResponse)
         .isEqualTo(StepResponse.builder()
                        .status(Status.FAILED)
-                       .failureInfo(FailureInfo.builder()
-                                        .errorMessage(ERROR)
-                                        .failureTypes(EnumSet.of(FailureType.APPLICATION_ERROR))
+                       .failureInfo(FailureInfo.newBuilder()
+                                        .setErrorMessage(ERROR)
+                                        .addAllFailureTypes(EnumSet.of(FailureType.APPLICATION_FAILURE))
                                         .build())
                        .build());
   }

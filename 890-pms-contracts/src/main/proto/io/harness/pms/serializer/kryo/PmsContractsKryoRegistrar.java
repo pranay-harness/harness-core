@@ -6,10 +6,13 @@ import io.harness.pms.ambiance.Ambiance;
 import io.harness.pms.ambiance.Level;
 import io.harness.pms.execution.ExecutionMode;
 import io.harness.pms.execution.Status;
+import io.harness.pms.execution.failure.FailureInfo;
+import io.harness.pms.execution.failure.FailureType;
 import io.harness.pms.facilitators.FacilitatorType;
 import io.harness.pms.refobjects.RefObject;
 import io.harness.pms.refobjects.RefType;
 import io.harness.pms.serializer.kryo.serializers.AmbianceKryoSerializer;
+import io.harness.pms.serializer.kryo.serializers.FailureInfoKryoSerializer;
 import io.harness.pms.serializer.kryo.serializers.LevelKryoSerializer;
 import io.harness.pms.serializer.kryo.serializers.RefTypeKryoSerializer;
 import io.harness.pms.serializer.kryo.serializers.StepTypeKryoSerializer;
@@ -33,5 +36,7 @@ public class PmsContractsKryoRegistrar implements KryoRegistrar {
     kryo.register(RefType.class, RefTypeKryoSerializer.getInstance(), 2609);
     kryo.register(RefObject.class, 2610);
     kryo.register(StepType.class, StepTypeKryoSerializer.getInstance(), 2611);
+    kryo.register(FailureType.class, 2612);
+    kryo.register(FailureInfo.class, FailureInfoKryoSerializer.getInstance(), 2613);
   }
 }

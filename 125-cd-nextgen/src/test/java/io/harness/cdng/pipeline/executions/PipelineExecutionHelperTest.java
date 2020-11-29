@@ -31,8 +31,8 @@ import io.harness.ngpipeline.pipeline.executions.beans.ServiceExecutionSummary;
 import io.harness.ngpipeline.pipeline.executions.beans.StageExecutionSummary;
 import io.harness.plan.PlanNode;
 import io.harness.pms.execution.Status;
+import io.harness.pms.execution.failure.FailureInfo;
 import io.harness.rule.Owner;
-import io.harness.state.io.FailureInfo;
 import io.harness.yaml.core.ParallelStageElement;
 import io.harness.yaml.core.StageElement;
 
@@ -143,7 +143,7 @@ public class PipelineExecutionHelperTest extends CDNGBaseTest {
     NodeExecution nodeExecution = NodeExecution.builder()
                                       .uuid("id")
                                       .status(Status.FAILED)
-                                      .failureInfo(FailureInfo.builder().errorMessage("invalid").build())
+                                      .failureInfo(FailureInfo.newBuilder().setErrorMessage("invalid").build())
                                       .startTs(123L)
                                       .endTs(124L)
                                       .build();
@@ -170,7 +170,7 @@ public class PipelineExecutionHelperTest extends CDNGBaseTest {
     NodeExecution nodeExecution = NodeExecution.builder()
                                       .uuid("id")
                                       .status(Status.FAILED)
-                                      .failureInfo(FailureInfo.builder().errorMessage("invalid").build())
+                                      .failureInfo(FailureInfo.newBuilder().setErrorMessage("invalid").build())
                                       .startTs(123L)
                                       .endTs(124L)
                                       .build();

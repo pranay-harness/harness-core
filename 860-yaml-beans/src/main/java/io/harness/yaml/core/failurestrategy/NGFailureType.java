@@ -1,8 +1,8 @@
 package io.harness.yaml.core.failurestrategy;
 
-import static io.harness.exception.FailureType.*;
+import static io.harness.pms.execution.failure.FailureType.*;
 
-import io.harness.exception.FailureType;
+import io.harness.pms.execution.failure.FailureType;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -12,22 +12,23 @@ import java.util.EnumSet;
 public enum NGFailureType {
   @JsonProperty(NGFailureTypeConstants.ALL_ERRORS)
   ALL_ERRORS(NGFailureTypeConstants.ALL_ERRORS,
-      EnumSet.of(AUTHENTICATION, CONNECTIVITY, DELEGATE_PROVISIONING, APPLICATION_ERROR,
-          FailureType.AUTHORIZATION_ERROR, VERIFICATION_FAILURE, EXPIRED)),
+      EnumSet.of(AUTHENTICATION_FAILURE, CONNECTIVITY_FAILURE, DELEGATE_PROVISIONING_FAILURE, APPLICATION_FAILURE,
+          AUTHORIZATION_FAILURE, VERIFICATION_FAILURE, TIMEOUT_FAILURE)),
   @JsonProperty(NGFailureTypeConstants.OTHER_ERRORS)
-  OTHER_ERRORS(NGFailureTypeConstants.OTHER_ERRORS, EnumSet.of(APPLICATION_ERROR)),
+  OTHER_ERRORS(NGFailureTypeConstants.OTHER_ERRORS, EnumSet.of(APPLICATION_FAILURE)),
   @JsonProperty(NGFailureTypeConstants.AUTHENTICATION_ERROR)
-  AUTHENTICATION_ERROR(NGFailureTypeConstants.AUTHENTICATION_ERROR, EnumSet.of(AUTHENTICATION)),
+  AUTHENTICATION_ERROR(NGFailureTypeConstants.AUTHENTICATION_ERROR, EnumSet.of(AUTHENTICATION_FAILURE)),
   @JsonProperty(NGFailureTypeConstants.CONNECTIVITY_ERROR)
-  CONNECTIVITY_ERROR(NGFailureTypeConstants.CONNECTIVITY_ERROR, EnumSet.of(CONNECTIVITY)),
+  CONNECTIVITY_ERROR(NGFailureTypeConstants.CONNECTIVITY_ERROR, EnumSet.of(CONNECTIVITY_FAILURE)),
   @JsonProperty(NGFailureTypeConstants.TIMEOUT_ERROR)
-  TIMEOUT_ERROR(NGFailureTypeConstants.TIMEOUT_ERROR, EnumSet.of(EXPIRED)),
+  TIMEOUT_ERROR(NGFailureTypeConstants.TIMEOUT_ERROR, EnumSet.of(TIMEOUT_FAILURE)),
   @JsonProperty(NGFailureTypeConstants.AUTHORIZATION_ERROR)
-  AUTHORIZATION_ERROR(NGFailureTypeConstants.AUTHORIZATION_ERROR, EnumSet.of(FailureType.AUTHORIZATION_ERROR)),
+  AUTHORIZATION_ERROR(NGFailureTypeConstants.AUTHORIZATION_ERROR, EnumSet.of(AUTHORIZATION_FAILURE)),
   @JsonProperty(NGFailureTypeConstants.VERIFICATION_ERROR)
   VERIFICATION_ERROR(NGFailureTypeConstants.VERIFICATION_ERROR, EnumSet.of(VERIFICATION_FAILURE)),
   @JsonProperty(NGFailureTypeConstants.DELEGATE_PROVISIONING_ERROR)
-  DELEGATE_PROVISIONING_ERROR(NGFailureTypeConstants.DELEGATE_PROVISIONING_ERROR, EnumSet.of(DELEGATE_PROVISIONING));
+  DELEGATE_PROVISIONING_ERROR(
+      NGFailureTypeConstants.DELEGATE_PROVISIONING_ERROR, EnumSet.of(DELEGATE_PROVISIONING_FAILURE));
 
   private final String yamlName;
   private final EnumSet<FailureType> failureType;

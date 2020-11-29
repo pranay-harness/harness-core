@@ -7,14 +7,15 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.delegate.beans.ErrorNotifyResponseData;
 import io.harness.delegate.beans.TaskData;
 import io.harness.delegate.task.http.HttpTaskParameters;
+import io.harness.engine.EngineExceptionUtils;
 import io.harness.executions.steps.ExecutionNodeType;
 import io.harness.facilitator.modes.task.TaskExecutable;
 import io.harness.ngpipeline.orchestration.StepUtils;
 import io.harness.pms.ambiance.Ambiance;
 import io.harness.pms.execution.Status;
+import io.harness.pms.execution.failure.FailureInfo;
 import io.harness.pms.steps.StepType;
 import io.harness.redesign.states.http.BasicHttpStepParameters;
-import io.harness.state.io.FailureInfo;
 import io.harness.state.io.StepInputPackage;
 import io.harness.state.io.StepResponse;
 import io.harness.state.io.StepResponse.StepOutcome;
@@ -70,9 +71,10 @@ public class HttpStep implements TaskExecutable<BasicHttpStepParameters> {
       ErrorNotifyResponseData errorNotifyResponseData = (ErrorNotifyResponseData) notifyResponseData;
       responseBuilder.status(Status.FAILED);
       responseBuilder
-          .failureInfo(FailureInfo.builder()
-                           .errorMessage(errorNotifyResponseData.getErrorMessage())
-                           .failureTypes(errorNotifyResponseData.getFailureTypes())
+          .failureInfo(FailureInfo.newBuilder()
+                           .setErrorMessage(errorNotifyResponseData.getErrorMessage())
+                           .addAllFailureTypes(
+                               EngineExceptionUtils.transformFailureTypes(errorNotifyResponseData.getFailureTypes()))
                            .build())
           .build();
     } else {

@@ -1,6 +1,6 @@
 package io.harness.adviser.advise;
 
-import io.harness.exception.FailureType;
+import io.harness.pms.execution.failure.FailureType;
 
 import java.util.Set;
 

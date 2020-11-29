@@ -8,8 +8,8 @@ import io.harness.interrupts.InterruptEffect;
 import io.harness.pms.ambiance.Ambiance;
 import io.harness.pms.execution.ExecutionMode;
 import io.harness.pms.execution.Status;
+import io.harness.pms.execution.failure.FailureInfo;
 import io.harness.pms.steps.SkipType;
-import io.harness.state.io.FailureInfo;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import java.io.Serializable;

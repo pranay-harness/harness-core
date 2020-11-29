@@ -31,10 +31,10 @@ import io.harness.exception.WingsException;
 import io.harness.facilitator.modes.task.TaskExecutable;
 import io.harness.pms.ambiance.Ambiance;
 import io.harness.pms.execution.Status;
+import io.harness.pms.execution.failure.FailureInfo;
 import io.harness.pms.steps.StepType;
 import io.harness.resolvers.ResolverUtils;
 import io.harness.security.encryption.EncryptedDataDetail;
-import io.harness.state.io.FailureInfo;
 import io.harness.state.io.ResolvedRefInput;
 import io.harness.state.io.StepInputPackage;
 import io.harness.state.io.StepResponse;
@@ -276,7 +276,7 @@ public class ShellScriptStep implements TaskExecutable<ShellScriptStepParameters
       }
 
       stepResponseBuilder.failureInfo(
-          FailureInfo.builder().errorMessage(commandExecutionResult.getErrorMessage()).build());
+          FailureInfo.newBuilder().setErrorMessage(commandExecutionResult.getErrorMessage()).build());
 
       ScriptStateExecutionData scriptStateExecutionData =
           ScriptStateExecutionData.builder().activityId(activityId).build();
@@ -298,7 +298,7 @@ public class ShellScriptStep implements TaskExecutable<ShellScriptStepParameters
     } else if (data instanceof ErrorNotifyResponseData) {
       stepResponseBuilder.status(Status.FAILED);
       stepResponseBuilder.failureInfo(
-          FailureInfo.builder().errorMessage(((ErrorNotifyResponseData) data).getErrorMessage()).build());
+          FailureInfo.newBuilder().setErrorMessage(((ErrorNotifyResponseData) data).getErrorMessage()).build());
       return stepResponseBuilder.build();
     } else {
       log.error("Unhandled DelegateResponseData class " + data.getClass().getCanonicalName(), new Exception(""));

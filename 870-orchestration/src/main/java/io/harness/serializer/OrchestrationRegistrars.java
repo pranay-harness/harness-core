@@ -9,6 +9,7 @@ import io.harness.serializer.morphia.converters.AdviserTypeMorphiaConverter;
 import io.harness.serializer.morphia.converters.AmbianceMorphiaConverter;
 import io.harness.serializer.morphia.converters.FacilitatorObtainmentMorphiaConverter;
 import io.harness.serializer.morphia.converters.FacilitatorTypeMorphiaConverter;
+import io.harness.serializer.morphia.converters.FailureInfoMorphiaConverter;
 import io.harness.serializer.morphia.converters.LevelMorphiaConverter;
 import io.harness.serializer.morphia.converters.RefObjectMorphiaConverter;
 import io.harness.serializer.morphia.converters.RefTypeMorphiaConverter;
@@ -24,6 +25,8 @@ import io.harness.serializer.spring.converters.facilitators.obtainment.Facilitat
 import io.harness.serializer.spring.converters.facilitators.obtainment.FacilitatorObtainmentWriteConverter;
 import io.harness.serializer.spring.converters.facilitators.type.FacilitatorTypeReadConverter;
 import io.harness.serializer.spring.converters.facilitators.type.FacilitatorTypeWriteConverter;
+import io.harness.serializer.spring.converters.failureinfo.FailureInfoReadConverter;
+import io.harness.serializer.spring.converters.failureinfo.FailureInfoWriteConverter;
 import io.harness.serializer.spring.converters.level.LevelReadConverter;
 import io.harness.serializer.spring.converters.level.LevelWriteConverter;
 import io.harness.serializer.spring.converters.refobject.RefObjectReadConverter;
@@ -81,6 +84,7 @@ public class OrchestrationRegistrars {
           .add(FacilitatorTypeMorphiaConverter.class)
           .add(FacilitatorObtainmentMorphiaConverter.class)
           .add(RefTypeMorphiaConverter.class)
+          .add(FailureInfoMorphiaConverter.class)
           .build();
 
   public static final List<Class<? extends Converter<?, ?>>> springConverters = ImmutableList.of(
@@ -90,5 +94,5 @@ public class OrchestrationRegistrars {
       FacilitatorTypeReadConverter.class, FacilitatorTypeWriteConverter.class, StepTypeReadConverter.class,
       StepTypeWriteConverter.class, FacilitatorObtainmentReadConverter.class, FacilitatorObtainmentWriteConverter.class,
       RefTypeReadConverter.class, RefTypeWriteConverter.class, RefObjectReadConverter.class,
-      RefObjectWriteConverter.class);
+      RefObjectWriteConverter.class, FailureInfoReadConverter.class, FailureInfoWriteConverter.class);
 }

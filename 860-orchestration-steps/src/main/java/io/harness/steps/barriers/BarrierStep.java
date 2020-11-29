@@ -11,9 +11,9 @@ import io.harness.facilitator.modes.async.AsyncExecutableResponse;
 import io.harness.facilitator.modes.sync.SyncExecutable;
 import io.harness.pms.ambiance.Ambiance;
 import io.harness.pms.execution.Status;
+import io.harness.pms.execution.failure.FailureInfo;
 import io.harness.pms.steps.StepType;
 import io.harness.springdata.HMongoTemplate;
-import io.harness.state.io.FailureInfo;
 import io.harness.state.io.StepInputPackage;
 import io.harness.state.io.StepResponse;
 import io.harness.state.io.StepResponse.StepResponseBuilder;
@@ -93,7 +93,7 @@ public class BarrierStep implements SyncExecutable<BarrierStepParameters>, Async
         (BarrierResponseData) responseDataMap.get(barrierExecutionInstance.getBarrierGroupId());
     if (responseData.isFailed()) {
       stepResponseBuilder.status(Status.FAILED)
-          .failureInfo(FailureInfo.builder().errorMessage(responseData.getErrorMessage()).build());
+          .failureInfo(FailureInfo.newBuilder().setErrorMessage(responseData.getErrorMessage()).build());
     } else {
       stepResponseBuilder.status(Status.SUCCEEDED);
     }

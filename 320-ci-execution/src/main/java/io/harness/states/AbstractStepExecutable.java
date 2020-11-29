@@ -9,13 +9,13 @@ import io.harness.delegate.task.stepstatus.StepExecutionStatus;
 import io.harness.delegate.task.stepstatus.StepStatus;
 import io.harness.delegate.task.stepstatus.StepStatusTaskResponseData;
 import io.harness.engine.outputs.ExecutionSweepingOutputService;
-import io.harness.exception.FailureType;
 import io.harness.facilitator.modes.async.AsyncExecutable;
 import io.harness.facilitator.modes.async.AsyncExecutableResponse;
 import io.harness.pms.ambiance.Ambiance;
 import io.harness.pms.execution.Status;
+import io.harness.pms.execution.failure.FailureInfo;
+import io.harness.pms.execution.failure.FailureType;
 import io.harness.refObjects.RefObjectUtil;
-import io.harness.state.io.FailureInfo;
 import io.harness.state.io.StepInputPackage;
 import io.harness.state.io.StepResponse;
 import io.harness.tasks.ResponseData;
@@ -68,9 +68,9 @@ public abstract class AbstractStepExecutable implements AsyncExecutable<CIStepIn
     } else {
       return StepResponse.builder()
           .status(Status.FAILED)
-          .failureInfo(FailureInfo.builder()
-                           .errorMessage(stepStatus.getError())
-                           .failureTypes(EnumSet.of(FailureType.APPLICATION_ERROR))
+          .failureInfo(FailureInfo.newBuilder()
+                           .setErrorMessage(stepStatus.getError())
+                           .addAllFailureTypes(EnumSet.of(FailureType.APPLICATION_FAILURE))
                            .build())
           .build();
     }
