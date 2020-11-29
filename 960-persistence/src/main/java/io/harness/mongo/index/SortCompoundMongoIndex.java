@@ -1,11 +1,14 @@
 package io.harness.mongo.index;
 
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+
 import static org.atmosphere.annotation.AnnotationUtil.logger;
 
 import io.harness.mongo.IndexCreator;
 import io.harness.mongo.IndexCreator.IndexCreatorBuilder;
 import io.harness.mongo.IndexManagerInspectException;
 
+import com.google.common.base.Preconditions;
 import com.mongodb.BasicDBObject;
 import java.util.List;
 import lombok.Builder;
@@ -24,6 +27,10 @@ public class SortCompoundMongoIndex implements MongoIndex {
 
   @Override
   public IndexCreatorBuilder createBuilder(String id) {
+    Preconditions.checkState(isNotEmpty(name), name);
+    Preconditions.checkState(!sortFields.isEmpty(), name);
+    Preconditions.checkState(!fields.isEmpty(), name);
+
     checks(logger);
 
     BasicDBObject keys = buildBasicDBObject(id);

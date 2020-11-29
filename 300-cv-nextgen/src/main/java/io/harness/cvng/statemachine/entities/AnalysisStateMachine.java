@@ -3,9 +3,7 @@ package io.harness.cvng.statemachine.entities;
 import io.harness.annotation.HarnessEntity;
 import io.harness.cvng.statemachine.beans.AnalysisState;
 import io.harness.cvng.statemachine.beans.AnalysisStatus;
-import io.harness.mongo.index.CdIndex;
 import io.harness.mongo.index.FdIndex;
-import io.harness.mongo.index.Field;
 import io.harness.persistence.CreatedAtAware;
 import io.harness.persistence.PersistentEntity;
 import io.harness.persistence.UpdatedAtAware;
@@ -22,8 +20,6 @@ import lombok.experimental.FieldNameConstants;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Id;
 
-@CdIndex(name = "state_machine_index", fields = { @Field("cvConfigId")
-                                                  , @Field(value = "status") })
 @Data
 @Builder
 @FieldNameConstants(innerTypeName = "AnalysisStateMachineKeys")

@@ -3,10 +3,11 @@ package software.wings.beans.alert;
 import io.harness.alert.AlertData;
 import io.harness.annotation.HarnessEntity;
 import io.harness.iterator.PersistentRegularIterable;
-import io.harness.mongo.index.CdIndex;
+import io.harness.mongo.index.CompoundMongoIndex;
 import io.harness.mongo.index.FdIndex;
 import io.harness.mongo.index.FdTtlIndex;
-import io.harness.mongo.index.Field;
+import io.harness.mongo.index.MongoIndex;
+import io.harness.mongo.index.SortCompoundMongoIndex;
 import io.harness.persistence.AccountAccess;
 import io.harness.persistence.CreatedAtAware;
 import io.harness.persistence.PersistentEntity;
@@ -17,13 +18,14 @@ import io.harness.validation.Update;
 import software.wings.alerts.AlertCategory;
 import software.wings.alerts.AlertSeverity;
 import software.wings.alerts.AlertStatus;
-import software.wings.beans.alert.Alert.AlertKeys;
 import software.wings.beans.alert.AlertReconciliation.AlertReconciliationKeys;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.github.reinert.jjschema.SchemaIgnore;
+import com.google.common.collect.ImmutableList;
 import java.time.OffsetDateTime;
 import java.util.Date;
+import java.util.List;
 import javax.validation.constraints.NotNull;
 import lombok.Builder;
 import lombok.Builder.Default;
@@ -34,28 +36,41 @@ import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Id;
 
 @FieldNameConstants(innerTypeName = "AlertKeys")
-
-@CdIndex(name = "accountAppTypeStatusIdx",
-    fields = { @Field(AlertKeys.accountId)
-               , @Field(AlertKeys.appId), @Field(AlertKeys.type), @Field(AlertKeys.status) })
-@CdIndex(name = "accountTypeStatusIdx",
-    fields = { @Field(AlertKeys.accountId)
-               , @Field(AlertKeys.type), @Field(AlertKeys.status) })
-@CdIndex(name = "createdAtTypeIndex", fields = { @Field(AlertKeys.type)
-                                                 , @Field(AlertKeys.createdAt) })
-@CdIndex(name = "reconciliationIterator",
-    fields =
-    {
-      @Field(AlertKeys.status)
-      , @Field(AlertKeys.alertReconciliation + "." + AlertReconciliationKeys.needed),
-          @Field(AlertKeys.alertReconciliation + "." + AlertReconciliationKeys.nextIteration)
-    })
 @Data
 @Builder
 @Entity(value = "alerts")
 @HarnessEntity(exportable = false)
 public class Alert
     implements PersistentEntity, UuidAware, CreatedAtAware, UpdatedAtAware, PersistentRegularIterable, AccountAccess {
+  public static List<MongoIndex> mongoIndexes() {
+    return ImmutableList.<MongoIndex>builder()
+        .add(CompoundMongoIndex.builder()
+                 .name("accountAppTypeStatusIdx")
+                 .field(AlertKeys.accountId)
+                 .field(AlertKeys.appId)
+                 .field(AlertKeys.type)
+                 .field(AlertKeys.status)
+                 .build())
+        .add(CompoundMongoIndex.builder()
+                 .name("accountTypeStatusIdx")
+                 .field(AlertKeys.accountId)
+                 .field(AlertKeys.type)
+                 .field(AlertKeys.status)
+                 .build())
+        .add(SortCompoundMongoIndex.builder()
+                 .name("createdAtTypeIndex")
+                 .field(AlertKeys.type)
+                 .ascSortField(AlertKeys.createdAt)
+                 .build())
+        .add(CompoundMongoIndex.builder()
+                 .name("reconciliationIterator")
+                 .field(AlertKeys.status)
+                 .field(AlertKeys.alertReconciliation_needed)
+                 .field(AlertKeys.alertReconciliation_nextIteration)
+                 .build())
+        .build();
+  }
+
   @Id @NotNull(groups = {Update.class}) @SchemaIgnore private String uuid;
   @FdIndex @NotNull @SchemaIgnore protected String appId;
   @SchemaIgnore private long createdAt;

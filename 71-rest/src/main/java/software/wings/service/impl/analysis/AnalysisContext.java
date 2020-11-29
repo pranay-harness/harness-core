@@ -11,11 +11,10 @@ import io.harness.annotation.HarnessEntity;
 import io.harness.beans.EmbeddedUser;
 import io.harness.beans.ExecutionStatus;
 import io.harness.iterator.PersistentRegularIterable;
-import io.harness.mongo.index.CdIndex;
+import io.harness.mongo.index.CompoundMongoIndex;
 import io.harness.mongo.index.FdIndex;
 import io.harness.mongo.index.FdTtlIndex;
-import io.harness.mongo.index.Field;
-import io.harness.mongo.index.NgUniqueIndex;
+import io.harness.mongo.index.MongoIndex;
 import io.harness.persistence.AccountAccess;
 import io.harness.version.ServiceApiVersion;
 
@@ -26,6 +25,7 @@ import software.wings.sm.StateType;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.github.reinert.jjschema.Nullable;
 import com.github.reinert.jjschema.SchemaIgnore;
+import com.google.common.collect.ImmutableList;
 import java.time.OffsetDateTime;
 import java.util.Date;
 import java.util.HashMap;
@@ -39,22 +39,6 @@ import lombok.NoArgsConstructor;
 import lombok.experimental.FieldNameConstants;
 import org.mongodb.morphia.annotations.Entity;
 
-/**
- * Created by sriram_parthasarathy on 8/23/17.
- */
-
-@NgUniqueIndex(name = "task_Unique_Idx", fields = { @Field("stateExecutionId")
-                                                    , @Field("executionStatus") })
-@CdIndex(name = "timeSeriesAnalysisIterationIdx",
-    fields = { @Field("analysisType")
-               , @Field("executionStatus"), @Field("timeSeriesAnalysisIteration") })
-@CdIndex(name = "logAnalysisIterationIdx",
-    fields = { @Field("analysisType")
-               , @Field("executionStatus"), @Field("logAnalysisIteration") })
-@CdIndex(name = "workflowDataCollectionIdx", fields = { @Field("stateType")
-                                                        , @Field("perMinCollectionFinished") })
-@CdIndex(name = "cvTaskCreationIndex", fields = { @Field("cvTasksCreated")
-                                                  , @Field("cvTaskCreationIteration") })
 @Data
 @FieldNameConstants(innerTypeName = "AnalysisContextKeys")
 @NoArgsConstructor
@@ -63,6 +47,39 @@ import org.mongodb.morphia.annotations.Entity;
 @Entity(value = "verificationServiceTask", noClassnameStored = true)
 @HarnessEntity(exportable = false)
 public class AnalysisContext extends Base implements PersistentRegularIterable, AccountAccess {
+  public static List<MongoIndex> mongoIndexes() {
+    return ImmutableList.<MongoIndex>builder()
+        .add(CompoundMongoIndex.builder()
+                 .name("task_Unique_Idx")
+                 .unique(true)
+                 .field(AnalysisContextKeys.stateExecutionId)
+                 .field(AnalysisContextKeys.executionStatus)
+                 .build())
+        .add(CompoundMongoIndex.builder()
+                 .name("timeSeriesAnalysisIterationIdx")
+                 .field(AnalysisContextKeys.analysisType)
+                 .field(AnalysisContextKeys.executionStatus)
+                 .field(AnalysisContextKeys.timeSeriesAnalysisIteration)
+                 .build())
+        .add(CompoundMongoIndex.builder()
+                 .name("logAnalysisIterationIdx")
+                 .field(AnalysisContextKeys.analysisType)
+                 .field(AnalysisContextKeys.executionStatus)
+                 .field(AnalysisContextKeys.logAnalysisIteration)
+                 .build())
+        .add(CompoundMongoIndex.builder()
+                 .name("workflowDataCollectionIdx")
+                 .field(AnalysisContextKeys.stateType)
+                 .field(AnalysisContextKeys.perMinCollectionFinished)
+                 .build())
+        .add(CompoundMongoIndex.builder()
+                 .name("cvTaskCreationIndex")
+                 .field(AnalysisContextKeys.cvTasksCreated)
+                 .field(AnalysisContextKeys.cvTaskCreationIteration)
+                 .build())
+        .build();
+  }
+
   @FdIndex private String accountId;
   private String workflowId;
   private String workflowExecutionId;
