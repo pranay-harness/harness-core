@@ -10,9 +10,9 @@ import io.harness.cvng.beans.DataSourceType;
 import io.harness.cvng.core.beans.TimeRange;
 import io.harness.cvng.models.VerificationType;
 import io.harness.iterator.PersistentRegularIterable;
-import io.harness.mongo.index.CdIndex;
+import io.harness.mongo.index.CompoundMongoIndex;
 import io.harness.mongo.index.FdIndex;
-import io.harness.mongo.index.Field;
+import io.harness.mongo.index.MongoIndex;
 import io.harness.persistence.AccountAccess;
 import io.harness.persistence.CreatedAtAware;
 import io.harness.persistence.PersistentEntity;
@@ -22,6 +22,8 @@ import io.harness.persistence.UuidAware;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import com.google.common.collect.ImmutableList;
+import java.util.List;
 import javax.validation.constraints.NotNull;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -30,13 +32,6 @@ import lombok.experimental.FieldNameConstants;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Id;
 
-@CdIndex(name = "env_service_category_index",
-    fields =
-    {
-      @Field("accountId")
-      , @Field("orgIdentifier"), @Field(value = "projectIdentifier"), @Field("envIdentifier"),
-          @Field(value = "serviceIdentifier")
-    })
 @Data
 @FieldNameConstants(innerTypeName = "CVConfigKeys")
 @NoArgsConstructor
@@ -47,6 +42,19 @@ import org.mongodb.morphia.annotations.Id;
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "type", include = JsonTypeInfo.As.EXISTING_PROPERTY)
 public abstract class CVConfig
     implements PersistentEntity, UuidAware, CreatedAtAware, UpdatedAtAware, AccountAccess, PersistentRegularIterable {
+  public static List<MongoIndex> mongoIndexes() {
+    return ImmutableList.<MongoIndex>builder()
+        .add(CompoundMongoIndex.builder()
+                 .name("env_service_category_index")
+                 .field(CVConfigKeys.accountId)
+                 .field(CVConfigKeys.orgIdentifier)
+                 .field(CVConfigKeys.projectIdentifier)
+                 .field(CVConfigKeys.envIdentifier)
+                 .field(CVConfigKeys.serviceIdentifier)
+                 .build())
+        .build();
+  }
+
   @Id private String uuid;
   @FdIndex private Long dataCollectionTaskIteration;
   private long createdAt;

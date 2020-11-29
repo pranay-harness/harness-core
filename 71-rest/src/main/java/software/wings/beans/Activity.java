@@ -6,11 +6,10 @@ import io.harness.beans.ExecutionStatus;
 import io.harness.beans.TriggeredBy;
 import io.harness.beans.WorkflowType;
 import io.harness.dataretention.AccountDataRetentionEntity;
-import io.harness.mongo.index.CdIndex;
 import io.harness.mongo.index.FdIndex;
 import io.harness.mongo.index.FdTtlIndex;
-import io.harness.mongo.index.Field;
-import io.harness.mongo.index.IndexType;
+import io.harness.mongo.index.MongoIndex;
+import io.harness.mongo.index.SortCompoundMongoIndex;
 import io.harness.persistence.CreatedAtAware;
 import io.harness.persistence.CreatedByAware;
 import io.harness.persistence.PersistentEntity;
@@ -19,7 +18,6 @@ import io.harness.persistence.UpdatedByAware;
 import io.harness.persistence.UuidAware;
 import io.harness.validation.Update;
 
-import software.wings.beans.Activity.ActivityKeys;
 import software.wings.beans.Environment.EnvironmentType;
 import software.wings.beans.command.CommandUnit;
 import software.wings.beans.command.CommandUnitDetails.CommandUnitType;
@@ -27,6 +25,7 @@ import software.wings.beans.entityinterface.ApplicationAccess;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.github.reinert.jjschema.SchemaIgnore;
+import com.google.common.collect.ImmutableList;
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.Date;
@@ -51,15 +50,20 @@ import org.mongodb.morphia.annotations.Version;
 @AllArgsConstructor
 @Entity(value = "activities", noClassnameStored = true)
 @HarnessEntity(exportable = false)
-@CdIndex(name = "app_status_createdAt",
-    fields =
-    {
-      @Field(value = ActivityKeys.appId)
-      , @Field(value = ActivityKeys.serviceInstanceId), @Field(value = ActivityKeys.status),
-          @Field(value = ActivityKeys.createdAt, type = IndexType.DESC)
-    })
 public class Activity implements PersistentEntity, AccountDataRetentionEntity, UuidAware, CreatedAtAware,
                                  CreatedByAware, UpdatedAtAware, UpdatedByAware, ApplicationAccess {
+  public static List<MongoIndex> mongoIndexes() {
+    return ImmutableList.<MongoIndex>builder()
+        .add(SortCompoundMongoIndex.builder()
+                 .name("app_status_createdAt")
+                 .unique(false)
+                 .field(ActivityKeys.appId)
+                 .field(ActivityKeys.serviceInstanceId)
+                 .field(ActivityKeys.status)
+                 .descSortField(ActivityKeys.createdAt)
+                 .build())
+        .build();
+  }
   @Id @NotNull(groups = {Update.class}) @SchemaIgnore private String uuid;
   @FdIndex @NotNull @SchemaIgnore protected String appId;
   @SchemaIgnore private EmbeddedUser createdBy;

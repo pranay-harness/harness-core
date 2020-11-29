@@ -5,17 +5,16 @@ import static io.harness.annotations.dev.HarnessTeam.PL;
 import io.harness.annotation.HarnessEntity;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.iterator.PersistentRegularIterable;
-import io.harness.mongo.index.CdIndex;
 import io.harness.mongo.index.FdIndex;
-import io.harness.mongo.index.Field;
-import io.harness.mongo.index.IndexType;
+import io.harness.mongo.index.MongoIndex;
+import io.harness.mongo.index.SortCompoundMongoIndex;
 import io.harness.persistence.AccountAccess;
 import io.harness.persistence.CreatedAtAware;
 import io.harness.persistence.PersistentEntity;
 import io.harness.persistence.UuidAware;
 
-import software.wings.audit.AuditRecord.AuditRecordKeys;
-
+import com.google.common.collect.ImmutableList;
+import java.util.List;
 import javax.validation.constraints.NotNull;
 import lombok.Builder;
 import lombok.Data;
@@ -31,13 +30,18 @@ import org.mongodb.morphia.annotations.Id;
 @Entity(value = "entityAuditRecords", noClassnameStored = true)
 @HarnessEntity(exportable = false)
 @FieldNameConstants(innerTypeName = "AuditRecordKeys")
-
-@CdIndex(name = "entityRecordIndex_1",
-    fields =
-    { @Field(AuditRecordKeys.auditHeaderId)
-      , @Field(value = AuditRecordKeys.createdAt, type = IndexType.DESC), })
 public class AuditRecord
     implements PersistentEntity, CreatedAtAware, UuidAware, PersistentRegularIterable, AccountAccess {
+  public static List<MongoIndex> mongoIndexes() {
+    return ImmutableList.<MongoIndex>builder()
+        .add(SortCompoundMongoIndex.builder()
+                 .name("entityRecordIndex_1")
+                 .field(AuditRecordKeys.auditHeaderId)
+                 .descSortField(AuditRecordKeys.createdAt)
+                 .build())
+        .build();
+  }
+
   @Id @NotNull private String uuid;
   @NotEmpty String auditHeaderId;
   @NotNull EntityAuditRecord entityAuditRecord;

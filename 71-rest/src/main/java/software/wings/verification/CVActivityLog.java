@@ -8,11 +8,10 @@ import static software.wings.beans.LogWeight.Bold;
 import static software.wings.common.VerificationConstants.ACTIVITY_LOG_TTL_WEEKS;
 
 import io.harness.annotation.HarnessEntity;
-import io.harness.mongo.index.CdIndex;
 import io.harness.mongo.index.FdIndex;
 import io.harness.mongo.index.FdTtlIndex;
-import io.harness.mongo.index.Field;
-import io.harness.mongo.index.IndexType;
+import io.harness.mongo.index.MongoIndex;
+import io.harness.mongo.index.SortCompoundMongoIndex;
 import io.harness.persistence.AccountAccess;
 import io.harness.persistence.CreatedAtAware;
 import io.harness.persistence.PersistentEntity;
@@ -23,6 +22,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.github.reinert.jjschema.SchemaIgnore;
+import com.google.common.collect.ImmutableList;
 import java.time.OffsetDateTime;
 import java.util.Collections;
 import java.util.Date;
@@ -41,14 +41,18 @@ import org.mongodb.morphia.annotations.Id;
 @JsonIgnoreProperties(ignoreUnknown = true)
 @Entity(value = "cvActivityLogs", noClassnameStored = true)
 @HarnessEntity(exportable = false)
-
-@CdIndex(name = "service_guard_idx",
-    fields =
-    {
-      @Field("cvConfigId")
-      , @Field(value = "dataCollectionMinute", type = IndexType.DESC), @Field(value = "createdAt", type = IndexType.ASC)
-    })
 public class CVActivityLog implements PersistentEntity, UuidAware, CreatedAtAware, UpdatedAtAware, AccountAccess {
+  public static List<MongoIndex> mongoIndexes() {
+    return ImmutableList.<MongoIndex>builder()
+        .add(SortCompoundMongoIndex.builder()
+                 .name("service_guard_idx")
+                 .field(CVActivityLogKeys.cvConfigId)
+                 .descSortField(CVActivityLogKeys.dataCollectionMinute)
+                 .ascSortField(CVActivityLogKeys.createdAt)
+                 .build())
+        .build();
+  }
+
   @Id private String uuid;
   @FdIndex private String cvConfigId;
   @FdIndex private String stateExecutionId;
