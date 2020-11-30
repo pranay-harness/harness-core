@@ -4,6 +4,7 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -54,6 +55,10 @@ public class TrialSignupOptions {
     }
 
     public static List<Products> getProductsFromFullNames(List<String> fullNames) {
+      if (isEmpty(fullNames)) {
+        return Collections.emptyList();
+      }
+
       return Stream.of(Products.values())
           .filter(product -> fullNames.contains(product.getFullName()))
           .collect(Collectors.toList());
