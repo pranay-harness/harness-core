@@ -19,6 +19,7 @@ import static java.util.stream.Collectors.groupingBy;
 import static java.util.stream.Collectors.joining;
 import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.StringUtils.isBlank;
+import static org.apache.commons.lang3.StringUtils.right;
 
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.logging.LogLevel;
@@ -48,7 +49,10 @@ import java.io.IOException;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.ExecutorService;
@@ -65,8 +69,19 @@ import retrofit2.Response;
 @ValidateOnExecution
 @Slf4j
 public class DelegateLogServiceImpl implements DelegateLogService {
-  // 10 KB Activity logs batch size
-  static final int ACTIVITY_LOGS_BATCH_SIZE = 1024 * 10;
+  /**
+   * The Size Limit For Final LogLine
+   */
+  static final int ACTIVITY_STATUS_LOGLINE_LIMIT = 1024 * 10;
+  /**
+   * Total Permissible Size Limit for LogLines for a Particular ActivityId
+   */
+  static final int ACTIVITY_LOGS_TOTAL_SIZE = 1024 * 10 * 2500;
+  /**
+   * Maximum number of entries to keep in the #activityLogSize Map 10^6
+   */
+  static final int MAX_ACTIVITIES = 1000000;
+  public static final String TRUNCATION_MESSAGE = "\nThe Above Log Message Has Been Truncated Due To Size Limit\n";
 
   private final String LOGS_COMMON_MESSAGE_ERROR = "Unexpected Cache eviction accountId={}, logs={}, removalCause={}";
 
@@ -78,6 +93,12 @@ public class DelegateLogServiceImpl implements DelegateLogService {
   private final Subject<LogSanitizer> logSanitizerSubject = new Subject<>();
   private VerificationServiceClient verificationServiceClient;
   private final KryoSerializer kryoSerializer;
+  private HashMap<String, Integer> activityLogSize = new LinkedHashMap<String, Integer>() {
+    @Override
+    protected boolean removeEldestEntry(Map.Entry eldest) {
+      return size() > MAX_ACTIVITIES;
+    }
+  };
 
   @Inject
   public DelegateLogServiceImpl(ManagerClient managerClient, DelegateAgentManagerClient delegateAgentManagerClient,
@@ -135,6 +156,29 @@ public class DelegateLogServiceImpl implements DelegateLogService {
     line = doneColoring(line);
     logObject.setLogLine(line);
 
+    saveLogsBounded(accountId, logObject);
+  }
+
+  private void saveLogsBounded(String accountId, Log logObject) {
+    int currentSize = activityLogSize.getOrDefault(logObject.getActivityId(), 0);
+    if (logObject.getCommandExecutionStatus() == RUNNING) {
+      if (currentSize >= ACTIVITY_LOGS_TOTAL_SIZE) {
+        log.warn("Not Saving LogLine because of size overflow for ActivityId {}", logObject.getActivityId());
+        return;
+      }
+      activityLogSize.put(logObject.getActivityId(), currentSize + StringUtils.length(logObject.getLogLine()));
+    } else {
+      if (currentSize >= ACTIVITY_LOGS_TOTAL_SIZE) {
+        String right = right(logObject.getLogLine(), ACTIVITY_STATUS_LOGLINE_LIMIT);
+        logObject.setLogLine(new StringBuilder().append(right).append(TRUNCATION_MESSAGE).toString());
+      }
+      activityLogSize.remove(logObject.getActivityId());
+    }
+    insertLogToCache(accountId, logObject);
+  }
+
+  @VisibleForTesting
+  void insertLogToCache(String accountId, Log logObject) {
     Optional.ofNullable(cache.get(accountId, s -> new ArrayList<>())).ifPresent(logs -> logs.add(logObject));
   }
 
@@ -204,10 +248,10 @@ public class DelegateLogServiceImpl implements DelegateLogService {
                                                        .findFirst()
                                                        .orElse(RUNNING);
 
-        String logText = trimAndIndicate(logBatch);
+        String logText = logBatch.stream().map(Log::getLogLine).collect(joining("\n"));
         Log logObject = logBatch.get(0);
         logObject.setLogLine(logText);
-        logObject.setLinesCount(StringUtils.countMatches(logText, "\n"));
+        logObject.setLinesCount(logBatch.size());
         logObject.setCommandExecutionStatus(commandUnitStatus);
         logObject.setCreatedAt(System.currentTimeMillis());
 
@@ -226,18 +270,6 @@ public class DelegateLogServiceImpl implements DelegateLogService {
         log.error("Finished printing lost logs");
       }
     }
-  }
-
-  @VisibleForTesting
-  String trimAndIndicate(List<Log> logBatch) {
-    final String logLines = logBatch.stream().map(Log::getLogLine).collect(joining("\n"));
-    if (StringUtils.length(logLines) > ACTIVITY_LOGS_BATCH_SIZE) {
-      return new StringBuilder()
-          .append(StringUtils.left(logLines, ACTIVITY_LOGS_BATCH_SIZE))
-          .append("\nThe above log messages are truncated to 10KB\n")
-          .toString();
-    }
-    return logLines;
   }
 
   private void dispatchApiCallLogs(String accountId, List<ThirdPartyApiCallLog> logs, RemovalCause removalCause) {

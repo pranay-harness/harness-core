@@ -5,8 +5,6 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.persistence.HQuery.excludeAuthority;
 
-import static software.wings.service.impl.LogServiceImpl.MAX_LOG_ROWS_PER_ACTIVITY;
-
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 
 import io.harness.beans.PageRequest;
@@ -43,20 +41,6 @@ public class MongoDataStoreServiceImpl implements DataStoreService {
     if (isEmpty(records)) {
       return;
     }
-    if (records.get(0) instanceof Log) {
-      Log logObject = (Log) records.get(0);
-      long count = wingsPersistence.createQuery(Log.class)
-                       .filter(LogKeys.appId, logObject.getAppId())
-                       .filter(LogKeys.activityId, logObject.getActivityId())
-                       .count();
-      if (count >= MAX_LOG_ROWS_PER_ACTIVITY) {
-        log.warn(
-            "Number of logObject rows per activity threshold [{}] crossed. [{}] logObject lines truncated for activityId: [{}], commandUnitName: [{}]",
-            MAX_LOG_ROWS_PER_ACTIVITY, logObject.getLinesCount(), logObject.getActivityId(),
-            logObject.getCommandUnitName());
-        return;
-      }
-    }
     if (ignoreDuplicate) {
       wingsPersistence.saveIgnoringDuplicateKeys(records);
     } else {
@@ -66,8 +50,7 @@ public class MongoDataStoreServiceImpl implements DataStoreService {
 
   @Override
   public <T extends GoogleDataStoreAware> int getNumberOfResults(Class<T> clazz, PageRequest<T> pageRequest) {
-    // return wingsPersistence.convertToQuery(clazz, pageRequest).asKeyList().size();
-    return 0; // ToDo (Yogesh)
+    return wingsPersistence.convertToQuery(clazz, pageRequest).asKeyList().size();
   }
 
   @Override
