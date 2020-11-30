@@ -310,7 +310,11 @@ public class PipelineExecutionController {
         notNullCheck(envVarInput.getName() + " has no variable value present", envVarValue, USER);
         switch (envVarValue.getType()) {
           case ID:
-            return envVarValue.getValue();
+            String envId = envVarValue.getValue();
+            Environment environment = environmentService.get(pipeline.getAppId(), envId);
+            notNullCheck("Environment [" + envId + "] doesn't exist in specified application " + pipeline.getAppId(),
+                environment, USER);
+            return envId;
           case NAME:
             String envName = envVarValue.getValue();
             Environment environmentFromName = environmentService.getEnvironmentByName(pipeline.getAppId(), envName);
@@ -369,6 +373,8 @@ public class PipelineExecutionController {
         QLVariableValueType type = variableValue.getType();
         switch (type) {
           case ID:
+            executionController.validateVariableValue(
+                pipeline.getAppId(), variableValue.getValue(), variableInPipeline, envId);
             pipelineVariableValues.put(variableInput.getName(), variableValue.getValue());
             break;
           case NAME:
