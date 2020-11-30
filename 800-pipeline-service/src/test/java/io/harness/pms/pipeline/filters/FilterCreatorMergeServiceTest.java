@@ -100,7 +100,7 @@ public class FilterCreatorMergeServiceTest extends PipelineServiceTestBase {
     stepToSupportedTypes.put("pipeline", Collections.singleton("__any__"));
     Map<String, Map<String, Set<String>>> sdkInstances = new HashMap<>();
     sdkInstances.put("cd", stepToSupportedTypes);
-    when(pmsSdkInstanceService.getSdkInstancesMap()).thenReturn(sdkInstances);
+    when(pmsSdkInstanceService.getInstanceNameToSupportedTypes()).thenReturn(sdkInstances);
 
     doReturn(FilterCreationBlobResponse.newBuilder().build())
         .when(filterCreatorMergeService)
@@ -111,7 +111,7 @@ public class FilterCreatorMergeServiceTest extends PipelineServiceTestBase {
 
     assertThat(filterCreatorMergeServiceResponse)
         .isEqualTo(FilterCreatorMergeServiceResponse.builder().filters(new HashMap<>()).build());
-    verify(pmsSdkInstanceService).getSdkInstancesMap();
+    verify(pmsSdkInstanceService).getInstanceNameToSupportedTypes();
   }
 
   @Test
