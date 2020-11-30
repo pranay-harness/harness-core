@@ -169,6 +169,16 @@ public class ConnectorResourceTest extends CategoryTest {
   }
 
   @Test
+  @Owner(developers = OwnerRule.HARSH)
+  @Category(UnitTests.class)
+  public void testGitRepoConnectionResourceTest() {
+    ResponseDTO<ConnectorValidationResult> validationResult =
+        connectorResource.testGitRepoConnection("accountIdentifier", "orgIdentifier", "projectIdentifier",
+            "connectorIdentifier", "https://github.com/wings-software/portal.git");
+    Mockito.verify(connectorService, times(1)).testGitRepoConnection(any(), any(), any(), any(), any());
+  }
+
+  @Test
   @Owner(developers = OwnerRule.VARDAN_BANSAL)
   @Category(UnitTests.class)
   public void getConnectorCatalogueTest() {
