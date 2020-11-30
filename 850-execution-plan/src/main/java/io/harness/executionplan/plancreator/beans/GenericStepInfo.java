@@ -4,6 +4,8 @@ import io.harness.executionplan.core.ExecutionPlanCreationContext;
 import io.harness.executionplan.stepsdependency.StepDependencyService;
 import io.harness.executionplan.stepsdependency.StepDependencySpec;
 import io.harness.pms.steps.StepType;
+import io.harness.serializer.json.JsonOrchestrationIgnore;
+import io.harness.serializer.json.JsonOrchestrationUtils;
 import io.harness.state.io.StepParameters;
 import io.harness.yaml.core.intfc.WithIdentifier;
 
@@ -15,7 +17,9 @@ public interface GenericStepInfo extends StepParameters, WithIdentifier {
   @JsonIgnore String getDisplayName();
   @JsonIgnore StepType getStepType();
   @JsonIgnore String getFacilitatorType();
+
   @JsonIgnore
+  @JsonOrchestrationIgnore
   default StepParameters getStepParameters() {
     return this;
   }
@@ -31,5 +35,10 @@ public interface GenericStepInfo extends StepParameters, WithIdentifier {
   default void registerStepDependencyInstructors(
       StepDependencyService stepDependencyService, ExecutionPlanCreationContext context, String nodeId) {
     // Do nothing.
+  }
+
+  @Override
+  default String toJson() {
+    return JsonOrchestrationUtils.asJsonWithIgnoredFields(this);
   }
 }

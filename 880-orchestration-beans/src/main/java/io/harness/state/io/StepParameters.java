@@ -4,6 +4,7 @@ import static io.harness.annotations.dev.HarnessTeam.CDC;
 
 import io.harness.annotations.Redesign;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.serializer.json.JsonOrchestrationUtils;
 import io.harness.timeout.TimeoutObtainment;
 import io.harness.timeout.trackers.absolute.AbsoluteTimeoutParameters;
 import io.harness.timeout.trackers.absolute.AbsoluteTimeoutTrackerFactory;
@@ -23,5 +24,9 @@ public interface StepParameters {
             .type(AbsoluteTimeoutTrackerFactory.DIMENSION)
             .parameters(AbsoluteTimeoutParameters.builder().timeoutMillis(DEFAULT_TIMEOUT.toMillis()).build())
             .build());
+  }
+
+  default String toJson() {
+    return JsonOrchestrationUtils.asJson(this);
   }
 }

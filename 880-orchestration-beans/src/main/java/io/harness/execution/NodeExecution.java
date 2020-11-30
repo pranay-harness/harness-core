@@ -16,7 +16,6 @@ import io.harness.pms.ambiance.Ambiance;
 import io.harness.pms.execution.ExecutionMode;
 import io.harness.pms.execution.Status;
 import io.harness.pms.execution.failure.FailureInfo;
-import io.harness.serializer.json.JsonOrchestrationUtils;
 import io.harness.state.io.StepOutcomeRef;
 import io.harness.state.io.StepParameters;
 import io.harness.state.io.StepTransput;
@@ -125,8 +124,7 @@ public final class NodeExecution implements PersistentEntity, UuidAware {
 
   public static class NodeExecutionBuilder {
     public NodeExecutionBuilder resolvedStepParameters(StepParameters stepParameters) {
-      this.resolvedStepParameters =
-          stepParameters == null ? null : org.bson.Document.parse(JsonOrchestrationUtils.asJson(stepParameters));
+      this.resolvedStepParameters = stepParameters == null ? null : org.bson.Document.parse(stepParameters.toJson());
       return this;
     }
   }
