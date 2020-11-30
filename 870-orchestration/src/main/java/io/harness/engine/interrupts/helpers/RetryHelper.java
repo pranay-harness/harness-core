@@ -69,7 +69,6 @@ public class RetryHelper {
         .version(null)
         .executableResponses(new ArrayList<>())
         .interruptHistories(nodeExecution.getInterruptHistories())
-        .additionalInputs(new ArrayList<>())
         .failureInfo(null)
         .status(Status.QUEUED)
         .timeoutInstanceIds(new ArrayList<>())

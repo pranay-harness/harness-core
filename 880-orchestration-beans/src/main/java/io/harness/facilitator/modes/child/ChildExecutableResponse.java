@@ -20,5 +20,4 @@ import org.springframework.data.annotation.TypeAlias;
 @TypeAlias("childExecutableResponse")
 public class ChildExecutableResponse implements ExecutableResponse {
   String childNodeId;
-  @Singular List<StepTransput> additionalInputs;
 }

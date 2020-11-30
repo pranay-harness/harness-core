@@ -76,7 +76,6 @@ public final class NodeExecution implements PersistentEntity, UuidAware {
 
   @Singular List<ExecutableResponse> executableResponses;
   @Singular private List<InterruptEffect> interruptHistories;
-  @Singular List<StepTransput> additionalInputs;
   FailureInfo failureInfo;
 
   // Retries

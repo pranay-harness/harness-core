@@ -92,7 +92,6 @@ public class ChildStrategy implements ExecuteStrategy {
                                            .status(Status.QUEUED)
                                            .notifyId(childInstanceId)
                                            .parentId(nodeExecution.getUuid())
-                                           .additionalInputs(response.getAdditionalInputs())
                                            .build();
     nodeExecutionService.save(childNodeExecution);
     executorService.submit(

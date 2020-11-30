@@ -74,8 +74,8 @@ public class TaskChainStrategy implements TaskExecuteStrategy {
           resumePackage.getResponseDataMap());
       engine.handleStepResponse(nodeExecution.getUuid(), stepResponse);
     } else {
-      StepInputPackage inputPackage = engineObtainmentHelper.obtainInputPackage(
-          ambiance, nodeExecution.getNode().getRefObjects(), nodeExecution.getAdditionalInputs());
+      StepInputPackage inputPackage =
+          engineObtainmentHelper.obtainInputPackage(ambiance, nodeExecution.getNode().getRefObjects());
       TaskChainResponse chainResponse = taskChainExecutable.executeNextLink(ambiance,
           nodeExecutionService.extractResolvedStepParameters(nodeExecution), inputPackage,
           lastLinkResponse.getPassThroughData(), resumePackage.getResponseDataMap());

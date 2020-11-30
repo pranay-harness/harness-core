@@ -176,8 +176,7 @@ public class OrchestrationEngine {
 
       PlanNode node = nodeExecution.getNode();
       // Facilitate and execute
-      StepInputPackage inputPackage = engineObtainmentHelper.obtainInputPackage(
-          ambiance, node.getRefObjects(), nodeExecution.getAdditionalInputs());
+      StepInputPackage inputPackage = engineObtainmentHelper.obtainInputPackage(ambiance, node.getRefObjects());
       String stepParameters = node.getStepParameters() == null ? null : node.getStepParameters().toJson();
       Object obj = stepParameters == null
           ? null
