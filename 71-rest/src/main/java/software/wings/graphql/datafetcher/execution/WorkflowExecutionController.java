@@ -265,6 +265,8 @@ public class WorkflowExecutionController {
         QLVariableValueType type = variableValue.getType();
         switch (type) {
           case ID:
+            executionController.validateVariableValue(
+                workflow.getAppId(), variableValue.getValue(), variableInWorkflow, envId);
             workflowVariableValues.put(variableInput.getName(), variableValue.getValue());
             break;
           case NAME:
@@ -362,7 +364,11 @@ public class WorkflowExecutionController {
           QLVariableValue envVarValue = envVarInput.getVariableValue();
           switch (envVarValue.getType()) {
             case ID:
-              return envVarValue.getValue();
+              String envId = envVarValue.getValue();
+              Environment environment = environmentService.get(workflow.getAppId(), envId);
+              notNullCheck("Environment [" + envId + "] doesn't exist in specified application " + workflow.getAppId(),
+                  environment, USER);
+              return envId;
             case NAME:
               String envName = envVarValue.getValue();
               Environment environmentFromName = environmentService.getEnvironmentByName(workflow.getAppId(), envName);

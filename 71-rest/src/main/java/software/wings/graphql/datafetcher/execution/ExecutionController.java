@@ -21,6 +21,7 @@ import software.wings.beans.ArtifactVariable;
 import software.wings.beans.EntityType;
 import software.wings.beans.ExecutionArgs;
 import software.wings.beans.Service;
+import software.wings.beans.Variable;
 import software.wings.beans.artifact.Artifact;
 import software.wings.beans.artifact.ArtifactStream;
 import software.wings.graphql.datafetcher.MutationContext;
@@ -33,11 +34,13 @@ import software.wings.graphql.schema.mutation.execution.input.QLParameterizedArt
 import software.wings.graphql.schema.mutation.execution.input.QLServiceInput;
 import software.wings.graphql.schema.mutation.execution.input.QLStartExecutionInput;
 import software.wings.graphql.schema.type.QLExecutionStatus;
+import software.wings.infra.InfrastructureDefinition;
 import software.wings.resources.graphql.TriggeredByType;
 import software.wings.service.ArtifactStreamHelper;
 import software.wings.service.intfc.ArtifactCollectionService;
 import software.wings.service.intfc.ArtifactService;
 import software.wings.service.intfc.ArtifactStreamService;
+import software.wings.service.intfc.InfrastructureDefinitionService;
 import software.wings.service.intfc.ServiceResourceService;
 
 import com.google.inject.Inject;
@@ -64,6 +67,7 @@ public class ExecutionController {
   @Inject @Named("AsyncArtifactCollectionService") private ArtifactCollectionService artifactCollectionServiceAsync;
   @Inject ServiceResourceService serviceResourceService;
   @Inject ArtifactStreamHelper artifactStreamHelper;
+  @Inject InfrastructureDefinitionService infrastructureDefinitionService;
 
   public static QLExecutionStatus convertStatus(ExecutionStatus status) {
     switch (status) {
@@ -175,6 +179,36 @@ public class ExecutionController {
           "Artifact Id: " + artifactIdVal + " does not belong to specified service: " + service.getName(), USER);
     }
     return artifact;
+  }
+
+  public boolean validateVariableValue(String appId, String value, Variable variable, String envId) {
+    EntityType entityType = variable.obtainEntityType();
+    if (entityType != null) {
+      switch (entityType) {
+        case ENVIRONMENT:
+          return true;
+        case SERVICE:
+          if (!serviceResourceService.exist(appId, value)) {
+            throw new InvalidRequestException(
+                "Service [" + value + "] doesn't exist in specified application " + appId);
+          }
+          return true;
+        case INFRASTRUCTURE_DEFINITION:
+          InfrastructureDefinition infrastructureDefinition = infrastructureDefinitionService.get(appId, value);
+          notNullCheck("Infrastructure Definition  [" + value + "] doesn't exist in specified application " + appId,
+              infrastructureDefinition, USER);
+          if (!infrastructureDefinition.getEnvId().equals(envId)) {
+            throw new InvalidRequestException(
+                "Infrastructure Definition  [" + value + "] doesn't exist in specified application and environment ",
+                USER);
+          }
+          return true;
+        default:
+          // do nothing.
+          return true;
+      }
+    }
+    return true;
   }
 
   private Artifact getArtifactFromBuildNumber(QLBuildNumberInput buildNumber, Service service) {

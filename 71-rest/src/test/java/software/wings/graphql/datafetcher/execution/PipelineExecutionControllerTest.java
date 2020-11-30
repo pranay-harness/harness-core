@@ -219,6 +219,8 @@ public class PipelineExecutionControllerTest extends WingsBaseTest {
   public void testEnvPresentCorrectly() {
     when(environmentService.getEnvironmentByName(eq("APP_ID"), eq("DEV")))
         .thenReturn(Environment.Builder.anEnvironment().uuid(ENVIRONMENT_DEV_ID).build());
+    when(environmentService.get(eq("APP_ID"), eq(ENVIRONMENT_DEV_ID)))
+        .thenReturn(Environment.Builder.anEnvironment().uuid(ENVIRONMENT_DEV_ID).build());
     Pipeline pipeline = buildPipeline("APP_ID", buildVariable("env", ENVIRONMENT, false));
     String actual = pipelineExecutionController.resolveEnvId(pipeline,
         newArrayList(
