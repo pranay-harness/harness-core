@@ -1,6 +1,7 @@
 package io.harness.cvng.core.entities;
 
 import io.harness.annotation.HarnessEntity;
+import io.harness.cvng.beans.TimeSeriesMetricType;
 import io.harness.mongo.index.FdIndex;
 import io.harness.mongo.index.FdTtlIndex;
 import io.harness.persistence.AccountAccess;
@@ -40,6 +41,7 @@ public class TimeSeriesRecord implements CreatedAtAware, AccountAccess, Persiste
   @FdIndex private String metricName;
   private double riskScore;
   private Instant bucketStartTime;
+  private TimeSeriesMetricType metricType;
 
   private long createdAt;
   @Default private Set<TimeSeriesGroupValue> timeSeriesGroupValues = new HashSet<>();
@@ -67,6 +69,7 @@ public class TimeSeriesRecord implements CreatedAtAware, AccountAccess, Persiste
     private Instant timeStamp;
     private double metricValue;
     private double riskScore;
+    private Double percentValue;
 
     @Override
     public int compareTo(TimeSeriesGroupValue other) {

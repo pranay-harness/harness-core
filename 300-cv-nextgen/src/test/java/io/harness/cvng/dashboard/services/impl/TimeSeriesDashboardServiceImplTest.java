@@ -16,6 +16,7 @@ import io.harness.cvng.activity.entities.Activity;
 import io.harness.cvng.activity.entities.DeploymentActivity;
 import io.harness.cvng.activity.services.api.ActivityService;
 import io.harness.cvng.beans.CVMonitoringCategory;
+import io.harness.cvng.beans.TimeSeriesMetricType;
 import io.harness.cvng.core.entities.AppDynamicsCVConfig;
 import io.harness.cvng.core.entities.TimeSeriesRecord;
 import io.harness.cvng.core.services.api.CVConfigService;
@@ -219,7 +220,7 @@ public class TimeSeriesDashboardServiceImplTest extends CvNextGenTest {
 
     assertThat(response).isNotNull();
     assertThat(response.getContent()).isNotEmpty();
-    assertThat(response.getTotalPages()).isEqualTo(41);
+    assertThat(response.getTotalPages()).isEqualTo(62);
     assertThat(response.getContent().size()).isEqualTo(3);
     response.getContent().forEach(timeSeriesMetricDataDTO -> {
       assertThat(timeSeriesMetricDataDTO.getMetricDataList()).isNotEmpty();
@@ -256,12 +257,16 @@ public class TimeSeriesDashboardServiceImplTest extends CvNextGenTest {
             envIdentifier, serviceIdentifier, start.toEpochMilli(), end.toEpochMilli(), false, 0, 10);
     assertThat(response).isNotNull();
     assertThat(response.getContent()).isNotEmpty();
-    assertThat(response.getTotalPages()).isEqualTo(13);
+    assertThat(response.getTotalPages()).isEqualTo(19);
     assertThat(response.getContent().size()).isEqualTo(10);
     response.getContent().forEach(timeSeriesMetricDataDTO -> {
       assertThat(timeSeriesMetricDataDTO.getMetricDataList()).isNotEmpty();
+      assertThat(timeSeriesMetricDataDTO.getMetricType()).isNotNull();
       timeSeriesMetricDataDTO.getMetricDataList().forEach(metricData -> {
         assertThat(metricData.getRisk().name()).isNotEqualTo(TimeSeriesMetricDataDTO.TimeSeriesRisk.LOW_RISK.name());
+        if (TimeSeriesMetricType.ERROR.equals(timeSeriesMetricDataDTO.getMetricType())) {
+          assertThat(metricData.getValue()).isGreaterThan(0.0);
+        }
       });
     });
   }
@@ -275,6 +280,11 @@ public class TimeSeriesDashboardServiceImplTest extends CvNextGenTest {
       timeSeriesMLAnalysisRecords.forEach(timeSeriesMLAnalysisRecord -> {
         timeSeriesMLAnalysisRecord.setCvConfigId(cvConfigId);
         timeSeriesMLAnalysisRecord.setBucketStartTime(Instant.parse("2020-07-07T02:40:00.000Z"));
+        if (timeSeriesMLAnalysisRecord.getMetricName().equals("Calls per Minute")) {
+          Random r = new Random();
+          timeSeriesMLAnalysisRecord.getTimeSeriesGroupValues().forEach(
+              timeSeriesGroupValue -> timeSeriesGroupValue.setPercentValue(100 * Math.abs(r.nextDouble())));
+        }
         timeSeriesMLAnalysisRecord.getTimeSeriesGroupValues().forEach(groupVal -> {
           Instant baseTime = Instant.parse("2020-07-07T02:40:00.000Z");
           Random random = new Random();
