@@ -86,12 +86,12 @@ public class EmailState extends State {
 
     Map<Boolean, List<String>> toAddressMap = getEmailAddressMap(toAddress, accountId);
     Map<Boolean, List<String>> ccAddressMap = getEmailAddressMap(ccAddress, accountId);
-    toAddress = StringUtils.join(toAddressMap.get(true), ",");
-    ccAddress = StringUtils.join(ccAddressMap.get(true), ",");
+    toAddress = StringUtils.join(toAddressMap.get(true), ", ");
+    ccAddress = StringUtils.join(ccAddressMap.get(true), ", ");
 
     List<String> unregisteredAddressList =
         Stream.concat(toAddressMap.get(false).stream(), ccAddressMap.get(false).stream()).collect(Collectors.toList());
-    String unregisteredAddress = StringUtils.join(unregisteredAddressList, ",");
+    String unregisteredAddress = StringUtils.join(unregisteredAddressList, ", ");
 
     emailStateExecutionData = getEmailStateExecutionData(toAddress, ccAddress, subject, body);
 
@@ -201,6 +201,7 @@ public class EmailState extends State {
       return Stream.of(emailList.split(","))
           .filter(StringUtils::isNotBlank)
           .map(String::trim)
+          .distinct()
           .collect(partitioningBy(address -> isEmailAddressRegistered(address, accountId)));
     } else {
       return retrieveEmptyAddressMap();
@@ -208,13 +209,8 @@ public class EmailState extends State {
   }
 
   private boolean isEmailAddressRegistered(String address, String accountId) {
-    User user = userServiceImpl.getUserByEmail(address, accountId);
-    if (user != null && user.isEmailVerified()) {
-      return true;
-    } else {
-      log.warn(String.format("Unregistered email %s", address));
-      return false;
-    }
+    User user = userServiceImpl.getUserWithAcceptedInviteByEmail(address, accountId);
+    return user != null;
   }
 
   /**
