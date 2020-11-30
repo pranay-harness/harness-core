@@ -13,6 +13,7 @@ import com.google.common.collect.ImmutableList;
 import java.util.List;
 import lombok.Builder;
 import lombok.Data;
+import lombok.Getter;
 import lombok.experimental.FieldNameConstants;
 import org.mongodb.morphia.annotations.Entity;
 import org.springframework.data.annotation.*;

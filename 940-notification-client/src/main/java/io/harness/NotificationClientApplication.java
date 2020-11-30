@@ -4,6 +4,7 @@ import static io.harness.logging.LoggingInitializer.initializeLogging;
 
 import static com.google.common.collect.ImmutableMap.of;
 
+import io.harness.channeldetails.EmailChannel;
 import io.harness.maintenance.MaintenanceController;
 import io.harness.metrics.MetricRegistryModule;
 import io.harness.ng.core.CorrelationFilter;
@@ -21,6 +22,7 @@ import io.harness.remote.NGObjectMapperHelper;
 
 import com.codahale.metrics.MetricRegistry;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.common.collect.Lists;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
 import io.dropwizard.Application;
@@ -28,6 +30,7 @@ import io.dropwizard.configuration.EnvironmentVariableSubstitutor;
 import io.dropwizard.configuration.SubstitutingSourceProvider;
 import io.dropwizard.setup.Bootstrap;
 import io.dropwizard.setup.Environment;
+import java.util.Collections;
 import java.util.EnumSet;
 import javax.servlet.DispatcherType;
 import javax.servlet.FilterRegistration;
@@ -69,26 +72,17 @@ public class NotificationClientApplication extends Application<NotificationClien
   @Override
   public void run(NotificationClientApplicationConfiguration appConfig, Environment environment) {
     log.info("Starting Next Gen Application ...");
-    MaintenanceController.forceMaintenance(true);
     Injector injector = Guice.createInjector(
         new NotificationClientApplicationModule(appConfig), new MetricRegistryModule(metricRegistry));
-
-    registerCorsFilter(appConfig, environment);
-    registerJerseyProviders(environment);
-    registerJerseyFeatures(environment);
-    registerCharsetResponseFilter(environment, injector);
-    registerCorrelationFilter(environment, injector);
-    registerManagedBeans(environment, injector);
-    MaintenanceController.forceMaintenance(false);
     NotificationClientImpl notificationClient = injector.getInstance(NotificationClientImpl.class);
-    //    notificationClient.sendNotificationAsync(EmailChannel.builder()
-    //                                                 .accountId("abcd")
-    //                                                 .recipients(Collections.singletonList("shawank17198@gmail.com"))
-    //                                                 .team(Team.CD)
-    //                                                 .templateId("email_test.txt")
-    //                                                 .templateData(Collections.emptyMap())
-    //                                                 .userGroupIds(Collections.emptyList())
-    //                                                 .build());
+    notificationClient.sendNotificationAsync(EmailChannel.builder()
+                                                 .accountId("abcd")
+                                                 .recipients(Collections.singletonList("shawank17198@gmail.com"))
+                                                 .team(Team.CD)
+                                                 .templateId("email_test.txt")
+                                                 .templateData(Collections.emptyMap())
+                                                 .userGroupIds(Lists.newArrayList("5fbce374298d69483974609a"))
+                                                 .build());
     //
     //    notificationClient.sendNotificationAsync(EmailChannel.builder()
     //                                                 .accountId("abcd")
@@ -163,26 +157,26 @@ public class NotificationClientApplication extends Application<NotificationClien
     //            .userGroupIds(Collections.emptyList())
     //            .build());
 
-    notificationClient.testNotificationChannel(EmailSettingDTO.builder()
-                                                   .accountId("dummy-accountId")
-                                                   .recipient("shawank17198@gmail.com")
-                                                   .subject("test-subject")
-                                                   .body("test-body")
-                                                   .build());
-
-    notificationClient.testNotificationChannel(
-        SlackSettingDTO.builder()
-            .accountId("dummy")
-            .recipient("https://hooks.slack.com/services/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")
-            .build());
-    notificationClient.testNotificationChannel(
-        PagerDutySettingDTO.builder().accountId("dummy").recipient("b86fd4f114df45808c94b4bce41195da").build());
-    notificationClient.testNotificationChannel(
-        MSTeamSettingDTO.builder()
-            .accountId("dummy")
-            .recipient(
-                "https://outlook.office.com/webhook/54207803-1d3d-44e4-8389-b419334395f2@b229b2bb-5f33-4d22-bce0-730f6474e906/IncomingWebhook/edc3516331d34b2ab54fa906004adbd0/61ab09e6-9850-44f1-b408-3639589f22bf")
-            .build());
+    //    notificationClient.testNotificationChannel(EmailSettingDTO.builder()
+    //                                                   .accountId("dummy-accountId")
+    //                                                   .recipient("shawank17198@gmail.com")
+    //                                                   .subject("test-subject")
+    //                                                   .body("test-body")
+    //                                                   .build());
+    //
+    //    notificationClient.testNotificationChannel(
+    //        SlackSettingDTO.builder()
+    //            .accountId("dummy")
+    //            .recipient("https://hooks.slack.com/services/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")
+    //            .build());
+    //    notificationClient.testNotificationChannel(
+    //        PagerDutySettingDTO.builder().accountId("dummy").recipient("b86fd4f114df45808c94b4bce41195da").build());
+    //    notificationClient.testNotificationChannel(
+    //        MSTeamSettingDTO.builder()
+    //            .accountId("dummy")
+    //            .recipient(
+    //                "https://outlook.office.com/webhook/54207803-1d3d-44e4-8389-b419334395f2@b229b2bb-5f33-4d22-bce0-730f6474e906/IncomingWebhook/edc3516331d34b2ab54fa906004adbd0/61ab09e6-9850-44f1-b408-3639589f22bf")
+    //            .build());
 
     //    new Thread(injector.getInstance(MessageConsumer.class)).start();
     //    QueuePublisher<MongoNotificationRequest> mongoQueuePublisher =

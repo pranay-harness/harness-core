@@ -539,4 +539,6 @@ public interface UserService extends OwnedByAccount {
   void setNewDefaultAccountId(User user);
 
   boolean isUserPresent(String userId);
+
+  List<User> getUsers(List<String> userIds);
 }

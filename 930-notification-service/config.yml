@@ -63,6 +63,11 @@ managerClientConfig:
   connectTimeOutSeconds: 15
   readTimeOutSeconds: 15
 
+rbacServiceConfig:
+  baseUrl: http://localhost:7457/api/
+  connectTimeOutSeconds: 15
+  readTimeOutSeconds: 15
+
 smtp:
   type: SMTP
   host: host_placeholder

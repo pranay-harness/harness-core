@@ -1,9 +1,12 @@
 package io.harness.ng.core.dto;
 
-import io.harness.ng.core.dto.NotificationSettingType;
+import io.harness.notification.NotificationChannelType;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import java.util.Optional;
 import lombok.Data;
 
 @Data
@@ -11,11 +14,13 @@ import lombok.Data;
     use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.EXISTING_PROPERTY, property = "type", visible = true)
 @JsonSubTypes(value =
     {
-      @JsonSubTypes.Type(value = SlackConfigDTO.class, name = "Slack")
-      , @JsonSubTypes.Type(value = PagerDutyConfigDTO.class, name = "PagerDuty"),
-          @JsonSubTypes.Type(value = MicrosoftTeamsConfigDTO.class, name = "MicrosoftTeams"),
-          @JsonSubTypes.Type(value = EmailConfigDTO.class, name = "Email")
+      @JsonSubTypes.Type(value = SlackConfigDTO.class, name = "SLACK")
+      , @JsonSubTypes.Type(value = PagerDutyConfigDTO.class, name = "PAGERDUTY"),
+          @JsonSubTypes.Type(value = MicrosoftTeamsConfigDTO.class, name = "MSTEAMS"),
+          @JsonSubTypes.Type(value = EmailConfigDTO.class, name = "EMAIL")
     })
 public abstract class NotificationSettingConfigDTO {
-  private NotificationSettingType type;
+  protected NotificationChannelType type;
+
+  @JsonIgnore public abstract Optional<String> getSetting();
 }

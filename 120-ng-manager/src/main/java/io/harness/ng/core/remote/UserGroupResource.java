@@ -25,6 +25,7 @@ import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
 import java.util.List;
+import java.util.stream.Collectors;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 import javax.ws.rs.BeanParam;
@@ -80,11 +81,12 @@ public class UserGroupResource {
     return ResponseDTO.newResponse(getNGPageResponse(page));
   }
 
-  @GET
+  @POST
   @Path("batch")
   @ApiOperation(value = "Get Batch User Group List", nickname = "getBatchUserGroupList")
-  public ResponseDTO<PageResponse<UserGroupDTO>> list(@NotNull List<String> userGroupsIds) {
-    Page<UserGroupDTO> page = userGroupService.list(userGroupsIds).map(UserGroupMapper::toDTO);
-    return ResponseDTO.newResponse(getNGPageResponse(page));
+  public ResponseDTO<List<UserGroupDTO>> list(@NotNull List<String> userGroupsIds) {
+    List<UserGroupDTO> userGroups =
+        userGroupService.list(userGroupsIds).stream().map(UserGroupMapper::toDTO).collect(Collectors.toList());
+    return ResponseDTO.newResponse(userGroups);
   }
 }

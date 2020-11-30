@@ -6,6 +6,7 @@ import static java.time.Duration.ofSeconds;
 
 import io.harness.mongo.queue.NGMongoQueueConsumer;
 import io.harness.ng.MongoNotificationRequest;
+import io.harness.ng.core.UserClientModule;
 import io.harness.notification.KafkaBackendConfiguration;
 import io.harness.notification.NotificationClientBackendConfiguration;
 import io.harness.notification.NotificationConfiguration;
@@ -37,7 +38,9 @@ public class NotificationCoreModule extends AbstractModule {
   @Override
   public void configure() {
     install(new UserGroupClientModule(
-        appConfig.getServiceHttpClientConfig(), appConfig.getNotificationSecrets().getManagerServiceSecret()));
+        appConfig.getRbacServiceConfig(), appConfig.getNotificationSecrets().getManagerServiceSecret()));
+    install(new UserClientModule(appConfig.getServiceHttpClientConfig(),
+        appConfig.getNotificationSecrets().getManagerServiceSecret(), "NextGenManager"));
     bind(ChannelService.class).to(ChannelServiceImpl.class);
     bind(NotificationTemplateService.class).to(NotificationTemplateServiceImpl.class);
     bind(NotificationSettingsService.class).to(NotificationSettingsServiceImpl.class);

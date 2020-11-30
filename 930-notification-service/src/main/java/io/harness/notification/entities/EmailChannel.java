@@ -2,6 +2,9 @@ package io.harness.notification.entities;
 
 import static io.harness.NotificationRequest.*;
 
+import io.harness.notification.NotificationChannelType;
+
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import java.util.List;
 import java.util.Map;
@@ -27,6 +30,12 @@ public class EmailChannel implements Channel {
         .putAllTemplateData(templateData)
         .setTemplateId(templateId)
         .build();
+  }
+
+  @Override
+  @JsonIgnore
+  public NotificationChannelType getChannelType() {
+    return NotificationChannelType.EMAIL;
   }
 
   public static EmailChannel toEmailEntity(Email emailDetails) {

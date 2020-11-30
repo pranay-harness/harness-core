@@ -1,7 +1,10 @@
 package io.harness.notification.entities;
 
-import static io.harness.NotificationRequest.*;
+import static io.harness.NotificationRequest.PagerDuty;
 
+import io.harness.notification.NotificationChannelType;
+
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import java.util.List;
 import java.util.Map;
@@ -27,6 +30,12 @@ public class PagerDutyChannel implements Channel {
         .putAllTemplateData(templateData)
         .setTemplateId(templateId)
         .build();
+  }
+
+  @Override
+  @JsonIgnore
+  public NotificationChannelType getChannelType() {
+    return NotificationChannelType.PAGERDUTY;
   }
 
   public static PagerDutyChannel toPagerDutyEntity(PagerDuty pagerDutyDetails) {
