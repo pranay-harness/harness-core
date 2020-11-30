@@ -23,6 +23,7 @@ import io.harness.morphia.MorphiaRegistrar;
 import io.harness.ngpipeline.common.NGPipelineObjectMapperHelper;
 import io.harness.persistence.HPersistence;
 import io.harness.persistence.Store;
+import io.harness.pms.execution.failure.FailureInfo;
 import io.harness.pms.sdk.PmsSdkConfiguration;
 import io.harness.pms.sdk.PmsSdkModule;
 import io.harness.pms.steps.StepType;
@@ -39,6 +40,7 @@ import io.harness.serializer.KryoRegistrar;
 import io.harness.serializer.OrchestrationRegistrars;
 import io.harness.serializer.PersistenceRegistrars;
 import io.harness.serializer.YamlBeansModuleRegistrars;
+import io.harness.serializer.json.FailureInfoSerializer;
 import io.harness.serializer.json.StepTypeSerializer;
 import io.harness.service.impl.DelegateAsyncServiceImpl;
 import io.harness.service.impl.DelegateProgressServiceImpl;
@@ -132,6 +134,7 @@ public class CIManagerApplication extends Application<CIManagerConfiguration> {
     SimpleModule module = new SimpleModule();
     // Todo: Discuss with Prashant on having an impl just like Morphia Converters
     module.addSerializer(StepType.class, new StepTypeSerializer());
+    module.addSerializer(FailureInfo.class, new FailureInfoSerializer());
     mapper.registerModule(module);
     NGPipelineObjectMapperHelper.configureNGObjectMapper(mapper);
   }
