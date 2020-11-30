@@ -46,7 +46,7 @@ public class ScheduledReportServiceImpl {
   @Autowired private CloudBillingHelper cloudBillingHelper;
 
   // TODO: CE_VIEW_URL, MAIL_SUBJECT to be finalized
-  private static final String CE_VIEW_URL = "/account/%s/continuous-efficiency/views-explorer/%s";
+  private static final String CE_VIEW_URL = "PERSPECTIVE_URL";
   private static final String MAIL_SUBJECT = "Your Continous Efficiency scheduled report is here";
   private static final String URL = "url";
   private int scheduleCount;
@@ -93,7 +93,7 @@ public class ScheduledReportServiceImpl {
                 config.getBillingDataPipelineConfig().getGcpProjectId(), accountId, unified));
     String viewUrl = "";
     try {
-      viewUrl = emailNotificationService.buildAbsoluteUrl(String.format(CE_VIEW_URL, accountId, viewId));
+      viewUrl = emailNotificationService.buildAbsoluteUrl(templateModel.get(CE_VIEW_URL));
     } catch (URISyntaxException e) {
       log.error("Error in forming View URL for Scheduled Report", e);
     }
