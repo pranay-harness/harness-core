@@ -58,8 +58,8 @@ public class PauseStateTest extends WingsBaseTest {
   private static final String UUID = RandomStringUtils.randomAlphanumeric(32);
   private static final EmailStateExecutionData.Builder expected =
       EmailStateExecutionData.Builder.anEmailStateExecutionData()
-          .withToAddress("to1,to2")
-          .withCcAddress("cc1,cc2")
+          .withToAddress("to1, to2")
+          .withCcAddress("cc1, cc2")
           .withSubject("subject")
           .withBody("body");
 
@@ -104,7 +104,7 @@ public class PauseStateTest extends WingsBaseTest {
     when(subdomainUrlHelper.getPortalBaseUrl(any())).thenReturn("baseUrl");
 
     User user = User.Builder.anUser().uuid(UUID).name(USERNAME).email(EMAIL).emailVerified(true).build();
-    when(userServiceImpl.getUserByEmail(any(), any())).thenReturn(user);
+    when(userServiceImpl.getUserWithAcceptedInviteByEmail(any(), any())).thenReturn(user);
   }
 
   /**

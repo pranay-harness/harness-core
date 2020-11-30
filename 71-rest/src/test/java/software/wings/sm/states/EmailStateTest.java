@@ -8,6 +8,7 @@ import static io.harness.rule.OwnerRule.RAGHU;
 import static io.harness.rule.OwnerRule.SRINIVAS;
 
 import static software.wings.api.EmailStateExecutionData.Builder.anEmailStateExecutionData;
+import static software.wings.beans.Account.Builder.anAccount;
 import static software.wings.beans.Application.Builder.anApplication;
 import static software.wings.beans.Environment.Builder.anEnvironment;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
@@ -31,6 +32,7 @@ import software.wings.api.EmailStateExecutionData;
 import software.wings.api.HostElement;
 import software.wings.app.MainConfiguration;
 import software.wings.app.PortalConfig;
+import software.wings.beans.Account;
 import software.wings.beans.User;
 import software.wings.helpers.ext.mail.EmailData;
 import software.wings.helpers.ext.url.SubdomainUrlHelperIntfc;
@@ -42,9 +44,11 @@ import software.wings.sm.ExecutionResponse;
 import software.wings.sm.StateExecutionInstance;
 import software.wings.sm.WorkflowStandardParams;
 
+import com.google.common.base.Splitter;
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import org.apache.commons.lang3.RandomStringUtils;
@@ -60,14 +64,17 @@ import org.mockito.Mock;
  * @author paggarwal.
  */
 public class EmailStateTest extends WingsBaseTest {
+  private static final Splitter COMMA_SPLITTER = Splitter.on(",").omitEmptyStrings().trimResults();
   private static final String BASE_URL = "https://env.harness.io/";
   private static final String stateName = "emailState1";
   private static final String EMAIL = "user@test.com";
   private static final String USERNAME = "username";
   private static final String UUID = RandomStringUtils.randomAlphanumeric(32);
-  private static final EmailStateExecutionData.Builder expected =
-      anEmailStateExecutionData().withToAddress("to1,to2").withCcAddress("cc1,cc2").withSubject("subject").withBody(
-          "body");
+  private static final EmailStateExecutionData.Builder expected = anEmailStateExecutionData()
+                                                                      .withToAddress("to1, to2")
+                                                                      .withCcAddress("cc1, cc2")
+                                                                      .withSubject("subject")
+                                                                      .withBody("body");
   private final EmailData emailData = EmailData.builder()
                                           .accountId(ACCOUNT_ID)
                                           .to(Lists.newArrayList("to1", "to2"))
@@ -87,6 +94,8 @@ public class EmailStateTest extends WingsBaseTest {
   @Mock private UserServiceImpl userServiceImpl;
 
   private ExecutionContextImpl context;
+  private Account account;
+  private Account wrongAccount;
 
   /**
    * Sets the up context and state.
@@ -121,7 +130,10 @@ public class EmailStateTest extends WingsBaseTest {
     when(subdomainUrlHelper.getPortalBaseUrl(any())).thenReturn("baseUrl");
 
     User user = User.Builder.anUser().uuid(UUID).name(USERNAME).email(EMAIL).emailVerified(true).build();
-    when(userServiceImpl.getUserByEmail(any(), any())).thenReturn(user);
+    when(userServiceImpl.getUserWithAcceptedInviteByEmail(any(), any())).thenReturn(user);
+
+    account = anAccount().withUuid(ACCOUNT_ID).build();
+    wrongAccount = anAccount().withUuid("WRONG_ID").build();
   }
 
   /**
@@ -265,9 +277,10 @@ public class EmailStateTest extends WingsBaseTest {
     emailState.setBody("body");
     emailState.setSubject("subject");
 
-    User user1 = User.Builder.anUser().uuid(UUID).name(USERNAME).email(EMAIL).emailVerified(true).build();
-    User user2 = User.Builder.anUser().uuid(UUID).name(USERNAME).email(EMAIL).emailVerified(false).build();
-    when(userServiceImpl.getUserByEmail(any(), any())).thenReturn(user1, user2);
+    User user1 = User.Builder.anUser().uuid(UUID).name(USERNAME).email(EMAIL).accounts(Arrays.asList(account)).build();
+    User user2 =
+        User.Builder.anUser().uuid(UUID).name(USERNAME).email(EMAIL).accounts(Arrays.asList(wrongAccount)).build();
+    when(userServiceImpl.getUserWithAcceptedInviteByEmail(any(), any())).thenReturn(user1, null);
 
     ExecutionResponse executionResponse = emailState.execute(context);
     assertThat(executionResponse).extracting(ExecutionResponse::getExecutionStatus).isEqualTo(ExecutionStatus.SUCCESS);
@@ -292,9 +305,10 @@ public class EmailStateTest extends WingsBaseTest {
     emailState.setBody("body");
     emailState.setSubject("subject");
 
-    User user1 = User.Builder.anUser().uuid(UUID).name(USERNAME).email(EMAIL).emailVerified(false).build();
-    User user2 = User.Builder.anUser().uuid(UUID).name(USERNAME).email(EMAIL).emailVerified(true).build();
-    when(userServiceImpl.getUserByEmail(any(), any())).thenReturn(user1, user2);
+    User user1 =
+        User.Builder.anUser().uuid(UUID).name(USERNAME).email(EMAIL).accounts(Arrays.asList(wrongAccount)).build();
+    User user2 = User.Builder.anUser().uuid(UUID).name(USERNAME).email(EMAIL).accounts(Arrays.asList(account)).build();
+    when(userServiceImpl.getUserWithAcceptedInviteByEmail(any(), any())).thenReturn(null, user2);
 
     ExecutionResponse executionResponse = emailState.execute(context);
     assertThat(executionResponse).extracting(ExecutionResponse::getExecutionStatus).isEqualTo(ExecutionStatus.SUCCESS);
@@ -319,14 +333,16 @@ public class EmailStateTest extends WingsBaseTest {
     emailState.setBody("body");
     emailState.setSubject("subject");
 
-    User user1 = User.Builder.anUser().uuid(UUID).name(USERNAME).email(EMAIL).emailVerified(false).build();
-    User user2 = User.Builder.anUser().uuid(UUID).name(USERNAME).email(EMAIL).emailVerified(false).build();
-    when(userServiceImpl.getUserByEmail(any(), any())).thenReturn(user1, user2);
+    User user1 =
+        User.Builder.anUser().uuid(UUID).name(USERNAME).email(EMAIL).accounts(Arrays.asList(wrongAccount)).build();
+    User user2 =
+        User.Builder.anUser().uuid(UUID).name(USERNAME).email(EMAIL).accounts(Arrays.asList(wrongAccount)).build();
+    when(userServiceImpl.getUserWithAcceptedInviteByEmail(any(), any())).thenReturn(null, null);
 
     ExecutionResponse executionResponse = emailState.execute(context);
     assertThat(executionResponse).extracting(ExecutionResponse::getExecutionStatus).isEqualTo(ExecutionStatus.SKIPPED);
     assertThat(executionResponse.getStateExecutionData().getErrorMsg())
-        .isEqualTo("Email was not sent to the following unregistered addresses: toAddress1,ccAddress1");
+        .isEqualTo("Email was not sent to the following unregistered addresses: toAddress1, ccAddress1");
     assertThat(emailState.getBody()).isNotEmpty();
     assertThat(emailState.getSubject()).isNotEmpty();
     assertThat(emailState.getCcAddress()).isEmpty();
@@ -343,16 +359,16 @@ public class EmailStateTest extends WingsBaseTest {
     emailState.setBody("body");
     emailState.setSubject("subject");
 
-    User user1 = User.Builder.anUser().uuid(UUID).name(USERNAME).email(EMAIL).emailVerified(true).build();
-    User user2 = User.Builder.anUser().uuid(UUID).name(USERNAME).email(EMAIL).emailVerified(true).build();
-    when(userServiceImpl.getUserByEmail(any(), any())).thenReturn(user1, user2);
+    User user1 = User.Builder.anUser().uuid(UUID).name(USERNAME).email(EMAIL).accounts(Arrays.asList(account)).build();
+    User user2 = User.Builder.anUser().uuid(UUID).name(USERNAME).email(EMAIL).accounts(Arrays.asList(account)).build();
+    when(userServiceImpl.getUserWithAcceptedInviteByEmail(any(), any())).thenReturn(user1, user2);
 
     ExecutionResponse executionResponse = emailState.execute(context);
     assertThat(executionResponse).extracting(ExecutionResponse::getExecutionStatus).isEqualTo(ExecutionStatus.SUCCESS);
     assertThat(emailState.getBody()).isNotEmpty();
     assertThat(emailState.getSubject()).isNotEmpty();
     assertThat(emailState.getCcAddress()).isNotEmpty();
-    assertThat(emailState.getCcAddress()).isEqualTo("ccAddress1,ccAddress2");
+    assertThat(emailState.getCcAddress()).isEqualTo("ccAddress1, ccAddress2");
     assertThat(emailState.getToAddress()).isEmpty();
     assertThat(emailState.isIgnoreDeliveryFailure()).isTrue();
 
