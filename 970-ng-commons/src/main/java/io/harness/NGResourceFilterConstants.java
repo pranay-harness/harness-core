@@ -16,4 +16,5 @@ public class NGResourceFilterConstants {
   public static final String START = "startTime";
   public static final String END = "endTime";
   public static final String STATUS = "status";
+  public static final String SCOPE = "scope";
 }

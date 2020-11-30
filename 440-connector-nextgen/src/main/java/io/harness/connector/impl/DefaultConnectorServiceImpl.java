@@ -15,8 +15,10 @@ import io.harness.connector.apis.dto.ConnectorCatalogueResponseDTO;
 import io.harness.connector.apis.dto.ConnectorDTO;
 import io.harness.connector.apis.dto.ConnectorInfoDTO;
 import io.harness.connector.apis.dto.ConnectorResponseDTO;
+import io.harness.connector.apis.dto.stats.ConnectorStatistics;
 import io.harness.connector.entities.Connector;
 import io.harness.connector.entities.Connector.ConnectorKeys;
+import io.harness.connector.entities.Connector.Scope;
 import io.harness.connector.entities.ConnectorConnectivityDetails;
 import io.harness.connector.entities.ConnectorConnectivityDetails.ConnectorConnectivityDetailsBuilder;
 import io.harness.connector.helper.CatalogueHelper;
@@ -59,6 +61,7 @@ public class DefaultConnectorServiceImpl implements ConnectorService {
   private Map<String, ConnectionValidator> connectionValidatorMap;
   private final CatalogueHelper catalogueHelper;
   EntitySetupUsageClient entitySetupUsageClient;
+  ConnectorStatisticsHelper connectorStatisticsHelper;
 
   @Override
   public Optional<ConnectorResponseDTO> get(
@@ -267,5 +270,11 @@ public class DefaultConnectorServiceImpl implements ConnectorService {
               connector.getProjectIdentifier()),
           ex);
     }
+  }
+
+  @Override
+  public ConnectorStatistics getConnectorStatistics(
+      String accountIdentifier, String orgIdentifier, String projectIdentifier, Scope scope) {
+    return connectorStatisticsHelper.getStats(accountIdentifier, orgIdentifier, projectIdentifier, scope);
   }
 }

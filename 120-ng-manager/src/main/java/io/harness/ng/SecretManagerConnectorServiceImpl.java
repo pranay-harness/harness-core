@@ -10,6 +10,8 @@ import io.harness.connector.apis.dto.ConnectorCatalogueResponseDTO;
 import io.harness.connector.apis.dto.ConnectorDTO;
 import io.harness.connector.apis.dto.ConnectorInfoDTO;
 import io.harness.connector.apis.dto.ConnectorResponseDTO;
+import io.harness.connector.apis.dto.stats.ConnectorStatistics;
+import io.harness.connector.entities.Connector;
 import io.harness.connector.services.ConnectorService;
 import io.harness.delegate.beans.connector.ConnectorCategory;
 import io.harness.delegate.beans.connector.ConnectorType;
@@ -162,5 +164,11 @@ public class SecretManagerConnectorServiceImpl implements ConnectorService {
   public void updateConnectorEntityWithPerpetualtaskId(
       String accountIdentifier, ConnectorInfoDTO connector, String perpetualTaskId) {
     defaultConnectorService.updateConnectorEntityWithPerpetualtaskId(accountIdentifier, connector, perpetualTaskId);
+  }
+
+  @Override
+  public ConnectorStatistics getConnectorStatistics(
+      String accountIdentifier, String orgIdentifier, String projectIdentifier, Connector.Scope scope) {
+    return defaultConnectorService.getConnectorStatistics(accountIdentifier, orgIdentifier, projectIdentifier, scope);
   }
 }
