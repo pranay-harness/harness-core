@@ -17,8 +17,10 @@ import software.wings.security.annotations.AuthRule;
 
 import com.google.inject.Inject;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 
@@ -46,15 +48,36 @@ public class ViewFieldsDataFetcher extends AbstractFieldsDataFetcher<QLCEViewFie
     fieldIdentifierData.add(getViewField(ViewFieldUtils.getCommonFields(), ViewFieldIdentifier.COMMON));
     fieldIdentifierData.add(getViewCustomField(customFields));
 
+    Set<ViewFieldIdentifier> viewFieldIdentifierSetFromCustomFields = new HashSet<>();
+    for (ViewField customField : customFields) {
+      List<ViewField> customFieldViewFields = viewCustomFieldService.get(customField.getFieldId()).getViewFields();
+      for (ViewField field : customFieldViewFields) {
+        viewFieldIdentifierSetFromCustomFields.add(field.getIdentifier());
+      }
+    }
+
     if (isExplorerQuery) {
       CEView ceView = ceViewService.get(viewId);
       if (ceView.getDataSources() != null && isNotEmpty(ceView.getDataSources())) {
-        for (ViewFieldIdentifier viewFieldIdentifier : ceView.getDataSources()) {
+        for (ViewFieldIdentifier viewFieldIdentifier : viewFieldIdentifierSetFromCustomFields) {
           if (viewFieldIdentifier == ViewFieldIdentifier.AWS) {
             fieldIdentifierData.add(getViewField(ViewFieldUtils.getAwsFields(), viewFieldIdentifier));
           } else if (viewFieldIdentifier == ViewFieldIdentifier.GCP) {
             fieldIdentifierData.add(getViewField(ViewFieldUtils.getGcpFields(), viewFieldIdentifier));
           } else if (viewFieldIdentifier == ViewFieldIdentifier.CLUSTER) {
+            fieldIdentifierData.add(getViewField(ViewFieldUtils.getClusterFields(), viewFieldIdentifier));
+          }
+        }
+
+        for (ViewFieldIdentifier viewFieldIdentifier : ceView.getDataSources()) {
+          if (viewFieldIdentifier == ViewFieldIdentifier.AWS
+              && !viewFieldIdentifierSetFromCustomFields.contains(ViewFieldIdentifier.AWS)) {
+            fieldIdentifierData.add(getViewField(ViewFieldUtils.getAwsFields(), viewFieldIdentifier));
+          } else if (viewFieldIdentifier == ViewFieldIdentifier.GCP
+              && !viewFieldIdentifierSetFromCustomFields.contains(ViewFieldIdentifier.GCP)) {
+            fieldIdentifierData.add(getViewField(ViewFieldUtils.getGcpFields(), viewFieldIdentifier));
+          } else if (viewFieldIdentifier == ViewFieldIdentifier.CLUSTER
+              && !viewFieldIdentifierSetFromCustomFields.contains(ViewFieldIdentifier.CLUSTER)) {
             fieldIdentifierData.add(getViewField(ViewFieldUtils.getClusterFields(), viewFieldIdentifier));
           }
         }

@@ -13,6 +13,7 @@ import io.harness.ccm.views.entities.ViewRule;
 import io.harness.ccm.views.entities.ViewTimeGranularity;
 import io.harness.exception.InvalidRequestException;
 
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.inject.Inject;
 import com.healthmarketscience.sqlbuilder.BinaryCondition;
@@ -41,6 +42,9 @@ import lombok.extern.slf4j.Slf4j;
 public class ViewsQueryBuilder {
   public static final String K8S_NODE = "K8S_NODE";
   public static final String K8S_POD = "K8S_POD";
+  public static final String ECS_TASK_FARGATE = "ECS_TASK_FARGATE";
+  public static final String ECS_TASK_EC2 = "ECS_TASK_EC2";
+  public static final String ECS_CONTAINER_INSTANCE = "ECS_CONTAINER_INSTANCE";
   @Inject ViewCustomFieldDao viewCustomFieldDao;
   private static final String leftJoinLabels = " LEFT JOIN UNNEST(labels) as labels";
   private static final String leftJoinSelectiveLabels = " LEFT JOIN UNNEST(labels) as labels ON labels.key IN (%s)";
@@ -237,15 +241,18 @@ public class ViewsQueryBuilder {
     }
 
     if (isClusterConditionOrFilterPresent) {
-      String instanceType = K8S_NODE;
+      List<String> instancetypeList = ImmutableList.of(K8S_NODE, ECS_TASK_FARGATE, ECS_CONTAINER_INSTANCE);
+
       if (isPodFilterPresent) {
-        instanceType = K8S_POD;
+        instancetypeList = ImmutableList.of(K8S_POD, ECS_TASK_FARGATE, ECS_TASK_EC2);
       }
+
+      String[] instancetypeStringArray = instancetypeList.toArray(new String[instancetypeList.size()]);
 
       List<Condition> conditionList = new ArrayList<>();
       conditionList.add(UnaryCondition.isNull(new CustomSql(ViewsMetaDataFields.INSTANCE_TYPE.getFieldName())));
-      conditionList.add(
-          BinaryCondition.equalTo(new CustomSql(ViewsMetaDataFields.INSTANCE_TYPE.getFieldName()), instanceType));
+      conditionList.add(new InCondition(
+          new CustomSql(ViewsMetaDataFields.INSTANCE_TYPE.getFieldName()), (Object[]) instancetypeStringArray));
       selectQuery.addCondition(getSqlOrCondition(conditionList));
     }
   }

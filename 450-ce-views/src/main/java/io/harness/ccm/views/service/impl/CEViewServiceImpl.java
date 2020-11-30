@@ -18,6 +18,7 @@ import io.harness.ccm.views.entities.ViewVisualization;
 import io.harness.ccm.views.graphql.QLCEView;
 import io.harness.ccm.views.graphql.QLCEViewField;
 import io.harness.ccm.views.service.CEViewService;
+import io.harness.ccm.views.service.ViewCustomFieldService;
 import io.harness.exception.InvalidRequestException;
 
 import com.google.inject.Inject;
@@ -34,6 +35,7 @@ import lombok.extern.slf4j.Slf4j;
 public class CEViewServiceImpl implements CEViewService {
   @Inject private CEViewDao ceViewDao;
   @Inject private CEReportScheduleDao ceReportScheduleDao;
+  @Inject private ViewCustomFieldService viewCustomFieldService;
 
   private static final String VIEW_NAME_DUPLICATE_EXCEPTION = "View with given name already exists";
   private static final String VIEW_LIMIT_REACHED_EXCEPTION = "Maximum allowed custom views limit(50) has been reached";
@@ -92,6 +94,11 @@ public class CEViewServiceImpl implements CEViewService {
             viewFieldIdentifierSet.add(ViewFieldIdentifier.GCP);
           }
           if (((ViewIdCondition) condition).getViewField().getIdentifier() == ViewFieldIdentifier.CUSTOM) {
+            String viewId = ((ViewIdCondition) condition).getViewField().getFieldId();
+            List<ViewField> customFieldViewFields = viewCustomFieldService.get(viewId).getViewFields();
+            for (ViewField field : customFieldViewFields) {
+              viewFieldIdentifierSet.add(field.getIdentifier());
+            }
             viewFieldIdentifierSet.add(ViewFieldIdentifier.CUSTOM);
           }
         }
