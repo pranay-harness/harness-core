@@ -3,7 +3,7 @@ load("@io_bazel_rules_go//go:def.bzl", "go_library", "go_test")
 go_library(
     name = "go_default_library",
     srcs = ["client.go"],
-    importpath = "github.com/wings-software/portal/commons/go/lib/910-delegate-task-grpc-service/grpc",
+    importpath = "github.com/wings-software/portal/commons/go/lib/delegate-task-grpc-service/grpc",
     visibility = ["//visibility:public"],
     deps = [
         "//910-delegate-task-grpc-service/src/main/proto/io/harness/task/service:go_default_library",
