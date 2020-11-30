@@ -45,11 +45,6 @@ import software.wings.helpers.ext.helm.response.HelmChartInfo;
 import software.wings.service.intfc.security.EncryptionService;
 import software.wings.settings.SettingValue;
 
-import com.fasterxml.jackson.core.JsonFactory;
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.DeserializationFeature;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.PropertyNamingStrategy;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.util.concurrent.UncheckedTimeoutException;
 import com.google.inject.Inject;
@@ -72,6 +67,9 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.csv.CSVFormat;
+import org.apache.commons.csv.CSVParser;
+import org.apache.commons.csv.CSVRecord;
 import org.apache.commons.lang3.StringUtils;
 import org.zeroturnaround.exec.ProcessExecutor;
 import org.zeroturnaround.exec.ProcessResult;
@@ -89,18 +87,11 @@ public class HelmTaskHelper {
   private static final String ADD_COMMAND_FOR_REPOSITORY = "helm repo add command for repository ";
   private static final String REPO_NAME = "${REPO_NAME}";
   private static final long DEFAULT_TIMEOUT_IN_MILLIS = Duration.ofMinutes(DEFAULT_STEADY_STATE_TIMEOUT).toMillis();
+  public static final String HELM_HOME_PATH_FLAG = "${HELM_HOME_PATH_FLAG}";
 
   @Inject private K8sGlobalConfigService k8sGlobalConfigService;
   @Inject private EncryptionService encryptionService;
   @Inject private ChartMuseumClient chartMuseumClient;
-
-  private static final ObjectMapper OBJECT_MAPPER;
-
-  static {
-    OBJECT_MAPPER = new ObjectMapper(new JsonFactory());
-    OBJECT_MAPPER.setPropertyNamingStrategy(PropertyNamingStrategy.LOWER_CAMEL_CASE);
-    OBJECT_MAPPER.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
-  }
 
   private void fetchChartFiles(
       HelmChartConfigParams helmChartConfigParams, String destinationDirectory, long timeoutInMillis) throws Exception {
@@ -215,10 +206,10 @@ public class HelmTaskHelper {
   @VisibleForTesting
   String applyHelmHomePath(String command, String workingDirectory) {
     if (isBlank(workingDirectory)) {
-      return command.replace("${HELM_HOME_PATH_FLAG}", "");
+      return command.replace(HELM_HOME_PATH_FLAG, "");
     } else {
       String helmHomePath = getHelmHomePath(workingDirectory);
-      return command.replace("${HELM_HOME_PATH_FLAG}", "--home " + helmHomePath);
+      return command.replace(HELM_HOME_PATH_FLAG, "--home " + helmHomePath);
     }
   }
 
@@ -537,7 +528,7 @@ public class HelmTaskHelper {
             .replace(HELM_PATH_PLACEHOLDER, encloseWithQuotesIfNeeded(k8sGlobalConfigService.getHelmPath(helmVersion)))
             .replace("KUBECONFIG=${KUBECONFIG_PATH}", "")
             .replace(REPO_NAME, repoName)
-        + "${HELM_HOME_PATH_FLAG";
+        + HELM_HOME_PATH_FLAG;
 
     return applyHelmHomePath(repoUpdateCommand, workingDirectory);
   }
@@ -662,7 +653,7 @@ public class HelmTaskHelper {
   }
 
   private List<HelmChart> fetchVersionsFromHttp(HelmChartCollectionParams helmChartCollectionParams,
-      String destinationDirectory, long timeoutInMillis, String workingDirectory) {
+      String destinationDirectory, long timeoutInMillis, String workingDirectory) throws IOException {
     HelmChartConfigParams helmChartConfigParams = helmChartCollectionParams.getHelmChartConfigParams();
     HttpHelmRepoConfig httpHelmRepoConfig = (HttpHelmRepoConfig) helmChartConfigParams.getHelmRepoConfig();
     addRepo(helmChartConfigParams.getRepoName(), helmChartConfigParams.getRepoDisplayName(),
@@ -682,51 +673,47 @@ public class HelmTaskHelper {
           helmChartCollectionParams.getHelmChartConfigParams().getChartName());
     }
 
-    return parseHelmVersionFetchJsonOutput(commandOutput, helmChartCollectionParams);
+    return parseHelmVersionFetchOutput(commandOutput, helmChartCollectionParams);
   }
 
-  private List<HelmChart> parseHelmVersionFetchJsonOutput(
-      String commandOutput, HelmChartCollectionParams manifestCollectionParams) {
+  private List<HelmChart> parseHelmVersionFetchOutput(
+      String commandOutput, HelmChartCollectionParams manifestCollectionParams) throws IOException {
     String errorMessage = "No chart with the given name found. Chart might be deleted at source";
-    int resultStartIndex = commandOutput.indexOf("[{\"");
-    if (resultStartIndex < 0) {
+    if (isEmpty(commandOutput) || commandOutput.contains("No results found")) {
       throw new InvalidRequestException(errorMessage);
     }
-    String jsonOutput = commandOutput.substring(resultStartIndex);
-    try {
-      List<HelmChartDetails> collectionResponses =
-          OBJECT_MAPPER.readValue(jsonOutput, new TypeReference<List<HelmChartDetails>>() {});
-      if (isEmpty(collectionResponses)) {
-        throw new InvalidRequestException(errorMessage);
-      }
-      List<HelmChart> charts =
-          collectionResponses.stream()
-              .filter(response
-                  -> matchesChartName(
-                      manifestCollectionParams.getHelmChartConfigParams().getChartName(), response.getName()))
-              .map(response
-                  -> HelmChart.builder()
-                         .appId(manifestCollectionParams.getAppId())
-                         .accountId(manifestCollectionParams.getAccountId())
-                         .applicationManifestId(manifestCollectionParams.getAppManifestId())
-                         .serviceId(manifestCollectionParams.getServiceId())
-                         .name(manifestCollectionParams.getHelmChartConfigParams().getChartName())
-                         .version(response.getVersion())
-                         .displayName(manifestCollectionParams.getHelmChartConfigParams().getChartName() + "-"
-                             + response.getVersion())
-                         .appVersion(response.getAppVersion())
-                         .description(response.getDescription())
-                         .build())
-              .collect(Collectors.toList());
-      if (isEmpty(charts)) {
-        log.warn("No exact matches present for the chart with given name");
-        throw new InvalidRequestException(errorMessage);
-      }
-      return charts;
-    } catch (IOException ioe) {
-      log.warn("Error in parsing the helm version fetch command output: " + ioe.getMessage());
+
+    CSVFormat csvFormat = CSVFormat.RFC4180.withFirstRecordAsHeader().withDelimiter('\t').withTrim();
+    List<CSVRecord> records = CSVParser.parse(commandOutput, csvFormat).getRecords();
+    if (isEmpty(records)) {
       throw new InvalidRequestException(errorMessage);
     }
+    List<HelmChart> charts =
+        records.stream()
+            .filter(record
+                -> record.size() > 1
+                    && matchesChartName(
+                        manifestCollectionParams.getHelmChartConfigParams().getChartName(), record.get(0)))
+            .map(record
+                -> HelmChart.builder()
+                       .appId(manifestCollectionParams.getAppId())
+                       .accountId(manifestCollectionParams.getAccountId())
+                       .applicationManifestId(manifestCollectionParams.getAppManifestId())
+                       .serviceId(manifestCollectionParams.getServiceId())
+                       .name(manifestCollectionParams.getHelmChartConfigParams().getChartName())
+                       .version(record.get(1))
+                       .displayName(
+                           manifestCollectionParams.getHelmChartConfigParams().getChartName() + "-" + record.get(1))
+                       .appVersion(record.size() > 2 ? record.get(2) : null)
+                       .description(record.size() > 3 ? record.get(3) : null)
+                       .build())
+            .collect(Collectors.toList());
+
+    if (isEmpty(charts)) {
+      throw new InvalidRequestException(errorMessage);
+    }
+
+    return charts;
   }
 
   private List<HelmChart> fetchVersionsUsingChartMuseumServer(HelmChartCollectionParams helmChartCollectionParams,
@@ -749,7 +736,7 @@ public class HelmTaskHelper {
 
     chartMuseumClient.stopChartMuseumServer(chartMuseumServer.getStartedProcess());
 
-    return parseHelmVersionFetchJsonOutput(commandOutput, helmChartCollectionParams);
+    return parseHelmVersionFetchOutput(commandOutput, helmChartCollectionParams);
   }
 
   private String fetchHelmChartVersionsCommand(
