@@ -6,17 +6,20 @@ step:
     publishArtifacts:
     - filePattern: ~/.m2/*-${BUILD_NUMBER}.jar
       nexus:
+        type: NEXUS
         connectorRef: myNexusConnector
         path: path/to/myfile/on/server
 
     - filePattern: ~/.m2/*-${BUILD_NUMBER}.jar
       artifactory:
+        type: ARTIFACTORY
         connectorRef: myArtifactoryConnector
         repository: myRepo
         artifactPath: path/to/myfile/on/server
 
     - filePattern: ~/.m2/*-${BUILD_NUMBER}.jar
       s3:
+        type: S3
         connectorRef: myS3Connector
         location: s3://snapshot-watcher-jars/artifacts/
 
@@ -30,6 +33,7 @@ step:
         - key: key2
           value: value2
       ecr:
+        type: ECR
         connectorRef: myDockerRepoConnector
         location: eu.gcr.io/harness/ui:latest
         region: US-West
@@ -44,6 +48,7 @@ step:
         - key: key2
           value: value2
       dockerhub:
+        type: DOCKERHUB
         connectorRef: myDockerHubConnector # credentials are always needed to push
 
     - dockerFile: ~/Dockerfile
@@ -56,11 +61,13 @@ step:
         - key: key2
           value: value2
       gcr:
+        type: GCR
         connectorRef: myDockerRepoConnector
         location: eu.gcr.io/harness/ui:latest
 
     - dockerImage: build-based-image
       tag: 1.0.0
       gcr:
+        type: GCR
         connectorRef: myDockerRepoConnector
         location: eu.gcr.io/harness/ui:latest

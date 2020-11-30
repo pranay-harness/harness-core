@@ -9,7 +9,7 @@ import org.springframework.data.annotation.TypeAlias;
 @Value
 @Builder
 @JsonTypeName("text")
-@TypeAlias("customSecretVariable")
+@TypeAlias("customTextVariable")
 public class CustomTextVariable implements CustomVariable {
   @Builder.Default @NotNull Type type = Type.TEXT;
   @NotNull String name;

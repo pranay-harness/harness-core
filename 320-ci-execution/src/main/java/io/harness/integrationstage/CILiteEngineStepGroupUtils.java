@@ -109,6 +109,7 @@ public class CILiteEngineStepGroupUtils {
 
     return StepElement.builder()
         .identifier(LITE_ENGINE_TASK + liteEngineCounter)
+        .type("liteEngineTask")
         .stepSpecType(liteEngineTaskStepInfo)
         .build();
   }

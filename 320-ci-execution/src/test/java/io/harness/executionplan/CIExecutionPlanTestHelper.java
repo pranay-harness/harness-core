@@ -182,6 +182,7 @@ public class CIExecutionPlanTestHelper {
     List<ExecutionWrapper> executionWrappers = new ArrayList<>();
     executionWrappers.add(StepElement.builder()
                               .identifier("liteEngineTask1")
+                              .type("liteEngineTask")
                               .stepSpecType(LiteEngineTaskStepInfo.builder()
                                                 .identifier("liteEngineTask1")
                                                 .buildJobEnvInfo(getCIBuildJobEnvInfoOnFirstPod())

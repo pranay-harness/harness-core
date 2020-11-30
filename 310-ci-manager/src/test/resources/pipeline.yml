@@ -98,5 +98,6 @@ pipeline:
                         - key: key2
                           value: value2
                       gcr:
+                        type: GCR
                         location: eu.gcr.io/harness/ui:latest
                         connectorRef: myDockerRepoConnector

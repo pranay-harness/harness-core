@@ -31,10 +31,9 @@ import org.springframework.data.annotation.TypeAlias;
 @JsonIgnoreProperties(ignoreUnknown = true)
 @TypeAlias("integrationStage")
 public class IntegrationStage implements CIStage {
-  @JsonIgnore public static final CIStageType type = CIStageType.INTEGRATION;
+  @JsonIgnore public static final CIStageType type = CIStageType.ci;
   @JsonIgnore
-  public static final NGStageType INTEGRATION_STAGE_TYPE =
-      NGStageType.builder().type(CIStageType.INTEGRATION.name()).build();
+  public static final NGStageType INTEGRATION_STAGE_TYPE = NGStageType.builder().type(CIStageType.ci.name()).build();
 
   @Getter(onMethod = @__(@JsonIgnore)) @JsonIgnore @NotNull @EntityIdentifier private String identifier;
   @Getter(onMethod = @__(@JsonIgnore)) @JsonIgnore private String name;

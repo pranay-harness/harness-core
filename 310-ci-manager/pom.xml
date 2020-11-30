@@ -41,6 +41,10 @@
             <artifactId>dropwizard-configurable-assets-bundle</artifactId>
         </dependency>
         <dependency>
+            <groupId>org.mortbay.jetty.alpn</groupId>
+            <artifactId>alpn-boot</artifactId>
+        </dependency>
+        <dependency>
             <groupId>ru.vyarus</groupId>
             <artifactId>guice-validator</artifactId>
         </dependency>
