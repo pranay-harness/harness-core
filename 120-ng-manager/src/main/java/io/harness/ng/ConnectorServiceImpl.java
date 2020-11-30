@@ -202,6 +202,13 @@ public class ConnectorServiceImpl implements ConnectorService {
   }
 
   @Override
+  public ConnectorValidationResult testGitRepoConnection(String accountIdentifier, String orgIdentifier,
+      String projectIdentifier, String connectorIdentifier, String gitRepoURL) {
+    return defaultConnectorService.testGitRepoConnection(
+        accountIdentifier, orgIdentifier, projectIdentifier, connectorIdentifier, gitRepoURL);
+  }
+
+  @Override
   public ConnectorStatistics getConnectorStatistics(
       String accountIdentifier, String orgIdentifier, String projectIdentifier, Connector.Scope scope) {
     return defaultConnectorService.getConnectorStatistics(accountIdentifier, orgIdentifier, projectIdentifier, scope);

@@ -141,6 +141,19 @@ public class ConnectorResource {
         connectorService.testConnection(accountIdentifier, orgIdentifier, projectIdentifier, connectorIdentifier));
   }
 
+  @POST
+  @Path("testGitRepoConnection/{identifier}")
+  @ApiOperation(value = "Test the connection", nickname = "getTestGitRepoConnectionResult")
+  public ResponseDTO<ConnectorValidationResult> testGitRepoConnection(
+      @NotEmpty @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier,
+      @QueryParam(NGCommonEntityConstants.ORG_KEY) String orgIdentifier,
+      @QueryParam(NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier,
+      @QueryParam(NGCommonEntityConstants.REPO_URL) String repoURL,
+      @PathParam(NGCommonEntityConstants.IDENTIFIER_KEY) String connectorIdentifier) {
+    return ResponseDTO.newResponse(connectorService.testGitRepoConnection(
+        accountIdentifier, orgIdentifier, projectIdentifier, connectorIdentifier, repoURL));
+  }
+
   @GET
   @Path("catalogue")
   @ApiOperation(value = "Get Connector Catalogue", nickname = "getConnectorCatalogue")

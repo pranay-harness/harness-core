@@ -4,6 +4,7 @@ import static io.harness.NGConstants.CONNECTOR_HEARTBEAT_LOG_PREFIX;
 import static io.harness.NGConstants.CONNECTOR_STRING;
 import static io.harness.connector.entities.ConnectivityStatus.FAILURE;
 import static io.harness.connector.entities.ConnectivityStatus.SUCCESS;
+import static io.harness.delegate.beans.connector.ConnectorType.GIT;
 import static io.harness.utils.RestCallToNGManagerClientUtils.execute;
 
 import static java.lang.String.format;
@@ -24,10 +25,12 @@ import io.harness.connector.entities.ConnectorConnectivityDetails.ConnectorConne
 import io.harness.connector.helper.CatalogueHelper;
 import io.harness.connector.mappers.ConnectorMapper;
 import io.harness.connector.services.ConnectorService;
+import io.harness.connector.services.GitRepoConnectorService;
 import io.harness.connector.validator.ConnectionValidator;
 import io.harness.delegate.beans.connector.ConnectorCategory;
 import io.harness.delegate.beans.connector.ConnectorType;
 import io.harness.delegate.beans.connector.ConnectorValidationResult;
+import io.harness.delegate.beans.connector.gitconnector.GitConfigDTO;
 import io.harness.entitysetupusageclient.remote.EntitySetupUsageClient;
 import io.harness.exception.DuplicateFieldException;
 import io.harness.exception.InvalidRequestException;
@@ -192,20 +195,63 @@ public class DefaultConnectorServiceImpl implements ConnectorService {
   @Override
   public ConnectorValidationResult testConnection(
       String accountIdentifier, String orgIdentifier, String projectIdentifier, String connectorIdentifier) {
+    Connector connector =
+        getConnectorWithIdentifier(accountIdentifier, orgIdentifier, projectIdentifier, connectorIdentifier);
+    ConnectorResponseDTO connectorDTO = connectorMapper.writeDTO(connector);
+    ConnectorInfoDTO connectorInfo = connectorDTO.getConnector();
+    return validateConnector(
+        connector, connectorDTO, connectorInfo, accountIdentifier, orgIdentifier, projectIdentifier);
+  }
+
+  /**
+   * This function tests connection for git connector with repo url from parameter.
+   */
+
+  public ConnectorValidationResult testGitRepoConnection(String accountIdentifier, String orgIdentifier,
+      String projectIdentifier, String connectorIdentifier, String gitRepoURL) {
+    Connector connector =
+        getConnectorWithIdentifier(accountIdentifier, orgIdentifier, projectIdentifier, connectorIdentifier);
+    ConnectorValidationResult validationResult;
+
+    if (connector.getType() != GIT) {
+      log.info("Test Connection failed for connector with identifier[{}] in account[{}] with error [{}]",
+          connector.getIdentifier(), accountIdentifier, "Non git connector is provided for repo verification");
+      validationResult = ConnectorValidationResult.builder().valid(false).build();
+      return validationResult;
+    }
+
+    ConnectorResponseDTO connectorDTO = connectorMapper.writeDTO(connector);
+    ConnectorInfoDTO connectorInfo = connectorDTO.getConnector();
+    GitConfigDTO gitConfigDTO = (GitConfigDTO) connectorInfo.getConnectorConfig();
+    // Use Repo URL from parameter instead of using configured URL
+    gitConfigDTO.setUrl(gitRepoURL);
+    connectorInfo.setConnectorConfig(gitConfigDTO);
+
+    return validateConnector(
+        connector, connectorDTO, connectorInfo, accountIdentifier, orgIdentifier, projectIdentifier);
+  }
+
+  private ConnectorValidationResult validateConnector(Connector connector, ConnectorResponseDTO connectorDTO,
+      ConnectorInfoDTO connectorInfo, String accountIdentifier, String orgIdentifier, String projectIdentifier) {
+    ConnectorValidationResult validationResult;
+    validationResult = validateSafely(connectorInfo, accountIdentifier, orgIdentifier, projectIdentifier);
+    long connectivityTestedAt = System.currentTimeMillis();
+    validationResult.setTestedAt(connectivityTestedAt);
+    updateConnectivityStatusOfConnector(connector, validationResult, connectivityTestedAt, connectorDTO.getStatus());
+    return validationResult;
+  }
+
+  private Connector getConnectorWithIdentifier(
+      String accountIdentifier, String orgIdentifier, String projectIdentifier, String connectorIdentifier) {
     String fullyQualifiedIdentifier = FullyQualifiedIdentifierHelper.getFullyQualifiedIdentifier(
         accountIdentifier, orgIdentifier, projectIdentifier, connectorIdentifier);
+
     Optional<Connector> connectorOptional =
         connectorRepository.findByFullyQualifiedIdentifierAndDeletedNot(fullyQualifiedIdentifier, true);
+
     if (connectorOptional.isPresent()) {
-      ConnectorResponseDTO connectorDTO = connectorMapper.writeDTO(connectorOptional.get());
-      ConnectorInfoDTO connectorInfo = connectorDTO.getConnector();
-      ConnectorValidationResult validationResult =
-          validateSafely(connectorInfo, accountIdentifier, orgIdentifier, projectIdentifier);
-      long connectivityTestedAt = System.currentTimeMillis();
-      validationResult.setTestedAt(connectivityTestedAt);
-      updateConnectivityStatusOfConnector(
-          connectorOptional.get(), validationResult, connectivityTestedAt, connectorDTO.getStatus());
-      return validationResult;
+      return connectorOptional.get();
+
     } else {
       throw new InvalidRequestException(
           createConnectorNotFoundMessage(accountIdentifier, orgIdentifier, projectIdentifier, connectorIdentifier));
