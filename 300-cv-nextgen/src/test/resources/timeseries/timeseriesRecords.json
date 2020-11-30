@@ -1,3067 +1,3445 @@
 [
   {
-    "_id" : "5f03ff0d285fa07a833541a0",
-    "cvConfigId" : "Z6-wzYE-St6SMNjNtmKCrA",
-    "metricName" : "Average Response Time (ms)",
-    "accountId" : "kmpySmUISimoRrJL6NL73w",
-    "timeSeriesGroupValues" : [
-      {
-        "groupName" : "/api/settings",
-        "metricValue" : 0.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/userGroups",
-        "metricValue" : 58.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/setup-as-code",
-        "metricValue" : 203.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/delegates",
-        "metricValue" : 9.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/health",
-        "metricValue" : 10.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/services",
-        "metricValue" : 0.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "secrets-decrypt",
-        "metricValue" : 641.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/account",
-        "metricValue" : 3.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/preference",
-        "metricValue" : 101.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/identity",
-        "metricValue" : 0.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/compliance-config",
-        "metricValue" : 0.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/pipelines",
-        "metricValue" : 0.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/app-manifests",
-        "metricValue" : 0.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/stream/delegate",
-        "metricValue" : 2.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/admin",
-        "metricValue" : 0.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/service-templates",
-        "metricValue" : 0.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/cv-activity-logs",
-        "metricValue" : 0.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/service-templates",
-        "metricValue" : 0.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/external",
-        "metricValue" : 0.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/plugins",
-        "metricValue" : 0.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/infrastructure-provisioners",
-        "metricValue" : 0.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/graphql",
-        "metricValue" : 38.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/build-sources",
-        "metricValue" : 0.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/artifactstreams",
-        "metricValue" : 0.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/logml",
-        "metricValue" : 0.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/templates",
-        "metricValue" : 0.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/configs",
-        "metricValue" : 0.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/webhooks",
-        "metricValue" : 0.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/cv-configuration",
-        "metricValue" : 0.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/version",
-        "metricValue" : 2.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/delegate-scopes",
-        "metricValue" : 0.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/service-variables",
-        "metricValue" : 0.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/services",
-        "metricValue" : 0.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "secrets-decrypt",
-        "metricValue" : 0.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/features",
-        "metricValue" : 29.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/settings",
-        "metricValue" : 0.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/identity",
-        "metricValue" : 0.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/tags",
-        "metricValue" : 0.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/app-manifests",
-        "metricValue" : 0.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/pipelines",
-        "metricValue" : 15.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/account",
-        "metricValue" : 2.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/preference",
-        "metricValue" : 0.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/plugins",
-        "metricValue" : 81.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/health",
-        "metricValue" : 9.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/compliance-config",
-        "metricValue" : 0.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/dash-stats",
-        "metricValue" : 0.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/triggers",
-        "metricValue" : 0.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/external",
-        "metricValue" : 0.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/service-templates",
-        "metricValue" : 0.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/logml",
-        "metricValue" : 0.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/notification-setup",
-        "metricValue" : 49.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/cv-activity-logs",
-        "metricValue" : 0.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/workflows",
-        "metricValue" : 6.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/plugins",
-        "metricValue" : 0.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/build-sources",
-        "metricValue" : 0.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/infrastructure-definitions",
-        "metricValue" : 0.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/account",
-        "metricValue" : 3.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/artifactstreams",
-        "metricValue" : 0.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/infrastructure-provisioners",
-        "metricValue" : 0.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/graphql",
-        "metricValue" : 206.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/delegates",
-        "metricValue" : 12.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/git-sync",
-        "metricValue" : 0.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/delegate-scopes",
-        "metricValue" : 0.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/templates",
-        "metricValue" : 0.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "secrets-decrypt",
-        "metricValue" : 1.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/cv-configuration",
-        "metricValue" : 0.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "ApprovalHandling-Iterator",
-        "metricValue" : 2436.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/account",
-        "metricValue" : 2.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/identity",
-        "metricValue" : 0.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/statistics",
-        "metricValue" : 0.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/catalogs",
-        "metricValue" : 0.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/service-variables",
-        "metricValue" : 0.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/users",
-        "metricValue" : 0.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/delegate-scopes",
-        "metricValue" : 0.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/app-manifests",
-        "metricValue" : 0.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/pipelines",
-        "metricValue" : 0.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/health",
-        "metricValue" : 9.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/activities",
-        "metricValue" : 67.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/executions",
-        "metricValue" : 81.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/agent",
-        "metricValue" : 11.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/stream/delegate",
-        "metricValue" : 0.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/workflows",
-        "metricValue" : 5.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/scim",
-        "metricValue" : 0.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/settings",
-        "metricValue" : 0.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/secrets",
-        "metricValue" : 0.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/learning-exp-metric",
-        "metricValue" : 3.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/logml",
-        "metricValue" : 0.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/infra-download",
-        "metricValue" : 0.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/setup",
-        "metricValue" : 29.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/configs",
-        "metricValue" : 0.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/webhooks",
-        "metricValue" : 2650.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/delegate-profiles",
-        "metricValue" : 0.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/version",
-        "metricValue" : 1.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/scim",
-        "metricValue" : 0.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/apps",
-        "metricValue" : 0.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/workflows",
-        "metricValue" : 7.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/service-templates",
-        "metricValue" : 0.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/build-sources",
-        "metricValue" : 0.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/templates",
-        "metricValue" : 0.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/expression-builder",
-        "metricValue" : 0.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/logs",
-        "metricValue" : 70.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/apm",
-        "metricValue" : 25.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/users",
-        "metricValue" : 0.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/delegates",
-        "metricValue" : 14.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/metrics",
-        "metricValue" : 3.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/identity",
-        "metricValue" : 0.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/health",
-        "metricValue" : 10.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/delegate-scopes",
-        "metricValue" : 0.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/account",
-        "metricValue" : 2.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/activities",
-        "metricValue" : 0.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/service-variables",
-        "metricValue" : 0.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "secrets-decrypt",
-        "metricValue" : 0.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/graphql",
-        "metricValue" : 25.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/workflows",
-        "metricValue" : 5.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/external",
-        "metricValue" : 0.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/secrets",
-        "metricValue" : 0.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/stream/delegate",
-        "metricValue" : 0.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/settings",
-        "metricValue" : 0.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/infrastructure-mappings",
-        "metricValue" : 0.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/build-sources",
-        "metricValue" : 0.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/environments",
-        "metricValue" : 62.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/external",
-        "metricValue" : 0.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/logml",
-        "metricValue" : 62.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/cv-activity-logs",
-        "metricValue" : 0.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/alerts",
-        "metricValue" : 24.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/logs",
-        "metricValue" : 69.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "_APPDYNAMICS_DEFAULT_TX_",
-        "metricValue" : 0.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/templates",
-        "metricValue" : 0.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/expression-builder",
-        "metricValue" : 0.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/version",
-        "metricValue" : 3.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/metrics",
-        "metricValue" : 2.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/apm",
-        "metricValue" : 29.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/setup",
-        "metricValue" : 20.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/users",
-        "metricValue" : 0.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/configs",
-        "metricValue" : 0.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/webhooks",
-        "metricValue" : 0.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/expression-builder",
-        "metricValue" : 0.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/executions",
-        "metricValue" : 80.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/agent",
-        "metricValue" : 16.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/triggers",
-        "metricValue" : 0.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/dash-stats",
-        "metricValue" : 0.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/statistics",
-        "metricValue" : 0.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/catalogs",
-        "metricValue" : 0.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/service-variables",
-        "metricValue" : 0.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/users",
-        "metricValue" : 408.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/secrets",
-        "metricValue" : 0.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/setup-as-code",
-        "metricValue" : 179.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/apps",
-        "metricValue" : 0.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/features",
-        "metricValue" : 0.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/learning-exp-metric",
-        "metricValue" : 4.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "ApprovalHandling-Iterator",
-        "metricValue" : 1649.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/workflows",
-        "metricValue" : 6.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/preference",
-        "metricValue" : 0.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/infrastructure-mappings",
-        "metricValue" : 0.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/scim",
-        "metricValue" : 0.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/apm",
-        "metricValue" : 29.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/environments",
-        "metricValue" : 0.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/git-sync",
-        "metricValue" : 67.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/build-sources",
-        "metricValue" : 0.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/logml",
-        "metricValue" : 52.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/stream/delegate",
-        "metricValue" : 0.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/setup",
-        "metricValue" : 30.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/infra-download",
-        "metricValue" : 0.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/admin",
-        "metricValue" : 0.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/templates",
-        "metricValue" : 0.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/configs",
-        "metricValue" : 0.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/webhooks",
-        "metricValue" : 0.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/cv-configuration",
-        "metricValue" : 0.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/delegate-profiles",
-        "metricValue" : 0.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/alerts",
-        "metricValue" : 23.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/logs",
-        "metricValue" : 76.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/version",
-        "metricValue" : 1.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/notification-setup",
-        "metricValue" : 0.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/infrastructure-definitions",
-        "metricValue" : 0.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/activities",
-        "metricValue" : 70.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/services",
-        "metricValue" : 35.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "_APPDYNAMICS_DEFAULT_TX_",
-        "metricValue" : 0.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/metrics",
-        "metricValue" : 25.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/tags",
-        "metricValue" : 30.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/expression-builder",
-        "metricValue" : 0.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/catalogs",
-        "metricValue" : 0.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/users",
-        "metricValue" : 18.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "ApprovalHandling-Iterator",
-        "metricValue" : 2321.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/expression-builder",
-        "metricValue" : 0.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/infrastructure-provisioners",
-        "metricValue" : 0.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/statistics",
-        "metricValue" : 0.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/executions",
-        "metricValue" : 87.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/triggers",
-        "metricValue" : 0.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/dash-stats",
-        "metricValue" : 0.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/scim",
-        "metricValue" : 0.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/secrets",
-        "metricValue" : 0.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/service-variables",
-        "metricValue" : 0.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/apps",
-        "metricValue" : 0.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/features",
-        "metricValue" : 0.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/agent",
-        "metricValue" : 13.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/stream/delegate",
-        "metricValue" : 0.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/infrastructure-mappings",
-        "metricValue" : 0.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/setup-as-code",
-        "metricValue" : 0.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/learning-exp-metric",
-        "metricValue" : 3.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/environments",
-        "metricValue" : 0.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/environments",
-        "metricValue" : 0.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/version",
-        "metricValue" : 1.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/apm",
-        "metricValue" : 41.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/infra-download",
-        "metricValue" : 0.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/setup",
-        "metricValue" : 28.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/configs",
-        "metricValue" : 0.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/webhooks",
-        "metricValue" : 0.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/delegate-profiles",
-        "metricValue" : 0.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/alerts",
-        "metricValue" : 23.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/logs",
-        "metricValue" : 83.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/git-sync",
-        "metricValue" : 0.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "_APPDYNAMICS_DEFAULT_TX_",
-        "metricValue" : 0.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/admin",
-        "metricValue" : 0.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/apps",
-        "metricValue" : 56.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/compliance-config",
-        "metricValue" : 174.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/activities",
-        "metricValue" : 120.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/userGroups",
-        "metricValue" : 0.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/metrics",
-        "metricValue" : 3.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/notification-setup",
-        "metricValue" : 0.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/infrastructure-definitions",
-        "metricValue" : 14.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/agent",
-        "metricValue" : 12.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/dash-stats",
-        "metricValue" : 0.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/triggers",
-        "metricValue" : 22.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/tags",
-        "metricValue" : 0.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/infrastructure-provisioners",
-        "metricValue" : 25.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/settings",
-        "metricValue" : 149.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/artifactstreams",
-        "metricValue" : 0.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/delegates",
-        "metricValue" : 15.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/services",
-        "metricValue" : 0.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/features",
-        "metricValue" : 8.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "ApprovalHandling-Iterator",
-        "metricValue" : 1886.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/preference",
-        "metricValue" : 0.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/statistics",
-        "metricValue" : 0.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/infrastructure-mappings",
-        "metricValue" : 0.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/environments",
-        "metricValue" : 0.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/pipelines",
-        "metricValue" : 0.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/app-manifests",
-        "metricValue" : 0.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/cv-activity-logs",
-        "metricValue" : 0.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/setup-as-code",
-        "metricValue" : 0.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/health",
-        "metricValue" : 8.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/executions",
-        "metricValue" : 88.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/admin",
-        "metricValue" : 0.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/cv-configuration",
-        "metricValue" : 0.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/external",
-        "metricValue" : 0.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/plugins",
-        "metricValue" : 0.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/alerts",
-        "metricValue" : 23.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/compliance-config",
-        "metricValue" : 0.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/infrastructure-definitions",
-        "metricValue" : 0.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "_APPDYNAMICS_DEFAULT_TX_",
-        "metricValue" : 0.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/metrics",
-        "metricValue" : 2.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/artifactstreams",
-        "metricValue" : 0.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/delegate-profiles",
-        "metricValue" : 0.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/catalogs",
-        "metricValue" : 0.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/delegate-scopes",
-        "metricValue" : 0.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/notification-setup",
-        "metricValue" : 0.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/graphql",
-        "metricValue" : 32.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "secrets-decrypt",
-        "metricValue" : 0.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/git-sync",
-        "metricValue" : 0.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/userGroups",
-        "metricValue" : 0.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/setup-as-code",
-        "metricValue" : 199.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/delegates",
-        "metricValue" : 14.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/tags",
-        "metricValue" : 0.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/executions",
-        "metricValue" : 104.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/userGroups",
-        "metricValue" : 0.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/dash-stats",
-        "metricValue" : 0.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/triggers",
-        "metricValue" : 0.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/catalogs",
-        "metricValue" : 0.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/secrets",
-        "metricValue" : 0.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/artifactstreams",
-        "metricValue" : 0.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/features",
-        "metricValue" : 0.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/services",
-        "metricValue" : 0.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/agent",
-        "metricValue" : 33.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/infrastructure-provisioners",
-        "metricValue" : 0.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/identity",
-        "metricValue" : 0.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/statistics",
-        "metricValue" : 0.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/infrastructure-mappings",
-        "metricValue" : 0.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/infra-download",
-        "metricValue" : 0.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/learning-exp-metric",
-        "metricValue" : 5.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/pipelines",
-        "metricValue" : 0.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/compliance-config",
-        "metricValue" : 0.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/app-manifests",
-        "metricValue" : 0.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/scim",
-        "metricValue" : 0.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/apps",
-        "metricValue" : 0.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "ApprovalHandling-Iterator",
-        "metricValue" : 1779.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/preference",
-        "metricValue" : 0.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/service-templates",
-        "metricValue" : 0.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/cv-activity-logs",
-        "metricValue" : 0.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/logs",
-        "metricValue" : 72.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/plugins",
-        "metricValue" : 0.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/git-sync",
-        "metricValue" : 0.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/alerts",
-        "metricValue" : 24.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "_APPDYNAMICS_DEFAULT_TX_",
-        "metricValue" : 290.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/admin",
-        "metricValue" : 0.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/cv-configuration",
-        "metricValue" : 0.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/apm",
-        "metricValue" : 22.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/setup",
-        "metricValue" : 26.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/infra-download",
-        "metricValue" : 0.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/learning-exp-metric",
-        "metricValue" : 3.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/delegate-profiles",
-        "metricValue" : 0.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/infrastructure-definitions",
-        "metricValue" : 0.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/activities",
-        "metricValue" : 110.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/userGroups",
-        "metricValue" : 0.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/notification-setup",
-        "metricValue" : 0.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/tags",
-        "metricValue" : 21.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/graphql",
-        "metricValue" : 34.0,
-        "riskScore" : 0.0
-      }
-    ]
+	"_id": "5f03ff0d285fa07a833541a0",
+	"cvConfigId": "Z6-wzYE-St6SMNjNtmKCrA",
+	"metricName": "Average Response Time (ms)",
+	"accountId": "kmpySmUISimoRrJL6NL73w",
+	"metricType": "RESP_TIME",
+	"timeSeriesGroupValues": [
+	  {
+		"groupName": "/api/settings",
+		"metricValue": 0,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/userGroups",
+		"metricValue": 58,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/setup-as-code",
+		"metricValue": 203,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/delegates",
+		"metricValue": 9,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/health",
+		"metricValue": 10,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/services",
+		"metricValue": 0,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "secrets-decrypt",
+		"metricValue": 641,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/account",
+		"metricValue": 3,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/preference",
+		"metricValue": 101,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/identity",
+		"metricValue": 0,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/compliance-config",
+		"metricValue": 0,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/pipelines",
+		"metricValue": 0,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/app-manifests",
+		"metricValue": 0,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/stream/delegate",
+		"metricValue": 2,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/admin",
+		"metricValue": 0,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/service-templates",
+		"metricValue": 0,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/cv-activity-logs",
+		"metricValue": 0,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/service-templates",
+		"metricValue": 0,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/external",
+		"metricValue": 0,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/plugins",
+		"metricValue": 0,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/infrastructure-provisioners",
+		"metricValue": 0,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/graphql",
+		"metricValue": 38,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/build-sources",
+		"metricValue": 0,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/artifactstreams",
+		"metricValue": 0,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/logml",
+		"metricValue": 0,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/templates",
+		"metricValue": 0,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/configs",
+		"metricValue": 0,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/webhooks",
+		"metricValue": 0,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/cv-configuration",
+		"metricValue": 0,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/version",
+		"metricValue": 2,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/delegate-scopes",
+		"metricValue": 0,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/service-variables",
+		"metricValue": 0,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/services",
+		"metricValue": 0,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "secrets-decrypt",
+		"metricValue": 0,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/features",
+		"metricValue": 29,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/settings",
+		"metricValue": 0,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/identity",
+		"metricValue": 0,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/tags",
+		"metricValue": 0,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/app-manifests",
+		"metricValue": 0,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/pipelines",
+		"metricValue": 15,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/account",
+		"metricValue": 2,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/preference",
+		"metricValue": 0,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/plugins",
+		"metricValue": 81,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/health",
+		"metricValue": 9,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/compliance-config",
+		"metricValue": 0,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/dash-stats",
+		"metricValue": 0,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/triggers",
+		"metricValue": 0,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/external",
+		"metricValue": 0,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/service-templates",
+		"metricValue": 0,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/logml",
+		"metricValue": 0,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/notification-setup",
+		"metricValue": 49,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/cv-activity-logs",
+		"metricValue": 0,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/workflows",
+		"metricValue": 6,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/plugins",
+		"metricValue": 0,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/build-sources",
+		"metricValue": 0,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/infrastructure-definitions",
+		"metricValue": 0,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/account",
+		"metricValue": 3,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/artifactstreams",
+		"metricValue": 0,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/infrastructure-provisioners",
+		"metricValue": 0,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/graphql",
+		"metricValue": 206,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/delegates",
+		"metricValue": 12,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/git-sync",
+		"metricValue": 0,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/delegate-scopes",
+		"metricValue": 0,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/templates",
+		"metricValue": 0,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "secrets-decrypt",
+		"metricValue": 1,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/cv-configuration",
+		"metricValue": 0,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "ApprovalHandling-Iterator",
+		"metricValue": 2436,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/account",
+		"metricValue": 2,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/identity",
+		"metricValue": 0,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/statistics",
+		"metricValue": 0,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/catalogs",
+		"metricValue": 0,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/service-variables",
+		"metricValue": 0,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/users",
+		"metricValue": 0,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/delegate-scopes",
+		"metricValue": 0,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/app-manifests",
+		"metricValue": 0,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/pipelines",
+		"metricValue": 0,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/health",
+		"metricValue": 9,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/activities",
+		"metricValue": 67,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/executions",
+		"metricValue": 81,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/agent",
+		"metricValue": 11,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/stream/delegate",
+		"metricValue": 0,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/workflows",
+		"metricValue": 5,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/scim",
+		"metricValue": 0,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/settings",
+		"metricValue": 0,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/secrets",
+		"metricValue": 0,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/learning-exp-metric",
+		"metricValue": 3,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/logml",
+		"metricValue": 0,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/infra-download",
+		"metricValue": 0,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/setup",
+		"metricValue": 29,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/configs",
+		"metricValue": 0,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/webhooks",
+		"metricValue": 2650,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/delegate-profiles",
+		"metricValue": 0,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/version",
+		"metricValue": 1,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/scim",
+		"metricValue": 0,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/apps",
+		"metricValue": 0,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/workflows",
+		"metricValue": 7,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/service-templates",
+		"metricValue": 0,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/build-sources",
+		"metricValue": 0,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/templates",
+		"metricValue": 0,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/expression-builder",
+		"metricValue": 0,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/logs",
+		"metricValue": 70,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/apm",
+		"metricValue": 25,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/users",
+		"metricValue": 0,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/delegates",
+		"metricValue": 14,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/metrics",
+		"metricValue": 3,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/identity",
+		"metricValue": 0,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/health",
+		"metricValue": 10,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/delegate-scopes",
+		"metricValue": 0,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/account",
+		"metricValue": 2,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/activities",
+		"metricValue": 0,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/service-variables",
+		"metricValue": 0,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "secrets-decrypt",
+		"metricValue": 0,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/graphql",
+		"metricValue": 25,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/workflows",
+		"metricValue": 5,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/external",
+		"metricValue": 0,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/secrets",
+		"metricValue": 0,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/stream/delegate",
+		"metricValue": 0,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/settings",
+		"metricValue": 0,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/infrastructure-mappings",
+		"metricValue": 0,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/build-sources",
+		"metricValue": 0,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/environments",
+		"metricValue": 62,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/external",
+		"metricValue": 0,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/logml",
+		"metricValue": 62,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/cv-activity-logs",
+		"metricValue": 0,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/alerts",
+		"metricValue": 24,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/logs",
+		"metricValue": 69,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "_APPDYNAMICS_DEFAULT_TX_",
+		"metricValue": 0,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/templates",
+		"metricValue": 0,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/expression-builder",
+		"metricValue": 0,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/version",
+		"metricValue": 3,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/metrics",
+		"metricValue": 2,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/apm",
+		"metricValue": 29,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/setup",
+		"metricValue": 20,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/users",
+		"metricValue": 0,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/configs",
+		"metricValue": 0,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/webhooks",
+		"metricValue": 0,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/expression-builder",
+		"metricValue": 0,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/executions",
+		"metricValue": 80,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/agent",
+		"metricValue": 16,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/triggers",
+		"metricValue": 0,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/dash-stats",
+		"metricValue": 0,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/statistics",
+		"metricValue": 0,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/catalogs",
+		"metricValue": 0,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/service-variables",
+		"metricValue": 0,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/users",
+		"metricValue": 408,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/secrets",
+		"metricValue": 0,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/setup-as-code",
+		"metricValue": 179,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/apps",
+		"metricValue": 0,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/features",
+		"metricValue": 0,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/learning-exp-metric",
+		"metricValue": 4,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "ApprovalHandling-Iterator",
+		"metricValue": 1649,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/workflows",
+		"metricValue": 6,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/preference",
+		"metricValue": 0,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/infrastructure-mappings",
+		"metricValue": 0,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/scim",
+		"metricValue": 0,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/apm",
+		"metricValue": 29,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/environments",
+		"metricValue": 0,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/git-sync",
+		"metricValue": 67,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/build-sources",
+		"metricValue": 0,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/logml",
+		"metricValue": 52,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/stream/delegate",
+		"metricValue": 0,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/setup",
+		"metricValue": 30,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/infra-download",
+		"metricValue": 0,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/admin",
+		"metricValue": 0,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/templates",
+		"metricValue": 0,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/configs",
+		"metricValue": 0,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/webhooks",
+		"metricValue": 0,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/cv-configuration",
+		"metricValue": 0,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/delegate-profiles",
+		"metricValue": 0,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/alerts",
+		"metricValue": 23,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/logs",
+		"metricValue": 76,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/version",
+		"metricValue": 1,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/notification-setup",
+		"metricValue": 0,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/infrastructure-definitions",
+		"metricValue": 0,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/activities",
+		"metricValue": 70,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/services",
+		"metricValue": 35,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "_APPDYNAMICS_DEFAULT_TX_",
+		"metricValue": 0,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/metrics",
+		"metricValue": 25,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/tags",
+		"metricValue": 30,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/expression-builder",
+		"metricValue": 0,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/catalogs",
+		"metricValue": 0,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/users",
+		"metricValue": 18,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "ApprovalHandling-Iterator",
+		"metricValue": 2321,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/expression-builder",
+		"metricValue": 0,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/infrastructure-provisioners",
+		"metricValue": 0,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/statistics",
+		"metricValue": 0,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/executions",
+		"metricValue": 87,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/triggers",
+		"metricValue": 0,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/dash-stats",
+		"metricValue": 0,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/scim",
+		"metricValue": 0,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/secrets",
+		"metricValue": 0,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/service-variables",
+		"metricValue": 0,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/apps",
+		"metricValue": 0,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/features",
+		"metricValue": 0,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/agent",
+		"metricValue": 13,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/stream/delegate",
+		"metricValue": 0,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/infrastructure-mappings",
+		"metricValue": 0,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/setup-as-code",
+		"metricValue": 0,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/learning-exp-metric",
+		"metricValue": 3,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/environments",
+		"metricValue": 0,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/environments",
+		"metricValue": 0,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/version",
+		"metricValue": 1,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/apm",
+		"metricValue": 41,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/infra-download",
+		"metricValue": 0,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/setup",
+		"metricValue": 28,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/configs",
+		"metricValue": 0,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/webhooks",
+		"metricValue": 0,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/delegate-profiles",
+		"metricValue": 0,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/alerts",
+		"metricValue": 23,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/logs",
+		"metricValue": 83,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/git-sync",
+		"metricValue": 0,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "_APPDYNAMICS_DEFAULT_TX_",
+		"metricValue": 0,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/admin",
+		"metricValue": 0,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/apps",
+		"metricValue": 56,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/compliance-config",
+		"metricValue": 174,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/activities",
+		"metricValue": 120,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/userGroups",
+		"metricValue": 0,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/metrics",
+		"metricValue": 3,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/notification-setup",
+		"metricValue": 0,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/infrastructure-definitions",
+		"metricValue": 14,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/agent",
+		"metricValue": 12,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/dash-stats",
+		"metricValue": 0,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/triggers",
+		"metricValue": 22,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/tags",
+		"metricValue": 0,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/infrastructure-provisioners",
+		"metricValue": 25,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/settings",
+		"metricValue": 149,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/artifactstreams",
+		"metricValue": 0,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/delegates",
+		"metricValue": 15,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/services",
+		"metricValue": 0,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/features",
+		"metricValue": 8,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "ApprovalHandling-Iterator",
+		"metricValue": 1886,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/preference",
+		"metricValue": 0,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/statistics",
+		"metricValue": 0,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/infrastructure-mappings",
+		"metricValue": 0,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/environments",
+		"metricValue": 0,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/pipelines",
+		"metricValue": 0,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/app-manifests",
+		"metricValue": 0,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/cv-activity-logs",
+		"metricValue": 0,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/setup-as-code",
+		"metricValue": 0,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/health",
+		"metricValue": 8,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/executions",
+		"metricValue": 88,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/admin",
+		"metricValue": 0,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/cv-configuration",
+		"metricValue": 0,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/external",
+		"metricValue": 0,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/plugins",
+		"metricValue": 0,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/alerts",
+		"metricValue": 23,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/compliance-config",
+		"metricValue": 0,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/infrastructure-definitions",
+		"metricValue": 0,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "_APPDYNAMICS_DEFAULT_TX_",
+		"metricValue": 0,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/metrics",
+		"metricValue": 2,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/artifactstreams",
+		"metricValue": 0,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/delegate-profiles",
+		"metricValue": 0,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/catalogs",
+		"metricValue": 0,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/delegate-scopes",
+		"metricValue": 0,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/notification-setup",
+		"metricValue": 0,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/graphql",
+		"metricValue": 32,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "secrets-decrypt",
+		"metricValue": 0,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/git-sync",
+		"metricValue": 0,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/userGroups",
+		"metricValue": 0,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/setup-as-code",
+		"metricValue": 199,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/delegates",
+		"metricValue": 14,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/tags",
+		"metricValue": 0,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/executions",
+		"metricValue": 104,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/userGroups",
+		"metricValue": 0,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/dash-stats",
+		"metricValue": 0,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/triggers",
+		"metricValue": 0,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/catalogs",
+		"metricValue": 0,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/secrets",
+		"metricValue": 0,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/artifactstreams",
+		"metricValue": 0,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/features",
+		"metricValue": 0,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/services",
+		"metricValue": 0,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/agent",
+		"metricValue": 33,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/infrastructure-provisioners",
+		"metricValue": 0,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/identity",
+		"metricValue": 0,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/statistics",
+		"metricValue": 0,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/infrastructure-mappings",
+		"metricValue": 0,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/infra-download",
+		"metricValue": 0,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/learning-exp-metric",
+		"metricValue": 5,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/pipelines",
+		"metricValue": 0,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/compliance-config",
+		"metricValue": 0,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/app-manifests",
+		"metricValue": 0,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/scim",
+		"metricValue": 0,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/apps",
+		"metricValue": 0,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "ApprovalHandling-Iterator",
+		"metricValue": 1779,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/preference",
+		"metricValue": 0,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/service-templates",
+		"metricValue": 0,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/cv-activity-logs",
+		"metricValue": 0,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/logs",
+		"metricValue": 72,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/plugins",
+		"metricValue": 0,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/git-sync",
+		"metricValue": 0,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/alerts",
+		"metricValue": 24,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "_APPDYNAMICS_DEFAULT_TX_",
+		"metricValue": 290,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/admin",
+		"metricValue": 0,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/cv-configuration",
+		"metricValue": 0,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/apm",
+		"metricValue": 22,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/setup",
+		"metricValue": 26,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/infra-download",
+		"metricValue": 0,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/learning-exp-metric",
+		"metricValue": 3,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/delegate-profiles",
+		"metricValue": 0,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/infrastructure-definitions",
+		"metricValue": 0,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/activities",
+		"metricValue": 110,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/userGroups",
+		"metricValue": 0,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/notification-setup",
+		"metricValue": 0,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/tags",
+		"metricValue": 21,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/graphql",
+		"metricValue": 34,
+		"riskScore": 0
+	  }
+	]
   },
   {
-    "_id" : "5f03ff0d285fa07a833541a5",
-    "cvConfigId" : "Z6-wzYE-St6SMNjNtmKCrA",
-    "metricName" : "Calls per Minute",
-    "accountId" : "kmpySmUISimoRrJL6NL73w",
-    "timeSeriesGroupValues" : [
-      {
-        "groupName" : "/api/settings",
-        "metricValue" : 0.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/userGroups",
-        "metricValue" : 1.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/setup-as-code",
-        "metricValue" : 1.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/delegates",
-        "metricValue" : 7.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/health",
-        "metricValue" : 67.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/services",
-        "metricValue" : 0.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "secrets-decrypt",
-        "metricValue" : 3.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/account",
-        "metricValue" : 1063.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/preference",
-        "metricValue" : 1.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/identity",
-        "metricValue" : 0.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/compliance-config",
-        "metricValue" : 0.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/pipelines",
-        "metricValue" : 0.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/app-manifests",
-        "metricValue" : 0.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/stream/delegate",
-        "metricValue" : 13.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/admin",
-        "metricValue" : 0.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/service-templates",
-        "metricValue" : 0.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/cv-activity-logs",
-        "metricValue" : 0.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/service-templates",
-        "metricValue" : 0.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/external",
-        "metricValue" : 0.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/plugins",
-        "metricValue" : 0.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/infrastructure-provisioners",
-        "metricValue" : 0.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/graphql",
-        "metricValue" : 1.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/build-sources",
-        "metricValue" : 0.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/artifactstreams",
-        "metricValue" : 0.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/logml",
-        "metricValue" : 0.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/templates",
-        "metricValue" : 0.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/configs",
-        "metricValue" : 0.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/webhooks",
-        "metricValue" : 0.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/cv-configuration",
-        "metricValue" : 0.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/version",
-        "metricValue" : 32.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/delegate-scopes",
-        "metricValue" : 0.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/service-variables",
-        "metricValue" : 0.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/services",
-        "metricValue" : 0.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "secrets-decrypt",
-        "metricValue" : 0.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/features",
-        "metricValue" : 4.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/settings",
-        "metricValue" : 0.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/identity",
-        "metricValue" : 0.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/tags",
-        "metricValue" : 0.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/app-manifests",
-        "metricValue" : 0.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/pipelines",
-        "metricValue" : 1.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/account",
-        "metricValue" : 905.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/preference",
-        "metricValue" : 0.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/plugins",
-        "metricValue" : 1.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/health",
-        "metricValue" : 67.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/compliance-config",
-        "metricValue" : 0.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/dash-stats",
-        "metricValue" : 0.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/triggers",
-        "metricValue" : 0.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/external",
-        "metricValue" : 0.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/service-templates",
-        "metricValue" : 0.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/logml",
-        "metricValue" : 0.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/notification-setup",
-        "metricValue" : 1.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/cv-activity-logs",
-        "metricValue" : 0.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/workflows",
-        "metricValue" : 316.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/plugins",
-        "metricValue" : 0.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/build-sources",
-        "metricValue" : 0.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/infrastructure-definitions",
-        "metricValue" : 0.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/account",
-        "metricValue" : 894.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/artifactstreams",
-        "metricValue" : 0.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/infrastructure-provisioners",
-        "metricValue" : 0.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/graphql",
-        "metricValue" : 1.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/delegates",
-        "metricValue" : 14.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/git-sync",
-        "metricValue" : 0.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/delegate-scopes",
-        "metricValue" : 0.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/templates",
-        "metricValue" : 0.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "secrets-decrypt",
-        "metricValue" : 1.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/cv-configuration",
-        "metricValue" : 0.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "ApprovalHandling-Iterator",
-        "metricValue" : 5.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/account",
-        "metricValue" : 918.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/identity",
-        "metricValue" : 0.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/statistics",
-        "metricValue" : 0.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/catalogs",
-        "metricValue" : 0.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/service-variables",
-        "metricValue" : 0.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/users",
-        "metricValue" : 0.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/delegate-scopes",
-        "metricValue" : 0.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/app-manifests",
-        "metricValue" : 0.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/pipelines",
-        "metricValue" : 0.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/health",
-        "metricValue" : 68.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/activities",
-        "metricValue" : 10.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/executions",
-        "metricValue" : 91.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/agent",
-        "metricValue" : 30976.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/stream/delegate",
-        "metricValue" : 0.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/workflows",
-        "metricValue" : 312.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/scim",
-        "metricValue" : 0.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/settings",
-        "metricValue" : 0.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/secrets",
-        "metricValue" : 0.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/learning-exp-metric",
-        "metricValue" : 37.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/logml",
-        "metricValue" : 0.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/infra-download",
-        "metricValue" : 0.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/setup",
-        "metricValue" : 74.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/configs",
-        "metricValue" : 0.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/webhooks",
-        "metricValue" : 2.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/delegate-profiles",
-        "metricValue" : 0.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/version",
-        "metricValue" : 30.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/scim",
-        "metricValue" : 0.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/apps",
-        "metricValue" : 0.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/workflows",
-        "metricValue" : 364.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/service-templates",
-        "metricValue" : 0.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/build-sources",
-        "metricValue" : 0.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/templates",
-        "metricValue" : 0.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/expression-builder",
-        "metricValue" : 0.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/logs",
-        "metricValue" : 44.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/apm",
-        "metricValue" : 77.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/users",
-        "metricValue" : 0.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/delegates",
-        "metricValue" : 17.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/metrics",
-        "metricValue" : 6.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/identity",
-        "metricValue" : 0.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/health",
-        "metricValue" : 66.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/delegate-scopes",
-        "metricValue" : 0.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/account",
-        "metricValue" : 914.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/activities",
-        "metricValue" : 0.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/service-variables",
-        "metricValue" : 0.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "secrets-decrypt",
-        "metricValue" : 0.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/graphql",
-        "metricValue" : 2.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/workflows",
-        "metricValue" : 362.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/external",
-        "metricValue" : 0.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/secrets",
-        "metricValue" : 0.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/stream/delegate",
-        "metricValue" : 0.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/settings",
-        "metricValue" : 0.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/infrastructure-mappings",
-        "metricValue" : 0.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/build-sources",
-        "metricValue" : 0.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/environments",
-        "metricValue" : 3.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/external",
-        "metricValue" : 0.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/logml",
-        "metricValue" : 1.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/cv-activity-logs",
-        "metricValue" : 0.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/alerts",
-        "metricValue" : 1361.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/logs",
-        "metricValue" : 55.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "_APPDYNAMICS_DEFAULT_TX_",
-        "metricValue" : 0.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/templates",
-        "metricValue" : 0.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/expression-builder",
-        "metricValue" : 0.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/version",
-        "metricValue" : 30.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/metrics",
-        "metricValue" : 9.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/apm",
-        "metricValue" : 78.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/setup",
-        "metricValue" : 68.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/users",
-        "metricValue" : 0.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/configs",
-        "metricValue" : 0.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/webhooks",
-        "metricValue" : 0.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/expression-builder",
-        "metricValue" : 0.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/executions",
-        "metricValue" : 91.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/agent",
-        "metricValue" : 30914.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/triggers",
-        "metricValue" : 0.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/dash-stats",
-        "metricValue" : 0.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/statistics",
-        "metricValue" : 0.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/catalogs",
-        "metricValue" : 0.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/service-variables",
-        "metricValue" : 0.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/users",
-        "metricValue" : 3.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/secrets",
-        "metricValue" : 0.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/setup-as-code",
-        "metricValue" : 1.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/apps",
-        "metricValue" : 0.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/features",
-        "metricValue" : 0.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/learning-exp-metric",
-        "metricValue" : 38.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "ApprovalHandling-Iterator",
-        "metricValue" : 5.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/workflows",
-        "metricValue" : 362.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/preference",
-        "metricValue" : 0.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/infrastructure-mappings",
-        "metricValue" : 0.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/scim",
-        "metricValue" : 0.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/apm",
-        "metricValue" : 144.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/environments",
-        "metricValue" : 0.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/git-sync",
-        "metricValue" : 1.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/build-sources",
-        "metricValue" : 0.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/logml",
-        "metricValue" : 13.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/stream/delegate",
-        "metricValue" : 0.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/setup",
-        "metricValue" : 93.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/infra-download",
-        "metricValue" : 0.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/admin",
-        "metricValue" : 0.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/templates",
-        "metricValue" : 0.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/configs",
-        "metricValue" : 0.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/webhooks",
-        "metricValue" : 0.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/cv-configuration",
-        "metricValue" : 0.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/delegate-profiles",
-        "metricValue" : 0.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/alerts",
-        "metricValue" : 1335.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/logs",
-        "metricValue" : 44.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/version",
-        "metricValue" : 30.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/notification-setup",
-        "metricValue" : 0.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/infrastructure-definitions",
-        "metricValue" : 0.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/activities",
-        "metricValue" : 10.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/services",
-        "metricValue" : 2.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "_APPDYNAMICS_DEFAULT_TX_",
-        "metricValue" : 0.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/metrics",
-        "metricValue" : 6.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/tags",
-        "metricValue" : 2.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/expression-builder",
-        "metricValue" : 0.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/catalogs",
-        "metricValue" : 0.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/users",
-        "metricValue" : 3.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "ApprovalHandling-Iterator",
-        "metricValue" : 5.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/expression-builder",
-        "metricValue" : 0.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/infrastructure-provisioners",
-        "metricValue" : 0.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/statistics",
-        "metricValue" : 0.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/executions",
-        "metricValue" : 89.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/triggers",
-        "metricValue" : 0.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/dash-stats",
-        "metricValue" : 0.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/scim",
-        "metricValue" : 0.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/secrets",
-        "metricValue" : 0.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/service-variables",
-        "metricValue" : 0.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/apps",
-        "metricValue" : 0.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/features",
-        "metricValue" : 0.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/agent",
-        "metricValue" : 35022.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/stream/delegate",
-        "metricValue" : 0.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/infrastructure-mappings",
-        "metricValue" : 0.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/setup-as-code",
-        "metricValue" : 0.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/learning-exp-metric",
-        "metricValue" : 138.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/environments",
-        "metricValue" : 0.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/environments",
-        "metricValue" : 0.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/version",
-        "metricValue" : 30.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/apm",
-        "metricValue" : 624.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/infra-download",
-        "metricValue" : 0.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/setup",
-        "metricValue" : 87.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/configs",
-        "metricValue" : 0.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/webhooks",
-        "metricValue" : 0.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/delegate-profiles",
-        "metricValue" : 0.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/alerts",
-        "metricValue" : 1345.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/logs",
-        "metricValue" : 47.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/git-sync",
-        "metricValue" : 0.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "_APPDYNAMICS_DEFAULT_TX_",
-        "metricValue" : 0.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/admin",
-        "metricValue" : 0.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/apps",
-        "metricValue" : 5.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/compliance-config",
-        "metricValue" : 1.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/activities",
-        "metricValue" : 22.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/userGroups",
-        "metricValue" : 0.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/metrics",
-        "metricValue" : 9.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/notification-setup",
-        "metricValue" : 0.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/infrastructure-definitions",
-        "metricValue" : 1.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/agent",
-        "metricValue" : 42175.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/dash-stats",
-        "metricValue" : 0.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/triggers",
-        "metricValue" : 1.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/tags",
-        "metricValue" : 0.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/infrastructure-provisioners",
-        "metricValue" : 1.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/settings",
-        "metricValue" : 1.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/artifactstreams",
-        "metricValue" : 0.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/delegates",
-        "metricValue" : 17.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/services",
-        "metricValue" : 0.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/features",
-        "metricValue" : 6.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "ApprovalHandling-Iterator",
-        "metricValue" : 5.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/preference",
-        "metricValue" : 0.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/statistics",
-        "metricValue" : 0.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/infrastructure-mappings",
-        "metricValue" : 0.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/environments",
-        "metricValue" : 0.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/pipelines",
-        "metricValue" : 0.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/app-manifests",
-        "metricValue" : 0.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/cv-activity-logs",
-        "metricValue" : 0.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/setup-as-code",
-        "metricValue" : 0.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/health",
-        "metricValue" : 68.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/executions",
-        "metricValue" : 106.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/admin",
-        "metricValue" : 0.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/cv-configuration",
-        "metricValue" : 0.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/external",
-        "metricValue" : 0.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/plugins",
-        "metricValue" : 0.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/alerts",
-        "metricValue" : 1331.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/compliance-config",
-        "metricValue" : 0.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/infrastructure-definitions",
-        "metricValue" : 0.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "_APPDYNAMICS_DEFAULT_TX_",
-        "metricValue" : 0.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/metrics",
-        "metricValue" : 6.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/artifactstreams",
-        "metricValue" : 0.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/delegate-profiles",
-        "metricValue" : 0.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/catalogs",
-        "metricValue" : 0.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/delegate-scopes",
-        "metricValue" : 0.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/notification-setup",
-        "metricValue" : 0.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/graphql",
-        "metricValue" : 1.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "secrets-decrypt",
-        "metricValue" : 1.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/git-sync",
-        "metricValue" : 0.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/userGroups",
-        "metricValue" : 0.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/setup-as-code",
-        "metricValue" : 2.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/delegates",
-        "metricValue" : 19.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/tags",
-        "metricValue" : 0.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/executions",
-        "metricValue" : 84.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/userGroups",
-        "metricValue" : 0.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/dash-stats",
-        "metricValue" : 0.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/triggers",
-        "metricValue" : 0.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/catalogs",
-        "metricValue" : 0.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/secrets",
-        "metricValue" : 0.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/artifactstreams",
-        "metricValue" : 0.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/features",
-        "metricValue" : 0.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/services",
-        "metricValue" : 0.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/agent",
-        "metricValue" : 29580.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/infrastructure-provisioners",
-        "metricValue" : 0.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/identity",
-        "metricValue" : 0.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/statistics",
-        "metricValue" : 0.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/infrastructure-mappings",
-        "metricValue" : 0.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/infra-download",
-        "metricValue" : 0.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/learning-exp-metric",
-        "metricValue" : 1.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/pipelines",
-        "metricValue" : 0.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/compliance-config",
-        "metricValue" : 0.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/app-manifests",
-        "metricValue" : 0.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/scim",
-        "metricValue" : 0.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/apps",
-        "metricValue" : 0.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "ApprovalHandling-Iterator",
-        "metricValue" : 5.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/preference",
-        "metricValue" : 0.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/service-templates",
-        "metricValue" : 0.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/cv-activity-logs",
-        "metricValue" : 0.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/logs",
-        "metricValue" : 63.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/plugins",
-        "metricValue" : 0.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/git-sync",
-        "metricValue" : 0.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/alerts",
-        "metricValue" : 1311.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "_APPDYNAMICS_DEFAULT_TX_",
-        "metricValue" : 3.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/admin",
-        "metricValue" : 0.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/cv-configuration",
-        "metricValue" : 0.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/apm",
-        "metricValue" : 285.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/setup",
-        "metricValue" : 93.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/infra-download",
-        "metricValue" : 0.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/learning-exp-metric",
-        "metricValue" : 61.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/delegate-profiles",
-        "metricValue" : 0.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/infrastructure-definitions",
-        "metricValue" : 0.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/activities",
-        "metricValue" : 46.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/userGroups",
-        "metricValue" : 0.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/notification-setup",
-        "metricValue" : 0.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/tags",
-        "metricValue" : 1.0,
-        "riskScore" : 0.0
-      },
-      {
-        "groupName" : "/api/graphql",
-        "metricValue" : 2.0,
-        "riskScore" : 0.0
-      }
-    ]
-  }]
+	"_id": "5f03ff0d285fa07a833541a5",
+	"cvConfigId": "Z6-wzYE-St6SMNjNtmKCrA",
+	"metricName": "Calls per Minute",
+	"metricType": "THROUGHPUT",
+	"accountId": "kmpySmUISimoRrJL6NL73w",
+	"timeSeriesGroupValues": [
+	  {
+		"groupName": "/api/settings",
+		"metricValue": 0,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/userGroups",
+		"metricValue": 1,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/setup-as-code",
+		"metricValue": 1,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/delegates",
+		"metricValue": 7,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/health",
+		"metricValue": 67,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/services",
+		"metricValue": 0,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "secrets-decrypt",
+		"metricValue": 3,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/account",
+		"metricValue": 1063,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/preference",
+		"metricValue": 1,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/identity",
+		"metricValue": 0,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/compliance-config",
+		"metricValue": 0,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/pipelines",
+		"metricValue": 0,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/app-manifests",
+		"metricValue": 0,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/stream/delegate",
+		"metricValue": 13,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/admin",
+		"metricValue": 0,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/service-templates",
+		"metricValue": 0,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/cv-activity-logs",
+		"metricValue": 0,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/service-templates",
+		"metricValue": 0,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/external",
+		"metricValue": 0,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/plugins",
+		"metricValue": 0,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/infrastructure-provisioners",
+		"metricValue": 0,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/graphql",
+		"metricValue": 1,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/build-sources",
+		"metricValue": 0,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/artifactstreams",
+		"metricValue": 0,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/logml",
+		"metricValue": 0,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/templates",
+		"metricValue": 0,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/configs",
+		"metricValue": 0,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/webhooks",
+		"metricValue": 0,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/cv-configuration",
+		"metricValue": 0,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/version",
+		"metricValue": 32,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/delegate-scopes",
+		"metricValue": 0,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/service-variables",
+		"metricValue": 0,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/services",
+		"metricValue": 0,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "secrets-decrypt",
+		"metricValue": 0,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/features",
+		"metricValue": 4,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/settings",
+		"metricValue": 0,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/identity",
+		"metricValue": 0,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/tags",
+		"metricValue": 0,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/app-manifests",
+		"metricValue": 0,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/pipelines",
+		"metricValue": 1,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/account",
+		"metricValue": 905,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/preference",
+		"metricValue": 0,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/plugins",
+		"metricValue": 1,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/health",
+		"metricValue": 67,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/compliance-config",
+		"metricValue": 0,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/dash-stats",
+		"metricValue": 0,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/triggers",
+		"metricValue": 0,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/external",
+		"metricValue": 0,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/service-templates",
+		"metricValue": 0,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/logml",
+		"metricValue": 0,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/notification-setup",
+		"metricValue": 1,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/cv-activity-logs",
+		"metricValue": 0,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/workflows",
+		"metricValue": 316,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/plugins",
+		"metricValue": 0,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/build-sources",
+		"metricValue": 0,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/infrastructure-definitions",
+		"metricValue": 0,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/account",
+		"metricValue": 894,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/artifactstreams",
+		"metricValue": 0,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/infrastructure-provisioners",
+		"metricValue": 0,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/graphql",
+		"metricValue": 1,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/delegates",
+		"metricValue": 14,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/git-sync",
+		"metricValue": 0,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/delegate-scopes",
+		"metricValue": 0,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/templates",
+		"metricValue": 0,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "secrets-decrypt",
+		"metricValue": 1,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/cv-configuration",
+		"metricValue": 0,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "ApprovalHandling-Iterator",
+		"metricValue": 5,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/account",
+		"metricValue": 918,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/identity",
+		"metricValue": 0,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/statistics",
+		"metricValue": 0,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/catalogs",
+		"metricValue": 0,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/service-variables",
+		"metricValue": 0,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/users",
+		"metricValue": 0,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/delegate-scopes",
+		"metricValue": 0,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/app-manifests",
+		"metricValue": 0,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/pipelines",
+		"metricValue": 0,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/health",
+		"metricValue": 68,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/activities",
+		"metricValue": 10,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/executions",
+		"metricValue": 91,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/agent",
+		"metricValue": 30976,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/stream/delegate",
+		"metricValue": 0,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/workflows",
+		"metricValue": 312,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/scim",
+		"metricValue": 0,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/settings",
+		"metricValue": 0,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/secrets",
+		"metricValue": 0,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/learning-exp-metric",
+		"metricValue": 37,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/logml",
+		"metricValue": 0,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/infra-download",
+		"metricValue": 0,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/setup",
+		"metricValue": 74,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/configs",
+		"metricValue": 0,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/webhooks",
+		"metricValue": 2,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/delegate-profiles",
+		"metricValue": 0,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/version",
+		"metricValue": 30,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/scim",
+		"metricValue": 0,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/apps",
+		"metricValue": 0,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/workflows",
+		"metricValue": 364,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/service-templates",
+		"metricValue": 0,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/build-sources",
+		"metricValue": 0,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/templates",
+		"metricValue": 0,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/expression-builder",
+		"metricValue": 0,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/logs",
+		"metricValue": 44,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/apm",
+		"metricValue": 77,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/users",
+		"metricValue": 0,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/delegates",
+		"metricValue": 17,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/metrics",
+		"metricValue": 6,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/identity",
+		"metricValue": 0,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/health",
+		"metricValue": 66,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/delegate-scopes",
+		"metricValue": 0,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/account",
+		"metricValue": 914,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/activities",
+		"metricValue": 0,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/service-variables",
+		"metricValue": 0,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "secrets-decrypt",
+		"metricValue": 0,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/graphql",
+		"metricValue": 2,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/workflows",
+		"metricValue": 362,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/external",
+		"metricValue": 0,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/secrets",
+		"metricValue": 0,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/stream/delegate",
+		"metricValue": 0,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/settings",
+		"metricValue": 0,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/infrastructure-mappings",
+		"metricValue": 0,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/build-sources",
+		"metricValue": 0,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/environments",
+		"metricValue": 3,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/external",
+		"metricValue": 0,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/logml",
+		"metricValue": 1,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/cv-activity-logs",
+		"metricValue": 0,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/alerts",
+		"metricValue": 1361,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/logs",
+		"metricValue": 55,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "_APPDYNAMICS_DEFAULT_TX_",
+		"metricValue": 0,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/templates",
+		"metricValue": 0,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/expression-builder",
+		"metricValue": 0,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/version",
+		"metricValue": 30,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/metrics",
+		"metricValue": 9,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/apm",
+		"metricValue": 78,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/setup",
+		"metricValue": 68,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/users",
+		"metricValue": 0,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/configs",
+		"metricValue": 0,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/webhooks",
+		"metricValue": 0,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/expression-builder",
+		"metricValue": 0,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/executions",
+		"metricValue": 91,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/agent",
+		"metricValue": 30914,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/triggers",
+		"metricValue": 0,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/dash-stats",
+		"metricValue": 0,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/statistics",
+		"metricValue": 0,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/catalogs",
+		"metricValue": 0,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/service-variables",
+		"metricValue": 0,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/users",
+		"metricValue": 3,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/secrets",
+		"metricValue": 0,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/setup-as-code",
+		"metricValue": 1,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/apps",
+		"metricValue": 0,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/features",
+		"metricValue": 0,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/learning-exp-metric",
+		"metricValue": 38,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "ApprovalHandling-Iterator",
+		"metricValue": 5,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/workflows",
+		"metricValue": 362,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/preference",
+		"metricValue": 0,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/infrastructure-mappings",
+		"metricValue": 0,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/scim",
+		"metricValue": 0,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/apm",
+		"metricValue": 144,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/environments",
+		"metricValue": 0,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/git-sync",
+		"metricValue": 1,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/build-sources",
+		"metricValue": 0,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/logml",
+		"metricValue": 13,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/stream/delegate",
+		"metricValue": 0,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/setup",
+		"metricValue": 93,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/infra-download",
+		"metricValue": 0,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/admin",
+		"metricValue": 0,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/templates",
+		"metricValue": 0,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/configs",
+		"metricValue": 0,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/webhooks",
+		"metricValue": 0,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/cv-configuration",
+		"metricValue": 0,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/delegate-profiles",
+		"metricValue": 0,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/alerts",
+		"metricValue": 1335,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/logs",
+		"metricValue": 44,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/version",
+		"metricValue": 30,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/notification-setup",
+		"metricValue": 0,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/infrastructure-definitions",
+		"metricValue": 0,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/activities",
+		"metricValue": 10,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/services",
+		"metricValue": 2,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "_APPDYNAMICS_DEFAULT_TX_",
+		"metricValue": 0,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/metrics",
+		"metricValue": 6,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/tags",
+		"metricValue": 2,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/expression-builder",
+		"metricValue": 0,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/catalogs",
+		"metricValue": 0,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/users",
+		"metricValue": 3,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "ApprovalHandling-Iterator",
+		"metricValue": 5,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/expression-builder",
+		"metricValue": 0,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/infrastructure-provisioners",
+		"metricValue": 0,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/statistics",
+		"metricValue": 0,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/executions",
+		"metricValue": 89,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/triggers",
+		"metricValue": 0,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/dash-stats",
+		"metricValue": 0,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/scim",
+		"metricValue": 0,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/secrets",
+		"metricValue": 0,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/service-variables",
+		"metricValue": 0,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/apps",
+		"metricValue": 0,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/features",
+		"metricValue": 0,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/agent",
+		"metricValue": 35022,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/stream/delegate",
+		"metricValue": 0,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/infrastructure-mappings",
+		"metricValue": 0,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/setup-as-code",
+		"metricValue": 0,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/learning-exp-metric",
+		"metricValue": 138,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/environments",
+		"metricValue": 0,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/environments",
+		"metricValue": 0,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/version",
+		"metricValue": 30,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/apm",
+		"metricValue": 624,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/infra-download",
+		"metricValue": 0,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/setup",
+		"metricValue": 87,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/configs",
+		"metricValue": 0,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/webhooks",
+		"metricValue": 0,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/delegate-profiles",
+		"metricValue": 0,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/alerts",
+		"metricValue": 1345,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/logs",
+		"metricValue": 47,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/git-sync",
+		"metricValue": 0,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "_APPDYNAMICS_DEFAULT_TX_",
+		"metricValue": 0,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/admin",
+		"metricValue": 0,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/apps",
+		"metricValue": 5,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/compliance-config",
+		"metricValue": 1,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/activities",
+		"metricValue": 22,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/userGroups",
+		"metricValue": 0,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/metrics",
+		"metricValue": 9,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/notification-setup",
+		"metricValue": 0,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/infrastructure-definitions",
+		"metricValue": 1,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/agent",
+		"metricValue": 42175,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/dash-stats",
+		"metricValue": 0,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/triggers",
+		"metricValue": 1,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/tags",
+		"metricValue": 0,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/infrastructure-provisioners",
+		"metricValue": 1,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/settings",
+		"metricValue": 1,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/artifactstreams",
+		"metricValue": 0,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/delegates",
+		"metricValue": 17,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/services",
+		"metricValue": 0,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/features",
+		"metricValue": 6,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "ApprovalHandling-Iterator",
+		"metricValue": 5,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/preference",
+		"metricValue": 0,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/statistics",
+		"metricValue": 0,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/infrastructure-mappings",
+		"metricValue": 0,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/environments",
+		"metricValue": 0,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/pipelines",
+		"metricValue": 0,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/app-manifests",
+		"metricValue": 0,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/cv-activity-logs",
+		"metricValue": 0,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/setup-as-code",
+		"metricValue": 0,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/health",
+		"metricValue": 68,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/executions",
+		"metricValue": 106,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/admin",
+		"metricValue": 0,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/cv-configuration",
+		"metricValue": 0,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/external",
+		"metricValue": 0,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/plugins",
+		"metricValue": 0,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/alerts",
+		"metricValue": 1331,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/compliance-config",
+		"metricValue": 0,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/infrastructure-definitions",
+		"metricValue": 0,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "_APPDYNAMICS_DEFAULT_TX_",
+		"metricValue": 0,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/metrics",
+		"metricValue": 6,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/artifactstreams",
+		"metricValue": 0,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/delegate-profiles",
+		"metricValue": 0,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/catalogs",
+		"metricValue": 0,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/delegate-scopes",
+		"metricValue": 0,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/notification-setup",
+		"metricValue": 0,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/graphql",
+		"metricValue": 1,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "secrets-decrypt",
+		"metricValue": 1,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/git-sync",
+		"metricValue": 0,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/userGroups",
+		"metricValue": 0,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/setup-as-code",
+		"metricValue": 2,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/delegates",
+		"metricValue": 19,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/tags",
+		"metricValue": 0,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/executions",
+		"metricValue": 84,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/userGroups",
+		"metricValue": 0,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/dash-stats",
+		"metricValue": 0,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/triggers",
+		"metricValue": 0,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/catalogs",
+		"metricValue": 0,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/secrets",
+		"metricValue": 0,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/artifactstreams",
+		"metricValue": 0,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/features",
+		"metricValue": 0,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/services",
+		"metricValue": 0,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/agent",
+		"metricValue": 29580,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/infrastructure-provisioners",
+		"metricValue": 0,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/identity",
+		"metricValue": 0,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/statistics",
+		"metricValue": 0,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/infrastructure-mappings",
+		"metricValue": 0,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/infra-download",
+		"metricValue": 0,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/learning-exp-metric",
+		"metricValue": 1,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/pipelines",
+		"metricValue": 0,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/compliance-config",
+		"metricValue": 0,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/app-manifests",
+		"metricValue": 0,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/scim",
+		"metricValue": 0,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/apps",
+		"metricValue": 0,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "ApprovalHandling-Iterator",
+		"metricValue": 5,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/preference",
+		"metricValue": 0,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/service-templates",
+		"metricValue": 0,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/cv-activity-logs",
+		"metricValue": 0,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/logs",
+		"metricValue": 63,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/plugins",
+		"metricValue": 0,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/git-sync",
+		"metricValue": 0,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/alerts",
+		"metricValue": 1311,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "_APPDYNAMICS_DEFAULT_TX_",
+		"metricValue": 3,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/admin",
+		"metricValue": 0,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/cv-configuration",
+		"metricValue": 0,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/apm",
+		"metricValue": 285,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/setup",
+		"metricValue": 93,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/infra-download",
+		"metricValue": 0,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/learning-exp-metric",
+		"metricValue": 61,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/delegate-profiles",
+		"metricValue": 0,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/infrastructure-definitions",
+		"metricValue": 0,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/activities",
+		"metricValue": 46,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/userGroups",
+		"metricValue": 0,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/notification-setup",
+		"metricValue": 0,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/tags",
+		"metricValue": 1,
+		"riskScore": 0
+	  },
+	  {
+		"groupName": "/api/graphql",
+		"metricValue": 2,
+		"riskScore": 0
+	  }
+	]
+  },
+  {
+	"_id": "5f7feaac9fb82216ac25588e",
+	"accountId": "kmpySmUISimoRrJL6NL73w",
+	"cvConfigId": "YUGpcxq9QLCuRPP6DTPCdA",
+	"metricName": "Errors per Minute",
+	"metricType": "ERROR",
+	"timeSeriesGroupValues": [
+	  {
+		"groupName": "/api/settings",
+		"metricValue": 0,
+		"riskScore": 0,
+		"percentValue": 85.5844017792179
+	  },
+	  {
+		"groupName": "/api/userGroups",
+		"metricValue": 1,
+		"riskScore": 0,
+		"percentValue": 26.748044990673105
+	  },
+	  {
+		"groupName": "/api/setup-as-code",
+		"metricValue": 1,
+		"riskScore": 0,
+		"percentValue": 51.981194331348334
+	  },
+	  {
+		"groupName": "/api/delegates",
+		"metricValue": 7,
+		"riskScore": 0,
+		"percentValue": 76.74461893288166
+	  },
+	  {
+		"groupName": "/api/health",
+		"metricValue": 67,
+		"riskScore": 0,
+		"percentValue": 73.41104488239996
+	  },
+	  {
+		"groupName": "/api/services",
+		"metricValue": 0,
+		"riskScore": 0,
+		"percentValue": 45.41535317552924
+	  },
+	  {
+		"groupName": "secrets-decrypt",
+		"metricValue": 3,
+		"riskScore": 0,
+		"percentValue": 81.91943572750495
+	  },
+	  {
+		"groupName": "/api/account",
+		"metricValue": 1063,
+		"riskScore": 0,
+		"percentValue": 38.9408457835863
+	  },
+	  {
+		"groupName": "/api/preference",
+		"metricValue": 1,
+		"riskScore": 0,
+		"percentValue": 79.04143261302714
+	  },
+	  {
+		"groupName": "/api/identity",
+		"metricValue": 0,
+		"riskScore": 0,
+		"percentValue": 68.02423295438605
+	  },
+	  {
+		"groupName": "/api/compliance-config",
+		"metricValue": 0,
+		"riskScore": 0,
+		"percentValue": 14.826088615779142
+	  },
+	  {
+		"groupName": "/api/pipelines",
+		"metricValue": 0,
+		"riskScore": 0,
+		"percentValue": 0.05943751705475009
+	  },
+	  {
+		"groupName": "/api/app-manifests",
+		"metricValue": 0,
+		"riskScore": 0,
+		"percentValue": 91.78526467458565
+	  },
+	  {
+		"groupName": "/stream/delegate",
+		"metricValue": 13,
+		"riskScore": 0,
+		"percentValue": 19.292941540744145
+	  },
+	  {
+		"groupName": "/api/admin",
+		"metricValue": 0,
+		"riskScore": 0,
+		"percentValue": 30.98215936992188
+	  },
+	  {
+		"groupName": "/api/service-templates",
+		"metricValue": 0,
+		"riskScore": 0,
+		"percentValue": 23.638171056884115
+	  },
+	  {
+		"groupName": "/api/cv-activity-logs",
+		"metricValue": 0,
+		"riskScore": 0,
+		"percentValue": 26.711616950888107
+	  },
+	  {
+		"groupName": "/api/external",
+		"metricValue": 0,
+		"riskScore": 0,
+		"percentValue": 2.9579793927133724
+	  },
+	  {
+		"groupName": "/api/plugins",
+		"metricValue": 0,
+		"riskScore": 0,
+		"percentValue": 72.99651670883607
+	  },
+	  {
+		"groupName": "/api/infrastructure-provisioners",
+		"metricValue": 0,
+		"riskScore": 0,
+		"percentValue": 41.62907882941368
+	  },
+	  {
+		"groupName": "/api/graphql",
+		"metricValue": 1,
+		"riskScore": 0,
+		"percentValue": 10.936157866048745
+	  },
+	  {
+		"groupName": "/api/build-sources",
+		"metricValue": 0,
+		"riskScore": 0,
+		"percentValue": 75.95300649978847
+	  },
+	  {
+		"groupName": "/api/artifactstreams",
+		"metricValue": 0,
+		"riskScore": 0,
+		"percentValue": 1.3596702572140518
+	  },
+	  {
+		"groupName": "/api/logml",
+		"metricValue": 0,
+		"riskScore": 0,
+		"percentValue": 23.953588186922136
+	  },
+	  {
+		"groupName": "/api/templates",
+		"metricValue": 0,
+		"riskScore": 0,
+		"percentValue": 16.889515337330387
+	  },
+	  {
+		"groupName": "/api/configs",
+		"metricValue": 0,
+		"riskScore": 0,
+		"percentValue": 27.33637864277697
+	  },
+	  {
+		"groupName": "/api/webhooks",
+		"metricValue": 0,
+		"riskScore": 0,
+		"percentValue": 5.097887107534715
+	  },
+	  {
+		"groupName": "/api/cv-configuration",
+		"metricValue": 0,
+		"riskScore": 0,
+		"percentValue": 90.47877006915076
+	  },
+	  {
+		"groupName": "/api/version",
+		"metricValue": 32,
+		"riskScore": 0,
+		"percentValue": 47.69677407820243
+	  },
+	  {
+		"groupName": "/api/delegate-scopes",
+		"metricValue": 0,
+		"riskScore": 0,
+		"percentValue": 33.4303406357592
+	  },
+	  {
+		"groupName": "/api/service-variables",
+		"metricValue": 0,
+		"riskScore": 0,
+		"percentValue": 16.45649374001249
+	  },
+	  {
+		"groupName": "/api/features",
+		"metricValue": 4,
+		"riskScore": 0,
+		"percentValue": 60.75456302342802
+	  },
+	  {
+		"groupName": "/api/tags",
+		"metricValue": 0,
+		"riskScore": 0,
+		"percentValue": 55.67704917354964
+	  },
+	  {
+		"groupName": "/api/dash-stats",
+		"metricValue": 0,
+		"riskScore": 0,
+		"percentValue": 77.92001965287415
+	  },
+	  {
+		"groupName": "/api/triggers",
+		"metricValue": 0,
+		"riskScore": 0,
+		"percentValue": 43.48258455090666
+	  },
+	  {
+		"groupName": "/api/notification-setup",
+		"metricValue": 1,
+		"riskScore": 0,
+		"percentValue": 5.699670107798848
+	  },
+	  {
+		"groupName": "/api/workflows",
+		"metricValue": 316,
+		"riskScore": 0,
+		"percentValue": 53.97593387999065
+	  },
+	  {
+		"groupName": "/api/infrastructure-definitions",
+		"metricValue": 0,
+		"riskScore": 0,
+		"percentValue": 71.07057014242315
+	  },
+	  {
+		"groupName": "/api/git-sync",
+		"metricValue": 0,
+		"riskScore": 0,
+		"percentValue": 52.443803519291464
+	  },
+	  {
+		"groupName": "ApprovalHandling-Iterator",
+		"metricValue": 5,
+		"riskScore": 0,
+		"percentValue": 12.396347894366977
+	  },
+	  {
+		"groupName": "/api/statistics",
+		"metricValue": 0,
+		"riskScore": 0,
+		"percentValue": 63.47253929586897
+	  },
+	  {
+		"groupName": "/api/catalogs",
+		"metricValue": 0,
+		"riskScore": 0,
+		"percentValue": 75.75592242989453
+	  },
+	  {
+		"groupName": "/api/users",
+		"metricValue": 0,
+		"riskScore": 0,
+		"percentValue": 3.211240646923319
+	  },
+	  {
+		"groupName": "/api/activities",
+		"metricValue": 10,
+		"riskScore": 0,
+		"percentValue": 98.25208948601599
+	  },
+	  {
+		"groupName": "/api/executions",
+		"metricValue": 91,
+		"riskScore": 0,
+		"percentValue": 22.356780233720908
+	  },
+	  {
+		"groupName": "/api/agent",
+		"metricValue": 30976,
+		"riskScore": 0,
+		"percentValue": 49.65279150652332
+	  },
+	  {
+		"groupName": "/api/scim",
+		"metricValue": 0,
+		"riskScore": 0,
+		"percentValue": 65.05089553346552
+	  },
+	  {
+		"groupName": "/api/secrets",
+		"metricValue": 0,
+		"riskScore": 0,
+		"percentValue": 14.008713697212594
+	  },
+	  {
+		"groupName": "/api/learning-exp-metric",
+		"metricValue": 37,
+		"riskScore": 0,
+		"percentValue": 74.15140951465754
+	  },
+	  {
+		"groupName": "/api/infra-download",
+		"metricValue": 0,
+		"riskScore": 0,
+		"percentValue": 42.738752738604255
+	  },
+	  {
+		"groupName": "/api/setup",
+		"metricValue": 74,
+		"riskScore": 0,
+		"percentValue": 17.709582958186097
+	  },
+	  {
+		"groupName": "/api/delegate-profiles",
+		"metricValue": 0,
+		"riskScore": 0,
+		"percentValue": 56.42717359260689
+	  },
+	  {
+		"groupName": "/api/apps",
+		"metricValue": 0,
+		"riskScore": 0,
+		"percentValue": 41.45727954607832
+	  },
+	  {
+		"groupName": "/api/expression-builder",
+		"metricValue": 0,
+		"riskScore": 0,
+		"percentValue": 47.143290295204686
+	  },
+	  {
+		"groupName": "/api/logs",
+		"metricValue": 44,
+		"riskScore": 0,
+		"percentValue": 73.24753896538148
+	  },
+	  {
+		"groupName": "/api/apm",
+		"metricValue": 77,
+		"riskScore": 0,
+		"percentValue": 70.94895745417601
+	  },
+	  {
+		"groupName": "/api/metrics",
+		"metricValue": 6,
+		"riskScore": 0,
+		"percentValue": 87.32915169090566
+	  },
+	  {
+		"groupName": "/api/infrastructure-mappings",
+		"metricValue": 0,
+		"riskScore": 0,
+		"percentValue": 82.43597314385273
+	  },
+	  {
+		"groupName": "/api/environments",
+		"metricValue": 3,
+		"riskScore": 0,
+		"percentValue": 37.761430531978846
+	  },
+	  {
+		"groupName": "/api/alerts",
+		"metricValue": 1361,
+		"riskScore": 0,
+		"percentValue": 62.23263605692439
+	  },
+	  {
+		"groupName": "_APPDYNAMICS_DEFAULT_TX_",
+		"metricValue": 0,
+		"riskScore": 0,
+		"percentValue": 63.94332198690652
+	  }
+	]
+  }
+]

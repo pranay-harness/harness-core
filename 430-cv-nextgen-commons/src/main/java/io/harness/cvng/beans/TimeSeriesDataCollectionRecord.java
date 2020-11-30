@@ -29,5 +29,6 @@ public class TimeSeriesDataCollectionRecord {
   public static class TimeSeriesDataRecordGroupValue {
     private String groupName;
     private double value;
+    private Double percent;
   }
 }

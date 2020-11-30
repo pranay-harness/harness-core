@@ -1,6 +1,7 @@
 package io.harness.cvng.dashboard.beans;
 
 import io.harness.cvng.beans.CVMonitoringCategory;
+import io.harness.cvng.beans.TimeSeriesMetricType;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import java.util.SortedSet;
@@ -16,6 +17,7 @@ public class TimeSeriesMetricDataDTO implements Comparable<TimeSeriesMetricDataD
   String orgIdentifier;
   String environmentIdentifier;
   String serviceIdentifier;
+  TimeSeriesMetricType metricType;
 
   CVMonitoringCategory category;
 

@@ -12,8 +12,12 @@ import io.harness.cvng.analysis.beans.TimeSeriesRecordDTO;
 import io.harness.cvng.analysis.beans.TimeSeriesTestDataDTO;
 import io.harness.cvng.analysis.beans.TimeSeriesTestDataDTO.MetricData;
 import io.harness.cvng.analysis.entities.TimeSeriesRiskSummary;
+import io.harness.cvng.analysis.services.api.TimeSeriesAnalysisService;
 import io.harness.cvng.beans.HostRecordDTO;
 import io.harness.cvng.beans.TimeSeriesDataCollectionRecord;
+import io.harness.cvng.beans.TimeSeriesDataCollectionRecord.TimeSeriesDataRecordGroupValue;
+import io.harness.cvng.beans.TimeSeriesDataCollectionRecord.TimeSeriesDataRecordMetricValue;
+import io.harness.cvng.beans.TimeSeriesMetricType;
 import io.harness.cvng.core.beans.TimeSeriesMetricDefinition;
 import io.harness.cvng.core.entities.CVConfig;
 import io.harness.cvng.core.entities.MetricCVConfig;
@@ -53,6 +57,7 @@ public class TimeSeriesServiceImpl implements TimeSeriesService {
   @Inject private CVConfigService cvConfigService;
   @Inject private MetricPackService metricPackService;
   @Inject private HostRecordService hostRecordService;
+  @Inject private TimeSeriesAnalysisService timeSeriesAnalysisService;
 
   @Override
   public boolean save(List<TimeSeriesDataCollectionRecord> dataRecords) {
@@ -61,6 +66,15 @@ public class TimeSeriesServiceImpl implements TimeSeriesService {
     options.upsert(true);
     Map<TimeSeriesRecordBucketKey, TimeSeriesRecord> timeSeriesRecordMap = bucketTimeSeriesRecords(dataRecords);
     timeSeriesRecordMap.forEach((timeSeriesRecordBucketKey, timeSeriesRecord) -> {
+      List<TimeSeriesMetricDefinition> metricTemplates =
+          timeSeriesAnalysisService.getMetricTemplate(timeSeriesRecord.getVerificationTaskId());
+      TimeSeriesMetricDefinition timeSeriesMetricDefinition =
+          metricTemplates.stream()
+              .filter(metricTemplate -> metricTemplate.getMetricName().equals(timeSeriesRecord.getMetricName()))
+              .findFirst()
+              .orElse(null);
+      TimeSeriesMetricType metricType =
+          timeSeriesMetricDefinition != null ? timeSeriesMetricDefinition.getMetricType() : null;
       Query<TimeSeriesRecord> query =
           hPersistence.createQuery(TimeSeriesRecord.class)
               .filter(
@@ -75,6 +89,7 @@ public class TimeSeriesServiceImpl implements TimeSeriesService {
               hPersistence.createUpdateOperations(TimeSeriesRecord.class)
                   .setOnInsert(TimeSeriesRecordKeys.uuid, generateUuid())
                   .setOnInsert(TimeSeriesRecordKeys.createdAt, Instant.now().toEpochMilli())
+                  .setOnInsert(TimeSeriesRecordKeys.metricType, metricType)
                   .set(TimeSeriesRecordKeys.accountId, timeSeriesRecord.getAccountId())
                   .addToSet(TimeSeriesRecordKeys.timeSeriesGroupValues,
                       Lists.newArrayList(timeSeriesRecord.getTimeSeriesGroupValues())),
@@ -125,6 +140,12 @@ public class TimeSeriesServiceImpl implements TimeSeriesService {
 
   private Map<TimeSeriesRecordBucketKey, TimeSeriesRecord> bucketTimeSeriesRecords(
       List<TimeSeriesDataCollectionRecord> dataRecords) {
+    Map<String, TimeSeriesMetricType> metricTypeMap = new HashMap<>();
+    List<TimeSeriesMetricDefinition> metricDefinitions =
+        timeSeriesAnalysisService.getMetricTemplate(dataRecords.get(0).getVerificationTaskId());
+    metricDefinitions.forEach(timeSeriesMetricDefinition
+        -> metricTypeMap.put(timeSeriesMetricDefinition.getMetricName(), timeSeriesMetricDefinition.getMetricType()));
+    populatePercent(metricTypeMap, dataRecords);
     Map<TimeSeriesRecordBucketKey, TimeSeriesRecord> rv = new HashMap<>();
     dataRecords.forEach(dataRecord -> {
       long bucketBoundary = dataRecord.getTimeStamp()
@@ -155,10 +176,54 @@ public class TimeSeriesServiceImpl implements TimeSeriesService {
                             .groupName(timeSeriesDataRecordGroupValue.getGroupName())
                             .timeStamp(Instant.ofEpochMilli(dataRecord.getTimeStamp()))
                             .metricValue(timeSeriesDataRecordGroupValue.getValue())
+                            .percentValue(TimeSeriesMetricType.ERROR.equals(metricTypeMap.get(metricName))
+                                        && timeSeriesDataRecordGroupValue.getPercent() != null
+                                    ? timeSeriesDataRecordGroupValue.getPercent()
+                                    : null)
                             .build()));
       });
     });
     return rv;
+  }
+
+  private void populatePercent(
+      Map<String, TimeSeriesMetricType> metricTypeMap, List<TimeSeriesDataCollectionRecord> dataRecords) {
+    dataRecords.forEach(dataRecord -> {
+      TimeSeriesDataRecordMetricValue throughput =
+          dataRecord.getMetricValues()
+              .stream()
+              .filter(
+                  metricValue -> TimeSeriesMetricType.THROUGHPUT.equals(metricTypeMap.get(metricValue.getMetricName())))
+              .findFirst()
+              .orElse(null);
+
+      for (TimeSeriesDataRecordMetricValue metricValue : dataRecord.getMetricValues()) {
+        if (!TimeSeriesMetricType.ERROR.equals(metricTypeMap.get(metricValue.getMetricName()))) {
+          continue;
+        }
+
+        // if no throughput is configured then percent value is same as value
+        if (throughput == null) {
+          metricValue.getTimeSeriesValues().forEach(
+              errorMetricValue -> errorMetricValue.setPercent(errorMetricValue.getValue()));
+          return;
+        }
+
+        for (TimeSeriesDataRecordGroupValue throughputValue : throughput.getTimeSeriesValues()) {
+          if (throughputValue.getValue() <= 0.0) {
+            continue;
+          }
+
+          for (TimeSeriesDataRecordGroupValue errorMetricValue : metricValue.getTimeSeriesValues()) {
+            if (!errorMetricValue.getGroupName().equals(throughputValue.getGroupName())) {
+              continue;
+            }
+
+            errorMetricValue.setPercent((errorMetricValue.getValue() * 100) / throughputValue.getValue());
+          }
+        }
+      }
+    });
   }
 
   @Override

@@ -11,6 +11,8 @@ import static io.harness.rule.TestUserProvider.testUserProvider;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.data.Offset.offset;
+import static org.mockito.Matchers.anyString;
+import static org.mockito.Mockito.when;
 
 import io.harness.CvNextGenTest;
 import io.harness.beans.EmbeddedUser;
@@ -18,6 +20,7 @@ import io.harness.category.element.UnitTests;
 import io.harness.cvng.analysis.beans.TimeSeriesTestDataDTO.MetricData;
 import io.harness.cvng.analysis.entities.TimeSeriesRiskSummary;
 import io.harness.cvng.analysis.entities.TimeSeriesRiskSummary.TransactionMetricRisk;
+import io.harness.cvng.analysis.services.api.TimeSeriesAnalysisService;
 import io.harness.cvng.beans.DataSourceType;
 import io.harness.cvng.beans.TimeSeriesCustomThresholdActions;
 import io.harness.cvng.beans.TimeSeriesDataCollectionRecord;
@@ -57,6 +60,7 @@ import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -64,10 +68,13 @@ import java.util.Random;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.stream.Collectors;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.reflect.FieldUtils;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
+import org.mockito.Mock;
 import org.mongodb.morphia.query.Sort;
 
 public class TimeSeriesServiceImplTest extends CvNextGenTest {
@@ -83,9 +90,10 @@ public class TimeSeriesServiceImplTest extends CvNextGenTest {
   @Inject private CVConfigService cvConfigService;
   @Inject private MetricPackService metricPackService;
   @Inject private HostRecordService hostRecordService;
+  @Mock private TimeSeriesAnalysisService timeSeriesAnalysisService;
 
   @Before
-  public void setUp() {
+  public void setUp() throws IllegalAccessException {
     verificationTaskId = generateUuid();
     accountId = generateUuid();
     connectorIdentifier = generateUuid();
@@ -94,6 +102,21 @@ public class TimeSeriesServiceImplTest extends CvNextGenTest {
     random = new Random(System.currentTimeMillis());
     testUserProvider.setActiveUser(EmbeddedUser.builder().name("user1").build());
     hPersistence.registerUserProvider(testUserProvider);
+    FieldUtils.writeField(timeSeriesService, "timeSeriesAnalysisService", timeSeriesAnalysisService, true);
+    when(timeSeriesAnalysisService.getMetricTemplate(anyString()))
+        .thenReturn(Lists.newArrayList(TimeSeriesMetricDefinition.builder()
+                                           .metricName("metric-0")
+                                           .metricType(TimeSeriesMetricType.THROUGHPUT)
+                                           .build(),
+            TimeSeriesMetricDefinition.builder()
+                .metricName("metric-1")
+                .metricType(TimeSeriesMetricType.RESP_TIME)
+                .build(),
+            TimeSeriesMetricDefinition.builder().metricName("metric-2").metricType(TimeSeriesMetricType.INFRA).build(),
+            TimeSeriesMetricDefinition.builder()
+                .metricName("metric-3")
+                .metricType(TimeSeriesMetricType.ERROR)
+                .build()));
   }
 
   @Test
@@ -137,6 +160,16 @@ public class TimeSeriesServiceImplTest extends CvNextGenTest {
                             .order(Sort.ascending(TimeSeriesRecordKeys.metricName))
                             .asList();
     assertThat(timeSeriesRecords.size()).isEqualTo(numOfMetrics);
+    timeSeriesRecords.forEach(timeSeriesRecord -> {
+      assertThat(timeSeriesRecord.getMetricType()).isNotNull();
+      if (TimeSeriesMetricType.ERROR.equals(timeSeriesRecord.getMetricType())) {
+        timeSeriesRecord.getTimeSeriesGroupValues().forEach(
+            timeSeriesGroupValue -> assertThat(timeSeriesGroupValue.getPercentValue()).isNotNull());
+      } else {
+        timeSeriesRecord.getTimeSeriesGroupValues().forEach(
+            timeSeriesGroupValue -> assertThat(timeSeriesGroupValue.getPercentValue()).isNull());
+      }
+    });
     validateSavedRecords(numOfMetrics, numOfTxnx, numOfMins, timeSeriesRecords);
   }
 
@@ -437,7 +470,7 @@ public class TimeSeriesServiceImplTest extends CvNextGenTest {
 
     assertThat(testData).isNotNull();
     assertThat(testData.size()).isEqualTo(61);
-    testData.forEach((txn, metricMap) -> { assertThat(metricMap.size()).isEqualTo(2); });
+    testData.forEach((txn, metricMap) -> assertThat(metricMap.size()).isEqualTo(3));
   }
 
   @Test
@@ -536,6 +569,7 @@ public class TimeSeriesServiceImplTest extends CvNextGenTest {
   private void saveTimeSeriesRecords(
       Instant startTime, int numberOfMinutes, int numberOfMetricValues, int numOfGroups) {
     List<TimeSeriesDataCollectionRecord> collectionRecords = new ArrayList<>();
+    Map<String, TimeSeriesMetricDefinition> metricDefinitions = new HashMap<>();
     for (int i = 0; i < numberOfMinutes; i++) {
       TimeSeriesDataCollectionRecord collectionRecord =
           TimeSeriesDataCollectionRecord.builder()
@@ -549,6 +583,11 @@ public class TimeSeriesServiceImplTest extends CvNextGenTest {
                                                           .metricName("metric-" + j)
                                                           .timeSeriesValues(new HashSet<>())
                                                           .build();
+        metricDefinitions.put("metric-" + j,
+            TimeSeriesMetricDefinition.builder()
+                .metricName("metric-" + j)
+                .metricType(TimeSeriesMetricType.ERROR)
+                .build());
         for (int k = 0; k < numOfGroups; k++) {
           metricValue.getTimeSeriesValues().add(
               TimeSeriesDataRecordGroupValue.builder().value(random.nextDouble()).groupName("group-" + k).build());
@@ -557,6 +596,8 @@ public class TimeSeriesServiceImplTest extends CvNextGenTest {
       }
       collectionRecords.add(collectionRecord);
     }
+    when(timeSeriesAnalysisService.getMetricTemplate(anyString()))
+        .thenReturn(metricDefinitions.values().stream().collect(Collectors.toList()));
     timeSeriesService.save(collectionRecords);
   }
 

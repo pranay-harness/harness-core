@@ -187,7 +187,7 @@ public class TimeSeriesAnalysisServiceImplTest extends CvNextGenTest {
         timeSeriesAnalysisService.getTimeSeriesRecordDTOs(cvConfigId, start, start.plus(5, ChronoUnit.MINUTES));
 
     assertThat(testData).isNotNull();
-    assertThat(testData.size()).isEqualTo(122);
+    assertThat(testData.size()).isEqualTo(183);
   }
 
   @Test
