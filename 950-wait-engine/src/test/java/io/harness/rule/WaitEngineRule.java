@@ -129,7 +129,7 @@ public class WaitEngineRule implements MethodRule, InjectorRuleMixin, MongoRuleM
     });
 
     modules.add(TestMongoModule.getInstance());
-    modules.add(new VersionModule());
+    modules.add(VersionModule.getInstance());
     modules.add(new ProviderModule() {
       @Provides
       @Singleton

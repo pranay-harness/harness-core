@@ -188,7 +188,7 @@ public class SMCoreRule implements MethodRule, InjectorRuleMixin, MongoRuleMixin
         bind(SecretsManagerRBACService.class).toInstance(mock(SecretsManagerRBACService.class));
       }
     });
-    modules.add(new VersionModule());
+    modules.add(VersionModule.getInstance());
     modules.add(TimeModule.getInstance());
     modules.add(TestMongoModule.getInstance());
     modules.add(SecretManagementCoreModule.getInstance());

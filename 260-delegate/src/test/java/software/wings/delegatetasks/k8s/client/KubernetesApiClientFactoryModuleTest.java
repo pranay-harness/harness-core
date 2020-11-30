@@ -30,7 +30,7 @@ public class KubernetesApiClientFactoryModuleTest extends CategoryTest {
   @Category(UnitTests.class)
   public void testApiClientFactoryModule() {
     List<Module> modules = new ArrayList<>();
-    modules.add(new KubernetesApiClientFactoryModule());
+    modules.add(KubernetesApiClientFactoryModule.getInstance());
 
     Injector injector = Guice.createInjector(modules);
 

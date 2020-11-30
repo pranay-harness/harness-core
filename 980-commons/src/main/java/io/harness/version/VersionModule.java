@@ -5,6 +5,8 @@ import com.google.inject.AbstractModule;
 public class VersionModule extends AbstractModule {
   private static VersionModule instance;
 
+  private VersionModule() {}
+
   public static VersionModule getInstance() {
     if (instance == null) {
       instance = new VersionModule();
