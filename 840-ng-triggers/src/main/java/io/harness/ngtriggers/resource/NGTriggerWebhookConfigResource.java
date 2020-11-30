@@ -1,8 +1,7 @@
 package io.harness.ngtriggers.resource;
 
-import static io.harness.utils.PageUtils.getNGPageResponse;
-
 import io.harness.NGCommonEntityConstants;
+import io.harness.exception.InvalidRequestException;
 import io.harness.ng.core.dto.ErrorDTO;
 import io.harness.ng.core.dto.FailureDTO;
 import io.harness.ng.core.dto.ResponseDTO;
@@ -14,12 +13,14 @@ import io.harness.ngtriggers.beans.source.webhook.WebhookSourceRepo;
 import io.harness.ngtriggers.helpers.WebhookConfigHelper;
 import io.harness.ngtriggers.mapper.NGTriggerElementMapper;
 import io.harness.ngtriggers.service.NGTriggerService;
+import io.harness.yaml.utils.YamlPipelineUtils;
 
 import com.google.inject.Inject;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -56,9 +57,14 @@ public class NGTriggerWebhookConfigResource {
   @Path("/actions")
   @ApiOperation(value = "Get Actions for event type and source", nickname = "getActionsList")
   public ResponseDTO<List<WebhookAction>> getActionsList(
-      @NotNull @QueryParam("sourceRepo") WebhookSourceRepo sourceRepo,
-      @NotNull @QueryParam("event") WebhookEvent event) {
-    return ResponseDTO.newResponse(WebhookConfigHelper.getActionsList(sourceRepo, event));
+      @NotNull @QueryParam("sourceRepo") WebhookSourceRepo sourceRepo, @NotNull @QueryParam("event") String event) {
+    WebhookEvent webhookEvent;
+    try {
+      webhookEvent = YamlPipelineUtils.read(event, WebhookEvent.class);
+    } catch (IOException e) {
+      throw new InvalidRequestException("Event: " + event + " is not valid");
+    }
+    return ResponseDTO.newResponse(WebhookConfigHelper.getActionsList(sourceRepo, webhookEvent));
   }
 
   @POST
