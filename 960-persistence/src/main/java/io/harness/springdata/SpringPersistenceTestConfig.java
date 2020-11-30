@@ -65,4 +65,9 @@ public class SpringPersistenceTestConfig extends AbstractMongoConfiguration {
     List<?> converterInstances = springConverters.stream().map(injector::getInstance).collect(Collectors.toList());
     return new MongoCustomConversions(converterInstances);
   }
+
+  @Override
+  protected boolean autoIndexCreation() {
+    return false;
+  }
 }
