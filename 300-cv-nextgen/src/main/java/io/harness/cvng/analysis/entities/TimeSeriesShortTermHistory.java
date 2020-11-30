@@ -91,8 +91,9 @@ public class TimeSeriesShortTermHistory implements PersistentEntity, UuidAware, 
           if (!txnMetricHistoryMap.get(txn).containsKey(metricName)) {
             txnMetricHistoryMap.get(txn).put(metricName, new ArrayList<>());
           }
-
-          txnMetricHistoryMap.get(txn).get(metricName).addAll(metricHistory.getValue());
+          if (metricHistory.getValue() != null) {
+            txnMetricHistoryMap.get(txn).get(metricName).addAll(metricHistory.getValue());
+          }
         });
       }
     });

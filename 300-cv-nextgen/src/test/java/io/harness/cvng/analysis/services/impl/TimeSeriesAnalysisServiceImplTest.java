@@ -21,7 +21,6 @@ import io.harness.cvng.analysis.beans.TimeSeriesRecordDTO;
 import io.harness.cvng.analysis.entities.DeploymentTimeSeriesAnalysis;
 import io.harness.cvng.analysis.entities.LearningEngineTask;
 import io.harness.cvng.analysis.entities.LearningEngineTask.LearningEngineTaskType;
-import io.harness.cvng.analysis.entities.ServiceGuardLogAnalysisTask;
 import io.harness.cvng.analysis.entities.TimeSeriesAnomalousPatterns;
 import io.harness.cvng.analysis.entities.TimeSeriesCanaryLearningEngineTask;
 import io.harness.cvng.analysis.entities.TimeSeriesCumulativeSums;
@@ -122,7 +121,8 @@ public class TimeSeriesAnalysisServiceImplTest extends CvNextGenTest {
     TimeSeriesLearningEngineTask timeSeriesLearningEngineTask = TimeSeriesLearningEngineTask.builder().build();
     timeSeriesLearningEngineTask.setVerificationTaskId(verificationTaskId);
     timeSeriesLearningEngineTask.setAnalysisStartTime(Instant.now());
-    timeSeriesLearningEngineTask.setAnalysisStartTime(Instant.now().plus(Duration.ofMinutes(5)));
+    timeSeriesLearningEngineTask.setAnalysisEndTime(Instant.now().plus(Duration.ofMinutes(5)));
+    timeSeriesLearningEngineTask.setWindowSize(5);
     learningEngineTaskId = learningEngineTaskService.createLearningEngineTask(timeSeriesLearningEngineTask);
   }
 
@@ -536,9 +536,10 @@ public class TimeSeriesAnalysisServiceImplTest extends CvNextGenTest {
   @Category(UnitTests.class)
   public void testGetTopTimeSeriesTransactionMetricRisk_validOrder() throws IllegalAccessException {
     FieldUtils.writeField(timeSeriesAnalysisService, "heatMapService", mock(HeatMapService.class), true);
-    ServiceGuardLogAnalysisTask task = ServiceGuardLogAnalysisTask.builder().build();
+    TimeSeriesLearningEngineTask task = TimeSeriesLearningEngineTask.builder().build();
     task.setTestDataUrl("testData");
-    fillCommon(task, LearningEngineTaskType.SERVICE_GUARD_LOG_ANALYSIS);
+    task.setWindowSize(5);
+    fillCommon(task, LearningEngineTaskType.SERVICE_GUARD_TIME_SERIES);
     Instant start = instant.minus(10, ChronoUnit.MINUTES).truncatedTo(ChronoUnit.MINUTES);
     Instant end = start.plus(5, ChronoUnit.MINUTES);
     task.setAnalysisStartTime(start);
