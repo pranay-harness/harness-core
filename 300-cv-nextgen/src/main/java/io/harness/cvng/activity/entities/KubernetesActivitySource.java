@@ -76,6 +76,8 @@ public class KubernetesActivitySource
         .name(name)
         .connectorIdentifier(connectorIdentifier)
         .activitySourceConfigs(activitySourceConfigs)
+        .createdAt(createdAt)
+        .lastUpdatedAt(lastUpdatedAt)
         .build();
   }
 }

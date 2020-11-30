@@ -14,6 +14,8 @@ public class KubernetesActivitySourceDTO {
   @NotNull String identifier;
   @NotNull String name;
   @NotNull String connectorIdentifier;
+  long createdAt;
+  long lastUpdatedAt;
   @NotNull @NotEmpty Set<KubernetesActivitySourceConfig> activitySourceConfigs;
 
   @Value

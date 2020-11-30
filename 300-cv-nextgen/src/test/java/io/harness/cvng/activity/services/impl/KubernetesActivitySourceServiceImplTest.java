@@ -70,7 +70,7 @@ public class KubernetesActivitySourceServiceImplTest extends CvNextGenTest {
     KubernetesActivitySourceDTO kubernetesActivitySourceDTO =
         KubernetesActivitySourceDTO.builder()
             .identifier(identifier)
-            .name(generateUuid())
+            .name("some-name")
             .connectorIdentifier(generateUuid())
             .activitySourceConfigs(Sets.newHashSet(KubernetesActivitySourceConfig.builder()
                                                        .serviceIdentifier(generateUuid())
@@ -93,7 +93,8 @@ public class KubernetesActivitySourceServiceImplTest extends CvNextGenTest {
         .isEqualTo(kubernetesActivitySourceDTO.getActivitySourceConfigs());
 
     List<KubernetesActivitySourceDTO> kubernetesActivitySourceDTOS =
-        kubernetesActivitySourceService.listKubernetesSources(accountId, orgIdentifier, projectIdentifier);
+        kubernetesActivitySourceService.listKubernetesSources(accountId, orgIdentifier, projectIdentifier, 0, 10, null)
+            .getContent();
     assertThat(kubernetesActivitySourceDTOS.size()).isEqualTo(1);
     KubernetesActivitySourceDTO activitySourceDTO = kubernetesActivitySourceDTOS.get(0);
     assertThat(activitySourceDTO.getConnectorIdentifier())
@@ -102,6 +103,18 @@ public class KubernetesActivitySourceServiceImplTest extends CvNextGenTest {
     assertThat(activitySourceDTO.getName()).isEqualTo(kubernetesActivitySourceDTO.getName());
     assertThat(activitySourceDTO.getActivitySourceConfigs())
         .isEqualTo(kubernetesActivitySourceDTO.getActivitySourceConfigs());
+
+    // list call with filter
+    kubernetesActivitySourceDTOS =
+        kubernetesActivitySourceService.listKubernetesSources(accountId, orgIdentifier, projectIdentifier, 0, 10, "Me-")
+            .getContent();
+    assertThat(kubernetesActivitySourceDTOS.size()).isEqualTo(1);
+
+    kubernetesActivitySourceDTOS =
+        kubernetesActivitySourceService
+            .listKubernetesSources(accountId, orgIdentifier, projectIdentifier, 0, 10, "sddhvsh")
+            .getContent();
+    assertThat(kubernetesActivitySourceDTOS.size()).isEqualTo(0);
 
     // get call
     activitySourceDTO =
@@ -118,7 +131,8 @@ public class KubernetesActivitySourceServiceImplTest extends CvNextGenTest {
                    accountId, orgIdentifier, projectIdentifier, kubernetesActivitySourceDTO.getIdentifier()))
         .isTrue();
     kubernetesActivitySourceDTOS =
-        kubernetesActivitySourceService.listKubernetesSources(accountId, orgIdentifier, projectIdentifier);
+        kubernetesActivitySourceService.listKubernetesSources(accountId, orgIdentifier, projectIdentifier, 0, 10, null)
+            .getContent();
     assertThat(kubernetesActivitySourceDTOS.size()).isEqualTo(0);
   }
 

@@ -14,8 +14,8 @@ public interface KubernetesActivitySourceService {
       String accountId, String orgIdentifier, String projectIdentifier, KubernetesActivitySourceDTO activitySourceDTO);
   KubernetesActivitySourceDTO getKubernetesSource(
       String accountId, String orgIdentifier, String projectIdentifier, String identifier);
-  List<KubernetesActivitySourceDTO> listKubernetesSources(
-      String accountId, String orgIdentifier, String projectIdentifier);
+  PageResponse<KubernetesActivitySourceDTO> listKubernetesSources(
+      String accountId, String orgIdentifier, String projectIdentifier, int offset, int pageSize, String filter);
   boolean deleteKubernetesSource(String accountId, String orgIdentifier, String projectIdentifier, String identifier);
   boolean saveKubernetesActivities(String accountId, String activitySourceId, List<KubernetesActivityDTO> activities);
   void enqueueDataCollectionTask(KubernetesActivitySource activitySource);

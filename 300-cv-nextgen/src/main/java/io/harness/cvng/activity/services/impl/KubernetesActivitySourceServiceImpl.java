@@ -1,5 +1,6 @@
 package io.harness.cvng.activity.services.impl;
 
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.persistence.HQuery.excludeAuthority;
 
@@ -93,17 +94,22 @@ public class KubernetesActivitySourceServiceImpl implements KubernetesActivitySo
   }
 
   @Override
-  public List<KubernetesActivitySourceDTO> listKubernetesSources(
-      String accountId, String orgIdentifier, String projectIdentifier) {
+  public PageResponse<KubernetesActivitySourceDTO> listKubernetesSources(
+      String accountId, String orgIdentifier, String projectIdentifier, int offset, int pageSize, String filter) {
     List<KubernetesActivitySource> kubernetesActivitySources =
         hPersistence.createQuery(KubernetesActivitySource.class, excludeAuthority)
             .filter(KubernetesActivitySourceKeys.accountId, accountId)
             .filter(KubernetesActivitySourceKeys.orgIdentifier, orgIdentifier)
             .filter(KubernetesActivitySourceKeys.projectIdentifier, projectIdentifier)
             .asList();
-    return kubernetesActivitySources.stream()
-        .map(kubernetesActivitySource -> kubernetesActivitySource.toDTO())
-        .collect(Collectors.toList());
+    List<KubernetesActivitySourceDTO> activitySourceDTOs =
+        kubernetesActivitySources.stream()
+            .filter(kubernetesActivitySource
+                -> isEmpty(filter)
+                    || kubernetesActivitySource.getName().toLowerCase().contains(filter.trim().toLowerCase()))
+            .map(kubernetesActivitySource -> kubernetesActivitySource.toDTO())
+            .collect(Collectors.toList());
+    return PageUtils.offsetAndLimit(activitySourceDTOs, offset, pageSize);
   }
 
   @Override
