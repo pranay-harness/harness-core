@@ -166,7 +166,6 @@ import software.wings.security.LoginRateLimitFilter;
 import software.wings.security.ThreadLocalUserProvider;
 import software.wings.security.encryption.migration.SettingAttributesSecretReferenceFeatureFlagJob;
 import software.wings.security.encryption.migration.SettingAttributesSecretsMigrationHandler;
-import software.wings.security.encryption.migration.VaultManuallyEnteredSecretEngineFlagHandler;
 import software.wings.service.impl.AccountServiceImpl;
 import software.wings.service.impl.ApplicationManifestServiceImpl;
 import software.wings.service.impl.ArtifactStreamServiceImpl;
@@ -939,7 +938,6 @@ public class WingsApplication extends Application<MainConfiguration> {
     injector.getInstance(SettingAttributeValidateConnectivityHandler.class).registerIterators();
     injector.getInstance(PerpetualTaskRecordHandler.class).registerIterators();
     injector.getInstance(VaultSecretManagerRenewalHandler.class).registerIterators();
-    injector.getInstance(VaultManuallyEnteredSecretEngineFlagHandler.class).registerIterators();
     injector.getInstance(SettingAttributesSecretsMigrationHandler.class).registerIterators();
     injector.getInstance(GitSyncEntitiesExpiryHandler.class).registerIterators();
     injector.getInstance(ExportExecutionsRequestHandler.class).registerIterators();
