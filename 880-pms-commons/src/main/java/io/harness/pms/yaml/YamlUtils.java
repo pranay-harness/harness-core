@@ -12,6 +12,7 @@ import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import com.fasterxml.jackson.datatype.guava.GuavaModule;
 import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+import com.google.common.base.Preconditions;
 import java.io.IOException;
 import java.util.Iterator;
 import java.util.Map.Entry;
@@ -44,6 +45,17 @@ public class YamlUtils {
     JsonNode rootJsonNode = mapper.readTree(content);
     YamlNode rootYamlNode = new YamlNode(rootJsonNode, null);
     return new YamlField(rootYamlNode);
+  }
+
+  public YamlField extractPipelineField(String content) throws IOException {
+    YamlField rootYamlField = readTree(content);
+    YamlNode rootYamlNode = rootYamlField.getNode();
+    return Preconditions.checkNotNull(
+        getPipelineField(rootYamlNode), "Invalid pipeline YAML: root of the yaml needs to be an object");
+  }
+
+  private YamlField getPipelineField(YamlNode rootYamlNode) {
+    return (rootYamlNode == null || !rootYamlNode.isObject()) ? null : rootYamlNode.getField("pipeline");
   }
 
   public String injectUuid(String content) throws IOException {

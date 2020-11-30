@@ -19,6 +19,7 @@ import io.harness.pms.yaml.YamlField;
 import io.harness.pms.yaml.YamlNode;
 import io.harness.pms.yaml.YamlUtils;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -39,7 +40,7 @@ public class FilterCreatorMergeService {
   private Map<String, PlanCreationServiceBlockingStub> planCreatorServices;
   private final PmsSdkInstanceService pmsSdkInstanceService;
 
-  private static final int MAX_DEPTH = 1;
+  public static final int MAX_DEPTH = 1;
   private final Executor executor = Executors.newFixedThreadPool(5);
 
   @Inject
@@ -61,9 +62,7 @@ public class FilterCreatorMergeService {
     }
 
     String processedYaml = YamlUtils.injectUuid(yaml);
-    YamlField rootYamlField = YamlUtils.readTree(processedYaml);
-
-    YamlField pipelineField = extractPipelineField(rootYamlField);
+    YamlField pipelineField = YamlUtils.extractPipelineField(processedYaml);
     Map<String, YamlFieldBlob> dependencies = new HashMap<>();
     dependencies.put(pipelineField.getNode().getUuid(), pipelineField.toFieldBlob());
 
@@ -74,14 +73,16 @@ public class FilterCreatorMergeService {
     return FilterCreatorMergeServiceResponse.builder().filters(filters).stageCount(response.getStageCount()).build();
   }
 
-  private void validateFilterCreationBlobResponse(FilterCreationBlobResponse response) {
+  @VisibleForTesting
+  void validateFilterCreationBlobResponse(FilterCreationBlobResponse response) {
     if (isNotEmpty(response.getDependenciesMap())) {
       throw new InvalidRequestException(
           format("Unable to resolve all dependencies: %s", response.getDependenciesMap().keySet().toString()));
     }
   }
 
-  private FilterCreationBlobResponse obtainFiltersRecursively(Map<String, PlanCreatorServiceInfo> services,
+  @VisibleForTesting
+  FilterCreationBlobResponse obtainFiltersRecursively(Map<String, PlanCreatorServiceInfo> services,
       Map<String, YamlFieldBlob> dependencies, Map<String, String> filters) {
     FilterCreationBlobResponse.Builder responseBuilder =
         FilterCreationBlobResponse.newBuilder().putAllDependencies(dependencies);
@@ -106,7 +107,8 @@ public class FilterCreatorMergeService {
     return responseBuilder.build();
   }
 
-  private FilterCreationBlobResponse obtainFiltersPerIteration(Map<String, PlanCreatorServiceInfo> services,
+  @VisibleForTesting
+  FilterCreationBlobResponse obtainFiltersPerIteration(Map<String, PlanCreatorServiceInfo> services,
       Map<String, YamlFieldBlob> dependencies, Map<String, String> filters) {
     CompletableFutures<FilterCreationResponseWrapper> completableFutures = new CompletableFutures<>(executor);
     for (Map.Entry<String, PlanCreatorServiceInfo> entry : services.entrySet()) {

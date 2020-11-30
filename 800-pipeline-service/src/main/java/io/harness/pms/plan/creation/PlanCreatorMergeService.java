@@ -62,8 +62,7 @@ public class PlanCreatorMergeService {
     }
 
     String finalContent = preprocessYaml(content);
-    YamlField rootYamlField = YamlUtils.readTree(finalContent);
-    YamlField pipelineField = extractPipelineField(rootYamlField);
+    YamlField pipelineField = YamlUtils.extractPipelineField(finalContent);
     Map<String, YamlFieldBlob> dependencies = new HashMap<>();
     dependencies.put(pipelineField.getNode().getUuid(), pipelineField.toFieldBlob());
     PlanCreationBlobResponse finalResponse = createPlanForDependenciesRecursive(services, dependencies);
@@ -152,15 +151,5 @@ public class PlanCreatorMergeService {
 
   private String preprocessYaml(@NotNull String content) throws IOException {
     return YamlUtils.injectUuid(content);
-  }
-
-  private YamlField extractPipelineField(YamlField rootYamlField) {
-    YamlNode rootYamlNode = rootYamlField.getNode();
-    return Preconditions.checkNotNull(
-        getPipelineField(rootYamlNode), "Invalid pipeline YAML: root of the yaml needs to be an object");
-  }
-
-  private YamlField getPipelineField(YamlNode rootYamlNode) {
-    return (rootYamlNode == null || !rootYamlNode.isObject()) ? null : rootYamlNode.getField("pipeline");
   }
 }

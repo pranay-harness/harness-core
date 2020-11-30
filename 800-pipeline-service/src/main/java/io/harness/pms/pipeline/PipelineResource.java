@@ -138,7 +138,7 @@ public class PipelineResource {
       @NotNull @QueryParam(NGCommonEntityConstants.PROJECT_KEY) String projectId,
       @QueryParam("filter") String filterQuery, @QueryParam("page") @DefaultValue("0") int page,
       @QueryParam("size") @DefaultValue("25") int size, @QueryParam("sort") List<String> sort,
-      @QueryParam(NGResourceFilterConstants.SEARCH_TERM_KEY) String searchTerm) {
+      @QueryParam(NGResourceFilterConstants.SEARCH_TERM_KEY) String searchTerm, @QueryParam("module") String module) {
     log.info("Get List of pipelines");
     PMSPipelineFilterRequestDTO pmsPipelineFilterRequestDTO = null;
 
@@ -146,7 +146,7 @@ public class PipelineResource {
       pmsPipelineFilterRequestDTO = JsonUtils.asObject(filterQuery, PMSPipelineFilterRequestDTO.class);
     }
     Criteria criteria = PMSPipelineFilterHelper.createCriteriaForGetList(
-        accountId, orgId, projectId, pmsPipelineFilterRequestDTO, searchTerm, false);
+        accountId, orgId, projectId, pmsPipelineFilterRequestDTO, module, searchTerm, false);
     Pageable pageRequest;
     if (EmptyPredicate.isEmpty(sort)) {
       pageRequest = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, PipelineEntityKeys.createdAt));

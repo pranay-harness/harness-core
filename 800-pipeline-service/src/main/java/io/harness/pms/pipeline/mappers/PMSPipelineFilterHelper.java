@@ -26,6 +26,7 @@ public class PMSPipelineFilterHelper {
     update.set(PipelineEntityKeys.yaml, pipelineEntity.getYaml());
     update.set(PipelineEntityKeys.tags, pipelineEntity.getTags());
     update.set(PipelineEntityKeys.deleted, false);
+    update.set(PipelineEntityKeys.description, pipelineEntity.getDescription());
     return update;
   }
 
@@ -36,7 +37,7 @@ public class PMSPipelineFilterHelper {
   }
 
   public Criteria createCriteriaForGetList(String accountId, String orgIdentifier, String projectIdentifier,
-      PMSPipelineFilterRequestDTO filter, String searchTerm, boolean deleted) {
+      PMSPipelineFilterRequestDTO filter, String module, String searchTerm, boolean deleted) {
     Criteria criteria = new Criteria();
     if (isNotEmpty(accountId)) {
       criteria.and(PipelineEntityKeys.accountId).is(accountId);
@@ -53,6 +54,10 @@ public class PMSPipelineFilterHelper {
       for (Map.Entry<String, List<String>> filters : filter.getFilters().entrySet()) {
         criteria.and(filters.getKey()).in(filters.getValue());
       }
+    }
+
+    if (EmptyPredicate.isNotEmpty(module)) {
+      criteria.and(String.format("filters.%s", module)).exists(true);
     }
 
     if (EmptyPredicate.isNotEmpty(searchTerm)) {
