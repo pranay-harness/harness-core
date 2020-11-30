@@ -23,7 +23,6 @@ public class ChildChainResponse implements ExecutableResponse {
   String previousChildId;
   PassThroughData passThroughData;
   boolean lastLink;
-  @Singular List<StepTransput> additionalInputs;
   boolean suspend;
 
   public static class ChildChainResponseBuilder {

@@ -36,10 +36,9 @@ message NodeExecution {
   Status status = 13;
 
   repeated google.protobuf.Any executableResponses = 14;
-  repeated google.protobuf.Any additionalInputs = 15;
-  repeated io.harness.pms.data.StepOutcomeRef outcomeRefs = 16;
+  repeated io.harness.pms.data.StepOutcomeRef outcomeRefs = 15;
 
-  io.harness.pms.execution.failure.FailureInfo failureInfo = 17;
+  io.harness.pms.execution.failure.FailureInfo failureInfo = 16;
 
   // Missing Fields which needs to be added
   // Interrupt Effect

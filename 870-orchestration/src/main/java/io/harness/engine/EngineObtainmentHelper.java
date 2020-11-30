@@ -28,12 +28,9 @@ public class EngineObtainmentHelper {
   @Inject private ResolverRegistry resolverRegistry;
   @Inject private PlanExecutionService planExecutionService;
 
-  public StepInputPackage obtainInputPackage(
-      Ambiance ambiance, List<RefObject> refObjects, List<? extends StepTransput> additionalInputs) {
+  public StepInputPackage obtainInputPackage(Ambiance ambiance, List<RefObject> refObjects) {
     StepInputPackageBuilder inputPackageBuilder = StepInputPackage.builder();
-    if (additionalInputs != null) {
-      inputPackageBuilder.additionalInputs(additionalInputs);
-    }
+
     if (!isEmpty(refObjects)) {
       for (RefObject refObject : refObjects) {
         Resolver resolver = resolverRegistry.obtain(refObject.getRefType());

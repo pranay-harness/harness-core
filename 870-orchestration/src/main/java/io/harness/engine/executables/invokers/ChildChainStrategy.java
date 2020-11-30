@@ -86,8 +86,8 @@ public class ChildChainStrategy implements ExecuteStrategy {
           lastChildChainExecutableResponse.getPassThroughData(), accumulatedResponse);
       engine.handleStepResponse(nodeExecution.getUuid(), stepResponse);
     } else {
-      StepInputPackage inputPackage = engineObtainmentHelper.obtainInputPackage(
-          ambiance, nodeExecution.getNode().getRefObjects(), nodeExecution.getAdditionalInputs());
+      StepInputPackage inputPackage =
+          engineObtainmentHelper.obtainInputPackage(ambiance, nodeExecution.getNode().getRefObjects());
       ChildChainResponse chainResponse = childChainExecutable.executeNextChild(ambiance,
           nodeExecutionService.extractResolvedStepParameters(nodeExecution), inputPackage,
           lastChildChainExecutableResponse.getPassThroughData(), accumulatedResponse);
@@ -124,7 +124,6 @@ public class ChildChainStrategy implements ExecuteStrategy {
                                            .status(QUEUED)
                                            .notifyId(childInstanceId)
                                            .parentId(nodeExecution.getUuid())
-                                           .additionalInputs(childChainResponse.getAdditionalInputs())
                                            .build();
     nodeExecutionService.save(childNodeExecution);
     executorService.submit(

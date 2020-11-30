@@ -25,6 +25,5 @@ public class ChildrenExecutableResponse implements ExecutableResponse {
   @Builder
   public static class Child {
     String childNodeId;
-    @Singular List<StepTransput> additionalInputs;
   }
 }

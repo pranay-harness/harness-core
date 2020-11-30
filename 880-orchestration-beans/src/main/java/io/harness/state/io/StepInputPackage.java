@@ -13,7 +13,6 @@ import lombok.Value;
 @Builder
 public class StepInputPackage {
   @Singular List<ResolvedRefInput> inputs;
-  @Singular List<StepTransput> additionalInputs;
 
   public List<StepTransput> findByRefKey(String refKey) {
     if (isEmpty(inputs)) {
