@@ -1,5 +1,6 @@
 package software.wings.graphql.datafetcher.instance;
 
+import io.harness.data.structure.EmptyPredicate;
 import io.harness.persistence.HPersistence;
 
 import software.wings.beans.artifact.Artifact;
@@ -13,6 +14,7 @@ import com.google.inject.Singleton;
 
 @Singleton
 public class InstanceControllerUtils {
+  public static final String DUMMY_ARTIFACT_SOURCE_ID = "DUMMY_ARTIFACT_SOURCE_ID";
   @Inject HPersistence persistence;
 
   public QLArtifact getQlArtifact(Instance instance) {
@@ -20,6 +22,9 @@ public class InstanceControllerUtils {
     if (artifact == null) {
       return QLArtifact.builder()
           .buildNo(instance.getLastArtifactBuildNum())
+          .artifactSourceId(EmptyPredicate.isNotEmpty(instance.getLastArtifactStreamId())
+                  ? instance.getLastArtifactStreamId()
+                  : DUMMY_ARTIFACT_SOURCE_ID)
           .id(instance.getLastArtifactId())
           .collectedAt(instance.getLastDeployedAt())
           .build();
