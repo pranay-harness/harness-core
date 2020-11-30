@@ -1,12 +1,7 @@
 package software.wings.integration;
 
-import static io.harness.rule.OwnerRule.RAMA;
 import static io.harness.rule.OwnerRule.UTKARSH;
 
-import static software.wings.beans.Account.Builder.anAccount;
-
-import static javax.ws.rs.client.Entity.entity;
-import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.beans.PageResponse;
@@ -85,40 +80,6 @@ public class AccountResourceIntegrationTest extends IntegrationTestBase {
 
     alertResponse = getAccountAlerts(accountId);
     assertThat(alertResponse.getStatus()).isEqualTo(Status.OK.getStatusCode());
-  }
-
-  @Test
-  @Owner(developers = RAMA)
-  @Category(DeprecatedIntegrationTests.class)
-  @Ignore("skipping the integration test")
-  public void shouldEnableAndDisableCloudCost() {
-    long timeMillis = System.currentTimeMillis();
-    String randomString = "" + timeMillis;
-
-    Account account = anAccount()
-                          .withCompanyName(randomString)
-                          .withAccountName(randomString)
-                          .withAccountKey(randomString)
-                          .withLicenseInfo(getLicenseInfo())
-                          .withCloudCostEnabled(true)
-                          .build();
-
-    WebTarget target = client.target(API_BASE + "/account/cloudcost/enable?accountId=" + accountId);
-    Response response = getRequestBuilderWithAuthHeader(target).post(entity(account, APPLICATION_JSON));
-    if (response.getStatus() != Status.OK.getStatusCode()) {
-      log.error("Non-ok-status. Headers: {}", response.getHeaders());
-    }
-    assertThat(response.getStatus()).isEqualTo(Status.OK.getStatusCode());
-
-    RestResponse<Boolean> restResponse = response.readEntity(new GenericType<RestResponse<Boolean>>() {});
-    assertThat(restResponse.getResource()).isTrue();
-
-    target = client.target(API_BASE + "/account/cloudcost/disable?accountId=" + accountId);
-    response = getRequestBuilderWithAuthHeader(target).post(entity(account, APPLICATION_JSON));
-    if (response.getStatus() != Status.OK.getStatusCode()) {
-      log.error("Non-ok-status. Headers: {}", response.getHeaders());
-    }
-    assertThat(response.getStatus()).isEqualTo(Status.OK.getStatusCode());
   }
 
   private Response getAccountAlerts(String accountId) {
