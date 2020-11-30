@@ -1,3 +1,3 @@
 package io.harness.beans.stages;
 
-public enum CIStageType { INTEGRATION }
+public enum CIStageType { ci }

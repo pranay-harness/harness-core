@@ -8,7 +8,7 @@ import lombok.Value;
 
 @Value
 @Builder
-@JsonTypeName("Webhook")
+@JsonTypeName("WEBHOOK")
 public class WebhookExecutionSource implements ExecutionSource {
   private WebhookGitUser user;
   private WebhookEvent webhookEvent;

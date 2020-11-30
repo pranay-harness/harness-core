@@ -11,16 +11,19 @@ public interface WithFileConnector {
 
   @JsonProperty(ARTIFACTORY_PROPERTY)
   default void setFileConnector(ArtifactoryConnector connector) {
+    connector.setType(ArtifactConnector.Type.ARTIFACTORY);
     setConnector(connector);
   }
 
   @JsonProperty(NEXUS_PROPERTY)
   default void setFileConnector(NexusConnector connector) {
+    connector.setType(ArtifactConnector.Type.NEXUS);
     setConnector(connector);
   }
 
   @JsonProperty(S3_PROPERTY)
   default void setFileConnector(S3Connector connector) {
+    connector.setType(ArtifactConnector.Type.S3);
     setConnector(connector);
   }
 }

@@ -10,7 +10,7 @@ import org.springframework.data.annotation.TypeAlias;
 @Value
 @Builder
 @JsonTypeName("Manual")
-@TypeAlias("manualExecutionSource")
+@TypeAlias("MANUAL")
 public class ManualExecutionSource implements ExecutionSource {
   private String branch;
   private String tag;
