@@ -5,21 +5,27 @@ import static io.harness.exception.WingsException.USER_SRE;
 
 import static java.lang.String.format;
 
+import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.DuplicateFieldException;
 import io.harness.exception.InvalidRequestException;
+import io.harness.pms.pipeline.CommonStepInfo;
 import io.harness.pms.pipeline.PipelineEntity;
 import io.harness.pms.pipeline.PipelineEntity.PipelineEntityKeys;
+import io.harness.pms.pipeline.StepCategory;
+import io.harness.pms.pipeline.StepData;
 import io.harness.pms.pipeline.filters.FilterCreatorMergeService;
 import io.harness.pms.pipeline.filters.FilterCreatorMergeServiceResponse;
+import io.harness.pms.sdk.PmsSdkInstanceService;
+import io.harness.pms.steps.StepInfo;
 import io.harness.repositories.pipeline.PMSPipelineRepository;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.mongodb.client.result.UpdateResult;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Optional;
+import java.util.*;
+import java.util.stream.Collectors;
 import javax.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
 import org.bson.Document;
@@ -33,9 +39,11 @@ import org.springframework.data.mongodb.core.query.Criteria;
 public class PMSPipelineServiceImpl implements PMSPipelineService {
   @Inject private PMSPipelineRepository pmsPipelineRepository;
   @Inject private FilterCreatorMergeService filterCreatorMergeService;
+  @Inject private PmsSdkInstanceService pmsSdkInstanceService;
 
   private static final String DUP_KEY_EXP_FORMAT_STRING =
       "Pipeline [%s] under Project[%s], Organization [%s] already exists";
+  @VisibleForTesting static String LIBRARY = "Library";
 
   void validatePresenceOfRequiredFields(Object... fields) {
     Lists.newArrayList(fields).forEach(field -> Objects.requireNonNull(field, "One of the required fields is null."));
@@ -147,5 +155,52 @@ public class PMSPipelineServiceImpl implements PMSPipelineService {
       throw new InvalidRequestException(
           format("Error happened while creating filters for pipeline: %s", ex.getMessage(), ex));
     }
+  }
+
+  public StepCategory getSteps(String module, String category) {
+    Map<String, List<StepInfo>> serviceInstanceNameToSupportedSteps =
+        pmsSdkInstanceService.getInstanceNameToSupportedSteps();
+    StepCategory stepCategory =
+        calculateStepsForModuleBasedOnCategory(category, serviceInstanceNameToSupportedSteps.get(module));
+    for (Map.Entry<String, List<StepInfo>> entry : serviceInstanceNameToSupportedSteps.entrySet()) {
+      if (entry.getKey().equals(module)) {
+        continue;
+      }
+      stepCategory.addStepCategory(calculateStepsForCategory(entry.getKey(), entry.getValue()));
+    }
+    return stepCategory;
+  }
+
+  private StepCategory calculateStepsForCategory(String module, List<StepInfo> stepInfos) {
+    StepCategory stepCategory = StepCategory.builder().name(module).build();
+    for (StepInfo stepType : stepInfos) {
+      addToTopLevel(stepCategory, stepType);
+    }
+    return stepCategory;
+  }
+
+  private StepCategory calculateStepsForModuleBasedOnCategory(String category, List<StepInfo> stepInfos) {
+    List<StepInfo> filteredStepTypes =
+        stepInfos.stream()
+            .filter(stepInfo
+                -> EmptyPredicate.isEmpty(category) || stepInfo.getStepMetaData().getCategoryList().contains(category)
+                    || EmptyPredicate.isEmpty(stepInfo.getStepMetaData().getCategoryList()))
+            .collect(Collectors.toList());
+    filteredStepTypes.addAll(CommonStepInfo.getCommonSteps());
+    StepCategory stepCategory = StepCategory.builder().name(LIBRARY).build();
+    for (StepInfo stepType : filteredStepTypes) {
+      addToTopLevel(stepCategory, stepType);
+    }
+    return stepCategory;
+  }
+
+  private void addToTopLevel(StepCategory stepCategory, StepInfo stepInfo) {
+    String folderPath = stepInfo.getStepMetaData().getFolderPath();
+    String[] categoryArrayName = folderPath.split("/");
+    StepCategory currentStepCategory = stepCategory;
+    for (String catogoryName : categoryArrayName) {
+      currentStepCategory = currentStepCategory.getOrCreateChildStepCategory(catogoryName);
+    }
+    currentStepCategory.addStepData(StepData.builder().name(stepInfo.getName()).build());
   }
 }

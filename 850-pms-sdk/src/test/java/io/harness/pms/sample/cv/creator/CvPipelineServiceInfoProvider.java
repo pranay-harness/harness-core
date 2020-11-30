@@ -5,6 +5,8 @@ import io.harness.pms.plan.creator.filters.PipelineFilterJsonCreator;
 import io.harness.pms.plan.creator.plan.PartialPlanCreator;
 import io.harness.pms.plan.creator.plan.PipelinePlanCreator;
 import io.harness.pms.plan.creator.plan.PipelineServiceInfoProvider;
+import io.harness.pms.steps.StepInfo;
+import io.harness.pms.steps.StepMetaData;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -28,5 +30,15 @@ public class CvPipelineServiceInfoProvider implements PipelineServiceInfoProvide
     List<FilterJsonCreator> filterJsonCreators = new ArrayList<>();
     filterJsonCreators.add(new PipelineFilterJsonCreator());
     return filterJsonCreators;
+  }
+
+  @Override
+  public List<StepInfo> getStepInfo() {
+    List<StepInfo> stepInfos = new ArrayList<>();
+    stepInfos.add(StepInfo.newBuilder()
+                      .setName("appdVerify")
+                      .setStepMetaData(StepMetaData.newBuilder().setFolderPath("Verification").build())
+                      .build());
+    return stepInfos;
   }
 }

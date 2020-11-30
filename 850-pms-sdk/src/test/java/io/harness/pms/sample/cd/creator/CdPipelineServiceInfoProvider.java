@@ -6,8 +6,11 @@ import io.harness.pms.plan.creator.plan.PartialPlanCreator;
 import io.harness.pms.plan.creator.plan.PipelinePlanCreator;
 import io.harness.pms.plan.creator.plan.PipelineServiceInfoProvider;
 import io.harness.pms.sample.cd.creator.filters.DeploymentStageFilterCreator;
+import io.harness.pms.steps.StepInfo;
+import io.harness.pms.steps.StepMetaData;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 public class CdPipelineServiceInfoProvider implements PipelineServiceInfoProvider {
@@ -32,5 +35,15 @@ public class CdPipelineServiceInfoProvider implements PipelineServiceInfoProvide
     filterJsonCreators.add(new DeploymentStageFilterCreator());
 
     return filterJsonCreators;
+  }
+
+  @Override
+  public List<StepInfo> getStepInfo() {
+    StepInfo stepInfo =
+        StepInfo.newBuilder()
+            .setName("Kubernetes")
+            .setStepMetaData(StepMetaData.newBuilder().addCategory("Kubernetes").setFolderPath("Kubernetes").build())
+            .build();
+    return Collections.singletonList(stepInfo);
   }
 }
