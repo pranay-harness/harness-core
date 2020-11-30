@@ -12,6 +12,7 @@ java_library(
     visibility = ["//visibility:public"],
     exports = [
         "//940-notification-client:module",
+        "//950-ng-project-n-orgs:module",
         "//960-ng-core-beans:module",
         "//960-notification-beans:module",
         "//960-persistence:module",

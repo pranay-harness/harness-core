@@ -67,15 +67,15 @@ public class UserGroupMapper {
       return null;
     }
     switch (dto.getType()) {
-      case Slack:
+      case SLACK:
         return SlackConfig.builder().slackWebhookUrl(((SlackConfigDTO) dto).getSlackWebhookUrl()).build();
-      case PagerDuty:
+      case PAGERDUTY:
         return PagerDutyConfig.builder().pagerDutyKey(((PagerDutyConfigDTO) dto).getPagerDutyKey()).build();
-      case MicrosoftTeams:
+      case MSTEAMS:
         return MicrosoftTeamsConfig.builder()
             .microsoftTeamsWebhookUrl(((MicrosoftTeamsConfigDTO) dto).getMicrosoftTeamsWebhookUrl())
             .build();
-      case Email:
+      case EMAIL:
         return EmailConfig.builder().groupEmail(((EmailConfigDTO) dto).getGroupEmail()).build();
       default:
         throw new IllegalArgumentException("This is not a valid Notification Setting Type: " + dto.getType());
@@ -87,15 +87,15 @@ public class UserGroupMapper {
       return null;
     }
     switch (entity.getType()) {
-      case Slack:
+      case SLACK:
         return SlackConfigDTO.builder().slackWebhookUrl(((SlackConfig) entity).getSlackWebhookUrl()).build();
-      case PagerDuty:
+      case PAGERDUTY:
         return PagerDutyConfigDTO.builder().pagerDutyKey(((PagerDutyConfig) entity).getPagerDutyKey()).build();
-      case MicrosoftTeams:
+      case MSTEAMS:
         return MicrosoftTeamsConfigDTO.builder()
             .microsoftTeamsWebhookUrl(((MicrosoftTeamsConfig) entity).getMicrosoftTeamsWebhookUrl())
             .build();
-      case Email:
+      case EMAIL:
         return EmailConfigDTO.builder().groupEmail(((EmailConfig) entity).getGroupEmail()).build();
       default:
         throw new IllegalArgumentException("This is not a valid Notification Setting Type: " + entity.getType());

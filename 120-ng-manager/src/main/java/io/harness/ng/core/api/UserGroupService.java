@@ -13,5 +13,5 @@ public interface UserGroupService {
   Page<UserGroup> list(
       String accountIdentifier, String orgIdentifier, String projectIdentifier, String searchTerm, Pageable pageable);
 
-  Page<UserGroup> list(List<String> userGroupIds);
+  List<UserGroup> list(List<String> userGroupIds);
 }

@@ -1,18 +1,25 @@
 package io.harness.notification.service;
 
 import io.harness.NotificationRequest;
+import io.harness.Team;
+import io.harness.ng.beans.PageRequest;
 import io.harness.notification.entities.Notification;
+import io.harness.notification.entities.NotificationTemplate;
 import io.harness.notification.exception.NotificationException;
 import io.harness.notification.remote.mappers.NotificationMapper;
 import io.harness.notification.repositories.NotificationRepository;
 import io.harness.notification.service.api.ChannelService;
 import io.harness.notification.service.api.NotificationService;
+import io.harness.utils.PageUtils;
 
 import com.google.inject.Inject;
 import java.util.Objects;
 import java.util.Optional;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.mongodb.core.query.Criteria;
 
 @AllArgsConstructor(onConstructor = @__({ @Inject }))
 @Slf4j
@@ -73,5 +80,16 @@ public class NotificationServiceImpl implements NotificationService {
     notification.setSent(sent);
     notification.setRetries(notification.getRetries() + 1);
     notificationRepository.save(notification);
+  }
+
+  @Override
+  public Optional<Notification> getnotification(String notificationId) {
+    return notificationRepository.findDistinctById(notificationId);
+  }
+
+  @Override
+  public Page<Notification> list(Team team, PageRequest pageRequest) {
+    Criteria criteria = Criteria.where(Notification.NotificationKeys.team).is(team);
+    return notificationRepository.findAll(criteria, PageUtils.getPageRequest(pageRequest));
   }
 }

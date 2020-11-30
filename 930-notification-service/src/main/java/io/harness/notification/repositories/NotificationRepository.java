@@ -11,6 +11,7 @@ import org.springframework.data.repository.PagingAndSortingRepository;
 
 @HarnessRepo
 @OwnedBy(PL)
-public interface NotificationRepository extends PagingAndSortingRepository<Notification, String> {
+public interface NotificationRepository
+    extends PagingAndSortingRepository<Notification, String>, NotificationRepositoryCustom {
   Optional<Notification> findDistinctById(String id);
 }

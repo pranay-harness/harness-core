@@ -31,7 +31,6 @@ public class UserClientModule extends AbstractModule {
 
   @Override
   protected void configure() {
-    bind(NgUserService.class).to(NgUserServiceImpl.class);
     bind(UserClient.class).toProvider(UserHttpClientFactory.class).in(Scopes.SINGLETON);
   }
 }

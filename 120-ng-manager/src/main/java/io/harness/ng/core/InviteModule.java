@@ -10,6 +10,8 @@ import io.harness.ng.core.invites.api.impl.InvitesServiceImpl;
 import io.harness.ng.core.invites.ext.mail.EmailData;
 import io.harness.ng.core.invites.ext.mail.EmailNotificationListener;
 import io.harness.ng.core.invites.ext.mail.SmtpConfig;
+import io.harness.ng.core.user.services.api.NgUserService;
+import io.harness.ng.core.user.services.api.impl.NgUserServiceImpl;
 import io.harness.persistence.HPersistence;
 import io.harness.queue.QueueConsumer;
 import io.harness.queue.QueueListener;
@@ -40,6 +42,7 @@ public class InviteModule extends AbstractModule {
   protected void configure() {
     bind(InvitesService.class).to(InvitesServiceImpl.class);
     bind(new TypeLiteral<QueueListener<EmailData>>() {}).to(EmailNotificationListener.class);
+    bind(NgUserService.class).to(NgUserServiceImpl.class);
     registerRequiredBindings();
     install(new UserClientModule(this.serviceHttpClientConfig, this.managerServiceSecret, this.clientId));
   }

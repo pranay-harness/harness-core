@@ -46,7 +46,6 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.beans.SearchFilter;
-import io.harness.beans.SearchFilter.Operator;
 import io.harness.ccm.license.CeLicenseInfo;
 import io.harness.ccm.license.CeLicenseType;
 import io.harness.data.encoding.EncodingUtils;
@@ -2079,7 +2078,7 @@ public class UserServiceImpl implements UserService {
 
   @Override
   public void loadUserGroupsForUsers(List<User> users, String accountId) {
-    PageRequest<UserGroup> req = aPageRequest().addFilter(UserGroupKeys.accountId, Operator.EQ, accountId).build();
+    PageRequest<UserGroup> req = aPageRequest().addFilter(UserGroupKeys.accountId, EQ, accountId).build();
     PageResponse<UserGroup> res = userGroupService.list(accountId, req, false);
     List<UserGroup> allUserGroupList = res.getResponse();
     if (isEmpty(allUserGroupList)) {
@@ -2214,6 +2213,11 @@ public class UserServiceImpl implements UserService {
   public boolean isUserPresent(String userId) {
     User user = wingsPersistence.get(User.class, userId);
     return user != null;
+  }
+
+  @Override
+  public List<User> getUsers(List<String> userIds) {
+    return wingsPersistence.createQuery(User.class).field("uuid").in(userIds).asList();
   }
 
   private void loadSupportAccounts(User user) {

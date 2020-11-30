@@ -18,6 +18,7 @@ import java.util.Optional;
 import javax.ws.rs.BeanParam;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
+import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
@@ -52,6 +53,12 @@ public class UserResourceNG {
                                           .build();
 
     return new RestResponse<>(pageResponse);
+  }
+
+  @POST
+  @Path("/batch")
+  public RestResponse<List<User>> listUsersByIds(List<String> userIds) {
+    return new RestResponse<>(userService.getUsers(userIds));
   }
 
   @GET

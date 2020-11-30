@@ -8,11 +8,11 @@ import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 import io.harness.exception.DuplicateFieldException;
 import io.harness.ng.core.api.UserGroupService;
-import io.harness.ng.core.dto.NotificationSettingType;
 import io.harness.ng.core.dto.UserGroupDTO;
 import io.harness.ng.core.entities.NotificationSettingConfig;
 import io.harness.ng.core.entities.UserGroup;
 import io.harness.ng.core.entities.UserGroup.UserGroupKeys;
+import io.harness.notification.NotificationChannelType;
 import io.harness.repositories.ng.core.spring.UserGroupRepository;
 
 import com.google.common.collect.Lists;
@@ -47,7 +47,7 @@ public class UserGroupServiceImpl implements UserGroupService {
     userGroupDTO.setProjectIdentifier(projectIdentifier);
     try {
       UserGroup userGroup = toEntity(userGroupDTO);
-      Set<NotificationSettingType> typeSet = new HashSet<>();
+      Set<NotificationChannelType> typeSet = new HashSet<>();
       for (NotificationSettingConfig config : userGroup.getNotificationConfigs()) {
         if (typeSet.contains(config.getType())) {
           throw new IllegalArgumentException(
@@ -71,9 +71,9 @@ public class UserGroupServiceImpl implements UserGroupService {
   }
 
   @Override
-  public Page<UserGroup> list(List<String> userGroupIds) {
+  public List<UserGroup> list(List<String> userGroupIds) {
     Criteria criteria = Criteria.where(UserGroupKeys.id).in(userGroupIds).and(UserGroupKeys.deleted).ne(Boolean.TRUE);
-    return userGroupRepository.findAll(criteria, Pageable.unpaged());
+    return userGroupRepository.findAll(criteria, Pageable.unpaged()).getContent();
   }
 
   private void validateCreateUserGroupRequest(

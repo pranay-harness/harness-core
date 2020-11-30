@@ -29,6 +29,7 @@ public class NotificationConfiguration extends Configuration {
   @JsonProperty("mongo") private MongoConfig mongoConfig;
   @JsonProperty("allowedOrigins") private List<String> allowedOrigins = Lists.newArrayList();
   @JsonProperty("managerClientConfig") private ServiceHttpClientConfig serviceHttpClientConfig;
+  @JsonProperty("rbacServiceConfig") private ServiceHttpClientConfig rbacServiceConfig;
   @JsonProperty("secrets") private NotificationSecrets notificationSecrets;
   @JsonProperty(value = "enableAuth", defaultValue = "true") private boolean enableAuth;
   @JsonProperty("smtp") private SmtpConfig smtpConfig;
