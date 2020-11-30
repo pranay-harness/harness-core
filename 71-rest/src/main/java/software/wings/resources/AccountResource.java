@@ -6,7 +6,6 @@ import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
 import static software.wings.security.PermissionAttribute.PermissionType.ACCOUNT_MANAGEMENT;
 import static software.wings.security.PermissionAttribute.PermissionType.LOGGED_IN;
 import static software.wings.security.PermissionAttribute.PermissionType.MANAGE_AUTHENTICATION_SETTINGS;
-import static software.wings.utils.Utils.urlDecode;
 
 import static org.apache.commons.lang3.StringUtils.substringAfter;
 
@@ -122,37 +121,6 @@ public class AccountResource {
   @PublicApi
   public RestResponse<String> getStatus(@PathParam("accountId") String accountId) {
     return new RestResponse<>(accountService.getAccountStatus(accountId));
-  }
-
-  @POST
-  @Path("disable")
-  @Timed
-  @ExceptionMetered
-  public RestResponse<Boolean> disableAccount(
-      @QueryParam("accountId") String accountId, @QueryParam("migratedTo") String migratedToClusterUrl) {
-    try (AutoLogContext ignore1 = new AccountLogContext(accountId, OVERRIDE_ERROR)) {
-      log.info("Disabling account");
-      RestResponse<Boolean> response = accountPermissionUtils.checkIfHarnessUser("User not allowed to disable account");
-      if (response == null) {
-        response = new RestResponse<>(accountService.disableAccount(accountId, urlDecode(migratedToClusterUrl)));
-      }
-      return response;
-    }
-  }
-
-  @POST
-  @Path("enable")
-  @Timed
-  @ExceptionMetered
-  public RestResponse<Boolean> enableAccount(@QueryParam("accountId") String accountId) {
-    try (AutoLogContext ignore1 = new AccountLogContext(accountId, OVERRIDE_ERROR)) {
-      log.info("Enabling account");
-      RestResponse<Boolean> response = accountPermissionUtils.checkIfHarnessUser("User not allowed to enable account");
-      if (response == null) {
-        response = new RestResponse<>(accountService.enableAccount(accountId));
-      }
-      return response;
-    }
   }
 
   @POST
