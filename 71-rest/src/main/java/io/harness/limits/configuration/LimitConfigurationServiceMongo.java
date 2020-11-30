@@ -17,10 +17,10 @@ import io.harness.logging.AutoLogContext;
 import software.wings.beans.Account;
 import software.wings.beans.AccountType;
 import software.wings.dl.WingsPersistence;
+import software.wings.exception.AccountNotFoundException;
 import software.wings.service.intfc.AccountService;
 
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -93,30 +93,25 @@ public class LimitConfigurationServiceMongo implements LimitConfigurationService
 
   @Nullable
   private ConfiguredLimit getDefaultLimit(ActionType actionType, String accountId) {
-    Account account = accountService.get(accountId);
-    Objects.requireNonNull(account, "account should not be null. AccountId: " + accountId);
-
-    String accountType;
-    if (null != account.getLicenseInfo()) {
-      accountType = account.getLicenseInfo().getAccountType();
-    } else {
-      // LicenseInfo can be null for some accounts. We haven't set the license info for some old accounts yet.
-      // Defaulting to PAID
-      accountType = AccountType.PAID;
+    String accountType = AccountType.PAID;
+    try {
+      Account account = accountService.get(accountId);
+      if (account.getLicenseInfo() != null) {
+        accountType = account.getLicenseInfo().getAccountType();
+      }
+    } catch (AccountNotFoundException exception) {
+      log.warn("Account {} does not exist", accountId, exception);
     }
-
-    Preconditions.checkArgument(
-        AccountType.isValid(accountType), "accountType should be valid. AccountId: " + accountId);
 
     Limit limit = defaultLimits.get(actionType, accountType.toUpperCase());
-    if (null == limit) {
-      log.error(
-          "Default limit is null. Action Type: {}, Account Type: {}. Please configure the same in DefaultLimitsImpl class",
-          actionType, accountType);
-      return null;
+    if (limit != null) {
+      return new ConfiguredLimit<>(accountId, limit, actionType);
     }
 
-    return new ConfiguredLimit<>(accountId, limit, actionType);
+    log.error(
+        "Default limit is null. Action Type: {}, Account Type: {}. Please configure the same in DefaultLimitsImpl class",
+        actionType, accountType);
+    return null;
   }
 
   @Override
