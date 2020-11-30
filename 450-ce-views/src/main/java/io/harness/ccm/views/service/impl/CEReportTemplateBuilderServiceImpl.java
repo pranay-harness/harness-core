@@ -15,7 +15,9 @@ import io.harness.ccm.views.graphql.QLCEViewSortCriteria;
 import io.harness.ccm.views.graphql.QLCEViewSortType;
 import io.harness.ccm.views.graphql.QLCEViewTimeFilter;
 import io.harness.ccm.views.graphql.QLCEViewTimeFilterOperator;
+import io.harness.ccm.views.graphql.QLCEViewTimeGroupType;
 import io.harness.ccm.views.graphql.QLCEViewTimeSeriesData;
+import io.harness.ccm.views.graphql.QLCEViewTimeTruncGroupBy;
 import io.harness.ccm.views.graphql.QLCEViewTrendInfo;
 import io.harness.ccm.views.graphql.ViewsQueryHelper;
 import io.harness.ccm.views.service.CEReportTemplateBuilderService;
@@ -77,6 +79,10 @@ public class CEReportTemplateBuilderServiceImpl implements CEReportTemplateBuild
   private static final String ROW_START = "<tr>";
   private static final String ROW_END = "</tr>";
   private static final String COST_TREND = "<span style=\"font-size: 15px; color: %s\">( %s | %s )</span>";
+  private static final String PERSPECTIVE_URL_TEMPLATE =
+      "/account/%s/continuous-efficiency/perspective-explorer/%s/%s?defaultGroupBy=fieldId=%s%%26fieldName=%s%%26identifier=%s%%26identifierName=%s&defaultTimeRange=%s";
+  private static final String PERSPECTIVE_DEFAULT_URL_TEMPLATE =
+      "/account/%s/continuous-efficiency/perspective-explorer/%s/%s";
 
   // Template keys
   private static final String VIEW_NAME = "VIEW_NAME";
@@ -88,6 +94,7 @@ public class CEReportTemplateBuilderServiceImpl implements CEReportTemplateBuild
   private static final String TABLE = "TABLE";
   private static final String CHART = "CHART";
   private static final String UNSUBSCRIBE_URL = "UNSUBSCRIBE_URL";
+  private static final String PERSPECTIVE_URL = "PERSPECTIVE_URL";
 
   // Constants
   private static final String ZERO = "0";
@@ -157,6 +164,9 @@ public class CEReportTemplateBuilderServiceImpl implements CEReportTemplateBuild
     List<String> entities = tableData.stream().map(QLCEViewEntityStatsDataPoint::getName).collect(Collectors.toList());
 
     // Generating chart data
+    groupBy.add(QLCEViewGroupBy.builder()
+                    .timeTruncGroupBy(QLCEViewTimeTruncGroupBy.builder().resolution(QLCEViewTimeGroupType.DAY).build())
+                    .build());
     List<QLCEViewTimeSeriesData> chartData =
         viewsBillingService.convertToQLViewTimeSeriesData(viewsBillingService.getTimeSeriesStats(
             bigQuery, filters, groupBy, aggregationFunction, sortCriteria, cloudProviderTableName));
@@ -191,6 +201,7 @@ public class CEReportTemplateBuilderServiceImpl implements CEReportTemplateBuild
 
     // Generating table for report
     templatePlaceholders.put(TABLE, generateTable(tableData, entity));
+    templatePlaceholders.put(PERSPECTIVE_URL, getPerspectiveUrl(view));
 
     return templatePlaceholders;
   }
@@ -366,5 +377,20 @@ public class CEReportTemplateBuilderServiceImpl implements CEReportTemplateBuild
     }
 
     return byteArrayOutputStream.toByteArray();
+  }
+
+  public String getPerspectiveUrl(CEView view) {
+    String defaultUrl =
+        String.format(PERSPECTIVE_DEFAULT_URL_TEMPLATE, view.getAccountId(), view.getUuid(), view.getName());
+    try {
+      return String.format(PERSPECTIVE_URL_TEMPLATE, view.getAccountId(), view.getUuid(), view.getName(),
+          view.getViewVisualization().getGroupBy().getFieldId(),
+          view.getViewVisualization().getGroupBy().getFieldName(),
+          view.getViewVisualization().getGroupBy().getIdentifier(),
+          view.getViewVisualization().getGroupBy().getIdentifierName(), view.getViewTimeRange().getViewTimeRangeType());
+    } catch (Exception e) {
+      log.info("Can't create explorer Url for perspective : {}", view.getUuid());
+    }
+    return defaultUrl;
   }
 }

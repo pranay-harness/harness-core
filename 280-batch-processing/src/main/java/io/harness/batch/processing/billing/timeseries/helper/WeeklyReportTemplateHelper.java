@@ -62,17 +62,17 @@ public class WeeklyReportTemplateHelper {
   public static final String NOT_AVAILABLE = "NOT_AVAILABLE";
 
   private static final String CLUSTER_EXPLORER_URL_FORMAT =
-      "/account/%s/continuous-efficiency/cluster/insights?utm_medium=%s&clusterList=%%5B%%22%s%%22%%5D&from=%%22%s%%22&groupBy=%%22Cluster%%22&showOthers=%%22false%%22&showUnallocated=%%22false%%22&to=%%22%s%%22";
+      "/account/%s/continuous-efficiency/cluster/insights?utm_medium=%s&clusterList=%s&from=%s&groupBy=Cluster&to=%s";
   private static final String NAMESPACE_EXPLORER_URL_TEMPLATE =
-      "/account/%s/continuous-efficiency/cluster/K8S/%s/insights?utm_medium=%s&aggregation=%%22DAY%%22&chart=%%22column%%22&clusterList=%%5B%%22%s%%22%%5D&clusterNamespaceList=%%5B%%22%s%%22%%5D&from=%%22%s%%22&groupBy=%%22Namespace%%22&isFilterOn=true&pageType=CLUSTER_USAGE_COST&showOthers=%%22false%%22&showUnallocated=%%22false%%22&to=%%22%s%%22";
+      "/account/%s/continuous-efficiency/cluster/insights?utm_medium=%s&clusterList=%s&clusterNamespaceList=%s&from=%s&groupBy=Namespace&to=%s";
   private static final String WORKLOAD_EXPLORER_URL_TEMPLATE =
-      "/account/%s/continuous-efficiency/cluster/K8S/%s/insights?utm_medium=%s&aggregation=%%22DAY%%22&chart=%%22column%%22&clusterList=%%5B%%22%s%%22%%5D&clusterWorkLoadList=%%5B%%22%s%%22%%5D&from=%%22%s%%22&groupBy=%%22WorkloadName%%22&isFilterOn=true&pageType=CLUSTER_USAGE_COST&showOthers=%%22false%%22&showUnallocated=%%22false%%22&to=%%22%s%%22";
+      "/account/%s/continuous-efficiency/cluster/insights?utm_medium=%s&clusterList=%s&clusterWorkLoadList=%s&from=%s&groupBy=WorkloadName&to=%s";
   private static final String APPLICATION_EXPLORER_URL_FORMAT =
-      "/account/%s/continuous-efficiency/insights?utm_medium=%s&applicationList=%%5B%%22%s%%22%%5D&from=%%22%s%%22&groupBy=%%22Application%%22&showOthers=%%22false%%22&showUnallocated=%%22false%%22&to=%%22%s%%22";
+      "/account/%s/continuous-efficiency/cluster/insights?utm_medium=%s&applicationList=%s&from=%s&groupBy=Application&to=%s";
   private static final String SERVICE_EXPLORER_URL_FORMAT =
-      "/account/%s/continuous-efficiency/Application/insights/%s?utm_medium=%s&aggregation=%%22DAY%%22&applicationList=%%5B%%22%s%%22%%5D&chart=%%22column%%22&from=%%22%s%%22&groupBy=%%22Service%%22&isFilterOn=true&serviceList=%%5B%%22%s%%22%%5D&showOthers=%%22false%%22&showUnallocated=%%22false%%22&to=%%22%s%%22";
+      "/account/%s/continuous-efficiency/cluster/insights?utm_medium=%s&applicationList=%s&serviceList=%s&from=%s&groupBy=Service&to=%s";
   private static final String ENVIRONMENT_EXPLORER_URL_FORMAT =
-      "/account/%s/continuous-efficiency/Application/insights/%s?utm_medium=%s&aggregation=%%22DAY%%22&applicationList=%%5B%%22%s%%22%%5D&chart=%%22column%%22&from=%%22%s%%22&groupBy=%%22Environment%%22&isFilterOn=true&environmentList=%%5B%%22%s%%22%%5D&showOthers=%%22false%%22&showUnallocated=%%22false%%22&to=%%22%s%%22";
+      "/account/%s/continuous-efficiency/cluster/insights?utm_medium=%s&applicationList=%s&environmentList=%s&from=%s&groupBy=Environment&to=%s";
 
   public void populateCostDataForTemplate(Map<String, String> templateModel, Map<String, String> values) {
     templateModel.put("TOTAL_CLUSTER_COST", getTotalCostPopulatedValue(TOTAL_CLUSTER_COST, values));
@@ -140,28 +140,24 @@ public class WeeklyReportTemplateHelper {
             values.get(CLUSTER + PARENT), values.get(FROM), values.get(TO));
         break;
       case WORKLOAD:
-        url = String.format(WORKLOAD_EXPLORER_URL_TEMPLATE, values.get(ACCOUNT_ID), values.get(WORKLOAD + PARENT),
-            values.get(COMMUNICATION_MEDIUM), values.get(WORKLOAD + PARENT), values.get(entity + NAME),
-            values.get(FROM), values.get(TO));
+        url = String.format(WORKLOAD_EXPLORER_URL_TEMPLATE, values.get(ACCOUNT_ID), values.get(COMMUNICATION_MEDIUM),
+            values.get(WORKLOAD + PARENT), values.get(entity + NAME), values.get(FROM), values.get(TO));
         break;
       case NAMESPACE:
-        url = String.format(NAMESPACE_EXPLORER_URL_TEMPLATE, values.get(ACCOUNT_ID), values.get(NAMESPACE + PARENT),
-            values.get(COMMUNICATION_MEDIUM), values.get(NAMESPACE + PARENT), values.get(entity + NAME),
-            values.get(FROM), values.get(TO));
+        url = String.format(NAMESPACE_EXPLORER_URL_TEMPLATE, values.get(ACCOUNT_ID), values.get(COMMUNICATION_MEDIUM),
+            values.get(NAMESPACE + PARENT), values.get(entity + NAME), values.get(FROM), values.get(TO));
         break;
       case APPLICATION:
         url = String.format(APPLICATION_EXPLORER_URL_FORMAT, values.get(ACCOUNT_ID), values.get(COMMUNICATION_MEDIUM),
             values.get(APPLICATION + PARENT), values.get(FROM), values.get(TO));
         break;
       case SERVICE:
-        url = String.format(SERVICE_EXPLORER_URL_FORMAT, values.get(ACCOUNT_ID), values.get(SERVICE + PARENT),
-            values.get(COMMUNICATION_MEDIUM), values.get(SERVICE + PARENT), values.get(FROM), values.get(SERVICE + ID),
-            values.get(TO));
+        url = String.format(SERVICE_EXPLORER_URL_FORMAT, values.get(ACCOUNT_ID), values.get(COMMUNICATION_MEDIUM),
+            values.get(SERVICE + PARENT), values.get(SERVICE + ID), values.get(FROM), values.get(TO));
         break;
       case ENVIRONMENT:
-        url = String.format(ENVIRONMENT_EXPLORER_URL_FORMAT, values.get(ACCOUNT_ID), values.get(ENVIRONMENT + PARENT),
-            values.get(COMMUNICATION_MEDIUM), values.get(ENVIRONMENT + PARENT), values.get(FROM),
-            values.get(ENVIRONMENT + ID), values.get(TO));
+        url = String.format(ENVIRONMENT_EXPLORER_URL_FORMAT, values.get(ACCOUNT_ID), values.get(COMMUNICATION_MEDIUM),
+            values.get(ENVIRONMENT + PARENT), values.get(ENVIRONMENT + ID), values.get(FROM), values.get(TO));
         break;
       default:
         url = "";
