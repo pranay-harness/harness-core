@@ -68,11 +68,12 @@ public class KubernetesActivityResource {
   @NextGenManagerAuth
   @Path("/sources")
   @ApiOperation(value = "lists all kubernetes event sources", nickname = "listKubernetesSources")
-  public RestResponse<List<KubernetesActivitySourceDTO>> listKubernetesSources(
+  public RestResponse<PageResponse<KubernetesActivitySourceDTO>> listKubernetesSources(
       @QueryParam("accountId") @NotNull String accountId, @QueryParam("orgIdentifier") @NotNull String orgIdentifier,
-      @QueryParam("projectIdentifier") @NotNull String projectIdentifier) {
-    return new RestResponse<>(
-        kubernetesActivitySourceService.listKubernetesSources(accountId, orgIdentifier, projectIdentifier));
+      @QueryParam("projectIdentifier") @NotNull String projectIdentifier, @QueryParam("offset") @NotNull Integer offset,
+      @QueryParam("pageSize") @NotNull Integer pageSize, @QueryParam("filter") String filter) {
+    return new RestResponse<>(kubernetesActivitySourceService.listKubernetesSources(
+        accountId, orgIdentifier, projectIdentifier, offset, pageSize, filter));
   }
 
   @DELETE
