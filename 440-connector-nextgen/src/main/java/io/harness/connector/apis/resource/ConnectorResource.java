@@ -7,6 +7,8 @@ import io.harness.NGResourceFilterConstants;
 import io.harness.connector.apis.dto.ConnectorCatalogueResponseDTO;
 import io.harness.connector.apis.dto.ConnectorDTO;
 import io.harness.connector.apis.dto.ConnectorResponseDTO;
+import io.harness.connector.apis.dto.stats.ConnectorStatistics;
+import io.harness.connector.entities.Connector.Scope;
 import io.harness.connector.services.ConnectorService;
 import io.harness.delegate.beans.connector.ConnectorCategory;
 import io.harness.delegate.beans.connector.ConnectorType;
@@ -145,5 +147,17 @@ public class ConnectorResource {
   public ResponseDTO<ConnectorCatalogueResponseDTO> getConnectorCatalogue(
       @NotEmpty @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier) {
     return ResponseDTO.newResponse(connectorService.getConnectorCatalogue());
+  }
+
+  @GET
+  @Path("/stats")
+  @ApiOperation(value = "Get Connectors statistics", nickname = "getConnectorStatistics")
+  public ResponseDTO<ConnectorStatistics> getConnectorStats(
+      @NotEmpty @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier,
+      @QueryParam(NGCommonEntityConstants.ORG_KEY) String orgIdentifier,
+      @QueryParam(NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier,
+      @QueryParam(NGResourceFilterConstants.SCOPE) Scope scope) {
+    return ResponseDTO.newResponse(
+        connectorService.getConnectorStatistics(accountIdentifier, orgIdentifier, projectIdentifier, scope));
   }
 }

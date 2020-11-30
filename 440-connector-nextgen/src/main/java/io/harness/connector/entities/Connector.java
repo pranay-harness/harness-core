@@ -1,6 +1,7 @@
 package io.harness.connector.entities;
 
 import io.harness.beans.EmbeddedUser;
+import io.harness.connector.entities.ConnectorConnectivityDetails.ConnectorConnectivityDetailsKeys;
 import io.harness.data.validator.EntityIdentifier;
 import io.harness.data.validator.EntityName;
 import io.harness.data.validator.Trimmed;
@@ -18,6 +19,7 @@ import javax.validation.constraints.Size;
 import lombok.Data;
 import lombok.Singular;
 import lombok.experimental.FieldNameConstants;
+import lombok.experimental.UtilityClass;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Entity;
 import org.springframework.data.annotation.CreatedBy;
@@ -62,5 +64,12 @@ public abstract class Connector implements PersistentEntity, NGAccountAccess {
   @Override
   public String getAccountIdentifier() {
     return accountIdentifier;
+  }
+
+  public static final String CONNECTOR_COLLECTION_NAME = "connectors";
+
+  @UtilityClass
+  public static final class ConnectorKeys {
+    public static final String connectionStatus = ConnectorKeys.status + "." + ConnectorConnectivityDetailsKeys.status;
   }
 }
