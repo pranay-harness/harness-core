@@ -18,7 +18,6 @@ import io.harness.exception.WingsException;
 import io.harness.logging.CommandExecutionStatus;
 
 import software.wings.beans.Log;
-import software.wings.beans.Log.LogKeys;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.ActivityService;
 import software.wings.service.intfc.AppService;
@@ -121,31 +120,6 @@ public class LogServiceImpl implements LogService {
 
   @Override
   public boolean batchedSaveCommandUnitLogs(String activityId, String unitName, Log logObject) {
-    final int buffer = 5; // buffer so that we count above max limit and know when to stop
-    int count = dataStoreService.getNumberOfResults(Log.class,
-        aPageRequest()
-            .addFilter(LogKeys.appId, Operator.EQ, logObject.getAppId())
-            .addFilter(LogKeys.activityId, Operator.EQ, logObject.getActivityId())
-            .withLimit(String.valueOf(LogServiceImpl.MAX_LOG_ROWS_PER_ACTIVITY_GOOGLE_DATA_STORE + buffer))
-            .build());
-    if (count > MAX_LOG_ROWS_PER_ACTIVITY_GOOGLE_DATA_STORE) {
-      log.warn("Number of logObject rows per activity threshold [{}] crossed. logObject lines truncated for [{}]",
-          MAX_LOG_ROWS_PER_ACTIVITY_GOOGLE_DATA_STORE,
-          String.format("LogLines: %s, AppId: %s, ActivityId: %s", logObject.getLinesCount(), logObject.getAppId(),
-
-              logObject.getActivityId()));
-      if (CommandExecutionStatus.RUNNING != logObject.getCommandExecutionStatus()) {
-        logObject.setLogLine(new StringBuilder()
-                                 .append("Previous logs might have been truncated\n")
-                                 .append(logObject.getLogLine())
-                                 .toString());
-        dataStoreService.save(Log.class, Lists.newArrayList(logObject), false);
-        activityService.updateCommandUnitStatus(
-            logObject.getAppId(), activityId, unitName, logObject.getCommandExecutionStatus());
-      }
-      return true;
-    }
-
     dataStoreService.save(Log.class, Lists.newArrayList(logObject), false);
     activityService.updateCommandUnitStatus(
         logObject.getAppId(), activityId, unitName, logObject.getCommandExecutionStatus());
