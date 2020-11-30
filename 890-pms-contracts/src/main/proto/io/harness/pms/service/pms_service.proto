@@ -5,6 +5,7 @@ package io.harness.pms.plan;
 option java_multiple_files = true;
 
 import "io/harness/pms/plan/plan_node_proto.proto";
+import "io/harness/pms/steps/step_type.proto";
 
 service PmsService {
   rpc initializeSdk(InitializeSdkRequest) returns (InitializeSdkResponse);
@@ -13,6 +14,7 @@ service PmsService {
 message InitializeSdkRequest {
   string name = 1;
   map<string, Types> supportedTypes = 2;
+  repeated io.harness.pms.steps.StepInfo supportedSteps = 3;
 }
 
 message InitializeSdkResponse {}

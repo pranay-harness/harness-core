@@ -51,7 +51,7 @@ public class FilterCreatorMergeService {
   }
 
   public FilterCreatorMergeServiceResponse getFiltersAndStageCount(@NotNull String yaml) throws IOException {
-    Map<String, Map<String, Set<String>>> sdkInstances = pmsSdkInstanceService.getSdkInstancesMap();
+    Map<String, Map<String, Set<String>>> sdkInstances = pmsSdkInstanceService.getInstanceNameToSupportedTypes();
     Map<String, PlanCreatorServiceInfo> services = new HashMap<>();
     if (EmptyPredicate.isNotEmpty(planCreatorServices) && EmptyPredicate.isNotEmpty(sdkInstances)) {
       sdkInstances.forEach((k, v) -> {

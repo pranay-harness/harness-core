@@ -3,6 +3,7 @@ package io.harness.ci.plan.creator;
 import io.harness.pms.plan.creator.filters.FilterJsonCreator;
 import io.harness.pms.plan.creator.plan.PartialPlanCreator;
 import io.harness.pms.plan.creator.plan.PipelineServiceInfoProvider;
+import io.harness.pms.steps.StepInfo;
 
 import java.util.ArrayList;
 import java.util.LinkedList;
@@ -21,6 +22,11 @@ public class CIPipelineServiceInfoProvider implements PipelineServiceInfoProvide
 
   @Override
   public List<FilterJsonCreator> getFilterJsonCreators() {
+    return new ArrayList<>();
+  }
+
+  @Override
+  public List<StepInfo> getStepInfo() {
     return new ArrayList<>();
   }
 }

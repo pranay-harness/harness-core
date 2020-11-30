@@ -1,6 +1,7 @@
 package io.harness.pms.pipeline.service;
 
 import io.harness.pms.pipeline.PipelineEntity;
+import io.harness.pms.pipeline.StepCategory;
 
 import java.util.Optional;
 import org.springframework.data.domain.Page;
@@ -19,4 +20,6 @@ public interface PMSPipelineService {
       String accountId, String orgIdentifier, String projectIdentifier, String pipelineIdentifier, Long version);
 
   Page<PipelineEntity> list(Criteria criteria, Pageable pageable);
+
+  StepCategory getSteps(String module, String category);
 }

@@ -178,4 +178,14 @@ public class PipelineResource {
 
     return ResponseDTO.newResponse(pipelineSummary);
   }
+
+  @GET
+  @Path("/steps")
+  @ApiOperation(value = "Get Steps for given module", nickname = "getSteps")
+  public ResponseDTO<StepCategory> getSteps(
+      @NotNull @QueryParam("category") String category, @NotNull @QueryParam("module") String module) {
+    log.info("Get Steps for given module");
+
+    return ResponseDTO.newResponse(pmsPipelineService.getSteps(module, category));
+  }
 }

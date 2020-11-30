@@ -37,7 +37,7 @@ import org.reflections.Reflections;
 @EqualsAndHashCode(callSuper = false)
 @Singleton
 public class PipelineServiceConfiguration extends Configuration {
-  public static final String RESOURCE_PACKAGE = "io.harness.pms.resources";
+  public static final String RESOURCE_PACKAGE = "io.harness.pms";
 
   @JsonProperty("swagger") private SwaggerBundleConfiguration swaggerBundleConfiguration;
   @JsonProperty("mongo") private MongoConfig mongoConfig;

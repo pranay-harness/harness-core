@@ -124,6 +124,7 @@ public class PmsSdkModule {
     pmsClient.initializeSdk(InitializeSdkRequest.newBuilder()
                                 .setName(pipelineServiceInfoProvider.getServiceName())
                                 .putAllSupportedTypes(calculateSupportedTypes(pipelineServiceInfoProvider))
+                                .addAllSupportedSteps(pipelineServiceInfoProvider.getStepInfo())
                                 .build());
   }
 

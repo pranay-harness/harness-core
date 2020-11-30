@@ -7,9 +7,11 @@ import io.harness.persistence.CreatedAtAware;
 import io.harness.persistence.PersistentEntity;
 import io.harness.persistence.UpdatedAtAware;
 import io.harness.persistence.UuidAware;
+import io.harness.pms.steps.StepInfo;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.github.reinert.jjschema.SchemaIgnore;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import javax.validation.constraints.NotNull;
@@ -37,6 +39,7 @@ public class PmsSdkInstance implements PersistentEntity, UuidAware, CreatedAtAwa
 
   @NotNull @FdUniqueIndex String name;
   Map<String, Set<String>> supportedTypes;
+  List<StepInfo> supportedSteps;
 
   @SchemaIgnore @FdIndex @CreatedDate private long createdAt;
   @SchemaIgnore @NotNull @LastModifiedDate private long lastUpdatedAt;
