@@ -86,9 +86,9 @@ public class AuthRuleFilter implements ContainerRequestFilter {
           "users/enable-two-factor-auth", "users/refresh-token", "harness-api-keys", "users/set-default-account"};
   private static final String[] NO_FILTERING_URIS_SUFFIXES = new String[] {"/logout"};
   private static final String[] EXEMPTED_URI_PREFIXES = new String[] {"limits/configure", "account/license",
-      "account/export", "account/import", "account/delete/", "account/disable", "account/enable", "users/reset-cache",
-      "executions/workflow-variables", "executions/nodeSubGraphs", "executions/deployment-metadata",
-      "setup-as-code/yaml/internal/template-yaml-sync", "infrastructure-definitions/list"};
+      "account/export", "account/import", "account/delete/", "users/reset-cache", "executions/workflow-variables",
+      "executions/nodeSubGraphs", "executions/deployment-metadata", "setup-as-code/yaml/internal/template-yaml-sync",
+      "infrastructure-definitions/list"};
   private static final String[] EXEMPTED_URI_SUFFIXES = new String[] {"sales-contacts", "addSubdomainUrl"};
   private static final String USER_NOT_AUTHORIZED = "User not authorized";
 
