@@ -151,8 +151,8 @@ build_bazel_module 890-sm-core
 build_bazel_module 950-common-entities
 build_bazel_module 890-pms-contracts
 build_bazel_module 890-orchestration-persistence
-build_bazel_module 880-pms-commons
-build_bazel_module 870-pms-sdk-utils
+build_bazel_module 884-pms-commons
+build_bazel_module 882-pms-sdk-core
 build_bazel_module 880-orchestration-beans
 build_bazel_module 870-orchestration
 build_bazel_module 860-orchestration-steps

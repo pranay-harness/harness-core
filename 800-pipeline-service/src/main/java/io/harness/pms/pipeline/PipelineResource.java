@@ -12,10 +12,10 @@ import io.harness.ng.core.dto.ErrorDTO;
 import io.harness.ng.core.dto.FailureDTO;
 import io.harness.ng.core.dto.ResponseDTO;
 import io.harness.pms.pipeline.PipelineEntity.PipelineEntityKeys;
-import io.harness.pms.pipeline.filters.PMSPipelineFilterRequestDTO;
 import io.harness.pms.pipeline.mappers.PMSPipelineDtoMapper;
 import io.harness.pms.pipeline.mappers.PMSPipelineFilterHelper;
 import io.harness.pms.pipeline.service.PMSPipelineService;
+import io.harness.pms.sdk.core.PMSPipelineFilterRequestDTO;
 import io.harness.serializer.JsonUtils;
 import io.harness.utils.PageUtils;
 

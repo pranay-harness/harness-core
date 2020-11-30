@@ -2,12 +2,12 @@ package io.harness.pms.sample.cd;
 
 import static io.harness.logging.LoggingInitializer.initializeLogging;
 
-import io.harness.PmsSdkConfiguration;
-import io.harness.PmsSdkModule;
 import io.harness.maintenance.MaintenanceController;
 import io.harness.persistence.HPersistence;
 import io.harness.pms.sample.cd.creator.CdPipelineServiceInfoProvider;
 import io.harness.pms.sample.cd.creator.filters.CDFilterCreationResponseMerger;
+import io.harness.pms.sdk.PmsSdkConfiguration;
+import io.harness.pms.sdk.PmsSdkModule;
 
 import com.google.inject.Guice;
 import com.google.inject.Injector;

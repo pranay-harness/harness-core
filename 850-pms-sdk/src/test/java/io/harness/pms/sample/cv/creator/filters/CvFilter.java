@@ -1,6 +1,6 @@
 package io.harness.pms.sample.cv.creator.filters;
 
-import io.harness.pms.filter.PipelineFilter;
+import io.harness.pms.pipeline.filter.PipelineFilter;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
