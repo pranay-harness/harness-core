@@ -10,7 +10,7 @@ import (
 	"github.com/pkg/errors"
 	"github.com/stretchr/testify/assert"
 	pb "github.com/wings-software/portal/910-delegate-task-grpc-service/src/main/proto/io/harness/task/service"
-	dclient "github.com/wings-software/portal/commons/go/lib/910-delegate-task-grpc-service/grpc"
+	dclient "github.com/wings-software/portal/commons/go/lib/delegate-task-grpc-service/grpc"
 	"github.com/wings-software/portal/commons/go/lib/logs"
 	"go.uber.org/zap"
 )
