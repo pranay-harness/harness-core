@@ -177,11 +177,16 @@ public class OrchestrationEngine {
       PlanNode node = nodeExecution.getNode();
       // Facilitate and execute
       StepInputPackage inputPackage = engineObtainmentHelper.obtainInputPackage(ambiance, node.getRefObjects());
+
+      // Resolve step parameters
       String stepParameters = node.getStepParameters() == null ? null : node.getStepParameters().toJson();
       Object obj = stepParameters == null
           ? null
           : engineExpressionService.resolve(ambiance, nodeExecutionService.extractStepParameters(nodeExecution));
-      Document resolvedStepParameters = obj == null ? null : Document.parse(JsonOrchestrationUtils.asJson(obj));
+      String json =
+          obj instanceof StepParameters ? ((StepParameters) obj).toJson() : JsonOrchestrationUtils.asJson(obj);
+      Document resolvedStepParameters = obj == null ? null : Document.parse(json);
+
       NodeExecution updatedNodeExecution =
           Preconditions.checkNotNull(nodeExecutionService.update(nodeExecution.getUuid(),
               ops -> setUnset(ops, NodeExecutionKeys.resolvedStepParameters, resolvedStepParameters)));

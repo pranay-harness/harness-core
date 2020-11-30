@@ -20,6 +20,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class JsonOrchestrationUtils {
   public static final ObjectMapper mapper;
+  public static final ObjectMapper nonIgnoringMapper;
 
   static {
     mapper = new ObjectMapper();
@@ -31,11 +32,30 @@ public class JsonOrchestrationUtils {
     mapper.registerModule(new GuavaModule());
     mapper.registerModule(new JavaTimeModule());
     mapper.setPropertyNamingStrategy(PropertyNamingStrategy.LOWER_CAMEL_CASE);
+
+    nonIgnoringMapper = new ObjectMapper();
+    nonIgnoringMapper.disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES);
+    nonIgnoringMapper.setSerializationInclusion(Include.NON_NULL);
+    nonIgnoringMapper.setAnnotationIntrospector(new JsonAnnotationIntrospector());
+    nonIgnoringMapper.setSubtypeResolver(AnnotationAwareJsonSubtypeResolver.newInstance(mapper.getSubtypeResolver()));
+    nonIgnoringMapper.registerModule(new ProtobufModule());
+    nonIgnoringMapper.registerModule(new Jdk8Module());
+    nonIgnoringMapper.registerModule(new GuavaModule());
+    nonIgnoringMapper.registerModule(new JavaTimeModule());
+    nonIgnoringMapper.setPropertyNamingStrategy(PropertyNamingStrategy.LOWER_CAMEL_CASE);
   }
 
   public static String asJson(Object obj) {
     try {
       return mapper.writeValueAsString(obj);
+    } catch (Exception exception) {
+      throw new RuntimeException(exception);
+    }
+  }
+
+  public static String asJsonWithIgnoredFields(Object obj) {
+    try {
+      return nonIgnoringMapper.writeValueAsString(obj);
     } catch (Exception exception) {
       throw new RuntimeException(exception);
     }
