@@ -34,7 +34,7 @@ public class WalkTreeTestRule implements MethodRule, InjectorRuleMixin {
     modules.add(new ClosingFactoryModule(closingFactory));
 
     modules.add(TimeModule.getInstance());
-    modules.add(new VersionModule());
+    modules.add(VersionModule.getInstance());
 
     modules.add(WalkTreeModule.getInstance());
 

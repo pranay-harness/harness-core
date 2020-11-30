@@ -147,7 +147,7 @@ public class OrchestrationStepsRule implements MethodRule, InjectorRuleMixin, Mo
       }
     });
 
-    modules.add(new VersionModule());
+    modules.add(VersionModule.getInstance());
     modules.add(TestMongoModule.getInstance());
     modules.add(TimeModule.getInstance());
     modules.add(new SpringPersistenceTestModule());

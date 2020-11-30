@@ -135,7 +135,7 @@ public class NGPipelineCommonsTestRule implements MethodRule, InjectorRuleMixin,
       }
     });
 
-    modules.add(new VersionModule());
+    modules.add(VersionModule.getInstance());
     modules.add(TimeModule.getInstance());
     modules.add(TestMongoModule.getInstance());
     modules.add(new SpringPersistenceTestModule());
