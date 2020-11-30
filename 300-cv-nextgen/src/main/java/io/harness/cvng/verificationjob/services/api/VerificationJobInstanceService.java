@@ -20,6 +20,7 @@ public interface VerificationJobInstanceService {
   List<String> create(List<VerificationJobInstance> verificationJobInstances);
   VerificationJobInstanceDTO get(String verificationJobInstanceId);
   List<VerificationJobInstance> get(List<String> verificationJobInstanceIds);
+  List<VerificationJobInstance> getNonDeploymentInstances(List<String> verificationJobInstanceIds);
   VerificationJobInstance getVerificationJobInstance(String verificationJobInstanceId);
   void processVerificationJobInstance(VerificationJobInstance verificationJobInstance);
   void createDataCollectionTasks(VerificationJobInstance verificationJobInstance);

@@ -416,10 +416,12 @@ public class TimeSeriesAnalysisServiceImpl implements TimeSeriesAnalysisService 
   @Override
   public void saveAnalysis(String taskId, ServiceGuardTimeSeriesAnalysisDTO analysis) {
     LearningEngineTask learningEngineTask = learningEngineTaskService.get(taskId);
+    TimeSeriesLearningEngineTask task = (TimeSeriesLearningEngineTask) learningEngineTask;
     Preconditions.checkNotNull(learningEngineTask, "Needs to be a valid LE task.");
     analysis.setVerificationTaskId(learningEngineTask.getVerificationTaskId());
-    Instant startTime = learningEngineTask.getAnalysisStartTime();
+    Instant dataStartTime = learningEngineTask.getAnalysisStartTime();
     Instant endTime = learningEngineTask.getAnalysisEndTime();
+    Instant startTime = endTime.minus(Duration.ofMinutes(task.getWindowSize()));
     analysis.setAnalysisStartTime(startTime);
     analysis.setAnalysisEndTime(endTime);
     String cvConfigId = verificationTaskService.getCVConfigId(learningEngineTask.getVerificationTaskId());

@@ -150,6 +150,19 @@ public class VerificationJobInstanceServiceImpl implements VerificationJobInstan
         .asList();
   }
 
+  public List<VerificationJobInstance> getNonDeploymentInstances(List<String> verificationJobInstanceIds) {
+    List<VerificationJobInstance> allInstances = get(verificationJobInstanceIds);
+    List<VerificationJobInstance> nonDeploymentInstances = new ArrayList<>();
+    if (allInstances != null) {
+      allInstances.forEach(instance -> {
+        if (!VerificationJobType.getDeploymentJobTypes().contains(instance.getResolvedJob().getType())) {
+          nonDeploymentInstances.add(instance);
+        }
+      });
+    }
+    return nonDeploymentInstances;
+  }
+
   @Override
   public VerificationJobInstance getVerificationJobInstance(String verificationJobInstanceId) {
     return hPersistence.get(VerificationJobInstance.class, verificationJobInstanceId);

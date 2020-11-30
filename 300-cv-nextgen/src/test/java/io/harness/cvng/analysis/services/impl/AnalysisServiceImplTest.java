@@ -18,6 +18,7 @@ import io.harness.cvng.analysis.entities.LogAnalysisCluster;
 import io.harness.cvng.analysis.entities.LogAnalysisResult;
 import io.harness.cvng.analysis.entities.ServiceGuardLogAnalysisTask;
 import io.harness.cvng.analysis.entities.TimeSeriesCumulativeSums;
+import io.harness.cvng.analysis.entities.TimeSeriesLearningEngineTask;
 import io.harness.cvng.analysis.services.api.AnalysisService;
 import io.harness.cvng.analysis.services.api.LearningEngineTaskService;
 import io.harness.cvng.analysis.services.api.LogAnalysisService;
@@ -83,8 +84,7 @@ public class AnalysisServiceImplTest extends CvNextGenTest {
   @Category(UnitTests.class)
   public void testGetTop3AnalysisRisks_withoutLogs() throws IllegalAccessException {
     FieldUtils.writeField(timeSeriesAnalysisService, "heatMapService", mock(HeatMapService.class), true);
-    LearningEngineTask learningEngineTask =
-        create(metricVerificationTaskId, LearningEngineTaskType.SERVICE_GUARD_TIME_SERIES);
+    LearningEngineTask learningEngineTask = createTimeseriesTask(metricVerificationTaskId);
     timeSeriesAnalysisService.saveAnalysis(learningEngineTask.getUuid(),
         buildServiceGuardMetricAnalysisDTO(
             Lists.newArrayList("m1", "m2", "m3", "m4"), Lists.newArrayList(.2, .4, .5, .6)));
@@ -104,8 +104,7 @@ public class AnalysisServiceImplTest extends CvNextGenTest {
   public void testGetTop3AnalysisRisks_logsAndMetrics() throws IllegalAccessException {
     FieldUtils.writeField(timeSeriesAnalysisService, "heatMapService", mock(HeatMapService.class), true);
     FieldUtils.writeField(logAnalysisService, "heatMapService", mock(HeatMapService.class), true);
-    LearningEngineTask learningEngineTask1 =
-        create(metricVerificationTaskId, LearningEngineTaskType.SERVICE_GUARD_TIME_SERIES);
+    LearningEngineTask learningEngineTask1 = createTimeseriesTask(metricVerificationTaskId);
     LearningEngineTask learningEngineTask2 =
         create(logVerificationTaskId, LearningEngineTaskType.SERVICE_GUARD_LOG_ANALYSIS);
     timeSeriesAnalysisService.saveAnalysis(learningEngineTask1.getUuid(),
@@ -180,6 +179,25 @@ public class AnalysisServiceImplTest extends CvNextGenTest {
     Instant end = start.plus(5, ChronoUnit.MINUTES);
     task.setAnalysisStartTime(start);
     task.setAnalysisEndTime(end);
+
+    learningEngineTaskService.createLearningEngineTask(task);
+    return task;
+  }
+
+  private LearningEngineTask createTimeseriesTask(String verificationTaskId) {
+    TimeSeriesLearningEngineTask task = TimeSeriesLearningEngineTask.builder().build();
+    task.setTestDataUrl("testData");
+    task.setTaskStatus(LearningEngineTask.ExecutionStatus.QUEUED);
+    task.setVerificationTaskId(verificationTaskId);
+    task.setAnalysisType(LearningEngineTaskType.SERVICE_GUARD_TIME_SERIES);
+    task.setFailureUrl("failure-url");
+    task.setAnalysisStartTime(instant.minus(Duration.ofMinutes(10)));
+    task.setAnalysisEndTime(instant);
+    Instant start = instant.minus(10, ChronoUnit.MINUTES).truncatedTo(ChronoUnit.MINUTES);
+    Instant end = start.plus(5, ChronoUnit.MINUTES);
+    task.setAnalysisStartTime(start);
+    task.setAnalysisEndTime(end);
+    task.setWindowSize(5);
 
     learningEngineTaskService.createLearningEngineTask(task);
     return task;

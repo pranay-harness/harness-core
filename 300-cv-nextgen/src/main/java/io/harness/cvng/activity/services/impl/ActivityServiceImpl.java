@@ -360,7 +360,7 @@ public class ActivityServiceImpl implements ActivityService {
 
   private ActivityVerificationResultDTO getResultForAnActivity(Activity activity) {
     List<VerificationJobInstance> verificationJobInstances =
-        verificationJobInstanceService.get(activity.getVerificationJobInstanceIds());
+        verificationJobInstanceService.getNonDeploymentInstances(activity.getVerificationJobInstanceIds());
 
     ActivityVerificationSummary summary =
         verificationJobInstanceService.getActivityVerificationSummary(verificationJobInstances);
