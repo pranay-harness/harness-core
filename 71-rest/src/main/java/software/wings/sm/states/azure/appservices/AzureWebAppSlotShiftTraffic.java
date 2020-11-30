@@ -63,6 +63,7 @@ public class AzureWebAppSlotShiftTraffic extends AbstractAzureAppServiceState {
         .appServiceName(azureAppServiceStateData.getAppService())
         .deploySlotName(azureAppServiceStateData.getDeploymentSlot())
         .trafficWeight(String.valueOf(renderTrafficWeight(context)))
+        .appServiceSlotSetupTimeOut(getTimeoutMillis(context))
         .build();
   }
 
@@ -120,11 +121,6 @@ public class AzureWebAppSlotShiftTraffic extends AbstractAzureAppServiceState {
     return "Azure App Service traffic shift failed";
   }
 
-  @Override
-  protected String skipMessage() {
-    return "No Azure App service setup context element found. Skipping traffic shifting";
-  }
-
   private AzureWebAppSlotShiftTrafficParameters buildTrafficShiftParams(
       ExecutionContext context, AzureAppServiceStateData azureAppServiceStateData, Activity activity) {
     AzureAppServiceSlotSetupContextElement contextElement = getContextElement(context);
@@ -138,9 +134,8 @@ public class AzureWebAppSlotShiftTraffic extends AbstractAzureAppServiceState {
         .subscriptionId(azureAppServiceStateData.getSubscriptionId())
         .resourceGroupName(azureAppServiceStateData.getResourceGroup())
         .webAppName(azureAppServiceStateData.getAppService())
-        .shiftTrafficSlotName(azureAppServiceStateData.getDeploymentSlot())
+        .deploymentSlot(azureAppServiceStateData.getDeploymentSlot())
         .trafficWeightInPercentage(renderTrafficWeight(context))
-        .isRollback(isRollback())
         .preDeploymentData(contextElement.getPreDeploymentData())
         .build();
   }

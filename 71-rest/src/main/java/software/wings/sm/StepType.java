@@ -199,7 +199,6 @@ import software.wings.sm.states.azure.AzureVMSSRollbackState;
 import software.wings.sm.states.azure.AzureVMSSSetupState;
 import software.wings.sm.states.azure.AzureVMSSSwitchRoutesRollbackState;
 import software.wings.sm.states.azure.AzureVMSSSwitchRoutesState;
-import software.wings.sm.states.azure.appservices.AzureWebAppSlotResize;
 import software.wings.sm.states.azure.appservices.AzureWebAppSlotRollback;
 import software.wings.sm.states.azure.appservices.AzureWebAppSlotSetup;
 import software.wings.sm.states.azure.appservices.AzureWebAppSlotShiftTraffic;
@@ -317,17 +316,13 @@ public enum StepType {
       singletonList(WorkflowStepType.AZURE_WEBAPP), singletonList(PhaseStepType.AZURE_WEBAPP_SLOT_SETUP),
       Lists.newArrayList(DeploymentType.AZURE_WEBAPP), singletonList(PhaseType.NON_ROLLBACK),
       asList(CANARY, BLUE_GREEN)),
-  AZURE_WEBAPP_SLOT_RESIZE(AzureWebAppSlotResize.class, WorkflowServiceHelper.AZURE_WEBAPP_SLOT_RESIZE,
-      singletonList(WorkflowStepType.AZURE_WEBAPP), singletonList(PhaseStepType.AZURE_WEBAPP_SLOT_RESIZE),
-      Lists.newArrayList(DeploymentType.AZURE_WEBAPP), singletonList(PhaseType.NON_ROLLBACK),
-      asList(CANARY, BLUE_GREEN)),
   AZURE_WEBAPP_SLOT_SWAP(AzureWebAppSlotSwap.class, WorkflowServiceHelper.AZURE_WEBAPP_SLOT_SWAP,
       singletonList(WorkflowStepType.AZURE_WEBAPP), singletonList(PhaseStepType.AZURE_WEBAPP_SLOT_SWAP),
       Lists.newArrayList(DeploymentType.AZURE_WEBAPP), singletonList(PhaseType.NON_ROLLBACK),
       asList(CANARY, BLUE_GREEN)),
   AZURE_WEBAPP_SLOT_SHIFT_TRAFFIC(AzureWebAppSlotShiftTraffic.class,
       WorkflowServiceHelper.AZURE_WEBAPP_SLOT_SHIFT_TRAFFIC, singletonList(WorkflowStepType.AZURE_WEBAPP),
-      singletonList(PhaseStepType.AZURE_WEBAPP_SLOT_SHIFT_TRAFFIC), Lists.newArrayList(DeploymentType.AZURE_WEBAPP),
+      singletonList(PhaseStepType.AZURE_WEBAPP_SLOT_TRAFFIC_SHIFT), Lists.newArrayList(DeploymentType.AZURE_WEBAPP),
       singletonList(PhaseType.NON_ROLLBACK), singletonList(CANARY)),
   AZURE_WEBAPP_SLOT_ROLLBACK(AzureWebAppSlotRollback.class, WorkflowServiceHelper.AZURE_WEBAPP_SLOT_ROLLBACK,
       singletonList(WorkflowStepType.AZURE_WEBAPP), singletonList(PhaseStepType.AZURE_WEBAPP_SLOT_ROLLBACK),
@@ -565,14 +560,17 @@ public enum StepType {
 
   // APM
   APP_DYNAMICS(AppDynamicsState.class, APPDYNAMICS, asList(APM),
-      asList(VERIFY_SERVICE, K8S_PHASE_STEP, PhaseStepType.SPOTINST_LISTENER_UPDATE, CUSTOM_DEPLOYMENT_PHASE_STEP),
+      asList(VERIFY_SERVICE, K8S_PHASE_STEP, PhaseStepType.SPOTINST_LISTENER_UPDATE,
+          PhaseStepType.AZURE_WEBAPP_SLOT_TRAFFIC_SHIFT, CUSTOM_DEPLOYMENT_PHASE_STEP),
       asList(DeploymentType.values()), asList(PhaseType.ROLLBACK, PhaseType.NON_ROLLBACK)),
   NEW_RELIC(NewRelicState.class, WorkflowServiceHelper.NEW_RELIC, asList(APM),
-      asList(VERIFY_SERVICE, K8S_PHASE_STEP, CUSTOM_DEPLOYMENT_PHASE_STEP), asList(DeploymentType.values()),
-      asList(PhaseType.ROLLBACK, PhaseType.NON_ROLLBACK)),
+      asList(
+          VERIFY_SERVICE, K8S_PHASE_STEP, PhaseStepType.AZURE_WEBAPP_SLOT_TRAFFIC_SHIFT, CUSTOM_DEPLOYMENT_PHASE_STEP),
+      asList(DeploymentType.values()), asList(PhaseType.ROLLBACK, PhaseType.NON_ROLLBACK)),
   INSTANA(InstanaState.class, WorkflowServiceHelper.INSTANA, asList(APM),
-      asList(VERIFY_SERVICE, K8S_PHASE_STEP, CUSTOM_DEPLOYMENT_PHASE_STEP), asList(DeploymentType.values()),
-      asList(PhaseType.ROLLBACK, PhaseType.NON_ROLLBACK)),
+      asList(
+          VERIFY_SERVICE, K8S_PHASE_STEP, PhaseStepType.AZURE_WEBAPP_SLOT_TRAFFIC_SHIFT, CUSTOM_DEPLOYMENT_PHASE_STEP),
+      asList(DeploymentType.values()), asList(PhaseType.ROLLBACK, PhaseType.NON_ROLLBACK)),
 
   DYNA_TRACE(DynatraceState.class, DYNATRACE, asList(APM),
       asList(VERIFY_SERVICE, K8S_PHASE_STEP, CUSTOM_DEPLOYMENT_PHASE_STEP), asList(DeploymentType.values()),

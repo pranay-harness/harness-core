@@ -28,10 +28,9 @@ import static software.wings.beans.PhaseStep.PhaseStepBuilder.aPhaseStep;
 import static software.wings.beans.PhaseStepType.AZURE_VMSS_DEPLOY;
 import static software.wings.beans.PhaseStepType.AZURE_VMSS_SETUP;
 import static software.wings.beans.PhaseStepType.AZURE_VMSS_SWITCH_ROUTES;
-import static software.wings.beans.PhaseStepType.AZURE_WEBAPP_SLOT_RESIZE;
 import static software.wings.beans.PhaseStepType.AZURE_WEBAPP_SLOT_SETUP;
-import static software.wings.beans.PhaseStepType.AZURE_WEBAPP_SLOT_SHIFT_TRAFFIC;
 import static software.wings.beans.PhaseStepType.AZURE_WEBAPP_SLOT_SWAP;
+import static software.wings.beans.PhaseStepType.AZURE_WEBAPP_SLOT_TRAFFIC_SHIFT;
 import static software.wings.beans.PhaseStepType.CLUSTER_SETUP;
 import static software.wings.beans.PhaseStepType.DEPLOY_SERVICE;
 import static software.wings.beans.PhaseStepType.ECS_UPDATE_LISTENER_BG;
@@ -1210,18 +1209,8 @@ public class WorkflowServiceHelperTest extends WingsBaseTest {
     List<PhaseStepType> phaseStepTypes =
         workflowPhase.getPhaseSteps().stream().map(PhaseStep::getPhaseStepType).collect(Collectors.toList());
     assertThat(phaseStepTypes)
-        .containsExactly(AZURE_WEBAPP_SLOT_SETUP, AZURE_WEBAPP_SLOT_RESIZE, VERIFY_SERVICE,
-            AZURE_WEBAPP_SLOT_SHIFT_TRAFFIC, WRAP_UP);
-    workflowPhase.getPhaseSteps().clear();
-
-    // blue green deployment test
-    workflowServiceHelper.generateNewWorkflowPhaseStepsForAzureWebApp(
-        APP_ID, ACCOUNT_ID, workflowPhase, OrchestrationWorkflowType.BLUE_GREEN);
-    phaseStepTypes =
-        workflowPhase.getPhaseSteps().stream().map(PhaseStep::getPhaseStepType).collect(Collectors.toList());
-    assertThat(phaseStepTypes)
         .containsExactly(
-            AZURE_WEBAPP_SLOT_SETUP, AZURE_WEBAPP_SLOT_RESIZE, VERIFY_SERVICE, AZURE_WEBAPP_SLOT_SWAP, WRAP_UP);
+            AZURE_WEBAPP_SLOT_SETUP, VERIFY_SERVICE, AZURE_WEBAPP_SLOT_TRAFFIC_SHIFT, AZURE_WEBAPP_SLOT_SWAP, WRAP_UP);
     workflowPhase.getPhaseSteps().clear();
 
     // unsupported deployment type test

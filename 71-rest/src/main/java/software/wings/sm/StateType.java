@@ -183,7 +183,6 @@ import software.wings.sm.states.azure.AzureVMSSRollbackState;
 import software.wings.sm.states.azure.AzureVMSSSetupState;
 import software.wings.sm.states.azure.AzureVMSSSwitchRoutesRollbackState;
 import software.wings.sm.states.azure.AzureVMSSSwitchRoutesState;
-import software.wings.sm.states.azure.appservices.AzureWebAppSlotResize;
 import software.wings.sm.states.azure.appservices.AzureWebAppSlotRollback;
 import software.wings.sm.states.azure.appservices.AzureWebAppSlotSetup;
 import software.wings.sm.states.azure.appservices.AzureWebAppSlotShiftTraffic;
@@ -502,17 +501,13 @@ public enum StateType implements StateTypeDescriptor {
       Lists.newArrayList(InfrastructureMappingType.AZURE_WEBAPP), singletonList(PhaseStepType.AZURE_WEBAPP_SLOT_SETUP),
       ORCHESTRATION_STENCILS),
 
-  AZURE_WEBAPP_SLOT_RESIZE(AzureWebAppSlotResize.class, AZURE_WEBAPP, WorkflowServiceHelper.AZURE_WEBAPP_SLOT_RESIZE,
-      Lists.newArrayList(InfrastructureMappingType.AZURE_WEBAPP), singletonList(PhaseStepType.AZURE_WEBAPP_SLOT_RESIZE),
-      ORCHESTRATION_STENCILS),
-
   AZURE_WEBAPP_SLOT_SWAP(AzureWebAppSlotSwap.class, AZURE_WEBAPP, WorkflowServiceHelper.AZURE_WEBAPP_SLOT_SWAP,
       Lists.newArrayList(InfrastructureMappingType.AZURE_WEBAPP), singletonList(PhaseStepType.AZURE_WEBAPP_SLOT_SWAP),
       ORCHESTRATION_STENCILS),
 
   AZURE_WEBAPP_SLOT_SHIFT_TRAFFIC(AzureWebAppSlotShiftTraffic.class, AZURE_WEBAPP,
-      WorkflowServiceHelper.AZURE_WEBAPP_SLOT_SHIFT_TRAFFIC, Lists.newArrayList(InfrastructureMappingType.AZURE_WEBAPP),
-      singletonList(PhaseStepType.AZURE_WEBAPP_SLOT_SHIFT_TRAFFIC), ORCHESTRATION_STENCILS),
+      WorkflowServiceHelper.AZURE_WEBAPP_SLOT_TRAFFIC_SHIFT, Lists.newArrayList(InfrastructureMappingType.AZURE_WEBAPP),
+      singletonList(PhaseStepType.AZURE_WEBAPP_SLOT_TRAFFIC_SHIFT), ORCHESTRATION_STENCILS),
 
   AZURE_WEBAPP_SLOT_ROLLBACK(AzureWebAppSlotRollback.class, AZURE_WEBAPP,
       WorkflowServiceHelper.AZURE_WEBAPP_SLOT_ROLLBACK, Lists.newArrayList(InfrastructureMappingType.AZURE_WEBAPP),

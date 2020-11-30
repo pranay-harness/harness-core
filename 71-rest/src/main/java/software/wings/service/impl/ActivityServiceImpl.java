@@ -164,6 +164,9 @@ public class ActivityServiceImpl implements ActivityService {
         case AZURE_VMSS_SETUP:
         case AZURE_VMSS_DEPLOY:
         case AZURE_VMSS_SWAP:
+        case AZURE_APP_SERVICE_SLOT_SETUP:
+        case AZURE_APP_SERVICE_SLOT_TRAFFIC_SHIFT:
+        case AZURE_APP_SERVICE_SLOT_SWAP:
         case AWS_AMI_SWITCH_ROUTES:
         case SPOTINST_SETUP:
         case SPOTINST_DEPLOY:

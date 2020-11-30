@@ -295,7 +295,7 @@ public class AzureVMSSStateHelper {
           format("Infrastructure Mapping is not instance of AzureVMSSInfrastructureMapping, infrastructureMapping: %s",
               infrastructureMapping));
     }
-    return (AzureWebAppInfrastructureMapping) infrastructureMappingService.get(appId, infraMappingId);
+    return (AzureWebAppInfrastructureMapping) infrastructureMapping;
   }
 
   public AzureConfig getAzureConfig(final String computeProviderSettingId) {

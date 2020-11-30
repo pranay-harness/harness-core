@@ -60,10 +60,10 @@ public class AzureWebAppSlotSwap extends AbstractAzureAppServiceState {
     return AzureAppServiceSlotSwapExecutionData.builder()
         .activityId(activity.getUuid())
         .infrastructureMappingId(azureAppServiceStateData.getInfrastructureMapping().getUuid())
-        .resourceGroup(azureAppServiceStateData.getResourceGroup())
-        .appServiceName(azureAppServiceStateData.getAppService())
+        .resourceGroup(resourceGroup)
+        .appServiceName(webApp)
         .deploymentSlot(azureAppServiceStateData.getDeploymentSlot())
-        .targetSlot(azureAppServiceStateData.getDeploymentSlot())
+        .targetSlot(targetSlot)
         .build();
   }
 
@@ -121,11 +121,6 @@ public class AzureWebAppSlotSwap extends AbstractAzureAppServiceState {
     return "Azure App Service swap slot failed";
   }
 
-  @Override
-  protected String skipMessage() {
-    return "No Azure App service setup context element found. Skipping slot swapping";
-  }
-
   private AzureWebAppSwapSlotsParameters buildSlotSwapParams(
       ExecutionContext context, AzureAppServiceStateData azureAppServiceStateData, Activity activity) {
     AzureAppServiceSlotSetupContextElement contextElement = getContextElement(context);
@@ -136,11 +131,11 @@ public class AzureWebAppSlotSwap extends AbstractAzureAppServiceState {
         .activityId(activity.getUuid())
         .commandName(APP_SERVICE_SLOT_SWAP)
         .timeoutIntervalInMin(contextElement.getAppServiceSlotSetupTimeOut())
-        .subscriptionId(azureAppServiceStateData.getSubscriptionId())
-        .resourceGroupName(azureAppServiceStateData.getResourceGroup())
-        .webAppName(azureAppServiceStateData.getAppService())
+        .subscriptionId(subscriptionId)
+        .resourceGroupName(resourceGroup)
+        .webAppName(webApp)
         .sourceSlotName(contextElement.getDeploymentSlot())
-        .targetSlotName(azureAppServiceStateData.getDeploymentSlot())
+        .targetSlotName(targetSlot)
         .preDeploymentData(contextElement.getPreDeploymentData())
         .build();
   }

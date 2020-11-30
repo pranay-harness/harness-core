@@ -27,6 +27,7 @@ import software.wings.beans.Activity;
 import software.wings.beans.Application;
 import software.wings.beans.AzureConfig;
 import software.wings.beans.AzureVMSSInfrastructureMapping;
+import software.wings.beans.AzureWebAppInfrastructureMapping;
 import software.wings.beans.DeploymentExecutionContext;
 import software.wings.beans.Environment;
 import software.wings.beans.InfrastructureMapping;
@@ -47,6 +48,7 @@ import software.wings.service.intfc.security.SecretManager;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionContextImpl;
 import software.wings.sm.WorkflowStandardParams;
+import software.wings.sm.states.azure.appservices.AzureAppServiceStateData;
 
 import com.google.inject.Inject;
 import java.util.ArrayList;
@@ -503,5 +505,66 @@ public class AzureVMSSStateHelperTest extends WingsBaseTest {
         azureVMSSStateHelper.getConnectorAuthEncryptedDataDetails("accountId", mockDecryptableEntity);
 
     assertThat(connectorAuthEncryptedDataDetails).isNotNull();
+  }
+
+  @Test
+  @Owner(developers = OwnerRule.ANIL)
+  @Category(UnitTests.class)
+  public void testPopulateAzureAppServiceData() {
+    String appId = "applicationId";
+    String serviceId = "serviceId";
+    String envId = "environmentId";
+    String accountId = "accountId";
+    String computeProviderSettingId = "computeProviderSettingId";
+    String infraMappingId = "infraMappingId";
+    String subscriptionId = "subscriptionId";
+    String resourceGroup = "resourceGroup";
+    String webApp = "webApp";
+    String deploymentSlot = "slot";
+    String harnessUser = "harnessUser";
+
+    Service service = Service.builder().uuid(serviceId).build();
+    AzureWebAppInfrastructureMapping webAppInfrastructureMapping =
+        AzureWebAppInfrastructureMapping.builder()
+            .computeProviderSettingId(computeProviderSettingId)
+            .subscriptionId(subscriptionId)
+            .resourceGroup(resourceGroup)
+            .webApp(webApp)
+            .deploymentSlot(deploymentSlot)
+            .build();
+
+    ExecutionContextImpl context = Mockito.mock(ExecutionContextImpl.class);
+    WorkflowStandardParams workflowStandardParams = Mockito.mock(WorkflowStandardParams.class);
+    PhaseElement phaseElement = Mockito.mock(PhaseElement.class);
+    Artifact artifact = Mockito.mock(Artifact.class);
+    SettingAttribute settingAttribute = mock(SettingAttribute.class);
+
+    when(context.getContextElement(ContextElementType.STANDARD)).thenReturn(workflowStandardParams);
+    when(workflowStandardParams.getApp()).thenReturn(Application.Builder.anApplication().uuid(appId).build());
+    when(workflowStandardParams.getCurrentUser()).thenReturn(EmbeddedUser.builder().name(harnessUser).build());
+    when(context.getContextElement(ContextElementType.PARAM, PhaseElement.PHASE_PARAM)).thenReturn(phaseElement);
+    when(phaseElement.getServiceElement()).thenReturn(ServiceElement.builder().uuid(serviceId).build());
+    doReturn(service).when(serviceResourceService).getWithDetails(appId, serviceId);
+    when(context.getDefaultArtifactForService(serviceId)).thenReturn(artifact);
+    when(workflowStandardParams.getEnv()).thenReturn(Environment.Builder.anEnvironment().uuid(envId).build());
+    when(settingsService.get(computeProviderSettingId)).thenReturn(settingAttribute);
+    when(settingAttribute.getValue()).thenReturn(AzureConfig.builder().accountId(accountId).build());
+    when(context.fetchInfraMappingId()).thenReturn(infraMappingId);
+    when(infrastructureMappingService.get(appId, infraMappingId)).thenReturn(webAppInfrastructureMapping);
+
+    AzureAppServiceStateData azureAppServiceStateData = azureVMSSStateHelper.populateAzureAppServiceData(context);
+
+    assertThat(azureAppServiceStateData).isNotNull();
+    assertThat(azureAppServiceStateData.getArtifact()).isNotNull();
+    assertThat(azureAppServiceStateData.getService()).isNotNull();
+    assertThat(azureAppServiceStateData.getEnvironment()).isNotNull();
+    assertThat(azureAppServiceStateData.toString()).isNotNull();
+    assertThat(azureAppServiceStateData.getCurrentUser().getName()).isEqualTo(harnessUser);
+
+    assertThat(azureAppServiceStateData.getServiceId()).isEqualTo(serviceId);
+    assertThat(azureAppServiceStateData.getResourceGroup()).isEqualTo(resourceGroup);
+    assertThat(azureAppServiceStateData.getSubscriptionId()).isEqualTo(subscriptionId);
+    assertThat(azureAppServiceStateData.getAppService()).isEqualTo(webApp);
+    assertThat(azureAppServiceStateData.getDeploymentSlot()).isEqualTo(deploymentSlot);
   }
 }

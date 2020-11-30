@@ -368,6 +368,9 @@ public class PhaseStepSubWorkflow extends SubWorkflowState {
       case AMI_SWITCH_AUTOSCALING_GROUP_ROUTES:
       case AZURE_VMSS_DEPLOY:
       case AZURE_VMSS_SWITCH_ROUTES:
+      case AZURE_WEBAPP_SLOT_SETUP:
+      case AZURE_WEBAPP_SLOT_TRAFFIC_SHIFT:
+      case AZURE_WEBAPP_SLOT_SWAP:
       case SPOTINST_DEPLOY:
       case SPOTINST_LISTENER_UPDATE: {
         // All the data required is already there on the service setup element.
@@ -498,6 +501,10 @@ public class PhaseStepSubWorkflow extends SubWorkflowState {
       case AZURE_VMSS_ROLLBACK:
       case AZURE_VMSS_SWITCH_ROUTES:
       case AZURE_VMSS_SWITCH_ROLLBACK:
+      case AZURE_WEBAPP_SLOT_SETUP:
+      case AZURE_WEBAPP_SLOT_TRAFFIC_SHIFT:
+      case AZURE_WEBAPP_SLOT_SWAP:
+      case AZURE_WEBAPP_SLOT_ROLLBACK:
         noop();
         break;
 
