@@ -7,8 +7,6 @@ import static io.harness.waiter.OrchestrationNotifyEventListener.ORCHESTRATION;
 import static java.util.Collections.singletonList;
 
 import io.harness.AuthorizationServiceHeader;
-import io.harness.PmsSdkConfiguration;
-import io.harness.PmsSdkModule;
 import io.harness.ci.plan.creator.CIPipelineServiceInfoProvider;
 import io.harness.delegate.beans.DelegateAsyncTaskResponse;
 import io.harness.delegate.beans.DelegateSyncTaskResponse;
@@ -25,6 +23,8 @@ import io.harness.morphia.MorphiaRegistrar;
 import io.harness.ngpipeline.common.NGPipelineObjectMapperHelper;
 import io.harness.persistence.HPersistence;
 import io.harness.persistence.Store;
+import io.harness.pms.sdk.PmsSdkConfiguration;
+import io.harness.pms.sdk.PmsSdkModule;
 import io.harness.pms.steps.StepType;
 import io.harness.queue.QueueController;
 import io.harness.queue.QueueListenerController;

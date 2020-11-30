@@ -25,7 +25,7 @@ public class GrpcServer extends AbstractIdleService {
   private final Server server;
   private final HealthStatusManager healthStatusManager;
 
-  GrpcServer(Connector connector, Set<BindableService> services, Set<ServerInterceptor> interceptors,
+  public GrpcServer(Connector connector, Set<BindableService> services, Set<ServerInterceptor> interceptors,
       HealthStatusManager healthStatusManager) {
     ServerBuilder<?> builder = ServerBuilder.forPort(connector.getPort());
     if (connector.isSecure()) {

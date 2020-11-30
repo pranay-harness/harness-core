@@ -17,8 +17,8 @@ directories:
   950-common-entities
   890-pms-contracts
   890-orchestration-persistence
-  880-pms-commons
-  870-pms-sdk-utils
+  884-pms-commons
+  882-pms-sdk-core
   880-orchestration-beans
   870-orchestration
   860-orchestration-steps

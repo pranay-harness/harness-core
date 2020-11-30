@@ -7,6 +7,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import io.harness.category.element.UnitTests;
 import io.harness.ng.NextGenApplication;
 import io.harness.ng.NextGenConfiguration;
+import io.harness.pms.sdk.PmsSdkModule;
 import io.harness.rule.Owner;
 import io.harness.yaml.YamlSdkModule;
 

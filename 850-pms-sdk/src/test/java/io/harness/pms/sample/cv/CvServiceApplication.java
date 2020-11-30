@@ -2,12 +2,12 @@ package io.harness.pms.sample.cv;
 
 import static io.harness.logging.LoggingInitializer.initializeLogging;
 
-import io.harness.PmsSdkConfiguration;
-import io.harness.PmsSdkModule;
 import io.harness.maintenance.MaintenanceController;
 import io.harness.persistence.HPersistence;
 import io.harness.pms.sample.cv.creator.CvPipelineServiceInfoProvider;
 import io.harness.pms.sample.cv.creator.filters.CVFilterCreationResponseMerger;
+import io.harness.pms.sdk.PmsSdkConfiguration;
+import io.harness.pms.sdk.PmsSdkModule;
 
 import com.google.inject.Guice;
 import com.google.inject.Injector;

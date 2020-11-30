@@ -50,12 +50,12 @@
         </dependency>
         <dependency>
             <groupId>software.wings</groupId>
-            <artifactId>880-pms-commons</artifactId>
+            <artifactId>884-pms-commons</artifactId>
             <version>${project.parent.version}</version>
         </dependency>
         <dependency>
             <groupId>software.wings</groupId>
-            <artifactId>870-pms-sdk-utils</artifactId>
+            <artifactId>882-pms-sdk-core</artifactId>
             <version>${project.parent.version}</version>
         </dependency>
         <dependency>

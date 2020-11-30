@@ -34,17 +34,6 @@ public class StepResponse {
     Outcome outcome;
   }
 
-  public Map<String, Outcome> outcomeMap() {
-    Map<String, Outcome> stringOutcomeMap = new HashMap<>();
-    if (isEmpty(stepOutcomes)) {
-      return stringOutcomeMap;
-    }
-    for (StepOutcome stepOutcome : stepOutcomes) {
-      stringOutcomeMap.put(stepOutcome.getName(), stepOutcome.getOutcome());
-    }
-    return stringOutcomeMap;
-  }
-
   public Map<String, StepOutcome> stepOutcomeMap() {
     Map<String, StepOutcome> stepOutcomeMap = new HashMap<>();
     if (isEmpty(stepOutcomes)) {

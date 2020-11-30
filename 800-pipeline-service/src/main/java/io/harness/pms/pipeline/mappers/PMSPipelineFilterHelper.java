@@ -7,7 +7,7 @@ import io.harness.NGResourceFilterConstants;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.pms.pipeline.PipelineEntity;
 import io.harness.pms.pipeline.PipelineEntity.PipelineEntityKeys;
-import io.harness.pms.pipeline.filters.PMSPipelineFilterRequestDTO;
+import io.harness.pms.sdk.core.PMSPipelineFilterRequestDTO;
 
 import java.util.List;
 import java.util.Map;
