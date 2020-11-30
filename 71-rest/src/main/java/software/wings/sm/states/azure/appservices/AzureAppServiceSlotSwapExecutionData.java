@@ -44,7 +44,7 @@ public class AzureAppServiceSlotSwapExecutionData extends StateExecutionData imp
     putNotNull(executionDetails, "appServiceName",
         ExecutionDataValue.builder().displayName("Web App Name").value(appServiceName).build());
     putNotNull(executionDetails, "deploymentSlot",
-        ExecutionDataValue.builder().displayName("Deployment Slot").value(targetSlot).build());
+        ExecutionDataValue.builder().displayName("Deployment Slot").value(deploymentSlot).build());
     putNotNull(executionDetails, "targetSlot",
         ExecutionDataValue.builder().displayName("Target Swap Slot").value(targetSlot).build());
     putNotNull(

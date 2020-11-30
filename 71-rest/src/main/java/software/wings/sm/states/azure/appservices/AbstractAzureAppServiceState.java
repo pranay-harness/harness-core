@@ -13,7 +13,6 @@ import io.harness.context.ContextElementType;
 import io.harness.delegate.beans.TaskData;
 import io.harness.delegate.task.azure.AzureTaskExecutionResponse;
 import io.harness.exception.InvalidRequestException;
-import io.harness.exception.WingsException;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.logging.Misc;
 import io.harness.tasks.Cd1SetupFields;
@@ -68,8 +67,6 @@ public abstract class AbstractAzureAppServiceState extends State {
   public ExecutionResponse execute(ExecutionContext context) {
     try {
       return executeInternal(context);
-    } catch (WingsException e) {
-      throw e;
     } catch (Exception e) {
       throw new InvalidRequestException(getMessage(e), e);
     }
@@ -124,8 +121,6 @@ public abstract class AbstractAzureAppServiceState extends State {
   public ExecutionResponse handleAsyncResponse(ExecutionContext context, Map<String, ResponseData> response) {
     try {
       return handleAsyncInternal(context, response);
-    } catch (WingsException e) {
-      throw e;
     } catch (Exception e) {
       throw new InvalidRequestException(getMessage(e), e);
     }
@@ -134,17 +129,19 @@ public abstract class AbstractAzureAppServiceState extends State {
   private ExecutionResponse handleAsyncInternal(ExecutionContext context, Map<String, ResponseData> response) {
     AzureTaskExecutionResponse executionResponse = (AzureTaskExecutionResponse) response.values().iterator().next();
     ExecutionStatus executionStatus = azureVMSSStateHelper.getAppServiceExecutionStatus(executionResponse);
+    ContextElement contextElement = buildContextElement(context, executionResponse);
 
     if (executionStatus == ExecutionStatus.FAILED) {
       return ExecutionResponse.builder()
           .executionStatus(executionStatus)
+          .contextElement(contextElement)
+          .notifyElement(contextElement)
           .errorMessage(executionResponse.getErrorMessage())
           .build();
     }
 
     updateActivityStatus(response, context.getAppId(), executionStatus);
     StateExecutionData stateExecutionData = buildPostStateExecutionData(context, executionResponse, executionStatus);
-    ContextElement contextElement = buildContextElement(context, executionResponse);
     emitAnyDataForExternalConsumption(context, executionResponse);
 
     return ExecutionResponse.builder()
@@ -162,6 +159,10 @@ public abstract class AbstractAzureAppServiceState extends State {
   }
 
   protected boolean shouldExecute(ExecutionContext context) {
+    return verifyIfContextElementExist(context);
+  }
+
+  protected boolean verifyIfContextElementExist(ExecutionContext context) {
     ContextElement contextElement = context.getContextElement(ContextElementType.AZURE_WEBAPP_SETUP);
     if (!(contextElement instanceof AzureAppServiceSlotSetupContextElement)) {
       if (isRollback()) {
@@ -197,10 +198,14 @@ public abstract class AbstractAzureAppServiceState extends State {
 
   @NotNull protected abstract String errorMessageTag();
 
-  protected abstract String skipMessage();
+  public String skipMessage() {
+    return "No Azure App service setup context element found. Skipping current step";
+  }
 
   @Override
-  public void handleAbortEvent(ExecutionContext context) {}
+  public void handleAbortEvent(ExecutionContext context) {
+    // Do nothing on abort
+  }
 
   private ExecutionResponse successResponse(Activity activity, StateExecutionData executionData) {
     return ExecutionResponse.builder()

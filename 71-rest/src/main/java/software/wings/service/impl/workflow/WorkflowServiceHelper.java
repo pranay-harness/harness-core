@@ -254,6 +254,9 @@ public class WorkflowServiceHelper {
   public static final String AZURE_WEBAPP_SLOT_SWAP = "Swap Slot";
   public static final String AZURE_WEBAPP_SLOT_SHIFT_TRAFFIC = "Slot Shift Traffic Weight";
   public static final String AZURE_WEBAPP_SLOT_ROLLBACK = "Slot Rollback";
+  public static final String AZURE_WEBAPP_SLOT_TRAFFIC_SHIFT = "Slot Traffic Shift";
+  public static final String AZURE_WEBAPP_SLOT_TRAFFIC_WEIGHT = "Slot Traffic Weight";
+  public static final String AZURE_WEBAPP_SLOT_ROUTE = "Update Slot Route";
   public static final String KUBERNETES_SERVICE_SETUP_BLUEGREEN = "Blue/Green Service Setup";
   public static final String INFRA_ROUTE_PCF = "infra.pcf.route";
   public static final String VERIFY_STAGE_SERVICE = "Verify Stage Service";
@@ -971,38 +974,28 @@ public class WorkflowServiceHelper {
                                     .build())
                        .build());
 
-    phaseSteps.add(aPhaseStep(PhaseStepType.AZURE_WEBAPP_SLOT_RESIZE, AZURE_WEBAPP_SLOT_RESIZE)
-                       .addStep(GraphNode.builder()
-                                    .id(generateUuid())
-                                    .type(StateType.AZURE_WEBAPP_SLOT_RESIZE.name())
-                                    .name(AZURE_WEBAPP_SLOT_RESIZE)
-                                    .build())
-                       .build());
-
     phaseSteps.add(aPhaseStep(PhaseStepType.VERIFY_SERVICE, VERIFY_SERVICE)
                        .addAllSteps(commandNodes(commandMap, CommandType.VERIFY))
                        .build());
 
-    if (BLUE_GREEN == orchestrationWorkflowType) {
-      phaseSteps.add(aPhaseStep(PhaseStepType.AZURE_WEBAPP_SLOT_SWAP, AZURE_WEBAPP_SLOT_SWAP)
-                         .addStep(GraphNode.builder()
-                                      .id(generateUuid())
-                                      .type(StateType.AZURE_WEBAPP_SLOT_SWAP.name())
-                                      .name(AZURE_WEBAPP_SLOT_SWAP)
-                                      .build())
-                         .build());
-    } else if (CANARY == orchestrationWorkflowType) {
-      Map<String, Object> defaultData = new HashMap<>();
-      defaultData.put(AzureConstants.TRAFFIC_WEIGHT_EXPR, 100);
-      phaseSteps.add(aPhaseStep(PhaseStepType.AZURE_WEBAPP_SLOT_SHIFT_TRAFFIC, AZURE_WEBAPP_SLOT_SHIFT_TRAFFIC)
-                         .addStep(GraphNode.builder()
-                                      .id(generateUuid())
-                                      .type(StateType.AZURE_WEBAPP_SLOT_SHIFT_TRAFFIC.name())
-                                      .name(AZURE_WEBAPP_SLOT_SHIFT_TRAFFIC)
-                                      .properties(defaultData)
-                                      .build())
-                         .build());
-    }
+    Map<String, Object> defaultData = new HashMap<>();
+    defaultData.put(AzureConstants.TRAFFIC_WEIGHT_EXPR, 100);
+    phaseSteps.add(aPhaseStep(PhaseStepType.AZURE_WEBAPP_SLOT_TRAFFIC_SHIFT, AZURE_WEBAPP_SLOT_TRAFFIC_SHIFT)
+                       .addStep(GraphNode.builder()
+                                    .id(generateUuid())
+                                    .type(StateType.AZURE_WEBAPP_SLOT_SHIFT_TRAFFIC.name())
+                                    .name(AZURE_WEBAPP_SLOT_TRAFFIC_WEIGHT)
+                                    .properties(defaultData)
+                                    .build())
+                       .build());
+
+    phaseSteps.add(aPhaseStep(PhaseStepType.AZURE_WEBAPP_SLOT_SWAP, AZURE_WEBAPP_SLOT_SWAP)
+                       .addStep(GraphNode.builder()
+                                    .id(generateUuid())
+                                    .type(StateType.AZURE_WEBAPP_SLOT_SWAP.name())
+                                    .name(AZURE_WEBAPP_SLOT_ROUTE)
+                                    .build())
+                       .build());
 
     phaseSteps.add(aPhaseStep(PhaseStepType.WRAP_UP, WRAP_UP).build());
   }

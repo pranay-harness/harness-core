@@ -16,9 +16,14 @@ import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 
+import io.harness.azure.model.AzureAppServiceApplicationSetting;
+import io.harness.azure.model.AzureAppServiceConnectionString;
+import io.harness.azure.model.AzureAppServiceConnectionStringType;
 import io.harness.beans.DecryptableEntity;
+import io.harness.beans.EmbeddedUser;
 import io.harness.beans.ExecutionStatus;
 import io.harness.category.element.UnitTests;
+import io.harness.context.ContextElementType;
 import io.harness.delegate.beans.azure.registry.AzureRegistryType;
 import io.harness.delegate.beans.connector.ConnectorConfigDTO;
 import io.harness.delegate.task.azure.AzureTaskExecutionResponse;
@@ -45,6 +50,7 @@ import software.wings.sm.ExecutionResponse;
 import software.wings.sm.states.ManagerExecutionLogCallback;
 import software.wings.sm.states.azure.appservices.AzureAppServiceSlotSetupContextElement;
 import software.wings.sm.states.azure.appservices.AzureAppServiceSlotSetupExecutionData;
+import software.wings.sm.states.azure.appservices.AzureAppServiceSlotSetupExecutionSummary;
 import software.wings.sm.states.azure.appservices.AzureAppServiceStateData;
 import software.wings.sm.states.azure.appservices.AzureWebAppSlotSetup;
 import software.wings.sm.states.azure.artifact.ArtifactStreamMapper;
@@ -107,6 +113,9 @@ public class AzureWebAppSlotSetupTest extends WingsBaseTest {
                                                        .artifact(artifact)
                                                        .azureEncryptedDataDetails(encryptedDataDetails)
                                                        .appService("app-service")
+                                                       .artifact(Artifact.Builder.anArtifact().build())
+                                                       .currentUser(EmbeddedUser.builder().build())
+                                                       .serviceId("serviceId")
                                                        .build();
 
     doReturn(appServiceStateData).when(azureVMSSStateHelper).populateAzureAppServiceData(context);
@@ -115,10 +124,19 @@ public class AzureWebAppSlotSetupTest extends WingsBaseTest {
         .when(azureVMSSStateHelper)
         .createAndSaveActivity(any(), any(), anyString(), anyString(), any(), anyListOf(CommandUnit.class));
     doReturn(managerExecutionLogCallback).when(azureVMSSStateHelper).getExecutionLogCallback(activity);
-
     mockArtifactStreamMapper();
-
     doReturn(delegateResult).when(delegateService).queueTask(any());
+
+    state.setSlotSteadyStateTimeout("10");
+    state.setApplicationSettings(
+        Collections.singletonList(AzureAppServiceApplicationSetting.builder().name("key1").value("value1").build()));
+    state.setAppServiceConnectionStrings(
+        Collections.singletonList(AzureAppServiceConnectionString.builder()
+                                      .name("conn1")
+                                      .value("url1")
+                                      .sticky(true)
+                                      .type(AzureAppServiceConnectionStringType.SQL_SERVER)
+                                      .build()));
     ExecutionResponse result = state.execute(context);
 
     assertThat(result).isNotNull();
@@ -126,8 +144,22 @@ public class AzureWebAppSlotSetupTest extends WingsBaseTest {
     assertThat(result.getErrorMessage()).isNull();
     assertThat(result.getStateExecutionData()).isNotNull();
     assertThat(result.getStateExecutionData()).isInstanceOf(AzureAppServiceSlotSetupExecutionData.class);
-    assertThat(((AzureAppServiceSlotSetupExecutionData) result.getStateExecutionData()).getActivityId())
-        .isEqualTo(activityId);
+
+    AzureAppServiceSlotSetupExecutionData stateExecutionData =
+        (AzureAppServiceSlotSetupExecutionData) result.getStateExecutionData();
+    assertThat(stateExecutionData.equals(new AzureAppServiceSlotSetupExecutionData())).isFalse();
+    assertThat(stateExecutionData.getActivityId()).isEqualTo(activityId);
+    assertThat(stateExecutionData.getAppServiceName()).isEqualTo("app-service");
+    assertThat(stateExecutionData.getDeploySlotName()).isEqualTo("stage");
+    assertThat(stateExecutionData.getAppServiceSlotSetupTimeOut()).isNotNull();
+
+    AzureAppServiceSlotSetupExecutionSummary stepExecutionSummary = stateExecutionData.getStepExecutionSummary();
+    assertThat(stepExecutionSummary.equals(AzureAppServiceSlotSetupExecutionSummary.builder().build())).isFalse();
+    assertThat(stateExecutionData.getStepExecutionSummary().toString()).isNotNull();
+
+    assertThat(stateExecutionData.getExecutionDetails()).isNotEmpty();
+    assertThat(stateExecutionData.getExecutionSummary()).isNotEmpty();
+    assertThat(stateExecutionData.getStepExecutionSummary()).isNotNull();
   }
 
   private void mockArtifactStreamMapper() {
@@ -226,5 +258,21 @@ public class AzureWebAppSlotSetupTest extends WingsBaseTest {
         (AzureAppServiceSlotSetupContextElement) contextElement;
     assertThat(slotSetupContextElement.getWebApp()).isEqualTo("webApp-for-deployment");
     assertThat(slotSetupContextElement.getDeploymentSlot()).isEqualTo("stage");
+
+    ContextElement setupContextElement = executionResponse.getContextElements().get(0);
+    assertThat(setupContextElement instanceof AzureAppServiceSlotSetupContextElement).isTrue();
+
+    AzureAppServiceSlotSetupContextElement webAppSlotSetupContextElement =
+        (AzureAppServiceSlotSetupContextElement) setupContextElement;
+    assertThat(webAppSlotSetupContextElement.equals(new AzureAppServiceSlotSetupContextElement())).isFalse();
+    assertThat(webAppSlotSetupContextElement.getUuid()).isNull();
+    assertThat(webAppSlotSetupContextElement.getName()).isNull();
+    assertThat(webAppSlotSetupContextElement.getTargetSlot()).isNull();
+    assertThat(webAppSlotSetupContextElement.getInfraMappingId()).isNull();
+    assertThat(webAppSlotSetupContextElement.getCommandName()).isEqualTo(AzureWebAppSlotSetup.APP_SERVICE_SLOT_SETUP);
+    assertThat(webAppSlotSetupContextElement.cloneMin()).isNull();
+    assertThat(webAppSlotSetupContextElement.toString()).isNotNull();
+    assertThat(setupContextElement.getElementType()).isEqualTo(ContextElementType.AZURE_WEBAPP_SETUP);
+    assertThat(setupContextElement.paramMap(context)).isNotEmpty();
   }
 }
