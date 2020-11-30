@@ -8,8 +8,6 @@ public enum WebhookEvent {
   @JsonProperty("Pull Request") PULL_REQUEST,
   @JsonProperty("Push") PUSH,
   @JsonProperty("Issue") ISSUE,
-  @JsonProperty("Package") PACKAGE,
-  @JsonProperty("Release") RELEASE,
   @JsonProperty("Delete") DELETE,
   @JsonProperty("Merge Request") MERGE_REQUEST,
   @JsonProperty("Repository") REPOSITORY;

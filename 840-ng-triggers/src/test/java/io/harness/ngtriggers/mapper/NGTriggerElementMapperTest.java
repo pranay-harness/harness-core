@@ -9,10 +9,13 @@ import static io.harness.rule.OwnerRule.ADWAIT;
 import static io.harness.rule.OwnerRule.NAMAN;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
+import io.harness.exception.InvalidRequestException;
 import io.harness.ngtriggers.beans.config.NGTriggerConfig;
+import io.harness.ngtriggers.beans.dto.NGTriggerResponseDTO;
 import io.harness.ngtriggers.beans.entity.NGTriggerEntity;
 import io.harness.ngtriggers.beans.entity.metadata.NGTriggerMetadata;
 import io.harness.ngtriggers.beans.source.webhook.WebhookTriggerConfig;
@@ -99,5 +102,32 @@ public class NGTriggerElementMapperTest extends CategoryTest {
     assertThat(metadata.getWebhook()).isNotNull();
     assertThat(metadata.getWebhook().getRepoURL()).isEqualTo("https://github.com/test/myrepo");
     assertThat(metadata.getWebhook().getType()).isEqualTo("Github");
+  }
+
+  @Test
+  @Owner(developers = NAMAN)
+  @Category(UnitTests.class)
+  public void testToTriggerEntityWithWrongIdentifier() {
+    assertThatThrownBy(
+        () -> NGTriggerElementMapper.toTriggerEntity("accId", "orgId", "projId", "not_first_trigger", ngTriggerYaml))
+        .isInstanceOf(InvalidRequestException.class);
+  }
+
+  @Test
+  @Owner(developers = NAMAN)
+  @Category(UnitTests.class)
+  public void testToResponseDTO() {
+    NGTriggerEntity ngTriggerEntity = NGTriggerElementMapper.toTriggerEntity("accId", "orgId", "projId", ngTriggerYaml);
+    NGTriggerResponseDTO responseDTO = NGTriggerElementMapper.toResponseDTO(ngTriggerEntity);
+    assertThat(responseDTO.getAccountIdentifier()).isEqualTo(ngTriggerEntity.getAccountId());
+    assertThat(responseDTO.getOrgIdentifier()).isEqualTo(ngTriggerEntity.getOrgIdentifier());
+    assertThat(responseDTO.getProjectIdentifier()).isEqualTo(ngTriggerEntity.getProjectIdentifier());
+    assertThat(responseDTO.getTargetIdentifier()).isEqualTo(ngTriggerEntity.getTargetIdentifier());
+    assertThat(responseDTO.getYaml()).isEqualTo(ngTriggerEntity.getYaml());
+    assertThat(responseDTO.getType()).isEqualTo(ngTriggerEntity.getType());
+    assertThat(responseDTO.getIdentifier()).isEqualTo(ngTriggerEntity.getIdentifier());
+    assertThat(responseDTO.getName()).isEqualTo(ngTriggerEntity.getName());
+    assertThat(responseDTO.getDescription()).isEqualTo(ngTriggerEntity.getDescription());
+    assertThat(responseDTO.getDescription()).isEqualTo(ngTriggerEntity.getDescription());
   }
 }
