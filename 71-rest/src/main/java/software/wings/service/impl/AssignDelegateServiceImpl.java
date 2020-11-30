@@ -3,6 +3,7 @@ package software.wings.service.impl;
 import static io.harness.data.structure.CollectionUtils.trimmedLowercaseSet;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.delegate.task.TaskFailureReason.EXPIRED;
 
 import static java.util.Collections.emptyList;
@@ -211,6 +212,16 @@ public class AssignDelegateServiceImpl implements AssignDelegateService {
       return false;
     }
 
+    // All logs with logSequence,so as the map string builder should probably be removed before GA or changed to debug
+    // level
+    StringBuilder taskSetupAbstractionsPrintable = new StringBuilder();
+    for (Map.Entry<String, String> entity : taskSetupAbstractions.entrySet()) {
+      taskSetupAbstractionsPrintable.append(entity.getKey() + ":" + entity.getValue() + "; ");
+    }
+    String logSequence = batch != null && isNotBlank(batch.getTaskId()) ? batch.getTaskId() : generateUuid();
+    log.info(logSequence + " - Starting profile scoping rules match with task abstractions {}.",
+        taskSetupAbstractionsPrintable.toString());
+
     for (DelegateProfileScopingRule scopingRule : delegateProfileScopingRules) {
       boolean scopingRuleMatched = true;
 
@@ -219,6 +230,9 @@ public class AssignDelegateServiceImpl implements AssignDelegateService {
 
         if (isBlank(taskSetupAbstractionValue)
             || (entity.getValue() != null && !entity.getValue().contains(taskSetupAbstractionValue))) {
+          log.info(
+              logSequence + " - Scoping rule with description: {}, did not match with task abstractions for key {}.",
+              scopingRule.getDescription(), entity.getKey());
           failedRuleDescription = scopingRule.getDescription();
           scopingRuleMatched = false;
           break;
