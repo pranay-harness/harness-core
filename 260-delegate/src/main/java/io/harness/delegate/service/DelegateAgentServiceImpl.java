@@ -105,6 +105,7 @@ import io.harness.delegate.task.Cd1ApplicationAccess;
 import io.harness.delegate.task.DelegateRunnableTask;
 import io.harness.delegate.task.TaskLogContext;
 import io.harness.delegate.task.TaskParameters;
+import io.harness.delegate.task.validation.DelegateConnectionResultDetail;
 import io.harness.exception.UnexpectedException;
 import io.harness.expression.ExpressionReflectionUtils;
 import io.harness.filesystem.FileIo;
@@ -1767,8 +1768,9 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
         boolean validated = results.stream().allMatch(DelegateConnectionResult::isValidated);
         log.info("Validation {} for task", validated ? "succeeded" : "failed");
         try {
-          DelegateTaskPackage delegateTaskPackage = execute(managerClient.reportConnectionResults(
-              delegateId, delegateTaskEvent.getDelegateTaskId(), accountId, results));
+          DelegateTaskPackage delegateTaskPackage =
+              execute(delegateAgentManagerClient.reportConnectionResults(delegateId,
+                  delegateTaskEvent.getDelegateTaskId(), accountId, getDelegateConnectionResultDetails(results)));
 
           if (delegateTaskPackage != null && delegateTaskPackage.getData() != null
               && delegateId.equals(delegateTaskPackage.getDelegateId())) {
@@ -1796,6 +1798,24 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
         }
       }
     };
+  }
+
+  private List<DelegateConnectionResultDetail> getDelegateConnectionResultDetails(
+      List<DelegateConnectionResult> results) {
+    List<DelegateConnectionResultDetail> delegateConnectionResultDetails = new ArrayList<>();
+    for (DelegateConnectionResult source : results) {
+      DelegateConnectionResultDetail target = DelegateConnectionResultDetail.builder().build();
+      target.setAccountId(source.getAccountId());
+      target.setCriteria(source.getCriteria());
+      target.setDelegateId(source.getDelegateId());
+      target.setDuration(source.getDuration());
+      target.setLastUpdatedAt(source.getLastUpdatedAt());
+      target.setUuid(source.getUuid());
+      target.setValidated(source.isValidated());
+      target.setValidUntil(source.getValidUntil());
+      delegateConnectionResultDetails.add(target);
+    }
+    return delegateConnectionResultDetails;
   }
 
   private void executeTask(@NotNull DelegateTaskPackage delegateTaskPackage) {

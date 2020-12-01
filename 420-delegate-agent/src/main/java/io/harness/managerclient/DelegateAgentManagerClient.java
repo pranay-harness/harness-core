@@ -13,6 +13,7 @@ import io.harness.delegate.beans.DelegateTaskPackage;
 import io.harness.delegate.beans.DelegateTaskResponse;
 import io.harness.delegate.beans.connector.ConnectorHeartbeatDelegateResponse;
 import io.harness.delegate.service.DelegateAgentFileService.FileBucket;
+import io.harness.delegate.task.validation.DelegateConnectionResultDetail;
 import io.harness.logging.AccessTokenBean;
 import io.harness.rest.RestResponse;
 import io.harness.serializer.kryo.KryoRequest;
@@ -136,4 +137,9 @@ public interface DelegateAgentManagerClient {
   @GET("service-templates/{templateId}/compute-files")
   Call<RestResponse<String>> getConfigFiles(@Path("templateId") String templateId, @Query("accountId") String accountId,
       @Query("appId") String appId, @Query("envId") String envId, @Query("hostId") String hostId);
+
+  @KryoResponse
+  @POST("agent/delegates/{delegateId}/tasks/{taskId}/report")
+  Call<DelegateTaskPackage> reportConnectionResults(@Path("delegateId") String delegateId, @Path("taskId") String uuid,
+      @Query("accountId") String accountId, @Body List<DelegateConnectionResultDetail> results);
 }

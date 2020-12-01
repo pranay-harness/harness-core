@@ -22,6 +22,7 @@ import io.harness.delegate.beans.DelegateTaskResponse;
 import io.harness.delegate.beans.connector.ConnectorHeartbeatDelegateResponse;
 import io.harness.delegate.task.DelegateLogContext;
 import io.harness.delegate.task.TaskLogContext;
+import io.harness.delegate.task.validation.DelegateConnectionResultDetail;
 import io.harness.exception.WingsException;
 import io.harness.logging.AccountLogContext;
 import io.harness.logging.AutoLogContext;
@@ -58,6 +59,7 @@ import com.google.protobuf.TextFormat;
 import com.google.protobuf.TextFormat.ParseException;
 import io.swagger.annotations.Api;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.Consumes;
@@ -72,6 +74,7 @@ import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Context;
 import lombok.extern.slf4j.Slf4j;
 import org.hibernate.validator.constraints.NotEmpty;
+import org.jetbrains.annotations.NotNull;
 
 @Api("/agent/delegates")
 @Path("/agent/delegates")
@@ -258,12 +261,31 @@ public class DelegateAgentResource {
   @ExceptionMetered
   public DelegateTaskPackage reportConnectionResults(@PathParam("delegateId") String delegateId,
       @PathParam("taskId") String taskId, @QueryParam("accountId") @NotEmpty String accountId,
-      List<DelegateConnectionResult> results) {
+      List<DelegateConnectionResultDetail> results) {
     try (AutoLogContext ignore1 = new TaskLogContext(taskId, OVERRIDE_ERROR);
          AutoLogContext ignore2 = new AccountLogContext(accountId, OVERRIDE_ERROR);
          AutoLogContext ignore3 = new DelegateLogContext(delegateId, OVERRIDE_ERROR)) {
-      return delegateService.reportConnectionResults(accountId, delegateId, taskId, results);
+      return delegateService.reportConnectionResults(
+          accountId, delegateId, taskId, getDelegateConnectionResults(results));
     }
+  }
+
+  @NotNull
+  private List<DelegateConnectionResult> getDelegateConnectionResults(List<DelegateConnectionResultDetail> results) {
+    List<DelegateConnectionResult> delegateConnectionResult = new ArrayList<>();
+    for (DelegateConnectionResultDetail source : results) {
+      DelegateConnectionResult target = DelegateConnectionResult.builder().build();
+      target.setAccountId(source.getAccountId());
+      target.setCriteria(source.getCriteria());
+      target.setDelegateId(source.getDelegateId());
+      target.setDuration(source.getDuration());
+      target.setLastUpdatedAt(source.getLastUpdatedAt());
+      target.setUuid(source.getUuid());
+      target.setValidated(source.isValidated());
+      target.setValidUntil(source.getValidUntil());
+      delegateConnectionResult.add(target);
+    }
+    return delegateConnectionResult;
   }
 
   @DelegateAuth
