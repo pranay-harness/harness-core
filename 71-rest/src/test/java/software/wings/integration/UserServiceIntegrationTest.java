@@ -79,47 +79,6 @@ public class UserServiceIntegrationTest extends IntegrationTestBase {
   }
 
   @Test
-  @Owner(developers = UTKARSH)
-  @Category(DeprecatedIntegrationTests.class)
-  @Ignore("skippingg the integration test")
-  public void testDisableEnableUser() {
-    User user = userService.getUserByEmail(defaultEmail);
-    String userId = user.getUuid();
-    String userAccountId = user.getDefaultAccountId();
-
-    // 1. Disable user
-    WebTarget target = client.target(API_BASE + "/users/disable/" + userId + "?accountId=" + userAccountId);
-    RestResponse<Boolean> restResponse = getRequestBuilderWithAuthHeader(target).put(
-        entity(defaultEmail, APPLICATION_JSON), new GenericType<RestResponse<Boolean>>() {});
-    assertThat(restResponse.getResponseMessages()).isEmpty();
-    assertThat(restResponse.getResource()).isTrue();
-
-    // 2. User should be disabled after disable operation above
-    user = userService.getUserByEmail(defaultEmail);
-    assertThat(user.isDisabled()).isTrue();
-
-    // 3. Once the user is disabled, its logintype call will fail with 401 unauthorized error.
-    target = client.target(API_BASE + "/users/logintype?userName=" + defaultEmail + "&accountId=" + userAccountId);
-    try {
-      getRequestBuilder(target).get(new GenericType<RestResponse<LoginTypeResponse>>() {});
-      fail("NotAuthorizedException is expected");
-    } catch (NotAuthorizedException e) {
-      // Expected 'HTTP 401 Unauthorized' exception here.
-    }
-
-    // 4. Re-enable user
-    target = client.target(API_BASE + "/users/enable/" + userId + "?accountId=" + userAccountId);
-    restResponse = getRequestBuilderWithAuthHeader(target).put(
-        entity(defaultEmail, APPLICATION_JSON), new GenericType<RestResponse<Boolean>>() {});
-    assertThat(restResponse.getResponseMessages()).isEmpty();
-    assertThat(restResponse.getResource()).isTrue();
-
-    // 5. User should not be disabled after enabled above
-    user = userService.getUserByEmail(defaultEmail);
-    assertThat(user.isDisabled()).isFalse();
-  }
-
-  @Test
   @Owner(developers = RAGHU)
   @Category(DeprecatedIntegrationTests.class)
   @Ignore("skippingg the integration test")
