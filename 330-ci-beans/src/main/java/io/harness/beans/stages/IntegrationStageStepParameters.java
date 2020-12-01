@@ -3,6 +3,7 @@ package io.harness.beans.stages;
 import io.harness.ci.beans.entities.BuildNumberDetails;
 import io.harness.ngpipeline.status.BuildStatusUpdateParameter;
 import io.harness.pms.sdk.core.steps.io.StepParameters;
+import io.harness.pms.serializer.json.JsonOrchestrationUtils;
 
 import java.util.Map;
 import lombok.Builder;
@@ -17,4 +18,9 @@ public class IntegrationStageStepParameters implements StepParameters {
   private BuildNumberDetails buildNumberDetails;
   private BuildStatusUpdateParameter buildStatusUpdateParameter;
   private Map<String, String> fieldToExecutionNodeIdMap;
+
+  @Override
+  public String toJson() {
+    return JsonOrchestrationUtils.asJsonWithIgnoredFields(this);
+  }
 }
