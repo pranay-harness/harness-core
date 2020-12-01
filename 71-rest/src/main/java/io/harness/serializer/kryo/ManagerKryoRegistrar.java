@@ -159,6 +159,7 @@ import software.wings.beans.Base;
 import software.wings.beans.BastionConnectionAttributes;
 import software.wings.beans.BugsnagConfig;
 import software.wings.beans.CanaryWorkflowExecutionAdvisor;
+import software.wings.beans.ConfigFile;
 import software.wings.beans.CountsByStatuses;
 import software.wings.beans.DatadogConfig;
 import software.wings.beans.DelegateTaskBroadcast;
@@ -1475,6 +1476,8 @@ public class ManagerKryoRegistrar implements KryoRegistrar {
     kryo.register(ManifestCollectionExecutionResponse.class, 71104);
     kryo.register(ManifestCollectionResponse.class, 71105);
     kryo.register(HelmChart.class, 71106);
+    kryo.register(ConfigFile.class, 71107);
+    kryo.register(ConfigFile.ConfigOverrideType.class, 71108);
     kryo.register(ArtifactStreamSummary.class, 7202);
     kryo.register(AwsCrossAccountAttributes.class, 7203);
     kryo.register(RepositoryFormat.class, 7204);
