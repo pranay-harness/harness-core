@@ -1080,9 +1080,8 @@ public class TriggerServiceImpl implements TriggerService {
     }
 
     resolveServices(trigger, triggerWorkflowVariableValues, pipelineVariables);
-    if (StringUtils.isNotBlank(envId)) {
-      resolveInfraDefinitions(trigger.getAppId(), triggerWorkflowVariableValues, envId, pipelineVariables);
-    }
+
+    resolveInfraDefinitions(trigger.getAppId(), triggerWorkflowVariableValues, envId, pipelineVariables);
 
     executionArgs.setWorkflowVariables(triggerWorkflowVariableValues);
 
