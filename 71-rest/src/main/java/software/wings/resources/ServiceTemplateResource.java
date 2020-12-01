@@ -10,6 +10,7 @@ import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.rest.RestResponse;
 import io.harness.security.annotations.DelegateAuth;
+import io.harness.serializer.KryoSerializer;
 
 import software.wings.beans.ConfigFile;
 import software.wings.beans.ServiceTemplate;
@@ -49,6 +50,7 @@ public class ServiceTemplateResource {
    * The Service template service.
    */
   @Inject ServiceTemplateService serviceTemplateService;
+  @Inject private KryoSerializer kryoSerializer;
 
   /**
    * List.
@@ -150,9 +152,11 @@ public class ServiceTemplateResource {
   @Path("{templateId}/compute-files")
   @Timed
   @ExceptionMetered
-  public RestResponse<List<ConfigFile>> computeFiles(@PathParam("templateId") String templateId,
+  public RestResponse<String> computeFiles(@PathParam("templateId") String templateId,
       @QueryParam("envId") @NotEmpty String envId, @QueryParam("appId") @NotEmpty String appId,
       @QueryParam("hostId") String hostId, @QueryParam("accountId") @NotEmpty String accountId) {
-    return new RestResponse<>(serviceTemplateService.computedConfigFiles(appId, envId, templateId));
+    List<ConfigFile> configFiles = serviceTemplateService.computedConfigFiles(appId, envId, templateId);
+
+    return new RestResponse<>(kryoSerializer.asString(configFiles));
   }
 }

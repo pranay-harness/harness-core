@@ -132,4 +132,8 @@ public interface DelegateAgentManagerClient {
   @POST("agent/delegates/heartbeat-with-polling")
   Call<RestResponse<DelegateHeartbeatResponse>> delegateHeartbeat(
       @Query("accountId") String accountId, @Body DelegateParams delegateParams);
+
+  @GET("service-templates/{templateId}/compute-files")
+  Call<RestResponse<String>> getConfigFiles(@Path("templateId") String templateId, @Query("accountId") String accountId,
+      @Query("appId") String appId, @Query("envId") String envId, @Query("hostId") String hostId);
 }
