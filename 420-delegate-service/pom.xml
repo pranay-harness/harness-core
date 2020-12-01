@@ -9,6 +9,10 @@
     <artifactId>420-delegate-service</artifactId>
     <dependencies>
         <dependency>
+            <groupId>com.smoketurner</groupId>
+            <artifactId>dropwizard-swagger</artifactId>
+        </dependency>
+        <dependency>
             <groupId>de.bwaldvogel</groupId>
             <artifactId>mongo-java-server-memory-backend</artifactId>
         </dependency>
@@ -18,7 +22,7 @@
         </dependency>
         <dependency>
             <groupId>software.wings</groupId>
-            <artifactId>970-grpc</artifactId>
+            <artifactId>870-orchestration</artifactId>
             <version>${project.parent.version}</version>
         </dependency>
         <dependency>
@@ -28,7 +32,12 @@
         </dependency>
         <dependency>
             <groupId>software.wings</groupId>
-            <artifactId>870-orchestration</artifactId>
+            <artifactId>950-common-entities</artifactId>
+            <version>${project.parent.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>software.wings</groupId>
+            <artifactId>970-grpc</artifactId>
             <version>${project.parent.version}</version>
         </dependency>
         <dependency>
