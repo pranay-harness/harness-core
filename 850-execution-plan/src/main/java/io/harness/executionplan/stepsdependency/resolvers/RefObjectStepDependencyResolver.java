@@ -4,7 +4,7 @@ import io.harness.executionplan.stepsdependency.KeyAware;
 import io.harness.executionplan.stepsdependency.StepDependencyResolver;
 import io.harness.executionplan.stepsdependency.StepDependencyResolverContext;
 import io.harness.executionplan.stepsdependency.StepDependencySpec;
-import io.harness.state.io.ResolvedRefInput;
+import io.harness.pms.sdk.core.steps.io.ResolvedRefInput;
 
 import java.util.List;
 import java.util.Map;

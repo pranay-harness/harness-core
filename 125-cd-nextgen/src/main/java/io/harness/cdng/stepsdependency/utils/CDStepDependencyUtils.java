@@ -13,9 +13,9 @@ import io.harness.executionplan.stepsdependency.StepDependencySpec;
 import io.harness.executionplan.stepsdependency.resolvers.StepDependencyResolverContextImpl;
 import io.harness.executionplan.utils.ParentPathInfoUtils;
 import io.harness.pms.ambiance.Ambiance;
+import io.harness.pms.sdk.core.steps.io.ResolvedRefInput;
+import io.harness.pms.sdk.core.steps.io.StepInputPackage;
 import io.harness.pms.sdk.core.steps.io.StepParameters;
-import io.harness.state.io.ResolvedRefInput;
-import io.harness.state.io.StepInputPackage;
 
 import com.google.common.annotations.VisibleForTesting;
 import java.util.HashMap;

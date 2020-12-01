@@ -31,13 +31,13 @@ import io.harness.pms.ambiance.Ambiance;
 import io.harness.pms.facilitators.FacilitatorObtainment;
 import io.harness.pms.facilitators.FacilitatorType;
 import io.harness.pms.sdk.core.steps.io.EmptyStepParameters;
+import io.harness.pms.sdk.core.steps.io.StepInputPackage;
 import io.harness.pms.sdk.core.steps.io.StepResponse;
 import io.harness.pms.steps.StepType;
 import io.harness.registries.adviser.AdviserRegistry;
 import io.harness.registries.state.StepRegistry;
 import io.harness.rule.Owner;
 import io.harness.serializer.KryoSerializer;
-import io.harness.state.io.StepInputPackage;
 import io.harness.utils.steps.TestAsyncStep;
 import io.harness.utils.steps.TestStepParameters;
 

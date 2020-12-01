@@ -10,9 +10,9 @@ import io.harness.executionplan.stepsdependency.StepDependencyResolverContext;
 import io.harness.executionplan.stepsdependency.StepDependencySpec;
 import io.harness.pms.sdk.core.data.Outcome;
 import io.harness.pms.sdk.core.data.StepTransput;
+import io.harness.pms.sdk.core.steps.io.ResolvedRefInput;
 import io.harness.refObjects.RefObjectUtil;
 import io.harness.rule.Owner;
-import io.harness.state.io.ResolvedRefInput;
 
 import java.util.Arrays;
 import java.util.Collections;

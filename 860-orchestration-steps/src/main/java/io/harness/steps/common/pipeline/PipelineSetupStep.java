@@ -5,9 +5,9 @@ import static io.harness.steps.StepUtils.createStepResponseFromChildResponse;
 import io.harness.facilitator.modes.child.ChildExecutable;
 import io.harness.facilitator.modes.child.ChildExecutableResponse;
 import io.harness.pms.ambiance.Ambiance;
+import io.harness.pms.sdk.core.steps.io.StepInputPackage;
 import io.harness.pms.sdk.core.steps.io.StepResponse;
 import io.harness.pms.steps.StepType;
-import io.harness.state.io.StepInputPackage;
 import io.harness.steps.OrchestrationStepTypes;
 import io.harness.tasks.ResponseData;
 
