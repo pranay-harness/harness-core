@@ -66,6 +66,12 @@
         </dependency>
         <dependency>
             <groupId>software.wings</groupId>
+            <artifactId>980-commons</artifactId>
+            <version>${project.parent.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>software.wings</groupId>
             <artifactId>ciscm-proto</artifactId>
             <version>${project.parent.version}</version>
         </dependency>
