@@ -171,7 +171,7 @@ public class DelegateApplication {
       modules.add(new PingPongModule());
       modules.add(new PerpetualTaskWorkerModule());
     }
-    modules.add(new KubernetesClientFactoryModule());
+    modules.add(KubernetesClientFactoryModule.getInstance());
     modules.add(KubernetesApiClientFactoryModule.getInstance());
     modules.add(new CITaskFactoryModule());
     modules.add(new AppenderModule(Config.builder()
