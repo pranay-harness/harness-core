@@ -4,7 +4,7 @@ import static io.harness.annotations.dev.HarnessTeam.CDC;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.ExecutionStatus;
-import io.harness.data.SweepingOutput;
+import io.harness.pms.sdk.core.data.SweepingOutput;
 
 import software.wings.beans.ElementExecutionSummary;
 import software.wings.sm.ContextElement;

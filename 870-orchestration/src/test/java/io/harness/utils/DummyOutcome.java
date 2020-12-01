@@ -1,6 +1,6 @@
 package io.harness.utils;
 
-import io.harness.data.Outcome;
+import io.harness.pms.sdk.core.data.Outcome;
 
 import lombok.Builder;
 import lombok.Value;

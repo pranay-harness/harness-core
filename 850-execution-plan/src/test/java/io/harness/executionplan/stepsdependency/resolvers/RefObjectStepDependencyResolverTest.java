@@ -6,13 +6,13 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
-import io.harness.data.Outcome;
 import io.harness.executionplan.stepsdependency.StepDependencyResolverContext;
 import io.harness.executionplan.stepsdependency.StepDependencySpec;
+import io.harness.pms.sdk.core.data.Outcome;
+import io.harness.pms.sdk.core.data.StepTransput;
 import io.harness.refObjects.RefObjectUtil;
 import io.harness.rule.Owner;
 import io.harness.state.io.ResolvedRefInput;
-import io.harness.state.io.StepTransput;
 
 import java.util.Arrays;
 import java.util.Collections;

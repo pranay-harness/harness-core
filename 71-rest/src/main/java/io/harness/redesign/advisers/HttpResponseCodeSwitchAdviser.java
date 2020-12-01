@@ -9,10 +9,10 @@ import io.harness.adviser.AdvisingEvent;
 import io.harness.adviser.advise.NextStepAdvise;
 import io.harness.annotations.Redesign;
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.data.Outcome;
 import io.harness.engine.outcomes.OutcomeService;
 import io.harness.exception.InvalidRequestException;
 import io.harness.pms.advisers.AdviserType;
+import io.harness.pms.sdk.core.data.Outcome;
 import io.harness.serializer.KryoSerializer;
 import io.harness.state.io.StepOutcomeRef;
 

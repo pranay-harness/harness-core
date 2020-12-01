@@ -3,7 +3,7 @@ package software.wings.api;
 import static io.harness.context.ContextElementType.CONTAINER_SERVICE;
 
 import io.harness.context.ContextElementType;
-import io.harness.data.SweepingOutput;
+import io.harness.pms.sdk.core.data.SweepingOutput;
 
 import software.wings.api.ecs.EcsBGSetupData;
 import software.wings.beans.ResizeStrategy;

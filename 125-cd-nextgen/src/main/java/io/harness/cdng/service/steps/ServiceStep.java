@@ -18,9 +18,7 @@ import io.harness.cdng.service.beans.ServiceOutcome;
 import io.harness.cdng.service.beans.ServiceOutcome.ArtifactsOutcome.ArtifactsOutcomeBuilder;
 import io.harness.cdng.service.beans.ServiceOutcome.ServiceOutcomeBuilder;
 import io.harness.cdng.stepsdependency.constants.OutcomeExpressionConstants;
-import io.harness.data.Outcome;
 import io.harness.delegate.beans.DelegateResponseData;
-import io.harness.engine.outcomes.OutcomeService;
 import io.harness.executions.steps.ExecutionNodeType;
 import io.harness.facilitator.PassThroughData;
 import io.harness.facilitator.modes.chain.task.TaskChainExecutable;
@@ -30,6 +28,7 @@ import io.harness.ng.core.service.services.ServiceEntityService;
 import io.harness.ngpipeline.common.AmbianceHelper;
 import io.harness.pms.ambiance.Ambiance;
 import io.harness.pms.execution.Status;
+import io.harness.pms.sdk.core.data.Outcome;
 import io.harness.pms.steps.StepType;
 import io.harness.state.io.StepInputPackage;
 import io.harness.state.io.StepResponse;
@@ -53,7 +52,6 @@ import lombok.extern.slf4j.Slf4j;
 public class ServiceStep implements TaskChainExecutable<ServiceStepParameters> {
   public static final StepType STEP_TYPE = StepType.newBuilder().setType(ExecutionNodeType.SERVICE.getName()).build();
 
-  @Inject private OutcomeService outcomeService;
   @Inject private ServiceEntityService serviceEntityService;
   @Inject private ArtifactStep artifactStep;
   @Inject private ManifestStep manifestStep;

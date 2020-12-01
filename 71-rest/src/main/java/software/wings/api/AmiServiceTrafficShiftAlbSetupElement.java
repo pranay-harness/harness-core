@@ -1,8 +1,8 @@
 package software.wings.api;
 
 import io.harness.context.ContextElementType;
-import io.harness.data.SweepingOutput;
 import io.harness.delegate.task.aws.LbDetailsForAlbTrafficShift;
+import io.harness.pms.sdk.core.data.SweepingOutput;
 
 import software.wings.service.impl.aws.model.AwsAmiPreDeploymentData;
 import software.wings.sm.ContextElement;

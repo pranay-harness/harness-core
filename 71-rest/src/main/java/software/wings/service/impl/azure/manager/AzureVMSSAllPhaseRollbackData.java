@@ -1,6 +1,6 @@
 package software.wings.service.impl.azure.manager;
 
-import io.harness.data.SweepingOutput;
+import io.harness.pms.sdk.core.data.SweepingOutput;
 
 import lombok.Builder;
 import lombok.Value;

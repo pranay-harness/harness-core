@@ -38,7 +38,6 @@ import io.harness.beans.SweepingOutputInstance.Scope;
 import io.harness.beans.SweepingOutputInstance.SweepingOutputInstanceBuilder;
 import io.harness.beans.WorkflowType;
 import io.harness.context.ContextElementType;
-import io.harness.data.SweepingOutput;
 import io.harness.data.structure.CollectionUtils;
 import io.harness.deployment.InstanceDetails;
 import io.harness.exception.InvalidRequestException;
@@ -48,6 +47,7 @@ import io.harness.expression.SecretString;
 import io.harness.expression.VariableResolverTracker;
 import io.harness.logging.AccountLogContext;
 import io.harness.logging.AutoLogContext;
+import io.harness.pms.sdk.core.data.SweepingOutput;
 import io.harness.serializer.KryoSerializer;
 
 import software.wings.api.DeploymentType;

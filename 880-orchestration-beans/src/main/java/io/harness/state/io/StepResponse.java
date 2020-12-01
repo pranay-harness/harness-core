@@ -5,9 +5,9 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 
 import io.harness.annotations.Redesign;
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.data.Outcome;
 import io.harness.pms.execution.Status;
 import io.harness.pms.execution.failure.FailureInfo;
+import io.harness.pms.sdk.core.data.Outcome;
 
 import java.util.Collection;
 import java.util.HashMap;
@@ -16,6 +16,7 @@ import lombok.Builder;
 import lombok.NonNull;
 import lombok.Singular;
 import lombok.Value;
+import org.codehaus.jackson.JsonNode;
 
 @OwnedBy(CDC)
 @Value

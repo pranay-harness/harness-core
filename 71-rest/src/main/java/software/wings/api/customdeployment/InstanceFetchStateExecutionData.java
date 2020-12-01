@@ -1,6 +1,6 @@
 package software.wings.api.customdeployment;
 
-import io.harness.data.Outcome;
+import io.harness.pms.sdk.core.data.Outcome;
 
 import software.wings.api.ExecutionDataValue;
 import software.wings.api.InstanceFetchStateExecutionSummary;

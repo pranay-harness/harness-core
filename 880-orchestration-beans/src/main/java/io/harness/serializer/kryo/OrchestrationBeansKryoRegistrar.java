@@ -4,7 +4,6 @@ import static io.harness.annotations.dev.HarnessTeam.CDC;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.data.OutcomeInstance;
-import io.harness.data.SweepingOutput;
 import io.harness.execution.NodeExecution;
 import io.harness.facilitator.DefaultFacilitatorParams;
 import io.harness.facilitator.modes.async.AsyncExecutableResponse;
@@ -17,6 +16,7 @@ import io.harness.interrupts.ExecutionInterruptType;
 import io.harness.interrupts.InterruptEffect;
 import io.harness.interrupts.RepairActionCode;
 import io.harness.plan.PlanNode;
+import io.harness.pms.sdk.core.data.SweepingOutput;
 import io.harness.serializer.KryoRegistrar;
 import io.harness.state.io.StatusNotifyResponseData;
 import io.harness.state.io.StepOutcomeRef;
@@ -62,6 +62,5 @@ public class OrchestrationBeansKryoRegistrar implements KryoRegistrar {
     // Add moved/old classes here
     // Keeping the same id for moved classes
     kryo.register(ExecutionInterruptType.class, 4000);
-    kryo.register(SweepingOutput.class, 3101);
   }
 }

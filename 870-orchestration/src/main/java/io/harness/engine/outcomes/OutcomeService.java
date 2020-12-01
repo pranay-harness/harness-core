@@ -3,7 +3,7 @@ package io.harness.engine.outcomes;
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.data.Outcome;
+import io.harness.pms.sdk.core.data.Outcome;
 import io.harness.resolvers.Resolver;
 
 import java.util.List;

@@ -1,6 +1,6 @@
 package software.wings.api.pcf;
 
-import io.harness.data.SweepingOutput;
+import io.harness.pms.sdk.core.data.SweepingOutput;
 
 import software.wings.helpers.ext.pcf.request.PcfRouteUpdateRequestConfigData;
 

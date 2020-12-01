@@ -1,9 +1,9 @@
 package io.harness.cdng.infra.beans;
 
 import io.harness.cdng.infra.yaml.K8SDirectInfrastructure;
-import io.harness.data.Outcome;
 import io.harness.persistence.PersistentEntity;
 import io.harness.persistence.UuidAware;
+import io.harness.pms.sdk.core.data.Outcome;
 
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;

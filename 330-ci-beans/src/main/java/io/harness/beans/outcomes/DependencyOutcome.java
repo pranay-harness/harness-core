@@ -1,7 +1,7 @@
 package io.harness.beans.outcomes;
 
 import io.harness.beans.dependencies.ServiceDependency;
-import io.harness.data.Outcome;
+import io.harness.pms.sdk.core.data.Outcome;
 
 import java.util.List;
 import lombok.Builder;

@@ -17,7 +17,6 @@ import io.harness.resolvers.Resolver;
 import io.harness.state.io.ResolvedRefInput;
 import io.harness.state.io.StepInputPackage;
 import io.harness.state.io.StepInputPackage.StepInputPackageBuilder;
-import io.harness.state.io.StepTransput;
 
 import com.google.inject.Inject;
 import java.util.List;

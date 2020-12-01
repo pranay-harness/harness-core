@@ -3,7 +3,7 @@ package io.harness.serializer.spring.converters.sweepingoutput;
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.data.SweepingOutput;
+import io.harness.pms.sdk.core.data.SweepingOutput;
 import io.harness.serializer.KryoSerializer;
 
 import com.google.inject.Inject;

@@ -12,13 +12,13 @@ import io.harness.annotations.Redesign;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.data.ExecutionSweepingOutputInstance;
 import io.harness.data.ExecutionSweepingOutputInstance.ExecutionSweepingOutputKeys;
-import io.harness.data.SweepingOutput;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.engine.expressions.ExpressionEvaluatorProvider;
 import io.harness.engine.expressions.functors.NodeExecutionEntityType;
 import io.harness.expression.EngineExpressionEvaluator;
 import io.harness.pms.ambiance.Ambiance;
 import io.harness.pms.refobjects.RefObject;
+import io.harness.pms.sdk.core.data.SweepingOutput;
 import io.harness.resolvers.ResolverUtils;
 
 import com.google.inject.Inject;

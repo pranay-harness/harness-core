@@ -2,6 +2,8 @@ package io.harness.state.io;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 
+import io.harness.pms.sdk.core.data.StepTransput;
+
 import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
