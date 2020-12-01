@@ -35,7 +35,7 @@ public class KubernetesClientFactoryModuleTest extends CategoryTest {
   @Category(UnitTests.class)
   public void testKubernetesClientFactoryModule() {
     List<Module> modules = new ArrayList<>();
-    modules.add(new KubernetesClientFactoryModule());
+    modules.add(KubernetesClientFactoryModule.getInstance());
     modules.add(new ProviderModule() {
       @Provides
       @Singleton
