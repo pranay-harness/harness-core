@@ -101,6 +101,7 @@ import software.wings.beans.AwsInstanceFilter.AwsInstanceFilterKeys;
 import software.wings.beans.AzureConfig;
 import software.wings.beans.Environment;
 import software.wings.beans.Event.Type;
+import software.wings.beans.GcpConfig;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.InfrastructureMapping.InfrastructureMappingKeys;
 import software.wings.beans.InfrastructureProvisioner;
@@ -554,6 +555,14 @@ public class InfrastructureDefinitionServiceImpl implements InfrastructureDefini
       validateInfraVariables(customDeploymentTypeDTO.getInfraVariables(), infra.getInfraVariables());
       infra.setInfraVariables(
           filterNonOverridenVariables(customDeploymentTypeDTO.getInfraVariables(), infra.getInfraVariables()));
+    }
+    if (infraDefinition.getCloudProviderType() == CloudProviderType.GCP) {
+      SettingAttribute cloudProvider = settingsService.getByAccountAndId(
+          infraDefinition.getAccountId(), infraDefinition.getInfrastructure().getCloudProviderId());
+      if (((GcpConfig) cloudProvider.getValue()).isUseDelegate()) {
+        throw new InvalidRequestException(
+            "Infrastructure Definition Using a GCP Cloud Provider Inheriting from Delegate is not yet supported", USER);
+      }
     }
     if (isNotEmpty(infraDefinition.getProvisionerId())) {
       ProvisionerAware provisionerAwareInfra = (ProvisionerAware) infraDefinition.getInfrastructure();

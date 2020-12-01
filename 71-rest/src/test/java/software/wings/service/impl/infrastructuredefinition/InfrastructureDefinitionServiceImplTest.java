@@ -22,6 +22,7 @@ import static software.wings.beans.InfrastructureType.AWS_ECS;
 import static software.wings.beans.InfrastructureType.GCP_KUBERNETES_ENGINE;
 import static software.wings.beans.InfrastructureType.PHYSICAL_INFRA;
 import static software.wings.beans.InfrastructureType.PHYSICAL_INFRA_WINRM;
+import static software.wings.beans.PhysicalDataCenterConfig.Builder.aPhysicalDataCenterConfig;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 import static software.wings.beans.Variable.VariableBuilder.aVariable;
 import static software.wings.common.InfrastructureConstants.INFRA_KUBERNETES_INFRAID_EXPRESSION;
@@ -31,6 +32,7 @@ import static software.wings.infra.InfraDefinitionTestConstants.INFRA_PROVISIONE
 import static software.wings.infra.InfraDefinitionTestConstants.REGION;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 import static software.wings.utils.WingsTestConstants.APP_ID;
+import static software.wings.utils.WingsTestConstants.COMPUTE_PROVIDER_ID;
 import static software.wings.utils.WingsTestConstants.ENV_ID;
 import static software.wings.utils.WingsTestConstants.HOST_NAME;
 import static software.wings.utils.WingsTestConstants.INFRA_MAPPING_ID;
@@ -74,6 +76,7 @@ import software.wings.api.DeploymentType;
 import software.wings.beans.AwsConfig;
 import software.wings.beans.AwsInstanceFilter.AwsInstanceFilterKeys;
 import software.wings.beans.Event;
+import software.wings.beans.GcpConfig;
 import software.wings.beans.NameValuePair;
 import software.wings.beans.Service;
 import software.wings.beans.SettingAttribute;
@@ -749,6 +752,14 @@ public class InfrastructureDefinitionServiceImplTest extends WingsBaseTest {
           .isThrownBy(() -> infrastructureDefinitionService.validateAndPrepareInfraDefinition(invalid_gcp_k8s_prov));
       ((GoogleKubernetesEngine) invalid_gcp_k8s_prov.getInfrastructure()).getExpressions().put(key, "default");
     }
+    when(mockSettingsService.getByAccountAndId(anyString(), anyString()))
+        .thenReturn(SettingAttribute.Builder.aSettingAttribute()
+                        .withValue(GcpConfig.builder().useDelegate(true).delegateSelector("abc").build())
+                        .build());
+    InfrastructureDefinition invalid_gcp_k8s_delegate_selector = valid.cloneForUpdate();
+    assertThatExceptionOfType(InvalidRequestException.class)
+        .isThrownBy(
+            () -> infrastructureDefinitionService.validateAndPrepareInfraDefinition(invalid_gcp_k8s_delegate_selector));
 
     valid = getValidInfra(AWS_ECS, true);
     infrastructureDefinitionService.validateAndPrepareInfraDefinition(valid);
@@ -768,6 +779,8 @@ public class InfrastructureDefinitionServiceImplTest extends WingsBaseTest {
   }
 
   private InfrastructureDefinition getValidInfra(@NotNull String type, boolean withProvisioner) {
+    SettingAttribute settingAttribute = SettingAttribute.Builder.aSettingAttribute().withAccountId(ACCOUNT_ID).build();
+    when(mockSettingsService.getByAccountAndId(anyString(), anyString())).thenReturn(settingAttribute);
     InfrastructureDefinitionBuilder builder = InfrastructureDefinition.builder()
                                                   .name(INFRA_DEFINITION_NAME)
                                                   .uuid(INFRA_DEFINITION_ID)
@@ -778,6 +791,7 @@ public class InfrastructureDefinitionServiceImplTest extends WingsBaseTest {
     HashMap<String, String> expMap = Maps.<String, String>newHashMap();
     switch (type) {
       case PHYSICAL_INFRA:
+        settingAttribute.setValue(aPhysicalDataCenterConfig().build());
         PhysicalInfra infra = null;
         if (withProvisioner) {
           expMap.put(PhysicalInfra.hostArrayPath, "host");
@@ -800,6 +814,7 @@ public class InfrastructureDefinitionServiceImplTest extends WingsBaseTest {
             .infrastructure(infra)
             .build();
       case PHYSICAL_INFRA_WINRM:
+        settingAttribute.setValue(aPhysicalDataCenterConfig().build());
         if (withProvisioner) {
           return null;
         } else {
@@ -813,18 +828,21 @@ public class InfrastructureDefinitionServiceImplTest extends WingsBaseTest {
               .build();
         }
       case GCP_KUBERNETES_ENGINE:
+        settingAttribute.setValue(GcpConfig.builder().build());
         if (withProvisioner) {
           expMap.put("clusterName", "${terraform.cluster}");
           expMap.put("namespace", "${terraform.namespace}");
           return builder.provisionerId(INFRA_PROVISIONER_ID)
               .deploymentType(DeploymentType.KUBERNETES)
               .cloudProviderType(CloudProviderType.GCP)
-              .infrastructure(GoogleKubernetesEngine.builder().expressions(expMap).build())
+              .infrastructure(
+                  GoogleKubernetesEngine.builder().expressions(expMap).cloudProviderId(COMPUTE_PROVIDER_ID).build())
               .build();
         } else {
           return null;
         }
       case AWS_ECS:
+        settingAttribute.setValue(AwsConfig.builder().build());
         if (withProvisioner) {
           expMap.put(AwsEcsInfrastructureKeys.region, "region");
           expMap.put(AwsEcsInfrastructureKeys.clusterName, "cluster");
@@ -835,8 +853,11 @@ public class InfrastructureDefinitionServiceImplTest extends WingsBaseTest {
           return builder.provisionerId(INFRA_PROVISIONER_ID)
               .deploymentType(DeploymentType.ECS)
               .cloudProviderType(CloudProviderType.AWS)
-              .infrastructure(
-                  AwsEcsInfrastructure.builder().launchType(LaunchType.FARGATE.name()).expressions(expMap).build())
+              .infrastructure(AwsEcsInfrastructure.builder()
+                                  .launchType(LaunchType.FARGATE.name())
+                                  .expressions(expMap)
+                                  .cloudProviderId(COMPUTE_PROVIDER_ID)
+                                  .build())
               .build();
         } else {
           return builder.deploymentType(DeploymentType.ECS)
@@ -845,6 +866,7 @@ public class InfrastructureDefinitionServiceImplTest extends WingsBaseTest {
                                   .launchType(LaunchType.FARGATE.name())
                                   .region("us-east-1")
                                   .clusterName("test")
+                                  .cloudProviderId(COMPUTE_PROVIDER_ID)
                                   .build())
               .build();
         }
