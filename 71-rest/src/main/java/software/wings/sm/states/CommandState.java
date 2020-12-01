@@ -590,6 +590,7 @@ public class CommandState extends State {
         SshCommandTemplate sshCommandTemplate = (SshCommandTemplate) template.getTemplateObject();
         resolveTemplateVariablesInLinkedCommands(
             command, sshCommandTemplate.getReferencedTemplateList(), getTemplateVariables());
+        renderCommandString(command, context, executionDataBuilder.build());
       }
     } else {
       if (instanceElement != null) {
@@ -627,6 +628,7 @@ public class CommandState extends State {
             WingsException.USER);
       }
       command = serviceCommand.getCommand();
+      command.setTemplateId(serviceCommand.getTemplateUuid());
     }
     return command;
   }
