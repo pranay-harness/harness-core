@@ -12,6 +12,8 @@ import io.harness.remote.NotificationHTTPClient;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import java.util.List;
+import java.util.stream.Collectors;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.Setter;
@@ -32,6 +34,11 @@ public class NotificationClientImpl implements NotificationClient {
 
     this.messageClient.send(notificationRequest, notificationChannel.getAccountId());
     return NotificationResultWithoutStatus.builder().notificationId(notificationRequest.getId()).build();
+  }
+
+  @Override
+  public List<NotificationResult> sendBulkNotificationAsync(List<NotificationChannel> notificationChannels) {
+    return notificationChannels.stream().map(this::sendNotificationAsync).collect(Collectors.toList());
   }
 
   @Override
