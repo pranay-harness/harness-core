@@ -7,8 +7,8 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.pms.ambiance.Ambiance;
 import io.harness.pms.sdk.core.steps.Step;
 import io.harness.pms.sdk.core.steps.io.StepParameters;
+import io.harness.pms.sdk.core.steps.io.StepResponse;
 import io.harness.state.io.StepInputPackage;
-import io.harness.state.io.StepResponse;
 import io.harness.tasks.ResponseData;
 import io.harness.tasks.Task;
 

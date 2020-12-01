@@ -17,8 +17,8 @@ import io.harness.cdng.service.beans.ServiceConfig;
 import io.harness.cdng.service.beans.ServiceDefinition;
 import io.harness.cdng.service.beans.ServiceOutcome;
 import io.harness.delegate.beans.storeconfig.FetchType;
+import io.harness.pms.sdk.core.steps.io.StepResponse.StepOutcome;
 import io.harness.rule.Owner;
-import io.harness.state.io.StepResponse.StepOutcome;
 
 import java.util.Arrays;
 import java.util.Collections;

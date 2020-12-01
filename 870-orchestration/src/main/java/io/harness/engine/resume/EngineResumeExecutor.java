@@ -12,7 +12,7 @@ import io.harness.engine.executables.ResumePackage;
 import io.harness.execution.NodeExecution;
 import io.harness.pms.execution.Status;
 import io.harness.pms.execution.failure.FailureInfo;
-import io.harness.state.io.StepResponse;
+import io.harness.pms.sdk.core.steps.io.StepResponse;
 import io.harness.tasks.ResponseData;
 
 import java.util.Map;

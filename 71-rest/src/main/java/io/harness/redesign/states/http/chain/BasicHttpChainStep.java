@@ -17,10 +17,10 @@ import io.harness.facilitator.modes.chain.task.TaskChainExecutable;
 import io.harness.facilitator.modes.chain.task.TaskChainResponse;
 import io.harness.pms.ambiance.Ambiance;
 import io.harness.pms.execution.Status;
+import io.harness.pms.sdk.core.steps.io.StepResponse;
 import io.harness.pms.steps.StepType;
 import io.harness.redesign.states.http.BasicHttpStepParameters;
 import io.harness.state.io.StepInputPackage;
-import io.harness.state.io.StepResponse;
 import io.harness.tasks.Cd1SetupFields;
 import io.harness.tasks.ResponseData;
 

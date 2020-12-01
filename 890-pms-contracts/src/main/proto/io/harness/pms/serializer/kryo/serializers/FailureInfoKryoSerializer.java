@@ -1,6 +1,5 @@
 package io.harness.pms.serializer.kryo.serializers;
 
-import io.harness.pms.ambiance.Ambiance;
 import io.harness.pms.execution.failure.FailureInfo;
 import io.harness.serializer.kryo.ProtobufKryoSerializer;
 

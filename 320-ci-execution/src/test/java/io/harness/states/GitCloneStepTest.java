@@ -8,8 +8,8 @@ import io.harness.beans.steps.stepinfo.GitCloneStepInfo;
 import io.harness.category.element.UnitTests;
 import io.harness.executionplan.CIExecutionTest;
 import io.harness.pms.execution.Status;
+import io.harness.pms.sdk.core.steps.io.StepResponse;
 import io.harness.rule.Owner;
-import io.harness.state.io.StepResponse;
 
 import com.google.inject.Inject;
 import org.junit.Test;

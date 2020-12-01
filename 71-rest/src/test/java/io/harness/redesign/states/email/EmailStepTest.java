@@ -9,9 +9,9 @@ import static org.mockito.Mockito.when;
 import io.harness.category.element.UnitTests;
 import io.harness.pms.ambiance.Ambiance;
 import io.harness.pms.execution.Status;
+import io.harness.pms.sdk.core.steps.io.StepResponse;
 import io.harness.rule.Owner;
 import io.harness.state.io.StepInputPackage;
-import io.harness.state.io.StepResponse;
 
 import software.wings.WingsBaseTest;
 import software.wings.service.intfc.EmailNotificationService;

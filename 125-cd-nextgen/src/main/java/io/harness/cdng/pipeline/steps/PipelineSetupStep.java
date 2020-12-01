@@ -10,9 +10,9 @@ import io.harness.facilitator.modes.child.ChildExecutableResponse;
 import io.harness.facilitator.modes.sync.SyncExecutable;
 import io.harness.pms.ambiance.Ambiance;
 import io.harness.pms.execution.Status;
+import io.harness.pms.sdk.core.steps.io.StepResponse;
 import io.harness.pms.steps.StepType;
 import io.harness.state.io.StepInputPackage;
-import io.harness.state.io.StepResponse;
 import io.harness.tasks.ResponseData;
 
 import java.util.Map;

@@ -15,8 +15,8 @@ import io.harness.cdng.manifest.yaml.StoreConfigWrapper;
 import io.harness.cdng.manifest.yaml.kinds.K8sManifest;
 import io.harness.cdng.manifest.yaml.kinds.ValuesManifest;
 import io.harness.delegate.beans.storeconfig.FetchType;
+import io.harness.pms.sdk.core.steps.io.StepResponse;
 import io.harness.rule.Owner;
-import io.harness.state.io.StepResponse;
 
 import java.util.Arrays;
 import java.util.Collections;
