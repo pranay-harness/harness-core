@@ -1,7 +1,7 @@
 package io.harness.cdng.infra.steps;
 
 import io.harness.cdng.pipeline.PipelineInfrastructure;
-import io.harness.state.io.StepParameters;
+import io.harness.pms.sdk.core.steps.io.StepParameters;
 
 import lombok.Builder;
 import lombok.Value;

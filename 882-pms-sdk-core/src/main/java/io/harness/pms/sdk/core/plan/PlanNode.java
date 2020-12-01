@@ -3,6 +3,7 @@ package io.harness.pms.sdk.core.plan;
 import io.harness.pms.advisers.AdviserObtainment;
 import io.harness.pms.facilitators.FacilitatorObtainment;
 import io.harness.pms.refobjects.RefObject;
+import io.harness.pms.sdk.core.steps.io.StepParameters;
 import io.harness.pms.steps.SkipType;
 import io.harness.pms.steps.StepType;
 

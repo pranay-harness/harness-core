@@ -20,7 +20,7 @@ import io.harness.ngpipeline.status.BuildStatusUpdateParameter;
 import io.harness.plancreators.IntegrationStagePlanCreator;
 import io.harness.pms.ambiance.Ambiance;
 import io.harness.pms.execution.Status;
-import io.harness.serializer.json.JsonOrchestrationUtils;
+import io.harness.pms.serializer.json.JsonOrchestrationUtils;
 import io.harness.service.DelegateGrpcClientWrapper;
 import io.harness.stateutils.buildstate.ConnectorUtils;
 

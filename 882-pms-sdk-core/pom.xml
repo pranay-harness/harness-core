@@ -30,6 +30,11 @@
         </dependency>
         <dependency>
             <groupId>software.wings</groupId>
+            <artifactId>884-pms-commons</artifactId>
+            <version>${project.parent.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>software.wings</groupId>
             <artifactId>890-pms-contracts-proto</artifactId>
             <version>${project.parent.version}</version>
         </dependency>

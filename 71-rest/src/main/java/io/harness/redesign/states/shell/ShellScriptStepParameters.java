@@ -6,7 +6,7 @@ import io.harness.annotations.Redesign;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.delegate.task.shell.ScriptType;
-import io.harness.state.io.StepParameters;
+import io.harness.pms.sdk.core.steps.io.StepParameters;
 import io.harness.timeout.TimeoutObtainment;
 import io.harness.timeout.trackers.absolute.AbsoluteTimeoutParameters;
 import io.harness.timeout.trackers.absolute.AbsoluteTimeoutTrackerFactory;
@@ -59,7 +59,8 @@ public class ShellScriptStepParameters implements StepParameters {
   @Attributes(title = "Publish Variable Name") String sweepingOutputName;
   @Attributes(title = "Publish Variable Scope") String sweepingOutputScope;
 
-  @Override
+  // TODO(gpahal): update later
+  // @Override
   public List<TimeoutObtainment> fetchTimeouts() {
     long timeoutMillis = 3600000;
     if (EmptyPredicate.isNotEmpty(timeoutSecs)) {

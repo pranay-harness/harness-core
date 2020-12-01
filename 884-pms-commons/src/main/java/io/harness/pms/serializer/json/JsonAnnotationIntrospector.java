@@ -1,6 +1,5 @@
-package io.harness.serializer.json;
+package io.harness.pms.serializer.json;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.databind.introspect.Annotated;
 import com.fasterxml.jackson.databind.introspect.JacksonAnnotationIntrospector;
 import java.beans.Transient;

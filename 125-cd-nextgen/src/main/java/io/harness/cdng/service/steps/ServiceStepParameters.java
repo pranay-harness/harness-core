@@ -1,7 +1,7 @@
 package io.harness.cdng.service.steps;
 
 import io.harness.cdng.service.beans.ServiceConfig;
-import io.harness.state.io.StepParameters;
+import io.harness.pms.sdk.core.steps.io.StepParameters;
 
 import java.util.List;
 import lombok.Builder;

@@ -8,7 +8,7 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.logging.AutoLogContext;
 import io.harness.persistence.PersistentEntity;
 import io.harness.persistence.UuidAccess;
-import io.harness.state.io.StepParameters;
+import io.harness.pms.sdk.core.steps.io.StepParameters;
 
 import java.util.HashMap;
 import java.util.Map;

@@ -1,6 +1,6 @@
 package io.harness.cdng.pipeline.beans;
 
-import io.harness.state.io.StepParameters;
+import io.harness.pms.sdk.core.steps.io.StepParameters;
 
 import java.util.List;
 import lombok.Builder;

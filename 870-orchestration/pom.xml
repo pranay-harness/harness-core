@@ -75,17 +75,22 @@
         </dependency>
         <dependency>
             <groupId>software.wings</groupId>
+            <artifactId>880-orchestration-beans</artifactId>
+            <version>${project.parent.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>software.wings</groupId>
+            <artifactId>882-pms-sdk-core</artifactId>
+            <version>${project.parent.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>software.wings</groupId>
             <artifactId>930-delegate-tasks</artifactId>
             <version>${project.parent.version}</version>
         </dependency>
         <dependency>
             <groupId>software.wings</groupId>
             <artifactId>950-wait-engine</artifactId>
-            <version>${project.parent.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>software.wings</groupId>
-            <artifactId>880-orchestration-beans</artifactId>
             <version>${project.parent.version}</version>
         </dependency>
         <dependency>

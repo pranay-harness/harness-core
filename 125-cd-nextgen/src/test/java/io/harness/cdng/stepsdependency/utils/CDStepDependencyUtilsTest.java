@@ -23,11 +23,11 @@ import io.harness.executionplan.stepsdependency.StepDependencyService;
 import io.harness.executionplan.stepsdependency.StepDependencySpec;
 import io.harness.executionplan.utils.ParentPathInfoUtils;
 import io.harness.pms.ambiance.Ambiance;
+import io.harness.pms.sdk.core.steps.io.StepParameters;
 import io.harness.refObjects.RefObjectUtil;
 import io.harness.rule.Owner;
 import io.harness.state.io.ResolvedRefInput;
 import io.harness.state.io.StepInputPackage;
-import io.harness.state.io.StepParameters;
 import io.harness.state.io.StepTransput;
 import io.harness.steps.dummy.DummyStepParameters;
 

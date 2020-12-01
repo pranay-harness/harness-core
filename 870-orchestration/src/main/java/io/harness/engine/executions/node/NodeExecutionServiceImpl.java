@@ -18,10 +18,10 @@ import io.harness.execution.events.OrchestrationEventType;
 import io.harness.interrupts.ExecutionInterruptType;
 import io.harness.interrupts.InterruptEffect;
 import io.harness.pms.execution.Status;
+import io.harness.pms.sdk.core.steps.io.StepParameters;
+import io.harness.pms.serializer.json.JsonOrchestrationUtils;
 import io.harness.registries.state.StepRegistry;
-import io.harness.serializer.json.JsonOrchestrationUtils;
 import io.harness.state.Step;
-import io.harness.state.io.StepParameters;
 
 import com.google.inject.Inject;
 import com.mongodb.client.result.UpdateResult;

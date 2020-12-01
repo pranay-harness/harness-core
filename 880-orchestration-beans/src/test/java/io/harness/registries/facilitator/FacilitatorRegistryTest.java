@@ -11,12 +11,12 @@ import io.harness.facilitator.Facilitator;
 import io.harness.facilitator.FacilitatorResponse;
 import io.harness.pms.ambiance.Ambiance;
 import io.harness.pms.facilitators.FacilitatorType;
+import io.harness.pms.sdk.core.steps.io.StepParameters;
 import io.harness.registries.RegistryType;
 import io.harness.registries.exceptions.DuplicateRegistryException;
 import io.harness.registries.exceptions.UnregisteredKeyAccessException;
 import io.harness.rule.Owner;
 import io.harness.state.io.StepInputPackage;
-import io.harness.state.io.StepParameters;
 
 import com.google.inject.Inject;
 import lombok.Builder;

@@ -3,7 +3,7 @@ package io.harness.steps.barriers;
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.state.io.StepParameters;
+import io.harness.pms.sdk.core.steps.io.StepParameters;
 import io.harness.timeout.TimeoutObtainment;
 import io.harness.timeout.trackers.absolute.AbsoluteTimeoutParameters;
 import io.harness.timeout.trackers.absolute.AbsoluteTimeoutTrackerFactory;
@@ -22,7 +22,8 @@ public class BarrierStepParameters implements StepParameters {
   String identifier;
   long timeoutInMillis;
 
-  @Override
+  // TODO(gpahal): update later
+  // @Override
   public List<TimeoutObtainment> fetchTimeouts() {
     return Collections.singletonList(
         TimeoutObtainment.builder()

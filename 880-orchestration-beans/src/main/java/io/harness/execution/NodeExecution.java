@@ -16,9 +16,8 @@ import io.harness.pms.ambiance.Ambiance;
 import io.harness.pms.execution.ExecutionMode;
 import io.harness.pms.execution.Status;
 import io.harness.pms.execution.failure.FailureInfo;
+import io.harness.pms.sdk.core.steps.io.StepParameters;
 import io.harness.state.io.StepOutcomeRef;
-import io.harness.state.io.StepParameters;
-import io.harness.state.io.StepTransput;
 import io.harness.timeout.TimeoutDetails;
 
 import java.time.Duration;
