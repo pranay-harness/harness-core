@@ -6,6 +6,7 @@ import io.harness.pms.execution.ExecutionMode;
 import io.harness.pms.execution.Status;
 import io.harness.pms.execution.failure.FailureInfo;
 import io.harness.pms.steps.SkipType;
+import io.harness.tasks.ProgressData;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
@@ -39,6 +40,8 @@ public class GraphVertexDTO {
   List<InterruptEffect> interruptHistories;
   List<Outcome> outcomes;
   List<String> retryIds;
+
+  Map<String, List<ProgressData>> progressDataMap;
 
   // skip
   SkipType skipType;

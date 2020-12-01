@@ -10,6 +10,7 @@ import io.harness.pms.execution.ExecutionMode;
 import io.harness.pms.execution.Status;
 import io.harness.pms.execution.failure.FailureInfo;
 import io.harness.pms.steps.SkipType;
+import io.harness.tasks.ProgressData;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import java.io.Serializable;
@@ -47,6 +48,8 @@ public class GraphVertex implements Serializable {
   private List<InterruptEffect> interruptHistories;
   private List<Outcome> outcomes;
   private List<String> retryIds;
+
+  private Map<String, List<ProgressData>> progressDataMap;
 
   // skip
   private SkipType skipType;

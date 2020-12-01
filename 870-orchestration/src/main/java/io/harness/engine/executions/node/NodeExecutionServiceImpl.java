@@ -17,6 +17,7 @@ import io.harness.execution.events.OrchestrationEvent;
 import io.harness.execution.events.OrchestrationEventType;
 import io.harness.interrupts.ExecutionInterruptType;
 import io.harness.interrupts.InterruptEffect;
+import io.harness.pms.ambiance.Ambiance;
 import io.harness.pms.execution.Status;
 import io.harness.pms.sdk.core.steps.Step;
 import io.harness.pms.sdk.core.steps.io.StepParameters;
@@ -134,6 +135,8 @@ public class NodeExecutionServiceImpl implements NodeExecutionService {
       throw new NodeExecutionUpdateFailedException(
           "Node Execution Cannot be updated with provided operations" + nodeExecutionId);
     }
+
+    emitEvent(updated.getAmbiance());
     return updated;
   }
 
@@ -176,10 +179,7 @@ public class NodeExecutionServiceImpl implements NodeExecutionService {
     if (updated == null) {
       log.warn("Cannot update execution status for the node {} with {}", nodeExecutionId, status);
     } else {
-      eventEmitter.emitEvent(OrchestrationEvent.builder()
-                                 .ambiance(updated.getAmbiance())
-                                 .eventType(OrchestrationEventType.NODE_EXECUTION_STATUS_UPDATE)
-                                 .build());
+      emitEvent(updated.getAmbiance());
     }
     return updated;
   }
@@ -258,5 +258,12 @@ public class NodeExecutionServiceImpl implements NodeExecutionService {
       return null;
     }
     return (StepParameters) JsonOrchestrationUtils.asObject(stepParameters.toJson(), step.getStepParametersClass());
+  }
+
+  private void emitEvent(Ambiance ambiance) {
+    eventEmitter.emitEvent(OrchestrationEvent.builder()
+                               .ambiance(ambiance)
+                               .eventType(OrchestrationEventType.NODE_EXECUTION_STATUS_UPDATE)
+                               .build());
   }
 }

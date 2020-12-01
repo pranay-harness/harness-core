@@ -117,6 +117,7 @@ import io.harness.waiter.NotifyEvent;
 import io.harness.waiter.NotifyQueuePublisherRegister;
 import io.harness.waiter.NotifyResponseCleaner;
 import io.harness.waiter.OrchestrationNotifyEventListener;
+import io.harness.waiter.ProgressUpdateService;
 import io.harness.workers.background.critical.iterator.ArtifactCollectionHandler;
 import io.harness.workers.background.critical.iterator.ResourceConstraintBackupHandler;
 import io.harness.workers.background.critical.iterator.WorkflowExecutionMonitorHandler;
@@ -819,6 +820,9 @@ public class WingsApplication extends Application<MainConfiguration> {
         new Schedulable("Failed updating delegate connection disconnected flag to true",
             injector.getInstance(PollingModeDelegateDisconnectedDetector.class)),
         0L, 60L, TimeUnit.SECONDS);
+
+    taskPollExecutor.scheduleWithFixedDelay(
+        injector.getInstance(ProgressUpdateService.class), 0L, 5L, TimeUnit.SECONDS);
 
     ImmutableList<Class<? extends AccountDataRetentionEntity>> classes =
         ImmutableList.<Class<? extends AccountDataRetentionEntity>>builder()

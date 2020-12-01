@@ -34,6 +34,7 @@ import io.harness.waiter.WaitNotifyEngine;
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 
@@ -91,6 +92,7 @@ public class ChildrenStrategy implements ExecuteStrategy {
                                              .status(Status.QUEUED)
                                              .notifyId(uuid)
                                              .parentId(nodeExecution.getUuid())
+                                             .progressDataMap(new LinkedHashMap<>())
                                              .build();
       nodeExecutionService.save(childNodeExecution);
       executorService.submit(
