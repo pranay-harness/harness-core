@@ -20,8 +20,8 @@ import io.harness.executionplan.stepsdependency.StepDependencyService;
 import io.harness.executionplan.stepsdependency.StepDependencySpec;
 import io.harness.executionplan.stepsdependency.bean.KeyAwareStepDependencySpec;
 import io.harness.pms.ambiance.Ambiance;
+import io.harness.pms.sdk.core.steps.io.StepInputPackage;
 import io.harness.rule.Owner;
-import io.harness.state.io.StepInputPackage;
 
 import java.util.ArrayList;
 import java.util.Collections;

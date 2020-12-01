@@ -16,11 +16,11 @@ import io.harness.facilitator.modes.task.TaskExecutable;
 import io.harness.pms.ambiance.Ambiance;
 import io.harness.pms.execution.Status;
 import io.harness.pms.execution.failure.FailureInfo;
+import io.harness.pms.sdk.core.steps.io.StepInputPackage;
 import io.harness.pms.sdk.core.steps.io.StepResponse;
 import io.harness.pms.sdk.core.steps.io.StepResponse.StepOutcome;
 import io.harness.pms.sdk.core.steps.io.StepResponse.StepResponseBuilder;
 import io.harness.pms.steps.StepType;
-import io.harness.state.io.StepInputPackage;
 import io.harness.tasks.Cd1SetupFields;
 import io.harness.tasks.ResponseData;
 

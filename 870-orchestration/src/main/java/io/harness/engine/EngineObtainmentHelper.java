@@ -12,11 +12,11 @@ import io.harness.plan.Plan;
 import io.harness.plan.PlanNode;
 import io.harness.pms.ambiance.Ambiance;
 import io.harness.pms.refobjects.RefObject;
+import io.harness.pms.sdk.core.steps.io.ResolvedRefInput;
+import io.harness.pms.sdk.core.steps.io.StepInputPackage;
+import io.harness.pms.sdk.core.steps.io.StepInputPackage.StepInputPackageBuilder;
 import io.harness.registries.resolver.ResolverRegistry;
 import io.harness.resolvers.Resolver;
-import io.harness.state.io.ResolvedRefInput;
-import io.harness.state.io.StepInputPackage;
-import io.harness.state.io.StepInputPackage.StepInputPackageBuilder;
 
 import com.google.inject.Inject;
 import java.util.List;

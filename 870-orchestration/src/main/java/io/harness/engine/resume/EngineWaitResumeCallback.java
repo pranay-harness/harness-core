@@ -6,7 +6,7 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.engine.OrchestrationEngine;
 import io.harness.facilitator.FacilitatorResponse;
 import io.harness.pms.ambiance.Ambiance;
-import io.harness.state.io.StepInputPackage;
+import io.harness.pms.sdk.core.steps.io.StepInputPackage;
 import io.harness.tasks.ResponseData;
 import io.harness.waiter.NotifyCallback;
 
