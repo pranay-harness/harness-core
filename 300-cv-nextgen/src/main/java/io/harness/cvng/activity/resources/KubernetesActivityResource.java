@@ -23,6 +23,7 @@ import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import retrofit2.http.Body;
@@ -80,12 +81,12 @@ public class KubernetesActivityResource {
   @Timed
   @ExceptionMetered
   @NextGenManagerAuth
-  @Path("/source")
+  @Path("{identifier}")
   @ApiOperation(value = "deletes a kubernetes event source", nickname = "deleteKubernetesSource")
   public RestResponse<Boolean> deleteKubernetesSource(@QueryParam("accountId") @NotNull String accountId,
       @QueryParam("orgIdentifier") @NotNull String orgIdentifier,
       @QueryParam("projectIdentifier") @NotNull String projectIdentifier,
-      @QueryParam("identifier") @NotNull String identifier) {
+      @PathParam("identifier") @NotNull String identifier) {
     return new RestResponse<>(kubernetesActivitySourceService.deleteKubernetesSource(
         accountId, orgIdentifier, projectIdentifier, identifier));
   }
