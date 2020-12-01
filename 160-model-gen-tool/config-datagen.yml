@@ -224,3 +224,7 @@ grpcDelegateServiceClientConfig:
 logStreamingServiceConfig:
   baseUrl: http://localhost:8079
   serviceToken: token
+
+cvngClientConfig:
+  baseUrl: https://localhost:6060/cv/
+  cvNgServiceSecret: IC04LYMBf1lDP5oeY4hupxd4HJhLmN6azUku3xEbeE3SUx5G3ZYzhbiwVtK4i7AmqyU9OZkwB4v8E9qM
