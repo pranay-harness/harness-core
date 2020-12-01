@@ -1,7 +1,7 @@
 package io.harness.cdng.pipeline.beans;
 
 import io.harness.ngpipeline.pipeline.beans.yaml.NgPipeline;
-import io.harness.state.io.StepParameters;
+import io.harness.pms.sdk.core.steps.io.StepParameters;
 
 import java.util.Map;
 import lombok.Builder;

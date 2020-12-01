@@ -1,4 +1,4 @@
-package io.harness.serializer.json;
+package io.harness.pms.serializer.json;
 
 import io.harness.serializer.AnnotationAwareJsonSubtypeResolver;
 
@@ -7,6 +7,7 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.PropertyNamingStrategy;
+import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.datatype.guava.GuavaModule;
 import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
@@ -25,6 +26,7 @@ public class JsonOrchestrationUtils {
   static {
     mapper = new ObjectMapper();
     mapper.disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES);
+    mapper.disable(SerializationFeature.FAIL_ON_EMPTY_BEANS);
     mapper.setSerializationInclusion(Include.NON_NULL);
     mapper.setSubtypeResolver(AnnotationAwareJsonSubtypeResolver.newInstance(mapper.getSubtypeResolver()));
     mapper.registerModule(new ProtobufModule());
@@ -35,6 +37,7 @@ public class JsonOrchestrationUtils {
 
     nonIgnoringMapper = new ObjectMapper();
     nonIgnoringMapper.disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES);
+    mapper.disable(SerializationFeature.FAIL_ON_EMPTY_BEANS);
     nonIgnoringMapper.setSerializationInclusion(Include.NON_NULL);
     nonIgnoringMapper.setAnnotationIntrospector(new JsonAnnotationIntrospector());
     nonIgnoringMapper.setSubtypeResolver(AnnotationAwareJsonSubtypeResolver.newInstance(mapper.getSubtypeResolver()));

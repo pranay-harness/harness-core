@@ -1,4 +1,4 @@
-package io.harness.serializer.json;
+package io.harness.pms.serializer.json;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;

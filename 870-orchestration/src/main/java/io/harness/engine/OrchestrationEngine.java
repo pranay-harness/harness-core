@@ -56,18 +56,17 @@ import io.harness.pms.ambiance.Ambiance;
 import io.harness.pms.execution.Status;
 import io.harness.pms.execution.failure.FailureInfo;
 import io.harness.pms.facilitators.FacilitatorObtainment;
+import io.harness.pms.sdk.core.steps.io.StepParameters;
+import io.harness.pms.serializer.json.JsonOrchestrationUtils;
 import io.harness.registries.adviser.AdviserRegistry;
 import io.harness.registries.facilitator.FacilitatorRegistry;
 import io.harness.registries.resolver.ResolverRegistry;
 import io.harness.registries.state.StepRegistry;
 import io.harness.registries.timeout.TimeoutRegistry;
 import io.harness.resolvers.Resolver;
-import io.harness.serializer.JsonUtils;
 import io.harness.serializer.KryoSerializer;
-import io.harness.serializer.json.JsonOrchestrationUtils;
 import io.harness.state.io.StepInputPackage;
 import io.harness.state.io.StepOutcomeRef;
-import io.harness.state.io.StepParameters;
 import io.harness.state.io.StepResponse;
 import io.harness.state.io.StepResponse.StepOutcome;
 import io.harness.state.io.StepResponseNotifyData;
@@ -78,11 +77,15 @@ import io.harness.timeout.TimeoutInstance;
 import io.harness.timeout.TimeoutObtainment;
 import io.harness.timeout.TimeoutTracker;
 import io.harness.timeout.TimeoutTrackerFactory;
+import io.harness.timeout.trackers.absolute.AbsoluteTimeoutParameters;
+import io.harness.timeout.trackers.absolute.AbsoluteTimeoutTrackerFactory;
 import io.harness.waiter.WaitNotifyEngine;
 
 import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
+import java.time.Duration;
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -243,12 +246,19 @@ public class OrchestrationEngine {
 
   private List<String> registerTimeouts(NodeExecution nodeExecution) {
     StepParameters resolvedStepParameters = nodeExecutionService.extractResolvedStepParameters(nodeExecution);
-    List<TimeoutObtainment> timeoutObtainmentList;
-    if (resolvedStepParameters != null) {
-      timeoutObtainmentList = resolvedStepParameters.fetchTimeouts();
-    } else {
-      timeoutObtainmentList = new StepParameters() {}.fetchTimeouts();
-    }
+    List<TimeoutObtainment> timeoutObtainmentList =
+        Collections.singletonList(TimeoutObtainment.builder()
+                                      .type(AbsoluteTimeoutTrackerFactory.DIMENSION)
+                                      .parameters(AbsoluteTimeoutParameters.builder()
+                                                      .timeoutMillis(Duration.of(10, ChronoUnit.MINUTES).toMillis())
+                                                      .build())
+                                      .build());
+    // TODO(gpahal): update later
+    //    if (resolvedStepParameters != null) {
+    //      timeoutObtainmentList = resolvedStepParameters.fetchTimeouts();
+    //    } else {
+    //      timeoutObtainmentList = new StepParameters() {}.fetchTimeouts();
+    //    }
 
     List<String> timeoutInstanceIds = new ArrayList<>();
     if (isEmpty(timeoutObtainmentList)) {

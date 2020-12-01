@@ -27,9 +27,9 @@ import io.harness.pms.facilitators.FacilitatorObtainment;
 import io.harness.pms.facilitators.FacilitatorType;
 import io.harness.pms.refobjects.RefObject;
 import io.harness.pms.refobjects.RefType;
+import io.harness.pms.sdk.core.steps.io.StepParameters;
 import io.harness.pms.steps.StepType;
 import io.harness.rest.RestResponse;
-import io.harness.state.io.StepParameters;
 import io.harness.testframework.framework.Setup;
 
 import com.fasterxml.jackson.databind.DeserializationFeature;

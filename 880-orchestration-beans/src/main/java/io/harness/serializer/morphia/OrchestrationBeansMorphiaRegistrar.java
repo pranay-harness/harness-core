@@ -22,7 +22,6 @@ import io.harness.facilitator.modes.task.TaskExecutableResponse;
 import io.harness.interrupts.Interrupt;
 import io.harness.morphia.MorphiaRegistrar;
 import io.harness.morphia.MorphiaRegistrarHelperPut;
-import io.harness.state.io.StepParameters;
 import io.harness.state.io.StepTransput;
 
 import java.util.Set;
@@ -37,7 +36,6 @@ public class OrchestrationBeansMorphiaRegistrar implements MorphiaRegistrar {
     set.add(OutcomeInstance.class);
     set.add(StepTransput.class);
     set.add(FacilitatorParameters.class);
-    set.add(StepParameters.class);
     set.add(Outcome.class);
     set.add(ExecutableResponse.class);
     set.add(PassThroughData.class);

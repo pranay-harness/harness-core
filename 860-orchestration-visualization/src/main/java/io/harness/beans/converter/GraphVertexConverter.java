@@ -7,7 +7,7 @@ import io.harness.data.Outcome;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.execution.NodeExecution;
 import io.harness.facilitator.modes.ExecutableResponse;
-import io.harness.serializer.json.JsonOrchestrationUtils;
+import io.harness.pms.serializer.json.JsonOrchestrationUtils;
 
 import java.util.Collections;
 import java.util.List;

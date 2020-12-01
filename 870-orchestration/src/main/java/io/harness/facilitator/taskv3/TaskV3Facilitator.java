@@ -11,8 +11,8 @@ import io.harness.facilitator.OrchestrationFacilitatorType;
 import io.harness.pms.ambiance.Ambiance;
 import io.harness.pms.execution.ExecutionMode;
 import io.harness.pms.facilitators.FacilitatorType;
+import io.harness.pms.sdk.core.steps.io.StepParameters;
 import io.harness.state.io.StepInputPackage;
-import io.harness.state.io.StepParameters;
 
 import com.google.inject.Inject;
 import java.time.Duration;

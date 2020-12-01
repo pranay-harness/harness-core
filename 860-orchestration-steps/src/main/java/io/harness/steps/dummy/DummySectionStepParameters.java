@@ -3,7 +3,7 @@ package io.harness.steps.dummy;
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.state.io.StepParameters;
+import io.harness.pms.sdk.core.steps.io.StepParameters;
 
 import java.util.Map;
 import lombok.Builder;

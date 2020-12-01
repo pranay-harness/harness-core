@@ -275,8 +275,11 @@ public class ShellScriptStep implements TaskExecutable<ShellScriptStepParameters
               ErrorCode.SSH_CONNECTION_ERROR, Level.ERROR, WingsException.USER);
       }
 
-      stepResponseBuilder.failureInfo(
-          FailureInfo.newBuilder().setErrorMessage(commandExecutionResult.getErrorMessage()).build());
+      FailureInfo.Builder failureInfoBuilder = FailureInfo.newBuilder();
+      if (commandExecutionResult.getErrorMessage() != null) {
+        failureInfoBuilder.setErrorMessage(commandExecutionResult.getErrorMessage());
+      }
+      stepResponseBuilder.failureInfo(failureInfoBuilder.build());
 
       ScriptStateExecutionData scriptStateExecutionData =
           ScriptStateExecutionData.builder().activityId(activityId).build();

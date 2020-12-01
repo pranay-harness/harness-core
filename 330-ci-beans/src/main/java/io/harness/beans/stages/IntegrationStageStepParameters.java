@@ -2,7 +2,7 @@ package io.harness.beans.stages;
 
 import io.harness.ci.beans.entities.BuildNumberDetails;
 import io.harness.ngpipeline.status.BuildStatusUpdateParameter;
-import io.harness.state.io.StepParameters;
+import io.harness.pms.sdk.core.steps.io.StepParameters;
 
 import java.util.Map;
 import lombok.Builder;

@@ -2,9 +2,9 @@ package io.harness.executionplan.stepsdependency.resolvers;
 
 import io.harness.executionplan.stepsdependency.StepDependencyResolverContext;
 import io.harness.pms.ambiance.Ambiance;
+import io.harness.pms.sdk.core.steps.io.StepParameters;
 import io.harness.state.io.ResolvedRefInput;
 import io.harness.state.io.StepInputPackage;
-import io.harness.state.io.StepParameters;
 
 import java.util.List;
 import java.util.Map;

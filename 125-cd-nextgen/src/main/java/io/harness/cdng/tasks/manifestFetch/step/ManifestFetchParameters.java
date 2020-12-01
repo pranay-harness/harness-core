@@ -1,7 +1,7 @@
 package io.harness.cdng.tasks.manifestFetch.step;
 
 import io.harness.cdng.manifest.yaml.ManifestAttributes;
-import io.harness.state.io.StepParameters;
+import io.harness.pms.sdk.core.steps.io.StepParameters;
 
 import java.util.List;
 import lombok.Builder;

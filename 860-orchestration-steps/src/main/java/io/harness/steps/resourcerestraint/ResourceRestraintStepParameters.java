@@ -3,7 +3,7 @@ package io.harness.steps.resourcerestraint;
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.state.io.StepParameters;
+import io.harness.pms.sdk.core.steps.io.StepParameters;
 import io.harness.steps.resourcerestraint.beans.AcquireMode;
 import io.harness.steps.resourcerestraint.beans.HoldingScope;
 import io.harness.timeout.TimeoutObtainment;
@@ -31,7 +31,8 @@ public class ResourceRestraintStepParameters implements StepParameters {
 
   long timeoutInMillis;
 
-  @Override
+  // TODO(gpahal): update later
+  // @Override
   public List<TimeoutObtainment> fetchTimeouts() {
     return Collections.singletonList(
         TimeoutObtainment.builder()

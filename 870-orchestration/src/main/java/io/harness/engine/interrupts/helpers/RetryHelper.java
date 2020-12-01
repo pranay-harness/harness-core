@@ -14,7 +14,7 @@ import io.harness.execution.NodeExecution;
 import io.harness.plan.PlanNode;
 import io.harness.pms.ambiance.Ambiance;
 import io.harness.pms.execution.Status;
-import io.harness.state.io.StepParameters;
+import io.harness.pms.sdk.core.steps.io.StepParameters;
 
 import com.google.common.base.Preconditions;
 import com.google.inject.Inject;

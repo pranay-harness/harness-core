@@ -3,7 +3,7 @@ package io.harness.cdng.k8s;
 import io.harness.beans.ParameterField;
 import io.harness.common.SwaggerConstants;
 import io.harness.executionplan.stepsdependency.StepDependencySpec;
-import io.harness.state.io.StepParameters;
+import io.harness.pms.sdk.core.steps.io.StepParameters;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import io.swagger.annotations.ApiModelProperty;
