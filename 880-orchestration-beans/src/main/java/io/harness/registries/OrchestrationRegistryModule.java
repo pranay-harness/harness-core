@@ -12,6 +12,7 @@ import io.harness.facilitator.Facilitator;
 import io.harness.pms.advisers.AdviserType;
 import io.harness.pms.facilitators.FacilitatorType;
 import io.harness.pms.refobjects.RefType;
+import io.harness.pms.sdk.core.steps.Step;
 import io.harness.pms.steps.StepType;
 import io.harness.registries.adviser.AdviserRegistry;
 import io.harness.registries.events.OrchestrationEventHandlerRegistry;
@@ -26,7 +27,6 @@ import io.harness.registries.registrar.StepRegistrar;
 import io.harness.registries.resolver.ResolverRegistry;
 import io.harness.registries.state.StepRegistry;
 import io.harness.resolvers.Resolver;
-import io.harness.state.Step;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.Injector;

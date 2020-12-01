@@ -4,12 +4,12 @@ import static io.harness.annotations.dev.HarnessTeam.CDC;
 
 import io.harness.annotations.Redesign;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.pms.sdk.core.steps.Step;
 import io.harness.pms.steps.StepType;
 import io.harness.registries.Registry;
 import io.harness.registries.RegistryType;
 import io.harness.registries.exceptions.DuplicateRegistryException;
 import io.harness.registries.exceptions.UnregisteredKeyAccessException;
-import io.harness.state.Step;
 
 import com.google.inject.Singleton;
 import java.util.Map;
