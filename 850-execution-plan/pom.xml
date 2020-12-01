@@ -15,7 +15,7 @@
         </dependency>
         <dependency>
             <groupId>software.wings</groupId>
-            <artifactId>860-yaml-beans</artifactId>
+            <artifactId>870-yaml-beans</artifactId>
             <version>${project.parent.version}</version>
         </dependency>
         <dependency>

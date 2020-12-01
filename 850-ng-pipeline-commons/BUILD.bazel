@@ -12,7 +12,7 @@ java_library(
     visibility = ["//visibility:public"],
     exports = [
         "//860-orchestration-visualization:module",
-        "//860-yaml-beans:module",
+        "//870-yaml-beans:module",
         "//930-ng-core-clients:module",
         "//950-delegate-tasks-beans:module",
         "//950-ng-project-n-orgs:module",

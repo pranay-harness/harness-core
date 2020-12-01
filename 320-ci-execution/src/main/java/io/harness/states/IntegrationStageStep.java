@@ -1,6 +1,6 @@
 package io.harness.states;
 
-import static io.harness.ngpipeline.orchestration.StepUtils.createStepResponseFromChildResponse;
+import static io.harness.steps.StepUtils.createStepResponseFromChildResponse;
 
 import io.harness.beans.stages.IntegrationStageStepParameters;
 import io.harness.beans.sweepingoutputs.ContextElement;

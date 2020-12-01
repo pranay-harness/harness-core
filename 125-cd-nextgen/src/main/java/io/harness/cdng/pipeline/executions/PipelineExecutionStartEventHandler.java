@@ -6,11 +6,11 @@ import io.harness.engine.executions.plan.PlanExecutionService;
 import io.harness.execution.PlanExecution;
 import io.harness.execution.events.AsyncOrchestrationEventHandler;
 import io.harness.execution.events.OrchestrationEvent;
-import io.harness.executionplan.plancreator.beans.StepOutcomeGroup;
 import io.harness.ngpipeline.common.AmbianceHelper;
 import io.harness.plan.PlanNode;
 import io.harness.pms.ambiance.Ambiance;
 import io.harness.pms.serializer.json.JsonOrchestrationUtils;
+import io.harness.steps.StepOutcomeGroup;
 
 import com.google.inject.Inject;
 import java.util.Objects;

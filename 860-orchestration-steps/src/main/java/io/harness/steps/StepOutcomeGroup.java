@@ -1,4 +1,4 @@
-package io.harness.executionplan.plancreator.beans;
+package io.harness.steps;
 
 public enum StepOutcomeGroup {
   STAGE,

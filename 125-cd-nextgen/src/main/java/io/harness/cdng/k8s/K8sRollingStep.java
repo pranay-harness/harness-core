@@ -2,7 +2,7 @@ package io.harness.cdng.k8s;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
-import static io.harness.ngpipeline.orchestration.StepUtils.prepareDelegateTaskInput;
+import static io.harness.steps.StepUtils.prepareDelegateTaskInput;
 
 import io.harness.cdng.executionplan.CDStepDependencyKey;
 import io.harness.cdng.infra.beans.InfrastructureOutcome;

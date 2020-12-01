@@ -20,12 +20,12 @@ import io.harness.engine.executions.node.NodeExecutionServiceImpl;
 import io.harness.engine.outcomes.OutcomeService;
 import io.harness.execution.NodeExecution;
 import io.harness.execution.events.OrchestrationEvent;
-import io.harness.executionplan.plancreator.beans.StepOutcomeGroup;
 import io.harness.plan.PlanNode;
 import io.harness.pms.ambiance.Ambiance;
 import io.harness.pms.ambiance.Level;
 import io.harness.pms.execution.Status;
 import io.harness.rule.Owner;
+import io.harness.steps.StepOutcomeGroup;
 
 import io.fabric8.utils.Lists;
 import org.apache.groovy.util.Maps;

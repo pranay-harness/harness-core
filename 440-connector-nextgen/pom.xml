@@ -51,7 +51,7 @@
         </dependency>
         <dependency>
             <groupId>software.wings</groupId>
-            <artifactId>860-yaml-beans</artifactId>
+            <artifactId>870-yaml-beans</artifactId>
             <version>0.0.1-SNAPSHOT</version>
             <scope>compile</scope>
         </dependency>

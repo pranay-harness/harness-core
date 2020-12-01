@@ -33,7 +33,7 @@ java_library(
 java_library(
     name = "module",
     srcs = glob(["src/main/**/*.java"]),
-    resources = ["//860-yaml-beans/src/main/schema:resource"],
+    resources = ["//870-yaml-beans/src/main/schema:resource"],
     visibility = ["//visibility:public"],
     deps = [
         "maven_deps",
@@ -53,7 +53,7 @@ java_library(
 java_library(
     name = "tests",
     srcs = glob(["src/test/**/*.java"]),
-    resources = ["//860-yaml-beans/src/test/resources:resource"],
+    resources = ["//870-yaml-beans/src/test/resources:resource"],
     visibility = ["//visibility:public"],
     deps = [
         "maven_deps",

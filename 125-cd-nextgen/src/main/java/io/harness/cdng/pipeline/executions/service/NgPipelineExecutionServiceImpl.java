@@ -23,7 +23,6 @@ import io.harness.exception.InvalidRequestException;
 import io.harness.exception.UnexpectedException;
 import io.harness.execution.NodeExecution;
 import io.harness.execution.PlanExecution;
-import io.harness.executionplan.plancreator.beans.StepOutcomeGroup;
 import io.harness.executions.steps.ExecutionNodeType;
 import io.harness.interrupts.Interrupt;
 import io.harness.ngpipeline.executions.beans.ExecutionGraph;
@@ -41,6 +40,7 @@ import io.harness.ngpipeline.pipeline.executions.beans.dto.PipelineExecutionInte
 import io.harness.ngpipeline.pipeline.service.NGPipelineService;
 import io.harness.repositories.pipeline.PipelineExecutionRepository;
 import io.harness.service.GraphGenerationService;
+import io.harness.steps.StepOutcomeGroup;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;

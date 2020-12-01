@@ -13,12 +13,12 @@ import io.harness.executions.steps.ExecutionNodeType;
 import io.harness.facilitator.modes.task.TaskExecutable;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.ngpipeline.common.AmbianceHelper;
-import io.harness.ngpipeline.orchestration.StepUtils;
 import io.harness.pms.ambiance.Ambiance;
 import io.harness.pms.execution.Status;
 import io.harness.pms.steps.StepType;
 import io.harness.state.io.StepInputPackage;
 import io.harness.state.io.StepResponse;
+import io.harness.steps.StepUtils;
 import io.harness.tasks.ResponseData;
 import io.harness.tasks.Task;
 

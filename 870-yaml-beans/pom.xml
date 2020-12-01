@@ -6,7 +6,7 @@
         <artifactId>portal</artifactId>
         <version>0.0.1-SNAPSHOT</version>
     </parent>
-    <artifactId>860-yaml-beans</artifactId>
+    <artifactId>870-yaml-beans</artifactId>
     <dependencies>
         <dependency>
             <groupId>com.google.code.findbugs</groupId>

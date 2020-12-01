@@ -16,13 +16,13 @@ import io.harness.executionplan.core.ExecutionPlanCreatorResponse;
 import io.harness.executionplan.core.PlanCreatorSearchContext;
 import io.harness.executionplan.core.SupportDefinedExecutorPlanCreator;
 import io.harness.executionplan.plancreator.beans.PlanNodeType;
-import io.harness.executionplan.plancreator.beans.StepOutcomeGroup;
 import io.harness.executionplan.service.ExecutionPlanCreatorHelper;
 import io.harness.facilitator.OrchestrationFacilitatorType;
 import io.harness.ngpipeline.pipeline.beans.yaml.NgPipeline;
 import io.harness.plan.PlanNode;
 import io.harness.pms.facilitators.FacilitatorObtainment;
 import io.harness.pms.facilitators.FacilitatorType;
+import io.harness.steps.StepOutcomeGroup;
 import io.harness.yaml.core.auxiliary.intfc.StageElementWrapper;
 
 import com.google.common.collect.ImmutableMap;

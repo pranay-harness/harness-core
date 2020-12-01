@@ -72,7 +72,7 @@ public class PlanCreatorService extends PlanCreationServiceImplBase {
       return finalResponse;
     }
 
-    PlanCreationContext ctx = new PlanCreationContext();
+    PlanCreationContext ctx = new PlanCreationContext(null);
     Map<String, YamlField> dependencies = new HashMap<>(initialDependencies);
     while (!dependencies.isEmpty()) {
       createPlanForDependencies(ctx, finalResponse, dependencies);
