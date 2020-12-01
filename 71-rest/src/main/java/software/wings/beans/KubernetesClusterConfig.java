@@ -176,7 +176,7 @@ public class KubernetesClusterConfig extends SettingValue implements Encryptable
       case OIDC:
         return Arrays.asList(encryptedOidcSecret, encryptedOidcClientId, encryptedOidcPassword);
       case SERVICE_ACCOUNT:
-        return Collections.singletonList(encryptedServiceAccountToken);
+        return Arrays.asList(encryptedServiceAccountToken, encryptedCaCert);
       case CLIENT_KEY_CERT:
         return Arrays.asList(encryptedCaCert, encryptedClientCert, encryptedClientKey, encryptedClientKeyPassphrase);
       case USER_PASSWORD:

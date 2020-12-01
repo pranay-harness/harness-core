@@ -118,7 +118,7 @@ public class SettingAttributeTest extends CategoryTest {
     KubernetesClusterConfig kubernetesClusterConfig =
         KubernetesClusterConfig.builder().authType(KubernetesClusterAuthType.SERVICE_ACCOUNT).build();
     List<String> secretIds = kubernetesClusterConfig.fetchRelevantEncryptedSecrets();
-    assertThat(secretIds).hasSize(1);
+    assertThat(secretIds).hasSize(2);
   }
   @Test
   @Owner(developers = VAIBHAV_SI)

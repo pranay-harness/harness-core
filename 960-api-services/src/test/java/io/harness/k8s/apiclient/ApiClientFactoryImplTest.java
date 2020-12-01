@@ -12,7 +12,11 @@ import io.harness.rule.Owner;
 
 import io.kubernetes.client.openapi.ApiClient;
 import io.kubernetes.client.openapi.auth.ApiKeyAuth;
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
+import java.util.stream.Collectors;
 import okio.ByteString;
 import org.apache.commons.codec.binary.Base64;
 import org.junit.Before;
@@ -41,7 +45,7 @@ public class ApiClientFactoryImplTest extends CategoryTest {
       + "VFI2x1dwRck9pfh5BWqRySMXTVEeiEDkLC8ffzBLkzxVndLw9S0KrM110SeEqZG0\n"
       + "qwQuGwyvzkeKKiebTa12RJgrdHO+ZZjE+LT4ZPMq51CfA5OIR9sRGkTgWXJchECe\n"
       + "/exf+BvOZKtG6A==\n"
-      + "-----END CERTIFICATE-----\n";
+      + "-----END CERTIFICATE-----";
 
   private static final String TEST_KEY = "-----BEGIN RSA PRIVATE KEY-----\n"
       + "MIIEpAIBAAKCAQEA48K4xrv5vXWQb2VwLbdmzJ2aN2ArPSx7Hd0glBD0/wTMirvi\n"
@@ -106,7 +110,7 @@ public class ApiClientFactoryImplTest extends CategoryTest {
   @Test
   @Owner(developers = AVMOHAN)
   @Category(UnitTests.class)
-  public void testGetClientWithBasicAuth() throws Exception {
+  public void testGetClientWithBasicAuth() {
     KubernetesConfig kubernetesConfig = KubernetesConfig.builder()
                                             .masterUrl("https://34.66.78.221")
                                             .username("avmohan".toCharArray())
@@ -116,6 +120,7 @@ public class ApiClientFactoryImplTest extends CategoryTest {
     ApiClient client = apiClientFactory.getClient(kubernetesConfig);
     assertThat(client.getBasePath()).isEqualTo("https://34.66.78.221");
     assertThat(client.isVerifyingSsl()).isEqualTo(false);
+    assertThat(client.getSslCaCert()).isNull();
     assertThat(client.getAuthentication("BearerToken")).isInstanceOfSatisfying(ApiKeyAuth.class, apiKeyAuth -> {
       assertThat(apiKeyAuth.getApiKeyPrefix()).isEqualTo("Basic");
       assertThat(apiKeyAuth.getApiKey())
@@ -126,7 +131,7 @@ public class ApiClientFactoryImplTest extends CategoryTest {
   @Test
   @Owner(developers = AVMOHAN)
   @Category(UnitTests.class)
-  public void testGetClientWithClientCertificateAuth() throws Exception {
+  public void testGetClientWithClientCertificateAuth() {
     KubernetesConfig kubernetesConfig = KubernetesConfig.builder()
                                             .masterUrl("https://34.66.78.221")
                                             .clientCert(TEST_CERT.toCharArray())
@@ -136,6 +141,7 @@ public class ApiClientFactoryImplTest extends CategoryTest {
     ApiClient client = apiClientFactory.getClient(kubernetesConfig);
     assertThat(client.getBasePath()).isEqualTo("https://34.66.78.221");
     assertThat(client.isVerifyingSsl()).isEqualTo(false);
+    assertThat(client.getSslCaCert()).isNull();
     assertThat(client.getKeyManagers()).isNotEmpty();
   }
 
@@ -152,6 +158,30 @@ public class ApiClientFactoryImplTest extends CategoryTest {
     ApiClient client = apiClientFactory.getClient(kubernetesConfig);
     assertThat(client.getBasePath()).isEqualTo("https://34.66.78.221");
     assertThat(client.isVerifyingSsl()).isEqualTo(false);
+    assertThat(client.getSslCaCert()).isNull();
     assertThat(client.getKeyManagers()).isNotEmpty();
+  }
+
+  @Test
+  @Owner(developers = ABOSII)
+  @Category(UnitTests.class)
+  public void testGetClientWithCaCert() throws IOException {
+    testGetApiClientWithCaCert(TEST_CERT, TEST_CERT);
+    testGetApiClientWithCaCert(Base64.encodeBase64String(TEST_CERT.getBytes()), TEST_CERT);
+  }
+
+  private void testGetApiClientWithCaCert(String cert, String expectedCert) throws IOException {
+    KubernetesConfig kubernetesConfig = KubernetesConfig.builder()
+                                            .masterUrl("https://34.13.13.112")
+                                            .serviceAccountToken("token".toCharArray())
+                                            .caCert(cert.toCharArray())
+                                            .build();
+
+    ApiClient client = apiClientFactory.getClient(kubernetesConfig);
+    assertThat(client.isVerifyingSsl()).isTrue();
+    assertThat(client.getSslCaCert()).isNotNull();
+    client.getSslCaCert().reset();
+    BufferedReader reader = new BufferedReader(new InputStreamReader(client.getSslCaCert()));
+    assertThat(reader.lines().collect(Collectors.joining("\n"))).isEqualTo(expectedCert);
   }
 }

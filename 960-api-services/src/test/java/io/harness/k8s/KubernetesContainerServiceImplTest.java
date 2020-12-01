@@ -931,7 +931,7 @@ public class KubernetesContainerServiceImplTest extends CategoryTest {
                                             .build();
 
     String configFileContent = kubernetesContainerService.getConfigFileContent(kubeConfig);
-    assertThat(expected).isEqualTo(configFileContent);
+    assertThat(configFileContent).isEqualTo(expected);
   }
 
   @Test
@@ -943,6 +943,7 @@ public class KubernetesContainerServiceImplTest extends CategoryTest {
         + "- cluster:\n"
         + "    xxxxxxxx masterUrl\n"
         + "    insecure-skip-tls-verify: true\n"
+        + "    \n"
         + "  name: CLUSTER_NAME\n"
         + "contexts:\n"
         + "- context:\n"
@@ -968,6 +969,46 @@ public class KubernetesContainerServiceImplTest extends CategoryTest {
                                       .masterUrl("masterUrl")
                                       .username("username".toCharArray())
                                       .password("password".toCharArray())
+                                      .build();
+    String configFileContent = kubernetesContainerService.getConfigFileContent(kubeConfig);
+    assertThat(expected).isEqualTo(configFileContent);
+  }
+
+  @Test
+  @Owner(developers = ABOSII)
+  @Category(UnitTests.class)
+  public void testGetConfigFileWithCACert() {
+    String expected = "apiVersion: v1\n"
+        + "clusters:\n"
+        + "- cluster:\n"
+        + "    xxxxxxxx masterUrl\n"
+        + "    \n"
+        + "    certificate-authority-data: caCert\n"
+        + "  name: CLUSTER_NAME\n"
+        + "contexts:\n"
+        + "- context:\n"
+        + "    cluster: CLUSTER_NAME\n"
+        + "    user: HARNESS_USER\n"
+        + "    namespace: namespace\n"
+        + "  name: CURRENT_CONTEXT\n"
+        + "current-context: CURRENT_CONTEXT\n"
+        + "kind: Config\n"
+        + "preferences: {}\n"
+        + "users:\n"
+        + "- name: HARNESS_USER\n"
+        + "  user:\n"
+        + "    \n"
+        + "    \n"
+        + "    \n"
+        + "    \n"
+        + "    token: serviceAccountToken";
+
+    KubernetesConfig kubeConfig = KubernetesConfig.builder()
+                                      .authType(USER_PASSWORD)
+                                      .namespace("namespace")
+                                      .masterUrl("masterUrl")
+                                      .caCert("caCert".toCharArray())
+                                      .serviceAccountToken("serviceAccountToken".toCharArray())
                                       .build();
     String configFileContent = kubernetesContainerService.getConfigFileContent(kubeConfig);
     assertThat(expected).isEqualTo(configFileContent);

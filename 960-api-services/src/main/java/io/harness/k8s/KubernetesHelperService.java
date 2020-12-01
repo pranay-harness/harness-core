@@ -1,6 +1,7 @@
 package io.harness.k8s;
 
 import static io.harness.data.encoding.EncodingUtils.encodeBase64;
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.filesystem.FileIo.getHomeDir;
@@ -178,7 +179,8 @@ public class KubernetesHelperService {
   }
 
   public Config getConfig(KubernetesConfig kubernetesConfig, String apiVersion) {
-    ConfigBuilder configBuilder = new ConfigBuilder().withTrustCerts(true);
+    // Disable SSL validation (trust certs) if CA Certificate is missing in k8s configuration
+    ConfigBuilder configBuilder = new ConfigBuilder().withTrustCerts(isEmpty(kubernetesConfig.getCaCert()));
     if (isNotBlank(kubernetesConfig.getNamespace())) {
       configBuilder.withNamespace(kubernetesConfig.getNamespace().trim());
     }
