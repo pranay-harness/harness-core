@@ -34,6 +34,7 @@ public class QLCEDataEntry implements QLData {
   QLCEHarnessEntity harness;
   String clusterType;
   String cluster;
+  String clusterId;
   String instanceType;
   Long startTime;
   String labelName;
