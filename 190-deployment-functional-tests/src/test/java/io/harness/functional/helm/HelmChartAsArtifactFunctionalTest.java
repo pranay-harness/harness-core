@@ -139,13 +139,15 @@ public class HelmChartAsArtifactFunctionalTest extends AbstractFunctionalTest {
     WorkflowExecution workflowExecution =
         runWorkflow(bearerToken, service.getAppId(), infraDefinition.getUuid(), executionArgs);
 
-    // Cleanup
-    logStateExecutionInstanceErrors(runWorkflow(bearerToken, service.getAppId(), infraDefinition.getUuid(),
-        getExecutionArgs(cleanupWorkflow, helmChartToDeploy)));
-
-    logStateExecutionInstanceErrors(workflowExecution);
-    assertThat(workflowExecution.getStatus()).isEqualTo(ExecutionStatus.SUCCESS);
-    assertHelmChartVersion(workflowExecution, service);
+    try {
+      logStateExecutionInstanceErrors(workflowExecution);
+      assertThat(workflowExecution.getStatus()).isEqualTo(ExecutionStatus.SUCCESS);
+      assertHelmChartVersion(workflowExecution, service);
+    } finally {
+      // Cleanup
+      logStateExecutionInstanceErrors(runWorkflow(bearerToken, service.getAppId(), infraDefinition.getUuid(),
+          getExecutionArgs(cleanupWorkflow, helmChartToDeploy)));
+    }
   }
 
   private Service createHelmService() {
