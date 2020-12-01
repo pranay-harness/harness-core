@@ -83,7 +83,7 @@ public class CEExportDataQueryBuilder {
     List<CEExportDataMetadataFields> fieldNames = new ArrayList<>();
     List<CEExportDataMetadataFields> groupByFields = new ArrayList<>();
 
-    if (isGroupByEntityPresent(groupBy, QLCEEntityGroupBy.Cluster)) {
+    if (isGroupByEntityPresent(groupBy, QLCEEntityGroupBy.Cluster) && !isClusterDrillDown(groupBy)) {
       addInstanceTypeFilter(filters);
     }
 
@@ -719,5 +719,12 @@ public class CEExportDataQueryBuilder {
       }
     }
     return endTime - startTime <= 7 * ONE_DAY_MILLISEC;
+  }
+
+  protected boolean isClusterDrillDown(List<QLCEEntityGroupBy> groupByList) {
+    return groupByList.stream().anyMatch(groupBy
+        -> groupBy == QLCEEntityGroupBy.Workload || groupBy == QLCEEntityGroupBy.Namespace
+            || groupBy == QLCEEntityGroupBy.EcsService || groupBy == QLCEEntityGroupBy.Task
+            || groupBy == QLCEEntityGroupBy.LaunchType);
   }
 }

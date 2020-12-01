@@ -142,6 +142,7 @@ type BillingDataEntry {
   harness: ceHarnessEntity
   clusterType: String
   cluster: String
+  clusterId: String
   instanceType: String
   startTime: DateTime
   labelName: String

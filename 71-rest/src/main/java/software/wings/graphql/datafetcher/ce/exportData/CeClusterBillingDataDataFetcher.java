@@ -29,6 +29,8 @@ import software.wings.graphql.datafetcher.ce.exportData.dto.QLCETagAggregation;
 import software.wings.graphql.datafetcher.ce.exportData.dto.QLCETagType;
 import software.wings.graphql.datafetcher.ce.exportData.dto.QLCETimeAggregation;
 import software.wings.graphql.schema.type.aggregation.QLData;
+import software.wings.graphql.schema.type.aggregation.QLIdFilter;
+import software.wings.graphql.schema.type.aggregation.QLIdOperator;
 import software.wings.security.PermissionAttribute;
 import software.wings.security.annotations.AuthRule;
 import software.wings.service.intfc.ce.CeAccountExpirationChecker;
@@ -63,6 +65,7 @@ public class CeClusterBillingDataDataFetcher extends AbstractStatsDataFetcherWit
   private static final int LIMIT_THRESHOLD = 100;
   private static final String SELECT = "select";
   private static final String DEFAULT_SELECTED_LABEL = "-";
+  private static final String UNALLOCATED = "Unallocated";
 
   @Override
   @AuthRule(permissionType = PermissionAttribute.PermissionType.LOGGED_IN)
@@ -125,6 +128,9 @@ public class CeClusterBillingDataDataFetcher extends AbstractStatsDataFetcherWit
       offset = 0;
     }
 
+    // adding filters to exclude unallocated cost rows
+    addFiltersToExcludeUnallocatedRows(filters, groupByEntityList);
+
     queryData = queryBuilder.formQuery(accountId, filters, aggregateFunction, groupByEntityList, groupByTime,
         sortCriteria, limit, offset, selectedFields);
 
@@ -158,6 +164,8 @@ public class CeClusterBillingDataDataFetcher extends AbstractStatsDataFetcherWit
       List<String> selectedLabels) throws SQLException {
     List<QLCEDataEntry> dataEntries = new ArrayList<>();
     Set<String> workloads = new HashSet<>();
+    boolean isNamespacePresent = queryData.groupByFields.contains(QLCEEntityGroupBy.Namespace);
+    boolean isClusterPresent = queryData.groupByFields.contains(QLCEEntityGroupBy.Cluster);
     while (resultSet != null && resultSet.next()) {
       Double totalCost = null;
       Double idleCost = null;
@@ -183,6 +191,7 @@ public class CeClusterBillingDataDataFetcher extends AbstractStatsDataFetcherWit
       String service = "";
       String environment = "";
       String cluster = "";
+      String clusterId = "";
       String instanceType = "";
       String clusterType = "";
       String instanceName = "";
@@ -236,8 +245,8 @@ public class CeClusterBillingDataDataFetcher extends AbstractStatsDataFetcherWit
             = resultSet.getString(field.getFieldName());
             break;
           case CLUSTERID:
-            cluster = statsHelper.getEntityName(
-                BillingDataMetaDataFields.CLUSTERID, resultSet.getString(field.getFieldName()));
+            clusterId = resultSet.getString(field.getFieldName());
+            cluster = statsHelper.getEntityName(BillingDataMetaDataFields.CLUSTERID, clusterId);
             break;
           case CLUSTERTYPE:
             clusterType = resultSet.getString(field.getFieldName());
@@ -306,6 +315,7 @@ public class CeClusterBillingDataDataFetcher extends AbstractStatsDataFetcherWit
           .k8s(QLCEK8sEntity.builder().namespace(namespace).node(node).pod(pod).workload(workload).build())
           .ecs(QLCEEcsEntity.builder().launchType(launchType).service(ecsService).taskId(task).build())
           .cluster(cluster)
+          .clusterId(clusterId)
           .clusterType(clusterType)
           .instanceType(instanceType)
           .startTime(startTime);
@@ -316,13 +326,16 @@ public class CeClusterBillingDataDataFetcher extends AbstractStatsDataFetcherWit
     if (!workloads.isEmpty() && !selectedLabels.isEmpty()) {
       List<K8sWorkload> k8sWorkloads = dao.list(accountId, workloads);
       Map<String, Map<String, String>> labelsForWorkload = new HashMap<>();
-      k8sWorkloads.forEach(k8sWorkload -> labelsForWorkload.put(k8sWorkload.getName(), k8sWorkload.getLabels()));
+      k8sWorkloads.forEach(k8sWorkload
+          -> labelsForWorkload.put(
+              createWorkloadId(isNamespacePresent, isClusterPresent, k8sWorkload), k8sWorkload.getLabels()));
 
       dataEntries.forEach(entry -> {
         Map<String, String> labels = new HashMap<>();
         List<QLCEK8sLabels> labelValues = new ArrayList<>();
         selectedLabels.forEach(label -> labels.put(label, DEFAULT_SELECTED_LABEL));
-        Map<String, String> workloadLabels = labelsForWorkload.getOrDefault(entry.getK8s().getWorkload(), null);
+        Map<String, String> workloadLabels =
+            labelsForWorkload.getOrDefault(createWorkloadId(isNamespacePresent, isClusterPresent, entry), null);
         if (workloadLabels != null) {
           selectedLabels.forEach(
               label -> labels.put(label, workloadLabels.getOrDefault(label, DEFAULT_SELECTED_LABEL)));
@@ -360,6 +373,66 @@ public class CeClusterBillingDataDataFetcher extends AbstractStatsDataFetcherWit
   private QLCESelect convertToObject(Object fromValue) {
     ObjectMapper mapper = new ObjectMapper();
     return mapper.convertValue(fromValue, QLCESelect.class);
+  }
+
+  private String createWorkloadId(boolean isNamespacePresent, boolean isClusterPresent, K8sWorkload workload) {
+    String id = workload.getName();
+    if (isNamespacePresent) {
+      id += workload.getNamespace();
+    }
+    if (isClusterPresent) {
+      id += workload.getClusterId();
+    }
+    return id;
+  }
+
+  private String createWorkloadId(boolean isNamespacePresent, boolean isClusterPresent, QLCEDataEntry entry) {
+    String id = entry.getK8s().getWorkload();
+    if (isNamespacePresent) {
+      id += entry.getK8s().getNamespace();
+    }
+    if (isClusterPresent) {
+      id += entry.getClusterId();
+    }
+    return id;
+  }
+
+  protected void addFiltersToExcludeUnallocatedRows(List<QLCEFilter> filters, List<QLCEEntityGroupBy> groupBy) {
+    String[] values = {UNALLOCATED};
+    if (filters == null) {
+      filters = new ArrayList<>();
+    }
+    for (QLCEEntityGroupBy entityGroupBy : groupBy) {
+      switch (entityGroupBy) {
+        case Workload:
+          filters.add(QLCEFilter.builder()
+                          .workload(QLIdFilter.builder().operator(QLIdOperator.NOT_IN).values(values).build())
+                          .build());
+          break;
+        case Namespace:
+          filters.add(QLCEFilter.builder()
+                          .namespace(QLIdFilter.builder().operator(QLIdOperator.NOT_IN).values(values).build())
+                          .build());
+          break;
+        case EcsService:
+          filters.add(QLCEFilter.builder()
+                          .ecsService(QLIdFilter.builder().operator(QLIdOperator.NOT_IN).values(values).build())
+                          .build());
+          break;
+        case Task:
+          filters.add(QLCEFilter.builder()
+                          .task(QLIdFilter.builder().operator(QLIdOperator.NOT_IN).values(values).build())
+                          .build());
+          break;
+        case LaunchType:
+          filters.add(QLCEFilter.builder()
+                          .launchType(QLIdFilter.builder().operator(QLIdOperator.NOT_IN).values(values).build())
+                          .build());
+          break;
+        default:
+          break;
+      }
+    }
   }
 
   @Override
