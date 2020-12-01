@@ -65,10 +65,6 @@ public enum WebhookAction {
   }
 
   public static Set<WebhookAction> getGithubActionForEvent(WebhookEvent event) {
-    if (!WebhookEvent.githubEvents.contains(event)) {
-      throw new InvalidRequestException("Event " + event.name() + "not a github event");
-    }
-
     switch (event) {
       case PULL_REQUEST:
         return EnumSet.of(CLOSED, EDITED, LABELED, OPENED, REOPENED, SYNCHRONIZED, UNLABELED);
@@ -80,35 +76,31 @@ public enum WebhookAction {
       case DELETE:
         return emptySet();
       default:
-        throw new InvalidRequestException("Event " + event.name() + "not a github event");
+        throw new InvalidRequestException("Event " + event.name() + " not a github event");
     }
   }
 
   public static Set<WebhookAction> getBitbucketActionForEvent(WebhookEvent event) {
-    if (!WebhookEvent.bitbucketEvents.contains(event)) {
-      throw new InvalidRequestException("Event " + event.name() + "not a bitbucket event");
-    }
     switch (event) {
       case PULL_REQUEST:
         return EnumSet.of(PULL_REQUEST_CREATED, PULL_REQUEST_UPDATED, PULL_REQUEST_MERGED, PULL_REQUEST_DECLINED);
       case REPOSITORY:
-        return emptySet();
       case ISSUE:
         return emptySet();
       default:
-        throw new InvalidRequestException("Event " + event.name() + "not a bitbucket event");
+        throw new InvalidRequestException("Event " + event.name() + " not a bitbucket event");
     }
   }
 
   public static Set<WebhookAction> getGitLabActionForEvent(WebhookEvent event) {
     switch (event) {
-      case PULL_REQUEST:
+      case MERGE_REQUEST:
         return EnumSet.of(GITLAB_OPEN, GITLAB_CLOSE, GITLAB_REOPEN, GITLAB_MERGED, GITLAB_UPDATED, GITLAB_SYNC);
       case PUSH:
       case DELETE:
         return emptySet();
       default:
-        throw new InvalidRequestException("Event " + event.name() + "not a gitlab event");
+        throw new InvalidRequestException("Event " + event.name() + " not a gitlab event");
     }
   }
 }

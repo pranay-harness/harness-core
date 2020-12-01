@@ -42,32 +42,6 @@ public class WebhookTriggerFilterUtilTest extends CategoryTest {
       + "\t\t}\n"
       + "    } ";
 
-  String t = "pipeline:\n"
-      + "    identifier: T1\n"
-      + "    stages:\n"
-      + "      - stage:\n"
-      + "          identifier: S1\n"
-      + "          type: Deployment\n"
-      + "          spec:\n"
-      + "            service:\n"
-      + "              serviceDefinition:\n"
-      + "                type: Kubernetes\n"
-      + "                spec:\n"
-      + "                  manifests:\n"
-      + "                    - manifest:\n"
-      + "                        identifier: manifestId\n"
-      + "                        type: K8sManifest\n"
-      + "                        spec:\n"
-      + "                          store:\n"
-      + "                            type: Git\n"
-      + "                            spec:\n"
-      + "                              branch: triggerTest\n"
-      + "            infrastructure:\n"
-      + "              infrastructureDefinition:\n"
-      + "                type: KubernetesDirect\n"
-      + "                spec:\n"
-      + "                  releaseName: adwait-1001009\n";
-
   @Test
   @Owner(developers = ADWAIT)
   @Category(UnitTests.class)

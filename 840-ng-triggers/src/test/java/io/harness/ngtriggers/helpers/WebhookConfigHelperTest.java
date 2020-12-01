@@ -1,11 +1,39 @@
 package io.harness.ngtriggers.helpers;
 
+import static io.harness.ngtriggers.beans.source.webhook.WebhookAction.CLOSED;
+import static io.harness.ngtriggers.beans.source.webhook.WebhookAction.EDITED;
+import static io.harness.ngtriggers.beans.source.webhook.WebhookAction.GITLAB_CLOSE;
+import static io.harness.ngtriggers.beans.source.webhook.WebhookAction.GITLAB_MERGED;
+import static io.harness.ngtriggers.beans.source.webhook.WebhookAction.GITLAB_OPEN;
+import static io.harness.ngtriggers.beans.source.webhook.WebhookAction.GITLAB_REOPEN;
+import static io.harness.ngtriggers.beans.source.webhook.WebhookAction.GITLAB_SYNC;
+import static io.harness.ngtriggers.beans.source.webhook.WebhookAction.GITLAB_UPDATED;
+import static io.harness.ngtriggers.beans.source.webhook.WebhookAction.LABELED;
+import static io.harness.ngtriggers.beans.source.webhook.WebhookAction.OPENED;
+import static io.harness.ngtriggers.beans.source.webhook.WebhookAction.PULL_REQUEST_CREATED;
+import static io.harness.ngtriggers.beans.source.webhook.WebhookAction.PULL_REQUEST_DECLINED;
+import static io.harness.ngtriggers.beans.source.webhook.WebhookAction.PULL_REQUEST_MERGED;
+import static io.harness.ngtriggers.beans.source.webhook.WebhookAction.PULL_REQUEST_UPDATED;
+import static io.harness.ngtriggers.beans.source.webhook.WebhookAction.REOPENED;
+import static io.harness.ngtriggers.beans.source.webhook.WebhookAction.SYNCHRONIZED;
+import static io.harness.ngtriggers.beans.source.webhook.WebhookAction.UNLABELED;
+import static io.harness.ngtriggers.beans.source.webhook.WebhookEvent.DELETE;
+import static io.harness.ngtriggers.beans.source.webhook.WebhookEvent.MERGE_REQUEST;
+import static io.harness.ngtriggers.beans.source.webhook.WebhookEvent.PULL_REQUEST;
+import static io.harness.ngtriggers.beans.source.webhook.WebhookEvent.PUSH;
+import static io.harness.ngtriggers.beans.source.webhook.WebhookSourceRepo.BITBUCKET;
+import static io.harness.ngtriggers.beans.source.webhook.WebhookSourceRepo.GITHUB;
+import static io.harness.ngtriggers.beans.source.webhook.WebhookSourceRepo.GITLAB;
+import static io.harness.rule.OwnerRule.ADWAIT;
 import static io.harness.rule.OwnerRule.NAMAN;
 
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.assertj.core.api.AssertionsForInterfaceTypes.assertThat;
 
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
+import io.harness.exception.InvalidRequestException;
+import io.harness.ngtriggers.beans.source.webhook.WebhookAction;
 import io.harness.ngtriggers.beans.source.webhook.WebhookEvent;
 import io.harness.ngtriggers.beans.source.webhook.WebhookSourceRepo;
 import io.harness.rule.Owner;
@@ -20,7 +48,7 @@ public class WebhookConfigHelperTest extends CategoryTest {
   @Category(UnitTests.class)
   public void testGetSourceRepoToEvent() {
     Map<WebhookSourceRepo, List<WebhookEvent>> map = WebhookConfigHelper.getSourceRepoToEvent();
-    Set<WebhookEvent> events = new HashSet<>(map.get(WebhookSourceRepo.GITHUB));
+    Set<WebhookEvent> events = new HashSet<>(map.get(GITHUB));
     events.addAll(map.get(WebhookSourceRepo.GITLAB));
     events.addAll(map.get(WebhookSourceRepo.BITBUCKET));
 
@@ -32,5 +60,52 @@ public class WebhookConfigHelperTest extends CategoryTest {
       }
     }
     assertThat(eventsNotPresent).isEmpty();
+  }
+
+  @Test
+  @Owner(developers = ADWAIT)
+  @Category(UnitTests.class)
+  public void testGetActionList() {
+    List<WebhookAction> actionsList = WebhookConfigHelper.getActionsList(null, PUSH);
+    assertThat(actionsList).isEmpty();
+
+    actionsList = WebhookConfigHelper.getActionsList(GITHUB, PUSH);
+    assertThat(actionsList).isEmpty();
+
+    actionsList = WebhookConfigHelper.getActionsList(GITHUB, PULL_REQUEST);
+    assertThat(actionsList)
+        .containsExactlyInAnyOrder(CLOSED, EDITED, LABELED, OPENED, REOPENED, SYNCHRONIZED, UNLABELED);
+
+    actionsList.clear();
+    assertThatThrownBy(() -> WebhookConfigHelper.getActionsList(GITHUB, MERGE_REQUEST))
+        .isInstanceOf(InvalidRequestException.class)
+        .hasMessage("Event MERGE_REQUEST not a github event");
+
+    actionsList.clear();
+    assertThatThrownBy(() -> WebhookConfigHelper.getActionsList(BITBUCKET, PUSH))
+        .isInstanceOf(InvalidRequestException.class)
+        .hasMessage("Event PUSH not a bitbucket event");
+    assertThat(actionsList).isEmpty();
+
+    actionsList = WebhookConfigHelper.getActionsList(BITBUCKET, PULL_REQUEST);
+    assertThat(actionsList)
+        .containsExactlyInAnyOrder(
+            PULL_REQUEST_CREATED, PULL_REQUEST_UPDATED, PULL_REQUEST_MERGED, PULL_REQUEST_DECLINED);
+
+    actionsList.clear();
+    actionsList = WebhookConfigHelper.getActionsList(GITLAB, MERGE_REQUEST);
+    assertThat(actionsList)
+        .containsExactlyInAnyOrder(
+            GITLAB_OPEN, GITLAB_CLOSE, GITLAB_REOPEN, GITLAB_MERGED, GITLAB_UPDATED, GITLAB_SYNC);
+
+    actionsList.clear();
+    assertThatThrownBy(() -> WebhookConfigHelper.getActionsList(GITLAB, PULL_REQUEST))
+        .isInstanceOf(InvalidRequestException.class)
+        .hasMessage("Event PULL_REQUEST not a gitlab event");
+
+    actionsList = WebhookConfigHelper.getActionsList(GITLAB, PUSH);
+    assertThat(actionsList).isEmpty();
+    actionsList = WebhookConfigHelper.getActionsList(GITLAB, DELETE);
+    assertThat(actionsList).isEmpty();
   }
 }
