@@ -28,11 +28,12 @@ public class AzureWebAppRollbackTaskHandler extends AbstractAzureWebAppTaskHandl
     AzureAppServicePreDeploymentData preDeploymentData = rollbackParameters.getPreDeploymentData();
     AzureWebClientContext azureWebClientContext = buildAzureWebClientContext(rollbackParameters, azureConfig);
     Integer steadyTimeoutIntervalInMin = rollbackParameters.getTimeoutIntervalInMin();
-    AzureAppServiceTaskType failedStep = preDeploymentData.getFailedStep();
+    AzureAppServiceTaskType failedTaskType = preDeploymentData.getFailedTaskType();
 
     rollbackSetupSlot(preDeploymentData, azureWebClientContext, steadyTimeoutIntervalInMin, logStreamingTaskClient);
 
-    if (AzureAppServiceTaskType.SLOT_SHIFT_TRAFFIC == failedStep || AzureAppServiceTaskType.SLOT_SWAP == failedStep) {
+    if (AzureAppServiceTaskType.SLOT_SHIFT_TRAFFIC == failedTaskType
+        || AzureAppServiceTaskType.SLOT_SWAP == failedTaskType) {
       rollbackUpdateSlotTrafficWeight(preDeploymentData, azureWebClientContext, logStreamingTaskClient);
     }
 

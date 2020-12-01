@@ -33,10 +33,8 @@ import com.microsoft.azure.management.appservice.DeploymentSlot;
 import com.microsoft.azure.management.appservice.Experiments;
 import com.microsoft.azure.management.appservice.RampUpRule;
 import com.microsoft.azure.management.appservice.WebApp;
-import com.microsoft.azure.management.appservice.WebAppBase;
 import com.microsoft.azure.management.appservice.implementation.SiteConfigResourceInner;
 import com.microsoft.azure.management.appservice.implementation.StringDictionaryInner;
-import com.microsoft.azure.management.resources.fluentcore.model.Appliable;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.ArrayList;
@@ -45,7 +43,6 @@ import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Optional;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 import lombok.extern.slf4j.Slf4j;
 import org.jetbrains.annotations.NotNull;
 import rx.Completable;
@@ -216,7 +213,7 @@ public class AzureWebClientImpl extends AzureClient implements AzureWebClient {
     log.debug("Start deleting slot connection settings by slotName: {}, context: {}", slotName, context);
     DeploymentSlot deploymentSlot = getDeploymentSlot(context, slotName);
     DeploymentSlot.Update update = deploymentSlot.update();
-    appSettingsToRemove.keySet().forEach(update::withoutConnectionString);
+    appSettingsToRemove.keySet().forEach(update::withoutAppSetting);
     return update.apply();
   }
 
@@ -458,18 +455,19 @@ public class AzureWebClientImpl extends AzureClient implements AzureWebClient {
   }
 
   @Override
-  public Optional<String> getDockerImageNameAndTag(AzureWebClientContext context) {
+  public Optional<String> getSlotDockerImageNameAndTag(AzureWebClientContext context, String slotName) {
     String resourceGroupName = context.getResourceGroupName();
     String webAppName = context.getAppName();
     Azure azure = getAzureClientByContext(context);
-    SiteConfigResourceInner config = azure.webApps().inner().getConfiguration(resourceGroupName, webAppName);
+    SiteConfigResourceInner slotConfig =
+        azure.webApps().inner().getConfigurationSlot(resourceGroupName, webAppName, slotName);
 
-    String windowsFxVersion = config.windowsFxVersion();
+    String windowsFxVersion = slotConfig.windowsFxVersion();
     if (isNotBlank(windowsFxVersion)) {
       return Optional.of(AzureResourceUtility.removeDockerFxImagePrefix(windowsFxVersion));
     }
 
-    String linuxFxVersion = config.linuxFxVersion();
+    String linuxFxVersion = slotConfig.linuxFxVersion();
     return isNotBlank(linuxFxVersion) ? Optional.of(AzureResourceUtility.removeDockerFxImagePrefix(linuxFxVersion))
                                       : Optional.empty();
   }
@@ -484,8 +482,8 @@ public class AzureWebClientImpl extends AzureClient implements AzureWebClient {
     List<RampUpRule> rampUpRules = createRampUpRules(targetRouteSlot, trafficReroutePercentage);
     Experiments experiments = createExperiments(rampUpRules);
 
-    log.debug("Start getting wen app configuration settings, targetRerouteSlotName: {}, context: {}",
-        targetRerouteSlotName, context);
+    log.debug("Start getting app configuration settings, targetRerouteSlotName: {}, context: {}", targetRerouteSlotName,
+        context);
     SiteConfigResourceInner siteConfig = azure.webApps().inner().getConfiguration(resourceGroupName, webAppName);
     siteConfig.withExperiments(experiments);
 
@@ -522,14 +520,23 @@ public class AzureWebClientImpl extends AzureClient implements AzureWebClient {
     Azure azure = getAzureClientByContext(context);
     double defaultTrafficWeight = 0.0;
 
-    SiteConfigResourceInner configurationSlot =
-        azure.webApps().inner().getConfigurationSlot(resourceGroupName, webAppName, slotName);
+    String slotDefaultHostName = getDeploymentSlotDefaultHostName(context, slotName);
+
+    SiteConfigResourceInner configurationSlot = azure.webApps().inner().getConfiguration(resourceGroupName, webAppName);
     Experiments experiments = configurationSlot.experiments();
     if (experiments == null) {
       return defaultTrafficWeight;
     }
 
-    List<RampUpRule> rampUpRules = experiments.rampUpRules();
-    return rampUpRules.isEmpty() ? defaultTrafficWeight : rampUpRules.get(0).reroutePercentage();
+    return experiments.rampUpRules()
+        .stream()
+        .filter(rule -> slotDefaultHostName.equals(rule.actionHostName()))
+        .map(RampUpRule::reroutePercentage)
+        .findFirst()
+        .orElse(defaultTrafficWeight);
+  }
+
+  private String getDeploymentSlotDefaultHostName(AzureWebClientContext context, String slotName) {
+    return getDeploymentSlot(context, slotName).defaultHostName();
   }
 }
