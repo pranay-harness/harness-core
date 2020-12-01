@@ -6,9 +6,12 @@ import io.harness.histogram.DecayingHistogram;
 import io.harness.histogram.ExponentialHistogramOptions;
 import io.harness.histogram.Histogram;
 import io.harness.histogram.HistogramCheckpoint;
+import io.harness.histogram.HistogramImpl;
 import io.harness.histogram.HistogramOptions;
 
 import java.time.Duration;
+import java.time.Instant;
+import java.util.Optional;
 import lombok.experimental.UtilityClass;
 
 @UtilityClass
@@ -55,13 +58,22 @@ public class RecommenderUtils {
     return new DecayingHistogram(CPU_HISTOGRAM_OPTIONS, CPU_HISTOGRAM_DECAY_HALF_LIFE);
   }
 
+  public static Histogram newCpuHistogramV2() {
+    return new HistogramImpl(CPU_HISTOGRAM_OPTIONS);
+  }
+
   public static Histogram newMemoryHistogram() {
     return new DecayingHistogram(MEMORY_HISTOGRAM_OPTIONS, MEMORY_HISTOGRAM_DECAY_HALF_LIFE);
   }
 
+  public static Histogram newMemoryHistogramV2() {
+    return new HistogramImpl(MEMORY_HISTOGRAM_OPTIONS);
+  }
+
   public static HistogramProto checkpointToProto(HistogramCheckpoint histogramCheckpoint) {
     return HistogramProto.newBuilder()
-        .setReferenceTimestamp(HTimestamps.fromInstant(histogramCheckpoint.getReferenceTimestamp()))
+        .setReferenceTimestamp(HTimestamps.fromInstant(
+            Optional.ofNullable(histogramCheckpoint.getReferenceTimestamp()).orElse(Instant.EPOCH)))
         .putAllBucketWeights(histogramCheckpoint.getBucketWeights())
         .setTotalWeight(histogramCheckpoint.getTotalWeight())
         .build();

@@ -5,18 +5,20 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import io.harness.annotation.StoreIn;
 import io.harness.ccm.commons.beans.HarnessServiceInfo;
 import io.harness.data.structure.MongoMapSanitizer;
+import io.harness.mongo.index.CompoundMongoIndex;
 import io.harness.mongo.index.FdIndex;
 import io.harness.mongo.index.FdTtlIndex;
-import io.harness.mongo.index.Field;
-import io.harness.mongo.index.NgUniqueIndex;
+import io.harness.mongo.index.MongoIndex;
 import io.harness.persistence.AccountAccess;
 import io.harness.persistence.CreatedAtAware;
 import io.harness.persistence.PersistentEntity;
 import io.harness.persistence.UpdatedAtAware;
 import io.harness.persistence.UuidAware;
 
+import com.google.common.collect.ImmutableList;
 import java.math.BigDecimal;
 import java.time.Instant;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import lombok.AccessLevel;
@@ -38,12 +40,22 @@ import org.mongodb.morphia.annotations.PrePersist;
 @FieldNameConstants(innerTypeName = "K8sWorkloadRecommendationKeys")
 @StoreIn("events")
 @Entity(value = "k8sWorkloadRecommendation", noClassnameStored = true)
-@NgUniqueIndex(name = "no_dup",
-    fields =
-    { @Field("accountId")
-      , @Field("clusterId"), @Field("namespace"), @Field("workloadName"), @Field("workloadType") })
 public final class K8sWorkloadRecommendation
     implements PersistentEntity, UuidAware, CreatedAtAware, UpdatedAtAware, AccountAccess {
+  public static List<MongoIndex> mongoIndexes() {
+    return ImmutableList.<MongoIndex>builder()
+        .add(CompoundMongoIndex.builder()
+                 .name("unique_accountId_clusterId_namespace_workloadName_workloadType")
+                 .unique(true)
+                 .field(K8sWorkloadRecommendationKeys.accountId)
+                 .field(K8sWorkloadRecommendationKeys.clusterId)
+                 .field(K8sWorkloadRecommendationKeys.namespace)
+                 .field(K8sWorkloadRecommendationKeys.workloadName)
+                 .field(K8sWorkloadRecommendationKeys.workloadType)
+                 .build())
+        .build();
+  }
+
   private static final MongoMapSanitizer SANITIZER = new MongoMapSanitizer('~');
 
   @Id String uuid;

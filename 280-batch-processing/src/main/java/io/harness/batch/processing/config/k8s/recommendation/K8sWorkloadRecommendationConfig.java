@@ -1,6 +1,7 @@
 package io.harness.batch.processing.config.k8s.recommendation;
 
 import io.harness.batch.processing.ccm.BatchJobType;
+import io.harness.batch.processing.dao.intfc.InstanceDataDao;
 import io.harness.batch.processing.reader.CloseableIteratorItemReader;
 import io.harness.batch.processing.reader.EventReaderFactory;
 import io.harness.batch.processing.service.intfc.WorkloadRepository;
@@ -76,6 +77,14 @@ public class K8sWorkloadRecommendationConfig {
   public ItemReader<PublishedMessage> containerStateReader(@Value("#{jobParameters[accountId]}") String accountId,
       @Value("#{jobParameters[startDate]}") Long startDate, @Value("#{jobParameters[endDate]}") Long endDate) {
     return eventReaderFactory.getEventReader(accountId, EventTypeConstants.K8S_CONTAINER_STATE, startDate, endDate);
+  }
+
+  @Bean
+  @StepScope
+  public ContainerStateWriter containerStateWriter(InstanceDataDao instanceDataDao,
+      WorkloadRecommendationDao workloadRecommendationDao, @Value("#{jobParameters[startDate]}") Long startDateMillis) {
+    Instant jobStartDate = Instant.ofEpochMilli(startDateMillis);
+    return new ContainerStateWriter(instanceDataDao, workloadRecommendationDao, jobStartDate);
   }
 
   @Bean

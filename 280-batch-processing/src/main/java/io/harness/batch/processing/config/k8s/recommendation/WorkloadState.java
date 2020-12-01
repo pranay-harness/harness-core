@@ -11,6 +11,7 @@ import lombok.Value;
 @Value
 class WorkloadState {
   Map<String, ContainerState> containerStateMap;
+  Map<String, ContainerStateV2> containerStateMapSingleDay;
 
   WorkloadState(K8sWorkloadRecommendation recommendation) {
     this.containerStateMap =
@@ -19,5 +20,11 @@ class WorkloadState {
             .entrySet()
             .stream()
             .collect(Collectors.toMap(Map.Entry::getKey, e -> ContainerState.fromCheckpoint(e.getValue())));
+
+    this.containerStateMapSingleDay = Optional.ofNullable(recommendation.getContainerCheckpoints())
+                                          .orElseGet(HashMap::new)
+                                          .entrySet()
+                                          .stream()
+                                          .collect(Collectors.toMap(Map.Entry::getKey, e -> new ContainerStateV2()));
   }
 }

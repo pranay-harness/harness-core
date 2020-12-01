@@ -2,6 +2,7 @@ package io.harness.perpetualtask.k8s.metrics.recommender;
 
 import static io.harness.ccm.recommender.k8sworkload.RecommenderUtils.MIN_SAMPLE_WEIGHT;
 import static io.harness.ccm.recommender.k8sworkload.RecommenderUtils.newCpuHistogram;
+import static io.harness.ccm.recommender.k8sworkload.RecommenderUtils.newCpuHistogramV2;
 
 import io.harness.histogram.Histogram;
 
@@ -20,6 +21,7 @@ public class ContainerState {
   private long memoryPeak;
   private Instant memoryPeakTime;
   private final Histogram cpuHistogram;
+  private final Histogram cpuHistogramV2;
   private Instant firstSampleStart;
   private Instant lastSampleStart;
   private int totalSamplesCount;
@@ -29,6 +31,7 @@ public class ContainerState {
     this.podName = podName;
     this.containerName = containerName;
     this.cpuHistogram = newCpuHistogram();
+    this.cpuHistogramV2 = newCpuHistogramV2();
   }
 
   public void addCpuSample(double containerCpuCores, String timestamp) {
@@ -38,6 +41,7 @@ public class ContainerState {
       return;
     }
     cpuHistogram.addSample(containerCpuCores, MIN_SAMPLE_WEIGHT, now);
+    cpuHistogramV2.addSample(containerCpuCores, MIN_SAMPLE_WEIGHT, now);
     if (firstSampleStart == null) {
       firstSampleStart = now;
     }

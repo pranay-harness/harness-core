@@ -4,7 +4,6 @@ package io.harness.event.payloads;
 
 option java_multiple_files = true;
 
-import "google/protobuf/duration.proto";
 import "google/protobuf/timestamp.proto";
 
 message HistogramProto {
@@ -36,4 +35,6 @@ message ContainerStateProto {
 
   // timestamp of the memory_peak observation
   google.protobuf.Timestamp memory_peak_time = 14;
+
+  HistogramProto cpu_histogram_v2 = 15;
 }

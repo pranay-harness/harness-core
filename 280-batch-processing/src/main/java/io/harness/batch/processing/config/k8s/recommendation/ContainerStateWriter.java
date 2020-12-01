@@ -5,6 +5,7 @@ import static io.harness.batch.processing.tasklet.util.InstanceMetaDataUtils.get
 import static io.harness.ccm.recommender.k8sworkload.RecommenderUtils.MEMORY_AGGREGATION_INTERVAL;
 import static io.harness.ccm.recommender.k8sworkload.RecommenderUtils.RECOMMENDER_VERSION;
 import static io.harness.ccm.recommender.k8sworkload.RecommenderUtils.newCpuHistogram;
+import static io.harness.ccm.recommender.k8sworkload.RecommenderUtils.newCpuHistogramV2;
 import static io.harness.ccm.recommender.k8sworkload.RecommenderUtils.protoToCheckpoint;
 import static io.harness.time.DurationUtils.truncate;
 
@@ -20,6 +21,7 @@ import io.harness.histogram.Histogram;
 
 import software.wings.graphql.datafetcher.ce.recommendation.entity.ContainerCheckpoint;
 import software.wings.graphql.datafetcher.ce.recommendation.entity.K8sWorkloadRecommendation;
+import software.wings.graphql.datafetcher.ce.recommendation.entity.PartialRecommendationHistogram;
 
 import com.github.benmanes.caffeine.cache.Caffeine;
 import com.github.benmanes.caffeine.cache.LoadingCache;
@@ -37,9 +39,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.batch.item.ItemWriter;
-import org.springframework.stereotype.Component;
 
-@Component
 @Slf4j
 class ContainerStateWriter implements ItemWriter<PublishedMessage> {
   private static final Set<Integer> ACCEPTED_VERSIONS = Collections.singleton(RECOMMENDER_VERSION);
@@ -49,7 +49,11 @@ class ContainerStateWriter implements ItemWriter<PublishedMessage> {
 
   private final LoadingCache<ResourceId, ResourceId> podToWorkload;
 
-  ContainerStateWriter(InstanceDataDao instanceDataDao, WorkloadRecommendationDao workloadRecommendationDao) {
+  private final Instant jobStartDate;
+
+  ContainerStateWriter(
+      InstanceDataDao instanceDataDao, WorkloadRecommendationDao workloadRecommendationDao, Instant jobStartDate) {
+    this.jobStartDate = jobStartDate;
     this.podToWorkload = Caffeine.newBuilder().maximumSize(10000).build(this::fetchWorkloadIdForPod);
     this.instanceDataDao = instanceDataDao;
     this.workloadRecommendationDao = workloadRecommendationDao;
@@ -85,6 +89,7 @@ class ContainerStateWriter implements ItemWriter<PublishedMessage> {
       }
       WorkloadState workloadState = workloadToRecommendation.computeIfAbsent(workloadId, this::getWorkloadState);
       updateContainerStateMap(workloadState.getContainerStateMap(), containerStateProto);
+      updateContainerStateMapSingleDay(workloadState.getContainerStateMapSingleDay(), containerStateProto);
     }
     persistChanges(workloadToRecommendation);
   }
@@ -148,6 +153,40 @@ class ContainerStateWriter implements ItemWriter<PublishedMessage> {
     }
   }
 
+  private void updateContainerStateMapSingleDay(
+      Map<String, ContainerStateV2> containerStateMap, ContainerStateProto containerStateProto) {
+    String containerName = containerStateProto.getContainerName();
+    ContainerStateV2 containerState = containerStateMap.get(containerName);
+    Instant firstSampleStart = HTimestamps.toInstant(containerStateProto.getFirstSampleStart());
+    Instant lastSampleStart = HTimestamps.toInstant(containerStateProto.getLastSampleStart());
+    if (containerState != null && containerState.getVersion() >= containerStateProto.getVersion()
+        && firstSampleStart.isBefore(containerState.getLastSampleStart())) {
+      log.debug("Skipping sample {} as interval already covered", containerStateProto);
+    } else {
+      if (containerState == null || containerState.getVersion() < containerStateProto.getVersion()) {
+        // First sample seen for this container, or new version of proto for this container
+        // Re-initialize containerState
+        containerState = new ContainerStateV2();
+        containerState.setFirstSampleStart(firstSampleStart);
+        containerStateMap.put(containerName, containerState);
+        containerState.setVersion(containerStateProto.getVersion());
+      }
+      containerState.setLastUpdateTime(Instant.now());
+      containerState.setLastSampleStart(lastSampleStart);
+      containerState.setTotalSamplesCount(
+          containerState.getTotalSamplesCount() + containerStateProto.getTotalSamplesCount());
+
+      // Handle cpu
+      // Just merge the histogram received from delegate into the existing histogram
+      Histogram protoHistogram = newCpuHistogramV2();
+      protoHistogram.loadFromCheckPoint(protoToCheckpoint(containerStateProto.getCpuHistogramV2()));
+      containerState.getCpuHistogram().merge(protoHistogram);
+
+      // Just store a single value for memory - max memory for the day
+      containerState.setMemoryPeak(Math.max(containerStateProto.getMemoryPeak(), containerState.getMemoryPeak()));
+    }
+  }
+
   @NotNull
   private WorkloadState getWorkloadState(ResourceId workloadId) {
     return new WorkloadState(workloadRecommendationDao.fetchRecommendationForWorkload(workloadId));
@@ -171,6 +210,20 @@ class ContainerStateWriter implements ItemWriter<PublishedMessage> {
                                                   .orElse(Instant.EPOCH);
       recommendation.setLastReceivedUtilDataAt(lastReceivedUtilDataTimestamp);
       workloadRecommendationDao.save(recommendation);
+
+      Map<String, ContainerStateV2> containerStatesV2 = workloadState.getContainerStateMapSingleDay();
+      Map<String, ContainerCheckpoint> containerCheckpointsV2 = containerStatesV2.entrySet().stream().collect(
+          Collectors.toMap(Map.Entry::getKey, cse -> cse.getValue().toContainerCheckpoint()));
+      PartialRecommendationHistogram partialRecommendationHistogram = PartialRecommendationHistogram.builder()
+                                                                          .accountId(workloadId.getAccountId())
+                                                                          .clusterId(workloadId.getClusterId())
+                                                                          .namespace(workloadId.getNamespace())
+                                                                          .workloadName(workloadId.getName())
+                                                                          .workloadType(workloadId.getKind())
+                                                                          .date(jobStartDate)
+                                                                          .containerCheckpoints(containerCheckpointsV2)
+                                                                          .build();
+      workloadRecommendationDao.save(partialRecommendationHistogram);
     });
   }
 
