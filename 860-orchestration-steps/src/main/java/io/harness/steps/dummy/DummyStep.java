@@ -9,9 +9,9 @@ import io.harness.facilitator.PassThroughData;
 import io.harness.facilitator.modes.sync.SyncExecutable;
 import io.harness.pms.ambiance.Ambiance;
 import io.harness.pms.execution.Status;
+import io.harness.pms.sdk.core.steps.io.StepResponse;
 import io.harness.pms.steps.StepType;
 import io.harness.state.io.StepInputPackage;
-import io.harness.state.io.StepResponse;
 import io.harness.steps.OrchestrationStepTypes;
 
 import com.google.common.base.Preconditions;

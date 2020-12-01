@@ -24,7 +24,7 @@ import io.harness.exception.InvalidArgumentsException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.ngpipeline.common.AmbianceHelper;
 import io.harness.pms.ambiance.Ambiance;
-import io.harness.state.io.StepResponse.StepOutcome;
+import io.harness.pms.sdk.core.steps.io.StepResponse.StepOutcome;
 import io.harness.steps.StepUtils;
 import io.harness.tasks.Cd1SetupFields;
 import io.harness.tasks.Task;

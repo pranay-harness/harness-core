@@ -24,8 +24,8 @@ import io.harness.delegate.task.artifacts.response.ArtifactTaskExecutionResponse
 import io.harness.delegate.task.artifacts.response.ArtifactTaskResponse;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.pms.ambiance.Ambiance;
+import io.harness.pms.sdk.core.steps.io.StepResponse.StepOutcome;
 import io.harness.rule.Owner;
-import io.harness.state.io.StepResponse.StepOutcome;
 import io.harness.tasks.ResponseData;
 import io.harness.tasks.Task;
 

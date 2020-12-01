@@ -21,10 +21,10 @@ import io.harness.ng.core.environment.services.EnvironmentService;
 import io.harness.ngpipeline.common.AmbianceHelper;
 import io.harness.pms.ambiance.Ambiance;
 import io.harness.pms.execution.Status;
+import io.harness.pms.sdk.core.steps.io.StepResponse;
+import io.harness.pms.sdk.core.steps.io.StepResponse.StepOutcome;
 import io.harness.pms.steps.StepType;
 import io.harness.state.io.StepInputPackage;
-import io.harness.state.io.StepResponse;
-import io.harness.state.io.StepResponse.StepOutcome;
 import io.harness.steps.StepOutcomeGroup;
 
 import com.google.common.annotations.VisibleForTesting;

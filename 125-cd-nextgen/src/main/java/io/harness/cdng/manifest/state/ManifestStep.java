@@ -9,7 +9,7 @@ import io.harness.cdng.manifest.yaml.ManifestOutcome;
 import io.harness.cdng.service.beans.ServiceConfig;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.InvalidRequestException;
-import io.harness.state.io.StepResponse.StepOutcome;
+import io.harness.pms.sdk.core.steps.io.StepResponse.StepOutcome;
 import io.harness.yaml.core.intfc.WithIdentifier;
 
 import com.google.common.annotations.VisibleForTesting;
