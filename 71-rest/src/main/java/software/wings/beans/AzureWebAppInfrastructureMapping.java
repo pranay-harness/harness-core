@@ -36,17 +36,21 @@ public class AzureWebAppInfrastructureMapping extends AzureAppServiceInfrastruct
     return DeploymentType.AZURE_WEBAPP.name();
   }
 
+  public AzureWebAppInfrastructureMapping() {
+    super(InfrastructureMappingType.AZURE_WEBAPP.getName());
+  }
+
   @Builder
   public AzureWebAppInfrastructureMapping(String entityYamlPath, String appId, String accountId, String type,
       String uuid, EmbeddedUser createdBy, long createdAt, EmbeddedUser lastUpdatedBy, long lastUpdatedAt,
       String computeProviderSettingId, String envId, String serviceTemplateId, String serviceId,
-      String computeProviderType, String infraMappingType, String deploymentType, String computeProviderName,
-      String name, boolean autoPopulateName, Map<String, Object> blueprints, String provisionerId, boolean sample,
+      String computeProviderType, String deploymentType, String computeProviderName, String name,
+      boolean autoPopulateName, Map<String, Object> blueprints, String provisionerId, boolean sample,
       String subscriptionId, String resourceGroup, String deploymentSlot, String webApp) {
     super(entityYamlPath, appId, accountId, type, uuid, createdBy, createdAt, lastUpdatedBy, lastUpdatedAt,
-        computeProviderSettingId, envId, serviceTemplateId, serviceId, computeProviderType, infraMappingType,
-        deploymentType, computeProviderName, name, autoPopulateName, blueprints, provisionerId, sample, subscriptionId,
-        resourceGroup, deploymentSlot);
+        computeProviderSettingId, envId, serviceTemplateId, serviceId, computeProviderType,
+        InfrastructureMappingType.AZURE_WEBAPP.getName(), deploymentType, computeProviderName, name, autoPopulateName,
+        blueprints, provisionerId, sample, subscriptionId, resourceGroup, deploymentSlot);
     this.webApp = webApp;
   }
 
