@@ -1625,8 +1625,7 @@ public class AccountServiceImpl implements AccountService {
 
   @Override
   public CertRequirement getHttpsCertificateRequirement(String accountId) {
-    // TODO: write an actual implementation
-    if (accountId.isEmpty()) {
+    if (isCertValidationRequired(accountId)) {
       return CertRequirement.UNKNOWN_REQUIREMENT;
     } else {
       return CertRequirement.CERTIFICATE_REQUIRED;
