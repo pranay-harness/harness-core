@@ -1,6 +1,6 @@
 package io.harness.beans.sweepingoutputs;
 
-import io.harness.data.SweepingOutput;
+import io.harness.pms.sdk.core.data.SweepingOutput;
 import io.harness.validation.Update;
 
 import com.github.reinert.jjschema.SchemaIgnore;

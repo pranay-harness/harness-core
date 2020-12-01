@@ -1,7 +1,7 @@
 package io.harness.cdng.tasks.manifestFetch.step;
 
-import io.harness.data.Outcome;
 import io.harness.git.model.GitFile;
+import io.harness.pms.sdk.core.data.Outcome;
 
 import java.io.Serializable;
 import java.util.List;

@@ -1,6 +1,6 @@
 package software.wings.helpers.ext.cloudformation;
 
-import io.harness.data.SweepingOutput;
+import io.harness.pms.sdk.core.data.SweepingOutput;
 
 import lombok.Builder;
 import lombok.Data;

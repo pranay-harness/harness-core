@@ -3,10 +3,10 @@ package io.harness.beans.converter;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.GraphVertex;
-import io.harness.data.Outcome;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.execution.NodeExecution;
 import io.harness.facilitator.modes.ExecutableResponse;
+import io.harness.pms.sdk.core.data.Outcome;
 import io.harness.pms.serializer.json.JsonOrchestrationUtils;
 
 import java.util.Collections;

@@ -5,8 +5,8 @@ import static io.harness.annotations.dev.HarnessTeam.CDC;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.engine.outcomes.OutcomeService;
 import io.harness.engine.outputs.ExecutionSweepingOutputService;
+import io.harness.pms.data.OrchestrationRefType;
 import io.harness.pms.refobjects.RefType;
-import io.harness.references.OrchestrationRefType;
 import io.harness.registries.registrar.ResolverRegistrar;
 import io.harness.resolvers.Resolver;
 

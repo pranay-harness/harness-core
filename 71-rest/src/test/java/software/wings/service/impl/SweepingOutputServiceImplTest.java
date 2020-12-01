@@ -25,8 +25,8 @@ import io.harness.beans.SweepingOutputInstance;
 import io.harness.beans.SweepingOutputInstance.Scope;
 import io.harness.beans.SweepingOutputInstance.SweepingOutputInstanceBuilder;
 import io.harness.category.element.UnitTests;
-import io.harness.data.SweepingOutput;
 import io.harness.deployment.InstanceDetails;
+import io.harness.pms.sdk.core.data.SweepingOutput;
 import io.harness.rule.Owner;
 import io.harness.serializer.KryoSerializer;
 

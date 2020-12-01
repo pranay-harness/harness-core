@@ -1,9 +1,9 @@
 package software.wings.sm.states.spotinst;
 
 import io.harness.context.ContextElementType;
-import io.harness.data.SweepingOutput;
 import io.harness.delegate.task.aws.LoadBalancerDetailsForBGDeployment;
 import io.harness.delegate.task.spotinst.response.SpotInstSetupTaskResponse;
+import io.harness.pms.sdk.core.data.SweepingOutput;
 import io.harness.spotinst.model.ElastiGroup;
 
 import software.wings.beans.ResizeStrategy;

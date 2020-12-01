@@ -1,6 +1,6 @@
 package software.wings.api.terraform;
 
-import io.harness.data.SweepingOutput;
+import io.harness.pms.sdk.core.data.SweepingOutput;
 
 import java.util.HashMap;
 

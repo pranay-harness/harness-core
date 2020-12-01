@@ -1,6 +1,6 @@
 package software.wings.api.artifact;
 
-import io.harness.data.SweepingOutput;
+import io.harness.pms.sdk.core.data.SweepingOutput;
 
 import java.util.List;
 import lombok.Builder;

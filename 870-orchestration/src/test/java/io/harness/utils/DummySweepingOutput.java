@@ -1,6 +1,6 @@
 package io.harness.utils;
 
-import io.harness.data.SweepingOutput;
+import io.harness.pms.sdk.core.data.SweepingOutput;
 
 import lombok.Builder;
 import lombok.Value;

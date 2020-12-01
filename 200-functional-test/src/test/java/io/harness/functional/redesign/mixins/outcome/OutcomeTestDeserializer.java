@@ -1,7 +1,7 @@
 package io.harness.functional.redesign.mixins.outcome;
 
 import io.harness.beans.ExecutionStatus;
-import io.harness.data.Outcome;
+import io.harness.pms.sdk.core.data.Outcome;
 
 import software.wings.api.HttpStateExecutionData;
 

@@ -1,6 +1,6 @@
 package io.harness.cdng.manifest.yaml;
 
-import io.harness.data.Outcome;
+import io.harness.pms.sdk.core.data.Outcome;
 
 import java.util.List;
 import lombok.Builder;

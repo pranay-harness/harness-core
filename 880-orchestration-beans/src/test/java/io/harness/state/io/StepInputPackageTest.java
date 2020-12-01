@@ -8,6 +8,7 @@ import static org.assertj.core.api.Assumptions.assumeThat;
 
 import io.harness.OrchestrationBeansTestBase;
 import io.harness.category.element.UnitTests;
+import io.harness.pms.sdk.core.data.StepTransput;
 import io.harness.refObjects.RefObjectUtil;
 import io.harness.rule.Owner;
 import io.harness.utils.DummyOutcome;
@@ -37,7 +38,7 @@ public class StepInputPackageTest extends OrchestrationBeansTestBase {
   @Category(UnitTests.class)
   public void shouldTestFindByRefKey() {
     assumeThat(false).isTrue();
-    List<StepTransput> transputList = inputPackage.findByRefKey("refKey");
+    List<io.harness.pms.sdk.core.data.StepTransput> transputList = inputPackage.findByRefKey("refKey");
     assertThat(transputList).isNotEmpty();
     assertThat(transputList).hasSize(2);
     assertThat(transputList.stream().map(transput -> ((DummyOutcome) transput).getName()))

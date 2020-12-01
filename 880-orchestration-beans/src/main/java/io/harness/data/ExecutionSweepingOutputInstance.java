@@ -12,6 +12,7 @@ import io.harness.mongo.index.NgUniqueIndex;
 import io.harness.persistence.PersistentEntity;
 import io.harness.persistence.UuidAccess;
 import io.harness.pms.ambiance.Level;
+import io.harness.pms.sdk.core.data.SweepingOutput;
 
 import java.time.OffsetDateTime;
 import java.util.Date;

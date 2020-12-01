@@ -4,8 +4,8 @@ import static io.harness.annotations.dev.HarnessTeam.CDC;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.ExecutionStatus;
-import io.harness.data.Outcome;
 import io.harness.delegate.beans.DelegateTaskNotifyResponseData;
+import io.harness.pms.sdk.core.data.Outcome;
 import io.harness.serializer.JsonUtils;
 import io.harness.serializer.XmlUtils;
 

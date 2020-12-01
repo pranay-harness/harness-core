@@ -1,7 +1,7 @@
 package io.harness.beans.steps;
 
-import io.harness.data.Outcome;
 import io.harness.delegate.task.stepstatus.StepOutput;
+import io.harness.pms.sdk.core.data.Outcome;
 
 import lombok.Builder;
 import lombok.Data;
