@@ -7,7 +7,6 @@ import io.harness.facilitator.modes.async.AsyncExecutableResponse;
 import io.harness.pms.ambiance.Ambiance;
 import io.harness.pms.execution.Status;
 import io.harness.pms.steps.StepType;
-import io.harness.state.Step;
 import io.harness.state.io.StepInputPackage;
 import io.harness.state.io.StepResponse;
 import io.harness.tasks.ResponseData;

@@ -20,8 +20,8 @@ import io.harness.interrupts.Interrupt;
 import io.harness.plan.PlanNode;
 import io.harness.pms.ambiance.Ambiance;
 import io.harness.pms.execution.Status;
+import io.harness.pms.sdk.core.steps.Step;
 import io.harness.registries.state.StepRegistry;
-import io.harness.state.Step;
 import io.harness.tasks.TaskExecutor;
 
 import com.google.common.base.Preconditions;

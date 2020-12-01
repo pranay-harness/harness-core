@@ -3,9 +3,9 @@ package io.harness.registrars;
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.pms.sdk.core.steps.Step;
 import io.harness.pms.steps.StepType;
 import io.harness.registries.registrar.StepRegistrar;
-import io.harness.state.Step;
 import io.harness.steps.barriers.BarrierStep;
 import io.harness.steps.dummy.DummySectionStep;
 import io.harness.steps.dummy.DummyStep;
