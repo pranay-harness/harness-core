@@ -14,6 +14,7 @@ import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
 import com.google.inject.Inject;
+import com.google.inject.Injector;
 import com.google.inject.Singleton;
 import java.util.Date;
 import java.util.HashSet;
@@ -27,6 +28,7 @@ import org.mongodb.morphia.query.UpdateOperations;
 @Singleton
 @Slf4j
 public class ProgressUpdateService implements Runnable {
+  @Inject private Injector injector;
   @Inject private HPersistence persistence;
   @Inject private KryoSerializer kryoSerializer;
   @Inject private WaitInstanceService waitInstanceService;
@@ -54,7 +56,9 @@ public class ProgressUpdateService implements Runnable {
 
         try (HIterator<WaitInstance> iterator = new HIterator<>(query.fetch())) {
           for (WaitInstance waitInstance : iterator) {
-            waitInstance.getProgressCallback().notify(progressUpdate.getCorrelationId(), progressData);
+            ProgressCallback progressCallback = waitInstance.getProgressCallback();
+            injector.injectMembers(progressCallback);
+            progressCallback.notify(progressUpdate.getCorrelationId(), progressData);
           }
         }
         persistence.delete(progressUpdate);

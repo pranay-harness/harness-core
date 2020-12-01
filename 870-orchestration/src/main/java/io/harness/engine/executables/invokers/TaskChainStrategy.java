@@ -10,6 +10,7 @@ import io.harness.engine.executables.InvokerPackage;
 import io.harness.engine.executables.ResumePackage;
 import io.harness.engine.executables.TaskExecuteStrategy;
 import io.harness.engine.executions.node.NodeExecutionService;
+import io.harness.engine.progress.EngineProgressCallback;
 import io.harness.engine.resume.EngineResumeCallback;
 import io.harness.execution.NodeExecution;
 import io.harness.execution.NodeExecution.NodeExecutionKeys;
@@ -25,6 +26,7 @@ import io.harness.state.io.StepResponse;
 import io.harness.tasks.TaskExecutor;
 import io.harness.tasks.TaskMode;
 import io.harness.waiter.NotifyCallback;
+import io.harness.waiter.ProgressCallback;
 import io.harness.waiter.WaitNotifyEngine;
 
 import com.google.common.base.Preconditions;
@@ -122,8 +124,10 @@ public class TaskChainStrategy implements TaskExecuteStrategy {
                 .passThroughData(taskChainResponse.getPassThroughData())
                 .metadata(taskChainResponse.getMetadata())
                 .build()));
-    NotifyCallback callback = EngineResumeCallback.builder().nodeExecutionId(nodeExecution.getUuid()).build();
-    waitNotifyEngine.waitForAllOn(publisherName, callback, taskId);
+    NotifyCallback notifyCallback = EngineResumeCallback.builder().nodeExecutionId(nodeExecution.getUuid()).build();
+    ProgressCallback progressCallback =
+        EngineProgressCallback.builder().nodeExecutionId(nodeExecution.getUuid()).build();
+    waitNotifyEngine.waitForAllOn(publisherName, notifyCallback, progressCallback, taskId);
   }
 
   @Override

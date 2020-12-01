@@ -18,10 +18,12 @@ import io.harness.pms.execution.Status;
 import io.harness.pms.execution.failure.FailureInfo;
 import io.harness.pms.sdk.core.steps.io.StepParameters;
 import io.harness.state.io.StepOutcomeRef;
+import io.harness.tasks.ProgressData;
 import io.harness.timeout.TimeoutDetails;
 
 import java.time.Duration;
 import java.util.List;
+import java.util.Map;
 import javax.validation.constraints.NotNull;
 import lombok.Builder;
 import lombok.Data;
@@ -85,6 +87,8 @@ public final class NodeExecution implements PersistentEntity, UuidAware {
   TimeoutDetails timeoutDetails;
 
   List<StepOutcomeRef> outcomeRefs;
+
+  Map<String, List<ProgressData>> progressDataMap;
 
   public boolean isRetry() {
     return !isEmpty(retryIds);

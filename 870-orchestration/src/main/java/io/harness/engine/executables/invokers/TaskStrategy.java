@@ -11,6 +11,7 @@ import io.harness.engine.executables.InvokerPackage;
 import io.harness.engine.executables.ResumePackage;
 import io.harness.engine.executables.TaskExecuteStrategy;
 import io.harness.engine.executions.node.NodeExecutionService;
+import io.harness.engine.progress.EngineProgressCallback;
 import io.harness.engine.resume.EngineResumeCallback;
 import io.harness.execution.NodeExecution;
 import io.harness.execution.NodeExecution.NodeExecutionKeys;
@@ -24,6 +25,7 @@ import io.harness.tasks.Task;
 import io.harness.tasks.TaskExecutor;
 import io.harness.tasks.TaskMode;
 import io.harness.waiter.NotifyCallback;
+import io.harness.waiter.ProgressCallback;
 import io.harness.waiter.WaitNotifyEngine;
 
 import com.google.common.base.Preconditions;
@@ -80,8 +82,10 @@ public class TaskStrategy implements TaskExecuteStrategy {
         Preconditions.checkNotNull(nodeExecutionService.get(AmbianceUtils.obtainCurrentRuntimeId(ambiance)));
     TaskExecutor taskExecutor = taskExecutorMap.get(mode.name());
     String taskId = Preconditions.checkNotNull(taskExecutor.queueTask(ambiance.getSetupAbstractionsMap(), task));
-    NotifyCallback callback = EngineResumeCallback.builder().nodeExecutionId(nodeExecution.getUuid()).build();
-    waitNotifyEngine.waitForAllOn(publisherName, callback, taskId);
+    NotifyCallback notifyCallback = EngineResumeCallback.builder().nodeExecutionId(nodeExecution.getUuid()).build();
+    ProgressCallback progressCallback =
+        EngineProgressCallback.builder().nodeExecutionId(nodeExecution.getUuid()).build();
+    waitNotifyEngine.waitForAllOn(publisherName, notifyCallback, progressCallback, taskId);
 
     // Update Execution Node Instance state to TASK_WAITING
     nodeExecutionService.updateStatusWithOps(nodeExecution.getUuid(), TASK_WAITING,
