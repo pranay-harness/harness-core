@@ -123,32 +123,6 @@ public class AccountResource {
     return new RestResponse<>(accountService.getAccountStatus(accountId));
   }
 
-  @POST
-  @Path("continuous-efficiency/enableCeK8sEventCollection")
-  @Timed
-  @ExceptionMetered
-  public RestResponse<Boolean> enableK8sEventCollection(@QueryParam("accountId") String accountId) {
-    RestResponse<Boolean> response =
-        accountPermissionUtils.checkIfHarnessUser("User is not allowed to enable cloud cost for the account.");
-    if (response == null) {
-      response = new RestResponse<>(accountService.updateCeAutoCollectK8sEvents(accountId, true));
-    }
-    return response;
-  }
-
-  @POST
-  @Path("continuous-efficiency/disableCeK8sEventCollection")
-  @Timed
-  @ExceptionMetered
-  public RestResponse<Boolean> disableK8sEventCollection(@QueryParam("accountId") String accountId) {
-    RestResponse<Boolean> response =
-        accountPermissionUtils.checkIfHarnessUser("User is not allowed to enable cloud cost for the account.");
-    if (response == null) {
-      response = new RestResponse<>(accountService.updateCeAutoCollectK8sEvents(accountId, false));
-    }
-    return response;
-  }
-
   @GET
   @Timed
   @ExceptionMetered
