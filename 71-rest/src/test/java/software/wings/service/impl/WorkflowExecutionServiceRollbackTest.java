@@ -201,7 +201,7 @@ public class WorkflowExecutionServiceRollbackTest extends WingsBaseTest {
       workflowExecutionService.getOnDemandRollbackConfirmation(APP_ID, newWE);
       failBecauseExceptionWasNotThrown(InvalidRequestException.class);
     } catch (Exception e) {
-      assertThat(e).hasMessage("This is not the latest successful workflowExecution: test");
+      assertThat(e).hasMessage("This is not the latest successful Workflow Execution: test");
     }
 
     try {
