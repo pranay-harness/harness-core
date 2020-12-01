@@ -31,6 +31,10 @@ public abstract class AzureAppServiceInfrastructureMapping extends Infrastructur
   @Trimmed @Attributes(title = "Resource Group") @Getter @Setter private String resourceGroup;
   @Trimmed @Attributes(title = "Deployment Slot") @Getter @Setter private String deploymentSlot;
 
+  public AzureAppServiceInfrastructureMapping(String infraMappingType) {
+    super(infraMappingType);
+  }
+
   public AzureAppServiceInfrastructureMapping(String entityYamlPath, String appId, String accountId, String type,
       String uuid, EmbeddedUser createdBy, long createdAt, EmbeddedUser lastUpdatedBy, long lastUpdatedAt,
       String computeProviderSettingId, String envId, String serviceTemplateId, String serviceId,
