@@ -10,6 +10,7 @@ import io.harness.cache.CacheConfig;
 import io.harness.cache.CacheModule;
 import io.harness.commandlibrary.client.CommandLibraryServiceHttpClient;
 import io.harness.configuration.DeployMode;
+import io.harness.cvng.client.CVNGClientModule;
 import io.harness.delegate.beans.DelegateAsyncTaskResponse;
 import io.harness.delegate.beans.DelegateSyncTaskResponse;
 import io.harness.delegate.beans.DelegateTaskProgressResponse;
@@ -171,6 +172,7 @@ public class DataGenApplication extends Application<MainConfiguration> {
     modules.add(new ValidationModule(validatorFactory));
     modules.add(new DelegateServiceModule());
     modules.add(new WingsModule(configuration));
+    modules.add(new CVNGClientModule(configuration.getCvngClientConfig()));
     modules.add(new ProviderModule() {
       @Provides
       @Singleton
