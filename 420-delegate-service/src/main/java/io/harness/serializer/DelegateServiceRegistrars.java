@@ -2,6 +2,7 @@ package io.harness.serializer;
 
 import io.harness.morphia.MorphiaRegistrar;
 import io.harness.serializer.kryo.DelegateServiceKryoRegister;
+import io.harness.serializer.morphia.CommonEntitiesMorphiaRegister;
 import io.harness.serializer.morphia.DelegateServiceMorphiaRegistrar;
 import io.harness.spring.AliasRegistrar;
 
@@ -20,6 +21,7 @@ public class DelegateServiceRegistrars {
   public static final ImmutableSet<Class<? extends MorphiaRegistrar>> morphiaRegistrars =
       ImmutableSet.<Class<? extends MorphiaRegistrar>>builder()
           .addAll(DelegateServiceBeansRegistrars.morphiaRegistrars)
+          .add(CommonEntitiesMorphiaRegister.class)
           .addAll(OrchestrationRegistrars.morphiaRegistrars)
           .add(DelegateServiceMorphiaRegistrar.class)
           .build();
