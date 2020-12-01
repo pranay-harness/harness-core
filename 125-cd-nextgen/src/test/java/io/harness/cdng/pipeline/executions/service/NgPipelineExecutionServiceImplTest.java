@@ -30,7 +30,6 @@ import io.harness.engine.interrupts.InterruptPackage;
 import io.harness.exception.InvalidRequestException;
 import io.harness.execution.NodeExecution;
 import io.harness.execution.PlanExecution;
-import io.harness.executionplan.plancreator.beans.StepOutcomeGroup;
 import io.harness.executions.steps.ExecutionNodeType;
 import io.harness.interrupts.ExecutionInterruptType;
 import io.harness.interrupts.Interrupt;
@@ -51,6 +50,7 @@ import io.harness.plan.PlanNode;
 import io.harness.repositories.pipeline.PipelineExecutionRepository;
 import io.harness.rule.Owner;
 import io.harness.service.GraphGenerationService;
+import io.harness.steps.StepOutcomeGroup;
 
 import io.fabric8.utils.Lists;
 import java.util.ArrayList;

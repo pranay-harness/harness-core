@@ -158,7 +158,7 @@ build_bazel_module 870-orchestration
 build_bazel_module 860-orchestration-steps
 build_bazel_module 860-orchestration-visualization
 build_bazel_module 950-walktree-visitor
-build_bazel_module 860-yaml-beans
+build_bazel_module 870-yaml-beans
 build_bazel_module 850-execution-plan
 build_bazel_module 850-ng-pipeline-commons
 build_bazel_module 840-ng-triggers

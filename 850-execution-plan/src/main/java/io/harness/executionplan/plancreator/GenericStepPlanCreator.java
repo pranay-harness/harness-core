@@ -9,7 +9,6 @@ import io.harness.executionplan.core.ExecutionPlanCreatorResponse;
 import io.harness.executionplan.core.PlanCreatorSearchContext;
 import io.harness.executionplan.core.SupportDefinedExecutorPlanCreator;
 import io.harness.executionplan.plancreator.beans.GenericStepInfo;
-import io.harness.executionplan.plancreator.beans.StepOutcomeGroup;
 import io.harness.executionplan.stepsdependency.StepDependencyService;
 import io.harness.executionplan.stepsdependency.StepDependencySpec;
 import io.harness.plan.PlanNode;
@@ -17,6 +16,7 @@ import io.harness.plan.PlanNode.PlanNodeBuilder;
 import io.harness.pms.facilitators.FacilitatorObtainment;
 import io.harness.pms.facilitators.FacilitatorType;
 import io.harness.pms.steps.StepType;
+import io.harness.steps.StepOutcomeGroup;
 import io.harness.yaml.core.StepElement;
 
 import com.google.inject.Inject;

@@ -26,7 +26,7 @@
         <!--<module>860-orchestration-steps</module>-->
         <!--<module>860-orchestration-visualization</module>-->
         <!--<module>950-walktree-visitor</module>-->
-        <!--<module>860-yaml-beans</module>-->
+        <!--<module>870-yaml-beans</module>-->
         <!--<module>850-execution-plan</module>-->
         <!--<module>850-ng-pipeline-commons</module>-->
         <!--<module>40-pipeline-service</module>-->

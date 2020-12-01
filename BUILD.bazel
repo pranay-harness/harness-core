@@ -73,7 +73,7 @@ modules = [
     "//860-orchestration-steps",
     "//860-orchestration-visualization",
     "//950-walktree-visitor",
-    "//860-yaml-beans",
+    "//870-yaml-beans",
     "//850-execution-plan",
     "//850-ng-pipeline-commons",
     "//910-delegate-task-grpc-service",

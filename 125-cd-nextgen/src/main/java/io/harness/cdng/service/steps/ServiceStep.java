@@ -21,7 +21,6 @@ import io.harness.cdng.stepsdependency.constants.OutcomeExpressionConstants;
 import io.harness.data.Outcome;
 import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.engine.outcomes.OutcomeService;
-import io.harness.executionplan.plancreator.beans.StepOutcomeGroup;
 import io.harness.executions.steps.ExecutionNodeType;
 import io.harness.facilitator.PassThroughData;
 import io.harness.facilitator.modes.chain.task.TaskChainExecutable;
@@ -35,6 +34,7 @@ import io.harness.pms.steps.StepType;
 import io.harness.state.io.StepInputPackage;
 import io.harness.state.io.StepResponse;
 import io.harness.state.io.StepResponse.StepOutcome;
+import io.harness.steps.StepOutcomeGroup;
 import io.harness.tasks.ResponseData;
 import io.harness.tasks.Task;
 

@@ -9,7 +9,6 @@ import io.harness.facilitator.modes.task.TaskExecutable;
 import io.harness.git.GitClientHelper;
 import io.harness.ng.core.NGAccess;
 import io.harness.ngpipeline.common.AmbianceHelper;
-import io.harness.ngpipeline.orchestration.StepUtils;
 import io.harness.ngpipeline.status.BuildStatusUpdateParameter;
 import io.harness.pms.ambiance.Ambiance;
 import io.harness.pms.execution.Status;
@@ -17,6 +16,7 @@ import io.harness.pms.steps.StepType;
 import io.harness.state.io.StepInputPackage;
 import io.harness.state.io.StepResponse;
 import io.harness.stateutils.buildstate.ConnectorUtils;
+import io.harness.steps.StepUtils;
 import io.harness.tasks.ResponseData;
 import io.harness.tasks.Task;
 

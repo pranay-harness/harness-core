@@ -1,6 +1,6 @@
 package io.harness.cdng.pipeline.steps;
 
-import static io.harness.ngpipeline.orchestration.StepUtils.createStepResponseFromChildResponse;
+import static io.harness.steps.StepUtils.createStepResponseFromChildResponse;
 
 import io.harness.cdng.pipeline.beans.DeploymentStageStepParameters;
 import io.harness.executions.steps.ExecutionNodeType;

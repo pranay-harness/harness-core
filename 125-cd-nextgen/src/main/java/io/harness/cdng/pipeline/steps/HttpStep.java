@@ -10,7 +10,6 @@ import io.harness.delegate.task.http.HttpTaskParameters;
 import io.harness.engine.EngineExceptionUtils;
 import io.harness.executions.steps.ExecutionNodeType;
 import io.harness.facilitator.modes.task.TaskExecutable;
-import io.harness.ngpipeline.orchestration.StepUtils;
 import io.harness.pms.ambiance.Ambiance;
 import io.harness.pms.execution.Status;
 import io.harness.pms.execution.failure.FailureInfo;
@@ -20,6 +19,7 @@ import io.harness.state.io.StepInputPackage;
 import io.harness.state.io.StepResponse;
 import io.harness.state.io.StepResponse.StepOutcome;
 import io.harness.state.io.StepResponse.StepResponseBuilder;
+import io.harness.steps.StepUtils;
 import io.harness.tasks.ResponseData;
 import io.harness.tasks.Task;
 

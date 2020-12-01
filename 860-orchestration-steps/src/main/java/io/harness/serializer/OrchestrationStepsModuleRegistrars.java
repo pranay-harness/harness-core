@@ -1,7 +1,9 @@
 package io.harness.serializer;
 
 import io.harness.morphia.MorphiaRegistrar;
+import io.harness.serializer.kryo.NGCoreBeansKryoRegistrar;
 import io.harness.serializer.kryo.OrchestrationStepsKryoRegistrar;
+import io.harness.serializer.kryo.YamlKryoRegistrar;
 import io.harness.serializer.morphia.OrchestrationStepsMorphiaRegistrar;
 import io.harness.serializer.spring.OrchestrationStepsAliasRegistrar;
 import io.harness.spring.AliasRegistrar;
@@ -18,6 +20,8 @@ public class OrchestrationStepsModuleRegistrars {
       ImmutableSet.<Class<? extends KryoRegistrar>>builder()
           .addAll(OrchestrationRegistrars.kryoRegistrars)
           .add(OrchestrationStepsKryoRegistrar.class)
+          .add(YamlKryoRegistrar.class)
+          .add(NGCoreBeansKryoRegistrar.class)
           .build();
 
   public static final ImmutableSet<Class<? extends MorphiaRegistrar>> morphiaRegistrars =

@@ -11,7 +11,7 @@ java_library(
     name = "maven_deps",
     visibility = ["//visibility:public"],
     exports = [
-        "//860-yaml-beans:module",
+        "//870-yaml-beans:module",
         "//910-delegate-service-driver:module",
         "//930-ng-core-clients:module",
         "//950-ng-core:module",
