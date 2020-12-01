@@ -484,6 +484,7 @@ import software.wings.delegatetasks.validation.capabilities.SmbConnectionCapabil
 import software.wings.delegatetasks.validation.capabilities.SmtpCapability;
 import software.wings.delegatetasks.validation.capabilities.WinrmHostValidationCapability;
 import software.wings.graphql.datafetcher.ce.recommendation.entity.K8sWorkloadRecommendation;
+import software.wings.graphql.datafetcher.ce.recommendation.entity.PartialRecommendationHistogram;
 import software.wings.helpers.ext.cloudformation.CloudFormationCompletionFlag;
 import software.wings.helpers.ext.cloudformation.response.CloudFormationCommandExecutionResponse;
 import software.wings.helpers.ext.cloudformation.response.CloudFormationCreateStackResponse;
@@ -1008,6 +1009,7 @@ public class ManagerMorphiaRegistrar implements MorphiaRegistrar {
     set.add(NotificationReceiverInfo.class);
     set.add(NotificationRulesStatus.class);
     set.add(OauthSettings.class);
+    set.add(PartialRecommendationHistogram.class);
     set.add(PcfInfrastructureMapping.class);
     set.add(PcfServiceSpecification.class);
     set.add(Permit.class);

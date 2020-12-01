@@ -4,6 +4,7 @@ import io.harness.persistence.HPersistence;
 
 import software.wings.graphql.datafetcher.ce.recommendation.entity.K8sWorkloadRecommendation;
 import software.wings.graphql.datafetcher.ce.recommendation.entity.K8sWorkloadRecommendation.K8sWorkloadRecommendationKeys;
+import software.wings.graphql.datafetcher.ce.recommendation.entity.PartialRecommendationHistogram;
 
 import java.util.HashMap;
 import java.util.Optional;
@@ -47,5 +48,9 @@ public class WorkloadRecommendationDao {
 
   void save(K8sWorkloadRecommendation recommendation) {
     hPersistence.save(recommendation);
+  }
+
+  public void save(PartialRecommendationHistogram partialRecommendationHistogram) {
+    hPersistence.save(partialRecommendationHistogram);
   }
 }

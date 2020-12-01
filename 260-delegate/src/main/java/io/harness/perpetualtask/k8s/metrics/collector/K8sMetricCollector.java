@@ -250,6 +250,7 @@ public class K8sMetricCollector {
         .map(e -> {
           ContainerState containerState = e.getValue();
           HistogramCheckpoint histogramCheckpoint = containerState.getCpuHistogram().saveToCheckpoint();
+          HistogramCheckpoint histogramCheckpointV2 = containerState.getCpuHistogramV2().saveToCheckpoint();
           return ContainerStateProto.newBuilder()
               .setCloudProviderId(clusterDetails.getCloudProviderId())
               .setClusterId(clusterDetails.getClusterId())
@@ -260,6 +261,7 @@ public class K8sMetricCollector {
               .setMemoryPeak(containerState.getMemoryPeak())
               .setMemoryPeakTime(HTimestamps.fromInstant(containerState.getMemoryPeakTime()))
               .setCpuHistogram(checkpointToProto(histogramCheckpoint))
+              .setCpuHistogramV2(checkpointToProto(histogramCheckpointV2))
               .setFirstSampleStart(HTimestamps.fromInstant(containerState.getFirstSampleStart()))
               .setLastSampleStart(HTimestamps.fromInstant(containerState.getLastSampleStart()))
               .setTotalSamplesCount(containerState.getTotalSamplesCount())
