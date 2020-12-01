@@ -2,12 +2,15 @@ package software.wings.service.impl;
 
 import static io.harness.beans.PageResponse.PageResponseBuilder.aPageResponse;
 import static io.harness.delegate.beans.TaskData.DEFAULT_SYNC_CALL_TIMEOUT;
+import static io.harness.exception.WingsException.USER;
 
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
+import io.harness.exception.InvalidRequestException;
 import io.harness.security.encryption.EncryptedDataDetail;
 
 import software.wings.beans.AwsInfrastructureMapping;
+import software.wings.beans.GcpConfig;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.SyncTaskContext;
@@ -59,6 +62,7 @@ public class GcpInfrastructureProvider implements InfrastructureProvider {
 
   List<String> listClusterNames(
       SettingAttribute computeProviderSetting, List<EncryptedDataDetail> encryptedDataDetails) {
+    checkValidSettingAttribute(computeProviderSetting);
     SyncTaskContext syncTaskContext = SyncTaskContext.builder()
                                           .accountId(computeProviderSetting.getAccountId())
                                           .timeout(DEFAULT_SYNC_CALL_TIMEOUT)
@@ -69,5 +73,13 @@ public class GcpInfrastructureProvider implements InfrastructureProvider {
                           .settingAttribute(computeProviderSetting)
                           .clusterName("None")
                           .build());
+  }
+
+  private void checkValidSettingAttribute(SettingAttribute computeProviderSetting) {
+    if (computeProviderSetting.getValue() instanceof GcpConfig
+        && ((GcpConfig) computeProviderSetting.getValue()).isUseDelegate()) {
+      throw new InvalidRequestException(
+          "Infrastructure Definition Using a GCP Cloud Provider Inheriting from Delegate is not yet supported", USER);
+    }
   }
 }
