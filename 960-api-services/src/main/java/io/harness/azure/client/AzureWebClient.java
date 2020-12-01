@@ -258,9 +258,10 @@ public interface AzureWebClient {
    * Get docker image name and tag.
    *
    * @param context
+   * @param slotName
    * @return
    */
-  Optional<String> getDockerImageNameAndTag(AzureWebClientContext context);
+  Optional<String> getSlotDockerImageNameAndTag(AzureWebClientContext context, String slotName);
 
   /**
    * Reroute production slot traffic to target slot in percentage.

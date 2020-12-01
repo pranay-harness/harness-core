@@ -332,7 +332,8 @@ public class AzureAppServiceDeploymentService {
 
     Map<String, AzureAppServiceDockerSetting> dockerSettingsNeedBeUpdatedInRollback =
         azureWebClient.listDeploymentSlotDockerSettings(azureWebClientContext, slotName);
-    String dockerImageNameAndTag = azureWebClient.getDockerImageNameAndTag(azureWebClientContext).orElse(EMPTY);
+    String dockerImageNameAndTag =
+        azureWebClient.getSlotDockerImageNameAndTag(azureWebClientContext, slotName).orElse(EMPTY);
     double slotTrafficWeight = azureWebClient.getDeploymentSlotTrafficWeight(azureWebClientContext, slotName);
 
     return AzureAppServicePreDeploymentData.builder()
@@ -345,7 +346,7 @@ public class AzureAppServiceDeploymentService {
         .appName(azureWebClientContext.getAppName())
         .imageNameAndTag(dockerImageNameAndTag)
         .trafficWeight(slotTrafficWeight)
-        .failedStep(AzureAppServiceTaskParameters.AzureAppServiceTaskType.SLOT_SWAP)
+        .failedTaskType(AzureAppServiceTaskParameters.AzureAppServiceTaskType.SLOT_SWAP)
         .build();
   }
 

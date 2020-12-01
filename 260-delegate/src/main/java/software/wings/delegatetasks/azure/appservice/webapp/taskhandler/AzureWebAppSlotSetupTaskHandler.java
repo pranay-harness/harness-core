@@ -60,6 +60,7 @@ public class AzureWebAppSlotSetupTaskHandler extends AbstractAzureWebAppTaskHand
     } catch (Exception ex) {
       String message = AzureResourceUtility.getAzureCloudExceptionMessage(ex);
       logErrorMsg(azureAppServiceTaskParameters, logStreamingTaskClient, ex, message);
+      updatePreDeploymentData(azureAppServicePreDeploymentData);
       return AzureWebAppSlotSetupResponse.builder()
           .errorMsg(message)
           .preDeploymentData(azureAppServicePreDeploymentData)
@@ -160,5 +161,10 @@ public class AzureWebAppSlotSetupTaskHandler extends AbstractAzureWebAppTaskHand
 
     return azureAppServiceDeploymentService.getAzureAppServicePreDeploymentData(
         azureWebClientContext, slotName, userAddedAppSettings, userAddedConnSettings);
+  }
+
+  private void updatePreDeploymentData(AzureAppServicePreDeploymentData azureAppServicePreDeploymentData) {
+    azureAppServicePreDeploymentData.setFailedTaskType(
+        AzureAppServiceTaskParameters.AzureAppServiceTaskType.SLOT_SETUP);
   }
 }

@@ -21,5 +21,5 @@ public class AzureAppServicePreDeploymentData {
   private Map<String, AzureAppServiceConnectionString> connSettingsToAdd;
   private Map<String, AzureAppServiceDockerSetting> dockerSettingsToAdd;
   private String imageNameAndTag;
-  private AzureAppServiceTaskType failedStep;
+  private AzureAppServiceTaskType failedTaskType;
 }
