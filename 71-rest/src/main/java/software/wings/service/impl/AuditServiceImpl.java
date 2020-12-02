@@ -413,7 +413,8 @@ public class AuditServiceImpl implements AuditService {
 
   @Override
   public boolean deleteTempAuditRecords(List<String> ids) {
-    return wingsPersistence.delete(wingsPersistence.createQuery(AuditRecord.class).field(AuditRecordKeys.uuid).in(ids));
+    return wingsPersistence.delete(
+        wingsPersistence.createQuery(AuditRecord.class, excludeAuthority).field(AuditRecordKeys.uuid).in(ids));
   }
 
   @Override
