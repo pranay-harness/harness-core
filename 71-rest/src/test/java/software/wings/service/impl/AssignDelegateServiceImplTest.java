@@ -61,6 +61,7 @@ import io.harness.selection.log.BatchDelegateSelectionLog;
 import io.harness.tasks.Cd1SetupFields;
 
 import software.wings.WingsBaseTest;
+import software.wings.beans.AwsAmiInfrastructureMapping;
 import software.wings.beans.Delegate;
 import software.wings.beans.Delegate.DelegateBuilder;
 import software.wings.beans.DelegateScope;
@@ -266,13 +267,62 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
     Map<String, Set<String>> scopingRulesMap4 = new HashMap<>();
     scopingRulesMap4.put("k1", emptySet());
 
+    // Test for temporary workaround, until all tasks start sending envType and serviceId
+    Map<String, Set<String>> scopingRulesWorkaroundMap5 = new HashMap<>();
+    scopingRulesWorkaroundMap5.put(Cd1SetupFields.ENV_TYPE_FIELD, new HashSet<>(singletonList(PROD.name())));
+    scopingRulesWorkaroundMap5.put(Cd1SetupFields.SERVICE_ID_FIELD, new HashSet<>(singletonList("s1")));
+
+    Environment env = new Environment();
+    env.setName("test environment");
+    env.setEnvironmentType(PROD);
+    String envId = wingsPersistence.save(env);
+
+    AwsAmiInfrastructureMapping infrastructureMapping = new AwsAmiInfrastructureMapping();
+    infrastructureMapping.setAccountId(generateUuid());
+    infrastructureMapping.setInfraMappingType(generateUuid());
+    infrastructureMapping.setComputeProviderType(generateUuid());
+    infrastructureMapping.setComputeProviderSettingId(generateUuid());
+    infrastructureMapping.setEnvId(generateUuid());
+    infrastructureMapping.setDeploymentType(generateUuid());
+    infrastructureMapping.setServiceId("s1");
+    String infraMappingId = wingsPersistence.save(infrastructureMapping);
+    // End of temporary workaround
+
     List<DelegateProfileScopeTestData> tests =
         ImmutableList.<DelegateProfileScopeTestData>builder()
             .add(DelegateProfileScopeTestData.builder()
+                     .delegate(Delegate.builder()
+                                   .accountId(accountId)
+                                   .uuid(generateUuid())
+                                   .delegateProfileId(generateUuid())
+                                   .build())
+                     .task(DelegateTask.builder()
+                               .uuid(generateUuid())
+                               .accountId(accountId)
+                               .setupAbstraction(Cd1SetupFields.ENV_ID_FIELD, envId)
+                               .setupAbstraction(Cd1SetupFields.INFRASTRUCTURE_MAPPING_ID_FIELD, infraMappingId)
+                               .data(TaskData.builder()
+                                         .taskType(TaskType.HTTP.name())
+                                         .async(true)
+                                         .timeout(DEFAULT_ASYNC_CALL_TIMEOUT)
+                                         .build())
+                               .build())
+                     .scopingRules(singletonList(DelegateProfileScopingRule.builder()
+                                                     .description("rule1")
+                                                     .scopingEntities(scopingRulesWorkaroundMap5)
+                                                     .build()))
+                     .assignable(true)
+                     .build())
+            .add(DelegateProfileScopeTestData.builder()
                      .delegate(Delegate.builder().accountId(accountId).uuid(generateUuid()).build())
                      .task(DelegateTask.builder()
+                               .uuid(generateUuid())
                                .accountId(accountId)
-                               .data(TaskData.builder().async(true).timeout(DEFAULT_ASYNC_CALL_TIMEOUT).build())
+                               .data(TaskData.builder()
+                                         .taskType(TaskType.HTTP.name())
+                                         .async(true)
+                                         .timeout(DEFAULT_ASYNC_CALL_TIMEOUT)
+                                         .build())
                                .build())
                      .scopingRules(null)
                      .assignable(true)
@@ -284,9 +334,14 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
                                    .delegateProfileId(generateUuid())
                                    .build())
                      .task(DelegateTask.builder()
+                               .uuid(generateUuid())
                                .accountId(accountId)
                                .setupAbstraction("k1", "v1")
-                               .data(TaskData.builder().async(true).timeout(DEFAULT_ASYNC_CALL_TIMEOUT).build())
+                               .data(TaskData.builder()
+                                         .taskType(TaskType.HTTP.name())
+                                         .async(true)
+                                         .timeout(DEFAULT_ASYNC_CALL_TIMEOUT)
+                                         .build())
                                .build())
                      .scopingRules(null)
                      .assignable(true)
@@ -298,9 +353,13 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
                                    .delegateProfileId(generateUuid())
                                    .build())
                      .task(DelegateTask.builder()
+                               .uuid(generateUuid())
                                .accountId(accountId)
-                               .setupAbstraction("k1", "v1")
-                               .data(TaskData.builder().async(true).timeout(DEFAULT_ASYNC_CALL_TIMEOUT).build())
+                               .data(TaskData.builder()
+                                         .taskType(TaskType.HTTP.name())
+                                         .async(true)
+                                         .timeout(DEFAULT_ASYNC_CALL_TIMEOUT)
+                                         .build())
                                .build())
                      .scopingRules(singletonList(DelegateProfileScopingRule.builder()
                                                      .description("rule1")
@@ -315,10 +374,37 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
                                    .delegateProfileId(generateUuid())
                                    .build())
                      .task(DelegateTask.builder()
+                               .uuid(generateUuid())
+                               .accountId(accountId)
+                               .setupAbstraction("k1", "v1")
+                               .data(TaskData.builder()
+                                         .taskType(TaskType.HTTP.name())
+                                         .async(true)
+                                         .timeout(DEFAULT_ASYNC_CALL_TIMEOUT)
+                                         .build())
+                               .build())
+                     .scopingRules(singletonList(DelegateProfileScopingRule.builder()
+                                                     .description("rule1")
+                                                     .scopingEntities(scopingRulesMap1)
+                                                     .build()))
+                     .assignable(false)
+                     .build())
+            .add(DelegateProfileScopeTestData.builder()
+                     .delegate(Delegate.builder()
+                                   .accountId(accountId)
+                                   .uuid(generateUuid())
+                                   .delegateProfileId(generateUuid())
+                                   .build())
+                     .task(DelegateTask.builder()
+                               .uuid(generateUuid())
                                .accountId(accountId)
                                .setupAbstraction("k0", "v0")
                                .setupAbstraction("k1", "v1")
-                               .data(TaskData.builder().async(true).timeout(DEFAULT_ASYNC_CALL_TIMEOUT).build())
+                               .data(TaskData.builder()
+                                         .taskType(TaskType.HTTP.name())
+                                         .async(true)
+                                         .timeout(DEFAULT_ASYNC_CALL_TIMEOUT)
+                                         .build())
                                .build())
                      .scopingRules(singletonList(DelegateProfileScopingRule.builder()
                                                      .description("rule1")
@@ -333,9 +419,14 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
                                    .delegateProfileId(generateUuid())
                                    .build())
                      .task(DelegateTask.builder()
+                               .uuid(generateUuid())
                                .accountId(accountId)
                                .setupAbstraction("k1", "v1")
-                               .data(TaskData.builder().async(true).timeout(DEFAULT_ASYNC_CALL_TIMEOUT).build())
+                               .data(TaskData.builder()
+                                         .taskType(TaskType.HTTP.name())
+                                         .async(true)
+                                         .timeout(DEFAULT_ASYNC_CALL_TIMEOUT)
+                                         .build())
                                .build())
                      .scopingRules(singletonList(DelegateProfileScopingRule.builder()
                                                      .description("rule2")
@@ -350,10 +441,15 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
                                    .delegateProfileId(generateUuid())
                                    .build())
                      .task(DelegateTask.builder()
+                               .uuid(generateUuid())
                                .accountId(accountId)
                                .setupAbstraction("k1", "v13")
                                .setupAbstraction("k2", "v22")
-                               .data(TaskData.builder().async(true).timeout(DEFAULT_ASYNC_CALL_TIMEOUT).build())
+                               .data(TaskData.builder()
+                                         .taskType(TaskType.HTTP.name())
+                                         .async(true)
+                                         .timeout(DEFAULT_ASYNC_CALL_TIMEOUT)
+                                         .build())
                                .build())
                      .scopingRules(asList(DelegateProfileScopingRule.builder()
                                               .description("rule3")
@@ -372,9 +468,14 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
                                    .delegateProfileId(generateUuid())
                                    .build())
                      .task(DelegateTask.builder()
+                               .uuid(generateUuid())
                                .accountId(accountId)
                                .setupAbstraction("k1", "v13")
-                               .data(TaskData.builder().async(true).timeout(DEFAULT_ASYNC_CALL_TIMEOUT).build())
+                               .data(TaskData.builder()
+                                         .taskType(TaskType.HTTP.name())
+                                         .async(true)
+                                         .timeout(DEFAULT_ASYNC_CALL_TIMEOUT)
+                                         .build())
                                .build())
                      .scopingRules(singletonList(DelegateProfileScopingRule.builder()
                                                      .description("rule5")
@@ -405,9 +506,14 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
         .thenReturn(delegateWithNonExistingProfile);
     assertThat(assignDelegateService.canAssign(null, delegateWithNonExistingProfile.getUuid(),
                    DelegateTask.builder()
+                       .uuid(generateUuid())
                        .accountId(accountId)
                        .setupAbstraction("k1", "v13")
-                       .data(TaskData.builder().async(true).timeout(DEFAULT_ASYNC_CALL_TIMEOUT).build())
+                       .data(TaskData.builder()
+                                 .taskType(TaskType.HTTP.name())
+                                 .async(true)
+                                 .timeout(DEFAULT_ASYNC_CALL_TIMEOUT)
+                                 .build())
                        .build()))
         .isEqualTo(true);
   }

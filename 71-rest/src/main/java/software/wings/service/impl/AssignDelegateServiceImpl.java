@@ -23,6 +23,7 @@ import io.harness.delegate.task.TaskFailureReason;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
 import io.harness.selection.log.BatchDelegateSelectionLog;
+import io.harness.tasks.Cd1SetupFields;
 
 import software.wings.beans.Delegate;
 import software.wings.beans.Delegate.DelegateKeys;
@@ -187,12 +188,6 @@ public class AssignDelegateServiceImpl implements AssignDelegateService {
   @VisibleForTesting
   protected boolean canAssignDelegateProfileScopes(
       BatchDelegateSelectionLog batch, Delegate delegate, Map<String, String> taskSetupAbstractions) {
-    if (isEmpty(taskSetupAbstractions)) {
-      log.warn(
-          "No setup abstractions have been passed in from delegate task. Considering this delegate profile matched");
-      return true;
-    }
-
     DelegateProfile delegateProfile = wingsPersistence.get(DelegateProfile.class, delegate.getDelegateProfileId());
     if (delegateProfile == null) {
       log.warn(
@@ -207,6 +202,8 @@ public class AssignDelegateServiceImpl implements AssignDelegateService {
     if (isEmpty(delegateProfileScopingRules)) {
       return true;
     } else if (isEmpty(taskSetupAbstractions)) {
+      log.warn(
+          "No setup abstractions have been passed in from delegate task, while there are some profile scoping rules. Considering this delegate profile NOT matched");
       return false;
     }
 
@@ -228,12 +225,18 @@ public class AssignDelegateServiceImpl implements AssignDelegateService {
 
         if (isBlank(taskSetupAbstractionValue)
             || (entity.getValue() != null && !entity.getValue().contains(taskSetupAbstractionValue))) {
-          log.info(
-              logSequence + " - Scoping rule with description: {}, did not match with task abstractions for key {}.",
-              scopingRule.getDescription(), entity.getKey());
-          failedRuleDescription = scopingRule.getDescription();
-          scopingRuleMatched = false;
-          break;
+          // Temporary workaround, until all tasks start sending envType and serviceId
+          boolean workaroundPassed =
+              trySetupAbstractionsWorkaround(logSequence, taskSetupAbstractions, entity.getKey(), entity.getValue());
+
+          if (!workaroundPassed) {
+            log.info(
+                logSequence + " - Scoping rule with description: {}, did not match with task abstractions for key {}.",
+                scopingRule.getDescription(), entity.getKey());
+            failedRuleDescription = scopingRule.getDescription();
+            scopingRuleMatched = false;
+            break;
+          }
         }
       }
 
@@ -246,6 +249,34 @@ public class AssignDelegateServiceImpl implements AssignDelegateService {
         batch, delegate.getAccountId(), delegate.getUuid(), failedRuleDescription);
 
     return false;
+  }
+
+  private boolean trySetupAbstractionsWorkaround(String logSequence, Map<String, String> taskSetupAbstractions,
+      String scopingEntityKey, Set<String> scopingEntityValues) {
+    boolean workaroundPassed = false;
+
+    if (Cd1SetupFields.ENV_TYPE_FIELD.equals(scopingEntityKey)) {
+      if (taskSetupAbstractions.containsKey(Cd1SetupFields.ENV_ID_FIELD)) {
+        Environment environment =
+            wingsPersistence.get(Environment.class, taskSetupAbstractions.get(Cd1SetupFields.ENV_ID_FIELD));
+        if (environment != null && environment.getEnvironmentType() != null) {
+          workaroundPassed = scopingEntityValues.contains(environment.getEnvironmentType().name());
+        }
+      }
+    }
+
+    if (Cd1SetupFields.SERVICE_ID_FIELD.equals(scopingEntityKey)) {
+      if (taskSetupAbstractions.containsKey(Cd1SetupFields.INFRASTRUCTURE_MAPPING_ID_FIELD)) {
+        InfrastructureMapping infrastructureMapping = wingsPersistence.get(
+            InfrastructureMapping.class, taskSetupAbstractions.get(Cd1SetupFields.INFRASTRUCTURE_MAPPING_ID_FIELD));
+        if (infrastructureMapping != null && isNotBlank(infrastructureMapping.getServiceId())) {
+          workaroundPassed = scopingEntityValues.contains(infrastructureMapping.getServiceId());
+        }
+      }
+    }
+
+    log.warn(logSequence + " - Workaround for entity key {} passed: {}", scopingEntityKey, workaroundPassed);
+    return workaroundPassed;
   }
 
   private boolean canAssignDelegateScopes(BatchDelegateSelectionLog batch, Delegate delegate, String appId,

@@ -144,6 +144,7 @@ import io.harness.service.intfc.DelegateTaskResultsProvider;
 import io.harness.service.intfc.DelegateTaskSelectorMapService;
 import io.harness.service.intfc.DelegateTaskService;
 import io.harness.stream.BoundedInputStream;
+import io.harness.tasks.Cd1SetupFields;
 import io.harness.version.VersionInfoManager;
 import io.harness.waiter.WaitNotifyEngine;
 
@@ -2196,7 +2197,31 @@ public class DelegateServiceImpl implements DelegateService {
     // TODO: Make this call to make sure there are no secrets in disallowed expressions
     // resolvePreAssignmentExpressions(task, CHECK_FOR_SECRETS);
 
+    // Added temporarily to help identifying tasks whose task setup abstractions need to be fixed
+    verifyTaskSetupAbstractions(task);
+
     wingsPersistence.save(task);
+  }
+
+  private void verifyTaskSetupAbstractions(DelegateTask task) {
+    if (isNotBlank(task.getUuid()) && task.getData() != null && task.getData().getTaskType() != null) {
+      try (AutoLogContext ignore1 = new TaskLogContext(task.getUuid(), task.getData().getTaskType(),
+               TaskType.valueOf(task.getData().getTaskType()).getTaskGroup().name(), OVERRIDE_NESTS);) {
+        // Verify presence of Environment type, if EnvironmentId is present
+        if (isNotEmpty(task.getSetupAbstractions())
+            && task.getSetupAbstractions().get(Cd1SetupFields.ENV_ID_FIELD) != null
+            && task.getSetupAbstractions().get(Cd1SetupFields.ENV_TYPE_FIELD) == null) {
+          log.error("Missing envType setup abstraction", new RuntimeException());
+        }
+
+        // Verify presence of ServiceId, if Infrastructure Mapping is present
+        if (isNotEmpty(task.getSetupAbstractions())
+            && task.getSetupAbstractions().get(Cd1SetupFields.INFRASTRUCTURE_MAPPING_ID_FIELD) != null
+            && task.getSetupAbstractions().get(Cd1SetupFields.SERVICE_ID_FIELD) == null) {
+          log.error("Missing serviceId setup abstraction", new RuntimeException());
+        }
+      }
+    }
   }
 
   private Long fetchTaskCount() {
