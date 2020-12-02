@@ -67,6 +67,7 @@
         <!--<module>960-ng-core-beans</module>-->
         <!--<module>960-persistence</module>-->
         <!--<module>970-api-services-beans</module>-->
+        <!--<module>970-atmosphere</module>-->
         <!--<module>970-grpc</module>-->
         <!--<module>970-ng-commons</module>-->
         <!--<module>970-rbac-core</module>-->

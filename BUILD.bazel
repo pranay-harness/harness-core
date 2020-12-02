@@ -92,6 +92,7 @@ modules = [
     "//960-api-services",
     "//960-expression-service",
     "//970-api-services-beans",
+    "//970-atmosphere",
     "//970-grpc",
     "//970-ng-commons",
     "//980-commons",
