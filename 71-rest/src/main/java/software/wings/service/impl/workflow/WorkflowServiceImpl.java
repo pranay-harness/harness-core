@@ -836,8 +836,9 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
       if (stepNode.getType() != null && stepNode.getType().equals("COMMAND") && stepNode.getTemplateUuid() != null) {
         Template template = templateService.get(stepNode.getTemplateUuid());
         if (template != null) {
-          if (!stepNode.getName().equals(template.getName())) {
-            stepNode.setName(template.getName());
+          Map<String, Object> stepProperties = stepNode.getProperties();
+          if (stepProperties != null && stepProperties.containsKey("commandName")) {
+            stepProperties.put("commandName", template.getName());
           }
         } else {
           log.error("No command template found for the templateid in state machine");
