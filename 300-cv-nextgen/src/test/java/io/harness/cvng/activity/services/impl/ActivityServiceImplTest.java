@@ -7,6 +7,7 @@ import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.rule.OwnerRule.KAMAL;
 import static io.harness.rule.OwnerRule.NEMANJA;
 import static io.harness.rule.OwnerRule.PRAVEEN;
+import static io.harness.rule.OwnerRule.RAGHU;
 import static io.harness.rule.OwnerRule.VUK;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -45,6 +46,9 @@ import io.harness.cvng.beans.KubernetesActivityDTO;
 import io.harness.cvng.beans.activity.ActivityStatusDTO;
 import io.harness.cvng.beans.activity.ActivityVerificationStatus;
 import io.harness.cvng.client.NextGenService;
+import io.harness.cvng.core.entities.AppDynamicsCVConfig;
+import io.harness.cvng.core.entities.SplunkCVConfig;
+import io.harness.cvng.core.services.api.CVConfigService;
 import io.harness.cvng.core.services.api.VerificationTaskService;
 import io.harness.cvng.core.services.api.WebhookService;
 import io.harness.cvng.dashboard.services.api.HealthVerificationHeatMapService;
@@ -84,6 +88,7 @@ import org.mockito.MockitoAnnotations;
 public class ActivityServiceImplTest extends CvNextGenTest {
   @Inject private HPersistence hPersistence;
   @Inject private ActivityService activityService;
+  @Mock private CVConfigService cvConfigService;
   @Mock private WebhookService mockWebhookService;
   @Mock private VerificationJobService verificationJobService;
   @Mock private VerificationJobInstanceService verificationJobInstanceService;
@@ -114,9 +119,59 @@ public class ActivityServiceImplTest extends CvNextGenTest {
     FieldUtils.writeField(activityService, "verificationJobInstanceService", verificationJobInstanceService, true);
     FieldUtils.writeField(activityService, "nextGenService", nextGenService, true);
     FieldUtils.writeField(activityService, "healthVerificationHeatMapService", healthVerificationHeatMapService, true);
+    FieldUtils.writeField(activityService, "cvConfigService", cvConfigService, true);
     when(nextGenService.getService(any(), any(), any(), any()))
         .thenReturn(ServiceResponseDTO.builder().name("service name").build());
     when(mockWebhookService.validateWebhookToken(any(), any(), any())).thenReturn(true);
+    when(cvConfigService.list(
+             anyString(), anyString(), anyString(), anyString(), anyString(), any(CVMonitoringCategory.class)))
+        .thenReturn(Lists.newArrayList(new AppDynamicsCVConfig()));
+  }
+
+  @Test
+  @Owner(developers = RAGHU)
+  @Category(UnitTests.class)
+  public void testRegisterActivity_whenNoJobExists() {
+    VerificationJob verificationJob = createVerificationJob();
+    when(verificationJobService.getVerificationJob(accountId, verificationJob.getIdentifier())).thenReturn(null);
+    assertThatThrownBy(
+        () -> activityService.register(accountId, generateUuid(), getKubernetesActivity(verificationJob)))
+        .isInstanceOf(NullPointerException.class)
+        .hasMessage("No Job exists for verificationJobIdentifier: 'identifier'");
+  }
+
+  @Test
+  @Owner(developers = RAGHU)
+  @Category(UnitTests.class)
+  public void testRegisterActivity_whenNoCvConfigExists() {
+    VerificationJob verificationJob = createVerificationJob();
+    when(verificationJobService.getVerificationJob(accountId, verificationJob.getIdentifier()))
+        .thenReturn(verificationJob);
+    when(cvConfigService.list(
+             anyString(), anyString(), anyString(), anyString(), anyString(), any(CVMonitoringCategory.class)))
+        .thenReturn(null);
+    KubernetesActivityDTO kubernetesActivity = getKubernetesActivity(verificationJob);
+    assertThatThrownBy(() -> activityService.register(accountId, generateUuid(), kubernetesActivity))
+        .isInstanceOf(IllegalStateException.class)
+        .hasMessage("No data sources defined for environment " + envIdentifier + " and service "
+            + kubernetesActivity.getServiceIdentifier());
+  }
+
+  @Test
+  @Owner(developers = RAGHU)
+  @Category(UnitTests.class)
+  public void testRegisterActivity_whenNoCvConfigTypeExists() {
+    VerificationJob verificationJob = createVerificationJob();
+    when(verificationJobService.getVerificationJob(accountId, verificationJob.getIdentifier()))
+        .thenReturn(verificationJob);
+    when(cvConfigService.list(
+             anyString(), anyString(), anyString(), anyString(), anyString(), any(CVMonitoringCategory.class)))
+        .thenReturn(Lists.newArrayList(new SplunkCVConfig()));
+    KubernetesActivityDTO kubernetesActivity = getKubernetesActivity(verificationJob);
+    assertThatThrownBy(() -> activityService.register(accountId, generateUuid(), kubernetesActivity))
+        .isInstanceOf(IllegalStateException.class)
+        .hasMessage("No data sources of type(s) [APP_DYNAMICS] defined for environment " + envIdentifier
+            + " and service " + kubernetesActivity.getServiceIdentifier());
   }
 
   @Test
@@ -174,7 +229,7 @@ public class ActivityServiceImplTest extends CvNextGenTest {
 
     assertThatThrownBy(() -> activityService.register(accountId, generateUuid(), activityDTO))
         .isInstanceOf(NullPointerException.class)
-        .hasMessage(KubernetesActivityKeys.json + " should not be null");
+        .hasMessage(KubernetesActivityKeys.eventDetails + " should not be null");
   }
 
   @Test
@@ -654,7 +709,6 @@ public class ActivityServiceImplTest extends CvNextGenTest {
                                                        .runtimeValues(runtimeParams)
                                                        .build();
     verificationJobDetails.add(runtimeDetails);
-
     DeploymentActivityDTO activityDTO =
         getDeploymentActivityDTO(verificationJobDetails, instant, deploymentTag, envIdentifier, serviceIdentifier);
     return activityDTO;
@@ -691,7 +745,7 @@ public class ActivityServiceImplTest extends CvNextGenTest {
     activityDTO.setEnvironmentIdentifier(envIdentifier);
     activityDTO.setName("Pod restart activity");
     activityDTO.setServiceIdentifier(generateUuid());
-    activityDTO.setJson(generateUuid());
+    activityDTO.setEventDetails(generateUuid());
 
     Map<String, String> runtimeParams = new HashMap<>();
     runtimeParams.put(JOB_IDENTIFIER_KEY, verificationJob.getIdentifier());

@@ -26,6 +26,8 @@ import io.harness.cvng.beans.ActivityType;
 import io.harness.cvng.beans.activity.ActivityStatusDTO;
 import io.harness.cvng.beans.activity.ActivityVerificationStatus;
 import io.harness.cvng.client.NextGenService;
+import io.harness.cvng.core.entities.CVConfig;
+import io.harness.cvng.core.services.api.CVConfigService;
 import io.harness.cvng.core.services.api.WebhookService;
 import io.harness.cvng.dashboard.services.api.HealthVerificationHeatMapService;
 import io.harness.cvng.verificationjob.entities.VerificationJob;
@@ -65,6 +67,7 @@ public class ActivityServiceImpl implements ActivityService {
   @Inject private VerificationJobService verificationJobService;
   @Inject private NextGenService nextGenService;
   @Inject private HealthVerificationHeatMapService healthVerificationHeatMapService;
+  @Inject private CVConfigService cvConfigService;
 
   @Override
   public Activity get(String activityId) {
@@ -454,11 +457,26 @@ public class ActivityServiceImpl implements ActivityService {
       VerificationJobInstance verificationJobInstance = fillOutCommonJobInstanceProperties(activity,
           verificationJob.resolveVerificationJob(jobDetail.getRuntimeValues())
               .resolveAdditionsFields(verificationJobInstanceService));
+      validateJob(activity, verificationJob);
       activity.fillInVerificationJobInstanceDetails(verificationJobInstance);
 
       jobInstancesToCreate.add(verificationJobInstance);
     });
     return verificationJobInstanceService.create(jobInstancesToCreate);
+  }
+
+  private void validateJob(Activity activity, VerificationJob verificationJob) {
+    List<CVConfig> cvConfigs = cvConfigService.list(activity.getAccountIdentifier(), activity.getOrgIdentifier(),
+        activity.getProjectIdentifier(), activity.getEnvironmentIdentifier(), activity.getServiceIdentifier(), null);
+    Preconditions.checkState(isNotEmpty(cvConfigs), "No data sources defined for environment %s and service %s",
+        activity.getEnvironmentIdentifier(), activity.getServiceIdentifier());
+    List<CVConfig> dataSources =
+        cvConfigs.stream()
+            .filter(cvConfig -> new HashSet<>(verificationJob.getDataSources()).contains(cvConfig.getType()))
+            .collect(Collectors.toList());
+    Preconditions.checkState(isNotEmpty(dataSources),
+        "No data sources of type(s) %s defined for environment %s and service %s", verificationJob.getDataSources(),
+        activity.getEnvironmentIdentifier(), activity.getServiceIdentifier());
   }
 
   private VerificationJobInstance fillOutCommonJobInstanceProperties(

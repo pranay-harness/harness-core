@@ -14,7 +14,7 @@ import lombok.experimental.SuperBuilder;
 public class KubernetesActivityDTO extends ActivityDTO {
   String message;
   String activitySourceConfigId;
-  String json;
+  String eventDetails;
 
   @Override
   public ActivityType getType() {
