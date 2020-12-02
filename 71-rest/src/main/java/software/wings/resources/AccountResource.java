@@ -63,7 +63,6 @@ import javax.servlet.http.HttpServletResponse;
 import javax.validation.constraints.NotNull;
 import javax.ws.rs.BeanParam;
 import javax.ws.rs.Consumes;
-import javax.ws.rs.DELETE;
 import javax.ws.rs.DefaultValue;
 import javax.ws.rs.FormParam;
 import javax.ws.rs.GET;
@@ -309,21 +308,6 @@ public class AccountResource {
       log.info("Creating sample cloud provider and sample application..");
       sampleDataProviderServiceProvider.get().createK8sV2SampleApp(accountService.get(accountId));
       return new RestResponse<>(Boolean.TRUE);
-    }
-  }
-
-  @DELETE
-  @Path("delete/{accountId}")
-  @Timed
-  @ExceptionMetered
-  public RestResponse<Boolean> deleteAccount(@PathParam("accountId") @NotEmpty String accountId) {
-    try (AutoLogContext ignore1 = new AccountLogContext(accountId, OVERRIDE_ERROR)) {
-      log.info("Deleting account");
-      RestResponse<Boolean> response = accountPermissionUtils.checkIfHarnessUser("User not allowed to delete account");
-      if (response == null) {
-        response = new RestResponse<>(accountService.delete(accountId));
-      }
-      return response;
     }
   }
 
