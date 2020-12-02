@@ -1,6 +1,7 @@
 package software.wings.service.intfc;
 
 import io.harness.account.ProvisionStep;
+import io.harness.beans.FeatureFlag;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.cvng.beans.ServiceGuardLimitDTO;
@@ -12,7 +13,6 @@ import io.harness.validation.Update;
 
 import software.wings.beans.Account;
 import software.wings.beans.AccountEvent;
-import software.wings.beans.FeatureFlag;
 import software.wings.beans.Service;
 import software.wings.beans.SubdomainUrl;
 import software.wings.beans.TechStack;

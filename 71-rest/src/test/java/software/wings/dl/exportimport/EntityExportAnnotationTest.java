@@ -6,11 +6,11 @@ import static org.assertj.core.api.Assertions.fail;
 
 import io.harness.CategoryTest;
 import io.harness.annotation.HarnessEntity;
+import io.harness.beans.FeatureFlag;
 import io.harness.category.element.UnitTests;
 import io.harness.morphia.MorphiaRegistrar;
 import io.harness.rule.Owner;
 
-import software.wings.beans.FeatureFlag;
 import software.wings.beans.Schema;
 
 import java.lang.reflect.Constructor;

@@ -1,38 +1,4 @@
 directories:
-  920-delegate-agent-beans
-  950-events-api
-  960-persistence
-  940-notification-client
-  920-delegate-service-beans
-  950-ng-core
-  950-ng-project-n-orgs
-  970-rbac-core
-  940-secret-manager-client
-  950-timeout-engine
-  950-wait-engine
-  930-ng-core-clients
-  910-delegate-service-driver
-  930-notification-service
-  890-sm-core
-  950-common-entities
-  890-pms-contracts
-  890-orchestration-persistence
-  884-pms-commons
-  882-pms-sdk-core
-  880-orchestration-beans
-  870-orchestration
-  860-orchestration-steps
-  860-orchestration-visualization
-  950-walktree-visitor
-  870-yaml-beans
-  850-execution-plan
-  850-ng-pipeline-commons
-  850-pms-sdk
-  840-ng-triggers
-  800-pipeline-service
-  910-delegate-task-grpc-service
-  950-command-library-common
-  950-events-framework
   310-ci-manager
   320-ci-execution
   330-ci-beans
@@ -42,17 +8,52 @@ directories:
   440-connector-nextgen
   450-ce-views
   490-ce-commons
+  800-pipeline-service
+  840-ng-triggers
+  850-execution-plan
+  850-ng-pipeline-commons
+  850-pms-sdk
+  860-orchestration-steps
+  860-orchestration-visualization
+  870-orchestration
+  870-yaml-beans
+  880-orchestration-beans
+  882-pms-sdk-core
+  884-pms-commons
+  890-orchestration-persistence
+  890-pms-contracts
+  890-sm-core
   900-yaml-sdk
+  910-delegate-service-driver
+  910-delegate-task-grpc-service
+  920-delegate-agent-beans
+  920-delegate-service-beans
   930-delegate-tasks
+  930-ng-core-clients
+  930-notification-service
   940-delegate-beans
+  940-notification-client
+  940-secret-manager-client
+  950-command-library-common
+  950-common-entities
   950-delegate-tasks-beans
+  950-events-api
+  950-events-framework
+  950-ng-core
+  950-ng-project-n-orgs
+  950-feature-flag
+  950-timeout-engine
+  950-wait-engine
+  950-walktree-visitor
   960-api-services
   960-expression-service
   960-ng-core-beans
   960-notification-beans
+  960-persistence
   970-api-services-beans
   970-grpc
   970-ng-commons
+  970-rbac-core
   980-commons
   990-commons-test
   tools/bazel

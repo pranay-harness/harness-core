@@ -19,6 +19,7 @@ import static org.mockito.Mockito.when;
 
 import io.harness.VerificationBaseIntegrationTest;
 import io.harness.beans.ExecutionStatus;
+import io.harness.beans.FeatureFlag;
 import io.harness.category.element.DeprecatedIntegrationTests;
 import io.harness.jobs.LogMLClusterGenerator;
 import io.harness.jobs.workflow.logs.WorkflowLogAnalysisJob.LogAnalysisTask;
@@ -34,7 +35,6 @@ import software.wings.api.PhaseElement;
 import software.wings.api.ServiceElement;
 import software.wings.beans.CountsByStatuses;
 import software.wings.beans.EntityType;
-import software.wings.beans.FeatureFlag;
 import software.wings.beans.FeatureName;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.SettingAttribute.SettingAttributeKeys;

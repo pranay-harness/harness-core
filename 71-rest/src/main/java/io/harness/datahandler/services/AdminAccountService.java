@@ -1,5 +1,6 @@
 package io.harness.datahandler.services;
 
+import io.harness.beans.FeatureFlag;
 import io.harness.ccm.license.CeLicenseInfo;
 import io.harness.datahandler.models.AccountSummary;
 import io.harness.limits.ActionType;
@@ -7,7 +8,6 @@ import io.harness.limits.ConfiguredLimit;
 import io.harness.limits.lib.Limit;
 
 import software.wings.beans.Account;
-import software.wings.beans.FeatureFlag;
 import software.wings.beans.LicenseInfo;
 import software.wings.beans.LicenseUpdateInfo;
 

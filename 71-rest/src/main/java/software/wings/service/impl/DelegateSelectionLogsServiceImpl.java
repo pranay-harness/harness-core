@@ -5,6 +5,7 @@ import static software.wings.beans.FeatureName.DISABLE_DELEGATE_SELECTION_LOG;
 import io.harness.beans.DelegateTask;
 import io.harness.delegate.beans.DelegateProfile;
 import io.harness.delegate.beans.DelegateSelectionLogParams;
+import io.harness.persistence.HPersistence;
 import io.harness.selection.log.BatchDelegateSelectionLog;
 import io.harness.selection.log.DelegateSelectionLog;
 import io.harness.selection.log.DelegateSelectionLog.DelegateSelectionLogBuilder;
@@ -12,7 +13,6 @@ import io.harness.selection.log.DelegateSelectionLog.DelegateSelectionLogKeys;
 
 import software.wings.beans.Delegate;
 import software.wings.beans.DelegateScope;
-import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.DelegateSelectionLogsService;
 import software.wings.service.intfc.DelegateService;
 import software.wings.service.intfc.FeatureFlagService;
@@ -32,7 +32,7 @@ import lombok.extern.slf4j.Slf4j;
 @Singleton
 @Slf4j
 public class DelegateSelectionLogsServiceImpl implements DelegateSelectionLogsService {
-  @Inject private WingsPersistence wingsPersistence;
+  @Inject private HPersistence persistence;
   @Inject private FeatureFlagService featureFlagService;
   @Inject private DelegateService delegateService;
 
@@ -60,7 +60,7 @@ public class DelegateSelectionLogsServiceImpl implements DelegateSelectionLogsSe
     try {
       if (featureFlagService.isNotEnabled(
               DISABLE_DELEGATE_SELECTION_LOG, batch.getDelegateSelectionLogs().iterator().next().getAccountId())) {
-        wingsPersistence.saveIgnoringDuplicateKeys(batch.getDelegateSelectionLogs());
+        persistence.saveIgnoringDuplicateKeys(batch.getDelegateSelectionLogs());
         log.info("Batch saved successfully");
       } else {
         batch.getDelegateSelectionLogs()
@@ -225,7 +225,7 @@ public class DelegateSelectionLogsServiceImpl implements DelegateSelectionLogsSe
 
   @Override
   public List<DelegateSelectionLogParams> fetchTaskSelectionLogs(String accountId, String taskId) {
-    List<DelegateSelectionLog> delegateSelectionLogsList = wingsPersistence.createQuery(DelegateSelectionLog.class)
+    List<DelegateSelectionLog> delegateSelectionLogsList = persistence.createQuery(DelegateSelectionLog.class)
                                                                .filter(DelegateSelectionLogKeys.accountId, accountId)
                                                                .filter(DelegateSelectionLogKeys.taskId, taskId)
                                                                .asList();
@@ -249,7 +249,7 @@ public class DelegateSelectionLogsServiceImpl implements DelegateSelectionLogsSe
 
       String delegateProfileName = "";
       if (delegate != null) {
-        DelegateProfile delegateProfile = wingsPersistence.get(DelegateProfile.class, delegate.getDelegateProfileId());
+        DelegateProfile delegateProfile = persistence.get(DelegateProfile.class, delegate.getDelegateProfileId());
         delegateProfileName = Optional.ofNullable(delegateProfile).map(DelegateProfile::getName).orElse("");
       }
 
@@ -269,7 +269,7 @@ public class DelegateSelectionLogsServiceImpl implements DelegateSelectionLogsSe
 
   @Override
   public Optional<DelegateSelectionLogParams> fetchSelectedDelegateForTask(String accountId, String taskId) {
-    DelegateSelectionLog delegateSelectionLog = wingsPersistence.createQuery(DelegateSelectionLog.class)
+    DelegateSelectionLog delegateSelectionLog = persistence.createQuery(DelegateSelectionLog.class)
                                                     .filter(DelegateSelectionLogKeys.accountId, accountId)
                                                     .filter(DelegateSelectionLogKeys.taskId, taskId)
                                                     .filter(DelegateSelectionLogKeys.conclusion, SELECTED)

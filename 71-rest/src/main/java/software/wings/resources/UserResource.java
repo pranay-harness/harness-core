@@ -20,6 +20,7 @@ import static software.wings.utils.Utils.urlDecode;
 import static com.google.common.collect.ImmutableMap.of;
 import static java.nio.charset.StandardCharsets.UTF_8;
 
+import io.harness.beans.FeatureFlag;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.configuration.DeployMode;
@@ -41,7 +42,6 @@ import software.wings.beans.AccountRole;
 import software.wings.beans.ApplicationRole;
 import software.wings.beans.BugsnagTab;
 import software.wings.beans.ErrorData;
-import software.wings.beans.FeatureFlag;
 import software.wings.beans.LoginRequest;
 import software.wings.beans.LoginTypeRequest;
 import software.wings.beans.PublicUser;

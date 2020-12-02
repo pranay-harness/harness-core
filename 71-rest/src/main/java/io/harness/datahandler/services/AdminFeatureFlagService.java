@@ -1,6 +1,6 @@
 package io.harness.datahandler.services;
 
-import software.wings.beans.FeatureFlag;
+import io.harness.beans.FeatureFlag;
 
 import java.util.List;
 import java.util.Optional;
