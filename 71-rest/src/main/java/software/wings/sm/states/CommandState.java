@@ -590,6 +590,8 @@ public class CommandState extends State {
         SshCommandTemplate sshCommandTemplate = (SshCommandTemplate) template.getTemplateObject();
         resolveTemplateVariablesInLinkedCommands(
             command, sshCommandTemplate.getReferencedTemplateList(), getTemplateVariables());
+        executionDataBuilder.withTemplateVariable(
+            templateUtils.processTemplateVariables(context, getTemplateVariables()));
         renderCommandString(command, context, executionDataBuilder.build());
       }
     } else {
