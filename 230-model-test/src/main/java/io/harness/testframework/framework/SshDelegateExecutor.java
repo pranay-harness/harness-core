@@ -267,8 +267,8 @@ public class SshDelegateExecutor {
       } else {
         log.info("Publishing Local delegate");
         UpdateOperations<Account> ops = wingsPersistence.createUpdateOperations(Account.class);
-        setUnset(ops, "delegateConfiguration",
-            DelegateConfiguration.builder().watcherVersion(version).delegateVersions(asList(version)).build());
+        setUnset(
+            ops, "delegateConfiguration", DelegateConfiguration.builder().delegateVersions(asList(version)).build());
         wingsPersistence.update(globalAccountQuery, ops);
       }
     } catch (Exception e) {

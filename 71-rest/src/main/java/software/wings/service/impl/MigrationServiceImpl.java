@@ -316,15 +316,13 @@ public class MigrationServiceImpl implements MigrationService {
                                   .withUuid(GLOBAL_ACCOUNT_ID)
                                   .withCompanyName("Global")
                                   .withAccountName("Global")
-                                  .withDelegateConfiguration(DelegateConfiguration.builder()
-                                                                 .watcherVersion("1.0.0-dev")
-                                                                 .delegateVersions(asList("1.0.0-dev"))
-                                                                 .build())
+                                  .withDelegateConfiguration(
+                                      DelegateConfiguration.builder().delegateVersions(asList("1.0.0-dev")).build())
                                   .build());
       } else if (globalAccount.getDelegateConfiguration() == null) {
         UpdateOperations<Account> ops = wingsPersistence.createUpdateOperations(Account.class);
         setUnset(ops, "delegateConfiguration",
-            DelegateConfiguration.builder().watcherVersion("1.0.0-dev").delegateVersions(asList("1.0.0-dev")).build());
+            DelegateConfiguration.builder().delegateVersions(asList("1.0.0-dev")).build());
         wingsPersistence.update(globalAccountQuery, ops);
       }
     } catch (Exception e) {
