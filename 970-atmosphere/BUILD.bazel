@@ -1,0 +1,30 @@
+load("//:tools/bazel/GenTestRules.bzl", "run_tests")
+load("//tools/checkstyle:rules.bzl", "checkstyle")
+load("//:macros.bzl", "sources")
+load("//:macros.bzl", "sonarqube_test")
+load("//tools/bazel/pmd:defs.bzl", "pmd")
+load("//:tools/bazel/protos/harness_grpc_library.bzl", "harness_grpc_library")
+
+sources()
+
+java_library(
+    name = "maven_deps",
+    visibility = ["//visibility:private"],
+    exports = [
+    ],
+)
+
+run_tests()
+
+checkstyle()
+
+sonarqube_test(
+    name = "sq_mycomponent",
+    srcs = ["sources"],
+    targets = [
+        ":maven_deps",
+        ":module",
+    ],
+)
+
+pmd()
