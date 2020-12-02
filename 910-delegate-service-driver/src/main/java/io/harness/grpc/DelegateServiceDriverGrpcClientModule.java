@@ -61,11 +61,12 @@ public class DelegateServiceDriverGrpcClientModule extends ProviderModule {
 
   private String computeAuthority(VersionInfo versionInfo) {
     String defaultAuthority = "default-authority.harness.io";
+    String deployMode = System.getenv().get("DEPLOY_MODE");
     String authorityToUse;
     if (!isValidAuthority(authority)) {
       log.info("Authority in config {} is invalid. Using default value {}", authority, defaultAuthority);
       authorityToUse = defaultAuthority;
-    } else {
+    } else if (!("ONPREM".equals(deployMode) || "KUBERNETES_ONPREM".equals(deployMode))) {
       String versionPrefix = "v-" + versionInfo.getVersion().replace('.', '-') + "-";
       String versionedAuthority = versionPrefix + authority;
       if (isValidAuthority(versionedAuthority)) {
@@ -75,6 +76,9 @@ public class DelegateServiceDriverGrpcClientModule extends ProviderModule {
         log.info("Versioned authority {} is invalid. Using non-versioned", versionedAuthority);
         authorityToUse = authority;
       }
+    } else {
+      log.info("Deploy Mode is {}. Using non-versioned authority", deployMode);
+      authorityToUse = authority;
     }
 
     return authorityToUse;
