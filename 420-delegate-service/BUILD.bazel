@@ -16,6 +16,7 @@ java_library(
         "//920-delegate-service-beans/src/main/proto:920_delegate_service_beans_java_proto",
         "//950-common-entities:module",
         "//970-grpc:module",
+        "//970-rbac-core:module",
         "@maven//:com_esotericsoftware_kryo",
         "@maven//:com_fasterxml_jackson_core_jackson_annotations",
         "@maven//:com_github_reinert_jjschema",
