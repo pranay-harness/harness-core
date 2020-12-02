@@ -1,9 +1,5 @@
 package io.harness.connector.mappers;
 
-import static io.harness.connector.entities.Connector.Scope.ACCOUNT;
-import static io.harness.connector.entities.Connector.Scope.ORGANIZATION;
-import static io.harness.connector.entities.Connector.Scope.PROJECT;
-
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 import io.harness.connector.apis.dto.ConnectorDTO;
@@ -17,6 +13,7 @@ import io.harness.connector.mappers.gitconnectormapper.GitEntityToDTO;
 import io.harness.connector.mappers.kubernetesMapper.KubernetesDTOToEntity;
 import io.harness.connector.mappers.kubernetesMapper.KubernetesEntityToDTO;
 import io.harness.delegate.beans.connector.ConnectorConfigDTO;
+import io.harness.encryption.Scope;
 import io.harness.utils.FullyQualifiedIdentifierHelper;
 
 import com.google.common.annotations.VisibleForTesting;
@@ -60,15 +57,15 @@ public class ConnectorMapper {
   }
 
   @VisibleForTesting
-  Connector.Scope getScopeFromConnectorDTO(ConnectorDTO connectorRequestDTO) {
+  Scope getScopeFromConnectorDTO(ConnectorDTO connectorRequestDTO) {
     ConnectorInfoDTO connectorInfo = connectorRequestDTO.getConnectorInfo();
     if (isNotBlank(connectorInfo.getProjectIdentifier())) {
-      return PROJECT;
+      return Scope.PROJECT;
     }
     if (isNotBlank(connectorInfo.getOrgIdentifier())) {
-      return ORGANIZATION;
+      return Scope.ORG;
     }
-    return ACCOUNT;
+    return Scope.ACCOUNT;
   }
 
   public ConnectorResponseDTO writeDTO(Connector connector) {

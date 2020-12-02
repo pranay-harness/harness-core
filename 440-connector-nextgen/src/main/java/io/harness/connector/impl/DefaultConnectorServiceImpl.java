@@ -11,35 +11,40 @@ import static java.lang.String.format;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 import io.harness.beans.IdentifierRef;
-import io.harness.connector.ConnectorFilterHelper;
+import io.harness.beans.SortOrder;
+import io.harness.beans.SortOrder.OrderType;
 import io.harness.connector.apis.dto.ConnectorCatalogueResponseDTO;
 import io.harness.connector.apis.dto.ConnectorDTO;
 import io.harness.connector.apis.dto.ConnectorInfoDTO;
+import io.harness.connector.apis.dto.ConnectorListFilter;
 import io.harness.connector.apis.dto.ConnectorResponseDTO;
 import io.harness.connector.apis.dto.stats.ConnectorStatistics;
 import io.harness.connector.entities.Connector;
 import io.harness.connector.entities.Connector.ConnectorKeys;
-import io.harness.connector.entities.Connector.Scope;
 import io.harness.connector.entities.ConnectorConnectivityDetails;
 import io.harness.connector.entities.ConnectorConnectivityDetails.ConnectorConnectivityDetailsBuilder;
 import io.harness.connector.helper.CatalogueHelper;
 import io.harness.connector.mappers.ConnectorMapper;
+import io.harness.connector.services.ConnectorFilterService;
 import io.harness.connector.services.ConnectorService;
-import io.harness.connector.services.GitRepoConnectorService;
 import io.harness.connector.validator.ConnectionValidator;
 import io.harness.delegate.beans.connector.ConnectorCategory;
 import io.harness.delegate.beans.connector.ConnectorType;
 import io.harness.delegate.beans.connector.ConnectorValidationResult;
 import io.harness.delegate.beans.connector.gitconnector.GitConfigDTO;
+import io.harness.encryption.Scope;
 import io.harness.entitysetupusageclient.remote.EntitySetupUsageClient;
 import io.harness.exception.DuplicateFieldException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.UnexpectedException;
+import io.harness.ng.beans.PageRequest;
 import io.harness.repositories.ConnectorRepository;
 import io.harness.utils.FullyQualifiedIdentifierHelper;
+import io.harness.utils.PageUtils;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import java.util.Collections;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
@@ -47,9 +52,7 @@ import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.Update;
@@ -60,7 +63,7 @@ import org.springframework.data.mongodb.core.query.Update;
 public class DefaultConnectorServiceImpl implements ConnectorService {
   private final ConnectorMapper connectorMapper;
   private final ConnectorRepository connectorRepository;
-  private final ConnectorFilterHelper connectorFilterHelper;
+  private final ConnectorFilterService connectorFilterService;
   private Map<String, ConnectionValidator> connectionValidatorMap;
   private final CatalogueHelper catalogueHelper;
   EntitySetupUsageClient entitySetupUsageClient;
@@ -93,17 +96,34 @@ public class DefaultConnectorServiceImpl implements ConnectorService {
   }
 
   @Override
-  public Page<ConnectorResponseDTO> list(int page, int size, String accountIdentifier, String orgIdentifier,
-      String projectIdentifier, String searchTerm, ConnectorType type, ConnectorCategory category) {
-    Criteria criteria = connectorFilterHelper.createCriteriaFromConnectorFilter(
-        accountIdentifier, orgIdentifier, projectIdentifier, searchTerm, type, category);
-    Pageable pageable = getPageRequest(page, size, Sort.by(Sort.Direction.DESC, ConnectorKeys.createdAt));
+  public Page<ConnectorResponseDTO> list(
+      int page, int size, String accountIdentifier, ConnectorListFilter connectorFilter) {
+    Criteria criteria =
+        connectorFilterService.createCriteriaFromConnectorListQueryParams(accountIdentifier, connectorFilter);
+    Pageable pageable = PageUtils.getPageRequest(
+        PageRequest.builder()
+            .pageIndex(page)
+            .pageSize(size)
+            .sortOrders(Collections.singletonList(
+                SortOrder.Builder.aSortOrder().withField(ConnectorKeys.createdAt, OrderType.DESC).build()))
+            .build());
     Page<Connector> connectors = connectorRepository.findAll(criteria, pageable);
     return connectors.map(connector -> connectorMapper.writeDTO(connector));
   }
 
-  private Pageable getPageRequest(int page, int size, Sort sort) {
-    return PageRequest.of(page, size, sort);
+  public Page<ConnectorResponseDTO> list(int page, int size, String accountIdentifier, String orgIdentifier,
+      String projectIdentifier, String searchTerm, ConnectorType type, ConnectorCategory category) {
+    Criteria criteria = connectorFilterService.createCriteriaFromConnectorFilter(
+        accountIdentifier, orgIdentifier, projectIdentifier, searchTerm, type, category);
+    Pageable pageable = PageUtils.getPageRequest(
+        PageRequest.builder()
+            .pageIndex(page)
+            .pageSize(size)
+            .sortOrders(Collections.singletonList(
+                SortOrder.Builder.aSortOrder().withField(ConnectorKeys.createdAt, OrderType.DESC).build()))
+            .build());
+    Page<Connector> connectors = connectorRepository.findAll(criteria, pageable);
+    return connectors.map(connector -> connectorMapper.writeDTO(connector));
   }
 
   @Override

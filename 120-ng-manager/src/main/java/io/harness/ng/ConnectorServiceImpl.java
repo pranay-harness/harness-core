@@ -11,6 +11,7 @@ import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import io.harness.connector.apis.dto.ConnectorCatalogueResponseDTO;
 import io.harness.connector.apis.dto.ConnectorDTO;
 import io.harness.connector.apis.dto.ConnectorInfoDTO;
+import io.harness.connector.apis.dto.ConnectorListFilter;
 import io.harness.connector.apis.dto.ConnectorResponseDTO;
 import io.harness.connector.apis.dto.stats.ConnectorStatistics;
 import io.harness.connector.entities.Connector;
@@ -20,6 +21,7 @@ import io.harness.connector.services.ConnectorService;
 import io.harness.delegate.beans.connector.ConnectorCategory;
 import io.harness.delegate.beans.connector.ConnectorType;
 import io.harness.delegate.beans.connector.ConnectorValidationResult;
+import io.harness.encryption.Scope;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.SecretManagementException;
@@ -73,10 +75,9 @@ public class ConnectorServiceImpl implements ConnectorService {
   }
 
   @Override
-  public Page<ConnectorResponseDTO> list(int page, int size, String accountIdentifier, String orgIdentifier,
-      String projectIdentifier, String searchTerm, ConnectorType type, ConnectorCategory category) {
-    return defaultConnectorService.list(
-        page, size, accountIdentifier, orgIdentifier, projectIdentifier, searchTerm, type, category);
+  public Page<ConnectorResponseDTO> list(
+      int page, int size, String accountIdentifier, ConnectorListFilter connectorFilter) {
+    return defaultConnectorService.list(page, size, accountIdentifier, connectorFilter);
   }
 
   @Override
@@ -210,7 +211,14 @@ public class ConnectorServiceImpl implements ConnectorService {
 
   @Override
   public ConnectorStatistics getConnectorStatistics(
-      String accountIdentifier, String orgIdentifier, String projectIdentifier, Connector.Scope scope) {
+      String accountIdentifier, String orgIdentifier, String projectIdentifier, Scope scope) {
     return defaultConnectorService.getConnectorStatistics(accountIdentifier, orgIdentifier, projectIdentifier, scope);
+  }
+
+  @Override
+  public Page<ConnectorResponseDTO> list(int page, int size, String accountIdentifier, String orgIdentifier,
+      String projectIdentifier, String searchTerm, ConnectorType type, ConnectorCategory category) {
+    return defaultConnectorService.list(
+        page, size, accountIdentifier, orgIdentifier, projectIdentifier, searchTerm, type, category);
   }
 }

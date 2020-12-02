@@ -1,6 +1,7 @@
 package io.harness.connector;
 
 import io.harness.connector.impl.ConnectorActivityServiceImpl;
+import io.harness.connector.impl.ConnectorFilterServiceImpl;
 import io.harness.connector.impl.ConnectorHeartbeatServiceImpl;
 import io.harness.connector.impl.DefaultConnectorServiceImpl;
 import io.harness.connector.mappers.ConnectorDTOToEntityMapper;
@@ -32,6 +33,7 @@ import io.harness.connector.mappers.secretmanagermapper.VaultEntityToDTO;
 import io.harness.connector.mappers.splunkconnectormapper.SplunkDTOToEntity;
 import io.harness.connector.mappers.splunkconnectormapper.SplunkEntityToDTO;
 import io.harness.connector.services.ConnectorActivityService;
+import io.harness.connector.services.ConnectorFilterService;
 import io.harness.connector.services.ConnectorHeartbeatService;
 import io.harness.connector.services.ConnectorService;
 import io.harness.connector.validator.ArtifactoryConnectionValidator;
@@ -113,6 +115,7 @@ public class ConnectorModule extends AbstractModule {
         .annotatedWith(Names.named(DEFAULT_CONNECTOR_SERVICE))
         .to(DefaultConnectorServiceImpl.class);
     bind(ConnectorActivityService.class).to(ConnectorActivityServiceImpl.class);
+    bind(ConnectorFilterService.class).to(ConnectorFilterServiceImpl.class);
     bind(ConnectorHeartbeatService.class).to(ConnectorHeartbeatServiceImpl.class);
   }
 

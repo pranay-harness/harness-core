@@ -93,7 +93,7 @@ public class IdentifierRefHelperTest extends CategoryTest {
 
     assertThatThrownBy(
         () -> IdentifierRefHelper.getIdentifierRef(identifier, accountIdentifier, orgIdentifier, projectIdentifier))
-        .isInstanceOf(InvalidRequestException.class);
+        .isInstanceOf(IllegalArgumentException.class);
   }
 
   @Test

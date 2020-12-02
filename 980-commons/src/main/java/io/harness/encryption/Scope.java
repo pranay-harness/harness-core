@@ -1,12 +1,13 @@
 package io.harness.encryption;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import java.util.Arrays;
 import java.util.Optional;
 
 public enum Scope {
-  ACCOUNT("account"),
-  ORG("org"),
-  PROJECT("proj");
+  @JsonProperty("account") ACCOUNT("account"),
+  @JsonProperty("org") ORG("org"),
+  @JsonProperty("project") PROJECT("project");
   private final String yamlRepresentation;
 
   public String getYamlRepresentation() {

@@ -1,12 +1,12 @@
 package io.harness.connector.utils;
 
 import io.harness.connector.entities.Connector;
-import io.harness.connector.entities.Connector.Scope;
 import io.harness.connector.entities.embedded.awsconnector.AwsConfig;
 import io.harness.connector.entities.embedded.awsconnector.AwsIamCredential;
 import io.harness.delegate.beans.connector.ConnectorType;
 import io.harness.delegate.beans.connector.awsconnector.AwsCredentialType;
 import io.harness.delegate.beans.connector.awsconnector.CrossAccountAccessDTO;
+import io.harness.encryption.Scope;
 
 import lombok.experimental.UtilityClass;
 

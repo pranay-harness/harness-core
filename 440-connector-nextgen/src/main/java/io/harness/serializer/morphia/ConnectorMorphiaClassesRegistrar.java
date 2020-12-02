@@ -1,6 +1,7 @@
 package io.harness.serializer.morphia;
 
 import io.harness.connector.entities.Connector;
+import io.harness.connector.entities.ConnectorFilter;
 import io.harness.connector.entities.embedded.appdynamicsconnector.AppDynamicsConnector;
 import io.harness.connector.entities.embedded.artifactoryconnector.ArtifactoryConnector;
 import io.harness.connector.entities.embedded.artifactoryconnector.ArtifactoryUserNamePasswordAuthentication;
@@ -51,6 +52,7 @@ public class ConnectorMorphiaClassesRegistrar implements MorphiaRegistrar {
     set.add(ArtifactoryConnector.class);
     set.add(JiraConnector.class);
     set.add(NexusConnector.class);
+    set.add(ConnectorFilter.class);
   }
 
   @Override
