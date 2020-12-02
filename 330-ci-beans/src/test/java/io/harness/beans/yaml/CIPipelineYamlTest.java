@@ -10,6 +10,7 @@ import io.harness.beans.CIBeansTest;
 import io.harness.beans.ParameterField;
 import io.harness.beans.stages.IntegrationStage;
 import io.harness.beans.steps.stepinfo.GitCloneStepInfo;
+import io.harness.beans.steps.stepinfo.PluginStepInfo;
 import io.harness.beans.steps.stepinfo.PublishStepInfo;
 import io.harness.beans.steps.stepinfo.RunStepInfo;
 import io.harness.beans.steps.stepinfo.TestIntelligenceStepInfo;
@@ -33,6 +34,7 @@ import io.harness.yaml.core.StageElement;
 import io.harness.yaml.core.StepElement;
 import io.harness.yaml.utils.YamlPipelineUtils;
 
+import com.google.common.collect.ImmutableMap;
 import java.io.IOException;
 import java.net.URL;
 import org.junit.Test;
@@ -185,6 +187,18 @@ public class CIPipelineYamlTest extends CIBeansTest {
                                                                            .build())
                                                             .build()))
                                                     .build())
+                                            .build(),
+                                        StepElement.builder()
+                                            .identifier("minio")
+                                            .type("plugin")
+                                            .stepSpecType(PluginStepInfo.builder()
+                                                              .identifier("minio")
+                                                              .image("plugins/s3")
+                                                              .settings(ImmutableMap.<String, String>builder()
+                                                                            .put("secret_key", "foo")
+                                                                            .put("access_key", "bar")
+                                                                            .build())
+                                                              .build())
                                             .build()))
                                     .build())
                             .build())

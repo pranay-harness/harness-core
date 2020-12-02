@@ -168,30 +168,27 @@ public class K8BuildSetupUtilsTest extends CIExecutionTest {
     Map<String, String> map = new HashMap<>();
     map.put(STEP_EXEC, MOUNT_PATH);
     String workDir = String.format("/%s/%s", STEP_EXEC, "workspace");
-    assertThat(podParams.getContainerParamsList().get(2))
+    assertThat(podParams.getContainerParamsList().get(3))
         .isEqualToIgnoringGivenFields(
             ciExecutionPlanTestHelper.getRunStepCIK8Container().volumeToMountPath(map).workingDir(workDir).build(),
             "envVars", "containerSecrets");
-    assertThat(podParams.getContainerParamsList().get(2).getContainerSecrets().getSecretVariableDetails())
+    assertThat(podParams.getContainerParamsList().get(3).getContainerSecrets().getSecretVariableDetails())
         .containsAnyElementsOf(secretVariableDetails);
-    assertThat(podParams.getContainerParamsList().get(2).getEnvVars()).containsAllEntriesOf(stepEnvVars);
+    assertThat(podParams.getContainerParamsList().get(3).getEnvVars()).containsAllEntriesOf(stepEnvVars);
 
     stepEnvVars.put(DELEGATE_SERVICE_TOKEN_VARIABLE,
-        podParams.getContainerParamsList().get(3).getEnvVars().get(DELEGATE_SERVICE_TOKEN_VARIABLE));
-    assertThat(podParams.getContainerParamsList().get(3))
+        podParams.getContainerParamsList().get(4).getEnvVars().get(DELEGATE_SERVICE_TOKEN_VARIABLE));
+    assertThat(podParams.getContainerParamsList().get(4))
         .isEqualToIgnoringGivenFields(
             ciExecutionPlanTestHelper.getPluginStepCIK8Container().build(), "envVars", "containerSecrets");
 
-    assertThat(podParams.getContainerParamsList().get(1))
+    assertThat(podParams.getContainerParamsList().get(2))
         .isEqualToIgnoringGivenFields(
             ciExecutionPlanTestHelper.getGitCloneStepCIK8Container().build(), "envVars", "containerSecrets");
 
-    assertThat(podParams.getContainerParamsList().get(0))
+    assertThat(podParams.getContainerParamsList().get(1))
         .isEqualToIgnoringGivenFields(
             ciExecutionPlanTestHelper.getServiceCIK8Container(), "envVars", "containerSecrets");
-
-    verify(logServiceUtils, times(1)).getLogServiceConfig();
-    verify(logServiceUtils, times(1)).getLogServiceToken(accountID);
   }
 
   @Test

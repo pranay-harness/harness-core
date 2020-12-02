@@ -171,24 +171,22 @@ public class K8BuildSetupUtils {
         ((K8BuildJobEnvInfo) liteEngineTaskStepInfo.getBuildJobEnvInfo()).getStepConnectorRefs();
     Set<String> publishArtifactStepIds =
         ((K8BuildJobEnvInfo) liteEngineTaskStepInfo.getBuildJobEnvInfo()).getPublishArtifactStepIds();
-    // user input containers with custom entry point
-    List<CIK8ContainerParams> containerParams =
-        podSetupInfo.getPodSetupParams()
-            .getContainerDefinitionInfos()
-            .stream()
-            .map(containerDefinitionInfo
-                -> createCIK8ContainerParams(ngAccess, containerDefinitionInfo, commonEnvVars, stepConnectors,
-                    podSetupInfo.getVolumeToMountPath(), podSetupInfo.getWorkDirPath()))
-            .collect(toList());
 
-    // include lite-engine container
     CIK8ContainerParams liteEngineContainerParams =
         createLiteEngineContainerParams(ngAccess, harnessInternalImageRegistryConnectorDetails, stepConnectors,
             publishArtifactStepIds, liteEngineTaskStepInfo, k8PodDetails, podSetupInfo.getStageCpuRequest(),
             podSetupInfo.getStageMemoryRequest(), podSetupInfo.getServiceGrpcPortList(), logEnvVars,
             podSetupInfo.getVolumeToMountPath(), podSetupInfo.getWorkDirPath());
-    containerParams.add(liteEngineContainerParams);
 
+    List<CIK8ContainerParams> containerParams = new ArrayList<>();
+    containerParams.add(liteEngineContainerParams);
+    // user input containers with custom entry point
+    for (ContainerDefinitionInfo containerDefinitionInfo :
+        podSetupInfo.getPodSetupParams().getContainerDefinitionInfos()) {
+      CIK8ContainerParams cik8ContainerParams = createCIK8ContainerParams(ngAccess, containerDefinitionInfo,
+          commonEnvVars, stepConnectors, podSetupInfo.getVolumeToMountPath(), podSetupInfo.getWorkDirPath());
+      containerParams.add(cik8ContainerParams);
+    }
     return containerParams;
   }
 
