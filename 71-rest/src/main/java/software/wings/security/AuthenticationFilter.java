@@ -1,5 +1,7 @@
 package software.wings.security;
 
+import static io.harness.AuthorizationServiceHeader.BEARER;
+import static io.harness.AuthorizationServiceHeader.DEFAULT;
 import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
@@ -9,7 +11,9 @@ import static io.harness.eraro.ErrorCode.USER_DOES_NOT_EXIST;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
 import static io.harness.security.JWTTokenServiceUtils.extractToken;
+import static io.harness.security.JWTTokenServiceUtils.verifyJWTToken;
 
+import static java.util.Collections.emptyMap;
 import static javax.ws.rs.HttpMethod.OPTIONS;
 import static javax.ws.rs.Priorities.AUTHENTICATION;
 import static org.apache.commons.lang3.StringUtils.isBlank;
@@ -22,6 +26,9 @@ import io.harness.exception.InvalidRequestException;
 import io.harness.exception.UnauthorizedException;
 import io.harness.logging.AccountLogContext;
 import io.harness.manage.GlobalContextManager;
+import io.harness.security.JWTAuthenticationFilter;
+import io.harness.security.JWTTokenHandler;
+import io.harness.security.SecurityContextBuilder;
 import io.harness.security.annotations.DelegateAuth;
 import io.harness.security.annotations.LearningEngineAuth;
 import io.harness.security.annotations.NextGenManagerAuth;
@@ -41,11 +48,14 @@ import software.wings.service.intfc.ExternalApiRateLimitingService;
 import software.wings.service.intfc.HarnessApiKeyService;
 import software.wings.service.intfc.UserService;
 
+import com.auth0.jwt.interfaces.Claim;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import java.io.IOException;
 import java.lang.reflect.Method;
+import java.util.HashMap;
+import java.util.Map;
 import javax.annotation.Priority;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.container.ContainerRequestContext;
@@ -77,6 +87,8 @@ public class AuthenticationFilter implements ContainerRequestFilter {
   private AuditHelper auditHelper;
   private ExternalApiRateLimitingService rateLimitingService;
   private SecretManager secretManager;
+  private Map<String, String> serviceToSecretMapping;
+  private Map<String, JWTTokenHandler> serviceToJWTTokenHandlerMapping;
 
   @Inject
   public AuthenticationFilter(UserService userService, AuthService authService, AuditService auditService,
@@ -90,6 +102,8 @@ public class AuthenticationFilter implements ContainerRequestFilter {
     this.harnessApiKeyService = harnessApiKeyService;
     this.rateLimitingService = rateLimitingService;
     this.secretManager = secretManager;
+    serviceToSecretMapping = getServiceToSecretMapping();
+    serviceToJWTTokenHandlerMapping = getServiceToJWTTokenHandlerMapping();
   }
 
   @Override
@@ -156,38 +170,36 @@ public class AuthenticationFilter implements ContainerRequestFilter {
       return;
     }
 
-    if (isNextGenManagerRequest(resourceInfo) && isNextGenAuthorizationValid(containerRequestContext)) {
-      return;
-    }
-
-    if (isAuthenticatedByIdentitySvc(containerRequestContext)) {
+    if (isIdentityServiceOriginatedRequest(containerRequestContext)) {
       String identityServiceToken =
           substringAfter(containerRequestContext.getHeaderString(HttpHeaders.AUTHORIZATION), IDENTITY_SERVICE_PREFIX);
-      HarnessUserAccountActions harnessUserAccountActions = secretManager.getHarnessUserAccountActions(
-          secretManager.verifyJWTToken(identityServiceToken, JWT_CATEGORY.IDENTITY_SERVICE_SECRET));
+      Map<String, Claim> claimMap =
+          secretManager.verifyJWTToken(identityServiceToken, JWT_CATEGORY.IDENTITY_SERVICE_SECRET);
+      HarnessUserAccountActions harnessUserAccountActions = secretManager.getHarnessUserAccountActions(claimMap);
       HarnessUserThreadLocal.set(harnessUserAccountActions);
-
-      String userId = containerRequestContext.getHeaderString(USER_IDENTITY_HEADER);
-      User user = userService.getUserFromCacheOrDB(userId);
-      if (user != null) {
-        UserThreadLocal.set(user);
+      if (isAuthenticatedByIdentitySvc(containerRequestContext)) {
+        SecurityContextBuilder.setContext(claimMap);
+        String userId = containerRequestContext.getHeaderString(USER_IDENTITY_HEADER);
+        User user = userService.getUserFromCacheOrDB(userId);
+        if (user != null) {
+          UserThreadLocal.set(user);
+          return;
+        } else {
+          throw new InvalidRequestException(USER_DOES_NOT_EXIST.name(), USER_DOES_NOT_EXIST, USER);
+        }
+      } else if (identityServiceAPI()) {
         return;
-      } else {
-        throw new InvalidRequestException(USER_DOES_NOT_EXIST.name(), USER_DOES_NOT_EXIST, USER);
       }
+      throw new InvalidRequestException(INVALID_CREDENTIAL.name(), INVALID_CREDENTIAL, USER);
     }
 
-    if (isIdentityServiceRequest(containerRequestContext)) {
-      String identityServiceToken =
-          substringAfter(containerRequestContext.getHeaderString(HttpHeaders.AUTHORIZATION), IDENTITY_SERVICE_PREFIX);
-      HarnessUserAccountActions harnessUserAccountActions = secretManager.getHarnessUserAccountActions(
-          secretManager.verifyJWTToken(identityServiceToken, JWT_CATEGORY.IDENTITY_SERVICE_SECRET));
-      HarnessUserThreadLocal.set(harnessUserAccountActions);
-
+    // Bearer token validation is needed for environments without Gateway
+    if (checkIfBearerTokenAndValidate(authorization, containerRequestContext)) {
       return;
     }
 
-    if (checkIfBearerTokenAndValidate(authorization, containerRequestContext)) {
+    if (isNextGenManagerRequest(resourceInfo)) {
+      validateNextGenRequest(containerRequestContext);
       return;
     }
 
@@ -232,9 +244,32 @@ public class AuthenticationFilter implements ContainerRequestFilter {
       containerRequestContext.setProperty("USER", user);
       updateUserInAuditRecord(user);
       UserThreadLocal.set(user);
+      setPrincipal(extractToken(containerRequestContext, "Bearer"));
       return true;
     }
     return false;
+  }
+
+  private void setPrincipal(String tokenString) {
+    if (tokenString.length() > 32) {
+      Map<String, Claim> claimMap = verifyJWTToken(tokenString, secretManager.getJWTSecret(JWT_CATEGORY.AUTH_SECRET));
+      SecurityContextBuilder.setContext(claimMap);
+    }
+  }
+
+  private Map<String, String> getServiceToSecretMapping() {
+    Map<String, String> mapping = new HashMap<>();
+    mapping.put(DEFAULT.getServiceId(), secretManager.getJWTSecret(JWT_CATEGORY.NEXT_GEN_MANAGER_SECRET));
+    mapping.put(BEARER.getServiceId(), secretManager.getJWTSecret(JWT_CATEGORY.AUTH_SECRET));
+    return mapping;
+  }
+
+  private Map<String, JWTTokenHandler> getServiceToJWTTokenHandlerMapping() {
+    return emptyMap();
+  }
+
+  private void validateNextGenRequest(ContainerRequestContext containerRequestContext) {
+    JWTAuthenticationFilter.filter(containerRequestContext, serviceToJWTTokenHandlerMapping, serviceToSecretMapping);
   }
 
   private void ensureValidQPM(String key) {
@@ -321,6 +356,10 @@ public class AuthenticationFilter implements ContainerRequestFilter {
   private boolean isIdentityServiceRequest(ContainerRequestContext requestContext) {
     return identityServiceAPI()
         && startsWith(requestContext.getHeaderString(HttpHeaders.AUTHORIZATION), IDENTITY_SERVICE_PREFIX);
+  }
+
+  protected boolean isIdentityServiceOriginatedRequest(ContainerRequestContext requestContext) {
+    return startsWith(requestContext.getHeaderString(HttpHeaders.AUTHORIZATION), IDENTITY_SERVICE_PREFIX);
   }
 
   private boolean isExternalFacingApiRequest(ContainerRequestContext requestContext) {

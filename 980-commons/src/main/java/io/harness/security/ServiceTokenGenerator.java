@@ -8,12 +8,15 @@ import io.harness.exception.InvalidArgumentsException;
 import io.harness.exception.InvalidRequestException;
 
 import com.auth0.jwt.JWT;
+import com.auth0.jwt.JWTCreator;
 import com.auth0.jwt.algorithms.Algorithm;
 import com.auth0.jwt.exceptions.JWTCreationException;
 import com.google.common.base.Preconditions;
 import java.io.UnsupportedEncodingException;
 import java.time.Duration;
 import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -49,17 +52,31 @@ public class ServiceTokenGenerator {
     try {
       Algorithm algorithm = Algorithm.HMAC256(serviceSecret);
 
-      return JWT.create()
-          .withIssuer("Harness Inc")
-          .withIssuedAt(new Date())
-          .withExpiresAt(new Date(System.currentTimeMillis() + TimeUnit.HOURS.toMillis(tokenDuration.toHours())))
-          .withNotBefore(new Date(System.currentTimeMillis() - TimeUnit.HOURS.toMillis(1)))
-          .withIssuedAt(new Date())
-          .sign(algorithm);
+      JWTCreator.Builder jwtBuilder =
+          JWT.create()
+              .withIssuer("Harness Inc")
+              .withIssuedAt(new Date())
+              .withExpiresAt(new Date(System.currentTimeMillis() + TimeUnit.HOURS.toMillis(tokenDuration.toHours())))
+              .withNotBefore(new Date(System.currentTimeMillis() - TimeUnit.HOURS.toMillis(1)))
+              .withIssuedAt(new Date());
+
+      addPrincipalToJWTBuilder(jwtBuilder);
+      return jwtBuilder.sign(algorithm);
     } catch (UnsupportedEncodingException | JWTCreationException exception) {
       throw new InvalidRequestException("error creating jwt token", exception);
     }
   }
+
+  private void addPrincipalToJWTBuilder(JWTCreator.Builder jwtBuilder) {
+    Map<String, String> claims = new HashMap<>();
+    if (SecurityContextBuilder.getPrincipal() != null) {
+      claims = SecurityContextBuilder.getPrincipal().getJWTClaims();
+    }
+    if (claims.size() > 0) {
+      claims.forEach(jwtBuilder::withClaim);
+    }
+  }
+
   private String createNewToken(String serviceSecret) {
     return createNewToken(serviceSecret, Duration.ofHours(4));
   }

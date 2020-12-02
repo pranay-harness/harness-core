@@ -67,6 +67,7 @@ import io.harness.limits.LimitEnforcementUtils;
 import io.harness.limits.checker.StaticLimitCheckerWithDecrement;
 import io.harness.marketplace.gcp.procurement.GcpProcurementService;
 import io.harness.persistence.UuidAware;
+import io.harness.security.dto.UserPrincipal;
 import io.harness.serializer.KryoSerializer;
 
 import software.wings.app.MainConfiguration;
@@ -2481,7 +2482,7 @@ public class UserServiceImpl implements UserService {
   }
 
   @Override
-  public String generateJWTToken(Map<String, String> claims, JWT_CATEGORY category) {
+  public String generateJWTToken(User user, Map<String, String> claims, JWT_CATEGORY category) {
     String jwtPasswordSecret = secretManager.getJWTSecret(category);
     if (jwtPasswordSecret == null) {
       throw new InvalidRequestException(INCORRECT_PORTAL_SETUP);
@@ -2494,12 +2495,23 @@ public class UserServiceImpl implements UserService {
               .withIssuer(HARNESS_ISSUER)
               .withIssuedAt(new Date())
               .withExpiresAt(new Date(System.currentTimeMillis() + category.getValidityDuration()));
+      // User Principal needed in token for environments without gateway as this token will be sent back to different
+      // microservices
+      addUserPrincipal(claims, user);
       if (claims != null && claims.size() > 0) {
         claims.forEach(jwtBuilder::withClaim);
       }
       return jwtBuilder.sign(algorithm);
     } catch (UnsupportedEncodingException | JWTCreationException exception) {
       throw new GeneralException("JWTToken could not be generated");
+    }
+  }
+
+  private void addUserPrincipal(Map<String, String> claims, User user) {
+    UserPrincipal userPrincipal = new UserPrincipal(user.getUuid(), user.getDefaultAccountId());
+    Map<String, String> userClaims = userPrincipal.getJWTClaims();
+    if (userClaims != null) {
+      claims.putAll(userClaims);
     }
   }
 

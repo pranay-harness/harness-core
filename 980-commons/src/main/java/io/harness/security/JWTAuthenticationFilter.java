@@ -11,12 +11,15 @@ import static org.apache.commons.lang3.StringUtils.SPACE;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.exception.InvalidRequestException;
 
+import com.auth0.jwt.interfaces.Claim;
 import com.google.inject.Singleton;
 import java.util.Map;
 import java.util.function.Predicate;
 import javax.annotation.Priority;
 import javax.ws.rs.container.ContainerRequestContext;
 import javax.ws.rs.container.ContainerRequestFilter;
+import javax.ws.rs.container.ContainerResponseContext;
+import javax.ws.rs.container.ContainerResponseFilter;
 import javax.ws.rs.container.ResourceInfo;
 import javax.ws.rs.core.Context;
 import org.apache.commons.lang3.tuple.Pair;
@@ -24,7 +27,7 @@ import org.apache.commons.lang3.tuple.Pair;
 @OwnedBy(PL)
 @Singleton
 @Priority(AUTHENTICATION)
-public class JWTAuthenticationFilter implements ContainerRequestFilter {
+public class JWTAuthenticationFilter implements ContainerRequestFilter, ContainerResponseFilter {
   @Context private ResourceInfo resourceInfo;
   private final Predicate<Pair<ResourceInfo, ContainerRequestContext> > predicate;
   private final Map<String, JWTTokenHandler> serviceToJWTTokenHandlerMapping;
@@ -41,16 +44,30 @@ public class JWTAuthenticationFilter implements ContainerRequestFilter {
   @Override
   public void filter(ContainerRequestContext containerRequestContext) {
     if (predicate.test(Pair.of(resourceInfo, containerRequestContext))) {
-      String sourceServiceId = JWTTokenServiceUtils.extractSource(containerRequestContext);
-      String secret = JWTTokenServiceUtils.extractSecret(serviceToSecretMapping, sourceServiceId);
-      String token = JWTTokenServiceUtils.extractToken(containerRequestContext, sourceServiceId + SPACE);
-      boolean validate = serviceToJWTTokenHandlerMapping
-                             .getOrDefault(sourceServiceId, JWTTokenServiceUtils::isServiceAuthorizationValid)
-                             .validate(token, secret);
-      if (validate) {
-        return;
-      }
-      throw new InvalidRequestException(INVALID_TOKEN.name(), INVALID_TOKEN, USER);
+      filter(containerRequestContext, serviceToJWTTokenHandlerMapping, serviceToSecretMapping);
+    }
+  }
+
+  public static void filter(ContainerRequestContext containerRequestContext,
+      Map<String, JWTTokenHandler> serviceToJWTTokenHandlerMapping, Map<String, String> serviceToSecretMapping) {
+    String sourceServiceId = JWTTokenServiceUtils.extractSource(containerRequestContext);
+    String secret = JWTTokenServiceUtils.extractSecret(serviceToSecretMapping, sourceServiceId);
+    String token = JWTTokenServiceUtils.extractToken(containerRequestContext, sourceServiceId + SPACE);
+    Pair<Boolean, Map<String, Claim> > validate =
+        serviceToJWTTokenHandlerMapping.getOrDefault(sourceServiceId, JWTTokenServiceUtils::isServiceAuthorizationValid)
+            .validate(token, secret);
+    if (Boolean.TRUE.equals(validate.getLeft())) {
+      SecurityContextBuilder.setContext(validate.getRight());
+      return;
+    }
+    throw new InvalidRequestException(INVALID_TOKEN.name(), INVALID_TOKEN, USER);
+  }
+
+  @Override
+  public void filter(
+      ContainerRequestContext containerRequestContext, ContainerResponseContext containerResponseContext) {
+    if (predicate.test(Pair.of(resourceInfo, containerRequestContext))) {
+      SecurityContextBuilder.unsetContext();
     }
   }
 }

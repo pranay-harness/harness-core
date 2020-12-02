@@ -1265,12 +1265,15 @@ public class UserServiceTest extends WingsBaseTest {
         .thenReturn("5E1YekVGldTSS5Kt0GHlyWrJ6fJHmee9nXSBssefAWSOgdMwAvvbvJalnYENZ0H0EealN0CxHh34gUCN");
     HashMap<String, String> claimMap = new HashMap<>();
     claimMap.put("email", "testUser@harness.io");
-    assertThat(userService.verifyJWTToken(userService.generateJWTToken(claimMap, JWT_CATEGORY.MULTIFACTOR_AUTH),
+    assertThat(userService.verifyJWTToken(
+                   userService.generateJWTToken(User.Builder.anUser().build(), claimMap, JWT_CATEGORY.MULTIFACTOR_AUTH),
                    JWT_CATEGORY.MULTIFACTOR_AUTH))
         .isEqualTo(null);
 
     try {
-      userService.verifyJWTToken(userService.generateJWTToken(claimMap, JWT_CATEGORY.MULTIFACTOR_AUTH) + "fakeData",
+      userService.verifyJWTToken(
+          userService.generateJWTToken(User.Builder.anUser().build(), claimMap, JWT_CATEGORY.MULTIFACTOR_AUTH)
+              + "fakeData",
           JWT_CATEGORY.MULTIFACTOR_AUTH);
       failBecauseExceptionWasNotThrown(WingsException.class);
     } catch (WingsException e) {

@@ -252,12 +252,12 @@ public class AuthRuleFilterTest extends WingsBaseTest {
     Class clazz = SecretsResourceNG.class;
     when(resourceInfo.getResourceClass()).thenReturn(clazz);
     when(resourceInfo.getResourceMethod()).thenReturn(getNgMockResourceMethod());
-    boolean isNextGenRequest = authRuleFilter.isNextGenManagerRequest(requestContext);
-    assertThat(isNextGenRequest).isFalse();
+    boolean isNextGenRequest = authRuleFilter.isNextGenManagerRequest();
+    assertThat(isNextGenRequest).isTrue();
 
     when(requestContext.getHeaderString(HttpHeaders.AUTHORIZATION))
         .thenReturn(AuthenticationFilter.NEXT_GEN_MANAGER_PREFIX);
-    isNextGenRequest = authRuleFilter.isNextGenManagerRequest(requestContext);
+    isNextGenRequest = authRuleFilter.isNextGenManagerRequest();
     assertThat(isNextGenRequest).isTrue();
   }
 

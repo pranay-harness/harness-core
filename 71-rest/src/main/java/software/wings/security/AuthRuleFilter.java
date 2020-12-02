@@ -185,7 +185,7 @@ public class AuthRuleFilter implements ContainerRequestFilter {
 
     if (isDelegateRequest(requestContext) || isLearningEngineServiceRequest(requestContext)
         || isIdentityServiceRequest(requestContext) || isAdminPortalRequest(requestContext)
-        || isNextGenManagerRequest(requestContext)) {
+        || isNextGenManagerRequest()) {
       return;
     }
 
@@ -486,10 +486,8 @@ public class AuthRuleFilter implements ContainerRequestFilter {
   }
 
   @VisibleForTesting
-  boolean isNextGenManagerRequest(ContainerRequestContext requestContext) {
-    return isNextGenManagerAPI()
-        && startsWith(
-            requestContext.getHeaderString(HttpHeaders.AUTHORIZATION), AuthenticationFilter.NEXT_GEN_MANAGER_PREFIX);
+  boolean isNextGenManagerRequest() {
+    return isNextGenManagerAPI();
   }
 
   private boolean authorizationExemptedRequest(ContainerRequestContext requestContext) {
