@@ -3,6 +3,8 @@ package memory
 
 import (
 	"context"
+	"encoding/json"
+	"io"
 	"sync"
 
 	"github.com/wings-software/portal/product/log-service/stream"
@@ -61,6 +63,22 @@ func (s *Streamer) Tail(ctx context.Context, key string) (<-chan *stream.Line, <
 		return nil, nil
 	}
 	return stream.subscribe(ctx)
+}
+
+func (s *Streamer) CopyTo(ctx context.Context, key string, wc io.WriteCloser) error {
+	defer wc.Close()
+	s.Lock()
+	logStream, ok := s.streams[key]
+	s.Unlock()
+	if !ok {
+		return stream.ErrNotFound
+	}
+	for _, line := range logStream.hist {
+		jsonBytes, _ := json.Marshal(line)
+		wc.Write(jsonBytes)
+		wc.Write([]byte("\n"))
+	}
+	return nil
 }
 
 func (s *Streamer) Info(ctx context.Context) *stream.Info {

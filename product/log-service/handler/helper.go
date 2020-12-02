@@ -8,6 +8,7 @@ import (
 const (
 	accountIDParam = "accountID"
 	keyParam       = "key"
+	snapshotParam  = "snapshot"
 )
 
 // writeBadRequest writes the json-encoded error message

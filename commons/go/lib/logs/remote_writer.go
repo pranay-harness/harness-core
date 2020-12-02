@@ -178,6 +178,7 @@ func (b *RemoteWriter) upload() error {
 			return err
 		}
 		data.Write(buf.Bytes())
+		data.Write([]byte("\n"))
 	}
 	link, err := b.client.UploadLink(context.Background(), b.key)
 	if err != nil {

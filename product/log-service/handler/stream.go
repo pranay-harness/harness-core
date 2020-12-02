@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"bufio"
 	"context"
 	"encoding/json"
 	"io"
@@ -8,11 +9,27 @@ import (
 	"time"
 
 	"github.com/wings-software/portal/product/log-service/logger"
+	"github.com/wings-software/portal/product/log-service/store"
 	"github.com/wings-software/portal/product/log-service/stream"
+
+	"golang.org/x/sync/errgroup"
 )
 
 var pingInterval = time.Second * 30
 var tailMaxTime = time.Hour * 1
+
+// BufioWriterCloser combines a bufio Writer with a Closer
+type BufioWriterCloser struct {
+	wc io.Closer
+	*bufio.Writer
+}
+
+func (bwc *BufioWriterCloser) Close() error {
+	if err := bwc.Flush(); err != nil {
+		return err
+	}
+	return bwc.wc.Close()
+}
 
 // HandleOpen returns an http.HandlerFunc that opens
 // the live stream.
@@ -37,15 +54,41 @@ func HandleOpen(stream stream.Stream) http.HandlerFunc {
 }
 
 // HandleClose returns an http.HandlerFunc that closes
-// the live stream.
-func HandleClose(stream stream.Stream) http.HandlerFunc {
+// the live stream and optionally snapshots the stream.
+func HandleClose(logStream stream.Stream, store store.Store) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
 
 		accountID := r.FormValue(accountIDParam)
 		key := CreateAccountSeparatedKey(accountID, r.FormValue(keyParam))
 
-		if err := stream.Delete(ctx, key); err != nil {
+		snapshot := r.FormValue(snapshotParam)
+		if snapshot == "true" {
+			pr, pw := io.Pipe()
+			defer pr.Close()
+			br := bufio.NewReader(pr)
+			bwc := &BufioWriterCloser{pw, bufio.NewWriter(pw)}
+
+			g := new(errgroup.Group)
+			g.Go(func() error {
+				return logStream.CopyTo(ctx, key, bwc)
+			})
+
+			g.Go(func() error {
+				return store.Upload(ctx, key, br)
+			})
+
+			if err := g.Wait(); err != nil {
+				WriteInternalError(w, err)
+				logger.FromRequest(r).
+					WithError(err).
+					WithField("key", key).
+					Errorln("api: could not snapshot stream to store")
+				return // don't delete the stream if snapshotting failed
+			}
+		}
+
+		if err := logStream.Delete(ctx, key); err != nil {
 			WriteInternalError(w, err)
 			logger.FromRequest(r).
 				WithError(err).
@@ -73,7 +116,7 @@ func HandleWrite(s stream.Stream) http.HandlerFunc {
 			logger.FromRequest(r).
 				WithError(err).
 				WithField("key", key).
-				Errorln("api: cannot unmsrshal input")
+				Errorln("api: cannot unmarshal input")
 			return
 		}
 

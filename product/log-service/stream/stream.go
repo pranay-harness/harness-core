@@ -4,6 +4,7 @@ package stream
 import (
 	"context"
 	"errors"
+	"io"
 	"time"
 )
 
@@ -28,6 +29,9 @@ type Stream interface {
 
 	// Info returns internal stream information.
 	Info(context.Context) *Info
+
+	// CopyTo copies the contents of the stream to the writer
+	CopyTo(ctx context.Context, key string, rc io.WriteCloser) error
 }
 
 // Line represents a line in the logs.
