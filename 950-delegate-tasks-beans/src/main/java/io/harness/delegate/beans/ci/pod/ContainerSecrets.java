@@ -11,5 +11,5 @@ import lombok.Data;
 @Builder
 public class ContainerSecrets {
   @Builder.Default private List<SecretVariableDetails> secretVariableDetails = new ArrayList<>();
-  @Builder.Default private Map<String, ConnectorDetails> publishArtifactConnectors = new HashMap<>();
+  @Builder.Default private Map<String, ConnectorDetails> connectorDetailsMap = new HashMap<>();
 }

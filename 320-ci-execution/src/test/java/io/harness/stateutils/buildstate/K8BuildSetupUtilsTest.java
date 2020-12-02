@@ -26,7 +26,6 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import io.harness.beans.environment.pod.PodSetupInfo;
 import io.harness.beans.sweepingoutputs.K8PodDetails;
 import io.harness.beans.sweepingoutputs.StepTaskDetails;
 import io.harness.category.element.UnitTests;
@@ -115,8 +114,8 @@ public class K8BuildSetupUtilsTest extends CIExecutionTest {
         .thenReturn(Collections.singletonList(EncryptedDataDetail.builder().build()));
     when(executionSweepingOutputResolver.resolve(any(), any())).thenReturn(StepTaskDetails.builder().build());
     when(connectorUtils.getConnectorDetails(any(), any())).thenReturn(ConnectorDetails.builder().build());
-
-    PodSetupInfo podsSetupInfo = ciExecutionPlanTestHelper.getCIPodsSetupInfoOnFirstPod().getPodSetupInfoList().get(0);
+    when(connectorUtils.getConnectorDetailsWithConversionInfo(any(), any()))
+        .thenReturn(ConnectorDetails.builder().identifier("connectorId").build());
 
     BuildNumberDetails buildNumberDetails = BuildNumberDetails.builder()
                                                 .accountIdentifier(accountID)
@@ -129,8 +128,8 @@ public class K8BuildSetupUtilsTest extends CIExecutionTest {
     K8PodDetails k8PodDetails =
         K8PodDetails.builder().namespace(namespace).buildNumberDetails(buildNumberDetails).stageID(stageID).build();
 
-    CIK8PodParams<CIK8ContainerParams> podParams = k8BuildSetupUtils.getPodParams(ngAccess, podsSetupInfo, k8PodDetails,
-        ciExecutionPlanTestHelper.getExpectedLiteEngineTaskInfoOnFirstPodWithSetCallbackId(), null, true, null, true,
+    CIK8PodParams<CIK8ContainerParams> podParams = k8BuildSetupUtils.getPodParams(ngAccess, k8PodDetails,
+        ciExecutionPlanTestHelper.getExpectedLiteEngineTaskInfoOnFirstPodWithSetCallbackId(), true, null, true,
         "workspace");
 
     List<SecretVariableDetails> secretVariableDetails =
@@ -212,8 +211,6 @@ public class K8BuildSetupUtilsTest extends CIExecutionTest {
     when(logServiceUtils.getLogServiceConfig()).thenReturn(logServiceConfig);
     when(logServiceUtils.getLogServiceToken(eq(accountID))).thenThrow(new GeneralException("Could not retrieve token"));
 
-    PodSetupInfo podsSetupInfo = ciExecutionPlanTestHelper.getCIPodsSetupInfoOnFirstPod().getPodSetupInfoList().get(0);
-
     BuildNumberDetails buildNumberDetails = BuildNumberDetails.builder()
                                                 .accountIdentifier(accountID)
                                                 .orgIdentifier(orgID)
@@ -225,10 +222,10 @@ public class K8BuildSetupUtilsTest extends CIExecutionTest {
     K8PodDetails k8PodDetails =
         K8PodDetails.builder().namespace(namespace).buildNumberDetails(buildNumberDetails).stageID(stageID).build();
 
-    assertThatThrownBy(()
-                           -> k8BuildSetupUtils.getPodParams(ngAccess, podsSetupInfo, k8PodDetails,
-                               ciExecutionPlanTestHelper.getExpectedLiteEngineTaskInfoOnFirstPod(), null, true, null,
-                               true, "workspace"))
+    assertThatThrownBy(
+        ()
+            -> k8BuildSetupUtils.getPodParams(ngAccess, k8PodDetails,
+                ciExecutionPlanTestHelper.getExpectedLiteEngineTaskInfoOnFirstPod(), true, null, true, "workspace"))
         .isInstanceOf(Exception.class);
 
     verify(logServiceUtils, times(1)).getLogServiceConfig();

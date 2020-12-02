@@ -138,7 +138,7 @@ public class CIK8BuildTaskHandlerTestHelper {
                                            .imageDetails(imageDetails)
                                            .build())
             .containerSecrets(
-                ContainerSecrets.builder().publishArtifactConnectors(getPublishArtifactConnectorDetails()).build())
+                ContainerSecrets.builder().connectorDetailsMap(getPublishArtifactConnectorDetails()).build())
             .build());
     containerParamsList.add(
         CIK8ContainerParams.builder()
@@ -189,7 +189,7 @@ public class CIK8BuildTaskHandlerTestHelper {
             .containerType(CIContainerType.ADD_ON)
             .imageDetailsWithConnector(ImageDetailsWithConnector.builder().imageDetails(imageDetails).build())
             .containerSecrets(
-                ContainerSecrets.builder().publishArtifactConnectors(getPublishArtifactConnectorDetails()).build())
+                ContainerSecrets.builder().connectorDetailsMap(getPublishArtifactConnectorDetails()).build())
             .build());
     containerParamsList.add(
         CIK8ContainerParams.builder()
@@ -243,7 +243,7 @@ public class CIK8BuildTaskHandlerTestHelper {
             .containerType(CIContainerType.ADD_ON)
             .imageDetailsWithConnector(ImageDetailsWithConnector.builder().imageDetails(imageDetails).build())
             .containerSecrets(
-                ContainerSecrets.builder().publishArtifactConnectors(getPublishArtifactConnectorDetails()).build())
+                ContainerSecrets.builder().connectorDetailsMap(getPublishArtifactConnectorDetails()).build())
             .build());
     containerParamsList.add(
         CIK8ContainerParams.builder()

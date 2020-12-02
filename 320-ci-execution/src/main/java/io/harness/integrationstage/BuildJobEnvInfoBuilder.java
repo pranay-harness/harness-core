@@ -17,10 +17,12 @@ import static java.util.stream.Collectors.toMap;
 
 import io.harness.beans.environment.BuildJobEnvInfo;
 import io.harness.beans.environment.K8BuildJobEnvInfo;
+import io.harness.beans.environment.K8BuildJobEnvInfo.ConnectorConversionInfo;
 import io.harness.beans.environment.pod.PodSetupInfo;
 import io.harness.beans.environment.pod.container.ContainerDefinitionInfo;
 import io.harness.beans.environment.pod.container.ContainerImageDetails;
 import io.harness.beans.executionargs.CIExecutionArgs;
+import io.harness.beans.plugin.compatible.PluginCompatibleStep;
 import io.harness.beans.stages.IntegrationStage;
 import io.harness.beans.steps.CIStepInfo;
 import io.harness.beans.steps.stepinfo.PluginStepInfo;
@@ -37,18 +39,20 @@ import io.harness.ci.config.CIExecutionServiceConfig;
 import io.harness.common.CICommonPodConstants;
 import io.harness.delegate.beans.ci.pod.CIContainerType;
 import io.harness.delegate.beans.ci.pod.ContainerResourceParams;
+import io.harness.delegate.beans.ci.pod.EnvVariableEnum;
 import io.harness.delegate.beans.ci.pod.PVCParams;
 import io.harness.exception.InvalidRequestException;
 import io.harness.k8s.model.ImageDetails;
+import io.harness.stateutils.buildstate.PluginSettingUtils;
 import io.harness.stateutils.buildstate.providers.StepContainerUtils;
 import io.harness.util.PortFinder;
+import io.harness.utils.IdentifierRefHelper;
 import io.harness.yaml.core.ParallelStepElement;
 import io.harness.yaml.core.StepElement;
 import io.harness.yaml.core.auxiliary.intfc.ExecutionWrapper;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
-import java.security.SecureRandom;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -62,7 +66,20 @@ import lombok.extern.slf4j.Slf4j;
 @Singleton
 @Slf4j
 public class BuildJobEnvInfoBuilder {
-  private static final SecureRandom random = new SecureRandom();
+  private static final String USERNAME_PREFIX = "USERNAME_";
+  private static final String PASSW_PREFIX = "PASSWORD_";
+  private static final String ENDPOINT_PREFIX = "ENDPOINT_";
+  private static final String ACCESS_KEY_PREFIX = "ACCESS_KEY_";
+  private static final String SECRET_KEY_PREFIX = "SECRET_KEY_";
+  private static final String SECRET_PATH_PREFIX = "SECRET_PATH_";
+
+  private static final String PLUGIN_USERNAME = "PLUGIN_USERNAME";
+  private static final String PLUGIN_PASSW = "PLUGIN_PASSWORD";
+  private static final String PLUGIN_REGISTRY = "PLUGIN_REGISTRY";
+  private static final String PLUGIN_ACCESS_KEY = "PLUGIN_ACCESS_KEY";
+  private static final String PLUGIN_SECRET_KEY = "PLUGIN_SECRET_KEY";
+  private static final String PLUGIN_JSON_KEY = "PLUGIN_JSON_KEY";
+
   @Inject private CIExecutionServiceConfig ciExecutionServiceConfig;
 
   public BuildJobEnvInfo getCIBuildJobEnvInfo(IntegrationStage integrationStage, CIExecutionArgs ciExecutionArgs,
@@ -77,7 +94,8 @@ public class BuildJobEnvInfoBuilder {
       return K8BuildJobEnvInfo.builder()
           .podsSetupInfo(getCIPodsSetupInfo(integrationStage, ciExecutionArgs, steps, isFirstPod, podName))
           .workDir(getWorkingDirectory(integrationStage))
-          .publishStepConnectorIdentifier(getPublishStepConnectorRefs(integrationStage))
+          .publishArtifactStepIds(getPublishArtifactStepIds(integrationStage))
+          .stepConnectorRefs(getStepConnectorRefs(integrationStage))
           .build();
     } else {
       throw new IllegalArgumentException("Input infrastructure type is not of type kubernetes");
@@ -201,6 +219,17 @@ public class BuildJobEnvInfoBuilder {
       case RUN:
         return createRunStepContainerDefinition(
             (RunStepInfo) ciStepInfo, integrationStage, ciExecutionArgs, portFinder, stepIndex);
+      case DOCKER:
+      case ECR:
+      case GCR:
+      case SAVE_CACHE_S3:
+      case RESTORE_CACHE_S3:
+      case RESTORE_CACHE_GCS:
+      case SAVE_CACHE_GCS:
+      case UPLOAD_S3:
+      case UPLOAD_GCS:
+        return createPluginCompatibleStepContainerDefinition(
+            (PluginCompatibleStep) ciStepInfo, ciExecutionArgs, portFinder, stepIndex);
       case PLUGIN:
         return createPluginStepContainerDefinition((PluginStepInfo) ciStepInfo, ciExecutionArgs, portFinder, stepIndex);
       case TEST_INTELLIGENCE:
@@ -209,6 +238,29 @@ public class BuildJobEnvInfoBuilder {
       default:
         return null;
     }
+  }
+
+  private ContainerDefinitionInfo createPluginCompatibleStepContainerDefinition(
+      PluginCompatibleStep stepInfo, CIExecutionArgs ciExecutionArgs, PortFinder portFinder, int stepIndex) {
+    Integer port = portFinder.getNextPort();
+    stepInfo.setPort(port);
+
+    String containerName = String.format("%s%d", STEP_PREFIX, stepIndex);
+    Map<String, String> envVarMap = new HashMap<>();
+    envVarMap.putAll(BuildEnvironmentUtils.getBuildEnvironmentVariables(ciExecutionArgs));
+    envVarMap.putAll(PluginSettingUtils.getPluginCompatibleEnvVariables(stepInfo));
+    return ContainerDefinitionInfo.builder()
+        .name(containerName)
+        .commands(StepContainerUtils.getCommand())
+        .args(StepContainerUtils.getArguments(port))
+        .envVars(envVarMap)
+        .containerImageDetails(ContainerImageDetails.builder().imageDetails(getImageInfo(stepInfo.getImage())).build())
+        .containerResourceParams(getStepContainerResource(stepInfo.getResources()))
+        .ports(Collections.singletonList(port))
+        .containerType(CIContainerType.PLUGIN)
+        .stepIdentifier(stepInfo.getIdentifier())
+        .stepName(stepInfo.getName())
+        .build();
   }
 
   private ContainerDefinitionInfo createRunStepContainerDefinition(RunStepInfo runStepInfo,
@@ -320,7 +372,7 @@ public class BuildJobEnvInfoBuilder {
         .collect(Collectors.toList());
   }
 
-  private Set<String> getPublishStepConnectorRefs(IntegrationStage integrationStage) {
+  private Set<String> getPublishArtifactStepIds(IntegrationStage integrationStage) {
     List<ExecutionWrapper> executionWrappers = integrationStage.getExecution().getSteps();
     if (isEmpty(executionWrappers)) {
       return Collections.emptySet();
@@ -331,27 +383,127 @@ public class BuildJobEnvInfoBuilder {
       if (executionSection instanceof ParallelStepElement) {
         for (ExecutionWrapper executionWrapper : ((ParallelStepElement) executionSection).getSections()) {
           if (executionWrapper instanceof StepElement) {
-            StepElement stepElement = (StepElement) executionWrapper;
-            if (stepElement.getStepSpecType() instanceof PublishStepInfo) {
-              List<Artifact> publishArtifacts = ((PublishStepInfo) stepElement.getStepSpecType()).getPublishArtifacts();
-              for (Artifact artifact : publishArtifacts) {
-                String connector = artifact.getConnector().getConnectorRef();
-                set.add(connector);
-              }
+            if (((StepElement) executionWrapper).getType().equals("publishArtifacts")) {
+              set.add(((PublishStepInfo) ((StepElement) executionWrapper).getStepSpecType()).getIdentifier());
             }
           }
         }
       } else if (executionSection instanceof StepElement) {
-        if (((StepElement) executionSection).getStepSpecType() instanceof PublishStepInfo) {
-          List<Artifact> publishArtifacts =
-              ((PublishStepInfo) ((StepElement) executionSection).getStepSpecType()).getPublishArtifacts();
-          for (Artifact artifact : publishArtifacts) {
-            set.add(artifact.getConnector().getConnectorRef());
-          }
+        if (((StepElement) executionSection).getType().equals("publishArtifacts")) {
+          set.add(((PublishStepInfo) ((StepElement) executionSection).getStepSpecType()).getIdentifier());
         }
       }
     }
     return set;
+  }
+
+  private Map<String, ConnectorConversionInfo> getStepConnectorRefs(IntegrationStage integrationStage) {
+    List<ExecutionWrapper> executionWrappers = integrationStage.getExecution().getSteps();
+    if (isEmpty(executionWrappers)) {
+      return Collections.emptyMap();
+    }
+
+    Map<String, ConnectorConversionInfo> map = new HashMap<>();
+    for (ExecutionWrapper executionSection : executionWrappers) {
+      if (executionSection instanceof ParallelStepElement) {
+        for (ExecutionWrapper executionWrapper : ((ParallelStepElement) executionSection).getSections()) {
+          if (executionWrapper instanceof StepElement) {
+            map.putAll(getStepConnectorConversionInfo((StepElement) executionWrapper));
+          }
+        }
+      } else if (executionSection instanceof StepElement) {
+        map.putAll(getStepConnectorConversionInfo((StepElement) executionSection));
+      }
+    }
+    return map;
+  }
+
+  private Map<String, ConnectorConversionInfo> getStepConnectorConversionInfo(StepElement stepElement) {
+    Map<String, ConnectorConversionInfo> map = new HashMap<>();
+    if (stepElement.getStepSpecType() instanceof PublishStepInfo) {
+      List<Artifact> publishArtifacts = ((PublishStepInfo) stepElement.getStepSpecType()).getPublishArtifacts();
+      for (Artifact artifact : publishArtifacts) {
+        String connectorRef = artifact.getConnector().getConnectorRef();
+        String connectorId = IdentifierRefHelper.getIdentifier(connectorRef);
+        String stepId = stepElement.getIdentifier();
+        switch (artifact.getConnector().getType()) {
+          case ECR:
+          case S3:
+            map.put(stepId,
+                ConnectorConversionInfo.builder()
+                    .connectorRef(connectorRef)
+                    .envToSecretEntry(EnvVariableEnum.AWS_ACCESS_KEY, ACCESS_KEY_PREFIX + connectorId)
+                    .envToSecretEntry(EnvVariableEnum.AWS_SECRET_KEY, SECRET_KEY_PREFIX + connectorId)
+                    .build());
+            break;
+          case GCR:
+            map.put(stepId,
+                ConnectorConversionInfo.builder()
+                    .connectorRef(connectorRef)
+                    .envToSecretEntry(EnvVariableEnum.GCP_KEY_AS_FILE, SECRET_PATH_PREFIX + connectorId)
+                    .build());
+            break;
+          case ARTIFACTORY:
+            map.put(stepId,
+                ConnectorConversionInfo.builder()
+                    .connectorRef(connectorRef)
+                    .envToSecretEntry(EnvVariableEnum.ARTIFACTORY_ENDPOINT, ENDPOINT_PREFIX + connectorId)
+                    .envToSecretEntry(EnvVariableEnum.ARTIFACTORY_USERNAME, USERNAME_PREFIX + connectorId)
+                    .envToSecretEntry(EnvVariableEnum.ARTIFACTORY_PASSWORD, PASSW_PREFIX + connectorId)
+                    .build());
+            break;
+          case DOCKERHUB:
+            map.put(stepId,
+                ConnectorConversionInfo.builder()
+                    .connectorRef(connectorRef)
+                    .envToSecretEntry(EnvVariableEnum.DOCKER_REGISTRY, ENDPOINT_PREFIX + connectorId)
+                    .envToSecretEntry(EnvVariableEnum.DOCKER_USERNAME, USERNAME_PREFIX + connectorId)
+                    .envToSecretEntry(EnvVariableEnum.DOCKER_PASSWORD, PASSW_PREFIX + connectorId)
+                    .build());
+            break;
+          default:
+            throw new IllegalStateException("Unexpected value: " + stepElement.getType());
+        }
+      }
+    } else if (stepElement.getStepSpecType() instanceof PluginCompatibleStep) {
+      PluginCompatibleStep step = (PluginCompatibleStep) stepElement.getStepSpecType();
+      switch (stepElement.getType()) {
+        case "buildAndPushECR":
+        case "restoreCacheS3":
+        case "saveCacheS3":
+        case "uploadToS3":
+          map.put(step.getIdentifier(),
+              ConnectorConversionInfo.builder()
+                  .connectorRef(step.getConnectorRef())
+                  .envToSecretEntry(EnvVariableEnum.AWS_ACCESS_KEY, PLUGIN_ACCESS_KEY)
+                  .envToSecretEntry(EnvVariableEnum.AWS_SECRET_KEY, PLUGIN_SECRET_KEY)
+                  .build());
+          break;
+        case "buildAndPushGCR":
+        case "uploadToGCS":
+        case "saveCacheGCS":
+        case "restoreCacheGCS":
+          map.put(step.getIdentifier(),
+              ConnectorConversionInfo.builder()
+                  .connectorRef(step.getConnectorRef())
+                  .envToSecretEntry(EnvVariableEnum.GCP_KEY, PLUGIN_JSON_KEY)
+                  .build());
+
+          break;
+        case "buildAndPushDockerHub":
+          map.put(step.getIdentifier(),
+              ConnectorConversionInfo.builder()
+                  .connectorRef(step.getConnectorRef())
+                  .envToSecretEntry(EnvVariableEnum.DOCKER_USERNAME, PLUGIN_USERNAME)
+                  .envToSecretEntry(EnvVariableEnum.DOCKER_PASSWORD, PLUGIN_PASSW)
+                  .envToSecretEntry(EnvVariableEnum.DOCKER_REGISTRY, PLUGIN_REGISTRY)
+                  .build());
+          break;
+        default:
+          throw new IllegalStateException("Unexpected value: " + stepElement.getType());
+      }
+    }
+    return map;
   }
 
   private Map<String, String> getEnvVariables(IntegrationStage integrationStage) {
@@ -442,6 +594,16 @@ public class BuildJobEnvInfoBuilder {
         return getContainerMemoryLimit(((PluginStepInfo) ciStepInfo).getResources());
       case TEST_INTELLIGENCE:
         return getContainerMemoryLimit(((TestIntelligenceStepInfo) ciStepInfo).getResources());
+      case GCR:
+      case ECR:
+      case DOCKER:
+      case UPLOAD_GCS:
+      case UPLOAD_S3:
+      case RESTORE_CACHE_GCS:
+      case RESTORE_CACHE_S3:
+      case SAVE_CACHE_S3:
+      case SAVE_CACHE_GCS:
+        return getContainerMemoryLimit(((PluginCompatibleStep) ciStepInfo).getResources());
       default:
         return zeroMemory;
     }
@@ -489,6 +651,16 @@ public class BuildJobEnvInfoBuilder {
         return getContainerCpuLimit(((PluginStepInfo) ciStepInfo).getResources());
       case TEST_INTELLIGENCE:
         return getContainerCpuLimit(((TestIntelligenceStepInfo) ciStepInfo).getResources());
+      case GCR:
+      case ECR:
+      case DOCKER:
+      case UPLOAD_GCS:
+      case UPLOAD_S3:
+      case RESTORE_CACHE_GCS:
+      case RESTORE_CACHE_S3:
+      case SAVE_CACHE_S3:
+      case SAVE_CACHE_GCS:
+        return getContainerCpuLimit(((PluginCompatibleStep) ciStepInfo).getResources());
       default:
         return zeroCpu;
     }

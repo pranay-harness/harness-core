@@ -452,10 +452,10 @@ public class CIK8CtlHandlerTest extends CategoryTest {
   @Category(UnitTests.class)
   public void shouldFetchPublishArtifactSecretKeyMap() {
     Map<String, ConnectorDetails> publishArtifactSettings = getPublishArtifactConnectorDetails();
-    when(mockSecretSpecBuilder.decryptPublishArtifactSecretVariables(publishArtifactSettings))
+    when(mockSecretSpecBuilder.decryptConnectorSecretVariables(publishArtifactSettings))
         .thenReturn(getPublishArtifactSecrets());
 
-    Map<String, SecretParams> secretParams = cik8CtlHandler.fetchPublishArtifactSecretKeyMap(publishArtifactSettings);
+    Map<String, SecretParams> secretParams = cik8CtlHandler.fetchConnectorsSecretKeyMap(publishArtifactSettings);
     assertThat(secretParams).isEqualTo(getPublishArtifactSecrets());
   }
 

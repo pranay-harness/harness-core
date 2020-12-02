@@ -40,6 +40,7 @@ import io.harness.delegate.beans.ci.pod.ContainerParams;
 import io.harness.delegate.beans.ci.pod.ContainerResourceParams;
 import io.harness.delegate.beans.ci.pod.ContainerSecrets;
 import io.harness.delegate.beans.ci.pod.EncryptedVariableWithType;
+import io.harness.delegate.beans.ci.pod.EnvVariableEnum;
 import io.harness.delegate.beans.ci.pod.HostAliasParams;
 import io.harness.delegate.beans.ci.pod.ImageDetailsWithConnector;
 import io.harness.delegate.beans.ci.pod.PVCParams;
@@ -490,5 +491,6 @@ public class DelegateTasksBeansKryoRegister implements KryoRegistrar {
     kryo.register(ConnectorHeartbeatDelegateResponse.class, 19427);
     kryo.register(DelegateStringProgressData.class, 19428);
     kryo.register(GitSCMType.class, 19429);
+    kryo.register(EnvVariableEnum.class, 19430);
   }
 }

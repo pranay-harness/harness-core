@@ -16,6 +16,7 @@ public interface CIStepInfo extends WithNonYamlInfo<TypeInfo>, StepSpecType, Gen
 
   int getRetry();
   int getTimeout();
+  String getName();
 
   // TODO: implement this when we support graph section in yaml
   default List<String> getDependencies() {

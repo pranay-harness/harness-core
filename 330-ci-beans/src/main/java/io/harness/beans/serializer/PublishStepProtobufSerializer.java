@@ -28,17 +28,17 @@ import java.util.function.Supplier;
 import org.apache.commons.codec.binary.Base64;
 
 @Singleton
-public class PublishStepProtobufSerializer implements ProtobufSerializer<PublishStepInfo> {
+public class PublishStepProtobufSerializer implements ProtobufStepSerializer<PublishStepInfo> {
   public static final String TYPE_NOT_SUPPORTED = "%s not supported";
   public static final String TYPE_NOT_IMPLEMENTED_YET = "%s not implemented yet";
   @Inject private Supplier<DelegateCallbackToken> delegateCallbackTokenSupplier;
 
   @Override
-  public String serialize(PublishStepInfo stepInfo) {
-    return Base64.encodeBase64String(convertRestoreCacheStepInfo(stepInfo).toByteArray());
+  public String serializeToBase64(PublishStepInfo stepInfo) {
+    return Base64.encodeBase64String(serializeStep(stepInfo).toByteArray());
   }
 
-  public UnitStep convertRestoreCacheStepInfo(PublishStepInfo publishStepInfo) {
+  public UnitStep serializeStep(PublishStepInfo publishStepInfo) {
     PublishArtifactsStep.Builder publishArtifactsStepBuilder = PublishArtifactsStep.newBuilder();
     publishStepInfo.getPublishArtifacts().forEach(artifact -> {
       switch (artifact.getType()) {

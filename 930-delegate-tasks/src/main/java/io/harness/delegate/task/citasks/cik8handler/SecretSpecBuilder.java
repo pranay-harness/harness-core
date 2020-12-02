@@ -1,6 +1,7 @@
 package io.harness.delegate.task.citasks.cik8handler;
 
 import static io.harness.data.encoding.EncodingUtils.encodeBase64;
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.delegate.beans.ci.pod.SecretParams.Type.FILE;
 import static io.harness.delegate.beans.ci.pod.SecretParams.Type.TEXT;
@@ -24,10 +25,10 @@ import io.harness.delegate.beans.connector.gitconnector.GitAuthType;
 import io.harness.delegate.beans.connector.gitconnector.GitConfigDTO;
 import io.harness.delegate.beans.connector.gitconnector.GitHTTPAuthenticationDTO;
 import io.harness.delegate.beans.connector.gitconnector.GitSSHAuthenticationDTO;
+import io.harness.delegate.task.citasks.cik8handler.helper.ConnectorEnvVariablesHelper;
 import io.harness.exception.InvalidArgumentsException;
 import io.harness.exception.WingsException;
 import io.harness.k8s.model.ImageDetails;
-import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.security.encryption.SecretDecryptionService;
 
 import com.google.common.collect.ImmutableMap;
@@ -61,15 +62,10 @@ public class SecretSpecBuilder {
   public static final String SECRET = "secret";
   private static final String OPAQUE_SECRET_TYPE = "opaque";
   private static final String DOCKER_CONFIG_KEY = ".dockercfg";
-  private static final String USERNAME_PREFIX = "USERNAME_";
-  private static final String PASSWORD_PREFIX = "PASSWORD_";
-  private static final String ENDPOINT_PREFIX = "ENDPOINT_";
   private static final String SSH_KEY = "SSH_KEY";
   private static final String DRONE_NETRC_PASSWORD = "DRONE_NETRC_PASSWORD";
-  private static final String ACCESS_KEY_PREFIX = "ACCESS_KEY_";
-  private static final String SECRET_KEY_PREFIX = "SECRET_KEY_";
-  private static final String SECRET_PATH_PREFIX = "SECRET_PATH_";
 
+  @Inject private ConnectorEnvVariablesHelper connectorEnvVariablesHelper;
   @Inject private SecretDecryptionService secretDecryptionService;
 
   public Secret getRegistrySecretSpec(ImageDetailsWithConnector imageDetailsWithConnector, String namespace) {
@@ -151,39 +147,29 @@ public class SecretSpecBuilder {
     return data;
   }
 
-  public Map<String, SecretParams> decryptPublishArtifactSecretVariables(
-      Map<String, ConnectorDetails> publishArtifactEncryptedValues) {
+  public Map<String, SecretParams> decryptConnectorSecretVariables(Map<String, ConnectorDetails> connectorDetailsMap) {
     Map<String, SecretParams> secretData = new HashMap<>();
-    if (isNotEmpty(publishArtifactEncryptedValues)) {
-      for (Map.Entry<String, ConnectorDetails> connectorDetailsEntry : publishArtifactEncryptedValues.entrySet()) {
-        ConnectorDetails connectorDetails = connectorDetailsEntry.getValue();
-        List<EncryptedDataDetail> encryptedDataDetails = connectorDetailsEntry.getValue().getEncryptedDataDetails();
-
-        log.info("Decrypting publish artifact connector id:[{}], type:[{}]", connectorDetails.getIdentifier(),
-            connectorDetails.getConnectorType());
-        if (connectorDetails.getConnectorType() == ConnectorType.DOCKER) {
-          DockerConnectorDTO connectorConfig = (DockerConnectorDTO) connectorDetails.getConnectorConfig();
-          String registryUrl = connectorConfig.getDockerRegistryUrl();
-          String username = "";
-          String password = "";
-          if (connectorConfig.getAuth().getAuthType() == DockerAuthType.USER_PASSWORD) {
-            DockerUserNamePasswordDTO dockerUserNamePasswordDTO =
-                (DockerUserNamePasswordDTO) secretDecryptionService.decrypt(
-                    connectorConfig.getAuth().getCredentials(), encryptedDataDetails);
-            username = dockerUserNamePasswordDTO.getUsername();
-            password = String.valueOf(dockerUserNamePasswordDTO.getPasswordRef().getDecryptedValue());
-          }
-
-          secretData.put(USERNAME_PREFIX + connectorDetailsEntry.getKey(),
-              getVariableSecret(USERNAME_PREFIX + connectorDetailsEntry.getKey(), encodeBase64(username)));
-          secretData.put(PASSWORD_PREFIX + connectorDetailsEntry.getKey(),
-              getVariableSecret(PASSWORD_PREFIX + connectorDetailsEntry.getKey(), encodeBase64(password)));
-          secretData.put(ENDPOINT_PREFIX + connectorDetailsEntry.getKey(),
-              getVariableSecret(ENDPOINT_PREFIX + connectorDetailsEntry.getKey(), encodeBase64(registryUrl)));
-        }
-      }
+    if (isEmpty(connectorDetailsMap)) {
+      return secretData;
     }
 
+    for (Map.Entry<String, ConnectorDetails> connectorDetailsEntry : connectorDetailsMap.entrySet()) {
+      ConnectorDetails connectorDetails = connectorDetailsEntry.getValue();
+
+      log.info("Decrypting connector id:[{}], type:[{}]", connectorDetails.getIdentifier(),
+          connectorDetails.getConnectorType());
+      if (connectorDetails.getConnectorType() == ConnectorType.DOCKER) {
+        secretData.putAll(connectorEnvVariablesHelper.getDockerSecretVariables(connectorDetails));
+      } else if (connectorDetails.getConnectorType() == ConnectorType.AWS) {
+        secretData.putAll(connectorEnvVariablesHelper.getAwsSecretVariables(connectorDetails));
+      } else if (connectorDetails.getConnectorType() == ConnectorType.GCP) {
+        secretData.putAll(connectorEnvVariablesHelper.getGcpSecretVariables(connectorDetails));
+      } else if (connectorDetails.getConnectorType() == ConnectorType.ARTIFACTORY) {
+        secretData.putAll(connectorEnvVariablesHelper.getArtifactorySecretVariables(connectorDetails));
+      }
+      log.info("Decrypted connector id:[{}], type:[{}]", connectorDetails.getIdentifier(),
+          connectorDetails.getConnectorType());
+    }
     return secretData;
   }
 
@@ -204,19 +190,23 @@ public class SecretSpecBuilder {
 
       String key = DRONE_NETRC_PASSWORD;
       secretData.put(key,
-          getVariableSecret(
-              key, encodeBase64(new String(gitHTTPAuthenticationDTO.getPasswordRef().getDecryptedValue()))));
+          SecretParams.builder()
+              .secretKey(key)
+              .value(encodeBase64(new String(gitHTTPAuthenticationDTO.getPasswordRef().getDecryptedValue())))
+              .type(TEXT)
+              .build());
     } else if (gitAuthType == GitAuthType.SSH) {
       GitSSHAuthenticationDTO gitHTTPAuthenticationDTO = (GitSSHAuthenticationDTO) gitConfigDTO.getGitAuth();
 
       String key = SSH_KEY;
-      secretData.put(key, getVariableSecret(key, encodeBase64(gitHTTPAuthenticationDTO.getEncryptedSshKey())));
+      secretData.put(key,
+          SecretParams.builder()
+              .secretKey(key)
+              .value(encodeBase64(gitHTTPAuthenticationDTO.getEncryptedSshKey()))
+              .type(TEXT)
+              .build());
     }
     return secretData;
-  }
-
-  private SecretParams getVariableSecret(String key, String encodedSecret) {
-    return SecretParams.builder().secretKey(key).value(encodedSecret).type(TEXT).build();
   }
 
   public Secret createSecret(String secretName, String namespace, Map<String, String> data) {

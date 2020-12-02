@@ -12,15 +12,15 @@ import java.util.function.Supplier;
 import org.apache.commons.codec.binary.Base64;
 
 @Singleton
-public class SaveCacheStepProtobufSerializer implements ProtobufSerializer<SaveCacheStepInfo> {
+public class SaveCacheStepProtobufSerializer implements ProtobufStepSerializer<SaveCacheStepInfo> {
   @Inject private Supplier<DelegateCallbackToken> delegateCallbackTokenSupplier;
 
   @Override
-  public String serialize(SaveCacheStepInfo object) {
-    return Base64.encodeBase64String(convertSaveCacheStepInfo(object).toByteArray());
+  public String serializeToBase64(SaveCacheStepInfo object) {
+    return Base64.encodeBase64String(serializeStep(object).toByteArray());
   }
 
-  public UnitStep convertSaveCacheStepInfo(SaveCacheStepInfo saveCacheStepInfo) {
+  public UnitStep serializeStep(SaveCacheStepInfo saveCacheStepInfo) {
     SaveCacheStep.Builder saveCacheBuilder = SaveCacheStep.newBuilder();
     saveCacheBuilder.addAllPaths(saveCacheStepInfo.getPaths());
     saveCacheBuilder.setKey(saveCacheStepInfo.getKey());

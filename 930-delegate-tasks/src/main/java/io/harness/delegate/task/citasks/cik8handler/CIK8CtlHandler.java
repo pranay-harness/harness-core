@@ -1,7 +1,8 @@
 package io.harness.delegate.task.citasks.cik8handler;
 
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
+
 import static java.lang.String.format;
-import static org.apache.commons.lang3.StringUtils.isEmpty;
 
 import io.harness.delegate.beans.ci.k8s.CIContainerStatus;
 import io.harness.delegate.beans.ci.k8s.PodStatus;
@@ -22,6 +23,7 @@ import io.fabric8.kubernetes.api.model.ContainerStatus;
 import io.fabric8.kubernetes.api.model.PersistentVolumeClaim;
 import io.fabric8.kubernetes.api.model.PersistentVolumeClaimBuilder;
 import io.fabric8.kubernetes.api.model.Pod;
+import io.fabric8.kubernetes.api.model.PodCondition;
 import io.fabric8.kubernetes.api.model.Quantity;
 import io.fabric8.kubernetes.api.model.ResourceRequirementsBuilder;
 import io.fabric8.kubernetes.api.model.Secret;
@@ -36,6 +38,7 @@ import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
@@ -107,9 +110,8 @@ public class CIK8CtlHandler {
     return secretSpecBuilder.decryptCustomSecretVariables(secretVariableDetails);
   }
 
-  public Map<String, SecretParams> fetchPublishArtifactSecretKeyMap(
-      Map<String, ConnectorDetails> publishArtifactConnectors) {
-    return secretSpecBuilder.decryptPublishArtifactSecretVariables(publishArtifactConnectors);
+  public Map<String, SecretParams> fetchConnectorsSecretKeyMap(Map<String, ConnectorDetails> connectorDetailsMap) {
+    return secretSpecBuilder.decryptConnectorSecretVariables(connectorDetailsMap);
   }
 
   public Secret createSecret(
@@ -145,8 +147,8 @@ public class CIK8CtlHandler {
         List<String> posStatusLogs = pod.getStatus()
                                          .getConditions()
                                          .stream()
-                                         .filter(condition -> condition != null)
-                                         .map(condition -> condition.getMessage())
+                                         .filter(Objects::nonNull)
+                                         .map(PodCondition::getMessage)
                                          .collect(Collectors.toList());
         return PodStatus.builder()
             .status(PodStatus.Status.ERROR)
@@ -155,7 +157,7 @@ public class CIK8CtlHandler {
             .build();
       }
 
-      sleeper.sleep(CIConstants.POD_WAIT_UNTIL_READY_SLEEP_SECS * 1000);
+      sleeper.sleep(CIConstants.POD_WAIT_UNTIL_READY_SLEEP_SECS * 1000L);
       waitTimeSec += CIConstants.POD_WAIT_UNTIL_READY_SLEEP_SECS;
     }
 

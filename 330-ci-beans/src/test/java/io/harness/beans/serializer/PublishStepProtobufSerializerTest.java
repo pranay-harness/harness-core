@@ -49,7 +49,7 @@ public class PublishStepProtobufSerializerTest extends CIBeansTest {
   public static final String GCR_CONNECTOR = "gcr-connector";
   public static final String GCR_LOCATION = "us.gcr.io/project/image";
   public static final String CALLBACK_ID = "callbackId";
-  @Inject ProtobufSerializer<PublishStepInfo> protobufSerializer;
+  @Inject ProtobufStepSerializer<PublishStepInfo> protobufSerializer;
 
   @Test
   @Owner(developers = ALEKSANDAR)
@@ -70,7 +70,7 @@ public class PublishStepProtobufSerializerTest extends CIBeansTest {
                                           .publishArtifacts(singletonList(filePatternArtifact))
                                           .build();
     publishStepInfo.setCallbackId(CALLBACK_ID);
-    String serialize = protobufSerializer.serialize(publishStepInfo);
+    String serialize = protobufSerializer.serializeToBase64(publishStepInfo);
     UnitStep publishArtifactStep = UnitStep.parseFrom(Base64.decodeBase64(serialize));
     assertThat(publishArtifactStep.getId()).isEqualTo(PUBLISH_ID);
     assertThat(publishArtifactStep.getDisplayName()).isEqualTo(PUBLISH_NAME);
@@ -103,7 +103,7 @@ public class PublishStepProtobufSerializerTest extends CIBeansTest {
                                           .publishArtifacts(singletonList(dockerFileArtifact))
                                           .build();
 
-    String serialize = protobufSerializer.serialize(publishStepInfo);
+    String serialize = protobufSerializer.serializeToBase64(publishStepInfo);
     UnitStep publishArtifactStep = UnitStep.parseFrom(Base64.decodeBase64(serialize));
     assertThat(publishArtifactStep.getId()).isEqualTo(PUBLISH_ID);
     assertThat(publishArtifactStep.getDisplayName()).isEqualTo(PUBLISH_NAME);
@@ -137,7 +137,7 @@ public class PublishStepProtobufSerializerTest extends CIBeansTest {
                                           .publishArtifacts(singletonList(dockerFileArtifact))
                                           .build();
 
-    String serialize = protobufSerializer.serialize(publishStepInfo);
+    String serialize = protobufSerializer.serializeToBase64(publishStepInfo);
     UnitStep publishArtifactStep = UnitStep.parseFrom(Base64.decodeBase64(serialize));
     assertThat(publishArtifactStep.getId()).isEqualTo(PUBLISH_ID);
     assertThat(publishArtifactStep.getDisplayName()).isEqualTo(PUBLISH_NAME);
@@ -172,7 +172,7 @@ public class PublishStepProtobufSerializerTest extends CIBeansTest {
                                           .publishArtifacts(singletonList(dockerFileArtifact))
                                           .build();
 
-    String serialize = protobufSerializer.serialize(publishStepInfo);
+    String serialize = protobufSerializer.serializeToBase64(publishStepInfo);
     UnitStep publishArtifactStep = UnitStep.parseFrom(Base64.decodeBase64(serialize));
     assertThat(publishArtifactStep.getId()).isEqualTo(PUBLISH_ID);
     assertThat(publishArtifactStep.getDisplayName()).isEqualTo(PUBLISH_NAME);

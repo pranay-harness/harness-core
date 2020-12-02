@@ -1,8 +1,11 @@
 package io.harness;
 
+import io.harness.beans.plugin.compatible.PluginCompatibleStep;
 import io.harness.beans.serializer.ExecutionProtobufSerializer;
+import io.harness.beans.serializer.PluginCompatibleStepSerializer;
 import io.harness.beans.serializer.PluginStepProtobufSerializer;
 import io.harness.beans.serializer.ProtobufSerializer;
+import io.harness.beans.serializer.ProtobufStepSerializer;
 import io.harness.beans.serializer.PublishStepProtobufSerializer;
 import io.harness.beans.serializer.RestoreCacheStepProtobufSerializer;
 import io.harness.beans.serializer.RunStepProtobufSerializer;
@@ -35,13 +38,16 @@ public class CIBeansModule extends AbstractModule {
   protected void configure() {
     bind(new TypeLiteral<GraphOperations<CIStepInfo>>() {}).toInstance(new GraphOperations<>());
     bind(new TypeLiteral<ProtobufSerializer<ExecutionElement>>() {}).toInstance(new ExecutionProtobufSerializer());
-    bind(new TypeLiteral<ProtobufSerializer<RunStepInfo>>() {}).toInstance(new RunStepProtobufSerializer());
-    bind(new TypeLiteral<ProtobufSerializer<PluginStepInfo>>() {}).toInstance(new PluginStepProtobufSerializer());
-    bind(new TypeLiteral<ProtobufSerializer<SaveCacheStepInfo>>() {}).toInstance(new SaveCacheStepProtobufSerializer());
-    bind(new TypeLiteral<ProtobufSerializer<TestIntelligenceStepInfo>>() {
-    }).toInstance(new TestIntelligenceStepProtobufSerializer());
-    bind(new TypeLiteral<ProtobufSerializer<RestoreCacheStepInfo>>() {
+    bind(new TypeLiteral<ProtobufStepSerializer<RunStepInfo>>() {}).toInstance(new RunStepProtobufSerializer());
+    bind(new TypeLiteral<ProtobufStepSerializer<PluginStepInfo>>() {}).toInstance(new PluginStepProtobufSerializer());
+    bind(new TypeLiteral<ProtobufStepSerializer<SaveCacheStepInfo>>() {
+    }).toInstance(new SaveCacheStepProtobufSerializer());
+    bind(new TypeLiteral<ProtobufStepSerializer<RestoreCacheStepInfo>>() {
     }).toInstance(new RestoreCacheStepProtobufSerializer());
-    bind(new TypeLiteral<ProtobufSerializer<PublishStepInfo>>() {}).toInstance(new PublishStepProtobufSerializer());
+    bind(new TypeLiteral<ProtobufStepSerializer<TestIntelligenceStepInfo>>() {
+    }).toInstance(new TestIntelligenceStepProtobufSerializer());
+    bind(new TypeLiteral<ProtobufStepSerializer<PublishStepInfo>>() {}).toInstance(new PublishStepProtobufSerializer());
+    bind(new TypeLiteral<ProtobufStepSerializer<PluginCompatibleStep>>() {
+    }).toInstance(new PluginCompatibleStepSerializer());
   }
 }

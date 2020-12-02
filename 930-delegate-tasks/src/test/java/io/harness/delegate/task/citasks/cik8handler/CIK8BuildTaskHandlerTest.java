@@ -193,7 +193,7 @@ public class CIK8BuildTaskHandlerTest extends CategoryTest {
                                                                        .getContainerParamsList()
                                                                        .get(0)
                                                                        .getContainerSecrets()
-                                                                       .getPublishArtifactConnectors();
+                                                                       .getConnectorDetailsMap();
 
     ConnectorDetails gitConnectorDetails = ConnectorDetails.builder().build();
     ImageDetailsWithConnector imageDetailsWithConnector =
@@ -203,7 +203,7 @@ public class CIK8BuildTaskHandlerTest extends CategoryTest {
     doNothing().when(kubeCtlHandler).createGitSecret(kubernetesClient, namespace, gitConnectorDetails);
     doNothing().when(kubeCtlHandler).createRegistrySecret(kubernetesClient, namespace, imageDetailsWithConnector);
     when(kubeCtlHandler.fetchCustomVariableSecretKeyMap(getSecretVariableDetails())).thenReturn(getCustomVarSecret());
-    when(kubeCtlHandler.fetchPublishArtifactSecretKeyMap(publishArtifactEncryptedValues))
+    when(kubeCtlHandler.fetchConnectorsSecretKeyMap(publishArtifactEncryptedValues))
         .thenReturn(getPublishArtifactSecrets());
     when(podSpecBuilder.createSpec((PodParams) cik8BuildTaskParams.getCik8PodParams())).thenReturn(podBuilder);
     when(kubeCtlHandler.createPod(kubernetesClient, podBuilder.build(), namespace)).thenReturn(podBuilder.build());
@@ -228,7 +228,7 @@ public class CIK8BuildTaskHandlerTest extends CategoryTest {
                                                                   .getContainerParamsList()
                                                                   .get(0)
                                                                   .getContainerSecrets()
-                                                                  .getPublishArtifactConnectors();
+                                                                  .getConnectorDetailsMap();
 
     ImageDetailsWithConnector imageDetailsWithConnector =
         cik8BuildTaskParams.getCik8PodParams().getContainerParamsList().get(0).getImageDetailsWithConnector();
@@ -238,8 +238,7 @@ public class CIK8BuildTaskHandlerTest extends CategoryTest {
         .thenReturn(gitSecretData);
     doNothing().when(kubeCtlHandler).createRegistrySecret(kubernetesClient, namespace, imageDetailsWithConnector);
     when(kubeCtlHandler.fetchCustomVariableSecretKeyMap(getSecretVariableDetails())).thenReturn(getCustomVarSecret());
-    when(kubeCtlHandler.fetchPublishArtifactSecretKeyMap(publishArtifactConnectors))
-        .thenReturn(getPublishArtifactSecrets());
+    when(kubeCtlHandler.fetchConnectorsSecretKeyMap(publishArtifactConnectors)).thenReturn(getPublishArtifactSecrets());
 
     CIK8ServicePodParams servicePodParams = cik8BuildTaskParams.getServicePodParams().get(0);
     when(podSpecBuilder.createSpec((PodParams) servicePodParams.getCik8PodParams())).thenReturn(podBuilder);

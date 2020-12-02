@@ -6,6 +6,7 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import io.harness.beans.dependencies.ServiceDependency;
 import io.harness.beans.environment.pod.container.ContainerDefinitionInfo;
 import io.harness.beans.outcomes.DependencyOutcome;
+import io.harness.beans.plugin.compatible.PluginCompatibleStep;
 import io.harness.beans.steps.stepinfo.LiteEngineTaskStepInfo;
 import io.harness.beans.steps.stepinfo.PluginStepInfo;
 import io.harness.beans.steps.stepinfo.PublishStepInfo;
@@ -228,6 +229,13 @@ public class LiteEngineTaskStep implements TaskExecutable<LiteEngineTaskStepInfo
       String taskId = queueDelegateTask(ambiance, runStepInfo.getTimeout(), accountId, executor);
       runStepInfo.setCallbackId(taskId);
       taskIds.put(runStepInfo.getIdentifier(), taskId);
+    }
+
+    if (stepElement.getStepSpecType() instanceof PluginCompatibleStep) {
+      PluginCompatibleStep stepInfo = (PluginCompatibleStep) stepElement.getStepSpecType();
+      String taskId = queueDelegateTask(ambiance, stepInfo.getTimeout(), accountId, executor);
+      stepInfo.setCallbackId(taskId);
+      taskIds.put(stepInfo.getIdentifier(), taskId);
     }
   }
 

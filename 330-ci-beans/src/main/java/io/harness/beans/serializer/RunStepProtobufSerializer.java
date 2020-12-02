@@ -13,15 +13,15 @@ import java.util.function.Supplier;
 import org.apache.commons.codec.binary.Base64;
 
 @Singleton
-public class RunStepProtobufSerializer implements ProtobufSerializer<RunStepInfo> {
+public class RunStepProtobufSerializer implements ProtobufStepSerializer<RunStepInfo> {
   @Inject private Supplier<DelegateCallbackToken> delegateCallbackTokenSupplier;
 
   @Override
-  public String serialize(RunStepInfo object) {
-    return Base64.encodeBase64String(convertRunStepInfo(object).toByteArray());
+  public String serializeToBase64(RunStepInfo object) {
+    return Base64.encodeBase64String(serializeStep(object).toByteArray());
   }
 
-  public UnitStep convertRunStepInfo(RunStepInfo runStepInfo) {
+  public UnitStep serializeStep(RunStepInfo runStepInfo) {
     RunStep.Builder runStepBuilder = RunStep.newBuilder();
     runStepBuilder.addAllCommands(runStepInfo.getCommand());
     runStepBuilder.setContainerPort(runStepInfo.getPort());

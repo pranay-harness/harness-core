@@ -59,10 +59,6 @@ public class PublishStepInfo implements CIStepInfo {
     this.publishArtifacts = publishArtifacts;
   }
 
-  public static PublishStepInfoBuilder builder() {
-    return new PublishStepInfoBuilder();
-  }
-
   @Override
   public TypeInfo getNonYamlInfo() {
     return typeInfo;
