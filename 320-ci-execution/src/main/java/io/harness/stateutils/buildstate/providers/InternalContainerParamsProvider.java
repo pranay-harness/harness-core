@@ -105,7 +105,7 @@ public class InternalContainerParamsProvider {
         .containerResourceParams(getLiteEngineResourceParams(stageCpuRequest, stageMemoryRequest))
         .envVars(getLiteEngineEnvVars(k8PodDetails, serviceToken, logEnvVars, workDirPath))
         .containerType(CIContainerType.LITE_ENGINE)
-        .containerSecrets(ContainerSecrets.builder().publishArtifactConnectors(publishArtifactConnectors).build())
+        .containerSecrets(ContainerSecrets.builder().connectorDetailsMap(publishArtifactConnectors).build())
         .imageDetailsWithConnector(ImageDetailsWithConnector.builder()
                                        .imageDetails(ImageDetails.builder()
                                                          .name(LITE_ENGINE_IMAGE_NAME)

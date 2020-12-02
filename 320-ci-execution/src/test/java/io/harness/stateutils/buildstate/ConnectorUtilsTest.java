@@ -94,8 +94,7 @@ public class ConnectorUtilsTest extends CIExecutionTest {
     when(connectorResourceClient.get(eq(connectorId01), eq(ACCOUNT_ID), eq(ORG_ID), eq(PROJ_ID)))
         .thenReturn(getConnectorResourceCall);
     when(secretManagerClientService.getEncryptionDetails(eq(ngAccess), any(GitAuthenticationDTO.class)))
-        .thenReturn(Collections.singletonList(EncryptedDataDetail.builder().build()))
-        .thenReturn(null);
+        .thenReturn(Collections.singletonList(EncryptedDataDetail.builder().build()));
 
     ConnectorDetails connectorDetails = connectorUtils.getConnectorDetails(ngAccess, connectorId01);
     assertThat(connectorDetails.getConnectorConfig())
@@ -107,9 +106,6 @@ public class ConnectorUtilsTest extends CIExecutionTest {
         .isEqualTo(gitConnectorDto.getConnectorInfo().getProjectIdentifier());
     verify(connectorResourceClient, times(1)).get(eq(connectorId01), eq(ACCOUNT_ID), eq(ORG_ID), eq(PROJ_ID));
     verify(secretManagerClientService, times(1)).getEncryptionDetails(eq(ngAccess), any(GitAuthenticationDTO.class));
-
-    assertThatThrownBy(() -> connectorUtils.getConnectorDetails(ngAccess, connectorId01))
-        .isInstanceOf(InvalidArgumentsException.class);
   }
 
   @Test
@@ -123,8 +119,7 @@ public class ConnectorUtilsTest extends CIExecutionTest {
     when(connectorResourceClient.get(eq(connectorId02), eq(ACCOUNT_ID), eq(ORG_ID), eq(PROJ_ID)))
         .thenReturn(getConnectorResourceCall);
     when(secretManagerClientService.getEncryptionDetails(eq(ngAccess), any(DockerAuthCredentialsDTO.class)))
-        .thenReturn(Collections.singletonList(EncryptedDataDetail.builder().build()))
-        .thenReturn(null);
+        .thenReturn(Collections.singletonList(EncryptedDataDetail.builder().build()));
 
     ConnectorDetails connectorDetails = connectorUtils.getConnectorDetails(ngAccess, connectorId02);
     assertThat(connectorDetails.getConnectorConfig())
@@ -137,9 +132,6 @@ public class ConnectorUtilsTest extends CIExecutionTest {
     verify(connectorResourceClient, times(1)).get(eq(connectorId02), eq(ACCOUNT_ID), eq(ORG_ID), eq(PROJ_ID));
     verify(secretManagerClientService, times(1))
         .getEncryptionDetails(eq(ngAccess), any(DockerAuthCredentialsDTO.class));
-
-    assertThatThrownBy(() -> connectorUtils.getConnectorDetails(ngAccess, connectorId02))
-        .isInstanceOf(InvalidArgumentsException.class);
   }
 
   @Test
@@ -154,8 +146,7 @@ public class ConnectorUtilsTest extends CIExecutionTest {
         .thenReturn(getConnectorResourceCall);
 
     when(secretManagerClientService.getEncryptionDetails(eq(ngAccess), any(KubernetesAuthCredentialDTO.class)))
-        .thenReturn(Collections.singletonList(EncryptedDataDetail.builder().build()))
-        .thenReturn(null);
+        .thenReturn(Collections.singletonList(EncryptedDataDetail.builder().build()));
 
     ConnectorDetails connectorDetails = connectorUtils.getConnectorDetails(ngAccess, connectorId03);
 
@@ -170,8 +161,6 @@ public class ConnectorUtilsTest extends CIExecutionTest {
     verify(connectorResourceClient, times(1)).get(eq(connectorId03), eq(ACCOUNT_ID), eq(ORG_ID), eq(PROJ_ID));
     verify(secretManagerClientService, times(1))
         .getEncryptionDetails(eq(ngAccess), any(KubernetesAuthCredentialDTO.class));
-    assertThatThrownBy(() -> connectorUtils.getConnectorDetails(ngAccess, connectorId03))
-        .isInstanceOf(InvalidArgumentsException.class);
   }
 
   @Test

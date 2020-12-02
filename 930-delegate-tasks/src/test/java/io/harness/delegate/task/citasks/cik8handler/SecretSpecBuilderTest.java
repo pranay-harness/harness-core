@@ -19,6 +19,7 @@ import static org.mockito.Mockito.when;
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.beans.ci.pod.ConnectorDetails;
+import io.harness.delegate.beans.ci.pod.EnvVariableEnum;
 import io.harness.delegate.beans.ci.pod.ImageDetailsWithConnector;
 import io.harness.delegate.beans.ci.pod.SecretParams;
 import io.harness.delegate.beans.ci.pod.SecretVariableDTO;
@@ -34,6 +35,7 @@ import io.harness.delegate.beans.connector.gitconnector.GitConfigDTO;
 import io.harness.delegate.beans.connector.gitconnector.GitConnectionType;
 import io.harness.delegate.beans.connector.gitconnector.GitHTTPAuthenticationDTO;
 import io.harness.delegate.beans.connector.gitconnector.GitSSHAuthenticationDTO;
+import io.harness.delegate.task.citasks.cik8handler.helper.ConnectorEnvVariablesHelper;
 import io.harness.encryption.Scope;
 import io.harness.encryption.SecretRefData;
 import io.harness.exception.InvalidArgumentsException;
@@ -60,7 +62,7 @@ import org.mockito.MockitoAnnotations;
 
 public class SecretSpecBuilderTest extends CategoryTest {
   @Mock private SecretDecryptionService secretDecryptionService;
-
+  @Mock private ConnectorEnvVariablesHelper connectorEnvVariablesHelper;
   @InjectMocks private SecretSpecBuilder secretSpecBuilder;
 
   private static final String imageName = "IMAGE";
@@ -292,14 +294,12 @@ public class SecretSpecBuilderTest extends CategoryTest {
   @Category(UnitTests.class)
   public void shouldDecryptDockerConfig() {
     Map<String, ConnectorDetails> map = new HashMap<>();
-    DockerUserNamePasswordDTO decryptableEntity =
-        DockerUserNamePasswordDTO.builder()
-            .username("username")
-            .passwordRef(SecretRefData.builder().decryptedValue("password".toCharArray()).build())
-            .build();
     ConnectorDetails setting =
         ConnectorDetails.builder()
             .connectorType(ConnectorType.DOCKER)
+            .envToSecretEntry(EnvVariableEnum.DOCKER_USERNAME, "USERNAME_docker")
+            .envToSecretEntry(EnvVariableEnum.DOCKER_PASSWORD, "PASSWORD_docker")
+            .envToSecretEntry(EnvVariableEnum.DOCKER_REGISTRY, "ENDPOINT_docker")
             .identifier("docker")
             .connectorConfig(
                 DockerConnectorDTO.builder()
@@ -311,14 +311,26 @@ public class SecretSpecBuilderTest extends CategoryTest {
                     .build())
             .build();
     map.put("docker", setting);
-    when(secretDecryptionService.decrypt(any(), any())).thenReturn(decryptableEntity);
-    Map<String, String> data = secretSpecBuilder.decryptPublishArtifactSecretVariables(map).values().stream().collect(
+
+    Map<String, SecretParams> expectedSecretParams = new HashMap<>();
+    expectedSecretParams.put("USERNAME_docker",
+        SecretParams.builder().secretKey("USERNAME_dockerdocker").value(encodeBase64("username")).build());
+    expectedSecretParams.put("PASSWORD_docker",
+        SecretParams.builder().secretKey("PASSWORD_dockerdocker").value(encodeBase64("password")).build());
+    expectedSecretParams.put("ENDPOINT_docker",
+        SecretParams.builder()
+            .secretKey("ENDPOINT_dockerdocker")
+            .value(encodeBase64("https://index.docker.io/v1/"))
+            .build());
+
+    when(connectorEnvVariablesHelper.getDockerSecretVariables(any())).thenReturn(expectedSecretParams);
+    Map<String, String> data = secretSpecBuilder.decryptConnectorSecretVariables(map).values().stream().collect(
         Collectors.toMap(SecretParams::getSecretKey, SecretParams::getValue));
     assertThat(data)
-        .containsKeys("USERNAME_docker", "PASSWORD_docker", "ENDPOINT_docker")
-        .containsEntry("USERNAME_docker", encodeBase64("username"))
-        .containsEntry("PASSWORD_docker", encodeBase64("password"))
-        .containsEntry("ENDPOINT_docker", encodeBase64("https://index.docker.io/v1/"));
+        .containsKeys("USERNAME_dockerdocker", "PASSWORD_dockerdocker", "ENDPOINT_dockerdocker")
+        .containsEntry("USERNAME_dockerdocker", encodeBase64("username"))
+        .containsEntry("PASSWORD_dockerdocker", encodeBase64("password"))
+        .containsEntry("ENDPOINT_dockerdocker", encodeBase64("https://index.docker.io/v1/"));
   }
 
   @Test()

@@ -26,7 +26,7 @@ public class SaveCacheStepProtobufSerializerTest extends CIBeansTest {
   public static final String CALLBACK_ID = "callbackId";
   public static final String PATH_1 = "~/path1";
   public static final String PATH_2 = "./path2";
-  @Inject ProtobufSerializer<SaveCacheStepInfo> protobufSerializer;
+  @Inject ProtobufStepSerializer<SaveCacheStepInfo> protobufSerializer;
   @Inject private Supplier<DelegateCallbackToken> delegateCallbackTokenSupplier;
 
   @Test
@@ -40,7 +40,7 @@ public class SaveCacheStepProtobufSerializerTest extends CIBeansTest {
                                               .paths(Arrays.asList(PATH_1, PATH_2))
                                               .build();
     saveCacheStepInfo.setCallbackId(CALLBACK_ID);
-    String serialize = protobufSerializer.serialize(saveCacheStepInfo);
+    String serialize = protobufSerializer.serializeToBase64(saveCacheStepInfo);
     UnitStep saveCacheStep = UnitStep.parseFrom(Base64.decodeBase64(serialize));
 
     assertThat(saveCacheStep.getDisplayName()).isEqualTo(SAVE_CACHE);

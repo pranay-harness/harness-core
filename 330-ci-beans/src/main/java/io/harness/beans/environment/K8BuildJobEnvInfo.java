@@ -1,12 +1,15 @@
 package io.harness.beans.environment;
 
 import io.harness.beans.environment.pod.PodSetupInfo;
+import io.harness.delegate.beans.ci.pod.EnvVariableEnum;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import lombok.Builder;
 import lombok.Data;
+import lombok.Singular;
 import lombok.Value;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.springframework.data.annotation.TypeAlias;
@@ -22,7 +25,8 @@ import org.springframework.data.annotation.TypeAlias;
 public class K8BuildJobEnvInfo implements BuildJobEnvInfo {
   @NotEmpty private PodsSetupInfo podsSetupInfo;
   @NotEmpty private String workDir;
-  private Set<String> publishStepConnectorIdentifier;
+  private Set<String> publishArtifactStepIds;
+  private Map<String, ConnectorConversionInfo> stepConnectorRefs;
 
   @Override
   public Type getType() {
@@ -33,5 +37,12 @@ public class K8BuildJobEnvInfo implements BuildJobEnvInfo {
   @Builder
   public static final class PodsSetupInfo {
     private List<PodSetupInfo> podSetupInfoList = new ArrayList<>();
+  }
+
+  @Data
+  @Builder
+  public static final class ConnectorConversionInfo {
+    private String connectorRef;
+    @Singular("envToSecretEntry") private Map<EnvVariableEnum, String> envToSecretsMap;
   }
 }

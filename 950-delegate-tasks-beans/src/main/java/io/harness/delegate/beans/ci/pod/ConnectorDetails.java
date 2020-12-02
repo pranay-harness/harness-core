@@ -5,11 +5,13 @@ import io.harness.delegate.beans.connector.ConnectorType;
 import io.harness.security.encryption.EncryptedDataDetail;
 
 import java.util.List;
+import java.util.Map;
 import javax.validation.constraints.NotNull;
 import lombok.Builder;
-import lombok.Value;
+import lombok.Data;
+import lombok.Singular;
 
-@Value
+@Data
 @Builder
 public class ConnectorDetails {
   @NotNull ConnectorConfigDTO connectorConfig;
@@ -18,4 +20,5 @@ public class ConnectorDetails {
   String orgIdentifier;
   String projectIdentifier;
   @NotNull List<EncryptedDataDetail> encryptedDataDetails;
+  @Singular("envToSecretEntry") Map<EnvVariableEnum, String> envToSecretsMap;
 }

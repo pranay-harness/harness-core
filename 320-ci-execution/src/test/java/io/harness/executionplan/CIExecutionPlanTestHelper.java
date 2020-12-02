@@ -31,6 +31,7 @@ import io.harness.beans.dependencies.CIServiceInfo;
 import io.harness.beans.dependencies.DependencyElement;
 import io.harness.beans.environment.BuildJobEnvInfo;
 import io.harness.beans.environment.K8BuildJobEnvInfo;
+import io.harness.beans.environment.K8BuildJobEnvInfo.ConnectorConversionInfo;
 import io.harness.beans.environment.pod.PodSetupInfo;
 import io.harness.beans.environment.pod.container.ContainerDefinitionInfo;
 import io.harness.beans.environment.pod.container.ContainerImageDetails;
@@ -73,6 +74,7 @@ import io.harness.delegate.beans.ci.pod.CIK8ContainerParams;
 import io.harness.delegate.beans.ci.pod.CIK8ContainerParams.CIK8ContainerParamsBuilder;
 import io.harness.delegate.beans.ci.pod.ConnectorDetails;
 import io.harness.delegate.beans.ci.pod.ContainerResourceParams;
+import io.harness.delegate.beans.ci.pod.EnvVariableEnum;
 import io.harness.delegate.beans.ci.pod.ImageDetailsWithConnector;
 import io.harness.delegate.beans.ci.pod.PVCParams;
 import io.harness.delegate.beans.ci.pod.SecretVariableDTO;
@@ -278,15 +280,33 @@ public class CIExecutionPlanTestHelper {
     return K8BuildJobEnvInfo.builder()
         .workDir("workspace")
         .podsSetupInfo(getCIPodsSetupInfoOnFirstPod())
-        .publishStepConnectorIdentifier(getPublishArtifactConnectorIds())
+        .publishArtifactStepIds(getPublishArtifactStepIds())
+        .stepConnectorRefs(getStepConnectorConversionInfoMap())
         .build();
+  }
+
+  private Map<String, ConnectorConversionInfo> getStepConnectorConversionInfoMap() {
+    Map<String, ConnectorConversionInfo> map = new HashMap<>();
+    map.put("publish-1",
+        ConnectorConversionInfo.builder()
+            .connectorRef("gcr-connector")
+            .envToSecretEntry(EnvVariableEnum.GCP_KEY_AS_FILE, "SECRET_PATH_gcr-connector")
+            .build());
+    map.put("publish-2",
+        ConnectorConversionInfo.builder()
+            .connectorRef("ecr-connector")
+            .envToSecretEntry(EnvVariableEnum.AWS_ACCESS_KEY, "ACCESS_KEY_ecr-connector")
+            .envToSecretEntry(EnvVariableEnum.AWS_SECRET_KEY, "SECRET_KEY_ecr-connector")
+            .build());
+    return map;
   }
 
   public BuildJobEnvInfo getCIBuildJobEnvInfoOnOtherPods() {
     return K8BuildJobEnvInfo.builder()
         .workDir("workspace")
         .podsSetupInfo(getCIPodsSetupInfoOnOtherPods())
-        .publishStepConnectorIdentifier(getPublishArtifactConnectorIds())
+        .publishArtifactStepIds(getPublishArtifactStepIds())
+        .stepConnectorRefs(getStepConnectorConversionInfoMap())
         .build();
   }
 
@@ -787,10 +807,10 @@ public class CIExecutionPlanTestHelper {
                              .build());
   }
 
-  public Set<String> getPublishArtifactConnectorIds() {
+  public Set<String> getPublishArtifactStepIds() {
     Set<String> ids = new HashSet<>();
-    ids.add("gcr-connector");
-    ids.add("ecr-connector");
+    ids.add("publish-1");
+    ids.add("publish-2");
     return ids;
   }
 

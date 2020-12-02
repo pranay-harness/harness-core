@@ -11,15 +11,15 @@ import java.util.Optional;
 import java.util.function.Supplier;
 import org.apache.commons.codec.binary.Base64;
 
-public class TestIntelligenceStepProtobufSerializer implements ProtobufSerializer<TestIntelligenceStepInfo> {
+public class TestIntelligenceStepProtobufSerializer implements ProtobufStepSerializer<TestIntelligenceStepInfo> {
   @Inject private Supplier<DelegateCallbackToken> delegateCallbackTokenSupplier;
 
   @Override
-  public String serialize(TestIntelligenceStepInfo object) {
-    return Base64.encodeBase64String(convertTestIntelligenceStepInfo(object).toByteArray());
+  public String serializeToBase64(TestIntelligenceStepInfo object) {
+    return Base64.encodeBase64String(serializeStep(object).toByteArray());
   }
 
-  public UnitStep convertTestIntelligenceStepInfo(TestIntelligenceStepInfo testIntelligenceStepInfo) {
+  public UnitStep serializeStep(TestIntelligenceStepInfo testIntelligenceStepInfo) {
     TestIntelligenceStep.Builder testIntelligenceStepBuilder = TestIntelligenceStep.newBuilder();
     testIntelligenceStepBuilder.setGoals(testIntelligenceStepInfo.getGoals());
     testIntelligenceStepBuilder.setContainerPort(testIntelligenceStepInfo.getPort());

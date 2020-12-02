@@ -48,8 +48,7 @@ public class CILiteEngineIntegrationStageModifierTest extends CIExecutionTest {
     K8BuildJobEnvInfo envInfo = (K8BuildJobEnvInfo) liteEngineTask.getBuildJobEnvInfo();
     assertThat(envInfo.getType()).isEqualTo(K8);
     assertThat(envInfo.getWorkDir()).isEqualTo(stage.getWorkingDirectory());
-    assertThat(envInfo.getPublishStepConnectorIdentifier())
-        .isEqualTo(ciExecutionPlanTestHelper.getPublishArtifactConnectorIds());
+    assertThat(envInfo.getPublishArtifactStepIds()).isEqualTo(ciExecutionPlanTestHelper.getPublishArtifactStepIds());
     assertThat(envInfo.getPodsSetupInfo().getPodSetupInfoList().get(0).getPodSetupParams())
         .isEqualTo(
             ciExecutionPlanTestHelper.getCIPodsSetupInfoOnFirstPod().getPodSetupInfoList().get(0).getPodSetupParams());

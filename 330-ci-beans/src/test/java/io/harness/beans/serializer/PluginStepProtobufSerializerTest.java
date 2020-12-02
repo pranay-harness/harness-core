@@ -24,7 +24,7 @@ public class PluginStepProtobufSerializerTest extends CIBeansTest {
   public static final String CALLBACK_ID = "callbackId";
   public static final int RETRY = 1;
   public static final Integer PORT = 8000;
-  @Inject ProtobufSerializer<PluginStepInfo> protobufSerializer;
+  @Inject ProtobufStepSerializer<PluginStepInfo> protobufSerializer;
 
   @Test
   @Owner(developers = SHUBHAM)
@@ -39,7 +39,7 @@ public class PluginStepProtobufSerializerTest extends CIBeansTest {
                                         .build();
     pluginStepInfo.setCallbackId(CALLBACK_ID);
     pluginStepInfo.setPort(PORT);
-    String serialize = protobufSerializer.serialize(pluginStepInfo);
+    String serialize = protobufSerializer.serializeToBase64(pluginStepInfo);
     UnitStep pluginStep = UnitStep.parseFrom(Base64.decodeBase64(serialize));
     assertThat(pluginStep.getId()).isEqualTo(PLUGIN_STEP_ID);
     assertThat(pluginStep.getDisplayName()).isEqualTo(PLUGIN_STEP);
