@@ -77,7 +77,7 @@ public class LogStreamingTaskClientTest extends CategoryTest {
   @Category(UnitTests.class)
   public void shouldInvokeCloseLogStreamWithoutKeySuffix() {
     completeLogStreamingTaskClient.closeStream(null);
-    verify(delegateAgentLogStreamingClientMock).closeLogStream(TOKEN, ACCOUNT_ID, BASE_LOG_KEY);
+    verify(delegateAgentLogStreamingClientMock).closeLogStream(TOKEN, ACCOUNT_ID, BASE_LOG_KEY, true);
   }
 
   @Test
@@ -86,7 +86,7 @@ public class LogStreamingTaskClientTest extends CategoryTest {
   public void shouldInvokeCloseLogStreamWithKeySuffix() {
     completeLogStreamingTaskClient.closeStream("keySuffix");
     verify(delegateAgentLogStreamingClientMock)
-        .closeLogStream(TOKEN, ACCOUNT_ID, BASE_LOG_KEY + String.format(COMMAND_UNIT_PLACEHOLDER, "keySuffix"));
+        .closeLogStream(TOKEN, ACCOUNT_ID, BASE_LOG_KEY + String.format(COMMAND_UNIT_PLACEHOLDER, "keySuffix"), true);
   }
 
   @Test
