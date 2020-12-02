@@ -55,7 +55,8 @@ public class LogStreamingTaskClient implements ILogStreamingTaskClient {
         baseLogKey + (isBlank(baseLogKeySuffix) ? "" : String.format(COMMAND_UNIT_PLACEHOLDER, baseLogKeySuffix));
 
     try {
-      SafeHttpCall.executeWithExceptions(delegateAgentLogStreamingClient.closeLogStream(token, accountId, logKey));
+      SafeHttpCall.executeWithExceptions(
+          delegateAgentLogStreamingClient.closeLogStream(token, accountId, logKey, true));
     } catch (Exception ex) {
       log.error("Unable to close log stream for account {} and key {}", accountId, logKey, ex);
     }

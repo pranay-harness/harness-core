@@ -17,8 +17,8 @@ public interface DelegateAgentLogStreamingClient {
       @Header("X-Harness-Token") String authToken, @Query("accountID") String accountId, @Query("key") String logKey);
 
   @DELETE("stream")
-  Call<Void> closeLogStream(
-      @Header("X-Harness-Token") String authToken, @Query("accountID") String accountId, @Query("key") String logKey);
+  Call<Void> closeLogStream(@Header("X-Harness-Token") String authToken, @Query("accountID") String accountId,
+      @Query("key") String logKey, @Query("snapshot") boolean snapshot);
 
   @PUT("stream")
   Call<Void> pushMessage(@Header("X-Harness-Token") String authToken, @Query("accountID") String accountId,
