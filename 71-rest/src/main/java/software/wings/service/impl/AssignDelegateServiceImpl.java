@@ -16,7 +16,6 @@ import io.harness.delegate.beans.DelegateActivity;
 import io.harness.delegate.beans.DelegateProfile;
 import io.harness.delegate.beans.DelegateProfileScopingRule;
 import io.harness.delegate.beans.DelegateSelectionLogParams;
-import io.harness.delegate.beans.DelegateTaskPackage;
 import io.harness.delegate.beans.TaskGroup;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.delegate.beans.executioncapability.SelectorCapability;
@@ -41,7 +40,6 @@ import software.wings.service.intfc.DelegateService;
 import software.wings.service.intfc.EnvironmentService;
 import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.InfrastructureMappingService;
-import software.wings.utils.DelegateTaskUtils;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.cache.CacheBuilder;
@@ -461,12 +459,11 @@ public class AssignDelegateServiceImpl implements AssignDelegateService {
   }
 
   protected List<String> fetchCriteria(DelegateTask task) {
-    DelegateTaskPackage delegateTaskPackage = DelegateTaskUtils.getDelegateTaskPackage(task);
-    if (isEmpty(delegateTaskPackage.getExecutionCapabilities())) {
+    if (isEmpty(task.getExecutionCapabilities())) {
       return emptyList();
     }
 
-    return delegateTaskPackage.getExecutionCapabilities()
+    return task.getExecutionCapabilities()
         .stream()
         .filter(e -> e.evaluationMode() == ExecutionCapability.EvaluationMode.AGENT)
         .map(ExecutionCapability::fetchCapabilityBasis)
