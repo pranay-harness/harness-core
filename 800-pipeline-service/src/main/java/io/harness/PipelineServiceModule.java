@@ -1,21 +1,26 @@
 package io.harness;
 
+import io.harness.config.PublisherConfiguration;
 import io.harness.grpc.server.PipelineServiceGrpcModule;
 import io.harness.mongo.MongoConfig;
 import io.harness.mongo.MongoModule;
 import io.harness.mongo.MongoPersistence;
+import io.harness.mongo.queue.QueueFactory;
 import io.harness.morphia.MorphiaRegistrar;
 import io.harness.persistence.HPersistence;
+import io.harness.pms.execution.NodeExecutionEvent;
 import io.harness.pms.pipeline.service.PMSPipelineService;
 import io.harness.pms.pipeline.service.PMSPipelineServiceImpl;
+import io.harness.queue.QueuePublisher;
 import io.harness.serializer.KryoRegistrar;
 import io.harness.serializer.PipelineServiceModuleRegistrars;
 import io.harness.spring.AliasRegistrar;
-import io.harness.springdata.SpringPersistenceTestModule;
+import io.harness.springdata.SpringPersistenceModule;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.inject.AbstractModule;
+import com.google.inject.Injector;
 import com.google.inject.Provides;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
@@ -40,10 +45,17 @@ public class PipelineServiceModule extends AbstractModule {
   protected void configure() {
     install(MongoModule.getInstance());
     install(PipelineServiceGrpcModule.getInstance());
-    install(new SpringPersistenceTestModule());
+    install(new SpringPersistenceModule());
 
     bind(HPersistence.class).to(MongoPersistence.class);
     bind(PMSPipelineService.class).to(PMSPipelineServiceImpl.class);
+  }
+
+  @Provides
+  @Singleton
+  public QueuePublisher<NodeExecutionEvent> nodeExecutionEventQueuePublisher(
+      Injector injector, PublisherConfiguration config) {
+    return QueueFactory.createQueuePublisher(injector, NodeExecutionEvent.class, null, config);
   }
 
   @Provides

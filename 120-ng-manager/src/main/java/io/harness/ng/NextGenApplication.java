@@ -161,6 +161,7 @@ public class NextGenApplication extends Application<NextGenConfiguration> {
 
     if (appConfig.getShouldConfigureWithPMS() != null && appConfig.getShouldConfigureWithPMS()) {
       PmsSdkConfiguration sdkConfig = PmsSdkConfiguration.builder()
+                                          .mongoConfig(appConfig.getPmsMongoConfig())
                                           .grpcServerConfig(appConfig.getPmsSdkGrpcServerConfig())
                                           .pmsGrpcClientConfig(appConfig.getPmsGrpcClientConfig())
                                           .pipelineServiceInfoProvider(new CDNGPlanCreatorProvider())
