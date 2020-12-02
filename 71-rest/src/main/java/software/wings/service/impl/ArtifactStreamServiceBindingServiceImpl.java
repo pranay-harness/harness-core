@@ -12,6 +12,7 @@ import static software.wings.beans.Application.GLOBAL_APP_ID;
 
 import static java.lang.String.format;
 
+import io.harness.beans.FeatureName;
 import io.harness.beans.SearchFilter.Operator;
 import io.harness.beans.SortOrder.OrderType;
 import io.harness.eraro.ErrorCode;
@@ -21,7 +22,6 @@ import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 
 import software.wings.beans.EntityType;
-import software.wings.beans.FeatureName;
 import software.wings.beans.Service;
 import software.wings.beans.ServiceVariable;
 import software.wings.beans.ServiceVariable.ServiceVariableKeys;

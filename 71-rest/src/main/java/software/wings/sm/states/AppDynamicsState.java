@@ -13,13 +13,13 @@ import static software.wings.service.impl.newrelic.NewRelicMetricValueDefinition
 import static org.apache.commons.lang3.StringUtils.isBlank;
 
 import io.harness.beans.DelegateTask;
+import io.harness.beans.FeatureName;
 import io.harness.delegate.beans.TaskData;
 import io.harness.exception.WingsException;
 import io.harness.tasks.Cd1SetupFields;
 
 import software.wings.api.DeploymentType;
 import software.wings.beans.AppDynamicsConfig;
-import software.wings.beans.FeatureName;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.TaskType;

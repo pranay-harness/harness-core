@@ -10,6 +10,7 @@ import static software.wings.beans.yaml.YamlConstants.YAML_EXTENSION;
 
 import static com.google.common.base.Charsets.UTF_8;
 
+import io.harness.beans.FeatureName;
 import io.harness.delegate.service.DelegateAgentFileService.FileBucket;
 import io.harness.exception.WingsException;
 import io.harness.git.model.ChangeType;
@@ -19,7 +20,6 @@ import software.wings.beans.Base;
 import software.wings.beans.ConfigFile;
 import software.wings.beans.EntityType;
 import software.wings.beans.Environment;
-import software.wings.beans.FeatureName;
 import software.wings.beans.HarnessTag;
 import software.wings.beans.Service;
 import software.wings.beans.ServiceVariable;

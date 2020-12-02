@@ -38,6 +38,7 @@ import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.when;
 
 import io.harness.beans.ExecutionStatus;
+import io.harness.beans.FeatureName;
 import io.harness.beans.OrchestrationWorkflowType;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
@@ -56,7 +57,6 @@ import software.wings.api.SelectedNodeExecutionData;
 import software.wings.api.ServiceElement;
 import software.wings.api.ServiceInstanceArtifactParam;
 import software.wings.beans.AwsInfrastructureMapping;
-import software.wings.beans.FeatureName;
 import software.wings.beans.HostConnectionType;
 import software.wings.beans.InfrastructureMappingType;
 import software.wings.beans.InstanceUnitType;

@@ -14,12 +14,12 @@ import static java.lang.Math.ceil;
 import static java.lang.Math.min;
 
 import io.harness.beans.ExecutionStatus;
+import io.harness.beans.FeatureName;
 import io.harness.delegate.task.DataCollectionExecutorService;
 import io.harness.exception.WingsException;
 import io.harness.persistence.HIterator;
 import io.harness.time.Timestamp;
 
-import software.wings.beans.FeatureName;
 import software.wings.common.VerificationConstants;
 import software.wings.dl.WingsPersistence;
 import software.wings.metrics.RiskLevel;

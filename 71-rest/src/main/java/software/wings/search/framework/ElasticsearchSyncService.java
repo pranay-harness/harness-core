@@ -3,8 +3,8 @@ package software.wings.search.framework;
 import static io.harness.annotations.dev.HarnessTeam.PL;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.beans.FeatureName;
 
-import software.wings.beans.FeatureName;
 import software.wings.service.intfc.FeatureFlagService;
 
 import com.google.common.util.concurrent.ThreadFactoryBuilder;

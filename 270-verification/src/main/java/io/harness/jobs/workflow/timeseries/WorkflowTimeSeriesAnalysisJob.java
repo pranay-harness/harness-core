@@ -7,6 +7,7 @@ import static software.wings.delegatetasks.AbstractDelegateDataCollectionTask.PR
 import static software.wings.service.impl.newrelic.NewRelicMetricDataRecord.DEFAULT_GROUP_NAME;
 
 import io.harness.beans.ExecutionStatus;
+import io.harness.beans.FeatureName;
 import io.harness.beans.SortOrder.OrderType;
 import io.harness.exception.ExceptionUtils;
 import io.harness.managerclient.VerificationManagerClient;
@@ -16,7 +17,6 @@ import io.harness.resources.intfc.ExperimentalMetricAnalysisResource;
 import io.harness.service.intfc.LearningEngineService;
 import io.harness.service.intfc.TimeSeriesAnalysisService;
 
-import software.wings.beans.FeatureName;
 import software.wings.common.VerificationConstants;
 import software.wings.delegatetasks.NewRelicDataCollectionTask;
 import software.wings.metrics.MetricType;

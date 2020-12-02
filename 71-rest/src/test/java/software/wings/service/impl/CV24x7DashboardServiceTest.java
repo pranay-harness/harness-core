@@ -15,6 +15,7 @@ import static org.apache.cxf.ws.addressing.ContextUtils.generateUUID;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.beans.EmbeddedUser;
+import io.harness.beans.FeatureName;
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
 import io.harness.security.EncryptionUtils;
@@ -23,7 +24,6 @@ import io.harness.time.Timestamp;
 import software.wings.WingsBaseTest;
 import software.wings.beans.Account;
 import software.wings.beans.AccountType;
-import software.wings.beans.FeatureName;
 import software.wings.beans.LicenseInfo;
 import software.wings.beans.Service;
 import software.wings.dl.WingsPersistence;

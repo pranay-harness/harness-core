@@ -10,8 +10,8 @@ import static software.wings.common.NotificationMessageResolver.getDecoratedNoti
 import static org.apache.commons.lang3.StringUtils.stripToEmpty;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.beans.FeatureName;
 
-import software.wings.beans.FeatureName;
 import software.wings.beans.Notification;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.notification.SlackNotificationConfiguration;

@@ -54,6 +54,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import io.harness.beans.EmbeddedUser;
+import io.harness.beans.FeatureName;
 import io.harness.category.element.UnitTests;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.ShellExecutionException;
@@ -66,7 +67,6 @@ import software.wings.WingsBaseTest;
 import software.wings.beans.AzureConfig;
 import software.wings.beans.AzureContainerRegistry;
 import software.wings.beans.DockerConfig;
-import software.wings.beans.FeatureName;
 import software.wings.beans.GcpConfig;
 import software.wings.beans.JenkinsConfig;
 import software.wings.beans.Service;

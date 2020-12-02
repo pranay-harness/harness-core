@@ -19,6 +19,7 @@ import static software.wings.delegatetasks.ElkLogzDataCollectionTask.parseElkRes
 import static software.wings.service.impl.ThirdPartyApiCallLog.createApiCallLog;
 
 import io.harness.beans.ExecutionStatus;
+import io.harness.beans.FeatureName;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageRequest.PageRequestBuilder;
 import io.harness.beans.SearchFilter.Operator;
@@ -39,7 +40,6 @@ import software.wings.annotation.EncryptableSetting;
 import software.wings.api.PhaseElement;
 import software.wings.api.jira.JiraExecutionData;
 import software.wings.beans.ElkConfig;
-import software.wings.beans.FeatureName;
 import software.wings.beans.InstanaConfig;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.SplunkConfig;

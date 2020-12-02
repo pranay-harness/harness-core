@@ -10,6 +10,7 @@ import static software.wings.service.impl.instance.InstanceSyncFlow.NEW_DEPLOYME
 import static software.wings.service.impl.instance.InstanceSyncFlow.PERPETUAL_TASK;
 
 import io.harness.beans.EmbeddedUser;
+import io.harness.beans.FeatureName;
 import io.harness.perpetualtask.PerpetualTaskService;
 
 import software.wings.api.DeploymentInfo;
@@ -19,7 +20,6 @@ import software.wings.api.PhaseStepExecutionData;
 import software.wings.api.ondemandrollback.OnDemandRollbackInfo;
 import software.wings.beans.Application;
 import software.wings.beans.Environment;
-import software.wings.beans.FeatureName;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.Service;
 import software.wings.beans.WorkflowExecution;

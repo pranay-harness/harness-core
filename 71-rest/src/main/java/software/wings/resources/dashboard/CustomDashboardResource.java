@@ -7,6 +7,7 @@ import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
 import static software.wings.security.PermissionAttribute.PermissionType.LOGGED_IN;
 import static software.wings.security.PermissionAttribute.ResourceType.CUSTOM_DASHBOARD;
 
+import io.harness.beans.FeatureName;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.beans.PageResponse.PageResponseBuilder;
@@ -27,7 +28,6 @@ import io.harness.rest.RestResponse.Builder;
 
 import software.wings.beans.Account;
 import software.wings.beans.Application;
-import software.wings.beans.FeatureName;
 import software.wings.beans.User;
 import software.wings.features.api.AccountId;
 import software.wings.security.PermissionAttribute.ResourceType;

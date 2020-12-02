@@ -3,6 +3,7 @@ package io.harness.jobs.workflow.collection;
 import static software.wings.common.VerificationConstants.DELAY_MINUTES;
 import static software.wings.common.VerificationConstants.WORKFLOW_CV_COLLECTION_CRON_GROUP;
 
+import io.harness.beans.FeatureName;
 import io.harness.managerclient.VerificationManagerClient;
 import io.harness.managerclient.VerificationManagerClientHelper;
 import io.harness.mongo.iterator.MongoPersistenceIterator.Handler;
@@ -10,7 +11,6 @@ import io.harness.scheduler.PersistentScheduler;
 import io.harness.serializer.JsonUtils;
 import io.harness.service.intfc.ContinuousVerificationService;
 
-import software.wings.beans.FeatureName;
 import software.wings.service.impl.analysis.AnalysisContext;
 
 import com.google.inject.Inject;

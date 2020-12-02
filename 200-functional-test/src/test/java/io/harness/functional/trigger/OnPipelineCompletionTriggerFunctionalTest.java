@@ -4,6 +4,7 @@ import static io.harness.rule.OwnerRule.MILAN;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import io.harness.beans.FeatureName;
 import io.harness.category.element.FunctionalTests;
 import io.harness.functional.AbstractFunctionalTest;
 import io.harness.functional.WorkflowUtils;
@@ -19,7 +20,6 @@ import io.harness.testframework.restutils.PipelineRestUtils;
 import io.harness.testframework.restutils.WorkflowRestUtils;
 
 import software.wings.beans.Application;
-import software.wings.beans.FeatureName;
 import software.wings.beans.InfrastructureType;
 import software.wings.beans.Pipeline;
 import software.wings.beans.Service;

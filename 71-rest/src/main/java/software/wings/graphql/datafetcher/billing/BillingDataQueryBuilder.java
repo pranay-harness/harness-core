@@ -1,9 +1,8 @@
 package software.wings.graphql.datafetcher.billing;
 
+import static io.harness.beans.FeatureName.CE_BILLING_DATA_PRE_AGGREGATION;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
-
-import static software.wings.beans.FeatureName.CE_BILLING_DATA_PRE_AGGREGATION;
 
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.InvalidRequestException;

@@ -13,6 +13,7 @@ import static software.wings.sm.states.DynatraceState.CONTROL_HOST_NAME;
 import static software.wings.sm.states.DynatraceState.TEST_HOST_NAME;
 
 import io.harness.beans.DelegateTask;
+import io.harness.beans.FeatureName;
 import io.harness.delegate.beans.TaskData;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.VerificationOperationException;
@@ -20,7 +21,6 @@ import io.harness.exception.WingsException;
 import io.harness.tasks.Cd1SetupFields;
 
 import software.wings.beans.APMVerificationConfig;
-import software.wings.beans.FeatureName;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.TaskType;
 import software.wings.metrics.MetricType;

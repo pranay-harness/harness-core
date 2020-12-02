@@ -18,6 +18,7 @@ import static java.util.Arrays.asList;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.ExecutionStatus;
+import io.harness.beans.FeatureName;
 import io.harness.context.ContextElementType;
 import io.harness.distribution.constraint.Constraint;
 import io.harness.distribution.constraint.ConstraintException;
@@ -33,7 +34,6 @@ import io.harness.tasks.ResponseData;
 import software.wings.api.PhaseElement;
 import software.wings.api.ResourceConstraintExecutionData;
 import software.wings.beans.Application;
-import software.wings.beans.FeatureName;
 import software.wings.beans.NotificationGroup;
 import software.wings.beans.NotificationRule;
 import software.wings.beans.ResourceConstraintInstance.ResourceConstraintInstanceKeys;

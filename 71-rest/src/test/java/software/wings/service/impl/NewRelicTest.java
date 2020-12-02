@@ -9,6 +9,7 @@ import static software.wings.service.impl.newrelic.NewRelicDelgateServiceImpl.ME
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import io.harness.beans.FeatureName;
 import io.harness.category.element.UnitTests;
 import io.harness.exception.WingsException;
 import io.harness.rule.Owner;
@@ -18,7 +19,6 @@ import io.harness.time.Timestamp;
 
 import software.wings.WingsBaseTest;
 import software.wings.beans.APMValidateCollectorConfig;
-import software.wings.beans.FeatureName;
 import software.wings.beans.NewRelicConfig;
 import software.wings.service.impl.newrelic.NewRelicDelgateServiceImpl;
 import software.wings.service.impl.newrelic.NewRelicMetric;

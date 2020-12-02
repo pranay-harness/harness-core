@@ -1,7 +1,7 @@
 package software.wings.sm.states.pcf;
 
-import static software.wings.beans.FeatureName.IGNORE_PCF_CONNECTION_CONTEXT_CACHE;
-import static software.wings.beans.FeatureName.LIMIT_PCF_THREADS;
+import static io.harness.beans.FeatureName.IGNORE_PCF_CONNECTION_CONTEXT_CACHE;
+import static io.harness.beans.FeatureName.LIMIT_PCF_THREADS;
 
 import static com.google.common.base.MoreObjects.firstNonNull;
 import static java.util.Collections.emptyMap;

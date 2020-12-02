@@ -4,6 +4,7 @@ import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
 
 import static java.lang.System.currentTimeMillis;
 
+import io.harness.beans.FeatureName;
 import io.harness.entities.TimeSeriesAnomaliesRecord;
 import io.harness.entities.TimeSeriesCumulativeSums;
 import io.harness.managerclient.VerificationManagerClient;
@@ -13,7 +14,6 @@ import io.harness.security.annotations.LearningEngineAuth;
 import io.harness.service.intfc.LearningEngineService;
 import io.harness.service.intfc.TimeSeriesAnalysisService;
 
-import software.wings.beans.FeatureName;
 import software.wings.metrics.TimeSeriesMetricDefinition;
 import software.wings.security.PermissionAttribute.ResourceType;
 import software.wings.security.annotations.Scope;

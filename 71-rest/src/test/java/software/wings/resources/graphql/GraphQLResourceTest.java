@@ -10,10 +10,10 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import io.harness.CategoryTest;
+import io.harness.beans.FeatureName;
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
 
-import software.wings.beans.FeatureName;
 import software.wings.beans.User;
 import software.wings.exception.WingsExceptionMapper;
 import software.wings.features.RestApiFeature;

@@ -1,5 +1,6 @@
 package io.harness.jobs.workflow.logs;
 
+import io.harness.beans.FeatureName;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.jobs.LogMLAnalysisGenerator;
 import io.harness.managerclient.VerificationManagerClient;
@@ -8,7 +9,6 @@ import io.harness.mongo.iterator.MongoPersistenceIterator;
 import io.harness.service.intfc.LearningEngineService;
 import io.harness.service.intfc.LogAnalysisService;
 
-import software.wings.beans.FeatureName;
 import software.wings.service.impl.analysis.AnalysisContext;
 import software.wings.service.impl.analysis.CVFeedbackRecord;
 import software.wings.service.impl.analysis.LogMLAnalysisRecord.LogMLAnalysisRecordKeys;

@@ -1,9 +1,9 @@
 package software.wings.service.impl.yaml;
 
+import io.harness.beans.FeatureName;
 import io.harness.git.model.ChangeType;
 
 import software.wings.beans.ConfigFile;
-import software.wings.beans.FeatureName;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.appmanifest.ApplicationManifest;
 import software.wings.beans.appmanifest.ManifestFile;

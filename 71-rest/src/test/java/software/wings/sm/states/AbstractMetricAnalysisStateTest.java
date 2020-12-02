@@ -15,6 +15,7 @@ import static org.mockito.Mockito.when;
 import static org.mockito.MockitoAnnotations.initMocks;
 
 import io.harness.beans.ExecutionStatus;
+import io.harness.beans.FeatureName;
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
 import io.harness.serializer.KryoSerializer;
@@ -22,7 +23,6 @@ import io.harness.tasks.ResponseData;
 import io.harness.waiter.NotifyResponse;
 
 import software.wings.WingsBaseTest;
-import software.wings.beans.FeatureName;
 import software.wings.metrics.RiskLevel;
 import software.wings.service.impl.analysis.AnalysisComparisonStrategy;
 import software.wings.service.impl.analysis.AnalysisContext;

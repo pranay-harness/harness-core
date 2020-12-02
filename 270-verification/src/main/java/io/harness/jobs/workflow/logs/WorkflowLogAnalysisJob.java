@@ -1,6 +1,7 @@
 package io.harness.jobs.workflow.logs;
 
 import io.harness.beans.ExecutionStatus;
+import io.harness.beans.FeatureName;
 import io.harness.exception.WingsException;
 import io.harness.jobs.LogMLAnalysisGenerator;
 import io.harness.jobs.LogMLClusterGenerator;
@@ -11,7 +12,6 @@ import io.harness.serializer.JsonUtils;
 import io.harness.service.intfc.LearningEngineService;
 import io.harness.service.intfc.LogAnalysisService;
 
-import software.wings.beans.FeatureName;
 import software.wings.service.impl.analysis.AnalysisContext;
 import software.wings.service.impl.analysis.LogRequest;
 import software.wings.service.impl.analysis.MLAnalysisType;

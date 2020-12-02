@@ -8,10 +8,10 @@ import static java.util.Collections.singletonList;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
+import io.harness.beans.FeatureName;
 import io.harness.environment.SystemEnvironment;
 import io.harness.logging.AccessTokenBean;
 
-import software.wings.beans.FeatureName;
 import software.wings.service.intfc.FeatureFlagService;
 import software.wings.utils.CdnStorageUrlGenerator;
 import software.wings.utils.GcsUtils;

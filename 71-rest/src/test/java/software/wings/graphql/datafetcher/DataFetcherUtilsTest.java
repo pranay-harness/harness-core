@@ -8,13 +8,13 @@ import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.when;
 
 import io.harness.CategoryTest;
+import io.harness.beans.FeatureName;
 import io.harness.category.element.UnitTests;
 import io.harness.ccm.setup.config.CESetUpConfig;
 import io.harness.rule.Owner;
 import io.harness.timescaledb.TimeScaleDBService;
 
 import software.wings.app.MainConfiguration;
-import software.wings.beans.FeatureName;
 import software.wings.service.intfc.FeatureFlagService;
 
 import java.sql.Connection;

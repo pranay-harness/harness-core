@@ -1,6 +1,6 @@
 package software.wings.service.impl;
 
-import static software.wings.beans.FeatureName.DISABLE_DELEGATE_SELECTION_LOG;
+import static io.harness.beans.FeatureName.DISABLE_DELEGATE_SELECTION_LOG;
 
 import io.harness.beans.DelegateTask;
 import io.harness.delegate.beans.DelegateProfile;

@@ -1,11 +1,11 @@
 package io.harness.managerclient;
 
 import io.harness.beans.ExecutionStatus;
+import io.harness.beans.FeatureName;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.VerificationOperationException;
 import io.harness.network.SafeHttpCall;
 
-import software.wings.beans.FeatureName;
 import software.wings.service.impl.analysis.AnalysisContext;
 import software.wings.service.intfc.verification.CVActivityLogService;
 import software.wings.verification.VerificationDataAnalysisResponse;

@@ -19,11 +19,11 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import io.harness.CategoryTest;
+import io.harness.beans.FeatureName;
 import io.harness.category.element.UnitTests;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.rule.Owner;
 
-import software.wings.beans.FeatureName;
 import software.wings.beans.alert.AlertType;
 import software.wings.beans.alert.ManifestCollectionFailedAlert;
 import software.wings.beans.appmanifest.ApplicationManifest;

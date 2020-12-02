@@ -48,6 +48,7 @@ import static org.apache.commons.lang3.StringUtils.isBlank;
 
 import io.harness.beans.DelegateTask;
 import io.harness.beans.ExecutionStatus;
+import io.harness.beans.FeatureName;
 import io.harness.beans.FileMetadata;
 import io.harness.beans.SecretFile;
 import io.harness.beans.SweepingOutputInstance;
@@ -78,7 +79,6 @@ import software.wings.beans.Activity.ActivityBuilder;
 import software.wings.beans.Activity.Type;
 import software.wings.beans.Application;
 import software.wings.beans.Environment;
-import software.wings.beans.FeatureName;
 import software.wings.beans.GitConfig;
 import software.wings.beans.GitFileConfig;
 import software.wings.beans.InfrastructureProvisioner;

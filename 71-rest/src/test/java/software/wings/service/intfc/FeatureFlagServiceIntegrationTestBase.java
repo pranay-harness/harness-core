@@ -10,7 +10,7 @@
 // import org.junit.experimental.categories.Category;
 // import software.wings.beans.FeatureFlag;
 // import software.wings.beans.FeatureFlag.FeatureFlagKeys;
-// import software.wings.beans.FeatureName;
+// import io.harness.beans.FeatureName;
 // import software.wings.integration.IntegrationTestBase;
 // import software.wings.utils.WingsTestConstants;
 //

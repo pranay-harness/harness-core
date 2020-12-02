@@ -10,6 +10,7 @@ import static software.wings.common.VerificationConstants.ML_RECORDS_TTL_MONTHS;
 import io.harness.annotation.HarnessEntity;
 import io.harness.beans.EmbeddedUser;
 import io.harness.beans.ExecutionStatus;
+import io.harness.beans.FeatureName;
 import io.harness.iterator.PersistentRegularIterable;
 import io.harness.mongo.index.CompoundMongoIndex;
 import io.harness.mongo.index.FdIndex;
@@ -19,7 +20,6 @@ import io.harness.persistence.AccountAccess;
 import io.harness.version.ServiceApiVersion;
 
 import software.wings.beans.Base;
-import software.wings.beans.FeatureName;
 import software.wings.sm.StateType;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;

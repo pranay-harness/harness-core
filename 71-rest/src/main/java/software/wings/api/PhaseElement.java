@@ -4,9 +4,9 @@
 
 package software.wings.api;
 
+import io.harness.beans.FeatureName;
 import io.harness.context.ContextElementType;
 
-import software.wings.beans.FeatureName;
 import software.wings.beans.NameValuePair;
 import software.wings.beans.artifact.Artifact;
 import software.wings.service.intfc.ArtifactService;

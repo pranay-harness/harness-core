@@ -1,10 +1,10 @@
 package software.wings.service;
 
+import static io.harness.beans.FeatureName.ARTIFACT_STREAM_REFACTOR;
 import static io.harness.rule.OwnerRule.ANUBHAW;
 import static io.harness.rule.OwnerRule.RAGHU;
 
 import static software.wings.beans.AccountPlugin.Builder.anAccountPlugin;
-import static software.wings.beans.FeatureName.ARTIFACT_STREAM_REFACTOR;
 import static software.wings.beans.PluginCategory.Artifact;
 import static software.wings.beans.PluginCategory.AzureArtifacts;
 import static software.wings.beans.PluginCategory.CloudProvider;

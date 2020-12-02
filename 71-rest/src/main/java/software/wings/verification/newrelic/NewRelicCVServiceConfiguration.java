@@ -2,7 +2,8 @@ package software.wings.verification.newrelic;
 
 import static software.wings.service.impl.newrelic.NewRelicMetricDataRecord.DEFAULT_GROUP_NAME;
 
-import software.wings.beans.FeatureName;
+import io.harness.beans.FeatureName;
+
 import software.wings.service.impl.analysis.DataCollectionInfoV2;
 import software.wings.service.impl.newrelic.NewRelicDataCollectionInfoV2;
 import software.wings.verification.CVConfiguration;

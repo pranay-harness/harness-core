@@ -1,12 +1,12 @@
 package software.wings.sm.states;
 
+import static io.harness.beans.FeatureName.CV_SUCCEED_FOR_ANOMALY;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.govern.Switch.noop;
 
 import static software.wings.beans.AccountType.COMMUNITY;
 import static software.wings.beans.AccountType.ESSENTIALS;
-import static software.wings.beans.FeatureName.CV_SUCCEED_FOR_ANOMALY;
 import static software.wings.common.TemplateExpressionProcessor.checkFieldTemplatized;
 import static software.wings.common.VerificationConstants.DELAY_MINUTES;
 import static software.wings.common.VerificationConstants.GA_PER_MINUTE_CV_STATES;
@@ -20,6 +20,7 @@ import static software.wings.sm.ExecutionContextImpl.PHASE_PARAM;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 
 import io.harness.beans.ExecutionStatus;
+import io.harness.beans.FeatureName;
 import io.harness.context.ContextElementType;
 import io.harness.expression.ExpressionEvaluator;
 import io.harness.time.Timestamp;
@@ -29,7 +30,6 @@ import software.wings.api.DeploymentType;
 import software.wings.api.PhaseElement;
 import software.wings.api.instancedetails.InstanceApiResponse;
 import software.wings.app.MainConfiguration;
-import software.wings.beans.FeatureName;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.TemplateExpression;

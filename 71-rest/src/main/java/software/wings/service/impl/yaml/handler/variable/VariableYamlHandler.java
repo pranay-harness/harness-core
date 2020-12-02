@@ -6,6 +6,7 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static java.lang.String.format;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.beans.FeatureName;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.HarnessException;
 import io.harness.exception.InvalidRequestException;
@@ -13,7 +14,6 @@ import io.harness.exception.WingsException;
 
 import software.wings.beans.AllowedValueYaml;
 import software.wings.beans.ArtifactStreamAllowedValueYaml;
-import software.wings.beans.FeatureName;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.Variable;
 import software.wings.beans.Variable.VariableBuilder;

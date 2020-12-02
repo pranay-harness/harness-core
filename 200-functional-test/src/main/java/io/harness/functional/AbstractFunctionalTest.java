@@ -10,6 +10,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.CategoryTest;
 import io.harness.beans.ExecutionStatus;
+import io.harness.beans.FeatureName;
 import io.harness.beans.WorkflowType;
 import io.harness.multiline.MultilineStringMixin;
 import io.harness.rest.RestResponse;
@@ -30,7 +31,6 @@ import software.wings.beans.Account;
 import software.wings.beans.ExecutionArgs;
 import software.wings.beans.ExecutionCredential;
 import software.wings.beans.ExecutionCredential.ExecutionType;
-import software.wings.beans.FeatureName;
 import software.wings.beans.SSHExecutionCredential;
 import software.wings.beans.User;
 import software.wings.beans.Workflow;

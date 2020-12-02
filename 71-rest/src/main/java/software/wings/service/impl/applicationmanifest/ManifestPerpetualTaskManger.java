@@ -2,8 +2,8 @@ package software.wings.service.impl.applicationmanifest;
 
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.beans.FeatureName;
 
-import software.wings.beans.FeatureName;
 import software.wings.beans.appmanifest.ApplicationManifest;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.FeatureFlagService;

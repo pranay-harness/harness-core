@@ -10,9 +10,9 @@ import static java.util.Arrays.asList;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.beans.FeatureName;
 import io.harness.beans.OrchestrationWorkflowType;
 
-import software.wings.beans.FeatureName;
 import software.wings.beans.SubEntityType;
 import software.wings.beans.VariableType;
 import software.wings.beans.Workflow;

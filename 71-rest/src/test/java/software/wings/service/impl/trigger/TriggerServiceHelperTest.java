@@ -15,11 +15,11 @@ import static software.wings.utils.WingsTestConstants.TRIGGER_ID;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 
+import io.harness.beans.FeatureName;
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
 
 import software.wings.WingsBaseTest;
-import software.wings.beans.FeatureName;
 import software.wings.beans.Service;
 import software.wings.beans.WebHookToken;
 import software.wings.beans.trigger.ArtifactSelection;

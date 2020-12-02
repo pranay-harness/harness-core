@@ -32,6 +32,7 @@ import static org.apache.cxf.ws.addressing.ContextUtils.generateUUID;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 
 import io.harness.beans.ExecutionStatus;
+import io.harness.beans.FeatureName;
 import io.harness.beans.SortOrder.OrderType;
 import io.harness.entities.CVTask;
 import io.harness.event.usagemetrics.UsageMetricsHelper;
@@ -48,7 +49,6 @@ import software.wings.alerts.AlertStatus;
 import software.wings.beans.Account;
 import software.wings.beans.AccountStatus;
 import software.wings.beans.AccountType;
-import software.wings.beans.FeatureName;
 import software.wings.beans.alert.cv.ContinuousVerificationAlertData;
 import software.wings.common.VerificationConstants;
 import software.wings.dl.WingsPersistence;
