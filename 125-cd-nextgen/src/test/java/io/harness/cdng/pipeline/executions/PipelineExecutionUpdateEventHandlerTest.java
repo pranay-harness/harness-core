@@ -20,10 +20,10 @@ import io.harness.engine.executions.node.NodeExecutionServiceImpl;
 import io.harness.engine.outcomes.OutcomeService;
 import io.harness.execution.NodeExecution;
 import io.harness.execution.events.OrchestrationEvent;
-import io.harness.plan.PlanNode;
 import io.harness.pms.ambiance.Ambiance;
 import io.harness.pms.ambiance.Level;
 import io.harness.pms.execution.Status;
+import io.harness.pms.plan.PlanNodeProto;
 import io.harness.rule.Owner;
 import io.harness.steps.StepOutcomeGroup;
 
@@ -61,7 +61,7 @@ public class PipelineExecutionUpdateEventHandlerTest extends CategoryTest {
     OrchestrationEvent orchestrationEvent = OrchestrationEvent.builder().ambiance(ambiance).build();
     NodeExecution nodeExecution = NodeExecution.builder()
                                       .ambiance(ambiance)
-                                      .node(PlanNode.builder().group(StepOutcomeGroup.STAGE.name()).build())
+                                      .node(PlanNodeProto.newBuilder().setGroup(StepOutcomeGroup.STAGE.name()).build())
                                       .build();
     when(nodeExecutionService.get("node1")).thenReturn(nodeExecution);
     pipelineExecutionUpdateEventHandler.handleEvent(orchestrationEvent);
@@ -84,7 +84,7 @@ public class PipelineExecutionUpdateEventHandlerTest extends CategoryTest {
                           .addAllLevels(Lists.newArrayList(Level.newBuilder().setRuntimeId("node1").build()))
                           .build())
             .build();
-    NodeExecution nodeExecution = NodeExecution.builder().node(PlanNode.builder().group(null).build()).build();
+    NodeExecution nodeExecution = NodeExecution.builder().node(PlanNodeProto.newBuilder().build()).build();
     when(nodeExecutionService.get("node1")).thenReturn(nodeExecution);
     pipelineExecutionUpdateEventHandler.handleEvent(orchestrationEvent);
 
@@ -104,7 +104,7 @@ public class PipelineExecutionUpdateEventHandlerTest extends CategoryTest {
                           .build())
             .build();
     NodeExecution nodeExecution = NodeExecution.builder()
-                                      .node(PlanNode.builder().stepType(ServiceStep.STEP_TYPE).build())
+                                      .node(PlanNodeProto.newBuilder().setStepType(ServiceStep.STEP_TYPE).build())
                                       .status(Status.SUCCEEDED)
                                       .build();
     when(nodeExecutionService.get("node1")).thenReturn(nodeExecution);
@@ -130,10 +130,11 @@ public class PipelineExecutionUpdateEventHandlerTest extends CategoryTest {
                           .addAllLevels(Lists.newArrayList(Level.newBuilder().setRuntimeId("node1").build()))
                           .build())
             .build();
-    NodeExecution nodeExecution = NodeExecution.builder()
-                                      .node(PlanNode.builder().stepType(InfrastructureStep.STEP_TYPE).build())
-                                      .status(Status.SUCCEEDED)
-                                      .build();
+    NodeExecution nodeExecution =
+        NodeExecution.builder()
+            .node(PlanNodeProto.newBuilder().setStepType(InfrastructureStep.STEP_TYPE).build())
+            .status(Status.SUCCEEDED)
+            .build();
     when(nodeExecutionService.get("node1")).thenReturn(nodeExecution);
     when(outcomeService.findAllByRuntimeId(any(), anyString()))
         .thenReturn(Lists.newArrayList(EnvironmentOutcome.builder().build()));

@@ -10,12 +10,11 @@ import io.harness.interrupts.InterruptEffect;
 import io.harness.mongo.index.FdIndex;
 import io.harness.persistence.PersistentEntity;
 import io.harness.persistence.UuidAware;
-import io.harness.plan.PlanNode;
-import io.harness.plan.PlanNode.PlanNodeKeys;
 import io.harness.pms.ambiance.Ambiance;
 import io.harness.pms.execution.ExecutionMode;
 import io.harness.pms.execution.Status;
 import io.harness.pms.execution.failure.FailureInfo;
+import io.harness.pms.plan.PlanNodeProto;
 import io.harness.pms.sdk.core.steps.io.StepParameters;
 import io.harness.state.io.StepOutcomeRef;
 import io.harness.tasks.ProgressData;
@@ -51,7 +50,7 @@ public final class NodeExecution implements PersistentEntity, UuidAware {
   // Immutable
   @Id @org.mongodb.morphia.annotations.Id String uuid;
   @NotNull Ambiance ambiance;
-  @NotNull PlanNode node;
+  @NotNull PlanNodeProto node;
   @NotNull ExecutionMode mode;
   @Wither @FdIndex @CreatedDate Long createdAt;
   private Long startTs;
@@ -121,13 +120,20 @@ public final class NodeExecution implements PersistentEntity, UuidAware {
     public static final String planExecutionId = NodeExecutionKeys.ambiance + "."
         + "planExecutionId";
 
-    public static final String planNodeId = NodeExecutionKeys.node + "." + PlanNodeKeys.uuid;
-    public static final String planNodeIdentifier = NodeExecutionKeys.node + "." + PlanNodeKeys.identifier;
+    public static final String planNodeId = NodeExecutionKeys.node + "."
+        + "uuid";
+    public static final String planNodeIdentifier = NodeExecutionKeys.node + "."
+        + "identifier";
   }
 
   public static class NodeExecutionBuilder {
     public NodeExecutionBuilder resolvedStepParameters(StepParameters stepParameters) {
       this.resolvedStepParameters = stepParameters == null ? null : org.bson.Document.parse(stepParameters.toJson());
+      return this;
+    }
+
+    public NodeExecutionBuilder resolvedStepParameters(String jsonString) {
+      this.resolvedStepParameters = isEmpty(jsonString) ? null : org.bson.Document.parse(jsonString);
       return this;
     }
   }

@@ -17,9 +17,10 @@ import io.harness.execution.NodeExecution.NodeExecutionKeys;
 import io.harness.facilitator.modes.chain.task.TaskChainExecutable;
 import io.harness.facilitator.modes.chain.task.TaskChainExecutableResponse;
 import io.harness.facilitator.modes.chain.task.TaskChainResponse;
-import io.harness.plan.PlanNode;
 import io.harness.pms.ambiance.Ambiance;
 import io.harness.pms.execution.Status;
+import io.harness.pms.plan.PlanNodeProto;
+import io.harness.pms.sdk.core.plan.PlanNode;
 import io.harness.pms.sdk.core.steps.io.StepInputPackage;
 import io.harness.pms.sdk.core.steps.io.StepResponse;
 import io.harness.registries.state.StepRegistry;
@@ -77,7 +78,7 @@ public class TaskChainStrategy implements TaskExecuteStrategy {
       engine.handleStepResponse(nodeExecution.getUuid(), stepResponse);
     } else {
       StepInputPackage inputPackage =
-          engineObtainmentHelper.obtainInputPackage(ambiance, nodeExecution.getNode().getRefObjects());
+          engineObtainmentHelper.obtainInputPackage(ambiance, nodeExecution.getNode().getRebObjectsList());
       TaskChainResponse chainResponse = taskChainExecutable.executeNextLink(ambiance,
           nodeExecutionService.extractResolvedStepParameters(nodeExecution), inputPackage,
           lastLinkResponse.getPassThroughData(), resumePackage.getResponseDataMap());
@@ -86,7 +87,7 @@ public class TaskChainStrategy implements TaskExecuteStrategy {
   }
 
   private TaskChainExecutable extractTaskChainExecutable(NodeExecution nodeExecution) {
-    PlanNode node = nodeExecution.getNode();
+    PlanNodeProto node = nodeExecution.getNode();
     return (TaskChainExecutable) stepRegistry.obtain(node.getStepType());
   }
 

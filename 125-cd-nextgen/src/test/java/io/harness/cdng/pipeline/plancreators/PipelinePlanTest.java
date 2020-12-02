@@ -16,7 +16,7 @@ import io.harness.executionplan.plancreator.beans.PlanCreatorConstants;
 import io.harness.executionplan.service.ExecutionPlanCreatorService;
 import io.harness.ngpipeline.pipeline.beans.yaml.NgPipeline;
 import io.harness.plan.Plan;
-import io.harness.plan.PlanNode;
+import io.harness.pms.plan.PlanNodeProto;
 import io.harness.pms.serializer.json.JsonOrchestrationUtils;
 import io.harness.rule.Owner;
 import io.harness.serializer.KryoSerializer;
@@ -55,36 +55,36 @@ public class PipelinePlanTest extends CDNGBaseTest {
     NgPipeline ngPipeline = YamlPipelineUtils.read(testFile, NgPipeline.class);
     final Plan planForPipeline =
         executionPlanCreatorService.createPlanForPipeline(ngPipeline, "ACCOUNT_ID", contextAttributes);
-    List<PlanNode> planNodes = planForPipeline.getNodes();
-    List<PlanNode> pipelinePlanNodeList = getNodesByIdentifier(planNodes, "managerServiceDeployment");
+    List<PlanNodeProto> planNodes = planForPipeline.getNodes();
+    List<PlanNodeProto> pipelinePlanNodeList = getNodesByIdentifier(planNodes, "managerServiceDeployment");
     assertThat(pipelinePlanNodeList.size()).isEqualTo(1);
 
-    List<PlanNode> qaStageList = getNodesByIdentifier(planNodes, "qaStage");
+    List<PlanNodeProto> qaStageList = getNodesByIdentifier(planNodes, "qaStage");
     assertThat(qaStageList.size()).isEqualTo(1);
-    List<PlanNode> prodStageNodesList = getNodesByIdentifier(planNodes, "prodStage");
+    List<PlanNodeProto> prodStageNodesList = getNodesByIdentifier(planNodes, "prodStage");
     assertThat(prodStageNodesList.size()).isEqualTo(1);
 
-    List<PlanNode> serviceNodesList = getNodesByIdentifier(planNodes, "service");
+    List<PlanNodeProto> serviceNodesList = getNodesByIdentifier(planNodes, "service");
     assertThat(serviceNodesList.size()).isEqualTo(2);
-    List<PlanNode> infrastructureNodesList = getNodesByIdentifier(planNodes, "infrastructure");
+    List<PlanNodeProto> infrastructureNodesList = getNodesByIdentifier(planNodes, "infrastructure");
     assertThat(infrastructureNodesList.size()).isEqualTo(2);
 
-    List<PlanNode> executionNodesList = getNodesByIdentifier(planNodes, "execution");
+    List<PlanNodeProto> executionNodesList = getNodesByIdentifier(planNodes, "execution");
     assertThat(executionNodesList.size()).isEqualTo(2);
 
-    List<PlanNode> stepGroupNodesList = getNodesByIdentifier(planNodes, "StepGroup1");
+    List<PlanNodeProto> stepGroupNodesList = getNodesByIdentifier(planNodes, "StepGroup1");
     assertThat(stepGroupNodesList.size()).isEqualTo(1);
 
-    List<PlanNode> httpStepNodesList = getNodesByIdentifier(planNodes, "httpStep1");
+    List<PlanNodeProto> httpStepNodesList = getNodesByIdentifier(planNodes, "httpStep1");
     assertThat(httpStepNodesList.size()).isEqualTo(1);
 
-    List<PlanNode> stage1RollOutNodesList = getNodesByIdentifier(planNodes, "rolloutDeployment1");
+    List<PlanNodeProto> stage1RollOutNodesList = getNodesByIdentifier(planNodes, "rolloutDeployment1");
     assertThat(stage1RollOutNodesList.size()).isEqualTo(1);
-    List<PlanNode> stage2RollOutNodesList = getNodesByIdentifier(planNodes, "rolloutDeployment2");
+    List<PlanNodeProto> stage2RollOutNodesList = getNodesByIdentifier(planNodes, "rolloutDeployment2");
     assertThat(stage2RollOutNodesList.size()).isEqualTo(1);
-    List<PlanNode> stage2RollBackNodesList = getNodesByIdentifier(planNodes, "rollbackRolloutDeployment2");
+    List<PlanNodeProto> stage2RollBackNodesList = getNodesByIdentifier(planNodes, "rollbackRolloutDeployment2");
     assertThat(stage2RollBackNodesList.size()).isEqualTo(1);
-    List<PlanNode> stage1RollBackNodesList = getNodesByIdentifier(planNodes, "rollbackRolloutDeployment1");
+    List<PlanNodeProto> stage1RollBackNodesList = getNodesByIdentifier(planNodes, "rollbackRolloutDeployment1");
     assertThat(stage1RollBackNodesList.size()).isEqualTo(1);
   }
 
@@ -97,26 +97,26 @@ public class PipelinePlanTest extends CDNGBaseTest {
     NgPipeline ngPipeline = YamlPipelineUtils.read(testFile, NgPipeline.class);
     final Plan planForPipeline =
         executionPlanCreatorService.createPlanForPipeline(ngPipeline, "ACCOUNT_ID", contextAttributes);
-    List<PlanNode> planNodes = planForPipeline.getNodes();
+    List<PlanNodeProto> planNodes = planForPipeline.getNodes();
 
     // Stage1Node
-    PlanNode stageNode = getNodesByIdentifier(planNodes, "managerDeploymentStage").get(0);
-    assertThat(stageNode.getAdviserObtainments().size()).isEqualTo(1);
+    PlanNodeProto stageNode = getNodesByIdentifier(planNodes, "managerDeploymentStage").get(0);
+    assertThat(stageNode.getAdviserObtainmentsList().size()).isEqualTo(1);
 
     // Advisor attached -> rollbackNode
     String advisorNodeId = ((OnFailAdviserParameters) kryoSerializer.asObject(
-                                stageNode.getAdviserObtainments().get(0).getParameters().toByteArray()))
+                                stageNode.getAdviserObtainments(0).getParameters().toByteArray()))
                                .getNextNodeId();
-    PlanNode rollbackPlanNode = getNodeByUUID(planNodes, advisorNodeId).get();
+    PlanNodeProto rollbackPlanNode = getNodeByUUID(planNodes, advisorNodeId).get();
     assertThat(rollbackPlanNode.getIdentifier()).isEqualTo("managerDeploymentStageRollback");
 
-    List<RollbackNode> childNodes = (JsonOrchestrationUtils.asObject(rollbackPlanNode.getStepParameters().toJson(),
+    List<RollbackNode> childNodes = (JsonOrchestrationUtils.asObject(rollbackPlanNode.getStepParameters(),
                                          RollbackOptionalChildChainStepParameters.class))
                                         .getChildNodes();
     assertThat(childNodes).hasSize(2);
 
     // First child -> Step Groups Rollback Node
-    PlanNode stepGroupsRollbackNode = getNodeByUUID(planNodes, childNodes.get(0).getNodeId()).get();
+    PlanNodeProto stepGroupsRollbackNode = getNodeByUUID(planNodes, childNodes.get(0).getNodeId()).get();
     assertThat(stepGroupsRollbackNode.getIdentifier())
         .isEqualTo(PlanCreatorConstants.STEP_GROUPS_ROLLBACK_NODE_IDENTIFIER);
     assertThat(childNodes.get(0).getDependentNodeIdentifier())
@@ -124,7 +124,7 @@ public class PipelinePlanTest extends CDNGBaseTest {
             + PlanCreatorConstants.EXECUTION_NODE_IDENTIFIER);
 
     // Second Child -> Execution Rollback Node
-    PlanNode executionRollbackNode = getNodeByUUID(planNodes, childNodes.get(1).getNodeId()).get();
+    PlanNodeProto executionRollbackNode = getNodeByUUID(planNodes, childNodes.get(1).getNodeId()).get();
     assertThat(executionRollbackNode.getIdentifier())
         .isEqualTo(PlanCreatorConstants.EXECUTION_ROLLBACK_NODE_IDENTIFIER);
     assertThat(childNodes.get(1).getDependentNodeIdentifier())
@@ -134,13 +134,13 @@ public class PipelinePlanTest extends CDNGBaseTest {
     // Step Groups Rollback Node Children
     List<RollbackNode> stepGroupsRollbackNodeChildren =
         (JsonOrchestrationUtils.asObject(
-             stepGroupsRollbackNode.getStepParameters().toJson(), RollbackOptionalChildChainStepParameters.class))
+             stepGroupsRollbackNode.getStepParameters(), RollbackOptionalChildChainStepParameters.class))
             .getChildNodes();
     assertThat(stepGroupsRollbackNodeChildren).hasSize(3);
 
     // Step Groups Rollback Node First Child -> Parallel Node
     RollbackNode parallelRollbackNode = stepGroupsRollbackNodeChildren.get(0);
-    PlanNode parallelRollbackPlanNode = getNodeByUUID(planNodes, parallelRollbackNode.getNodeId()).get();
+    PlanNodeProto parallelRollbackPlanNode = getNodeByUUID(planNodes, parallelRollbackNode.getNodeId()).get();
     assertThat(parallelRollbackPlanNode.getIdentifier())
         .isEqualTo(PlanCreatorConstants.PARALLEL_STEP_GROUPS_ROLLBACK_NODE_IDENTIFIER);
     assertThat(parallelRollbackNode.getDependentNodeIdentifier())
@@ -149,7 +149,7 @@ public class PipelinePlanTest extends CDNGBaseTest {
 
     List<RollbackNode> parallelNodeChildren =
         (JsonOrchestrationUtils.asObject(
-             parallelRollbackPlanNode.getStepParameters().toJson(), RollbackOptionalChildrenParameters.class))
+             parallelRollbackPlanNode.getStepParameters(), RollbackOptionalChildrenParameters.class))
             .getParallelNodes();
     assertThat(parallelNodeChildren).hasSize(1);
     assertThat(getNodeByUUID(planNodes, parallelNodeChildren.get(0).getNodeId()).get().getIdentifier())
@@ -174,19 +174,18 @@ public class PipelinePlanTest extends CDNGBaseTest {
 
     // Execution Rollback Node Children
     List<String> executionRollbackNodeChildIds =
-        (JsonOrchestrationUtils.asObject(
-             executionRollbackNode.getStepParameters().toJson(), SectionChainStepParameters.class))
+        (JsonOrchestrationUtils.asObject(executionRollbackNode.getStepParameters(), SectionChainStepParameters.class))
             .getChildNodeIds();
     assertThat(executionRollbackNodeChildIds).hasSize(2);
   }
 
-  List<PlanNode> getNodesByIdentifier(List<PlanNode> planNodes, String identifier) {
+  List<PlanNodeProto> getNodesByIdentifier(List<PlanNodeProto> planNodes, String identifier) {
     return planNodes.stream()
         .filter(planNode -> planNode.getIdentifier().equals(identifier))
         .collect(Collectors.toList());
   }
 
-  Optional<PlanNode> getNodeByUUID(List<PlanNode> planNodes, String uuid) {
+  Optional<PlanNodeProto> getNodeByUUID(List<PlanNodeProto> planNodes, String uuid) {
     return planNodes.stream().filter(planNode -> planNode.getUuid().equals(uuid)).findFirst();
   }
 }

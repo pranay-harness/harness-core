@@ -1,7 +1,7 @@
 package io.harness.executionplan.stepsdependency;
 
 import io.harness.executionplan.core.ExecutionPlanCreationContext;
-import io.harness.plan.PlanNode.PlanNodeBuilder;
+import io.harness.pms.sdk.core.plan.PlanNode.PlanNodeBuilder;
 
 public interface StepDependencyInstructor {
   /**

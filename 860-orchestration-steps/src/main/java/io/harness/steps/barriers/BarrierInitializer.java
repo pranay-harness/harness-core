@@ -33,7 +33,7 @@ public class BarrierInitializer implements SyncOrchestrationEventHandler {
             .filter(planNode -> planNode.getStepType().equals(BarrierStep.STEP_TYPE))
             .map(planNode -> {
               BarrierStepParameters stepParameters =
-                  JsonOrchestrationUtils.asObject(planNode.getStepParameters().toJson(), BarrierStepParameters.class);
+                  JsonOrchestrationUtils.asObject(planNode.getStepParameters(), BarrierStepParameters.class);
               return BarrierExecutionInstance.builder()
                   .uuid(generateUuid())
                   .name(planNode.getName())

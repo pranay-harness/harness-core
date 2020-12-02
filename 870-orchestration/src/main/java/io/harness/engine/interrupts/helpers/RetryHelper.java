@@ -11,9 +11,10 @@ import io.harness.engine.ExecutionEngineDispatcher;
 import io.harness.engine.OrchestrationEngine;
 import io.harness.engine.executions.node.NodeExecutionService;
 import io.harness.execution.NodeExecution;
-import io.harness.plan.PlanNode;
+import io.harness.plan.PlanNodeUtils;
 import io.harness.pms.ambiance.Ambiance;
 import io.harness.pms.execution.Status;
+import io.harness.pms.plan.PlanNodeProto;
 import io.harness.pms.sdk.core.steps.io.StepParameters;
 
 import com.google.common.base.Preconditions;
@@ -33,7 +34,7 @@ public class RetryHelper {
 
   public void retryNodeExecution(String nodeExecutionId, StepParameters parameters) {
     NodeExecution nodeExecution = Preconditions.checkNotNull(nodeExecutionService.get(nodeExecutionId));
-    PlanNode node = nodeExecution.getNode();
+    PlanNodeProto node = nodeExecution.getNode();
     String newUuid = generateUuid();
     Ambiance ambiance = AmbianceUtils.cloneForFinish(nodeExecution.getAmbiance());
     ambiance = ambiance.toBuilder().addLevels(LevelUtils.buildLevelFromPlanNode(newUuid, node)).build();
@@ -46,9 +47,9 @@ public class RetryHelper {
 
   private NodeExecution cloneForRetry(
       NodeExecution nodeExecution, StepParameters parameters, String newUuid, Ambiance ambiance) {
-    PlanNode newPlanNode = nodeExecution.getNode();
+    PlanNodeProto newPlanNode = nodeExecution.getNode();
     if (parameters != null) {
-      newPlanNode = nodeExecution.getNode().cloneForRetry(parameters);
+      newPlanNode = PlanNodeUtils.cloneForRetry(nodeExecution.getNode(), parameters);
     }
     List<String> retryIds = isEmpty(nodeExecution.getRetryIds()) ? new ArrayList<>() : nodeExecution.getRetryIds();
     retryIds.add(0, nodeExecution.getUuid());
@@ -60,7 +61,7 @@ public class RetryHelper {
         .startTs(null)
         .endTs(null)
         .initialWaitDuration(null)
-        .resolvedStepParameters(null)
+        .resolvedStepParameters((StepParameters) null)
         .notifyId(nodeExecution.getNotifyId())
         .parentId(nodeExecution.getParentId())
         .nextId(nodeExecution.getNextId())

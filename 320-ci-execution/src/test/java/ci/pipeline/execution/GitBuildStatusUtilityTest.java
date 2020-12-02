@@ -15,10 +15,10 @@ import io.harness.executionplan.CIExecutionPlanTestHelper;
 import io.harness.executionplan.CIExecutionTest;
 import io.harness.git.GitClientHelper;
 import io.harness.ngpipeline.status.BuildStatusUpdateParameter;
-import io.harness.plan.PlanNode;
 import io.harness.plancreators.IntegrationStagePlanCreator;
 import io.harness.pms.ambiance.Ambiance;
 import io.harness.pms.execution.Status;
+import io.harness.pms.plan.PlanNodeProto;
 import io.harness.rule.Owner;
 import io.harness.service.DelegateGrpcClientWrapper;
 import io.harness.stateutils.buildstate.ConnectorUtils;
@@ -241,7 +241,7 @@ public class GitBuildStatusUtilityTest extends CIExecutionTest {
                                                                     .build())
                                     .integrationStage(null)
                                     .build())
-        .node(PlanNode.builder().group(IntegrationStagePlanCreator.GROUP_NAME).build())
+        .node(PlanNodeProto.newBuilder().setGroup(IntegrationStagePlanCreator.GROUP_NAME).build())
         .build();
   }
 }

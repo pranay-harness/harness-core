@@ -16,7 +16,7 @@ import io.harness.executionplan.core.ExecutionPlanCreationContext;
 import io.harness.executionplan.core.ExecutionPlanCreatorResponse;
 import io.harness.executionplan.core.PlanCreatorSearchContext;
 import io.harness.executionplan.core.impl.ExecutionPlanCreationContextImpl;
-import io.harness.plan.PlanNode;
+import io.harness.pms.sdk.core.plan.PlanNode;
 import io.harness.rule.Owner;
 
 import com.google.inject.Inject;

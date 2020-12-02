@@ -15,8 +15,6 @@ import io.harness.facilitator.modes.task.TaskExecutableResponse;
 import io.harness.interrupts.Interrupt;
 import io.harness.interrupts.InterruptEffect;
 import io.harness.plan.Plan;
-import io.harness.plan.PlanNode;
-import io.harness.pms.execution.failure.FailureInfo;
 import io.harness.spring.AliasRegistrar;
 import io.harness.state.io.StepOutcomeRef;
 import io.harness.timeout.TimeoutDetails;
@@ -27,7 +25,6 @@ import java.util.Map;
 public class OrchestrationBeansAliasRegistrar implements AliasRegistrar {
   @Override
   public void register(Map<String, Class<?>> orchestrationElements) {
-    orchestrationElements.put("planNode", PlanNode.class);
     orchestrationElements.put("plan", Plan.class);
     orchestrationElements.put("asyncExecutableResponse", AsyncExecutableResponse.class);
     orchestrationElements.put("childChainResponse", ChildChainResponse.class);

@@ -46,7 +46,7 @@ import io.harness.ngpipeline.pipeline.executions.beans.PipelineExecutionSummary.
 import io.harness.ngpipeline.pipeline.executions.beans.PipelineExecutionSummaryFilter;
 import io.harness.ngpipeline.pipeline.service.NGPipelineService;
 import io.harness.plan.Plan;
-import io.harness.plan.PlanNode;
+import io.harness.pms.plan.PlanNodeProto;
 import io.harness.repositories.pipeline.PipelineExecutionRepository;
 import io.harness.rule.Owner;
 import io.harness.service.GraphGenerationService;
@@ -107,7 +107,7 @@ public class NgPipelineExecutionServiceImplTest extends CategoryTest {
   public void testUpdateStatusForGivenStageNode() {
     NodeExecution nodeExecution =
         NodeExecution.builder()
-            .node(PlanNode.builder().uuid("planNodeId").group(StepOutcomeGroup.STAGE.name()).build())
+            .node(PlanNodeProto.newBuilder().setUuid("planNodeId").setGroup(StepOutcomeGroup.STAGE.name()).build())
             .build();
     PipelineExecutionSummary pipelineExecutionSummary = PipelineExecutionSummary.builder().build();
     doReturn(pipelineExecutionSummary)
@@ -131,7 +131,9 @@ public class NgPipelineExecutionServiceImplTest extends CategoryTest {
   @Category(UnitTests.class)
   public void testUpdateStatusForPipelineNode() {
     NodeExecution nodeExecution =
-        NodeExecution.builder().node(PlanNode.builder().group(StepOutcomeGroup.PIPELINE.name()).build()).build();
+        NodeExecution.builder()
+            .node(PlanNodeProto.newBuilder().setGroup(StepOutcomeGroup.PIPELINE.name()).build())
+            .build();
     PipelineExecutionSummary pipelineExecutionSummary = PipelineExecutionSummary.builder().build();
     doReturn(pipelineExecutionSummary)
         .when(ngPipelineExecutionService)
@@ -221,7 +223,7 @@ public class NgPipelineExecutionServiceImplTest extends CategoryTest {
 
   private void shouldReturnStageGraph() {
     NodeExecution stageNodeExecution =
-        NodeExecution.builder().node(PlanNode.builder().uuid("planNodeId").build()).build();
+        NodeExecution.builder().node(PlanNodeProto.newBuilder().setUuid("planNodeId").build()).build();
     doReturn(Optional.of(PipelineExecutionSummary.builder().build()))
         .when(pipelineExecutionRepository)
         .findByPlanExecutionId(any());

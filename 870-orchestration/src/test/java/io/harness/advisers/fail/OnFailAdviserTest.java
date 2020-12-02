@@ -15,12 +15,13 @@ import io.harness.adviser.advise.NextStepAdvise;
 import io.harness.category.element.UnitTests;
 import io.harness.engine.executions.node.NodeExecutionService;
 import io.harness.execution.NodeExecution;
-import io.harness.plan.PlanNode;
 import io.harness.pms.ambiance.Ambiance;
 import io.harness.pms.ambiance.Level;
 import io.harness.pms.execution.Status;
 import io.harness.pms.execution.failure.FailureInfo;
 import io.harness.pms.execution.failure.FailureType;
+import io.harness.pms.plan.PlanNodeProto;
+import io.harness.pms.sdk.core.plan.PlanNode;
 import io.harness.pms.steps.StepType;
 import io.harness.rule.Owner;
 import io.harness.serializer.KryoSerializer;
@@ -69,11 +70,11 @@ public class OnFailAdviserTest extends OrchestrationTestBase {
     NodeExecution nodeExecution = NodeExecution.builder()
                                       .uuid(NODE_EXECUTION_ID)
                                       .ambiance(ambiance)
-                                      .node(PlanNode.builder()
-                                                .uuid(NODE_SETUP_ID)
-                                                .name(NODE_NAME)
-                                                .identifier("dummy")
-                                                .stepType(StepType.newBuilder().setType("DUMMY").build())
+                                      .node(PlanNodeProto.newBuilder()
+                                                .setUuid(NODE_SETUP_ID)
+                                                .setName(NODE_NAME)
+                                                .setIdentifier("dummy")
+                                                .setStepType(StepType.newBuilder().setType("DUMMY").build())
                                                 .build())
                                       .startTs(System.currentTimeMillis())
                                       .status(Status.FAILED)

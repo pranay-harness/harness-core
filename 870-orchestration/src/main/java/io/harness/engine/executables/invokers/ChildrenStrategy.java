@@ -23,9 +23,10 @@ import io.harness.facilitator.modes.children.ChildrenExecutable;
 import io.harness.facilitator.modes.children.ChildrenExecutableResponse;
 import io.harness.facilitator.modes.children.ChildrenExecutableResponse.Child;
 import io.harness.plan.Plan;
-import io.harness.plan.PlanNode;
 import io.harness.pms.ambiance.Ambiance;
 import io.harness.pms.execution.Status;
+import io.harness.pms.plan.PlanNodeProto;
+import io.harness.pms.sdk.core.plan.PlanNode;
 import io.harness.pms.sdk.core.steps.io.StepResponse;
 import io.harness.registries.state.StepRegistry;
 import io.harness.waiter.NotifyCallback;
@@ -71,7 +72,7 @@ public class ChildrenStrategy implements ExecuteStrategy {
   }
 
   private ChildrenExecutable extractChildrenExecutable(NodeExecution nodeExecution) {
-    PlanNode node = nodeExecution.getNode();
+    PlanNodeProto node = nodeExecution.getNode();
     return (ChildrenExecutable) stepRegistry.obtain(node.getStepType());
   }
 
@@ -83,7 +84,7 @@ public class ChildrenStrategy implements ExecuteStrategy {
     for (Child child : response.getChildren()) {
       String uuid = generateUuid();
       callbackIds.add(uuid);
-      PlanNode node = plan.fetchNode(child.getChildNodeId());
+      PlanNodeProto node = plan.fetchNode(child.getChildNodeId());
       Ambiance clonedAmbiance = AmbianceUtils.cloneForChild(ambiance, LevelUtils.buildLevelFromPlanNode(uuid, node));
       NodeExecution childNodeExecution = NodeExecution.builder()
                                              .uuid(uuid)

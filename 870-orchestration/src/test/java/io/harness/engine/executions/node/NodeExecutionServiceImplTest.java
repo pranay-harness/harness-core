@@ -8,8 +8,9 @@ import static org.assertj.core.api.Assertions.assertThat;
 import io.harness.OrchestrationTestBase;
 import io.harness.category.element.UnitTests;
 import io.harness.execution.NodeExecution;
-import io.harness.plan.PlanNode;
 import io.harness.pms.execution.Status;
+import io.harness.pms.plan.PlanNodeProto;
+import io.harness.pms.sdk.core.plan.PlanNode;
 import io.harness.pms.steps.StepType;
 import io.harness.rule.Owner;
 import io.harness.testlib.RealMongo;
@@ -31,11 +32,11 @@ public class NodeExecutionServiceImplTest extends OrchestrationTestBase {
     NodeExecution nodeExecution = NodeExecution.builder()
                                       .uuid(nodeExecutionId)
                                       .ambiance(AmbianceTestUtils.buildAmbiance())
-                                      .node(PlanNode.builder()
-                                                .uuid(generateUuid())
-                                                .name("name")
-                                                .identifier("dummy")
-                                                .stepType(StepType.newBuilder().setType("DUMMY").build())
+                                      .node(PlanNodeProto.newBuilder()
+                                                .setUuid(generateUuid())
+                                                .setName("name")
+                                                .setIdentifier("dummy")
+                                                .setStepType(StepType.newBuilder().setType("DUMMY").build())
                                                 .build())
                                       .startTs(System.currentTimeMillis())
                                       .status(Status.QUEUED)

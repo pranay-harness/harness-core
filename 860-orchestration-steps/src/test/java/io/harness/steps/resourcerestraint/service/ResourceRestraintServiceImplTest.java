@@ -19,11 +19,12 @@ import io.harness.engine.executions.plan.PlanExecutionService;
 import io.harness.exception.InvalidRequestException;
 import io.harness.execution.NodeExecution;
 import io.harness.execution.PlanExecution;
-import io.harness.plan.PlanNode;
 import io.harness.pms.ambiance.Ambiance;
 import io.harness.pms.ambiance.Level;
 import io.harness.pms.execution.ExecutionMode;
 import io.harness.pms.execution.Status;
+import io.harness.pms.plan.PlanNodeProto;
+import io.harness.pms.sdk.core.plan.PlanNode;
 import io.harness.pms.steps.StepType;
 import io.harness.repositories.ResourceRestraintInstanceRepository;
 import io.harness.rule.Owner;
@@ -203,11 +204,11 @@ public class ResourceRestraintServiceImplTest extends OrchestrationStepsTestBase
     when(nodeExecutionService.getByPlanNodeUuid(any(), any()))
         .thenReturn(NodeExecution.builder()
                         .ambiance(ambiance)
-                        .node(PlanNode.builder()
-                                  .uuid(generateUuid())
-                                  .stepType(StepType.newBuilder().setType("DUMMY").build())
-                                  .name("dummy")
-                                  .identifier("dummy")
+                        .node(PlanNodeProto.newBuilder()
+                                  .setUuid(generateUuid())
+                                  .setStepType(StepType.newBuilder().setType("DUMMY").build())
+                                  .setName("dummy")
+                                  .setIdentifier("dummy")
                                   .build())
                         .mode(ExecutionMode.SYNC)
                         .status(Status.SUCCEEDED)

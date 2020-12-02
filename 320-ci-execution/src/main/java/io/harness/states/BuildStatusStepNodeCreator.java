@@ -4,9 +4,9 @@ import static io.harness.data.structure.UUIDGenerator.generateUuid;
 
 import io.harness.facilitator.OrchestrationFacilitatorType;
 import io.harness.ngpipeline.status.BuildStatusUpdateParameter;
-import io.harness.plan.PlanNode;
 import io.harness.pms.facilitators.FacilitatorObtainment;
 import io.harness.pms.facilitators.FacilitatorType;
+import io.harness.pms.sdk.core.plan.PlanNode;
 
 public class BuildStatusStepNodeCreator {
   private static final String POST_COMMIT_STATUS_NAME = "POST_COMMIT_STATUS";

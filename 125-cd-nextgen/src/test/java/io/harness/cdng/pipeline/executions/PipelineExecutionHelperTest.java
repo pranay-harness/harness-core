@@ -29,9 +29,9 @@ import io.harness.ngpipeline.pipeline.executions.beans.PipelineExecutionSummary;
 import io.harness.ngpipeline.pipeline.executions.beans.PipelineExecutionSummary.PipelineExecutionSummaryKeys;
 import io.harness.ngpipeline.pipeline.executions.beans.ServiceExecutionSummary;
 import io.harness.ngpipeline.pipeline.executions.beans.StageExecutionSummary;
-import io.harness.plan.PlanNode;
 import io.harness.pms.execution.Status;
 import io.harness.pms.execution.failure.FailureInfo;
+import io.harness.pms.plan.PlanNodeProto;
 import io.harness.rule.Owner;
 import io.harness.yaml.core.ParallelStageElement;
 import io.harness.yaml.core.StageElement;
@@ -239,7 +239,10 @@ public class PipelineExecutionHelperTest extends CDNGBaseTest {
     PipelineExecutionSummary pipelineExecutionSummary = PipelineExecutionSummary.builder().build();
 
     pipelineExecutionHelper.updatePipelineExecutionStatus(pipelineExecutionSummary,
-        NodeExecution.builder().node(PlanNode.builder().uuid("node1").build()).status(Status.ERRORED).build());
+        NodeExecution.builder()
+            .node(PlanNodeProto.newBuilder().setUuid("node1").build())
+            .status(Status.ERRORED)
+            .build());
     assertThat(pipelineExecutionSummary.getExecutionStatus()).isEqualTo(ExecutionStatus.FAILED);
   }
 

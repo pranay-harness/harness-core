@@ -12,10 +12,11 @@ import io.harness.engine.executions.node.NodeExecutionService;
 import io.harness.engine.executions.plan.PlanExecutionService;
 import io.harness.execution.NodeExecution;
 import io.harness.execution.PlanExecution;
-import io.harness.plan.PlanNode;
 import io.harness.pms.ambiance.Ambiance;
 import io.harness.pms.ambiance.Level;
 import io.harness.pms.execution.Status;
+import io.harness.pms.plan.PlanNodeProto;
+import io.harness.pms.sdk.core.plan.PlanNode;
 import io.harness.pms.steps.StepType;
 import io.harness.rule.Owner;
 import io.harness.testlib.RealMongo;
@@ -56,11 +57,11 @@ public class RetryAdviseHandlerTest extends OrchestrationTestBase {
     NodeExecution nodeExecution = NodeExecution.builder()
                                       .uuid(NODE_EXECUTION_ID)
                                       .ambiance(ambiance)
-                                      .node(PlanNode.builder()
-                                                .uuid(NODE_SETUP_ID)
-                                                .name("DUMMY")
-                                                .identifier("dummy")
-                                                .stepType(StepType.newBuilder().setType("DUMMY").build())
+                                      .node(PlanNodeProto.newBuilder()
+                                                .setUuid(NODE_SETUP_ID)
+                                                .setName("DUMMY")
+                                                .setIdentifier("dummy")
+                                                .setStepType(StepType.newBuilder().setType("DUMMY").build())
                                                 .build())
                                       .startTs(System.currentTimeMillis())
                                       .status(Status.FAILED)

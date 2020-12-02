@@ -29,6 +29,8 @@ import io.harness.serializer.spring.converters.failureinfo.FailureInfoReadConver
 import io.harness.serializer.spring.converters.failureinfo.FailureInfoWriteConverter;
 import io.harness.serializer.spring.converters.level.LevelReadConverter;
 import io.harness.serializer.spring.converters.level.LevelWriteConverter;
+import io.harness.serializer.spring.converters.plannode.PlanNodeProtoReadConverter;
+import io.harness.serializer.spring.converters.plannode.PlanNodeProtoWriteConverter;
 import io.harness.serializer.spring.converters.refobject.RefObjectReadConverter;
 import io.harness.serializer.spring.converters.refobject.RefObjectWriteConverter;
 import io.harness.serializer.spring.converters.reftype.RefTypeReadConverter;
@@ -97,5 +99,6 @@ public class OrchestrationRegistrars {
       StepTypeWriteConverter.class, FacilitatorObtainmentReadConverter.class, FacilitatorObtainmentWriteConverter.class,
       RefTypeReadConverter.class, RefTypeWriteConverter.class, RefObjectReadConverter.class,
       RefObjectWriteConverter.class, StepInfoReadConverter.class, StepInfoWriteConverter.class,
-      FailureInfoReadConverter.class, FailureInfoWriteConverter.class);
+      FailureInfoReadConverter.class, FailureInfoWriteConverter.class, PlanNodeProtoReadConverter.class,
+      PlanNodeProtoWriteConverter.class);
 }

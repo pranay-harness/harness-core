@@ -18,9 +18,10 @@ import io.harness.execution.NodeExecution;
 import io.harness.execution.NodeExecution.NodeExecutionKeys;
 import io.harness.facilitator.modes.async.AsyncExecutable;
 import io.harness.facilitator.modes.async.AsyncExecutableResponse;
-import io.harness.plan.PlanNode;
 import io.harness.pms.ambiance.Ambiance;
 import io.harness.pms.execution.Status;
+import io.harness.pms.plan.PlanNodeProto;
+import io.harness.pms.sdk.core.plan.PlanNode;
 import io.harness.pms.sdk.core.steps.io.StepResponse;
 import io.harness.registries.state.StepRegistry;
 import io.harness.waiter.NotifyCallback;
@@ -65,7 +66,7 @@ public class AsyncStrategy implements ExecuteStrategy {
   private void handleResponse(Ambiance ambiance, AsyncExecutableResponse response) {
     NodeExecution nodeExecution =
         Preconditions.checkNotNull(nodeExecutionService.get(AmbianceUtils.obtainCurrentRuntimeId(ambiance)));
-    PlanNode node = nodeExecution.getNode();
+    PlanNodeProto node = nodeExecution.getNode();
     if (isEmpty(response.getCallbackIds())) {
       log.error("StepResponse has no callbackIds - currentState : " + node.getName()
           + ", nodeExecutionId: " + nodeExecution.getUuid());
@@ -79,7 +80,7 @@ public class AsyncStrategy implements ExecuteStrategy {
   }
 
   private AsyncExecutable extractAsyncExecutable(NodeExecution nodeExecution) {
-    PlanNode node = nodeExecution.getNode();
+    PlanNodeProto node = nodeExecution.getNode();
     return (AsyncExecutable) stepRegistry.obtain(node.getStepType());
   }
 }
