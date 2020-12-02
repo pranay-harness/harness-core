@@ -30,7 +30,6 @@ import io.harness.managerclient.DelegateVersions;
 import io.harness.managerclient.GetDelegatePropertiesRequest;
 import io.harness.managerclient.GetDelegatePropertiesResponse;
 import io.harness.managerclient.HttpsCertRequirement;
-import io.harness.managerclient.WatcherVersion;
 import io.harness.manifest.ManifestCollectionResponseHandler;
 import io.harness.perpetualtask.PerpetualTaskLogContext;
 import io.harness.perpetualtask.connector.ConnectorHearbeatPublisher;
@@ -140,12 +139,6 @@ public class DelegateAgentResource {
                       .stream()
                       .map(requestEntry -> {
                         switch (requestEntry.getTypeUrl().split("/")[1]) {
-                          case "io.harness.managerclient.WatcherVersionQuery":
-                            return Any.pack(
-                                WatcherVersion.newBuilder()
-                                    .setWatcherVersion(
-                                        accountService.getDelegateConfiguration(accountId).getWatcherVersion())
-                                    .build());
                           case "io.harness.managerclient.DelegateVersionsQuery":
                             return Any.pack(
                                 DelegateVersions.newBuilder()

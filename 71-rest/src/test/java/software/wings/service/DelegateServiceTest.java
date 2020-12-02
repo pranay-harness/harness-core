@@ -331,7 +331,7 @@ public class DelegateServiceTest extends WingsBaseTest {
   public void shouldGetDelegateStatus() {
     String accountId = generateUuid();
     when(accountService.getDelegateConfiguration(anyString()))
-        .thenReturn(DelegateConfiguration.builder().watcherVersion(VERSION).delegateVersions(asList(VERSION)).build());
+        .thenReturn(DelegateConfiguration.builder().delegateVersions(asList(VERSION)).build());
     Delegate delegate = createDelegateBuilder().build();
 
     delegate.setAccountId(accountId);
@@ -359,7 +359,7 @@ public class DelegateServiceTest extends WingsBaseTest {
   public void shouldGetDelegateStatus2WithoutScalingGroups() {
     String accountId = generateUuid();
     when(accountService.getDelegateConfiguration(anyString()))
-        .thenReturn(DelegateConfiguration.builder().watcherVersion(VERSION).delegateVersions(asList(VERSION)).build());
+        .thenReturn(DelegateConfiguration.builder().delegateVersions(asList(VERSION)).build());
 
     Delegate deletedDelegate = createDelegateBuilder().build();
     deletedDelegate.setAccountId(accountId);
@@ -386,7 +386,7 @@ public class DelegateServiceTest extends WingsBaseTest {
   public void shouldGetDelegateStatus2ScalingGroupHasCorrectItems() {
     String accountId = generateUuid();
     when(accountService.getDelegateConfiguration(anyString()))
-        .thenReturn(DelegateConfiguration.builder().watcherVersion(VERSION).delegateVersions(asList(VERSION)).build());
+        .thenReturn(DelegateConfiguration.builder().delegateVersions(asList(VERSION)).build());
 
     Delegate deletedDelegate = createDelegateBuilder().build();
     deletedDelegate.setAccountId(accountId);
@@ -453,7 +453,7 @@ public class DelegateServiceTest extends WingsBaseTest {
   public void shouldGetDelegateStatus2ScalingGroupEmpty() {
     String accountId = generateUuid();
     when(accountService.getDelegateConfiguration(anyString()))
-        .thenReturn(DelegateConfiguration.builder().watcherVersion(VERSION).delegateVersions(asList(VERSION)).build());
+        .thenReturn(DelegateConfiguration.builder().delegateVersions(asList(VERSION)).build());
 
     Delegate deletedDelegate = createDelegateBuilder().build();
     deletedDelegate.setAccountId(accountId);

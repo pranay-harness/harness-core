@@ -476,36 +476,16 @@ public class AccountServiceTest extends WingsBaseTest {
   @Owner(developers = PUNEET)
   @Category(UnitTests.class)
   public void shouldGetDelegateConfiguration() {
-    String accountId =
-        wingsPersistence.save(anAccount()
-                                  .withCompanyName(HARNESS_NAME)
-                                  .withDelegateConfiguration(DelegateConfiguration.builder()
-                                                                 .watcherVersion("1.0.1")
-                                                                 .delegateVersions(asList("1.0.0", "1.0.1"))
-                                                                 .build())
-                                  .build());
-    assertThat(accountService.getDelegateConfiguration(accountId))
-        .hasFieldOrPropertyWithValue("watcherVersion", "1.0.1")
-        .hasFieldOrPropertyWithValue("delegateVersions", asList("1.0.0", "1.0.1"));
-  }
-
-  @Test
-  @Owner(developers = PUNEET)
-  @Category(UnitTests.class)
-  public void shouldGetDelegateConfigurationFromGlobalAccount() {
     wingsPersistence.save(anAccount()
                               .withUuid(GLOBAL_ACCOUNT_ID)
                               .withCompanyName(HARNESS_NAME)
-                              .withDelegateConfiguration(DelegateConfiguration.builder()
-                                                             .watcherVersion("globalVersion")
-                                                             .delegateVersions(asList("globalVersion"))
-                                                             .build())
+                              .withDelegateConfiguration(
+                                  DelegateConfiguration.builder().delegateVersions(asList("globalVersion")).build())
                               .build());
 
     String accountId = wingsPersistence.save(anAccount().withCompanyName(HARNESS_NAME).build());
 
     assertThat(accountService.getDelegateConfiguration(accountId))
-        .hasFieldOrPropertyWithValue("watcherVersion", "globalVersion")
         .hasFieldOrPropertyWithValue("delegateVersions", asList("globalVersion"));
   }
 

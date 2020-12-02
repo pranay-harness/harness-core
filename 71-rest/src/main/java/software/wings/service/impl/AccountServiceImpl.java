@@ -30,7 +30,6 @@ import static software.wings.beans.SystemCatalog.CatalogType.APPSTACK;
 import static java.lang.System.currentTimeMillis;
 import static java.time.Duration.ofDays;
 import static java.time.Duration.ofHours;
-import static java.util.Arrays.asList;
 import static java.util.Collections.emptyMap;
 import static java.util.Collections.singletonList;
 import static org.apache.commons.lang3.StringUtils.isBlank;
@@ -180,7 +179,6 @@ import javax.validation.constraints.NotNull;
 import javax.validation.executable.ValidateOnExecution;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.validator.routines.UrlValidator;
 import org.mongodb.morphia.Key;
 import org.mongodb.morphia.Morphia;
@@ -852,32 +850,12 @@ public class AccountServiceImpl implements AccountService {
       throw new InvalidRequestException("Deleted AccountId: " + accountId);
     }
 
-    List<Account> accounts = wingsPersistence.createQuery(Account.class, excludeAuthorityCount)
-                                 .field(Mapper.ID_KEY)
-                                 .in(asList(accountId, GLOBAL_ACCOUNT_ID))
-                                 .project("delegateConfiguration", true)
-                                 .asList();
+    Account account = wingsPersistence.createQuery(Account.class, excludeAuthorityCount)
+                          .filter(AccountKeys.uuid, GLOBAL_ACCOUNT_ID)
+                          .project("delegateConfiguration", true)
+                          .get();
 
-    Optional<Account> specificAccount =
-        accounts.stream().filter(account -> StringUtils.equals(accountId, account.getUuid())).findFirst();
-
-    if (!specificAccount.isPresent()) {
-      throw new InvalidRequestException("Invalid AccountId: " + accountId);
-    }
-
-    if (specificAccount.get().getDelegateConfiguration() != null
-        && !isBlank(specificAccount.get().getDelegateConfiguration().getWatcherVersion())) {
-      return specificAccount.get().getDelegateConfiguration();
-    }
-
-    Optional<Account> fallbackAccount =
-        accounts.stream().filter(account -> StringUtils.equals(GLOBAL_ACCOUNT_ID, account.getUuid())).findFirst();
-
-    if (!fallbackAccount.isPresent()) {
-      throw new InvalidRequestException("Global account ID is missing");
-    }
-
-    return fallbackAccount.get().getDelegateConfiguration();
+    return account.getDelegateConfiguration();
   }
 
   @Override
