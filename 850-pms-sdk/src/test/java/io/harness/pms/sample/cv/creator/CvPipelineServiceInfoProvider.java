@@ -1,5 +1,7 @@
 package io.harness.pms.sample.cv.creator;
 
+import io.harness.plancreator.pipeline.NGPipelinePlanCreator;
+import io.harness.plancreator.stages.StagesPlanCreator;
 import io.harness.pms.sdk.core.pipeline.filters.FilterJsonCreator;
 import io.harness.pms.sdk.core.pipeline.filters.PipelineFilterJsonCreator;
 import io.harness.pms.sdk.core.plan.creation.creators.PartialPlanCreator;
@@ -20,7 +22,8 @@ public class CvPipelineServiceInfoProvider implements PipelineServiceInfoProvide
   @Override
   public List<PartialPlanCreator<?>> getPlanCreators() {
     List<PartialPlanCreator<?>> planCreators = new ArrayList<>();
-    planCreators.add(new PipelinePlanCreator());
+    planCreators.add(new NGPipelinePlanCreator());
+    planCreators.add(new StagesPlanCreator());
     planCreators.add(new CvStepPlanCreator());
     return planCreators;
   }

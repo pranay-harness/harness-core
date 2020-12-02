@@ -72,7 +72,7 @@ public class PlanCreatorService extends PlanCreationServiceImplBase {
       return finalResponse;
     }
 
-    PlanCreationContext ctx = new PlanCreationContext(null);
+    PlanCreationContext ctx = PlanCreationContext.builder().build();
     Map<String, YamlField> dependencies = new HashMap<>(initialDependencies);
     while (!dependencies.isEmpty()) {
       createPlanForDependencies(ctx, finalResponse, dependencies);
@@ -104,12 +104,12 @@ public class PlanCreatorService extends PlanCreationServiceImplBase {
         PartialPlanCreator planCreator = planCreatorOptional.get();
         Class<?> cls = planCreator.getFieldClass();
         if (YamlField.class.isAssignableFrom(cls)) {
-          return planCreator.createPlanForField(ctx, field);
+          return planCreator.createPlanForField(PlanCreationContext.cloneWithCurrentField(ctx, field), field);
         }
 
         try {
           Object obj = YamlUtils.read(field.getNode().toString(), cls);
-          return planCreator.createPlanForField(ctx, obj);
+          return planCreator.createPlanForField(PlanCreationContext.cloneWithCurrentField(ctx, field), obj);
         } catch (IOException e) {
           throw new InvalidRequestException("Invalid yaml", e);
         }

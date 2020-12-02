@@ -1,5 +1,7 @@
 package io.harness.pms.sample.cd.creator;
 
+import io.harness.plancreator.pipeline.NGPipelinePlanCreator;
+import io.harness.plancreator.stages.StagesPlanCreator;
 import io.harness.pms.sample.cd.creator.filters.DeploymentStageFilterCreator;
 import io.harness.pms.sdk.core.pipeline.filters.FilterJsonCreator;
 import io.harness.pms.sdk.core.pipeline.filters.PipelineFilterJsonCreator;
@@ -22,7 +24,8 @@ public class CdPipelineServiceInfoProvider implements PipelineServiceInfoProvide
   @Override
   public List<PartialPlanCreator<?>> getPlanCreators() {
     List<PartialPlanCreator<?>> planCreators = new ArrayList<>();
-    planCreators.add(new PipelinePlanCreator());
+    planCreators.add(new NGPipelinePlanCreator());
+    planCreators.add(new StagesPlanCreator());
     planCreators.add(new DeploymentStagePlanCreator());
     planCreators.add(new CdStepPlanCreator());
     return planCreators;
