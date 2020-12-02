@@ -22,7 +22,6 @@ import static java.lang.String.format;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static java.util.stream.Collectors.toList;
 
-import io.harness.connector.apis.dto.ConnectorFilter;
 import io.harness.connector.apis.dto.ConnectorInfoDTO;
 import io.harness.data.structure.NullSafeImmutableMap;
 import io.harness.delegate.beans.TaskData;
@@ -215,7 +214,6 @@ public class YamlGitServiceImpl implements YamlGitService {
 
   @VisibleForTesting
   List<ConnectorInfoDTO> getGitConnectors(String accountId) {
-    ConnectorFilter connectorFilter = ConnectorFilter.builder().type(ConnectorType.GIT).build();
     // TODO(abhinav): Refactor after connector impl
     return null;
   }

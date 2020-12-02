@@ -1,7 +1,7 @@
 package io.harness.connector.services;
 
 import io.harness.connector.apis.dto.stats.ConnectorStatistics;
-import io.harness.connector.entities.Connector.Scope;
+import io.harness.encryption.Scope;
 
 public interface ConnectorService extends ConnectorCrudService, ConnectorValidationService, GitRepoConnectorService {
   boolean validateTheIdentifierIsUnique(

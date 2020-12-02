@@ -6,13 +6,14 @@ import io.harness.NGCommonEntityConstants;
 import io.harness.NGResourceFilterConstants;
 import io.harness.connector.apis.dto.ConnectorCatalogueResponseDTO;
 import io.harness.connector.apis.dto.ConnectorDTO;
+import io.harness.connector.apis.dto.ConnectorListFilter;
 import io.harness.connector.apis.dto.ConnectorResponseDTO;
 import io.harness.connector.apis.dto.stats.ConnectorStatistics;
-import io.harness.connector.entities.Connector.Scope;
 import io.harness.connector.services.ConnectorService;
 import io.harness.delegate.beans.connector.ConnectorCategory;
 import io.harness.delegate.beans.connector.ConnectorType;
 import io.harness.delegate.beans.connector.ConnectorValidationResult;
+import io.harness.encryption.Scope;
 import io.harness.ng.beans.PageResponse;
 import io.harness.ng.core.dto.ErrorDTO;
 import io.harness.ng.core.dto.FailureDTO;
@@ -81,6 +82,7 @@ public class ConnectorResource {
   }
 
   @GET
+  @Deprecated
   @ApiOperation(value = "Gets Connector list", nickname = "getConnectorList")
   public ResponseDTO<PageResponse<ConnectorResponseDTO>> list(
       @QueryParam(NGResourceFilterConstants.PAGE_KEY) @DefaultValue("0") int page,
@@ -93,6 +95,18 @@ public class ConnectorResource {
       @QueryParam(CATEGORY_KEY) ConnectorCategory category) {
     return ResponseDTO.newResponse(getNGPageResponse(connectorService.list(
         page, size, accountIdentifier, orgIdentifier, projectIdentifier, searchTerm, type, category)));
+  }
+
+  @POST
+  @Path("/listV2")
+  @ApiOperation(value = "Gets Connector list", nickname = "getConnectorListV2")
+  public ResponseDTO<PageResponse<ConnectorResponseDTO>> list(
+      @QueryParam(NGResourceFilterConstants.PAGE_KEY) @DefaultValue("0") int page,
+      @QueryParam(NGResourceFilterConstants.SIZE_KEY) @DefaultValue("100") int size,
+      @NotEmpty @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier,
+      ConnectorListFilter connectorListFilter) {
+    return ResponseDTO.newResponse(
+        getNGPageResponse(connectorService.list(page, size, accountIdentifier, connectorListFilter)));
   }
 
   @POST

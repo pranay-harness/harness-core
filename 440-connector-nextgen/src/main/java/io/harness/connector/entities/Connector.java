@@ -41,7 +41,7 @@ public abstract class Connector implements PersistentEntity, NGAccountAccess {
   @NotEmpty @EntityIdentifier String identifier;
   @NotEmpty @EntityName String name;
   // todo deepak: Where we should keep the scope, it will be used by everyone
-  @NotEmpty Scope scope;
+  @NotEmpty io.harness.encryption.Scope scope;
   String description;
   @Trimmed @NotEmpty String accountIdentifier;
   @Trimmed String orgIdentifier;
@@ -55,11 +55,10 @@ public abstract class Connector implements PersistentEntity, NGAccountAccess {
   @CreatedDate Long createdAt;
   @LastModifiedDate Long lastModifiedAt;
   @Version Long version;
+  // todo @deepak: Change the name of this variable from status to something else
   ConnectorConnectivityDetails status;
   Boolean deleted = Boolean.FALSE;
   String heartbeatPerpetualTaskId;
-
-  public enum Scope { ACCOUNT, ORGANIZATION, PROJECT }
 
   @Override
   public String getAccountIdentifier() {

@@ -1,6 +1,5 @@
 package io.harness.connector.impl;
 
-import static io.harness.delegate.beans.connector.ConnectorCategory.CLOUD_PROVIDER;
 import static io.harness.delegate.beans.connector.ConnectorType.KUBERNETES_CLUSTER;
 import static io.harness.delegate.beans.connector.k8Connector.KubernetesCredentialType.MANUAL_CREDENTIALS;
 import static io.harness.rule.OwnerRule.DEEPAK;
@@ -188,8 +187,7 @@ public class DefaultConnectorServiceImplTest extends ConnectorsTestBase {
     createConnector(connectorIdentifier2);
     createConnector(connectorIdentifier3);
     ArgumentCaptor<Page> connectorsListArgumentCaptor = ArgumentCaptor.forClass(Page.class);
-    Page<ConnectorResponseDTO> connectorSummaryDTOSList =
-        connectorService.list(0, 100, accountIdentifier, null, null, null, KUBERNETES_CLUSTER, CLOUD_PROVIDER);
+    Page<ConnectorResponseDTO> connectorSummaryDTOSList = connectorService.list(0, 100, accountIdentifier, null);
     assertThat(connectorSummaryDTOSList.getTotalElements()).isEqualTo(3);
     List<String> connectorIdentifierList =
         connectorSummaryDTOSList.stream()

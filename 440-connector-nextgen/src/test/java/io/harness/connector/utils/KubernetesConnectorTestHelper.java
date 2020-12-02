@@ -5,12 +5,12 @@ import static io.harness.encryption.Scope.ACCOUNT;
 import static io.harness.encryption.SecretRefData.SECRET_DOT_DELIMINITER;
 
 import io.harness.connector.entities.Connector;
-import io.harness.connector.entities.Connector.Scope;
 import io.harness.connector.entities.embedded.kubernetescluster.K8sUserNamePassword;
 import io.harness.connector.entities.embedded.kubernetescluster.KubernetesClusterConfig;
 import io.harness.connector.entities.embedded.kubernetescluster.KubernetesClusterDetails;
 import io.harness.delegate.beans.connector.ConnectorType;
 import io.harness.delegate.beans.connector.k8Connector.KubernetesAuthType;
+import io.harness.encryption.Scope;
 
 import lombok.experimental.UtilityClass;
 

@@ -11,7 +11,7 @@ import io.harness.connector.apis.dto.stats.ConnectorStatistics.ConnectorStatisti
 import io.harness.connector.apis.dto.stats.ConnectorStatusStats.ConnectorStatusStatsKeys;
 import io.harness.connector.apis.dto.stats.ConnectorTypeStats.ConnectorTypeStatsKeys;
 import io.harness.connector.entities.Connector.ConnectorKeys;
-import io.harness.connector.entities.Connector.Scope;
+import io.harness.encryption.Scope;
 import io.harness.repositories.ConnectorRepository;
 
 import com.google.inject.Inject;
