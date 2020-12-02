@@ -44,6 +44,7 @@ java_library(
         "//950-delegate-tasks-beans:module",
         "//950-delegate-tasks-beans/src/main/proto:950_delegate_tasks_beans_java_proto",
         "//950-delegate-tasks-beans/src/main/proto:950_delegate_tasks_beans_proto",
+        "//950-feature-flag:module",
         "//960-api-services:module",
         "//970-api-services-beans:module",
         "//970-grpc:module",
