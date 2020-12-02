@@ -763,7 +763,7 @@ public class YamlResource {
   @Path("infrastructuredefinitions/{infraDefinitionId}")
   @Timed
   @ExceptionMetered
-  @AuthRule(permissionType = ENV, action = Action.UPDATE)
+  @AuthRule(permissionType = ENV, action = Action.UPDATE, skipAuth = true)
   public RestResponse<InfrastructureDefinition> updateInfraDefinition(@QueryParam("appId") String appId,
       @QueryParam("accountId") String accountId, YamlPayload yamlPayload,
       @QueryParam("deleteEnabled") @DefaultValue("false") boolean deleteEnabled) {
