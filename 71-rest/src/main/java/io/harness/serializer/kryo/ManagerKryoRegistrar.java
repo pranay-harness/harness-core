@@ -522,7 +522,6 @@ import software.wings.security.AccountPermissionSummary;
 import software.wings.security.AppPermissionSummary;
 import software.wings.security.AppPermissionSummary.EnvInfo;
 import software.wings.security.AppPermissionSummaryForUI;
-import software.wings.security.PermissionAttribute;
 import software.wings.security.UserPermissionInfo;
 import software.wings.security.UserRestrictionInfo;
 import software.wings.security.authentication.AuthenticationMechanism;
@@ -1189,9 +1188,6 @@ public class ManagerKryoRegistrar implements KryoRegistrar {
     kryo.register(MetricType.class, 5313);
     kryo.register(AuthenticationMechanism.class, 5357);
     kryo.register(TwoFactorAuthenticationMechanism.class, 5358);
-    kryo.register(PermissionAttribute.Action.class, 5354);
-    kryo.register(PermissionAttribute.PermissionType.class, 5353);
-    kryo.register(PermissionAttribute.class, 5352);
     kryo.register(AnalysisComparisonStrategy.class, 5240);
     kryo.register(CustomLogDataCollectionInfo.class, 5492);
     kryo.register(DataCollectionTaskResult.DataCollectionTaskStatus.class, 5185);
