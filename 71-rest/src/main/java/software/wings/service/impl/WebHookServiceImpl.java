@@ -12,6 +12,7 @@ import static software.wings.beans.trigger.WebhookSource.GITHUB;
 import static java.lang.String.format;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.beans.FeatureName;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.InvalidRequestException;
@@ -21,7 +22,6 @@ import io.harness.serializer.JsonUtils;
 
 import software.wings.app.MainConfiguration;
 import software.wings.beans.Application;
-import software.wings.beans.FeatureName;
 import software.wings.beans.Service;
 import software.wings.beans.WebHookRequest;
 import software.wings.beans.WebHookResponse;

@@ -12,6 +12,7 @@ import static org.mockito.Mockito.doNothing;
 
 import io.harness.beans.EncryptedData;
 import io.harness.beans.EncryptedDataParent;
+import io.harness.beans.FeatureName;
 import io.harness.beans.SecretText;
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
@@ -21,7 +22,6 @@ import io.harness.secrets.setupusage.SecretSetupUsageService;
 import software.wings.WingsBaseTest;
 import software.wings.beans.APMValidateCollectorConfig;
 import software.wings.beans.APMVerificationConfig;
-import software.wings.beans.FeatureName;
 import software.wings.beans.SettingAttribute;
 import software.wings.resources.secretsmanagement.SecretManagementResource;
 import software.wings.service.impl.SettingValidationService;

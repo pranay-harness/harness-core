@@ -11,6 +11,7 @@ import static software.wings.graphql.schema.type.QLTag.QLTagKeys;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.beans.EmbeddedUser;
+import io.harness.beans.FeatureName;
 import io.harness.category.element.UnitTests;
 import io.harness.category.layer.GraphQLTests;
 import io.harness.data.structure.UUIDGenerator;
@@ -24,7 +25,6 @@ import io.harness.rule.Owner;
 import io.harness.testframework.graphql.QLTestObject;
 
 import software.wings.beans.Application;
-import software.wings.beans.FeatureName;
 import software.wings.beans.HarnessTagLink;
 import software.wings.beans.Service;
 import software.wings.beans.Service.ServiceBuilder;

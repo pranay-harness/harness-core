@@ -1,8 +1,8 @@
 package software.wings.security.encryption.migration;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
+import static io.harness.beans.FeatureName.CONNECTORS_REF_SECRETS;
 
-import static software.wings.beans.FeatureName.CONNECTORS_REF_SECRETS;
 import static software.wings.beans.SettingAttribute.VALUE_TYPE_KEY;
 import static software.wings.service.impl.SettingServiceHelper.ATTRIBUTES_USING_REFERENCES;
 

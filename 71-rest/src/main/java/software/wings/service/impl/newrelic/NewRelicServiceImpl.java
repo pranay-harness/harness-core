@@ -10,6 +10,7 @@ import static software.wings.app.ManagerCacheRegistrar.NEW_RELIC_APPLICATION_CAC
 import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static software.wings.service.impl.ThirdPartyApiCallLog.createApiCallLog;
 
+import io.harness.beans.FeatureName;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.VerificationOperationException;
@@ -25,7 +26,6 @@ import software.wings.beans.APMVerificationConfig;
 import software.wings.beans.APMVerificationConfig.KeyValues;
 import software.wings.beans.AppDynamicsConfig;
 import software.wings.beans.DynaTraceConfig;
-import software.wings.beans.FeatureName;
 import software.wings.beans.NewRelicConfig;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.SyncTaskContext;

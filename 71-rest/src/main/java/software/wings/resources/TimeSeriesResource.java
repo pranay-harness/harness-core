@@ -1,9 +1,9 @@
 package software.wings.resources;
 
+import io.harness.beans.FeatureName;
 import io.harness.rest.RestResponse;
 
 import software.wings.APMFetchConfig;
-import software.wings.beans.FeatureName;
 import software.wings.metrics.ThresholdComparisonType;
 import software.wings.metrics.TimeSeriesMetricDefinition;
 import software.wings.security.PermissionAttribute.ResourceType;

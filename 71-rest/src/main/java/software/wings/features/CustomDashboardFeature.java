@@ -2,6 +2,7 @@ package software.wings.features;
 
 import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 
+import io.harness.beans.FeatureName;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.beans.SearchFilter.Operator;
@@ -9,7 +10,6 @@ import io.harness.dashboard.DashboardSettings;
 import io.harness.dashboard.DashboardSettingsService;
 
 import software.wings.beans.EntityType;
-import software.wings.beans.FeatureName;
 import software.wings.features.api.AbstractPremiumFeature;
 import software.wings.features.api.ComplianceByRemovingUsage;
 import software.wings.features.api.FeatureRestrictions;

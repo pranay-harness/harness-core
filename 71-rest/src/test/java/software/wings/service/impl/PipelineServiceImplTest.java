@@ -42,6 +42,7 @@ import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.when;
 
+import io.harness.beans.FeatureName;
 import io.harness.beans.OrchestrationWorkflowType;
 import io.harness.category.element.UnitTests;
 import io.harness.exception.InvalidRequestException;
@@ -50,7 +51,6 @@ import io.harness.rule.Owner;
 
 import software.wings.WingsBaseTest;
 import software.wings.api.DeploymentType;
-import software.wings.beans.FeatureName;
 import software.wings.beans.ManifestVariable;
 import software.wings.beans.Pipeline;
 import software.wings.beans.PipelineStage;

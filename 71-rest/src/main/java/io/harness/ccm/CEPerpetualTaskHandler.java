@@ -1,10 +1,9 @@
 package io.harness.ccm;
 
+import static io.harness.beans.FeatureName.SIDE_NAVIGATION;
 import static io.harness.ccm.cluster.entities.ClusterType.DIRECT_KUBERNETES;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
-
-import static software.wings.beans.FeatureName.SIDE_NAVIGATION;
 
 import io.harness.ccm.cluster.ClusterRecordObserver;
 import io.harness.ccm.cluster.ClusterRecordService;

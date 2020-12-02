@@ -1,6 +1,7 @@
 package software.wings.service.impl;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
+import static io.harness.beans.FeatureName.HARNESS_TAGS;
 import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 import static io.harness.beans.PageRequest.UNLIMITED;
 import static io.harness.beans.SearchFilter.Operator.EQ;
@@ -18,7 +19,6 @@ import static software.wings.beans.Environment.Builder.anEnvironment;
 import static software.wings.beans.Environment.EnvironmentType.NON_PROD;
 import static software.wings.beans.Environment.EnvironmentType.PROD;
 import static software.wings.beans.Environment.GLOBAL_ENV_ID;
-import static software.wings.beans.FeatureName.HARNESS_TAGS;
 import static software.wings.beans.Service.ServiceKeys;
 import static software.wings.beans.ServiceTemplate.ServiceTemplateKeys;
 import static software.wings.beans.ServiceVariable.DEFAULT_TEMPLATE_ID;

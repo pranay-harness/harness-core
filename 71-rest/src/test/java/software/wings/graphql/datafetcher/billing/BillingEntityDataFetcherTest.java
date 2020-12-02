@@ -1,10 +1,9 @@
 package software.wings.graphql.datafetcher.billing;
 
+import static io.harness.beans.FeatureName.CE_BILLING_DATA_PRE_AGGREGATION;
 import static io.harness.rule.OwnerRule.HITESH;
 import static io.harness.rule.OwnerRule.ROHIT;
 import static io.harness.rule.OwnerRule.SHUBHANSHU;
-
-import static software.wings.beans.FeatureName.CE_BILLING_DATA_PRE_AGGREGATION;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;

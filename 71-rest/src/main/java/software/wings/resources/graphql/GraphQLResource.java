@@ -7,12 +7,12 @@ import static software.wings.graphql.utils.GraphQLConstants.GRAPHQL_QUERY_STRING
 import static software.wings.graphql.utils.GraphQLConstants.HTTP_SERVLET_REQUEST;
 import static software.wings.security.AuthenticationFilter.API_KEY_HEADER;
 
+import io.harness.beans.FeatureName;
 import io.harness.logging.AccountLogContext;
 import io.harness.logging.AutoLogContext;
 
 import software.wings.audit.AuditSkip;
 import software.wings.beans.ApiKeyEntry;
-import software.wings.beans.FeatureName;
 import software.wings.beans.User;
 import software.wings.features.RestApiFeature;
 import software.wings.features.api.PremiumFeature;

@@ -14,6 +14,7 @@ import static software.wings.utils.CryptoUtils.secureRandAlphaNumString;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.beans.ExecutionStatus;
+import io.harness.beans.FeatureName;
 import io.harness.beans.WorkflowType;
 import io.harness.category.element.FunctionalTests;
 import io.harness.functional.AbstractFunctionalTest;
@@ -40,7 +41,6 @@ import io.harness.testframework.restutils.InfraProvisionerRestUtils;
 import software.wings.beans.Application;
 import software.wings.beans.Environment;
 import software.wings.beans.ExecutionArgs;
-import software.wings.beans.FeatureName;
 import software.wings.beans.GraphNode;
 import software.wings.beans.InfrastructureProvisioner;
 import software.wings.beans.NameValuePair;

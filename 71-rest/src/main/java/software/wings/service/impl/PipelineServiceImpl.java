@@ -47,6 +47,7 @@ import static java.util.stream.Collectors.toSet;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.beans.FeatureName;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.event.handler.impl.EventPublishHelper;
@@ -72,7 +73,6 @@ import software.wings.beans.CanaryOrchestrationWorkflow;
 import software.wings.beans.EntityType;
 import software.wings.beans.Event.Type;
 import software.wings.beans.FailureStrategy;
-import software.wings.beans.FeatureName;
 import software.wings.beans.ManifestVariable;
 import software.wings.beans.OrchestrationWorkflow;
 import software.wings.beans.Pipeline;

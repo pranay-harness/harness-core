@@ -6,8 +6,8 @@ import static io.harness.delegate.beans.TaskData.DEFAULT_SYNC_CALL_TIMEOUT;
 import static software.wings.beans.Application.GLOBAL_APP_ID;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.beans.FeatureName;
 
-import software.wings.beans.FeatureName;
 import software.wings.beans.SlackMessage;
 import software.wings.beans.SyncTaskContext;
 import software.wings.beans.notification.SlackNotificationConfiguration;

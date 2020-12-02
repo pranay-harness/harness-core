@@ -19,6 +19,7 @@ import static java.util.stream.Collectors.toList;
 import static org.atteo.evo.inflector.English.plural;
 
 import io.harness.beans.ExecutionStatus;
+import io.harness.beans.FeatureName;
 import io.harness.beans.OrchestrationWorkflowType;
 import io.harness.beans.PageRequest;
 import io.harness.beans.SweepingOutputInstance.Scope;
@@ -38,7 +39,6 @@ import software.wings.beans.Account;
 import software.wings.beans.AccountType;
 import software.wings.beans.AwsInfrastructureMapping;
 import software.wings.beans.DeploymentExecutionContext;
-import software.wings.beans.FeatureName;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.InfrastructureMappingType;
 import software.wings.beans.InstanceUnitType;

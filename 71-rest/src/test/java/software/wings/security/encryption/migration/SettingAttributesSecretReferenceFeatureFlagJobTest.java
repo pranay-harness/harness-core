@@ -1,8 +1,7 @@
 package software.wings.security.encryption.migration;
 
+import static io.harness.beans.FeatureName.CONNECTORS_REF_SECRETS;
 import static io.harness.rule.OwnerRule.UTKARSH;
-
-import static software.wings.beans.FeatureName.CONNECTORS_REF_SECRETS;
 
 import static org.assertj.core.api.Assertions.assertThat;
 

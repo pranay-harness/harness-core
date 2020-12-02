@@ -5,8 +5,8 @@ import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static software.wings.beans.Application.GLOBAL_APP_ID;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.beans.FeatureName;
 
-import software.wings.beans.FeatureName;
 import software.wings.beans.artifact.DockerArtifactStream;
 import software.wings.beans.artifact.DockerArtifactStream.DockerArtifactStreamBuilder;
 import software.wings.beans.artifact.DockerArtifactStream.Yaml;

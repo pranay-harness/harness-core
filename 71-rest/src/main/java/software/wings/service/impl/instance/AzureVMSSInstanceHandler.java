@@ -1,11 +1,10 @@
 package software.wings.service.impl.instance;
 
+import static io.harness.beans.FeatureName.AZURE_VMSS;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.logging.CommandExecutionStatus.SUCCESS;
 import static io.harness.validation.Validator.notNullCheck;
-
-import static software.wings.beans.FeatureName.AZURE_VMSS;
 
 import static com.google.common.collect.Sets.difference;
 import static java.lang.String.format;
@@ -14,6 +13,7 @@ import static java.util.Optional.of;
 import static java.util.stream.Collectors.toSet;
 
 import io.harness.azure.model.AzureVMData;
+import io.harness.beans.FeatureName;
 import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.delegate.task.azure.response.AzureVMSSListVMDataResponse;
 import io.harness.delegate.task.azure.response.AzureVMSSTaskExecutionResponse;
@@ -28,7 +28,6 @@ import software.wings.api.PhaseStepExecutionData;
 import software.wings.api.ondemandrollback.OnDemandRollbackInfo;
 import software.wings.beans.AzureConfig;
 import software.wings.beans.AzureVMSSInfrastructureMapping;
-import software.wings.beans.FeatureName;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.WorkflowExecution;

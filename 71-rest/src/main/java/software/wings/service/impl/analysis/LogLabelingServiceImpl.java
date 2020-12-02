@@ -7,6 +7,7 @@ import static io.harness.persistence.HQuery.excludeAuthority;
 
 import static java.util.stream.Collectors.toMap;
 
+import io.harness.beans.FeatureName;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageRequest.PageRequestBuilder;
 import io.harness.beans.SearchFilter.Operator;
@@ -14,7 +15,6 @@ import io.harness.time.Timestamp;
 
 import software.wings.beans.Account;
 import software.wings.beans.Application;
-import software.wings.beans.FeatureName;
 import software.wings.beans.Service;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.impl.analysis.CVFeedbackRecord.CVFeedbackRecordKeys;

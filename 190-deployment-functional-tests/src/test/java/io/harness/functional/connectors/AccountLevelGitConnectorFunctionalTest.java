@@ -14,6 +14,7 @@ import static java.lang.String.format;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.beans.ExecutionStatus;
+import io.harness.beans.FeatureName;
 import io.harness.beans.OrchestrationWorkflowType;
 import io.harness.beans.WorkflowType;
 import io.harness.category.element.CDFunctionalTests;
@@ -41,7 +42,6 @@ import software.wings.beans.BasicOrchestrationWorkflow;
 import software.wings.beans.EntityType;
 import software.wings.beans.Environment;
 import software.wings.beans.ExecutionArgs;
-import software.wings.beans.FeatureName;
 import software.wings.beans.GitFileConfig;
 import software.wings.beans.GraphNode;
 import software.wings.beans.Service;

@@ -7,11 +7,11 @@ import static software.wings.security.PermissionAttribute.PermissionType.LOGGED_
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.beans.FeatureName;
 import io.harness.exception.HintException;
 import io.harness.rest.RestResponse;
 
 import software.wings.app.MainConfiguration;
-import software.wings.beans.FeatureName;
 import software.wings.search.SearchService;
 import software.wings.search.framework.AdvancedSearchQuery;
 import software.wings.search.framework.SearchResults;

@@ -39,10 +39,10 @@ import static software.wings.sm.ContextElement.DEPLOYMENT_URL;
 import static java.util.Arrays.asList;
 import static java.util.stream.Collectors.toList;
 
+import io.harness.beans.FeatureName;
 import io.harness.beans.PageRequest;
 
 import software.wings.beans.EntityType;
-import software.wings.beans.FeatureName;
 import software.wings.beans.ServiceTemplate;
 import software.wings.beans.ServiceVariable;
 import software.wings.beans.ServiceVariable.ServiceVariableKeys;

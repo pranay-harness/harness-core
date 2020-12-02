@@ -14,6 +14,7 @@ import static io.harness.seeddata.SampleDataProviderConstants.K8S_QA_ENVIRONMENT
 import static io.harness.seeddata.SampleDataProviderConstants.K8S_ROLLING_WORKFLOW_NAME;
 import static io.harness.seeddata.SampleDataProviderConstants.K8S_SERVICE_NAME;
 
+import io.harness.beans.FeatureName;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.seeddata.SampleDataProviderService;
@@ -23,7 +24,6 @@ import software.wings.beans.Account;
 import software.wings.beans.Application;
 import software.wings.beans.EntityType;
 import software.wings.beans.Environment;
-import software.wings.beans.FeatureName;
 import software.wings.beans.Pipeline;
 import software.wings.beans.SampleAppEntityStatus;
 import software.wings.beans.SampleAppEntityStatus.Health;

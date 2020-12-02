@@ -1,20 +1,19 @@
 package software.wings.service.impl.artifact;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
+import static io.harness.beans.FeatureName.ARTIFACT_PERPETUAL_TASK;
+import static io.harness.beans.FeatureName.ARTIFACT_PERPETUAL_TASK_MIGRATION;
 import static io.harness.persistence.HQuery.excludeAuthority;
-
-import static software.wings.beans.FeatureName.ARTIFACT_PERPETUAL_TASK;
-import static software.wings.beans.FeatureName.ARTIFACT_PERPETUAL_TASK_MIGRATION;
 
 import static java.lang.String.format;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.artifact.ArtifactCollectionResponseHandler;
+import io.harness.beans.FeatureName;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.lock.AcquiredLock;
 import io.harness.lock.PersistentLocker;
 
-import software.wings.beans.FeatureName;
 import software.wings.beans.artifact.ArtifactStream;
 import software.wings.beans.artifact.ArtifactStream.ArtifactStreamKeys;
 import software.wings.dl.WingsPersistence;

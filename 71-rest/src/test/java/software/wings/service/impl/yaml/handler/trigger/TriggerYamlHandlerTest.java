@@ -27,6 +27,7 @@ import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.reset;
 import static org.mockito.Mockito.verify;
 
+import io.harness.beans.FeatureName;
 import io.harness.beans.PageResponse;
 import io.harness.beans.WorkflowType;
 import io.harness.category.element.UnitTests;
@@ -35,7 +36,6 @@ import io.harness.rule.Owner;
 
 import software.wings.beans.EntityType;
 import software.wings.beans.Environment;
-import software.wings.beans.FeatureName;
 import software.wings.beans.Pipeline;
 import software.wings.beans.Service;
 import software.wings.beans.SettingAttribute;

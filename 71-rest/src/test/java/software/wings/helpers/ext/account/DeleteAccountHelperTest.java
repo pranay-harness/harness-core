@@ -1,5 +1,6 @@
 package software.wings.helpers.ext.account;
 
+import static io.harness.beans.FeatureName.SEARCH_REQUEST;
 import static io.harness.persistence.HQuery.excludeAuthority;
 import static io.harness.rule.OwnerRule.ANKIT;
 import static io.harness.rule.OwnerRule.MEHUL;
@@ -7,7 +8,6 @@ import static io.harness.rule.OwnerRule.UJJAWAL;
 import static io.harness.rule.OwnerRule.VOJIN;
 
 import static software.wings.beans.Account.Builder.anAccount;
-import static software.wings.beans.FeatureName.SEARCH_REQUEST;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 import static software.wings.utils.WingsTestConstants.JOB_NAME;
 
@@ -22,6 +22,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import io.harness.beans.FeatureFlag;
+import io.harness.beans.FeatureName;
 import io.harness.category.element.UnitTests;
 import io.harness.limits.checker.rate.UsageBucket;
 import io.harness.ng.core.NGAccountAccess;
@@ -38,7 +39,6 @@ import software.wings.beans.AccountStatus;
 import software.wings.beans.AccountType;
 import software.wings.beans.Application;
 import software.wings.beans.DeletedEntity;
-import software.wings.beans.FeatureName;
 import software.wings.beans.LicenseInfo;
 import software.wings.beans.ServiceTemplate;
 import software.wings.beans.User;

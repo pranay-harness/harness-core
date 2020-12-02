@@ -15,6 +15,7 @@ import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
+import io.harness.beans.FeatureName;
 import io.harness.exception.InvalidRequestException;
 import io.harness.k8s.model.HelmVersion;
 
@@ -23,7 +24,6 @@ import software.wings.beans.AllowedValueYaml;
 import software.wings.beans.AppContainer;
 import software.wings.beans.Application;
 import software.wings.beans.EntityType;
-import software.wings.beans.FeatureName;
 import software.wings.beans.NameValuePair;
 import software.wings.beans.Service;
 import software.wings.beans.Service.Yaml;

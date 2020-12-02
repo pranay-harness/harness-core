@@ -1,8 +1,7 @@
 package software.wings.service.intfc;
 
 import io.harness.beans.FeatureFlag;
-
-import software.wings.beans.FeatureName;
+import io.harness.beans.FeatureName;
 
 import java.util.List;
 import java.util.Optional;

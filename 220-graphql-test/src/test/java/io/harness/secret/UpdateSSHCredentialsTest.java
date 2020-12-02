@@ -5,6 +5,7 @@ import static io.harness.rule.OwnerRule.DEEPAK;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.GraphQLTest;
+import io.harness.beans.FeatureName;
 import io.harness.beans.SecretText;
 import io.harness.category.element.UnitTests;
 import io.harness.category.layer.GraphQLTests;
@@ -20,7 +21,6 @@ import io.harness.testframework.graphql.QLTestObject;
 
 import software.wings.beans.Account;
 import software.wings.beans.Application;
-import software.wings.beans.FeatureName;
 import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.security.SecretManager;
 

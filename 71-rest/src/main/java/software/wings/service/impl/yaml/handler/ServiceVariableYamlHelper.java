@@ -2,9 +2,10 @@ package software.wings.service.impl.yaml.handler;
 
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
+import io.harness.beans.FeatureName;
+
 import software.wings.beans.AllowedValueYaml;
 import software.wings.beans.ArtifactStreamAllowedValueYaml;
-import software.wings.beans.FeatureName;
 import software.wings.beans.ServiceVariable;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.artifact.ArtifactStream;

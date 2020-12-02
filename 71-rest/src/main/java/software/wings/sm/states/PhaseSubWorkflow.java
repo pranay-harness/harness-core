@@ -11,6 +11,7 @@ import static software.wings.api.PhaseExecutionData.PhaseExecutionDataBuilder.aP
 import static java.lang.String.format;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.beans.FeatureName;
 import io.harness.beans.OrchestrationWorkflowType;
 import io.harness.beans.SweepingOutputInstance;
 import io.harness.beans.SweepingOutputInstance.Scope;
@@ -34,7 +35,6 @@ import software.wings.beans.ArtifactVariable;
 import software.wings.beans.ContainerInfrastructureMapping;
 import software.wings.beans.EntityType;
 import software.wings.beans.Environment;
-import software.wings.beans.FeatureName;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.PipelineStageExecution;
 import software.wings.beans.Service;

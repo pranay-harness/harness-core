@@ -19,6 +19,7 @@ import static org.apache.commons.lang3.StringUtils.EMPTY;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 
 import io.harness.beans.EncryptedData;
+import io.harness.beans.FeatureName;
 import io.harness.beans.SecretManagerConfig;
 import io.harness.context.GlobalContextData;
 import io.harness.dashboard.DashboardSettings;
@@ -45,7 +46,6 @@ import software.wings.beans.EntityType;
 import software.wings.beans.Environment;
 import software.wings.beans.Environment.EnvironmentKeys;
 import software.wings.beans.Event.Type;
-import software.wings.beans.FeatureName;
 import software.wings.beans.HarnessTag;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.InfrastructureProvisioner;

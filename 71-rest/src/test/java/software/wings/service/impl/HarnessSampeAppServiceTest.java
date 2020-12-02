@@ -26,6 +26,7 @@ import static software.wings.utils.WingsTestConstants.APP_ID;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.when;
 
+import io.harness.beans.FeatureName;
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
 import io.harness.seeddata.SampleDataProviderService;
@@ -37,7 +38,6 @@ import software.wings.beans.Application;
 import software.wings.beans.EntityType;
 import software.wings.beans.Environment;
 import software.wings.beans.Environment.Builder;
-import software.wings.beans.FeatureName;
 import software.wings.beans.Pipeline;
 import software.wings.beans.SampleAppEntityStatus;
 import software.wings.beans.SampleAppEntityStatus.Health;

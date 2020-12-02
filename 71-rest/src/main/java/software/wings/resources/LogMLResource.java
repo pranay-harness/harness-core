@@ -3,12 +3,12 @@ package software.wings.resources;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.exception.WingsException.USER;
 
+import io.harness.beans.FeatureName;
 import io.harness.deployment.InstanceDetails;
 import io.harness.exception.WingsException;
 import io.harness.rest.RestResponse;
 import io.harness.security.annotations.LearningEngineAuth;
 
-import software.wings.beans.FeatureName;
 import software.wings.security.PermissionAttribute;
 import software.wings.security.annotations.Scope;
 import software.wings.service.impl.analysis.CVCollaborationProviderParameters;

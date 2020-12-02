@@ -5,6 +5,7 @@ import static io.harness.validation.Validator.notNullCheck;
 
 import static java.util.stream.Collectors.toSet;
 
+import io.harness.beans.FeatureName;
 import io.harness.exception.WingsException;
 import io.harness.security.encryption.EncryptedDataDetail;
 
@@ -16,7 +17,6 @@ import software.wings.api.PhaseStepExecutionData;
 import software.wings.api.ondemandrollback.OnDemandRollbackInfo;
 import software.wings.beans.AzureConfig;
 import software.wings.beans.AzureInfrastructureMapping;
-import software.wings.beans.FeatureName;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.WorkflowExecution;

@@ -1,4 +1,4 @@
-package software.wings.beans;
+package io.harness.beans;
 
 import io.harness.beans.FeatureFlag;
 import io.harness.beans.FeatureFlag.Scope;

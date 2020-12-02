@@ -4,6 +4,7 @@ import static io.harness.rule.OwnerRule.POOJA;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import io.harness.beans.FeatureName;
 import io.harness.category.element.FunctionalTests;
 import io.harness.functional.AbstractFunctionalTest;
 import io.harness.generator.OwnerManager;
@@ -12,7 +13,6 @@ import io.harness.generator.ServiceGenerator;
 import io.harness.rule.Owner;
 import io.harness.testframework.restutils.GraphQLRestUtils;
 
-import software.wings.beans.FeatureName;
 import software.wings.beans.Service;
 import software.wings.beans.artifact.ArtifactStream;
 import software.wings.service.intfc.ArtifactStreamService;

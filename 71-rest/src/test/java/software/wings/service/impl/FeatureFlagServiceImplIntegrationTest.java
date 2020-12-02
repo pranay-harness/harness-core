@@ -6,10 +6,10 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.beans.FeatureFlag;
 import io.harness.beans.FeatureFlag.FeatureFlagKeys;
+import io.harness.beans.FeatureName;
 import io.harness.category.element.DeprecatedIntegrationTests;
 import io.harness.rule.Owner;
 
-import software.wings.beans.FeatureName;
 import software.wings.integration.IntegrationTestBase;
 import software.wings.service.intfc.FeatureFlagService;
 

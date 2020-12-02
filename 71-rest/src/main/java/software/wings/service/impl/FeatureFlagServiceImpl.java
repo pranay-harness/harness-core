@@ -13,12 +13,12 @@ import static org.apache.commons.lang3.StringUtils.isBlank;
 import io.harness.beans.FeatureFlag;
 import io.harness.beans.FeatureFlag.FeatureFlagKeys;
 import io.harness.beans.FeatureFlag.Scope;
+import io.harness.beans.FeatureName;
 import io.harness.configuration.DeployMode;
 import io.harness.exception.InvalidRequestException;
 import io.harness.persistence.HPersistence;
 
 import software.wings.app.MainConfiguration;
-import software.wings.beans.FeatureName;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.FeatureFlagService;
 

@@ -6,6 +6,7 @@ import static software.wings.common.VerificationConstants.MAX_NUM_ALERT_OCCURREN
 import static java.lang.Boolean.parseBoolean;
 
 import io.harness.annotation.HarnessEntity;
+import io.harness.beans.FeatureName;
 import io.harness.mongo.index.FdIndex;
 import io.harness.mongo.index.FdTtlIndex;
 import io.harness.mongo.index.Field;
@@ -13,7 +14,6 @@ import io.harness.mongo.index.NgUniqueIndex;
 import io.harness.persistence.NameAccess;
 
 import software.wings.beans.Base;
-import software.wings.beans.FeatureName;
 import software.wings.beans.yaml.YamlConstants;
 import software.wings.service.impl.analysis.AnalysisComparisonStrategy;
 import software.wings.service.impl.analysis.AnalysisTolerance;
