@@ -5,6 +5,7 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.manage.GlobalContextManager;
+import io.harness.security.SecurityContextBuilder;
 
 import software.wings.beans.HttpMethod;
 import software.wings.service.intfc.AppService;
@@ -69,6 +70,7 @@ public class AuthResponseFilter implements ContainerResponseFilter {
     GlobalContextManager.unset();
     UserThreadLocal.unset(); // clear user object from thread local
     HarnessUserThreadLocal.unset(); // clean the isHarnessUser flag from thread local
+    SecurityContextBuilder.unsetContext();
     invalidateAccountCacheIfNeeded(requestContext);
   }
 

@@ -27,6 +27,7 @@ import javax.ws.rs.container.ContainerRequestContext;
 import javax.ws.rs.core.HttpHeaders;
 import lombok.experimental.UtilityClass;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.tuple.Pair;
 
 @OwnedBy(PL)
 @UtilityClass
@@ -34,9 +35,9 @@ import lombok.extern.slf4j.Slf4j;
 public class JWTTokenServiceUtils {
   private final String ISSUER = "Harness Inc";
 
-  public boolean isServiceAuthorizationValid(String serviceToken, String serviceSecret) {
-    verifyJWTToken(serviceToken, serviceSecret);
-    return true;
+  public Pair<Boolean, Map<String, Claim> > isServiceAuthorizationValid(String serviceToken, String serviceSecret) {
+    Map<String, Claim> claimMap = verifyJWTToken(serviceToken, serviceSecret);
+    return Pair.of(true, claimMap);
   }
 
   public Map<String, Claim> verifyJWTToken(String jwtToken, String secret) {

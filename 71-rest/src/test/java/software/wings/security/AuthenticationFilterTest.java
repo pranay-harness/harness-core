@@ -207,6 +207,7 @@ public class AuthenticationFilterTest extends CategoryTest {
     doReturn(false).when(authenticationFilter).isAdminPortalRequest();
     doReturn(false).when(authenticationFilter).isNextGenManagerRequest(any(ResourceInfo.class));
     doReturn(true).when(authenticationFilter).isAuthenticatedByIdentitySvc(any(ContainerRequestContext.class));
+    doReturn(true).when(authenticationFilter).isIdentityServiceOriginatedRequest(any(ContainerRequestContext.class));
     User user = mock(User.class);
     doReturn(user).when(userService).getUserFromCacheOrDB("userId");
     authenticationFilter.filter(context);

@@ -43,6 +43,7 @@ import io.harness.exception.InvalidTokenException;
 import io.harness.exception.WingsException;
 import io.harness.logging.AutoLogContext;
 import io.harness.persistence.HPersistence;
+import io.harness.security.dto.UserPrincipal;
 import io.harness.version.VersionInfoManager;
 
 import software.wings.app.MainConfiguration;
@@ -89,6 +90,7 @@ import software.wings.service.intfc.UserGroupService;
 import software.wings.service.intfc.UserService;
 
 import com.auth0.jwt.JWT;
+import com.auth0.jwt.JWTCreator;
 import com.auth0.jwt.JWTVerifier;
 import com.auth0.jwt.algorithms.Algorithm;
 import com.auth0.jwt.exceptions.InvalidClaimException;
@@ -916,17 +918,26 @@ public class AuthServiceImpl implements AuthService {
     int duration = JWT_CATEGORY.AUTH_SECRET.getValidityDuration();
     try {
       Algorithm algorithm = Algorithm.HMAC256(jwtAuthSecret);
-      return JWT.create()
-          .withIssuer("Harness Inc")
-          .withIssuedAt(new Date())
-          .withExpiresAt(new Date(System.currentTimeMillis() + duration))
-          .withClaim("authToken", authToken.getUuid())
-          .withClaim("usrId", authToken.getUserId())
-          .withClaim("env", configuration.getEnvPath())
-          .sign(algorithm);
+      JWTCreator.Builder jwtBuilder = JWT.create()
+                                          .withIssuer("Harness Inc")
+                                          .withIssuedAt(new Date())
+                                          .withExpiresAt(new Date(System.currentTimeMillis() + duration))
+                                          .withClaim("authToken", authToken.getUuid())
+                                          .withClaim("usrId", authToken.getUserId())
+                                          .withClaim("env", configuration.getEnvPath());
+      // User Principal needed in token for environments without gateway as this token will be sent back to different
+      // microservices
+      addUserPrincipal(authToken, jwtBuilder);
+      return jwtBuilder.sign(algorithm);
     } catch (UnsupportedEncodingException | JWTCreationException exception) {
       throw new WingsException(GENERAL_ERROR, exception).addParam("message", "JWTToken could not be generated");
     }
+  }
+
+  private void addUserPrincipal(AuthToken authToken, JWTCreator.Builder jwtBuilder) {
+    UserPrincipal userPrincipal = new UserPrincipal(authToken.getUserId(), authToken.getAccountId());
+    Map<String, String> userClaims = userPrincipal.getJWTClaims();
+    userClaims.forEach(jwtBuilder::withClaim);
   }
 
   @Override

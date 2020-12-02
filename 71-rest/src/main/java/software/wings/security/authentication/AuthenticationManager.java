@@ -269,7 +269,7 @@ public class AuthenticationManager {
   public User generate2faJWTToken(User user) {
     HashMap<String, String> claimMap = new HashMap<>();
     claimMap.put(EMAIL, user.getEmail());
-    String jwtToken = userService.generateJWTToken(claimMap, JWT_CATEGORY.MULTIFACTOR_AUTH);
+    String jwtToken = userService.generateJWTToken(user, claimMap, JWT_CATEGORY.MULTIFACTOR_AUTH);
     return User.Builder.anUser()
         .uuid(user.getUuid())
         .email(user.getEmail())
@@ -421,7 +421,7 @@ public class AuthenticationManager {
       claimMap.put("subDomainUrl", accountService.get(user.getDefaultAccountId()).getSubdomainUrl());
       claimMap.put(ACCOUNT_ID, user.getDefaultAccountId());
 
-      String jwtToken = userService.generateJWTToken(claimMap, JWT_CATEGORY.SSO_REDIRECT);
+      String jwtToken = userService.generateJWTToken(user, claimMap, JWT_CATEGORY.SSO_REDIRECT);
       String encodedApiUrl = encodeBase64(configuration.getApiUrl());
 
       Map<String, String> params = getRedirectParamsForSsoRedirection(jwtToken, encodedApiUrl);
@@ -484,7 +484,7 @@ public class AuthenticationManager {
       log.info("OauthAuthentication succeeded for email {}", user.getEmail());
       HashMap<String, String> claimMap = new HashMap<>();
       claimMap.put(EMAIL, user.getEmail());
-      String jwtToken = userService.generateJWTToken(claimMap, JWT_CATEGORY.SSO_REDIRECT);
+      String jwtToken = userService.generateJWTToken(user, claimMap, JWT_CATEGORY.SSO_REDIRECT);
       String encodedApiUrl = encodeBase64(configuration.getApiUrl());
 
       Map<String, String> params = getRedirectParamsForSsoRedirection(jwtToken, encodedApiUrl);
