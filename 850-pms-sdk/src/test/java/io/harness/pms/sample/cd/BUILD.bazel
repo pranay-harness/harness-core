@@ -12,6 +12,7 @@ java_library(
     visibility = ["//visibility:public"],
     exports = [
         "//850-pms-sdk:module",
+        "//860-orchestration-steps:module",
         "//884-pms-commons:module",
         "//890-pms-contracts:module",
         "//960-persistence:module",
