@@ -115,7 +115,7 @@ public class HeatMapServiceImplTest extends CvNextGenTest {
     FieldUtils.writeField(heatMapService, "clock", clock, true);
     FieldUtils.writeField(heatMapService, "nextGenService", nextGenService, true);
     FieldUtils.writeField(heatMapService, "analysisService", analysisService, true);
-    when(cvConfigService.getAvailableCategories(accountId, orgIdentifier, projectIdentifier))
+    when(cvConfigService.getAvailableCategories(anyString(), anyString(), anyString(), anyString(), anyString()))
         .thenReturn(new HashSet<>(Arrays.asList(CVMonitoringCategory.PERFORMANCE)));
     when(cvConfigService.isProductionConfig(cvConfig)).thenReturn(true);
   }
@@ -437,7 +437,9 @@ public class HeatMapServiceImplTest extends CvNextGenTest {
     Set<CVMonitoringCategory> categories = new HashSet<>();
     for (CVMonitoringCategory cvMonitoringCategory : CVMonitoringCategory.values()) {
       categories.add(cvMonitoringCategory);
-      when(cvConfigService.getAvailableCategories(accountId, orgIdentifier, projectIdentifier)).thenReturn(categories);
+      when(cvConfigService.getAvailableCategories(
+               accountId, orgIdentifier, projectIdentifier, envIdentifier, serviceIdentifier))
+          .thenReturn(categories);
       Map<CVMonitoringCategory, SortedSet<HeatMapDTO>> heatMap = heatMapService.getHeatMap(accountId, orgIdentifier,
           projectIdentifier, serviceIdentifier, envIdentifier, Instant.now().minus(1, ChronoUnit.HOURS), Instant.now());
       assertThat(heatMap.size()).isEqualTo(categories.size());
@@ -449,7 +451,8 @@ public class HeatMapServiceImplTest extends CvNextGenTest {
   @Owner(developers = PRAVEEN)
   @Category(UnitTests.class)
   public void testGetCategoryRiskScores_singleServiceEnvironment() {
-    when(cvConfigService.getAvailableCategories(accountId, orgIdentifier, projectIdentifier))
+    when(cvConfigService.getAvailableCategories(
+             accountId, orgIdentifier, projectIdentifier, envIdentifier, serviceIdentifier))
         .thenReturn(new HashSet<>(Arrays.asList(CVMonitoringCategory.PERFORMANCE, CVMonitoringCategory.ERRORS)));
     int numOfRiskUnits = 24;
     long riskStartBoundary = TimeUnit.MILLISECONDS.toMinutes(clock.instant().toEpochMilli());
@@ -487,7 +490,7 @@ public class HeatMapServiceImplTest extends CvNextGenTest {
     envServiceMap.put(envIdentifier, services);
 
     when(cvConfigService.getEnvToServicesMap(accountId, orgIdentifier, projectIdentifier)).thenReturn(envServiceMap);
-    when(cvConfigService.getAvailableCategories(accountId, orgIdentifier, projectIdentifier))
+    when(cvConfigService.getAvailableCategories(anyString(), anyString(), anyString(), anyString(), anyString()))
         .thenReturn(new HashSet<>(Arrays.asList(CVMonitoringCategory.PERFORMANCE, CVMonitoringCategory.ERRORS)));
     int numOfRiskUnits = 24;
     long riskStartBoundary = TimeUnit.MILLISECONDS.toMinutes(clock.instant().toEpochMilli());
@@ -512,7 +515,7 @@ public class HeatMapServiceImplTest extends CvNextGenTest {
     assertThat(categoryRisk.getCategoryRisks().size()).isEqualTo(CVMonitoringCategory.values().length);
     Map<CVMonitoringCategory, Integer> categoryRiskMap = new HashMap<>();
     categoryRisk.getCategoryRisks().forEach(
-        categoryRisks -> { categoryRiskMap.put(categoryRisks.getCategory(), categoryRisks.getRisk()); });
+        categoryRisks -> categoryRiskMap.put(categoryRisks.getCategory(), categoryRisks.getRisk()));
     assertThat(categoryRiskMap.containsKey(CVMonitoringCategory.PERFORMANCE)).isTrue();
     assertThat(categoryRiskMap.get(CVMonitoringCategory.PERFORMANCE)).isNotEqualTo(-1);
     assertThat(categoryRiskMap.get(CVMonitoringCategory.ERRORS)).isNotEqualTo(-1);
@@ -528,7 +531,7 @@ public class HeatMapServiceImplTest extends CvNextGenTest {
     envServiceMap.put(envIdentifier, services);
 
     when(cvConfigService.getEnvToServicesMap(accountId, orgIdentifier, projectIdentifier)).thenReturn(envServiceMap);
-    when(cvConfigService.getAvailableCategories(accountId, orgIdentifier, projectIdentifier))
+    when(cvConfigService.getAvailableCategories(anyString(), anyString(), anyString(), anyString(), anyString()))
         .thenReturn(new HashSet<>(Arrays.asList(CVMonitoringCategory.PERFORMANCE, CVMonitoringCategory.ERRORS)));
     int numOfRiskUnits = 24;
     long riskStartBoundary = TimeUnit.MILLISECONDS.toMinutes(clock.instant().toEpochMilli());
@@ -571,7 +574,8 @@ public class HeatMapServiceImplTest extends CvNextGenTest {
     envServiceMap.put(envIdentifier, services);
 
     when(cvConfigService.getEnvToServicesMap(accountId, orgIdentifier, projectIdentifier)).thenReturn(envServiceMap);
-    when(cvConfigService.getAvailableCategories(accountId, orgIdentifier, projectIdentifier))
+    when(cvConfigService.getAvailableCategories(
+             accountId, orgIdentifier, projectIdentifier, envIdentifier, serviceIdentifier))
         .thenReturn(new HashSet<>(Arrays.asList(CVMonitoringCategory.PERFORMANCE, CVMonitoringCategory.ERRORS)));
     int numOfRiskUnits = 24;
     long riskStartBoundary = TimeUnit.MILLISECONDS.toMinutes(clock.instant().toEpochMilli());
@@ -628,7 +632,8 @@ public class HeatMapServiceImplTest extends CvNextGenTest {
         .thenReturn(envToServicesDTO.getServices().iterator().next());
     when(cvConfigService.getEnvToServicesList(accountId, orgIdentifier, projectIdentifier))
         .thenReturn(Lists.newArrayList(envToServicesDTO));
-    when(cvConfigService.getAvailableCategories(accountId, orgIdentifier, projectIdentifier))
+    when(cvConfigService.getAvailableCategories(
+             accountId, orgIdentifier, projectIdentifier, envIdentifier, serviceIdentifier))
         .thenReturn(new HashSet<>(Arrays.asList(CVMonitoringCategory.PERFORMANCE, CVMonitoringCategory.ERRORS)));
     heatMapService.updateRiskScore(accountId, orgIdentifier, projectIdentifier, serviceIdentifier, envIdentifier,
         cvConfig, CVMonitoringCategory.PERFORMANCE, clock.instant(), 0.70);
@@ -674,7 +679,8 @@ public class HeatMapServiceImplTest extends CvNextGenTest {
         .thenReturn(envToServicesDTO.getServices().iterator().next());
     when(cvConfigService.getEnvToServicesList(accountId, orgIdentifier, projectIdentifier))
         .thenReturn(Lists.newArrayList(envToServicesDTO));
-    when(cvConfigService.getAvailableCategories(accountId, orgIdentifier, projectIdentifier))
+    when(cvConfigService.getAvailableCategories(
+             accountId, orgIdentifier, projectIdentifier, envIdentifier, serviceIdentifier))
         .thenReturn(new HashSet<>(Arrays.asList(CVMonitoringCategory.PERFORMANCE, CVMonitoringCategory.ERRORS)));
     heatMapService.updateRiskScore(accountId, orgIdentifier, projectIdentifier, serviceIdentifier, envIdentifier,
         cvConfig, CVMonitoringCategory.PERFORMANCE, clock.instant(), 0.70);

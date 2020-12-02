@@ -404,7 +404,21 @@ public class CVConfigServiceImplTest extends CvNextGenTest {
     CVConfig cvConfig = createCVConfig();
     save(cvConfig);
     Set<CVMonitoringCategory> categories =
-        cvConfigService.getAvailableCategories(accountId, orgIdentifier, projectIdentifier);
+        cvConfigService.getAvailableCategories(accountId, orgIdentifier, projectIdentifier, null, null);
+    assertThat(categories).isEqualTo(Sets.newHashSet(CVMonitoringCategory.PERFORMANCE));
+    categories = cvConfigService.getAvailableCategories(accountId, orgIdentifier, projectIdentifier, "env", null);
+    assertThat(categories).isEqualTo(Sets.newHashSet(CVMonitoringCategory.PERFORMANCE));
+    categories =
+        cvConfigService.getAvailableCategories(accountId, orgIdentifier, projectIdentifier, generateUuid(), null);
+    assertThat(categories).isEmpty();
+
+    categories = cvConfigService.getAvailableCategories(accountId, orgIdentifier, projectIdentifier, null, "service");
+    assertThat(categories).isEqualTo(Sets.newHashSet(CVMonitoringCategory.PERFORMANCE));
+    categories =
+        cvConfigService.getAvailableCategories(accountId, orgIdentifier, projectIdentifier, null, generateUuid());
+    assertThat(categories).isEmpty();
+
+    categories = cvConfigService.getAvailableCategories(accountId, orgIdentifier, projectIdentifier, "env", "service");
     assertThat(categories).isEqualTo(Sets.newHashSet(CVMonitoringCategory.PERFORMANCE));
   }
 
