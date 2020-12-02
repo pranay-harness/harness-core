@@ -2,9 +2,11 @@ package software.wings.sm.states.azure;
 
 import static io.harness.beans.ExecutionStatus.FAILED;
 import static io.harness.beans.ExecutionStatus.SUCCESS;
+import static io.harness.context.ContextElementType.AZURE_WEBAPP_SETUP;
 import static io.harness.rule.OwnerRule.ANIL;
 
-import static software.wings.utils.WingsTestConstants.ACTIVITY_ID;
+import static software.wings.api.InstanceElement.Builder.anInstanceElement;
+import static software.wings.sm.states.azure.appservices.AzureWebAppSlotSetup.APP_SERVICE_SLOT_SETUP;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
@@ -15,6 +17,7 @@ import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
 
 import io.harness.azure.model.AzureAppServiceApplicationSetting;
 import io.harness.azure.model.AzureAppServiceConnectionString;
@@ -23,11 +26,11 @@ import io.harness.beans.DecryptableEntity;
 import io.harness.beans.EmbeddedUser;
 import io.harness.beans.ExecutionStatus;
 import io.harness.category.element.UnitTests;
-import io.harness.context.ContextElementType;
 import io.harness.delegate.beans.azure.registry.AzureRegistryType;
 import io.harness.delegate.beans.connector.ConnectorConfigDTO;
 import io.harness.delegate.task.azure.AzureTaskExecutionResponse;
 import io.harness.delegate.task.azure.appservice.AzureAppServicePreDeploymentData;
+import io.harness.delegate.task.azure.appservice.webapp.response.AzureAppDeploymentData;
 import io.harness.delegate.task.azure.appservice.webapp.response.AzureWebAppSlotSetupResponse;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.rule.Owner;
@@ -35,6 +38,8 @@ import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.tasks.ResponseData;
 
 import software.wings.WingsBaseTest;
+import software.wings.api.InstanceElement;
+import software.wings.api.InstanceElementListParam;
 import software.wings.beans.Activity;
 import software.wings.beans.Application;
 import software.wings.beans.AzureConfig;
@@ -47,6 +52,7 @@ import software.wings.service.intfc.DelegateService;
 import software.wings.sm.ContextElement;
 import software.wings.sm.ExecutionContextImpl;
 import software.wings.sm.ExecutionResponse;
+import software.wings.sm.StateExecutionData;
 import software.wings.sm.states.ManagerExecutionLogCallback;
 import software.wings.sm.states.azure.appservices.AzureAppServiceSlotSetupContextElement;
 import software.wings.sm.states.azure.appservices.AzureAppServiceSlotSetupExecutionData;
@@ -61,16 +67,30 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Spy;
 
 public class AzureWebAppSlotSetupTest extends WingsBaseTest {
   @Mock private DelegateService delegateService;
-  @Mock private AzureVMSSStateHelper azureVMSSStateHelper;
+  @Mock private AzureSweepingOutputServiceHelper azureSweepingOutputServiceHelper;
+  @Spy @InjectMocks private AzureVMSSStateHelper azureVMSSStateHelper;
   @Spy @InjectMocks AzureWebAppSlotSetup state = new AzureWebAppSlotSetup("Slot Setup state");
+
+  private final String ACTIVITY_ID = "activityId";
+  private final String INFRA_ID = "infraId";
+
+  private final String SUBSCRIPTION_ID = "subscriptionId";
+  private final String RESOURCE_GROUP = "resourceGroup";
+  private final String APP_NAME = "testWebApp";
+  private final String DEPLOYMENT_SLOT = "deploymentSlot";
+  private final String DEPLOYMENT_SLOT_ID = "testWebApp/deploymentSlot";
+  private final String APP_SERVICE_PLAN_ID = "appService-plan-id";
+  private final String HOST_NAME = "hostname";
 
   @Test
   @Owner(developers = ANIL)
@@ -85,14 +105,9 @@ public class AzureWebAppSlotSetupTest extends WingsBaseTest {
     Application app = Application.Builder.anApplication().uuid(appId).build();
     Environment env = Environment.Builder.anEnvironment().uuid(envId).build();
     Service service = Service.builder().uuid(serviceId).build();
-    Activity activity = Activity.builder().uuid(activityId).build();
+    Activity activity = Activity.builder().uuid(ACTIVITY_ID).build();
 
-    AzureWebAppInfrastructureMapping azureWebAppInfrastructureMapping = AzureWebAppInfrastructureMapping.builder()
-                                                                            .resourceGroup("rg")
-                                                                            .subscriptionId("subId")
-                                                                            .webApp("app-service")
-                                                                            .deploymentSlot("stage")
-                                                                            .build();
+    AzureWebAppInfrastructureMapping azureWebAppInfrastructureMapping = getAzureWebAppInfraMapping();
 
     AzureConfig azureConfig = AzureConfig.builder().build();
     Artifact artifact = Artifact.Builder.anArtifact().build();
@@ -152,6 +167,7 @@ public class AzureWebAppSlotSetupTest extends WingsBaseTest {
     assertThat(stateExecutionData.getAppServiceName()).isEqualTo("app-service");
     assertThat(stateExecutionData.getDeploySlotName()).isEqualTo("stage");
     assertThat(stateExecutionData.getAppServiceSlotSetupTimeOut()).isNotNull();
+    assertThat(stateExecutionData.getInfrastructureMappingId()).isEqualTo("infraId");
 
     AzureAppServiceSlotSetupExecutionSummary stepExecutionSummary = stateExecutionData.getStepExecutionSummary();
     assertThat(stepExecutionSummary.equals(AzureAppServiceSlotSetupExecutionSummary.builder().build())).isFalse();
@@ -160,6 +176,16 @@ public class AzureWebAppSlotSetupTest extends WingsBaseTest {
     assertThat(stateExecutionData.getExecutionDetails()).isNotEmpty();
     assertThat(stateExecutionData.getExecutionSummary()).isNotEmpty();
     assertThat(stateExecutionData.getStepExecutionSummary()).isNotNull();
+  }
+
+  private AzureWebAppInfrastructureMapping getAzureWebAppInfraMapping() {
+    return AzureWebAppInfrastructureMapping.builder()
+        .uuid(INFRA_ID)
+        .resourceGroup(RESOURCE_GROUP)
+        .subscriptionId(SUBSCRIPTION_ID)
+        .webApp(APP_NAME)
+        .deploymentSlot(DEPLOYMENT_SLOT)
+        .build();
   }
 
   private void mockArtifactStreamMapper() {
@@ -208,7 +234,7 @@ public class AzureWebAppSlotSetupTest extends WingsBaseTest {
   @Owner(developers = ANIL)
   @Category(UnitTests.class)
   public void testSlotSetupExecuteFailure() {
-    Activity activity = Activity.builder().uuid("activityId").build();
+    Activity activity = Activity.builder().uuid(ACTIVITY_ID).build();
     ExecutionContextImpl context = mock(ExecutionContextImpl.class);
     ManagerExecutionLogCallback managerExecutionLogCallback = mock(ManagerExecutionLogCallback.class);
 
@@ -225,54 +251,133 @@ public class AzureWebAppSlotSetupTest extends WingsBaseTest {
   @Test
   @Owner(developers = ANIL)
   @Category(UnitTests.class)
-  public void testSlotSetupHandleAsyncResponse() {
+  public void testSlotSetupHandleAsyncResponseSuccess() {
     ExecutionContextImpl context = mock(ExecutionContextImpl.class);
     doNothing().when(azureVMSSStateHelper).updateActivityStatus(anyString(), anyString(), any());
     doReturn(SUCCESS).when(azureVMSSStateHelper).getAppServiceExecutionStatus(any());
-    Map<String, ResponseData> responseMap = ImmutableMap.of(ACTIVITY_ID,
-        AzureTaskExecutionResponse.builder()
-            .azureTaskResponse(AzureWebAppSlotSetupResponse.builder()
-                                   .preDeploymentData(AzureAppServicePreDeploymentData.builder()
-                                                          .appName("webApp-for-deployment")
-                                                          .appSettingsToAdd(Collections.emptyMap())
-                                                          .connSettingsToAdd(Collections.emptyMap())
-                                                          .slotName("stage")
-                                                          .build())
-                                   .build())
-            .commandExecutionStatus(CommandExecutionStatus.SUCCESS)
-            .build());
-    AzureAppServiceSlotSetupExecutionData data = AzureAppServiceSlotSetupExecutionData.builder().build();
-    doReturn(data).when(context).getStateExecutionData();
+
+    List<AzureAppDeploymentData> azureAppDeploymentData = getAzureAppDeploymentData();
+    AzureWebAppInfrastructureMapping azureWebAppInfrastructureMapping = getAzureWebAppInfraMapping();
+    Map<String, ResponseData> responseMap = getResponseDataMap(azureAppDeploymentData);
+    AzureAppServiceSlotSetupExecutionData stateExecutionData = getStateExecutionData();
+    List<InstanceElement> instanceElements = Collections.singletonList(
+        anInstanceElement().uuid("uuid").hostName(HOST_NAME).displayName(HOST_NAME).newInstance(true).build());
+
+    doReturn(stateExecutionData).when(context).getStateExecutionData();
+    doReturn(azureWebAppInfrastructureMapping)
+        .when(azureVMSSStateHelper)
+        .getAzureWebAppInfrastructureMapping(any(), any());
+
+    doReturn(instanceElements)
+        .when(azureSweepingOutputServiceHelper)
+        .generateAzureAppInstanceElements(any(), any(), any());
+
+    ArgumentCaptor<AzureAppServiceSlotSetupContextElement> contextElementArgumentCaptor =
+        ArgumentCaptor.forClass(AzureAppServiceSlotSetupContextElement.class);
 
     ExecutionResponse executionResponse = state.handleAsyncResponse(context, responseMap);
 
     assertThat(executionResponse).isNotNull();
     assertThat(executionResponse.getExecutionStatus()).isEqualTo(SUCCESS);
+    verifySetupContextElement(context, contextElementArgumentCaptor);
+    verifyContextAndNotifyElements(executionResponse);
+    verifyPostStateExecutionData(executionResponse);
+  }
+
+  @Test
+  @Owner(developers = ANIL)
+  @Category(UnitTests.class)
+  public void testSlotSetupHandleAsyncResponseFailure() {
+    ExecutionContextImpl context = mock(ExecutionContextImpl.class);
+    doNothing().when(azureVMSSStateHelper).updateActivityStatus(anyString(), anyString(), any());
+    doReturn(FAILED).when(azureVMSSStateHelper).getAppServiceExecutionStatus(any());
+    doReturn(getStateExecutionData()).when(context).getStateExecutionData();
+    ArgumentCaptor<AzureAppServiceSlotSetupContextElement> contextElementArgumentCaptor =
+        ArgumentCaptor.forClass(AzureAppServiceSlotSetupContextElement.class);
+
+    ExecutionResponse executionResponse =
+        state.handleAsyncResponse(context, getResponseDataMap(getAzureAppDeploymentData()));
+
+    assertThat(executionResponse.getExecutionStatus()).isEqualTo(FAILED);
+    verifySetupContextElement(context, contextElementArgumentCaptor);
+  }
+
+  @NotNull
+  private List<AzureAppDeploymentData> getAzureAppDeploymentData() {
+    return Collections.singletonList(AzureAppDeploymentData.builder()
+                                         .subscriptionId(SUBSCRIPTION_ID)
+                                         .resourceGroup(RESOURCE_GROUP)
+                                         .appName(APP_NAME)
+                                         .deploySlot(DEPLOYMENT_SLOT)
+                                         .deploySlotId(DEPLOYMENT_SLOT_ID)
+                                         .appServicePlanId(APP_SERVICE_PLAN_ID)
+                                         .hostName(HOST_NAME)
+                                         .build());
+  }
+
+  @NotNull
+  private ImmutableMap<String, ResponseData> getResponseDataMap(List<AzureAppDeploymentData> azureAppDeploymentData) {
+    return ImmutableMap.of(ACTIVITY_ID,
+        AzureTaskExecutionResponse.builder()
+            .azureTaskResponse(AzureWebAppSlotSetupResponse.builder()
+                                   .azureAppDeploymentData(azureAppDeploymentData)
+                                   .preDeploymentData(AzureAppServicePreDeploymentData.builder()
+                                                          .appName(APP_NAME)
+                                                          .appSettingsToAdd(Collections.emptyMap())
+                                                          .connSettingsToAdd(Collections.emptyMap())
+                                                          .slotName(DEPLOYMENT_SLOT)
+                                                          .build())
+                                   .build())
+            .commandExecutionStatus(CommandExecutionStatus.SUCCESS)
+            .build());
+  }
+
+  private AzureAppServiceSlotSetupExecutionData getStateExecutionData() {
+    return AzureAppServiceSlotSetupExecutionData.builder()
+        .infrastructureMappingId(INFRA_ID)
+        .deploySlotName(DEPLOYMENT_SLOT)
+        .appServiceName(APP_NAME)
+        .activityId(ACTIVITY_ID)
+        .build();
+  }
+
+  private void verifySetupContextElement(ExecutionContextImpl context,
+      ArgumentCaptor<AzureAppServiceSlotSetupContextElement> contextElementArgumentCaptor) {
+    verify(azureSweepingOutputServiceHelper).saveToSweepingOutPut(contextElementArgumentCaptor.capture(), any(), any());
+    AzureAppServiceSlotSetupContextElement setupContextElement = contextElementArgumentCaptor.getValue();
+    assertThat(setupContextElement).isNotNull();
+    assertThat(setupContextElement.equals(new AzureAppServiceSlotSetupContextElement())).isFalse();
+    assertThat(setupContextElement.getCommandName()).isEqualTo(APP_SERVICE_SLOT_SETUP);
+    assertThat(setupContextElement.getWebApp()).isEqualTo(APP_NAME);
+    assertThat(setupContextElement.getDeploymentSlot()).isEqualTo(DEPLOYMENT_SLOT);
+    assertThat(setupContextElement.getInfraMappingId()).isEqualTo(INFRA_ID);
+    assertThat(setupContextElement.getPreDeploymentData()).isNotNull();
+
+    assertThat(setupContextElement.getName()).isNull();
+    assertThat(setupContextElement.getUuid()).isNull();
+    assertThat(setupContextElement.cloneMin()).isNull();
+    assertThat(setupContextElement.toString()).isNotNull();
+    assertThat(setupContextElement.getElementType()).isEqualTo(AZURE_WEBAPP_SETUP);
+    assertThat(setupContextElement.paramMap(context)).isNotEmpty();
+  }
+
+  private void verifyContextAndNotifyElements(ExecutionResponse executionResponse) {
     List<ContextElement> notifyElements = executionResponse.getNotifyElements();
     assertThat(notifyElements).isNotNull();
     assertThat(notifyElements.size()).isEqualTo(1);
+
     ContextElement contextElement = notifyElements.get(0);
     assertThat(contextElement).isNotNull();
-    assertThat(contextElement instanceof AzureAppServiceSlotSetupContextElement).isTrue();
-    AzureAppServiceSlotSetupContextElement slotSetupContextElement =
-        (AzureAppServiceSlotSetupContextElement) contextElement;
-    assertThat(slotSetupContextElement.getWebApp()).isEqualTo("webApp-for-deployment");
-    assertThat(slotSetupContextElement.getDeploymentSlot()).isEqualTo("stage");
+    assertThat(contextElement instanceof InstanceElementListParam).isTrue();
 
-    ContextElement setupContextElement = executionResponse.getContextElements().get(0);
-    assertThat(setupContextElement instanceof AzureAppServiceSlotSetupContextElement).isTrue();
+    ContextElement instanceElementParam = executionResponse.getContextElements().get(0);
+    assertThat(instanceElementParam instanceof InstanceElementListParam).isTrue();
+  }
 
-    AzureAppServiceSlotSetupContextElement webAppSlotSetupContextElement =
-        (AzureAppServiceSlotSetupContextElement) setupContextElement;
-    assertThat(webAppSlotSetupContextElement.equals(new AzureAppServiceSlotSetupContextElement())).isFalse();
-    assertThat(webAppSlotSetupContextElement.getUuid()).isNull();
-    assertThat(webAppSlotSetupContextElement.getName()).isNull();
-    assertThat(webAppSlotSetupContextElement.getTargetSlot()).isNull();
-    assertThat(webAppSlotSetupContextElement.getInfraMappingId()).isNull();
-    assertThat(webAppSlotSetupContextElement.getCommandName()).isEqualTo(AzureWebAppSlotSetup.APP_SERVICE_SLOT_SETUP);
-    assertThat(webAppSlotSetupContextElement.cloneMin()).isNull();
-    assertThat(webAppSlotSetupContextElement.toString()).isNotNull();
-    assertThat(setupContextElement.getElementType()).isEqualTo(ContextElementType.AZURE_WEBAPP_SETUP);
-    assertThat(setupContextElement.paramMap(context)).isNotEmpty();
+  private void verifyPostStateExecutionData(ExecutionResponse executionResponse) {
+    StateExecutionData stateExecutionData = executionResponse.getStateExecutionData();
+    assertThat(stateExecutionData instanceof AzureAppServiceSlotSetupExecutionData).isTrue();
+    AzureAppServiceSlotSetupExecutionData executionData = (AzureAppServiceSlotSetupExecutionData) stateExecutionData;
+    assertThat(executionData.getNewInstanceStatusSummaries().size()).isEqualTo(1);
   }
 }

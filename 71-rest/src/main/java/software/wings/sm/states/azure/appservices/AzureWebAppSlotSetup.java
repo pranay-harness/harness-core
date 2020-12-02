@@ -4,6 +4,7 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
 import static software.wings.beans.command.CommandUnitDetails.CommandUnitType.AZURE_APP_SERVICE_SLOT_SETUP;
 import static software.wings.sm.StateType.AZURE_WEBAPP_SLOT_SETUP;
+import static software.wings.sm.states.azure.appservices.AzureAppServiceSlotSetupContextElement.AMI_SERVICE_SETUP_SWEEPING_OUTPUT_NAME;
 
 import io.harness.azure.model.AzureAppServiceApplicationSetting;
 import io.harness.azure.model.AzureAppServiceConnectionString;
@@ -18,13 +19,18 @@ import io.harness.delegate.task.azure.appservice.webapp.request.AzureWebAppSlotS
 import io.harness.delegate.task.azure.appservice.webapp.response.AzureWebAppSlotSetupResponse;
 import io.harness.security.encryption.EncryptedDataDetail;
 
+import software.wings.api.InstanceElement;
+import software.wings.api.InstanceElementListParam;
 import software.wings.beans.Activity;
+import software.wings.beans.AzureWebAppInfrastructureMapping;
 import software.wings.beans.command.AzureVMSSDummyCommandUnit;
 import software.wings.beans.command.CommandUnit;
 import software.wings.beans.command.CommandUnitDetails.CommandUnitType;
 import software.wings.service.impl.azure.manager.AzureTaskExecutionRequest;
 import software.wings.sm.ContextElement;
 import software.wings.sm.ExecutionContext;
+import software.wings.sm.ExecutionResponse;
+import software.wings.sm.InstanceStatusSummary;
 import software.wings.sm.StateExecutionData;
 import software.wings.sm.StateType;
 import software.wings.sm.states.azure.artifact.ArtifactStreamMapper;
@@ -109,6 +115,8 @@ public class AzureWebAppSlotSetup extends AbstractAzureAppServiceState {
     AzureWebAppSlotSetupResponse slotSetupTaskResponse =
         (AzureWebAppSlotSetupResponse) executionResponse.getAzureTaskResponse();
 
+    provideInstanceElementDetails(context, executionStatus, slotSetupTaskResponse);
+
     AzureAppServiceSlotSetupExecutionData stateExecutionData = context.getStateExecutionData();
     stateExecutionData.setStatus(executionStatus);
     stateExecutionData.setErrorMsg(executionResponse.getErrorMessage());
@@ -123,16 +131,47 @@ public class AzureWebAppSlotSetup extends AbstractAzureAppServiceState {
     AzureWebAppSlotSetupResponse slotSetupTaskResponse =
         (AzureWebAppSlotSetupResponse) executionResponse.getAzureTaskResponse();
     AzureAppServiceSlotSetupExecutionData stateExecutionData = context.getStateExecutionData();
+    List<InstanceElement> instanceElements = getInstanceElements(context, slotSetupTaskResponse, stateExecutionData);
+    return InstanceElementListParam.builder().instanceElements(instanceElements).build();
+  }
+
+  @Override
+  protected ExecutionResponse processDelegateResponse(
+      AzureTaskExecutionResponse executionResponse, ExecutionContext context, ExecutionStatus executionStatus) {
+    saveContextElementToSweepingOutput(executionResponse, context);
+    return super.processDelegateResponse(executionResponse, context, executionStatus);
+  }
+
+  private void saveContextElementToSweepingOutput(
+      AzureTaskExecutionResponse executionResponse, ExecutionContext context) {
+    AzureWebAppSlotSetupResponse slotSetupTaskResponse =
+        (AzureWebAppSlotSetupResponse) executionResponse.getAzureTaskResponse();
+    AzureAppServiceSlotSetupExecutionData stateExecutionData = context.getStateExecutionData();
     AzureAppServicePreDeploymentData preDeploymentData = slotSetupTaskResponse.getPreDeploymentData();
 
-    return AzureAppServiceSlotSetupContextElement.builder()
-        .infraMappingId(stateExecutionData.getInfrastructureMappingId())
-        .appServiceSlotSetupTimeOut(getTimeOut(context))
-        .commandName(APP_SERVICE_SLOT_SETUP)
-        .webApp(preDeploymentData.getAppName())
-        .deploymentSlot(preDeploymentData.getSlotName())
-        .preDeploymentData(preDeploymentData)
-        .build();
+    AzureAppServiceSlotSetupContextElement setupContextElement =
+        AzureAppServiceSlotSetupContextElement.builder()
+            .infraMappingId(stateExecutionData.getInfrastructureMappingId())
+            .appServiceSlotSetupTimeOut(getTimeOut(context))
+            .commandName(APP_SERVICE_SLOT_SETUP)
+            .webApp(preDeploymentData.getAppName())
+            .deploymentSlot(preDeploymentData.getSlotName())
+            .preDeploymentData(preDeploymentData)
+            .build();
+
+    azureSweepingOutputServiceHelper.saveToSweepingOutPut(
+        setupContextElement, AMI_SERVICE_SETUP_SWEEPING_OUTPUT_NAME, context);
+  }
+
+  @Override
+  protected void emitAnyDataForExternalConsumption(
+      ExecutionContext context, AzureTaskExecutionResponse executionResponse) {
+    AzureWebAppSlotSetupResponse slotSetupTaskResponse =
+        (AzureWebAppSlotSetupResponse) executionResponse.getAzureTaskResponse();
+    AzureAppServiceSlotSetupExecutionData stateExecutionData = context.getStateExecutionData();
+    List<InstanceElement> instanceElements = getInstanceElements(context, slotSetupTaskResponse, stateExecutionData);
+    azureVMSSStateHelper.saveAzureAppInfoToSweepingOutput(
+        context, instanceElements, slotSetupTaskResponse.getAzureAppDeploymentData());
   }
 
   @Override
@@ -211,5 +250,26 @@ public class AzureWebAppSlotSetup extends AbstractAzureAppServiceState {
     slotSetupParametersBuilder.connectorConfigDTO(connectorConfigDTO);
     slotSetupParametersBuilder.encryptedDataDetails(encryptedDataDetails);
     slotSetupParametersBuilder.azureRegistryType(azureRegistryType);
+  }
+
+  private void provideInstanceElementDetails(
+      ExecutionContext context, ExecutionStatus executionStatus, AzureWebAppSlotSetupResponse slotSetupTaskResponse) {
+    AzureAppServiceSlotSetupExecutionData stateExecutionData = context.getStateExecutionData();
+    List<InstanceElement> instanceElements = getInstanceElements(context, slotSetupTaskResponse, stateExecutionData);
+    if (isNotEmpty(instanceElements)) {
+      List<InstanceStatusSummary> newInstanceStatusSummaries =
+          azureVMSSStateHelper.getInstanceStatusSummaries(executionStatus, instanceElements);
+      stateExecutionData.setNewInstanceStatusSummaries(newInstanceStatusSummaries);
+    }
+  }
+
+  private List<InstanceElement> getInstanceElements(ExecutionContext context,
+      AzureWebAppSlotSetupResponse slotSetupTaskResponse, AzureAppServiceSlotSetupExecutionData stateExecutionData) {
+    AzureWebAppInfrastructureMapping webAppInfrastructureMapping =
+        azureVMSSStateHelper.getAzureWebAppInfrastructureMapping(
+            stateExecutionData.getInfrastructureMappingId(), context.getAppId());
+
+    return azureSweepingOutputServiceHelper.generateAzureAppInstanceElements(
+        context, webAppInfrastructureMapping, slotSetupTaskResponse.getAzureAppDeploymentData());
   }
 }

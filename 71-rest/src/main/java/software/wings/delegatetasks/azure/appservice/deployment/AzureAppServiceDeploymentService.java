@@ -34,6 +34,7 @@ import io.harness.delegate.beans.connector.azureconnector.AzureContainerRegistry
 import io.harness.delegate.beans.logstreaming.ILogStreamingTaskClient;
 import io.harness.delegate.task.azure.appservice.AzureAppServicePreDeploymentData;
 import io.harness.delegate.task.azure.appservice.AzureAppServiceTaskParameters;
+import io.harness.delegate.task.azure.appservice.webapp.response.AzureAppDeploymentData;
 import io.harness.exception.InvalidRequestException;
 import io.harness.logging.LogCallback;
 
@@ -50,6 +51,7 @@ import com.microsoft.azure.management.containerregistry.Registry;
 import com.microsoft.azure.management.containerregistry.RegistryCredentials;
 import com.microsoft.azure.management.monitor.EventData;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -71,7 +73,7 @@ public class AzureAppServiceDeploymentService {
   @Inject private AzureTimeLimiter azureTimeLimiter;
   @Inject private AzureMonitorClient azureMonitorClient;
 
-  public void deployDockerImage(AzureAppServiceDockerDeploymentContext deploymentContext) {
+  public List<AzureAppDeploymentData> deployDockerImage(AzureAppServiceDockerDeploymentContext deploymentContext) {
     validateContextForDockerDeployment(deploymentContext);
     int steadyStateTimeoutInMin = deploymentContext.getSteadyStateTimeoutInMin();
     ILogStreamingTaskClient logStreamingTaskClient = deploymentContext.getLogStreamingTaskClient();
@@ -83,17 +85,30 @@ public class AzureAppServiceDeploymentService {
     updateDeploymentSlotConfigurationSettings(deploymentContext);
     updateDeploymentSlotContainerSettings(deploymentContext);
     startSlotAsyncWithSteadyCheck(deploymentSlot, logStreamingTaskClient, steadyStateTimeoutInMin);
+    return fetchDeploymentData(deploymentContext);
   }
 
-  public void setupSlot(AzureAppServiceDeploymentContext deploymentContext) {
-    int steadyStateTimeoutInMin = deploymentContext.getSteadyStateTimeoutInMin();
-    ILogStreamingTaskClient logStreamingTaskClient = deploymentContext.getLogStreamingTaskClient();
-    DeploymentSlot deploymentSlot =
-        getDeploymentSlot(deploymentContext.getAzureWebClientContext(), deploymentContext.getSlotName());
+  public List<AzureAppDeploymentData> fetchDeploymentData(AzureAppServiceDeploymentContext deploymentContext) {
+    AzureWebClientContext azureWebClientContext = deploymentContext.getAzureWebClientContext();
+    Optional<DeploymentSlot> deploymentSlotName =
+        azureWebClient.getDeploymentSlotByName(azureWebClientContext, deploymentContext.getSlotName());
 
-    stopSlotAsyncWithSteadyCheck(deploymentSlot, logStreamingTaskClient, steadyStateTimeoutInMin);
-    updateDeploymentSlotConfigurationSettings(deploymentContext);
-    startSlotAsyncWithSteadyCheck(deploymentSlot, logStreamingTaskClient, steadyStateTimeoutInMin);
+    if (!deploymentSlotName.isPresent()) {
+      throw new InvalidRequestException(format("Deployment slot - [%s] not found for Web App - [%s]",
+          deploymentContext.getSlotName(), azureWebClientContext.getAppName()));
+    }
+
+    DeploymentSlot deploymentSlot = deploymentSlotName.get();
+
+    return Collections.singletonList(AzureAppDeploymentData.builder()
+                                         .subscriptionId(azureWebClientContext.getSubscriptionId())
+                                         .resourceGroup(azureWebClientContext.getResourceGroupName())
+                                         .appName(azureWebClientContext.getAppName())
+                                         .deploySlot(deploymentContext.getSlotName())
+                                         .deploySlotId(deploymentSlot.id())
+                                         .appServicePlanId(deploymentSlot.appServicePlanId())
+                                         .hostName(deploymentSlot.defaultHostName())
+                                         .build());
   }
 
   private void validateContextForDockerDeployment(AzureAppServiceDockerDeploymentContext deploymentContext) {

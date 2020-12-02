@@ -2,6 +2,7 @@ package software.wings.sm.states.azure;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.deployment.InstanceDetails.InstanceType.AZURE_VMSS;
+import static io.harness.deployment.InstanceDetails.InstanceType.AZURE_WEBAPP;
 
 import static software.wings.api.InstanceElement.Builder.anInstanceElement;
 import static software.wings.beans.infrastructure.Host.Builder.aHost;
@@ -9,18 +10,24 @@ import static software.wings.beans.infrastructure.Host.Builder.aHost;
 import static java.util.stream.Collectors.toList;
 
 import io.harness.beans.SweepingOutputInstance;
+import io.harness.context.ContextElementType;
+import io.harness.delegate.task.azure.appservice.webapp.response.AzureAppDeploymentData;
 import io.harness.delegate.task.azure.response.AzureVMInstanceData;
 import io.harness.deployment.InstanceDetails;
+import io.harness.pms.sdk.core.data.SweepingOutput;
 
 import software.wings.api.HostElement;
 import software.wings.api.InstanceElement;
+import software.wings.api.PhaseElement;
 import software.wings.api.instancedetails.InstanceInfoVariables;
 import software.wings.beans.AzureVMSSInfrastructureMapping;
+import software.wings.beans.AzureWebAppInfrastructureMapping;
 import software.wings.beans.infrastructure.Host;
 import software.wings.common.InfrastructureConstants;
 import software.wings.expression.ManagerExpressionEvaluator;
 import software.wings.service.impl.servicetemplates.ServiceTemplateHelper;
 import software.wings.service.intfc.HostService;
+import software.wings.service.intfc.sweepingoutput.SweepingOutputInquiry;
 import software.wings.service.intfc.sweepingoutput.SweepingOutputService;
 import software.wings.sm.ExecutionContext;
 
@@ -115,11 +122,90 @@ public class AzureSweepingOutputServiceHelper {
                                    .build());
   }
 
-  public void saveInstanceInfoToSweepingOutput(ExecutionContext context, int trafficShift) {
+  public void saveTrafficShiftInfoToSweepingOutput(ExecutionContext context, int trafficShift) {
     sweepingOutputService.save(
         context.prepareSweepingOutputBuilder(SweepingOutputInstance.Scope.WORKFLOW)
             .name(context.appendStateExecutionId(InstanceInfoVariables.SWEEPING_OUTPUT_NAME))
             .value(InstanceInfoVariables.builder().newInstanceTrafficPercent(trafficShift).build())
             .build());
+  }
+
+  public List<InstanceElement> generateAzureAppInstanceElements(ExecutionContext context,
+      AzureWebAppInfrastructureMapping infraMapping, List<AzureAppDeploymentData> appDeploymentData) {
+    return appDeploymentData.stream()
+        .filter(Objects::nonNull)
+        .map(appDeploy -> {
+          Host host = aHost()
+                          .withHostName(appDeploy.getHostName())
+                          .withPublicDns(appDeploy.getAppName())
+                          .withAppId(infraMapping.getAppId())
+                          .withEnvId(infraMapping.getEnvId())
+                          .withHostConnAttr(infraMapping.getHostConnectionAttrs())
+                          .withInfraMappingId(infraMapping.getUuid())
+                          .withInfraDefinitionId(infraMapping.getInfrastructureDefinitionId())
+                          .withServiceTemplateId(serviceTemplateHelper.fetchServiceTemplateId(infraMapping))
+                          .build();
+          Host savedHost = hostService.saveHost(host);
+          HostElement hostElement = HostElement.builder()
+                                        .uuid(savedHost.getUuid())
+                                        .publicDns(appDeploy.getHostName())
+                                        .ip(appDeploy.getHostName())
+                                        .appDeploymentData(appDeploy)
+                                        .instanceId(appDeploy.getHostName())
+                                        .build();
+          final Map<String, Object> contextMap = context.asMap();
+          contextMap.put(HOST, hostElement);
+          String hostName = getHostnameFromConvention(contextMap, "");
+          hostElement.setHostName(hostName);
+          return anInstanceElement()
+              .uuid(appDeploy.getDeploySlotId())
+              .hostName(hostName)
+              .displayName(appDeploy.getHostName())
+              .host(hostElement)
+              .newInstance(true)
+              .build();
+        })
+        .collect(toList());
+  }
+
+  public List<InstanceDetails> generateAzureAppServiceInstanceDetails(List<AzureAppDeploymentData> appDeploymentData) {
+    return appDeploymentData.stream()
+        .filter(Objects::nonNull)
+        .map(instanceElement
+            -> InstanceDetails.builder()
+                   .instanceType(AZURE_WEBAPP)
+                   .newInstance(true)
+                   .hostName(instanceElement.getHostName())
+                   .azureWebapp(InstanceDetails.AZURE_WEBAPP.builder()
+                                    .subscriptionId(instanceElement.getSubscriptionId())
+                                    .resourceGroup(instanceElement.getResourceGroup())
+                                    .appName(instanceElement.getAppName())
+                                    .appServicePlanId(instanceElement.getAppServicePlanId())
+                                    .deploySlot(instanceElement.getDeploySlot())
+                                    .deploySlotId(instanceElement.getDeploySlotId())
+                                    .defaultHostName(instanceElement.getHostName())
+                                    .build())
+                   .build())
+        .collect(toList());
+  }
+
+  public SweepingOutput getSetupElementFromSweepingOutput(ExecutionContext context, String prefix) {
+    String sweepingOutputName = getSweepingOutputName(context, prefix);
+    SweepingOutputInquiry inquiry = context.prepareSweepingOutputInquiryBuilder().name(sweepingOutputName).build();
+    return sweepingOutputService.findSweepingOutput(inquiry);
+  }
+
+  public void saveToSweepingOutPut(SweepingOutput value, String prefix, ExecutionContext context) {
+    String sweepingOutputName = getSweepingOutputName(context, prefix);
+    sweepingOutputService.save(context.prepareSweepingOutputBuilder(SweepingOutputInstance.Scope.WORKFLOW)
+                                   .name(sweepingOutputName)
+                                   .value(value)
+                                   .build());
+  }
+
+  protected String getSweepingOutputName(ExecutionContext context, String prefix) {
+    PhaseElement phaseElement = context.getContextElement(ContextElementType.PARAM, PhaseElement.PHASE_PARAM);
+    String suffix = phaseElement.getServiceElement().getUuid().trim();
+    return prefix + suffix;
   }
 }

@@ -55,17 +55,12 @@ public class AzureWebAppRollbackTaskHandlerTest extends WingsBaseTest {
   public void testExecuteTaskInternal() {
     AzureWebAppRollbackParameters rollbackParameters = buildAzureWebAppRollbackParameters();
     AzureConfig azureConfig = buildAzureConfig();
-    mockSetupSlot();
     mockRerouteProductionSlotTraffic();
 
     AzureAppServiceTaskResponse azureAppServiceTaskResponse =
         azureWebAppRollbackTaskHandler.executeTaskInternal(rollbackParameters, azureConfig, mockLogStreamingTaskClient);
 
     assertThat(azureAppServiceTaskResponse).isNotNull();
-  }
-
-  private void mockSetupSlot() {
-    doNothing().when(azureAppServiceDeploymentService).setupSlot(any());
   }
 
   private void mockRerouteProductionSlotTraffic() {

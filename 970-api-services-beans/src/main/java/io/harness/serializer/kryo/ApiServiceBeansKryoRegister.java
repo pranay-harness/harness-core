@@ -222,5 +222,6 @@ public class ApiServiceBeansKryoRegister implements KryoRegistrar {
     kryo.register(TfVarScriptRepositorySource.class, 1433);
     kryo.register(TfVarSource.class, 1434);
     kryo.register(TfVarSourceType.class, 1435);
+    kryo.register(InstanceDetails.AZURE_WEBAPP.class, 1437);
   }
 }

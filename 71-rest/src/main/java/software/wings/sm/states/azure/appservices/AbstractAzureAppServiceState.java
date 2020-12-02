@@ -4,17 +4,20 @@ import static io.harness.beans.ExecutionStatus.FAILED;
 import static io.harness.beans.ExecutionStatus.SKIPPED;
 import static io.harness.exception.ExceptionUtils.getMessage;
 
+import static software.wings.sm.states.azure.appservices.AzureAppServiceSlotSetupContextElement.AMI_SERVICE_SETUP_SWEEPING_OUTPUT_NAME;
+
 import static java.util.Collections.singletonList;
 import static java.util.concurrent.TimeUnit.MINUTES;
 
+import io.harness.azure.model.AzureConstants;
 import io.harness.beans.DelegateTask;
 import io.harness.beans.ExecutionStatus;
-import io.harness.context.ContextElementType;
 import io.harness.delegate.beans.TaskData;
 import io.harness.delegate.task.azure.AzureTaskExecutionResponse;
 import io.harness.exception.InvalidRequestException;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.logging.Misc;
+import io.harness.pms.sdk.core.data.SweepingOutput;
 import io.harness.tasks.Cd1SetupFields;
 import io.harness.tasks.ResponseData;
 
@@ -39,9 +42,11 @@ import software.wings.sm.states.azure.AzureVMSSStateHelper;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.github.reinert.jjschema.SchemaIgnore;
+import com.google.common.primitives.Ints;
 import com.google.inject.Inject;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 import lombok.extern.slf4j.Slf4j;
 import org.jetbrains.annotations.NotNull;
 
@@ -60,7 +65,15 @@ public abstract class AbstractAzureAppServiceState extends State {
   @Override
   @SchemaIgnore
   public Integer getTimeoutMillis(ExecutionContext context) {
-    return azureVMSSStateHelper.getStateTimeOutFromContext(context, ContextElementType.AZURE_WEBAPP_SETUP);
+    int timeOut = AzureConstants.DEFAULT_AZURE_VMSS_TIMEOUT_MIN;
+    SweepingOutput setupElementFromSweepingOutput = azureSweepingOutputServiceHelper.getSetupElementFromSweepingOutput(
+        context, AMI_SERVICE_SETUP_SWEEPING_OUTPUT_NAME);
+    if (setupElementFromSweepingOutput != null) {
+      AzureAppServiceSlotSetupContextElement setupContextElement =
+          (AzureAppServiceSlotSetupContextElement) setupElementFromSweepingOutput;
+      timeOut = setupContextElement.getAppServiceSlotSetupTimeOut();
+    }
+    return Ints.checkedCast(TimeUnit.MINUTES.toMillis(timeOut));
   }
 
   @Override
@@ -129,27 +142,31 @@ public abstract class AbstractAzureAppServiceState extends State {
   private ExecutionResponse handleAsyncInternal(ExecutionContext context, Map<String, ResponseData> response) {
     AzureTaskExecutionResponse executionResponse = (AzureTaskExecutionResponse) response.values().iterator().next();
     ExecutionStatus executionStatus = azureVMSSStateHelper.getAppServiceExecutionStatus(executionResponse);
-    ContextElement contextElement = buildContextElement(context, executionResponse);
+    updateActivityStatus(response, context.getAppId(), executionStatus);
+    return processDelegateResponse(executionResponse, context, executionStatus);
+  }
 
+  protected ExecutionResponse processDelegateResponse(
+      AzureTaskExecutionResponse executionResponse, ExecutionContext context, ExecutionStatus executionStatus) {
     if (executionStatus == ExecutionStatus.FAILED) {
       return ExecutionResponse.builder()
           .executionStatus(executionStatus)
-          .contextElement(contextElement)
-          .notifyElement(contextElement)
           .errorMessage(executionResponse.getErrorMessage())
           .build();
     }
 
-    updateActivityStatus(response, context.getAppId(), executionStatus);
     StateExecutionData stateExecutionData = buildPostStateExecutionData(context, executionResponse, executionStatus);
     emitAnyDataForExternalConsumption(context, executionResponse);
+    ContextElement contextElement = buildContextElement(context, executionResponse);
 
-    return ExecutionResponse.builder()
-        .executionStatus(executionStatus)
+    ExecutionResponseBuilder responseBuilder = ExecutionResponse.builder();
+    if (contextElement != null) {
+      responseBuilder.contextElement(contextElement);
+      responseBuilder.notifyElement(contextElement);
+    }
+    return responseBuilder.executionStatus(executionStatus)
         .errorMessage(executionResponse.getErrorMessage())
         .stateExecutionData(stateExecutionData)
-        .contextElement(contextElement)
-        .notifyElement(contextElement)
         .build();
   }
 
@@ -163,8 +180,9 @@ public abstract class AbstractAzureAppServiceState extends State {
   }
 
   protected boolean verifyIfContextElementExist(ExecutionContext context) {
-    ContextElement contextElement = context.getContextElement(ContextElementType.AZURE_WEBAPP_SETUP);
-    if (!(contextElement instanceof AzureAppServiceSlotSetupContextElement)) {
+    SweepingOutput setupElementFromSweepingOutput = azureSweepingOutputServiceHelper.getSetupElementFromSweepingOutput(
+        context, AMI_SERVICE_SETUP_SWEEPING_OUTPUT_NAME);
+    if (!(setupElementFromSweepingOutput instanceof AzureAppServiceSlotSetupContextElement)) {
       if (isRollback()) {
         return false;
       }
@@ -173,9 +191,9 @@ public abstract class AbstractAzureAppServiceState extends State {
     return true;
   }
 
-  protected AzureAppServiceSlotSetupContextElement getContextElement(ExecutionContext context) {
-    ContextElement contextElement = context.getContextElement(ContextElementType.AZURE_WEBAPP_SETUP);
-    return (AzureAppServiceSlotSetupContextElement) contextElement;
+  protected AzureAppServiceSlotSetupContextElement readContextElement(ExecutionContext context) {
+    return (AzureAppServiceSlotSetupContextElement) azureSweepingOutputServiceHelper.getSetupElementFromSweepingOutput(
+        context, AMI_SERVICE_SETUP_SWEEPING_OUTPUT_NAME);
   }
 
   protected abstract AzureTaskExecutionRequest buildTaskExecutionRequest(
@@ -187,8 +205,9 @@ public abstract class AbstractAzureAppServiceState extends State {
   protected abstract StateExecutionData buildPostStateExecutionData(
       ExecutionContext context, AzureTaskExecutionResponse executionResponse, ExecutionStatus executionStatus);
 
-  protected abstract ContextElement buildContextElement(
-      ExecutionContext context, AzureTaskExecutionResponse executionResponse);
+  protected ContextElement buildContextElement(ExecutionContext context, AzureTaskExecutionResponse executionResponse) {
+    return null;
+  }
 
   protected abstract List<CommandUnit> commandUnits();
 

@@ -5,6 +5,7 @@
 package software.wings.api;
 
 import io.harness.context.ContextElementType;
+import io.harness.delegate.task.azure.appservice.webapp.response.AzureAppDeploymentData;
 import io.harness.delegate.task.azure.response.AzureVMInstanceData;
 
 import software.wings.sm.ContextElement;
@@ -35,6 +36,7 @@ public class HostElement implements ContextElement {
   private Instance ec2Instance;
   private PcfInstanceElement pcfElement;
   private AzureVMInstanceData azureVMInstance;
+  private AzureAppDeploymentData appDeploymentData;
 
   @Override
   public String getName() {

@@ -3,6 +3,8 @@ package software.wings.sm.states.azure;
 import static io.harness.beans.ExecutionStatus.SKIPPED;
 import static io.harness.rule.OwnerRule.ANIL;
 
+import static software.wings.sm.states.azure.appservices.AzureAppServiceSlotSetupContextElement.AMI_SERVICE_SETUP_SWEEPING_OUTPUT_NAME;
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyListOf;
@@ -51,6 +53,7 @@ import org.mockito.stubbing.Answer;
 public class AzureWebAppSlotRollbackTest extends WingsBaseTest {
   @Mock protected transient DelegateService delegateService;
   @Mock protected transient AzureVMSSStateHelper azureVMSSStateHelper;
+  @Mock protected transient AzureSweepingOutputServiceHelper azureSweepingOutputServiceHelper;
   @Mock protected ActivityService activityService;
   @Spy @InjectMocks AzureWebAppSlotRollback state = new AzureWebAppSlotRollback("Web app slot rollback state");
 
@@ -84,11 +87,11 @@ public class AzureWebAppSlotRollbackTest extends WingsBaseTest {
     Environment env = Environment.Builder.anEnvironment().uuid(envId).build();
     Service service = Service.builder().uuid(serviceId).build();
     AzureAppServicePreDeploymentData preDeploymentData = AzureAppServicePreDeploymentData.builder().build();
-    AzureAppServiceSlotSetupContextElement trafficShiftContextElement = AzureAppServiceSlotSetupContextElement.builder()
-                                                                            .preDeploymentData(preDeploymentData)
-                                                                            .deploymentSlot("dev-slot")
-                                                                            .appServiceSlotSetupTimeOut(10)
-                                                                            .build();
+    AzureAppServiceSlotSetupContextElement setupContextElement = AzureAppServiceSlotSetupContextElement.builder()
+                                                                     .preDeploymentData(preDeploymentData)
+                                                                     .deploymentSlot("dev-slot")
+                                                                     .appServiceSlotSetupTimeOut(10)
+                                                                     .build();
 
     AzureConfig azureConfig = AzureConfig.builder().build();
     Artifact artifact = Artifact.Builder.anArtifact().build();
@@ -120,9 +123,10 @@ public class AzureWebAppSlotRollbackTest extends WingsBaseTest {
     ManagerExecutionLogCallback managerExecutionLogCallback = mock(ManagerExecutionLogCallback.class);
 
     if (contextElement) {
-      doReturn(trafficShiftContextElement)
-          .when(mockContext)
-          .getContextElement(eq(ContextElementType.AZURE_WEBAPP_SETUP));
+      doReturn(setupContextElement).when(mockContext).getContextElement(eq(ContextElementType.AZURE_WEBAPP_SETUP));
+      doReturn(setupContextElement)
+          .when(azureSweepingOutputServiceHelper)
+          .getSetupElementFromSweepingOutput(eq(mockContext), eq(AMI_SERVICE_SETUP_SWEEPING_OUTPUT_NAME));
     }
     doReturn(activity)
         .when(azureVMSSStateHelper)
