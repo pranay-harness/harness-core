@@ -72,6 +72,7 @@ public class KubernetesActivitySource
 
   public KubernetesActivitySourceDTO toDTO() {
     return KubernetesActivitySourceDTO.builder()
+        .uuid(uuid)
         .identifier(identifier)
         .name(name)
         .connectorIdentifier(connectorIdentifier)

@@ -81,7 +81,7 @@ public class K8ActivityCollectionPerpetualTaskExecutor implements PerpetualTaskE
               kubernetesActivitiesStoreService.save(taskParams.getAccountId(),
                   KubernetesActivityDTO.builder()
                       .message(v1Event.getMessage())
-                      .json(v1Event.toString())
+                      .eventDetails(v1Event.toString())
                       .activitySourceConfigId(activitySourceConfigId)
                       .name(v1Event.getInvolvedObject().getUid())
                       .activityStartTime(v1Event.getFirstTimestamp().getMillis())

@@ -10,10 +10,12 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import java.util.List;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import lombok.experimental.SuperBuilder;
 
 @Data
 @NoArgsConstructor
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "type", include = JsonTypeInfo.As.EXISTING_PROPERTY)
+@SuperBuilder
 public abstract class VerificationJobDTO {
   private String identifier;
   private String jobName;

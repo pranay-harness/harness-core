@@ -22,14 +22,14 @@ import lombok.experimental.FieldNameConstants;
 @EqualsAndHashCode(callSuper = true)
 public class KubernetesActivity extends InfrastructureActivity {
   private String message;
-  private String json;
+  private String eventDetails;
 
   @Override
   public void fromDTO(ActivityDTO activityDTO) {
     Preconditions.checkState(activityDTO instanceof KubernetesActivityDTO);
     KubernetesActivityDTO kubernetesActivityDTO = (KubernetesActivityDTO) activityDTO;
     setMessage(kubernetesActivityDTO.getMessage());
-    setJson(kubernetesActivityDTO.getJson());
+    setEventDetails(kubernetesActivityDTO.getEventDetails());
     setType(ActivityType.INFRASTRUCTURE);
     addCommonFileds(activityDTO);
   }
@@ -37,6 +37,6 @@ public class KubernetesActivity extends InfrastructureActivity {
   @Override
   public void validateActivityParams() {
     Preconditions.checkNotNull(message, generateErrorMessageFromParam(KubernetesActivityKeys.message));
-    Preconditions.checkNotNull(json, generateErrorMessageFromParam(KubernetesActivityKeys.json));
+    Preconditions.checkNotNull(eventDetails, generateErrorMessageFromParam(KubernetesActivityKeys.eventDetails));
   }
 }
