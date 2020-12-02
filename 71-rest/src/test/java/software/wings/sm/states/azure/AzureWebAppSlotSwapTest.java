@@ -4,6 +4,8 @@ import static io.harness.beans.ExecutionStatus.FAILED;
 import static io.harness.beans.ExecutionStatus.SUCCESS;
 import static io.harness.rule.OwnerRule.ANIL;
 
+import static software.wings.sm.states.azure.appservices.AzureAppServiceSlotSetupContextElement.AMI_SERVICE_SETUP_SWEEPING_OUTPUT_NAME;
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyListOf;
@@ -66,6 +68,7 @@ public class AzureWebAppSlotSwapTest extends WingsBaseTest {
   @Mock protected transient DelegateService delegateService;
   @Mock protected transient AzureVMSSStateHelper azureVMSSStateHelper;
   @Mock protected ActivityService activityService;
+  @Mock protected transient AzureSweepingOutputServiceHelper azureSweepingOutputServiceHelper;
   @Spy @InjectMocks AzureWebAppSlotSwap state = new AzureWebAppSlotSwap("Slot swap state");
 
   private final String ACTIVITY_ID = "activityId";
@@ -73,6 +76,7 @@ public class AzureWebAppSlotSwapTest extends WingsBaseTest {
   private final String SWAP_APP_NAME = "swapSlotWebApp";
   private final String SWAP_TARGET_SLOT = "swapTargetSlot";
   private final String SWAP_DEPLOYMENT_SLOT = "swapDeploymentSlot";
+  private final String INFRA_MAPPING_ID = "infraMappingId";
 
   @Test
   @Owner(developers = ANIL)
@@ -173,17 +177,18 @@ public class AzureWebAppSlotSwapTest extends WingsBaseTest {
     Environment env = Environment.Builder.anEnvironment().uuid(envId).build();
     Service service = Service.builder().uuid(serviceId).build();
     AzureAppServicePreDeploymentData preDeploymentData = AzureAppServicePreDeploymentData.builder().build();
-    AzureAppServiceSlotSetupContextElement trafficShiftContextElement = AzureAppServiceSlotSetupContextElement.builder()
-                                                                            .preDeploymentData(preDeploymentData)
-                                                                            .deploymentSlot(SWAP_DEPLOYMENT_SLOT)
-                                                                            .appServiceSlotSetupTimeOut(10)
-                                                                            .build();
+    AzureAppServiceSlotSetupContextElement setupContextElement = AzureAppServiceSlotSetupContextElement.builder()
+                                                                     .preDeploymentData(preDeploymentData)
+                                                                     .deploymentSlot(SWAP_DEPLOYMENT_SLOT)
+                                                                     .appServiceSlotSetupTimeOut(10)
+                                                                     .build();
 
     AzureConfig azureConfig = AzureConfig.builder().build();
     Artifact artifact = Artifact.Builder.anArtifact().build();
     List<EncryptedDataDetail> encryptedDataDetails = new ArrayList<>();
 
     AzureWebAppInfrastructureMapping azureWebAppInfrastructureMapping = AzureWebAppInfrastructureMapping.builder()
+                                                                            .uuid(INFRA_MAPPING_ID)
                                                                             .resourceGroup(SWAP_RESOURCE_GROUP)
                                                                             .subscriptionId("subId")
                                                                             .webApp(SWAP_APP_NAME)
@@ -208,9 +213,10 @@ public class AzureWebAppSlotSwapTest extends WingsBaseTest {
     ManagerExecutionLogCallback managerExecutionLogCallback = mock(ManagerExecutionLogCallback.class);
 
     if (contextElement) {
-      doReturn(trafficShiftContextElement)
-          .when(mockContext)
-          .getContextElement(eq(ContextElementType.AZURE_WEBAPP_SETUP));
+      doReturn(setupContextElement).when(mockContext).getContextElement(eq(ContextElementType.AZURE_WEBAPP_SETUP));
+      doReturn(setupContextElement)
+          .when(azureSweepingOutputServiceHelper)
+          .getSetupElementFromSweepingOutput(eq(mockContext), eq(AMI_SERVICE_SETUP_SWEEPING_OUTPUT_NAME));
     }
 
     if (failActivityCreation) {
@@ -291,6 +297,7 @@ public class AzureWebAppSlotSwapTest extends WingsBaseTest {
     assertThat(stateExecutionData.getAppServiceName()).isEqualTo(SWAP_APP_NAME);
     assertThat(stateExecutionData.getDeploymentSlot()).isEqualTo(SWAP_DEPLOYMENT_SLOT);
     assertThat(stateExecutionData.getTargetSlot()).isEqualTo(SWAP_TARGET_SLOT);
+    assertThat(stateExecutionData.getInfrastructureMappingId()).isEqualTo(INFRA_MAPPING_ID);
 
     AzureAppServiceSlotSwapExecutionSummary stepExecutionSummary = stateExecutionData.getStepExecutionSummary();
     assertThat(stepExecutionSummary.equals(AzureAppServiceSlotSwapExecutionSummary.builder().build())).isFalse();

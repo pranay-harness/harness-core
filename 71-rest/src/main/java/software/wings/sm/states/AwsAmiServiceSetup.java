@@ -186,7 +186,7 @@ public class AwsAmiServiceSetup extends State {
           : SweepingOutputInstance.Scope.WORKFLOW;
       sweepingOutputService.save(context.prepareSweepingOutputBuilder(outputScope)
                                      .name(AwsAmiInfoVariables.SWEEPING_OUTPUT_NAME)
-                                     .value(amiServiceElement.fetchPcfVariableInfo())
+                                     .value(amiServiceElement.fetchAmiVariableInfo())
                                      .build());
     }
   }

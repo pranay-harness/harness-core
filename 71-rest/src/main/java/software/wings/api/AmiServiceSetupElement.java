@@ -54,7 +54,7 @@ public class AmiServiceSetupElement implements ContextElement, SweepingOutput {
     return ImmutableMap.of("ami", map);
   }
 
-  public AwsAmiInfoVariables fetchPcfVariableInfo() {
+  public AwsAmiInfoVariables fetchAmiVariableInfo() {
     AwsAmiInfoVariablesBuilder builder = AwsAmiInfoVariables.builder();
     if (newAutoScalingGroupName != null) {
       builder.newAsgName(newAutoScalingGroupName);

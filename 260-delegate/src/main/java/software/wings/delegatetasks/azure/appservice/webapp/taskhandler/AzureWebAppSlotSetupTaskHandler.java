@@ -23,6 +23,7 @@ import io.harness.delegate.task.azure.appservice.AzureAppServicePreDeploymentDat
 import io.harness.delegate.task.azure.appservice.AzureAppServiceTaskParameters;
 import io.harness.delegate.task.azure.appservice.AzureAppServiceTaskResponse;
 import io.harness.delegate.task.azure.appservice.webapp.request.AzureWebAppSlotSetupParameters;
+import io.harness.delegate.task.azure.appservice.webapp.response.AzureAppDeploymentData;
 import io.harness.delegate.task.azure.appservice.webapp.response.AzureWebAppSlotSetupResponse;
 import io.harness.exception.InvalidArgumentsException;
 
@@ -32,6 +33,7 @@ import software.wings.delegatetasks.azure.appservice.webapp.AbstractAzureWebAppT
 import com.google.inject.Singleton;
 import com.microsoft.azure.management.containerregistry.AccessKeyType;
 import com.microsoft.azure.management.containerregistry.RegistryCredentials;
+import java.util.List;
 import java.util.Map;
 import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -56,7 +58,13 @@ public class AzureWebAppSlotSetupTaskHandler extends AbstractAzureWebAppTaskHand
         getAzureAppServicePreDeploymentData(dockerDeploymentContext);
 
     try {
-      azureAppServiceDeploymentService.deployDockerImage(dockerDeploymentContext);
+      List<AzureAppDeploymentData> azureAppDeploymentData =
+          azureAppServiceDeploymentService.deployDockerImage(dockerDeploymentContext);
+
+      return AzureWebAppSlotSetupResponse.builder()
+          .azureAppDeploymentData(azureAppDeploymentData)
+          .preDeploymentData(azureAppServicePreDeploymentData)
+          .build();
     } catch (Exception ex) {
       String message = AzureResourceUtility.getAzureCloudExceptionMessage(ex);
       logErrorMsg(azureAppServiceTaskParameters, logStreamingTaskClient, ex, message);
@@ -66,8 +74,6 @@ public class AzureWebAppSlotSetupTaskHandler extends AbstractAzureWebAppTaskHand
           .preDeploymentData(azureAppServicePreDeploymentData)
           .build();
     }
-
-    return AzureWebAppSlotSetupResponse.builder().preDeploymentData(azureAppServicePreDeploymentData).build();
   }
 
   private AzureAppServiceDockerDeploymentContext toAzureAppServiceDockerDeploymentContext(

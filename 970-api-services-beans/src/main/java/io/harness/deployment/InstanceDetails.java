@@ -23,9 +23,10 @@ public class InstanceDetails {
   private PHYSICAL_HOST physicalHost;
   private K8s k8s;
   private AZURE_VMSS azureVmss;
+  private AZURE_WEBAPP azureWebapp;
   private InstanceType instanceType;
 
-  public enum InstanceType { PCF, AWS, K8s, PHYSICAL_HOST, AZURE_VMSS }
+  public enum InstanceType { PCF, AWS, K8s, PHYSICAL_HOST, AZURE_VMSS, AZURE_WEBAPP }
 
   @Value
   @Builder
@@ -73,5 +74,17 @@ public class InstanceDetails {
     private String ip;
     private String instanceId;
     private String publicDns;
+  }
+
+  @Value
+  @Builder
+  public static class AZURE_WEBAPP {
+    private String resourceGroup;
+    private String subscriptionId;
+    private String appName;
+    private String deploySlot;
+    private String deploySlotId;
+    private String appServicePlanId;
+    private String defaultHostName;
   }
 }

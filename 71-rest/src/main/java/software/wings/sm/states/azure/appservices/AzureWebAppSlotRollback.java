@@ -45,7 +45,7 @@ public class AzureWebAppSlotRollback extends AzureWebAppSlotSetup {
 
   private AzureWebAppRollbackParameters buildAzureWebAppSlotRollbackParameters(
       ExecutionContext context, AzureAppServiceStateData azureAppServiceStateData, Activity activity) {
-    AzureAppServiceSlotSetupContextElement contextElement = getContextElement(context);
+    AzureAppServiceSlotSetupContextElement contextElement = readContextElement(context);
     return AzureWebAppRollbackParameters.builder()
         .accountId(azureAppServiceStateData.getApplication().getAccountId())
         .appId(azureAppServiceStateData.getApplication().getAppId())
@@ -78,7 +78,7 @@ public class AzureWebAppSlotRollback extends AzureWebAppSlotSetup {
   @Override
   protected boolean shouldExecute(ExecutionContext context) {
     if (verifyIfContextElementExist(context)) {
-      AzureAppServiceSlotSetupContextElement contextElement = getContextElement(context);
+      AzureAppServiceSlotSetupContextElement contextElement = readContextElement(context);
       AzureAppServicePreDeploymentData preDeploymentData = contextElement.getPreDeploymentData();
       return preDeploymentData != null;
     }

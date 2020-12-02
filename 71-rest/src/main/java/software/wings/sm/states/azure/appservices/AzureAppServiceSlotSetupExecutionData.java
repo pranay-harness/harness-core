@@ -5,8 +5,11 @@ import static io.harness.azure.model.AzureConstants.ACTIVITY_ID;
 import io.harness.delegate.beans.DelegateTaskNotifyResponseData;
 
 import software.wings.api.ExecutionDataValue;
+import software.wings.sm.InstanceStatusSummary;
 import software.wings.sm.StateExecutionData;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -26,6 +29,7 @@ public class AzureAppServiceSlotSetupExecutionData
   private Integer appServiceSlotSetupTimeOut;
   private String appServiceName;
   private String deploySlotName;
+  @Builder.Default private List<InstanceStatusSummary> newInstanceStatusSummaries = new ArrayList<>();
 
   @Override
   public Map<String, ExecutionDataValue> getExecutionSummary() {

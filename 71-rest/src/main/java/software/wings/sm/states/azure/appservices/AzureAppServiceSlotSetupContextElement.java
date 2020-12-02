@@ -2,6 +2,7 @@ package software.wings.sm.states.azure.appservices;
 
 import io.harness.context.ContextElementType;
 import io.harness.delegate.task.azure.appservice.AzureAppServicePreDeploymentData;
+import io.harness.pms.sdk.core.data.SweepingOutput;
 
 import software.wings.sm.ContextElement;
 import software.wings.sm.ExecutionContext;
@@ -20,16 +21,16 @@ import lombok.NoArgsConstructor;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class AzureAppServiceSlotSetupContextElement implements ContextElement {
+public class AzureAppServiceSlotSetupContextElement implements ContextElement, SweepingOutput {
   private String uuid;
   private String name;
   private String commandName;
   private String webApp;
   private String deploymentSlot;
-  private String targetSlot;
   private Integer appServiceSlotSetupTimeOut;
   private String infraMappingId;
   private AzureAppServicePreDeploymentData preDeploymentData;
+  public static final String AMI_SERVICE_SETUP_SWEEPING_OUTPUT_NAME = "setupSweepingOutputAppService";
 
   @Override
   public ContextElementType getElementType() {

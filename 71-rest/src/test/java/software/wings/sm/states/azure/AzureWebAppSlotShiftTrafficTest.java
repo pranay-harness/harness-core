@@ -4,6 +4,8 @@ import static io.harness.beans.ExecutionStatus.FAILED;
 import static io.harness.beans.ExecutionStatus.SUCCESS;
 import static io.harness.rule.OwnerRule.ANIL;
 
+import static software.wings.sm.states.azure.appservices.AzureAppServiceSlotSetupContextElement.AMI_SERVICE_SETUP_SWEEPING_OUTPUT_NAME;
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyInt;
@@ -128,16 +130,17 @@ public class AzureWebAppSlotShiftTrafficTest extends WingsBaseTest {
     Environment env = Environment.Builder.anEnvironment().uuid(envId).build();
     Service service = Service.builder().uuid(serviceId).build();
     AzureAppServicePreDeploymentData preDeploymentData = AzureAppServicePreDeploymentData.builder().build();
-    AzureAppServiceSlotSetupContextElement trafficShiftContextElement = AzureAppServiceSlotSetupContextElement.builder()
-                                                                            .preDeploymentData(preDeploymentData)
-                                                                            .appServiceSlotSetupTimeOut(10)
-                                                                            .build();
+    AzureAppServiceSlotSetupContextElement setupContextElement = AzureAppServiceSlotSetupContextElement.builder()
+                                                                     .preDeploymentData(preDeploymentData)
+                                                                     .appServiceSlotSetupTimeOut(10)
+                                                                     .build();
 
     AzureConfig azureConfig = AzureConfig.builder().build();
     Artifact artifact = Artifact.Builder.anArtifact().build();
     List<EncryptedDataDetail> encryptedDataDetails = new ArrayList<>();
 
     AzureWebAppInfrastructureMapping azureWebAppInfrastructureMapping = AzureWebAppInfrastructureMapping.builder()
+                                                                            .uuid("infraMappingId")
                                                                             .resourceGroup("resourceGroup")
                                                                             .subscriptionId("subId")
                                                                             .webApp("app-service")
@@ -167,9 +170,10 @@ public class AzureWebAppSlotShiftTrafficTest extends WingsBaseTest {
     doReturn(managerExecutionLogCallback).when(azureVMSSStateHelper).getExecutionLogCallback(activity);
 
     if (contextElement) {
-      doReturn(trafficShiftContextElement)
-          .when(mockContext)
-          .getContextElement(eq(ContextElementType.AZURE_WEBAPP_SETUP));
+      doReturn(setupContextElement).when(mockContext).getContextElement(eq(ContextElementType.AZURE_WEBAPP_SETUP));
+      doReturn(setupContextElement)
+          .when(azureSweepingOutputServiceHelper)
+          .getSetupElementFromSweepingOutput(eq(mockContext), eq(AMI_SERVICE_SETUP_SWEEPING_OUTPUT_NAME));
     }
 
     doReturn(appServiceStateData).when(azureVMSSStateHelper).populateAzureAppServiceData(eq(mockContext));
@@ -223,10 +227,10 @@ public class AzureWebAppSlotShiftTrafficTest extends WingsBaseTest {
     assertThat(stateExecutionData.equals(new AzureAppServiceSlotShiftTrafficExecutionData())).isFalse();
     assertThat(stateExecutionData.getActivityId()).isEqualTo(ACTIVITY_ID);
     assertThat(stateExecutionData.getAppServiceSlotSetupTimeOut()).isNotNull();
-    assertThat(stateExecutionData.getAppServiceSlotSetupTimeOut()).isEqualTo(20);
     assertThat(stateExecutionData.getAppServiceName()).isEqualTo("app-service");
     assertThat(stateExecutionData.getDeploySlotName()).isEqualTo("stage");
     assertThat(stateExecutionData.getTrafficWeight()).isEqualTo(trafficWeight);
+    assertThat(stateExecutionData.getInfrastructureMappingId()).isEqualTo("infraMappingId");
 
     AzureAppServiceSlotShiftTrafficExecutionSummary stepExecutionSummary = stateExecutionData.getStepExecutionSummary();
     assertThat(stepExecutionSummary.equals(AzureAppServiceSlotShiftTrafficExecutionSummary.builder().build()))

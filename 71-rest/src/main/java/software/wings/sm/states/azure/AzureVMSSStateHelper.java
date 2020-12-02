@@ -29,6 +29,7 @@ import io.harness.delegate.beans.azure.AzureVMAuthDTO;
 import io.harness.delegate.beans.azure.AzureVMAuthType;
 import io.harness.delegate.beans.azure.GalleryImageDefinitionDTO;
 import io.harness.delegate.task.azure.AzureTaskExecutionResponse;
+import io.harness.delegate.task.azure.appservice.webapp.response.AzureAppDeploymentData;
 import io.harness.delegate.task.azure.response.AzureVMInstanceData;
 import io.harness.delegate.task.azure.response.AzureVMSSTaskExecutionResponse;
 import io.harness.deployment.InstanceDetails;
@@ -347,6 +348,16 @@ public class AzureVMSSStateHelper {
       // This sweeping element will be used by verification or other consumers.
       List<InstanceDetails> instanceDetails =
           azureSweepingOutputServiceHelper.generateAzureVMSSInstanceDetails(instanceElements);
+      azureSweepingOutputServiceHelper.saveInstanceDetails(context, instanceElements, instanceDetails);
+    }
+  }
+
+  public void saveAzureAppInfoToSweepingOutput(ExecutionContext context, List<InstanceElement> instanceElements,
+      List<AzureAppDeploymentData> appDeploymentData) {
+    if (isNotEmpty(appDeploymentData)) {
+      // This sweeping element will be used by verification or other consumers.
+      List<InstanceDetails> instanceDetails =
+          azureSweepingOutputServiceHelper.generateAzureAppServiceInstanceDetails(appDeploymentData);
       azureSweepingOutputServiceHelper.saveInstanceDetails(context, instanceElements, instanceDetails);
     }
   }
