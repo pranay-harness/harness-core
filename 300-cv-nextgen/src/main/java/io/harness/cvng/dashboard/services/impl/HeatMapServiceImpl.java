@@ -140,8 +140,8 @@ public class HeatMapServiceImpl implements HeatMapService {
     Instant startTimeBoundary = getBoundaryOfResolution(startTime, heatMapResolution.getResolution());
     Instant endTimeBoundary = getBoundaryOfResolution(endTime, heatMapResolution.getResolution());
 
-    Set<CVMonitoringCategory> cvMonitoringCategories =
-        cvConfigService.getAvailableCategories(accountId, orgIdentifier, projectIdentifier);
+    Set<CVMonitoringCategory> cvMonitoringCategories = cvConfigService.getAvailableCategories(
+        accountId, orgIdentifier, projectIdentifier, envIdentifier, serviceIdentifier);
     for (CVMonitoringCategory category : cvMonitoringCategories) {
       Map<Instant, HeatMapDTO> heatMapsFromDB = getHeatMapsFromDB(orgIdentifier, projectIdentifier, serviceIdentifier,
           envIdentifier, category, startTime, endTime, heatMapResolution);
@@ -319,7 +319,8 @@ public class HeatMapServiceImpl implements HeatMapService {
     if (cvMonitoringCategory != null) {
       cvMonitoringCategories = Collections.singleton(cvMonitoringCategory);
     } else {
-      cvMonitoringCategories = cvConfigService.getAvailableCategories(accountId, orgIdentifier, projectIdentifier);
+      cvMonitoringCategories = cvConfigService.getAvailableCategories(
+          accountId, orgIdentifier, projectIdentifier, envIdentifier, serviceIdentifier);
     }
     List<CategoryRisk> categoryRiskList = new ArrayList<>();
     Instant latestAnalysisTime = Instant.MIN;

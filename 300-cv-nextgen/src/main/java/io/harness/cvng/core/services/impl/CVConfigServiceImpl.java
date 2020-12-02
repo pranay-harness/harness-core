@@ -209,9 +209,10 @@ public class CVConfigServiceImpl implements CVConfigService {
   }
 
   @Override
-  public Set<CVMonitoringCategory> getAvailableCategories(
-      String accountId, String orgIdentifier, String projectIdentifier) {
-    BasicDBObject cvConfigQuery = getQueryWithAccountOrgProjectFiltersSet(accountId, orgIdentifier, projectIdentifier);
+  public Set<CVMonitoringCategory> getAvailableCategories(String accountId, String orgIdentifier,
+      String projectIdentifier, String envIdentifier, String serviceIdentifier) {
+    BasicDBObject cvConfigQuery = getQueryWithAccountOrgProjectFiltersSet(
+        accountId, orgIdentifier, projectIdentifier, envIdentifier, serviceIdentifier);
     Set<CVMonitoringCategory> cvMonitoringCategories = new HashSet<>();
     hPersistence.getCollection(CVConfig.class)
         .distinct(CVConfigKeys.category, cvConfigQuery)
@@ -219,13 +220,20 @@ public class CVConfigServiceImpl implements CVConfigService {
     return cvMonitoringCategories;
   }
 
-  private BasicDBObject getQueryWithAccountOrgProjectFiltersSet(
-      String accountId, String orgIdentifier, String projectIdentifier) {
+  private BasicDBObject getQueryWithAccountOrgProjectFiltersSet(String accountId, String orgIdentifier,
+      String projectIdentifier, String envIdentifier, String serviceIdentifier) {
     BasicDBObject cvConfigQuery = new BasicDBObject();
     List<BasicDBObject> conditions = new ArrayList<>();
     conditions.add(new BasicDBObject(CVConfigKeys.accountId, accountId));
     conditions.add(new BasicDBObject(CVConfigKeys.projectIdentifier, projectIdentifier));
     conditions.add(new BasicDBObject(CVConfigKeys.orgIdentifier, orgIdentifier));
+    if (isNotEmpty(envIdentifier)) {
+      conditions.add(new BasicDBObject(CVConfigKeys.envIdentifier, envIdentifier));
+    }
+
+    if (isNotEmpty(serviceIdentifier)) {
+      conditions.add(new BasicDBObject(CVConfigKeys.serviceIdentifier, serviceIdentifier));
+    }
     cvConfigQuery.put("$and", conditions);
     return cvConfigQuery;
   }
@@ -328,7 +336,8 @@ public class CVConfigServiceImpl implements CVConfigService {
 
   @Override
   public int getNumberOfServicesSetup(String accountId, String orgIdentifier, String projectIdentifier) {
-    BasicDBObject cvConfigQuery = getQueryWithAccountOrgProjectFiltersSet(accountId, orgIdentifier, projectIdentifier);
+    BasicDBObject cvConfigQuery =
+        getQueryWithAccountOrgProjectFiltersSet(accountId, orgIdentifier, projectIdentifier, null, null);
     List<String> serviceIdentifiers =
         hPersistence.getCollection(CVConfig.class).distinct(CVConfigKeys.serviceIdentifier, cvConfigQuery);
     return serviceIdentifiers.size();
