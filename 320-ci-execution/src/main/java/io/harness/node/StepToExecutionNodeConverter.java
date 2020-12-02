@@ -1,6 +1,6 @@
 package io.harness.node;
 
-import io.harness.plan.PlanNode;
+import io.harness.pms.sdk.core.plan.PlanNode;
 
 import java.util.List;
 

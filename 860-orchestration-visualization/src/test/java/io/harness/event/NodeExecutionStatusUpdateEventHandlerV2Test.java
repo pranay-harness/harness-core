@@ -23,11 +23,11 @@ import io.harness.engine.executions.plan.PlanExecutionService;
 import io.harness.execution.NodeExecution;
 import io.harness.execution.PlanExecution;
 import io.harness.execution.events.OrchestrationEvent;
-import io.harness.plan.PlanNode;
 import io.harness.pms.ambiance.Ambiance;
 import io.harness.pms.ambiance.Level;
 import io.harness.pms.execution.ExecutionMode;
 import io.harness.pms.execution.Status;
+import io.harness.pms.plan.PlanNodeProto;
 import io.harness.pms.serializer.json.JsonOrchestrationUtils;
 import io.harness.pms.steps.StepType;
 import io.harness.rule.Owner;
@@ -95,11 +95,11 @@ public class NodeExecutionStatusUpdateEventHandlerV2Test extends OrchestrationVi
                                    .uuid(generateUuid())
                                    .ambiance(Ambiance.newBuilder().setPlanExecutionId(planExecution.getUuid()).build())
                                    .mode(ExecutionMode.SYNC)
-                                   .node(PlanNode.builder()
-                                             .uuid(generateUuid())
-                                             .name("name")
-                                             .stepType(StepType.newBuilder().setType("DUMMY").build())
-                                             .identifier("identifier1")
+                                   .node(PlanNodeProto.newBuilder()
+                                             .setUuid(generateUuid())
+                                             .setName("name")
+                                             .setStepType(StepType.newBuilder().setType("DUMMY").build())
+                                             .setIdentifier("identifier1")
                                              .build())
                                    .build();
     nodeExecutionService.save(dummyStart);
@@ -165,11 +165,11 @@ public class NodeExecutionStatusUpdateEventHandlerV2Test extends OrchestrationVi
                                    .ambiance(Ambiance.newBuilder().setPlanExecutionId(planExecution.getUuid()).build())
                                    .mode(ExecutionMode.SYNC)
                                    .status(SUCCEEDED)
-                                   .node(PlanNode.builder()
-                                             .uuid(generateUuid())
-                                             .name("name")
-                                             .stepType(StepType.newBuilder().setType("DUMMY").build())
-                                             .identifier("identifier1")
+                                   .node(PlanNodeProto.newBuilder()
+                                             .setUuid(generateUuid())
+                                             .setName("name")
+                                             .setStepType(StepType.newBuilder().setType("DUMMY").build())
+                                             .setIdentifier("identifier1")
                                              .build())
                                    .build();
     nodeExecutionService.save(dummyStart);

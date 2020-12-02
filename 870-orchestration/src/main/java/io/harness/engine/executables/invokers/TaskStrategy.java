@@ -17,8 +17,9 @@ import io.harness.execution.NodeExecution;
 import io.harness.execution.NodeExecution.NodeExecutionKeys;
 import io.harness.facilitator.modes.task.TaskExecutable;
 import io.harness.facilitator.modes.task.TaskExecutableResponse;
-import io.harness.plan.PlanNode;
 import io.harness.pms.ambiance.Ambiance;
+import io.harness.pms.plan.PlanNodeProto;
+import io.harness.pms.sdk.core.plan.PlanNode;
 import io.harness.pms.sdk.core.steps.io.StepResponse;
 import io.harness.registries.state.StepRegistry;
 import io.harness.tasks.Task;
@@ -73,7 +74,7 @@ public class TaskStrategy implements TaskExecuteStrategy {
   }
 
   private TaskExecutable extractTaskExecutable(NodeExecution nodeExecution) {
-    PlanNode node = nodeExecution.getNode();
+    PlanNodeProto node = nodeExecution.getNode();
     return (TaskExecutable) stepRegistry.obtain(node.getStepType());
   }
 

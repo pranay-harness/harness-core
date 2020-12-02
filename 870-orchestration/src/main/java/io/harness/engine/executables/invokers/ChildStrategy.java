@@ -23,9 +23,10 @@ import io.harness.execution.PlanExecution;
 import io.harness.facilitator.modes.child.ChildExecutable;
 import io.harness.facilitator.modes.child.ChildExecutableResponse;
 import io.harness.plan.Plan;
-import io.harness.plan.PlanNode;
 import io.harness.pms.ambiance.Ambiance;
 import io.harness.pms.execution.Status;
+import io.harness.pms.plan.PlanNodeProto;
+import io.harness.pms.sdk.core.plan.PlanNode;
 import io.harness.pms.sdk.core.steps.io.StepResponse;
 import io.harness.registries.state.StepRegistry;
 import io.harness.tasks.ResponseData;
@@ -74,7 +75,7 @@ public class ChildStrategy implements ExecuteStrategy {
   }
 
   private ChildExecutable extractChildExecutable(NodeExecution nodeExecution) {
-    PlanNode node = nodeExecution.getNode();
+    PlanNodeProto node = nodeExecution.getNode();
     return (ChildExecutable) stepRegistry.obtain(node.getStepType());
   }
 
@@ -83,7 +84,7 @@ public class ChildStrategy implements ExecuteStrategy {
     PlanExecution planExecution = planExecutionService.get(ambiance.getPlanExecutionId());
     NodeExecution nodeExecution = nodeExecutionService.get(AmbianceUtils.obtainCurrentRuntimeId(ambiance));
     Plan plan = planExecution.getPlan();
-    PlanNode node = plan.fetchNode(response.getChildNodeId());
+    PlanNodeProto node = plan.fetchNode(response.getChildNodeId());
     Ambiance clonedAmbiance =
         AmbianceUtils.cloneForChild(ambiance, LevelUtils.buildLevelFromPlanNode(childInstanceId, node));
     NodeExecution childNodeExecution = NodeExecution.builder()

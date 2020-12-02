@@ -1,5 +1,6 @@
 package io.harness.engine.expressions.functors;
 
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.rule.OwnerRule.GARVIT;
 
@@ -14,16 +15,16 @@ import io.harness.engine.executions.node.NodeExecutionService;
 import io.harness.engine.expressions.NodeExecutionsCache;
 import io.harness.engine.outcomes.OutcomeService;
 import io.harness.execution.NodeExecution;
-import io.harness.plan.PlanNode;
 import io.harness.pms.ambiance.Ambiance;
 import io.harness.pms.ambiance.Level;
+import io.harness.pms.plan.PlanNodeProto;
+import io.harness.pms.sdk.core.steps.io.StepParameters;
 import io.harness.pms.steps.StepType;
 import io.harness.rule.Owner;
 import io.harness.utils.AmbianceTestUtils;
 import io.harness.utils.steps.TestStepParameters;
 
 import com.google.common.collect.ImmutableMap;
-import com.google.inject.Inject;
 import java.util.Collections;
 import org.apache.commons.jexl3.JexlBuilder;
 import org.apache.commons.jexl3.JexlEngine;
@@ -179,28 +180,31 @@ public class NodeExecutionValueTest extends OrchestrationTestBase {
     assertThat(engine.getProperty(nodeExecutionMap, "a.d[0].e.param")).isEqualTo("eo");
   }
 
-  private PlanNode preparePlanNode(boolean skipExpressionChain, String identifier) {
+  private PlanNodeProto preparePlanNode(boolean skipExpressionChain, String identifier) {
     return preparePlanNode(skipExpressionChain, identifier, identifier + "i");
   }
 
-  private PlanNode preparePlanNode(boolean skipExpressionChain, String identifier, String paramValue) {
+  private PlanNodeProto preparePlanNode(boolean skipExpressionChain, String identifier, String paramValue) {
     return preparePlanNode(skipExpressionChain, identifier, paramValue, null);
   }
 
-  private PlanNode preparePlanNode(
+  private PlanNodeProto preparePlanNode(
       boolean skipExpressionChain, String identifier, String paramValue, String groupName) {
-    return PlanNode.builder()
-        .uuid(generateUuid())
-        .name(identifier + "n")
-        .stepType(StepType.newBuilder().setType("DUMMY").build())
-        .group(groupName)
-        .identifier(identifier)
-        .skipExpressionChain(skipExpressionChain)
-        .stepParameters(prepareStepParameters(paramValue))
-        .build();
+    PlanNodeProto.Builder builder = PlanNodeProto.newBuilder()
+                                        .setUuid(generateUuid())
+                                        .setName(identifier + "n")
+                                        .setStepType(StepType.newBuilder().setType("DUMMY").build())
+                                        .setIdentifier(identifier)
+                                        .setSkipExpressionChain(skipExpressionChain)
+                                        .setStepParameters(prepareStepParameters(paramValue).toJson());
+
+    if (!isEmpty(groupName)) {
+      builder.setGroup(groupName);
+    }
+    return builder.build();
   }
 
-  private TestStepParameters prepareStepParameters(String paramValue) {
+  private StepParameters prepareStepParameters(String paramValue) {
     return TestStepParameters.builder().param(paramValue).build();
   }
 }

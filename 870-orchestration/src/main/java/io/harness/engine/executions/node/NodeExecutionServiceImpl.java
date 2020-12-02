@@ -1,6 +1,7 @@
 package io.harness.engine.executions.node;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.pms.execution.Status.DISCONTINUING;
 import static io.harness.springdata.SpringDataMongoUtils.returnNewOptions;
 
@@ -244,7 +245,10 @@ public class NodeExecutionServiceImpl implements NodeExecutionService {
 
   @Override
   public StepParameters extractStepParameters(NodeExecution nodeExecution) {
-    return extractStepParametersInternal(nodeExecution, nodeExecution.getNode().getStepParameters());
+    Document document = isEmpty(nodeExecution.getNode().getStepParameters())
+        ? null
+        : Document.parse(nodeExecution.getNode().getStepParameters());
+    return extractStepParametersInternal(nodeExecution, document);
   }
 
   @Override

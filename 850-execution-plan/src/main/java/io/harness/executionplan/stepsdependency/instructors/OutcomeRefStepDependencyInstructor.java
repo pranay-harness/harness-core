@@ -4,7 +4,7 @@ import io.harness.executionplan.core.ExecutionPlanCreationContext;
 import io.harness.executionplan.stepsdependency.KeyAware;
 import io.harness.executionplan.stepsdependency.StepDependencyInstructor;
 import io.harness.executionplan.stepsdependency.StepDependencySpec;
-import io.harness.plan.PlanNode.PlanNodeBuilder;
+import io.harness.pms.sdk.core.plan.PlanNode.PlanNodeBuilder;
 import io.harness.refObjects.RefObjectUtil;
 
 import lombok.Builder;

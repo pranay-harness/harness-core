@@ -49,13 +49,14 @@ import io.harness.execution.events.OrchestrationEventType;
 import io.harness.facilitator.Facilitator;
 import io.harness.facilitator.FacilitatorResponse;
 import io.harness.logging.AutoLogContext;
-import io.harness.plan.PlanNode;
 import io.harness.pms.advisers.AdviserObtainment;
 import io.harness.pms.ambiance.Ambiance;
 import io.harness.pms.execution.Status;
 import io.harness.pms.execution.failure.FailureInfo;
 import io.harness.pms.facilitators.FacilitatorObtainment;
+import io.harness.pms.plan.PlanNodeProto;
 import io.harness.pms.sdk.core.data.Outcome;
+import io.harness.pms.sdk.core.plan.PlanNode;
 import io.harness.pms.sdk.core.steps.io.StepInputPackage;
 import io.harness.pms.sdk.core.steps.io.StepParameters;
 import io.harness.pms.sdk.core.steps.io.StepResponse;
@@ -137,7 +138,7 @@ public class OrchestrationEngine {
     facilitateAndStartStep(ambiance, nodeExecution);
   }
 
-  public void triggerExecution(Ambiance ambiance, PlanNode node) {
+  public void triggerExecution(Ambiance ambiance, PlanNodeProto node) {
     String uuid = generateUuid();
     NodeExecution previousNodeExecution = null;
     if (AmbianceUtils.obtainCurrentRuntimeId(ambiance) != null) {
@@ -160,7 +161,7 @@ public class OrchestrationEngine {
     executorService.submit(ExecutionEngineDispatcher.builder().ambiance(cloned).orchestrationEngine(this).build());
   }
 
-  private Ambiance reBuildAmbiance(Ambiance ambiance, PlanNode node, String uuid) {
+  private Ambiance reBuildAmbiance(Ambiance ambiance, PlanNodeProto node, String uuid) {
     Ambiance cloned =
         AmbianceUtils.obtainCurrentRuntimeId(ambiance) == null ? ambiance : AmbianceUtils.cloneForFinish(ambiance);
     cloned = cloned.toBuilder().addLevels(LevelUtils.buildLevelFromPlanNode(uuid, node)).build();
@@ -179,12 +180,12 @@ public class OrchestrationEngine {
       }
       log.info("Proceeding with  Execution. Reason : {}", check.getReason());
 
-      PlanNode node = nodeExecution.getNode();
+      PlanNodeProto node = nodeExecution.getNode();
       // Facilitate and execute
-      StepInputPackage inputPackage = engineObtainmentHelper.obtainInputPackage(ambiance, node.getRefObjects());
+      StepInputPackage inputPackage = engineObtainmentHelper.obtainInputPackage(ambiance, node.getRebObjectsList());
 
       // Resolve step parameters
-      String stepParameters = node.getStepParameters() == null ? null : node.getStepParameters().toJson();
+      String stepParameters = node.getStepParameters();
       Object obj = stepParameters == null
           ? null
           : engineExpressionService.resolve(ambiance, nodeExecutionService.extractStepParameters(nodeExecution));
@@ -202,9 +203,9 @@ public class OrchestrationEngine {
   }
 
   private void facilitateExecution(Ambiance ambiance, NodeExecution nodeExecution, StepInputPackage inputPackage) {
-    PlanNode node = nodeExecution.getNode();
+    PlanNodeProto node = nodeExecution.getNode();
     FacilitatorResponse facilitatorResponse = null;
-    for (FacilitatorObtainment obtainment : node.getFacilitatorObtainments()) {
+    for (FacilitatorObtainment obtainment : node.getFacilitatorObtainmentsList()) {
       Facilitator facilitator = facilitatorRegistry.obtain(obtainment.getType());
       facilitatorResponse =
           facilitator.facilitate(ambiance, nodeExecutionService.extractResolvedStepParameters(nodeExecution),
@@ -302,15 +303,15 @@ public class OrchestrationEngine {
   }
 
   public void concludeNodeExecution(NodeExecution nodeExecution, Status status) {
-    PlanNode node = nodeExecution.getNode();
+    PlanNodeProto node = nodeExecution.getNode();
 
-    if (isEmpty(node.getAdviserObtainments())) {
+    if (isEmpty(node.getAdviserObtainmentsList())) {
       NodeExecution updatedNodeExecution = nodeExecutionService.updateStatusWithOps(
           nodeExecution.getUuid(), status, ops -> setUnset(ops, NodeExecutionKeys.endTs, System.currentTimeMillis()));
       endTransition(updatedNodeExecution);
       return;
     }
-    for (AdviserObtainment obtainment : node.getAdviserObtainments()) {
+    for (AdviserObtainment obtainment : node.getAdviserObtainmentsList()) {
       Adviser adviser = adviserRegistry.obtain(obtainment.getType());
       AdvisingEvent advisingEvent = AdvisingEvent.builder()
                                         .ambiance(nodeExecution.getAmbiance())
@@ -356,7 +357,7 @@ public class OrchestrationEngine {
 
   public void endTransition(NodeExecution nodeExecution) {
     if (isNotEmpty(nodeExecution.getNotifyId())) {
-      PlanNode planNode = nodeExecution.getNode();
+      PlanNodeProto planNode = nodeExecution.getNode();
       StepResponseNotifyData responseData = StepResponseNotifyData.builder()
                                                 .nodeUuid(planNode.getUuid())
                                                 .stepOutcomeRefs(nodeExecution.getOutcomeRefs())

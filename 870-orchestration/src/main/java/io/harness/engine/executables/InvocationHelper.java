@@ -4,7 +4,8 @@ import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.engine.executions.node.NodeExecutionService;
 import io.harness.execution.NodeExecution;
-import io.harness.plan.PlanNode;
+import io.harness.pms.plan.PlanNodeProto;
+import io.harness.pms.sdk.core.plan.PlanNode;
 import io.harness.state.io.StepResponseNotifyData;
 import io.harness.tasks.ResponseData;
 
@@ -26,7 +27,7 @@ public class InvocationHelper {
     Map<String, ResponseData> response = new HashMap<>();
     List<NodeExecution> childExecutions = nodeExecutionService.fetchNodeExecutionsByNotifyId(planExecutionId, notifyId);
     for (NodeExecution childExecution : childExecutions) {
-      PlanNode node = childExecution.getNode();
+      PlanNodeProto node = childExecution.getNode();
       StepResponseNotifyData notifyData = StepResponseNotifyData.builder()
                                               .nodeUuid(node.getUuid())
                                               .identifier(node.getIdentifier())

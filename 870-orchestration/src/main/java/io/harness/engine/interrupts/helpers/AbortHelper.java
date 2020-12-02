@@ -17,9 +17,10 @@ import io.harness.facilitator.modes.Abortable;
 import io.harness.facilitator.modes.ExecutableResponse;
 import io.harness.facilitator.modes.TaskSpawningExecutableResponse;
 import io.harness.interrupts.Interrupt;
-import io.harness.plan.PlanNode;
 import io.harness.pms.ambiance.Ambiance;
 import io.harness.pms.execution.Status;
+import io.harness.pms.plan.PlanNodeProto;
+import io.harness.pms.sdk.core.plan.PlanNode;
 import io.harness.pms.sdk.core.steps.Step;
 import io.harness.registries.state.StepRegistry;
 import io.harness.tasks.TaskExecutor;
@@ -43,7 +44,7 @@ public class AbortHelper {
   public void discontinueMarkedInstance(NodeExecution nodeExecution, Status finalStatus) {
     try {
       Ambiance ambiance = nodeExecution.getAmbiance();
-      PlanNode node = nodeExecution.getNode();
+      PlanNodeProto node = nodeExecution.getNode();
       Step currentState = Preconditions.checkNotNull(stepRegistry.obtain(node.getStepType()));
       ExecutableResponse executableResponse = nodeExecution.obtainLatestExecutableResponse();
       if (executableResponse != null && nodeExecution.isTaskSpawningMode()) {

@@ -13,7 +13,7 @@ import io.harness.executionplan.CIExecutionTest;
 import io.harness.executionplan.core.ExecutionPlanCreationContext;
 import io.harness.executionplan.core.ExecutionPlanCreatorResponse;
 import io.harness.executionplan.core.PlanCreatorSearchContext;
-import io.harness.plan.PlanNode;
+import io.harness.pms.sdk.core.plan.PlanNode;
 import io.harness.rule.Owner;
 import io.harness.yaml.core.ExecutionElement;
 

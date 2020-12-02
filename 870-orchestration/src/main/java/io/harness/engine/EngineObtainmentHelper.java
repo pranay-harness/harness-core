@@ -9,9 +9,10 @@ import io.harness.engine.executions.plan.PlanExecutionService;
 import io.harness.exception.InvalidRequestException;
 import io.harness.execution.PlanExecution;
 import io.harness.plan.Plan;
-import io.harness.plan.PlanNode;
 import io.harness.pms.ambiance.Ambiance;
+import io.harness.pms.plan.PlanNodeProto;
 import io.harness.pms.refobjects.RefObject;
+import io.harness.pms.sdk.core.plan.PlanNode;
 import io.harness.pms.sdk.core.steps.io.ResolvedRefInput;
 import io.harness.pms.sdk.core.steps.io.StepInputPackage;
 import io.harness.pms.sdk.core.steps.io.StepInputPackage.StepInputPackageBuilder;
@@ -40,7 +41,7 @@ public class EngineObtainmentHelper {
     return inputPackageBuilder.build();
   }
 
-  public PlanNode fetchExecutionNode(String nodeId, String planExecutionId) {
+  public PlanNodeProto fetchExecutionNode(String nodeId, String planExecutionId) {
     PlanExecution instance = planExecutionService.get(planExecutionId);
     if (instance == null) {
       throw new InvalidRequestException("Execution Instance is null for id : " + planExecutionId);

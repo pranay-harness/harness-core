@@ -226,7 +226,8 @@ public class BarrierServiceImpl implements BarrierService, ForceProctor {
   @Override
   public List<NodeExecution> findBarrierNodesByPlanExecutionIdAndIdentifier(String planExecutionId, String identifier) {
     Query query = query(new Criteria().andOperator(where(NodeExecutionKeys.planExecutionId).is(planExecutionId),
-        where("node.stepType").is(BarrierStep.STEP_TYPE), where("node.stepParameters.identifier").is(identifier)));
+        where("node.stepType.type").is(BarrierStep.STEP_TYPE.getType()),
+        where("resolvedStepParameters.identifier").is(identifier)));
     return mongoTemplate.find(query, NodeExecution.class);
   }
 }

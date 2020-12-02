@@ -27,8 +27,9 @@ import io.harness.execution.PlanExecution;
 import io.harness.facilitator.modes.chain.child.ChildChainExecutable;
 import io.harness.facilitator.modes.chain.child.ChildChainResponse;
 import io.harness.plan.Plan;
-import io.harness.plan.PlanNode;
 import io.harness.pms.ambiance.Ambiance;
+import io.harness.pms.plan.PlanNodeProto;
+import io.harness.pms.sdk.core.plan.PlanNode;
 import io.harness.pms.sdk.core.steps.io.StepInputPackage;
 import io.harness.pms.sdk.core.steps.io.StepResponse;
 import io.harness.registries.state.StepRegistry;
@@ -88,7 +89,7 @@ public class ChildChainStrategy implements ExecuteStrategy {
       engine.handleStepResponse(nodeExecution.getUuid(), stepResponse);
     } else {
       StepInputPackage inputPackage =
-          engineObtainmentHelper.obtainInputPackage(ambiance, nodeExecution.getNode().getRefObjects());
+          engineObtainmentHelper.obtainInputPackage(ambiance, nodeExecution.getNode().getRebObjectsList());
       ChildChainResponse chainResponse = childChainExecutable.executeNextChild(ambiance,
           nodeExecutionService.extractResolvedStepParameters(nodeExecution), inputPackage,
           lastChildChainExecutableResponse.getPassThroughData(), accumulatedResponse);
@@ -97,7 +98,7 @@ public class ChildChainStrategy implements ExecuteStrategy {
   }
 
   ChildChainExecutable extractExecutable(NodeExecution nodeExecution) {
-    PlanNode node = nodeExecution.getNode();
+    PlanNodeProto node = nodeExecution.getNode();
     return (ChildChainExecutable) stepRegistry.obtain(node.getStepType());
   }
 
@@ -115,7 +116,7 @@ public class ChildChainStrategy implements ExecuteStrategy {
       NodeExecution nodeExecution) {
     String childInstanceId = generateUuid();
     Plan plan = planExecution.getPlan();
-    PlanNode node = plan.fetchNode(childChainResponse.getNextChildId());
+    PlanNodeProto node = plan.fetchNode(childChainResponse.getNextChildId());
     Ambiance clonedAmbiance =
         AmbianceUtils.cloneForChild(ambiance, LevelUtils.buildLevelFromPlanNode(childInstanceId, node));
     NodeExecution childNodeExecution = NodeExecution.builder()
@@ -142,7 +143,7 @@ public class ChildChainStrategy implements ExecuteStrategy {
         nodeExecution.getUuid(), ops -> ops.addToSet(NodeExecutionKeys.executableResponses, childChainResponse));
     NotifyCallback callback = EngineResumeCallback.builder().nodeExecutionId(nodeExecution.getUuid()).build();
     waitNotifyEngine.waitForAllOn(publisherName, callback, ignoreNotifyId);
-    PlanNode planNode = nodeExecution.getNode();
+    PlanNodeProto planNode = nodeExecution.getNode();
     waitNotifyEngine.doneWith(ignoreNotifyId,
         StepResponseNotifyData.builder()
             .nodeUuid(planNode.getUuid())

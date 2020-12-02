@@ -12,9 +12,9 @@ import io.harness.execution.NodeExecution;
 import io.harness.execution.events.AsyncOrchestrationEventHandler;
 import io.harness.execution.events.OrchestrationEvent;
 import io.harness.ngpipeline.common.AmbianceHelper;
-import io.harness.plan.PlanNode;
 import io.harness.pms.ambiance.Ambiance;
 import io.harness.pms.execution.Status;
+import io.harness.pms.plan.PlanNodeProto;
 import io.harness.steps.StepOutcomeGroup;
 
 import com.google.inject.Inject;
@@ -72,11 +72,11 @@ public class PipelineExecutionUpdateEventHandler implements AsyncOrchestrationEv
         .findFirst();
   }
 
-  private boolean isServiceNodeAndCompleted(PlanNode node, Status status) {
+  private boolean isServiceNodeAndCompleted(PlanNodeProto node, Status status) {
     return Objects.equals(node.getStepType(), ServiceStep.STEP_TYPE) && status == Status.SUCCEEDED;
   }
 
-  private boolean isInfrastructureNodeAndCompleted(PlanNode node, Status status) {
+  private boolean isInfrastructureNodeAndCompleted(PlanNodeProto node, Status status) {
     return Objects.equals(node.getStepType(), InfrastructureStep.STEP_TYPE) && status == Status.SUCCEEDED;
   }
 

@@ -21,11 +21,11 @@ import io.harness.engine.executions.node.NodeExecutionService;
 import io.harness.engine.executions.plan.PlanExecutionService;
 import io.harness.execution.NodeExecution;
 import io.harness.execution.PlanExecution;
-import io.harness.plan.PlanNode;
 import io.harness.pms.ambiance.Ambiance;
 import io.harness.pms.ambiance.Level;
 import io.harness.pms.execution.ExecutionMode;
 import io.harness.pms.execution.Status;
+import io.harness.pms.plan.PlanNodeProto;
 import io.harness.pms.steps.SkipType;
 import io.harness.pms.steps.StepType;
 import io.harness.rule.Owner;
@@ -69,11 +69,11 @@ public class GraphGenerationServiceImplTest extends OrchestrationVisualizationTe
                           .addAllLevels(Collections.singletonList(Level.newBuilder().setSetupId("node1_plan").build()))
                           .build())
             .mode(ExecutionMode.SYNC)
-            .node(PlanNode.builder()
-                      .uuid("node1_plan")
-                      .name("name")
-                      .stepType(StepType.newBuilder().setType("DUMMY").build())
-                      .identifier("identifier1")
+            .node(PlanNodeProto.newBuilder()
+                      .setUuid("node1_plan")
+                      .setName("name")
+                      .setStepType(StepType.newBuilder().setType("DUMMY").build())
+                      .setIdentifier("identifier1")
                       .build())
             .build();
     nodeExecutionService.save(dummyStart);
@@ -105,11 +105,11 @@ public class GraphGenerationServiceImplTest extends OrchestrationVisualizationTe
                           .addAllLevels(Collections.singletonList(Level.newBuilder().setSetupId("node1_plan").build()))
                           .build())
             .mode(ExecutionMode.SYNC)
-            .node(PlanNode.builder()
-                      .uuid("node1_plan")
-                      .name("name")
-                      .stepType(StepType.newBuilder().setType("DUMMY").build())
-                      .identifier("identifier1")
+            .node(PlanNodeProto.newBuilder()
+                      .setUuid("node1_plan")
+                      .setName("name")
+                      .setStepType(StepType.newBuilder().setType("DUMMY").build())
+                      .setIdentifier("identifier1")
                       .build())
             .build();
     nodeExecutionService.save(dummyStart);
@@ -154,11 +154,11 @@ public class GraphGenerationServiceImplTest extends OrchestrationVisualizationTe
                           .addAllLevels(Collections.singletonList(Level.newBuilder().setSetupId("node1_plan").build()))
                           .build())
             .mode(ExecutionMode.SYNC)
-            .node(PlanNode.builder()
-                      .uuid("node1_plan")
-                      .name("name")
-                      .stepType(StepType.newBuilder().setType("DUMMY").build())
-                      .identifier("identifier1")
+            .node(PlanNodeProto.newBuilder()
+                      .setUuid("node1_plan")
+                      .setName("name")
+                      .setStepType(StepType.newBuilder().setType("DUMMY").build())
+                      .setIdentifier("identifier1")
                       .build())
             .build();
     nodeExecutionService.save(dummyStart);
@@ -190,11 +190,11 @@ public class GraphGenerationServiceImplTest extends OrchestrationVisualizationTe
                           .addAllLevels(Collections.singletonList(Level.newBuilder().setSetupId("node1_plan").build()))
                           .build())
             .mode(ExecutionMode.SYNC)
-            .node(PlanNode.builder()
-                      .uuid("node1_plan")
-                      .name("name")
-                      .stepType(StepType.newBuilder().setType("DUMMY").build())
-                      .identifier("identifier1")
+            .node(PlanNodeProto.newBuilder()
+                      .setUuid("node1_plan")
+                      .setName("name")
+                      .setStepType(StepType.newBuilder().setType("DUMMY").build())
+                      .setIdentifier("identifier1")
                       .build())
             .build();
     nodeExecutionService.save(dummyStart);
@@ -206,11 +206,11 @@ public class GraphGenerationServiceImplTest extends OrchestrationVisualizationTe
                           .addAllLevels(Collections.singletonList(Level.newBuilder().setSetupId("node2_plan").build()))
                           .build())
             .mode(ExecutionMode.SYNC)
-            .node(PlanNode.builder()
-                      .uuid("node2_plan")
-                      .name("nam2")
-                      .stepType(StepType.newBuilder().setType("DUMMY").build())
-                      .identifier("identifier2")
+            .node(PlanNodeProto.newBuilder()
+                      .setUuid("node2_plan")
+                      .setName("nam2")
+                      .setStepType(StepType.newBuilder().setType("DUMMY").build())
+                      .setIdentifier("identifier2")
                       .build())
             .previousId(dummyStart.getUuid())
             .build();

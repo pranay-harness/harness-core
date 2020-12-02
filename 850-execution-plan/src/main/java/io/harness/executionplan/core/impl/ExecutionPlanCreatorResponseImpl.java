@@ -1,7 +1,7 @@
 package io.harness.executionplan.core.impl;
 
 import io.harness.executionplan.core.ExecutionPlanCreatorResponse;
-import io.harness.plan.PlanNode;
+import io.harness.pms.sdk.core.plan.PlanNode;
 
 import java.util.List;
 import javax.validation.constraints.NotNull;

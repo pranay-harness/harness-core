@@ -17,8 +17,8 @@ import io.harness.executionplan.stepsdependency.StepDependencyInstructor;
 import io.harness.executionplan.stepsdependency.StepDependencyResolver;
 import io.harness.executionplan.stepsdependency.StepDependencyResolverContext;
 import io.harness.executionplan.stepsdependency.StepDependencySpec;
-import io.harness.plan.PlanNode;
-import io.harness.plan.PlanNode.PlanNodeBuilder;
+import io.harness.pms.sdk.core.plan.PlanNode;
+import io.harness.pms.sdk.core.plan.PlanNode.PlanNodeBuilder;
 import io.harness.rule.Owner;
 
 import com.google.inject.name.Named;

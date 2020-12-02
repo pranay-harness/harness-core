@@ -14,9 +14,10 @@ import io.harness.execution.events.OrchestrationEvent;
 import io.harness.execution.events.OrchestrationEventType;
 import io.harness.interrupts.Interrupt;
 import io.harness.plan.Plan;
-import io.harness.plan.PlanNode;
 import io.harness.pms.ambiance.Ambiance;
 import io.harness.pms.execution.Status;
+import io.harness.pms.plan.PlanNodeProto;
+import io.harness.pms.sdk.core.plan.PlanNode;
 
 import com.google.inject.Inject;
 import java.util.HashMap;
@@ -47,7 +48,7 @@ public class OrchestrationServiceImpl implements OrchestrationService {
                                       .status(Status.RUNNING)
                                       .startTs(System.currentTimeMillis())
                                       .build();
-    PlanNode planNode = plan.fetchStartingNode();
+    PlanNodeProto planNode = plan.fetchStartingNode();
     if (planNode == null) {
       log.error("Cannot Start Execution for empty plan");
       return null;

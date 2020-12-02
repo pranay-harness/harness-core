@@ -11,15 +11,17 @@ import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.cdng.pipeline.beans.CDPipelineSetupParameters;
 import io.harness.cdng.pipeline.executions.service.NgPipelineExecutionService;
+import io.harness.cdng.pipeline.steps.PipelineSetupStep;
 import io.harness.engine.executions.node.NodeExecutionServiceImpl;
 import io.harness.engine.executions.plan.PlanExecutionService;
 import io.harness.execution.PlanExecution;
 import io.harness.execution.events.OrchestrationEvent;
 import io.harness.ngpipeline.pipeline.beans.yaml.NgPipeline;
 import io.harness.plan.Plan;
-import io.harness.plan.PlanNode;
 import io.harness.pms.ambiance.Ambiance;
 import io.harness.pms.ambiance.Level;
+import io.harness.pms.sdk.core.plan.PlanNode;
+import io.harness.pms.steps.StepType;
 import io.harness.rule.Owner;
 import io.harness.steps.StepOutcomeGroup;
 
@@ -61,6 +63,7 @@ public class PipelineExecutionStartEventHandlerTest extends CategoryTest {
         PlanNode.builder()
             .group(StepOutcomeGroup.PIPELINE.name())
             .uuid("uuid")
+            .stepType(PipelineSetupStep.STEP_TYPE)
             .stepParameters(CDPipelineSetupParameters.builder().ngPipeline(NgPipeline.builder().build()).build())
             .build();
     PlanExecution planExecution =
@@ -91,6 +94,8 @@ public class PipelineExecutionStartEventHandlerTest extends CategoryTest {
         PlanNode.builder()
             .group(StepOutcomeGroup.STAGES.name())
             .uuid("uuid")
+            .uuid("uuid")
+            .stepType(PipelineSetupStep.STEP_TYPE)
             .stepParameters(CDPipelineSetupParameters.builder().ngPipeline(NgPipeline.builder().build()).build())
             .build();
     PlanExecution planExecution =
@@ -117,10 +122,11 @@ public class PipelineExecutionStartEventHandlerTest extends CategoryTest {
     PlanNode planNode =
         PlanNode.builder()
             .uuid("uuid")
+            .stepType(StepType.newBuilder().setType("TEST").build())
             .stepParameters(CDPipelineSetupParameters.builder().ngPipeline(NgPipeline.builder().build()).build())
             .build();
     PlanExecution planExecution =
-        PlanExecution.builder().plan(Plan.builder().startingNodeId("uuid").node(planNode).internalBuild()).build();
+        PlanExecution.builder().plan(Plan.builder().startingNodeId("uuid").node(planNode).build()).build();
     when(planExecutionService.get("executionId")).thenReturn(planExecution);
     pipelineExecutionStartEventHandler.handleEvent(orchestrationEvent);
 
