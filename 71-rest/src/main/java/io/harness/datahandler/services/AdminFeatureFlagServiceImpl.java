@@ -1,6 +1,7 @@
 package io.harness.datahandler.services;
 
-import software.wings.beans.FeatureFlag;
+import io.harness.beans.FeatureFlag;
+
 import software.wings.beans.FeatureName;
 import software.wings.service.intfc.FeatureFlagService;
 

@@ -4,11 +4,11 @@ import static io.harness.rule.OwnerRule.VAIBHAV_SI;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import io.harness.beans.FeatureFlag;
+import io.harness.beans.FeatureFlag.FeatureFlagKeys;
 import io.harness.category.element.DeprecatedIntegrationTests;
 import io.harness.rule.Owner;
 
-import software.wings.beans.FeatureFlag;
-import software.wings.beans.FeatureFlag.FeatureFlagKeys;
 import software.wings.beans.FeatureName;
 import software.wings.integration.IntegrationTestBase;
 import software.wings.service.intfc.FeatureFlagService;

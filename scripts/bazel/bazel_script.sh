@@ -68,6 +68,7 @@ BAZEL_MODULES="\
   //950-common-entities:module \
   //950-delegate-tasks-beans:module \
   //950-events-framework:module \
+  //950-feature-flag:module \
   //950-ng-core:module \
   //950-ng-project-n-orgs:module \
   //950-timeout-engine:module \
@@ -267,6 +268,7 @@ build_bazel_module 950-common-entities
 build_bazel_module 950-delegate-tasks-beans
 build_bazel_module 950-events-framework
 build_bazel_module 950-ng-core
+build_bazel_module 950-feature-flag
 build_bazel_module 950-ng-project-n-orgs
 build_bazel_module 950-timeout-engine
 build_bazel_module 950-wait-engine

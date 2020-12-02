@@ -2,6 +2,7 @@ package io.harness.datahandler.services;
 
 import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 
+import io.harness.beans.FeatureFlag;
 import io.harness.beans.PageRequest;
 import io.harness.ccm.license.CeLicenseInfo;
 import io.harness.datahandler.models.AccountSummary;
@@ -13,7 +14,6 @@ import io.harness.limits.configuration.LimitConfigurationService;
 import io.harness.limits.lib.Limit;
 
 import software.wings.beans.Account;
-import software.wings.beans.FeatureFlag;
 import software.wings.beans.LicenseInfo;
 import software.wings.beans.LicenseUpdateInfo;
 import software.wings.beans.User;

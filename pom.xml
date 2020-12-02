@@ -6,33 +6,6 @@
     <version>0.0.1-SNAPSHOT</version>
     <packaging>pom</packaging>
     <modules>
-        <!--<module>920-delegate-agent-beans</module>-->
-        <!--<module>950-events-api</module>-->
-        <!--<module>960-persistence</module>-->
-        <!--<module>920-delegate-service-beans</module>-->
-        <!--<module>950-ng-core</module>-->
-        <!--<module>950-ng-project-n-orgs</module>-->
-        <!--<module>970-rbac-core</module>-->
-        <!--<module>940-secret-manager-client</module>-->
-        <!--<module>950-timeout-engine</module>-->
-        <!--<module>950-wait-engine</module>-->
-        <!--<module>930-ng-core-clients</module>-->
-        <!--<module>910-delegate-service-driver</module>-->
-        <!--<module>890-sm-core</module>-->
-        <!--<module>950-common-entities</module>-->
-        <!--<module>890-orchestration-persistence</module>-->
-        <!--<module>880-orchestration-beans</module>-->
-        <!--<module>870-orchestration</module>-->
-        <!--<module>860-orchestration-steps</module>-->
-        <!--<module>860-orchestration-visualization</module>-->
-        <!--<module>950-walktree-visitor</module>-->
-        <!--<module>870-yaml-beans</module>-->
-        <!--<module>850-execution-plan</module>-->
-        <!--<module>850-ng-pipeline-commons</module>-->
-        <!--<module>40-pipeline-service</module>-->
-        <!--<module>910-delegate-task-grpc-service</module>-->
-        <!--<module>950-command-library-common</module>-->
-        <!--<module>950-events-framework</module>-->
         <module>71-rest</module>
         <!--The following modules are in the new order-->
         <module>120-ng-manager</module>
@@ -53,22 +26,50 @@
         <module>320-ci-execution</module>
         <module>330-ci-beans</module>
         <module>350-event-server</module>
+        <!--<module>40-pipeline-service</module>-->
         <!--<module>420-delegate-agent</module>-->
         <!--<module>420-delegate-service</module>-->
         <!--<module>430-cv-nextgen-commons</module>-->
         <!--<module>440-connector-nextgen</module>-->
         <!--<module>450-ce-views</module>-->
         <!--<module>490-ce-commons</module>-->
+        <!--<module>850-execution-plan</module>-->
+        <!--<module>850-ng-pipeline-commons</module>-->
+        <!--<module>860-orchestration-steps</module>-->
+        <!--<module>860-orchestration-visualization</module>-->
+        <!--<module>870-orchestration</module>-->
+        <!--<module>870-yaml-beans</module>-->
+        <!--<module>880-orchestration-beans</module>-->
+        <!--<module>890-orchestration-persistence</module>-->
+        <!--<module>890-sm-core</module>-->
         <!--<module>900-yaml-sdk</module>-->
+        <!--<module>910-delegate-service-driver</module>-->
+        <!--<module>910-delegate-task-grpc-service</module>-->
+        <!--<module>920-delegate-agent-beans</module>-->
+        <!--<module>920-delegate-service-beans</module>-->
         <!--<module>930-delegate-tasks</module>-->
+        <!--<module>930-ng-core-clients</module>-->
         <!--<module>940-delegate-beans</module>-->
+        <!--<module>940-secret-manager-client</module>-->
+        <!--<module>950-command-library-common</module>-->
+        <!--<module>950-common-entities</module>-->
         <!--<module>950-delegate-tasks-beans</module>-->
+        <!--<module>950-events-api</module>-->
+        <!--<module>950-events-framework</module>-->
+        <!--<module>950-ng-core</module>-->
+        <!--<module>950-ng-project-n-orgs</module>-->
+        <!--<module>950-feature-flag</module>-->
+        <!--<module>950-timeout-engine</module>-->
+        <!--<module>950-wait-engine</module>-->
+        <!--<module>950-walktree-visitor</module>-->
         <!--<module>960-api-services</module>-->
         <!--<module>960-expression-service</module>-->
         <!--<module>960-ng-core-beans</module>-->
+        <!--<module>960-persistence</module>-->
         <!--<module>970-api-services-beans</module>-->
         <!--<module>970-grpc</module>-->
         <!--<module>970-ng-commons</module>-->
+        <!--<module>970-rbac-core</module>-->
         <!--<module>980-commons</module>-->
         <!--<module>990-commons-test</module>-->
     </modules>

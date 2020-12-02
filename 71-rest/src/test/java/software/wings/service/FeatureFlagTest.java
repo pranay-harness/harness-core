@@ -1,15 +1,16 @@
 package software.wings.service;
 
+import static io.harness.beans.FeatureFlag.Scope.GLOBAL;
 import static io.harness.rule.OwnerRule.BRETT;
 import static io.harness.rule.OwnerRule.RUSHABH;
 
-import static software.wings.beans.FeatureFlag.Scope.GLOBAL;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.when;
 
+import io.harness.beans.FeatureFlag;
 import io.harness.beans.PageRequest;
 import io.harness.beans.SearchFilter;
 import io.harness.category.element.UnitTests;
@@ -18,7 +19,6 @@ import io.harness.rule.Owner;
 
 import software.wings.WingsBaseTest;
 import software.wings.app.MainConfiguration;
-import software.wings.beans.FeatureFlag;
 import software.wings.beans.FeatureName;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.impl.FeatureFlagServiceImpl;

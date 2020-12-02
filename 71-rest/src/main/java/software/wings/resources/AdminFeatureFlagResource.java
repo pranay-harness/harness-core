@@ -1,11 +1,11 @@
 package software.wings.resources;
 
+import io.harness.beans.FeatureFlag;
 import io.harness.datahandler.models.FeatureFlagBO;
 import io.harness.datahandler.services.AdminFeatureFlagService;
 import io.harness.exception.InvalidRequestException;
 import io.harness.rest.RestResponse;
 
-import software.wings.beans.FeatureFlag;
 import software.wings.security.annotations.AdminPortalAuth;
 
 import com.google.inject.Inject;

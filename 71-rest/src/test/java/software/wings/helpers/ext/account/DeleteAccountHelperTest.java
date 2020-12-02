@@ -21,6 +21,7 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import io.harness.beans.FeatureFlag;
 import io.harness.category.element.UnitTests;
 import io.harness.limits.checker.rate.UsageBucket;
 import io.harness.ng.core.NGAccountAccess;
@@ -37,7 +38,6 @@ import software.wings.beans.AccountStatus;
 import software.wings.beans.AccountType;
 import software.wings.beans.Application;
 import software.wings.beans.DeletedEntity;
-import software.wings.beans.FeatureFlag;
 import software.wings.beans.FeatureName;
 import software.wings.beans.LicenseInfo;
 import software.wings.beans.ServiceTemplate;

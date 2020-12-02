@@ -1,6 +1,6 @@
 package io.harness.datahandler.models;
 
-import software.wings.beans.FeatureFlag;
+import io.harness.beans.FeatureFlag;
 
 import java.util.Objects;
 import java.util.Set;

@@ -215,7 +215,6 @@ import software.wings.beans.Environment;
 import software.wings.beans.ExportExecutionsNotification;
 import software.wings.beans.ExternalServiceAuthToken;
 import software.wings.beans.FailureNotification;
-import software.wings.beans.FeatureFlag;
 import software.wings.beans.GcpConfig;
 import software.wings.beans.GcpKubernetesInfrastructureMapping;
 import software.wings.beans.GcsFileMetadata;
@@ -940,7 +939,6 @@ public class ManagerMorphiaRegistrar implements MorphiaRegistrar {
     set.add(ExportExecutionsRequest.class);
     set.add(ExternalServiceAuthToken.class);
     set.add(FailureNotification.class);
-    set.add(FeatureFlag.class);
     set.add(GcpBillingAccount.class);
     set.add(GCPBillingJobEntity.class);
     set.add(GcpKubernetesInfrastructureMapping.class);

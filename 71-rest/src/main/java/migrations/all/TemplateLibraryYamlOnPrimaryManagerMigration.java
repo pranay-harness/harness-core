@@ -2,11 +2,11 @@ package migrations.all;
 
 import static io.harness.persistence.HQuery.excludeAuthority;
 
+import io.harness.beans.FeatureFlag;
+import io.harness.beans.FeatureFlag.FeatureFlagKeys;
 import io.harness.persistence.HIterator;
 
 import software.wings.beans.Account;
-import software.wings.beans.FeatureFlag;
-import software.wings.beans.FeatureFlag.FeatureFlagKeys;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.yaml.sync.YamlService;

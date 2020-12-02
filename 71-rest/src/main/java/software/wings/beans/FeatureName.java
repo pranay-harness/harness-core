@@ -1,6 +1,7 @@
 package software.wings.beans;
 
-import software.wings.beans.FeatureFlag.Scope;
+import io.harness.beans.FeatureFlag;
+import io.harness.beans.FeatureFlag.Scope;
 
 import lombok.Getter;
 

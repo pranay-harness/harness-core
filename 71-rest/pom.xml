@@ -795,6 +795,11 @@
         </dependency>
         <dependency>
             <groupId>software.wings</groupId>
+            <artifactId>950-feature-flag</artifactId>
+            <version>${project.parent.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>software.wings</groupId>
             <artifactId>950-ng-project-n-orgs</artifactId>
             <version>${project.parent.version}</version>
         </dependency>
