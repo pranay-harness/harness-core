@@ -2,6 +2,7 @@ package io.harness.delegate.service;
 
 import static io.harness.rule.OwnerRule.MATT;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.times;
@@ -13,12 +14,14 @@ import io.harness.category.element.UnitTests;
 import io.harness.managerclient.DelegateAgentManagerClient;
 import io.harness.managerclient.GetDelegatePropertiesRequest;
 import io.harness.managerclient.GetDelegatePropertiesResponse;
+import io.harness.managerclient.HttpsCertRequirement;
+import io.harness.managerclient.HttpsCertRequirement.CertRequirement;
 import io.harness.rest.RestResponse;
 import io.harness.rule.Owner;
 
 import com.google.inject.Inject;
+import com.google.protobuf.Any;
 import java.io.IOException;
-import java.util.concurrent.ExecutionException;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -44,19 +47,28 @@ public class DelegatePropertyServiceImplTest extends CategoryTest {
   @Before
   public void setUp() throws IOException {
     when(delegateAgentManagerClient.getDelegateProperties(anyString())).thenReturn(propertyResponse);
-    doReturn(Response.success(new RestResponse<>(GetDelegatePropertiesResponse.newBuilder().build().toString())))
-        .when(propertyResponse)
-        .execute();
   }
 
   @Test
   @Owner(developers = MATT)
   @Category(UnitTests.class)
-  public void shouldHitCache() throws ExecutionException {
+  public void shouldHitCache() throws Exception {
+    doReturn(
+        Response.success(new RestResponse<>(
+            GetDelegatePropertiesResponse.newBuilder()
+                .addResponseEntry(Any.pack(
+                    HttpsCertRequirement.newBuilder().setCertRequirement(CertRequirement.CERTIFICATE_REQUIRED).build()))
+                .build()
+                .toString())))
+        .when(propertyResponse)
+        .execute();
     GetDelegatePropertiesRequest request = GetDelegatePropertiesRequest.newBuilder().setAccountId(ACCOUNT_ID).build();
-    propertyService.getDelegateProperties(request);
+    GetDelegatePropertiesResponse response = propertyService.getDelegateProperties(request);
     propertyService.getDelegateProperties(request);
 
     verify(delegateAgentManagerClient, times(1)).getDelegateProperties(anyString());
+
+    assertThat(response.getResponseEntry(0).unpack(HttpsCertRequirement.class).getCertRequirement())
+        .isEqualTo(CertRequirement.CERTIFICATE_REQUIRED);
   }
 }
