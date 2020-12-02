@@ -64,7 +64,7 @@ func Handler(stream stream.Stream, store store.Store, config config.Config) http
 		sr.Use(AuthMiddleware(config))
 
 		sr.Post("/", HandleOpen(stream))
-		sr.Delete("/", HandleClose(stream))
+		sr.Delete("/", HandleClose(stream, store))
 		sr.Put("/", HandleWrite(stream))
 		sr.Get("/", HandleTail(stream))
 		sr.Get("/info", HandleInfo(stream))

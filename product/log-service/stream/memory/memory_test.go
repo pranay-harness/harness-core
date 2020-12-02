@@ -1,14 +1,30 @@
 package memory
 
 import (
+	"bufio"
+	"bytes"
 	"context"
+	"encoding/json"
 	"sync"
 	"testing"
 
 	"github.com/wings-software/portal/product/log-service/stream"
 
 	"github.com/google/go-cmp/cmp"
+	"github.com/stretchr/testify/assert"
 )
+
+// BufioWriterCloser combines a bufio Writer with a Closer
+type BufioWriterCloser struct {
+	*bufio.Writer
+}
+
+func (bwc *BufioWriterCloser) Close() error {
+	if err := bwc.Flush(); err != nil {
+		return err
+	}
+	return nil
+}
 
 func TestStreamer(t *testing.T) {
 	s := New()
@@ -90,6 +106,30 @@ func TestStreamTailNotFound(t *testing.T) {
 	if outc != nil && errc != nil {
 		t.Errorf("Expect nil channel when stream not found")
 	}
+}
+
+func TestStreamCopy(t *testing.T) {
+	s := New()
+	var err error
+
+	line1 := &stream.Line{Level: "info", Number: 0, Message: "test message"}
+	line2 := &stream.Line{Level: "warn", Number: 1, Message: "test message2"}
+	bytes1, _ := json.Marshal(&line1)
+	bytes1 = append(bytes1, []byte("\n")...)
+	bytes2, _ := json.Marshal(&line2)
+	bytes2 = append(bytes2, []byte("\n")...)
+
+	err = s.Create(context.Background(), "1")
+	assert.Nil(t, err)
+	err = s.Write(context.Background(), "1", line1)
+	assert.Nil(t, err)
+	err = s.Write(context.Background(), "1", line2)
+	assert.Nil(t, err)
+	w := new(bytes.Buffer)
+	bwc := BufioWriterCloser{bufio.NewWriter(w)}
+	err = s.CopyTo(context.Background(), "1", &bwc)
+	assert.Nil(t, err)
+	assert.Equal(t, w.Bytes(), append(bytes1, bytes2...))
 }
 
 func TestStreamerInfo(t *testing.T) {

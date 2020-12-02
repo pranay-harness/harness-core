@@ -20,6 +20,7 @@ go_library(
         "//product/log-service/stream:go_default_library",
         "@com_github_dchest_authcookie//:go_default_library",
         "@com_github_go_chi_chi//:go_default_library",
+        "@org_golang_x_sync//errgroup:go_default_library",
     ],
 )
 

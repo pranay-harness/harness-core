@@ -6,14 +6,16 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"io"
 	"time"
 
+	"github.com/wings-software/portal/product/log-service/stream"
 	// TODO (vistaar): Move to redis v8. v8 accepts ctx in all calls.
 	// There is some bazel issue with otel library with v8, need to move it once that is resolved.
 	"github.com/go-redis/redis/v7"
+	"github.com/hashicorp/go-multierror"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
-	"github.com/wings-software/portal/product/log-service/stream"
 )
 
 const (
@@ -27,6 +29,7 @@ const (
 	// max. number of concurrent connections that Redis can handle. This limit is set to 10k by default on the latest
 	// Redis servers. To increase it, make sure it gets increased on the server side as well.
 	connectionPool = 5000
+	entryKey       = "line"
 )
 
 type Redis struct {
@@ -59,7 +62,7 @@ func (r *Redis) Create(ctx context.Context, key string) error {
 		Stream:       key,
 		ID:           "*",
 		MaxLenApprox: maxStreamSize,
-		Values:       map[string]interface{}{"lines": []byte{}},
+		Values:       map[string]interface{}{entryKey: []byte{}},
 	}
 	resp := r.Client.XAdd(args)
 	if err := resp.Err(); err != nil {
@@ -90,32 +93,31 @@ func (r *Redis) Delete(ctx context.Context, key string) error {
 
 // Write writes information into the Redis stream
 func (r *Redis) Write(ctx context.Context, key string, lines ...*stream.Line) error {
+	var errors error
 	exists := r.Client.Exists(key)
 	if exists.Err() != nil || exists.Val() == 0 {
 		return stream.ErrNotFound
 	}
 
-	bytes, err := json.Marshal(lines)
-	if err != nil {
-		return err
-	}
-
 	// Write input to redis stream. "*" tells Redis to auto-generate a unique incremental ID.
-	args := &redis.XAddArgs{
-		Stream:       key,
-		Values:       map[string]interface{}{"lines": bytes},
-		MaxLenApprox: maxStreamSize,
-		ID:           "*",
+	for _, line := range lines {
+		bytes, _ := json.Marshal(line)
+		arg := &redis.XAddArgs{
+			Stream:       key,
+			Values:       map[string]interface{}{entryKey: bytes},
+			MaxLenApprox: maxStreamSize,
+			ID:           "*",
+		}
+		resp := r.Client.XAdd(arg)
+		if err := resp.Err(); err != nil {
+			errors = multierror.Append(errors, err)
+		}
 	}
-
-	resp := r.Client.XAdd(args)
-	if err := resp.Err(); err != nil {
-		return errors.Wrap(err, fmt.Sprintf("could not write to stream with key: %s", key))
-	}
-	return nil
+	return errors
 }
 
-// Tail returns back all the lines in the stream and watches for new lines
+// Read returns back all the lines in the stream. If tail is specifed as true, it keeps watching and doesn't
+// close the channel.
 func (r *Redis) Tail(ctx context.Context, key string) (<-chan *stream.Line, <-chan error) {
 	handler := make(chan *stream.Line, bufferSize)
 	err := make(chan error, 1)
@@ -158,16 +160,13 @@ func (r *Redis) Tail(ctx context.Context, key string) (<-chan *stream.Line, <-ch
 					}
 					for _, message := range b {
 						x := message.Values
-						if val, ok := x["lines"]; ok {
-							var in []*stream.Line
-							err := json.Unmarshal([]byte(val.(string)), &in)
-							if err != nil {
+						if val, ok := x[entryKey]; ok {
+							var in *stream.Line
+							if err := json.Unmarshal([]byte(val.(string)), &in); err != nil {
 								// Ignore errors in the stream
 								continue
 							}
-							for _, line := range in {
-								handler <- line
-							}
+							handler <- in
 						}
 					}
 				}
@@ -175,6 +174,44 @@ func (r *Redis) Tail(ctx context.Context, key string) (<-chan *stream.Line, <-ch
 		}
 	}()
 	return handler, err
+}
+
+// CopyTo copies the contents from the redis stream to the writer
+func (r *Redis) CopyTo(ctx context.Context, key string, wc io.WriteCloser) error {
+	defer wc.Close()
+	exists := r.Client.Exists(key)
+	if exists.Err() != nil || exists.Val() == 0 {
+		return stream.ErrNotFound
+	}
+
+	lastID := "0"
+	args := &redis.XReadArgs{
+		Streams: append([]string{key}, lastID),
+		Block:   readPollTime, // periodically check for ctx.Done
+	}
+
+	resp := r.Client.XRead(args)
+	if resp.Err() != nil && resp.Err() != redis.Nil { // resp.Err() is sometimes set to "redis: nil" instead of nil
+		logrus.WithError(resp.Err()).Errorln("received error on redis read call")
+		return resp.Err()
+	}
+
+	for _, msg := range resp.Val() {
+		b := msg.Messages
+		if len(b) > 0 {
+			lastID = b[len(b)-1].ID
+		} else { // Should not happen
+			break
+		}
+		for _, message := range b {
+			x := message.Values
+			if val, ok := x[entryKey]; ok && val.(string) != "" {
+				wc.Write([]byte(val.(string)))
+				wc.Write([]byte("\n"))
+			}
+		}
+	}
+	return nil
 }
 
 // Info returns back information like TTL, size of a stream
