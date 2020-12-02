@@ -101,3 +101,11 @@ pipeline:
                         type: GCR
                         location: eu.gcr.io/harness/ui:latest
                         connectorRef: myDockerRepoConnector
+            - step:
+                identifier: minio
+                type: plugin
+                spec:
+                  image: "plugins/s3"
+                  settings:
+                    secret_key: foo
+                    access_key: bar
