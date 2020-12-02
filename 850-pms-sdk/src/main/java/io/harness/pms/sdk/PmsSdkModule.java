@@ -1,14 +1,24 @@
 package io.harness.pms.sdk;
 
+import static java.time.Duration.ofSeconds;
+
+import io.harness.config.PublisherConfiguration;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.govern.ProviderModule;
+import io.harness.mongo.MongoConfig;
+import io.harness.mongo.queue.QueueFactory;
 import io.harness.morphia.MorphiaRegistrar;
+import io.harness.pms.execution.NodeExecutionEvent;
 import io.harness.pms.plan.InitializeSdkRequest;
 import io.harness.pms.plan.PmsServiceGrpc.PmsServiceBlockingStub;
 import io.harness.pms.plan.Types;
 import io.harness.pms.sdk.core.pipeline.filters.FilterCreationResponseMerger;
 import io.harness.pms.sdk.core.plan.creation.creators.PartialPlanCreator;
 import io.harness.pms.sdk.core.plan.creation.creators.PipelineServiceInfoProvider;
+import io.harness.pms.sdk.execution.NodeExecutionEventListener;
+import io.harness.queue.QueueConsumer;
+import io.harness.queue.QueueController;
+import io.harness.queue.QueueListener;
 import io.harness.serializer.KryoRegistrar;
 import io.harness.serializer.PmsSdkModuleRegistrars;
 import io.harness.spring.AliasRegistrar;
@@ -16,11 +26,13 @@ import io.harness.spring.AliasRegistrar;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.util.concurrent.Service;
 import com.google.common.util.concurrent.ServiceManager;
+import com.google.inject.AbstractModule;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.google.inject.Module;
 import com.google.inject.Provides;
 import com.google.inject.Singleton;
+import com.google.inject.TypeLiteral;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -51,6 +63,9 @@ public class PmsSdkModule {
   }
 
   private void initialize() {
+    PipelineServiceInfoProvider pipelineServiceInfoProvider = config.getPipelineServiceInfoProvider();
+    String serviceName = pipelineServiceInfoProvider.getServiceName();
+
     List<Module> modules = new ArrayList<>();
     modules.add(new ProviderModule() {
       @Provides
@@ -61,6 +76,14 @@ public class PmsSdkModule {
     });
     modules.add(PmsSdkGrpcModule.getInstance());
     modules.add(new ProviderModule() {
+      @Provides
+      @Singleton
+      public QueueConsumer<NodeExecutionEvent> nodeExecutionEventQueueConsumer(
+          Injector injector, PublisherConfiguration config) {
+        return QueueFactory.createQueueConsumer(injector, NodeExecutionEvent.class, ofSeconds(5),
+            Collections.singletonList(Collections.singletonList(serviceName)), config);
+      }
+
       @Provides
       @Singleton
       public Set<Class<? extends KryoRegistrar>> kryoRegistrars() {
@@ -110,6 +133,29 @@ public class PmsSdkModule {
       public ServiceManager serviceManager(Set<Service> services) {
         return new ServiceManager(services);
       }
+
+      @Provides
+      @Singleton
+      public MongoConfig mongoConfig(Set<Service> services) {
+        return config.getMongoConfig();
+      }
+    });
+    modules.add(new AbstractModule() {
+      @Override
+      protected void configure() {
+        bind(QueueController.class).toInstance(new QueueController() {
+          @Override
+          public boolean isPrimary() {
+            return true;
+          }
+
+          @Override
+          public boolean isNotPrimary() {
+            return false;
+          }
+        });
+        bind(new TypeLiteral<QueueListener<NodeExecutionEvent>>() {}).to(NodeExecutionEventListener.class);
+      }
     });
 
     Injector injector = Guice.createInjector(modules);
@@ -118,10 +164,9 @@ public class PmsSdkModule {
     serviceManager.awaitHealthy();
     Runtime.getRuntime().addShutdownHook(new Thread(() -> serviceManager.stopAsync().awaitStopped()));
 
-    PipelineServiceInfoProvider pipelineServiceInfoProvider = config.getPipelineServiceInfoProvider();
     PmsServiceBlockingStub pmsClient = injector.getInstance(PmsServiceBlockingStub.class);
     pmsClient.initializeSdk(InitializeSdkRequest.newBuilder()
-                                .setName(pipelineServiceInfoProvider.getServiceName())
+                                .setName(serviceName)
                                 .putAllSupportedTypes(calculateSupportedTypes(pipelineServiceInfoProvider))
                                 .addAllSupportedSteps(pipelineServiceInfoProvider.getStepInfo())
                                 .build());

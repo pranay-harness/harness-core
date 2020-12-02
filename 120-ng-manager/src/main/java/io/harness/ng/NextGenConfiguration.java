@@ -34,6 +34,7 @@ public class NextGenConfiguration extends Configuration {
   public static final String YAML_SNIPPET_PACKAGE = "io.harness.yaml.snippets";
   @JsonProperty("swagger") private SwaggerBundleConfiguration swaggerBundleConfiguration;
   @JsonProperty("mongo") private MongoConfig mongoConfig;
+  @JsonProperty("pmsMongo") private MongoConfig pmsMongoConfig;
   @JsonProperty("allowedOrigins") private List<String> allowedOrigins = Lists.newArrayList();
   @JsonProperty("managerClientConfig") private ServiceHttpClientConfig serviceHttpClientConfig;
   @JsonProperty("grpcClient") private GrpcClientConfig grpcClientConfig;
