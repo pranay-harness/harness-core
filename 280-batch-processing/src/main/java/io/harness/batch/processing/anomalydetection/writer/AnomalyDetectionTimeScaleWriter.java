@@ -3,7 +3,9 @@ package io.harness.batch.processing.anomalydetection.writer;
 import io.harness.batch.processing.anomalydetection.Anomaly;
 import io.harness.batch.processing.anomalydetection.service.impl.AnomalyDetectionTimescaleDataServiceImpl;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.ListIterator;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.batch.core.ExitStatus;
 import org.springframework.batch.core.StepExecution;
@@ -22,7 +24,16 @@ public class AnomalyDetectionTimeScaleWriter implements ItemWriter<Anomaly>, Ste
 
   @Override
   public void write(List<? extends Anomaly> anomaliesList) throws Exception {
-    dataService.writeAnomaliesToTimescale((List<Anomaly>) anomaliesList);
+    List<Anomaly> anomalyArrayList = new ArrayList<>(anomaliesList);
+    ListIterator<Anomaly> iter = anomalyArrayList.listIterator();
+    Anomaly currentAnomaly;
+    while (iter.hasNext()) {
+      currentAnomaly = iter.next();
+      if (!currentAnomaly.isAnomaly()) {
+        iter.remove();
+      }
+    }
+    dataService.writeAnomaliesToTimescale(anomalyArrayList);
   }
 
   @Override

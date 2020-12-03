@@ -10,6 +10,7 @@ import software.wings.graphql.schema.type.aggregation.anomaly.QLAnomalyData;
 import software.wings.graphql.schema.type.aggregation.anomaly.QLAnomalyData.QLAnomalyDataBuilder;
 import software.wings.graphql.schema.type.aggregation.anomaly.QLAnomalyDataList;
 import software.wings.graphql.schema.type.aggregation.anomaly.QLAnomalyDataList.QLAnomalyDataListBuilder;
+import software.wings.graphql.schema.type.aggregation.anomaly.QLAnomalyFeedback;
 import software.wings.graphql.schema.type.aggregation.anomaly.QLEntityInfo;
 import software.wings.graphql.schema.type.aggregation.anomaly.QLEntityInfo.QLEntityInfoBuilder;
 import software.wings.graphql.schema.type.aggregation.billing.QLBillingDataFilter;
@@ -23,11 +24,14 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class K8sAnomaliesDataFetcher extends AbstractAnomalyDataFetcher<QLBillingDataFilter, QLCCMGroupBy> {
+  private static int ANOMALIES_LIMIT_PER_DAY = 5;
+
   @Inject private TimeScaleDBService timeScaleDBService;
 
   @Override
@@ -42,7 +46,7 @@ public class K8sAnomaliesDataFetcher extends AbstractAnomalyDataFetcher<QLBillin
     try {
       anomaiesList.data(getData(accountId, filters, groupBy));
     } catch (Exception e) {
-      throw new InvalidRequestException("Error while fetching K8SAnomalies data : {}", e);
+      throw new InvalidRequestException("Error while fetching K8SAnomalies data, Exception: {}", e);
     }
     return anomaiesList.build();
   }
@@ -51,9 +55,10 @@ public class K8sAnomaliesDataFetcher extends AbstractAnomalyDataFetcher<QLBillin
     List<QLAnomalyData> listAnomalies = new ArrayList<>();
     String queryStatement = "";
     try {
+      log.info("Query Step 1/3 : Constructing Query");
       queryStatement = new AnomalyDataQueryBuilder().formK8SQuery(accountId, filters, groupBy);
     } catch (InvalidArgumentsException | InvalidRequestException e) {
-      log.error("Error while constructing query for K8SAnomaliesDataFetcher : {} ", e);
+      log.error("Error while constructing query for K8SAnomaliesDataFetcher, Exception : {} ", e.toString());
       return listAnomalies;
     }
 
@@ -63,12 +68,13 @@ public class K8sAnomaliesDataFetcher extends AbstractAnomalyDataFetcher<QLBillin
     while (!successfulRead && retryCount < MAX_RETRY) {
       try (Connection dbConnection = timeScaleDBService.getDBConnection();
            PreparedStatement statement = dbConnection.prepareStatement(queryStatement)) {
-        log.debug("Prepared Statement in k8s anomalies DataFetcher: {} ", statement);
+        log.info("Query Step 2/3 : Statement in k8sAnomaliesDataFetcher: {} ", queryStatement);
         resultSet = statement.executeQuery();
         listAnomalies = extractAnomaliesFromResultSet(resultSet);
         successfulRead = true;
       } catch (SQLException e) {
         retryCount++;
+        log.info("Select Query failed after retry count {} , Exception {}", retryCount, e);
       } finally {
         DBUtils.close(resultSet);
       }
@@ -78,6 +84,7 @@ public class K8sAnomaliesDataFetcher extends AbstractAnomalyDataFetcher<QLBillin
 
   protected List<QLAnomalyData> extractAnomaliesFromResultSet(ResultSet resultSet) throws SQLException {
     List<QLAnomalyData> qlAnomalyDataList = new ArrayList<>();
+    log.info("Query Step 3/3 : conversion of resultset into anomalies");
     while (null != resultSet && resultSet.next()) {
       QLAnomalyDataBuilder anomalyBuilder = QLAnomalyData.builder();
       QLEntityInfoBuilder entityDataBuilder = QLEntityInfo.builder();
@@ -90,10 +97,12 @@ public class K8sAnomaliesDataFetcher extends AbstractAnomalyDataFetcher<QLBillin
             anomalyBuilder.time(resultSet.getTimestamp(field.getFieldName()).getTime());
             break;
           case ACTUAL_COST:
-            anomalyBuilder.actualAmount(resultSet.getDouble(field.getFieldName()));
+            anomalyBuilder.actualAmount(
+                AnomalyDataHelper.getRoundedDoubleValue(resultSet.getDouble(field.getFieldName())));
             break;
           case EXPECTED_COST:
-            anomalyBuilder.expectedAmount(resultSet.getDouble(field.getFieldName()));
+            anomalyBuilder.expectedAmount(
+                AnomalyDataHelper.getRoundedDoubleValue(resultSet.getDouble(field.getFieldName())));
             break;
           case NOTE:
             anomalyBuilder.comment(resultSet.getString(field.getFieldName()));
@@ -114,7 +123,13 @@ public class K8sAnomaliesDataFetcher extends AbstractAnomalyDataFetcher<QLBillin
             entityDataBuilder.workloadType(resultSet.getString(field.getFieldName()));
             break;
           case ANOMALY_SCORE:
-            anomalyBuilder.anomalyScore(resultSet.getDouble(field.getFieldName()));
+            anomalyBuilder.anomalyScore(
+                AnomalyDataHelper.getRoundedDoubleValue(resultSet.getDouble(field.getFieldName())));
+            break;
+          case FEED_BACK:
+            if (resultSet.getString(field.getFieldName()) != null) {
+              anomalyBuilder.userFeedback(QLAnomalyFeedback.valueOf(resultSet.getString(field.getFieldName())));
+            }
             break;
           case ACCOUNT_ID:
           case REPORTED_BY:
@@ -130,11 +145,27 @@ public class K8sAnomaliesDataFetcher extends AbstractAnomalyDataFetcher<QLBillin
           case TIME_GRANULARITY:
             break;
           default:
-            log.error("Unknown field Resultset conversion encountered in K8SAnoamliesDataFetecher");
+            log.error("Unknown field : {} encountered while Resultset conversion in K8SAnoamliesDataFetecher", field);
         }
       }
       anomalyBuilder.entity(entityDataBuilder.build());
       qlAnomalyDataList.add(anomalyBuilder.build());
+    }
+
+    Iterator<QLAnomalyData> iter = qlAnomalyDataList.iterator();
+    int counter = 0;
+    QLAnomalyData current;
+    Long currentDate = null;
+    while (iter.hasNext()) {
+      current = iter.next();
+      if (currentDate == null || current.getTime() > currentDate) {
+        counter = 1;
+        currentDate = current.getTime();
+      } else if (counter < ANOMALIES_LIMIT_PER_DAY) {
+        counter++;
+      } else {
+        iter.remove();
+      }
     }
     return qlAnomalyDataList;
   }

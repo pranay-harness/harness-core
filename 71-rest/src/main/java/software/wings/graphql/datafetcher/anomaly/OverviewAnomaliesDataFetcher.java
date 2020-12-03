@@ -99,16 +99,19 @@ public class OverviewAnomaliesDataFetcher extends AbstractAnomalyDataFetcher<QLB
             }
             break;
           case ANOMALY_SCORE:
-            anomalyBuilder.anomalyScore(resultSet.getDouble(field.getFieldName()));
+            anomalyBuilder.anomalyScore(
+                AnomalyDataHelper.getRoundedDoubleValue(resultSet.getDouble(field.getFieldName())));
             break;
           case ANOMALY_TIME:
             anomalyBuilder.time(resultSet.getTimestamp(field.getFieldName()).getTime());
             break;
           case ACTUAL_COST:
-            anomalyBuilder.actualAmount(resultSet.getDouble(field.getFieldName()));
+            anomalyBuilder.actualAmount(
+                AnomalyDataHelper.getRoundedDoubleValue(resultSet.getDouble(field.getFieldName())));
             break;
           case EXPECTED_COST:
-            anomalyBuilder.expectedAmount(resultSet.getDouble(field.getFieldName()));
+            anomalyBuilder.expectedAmount(
+                AnomalyDataHelper.getRoundedDoubleValue(resultSet.getDouble(field.getFieldName())));
             break;
           case NOTE:
             anomalyBuilder.comment(resultSet.getString(field.getFieldName()));
