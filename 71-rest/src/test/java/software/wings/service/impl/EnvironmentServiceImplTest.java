@@ -1,5 +1,6 @@
 package software.wings.service.impl;
 
+import static io.harness.rule.OwnerRule.MILOS;
 import static io.harness.rule.OwnerRule.PRASHANT;
 import static io.harness.rule.OwnerRule.RAMA;
 import static io.harness.rule.OwnerRule.VAIBHAV_SI;
@@ -12,6 +13,8 @@ import static software.wings.utils.WingsTestConstants.ENV_NAME;
 import static junit.framework.TestCase.assertTrue;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.powermock.api.mockito.PowerMockito.doReturn;
 
@@ -90,14 +93,16 @@ public class EnvironmentServiceImplTest extends WingsBaseTest {
   @Owner(developers = RAMA)
   @Category(UnitTests.class)
   public void shouldSetServiceDeploymentTypeAndArtifactTypeTag() {
-    when(appService.getAccountIdByAppId(APP_ID)).thenReturn(ACCOUNT_ID);
-    when(featureFlagService.isEnabled(FeatureName.HARNESS_TAGS, ACCOUNT_ID)).thenReturn(true);
     Environment env1 = Environment.Builder.anEnvironment()
                            .uuid(ENV_ID)
                            .name(ENV_NAME)
                            .appId(APP_ID)
                            .environmentType(EnvironmentType.PROD)
                            .build();
+
+    when(appService.getAccountIdByAppId(APP_ID)).thenReturn(ACCOUNT_ID);
+    when(featureFlagService.isEnabled(FeatureName.HARNESS_TAGS, ACCOUNT_ID)).thenReturn(true);
+
     Environment savedEnv = environmentService.save(env1);
     List<HarnessTagLink> tagLinksWithEntityId =
         harnessTagService.getTagLinksWithEntityId(ACCOUNT_ID, savedEnv.getUuid());
@@ -110,16 +115,42 @@ public class EnvironmentServiceImplTest extends WingsBaseTest {
   @Owner(developers = PRASHANT)
   @Category(UnitTests.class)
   public void shouldNoTDeleteIfRunningExecution() {
-    when(appService.getAccountIdByAppId(APP_ID)).thenReturn(ACCOUNT_ID);
     Environment env = Environment.Builder.anEnvironment()
                           .uuid(ENV_ID)
                           .name(ENV_NAME)
                           .appId(APP_ID)
                           .environmentType(EnvironmentType.PROD)
                           .build();
+
+    when(appService.getAccountIdByAppId(APP_ID)).thenReturn(ACCOUNT_ID);
+
     environmentService.save(env);
     when(workflowExecutionService.runningExecutionsForEnvironment(APP_ID, ENV_ID))
         .thenReturn(ImmutableList.of("Execution Name 1"));
     assertThatThrownBy(() -> environmentService.delete(APP_ID, ENV_ID)).isInstanceOf(InvalidRequestException.class);
+  }
+
+  @Test
+  @Owner(developers = MILOS)
+  @Category(UnitTests.class)
+  public void updateEnvironment() {
+    Environment savedEnv = Environment.Builder.anEnvironment()
+                               .uuid(ENV_ID)
+                               .name(ENV_NAME)
+                               .appId(APP_ID)
+                               .environmentType(EnvironmentType.PROD)
+                               .build();
+    Environment updatedEnv = Environment.Builder.anEnvironment()
+                                 .uuid(ENV_ID)
+                                 .name("DEV_ENV_NAME")
+                                 .appId(APP_ID)
+                                 .environmentType(EnvironmentType.NON_PROD)
+                                 .build();
+
+    when(appService.getAccountIdByAppId(APP_ID)).thenReturn(ACCOUNT_ID);
+    environmentService.save(savedEnv);
+    environmentService.update(updatedEnv);
+
+    verify(appService, times(3)).getAccountIdByAppId(APP_ID);
   }
 }
