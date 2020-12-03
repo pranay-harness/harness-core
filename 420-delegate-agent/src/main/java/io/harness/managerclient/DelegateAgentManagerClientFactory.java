@@ -1,5 +1,6 @@
 package io.harness.managerclient;
 
+import io.harness.delegate.service.DelegateAgentService;
 import io.harness.network.FibonacciBackOff;
 import io.harness.network.Http;
 import io.harness.security.TokenGenerator;
@@ -27,12 +28,15 @@ import javax.net.ssl.SSLSocketFactory;
 import javax.net.ssl.TrustManager;
 import javax.net.ssl.TrustManagerFactory;
 import javax.net.ssl.X509TrustManager;
+import lombok.extern.slf4j.Slf4j;
 import okhttp3.ConnectionPool;
 import okhttp3.OkHttpClient;
+import okhttp3.Request;
 import okhttp3.Request.Builder;
 import retrofit2.Retrofit;
 import retrofit2.converter.jackson.JacksonConverterFactory;
 
+@Slf4j
 public class DelegateAgentManagerClientFactory implements Provider<DelegateAgentManagerClient> {
   public static final ImmutableList<TrustManager> TRUST_ALL_CERTS =
       ImmutableList.of(new DelegateAgentManagerClientX509TrustManager());
@@ -44,9 +48,14 @@ public class DelegateAgentManagerClientFactory implements Provider<DelegateAgent
 
   private String baseUrl;
   private TokenGenerator tokenGenerator;
+  private static DelegateAgentService delegateAgentService;
 
   public static void setSendVersionHeader(boolean send) {
     sendVersionHeader = send;
+  }
+
+  public static void setDelegateAgentService(DelegateAgentService service) {
+    delegateAgentService = service;
   }
 
   DelegateAgentManagerClientFactory(String baseUrl, TokenGenerator tokenGenerator) {
@@ -93,6 +102,21 @@ public class DelegateAgentManagerClientFactory implements Provider<DelegateAgent
               request.addHeader("Version", versionInfoManager.getVersionInfo().getVersion());
             }
             return chain.proceed(request.build());
+          })
+          .addInterceptor(chain -> {
+            okhttp3.Response response = chain.proceed(chain.request());
+            try {
+              if (response.code() == 401) {
+                if (response.body() != null && response.body().string().contains("EXPIRED_TOKEN")) {
+                  if (delegateAgentService != null) {
+                    delegateAgentService.freeze();
+                  }
+                }
+              }
+            } catch (Exception e) {
+              log.error("Exception occurred in expired token interceptor", e);
+            }
+            return response;
           })
           .addInterceptor(chain -> FibonacciBackOff.executeForEver(() -> chain.proceed(chain.request())))
           // During this call we not just query the task but we also obtain the secret on the manager side
