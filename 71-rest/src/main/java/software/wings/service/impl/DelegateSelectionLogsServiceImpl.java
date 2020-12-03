@@ -5,6 +5,7 @@ import static io.harness.beans.FeatureName.DISABLE_DELEGATE_SELECTION_LOG;
 import io.harness.beans.DelegateTask;
 import io.harness.delegate.beans.DelegateProfile;
 import io.harness.delegate.beans.DelegateSelectionLogParams;
+import io.harness.ff.FeatureFlagService;
 import io.harness.persistence.HPersistence;
 import io.harness.selection.log.BatchDelegateSelectionLog;
 import io.harness.selection.log.DelegateSelectionLog;
@@ -14,7 +15,6 @@ import io.harness.selection.log.DelegateSelectionLog.DelegateSelectionLogKeys;
 import software.wings.beans.Delegate;
 import software.wings.service.intfc.DelegateSelectionLogsService;
 import software.wings.service.intfc.DelegateService;
-import software.wings.service.intfc.FeatureFlagService;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;

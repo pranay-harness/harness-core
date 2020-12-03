@@ -46,6 +46,7 @@ import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.beans.SearchFilter;
 import io.harness.exception.InvalidRequestException;
+import io.harness.ff.FeatureFlagService;
 import io.harness.persistence.UuidAware;
 
 import software.wings.audit.EntityAuditRecord;
@@ -65,7 +66,6 @@ import software.wings.dl.WingsPersistence;
 import software.wings.security.PermissionAttribute.Action;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.EnvironmentService;
-import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.FileService;
 import software.wings.service.intfc.HarnessTagService;
 import software.wings.service.intfc.ResourceLookupService;

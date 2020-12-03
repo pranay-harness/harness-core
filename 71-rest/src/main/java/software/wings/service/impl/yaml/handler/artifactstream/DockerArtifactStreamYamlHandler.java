@@ -6,13 +6,13 @@ import static software.wings.beans.Application.GLOBAL_APP_ID;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.FeatureName;
+import io.harness.ff.FeatureFlagService;
 
 import software.wings.beans.artifact.DockerArtifactStream;
 import software.wings.beans.artifact.DockerArtifactStream.DockerArtifactStreamBuilder;
 import software.wings.beans.artifact.DockerArtifactStream.Yaml;
 import software.wings.beans.yaml.ChangeContext;
 import software.wings.beans.yaml.YamlType;
-import software.wings.service.intfc.FeatureFlagService;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;

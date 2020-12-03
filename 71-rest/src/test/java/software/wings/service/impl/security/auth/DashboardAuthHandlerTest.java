@@ -23,6 +23,7 @@ import io.harness.category.element.UnitTests;
 import io.harness.dashboard.Action;
 import io.harness.dashboard.DashboardAccessPermissions;
 import io.harness.dashboard.DashboardSettings;
+import io.harness.ff.FeatureFlagService;
 import io.harness.rule.Owner;
 
 import software.wings.WingsBaseTest;
@@ -36,7 +37,6 @@ import software.wings.security.UserPermissionInfo;
 import software.wings.security.UserRequestContext;
 import software.wings.security.UserThreadLocal;
 import software.wings.service.intfc.AccountService;
-import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.UserGroupService;
 import software.wings.service.intfc.UserService;
 

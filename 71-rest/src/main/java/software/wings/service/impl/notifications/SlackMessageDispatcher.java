@@ -11,12 +11,12 @@ import static org.apache.commons.lang3.StringUtils.stripToEmpty;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.FeatureName;
+import io.harness.ff.FeatureFlagService;
 
 import software.wings.beans.Notification;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.notification.SlackNotificationConfiguration;
 import software.wings.common.NotificationMessageResolver;
-import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.SlackNotificationService;
 import software.wings.settings.SettingVariableTypes;

@@ -19,6 +19,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.beans.WorkflowType;
 import io.harness.category.element.FunctionalTests;
+import io.harness.ff.FeatureFlagService;
 import io.harness.functional.AbstractFunctionalTest;
 import io.harness.functional.WorkflowUtils;
 import io.harness.generator.ApplicationGenerator;
@@ -47,7 +48,6 @@ import software.wings.beans.Workflow;
 import software.wings.beans.WorkflowExecution;
 import software.wings.beans.artifact.Artifact;
 import software.wings.service.impl.WorkflowExecutionServiceImpl;
-import software.wings.service.intfc.FeatureFlagService;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;

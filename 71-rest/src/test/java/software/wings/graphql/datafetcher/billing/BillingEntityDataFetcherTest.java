@@ -21,6 +21,7 @@ import io.harness.category.element.UnitTests;
 import io.harness.ccm.cluster.dao.K8sWorkloadDao;
 import io.harness.ccm.cluster.entities.K8sWorkload;
 import io.harness.exception.InvalidRequestException;
+import io.harness.ff.FeatureFlagService;
 import io.harness.rule.Owner;
 import io.harness.timescaledb.TimeScaleDBService;
 
@@ -47,7 +48,6 @@ import software.wings.graphql.schema.type.aggregation.billing.QLCCMGroupBy;
 import software.wings.graphql.schema.type.aggregation.billing.QLEntityTableListData;
 import software.wings.graphql.schema.type.aggregation.tag.QLTagInput;
 import software.wings.security.UserThreadLocal;
-import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.ce.CeAccountExpirationChecker;
 
 import com.google.inject.Inject;

@@ -12,12 +12,12 @@ import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.FeatureName;
 import io.harness.beans.OrchestrationWorkflowType;
+import io.harness.ff.FeatureFlagService;
 
 import software.wings.beans.SubEntityType;
 import software.wings.beans.VariableType;
 import software.wings.beans.Workflow;
 import software.wings.service.intfc.AppService;
-import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.WorkflowService;
 import software.wings.sm.StateType;
 

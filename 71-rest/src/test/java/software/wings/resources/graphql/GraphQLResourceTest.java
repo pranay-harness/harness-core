@@ -12,6 +12,7 @@ import static org.mockito.Mockito.when;
 import io.harness.CategoryTest;
 import io.harness.beans.FeatureName;
 import io.harness.category.element.UnitTests;
+import io.harness.ff.FeatureFlagService;
 import io.harness.rule.Owner;
 
 import software.wings.beans.User;
@@ -25,7 +26,6 @@ import software.wings.security.UserRequestContext;
 import software.wings.security.UserRestrictionInfo;
 import software.wings.security.UserThreadLocal;
 import software.wings.service.intfc.ApiKeyService;
-import software.wings.service.intfc.FeatureFlagService;
 import software.wings.utils.ResourceTestRule;
 
 import com.google.inject.name.Named;

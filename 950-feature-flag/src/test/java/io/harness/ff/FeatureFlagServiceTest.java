@@ -1,4 +1,4 @@
-package software.wings.service.impl;
+package io.harness.ff;
 
 import static io.harness.beans.FeatureName.CV_DEMO;
 import static io.harness.beans.FeatureName.GLOBAL_DISABLE_HEALTH_CHECK;
@@ -8,19 +8,15 @@ import static io.harness.rule.OwnerRule.PHOENIKX;
 import static io.harness.rule.OwnerRule.UTKARSH;
 import static io.harness.rule.OwnerRule.VIKAS;
 
-import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
-
 import static org.assertj.core.api.Assertions.assertThat;
 
+import io.harness.FeatureFlagTestBase;
 import io.harness.beans.FeatureFlag;
 import io.harness.beans.FeatureName;
 import io.harness.category.element.UnitTests;
 import io.harness.exception.InvalidRequestException;
+import io.harness.persistence.HPersistence;
 import io.harness.rule.Owner;
-
-import software.wings.WingsBaseTest;
-import software.wings.dl.WingsPersistence;
-import software.wings.service.intfc.FeatureFlagService;
 
 import com.google.common.collect.Sets;
 import com.google.inject.Inject;
@@ -33,8 +29,8 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
 @FieldDefaults(level = AccessLevel.PRIVATE)
-public class FeatureFlagServiceImplTest extends WingsBaseTest {
-  @Inject WingsPersistence wingsPersistence;
+public class FeatureFlagServiceTest extends FeatureFlagTestBase {
+  @Inject HPersistence persistence;
   @Inject FeatureFlagService featureFlagService;
 
   @Before
@@ -53,7 +49,7 @@ public class FeatureFlagServiceImplTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void testGetFeatureFlag_WhenFlagPresentInDB() {
     FeatureFlag featureFlag = FeatureFlag.builder().name(SEARCH_REQUEST.name()).enabled(true).build();
-    wingsPersistence.save(featureFlag);
+    persistence.save(featureFlag);
     Optional<FeatureFlag> featureFlagInDb = featureFlagService.getFeatureFlag(SEARCH_REQUEST);
     assertThat(featureFlagInDb.isPresent()).isTrue();
     assertThat(featureFlagInDb.get().getName()).isEqualTo(SEARCH_REQUEST.name());
@@ -72,7 +68,7 @@ public class FeatureFlagServiceImplTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void testIsEnabled_WhenFlagPresentInDB() {
     FeatureFlag featureFlag = FeatureFlag.builder().name(SEARCH_REQUEST.name()).enabled(true).build();
-    wingsPersistence.save(featureFlag);
+    persistence.save(featureFlag);
     boolean featureFlagEnabled = featureFlagService.isEnabled(SEARCH_REQUEST, null);
     assertThat(featureFlagEnabled).isTrue();
   }
@@ -87,13 +83,13 @@ public class FeatureFlagServiceImplTest extends WingsBaseTest {
 
     FeatureFlag featureFlag =
         FeatureFlag.builder().name(featureName.name()).enabled(false).accountIds(Sets.newHashSet()).build();
-    wingsPersistence.save(featureFlag);
+    persistence.save(featureFlag);
     featureFlagService.isEnabledReloadCache(featureName, "accountId");
     accountIds = featureFlagService.getAccountIds(featureName);
     assertThat(accountIds).hasSize(0);
 
     featureFlag.setAccountIds(Sets.newHashSet("accountId"));
-    wingsPersistence.save(featureFlag);
+    persistence.save(featureFlag);
     featureFlagService.isEnabledReloadCache(featureName, "accountId");
     accountIds = featureFlagService.getAccountIds(featureName);
     assertThat(accountIds).hasSize(1);
@@ -109,13 +105,13 @@ public class FeatureFlagServiceImplTest extends WingsBaseTest {
 
     FeatureFlag featureFlag =
         FeatureFlag.builder().name(featureName.name()).enabled(false).accountIds(Sets.newHashSet()).build();
-    wingsPersistence.save(featureFlag);
+    persistence.save(featureFlag);
     featureFlagService.isEnabledReloadCache(featureName, "accountId");
     accountIds = featureFlagService.getAccountIds(featureName);
     assertThat(accountIds).hasSize(0);
 
     featureFlag.setAccountIds(Sets.newHashSet("accountId"));
-    wingsPersistence.save(featureFlag);
+    persistence.save(featureFlag);
     featureFlagService.isEnabledReloadCache(featureName, "accountId");
     accountIds = featureFlagService.getAccountIds(featureName);
     assertThat(accountIds).hasSize(1);
@@ -129,7 +125,7 @@ public class FeatureFlagServiceImplTest extends WingsBaseTest {
 
     FeatureFlag featureFlag =
         FeatureFlag.builder().name(featureName.name()).enabled(false).accountIds(Sets.newHashSet()).build();
-    wingsPersistence.save(featureFlag);
+    persistence.save(featureFlag);
     featureFlagService.enableGlobally(featureName);
     Optional<FeatureFlag> featureFlagOptional = featureFlagService.getFeatureFlag(featureName);
     assertThat(featureFlagOptional.isPresent()).isTrue();
@@ -150,7 +146,7 @@ public class FeatureFlagServiceImplTest extends WingsBaseTest {
   public void testUpdateFeatureFlagForAccount_EnableFeatureFlag() {
     FeatureName featureName = CV_DEMO;
     FeatureFlag featureFlag = FeatureFlag.builder().name(featureName.name()).enabled(false).obsolete(false).build();
-    wingsPersistence.save(featureFlag);
+    persistence.save(featureFlag);
     FeatureFlag updatedFeatureFlag = featureFlagService.updateFeatureFlagForAccount(featureName.name(), "abcde", true);
     assertThat(updatedFeatureFlag).isNotNull();
     assertThat(updatedFeatureFlag.getAccountIds()).contains("abcde");
@@ -167,7 +163,7 @@ public class FeatureFlagServiceImplTest extends WingsBaseTest {
                                   .accountIds(Sets.newHashSet("abcde"))
                                   .obsolete(false)
                                   .build();
-    wingsPersistence.save(featureFlag);
+    persistence.save(featureFlag);
     FeatureFlag updatedFeatureFlag = featureFlagService.updateFeatureFlagForAccount(featureName.name(), "abcde", false);
     assertThat(updatedFeatureFlag).isNotNull();
     assertThat(updatedFeatureFlag.getAccountIds()).isEmpty();
@@ -182,18 +178,18 @@ public class FeatureFlagServiceImplTest extends WingsBaseTest {
     FeatureFlag featureFlag1 = FeatureFlag.builder()
                                    .name(featureName1.name())
                                    .enabled(false)
-                                   .accountIds(Sets.newHashSet(ACCOUNT_ID, "abc", "def", "ghi"))
+                                   .accountIds(Sets.newHashSet("accountId", "abc", "def", "ghi"))
                                    .obsolete(false)
                                    .build();
     FeatureFlag featureFlag2 = FeatureFlag.builder()
                                    .name(featureName2.name())
                                    .enabled(false)
-                                   .accountIds(Sets.newHashSet(ACCOUNT_ID, "jkl", "mno", "pqr"))
+                                   .accountIds(Sets.newHashSet("accountId", "jkl", "mno", "pqr"))
                                    .obsolete(false)
                                    .build();
-    wingsPersistence.save(featureFlag1);
-    wingsPersistence.save(featureFlag2);
-    featureFlagService.removeAccountReferenceFromAllFeatureFlags(ACCOUNT_ID);
+    persistence.save(featureFlag1);
+    persistence.save(featureFlag2);
+    featureFlagService.removeAccountReferenceFromAllFeatureFlags("accountId");
     FeatureFlag updatedFeatureFlag1 = featureFlagService.getFeatureFlag(featureName1).get();
     assertThat(updatedFeatureFlag1).isNotNull();
     assertThat(updatedFeatureFlag1.getAccountIds()).containsExactlyInAnyOrder("abc", "def", "ghi");

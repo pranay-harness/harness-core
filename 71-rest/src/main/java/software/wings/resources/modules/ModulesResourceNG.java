@@ -2,10 +2,9 @@ package software.wings.resources.modules;
 
 import io.harness.ModuleType;
 import io.harness.beans.FeatureName;
+import io.harness.ff.FeatureFlagService;
 import io.harness.rest.RestResponse;
 import io.harness.security.annotations.NextGenManagerAuth;
-
-import software.wings.service.intfc.FeatureFlagService;
 
 import com.google.inject.Inject;
 import io.swagger.annotations.Api;

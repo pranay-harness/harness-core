@@ -24,6 +24,7 @@ import static org.mockito.Mockito.when;
 import io.harness.beans.FeatureFlag;
 import io.harness.beans.FeatureName;
 import io.harness.category.element.UnitTests;
+import io.harness.ff.FeatureFlagService;
 import io.harness.limits.checker.rate.UsageBucket;
 import io.harness.ng.core.NGAccountAccess;
 import io.harness.perpetualtask.PerpetualTaskService;
@@ -45,7 +46,6 @@ import software.wings.beans.User;
 import software.wings.beans.entityinterface.ApplicationAccess;
 import software.wings.licensing.LicenseService;
 import software.wings.scheduler.events.segment.SegmentGroupEventJobContext;
-import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.UserService;
 
 import com.google.common.collect.Sets;

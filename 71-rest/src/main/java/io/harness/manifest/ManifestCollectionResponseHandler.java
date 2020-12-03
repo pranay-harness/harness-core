@@ -8,6 +8,7 @@ import static java.util.stream.Collectors.toSet;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.FeatureName;
+import io.harness.ff.FeatureFlagService;
 import io.harness.logging.AccountLogContext;
 import io.harness.logging.AutoLogContext;
 import io.harness.logging.CommandExecutionStatus;
@@ -25,7 +26,6 @@ import software.wings.service.impl.applicationmanifest.AppManifestPTaskHelper;
 import software.wings.service.impl.applicationmanifest.ManifestCollectionUtils;
 import software.wings.service.intfc.AlertService;
 import software.wings.service.intfc.ApplicationManifestService;
-import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.TriggerService;
 import software.wings.service.intfc.applicationmanifest.HelmChartService;
 

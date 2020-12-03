@@ -11,6 +11,7 @@ import io.harness.beans.FeatureName;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageRequest.PageRequestBuilder;
 import io.harness.beans.SearchFilter.Operator;
+import io.harness.ff.FeatureFlagService;
 import io.harness.time.Timestamp;
 
 import software.wings.beans.Account;
@@ -23,7 +24,6 @@ import software.wings.service.impl.analysis.LogDataRecord.LogDataRecordKeys;
 import software.wings.service.impl.splunk.SplunkAnalysisCluster;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.DataStoreService;
-import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.analysis.LogLabelingService;
 
 import com.google.common.collect.Lists;

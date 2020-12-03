@@ -36,6 +36,7 @@ import io.harness.beans.ExecutionStatus;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.beans.DelegateSelectionLogParams;
 import io.harness.delegate.beans.DelegateTaskDetails;
+import io.harness.ff.FeatureFlagService;
 import io.harness.rule.Owner;
 
 import software.wings.WingsBaseTest;
@@ -45,7 +46,6 @@ import software.wings.beans.GraphGroup;
 import software.wings.beans.GraphNode;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.DelegateSelectionLogsService;
-import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.sm.ContextElement;
 import software.wings.sm.StateExecutionData;

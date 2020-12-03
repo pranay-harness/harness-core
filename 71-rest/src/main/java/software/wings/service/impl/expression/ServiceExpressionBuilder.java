@@ -15,6 +15,7 @@ import static java.util.stream.Collectors.toList;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.FeatureName;
 import io.harness.beans.PageRequest;
+import io.harness.ff.FeatureFlagService;
 import io.harness.logging.Misc;
 
 import software.wings.api.DeploymentType;
@@ -23,7 +24,6 @@ import software.wings.beans.EntityType;
 import software.wings.beans.Service;
 import software.wings.beans.ServiceTemplate;
 import software.wings.service.intfc.AppService;
-import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.sm.StateType;
 

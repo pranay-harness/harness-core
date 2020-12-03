@@ -9,6 +9,7 @@ import static software.wings.beans.PhaseStepType.K8S_PHASE_STEP;
 import static software.wings.beans.WorkflowPhase.WorkflowPhaseBuilder.aWorkflowPhase;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.ff.FeatureFlagService;
 
 import software.wings.beans.CanaryOrchestrationWorkflow;
 import software.wings.beans.OrchestrationWorkflow;
@@ -17,7 +18,6 @@ import software.wings.beans.Workflow;
 import software.wings.beans.WorkflowPhase;
 import software.wings.beans.container.KubernetesContainerTask;
 import software.wings.service.impl.workflow.WorkflowServiceHelper;
-import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.ServiceResourceService;
 
 import com.google.inject.Inject;

@@ -39,7 +39,6 @@ import io.harness.cvng.core.services.api.DSConfigService;
 import io.harness.cvng.core.services.api.DataCollectionInfoMapper;
 import io.harness.cvng.core.services.api.DataCollectionTaskService;
 import io.harness.cvng.core.services.api.DeletedCVConfigService;
-import io.harness.cvng.core.services.api.FeatureFlagService;
 import io.harness.cvng.core.services.api.HostRecordService;
 import io.harness.cvng.core.services.api.LogRecordService;
 import io.harness.cvng.core.services.api.MetricPackService;
@@ -57,7 +56,6 @@ import io.harness.cvng.core.services.impl.CVSetupServiceImpl;
 import io.harness.cvng.core.services.impl.DSConfigServiceImpl;
 import io.harness.cvng.core.services.impl.DataCollectionTaskServiceImpl;
 import io.harness.cvng.core.services.impl.DeletedCVConfigServiceImpl;
-import io.harness.cvng.core.services.impl.FeatureFlagServiceImpl;
 import io.harness.cvng.core.services.impl.HostRecordServiceImpl;
 import io.harness.cvng.core.services.impl.LogRecordServiceImpl;
 import io.harness.cvng.core.services.impl.MetricPackServiceImpl;
@@ -86,6 +84,7 @@ import io.harness.cvng.verificationjob.services.api.VerificationJobInstanceServi
 import io.harness.cvng.verificationjob.services.api.VerificationJobService;
 import io.harness.cvng.verificationjob.services.impl.VerificationJobInstanceServiceImpl;
 import io.harness.cvng.verificationjob.services.impl.VerificationJobServiceImpl;
+import io.harness.ff.FeatureFlagModule;
 import io.harness.mongo.MongoPersistence;
 import io.harness.persistence.HPersistence;
 import io.harness.queue.QueueController;
@@ -116,6 +115,8 @@ public class CVServiceModule extends AbstractModule {
    */
   @Override
   protected void configure() {
+    install(FeatureFlagModule.getInstance());
+
     bind(ExecutorService.class)
         .toInstance(ThreadPool.create(1, 20, 5, TimeUnit.SECONDS,
             new ThreadFactoryBuilder()
@@ -139,7 +140,6 @@ public class CVServiceModule extends AbstractModule {
       });
       bind(VersionInfoManager.class).toInstance(versionInfoManager);
       bind(HPersistence.class).to(MongoPersistence.class);
-      bind(FeatureFlagService.class).to(FeatureFlagServiceImpl.class);
       bind(TimeSeriesService.class).to(TimeSeriesServiceImpl.class);
       bind(OrchestrationService.class).to(OrchestrationServiceImpl.class);
       bind(AnalysisStateMachineService.class).to(AnalysisStateMachineServiceImpl.class);

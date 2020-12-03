@@ -75,6 +75,7 @@ import io.harness.event.handler.impl.segment.SegmentGroupEventJobServiceImpl;
 import io.harness.event.reconciliation.service.DeploymentReconService;
 import io.harness.event.reconciliation.service.DeploymentReconServiceImpl;
 import io.harness.exception.InvalidArgumentsException;
+import io.harness.ff.FeatureFlagModule;
 import io.harness.git.GitClientV2;
 import io.harness.git.GitClientV2Impl;
 import io.harness.govern.ServersModule;
@@ -308,7 +309,6 @@ import software.wings.service.impl.EmailNotificationServiceImpl;
 import software.wings.service.impl.EntityVersionServiceImpl;
 import software.wings.service.impl.EnvironmentServiceImpl;
 import software.wings.service.impl.ExternalApiRateLimitingServiceImpl;
-import software.wings.service.impl.FeatureFlagServiceImpl;
 import software.wings.service.impl.FileServiceImpl;
 import software.wings.service.impl.GcpInfrastructureProvider;
 import software.wings.service.impl.GcrBuildServiceImpl;
@@ -521,7 +521,6 @@ import software.wings.service.intfc.EntityVersionService;
 import software.wings.service.intfc.EnvironmentService;
 import software.wings.service.intfc.ErrorReporter;
 import software.wings.service.intfc.ExternalApiRateLimitingService;
-import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.FileService;
 import software.wings.service.intfc.GcrBuildService;
 import software.wings.service.intfc.GcsBuildService;
@@ -796,6 +795,7 @@ public class WingsModule extends AbstractModule implements ServersModule {
         configuration.getGrpcDelegateServiceClientConfig().getTarget(),
         configuration.getGrpcDelegateServiceClientConfig().getAuthority(), configuration.getApiUrl()));
     install(PersistentLockModule.getInstance());
+    install(FeatureFlagModule.getInstance());
 
     bind(MainConfiguration.class).toInstance(configuration);
     bind(SchedulerConfig.class)
@@ -920,7 +920,6 @@ public class WingsModule extends AbstractModule implements ServersModule {
     bind(YamlGitService.class).to(YamlGitServiceImpl.class);
     bind(YamlArtifactStreamService.class).to(YamlArtifactStreamServiceImpl.class);
     bind(EntityUpdateService.class).to(EntityUpdateServiceImpl.class);
-    bind(FeatureFlagService.class).to(FeatureFlagServiceImpl.class);
     bind(HarnessTagService.class).to(HarnessTagServiceImpl.class);
     bind(AlertService.class).to(AlertServiceImpl.class).in(Singleton.class);
     bind(AlertNotificationRuleService.class).to(AlertNotificationRuleServiceImpl.class);

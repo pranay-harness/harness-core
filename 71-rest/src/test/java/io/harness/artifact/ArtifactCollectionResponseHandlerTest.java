@@ -23,6 +23,7 @@ import static org.mockito.Mockito.when;
 import io.harness.CategoryTest;
 import io.harness.beans.FeatureName;
 import io.harness.category.element.UnitTests;
+import io.harness.ff.FeatureFlagService;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.perpetualtask.PerpetualTaskService;
 import io.harness.rule.Owner;
@@ -39,7 +40,6 @@ import software.wings.service.impl.artifact.ArtifactStreamPTaskHelper;
 import software.wings.service.intfc.AlertService;
 import software.wings.service.intfc.ArtifactService;
 import software.wings.service.intfc.ArtifactStreamService;
-import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.TriggerService;
 
 import com.google.inject.Inject;

@@ -23,12 +23,12 @@ import io.harness.ccm.cluster.entities.DirectKubernetesCluster;
 import io.harness.ccm.cluster.entities.EcsCluster;
 import io.harness.ccm.config.CCMSettingService;
 import io.harness.exception.InvalidRequestException;
+import io.harness.ff.FeatureFlagService;
 import io.harness.rule.Owner;
 
 import software.wings.beans.Account;
 import software.wings.features.CeClusterFeature;
 import software.wings.features.api.UsageLimitedFeature;
-import software.wings.service.intfc.FeatureFlagService;
 
 import com.google.inject.name.Named;
 import java.util.Arrays;

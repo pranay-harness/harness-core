@@ -17,6 +17,7 @@ import io.harness.beans.ExecutionStatus;
 import io.harness.beans.FeatureName;
 import io.harness.beans.WorkflowType;
 import io.harness.category.element.FunctionalTests;
+import io.harness.ff.FeatureFlagService;
 import io.harness.functional.AbstractFunctionalTest;
 import io.harness.functional.WorkflowUtils;
 import io.harness.functional.provisioners.utils.InfraProvisionerUtils;
@@ -50,7 +51,6 @@ import software.wings.beans.SettingAttribute;
 import software.wings.beans.TerraformInfrastructureProvisioner;
 import software.wings.beans.Workflow;
 import software.wings.beans.WorkflowExecution;
-import software.wings.service.intfc.FeatureFlagService;
 import software.wings.sm.StateType;
 
 import com.google.common.collect.ImmutableMap;

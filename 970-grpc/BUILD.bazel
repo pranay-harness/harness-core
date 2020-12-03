@@ -7,11 +7,24 @@ load("//:tools/bazel/protos/harness_grpc_library.bzl", "harness_grpc_library")
 
 sources()
 
-java_library(
-    name = "maven_deps",
+harness_grpc_library(
+    name = "970_grpc_java_proto",
     visibility = ["//visibility:private"],
-    exports = [
-        "//980-commons:maven_deps",
+    deps = [
+        "//970-grpc/src/main/proto:970_grpc_proto",
+    ],
+)
+
+java_library(
+    name = "module",
+    srcs = glob(["src/main/**/*.java"]),
+    resource_jars = [
+        ":970_grpc_java_proto",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [
+        ":970_grpc_java_proto",
+        "//:lombok",
         "//980-commons:module",
         "@maven//:com_google_code_findbugs_annotations",
         "@maven//:com_google_guava_guava",
@@ -30,34 +43,11 @@ java_library(
     ],
 )
 
-harness_grpc_library(
-    name = "970_grpc_java_proto",
-    visibility = ["//visibility:private"],
-    deps = [
-        "//970-grpc/src/main/proto:970_grpc_proto",
-    ],
-)
-
-java_library(
-    name = "module",
-    srcs = glob(["src/main/**/*.java"]),
-    resource_jars = [
-        ":970_grpc_java_proto",
-    ],
-    visibility = ["//visibility:public"],
-    deps = [
-        ":970_grpc_java_proto",
-        ":maven_deps",
-        "//:lombok",
-    ],
-)
-
 java_library(
     name = "tests",
     srcs = glob(["src/test/**/*.java"]),
     visibility = ["//visibility:private"],
     deps = [
-        ":maven_deps",
         ":module",
         "//:lombok",
         "//990-commons-test:module",

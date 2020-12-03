@@ -51,6 +51,7 @@ import io.harness.event.usagemetrics.EventsModuleHelper;
 import io.harness.exception.WingsException;
 import io.harness.execution.export.background.ExportExecutionsRequestCleanupHandler;
 import io.harness.execution.export.background.ExportExecutionsRequestHandler;
+import io.harness.ff.FeatureFlagService;
 import io.harness.govern.ProviderModule;
 import io.harness.grpc.GrpcServiceConfigurationModule;
 import io.harness.grpc.server.GrpcServerConfig;
@@ -198,7 +199,6 @@ import software.wings.service.intfc.AuditService;
 import software.wings.service.intfc.DataStoreService;
 import software.wings.service.intfc.DelegateProfileService;
 import software.wings.service.intfc.DelegateService;
-import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.InfrastructureDefinitionService;
 import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.MigrationService;
@@ -504,7 +504,7 @@ public class WingsApplication extends Application<MainConfiguration> {
 
     registerAtmosphereStreams(environment, injector);
 
-    initializeFeatureFlags(injector);
+    initializeFeatureFlags(configuration, injector);
 
     registerHealthChecks(environment, injector);
 
@@ -560,8 +560,6 @@ public class WingsApplication extends Application<MainConfiguration> {
     harnessMetricRegistry = injector.getInstance(HarnessMetricRegistry.class);
 
     initMetrics();
-
-    initializeFeatureFlags(injector);
 
     initializeServiceSecretKeys(injector);
 
@@ -676,8 +674,9 @@ public class WingsApplication extends Application<MainConfiguration> {
     harnessMetricRegistry.registerGaugeMetric(CV_META_DATA, CV_24X7_METRIC_LABELS, " ");
   }
 
-  private void initializeFeatureFlags(Injector injector) {
-    injector.getInstance(FeatureFlagService.class).initializeFeatureFlags();
+  private void initializeFeatureFlags(MainConfiguration mainConfiguration, Injector injector) {
+    injector.getInstance(FeatureFlagService.class)
+        .initializeFeatureFlags(mainConfiguration.getDeployMode(), mainConfiguration.getFeatureNames());
   }
 
   private void registerHealthChecks(Environment environment, Injector injector) {

@@ -28,6 +28,7 @@ import io.harness.deployment.InstanceDetails;
 import io.harness.deployment.InstanceDetails.InstanceDetailsBuilder;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
+import io.harness.ff.FeatureFlagService;
 
 import software.wings.api.InstanceElement;
 import software.wings.api.PhaseElement;
@@ -53,7 +54,6 @@ import software.wings.service.impl.workflow.WorkflowServiceHelper;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ArtifactService;
-import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.HostService;
 import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.StateExecutionService;

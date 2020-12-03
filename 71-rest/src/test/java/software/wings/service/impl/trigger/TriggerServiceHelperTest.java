@@ -17,6 +17,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.beans.FeatureName;
 import io.harness.category.element.UnitTests;
+import io.harness.ff.FeatureFlagService;
 import io.harness.rule.Owner;
 
 import software.wings.WingsBaseTest;
@@ -27,7 +28,6 @@ import software.wings.beans.trigger.ManifestSelection;
 import software.wings.beans.trigger.ManifestSelection.ManifestSelectionType;
 import software.wings.beans.trigger.Trigger;
 import software.wings.service.intfc.ArtifactStreamService;
-import software.wings.service.intfc.FeatureFlagService;
 
 import com.google.gson.Gson;
 import com.google.inject.Inject;

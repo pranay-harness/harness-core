@@ -5,6 +5,7 @@ import static io.harness.annotations.dev.HarnessTeam.CDC;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.ExecutionStatus;
 import io.harness.beans.ExecutionStatusResponseData;
+import io.harness.ff.FeatureFlagService;
 import io.harness.interrupts.RepairActionCode;
 import io.harness.tasks.ResponseData;
 
@@ -12,7 +13,6 @@ import software.wings.api.ForkElement;
 import software.wings.beans.LoopEnvStateParams;
 import software.wings.beans.LoopEnvStateParams.LoopEnvStateParamsBuilder;
 import software.wings.service.impl.workflow.WorkflowServiceImpl;
-import software.wings.service.intfc.FeatureFlagService;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionContextImpl;
 import software.wings.sm.ExecutionResponse;

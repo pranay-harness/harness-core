@@ -5,6 +5,7 @@ import static io.harness.persistence.HQuery.excludeAuthority;
 
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 
+import io.harness.ff.FeatureFlagService;
 import io.harness.persistence.HIterator;
 import io.harness.scheduler.PersistentScheduler;
 
@@ -17,7 +18,6 @@ import software.wings.dl.WingsPersistence;
 import software.wings.security.authentication.AuthenticationMechanism;
 import software.wings.service.impl.UserServiceImpl;
 import software.wings.service.intfc.AccountService;
-import software.wings.service.intfc.FeatureFlagService;
 
 import com.google.inject.Inject;
 import java.time.Instant;

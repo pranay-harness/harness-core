@@ -6,6 +6,7 @@ import static io.harness.exception.WingsException.USER;
 import io.harness.beans.FeatureName;
 import io.harness.deployment.InstanceDetails;
 import io.harness.exception.WingsException;
+import io.harness.ff.FeatureFlagService;
 import io.harness.rest.RestResponse;
 import io.harness.security.annotations.LearningEngineAuth;
 
@@ -17,7 +18,6 @@ import software.wings.service.impl.analysis.FeedbackAction;
 import software.wings.service.impl.analysis.LogMLAnalysisSummary;
 import software.wings.service.impl.analysis.LogMLFeedback;
 import software.wings.service.impl.analysis.LogMLFeedbackRecord;
-import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.analysis.AnalysisService;
 import software.wings.service.intfc.analysis.LogAnalysisResource;
 import software.wings.service.intfc.verification.CV24x7DashboardService;

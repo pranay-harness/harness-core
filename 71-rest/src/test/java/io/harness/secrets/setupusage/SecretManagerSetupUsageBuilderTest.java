@@ -14,6 +14,7 @@ import io.harness.beans.SecretManagerConfig;
 import io.harness.category.element.UnitTests;
 import io.harness.data.structure.UUIDGenerator;
 import io.harness.encryption.EncryptionReflectUtils;
+import io.harness.ff.FeatureFlagService;
 import io.harness.reflection.ReflectionUtils;
 import io.harness.rule.Owner;
 import io.harness.secretmanagers.SecretManagerConfigService;
@@ -25,7 +26,6 @@ import software.wings.beans.Account;
 import software.wings.beans.AccountType;
 import software.wings.beans.KmsConfig;
 import software.wings.beans.KmsConfig.KmsConfigKeys;
-import software.wings.service.intfc.FeatureFlagService;
 import software.wings.settings.SettingVariableTypes;
 
 import com.google.common.collect.Sets;

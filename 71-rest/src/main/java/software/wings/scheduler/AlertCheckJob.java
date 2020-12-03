@@ -9,6 +9,7 @@ import static software.wings.common.Constants.ACCOUNT_ID_KEY;
 
 import io.harness.alert.AlertData;
 import io.harness.delegate.beans.alert.DelegatesScalingGroupDownAlert;
+import io.harness.ff.FeatureFlagService;
 import io.harness.scheduler.PersistentScheduler;
 
 import software.wings.app.MainConfiguration;
@@ -23,7 +24,6 @@ import software.wings.beans.alert.NoInstalledDelegatesAlert;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.impl.DelegateConnectionDao;
 import software.wings.service.intfc.AlertService;
-import software.wings.service.intfc.FeatureFlagService;
 import software.wings.utils.EmailHelperUtils;
 
 import com.google.common.annotations.VisibleForTesting;

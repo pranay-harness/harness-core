@@ -109,6 +109,7 @@ import io.harness.eraro.ErrorCode;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.expression.ExpressionEvaluator;
+import io.harness.ff.FeatureFlagService;
 import io.harness.interrupts.ExecutionInterruptType;
 import io.harness.limits.InstanceUsageExceededLimitException;
 import io.harness.limits.checker.LimitApproachingException;
@@ -242,7 +243,6 @@ import software.wings.service.intfc.BarrierService.OrchestrationWorkflowInfo.Orc
 import software.wings.service.intfc.BuildSourceService;
 import software.wings.service.intfc.EntityVersionService;
 import software.wings.service.intfc.EnvironmentService;
-import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.HostService;
 import software.wings.service.intfc.InfrastructureDefinitionService;
 import software.wings.service.intfc.InfrastructureMappingService;

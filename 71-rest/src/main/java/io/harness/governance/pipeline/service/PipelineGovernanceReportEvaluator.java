@@ -4,6 +4,7 @@ import static software.wings.beans.Application.Builder.anApplication;
 
 import static java.util.stream.Collectors.toList;
 
+import io.harness.ff.FeatureFlagService;
 import io.harness.governance.pipeline.enforce.GovernanceRuleStatus;
 import io.harness.governance.pipeline.enforce.PipelineReportCard;
 import io.harness.governance.pipeline.service.evaluators.OnPipeline;
@@ -17,7 +18,6 @@ import software.wings.beans.HarnessTagLink;
 import software.wings.beans.Pipeline;
 import software.wings.beans.Workflow;
 import software.wings.features.api.Usage;
-import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.HarnessTagService;
 import software.wings.service.intfc.PipelineService;
 import software.wings.service.intfc.WorkflowService;

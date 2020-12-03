@@ -11,11 +11,11 @@ import io.harness.CategoryTest;
 import io.harness.beans.FeatureName;
 import io.harness.category.element.UnitTests;
 import io.harness.ccm.setup.config.CESetUpConfig;
+import io.harness.ff.FeatureFlagService;
 import io.harness.rule.Owner;
 import io.harness.timescaledb.TimeScaleDBService;
 
 import software.wings.app.MainConfiguration;
-import software.wings.service.intfc.FeatureFlagService;
 
 import java.sql.Connection;
 import java.sql.ResultSet;

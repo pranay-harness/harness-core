@@ -6,6 +6,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.beans.FeatureName;
 import io.harness.category.element.FunctionalTests;
+import io.harness.ff.FeatureFlagService;
 import io.harness.functional.AbstractFunctionalTest;
 import io.harness.rule.Owner;
 import io.harness.testframework.framework.Retry;
@@ -20,7 +21,6 @@ import software.wings.beans.Pipeline;
 import software.wings.search.entities.pipeline.PipelineSearchEntity;
 import software.wings.search.framework.SearchResult;
 import software.wings.search.framework.SearchResults;
-import software.wings.service.intfc.FeatureFlagService;
 
 import com.google.inject.Inject;
 import lombok.extern.slf4j.Slf4j;

@@ -7,13 +7,13 @@ import static java.lang.String.format;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.FeatureName;
+import io.harness.ff.FeatureFlagService;
 import io.harness.logging.AccountLogContext;
 import io.harness.logging.AutoLogContext;
 import io.harness.perpetualtask.PerpetualTaskService;
 
 import software.wings.beans.artifact.ArtifactStream;
 import software.wings.delegatetasks.buildsource.ArtifactStreamLogContext;
-import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.artifact.ArtifactStreamServiceObserver;
 
 import com.google.inject.Inject;

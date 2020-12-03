@@ -10,11 +10,14 @@ import lombok.experimental.UtilityClass;
 @UtilityClass
 public class FeatureFlagRegistrars {
   public static final ImmutableSet<Class<? extends KryoRegistrar>> kryoRegistrars =
-      ImmutableSet.<Class<? extends KryoRegistrar>>builder().build();
+      ImmutableSet.<Class<? extends KryoRegistrar>>builder().addAll(PersistenceRegistrars.kryoRegistrars).build();
 
   public static final ImmutableSet<Class<? extends MorphiaRegistrar>> morphiaRegistrars =
-      ImmutableSet.<Class<? extends MorphiaRegistrar>>builder().add(FeatureFlagBeansMorphiaRegistrar.class).build();
+      ImmutableSet.<Class<? extends MorphiaRegistrar>>builder()
+          .addAll(PersistenceRegistrars.morphiaRegistrars)
+          .add(FeatureFlagBeansMorphiaRegistrar.class)
+          .build();
 
   public static final ImmutableSet<Class<? extends AliasRegistrar>> aliasRegistrars =
-      ImmutableSet.<Class<? extends AliasRegistrar>>builder().build();
+      ImmutableSet.<Class<? extends AliasRegistrar>>builder().addAll(PersistenceRegistrars.aliasRegistrars).build();
 }

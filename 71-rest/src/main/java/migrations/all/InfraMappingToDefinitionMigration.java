@@ -6,6 +6,7 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static java.lang.String.format;
 
 import io.harness.exception.ExceptionUtils;
+import io.harness.ff.FeatureFlagService;
 import io.harness.persistence.HIterator;
 
 import software.wings.api.CloudProviderType;
@@ -55,7 +56,6 @@ import software.wings.infra.PhysicalInfraWinrm;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.EnvironmentService;
-import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.InfrastructureDefinitionService;
 import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.yaml.YamlGitService;

@@ -15,6 +15,7 @@ import io.harness.beans.FeatureName;
 import io.harness.beans.WorkflowType;
 import io.harness.context.ContextElementType;
 import io.harness.exception.InvalidRequestException;
+import io.harness.ff.FeatureFlagService;
 
 import software.wings.api.InfraMappingElement;
 import software.wings.api.InstanceElement;
@@ -38,7 +39,6 @@ import software.wings.service.intfc.ArtifactStreamService;
 import software.wings.service.intfc.ArtifactStreamServiceBindingService;
 import software.wings.service.intfc.BuildSourceService;
 import software.wings.service.intfc.EnvironmentService;
-import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.ServiceTemplateService;
 import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.service.intfc.applicationmanifest.HelmChartService;

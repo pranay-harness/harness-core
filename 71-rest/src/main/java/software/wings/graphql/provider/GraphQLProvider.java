@@ -1,5 +1,7 @@
 package software.wings.graphql.provider;
 
+import io.harness.ff.FeatureFlagService;
+
 import software.wings.graphql.directive.DataFetcherDirective;
 import software.wings.graphql.instrumentation.QLAuditInstrumentation;
 import software.wings.graphql.instrumentation.QueryDepthInstrumentation;
@@ -7,7 +9,6 @@ import software.wings.graphql.scalar.GraphQLDateTimeScalar;
 import software.wings.graphql.scalar.LongScalar;
 import software.wings.graphql.scalar.NumberScalar;
 import software.wings.graphql.schema.TypeResolverManager;
-import software.wings.service.intfc.FeatureFlagService;
 
 import com.google.common.io.Resources;
 import com.google.inject.Inject;

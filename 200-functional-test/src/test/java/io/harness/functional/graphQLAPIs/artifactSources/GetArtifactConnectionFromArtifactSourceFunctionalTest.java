@@ -6,6 +6,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.beans.FeatureName;
 import io.harness.category.element.FunctionalTests;
+import io.harness.ff.FeatureFlagService;
 import io.harness.functional.AbstractFunctionalTest;
 import io.harness.generator.OwnerManager;
 import io.harness.generator.Randomizer;
@@ -16,7 +17,6 @@ import io.harness.testframework.restutils.GraphQLRestUtils;
 
 import software.wings.beans.Service;
 import software.wings.beans.artifact.Artifact;
-import software.wings.service.intfc.FeatureFlagService;
 
 import com.google.inject.Inject;
 import java.util.List;

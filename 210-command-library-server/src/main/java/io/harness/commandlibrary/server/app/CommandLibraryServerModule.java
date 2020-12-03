@@ -12,6 +12,7 @@ import io.harness.commandlibrary.server.service.intfc.CommandService;
 import io.harness.commandlibrary.server.service.intfc.CommandStoreService;
 import io.harness.commandlibrary.server.service.intfc.CommandVersionService;
 import io.harness.exception.UnexpectedException;
+import io.harness.ff.FeatureFlagModule;
 import io.harness.persistence.HPersistence;
 import io.harness.queue.QueueController;
 import io.harness.threading.ThreadPool;
@@ -19,11 +20,9 @@ import io.harness.version.VersionInfoManager;
 
 import software.wings.dl.WingsMongoPersistence;
 import software.wings.dl.WingsPersistence;
-import software.wings.service.impl.FeatureFlagServiceImpl;
 import software.wings.service.impl.MongoDataStoreServiceImpl;
 import software.wings.service.impl.security.NoOpSecretManagerImpl;
 import software.wings.service.intfc.DataStoreService;
-import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.security.SecretManager;
 
 import com.google.common.util.concurrent.SimpleTimeLimiter;
@@ -50,6 +49,8 @@ public class CommandLibraryServerModule extends AbstractModule {
 
   @Override
   protected void configure() {
+    install(FeatureFlagModule.getInstance());
+
     bind(CommandLibraryServerConfig.class).toInstance(configuration);
     bind(HPersistence.class).to(WingsMongoPersistence.class);
     bind(WingsPersistence.class).to(WingsMongoPersistence.class);
@@ -57,7 +58,6 @@ public class CommandLibraryServerModule extends AbstractModule {
     bind(Clock.class).toInstance(Clock.systemUTC());
 
     bind(TimeLimiter.class).toInstance(new SimpleTimeLimiter());
-    bind(FeatureFlagService.class).to(FeatureFlagServiceImpl.class);
     bind(CommandStoreService.class).to(CommandStoreServiceImpl.class);
     bind(CommandService.class).to(CommandServiceImpl.class);
     bind(CommandVersionService.class).to(CommandVersionServiceImpl.class);

@@ -4,6 +4,7 @@ import static software.wings.security.PermissionAttribute.ResourceType.SERVICE;
 
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
+import io.harness.ff.FeatureFlagService;
 import io.harness.rest.RestResponse;
 
 import software.wings.beans.WorkflowExecution;
@@ -15,7 +16,6 @@ import software.wings.service.impl.analysis.ContinuousVerificationExecutionMetaD
 import software.wings.service.impl.analysis.ContinuousVerificationService;
 import software.wings.service.impl.analysis.LogMLAnalysisSummary;
 import software.wings.service.impl.analysis.TimeSeriesFilter;
-import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.verification.CV24x7DashboardService;
 import software.wings.verification.HeatMap;
 import software.wings.verification.ServiceGuardTimeSeries;

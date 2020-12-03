@@ -15,12 +15,12 @@ import io.harness.CategoryTest;
 import io.harness.beans.FeatureName;
 import io.harness.category.element.UnitTests;
 import io.harness.environment.SystemEnvironment;
+import io.harness.ff.FeatureFlagService;
 import io.harness.logging.AccessTokenBean;
 import io.harness.rule.Owner;
 
 import software.wings.app.MainConfiguration;
 import software.wings.app.PortalConfig;
-import software.wings.service.intfc.FeatureFlagService;
 import software.wings.utils.GcsUtils;
 
 import com.google.api.client.googleapis.auth.oauth2.GoogleCredential;

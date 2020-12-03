@@ -13,6 +13,7 @@ import static org.mockito.Mockito.withSettings;
 
 import io.harness.beans.FeatureName;
 import io.harness.category.element.UnitTests;
+import io.harness.ff.FeatureFlagService;
 import io.harness.lock.AcquiredLock;
 import io.harness.lock.PersistentLocker;
 import io.harness.rule.Owner;
@@ -23,7 +24,6 @@ import software.wings.beans.AccountType;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.AppService;
-import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.InfrastructureMappingService;
 
 import java.util.Arrays;

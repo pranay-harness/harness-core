@@ -4,8 +4,7 @@ import static io.harness.annotations.dev.HarnessTeam.PL;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.FeatureName;
-
-import software.wings.service.intfc.FeatureFlagService;
+import io.harness.ff.FeatureFlagService;
 
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.google.inject.Inject;

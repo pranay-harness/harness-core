@@ -8,6 +8,7 @@ import static software.wings.graphql.utils.GraphQLConstants.HTTP_SERVLET_REQUEST
 import static software.wings.security.AuthenticationFilter.API_KEY_HEADER;
 
 import io.harness.beans.FeatureName;
+import io.harness.ff.FeatureFlagService;
 import io.harness.logging.AccountLogContext;
 import io.harness.logging.AutoLogContext;
 
@@ -27,7 +28,6 @@ import software.wings.security.UserThreadLocal;
 import software.wings.security.annotations.AuthRule;
 import software.wings.security.annotations.ExternalFacingApiAuth;
 import software.wings.service.intfc.ApiKeyService;
-import software.wings.service.intfc.FeatureFlagService;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;

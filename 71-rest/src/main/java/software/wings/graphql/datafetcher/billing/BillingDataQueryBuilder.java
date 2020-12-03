@@ -7,6 +7,7 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
+import io.harness.ff.FeatureFlagService;
 
 import software.wings.beans.EntityType;
 import software.wings.graphql.datafetcher.billing.BillingDataQueryMetadata.BillingDataMetaDataFields;
@@ -40,7 +41,6 @@ import software.wings.graphql.schema.type.aggregation.billing.QLCCMTimeSeriesAgg
 import software.wings.graphql.schema.type.aggregation.billing.QLCEEnvironmentTypeFilter;
 import software.wings.graphql.schema.type.aggregation.billing.QLTimeGroupType;
 import software.wings.service.impl.EnvironmentServiceImpl;
-import software.wings.service.intfc.FeatureFlagService;
 
 import com.google.common.collect.ImmutableSet;
 import com.google.inject.Inject;

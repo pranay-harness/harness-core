@@ -12,6 +12,7 @@ import io.harness.beans.FeatureName;
 import io.harness.beans.OrchestrationWorkflowType;
 import io.harness.beans.PageRequest;
 import io.harness.category.element.CDFunctionalTests;
+import io.harness.ff.FeatureFlagService;
 import io.harness.functional.AbstractFunctionalTest;
 import io.harness.functional.utils.HelmHelper;
 import io.harness.functional.utils.K8SUtils;
@@ -37,7 +38,6 @@ import software.wings.beans.infrastructure.instance.info.ContainerInfo;
 import software.wings.beans.infrastructure.instance.info.K8sPodInfo;
 import software.wings.beans.infrastructure.instance.info.KubernetesContainerInfo;
 import software.wings.infra.InfrastructureDefinition;
-import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.applicationmanifest.HelmChartService;
 import software.wings.utils.ArtifactType;
 

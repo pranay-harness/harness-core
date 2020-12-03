@@ -3,10 +3,10 @@ package software.wings.service.impl.applicationmanifest;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.FeatureName;
+import io.harness.ff.FeatureFlagService;
 
 import software.wings.beans.appmanifest.ApplicationManifest;
 import software.wings.service.intfc.AppService;
-import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.applicationmanifest.ApplicationManifestServiceObserver;
 
 import com.google.inject.Inject;

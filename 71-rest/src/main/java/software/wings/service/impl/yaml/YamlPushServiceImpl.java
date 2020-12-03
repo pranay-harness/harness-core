@@ -4,6 +4,7 @@ import static io.harness.govern.Switch.unhandled;
 import static io.harness.validation.Validator.notNullCheck;
 import static io.harness.validation.Validator.nullCheck;
 
+import io.harness.ff.FeatureFlagService;
 import io.harness.git.model.ChangeType;
 import io.harness.observer.Subject;
 import io.harness.persistence.UuidAware;
@@ -11,7 +12,6 @@ import io.harness.persistence.UuidAware;
 import software.wings.beans.Application;
 import software.wings.beans.Event.Type;
 import software.wings.service.impl.yaml.service.YamlHelper;
-import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.entitycrud.EntityCrudOperationObserver;
 import software.wings.service.intfc.yaml.YamlPushService;
 

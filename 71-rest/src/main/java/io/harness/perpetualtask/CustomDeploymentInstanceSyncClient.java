@@ -4,6 +4,7 @@ import static software.wings.sm.states.customdeployment.InstanceFetchState.OUTPU
 
 import io.harness.beans.DelegateTask;
 import io.harness.delegate.beans.TaskData;
+import io.harness.ff.FeatureFlagService;
 import io.harness.perpetualtask.instancesync.CustomDeploymentInstanceSyncTaskParams;
 import io.harness.tasks.Cd1SetupFields;
 
@@ -15,7 +16,6 @@ import software.wings.beans.shellscript.provisioner.ShellScriptProvisionParamete
 import software.wings.expression.ManagerExpressionEvaluator;
 import software.wings.expression.SecretFunctor;
 import software.wings.service.InstanceSyncConstants;
-import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.instance.DeploymentService;
 import software.wings.service.intfc.security.ManagerDecryptionService;
 import software.wings.service.intfc.security.SecretManager;

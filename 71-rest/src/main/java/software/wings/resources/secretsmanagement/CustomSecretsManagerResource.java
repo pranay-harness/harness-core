@@ -9,6 +9,7 @@ import static software.wings.security.PermissionAttribute.ResourceType.SETTING;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.exception.HintException;
+import io.harness.ff.FeatureFlagService;
 import io.harness.logging.AccountLogContext;
 import io.harness.logging.AutoLogContext;
 import io.harness.rest.RestResponse;
@@ -16,7 +17,6 @@ import io.harness.rest.RestResponse;
 import software.wings.security.annotations.AuthRule;
 import software.wings.security.annotations.Scope;
 import software.wings.security.encryption.secretsmanagerconfigs.CustomSecretsManagerConfig;
-import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.security.CustomSecretsManagerService;
 
 import com.google.inject.Inject;
