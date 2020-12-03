@@ -5,13 +5,13 @@ import static io.harness.distribution.barrier.Barrier.State.DOWN;
 
 import io.harness.AmbianceUtils;
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.facilitator.PassThroughData;
-import io.harness.facilitator.modes.async.AsyncExecutable;
-import io.harness.facilitator.modes.sync.SyncExecutable;
 import io.harness.pms.ambiance.Ambiance;
 import io.harness.pms.execution.AsyncExecutableResponse;
 import io.harness.pms.execution.Status;
 import io.harness.pms.execution.failure.FailureInfo;
+import io.harness.pms.sdk.core.steps.executables.AsyncExecutable;
+import io.harness.pms.sdk.core.steps.executables.SyncExecutable;
+import io.harness.pms.sdk.core.steps.io.PassThroughData;
 import io.harness.pms.sdk.core.steps.io.StepInputPackage;
 import io.harness.pms.sdk.core.steps.io.StepResponse;
 import io.harness.pms.sdk.core.steps.io.StepResponse.StepResponseBuilder;

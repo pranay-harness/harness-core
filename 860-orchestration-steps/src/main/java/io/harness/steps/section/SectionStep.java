@@ -3,10 +3,10 @@ package io.harness.steps.section;
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.facilitator.modes.child.ChildExecutable;
 import io.harness.pms.ambiance.Ambiance;
 import io.harness.pms.execution.ChildExecutableResponse;
 import io.harness.pms.execution.Status;
+import io.harness.pms.sdk.core.steps.executables.ChildExecutable;
 import io.harness.pms.sdk.core.steps.io.StepInputPackage;
 import io.harness.pms.sdk.core.steps.io.StepResponse;
 import io.harness.pms.sdk.core.steps.io.StepResponse.StepResponseBuilder;

@@ -1,10 +1,8 @@
-package io.harness.facilitator;
+package io.harness.pms.sdk.core.steps.io;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 
-import io.harness.annotations.Redesign;
 import io.harness.annotations.dev.OwnedBy;
 
 @OwnedBy(CDC)
-@Redesign
 public interface PassThroughData {}

@@ -4,7 +4,7 @@ import static com.fasterxml.jackson.annotation.JsonTypeInfo.As.EXTERNAL_PROPERTY
 import static com.fasterxml.jackson.annotation.JsonTypeInfo.Id.NAME;
 
 import io.harness.cdng.infra.beans.InfraMapping;
-import io.harness.facilitator.PassThroughData;
+import io.harness.pms.sdk.core.steps.io.PassThroughData;
 import io.harness.yaml.core.intfc.OverridesApplier;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;

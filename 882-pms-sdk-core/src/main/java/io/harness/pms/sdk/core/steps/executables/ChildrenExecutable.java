@@ -1,8 +1,7 @@
-package io.harness.facilitator.modes.children;
+package io.harness.pms.sdk.core.steps.executables;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 
-import io.harness.annotations.Redesign;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.pms.ambiance.Ambiance;
 import io.harness.pms.execution.ChildrenExecutableResponse;
@@ -27,7 +26,6 @@ import java.util.Map;
  */
 
 @OwnedBy(CDC)
-@Redesign
 public interface ChildrenExecutable<T extends StepParameters> extends Step<T> {
   ChildrenExecutableResponse obtainChildren(Ambiance ambiance, T stepParameters, StepInputPackage inputPackage);
 

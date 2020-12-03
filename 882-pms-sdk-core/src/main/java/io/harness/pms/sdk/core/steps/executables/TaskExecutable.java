@@ -1,8 +1,7 @@
-package io.harness.facilitator.modes.task;
+package io.harness.pms.sdk.core.steps.executables;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 
-import io.harness.annotations.Redesign;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.pms.ambiance.Ambiance;
 import io.harness.pms.sdk.core.steps.Step;
@@ -26,7 +25,6 @@ import java.util.Map;
  * {@link Task} for details on this
  */
 @OwnedBy(CDC)
-@Redesign
 public interface TaskExecutable<T extends StepParameters> extends Step<T> {
   Task obtainTask(Ambiance ambiance, T stepParameters, StepInputPackage inputPackage);
 

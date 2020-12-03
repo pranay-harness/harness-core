@@ -8,6 +8,8 @@ import io.harness.morphia.MorphiaRegistrarHelperPut;
 import io.harness.pms.sdk.core.data.Outcome;
 import io.harness.pms.sdk.core.data.StepTransput;
 import io.harness.pms.sdk.core.data.SweepingOutput;
+import io.harness.pms.sdk.core.steps.executables.TaskChainResponse;
+import io.harness.pms.sdk.core.steps.io.PassThroughData;
 
 import java.util.Set;
 
@@ -18,6 +20,7 @@ public class PmsSdkCoreMorphiaRegistrar implements MorphiaRegistrar {
     set.add(Outcome.class);
     set.add(SweepingOutput.class);
     set.add(StepTransput.class);
+    set.add(PassThroughData.class);
   }
 
   @Override

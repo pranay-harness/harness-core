@@ -4,12 +4,12 @@ import static io.harness.steps.StepUtils.createStepResponseFromChildResponse;
 
 import io.harness.cdng.pipeline.beans.CDPipelineSetupParameters;
 import io.harness.executions.steps.ExecutionNodeType;
-import io.harness.facilitator.PassThroughData;
-import io.harness.facilitator.modes.child.ChildExecutable;
-import io.harness.facilitator.modes.sync.SyncExecutable;
 import io.harness.pms.ambiance.Ambiance;
 import io.harness.pms.execution.ChildExecutableResponse;
 import io.harness.pms.execution.Status;
+import io.harness.pms.sdk.core.steps.executables.ChildExecutable;
+import io.harness.pms.sdk.core.steps.executables.SyncExecutable;
+import io.harness.pms.sdk.core.steps.io.PassThroughData;
 import io.harness.pms.sdk.core.steps.io.StepInputPackage;
 import io.harness.pms.sdk.core.steps.io.StepResponse;
 import io.harness.pms.steps.StepType;
