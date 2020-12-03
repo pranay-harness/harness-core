@@ -54,7 +54,7 @@ public class BuildSourceParametersTest extends WingsBaseTest {
                                                                         .password("password".toCharArray())
                                                                         .build())
                                                       .build();
-    List<ExecutionCapability> capabilityList = buildSourceParameters.fetchRequiredExecutionCapabilities();
+    List<ExecutionCapability> capabilityList = buildSourceParameters.fetchRequiredExecutionCapabilities(null);
     assertThat(capabilityList).hasSize(1);
     assertThat(capabilityList.get(0)).isExactlyInstanceOf(HttpConnectionExecutionCapability.class);
     HttpConnectionExecutionCapability connectionExecutionCapability =
@@ -74,7 +74,7 @@ public class BuildSourceParametersTest extends WingsBaseTest {
                                                                         .password("password".toCharArray())
                                                                         .build())
                                                       .build();
-    List<ExecutionCapability> capabilityList = buildSourceParameters.fetchRequiredExecutionCapabilities();
+    List<ExecutionCapability> capabilityList = buildSourceParameters.fetchRequiredExecutionCapabilities(null);
     assertThat(capabilityList).hasSize(1);
     assertThat(capabilityList.get(0)).isExactlyInstanceOf(HttpConnectionExecutionCapability.class);
     HttpConnectionExecutionCapability connectionExecutionCapability =
@@ -94,7 +94,7 @@ public class BuildSourceParametersTest extends WingsBaseTest {
                                                                         .password("password".toCharArray())
                                                                         .build())
                                                       .build();
-    List<ExecutionCapability> capabilityList = buildSourceParameters.fetchRequiredExecutionCapabilities();
+    List<ExecutionCapability> capabilityList = buildSourceParameters.fetchRequiredExecutionCapabilities(null);
     assertThat(capabilityList).hasSize(1);
     assertThat(capabilityList.get(0)).isExactlyInstanceOf(HttpConnectionExecutionCapability.class);
     HttpConnectionExecutionCapability connectionExecutionCapability =
@@ -114,7 +114,7 @@ public class BuildSourceParametersTest extends WingsBaseTest {
                                                                         .password("password".toCharArray())
                                                                         .build())
                                                       .build();
-    List<ExecutionCapability> capabilityList = buildSourceParameters.fetchRequiredExecutionCapabilities();
+    List<ExecutionCapability> capabilityList = buildSourceParameters.fetchRequiredExecutionCapabilities(null);
     assertThat(capabilityList).hasSize(1);
     assertThat(capabilityList.get(0)).isExactlyInstanceOf(HttpConnectionExecutionCapability.class);
     HttpConnectionExecutionCapability connectionExecutionCapability =
@@ -134,7 +134,7 @@ public class BuildSourceParametersTest extends WingsBaseTest {
                                                                         .password("password".toCharArray())
                                                                         .build())
                                                       .build();
-    List<ExecutionCapability> capabilityList = buildSourceParameters.fetchRequiredExecutionCapabilities();
+    List<ExecutionCapability> capabilityList = buildSourceParameters.fetchRequiredExecutionCapabilities(null);
     assertThat(capabilityList).hasSize(1);
     assertThat(capabilityList.get(0)).isExactlyInstanceOf(HttpConnectionExecutionCapability.class);
     HttpConnectionExecutionCapability connectionExecutionCapability =
@@ -151,7 +151,7 @@ public class BuildSourceParametersTest extends WingsBaseTest {
             .artifactStreamType(ArtifactStreamType.GCR.name())
             .artifactStreamAttributes(ArtifactStreamAttributes.builder().registryHostName("gcr.io").build())
             .build();
-    List<ExecutionCapability> capabilityList = buildSourceParameters.fetchRequiredExecutionCapabilities();
+    List<ExecutionCapability> capabilityList = buildSourceParameters.fetchRequiredExecutionCapabilities(null);
     assertThat(capabilityList).hasSize(1);
     assertThat(capabilityList.get(0)).isExactlyInstanceOf(HttpConnectionExecutionCapability.class);
     HttpConnectionExecutionCapability connectionExecutionCapability =
@@ -169,7 +169,7 @@ public class BuildSourceParametersTest extends WingsBaseTest {
             .artifactStreamAttributes(
                 ArtifactStreamAttributes.builder().registryHostName("harnessprod.azurecr.io").build())
             .build();
-    List<ExecutionCapability> capabilityList = buildSourceParameters.fetchRequiredExecutionCapabilities();
+    List<ExecutionCapability> capabilityList = buildSourceParameters.fetchRequiredExecutionCapabilities(null);
     assertThat(capabilityList).hasSize(1);
     assertThat(capabilityList.get(0)).isExactlyInstanceOf(HttpConnectionExecutionCapability.class);
     HttpConnectionExecutionCapability connectionExecutionCapability =
@@ -186,7 +186,7 @@ public class BuildSourceParametersTest extends WingsBaseTest {
             .artifactStreamType(ArtifactStreamType.ACR.name())
             .artifactStreamAttributes(ArtifactStreamAttributes.builder().build())
             .build();
-    List<ExecutionCapability> capabilityList = buildSourceParameters.fetchRequiredExecutionCapabilities();
+    List<ExecutionCapability> capabilityList = buildSourceParameters.fetchRequiredExecutionCapabilities(null);
     assertThat(capabilityList).hasSize(1);
     assertThat(capabilityList.get(0)).isExactlyInstanceOf(HttpConnectionExecutionCapability.class);
     HttpConnectionExecutionCapability connectionExecutionCapability =
@@ -203,7 +203,7 @@ public class BuildSourceParametersTest extends WingsBaseTest {
             .artifactStreamType(ArtifactStreamType.SMB.name())
             .artifactStreamAttributes(ArtifactStreamAttributes.builder().build())
             .build();
-    List<ExecutionCapability> capabilityList = buildSourceParameters.fetchRequiredExecutionCapabilities();
+    List<ExecutionCapability> capabilityList = buildSourceParameters.fetchRequiredExecutionCapabilities(null);
     assertThat(capabilityList).hasSize(0);
   }
 }

@@ -8,6 +8,7 @@ import static software.wings.yaml.YamlHelper.ENCRYPTED_VALUE_STR;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.delegate.task.mixin.SocketConnectivityCapabilityGenerator;
 import io.harness.encryption.Encrypted;
+import io.harness.expression.ExpressionEvaluator;
 
 import software.wings.annotation.EncryptableSetting;
 import software.wings.jersey.JsonViews;
@@ -82,7 +83,7 @@ public class SmtpConfig extends SettingValue implements EncryptableSetting {
   }
 
   @Override
-  public List<ExecutionCapability> fetchRequiredExecutionCapabilities() {
+  public List<ExecutionCapability> fetchRequiredExecutionCapabilities(ExpressionEvaluator maskingEvaluator) {
     return Collections.singletonList(
         SocketConnectivityCapabilityGenerator.buildSocketConnectivityCapability(host, Integer.toString(port)));
   }

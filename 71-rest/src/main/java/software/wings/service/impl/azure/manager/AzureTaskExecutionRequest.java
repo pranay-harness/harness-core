@@ -5,6 +5,7 @@ import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.delegate.beans.executioncapability.ExecutionCapabilityDemander;
 import io.harness.delegate.task.TaskParameters;
 import io.harness.delegate.task.azure.AzureTaskParameters;
+import io.harness.expression.ExpressionEvaluator;
 import io.harness.security.encryption.EncryptedDataDetail;
 
 import software.wings.delegatetasks.delegatecapability.CapabilityHelper;
@@ -24,9 +25,9 @@ public class AzureTaskExecutionRequest implements TaskParameters, ExecutionCapab
   private AzureTaskParameters azureTaskParameters;
 
   @Override
-  public List<ExecutionCapability> fetchRequiredExecutionCapabilities() {
-    Set<ExecutionCapability> executionCapabilities =
-        new HashSet<>(CapabilityHelper.generateDelegateCapabilities(azureConfigDTO, azureConfigEncryptionDetails));
+  public List<ExecutionCapability> fetchRequiredExecutionCapabilities(ExpressionEvaluator maskingEvaluator) {
+    Set<ExecutionCapability> executionCapabilities = new HashSet<>(
+        CapabilityHelper.generateDelegateCapabilities(azureConfigDTO, azureConfigEncryptionDetails, maskingEvaluator));
     return new ArrayList<>(executionCapabilities);
   }
 }

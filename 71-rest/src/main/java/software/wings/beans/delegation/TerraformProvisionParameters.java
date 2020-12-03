@@ -7,6 +7,7 @@ import io.harness.delegate.beans.executioncapability.ExecutionCapabilityDemander
 import io.harness.delegate.task.ActivityAccess;
 import io.harness.delegate.task.TaskParameters;
 import io.harness.expression.Expression;
+import io.harness.expression.ExpressionEvaluator;
 import io.harness.provision.TfVarSource;
 import io.harness.security.encryption.EncryptedDataDetail;
 
@@ -80,9 +81,9 @@ public class TerraformProvisionParameters implements TaskParameters, ActivityAcc
   private boolean skipRefreshBeforeApplyingPlan;
 
   @Override
-  public List<ExecutionCapability> fetchRequiredExecutionCapabilities() {
+  public List<ExecutionCapability> fetchRequiredExecutionCapabilities(ExpressionEvaluator maskingEvaluator) {
     List<ExecutionCapability> capabilities =
-        CapabilityHelper.generateExecutionCapabilitiesForTerraform(sourceRepoEncryptionDetails);
+        CapabilityHelper.generateExecutionCapabilitiesForTerraform(sourceRepoEncryptionDetails, maskingEvaluator);
     if (sourceRepo != null) {
       capabilities.add(GitConnectionCapability.builder()
                            .gitConfig(sourceRepo)

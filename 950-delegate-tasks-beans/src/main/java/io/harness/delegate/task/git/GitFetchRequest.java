@@ -4,6 +4,7 @@ import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.delegate.beans.executioncapability.ExecutionCapabilityDemander;
 import io.harness.delegate.task.ActivityAccess;
 import io.harness.delegate.task.TaskParameters;
+import io.harness.expression.ExpressionEvaluator;
 
 import java.util.Collections;
 import java.util.List;
@@ -19,7 +20,7 @@ public class GitFetchRequest implements ActivityAccess, TaskParameters, Executio
   private String accountId;
 
   @Override
-  public List<ExecutionCapability> fetchRequiredExecutionCapabilities() {
+  public List<ExecutionCapability> fetchRequiredExecutionCapabilities(ExpressionEvaluator maskingEvaluator) {
     // TODO VS/Anshul: add capability later
     return Collections.emptyList();
   }

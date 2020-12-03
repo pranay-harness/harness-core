@@ -2,6 +2,7 @@ package software.wings.beans.container;
 
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.delegate.beans.executioncapability.ExecutionCapabilityDemander;
+import io.harness.expression.ExpressionEvaluator;
 
 import software.wings.service.impl.ContainerServiceParams;
 
@@ -24,7 +25,7 @@ public class KubernetesSteadyStateCheckParams implements ExecutionCapabilityDema
   private long timeoutMillis;
 
   @Override
-  public List<ExecutionCapability> fetchRequiredExecutionCapabilities() {
-    return containerServiceParams.fetchRequiredExecutionCapabilities();
+  public List<ExecutionCapability> fetchRequiredExecutionCapabilities(ExpressionEvaluator maskingEvaluator) {
+    return containerServiceParams.fetchRequiredExecutionCapabilities(maskingEvaluator);
   }
 }

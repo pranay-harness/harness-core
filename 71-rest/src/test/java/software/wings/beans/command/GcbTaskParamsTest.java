@@ -30,16 +30,16 @@ public class GcbTaskParamsTest extends CategoryTest {
 
   @Before
   public void setUp() {
-    capabilities.add(buildHttpConnectionExecutionCapability("GCS_URL"));
+    capabilities.add(buildHttpConnectionExecutionCapability("GCS_URL", null));
     when(gcpConfig.isUseDelegate()).thenReturn(false);
-    when(gcpConfig.fetchRequiredExecutionCapabilities()).thenReturn(capabilities);
+    when(gcpConfig.fetchRequiredExecutionCapabilities(null)).thenReturn(capabilities);
   }
 
   @Test
   @Owner(developers = VGLIJIN)
   @Category(UnitTests.class)
   public void fetchRequiredExecutionCapabilitiesTest() {
-    assertThat(gcbTaskParam.fetchRequiredExecutionCapabilities()).isEqualTo(capabilities);
+    assertThat(gcbTaskParam.fetchRequiredExecutionCapabilities(null)).isEqualTo(capabilities);
   }
 
   @Test
@@ -49,8 +49,8 @@ public class GcbTaskParamsTest extends CategoryTest {
     when(gcpConfig.isUseDelegate()).thenReturn(true);
     when(gcpConfig.getDelegateSelector()).thenReturn(DELEGATE_SELECTOR);
 
-    assertThat(gcbTaskParam.fetchRequiredExecutionCapabilities()).hasSize(2);
-    SelectorCapability selector = (SelectorCapability) gcbTaskParam.fetchRequiredExecutionCapabilities()
+    assertThat(gcbTaskParam.fetchRequiredExecutionCapabilities(null)).hasSize(2);
+    SelectorCapability selector = (SelectorCapability) gcbTaskParam.fetchRequiredExecutionCapabilities(null)
                                       .stream()
                                       .filter(executionCapability -> executionCapability instanceof SelectorCapability)
                                       .findFirst()

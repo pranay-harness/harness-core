@@ -1142,7 +1142,7 @@ public class DelegateServiceTest extends WingsBaseTest {
             .accountId(ACCOUNT_ID)
             .executionCapabilities(
                 asList(HttpConnectionExecutionCapabilityGenerator.buildHttpConnectionExecutionCapability(
-                    "http://www.url.com")))
+                    "http://www.url.com", null)))
             .waitId(generateUuid())
             .setupAbstraction(Cd1SetupFields.APP_ID_FIELD, APP_ID)
             .setupAbstraction(Cd1SetupFields.ENV_ID_FIELD, ENV_ID)
@@ -1173,7 +1173,7 @@ public class DelegateServiceTest extends WingsBaseTest {
             .accountId(ACCOUNT_ID)
             .executionCapabilities(
                 asList(HttpConnectionExecutionCapabilityGenerator.buildHttpConnectionExecutionCapability(
-                    "http://www.url.com")))
+                    "http://www.url.com", null)))
             .rank(DelegateTaskRank.OPTIONAL)
             .waitId(generateUuid())
             .setupAbstraction(Cd1SetupFields.APP_ID_FIELD, APP_ID)

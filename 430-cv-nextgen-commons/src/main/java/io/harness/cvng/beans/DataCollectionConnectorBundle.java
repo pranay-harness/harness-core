@@ -5,6 +5,7 @@ import io.harness.cvng.beans.activity.KubernetesActivitySourceDTO;
 import io.harness.delegate.beans.connector.ConnectorConfigDTO;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.delegate.beans.executioncapability.ExecutionCapabilityDemander;
+import io.harness.expression.ExpressionEvaluator;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.google.common.base.Preconditions;
@@ -31,9 +32,9 @@ public class DataCollectionConnectorBundle implements ExecutionCapabilityDemande
   }
 
   @Override
-  public List<ExecutionCapability> fetchRequiredExecutionCapabilities() {
+  public List<ExecutionCapability> fetchRequiredExecutionCapabilities(ExpressionEvaluator maskingEvaluator) {
     Preconditions.checkState(getConnectorConfigDTO() instanceof ExecutionCapabilityDemander,
         "ConnectorConfigDTO should impalement ExecutionCapabilityDemander");
-    return ((ExecutionCapabilityDemander) getConnectorConfigDTO()).fetchRequiredExecutionCapabilities();
+    return ((ExecutionCapabilityDemander) getConnectorConfigDTO()).fetchRequiredExecutionCapabilities(maskingEvaluator);
   }
 }

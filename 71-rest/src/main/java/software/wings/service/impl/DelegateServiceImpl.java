@@ -182,6 +182,7 @@ import software.wings.delegatetasks.delegatecapability.CapabilityHelper;
 import software.wings.delegatetasks.validation.DelegateConnectionResult;
 import software.wings.dl.WingsPersistence;
 import software.wings.expression.ManagerPreExecutionExpressionEvaluator;
+import software.wings.expression.ManagerPreviewExpressionEvaluator;
 import software.wings.expression.SecretFunctor;
 import software.wings.expression.SecretManagerFunctor;
 import software.wings.features.DelegatesFeature;
@@ -2264,7 +2265,8 @@ public class DelegateServiceImpl implements DelegateService {
     CapabilityHelper.embedCapabilitiesInDelegateTask(task,
         delegateTaskPackage == null || isEmpty(delegateTaskPackage.getEncryptionConfigs())
             ? emptyList()
-            : delegateTaskPackage.getEncryptionConfigs().values());
+            : delegateTaskPackage.getEncryptionConfigs().values(),
+        new ManagerPreviewExpressionEvaluator());
 
     if (isNotEmpty(task.getExecutionCapabilities())) {
       log.info(CapabilityHelper.generateLogStringWithCapabilitiesGenerated(task));

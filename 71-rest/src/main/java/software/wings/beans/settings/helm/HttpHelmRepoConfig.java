@@ -6,6 +6,7 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.delegate.task.mixin.HttpConnectionExecutionCapabilityGenerator;
 import io.harness.encryption.Encrypted;
+import io.harness.expression.ExpressionEvaluator;
 import io.harness.k8s.model.HelmVersion;
 
 import software.wings.audit.ResourceType;
@@ -68,14 +69,14 @@ public class HttpHelmRepoConfig extends SettingValue implements HelmRepoConfig {
   }
 
   @Override
-  public List<ExecutionCapability> fetchRequiredExecutionCapabilities() {
+  public List<ExecutionCapability> fetchRequiredExecutionCapabilities(ExpressionEvaluator maskingEvaluator) {
     List<ExecutionCapability> executionCapabilityList = new ArrayList<>();
     executionCapabilityList.add(HelmInstallationCapability.builder()
                                     .version(HelmVersion.V3)
                                     .criteria("HTTP_HELM_REPO: " + getChartRepoUrl())
                                     .build());
-    executionCapabilityList.add(
-        HttpConnectionExecutionCapabilityGenerator.buildHttpConnectionExecutionCapability(chartRepoUrl));
+    executionCapabilityList.add(HttpConnectionExecutionCapabilityGenerator.buildHttpConnectionExecutionCapability(
+        chartRepoUrl, maskingEvaluator));
     return executionCapabilityList;
   }
 

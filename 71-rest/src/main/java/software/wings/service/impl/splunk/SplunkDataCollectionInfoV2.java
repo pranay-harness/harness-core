@@ -1,6 +1,7 @@
 package software.wings.service.impl.splunk;
 
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
+import io.harness.expression.ExpressionEvaluator;
 import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.security.encryption.EncryptionConfig;
 
@@ -50,8 +51,8 @@ public class SplunkDataCollectionInfoV2 extends LogDataCollectionInfoV2 {
     this.isAdvancedQuery = isAdvancedQuery;
   }
   @Override
-  public List<ExecutionCapability> fetchRequiredExecutionCapabilities() {
-    return CapabilityHelper.generateDelegateCapabilities(splunkConfig, getEncryptedDataDetails());
+  public List<ExecutionCapability> fetchRequiredExecutionCapabilities(ExpressionEvaluator maskingEvaluator) {
+    return CapabilityHelper.generateDelegateCapabilities(splunkConfig, getEncryptedDataDetails(), maskingEvaluator);
   }
 
   @Override

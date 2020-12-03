@@ -28,7 +28,7 @@ public class HelmCommandRequestTest extends WingsBaseTest {
   public void setUp() throws Exception {
     doReturn(asList(HttpConnectionExecutionCapability.builder().build()))
         .when(containerServiceParams)
-        .fetchRequiredExecutionCapabilities();
+        .fetchRequiredExecutionCapabilities(null);
   }
 
   @Test
@@ -43,7 +43,7 @@ public class HelmCommandRequestTest extends WingsBaseTest {
   private void testWithoutGitConfig() {
     HelmRollbackCommandRequest rollbackCommandRequest =
         HelmRollbackCommandRequest.builder().containerServiceParams(containerServiceParams).build();
-    assertThat(rollbackCommandRequest.fetchRequiredExecutionCapabilities()
+    assertThat(rollbackCommandRequest.fetchRequiredExecutionCapabilities(null)
                    .stream()
                    .map(ExecutionCapability::getCapabilityType)
                    .collect(Collectors.toList()))
@@ -55,7 +55,7 @@ public class HelmCommandRequestTest extends WingsBaseTest {
                                                           .gitConfig(new GitConfig())
                                                           .containerServiceParams(containerServiceParams)
                                                           .build();
-    assertThat(installCommandRequest.fetchRequiredExecutionCapabilities()
+    assertThat(installCommandRequest.fetchRequiredExecutionCapabilities(null)
                    .stream()
                    .map(ExecutionCapability::getCapabilityType)
                    .collect(Collectors.toList()))
@@ -65,7 +65,7 @@ public class HelmCommandRequestTest extends WingsBaseTest {
   private void testWithoutContainerParams() {
     HelmInstallCommandRequest installCommandRequest =
         HelmInstallCommandRequest.builder().gitConfig(new GitConfig()).build();
-    assertThat(installCommandRequest.fetchRequiredExecutionCapabilities()
+    assertThat(installCommandRequest.fetchRequiredExecutionCapabilities(null)
                    .stream()
                    .map(ExecutionCapability::getCapabilityType)
                    .collect(Collectors.toList()))

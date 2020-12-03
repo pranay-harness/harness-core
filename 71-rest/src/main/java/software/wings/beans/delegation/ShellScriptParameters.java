@@ -13,6 +13,7 @@ import io.harness.delegate.task.TaskParameters;
 import io.harness.delegate.task.mixin.ProcessExecutorCapabilityGenerator;
 import io.harness.delegate.task.shell.ScriptType;
 import io.harness.expression.Expression;
+import io.harness.expression.ExpressionEvaluator;
 import io.harness.security.encryption.EncryptedDataDetail;
 
 import software.wings.beans.AzureConfig;
@@ -160,7 +161,7 @@ public class ShellScriptParameters implements TaskParameters, ActivityAccess, Ex
   }
 
   @Override
-  public List<ExecutionCapability> fetchRequiredExecutionCapabilities() {
+  public List<ExecutionCapability> fetchRequiredExecutionCapabilities(ExpressionEvaluator maskingEvaluator) {
     List<ExecutionCapability> executionCapabilities = new ArrayList<>();
 
     if (executeOnDelegate) {
@@ -173,7 +174,7 @@ public class ShellScriptParameters implements TaskParameters, ActivityAccess, Ex
           boolean isKubernetes =
               value instanceof GcpConfig || value instanceof AzureConfig || value instanceof KubernetesClusterConfig;
           if (useKubernetesDelegate || (isKubernetes && script.contains(HARNESS_KUBE_CONFIG_PATH))) {
-            return containerServiceParams.fetchRequiredExecutionCapabilities();
+            return containerServiceParams.fetchRequiredExecutionCapabilities(maskingEvaluator);
           }
         }
       }

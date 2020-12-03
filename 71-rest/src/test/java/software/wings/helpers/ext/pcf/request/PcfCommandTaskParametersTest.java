@@ -35,7 +35,7 @@ public class PcfCommandTaskParametersTest extends WingsBaseTest {
             .encryptedDataDetails(new ArrayList<>())
             .build();
 
-    List<ExecutionCapability> executionCapabilities = taskParameters.fetchRequiredExecutionCapabilities();
+    List<ExecutionCapability> executionCapabilities = taskParameters.fetchRequiredExecutionCapabilities(null);
     assertThat(executionCapabilities).hasSize(3);
     assertThat(executionCapabilities.stream().map(ExecutionCapability::getCapabilityType))
         .containsExactlyInAnyOrder(
@@ -69,7 +69,7 @@ public class PcfCommandTaskParametersTest extends WingsBaseTest {
             .encryptedDataDetails(new ArrayList<>())
             .build();
 
-    List<ExecutionCapability> executionCapabilities = taskParameters.fetchRequiredExecutionCapabilities();
+    List<ExecutionCapability> executionCapabilities = taskParameters.fetchRequiredExecutionCapabilities(null);
     assertThat(executionCapabilities).hasSize(2);
     assertThat(executionCapabilities.stream().map(ExecutionCapability::getCapabilityType))
         .containsExactlyInAnyOrder(CapabilityType.PCF_CONNECTIVITY, CapabilityType.PROCESS_EXECUTOR);

@@ -3,6 +3,7 @@ package software.wings.helpers.ext.pcf.request;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.delegate.beans.executioncapability.ExecutionCapabilityDemander;
 import io.harness.delegate.task.mixin.ProcessExecutorCapabilityGenerator;
+import io.harness.expression.ExpressionEvaluator;
 import io.harness.security.encryption.EncryptedDataDetail;
 
 import software.wings.delegatetasks.validation.capabilities.PcfAutoScalarCapability;
@@ -21,7 +22,7 @@ public class PcfCommandTaskParameters implements ExecutionCapabilityDemander {
   private List<EncryptedDataDetail> encryptedDataDetails;
 
   @Override
-  public List<ExecutionCapability> fetchRequiredExecutionCapabilities() {
+  public List<ExecutionCapability> fetchRequiredExecutionCapabilities(ExpressionEvaluator maskingEvaluator) {
     List<ExecutionCapability> capabilities = new ArrayList<>();
     capabilities.add(PcfConnectivityCapability.builder()
                          .limitPcfThreads(pcfCommandRequest.isLimitPcfThreads())

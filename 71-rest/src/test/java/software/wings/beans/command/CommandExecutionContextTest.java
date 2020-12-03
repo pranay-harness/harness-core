@@ -57,7 +57,7 @@ public class CommandExecutionContextTest extends WingsBaseTest {
             .cloudProviderSetting(SettingAttributeTestHelper.obtainKubernetesClusterSettingAttribute(true))
             .build();
 
-    List<ExecutionCapability> executionCapabilities = executionContext.fetchRequiredExecutionCapabilities();
+    List<ExecutionCapability> executionCapabilities = executionContext.fetchRequiredExecutionCapabilities(null);
     assertThat(executionCapabilities).hasSize(1);
     assertThat(executionCapabilities.get(0)).isExactlyInstanceOf(SystemEnvCheckerCapability.class);
   }
@@ -71,7 +71,7 @@ public class CommandExecutionContextTest extends WingsBaseTest {
             .cloudProviderSetting(SettingAttributeTestHelper.obtainWinrmSettingAttribute())
             .build();
 
-    List<ExecutionCapability> executionCapabilities = executionContext.fetchRequiredExecutionCapabilities();
+    List<ExecutionCapability> executionCapabilities = executionContext.fetchRequiredExecutionCapabilities(null);
     assertThat(executionCapabilities).hasSize(1);
     assertThat(executionCapabilities.get(0)).isExactlyInstanceOf(WinrmHostValidationCapability.class);
   }
@@ -87,7 +87,7 @@ public class CommandExecutionContextTest extends WingsBaseTest {
             .executeOnDelegate(false)
             .build();
 
-    List<ExecutionCapability> executionCapabilities = executionContext.fetchRequiredExecutionCapabilities();
+    List<ExecutionCapability> executionCapabilities = executionContext.fetchRequiredExecutionCapabilities(null);
     assertThat(executionCapabilities).hasSize(2);
     assertThat(executionCapabilities.get(0)).isExactlyInstanceOf(WinrmHostValidationCapability.class);
     assertThat(executionCapabilities.get(1)).isExactlyInstanceOf(SelectorCapability.class);
@@ -103,7 +103,7 @@ public class CommandExecutionContextTest extends WingsBaseTest {
             .executionCredential(aSSHExecutionCredential().withSshUser(USER_NAME).withSshPassword(PASSWORD).build())
             .build();
 
-    List<ExecutionCapability> executionCapabilities = executionContext.fetchRequiredExecutionCapabilities();
+    List<ExecutionCapability> executionCapabilities = executionContext.fetchRequiredExecutionCapabilities(null);
     assertThat(executionCapabilities).hasSize(1);
     assertThat(executionCapabilities.get(0)).isExactlyInstanceOf(SSHHostValidationCapability.class);
   }
@@ -120,7 +120,7 @@ public class CommandExecutionContextTest extends WingsBaseTest {
             .executeOnDelegate(true)
             .build();
 
-    List<ExecutionCapability> executionCapabilities = executionContext.fetchRequiredExecutionCapabilities();
+    List<ExecutionCapability> executionCapabilities = executionContext.fetchRequiredExecutionCapabilities(null);
     assertThat(executionCapabilities).hasSize(2);
     assertThat(executionCapabilities.get(0)).isExactlyInstanceOf(SSHHostValidationCapability.class);
     assertThat(executionCapabilities.get(1)).isExactlyInstanceOf(SelectorCapability.class);
@@ -135,7 +135,7 @@ public class CommandExecutionContextTest extends WingsBaseTest {
             .containerResizeParams(SettingAttributeTestHelper.obtainECSResizeParams())
             .build();
 
-    List<ExecutionCapability> executionCapabilities = executionContext.fetchRequiredExecutionCapabilities();
+    List<ExecutionCapability> executionCapabilities = executionContext.fetchRequiredExecutionCapabilities(null);
     assertThat(executionCapabilities).isEmpty();
   }
 
@@ -148,7 +148,7 @@ public class CommandExecutionContextTest extends WingsBaseTest {
             .containerSetupParams(SettingAttributeTestHelper.obtainECSSetupParams())
             .build();
 
-    List<ExecutionCapability> executionCapabilities = executionContext.fetchRequiredExecutionCapabilities();
+    List<ExecutionCapability> executionCapabilities = executionContext.fetchRequiredExecutionCapabilities(null);
     assertThat(executionCapabilities).isEmpty();
   }
 
@@ -159,7 +159,7 @@ public class CommandExecutionContextTest extends WingsBaseTest {
     CommandExecutionContext executionContext =
         contextBuilder.deploymentType(DeploymentType.AWS_CODEDEPLOY.name()).build();
 
-    List<ExecutionCapability> executionCapabilities = executionContext.fetchRequiredExecutionCapabilities();
+    List<ExecutionCapability> executionCapabilities = executionContext.fetchRequiredExecutionCapabilities(null);
     assertThat(executionCapabilities).hasSize(1);
     assertThat(executionCapabilities.get(0)).isExactlyInstanceOf(HttpConnectionExecutionCapability.class);
   }
@@ -170,7 +170,7 @@ public class CommandExecutionContextTest extends WingsBaseTest {
   public void shouldFetchRequiredExecutionCapabilitiesAMI() {
     CommandExecutionContext executionContext = contextBuilder.deploymentType(DeploymentType.AMI.name()).build();
 
-    List<ExecutionCapability> executionCapabilities = executionContext.fetchRequiredExecutionCapabilities();
+    List<ExecutionCapability> executionCapabilities = executionContext.fetchRequiredExecutionCapabilities(null);
     assertThat(executionCapabilities).hasSize(0);
   }
 
@@ -180,7 +180,7 @@ public class CommandExecutionContextTest extends WingsBaseTest {
   public void shouldFetchRequiredExecutionCapabilitiesLambda() {
     CommandExecutionContext executionContext = contextBuilder.deploymentType(DeploymentType.AWS_LAMBDA.name()).build();
 
-    List<ExecutionCapability> executionCapabilities = executionContext.fetchRequiredExecutionCapabilities();
+    List<ExecutionCapability> executionCapabilities = executionContext.fetchRequiredExecutionCapabilities(null);
     assertThat(executionCapabilities).hasSize(0);
   }
 
@@ -194,13 +194,13 @@ public class CommandExecutionContextTest extends WingsBaseTest {
             .containerSetupParams(aKubernetesSetupParams().withMasterUrl(MASTER_URL).build())
             .build();
 
-    List<ExecutionCapability> executionCapabilities = executionContext.fetchRequiredExecutionCapabilities();
+    List<ExecutionCapability> executionCapabilities = executionContext.fetchRequiredExecutionCapabilities(null);
     assertThat(executionCapabilities).hasSize(1);
     assertThat(executionCapabilities.get(0).fetchCapabilityBasis()).isEqualTo(MASTER_URL);
 
     executionContext.setContainerSetupParams(null);
     executionContext.setContainerResizeParams(aKubernetesResizeParams().withMasterUrl(MASTER_URL + "Resize").build());
-    executionCapabilities = executionContext.fetchRequiredExecutionCapabilities();
+    executionCapabilities = executionContext.fetchRequiredExecutionCapabilities(null);
     assertThat(executionCapabilities).hasSize(1);
     assertThat(executionCapabilities.get(0).fetchCapabilityBasis()).isEqualTo(MASTER_URL + "Resize");
   }

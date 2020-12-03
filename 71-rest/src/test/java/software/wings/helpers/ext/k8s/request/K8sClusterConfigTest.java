@@ -43,7 +43,7 @@ public class K8sClusterConfigTest extends WingsBaseTest {
                 KubernetesClusterConfig.builder().delegateName("my-delegate").useKubernetesDelegate(true).build())
             .build();
 
-    assertThat(clusterConfig.fetchRequiredExecutionCapabilities())
+    assertThat(clusterConfig.fetchRequiredExecutionCapabilities(null))
         .containsExactlyInAnyOrder(
             SystemEnvCheckerCapability.builder().systemPropertyName("DELEGATE_NAME").comparate("my-delegate").build());
   }
@@ -53,7 +53,7 @@ public class K8sClusterConfigTest extends WingsBaseTest {
                                          .cloudProvider(KubernetesClusterConfig.builder().masterUrl(MASTER_URL).build())
                                          .build();
 
-    assertThat(clusterConfig.fetchRequiredExecutionCapabilities())
+    assertThat(clusterConfig.fetchRequiredExecutionCapabilities(null))
         .containsExactlyInAnyOrder(
             HttpConnectionExecutionCapability.builder().host("a.b.c").port(-1).scheme("http").build());
   }
@@ -66,7 +66,7 @@ public class K8sClusterConfigTest extends WingsBaseTest {
             .masterUrl(masterUrl)
             .build();
 
-    assertThat(params.fetchRequiredExecutionCapabilities())
+    assertThat(params.fetchRequiredExecutionCapabilities(null))
         .containsExactlyInAnyOrder(
             ClusterMasterUrlValidationCapability.builder().containerServiceParams(params).build());
   }
@@ -79,16 +79,16 @@ public class K8sClusterConfigTest extends WingsBaseTest {
             .masterUrl("http://masterUrl")
             .build();
 
-    assertThat(params.fetchRequiredExecutionCapabilities())
-        .containsExactlyInAnyOrder(
-            HttpConnectionExecutionCapabilityGenerator.buildHttpConnectionExecutionCapability("http://masterUrl"));
+    assertThat(params.fetchRequiredExecutionCapabilities(null))
+        .containsExactlyInAnyOrder(HttpConnectionExecutionCapabilityGenerator.buildHttpConnectionExecutionCapability(
+            "http://masterUrl", null));
   }
 
   private void testGcpConfig() {
     K8sClusterConfig clusterConfig =
         K8sClusterConfig.builder().masterUrl(MASTER_URL).cloudProvider(GcpConfig.builder().build()).build();
 
-    assertThat(clusterConfig.fetchRequiredExecutionCapabilities())
+    assertThat(clusterConfig.fetchRequiredExecutionCapabilities(null))
         .containsExactlyInAnyOrder(
             HttpConnectionExecutionCapability.builder().host("a.b.c").port(-1).scheme("http").build());
   }
@@ -97,7 +97,7 @@ public class K8sClusterConfigTest extends WingsBaseTest {
     K8sClusterConfig clusterConfig =
         K8sClusterConfig.builder().masterUrl(MASTER_URL).cloudProvider(AzureConfig.builder().build()).build();
 
-    assertThat(clusterConfig.fetchRequiredExecutionCapabilities())
+    assertThat(clusterConfig.fetchRequiredExecutionCapabilities(null))
         .containsExactlyInAnyOrder(
             HttpConnectionExecutionCapability.builder().host("a.b.c").port(-1).scheme("http").build());
   }

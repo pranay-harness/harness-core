@@ -2,6 +2,7 @@ package software.wings.helpers.ext.ecs.request;
 
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.delegate.beans.executioncapability.ExecutionCapabilityDemander;
+import io.harness.expression.ExpressionEvaluator;
 
 import software.wings.beans.AwsConfig;
 
@@ -23,8 +24,8 @@ public class EcsCommandRequest implements ExecutionCapabilityDemander {
   @NotEmpty private EcsCommandType EcsCommandType;
 
   @Override
-  public List<ExecutionCapability> fetchRequiredExecutionCapabilities() {
-    return AwsConfig.fetchRequiredExecutionCapabilities();
+  public List<ExecutionCapability> fetchRequiredExecutionCapabilities(ExpressionEvaluator maskingEvaluator) {
+    return AwsConfig.fetchRequiredExecutionCapabilities(maskingEvaluator);
   }
 
   public enum EcsCommandType {

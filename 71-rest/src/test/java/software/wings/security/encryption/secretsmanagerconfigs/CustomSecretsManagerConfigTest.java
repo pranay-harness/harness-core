@@ -51,7 +51,7 @@ public class CustomSecretsManagerConfigTest extends CategoryTest {
   @Category(UnitTests.class)
   public void test_fetchRequiredExecutionCapabilities_executeOnDelegate_bash() {
     CustomSecretsManagerConfig config = getBaseBuilder(BASH).executeOnDelegate(true).build();
-    List<ExecutionCapability> executionCapabilities = config.fetchRequiredExecutionCapabilities();
+    List<ExecutionCapability> executionCapabilities = config.fetchRequiredExecutionCapabilities(null);
     assertThat(executionCapabilities).isNotNull();
     assertThat(executionCapabilities).hasSize(0);
   }
@@ -61,7 +61,7 @@ public class CustomSecretsManagerConfigTest extends CategoryTest {
   @Category(UnitTests.class)
   public void test_fetchRequiredExecutionCapabilities_executeOnDelegate_powershell() {
     CustomSecretsManagerConfig config = getBaseBuilder(POWERSHELL).executeOnDelegate(true).build();
-    List<ExecutionCapability> executionCapabilities = config.fetchRequiredExecutionCapabilities();
+    List<ExecutionCapability> executionCapabilities = config.fetchRequiredExecutionCapabilities(null);
     assertThat(executionCapabilities).isNotNull();
     assertThat(executionCapabilities).hasSize(1);
     ExecutionCapability executionCapability = executionCapabilities.get(0);
@@ -79,7 +79,7 @@ public class CustomSecretsManagerConfigTest extends CategoryTest {
     when(remoteHostConnector.getSshPort()).thenReturn(port);
     CustomSecretsManagerConfig config =
         getBaseBuilder(BASH).executeOnDelegate(false).host(host).remoteHostConnector(remoteHostConnector).build();
-    List<ExecutionCapability> executionCapabilities = config.fetchRequiredExecutionCapabilities();
+    List<ExecutionCapability> executionCapabilities = config.fetchRequiredExecutionCapabilities(null);
     assertThat(executionCapabilities).isNotNull();
     assertThat(executionCapabilities).hasSize(1);
     assertThat(executionCapabilities.get(0) instanceof ShellConnectionCapability).isTrue();
@@ -96,7 +96,7 @@ public class CustomSecretsManagerConfigTest extends CategoryTest {
     when(remoteHostConnector.getPort()).thenReturn(port);
     CustomSecretsManagerConfig config =
         getBaseBuilder(POWERSHELL).executeOnDelegate(false).host(host).remoteHostConnector(remoteHostConnector).build();
-    List<ExecutionCapability> executionCapabilities = config.fetchRequiredExecutionCapabilities();
+    List<ExecutionCapability> executionCapabilities = config.fetchRequiredExecutionCapabilities(null);
     assertThat(executionCapabilities).isNotNull();
     assertThat(executionCapabilities).hasSize(1);
     assertThat(executionCapabilities.get(0) instanceof ShellConnectionCapability).isTrue();

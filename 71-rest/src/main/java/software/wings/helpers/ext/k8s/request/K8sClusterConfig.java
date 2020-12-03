@@ -3,6 +3,7 @@ package software.wings.helpers.ext.k8s.request;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.delegate.beans.executioncapability.ExecutionCapabilityDemander;
 import io.harness.delegate.task.mixin.HttpConnectionExecutionCapabilityGenerator;
+import io.harness.expression.ExpressionEvaluator;
 import io.harness.security.encryption.EncryptedDataDetail;
 
 import software.wings.beans.AzureKubernetesCluster;
@@ -29,14 +30,16 @@ public class K8sClusterConfig implements ExecutionCapabilityDemander {
   private String masterUrl;
 
   @Override
-  public List<ExecutionCapability> fetchRequiredExecutionCapabilities() {
+  public List<ExecutionCapability> fetchRequiredExecutionCapabilities(ExpressionEvaluator maskingEvaluator) {
     if (cloudProvider instanceof KubernetesClusterConfig) {
-      return CapabilityHelper.generateDelegateCapabilities(cloudProvider, cloudProviderEncryptionDetails);
+      return CapabilityHelper.generateDelegateCapabilities(
+          cloudProvider, cloudProviderEncryptionDetails, maskingEvaluator);
     }
     List<ExecutionCapability> capabilities = new ArrayList<>();
-    capabilities.add(HttpConnectionExecutionCapabilityGenerator.buildHttpConnectionExecutionCapability(getMasterUrl()));
-    capabilities.addAll(
-        CapabilityHelper.fetchExecutionCapabilitiesForEncryptedDataDetails(getCloudProviderEncryptionDetails()));
+    capabilities.add(HttpConnectionExecutionCapabilityGenerator.buildHttpConnectionExecutionCapability(
+        getMasterUrl(), maskingEvaluator));
+    capabilities.addAll(CapabilityHelper.fetchExecutionCapabilitiesForEncryptedDataDetails(
+        getCloudProviderEncryptionDetails(), maskingEvaluator));
     return capabilities;
   }
 }

@@ -4,6 +4,7 @@ import static io.harness.delegate.task.mixin.HttpConnectionExecutionCapabilityGe
 
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.delegate.task.mixin.HttpConnectionExecutionCapabilityGenerator;
+import io.harness.expression.ExpressionEvaluator;
 import io.harness.security.encryption.EncryptedDataDetail;
 
 import software.wings.delegatetasks.delegatecapability.CapabilityHelper;
@@ -22,22 +23,22 @@ public class StackdriverUtils {
   private StackdriverUtils() {}
 
   public static List<ExecutionCapability> fetchRequiredExecutionCapabilitiesForMetrics(
-      List<EncryptedDataDetail> encryptedDataDetails) {
+      List<EncryptedDataDetail> encryptedDataDetails, ExpressionEvaluator maskingEvaluator) {
     List<ExecutionCapability> executionCapabilities = new ArrayList<>();
     executionCapabilities.add(HttpConnectionExecutionCapabilityGenerator.buildHttpConnectionExecutionCapability(
-        STACKDRIVER_VALIDATION_URL, QUERY));
+        STACKDRIVER_VALIDATION_URL, QUERY, maskingEvaluator));
     executionCapabilities.addAll(
-        CapabilityHelper.fetchExecutionCapabilitiesForEncryptedDataDetails(encryptedDataDetails));
+        CapabilityHelper.fetchExecutionCapabilitiesForEncryptedDataDetails(encryptedDataDetails, maskingEvaluator));
     return executionCapabilities;
   }
 
   public static List<ExecutionCapability> fetchRequiredExecutionCapabilitiesForLogs(
-      List<EncryptedDataDetail> encryptedDataDetails) {
+      List<EncryptedDataDetail> encryptedDataDetails, ExpressionEvaluator maskingEvaluator) {
     List<ExecutionCapability> executionCapabilities = new ArrayList<>();
     executionCapabilities.add(HttpConnectionExecutionCapabilityGenerator.buildHttpConnectionExecutionCapability(
-        STACKDRIVER_LOGGING_VALIDATION_URL, QUERY));
+        STACKDRIVER_LOGGING_VALIDATION_URL, QUERY, maskingEvaluator));
     executionCapabilities.addAll(
-        CapabilityHelper.fetchExecutionCapabilitiesForEncryptedDataDetails(encryptedDataDetails));
+        CapabilityHelper.fetchExecutionCapabilitiesForEncryptedDataDetails(encryptedDataDetails, maskingEvaluator));
     return executionCapabilities;
   }
 }

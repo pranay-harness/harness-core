@@ -14,6 +14,7 @@ import io.harness.delegate.beans.executioncapability.ExecutionCapabilityDemander
 import io.harness.delegate.task.TaskParameters;
 import io.harness.delegate.task.mixin.HttpConnectionExecutionCapabilityGenerator;
 import io.harness.delegate.task.mixin.ProcessExecutorCapabilityGenerator;
+import io.harness.expression.ExpressionEvaluator;
 import io.harness.security.encryption.EncryptableSettingWithEncryptionDetails;
 import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.security.encryption.EncryptionConfig;
@@ -44,7 +45,7 @@ public class CapabilityHelper {
   public static final String HELM = "helm";
 
   public static void embedCapabilitiesInDelegateTask(
-      DelegateTask task, Collection<EncryptionConfig> encryptionConfigs) {
+      DelegateTask task, Collection<EncryptionConfig> encryptionConfigs, ExpressionEvaluator maskingEvaluator) {
     if (isEmpty(task.getData().getParameters()) || isNotEmpty(task.getExecutionCapabilities())) {
       return;
     }
@@ -53,60 +54,63 @@ public class CapabilityHelper {
     task.getExecutionCapabilities().addAll(
         Arrays.stream(task.getData().getParameters())
             .filter(param -> param instanceof ExecutionCapabilityDemander)
-            .flatMap(param -> ((ExecutionCapabilityDemander) param).fetchRequiredExecutionCapabilities().stream())
+            .flatMap(param
+                -> ((ExecutionCapabilityDemander) param).fetchRequiredExecutionCapabilities(maskingEvaluator).stream())
             .collect(toList()));
 
     if (isNotEmpty(encryptionConfigs)) {
-      task.getExecutionCapabilities().addAll(fetchExecutionCapabilitiesForSecretManagers(encryptionConfigs));
+      task.getExecutionCapabilities().addAll(
+          fetchExecutionCapabilitiesForSecretManagers(encryptionConfigs, maskingEvaluator));
     }
   }
 
   private static List<ExecutionCapability> fetchExecutionCapabilitiesForSecretManagers(
-      Collection<EncryptionConfig> encryptionConfigs) {
+      Collection<EncryptionConfig> encryptionConfigs, ExpressionEvaluator maskingEvaluator) {
     List<ExecutionCapability> executionCapabilities = new ArrayList<>();
     encryptionConfigs.forEach(encryptionConfig -> {
       List<ExecutionCapability> encryptionConfigExecutionCapabilities =
-          fetchExecutionCapabilityForSecretManager(encryptionConfig);
+          fetchExecutionCapabilityForSecretManager(encryptionConfig, maskingEvaluator);
       executionCapabilities.addAll(encryptionConfigExecutionCapabilities);
     });
 
     return executionCapabilities;
   }
 
-  public static List<ExecutionCapability> generateDelegateCapabilities(
-      ExecutionCapabilityDemander capabilityDemander, List<EncryptedDataDetail> encryptedDataDetails) {
+  public static List<ExecutionCapability> generateDelegateCapabilities(ExecutionCapabilityDemander capabilityDemander,
+      List<EncryptedDataDetail> encryptedDataDetails, ExpressionEvaluator maskingEvaluator) {
     List<ExecutionCapability> executionCapabilities = new ArrayList<>();
 
     if (capabilityDemander != null) {
-      executionCapabilities.addAll(capabilityDemander.fetchRequiredExecutionCapabilities());
+      executionCapabilities.addAll(capabilityDemander.fetchRequiredExecutionCapabilities(maskingEvaluator));
     }
     if (isEmpty(encryptedDataDetails)) {
       return executionCapabilities;
     }
 
-    executionCapabilities.addAll(fetchExecutionCapabilitiesForEncryptedDataDetails(encryptedDataDetails));
+    executionCapabilities.addAll(
+        fetchExecutionCapabilitiesForEncryptedDataDetails(encryptedDataDetails, maskingEvaluator));
     return executionCapabilities;
   }
 
   public static List<ExecutionCapability> fetchExecutionCapabilitiesForEncryptedDataDetails(
-      List<EncryptedDataDetail> encryptedDataDetails) {
+      List<EncryptedDataDetail> encryptedDataDetails, ExpressionEvaluator maskingEvaluator) {
     List<ExecutionCapability> executionCapabilities = new ArrayList<>();
 
     if (isEmpty(encryptedDataDetails)) {
       return executionCapabilities;
     }
     return fetchExecutionCapabilitiesForSecretManagers(
-        fetchEncryptionConfigsMapFromEncryptedDataDetails(encryptedDataDetails).values());
+        fetchEncryptionConfigsMapFromEncryptedDataDetails(encryptedDataDetails).values(), maskingEvaluator);
   }
 
   public static List<ExecutionCapability> fetchExecutionCapabilityForSecretManager(
-      @NotNull EncryptionConfig encryptionConfig) {
+      @NotNull EncryptionConfig encryptionConfig, ExpressionEvaluator maskingEvaluator) {
     if (encryptionConfig instanceof ExecutionCapabilityDemander) {
-      return ((ExecutionCapabilityDemander) encryptionConfig).fetchRequiredExecutionCapabilities();
+      return ((ExecutionCapabilityDemander) encryptionConfig).fetchRequiredExecutionCapabilities(maskingEvaluator);
     } else if (isNotEmpty(encryptionConfig.getEncryptionServiceUrl())) {
       return new ArrayList<>(
           Collections.singleton(HttpConnectionExecutionCapabilityGenerator.buildHttpConnectionExecutionCapability(
-              encryptionConfig.getEncryptionServiceUrl())));
+              encryptionConfig.getEncryptionServiceUrl(), maskingEvaluator)));
     }
     return new ArrayList<>();
   }
@@ -237,8 +241,8 @@ public class CapabilityHelper {
   /**
    * This is Used by BuildSourceParameters
    */
-  public static List<ExecutionCapability> generateCapabilities(
-      SettingValue settingValue, ArtifactStreamAttributes artifactStreamAttributes) {
+  public static List<ExecutionCapability> generateCapabilities(SettingValue settingValue,
+      ArtifactStreamAttributes artifactStreamAttributes, ExpressionEvaluator maskingEvaluator) {
     String artifactStreamType = artifactStreamAttributes.getArtifactStreamType();
 
     List<ExecutionCapability> executionCapabilities = new ArrayList<>();
@@ -249,24 +253,26 @@ public class CapabilityHelper {
               .append("https://")
               .append(hostName)
               .append(hostName.endsWith("/") ? "" : "/")
-              .toString()));
+              .toString(),
+          maskingEvaluator));
 
     } else {
-      executionCapabilities.addAll(settingValue.fetchRequiredExecutionCapabilities());
+      executionCapabilities.addAll(settingValue.fetchRequiredExecutionCapabilities(maskingEvaluator));
     }
 
     return executionCapabilities;
   }
 
-  public static List<ExecutionCapability> generateExecutionCapabilitiesForProcessExecutor(
-      String category, List<String> processExecutorArguments, List<EncryptedDataDetail> encryptedDataDetails) {
+  public static List<ExecutionCapability> generateExecutionCapabilitiesForProcessExecutor(String category,
+      List<String> processExecutorArguments, List<EncryptedDataDetail> encryptedDataDetails,
+      ExpressionEvaluator maskingEvaluator) {
     List<ExecutionCapability> executionCapabilities = new ArrayList<>();
     executionCapabilities.add(
         ProcessExecutorCapabilityGenerator.buildProcessExecutorCapability(category, processExecutorArguments));
 
     if (isNotEmpty(encryptedDataDetails)) {
       List<ExecutionCapability> capabilitiesForEncryption =
-          fetchExecutionCapabilitiesForEncryptedDataDetails(encryptedDataDetails);
+          fetchExecutionCapabilitiesForEncryptedDataDetails(encryptedDataDetails, maskingEvaluator);
       if (isNotEmpty(capabilitiesForEncryption)) {
         executionCapabilities.addAll(capabilitiesForEncryption);
       }
@@ -275,12 +281,13 @@ public class CapabilityHelper {
   }
 
   public static List<ExecutionCapability> generateExecutionCapabilitiesForTerraform(
-      List<EncryptedDataDetail> encryptedDataDetails) {
+      List<EncryptedDataDetail> encryptedDataDetails, ExpressionEvaluator maskingEvaluator) {
     List<String> processExecutorArguments = new ArrayList<>();
     processExecutorArguments.add("/bin/sh");
     processExecutorArguments.add("-c");
     processExecutorArguments.add("terraform --version");
 
-    return generateExecutionCapabilitiesForProcessExecutor(TERRAFORM, processExecutorArguments, encryptedDataDetails);
+    return generateExecutionCapabilitiesForProcessExecutor(
+        TERRAFORM, processExecutorArguments, encryptedDataDetails, maskingEvaluator);
   }
 }

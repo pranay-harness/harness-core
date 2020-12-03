@@ -12,6 +12,7 @@ import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.delegate.beans.executioncapability.ExecutionCapabilityDemander;
 import io.harness.delegate.task.TaskParameters;
 import io.harness.delegate.task.mixin.HttpConnectionExecutionCapabilityGenerator;
+import io.harness.expression.ExpressionEvaluator;
 import io.harness.security.encryption.EncryptedDataDetail;
 
 import software.wings.beans.artifact.ArtifactStreamAttributes;
@@ -48,7 +49,7 @@ public class BuildSourceParameters implements TaskParameters, ExecutionCapabilit
   private Set<String> savedBuildDetailsKeys;
 
   @Override
-  public List<ExecutionCapability> fetchRequiredExecutionCapabilities() {
+  public List<ExecutionCapability> fetchRequiredExecutionCapabilities(ExpressionEvaluator maskingEvaluator) {
     if (settingValue == null) {
       return emptyList();
     }
@@ -59,26 +60,29 @@ public class BuildSourceParameters implements TaskParameters, ExecutionCapabilit
       case DOCKER:
       case NEXUS:
       case ARTIFACTORY:
-        return settingValue.fetchRequiredExecutionCapabilities();
+        return settingValue.fetchRequiredExecutionCapabilities(maskingEvaluator);
       default:
-        return getExecutionCapabilitiesFromArtifactStreamType();
+        return getExecutionCapabilitiesFromArtifactStreamType(maskingEvaluator);
     }
   }
 
-  private List<ExecutionCapability> getExecutionCapabilitiesFromArtifactStreamType() {
+  private List<ExecutionCapability> getExecutionCapabilitiesFromArtifactStreamType(
+      ExpressionEvaluator maskingEvaluator) {
     if (artifactStreamType.equals(GCR.name())) {
       String gcrHostName = artifactStreamAttributes.getRegistryHostName();
       return Collections.singletonList(
-          HttpConnectionExecutionCapabilityGenerator.buildHttpConnectionExecutionCapability(getUrl(gcrHostName)));
+          HttpConnectionExecutionCapabilityGenerator.buildHttpConnectionExecutionCapability(
+              getUrl(gcrHostName), maskingEvaluator));
     } else if (artifactStreamType.equals(AZURE_ARTIFACTS.name())) {
-      return settingValue.fetchRequiredExecutionCapabilities();
+      return settingValue.fetchRequiredExecutionCapabilities(maskingEvaluator);
     } else if (artifactStreamType.equals(ACR.name())) {
       final String default_server = "azure.microsoft.com";
       String loginServer = isNotEmpty(artifactStreamAttributes.getRegistryHostName())
           ? artifactStreamAttributes.getRegistryHostName()
           : default_server;
       return Collections.singletonList(
-          HttpConnectionExecutionCapabilityGenerator.buildHttpConnectionExecutionCapability(getUrl(loginServer)));
+          HttpConnectionExecutionCapabilityGenerator.buildHttpConnectionExecutionCapability(
+              getUrl(loginServer), maskingEvaluator));
     }
     return emptyList();
   }

@@ -2,6 +2,7 @@ package software.wings.service.impl.logz;
 
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.delegate.beans.executioncapability.ExecutionCapabilityDemander;
+import io.harness.expression.ExpressionEvaluator;
 import io.harness.security.encryption.EncryptedDataDetail;
 
 import software.wings.beans.config.LogzConfig;
@@ -47,7 +48,7 @@ public class LogzDataCollectionInfo extends LogDataCollectionInfo implements Exe
   }
 
   @Override
-  public List<ExecutionCapability> fetchRequiredExecutionCapabilities() {
-    return CapabilityHelper.generateDelegateCapabilities(logzConfig, getEncryptedDataDetails());
+  public List<ExecutionCapability> fetchRequiredExecutionCapabilities(ExpressionEvaluator maskingEvaluator) {
+    return CapabilityHelper.generateDelegateCapabilities(logzConfig, getEncryptedDataDetails(), maskingEvaluator);
   }
 }

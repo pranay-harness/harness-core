@@ -3,6 +3,7 @@ package software.wings.service.impl.instana;
 import static software.wings.beans.TaskType.INSTANA_COLLECT_METRIC_DATA;
 
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
+import io.harness.expression.ExpressionEvaluator;
 import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.security.encryption.EncryptionConfig;
 
@@ -126,7 +127,7 @@ public class InstanaDataCollectionInfo extends MetricsDataCollectionInfo {
   }
 
   @Override
-  public List<ExecutionCapability> fetchRequiredExecutionCapabilities() {
-    return CapabilityHelper.generateDelegateCapabilities(instanaConfig, getEncryptedDataDetails());
+  public List<ExecutionCapability> fetchRequiredExecutionCapabilities(ExpressionEvaluator maskingEvaluator) {
+    return CapabilityHelper.generateDelegateCapabilities(instanaConfig, getEncryptedDataDetails(), maskingEvaluator);
   }
 }

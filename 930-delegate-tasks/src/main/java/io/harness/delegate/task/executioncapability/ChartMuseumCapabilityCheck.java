@@ -9,6 +9,7 @@ import io.harness.delegate.beans.executioncapability.CapabilityResponse;
 import io.harness.delegate.beans.executioncapability.ChartMuseumCapability;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.delegate.configuration.InstallUtils;
+import io.harness.expression.ExpressionEvaluator;
 
 import lombok.extern.slf4j.Slf4j;
 

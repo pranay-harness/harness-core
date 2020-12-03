@@ -5,6 +5,7 @@ import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.delegate.beans.executioncapability.ExecutionCapabilityDemander;
 import io.harness.encryption.SecretRefData;
 import io.harness.encryption.SecretReference;
+import io.harness.expression.ExpressionEvaluator;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -27,17 +28,19 @@ public class AzureVMAuthDTO implements DecryptableEntity, ExecutionCapabilityDem
   private String secretRefFieldName = "secretRef";
   @ApiModelProperty(dataType = "string") @NotNull @SecretReference SecretRefData secretRef;
 
-  @JsonProperty("type") private AzureVMAuthType azureVmAuthType;
+  @JsonProperty("type") private io.harness.delegate.beans.azure.AzureVMAuthType azureVmAuthType;
 
   @Builder
-  public AzureVMAuthDTO(SecretRefData secretRef, AzureVMAuthType azureVmAuthType, String userName) {
+  public AzureVMAuthDTO(
+      SecretRefData secretRef, io.harness.delegate.beans.azure.AzureVMAuthType azureVmAuthType, String userName) {
     this.secretRef = secretRef;
     this.azureVmAuthType = azureVmAuthType;
     this.userName = userName;
   }
 
   @Override
-  public List<ExecutionCapability> fetchRequiredExecutionCapabilities() {
+  public List<ExecutionCapability> fetchRequiredExecutionCapabilities(
+      io.harness.expression.ExpressionEvaluator maskingEvaluator) {
     return new ArrayList<>();
   }
 }

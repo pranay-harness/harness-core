@@ -3,6 +3,7 @@ package software.wings.service.impl.cloudwatch;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.delegate.beans.executioncapability.ExecutionCapabilityDemander;
 import io.harness.delegate.task.TaskParameters;
+import io.harness.expression.ExpressionEvaluator;
 import io.harness.security.encryption.EncryptedDataDetail;
 
 import software.wings.beans.AwsConfig;
@@ -43,8 +44,8 @@ public class CloudWatchDataCollectionInfo implements TaskParameters, ExecutionCa
   @Builder.Default private Map<String, List<CloudWatchMetric>> metricsByECSClusterName = new HashMap<>();
 
   @Override
-  public List<ExecutionCapability> fetchRequiredExecutionCapabilities() {
+  public List<ExecutionCapability> fetchRequiredExecutionCapabilities(ExpressionEvaluator maskingEvaluator) {
     // TODO: CAPABILITY
-    return CapabilityHelper.generateDelegateCapabilities(awsConfig, encryptedDataDetails);
+    return CapabilityHelper.generateDelegateCapabilities(awsConfig, encryptedDataDetails, maskingEvaluator);
   }
 }

@@ -4,6 +4,7 @@ import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.delegate.beans.executioncapability.ExecutionCapabilityDemander;
 import io.harness.delegate.task.TaskParameters;
 import io.harness.delegate.task.spotinst.request.SpotInstTaskParameters;
+import io.harness.expression.ExpressionEvaluator;
 import io.harness.security.encryption.EncryptedDataDetail;
 
 import software.wings.beans.AwsConfig;
@@ -27,11 +28,12 @@ public class SpotInstCommandRequest implements TaskParameters, ExecutionCapabili
   private SpotInstTaskParameters spotInstTaskParameters;
 
   @Override
-  public List<ExecutionCapability> fetchRequiredExecutionCapabilities() {
+  public List<ExecutionCapability> fetchRequiredExecutionCapabilities(ExpressionEvaluator maskingEvaluator) {
     Set<ExecutionCapability> executionCapabilities = new HashSet<>();
-    executionCapabilities.addAll(CapabilityHelper.generateDelegateCapabilities(awsConfig, awsEncryptionDetails));
     executionCapabilities.addAll(
-        CapabilityHelper.generateDelegateCapabilities(spotInstConfig, spotinstEncryptionDetails));
+        CapabilityHelper.generateDelegateCapabilities(awsConfig, awsEncryptionDetails, maskingEvaluator));
+    executionCapabilities.addAll(
+        CapabilityHelper.generateDelegateCapabilities(spotInstConfig, spotinstEncryptionDetails, maskingEvaluator));
     return new ArrayList<>(executionCapabilities);
   }
 }

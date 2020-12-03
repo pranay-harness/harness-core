@@ -3,6 +3,7 @@ package software.wings.service.impl.dynatrace;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.delegate.beans.executioncapability.ExecutionCapabilityDemander;
 import io.harness.delegate.task.TaskParameters;
+import io.harness.expression.ExpressionEvaluator;
 import io.harness.security.encryption.EncryptedDataDetail;
 
 import software.wings.beans.DynaTraceConfig;
@@ -41,7 +42,7 @@ public class DynaTraceDataCollectionInfo implements TaskParameters, ExecutionCap
   List<EncryptedDataDetail> encryptedDataDetails;
 
   @Override
-  public List<ExecutionCapability> fetchRequiredExecutionCapabilities() {
-    return CapabilityHelper.generateDelegateCapabilities(dynaTraceConfig, encryptedDataDetails);
+  public List<ExecutionCapability> fetchRequiredExecutionCapabilities(ExpressionEvaluator maskingEvaluator) {
+    return CapabilityHelper.generateDelegateCapabilities(dynaTraceConfig, encryptedDataDetails, maskingEvaluator);
   }
 }

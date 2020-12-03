@@ -8,6 +8,7 @@ import io.harness.delegate.beans.executioncapability.ExecutionCapabilityDemander
 import io.harness.delegate.task.ActivityAccess;
 import io.harness.delegate.task.TaskParameters;
 import io.harness.expression.Expression;
+import io.harness.expression.ExpressionEvaluator;
 import io.harness.k8s.model.HelmVersion;
 import io.harness.logging.LogCallback;
 import io.harness.security.encryption.EncryptedDataDetail;
@@ -64,7 +65,7 @@ public class HelmCommandRequest implements TaskParameters, ActivityAccess, Execu
   }
 
   @Override
-  public List<ExecutionCapability> fetchRequiredExecutionCapabilities() {
+  public List<ExecutionCapability> fetchRequiredExecutionCapabilities(ExpressionEvaluator maskingEvaluator) {
     List<ExecutionCapability> executionCapabilities = new ArrayList<>();
     executionCapabilities.add(HelmCommandCapability.builder().commandRequest(this).build());
     if (gitConfig != null) {
@@ -75,7 +76,7 @@ public class HelmCommandRequest implements TaskParameters, ActivityAccess, Execu
                                     .build());
     }
     if (containerServiceParams != null) {
-      executionCapabilities.addAll(containerServiceParams.fetchRequiredExecutionCapabilities());
+      executionCapabilities.addAll(containerServiceParams.fetchRequiredExecutionCapabilities(maskingEvaluator));
     }
     return executionCapabilities;
   }

@@ -5,6 +5,7 @@ import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.delegate.beans.executioncapability.ExecutionCapabilityDemander;
 import io.harness.delegate.beans.executioncapability.GitConnectionNGCapability;
 import io.harness.delegate.task.TaskParameters;
+import io.harness.expression.ExpressionEvaluator;
 import io.harness.git.model.GitBaseRequest;
 import io.harness.security.encryption.EncryptedDataDetail;
 
@@ -22,7 +23,7 @@ public class GitCommandParams implements TaskParameters, ExecutionCapabilityDema
   GitBaseRequest gitCommandRequest;
 
   @Override
-  public List<ExecutionCapability> fetchRequiredExecutionCapabilities() {
+  public List<ExecutionCapability> fetchRequiredExecutionCapabilities(ExpressionEvaluator maskingEvaluator) {
     return Collections.singletonList(
         GitConnectionNGCapability.builder().encryptedDataDetails(encryptionDetails).gitConfig(gitConfig).build());
   }

@@ -7,6 +7,7 @@ import io.harness.delegate.beans.artifact.ArtifactFileMetadata;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.delegate.beans.executioncapability.ExecutionCapabilityDemander;
 import io.harness.delegate.task.mixin.HttpConnectionExecutionCapabilityGenerator;
+import io.harness.expression.ExpressionEvaluator;
 import io.harness.security.encryption.EncryptedDataDetail;
 
 import software.wings.beans.SettingAttribute;
@@ -82,14 +83,14 @@ public class ArtifactStreamAttributes implements ExecutionCapabilityDemander {
   private Set<String> savedBuildDetailsKeys;
 
   @Override
-  public List<ExecutionCapability> fetchRequiredExecutionCapabilities() {
+  public List<ExecutionCapability> fetchRequiredExecutionCapabilities(ExpressionEvaluator maskingEvaluator) {
     List<ExecutionCapability> executionCapabilities = new ArrayList<>();
     if (registryHostName != null) {
       executionCapabilities.add(HttpConnectionExecutionCapabilityGenerator.buildHttpConnectionExecutionCapability(
-          "https://" + registryHostName + (registryHostName.endsWith("/") ? "" : "/")));
+          "https://" + registryHostName + (registryHostName.endsWith("/") ? "" : "/"), maskingEvaluator));
     }
-    executionCapabilities.addAll(
-        CapabilityHelper.fetchExecutionCapabilitiesForEncryptedDataDetails(artifactServerEncryptedDataDetails));
+    executionCapabilities.addAll(CapabilityHelper.fetchExecutionCapabilitiesForEncryptedDataDetails(
+        artifactServerEncryptedDataDetails, maskingEvaluator));
     return executionCapabilities;
   }
 }

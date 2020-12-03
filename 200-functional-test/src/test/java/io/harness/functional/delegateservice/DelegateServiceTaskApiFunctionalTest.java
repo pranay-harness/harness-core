@@ -123,7 +123,7 @@ public class DelegateServiceTaskApiFunctionalTest extends AbstractFunctionalTest
                     .setExecutionTimeout(com.google.protobuf.Duration.newBuilder().setSeconds(600).setNanos(0).build())
                     .setExpressionFunctorToken(HashGenerator.generateIntegerHash())
                     .build(),
-                httpTaskParameters.fetchRequiredExecutionCapabilities(), null)
+                httpTaskParameters.fetchRequiredExecutionCapabilities(null), null)
             .getTaskId();
 
     DelegateResponseData responseData =
@@ -176,7 +176,7 @@ public class DelegateServiceTaskApiFunctionalTest extends AbstractFunctionalTest
                     .setExecutionTimeout(com.google.protobuf.Duration.newBuilder().setSeconds(600).setNanos(0).build())
                     .setExpressionFunctorToken(HashGenerator.generateIntegerHash())
                     .build(),
-                httpTaskParameters.fetchRequiredExecutionCapabilities(), null)
+                httpTaskParameters.fetchRequiredExecutionCapabilities(null), null)
             .getTaskId();
 
     DelegateResponseData responseData =
@@ -233,7 +233,7 @@ public class DelegateServiceTaskApiFunctionalTest extends AbstractFunctionalTest
                     .setExecutionTimeout(com.google.protobuf.Duration.newBuilder().setSeconds(600).setNanos(0).build())
                     .setExpressionFunctorToken(HashGenerator.generateIntegerHash())
                     .build(),
-                httpTaskParameters.fetchRequiredExecutionCapabilities(), Arrays.asList(NON_EXISTING_SELECTOR)))
+                httpTaskParameters.fetchRequiredExecutionCapabilities(null), Arrays.asList(NON_EXISTING_SELECTOR)))
         .isInstanceOf(DelegateServiceDriverException.class)
         .hasMessage("Unexpected error occurred while submitting task.")
         .hasRootCauseMessage("INTERNAL: Delegates are not available");
@@ -280,7 +280,7 @@ public class DelegateServiceTaskApiFunctionalTest extends AbstractFunctionalTest
                     .setExecutionTimeout(com.google.protobuf.Duration.newBuilder().setSeconds(600).setNanos(0).build())
                     .setExpressionFunctorToken(HashGenerator.generateIntegerHash())
                     .build(),
-                httpTaskParameters.fetchRequiredExecutionCapabilities(), null)
+                httpTaskParameters.fetchRequiredExecutionCapabilities(null), null)
             .getTaskId();
 
     Poller.pollFor(Duration.ofMinutes(3), Duration.ofSeconds(5), () -> {

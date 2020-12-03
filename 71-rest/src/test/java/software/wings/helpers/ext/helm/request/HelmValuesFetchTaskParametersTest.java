@@ -31,14 +31,14 @@ public class HelmValuesFetchTaskParametersTest {
 
     HelmValuesFetchTaskParameters taskParameters =
         HelmValuesFetchTaskParameters.builder().helmChartConfigTaskParams(helmChartConfigParams).build();
-    List<ExecutionCapability> capabilities = taskParameters.fetchRequiredExecutionCapabilities();
+    List<ExecutionCapability> capabilities = taskParameters.fetchRequiredExecutionCapabilities(null);
     assertThat(capabilities.size()).isEqualTo(3);
     assertThat(capabilities)
         .extracting(ExecutionCapability::getCapabilityType)
         .containsExactly(CapabilityType.HELM_INSTALL, CapabilityType.HTTP, CapabilityType.CHART_MUSEUM);
 
     helmChartConfigParams.setHelmRepoConfig(GCSHelmRepoConfig.builder().build());
-    capabilities = taskParameters.fetchRequiredExecutionCapabilities();
+    capabilities = taskParameters.fetchRequiredExecutionCapabilities(null);
     assertThat(capabilities.size()).isEqualTo(2);
     assertThat(capabilities)
         .extracting(ExecutionCapability::getCapabilityType)
@@ -46,7 +46,7 @@ public class HelmValuesFetchTaskParametersTest {
 
     helmChartConfigParams.setHelmRepoConfig(
         HttpHelmRepoConfig.builder().chartRepoUrl("http://www.example.com").build());
-    capabilities = taskParameters.fetchRequiredExecutionCapabilities();
+    capabilities = taskParameters.fetchRequiredExecutionCapabilities(null);
     assertThat(capabilities.size()).isEqualTo(2);
     assertThat(capabilities)
         .extracting(ExecutionCapability::getCapabilityType)
@@ -64,14 +64,14 @@ public class HelmValuesFetchTaskParametersTest {
 
     taskParameters.setBindTaskFeatureSet(true);
     taskParameters.setContainerServiceParams(containerServiceParams);
-    capabilities = taskParameters.fetchRequiredExecutionCapabilities();
+    capabilities = taskParameters.fetchRequiredExecutionCapabilities(null);
     assertThat(capabilities.size()).isEqualTo(3);
     assertThat(capabilities)
         .extracting(ExecutionCapability::getCapabilityType)
         .containsExactly(CapabilityType.HELM_INSTALL, CapabilityType.HTTP, CapabilityType.SYSTEM_ENV);
 
     helmChartConfigParams.setHelmRepoConfig(null);
-    capabilities = taskParameters.fetchRequiredExecutionCapabilities();
+    capabilities = taskParameters.fetchRequiredExecutionCapabilities(null);
     assertThat(capabilities.size()).isEqualTo(2);
     assertThat(capabilities)
         .extracting(ExecutionCapability::getCapabilityType)

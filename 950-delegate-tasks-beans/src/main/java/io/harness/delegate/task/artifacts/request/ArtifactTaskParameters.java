@@ -5,6 +5,7 @@ import io.harness.delegate.beans.executioncapability.ExecutionCapabilityDemander
 import io.harness.delegate.task.TaskParameters;
 import io.harness.delegate.task.artifacts.ArtifactSourceDelegateRequest;
 import io.harness.delegate.task.artifacts.ArtifactTaskType;
+import io.harness.expression.ExpressionEvaluator;
 
 import java.util.List;
 import javax.validation.constraints.NotNull;
@@ -19,7 +20,7 @@ public class ArtifactTaskParameters implements TaskParameters, ExecutionCapabili
   @NotNull ArtifactTaskType artifactTaskType;
 
   @Override
-  public List<ExecutionCapability> fetchRequiredExecutionCapabilities() {
-    return attributes.fetchRequiredExecutionCapabilities();
+  public List<ExecutionCapability> fetchRequiredExecutionCapabilities(ExpressionEvaluator maskingEvaluator) {
+    return attributes.fetchRequiredExecutionCapabilities(maskingEvaluator);
   }
 }

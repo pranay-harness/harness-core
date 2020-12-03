@@ -3,6 +3,7 @@ package software.wings.beans;
 import static java.util.Collections.emptyList;
 
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
+import io.harness.expression.ExpressionEvaluator;
 
 import software.wings.audit.ResourceType;
 import software.wings.security.UsageRestrictions;
@@ -34,7 +35,7 @@ public class PhysicalDataCenterConfig extends SettingValue {
   }
 
   @Override
-  public List<ExecutionCapability> fetchRequiredExecutionCapabilities() {
+  public List<ExecutionCapability> fetchRequiredExecutionCapabilities(ExpressionEvaluator maskingEvaluator) {
     return emptyList();
   }
 

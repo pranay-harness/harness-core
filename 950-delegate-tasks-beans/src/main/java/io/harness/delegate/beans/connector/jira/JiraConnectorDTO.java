@@ -7,6 +7,7 @@ import io.harness.delegate.beans.executioncapability.ExecutionCapabilityDemander
 import io.harness.delegate.task.mixin.HttpConnectionExecutionCapabilityGenerator;
 import io.harness.encryption.SecretRefData;
 import io.harness.encryption.SecretReference;
+import io.harness.expression.ExpressionEvaluator;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import io.swagger.annotations.ApiModel;
@@ -37,9 +38,9 @@ public class JiraConnectorDTO extends ConnectorConfigDTO implements ExecutionCap
   @ApiModelProperty(dataType = "string") @NotNull @SecretReference SecretRefData passwordRef;
 
   @Override
-  public List<ExecutionCapability> fetchRequiredExecutionCapabilities() {
+  public List<ExecutionCapability> fetchRequiredExecutionCapabilities(ExpressionEvaluator maskingEvaluator) {
     return Collections.singletonList(HttpConnectionExecutionCapabilityGenerator.buildHttpConnectionExecutionCapability(
-        jiraUrl.endsWith("/") ? jiraUrl : jiraUrl.concat("/")));
+        jiraUrl.endsWith("/") ? jiraUrl : jiraUrl.concat("/"), maskingEvaluator));
   }
 
   @Override

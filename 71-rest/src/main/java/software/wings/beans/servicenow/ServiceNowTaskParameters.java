@@ -3,6 +3,7 @@ package software.wings.beans.servicenow;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.delegate.beans.executioncapability.ExecutionCapabilityDemander;
 import io.harness.delegate.task.TaskParameters;
+import io.harness.expression.ExpressionEvaluator;
 import io.harness.security.encryption.EncryptedDataDetail;
 
 import software.wings.beans.ServiceNowConfig;
@@ -36,9 +37,9 @@ public class ServiceNowTaskParameters implements TaskParameters, ExecutionCapabi
   private String jsonBody;
 
   @Override
-  public List<ExecutionCapability> fetchRequiredExecutionCapabilities() {
+  public List<ExecutionCapability> fetchRequiredExecutionCapabilities(ExpressionEvaluator maskingEvaluator) {
     // As it extends TaskParameters, no need to pass encryptionDetails.
     // It will be resolved to valut capability in DelegateSErviceImp
-    return serviceNowConfig.fetchRequiredExecutionCapabilities();
+    return serviceNowConfig.fetchRequiredExecutionCapabilities(maskingEvaluator);
   }
 }

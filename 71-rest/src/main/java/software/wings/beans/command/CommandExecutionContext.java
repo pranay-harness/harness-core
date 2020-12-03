@@ -17,6 +17,7 @@ import io.harness.delegate.command.CommandExecutionData;
 import io.harness.delegate.task.mixin.HttpConnectionExecutionCapabilityGenerator;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
+import io.harness.expression.ExpressionEvaluator;
 import io.harness.security.encryption.EncryptedDataDetail;
 
 import software.wings.api.DeploymentType;
@@ -200,7 +201,7 @@ public class CommandExecutionContext implements ExecutionCapabilityDemander {
   }
 
   @Override
-  public List<ExecutionCapability> fetchRequiredExecutionCapabilities() {
+  public List<ExecutionCapability> fetchRequiredExecutionCapabilities(ExpressionEvaluator maskingEvaluator) {
     String region = null;
     DeploymentType dType = DeploymentType.valueOf(getDeploymentType());
     List<ExecutionCapability> capabilities = new ArrayList<>();
@@ -208,7 +209,7 @@ public class CommandExecutionContext implements ExecutionCapabilityDemander {
       case KUBERNETES:
         SettingValue config = cloudProviderSetting.getValue();
         if (config instanceof KubernetesClusterConfig && ((KubernetesClusterConfig) config).isUseKubernetesDelegate()) {
-          capabilities.addAll(config.fetchRequiredExecutionCapabilities());
+          capabilities.addAll(config.fetchRequiredExecutionCapabilities(maskingEvaluator));
         }
 
         String masterUrl = null;
@@ -218,8 +219,8 @@ public class CommandExecutionContext implements ExecutionCapabilityDemander {
           masterUrl = ((KubernetesResizeParams) containerResizeParams).getMasterUrl();
         }
         if (isNotBlank(masterUrl)) {
-          capabilities.add(
-              HttpConnectionExecutionCapabilityGenerator.buildHttpConnectionExecutionCapability(masterUrl));
+          capabilities.add(HttpConnectionExecutionCapabilityGenerator.buildHttpConnectionExecutionCapability(
+              masterUrl, maskingEvaluator));
         }
 
         return capabilities;
@@ -261,7 +262,8 @@ public class CommandExecutionContext implements ExecutionCapabilityDemander {
         }
         return capabilities;
       case AWS_CODEDEPLOY:
-        return singletonList(buildHttpConnectionExecutionCapability(AWS_SIMPLE_HTTP_CONNECTIVITY_URL));
+        return singletonList(
+            buildHttpConnectionExecutionCapability(AWS_SIMPLE_HTTP_CONNECTIVITY_URL, maskingEvaluator));
       case ECS:
       case AMI:
       case AWS_LAMBDA:

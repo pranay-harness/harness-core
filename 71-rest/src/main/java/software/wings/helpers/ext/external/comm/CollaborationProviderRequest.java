@@ -3,6 +3,7 @@ package software.wings.helpers.ext.external.comm;
 import io.harness.delegate.beans.executioncapability.AlwaysFalseValidationCapability;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.delegate.beans.executioncapability.ExecutionCapabilityDemander;
+import io.harness.expression.ExpressionEvaluator;
 
 import java.util.Collections;
 import java.util.List;
@@ -26,7 +27,7 @@ public abstract class CollaborationProviderRequest implements ExecutionCapabilit
   public enum CommunicationType { EMAIL }
 
   @Override
-  public List<ExecutionCapability> fetchRequiredExecutionCapabilities() {
+  public List<ExecutionCapability> fetchRequiredExecutionCapabilities(ExpressionEvaluator maskingEvaluator) {
     return Collections.singletonList(AlwaysFalseValidationCapability.builder().build());
   }
 }

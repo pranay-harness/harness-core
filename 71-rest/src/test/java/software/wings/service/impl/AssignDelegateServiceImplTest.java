@@ -908,7 +908,7 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
     when(accountDelegatesCache.get(ACCOUNT_ID)).thenReturn(asList(delegate));
 
     HttpConnectionExecutionCapability matchingExecutionCapability =
-        buildHttpConnectionExecutionCapability("http//www.matching.com");
+        buildHttpConnectionExecutionCapability("http//www.matching.com", null);
 
     DelegateConnectionResult connectionResult = DelegateConnectionResult.builder()
                                                     .accountId(ACCOUNT_ID)
@@ -924,7 +924,7 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
 
     HttpConnectionExecutionCapability executionCapability = criteria == MATCHING_CRITERIA
         ? matchingExecutionCapability
-        : buildHttpConnectionExecutionCapability("http//www.not-matching.com");
+        : buildHttpConnectionExecutionCapability("http//www.not-matching.com", null);
 
     Object[] params = {HttpTaskParameters.builder().url(executionCapability.getUrl()).build()};
     return DelegateTask.builder()

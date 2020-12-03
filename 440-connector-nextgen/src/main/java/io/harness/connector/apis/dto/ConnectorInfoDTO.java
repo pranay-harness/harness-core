@@ -17,6 +17,7 @@ import io.harness.delegate.beans.connector.splunkconnector.SplunkConnectorDTO;
 import io.harness.delegate.beans.connector.vaultconnector.VaultConnectorDTO;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.delegate.beans.executioncapability.ExecutionCapabilityDemander;
+import io.harness.expression.ExpressionEvaluator;
 import io.harness.secretmanagerclient.dto.GcpKmsConfigDTO;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
@@ -81,12 +82,13 @@ public class ConnectorInfoDTO {
     this.connectorConfig = connectorConfig;
   }
 
-  public List<ExecutionCapability> fetchRequiredExecutionCapabilitiesForConnector(String accountIdentifier) {
+  public List<ExecutionCapability> fetchRequiredExecutionCapabilitiesForConnector(
+      String accountIdentifier, ExpressionEvaluator maskingEvaluator) {
     if (this.connectorConfig instanceof ExecutionCapabilityDemanderWithScope) {
       return ((ExecutionCapabilityDemanderWithScope) this.connectorConfig)
           .fetchRequiredExecutionCapabilities(accountIdentifier, orgIdentifier, projectIdentifier);
     } else if (this.connectorConfig instanceof ExecutionCapabilityDemander) {
-      return ((ExecutionCapabilityDemander) this.connectorConfig).fetchRequiredExecutionCapabilities();
+      return ((ExecutionCapabilityDemander) this.connectorConfig).fetchRequiredExecutionCapabilities(maskingEvaluator);
     }
     throw new UnsupportedOperationException(
         "The execution capability is not defined for the connector type " + connectorType);

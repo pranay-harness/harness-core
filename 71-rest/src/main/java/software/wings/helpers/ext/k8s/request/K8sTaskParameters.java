@@ -9,6 +9,7 @@ import io.harness.delegate.task.ActivityAccess;
 import io.harness.delegate.task.TaskParameters;
 import io.harness.delegate.task.k8s.K8sTaskType;
 import io.harness.expression.Expression;
+import io.harness.expression.ExpressionEvaluator;
 import io.harness.k8s.model.HelmVersion;
 
 import software.wings.helpers.ext.kustomize.KustomizeConfig;
@@ -35,9 +36,9 @@ public class K8sTaskParameters implements TaskParameters, ActivityAccess, Execut
   private boolean deprecateFabric8Enabled;
 
   @Override
-  public List<ExecutionCapability> fetchRequiredExecutionCapabilities() {
+  public List<ExecutionCapability> fetchRequiredExecutionCapabilities(ExpressionEvaluator maskingEvaluator) {
     List<ExecutionCapability> executionCapabilities = new ArrayList<>();
-    executionCapabilities.addAll(k8sClusterConfig.fetchRequiredExecutionCapabilities());
+    executionCapabilities.addAll(k8sClusterConfig.fetchRequiredExecutionCapabilities(maskingEvaluator));
     if (kustomizeValidationNeeded()) {
       executionCapabilities.add(
           KustomizeCapability.builder().kustomizeConfig(fetchKustomizeConfig((ManifestAwareTaskParams) this)).build());

@@ -1,6 +1,7 @@
 package io.harness.delegate.beans.connector;
 
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
+import io.harness.expression.ExpressionEvaluator;
 
 import java.util.List;
 

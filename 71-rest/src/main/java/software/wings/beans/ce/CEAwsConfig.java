@@ -3,6 +3,7 @@ package software.wings.beans.ce;
 import static software.wings.audit.ResourceType.CE_CONNECTOR;
 
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
+import io.harness.expression.ExpressionEvaluator;
 
 import software.wings.beans.AwsCrossAccountAttributes;
 import software.wings.beans.AwsS3BucketDetails;
@@ -34,7 +35,7 @@ public class CEAwsConfig extends SettingValue {
   }
 
   @Override
-  public List<ExecutionCapability> fetchRequiredExecutionCapabilities() {
+  public List<ExecutionCapability> fetchRequiredExecutionCapabilities(ExpressionEvaluator maskingEvaluator) {
     return null;
   }
 

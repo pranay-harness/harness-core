@@ -22,37 +22,38 @@ public class HttpConnectionExecutionCapabilityGeneratorTest extends CategoryTest
   @Owner(developers = GEORGE)
   @Category(UnitTests.class)
   public void testFetchCapabilityBasis() {
-    HttpConnectionExecutionCapability noPortPath = buildHttpConnectionExecutionCapability("http://domain");
+    HttpConnectionExecutionCapability noPortPath = buildHttpConnectionExecutionCapability("http://domain", null);
     assertThat(noPortPath.getUrl()).isNull();
     assertThat(noPortPath.fetchCapabilityBasis()).isEqualTo("http://domain");
 
-    HttpConnectionExecutionCapability noPort = buildHttpConnectionExecutionCapability("http://domain/path");
+    HttpConnectionExecutionCapability noPort = buildHttpConnectionExecutionCapability("http://domain/path", null);
     assertThat(noPort.getUrl()).isNull();
     assertThat(noPort.fetchCapabilityBasis()).isEqualTo("http://domain/path");
 
-    HttpConnectionExecutionCapability all = buildHttpConnectionExecutionCapability("http://domain:80/path");
+    HttpConnectionExecutionCapability all = buildHttpConnectionExecutionCapability("http://domain:80/path", null);
     assertThat(all.getUrl()).isNull();
     assertThat(all.fetchCapabilityBasis()).isEqualTo("http://domain:80/path");
 
-    HttpConnectionExecutionCapability user = buildHttpConnectionExecutionCapability("http://user@domain:80/path");
+    HttpConnectionExecutionCapability user = buildHttpConnectionExecutionCapability("http://user@domain:80/path", null);
     assertThat(user.getUrl()).isNull();
     assertThat(user.fetchCapabilityBasis()).isEqualTo("http://domain:80/path");
 
-    HttpConnectionExecutionCapability userPass = buildHttpConnectionExecutionCapability("http://user:pass@domain");
+    HttpConnectionExecutionCapability userPass =
+        buildHttpConnectionExecutionCapability("http://user:pass@domain", null);
     assertThat(userPass.getUrl()).isNull();
     assertThat(userPass.fetchCapabilityBasis()).isEqualTo("http://domain");
 
-    HttpConnectionExecutionCapability bad = buildHttpConnectionExecutionCapability("http://domain.$$$");
+    HttpConnectionExecutionCapability bad = buildHttpConnectionExecutionCapability("http://domain.$$$", null);
     assertThat(bad.getUrl()).isNotNull();
     assertThat(bad.fetchCapabilityBasis()).isEqualTo("http://domain.$$$");
 
-    HttpConnectionExecutionCapability expression = buildHttpConnectionExecutionCapability("http://${expression}");
+    HttpConnectionExecutionCapability expression = buildHttpConnectionExecutionCapability("http://${expression}", null);
     assertThat(expression.getUrl()).isNotNull();
     assertThat(expression.fetchCapabilityBasis()).isEqualTo("http://${expression}");
     assertThat(expression.getQuery()).isNull();
 
     HttpConnectionExecutionCapability withQuery =
-        buildHttpConnectionExecutionCapability("http://35.239.148.216:8080/api/v1/query?query=up");
+        buildHttpConnectionExecutionCapability("http://35.239.148.216:8080/api/v1/query?query=up", null);
     assertThat(withQuery.getQuery()).isNull();
   }
 
@@ -61,7 +62,7 @@ public class HttpConnectionExecutionCapabilityGeneratorTest extends CategoryTest
   @Category(UnitTests.class)
   public void testBuildHttpConnectionExecutionCapability_defaultHttpCapabilityDetailsLevel() {
     HttpConnectionExecutionCapability capability =
-        buildHttpConnectionExecutionCapability("http://domain.com:8080/path/1/2/3?q1=1&q2=2");
+        buildHttpConnectionExecutionCapability("http://domain.com:8080/path/1/2/3?q1=1&q2=2", null);
     assertThat(capability.getHost()).isEqualTo("domain.com");
     assertThat(capability.getScheme()).isEqualTo("http");
     assertThat(capability.getPort()).isEqualTo(8080);
@@ -75,7 +76,7 @@ public class HttpConnectionExecutionCapabilityGeneratorTest extends CategoryTest
   @Category(UnitTests.class)
   public void testBuildHttpConnectionExecutionCapability_withHttpCapabilityDetailsLevelDomain() {
     HttpConnectionExecutionCapability capability =
-        buildHttpConnectionExecutionCapability("http://domain.com:8080/path/1/2/3?q1=1&q2=2", DOMAIN);
+        buildHttpConnectionExecutionCapability("http://domain.com:8080/path/1/2/3?q1=1&q2=2", DOMAIN, null);
     assertThat(capability.getHost()).isEqualTo("domain.com");
     assertThat(capability.getScheme()).isEqualTo("http");
     assertThat(capability.getPort()).isEqualTo(8080);
@@ -89,7 +90,7 @@ public class HttpConnectionExecutionCapabilityGeneratorTest extends CategoryTest
   @Category(UnitTests.class)
   public void testBuildHttpConnectionExecutionCapability_withHttpCapabilityDetailsLevelPath() {
     HttpConnectionExecutionCapability capability =
-        buildHttpConnectionExecutionCapability("http://domain.com:8080/path/1/2/3?q1=1&q2=2", PATH);
+        buildHttpConnectionExecutionCapability("http://domain.com:8080/path/1/2/3?q1=1&q2=2", PATH, null);
     assertThat(capability.getHost()).isEqualTo("domain.com");
     assertThat(capability.getScheme()).isEqualTo("http");
     assertThat(capability.getPort()).isEqualTo(8080);
@@ -103,7 +104,7 @@ public class HttpConnectionExecutionCapabilityGeneratorTest extends CategoryTest
   @Category(UnitTests.class)
   public void testBuildHttpConnectionExecutionCapability_withHttpCapabilityDetailsLevelQuery() {
     HttpConnectionExecutionCapability capability =
-        buildHttpConnectionExecutionCapability("http://domain.com:8080/path/1/2/3?q1=1&q2=2", QUERY);
+        buildHttpConnectionExecutionCapability("http://domain.com:8080/path/1/2/3?q1=1&q2=2", QUERY, null);
     assertThat(capability.getHost()).isEqualTo("domain.com");
     assertThat(capability.getScheme()).isEqualTo("http");
     assertThat(capability.getPort()).isEqualTo(8080);
