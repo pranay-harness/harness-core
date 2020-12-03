@@ -3,6 +3,7 @@ package io.harness.state.io;
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.pms.data.StepOutcomeRef;
 import io.harness.pms.execution.Status;
 import io.harness.pms.execution.failure.FailureInfo;
 import io.harness.tasks.ResponseData;

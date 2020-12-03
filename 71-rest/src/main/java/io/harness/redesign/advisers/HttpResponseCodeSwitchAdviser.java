@@ -12,9 +12,9 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.engine.outcomes.OutcomeService;
 import io.harness.exception.InvalidRequestException;
 import io.harness.pms.advisers.AdviserType;
+import io.harness.pms.data.StepOutcomeRef;
 import io.harness.pms.sdk.core.data.Outcome;
 import io.harness.serializer.KryoSerializer;
-import io.harness.state.io.StepOutcomeRef;
 
 import software.wings.api.HttpStateExecutionData;
 
