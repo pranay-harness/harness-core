@@ -23,10 +23,9 @@ import io.harness.pms.execution.Status;
 import io.harness.pms.execution.TaskChainExecutableResponse;
 import io.harness.pms.execution.TaskMode;
 import io.harness.pms.plan.PlanNodeProto;
-import io.harness.pms.sdk.core.plan.PlanNode;
+import io.harness.pms.sdk.core.data.Metadata;
 import io.harness.pms.sdk.core.steps.io.StepInputPackage;
 import io.harness.pms.sdk.core.steps.io.StepResponse;
-import io.harness.pms.serializer.json.JsonOrchestrationUtils;
 import io.harness.registries.state.StepRegistry;
 import io.harness.serializer.KryoSerializer;
 import io.harness.tasks.TaskExecutor;
@@ -38,10 +37,8 @@ import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
 import com.google.protobuf.ByteString;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
-import java.util.stream.Collectors;
 import lombok.NonNull;
 
 @SuppressWarnings({"rawtypes", "unchecked"})
@@ -117,10 +114,8 @@ public class TaskChainStrategy implements TaskExecuteStrategy {
                                     .setPassThroughData(ByteString.copyFrom(
                                         kryoSerializer.asBytes(taskChainResponse.getPassThroughData())))
                                     .build())
-                  .putAllMetadata(taskChainResponse.getMetadata() == null
-                          ? new HashMap<>()
-                          : taskChainResponse.getMetadata().entrySet().stream().collect(
-                              Collectors.toMap(Map.Entry::getKey, v -> v.getValue().toJson())))
+                  .setMetadata(taskChainResponse.getMetadata() == null ? new Metadata() {}.toJson()
+                                                                       : taskChainResponse.getMetadata().toJson())
                   .build()));
       StepResponse stepResponse = taskChainExecutable.finalizeExecution(ambiance,
           nodeExecutionService.extractResolvedStepParameters(nodeExecution), taskChainResponse.getPassThroughData(),
@@ -143,10 +138,8 @@ public class TaskChainStrategy implements TaskExecuteStrategy {
                                   .setPassThroughData(ByteString.copyFrom(
                                       kryoSerializer.asBytes(taskChainResponse.getPassThroughData())))
                                   .build())
-                .putAllMetadata(taskChainResponse.getMetadata() == null
-                        ? new HashMap<>()
-                        : taskChainResponse.getMetadata().entrySet().stream().collect(
-                            Collectors.toMap(Map.Entry::getKey, v -> v.getValue().toJson())))
+                .setMetadata(taskChainResponse.getMetadata() == null ? new Metadata() {}.toJson()
+                                                                     : taskChainResponse.getMetadata().toJson())
                 .build()));
     NotifyCallback notifyCallback = EngineResumeCallback.builder().nodeExecutionId(nodeExecution.getUuid()).build();
     ProgressCallback progressCallback =

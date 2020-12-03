@@ -13,7 +13,7 @@ message ExecutableResponse {
     TaskExecutableResponse task = 5;
     TaskChainExecutableResponse taskChain = 6;
   }
-  map<string, string> metadata = 7;
+  string metadata = 7;
 }
 
 message AsyncExecutableResponse {

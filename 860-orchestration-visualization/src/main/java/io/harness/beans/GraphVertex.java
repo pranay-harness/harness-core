@@ -14,7 +14,6 @@ import io.harness.pms.steps.SkipType;
 import io.harness.tasks.ProgressData;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
-import com.google.protobuf.ByteString;
 import java.io.Serializable;
 import java.time.Duration;
 import java.util.List;
@@ -23,7 +22,6 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import net.sf.json.JSON;
 
 @OwnedBy(CDC)
 @Data
@@ -47,7 +45,7 @@ public class GraphVertex implements Serializable {
   private Map<String, Object> stepParameters;
   private ExecutionMode mode;
 
-  private List<Map<String, Metadata>> executableResponsesMetadata;
+  private List<Metadata> executableResponsesMetadata;
   private List<InterruptEffect> interruptHistories;
   private List<Outcome> outcomes;
   private List<String> retryIds;
