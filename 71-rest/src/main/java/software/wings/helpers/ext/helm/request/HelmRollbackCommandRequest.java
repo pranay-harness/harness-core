@@ -6,6 +6,7 @@ import io.harness.security.encryption.EncryptedDataDetail;
 
 import software.wings.beans.GitConfig;
 import software.wings.beans.GitFileConfig;
+import software.wings.beans.HelmCommandFlag;
 import software.wings.beans.container.HelmChartSpecification;
 import software.wings.helpers.ext.k8s.request.K8sDelegateManifestConfig;
 import software.wings.service.impl.ContainerServiceParams;
@@ -35,12 +36,13 @@ public class HelmRollbackCommandRequest extends HelmCommandRequest {
       String activityId, ContainerServiceParams containerServiceParams, String releaseName, int newReleaseVersion,
       int prevReleaseVersion, int rollbackVersion, long timeoutInMillis, HelmChartSpecification chartSpecification,
       String repoName, GitConfig gitConfig, List<EncryptedDataDetail> encryptedDataDetails,
-      LogCallback executionLogCallback, String commandFlags, K8sDelegateManifestConfig sourceRepoConfig,
-      HelmVersion helmVersion, String ocPath, String workingDir, GitFileConfig gitFileConfig,
-      List<String> variableOverridesYamlFiles, boolean k8SteadyStateCheckEnabled, boolean deprecateFabric8Enabled) {
+      LogCallback executionLogCallback, String commandFlags, HelmCommandFlag helmCommandFlag,
+      K8sDelegateManifestConfig sourceRepoConfig, HelmVersion helmVersion, String ocPath, String workingDir,
+      GitFileConfig gitFileConfig, List<String> variableOverridesYamlFiles, boolean k8SteadyStateCheckEnabled,
+      boolean deprecateFabric8Enabled) {
     super(HelmCommandType.ROLLBACK, accountId, appId, kubeConfigLocation, commandName, activityId,
         containerServiceParams, releaseName, chartSpecification, repoName, gitConfig, encryptedDataDetails,
-        executionLogCallback, commandFlags, sourceRepoConfig, helmVersion, ocPath, workingDir,
+        executionLogCallback, commandFlags, helmCommandFlag, sourceRepoConfig, helmVersion, ocPath, workingDir,
         variableOverridesYamlFiles, gitFileConfig, k8SteadyStateCheckEnabled, deprecateFabric8Enabled);
     this.newReleaseVersion = newReleaseVersion;
     this.prevReleaseVersion = prevReleaseVersion;

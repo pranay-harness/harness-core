@@ -16,11 +16,13 @@ import static io.harness.rule.OwnerRule.ABOSII;
 import static io.harness.rule.OwnerRule.ACASIAN;
 import static io.harness.rule.OwnerRule.ADWAIT;
 import static io.harness.rule.OwnerRule.ANSHUL;
+import static io.harness.rule.OwnerRule.ARVIND;
 import static io.harness.rule.OwnerRule.SAHIL;
 import static io.harness.rule.OwnerRule.SATYAM;
 import static io.harness.rule.OwnerRule.VAIBHAV_SI;
 import static io.harness.rule.OwnerRule.YOGESH;
 
+import static software.wings.beans.HelmCommandFlagConstants.HelmSubCommand.TEMPLATE;
 import static software.wings.beans.appmanifest.StoreType.HelmChartRepo;
 import static software.wings.beans.appmanifest.StoreType.HelmSourceRepo;
 import static software.wings.beans.appmanifest.StoreType.KustomizeSourceRepo;
@@ -93,6 +95,7 @@ import io.harness.rule.Owner;
 import software.wings.WingsBaseTest;
 import software.wings.beans.GitConfig;
 import software.wings.beans.GitFileConfig;
+import software.wings.beans.HelmCommandFlag;
 import software.wings.beans.appmanifest.ManifestFile;
 import software.wings.beans.appmanifest.StoreType;
 import software.wings.beans.command.ExecutionLogCallback;
@@ -136,6 +139,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.ArgumentCaptor;
+import org.mockito.Captor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
@@ -145,6 +149,7 @@ import org.zeroturnaround.exec.ProcessResult;
 import org.zeroturnaround.exec.StartedProcess;
 import org.zeroturnaround.exec.stream.LogOutputStream;
 import wiremock.com.google.common.collect.ImmutableList;
+import wiremock.com.google.common.collect.ImmutableMap;
 import wiremock.com.google.common.collect.Lists;
 
 /*
@@ -173,6 +178,12 @@ public class K8sTaskHelperTest extends WingsBaseTest {
   private String deploymentYaml = "deployment.yaml";
   private String deploymentConfigYaml = "deployment-config.yaml";
   private String configMapYaml = "configMap.yaml";
+
+  @Captor private ArgumentCaptor<HelmCommandFlag> commandFlagCaptor;
+
+  private final String flagValue = "--flag-test-1";
+  private final HelmCommandFlag commandFlag =
+      HelmCommandFlag.builder().valueMap(ImmutableMap.of(TEMPLATE, flagValue)).build();
 
   @Inject @InjectMocks private K8sTaskHelperBase k8sTaskHelperBase;
   @Inject @InjectMocks private K8sTaskHelper helper;
@@ -349,8 +360,18 @@ public class K8sTaskHelperTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void testGetHelmV2CommandForRender() {
     String command = helper.getHelmCommandForRender(
-        "helm", "chart_location", "test-release", "default", " -f values-0.yaml", HelmVersion.V2);
+        "helm", "chart_location", "test-release", "default", " -f values-0.yaml", HelmVersion.V2, null);
     assertThat(command).doesNotContain("$").doesNotContain("{").doesNotContain("}");
+  }
+
+  @Test
+  @Owner(developers = ARVIND)
+  @Category(UnitTests.class)
+  public void testGetHelmV2CommandForRenderWithCommand() {
+    String command = helper.getHelmCommandForRender(
+        "helm", "chart_location", "test-release", "default", " -f values-0.yaml", HelmVersion.V2, commandFlag);
+    assertThat(command).doesNotContain("$").doesNotContain("{").doesNotContain("}");
+    assertThat(command).contains(flagValue);
   }
 
   @Test
@@ -358,8 +379,18 @@ public class K8sTaskHelperTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void testGetHelmV2CommandForRenderOneChartFile() {
     String command = helper.getHelmCommandForRender("helm", "chart_location", "test-release", "default",
-        " -f values-0.yaml", "template/service.yaml", HelmVersion.V2);
+        " -f values-0.yaml", "template/service.yaml", HelmVersion.V2, null);
     assertThat(command).doesNotContain("$").doesNotContain("{").doesNotContain("}");
+  }
+
+  @Test
+  @Owner(developers = ARVIND)
+  @Category(UnitTests.class)
+  public void testGetHelmV2CommandForRenderOneChartFileWithCommandFlags() {
+    String command = helper.getHelmCommandForRender("helm", "chart_location", "test-release", "default",
+        " -f values-0.yaml", "template/service.yaml", HelmVersion.V2, commandFlag);
+    assertThat(command).doesNotContain("$").doesNotContain("{").doesNotContain("}");
+    assertThat(command).contains(flagValue);
   }
 
   @Test
@@ -367,8 +398,18 @@ public class K8sTaskHelperTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void testGetHelmV3CommandForRender() {
     String command = helper.getHelmCommandForRender(
-        "helm", "chart_location", "test-release", "default", " -f values-0.yaml", HelmVersion.V3);
+        "helm", "chart_location", "test-release", "default", " -f values-0.yaml", HelmVersion.V3, null);
     assertThat(command).doesNotContain("$").doesNotContain("{").doesNotContain("}");
+  }
+
+  @Test
+  @Owner(developers = ARVIND)
+  @Category(UnitTests.class)
+  public void testGetHelmV3CommandForRenderWithCommand() {
+    String command = helper.getHelmCommandForRender(
+        "helm", "chart_location", "test-release", "default", " -f values-0.yaml", HelmVersion.V3, commandFlag);
+    assertThat(command).doesNotContain("$").doesNotContain("{").doesNotContain("}");
+    assertThat(command).contains(flagValue);
   }
 
   @Test
@@ -376,8 +417,18 @@ public class K8sTaskHelperTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void testGetHelmV3CommandForRenderOneChartFile() {
     String command = helper.getHelmCommandForRender("helm", "chart_location", "test-release", "default",
-        " -f values-0.yaml", "template/service.yaml", HelmVersion.V3);
+        " -f values-0.yaml", "template/service.yaml", HelmVersion.V3, null);
     assertThat(command).doesNotContain("$").doesNotContain("{").doesNotContain("}");
+  }
+
+  @Test
+  @Owner(developers = ARVIND)
+  @Category(UnitTests.class)
+  public void testGetHelmV3CommandForRenderOneChartFileWithCommandFlag() {
+    String command = helper.getHelmCommandForRender("helm", "chart_location", "test-release", "default",
+        " -f values-0.yaml", "template/service.yaml", HelmVersion.V3, commandFlag);
+    assertThat(command).doesNotContain("$").doesNotContain("{").doesNotContain("}");
+    assertThat(command).contains(flagValue);
   }
 
   @Owner(developers = ANSHUL)
@@ -973,11 +1024,11 @@ public class K8sTaskHelperTest extends WingsBaseTest {
         .isTrue();
 
     verify(mockHelmTaskHelper, times(1)).printHelmChartInfoInExecutionLogs(helmChartConfigParams, logCallback);
-    verify(mockHelmTaskHelper, times(1)).downloadChartFiles(eq(helmChartConfigParams), eq("dir"), anyLong());
+    verify(mockHelmTaskHelper, times(1)).downloadChartFiles(eq(helmChartConfigParams), eq("dir"), anyLong(), eq(null));
 
     doThrow(new RuntimeException())
         .when(mockHelmTaskHelper)
-        .downloadChartFiles(any(HelmChartConfigParams.class), anyString(), anyLong());
+        .downloadChartFiles(any(HelmChartConfigParams.class), anyString(), anyLong(), eq(null));
     assertThat(helper.fetchManifestFilesAndWriteToDirectory(K8sDelegateManifestConfig.builder()
                                                                 .manifestStoreTypes(StoreType.HelmChartRepo)
                                                                 .helmChartConfigParams(helmChartConfigParams)
@@ -1216,10 +1267,14 @@ public class K8sTaskHelperTest extends WingsBaseTest {
     doReturn(processResult).when(spyHelperBase).executeShellCommand(any(), any(), any(), anyLong());
 
     final List<FileData> manifestFiles = spyHelper.renderTemplateForGivenFiles(k8sDelegateTaskParams,
-        K8sDelegateManifestConfig.builder().manifestStoreTypes(HelmSourceRepo).build(), ".", new ArrayList<>(),
-        new ArrayList<>(), "release", "namespace", executionLogCallback, K8sApplyTaskParameters.builder().build());
+        K8sDelegateManifestConfig.builder().manifestStoreTypes(HelmSourceRepo).helmCommandFlag(commandFlag).build(),
+        ".", new ArrayList<>(), new ArrayList<>(), "release", "namespace", executionLogCallback,
+        K8sApplyTaskParameters.builder().build());
 
     assertThat(manifestFiles.size()).isEqualTo(0);
+    verify(spyHelper).renderTemplateForHelmChartFiles(any(), anyString(), any(), any(), anyString(), anyString(), any(),
+        any(), anyLong(), commandFlagCaptor.capture());
+    assertThat(commandFlagCaptor.getValue()).isEqualTo(commandFlag);
   }
 
   @Test
@@ -1595,7 +1650,8 @@ public class K8sTaskHelperTest extends WingsBaseTest {
 
     doThrow(new HelmClientException(exceptionMessage, WingsException.USER))
         .when(mockHelmTaskHelper)
-        .downloadChartFiles(manifestConfig.getHelmChartConfigParams(), manifestDirectory, LONG_TIMEOUT_INTERVAL);
+        .downloadChartFiles(manifestConfig.getHelmChartConfigParams(), manifestDirectory, LONG_TIMEOUT_INTERVAL,
+            manifestConfig.getHelmCommandFlag());
     helper.fetchManifestFilesAndWriteToDirectory(
         manifestConfig, manifestDirectory, executionLogCallback, LONG_TIMEOUT_INTERVAL);
 

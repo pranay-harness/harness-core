@@ -54,8 +54,8 @@ public class HelmValuesFetchTask extends AbstractDelegateRunnableTask {
 
       HelmChartConfigParams helmChartConfigParams = taskParams.getHelmChartConfigTaskParams();
 
-      String valuesFileContent =
-          helmTaskHelper.getValuesYamlFromChart(helmChartConfigParams, taskParams.getTimeoutInMillis());
+      String valuesFileContent = helmTaskHelper.getValuesYamlFromChart(
+          helmChartConfigParams, taskParams.getTimeoutInMillis(), taskParams.getHelmCommandFlag());
       helmTaskHelper.printHelmChartInfoInExecutionLogs(helmChartConfigParams, executionLogCallback);
 
       if (null == valuesFileContent) {

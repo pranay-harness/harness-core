@@ -6,6 +6,7 @@ import io.harness.security.encryption.EncryptedDataDetail;
 
 import software.wings.beans.GitConfig;
 import software.wings.beans.GitFileConfig;
+import software.wings.beans.HelmCommandFlag;
 import software.wings.beans.container.HelmChartSpecification;
 import software.wings.helpers.ext.k8s.request.K8sDelegateManifestConfig;
 import software.wings.service.impl.ContainerServiceParams;
@@ -38,12 +39,12 @@ public class HelmInstallCommandRequest extends HelmCommandRequest {
       HelmChartSpecification chartSpecification, int newReleaseVersion, int prevReleaseVersion, String namespace,
       long timeoutInMillis, Map<String, String> valueOverrides, List<String> variableOverridesYamlFiles,
       String repoName, GitConfig gitConfig, GitFileConfig gitFileConfig, List<EncryptedDataDetail> encryptedDataDetails,
-      LogCallback executionLogCallback, String commandFlags, K8sDelegateManifestConfig sourceRepoConfig,
-      HelmVersion helmVersion, String ocPath, String workingDir, boolean k8SteadyStateCheckEnabled,
-      boolean deprecateFabric8Enabled) {
+      LogCallback executionLogCallback, String commandFlags, HelmCommandFlag helmCommandFlag,
+      K8sDelegateManifestConfig sourceRepoConfig, HelmVersion helmVersion, String ocPath, String workingDir,
+      boolean k8SteadyStateCheckEnabled, boolean deprecateFabric8Enabled) {
     super(HelmCommandType.INSTALL, accountId, appId, kubeConfigLocation, commandName, activityId,
         containerServiceParams, releaseName, chartSpecification, repoName, gitConfig, encryptedDataDetails,
-        executionLogCallback, commandFlags, sourceRepoConfig, helmVersion, ocPath, workingDir,
+        executionLogCallback, commandFlags, helmCommandFlag, sourceRepoConfig, helmVersion, ocPath, workingDir,
         variableOverridesYamlFiles, gitFileConfig, k8SteadyStateCheckEnabled, deprecateFabric8Enabled);
     this.newReleaseVersion = newReleaseVersion;
     this.prevReleaseVersion = prevReleaseVersion;

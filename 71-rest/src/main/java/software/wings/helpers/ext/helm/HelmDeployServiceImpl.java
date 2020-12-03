@@ -286,10 +286,9 @@ public class HelmDeployServiceImpl implements HelmDeployService {
     List<FileData> manifestFiles = k8sTaskHelper.renderTemplateForHelm(
         helmClient.getHelmPath(commandRequest.getHelmVersion()), workingDirPath, variableOverridesYamlFiles,
         commandRequest.getReleaseName(), commandRequest.getContainerServiceParams().getNamespace(),
-        (ExecutionLogCallback) executionLogCallback, commandRequest.getHelmVersion(), timeoutInMillis);
+        executionLogCallback, commandRequest.getHelmVersion(), timeoutInMillis, commandRequest.getHelmCommandFlag());
 
-    List<KubernetesResource> resources =
-        k8sTaskHelperBase.readManifests(manifestFiles, (ExecutionLogCallback) executionLogCallback);
+    List<KubernetesResource> resources = k8sTaskHelperBase.readManifests(manifestFiles, executionLogCallback);
     k8sTaskHelperBase.setNamespaceToKubernetesResourcesIfRequired(
         resources, commandRequest.getContainerServiceParams().getNamespace());
 
@@ -340,7 +339,8 @@ public class HelmDeployServiceImpl implements HelmDeployService {
     HelmChartSpecification helmChartSpecification = commandRequest.getChartSpecification();
     String workingDirectory = Paths.get(getWorkingDirectory(commandRequest)).toString();
 
-    helmTaskHelper.downloadChartFiles(helmChartSpecification, workingDirectory, commandRequest, timeoutInMillis);
+    helmTaskHelper.downloadChartFiles(
+        helmChartSpecification, workingDirectory, commandRequest, timeoutInMillis, commandRequest.getHelmCommandFlag());
     String chartName = isBlank(helmChartSpecification.getChartUrl())
         ? excludeRepoNameFromChartName(helmChartSpecification.getChartName())
         : helmChartSpecification.getChartName();
@@ -364,7 +364,8 @@ public class HelmDeployServiceImpl implements HelmDeployService {
     HelmChartConfigParams helmChartConfigParams = commandRequest.getRepoConfig().getHelmChartConfigParams();
     String workingDirectory = Paths.get(getWorkingDirectory(commandRequest)).toString();
 
-    helmTaskHelper.downloadChartFiles(helmChartConfigParams, workingDirectory, timeoutInMillis);
+    helmTaskHelper.downloadChartFiles(
+        helmChartConfigParams, workingDirectory, timeoutInMillis, commandRequest.getHelmCommandFlag());
     commandRequest.setWorkingDir(Paths.get(workingDirectory, helmChartConfigParams.getChartName()).toString());
 
     commandRequest.getExecutionLogCallback().saveExecutionLog("Helm Chart Repo checked-out locally");

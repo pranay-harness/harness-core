@@ -1,55 +1,78 @@
 package software.wings.beans;
 
-import static java.lang.String.format;
+import static io.harness.k8s.model.HelmVersion.V2;
+import static io.harness.k8s.model.HelmVersion.V3;
 
-import io.harness.exception.InvalidRequestException;
+import static software.wings.beans.appmanifest.StoreType.HelmChartRepo;
+import static software.wings.beans.appmanifest.StoreType.HelmSourceRepo;
+
 import io.harness.k8s.model.HelmVersion;
 
+import software.wings.api.DeploymentType;
+import software.wings.beans.appmanifest.StoreType;
 import software.wings.helpers.ext.helm.HelmCommandTemplateFactory.HelmCliCommandType;
 
 import com.google.common.collect.ImmutableSet;
+import java.util.Arrays;
 import java.util.Set;
-import javax.validation.constraints.NotNull;
+import java.util.stream.Collectors;
 import lombok.Getter;
 
 public final class HelmCommandFlagConstants {
   @Getter
   public enum HelmSubCommand {
-    INSTALL(ImmutableSet.of(HelmCliCommandType.INSTALL.name()), "install"),
-    UPGRADE(ImmutableSet.of(HelmCliCommandType.UPGRADE.name()), "upgrade"),
-    ROLLBACK(ImmutableSet.of(HelmCliCommandType.ROLLBACK.name()), "rollback"),
-    HISTORY(ImmutableSet.of(HelmCliCommandType.RELEASE_HISTORY.name()), "hist"),
-    DELETE(ImmutableSet.of(HelmCliCommandType.DELETE_RELEASE.name()), "delete"),
-    UNINSTALL(ImmutableSet.of(HelmCliCommandType.DELETE_RELEASE.name()), "uninstall"),
-    LIST(ImmutableSet.of(HelmCliCommandType.LIST_RELEASE.name()), "list"),
-    VERSION(ImmutableSet.of(HelmCliCommandType.VERSION.name()), "version"),
-    PULL(ImmutableSet.of(HelmCliCommandType.FETCH.name()), "pull"),
-    FETCH(ImmutableSet.of(HelmCliCommandType.FETCH.name()), "fetch"),
+    INSTALL(ImmutableSet.of(HelmCliCommandType.INSTALL.name()), ImmutableSet.of(V2, V3),
+        ImmutableSet.of(DeploymentType.HELM), ImmutableSet.of(HelmSourceRepo, HelmChartRepo)),
+    UPGRADE(ImmutableSet.of(HelmCliCommandType.UPGRADE.name()), ImmutableSet.of(V2, V3),
+        ImmutableSet.of(DeploymentType.HELM), ImmutableSet.of(HelmSourceRepo, HelmChartRepo)),
+    ROLLBACK(ImmutableSet.of(HelmCliCommandType.ROLLBACK.name()), ImmutableSet.of(V2, V3),
+        ImmutableSet.of(DeploymentType.HELM), ImmutableSet.of(HelmSourceRepo, HelmChartRepo)),
+    HISTORY(ImmutableSet.of(HelmCliCommandType.RELEASE_HISTORY.name()), ImmutableSet.of(V2, V3),
+        ImmutableSet.of(DeploymentType.HELM), ImmutableSet.of(HelmSourceRepo, HelmChartRepo)),
+    DELETE(ImmutableSet.of(HelmCliCommandType.DELETE_RELEASE.name()), ImmutableSet.of(V2),
+        ImmutableSet.of(DeploymentType.HELM), ImmutableSet.of(HelmSourceRepo, HelmChartRepo)),
+    UNINSTALL(ImmutableSet.of(HelmCliCommandType.DELETE_RELEASE.name()), ImmutableSet.of(V3),
+        ImmutableSet.of(DeploymentType.HELM), ImmutableSet.of(HelmSourceRepo, HelmChartRepo)),
+    LIST(ImmutableSet.of(HelmCliCommandType.LIST_RELEASE.name()), ImmutableSet.of(V2, V3),
+        ImmutableSet.of(DeploymentType.HELM), ImmutableSet.of(HelmSourceRepo, HelmChartRepo)),
+    VERSION(ImmutableSet.of(HelmCliCommandType.VERSION.name()), ImmutableSet.of(V2, V3),
+        ImmutableSet.of(DeploymentType.HELM, DeploymentType.KUBERNETES),
+        ImmutableSet.of(HelmSourceRepo, HelmChartRepo)),
+    PULL(ImmutableSet.of(HelmCliCommandType.FETCH.name()), ImmutableSet.of(V3),
+        ImmutableSet.of(DeploymentType.HELM, DeploymentType.KUBERNETES), ImmutableSet.of(HelmSourceRepo)),
+    FETCH(ImmutableSet.of(HelmCliCommandType.FETCH.name()), ImmutableSet.of(V2),
+        ImmutableSet.of(DeploymentType.HELM, DeploymentType.KUBERNETES), ImmutableSet.of(HelmSourceRepo)),
     TEMPLATE(
         ImmutableSet.of(HelmCliCommandType.RENDER_CHART.name(), HelmCliCommandType.RENDER_SPECIFIC_CHART_FILE.name()),
-        "template");
+        ImmutableSet.of(V2, V3), ImmutableSet.of(DeploymentType.HELM, DeploymentType.KUBERNETES),
+        ImmutableSet.of(HelmSourceRepo, HelmChartRepo));
 
     private final Set<String> commandTypes;
-    private final String description;
+    private final Set<HelmVersion> helmVersions;
+    private final Set<DeploymentType> deploymentTypes;
+    private final Set<StoreType> storeTypes;
 
-    HelmSubCommand(Set<String> commandTypes, String description) {
+    HelmSubCommand(Set<String> commandTypes, Set<HelmVersion> helmVersions, Set<DeploymentType> deploymentTypes,
+        Set<StoreType> storeTypes) {
       this.commandTypes = commandTypes;
-      this.description = description;
+      this.helmVersions = helmVersions;
+      this.deploymentTypes = deploymentTypes;
+      this.storeTypes = storeTypes;
     }
   }
 
-  public static Set<HelmSubCommand> getHelmSubCommands(@NotNull HelmVersion version) {
-    switch (version) {
-      case V2:
-        return ImmutableSet.of(HelmSubCommand.INSTALL, HelmSubCommand.UPGRADE, HelmSubCommand.ROLLBACK,
-            HelmSubCommand.HISTORY, HelmSubCommand.DELETE, HelmSubCommand.LIST, HelmSubCommand.VERSION,
-            HelmSubCommand.FETCH, HelmSubCommand.TEMPLATE);
-      case V3:
-        return ImmutableSet.of(HelmSubCommand.INSTALL, HelmSubCommand.UPGRADE, HelmSubCommand.ROLLBACK,
-            HelmSubCommand.HISTORY, HelmSubCommand.UNINSTALL, HelmSubCommand.LIST, HelmSubCommand.VERSION,
-            HelmSubCommand.PULL, HelmSubCommand.TEMPLATE);
-      default:
-        throw new InvalidRequestException(format("Version [%s] is not supported", version));
-    }
+  public static Set<HelmSubCommand> getFilteredHelmSubCommands(
+      HelmVersion version, DeploymentType deploymentType, StoreType storeType) {
+    return Arrays.stream(HelmSubCommand.values())
+        .filter(sc
+            -> sc.getHelmVersions().contains(version) && sc.getDeploymentTypes().contains(deploymentType)
+                && sc.getStoreTypes().contains(storeType))
+        .collect(Collectors.toSet());
+  }
+
+  public static Set<HelmSubCommand> getHelmSubCommands(HelmVersion version) {
+    return Arrays.stream(HelmSubCommand.values())
+        .filter(sc -> sc.getHelmVersions().contains(version))
+        .collect(Collectors.toSet());
   }
 }

@@ -38,6 +38,7 @@ import io.harness.eraro.ErrorCode;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.ff.FeatureFlagService;
+import io.harness.k8s.model.HelmVersion;
 import io.harness.observer.Subject;
 import io.harness.queue.QueuePublisher;
 import io.harness.tasks.Cd1SetupFields;
@@ -86,6 +87,7 @@ import software.wings.service.intfc.ownership.OwnedByApplicationManifest;
 import software.wings.service.intfc.yaml.YamlDirectoryService;
 import software.wings.service.intfc.yaml.YamlPushService;
 import software.wings.utils.ApplicationManifestUtils;
+import software.wings.utils.CommandFlagUtils;
 import software.wings.yaml.directory.DirectoryNode;
 import software.wings.yaml.directory.DirectoryPath;
 
@@ -924,6 +926,7 @@ public class ApplicationManifestServiceImpl implements ApplicationManifestServic
       throw new InvalidRequestException("Application manifest kind cannot be empty", USER);
     }
 
+    validateCommandFlags(applicationManifest);
     validateAppManifestForEnvironment(applicationManifest);
 
     switch (applicationManifest.getStoreType()) {
@@ -949,6 +952,17 @@ public class ApplicationManifestServiceImpl implements ApplicationManifestServic
 
       default:
         unhandled(applicationManifest.getStoreType());
+    }
+  }
+
+  private void validateCommandFlags(ApplicationManifest applicationManifest) {
+    if (isBlank(applicationManifest.getServiceId()) || isBlank(applicationManifest.getAppId())) {
+      return;
+    }
+    HelmVersion helmVersion = serviceResourceService.getHelmVersionWithDefault(
+        applicationManifest.getAppId(), applicationManifest.getServiceId());
+    if (null != helmVersion) {
+      CommandFlagUtils.validateHelmCommandFlags(applicationManifest.getHelmCommandFlag(), helmVersion);
     }
   }
 

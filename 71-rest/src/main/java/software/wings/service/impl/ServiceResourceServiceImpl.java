@@ -2749,6 +2749,10 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
   @Override
   public HelmVersion getHelmVersionWithDefault(String appId, String serviceId) {
     Service service = get(appId, serviceId);
+    return getHelmVersionWithDefault(service);
+  }
+
+  private HelmVersion getHelmVersionWithDefault(Service service) {
     if (service.getHelmVersion() != null) {
       return service.getHelmVersion();
     } else {
@@ -3072,10 +3076,13 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
   }
 
   @Override
-  public Set<HelmSubCommand> getHelmCommandFlags(HelmVersion version, String appId, String serviceId) {
+  public Set<HelmSubCommand> getHelmCommandFlags(
+      HelmVersion version, String appId, String serviceId, StoreType storeType) {
+    Service service = get(appId, serviceId);
     if (null == version) {
-      version = getHelmVersionWithDefault(appId, serviceId);
+      version = getHelmVersionWithDefault(service);
     }
-    return HelmCommandFlagConstants.getHelmSubCommands(version);
+
+    return HelmCommandFlagConstants.getFilteredHelmSubCommands(version, service.getDeploymentType(), storeType);
   }
 }

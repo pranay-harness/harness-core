@@ -6,6 +6,7 @@ import io.harness.security.encryption.EncryptedDataDetail;
 
 import software.wings.beans.GitConfig;
 import software.wings.beans.GitFileConfig;
+import software.wings.beans.HelmCommandFlag;
 import software.wings.service.impl.ContainerServiceParams;
 
 import java.util.List;
@@ -27,11 +28,12 @@ public class HelmReleaseHistoryCommandRequest extends HelmCommandRequest {
   public HelmReleaseHistoryCommandRequest(String accountId, String appId, String kubeConfigLocation, String commandName,
       String activityId, ContainerServiceParams containerServiceParams, String releaseName, GitConfig gitConfig,
       List<EncryptedDataDetail> encryptedDataDetails, LogCallback executionLogCallback, String commandFlags,
-      HelmVersion helmVersion, String ocPath, String workingDir, List<String> variableOverridesYamlFiles,
-      GitFileConfig gitFileConfig, boolean k8SteadyStateCheckEnabled, boolean deprecateFabric8Enabled) {
+      HelmCommandFlag helmCommandFlag, HelmVersion helmVersion, String ocPath, String workingDir,
+      List<String> variableOverridesYamlFiles, GitFileConfig gitFileConfig, boolean k8SteadyStateCheckEnabled,
+      boolean deprecateFabric8Enabled) {
     super(HelmCommandType.RELEASE_HISTORY, accountId, appId, kubeConfigLocation, commandName, activityId,
         containerServiceParams, releaseName, null, null, gitConfig, encryptedDataDetails, executionLogCallback,
-        commandFlags, null, helmVersion, ocPath, workingDir, variableOverridesYamlFiles, gitFileConfig,
+        commandFlags, helmCommandFlag, null, helmVersion, ocPath, workingDir, variableOverridesYamlFiles, gitFileConfig,
         k8SteadyStateCheckEnabled, deprecateFabric8Enabled);
   }
 }

@@ -14,7 +14,7 @@ import lombok.EqualsAndHashCode;
 @Data
 @EqualsAndHashCode(callSuper = true)
 public class K8sRollingDeployTaskParameters extends K8sTaskParameters implements ManifestAwareTaskParams {
-  private K8sDelegateManifestConfig k8sDelegateManifestConfig;
+  @Expression(ALLOW_SECRETS) private K8sDelegateManifestConfig k8sDelegateManifestConfig;
   @Expression(ALLOW_SECRETS) private List<String> valuesYamlList;
   private boolean isInCanaryWorkflow;
   private boolean skipDryRun;

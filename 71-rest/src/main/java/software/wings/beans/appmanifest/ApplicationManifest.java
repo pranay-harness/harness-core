@@ -9,9 +9,11 @@ import io.harness.persistence.AccountAccess;
 import software.wings.beans.Base;
 import software.wings.beans.GitFileConfig;
 import software.wings.beans.HelmChartConfig;
+import software.wings.beans.HelmCommandFlag;
 import software.wings.helpers.ext.kustomize.KustomizeConfig;
 import software.wings.yaml.BaseEntityYaml;
 
+import javax.annotation.Nullable;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -39,6 +41,7 @@ public class ApplicationManifest extends Base implements AccountAccess {
   private GitFileConfig gitFileConfig;
   private HelmChartConfig helmChartConfig;
   private KustomizeConfig kustomizeConfig;
+  @Nullable private HelmCommandFlag helmCommandFlag;
 
   private Boolean pollForChanges;
   @Transient private String serviceName;
@@ -74,16 +77,19 @@ public class ApplicationManifest extends Base implements AccountAccess {
     private HelmChartConfig helmChartConfig;
     private KustomizeConfig kustomizeConfig;
     private Boolean pollForChanges;
+    private HelmCommandFlag helmCommandFlag;
 
     @Builder
     public Yaml(String type, String harnessApiVersion, String storeType, GitFileConfig gitFileConfig,
-        HelmChartConfig helmChartConfig, KustomizeConfig kustomizeConfig, Boolean pollForChanges) {
+        HelmChartConfig helmChartConfig, KustomizeConfig kustomizeConfig, Boolean pollForChanges,
+        HelmCommandFlag helmCommandFlag) {
       super(type, harnessApiVersion);
       this.storeType = storeType;
       this.gitFileConfig = gitFileConfig;
       this.helmChartConfig = helmChartConfig;
       this.kustomizeConfig = kustomizeConfig;
       this.pollForChanges = pollForChanges;
+      this.helmCommandFlag = helmCommandFlag;
     }
   }
 }

@@ -8,6 +8,7 @@ import io.harness.delegate.task.ActivityAccess;
 import io.harness.delegate.task.TaskParameters;
 import io.harness.expression.Expression;
 
+import software.wings.beans.HelmCommandFlag;
 import software.wings.delegatetasks.validation.capabilities.HelmCommandCapability;
 import software.wings.service.impl.ContainerServiceParams;
 
@@ -25,6 +26,7 @@ public class HelmValuesFetchTaskParameters implements TaskParameters, ActivityAc
   private String workflowExecutionId;
   private boolean isBindTaskFeatureSet; // BIND_FETCH_FILES_TASK_TO_DELEGATE
   private long timeoutInMillis;
+  @Expression(ALLOW_SECRETS) private HelmCommandFlag helmCommandFlag;
 
   // This is to support helm v1
   private ContainerServiceParams containerServiceParams;
@@ -45,6 +47,7 @@ public class HelmValuesFetchTaskParameters implements TaskParameters, ActivityAc
       capabilities.add(HelmCommandCapability.builder()
                            .commandRequest(HelmInstallCommandRequest.builder()
                                                .commandFlags(getHelmCommandFlags())
+                                               .helmCommandFlag(getHelmCommandFlag())
                                                .helmVersion(getHelmChartConfigTaskParams().getHelmVersion())
                                                .containerServiceParams(getContainerServiceParams())
                                                .build())

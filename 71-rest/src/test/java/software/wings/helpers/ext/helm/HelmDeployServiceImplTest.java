@@ -11,6 +11,7 @@ import static io.harness.rule.OwnerRule.ANSHUL;
 import static io.harness.rule.OwnerRule.VAIBHAV_SI;
 import static io.harness.rule.OwnerRule.YOGESH;
 
+import static software.wings.beans.HelmCommandFlagConstants.HelmSubCommand.TEMPLATE;
 import static software.wings.helpers.ext.helm.HelmDeployServiceImpl.WORKING_DIR;
 import static software.wings.utils.WingsTestConstants.BRANCH_NAME;
 import static software.wings.utils.WingsTestConstants.COMMIT_REFERENCE;
@@ -70,6 +71,7 @@ import io.harness.rule.Owner;
 import software.wings.WingsBaseTest;
 import software.wings.beans.GitConfig;
 import software.wings.beans.GitFileConfig;
+import software.wings.beans.HelmCommandFlag;
 import software.wings.beans.appmanifest.StoreType;
 import software.wings.beans.command.ExecutionLogCallback;
 import software.wings.beans.command.HelmDummyCommandUnit;
@@ -119,8 +121,10 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.ArgumentCaptor;
+import org.mockito.Captor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import wiremock.com.google.common.collect.ImmutableMap;
 
 public class HelmDeployServiceImplTest extends WingsBaseTest {
   @Mock private HelmClient helmClient;
@@ -139,6 +143,12 @@ public class HelmDeployServiceImplTest extends WingsBaseTest {
   @Mock private KubernetesContainerService kubernetesContainerService;
   @Mock private HelmHelper helmHelper;
   @InjectMocks private HelmDeployServiceImpl helmDeployService;
+
+  @Captor private ArgumentCaptor<HelmCommandFlag> commandFlagCaptor;
+
+  private final String flagValue = "--flag-test-1";
+  private final HelmCommandFlag commandFlag =
+      HelmCommandFlag.builder().valueMap(ImmutableMap.of(TEMPLATE, flagValue)).build();
 
   private HelmDeployServiceImpl spyHelmDeployService = spy(new HelmDeployServiceImpl());
 
@@ -810,18 +820,20 @@ public class HelmDeployServiceImplTest extends WingsBaseTest {
             .sourceRepoConfig(K8sDelegateManifestConfig.builder()
                                   .helmChartConfigParams(HelmChartConfigParams.builder().chartName("foo").build())
                                   .build())
+            .helmCommandFlag(commandFlag)
             .build();
 
     helmDeployService.fetchChartRepo(request, LONG_TIMEOUT_INTERVAL);
 
     verify(helmTaskHelper, times(1))
-        .downloadChartFiles(
-            chartConfigParamsArgumentCaptor.capture(), stringArgumentCaptor.capture(), eq(LONG_TIMEOUT_INTERVAL));
+        .downloadChartFiles(chartConfigParamsArgumentCaptor.capture(), stringArgumentCaptor.capture(),
+            eq(LONG_TIMEOUT_INTERVAL), commandFlagCaptor.capture());
 
     HelmChartConfigParams helmChartConfigParams = chartConfigParamsArgumentCaptor.getValue();
     String directory = stringArgumentCaptor.getValue();
     assertThat(helmChartConfigParams).isNotNull();
     assertThat(directory).isNotEmpty();
+    assertThat(commandFlagCaptor.getValue()).isEqualTo(commandFlag);
   }
 
   @Test
