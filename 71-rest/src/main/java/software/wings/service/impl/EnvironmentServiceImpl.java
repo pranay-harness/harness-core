@@ -387,7 +387,8 @@ public class EnvironmentServiceImpl implements EnvironmentService, DataProvider 
       }
     }
 
-    wingsPersistence.update(savedEnvironment, updateOperations);
+    PersistenceValidator.duplicateCheck(
+        () -> wingsPersistence.update(savedEnvironment, updateOperations), EnvironmentKeys.name, environment.getName());
 
     Environment updatedEnvironment =
         wingsPersistence.getWithAppId(Environment.class, environment.getAppId(), environment.getUuid());
