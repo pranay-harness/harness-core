@@ -140,7 +140,7 @@ public class ConfigFileYamlHandler extends BaseYamlHandler<Yaml, ConfigFile> {
     }
 
     BoundedInputStream inputStream = null;
-    ConfigFile previous = get(accountId, yamlFilePath);
+    ConfigFile previous = get(accountId, yamlFilePath, changeContext);
     if (!yaml.isEncrypted()) {
       int index = yamlFilePath.lastIndexOf(PATH_DELIMITER);
       if (index != -1) {
@@ -216,12 +216,23 @@ public class ConfigFileYamlHandler extends BaseYamlHandler<Yaml, ConfigFile> {
   }
 
   @Override
+  public ConfigFile get(String accountId, String yamlFilePath, ChangeContext<Yaml> changeContext) {
+    Yaml yaml = changeContext.getYaml();
+    String relativeFilePath = yaml.getTargetFilePath();
+    return getConfigFile(accountId, yamlFilePath, relativeFilePath);
+  }
+
+  @Override
   public ConfigFile get(String accountId, String yamlFilePath) {
+    String relativeFilePath = yamlHelper.getNameFromYamlFilePath(yamlFilePath);
+    return getConfigFile(accountId, yamlFilePath, relativeFilePath);
+  }
+
+  private ConfigFile getConfigFile(String accountId, String yamlFilePath, String relativeFilePath) {
     String appId = yamlHelper.getAppId(accountId, yamlFilePath);
     notNullCheck("Invalid Application for the yaml file:" + yamlFilePath, appId, USER);
     String serviceId = yamlHelper.getServiceId(appId, yamlFilePath);
     notNullCheck("Invalid Service for the yaml file:" + yamlFilePath, serviceId, USER);
-    String relativeFilePath = yamlHelper.getNameFromYamlFilePath(yamlFilePath);
     return configService.get(appId, serviceId, EntityType.SERVICE, relativeFilePath);
   }
 }

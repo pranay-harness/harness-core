@@ -61,7 +61,7 @@ public class ConfigFileOverrideYamlHandler extends BaseYamlHandler<OverrideYaml,
     OverrideYaml yaml = changeContext.getYaml();
     String targetFilePath = yaml.getTargetFilePath();
     String serviceName = yamlHelper.getServiceNameForFileOverride(yamlFilePath);
-    if (serviceName.equals(GLOBAL_SERVICE_NAME_FOR_YAML)) {
+    if (GLOBAL_SERVICE_NAME_FOR_YAML.equals(serviceName)) {
       configService.delete(optionalApplication.get().getUuid(), optionalEnvironment.get().getUuid(),
           EntityType.ENVIRONMENT, targetFilePath);
     } else {
@@ -112,7 +112,7 @@ public class ConfigFileOverrideYamlHandler extends BaseYamlHandler<OverrideYaml,
     OverrideYaml yaml = changeContext.getYaml();
 
     BoundedInputStream inputStream = null;
-    ConfigFile previous = get(accountId, yamlFilePath);
+    ConfigFile previous = get(accountId, yamlFilePath, changeContext);
     if (!yaml.isEncrypted()) {
       int index = yamlFilePath.lastIndexOf(PATH_DELIMITER);
       if (index != -1) {
@@ -156,7 +156,7 @@ public class ConfigFileOverrideYamlHandler extends BaseYamlHandler<OverrideYaml,
       configFile.setChecksumType(checksumType);
     }
 
-    if (serviceName.equals(GLOBAL_SERVICE_NAME_FOR_YAML)) {
+    if (GLOBAL_SERVICE_NAME_FOR_YAML.equals(serviceName)) {
       configFile.setEntityType(EntityType.ENVIRONMENT);
       configFile.setEntityId(envId);
       configFile.setEnvId(GLOBAL_ENV_ID);
@@ -193,14 +193,25 @@ public class ConfigFileOverrideYamlHandler extends BaseYamlHandler<OverrideYaml,
   }
 
   @Override
+  public ConfigFile get(String accountId, String yamlFilePath, ChangeContext<OverrideYaml> changeContext) {
+    ConfigFile.OverrideYaml yaml = changeContext.getYaml();
+    String relativeFilePath = yaml.getTargetFilePath();
+    return getConfigFile(accountId, yamlFilePath, relativeFilePath);
+  }
+
+  @Override
   public ConfigFile get(String accountId, String yamlFilePath) {
+    String relativeFilePath = yamlHelper.getNameFromYamlFilePath(yamlFilePath);
+    return getConfigFile(accountId, yamlFilePath, relativeFilePath);
+  }
+
+  private ConfigFile getConfigFile(String accountId, String yamlFilePath, String relativeFilePath) {
     String appId = yamlHelper.getAppId(accountId, yamlFilePath);
     notNullCheck("Invalid Application for the yaml file:" + yamlFilePath, appId, USER);
     String envId = yamlHelper.getEnvironmentId(appId, yamlFilePath);
     notNullCheck("Invalid Environment for the yaml file:" + yamlFilePath, envId, USER);
-    String relativeFilePath = yamlHelper.getNameFromYamlFilePath(yamlFilePath);
     String serviceName = yamlHelper.getServiceNameForFileOverride(yamlFilePath);
-    if (serviceName.equals(GLOBAL_SERVICE_NAME_FOR_YAML)) {
+    if (GLOBAL_SERVICE_NAME_FOR_YAML.equals(serviceName)) {
       return configService.get(appId, envId, EntityType.ENVIRONMENT, relativeFilePath);
     }
     Service service = yamlHelper.getServiceByName(appId, serviceName);

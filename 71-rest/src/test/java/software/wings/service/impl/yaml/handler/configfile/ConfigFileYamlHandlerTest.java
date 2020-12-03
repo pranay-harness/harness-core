@@ -15,6 +15,7 @@ import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -66,6 +67,7 @@ public class ConfigFileYamlHandlerTest extends YamlHandlerTestBase {
       "Setup/Applications/APP_NAME/Services/SERVICE_NAME/Config Files/configFile.txt";
   private static final String resourcePath = "./configfiles/Service";
   private static final String UNENCRYPTED_CONFIG_FILE_YAML = "unEncryptedConfigFile.yaml";
+  private static final String UNENCRYPTED_CONFIG_FILE_YAML_2 = "unEncryptedConfigFile2.yaml";
   private static final String ENCRYPTED_CONFIG_FILE_YAML = "encryptedConfigFile.yaml";
   private static final String CONFIG_FILE = "configFile.txt";
 
@@ -98,6 +100,28 @@ public class ConfigFileYamlHandlerTest extends YamlHandlerTestBase {
     testCrudConfigFiles(ENCRYPTED_CONFIG_FILE_YAML, null, yamlFilePath, configFilePath);
   }
 
+  @Test
+  @Owner(developers = INDER)
+  @Category(UnitTests.class)
+  public void testUpdateFromYamlWhenRelativePathHasBackSlashes() throws IOException {
+    String yamlString = getYamlFile(UNENCRYPTED_CONFIG_FILE_YAML_2);
+    ChangeContext<ConfigFile.Yaml> changeContext = getYamlChangeContext(yamlString, yamlFilePath);
+    ConfigFile.Yaml yaml = changeContext.getYaml();
+    boolean isEncrypted = yaml.isEncrypted();
+
+    List<ChangeContext> changeSetContext = getChangeSetContext(CONFIG_FILE, configFilePath, changeContext, isEncrypted);
+
+    testSetUp(yaml);
+
+    ConfigFile savedConfigFile = testSaveConfigFile(changeContext, isEncrypted, changeSetContext);
+
+    when(configService.get(eq(APP_ID), anyString(), any(), any())).thenReturn(savedConfigFile);
+
+    testUpdateYaml(changeContext, isEncrypted, changeSetContext, savedConfigFile);
+    verify(configService, times(2))
+        .get(eq(APP_ID), eq(SERVICE_ID), eq(EntityType.SERVICE), eq(yaml.getTargetFilePath()));
+  }
+
   private void testCrudConfigFiles(
       String yamlFileName, String configFileName, String yamlFilePath, String configFilePath) throws IOException {
     String yamlString = getYamlFile(yamlFileName);
@@ -105,42 +129,16 @@ public class ConfigFileYamlHandlerTest extends YamlHandlerTestBase {
     ConfigFile.Yaml yaml = changeContext.getYaml();
     boolean isEncrypted = yaml.isEncrypted();
 
-    List<ChangeContext> changeSetContext;
-    if (!isEncrypted && isNotEmpty(configFileName)) {
-      String configFileString = getYamlFile(configFileName);
-      ChangeContext configFileChangeContext = getChangeContextForConfigFile(configFilePath, configFileString);
+    List<ChangeContext> changeSetContext =
+        getChangeSetContext(configFileName, configFilePath, changeContext, isEncrypted);
 
-      changeSetContext = Arrays.asList(changeContext, configFileChangeContext);
-    } else {
-      changeSetContext = Collections.singletonList(changeContext);
-    }
+    testSetUp(yaml);
 
-    getApplication();
-    getService();
-    when(configService.get(eq(APP_ID), anyString(), any(), any())).thenReturn(null);
-    when(secretManager.getEncryptedDataFromYamlRef(yaml.getFileName(), ACCOUNT_ID))
-        .thenReturn(EncryptedData.builder().uuid(FILE_ID).build());
-    when(secretManager.getEncryptedYamlRef(ACCOUNT_ID, FILE_ID)).thenReturn("safeharness:FILE_ID");
-
-    configFileYamlHandler.upsertFromYaml(changeContext, changeSetContext);
-    verify(configService).save(captor.capture(), captorBoundedInputStream.capture());
-    ConfigFile savedConfigFile = captor.getValue();
-    assertThat(savedConfigFile).isNotNull();
-    assertThat(savedConfigFile.getEntityType()).isNotNull();
-    assertConfigFileEntityType(savedConfigFile);
-    verifyConfigFilePresence(isEncrypted);
-    verifyEncryptionFields(savedConfigFile, isEncrypted);
+    ConfigFile savedConfigFile = testSaveConfigFile(changeContext, isEncrypted, changeSetContext);
 
     when(configService.get(eq(APP_ID), anyString(), any(), any())).thenReturn(savedConfigFile);
 
-    configFileYamlHandler.upsertFromYaml(changeContext, changeSetContext);
-    verify(configService).update(captor.capture(), any());
-    ConfigFile updatedConfigFile = captor.getValue();
-    assertThat(updatedConfigFile).isNotNull();
-    assertThat(updatedConfigFile.getEntityType()).isNotNull().isEqualTo(savedConfigFile.getEntityType());
-    assertConfigFileEntityType(updatedConfigFile);
-    verifyConfigFilePresence(isEncrypted);
-    verifyEncryptionFields(savedConfigFile, isEncrypted);
+    ConfigFile updatedConfigFile = testUpdateYaml(changeContext, isEncrypted, changeSetContext, savedConfigFile);
 
     yaml = configFileYamlHandler.toYaml(updatedConfigFile, APP_ID);
 
@@ -152,6 +150,55 @@ public class ConfigFileYamlHandlerTest extends YamlHandlerTestBase {
 
     configFileYamlHandler.delete(changeContext);
     verify(configService).delete(eq(APP_ID), eq(SERVICE_ID), eq(EntityType.SERVICE), anyString());
+  }
+
+  private List<ChangeContext> getChangeSetContext(String configFileName, String configFilePath,
+      ChangeContext<ConfigFile.Yaml> changeContext, boolean isEncrypted) throws IOException {
+    List<ChangeContext> changeSetContext;
+    if (!isEncrypted && isNotEmpty(configFileName)) {
+      String configFileString = getYamlFile(configFileName);
+      ChangeContext configFileChangeContext = getChangeContextForConfigFile(configFilePath, configFileString);
+
+      changeSetContext = Arrays.asList(changeContext, configFileChangeContext);
+    } else {
+      changeSetContext = Collections.singletonList(changeContext);
+    }
+    return changeSetContext;
+  }
+
+  private ConfigFile testUpdateYaml(ChangeContext<ConfigFile.Yaml> changeContext, boolean isEncrypted,
+      List<ChangeContext> changeSetContext, ConfigFile savedConfigFile) {
+    configFileYamlHandler.upsertFromYaml(changeContext, changeSetContext);
+    verify(configService).update(captor.capture(), any());
+    ConfigFile updatedConfigFile = captor.getValue();
+    assertThat(updatedConfigFile).isNotNull();
+    assertThat(updatedConfigFile.getEntityType()).isNotNull().isEqualTo(savedConfigFile.getEntityType());
+    assertConfigFileEntityType(updatedConfigFile);
+    verifyConfigFilePresence(isEncrypted);
+    verifyEncryptionFields(savedConfigFile, isEncrypted);
+    return updatedConfigFile;
+  }
+
+  private ConfigFile testSaveConfigFile(
+      ChangeContext<ConfigFile.Yaml> changeContext, boolean isEncrypted, List<ChangeContext> changeSetContext) {
+    configFileYamlHandler.upsertFromYaml(changeContext, changeSetContext);
+    verify(configService).save(captor.capture(), captorBoundedInputStream.capture());
+    ConfigFile savedConfigFile = captor.getValue();
+    assertThat(savedConfigFile).isNotNull();
+    assertThat(savedConfigFile.getEntityType()).isNotNull();
+    assertConfigFileEntityType(savedConfigFile);
+    verifyConfigFilePresence(isEncrypted);
+    verifyEncryptionFields(savedConfigFile, isEncrypted);
+    return savedConfigFile;
+  }
+
+  private void testSetUp(ConfigFile.Yaml yaml) {
+    getApplication();
+    getService();
+    when(configService.get(eq(APP_ID), anyString(), any(), any())).thenReturn(null);
+    when(secretManager.getEncryptedDataFromYamlRef(yaml.getFileName(), ACCOUNT_ID))
+        .thenReturn(EncryptedData.builder().uuid(FILE_ID).build());
+    when(secretManager.getEncryptedYamlRef(ACCOUNT_ID, FILE_ID)).thenReturn("safeharness:FILE_ID");
   }
 
   private void verifyConfigFilePresence(boolean isEncrypted) {
