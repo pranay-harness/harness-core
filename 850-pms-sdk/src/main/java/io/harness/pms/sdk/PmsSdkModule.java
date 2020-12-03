@@ -29,10 +29,13 @@ import com.google.common.util.concurrent.ServiceManager;
 import com.google.inject.AbstractModule;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
+import com.google.inject.Key;
 import com.google.inject.Module;
 import com.google.inject.Provides;
 import com.google.inject.Singleton;
 import com.google.inject.TypeLiteral;
+import com.google.inject.name.Named;
+import com.google.inject.name.Names;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -41,6 +44,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import org.mongodb.morphia.converters.TypeConverter;
+import org.springframework.data.mongodb.core.MongoTemplate;
 
 public class PmsSdkModule {
   private static PmsSdkModule defaultInstance;
@@ -75,13 +79,16 @@ public class PmsSdkModule {
       }
     });
     modules.add(PmsSdkGrpcModule.getInstance());
+    modules.add(PmsSdkPersistenceModule.getInstance());
     modules.add(new ProviderModule() {
       @Provides
       @Singleton
       public QueueConsumer<NodeExecutionEvent> nodeExecutionEventQueueConsumer(
           Injector injector, PublisherConfiguration config) {
-        return QueueFactory.createQueueConsumer(injector, NodeExecutionEvent.class, ofSeconds(5),
-            Collections.singletonList(Collections.singletonList(serviceName)), config);
+        MongoTemplate sdkTemplate =
+            injector.getInstance(Key.get(MongoTemplate.class, Names.named("pmsSdkMongoTemplate")));
+        return QueueFactory.createNgQueueConsumer(injector, NodeExecutionEvent.class, ofSeconds(5),
+            Collections.singletonList(Collections.singletonList(serviceName)), config, sdkTemplate);
       }
 
       @Provides
@@ -136,7 +143,8 @@ public class PmsSdkModule {
 
       @Provides
       @Singleton
-      public MongoConfig mongoConfig(Set<Service> services) {
+      @Named("pmsSdkMongoConfig")
+      public MongoConfig mongoConfig() {
         return config.getMongoConfig();
       }
     });
