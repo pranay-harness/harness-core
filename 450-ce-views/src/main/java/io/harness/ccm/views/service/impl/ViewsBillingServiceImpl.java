@@ -61,6 +61,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -519,6 +520,7 @@ public class ViewsBillingServiceImpl implements ViewsBillingService {
                    .date(getFormattedDate(Instant.ofEpochMilli(e.getKey()), DATE_PATTERN_FOR_CHART))
                    .values(e.getValue())
                    .build())
+        .sorted(Comparator.comparing(QLCEViewTimeSeriesData::getTime))
         .collect(Collectors.toList());
   }
 

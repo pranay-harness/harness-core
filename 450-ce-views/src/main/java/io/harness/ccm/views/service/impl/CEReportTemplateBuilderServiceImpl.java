@@ -2,6 +2,7 @@ package io.harness.ccm.views.service.impl;
 
 import io.harness.ccm.views.entities.CEView;
 import io.harness.ccm.views.entities.ViewFieldIdentifier;
+import io.harness.ccm.views.entities.ViewTimeRangeType;
 import io.harness.ccm.views.graphql.QLCESortOrder;
 import io.harness.ccm.views.graphql.QLCEViewAggregateOperation;
 import io.harness.ccm.views.graphql.QLCEViewAggregation;
@@ -37,16 +38,19 @@ import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Base64;
+import java.util.Calendar;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.StringJoiner;
+import java.util.TimeZone;
 import java.util.stream.Collectors;
 import javax.imageio.ImageIO;
 import lombok.extern.slf4j.Slf4j;
 import org.jfree.chart.ChartFactory;
 import org.jfree.chart.JFreeChart;
+import org.jfree.chart.axis.CategoryLabelPositions;
 import org.jfree.chart.plot.CategoryPlot;
 import org.jfree.chart.plot.PlotOrientation;
 import org.jfree.chart.renderer.category.BarRenderer;
@@ -100,6 +104,7 @@ public class CEReportTemplateBuilderServiceImpl implements CEReportTemplateBuild
   private static final String ZERO = "0";
   private static final String WEEK = "WEEK";
   private static final String DAY = "DAY";
+  private static final String THIRTY_DAYS = "30 DAYS";
   private static final String MONTH = "MONTH";
   private static final long DAY_IN_MILLISECONDS = 86400000L;
   private static final String DEFAULT_TIMEZONE = "GMT";
@@ -137,15 +142,21 @@ public class CEReportTemplateBuilderServiceImpl implements CEReportTemplateBuild
       throw new InvalidRequestException("Exception while generating report. View doesn't exist.");
     }
     String entity = getEntity(view);
-    String period = getPeriod(reportId);
+    ViewTimeRangeType rangeType = view.getViewTimeRange().getViewTimeRangeType();
+    String period = getPeriod(rangeType);
     long startOfDay = getStartOfDayTimestamp(1);
     List<QLCEViewAggregation> aggregationFunction = getTotalCostAggregation();
     List<QLCEViewSortCriteria> sortCriteria = getSortCriteria();
     List<QLCEViewFilterWrapper> filters = new ArrayList<>();
     filters.add(getViewFilter(viewId));
-    filters.add(getTimeFilter(
-        getStartTime(startOfDay, getTimePeriod(period)).toEpochMilli(), QLCEViewTimeFilterOperator.AFTER));
-    filters.add(getTimeFilter(getEndTime(startOfDay).toEpochMilli(), QLCEViewTimeFilterOperator.BEFORE));
+    if (!period.equals(MONTH)) {
+      filters.add(getTimeFilter(
+          getStartTime(startOfDay, getTimePeriod(period)).toEpochMilli(), QLCEViewTimeFilterOperator.AFTER));
+      filters.add(getTimeFilter(getEndTime(startOfDay).toEpochMilli(), QLCEViewTimeFilterOperator.BEFORE));
+    } else {
+      filters.add(getTimeFilter(getStartOfMonth(true), QLCEViewTimeFilterOperator.AFTER));
+      filters.add(getTimeFilter(getStartOfMonth(false) - 1000, QLCEViewTimeFilterOperator.BEFORE));
+    }
     List<QLCEViewGroupBy> groupBy = new ArrayList<>();
 
     // Generating Trend data
@@ -169,7 +180,7 @@ public class CEReportTemplateBuilderServiceImpl implements CEReportTemplateBuild
                     .build());
     List<QLCEViewTimeSeriesData> chartData =
         viewsBillingService.convertToQLViewTimeSeriesData(viewsBillingService.getTimeSeriesStats(
-            bigQuery, filters, groupBy, aggregationFunction, sortCriteria, cloudProviderTableName));
+            bigQuery, filters, groupBy, aggregationFunction, Collections.emptyList(), cloudProviderTableName));
     if (chartData == null) {
       throw new InvalidRequestException("Exception while generating report. No data to for chart");
     }
@@ -180,7 +191,7 @@ public class CEReportTemplateBuilderServiceImpl implements CEReportTemplateBuild
     templatePlaceholders.put(DATE, getReportDateRange(period));
 
     // Generating chart for report
-    templatePlaceholders.put(CHART, getEncodedImage(createChart(chartData, entities)));
+    templatePlaceholders.put(CHART, getEncodedImage(createChart(chartData, entities, !period.equals(WEEK))));
 
     // Trend bar for report
     templatePlaceholders.put(TOTAL_COST, trendData.getStatsValue());
@@ -242,8 +253,16 @@ public class CEReportTemplateBuilderServiceImpl implements CEReportTemplateBuild
   }
 
   // Todo: Update this when time filters from view are used
-  private String getPeriod(String reportId) {
-    return WEEK;
+  private String getPeriod(ViewTimeRangeType rangeType) {
+    switch (rangeType) {
+      case LAST_30:
+        return THIRTY_DAYS;
+      case LAST_MONTH:
+        return MONTH;
+      case LAST_7:
+      default:
+        return WEEK;
+    }
   }
 
   private String getTotalCostDiff(QLCEViewTrendInfo trendInfo) {
@@ -291,8 +310,15 @@ public class CEReportTemplateBuilderServiceImpl implements CEReportTemplateBuild
 
   private String getReportDateRange(String period) {
     long timePeriod = getTimePeriod(period);
-    Instant startInstant = getStartTime(getStartOfDayTimestamp(0), timePeriod);
-    Instant endInstant = getEndTime(getStartOfDayTimestamp(0));
+    Instant startInstant;
+    Instant endInstant;
+    if (!period.equals(MONTH)) {
+      startInstant = getStartTime(getStartOfDayTimestamp(0), timePeriod);
+      endInstant = getEndTime(getStartOfDayTimestamp(0));
+    } else {
+      startInstant = getStartTime(getStartOfMonth(true), 0);
+      endInstant = getEndTime(getStartOfMonth(false));
+    }
     return startInstant.atZone(ZoneId.of(DEFAULT_TIMEZONE)).format(DateTimeFormatter.ofPattern(DATE_PATTERN)) + " to "
         + endInstant.atZone(ZoneId.of(DEFAULT_TIMEZONE)).format(DateTimeFormatter.ofPattern(DATE_PATTERN));
   }
@@ -301,6 +327,8 @@ public class CEReportTemplateBuilderServiceImpl implements CEReportTemplateBuild
     switch (period) {
       case DAY:
         return DAY_IN_MILLISECONDS;
+      case THIRTY_DAYS:
+        return 30 * DAY_IN_MILLISECONDS;
       case WEEK:
       default:
         return 7 * DAY_IN_MILLISECONDS;
@@ -322,6 +350,21 @@ public class CEReportTemplateBuilderServiceImpl implements CEReportTemplateBuild
     return (zdtStart.toEpochSecond() * 1000) - offset;
   }
 
+  // Returns start of current month, if prev month is true, returns start of previous month
+  private long getStartOfMonth(boolean prevMonth) {
+    Calendar c = Calendar.getInstance();
+    c.setTimeZone(TimeZone.getTimeZone(DEFAULT_TIMEZONE));
+    c.set(Calendar.DAY_OF_MONTH, 1);
+    c.set(Calendar.HOUR_OF_DAY, 0);
+    c.set(Calendar.MINUTE, 0);
+    c.set(Calendar.SECOND, 0);
+    c.set(Calendar.MILLISECOND, 0);
+    if (prevMonth) {
+      c.add(Calendar.MONTH, -1);
+    }
+    return c.getTimeInMillis();
+  }
+
   private String getEncodedImage(byte[] bytes) {
     String encodedfile = null;
     try {
@@ -332,7 +375,7 @@ public class CEReportTemplateBuilderServiceImpl implements CEReportTemplateBuild
     return encodedfile;
   }
 
-  private byte[] createChart(List<QLCEViewTimeSeriesData> data, List<String> entities) {
+  private byte[] createChart(List<QLCEViewTimeSeriesData> data, List<String> entities, boolean adjustFont) {
     DefaultCategoryDataset dataset = new DefaultCategoryDataset();
     int index = 0;
 
@@ -361,6 +404,12 @@ public class CEReportTemplateBuilderServiceImpl implements CEReportTemplateBuild
     plot.getRangeAxis().setMinorTickCount(5);
     plot.setOutlinePaint(WHITE);
     plot.setRangeGridlinePaint(GRAY);
+
+    if (adjustFont) {
+      plot.getDomainAxis().setCategoryLabelPositions(CategoryLabelPositions.UP_45);
+      plot.getDomainAxis().setUpperMargin(0.01);
+      plot.getDomainAxis().setLowerMargin(0.01);
+    }
 
     // Setting bar colors
     while (index < entities.size()) {
