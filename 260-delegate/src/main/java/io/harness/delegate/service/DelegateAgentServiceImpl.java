@@ -116,8 +116,6 @@ import io.harness.logstreaming.LogStreamingTaskClient;
 import io.harness.logstreaming.LogStreamingTaskClient.LogStreamingTaskClientBuilder;
 import io.harness.managerclient.DelegateAgentManagerClient;
 import io.harness.managerclient.DelegateAgentManagerClientFactory;
-import io.harness.managerclient.ManagerClient;
-import io.harness.managerclient.ManagerClientFactory;
 import io.harness.network.FibonacciBackOff;
 import io.harness.network.Http;
 import io.harness.perpetualtask.PerpetualTaskWorker;
@@ -269,7 +267,6 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
   @Inject private DelegateConfiguration delegateConfiguration;
 
   @Inject private DelegateAgentManagerClient delegateAgentManagerClient;
-  @Inject private ManagerClient managerClient;
 
   @Inject @Named("heartbeatExecutor") private ScheduledExecutorService heartbeatExecutor;
   @Inject @Named("localHeartbeatExecutor") private ScheduledExecutorService localHeartbeatExecutor;
@@ -363,7 +360,6 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
   @SuppressWarnings("unchecked")
   public void run(boolean watched) {
     try {
-      ManagerClientFactory.setDelegateAgentService(this);
       DelegateAgentManagerClientFactory.setDelegateAgentService(this);
       accountId = delegateConfiguration.getAccountId();
       if (perpetualTaskWorker != null) {
@@ -1103,8 +1099,8 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
           } else if (DELEGATE_RESUME.equals(message.getMessage())) {
             resume();
           } else if (DELEGATE_SEND_VERSION_HEADER.equals(message.getMessage())) {
-            ManagerClientFactory.setSendVersionHeader(Boolean.valueOf(message.getParams().get(0)));
-            managerClient = injector.getInstance(ManagerClient.class);
+            DelegateAgentManagerClientFactory.setSendVersionHeader(Boolean.parseBoolean(message.getParams().get(0)));
+            delegateAgentManagerClient = injector.getInstance(DelegateAgentManagerClient.class);
           }
         }), 0, 1, TimeUnit.SECONDS);
   }
@@ -1990,7 +1986,8 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
   /**
    * Create set of secrets from two maps. Both contain all variables, secret and plain.
    * The first does not mask secrets while the second does
-   * @param serviceVariables contains all variables, secret and plain, unmasked
+   *
+   * @param serviceVariables            contains all variables, secret and plain, unmasked
    * @param safeDisplayServiceVariables contains all variables with secret ones masked
    * @return set of secret variable values, unmasked
    */

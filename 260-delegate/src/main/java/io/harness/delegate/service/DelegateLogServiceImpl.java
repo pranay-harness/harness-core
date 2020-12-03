@@ -24,7 +24,6 @@ import static org.apache.commons.lang3.StringUtils.right;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.logging.LogLevel;
 import io.harness.managerclient.DelegateAgentManagerClient;
-import io.harness.managerclient.ManagerClient;
 import io.harness.managerclient.VerificationServiceClient;
 import io.harness.observer.Subject;
 import io.harness.rest.RestResponse;
@@ -88,7 +87,6 @@ public class DelegateLogServiceImpl implements DelegateLogService {
   private Cache<String, List<Log>> cache;
   private Cache<String, List<ThirdPartyApiCallLog>> apiCallLogCache;
   private Cache<String, List<CVActivityLog>> cvActivityLogCache;
-  private ManagerClient managerClient;
   private DelegateAgentManagerClient delegateAgentManagerClient;
   private final Subject<LogSanitizer> logSanitizerSubject = new Subject<>();
   private VerificationServiceClient verificationServiceClient;
@@ -101,10 +99,9 @@ public class DelegateLogServiceImpl implements DelegateLogService {
   };
 
   @Inject
-  public DelegateLogServiceImpl(ManagerClient managerClient, DelegateAgentManagerClient delegateAgentManagerClient,
+  public DelegateLogServiceImpl(DelegateAgentManagerClient delegateAgentManagerClient,
       @Named("asyncExecutor") ExecutorService executorService, VerificationServiceClient verificationServiceClient,
       KryoSerializer kryoSerializer) {
-    this.managerClient = managerClient;
     this.delegateAgentManagerClient = delegateAgentManagerClient;
     this.verificationServiceClient = verificationServiceClient;
     this.cache = Caffeine.newBuilder()
