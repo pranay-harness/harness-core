@@ -35,6 +35,7 @@ import io.harness.validation.Update;
 
 import software.wings.beans.Environment.EnvironmentType;
 import software.wings.beans.ExecutionArgs.ExecutionArgsKeys;
+import software.wings.beans.NameValuePair.NameValuePairKeys;
 import software.wings.beans.appmanifest.HelmChart;
 import software.wings.beans.artifact.Artifact;
 import software.wings.beans.concurrency.ConcurrencyStrategy;
@@ -136,14 +137,14 @@ public class WorkflowExecution implements PersistentRegularIterable, AccountData
         .add(SortCompoundMongoIndex.builder()
                  .name("accountId_tags_createdAt")
                  .field(WorkflowExecutionKeys.accountId)
-                 .field("tags.name")
+                 .field(WorkflowExecutionKeys.tags_name)
                  .descSortField(WorkflowExecutionKeys.createdAt)
                  .build())
         .add(SortCompoundMongoIndex.builder()
                  .name("accountId_appId_tags_createdAt")
                  .field(WorkflowExecutionKeys.accountId)
                  .field(WorkflowExecutionKeys.appId)
-                 .field("tags.name")
+                 .field(WorkflowExecutionKeys.tags_name)
                  .descSortField(WorkflowExecutionKeys.createdAt)
                  .build())
         .add(SortCompoundMongoIndex.builder()
@@ -326,6 +327,7 @@ public class WorkflowExecution implements PersistentRegularIterable, AccountData
     public static final String executionArgs_artifacts = executionArgs + "." + ExecutionArgsKeys.artifacts;
     public static final String executionArgs_artifact_variables =
         executionArgs + "." + ExecutionArgsKeys.artifactVariables;
+    public static final String tags_name = tags + "." + NameValuePairKeys.name;
   }
 
   @PrePersist
