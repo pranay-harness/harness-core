@@ -9,6 +9,9 @@ import static io.harness.rule.OwnerRule.PRABU;
 import static io.harness.rule.OwnerRule.VAIBHAV_SI;
 import static io.harness.rule.OwnerRule.YOGESH;
 
+import static software.wings.beans.HelmCommandFlagConstants.HelmSubCommand.FETCH;
+import static software.wings.beans.HelmCommandFlagConstants.HelmSubCommand.PULL;
+import static software.wings.beans.HelmCommandFlagConstants.HelmSubCommand.TEMPLATE;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 import static software.wings.beans.appmanifest.AppManifestKind.K8S_MANIFEST;
 import static software.wings.beans.appmanifest.StoreType.HelmChartRepo;
@@ -47,6 +50,7 @@ import io.harness.beans.PageResponse;
 import io.harness.category.element.UnitTests;
 import io.harness.exception.InvalidRequestException;
 import io.harness.ff.FeatureFlagService;
+import io.harness.k8s.model.HelmVersion;
 import io.harness.queue.QueuePublisher;
 import io.harness.rule.Owner;
 
@@ -56,6 +60,7 @@ import software.wings.beans.GitConfig;
 import software.wings.beans.GitFileConfig;
 import software.wings.beans.HelmChartConfig;
 import software.wings.beans.HelmChartConfig.HelmChartConfigBuilder;
+import software.wings.beans.HelmCommandFlag;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.appmanifest.AppManifestKind;
 import software.wings.beans.appmanifest.ApplicationManifest;
@@ -71,6 +76,7 @@ import software.wings.service.intfc.TriggerService;
 import software.wings.service.intfc.applicationmanifest.HelmChartService;
 import software.wings.service.intfc.yaml.YamlPushService;
 
+import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
 import java.util.Collections;
 import java.util.List;
@@ -180,6 +186,41 @@ public class ApplicationManifestServiceImplTest extends WingsBaseTest {
     }
 
     applicationManifest.setServiceId("s1");
+    doReturn(HelmVersion.V2).when(serviceResourceService).getHelmVersionWithDefault(anyString(), anyString());
+    applicationManifestServiceImpl.validateApplicationManifest(applicationManifest);
+  }
+
+  @Test
+  @Owner(developers = ARVIND)
+  @Category(UnitTests.class)
+  public void testValidateApplicationManifest_CommandFlags() {
+    ApplicationManifest applicationManifest =
+        ApplicationManifest.builder()
+            .kind(AppManifestKind.HELM_CHART_OVERRIDE)
+            .helmChartConfig(HelmChartConfig.builder().chartName("n").connectorId("c1").build())
+            .envId("ENVID")
+            .storeType(HelmChartRepo)
+            .helmCommandFlag(null)
+            .serviceId("s1")
+            .build();
+
+    applicationManifest.setAppId("a1");
+    doReturn(HelmVersion.V2).when(serviceResourceService).getHelmVersionWithDefault("a1", "s1");
+    applicationManifestServiceImpl.validateApplicationManifest(applicationManifest);
+    doReturn(null).when(serviceResourceService).getHelmVersionWithDefault("a1", "s1");
+
+    doReturn(HelmVersion.V2).when(serviceResourceService).getHelmVersionWithDefault("a1", "s1");
+
+    HelmCommandFlag helmCommandFlag = HelmCommandFlag.builder().valueMap(ImmutableMap.of(TEMPLATE, "")).build();
+    applicationManifest.setHelmCommandFlag(helmCommandFlag);
+    assertThatExceptionOfType(InvalidRequestException.class)
+        .isThrownBy(() -> applicationManifestServiceImpl.validateApplicationManifest(applicationManifest))
+        .withMessageContaining("Command flag provided is null");
+    helmCommandFlag.setValueMap(ImmutableMap.of(PULL, "--debug"));
+    assertThatExceptionOfType(InvalidRequestException.class)
+        .isThrownBy(() -> applicationManifestServiceImpl.validateApplicationManifest(applicationManifest))
+        .withMessageContaining("Invalid subCommand [PULL]");
+    helmCommandFlag.setValueMap(ImmutableMap.of(FETCH, "--debug"));
     applicationManifestServiceImpl.validateApplicationManifest(applicationManifest);
   }
 
@@ -194,6 +235,7 @@ public class ApplicationManifestServiceImplTest extends WingsBaseTest {
                                                   .build();
 
     applicationManifest.setGitFileConfig(GitFileConfig.builder().build());
+    doReturn(HelmVersion.V2).when(serviceResourceService).getHelmVersionWithDefault(anyString(), anyString());
     // No GitConfig
     verifyInvalidRequestExceptionWithMessage(applicationManifest, "gitFileConfig cannot be used with HelmChartRepo");
 
@@ -267,6 +309,7 @@ public class ApplicationManifestServiceImplTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void testValidateKustomizeApplicationManifest() {
     doReturn(aSettingAttribute().withValue(GitConfig.builder().build()).build()).when(settingsService).get(anyString());
+    doReturn(HelmVersion.V2).when(serviceResourceService).getHelmVersionWithDefault(anyString(), anyString());
     applicationManifestServiceImpl.validateApplicationManifest(buildKustomizeAppManifest());
     testEmptyConnectorInRemoteAppManifest(buildKustomizeAppManifest());
     testEmptyCommitInRemoteAppManifest(buildKustomizeAppManifest());
@@ -482,6 +525,7 @@ public class ApplicationManifestServiceImplTest extends WingsBaseTest {
     }
 
     gitFileConfig.setRepoName("repo-name");
+    doReturn(HelmVersion.V2).when(serviceResourceService).getHelmVersionWithDefault(anyString(), anyString());
     applicationManifestServiceImpl.validateApplicationManifest(applicationManifest);
   }
 

@@ -14,6 +14,7 @@ import io.harness.security.encryption.EncryptedDataDetail;
 
 import software.wings.beans.GitConfig;
 import software.wings.beans.GitFileConfig;
+import software.wings.beans.HelmCommandFlag;
 import software.wings.beans.container.HelmChartSpecification;
 import software.wings.delegatetasks.validation.capabilities.GitConnectionCapability;
 import software.wings.delegatetasks.validation.capabilities.HelmCommandCapability;
@@ -48,6 +49,7 @@ public class HelmCommandRequest implements TaskParameters, ActivityAccess, Execu
   private List<EncryptedDataDetail> encryptedDataDetails;
   @JsonIgnore private transient LogCallback executionLogCallback;
   @Expression(ALLOW_SECRETS) private String commandFlags;
+  @Expression(ALLOW_SECRETS) private HelmCommandFlag helmCommandFlag;
   private K8sDelegateManifestConfig repoConfig;
   @Builder.Default private HelmVersion helmVersion = V2;
   private String ocPath;

@@ -14,6 +14,7 @@ public final class HelmConstants {
   public static final String HELM_NAMESPACE_PLACEHOLDER = "${NAMESPACE}";
   public static final String HELM_DOCKER_IMAGE_NAME_PLACEHOLDER = "${DOCKER_IMAGE_NAME}";
   public static final String HELM_DOCKER_IMAGE_TAG_PLACEHOLDER = "${DOCKER_IMAGE_TAG}";
+  public static final String HELM_COMMAND_FLAG_PLACEHOLDER = "${COMMAND_FLAGS}";
 
   public static final class V2Commands {
     // The reason we are using ^ and $ before and after ${RELEASE_NAME} is because helm list doesn't take releaseName as
@@ -37,7 +38,7 @@ public final class HelmConstants {
     public static final String HELM_DELETE_RELEASE_TEMPLATE =
         "KUBECONFIG=${KUBECONFIG_PATH} ${HELM_PATH} delete ${COMMAND_FLAGS} ${FLAGS} ${RELEASE_NAME}";
     public static final String HELM_TEMPLATE_COMMAND_FOR_KUBERNETES_TEMPLATE =
-        "${HELM_PATH} template ${CHART_LOCATION}  --name ${RELEASE_NAME} --namespace ${NAMESPACE} ${OVERRIDE_VALUES}";
+        "${HELM_PATH} template ${CHART_LOCATION} ${COMMAND_FLAGS} --name ${RELEASE_NAME} --namespace ${NAMESPACE} ${OVERRIDE_VALUES}";
     public static final String HELM_SEARCH_COMMAND_TEMPLATE =
         "KUBECONFIG=${KUBECONFIG_PATH} ${HELM_PATH} search ${CHART_INFO}";
     public static final String HELM_REPO_ADD_COMMAND_FOR_CHART_MUSEUM =
@@ -50,7 +51,7 @@ public final class HelmConstants {
         "${HELM_PATH} repo remove ${REPO_NAME} ${HELM_HOME_PATH_FLAG}";
     public static final String HELM_INIT_COMMAND = "${HELM_PATH} init -c --skip-refresh ${HELM_HOME_PATH_FLAG}";
     public static final String HELM_RENDER_SPECIFIC_TEMPLATE =
-        "${HELM_PATH} template ${CHART_LOCATION} -x ${CHART_FILE} --name ${RELEASE_NAME} --namespace ${NAMESPACE} ${OVERRIDE_VALUES}";
+        "${HELM_PATH} template ${CHART_LOCATION} ${COMMAND_FLAGS} -x ${CHART_FILE} --name ${RELEASE_NAME} --namespace ${NAMESPACE} ${OVERRIDE_VALUES}";
     public static final String HELM_VERSION_COMMAND_TEMPLATE =
         "KUBECONFIG=${KUBECONFIG_PATH} ${HELM_PATH} version --short ${COMMAND_FLAGS}";
     public static final String HELM_FETCH_ALL_VERSIONS_COMMAND_TEMPLATE =
@@ -74,18 +75,18 @@ public final class HelmConstants {
     public static final String HELM_DELETE_RELEASE_TEMPLATE =
         "KUBECONFIG=${KUBECONFIG_PATH} ${HELM_PATH} uninstall ${RELEASE_NAME} ${COMMAND_FLAGS}";
     public static final String HELM_TEMPLATE_COMMAND_FOR_KUBERNETES_TEMPLATE =
-        "${HELM_PATH} template ${RELEASE_NAME} ${CHART_LOCATION}  --namespace ${NAMESPACE} ${OVERRIDE_VALUES}";
+        "${HELM_PATH} template ${RELEASE_NAME} ${CHART_LOCATION} ${COMMAND_FLAGS} --namespace ${NAMESPACE} ${OVERRIDE_VALUES}";
     public static final String HELM_SEARCH_COMMAND_TEMPLATE = "${HELM_PATH} search repo ${CHART_INFO}";
     public static final String HELM_REPO_ADD_COMMAND_FOR_CHART_MUSEUM =
         "${HELM_PATH} repo add ${REPO_NAME} ${REPO_URL}";
     public static final String HELM_REPO_ADD_COMMAND_FOR_HTTP =
         "${HELM_PATH} repo add ${REPO_NAME} ${REPO_URL} ${USERNAME} ${PASSWORD}";
     public static final String HELM_FETCH_COMMAND =
-        "${HELM_PATH} pull ${REPO_NAME}/${CHART_NAME} --untar ${CHART_VERSION}";
+        "${HELM_PATH} pull ${REPO_NAME}/${CHART_NAME} ${COMMAND_FLAGS} --untar ${CHART_VERSION}";
     public static final String HELM_REPO_REMOVE_COMMAND = "${HELM_PATH} repo remove ${REPO_NAME}";
     public static final String HELM_INIT_COMMAND = EMPTY;
     public static final String HELM_RENDER_SPECIFIC_TEMPLATE =
-        "${HELM_PATH} template ${RELEASE_NAME} ${CHART_LOCATION} -s ${CHART_FILE} --namespace ${NAMESPACE} ${OVERRIDE_VALUES}";
+        "${HELM_PATH} template ${RELEASE_NAME} ${CHART_LOCATION} ${COMMAND_FLAGS} -s ${CHART_FILE} --namespace ${NAMESPACE} ${OVERRIDE_VALUES}";
     public static final String HELM_VERSION_COMMAND_TEMPLATE = "${HELM_PATH} version --short ${COMMAND_FLAGS}";
     public static final String HELM_FETCH_ALL_VERSIONS_COMMAND_TEMPLATE =
         "${HELM_PATH} search repo ${REPO_NAME}/${CHART_NAME} -l --max-col-width 300";

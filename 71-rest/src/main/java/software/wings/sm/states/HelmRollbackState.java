@@ -12,6 +12,7 @@ import software.wings.api.HelmDeployStateExecutionData.HelmDeployStateExecutionD
 import software.wings.beans.Application;
 import software.wings.beans.GitConfig;
 import software.wings.beans.GitFileConfig;
+import software.wings.beans.HelmCommandFlag;
 import software.wings.beans.appmanifest.ApplicationManifest;
 import software.wings.beans.artifact.Artifact;
 import software.wings.beans.command.CommandUnit;
@@ -51,7 +52,7 @@ public class HelmRollbackState extends HelmDeployState {
   protected HelmCommandRequest getHelmCommandRequest(ExecutionContext context,
       HelmChartSpecification helmChartSpecification, ContainerServiceParams containerServiceParams, String releaseName,
       String accountId, String appId, String activityId, ImageDetails imageTag, String repoName, GitConfig gitConfig,
-      List<EncryptedDataDetail> encryptedDataDetails, String commandFlags, K8sDelegateManifestConfig repoConfig,
+      List<EncryptedDataDetail> encryptedDataDetails, String commandFlags, K8sDelegateManifestConfig manifestConfig,
       Map<K8sValuesLocation, ApplicationManifest> appManifestMap, HelmVersion helmVersion) {
     Integer previousReleaseRevision = null;
 
@@ -78,12 +79,16 @@ public class HelmRollbackState extends HelmDeployState {
             .gitConfig(gitConfig)
             .encryptedDataDetails(encryptedDataDetails)
             .commandFlags(commandFlags)
-            .sourceRepoConfig(repoConfig)
+            .sourceRepoConfig(manifestConfig)
             .helmVersion(helmVersion)
             .variableOverridesYamlFiles(helmValueOverridesYamlFilesEvaluated);
 
     if (getGitFileConfig() != null) {
       requestBuilder.gitFileConfig(getGitFileConfig());
+    }
+
+    if (null != manifestConfig) {
+      requestBuilder.helmCommandFlag(manifestConfig.getHelmCommandFlag());
     }
 
     return requestBuilder.build();
@@ -98,7 +103,7 @@ public class HelmRollbackState extends HelmDeployState {
   protected void setNewAndPrevReleaseVersion(ExecutionContext context, Application app, String releaseName,
       ContainerServiceParams containerServiceParams, HelmDeployStateExecutionDataBuilder stateExecutionDataBuilder,
       GitConfig gitConfig, List<EncryptedDataDetail> encryptedDataDetails, String commandFlags, HelmVersion helmVersion,
-      int expressionFunctorToken) {
+      int expressionFunctorToken, HelmCommandFlag helmCommandFlag) {
     HelmDeployContextElement contextElement = context.getContextElement(ContextElementType.HELM_DEPLOY);
     if (contextElement != null) {
       stateExecutionDataBuilder.releaseOldVersion(contextElement.getNewReleaseRevision());

@@ -1,5 +1,6 @@
 package software.wings.service;
 
+import static io.harness.k8s.model.HelmVersion.V2;
 import static io.harness.pcf.model.PcfConstants.VARS_YML;
 import static io.harness.rule.OwnerRule.ANSHUL;
 import static io.harness.rule.OwnerRule.PUNEET;
@@ -22,6 +23,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.assertj.core.api.Assertions.fail;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
+import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.when;
 
 import io.harness.category.element.UnitTests;
@@ -83,6 +85,7 @@ public class ApplicationManifestServiceTest extends WingsBaseTest {
   public void setUp() throws Exception {
     applicationManifest.setAppId(APP_ID);
     manifestFile.setAppId(APP_ID);
+    doReturn(V2).when(serviceResourceService).getHelmVersionWithDefault(anyString(), anyString());
   }
 
   private static ApplicationManifest applicationManifest =

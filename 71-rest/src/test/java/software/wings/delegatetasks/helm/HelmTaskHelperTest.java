@@ -254,7 +254,7 @@ public class HelmTaskHelperTest extends WingsBaseTest {
         .when(chartMuseumClient)
         .startChartMuseumServer(eq(gcsHelmRepoConfig), any(SettingValue.class), anyString(), anyString());
     doReturn(successfulResult).when(processExecutor).execute();
-    helmTaskHelper.downloadChartFiles(gcsConfigParams, outputTemporaryDir.toString(), LONG_TIMEOUT_INTERVAL);
+    helmTaskHelper.downloadChartFiles(gcsConfigParams, outputTemporaryDir.toString(), LONG_TIMEOUT_INTERVAL, null);
     verifyFetchChartFilesProcessExecutor(outputTemporaryDir.toString());
     FileUtils.deleteDirectory(outputTemporaryDir.toFile());
   }
@@ -276,7 +276,7 @@ public class HelmTaskHelperTest extends WingsBaseTest {
         .when(chartMuseumClient)
         .startChartMuseumServer(eq(s3HelmRepoConfig), any(SettingValue.class), anyString(), anyString());
     doReturn(successfulResult).when(processExecutor).execute();
-    helmTaskHelper.downloadChartFiles(awsConfigParams, outputTemporaryDir.toString(), LONG_TIMEOUT_INTERVAL);
+    helmTaskHelper.downloadChartFiles(awsConfigParams, outputTemporaryDir.toString(), LONG_TIMEOUT_INTERVAL, null);
     verifyFetchChartFilesProcessExecutor(outputTemporaryDir.toString());
     FileUtils.deleteDirectory(outputTemporaryDir.toFile());
   }
@@ -286,7 +286,7 @@ public class HelmTaskHelperTest extends WingsBaseTest {
         .createProcessExecutor(
             "v3/helm repo add repoName http://127.0.0.1:1234", outputDirectory, LONG_TIMEOUT_INTERVAL);
     verify(helmTaskHelper, times(1))
-        .createProcessExecutor("v3/helm pull repoName/chartName --untar ", outputDirectory, LONG_TIMEOUT_INTERVAL);
+        .createProcessExecutor("v3/helm pull repoName/chartName  --untar ", outputDirectory, LONG_TIMEOUT_INTERVAL);
     verify(helmTaskHelper, times(1)).createProcessExecutor("v3/helm repo remove repoName", null, LONG_TIMEOUT_INTERVAL);
     verify(processExecutor, times(3)).execute();
   }
@@ -308,13 +308,13 @@ public class HelmTaskHelperTest extends WingsBaseTest {
         .when(chartMuseumClient)
         .startChartMuseumServer(eq(httpHelmRepoConfig), any(SettingValue.class), anyString(), anyString());
     doReturn(successfulResult).when(processExecutor).execute();
-    helmTaskHelper.downloadChartFiles(httpHelmChartConfig, outputTemporaryDir.toString(), LONG_TIMEOUT_INTERVAL);
+    helmTaskHelper.downloadChartFiles(httpHelmChartConfig, outputTemporaryDir.toString(), LONG_TIMEOUT_INTERVAL, null);
     verify(helmTaskHelper, times(1))
         .createProcessExecutor(
             "v3/helm repo add repoName http://127.0.0.1:1234  ", outputTemporaryDir.toString(), LONG_TIMEOUT_INTERVAL);
     verify(helmTaskHelper, times(1))
         .createProcessExecutor(
-            "v3/helm pull repoName/chartName --untar ", outputTemporaryDir.toString(), LONG_TIMEOUT_INTERVAL);
+            "v3/helm pull repoName/chartName  --untar ", outputTemporaryDir.toString(), LONG_TIMEOUT_INTERVAL);
     verify(processExecutor, times(2)).execute();
     FileUtils.deleteDirectory(outputTemporaryDir.toFile());
   }
@@ -330,20 +330,20 @@ public class HelmTaskHelperTest extends WingsBaseTest {
     doReturn(successfulResult).when(processExecutor).execute();
 
     // With empty chart Url
-    helmTaskHelper.downloadChartFiles(emptyHelmRepoConfig, outputTemporaryDir.toString(), LONG_TIMEOUT_INTERVAL);
+    helmTaskHelper.downloadChartFiles(emptyHelmRepoConfig, outputTemporaryDir.toString(), LONG_TIMEOUT_INTERVAL, null);
     verify(helmTaskHelper, times(1))
         .createProcessExecutor(
-            "v3/helm pull repoName/chartName --untar ", outputTemporaryDir.toString(), LONG_TIMEOUT_INTERVAL);
+            "v3/helm pull repoName/chartName  --untar ", outputTemporaryDir.toString(), LONG_TIMEOUT_INTERVAL);
 
     // With not empty chart Url
     emptyHelmRepoConfig.setChartUrl("http://127.0.0.1:1234/chart");
-    helmTaskHelper.downloadChartFiles(emptyHelmRepoConfig, outputTemporaryDir.toString(), LONG_TIMEOUT_INTERVAL);
+    helmTaskHelper.downloadChartFiles(emptyHelmRepoConfig, outputTemporaryDir.toString(), LONG_TIMEOUT_INTERVAL, null);
     verify(helmTaskHelper, times(1))
         .createProcessExecutor("v3/helm repo add repoName http://127.0.0.1:1234/chart  ", outputTemporaryDir.toString(),
             LONG_TIMEOUT_INTERVAL);
     verify(helmTaskHelper, times(2))
         .createProcessExecutor(
-            "v3/helm pull repoName/chartName --untar ", outputTemporaryDir.toString(), LONG_TIMEOUT_INTERVAL);
+            "v3/helm pull repoName/chartName  --untar ", outputTemporaryDir.toString(), LONG_TIMEOUT_INTERVAL);
     verify(helmTaskHelper, times(1)).createProcessExecutor("v3/helm repo remove repoName", null, LONG_TIMEOUT_INTERVAL);
     FileUtils.deleteDirectory(outputTemporaryDir.toFile());
   }
@@ -364,37 +364,37 @@ public class HelmTaskHelperTest extends WingsBaseTest {
 
     // With empty chart Url
     helmTaskHelper.downloadChartFiles(
-        helmChartSpecification, outputTemporaryDir.toString(), helmCommandRequest, LONG_TIMEOUT_INTERVAL);
+        helmChartSpecification, outputTemporaryDir.toString(), helmCommandRequest, LONG_TIMEOUT_INTERVAL, null);
     verify(helmTaskHelper, times(1))
         .createProcessExecutor(
-            "v3/helm pull stable/chartName1 --untar ", outputTemporaryDir.toString(), LONG_TIMEOUT_INTERVAL);
+            "v3/helm pull stable/chartName1  --untar ", outputTemporaryDir.toString(), LONG_TIMEOUT_INTERVAL);
 
     helmChartSpecification.setChartName("chartName2");
     helmTaskHelper.downloadChartFiles(
-        helmChartSpecification, outputTemporaryDir.toString(), helmCommandRequest, LONG_TIMEOUT_INTERVAL);
+        helmChartSpecification, outputTemporaryDir.toString(), helmCommandRequest, LONG_TIMEOUT_INTERVAL, null);
     verify(helmTaskHelper, times(1))
         .createProcessExecutor(
-            "v3/helm pull chartName2 --untar ", outputTemporaryDir.toString(), LONG_TIMEOUT_INTERVAL);
+            "v3/helm pull chartName2  --untar ", outputTemporaryDir.toString(), LONG_TIMEOUT_INTERVAL);
 
     // With not empty chart Url
     helmChartSpecification.setChartUrl("http://127.0.0.1:1234/chart");
     helmChartSpecification.setChartName("stable/chartName3");
     helmTaskHelper.downloadChartFiles(
-        helmChartSpecification, outputTemporaryDir.toString(), helmCommandRequest, LONG_TIMEOUT_INTERVAL);
+        helmChartSpecification, outputTemporaryDir.toString(), helmCommandRequest, LONG_TIMEOUT_INTERVAL, null);
     verify(helmTaskHelper, times(1))
         .createProcessExecutor("v3/helm repo add repoName http://127.0.0.1:1234/chart  ", outputTemporaryDir.toString(),
             LONG_TIMEOUT_INTERVAL);
     verify(helmTaskHelper, times(1))
         .createProcessExecutor(
-            "v3/helm pull repoName/stable/chartName3 --untar ", outputTemporaryDir.toString(), LONG_TIMEOUT_INTERVAL);
+            "v3/helm pull repoName/stable/chartName3  --untar ", outputTemporaryDir.toString(), LONG_TIMEOUT_INTERVAL);
     verify(helmTaskHelper, times(1)).createProcessExecutor("v3/helm repo remove repoName", null, LONG_TIMEOUT_INTERVAL);
 
     helmChartSpecification.setChartName("chartName4");
     helmTaskHelper.downloadChartFiles(
-        helmChartSpecification, outputTemporaryDir.toString(), helmCommandRequest, LONG_TIMEOUT_INTERVAL);
+        helmChartSpecification, outputTemporaryDir.toString(), helmCommandRequest, LONG_TIMEOUT_INTERVAL, null);
     verify(helmTaskHelper, times(1))
         .createProcessExecutor(
-            "v3/helm pull repoName/chartName4 --untar ", outputTemporaryDir.toString(), LONG_TIMEOUT_INTERVAL);
+            "v3/helm pull repoName/chartName4  --untar ", outputTemporaryDir.toString(), LONG_TIMEOUT_INTERVAL);
 
     FileUtils.deleteDirectory(outputTemporaryDir.toFile());
   }
@@ -409,7 +409,7 @@ public class HelmTaskHelperTest extends WingsBaseTest {
     ProcessResult failedResult = new ProcessResult(1, null);
     doReturn(failedResult).when(processExecutor).execute();
 
-    helmTaskHelper.downloadChartFiles(emptyHelmRepoConfig, outputTemporaryDir.toString(), LONG_TIMEOUT_INTERVAL);
+    helmTaskHelper.downloadChartFiles(emptyHelmRepoConfig, outputTemporaryDir.toString(), LONG_TIMEOUT_INTERVAL, null);
   }
 
   @Test
@@ -544,7 +544,7 @@ public class HelmTaskHelperTest extends WingsBaseTest {
             contains("helm/path fetch chartName --untar"), anyString(), eq("fetch chart chartName"), anyLong());
 
     try {
-      String result = helmTaskHelper.getValuesYamlFromChart(helmChartConfigParams, LONG_TIMEOUT_INTERVAL);
+      String result = helmTaskHelper.getValuesYamlFromChart(helmChartConfigParams, LONG_TIMEOUT_INTERVAL, null);
       assertThat(result).isEqualTo(valuesFileContent);
     } finally {
       FileIo.deleteDirectoryAndItsContentIfExists(workingDirectory);
@@ -566,7 +566,7 @@ public class HelmTaskHelperTest extends WingsBaseTest {
         .executeCommand(contains("helm/path fetch"), anyString(), eq("fetch chart chartName"), anyLong());
 
     try {
-      String result = helmTaskHelper.getValuesYamlFromChart(helmChartConfigParams, LONG_TIMEOUT_INTERVAL);
+      String result = helmTaskHelper.getValuesYamlFromChart(helmChartConfigParams, LONG_TIMEOUT_INTERVAL, null);
       assertThat(result).isNullOrEmpty();
     } finally {
       FileIo.deleteDirectoryAndItsContentIfExists(workingDirectory);
@@ -591,7 +591,7 @@ public class HelmTaskHelperTest extends WingsBaseTest {
         .when(helmTaskHelper)
         .getHelmChartInfoFromChartsYamlFile(anyString());
 
-    helmTaskHelper.getValuesYamlFromChart(helmChartConfigParams, LONG_TIMEOUT_INTERVAL);
+    helmTaskHelper.getValuesYamlFromChart(helmChartConfigParams, LONG_TIMEOUT_INTERVAL, null);
     assertThat(helmChartConfigParams.getChartVersion()).isEqualTo(chartVersion);
   }
 
@@ -611,7 +611,7 @@ public class HelmTaskHelperTest extends WingsBaseTest {
         .when(helmTaskHelper)
         .getHelmChartInfoFromChartsYamlFile(anyString());
 
-    assertThatCode(() -> helmTaskHelper.getValuesYamlFromChart(helmChartConfigParams, LONG_TIMEOUT_INTERVAL))
+    assertThatCode(() -> helmTaskHelper.getValuesYamlFromChart(helmChartConfigParams, LONG_TIMEOUT_INTERVAL, null))
         .doesNotThrowAnyException();
   }
 

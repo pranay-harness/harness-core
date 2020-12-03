@@ -14,7 +14,7 @@ import lombok.EqualsAndHashCode;
 @Data
 @EqualsAndHashCode(callSuper = true)
 public class K8sDeleteTaskParameters extends K8sTaskParameters {
-  private K8sDelegateManifestConfig k8sDelegateManifestConfig;
+  @Expression(ALLOW_SECRETS) private K8sDelegateManifestConfig k8sDelegateManifestConfig;
   @Expression(ALLOW_SECRETS) private List<String> valuesYamlList;
   private String resources;
   private boolean deleteNamespacesForRelease;

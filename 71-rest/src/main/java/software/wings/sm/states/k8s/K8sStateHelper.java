@@ -228,8 +228,9 @@ public class K8sStateHelper {
 
   public K8sDelegateManifestConfig createDelegateManifestConfig(
       ExecutionContext context, ApplicationManifest appManifest) {
-    K8sDelegateManifestConfigBuilder manifestConfigBuilder =
-        K8sDelegateManifestConfig.builder().manifestStoreTypes(appManifest.getStoreType());
+    K8sDelegateManifestConfigBuilder manifestConfigBuilder = K8sDelegateManifestConfig.builder()
+                                                                 .manifestStoreTypes(appManifest.getStoreType())
+                                                                 .helmCommandFlag(appManifest.getHelmCommandFlag());
 
     StoreType storeType = appManifest.getStoreType();
     switch (storeType) {
@@ -921,6 +922,7 @@ public class K8sStateHelper {
             helmChartConfigHelperService.getHelmChartConfigTaskParams(context, applicationManifest))
         .timeoutInMillis(timeoutInMillis)
         .workflowExecutionId(context.getWorkflowExecutionId())
+        .helmCommandFlag(applicationManifest.getHelmCommandFlag())
         .build();
   }
 
@@ -962,12 +964,16 @@ public class K8sStateHelper {
     HelmValuesFetchTaskParameters helmValuesFetchTaskParameters =
         getHelmValuesFetchTaskParameters(context, activityId, timeoutInMillis);
 
+    ContainerInfrastructureMapping infraMapping = getContainerInfrastructureMapping(context);
+    String serviceTemplateId = serviceTemplateHelper.fetchServiceTemplateId(infraMapping);
+
     List<String> tags = new ArrayList<>();
     if (helmValuesFetchTaskParameters.isBindTaskFeatureSet()) {
       tags.addAll(fetchTagsFromK8sCloudProvider(helmValuesFetchTaskParameters.getContainerServiceParams()));
     }
 
     String waitId = generateUuid();
+    int expressionFunctorToken = HashGenerator.generateIntegerHash();
     DelegateTask delegateTask =
         DelegateTask.builder()
             .accountId(app.getAccountId())
@@ -975,6 +981,7 @@ public class K8sStateHelper {
             .setupAbstraction(Cd1SetupFields.ENV_ID_FIELD, getEnvIdFromExecutionContext(context))
             .setupAbstraction(
                 Cd1SetupFields.INFRASTRUCTURE_MAPPING_ID_FIELD, getContainerInfrastructureMappingId(context))
+            .setupAbstraction(Cd1SetupFields.SERVICE_TEMPLATE_ID_FIELD, serviceTemplateId)
             .waitId(waitId)
             .tags(tags)
             .data(TaskData.builder()
@@ -982,19 +989,35 @@ public class K8sStateHelper {
                       .taskType(TaskType.HELM_VALUES_FETCH.name())
                       .parameters(new Object[] {helmValuesFetchTaskParameters})
                       .timeout(TimeUnit.MINUTES.toMillis(10))
+                      .expressionFunctorToken(expressionFunctorToken)
                       .build())
             .build();
+
+    K8sStateExecutionData stateExecutionData = K8sStateExecutionData.builder()
+                                                   .activityId(activityId)
+                                                   .commandName(commandName)
+                                                   .currentTaskType(TaskType.HELM_VALUES_FETCH)
+                                                   .build();
+
+    StateExecutionContext stateExecutionContext = StateExecutionContext.builder()
+                                                      .stateExecutionData(stateExecutionData)
+                                                      .adoptDelegateDecryption(true)
+                                                      .expressionFunctorToken(expressionFunctorToken)
+                                                      .build();
+    context.resetPreparedCache();
+    if (delegateTask.getData().getParameters().length == 1
+        && delegateTask.getData().getParameters()[0] instanceof TaskParameters) {
+      delegateTask.setWorkflowExecutionId(context.getWorkflowExecutionId());
+      ExpressionReflectionUtils.applyExpression(delegateTask.getData().getParameters()[0],
+          (secretMode, value) -> context.renderExpression(value, stateExecutionContext));
+    }
 
     String delegateTaskId = delegateService.queueTask(delegateTask);
 
     return ExecutionResponse.builder()
         .async(true)
         .correlationIds(Arrays.asList(waitId))
-        .stateExecutionData(K8sStateExecutionData.builder()
-                                .activityId(activityId)
-                                .commandName(commandName)
-                                .currentTaskType(TaskType.HELM_VALUES_FETCH)
-                                .build())
+        .stateExecutionData(stateExecutionData)
         .delegateTaskId(delegateTaskId)
         .build();
   }

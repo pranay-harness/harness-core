@@ -8,6 +8,7 @@ import static io.harness.k8s.model.HelmVersion.V2;
 import static io.harness.k8s.model.HelmVersion.V3;
 import static io.harness.rule.OwnerRule.AGORODETKI;
 import static io.harness.rule.OwnerRule.ANSHUL;
+import static io.harness.rule.OwnerRule.ARVIND;
 import static io.harness.rule.OwnerRule.MILOS;
 import static io.harness.rule.OwnerRule.POOJA;
 import static io.harness.rule.OwnerRule.RAMA;
@@ -19,6 +20,17 @@ import static software.wings.api.DeploymentType.CUSTOM;
 import static software.wings.api.DeploymentType.HELM;
 import static software.wings.api.DeploymentType.KUBERNETES;
 import static software.wings.api.DeploymentType.SSH;
+import static software.wings.beans.HelmCommandFlagConstants.HelmSubCommand.DELETE;
+import static software.wings.beans.HelmCommandFlagConstants.HelmSubCommand.FETCH;
+import static software.wings.beans.HelmCommandFlagConstants.HelmSubCommand.HISTORY;
+import static software.wings.beans.HelmCommandFlagConstants.HelmSubCommand.INSTALL;
+import static software.wings.beans.HelmCommandFlagConstants.HelmSubCommand.LIST;
+import static software.wings.beans.HelmCommandFlagConstants.HelmSubCommand.PULL;
+import static software.wings.beans.HelmCommandFlagConstants.HelmSubCommand.ROLLBACK;
+import static software.wings.beans.HelmCommandFlagConstants.HelmSubCommand.TEMPLATE;
+import static software.wings.beans.HelmCommandFlagConstants.HelmSubCommand.UNINSTALL;
+import static software.wings.beans.HelmCommandFlagConstants.HelmSubCommand.UPGRADE;
+import static software.wings.beans.HelmCommandFlagConstants.HelmSubCommand.VERSION;
 import static software.wings.beans.command.Command.Builder.aCommand;
 import static software.wings.beans.command.ServiceCommand.Builder.aServiceCommand;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
@@ -104,6 +116,8 @@ import org.mockito.Mockito;
 import org.mongodb.morphia.query.UpdateOperations;
 
 public class ServiceResourceServiceImplTest extends WingsBaseTest {
+  @Captor ArgumentCaptor<Command> commandCaptor;
+  @Captor ArgumentCaptor<Boolean> booleanCaptor;
   @Inject private WingsPersistence wingsPersistence;
   @Inject private HarnessTagService harnessTagService;
   @Mock private FeatureFlagService featureFlagService;
@@ -121,9 +135,6 @@ public class ServiceResourceServiceImplTest extends WingsBaseTest {
   @Mock private CustomDeploymentTypeService customDeploymentTypeService;
   @Mock private YamlPushService yamlPushService;
   private ServiceResourceServiceImpl spyServiceResourceService = spy(new ServiceResourceServiceImpl());
-
-  @Captor ArgumentCaptor<Command> commandCaptor;
-  @Captor ArgumentCaptor<Boolean> booleanCaptor;
 
   @Before
   public void setUp() throws Exception {
@@ -780,5 +791,52 @@ public class ServiceResourceServiceImplTest extends WingsBaseTest {
 
     assertThat(commandCaptor.getValue().getName()).isEqualTo(clonedServiceCommand.getName());
     assertThat(booleanCaptor.getValue()).isFalse();
+  }
+
+  @Test
+  @Owner(developers = ARVIND)
+  @Category(UnitTests.class)
+  public void testGetHelmCommandFlags() {
+    Service service = Service.builder().appId(APP_ID).uuid(SERVICE_ID).helmVersion(V2).deploymentType(HELM).build();
+    wingsPersistence.save(service);
+    assertThat(serviceResourceService.getHelmCommandFlags(V2, APP_ID, SERVICE_ID, StoreType.HelmChartRepo))
+        .containsExactlyInAnyOrder(LIST, INSTALL, TEMPLATE, ROLLBACK, VERSION, DELETE, UPGRADE, HISTORY);
+    assertThat(serviceResourceService.getHelmCommandFlags(null, APP_ID, SERVICE_ID, StoreType.HelmChartRepo))
+        .containsExactlyInAnyOrder(LIST, INSTALL, TEMPLATE, ROLLBACK, VERSION, DELETE, UPGRADE, HISTORY);
+    assertThat(serviceResourceService.getHelmCommandFlags(V3, APP_ID, SERVICE_ID, StoreType.HelmChartRepo))
+        .containsExactlyInAnyOrder(LIST, INSTALL, TEMPLATE, ROLLBACK, VERSION, UNINSTALL, UPGRADE, HISTORY);
+
+    assertThat(serviceResourceService.getHelmCommandFlags(V2, APP_ID, SERVICE_ID, StoreType.HelmSourceRepo))
+        .containsExactlyInAnyOrder(LIST, INSTALL, TEMPLATE, ROLLBACK, VERSION, DELETE, UPGRADE, HISTORY, FETCH);
+    assertThat(serviceResourceService.getHelmCommandFlags(null, APP_ID, SERVICE_ID, StoreType.HelmSourceRepo))
+        .containsExactlyInAnyOrder(LIST, INSTALL, TEMPLATE, ROLLBACK, VERSION, DELETE, UPGRADE, HISTORY, FETCH);
+    assertThat(serviceResourceService.getHelmCommandFlags(V3, APP_ID, SERVICE_ID, StoreType.HelmSourceRepo))
+        .containsExactlyInAnyOrder(LIST, INSTALL, TEMPLATE, ROLLBACK, VERSION, UNINSTALL, UPGRADE, HISTORY, PULL);
+
+    service.setDeploymentType(KUBERNETES);
+    service.setHelmVersion(V3);
+    wingsPersistence.save(service);
+    assertThat(serviceResourceService.getHelmCommandFlags(V2, APP_ID, SERVICE_ID, StoreType.HelmChartRepo))
+        .containsExactlyInAnyOrder(VERSION, TEMPLATE);
+    assertThat(serviceResourceService.getHelmCommandFlags(null, APP_ID, SERVICE_ID, StoreType.HelmChartRepo))
+        .containsExactlyInAnyOrder(VERSION, TEMPLATE);
+    assertThat(serviceResourceService.getHelmCommandFlags(V3, APP_ID, SERVICE_ID, StoreType.HelmChartRepo))
+        .containsExactlyInAnyOrder(VERSION, TEMPLATE);
+
+    assertThat(serviceResourceService.getHelmCommandFlags(V2, APP_ID, SERVICE_ID, StoreType.HelmSourceRepo))
+        .containsExactlyInAnyOrder(FETCH, VERSION, TEMPLATE);
+    assertThat(serviceResourceService.getHelmCommandFlags(null, APP_ID, SERVICE_ID, StoreType.HelmSourceRepo))
+        .containsExactlyInAnyOrder(PULL, VERSION, TEMPLATE);
+    assertThat(serviceResourceService.getHelmCommandFlags(V3, APP_ID, SERVICE_ID, StoreType.HelmSourceRepo))
+        .containsExactlyInAnyOrder(PULL, VERSION, TEMPLATE);
+  }
+
+  @Test
+  @Owner(developers = ARVIND)
+  @Category(UnitTests.class)
+  public void testGetHelmCommandFlagsForOldServices() {
+    Service service = Service.builder().appId(APP_ID).uuid(SERVICE_ID).build();
+    wingsPersistence.save(service);
+    assertThat(serviceResourceService.getHelmCommandFlags(null, APP_ID, SERVICE_ID, null)).isEmpty();
   }
 }

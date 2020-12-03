@@ -9,7 +9,6 @@ import static software.wings.beans.HelmCommandFlagConstants.HelmSubCommand.PULL;
 import static software.wings.beans.HelmCommandFlagConstants.HelmSubCommand.TEMPLATE;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
@@ -35,7 +34,5 @@ public class CommandFlagUtilsTest extends CategoryTest {
     assertThat(CommandFlagUtils.getHelmSubCommand(V3, HelmCliCommandType.FETCH.toString())).isEqualTo(PULL);
     assertThat(CommandFlagUtils.getHelmSubCommand(V2, HelmCliCommandType.FETCH.toString())).isEqualTo(FETCH);
     assertThat(CommandFlagUtils.getHelmSubCommand(V2, HelmCliCommandType.INIT.toString())).isNull();
-    assertThatThrownBy(() -> CommandFlagUtils.getHelmSubCommand(null, HelmCliCommandType.INIT.toString()))
-        .isInstanceOf(NullPointerException.class);
   }
 }

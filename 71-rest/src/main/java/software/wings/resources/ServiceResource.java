@@ -22,6 +22,7 @@ import software.wings.beans.appmanifest.AppManifestKind;
 import software.wings.beans.appmanifest.ApplicationManifest;
 import software.wings.beans.appmanifest.HelmChart;
 import software.wings.beans.appmanifest.ManifestFile;
+import software.wings.beans.appmanifest.StoreType;
 import software.wings.beans.artifact.ArtifactStream;
 import software.wings.beans.artifact.ArtifactStreamBinding;
 import software.wings.beans.command.ServiceCommand;
@@ -839,7 +840,8 @@ public class ServiceResource {
   @Timed
   @ExceptionMetered
   public RestResponse<Set<HelmSubCommand>> getHelmCommandFlags(@QueryParam("appId") String appId,
-      @QueryParam("version") HelmVersion version, @PathParam("serviceId") String serviceId) {
-    return new RestResponse<>(serviceResourceService.getHelmCommandFlags(version, appId, serviceId));
+      @QueryParam("version") HelmVersion version, @QueryParam("storeType") StoreType storeType,
+      @PathParam("serviceId") String serviceId) {
+    return new RestResponse<>(serviceResourceService.getHelmCommandFlags(version, appId, serviceId, storeType));
   }
 }

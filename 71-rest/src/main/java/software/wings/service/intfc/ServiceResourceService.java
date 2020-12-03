@@ -20,6 +20,7 @@ import software.wings.beans.appmanifest.AppManifestKind;
 import software.wings.beans.appmanifest.ApplicationManifest;
 import software.wings.beans.appmanifest.ApplicationManifest.AppManifestSource;
 import software.wings.beans.appmanifest.ManifestFile;
+import software.wings.beans.appmanifest.StoreType;
 import software.wings.beans.artifact.Artifact;
 import software.wings.beans.command.CommandUnit;
 import software.wings.beans.command.ServiceCommand;
@@ -564,5 +565,5 @@ public interface ServiceResourceService extends OwnedByApplication {
   List<Service> listByCustomDeploymentTypeId(
       @NotBlank String accountId, @Nonnull List<String> deploymentTemplateIds, int limit);
 
-  Set<HelmSubCommand> getHelmCommandFlags(HelmVersion version, String appId, String serviceId);
+  Set<HelmSubCommand> getHelmCommandFlags(HelmVersion version, String appId, String serviceId, StoreType storeType);
 }
