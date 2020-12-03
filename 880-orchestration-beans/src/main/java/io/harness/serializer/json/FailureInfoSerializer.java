@@ -20,7 +20,7 @@ public class FailureInfoSerializer extends StdSerializer<FailureInfo> {
   public void serialize(FailureInfo failureInfo, JsonGenerator jgen, SerializerProvider serializerProvider)
       throws IOException {
     jgen.writeStartObject();
-    jgen.writeStringField("failureInfo", JsonFormat.printer().print(failureInfo));
+    jgen.writeStringField("errorMessage", failureInfo.getErrorMessage());
     jgen.writeEndObject();
   }
 }

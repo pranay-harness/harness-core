@@ -30,12 +30,16 @@ import io.harness.ng.core.invites.ext.mail.EmailNotificationListener;
 import io.harness.ngpipeline.common.NGPipelineObjectMapperHelper;
 import io.harness.ngtriggers.service.TriggerWebhookService;
 import io.harness.persistence.HPersistence;
+import io.harness.pms.execution.failure.FailureInfo;
 import io.harness.pms.sdk.PmsSdkConfiguration;
 import io.harness.pms.sdk.PmsSdkModule;
+import io.harness.pms.steps.StepType;
 import io.harness.queue.QueueListenerController;
 import io.harness.queue.QueuePublisher;
 import io.harness.security.JWTAuthenticationFilter;
 import io.harness.security.annotations.NextGenManagerAuth;
+import io.harness.serializer.json.FailureInfoSerializer;
+import io.harness.serializer.json.StepTypeSerializer;
 import io.harness.service.impl.DelegateAsyncServiceImpl;
 import io.harness.service.impl.DelegateProgressServiceImpl;
 import io.harness.service.impl.DelegateSyncServiceImpl;
@@ -55,6 +59,7 @@ import software.wings.app.CharsetResponseFilter;
 
 import com.codahale.metrics.MetricRegistry;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.module.SimpleModule;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
@@ -126,6 +131,11 @@ public class NextGenApplication extends Application<NextGenConfiguration> {
     });
   }
   public static void configureObjectMapper(final ObjectMapper mapper) {
+    SimpleModule module = new SimpleModule();
+    // Todo: Discuss with Prashant on having an impl just like Morphia Converters
+    module.addSerializer(StepType.class, new StepTypeSerializer());
+    module.addSerializer(FailureInfo.class, new FailureInfoSerializer());
+    mapper.registerModule(module);
     NGPipelineObjectMapperHelper.configureNGObjectMapper(mapper);
   }
 
