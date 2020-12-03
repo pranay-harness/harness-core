@@ -30,6 +30,7 @@ import software.wings.helpers.ext.ecs.response.EcsCommandExecutionResponse;
 import software.wings.helpers.ext.ecs.response.EcsRunTaskDeployResponse;
 import software.wings.service.impl.AwsHelperService;
 
+import com.amazonaws.services.ecs.model.Container;
 import com.amazonaws.services.ecs.model.DesiredStatus;
 import com.amazonaws.services.ecs.model.RunTaskRequest;
 import com.amazonaws.services.ecs.model.RunTaskResult;
@@ -211,5 +212,95 @@ public class EcsRunTaskDeployCommandHandlerTest extends WingsBaseTest {
     assertThat(response.getErrorMessage()).isEqualTo(null);
     assertThat(ecsRunTaskDeployResponse.getCommandExecutionStatus()).isEqualTo(CommandExecutionStatus.SUCCESS);
     assertThat(ecsRunTaskDeployResponse.getOutput()).isEqualTo("");
+  }
+
+  @Test
+  @Owner(developers = RAGHVENDRA)
+  @Category(UnitTests.class)
+  public void testExecuteTaskInternalWithSteadyStateCheckNonZeroExitCodeContainers() {
+    ExecutionLogCallback mockCallback = mock(ExecutionLogCallback.class);
+    doNothing().when(mockCallback).saveExecutionLog(anyString());
+
+    EcsRunTaskDeployResponse ecsRunTaskDeployResponse = EcsRunTaskDeployResponse.builder()
+                                                            .commandExecutionStatus(CommandExecutionStatus.SUCCESS)
+                                                            .output(StringUtils.EMPTY)
+                                                            .build();
+    doReturn(ecsRunTaskDeployResponse).when(mockEcsDeployCommandTaskHelper).getEmptyRunTaskDeployResponse();
+
+    when(mockEcsDeployCommandTaskHelper.createRunTaskDefinition(runTaskDefinition, runTaskFamilyName))
+        .thenCallRealMethod();
+
+    TaskDefinition registeredRunTaskDefinition = new TaskDefinition();
+    registeredRunTaskDefinition.setTaskDefinitionArn("taskArn1");
+    doReturn(registeredRunTaskDefinition)
+        .when(mockEcsDeployCommandTaskHelper)
+        .registerRunTaskDefinition(any(), any(), any(), anyString(), any(), any());
+
+    EcsRunTaskDeployRequest ecsCommandRequest = EcsRunTaskDeployRequest.builder()
+                                                    .accountId(ACCOUNT_ID)
+                                                    .runTaskFamilyName(runTaskFamilyName)
+                                                    .serviceSteadyStateTimeout(1l)
+                                                    .launchType("EC2")
+                                                    .cluster("RUN_TASK_CLUSTER")
+                                                    .listTaskDefinitionJson(singletonList(runTaskDefinition))
+                                                    .build();
+
+    when(mockEcsDeployCommandTaskHelper.createAwsRunTaskRequest(registeredRunTaskDefinition, ecsCommandRequest))
+        .thenCallRealMethod();
+
+    RunTaskResult runTaskResult = new RunTaskResult();
+    Task task = new Task();
+    Container containerWithNonZeroExitCode = new Container();
+    containerWithNonZeroExitCode.setExitCode(1);
+    containerWithNonZeroExitCode.setContainerArn("containerArn");
+    containerWithNonZeroExitCode.setTaskArn("taskArn1");
+    task.setTaskArn("taskArn1");
+    task.setContainers(singletonList(containerWithNonZeroExitCode));
+    runTaskResult.setTasks(singletonList(task));
+
+    doReturn(runTaskResult)
+        .when(mockEcsDeployCommandTaskHelper)
+        .triggerRunTask(eq(ecsCommandRequest.getRegion()), any(), any(), anyObject());
+
+    AwsConfig awsConfig = AwsConfig.builder().build();
+    doReturn(awsConfig).when(mockAwsHelperService).validateAndGetAwsConfig(any(), any(), anyBoolean());
+
+    task.setLastStatus(DesiredStatus.STOPPED.name());
+    Container stillRunningContainers = new Container();
+    stillRunningContainers.setExitCode(null);
+    stillRunningContainers.setContainerArn("containerArn");
+    stillRunningContainers.setTaskArn("taskArn1");
+    Task taskWithStatusStopped = new Task();
+    taskWithStatusStopped.setTaskArn("taskArn1");
+    taskWithStatusStopped.setLastStatus(DesiredStatus.RUNNING.name());
+    taskWithStatusStopped.setContainers(singletonList(stillRunningContainers));
+    doReturn(singletonList(taskWithStatusStopped))
+        .doReturn(singletonList(task))
+        .when(mockEcsDeployCommandTaskHelper)
+        .getTasksFromTaskArn(eq(awsConfig), anyString(), anyString(), eq(singletonList("taskArn1")), any(), any());
+
+    EcsCommandExecutionResponse response =
+        ecsRunTaskDeployCommandHandler.executeTaskInternal(ecsCommandRequest, null, mockCallback);
+
+    ArgumentCaptor<RunTaskRequest> captor = ArgumentCaptor.forClass(RunTaskRequest.class);
+    verify(mockEcsDeployCommandTaskHelper, times(1)).triggerRunTask(anyString(), any(), any(), captor.capture());
+
+    verify(mockEcsDeployCommandTaskHelper, times(2))
+        .getTasksFromTaskArn(any(), anyString(), anyString(), any(), any(), any());
+
+    RunTaskRequest triggeredRunTaskRequest = captor.getValue();
+    assertThat(triggeredRunTaskRequest.getTaskDefinition()).isEqualTo("taskArn1");
+    assertThat(triggeredRunTaskRequest.getLaunchType()).isEqualTo("EC2");
+    assertThat(triggeredRunTaskRequest.getCluster()).isEqualTo("RUN_TASK_CLUSTER");
+    assertThat(response).isNotNull();
+    assertThat(response.getErrorMessage()).isEqualTo(null);
+    assertThat(response.getCommandExecutionStatus()).isEqualTo(CommandExecutionStatus.FAILURE);
+    assertThat(response.getEcsCommandResponse().getOutput())
+        .isEqualTo("Failed to execute command: Containers in some tasks failed and are showing non zero exit code\n"
+            + " taskArn1 => containerArn => exit code : 1");
+    assertThat(ecsRunTaskDeployResponse.getCommandExecutionStatus()).isEqualTo(CommandExecutionStatus.FAILURE);
+    assertThat(ecsRunTaskDeployResponse.getOutput())
+        .isEqualTo("Failed to execute command: Containers in some tasks failed and are showing non zero exit code\n"
+            + " taskArn1 => containerArn => exit code : 1");
   }
 }

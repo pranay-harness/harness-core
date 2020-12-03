@@ -8,6 +8,7 @@ import static java.lang.String.format;
 import static java.time.Duration.ofSeconds;
 
 import io.harness.data.structure.EmptyPredicate;
+import io.harness.exception.CommandExecutionException;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.TimeoutException;
@@ -180,12 +181,37 @@ public class EcsRunTaskDeployCommandHandler extends EcsCommandTaskHandler {
           List<Task> notInStoppedStateTasks = tasks.stream()
                                                   .filter(t -> !t.getLastStatus().equals(DesiredStatus.STOPPED.name()))
                                                   .collect(Collectors.toList());
+
+          List<Task> tasksWithFailedContainers =
+              tasks.stream()
+                  .filter(task
+                      -> task.getContainers().stream().anyMatch(
+                          container -> container.getExitCode() != null && container.getExitCode() != 0))
+                  .collect(Collectors.toList());
+          if (EmptyPredicate.isNotEmpty(tasksWithFailedContainers)) {
+            String errorMsg = tasksWithFailedContainers.stream()
+                                  .flatMap(task
+                                      -> task.getContainers().stream().filter(
+                                          container -> container.getExitCode() != null && container.getExitCode() != 0))
+                                  .map(container
+                                      -> container.getTaskArn() + " => " + container.getContainerArn()
+                                          + " => exit code : " + container.getExitCode())
+                                  .collect(Collectors.joining("\n"));
+            executionLogCallback.saveExecutionLog(
+                "Containers in some tasks failed and are showing non zero exit code\n" + errorMsg, LogLevel.ERROR,
+                CommandExecutionStatus.FAILURE);
+            throw new CommandExecutionException(
+                "Containers in some tasks failed and are showing non zero exit code\n " + errorMsg);
+          }
+
           if (EmptyPredicate.isEmpty(notInStoppedStateTasks)) {
             return true;
           }
 
           String taskStatusLog = tasks.stream()
-                                     .map(task -> format("%s : %s", task.getTaskDefinitionArn(), task.getLastStatus()))
+                                     .map(task
+                                         -> format("%s : %s : %s : %s", task.getTaskDefinitionArn(),
+                                             task.getLastStatus(), task.getStopCode(), task.getStoppedReason()))
                                      .collect(Collectors.joining("\n"));
           executionLogCallback.saveExecutionLog(format("%d tasks have not completed", notInStoppedStateTasks.size()));
           executionLogCallback.saveExecutionLog(taskStatusLog);
