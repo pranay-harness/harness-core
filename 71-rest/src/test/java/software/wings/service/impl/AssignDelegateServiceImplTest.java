@@ -234,7 +234,7 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
       verify(delegateSelectionLogsService, Mockito.times(test.getNumOfNoIncludeScopeMatchedInvocations()))
           .logNoIncludeScopeMatched(eq(batch), anyString(), anyString());
       verify(delegateSelectionLogsService, Mockito.times(test.getNumOfExcludeScopeMatchedInvocations()))
-          .logExcludeScopeMatched(eq(batch), anyString(), anyString(), any(DelegateScope.class));
+          .logExcludeScopeMatched(eq(batch), anyString(), anyString(), anyString());
     }
   }
 

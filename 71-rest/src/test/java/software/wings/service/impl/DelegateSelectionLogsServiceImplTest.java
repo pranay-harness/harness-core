@@ -27,7 +27,6 @@ import io.harness.threading.Concurrent;
 
 import software.wings.WingsBaseTest;
 import software.wings.beans.Delegate;
-import software.wings.beans.DelegateScope;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.DelegateSelectionLogsService;
 import software.wings.service.intfc.FeatureFlagService;
@@ -293,10 +292,9 @@ public class DelegateSelectionLogsServiceImplTest extends WingsBaseTest {
     String delegate1Id = generateUuid();
     String delegate2Id = generateUuid();
 
-    DelegateScope scope = DelegateScope.builder().name("testScope").build();
     BatchDelegateSelectionLog batch = BatchDelegateSelectionLog.builder().taskId(taskId).build();
 
-    delegateSelectionLogsService.logExcludeScopeMatched(batch, accountId, delegate1Id, scope);
+    delegateSelectionLogsService.logExcludeScopeMatched(batch, accountId, delegate1Id, "testScope");
 
     assertThat(batch.getDelegateSelectionLogs()).isNotEmpty();
     assertThat(batch.getDelegateSelectionLogs().get(0).getDelegateIds().size()).isEqualTo(1);
@@ -307,7 +305,7 @@ public class DelegateSelectionLogsServiceImplTest extends WingsBaseTest {
     assertThat(batch.getDelegateSelectionLogs().get(0).getEventTimestamp()).isNotNull();
     assertThat(batch.getDelegateSelectionLogs().get(0).getGroupId()).isEqualTo(EXCLUDE_SCOPE_MATCHED_GROUP_ID);
 
-    delegateSelectionLogsService.logExcludeScopeMatched(batch, accountId, delegate2Id, scope);
+    delegateSelectionLogsService.logExcludeScopeMatched(batch, accountId, delegate2Id, "testScope");
 
     assertThat(batch.getDelegateSelectionLogs()).isNotEmpty();
     assertThat(batch.getDelegateSelectionLogs().get(0).getDelegateIds().size()).isEqualTo(2);
