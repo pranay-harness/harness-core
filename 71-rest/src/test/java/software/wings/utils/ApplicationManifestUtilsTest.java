@@ -46,6 +46,7 @@ import io.harness.category.element.UnitTests;
 import io.harness.context.ContextElementType;
 import io.harness.exception.InvalidArgumentsException;
 import io.harness.exception.InvalidRequestException;
+import io.harness.ff.FeatureFlagService;
 import io.harness.git.model.GitFile;
 import io.harness.rule.Owner;
 
@@ -70,7 +71,6 @@ import software.wings.helpers.ext.k8s.request.K8sValuesLocation;
 import software.wings.service.impl.GitFileConfigHelperService;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ApplicationManifestService;
-import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.sm.ExecutionContext;

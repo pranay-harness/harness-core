@@ -25,6 +25,7 @@ import io.harness.event.listener.EventListener;
 import io.harness.event.model.Event;
 import io.harness.event.model.EventData;
 import io.harness.event.model.EventType;
+import io.harness.ff.FeatureFlagService;
 import io.harness.persistence.HPersistence;
 import io.harness.rule.Owner;
 import io.harness.secretmanagers.SecretManagerConfigService;
@@ -39,7 +40,6 @@ import software.wings.beans.User;
 import software.wings.security.UserThreadLocal;
 import software.wings.service.impl.event.AccountEntityEvent;
 import software.wings.service.intfc.AccountService;
-import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.UserService;
 import software.wings.service.intfc.instance.stats.InstanceStatService;
 

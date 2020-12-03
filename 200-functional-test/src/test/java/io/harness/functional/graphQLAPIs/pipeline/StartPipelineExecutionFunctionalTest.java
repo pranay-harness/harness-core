@@ -10,6 +10,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.beans.FeatureName;
 import io.harness.category.element.FunctionalTests;
+import io.harness.ff.FeatureFlagService;
 import io.harness.functional.AbstractFunctionalTest;
 import io.harness.functional.WorkflowUtils;
 import io.harness.generator.ApplicationGenerator;
@@ -34,7 +35,6 @@ import software.wings.beans.Service;
 import software.wings.beans.Workflow;
 import software.wings.beans.artifact.Artifact;
 import software.wings.infra.InfrastructureDefinition;
-import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.PipelineService;
 import software.wings.service.intfc.WorkflowService;
 

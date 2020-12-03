@@ -26,6 +26,7 @@ import static org.mockito.Mockito.when;
 
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.beans.ErrorNotifyResponseData;
+import io.harness.ff.FeatureFlagService;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.rule.Owner;
 
@@ -37,7 +38,6 @@ import software.wings.helpers.ext.jenkins.BuildDetails;
 import software.wings.service.impl.artifact.ArtifactCollectionUtils;
 import software.wings.service.intfc.ArtifactService;
 import software.wings.service.intfc.ArtifactStreamService;
-import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.TriggerService;
 
 import com.google.inject.Inject;

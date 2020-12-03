@@ -10,6 +10,7 @@ import static software.wings.common.WorkflowConstants.K8S_PRIMARY_PHASE_NAME;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.ff.FeatureFlagService;
 import io.harness.serializer.MapperUtils;
 
 import software.wings.beans.CanaryOrchestrationWorkflow;
@@ -21,7 +22,6 @@ import software.wings.service.impl.workflow.WorkflowServiceTemplateHelper;
 import software.wings.service.impl.workflow.creation.helpers.K8CanaryWorkflowPhaseHelper;
 import software.wings.service.impl.workflow.creation.helpers.K8RollingWorkflowPhaseHelper;
 import software.wings.service.impl.workflow.creation.helpers.WorkflowPhaseHelper;
-import software.wings.service.intfc.FeatureFlagService;
 
 import com.google.inject.Inject;
 import lombok.extern.slf4j.Slf4j;

@@ -31,9 +31,11 @@ import static java.util.Arrays.asList;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.beans.SecretText;
+import io.harness.configuration.DeployMode;
 import io.harness.entity.ServiceSecretKey;
 import io.harness.entity.ServiceSecretKey.ServiceSecretKeyKeys;
 import io.harness.entity.ServiceSecretKey.ServiceType;
+import io.harness.ff.FeatureFlagService;
 import io.harness.generator.AccountGenerator;
 import io.harness.generator.ApplicationGenerator;
 import io.harness.generator.DelegateProfileGenerator;
@@ -82,7 +84,6 @@ import software.wings.security.UsageRestrictions;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.AppContainerService;
 import software.wings.service.intfc.EnvironmentService;
-import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.ServiceTemplateService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.SystemCatalogService;
@@ -194,7 +195,7 @@ public class DataGenService {
       log.error(ex.getMessage());
     }
 
-    featureFlagService.initializeFeatureFlags();
+    featureFlagService.initializeFeatureFlags(DeployMode.AWS, "");
     createServiceSecretKey(ServiceType.LEARNING_ENGINE, "67d9b94d9856665afc21acd3aa745401");
   }
 

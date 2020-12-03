@@ -21,6 +21,7 @@ import io.harness.context.ContextElementType;
 import io.harness.data.structure.UUIDGenerator;
 import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.exception.WingsException;
+import io.harness.ff.FeatureFlagService;
 import io.harness.lock.AcquiredLock;
 import io.harness.lock.PersistentLocker;
 import io.harness.perpetualtask.PerpetualTaskService;
@@ -57,7 +58,6 @@ import software.wings.beans.infrastructure.instance.info.PhysicalHostInstanceInf
 import software.wings.beans.infrastructure.instance.key.HostInstanceKey;
 import software.wings.service.impl.AwsHelperService;
 import software.wings.service.intfc.AppService;
-import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.HostService;
 import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.ServiceResourceService;

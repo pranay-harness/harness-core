@@ -21,6 +21,7 @@ import static org.mockito.Mockito.when;
 import io.harness.CategoryTest;
 import io.harness.beans.FeatureName;
 import io.harness.category.element.UnitTests;
+import io.harness.ff.FeatureFlagService;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.rule.Owner;
 
@@ -34,7 +35,6 @@ import software.wings.delegatetasks.manifest.ManifestCollectionResponse;
 import software.wings.service.impl.applicationmanifest.AppManifestPTaskHelper;
 import software.wings.service.intfc.AlertService;
 import software.wings.service.intfc.ApplicationManifestService;
-import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.TriggerService;
 import software.wings.service.intfc.applicationmanifest.HelmChartService;
 

@@ -3,6 +3,7 @@ package software.wings.service.impl.yaml.handler;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
 import io.harness.beans.FeatureName;
+import io.harness.ff.FeatureFlagService;
 
 import software.wings.beans.AllowedValueYaml;
 import software.wings.beans.ArtifactStreamAllowedValueYaml;
@@ -10,7 +11,6 @@ import software.wings.beans.ServiceVariable;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.artifact.ArtifactStream;
 import software.wings.service.intfc.ArtifactStreamService;
-import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.SettingsService;
 
 import com.google.inject.Inject;

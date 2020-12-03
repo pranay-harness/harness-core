@@ -21,6 +21,7 @@ import static org.mockito.Mockito.when;
 import io.harness.CategoryTest;
 import io.harness.beans.FeatureName;
 import io.harness.category.element.UnitTests;
+import io.harness.ff.FeatureFlagService;
 import io.harness.lock.AcquiredLock;
 import io.harness.lock.PersistentLocker;
 import io.harness.rule.Owner;
@@ -29,7 +30,6 @@ import io.harness.rule.OwnerRule;
 import software.wings.beans.artifact.ArtifactStream;
 import software.wings.beans.artifact.DockerArtifactStream;
 import software.wings.dl.WingsPersistence;
-import software.wings.service.intfc.FeatureFlagService;
 
 import com.google.inject.Inject;
 import java.util.Collections;

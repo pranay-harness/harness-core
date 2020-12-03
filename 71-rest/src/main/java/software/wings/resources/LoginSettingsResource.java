@@ -2,6 +2,7 @@ package software.wings.resources;
 
 import static software.wings.security.PermissionAttribute.PermissionType.MANAGE_AUTHENTICATION_SETTINGS;
 
+import io.harness.ff.FeatureFlagService;
 import io.harness.rest.RestResponse;
 
 import software.wings.beans.loginSettings.LoginSettings;
@@ -12,7 +13,6 @@ import software.wings.beans.loginSettings.UserLockoutPolicy;
 import software.wings.security.PermissionAttribute.ResourceType;
 import software.wings.security.annotations.AuthRule;
 import software.wings.security.annotations.Scope;
-import software.wings.service.intfc.FeatureFlagService;
 
 import com.google.inject.Inject;
 import io.swagger.annotations.Api;

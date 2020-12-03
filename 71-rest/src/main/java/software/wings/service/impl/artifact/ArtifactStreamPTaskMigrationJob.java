@@ -11,13 +11,13 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.artifact.ArtifactCollectionResponseHandler;
 import io.harness.beans.FeatureName;
 import io.harness.data.structure.EmptyPredicate;
+import io.harness.ff.FeatureFlagService;
 import io.harness.lock.AcquiredLock;
 import io.harness.lock.PersistentLocker;
 
 import software.wings.beans.artifact.ArtifactStream;
 import software.wings.beans.artifact.ArtifactStream.ArtifactStreamKeys;
 import software.wings.dl.WingsPersistence;
-import software.wings.service.intfc.FeatureFlagService;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Sets;

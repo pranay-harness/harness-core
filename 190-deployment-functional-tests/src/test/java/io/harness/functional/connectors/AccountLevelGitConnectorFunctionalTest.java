@@ -18,6 +18,7 @@ import io.harness.beans.FeatureName;
 import io.harness.beans.OrchestrationWorkflowType;
 import io.harness.beans.WorkflowType;
 import io.harness.category.element.CDFunctionalTests;
+import io.harness.ff.FeatureFlagService;
 import io.harness.functional.AbstractFunctionalTest;
 import io.harness.functional.utils.HelmHelper;
 import io.harness.functional.utils.K8SUtils;
@@ -58,7 +59,6 @@ import software.wings.beans.artifact.Artifact;
 import software.wings.beans.artifact.ArtifactStream;
 import software.wings.infra.InfrastructureDefinition;
 import software.wings.service.intfc.ApplicationManifestService;
-import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.WorkflowService;
 import software.wings.utils.ArtifactType;
 

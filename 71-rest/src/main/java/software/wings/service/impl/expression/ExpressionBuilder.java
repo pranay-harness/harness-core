@@ -41,6 +41,7 @@ import static java.util.stream.Collectors.toList;
 
 import io.harness.beans.FeatureName;
 import io.harness.beans.PageRequest;
+import io.harness.ff.FeatureFlagService;
 
 import software.wings.beans.EntityType;
 import software.wings.beans.ServiceTemplate;
@@ -49,7 +50,6 @@ import software.wings.beans.ServiceVariable.ServiceVariableKeys;
 import software.wings.beans.SubEntityType;
 import software.wings.beans.artifact.Artifact.ArtifactKeys;
 import software.wings.service.intfc.AppService;
-import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.ServiceTemplateService;
 import software.wings.service.intfc.ServiceVariableService;
 import software.wings.sm.StateType;

@@ -7,6 +7,7 @@ import static org.mockito.Mockito.when;
 
 import io.harness.beans.PageResponse;
 import io.harness.category.element.UnitTests;
+import io.harness.ff.FeatureFlagService;
 import io.harness.governance.pipeline.enforce.PipelineReportCard;
 import io.harness.governance.pipeline.service.model.PipelineGovernanceConfig;
 import io.harness.governance.pipeline.service.model.Restriction;
@@ -18,7 +19,6 @@ import io.harness.rule.Owner;
 import software.wings.WingsBaseTest;
 import software.wings.beans.HarnessTagLink;
 import software.wings.beans.Pipeline;
-import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.HarnessTagService;
 import software.wings.service.intfc.PipelineService;
 

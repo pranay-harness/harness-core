@@ -9,6 +9,7 @@ import io.harness.beans.FeatureName;
 import io.harness.beans.SecretText;
 import io.harness.category.element.UnitTests;
 import io.harness.category.layer.GraphQLTests;
+import io.harness.ff.FeatureFlagService;
 import io.harness.generator.AccountGenerator;
 import io.harness.generator.ApplicationGenerator;
 import io.harness.generator.OwnerManager;
@@ -21,7 +22,6 @@ import io.harness.testframework.graphql.QLTestObject;
 
 import software.wings.beans.Account;
 import software.wings.beans.Application;
-import software.wings.service.intfc.FeatureFlagService;
 
 import com.google.inject.Inject;
 import org.junit.Before;

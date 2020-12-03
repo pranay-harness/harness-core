@@ -15,6 +15,7 @@ import io.harness.beans.PageResponse;
 import io.harness.beans.SearchFilter.Operator;
 import io.harness.beans.SortOrder.OrderType;
 import io.harness.exception.WingsException;
+import io.harness.ff.FeatureFlagService;
 import io.harness.logging.CommandExecutionStatus;
 
 import software.wings.beans.Log;
@@ -22,7 +23,6 @@ import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.ActivityService;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.DataStoreService;
-import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.LogService;
 
 import com.google.common.collect.Lists;

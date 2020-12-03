@@ -19,6 +19,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.when;
 
 import io.harness.category.element.UnitTests;
+import io.harness.ff.FeatureFlagService;
 import io.harness.limits.Action;
 import io.harness.limits.ActionType;
 import io.harness.limits.LimitCheckerFactory;
@@ -26,7 +27,6 @@ import io.harness.rule.Owner;
 
 import software.wings.beans.Workflow;
 import software.wings.beans.yaml.ChangeContext;
-import software.wings.service.intfc.FeatureFlagService;
 import software.wings.utils.WingsTestConstants.MockChecker;
 import software.wings.yaml.workflow.BuildWorkflowYaml;
 

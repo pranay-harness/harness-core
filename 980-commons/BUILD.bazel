@@ -9,9 +9,15 @@ load("//tools/bazel/pmd:defs.bzl", "pmd")
 sources()
 
 java_library(
-    name = "maven_deps",
+    name = "module",
+    srcs = glob(["src/main/**/*.java"]),
+    resources = [
+        "//980-commons/src/main/resources:resource",
+        "//980-commons/src/main/resources-filtered:resource",
+    ],
     visibility = ["//visibility:public"],
-    exports = [
+    deps = [
+        "//:lombok",
         "@maven//:ch_qos_logback_contrib_logback_jackson",
         "@maven//:ch_qos_logback_contrib_logback_json_classic",
         "@maven//:ch_qos_logback_contrib_logback_json_core",
@@ -94,20 +100,6 @@ java_library(
 )
 
 java_library(
-    name = "module",
-    srcs = glob(["src/main/**/*.java"]),
-    resources = [
-        "//980-commons/src/main/resources:resource",
-        "//980-commons/src/main/resources-filtered:resource",
-    ],
-    visibility = ["//visibility:public"],
-    deps = [
-        "maven_deps",
-        "//:lombok",
-    ],
-)
-
-java_library(
     name = "tests",
     srcs = glob(["src/test/**/*.java"]),
     resources = [
@@ -115,7 +107,6 @@ java_library(
     ],
     visibility = ["//visibility:private"],
     deps = [
-        "maven_deps",
         "module",
         "//:lombok",
         "//990-commons-test:module",

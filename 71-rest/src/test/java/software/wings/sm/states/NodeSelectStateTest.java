@@ -48,6 +48,7 @@ import io.harness.category.element.UnitTests;
 import io.harness.context.ContextElementType;
 import io.harness.deployment.InstanceDetails;
 import io.harness.exception.InvalidRequestException;
+import io.harness.ff.FeatureFlagService;
 import io.harness.rule.Owner;
 
 import software.wings.WingsBaseTest;
@@ -72,7 +73,6 @@ import software.wings.beans.infrastructure.instance.key.HostInstanceKey;
 import software.wings.common.InstanceExpressionProcessor;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ArtifactService;
-import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.HostService;
 import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.StateExecutionService;

@@ -17,6 +17,7 @@ import static java.util.stream.Collectors.toMap;
 
 import io.harness.beans.FeatureName;
 import io.harness.exception.InvalidArgumentsException;
+import io.harness.ff.FeatureFlagService;
 import io.harness.serializer.JsonUtils;
 
 import software.wings.beans.APMVerificationConfig;
@@ -58,7 +59,6 @@ import software.wings.beans.settings.helm.AmazonS3HelmRepoConfig;
 import software.wings.beans.settings.helm.GCSHelmRepoConfig;
 import software.wings.beans.settings.helm.HttpHelmRepoConfig;
 import software.wings.helpers.ext.mail.SmtpConfig;
-import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.PluginService;
 import software.wings.settings.SettingVariableTypes;
 

@@ -9,6 +9,7 @@ import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.FeatureName;
 import io.harness.exception.HintException;
+import io.harness.ff.FeatureFlagService;
 import io.harness.rest.RestResponse;
 
 import software.wings.app.MainConfiguration;
@@ -16,7 +17,6 @@ import software.wings.search.SearchService;
 import software.wings.search.framework.AdvancedSearchQuery;
 import software.wings.search.framework.SearchResults;
 import software.wings.security.annotations.AuthRule;
-import software.wings.service.intfc.FeatureFlagService;
 
 import com.google.inject.Inject;
 import io.swagger.annotations.Api;

@@ -3,6 +3,7 @@ package io.harness.app;
 import io.harness.cvng.core.services.api.VerificationServiceSecretManager;
 import io.harness.cvng.core.services.impl.VerificationServiceSecretManagerImpl;
 import io.harness.exception.WingsException;
+import io.harness.ff.FeatureFlagModule;
 import io.harness.persistence.HPersistence;
 import io.harness.queue.QueueController;
 import io.harness.service.ContinuousVerificationServiceImpl;
@@ -23,7 +24,6 @@ import io.harness.version.VersionInfoManager;
 import software.wings.DataStorageMode;
 import software.wings.dl.WingsMongoPersistence;
 import software.wings.dl.WingsPersistence;
-import software.wings.service.impl.FeatureFlagServiceImpl;
 import software.wings.service.impl.GoogleDataStoreServiceImpl;
 import software.wings.service.impl.MongoDataStoreServiceImpl;
 import software.wings.service.impl.analysis.VerificationServiceImpl;
@@ -35,7 +35,6 @@ import software.wings.service.impl.verification.CVTaskServiceImpl;
 import software.wings.service.impl.verification.CvValidationService;
 import software.wings.service.intfc.AlertService;
 import software.wings.service.intfc.DataStoreService;
-import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.MigrationService;
 import software.wings.service.intfc.VerificationService;
 import software.wings.service.intfc.datadog.DatadogService;
@@ -81,6 +80,8 @@ public class VerificationServiceModule extends AbstractModule {
    */
   @Override
   protected void configure() {
+    install(FeatureFlagModule.getInstance());
+
     bind(VerificationServiceConfiguration.class).toInstance(configuration);
     bind(HPersistence.class).to(WingsMongoPersistence.class);
     bind(WingsPersistence.class).to(WingsMongoPersistence.class);
@@ -93,7 +94,6 @@ public class VerificationServiceModule extends AbstractModule {
     bind(TimeSeriesAnalysisService.class).to(TimeSeriesAnalysisServiceImpl.class);
     bind(LogAnalysisService.class).to(LogAnalysisServiceImpl.class);
     bind(CVTaskService.class).to(CVTaskServiceImpl.class);
-    bind(FeatureFlagService.class).to(FeatureFlagServiceImpl.class);
     bind(CVActivityLogService.class).to(CVActivityLogServiceImpl.class);
     bind(CVConfigurationService.class).to(CVConfigurationServiceImpl.class);
     bind(DatadogService.class).to(DatadogServiceImpl.class);

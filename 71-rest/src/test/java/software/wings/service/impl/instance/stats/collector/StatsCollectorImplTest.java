@@ -11,11 +11,11 @@ import static org.mockito.Mockito.doReturn;
 
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
+import io.harness.ff.FeatureFlagService;
 import io.harness.rule.Owner;
 
 import software.wings.beans.infrastructure.instance.ServerlessInstance;
 import software.wings.beans.infrastructure.instance.stats.ServerlessInstanceStats;
-import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.instance.ServerlessDashboardService;
 import software.wings.service.intfc.instance.stats.ServerlessInstanceStatService;
 

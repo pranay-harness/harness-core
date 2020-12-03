@@ -8,7 +8,6 @@ import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.Mockito.when;
 
 import io.harness.beans.FeatureFlag;
 import io.harness.beans.FeatureName;
@@ -16,12 +15,11 @@ import io.harness.beans.PageRequest;
 import io.harness.beans.SearchFilter;
 import io.harness.category.element.UnitTests;
 import io.harness.configuration.DeployMode;
+import io.harness.ff.FeatureFlagServiceImpl;
+import io.harness.persistence.HPersistence;
 import io.harness.rule.Owner;
 
 import software.wings.WingsBaseTest;
-import software.wings.app.MainConfiguration;
-import software.wings.dl.WingsPersistence;
-import software.wings.service.impl.FeatureFlagServiceImpl;
 
 import com.google.inject.Inject;
 import java.util.HashSet;
@@ -30,7 +28,6 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
-import org.mockito.Mock;
 import org.mockito.Spy;
 
 public class FeatureFlagTest extends WingsBaseTest {
@@ -41,10 +38,9 @@ public class FeatureFlagTest extends WingsBaseTest {
   private static final String TEST_ACCOUNT_ID_X = "TEST_ACCOUNT_ID_X";
   private static final String TEST_ACCOUNT_ID_Y = "TEST_ACCOUNT_ID_Y";
 
-  @Mock private MainConfiguration mainConfiguration;
   @Inject @InjectMocks @Spy private FeatureFlagServiceImpl featureFlagService;
 
-  @Inject private WingsPersistence wingsPersistence;
+  @Inject private HPersistence persistence;
 
   private Set<String> listWith = new HashSet<>(asList(TEST_ACCOUNT_ID, TEST_ACCOUNT_ID_X));
   private Set<String> listWithout = new HashSet<>(asList(TEST_ACCOUNT_ID_X, TEST_ACCOUNT_ID_Y));
@@ -76,7 +72,7 @@ public class FeatureFlagTest extends WingsBaseTest {
   @Owner(developers = BRETT)
   @Category(UnitTests.class)
   public void shouldBeEnabledWhenTrue() {
-    wingsPersistence.save(ffTrue);
+    persistence.save(ffTrue);
     assertThat(featureFlagService.isEnabled(FEATURE, ACCOUNT_ID)).isTrue();
   }
 
@@ -84,7 +80,7 @@ public class FeatureFlagTest extends WingsBaseTest {
   @Owner(developers = BRETT)
   @Category(UnitTests.class)
   public void shouldBeDisabledWhenFalse() {
-    wingsPersistence.save(ffFalse);
+    persistence.save(ffFalse);
     assertThat(featureFlagService.isEnabled(FEATURE, ACCOUNT_ID)).isFalse();
   }
 
@@ -92,7 +88,7 @@ public class FeatureFlagTest extends WingsBaseTest {
   @Owner(developers = BRETT)
   @Category(UnitTests.class)
   public void shouldWorkWhenAccountIdMissingTrue() {
-    wingsPersistence.save(ffTrue);
+    persistence.save(ffTrue);
     assertThat(featureFlagService.isEnabled(FEATURE, null)).isTrue();
   }
 
@@ -100,7 +96,7 @@ public class FeatureFlagTest extends WingsBaseTest {
   @Owner(developers = BRETT)
   @Category(UnitTests.class)
   public void shouldWorkWhenAccountIdMissingFalse() {
-    wingsPersistence.save(ffFalse);
+    persistence.save(ffFalse);
     assertThat(featureFlagService.isEnabled(FEATURE, null)).isFalse();
   }
 
@@ -108,7 +104,7 @@ public class FeatureFlagTest extends WingsBaseTest {
   @Owner(developers = BRETT)
   @Category(UnitTests.class)
   public void shouldWorkWhenAccountIdMissingTrueWith() {
-    wingsPersistence.save(ffTrueWith);
+    persistence.save(ffTrueWith);
     assertThat(featureFlagService.isEnabled(FEATURE, null)).isTrue();
   }
 
@@ -116,7 +112,7 @@ public class FeatureFlagTest extends WingsBaseTest {
   @Owner(developers = BRETT)
   @Category(UnitTests.class)
   public void shouldWorkWhenAccountIdMissingFalseWith() {
-    wingsPersistence.save(ffFalseWith);
+    persistence.save(ffFalseWith);
     assertThat(featureFlagService.isEnabled(FEATURE, null)).isFalse();
   }
 
@@ -124,7 +120,7 @@ public class FeatureFlagTest extends WingsBaseTest {
   @Owner(developers = BRETT)
   @Category(UnitTests.class)
   public void shouldWorkWhenAccountIdMissingTrueWithout() {
-    wingsPersistence.save(ffTrueWithout);
+    persistence.save(ffTrueWithout);
     assertThat(featureFlagService.isEnabled(FEATURE, null)).isTrue();
   }
 
@@ -132,7 +128,7 @@ public class FeatureFlagTest extends WingsBaseTest {
   @Owner(developers = BRETT)
   @Category(UnitTests.class)
   public void shouldWorkWhenAccountIdMissingFalseWithout() {
-    wingsPersistence.save(ffFalseWithout);
+    persistence.save(ffFalseWithout);
     assertThat(featureFlagService.isEnabled(FEATURE, null)).isFalse();
   }
 
@@ -140,7 +136,7 @@ public class FeatureFlagTest extends WingsBaseTest {
   @Owner(developers = BRETT)
   @Category(UnitTests.class)
   public void shouldBeEnabledWhenWhiteListedTrueWith() {
-    wingsPersistence.save(ffTrueWith);
+    persistence.save(ffTrueWith);
     assertThat(featureFlagService.isEnabled(FEATURE, TEST_ACCOUNT_ID)).isTrue();
   }
 
@@ -149,7 +145,7 @@ public class FeatureFlagTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void shouldBeEnabledWhenWhiteListedFalseWith() {
     // This tests whitelisting
-    wingsPersistence.save(ffFalseWith);
+    persistence.save(ffFalseWith);
     assertThat(featureFlagService.isEnabled(FEATURE, TEST_ACCOUNT_ID)).isTrue();
   }
 
@@ -157,7 +153,7 @@ public class FeatureFlagTest extends WingsBaseTest {
   @Owner(developers = BRETT)
   @Category(UnitTests.class)
   public void shouldBeEnabledWhenWhiteListedTrueWithout() {
-    wingsPersistence.save(ffTrueWithout);
+    persistence.save(ffTrueWithout);
     assertThat(featureFlagService.isEnabled(FEATURE, TEST_ACCOUNT_ID)).isTrue();
   }
 
@@ -165,7 +161,7 @@ public class FeatureFlagTest extends WingsBaseTest {
   @Owner(developers = BRETT)
   @Category(UnitTests.class)
   public void shouldBeEnabledWhenWhiteListedFalseWithout() {
-    wingsPersistence.save(ffFalseWithout);
+    persistence.save(ffFalseWithout);
     assertThat(featureFlagService.isEnabled(FEATURE, TEST_ACCOUNT_ID)).isFalse();
   }
 
@@ -173,11 +169,7 @@ public class FeatureFlagTest extends WingsBaseTest {
   @Owner(developers = RUSHABH)
   @Category(UnitTests.class)
   public void testFeatureFlagEnabledInConfig() {
-    when(mainConfiguration.getFeatureNames()).thenReturn(FEATURE.name());
-    when(mainConfiguration.getDeployMode()).thenReturn(DeployMode.ONPREM);
-
-    featureFlagService.initializeFeatureFlags();
-
+    featureFlagService.initializeFeatureFlags(DeployMode.ONPREM, FEATURE.name());
     for (FeatureName featureName : FeatureName.values()) {
       assertThat(featureFlagService.isEnabled(featureName, null)).isEqualTo(featureName == FEATURE);
     }
@@ -187,10 +179,7 @@ public class FeatureFlagTest extends WingsBaseTest {
   @Owner(developers = RUSHABH)
   @Category(UnitTests.class)
   public void testFeatureFlagEnabledInConfigSaas() {
-    when(mainConfiguration.getFeatureNames()).thenReturn(FEATURE.name());
-    when(mainConfiguration.getDeployMode()).thenReturn(DeployMode.KUBERNETES);
-
-    featureFlagService.initializeFeatureFlags();
+    featureFlagService.initializeFeatureFlags(DeployMode.KUBERNETES, FEATURE.name());
 
     for (FeatureName featureName : FeatureName.values()) {
       assertThat(featureFlagService.isEnabled(featureName, "dummy")).isFalse();
@@ -201,10 +190,7 @@ public class FeatureFlagTest extends WingsBaseTest {
   @Owner(developers = RUSHABH)
   @Category(UnitTests.class)
   public void testWithBadFlagEnabledValues() {
-    when(mainConfiguration.getFeatureNames()).thenReturn("wrongName");
-    when(mainConfiguration.getDeployMode()).thenReturn(DeployMode.ONPREM);
-
-    featureFlagService.initializeFeatureFlags();
+    featureFlagService.initializeFeatureFlags(DeployMode.ONPREM, "wrongName");
 
     for (FeatureName featureName : FeatureName.values()) {
       if (featureName.getScope() == GLOBAL) {

@@ -15,6 +15,7 @@ import io.harness.beans.PageResponse;
 import io.harness.category.element.UnitTests;
 import io.harness.data.structure.UUIDGenerator;
 import io.harness.encryption.EncryptionReflectUtils;
+import io.harness.ff.FeatureFlagService;
 import io.harness.reflection.ReflectionUtils;
 import io.harness.rule.Owner;
 import io.harness.secrets.setupusage.builders.SettingAttributeSetupUsageBuilder;
@@ -25,7 +26,6 @@ import software.wings.beans.Account;
 import software.wings.beans.AccountType;
 import software.wings.beans.KubernetesClusterConfig;
 import software.wings.beans.SettingAttribute;
-import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.settings.SettingVariableTypes;
 

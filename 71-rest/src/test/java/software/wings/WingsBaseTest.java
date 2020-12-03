@@ -16,10 +16,12 @@ import io.harness.encryptors.clients.AwsKmsEncryptor;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.SecretManagementException;
 import io.harness.exception.WingsException;
+import io.harness.ff.FeatureFlagService;
 import io.harness.queue.QueueConsumer;
 import io.harness.security.encryption.EncryptedRecord;
 import io.harness.security.encryption.EncryptionType;
 
+import software.wings.app.MainConfiguration;
 import software.wings.beans.Account;
 import software.wings.beans.Account.Builder;
 import software.wings.beans.AccountStatus;
@@ -41,7 +43,6 @@ import software.wings.dl.WingsPersistence;
 import software.wings.resources.secretsmanagement.SecretManagementResource;
 import software.wings.rules.WingsRule;
 import software.wings.service.intfc.ConfigService;
-import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.security.EncryptionService;
 import software.wings.service.intfc.security.LocalSecretManagerService;
@@ -80,6 +81,7 @@ public abstract class WingsBaseTest extends CategoryTest implements MockableTest
   @Inject protected SettingsService settingsService;
   @Inject protected FeatureFlagService featureFlagService;
   @Inject protected LocalSecretManagerService localSecretManagerService;
+  @Inject protected MainConfiguration mainConfiguration;
 
   protected EncryptedData encrypt(String accountId, char[] value, KmsConfig kmsConfig) throws Exception {
     if (kmsConfig.getAccessKey().equals("invalidKey")) {
@@ -383,7 +385,7 @@ public abstract class WingsBaseTest extends CategoryTest implements MockableTest
   }
 
   protected void enableFeatureFlag(FeatureName featureName) {
-    featureFlagService.initializeFeatureFlags();
+    featureFlagService.initializeFeatureFlags(mainConfiguration.getDeployMode(), mainConfiguration.getFeatureNames());
     wingsPersistence.update(
         wingsPersistence.createQuery(FeatureFlag.class, excludeAuthority).filter(FeatureFlagKeys.name, featureName),
         wingsPersistence.createUpdateOperations(FeatureFlag.class).set(FeatureFlagKeys.enabled, true));
@@ -391,7 +393,7 @@ public abstract class WingsBaseTest extends CategoryTest implements MockableTest
   }
 
   protected void disableFeatureFlag(FeatureName featureName) {
-    featureFlagService.initializeFeatureFlags();
+    featureFlagService.initializeFeatureFlags(mainConfiguration.getDeployMode(), mainConfiguration.getFeatureNames());
     wingsPersistence.update(
         wingsPersistence.createQuery(FeatureFlag.class, excludeAuthority).filter(FeatureFlagKeys.name, featureName),
         wingsPersistence.createUpdateOperations(FeatureFlag.class)

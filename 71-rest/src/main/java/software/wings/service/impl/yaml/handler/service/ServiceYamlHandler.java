@@ -17,6 +17,7 @@ import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 import io.harness.beans.FeatureName;
 import io.harness.exception.InvalidRequestException;
+import io.harness.ff.FeatureFlagService;
 import io.harness.k8s.model.HelmVersion;
 
 import software.wings.api.DeploymentType;
@@ -38,7 +39,6 @@ import software.wings.service.impl.yaml.handler.ServiceVariableYamlHelper;
 import software.wings.service.impl.yaml.service.YamlHelper;
 import software.wings.service.intfc.AppContainerService;
 import software.wings.service.intfc.AppService;
-import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.ServiceVariableService;
 import software.wings.service.intfc.customdeployment.CustomDeploymentTypeService;

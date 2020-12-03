@@ -8,6 +8,7 @@ import static org.mockito.Mockito.when;
 
 import io.harness.beans.FeatureName;
 import io.harness.category.element.UnitTests;
+import io.harness.ff.FeatureFlagService;
 import io.harness.rule.Owner;
 
 import software.wings.WingsBaseTest;
@@ -15,7 +16,6 @@ import software.wings.dl.WingsPersistence;
 import software.wings.service.impl.MongoDataStoreServiceImpl;
 import software.wings.service.impl.analysis.CVFeedbackRecord.CVFeedbackRecordKeys;
 import software.wings.service.intfc.DataStoreService;
-import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.analysis.LogLabelingService;
 
 import com.google.inject.Inject;

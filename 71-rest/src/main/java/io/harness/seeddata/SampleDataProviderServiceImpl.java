@@ -7,6 +7,7 @@ import static io.harness.validation.Validator.notNullCheck;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.WingsException;
+import io.harness.ff.FeatureFlagService;
 import io.harness.k8s.KubernetesConvention;
 
 import software.wings.beans.Account;
@@ -18,7 +19,6 @@ import software.wings.beans.SettingAttribute;
 import software.wings.infra.InfrastructureDefinition;
 import software.wings.service.intfc.ArtifactStreamServiceBindingService;
 import software.wings.service.intfc.AuthService;
-import software.wings.service.intfc.FeatureFlagService;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;

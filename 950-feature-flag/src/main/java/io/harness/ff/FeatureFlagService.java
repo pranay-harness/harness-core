@@ -1,7 +1,8 @@
-package software.wings.service.intfc;
+package io.harness.ff;
 
 import io.harness.beans.FeatureFlag;
 import io.harness.beans.FeatureName;
+import io.harness.configuration.DeployMode;
 
 import java.util.List;
 import java.util.Optional;
@@ -13,7 +14,7 @@ public interface FeatureFlagService {
   boolean isEnabled(FeatureName featureName, String accountId);
   boolean isNotEnabled(FeatureName featureName, String accountId);
 
-  void initializeFeatureFlags();
+  void initializeFeatureFlags(DeployMode deployMode, String featureNames);
 
   List<FeatureFlag> getAllFeatureFlags();
 

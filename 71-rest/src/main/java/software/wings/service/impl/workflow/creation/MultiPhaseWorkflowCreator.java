@@ -7,6 +7,7 @@ import static io.harness.validation.Validator.notNullCheck;
 import static software.wings.beans.Workflow.WorkflowBuilder.aWorkflow;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.ff.FeatureFlagService;
 import io.harness.serializer.MapperUtils;
 
 import software.wings.beans.CanaryOrchestrationWorkflow;
@@ -16,7 +17,6 @@ import software.wings.beans.WorkflowPhase;
 import software.wings.service.impl.workflow.WorkflowServiceHelper;
 import software.wings.service.impl.workflow.WorkflowServiceTemplateHelper;
 import software.wings.service.impl.workflow.creation.helpers.WorkflowPhaseHelper;
-import software.wings.service.intfc.FeatureFlagService;
 
 import com.google.inject.Inject;
 import java.util.ArrayList;

@@ -1,6 +1,7 @@
 package software.wings.service.impl.instance;
 
 import io.harness.beans.FeatureName;
+import io.harness.ff.FeatureFlagService;
 import io.harness.lock.AcquiredLock;
 import io.harness.lock.PersistentLocker;
 
@@ -8,7 +9,6 @@ import software.wings.beans.Account;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.AppService;
-import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.InfrastructureMappingService;
 
 import com.google.common.annotations.VisibleForTesting;

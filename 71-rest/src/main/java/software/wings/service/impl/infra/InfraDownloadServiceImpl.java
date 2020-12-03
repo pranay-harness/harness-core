@@ -10,9 +10,9 @@ import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 import io.harness.beans.FeatureName;
 import io.harness.environment.SystemEnvironment;
+import io.harness.ff.FeatureFlagService;
 import io.harness.logging.AccessTokenBean;
 
-import software.wings.service.intfc.FeatureFlagService;
 import software.wings.utils.CdnStorageUrlGenerator;
 import software.wings.utils.GcsUtils;
 

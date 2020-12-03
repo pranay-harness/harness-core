@@ -12,6 +12,7 @@ import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 
 import io.harness.beans.EmbeddedUser;
 import io.harness.beans.FeatureName;
+import io.harness.ff.FeatureFlagService;
 import io.harness.globalcontex.AuditGlobalContextData;
 import io.harness.manage.GlobalContextManager;
 
@@ -26,7 +27,6 @@ import software.wings.beans.yaml.GitFileChange;
 import software.wings.common.AuditHelper;
 import software.wings.dl.WingsPersistence;
 import software.wings.exception.YamlProcessingException.ChangeWithErrorMsg;
-import software.wings.service.intfc.FeatureFlagService;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;

@@ -7,13 +7,13 @@ import static software.wings.beans.Application.GLOBAL_APP_ID;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.FeatureName;
+import io.harness.ff.FeatureFlagService;
 
 import software.wings.beans.SlackMessage;
 import software.wings.beans.SyncTaskContext;
 import software.wings.beans.notification.SlackNotificationConfiguration;
 import software.wings.beans.notification.SlackNotificationSetting;
 import software.wings.delegatetasks.DelegateProxyFactory;
-import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.SlackMessageSender;
 import software.wings.service.intfc.SlackNotificationService;
 

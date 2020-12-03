@@ -31,6 +31,7 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.FeatureName;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.WingsException;
+import io.harness.ff.FeatureFlagService;
 import io.harness.persistence.HIterator;
 
 import software.wings.beans.ExecutionArgs;
@@ -60,7 +61,6 @@ import software.wings.dl.WingsPersistence;
 import software.wings.scheduler.ScheduledTriggerJob;
 import software.wings.service.intfc.ArtifactStreamService;
 import software.wings.service.intfc.ArtifactStreamServiceBindingService;
-import software.wings.service.intfc.FeatureFlagService;
 import software.wings.utils.CryptoUtils;
 
 import com.cronutils.descriptor.CronDescriptor;

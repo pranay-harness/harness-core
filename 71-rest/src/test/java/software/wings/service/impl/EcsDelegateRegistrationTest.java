@@ -25,6 +25,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import io.harness.category.element.UnitTests;
+import io.harness.ff.FeatureFlagService;
 import io.harness.rule.Owner;
 
 import software.wings.WingsBaseTest;
@@ -33,7 +34,6 @@ import software.wings.beans.Delegate;
 import software.wings.beans.DelegateSequenceConfig;
 import software.wings.dl.WingsPersistence;
 import software.wings.jre.JreConfig;
-import software.wings.service.intfc.FeatureFlagService;
 
 import java.util.ArrayList;
 import java.util.Arrays;

@@ -1,10 +1,11 @@
-package software.wings.service.impl;
+package io.harness.ff;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.persistence.HQuery.excludeAuthority;
 
+import static java.lang.System.currentTimeMillis;
 import static java.util.Collections.emptyList;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toSet;
@@ -16,17 +17,13 @@ import io.harness.beans.FeatureFlag.Scope;
 import io.harness.beans.FeatureName;
 import io.harness.configuration.DeployMode;
 import io.harness.exception.InvalidRequestException;
+import io.harness.ff.FeatureFlagService;
 import io.harness.persistence.HPersistence;
-
-import software.wings.app.MainConfiguration;
-import software.wings.dl.WingsPersistence;
-import software.wings.service.intfc.FeatureFlagService;
 
 import com.google.common.base.Splitter;
 import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
-import java.time.Clock;
 import java.time.Duration;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -45,9 +42,7 @@ import org.mongodb.morphia.query.UpdateOperations;
 @Singleton
 @Slf4j
 public class FeatureFlagServiceImpl implements FeatureFlagService {
-  @Inject private WingsPersistence wingsPersistence;
-  @Inject private Clock clock;
-  @Inject private MainConfiguration mainConfiguration;
+  @Inject private HPersistence persistence;
 
   private long lastEpoch;
   private final Map<FeatureName, FeatureFlag> cache = new HashMap<>();
@@ -64,15 +59,14 @@ public class FeatureFlagServiceImpl implements FeatureFlagService {
   public void enableAccount(FeatureName featureName, String accountId) {
     log.info("Enabling feature name :[{}] for account id: [{}]", featureName.name(), accountId);
     Query<FeatureFlag> query =
-        wingsPersistence.createQuery(FeatureFlag.class).filter(FeatureFlagKeys.name, featureName.name());
-    UpdateOperations<FeatureFlag> updateOperations = wingsPersistence.createUpdateOperations(FeatureFlag.class)
+        persistence.createQuery(FeatureFlag.class).filter(FeatureFlagKeys.name, featureName.name());
+    UpdateOperations<FeatureFlag> updateOperations = persistence.createUpdateOperations(FeatureFlag.class)
                                                          .addToSet(FeatureFlagKeys.accountIds, accountId)
                                                          .setOnInsert(FeatureFlagKeys.name, featureName.name())
                                                          .setOnInsert(FeatureFlagKeys.uuid, generateUuid())
                                                          .setOnInsert(FeatureFlagKeys.obsolete, false)
                                                          .setOnInsert(FeatureFlagKeys.enabled, false);
-    FeatureFlag featureFlag =
-        wingsPersistence.findAndModify(query, updateOperations, HPersistence.upsertReturnNewOptions);
+    FeatureFlag featureFlag = persistence.findAndModify(query, updateOperations, HPersistence.upsertReturnNewOptions);
     synchronized (cache) {
       cache.put(featureName, featureFlag);
     }
@@ -93,7 +87,7 @@ public class FeatureFlagServiceImpl implements FeatureFlagService {
     } else {
       featureFlag.getAccountIds().remove(accountId);
     }
-    wingsPersistence.save(featureFlag);
+    persistence.save(featureFlag);
     synchronized (cache) {
       cache.put(FeatureName.valueOf(featureName), featureFlag);
     }
@@ -104,14 +98,13 @@ public class FeatureFlagServiceImpl implements FeatureFlagService {
   public void enableGlobally(FeatureName featureName) {
     log.info("Enabling feature name :[{}] globally", featureName.name());
     Query<FeatureFlag> query =
-        wingsPersistence.createQuery(FeatureFlag.class).filter(FeatureFlagKeys.name, featureName.name());
-    UpdateOperations<FeatureFlag> updateOperations = wingsPersistence.createUpdateOperations(FeatureFlag.class)
+        persistence.createQuery(FeatureFlag.class).filter(FeatureFlagKeys.name, featureName.name());
+    UpdateOperations<FeatureFlag> updateOperations = persistence.createUpdateOperations(FeatureFlag.class)
                                                          .setOnInsert(FeatureFlagKeys.name, featureName.name())
                                                          .setOnInsert(FeatureFlagKeys.uuid, generateUuid())
                                                          .setOnInsert(FeatureFlagKeys.obsolete, Boolean.FALSE)
                                                          .set(FeatureFlagKeys.enabled, Boolean.TRUE);
-    FeatureFlag featureFlag =
-        wingsPersistence.findAndModify(query, updateOperations, HPersistence.upsertReturnNewOptions);
+    FeatureFlag featureFlag = persistence.findAndModify(query, updateOperations, HPersistence.upsertReturnNewOptions);
     synchronized (cache) {
       cache.put(featureName, featureFlag);
     }
@@ -137,7 +130,7 @@ public class FeatureFlagServiceImpl implements FeatureFlagService {
     synchronized (cache) {
       // if the last access to cache was in different epoch reset it. This will allow for potentially outdated
       // objects to be replaced, and the potential change will be in a relatively same time on all managers.
-      long epoch = clock.millis() / Duration.ofMinutes(5).toMillis();
+      long epoch = currentTimeMillis() / Duration.ofMinutes(5).toMillis();
       if (lastEpoch != epoch) {
         lastEpoch = epoch;
         cache.clear();
@@ -145,7 +138,7 @@ public class FeatureFlagServiceImpl implements FeatureFlagService {
 
       featureFlag = cache.computeIfAbsent(featureName,
           key
-          -> wingsPersistence.createQuery(FeatureFlag.class, excludeAuthority)
+          -> persistence.createQuery(FeatureFlag.class, excludeAuthority)
                  .filter(FeatureFlagKeys.name, key.name())
                  .get());
     }
@@ -198,31 +191,31 @@ public class FeatureFlagServiceImpl implements FeatureFlagService {
   }
 
   @Override
-  public void initializeFeatureFlags() {
+  public void initializeFeatureFlags(DeployMode deployMode, String featureNames) {
     Set<String> definedNames = Arrays.stream(FeatureName.values()).map(FeatureName::name).collect(toSet());
 
     // Mark persisted flags that are no longer defined as obsolete
-    wingsPersistence.update(wingsPersistence.createQuery(FeatureFlag.class, excludeAuthority)
-                                .filter(FeatureFlagKeys.obsolete, false)
-                                .field(FeatureFlagKeys.name)
-                                .notIn(definedNames),
-        wingsPersistence.createUpdateOperations(FeatureFlag.class).set(FeatureFlagKeys.obsolete, true));
+    persistence.update(persistence.createQuery(FeatureFlag.class, excludeAuthority)
+                           .filter(FeatureFlagKeys.obsolete, false)
+                           .field(FeatureFlagKeys.name)
+                           .notIn(definedNames),
+        persistence.createUpdateOperations(FeatureFlag.class).set(FeatureFlagKeys.obsolete, true));
 
     // Mark persisted flags that are defined as not obsolete
-    wingsPersistence.update(wingsPersistence.createQuery(FeatureFlag.class, excludeAuthority)
-                                .filter(FeatureFlagKeys.obsolete, true)
-                                .field(FeatureFlagKeys.name)
-                                .in(definedNames),
-        wingsPersistence.createUpdateOperations(FeatureFlag.class).set(FeatureFlagKeys.obsolete, false));
+    persistence.update(persistence.createQuery(FeatureFlag.class, excludeAuthority)
+                           .filter(FeatureFlagKeys.obsolete, true)
+                           .field(FeatureFlagKeys.name)
+                           .in(definedNames),
+        persistence.createUpdateOperations(FeatureFlag.class).set(FeatureFlagKeys.obsolete, false));
 
     // Delete flags that were marked obsolete more than ten days ago
-    wingsPersistence.delete(wingsPersistence.createQuery(FeatureFlag.class, excludeAuthority)
-                                .filter(FeatureFlagKeys.obsolete, true)
-                                .field(FeatureFlagKeys.lastUpdatedAt)
-                                .lessThan(clock.millis() - TimeUnit.DAYS.toMillis(10)));
+    persistence.delete(persistence.createQuery(FeatureFlag.class, excludeAuthority)
+                           .filter(FeatureFlagKeys.obsolete, true)
+                           .field(FeatureFlagKeys.lastUpdatedAt)
+                           .lessThan(currentTimeMillis() - TimeUnit.DAYS.toMillis(10)));
 
     // Persist new flags initialized as enabled false
-    Set<String> persistedNames = wingsPersistence.createQuery(FeatureFlag.class, excludeAuthority)
+    Set<String> persistedNames = persistence.createQuery(FeatureFlag.class, excludeAuthority)
                                      .project(FeatureFlagKeys.name, true)
                                      .asList()
                                      .stream()
@@ -232,18 +225,17 @@ public class FeatureFlagServiceImpl implements FeatureFlagService {
                                             .filter(name -> !persistedNames.contains(name))
                                             .map(name -> FeatureFlag.builder().name(name).enabled(false).build())
                                             .collect(toList());
-    wingsPersistence.save(newFeatureFlags);
+    persistence.save(newFeatureFlags);
 
     // For on-prem, set all enabled values from the list of enabled flags in the configuration
-    if (DeployMode.isOnPrem(mainConfiguration.getDeployMode().name())) {
-      String features = mainConfiguration.getFeatureNames();
-      List<String> enabled =
-          isBlank(features) ? emptyList() : Splitter.on(',').omitEmptyStrings().trimResults().splitToList(features);
+    if (DeployMode.isOnPrem(deployMode.name())) {
+      List<String> enabled = isBlank(featureNames)
+          ? emptyList()
+          : Splitter.on(',').omitEmptyStrings().trimResults().splitToList(featureNames);
       for (String name : definedNames) {
-        wingsPersistence.update(
-            wingsPersistence.createQuery(FeatureFlag.class, excludeAuthority).filter(FeatureFlagKeys.name, name),
-            wingsPersistence.createUpdateOperations(FeatureFlag.class)
-                .set(FeatureFlagKeys.enabled, enabled.contains(name)));
+        persistence.update(
+            persistence.createQuery(FeatureFlag.class, excludeAuthority).filter(FeatureFlagKeys.name, name),
+            persistence.createUpdateOperations(FeatureFlag.class).set(FeatureFlagKeys.enabled, enabled.contains(name)));
       }
     }
   }
@@ -254,7 +246,7 @@ public class FeatureFlagServiceImpl implements FeatureFlagService {
    */
   @Override
   public List<FeatureFlag> getAllFeatureFlags() {
-    return wingsPersistence.createQuery(FeatureFlag.class).asList();
+    return persistence.createQuery(FeatureFlag.class).asList();
   }
 
   /**
@@ -269,7 +261,7 @@ public class FeatureFlagServiceImpl implements FeatureFlagService {
     if (!featureFlagOptional.isPresent()) {
       return Optional.empty();
     }
-    wingsPersistence.save(featureFlag);
+    persistence.save(featureFlag);
     synchronized (cache) {
       cache.put(FeatureName.valueOf(featureFlagName), featureFlag);
     }

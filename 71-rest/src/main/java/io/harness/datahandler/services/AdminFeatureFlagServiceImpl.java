@@ -2,8 +2,7 @@ package io.harness.datahandler.services;
 
 import io.harness.beans.FeatureFlag;
 import io.harness.beans.FeatureName;
-
-import software.wings.service.intfc.FeatureFlagService;
+import io.harness.ff.FeatureFlagService;
 
 import com.google.inject.Inject;
 import java.util.List;

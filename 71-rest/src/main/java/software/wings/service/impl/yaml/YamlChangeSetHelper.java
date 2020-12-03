@@ -1,6 +1,7 @@
 package software.wings.service.impl.yaml;
 
 import io.harness.beans.FeatureName;
+import io.harness.ff.FeatureFlagService;
 import io.harness.git.model.ChangeType;
 
 import software.wings.beans.ConfigFile;
@@ -9,7 +10,6 @@ import software.wings.beans.appmanifest.ApplicationManifest;
 import software.wings.beans.appmanifest.ManifestFile;
 import software.wings.beans.yaml.GitFileChange;
 import software.wings.service.impl.yaml.handler.YamlHandlerFactory;
-import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.yaml.EntityUpdateService;
 import software.wings.service.intfc.yaml.YamlChangeSetService;
 import software.wings.service.intfc.yaml.YamlDirectoryService;

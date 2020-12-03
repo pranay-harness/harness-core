@@ -100,6 +100,7 @@ import io.harness.beans.OrchestrationWorkflowType;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.InvalidRequestException;
 import io.harness.expression.ExpressionEvaluator;
+import io.harness.ff.FeatureFlagService;
 
 import software.wings.api.DeploymentType;
 import software.wings.beans.AmiDeploymentType;
@@ -144,7 +145,6 @@ import software.wings.service.impl.workflow.creation.abstractfactories.AbstractW
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ArtifactStreamService;
 import software.wings.service.intfc.EnvironmentService;
-import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.InfrastructureDefinitionService;
 import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.ServiceResourceService;

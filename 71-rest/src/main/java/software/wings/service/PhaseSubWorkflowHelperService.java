@@ -5,6 +5,7 @@ import static io.harness.validation.Validator.notNullCheck;
 import static java.lang.String.format;
 
 import io.harness.exception.InvalidRequestException;
+import io.harness.ff.FeatureFlagService;
 
 import software.wings.beans.Environment;
 import software.wings.beans.InfrastructureMapping;
@@ -12,7 +13,6 @@ import software.wings.beans.Service;
 import software.wings.beans.TemplateExpression;
 import software.wings.common.TemplateExpressionProcessor;
 import software.wings.infra.InfrastructureDefinition;
-import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.InfrastructureDefinitionService;
 import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.ServiceResourceService;

@@ -8,6 +8,7 @@ import static java.lang.String.format;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.FeatureName;
+import io.harness.ff.FeatureFlagService;
 import io.harness.logging.AccountLogContext;
 import io.harness.logging.AutoLogContext;
 import io.harness.perpetualtask.PerpetualTaskService;
@@ -17,7 +18,6 @@ import software.wings.beans.artifact.ArtifactStream;
 import software.wings.logcontext.SettingAttributeLogContext;
 import software.wings.service.impl.SettingAttributeObserver;
 import software.wings.service.intfc.ArtifactStreamService;
-import software.wings.service.intfc.FeatureFlagService;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;

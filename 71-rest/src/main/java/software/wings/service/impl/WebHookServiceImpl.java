@@ -17,6 +17,7 @@ import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
+import io.harness.ff.FeatureFlagService;
 import io.harness.logging.ExceptionLogger;
 import io.harness.serializer.JsonUtils;
 
@@ -43,7 +44,6 @@ import software.wings.expression.ManagerExpressionEvaluator;
 import software.wings.service.impl.trigger.WebhookEventUtils;
 import software.wings.service.impl.trigger.WebhookTriggerProcessor;
 import software.wings.service.intfc.AppService;
-import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.TriggerService;
 import software.wings.service.intfc.WebHookService;

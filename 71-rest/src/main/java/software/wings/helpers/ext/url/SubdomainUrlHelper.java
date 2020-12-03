@@ -1,6 +1,7 @@
 package software.wings.helpers.ext.url;
 
 import io.harness.configuration.DeployMode;
+import io.harness.ff.FeatureFlagService;
 
 import software.wings.app.UrlConfiguration;
 import software.wings.beans.Account;
@@ -8,7 +9,6 @@ import software.wings.beans.User;
 import software.wings.graphql.datafetcher.AccountThreadLocal;
 import software.wings.security.UserThreadLocal;
 import software.wings.service.intfc.AccountService;
-import software.wings.service.intfc.FeatureFlagService;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;

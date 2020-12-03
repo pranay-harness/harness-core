@@ -19,6 +19,7 @@ import io.harness.beans.FeatureName;
 import io.harness.beans.PageResponse;
 import io.harness.category.element.UnitTests;
 import io.harness.exception.InvalidRequestException;
+import io.harness.ff.FeatureFlagService;
 import io.harness.rule.Owner;
 
 import software.wings.WingsBaseTest;
@@ -27,7 +28,6 @@ import software.wings.beans.Environment.EnvironmentType;
 import software.wings.beans.HarnessTagLink;
 import software.wings.infra.InfrastructureDefinition;
 import software.wings.service.intfc.AppService;
-import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.HarnessTagService;
 import software.wings.service.intfc.InfrastructureDefinitionService;
 import software.wings.service.intfc.WorkflowExecutionService;

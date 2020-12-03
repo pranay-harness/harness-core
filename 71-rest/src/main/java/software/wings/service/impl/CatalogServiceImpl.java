@@ -7,11 +7,11 @@ package software.wings.service.impl;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 
 import io.harness.exception.WingsException;
+import io.harness.ff.FeatureFlagService;
 import io.harness.serializer.YamlUtils;
 
 import software.wings.beans.CatalogItem;
 import software.wings.service.intfc.CatalogService;
-import software.wings.service.intfc.FeatureFlagService;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.google.common.base.Charsets;

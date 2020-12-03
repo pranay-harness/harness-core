@@ -7,6 +7,7 @@ import static io.restassured.config.EncoderConfig.encoderConfig;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.category.element.FunctionalTests;
+import io.harness.ff.FeatureFlagService;
 import io.harness.functional.AbstractFunctionalTest;
 import io.harness.rest.RestResponse;
 import io.harness.rule.Owner;
@@ -16,7 +17,6 @@ import io.harness.security.encryption.EncryptionType;
 import io.harness.testframework.framework.Setup;
 
 import software.wings.beans.Account;
-import software.wings.service.intfc.FeatureFlagService;
 
 import com.google.inject.Inject;
 import io.restassured.RestAssured;

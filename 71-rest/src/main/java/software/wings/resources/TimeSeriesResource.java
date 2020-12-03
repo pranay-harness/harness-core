@@ -1,6 +1,7 @@
 package software.wings.resources;
 
 import io.harness.beans.FeatureName;
+import io.harness.ff.FeatureFlagService;
 import io.harness.rest.RestResponse;
 
 import software.wings.APMFetchConfig;
@@ -14,7 +15,6 @@ import software.wings.service.impl.analysis.TimeSeriesMLTransactionThresholds;
 import software.wings.service.impl.analysis.TimeSeriesMLTransactionThresholds.TimeSeriesMLTransactionThresholdKeys;
 import software.wings.service.impl.newrelic.NewRelicMetricAnalysisRecord;
 import software.wings.service.impl.newrelic.NewRelicMetricAnalysisRecord.NewRelicMetricHostAnalysisValue;
-import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.MetricDataAnalysisService;
 import software.wings.service.intfc.newrelic.NewRelicService;
 import software.wings.service.intfc.verification.CVConfigurationService;

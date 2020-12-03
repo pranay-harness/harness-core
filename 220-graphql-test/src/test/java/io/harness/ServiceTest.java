@@ -15,6 +15,7 @@ import io.harness.beans.FeatureName;
 import io.harness.category.element.UnitTests;
 import io.harness.category.layer.GraphQLTests;
 import io.harness.data.structure.UUIDGenerator;
+import io.harness.ff.FeatureFlagService;
 import io.harness.generator.ApplicationGenerator;
 import io.harness.generator.OwnerManager;
 import io.harness.generator.OwnerManager.Owners;
@@ -30,7 +31,6 @@ import software.wings.beans.Service;
 import software.wings.beans.Service.ServiceBuilder;
 import software.wings.graphql.schema.type.QLServiceConnection;
 import software.wings.graphql.schema.type.QLUser.QLUserKeys;
-import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.HarnessTagService;
 
 import com.google.inject.Inject;

@@ -8,6 +8,7 @@ import io.harness.ccm.license.CeLicenseInfo;
 import io.harness.datahandler.models.AccountSummary;
 import io.harness.datahandler.utils.AccountSummaryHelper;
 import io.harness.exception.InvalidRequestException;
+import io.harness.ff.FeatureFlagService;
 import io.harness.limits.ActionType;
 import io.harness.limits.ConfiguredLimit;
 import io.harness.limits.configuration.LimitConfigurationService;
@@ -19,7 +20,6 @@ import software.wings.beans.LicenseUpdateInfo;
 import software.wings.beans.User;
 import software.wings.licensing.LicenseService;
 import software.wings.service.intfc.AccountService;
-import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.UserService;
 
 import com.google.inject.Inject;

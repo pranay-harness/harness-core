@@ -2,6 +2,7 @@ package software.wings.service.impl.yaml.handler;
 
 import io.harness.exception.GeneralException;
 import io.harness.exception.InvalidRequestException;
+import io.harness.ff.FeatureFlagService;
 
 import software.wings.api.DeploymentType;
 import software.wings.beans.Application;
@@ -83,7 +84,6 @@ import software.wings.service.impl.yaml.handler.workflow.StepSkipStrategyYamlHan
 import software.wings.service.impl.yaml.handler.workflow.StepYamlHandler;
 import software.wings.service.impl.yaml.handler.workflow.WorkflowPhaseYamlHandler;
 import software.wings.service.impl.yaml.handler.workflow.WorkflowYamlHandler;
-import software.wings.service.intfc.FeatureFlagService;
 import software.wings.verification.CVConfiguration;
 import software.wings.verification.CVConfigurationYamlHandler;
 import software.wings.yaml.templatelibrary.TemplateYamlConfig;

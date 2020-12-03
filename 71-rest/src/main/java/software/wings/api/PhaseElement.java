@@ -6,11 +6,11 @@ package software.wings.api;
 
 import io.harness.beans.FeatureName;
 import io.harness.context.ContextElementType;
+import io.harness.ff.FeatureFlagService;
 
 import software.wings.beans.NameValuePair;
 import software.wings.beans.artifact.Artifact;
 import software.wings.service.intfc.ArtifactService;
-import software.wings.service.intfc.FeatureFlagService;
 import software.wings.sm.ContextElement;
 import software.wings.sm.ExecutionContext;
 

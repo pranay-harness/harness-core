@@ -20,6 +20,7 @@ import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.category.element.UnitTests;
 import io.harness.exception.InvalidRequestException;
+import io.harness.ff.FeatureFlagService;
 import io.harness.rule.Owner;
 import io.harness.testlib.RealMongo;
 
@@ -36,7 +37,6 @@ import software.wings.security.annotations.AuthRule;
 import software.wings.service.impl.EntityNameCache;
 import software.wings.service.impl.HarnessTagServiceImpl;
 import software.wings.service.intfc.AccountService;
-import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.ResourceLookupService;
 import software.wings.utils.WingsTestConstants;
 

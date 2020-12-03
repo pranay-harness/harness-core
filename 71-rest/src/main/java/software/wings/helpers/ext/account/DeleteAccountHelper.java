@@ -10,6 +10,7 @@ import static java.lang.reflect.Modifier.isAbstract;
 
 import io.harness.annotation.HarnessEntity;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.ff.FeatureFlagService;
 import io.harness.limits.checker.rate.UsageBucket;
 import io.harness.limits.checker.rate.UsageBucket.UsageBucketKeys;
 import io.harness.perpetualtask.PerpetualTaskService;
@@ -33,7 +34,6 @@ import software.wings.scheduler.events.segment.SegmentGroupEventJobContext.Segme
 import software.wings.service.impl.SSOSettingServiceImpl;
 import software.wings.service.impl.ServiceClassLocator;
 import software.wings.service.intfc.DelegateService;
-import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.UserService;
 import software.wings.service.intfc.ownership.OwnedByAccount;
 

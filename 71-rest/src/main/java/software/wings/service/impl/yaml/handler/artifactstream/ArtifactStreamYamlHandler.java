@@ -8,6 +8,7 @@ import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static software.wings.beans.artifact.ArtifactStreamType.CUSTOM;
 
 import io.harness.beans.FeatureName;
+import io.harness.ff.FeatureFlagService;
 
 import software.wings.beans.Application;
 import software.wings.beans.Service;
@@ -20,7 +21,6 @@ import software.wings.beans.yaml.YamlType;
 import software.wings.service.impl.yaml.handler.BaseYamlHandler;
 import software.wings.service.impl.yaml.service.YamlHelper;
 import software.wings.service.intfc.ArtifactStreamService;
-import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.template.TemplateService;
 

@@ -10,13 +10,13 @@ import io.harness.ccm.cluster.ClusterRecordService;
 import io.harness.ccm.cluster.entities.ClusterRecord;
 import io.harness.ccm.config.CCMSettingService;
 import io.harness.exception.InvalidRequestException;
+import io.harness.ff.FeatureFlagService;
 import io.harness.logging.AccountLogContext;
 import io.harness.logging.AutoLogContext;
 
 import software.wings.beans.Account;
 import software.wings.features.CeClusterFeature;
 import software.wings.features.api.UsageLimitedFeature;
-import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.account.AccountCrudObserver;
 
 import com.google.inject.Inject;

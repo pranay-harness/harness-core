@@ -4,6 +4,7 @@ import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.expression.ExpressionEvaluator.containsVariablePattern;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.ff.FeatureFlagService;
 import io.harness.lock.PersistentLocker;
 import io.harness.queue.QueueConsumer;
 import io.harness.queue.QueueListener;
@@ -14,7 +15,6 @@ import software.wings.beans.GcpKubernetesInfrastructureMapping;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.AppService;
-import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.sm.StateMachineExecutor;

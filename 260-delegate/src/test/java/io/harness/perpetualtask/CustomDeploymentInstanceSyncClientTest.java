@@ -13,6 +13,7 @@ import static org.mockito.Mockito.doReturn;
 
 import io.harness.beans.DelegateTask;
 import io.harness.category.element.UnitTests;
+import io.harness.ff.FeatureFlagService;
 import io.harness.perpetualtask.instancesync.CustomDeploymentInstanceSyncTaskParams;
 import io.harness.rule.Owner;
 import io.harness.rule.OwnerRule;
@@ -23,7 +24,6 @@ import software.wings.api.DeploymentSummary;
 import software.wings.beans.shellscript.provisioner.ShellScriptProvisionParameters;
 import software.wings.expression.ManagerExpressionEvaluator;
 import software.wings.service.InstanceSyncConstants;
-import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.instance.DeploymentService;
 import software.wings.service.intfc.security.ManagerDecryptionService;
 import software.wings.service.intfc.security.SecretManager;

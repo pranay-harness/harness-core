@@ -42,6 +42,7 @@ import io.harness.event.handler.impl.segment.SegmentHandler;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.InvalidTokenException;
 import io.harness.exception.WingsException;
+import io.harness.ff.FeatureFlagService;
 import io.harness.persistence.HPersistence;
 import io.harness.rule.Owner;
 import io.harness.security.TokenGenerator;
@@ -68,7 +69,6 @@ import software.wings.security.UserRequestContext;
 import software.wings.security.UserThreadLocal;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.AuthService;
-import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.UserService;
 
 import com.auth0.jwt.JWT;

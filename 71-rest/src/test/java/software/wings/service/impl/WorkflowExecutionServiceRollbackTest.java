@@ -44,6 +44,7 @@ import io.harness.beans.ExecutionStatus;
 import io.harness.beans.WorkflowType;
 import io.harness.category.element.UnitTests;
 import io.harness.exception.InvalidRequestException;
+import io.harness.ff.FeatureFlagService;
 import io.harness.interrupts.ExecutionInterruptType;
 import io.harness.rule.Owner;
 
@@ -64,7 +65,6 @@ import software.wings.infra.InfrastructureDefinition;
 import software.wings.service.impl.deployment.checks.AccountExpirationChecker;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ArtifactService;
-import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.InfrastructureDefinitionService;
 import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.service.intfc.WorkflowService;

@@ -24,6 +24,7 @@ import io.harness.beans.FeatureName;
 import io.harness.category.element.UnitTests;
 import io.harness.exception.GeneralException;
 import io.harness.exception.InvalidRequestException;
+import io.harness.ff.FeatureFlagService;
 import io.harness.rule.Owner;
 import io.harness.security.encryption.EncryptedDataDetail;
 
@@ -32,7 +33,6 @@ import software.wings.beans.GitConfig;
 import software.wings.beans.GitRepositoryInfo;
 import software.wings.beans.yaml.GitCommandExecutionResponse;
 import software.wings.service.intfc.DelegateService;
-import software.wings.service.intfc.FeatureFlagService;
 import software.wings.sm.ExecutionContext;
 
 import com.google.inject.Inject;
