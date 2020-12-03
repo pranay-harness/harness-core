@@ -29,7 +29,6 @@ public class ManagerClientModule extends AbstractModule {
   protected void configure() {
     TokenGenerator tokenGenerator = new TokenGenerator(accountId, accountSecret);
     bind(TokenGenerator.class).toInstance(tokenGenerator);
-    bind(ManagerClient.class).toProvider(new ManagerClientFactory(managerBaseUrl, tokenGenerator));
     bind(DelegateAgentManagerClient.class)
         .toProvider(new DelegateAgentManagerClientFactory(managerBaseUrl, tokenGenerator));
     bind(VerificationServiceClient.class)

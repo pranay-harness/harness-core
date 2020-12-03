@@ -11,7 +11,6 @@ import io.harness.grpc.utils.AnyUtils;
 import io.harness.logging.AutoLogContext;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.managerclient.DelegateAgentManagerClient;
-import io.harness.managerclient.ManagerClient;
 import io.harness.perpetualtask.PerpetualTaskExecutionParams;
 import io.harness.perpetualtask.PerpetualTaskExecutor;
 import io.harness.perpetualtask.PerpetualTaskId;
@@ -46,7 +45,6 @@ import org.apache.commons.lang3.tuple.ImmutablePair;
 public class ManifestPerpetualTaskExecutor implements PerpetualTaskExecutor {
   private static final long INTERNAL_TIMEOUT_IN_MS = 120L * 1000;
 
-  private final ManagerClient managerClient;
   private final DelegateAgentManagerClient delegateAgentManagerClient;
   private final KryoSerializer kryoSerializer;
   private final ManifestRepositoryService manifestRepositoryService;
@@ -54,9 +52,8 @@ public class ManifestPerpetualTaskExecutor implements PerpetualTaskExecutor {
   private final @Getter Cache<String, ArtifactsPublishedCache<HelmChart>> cache = Caffeine.newBuilder().build();
 
   @Inject
-  public ManifestPerpetualTaskExecutor(ManifestRepositoryService manifestRepositoryService, ManagerClient managerClient,
+  public ManifestPerpetualTaskExecutor(ManifestRepositoryService manifestRepositoryService,
       DelegateAgentManagerClient delegateAgentManagerClient, KryoSerializer kryoSerializer) {
-    this.managerClient = managerClient;
     this.kryoSerializer = kryoSerializer;
     this.manifestRepositoryService = manifestRepositoryService;
     this.delegateAgentManagerClient = delegateAgentManagerClient;

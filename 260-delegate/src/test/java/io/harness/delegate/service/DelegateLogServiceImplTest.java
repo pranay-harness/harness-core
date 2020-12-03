@@ -19,7 +19,6 @@ import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.managerclient.DelegateAgentManagerClient;
-import io.harness.managerclient.ManagerClient;
 import io.harness.managerclient.VerificationServiceClient;
 import io.harness.rule.Owner;
 import io.harness.rule.OwnerRule;
@@ -41,7 +40,6 @@ import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
 
 public class DelegateLogServiceImplTest extends CategoryTest {
-  @Mock private ManagerClient managerClient;
   @Mock private DelegateAgentManagerClient delegateAgentManagerClient;
   @Mock private VerificationServiceClient verificationServiceClient;
   @Mock private ExecutorService executorService;
@@ -53,7 +51,7 @@ public class DelegateLogServiceImplTest extends CategoryTest {
   public void setUp() throws Exception {
     MockitoAnnotations.initMocks(this);
     delegateLogService = Mockito.spy(new DelegateLogServiceImpl(
-        managerClient, delegateAgentManagerClient, executorService, verificationServiceClient, kryoSerializer));
+        delegateAgentManagerClient, executorService, verificationServiceClient, kryoSerializer));
   }
 
   /**

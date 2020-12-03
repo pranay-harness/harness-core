@@ -15,7 +15,6 @@ import io.harness.delegate.task.manifests.request.ManifestCollectionParams;
 import io.harness.exception.HelmClientException;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.managerclient.DelegateAgentManagerClient;
-import io.harness.managerclient.ManagerClient;
 import io.harness.perpetualtask.PerpetualTaskExecutionParams;
 import io.harness.perpetualtask.PerpetualTaskId;
 import io.harness.perpetualtask.PerpetualTaskResponse;
@@ -63,7 +62,6 @@ public class ManifestPerpetualTaskExecutorTest extends DelegateTest {
   @Inject KryoSerializer kryoSerializer;
 
   @Mock private ManifestRepositoryService manifestRepositoryService;
-  @Mock private ManagerClient managerClient;
   @Mock private DelegateAgentManagerClient delegateAgentManagerClient;
   @Mock private Call<RestResponse<Boolean>> call;
 
@@ -71,8 +69,8 @@ public class ManifestPerpetualTaskExecutorTest extends DelegateTest {
 
   @Before
   public void setUp() throws Exception {
-    manifestPerpetualTaskExecutor = new ManifestPerpetualTaskExecutor(
-        manifestRepositoryService, managerClient, delegateAgentManagerClient, kryoSerializer);
+    manifestPerpetualTaskExecutor =
+        new ManifestPerpetualTaskExecutor(manifestRepositoryService, delegateAgentManagerClient, kryoSerializer);
     perpetualTaskId = PerpetualTaskId.newBuilder().setId(UUIDGenerator.generateUuid()).build();
   }
 
