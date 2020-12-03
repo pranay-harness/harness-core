@@ -5,6 +5,7 @@ import io.harness.cvng.beans.appd.AppDynamicsApplication;
 import io.harness.cvng.beans.appd.AppDynamicsTier;
 import io.harness.cvng.core.entities.MetricPack;
 import io.harness.cvng.core.services.api.AppDynamicsService;
+import io.harness.ng.beans.PageResponse;
 import io.harness.rest.RestResponse;
 import io.harness.security.annotations.NextGenManagerAuth;
 
@@ -50,13 +51,14 @@ public class AppDynamicsResource {
   @Timed
   @ExceptionMetered
   @ApiOperation(value = "get all appdynamics applications", nickname = "getAppdynamicsApplications")
-  public RestResponse<List<AppDynamicsApplication>> getAllApplications(
+  public RestResponse<PageResponse<AppDynamicsApplication>> getAllApplications(
       @NotNull @QueryParam("accountId") String accountId,
       @NotNull @QueryParam("connectorIdentifier") final String connectorIdentifier,
       @QueryParam("orgIdentifier") @NotNull String orgIdentifier,
-      @QueryParam("projectIdentifier") @NotNull String projectIdentifier) {
-    return new RestResponse<>(
-        appDynamicsService.getApplications(accountId, connectorIdentifier, orgIdentifier, projectIdentifier));
+      @QueryParam("projectIdentifier") @NotNull String projectIdentifier, @QueryParam("offset") @NotNull Integer offset,
+      @QueryParam("pageSize") @NotNull Integer pageSize, @QueryParam("filter") String filter) {
+    return new RestResponse<>(appDynamicsService.getApplications(
+        accountId, connectorIdentifier, orgIdentifier, projectIdentifier, offset, pageSize, filter));
   }
 
   @GET
@@ -64,12 +66,13 @@ public class AppDynamicsResource {
   @Timed
   @ExceptionMetered
   @ApiOperation(value = "get all appdynamics tiers for an application", nickname = "getAppdynamicsTiers")
-  public RestResponse<Set<AppDynamicsTier>> getAllTiers(@NotNull @QueryParam("accountId") String accountId,
+  public RestResponse<PageResponse<AppDynamicsTier>> getAllTiers(@NotNull @QueryParam("accountId") String accountId,
       @NotNull @QueryParam("connectorIdentifier") final String connectorIdentifier,
       @QueryParam("orgIdentifier") @NotNull String orgIdentifier,
       @QueryParam("projectIdentifier") @NotNull String projectIdentifier,
-      @NotNull @QueryParam("appDynamicsAppId") long appdynamicsAppId) {
+      @NotNull @QueryParam("appDynamicsAppId") long appdynamicsAppId, @QueryParam("offset") @NotNull Integer offset,
+      @QueryParam("pageSize") @NotNull Integer pageSize, @QueryParam("filter") String filter) {
     return new RestResponse<>(appDynamicsService.getTiers(
-        accountId, connectorIdentifier, orgIdentifier, projectIdentifier, appdynamicsAppId));
+        accountId, connectorIdentifier, orgIdentifier, projectIdentifier, appdynamicsAppId, offset, pageSize, filter));
   }
 }

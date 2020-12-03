@@ -1,5 +1,6 @@
 package io.harness.cvng.core.services.impl;
 
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
 import io.harness.connector.apis.dto.ConnectorInfoDTO;
@@ -20,9 +21,13 @@ import io.harness.cvng.core.entities.MetricPack;
 import io.harness.cvng.core.services.api.AppDynamicsService;
 import io.harness.cvng.core.services.api.MetricPackService;
 import io.harness.delegate.beans.connector.appdynamicsconnector.AppDynamicsConnectorDTO;
+import io.harness.ng.beans.PageResponse;
+import io.harness.utils.PageUtils;
 
 import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -58,33 +63,50 @@ public class AppDynamicsServiceImpl implements AppDynamicsService {
   }
 
   @Override
-  public List<AppDynamicsApplication> getApplications(
-      String accountId, String connectorIdentifier, String orgIdentifier, String projectIdentifier) {
+  public PageResponse<AppDynamicsApplication> getApplications(String accountId, String connectorIdentifier,
+      String orgIdentifier, String projectIdentifier, int offset, int pageSize, String filter) {
     Optional<ConnectorInfoDTO> connectorDTO =
         nextGenService.get(accountId, connectorIdentifier, orgIdentifier, projectIdentifier);
     Preconditions.checkState(connectorDTO.isPresent(), "ConnectorDTO should not be null");
     Preconditions.checkState(connectorDTO.get().getConnectorConfig() instanceof AppDynamicsConnectorDTO,
         "ConnectorConfig should be of type AppDynamics");
     AppDynamicsConnectorDTO appDynamicsConnectorDTO = (AppDynamicsConnectorDTO) connectorDTO.get().getConnectorConfig();
-    return requestExecutor
-        .execute(verificationManagerClient.getAppDynamicsApplications(
-            appDynamicsConnectorDTO.getAccountId(), orgIdentifier, projectIdentifier, appDynamicsConnectorDTO))
-        .getResource();
+    List<AppDynamicsApplication> applications =
+        requestExecutor
+            .execute(verificationManagerClient.getAppDynamicsApplications(
+                appDynamicsConnectorDTO.getAccountId(), orgIdentifier, projectIdentifier, appDynamicsConnectorDTO))
+            .getResource();
+    if (isNotEmpty(filter)) {
+      applications = applications.stream()
+                         .filter(appDynamicsApplication
+                             -> appDynamicsApplication.getName().toLowerCase().contains(filter.trim().toLowerCase()))
+                         .collect(Collectors.toList());
+    }
+    Collections.sort(applications);
+    return PageUtils.offsetAndLimit(applications, offset, pageSize);
   }
 
   @Override
-  public Set<AppDynamicsTier> getTiers(String accountId, String connectorIdentifier, String orgIdentifier,
-      String projectIdentifier, long appDynamicsAppId) {
+  public PageResponse<AppDynamicsTier> getTiers(String accountId, String connectorIdentifier, String orgIdentifier,
+      String projectIdentifier, long appDynamicsAppId, int offset, int pageSize, String filter) {
     Optional<ConnectorInfoDTO> connectorDTO =
         nextGenService.get(accountId, connectorIdentifier, orgIdentifier, projectIdentifier);
     Preconditions.checkState(connectorDTO.isPresent(), "ConnectorDTO should not be null");
     Preconditions.checkState(connectorDTO.get().getConnectorConfig() instanceof AppDynamicsConnectorDTO,
         "ConnectorConfig should be of type AppDynamics");
     AppDynamicsConnectorDTO appDynamicsConnectorDTO = (AppDynamicsConnectorDTO) connectorDTO.get().getConnectorConfig();
-    return requestExecutor
-        .execute(verificationManagerClient.getTiers(appDynamicsConnectorDTO.getAccountId(), orgIdentifier,
-            projectIdentifier, appDynamicsAppId, appDynamicsConnectorDTO))
-        .getResource();
+    Set<AppDynamicsTier> tiers = requestExecutor
+                                     .execute(verificationManagerClient.getTiers(appDynamicsConnectorDTO.getAccountId(),
+                                         orgIdentifier, projectIdentifier, appDynamicsAppId, appDynamicsConnectorDTO))
+                                     .getResource();
+    List<AppDynamicsTier> appDynamicsTiers = new ArrayList<>();
+    tiers.forEach(appDynamicsTier -> {
+      if (isEmpty(filter) || appDynamicsTier.getName().toLowerCase().contains(filter.trim().toLowerCase())) {
+        appDynamicsTiers.add(appDynamicsTier);
+      }
+    });
+    Collections.sort(appDynamicsTiers);
+    return PageUtils.offsetAndLimit(appDynamicsTiers, offset, pageSize);
   }
 
   @Override
@@ -98,9 +120,10 @@ public class AppDynamicsServiceImpl implements AppDynamicsService {
     Set<String> envIdentifiersList =
         cvConfigsGroupedByMonitoringSource.stream().map(CVConfig::getEnvIdentifier).collect(Collectors.toSet());
     CVConfig firstCVConfigForReference = cvConfigsGroupedByMonitoringSource.get(0);
-    List<AppDynamicsApplication> appDynamicsApplications =
-        getApplications(firstCVConfigForReference.getAccountId(), firstCVConfigForReference.getConnectorIdentifier(),
-            firstCVConfigForReference.getOrgIdentifier(), firstCVConfigForReference.getProjectIdentifier());
+    List<AppDynamicsApplication> appDynamicsApplications = getApplications(firstCVConfigForReference.getAccountId(),
+        firstCVConfigForReference.getConnectorIdentifier(), firstCVConfigForReference.getOrgIdentifier(),
+        firstCVConfigForReference.getProjectIdentifier(), 0, Integer.MAX_VALUE, null)
+                                                               .getContent();
     return AppdynamicsImportStatus.builder()
         .numberOfApplications(isNotEmpty(applicationSet) ? applicationSet.size() : 0)
         .numberOfEnvironments(isNotEmpty(envIdentifiersList) ? envIdentifiersList.size() : 0)
