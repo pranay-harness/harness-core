@@ -10,8 +10,8 @@ import io.harness.beans.yaml.extended.infrastrucutre.K8sDirectInfraYaml;
 import io.harness.ci.beans.entities.BuildNumberDetails;
 import io.harness.engine.outputs.ExecutionSweepingOutputService;
 import io.harness.facilitator.modes.child.ChildExecutable;
-import io.harness.facilitator.modes.child.ChildExecutableResponse;
 import io.harness.pms.ambiance.Ambiance;
+import io.harness.pms.execution.ChildExecutableResponse;
 import io.harness.pms.sdk.core.steps.io.StepInputPackage;
 import io.harness.pms.sdk.core.steps.io.StepResponse;
 import io.harness.pms.steps.StepType;
@@ -60,7 +60,7 @@ public class IntegrationStageStep implements ChildExecutable<IntegrationStageSte
 
     final String executionNodeId = fieldToExecutionNodeIdMap.get(CHILD_PLAN_START_NODE);
 
-    return ChildExecutableResponse.builder().childNodeId(executionNodeId).build();
+    return ChildExecutableResponse.newBuilder().setChildNodeId(executionNodeId).build();
   }
 
   @Override

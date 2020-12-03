@@ -9,9 +9,9 @@ import io.harness.ci.utils.CIPipelineStandardVariablesUtils;
 import io.harness.engine.outputs.ExecutionSweepingOutputService;
 import io.harness.facilitator.PassThroughData;
 import io.harness.facilitator.modes.child.ChildExecutable;
-import io.harness.facilitator.modes.child.ChildExecutableResponse;
 import io.harness.facilitator.modes.sync.SyncExecutable;
 import io.harness.pms.ambiance.Ambiance;
+import io.harness.pms.execution.ChildExecutableResponse;
 import io.harness.pms.execution.Status;
 import io.harness.pms.sdk.core.steps.io.StepInputPackage;
 import io.harness.pms.sdk.core.steps.io.StepResponse;
@@ -46,7 +46,7 @@ public class CIPipelineSetupStep
 
     final Map<String, String> fieldToExecutionNodeIdMap = ciPipelineSetupParameters.getFieldToExecutionNodeIdMap();
     final String stagesNodeId = fieldToExecutionNodeIdMap.get("stages");
-    return ChildExecutableResponse.builder().childNodeId(stagesNodeId).build();
+    return ChildExecutableResponse.newBuilder().setChildNodeId(stagesNodeId).build();
   }
 
   @Override

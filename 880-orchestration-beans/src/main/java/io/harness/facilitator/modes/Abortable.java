@@ -9,6 +9,6 @@ import io.harness.pms.sdk.core.steps.io.StepParameters;
 
 @OwnedBy(CDC)
 @Redesign
-public interface Abortable<T extends StepParameters, V extends ExecutableResponse> {
+public interface Abortable<T extends StepParameters, V> {
   void handleAbort(Ambiance ambiance, T stateParameters, V executableResponse);
 }

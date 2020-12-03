@@ -14,18 +14,22 @@ import io.harness.engine.progress.EngineProgressCallback;
 import io.harness.engine.resume.EngineResumeCallback;
 import io.harness.execution.NodeExecution;
 import io.harness.execution.NodeExecution.NodeExecutionKeys;
+import io.harness.facilitator.PassThroughData;
 import io.harness.facilitator.modes.chain.task.TaskChainExecutable;
-import io.harness.facilitator.modes.chain.task.TaskChainExecutableResponse;
 import io.harness.facilitator.modes.chain.task.TaskChainResponse;
 import io.harness.pms.ambiance.Ambiance;
+import io.harness.pms.execution.ExecutableResponse;
 import io.harness.pms.execution.Status;
+import io.harness.pms.execution.TaskChainExecutableResponse;
+import io.harness.pms.execution.TaskMode;
 import io.harness.pms.plan.PlanNodeProto;
 import io.harness.pms.sdk.core.plan.PlanNode;
 import io.harness.pms.sdk.core.steps.io.StepInputPackage;
 import io.harness.pms.sdk.core.steps.io.StepResponse;
+import io.harness.pms.serializer.json.JsonOrchestrationUtils;
 import io.harness.registries.state.StepRegistry;
+import io.harness.serializer.KryoSerializer;
 import io.harness.tasks.TaskExecutor;
-import io.harness.tasks.TaskMode;
 import io.harness.waiter.NotifyCallback;
 import io.harness.waiter.ProgressCallback;
 import io.harness.waiter.WaitNotifyEngine;
@@ -33,7 +37,11 @@ import io.harness.waiter.WaitNotifyEngine;
 import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
+import com.google.protobuf.ByteString;
+import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
+import java.util.stream.Collectors;
 import lombok.NonNull;
 
 @SuppressWarnings({"rawtypes", "unchecked"})
@@ -46,8 +54,9 @@ public class TaskChainStrategy implements TaskExecuteStrategy {
   @Inject private OrchestrationEngine engine;
   @Inject private EngineObtainmentHelper engineObtainmentHelper;
   @Inject @Named(OrchestrationPublisherName.PUBLISHER_NAME) String publisherName;
+  @Inject private KryoSerializer kryoSerializer;
 
-  private TaskMode mode;
+  private final TaskMode mode;
 
   public TaskChainStrategy(TaskMode mode) {
     this.mode = mode;
@@ -70,10 +79,11 @@ public class TaskChainStrategy implements TaskExecuteStrategy {
     Ambiance ambiance = nodeExecution.getAmbiance();
     TaskChainExecutable taskChainExecutable = extractTaskChainExecutable(nodeExecution);
     TaskChainExecutableResponse lastLinkResponse =
-        Preconditions.checkNotNull((TaskChainExecutableResponse) nodeExecution.obtainLatestExecutableResponse());
-    if (lastLinkResponse.isChainEnd()) {
+        Objects.requireNonNull(nodeExecution.obtainLatestExecutableResponse()).getTaskChain();
+    if (lastLinkResponse.getChainEnd()) {
       StepResponse stepResponse = taskChainExecutable.finalizeExecution(ambiance,
-          nodeExecutionService.extractResolvedStepParameters(nodeExecution), lastLinkResponse.getPassThroughData(),
+          nodeExecutionService.extractResolvedStepParameters(nodeExecution),
+          (PassThroughData) kryoSerializer.asObject(lastLinkResponse.getPassThroughData().toByteArray()),
           resumePackage.getResponseDataMap());
       engine.handleStepResponse(nodeExecution.getUuid(), stepResponse);
     } else {
@@ -81,7 +91,8 @@ public class TaskChainStrategy implements TaskExecuteStrategy {
           engineObtainmentHelper.obtainInputPackage(ambiance, nodeExecution.getNode().getRebObjectsList());
       TaskChainResponse chainResponse = taskChainExecutable.executeNextLink(ambiance,
           nodeExecutionService.extractResolvedStepParameters(nodeExecution), inputPackage,
-          lastLinkResponse.getPassThroughData(), resumePackage.getResponseDataMap());
+          (PassThroughData) kryoSerializer.asObject(lastLinkResponse.getPassThroughData().toByteArray()),
+          resumePackage.getResponseDataMap());
       handleResponse(ambiance, nodeExecution, chainResponse);
     }
   }
@@ -98,12 +109,18 @@ public class TaskChainStrategy implements TaskExecuteStrategy {
       nodeExecutionService.update(nodeExecution.getUuid(),
           ops
           -> ops.addToSet(NodeExecutionKeys.executableResponses,
-              TaskChainExecutableResponse.builder()
-                  .taskId(null)
-                  .taskMode(null)
-                  .chainEnd(true)
-                  .passThroughData(taskChainResponse.getPassThroughData())
-                  .metadata(taskChainResponse.getMetadata())
+              ExecutableResponse.newBuilder()
+                  .setTaskChain(TaskChainExecutableResponse.newBuilder()
+                                    .setTaskId(null)
+                                    .setTaskMode(null)
+                                    .setChainEnd(true)
+                                    .setPassThroughData(ByteString.copyFrom(
+                                        kryoSerializer.asBytes(taskChainResponse.getPassThroughData())))
+                                    .build())
+                  .putAllMetadata(taskChainResponse.getMetadata() == null
+                          ? new HashMap<>()
+                          : taskChainResponse.getMetadata().entrySet().stream().collect(
+                              Collectors.toMap(Map.Entry::getKey, v -> v.getValue().toJson())))
                   .build()));
       StepResponse stepResponse = taskChainExecutable.finalizeExecution(ambiance,
           nodeExecutionService.extractResolvedStepParameters(nodeExecution), taskChainResponse.getPassThroughData(),
@@ -118,12 +135,18 @@ public class TaskChainStrategy implements TaskExecuteStrategy {
     nodeExecutionService.updateStatusWithOps(nodeExecution.getUuid(), Status.TASK_WAITING,
         ops
         -> ops.addToSet(NodeExecutionKeys.executableResponses,
-            TaskChainExecutableResponse.builder()
-                .taskId(taskId)
-                .taskMode(mode)
-                .chainEnd(taskChainResponse.isChainEnd())
-                .passThroughData(taskChainResponse.getPassThroughData())
-                .metadata(taskChainResponse.getMetadata())
+            ExecutableResponse.newBuilder()
+                .setTaskChain(TaskChainExecutableResponse.newBuilder()
+                                  .setTaskId(taskId)
+                                  .setTaskMode(mode)
+                                  .setChainEnd(taskChainResponse.isChainEnd())
+                                  .setPassThroughData(ByteString.copyFrom(
+                                      kryoSerializer.asBytes(taskChainResponse.getPassThroughData())))
+                                  .build())
+                .putAllMetadata(taskChainResponse.getMetadata() == null
+                        ? new HashMap<>()
+                        : taskChainResponse.getMetadata().entrySet().stream().collect(
+                            Collectors.toMap(Map.Entry::getKey, v -> v.getValue().toJson())))
                 .build()));
     NotifyCallback notifyCallback = EngineResumeCallback.builder().nodeExecutionId(nodeExecution.getUuid()).build();
     ProgressCallback progressCallback =

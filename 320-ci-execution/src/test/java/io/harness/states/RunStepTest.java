@@ -18,8 +18,8 @@ import io.harness.delegate.task.stepstatus.StepStatus;
 import io.harness.delegate.task.stepstatus.StepStatusTaskResponseData;
 import io.harness.engine.outputs.ExecutionSweepingOutputService;
 import io.harness.executionplan.CIExecutionTest;
-import io.harness.facilitator.modes.async.AsyncExecutableResponse;
 import io.harness.pms.ambiance.Ambiance;
+import io.harness.pms.execution.AsyncExecutableResponse;
 import io.harness.pms.execution.Status;
 import io.harness.pms.execution.failure.FailureInfo;
 import io.harness.pms.execution.failure.FailureType;
@@ -81,7 +81,8 @@ public class RunStepTest extends CIExecutionTest {
   public void shouldExecuteAsync() {
     when(executionSweepingOutputResolver.resolve(eq(ambiance), eq(refObject))).thenReturn(stepTaskDetails);
     AsyncExecutableResponse asyncExecutableResponse = runStep.executeAsync(ambiance, stepInfo, stepInputPackage);
-    assertThat(asyncExecutableResponse).isEqualTo(AsyncExecutableResponse.builder().callbackId(callbackId).build());
+    assertThat(asyncExecutableResponse)
+        .isEqualTo(AsyncExecutableResponse.newBuilder().addCallbackIds(callbackId).build());
   }
 
   @Test

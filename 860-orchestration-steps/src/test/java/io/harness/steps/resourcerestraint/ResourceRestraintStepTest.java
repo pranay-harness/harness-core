@@ -9,7 +9,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doReturn;
-import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.only;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -20,9 +20,9 @@ import io.harness.distribution.constraint.ConstraintId;
 import io.harness.distribution.constraint.Consumer;
 import io.harness.engine.expressions.EngineExpressionService;
 import io.harness.exception.InvalidRequestException;
-import io.harness.facilitator.modes.async.AsyncExecutableResponse;
 import io.harness.pms.ambiance.Ambiance;
 import io.harness.pms.ambiance.Level;
+import io.harness.pms.execution.AsyncExecutableResponse;
 import io.harness.pms.sdk.core.steps.io.StepInputPackage;
 import io.harness.pms.sdk.core.steps.io.StepResponse;
 import io.harness.rule.Owner;
@@ -261,7 +261,7 @@ public class ResourceRestraintStepTest extends OrchestrationStepsTestBase {
     when(resourceRestraintService.finishInstance(any(), any())).thenReturn(ResourceRestraintInstance.builder().build());
 
     resourceRestraintStep.handleAbort(
-        ambiance, stepParameters, AsyncExecutableResponse.builder().callbackId(generateUuid()).build());
+        ambiance, stepParameters, AsyncExecutableResponse.newBuilder().addCallbackIds(generateUuid()).build());
 
     verify(resourceRestraintService).finishInstance(any(), any());
   }
@@ -286,13 +286,14 @@ public class ResourceRestraintStepTest extends OrchestrationStepsTestBase {
                                                          .claimantId(CLAIMANT_ID)
                                                          .build();
 
-    assertThatThrownBy(()
-                           -> resourceRestraintStep.handleAbort(
-                               ambiance, stepParameters, AsyncExecutableResponse.builder().callbackId(null).build()))
-        .isInstanceOf(NullPointerException.class)
-        .hasMessageStartingWith("CallbackId should not be null in handleAbort() for nodeExecution with id");
+    when(resourceRestraintService.finishInstance(any(), any())).thenThrow(new InvalidRequestException("Exception"));
 
-    verify(resourceRestraintService, never()).finishInstance(any(), any());
-    verify(resourceRestraintService, never()).finishInstance(any(), any());
+    assertThatThrownBy(()
+                           -> resourceRestraintStep.handleAbort(ambiance, stepParameters,
+                               AsyncExecutableResponse.newBuilder().addCallbackIds("").build()))
+        .isInstanceOf(InvalidRequestException.class)
+        .hasMessageStartingWith("Exception");
+
+    verify(resourceRestraintService, only()).finishInstance(any(), any());
   }
 }

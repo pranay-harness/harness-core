@@ -4,8 +4,8 @@ import static io.harness.annotations.dev.HarnessTeam.CDC;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.facilitator.modes.child.ChildExecutable;
-import io.harness.facilitator.modes.child.ChildExecutableResponse;
 import io.harness.pms.ambiance.Ambiance;
+import io.harness.pms.execution.ChildExecutableResponse;
 import io.harness.pms.execution.Status;
 import io.harness.pms.sdk.core.steps.io.StepInputPackage;
 import io.harness.pms.sdk.core.steps.io.StepResponse;
@@ -29,7 +29,7 @@ public class SectionStep implements ChildExecutable<SectionStepParameters> {
   @Override
   public ChildExecutableResponse obtainChild(
       Ambiance ambiance, SectionStepParameters stepParameters, StepInputPackage inputPackage) {
-    return ChildExecutableResponse.builder().childNodeId(stepParameters.getChildNodeId()).build();
+    return ChildExecutableResponse.newBuilder().setChildNodeId(stepParameters.getChildNodeId()).build();
   }
 
   @Override

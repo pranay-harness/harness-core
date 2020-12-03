@@ -7,6 +7,7 @@ import io.harness.serializer.morphia.OrchestrationMorphiaRegistrar;
 import io.harness.serializer.morphia.converters.AdviserObtainmentMorphiaConverter;
 import io.harness.serializer.morphia.converters.AdviserTypeMorphiaConverter;
 import io.harness.serializer.morphia.converters.AmbianceMorphiaConverter;
+import io.harness.serializer.morphia.converters.ExecutableResponseMorphiaConverter;
 import io.harness.serializer.morphia.converters.FacilitatorObtainmentMorphiaConverter;
 import io.harness.serializer.morphia.converters.FacilitatorTypeMorphiaConverter;
 import io.harness.serializer.morphia.converters.FailureInfoMorphiaConverter;
@@ -21,6 +22,8 @@ import io.harness.serializer.spring.converters.advisers.type.AdviserTypeReadConv
 import io.harness.serializer.spring.converters.advisers.type.AdviserTypeWriteConverter;
 import io.harness.serializer.spring.converters.ambiance.AmbianceReadConverter;
 import io.harness.serializer.spring.converters.ambiance.AmbianceWriteConverter;
+import io.harness.serializer.spring.converters.executableresponse.ExecutableResponseReadConverter;
+import io.harness.serializer.spring.converters.executableresponse.ExecutableResponseWriteConverter;
 import io.harness.serializer.spring.converters.facilitators.obtainment.FacilitatorObtainmentReadConverter;
 import io.harness.serializer.spring.converters.facilitators.obtainment.FacilitatorObtainmentWriteConverter;
 import io.harness.serializer.spring.converters.facilitators.type.FacilitatorTypeReadConverter;
@@ -91,6 +94,7 @@ public class OrchestrationRegistrars {
           .add(FacilitatorObtainmentMorphiaConverter.class)
           .add(RefTypeMorphiaConverter.class)
           .add(FailureInfoMorphiaConverter.class)
+          .add(ExecutableResponseMorphiaConverter.class)
           .build();
 
   public static final List<Class<? extends Converter<?, ?>>> springConverters = ImmutableList.of(
@@ -102,5 +106,6 @@ public class OrchestrationRegistrars {
       RefTypeReadConverter.class, RefTypeWriteConverter.class, RefObjectReadConverter.class,
       RefObjectWriteConverter.class, StepInfoReadConverter.class, StepInfoWriteConverter.class,
       FailureInfoReadConverter.class, FailureInfoWriteConverter.class, PlanNodeProtoReadConverter.class,
-      PlanNodeProtoWriteConverter.class, StepOutcomeRefReadConverter.class, StepOutcomeRefWriteConverter.class);
+      PlanNodeProtoWriteConverter.class, StepOutcomeRefReadConverter.class, StepOutcomeRefWriteConverter.class,
+      ExecutableResponseReadConverter.class, ExecutableResponseWriteConverter.class);
 }

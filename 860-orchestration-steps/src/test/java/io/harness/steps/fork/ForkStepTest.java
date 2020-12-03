@@ -7,8 +7,9 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.OrchestrationStepsTestBase;
 import io.harness.category.element.UnitTests;
-import io.harness.facilitator.modes.children.ChildrenExecutableResponse;
 import io.harness.pms.ambiance.Ambiance;
+import io.harness.pms.execution.ChildrenExecutableResponse;
+import io.harness.pms.execution.ChildrenExecutableResponse.Child;
 import io.harness.pms.execution.Status;
 import io.harness.pms.sdk.core.steps.io.StepInputPackage;
 import io.harness.pms.sdk.core.steps.io.StepResponse;
@@ -41,11 +42,9 @@ public class ForkStepTest extends OrchestrationStepsTestBase {
     ChildrenExecutableResponse childrenExecutableResponse =
         forkStep.obtainChildren(ambiance, stateParameters, inputPackage);
     assertThat(childrenExecutableResponse).isNotNull();
-    assertThat(childrenExecutableResponse.getChildren()).hasSize(2);
-    List<String> childIds = childrenExecutableResponse.getChildren()
-                                .stream()
-                                .map(ChildrenExecutableResponse.Child::getChildNodeId)
-                                .collect(Collectors.toList());
+    assertThat(childrenExecutableResponse.getChildrenList()).hasSize(2);
+    List<String> childIds =
+        childrenExecutableResponse.getChildrenList().stream().map(Child::getChildNodeId).collect(Collectors.toList());
     assertThat(childIds).hasSize(2);
     assertThat(childIds).containsExactlyInAnyOrder(FIRST_CHILD_ID, SECOND_CHILD_ID);
   }

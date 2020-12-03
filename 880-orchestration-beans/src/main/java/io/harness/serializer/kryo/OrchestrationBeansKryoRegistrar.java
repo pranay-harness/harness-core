@@ -6,6 +6,7 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.data.OutcomeInstance;
 import io.harness.execution.NodeExecution;
 import io.harness.facilitator.DefaultFacilitatorParams;
+import io.harness.facilitator.PassThroughData;
 import io.harness.facilitator.modes.async.AsyncExecutableResponse;
 import io.harness.facilitator.modes.chain.child.ChildChainResponse;
 import io.harness.facilitator.modes.chain.task.TaskChainExecutableResponse;
@@ -50,6 +51,7 @@ public class OrchestrationBeansKryoRegistrar implements KryoRegistrar {
 
     kryo.register(TaskMode.class, 2532);
     kryo.register(InterruptEffect.class, 2534);
+    kryo.register(PassThroughData.class, 2535);
 
     // Add moved/old classes here
     // Keeping the same id for moved classes

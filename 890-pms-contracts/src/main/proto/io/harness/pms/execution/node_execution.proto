@@ -6,11 +6,11 @@ option java_multiple_files = true;
 
 import "google/protobuf/timestamp.proto";
 import "google/protobuf/duration.proto";
-import "google/protobuf/any.proto";
 
 import "io/harness/pms/ambiance/ambiance.proto";
 import "io/harness/pms/plan/plan_node_proto.proto";
 import "io/harness/pms/execution/execution_mode.proto";
+import "io/harness/pms/execution/executable_response.proto";
 import "io/harness/pms/execution/failure/failure_info.proto";
 import "io/harness/pms/execution/status.proto";
 import "io/harness/pms/data/step_outcome_ref.proto";
@@ -35,7 +35,7 @@ message NodeExecution {
 
   Status status = 13;
 
-  repeated google.protobuf.Any executableResponses = 14;
+  repeated io.harness.pms.execution.ExecutableResponse executableResponses = 14;
   repeated io.harness.pms.data.StepOutcomeRef outcomeRefs = 15;
 
   io.harness.pms.execution.failure.FailureInfo failureInfo = 16;

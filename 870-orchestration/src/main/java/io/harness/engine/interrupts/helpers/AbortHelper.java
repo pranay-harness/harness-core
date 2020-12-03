@@ -11,17 +11,23 @@ import io.harness.engine.OrchestrationEngine;
 import io.harness.engine.executions.node.NodeExecutionService;
 import io.harness.engine.executions.node.NodeExecutionUpdateFailedException;
 import io.harness.engine.interrupts.InterruptProcessingFailedException;
+import io.harness.exception.InvalidRequestException;
 import io.harness.execution.NodeExecution;
 import io.harness.execution.NodeExecution.NodeExecutionKeys;
 import io.harness.facilitator.modes.Abortable;
-import io.harness.facilitator.modes.ExecutableResponse;
 import io.harness.facilitator.modes.TaskSpawningExecutableResponse;
 import io.harness.interrupts.Interrupt;
 import io.harness.pms.ambiance.Ambiance;
+import io.harness.pms.execution.AsyncExecutableResponse;
+import io.harness.pms.execution.ExecutableResponse;
+import io.harness.pms.execution.ExecutableResponse.ResponseCase;
 import io.harness.pms.execution.Status;
+import io.harness.pms.execution.TaskChainExecutableResponse;
+import io.harness.pms.execution.TaskExecutableResponse;
 import io.harness.pms.plan.PlanNodeProto;
 import io.harness.pms.sdk.core.plan.PlanNode;
 import io.harness.pms.sdk.core.steps.Step;
+import io.harness.pms.sdk.core.steps.io.StepParameters;
 import io.harness.registries.state.StepRegistry;
 import io.harness.tasks.TaskExecutor;
 
@@ -48,18 +54,38 @@ public class AbortHelper {
       Step currentState = Preconditions.checkNotNull(stepRegistry.obtain(node.getStepType()));
       ExecutableResponse executableResponse = nodeExecution.obtainLatestExecutableResponse();
       if (executableResponse != null && nodeExecution.isTaskSpawningMode()) {
-        TaskSpawningExecutableResponse taskExecutableResponse = (TaskSpawningExecutableResponse) executableResponse;
-        TaskExecutor executor = taskExecutorMap.get(taskExecutableResponse.getTaskMode().name());
-        boolean aborted = executor.abortTask(ambiance.getSetupAbstractionsMap(), taskExecutableResponse.getTaskId());
+        String taskId;
+        String taskMode;
+        switch (executableResponse.getResponseCase()) {
+          case TASK:
+            TaskExecutableResponse taskExecutableResponse = executableResponse.getTask();
+            taskId = taskExecutableResponse.getTaskId();
+            taskMode = taskExecutableResponse.getTaskMode().name();
+            break;
+          case TASKCHAIN:
+            TaskChainExecutableResponse taskChainExecutableResponse = executableResponse.getTaskChain();
+            taskId = taskChainExecutableResponse.getTaskId();
+            taskMode = taskChainExecutableResponse.getTaskMode().name();
+            break;
+          default:
+            throw new InvalidRequestException("Executable Response should contain either task or taskChain");
+        }
+        TaskExecutor executor = taskExecutorMap.get(taskMode);
+        boolean aborted = executor.abortTask(ambiance.getSetupAbstractionsMap(), taskId);
         if (!aborted) {
-          log.error("Delegate Task Cannot be aborted : TaskId: {}, NodeExecutionId: {}",
-              taskExecutableResponse.getTaskId(), nodeExecution.getUuid());
+          log.error(
+              "Delegate Task Cannot be aborted : TaskId: {}, NodeExecutionId: {}", taskId, nodeExecution.getUuid());
         }
       }
-      if (currentState instanceof Abortable) {
-        ((Abortable) currentState)
-            .handleAbort(
-                ambiance, nodeExecutionService.extractResolvedStepParameters(nodeExecution), executableResponse);
+      if (currentState instanceof Abortable && executableResponse != null) {
+        if (executableResponse.getResponseCase() == ResponseCase.ASYNC) {
+          ((Abortable) currentState)
+              .handleAbort(ambiance, nodeExecutionService.extractResolvedStepParameters(nodeExecution),
+                  executableResponse.getAsync());
+        } else {
+          log.error("Executable Response of type {} is not supported for abort", executableResponse.getResponseCase());
+          throw new InvalidRequestException("Abort for nodeExecution [" + nodeExecution.getUuid() + "] failed");
+        }
       }
 
       NodeExecution updatedNodeExecution = nodeExecutionService.updateStatusWithOps(

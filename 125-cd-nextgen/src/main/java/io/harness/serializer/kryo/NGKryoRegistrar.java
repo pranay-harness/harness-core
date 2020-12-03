@@ -21,6 +21,7 @@ import io.harness.cdng.k8s.K8sRollingRollbackStepInfo;
 import io.harness.cdng.k8s.K8sRollingRollbackStepParameters;
 import io.harness.cdng.k8s.K8sRollingStepInfo;
 import io.harness.cdng.k8s.K8sRollingStepParameters;
+import io.harness.cdng.k8s.K8sRollingStepPassThroughData;
 import io.harness.cdng.manifest.yaml.GitStore;
 import io.harness.cdng.manifest.yaml.ManifestConfig;
 import io.harness.cdng.manifest.yaml.ManifestOutcome;
@@ -45,6 +46,7 @@ import io.harness.cdng.service.beans.ServiceOutcome.ArtifactsOutcome;
 import io.harness.cdng.service.beans.ServiceUseFromStage;
 import io.harness.cdng.service.beans.ServiceUseFromStage.Overrides;
 import io.harness.cdng.service.beans.StageOverridesConfig;
+import io.harness.cdng.service.steps.ServiceStep.ServiceStepPassThroughData;
 import io.harness.cdng.service.steps.ServiceStepParameters;
 import io.harness.cdng.tasks.manifestFetch.step.ManifestFetchOutcome;
 import io.harness.cdng.tasks.manifestFetch.step.ManifestFetchParameters;
@@ -94,6 +96,8 @@ public class NGKryoRegistrar implements KryoRegistrar {
     kryo.register(K8sRollingStepParameters.class, 8052);
     kryo.register(ManifestFetchParameters.class, 8053);
     kryo.register(ShellScriptStepInfo.class, 8055);
+    kryo.register(K8sRollingStepPassThroughData.class, 8056);
+    kryo.register(ServiceStepPassThroughData.class, 8057);
 
     // Starting using 8100 series
     kryo.register(DeploymentStage.class, 8100);

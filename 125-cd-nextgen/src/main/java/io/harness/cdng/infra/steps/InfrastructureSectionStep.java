@@ -2,8 +2,8 @@ package io.harness.cdng.infra.steps;
 
 import io.harness.executions.steps.ExecutionNodeType;
 import io.harness.facilitator.modes.child.ChildExecutable;
-import io.harness.facilitator.modes.child.ChildExecutableResponse;
 import io.harness.pms.ambiance.Ambiance;
+import io.harness.pms.execution.ChildExecutableResponse;
 import io.harness.pms.execution.Status;
 import io.harness.pms.sdk.core.steps.io.StepInputPackage;
 import io.harness.pms.sdk.core.steps.io.StepResponse;
@@ -25,7 +25,7 @@ public class InfrastructureSectionStep implements ChildExecutable<SectionStepPar
   @Override
   public ChildExecutableResponse obtainChild(
       Ambiance ambiance, SectionStepParameters sectionStepParameters, StepInputPackage inputPackage) {
-    return ChildExecutableResponse.builder().childNodeId(sectionStepParameters.getChildNodeId()).build();
+    return ChildExecutableResponse.newBuilder().setChildNodeId(sectionStepParameters.getChildNodeId()).build();
   }
 
   @Override

@@ -17,11 +17,11 @@ import io.harness.exception.InvalidRequestException;
 import io.harness.execution.NodeExecution;
 import io.harness.execution.NodeExecution.NodeExecutionKeys;
 import io.harness.facilitator.modes.async.AsyncExecutable;
-import io.harness.facilitator.modes.async.AsyncExecutableResponse;
 import io.harness.pms.ambiance.Ambiance;
+import io.harness.pms.execution.AsyncExecutableResponse;
+import io.harness.pms.execution.ExecutableResponse;
 import io.harness.pms.execution.Status;
 import io.harness.pms.plan.PlanNodeProto;
-import io.harness.pms.sdk.core.plan.PlanNode;
 import io.harness.pms.sdk.core.steps.io.StepResponse;
 import io.harness.registries.state.StepRegistry;
 import io.harness.waiter.NotifyCallback;
@@ -67,16 +67,18 @@ public class AsyncStrategy implements ExecuteStrategy {
     NodeExecution nodeExecution =
         Preconditions.checkNotNull(nodeExecutionService.get(AmbianceUtils.obtainCurrentRuntimeId(ambiance)));
     PlanNodeProto node = nodeExecution.getNode();
-    if (isEmpty(response.getCallbackIds())) {
+    if (isEmpty(response.getCallbackIdsList())) {
       log.error("StepResponse has no callbackIds - currentState : " + node.getName()
           + ", nodeExecutionId: " + nodeExecution.getUuid());
       throw new InvalidRequestException("Callback Ids cannot be empty for Async Executable Response");
     }
     NotifyCallback callback = EngineResumeCallback.builder().nodeExecutionId(nodeExecution.getUuid()).build();
-    waitNotifyEngine.waitForAllOn(publisherName, callback, response.getCallbackIds().toArray(new String[0]));
+    waitNotifyEngine.waitForAllOn(publisherName, callback, response.getCallbackIdsList().toArray(new String[0]));
     // Update Execution Node Instance state to TASK_WAITING
     nodeExecutionService.updateStatusWithOps(nodeExecution.getUuid(), Status.ASYNC_WAITING,
-        ops -> ops.addToSet(NodeExecutionKeys.executableResponses, response));
+        ops
+        -> ops.addToSet(
+            NodeExecutionKeys.executableResponses, ExecutableResponse.newBuilder().setAsync(response).build()));
   }
 
   private AsyncExecutable extractAsyncExecutable(NodeExecution nodeExecution) {

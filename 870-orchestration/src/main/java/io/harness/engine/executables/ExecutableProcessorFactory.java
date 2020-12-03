@@ -13,7 +13,7 @@ import io.harness.engine.executables.invokers.TaskChainStrategy;
 import io.harness.engine.executables.invokers.TaskStrategy;
 import io.harness.exception.InvalidRequestException;
 import io.harness.pms.execution.ExecutionMode;
-import io.harness.tasks.TaskMode;
+import io.harness.pms.execution.TaskMode;
 
 import com.google.inject.Inject;
 import com.google.inject.Injector;

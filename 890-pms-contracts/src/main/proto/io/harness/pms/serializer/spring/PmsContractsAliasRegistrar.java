@@ -5,6 +5,7 @@ import io.harness.pms.advisers.AdviserType;
 import io.harness.pms.ambiance.Ambiance;
 import io.harness.pms.ambiance.Level;
 import io.harness.pms.data.StepOutcomeRef;
+import io.harness.pms.execution.ExecutableResponse;
 import io.harness.pms.execution.ExecutionMode;
 import io.harness.pms.execution.failure.FailureInfo;
 import io.harness.pms.facilitators.FacilitatorObtainment;
@@ -29,5 +30,6 @@ public class PmsContractsAliasRegistrar implements AliasRegistrar {
     orchestrationElements.put("refType", RefType.class);
     orchestrationElements.put("failureInfo", FailureInfo.class);
     orchestrationElements.put("stepOutcomeRef", StepOutcomeRef.class);
+    orchestrationElements.put("executableResponse", ExecutableResponse.class);
   }
 }

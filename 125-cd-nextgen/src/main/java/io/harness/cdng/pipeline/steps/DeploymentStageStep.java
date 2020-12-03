@@ -5,8 +5,8 @@ import static io.harness.steps.StepUtils.createStepResponseFromChildResponse;
 import io.harness.cdng.pipeline.beans.DeploymentStageStepParameters;
 import io.harness.executions.steps.ExecutionNodeType;
 import io.harness.facilitator.modes.child.ChildExecutable;
-import io.harness.facilitator.modes.child.ChildExecutableResponse;
 import io.harness.pms.ambiance.Ambiance;
+import io.harness.pms.execution.ChildExecutableResponse;
 import io.harness.pms.sdk.core.steps.io.StepInputPackage;
 import io.harness.pms.sdk.core.steps.io.StepResponse;
 import io.harness.pms.steps.StepType;
@@ -32,7 +32,7 @@ public class DeploymentStageStep implements ChildExecutable<DeploymentStageStepP
 
     final Map<String, String> fieldToExecutionNodeIdMap = stepParameters.getFieldToExecutionNodeIdMap();
     final String executionNodeId = fieldToExecutionNodeIdMap.get("execution");
-    return ChildExecutableResponse.builder().childNodeId(executionNodeId).build();
+    return ChildExecutableResponse.newBuilder().setChildNodeId(executionNodeId).build();
   }
 
   @Override

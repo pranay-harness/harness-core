@@ -4,8 +4,8 @@ import static io.harness.annotations.dev.HarnessTeam.CDC;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.facilitator.modes.child.ChildExecutable;
-import io.harness.facilitator.modes.child.ChildExecutableResponse;
 import io.harness.pms.ambiance.Ambiance;
+import io.harness.pms.execution.ChildExecutableResponse;
 import io.harness.pms.sdk.core.steps.io.StepInputPackage;
 import io.harness.pms.sdk.core.steps.io.StepResponse;
 import io.harness.pms.sdk.core.steps.io.StepResponse.StepResponseBuilder;
@@ -28,7 +28,7 @@ public class DummySectionStep implements ChildExecutable<DummySectionStepParamet
   @Override
   public ChildExecutableResponse obtainChild(
       Ambiance ambiance, DummySectionStepParameters dummySectionStepParameters, StepInputPackage inputPackage) {
-    return ChildExecutableResponse.builder().childNodeId(dummySectionStepParameters.getChildNodeId()).build();
+    return ChildExecutableResponse.newBuilder().setChildNodeId(dummySectionStepParameters.getChildNodeId()).build();
   }
 
   @Override

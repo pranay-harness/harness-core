@@ -5,6 +5,7 @@ import static io.harness.annotations.dev.HarnessTeam.CDC;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.exception.InvalidRequestException;
 import io.harness.facilitator.PassThroughData;
+import io.harness.pms.sdk.core.data.Metadata;
 import io.harness.tasks.Task;
 
 import java.util.Map;
@@ -18,7 +19,7 @@ public class TaskChainResponse {
   boolean chainEnd;
   PassThroughData passThroughData;
   Task task;
-  Map<String, Object> metadata;
+  Map<String, Metadata> metadata;
 
   public static class TaskChainResponseBuilder {
     public TaskChainResponse build() {

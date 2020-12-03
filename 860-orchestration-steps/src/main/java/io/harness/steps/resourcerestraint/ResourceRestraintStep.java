@@ -18,9 +18,9 @@ import io.harness.engine.expressions.EngineExpressionService;
 import io.harness.exception.InvalidRequestException;
 import io.harness.facilitator.PassThroughData;
 import io.harness.facilitator.modes.async.AsyncExecutable;
-import io.harness.facilitator.modes.async.AsyncExecutableResponse;
 import io.harness.facilitator.modes.sync.SyncExecutable;
 import io.harness.pms.ambiance.Ambiance;
+import io.harness.pms.execution.AsyncExecutableResponse;
 import io.harness.pms.execution.Status;
 import io.harness.pms.sdk.core.steps.io.StepInputPackage;
 import io.harness.pms.sdk.core.steps.io.StepResponse;
@@ -94,7 +94,7 @@ public class ResourceRestraintStep
 
     String consumerId = executeInternal(resourceRestraint, stepParameters, ambiance, releaseEntityId, true);
 
-    return AsyncExecutableResponse.builder().callbackId(consumerId).build();
+    return AsyncExecutableResponse.newBuilder().addCallbackIds(consumerId).build();
   }
 
   @Override
@@ -126,7 +126,7 @@ public class ResourceRestraintStep
   public void handleAbort(
       Ambiance ambiance, ResourceRestraintStepParameters stepParameters, AsyncExecutableResponse executableResponse) {
     resourceRestraintService.finishInstance(
-        Preconditions.checkNotNull(executableResponse.getCallbackIds().get(0),
+        Preconditions.checkNotNull(executableResponse.getCallbackIdsList().get(0),
             "CallbackId should not be null in handleAbort() for nodeExecution with id %s",
             AmbianceUtils.obtainCurrentRuntimeId(ambiance)),
         stepParameters.getResourceUnit());

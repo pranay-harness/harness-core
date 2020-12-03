@@ -5,23 +5,26 @@ import io.harness.cdng.pipeline.beans.RollbackOptionalChildChainStepParameters;
 import io.harness.cdng.pipeline.plancreators.PlanCreatorHelper;
 import io.harness.facilitator.PassThroughData;
 import io.harness.facilitator.modes.chain.child.ChildChainExecutable;
-import io.harness.facilitator.modes.chain.child.ChildChainResponse;
 import io.harness.pms.ambiance.Ambiance;
+import io.harness.pms.execution.ChildChainExecutableResponse;
 import io.harness.pms.execution.Status;
 import io.harness.pms.sdk.core.steps.io.StepInputPackage;
 import io.harness.pms.sdk.core.steps.io.StepResponse;
 import io.harness.pms.steps.StepType;
+import io.harness.serializer.KryoSerializer;
 import io.harness.state.io.StepResponseNotifyData;
 import io.harness.steps.section.chain.SectionChainPassThroughData;
 import io.harness.tasks.ResponseData;
 
 import com.google.inject.Inject;
+import com.google.protobuf.ByteString;
 import java.util.Map;
 
 public class RollbackOptionalChildChainStep implements ChildChainExecutable<RollbackOptionalChildChainStepParameters> {
   public static final StepType STEP_TYPE = StepType.newBuilder().setType("ROLLBACK_OPTIONAL_CHILD_CHAIN").build();
 
   @Inject private PlanCreatorHelper planCreatorHelper;
+  @Inject private KryoSerializer kryoSerializer;
 
   @Override
   public Class<RollbackOptionalChildChainStepParameters> getStepParametersClass() {
@@ -29,41 +32,42 @@ public class RollbackOptionalChildChainStep implements ChildChainExecutable<Roll
   }
 
   @Override
-  public ChildChainResponse executeFirstChild(
+  public ChildChainExecutableResponse executeFirstChild(
       Ambiance ambiance, RollbackOptionalChildChainStepParameters stepParameters, StepInputPackage inputPackage) {
     int index = 0;
     for (int i = index; i < stepParameters.getChildNodes().size(); i++) {
       RollbackNode childNode = stepParameters.getChildNodes().get(i);
 
       if (planCreatorHelper.shouldNodeRun(childNode, ambiance)) {
-        return ChildChainResponse.builder()
-            .nextChildId(childNode.getNodeId())
-            .passThroughData(SectionChainPassThroughData.builder().childIndex(i).build())
-            .lastLink(stepParameters.getChildNodes().size() == i + 1)
+        return ChildChainExecutableResponse.newBuilder()
+            .setNextChildId(childNode.getNodeId())
+            .setPassThroughData(obtainPassThroughData(SectionChainPassThroughData.builder().childIndex(i).build()))
+            .setLastLink(stepParameters.getChildNodes().size() == i + 1)
             .build();
       }
     }
-    return ChildChainResponse.builder().suspend(true).build();
+    return ChildChainExecutableResponse.newBuilder().setSuspend(true).build();
   }
 
   @Override
-  public ChildChainResponse executeNextChild(Ambiance ambiance, RollbackOptionalChildChainStepParameters stepParameters,
-      StepInputPackage inputPackage, PassThroughData passThroughData, Map<String, ResponseData> responseDataMap) {
+  public ChildChainExecutableResponse executeNextChild(Ambiance ambiance,
+      RollbackOptionalChildChainStepParameters stepParameters, StepInputPackage inputPackage,
+      PassThroughData passThroughData, Map<String, ResponseData> responseDataMap) {
     int index = ((SectionChainPassThroughData) passThroughData).getChildIndex() + 1;
 
     for (int i = index; i < stepParameters.getChildNodes().size(); i++) {
       RollbackNode childNode = stepParameters.getChildNodes().get(i);
 
       if (planCreatorHelper.shouldNodeRun(childNode, ambiance)) {
-        return ChildChainResponse.builder()
-            .nextChildId(childNode.getNodeId())
-            .passThroughData(SectionChainPassThroughData.builder().childIndex(i).build())
-            .lastLink(stepParameters.getChildNodes().size() == i + 1)
-            .previousChildId(responseDataMap.keySet().iterator().next())
+        return ChildChainExecutableResponse.newBuilder()
+            .setNextChildId(childNode.getNodeId())
+            .setPassThroughData(obtainPassThroughData(SectionChainPassThroughData.builder().childIndex(i).build()))
+            .setLastLink(stepParameters.getChildNodes().size() == i + 1)
+            .setPreviousChildId(responseDataMap.keySet().iterator().next())
             .build();
       }
     }
-    return ChildChainResponse.builder().suspend(true).build();
+    return ChildChainExecutableResponse.newBuilder().setSuspend(true).build();
   }
 
   @Override
@@ -75,5 +79,9 @@ public class RollbackOptionalChildChainStep implements ChildChainExecutable<Roll
       return StepResponse.builder().status(Status.SUCCEEDED).failureInfo(notifyData.getFailureInfo()).build();
     }
     return StepResponse.builder().status(notifyData.getStatus()).failureInfo(notifyData.getFailureInfo()).build();
+  }
+
+  private ByteString obtainPassThroughData(SectionChainPassThroughData passThroughData) {
+    return ByteString.copyFrom(kryoSerializer.asBytes(passThroughData));
   }
 }
