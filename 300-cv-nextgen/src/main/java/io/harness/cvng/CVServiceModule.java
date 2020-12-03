@@ -4,6 +4,8 @@ import io.harness.cvng.activity.services.api.ActivityService;
 import io.harness.cvng.activity.services.api.KubernetesActivitySourceService;
 import io.harness.cvng.activity.services.impl.ActivityServiceImpl;
 import io.harness.cvng.activity.services.impl.KubernetesActivitySourceServiceImpl;
+import io.harness.cvng.alert.services.api.AlertRuleService;
+import io.harness.cvng.alert.services.impl.AlertRuleServiceImpl;
 import io.harness.cvng.analysis.services.api.AnalysisService;
 import io.harness.cvng.analysis.services.api.DeploymentAnalysisService;
 import io.harness.cvng.analysis.services.api.DeploymentLogAnalysisService;
@@ -180,6 +182,7 @@ public class CVServiceModule extends AbstractModule {
       bind(VerificationTaskService.class).to(VerificationTaskServiceImpl.class);
       bind(TimeSeriesDashboardService.class).to(TimeSeriesDashboardServiceImpl.class);
       bind(ActivityService.class).to(ActivityServiceImpl.class);
+      bind(AlertRuleService.class).to(AlertRuleServiceImpl.class);
       bind(LogDashboardService.class).to(LogDashboardServiceImpl.class);
       bind(WebhookService.class).to(WebhookServiceImpl.class);
       bind(DeploymentTimeSeriesAnalysisService.class).to(DeploymentTimeSeriesAnalysisServiceImpl.class);
