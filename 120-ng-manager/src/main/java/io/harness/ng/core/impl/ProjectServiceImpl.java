@@ -13,6 +13,7 @@ import static io.harness.ng.core.utils.NGUtils.getDefaultHarnessSecretManagerNam
 import static io.harness.ng.core.utils.NGUtils.validate;
 import static io.harness.ng.core.utils.NGUtils.verifyValuesNotChanged;
 
+import static java.util.Collections.singletonList;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 import io.harness.ModuleType;
@@ -30,14 +31,20 @@ import io.harness.ng.core.DefaultOrganization;
 import io.harness.ng.core.OrgIdentifier;
 import io.harness.ng.core.ProjectIdentifier;
 import io.harness.ng.core.api.NGSecretManagerService;
+import io.harness.ng.core.common.beans.NGTag.NGTagKeys;
 import io.harness.ng.core.dto.ProjectDTO;
 import io.harness.ng.core.dto.ProjectFilterDTO;
 import io.harness.ng.core.entities.Project;
 import io.harness.ng.core.entities.Project.ProjectKeys;
+import io.harness.ng.core.invites.entities.Role;
+import io.harness.ng.core.invites.entities.UserProjectMap;
 import io.harness.ng.core.services.OrganizationService;
 import io.harness.ng.core.services.ProjectService;
+import io.harness.ng.core.user.services.api.NgUserService;
 import io.harness.repositories.core.spring.ProjectRepository;
 import io.harness.secretmanagerclient.dto.SecretManagerConfigDTO;
+import io.harness.security.SecurityContextBuilder;
+import io.harness.security.dto.PrincipalType;
 
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
@@ -65,17 +72,20 @@ public class ProjectServiceImpl implements ProjectService {
   private final NGSecretManagerService ngSecretManagerService;
   private final ConnectorService secretManagerConnectorService;
   private final EventDrivenClient eventDrivenClient;
+  private final NgUserService ngUserService;
+  private static final String PROJECT_ADMIN_ROLE_NAME = "Project Admin";
 
   @Inject
   public ProjectServiceImpl(ProjectRepository projectRepository, OrganizationService organizationService,
       NGSecretManagerService ngSecretManagerService,
       @Named(SECRET_MANAGER_CONNECTOR_SERVICE) ConnectorService secretManagerConnectorService,
-      EventDrivenClient eventDrivenClient) {
+      EventDrivenClient eventDrivenClient, NgUserService ngUserService) {
     this.projectRepository = projectRepository;
     this.organizationService = organizationService;
     this.ngSecretManagerService = ngSecretManagerService;
     this.secretManagerConnectorService = secretManagerConnectorService;
     this.eventDrivenClient = eventDrivenClient;
+    this.ngUserService = ngUserService;
   }
 
   @Override
@@ -99,6 +109,28 @@ public class ProjectServiceImpl implements ProjectService {
 
   private void performActionsPostProjectCreation(Project project) {
     createHarnessSecretManager(project);
+    createUserProjectMap(project);
+  }
+
+  private void createUserProjectMap(Project project) {
+    if (SecurityContextBuilder.getPrincipal() != null
+        && SecurityContextBuilder.getPrincipal().getType() == PrincipalType.USER) {
+      String userId = SecurityContextBuilder.getPrincipal().getName();
+      Role role = Role.builder()
+                      .accountIdentifier(project.getAccountIdentifier())
+                      .orgIdentifier(project.getOrgIdentifier())
+                      .projectIdentifier(project.getIdentifier())
+                      .name(PROJECT_ADMIN_ROLE_NAME)
+                      .build();
+      UserProjectMap userProjectMap = UserProjectMap.builder()
+                                          .userId(userId)
+                                          .accountIdentifier(project.getAccountIdentifier())
+                                          .orgIdentifier(project.getOrgIdentifier())
+                                          .projectIdentifier(project.getIdentifier())
+                                          .roles(singletonList(role))
+                                          .build();
+      ngUserService.createUserProjectMap(userProjectMap);
+    }
   }
 
   private void createHarnessSecretManager(Project project) {
@@ -204,7 +236,9 @@ public class ProjectServiceImpl implements ProjectService {
     }
     if (isNotBlank(projectFilterDTO.getSearchTerm())) {
       criteria.orOperator(Criteria.where(ProjectKeys.name).regex(projectFilterDTO.getSearchTerm(), "i"),
-          Criteria.where(ProjectKeys.tags).regex(projectFilterDTO.getSearchTerm(), "i"));
+          Criteria.where(ProjectKeys.identifier).regex(projectFilterDTO.getSearchTerm(), "i"),
+          Criteria.where(ProjectKeys.tags + "." + NGTagKeys.key).regex(projectFilterDTO.getSearchTerm(), "i"),
+          Criteria.where(ProjectKeys.tags + "." + NGTagKeys.value).regex(projectFilterDTO.getSearchTerm(), "i"));
     }
     return criteria;
   }
