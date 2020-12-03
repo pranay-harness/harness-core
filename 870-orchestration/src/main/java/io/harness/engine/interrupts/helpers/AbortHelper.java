@@ -14,7 +14,6 @@ import io.harness.engine.interrupts.InterruptProcessingFailedException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.execution.NodeExecution;
 import io.harness.execution.NodeExecution.NodeExecutionKeys;
-import io.harness.facilitator.modes.Abortable;
 import io.harness.interrupts.Interrupt;
 import io.harness.pms.ambiance.Ambiance;
 import io.harness.pms.execution.ExecutableResponse;
@@ -24,6 +23,7 @@ import io.harness.pms.execution.TaskChainExecutableResponse;
 import io.harness.pms.execution.TaskExecutableResponse;
 import io.harness.pms.plan.PlanNodeProto;
 import io.harness.pms.sdk.core.steps.Step;
+import io.harness.pms.sdk.core.steps.executables.Abortable;
 import io.harness.registries.state.StepRegistry;
 import io.harness.tasks.TaskExecutor;
 

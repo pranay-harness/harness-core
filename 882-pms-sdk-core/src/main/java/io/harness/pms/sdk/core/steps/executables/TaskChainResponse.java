@@ -1,11 +1,11 @@
-package io.harness.facilitator.modes.chain.task;
+package io.harness.pms.sdk.core.steps.executables;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.exception.InvalidRequestException;
-import io.harness.facilitator.PassThroughData;
 import io.harness.pms.sdk.core.data.Metadata;
+import io.harness.pms.sdk.core.steps.io.PassThroughData;
 import io.harness.tasks.Task;
 
 import lombok.Builder;

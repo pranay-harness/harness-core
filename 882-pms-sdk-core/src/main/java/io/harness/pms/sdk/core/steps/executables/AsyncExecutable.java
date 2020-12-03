@@ -1,10 +1,8 @@
-package io.harness.facilitator.modes.async;
+package io.harness.pms.sdk.core.steps.executables;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 
-import io.harness.annotations.Redesign;
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.facilitator.modes.Abortable;
 import io.harness.pms.ambiance.Ambiance;
 import io.harness.pms.execution.AsyncExecutableResponse;
 import io.harness.pms.sdk.core.steps.Step;
@@ -18,7 +16,7 @@ import java.util.Map;
 /**
  * An executable interface for async activities. This is used when you want to do async activities other that spawning a
  * delegate task. If your step acts as a wrapper to spawning a delegate task use {@link
- * io.harness.facilitator.modes.task.TaskExecutable}
+ * TaskExecutable}
  *
  * Interface Signature Details:
  *
@@ -30,7 +28,6 @@ import java.util.Map;
  *
  */
 @OwnedBy(CDC)
-@Redesign
 public interface AsyncExecutable<T extends StepParameters> extends Step<T>, Abortable<T, AsyncExecutableResponse> {
   AsyncExecutableResponse executeAsync(Ambiance ambiance, T stepParameters, StepInputPackage inputPackage);
 

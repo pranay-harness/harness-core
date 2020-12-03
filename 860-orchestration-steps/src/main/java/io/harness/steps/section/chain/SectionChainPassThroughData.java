@@ -3,7 +3,7 @@ package io.harness.steps.section.chain;
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.facilitator.PassThroughData;
+import io.harness.pms.sdk.core.steps.io.PassThroughData;
 
 import lombok.Builder;
 import lombok.Data;

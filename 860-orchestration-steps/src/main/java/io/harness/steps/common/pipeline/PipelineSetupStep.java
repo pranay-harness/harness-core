@@ -2,9 +2,9 @@ package io.harness.steps.common.pipeline;
 
 import static io.harness.steps.StepUtils.createStepResponseFromChildResponse;
 
-import io.harness.facilitator.modes.child.ChildExecutable;
 import io.harness.pms.ambiance.Ambiance;
 import io.harness.pms.execution.ChildExecutableResponse;
+import io.harness.pms.sdk.core.steps.executables.ChildExecutable;
 import io.harness.pms.sdk.core.steps.io.StepInputPackage;
 import io.harness.pms.sdk.core.steps.io.StepResponse;
 import io.harness.pms.steps.StepType;

@@ -10,8 +10,6 @@ import io.harness.execution.PlanExecution;
 import io.harness.execution.events.OrchestrationEvent;
 import io.harness.facilitator.DefaultFacilitatorParams;
 import io.harness.facilitator.FacilitatorParameters;
-import io.harness.facilitator.PassThroughData;
-import io.harness.facilitator.modes.chain.task.TaskChainResponse;
 import io.harness.interrupts.Interrupt;
 import io.harness.morphia.MorphiaRegistrar;
 import io.harness.morphia.MorphiaRegistrarHelperPut;
@@ -27,7 +25,6 @@ public class OrchestrationBeansMorphiaRegistrar implements MorphiaRegistrar {
     set.add(Interrupt.class);
     set.add(OutcomeInstance.class);
     set.add(FacilitatorParameters.class);
-    set.add(PassThroughData.class);
     set.add(ExecutionSweepingOutputInstance.class);
     set.add(OrchestrationEvent.class);
   }
@@ -35,6 +32,5 @@ public class OrchestrationBeansMorphiaRegistrar implements MorphiaRegistrar {
   @Override
   public void registerImplementationClasses(MorphiaRegistrarHelperPut h, MorphiaRegistrarHelperPut w) {
     h.put("facilitator.DefaultFacilitatorParams", DefaultFacilitatorParams.class);
-    h.put("facilitator.modes.chain.TaskChainResponse", TaskChainResponse.class);
   }
 }

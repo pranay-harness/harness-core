@@ -4,11 +4,11 @@ import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.facilitator.PassThroughData;
-import io.harness.facilitator.modes.chain.child.ChildChainExecutable;
 import io.harness.pms.ambiance.Ambiance;
 import io.harness.pms.execution.ChildChainExecutableResponse;
 import io.harness.pms.execution.Status;
+import io.harness.pms.sdk.core.steps.executables.ChildChainExecutable;
+import io.harness.pms.sdk.core.steps.io.PassThroughData;
 import io.harness.pms.sdk.core.steps.io.StepInputPackage;
 import io.harness.pms.sdk.core.steps.io.StepResponse;
 import io.harness.pms.sdk.core.steps.io.StepResponse.StepResponseBuilder;
