@@ -180,6 +180,15 @@ public class WorkflowExecution implements PersistentRegularIterable, AccountData
                  .field(WorkflowExecutionKeys.accountId)
                  .descSortField(WorkflowExecutionKeys.endTs)
                  .build())
+        .add(SortCompoundMongoIndex.builder()
+                 .name("accountId_appId_cdPageCandidate_pipelineSummary.pipelineId_envIds_createdAt")
+                 .field(WorkflowExecutionKeys.accountId)
+                 .field(WorkflowExecutionKeys.appId)
+                 .field(WorkflowExecutionKeys.cdPageCandidate)
+                 .field(WorkflowExecutionKeys.pipelineSummary_pipelineId)
+                 .field(WorkflowExecutionKeys.envIds)
+                 .descSortField(WorkflowExecutionKeys.createdAt)
+                 .build())
         .build();
   }
 
@@ -328,6 +337,7 @@ public class WorkflowExecution implements PersistentRegularIterable, AccountData
     public static final String executionArgs_artifact_variables =
         executionArgs + "." + ExecutionArgsKeys.artifactVariables;
     public static final String tags_name = tags + "." + NameValuePairKeys.name;
+    public static final String pipelineSummary_pipelineId = pipelineSummary + "." + ExecutionArgsKeys.pipelineId;
   }
 
   @PrePersist
