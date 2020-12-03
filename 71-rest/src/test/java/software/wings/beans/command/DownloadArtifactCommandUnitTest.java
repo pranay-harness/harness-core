@@ -2,6 +2,7 @@ package software.wings.beans.command;
 
 import static io.harness.delegate.beans.artifact.ArtifactFileMetadata.builder;
 import static io.harness.rule.OwnerRule.AADITI;
+import static io.harness.rule.OwnerRule.ROHITKARELIA;
 
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 import static software.wings.beans.command.CommandExecutionContext.Builder.aCommandExecutionContext;
@@ -19,6 +20,7 @@ import static software.wings.utils.WingsTestConstants.SETTING_ID;
 
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyBoolean;
 import static org.mockito.Matchers.anyListOf;
@@ -31,6 +33,7 @@ import static org.mockito.Mockito.when;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.beans.artifact.ArtifactFileMetadata;
 import io.harness.delegate.task.shell.ScriptType;
+import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.rule.Owner;
@@ -57,13 +60,18 @@ import software.wings.core.BaseScriptExecutor;
 import software.wings.delegatetasks.DelegateLogService;
 import software.wings.helpers.ext.azure.devops.AzureArtifactsPackageFileInfo;
 import software.wings.helpers.ext.azure.devops.AzureArtifactsService;
+import software.wings.helpers.ext.jenkins.BuildDetails;
+import software.wings.helpers.ext.nexus.NexusTwoServiceImpl;
 import software.wings.service.impl.AwsHelperService;
 import software.wings.service.intfc.security.EncryptionService;
 import software.wings.utils.WingsTestConstants;
 
+import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import junitparams.JUnitParamsRunner;
 import junitparams.Parameters;
@@ -89,6 +97,8 @@ public class DownloadArtifactCommandUnitTest extends WingsBaseTest {
   @Mock private AwsHelperService awsHelperService;
   @Mock private AzureArtifactsService azureArtifactsService;
   @Mock DelegateLogService logService;
+  @Mock NexusTwoServiceImpl nexusTwoService;
+
   private SettingAttribute awsSetting =
       aSettingAttribute()
           .withUuid(SETTING_ID)
@@ -207,6 +217,21 @@ public class DownloadArtifactCommandUnitTest extends WingsBaseTest {
                   .url(
                       "https://nexus2-cdteam.harness.io/service/local/artifact/maven/content?r=releases&g=io.harness.test&a=todolist&v=7.0&p=war&e=war&c=sources")
                   .build()))
+          .serverSetting(nexusSetting)
+          .artifactStreamId(ARTIFACT_STREAM_ID)
+          .jobName("releases")
+          .groupId("io.harness.test")
+          .artifactName("todolist")
+          .extension("war")
+          .classifier("sources")
+          .artifactServerEncryptedDataDetails(Collections.emptyList())
+          .build();
+
+  private ArtifactStreamAttributes nexus2MavenStreamAttributesWithoutArtifactFileMetadata =
+      ArtifactStreamAttributes.builder()
+          .artifactStreamType(ArtifactStreamType.NEXUS.name())
+          .metadataOnly(true)
+          .artifactFileMetadata(asList())
           .serverSetting(nexusSetting)
           .artifactStreamId(ARTIFACT_STREAM_ID)
           .jobName("releases")
@@ -341,6 +366,17 @@ public class DownloadArtifactCommandUnitTest extends WingsBaseTest {
                                            .build());
 
   @InjectMocks
+  ShellCommandExecutionContext nexusContextMavenWithoutArtifactFileMetadata = new ShellCommandExecutionContext(
+      aCommandExecutionContext()
+          .artifactStreamAttributes(nexus2MavenStreamAttributesWithoutArtifactFileMetadata)
+          .metadata(mockMetadata(ArtifactStreamType.NEXUS))
+          .hostConnectionAttributes(hostConnectionAttributes)
+          .appId(WingsTestConstants.APP_ID)
+          .activityId(ACTIVITY_ID)
+          .host(host)
+          .build());
+
+  @InjectMocks
   ShellCommandExecutionContext nexusContextMavenAnon =
       new ShellCommandExecutionContext(aCommandExecutionContext()
                                            .artifactStreamAttributes(nexus2MavenStreamAttributesAnon)
@@ -472,6 +508,51 @@ public class DownloadArtifactCommandUnitTest extends WingsBaseTest {
     ArgumentCaptor<String> argument = ArgumentCaptor.forClass(String.class);
     verify(executor).executeCommandString(argument.capture(), anyBoolean());
     assertThat(argument.getValue()).isEqualTo(command);
+  }
+
+  @Test
+  @Owner(developers = ROHITKARELIA)
+  @Category(UnitTests.class)
+  @Parameters(method = "getNexus2MavenData")
+  public void shouldThrowExecptionDownloadFromNexus2MavenRuntimeFails(ScriptType scriptType, String command) {
+    nexusContextMavenWithoutArtifactFileMetadata.setExecutor(executor);
+    downloadArtifactCommandUnit.setScriptType(scriptType);
+    downloadArtifactCommandUnit.setCommandPath(WingsTestConstants.DESTINATION_DIR_PATH);
+    when(encryptionService.decrypt(any(EncryptableSetting.class), anyListOf(EncryptedDataDetail.class), eq(false)))
+        .thenReturn((EncryptableSetting) hostConnectionAttributes.getValue());
+    assertThatThrownBy(() -> downloadArtifactCommandUnit.executeInternal(nexusContextMavenWithoutArtifactFileMetadata))
+        .isInstanceOf(InvalidRequestException.class);
+  }
+
+  @Test
+  @Owner(developers = ROHITKARELIA)
+  @Category(UnitTests.class)
+  @Parameters(method = "getNexus2MavenData")
+  public void shouldDownloadFromNexus2MavenRuntime(ScriptType scriptType, String command) throws IOException {
+    ArtifactFileMetadata artifactFileMetadata =
+        ArtifactFileMetadata.builder()
+            .fileName("todolist")
+            .url(
+                "https://nexus2-cdteam.harness.io/service/local/artifact/maven/content?r=releases&g=io.harness.test&a=todolist&v=7.0&p=war&e=war&c=sources")
+            .build();
+
+    List<ArtifactFileMetadata> artifactFileMetadataList = new ArrayList<>();
+    artifactFileMetadataList.add(artifactFileMetadata);
+
+    BuildDetails buildDetails =
+        BuildDetails.Builder.aBuildDetails().withArtifactDownloadMetadata(artifactFileMetadataList).build();
+    List<BuildDetails> buildDetailsList = new ArrayList<>();
+    buildDetailsList.add(buildDetails);
+
+    nexusContextMavenWithoutArtifactFileMetadata.setExecutor(executor);
+    downloadArtifactCommandUnit.setScriptType(scriptType);
+    downloadArtifactCommandUnit.setCommandPath(WingsTestConstants.DESTINATION_DIR_PATH);
+    when(encryptionService.decrypt(any(EncryptableSetting.class), anyListOf(EncryptedDataDetail.class), eq(false)))
+        .thenReturn((EncryptableSetting) hostConnectionAttributes.getValue());
+    when(nexusTwoService.getVersion(
+             any(NexusConfig.class), anyListOf(EncryptedDataDetail.class), any(), any(), any(), any(), any(), any()))
+        .thenReturn(buildDetailsList);
+    downloadArtifactCommandUnit.executeInternal(nexusContextMavenWithoutArtifactFileMetadata);
   }
 
   @Test

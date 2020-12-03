@@ -21,6 +21,7 @@ import io.harness.exception.WingsException;
 import io.harness.expression.ExpressionEvaluator;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.logging.LogLevel;
+import io.harness.security.encryption.EncryptedDataDetail;
 
 import software.wings.beans.AppContainer;
 import software.wings.beans.BambooConfig;
@@ -35,8 +36,10 @@ import software.wings.delegatetasks.DelegateLogService;
 import software.wings.helpers.ext.azure.devops.AzureArtifactsPackageFileInfo;
 import software.wings.helpers.ext.azure.devops.AzureArtifactsService;
 import software.wings.helpers.ext.bamboo.BambooService;
+import software.wings.helpers.ext.jenkins.BuildDetails;
 import software.wings.helpers.ext.jenkins.Jenkins;
 import software.wings.helpers.ext.nexus.NexusService;
+import software.wings.helpers.ext.nexus.NexusTwoServiceImpl;
 import software.wings.service.impl.jenkins.JenkinsUtils;
 import software.wings.service.intfc.security.EncryptionService;
 import software.wings.stencils.DataProvider;
@@ -51,6 +54,7 @@ import com.google.common.base.MoreObjects;
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -77,6 +81,7 @@ public class ScpCommandUnit extends SshCommandUnit {
   @Inject @Transient private JenkinsUtils jenkinsUtil;
   @Inject @Transient private BambooService bambooService;
   @Inject @Transient private NexusService nexusService;
+  @Inject @Transient private NexusTwoServiceImpl nexusTwoService;
 
   @Attributes(title = "Source")
   @EnumData(enumDataProvider = ScpCommandDataProvider.class)
@@ -226,16 +231,36 @@ public class ScpCommandUnit extends SshCommandUnit {
             }
             return SUCCESS;
           } else if (artifactStreamType.equalsIgnoreCase(ArtifactStreamType.NEXUS.name())) {
+            NexusConfig nexusConfig = (NexusConfig) artifactStreamAttributes.getServerSetting().getValue();
+            List<EncryptedDataDetail> encryptionDetails =
+                artifactStreamAttributes.getArtifactServerEncryptedDataDetails();
+
             if (isEmpty(artifactStreamAttributes.getArtifactFileMetadata())) {
-              saveExecutionLog(context, WARN, "There are no artifacts to copy");
-              return SUCCESS;
+              // Try once more of to get download url
+              try {
+                List<BuildDetails> buildDetailsList = nexusTwoService.getVersion(nexusConfig, encryptionDetails,
+                    artifactStreamAttributes.getRepositoryName(), artifactStreamAttributes.getGroupId(), null,
+                    artifactStreamAttributes.getExtension(), artifactStreamAttributes.getClassifier(),
+                    artifactStreamAttributes.getBuildNoPath());
+
+                if (isEmpty(buildDetailsList) || isEmpty(buildDetailsList.get(0).getArtifactFileMetadataList())) {
+                  saveExecutionLog(context, WARN, "There are no artifacts to copy");
+                  return SUCCESS;
+                } else {
+                  artifactStreamAttributes.setArtifactFileMetadata(
+                      buildDetailsList.get(0).getArtifactFileMetadataList());
+                  log.info("Found metadata for artifact: {}", buildDetailsList.get(0).getUiDisplayName());
+                }
+              } catch (IOException ioException) {
+                log.warn("Exception encountered while fetching download url for artifact", ioException);
+              }
             }
+
             Map<String, String> metadata = artifactStreamAttributes.getMetadata();
             if (metadata == null) {
               throw new InvalidRequestException(
                   "No metadata found for artifact stream. Cannot proceed with copy artifact");
             }
-            NexusConfig nexusConfig = (NexusConfig) artifactStreamAttributes.getServerSetting().getValue();
             for (ArtifactFileMetadata artifactFileMetadata : artifactStreamAttributes.getArtifactFileMetadata()) {
               // filter artifacts based on extension and classifier for nexus parameterized artifact stream.
               // No op for non-parameterized artifact stream because we have already filtered artifactFileMetadata
@@ -251,8 +276,7 @@ public class ScpCommandUnit extends SshCommandUnit {
               metadata.put(ArtifactMetadataKeys.artifactFileName, artifactFileMetadata.getFileName());
               metadata.put(ArtifactMetadataKeys.artifactPath, artifactFileMetadata.getUrl());
               metadata.put(ArtifactMetadataKeys.artifactFileSize,
-                  String.valueOf(nexusService.getFileSize(nexusConfig,
-                      artifactStreamAttributes.getArtifactServerEncryptedDataDetails(),
+                  String.valueOf(nexusService.getFileSize(nexusConfig, encryptionDetails,
                       artifactFileMetadata.getFileName(), artifactFileMetadata.getUrl())));
               artifactStreamAttributes.setMetadata(metadata);
               CommandExecutionStatus executionStatus = context.copyFiles(destinationDirectoryPath,

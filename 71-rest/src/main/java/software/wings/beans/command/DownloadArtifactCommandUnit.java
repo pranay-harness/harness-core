@@ -40,6 +40,8 @@ import software.wings.delegatetasks.DelegateLogService;
 import software.wings.helpers.ext.azure.devops.AzureArtifactsPackageFileInfo;
 import software.wings.helpers.ext.azure.devops.AzureArtifactsService;
 import software.wings.helpers.ext.azure.devops.AzureArtifactsServiceHelper;
+import software.wings.helpers.ext.jenkins.BuildDetails;
+import software.wings.helpers.ext.nexus.NexusTwoServiceImpl;
 import software.wings.service.impl.AwsHelperService;
 import software.wings.service.impl.SftpHelperService;
 import software.wings.service.impl.SmbHelperService;
@@ -49,6 +51,7 @@ import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
 import com.google.inject.Inject;
+import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.text.SimpleDateFormat;
@@ -80,6 +83,8 @@ public class DownloadArtifactCommandUnit extends ExecCommandUnit {
   @Inject private SmbHelperService smbHelperService;
   @Inject private SftpHelperService sftpHelperService;
   @Inject private AzureArtifactsService azureArtifactsService;
+  @Inject private NexusTwoServiceImpl nexusTwoService;
+
   private static Map<String, String> bucketRegions = new HashMap<>();
 
   private String artifactVariableName = ExpressionEvaluator.DEFAULT_ARTIFACT_VARIABLE_NAME;
@@ -535,8 +540,22 @@ public class DownloadArtifactCommandUnit extends ExecCommandUnit {
     StringBuilder command = new StringBuilder(128);
 
     if (isEmpty(artifactFileMetadata)) {
-      saveExecutionLog(context, ERROR, NO_ARTIFACTS_ERROR_STRING);
-      throw new InvalidRequestException(NO_ARTIFACTS_ERROR_STRING, USER);
+      // Try once more of to get download url
+      try {
+        List<BuildDetails> buildDetailsList =
+            nexusTwoService.getVersion(nexusConfig, encryptionDetails, artifactStreamAttributes.getRepositoryName(),
+                artifactStreamAttributes.getGroupId(), null, artifactStreamAttributes.getExtension(),
+                artifactStreamAttributes.getClassifier(), artifactStreamAttributes.getBuildNoPath());
+        if (isEmpty(buildDetailsList) || isEmpty(buildDetailsList.get(0).getArtifactFileMetadataList())) {
+          saveExecutionLog(context, ERROR, NO_ARTIFACTS_ERROR_STRING);
+          throw new InvalidRequestException(NO_ARTIFACTS_ERROR_STRING, USER);
+        } else {
+          artifactFileMetadata = buildDetailsList.get(0).getArtifactFileMetadataList();
+          log.info("Found metadata for artifact: {}", buildDetailsList.get(0).getUiDisplayName());
+        }
+      } catch (IOException ioException) {
+        log.warn("Exception encountered while fetching download url for artifact", ioException);
+      }
     }
 
     // filter artifacts based on extension and classifier for nexus parameterized artifact stream.
