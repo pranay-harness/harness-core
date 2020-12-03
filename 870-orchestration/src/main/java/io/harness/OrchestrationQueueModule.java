@@ -19,6 +19,7 @@ import com.google.inject.Injector;
 import com.google.inject.Provides;
 import com.google.inject.Singleton;
 import com.google.inject.TypeLiteral;
+import org.springframework.data.mongodb.core.MongoTemplate;
 
 public class OrchestrationQueueModule extends AbstractModule {
   private static OrchestrationQueueModule instance;
@@ -54,17 +55,17 @@ public class OrchestrationQueueModule extends AbstractModule {
 
   @Provides
   @Singleton
-  QueuePublisher<OrchestrationEvent> orchestrationEventQueuePublisher(
-      Injector injector, VersionInfoManager versionInfoManager, PublisherConfiguration config) {
-    return QueueFactory.createQueuePublisher(
-        injector, OrchestrationEvent.class, singletonList(versionInfoManager.getVersionInfo().getVersion()), config);
+  QueuePublisher<OrchestrationEvent> orchestrationEventQueuePublisher(Injector injector,
+      VersionInfoManager versionInfoManager, PublisherConfiguration config, MongoTemplate mongoTemplate) {
+    return QueueFactory.createNgQueuePublisher(injector, OrchestrationEvent.class,
+        singletonList(versionInfoManager.getVersionInfo().getVersion()), config, mongoTemplate);
   }
 
   @Provides
   @Singleton
-  QueueConsumer<OrchestrationEvent> orchestrationEventQueueConsumer(
-      Injector injector, VersionInfoManager versionInfoManager, PublisherConfiguration config) {
-    return QueueFactory.createQueueConsumer(injector, OrchestrationEvent.class, ofSeconds(5),
-        singletonList(singletonList(versionInfoManager.getVersionInfo().getVersion())), config);
+  QueueConsumer<OrchestrationEvent> orchestrationEventQueueConsumer(Injector injector,
+      VersionInfoManager versionInfoManager, PublisherConfiguration config, MongoTemplate mongoTemplate) {
+    return QueueFactory.createNgQueueConsumer(injector, OrchestrationEvent.class, ofSeconds(5),
+        singletonList(singletonList(versionInfoManager.getVersionInfo().getVersion())), config, mongoTemplate);
   }
 }
