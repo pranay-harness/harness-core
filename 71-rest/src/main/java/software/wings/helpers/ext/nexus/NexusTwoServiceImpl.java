@@ -849,10 +849,6 @@ public class NexusTwoServiceImpl {
     return getBaseUrl(nexusConfig) + "service/local/repositories/" + repoId + "/index_content" + path;
   }
 
-  private String getContentPathUrl(NexusConfig nexusConfig, String repoId, String path) {
-    return getBaseUrl(nexusConfig) + "service/local/repositories/" + repoId + "/content" + path;
-  }
-
   private List<FolderPath> getFolderPaths(
       NexusRestClient nexusRestClient, NexusConfig nexusConfig, String repoKey, String repoPath) {
     // Add first level paths

@@ -3,6 +3,7 @@ package software.wings.beans.command;
 import static io.harness.delegate.beans.artifact.ArtifactFileMetadata.builder;
 import static io.harness.rule.OwnerRule.AADITI;
 import static io.harness.rule.OwnerRule.GARVIT;
+import static io.harness.rule.OwnerRule.ROHITKARELIA;
 
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 import static software.wings.beans.command.CommandExecutionContext.Builder.aCommandExecutionContext;
@@ -22,9 +23,12 @@ import static software.wings.utils.WingsTestConstants.SETTING_ID;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyListOf;
 import static org.mockito.Matchers.anyMap;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
+import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -33,10 +37,13 @@ import io.harness.category.element.UnitTests;
 import io.harness.delegate.beans.artifact.ArtifactFileMetadata;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.rule.Owner;
+import io.harness.security.encryption.EncryptedDataDetail;
 
 import software.wings.WingsBaseTest;
+import software.wings.annotation.EncryptableSetting;
 import software.wings.beans.AwsConfig;
 import software.wings.beans.BambooConfig;
+import software.wings.beans.HostConnectionAttributes;
 import software.wings.beans.JenkinsConfig;
 import software.wings.beans.Log;
 import software.wings.beans.SettingAttribute;
@@ -55,17 +62,22 @@ import software.wings.delegatetasks.DelegateLogService;
 import software.wings.helpers.ext.azure.devops.AzureArtifactsPackageFileInfo;
 import software.wings.helpers.ext.azure.devops.AzureArtifactsService;
 import software.wings.helpers.ext.bamboo.BambooService;
+import software.wings.helpers.ext.jenkins.BuildDetails;
 import software.wings.helpers.ext.jenkins.Jenkins;
 import software.wings.helpers.ext.nexus.NexusService;
+import software.wings.helpers.ext.nexus.NexusTwoServiceImpl;
 import software.wings.service.impl.jenkins.JenkinsUtils;
 import software.wings.service.intfc.security.EncryptionService;
 import software.wings.utils.ArtifactType;
 import software.wings.utils.WingsTestConstants;
 
+import java.io.IOException;
 import java.net.URISyntaxException;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import org.junit.Before;
 import org.junit.Test;
@@ -82,6 +94,7 @@ public class ScpCommandUnitTest extends WingsBaseTest {
   private static final String JENKINS_ARTIFACT_FILENAME_2 = "docker-scheduler-1.0-SNAPSHOT-sources.jar";
   private static final String NEXUS_URL =
       "https://nexus2-cdteam.harness.io/service/local/artifact/maven/content?r=releases&g=io.harness.test&a=todolist&v=7.0&p=war&e=war";
+  private Host host = Host.Builder.aHost().withPublicDns(WingsTestConstants.PUBLIC_DNS).build();
 
   @InjectMocks private ScpCommandUnit scpCommandUnit = new ScpCommandUnit();
   @Mock BaseScriptExecutor baseExecutor;
@@ -92,12 +105,22 @@ public class ScpCommandUnitTest extends WingsBaseTest {
   @Mock DelegateLogService delegateLogService;
   @Mock BambooService bambooService;
   @Mock NexusService nexusService;
+  @Mock NexusTwoServiceImpl nexusTwoService;
 
   private SettingAttribute awsSetting =
       aSettingAttribute()
           .withUuid(SETTING_ID)
           .withValue(AwsConfig.builder().secretKey(SECRET_KEY).accessKey(ACCESS_KEY.toCharArray()).build())
           .build();
+
+  private SettingAttribute hostConnectionAttributes =
+      aSettingAttribute()
+          .withValue(HostConnectionAttributes.Builder.aHostConnectionAttributes()
+                         .withAccessType(HostConnectionAttributes.AccessType.USER_PASSWORD)
+                         .withAccountId(WingsTestConstants.ACCOUNT_ID)
+                         .build())
+          .build();
+
   private SettingAttribute artifactorySetting = aSettingAttribute()
                                                     .withUuid(SETTING_ID)
                                                     .withValue(ArtifactoryConfig.builder()
@@ -250,6 +273,22 @@ public class ScpCommandUnitTest extends WingsBaseTest {
           .artifactServerEncryptedDataDetails(Collections.emptyList())
           .build();
 
+  private ArtifactStreamAttributes artifactStreamAttributesForNexusWithEmptyArtifactFileMetadata =
+      ArtifactStreamAttributes.builder()
+          .artifactStreamType(ArtifactStreamType.NEXUS.name())
+          .metadataOnly(true)
+          .metadata(mockMetadata(ArtifactStreamType.NEXUS))
+          .artifactFileMetadata(Collections.emptyList())
+          .serverSetting(nexusSetting)
+          .artifactStreamId(ARTIFACT_STREAM_ID)
+          .jobName("releases")
+          .groupId("io.harness.test")
+          .artifactName("todolist")
+          .extension("war")
+          .classifier("sources")
+          .artifactServerEncryptedDataDetails(Collections.emptyList())
+          .build();
+
   @InjectMocks
   private ShellCommandExecutionContext contextForS3 = new ShellCommandExecutionContext(
       aCommandExecutionContext().artifactStreamAttributes(artifactStreamAttributesForS3).build());
@@ -299,6 +338,14 @@ public class ScpCommandUnitTest extends WingsBaseTest {
                                            .artifactStreamAttributes(artifactStreamAttributesForNexus)
                                            .metadata(mockMetadata(ArtifactStreamType.NEXUS))
                                            .build());
+
+  @InjectMocks
+  ShellCommandExecutionContext contextForNexusArtifactsWithEmptyArtifactFileMetadata = new ShellCommandExecutionContext(
+      aCommandExecutionContext()
+          .artifactStreamAttributes(artifactStreamAttributesForNexusWithEmptyArtifactFileMetadata)
+          .metadata(mockMetadata(ArtifactStreamType.NEXUS))
+          .host(host)
+          .build());
 
   /**
    * Sets up mocks.
@@ -413,6 +460,55 @@ public class ScpCommandUnitTest extends WingsBaseTest {
              anyString(), anyString()))
         .thenReturn(CommandExecutionStatus.SUCCESS);
     CommandExecutionStatus status = scpCommandUnit.executeInternal(contextForNexusArtifacts);
+    assertThat(status).isEqualTo(CommandExecutionStatus.SUCCESS);
+  }
+
+  @Test
+  @Owner(developers = ROHITKARELIA)
+  @Category(UnitTests.class)
+  public void shouldReturnSuccessIfArtifactFileMetadataIfEmpty() {
+    when(nexusService.getFileSize(any(), any(), eq("todolist.tar"), eq(NEXUS_URL))).thenReturn(1234L);
+    when(baseExecutor.copyFiles(anyString(), any(ArtifactStreamAttributes.class), anyString(), anyString(), anyString(),
+             anyString(), anyString()))
+        .thenReturn(CommandExecutionStatus.SUCCESS);
+    ExecutionLogCallback mockCallBack = mock(ExecutionLogCallback.class);
+    doNothing().when(mockCallBack).saveExecutionLog(anyString(), any());
+    CommandExecutionStatus status =
+        scpCommandUnit.executeInternal(contextForNexusArtifactsWithEmptyArtifactFileMetadata);
+    assertThat(status).isEqualTo(CommandExecutionStatus.SUCCESS);
+  }
+
+  @Test
+  @Owner(developers = ROHITKARELIA)
+  @Category(UnitTests.class)
+  public void shouldFetchDownloadIfArtifactFileMetadataIfEmpty() throws IOException {
+    ArtifactFileMetadata artifactFileMetadata =
+        ArtifactFileMetadata.builder()
+            .fileName("todolist")
+            .url(
+                "https://nexus2-cdteam.harness.io/service/local/artifact/maven/content?r=releases&g=io.harness.test&a=todolist&v=7.0&p=war&e=war&c=sources")
+            .build();
+
+    List<ArtifactFileMetadata> artifactFileMetadataList = new ArrayList<>();
+    artifactFileMetadataList.add(artifactFileMetadata);
+
+    BuildDetails buildDetails =
+        BuildDetails.Builder.aBuildDetails().withArtifactDownloadMetadata(artifactFileMetadataList).build();
+    List<BuildDetails> buildDetailsList = new ArrayList<>();
+    buildDetailsList.add(buildDetails);
+    when(encryptionService.decrypt(any(EncryptableSetting.class), anyListOf(EncryptedDataDetail.class), eq(false)))
+        .thenReturn((EncryptableSetting) hostConnectionAttributes.getValue());
+    when(nexusTwoService.getVersion(
+             any(NexusConfig.class), anyListOf(EncryptedDataDetail.class), any(), any(), any(), any(), any(), any()))
+        .thenReturn(buildDetailsList);
+    when(nexusService.getFileSize(any(), any(), eq("todolist.tar"), eq(NEXUS_URL))).thenReturn(1234L);
+    when(baseExecutor.copyFiles(anyString(), any(ArtifactStreamAttributes.class), anyString(), anyString(), anyString(),
+             anyString(), anyString()))
+        .thenReturn(CommandExecutionStatus.SUCCESS);
+    ExecutionLogCallback mockCallBack = mock(ExecutionLogCallback.class);
+    doNothing().when(mockCallBack).saveExecutionLog(anyString(), any());
+    CommandExecutionStatus status =
+        scpCommandUnit.executeInternal(contextForNexusArtifactsWithEmptyArtifactFileMetadata);
     assertThat(status).isEqualTo(CommandExecutionStatus.SUCCESS);
   }
 
