@@ -94,6 +94,7 @@ public class ScheduledReportServiceImpl {
     String viewUrl = "";
     try {
       viewUrl = emailNotificationService.buildAbsoluteUrl(templateModel.get(CE_VIEW_URL));
+      viewUrl = viewUrl.replace("%25", "%");
     } catch (URISyntaxException e) {
       log.error("Error in forming View URL for Scheduled Report", e);
     }
