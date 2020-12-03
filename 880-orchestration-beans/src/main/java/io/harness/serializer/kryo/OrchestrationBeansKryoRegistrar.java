@@ -7,12 +7,6 @@ import io.harness.data.OutcomeInstance;
 import io.harness.execution.NodeExecution;
 import io.harness.facilitator.DefaultFacilitatorParams;
 import io.harness.facilitator.PassThroughData;
-import io.harness.facilitator.modes.async.AsyncExecutableResponse;
-import io.harness.facilitator.modes.chain.child.ChildChainResponse;
-import io.harness.facilitator.modes.chain.task.TaskChainExecutableResponse;
-import io.harness.facilitator.modes.child.ChildExecutableResponse;
-import io.harness.facilitator.modes.children.ChildrenExecutableResponse;
-import io.harness.facilitator.modes.task.TaskExecutableResponse;
 import io.harness.interrupts.ExecutionInterruptType;
 import io.harness.interrupts.InterruptEffect;
 import io.harness.interrupts.RepairActionCode;
@@ -41,12 +35,6 @@ public class OrchestrationBeansKryoRegistrar implements KryoRegistrar {
     kryo.register(OutcomeInstance.class, 2517);
     kryo.register(StepResponseNotifyData.class, 2519);
 
-    kryo.register(AsyncExecutableResponse.class, 2522);
-    kryo.register(ChildExecutableResponse.class, 2523);
-    kryo.register(ChildrenExecutableResponse.class, 2524);
-    kryo.register(ChildChainResponse.class, 2525);
-    kryo.register(TaskExecutableResponse.class, 2526);
-    kryo.register(TaskChainExecutableResponse.class, 2527);
     kryo.register(RepairActionCode.class, 2528);
 
     kryo.register(TaskMode.class, 2532);
