@@ -21,9 +21,10 @@ import io.harness.execution.NodeExecution;
 import io.harness.execution.NodeExecution.NodeExecutionKeys;
 import io.harness.execution.PlanExecution;
 import io.harness.facilitator.modes.child.ChildExecutable;
-import io.harness.facilitator.modes.child.ChildExecutableResponse;
 import io.harness.plan.Plan;
 import io.harness.pms.ambiance.Ambiance;
+import io.harness.pms.execution.ChildExecutableResponse;
+import io.harness.pms.execution.ExecutableResponse;
 import io.harness.pms.execution.Status;
 import io.harness.pms.plan.PlanNodeProto;
 import io.harness.pms.sdk.core.plan.PlanNode;
@@ -101,7 +102,9 @@ public class ChildStrategy implements ExecuteStrategy {
         ExecutionEngineDispatcher.builder().ambiance(clonedAmbiance).orchestrationEngine(engine).build());
     NotifyCallback callback = EngineResumeCallback.builder().nodeExecutionId(nodeExecution.getUuid()).build();
     waitNotifyEngine.waitForAllOn(publisherName, callback, childInstanceId);
-    nodeExecutionService.update(
-        nodeExecution.getUuid(), ops -> ops.addToSet(NodeExecutionKeys.executableResponses, response));
+    nodeExecutionService.update(nodeExecution.getUuid(),
+        ops
+        -> ops.addToSet(
+            NodeExecutionKeys.executableResponses, ExecutableResponse.newBuilder().setChild(response).build()));
   }
 }

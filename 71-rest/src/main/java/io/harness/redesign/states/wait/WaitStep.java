@@ -8,8 +8,8 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.ExecutionStatus;
 import io.harness.delay.SimpleNotifier;
 import io.harness.facilitator.modes.async.AsyncExecutable;
-import io.harness.facilitator.modes.async.AsyncExecutableResponse;
 import io.harness.pms.ambiance.Ambiance;
+import io.harness.pms.execution.AsyncExecutableResponse;
 import io.harness.pms.execution.Status;
 import io.harness.pms.sdk.core.steps.io.StepInputPackage;
 import io.harness.pms.sdk.core.steps.io.StepResponse;
@@ -48,7 +48,7 @@ public class WaitStep implements AsyncExecutable<WaitStepParameters> {
     executorService.schedule(new SimpleNotifier(waitNotifyEngine, resumeId,
                                  StatusNotifyResponseData.builder().status(Status.SUCCEEDED).build()),
         waitStepParameters.getWaitDurationSeconds(), TimeUnit.SECONDS);
-    return AsyncExecutableResponse.builder().callbackId(resumeId).build();
+    return AsyncExecutableResponse.newBuilder().addCallbackIds(resumeId).build();
   }
 
   @Override

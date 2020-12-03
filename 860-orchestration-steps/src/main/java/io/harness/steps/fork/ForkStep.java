@@ -5,10 +5,9 @@ import static io.harness.annotations.dev.HarnessTeam.CDC;
 import io.harness.annotations.Redesign;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.facilitator.modes.children.ChildrenExecutable;
-import io.harness.facilitator.modes.children.ChildrenExecutableResponse;
-import io.harness.facilitator.modes.children.ChildrenExecutableResponse.Child;
-import io.harness.facilitator.modes.children.ChildrenExecutableResponse.ChildrenExecutableResponseBuilder;
 import io.harness.pms.ambiance.Ambiance;
+import io.harness.pms.execution.ChildrenExecutableResponse;
+import io.harness.pms.execution.ChildrenExecutableResponse.Child;
 import io.harness.pms.execution.Status;
 import io.harness.pms.sdk.core.steps.io.StepInputPackage;
 import io.harness.pms.sdk.core.steps.io.StepResponse;
@@ -33,9 +32,9 @@ public class ForkStep implements ChildrenExecutable<ForkStepParameters> {
   @Override
   public ChildrenExecutableResponse obtainChildren(
       Ambiance ambiance, ForkStepParameters forkStepParameters, StepInputPackage inputPackage) {
-    ChildrenExecutableResponseBuilder responseBuilder = ChildrenExecutableResponse.builder();
+    ChildrenExecutableResponse.Builder responseBuilder = ChildrenExecutableResponse.newBuilder();
     for (String nodeId : forkStepParameters.getParallelNodeIds()) {
-      responseBuilder.child(Child.builder().childNodeId(nodeId).build());
+      responseBuilder.addChildren(Child.newBuilder().setChildNodeId(nodeId).build());
     }
     return responseBuilder.build();
   }

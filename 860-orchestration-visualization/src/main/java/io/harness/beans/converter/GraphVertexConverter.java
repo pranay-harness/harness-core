@@ -5,15 +5,19 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.GraphVertex;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.execution.NodeExecution;
-import io.harness.facilitator.modes.ExecutableResponse;
+import io.harness.pms.execution.ExecutableResponse;
+import io.harness.pms.sdk.core.data.Metadata;
 import io.harness.pms.sdk.core.data.Outcome;
 import io.harness.pms.serializer.json.JsonOrchestrationUtils;
+import io.harness.serializer.JsonUtils;
 
+import com.google.protobuf.ByteString;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 import lombok.experimental.UtilityClass;
+import net.sf.json.JSON;
 
 @OwnedBy(HarnessTeam.CDC)
 @UtilityClass
@@ -71,13 +75,15 @@ public class GraphVertexConverter {
         .build();
   }
 
-  private List<Map<String, Object>> getExecutableResponsesMetadata(NodeExecution nodeExecution) {
+  private List<Map<String, Metadata>> getExecutableResponsesMetadata(NodeExecution nodeExecution) {
     if (EmptyPredicate.isEmpty(nodeExecution.getExecutableResponses())) {
       return Collections.emptyList();
     }
     return nodeExecution.getExecutableResponses()
         .stream()
-        .map(ExecutableResponse::getMetadata)
+        .map(r
+            -> r.getMetadataMap().entrySet().stream().collect(
+                Collectors.toMap(Map.Entry::getKey, v -> JsonUtils.asObject(v.getValue(), Metadata.class))))
         .collect(Collectors.toList());
   }
 }

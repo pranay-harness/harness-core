@@ -16,15 +16,15 @@ import io.harness.engine.resume.EngineResumeCallback;
 import io.harness.execution.NodeExecution;
 import io.harness.execution.NodeExecution.NodeExecutionKeys;
 import io.harness.facilitator.modes.task.TaskExecutable;
-import io.harness.facilitator.modes.task.TaskExecutableResponse;
 import io.harness.pms.ambiance.Ambiance;
+import io.harness.pms.execution.ExecutableResponse;
+import io.harness.pms.execution.TaskExecutableResponse;
+import io.harness.pms.execution.TaskMode;
 import io.harness.pms.plan.PlanNodeProto;
-import io.harness.pms.sdk.core.plan.PlanNode;
 import io.harness.pms.sdk.core.steps.io.StepResponse;
 import io.harness.registries.state.StepRegistry;
 import io.harness.tasks.Task;
 import io.harness.tasks.TaskExecutor;
-import io.harness.tasks.TaskMode;
 import io.harness.waiter.NotifyCallback;
 import io.harness.waiter.ProgressCallback;
 import io.harness.waiter.WaitNotifyEngine;
@@ -46,7 +46,7 @@ public class TaskStrategy implements TaskExecuteStrategy {
   @Inject private OrchestrationEngine engine;
   @Inject @Named(OrchestrationPublisherName.PUBLISHER_NAME) String publisherName;
 
-  private TaskMode mode;
+  private final TaskMode mode;
 
   @Builder
   public TaskStrategy(TaskMode mode) {
@@ -92,7 +92,8 @@ public class TaskStrategy implements TaskExecuteStrategy {
     nodeExecutionService.updateStatusWithOps(nodeExecution.getUuid(), TASK_WAITING,
         ops
         -> ops.addToSet(NodeExecutionKeys.executableResponses,
-            TaskExecutableResponse.builder().taskId(taskId).taskMode(mode).build()));
+            ExecutableResponse.newBuilder().setTask(
+                TaskExecutableResponse.newBuilder().setTaskId(taskId).setTaskMode(mode).build())));
   }
 
   @Override

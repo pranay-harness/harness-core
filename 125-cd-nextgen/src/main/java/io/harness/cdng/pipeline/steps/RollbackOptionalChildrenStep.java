@@ -5,9 +5,9 @@ import io.harness.cdng.pipeline.beans.RollbackOptionalChildrenParameters;
 import io.harness.cdng.pipeline.plancreators.PlanCreatorHelper;
 import io.harness.executions.steps.ExecutionNodeType;
 import io.harness.facilitator.modes.children.ChildrenExecutable;
-import io.harness.facilitator.modes.children.ChildrenExecutableResponse;
-import io.harness.facilitator.modes.children.ChildrenExecutableResponse.ChildrenExecutableResponseBuilder;
 import io.harness.pms.ambiance.Ambiance;
+import io.harness.pms.execution.ChildrenExecutableResponse;
+import io.harness.pms.execution.ChildrenExecutableResponse.Child;
 import io.harness.pms.execution.Status;
 import io.harness.pms.sdk.core.steps.io.StepInputPackage;
 import io.harness.pms.sdk.core.steps.io.StepResponse;
@@ -33,10 +33,10 @@ public class RollbackOptionalChildrenStep implements ChildrenExecutable<Rollback
   @Override
   public ChildrenExecutableResponse obtainChildren(
       Ambiance ambiance, RollbackOptionalChildrenParameters stepParameters, StepInputPackage inputPackage) {
-    ChildrenExecutableResponseBuilder responseBuilder = ChildrenExecutableResponse.builder();
+    ChildrenExecutableResponse.Builder responseBuilder = ChildrenExecutableResponse.newBuilder();
     for (RollbackNode node : stepParameters.getParallelNodes()) {
       if (planCreatorHelper.shouldNodeRun(node, ambiance)) {
-        responseBuilder.child(ChildrenExecutableResponse.Child.builder().childNodeId(node.getNodeId()).build());
+        responseBuilder.addChildren(Child.newBuilder().setChildNodeId(node.getNodeId()).build());
       }
     }
     return responseBuilder.build();

@@ -19,6 +19,7 @@ import io.harness.steps.resourcerestraint.beans.ResourceRestraintInstance;
 import io.harness.steps.resourcerestraint.beans.ResourceRestraintOutcome;
 import io.harness.steps.resourcerestraint.beans.ResourceRestraintResponseData;
 import io.harness.steps.section.SectionStepParameters;
+import io.harness.steps.section.chain.SectionChainPassThroughData;
 import io.harness.steps.section.chain.SectionChainStepParameters;
 
 import com.esotericsoftware.kryo.Kryo;
@@ -45,5 +46,7 @@ public class OrchestrationStepsKryoRegistrar implements KryoRegistrar {
 
     kryo.register(DummySectionStepTransput.class, 3215);
     kryo.register(DummySectionOutcome.class, 3216);
+
+    kryo.register(SectionChainPassThroughData.class, 3217);
   }
 }

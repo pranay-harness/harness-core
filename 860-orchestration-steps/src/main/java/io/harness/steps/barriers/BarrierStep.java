@@ -7,9 +7,9 @@ import io.harness.AmbianceUtils;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.facilitator.PassThroughData;
 import io.harness.facilitator.modes.async.AsyncExecutable;
-import io.harness.facilitator.modes.async.AsyncExecutableResponse;
 import io.harness.facilitator.modes.sync.SyncExecutable;
 import io.harness.pms.ambiance.Ambiance;
+import io.harness.pms.execution.AsyncExecutableResponse;
 import io.harness.pms.execution.Status;
 import io.harness.pms.execution.failure.FailureInfo;
 import io.harness.pms.sdk.core.steps.io.StepInputPackage;
@@ -78,7 +78,7 @@ public class BarrierStep implements SyncExecutable<BarrierStepParameters>, Async
 
     barrierService.update(barrierExecutionInstance);
 
-    return AsyncExecutableResponse.builder().callbackId(barrierExecutionInstance.getBarrierGroupId()).build();
+    return AsyncExecutableResponse.newBuilder().addCallbackIds(barrierExecutionInstance.getBarrierGroupId()).build();
   }
 
   @Override

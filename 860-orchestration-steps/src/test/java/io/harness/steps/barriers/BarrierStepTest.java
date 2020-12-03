@@ -12,9 +12,9 @@ import static org.mockito.Mockito.when;
 
 import io.harness.OrchestrationStepsTestBase;
 import io.harness.category.element.UnitTests;
-import io.harness.facilitator.modes.async.AsyncExecutableResponse;
 import io.harness.pms.ambiance.Ambiance;
 import io.harness.pms.ambiance.Level;
+import io.harness.pms.execution.AsyncExecutableResponse;
 import io.harness.pms.execution.Status;
 import io.harness.pms.sdk.core.steps.io.StepInputPackage;
 import io.harness.pms.sdk.core.steps.io.StepResponse;
@@ -106,7 +106,7 @@ public class BarrierStepTest extends OrchestrationStepsTestBase {
     AsyncExecutableResponse stepResponse = barrierStep.executeAsync(ambiance, stepParameters, stepInputPackage);
 
     assertThat(stepResponse).isNotNull();
-    assertThat(stepResponse.getCallbackIds()).contains(barrierGroupId);
+    assertThat(stepResponse.getCallbackIdsList()).contains(barrierGroupId);
 
     verify(barrierService).findByPlanNodeId(planNodeId);
     verify(barrierService).update(barrier);

@@ -5,6 +5,7 @@ import static io.harness.annotations.dev.HarnessTeam.CDC;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.facilitator.PassThroughData;
 import io.harness.pms.ambiance.Ambiance;
+import io.harness.pms.execution.ChildChainExecutableResponse;
 import io.harness.pms.sdk.core.steps.Step;
 import io.harness.pms.sdk.core.steps.io.StepInputPackage;
 import io.harness.pms.sdk.core.steps.io.StepParameters;
@@ -40,9 +41,9 @@ import java.util.Map;
  */
 @OwnedBy(CDC)
 public interface ChildChainExecutable<T extends StepParameters> extends Step<T> {
-  ChildChainResponse executeFirstChild(Ambiance ambiance, T stepParameters, StepInputPackage inputPackage);
+  ChildChainExecutableResponse executeFirstChild(Ambiance ambiance, T stepParameters, StepInputPackage inputPackage);
 
-  ChildChainResponse executeNextChild(Ambiance ambiance, T stepParameters, StepInputPackage inputPackage,
+  ChildChainExecutableResponse executeNextChild(Ambiance ambiance, T stepParameters, StepInputPackage inputPackage,
       PassThroughData passThroughData, Map<String, ResponseData> responseDataMap);
 
   StepResponse finalizeExecution(

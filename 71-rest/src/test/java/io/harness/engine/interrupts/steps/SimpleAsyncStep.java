@@ -4,9 +4,8 @@ import static io.harness.data.structure.UUIDGenerator.generateUuid;
 
 import io.harness.delay.SimpleNotifier;
 import io.harness.facilitator.modes.async.AsyncExecutable;
-import io.harness.facilitator.modes.async.AsyncExecutableResponse;
-import io.harness.facilitator.modes.async.AsyncExecutableResponse.AsyncExecutableResponseBuilder;
 import io.harness.pms.ambiance.Ambiance;
+import io.harness.pms.execution.AsyncExecutableResponse;
 import io.harness.pms.execution.Status;
 import io.harness.pms.sdk.core.steps.io.StepInputPackage;
 import io.harness.pms.sdk.core.steps.io.StepResponse;
@@ -41,8 +40,8 @@ public class SimpleAsyncStep implements AsyncExecutable<SimpleStepAsyncParams> {
     String uuid = generateUuid();
     log.info("Executing ..." + SimpleAsyncStep.class.getName() + "..duration=" + simpleStepAsyncParams.getDuration()
         + ", uuid=" + uuid);
-    AsyncExecutableResponseBuilder executionResponseBuilder = AsyncExecutableResponse.builder();
-    executionResponseBuilder.callbackId(uuid);
+    AsyncExecutableResponse.Builder builder = AsyncExecutableResponse.newBuilder();
+    builder.addCallbackIds(uuid);
     if (simpleStepAsyncParams.isShouldThrowException()) {
       throw new RuntimeException("Exception for test");
     }
@@ -51,7 +50,7 @@ public class SimpleAsyncStep implements AsyncExecutable<SimpleStepAsyncParams> {
         StringNotifyResponseData.builder().data(simpleStepAsyncParams.isShouldFail() ? "FAIL" : "SUCCESS").build();
     executorService.schedule(new SimpleNotifier(waitNotifyEngine, uuid, stringNotifyResponseData),
         simpleStepAsyncParams.getDuration(), TimeUnit.SECONDS);
-    return executionResponseBuilder.build();
+    return builder.build();
   }
 
   @Override

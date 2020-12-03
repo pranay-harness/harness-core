@@ -3,8 +3,8 @@ package io.harness.utils.steps;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 
 import io.harness.facilitator.modes.async.AsyncExecutable;
-import io.harness.facilitator.modes.async.AsyncExecutableResponse;
 import io.harness.pms.ambiance.Ambiance;
+import io.harness.pms.execution.AsyncExecutableResponse;
 import io.harness.pms.execution.Status;
 import io.harness.pms.sdk.core.steps.io.StepInputPackage;
 import io.harness.pms.sdk.core.steps.io.StepResponse;
@@ -31,7 +31,7 @@ public class TestAsyncStep implements AsyncExecutable<TestStepParameters> {
       Ambiance ambiance, TestStepParameters stepParameters, StepInputPackage inputPackage) {
     String resumeId = generateUuid();
     waitNotifyEngine.doneWith(resumeId, StringNotifyResponseData.builder().data("SUCCESS").build());
-    return AsyncExecutableResponse.builder().callbackId(resumeId).build();
+    return AsyncExecutableResponse.newBuilder().addCallbackIds(resumeId).build();
   }
 
   @Override

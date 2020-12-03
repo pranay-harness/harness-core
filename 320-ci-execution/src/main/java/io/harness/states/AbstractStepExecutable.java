@@ -10,8 +10,8 @@ import io.harness.delegate.task.stepstatus.StepStatus;
 import io.harness.delegate.task.stepstatus.StepStatusTaskResponseData;
 import io.harness.engine.outputs.ExecutionSweepingOutputService;
 import io.harness.facilitator.modes.async.AsyncExecutable;
-import io.harness.facilitator.modes.async.AsyncExecutableResponse;
 import io.harness.pms.ambiance.Ambiance;
+import io.harness.pms.execution.AsyncExecutableResponse;
 import io.harness.pms.execution.Status;
 import io.harness.pms.execution.failure.FailureInfo;
 import io.harness.pms.execution.failure.FailureType;
@@ -42,8 +42,8 @@ public abstract class AbstractStepExecutable implements AsyncExecutable<CIStepIn
 
     log.info("Waiting on response for task id {} and step Id {}",
         stepTaskDetails.getTaskIds().get(stepParameters.getIdentifier()), stepParameters.getIdentifier());
-    return AsyncExecutableResponse.builder()
-        .callbackId(stepTaskDetails.getTaskIds().get(stepParameters.getIdentifier()))
+    return AsyncExecutableResponse.newBuilder()
+        .addCallbackIds(stepTaskDetails.getTaskIds().get(stepParameters.getIdentifier()))
         .build();
   }
 

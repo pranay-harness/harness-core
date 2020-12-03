@@ -20,10 +20,11 @@ import io.harness.execution.NodeExecution;
 import io.harness.execution.NodeExecution.NodeExecutionKeys;
 import io.harness.execution.PlanExecution;
 import io.harness.facilitator.modes.children.ChildrenExecutable;
-import io.harness.facilitator.modes.children.ChildrenExecutableResponse;
-import io.harness.facilitator.modes.children.ChildrenExecutableResponse.Child;
 import io.harness.plan.Plan;
 import io.harness.pms.ambiance.Ambiance;
+import io.harness.pms.execution.ChildrenExecutableResponse;
+import io.harness.pms.execution.ChildrenExecutableResponse.Child;
+import io.harness.pms.execution.ExecutableResponse;
 import io.harness.pms.execution.Status;
 import io.harness.pms.plan.PlanNodeProto;
 import io.harness.pms.sdk.core.plan.PlanNode;
@@ -81,7 +82,7 @@ public class ChildrenStrategy implements ExecuteStrategy {
     NodeExecution nodeExecution = nodeExecutionService.get(AmbianceUtils.obtainCurrentRuntimeId(ambiance));
     Plan plan = planExecution.getPlan();
     List<String> callbackIds = new ArrayList<>();
-    for (Child child : response.getChildren()) {
+    for (Child child : response.getChildrenList()) {
       String uuid = generateUuid();
       callbackIds.add(uuid);
       PlanNodeProto node = plan.fetchNode(child.getChildNodeId());
@@ -101,7 +102,9 @@ public class ChildrenStrategy implements ExecuteStrategy {
     }
     NotifyCallback callback = EngineResumeCallback.builder().nodeExecutionId(nodeExecution.getUuid()).build();
     waitNotifyEngine.waitForAllOn(publisherName, callback, callbackIds.toArray(new String[0]));
-    nodeExecutionService.update(
-        nodeExecution.getUuid(), ops -> ops.addToSet(NodeExecutionKeys.executableResponses, response));
+    nodeExecutionService.update(nodeExecution.getUuid(),
+        ops
+        -> ops.addToSet(
+            NodeExecutionKeys.executableResponses, ExecutableResponse.newBuilder().setChildren(response).build()));
   }
 }
