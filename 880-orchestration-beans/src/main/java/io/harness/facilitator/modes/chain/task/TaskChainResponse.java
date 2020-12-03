@@ -8,7 +8,6 @@ import io.harness.facilitator.PassThroughData;
 import io.harness.pms.sdk.core.data.Metadata;
 import io.harness.tasks.Task;
 
-import java.util.Map;
 import lombok.Builder;
 import lombok.Value;
 
@@ -19,7 +18,7 @@ public class TaskChainResponse {
   boolean chainEnd;
   PassThroughData passThroughData;
   Task task;
-  Map<String, Metadata> metadata;
+  Metadata metadata;
 
   public static class TaskChainResponseBuilder {
     public TaskChainResponse build() {
