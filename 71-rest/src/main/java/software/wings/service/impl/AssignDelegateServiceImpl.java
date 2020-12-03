@@ -307,7 +307,8 @@ public class AssignDelegateServiceImpl implements AssignDelegateService {
 
     for (DelegateScope scope : excludeScopes) {
       if (scopeMatch(scope, appId, envId, infraMappingId, taskGroup, delegate.getAccountId())) {
-        delegateSelectionLogsService.logExcludeScopeMatched(batch, delegate.getAccountId(), delegate.getUuid(), scope);
+        delegateSelectionLogsService.logExcludeScopeMatched(
+            batch, delegate.getAccountId(), delegate.getUuid(), scope.getName());
         return false;
       }
     }

@@ -4,8 +4,6 @@ import io.harness.beans.DelegateTask;
 import io.harness.delegate.beans.DelegateSelectionLogParams;
 import io.harness.selection.log.BatchDelegateSelectionLog;
 
-import software.wings.beans.DelegateScope;
-
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -17,8 +15,7 @@ public interface DelegateSelectionLogsService {
 
   void logCanAssign(BatchDelegateSelectionLog batch, String accountId, String delegateId);
 
-  void logExcludeScopeMatched(
-      BatchDelegateSelectionLog batch, String accountId, String delegateId, DelegateScope scope);
+  void logExcludeScopeMatched(BatchDelegateSelectionLog batch, String accountId, String delegateId, String scopeName);
 
   void logMissingSelector(
       BatchDelegateSelectionLog batch, String accountId, String delegateId, String selector, String selectorOrigin);

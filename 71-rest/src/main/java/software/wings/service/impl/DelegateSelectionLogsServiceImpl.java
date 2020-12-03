@@ -12,7 +12,6 @@ import io.harness.selection.log.DelegateSelectionLog.DelegateSelectionLogBuilder
 import io.harness.selection.log.DelegateSelectionLog.DelegateSelectionLogKeys;
 
 import software.wings.beans.Delegate;
-import software.wings.beans.DelegateScope;
 import software.wings.service.intfc.DelegateSelectionLogsService;
 import software.wings.service.intfc.DelegateService;
 import software.wings.service.intfc.FeatureFlagService;
@@ -149,7 +148,7 @@ public class DelegateSelectionLogsServiceImpl implements DelegateSelectionLogsSe
 
   @Override
   public void logExcludeScopeMatched(
-      BatchDelegateSelectionLog batch, String accountId, String delegateId, DelegateScope scope) {
+      BatchDelegateSelectionLog batch, String accountId, String delegateId, String scopeName) {
     if (batch == null) {
       return;
     }
@@ -160,7 +159,7 @@ public class DelegateSelectionLogsServiceImpl implements DelegateSelectionLogsSe
         retrieveDelegateSelectionLogBuilder(accountId, batch.getTaskId(), delegateIds);
 
     batch.append(delegateSelectionLogBuilder.conclusion(REJECTED)
-                     .message("Matched exclude scope " + scope.getName())
+                     .message("Matched exclude scope " + scopeName)
                      .eventTimestamp(System.currentTimeMillis())
                      .groupId(EXCLUDE_SCOPE_MATCHED_GROUP_ID)
                      .build());
