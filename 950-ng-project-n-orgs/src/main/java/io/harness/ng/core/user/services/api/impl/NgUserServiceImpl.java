@@ -76,4 +76,9 @@ public class NgUserServiceImpl implements NgUserService {
                                                               .build());
     userProjectMapRepository.save(userProjectMap);
   }
+
+  @Override
+  public UserProjectMap createUserProjectMap(UserProjectMap userProjectMap) {
+    return userProjectMapRepository.save(userProjectMap);
+  }
 }

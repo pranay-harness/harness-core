@@ -24,4 +24,6 @@ public interface NgUserService {
       String uuid, String accountIdentifier, String orgIdentifier, String projectIdentifier);
 
   void createUserProjectMap(Invite invite, User user);
+
+  UserProjectMap createUserProjectMap(UserProjectMap userProjectMap);
 }

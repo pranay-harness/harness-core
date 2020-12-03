@@ -36,7 +36,9 @@ import io.harness.ng.core.dto.ProjectFilterDTO;
 import io.harness.ng.core.entities.Organization;
 import io.harness.ng.core.entities.Project;
 import io.harness.ng.core.entities.Project.ProjectKeys;
+import io.harness.ng.core.invites.entities.UserProjectMap;
 import io.harness.ng.core.services.OrganizationService;
+import io.harness.ng.core.user.services.api.NgUserService;
 import io.harness.repositories.core.spring.ProjectRepository;
 import io.harness.rule.Owner;
 import io.harness.secretmanagerclient.dto.GcpKmsConfigDTO;
@@ -59,6 +61,7 @@ public class ProjectServiceImplTest extends CategoryTest {
   private ConnectorService secretManagerConnectorService;
   private ProjectServiceImpl projectService;
   private EventDrivenClient eventDrivenClient;
+  private NgUserService ngUserService;
 
   @Before
   public void setup() {
@@ -67,8 +70,9 @@ public class ProjectServiceImplTest extends CategoryTest {
     ngSecretManagerService = mock(NGSecretManagerService.class);
     secretManagerConnectorService = mock(ConnectorService.class);
     eventDrivenClient = mock(NoOpEventClient.class);
+    ngUserService = mock(NgUserService.class);
     projectService = spy(new ProjectServiceImpl(projectRepository, organizationService, ngSecretManagerService,
-        secretManagerConnectorService, eventDrivenClient));
+        secretManagerConnectorService, eventDrivenClient, ngUserService));
   }
 
   private ProjectDTO createProjectDTO(String accountIdentifier, String orgIdentifier, String identifier) {
@@ -97,6 +101,7 @@ public class ProjectServiceImplTest extends CategoryTest {
         .thenReturn(GcpKmsConfigDTO.builder().encryptionType(GCP_KMS).build());
     when(secretManagerConnectorService.create(any(), eq(accountIdentifier))).thenReturn(new ConnectorResponseDTO());
     when(organizationService.get(accountIdentifier, orgIdentifier)).thenReturn(Optional.of(random(Organization.class)));
+    when(ngUserService.createUserProjectMap(any())).thenReturn(UserProjectMap.builder().build());
 
     Project createdProject = projectService.create(accountIdentifier, orgIdentifier, projectDTO);
 

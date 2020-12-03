@@ -29,6 +29,8 @@ import io.harness.ng.core.dto.OrganizationDTO;
 import io.harness.ng.core.dto.OrganizationFilterDTO;
 import io.harness.ng.core.entities.Organization;
 import io.harness.ng.core.entities.Organization.OrganizationKeys;
+import io.harness.ng.core.invites.entities.UserProjectMap;
+import io.harness.ng.core.user.services.api.NgUserService;
 import io.harness.repositories.core.spring.OrganizationRepository;
 import io.harness.rule.Owner;
 import io.harness.secretmanagerclient.dto.GcpKmsConfigDTO;
@@ -49,14 +51,16 @@ public class OrganizationServiceImplTest extends CategoryTest {
   private NGSecretManagerService ngSecretManagerService;
   private ConnectorService secretManagerConnectorService;
   private OrganizationServiceImpl organizationService;
+  private NgUserService ngUserService;
 
   @Before
   public void setup() {
     organizationRepository = mock(OrganizationRepository.class);
     ngSecretManagerService = mock(NGSecretManagerService.class);
     secretManagerConnectorService = mock(ConnectorService.class);
-    organizationService =
-        spy(new OrganizationServiceImpl(organizationRepository, ngSecretManagerService, secretManagerConnectorService));
+    ngUserService = mock(NgUserService.class);
+    organizationService = spy(new OrganizationServiceImpl(
+        organizationRepository, ngSecretManagerService, secretManagerConnectorService, ngUserService));
   }
 
   private OrganizationDTO createOrganizationDTO(String accountIdentifier, String identifier) {
@@ -80,6 +84,7 @@ public class OrganizationServiceImplTest extends CategoryTest {
     when(ngSecretManagerService.getGlobalSecretManager(accountIdentifier))
         .thenReturn(GcpKmsConfigDTO.builder().encryptionType(GCP_KMS).build());
     when(secretManagerConnectorService.create(any(), eq(accountIdentifier))).thenReturn(new ConnectorResponseDTO());
+    when(ngUserService.createUserProjectMap(any())).thenReturn(UserProjectMap.builder().build());
 
     Organization createdOrganization = organizationService.create(accountIdentifier, organizationDTO);
 

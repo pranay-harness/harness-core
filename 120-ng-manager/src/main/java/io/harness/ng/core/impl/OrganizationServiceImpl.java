@@ -11,6 +11,7 @@ import static io.harness.ng.core.utils.NGUtils.getDefaultHarnessSecretManagerNam
 import static io.harness.ng.core.utils.NGUtils.validate;
 import static io.harness.ng.core.utils.NGUtils.verifyValuesNotChanged;
 
+import static java.util.Collections.singletonList;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 import io.harness.connector.services.ConnectorService;
@@ -18,13 +19,19 @@ import io.harness.exception.DuplicateFieldException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.SecretManagementException;
 import io.harness.ng.core.api.NGSecretManagerService;
+import io.harness.ng.core.common.beans.NGTag.NGTagKeys;
 import io.harness.ng.core.dto.OrganizationDTO;
 import io.harness.ng.core.dto.OrganizationFilterDTO;
 import io.harness.ng.core.entities.Organization;
 import io.harness.ng.core.entities.Organization.OrganizationKeys;
+import io.harness.ng.core.invites.entities.Role;
+import io.harness.ng.core.invites.entities.UserProjectMap;
 import io.harness.ng.core.services.OrganizationService;
+import io.harness.ng.core.user.services.api.NgUserService;
 import io.harness.repositories.core.spring.OrganizationRepository;
 import io.harness.secretmanagerclient.dto.SecretManagerConfigDTO;
+import io.harness.security.SecurityContextBuilder;
+import io.harness.security.dto.PrincipalType;
 
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
@@ -44,14 +51,18 @@ public class OrganizationServiceImpl implements OrganizationService {
   private final OrganizationRepository organizationRepository;
   private final NGSecretManagerService ngSecretManagerService;
   private final ConnectorService secretManagerConnectorService;
+  private final NgUserService ngUserService;
+  private static final String ORGANIZATION_ADMIN_ROLE_NAME = "Organization Admin";
 
   @Inject
   public OrganizationServiceImpl(OrganizationRepository organizationRepository,
       NGSecretManagerService ngSecretManagerService,
-      @Named(SECRET_MANAGER_CONNECTOR_SERVICE) ConnectorService secretManagerConnectorService) {
+      @Named(SECRET_MANAGER_CONNECTOR_SERVICE) ConnectorService secretManagerConnectorService,
+      NgUserService ngUserService) {
     this.organizationRepository = organizationRepository;
     this.ngSecretManagerService = ngSecretManagerService;
     this.secretManagerConnectorService = secretManagerConnectorService;
+    this.ngUserService = ngUserService;
   }
 
   @Override
@@ -73,6 +84,26 @@ public class OrganizationServiceImpl implements OrganizationService {
 
   private void performActionsPostOrganizationCreation(Organization organization) {
     createHarnessSecretManager(organization);
+    createUserProjectMap(organization);
+  }
+
+  private void createUserProjectMap(Organization organization) {
+    if (SecurityContextBuilder.getPrincipal() != null
+        && SecurityContextBuilder.getPrincipal().getType() == PrincipalType.USER) {
+      String userId = SecurityContextBuilder.getPrincipal().getName();
+      Role role = Role.builder()
+                      .accountIdentifier(organization.getAccountIdentifier())
+                      .orgIdentifier(organization.getIdentifier())
+                      .name(ORGANIZATION_ADMIN_ROLE_NAME)
+                      .build();
+      UserProjectMap userProjectMap = UserProjectMap.builder()
+                                          .userId(userId)
+                                          .accountIdentifier(organization.getAccountIdentifier())
+                                          .orgIdentifier(organization.getIdentifier())
+                                          .roles(singletonList(role))
+                                          .build();
+      ngUserService.createUserProjectMap(userProjectMap);
+    }
   }
 
   private void createHarnessSecretManager(Organization organization) {
@@ -142,7 +173,10 @@ public class OrganizationServiceImpl implements OrganizationService {
     }
     if (isNotBlank(organizationFilterDTO.getSearchTerm())) {
       criteria.orOperator(Criteria.where(OrganizationKeys.name).regex(organizationFilterDTO.getSearchTerm(), "i"),
-          Criteria.where(OrganizationKeys.tags).regex(organizationFilterDTO.getSearchTerm(), "i"));
+          Criteria.where(OrganizationKeys.identifier).regex(organizationFilterDTO.getSearchTerm(), "i"),
+          Criteria.where(OrganizationKeys.tags + "." + NGTagKeys.key).regex(organizationFilterDTO.getSearchTerm(), "i"),
+          Criteria.where(OrganizationKeys.tags + "." + NGTagKeys.value)
+              .regex(organizationFilterDTO.getSearchTerm(), "i"));
     }
     return criteria;
   }
