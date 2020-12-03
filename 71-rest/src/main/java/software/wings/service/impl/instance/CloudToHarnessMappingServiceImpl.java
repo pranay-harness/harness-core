@@ -248,7 +248,7 @@ public class CloudToHarnessMappingServiceImpl implements CloudToHarnessMappingSe
              new HIterator<>(persistence.createQuery(SettingAttribute.class, excludeAuthority)
                                  .filter(SettingAttributeKeys.accountId, accountId)
                                  .filter(SettingAttributeKeys.category, category)
-                                 .filter(SettingAttributeKeys.valueType, valueType)
+                                 .filter(SettingAttributeKeys.value_type, valueType)
                                  .fetch())) {
       for (SettingAttribute settingAttribute : query) {
         settingAttributes.add(settingAttribute);
@@ -265,7 +265,7 @@ public class CloudToHarnessMappingServiceImpl implements CloudToHarnessMappingSe
              new HIterator<>(persistence.createQuery(SettingAttribute.class, excludeAuthority)
                                  .filter(SettingAttributeKeys.accountId, accountId)
                                  .filter(SettingAttributeKeys.category, category)
-                                 .filter(SettingAttributeKeys.valueType, valueType)
+                                 .filter(SettingAttributeKeys.value_type, valueType)
                                  .field(SettingAttributeKeys.createdAt)
                                  .greaterThan(startTime)
                                  .field(SettingAttributeKeys.createdAt)

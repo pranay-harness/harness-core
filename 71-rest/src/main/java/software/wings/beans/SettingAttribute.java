@@ -60,11 +60,10 @@ import io.harness.beans.EmbeddedUser;
 import io.harness.data.validator.EntityName;
 import io.harness.data.validator.Trimmed;
 import io.harness.iterator.PersistentRegularIterable;
-import io.harness.mongo.index.CdIndex;
+import io.harness.mongo.index.CompoundMongoIndex;
 import io.harness.mongo.index.FdIndex;
-import io.harness.mongo.index.Field;
-import io.harness.mongo.index.IndexType;
-import io.harness.mongo.index.NgUniqueIndex;
+import io.harness.mongo.index.MongoIndex;
+import io.harness.mongo.index.SortCompoundMongoIndex;
 import io.harness.persistence.AccountAccess;
 import io.harness.persistence.CreatedAtAware;
 import io.harness.persistence.CreatedByAware;
@@ -77,7 +76,6 @@ import io.harness.security.encryption.EncryptionType;
 import io.harness.validation.Update;
 import io.harness.yaml.BaseYaml;
 
-import software.wings.beans.SettingAttribute.SettingAttributeKeys;
 import software.wings.beans.artifact.ArtifactStreamSummary;
 import software.wings.beans.entityinterface.ApplicationAccess;
 import software.wings.security.UsageRestrictions;
@@ -87,6 +85,7 @@ import software.wings.settings.validation.ConnectivityValidationAttributes;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.github.reinert.jjschema.SchemaIgnore;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import java.util.Collections;
 import java.util.List;
@@ -105,31 +104,7 @@ import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Id;
 import org.mongodb.morphia.annotations.Transient;
 
-/**
- * Created by anubhaw on 5/16/16.
- */
 @OwnedBy(CDC)
-@CdIndex(name = "accountIdAppIdCategoryCreatedAt",
-    fields =
-    {
-      @Field(SettingAttributeKeys.accountId)
-      , @Field(SettingAttributeKeys.appId), @Field(SettingAttributeKeys.category),
-          @Field(value = SettingAttributeKeys.createdAt, type = IndexType.DESC)
-    })
-@NgUniqueIndex(name = "locate",
-    fields = { @Field("accountId")
-               , @Field("appId"), @Field("envId"), @Field("name"), @Field("value.type") })
-@CdIndex(name = "acctCatTypeIdx", fields = { @Field("accountId")
-                                             , @Field("category"), @Field("value.type") })
-@CdIndex(name = "acctValTypeIdx", fields = { @Field("accountId")
-                                             , @Field("value.type") })
-@CdIndex(name = "value.type_1_nextIteration_1", fields = { @Field("value.type")
-                                                           , @Field("nextIteration") })
-@CdIndex(name = "secretsMigrationIdx", fields = { @Field("value.type")
-                                                  , @Field("nextSecretMigrationIteration") })
-@CdIndex(name = "secretsMigrationPerAccountIdx",
-    fields = { @Field("value.type")
-               , @Field("secretsMigrated"), @Field("accountId") })
 @Data
 @EqualsAndHashCode(of = {"uuid", "appId"}, callSuper = false)
 @FieldNameConstants(innerTypeName = "SettingAttributeKeys")
@@ -138,12 +113,53 @@ import org.mongodb.morphia.annotations.Transient;
 public class SettingAttribute
     implements PersistentEntity, UuidAware, CreatedAtAware, CreatedByAware, UpdatedAtAware, UpdatedByAware,
                ApplicationAccess, NameAccess, PersistentRegularIterable, AccountAccess {
-  public static final String ID_KEY = "_id";
-  public static final String ACCOUNT_ID_KEY = "accountId";
-  public static final String CATEGORY_KEY = "category";
-  public static final String ENV_ID_KEY = "envId";
-  public static final String NAME_KEY = "name";
-  public static final String VALUE_TYPE_KEY = "value.type";
+  public static List<MongoIndex> mongoIndexes() {
+    return ImmutableList.<MongoIndex>builder()
+        .add(SortCompoundMongoIndex.builder()
+                 .name("accountIdAppIdCategoryCreatedAt")
+                 .field(SettingAttributeKeys.accountId)
+                 .field(SettingAttributeKeys.appId)
+                 .field(SettingAttributeKeys.category)
+                 .descSortField(SettingAttributeKeys.createdAt)
+                 .build())
+        .add(CompoundMongoIndex.builder()
+                 .name("locate")
+                 .unique(true)
+                 .field(SettingAttributeKeys.accountId)
+                 .field(SettingAttributeKeys.appId)
+                 .field(SettingAttributeKeys.envId)
+                 .field(SettingAttributeKeys.name)
+                 .field(SettingAttributeKeys.value_type)
+                 .build())
+        .add(CompoundMongoIndex.builder()
+                 .name("acctCatTypeIdx")
+                 .field(SettingAttributeKeys.accountId)
+                 .field(SettingAttributeKeys.category)
+                 .field(SettingAttributeKeys.value_type)
+                 .build())
+        .add(CompoundMongoIndex.builder()
+                 .name("acctValTypeIdx")
+                 .field(SettingAttributeKeys.accountId)
+                 .field(SettingAttributeKeys.value_type)
+                 .build())
+        .add(CompoundMongoIndex.builder()
+                 .name("typeNextIterationIdx")
+                 .field(SettingAttributeKeys.value_type)
+                 .field(SettingAttributeKeys.nextIteration)
+                 .build())
+        .add(CompoundMongoIndex.builder()
+                 .name("secretsMigrationIdx")
+                 .field(SettingAttributeKeys.value_type)
+                 .field(SettingAttributeKeys.nextSecretMigrationIteration)
+                 .build())
+        .add(CompoundMongoIndex.builder()
+                 .name("secretsMigrationPerAccountIdx")
+                 .field(SettingAttributeKeys.value_type)
+                 .field(SettingAttributeKeys.secretsMigrated)
+                 .field(SettingAttributeKeys.accountId)
+                 .build())
+        .build();
+  }
 
   @NotEmpty private String envId = GLOBAL_ENV_ID;
   @Id @NotNull(groups = {Update.class}) @SchemaIgnore private String uuid;
@@ -408,12 +424,7 @@ public class SettingAttribute
 
   @UtilityClass
   public static final class SettingAttributeKeys {
-    // Temporary
-    public static final String appId = "appId";
-    public static final String createdAt = "createdAt";
-    public static final String uuid = "uuid";
-    public static final String accountId = "accountId";
-    public static final String valueType = SettingAttributeKeys.value + ".type";
+    public static final String value_type = SettingAttributeKeys.value + ".type";
     public static final String isCEEnabled = SettingAttributeKeys.value + ".ccmConfig.cloudCostEnabled";
   }
 

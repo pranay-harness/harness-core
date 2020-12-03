@@ -3,7 +3,6 @@ package software.wings.security.encryption.migration;
 import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.beans.FeatureName.CONNECTORS_REF_SECRETS;
 
-import static software.wings.beans.SettingAttribute.VALUE_TYPE_KEY;
 import static software.wings.service.impl.SettingServiceHelper.ATTRIBUTES_USING_REFERENCES;
 
 import io.harness.annotations.dev.OwnedBy;
@@ -55,7 +54,7 @@ public class SettingAttributesSecretReferenceFeatureFlagJob implements Managed {
     Query<SettingAttribute> query = wingsPersistence.createQuery(SettingAttribute.class)
                                         .field(SettingAttributeKeys.secretsMigrated)
                                         .notEqual(Boolean.TRUE)
-                                        .field(VALUE_TYPE_KEY)
+                                        .field(SettingAttributeKeys.value_type)
                                         .in(ATTRIBUTES_USING_REFERENCES);
 
     SettingAttribute settingAttribute = query.get();

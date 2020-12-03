@@ -7,7 +7,6 @@ import static io.harness.rule.OwnerRule.UTKARSH;
 import static io.harness.security.encryption.EncryptionType.KMS;
 
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
-import static software.wings.beans.SettingAttribute.VALUE_TYPE_KEY;
 import static software.wings.service.impl.SettingServiceHelper.ATTRIBUTES_USING_REFERENCES;
 import static software.wings.settings.SettingVariableTypes.APP_DYNAMICS;
 import static software.wings.settings.SettingVariableTypes.SECRET_TEXT;
@@ -36,6 +35,7 @@ import software.wings.beans.Account;
 import software.wings.beans.AccountType;
 import software.wings.beans.AppDynamicsConfig;
 import software.wings.beans.SettingAttribute;
+import software.wings.beans.SettingAttribute.SettingAttributeKeys;
 import software.wings.beans.SettingAttribute.SettingCategory;
 import software.wings.dl.WingsPersistence;
 import software.wings.security.UsageRestrictions;
@@ -98,7 +98,7 @@ public class SettingAttributesSecretsMigrationHandlerTest extends WingsBaseTest 
     Query<SettingAttribute> query = mock(Query.class);
     FieldEnd fieldEnd = mock(FieldEnd.class);
 
-    when(query.field(VALUE_TYPE_KEY)).thenReturn(fieldEnd);
+    when(query.field(SettingAttributeKeys.value_type)).thenReturn(fieldEnd);
     when(fieldEnd.in(ATTRIBUTES_USING_REFERENCES)).thenReturn(query);
 
     settingAttributesSecretsMigrationHandler.createQuery(query);

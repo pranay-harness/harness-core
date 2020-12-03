@@ -486,7 +486,7 @@ public class InfrastructureProvisionerServiceImplTest extends WingsBaseTest {
     PageRequest<SettingAttribute> settingAttributePageRequest = new PageRequest<>();
     settingAttributePageRequest.addFilter(SettingAttribute.ACCOUNT_ID_KEY, Operator.EQ, ACCOUNT_ID);
     settingAttributePageRequest.addFilter(
-        SettingAttribute.VALUE_TYPE_KEY, Operator.EQ, SettingVariableTypes.GIT.name());
+        SettingAttributeKeys.value_type, Operator.EQ, SettingVariableTypes.GIT.name());
     Set<String> settingAttributeIds = Sets.newHashSet(asList("id1", "id2"));
     settingAttributePageRequest.addFilter(SettingAttributeKeys.uuid, Operator.IN, settingAttributeIds.toArray());
     PageResponse<SettingAttribute> settingAttributePageResponse = new PageResponse<>();

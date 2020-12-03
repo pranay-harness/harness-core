@@ -360,7 +360,7 @@ public class InfrastructureProvisionerServiceImpl implements InfrastructureProvi
     PageRequest<SettingAttribute> settingAttributePageRequest = new PageRequest<>();
     settingAttributePageRequest.addFilter(SettingAttribute.ACCOUNT_ID_KEY, Operator.EQ, accountId);
     settingAttributePageRequest.addFilter(
-        SettingAttribute.VALUE_TYPE_KEY, Operator.EQ, SettingVariableTypes.GIT.name());
+        SettingAttributeKeys.value_type, Operator.EQ, SettingVariableTypes.GIT.name());
     settingAttributePageRequest.addFilter(SettingAttributeKeys.uuid, Operator.IN, settingAttributeIds.toArray());
 
     PageResponse<SettingAttribute> settingAttributes = settingService.list(settingAttributePageRequest, null, null);

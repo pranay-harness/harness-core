@@ -7,6 +7,7 @@ import io.harness.beans.PageRequest;
 import io.harness.beans.SearchFilter.Operator;
 
 import software.wings.beans.SettingAttribute;
+import software.wings.beans.SettingAttribute.SettingAttributeKeys;
 import software.wings.features.api.AbstractUsageLimitedFeature;
 import software.wings.features.api.ComplianceByLimitingUsage;
 import software.wings.features.api.FeatureRestrictions;
@@ -67,7 +68,7 @@ public class GitOpsFeature extends AbstractUsageLimitedFeature implements Compli
     PageRequest<SettingAttribute> request =
         aPageRequest()
             .addFilter(SettingAttribute.ACCOUNT_ID_KEY, Operator.EQ, accountId)
-            .addFilter(SettingAttribute.VALUE_TYPE_KEY, Operator.EQ, SettingVariableTypes.GIT)
+            .addFilter(SettingAttributeKeys.value_type, Operator.EQ, SettingVariableTypes.GIT)
             .build();
 
     return settingsService.list(request, null, null).getResponse().size();

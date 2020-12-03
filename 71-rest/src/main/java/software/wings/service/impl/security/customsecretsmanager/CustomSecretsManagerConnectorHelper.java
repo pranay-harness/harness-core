@@ -78,8 +78,8 @@ class CustomSecretsManagerConnectorHelper {
 
   private SettingValue getSettingValueById(String accountId, String connectorId) {
     SettingAttribute settingAttribute = wingsPersistence.createQuery(SettingAttribute.class)
+                                            .filter(SettingAttributeKeys.uuid, connectorId)
                                             .filter(SettingAttributeKeys.accountId, accountId)
-                                            .filter(SettingAttribute.ID_KEY, connectorId)
                                             .get();
     if (settingAttribute != null) {
       return settingAttribute.getValue();

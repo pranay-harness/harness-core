@@ -3,6 +3,7 @@ package migrations.all;
 import static io.harness.persistence.HQuery.excludeValidate;
 
 import software.wings.beans.SettingAttribute;
+import software.wings.beans.SettingAttribute.SettingAttributeKeys;
 import software.wings.dl.WingsPersistence;
 
 import com.google.inject.Inject;
@@ -21,7 +22,7 @@ public class TrimURLsForAPMVerificationSettings implements Migration {
   public void migrate() {
     List<SettingAttribute> settingAttributes =
         wingsPersistence.createQuery(SettingAttribute.class, excludeValidate)
-            .filter(SettingAttribute.VALUE_TYPE_KEY + " in",
+            .filter(SettingAttributeKeys.value_type + " in",
                 Arrays.asList("BUG_SNAG", "APM_VERIFICATION", "PROMETHEUS", "DATA_DOG", "DATA_DOG_LOG"))
             .filter("value.url", Pattern.compile("^\\s+|\\s+$"))
             .asList();

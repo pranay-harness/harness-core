@@ -4,6 +4,7 @@ import static io.harness.mongo.MongoUtils.setUnset;
 import static io.harness.persistence.HQuery.excludeValidate;
 
 import software.wings.beans.SettingAttribute;
+import software.wings.beans.SettingAttribute.SettingAttributeKeys;
 import software.wings.dl.WingsPersistence;
 
 import com.google.inject.Inject;
@@ -19,7 +20,7 @@ public class AwsConfigEc2IamRoleMigration implements Migration {
   @Override
   public void migrate() {
     List<SettingAttribute> settingAttributes = wingsPersistence.createQuery(SettingAttribute.class, excludeValidate)
-                                                   .filter(SettingAttribute.VALUE_TYPE_KEY, "AWS")
+                                                   .filter(SettingAttributeKeys.value_type, "AWS")
                                                    .filter("value.useEc2IamCredentials", true)
                                                    .field("value.encryptedSecretKey")
                                                    .exists()
