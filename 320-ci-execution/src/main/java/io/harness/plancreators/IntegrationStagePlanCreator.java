@@ -177,6 +177,7 @@ public class IntegrationStagePlanCreator implements SupportDefinedExecutorPlanCr
         .stepParameters(
             IntegrationStageStepParameters.builder()
                 .buildNumberDetails(buildNumberDetails)
+                .integrationStageIdentifier(integrationStage.getIdentifier())
                 .buildStatusUpdateParameter(buildStatusUpdateParameter)
                 .integrationStage(integrationStage)
                 .fieldToExecutionNodeIdMap(ImmutableMap.of(CHILD_PLAN_START_NODE, planForExecution.getStartingNodeId()))

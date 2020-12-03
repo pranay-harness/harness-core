@@ -44,7 +44,9 @@ public class IntegrationStageStep implements ChildExecutable<IntegrationStageSte
           (K8sDirectInfraYaml) integrationStageStepParameters.getIntegrationStage().getInfrastructure();
 
       BuildNumberDetails buildNumberDetails = integrationStageStepParameters.getBuildNumberDetails();
-      String stageID = integrationStageStepParameters.getIntegrationStage().getIdentifier();
+      // TODO This is hack because identifier is null due to json ignore, we will solve it properly during PMS
+      // Integration
+      String stageID = integrationStageStepParameters.getIntegrationStageIdentifier();
 
       K8PodDetails k8PodDetails = K8PodDetails.builder()
                                       .clusterName(k8sDirectInfraYaml.getSpec().getConnectorRef())
