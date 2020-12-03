@@ -16,6 +16,7 @@ import static io.harness.beans.ExecutionStatus.SUCCESS;
 import static io.harness.beans.ExecutionStatus.WAITING;
 import static io.harness.beans.ExecutionStatus.activeStatuses;
 import static io.harness.beans.ExecutionStatus.isActiveStatus;
+import static io.harness.beans.FeatureName.ADDRESS_INEFFICIENT_QUERIES;
 import static io.harness.beans.FeatureName.HELM_CHART_AS_ARTIFACT;
 import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 import static io.harness.beans.PageRequest.UNLIMITED;
@@ -4459,6 +4460,22 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
     }
     if (workflowExecution.isOnDemandRollback()) {
       findOptions = findOptions.skip(1);
+    }
+    String accountId = workflowExecution.getAccountId();
+    if (accountId == null) {
+      accountId = appService.getAccountIdByAppId(workflowExecution.getAppId());
+    }
+    if (featureFlagService.isEnabled(ADDRESS_INEFFICIENT_QUERIES, accountId)) {
+      workflowExecutionQuery.project(WorkflowExecutionKeys.uuid, true)
+          .project(WorkflowExecutionKeys.releaseNo, true)
+          .project(WorkflowExecutionKeys.name, true)
+          .project(WorkflowExecutionKeys.createdAt, true);
+
+      if (isNotEmpty(workflowExecution.getInfraMappingIds())) {
+        findOptions.modifier("$hint", "appid_workflowid_infraMappingIds_status_createdat");
+      } else {
+        findOptions.modifier("$hint", "appid_workflowid_status_createdat");
+      }
     }
     return workflowExecutionQuery.order("-createdAt").get(findOptions);
   }
