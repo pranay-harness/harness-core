@@ -10,7 +10,7 @@ public class DummySubstitutor {
 
   static class DummyStrLookup extends StrLookup {
     @Override
-    public String lookup(String s) {
+    public String lookup(String expression) {
       return DUMMY_UUID;
     }
   }

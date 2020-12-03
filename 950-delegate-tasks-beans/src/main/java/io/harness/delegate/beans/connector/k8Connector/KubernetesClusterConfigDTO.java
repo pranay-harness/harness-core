@@ -7,6 +7,7 @@ import io.harness.delegate.beans.executioncapability.ExecutionCapabilityDemander
 import io.harness.delegate.beans.executioncapability.SystemEnvCheckerCapability;
 import io.harness.delegate.task.mixin.HttpConnectionExecutionCapabilityGenerator;
 import io.harness.exception.UnknownEnumTypeException;
+import io.harness.expression.ExpressionEvaluator;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import java.util.Collections;
@@ -23,7 +24,7 @@ public class KubernetesClusterConfigDTO extends ConnectorConfigDTO implements Ex
   KubernetesCredentialDTO credential;
 
   @Override
-  public List<ExecutionCapability> fetchRequiredExecutionCapabilities() {
+  public List<ExecutionCapability> fetchRequiredExecutionCapabilities(ExpressionEvaluator maskingEvaluator) {
     if (credential.getKubernetesCredentialType() == KubernetesCredentialType.INHERIT_FROM_DELEGATE) {
       KubernetesDelegateDetailsDTO k8sDetails = (KubernetesDelegateDetailsDTO) credential.getConfig();
       return Collections.singletonList(SystemEnvCheckerCapability.builder()
@@ -34,7 +35,7 @@ public class KubernetesClusterConfigDTO extends ConnectorConfigDTO implements Ex
       KubernetesClusterDetailsDTO k8sManualCreds = (KubernetesClusterDetailsDTO) credential.getConfig();
       return Collections.singletonList(
           HttpConnectionExecutionCapabilityGenerator.buildHttpConnectionExecutionCapability(
-              k8sManualCreds.getMasterUrl()));
+              k8sManualCreds.getMasterUrl(), maskingEvaluator));
     } else {
       throw new UnknownEnumTypeException(
           "Kubernetes Credential Type", String.valueOf(credential.getKubernetesCredentialType()));

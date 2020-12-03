@@ -2,6 +2,7 @@ package software.wings.beans.container;
 
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.delegate.beans.executioncapability.ExecutionCapabilityDemander;
+import io.harness.expression.ExpressionEvaluator;
 import io.harness.security.encryption.EncryptedDataDetail;
 
 import software.wings.beans.AwsConfig;
@@ -28,7 +29,7 @@ public class EcsSteadyStateCheckParams implements ExecutionCapabilityDemander {
   private List<EncryptedDataDetail> encryptionDetails;
 
   @Override
-  public List<ExecutionCapability> fetchRequiredExecutionCapabilities() {
-    return CapabilityHelper.generateDelegateCapabilities(awsConfig, encryptionDetails);
+  public List<ExecutionCapability> fetchRequiredExecutionCapabilities(ExpressionEvaluator maskingEvaluator) {
+    return CapabilityHelper.generateDelegateCapabilities(awsConfig, encryptionDetails, maskingEvaluator);
   }
 }

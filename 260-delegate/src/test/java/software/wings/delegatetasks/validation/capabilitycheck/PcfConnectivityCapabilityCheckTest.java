@@ -64,6 +64,6 @@ public class PcfConnectivityCapabilityCheckTest extends WingsBaseTest {
     assertThat(actualCapabilityUrl).isEqualTo(expectedCapabilityUrl);
 
     // CDP-14738
-    assertThat(pcfConfig.fetchRequiredExecutionCapabilities().size()).isEqualTo(0);
+    assertThat(pcfConfig.fetchRequiredExecutionCapabilities(null).size()).isEqualTo(0);
   }
 }

@@ -1,6 +1,7 @@
 package io.harness.capability.service;
 
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
+import io.harness.expression.ExpressionEvaluator;
 
 import java.util.Set;
 import org.apache.commons.lang3.tuple.Pair;

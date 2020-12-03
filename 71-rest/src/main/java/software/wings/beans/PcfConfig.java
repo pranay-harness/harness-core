@@ -6,6 +6,7 @@ import static java.util.Collections.emptyList;
 
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.encryption.Encrypted;
+import io.harness.expression.ExpressionEvaluator;
 
 import software.wings.annotation.EncryptableSetting;
 import software.wings.audit.ResourceType;
@@ -68,7 +69,7 @@ public class PcfConfig extends SettingValue implements EncryptableSetting {
   }
 
   @Override
-  public List<ExecutionCapability> fetchRequiredExecutionCapabilities() {
+  public List<ExecutionCapability> fetchRequiredExecutionCapabilities(ExpressionEvaluator maskingEvaluator) {
     /*
      * We do not need HTTP capability for end point Url.
      * The PcfConnectivityCapability already checks for decryption and

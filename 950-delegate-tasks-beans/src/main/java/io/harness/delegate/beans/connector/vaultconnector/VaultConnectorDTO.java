@@ -8,6 +8,7 @@ import io.harness.beans.DecryptableEntity;
 import io.harness.delegate.beans.connector.ConnectorConfigDTO;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.delegate.beans.executioncapability.ExecutionCapabilityDemander;
+import io.harness.expression.ExpressionEvaluator;
 import io.harness.security.encryption.AccessType;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -51,7 +52,7 @@ public class VaultConnectorDTO extends ConnectorConfigDTO implements ExecutionCa
   }
 
   @Override
-  public List<ExecutionCapability> fetchRequiredExecutionCapabilities() {
+  public List<ExecutionCapability> fetchRequiredExecutionCapabilities(ExpressionEvaluator maskingEvaluator) {
     return Collections.emptyList();
   }
 }

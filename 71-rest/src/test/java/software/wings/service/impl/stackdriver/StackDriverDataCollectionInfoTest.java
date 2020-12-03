@@ -38,7 +38,7 @@ public class StackDriverDataCollectionInfoTest extends CategoryTest {
   @Category(UnitTests.class)
   public void fetchRequiredExecutionCapabilities() {
     List<ExecutionCapability> executionCapabilities =
-        stackDriverDataCollectionInfo.fetchRequiredExecutionCapabilities();
+        stackDriverDataCollectionInfo.fetchRequiredExecutionCapabilities(null);
     assertThat(executionCapabilities).hasSize(1);
     assertThat(executionCapabilities.get(0)).isInstanceOf(HttpConnectionExecutionCapability.class);
     HttpConnectionExecutionCapability httpConnectionExecutionCapability =

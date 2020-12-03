@@ -2,6 +2,7 @@ package software.wings.beans;
 
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.delegate.beans.executioncapability.ExecutionCapabilityDemander;
+import io.harness.expression.ExpressionEvaluator;
 import io.harness.security.encryption.EncryptedDataDetail;
 
 import software.wings.delegatetasks.validation.capabilities.GitConnectionCapability;
@@ -18,7 +19,7 @@ public class GitValidationParameters implements ExecutionCapabilityDemander {
   List<EncryptedDataDetail> encryptedDataDetails;
 
   @Override
-  public List<ExecutionCapability> fetchRequiredExecutionCapabilities() {
+  public List<ExecutionCapability> fetchRequiredExecutionCapabilities(ExpressionEvaluator maskingEvaluator) {
     return Collections.singletonList(GitConnectionCapability.builder()
                                          .gitConfig(gitConfig)
                                          .settingAttribute(gitConfig.getSshSettingAttribute())

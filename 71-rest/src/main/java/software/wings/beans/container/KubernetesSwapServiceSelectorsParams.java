@@ -2,6 +2,7 @@ package software.wings.beans.container;
 
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.delegate.beans.executioncapability.ExecutionCapabilityDemander;
+import io.harness.expression.ExpressionEvaluator;
 
 import software.wings.service.impl.ContainerServiceParams;
 
@@ -23,7 +24,7 @@ public class KubernetesSwapServiceSelectorsParams implements ExecutionCapability
   private String service2;
 
   @Override
-  public List<ExecutionCapability> fetchRequiredExecutionCapabilities() {
-    return containerServiceParams.fetchRequiredExecutionCapabilities();
+  public List<ExecutionCapability> fetchRequiredExecutionCapabilities(ExpressionEvaluator maskingEvaluator) {
+    return containerServiceParams.fetchRequiredExecutionCapabilities(maskingEvaluator);
   }
 }

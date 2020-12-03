@@ -5,6 +5,7 @@ import static io.harness.annotations.dev.HarnessTeam.CDC;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.delegate.beans.executioncapability.ExecutionCapabilityDemander;
+import io.harness.expression.ExpressionEvaluator;
 import io.harness.jira.JiraAction;
 import io.harness.jira.JiraCustomFieldValue;
 import io.harness.security.encryption.EncryptedDataDetail;
@@ -49,7 +50,7 @@ public class JiraTaskParameters implements ExecutionCapabilityDemander {
   private String rejectionValue;
 
   @Override
-  public List<ExecutionCapability> fetchRequiredExecutionCapabilities() {
-    return CapabilityHelper.generateDelegateCapabilities(jiraConfig, encryptionDetails);
+  public List<ExecutionCapability> fetchRequiredExecutionCapabilities(ExpressionEvaluator maskingEvaluator) {
+    return CapabilityHelper.generateDelegateCapabilities(jiraConfig, encryptionDetails, maskingEvaluator);
   }
 }

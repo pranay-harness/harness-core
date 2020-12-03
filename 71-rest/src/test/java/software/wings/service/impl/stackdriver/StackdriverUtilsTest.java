@@ -31,7 +31,7 @@ public class StackdriverUtilsTest extends CategoryTest {
   @Category(UnitTests.class)
   public void fetchRequiredExecutionCapabilitiesForMetrics() {
     List<ExecutionCapability> executionCapabilities =
-        StackdriverUtils.fetchRequiredExecutionCapabilitiesForMetrics(encryptedDataDetails);
+        StackdriverUtils.fetchRequiredExecutionCapabilitiesForMetrics(encryptedDataDetails, null);
     assertThat(executionCapabilities).hasSize(1);
     assertThat(executionCapabilities.get(0)).isInstanceOf(HttpConnectionExecutionCapability.class);
     HttpConnectionExecutionCapability httpConnectionExecutionCapability =
@@ -45,7 +45,7 @@ public class StackdriverUtilsTest extends CategoryTest {
   @Category(UnitTests.class)
   public void fetchRequiredExecutionCapabilitiesForLogs() {
     List<ExecutionCapability> executionCapabilities =
-        StackdriverUtils.fetchRequiredExecutionCapabilitiesForLogs(encryptedDataDetails);
+        StackdriverUtils.fetchRequiredExecutionCapabilitiesForLogs(encryptedDataDetails, null);
     assertThat(executionCapabilities).hasSize(1);
     assertThat(executionCapabilities.get(0)).isInstanceOf(HttpConnectionExecutionCapability.class);
     HttpConnectionExecutionCapability httpConnectionExecutionCapability =

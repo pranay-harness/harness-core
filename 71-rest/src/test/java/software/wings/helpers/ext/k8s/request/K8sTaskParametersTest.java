@@ -29,7 +29,7 @@ public class K8sTaskParametersTest extends WingsBaseTest {
   public void setUp() throws Exception {
     doReturn(Arrays.asList(HttpConnectionExecutionCapability.builder().build()))
         .when(clusterConfig)
-        .fetchRequiredExecutionCapabilities();
+        .fetchRequiredExecutionCapabilities(null);
   }
 
   @Test
@@ -39,7 +39,7 @@ public class K8sTaskParametersTest extends WingsBaseTest {
     assertThat(K8sApplyTaskParameters.builder()
                    .k8sClusterConfig(clusterConfig)
                    .build()
-                   .fetchRequiredExecutionCapabilities()
+                   .fetchRequiredExecutionCapabilities(null)
                    .stream()
                    .map(ExecutionCapability::getCapabilityType)
                    .collect(Collectors.toList()))
@@ -53,15 +53,18 @@ public class K8sTaskParametersTest extends WingsBaseTest {
     assertThat(hasKustomizeCapability(K8sScaleTaskParameters.builder()
                                           .k8sClusterConfig(clusterConfig)
                                           .build()
-                                          .fetchRequiredExecutionCapabilities()))
+                                          .fetchRequiredExecutionCapabilities(null)))
         .isFalse();
-    assertThat(hasKustomizeCapability(k8sTaskParamsWithNoKustomizeConfig().fetchRequiredExecutionCapabilities()))
+    assertThat(hasKustomizeCapability(k8sTaskParamsWithNoKustomizeConfig().fetchRequiredExecutionCapabilities(null)))
         .isFalse();
-    assertThat(hasKustomizeCapability(k8sTaskParamsWithKustomizePluginPath(null).fetchRequiredExecutionCapabilities()))
+    assertThat(
+        hasKustomizeCapability(k8sTaskParamsWithKustomizePluginPath(null).fetchRequiredExecutionCapabilities(null)))
         .isTrue();
-    assertThat(hasKustomizeCapability(k8sTaskParamsWithKustomizePluginPath(EMPTY).fetchRequiredExecutionCapabilities()))
+    assertThat(
+        hasKustomizeCapability(k8sTaskParamsWithKustomizePluginPath(EMPTY).fetchRequiredExecutionCapabilities(null)))
         .isTrue();
-    assertThat(hasKustomizeCapability(k8sTaskParamsWithKustomizePluginPath("foo").fetchRequiredExecutionCapabilities()))
+    assertThat(
+        hasKustomizeCapability(k8sTaskParamsWithKustomizePluginPath("foo").fetchRequiredExecutionCapabilities(null)))
         .isTrue();
   }
 

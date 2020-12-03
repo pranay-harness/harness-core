@@ -2,6 +2,7 @@ package software.wings.helpers.ext.cloudformation.request;
 
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.delegate.beans.executioncapability.ExecutionCapabilityDemander;
+import io.harness.expression.ExpressionEvaluator;
 
 import software.wings.beans.AwsConfig;
 
@@ -24,8 +25,8 @@ public class CloudFormationCommandRequest implements ExecutionCapabilityDemander
   private String cloudFormationRoleArn;
 
   @Override
-  public List<ExecutionCapability> fetchRequiredExecutionCapabilities() {
-    return awsConfig.fetchRequiredExecutionCapabilities();
+  public List<ExecutionCapability> fetchRequiredExecutionCapabilities(ExpressionEvaluator maskingEvaluator) {
+    return awsConfig.fetchRequiredExecutionCapabilities(maskingEvaluator);
   }
 
   public enum CloudFormationCommandType { CREATE_STACK, GET_STACKS, DELETE_STACK, UNKNOWN_REQUEST }

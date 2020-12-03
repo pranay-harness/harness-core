@@ -14,6 +14,7 @@ import io.harness.delegate.beans.executioncapability.SystemEnvCheckerCapability;
 import io.harness.delegate.task.mixin.HttpConnectionExecutionCapabilityGenerator;
 import io.harness.encryption.Encrypted;
 import io.harness.exception.UnexpectedException;
+import io.harness.expression.ExpressionEvaluator;
 import io.harness.k8s.model.KubernetesClusterAuthType;
 import io.harness.k8s.model.KubernetesConfig;
 import io.harness.k8s.model.KubernetesConfig.KubernetesConfigBuilder;
@@ -253,13 +254,13 @@ public class KubernetesClusterConfig extends SettingValue implements Encryptable
   }
 
   @Override
-  public List<ExecutionCapability> fetchRequiredExecutionCapabilities() {
+  public List<ExecutionCapability> fetchRequiredExecutionCapabilities(ExpressionEvaluator maskingEvaluator) {
     if (useKubernetesDelegate) {
       return Collections.singletonList(
           SystemEnvCheckerCapability.builder().comparate(delegateName).systemPropertyName("DELEGATE_NAME").build());
     }
     return Collections.singletonList(
-        HttpConnectionExecutionCapabilityGenerator.buildHttpConnectionExecutionCapability(masterUrl));
+        HttpConnectionExecutionCapabilityGenerator.buildHttpConnectionExecutionCapability(masterUrl, maskingEvaluator));
   }
 
   @Data

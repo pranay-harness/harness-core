@@ -5,6 +5,7 @@ import static java.util.stream.Collectors.toList;
 import io.harness.delegate.beans.executioncapability.ConnectivityCapabilityDemander;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.delegate.beans.executioncapability.ExecutionCapabilityDemander;
+import io.harness.expression.ExpressionEvaluator;
 import io.harness.security.encryption.EncryptedDataDetail;
 
 import software.wings.delegatetasks.delegatecapability.CapabilityHelper;
@@ -24,9 +25,9 @@ public class HostValidationTaskParameters implements ExecutionCapabilityDemander
   ExecutionCredential executionCredential;
 
   @Override
-  public List<ExecutionCapability> fetchRequiredExecutionCapabilities() {
+  public List<ExecutionCapability> fetchRequiredExecutionCapabilities(ExpressionEvaluator maskingEvaluator) {
     if (connectionSetting == null) {
-      return CapabilityHelper.fetchExecutionCapabilitiesForEncryptedDataDetails(encryptionDetails);
+      return CapabilityHelper.fetchExecutionCapabilitiesForEncryptedDataDetails(encryptionDetails, maskingEvaluator);
     }
     SettingValue settingValue = connectionSetting.getValue();
     int port = 22;
@@ -38,7 +39,8 @@ public class HostValidationTaskParameters implements ExecutionCapabilityDemander
     final int portf = port;
     List<List<ExecutionCapability>> capabilityDemanders =
         hostNames.stream()
-            .map(host -> new ConnectivityCapabilityDemander(host, portf).fetchRequiredExecutionCapabilities())
+            .map(host
+                -> new ConnectivityCapabilityDemander(host, portf).fetchRequiredExecutionCapabilities(maskingEvaluator))
             .collect(toList());
     return capabilityDemanders.stream().flatMap(Collection::stream).collect(toList());
   }

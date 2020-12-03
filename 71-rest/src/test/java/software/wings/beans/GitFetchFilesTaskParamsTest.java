@@ -26,7 +26,7 @@ public class GitFetchFilesTaskParamsTest extends WingsBaseTest {
   @Test
   @Owner(developers = ANSHUL)
   @Category(UnitTests.class)
-  public void testFetchRequiredExecutionCapabilities() {
+  public void testfetchRequiredExecutionCapabilities() {
     GitFetchFilesTaskParams gitFetchFilesTaskParams =
         GitFetchFilesTaskParams.builder()
             .containerServiceParams(ContainerServiceParams.builder()
@@ -36,7 +36,7 @@ public class GitFetchFilesTaskParamsTest extends WingsBaseTest {
             .build();
 
     gitFetchFilesTaskParams.setBindTaskFeatureSet(true);
-    List<ExecutionCapability> executionCapabilities = gitFetchFilesTaskParams.fetchRequiredExecutionCapabilities();
+    List<ExecutionCapability> executionCapabilities = gitFetchFilesTaskParams.fetchRequiredExecutionCapabilities(null);
 
     assertThat(executionCapabilities.size()).isEqualTo(1);
     assertThat(executionCapabilities.get(0)).isInstanceOf(HttpConnectionExecutionCapability.class);
@@ -56,7 +56,7 @@ public class GitFetchFilesTaskParamsTest extends WingsBaseTest {
     gitFetchFilesTaskParams.setGitFetchFilesConfigMap(gitFetchFilesConfigMap);
 
     gitFetchFilesTaskParams.setBindTaskFeatureSet(false);
-    executionCapabilities = gitFetchFilesTaskParams.fetchRequiredExecutionCapabilities();
+    executionCapabilities = gitFetchFilesTaskParams.fetchRequiredExecutionCapabilities(null);
 
     assertThat(executionCapabilities.size()).isEqualTo(2);
     assertThat(executionCapabilities.get(0)).isInstanceOf(GitConnectionCapability.class);

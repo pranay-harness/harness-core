@@ -3,6 +3,7 @@ package software.wings.service.impl.newrelic;
 import static software.wings.beans.TaskType.NEWRELIC_COLLECT_METRIC_DATAV2;
 
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
+import io.harness.expression.ExpressionEvaluator;
 import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.security.encryption.EncryptionConfig;
 
@@ -36,8 +37,8 @@ public class NewRelicDataCollectionInfoV2 extends MetricsDataCollectionInfo {
   private long newRelicAppId;
 
   @Override
-  public List<ExecutionCapability> fetchRequiredExecutionCapabilities() {
-    return CapabilityHelper.generateDelegateCapabilities(newRelicConfig, getEncryptedDataDetails());
+  public List<ExecutionCapability> fetchRequiredExecutionCapabilities(ExpressionEvaluator maskingEvaluator) {
+    return CapabilityHelper.generateDelegateCapabilities(newRelicConfig, getEncryptedDataDetails(), maskingEvaluator);
   }
 
   @Builder

@@ -8,6 +8,7 @@ import io.harness.delegate.beans.executioncapability.ExecutionCapabilityDemander
 import io.harness.delegate.task.TaskParameters;
 import io.harness.delegate.task.mixin.HttpConnectionExecutionCapabilityGenerator;
 import io.harness.expression.Expression;
+import io.harness.expression.ExpressionEvaluator;
 
 import java.util.Collections;
 import java.util.List;
@@ -25,8 +26,8 @@ public class HttpTaskParameters implements TaskParameters, ExecutionCapabilityDe
   boolean useProxy;
 
   @Override
-  public List<ExecutionCapability> fetchRequiredExecutionCapabilities() {
-    return Collections.singletonList(
-        HttpConnectionExecutionCapabilityGenerator.buildHttpConnectionExecutionCapability(url, QUERY));
+  public List<ExecutionCapability> fetchRequiredExecutionCapabilities(ExpressionEvaluator maskingEvaluator) {
+    return Collections.singletonList(HttpConnectionExecutionCapabilityGenerator.buildHttpConnectionExecutionCapability(
+        url, QUERY, maskingEvaluator));
   }
 }

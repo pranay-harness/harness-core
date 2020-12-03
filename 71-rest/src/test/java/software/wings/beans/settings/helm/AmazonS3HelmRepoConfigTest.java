@@ -23,7 +23,7 @@ public class AmazonS3HelmRepoConfigTest extends WingsBaseTest {
   public void shouldFetchRequiredExecutionCapabilities() {
     AmazonS3HelmRepoConfig amazonS3HelmRepoConfig =
         AmazonS3HelmRepoConfig.builder().bucketName("default").region("us-east-1").connectorId("default").build();
-    List<ExecutionCapability> executionCapabilityList = amazonS3HelmRepoConfig.fetchRequiredExecutionCapabilities();
+    List<ExecutionCapability> executionCapabilityList = amazonS3HelmRepoConfig.fetchRequiredExecutionCapabilities(null);
     assertThat(executionCapabilityList).isNotEmpty();
     assertThat(executionCapabilityList).hasSize(3);
     assertThat(

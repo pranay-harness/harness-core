@@ -132,7 +132,7 @@ public class CVDataCollectionTaskServiceImpl implements CVDataCollectionTaskServ
       Any perpetualTaskPack, List<ExecutionCapability> executionCapabilities) {
     if (cvDataCollectionInfo.getConnectorConfigDTO() instanceof ExecutionCapabilityDemander) {
       executionCapabilities = ((ExecutionCapabilityDemander) cvDataCollectionInfo.getConnectorConfigDTO())
-                                  .fetchRequiredExecutionCapabilities();
+                                  .fetchRequiredExecutionCapabilities(null);
     }
 
     PerpetualTaskExecutionBundle.Builder builder = PerpetualTaskExecutionBundle.newBuilder();

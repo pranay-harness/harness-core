@@ -5,6 +5,7 @@ import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.delegate.task.artifacts.ArtifactSourceDelegateRequest;
 import io.harness.delegate.task.artifacts.ArtifactSourceType;
 import io.harness.delegate.task.mixin.HttpConnectionExecutionCapabilityGenerator;
+import io.harness.expression.ExpressionEvaluator;
 import io.harness.security.encryption.EncryptedDataDetail;
 
 import java.util.Collections;
@@ -36,10 +37,10 @@ public class DockerArtifactDelegateRequest implements ArtifactSourceDelegateRequ
   ArtifactSourceType sourceType;
 
   @Override
-  public List<ExecutionCapability> fetchRequiredExecutionCapabilities() {
+  public List<ExecutionCapability> fetchRequiredExecutionCapabilities(ExpressionEvaluator maskingEvaluator) {
     return Collections.singletonList(HttpConnectionExecutionCapabilityGenerator.buildHttpConnectionExecutionCapability(
-        dockerConnectorDTO.getDockerRegistryUrl().endsWith("/")
-            ? dockerConnectorDTO.getDockerRegistryUrl()
-            : dockerConnectorDTO.getDockerRegistryUrl().concat("/")));
+        dockerConnectorDTO.getDockerRegistryUrl().endsWith("/") ? dockerConnectorDTO.getDockerRegistryUrl()
+                                                                : dockerConnectorDTO.getDockerRegistryUrl().concat("/"),
+        maskingEvaluator));
   }
 }

@@ -40,7 +40,8 @@ public class CapabilityCheckController extends AbstractDelegateValidateTask {
         executionCapabilities =
             Arrays.stream(getParameters())
                 .filter(param -> param instanceof ExecutionCapabilityDemander)
-                .flatMap(param -> ((ExecutionCapabilityDemander) param).fetchRequiredExecutionCapabilities().stream())
+                .flatMap(
+                    param -> ((ExecutionCapabilityDemander) param).fetchRequiredExecutionCapabilities(null).stream())
                 .collect(toList());
       }
 
@@ -73,7 +74,7 @@ public class CapabilityCheckController extends AbstractDelegateValidateTask {
       executionCapabilities =
           Arrays.stream(getParameters())
               .filter(param -> param instanceof ExecutionCapabilityDemander)
-              .flatMap(param -> ((ExecutionCapabilityDemander) param).fetchRequiredExecutionCapabilities().stream())
+              .flatMap(param -> ((ExecutionCapabilityDemander) param).fetchRequiredExecutionCapabilities(null).stream())
               .collect(toList());
     }
 

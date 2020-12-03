@@ -3,6 +3,7 @@ package io.harness.delegate.task.executioncapability;
 import io.harness.delegate.beans.executioncapability.CapabilityResponse;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.delegate.beans.executioncapability.SystemEnvCheckerCapability;
+import io.harness.expression.ExpressionEvaluator;
 
 import lombok.extern.slf4j.Slf4j;
 

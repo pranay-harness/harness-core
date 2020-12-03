@@ -3,6 +3,7 @@ package software.wings.service.impl.elk;
 import static software.wings.beans.TaskType.ELK_COLLECT_LOG_DATAV2;
 
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
+import io.harness.expression.ExpressionEvaluator;
 import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.security.encryption.EncryptionConfig;
 
@@ -59,8 +60,8 @@ public class ElkDataCollectionInfoV2 extends LogDataCollectionInfoV2 {
   }
 
   @Override
-  public List<ExecutionCapability> fetchRequiredExecutionCapabilities() {
-    return CapabilityHelper.generateDelegateCapabilities(elkConfig, getEncryptedDataDetails());
+  public List<ExecutionCapability> fetchRequiredExecutionCapabilities(ExpressionEvaluator maskingEvaluator) {
+    return CapabilityHelper.generateDelegateCapabilities(elkConfig, getEncryptedDataDetails(), maskingEvaluator);
   }
 
   @Override

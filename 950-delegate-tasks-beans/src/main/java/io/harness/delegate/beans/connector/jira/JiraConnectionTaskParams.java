@@ -3,6 +3,7 @@ package io.harness.delegate.beans.connector.jira;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.delegate.beans.executioncapability.ExecutionCapabilityDemander;
 import io.harness.delegate.task.TaskParameters;
+import io.harness.expression.ExpressionEvaluator;
 import io.harness.security.encryption.EncryptedDataDetail;
 
 import java.util.List;
@@ -16,7 +17,7 @@ public class JiraConnectionTaskParams implements TaskParameters, ExecutionCapabi
   List<EncryptedDataDetail> encryptionDetails;
 
   @Override
-  public List<ExecutionCapability> fetchRequiredExecutionCapabilities() {
-    return jiraConnectorDTO.fetchRequiredExecutionCapabilities();
+  public List<ExecutionCapability> fetchRequiredExecutionCapabilities(ExpressionEvaluator maskingEvaluator) {
+    return jiraConnectorDTO.fetchRequiredExecutionCapabilities(maskingEvaluator);
   }
 }

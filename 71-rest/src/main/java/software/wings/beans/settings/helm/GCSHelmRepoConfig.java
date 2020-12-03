@@ -5,6 +5,7 @@ import static io.harness.annotations.dev.HarnessTeam.CDC;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.delegate.beans.executioncapability.ChartMuseumCapability;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
+import io.harness.expression.ExpressionEvaluator;
 import io.harness.k8s.model.HelmVersion;
 
 import software.wings.audit.ResourceType;
@@ -54,7 +55,7 @@ public class GCSHelmRepoConfig extends SettingValue implements HelmRepoConfig {
   }
 
   @Override
-  public List<ExecutionCapability> fetchRequiredExecutionCapabilities() {
+  public List<ExecutionCapability> fetchRequiredExecutionCapabilities(ExpressionEvaluator maskingEvaluator) {
     List<ExecutionCapability> executionCapabilityList = new ArrayList<>();
     executionCapabilityList.add(HelmInstallationCapability.builder()
                                     .version(HelmVersion.V3)

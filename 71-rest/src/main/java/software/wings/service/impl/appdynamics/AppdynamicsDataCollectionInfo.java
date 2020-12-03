@@ -3,6 +3,7 @@ package software.wings.service.impl.appdynamics;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.delegate.beans.executioncapability.ExecutionCapabilityDemander;
 import io.harness.delegate.task.TaskParameters;
+import io.harness.expression.ExpressionEvaluator;
 import io.harness.security.encryption.EncryptedDataDetail;
 
 import software.wings.beans.AppDynamicsConfig;
@@ -44,7 +45,7 @@ public class AppdynamicsDataCollectionInfo implements TaskParameters, ExecutionC
   @Default private TimeSeriesMlAnalysisType timeSeriesMlAnalysisType = TimeSeriesMlAnalysisType.COMPARATIVE;
 
   @Override
-  public List<ExecutionCapability> fetchRequiredExecutionCapabilities() {
-    return CapabilityHelper.generateDelegateCapabilities(appDynamicsConfig, encryptedDataDetails);
+  public List<ExecutionCapability> fetchRequiredExecutionCapabilities(ExpressionEvaluator maskingEvaluator) {
+    return CapabilityHelper.generateDelegateCapabilities(appDynamicsConfig, encryptedDataDetails, maskingEvaluator);
   }
 }

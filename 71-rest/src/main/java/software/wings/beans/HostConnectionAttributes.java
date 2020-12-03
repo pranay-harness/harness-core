@@ -6,6 +6,7 @@ import static software.wings.settings.SettingVariableTypes.HOST_CONNECTION_ATTRI
 
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.encryption.Encrypted;
+import io.harness.expression.ExpressionEvaluator;
 
 import software.wings.annotation.EncryptableSetting;
 import software.wings.jersey.JsonViews;
@@ -66,7 +67,7 @@ public class HostConnectionAttributes extends SettingValue implements Encryptabl
   // combination of hosts and port instance type of ConnectivityCapabilityDemander
   // The implementation is in DelegateServiceImpl.addMergedParamsForCapabilityCheck
   @Override
-  public List<ExecutionCapability> fetchRequiredExecutionCapabilities() {
+  public List<ExecutionCapability> fetchRequiredExecutionCapabilities(ExpressionEvaluator maskingEvaluator) {
     return new ArrayList<>();
   }
 

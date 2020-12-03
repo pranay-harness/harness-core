@@ -6,6 +6,7 @@ import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.delegate.beans.executioncapability.ExecutionCapabilityDemander;
 import io.harness.delegate.task.ActivityAccess;
 import io.harness.delegate.task.TaskParameters;
+import io.harness.expression.ExpressionEvaluator;
 
 import software.wings.beans.appmanifest.AppManifestKind;
 import software.wings.delegatetasks.validation.capabilities.GitConnectionCapability;
@@ -31,11 +32,11 @@ public class GitFetchFilesTaskParams implements ActivityAccess, TaskParameters, 
   private String executionLogName;
 
   @Override
-  public List<ExecutionCapability> fetchRequiredExecutionCapabilities() {
+  public List<ExecutionCapability> fetchRequiredExecutionCapabilities(ExpressionEvaluator maskingEvaluator) {
     List<ExecutionCapability> executionCapabilities = new ArrayList<>();
 
     if (isBindTaskFeatureSet && containerServiceParams != null) {
-      executionCapabilities.addAll(containerServiceParams.fetchRequiredExecutionCapabilities());
+      executionCapabilities.addAll(containerServiceParams.fetchRequiredExecutionCapabilities(maskingEvaluator));
     }
 
     if (isNotEmpty(gitFetchFilesConfigMap)) {

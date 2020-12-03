@@ -5,6 +5,7 @@ import static io.harness.annotations.dev.HarnessTeam.CDC;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.delegate.beans.executioncapability.ExecutionCapabilityDemander;
+import io.harness.expression.ExpressionEvaluator;
 import io.harness.security.encryption.EncryptedDataDetail;
 
 import software.wings.beans.JenkinsConfig;
@@ -35,9 +36,9 @@ public class JenkinsTaskParams implements ExecutionCapabilityDemander {
   private String appId;
 
   @Override
-  public List<ExecutionCapability> fetchRequiredExecutionCapabilities() {
+  public List<ExecutionCapability> fetchRequiredExecutionCapabilities(ExpressionEvaluator maskingEvaluator) {
     // Ideally we should check for capability for getting encryption details
     // but the original validation task does not do that
-    return jenkinsConfig.fetchRequiredExecutionCapabilities();
+    return jenkinsConfig.fetchRequiredExecutionCapabilities(maskingEvaluator);
   }
 }

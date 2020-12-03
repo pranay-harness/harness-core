@@ -8,6 +8,7 @@ import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.delegate.beans.executioncapability.ExecutionCapabilityDemander;
 import io.harness.delegate.beans.executioncapability.SystemEnvCheckerCapability;
 import io.harness.delegate.task.mixin.HttpConnectionExecutionCapabilityGenerator;
+import io.harness.expression.ExpressionEvaluator;
 import io.harness.security.encryption.EncryptedDataDetail;
 
 import software.wings.beans.AwsConfig;
@@ -56,7 +57,7 @@ public class ContainerServiceParams implements ExecutionCapabilityDemander {
   }
 
   @Override
-  public List<ExecutionCapability> fetchRequiredExecutionCapabilities() {
+  public List<ExecutionCapability> fetchRequiredExecutionCapabilities(ExpressionEvaluator maskingEvaluator) {
     if (settingAttribute == null) {
       return emptyList();
     }
@@ -74,14 +75,14 @@ public class ContainerServiceParams implements ExecutionCapabilityDemander {
     } else {
       if ("None".equals(clusterName)) {
         executionCapabilities.add(HttpConnectionExecutionCapabilityGenerator.buildHttpConnectionExecutionCapability(
-            "https://container.googleapis.com/"));
+            "https://container.googleapis.com/", null));
       } else {
         if (isEmpty(masterUrl)) {
           executionCapabilities.add(
               ClusterMasterUrlValidationCapability.builder().containerServiceParams(this).build());
         } else {
-          executionCapabilities.add(
-              HttpConnectionExecutionCapabilityGenerator.buildHttpConnectionExecutionCapability(masterUrl));
+          executionCapabilities.add(HttpConnectionExecutionCapabilityGenerator.buildHttpConnectionExecutionCapability(
+              masterUrl, maskingEvaluator));
         }
       }
     }

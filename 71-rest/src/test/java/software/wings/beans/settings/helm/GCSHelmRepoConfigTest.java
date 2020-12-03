@@ -22,7 +22,7 @@ public class GCSHelmRepoConfigTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void fetchRequiredExecutionCapabilities() {
     GCSHelmRepoConfig repoConfig = GCSHelmRepoConfig.builder().build();
-    List<ExecutionCapability> executionCapabilityList = repoConfig.fetchRequiredExecutionCapabilities();
+    List<ExecutionCapability> executionCapabilityList = repoConfig.fetchRequiredExecutionCapabilities(null);
     assertThat(executionCapabilityList).isNotEmpty();
     assertThat(executionCapabilityList).hasSize(2);
     assertThat(

@@ -6,6 +6,7 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.delegate.beans.executioncapability.ExecutionCapabilityDemander;
 import io.harness.delegate.beans.executioncapability.SelectorCapability;
+import io.harness.expression.ExpressionEvaluator;
 import io.harness.security.encryption.EncryptedDataDetail;
 
 import software.wings.beans.GcpConfig;
@@ -49,8 +50,9 @@ public class GcbTaskParams implements ExecutionCapabilityDemander {
 
   @NotNull
   @Override
-  public List<ExecutionCapability> fetchRequiredExecutionCapabilities() {
-    List<ExecutionCapability> executionCapabilities = new ArrayList<>(gcpConfig.fetchRequiredExecutionCapabilities());
+  public List<ExecutionCapability> fetchRequiredExecutionCapabilities(ExpressionEvaluator maskingEvaluator) {
+    List<ExecutionCapability> executionCapabilities =
+        new ArrayList<>(gcpConfig.fetchRequiredExecutionCapabilities(maskingEvaluator));
     if (gcpConfig.isUseDelegate()) {
       executionCapabilities.add(SelectorCapability.builder()
                                     .selectors(Collections.singleton(gcpConfig.getDelegateSelector()))

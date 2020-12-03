@@ -3,6 +3,7 @@ package io.harness.delegate.task.executioncapability;
 import io.harness.delegate.beans.executioncapability.CapabilityResponse;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.delegate.beans.executioncapability.HttpConnectionExecutionCapability;
+import io.harness.expression.ExpressionEvaluator;
 import io.harness.network.Http;
 
 public class HttpConnectionExecutionCapabilityCheck implements CapabilityCheck {

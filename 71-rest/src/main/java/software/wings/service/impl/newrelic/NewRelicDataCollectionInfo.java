@@ -3,6 +3,7 @@ package software.wings.service.impl.newrelic;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.delegate.beans.executioncapability.ExecutionCapabilityDemander;
 import io.harness.delegate.task.TaskParameters;
+import io.harness.expression.ExpressionEvaluator;
 import io.harness.security.encryption.EncryptedDataDetail;
 
 import software.wings.beans.NewRelicConfig;
@@ -44,7 +45,7 @@ public class NewRelicDataCollectionInfo implements TaskParameters, ExecutionCapa
   private boolean checkNotAllowedStrings;
 
   @Override
-  public List<ExecutionCapability> fetchRequiredExecutionCapabilities() {
-    return CapabilityHelper.generateDelegateCapabilities(newRelicConfig, encryptedDataDetails);
+  public List<ExecutionCapability> fetchRequiredExecutionCapabilities(ExpressionEvaluator maskingEvaluator) {
+    return CapabilityHelper.generateDelegateCapabilities(newRelicConfig, encryptedDataDetails, maskingEvaluator);
   }
 }

@@ -4,6 +4,7 @@ import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.delegate.beans.executioncapability.ExecutionCapabilityDemander;
 import io.harness.delegate.task.mixin.HttpConnectionExecutionCapabilityGenerator;
 import io.harness.encryption.Encrypted;
+import io.harness.expression.ExpressionEvaluator;
 import io.harness.spotinst.model.SpotInstConstants;
 
 import software.wings.annotation.EncryptableSetting;
@@ -57,9 +58,9 @@ public class SpotInstConfig extends SettingValue implements EncryptableSetting, 
 
   // It is expected to fail with 401, unauthorized access
   @Override
-  public List<ExecutionCapability> fetchRequiredExecutionCapabilities() {
+  public List<ExecutionCapability> fetchRequiredExecutionCapabilities(ExpressionEvaluator maskingEvaluator) {
     return Arrays.asList(HttpConnectionExecutionCapabilityGenerator.buildHttpConnectionExecutionCapability(
-        SpotInstConstants.spotInstBaseUrl));
+        SpotInstConstants.spotInstBaseUrl, maskingEvaluator));
   }
 
   @Data

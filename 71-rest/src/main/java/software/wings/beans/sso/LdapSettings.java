@@ -8,6 +8,7 @@ import io.harness.beans.SecretText;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.delegate.beans.executioncapability.ExecutionCapabilityDemander;
 import io.harness.delegate.task.mixin.SocketConnectivityCapabilityGenerator;
+import io.harness.expression.ExpressionEvaluator;
 import io.harness.security.encryption.EncryptedDataDetail;
 
 import software.wings.helpers.ext.ldap.LdapConstants;
@@ -115,7 +116,7 @@ public class LdapSettings extends SSOSettings implements ExecutionCapabilityDema
   }
 
   @Override
-  public List<ExecutionCapability> fetchRequiredExecutionCapabilities() {
+  public List<ExecutionCapability> fetchRequiredExecutionCapabilities(ExpressionEvaluator maskingEvaluator) {
     return Collections.singletonList(SocketConnectivityCapabilityGenerator.buildSocketConnectivityCapability(
         connectionSettings.getHost(), Integer.toString(connectionSettings.getPort())));
   }

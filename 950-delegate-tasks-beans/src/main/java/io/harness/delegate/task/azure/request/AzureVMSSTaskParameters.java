@@ -5,6 +5,7 @@ import static com.google.common.collect.Sets.newHashSet;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.delegate.beans.executioncapability.ExecutionCapabilityDemander;
 import io.harness.delegate.task.TaskParameters;
+import io.harness.expression.ExpressionEvaluator;
 
 import java.util.Collections;
 import java.util.List;
@@ -50,7 +51,7 @@ public class AzureVMSSTaskParameters implements TaskParameters, ExecutionCapabil
   }
 
   @Override
-  public List<ExecutionCapability> fetchRequiredExecutionCapabilities() {
+  public List<ExecutionCapability> fetchRequiredExecutionCapabilities(ExpressionEvaluator maskingEvaluator) {
     return Collections.emptyList();
   }
 }

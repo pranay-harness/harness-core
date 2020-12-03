@@ -3,6 +3,7 @@ package software.wings.service.impl.stackdriver;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.delegate.beans.executioncapability.ExecutionCapabilityDemander;
 import io.harness.delegate.task.TaskParameters;
+import io.harness.expression.ExpressionEvaluator;
 import io.harness.security.encryption.EncryptedDataDetail;
 
 import software.wings.beans.GcpConfig;
@@ -18,7 +19,7 @@ public class StackdriverGcpConfigTaskParams implements TaskParameters, Execution
   private List<EncryptedDataDetail> encryptedDataDetails;
 
   @Override
-  public List<ExecutionCapability> fetchRequiredExecutionCapabilities() {
-    return StackdriverUtils.fetchRequiredExecutionCapabilitiesForMetrics(encryptedDataDetails);
+  public List<ExecutionCapability> fetchRequiredExecutionCapabilities(ExpressionEvaluator maskingEvaluator) {
+    return StackdriverUtils.fetchRequiredExecutionCapabilitiesForMetrics(encryptedDataDetails, maskingEvaluator);
   }
 }

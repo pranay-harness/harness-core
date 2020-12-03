@@ -3,6 +3,7 @@ package software.wings.service.impl;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.delegate.beans.executioncapability.ExecutionCapabilityDemander;
 import io.harness.delegate.task.TaskParameters;
+import io.harness.expression.ExpressionEvaluator;
 
 import software.wings.delegatetasks.delegatecapability.CapabilityHelper;
 
@@ -18,8 +19,8 @@ public class MasterUrlFetchTaskParameter implements TaskParameters, ExecutionCap
   ContainerServiceParams containerServiceParams;
 
   @Override
-  public List<ExecutionCapability> fetchRequiredExecutionCapabilities() {
+  public List<ExecutionCapability> fetchRequiredExecutionCapabilities(ExpressionEvaluator maskingEvaluator) {
     return CapabilityHelper.fetchExecutionCapabilitiesForEncryptedDataDetails(
-        containerServiceParams.getEncryptionDetails());
+        containerServiceParams.getEncryptionDetails(), maskingEvaluator);
   }
 }

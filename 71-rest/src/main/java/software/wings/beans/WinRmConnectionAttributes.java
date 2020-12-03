@@ -4,6 +4,7 @@ import static software.wings.audit.ResourceType.CONNECTION_ATTRIBUTES;
 
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.encryption.Encrypted;
+import io.harness.expression.ExpressionEvaluator;
 
 import software.wings.annotation.EncryptableSetting;
 import software.wings.jersey.JsonViews;
@@ -49,7 +50,7 @@ public class WinRmConnectionAttributes extends SettingValue implements Encryptab
   // ConnectivityValidationDelegateRequest
   // Returning empty list here
   @Override
-  public List<ExecutionCapability> fetchRequiredExecutionCapabilities() {
+  public List<ExecutionCapability> fetchRequiredExecutionCapabilities(ExpressionEvaluator maskingEvaluator) {
     return new ArrayList<>();
   }
 

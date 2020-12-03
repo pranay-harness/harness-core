@@ -1,6 +1,7 @@
 package software.wings.delegatetasks.delegatecapability;
 
 import static io.harness.rule.OwnerRule.ADWAIT;
+import static io.harness.rule.OwnerRule.INDER;
 import static io.harness.rule.OwnerRule.MOHIT;
 import static io.harness.rule.OwnerRule.ROHIT_KUMAR;
 
@@ -24,6 +25,7 @@ import software.wings.beans.CyberArkConfig;
 import software.wings.beans.JenkinsConfig;
 import software.wings.beans.KmsConfig;
 import software.wings.beans.VaultConfig;
+import software.wings.expression.ManagerPreviewExpressionEvaluator;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -39,6 +41,7 @@ public class CapabilityHelperTest extends WingsBaseTest {
   public static final String GOOGLE_COM = "http://google.com";
   public static final String US_EAST_2 = "us-east-2";
   public static final String AWS_KMS_URL = "https://kms.us-east-2.amazonaws.com";
+  public static final String SECRET_URL = "http://google.com/?q=${secretManager.obtain(\"test\", 1234)}";
 
   @Test
   @Owner(developers = ADWAIT)
@@ -52,7 +55,7 @@ public class CapabilityHelperTest extends WingsBaseTest {
     EncryptionConfig encryptionConfig = VaultConfig.builder().vaultUrl(HTTP_VAUTL_URL).build();
     encryptionConfigs.add(encryptionConfig);
 
-    CapabilityHelper.embedCapabilitiesInDelegateTask(task, encryptionConfigs);
+    CapabilityHelper.embedCapabilitiesInDelegateTask(task, encryptionConfigs, null);
     assertThat(task.getExecutionCapabilities()).isNotNull();
     assertThat(task.getExecutionCapabilities()).hasSize(2);
 
@@ -73,7 +76,7 @@ public class CapabilityHelperTest extends WingsBaseTest {
     EncryptionConfig encryptionConfig = KmsConfig.builder().region(US_EAST_2).build();
     encryptionConfigs.add(encryptionConfig);
 
-    CapabilityHelper.embedCapabilitiesInDelegateTask(task, encryptionConfigs);
+    CapabilityHelper.embedCapabilitiesInDelegateTask(task, encryptionConfigs, null);
     assertThat(task.getExecutionCapabilities()).isNotNull();
     assertThat(task.getExecutionCapabilities()).hasSize(2);
 
@@ -152,7 +155,8 @@ public class CapabilityHelperTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void testGetHttpCapabilityForDecryption_VaultConfig() throws Exception {
     EncryptionConfig encryptionConfig = VaultConfig.builder().vaultUrl(HTTP_VAUTL_URL).build();
-    List<ExecutionCapability> capability = CapabilityHelper.fetchExecutionCapabilityForSecretManager(encryptionConfig);
+    List<ExecutionCapability> capability =
+        CapabilityHelper.fetchExecutionCapabilityForSecretManager(encryptionConfig, null);
     assertThat(HTTP_VAUTL_URL).isEqualTo(capability.get(0).fetchCapabilityBasis());
   }
 
@@ -161,7 +165,8 @@ public class CapabilityHelperTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void testGetHttpCapabilityForDecryption_KmsConfig() throws Exception {
     EncryptionConfig encryptionConfig = KmsConfig.builder().region(US_EAST_2).build();
-    List<ExecutionCapability> capability = CapabilityHelper.fetchExecutionCapabilityForSecretManager(encryptionConfig);
+    List<ExecutionCapability> capability =
+        CapabilityHelper.fetchExecutionCapabilityForSecretManager(encryptionConfig, null);
     assertThat(AWS_KMS_URL).isEqualTo(capability.get(0).fetchCapabilityBasis());
   }
 
@@ -170,7 +175,8 @@ public class CapabilityHelperTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void testGetHttpCapabilityForDecryption_secretconfig() throws Exception {
     EncryptionConfig encryptionConfig = CyberArkConfig.builder().cyberArkUrl("https://harness.cyberark.com").build();
-    List<ExecutionCapability> capability = CapabilityHelper.fetchExecutionCapabilityForSecretManager(encryptionConfig);
+    List<ExecutionCapability> capability =
+        CapabilityHelper.fetchExecutionCapabilityForSecretManager(encryptionConfig, null);
     assertThat("https://harness.cyberark.com").isEqualTo(capability.get(0).fetchCapabilityBasis());
   }
 
@@ -200,5 +206,23 @@ public class CapabilityHelperTest extends WingsBaseTest {
     assertThat(encryptionConfig.getEncryptionType()).isEqualTo(EncryptionType.VAULT);
     assertThat(encryptionConfig instanceof VaultConfig).isTrue();
     assertThat(((VaultConfig) encryptionConfig).getVaultUrl()).isEqualTo(HTTP_VAUTL_URL);
+  }
+
+  @Test
+  @Owner(developers = INDER)
+  @Category(UnitTests.class)
+  public void testEmbedCapabilitiesInDelegateTask_HTTP_SecretInUrl() {
+    TaskData taskData =
+        TaskData.builder().parameters(new Object[] {HttpTaskParameters.builder().url(SECRET_URL).build()}).build();
+    DelegateTask task = DelegateTask.builder().data(taskData).build();
+
+    Collection<EncryptionConfig> encryptionConfigs = new ArrayList<>();
+
+    CapabilityHelper.embedCapabilitiesInDelegateTask(task, encryptionConfigs, new ManagerPreviewExpressionEvaluator());
+    assertThat(task.getExecutionCapabilities()).isNotNull().hasSize(1);
+
+    assertThat(
+        task.getExecutionCapabilities().stream().map(ExecutionCapability::fetchCapabilityBasis).collect(toList()))
+        .containsExactlyInAnyOrder("http://google.com/?q=<<<test>>>");
   }
 }

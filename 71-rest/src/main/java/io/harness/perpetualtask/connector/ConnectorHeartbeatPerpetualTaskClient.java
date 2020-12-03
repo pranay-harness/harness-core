@@ -91,7 +91,7 @@ public class ConnectorHeartbeatPerpetualTaskClient implements PerpetualTaskServi
     Map<String, String> clientParams = clientContext.getClientParams();
     ConnectorDTO connector = getConnector(clientParams);
     List<ExecutionCapability> executionCapabilities =
-        connector.getConnectorInfo().fetchRequiredExecutionCapabilitiesForConnector(accountId);
+        connector.getConnectorInfo().fetchRequiredExecutionCapabilitiesForConnector(accountId, null);
     return DelegateTask.builder()
         .accountId(accountId)
         .data(TaskData.builder()

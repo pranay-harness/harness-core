@@ -43,7 +43,7 @@ public class ShellScriptProvisionParametersTest extends WingsBaseTest {
         ShellScriptProvisionParameters.builder().encryptedVariables(encryptedVariables).build();
 
     List<ExecutionCapability> executionCapabilities =
-        shellScriptProvisionParameters.fetchRequiredExecutionCapabilities();
+        shellScriptProvisionParameters.fetchRequiredExecutionCapabilities(null);
     assertThat(executionCapabilities).isNotEmpty();
     assertThat(((HttpConnectionExecutionCapability) executionCapabilities.get(0)).getHost())
         .isEqualTo("kms.us-east-1.amazonaws.com");

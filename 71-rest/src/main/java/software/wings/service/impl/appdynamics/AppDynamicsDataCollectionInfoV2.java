@@ -3,6 +3,7 @@ package software.wings.service.impl.appdynamics;
 import static software.wings.beans.TaskType.APPDYNAMICS_COLLECT_METRIC_DATA_V2;
 
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
+import io.harness.expression.ExpressionEvaluator;
 import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.security.encryption.EncryptionConfig;
 
@@ -106,7 +107,8 @@ public class AppDynamicsDataCollectionInfoV2 extends MetricsDataCollectionInfo {
   }
 
   @Override
-  public List<ExecutionCapability> fetchRequiredExecutionCapabilities() {
-    return CapabilityHelper.generateDelegateCapabilities(appDynamicsConfig, getEncryptedDataDetails());
+  public List<ExecutionCapability> fetchRequiredExecutionCapabilities(ExpressionEvaluator maskingEvaluator) {
+    return CapabilityHelper.generateDelegateCapabilities(
+        appDynamicsConfig, getEncryptedDataDetails(), maskingEvaluator);
   }
 }

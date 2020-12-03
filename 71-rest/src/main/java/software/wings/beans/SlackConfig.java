@@ -7,6 +7,7 @@ import static software.wings.audit.ResourceType.COLLABORATION_PROVIDER;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.delegate.task.mixin.HttpConnectionExecutionCapabilityGenerator;
+import io.harness.expression.ExpressionEvaluator;
 
 import software.wings.beans.notification.SlackNotificationConfiguration;
 import software.wings.settings.SettingValue;
@@ -71,9 +72,9 @@ public class SlackConfig extends SettingValue implements SlackNotificationConfig
   }
 
   @Override
-  public List<ExecutionCapability> fetchRequiredExecutionCapabilities() {
-    return Arrays.asList(
-        HttpConnectionExecutionCapabilityGenerator.buildHttpConnectionExecutionCapability(SLACK_HOOK_YRL));
+  public List<ExecutionCapability> fetchRequiredExecutionCapabilities(ExpressionEvaluator maskingEvaluator) {
+    return Arrays.asList(HttpConnectionExecutionCapabilityGenerator.buildHttpConnectionExecutionCapability(
+        SLACK_HOOK_YRL, maskingEvaluator));
   }
 
   /**

@@ -5,6 +5,7 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.delegate.beans.executioncapability.ExecutionCapabilityDemander;
+import io.harness.expression.ExpressionEvaluator;
 import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.security.encryption.EncryptionConfig;
 import io.harness.security.encryption.EncryptionType;
@@ -23,40 +24,41 @@ import lombok.extern.slf4j.Slf4j;
 @UtilityClass
 @Slf4j
 public class JiraCapabilityGenerator {
-  public static List<ExecutionCapability> generateDelegateCapabilities(
-      ExecutionCapabilityDemander capabilityDemander, List<EncryptedDataDetail> encryptedDataDetails) {
+  public static List<ExecutionCapability> generateDelegateCapabilities(ExecutionCapabilityDemander capabilityDemander,
+      List<EncryptedDataDetail> encryptedDataDetails, ExpressionEvaluator maskingEvaluator) {
     List<ExecutionCapability> executionCapabilities = new ArrayList<>();
 
     if (capabilityDemander != null) {
-      executionCapabilities.addAll(capabilityDemander.fetchRequiredExecutionCapabilities());
+      executionCapabilities.addAll(capabilityDemander.fetchRequiredExecutionCapabilities(maskingEvaluator));
     }
     if (isEmpty(encryptedDataDetails)) {
       return executionCapabilities;
     }
 
-    executionCapabilities.addAll(fetchExecutionCapabilitiesForEncryptedDataDetails(encryptedDataDetails));
+    executionCapabilities.addAll(
+        fetchExecutionCapabilitiesForEncryptedDataDetails(encryptedDataDetails, maskingEvaluator));
     return executionCapabilities;
   }
 
   public static List<ExecutionCapability> fetchExecutionCapabilitiesForEncryptedDataDetails(
-      List<EncryptedDataDetail> encryptedDataDetails) {
+      List<EncryptedDataDetail> encryptedDataDetails, ExpressionEvaluator maskingEvaluator) {
     List<ExecutionCapability> executionCapabilities = new ArrayList<>();
 
     if (isEmpty(encryptedDataDetails)) {
       return executionCapabilities;
     }
     return fetchExecutionCapabilitiesForSecretManagers(
-        fetchEncryptionConfigsMapFromEncryptedDataDetails(encryptedDataDetails).values());
+        fetchEncryptionConfigsMapFromEncryptedDataDetails(encryptedDataDetails).values(), maskingEvaluator);
   }
 
   public static List<ExecutionCapability> fetchExecutionCapabilityForSecretManager(
-      @NotNull EncryptionConfig encryptionConfig) {
+      @NotNull EncryptionConfig encryptionConfig, ExpressionEvaluator maskingEvaluator) {
     if (encryptionConfig instanceof ExecutionCapabilityDemander) {
-      return ((ExecutionCapabilityDemander) encryptionConfig).fetchRequiredExecutionCapabilities();
+      return ((ExecutionCapabilityDemander) encryptionConfig).fetchRequiredExecutionCapabilities(maskingEvaluator);
     } else if (isNotEmpty(encryptionConfig.getEncryptionServiceUrl())) {
       return new ArrayList<>(
           Collections.singleton(HttpConnectionExecutionCapabilityGenerator.buildHttpConnectionExecutionCapability(
-              encryptionConfig.getEncryptionServiceUrl())));
+              encryptionConfig.getEncryptionServiceUrl(), maskingEvaluator)));
     }
     return new ArrayList<>();
   }
@@ -81,11 +83,11 @@ public class JiraCapabilityGenerator {
   }
 
   private static List<ExecutionCapability> fetchExecutionCapabilitiesForSecretManagers(
-      Collection<EncryptionConfig> encryptionConfigs) {
+      Collection<EncryptionConfig> encryptionConfigs, ExpressionEvaluator maskingEvaluator) {
     List<ExecutionCapability> executionCapabilities = new ArrayList<>();
     encryptionConfigs.forEach(encryptionConfig -> {
       List<ExecutionCapability> encryptionConfigExecutionCapabilities =
-          fetchExecutionCapabilityForSecretManager(encryptionConfig);
+          fetchExecutionCapabilityForSecretManager(encryptionConfig, maskingEvaluator);
       executionCapabilities.addAll(encryptionConfigExecutionCapabilities);
     });
 

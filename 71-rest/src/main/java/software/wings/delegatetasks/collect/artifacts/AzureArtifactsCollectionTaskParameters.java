@@ -7,6 +7,7 @@ import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.delegate.beans.executioncapability.ExecutionCapabilityDemander;
 import io.harness.delegate.task.TaskParameters;
 import io.harness.exception.InvalidRequestException;
+import io.harness.expression.ExpressionEvaluator;
 import io.harness.security.encryption.EncryptedDataDetail;
 
 import software.wings.beans.artifact.ArtifactStreamAttributes;
@@ -31,10 +32,10 @@ public class AzureArtifactsCollectionTaskParameters implements TaskParameters, E
   private Map<String, String> artifactMetadata;
 
   @Override
-  public List<ExecutionCapability> fetchRequiredExecutionCapabilities() {
+  public List<ExecutionCapability> fetchRequiredExecutionCapabilities(ExpressionEvaluator maskingEvaluator) {
     if (azureArtifactsConfig instanceof AzureArtifactsPATConfig) {
       return CapabilityHelper.generateCapabilities(
-          (AzureArtifactsPATConfig) azureArtifactsConfig, artifactStreamAttributes);
+          (AzureArtifactsPATConfig) azureArtifactsConfig, artifactStreamAttributes, maskingEvaluator);
     } else {
       throw new InvalidRequestException("Invalid Azure Artifacts Server config");
     }

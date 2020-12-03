@@ -8,6 +8,7 @@ import static org.apache.commons.lang3.StringUtils.isBlank;
 import io.harness.data.validator.Trimmed;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.encryption.Encrypted;
+import io.harness.expression.ExpressionEvaluator;
 import io.harness.git.model.GitRepositoryType;
 
 import software.wings.annotation.EncryptableSetting;
@@ -72,7 +73,7 @@ public class GitConfig extends SettingValue implements EncryptableSetting {
   @Trimmed private String commitMessage;
 
   @Override
-  public List<ExecutionCapability> fetchRequiredExecutionCapabilities() {
+  public List<ExecutionCapability> fetchRequiredExecutionCapabilities(ExpressionEvaluator maskingEvaluator) {
     return new ArrayList<>();
   }
 

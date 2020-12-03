@@ -1,6 +1,7 @@
 package software.wings.helpers.ext.external.comm;
 
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
+import io.harness.expression.ExpressionEvaluator;
 import io.harness.security.encryption.EncryptedDataDetail;
 
 import software.wings.delegatetasks.validation.capabilities.SmtpCapability;
@@ -47,7 +48,7 @@ public class EmailRequest extends CollaborationProviderRequest {
   }
 
   @Override
-  public List<ExecutionCapability> fetchRequiredExecutionCapabilities() {
+  public List<ExecutionCapability> fetchRequiredExecutionCapabilities(ExpressionEvaluator maskingEvaluator) {
     return Collections.singletonList(
         SmtpCapability.builder().smtpConfig(smtpConfig).encryptionDetails(encryptionDetails).build());
   }

@@ -27,7 +27,7 @@ public class TerraformProvisionParametersTest extends WingsBaseTest {
   private void testWithoutGitConfig() {
     assertThat(TerraformProvisionParameters.builder()
                    .build()
-                   .fetchRequiredExecutionCapabilities()
+                   .fetchRequiredExecutionCapabilities(null)
                    .stream()
                    .map(ExecutionCapability::getCapabilityType)
                    .collect(Collectors.toList()))
@@ -37,7 +37,7 @@ public class TerraformProvisionParametersTest extends WingsBaseTest {
   private void testWithGitConfig() {
     TerraformProvisionParameters parameters =
         TerraformProvisionParameters.builder().sourceRepo(GitConfig.builder().build()).build();
-    assertThat(parameters.fetchRequiredExecutionCapabilities()
+    assertThat(parameters.fetchRequiredExecutionCapabilities(null)
                    .stream()
                    .map(ExecutionCapability::getCapabilityType)
                    .collect(Collectors.toList()))

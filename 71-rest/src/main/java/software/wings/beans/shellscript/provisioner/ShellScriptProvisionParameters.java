@@ -8,6 +8,7 @@ import io.harness.delegate.beans.executioncapability.ExecutionCapabilityDemander
 import io.harness.delegate.task.ActivityAccess;
 import io.harness.delegate.task.TaskParameters;
 import io.harness.expression.Expression;
+import io.harness.expression.ExpressionEvaluator;
 import io.harness.security.encryption.EncryptedDataDetail;
 
 import software.wings.delegatetasks.delegatecapability.CapabilityHelper;
@@ -40,13 +41,13 @@ public class ShellScriptProvisionParameters implements TaskParameters, ActivityA
   private String outputPathKey;
 
   @Override
-  public List<ExecutionCapability> fetchRequiredExecutionCapabilities() {
+  public List<ExecutionCapability> fetchRequiredExecutionCapabilities(ExpressionEvaluator maskingEvaluator) {
     List<ExecutionCapability> executionCapabilities = new ArrayList<>();
 
     if (isNotEmpty(encryptedVariables)) {
       for (EncryptedDataDetail encryptedDataDetail : encryptedVariables.values()) {
-        executionCapabilities.addAll(
-            CapabilityHelper.fetchExecutionCapabilitiesForEncryptedDataDetails(Arrays.asList(encryptedDataDetail)));
+        executionCapabilities.addAll(CapabilityHelper.fetchExecutionCapabilitiesForEncryptedDataDetails(
+            Arrays.asList(encryptedDataDetail), maskingEvaluator));
       }
     }
 

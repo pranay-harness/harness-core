@@ -3,6 +3,7 @@ package software.wings.service.impl.prometheus;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.delegate.beans.executioncapability.ExecutionCapabilityDemander;
 import io.harness.delegate.task.TaskParameters;
+import io.harness.expression.ExpressionEvaluator;
 
 import software.wings.beans.PrometheusConfig;
 import software.wings.service.impl.analysis.TimeSeries;
@@ -34,7 +35,7 @@ public class PrometheusDataCollectionInfo implements TaskParameters, ExecutionCa
   private int dataCollectionMinute;
 
   @Override
-  public List<ExecutionCapability> fetchRequiredExecutionCapabilities() {
-    return prometheusConfig.fetchRequiredExecutionCapabilities();
+  public List<ExecutionCapability> fetchRequiredExecutionCapabilities(ExpressionEvaluator maskingEvaluator) {
+    return prometheusConfig.fetchRequiredExecutionCapabilities(maskingEvaluator);
   }
 }
