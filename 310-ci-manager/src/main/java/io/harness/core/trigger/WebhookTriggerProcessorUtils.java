@@ -176,11 +176,12 @@ public class WebhookTriggerProcessorUtils {
   }
 
   private CommitDetails convertCommit(Commit commit) {
+    long timeStamp = commit.getCommitter().getDate().getSeconds();
     return CommitDetails.builder()
         .commitId(commit.getSha())
         .message(commit.getMessage())
         .link(commit.getLink())
-        .timeStamp(commit.getCommitter().getDate().getSeconds() * 1000)
+        .timeStamp(timeStamp)
         .ownerEmail(commit.getAuthor().getEmail())
         .ownerId(commit.getAuthor().getLogin())
         .ownerName(commit.getAuthor().getName())

@@ -120,7 +120,11 @@ public class BuildDtoMapper {
         .ownerEmail(commit.getOwnerEmail())
         .ownerId(commit.getOwnerId())
         .ownerName(commit.getOwnerName())
-        .timeStamp(commit.getTimeStamp())
+        .timeStamp(convertToMilliSeconds(commit.getTimeStamp()))
         .build();
+  }
+
+  private long convertToMilliSeconds(long seconds) {
+    return seconds * 1000;
   }
 }
