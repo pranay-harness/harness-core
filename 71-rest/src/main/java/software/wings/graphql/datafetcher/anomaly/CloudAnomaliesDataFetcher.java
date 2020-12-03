@@ -2,6 +2,7 @@ package software.wings.graphql.datafetcher.anomaly;
 
 import io.harness.ccm.billing.graphql.CloudBillingFilter;
 import io.harness.ccm.billing.graphql.CloudBillingGroupBy;
+import io.harness.exception.InvalidArgumentsException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.timescaledb.DBUtils;
 import io.harness.timescaledb.TimeScaleDBService;
@@ -18,15 +19,18 @@ import software.wings.security.annotations.AuthRule;
 
 import com.google.inject.Inject;
 import java.sql.Connection;
-import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Statement;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class CloudAnomaliesDataFetcher extends AbstractAnomalyDataFetcher<CloudBillingFilter, CloudBillingGroupBy> {
+  private static int ANOMALIES_LIMIT_PER_DAY = 5;
+
   @Inject private TimeScaleDBService timeScaleDBService;
 
   @Override
@@ -42,26 +46,35 @@ public class CloudAnomaliesDataFetcher extends AbstractAnomalyDataFetcher<CloudB
     try {
       anomaiesList.data(getData(accountId, filters, groupBy));
     } catch (Exception e) {
-      throw new InvalidRequestException("Error while fetching Cloud Anomalies data fetcher {}", e);
+      throw new InvalidRequestException("Error while fetching Cloud Anomalies data fetcher , Exception : {}", e);
     }
     return anomaiesList.build();
   }
 
   List<QLAnomalyData> getData(String accountId, List<CloudBillingFilter> filters, List<CloudBillingGroupBy> groupBy) {
     List<QLAnomalyData> listAnomalies = new ArrayList<>();
-    String queryStatement = new AnomalyDataQueryBuilder().formCloudQuery(accountId, filters, groupBy);
+    String queryStatement = null;
+    try {
+      log.info("Query Step 1/3 : Constructing Query");
+      queryStatement = new AnomalyDataQueryBuilder().formCloudQuery(accountId, filters, groupBy);
+    } catch (InvalidArgumentsException | InvalidRequestException e) {
+      log.error("Error while constructing query for CloudAnomaliesDataFetcher, Exception : {} ", e.toString());
+      return listAnomalies;
+    }
+
     boolean successfulRead = false;
     ResultSet resultSet = null;
     int retryCount = 0;
     while (!successfulRead && retryCount < MAX_RETRY) {
       try (Connection dbConnection = timeScaleDBService.getDBConnection();
-           PreparedStatement statement = dbConnection.prepareStatement(queryStatement)) {
-        log.debug("Prepared Statement in CloudAnomaliesDataFetcher: {} ", statement);
-        resultSet = statement.executeQuery();
+           Statement statement = dbConnection.createStatement()) {
+        log.info("Query step 2/3 : Constructed Query in CloudAnomaliesDataFetcher: {} ", queryStatement);
+        resultSet = statement.executeQuery(queryStatement);
         listAnomalies = extractAnomaliesFromResultSet(resultSet);
         successfulRead = true;
       } catch (SQLException e) {
         retryCount++;
+        log.info("Select Query failed after retry count {} , Exception {}", retryCount, e);
       } finally {
         DBUtils.close(resultSet);
       }
@@ -71,6 +84,7 @@ public class CloudAnomaliesDataFetcher extends AbstractAnomalyDataFetcher<CloudB
 
   private List<QLAnomalyData> extractAnomaliesFromResultSet(ResultSet resultSet) throws SQLException {
     List<QLAnomalyData> qlAnomalyDataList = new ArrayList<>();
+    log.info("Query Step 3/3 : conversion of resultset into anomalies");
     while (null != resultSet && resultSet.next()) {
       QLAnomalyDataBuilder anomalyBuilder = QLAnomalyData.builder();
       QLEntityInfoBuilder entityDataBuilder = QLEntityInfo.builder();
@@ -83,16 +97,19 @@ public class CloudAnomaliesDataFetcher extends AbstractAnomalyDataFetcher<CloudB
             anomalyBuilder.time(resultSet.getTimestamp(field.getFieldName()).getTime());
             break;
           case ACTUAL_COST:
-            anomalyBuilder.actualAmount(resultSet.getDouble(field.getFieldName()));
+            anomalyBuilder.actualAmount(
+                AnomalyDataHelper.getRoundedDoubleValue(resultSet.getDouble(field.getFieldName())));
             break;
           case EXPECTED_COST:
-            anomalyBuilder.expectedAmount(resultSet.getDouble(field.getFieldName()));
+            anomalyBuilder.expectedAmount(
+                AnomalyDataHelper.getRoundedDoubleValue(resultSet.getDouble(field.getFieldName())));
             break;
           case NOTE:
             anomalyBuilder.comment(resultSet.getString(field.getFieldName()));
             break;
           case ANOMALY_SCORE:
-            anomalyBuilder.anomalyScore(resultSet.getDouble(field.getFieldName()));
+            anomalyBuilder.anomalyScore(
+                AnomalyDataHelper.getRoundedDoubleValue(resultSet.getDouble(field.getFieldName())));
             break;
           case GCP_PRODUCT:
             entityDataBuilder.gcpProduct(resultSet.getString(field.getFieldName()));
@@ -125,12 +142,29 @@ public class CloudAnomaliesDataFetcher extends AbstractAnomalyDataFetcher<CloudB
           case WORKLOAD_TYPE:
             break;
           default:
-            log.error("Unknown field Resultset conversion encountered in CloudAnoamliesDataFetecher");
+            log.error("Unknown field : {} encountered while Resultset conversion in CloudAnoamliesDataFetecher", field);
         }
       }
       anomalyBuilder.entity(entityDataBuilder.build());
       qlAnomalyDataList.add(anomalyBuilder.build());
     }
+
+    Iterator<QLAnomalyData> iter = qlAnomalyDataList.iterator();
+    int counter = 0;
+    QLAnomalyData current;
+    Long currentDate = null;
+    while (iter.hasNext()) {
+      current = iter.next();
+      if (currentDate == null || current.getTime() > currentDate) {
+        counter = 1;
+        currentDate = current.getTime();
+      } else if (counter < ANOMALIES_LIMIT_PER_DAY) {
+        counter++;
+      } else {
+        iter.remove();
+      }
+    }
+
     return qlAnomalyDataList;
   }
 }

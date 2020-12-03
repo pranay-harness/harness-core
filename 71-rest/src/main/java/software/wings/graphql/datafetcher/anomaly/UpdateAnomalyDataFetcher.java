@@ -36,7 +36,7 @@ public class UpdateAnomalyDataFetcher extends BaseMutatorDataFetcher<QLAnomalyIn
   @AuthRule(permissionType = PermissionAttribute.PermissionType.LOGGED_IN)
   protected QLUpdateAnomalyPayLoad mutateAndFetch(QLAnomalyInput input, MutationContext mutationContext) {
     if (!dbService.isValid()) {
-      log.error("Timescale Db is not valid cannot mutation cannot be proceded ");
+      log.error("Timescale Db is not valid cannot mutation cannot be proceeded ");
       return null;
     }
     QLUpdateAnomalyPayLoad payLoad;
@@ -49,14 +49,18 @@ public class UpdateAnomalyDataFetcher extends BaseMutatorDataFetcher<QLAnomalyIn
     String query = queryBuilder.formAnomalyUpdateQuery(accountId, input);
 
     int retryCount = 0;
+    int count = 0;
     boolean successfulRead = false;
     while (!successfulRead && retryCount < MAX_RETRY_COUNT) {
       try (Connection dbConnection = dbService.getDBConnection();
            Statement statement = dbConnection.createStatement()) {
-        log.debug("Prepared Statement in AnomalyDetectionTimescaleDataServiceImpl: {} ", statement);
+        log.info("Mutation step 1/2 : Prepared Statement in updateAnomalyDataFetcher: {} ", statement);
         statement.addBatch(query);
-        int[] count = statement.executeBatch();
-        successfulRead = true;
+        count = statement.executeUpdate(query);
+        log.info(" Update Query status : {} , after retry count : {}", count, retryCount + 1);
+        if (count > 0) {
+          successfulRead = true;
+        }
       } catch (SQLException e) {
         retryCount++;
       }
@@ -73,12 +77,13 @@ public class UpdateAnomalyDataFetcher extends BaseMutatorDataFetcher<QLAnomalyIn
     while (!successfulRead && retryCount < MAX_RETRY_COUNT) {
       try (Connection dbConnection = dbService.getDBConnection();
            Statement statement = dbConnection.createStatement()) {
-        log.debug("Prepared Statement in updateAnomalyDataFetcher: {} ", statement);
+        log.info("Mutation step 2/2 :Prepared Statement in updateAnomalyDataFetcher: {} ", statement);
         resultSet = statement.executeQuery(query);
         anomalyData = extractAnomalyData(resultSet);
         successfulRead = true;
       } catch (SQLException e) {
         retryCount++;
+        log.info(" Select Query status failed after retry count : {} , Exception {}", retryCount, e);
       }
     }
     return QLUpdateAnomalyPayLoad.builder().anomaly(anomalyData).build();
@@ -88,7 +93,8 @@ public class UpdateAnomalyDataFetcher extends BaseMutatorDataFetcher<QLAnomalyIn
     QLAnomalyDataBuilder anomalyDataBuilder = QLAnomalyData.builder();
 
     if (!resultSet.next()) {
-      log.error("No anomalies found");
+      log.error("No anomalies found while fetching from db after mutation changes");
+      return anomalyDataBuilder.build();
     }
     anomalyDataBuilder.id(resultSet.getString(AnomaliesDataTableSchema.fields.ID.getFieldName()));
     anomalyDataBuilder.comment(resultSet.getString(AnomaliesDataTableSchema.fields.NOTE.getFieldName()));

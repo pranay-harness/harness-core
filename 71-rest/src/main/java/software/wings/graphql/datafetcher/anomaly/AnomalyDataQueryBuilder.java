@@ -76,8 +76,12 @@ public class AnomalyDataQueryBuilder {
 
     SelectQuery query = new SelectQuery();
     query.addAllTableColumns(AnomaliesDataTableSchema.table);
+    query.addAliasedColumn(new CustomSql(AnomaliesDataTableSchema.actualCost.getColumnNameSQL() + " - "
+                               + AnomaliesDataTableSchema.expectedCost.getColumnNameSQL()),
+        "difference");
     decorateK8SQueryWithFilters(query, filters);
     query.addOrdering(AnomaliesDataTableSchema.anomalyTime, OrderObject.Dir.ASCENDING);
+    query.addCustomOrdering(new CustomSql("difference"), OrderObject.Dir.DESCENDING);
     return query.toString();
   }
 
