@@ -11,12 +11,12 @@ import io.harness.mongo.index.FdIndex;
 import io.harness.persistence.PersistentEntity;
 import io.harness.persistence.UuidAware;
 import io.harness.pms.ambiance.Ambiance;
+import io.harness.pms.data.StepOutcomeRef;
 import io.harness.pms.execution.ExecutionMode;
 import io.harness.pms.execution.Status;
 import io.harness.pms.execution.failure.FailureInfo;
 import io.harness.pms.plan.PlanNodeProto;
 import io.harness.pms.sdk.core.steps.io.StepParameters;
-import io.harness.state.io.StepOutcomeRef;
 import io.harness.tasks.ProgressData;
 import io.harness.timeout.TimeoutDetails;
 

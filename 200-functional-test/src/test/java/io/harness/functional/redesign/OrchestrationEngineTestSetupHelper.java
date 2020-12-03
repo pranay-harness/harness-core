@@ -18,12 +18,14 @@ import io.harness.functional.redesign.mixins.plannode.PlanNodeProtoTestMixin;
 import io.harness.functional.redesign.mixins.refobject.RefObjectTestMixin;
 import io.harness.functional.redesign.mixins.reftype.RefTypeTestMixin;
 import io.harness.functional.redesign.mixins.stepType.StepTypeTestMixin;
+import io.harness.functional.redesign.mixins.stepoutcomeref.StepOutcomeRefTestMixin;
 import io.harness.functional.redesign.mixins.stepparameters.StepParametersTestMixin;
 import io.harness.interrupts.Interrupt;
 import io.harness.interrupts.Interrupt.InterruptKeys;
 import io.harness.pms.advisers.AdviserObtainment;
 import io.harness.pms.advisers.AdviserType;
 import io.harness.pms.ambiance.Ambiance;
+import io.harness.pms.data.StepOutcomeRef;
 import io.harness.pms.execution.failure.FailureInfo;
 import io.harness.pms.facilitators.FacilitatorObtainment;
 import io.harness.pms.facilitators.FacilitatorType;
@@ -75,6 +77,7 @@ public class OrchestrationEngineTestSetupHelper {
                       mapper.addMixIn(RefObject.class, RefObjectTestMixin.class);
                       mapper.addMixIn(FailureInfo.class, FailureInfoTestMixin.class);
                       mapper.addMixIn(PlanNodeProto.class, PlanNodeProtoTestMixin.class);
+                      mapper.addMixIn(StepOutcomeRef.class, StepOutcomeRefTestMixin.class);
                       return mapper;
                     }))
                     .sslConfig(new SSLConfig().relaxedHTTPSValidation()))

@@ -51,6 +51,7 @@ import io.harness.facilitator.FacilitatorResponse;
 import io.harness.logging.AutoLogContext;
 import io.harness.pms.advisers.AdviserObtainment;
 import io.harness.pms.ambiance.Ambiance;
+import io.harness.pms.data.StepOutcomeRef;
 import io.harness.pms.execution.Status;
 import io.harness.pms.execution.failure.FailureInfo;
 import io.harness.pms.facilitators.FacilitatorObtainment;
@@ -69,7 +70,6 @@ import io.harness.registries.state.StepRegistry;
 import io.harness.registries.timeout.TimeoutRegistry;
 import io.harness.resolvers.Resolver;
 import io.harness.serializer.KryoSerializer;
-import io.harness.state.io.StepOutcomeRef;
 import io.harness.state.io.StepResponseNotifyData;
 import io.harness.tasks.ResponseData;
 import io.harness.timeout.TimeoutCallback;
@@ -349,7 +349,7 @@ public class OrchestrationEngine {
       if (outcome != null) {
         Resolver resolver = resolverRegistry.obtain(Outcome.REF_TYPE);
         String instanceId = resolver.consume(ambiance, name, outcome, stepOutcome.getGroup());
-        outcomeRefs.add(StepOutcomeRef.builder().name(name).instanceId(instanceId).build());
+        outcomeRefs.add(StepOutcomeRef.newBuilder().setName(name).setInstanceId(instanceId).build());
       }
     });
     return outcomeRefs;
