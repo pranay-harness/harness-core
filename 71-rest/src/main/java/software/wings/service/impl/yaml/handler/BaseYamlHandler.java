@@ -33,6 +33,10 @@ public abstract class BaseYamlHandler<Y extends BaseYaml, B extends Object> {
 
   public abstract B get(String accountId, String yamlFilePath);
 
+  public B get(String accountId, String yamlFilePath, ChangeContext<Y> changeContext) {
+    return get(accountId, yamlFilePath);
+  }
+
   protected Builder cloneFileChangeContext(ChangeContext<Y> context, BaseYaml yaml) {
     Change change = context.getChange();
     Change.Builder clonedChange = change.toBuilder();

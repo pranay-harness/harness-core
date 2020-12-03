@@ -312,7 +312,7 @@ public class YamlServiceImpl<Y extends BaseYaml, B extends Base> implements Yaml
 
         ChangeContext changeContext = changeContextList.get(0);
         Object base = changeContext.getYamlSyncHandler().get(
-            changeContext.getChange().getAccountId(), changeContext.getChange().getFilePath());
+            changeContext.getChange().getAccountId(), changeContext.getChange().getFilePath(), changeContext);
         rr.setResource(base);
         yamlGitService.removeGitSyncErrors(accountId, gitFileChangeList, false);
       } else {

@@ -85,6 +85,7 @@ public class ConfigFileOverrideYamlHandlerTest extends YamlHandlerTestBase {
   private static final String resourcePath = "./configfiles/Environment";
 
   private static final String UNENCRYPTED_OVERRIDE_YAML = "unEncryptedFileOverride.yaml";
+  private static final String UNENCRYPTED_OVERRIDE_YAML_2 = "unEncryptedFileOverride2.yaml";
   private static final String ENCRYPTED_OVERRIDE_YAML = "encryptedFileOverride.yaml";
   private static final String CONFIG_FILE = "configFile.txt";
   private static final String INCORRECT_OVERRIDE_YAML = "incorrectOverrideYaml.yaml";
@@ -270,6 +271,52 @@ public class ConfigFileOverrideYamlHandlerTest extends YamlHandlerTestBase {
     String correctYamlString = getYamlFile(UNENCRYPTED_OVERRIDE_YAML);
     yamlContent = yamlContent.substring(0, yamlContent.length() - 1);
     assertThat(yamlContent).isEqualTo(correctYamlString);
+  }
+
+  @Test
+  @Owner(developers = INDER)
+  @Category(UnitTests.class)
+  public void testUpdateFromYamlWhenRelativePathHasBackSlashesForAllServices() throws IOException {
+    String yamlString = getYamlFile(UNENCRYPTED_OVERRIDE_YAML_2);
+    ChangeContext<ConfigFile.OverrideYaml> changeContext =
+        getOverrideYamlChangeContext(yamlString, yamlFilePathForAllServices);
+    ConfigFile.OverrideYaml yaml = changeContext.getYaml();
+    boolean isEncrypted = yaml.isEncrypted();
+
+    List<ChangeContext> changeSetContext =
+        getChangeSetContexts(CONFIG_FILE, configFilePathForAllServices, changeContext, isEncrypted);
+
+    String serviceName = mockServicesSetup(yamlFilePathForAllServices, yaml);
+    ConfigFile savedConfigFile = testSaveFromYaml(changeContext, isEncrypted, changeSetContext, serviceName);
+
+    savedConfigFile.setFileUuid(FILE_ID);
+    when(configService.get(eq(APP_ID), anyString(), any(), any())).thenReturn(savedConfigFile);
+    testUpdateFromYaml(changeContext, isEncrypted, changeSetContext, serviceName, savedConfigFile);
+    verify(configService, times(2))
+        .get(eq(APP_ID), eq(ENV_ID), eq(EntityType.ENVIRONMENT), eq(yaml.getTargetFilePath()));
+  }
+
+  @Test
+  @Owner(developers = INDER)
+  @Category(UnitTests.class)
+  public void testUpdateFromYamlWhenRelativePathHasBackSlashesForAService() throws IOException {
+    String yamlString = getYamlFile(UNENCRYPTED_OVERRIDE_YAML_2);
+    ChangeContext<ConfigFile.OverrideYaml> changeContext =
+        getOverrideYamlChangeContext(yamlString, yamlFilePathForAService);
+    ConfigFile.OverrideYaml yaml = changeContext.getYaml();
+    boolean isEncrypted = yaml.isEncrypted();
+
+    List<ChangeContext> changeSetContext =
+        getChangeSetContexts(CONFIG_FILE, configFilePathForAService, changeContext, isEncrypted);
+
+    String serviceName = mockServicesSetup(yamlFilePathForAService, yaml);
+    ConfigFile savedConfigFile = testSaveFromYaml(changeContext, isEncrypted, changeSetContext, serviceName);
+
+    savedConfigFile.setFileUuid(FILE_ID);
+    when(configService.get(eq(APP_ID), anyString(), any(), any())).thenReturn(savedConfigFile);
+    testUpdateFromYaml(changeContext, isEncrypted, changeSetContext, serviceName, savedConfigFile);
+    verify(configService, times(2))
+        .get(eq(APP_ID), eq(SERVICE_TEMPLATE_ID), eq(EntityType.SERVICE_TEMPLATE), eq(yaml.getTargetFilePath()));
   }
 
   private void testUpsertFromYaml(
