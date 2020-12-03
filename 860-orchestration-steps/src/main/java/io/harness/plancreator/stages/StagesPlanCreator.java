@@ -26,8 +26,8 @@ public class StagesPlanCreator extends ChildrenPlanCreator<StagesConfig> {
     for (YamlField stageYamlField : stageYamlFields) {
       Map<String, YamlField> stageYamlFieldMap = new HashMap<>();
       stageYamlFieldMap.put(stageYamlField.getNode().getUuid(), stageYamlField);
-      YamlNode node = ctx.getCurrentField().getNode();
-      responseMap.put(node.getUuid(), PlanCreationResponse.builder().dependencies(stageYamlFieldMap).build());
+      responseMap.put(
+          stageYamlField.getNode().getUuid(), PlanCreationResponse.builder().dependencies(stageYamlFieldMap).build());
     }
     return responseMap;
   }

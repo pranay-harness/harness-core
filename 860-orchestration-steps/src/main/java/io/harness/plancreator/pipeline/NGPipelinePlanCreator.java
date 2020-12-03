@@ -46,8 +46,6 @@ public class NGPipelinePlanCreator extends ChildrenPlanCreator<PipelineInfoConfi
     String name = field.getName() != null ? field.getName() : field.getIdentifier();
     YamlNode stagesYamlNode = Preconditions.checkNotNull(ctx.getCurrentField().getNode().getField("stages")).getNode();
 
-    // TODO(sahil): This step parameters will be used instead of MapParameters but as PlanNode has other StepParameters
-    // right now.
     StepParameters stepParameters = PipelineSetupStepParameters.getStepParameters(field, stagesYamlNode.getUuid());
 
     return PlanNode.builder()
@@ -56,7 +54,7 @@ public class NGPipelinePlanCreator extends ChildrenPlanCreator<PipelineInfoConfi
         .stepType(PipelineSetupStep.STEP_TYPE)
         .group(StepOutcomeGroup.PIPELINE.name())
         .name(name)
-        .stepParameters(new MapStepParameters("childrenNodeIds", childrenNodeIds))
+        .stepParameters(stepParameters)
         .facilitatorObtainment(
             FacilitatorObtainment.newBuilder().setType(FacilitatorType.newBuilder().setType("CHILD").build()).build())
         .skipExpressionChain(false)

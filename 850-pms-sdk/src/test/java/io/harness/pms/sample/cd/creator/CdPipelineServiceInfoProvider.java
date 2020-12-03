@@ -2,6 +2,7 @@ package io.harness.pms.sample.cd.creator;
 
 import io.harness.plancreator.pipeline.NGPipelinePlanCreator;
 import io.harness.plancreator.stages.StagesPlanCreator;
+import io.harness.plancreator.stages.parallel.ParallelPlanCreator;
 import io.harness.pms.sample.cd.creator.filters.DeploymentStageFilterCreator;
 import io.harness.pms.sdk.core.pipeline.filters.FilterJsonCreator;
 import io.harness.pms.sdk.core.pipeline.filters.PipelineFilterJsonCreator;
@@ -28,6 +29,7 @@ public class CdPipelineServiceInfoProvider implements PipelineServiceInfoProvide
     planCreators.add(new StagesPlanCreator());
     planCreators.add(new DeploymentStagePlanCreator());
     planCreators.add(new CdStepPlanCreator());
+    planCreators.add(new ParallelPlanCreator());
     return planCreators;
   }
 

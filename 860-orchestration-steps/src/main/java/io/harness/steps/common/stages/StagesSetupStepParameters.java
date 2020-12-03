@@ -13,7 +13,7 @@ import org.springframework.data.annotation.TypeAlias;
 
 @Value
 @EqualsAndHashCode(callSuper = true)
-@TypeAlias("pipelineSetupStepParameters")
+@TypeAlias("stagesSetupStepParameters")
 public class StagesSetupStepParameters extends StagesConfig implements StepParameters {
   Set<String> childrenNodeIds;
 
