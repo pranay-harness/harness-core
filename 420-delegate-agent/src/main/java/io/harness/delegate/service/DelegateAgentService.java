@@ -6,4 +6,6 @@ public interface DelegateAgentService {
   void pause();
 
   void stop();
+
+  void freeze();
 }

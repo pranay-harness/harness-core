@@ -115,6 +115,7 @@ import io.harness.logstreaming.DelegateAgentLogStreamingClient;
 import io.harness.logstreaming.LogStreamingTaskClient;
 import io.harness.logstreaming.LogStreamingTaskClient.LogStreamingTaskClientBuilder;
 import io.harness.managerclient.DelegateAgentManagerClient;
+import io.harness.managerclient.DelegateAgentManagerClientFactory;
 import io.harness.managerclient.ManagerClient;
 import io.harness.managerclient.ManagerClientFactory;
 import io.harness.network.FibonacciBackOff;
@@ -244,6 +245,7 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
   private static final int POLL_INTERVAL_SECONDS = 3;
   private static final long UPGRADE_TIMEOUT = TimeUnit.HOURS.toMillis(2);
   private static final long HEARTBEAT_TIMEOUT = TimeUnit.MINUTES.toMillis(15);
+  private static final long FROZEN_TIMEOUT = TimeUnit.HOURS.toMillis(2);
   private static final long WATCHER_HEARTBEAT_TIMEOUT = TimeUnit.MINUTES.toMillis(10);
   private static final long WATCHER_VERSION_MATCH_TIMEOUT = TimeUnit.MINUTES.toMillis(2);
   private static final long DELEGATE_JRE_VERSION_TIMEOUT = TimeUnit.MINUTES.toMillis(10);
@@ -314,11 +316,13 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
   private final AtomicInteger maxExecutingFuturesCount = new AtomicInteger();
 
   private final AtomicLong lastHeartbeatSentAt = new AtomicLong(System.currentTimeMillis());
+  private final AtomicLong frozenAt = new AtomicLong(-1);
   private final AtomicLong lastHeartbeatReceivedAt = new AtomicLong(System.currentTimeMillis());
   private final AtomicBoolean upgradePending = new AtomicBoolean(false);
   private final AtomicBoolean upgradeNeeded = new AtomicBoolean(false);
   private final AtomicBoolean restartNeeded = new AtomicBoolean(false);
   private final AtomicBoolean acquireTasks = new AtomicBoolean(true);
+  private final AtomicBoolean frozen = new AtomicBoolean(false);
   private final AtomicBoolean executingProfile = new AtomicBoolean(false);
   private final AtomicBoolean selfDestruct = new AtomicBoolean(false);
   private final AtomicBoolean multiVersionWatcherStarted = new AtomicBoolean(false);
@@ -359,6 +363,8 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
   @SuppressWarnings("unchecked")
   public void run(boolean watched) {
     try {
+      ManagerClientFactory.setDelegateAgentService(this);
+      DelegateAgentManagerClientFactory.setDelegateAgentService(this);
       accountId = delegateConfiguration.getAccountId();
       if (perpetualTaskWorker != null) {
         perpetualTaskWorker.setAccountId(accountId);
@@ -752,7 +758,6 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
       if (isEcsDelegate()) {
         int indexForToken = message.lastIndexOf(TOKEN);
         receivedId = message.substring(3, indexForToken); // Remove the "[X]
-
       } else {
         receivedId = message.substring(3);
       }
@@ -791,7 +796,8 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
     } else if (StringUtils.contains(message, INVALID_TOKEN.name())) {
       initiateSelfDestruct();
     } else if (StringUtils.contains(message, EXPIRED_TOKEN.name())) {
-      log.warn("Delegate used expired token. New token must be generated.");
+      log.warn("Delegate used expired token. It will be frozen and drained.");
+      freeze();
     } else if (!StringUtils.equals(message, "X")) {
       log.info("Executing: Event:{}, message:[{}]", Event.MESSAGE.name(), message);
       try {
@@ -1103,6 +1109,12 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
         }), 0, 1, TimeUnit.SECONDS);
   }
 
+  public void freeze() {
+    log.warn("Delegate with id: {} was put in freeze mode.", delegateId);
+    frozenAt.set(System.currentTimeMillis());
+    frozen.set(true);
+  }
+
   private void handleStopAcquiringMessage(String sender) {
     log.info("Got stop-acquiring message from watcher {}", sender);
     if (acquireTasks.getAndSet(false)) {
@@ -1410,13 +1422,16 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
   private boolean doRestartDelegate() {
     long now = clock.millis();
 
+    boolean heartbeatExpired = ((now - lastHeartbeatSentAt.get()) > HEARTBEAT_TIMEOUT)
+        || ((now - lastHeartbeatReceivedAt.get()) > HEARTBEAT_TIMEOUT);
+    boolean freezeIntervalExpired = (now - frozenAt.get()) > FROZEN_TIMEOUT;
+
     return new File(START_SH).exists()
-        && (restartNeeded.get() || now - lastHeartbeatSentAt.get() > HEARTBEAT_TIMEOUT
-            || now - lastHeartbeatReceivedAt.get() > HEARTBEAT_TIMEOUT);
+        && (restartNeeded.get() || (!frozen.get() && heartbeatExpired) || (frozen.get() && freezeIntervalExpired));
   }
 
   private void sendHeartbeat(DelegateParamsBuilder builder, Socket socket) {
-    if (!shouldContactManager() || !acquireTasks.get()) {
+    if (!shouldContactManager() || !acquireTasks.get() || frozen.get()) {
       return;
     }
 
@@ -1474,7 +1489,7 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
   }
 
   private void sendHeartbeatWhenPollingEnabled(DelegateParamsBuilder builder) {
-    if (!shouldContactManager() || !acquireTasks.get()) {
+    if (!shouldContactManager() || !acquireTasks.get() || frozen.get()) {
       return;
     }
 
@@ -1635,6 +1650,11 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
     String delegateTaskId = delegateTaskEvent.getDelegateTaskId();
     if (delegateTaskId == null) {
       log.warn("Delegate task id cannot be null");
+      return;
+    }
+
+    if (frozen.get()) {
+      log.info("Delegate process with detected time out of sync is running. Won't acquire tasks.");
       return;
     }
 
