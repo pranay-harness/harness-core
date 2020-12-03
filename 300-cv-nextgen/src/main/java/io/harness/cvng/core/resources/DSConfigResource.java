@@ -25,6 +25,7 @@ import javax.validation.constraints.NotNull;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
+import javax.ws.rs.POST;
 import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
@@ -55,6 +56,15 @@ public class DSConfigResource {
   @ApiOperation(value = "saves a data source config", nickname = "saveDataSourceCVConfig")
   public void saveDataSourceCVConfig(@QueryParam("accountId") @Valid final String accountId, @Body DSConfig dsConfig) {
     dsConfigService.upsert(dsConfig);
+  }
+
+  @POST
+  @Timed
+  @ExceptionMetered
+  @ApiOperation(value = "saves a list of data source config", nickname = "saveDataSourceCVConfigs")
+  public void saveDataSourceCVConfigs(
+      @QueryParam("accountId") @Valid final String accountId, @Body List<DSConfig> dsConfigs) {
+    dsConfigs.forEach(dsConfig -> saveDataSourceCVConfig(accountId, dsConfig));
   }
 
   @DELETE

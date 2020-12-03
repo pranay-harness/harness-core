@@ -4,6 +4,7 @@ import io.harness.cvng.beans.AppdynamicsValidationResponse;
 import io.harness.cvng.beans.appd.AppDynamicsApplication;
 import io.harness.cvng.beans.appd.AppDynamicsTier;
 import io.harness.cvng.core.entities.MetricPack;
+import io.harness.ng.beans.PageResponse;
 
 import java.util.List;
 import java.util.Set;
@@ -13,9 +14,9 @@ public interface AppDynamicsService extends MonitoringSourceImportStatusCreator 
       String orgIdentifier, String projectIdentifier, long appdAppId, long appdTierId, String requestGuid,
       List<MetricPack> metricPacks);
 
-  List<AppDynamicsApplication> getApplications(
-      String accountId, String connectorIdentifier, String orgIdentifier, String projectIdentifier);
+  PageResponse<AppDynamicsApplication> getApplications(String accountId, String connectorIdentifier,
+      String orgIdentifier, String projectIdentifier, int offset, int pageSize, String filter);
 
-  Set<AppDynamicsTier> getTiers(String accountId, String connectorIdentifier, String orgIdentifier,
-      String projectIdentifier, long appDynamicsAppId);
+  PageResponse<AppDynamicsTier> getTiers(String accountId, String connectorIdentifier, String orgIdentifier,
+      String projectIdentifier, long appDynamicsAppId, int offset, int pageSize, String filter);
 }
