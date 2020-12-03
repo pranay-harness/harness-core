@@ -23,11 +23,13 @@ RUN chmod g+x /opt/harness-delegate/*.sh
 
 RUN chown harness /opt/harness-delegate /opt/harness-delegate/*.sh
 
-RUN mkdir -p /home/harness
-
-RUN chown harness /home/harness
+RUN mkdir -p /home/harness \
+    && chown harness:harness /home/harness -R \
+    && chmod 777 /home/harness
 
 USER harness
+
+ENV HOME="/home/harness"
 
 RUN mkdir -p /home/harness/bin
 
