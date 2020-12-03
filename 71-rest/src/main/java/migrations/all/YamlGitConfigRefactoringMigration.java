@@ -1,6 +1,5 @@
 package migrations.all;
 
-import static software.wings.beans.SettingAttribute.NAME_KEY;
 import static software.wings.common.Constants.ACCOUNT_ID_KEY;
 
 import io.harness.beans.EncryptedData;
@@ -60,7 +59,7 @@ public class YamlGitConfigRefactoringMigration implements Migration {
         String settingAttributeForGitName = account.getAccountName() + "_default_Git_Connector_For_Yaml";
         SettingAttribute savedSettingAttribute = wingsPersistence.createQuery(SettingAttribute.class)
                                                      .filter(ACCOUNT_ID_KEY, yamlGitConfig.getAccountId())
-                                                     .filter(NAME_KEY, settingAttributeForGitName)
+                                                     .filter(SettingAttributeKeys.name, settingAttributeForGitName)
                                                      .filter(SettingAttributeKeys.category, SettingCategory.CONNECTOR)
                                                      .get();
 

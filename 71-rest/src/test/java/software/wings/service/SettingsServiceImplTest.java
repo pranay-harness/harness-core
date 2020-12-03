@@ -458,10 +458,10 @@ public class SettingsServiceImplTest extends WingsBaseTest {
 
     assertThat(settingAttribute).isNotNull();
     verify(mockWingsPersistence).createQuery(eq(SettingAttribute.class));
-    verify(spyQuery).filter("accountId", ACCOUNT_ID);
-    verify(spyQuery).filter("appId", GLOBAL_APP_ID);
-    verify(spyQuery).filter(SettingAttribute.NAME_KEY, "AWS Cloud Provider");
-    verify(spyQuery).filter(SettingAttribute.VALUE_TYPE_KEY, SettingVariableTypes.AWS.name());
+    verify(spyQuery).filter(SettingAttributeKeys.accountId, ACCOUNT_ID);
+    verify(spyQuery).filter(SettingAttributeKeys.appId, GLOBAL_APP_ID);
+    verify(spyQuery).filter(SettingAttributeKeys.name, "AWS Cloud Provider");
+    verify(spyQuery).filter(SettingAttributeKeys.value_type, SettingVariableTypes.AWS.name());
     verify(spyQuery, times(2)).get();
   }
 
@@ -945,7 +945,7 @@ public class SettingsServiceImplTest extends WingsBaseTest {
     when(mockWingsPersistence.createQuery(SettingAttribute.class)).thenReturn(spyQuery);
     when(spyQuery.filter(ACCOUNT_ID_KEY, ACCOUNT_ID)).thenReturn(spyQuery);
     when(spyQuery.filter(APP_ID_KEY, APP_ID)).thenReturn(spyQuery);
-    when(spyQuery.filter(SettingAttribute.VALUE_TYPE_KEY, SettingVariableTypes.STRING.name())).thenReturn(spyQuery);
+    when(spyQuery.filter(SettingAttributeKeys.value_type, SettingVariableTypes.STRING.name())).thenReturn(spyQuery);
 
     when(spyQuery.asList())
         .thenReturn(asList(aSettingAttribute()
@@ -967,7 +967,7 @@ public class SettingsServiceImplTest extends WingsBaseTest {
     verify(mockWingsPersistence).createQuery(SettingAttribute.class);
     verify(spyQuery, times(2)).filter(ACCOUNT_ID_KEY, ACCOUNT_ID);
     verify(spyQuery, times(2)).filter(APP_ID_KEY, APP_ID);
-    verify(spyQuery, times(2)).filter(SettingAttribute.VALUE_TYPE_KEY, SettingVariableTypes.STRING.name());
+    verify(spyQuery, times(2)).filter(SettingAttributeKeys.value_type, SettingVariableTypes.STRING.name());
   }
 
   @Test
@@ -977,7 +977,7 @@ public class SettingsServiceImplTest extends WingsBaseTest {
     when(mockWingsPersistence.createQuery(SettingAttribute.class)).thenReturn(spyQuery);
     when(spyQuery.filter(ACCOUNT_ID_KEY, ACCOUNT_ID)).thenReturn(spyQuery);
     when(spyQuery.filter(APP_ID_KEY, APP_ID)).thenReturn(spyQuery);
-    when(spyQuery.filter(SettingAttribute.VALUE_TYPE_KEY, SettingVariableTypes.STRING.name())).thenReturn(spyQuery);
+    when(spyQuery.filter(SettingAttributeKeys.value_type, SettingVariableTypes.STRING.name())).thenReturn(spyQuery);
     when(spyQuery.asList())
         .thenReturn(asList(aSettingAttribute()
                                .withName("NAME")
@@ -996,7 +996,7 @@ public class SettingsServiceImplTest extends WingsBaseTest {
     assertThat(accountDefaults).isNotEmpty().containsValues("", "VALUE");
     verify(mockWingsPersistence).createQuery(SettingAttribute.class);
     verify(spyQuery, times(2)).filter(ACCOUNT_ID_KEY, ACCOUNT_ID);
-    verify(spyQuery, times(2)).filter(SettingAttribute.VALUE_TYPE_KEY, SettingVariableTypes.STRING.name());
+    verify(spyQuery, times(2)).filter(SettingAttributeKeys.value_type, SettingVariableTypes.STRING.name());
   }
 
   @Test

@@ -730,7 +730,7 @@ public class YamlGitServiceImpl implements YamlGitService {
       List<SettingAttribute> settingAttributes =
           wingsPersistence.createQuery(SettingAttribute.class)
               .filter(SettingAttributeKeys.accountId, accountId)
-              .filter(SettingAttribute.VALUE_TYPE_KEY, SettingVariableTypes.GIT.name())
+              .filter(SettingAttributeKeys.value_type, SettingVariableTypes.GIT.name())
               .asList();
 
       if (isEmpty(settingAttributes)) {

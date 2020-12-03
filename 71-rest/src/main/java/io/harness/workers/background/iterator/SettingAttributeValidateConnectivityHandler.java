@@ -54,7 +54,7 @@ public class SettingAttributeValidateConnectivityHandler implements Handler<Sett
             .handler(this)
             .entityProcessController(new AccountStatusBasedEntityProcessController<>(accountService))
             .filterExpander(query
-                -> query.field(SettingAttributeKeys.valueType)
+                -> query.field(SettingAttributeKeys.value_type)
                        .in(asList(SettingVariableTypes.AWS.name(), SettingVariableTypes.GCP.name(),
                            SettingVariableTypes.AZURE.name(), SettingVariableTypes.DOCKER.name(),
                            SettingVariableTypes.ECR.name(), SettingVariableTypes.GCR.name(),

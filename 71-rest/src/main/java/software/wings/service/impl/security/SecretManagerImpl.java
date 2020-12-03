@@ -489,7 +489,7 @@ public class SecretManagerImpl implements SecretManager {
                                                 .filter(SettingAttributeKeys.accountId, accountId)
                                                 .field(SettingAttributeKeys.category)
                                                 .in(categories)
-                                                .field(SettingAttribute.VALUE_TYPE_KEY)
+                                                .field(SettingAttributeKeys.value_type)
                                                 .notIn(Lists.newArrayList(SettingVariableTypes.STRING));
     loadSettingQueryResult(categoryQuery, settingAttributeIds, settingAttributeList);
 
@@ -503,7 +503,7 @@ public class SecretManagerImpl implements SecretManager {
               .filter(SettingAttributeKeys.accountId, accountId)
               .field(SettingAttributeKeys.category)
               .doesNotExist()
-              .field(SettingAttribute.VALUE_TYPE_KEY)
+              .field(SettingAttributeKeys.value_type)
               .in(Lists.newArrayList(SettingVariableTypes.WINRM_CONNECTION_ATTRIBUTES));
       loadSettingQueryResult(winRmQuery, settingAttributeIds, settingAttributeList);
     }

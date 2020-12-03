@@ -890,9 +890,9 @@ public class SettingGenerator {
     return wingsPersistence.createQuery(SettingAttribute.class)
         .filter(SettingAttributeKeys.accountId, settingAttribute.getAccountId())
         .filter(SettingAttributeKeys.appId, settingAttribute.getAppId())
-        .filter(SettingAttribute.ENV_ID_KEY, settingAttribute.getEnvId())
-        .filter(SettingAttribute.CATEGORY_KEY, settingAttribute.getCategory())
-        .filter(SettingAttribute.NAME_KEY, settingAttribute.getName())
+        .filter(SettingAttributeKeys.envId, settingAttribute.getEnvId())
+        .filter(SettingAttributeKeys.category, settingAttribute.getCategory())
+        .filter(SettingAttributeKeys.name, settingAttribute.getName())
         .get();
   }
 

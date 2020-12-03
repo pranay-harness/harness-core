@@ -20,11 +20,8 @@ import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static software.wings.beans.Environment.GLOBAL_ENV_ID;
 import static software.wings.beans.GitConfig.GIT_USER;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
-import static software.wings.beans.SettingAttribute.ENV_ID_KEY;
-import static software.wings.beans.SettingAttribute.NAME_KEY;
 import static software.wings.beans.SettingAttribute.SettingCategory.CE_CONNECTOR;
 import static software.wings.beans.SettingAttribute.SettingCategory.CLOUD_PROVIDER;
-import static software.wings.beans.SettingAttribute.VALUE_TYPE_KEY;
 import static software.wings.beans.StringValue.Builder.aStringValue;
 import static software.wings.common.PathConstants.BACKUP_PATH;
 import static software.wings.common.PathConstants.DEFAULT_BACKUP_PATH;
@@ -268,7 +265,7 @@ public class SettingsServiceImpl implements SettingsService {
     Integer previousOffset = 0;
     PageRequest<SettingAttribute> pageRequest = aPageRequest()
                                                     .addFilter(SettingAttributeKeys.accountId, EQ, accountId)
-                                                    .addFilter(SettingAttributeKeys.valueType, EQ, type)
+                                                    .addFilter(SettingAttributeKeys.value_type, EQ, type)
                                                     .withLimit(String.valueOf(limit))
                                                     .withOffset(String.valueOf(previousOffset))
                                                     .build();
@@ -425,7 +422,7 @@ public class SettingsServiceImpl implements SettingsService {
     PageRequest<SettingAttribute> request =
         aPageRequest()
             .addFilter(SettingAttributeKeys.accountId, Operator.EQ, settingAttribute.getAccountId())
-            .addFilter(SettingAttribute.VALUE_TYPE_KEY, Operator.EQ, SettingVariableTypes.GIT)
+            .addFilter(SettingAttributeKeys.value_type, Operator.EQ, SettingVariableTypes.GIT)
             .build();
     int currentGitConnectorCount = list(request, null, null).getResponse().size();
     if (currentGitConnectorCount >= maxGitConnectorsAllowed) {
@@ -710,11 +707,12 @@ public class SettingsServiceImpl implements SettingsService {
   }
 
   private Map<String, String> listAccountOrAppDefaults(String accountId, String appId) {
-    List<SettingAttribute> settingAttributes = wingsPersistence.createQuery(SettingAttribute.class)
-                                                   .filter(SettingAttributeKeys.accountId, accountId)
-                                                   .filter(SettingAttributeKeys.appId, appId)
-                                                   .filter(VALUE_TYPE_KEY, SettingVariableTypes.STRING.name())
-                                                   .asList();
+    List<SettingAttribute> settingAttributes =
+        wingsPersistence.createQuery(SettingAttribute.class)
+            .filter(SettingAttributeKeys.accountId, accountId)
+            .filter(SettingAttributeKeys.appId, appId)
+            .filter(SettingAttributeKeys.value_type, SettingVariableTypes.STRING.name())
+            .asList();
 
     return settingAttributes.stream().collect(Collectors.toMap(SettingAttribute::getName,
         settingAttribute
@@ -1221,8 +1219,8 @@ public class SettingsServiceImpl implements SettingsService {
       // Delete git connectors
       wingsPersistence.delete(wingsPersistence.createQuery(SettingAttribute.class)
                                   .filter(SettingAttributeKeys.accountId, accountId)
-                                  .filter(SettingAttribute.VALUE_TYPE_KEY, SettingVariableTypes.GIT)
-                                  .field(NAME_KEY)
+                                  .filter(SettingAttributeKeys.value_type, SettingVariableTypes.GIT)
+                                  .field(SettingAttributeKeys.name)
                                   .notIn(selectedGitConnectors));
       return true;
     }
@@ -1447,9 +1445,9 @@ public class SettingsServiceImpl implements SettingsService {
     return wingsPersistence.createQuery(SettingAttribute.class)
         .filter(SettingAttributeKeys.accountId, accountId)
         .filter(SettingAttributeKeys.appId, GLOBAL_APP_ID)
-        .filter(ENV_ID_KEY, GLOBAL_ENV_ID)
-        .filter(SettingAttribute.NAME_KEY, attributeName)
-        .filter(VALUE_TYPE_KEY, settingVariableTypes.name())
+        .filter(SettingAttributeKeys.envId, GLOBAL_ENV_ID)
+        .filter(SettingAttributeKeys.name, attributeName)
+        .filter(SettingAttributeKeys.value_type, settingVariableTypes.name())
         .get();
   }
 
@@ -1559,8 +1557,8 @@ public class SettingsServiceImpl implements SettingsService {
                                                                   .filter(SettingAttributeKeys.accountId, accountId)
                                                                   .filter(SettingAttributeKeys.appId, appId)
                                                                   .filter(SettingAttributeKeys.envId, envId)
-                                                                  .filter(VALUE_TYPE_KEY, type)
-                                                                  .order(NAME_KEY)
+                                                                  .filter(SettingAttributeKeys.value_type, type)
+                                                                  .order(SettingAttributeKeys.name)
                                                                   .fetch())) {
       while (iterator.hasNext()) {
         settingAttributes.add(iterator.next());
@@ -1587,8 +1585,8 @@ public class SettingsServiceImpl implements SettingsService {
   @Override
   public SettingValue getSettingValueById(String accountId, String id) {
     SettingAttribute settingAttribute = wingsPersistence.createQuery(SettingAttribute.class)
+                                            .filter(SettingAttributeKeys.uuid, id)
                                             .filter(SettingAttributeKeys.accountId, accountId)
-                                            .filter(SettingAttribute.ID_KEY, id)
                                             .get();
     if (settingAttribute != null) {
       return settingAttribute.getValue();

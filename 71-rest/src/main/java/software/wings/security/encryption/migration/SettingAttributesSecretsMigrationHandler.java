@@ -7,7 +7,6 @@ import static io.harness.persistence.HPersistence.returnNewOptions;
 import static io.harness.persistence.UpdatedAtAware.LAST_UPDATED_AT_KEY;
 
 import static software.wings.beans.Base.ID_KEY2;
-import static software.wings.beans.SettingAttribute.VALUE_TYPE_KEY;
 import static software.wings.service.impl.SettingServiceHelper.ATTRIBUTES_USING_REFERENCES;
 import static software.wings.settings.SettingVariableTypes.APM_VERIFICATION;
 import static software.wings.settings.SettingVariableTypes.SECRET_TEXT;
@@ -85,7 +84,7 @@ public class SettingAttributesSecretsMigrationHandler implements Handler<Setting
 
   @VisibleForTesting
   public void createQuery(@NonNull Query<SettingAttribute> query) {
-    query.field(VALUE_TYPE_KEY).in(ATTRIBUTES_USING_REFERENCES);
+    query.field(SettingAttributeKeys.value_type).in(ATTRIBUTES_USING_REFERENCES);
   }
 
   public void handle(@NonNull SettingAttribute settingAttribute) {

@@ -77,7 +77,7 @@ public class ProductMetricsServiceImpl implements ProductMetricsService {
     return toIntExact(persistence.createQuery(SettingAttribute.class, excludeValidate)
                           .filter(SettingAttributeKeys.accountId, accountId)
                           .filter(SettingAttributeKeys.category, CE_CONNECTOR)
-                          .filter(SettingAttributeKeys.valueType, CE_AWS)
+                          .filter(SettingAttributeKeys.value_type, CE_AWS)
                           .count());
   }
 
@@ -86,7 +86,7 @@ public class ProductMetricsServiceImpl implements ProductMetricsService {
     return toIntExact(persistence.createQuery(SettingAttribute.class, excludeValidate)
                           .filter(SettingAttributeKeys.accountId, accountId)
                           .filter(SettingAttributeKeys.category, CLOUD_PROVIDER)
-                          .filter(SettingAttributeKeys.valueType, AWS)
+                          .filter(SettingAttributeKeys.value_type, AWS)
                           .count());
   }
 
@@ -95,7 +95,7 @@ public class ProductMetricsServiceImpl implements ProductMetricsService {
     return toIntExact(persistence.createQuery(SettingAttribute.class, excludeValidate)
                           .filter(SettingAttributeKeys.accountId, accountId)
                           .filter(SettingAttributeKeys.category, CLOUD_PROVIDER)
-                          .filter(SettingAttributeKeys.valueType, AWS)
+                          .filter(SettingAttributeKeys.value_type, AWS)
                           .filter(SettingAttributeKeys.isCEEnabled, Boolean.TRUE)
                           .count());
   }
@@ -104,7 +104,7 @@ public class ProductMetricsServiceImpl implements ProductMetricsService {
   public int countK8sClusterInCd(String accountId) {
     return toIntExact(persistence.createQuery(SettingAttribute.class, excludeAuthority)
                           .filter(SettingAttributeKeys.accountId, accountId)
-                          .filter(SettingAttributeKeys.valueType, KUBERNETES_CLUSTER)
+                          .filter(SettingAttributeKeys.value_type, KUBERNETES_CLUSTER)
                           .filter(SettingAttributeKeys.category, CLOUD_PROVIDER)
                           .count());
   }
@@ -114,7 +114,7 @@ public class ProductMetricsServiceImpl implements ProductMetricsService {
     return toIntExact(persistence.createQuery(SettingAttribute.class, excludeValidate)
                           .filter(SettingAttributeKeys.accountId, accountId)
                           .filter(SettingAttributeKeys.category, CLOUD_PROVIDER)
-                          .filter(SettingAttributeKeys.valueType, KUBERNETES_CLUSTER)
+                          .filter(SettingAttributeKeys.value_type, KUBERNETES_CLUSTER)
                           .filter(SettingAttributeKeys.isCEEnabled, Boolean.TRUE)
                           .count());
   }
