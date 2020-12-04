@@ -8,11 +8,11 @@ import static io.harness.k8s.kubectl.Utils.executeCommand;
 import io.harness.delegate.beans.executioncapability.CapabilityResponse;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.delegate.task.executioncapability.CapabilityCheck;
+import io.harness.helm.HelmCommandTemplateFactory;
 import io.harness.k8s.K8sGlobalConfigService;
 import io.harness.k8s.model.HelmVersion;
 
 import software.wings.delegatetasks.validation.capabilities.HelmInstallationCapability;
-import software.wings.helpers.ext.helm.HelmCommandTemplateFactory;
 
 import com.google.inject.Inject;
 import org.apache.commons.lang3.StringUtils;

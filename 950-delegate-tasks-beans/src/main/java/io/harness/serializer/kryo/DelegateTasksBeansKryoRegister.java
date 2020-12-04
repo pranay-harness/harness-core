@@ -119,6 +119,7 @@ import io.harness.delegate.beans.executioncapability.GitConnectionNGCapability;
 import io.harness.delegate.beans.executioncapability.HttpConnectionExecutionCapability;
 import io.harness.delegate.beans.executioncapability.ProcessExecutorCapability;
 import io.harness.delegate.beans.executioncapability.SelectorCapability;
+import io.harness.delegate.beans.executioncapability.SmbConnectionCapability;
 import io.harness.delegate.beans.executioncapability.SocketConnectivityExecutionCapability;
 import io.harness.delegate.beans.executioncapability.SystemEnvCheckerCapability;
 import io.harness.delegate.beans.git.GitCommandExecutionResponse;
@@ -126,6 +127,7 @@ import io.harness.delegate.beans.git.GitCommandExecutionResponse.GitCommandStatu
 import io.harness.delegate.beans.git.GitCommandParams;
 import io.harness.delegate.beans.git.GitCommandType;
 import io.harness.delegate.beans.git.YamlGitConfigDTO;
+import io.harness.delegate.beans.logstreaming.CommandUnitStatusProgress;
 import io.harness.delegate.beans.secrets.SSHConfigValidationTaskResponse;
 import io.harness.delegate.beans.storeconfig.FetchType;
 import io.harness.delegate.beans.storeconfig.GitStoreDelegateConfig;
@@ -329,6 +331,7 @@ public class DelegateTasksBeansKryoRegister implements KryoRegistrar {
     kryo.register(SecretDetail.class, 19001);
     kryo.register(SelectorCapability.class, 19098);
     kryo.register(ShellScriptApprovalTaskParameters.class, 20001);
+    kryo.register(SmbConnectionCapability.class, 19119);
     kryo.register(SocketConnectivityExecutionCapability.class, 19009);
     kryo.register(SpotInstDeployTaskParameters.class, 19018);
     kryo.register(SpotInstDeployTaskResponse.class, 19017);
@@ -497,5 +500,6 @@ public class DelegateTasksBeansKryoRegister implements KryoRegistrar {
     kryo.register(EnvVariableEnum.class, 19430);
     kryo.register(AzureWebAppListWebAppInstancesParameters.class, 19431);
     kryo.register(AzureWebAppListWebAppInstancesResponse.class, 19432);
+    kryo.register(CommandUnitStatusProgress.class, 19433);
   }
 }

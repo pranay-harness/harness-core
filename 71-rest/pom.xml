@@ -725,6 +725,11 @@
         </dependency>
         <dependency>
             <groupId>software.wings</groupId>
+            <artifactId>460-capability</artifactId>
+            <version>${project.parent.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>software.wings</groupId>
             <artifactId>490-ce-commons</artifactId>
             <version>${project.parent.version}</version>
         </dependency>

@@ -1,17 +1,17 @@
 load("@rules_proto//proto:defs.bzl", "proto_library")
-load("@rules_proto_grpc//java:defs.bzl", "java_proto_library")
+load("//:tools/bazel/protos/harness_grpc_library.bzl", "harness_grpc_library")
 
 proto_library(
-    name = "240_capability_proto",
+    name = "460_capability_proto",
     srcs = glob(["**/*.proto"]),
     strip_import_prefix = "",
     visibility = ["//visibility:public"],
 )
 
-java_proto_library(
-    name = "240_capability_java_proto",
+harness_grpc_library(
+    name = "460_capability_java_proto",
     visibility = ["//visibility:public"],
     deps = [
-        ":240_capability_proto",
+        ":460_capability_proto",
     ],
 )

@@ -9,6 +9,7 @@ import io.harness.delegate.task.executioncapability.GitConnectionNGCapabilityChe
 import io.harness.delegate.task.executioncapability.HttpConnectionExecutionCapabilityCheck;
 import io.harness.delegate.task.executioncapability.KustomizeCapabilityCheck;
 import io.harness.delegate.task.executioncapability.ProcessExecutorCapabilityCheck;
+import io.harness.delegate.task.executioncapability.SmbConnectionCapabilityCheck;
 import io.harness.delegate.task.executioncapability.SocketConnectivityCapabilityCheck;
 import io.harness.delegate.task.executioncapability.SystemEnvCapabilityCheck;
 
@@ -21,7 +22,6 @@ import software.wings.delegatetasks.validation.capabilitycheck.PcfConnectivityCa
 import software.wings.delegatetasks.validation.capabilitycheck.SSHHostValidationCapabilityCheck;
 import software.wings.delegatetasks.validation.capabilitycheck.SftpCapabilityCheck;
 import software.wings.delegatetasks.validation.capabilitycheck.ShellConnectionCapabilityCheck;
-import software.wings.delegatetasks.validation.capabilitycheck.SmbConnectionCapabilityCheck;
 import software.wings.delegatetasks.validation.capabilitycheck.SmtpCapabilityCheck;
 import software.wings.delegatetasks.validation.capabilitycheck.WinrmHostValidationCapabilityCheck;
 

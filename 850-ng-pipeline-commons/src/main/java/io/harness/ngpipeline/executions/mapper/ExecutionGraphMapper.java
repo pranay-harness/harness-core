@@ -45,6 +45,7 @@ public class ExecutionGraphMapper {
         .stepType(graphVertex.getStepType())
         .uuid(graphVertex.getUuid())
         .executableResponsesMetadata(graphVertex.getExecutableResponsesMetadata())
+        .taskIdToProgressDataMap(graphVertex.getProgressDataMap())
         .build();
   }
 

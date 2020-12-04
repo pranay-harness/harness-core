@@ -1,5 +1,6 @@
 package io.harness.delegate.beans.logstreaming;
 
+import io.harness.delegate.beans.taskprogress.ITaskProgressClient;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.logging.LogCallback;
 import io.harness.logging.LogLevel;
@@ -35,5 +36,12 @@ public class NGLogCallback implements LogCallback {
     if (CommandExecutionStatus.isTerminalStatus(commandExecutionStatus)) {
       iLogStreamingTaskClient.closeStream(commandUnitName);
     }
+
+    ITaskProgressClient taskProgressClient = iLogStreamingTaskClient.obtainTaskProgressClient();
+    CommandUnitStatusProgress commandUnitStatusProgress = CommandUnitStatusProgress.builder()
+                                                              .commandUnitName(commandUnitName)
+                                                              .commandExecutionStatus(commandExecutionStatus)
+                                                              .build();
+    taskProgressClient.sendTaskProgressUpdate(commandUnitStatusProgress);
   }
 }

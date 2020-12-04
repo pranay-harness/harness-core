@@ -5,7 +5,7 @@ import static io.harness.annotations.dev.HarnessTeam.CDC;
 import io.harness.adviser.WithFailureTypes;
 import io.harness.annotations.Redesign;
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.interrupts.RepairActionCode;
+import io.harness.pms.commons.RepairActionCode;
 import io.harness.pms.execution.failure.FailureType;
 
 import java.util.List;
