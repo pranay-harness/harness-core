@@ -22,6 +22,7 @@ import org.springframework.data.annotation.TypeAlias;
 @Builder
 @TypeAlias("stageElementConfig")
 public class StageElementConfig {
+  String uuid;
   @EntityIdentifier String identifier;
   @EntityName String name;
   @ApiModelProperty(dataType = SwaggerConstants.STRING_CLASSPATH) ParameterField<String> description;
