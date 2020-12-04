@@ -1,5 +1,3 @@
-import datetime
-
 import requests
 import time
 import csv
@@ -14,6 +12,7 @@ CSV_COL_START_DATE = "Start Date"
 CSV_COL_START_TIME = "Start Time"
 CSV_COL_END_DATE = "End Date"
 CSV_COL_END_TIME = "End Time"
+CSV_COL_PIPELINE_APPROVAL_STAGE = "Approval Stage Details"
 CSV_COL_TRIGGER_TYPE = "Triggered Type"
 CSV_COL_TRIGGER_DETAILS = "Trigger Details (User email or trigger name)"
 CSV_COL_ENVIRONMENT = "Environment(s)"
@@ -22,7 +21,7 @@ CSV_COL_ARTIFACT_SOURCE = "Artifact Source(s)"
 CSV_COL_ARTIFACT_BUILD = "Artifiact Build No(s)"
 CSV_HEADERS = [CSV_COL_APPLICATION_NAME, CSV_COL_ENTITY_TYPE, CSV_COL_PIPELINE_NAME, CSV_COL_WORKFLOW_NAME,
                CSV_COL_STATUS, CSV_COL_TAGS, CSV_COL_START_DATE, CSV_COL_START_TIME, CSV_COL_END_DATE, CSV_COL_END_TIME,
-               CSV_COL_TRIGGER_TYPE, CSV_COL_TRIGGER_DETAILS, CSV_COL_ENVIRONMENT, CSV_COL_SERVICE,
+               CSV_COL_PIPELINE_APPROVAL_STAGE, CSV_COL_TRIGGER_TYPE, CSV_COL_TRIGGER_DETAILS, CSV_COL_ENVIRONMENT, CSV_COL_SERVICE,
                CSV_COL_ARTIFACT_SOURCE, CSV_COL_ARTIFACT_BUILD]
 
 CAUSE_EXECUTED_BY_USER = "ExecutedByUser"
@@ -38,7 +37,7 @@ CLIENT_ACCOUNT_ID = "px7xd_BFRCi-pfWPYXVjvw"
 
 HEADER_X_API_KEY = "x-api-key"
 PAYLOAD_PARAM_QUERY = "query"
-GRAPHQL_QUERY = "{ executions(limit: 100, offset: $OFFSET, $FILTER) { pageInfo { hasMore limit offset total } nodes { id application { name } status tags { name value } __typename cause { ... on ExecutedByUser { user { email } } ... on ExecutedByAPIKey { apiKey { name } } ... on ExecutedByTrigger { trigger { name } } ... on ExecutedAlongPipeline { execution { pipeline { name } } } } startedAt endedAt ... on PipelineExecution { pipeline { name } memberExecutions { nodes { ... on WorkflowExecution { workflow { name } status tags { name value } startedAt endedAt artifacts { buildNo artifactSource { name } } cause { ... on ExecutedByUser { user { email } } ... on ExecutedByAPIKey { apiKey { name } } ... on ExecutedByTrigger { trigger { name } } ... on ExecutedAlongPipeline { execution { pipeline { name } } } } outcomes { nodes { ... on DeploymentOutcome { environment { name type } service { name deploymentType } } } } } } } } ... on WorkflowExecution { workflow { name } artifacts { buildNo artifactSource { name } } outcomes { nodes { ... on DeploymentOutcome { environment { name type } service { name deploymentType } } } } } } } } "
+GRAPHQL_QUERY = "{ executions(limit: 100, offset: $OFFSET, $FILTER) { pageInfo { hasMore limit offset total } nodes { id application { name } status tags { name value } __typename cause { ... on ExecutedByUser { user { email } } ... on ExecutedByAPIKey { apiKey { name } } ... on ExecutedByTrigger { trigger { name } } ... on ExecutedAlongPipeline { execution { pipeline { name } } } } startedAt endedAt ... on PipelineExecution { pipeline { name } pipelineStageExecutions{ ... on ApprovalStageExecution{ pipelineStageName status approvalStepType } } memberExecutions { nodes { ... on WorkflowExecution { workflow { name } status tags { name value } startedAt endedAt artifacts { buildNo artifactSource { name } } cause { ... on ExecutedByUser { user { email } } ... on ExecutedByAPIKey { apiKey { name } } ... on ExecutedByTrigger { trigger { name } } ... on ExecutedAlongPipeline { execution { pipeline { name } } } } outcomes { nodes { ... on DeploymentOutcome { environment { name type } service { name deploymentType } } } } } } } } ... on WorkflowExecution { workflow { name } artifacts { buildNo artifactSource { name } } outcomes { nodes { ... on DeploymentOutcome { environment { name type } service { name deploymentType } } } } } } } } "
 GRAPHQL_PIPELINE_FILTER = '{pipeline:{operator:EQUALS,values:["$PIPELINE_ID"]}}'
 GRAPHQL_WORKFLOW_FILTER = '{workflow:{operator:EQUALS,values:["$WORKFLOW_ID"]}}'
 GRAPHQL_BEFORE_DATE_FILTER = '{startTime: {operator: BEFORE, value: $VALUE}}'
@@ -68,6 +67,7 @@ FILE_STATUS_NEW = "NEW"
 FILE_STATUS_EXISTING = "EXISTING"
 TEMP_CSV_FILE_NAME = "temp.csv"
 
+
 #### helper methods #####
 
 def print_list(data):
@@ -78,7 +78,7 @@ def print_list(data):
 def get_past_time_from_epoch(curr_epoch_in_seconds, years, months, days):
     # assuming 30 days in each month
     return curr_epoch_in_seconds - (
-                years * SECONDS_IN_SINGLE_YEAR + months * 30 * SECONDS_IN_SINGLE_DAY + days * SECONDS_IN_SINGLE_DAY)
+            years * SECONDS_IN_SINGLE_YEAR + months * 30 * SECONDS_IN_SINGLE_DAY + days * SECONDS_IN_SINGLE_DAY)
 
 
 def join_list_items(itemList, separator):
@@ -177,7 +177,6 @@ def get_field(execution, fieldName):
             return execution['application']['name']
 
         if fieldName == CSV_COL_ENTITY_TYPE:
-
             return execution['__typename']
 
         if fieldName == CSV_COL_STATUS:
@@ -186,7 +185,6 @@ def get_field(execution, fieldName):
         if fieldName == CSV_COL_TAGS:
             formattedTagsList = []
             tagsList = execution['tags']
-
             for tag in tagsList:
                 formattedTagsList.append(tag['name'] + ":" + tag['value'])
 
@@ -223,6 +221,27 @@ def get_field(execution, fieldName):
         return MISSING_VALUE_PLACE_HOLDER
 
     return MISSING_VALUE_PLACE_HOLDER
+
+
+def get_approval_stage_details(execution, pipeline_stage_executions):
+    # in case of workflow execution
+    if 'pipelineStageExecutions' not in execution:
+        return [""]
+
+    pipeline_stage_executions = execution['pipelineStageExecutions']
+    if pipeline_stage_executions is None:
+        return [""]
+
+    approval_stage_details_list = []
+    for execution in pipeline_stage_executions:
+        approval_stage_details = {}
+        if execution is not None and execution != {}:
+            approval_stage_details['name'] = execution.get('pipelineStageName', "")
+            approval_stage_details['status'] = execution.get('status', "")
+            approval_stage_details['stepType'] = execution.get('approvalStepType', "")
+            approval_stage_details_list.append(str(approval_stage_details))
+
+    return approval_stage_details_list
 
 
 def get_entity_name(execution, entity_type):
@@ -267,10 +286,6 @@ def get_trigger_details(execution, trigger_type):
 
 
 def get_workflow_details(workflows):
-    # env = []
-    # services = []
-    # artifacts = []
-    # artifacts_sources = []
     workflow_details_list = []
 
     env = set()
@@ -357,57 +372,16 @@ def get_workflow_details(workflows):
 
         workflow_details_list.append(workflow_details)
 
-    # TODO
-    # Need to try and handle env, services, artifacts etc from the workflow_details_list as separate method
-    # rather than just creating multiple copies at same time
-    # return env, services, artifacts, artifacts_sources, workflow_details_list
-
-    ###
-    # parse services, env, artifacts and artifacts sources
-    # convert it to list with contains either only MISSING VALUE HOLDER or only valid values
-    # its required to show summarized pipeline view
-    ###
-
     return custom_workflow_parser_helper(env), custom_workflow_parser_helper(services), custom_workflow_parser_helper(artifacts), custom_workflow_parser_helper(artifacts_sources), workflow_details_list
-
-#
-# def is_interval_threshold_breached(execution_start_date, start_time_interval_epoch):
-#     # compare epoch time for interval start time and current execution start date
-#     curr_execution_time_epoch = datetime.datetime.strptime(execution_start_date, '%d-%b-%Y').strftime('%s')
-#     if int(curr_execution_time_epoch) < int(start_time_interval_epoch):
-#         return True
-#
-#     return False
-#
-#
-# def is_execution_within_search_interval(execution_start_date, start_time_interval_epoch, end_time_interval_epoch):
-#     # check if current execution start date lies within interval start and end epoch time
-#     curr_execution_time_epoch = datetime.datetime.strptime(execution_start_date, '%d-%b-%Y').strftime('%s')
-#     if int(curr_execution_time_epoch) > int(end_time_interval_epoch):
-#         return False
-#     if int(curr_execution_time_epoch) < int(start_time_interval_epoch):
-#         return False
-#
-#     return True
 
 
 def prepare_csv_row(entry_details):
-    return [entry_details.get(CSV_COL_APPLICATION_NAME, ""),
-            entry_details.get(CSV_COL_ENTITY_TYPE, ""),
-            entry_details.get(CSV_COL_PIPELINE_NAME, ""),
-            entry_details.get(CSV_COL_WORKFLOW_NAME, ""),
-            entry_details.get(CSV_COL_STATUS, ""),
-            entry_details.get(CSV_COL_TAGS, ""),
-            entry_details.get(CSV_COL_START_DATE, ""),
-            entry_details.get(CSV_COL_START_TIME, ""),
-            entry_details.get(CSV_COL_END_DATE, ""),
-            entry_details.get(CSV_COL_END_TIME, ""),
-            entry_details.get(CSV_COL_TRIGGER_TYPE, ""),
-            entry_details.get(CSV_COL_TRIGGER_DETAILS, ""),
-            entry_details.get(CSV_COL_ENVIRONMENT, ""),
-            entry_details.get(CSV_COL_SERVICE, ""),
-            entry_details.get(CSV_COL_ARTIFACT_SOURCE, ""),
-            entry_details.get(CSV_COL_ARTIFACT_BUILD, "")]
+    csv_row = []
+
+    for header in CSV_HEADERS:
+        csv_row.append(entry_details.get(header, ""))
+
+    return csv_row
 
 
 def create_csv_data(executions):
@@ -426,15 +400,9 @@ def create_csv_data(executions):
         start_time = get_field(execution, CSV_COL_START_TIME)
         end_date = get_field(execution, CSV_COL_END_DATE)
         end_time = get_field(execution, CSV_COL_END_TIME)
+        pipeline_approval_stage_details = get_approval_stage_details(execution, CSV_COL_PIPELINE_APPROVAL_STAGE)
         trigger_type = get_field(execution, CSV_COL_TRIGGER_TYPE)
         trigger_name = get_trigger_details(execution, trigger_type)
-        #
-        # # if current execution is older than the interval start time, we skip rest of the executions and return
-        # if is_interval_threshold_breached(start_date, start_time_interval_epoch) is True:
-        #     return data_rows, True
-        # # if current execution is not within search interval, skip it
-        # if is_execution_within_search_interval(start_date, start_time_interval_epoch, end_time_interval_epoch) is False:
-        #     continue
 
         # fetch env, services and artifacts details from workflow/s
         workflows = []
@@ -462,7 +430,8 @@ def create_csv_data(executions):
             CSV_COL_ENVIRONMENT: join_list_items(env, ","),
             CSV_COL_SERVICE: join_list_items(services, ","),
             CSV_COL_ARTIFACT_SOURCE: join_list_items(artifacts_sources, ","),
-            CSV_COL_ARTIFACT_BUILD: join_list_items(artifacts, ",")
+            CSV_COL_ARTIFACT_BUILD: join_list_items(artifacts, ","),
+            CSV_COL_PIPELINE_APPROVAL_STAGE: join_list_items(pipeline_approval_stage_details, ",")
         }
 
         data_rows.append(prepare_csv_row(main_execution_details))
@@ -474,11 +443,6 @@ def create_csv_data(executions):
                 sub_execution[CSV_COL_PIPELINE_NAME] = pipeline_name
 
                 data_rows.append(prepare_csv_row(sub_execution))
-
-        # entry = [application_name, entity_type, pipeline_name, workflow_name, status, ','.join(tags), start_date,
-        #          start_time, end_date, end_time, trigger_type, trigger_name, ','.join(env), ','.join(services),
-        #          ','.join(artifacts_sources), ','.join(artifacts)]
-        # data_rows.append(entry)
 
     return data_rows, False
 
