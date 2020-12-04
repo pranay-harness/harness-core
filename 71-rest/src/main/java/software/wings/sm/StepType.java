@@ -119,6 +119,7 @@ import software.wings.beans.PhaseStepType;
 import software.wings.common.WorkflowConstants;
 import software.wings.service.impl.workflow.WorkflowServiceHelper;
 import software.wings.service.impl.yaml.handler.workflow.ApprovalStepCompletionYamlValidator;
+import software.wings.service.impl.yaml.handler.workflow.EmailStepYamlValidator;
 import software.wings.service.impl.yaml.handler.workflow.GcbStepCompletionYamlValidator;
 import software.wings.service.impl.yaml.handler.workflow.ShellScriptStepYamlValidator;
 import software.wings.service.impl.yaml.handler.workflow.StepCompletionYamlValidator;
@@ -631,7 +632,8 @@ public enum StepType {
 
   // Notifications
   EMAIL(EmailState.class, WorkflowServiceHelper.EMAIL, asList(NOTIFICATION), asList(PhaseStepType.values()),
-      asList(DeploymentType.values()), asList(PhaseType.NON_ROLLBACK, PhaseType.ROLLBACK)),
+      asList(DeploymentType.values()), asList(PhaseType.NON_ROLLBACK, PhaseType.ROLLBACK),
+      EmailStepYamlValidator.class),
 
   // Flow Control
   BARRIER(BarrierState.class, WorkflowServiceHelper.BARRIER, asList(WorkflowStepType.FLOW_CONTROL),
