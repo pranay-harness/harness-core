@@ -1,0 +1,13 @@
+syntax = "proto3";
+
+package io.harness.pms.commons;
+
+option java_multiple_files = true;
+
+enum RepairActionCode {
+  UNKNOWN = 0;
+  RETRY = 1;
+  MANUAL_INTERVENTION = 2;
+  IGNORE = 3;
+  END_EXECUTION = 4;
+}
