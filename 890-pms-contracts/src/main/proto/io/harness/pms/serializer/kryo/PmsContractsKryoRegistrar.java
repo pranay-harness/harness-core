@@ -4,6 +4,7 @@ import io.harness.pms.advisers.AdviserObtainment;
 import io.harness.pms.advisers.AdviserType;
 import io.harness.pms.ambiance.Ambiance;
 import io.harness.pms.ambiance.Level;
+import io.harness.pms.commons.RepairActionCode;
 import io.harness.pms.data.StepOutcomeRef;
 import io.harness.pms.execution.ExecutableResponse;
 import io.harness.pms.execution.ExecutionMode;
@@ -44,5 +45,6 @@ public class PmsContractsKryoRegistrar implements KryoRegistrar {
     kryo.register(FailureInfo.class, FailureInfoKryoSerializer.getInstance(), 2613);
     kryo.register(StepOutcomeRef.class, StepOutcomeRefKryoSerializer.getInstance(), 2614);
     kryo.register(ExecutableResponse.class, ExecutableResponseSerializer.getInstance(), 2615);
+    kryo.register(RepairActionCode.class, 2616);
   }
 }
