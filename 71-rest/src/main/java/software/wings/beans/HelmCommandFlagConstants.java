@@ -6,11 +6,11 @@ import static io.harness.k8s.model.HelmVersion.V3;
 import static software.wings.beans.appmanifest.StoreType.HelmChartRepo;
 import static software.wings.beans.appmanifest.StoreType.HelmSourceRepo;
 
+import io.harness.helm.HelmCommandTemplateFactory.HelmCliCommandType;
 import io.harness.k8s.model.HelmVersion;
 
 import software.wings.api.DeploymentType;
 import software.wings.beans.appmanifest.StoreType;
-import software.wings.helpers.ext.helm.HelmCommandTemplateFactory.HelmCliCommandType;
 
 import com.google.common.collect.ImmutableSet;
 import java.util.Arrays;

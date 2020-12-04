@@ -12,9 +12,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
+import io.harness.helm.HelmCommandTemplateFactory.HelmCliCommandType;
 import io.harness.rule.Owner;
-
-import software.wings.helpers.ext.helm.HelmCommandTemplateFactory.HelmCliCommandType;
 
 import org.junit.Rule;
 import org.junit.Test;
