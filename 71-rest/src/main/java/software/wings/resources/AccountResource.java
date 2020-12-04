@@ -3,6 +3,7 @@ package software.wings.resources;
 import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
 
+import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static software.wings.security.PermissionAttribute.PermissionType.ACCOUNT_MANAGEMENT;
 import static software.wings.security.PermissionAttribute.PermissionType.LOGGED_IN;
 import static software.wings.security.PermissionAttribute.PermissionType.MANAGE_AUTHENTICATION_SETTINGS;
@@ -309,6 +310,19 @@ public class AccountResource {
       sampleDataProviderServiceProvider.get().createK8sV2SampleApp(accountService.get(accountId));
       return new RestResponse<>(Boolean.TRUE);
     }
+  }
+
+  @POST
+  @Path("new")
+  @Timed
+  @ExceptionMetered
+  public RestResponse<Account> createAccount(@NotNull Account account) {
+    RestResponse<Account> response = accountPermissionUtils.checkIfHarnessUser("User not allowed to create account");
+    if (response == null) {
+      account.setAppId(GLOBAL_APP_ID);
+      response = new RestResponse<>(accountService.save(account, false));
+    }
+    return response;
   }
 
   @GET

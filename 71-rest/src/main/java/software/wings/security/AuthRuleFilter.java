@@ -81,9 +81,17 @@ import org.apache.commons.lang3.StringUtils;
 @Priority(AUTHORIZATION)
 @Slf4j
 public class AuthRuleFilter implements ContainerRequestFilter {
-  private static final String[] NO_FILTERING_URIS_PREFIXES =
-      new String[] {"users/user", "users/sso/zendesk", "users/two-factor-auth", "users/disable-two-factor-auth",
-          "users/enable-two-factor-auth", "users/refresh-token", "harness-api-keys", "users/set-default-account"};
+  private static final String[] NO_FILTERING_URIS_PREFIXES = new String[] {
+      "users/user",
+      "users/sso/zendesk",
+      "users/two-factor-auth",
+      "users/disable-two-factor-auth",
+      "users/enable-two-factor-auth",
+      "users/refresh-token",
+      "harness-api-keys",
+      "users/set-default-account",
+      "account/new",
+  };
   private static final String[] NO_FILTERING_URIS_SUFFIXES = new String[] {"/logout"};
   private static final String[] EXEMPTED_URI_PREFIXES =
       new String[] {"limits/configure", "account/license", "account/export", "account/import", "users/reset-cache",
