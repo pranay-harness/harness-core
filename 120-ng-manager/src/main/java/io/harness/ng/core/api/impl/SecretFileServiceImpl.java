@@ -1,17 +1,10 @@
 package io.harness.ng.core.api.impl;
 
-import static io.harness.exception.WingsException.USER;
-import static io.harness.remote.client.RestClientUtils.getResponse;
-
-import io.harness.exception.InvalidRequestException;
 import io.harness.ng.core.api.SecretModifyService;
 import io.harness.ng.core.dto.secrets.SecretDTOV2;
 import io.harness.ng.core.dto.secrets.SecretFileSpecDTO;
 import io.harness.secretmanagerclient.dto.EncryptedDataDTO;
-import io.harness.secretmanagerclient.dto.SecretFileDTO;
-import io.harness.secretmanagerclient.dto.SecretFileUpdateDTO;
 import io.harness.secretmanagerclient.remote.SecretManagerClient;
-import io.harness.serializer.JsonUtils;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -26,37 +19,30 @@ public class SecretFileServiceImpl implements SecretModifyService {
 
   @Override
   public EncryptedDataDTO create(String accountIdentifier, SecretDTOV2 dto) {
+    // no need to make a call to 71-rest in case of creating file without any content
     SecretFileSpecDTO specDTO = (SecretFileSpecDTO) dto.getSpec();
-    SecretFileDTO secretFileDTO = SecretFileDTO.builder()
-                                      .account(accountIdentifier)
-                                      .org(dto.getOrgIdentifier())
-                                      .project(dto.getProjectIdentifier())
-                                      .identifier(dto.getIdentifier())
-                                      .name(dto.getName())
-                                      .description(dto.getDescription())
-                                      .tags(null)
-                                      .secretManager(specDTO.getSecretManagerIdentifier())
-                                      .type(dto.getType())
-                                      .build();
-    return getResponse(secretManagerClient.createSecretFile(getRequestBody(JsonUtils.asJson(secretFileDTO)), null));
+    return EncryptedDataDTO.builder()
+        .account(accountIdentifier)
+        .org(dto.getOrgIdentifier())
+        .project(dto.getProjectIdentifier())
+        .identifier(dto.getIdentifier())
+        .name(dto.getName())
+        .description(dto.getDescription())
+        .tags(null)
+        .secretManager(specDTO.getSecretManagerIdentifier())
+        .type(dto.getType())
+        .build();
   }
 
   @Override
   public boolean update(String accountIdentifier, SecretDTOV2 dto) {
-    EncryptedDataDTO encryptedDataDTO = getResponse(secretManagerClient.getSecret(
-        dto.getIdentifier(), accountIdentifier, dto.getOrgIdentifier(), dto.getProjectIdentifier()));
-    SecretFileSpecDTO specDTO = (SecretFileSpecDTO) dto.getSpec();
-    if (encryptedDataDTO == null || !specDTO.getSecretManagerIdentifier().equals(encryptedDataDTO.getSecretManager())) {
-      throw new InvalidRequestException("Cannot update secret manager after creation of secret", USER);
-    }
-    SecretFileUpdateDTO updateDTO =
-        SecretFileUpdateDTO.builder().name(dto.getName()).tags(null).description(dto.getDescription()).build();
-    return getResponse(secretManagerClient.updateSecretFile(dto.getIdentifier(), accountIdentifier,
-        dto.getOrgIdentifier(), dto.getProjectIdentifier(), null, getRequestBody(JsonUtils.asJson(updateDTO))));
+    // no need to make a call to 71-rest in case of updating file without any content
+    return true;
   }
 
   @Override
   public boolean updateViaYaml(String accountIdentifier, SecretDTOV2 dto) {
-    return update(accountIdentifier, dto);
+    // no need to make a call to 71-rest in case of updating file without any content
+    return true;
   }
 }
