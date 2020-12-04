@@ -81,9 +81,9 @@ public class NotificationClientApplication extends Application<NotificationClien
                                                  .team(Team.CD)
                                                  .templateId("email_test.txt")
                                                  .templateData(Collections.emptyMap())
-                                                 .userGroupIds(Lists.newArrayList("5fbce374298d69483974609a"))
+                                                 .userGroupIds(Collections.emptyList())
                                                  .build());
-    //
+
     //    notificationClient.sendNotificationAsync(EmailChannel.builder()
     //                                                 .accountId("abcd")
     //                                                 .recipients(Collections.singletonList("shawank17198@gmail.com"))

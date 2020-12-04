@@ -1,7 +1,7 @@
 package io.harness.notification;
 
-import io.harness.NotificationClientApplicationConfiguration;
 import io.harness.annotation.HarnessRepo;
+import io.harness.mongo.MongoConfig;
 import io.harness.springdata.HMongoTemplate;
 
 import com.google.inject.Inject;
@@ -15,7 +15,6 @@ import java.util.Objects;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.Primary;
 import org.springframework.data.mongodb.MongoDbFactory;
 import org.springframework.data.mongodb.MongoTransactionManager;
 import org.springframework.data.mongodb.config.AbstractMongoConfiguration;
@@ -28,21 +27,14 @@ import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
 import org.springframework.data.mongodb.repository.config.EnableMongoRepositories;
 
 @Configuration
-@EnableMongoRepositories(basePackages = {"io.harness.notification"},
-    includeFilters = @ComponentScan.Filter(HarnessRepo.class), mongoTemplateRef = "notification-channel")
-public class NotificationChannelPersistenceConfig extends AbstractMongoConfiguration {
-  private final MongoBackendConfiguration mongoBackendConfiguration;
+@EnableMongoRepositories(
+    basePackages = {"io.harness.notification"}, includeFilters = @ComponentScan.Filter(HarnessRepo.class))
+public class NotificationPersistenceConfig extends AbstractMongoConfiguration {
+  private final MongoConfig mongoBackendConfiguration;
 
   @Inject
-  public NotificationChannelPersistenceConfig(Injector injector) {
-    this.mongoBackendConfiguration = (MongoBackendConfiguration) injector.getInstance(NotificationConfiguration.class)
-                                         .getNotificationClientConfiguration()
-                                         .getNotificationClientBackendConfiguration();
-  }
-
-  @Override
-  protected String getDatabaseName() {
-    return new MongoClientURI(mongoBackendConfiguration.getUri()).getDatabase();
+  public NotificationPersistenceConfig(Injector injector) {
+    this.mongoBackendConfiguration = injector.getInstance(Key.get(NotificationConfiguration.class)).getMongoConfig();
   }
 
   @Override
@@ -61,9 +53,17 @@ public class NotificationChannelPersistenceConfig extends AbstractMongoConfigura
     return new MongoClient(uri);
   }
 
-  @Bean(name = "notification-channel")
-  @Primary
   @Override
+  protected String getDatabaseName() {
+    return new MongoClientURI(mongoBackendConfiguration.getUri()).getDatabase();
+  }
+
+  @Bean
+  MongoTransactionManager transactionManager(MongoDbFactory dbFactory) {
+    return new MongoTransactionManager(dbFactory);
+  }
+
+  @Bean
   public MongoTemplate mongoTemplate() throws Exception {
     MongoClientOptions primaryMongoClientOptions =
         MongoClientOptions.builder()
