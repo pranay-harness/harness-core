@@ -19,6 +19,7 @@ import static org.mockito.Mockito.when;
 import io.harness.category.element.UnitTests;
 import io.harness.exception.GeneralException;
 import io.harness.exception.HarnessJiraException;
+import io.harness.exception.InvalidRequestException;
 import io.harness.jira.JiraCreateMetaResponse;
 import io.harness.jira.JiraCustomFieldValue;
 import io.harness.rule.Owner;
@@ -481,5 +482,29 @@ public class JiraCreateUpdateTest extends WingsBaseTest {
     assertThatThrownBy(() -> jiraCreateUpdateState.execute(context))
         .isInstanceOf(GeneralException.class)
         .hasMessage("Jira connector doesn't exist");
+  }
+
+  @Test
+  @Owner(developers = AGORODETKI)
+  @Category(UnitTests.class)
+  public void shouldThrowInvalidRequestExceptionWhenInvalidArgumentIsPassedForNumberFieldType() {
+    String fieldValue = "wrongFormatForNumberType";
+    String fieldName = "fieldName";
+    when(context.renderExpression(fieldValue)).thenReturn(fieldValue);
+
+    assertThatThrownBy(() -> jiraCreateUpdateState.parseNumberValue(fieldValue, context, fieldName))
+        .isInstanceOf(InvalidRequestException.class)
+        .hasMessage("Invalid value provided for field: fieldName. fieldName field is of type 'number'.");
+  }
+
+  @Test
+  @Owner(developers = AGORODETKI)
+  @Category(UnitTests.class)
+  public void shouldReturnParsedNumericValueConvertedBackToString() {
+    String fieldValue = "10";
+    String fieldName = "fieldName";
+    when(context.renderExpression(fieldValue)).thenReturn(fieldValue);
+    String numericValue = jiraCreateUpdateState.parseNumberValue(fieldValue, context, fieldName);
+    assertThat(Double.parseDouble(numericValue)).isEqualTo(Double.parseDouble(fieldValue));
   }
 }
