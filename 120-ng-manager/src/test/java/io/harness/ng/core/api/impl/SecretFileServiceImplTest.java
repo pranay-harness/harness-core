@@ -51,22 +51,6 @@ public class SecretFileServiceImplTest extends CategoryTest {
   @Test
   @Owner(developers = PHOENIKX)
   @Category(UnitTests.class)
-  public void testCreate() throws IOException {
-    EncryptedDataDTO encryptedDataDTO = random(EncryptedDataDTO.class);
-    when(secretManagerClient.createSecretFile(any(), any()).execute())
-        .thenReturn(Response.success(new RestResponse<>(encryptedDataDTO)));
-
-    SecretDTOV2 secretDTO = getBaseSecret();
-    secretDTO.setSpec(SecretFileSpecDTO.builder().secretManagerIdentifier("sm").build());
-    EncryptedDataDTO savedData = secretFileService.create("account", secretDTO);
-
-    assertThat(savedData).isEqualTo(encryptedDataDTO);
-    verify(secretManagerClient, atLeastOnce()).createSecretFile(any(), any());
-  }
-
-  @Test
-  @Owner(developers = PHOENIKX)
-  @Category(UnitTests.class)
   public void testUpdate() throws IOException {
     EncryptedDataDTO encryptedDataDTO = random(EncryptedDataDTO.class);
     encryptedDataDTO.setSecretManager("sm");

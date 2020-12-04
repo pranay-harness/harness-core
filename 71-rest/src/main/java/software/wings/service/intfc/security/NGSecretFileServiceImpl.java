@@ -144,7 +144,7 @@ public class NGSecretFileServiceImpl implements NGSecretFileService {
       savedEncryptedData.setEncryptionType(secretManagerConfigOptional.get().getEncryptionType());
       savedEncryptedData.setType(SettingVariableTypes.CONFIG_FILE);
       savedEncryptedData.setAccountId(metadata.getAccountIdentifier());
-      metadata.setSecretManagerName(secretManagerConfigOptional.get().getName()); // TODO{phoenikx} remove this later
+      metadata.setSecretManagerName(secretManagerConfigOptional.get().getName());
       savedEncryptedData.setNgMetadata(metadata);
       wingsPersistence.save(savedEncryptedData);
 

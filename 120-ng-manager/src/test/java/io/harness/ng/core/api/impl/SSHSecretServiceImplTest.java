@@ -2,7 +2,6 @@ package io.harness.ng.core.api.impl;
 
 import static io.harness.rule.OwnerRule.PHOENIKX;
 
-import static io.github.benas.randombeans.api.EnhancedRandom.random;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.RETURNS_DEEP_STUBS;
@@ -18,8 +17,6 @@ import io.harness.encryption.SecretRefData;
 import io.harness.ng.core.dto.secrets.SSHAuthDTO;
 import io.harness.ng.core.dto.secrets.SSHConfigDTO;
 import io.harness.ng.core.dto.secrets.SSHCredentialType;
-import io.harness.ng.core.dto.secrets.SSHKeyPathCredentialDTO;
-import io.harness.ng.core.dto.secrets.SSHKeyReferenceCredentialDTO;
 import io.harness.ng.core.dto.secrets.SSHKeySpecDTO;
 import io.harness.ng.core.dto.secrets.SSHPasswordCredentialDTO;
 import io.harness.ng.core.dto.secrets.SecretDTOV2;
@@ -27,7 +24,6 @@ import io.harness.rest.RestResponse;
 import io.harness.rule.Owner;
 import io.harness.secretmanagerclient.SSHAuthScheme;
 import io.harness.secretmanagerclient.SecretType;
-import io.harness.secretmanagerclient.dto.EncryptedDataDTO;
 import io.harness.secretmanagerclient.remote.SecretManagerClient;
 
 import com.google.common.collect.ImmutableMap;
@@ -55,93 +51,6 @@ public class SSHSecretServiceImplTest extends CategoryTest {
         .identifier("identifier")
         .tags(Maps.newHashMap(ImmutableMap.of("a", "b")))
         .build();
-  }
-
-  @Test
-  @Owner(developers = PHOENIKX)
-  @Category(UnitTests.class)
-  public void testCreateSSHKeyWithPassword() throws IOException {
-    SecretDTOV2 secretDTOV2 = getBaseSecret();
-    EncryptedDataDTO encryptedDataDTO = random(EncryptedDataDTO.class);
-    secretDTOV2.setSpec(
-        SSHKeySpecDTO.builder()
-            .auth(
-                SSHAuthDTO.builder()
-                    .type(SSHAuthScheme.SSH)
-                    .spec(
-                        SSHConfigDTO.builder()
-                            .credentialType(SSHCredentialType.Password)
-                            .spec(SSHPasswordCredentialDTO.builder()
-                                      .userName("username")
-                                      .password(
-                                          SecretRefData.builder().identifier("identifier").scope(Scope.ACCOUNT).build())
-                                      .build())
-                            .build())
-                    .build())
-            .port(22)
-            .build());
-    when(secretManagerClient.createSecretFile(any(), any()).execute())
-        .thenReturn(Response.success(new RestResponse<>(encryptedDataDTO)));
-    EncryptedDataDTO savedData = sshSecretService.create("account", secretDTOV2);
-    assertThat(savedData).isNotNull();
-    assertThat(savedData).isEqualTo(encryptedDataDTO);
-    verify(secretManagerClient, atLeastOnce()).createSecretFile(any(), any());
-  }
-
-  @Test
-  @Owner(developers = PHOENIKX)
-  @Category(UnitTests.class)
-  public void testCreateSSHKeyWithKeyFile() throws IOException {
-    SecretDTOV2 secretDTOV2 = getBaseSecret();
-    EncryptedDataDTO encryptedDataDTO = random(EncryptedDataDTO.class);
-    secretDTOV2.setSpec(
-        SSHKeySpecDTO.builder()
-            .auth(SSHAuthDTO.builder()
-                      .type(SSHAuthScheme.SSH)
-                      .spec(SSHConfigDTO.builder()
-                                .credentialType(SSHCredentialType.KeyPath)
-                                .spec(SSHKeyPathCredentialDTO.builder().userName("username").keyPath("/a/b/c").build())
-                                .build())
-                      .build())
-            .port(22)
-            .build());
-    when(secretManagerClient.createSecretFile(any(), any()).execute())
-        .thenReturn(Response.success(new RestResponse<>(encryptedDataDTO)));
-    EncryptedDataDTO savedData = sshSecretService.create("account", secretDTOV2);
-    assertThat(savedData).isNotNull();
-    assertThat(savedData).isEqualTo(encryptedDataDTO);
-    verify(secretManagerClient, atLeastOnce()).createSecretFile(any(), any());
-  }
-
-  @Test
-  @Owner(developers = PHOENIKX)
-  @Category(UnitTests.class)
-  public void testCreateSSHKeyWithKeyReference() throws IOException {
-    SecretDTOV2 secretDTOV2 = getBaseSecret();
-    EncryptedDataDTO encryptedDataDTO = random(EncryptedDataDTO.class);
-    secretDTOV2.setSpec(
-        SSHKeySpecDTO.builder()
-            .auth(
-                SSHAuthDTO.builder()
-                    .type(SSHAuthScheme.SSH)
-                    .spec(
-                        SSHConfigDTO.builder()
-                            .credentialType(SSHCredentialType.KeyReference)
-                            .spec(
-                                SSHKeyReferenceCredentialDTO.builder()
-                                    .userName("username")
-                                    .key(SecretRefData.builder().scope(Scope.ACCOUNT).identifier("identifier").build())
-                                    .build())
-                            .build())
-                    .build())
-            .port(22)
-            .build());
-    when(secretManagerClient.createSecretFile(any(), any()).execute())
-        .thenReturn(Response.success(new RestResponse<>(encryptedDataDTO)));
-    EncryptedDataDTO savedData = sshSecretService.create("account", secretDTOV2);
-    assertThat(savedData).isNotNull();
-    assertThat(savedData).isEqualTo(encryptedDataDTO);
-    verify(secretManagerClient, atLeastOnce()).createSecretFile(any(), any());
   }
 
   @Test
