@@ -58,8 +58,9 @@ public class AzureWebAppSlotSetupTaskHandler extends AbstractAzureWebAppTaskHand
         getAzureAppServicePreDeploymentData(dockerDeploymentContext);
 
     try {
-      List<AzureAppDeploymentData> azureAppDeploymentData =
-          azureAppServiceDeploymentService.deployDockerImage(dockerDeploymentContext);
+      azureAppServiceDeploymentService.deployDockerImage(dockerDeploymentContext);
+      List<AzureAppDeploymentData> azureAppDeploymentData = azureAppServiceDeploymentService.fetchDeploymentData(
+          azureWebClientContext, azureWebAppSlotSetupParameters.getSlotName());
 
       return AzureWebAppSlotSetupResponse.builder()
           .azureAppDeploymentData(azureAppDeploymentData)
