@@ -4,7 +4,9 @@ import static io.harness.cvng.CVConstants.SERVICE_BASE_URL;
 import static io.harness.cvng.analysis.CVAnalysisConstants.ANALYSIS_RISK_RESULTS_LIMIT;
 import static io.harness.cvng.analysis.CVAnalysisConstants.TIMESERIES_ANALYSIS_RESOURCE;
 import static io.harness.cvng.analysis.CVAnalysisConstants.TIMESERIES_SAVE_ANALYSIS_PATH;
+import static io.harness.cvng.analysis.CVAnalysisConstants.TIMESERIES_SERVICE_GUARD_DATA_LENGTH;
 import static io.harness.cvng.analysis.CVAnalysisConstants.TIMESERIES_VERIFICATION_TASK_SAVE_ANALYSIS_PATH;
+import static io.harness.cvng.core.services.CVNextGenConstants.CV_ANALYSIS_WINDOW_MINUTES;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.persistence.HQuery.excludeAuthority;
 
@@ -203,15 +205,9 @@ public class TimeSeriesAnalysisServiceImpl implements TimeSeriesAnalysisService 
 
   private TimeSeriesLearningEngineTask createTimeSeriesLearningTask(AnalysisInput input) {
     String taskId = generateUuid();
-    int length = (int) Duration
-                     .between(input.getStartTime().truncatedTo(ChronoUnit.SECONDS),
-                         input.getEndTime().truncatedTo(ChronoUnit.SECONDS))
-                     .toMinutes();
-
     TimeSeriesLearningEngineTask timeSeriesLearningEngineTask =
         TimeSeriesLearningEngineTask.builder()
             .cumulativeSumsUrl(createCumulativeSumsUrl(input))
-            .dataLength(length)
             .keyTransactions(null)
             .metricTemplateUrl(createMetricTemplateUrl(input))
             .previousAnalysisUrl(createPreviousAnalysisUrl(input))
@@ -298,10 +294,13 @@ public class TimeSeriesAnalysisServiceImpl implements TimeSeriesAnalysisService 
   }
 
   private String createTestDataUrl(AnalysisInput input) {
+    Instant startForTestData = input.getEndTime()
+                                   .truncatedTo(ChronoUnit.SECONDS)
+                                   .minus(TIMESERIES_SERVICE_GUARD_DATA_LENGTH, ChronoUnit.MINUTES);
     URIBuilder uriBuilder = new URIBuilder();
     uriBuilder.setPath(SERVICE_BASE_URL + "/" + TIMESERIES_ANALYSIS_RESOURCE + "/time-series-data");
     uriBuilder.addParameter("verificationTaskId", input.getVerificationTaskId());
-    uriBuilder.addParameter("startTime", Long.toString(input.getStartTime().toEpochMilli()));
+    uriBuilder.addParameter("startTime", Long.toString(startForTestData.toEpochMilli()));
     uriBuilder.addParameter("endTime", Long.toString(input.getEndTime().toEpochMilli()));
     return getUriString(uriBuilder);
   }
@@ -419,9 +418,8 @@ public class TimeSeriesAnalysisServiceImpl implements TimeSeriesAnalysisService 
     TimeSeriesLearningEngineTask task = (TimeSeriesLearningEngineTask) learningEngineTask;
     Preconditions.checkNotNull(learningEngineTask, "Needs to be a valid LE task.");
     analysis.setVerificationTaskId(learningEngineTask.getVerificationTaskId());
-    Instant dataStartTime = learningEngineTask.getAnalysisStartTime();
     Instant endTime = learningEngineTask.getAnalysisEndTime();
-    Instant startTime = endTime.minus(Duration.ofMinutes(task.getWindowSize()));
+    Instant startTime = endTime.minus(Duration.ofMinutes(CV_ANALYSIS_WINDOW_MINUTES));
     analysis.setAnalysisStartTime(startTime);
     analysis.setAnalysisEndTime(endTime);
     String cvConfigId = verificationTaskService.getCVConfigId(learningEngineTask.getVerificationTaskId());

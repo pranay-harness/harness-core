@@ -28,4 +28,7 @@ public interface CVAnalysisConstants {
   String TREND_METRIC_NAME = "trend-error-metric";
   String LOG_METRIC_TEMPLATE_FILE = "/io/harness/cvng/analysis/service/impl/log_metric_template.yml";
   int ANALYSIS_RISK_RESULTS_LIMIT = 3;
+
+  int TIMESERIES_SERVICE_GUARD_DATA_LENGTH = 135;
+  int TIMESERIES_SERVICE_GUARD_WINDOW_SIZE = 15;
 }

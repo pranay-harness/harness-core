@@ -6,6 +6,7 @@ import static io.harness.cvng.analysis.CVAnalysisConstants.LOG_METRIC_TEMPLATE_F
 import static io.harness.cvng.analysis.CVAnalysisConstants.PREVIOUS_ANOMALIES_URL;
 import static io.harness.cvng.analysis.CVAnalysisConstants.SERVICE_GUARD_SHORT_TERM_HISTORY_URL;
 import static io.harness.cvng.analysis.CVAnalysisConstants.TIMESERIES_ANALYSIS_RESOURCE;
+import static io.harness.cvng.analysis.CVAnalysisConstants.TIMESERIES_SERVICE_GUARD_DATA_LENGTH;
 import static io.harness.cvng.analysis.CVAnalysisConstants.TREND_ANALYSIS_RESOURCE;
 import static io.harness.cvng.analysis.CVAnalysisConstants.TREND_ANALYSIS_SAVE_PATH;
 import static io.harness.cvng.analysis.CVAnalysisConstants.TREND_ANALYSIS_TEST_DATA;
@@ -61,7 +62,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.URISyntaxException;
 import java.nio.charset.StandardCharsets;
-import java.time.Duration;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
@@ -97,15 +97,9 @@ public class TrendAnalysisServiceImpl implements TrendAnalysisService {
 
   private TimeSeriesLearningEngineTask createTrendAnalysisTask(AnalysisInput input) {
     String taskId = generateUuid();
-    int length = (int) Duration
-                     .between(input.getStartTime().truncatedTo(ChronoUnit.SECONDS),
-                         input.getEndTime().truncatedTo(ChronoUnit.SECONDS))
-                     .toMinutes();
-
     TimeSeriesLearningEngineTask timeSeriesLearningEngineTask =
         TimeSeriesLearningEngineTask.builder()
             .cumulativeSumsUrl(createCumulativeSumsUrl(input))
-            .dataLength(length)
             .metricTemplateUrl(createMetricTemplateUrl())
             .previousAnalysisUrl(createPreviousAnalysisUrl(input))
             .previousAnomaliesUrl(createAnomaliesUrl(input))
@@ -156,7 +150,9 @@ public class TrendAnalysisServiceImpl implements TrendAnalysisService {
   }
 
   private String createTestDataUrl(AnalysisInput input) {
-    Instant startForTestData = input.getEndTime().truncatedTo(ChronoUnit.SECONDS).minus(125, ChronoUnit.MINUTES);
+    Instant startForTestData = input.getEndTime()
+                                   .truncatedTo(ChronoUnit.SECONDS)
+                                   .minus(TIMESERIES_SERVICE_GUARD_DATA_LENGTH, ChronoUnit.MINUTES);
 
     URIBuilder uriBuilder = new URIBuilder();
     uriBuilder.setPath(SERVICE_BASE_URL + "/" + TREND_ANALYSIS_RESOURCE + "/" + TREND_ANALYSIS_TEST_DATA);

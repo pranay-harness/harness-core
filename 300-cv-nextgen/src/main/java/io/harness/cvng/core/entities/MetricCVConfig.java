@@ -1,5 +1,6 @@
 package io.harness.cvng.core.entities;
 
+import static io.harness.cvng.analysis.CVAnalysisConstants.TIMESERIES_SERVICE_GUARD_DATA_LENGTH;
 import static io.harness.cvng.core.utils.ErrorMessageUtils.generateErrorMessageFromParam;
 
 import static com.google.common.base.Preconditions.checkNotNull;
@@ -23,7 +24,10 @@ public abstract class MetricCVConfig extends CVConfig {
   private MetricPack metricPack;
   public TimeRange getFirstTimeDataCollectionTimeRange() {
     Instant endTime = DateTimeUtils.roundDownTo5MinBoundary(Instant.ofEpochMilli(this.getCreatedAt()));
-    return TimeRange.builder().startTime(endTime.minus(125, ChronoUnit.MINUTES)).endTime(endTime).build();
+    return TimeRange.builder()
+        .startTime(endTime.minus(TIMESERIES_SERVICE_GUARD_DATA_LENGTH, ChronoUnit.MINUTES))
+        .endTime(endTime)
+        .build();
   }
   @Override
   public VerificationType getVerificationType() {
