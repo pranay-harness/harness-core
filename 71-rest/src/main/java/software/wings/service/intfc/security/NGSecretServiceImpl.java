@@ -6,6 +6,10 @@ import static io.harness.eraro.ErrorCode.ENCRYPT_DECRYPT_ERROR;
 import static io.harness.eraro.ErrorCode.INVALID_REQUEST;
 import static io.harness.eraro.ErrorCode.SECRET_MANAGEMENT_ERROR;
 import static io.harness.exception.WingsException.USER;
+import static io.harness.security.SimpleEncryption.CHARSET;
+import static io.harness.security.encryption.EncryptionType.GCP_KMS;
+import static io.harness.security.encryption.EncryptionType.KMS;
+import static io.harness.security.encryption.EncryptionType.LOCAL;
 import static io.harness.security.encryption.EncryptionType.VAULT;
 
 import io.harness.beans.DecryptableEntity;
@@ -41,11 +45,15 @@ import software.wings.settings.SettingVariableTypes;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import java.io.ByteArrayOutputStream;
 import java.lang.reflect.Field;
+import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.EnumSet;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import javax.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import org.apache.commons.lang3.StringUtils;
@@ -54,6 +62,7 @@ import org.mongodb.morphia.query.Query;
 @Singleton
 @AllArgsConstructor(onConstructor = @__({ @Inject }))
 public class NGSecretServiceImpl implements NGSecretService {
+  static final Set<EncryptionType> ENCRYPTION_TYPES_REQUIRING_FILE_DOWNLOAD = EnumSet.of(LOCAL, GCP_KMS, KMS);
   private static final String ACCOUNT_IDENTIFIER_KEY =
       EncryptedDataKeys.ngMetadata + "." + NGSecretManagerMetadataKeys.accountIdentifier;
   private static final String ORG_IDENTIFIER_KEY =
@@ -128,7 +137,7 @@ public class NGSecretServiceImpl implements NGSecretService {
 
       data.setKmsId(secretManagerConfig.getUuid());
       data.setEncryptionType(secretManagerConfig.getEncryptionType());
-      data.getNgMetadata().setSecretManagerName(secretManagerConfig.getName()); // TODO{phoenikx} remove this
+      data.getNgMetadata().setSecretManagerName(secretManagerConfig.getName());
 
       if (!StringUtils.isEmpty(dto.getValue())) {
         // send task to delegate for saving secret
@@ -295,6 +304,12 @@ public class NGSecretServiceImpl implements NGSecretService {
     return null;
   }
 
+  public void setEncryptedValueToFileContent(EncryptedData encryptedData) {
+    ByteArrayOutputStream os = new ByteArrayOutputStream();
+    fileService.downloadToStream(String.valueOf(encryptedData.getEncryptedValue()), os, CONFIGS);
+    encryptedData.setEncryptedValue(CHARSET.decode(ByteBuffer.wrap(os.toByteArray())).array());
+  }
+
   @Override
   public List<EncryptedDataDetail> getEncryptionDetails(NGAccess ngAccess, DecryptableEntity object) {
     // if object is already decrypted, return empty list
@@ -329,6 +344,12 @@ public class NGSecretServiceImpl implements NGSecretService {
           if (encryptedDataOptional.isPresent()
               && Optional.ofNullable(encryptedDataOptional.get().getNgMetadata()).isPresent()) {
             EncryptedData encryptedData = encryptedDataOptional.get();
+
+            // if type is file and file is saved elsewhere, download and save contents in encryptedValue
+            if (encryptedData.getType() == SettingVariableTypes.CONFIG_FILE
+                && ENCRYPTION_TYPES_REQUIRING_FILE_DOWNLOAD.contains(encryptedData.getEncryptionType())) {
+              setEncryptedValueToFileContent(encryptedData);
+            }
 
             // get secret manager with which this was secret was encrypted
             Optional<SecretManagerConfig> secretManagerConfigOptional =

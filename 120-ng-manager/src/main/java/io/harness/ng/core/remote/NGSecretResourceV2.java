@@ -3,17 +3,13 @@ package io.harness.ng.core.remote;
 import io.harness.NGCommonEntityConstants;
 import io.harness.NGResourceFilterConstants;
 import io.harness.ng.beans.PageResponse;
-import io.harness.ng.core.NGAccessWithEncryptionConsumer;
 import io.harness.ng.core.api.SecretCrudService;
 import io.harness.ng.core.dto.ErrorDTO;
 import io.harness.ng.core.dto.FailureDTO;
 import io.harness.ng.core.dto.ResponseDTO;
 import io.harness.ng.core.dto.secrets.SecretRequestWrapper;
 import io.harness.ng.core.dto.secrets.SecretResponseWrapper;
-import io.harness.rest.RestResponse;
 import io.harness.secretmanagerclient.SecretType;
-import io.harness.secretmanagerclient.services.api.SecretManagerClientService;
-import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.serializer.JsonUtils;
 
 import com.google.inject.Inject;
@@ -22,7 +18,6 @@ import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
 import java.io.InputStream;
-import java.util.List;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 import javax.ws.rs.Consumes;
@@ -52,7 +47,6 @@ import org.hibernate.validator.constraints.NotEmpty;
 @AllArgsConstructor(onConstructor = @__({ @Inject }))
 public class NGSecretResourceV2 {
   private final SecretCrudService ngSecretService;
-  private final SecretManagerClientService secretManagerClientService;
 
   @POST
   @Consumes({"application/json"})
@@ -165,14 +159,5 @@ public class NGSecretResourceV2 {
       @NotNull @FormDataParam("file") InputStream uploadedInputStream, @FormDataParam("spec") String spec) {
     SecretRequestWrapper dto = JsonUtils.asObject(spec, SecretRequestWrapper.class);
     return ResponseDTO.newResponse(ngSecretService.createFile(accountIdentifier, dto.getSecret(), uploadedInputStream));
-  }
-
-  @POST
-  @Path("encryption-details")
-  @ApiOperation(value = "Get Encryption Details", nickname = "postEncryptionDetails")
-  public RestResponse<List<EncryptedDataDetail>> getEncryptionDetails(
-      NGAccessWithEncryptionConsumer ngAccessWithEncryptionConsumer) {
-    return new RestResponse<>(secretManagerClientService.getEncryptionDetails(
-        ngAccessWithEncryptionConsumer.getNgAccess(), ngAccessWithEncryptionConsumer.getDecryptableEntity()));
   }
 }
