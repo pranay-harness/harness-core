@@ -126,6 +126,7 @@ import io.harness.delegate.beans.git.GitCommandExecutionResponse.GitCommandStatu
 import io.harness.delegate.beans.git.GitCommandParams;
 import io.harness.delegate.beans.git.GitCommandType;
 import io.harness.delegate.beans.git.YamlGitConfigDTO;
+import io.harness.delegate.beans.logstreaming.CommandUnitStatusProgress;
 import io.harness.delegate.beans.secrets.SSHConfigValidationTaskResponse;
 import io.harness.delegate.beans.storeconfig.FetchType;
 import io.harness.delegate.beans.storeconfig.GitStoreDelegateConfig;
@@ -497,5 +498,6 @@ public class DelegateTasksBeansKryoRegister implements KryoRegistrar {
     kryo.register(EnvVariableEnum.class, 19430);
     kryo.register(AzureWebAppListWebAppInstancesParameters.class, 19431);
     kryo.register(AzureWebAppListWebAppInstancesResponse.class, 19432);
+    kryo.register(CommandUnitStatusProgress.class, 19433);
   }
 }
