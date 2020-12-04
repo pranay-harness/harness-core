@@ -239,9 +239,9 @@ public class ScpCommandUnit extends SshCommandUnit {
               // Try once more of to get download url
               try {
                 List<BuildDetails> buildDetailsList = nexusTwoService.getVersion(nexusConfig, encryptionDetails,
-                    artifactStreamAttributes.getRepositoryName(), artifactStreamAttributes.getGroupId(), null,
-                    artifactStreamAttributes.getExtension(), artifactStreamAttributes.getClassifier(),
-                    artifactStreamAttributes.getBuildNoPath());
+                    artifactStreamAttributes.getRepositoryName(), artifactStreamAttributes.getGroupId(),
+                    artifactStreamAttributes.getArtifactName(), artifactStreamAttributes.getExtension(),
+                    artifactStreamAttributes.getClassifier(), artifactStreamAttributes.getMetadata().get("buildNo"));
 
                 if (isEmpty(buildDetailsList) || isEmpty(buildDetailsList.get(0).getArtifactFileMetadataList())) {
                   saveExecutionLog(context, WARN, "There are no artifacts to copy");
