@@ -755,6 +755,40 @@ public class UserResource {
   }
 
   @PUT
+  @Path("disable/{userId}")
+  @Timed
+  @ExceptionMetered
+  public RestResponse<Boolean> disableUser(
+      @PathParam("userId") @NotEmpty String userId, @QueryParam("accountId") @NotEmpty String accountId) {
+    // Only if the user the account administrator or in the Harness user group can perform the export operation.
+    if (!userService.hasPermission(accountId, USER_PERMISSION_MANAGEMENT)) {
+      String errorMessage = "User is not account administrator and can't perform the export operation.";
+      RestResponse<Boolean> restResponse = accountPermissionUtils.checkIfHarnessUser(errorMessage);
+      if (restResponse != null) {
+        throw new WingsException(ErrorCode.USER_NOT_AUTHORIZED, USER);
+      }
+    }
+    return new RestResponse<>(userService.enableUser(accountId, userId, false));
+  }
+
+  @PUT
+  @Path("enable/{userId}")
+  @Timed
+  @ExceptionMetered
+  public RestResponse<Boolean> enableUser(
+      @PathParam("userId") @NotEmpty String userId, @QueryParam("accountId") @NotEmpty String accountId) {
+    // Only if the user the account administrator or in the Harness user group can perform the export operation.
+    if (!userService.hasPermission(accountId, USER_PERMISSION_MANAGEMENT)) {
+      String errorMessage = "User is not account administrator and can't perform the export operation.";
+      RestResponse<Boolean> restResponse = accountPermissionUtils.checkIfHarnessUser(errorMessage);
+      if (restResponse != null) {
+        throw new WingsException(ErrorCode.USER_NOT_AUTHORIZED, USER);
+      }
+    }
+    return new RestResponse<>(userService.enableUser(accountId, userId, true));
+  }
+
+  @PUT
   @Path("enable-two-factor-auth")
   @Timed
   @ExceptionMetered
