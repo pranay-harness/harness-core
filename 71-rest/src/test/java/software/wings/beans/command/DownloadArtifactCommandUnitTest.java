@@ -240,6 +240,7 @@ public class DownloadArtifactCommandUnitTest extends WingsBaseTest {
           .extension("war")
           .classifier("sources")
           .artifactServerEncryptedDataDetails(Collections.emptyList())
+          .metadata(mockMetadata(ArtifactStreamType.NEXUS))
           .build();
 
   private ArtifactStreamAttributes nexus2MavenStreamAttributesAnon =
@@ -640,6 +641,9 @@ public class DownloadArtifactCommandUnitTest extends WingsBaseTest {
         break;
       case AZURE_ARTIFACTS:
         map.put(ArtifactMetadataKeys.version, BUILD_NO);
+        map.put(ArtifactMetadataKeys.buildNo, BUILD_NO);
+        break;
+      case NEXUS:
         map.put(ArtifactMetadataKeys.buildNo, BUILD_NO);
         break;
       default:
