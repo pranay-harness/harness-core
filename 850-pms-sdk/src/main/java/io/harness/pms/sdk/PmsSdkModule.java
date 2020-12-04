@@ -19,6 +19,7 @@ import io.harness.pms.sdk.execution.NodeExecutionEventListener;
 import io.harness.queue.QueueConsumer;
 import io.harness.queue.QueueController;
 import io.harness.queue.QueueListener;
+import io.harness.registries.state.StepRegistry;
 import io.harness.serializer.KryoRegistrar;
 import io.harness.serializer.PmsSdkModuleRegistrars;
 import io.harness.spring.AliasRegistrar;
@@ -26,23 +27,10 @@ import io.harness.spring.AliasRegistrar;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.util.concurrent.Service;
 import com.google.common.util.concurrent.ServiceManager;
-import com.google.inject.AbstractModule;
-import com.google.inject.Guice;
-import com.google.inject.Injector;
-import com.google.inject.Key;
-import com.google.inject.Module;
-import com.google.inject.Provides;
-import com.google.inject.Singleton;
-import com.google.inject.TypeLiteral;
+import com.google.inject.*;
 import com.google.inject.name.Named;
 import com.google.inject.name.Names;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import org.mongodb.morphia.converters.TypeConverter;
 import org.springframework.data.mongodb.core.MongoTemplate;
 
@@ -146,6 +134,12 @@ public class PmsSdkModule {
       @Named("pmsSdkMongoConfig")
       public MongoConfig mongoConfig() {
         return config.getMongoConfig();
+      }
+
+      @Provides
+      @Singleton
+      StepRegistry providesStateRegistry() {
+        return config.getStepRegistry();
       }
     });
     modules.add(new AbstractModule() {
