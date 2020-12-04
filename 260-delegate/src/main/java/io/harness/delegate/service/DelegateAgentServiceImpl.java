@@ -135,6 +135,7 @@ import io.harness.version.VersionInfoManager;
 import software.wings.beans.Delegate;
 import software.wings.beans.Delegate.Status;
 import software.wings.beans.DelegateTaskFactory;
+import software.wings.beans.LogHelper;
 import software.wings.beans.TaskType;
 import software.wings.beans.command.Command;
 import software.wings.beans.command.CommandExecutionContext;
@@ -1897,15 +1898,7 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
     if (!logStreamingConfigPresent && !logCallbackConfigPresent) {
       return null;
     }
-
-    // Generate base log key that will be used for writing logs to log streaming service
-    StringBuilder logBaseKey = new StringBuilder();
-    for (Entry<String, String> entry : delegateTaskPackage.getLogStreamingAbstractions().entrySet()) {
-      if (logBaseKey.length() != 0) {
-        logBaseKey.append("-");
-      }
-      logBaseKey.append(entry.getKey() + ":" + entry.getValue());
-    }
+    String logBaseKey = LogHelper.generateLogBaseKey(delegateTaskPackage.getLogStreamingAbstractions());
 
     LogStreamingTaskClientBuilder taskClientBuilder =
         LogStreamingTaskClient.builder()
@@ -1913,7 +1906,7 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
             .accountId(delegateTaskPackage.getAccountId())
             .token(delegateTaskPackage.getLogStreamingToken())
             .logStreamingSanitizer(LogStreamingSanitizer.builder().secrets(activitySecrets.getRight()).build())
-            .baseLogKey(logBaseKey.toString())
+            .baseLogKey(logBaseKey)
             .logService(delegateLogService)
             .appId(appId)
             .activityId(activityId);

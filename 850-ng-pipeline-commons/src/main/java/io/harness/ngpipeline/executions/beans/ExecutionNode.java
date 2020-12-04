@@ -2,7 +2,9 @@ package io.harness.ngpipeline.executions.beans;
 
 import io.harness.ngpipeline.pipeline.executions.ExecutionStatus;
 import io.harness.pms.execution.failure.FailureInfo;
+import io.harness.pms.sdk.core.data.Metadata;
 
+import java.util.List;
 import lombok.Builder;
 import lombok.Value;
 
@@ -16,4 +18,5 @@ public class ExecutionNode {
   String stepType;
   ExecutionStatus status;
   FailureInfo failureInfo;
+  List<Metadata> executableResponsesMetadata;
 }

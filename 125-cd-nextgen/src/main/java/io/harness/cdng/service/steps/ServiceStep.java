@@ -39,6 +39,7 @@ import io.harness.tasks.Task;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Inject;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -96,9 +97,11 @@ public class ServiceStep implements TaskChainExecutable<ServiceStepParameters> {
     List<ArtifactStepParameters> artifactsWithCorrespondingOverrides =
         serviceStepPassThroughData.getArtifactsWithCorrespondingOverrides();
 
-    StepOutcome stepOutcome =
+    StepOutcome artifactOutcome =
         artifactStep.processDelegateResponse(notifyResponseData, artifactsWithCorrespondingOverrides.get(currentIndex));
-    ((ServiceStepPassThroughData) passThroughData).getStepOutcomes().add(stepOutcome);
+    List<StepOutcome> stepOutcomes = new ArrayList<>(((ServiceStepPassThroughData) passThroughData).getStepOutcomes());
+    stepOutcomes.add(artifactOutcome);
+    ((ServiceStepPassThroughData) passThroughData).setStepOutcomes(stepOutcomes);
 
     int nextIndex = currentIndex + 1;
     Task task = artifactStep.getTask(ambiance, artifactsWithCorrespondingOverrides.get(nextIndex));
@@ -122,9 +125,13 @@ public class ServiceStep implements TaskChainExecutable<ServiceStepParameters> {
       List<ArtifactStepParameters> artifactsWithCorrespondingOverrides =
           serviceStepPassThroughData.getArtifactsWithCorrespondingOverrides();
 
-      StepOutcome stepOutcome = artifactStep.processDelegateResponse(
+      StepOutcome artifactOutcome = artifactStep.processDelegateResponse(
           notifyResponseData, artifactsWithCorrespondingOverrides.get(currentIndex));
-      ((ServiceStepPassThroughData) passThroughData).getStepOutcomes().add(stepOutcome);
+
+      List<StepOutcome> stepOutcomes =
+          new ArrayList<>(((ServiceStepPassThroughData) passThroughData).getStepOutcomes());
+      stepOutcomes.add(artifactOutcome);
+      ((ServiceStepPassThroughData) passThroughData).setStepOutcomes(stepOutcomes);
     }
 
     ServiceConfig serviceConfig = serviceStepParameters.getServiceOverrides() != null

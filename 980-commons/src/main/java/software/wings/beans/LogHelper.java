@@ -1,5 +1,9 @@
 package software.wings.beans;
 
+import java.util.LinkedHashMap;
+import java.util.Map;
+import javax.annotation.Nonnull;
+
 public class LogHelper {
   static final String END_MARK = "#==#";
   static final String NO_FORMATTING = "\033[0m";
@@ -23,5 +27,18 @@ public class LogHelper {
 
   public static String doneColoring(String value) {
     return value.replaceAll(END_MARK, NO_FORMATTING);
+  }
+
+  @Nonnull
+  public static String generateLogBaseKey(LinkedHashMap<String, String> logStreamingAbstractions) {
+    // Generate base log key that will be used for witing logs to log streaming service
+    StringBuilder logBaseKey = new StringBuilder();
+    for (Map.Entry<String, String> entry : logStreamingAbstractions.entrySet()) {
+      if (logBaseKey.length() != 0) {
+        logBaseKey.append("-");
+      }
+      logBaseKey.append(entry.getKey()).append(":").append(entry.getValue());
+    }
+    return logBaseKey.toString();
   }
 }

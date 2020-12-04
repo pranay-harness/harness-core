@@ -58,8 +58,8 @@ public class SectionChainStep implements ChildChainExecutable<SectionChainStepPa
     boolean lastLink = nextChildIndex + 1 == sectionChainStepParameters.getChildNodeIds().size();
     chainPassThroughData.setChildIndex(nextChildIndex);
     return ChildChainExecutableResponse.newBuilder()
-        .setPassThroughData(
-            ByteString.copyFrom(kryoSerializer.asBytes(SectionChainPassThroughData.builder().childIndex(0).build())))
+        .setPassThroughData(ByteString.copyFrom(
+            kryoSerializer.asBytes(SectionChainPassThroughData.builder().childIndex(nextChildIndex).build())))
         .setNextChildId(sectionChainStepParameters.getChildNodeIds().get(nextChildIndex))
         .setLastLink(lastLink)
         .setPreviousChildId(previousChildId)
