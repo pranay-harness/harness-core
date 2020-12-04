@@ -1,8 +1,17 @@
 package software.wings.sm.states.azure;
 
+import static io.harness.azure.model.AzureConstants.DEPLOYMENT_ERROR;
+import static io.harness.azure.model.AzureConstants.DEPLOYMENT_STATUS;
+import static io.harness.azure.model.AzureConstants.UP_SCALE_COMMAND_UNIT;
+import static io.harness.azure.model.AzureConstants.UP_SCALE_STEADY_STATE_WAIT_COMMAND_UNIT;
+import static io.harness.beans.ExecutionStatus.SKIPPED;
 import static io.harness.beans.ExecutionStatus.SUCCESS;
+import static io.harness.rule.OwnerRule.ANIL;
 import static io.harness.rule.OwnerRule.IVAN;
 
+import static software.wings.api.InstanceElement.Builder.anInstanceElement;
+import static software.wings.sm.StateType.AZURE_VMSS_DEPLOY;
+import static software.wings.sm.states.azure.AzureVMSSDeployState.AZURE_VMSS_DEPLOY_COMMAND_NAME;
 import static software.wings.utils.WingsTestConstants.ACTIVITY_ID;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -10,22 +19,30 @@ import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyInt;
 import static org.mockito.Matchers.anyList;
 import static org.mockito.Matchers.anyString;
+import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.reset;
 
 import io.harness.beans.ExecutionStatus;
+import io.harness.beans.OrchestrationWorkflowType;
 import io.harness.beans.SweepingOutputInstance;
 import io.harness.category.element.UnitTests;
+import io.harness.context.ContextElementType;
 import io.harness.delegate.task.azure.response.AzureVMInstanceData;
 import io.harness.delegate.task.azure.response.AzureVMSSDeployTaskResponse;
 import io.harness.delegate.task.azure.response.AzureVMSSTaskExecutionResponse;
+import io.harness.exception.InvalidRequestException;
+import io.harness.exception.WingsException;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.rule.Owner;
 import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.tasks.ResponseData;
 
 import software.wings.WingsBaseTest;
+import software.wings.api.HostElement;
 import software.wings.api.InstanceElementListParam;
 import software.wings.beans.Activity;
 import software.wings.beans.Application;
@@ -34,10 +51,12 @@ import software.wings.beans.AzureVMSSInfrastructureMapping;
 import software.wings.beans.Environment;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.InstanceUnitType;
+import software.wings.beans.ResizeStrategy;
 import software.wings.beans.Service;
 import software.wings.beans.VMSSAuthType;
 import software.wings.beans.VMSSDeploymentType;
 import software.wings.beans.artifact.Artifact;
+import software.wings.beans.command.CommandUnit;
 import software.wings.service.intfc.DelegateService;
 import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.sweepingoutput.SweepingOutputService;
@@ -48,8 +67,11 @@ import software.wings.sm.states.ManagerExecutionLogCallback;
 
 import com.google.common.collect.ImmutableMap;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
+import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
@@ -58,16 +80,16 @@ import org.mockito.Spy;
 
 public class AzureVMSSDeployStateTest extends WingsBaseTest {
   @Mock private DelegateService delegateService;
-  @Mock private AzureVMSSStateHelper azureVMSSStateHelper;
   @Mock private InfrastructureMappingService infrastructureMappingService;
   @Mock private SweepingOutputService sweepingOutputService;
-
-  @Spy @InjectMocks AzureVMSSDeployState state = new AzureVMSSDeployState("Azure VMSS Deploy State");
+  @Spy @InjectMocks private AzureVMSSStateHelper azureVMSSStateHelper;
+  @Spy @InjectMocks private AzureVMSSDeployState state = new AzureVMSSDeployState("Azure VMSS Deploy State");
 
   @Test
   @Owner(developers = IVAN)
   @Category(UnitTests.class)
   public void testExecute() {
+    reset(azureVMSSStateHelper);
     String appId = "appId";
     String serviceId = "serviceId";
     String envId = "envId";
@@ -85,20 +107,13 @@ public class AzureVMSSDeployStateTest extends WingsBaseTest {
     Environment env = Environment.Builder.anEnvironment().uuid(envId).build();
     Service service = Service.builder().uuid(serviceId).build();
     Activity activity = Activity.builder().uuid(activityId).build();
-    InfrastructureMapping azureVMSSInfrastructureMapping = AzureVMSSInfrastructureMapping.builder()
-                                                               .baseVMSSName("baseVMSSName")
-                                                               .resourceGroupName("resourceGroupName")
-                                                               .subscriptionId("subscriptionId")
-                                                               .passwordSecretTextName("password")
-                                                               .userName("userName")
-                                                               .vmssAuthType(VMSSAuthType.PASSWORD)
-                                                               .vmssDeploymentType(VMSSDeploymentType.NATIVE_VMSS)
-                                                               .build();
+    InfrastructureMapping azureVMSSInfrastructureMapping = getInfrastructureMapping();
     AzureConfig azureConfig = AzureConfig.builder().build();
     Artifact artifact = Artifact.Builder.anArtifact().build();
     List<EncryptedDataDetail> encryptedDataDetails = new ArrayList<>();
     AzureVMSSSetupContextElement azureVMSSSetupContextElement =
         AzureVMSSSetupContextElement.builder()
+            .infraMappingId("infraId")
             .autoScalingSteadyStateVMSSTimeout(10)
             .desiredInstances(1)
             .isBlueGreen(false)
@@ -142,22 +157,96 @@ public class AzureVMSSDeployStateTest extends WingsBaseTest {
         .fixNamePrefix(any(), anyString(), anyString(), anyString(), anyString());
     doReturn(numberOfInstances).when(azureVMSSStateHelper).renderExpressionOrGetDefault(anyString(), any(), anyInt());
     doReturn(delegateResult).when(delegateService).queueTask(any());
+    doReturn("newVirtualMachineScaleSetName-id")
+        .when(azureVMSSStateHelper)
+        .getVMSSIdFromName(eq("subscriptionId"), eq("resourceGroupName"), eq("newVirtualMachineScaleSetName"));
+    doReturn("oldVirtualMachineScaleSetName-id")
+        .when(azureVMSSStateHelper)
+        .getVMSSIdFromName(eq("subscriptionId"), eq("resourceGroupName"), eq("oldVirtualMachineScaleSetName"));
+    doReturn(60000).when(azureVMSSStateHelper).getAzureVMSSStateTimeoutFromContext(context);
 
     ExecutionResponse result = state.execute(context);
+    state.handleAbortEvent(context);
+    assertThat(state.getTimeoutMillis(context)).isEqualTo(60000);
 
     assertThat(result).isNotNull();
     assertThat(result.getExecutionStatus()).isEqualTo(ExecutionStatus.SUCCESS);
     assertThat(result.getErrorMessage()).isNull();
     assertThat(result.getStateExecutionData()).isNotNull();
     assertThat(result.getStateExecutionData()).isInstanceOf(AzureVMSSDeployStateExecutionData.class);
-    assertThat(((AzureVMSSDeployStateExecutionData) result.getStateExecutionData()).getActivityId())
-        .isEqualTo(activityId);
+
+    AzureVMSSDeployStateExecutionData stateExecutionData =
+        (AzureVMSSDeployStateExecutionData) result.getStateExecutionData();
+    assertThat(stateExecutionData.equals(new AzureVMSSDeployStateExecutionData())).isFalse();
+    assertThat(stateExecutionData.getActivityId()).isEqualTo(activityId);
+    assertThat(stateExecutionData.getInfraMappingId()).isEqualTo("infraId");
+    assertThat(stateExecutionData.getCommandName()).isEqualTo(AZURE_VMSS_DEPLOY_COMMAND_NAME);
+    assertThat(stateExecutionData.getNewVirtualMachineScaleSetName()).isEqualTo("newVirtualMachineScaleSetName");
+    assertThat(stateExecutionData.getNewVirtualMachineScaleSetId()).isEqualTo("newVirtualMachineScaleSetName-id");
+    assertThat(stateExecutionData.getOldVirtualMachineScaleSetName()).isEqualTo("oldVirtualMachineScaleSetName");
+    assertThat(stateExecutionData.getOldVirtualMachineScaleSetId()).isEqualTo("oldVirtualMachineScaleSetName-id");
+    assertThat(stateExecutionData.getNewDesiredCount()).isEqualTo(1);
+    assertThat(stateExecutionData.getOldDesiredCount()).isEqualTo(0);
+    assertThat(stateExecutionData.getStepExecutionSummary()).isNotNull();
+    assertThat(stateExecutionData.getExecutionDetails()).isNotEmpty();
+    assertThat(stateExecutionData.getExecutionSummary()).isNotEmpty();
+
+    AzureVMSSDeployExecutionSummary deployExecutionSummary = stateExecutionData.getStepExecutionSummary();
+    assertThat(deployExecutionSummary.equals(AzureVMSSDeployExecutionSummary.builder().build())).isFalse();
+    assertThat(deployExecutionSummary).isNotNull();
+    assertThat(deployExecutionSummary.getNewVirtualMachineScaleSetName()).isEqualTo("newVirtualMachineScaleSetName");
+    assertThat(deployExecutionSummary.getNewVirtualMachineScaleSetId()).isEqualTo("newVirtualMachineScaleSetName-id");
+    assertThat(deployExecutionSummary.getOldVirtualMachineScaleSetName()).isEqualTo("oldVirtualMachineScaleSetName");
+    assertThat(deployExecutionSummary.getOldVirtualMachineScaleSetId()).isEqualTo("oldVirtualMachineScaleSetName-id");
+    assertThat(deployExecutionSummary.toString()).isNotNull();
+  }
+
+  private AzureVMSSInfrastructureMapping getInfrastructureMapping() {
+    return AzureVMSSInfrastructureMapping.builder()
+        .baseVMSSName("baseVMSSName")
+        .resourceGroupName("resourceGroupName")
+        .subscriptionId("subscriptionId")
+        .passwordSecretTextName("password")
+        .userName("userName")
+        .vmssAuthType(VMSSAuthType.PASSWORD)
+        .vmssDeploymentType(VMSSDeploymentType.NATIVE_VMSS)
+        .build();
+  }
+
+  @Test(expected = InvalidRequestException.class)
+  @Owner(developers = ANIL)
+  @Category(UnitTests.class)
+  public void testExecuteFailure() {
+    ExecutionContextImpl context = mock(ExecutionContextImpl.class);
+    doThrow(Exception.class).when(context).getContextElement(eq(ContextElementType.AZURE_VMSS_SETUP));
+    state.execute(context);
+  }
+
+  @Test(expected = WingsException.class)
+  @Owner(developers = ANIL)
+  @Category(UnitTests.class)
+  public void testExecuteWingsExceptionFailure() {
+    ExecutionContextImpl context = mock(ExecutionContextImpl.class);
+    doThrow(WingsException.class).when(context).getContextElement(eq(ContextElementType.AZURE_VMSS_SETUP));
+    state.execute(context);
+  }
+
+  @Test
+  @Owner(developers = ANIL)
+  @Category(UnitTests.class)
+  public void testExecuteSkip() {
+    ExecutionContextImpl context = mock(ExecutionContextImpl.class);
+    doReturn(null).when(context).getContextElement(eq(ContextElementType.AZURE_VMSS_SETUP));
+    ExecutionResponse response = state.execute(context);
+    assertThat(response.getExecutionStatus()).isEqualTo(SKIPPED);
+    assertThat(response.getErrorMessage()).isEqualTo(state.getSkipMessage());
   }
 
   @Test
   @Owner(developers = IVAN)
   @Category(UnitTests.class)
   public void testHandleAsyncResponse() {
+    reset(azureVMSSStateHelper);
     String newVirtualMachineScaleSetName = "newVirtualMachineScaleSetName";
     String oldVirtualMachineScaleSetName = "oldVirtualMachineScaleSetName";
     String activityId = "activityId";
@@ -175,15 +264,11 @@ public class AzureVMSSDeployStateTest extends WingsBaseTest {
     doReturn(5).when(azureVMSSStateHelper).renderTimeoutExpressionOrGetDefault(anyString(), any(), anyInt());
     doReturn(SUCCESS).when(azureVMSSStateHelper).getExecutionStatus(any());
     doReturn(sweepingOutputInstance).when(sweepingOutputService).save(any());
-
-    Map<String, ResponseData> responseMap = ImmutableMap.of(ACTIVITY_ID,
-        AzureVMSSTaskExecutionResponse.builder()
-            .azureVMSSTaskResponse(AzureVMSSDeployTaskResponse.builder()
-                                       .vmInstancesAdded(instancesAdded)
-                                       .vmInstancesExisting(instancesExisting)
-                                       .build())
-            .commandExecutionStatus(CommandExecutionStatus.SUCCESS)
-            .build());
+    doReturn(getInfrastructureMapping())
+        .when(azureVMSSStateHelper)
+        .getAzureVMSSInfrastructureMapping(anyString(), anyString());
+    doNothing().when(azureVMSSStateHelper).saveInstanceInfoToSweepingOutput(any(), any());
+    Map<String, ResponseData> responseMap = getDelegateResponse(instancesAdded, instancesExisting);
     AzureVMSSDeployStateExecutionData data = AzureVMSSDeployStateExecutionData.builder()
                                                  .newVirtualMachineScaleSetName(newVirtualMachineScaleSetName)
                                                  .oldVirtualMachineScaleSetName(oldVirtualMachineScaleSetName)
@@ -192,6 +277,14 @@ public class AzureVMSSDeployStateTest extends WingsBaseTest {
                                                  .activityId(activityId)
                                                  .build();
     doReturn(data).when(context).getStateExecutionData();
+    doReturn(Collections.singletonList(anInstanceElement()
+                                           .uuid("vmss-id1")
+                                           .hostName("hostName")
+                                           .displayName("vmss-test")
+                                           .host(HostElement.builder().build())
+                                           .build()))
+        .when(azureVMSSStateHelper)
+        .generateInstanceElements(any(), any(), any());
 
     ExecutionResponse executionResponse = state.handleAsyncResponse(context, responseMap);
 
@@ -205,5 +298,88 @@ public class AzureVMSSDeployStateTest extends WingsBaseTest {
     assertThat(contextElement instanceof InstanceElementListParam).isTrue();
     InstanceElementListParam instanceElementListParam = (InstanceElementListParam) contextElement;
     assertThat(instanceElementListParam).isNotNull();
+
+    AzureVMSSDeployStateExecutionData stateExecutionData =
+        (AzureVMSSDeployStateExecutionData) executionResponse.getStateExecutionData();
+    assertThat(stateExecutionData.getNewInstanceStatusSummaries().size()).isEqualTo(1);
+  }
+
+  @NotNull
+  private ImmutableMap<String, ResponseData> getDelegateResponse(
+      List<AzureVMInstanceData> instancesAdded, List<AzureVMInstanceData> instancesExisting) {
+    return ImmutableMap.of(ACTIVITY_ID,
+        AzureVMSSTaskExecutionResponse.builder()
+            .azureVMSSTaskResponse(AzureVMSSDeployTaskResponse.builder()
+                                       .vmInstancesAdded(instancesAdded)
+                                       .vmInstancesExisting(instancesExisting)
+                                       .build())
+            .commandExecutionStatus(CommandExecutionStatus.SUCCESS)
+            .build());
+  }
+
+  @Test(expected = InvalidRequestException.class)
+  @Owner(developers = ANIL)
+  @Category(UnitTests.class)
+  public void testHandleAsyncResponseProcessingFailure() {
+    ExecutionContextImpl context = mock(ExecutionContextImpl.class);
+    doThrow(Exception.class).when(context).getAppId();
+    state.handleAsyncResponse(context, getDelegateResponse(Collections.emptyList(), Collections.emptyList()));
+  }
+
+  @Test(expected = WingsException.class)
+  @Owner(developers = ANIL)
+  @Category(UnitTests.class)
+  public void testHandleAsyncResponseWingsExceptionFailure() {
+    ExecutionContextImpl context = mock(ExecutionContextImpl.class);
+    doThrow(WingsException.class).when(context).getAppId();
+    state.handleAsyncResponse(context, getDelegateResponse(Collections.emptyList(), Collections.emptyList()));
+  }
+
+  @Test
+  @Owner(developers = ANIL)
+  @Category(UnitTests.class)
+  public void testHandleAsyncResponseFailure() {
+    ExecutionContextImpl context = mock(ExecutionContextImpl.class);
+    doReturn(ExecutionStatus.FAILED).when(azureVMSSStateHelper).getExecutionStatus(any());
+    ExecutionResponse executionResponse =
+        state.handleAsyncResponse(context, getDelegateResponse(Collections.emptyList(), Collections.emptyList()));
+    assertThat(executionResponse.getExecutionStatus()).isEqualTo(ExecutionStatus.FAILED);
+  }
+
+  @Test
+  @Owner(developers = ANIL)
+  @Category(UnitTests.class)
+  public void testValidateFields() {
+    AzureVMSSDeployState azureDeployState = new AzureVMSSDeployState("Validate fields");
+    assertThat(azureDeployState.validateFields().size()).isEqualTo(1);
+
+    azureDeployState.setInstanceCount(2);
+    assertThat(azureDeployState.validateFields().size()).isEqualTo(0);
+  }
+
+  @Test
+  @Owner(developers = ANIL)
+  @Category(UnitTests.class)
+  public void testGetTotalExpectedCount() {
+    AzureVMSSDeployState azureDeployState = new AzureVMSSDeployState("Validate expected count", AZURE_VMSS_DEPLOY);
+    azureDeployState.setInstanceUnitType(InstanceUnitType.PERCENTAGE);
+    azureDeployState.setInstanceCount(40);
+    assertThat(azureDeployState.getTotalExpectedCount(5)).isEqualTo(2);
+    assertThat(azureDeployState.getInstanceUnitType()).isEqualTo(InstanceUnitType.PERCENTAGE);
+  }
+
+  @Test
+  @Owner(developers = ANIL)
+  @Category(UnitTests.class)
+  public void testGetCommandUnits() {
+    AzureVMSSDeployState azureDeployState = new AzureVMSSDeployState("Test Command Units", AZURE_VMSS_DEPLOY);
+    ExecutionContextImpl context = mock(ExecutionContextImpl.class);
+    doReturn(OrchestrationWorkflowType.BLUE_GREEN).when(context).getOrchestrationWorkflowType();
+
+    List<CommandUnit> commandUnits = azureDeployState.getCommandUnits(context, ResizeStrategy.RESIZE_NEW_FIRST);
+    List<String> commandUnitsName = commandUnits.stream().map(CommandUnit::getName).collect(Collectors.toList());
+    assertThat(commandUnitsName)
+        .containsExactly(
+            UP_SCALE_COMMAND_UNIT, UP_SCALE_STEADY_STATE_WAIT_COMMAND_UNIT, DEPLOYMENT_STATUS, DEPLOYMENT_ERROR);
   }
 }

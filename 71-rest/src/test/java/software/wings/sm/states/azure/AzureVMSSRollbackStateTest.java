@@ -27,6 +27,7 @@ import io.harness.category.element.UnitTests;
 import io.harness.delegate.task.azure.response.AzureVMSSDeployTaskResponse;
 import io.harness.delegate.task.azure.response.AzureVMSSTaskExecutionResponse;
 import io.harness.exception.InvalidRequestException;
+import io.harness.exception.WingsException;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.rule.Owner;
 import io.harness.security.encryption.EncryptedDataDetail;
@@ -79,8 +80,15 @@ public class AzureVMSSRollbackStateTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void testExecuteSuccess() {
     ExecutionContextImpl context = mockSetup();
+    rollbackState.setInstanceCount(2);
+    rollbackState.setInstanceUnitType(InstanceUnitType.COUNT);
+
     ExecutionResponse executionResponse = rollbackState.execute(context);
 
+    assertThat(rollbackState.validateFields()).isEmpty();
+    assertThat(rollbackState.getTimeoutMillis()).isNull();
+    assertThat(rollbackState.getInstanceCount()).isEqualTo(2);
+    assertThat(rollbackState.getInstanceUnitType()).isEqualTo(InstanceUnitType.COUNT);
     assertThat(executionResponse).isNotNull();
     assertThat(executionResponse.getExecutionStatus()).isEqualTo(ExecutionStatus.SUCCESS);
     assertThat(executionResponse.getErrorMessage()).isNull();
@@ -119,6 +127,19 @@ public class AzureVMSSRollbackStateTest extends WingsBaseTest {
 
     doThrow(Exception.class).when(sweepingOutputService).findSweepingOutput(any());
     assertThatThrownBy(() -> rollbackState.execute(context)).isInstanceOf(InvalidRequestException.class);
+  }
+
+  @Test(expected = WingsException.class)
+  @Owner(developers = ANIL)
+  @Category(UnitTests.class)
+  public void testExecuteWingsExceptionFailure() {
+    reset(sweepingOutputService);
+    ExecutionContextImpl context = mock(ExecutionContextImpl.class);
+    SweepingOutputInquiryBuilder sweepingOutputInquiryBuilder = SweepingOutputInquiry.builder();
+    when(context.prepareSweepingOutputInquiryBuilder()).thenReturn(sweepingOutputInquiryBuilder);
+
+    doThrow(WingsException.class).when(sweepingOutputService).findSweepingOutput(any());
+    rollbackState.execute(context);
   }
 
   @Test
@@ -164,6 +185,10 @@ public class AzureVMSSRollbackStateTest extends WingsBaseTest {
     doThrow(Exception.class).when(sweepingOutputService).save(any());
     assertThatThrownBy(() -> rollbackState.handleAsyncResponse(context, responseMap))
         .isInstanceOf(InvalidRequestException.class);
+
+    doThrow(WingsException.class).when(sweepingOutputService).save(any());
+    assertThatThrownBy(() -> rollbackState.handleAsyncResponse(context, responseMap))
+        .isInstanceOf(WingsException.class);
   }
 
   @NotNull

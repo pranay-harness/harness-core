@@ -46,8 +46,8 @@ public class AzureVMSSDeployTaskHandler extends AzureVMSSTaskHandler {
   @Override
   protected AzureVMSSTaskExecutionResponse executeTaskInternal(
       final AzureVMSSTaskParameters azureVMSSTaskParameters, final AzureConfig azureConfig) {
-    AzureVMSSDeployTaskParameters deployTaskParameters = (AzureVMSSDeployTaskParameters) azureVMSSTaskParameters;
     try {
+      AzureVMSSDeployTaskParameters deployTaskParameters = (AzureVMSSDeployTaskParameters) azureVMSSTaskParameters;
       AzureVMSSDeployTaskResponse deployTaskResponse = resizeVirtualMachineScaleSet(azureConfig, deployTaskParameters);
       return logAndGenerateSuccessResponse(deployTaskResponse, deployTaskParameters);
     } catch (Exception ex) {

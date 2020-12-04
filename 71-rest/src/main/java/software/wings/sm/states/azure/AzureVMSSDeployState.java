@@ -64,9 +64,9 @@ import software.wings.stencils.EnumData;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
 import com.google.inject.Inject;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -204,7 +204,8 @@ public class AzureVMSSDeployState extends AbstractAzureState {
     return getTotalExpectedCount(desiredInstances);
   }
 
-  private int getTotalExpectedCount(int desiredInstances) {
+  @VisibleForTesting
+  int getTotalExpectedCount(int desiredInstances) {
     int updateCount;
     if (PERCENTAGE == instanceUnitType) {
       int percent = Math.min(instanceCount, 100);
@@ -308,12 +309,6 @@ public class AzureVMSSDeployState extends AbstractAzureState {
     // Execution Response
     AzureVMSSTaskExecutionResponse executionResponse =
         (AzureVMSSTaskExecutionResponse) response.values().iterator().next();
-    // Execution Task Response
-    AzureVMSSDeployTaskResponse azureVMSSDeployTaskResponse =
-        (AzureVMSSDeployTaskResponse) executionResponse.getAzureVMSSTaskResponse();
-    // Execution State Data
-    AzureVMSSDeployStateExecutionData stateExecutionData =
-        (AzureVMSSDeployStateExecutionData) context.getStateExecutionData();
     ExecutionStatus executionStatus = azureVMSSStateHelper.getExecutionStatus(executionResponse);
     if (executionStatus == ExecutionStatus.FAILED) {
       return ExecutionResponse.builder()
@@ -321,6 +316,13 @@ public class AzureVMSSDeployState extends AbstractAzureState {
           .errorMessage(executionResponse.getErrorMessage())
           .build();
     }
+
+    // Execution Task Response
+    AzureVMSSDeployTaskResponse azureVMSSDeployTaskResponse =
+        (AzureVMSSDeployTaskResponse) executionResponse.getAzureVMSSTaskResponse();
+    // Execution State Data
+    AzureVMSSDeployStateExecutionData stateExecutionData =
+        (AzureVMSSDeployStateExecutionData) context.getStateExecutionData();
 
     azureVMSSStateHelper.updateActivityStatus(appId, activityId, executionStatus);
 
@@ -357,10 +359,8 @@ public class AzureVMSSDeployState extends AbstractAzureState {
   private List<InstanceElement> getNewInstanceElements(ExecutionContext context,
       AzureVMSSDeployTaskResponse azureVMSSDeployTaskResponse,
       AzureVMSSInfrastructureMapping azureVMSSInfrastructureMapping) {
-    return azureVMSSDeployTaskResponse == null
-        ? Collections.emptyList()
-        : azureVMSSStateHelper.generateInstanceElements(
-            context, azureVMSSInfrastructureMapping, azureVMSSDeployTaskResponse.getVmInstancesAdded());
+    return azureVMSSStateHelper.generateInstanceElements(
+        context, azureVMSSInfrastructureMapping, azureVMSSDeployTaskResponse.getVmInstancesAdded());
   }
 
   private void addInstanceElements(
@@ -387,10 +387,8 @@ public class AzureVMSSDeployState extends AbstractAzureState {
   private List<InstanceElement> getExistingInstanceElements(ExecutionContext context,
       AzureVMSSDeployTaskResponse azureVMSSDeployTaskResponse,
       AzureVMSSInfrastructureMapping azureVMSSInfrastructureMapping) {
-    return azureVMSSDeployTaskResponse == null
-        ? Collections.emptyList()
-        : azureVMSSStateHelper.generateInstanceElements(
-            context, azureVMSSInfrastructureMapping, azureVMSSDeployTaskResponse.getVmInstancesExisting());
+    return azureVMSSStateHelper.generateInstanceElements(
+        context, azureVMSSInfrastructureMapping, azureVMSSDeployTaskResponse.getVmInstancesExisting());
   }
 
   @Override
