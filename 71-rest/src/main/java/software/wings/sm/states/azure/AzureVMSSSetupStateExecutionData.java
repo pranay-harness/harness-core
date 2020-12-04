@@ -26,7 +26,6 @@ public class AzureVMSSSetupStateExecutionData extends StateExecutionData impleme
   private String newVirtualMachineScaleSetName;
   private String oldVirtualMachineScaleSetName;
   private Integer newVersion;
-  private Integer autoScalingSteadyStateVMSSTimeout;
   private Integer maxInstances;
   private Integer desiredInstances;
   private ResizeStrategy resizeStrategy;

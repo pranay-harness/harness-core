@@ -1,5 +1,6 @@
 package software.wings.sm.states.azure;
 
+import static io.harness.azure.model.AzureConstants.SKIP_VMSS_DEPLOY;
 import static io.harness.beans.ExecutionStatus.FAILED;
 import static io.harness.beans.ExecutionStatus.SKIPPED;
 import static io.harness.beans.ExecutionStatus.SUCCESS;
@@ -33,6 +34,8 @@ import io.harness.delegate.task.azure.request.AzureLoadBalancerDetailForBGDeploy
 import io.harness.delegate.task.azure.request.AzureVMSSSwitchRouteTaskParameters;
 import io.harness.delegate.task.azure.response.AzureVMSSSwitchRoutesResponse;
 import io.harness.delegate.task.azure.response.AzureVMSSTaskExecutionResponse;
+import io.harness.exception.InvalidRequestException;
+import io.harness.exception.WingsException;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.rule.Owner;
 
@@ -70,13 +73,45 @@ public class AzureVMSSSwitchRoutesStateTest extends WingsBaseTest {
   private final AzureVMSSSwitchRoutesRollbackState switchRouteRollbackState =
       new AzureVMSSSwitchRoutesRollbackState("switch-route-rollback-state");
 
+  private final int timeOut = 10;
+  private static final String NEW_SCALE_SET = "newScaleSet";
+  private static final String OLD_SCALE_SET = "oldScaleSet";
+  private static final String LOAD_BALANCER = "loadBalancer";
+  private static final String PROD_BACKEND_POOL = "prodPool";
+  private static final String STAGE_BACKEND_POOL = "stagePool";
+
   @Test
   @Owner(developers = ANIL)
   @Category(UnitTests.class)
   public void testSwitchRouteExecute() {
     ExecutionContextImpl mockContext = initializeMockSetup(switchRoutesState, true, true);
+    switchRoutesState.handleAbortEvent(mockContext);
     ExecutionResponse response = switchRoutesState.execute(mockContext);
+    assertThat(switchRoutesState.getTimeoutMillis(mockContext)).isEqualTo(timeOut);
+    assertThat(switchRoutesState.getSkipMessage()).isEqualTo(SKIP_VMSS_DEPLOY);
     verifyDelegateTaskCreationResult(response, false);
+  }
+
+  @Test(expected = InvalidRequestException.class)
+  @Owner(developers = ANIL)
+  @Category(UnitTests.class)
+  public void testSwitchRouteFailure() {
+    ExecutionContextImpl mockContext = mock(ExecutionContextImpl.class);
+    doThrow(Exception.class)
+        .when(azureVMSSStateHelper)
+        .createAndSaveActivity(eq(mockContext), eq(null), anyString(), anyString(), any(), any());
+    switchRoutesState.execute(mockContext);
+  }
+
+  @Test(expected = WingsException.class)
+  @Owner(developers = ANIL)
+  @Category(UnitTests.class)
+  public void testSwitchRouteWingsExceptionFailure() {
+    ExecutionContextImpl mockContext = mock(ExecutionContextImpl.class);
+    doThrow(WingsException.class)
+        .when(azureVMSSStateHelper)
+        .createAndSaveActivity(eq(mockContext), eq(null), anyString(), anyString(), any(), any());
+    switchRoutesState.execute(mockContext);
   }
 
   @Test
@@ -115,12 +150,44 @@ public class AzureVMSSSwitchRoutesStateTest extends WingsBaseTest {
     assertThat(response.getExecutionStatus()).isEqualTo(SUCCESS);
   }
 
+  @Test(expected = InvalidRequestException.class)
+  @Owner(developers = ANIL)
+  @Category(UnitTests.class)
+  public void testSwitchRouteHandleAsyncResponseFailure() {
+    ExecutionContextImpl mockContext = initializeMockSetup(switchRoutesState, true, true);
+    AzureVMSSTaskExecutionResponse taskExecutionResponse =
+        AzureVMSSTaskExecutionResponse.builder()
+            .azureVMSSTaskResponse(
+                AzureVMSSSwitchRoutesResponse.builder().delegateMetaInfo(DelegateMetaInfo.builder().build()).build())
+            .commandExecutionStatus(CommandExecutionStatus.SUCCESS)
+            .build();
+    doThrow(Exception.class).when(azureVMSSStateHelper).getExecutionStatus(any());
+    switchRoutesState.handleAsyncResponse(mockContext, ImmutableMap.of(ACTIVITY_ID, taskExecutionResponse));
+  }
+
+  @Test(expected = WingsException.class)
+  @Owner(developers = ANIL)
+  @Category(UnitTests.class)
+  public void testSwitchRouteHandleAsyncResponseWingsExceptionFailure() {
+    ExecutionContextImpl mockContext = initializeMockSetup(switchRoutesState, true, true);
+    AzureVMSSTaskExecutionResponse taskExecutionResponse =
+        AzureVMSSTaskExecutionResponse.builder()
+            .azureVMSSTaskResponse(
+                AzureVMSSSwitchRoutesResponse.builder().delegateMetaInfo(DelegateMetaInfo.builder().build()).build())
+            .commandExecutionStatus(CommandExecutionStatus.SUCCESS)
+            .build();
+    doThrow(WingsException.class).when(azureVMSSStateHelper).getExecutionStatus(any());
+    switchRoutesState.handleAsyncResponse(mockContext, ImmutableMap.of(ACTIVITY_ID, taskExecutionResponse));
+  }
+
   @Test
   @Owner(developers = ANIL)
   @Category(UnitTests.class)
   public void testSwitchRouteRollBackExecute() {
     ExecutionContextImpl mockContext = initializeMockSetup(switchRouteRollbackState, true, true);
     ExecutionResponse response = switchRouteRollbackState.execute(mockContext);
+    assertThat(switchRouteRollbackState.isDownsizeOldVMSSS()).isTrue();
+    assertThat(switchRouteRollbackState.getTimeoutMillis()).isNull();
     verifyDelegateTaskCreationResult(response, true);
   }
 
@@ -131,6 +198,28 @@ public class AzureVMSSSwitchRoutesStateTest extends WingsBaseTest {
     ExecutionContextImpl mockContext = initializeMockSetup(switchRouteRollbackState, true, false);
     ExecutionResponse response = switchRouteRollbackState.execute(mockContext);
     assertThat(response.getExecutionStatus()).isEqualTo(SKIPPED);
+  }
+
+  @Test(expected = InvalidRequestException.class)
+  @Owner(developers = ANIL)
+  @Category(UnitTests.class)
+  public void testSwitchRouteRollBackFailure() {
+    ExecutionContextImpl mockContext = mock(ExecutionContextImpl.class);
+    doThrow(Exception.class)
+        .when(azureVMSSStateHelper)
+        .createAndSaveActivity(eq(mockContext), eq(null), anyString(), anyString(), any(), any());
+    switchRouteRollbackState.execute(mockContext);
+  }
+
+  @Test(expected = WingsException.class)
+  @Owner(developers = ANIL)
+  @Category(UnitTests.class)
+  public void testSwitchRouteRollBackWingsExceptionFailure() {
+    ExecutionContextImpl mockContext = mock(ExecutionContextImpl.class);
+    doThrow(WingsException.class)
+        .when(azureVMSSStateHelper)
+        .createAndSaveActivity(eq(mockContext), eq(null), anyString(), anyString(), any(), any());
+    switchRouteRollbackState.execute(mockContext);
   }
 
   private ExecutionContextImpl initializeMockSetup(
@@ -154,6 +243,7 @@ public class AzureVMSSSwitchRoutesStateTest extends WingsBaseTest {
                                                 .build();
 
     doReturn(azureVMSSStateData).when(azureVMSSStateHelper).populateStateData(mockContext);
+    doReturn(timeOut).when(azureVMSSStateHelper).getAzureVMSSStateTimeoutFromContext(mockContext);
 
     if (contextElement) {
       AzureVMSSSetupContextElement azureVMSSSetupContextElement =
@@ -163,17 +253,17 @@ public class AzureVMSSSwitchRoutesStateTest extends WingsBaseTest {
               .maxInstances(4)
               .minInstances(1)
               .autoScalingSteadyStateVMSSTimeout(10)
-              .newVirtualMachineScaleSetName("newScaleSet")
-              .oldVirtualMachineScaleSetName("oldScaleSet")
+              .newVirtualMachineScaleSetName(NEW_SCALE_SET)
+              .oldVirtualMachineScaleSetName(OLD_SCALE_SET)
               .oldDesiredCount(1)
               .baseVMSSScalingPolicyJSONs(emptyList())
               .resizeStrategy(ResizeStrategy.RESIZE_NEW_FIRST)
               .commandName(AzureVMSSSwitchRoutesState.AZURE_VMSS_SWAP_ROUTE)
               .infraMappingId("infraId")
               .azureLoadBalancerDetail(AzureLoadBalancerDetailForBGDeployment.builder()
-                                           .loadBalancerName("loadBalancer")
-                                           .prodBackendPool("prodPool")
-                                           .stageBackendPool("stagePool")
+                                           .loadBalancerName(LOAD_BALANCER)
+                                           .prodBackendPool(PROD_BACKEND_POOL)
+                                           .stageBackendPool(STAGE_BACKEND_POOL)
                                            .build())
               .preDeploymentData(AzureVMSSPreDeploymentData.builder().build())
               .build();
@@ -220,10 +310,26 @@ public class AzureVMSSSwitchRoutesStateTest extends WingsBaseTest {
     AzureVMSSSwitchRouteTaskParameters azureVMSSTaskParameters =
         (AzureVMSSSwitchRouteTaskParameters) params.getAzureVMSSTaskParameters();
 
-    assertThat(azureVMSSTaskParameters.getOldVMSSName()).isEqualTo("oldScaleSet");
-    assertThat(azureVMSSTaskParameters.getNewVMSSName()).isEqualTo("newScaleSet");
+    assertThat(azureVMSSTaskParameters.getOldVMSSName()).isEqualTo(OLD_SCALE_SET);
+    assertThat(azureVMSSTaskParameters.getNewVMSSName()).isEqualTo(NEW_SCALE_SET);
     assertThat(azureVMSSTaskParameters.isDownscaleOldVMSS()).isEqualTo(true);
     assertThat(azureVMSSTaskParameters.isRollback()).isEqualTo(isRollback);
     assertThat(response.getExecutionStatus()).isEqualTo(ExecutionStatus.SUCCESS);
+
+    assertThat(response.getStateExecutionData()).isNotNull();
+    assertThat(response.getStateExecutionData()).isInstanceOf(AzureVMSSSwitchRouteStateExecutionData.class);
+    AzureVMSSSwitchRouteStateExecutionData stateExecutionData =
+        (AzureVMSSSwitchRouteStateExecutionData) response.getStateExecutionData();
+    assertThat(stateExecutionData.equals(new AzureVMSSSwitchRouteStateExecutionData())).isFalse();
+    assertThat(stateExecutionData.toString()).isNotNull();
+    assertThat(stateExecutionData.getActivityId()).isEqualTo(ACTIVITY_ID);
+    assertThat(stateExecutionData.getNewVirtualMachineScaleSetName()).isEqualTo(NEW_SCALE_SET);
+    assertThat(stateExecutionData.getOldVirtualMachineScaleSetName()).isEqualTo(OLD_SCALE_SET);
+    assertThat(stateExecutionData.getProdBackendPool()).isEqualTo(PROD_BACKEND_POOL);
+    assertThat(stateExecutionData.getStageBackendPool()).isEqualTo(STAGE_BACKEND_POOL);
+
+    assertThat(stateExecutionData.getStepExecutionSummary()).isNotNull();
+    assertThat(stateExecutionData.getExecutionDetails()).isNotEmpty();
+    assertThat(stateExecutionData.getExecutionSummary()).isNotEmpty();
   }
 }
