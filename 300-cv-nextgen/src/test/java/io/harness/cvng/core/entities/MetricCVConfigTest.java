@@ -52,7 +52,7 @@ public class MetricCVConfigTest extends CategoryTest {
     assertThat(metricCVConfig.getFirstTimeDataCollectionTimeRange())
         .isEqualTo(TimeRange.builder()
                        .endTime(Instant.parse("2020-04-22T10:00:00Z"))
-                       .startTime(Instant.parse("2020-04-22T07:55:00Z"))
+                       .startTime(Instant.parse("2020-04-22T07:45:00Z"))
                        .build());
   }
 

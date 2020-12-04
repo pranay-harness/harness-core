@@ -1,5 +1,6 @@
 package io.harness.cvng.dashboard.services.impl;
 
+import static io.harness.cvng.analysis.CVAnalysisConstants.TIMESERIES_SERVICE_GUARD_WINDOW_SIZE;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 
 import io.harness.cvng.activity.entities.Activity;
@@ -13,12 +14,15 @@ import io.harness.cvng.core.services.api.TimeSeriesService;
 import io.harness.cvng.core.services.api.VerificationTaskService;
 import io.harness.cvng.core.utils.CVParallelExecutor;
 import io.harness.cvng.dashboard.beans.TimeSeriesMetricDataDTO;
+import io.harness.cvng.dashboard.beans.TimeSeriesMetricDataDTO.MetricData;
+import io.harness.cvng.dashboard.beans.TimeSeriesMetricDataDTO.TimeSeriesRisk;
 import io.harness.cvng.dashboard.services.api.TimeSeriesDashboardService;
 import io.harness.ng.beans.PageResponse;
 
 import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
 import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -28,6 +32,7 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.SortedSet;
 import java.util.TreeSet;
@@ -210,7 +215,29 @@ public class TimeSeriesDashboardServiceImpl implements TimeSeriesDashboardServic
       });
     });
     SortedSet<TimeSeriesMetricDataDTO> sortedMetricData = new TreeSet<>(transactionMetricDataMap.values());
+    updateLastWindowRisk(sortedMetricData, endTime);
     return formPageResponse(sortedMetricData, page, size);
+  }
+
+  private void updateLastWindowRisk(SortedSet<TimeSeriesMetricDataDTO> sortedMetricData, Instant endTime) {
+    /*
+     * We need to update the last 15 minutes in the UI to reflect the state which was present just after instant endTime
+     * as these risks might later get updated if the next analysis window risk is high (as we use 15 min as test data in
+     * LE).
+     * */
+    Instant lastWindowStartTime = endTime.minus(TIMESERIES_SERVICE_GUARD_WINDOW_SIZE, ChronoUnit.MINUTES);
+    for (TimeSeriesMetricDataDTO timeSeriesMetricDataDTO : sortedMetricData) {
+      Optional<TimeSeriesRisk> risk = timeSeriesMetricDataDTO.getMetricDataList()
+                                          .stream()
+                                          .filter(data -> data.getTimestamp() >= lastWindowStartTime.toEpochMilli())
+                                          .map(MetricData::getRisk)
+                                          .findFirst();
+      risk.ifPresent(timeSeriesRisk
+          -> timeSeriesMetricDataDTO.getMetricDataList()
+                 .stream()
+                 .filter(data -> data.getTimestamp() >= lastWindowStartTime.toEpochMilli())
+                 .forEach(data -> data.setRisk(timeSeriesRisk)));
+    }
   }
 
   private PageResponse<TimeSeriesMetricDataDTO> formPageResponse(

@@ -1,5 +1,6 @@
 package io.harness.cvng.core.services.impl;
 
+import static io.harness.cvng.analysis.CVAnalysisConstants.TIMESERIES_SERVICE_GUARD_WINDOW_SIZE;
 import static io.harness.cvng.core.services.CVNextGenConstants.CV_ANALYSIS_WINDOW_MINUTES;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
@@ -235,22 +236,28 @@ public class TimeSeriesServiceImpl implements TimeSeriesService {
     List<TimeSeriesRecord> records =
         hPersistence.createQuery(TimeSeriesRecord.class, excludeAuthority)
             .filter(TimeSeriesRecordKeys.verificationTaskId, riskSummary.getVerificationTaskId())
-            .filter(TimeSeriesRecordKeys.bucketStartTime, riskSummary.getAnalysisStartTime())
+            .field(TimeSeriesRecordKeys.bucketStartTime)
+            .greaterThanOrEq(
+                riskSummary.getAnalysisEndTime().minus(TIMESERIES_SERVICE_GUARD_WINDOW_SIZE, ChronoUnit.MINUTES))
+            .field(TimeSeriesRecordKeys.bucketStartTime)
+            .lessThan(riskSummary.getAnalysisEndTime())
             .field(TimeSeriesRecordKeys.metricName)
             .in(metricNames)
             .asList();
 
-    Map<String, TimeSeriesRecord> metricNameRecordMap = new HashMap<>();
-    records.forEach(record -> metricNameRecordMap.put(record.getMetricName(), record));
+    Map<String, List<TimeSeriesRecord>> metricNameRecordMap =
+        records.stream().collect(Collectors.groupingBy(TimeSeriesRecord::getMetricName));
 
     riskSummary.getTransactionMetricRiskList().forEach(metricRisk -> {
-      TimeSeriesRecord record = metricNameRecordMap.get(metricRisk.getMetricName());
-      if (record != null) {
-        String groupName = metricRisk.getTransactionName();
-        record.getTimeSeriesGroupValues().forEach(groupValue -> {
-          if (groupName.equals(groupValue.getGroupName())) {
-            groupValue.setRiskScore(metricRisk.getMetricRisk());
-          }
+      List<TimeSeriesRecord> timeSeriesRecords = metricNameRecordMap.get(metricRisk.getMetricName());
+      if (isNotEmpty(timeSeriesRecords)) {
+        timeSeriesRecords.forEach(record -> {
+          String groupName = metricRisk.getTransactionName();
+          record.getTimeSeriesGroupValues().forEach(groupValue -> {
+            if (groupName.equals(groupValue.getGroupName())) {
+              groupValue.setRiskScore(Math.max(metricRisk.getMetricRisk(), groupValue.getRiskScore()));
+            }
+          });
         });
       }
     });

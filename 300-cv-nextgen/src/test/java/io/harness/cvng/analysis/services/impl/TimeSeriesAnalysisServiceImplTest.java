@@ -1,5 +1,7 @@
 package io.harness.cvng.analysis.services.impl;
 
+import static io.harness.cvng.analysis.CVAnalysisConstants.TIMESERIES_SERVICE_GUARD_DATA_LENGTH;
+import static io.harness.cvng.analysis.CVAnalysisConstants.TIMESERIES_SERVICE_GUARD_WINDOW_SIZE;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.rule.OwnerRule.KAMAL;
 import static io.harness.rule.OwnerRule.PRAVEEN;
@@ -141,12 +143,15 @@ public class TimeSeriesAnalysisServiceImplTest extends CvNextGenTest {
 
     assertThat(taskIds.size()).isEqualTo(1);
 
-    LearningEngineTask task = hPersistence.get(LearningEngineTask.class, taskIds.get(0));
+    TimeSeriesLearningEngineTask task =
+        (TimeSeriesLearningEngineTask) hPersistence.get(LearningEngineTask.class, taskIds.get(0));
     assertThat(task).isNotNull();
     assertThat(task.getVerificationTaskId()).isEqualTo(verificationTaskId);
     assertThat(Duration.between(task.getAnalysisStartTime(), input.getStartTime())).isZero();
     assertThat(Duration.between(task.getAnalysisEndTime(), input.getEndTime())).isZero();
     assertThat(task.getAnalysisType().name()).isEqualTo(LearningEngineTaskType.SERVICE_GUARD_TIME_SERIES.name());
+    assertThat(task.getDataLength()).isEqualTo(TIMESERIES_SERVICE_GUARD_DATA_LENGTH);
+    assertThat(task.getWindowSize()).isEqualTo(TIMESERIES_SERVICE_GUARD_WINDOW_SIZE);
   }
 
   @Test

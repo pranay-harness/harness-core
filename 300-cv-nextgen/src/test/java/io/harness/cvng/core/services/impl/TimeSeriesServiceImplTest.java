@@ -1,5 +1,6 @@
 package io.harness.cvng.core.services.impl;
 
+import static io.harness.cvng.analysis.CVAnalysisConstants.TIMESERIES_SERVICE_GUARD_WINDOW_SIZE;
 import static io.harness.cvng.core.services.CVNextGenConstants.CV_ANALYSIS_WINDOW_MINUTES;
 import static io.harness.cvng.core.services.CVNextGenConstants.PERFORMANCE_PACK_IDENTIFIER;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
@@ -179,16 +180,18 @@ public class TimeSeriesServiceImplTest extends CvNextGenTest {
   public void testUpdateRiskScore() {
     int numOfMetrics = 4;
     int numOfTxnx = 5;
-    long numOfMins = CV_ANALYSIS_WINDOW_MINUTES;
+    long numOfMins = TIMESERIES_SERVICE_GUARD_WINDOW_SIZE;
 
     List<TimeSeriesDataCollectionRecord> collectionRecords = new ArrayList<>();
+    Instant startTime = Instant.now().truncatedTo(ChronoUnit.HOURS);
     for (int i = 0; i < numOfMins; i++) {
-      TimeSeriesDataCollectionRecord collectionRecord = TimeSeriesDataCollectionRecord.builder()
-                                                            .accountId(accountId)
-                                                            .verificationTaskId(verificationTaskId)
-                                                            .timeStamp(TimeUnit.MINUTES.toMillis(i))
-                                                            .metricValues(new HashSet<>())
-                                                            .build();
+      TimeSeriesDataCollectionRecord collectionRecord =
+          TimeSeriesDataCollectionRecord.builder()
+              .accountId(accountId)
+              .verificationTaskId(verificationTaskId)
+              .timeStamp(startTime.plus(i, ChronoUnit.MINUTES).toEpochMilli())
+              .metricValues(new HashSet<>())
+              .build();
       for (int j = 0; j < numOfMetrics; j++) {
         TimeSeriesDataRecordMetricValue metricValue = TimeSeriesDataRecordMetricValue.builder()
                                                           .metricName("metric-" + j)
@@ -206,17 +209,17 @@ public class TimeSeriesServiceImplTest extends CvNextGenTest {
     List<TimeSeriesRecord> timeSeriesRecords = hPersistence.createQuery(TimeSeriesRecord.class, excludeAuthority)
                                                    .order(Sort.ascending(TimeSeriesRecordKeys.metricName))
                                                    .asList();
-    assertThat(timeSeriesRecords.size()).isEqualTo(numOfMetrics);
+    assertThat(timeSeriesRecords.size()).isEqualTo(numOfMetrics * numOfMins / CV_ANALYSIS_WINDOW_MINUTES);
 
     // update the risk now.
-    TimeSeriesRiskSummary riskSummary = createRiskSummary(numOfMetrics, numOfTxnx);
+    TimeSeriesRiskSummary riskSummary = createRiskSummary(numOfMetrics, numOfTxnx, startTime);
     riskSummary.setAnalysisStartTime(Instant.ofEpochMilli(0));
     timeSeriesService.updateRiskScores(verificationTaskId, riskSummary);
     timeSeriesRecords = hPersistence.createQuery(TimeSeriesRecord.class, excludeAuthority)
                             .order(Sort.ascending(TimeSeriesRecordKeys.metricName))
                             .asList();
     // validate that the number of records is the same after updating risk
-    assertThat(timeSeriesRecords.size()).isEqualTo(numOfMetrics);
+    assertThat(timeSeriesRecords.size()).isEqualTo(numOfMetrics * numOfMins / CV_ANALYSIS_WINDOW_MINUTES);
 
     // validate the risks
     timeSeriesRecords.forEach(record -> {
@@ -620,8 +623,12 @@ public class TimeSeriesServiceImplTest extends CvNextGenTest {
     }
   }
 
-  private TimeSeriesRiskSummary createRiskSummary(int numMetrics, int numTxns) {
-    TimeSeriesRiskSummary riskSummary = TimeSeriesRiskSummary.builder().verificationTaskId(verificationTaskId).build();
+  private TimeSeriesRiskSummary createRiskSummary(int numMetrics, int numTxns, Instant startTime) {
+    TimeSeriesRiskSummary riskSummary = TimeSeriesRiskSummary.builder()
+                                            .verificationTaskId(verificationTaskId)
+                                            .analysisStartTime(startTime.plus(10, ChronoUnit.MINUTES))
+                                            .analysisEndTime(startTime.plus(15, ChronoUnit.MINUTES))
+                                            .build();
     List<TransactionMetricRisk> transactionMetricRisks = new ArrayList<>();
     for (int j = 0; j < numMetrics; j++) {
       for (int k = 0; k < numTxns; k++) {
