@@ -3,7 +3,6 @@ package io.harness.plancreator.pipeline;
 import io.harness.pms.facilitators.FacilitatorObtainment;
 import io.harness.pms.facilitators.FacilitatorType;
 import io.harness.pms.plan.creation.PlanCreatorUtils;
-import io.harness.pms.sdk.core.plan.MapStepParameters;
 import io.harness.pms.sdk.core.plan.PlanNode;
 import io.harness.pms.sdk.core.plan.creation.beans.PlanCreationContext;
 import io.harness.pms.sdk.core.plan.creation.beans.PlanCreationResponse;
@@ -16,7 +15,10 @@ import io.harness.steps.common.pipeline.PipelineSetupStep;
 import io.harness.steps.common.pipeline.PipelineSetupStepParameters;
 
 import com.google.common.base.Preconditions;
-import java.util.*;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Set;
 
 public class NGPipelinePlanCreator extends ChildrenPlanCreator<PipelineInfoConfig> {
   @Override

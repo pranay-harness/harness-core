@@ -102,7 +102,7 @@ public class FilterCreatorMergeServiceTest extends PipelineServiceTestBase {
   @Test
   @Owner(developers = SAHIL)
   @Category(UnitTests.class)
-  public void testGetFiltersAndStageCount() throws IOException {
+  public void testGetPipelineInfo() throws IOException {
     Map<String, Set<String>> stepToSupportedTypes = new HashMap<>();
     stepToSupportedTypes.put("pipeline", Collections.singleton("__any__"));
     Map<String, Map<String, Set<String>>> sdkInstances = new HashMap<>();
@@ -114,10 +114,14 @@ public class FilterCreatorMergeServiceTest extends PipelineServiceTestBase {
         .obtainFiltersRecursively(any(), any(), any());
 
     FilterCreatorMergeServiceResponse filterCreatorMergeServiceResponse =
-        filterCreatorMergeService.getFiltersAndStageCount(pipelineYaml);
+        filterCreatorMergeService.getPipelineInfo(pipelineYaml);
 
     assertThat(filterCreatorMergeServiceResponse)
-        .isEqualTo(FilterCreatorMergeServiceResponse.builder().filters(new HashMap<>()).build());
+        .isEqualTo(FilterCreatorMergeServiceResponse.builder()
+                       .filters(new HashMap<>())
+                       .layoutNodeMap(new HashMap<>())
+                       .startingNodeId("")
+                       .build());
     verify(pmsSdkInstanceService).getInstanceNameToSupportedTypes();
   }
 
