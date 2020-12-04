@@ -44,11 +44,15 @@ public class ManagerGrpcClientModule extends ProviderModule {
   @Provides
   public Channel managerChannel(VersionInfoManager versionInfoManager) throws SSLException {
     String authorityToUse = computeAuthority(versionInfoManager.getVersionInfo());
-    SslContext sslContext = GrpcSslContexts.forClient().trustManager(InsecureTrustManagerFactory.INSTANCE).build();
-    return NettyChannelBuilder.forTarget(config.target)
-        .overrideAuthority(authorityToUse)
-        .sslContext(sslContext)
-        .build();
+    String protocol = System.getenv().get("API_URL");
+    if ((protocol == null) || (protocol.toLowerCase().startsWith("https"))) {
+      SslContext sslContext = GrpcSslContexts.forClient().trustManager(InsecureTrustManagerFactory.INSTANCE).build();
+      return NettyChannelBuilder.forTarget(config.target)
+              .overrideAuthority(authorityToUse)
+              .sslContext(sslContext)
+              .build();
+    }
+    return NettyChannelBuilder.forTarget(config.target).overrideAuthority(authorityToUse).usePlaintext().build();
   }
 
   private String computeAuthority(VersionInfo versionInfo) {
