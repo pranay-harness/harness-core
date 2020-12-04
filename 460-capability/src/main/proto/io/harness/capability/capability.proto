@@ -5,11 +5,19 @@ package io.harness.capability;
 option java_multiple_files = true;
 option go_package = "240_capability";
 
+// Next ID: 3
 message CapabilityParameters {
   oneof capability {
+    SmbConnectionParameters smb_connection_parameters = 2;
     TestingCapability testing_capability = 1;
   }
 }
 
 // A testing method for capabilities
 message TestingCapability {}
+
+// Testing whether a connection can be established to a given SMB url
+// Next ID: 2
+message SmbConnectionParameters {
+  string smb_url = 1;
+}

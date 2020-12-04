@@ -398,7 +398,6 @@ import software.wings.delegatetasks.validation.capabilities.PcfConnectivityCapab
 import software.wings.delegatetasks.validation.capabilities.SSHHostValidationCapability;
 import software.wings.delegatetasks.validation.capabilities.SftpCapability;
 import software.wings.delegatetasks.validation.capabilities.ShellConnectionCapability;
-import software.wings.delegatetasks.validation.capabilities.SmbConnectionCapability;
 import software.wings.delegatetasks.validation.capabilities.SmtpCapability;
 import software.wings.delegatetasks.validation.capabilities.WinrmHostValidationCapability;
 import software.wings.helpers.ext.azure.devops.AzureArtifactsFeed;
@@ -1691,7 +1690,6 @@ public class ManagerKryoRegistrar implements KryoRegistrar {
     kryo.register(TechStack.class, 7447);
     kryo.register(ParameterEntry.class, 7448);
     kryo.register(K8sHelmDeploymentElement.class, 7449);
-    kryo.register(SmbConnectionCapability.class, 7450);
     kryo.register(ServiceNowFieldType.class, 7452);
     kryo.register(io.harness.dashboard.Action.class, 7453);
 

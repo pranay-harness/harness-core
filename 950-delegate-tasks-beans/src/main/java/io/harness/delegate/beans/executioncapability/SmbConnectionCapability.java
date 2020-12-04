@@ -1,4 +1,4 @@
-package software.wings.delegatetasks.validation.capabilities;
+package io.harness.delegate.beans.executioncapability;
 
 import io.harness.delegate.beans.executioncapability.CapabilityType;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
