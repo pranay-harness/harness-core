@@ -5,6 +5,7 @@ import io.harness.cdng.creator.plan.execution.ExecutionElementConfig;
 import io.harness.cdng.pipeline.PipelineInfrastructure;
 import io.harness.cdng.service.beans.ServiceConfig;
 import io.harness.common.SwaggerConstants;
+import io.harness.plancreator.stages.stage.StageInfoConfig;
 import io.harness.yaml.core.variables.NGVariable;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
@@ -18,7 +19,7 @@ import org.springframework.data.annotation.TypeAlias;
 @Builder
 @JsonTypeName("Deployment")
 @TypeAlias("deploymentStageConfig")
-public class DeploymentStageConfig {
+public class DeploymentStageConfig implements StageInfoConfig {
   String uuid;
   List<NGVariable> variables;
   ServiceConfig service;
