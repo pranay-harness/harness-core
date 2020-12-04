@@ -48,9 +48,9 @@ public class ManagerGrpcClientModule extends ProviderModule {
     if ((protocol == null) || (protocol.toLowerCase().startsWith("https"))) {
       SslContext sslContext = GrpcSslContexts.forClient().trustManager(InsecureTrustManagerFactory.INSTANCE).build();
       return NettyChannelBuilder.forTarget(config.target)
-              .overrideAuthority(authorityToUse)
-              .sslContext(sslContext)
-              .build();
+          .overrideAuthority(authorityToUse)
+          .sslContext(sslContext)
+          .build();
     }
     return NettyChannelBuilder.forTarget(config.target).overrideAuthority(authorityToUse).usePlaintext().build();
   }
