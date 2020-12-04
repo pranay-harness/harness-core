@@ -5,25 +5,27 @@ import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 
 import io.harness.AmbianceUtils;
-import io.harness.adviser.Advise;
 import io.harness.adviser.Adviser;
 import io.harness.adviser.AdvisingEvent;
 import io.harness.adviser.OrchestrationAdviserTypes;
-import io.harness.adviser.advise.EndPlanAdvise;
-import io.harness.adviser.advise.InterventionWaitAdvise;
-import io.harness.adviser.advise.NextStepAdvise;
-import io.harness.adviser.advise.RetryAdvise;
 import io.harness.annotations.Redesign;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.engine.executions.node.NodeExecutionService;
 import io.harness.execution.NodeExecution;
+import io.harness.pms.advisers.AdviseType;
+import io.harness.pms.advisers.AdviserResponse;
 import io.harness.pms.advisers.AdviserType;
+import io.harness.pms.advisers.EndPlanAdvise;
+import io.harness.pms.advisers.InterventionWaitAdvise;
+import io.harness.pms.advisers.NextStepAdvise;
+import io.harness.pms.advisers.RetryAdvise;
 import io.harness.pms.ambiance.Ambiance;
 import io.harness.pms.execution.failure.FailureInfo;
 import io.harness.serializer.KryoSerializer;
 
 import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
+import com.google.protobuf.Duration;
 import java.util.Collections;
 import java.util.List;
 import javax.validation.constraints.NotNull;
@@ -38,14 +40,20 @@ public class RetryAdviser implements Adviser {
       AdviserType.newBuilder().setType(OrchestrationAdviserTypes.RETRY.name()).build();
 
   @Override
-  public Advise onAdviseEvent(AdvisingEvent advisingEvent) {
+  public AdviserResponse onAdviseEvent(AdvisingEvent advisingEvent) {
     RetryAdviserParameters parameters = extractParameters(advisingEvent);
     Ambiance ambiance = advisingEvent.getAmbiance();
     NodeExecution nodeExecution =
         Preconditions.checkNotNull(nodeExecutionService.get(AmbianceUtils.obtainCurrentRuntimeId(ambiance)));
     if (nodeExecution.retryCount() < parameters.getRetryCount()) {
       int waitInterval = calculateWaitInterval(parameters.getWaitIntervalList(), nodeExecution.retryCount());
-      return RetryAdvise.builder().retryNodeExecutionId(nodeExecution.getUuid()).waitInterval(waitInterval).build();
+      return AdviserResponse.newBuilder()
+          .setType(AdviseType.RETRY)
+          .setRetryAdvise(RetryAdvise.newBuilder()
+                              .setRetryNodeExecutionId(nodeExecution.getUuid())
+                              .setWaitInterval(waitInterval)
+                              .build())
+          .build();
     }
     return handlePostRetry(parameters);
   }
@@ -62,14 +70,26 @@ public class RetryAdviser implements Adviser {
     return canAdvise;
   }
 
-  private Advise handlePostRetry(RetryAdviserParameters parameters) {
+  private AdviserResponse handlePostRetry(RetryAdviserParameters parameters) {
     switch (parameters.getRepairActionCodeAfterRetry()) {
       case MANUAL_INTERVENTION:
-        return InterventionWaitAdvise.builder().build();
+        return AdviserResponse.newBuilder()
+            .setInterventionWaitAdvise(
+                InterventionWaitAdvise.newBuilder()
+                    .setTimeout(Duration.newBuilder().setSeconds(java.time.Duration.ofDays(1).toMinutes() * 60).build())
+                    .build())
+            .setType(AdviseType.INTERVENTION_WAIT)
+            .build();
       case END_EXECUTION:
-        return EndPlanAdvise.builder().build();
+        return AdviserResponse.newBuilder()
+            .setEndPlanAdvise(EndPlanAdvise.newBuilder().build())
+            .setType(AdviseType.END_PLAN)
+            .build();
       case IGNORE:
-        return NextStepAdvise.builder().nextNodeId(parameters.getNextNodeId()).build();
+        return AdviserResponse.newBuilder()
+            .setNextStepAdvise(NextStepAdvise.newBuilder().setNextNodeId(parameters.getNextNodeId()).build())
+            .setType(AdviseType.NEXT_STEP)
+            .build();
       default:
         throw new IllegalStateException("Unexpected value: " + parameters.getRepairActionCodeAfterRetry());
     }

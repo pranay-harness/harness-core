@@ -2,24 +2,24 @@ package io.harness.engine.advise;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 
-import io.harness.adviser.AdviseType;
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.engine.advise.handlers.EndPlanAdviseHandler;
-import io.harness.engine.advise.handlers.InterventionWaitAdviseHandler;
+import io.harness.engine.advise.handlers.EndPlanAdviserResponseHandler;
+import io.harness.engine.advise.handlers.InterventionWaitAdviserResponseHandler;
 import io.harness.engine.advise.handlers.NextStepHandler;
-import io.harness.engine.advise.handlers.RetryAdviseHandler;
+import io.harness.engine.advise.handlers.RetryAdviserResponseHandler;
 import io.harness.exception.InvalidRequestException;
+import io.harness.pms.advisers.AdviseType;
 
 import com.google.inject.Inject;
 
 @OwnedBy(CDC)
 public class AdviseHandlerFactory {
   @Inject private NextStepHandler nextStepHandler;
-  @Inject private RetryAdviseHandler retryAdviseHandler;
-  @Inject private EndPlanAdviseHandler endPlanAdviseHandler;
-  @Inject private InterventionWaitAdviseHandler interventionWaitAdviseHandler;
+  @Inject private RetryAdviserResponseHandler retryAdviseHandler;
+  @Inject private EndPlanAdviserResponseHandler endPlanAdviseHandler;
+  @Inject private InterventionWaitAdviserResponseHandler interventionWaitAdviseHandler;
 
-  public AdviseHandler obtainHandler(AdviseType adviseType) {
+  public AdviserResponseHandler obtainHandler(AdviseType adviseType) {
     switch (adviseType) {
       case NEXT_STEP:
         return nextStepHandler;

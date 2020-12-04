@@ -6,17 +6,18 @@ import static io.harness.rule.OwnerRule.PRASHANT;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.OrchestrationTestBase;
-import io.harness.adviser.advise.RetryAdvise;
 import io.harness.category.element.UnitTests;
 import io.harness.engine.executions.node.NodeExecutionService;
 import io.harness.engine.executions.plan.PlanExecutionService;
 import io.harness.execution.NodeExecution;
 import io.harness.execution.PlanExecution;
+import io.harness.pms.advisers.AdviseType;
+import io.harness.pms.advisers.AdviserResponse;
+import io.harness.pms.advisers.RetryAdvise;
 import io.harness.pms.ambiance.Ambiance;
 import io.harness.pms.ambiance.Level;
 import io.harness.pms.execution.Status;
 import io.harness.pms.plan.PlanNodeProto;
-import io.harness.pms.sdk.core.plan.PlanNode;
 import io.harness.pms.steps.StepType;
 import io.harness.rule.Owner;
 import io.harness.testlib.RealMongo;
@@ -31,8 +32,8 @@ import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 
-public class RetryAdviseHandlerTest extends OrchestrationTestBase {
-  @InjectMocks @Inject private RetryAdviseHandler retryAdviseHandler;
+public class RetryAdviserResponseHandlerTest extends OrchestrationTestBase {
+  @InjectMocks @Inject private RetryAdviserResponseHandler retryAdviseHandler;
   @Inject private PlanExecutionService planExecutionService;
   @Inject private NodeExecutionService nodeExecutionService;
   @Mock private ExecutorService executorService;
@@ -67,7 +68,7 @@ public class RetryAdviseHandlerTest extends OrchestrationTestBase {
                                       .status(Status.FAILED)
                                       .build();
     nodeExecutionService.save(nodeExecution);
-    advise = RetryAdvise.builder().waitInterval(0).retryNodeExecutionId(NODE_EXECUTION_ID).build();
+    advise = RetryAdvise.newBuilder().setWaitInterval(0).setRetryNodeExecutionId(NODE_EXECUTION_ID).build();
   }
 
   @Test
@@ -75,7 +76,8 @@ public class RetryAdviseHandlerTest extends OrchestrationTestBase {
   @Owner(developers = PRASHANT)
   @Category(UnitTests.class)
   public void shouldTestHandleAdvise() {
-    retryAdviseHandler.handleAdvise(ambiance, advise);
+    retryAdviseHandler.handleAdvise(
+        ambiance, AdviserResponse.newBuilder().setRetryAdvise(advise).setType(AdviseType.RETRY).build());
     List<NodeExecution> executions = nodeExecutionService.fetchNodeExecutions(PLAN_EXECUTION_ID);
     assertThat(executions).hasSize(2);
     NodeExecution newNodeExecution =

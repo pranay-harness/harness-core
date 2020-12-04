@@ -3,15 +3,16 @@ package io.harness.redesign.advisers;
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 
 import io.harness.StatusUtils;
-import io.harness.adviser.Advise;
 import io.harness.adviser.Adviser;
 import io.harness.adviser.AdvisingEvent;
-import io.harness.adviser.advise.NextStepAdvise;
 import io.harness.annotations.Redesign;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.engine.outcomes.OutcomeService;
 import io.harness.exception.InvalidRequestException;
+import io.harness.pms.advisers.AdviseType;
+import io.harness.pms.advisers.AdviserResponse;
 import io.harness.pms.advisers.AdviserType;
+import io.harness.pms.advisers.NextStepAdvise;
 import io.harness.pms.data.StepOutcomeRef;
 import io.harness.pms.sdk.core.data.Outcome;
 import io.harness.serializer.KryoSerializer;
@@ -30,7 +31,7 @@ public class HttpResponseCodeSwitchAdviser implements Adviser {
   @Inject private KryoSerializer kryoSerializer;
 
   @Override
-  public Advise onAdviseEvent(AdvisingEvent advisingEvent) {
+  public AdviserResponse onAdviseEvent(AdvisingEvent advisingEvent) {
     HttpResponseCodeSwitchAdviserParameters parameters =
         (HttpResponseCodeSwitchAdviserParameters) Preconditions.checkNotNull(
             kryoSerializer.asObject(advisingEvent.getAdviserParameters()));
@@ -46,8 +47,11 @@ public class HttpResponseCodeSwitchAdviser implements Adviser {
 
     Map<Integer, String> responseCodeNodeIdMap = parameters.getResponseCodeNodeIdMappings();
     if (responseCodeNodeIdMap.containsKey(httpStateExecutionData.getHttpResponseCode())) {
-      return NextStepAdvise.builder()
-          .nextNodeId(responseCodeNodeIdMap.get(httpStateExecutionData.getHttpResponseCode()))
+      return AdviserResponse.newBuilder()
+          .setNextStepAdvise(NextStepAdvise.newBuilder()
+                                 .setNextNodeId(responseCodeNodeIdMap.get(httpStateExecutionData.getHttpResponseCode()))
+                                 .build())
+          .setType(AdviseType.NEXT_STEP)
           .build();
     } else {
       throw new InvalidRequestException(

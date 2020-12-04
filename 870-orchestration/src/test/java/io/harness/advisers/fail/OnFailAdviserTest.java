@@ -8,20 +8,20 @@ import static org.mockito.Mockito.when;
 
 import io.harness.AmbianceUtils;
 import io.harness.OrchestrationTestBase;
-import io.harness.adviser.Advise;
 import io.harness.adviser.AdvisingEvent;
 import io.harness.adviser.AdvisingEvent.AdvisingEventBuilder;
-import io.harness.adviser.advise.NextStepAdvise;
 import io.harness.category.element.UnitTests;
 import io.harness.engine.executions.node.NodeExecutionService;
 import io.harness.execution.NodeExecution;
+import io.harness.pms.advisers.AdviseType;
+import io.harness.pms.advisers.AdviserResponse;
+import io.harness.pms.advisers.NextStepAdvise;
 import io.harness.pms.ambiance.Ambiance;
 import io.harness.pms.ambiance.Level;
 import io.harness.pms.execution.Status;
 import io.harness.pms.execution.failure.FailureInfo;
 import io.harness.pms.execution.failure.FailureType;
 import io.harness.pms.plan.PlanNodeProto;
-import io.harness.pms.sdk.core.plan.PlanNode;
 import io.harness.pms.steps.StepType;
 import io.harness.rule.Owner;
 import io.harness.serializer.KryoSerializer;
@@ -86,9 +86,10 @@ public class OnFailAdviserTest extends OrchestrationTestBase {
             .toStatus(Status.FAILED)
             .adviserParameters(kryoSerializer.asBytes(OnFailAdviserParameters.builder().nextNodeId(nextNodeId).build()))
             .build();
-    Advise advise = onFailAdviser.onAdviseEvent(advisingEvent);
-    assertThat(advise).isInstanceOf(NextStepAdvise.class);
-    NextStepAdvise nextStepAdvise = (NextStepAdvise) advise;
+    AdviserResponse adviserResponse = onFailAdviser.onAdviseEvent(advisingEvent);
+    assertThat(adviserResponse.getType()).isEqualTo(AdviseType.NEXT_STEP);
+    assertThat(adviserResponse.getNextStepAdvise()).isNotNull();
+    NextStepAdvise nextStepAdvise = adviserResponse.getNextStepAdvise();
     assertThat(nextStepAdvise.getNextNodeId()).isEqualTo(nextNodeId);
   }
 

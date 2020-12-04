@@ -8,22 +8,22 @@ import static org.mockito.Mockito.when;
 
 import io.harness.AmbianceUtils;
 import io.harness.OrchestrationTestBase;
-import io.harness.adviser.Advise;
 import io.harness.adviser.AdvisingEvent;
 import io.harness.adviser.AdvisingEvent.AdvisingEventBuilder;
-import io.harness.adviser.advise.NextStepAdvise;
-import io.harness.adviser.advise.RetryAdvise;
 import io.harness.category.element.UnitTests;
 import io.harness.engine.executions.node.NodeExecutionService;
 import io.harness.execution.NodeExecution;
 import io.harness.interrupts.RepairActionCode;
+import io.harness.pms.advisers.AdviseType;
+import io.harness.pms.advisers.AdviserResponse;
+import io.harness.pms.advisers.NextStepAdvise;
+import io.harness.pms.advisers.RetryAdvise;
 import io.harness.pms.ambiance.Ambiance;
 import io.harness.pms.ambiance.Level;
 import io.harness.pms.execution.Status;
 import io.harness.pms.execution.failure.FailureInfo;
 import io.harness.pms.execution.failure.FailureType;
 import io.harness.pms.plan.PlanNodeProto;
-import io.harness.pms.sdk.core.plan.PlanNode;
 import io.harness.pms.steps.StepType;
 import io.harness.rule.Owner;
 import io.harness.serializer.KryoSerializer;
@@ -89,11 +89,13 @@ public class RetryAdviserTest extends OrchestrationTestBase {
                                       .toStatus(Status.FAILED)
                                       .adviserParameters(kryoSerializer.asBytes(getRetryParamsWithIgnore()))
                                       .build();
-    Advise advise = retryAdviser.onAdviseEvent(advisingEvent);
-    assertThat(advise).isInstanceOf(RetryAdvise.class);
-    RetryAdvise retryAdvise = (RetryAdvise) advise;
-    assertThat(retryAdvise.getWaitInterval()).isEqualTo(2);
+    AdviserResponse adviserResponse = retryAdviser.onAdviseEvent(advisingEvent);
+
+    assertThat(adviserResponse.getType()).isEqualTo(AdviseType.RETRY);
+    assertThat(adviserResponse.getRetryAdvise()).isNotNull();
+    RetryAdvise retryAdvise = adviserResponse.getRetryAdvise();
     assertThat(retryAdvise.getRetryNodeExecutionId()).isEqualTo(NODE_EXECUTION_ID);
+    assertThat(retryAdvise.getWaitInterval()).isEqualTo(2);
   }
 
   @Test
@@ -120,11 +122,13 @@ public class RetryAdviserTest extends OrchestrationTestBase {
                                       .toStatus(Status.FAILED)
                                       .adviserParameters(kryoSerializer.asBytes(getRetryParamsWithIgnore()))
                                       .build();
-    Advise advise = retryAdviser.onAdviseEvent(advisingEvent);
-    assertThat(advise).isInstanceOf(RetryAdvise.class);
-    RetryAdvise retryAdvise = (RetryAdvise) advise;
-    assertThat(retryAdvise.getWaitInterval()).isEqualTo(5);
+    AdviserResponse adviserResponse = retryAdviser.onAdviseEvent(advisingEvent);
+
+    assertThat(adviserResponse.getType()).isEqualTo(AdviseType.RETRY);
+    assertThat(adviserResponse.getRetryAdvise()).isNotNull();
+    RetryAdvise retryAdvise = adviserResponse.getRetryAdvise();
     assertThat(retryAdvise.getRetryNodeExecutionId()).isEqualTo(NODE_EXECUTION_ID);
+    assertThat(retryAdvise.getWaitInterval()).isEqualTo(5);
   }
 
   @Test
@@ -151,9 +155,11 @@ public class RetryAdviserTest extends OrchestrationTestBase {
                                       .toStatus(Status.FAILED)
                                       .adviserParameters(kryoSerializer.asBytes(getRetryParamsWithIgnore()))
                                       .build();
-    Advise advise = retryAdviser.onAdviseEvent(advisingEvent);
-    assertThat(advise).isInstanceOf(NextStepAdvise.class);
-    NextStepAdvise nextStepAdvise = (NextStepAdvise) advise;
+    AdviserResponse adviserResponse = retryAdviser.onAdviseEvent(advisingEvent);
+
+    assertThat(adviserResponse.getType()).isEqualTo(AdviseType.NEXT_STEP);
+    assertThat(adviserResponse.getNextStepAdvise()).isNotNull();
+    NextStepAdvise nextStepAdvise = adviserResponse.getNextStepAdvise();
     assertThat(nextStepAdvise.getNextNodeId()).isEqualTo(DUMMY_NODE_ID);
   }
 
