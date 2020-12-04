@@ -53,7 +53,6 @@ import javax.ws.rs.core.Response;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.hibernate.validator.constraints.NotEmpty;
 import org.springframework.data.domain.Page;
 import org.springframework.data.mongodb.core.query.Criteria;
 
@@ -79,8 +78,8 @@ public class InviteResource {
   @GET
   @ApiOperation(value = "Get all invites for the queried project/organization", nickname = "getInvites")
   public ResponseDTO<PageResponse<InviteDTO>> getInvites(
-      @QueryParam("accountIdentifier") @NotEmpty String accountIdentifier,
-      @QueryParam("orgIdentifier") @NotEmpty String orgIdentifier,
+      @QueryParam("accountIdentifier") @NotNull String accountIdentifier,
+      @QueryParam("orgIdentifier") @NotNull String orgIdentifier,
       @QueryParam("projectIdentifier") String projectIdentifier, @BeanParam PageRequest pageRequest) {
     if (isEmpty(pageRequest.getSortOrders())) {
       SortOrder order =
