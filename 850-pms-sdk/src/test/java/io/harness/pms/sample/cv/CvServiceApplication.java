@@ -63,7 +63,12 @@ public class CvServiceApplication extends Application<CvServiceConfiguration> {
                                         .pipelineServiceInfoProvider(new CvPipelineServiceInfoProvider())
                                         .filterCreationResponseMerger(new CVFilterCreationResponseMerger())
                                         .build();
-    PmsSdkModule.initializeDefaultInstance(sdkConfig);
+    try {
+      PmsSdkModule.initializeDefaultInstance(sdkConfig);
+    } catch (Exception e) {
+      log.error("Failed To register pipeline sdk");
+      System.exit(1);
+    }
 
     MaintenanceController.forceMaintenance(false);
   }
