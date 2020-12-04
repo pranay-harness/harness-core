@@ -10,7 +10,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import io.harness.OrchestrationTestBase;
-import io.harness.adviser.Advise;
 import io.harness.adviser.Adviser;
 import io.harness.adviser.AdvisingEvent;
 import io.harness.advisers.success.OnSuccessAdviser;
@@ -23,6 +22,7 @@ import io.harness.facilitator.OrchestrationFacilitatorType;
 import io.harness.maintenance.MaintenanceGuard;
 import io.harness.plan.Plan;
 import io.harness.pms.advisers.AdviserObtainment;
+import io.harness.pms.advisers.AdviserResponse;
 import io.harness.pms.advisers.AdviserType;
 import io.harness.pms.ambiance.Ambiance;
 import io.harness.pms.facilitators.FacilitatorObtainment;
@@ -234,7 +234,7 @@ public class OrchestrationEngineTest extends OrchestrationTestBase {
 
   private static class TestHttpResponseCodeSwitchAdviser implements Adviser {
     @Override
-    public Advise onAdviseEvent(AdvisingEvent advisingEvent) {
+    public AdviserResponse onAdviseEvent(AdvisingEvent advisingEvent) {
       return null;
     }
 

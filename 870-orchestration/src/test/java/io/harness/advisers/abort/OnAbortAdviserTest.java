@@ -6,10 +6,10 @@ import static io.harness.rule.OwnerRule.ALEXEI;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.OrchestrationTestBase;
-import io.harness.adviser.Advise;
 import io.harness.adviser.AdvisingEvent;
-import io.harness.adviser.advise.EndPlanAdvise;
 import io.harness.category.element.UnitTests;
+import io.harness.pms.advisers.AdviseType;
+import io.harness.pms.advisers.AdviserResponse;
 import io.harness.pms.ambiance.Ambiance;
 import io.harness.pms.ambiance.Level;
 import io.harness.pms.execution.Status;
@@ -50,8 +50,8 @@ public class OnAbortAdviserTest extends OrchestrationTestBase {
   @Category(UnitTests.class)
   public void shouldTestOnAdviseEvent() {
     AdvisingEvent advisingEvent = AdvisingEvent.builder().ambiance(ambiance).toStatus(Status.FAILED).build();
-    Advise advise = onAbortAdviser.onAdviseEvent(advisingEvent);
-    assertThat(advise).isInstanceOf(EndPlanAdvise.class);
+    AdviserResponse adviserResponse = onAbortAdviser.onAdviseEvent(advisingEvent);
+    assertThat(adviserResponse.getType()).isEqualTo(AdviseType.END_PLAN);
   }
 
   @Test

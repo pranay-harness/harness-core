@@ -6,11 +6,11 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import io.harness.OrchestrationBeansTestBase;
-import io.harness.adviser.Advise;
 import io.harness.adviser.Adviser;
 import io.harness.adviser.AdvisingEvent;
 import io.harness.adviser.OrchestrationAdviserTypes;
 import io.harness.category.element.UnitTests;
+import io.harness.pms.advisers.AdviserResponse;
 import io.harness.pms.advisers.AdviserType;
 import io.harness.registries.RegistryType;
 import io.harness.registries.exceptions.DuplicateRegistryException;
@@ -52,7 +52,7 @@ public class AdviserRegistryTest extends OrchestrationBeansTestBase {
 
   private static class Type1Adviser implements Adviser {
     @Override
-    public Advise onAdviseEvent(AdvisingEvent advisingEvent) {
+    public AdviserResponse onAdviseEvent(AdvisingEvent advisingEvent) {
       return null;
     }
 

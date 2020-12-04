@@ -18,15 +18,14 @@ import io.harness.AmbianceUtils;
 import io.harness.LevelUtils;
 import io.harness.OrchestrationPublisherName;
 import io.harness.StatusUtils;
-import io.harness.adviser.Advise;
-import io.harness.adviser.AdviseType;
+import io.harness.adviser.AdviseTypeUtils;
 import io.harness.adviser.Adviser;
 import io.harness.adviser.AdvisingEvent;
 import io.harness.annotations.Redesign;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.delay.DelayEventHelper;
-import io.harness.engine.advise.AdviseHandler;
 import io.harness.engine.advise.AdviseHandlerFactory;
+import io.harness.engine.advise.AdviserResponseHandler;
 import io.harness.engine.events.OrchestrationEventEmitter;
 import io.harness.engine.executables.ExecutableProcessor;
 import io.harness.engine.executables.ExecutableProcessorFactory;
@@ -50,6 +49,7 @@ import io.harness.facilitator.Facilitator;
 import io.harness.facilitator.FacilitatorResponse;
 import io.harness.logging.AutoLogContext;
 import io.harness.pms.advisers.AdviserObtainment;
+import io.harness.pms.advisers.AdviserResponse;
 import io.harness.pms.ambiance.Ambiance;
 import io.harness.pms.data.StepOutcomeRef;
 import io.harness.pms.execution.Status;
@@ -57,7 +57,6 @@ import io.harness.pms.execution.failure.FailureInfo;
 import io.harness.pms.facilitators.FacilitatorObtainment;
 import io.harness.pms.plan.PlanNodeProto;
 import io.harness.pms.sdk.core.data.Outcome;
-import io.harness.pms.sdk.core.plan.PlanNode;
 import io.harness.pms.sdk.core.steps.io.StepInputPackage;
 import io.harness.pms.sdk.core.steps.io.StepParameters;
 import io.harness.pms.sdk.core.steps.io.StepResponse;
@@ -322,10 +321,10 @@ public class OrchestrationEngine {
                                         .failureInfo(nodeExecution.getFailureInfo())
                                         .build();
       if (adviser.canAdvise(advisingEvent)) {
-        Advise advise = adviser.onAdviseEvent(advisingEvent);
+        AdviserResponse advise = adviser.onAdviseEvent(advisingEvent);
         NodeExecution updatedNodeExecution =
             nodeExecutionService.updateStatusWithOps(nodeExecution.getUuid(), status, ops -> {
-              if (AdviseType.isWaitingAdviseType(advise.getType())) {
+              if (AdviseTypeUtils.isWaitingAdviseType(advise.getType())) {
                 ops.set(NodeExecutionKeys.endTs, System.currentTimeMillis());
               }
             });
@@ -407,9 +406,9 @@ public class OrchestrationEngine {
   }
 
   @SuppressWarnings({"rawtypes", "unchecked"})
-  private void handleAdvise(@NotNull Ambiance ambiance, @NotNull Advise advise) {
-    AdviseHandler adviseHandler = adviseHandlerFactory.obtainHandler(advise.getType());
-    adviseHandler.handleAdvise(ambiance, advise);
+  private void handleAdvise(@NotNull Ambiance ambiance, @NotNull AdviserResponse adviserResponse) {
+    AdviserResponseHandler adviserResponseHandler = adviseHandlerFactory.obtainHandler(adviserResponse.getType());
+    adviserResponseHandler.handleAdvise(ambiance, adviserResponse);
   }
 
   public void resume(String nodeExecutionId, Map<String, ResponseData> response, boolean asyncError) {

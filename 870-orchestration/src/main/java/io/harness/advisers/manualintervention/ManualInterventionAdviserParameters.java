@@ -1,6 +1,6 @@
 package io.harness.advisers.manualintervention;
 
-import io.harness.adviser.advise.WithFailureTypes;
+import io.harness.adviser.WithFailureTypes;
 import io.harness.pms.execution.failure.FailureType;
 
 import java.util.EnumSet;

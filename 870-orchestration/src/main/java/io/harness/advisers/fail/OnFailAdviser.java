@@ -4,14 +4,15 @@ import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 
 import io.harness.StatusUtils;
-import io.harness.adviser.Advise;
 import io.harness.adviser.Adviser;
 import io.harness.adviser.AdvisingEvent;
 import io.harness.adviser.OrchestrationAdviserTypes;
-import io.harness.adviser.advise.NextStepAdvise;
 import io.harness.annotations.Redesign;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.pms.advisers.AdviseType;
+import io.harness.pms.advisers.AdviserResponse;
 import io.harness.pms.advisers.AdviserType;
+import io.harness.pms.advisers.NextStepAdvise;
 import io.harness.pms.execution.failure.FailureInfo;
 import io.harness.serializer.KryoSerializer;
 
@@ -29,9 +30,12 @@ public class OnFailAdviser implements Adviser {
   @Inject private KryoSerializer kryoSerializer;
 
   @Override
-  public Advise onAdviseEvent(AdvisingEvent advisingEvent) {
+  public AdviserResponse onAdviseEvent(AdvisingEvent advisingEvent) {
     OnFailAdviserParameters parameters = extractParameters(advisingEvent);
-    return NextStepAdvise.builder().nextNodeId(parameters.getNextNodeId()).build();
+    return AdviserResponse.newBuilder()
+        .setNextStepAdvise(NextStepAdvise.newBuilder().setNextNodeId(parameters.getNextNodeId()).build())
+        .setType(AdviseType.NEXT_STEP)
+        .build();
   }
 
   @Override

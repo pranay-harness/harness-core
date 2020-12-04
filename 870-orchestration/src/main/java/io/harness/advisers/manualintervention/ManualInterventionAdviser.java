@@ -4,16 +4,18 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.pms.execution.Status.INTERVENTION_WAITING;
 
 import io.harness.StatusUtils;
-import io.harness.adviser.Advise;
 import io.harness.adviser.Adviser;
 import io.harness.adviser.AdvisingEvent;
 import io.harness.adviser.OrchestrationAdviserTypes;
-import io.harness.adviser.advise.InterventionWaitAdvise;
+import io.harness.pms.advisers.AdviseType;
+import io.harness.pms.advisers.AdviserResponse;
 import io.harness.pms.advisers.AdviserType;
+import io.harness.pms.advisers.InterventionWaitAdvise;
 import io.harness.pms.execution.failure.FailureInfo;
 import io.harness.serializer.KryoSerializer;
 
 import com.google.inject.Inject;
+import com.google.protobuf.Duration;
 import java.util.Collections;
 
 public class ManualInterventionAdviser implements Adviser {
@@ -23,8 +25,14 @@ public class ManualInterventionAdviser implements Adviser {
   @Inject private KryoSerializer kryoSerializer;
 
   @Override
-  public Advise onAdviseEvent(AdvisingEvent advisingEvent) {
-    return InterventionWaitAdvise.builder().build();
+  public AdviserResponse onAdviseEvent(AdvisingEvent advisingEvent) {
+    return AdviserResponse.newBuilder()
+        .setInterventionWaitAdvise(
+            InterventionWaitAdvise.newBuilder()
+                .setTimeout(Duration.newBuilder().setSeconds(java.time.Duration.ofDays(1).toMinutes() * 60).build())
+                .build())
+        .setType(AdviseType.INTERVENTION_WAIT)
+        .build();
   }
 
   @Override

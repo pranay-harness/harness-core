@@ -1,4 +1,4 @@
-package io.harness.adviser.advise;
+package io.harness.adviser;
 
 import io.harness.pms.execution.failure.FailureType;
 

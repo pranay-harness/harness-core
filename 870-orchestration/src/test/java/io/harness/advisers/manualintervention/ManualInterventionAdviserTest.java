@@ -8,20 +8,19 @@ import static org.mockito.Mockito.when;
 
 import io.harness.AmbianceUtils;
 import io.harness.OrchestrationTestBase;
-import io.harness.adviser.Advise;
 import io.harness.adviser.AdvisingEvent;
 import io.harness.adviser.AdvisingEvent.AdvisingEventBuilder;
-import io.harness.adviser.advise.InterventionWaitAdvise;
 import io.harness.category.element.UnitTests;
 import io.harness.engine.executions.node.NodeExecutionService;
 import io.harness.execution.NodeExecution;
+import io.harness.pms.advisers.AdviseType;
+import io.harness.pms.advisers.AdviserResponse;
 import io.harness.pms.ambiance.Ambiance;
 import io.harness.pms.ambiance.Level;
 import io.harness.pms.execution.Status;
 import io.harness.pms.execution.failure.FailureInfo;
 import io.harness.pms.execution.failure.FailureType;
 import io.harness.pms.plan.PlanNodeProto;
-import io.harness.pms.sdk.core.plan.PlanNode;
 import io.harness.pms.steps.StepType;
 import io.harness.rule.Owner;
 import io.harness.serializer.KryoSerializer;
@@ -85,8 +84,9 @@ public class ManualInterventionAdviserTest extends OrchestrationTestBase {
             .toStatus(Status.FAILED)
             .adviserParameters(kryoSerializer.asBytes(ManualInterventionAdviserParameters.builder().build()))
             .build();
-    Advise advise = manualInterventionAdviser.onAdviseEvent(advisingEvent);
-    assertThat(advise).isInstanceOf(InterventionWaitAdvise.class);
+    AdviserResponse adviserResponse = manualInterventionAdviser.onAdviseEvent(advisingEvent);
+    assertThat(adviserResponse.getType()).isEqualTo(AdviseType.INTERVENTION_WAIT);
+    assertThat(adviserResponse.getInterventionWaitAdvise()).isNotNull();
   }
 
   @Test
