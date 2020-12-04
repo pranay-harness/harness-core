@@ -203,7 +203,7 @@ public class JiraCreateUpdate extends State implements SweepingOutputStateMixin 
         }
       }
 
-      parseCustomFieldsDateTime(context);
+      parseCustomFieldsDateTimeNumber(context, customFieldsIdToNameMap);
 
       try {
         resolveCustomFieldsVars(customFieldsIdToNameMap, customFieldsValueToIdMap);
@@ -511,10 +511,11 @@ public class JiraCreateUpdate extends State implements SweepingOutputStateMixin 
     }
   }
 
-  private void parseCustomFieldsDateTime(ExecutionContext context) {
+  private void parseCustomFieldsDateTimeNumber(ExecutionContext context, Map<String, String> idToNameMap) {
     if (isNotEmpty(customFields)) {
       for (Entry<String, JiraCustomFieldValue> customField : customFields.entrySet()) {
         JiraCustomFieldValue value = customField.getValue();
+        String customFieldName = idToNameMap.get(customField.getKey());
         if (value.getFieldType().equals("date")) {
           String parsedDateValue = parseDateValue(value.getFieldValue(), context);
           value.setFieldValue(parsedDateValue);
@@ -522,6 +523,10 @@ public class JiraCreateUpdate extends State implements SweepingOutputStateMixin 
         if (value.getFieldType().equals("datetime")) {
           String parsedDateTimeValue = parseDateTimeValue(value.getFieldValue(), context);
           value.setFieldValue(parsedDateTimeValue);
+        }
+        if (value.getFieldType().equals("number")) {
+          String parsedNumber = parseNumberValue(value.getFieldValue(), context, customFieldName);
+          value.setFieldValue(parsedNumber);
         }
       }
     }
@@ -538,7 +543,8 @@ public class JiraCreateUpdate extends State implements SweepingOutputStateMixin 
         .map(Entry::getValue)
         .filter(jiraField
             -> jiraField.getSchema().get("type").equals(OPTION) || jiraField.getSchema().get("type").equals(RESOLUTION)
-                || (jiraField.getSchema().get("type").equals(ARRAY) && jiraField.getAllowedValues() != null))
+                || (jiraField.getSchema().get("type").equals(ARRAY) && jiraField.getAllowedValues() != null)
+                || jiraField.getSchema().get("type").equals("number"))
         .collect(toMap(JiraField::getKey, JiraField::getName));
   }
 
@@ -593,6 +599,17 @@ public class JiraCreateUpdate extends State implements SweepingOutputStateMixin 
     } else {
       throw new InvalidRequestException("Cannot parse date time value from " + fieldValue, USER);
     }
+  }
+
+  String parseNumberValue(String fieldValue, ExecutionContext context, String customFieldName) {
+    double parsedNumber;
+    try {
+      parsedNumber = Double.parseDouble(context.renderExpression(fieldValue));
+    } catch (NumberFormatException e) {
+      throw new InvalidRequestException(
+          String.format("Invalid value provided for field: %1$s. %1$s field is of type 'number'.", customFieldName));
+    }
+    return String.valueOf(parsedNumber);
   }
 
   private String getDateTime(Matcher matcher, Long val1) {
