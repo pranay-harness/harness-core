@@ -36,6 +36,7 @@ import io.harness.pms.sdk.PmsSdkModule;
 import io.harness.pms.steps.StepType;
 import io.harness.queue.QueueListenerController;
 import io.harness.queue.QueuePublisher;
+import io.harness.registries.state.StepRegistry;
 import io.harness.security.JWTAuthenticationFilter;
 import io.harness.security.annotations.NextGenManagerAuth;
 import io.harness.serializer.json.FailureInfoSerializer;
@@ -176,6 +177,7 @@ public class NextGenApplication extends Application<NextGenConfiguration> {
                                           .pmsGrpcClientConfig(appConfig.getPmsGrpcClientConfig())
                                           .pipelineServiceInfoProvider(new CDNGPlanCreatorProvider())
                                           .filterCreationResponseMerger(new CDNGFilterCreationResponseMerger())
+                                          .stepRegistry(registerStepRegistry(injector))
                                           .build();
       PmsSdkModule.initializeDefaultInstance(sdkConfig);
     }
@@ -270,6 +272,10 @@ public class NextGenApplication extends Application<NextGenConfiguration> {
 
   private void registerExecutionPlanCreators(Injector injector) {
     injector.getInstance(ExecutionPlanCreatorRegistrar.class).register();
+  }
+
+  private StepRegistry registerStepRegistry(Injector injector) {
+    return injector.getInstance(StepRegistry.class);
   }
 
   private void registerAuthFilters(NextGenConfiguration configuration, Environment environment, Injector injector) {
