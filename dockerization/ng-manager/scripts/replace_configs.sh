@@ -132,3 +132,19 @@ if [[ "" != "$EVENTS_FRAMEWORK_REDIS_SENTINELS" ]]; then
     INDEX=$(expr $INDEX + 1)
   done
 fi
+
+if [[ "" != "$GRPC_SERVER_PORT" ]]; then
+  yq write -i $CONFIG_FILE   pmsSdkGrpcServerConfig.connectors.port "$GRPC_SERVER_PORT"
+fi
+
+if [[ "" != "$SHOULD_CONFIGURE_WITH_PMS" ]]; then
+  yq write -i $CONFIG_FILE shouldConfigureWithPMS $SHOULD_CONFIGURE_WITH_PMS
+fi
+
+if [[ "" != "$PMS_TARGET" ]]; then
+  yq write -i $CONFIG_FILE pmsGrpcClientConfig.target $PMS_TARGET
+fi
+
+if [[ "" != "$PMS_AUTHORITY" ]]; then
+  yq write -i $CONFIG_FILE pmsGrpcClientConfig.authority $PMS_AUTHORITY
+fi
