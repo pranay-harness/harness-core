@@ -10,6 +10,7 @@ import io.harness.delegate.beans.connector.ConnectorType;
 import io.harness.mongo.index.Field;
 import io.harness.mongo.index.NgUniqueIndex;
 import io.harness.ng.core.NGAccountAccess;
+import io.harness.ng.core.common.beans.NGTag;
 import io.harness.persistence.PersistentEntity;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
@@ -49,14 +50,13 @@ public abstract class Connector implements PersistentEntity, NGAccountAccess {
   @NotEmpty String fullyQualifiedIdentifier;
   @NotEmpty ConnectorType type;
   @NotEmpty List<ConnectorCategory> categories;
-  @NotNull @Singular @Size(max = 128) List<String> tags;
+  @NotNull @Singular @Size(max = 128) List<NGTag> tags;
   @CreatedBy private EmbeddedUser createdBy;
   @LastModifiedBy private EmbeddedUser lastUpdatedBy;
   @CreatedDate Long createdAt;
   @LastModifiedDate Long lastModifiedAt;
   @Version Long version;
-  // todo @deepak: Change the name of this variable from status to something else
-  ConnectorConnectivityDetails status;
+  ConnectorConnectivityDetails connectivityDetails;
   Boolean deleted = Boolean.FALSE;
   String heartbeatPerpetualTaskId;
 
@@ -69,6 +69,7 @@ public abstract class Connector implements PersistentEntity, NGAccountAccess {
 
   @UtilityClass
   public static final class ConnectorKeys {
-    public static final String connectionStatus = ConnectorKeys.status + "." + ConnectorConnectivityDetailsKeys.status;
+    public static final String connectionStatus =
+        ConnectorKeys.connectivityDetails + "." + ConnectorConnectivityDetailsKeys.status;
   }
 }

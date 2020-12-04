@@ -370,7 +370,7 @@ public class ConnectorListWithFiltersTest extends ConnectorsTestBase {
   private void createConnectorsWithStatus(int numberOfConnectors, ConnectivityStatus status) {
     for (int i = 0; i < numberOfConnectors; i++) {
       KubernetesClusterConfig connector = getConnectorEntity();
-      connector.setStatus(ConnectorConnectivityDetails.builder().status(status).build());
+      connector.setConnectivityDetails(ConnectorConnectivityDetails.builder().status(status).build());
       connectorRepository.save(connector);
     }
   }

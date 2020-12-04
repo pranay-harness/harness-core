@@ -25,6 +25,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import java.util.List;
+import java.util.Map;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 import lombok.AccessLevel;
@@ -43,7 +44,7 @@ public class ConnectorInfoDTO {
   String description;
   String orgIdentifier;
   String projectIdentifier;
-  List<String> tags;
+  Map<String, String> tags;
 
   @NotNull @JsonProperty("type") ConnectorType connectorType;
 
@@ -71,7 +72,8 @@ public class ConnectorInfoDTO {
 
   @Builder
   public ConnectorInfoDTO(String name, String identifier, String description, String orgIdentifier,
-      String projectIdentifier, List<String> tags, ConnectorType connectorType, ConnectorConfigDTO connectorConfig) {
+      String projectIdentifier, Map<String, String> tags, ConnectorType connectorType,
+      ConnectorConfigDTO connectorConfig) {
     this.name = name;
     this.identifier = identifier;
     this.description = description;

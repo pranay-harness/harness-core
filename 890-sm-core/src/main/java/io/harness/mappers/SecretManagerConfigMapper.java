@@ -4,6 +4,7 @@ import static io.harness.annotations.dev.HarnessTeam.PL;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.SecretManagerConfig;
+import io.harness.ng.core.mapper.TagMapper;
 import io.harness.secretmanagerclient.NGSecretManagerMetadata;
 import io.harness.secretmanagerclient.dto.GcpKmsConfigDTO;
 import io.harness.secretmanagerclient.dto.GcpKmsConfigUpdateDTO;
@@ -53,7 +54,7 @@ public class SecretManagerConfigMapper {
         .orgIdentifier(dto.getOrgIdentifier())
         .accountIdentifier(dto.getAccountIdentifier())
         .description(dto.getDescription())
-        .tags(dto.getTags())
+        .tags(TagMapper.convertToList(dto.getTags()))
         .build();
   }
 
@@ -64,7 +65,7 @@ public class SecretManagerConfigMapper {
       secretManagerConfigDTO.setOrgIdentifier(ngMetadata.getOrgIdentifier());
       secretManagerConfigDTO.setProjectIdentifier(ngMetadata.getProjectIdentifier());
       secretManagerConfigDTO.setIdentifier(ngMetadata.getIdentifier());
-      secretManagerConfigDTO.setTags(ngMetadata.getTags());
+      secretManagerConfigDTO.setTags(TagMapper.convertToMap(ngMetadata.getTags()));
       secretManagerConfigDTO.setDescription(ngMetadata.getDescription());
     }
   }

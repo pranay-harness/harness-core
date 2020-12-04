@@ -14,6 +14,7 @@ import io.harness.connector.mappers.kubernetesMapper.KubernetesDTOToEntity;
 import io.harness.connector.mappers.kubernetesMapper.KubernetesEntityToDTO;
 import io.harness.delegate.beans.connector.ConnectorConfigDTO;
 import io.harness.encryption.Scope;
+import io.harness.ng.core.mapper.TagMapper;
 import io.harness.utils.FullyQualifiedIdentifierHelper;
 
 import com.google.common.annotations.VisibleForTesting;
@@ -49,7 +50,7 @@ public class ConnectorMapper {
     connector.setProjectIdentifier(connectorInfo.getProjectIdentifier());
     connector.setFullyQualifiedIdentifier(FullyQualifiedIdentifierHelper.getFullyQualifiedIdentifier(accountIdentifier,
         connectorInfo.getOrgIdentifier(), connectorInfo.getProjectIdentifier(), connectorInfo.getIdentifier()));
-    connector.setTags(connectorInfo.getTags());
+    connector.setTags(TagMapper.convertToList(connectorInfo.getTags()));
     connector.setDescription(connectorInfo.getDescription());
     connector.setType(connectorInfo.getConnectorType());
     connector.setCategories(connectorDTOToEntityMapper.getConnectorCategory());
@@ -78,12 +79,12 @@ public class ConnectorMapper {
                                          .projectIdentifier(connector.getProjectIdentifier())
                                          .connectorConfig(connectorConfigDTO)
                                          .connectorType(connector.getType())
-                                         .tags(connector.getTags())
+                                         .tags(TagMapper.convertToMap(connector.getTags()))
                                          .connectorType(connector.getType())
                                          .build();
     return ConnectorResponseDTO.builder()
         .connector(connectorInfo)
-        .status(connector.getStatus())
+        .status(connector.getConnectivityDetails())
         .createdAt(connector.getCreatedAt())
         .lastModifiedAt(connector.getLastModifiedAt())
         .build();

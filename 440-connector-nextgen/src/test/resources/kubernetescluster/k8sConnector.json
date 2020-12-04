@@ -5,10 +5,10 @@
     "description": "description",
     "orgIdentifier": "orgIdentifier",
     "projectIdentifier": "projectIdentifier",
-    "tags": [
-      "tag1",
-      "tag2"
-    ],
+    "tags": {
+      "company" : "Harness",
+      "env" : "dev"
+    },
     "type": "K8sCluster",
     "spec": {
       "credential": {

@@ -86,6 +86,6 @@ public class ConnectorStatisticsHelperTest extends ConnectorsTestBase {
   }
 
   private void setStatus(Connector connector, ConnectivityStatus status) {
-    connector.setStatus(ConnectorConnectivityDetails.builder().status(status).build());
+    connector.setConnectivityDetails(ConnectorConnectivityDetails.builder().status(status).build());
   }
 }

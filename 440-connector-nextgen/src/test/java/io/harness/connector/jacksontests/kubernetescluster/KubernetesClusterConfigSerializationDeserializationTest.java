@@ -17,6 +17,7 @@ import io.harness.delegate.beans.connector.k8Connector.KubernetesCredentialDTO;
 import io.harness.delegate.beans.connector.k8Connector.KubernetesUserNamePasswordDTO;
 import io.harness.encryption.Scope;
 import io.harness.encryption.SecretRefData;
+import io.harness.ng.core.common.beans.NGTag;
 import io.harness.remote.NGObjectMapperHelper;
 import io.harness.rule.Owner;
 import io.harness.rule.OwnerRule;
@@ -26,6 +27,9 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.Assert;
 import org.junit.Before;
@@ -70,13 +74,19 @@ public class KubernetesClusterConfigSerializationDeserializationTest extends Cat
 
   private ConnectorInfoDTO createConnectorRequestDTOForK8sConnector() {
     KubernetesClusterConfigDTO kubernetesConnectorDTO = createKubernetesConnectorRequestDTO();
+    Map<String, String> tags = new HashMap<String, String>() {
+      {
+        put("company", "Harness");
+        put("env", "dev");
+      }
+    };
     return ConnectorInfoDTO.builder()
         .name(name)
         .identifier(connectorIdentifier)
         .description(description)
         .projectIdentifier(projectIdentifier)
         .orgIdentifier(orgIdentifier)
-        .tags(Arrays.asList(tag1, tag2))
+        .tags(tags)
         .connectorType(KUBERNETES_CLUSTER)
         .connectorConfig(kubernetesConnectorDTO)
         .build();
