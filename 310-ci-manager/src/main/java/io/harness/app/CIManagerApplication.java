@@ -288,7 +288,11 @@ public class CIManagerApplication extends Application<CIManagerConfiguration> {
                                         .pmsGrpcClientConfig(config.getPmsGrpcClientConfig())
                                         .pipelineServiceInfoProvider(new CIPipelineServiceInfoProvider())
                                         .build();
-    PmsSdkModule.initializeDefaultInstance(sdkConfig);
+    try {
+      PmsSdkModule.initializeDefaultInstance(sdkConfig);
+    } catch (Exception e) {
+      // Ignore for Now
+    }
   }
 
   private void scheduleJobs(Injector injector) {

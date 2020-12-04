@@ -63,7 +63,12 @@ public class CdServiceApplication extends Application<CdServiceConfiguration> {
                                         .pipelineServiceInfoProvider(new CdPipelineServiceInfoProvider())
                                         .filterCreationResponseMerger(new CDFilterCreationResponseMerger())
                                         .build();
-    PmsSdkModule.initializeDefaultInstance(sdkConfig);
+    try {
+      PmsSdkModule.initializeDefaultInstance(sdkConfig);
+    } catch (Exception e) {
+      log.error("Failed To register pipeline sdk");
+      System.exit(1);
+    }
 
     MaintenanceController.forceMaintenance(false);
   }

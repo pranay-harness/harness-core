@@ -170,6 +170,16 @@ public class NextGenApplication extends Application<NextGenConfiguration> {
     harnessMetricRegistry = injector.getInstance(HarnessMetricRegistry.class);
     injector.getInstance(TriggerWebhookService.class).registerIterators();
 
+    registerPipelineSDK(injector, appConfig);
+
+    final InputStream snippetIndexFile = getClass().getClassLoader().getResourceAsStream(SnippetConstants.resourceFile);
+    YamlSdkConfiguration yamlSdkConfiguration = YamlSdkConfiguration.builder().snippetIndex(snippetIndexFile).build();
+    YamlSdkModule.initializeDefaultInstance(yamlSdkConfiguration);
+
+    MaintenanceController.forceMaintenance(false);
+  }
+
+  public void registerPipelineSDK(Injector injector, NextGenConfiguration appConfig) {
     if (appConfig.getShouldConfigureWithPMS() != null && appConfig.getShouldConfigureWithPMS()) {
       PmsSdkConfiguration sdkConfig = PmsSdkConfiguration.builder()
                                           .mongoConfig(appConfig.getPmsMongoConfig())
@@ -179,14 +189,13 @@ public class NextGenApplication extends Application<NextGenConfiguration> {
                                           .filterCreationResponseMerger(new CDNGFilterCreationResponseMerger())
                                           .stepRegistry(registerStepRegistry(injector))
                                           .build();
-      PmsSdkModule.initializeDefaultInstance(sdkConfig);
+      try {
+        PmsSdkModule.initializeDefaultInstance(sdkConfig);
+      } catch (Exception e) {
+        log.error("Failed To register pipeline sdk");
+        System.exit(1);
+      }
     }
-
-    final InputStream snippetIndexFile = getClass().getClassLoader().getResourceAsStream(SnippetConstants.resourceFile);
-    YamlSdkConfiguration yamlSdkConfiguration = YamlSdkConfiguration.builder().snippetIndex(snippetIndexFile).build();
-    YamlSdkModule.initializeDefaultInstance(yamlSdkConfiguration);
-
-    MaintenanceController.forceMaintenance(false);
   }
 
   private void registerManagedBeans(Environment environment, Injector injector) {
