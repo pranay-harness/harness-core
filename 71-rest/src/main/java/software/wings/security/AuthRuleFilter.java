@@ -83,6 +83,7 @@ import org.apache.commons.lang3.StringUtils;
 public class AuthRuleFilter implements ContainerRequestFilter {
   private static final String[] NO_FILTERING_URIS_PREFIXES = new String[] {
       "users/user",
+      "users/account",
       "users/sso/zendesk",
       "users/two-factor-auth",
       "users/disable-two-factor-auth",
