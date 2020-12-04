@@ -22,11 +22,9 @@ import io.harness.engine.outputs.ExecutionSweepingOutputServiceImpl;
 import io.harness.govern.ServersModule;
 import io.harness.queue.TimerScheduledExecutorService;
 import io.harness.registrars.OrchestrationAdviserRegistrar;
-import io.harness.registrars.OrchestrationFacilitatorRegistrar;
 import io.harness.registrars.OrchestrationModuleEventHandlerRegistrar;
 import io.harness.registrars.OrchestrationResolverRegistrar;
 import io.harness.registries.registrar.AdviserRegistrar;
-import io.harness.registries.registrar.FacilitatorRegistrar;
 import io.harness.registries.registrar.OrchestrationEventHandlerRegistrar;
 import io.harness.registries.registrar.ResolverRegistrar;
 import io.harness.state.inspection.StateInspectionService;
@@ -84,10 +82,6 @@ public class OrchestrationModule extends AbstractModule implements ServersModule
         MapBinder.newMapBinder(binder(), String.class, ResolverRegistrar.class);
     resolverRegistrarMapBinder.addBinding(OrchestrationResolverRegistrar.class.getName())
         .to(OrchestrationResolverRegistrar.class);
-    MapBinder<String, FacilitatorRegistrar> facilitatorRegistrarMapBinder =
-        MapBinder.newMapBinder(binder(), String.class, FacilitatorRegistrar.class);
-    facilitatorRegistrarMapBinder.addBinding(OrchestrationFacilitatorRegistrar.class.getName())
-        .to(OrchestrationFacilitatorRegistrar.class);
     MapBinder<String, OrchestrationEventHandlerRegistrar> orchestrationEventHandlerRegistrarMapBinder =
         MapBinder.newMapBinder(binder(), String.class, OrchestrationEventHandlerRegistrar.class);
     orchestrationEventHandlerRegistrarMapBinder.addBinding(OrchestrationModuleEventHandlerRegistrar.class.getName())

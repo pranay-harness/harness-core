@@ -8,8 +8,6 @@ import io.harness.data.OutcomeInstance;
 import io.harness.execution.NodeExecution;
 import io.harness.execution.PlanExecution;
 import io.harness.execution.events.OrchestrationEvent;
-import io.harness.facilitator.DefaultFacilitatorParams;
-import io.harness.facilitator.FacilitatorParameters;
 import io.harness.interrupts.Interrupt;
 import io.harness.morphia.MorphiaRegistrar;
 import io.harness.morphia.MorphiaRegistrarHelperPut;
@@ -24,13 +22,10 @@ public class OrchestrationBeansMorphiaRegistrar implements MorphiaRegistrar {
     set.add(PlanExecution.class);
     set.add(Interrupt.class);
     set.add(OutcomeInstance.class);
-    set.add(FacilitatorParameters.class);
     set.add(ExecutionSweepingOutputInstance.class);
     set.add(OrchestrationEvent.class);
   }
 
   @Override
-  public void registerImplementationClasses(MorphiaRegistrarHelperPut h, MorphiaRegistrarHelperPut w) {
-    h.put("facilitator.DefaultFacilitatorParams", DefaultFacilitatorParams.class);
-  }
+  public void registerImplementationClasses(MorphiaRegistrarHelperPut h, MorphiaRegistrarHelperPut w) {}
 }

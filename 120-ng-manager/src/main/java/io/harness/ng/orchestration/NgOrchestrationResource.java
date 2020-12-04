@@ -3,7 +3,7 @@ package io.harness.ng.orchestration;
 import io.harness.dto.OrchestrationGraphDTO;
 import io.harness.engine.OrchestrationService;
 import io.harness.execution.PlanExecution;
-import io.harness.facilitator.OrchestrationFacilitatorType;
+import io.harness.pms.sdk.core.facilitator.OrchestrationFacilitatorType;
 import io.harness.redesign.services.CustomExecutionProvider;
 import io.harness.redesign.services.CustomExecutionService;
 import io.harness.rest.RestResponse;

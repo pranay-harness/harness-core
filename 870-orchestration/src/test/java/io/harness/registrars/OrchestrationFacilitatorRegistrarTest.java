@@ -20,14 +20,14 @@ import org.junit.experimental.categories.Category;
 import org.reflections.Reflections;
 
 public class OrchestrationFacilitatorRegistrarTest extends OrchestrationTestBase {
-  @Inject OrchestrationFacilitatorRegistrar orchestrationFacilitatorRegistrar;
+  @Inject PmsSdkCoreFacilitatorRegistrar pmsSdkCoreFacilitatorRegistrar;
   @Inject Map<String, FacilitatorRegistrar> facilitatorRegistrars;
 
   @Test
   @Owner(developers = PRASHANT)
   @Category(UnitTests.class)
   public void shouldTestRegister() {
-    orchestrationFacilitatorRegistrar.testClassesModule();
+    pmsSdkCoreFacilitatorRegistrar.testClassesModule();
   }
 
   @Test

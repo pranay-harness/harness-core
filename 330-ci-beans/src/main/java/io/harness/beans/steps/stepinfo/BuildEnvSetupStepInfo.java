@@ -5,7 +5,7 @@ import io.harness.beans.steps.CIStepInfo;
 import io.harness.beans.steps.CIStepInfoType;
 import io.harness.beans.steps.TypeInfo;
 import io.harness.data.validator.EntityIdentifier;
-import io.harness.facilitator.OrchestrationFacilitatorType;
+import io.harness.pms.sdk.core.facilitator.OrchestrationFacilitatorType;
 import io.harness.pms.steps.StepType;
 
 import software.wings.jersey.JsonViews;

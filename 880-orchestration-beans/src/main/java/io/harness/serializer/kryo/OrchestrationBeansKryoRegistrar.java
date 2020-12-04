@@ -5,7 +5,6 @@ import static io.harness.annotations.dev.HarnessTeam.CDC;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.data.OutcomeInstance;
 import io.harness.execution.NodeExecution;
-import io.harness.facilitator.DefaultFacilitatorParams;
 import io.harness.interrupts.ExecutionInterruptType;
 import io.harness.interrupts.InterruptEffect;
 import io.harness.interrupts.RepairActionCode;
@@ -29,7 +28,6 @@ public class OrchestrationBeansKryoRegistrar implements KryoRegistrar {
     // Add new Classes Here
     kryo.register(StatusNotifyResponseData.class, 2502);
     kryo.register(NodeExecution.class, 2506);
-    kryo.register(DefaultFacilitatorParams.class, 2515);
     kryo.register(Duration.class, 2516);
     kryo.register(OutcomeInstance.class, 2517);
     kryo.register(StepResponseNotifyData.class, 2519);

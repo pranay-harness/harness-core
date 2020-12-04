@@ -10,10 +10,10 @@ import io.harness.engine.OrchestrationService;
 import io.harness.engine.interrupts.InterruptManager;
 import io.harness.engine.interrupts.InterruptPackage;
 import io.harness.execution.PlanExecution;
-import io.harness.facilitator.OrchestrationFacilitatorType;
 import io.harness.generator.GraphVisualizer;
 import io.harness.interrupts.Interrupt;
 import io.harness.plan.Plan;
+import io.harness.pms.sdk.core.facilitator.OrchestrationFacilitatorType;
 import io.harness.service.GraphGenerationService;
 
 import software.wings.beans.User;

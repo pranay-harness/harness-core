@@ -25,9 +25,9 @@ import io.harness.executionplan.core.SupportDefinedExecutorPlanCreator;
 import io.harness.executionplan.plancreator.beans.PlanCreatorConstants;
 import io.harness.executionplan.stepsdependency.StepDependencyService;
 import io.harness.executionplan.stepsdependency.instructors.OutcomeRefStepDependencyInstructor;
-import io.harness.facilitator.OrchestrationFacilitatorType;
 import io.harness.pms.facilitators.FacilitatorObtainment;
 import io.harness.pms.facilitators.FacilitatorType;
+import io.harness.pms.sdk.core.facilitator.OrchestrationFacilitatorType;
 import io.harness.pms.sdk.core.plan.PlanNode;
 import io.harness.pms.sdk.core.plan.PlanNode.PlanNodeBuilder;
 

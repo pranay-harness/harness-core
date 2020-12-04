@@ -3,8 +3,8 @@ package io.harness.registries.registrar;
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.facilitator.Facilitator;
 import io.harness.pms.facilitators.FacilitatorType;
+import io.harness.pms.sdk.core.facilitator.Facilitator;
 import io.harness.registries.Registrar;
 
 import java.util.Set;

@@ -13,7 +13,7 @@ import io.harness.executionplan.core.ExecutionPlanCreationContext;
 import io.harness.executionplan.core.ExecutionPlanCreatorResponse;
 import io.harness.executionplan.core.PlanCreatorSearchContext;
 import io.harness.executionplan.plancreator.GenericStepPlanCreator;
-import io.harness.facilitator.OrchestrationFacilitatorType;
+import io.harness.pms.sdk.core.facilitator.OrchestrationFacilitatorType;
 import io.harness.pms.sdk.core.plan.PlanNode;
 import io.harness.pms.serializer.json.JsonOrchestrationUtils;
 import io.harness.rule.Owner;

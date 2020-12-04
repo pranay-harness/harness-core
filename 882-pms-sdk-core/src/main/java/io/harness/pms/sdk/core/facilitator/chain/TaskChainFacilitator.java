@@ -1,15 +1,15 @@
-package io.harness.facilitator.chain;
+package io.harness.pms.sdk.core.facilitator.chain;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.facilitator.Facilitator;
-import io.harness.facilitator.FacilitatorResponse;
-import io.harness.facilitator.FacilitatorUtils;
-import io.harness.facilitator.OrchestrationFacilitatorType;
 import io.harness.pms.ambiance.Ambiance;
 import io.harness.pms.execution.ExecutionMode;
 import io.harness.pms.facilitators.FacilitatorType;
+import io.harness.pms.sdk.core.facilitator.Facilitator;
+import io.harness.pms.sdk.core.facilitator.FacilitatorResponse;
+import io.harness.pms.sdk.core.facilitator.FacilitatorUtils;
+import io.harness.pms.sdk.core.facilitator.OrchestrationFacilitatorType;
 import io.harness.pms.sdk.core.steps.io.StepInputPackage;
 import io.harness.pms.sdk.core.steps.io.StepParameters;
 
@@ -17,9 +17,9 @@ import com.google.inject.Inject;
 import java.time.Duration;
 
 @OwnedBy(CDC)
-public class ChildChainFacilitator implements Facilitator {
+public class TaskChainFacilitator implements Facilitator {
   public static final FacilitatorType FACILITATOR_TYPE =
-      FacilitatorType.newBuilder().setType(OrchestrationFacilitatorType.CHILD_CHAIN).build();
+      FacilitatorType.newBuilder().setType(OrchestrationFacilitatorType.TASK_CHAIN).build();
 
   @Inject private FacilitatorUtils facilitatorUtils;
 
@@ -27,6 +27,6 @@ public class ChildChainFacilitator implements Facilitator {
   public FacilitatorResponse facilitate(
       Ambiance ambiance, StepParameters stepParameters, byte[] parameters, StepInputPackage inputPackage) {
     Duration waitDuration = facilitatorUtils.extractWaitDurationFromDefaultParams(parameters);
-    return FacilitatorResponse.builder().executionMode(ExecutionMode.CHILD_CHAIN).initialWait(waitDuration).build();
+    return FacilitatorResponse.builder().executionMode(ExecutionMode.TASK_CHAIN).initialWait(waitDuration).build();
   }
 }

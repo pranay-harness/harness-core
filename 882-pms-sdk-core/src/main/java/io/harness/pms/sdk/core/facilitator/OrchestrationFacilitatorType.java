@@ -1,14 +1,12 @@
-package io.harness.facilitator;
+package io.harness.pms.sdk.core.facilitator;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 
-import io.harness.annotations.Redesign;
 import io.harness.annotations.dev.OwnedBy;
 
 import lombok.experimental.UtilityClass;
 
 @OwnedBy(CDC)
-@Redesign
 @UtilityClass
 public class OrchestrationFacilitatorType {
   // Provided From the orchestration layer system facilitators
