@@ -2,6 +2,8 @@ package io.harness.steps;
 
 import io.harness.delegate.beans.TaskData;
 import io.harness.delegate.task.SimpleHDelegateTask;
+import io.harness.pms.ambiance.Ambiance;
+import io.harness.pms.ambiance.Level;
 import io.harness.pms.execution.Status;
 import io.harness.pms.sdk.core.steps.io.StepResponse;
 import io.harness.pms.sdk.core.steps.io.StepResponse.StepResponseBuilder;
@@ -11,6 +13,7 @@ import io.harness.tasks.Task;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
+import javax.annotation.Nonnull;
 
 public class StepUtils {
   private StepUtils() {}
@@ -46,5 +49,17 @@ public class StepUtils {
         .setupAbstractions(setupAbstractions)
         .logStreamingAbstractions(logAbstractions)
         .build();
+  }
+
+  @Nonnull
+  public static LinkedHashMap<String, String> generateLogAbstractions(Ambiance ambiance) {
+    LinkedHashMap<String, String> logAbstractions = new LinkedHashMap<>();
+    logAbstractions.put("pipelineExecutionId", ambiance.getPlanExecutionId());
+    Level stageLevel = ambiance.getLevels(2);
+    logAbstractions.put("stageIdentifier", stageLevel.getIdentifier());
+    Level currentStepLevel = ambiance.getLevels(ambiance.getLevelsCount() - 1);
+    logAbstractions.put("stepId", currentStepLevel.getRuntimeId());
+
+    return logAbstractions;
   }
 }

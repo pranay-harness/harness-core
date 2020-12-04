@@ -19,8 +19,6 @@ public class FailureInfoSerializer extends StdSerializer<FailureInfo> {
   @Override
   public void serialize(FailureInfo failureInfo, JsonGenerator jgen, SerializerProvider serializerProvider)
       throws IOException {
-    jgen.writeStartObject();
-    jgen.writeStringField("errorMessage", failureInfo.getErrorMessage());
-    jgen.writeEndObject();
+    jgen.writeRawValue(JsonFormat.printer().print(failureInfo));
   }
 }

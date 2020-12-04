@@ -37,8 +37,10 @@ import io.harness.exception.WingsException;
 import io.harness.executionplan.stepsdependency.StepDependencyService;
 import io.harness.executionplan.stepsdependency.StepDependencySpec;
 import io.harness.executions.steps.ExecutionNodeType;
+import io.harness.executions.steps.LoggingMetadata;
 import io.harness.git.model.FetchFilesResult;
 import io.harness.git.model.GitFile;
+import io.harness.k8s.K8sCommandUnitConstants;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.ngpipeline.common.AmbianceHelper;
 import io.harness.pms.ambiance.Ambiance;
@@ -51,15 +53,18 @@ import io.harness.pms.sdk.core.steps.io.StepInputPackage;
 import io.harness.pms.sdk.core.steps.io.StepResponse;
 import io.harness.pms.steps.StepType;
 import io.harness.security.encryption.EncryptedDataDetail;
+import io.harness.steps.StepUtils;
 import io.harness.tasks.ResponseData;
 import io.harness.tasks.Task;
 import io.harness.validation.Validator;
 
+import software.wings.beans.LogHelper;
 import software.wings.sm.states.k8s.K8sRollingDeploy;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Inject;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -151,8 +156,19 @@ public class K8sRollingStep implements TaskChainExecutable<K8sRollingStepParamet
                                   .parameters(new Object[] {gitFetchRequest})
                                   .build();
 
+    LinkedHashMap<String, String> logAbstractions = StepUtils.generateLogAbstractions(ambiance);
+    String baseLoggingKey = LogHelper.generateLogBaseKey(logAbstractions);
+
+    LoggingMetadata loggingMetadata =
+        LoggingMetadata.builder()
+            .baseLoggingKey(baseLoggingKey)
+            .commandUnits(Arrays.asList(K8sCommandUnitConstants.FetchFiles, K8sCommandUnitConstants.Init,
+                K8sCommandUnitConstants.Prepare, K8sCommandUnitConstants.Apply,
+                K8sCommandUnitConstants.WaitForSteadyState, K8sCommandUnitConstants.WrapUp))
+            .build();
+
     final Task delegateTask =
-        prepareDelegateTaskInput(accountId, taskData, ambiance.getSetupAbstractionsMap(), new LinkedHashMap<>());
+        prepareDelegateTaskInput(accountId, taskData, ambiance.getSetupAbstractionsMap(), logAbstractions);
 
     K8sRollingStepPassThroughData k8sRollingStepPassThroughData = K8sRollingStepPassThroughData.builder()
                                                                       .k8sManifest(k8sManifest)
@@ -163,6 +179,7 @@ public class K8sRollingStep implements TaskChainExecutable<K8sRollingStepParamet
         .chainEnd(false)
         .task(delegateTask)
         .passThroughData(k8sRollingStepPassThroughData)
+        .metadata(loggingMetadata)
         .build();
   }
 
@@ -203,12 +220,8 @@ public class K8sRollingStep implements TaskChainExecutable<K8sRollingStepParamet
             .async(true)
             .build();
 
-    LinkedHashMap<String, String> logAbstractions = new LinkedHashMap<>();
-    logAbstractions.put("key2", "val2");
-    logAbstractions.put("key1", "val1");
-
-    final Task delegateTask =
-        prepareDelegateTaskInput(accountId, taskData, ambiance.getSetupAbstractionsMap(), logAbstractions);
+    final Task delegateTask = prepareDelegateTaskInput(
+        accountId, taskData, ambiance.getSetupAbstractionsMap(), StepUtils.generateLogAbstractions(ambiance));
 
     return TaskChainResponse.builder().task(delegateTask).chainEnd(true).passThroughData(infrastructure).build();
   }
