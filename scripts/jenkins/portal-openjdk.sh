@@ -230,3 +230,24 @@ then
 fi
 
 cd ../..
+
+mkdir -p dist/pipeline-service
+cd dist/pipeline-service
+
+cp ${HOME}/.bazel-dirs/bin/800-pipeline-service/module_deploy.jar pipeline-service-capsule.jar
+cp ../../800-pipeline-service/config.yml .
+cp ../../800-pipeline-service/keystore.jks .
+cp ../../800-pipeline-service/key.pem .
+cp ../../800-pipeline-service/cert.pem .
+cp ../../dockerization/pipeline-service/Dockerfile-pipeline-service-jenkins-k8-openjdk ./Dockerfile
+cp ../../dockerization/pipeline-service/Dockerfile-pipeline-service-jenkins-k8-gcr-openjdk ./Dockerfile-gcr
+cp -r ../../dockerization/pipeline-service/scripts/ .
+
+echo ${JDK} > jdk.txt
+echo ${VERSION} > version.txt
+if [ ! -z ${PURPOSE} ]
+then
+    echo ${PURPOSE} > purpose.txt
+fi
+
+cd ../..

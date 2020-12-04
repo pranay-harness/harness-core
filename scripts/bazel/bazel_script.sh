@@ -41,6 +41,8 @@ BAZEL_MODULES="\
   //440-connector-nextgen:module \
   //450-ce-views:module \
   //490-ce-commons:module \
+  //800-pipeline-service:module \
+  //800-pipeline-service:module_deploy.jar \
   //840-ng-triggers:module \
   //850-execution-plan:module \
   //850-ng-pipeline-commons:module \
@@ -287,6 +289,7 @@ build_bazel_module 990-commons-test
 
 build_bazel_tests 960-persistence
 
+build_bazel_application 800-pipeline-service
 build_bazel_application 930-notification-service
 build_bazel_application 940-notification-client
 build_bazel_application 950-events-api
