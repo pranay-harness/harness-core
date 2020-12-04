@@ -73,8 +73,10 @@ public class AzureAppServiceDeploymentService {
   @Inject private AzureTimeLimiter azureTimeLimiter;
   @Inject private AzureMonitorClient azureMonitorClient;
 
-  public List<AzureAppDeploymentData> deployDockerImage(AzureAppServiceDockerDeploymentContext deploymentContext) {
+  public void deployDockerImage(AzureAppServiceDockerDeploymentContext deploymentContext) {
     validateContextForDockerDeployment(deploymentContext);
+    log.info("Start deploying docker image: {} on slot: {}", deploymentContext.getImagePathAndTag(),
+        deploymentContext.getSlotName());
     int steadyStateTimeoutInMin = deploymentContext.getSteadyStateTimeoutInMin();
     ILogStreamingTaskClient logStreamingTaskClient = deploymentContext.getLogStreamingTaskClient();
 
@@ -85,17 +87,17 @@ public class AzureAppServiceDeploymentService {
     updateDeploymentSlotConfigurationSettings(deploymentContext);
     updateDeploymentSlotContainerSettings(deploymentContext);
     startSlotAsyncWithSteadyCheck(deploymentSlot, logStreamingTaskClient, steadyStateTimeoutInMin);
-    return fetchDeploymentData(deploymentContext);
   }
 
-  public List<AzureAppDeploymentData> fetchDeploymentData(AzureAppServiceDeploymentContext deploymentContext) {
-    AzureWebClientContext azureWebClientContext = deploymentContext.getAzureWebClientContext();
+  public List<AzureAppDeploymentData> fetchDeploymentData(
+      AzureWebClientContext azureWebClientContext, String slotName) {
+    log.info("Start fetching deployment data for app name: {}, slot: {}", azureWebClientContext.getAppName(), slotName);
     Optional<DeploymentSlot> deploymentSlotName =
-        azureWebClient.getDeploymentSlotByName(azureWebClientContext, deploymentContext.getSlotName());
+        azureWebClient.getDeploymentSlotByName(azureWebClientContext, slotName);
 
     if (!deploymentSlotName.isPresent()) {
-      throw new InvalidRequestException(format("Deployment slot - [%s] not found for Web App - [%s]",
-          deploymentContext.getSlotName(), azureWebClientContext.getAppName()));
+      throw new InvalidRequestException(
+          format("Deployment slot - [%s] not found for Web App - [%s]", slotName, azureWebClientContext.getAppName()));
     }
 
     DeploymentSlot deploymentSlot = deploymentSlotName.get();
@@ -104,7 +106,7 @@ public class AzureAppServiceDeploymentService {
                                          .subscriptionId(azureWebClientContext.getSubscriptionId())
                                          .resourceGroup(azureWebClientContext.getResourceGroupName())
                                          .appName(azureWebClientContext.getAppName())
-                                         .deploySlot(deploymentContext.getSlotName())
+                                         .deploySlot(slotName)
                                          .deploySlotId(deploymentSlot.id())
                                          .appServicePlanId(deploymentSlot.appServicePlanId())
                                          .hostName(deploymentSlot.defaultHostName())

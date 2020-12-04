@@ -156,8 +156,10 @@ import io.harness.delegate.task.azure.appservice.AzureAppServiceTaskParameters.A
 import io.harness.delegate.task.azure.appservice.AzureAppServiceTaskParameters.AzureAppServiceType;
 import io.harness.delegate.task.azure.appservice.AzureAppServiceTaskResponse;
 import io.harness.delegate.task.azure.appservice.webapp.request.AzureWebAppListWebAppDeploymentSlotNamesParameters;
+import io.harness.delegate.task.azure.appservice.webapp.request.AzureWebAppListWebAppInstancesParameters;
 import io.harness.delegate.task.azure.appservice.webapp.request.AzureWebAppListWebAppNamesParameters;
 import io.harness.delegate.task.azure.appservice.webapp.response.AzureWebAppListWebAppDeploymentSlotNamesResponse;
+import io.harness.delegate.task.azure.appservice.webapp.response.AzureWebAppListWebAppInstancesResponse;
 import io.harness.delegate.task.azure.appservice.webapp.response.AzureWebAppListWebAppNamesResponse;
 import io.harness.delegate.task.azure.request.AzureLoadBalancerDetailForBGDeployment;
 import io.harness.delegate.task.azure.request.AzureVMSSDeployTaskParameters;
@@ -493,5 +495,7 @@ public class DelegateTasksBeansKryoRegister implements KryoRegistrar {
     kryo.register(DelegateStringProgressData.class, 19428);
     kryo.register(GitSCMType.class, 19429);
     kryo.register(EnvVariableEnum.class, 19430);
+    kryo.register(AzureWebAppListWebAppInstancesParameters.class, 19431);
+    kryo.register(AzureWebAppListWebAppInstancesResponse.class, 19432);
   }
 }

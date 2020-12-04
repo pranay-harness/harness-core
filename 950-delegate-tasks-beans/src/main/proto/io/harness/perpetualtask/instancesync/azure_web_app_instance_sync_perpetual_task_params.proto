@@ -1,0 +1,14 @@
+syntax = "proto3";
+
+package io.harness.perpetualtask.instancesync;
+
+option java_multiple_files = true;
+
+message AzureWebAppInstanceSyncPerpetualProtoTaskParams {
+  bytes azure_config = 1;
+  bytes azure_encrypted_data = 2;
+  string subscription_id = 3;
+  string resource_group_name = 4;
+  string app_name = 5;
+  string slot_name = 6;
+}

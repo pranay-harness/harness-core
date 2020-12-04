@@ -18,6 +18,7 @@ public final class PerpetualTaskType {
   public static final String AZURE_VMSS_INSTANCE_SYNC = "AZURE_VMSS_INSTANCE_SYNC";
   public static final String MANIFEST_COLLECTION = "MANIFEST_COLLECTION";
   public static final String CONNECTOR_TEST_CONNECTION = "CONNECTOR_TEST_CONNECTION";
+  public static final String AZURE_WEB_APP_INSTANCE_SYNC = "AZURE_WEB_APP_INSTANCE_SYNC";
 
   private PerpetualTaskType() {}
 }

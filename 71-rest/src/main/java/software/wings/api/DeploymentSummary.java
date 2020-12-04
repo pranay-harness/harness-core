@@ -13,6 +13,7 @@ import software.wings.beans.infrastructure.instance.key.deployment.AwsAmiDeploym
 import software.wings.beans.infrastructure.instance.key.deployment.AwsCodeDeployDeploymentKey;
 import software.wings.beans.infrastructure.instance.key.deployment.AwsLambdaDeploymentKey;
 import software.wings.beans.infrastructure.instance.key.deployment.AzureVMSSDeploymentKey;
+import software.wings.beans.infrastructure.instance.key.deployment.AzureWebAppDeploymentKey;
 import software.wings.beans.infrastructure.instance.key.deployment.ContainerDeploymentKey;
 import software.wings.beans.infrastructure.instance.key.deployment.CustomDeploymentKey;
 import software.wings.beans.infrastructure.instance.key.deployment.K8sDeploymentKey;
@@ -106,6 +107,7 @@ public class DeploymentSummary extends Base {
   private AwsLambdaDeploymentKey awsLambdaDeploymentKey;
   private CustomDeploymentKey customDeploymentKey;
   private AzureVMSSDeploymentKey azureVMSSDeploymentKey;
+  private AzureWebAppDeploymentKey azureWebAppDeploymentKey;
 
   @Builder
   public DeploymentSummary(String uuid, String appId, EmbeddedUser createdBy, long createdAt,
@@ -117,7 +119,7 @@ public class DeploymentSummary extends Base {
       AwsAmiDeploymentKey awsAmiDeploymentKey, AwsCodeDeployDeploymentKey awsCodeDeployDeploymentKey,
       ContainerDeploymentKey containerDeploymentKey, SpotinstAmiDeploymentKey spotinstAmiDeploymentKey,
       AwsLambdaDeploymentKey awsLambdaDeploymentKey, K8sDeploymentKey k8sDeploymentKey,
-      AzureVMSSDeploymentKey azureVMSSDeploymentKey) {
+      AzureVMSSDeploymentKey azureVMSSDeploymentKey, AzureWebAppDeploymentKey azureWebAppDeploymentKey) {
     super(uuid, appId, createdBy, createdAt, lastUpdatedBy, lastUpdatedAt, entityYamlPath);
     this.accountId = accountId;
     this.infraMappingId = infraMappingId;
@@ -144,6 +146,7 @@ public class DeploymentSummary extends Base {
     this.awsLambdaDeploymentKey = awsLambdaDeploymentKey;
     this.k8sDeploymentKey = k8sDeploymentKey;
     this.azureVMSSDeploymentKey = azureVMSSDeploymentKey;
+    this.azureWebAppDeploymentKey = azureWebAppDeploymentKey;
   }
 
   public static final class DeploymentSummaryKeys {
