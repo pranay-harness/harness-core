@@ -20,16 +20,19 @@ import io.harness.rule.Owner;
 
 import software.wings.graphql.datafetcher.ce.recommendation.entity.ContainerCheckpoint;
 import software.wings.graphql.datafetcher.ce.recommendation.entity.K8sWorkloadRecommendation;
+import software.wings.graphql.datafetcher.ce.recommendation.entity.PartialRecommendationHistogram;
 
 import com.google.common.collect.ImmutableMap;
 import java.time.Duration;
 import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.Collections;
+import java.util.HashMap;
+import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
 import org.mockito.ArgumentCaptor;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
 
@@ -43,10 +46,18 @@ public class ContainerStateWriterTest extends CategoryTest {
   public static final String WORKLOAD_TYPE = "WORKLOAD_TYPE";
   public static final String CONTAINER_NAME = "CONTAINER_NAME";
   public static final Instant anyTime = Instant.EPOCH;
-  @InjectMocks private ContainerStateWriter containerStateWriter;
+
+  public static final Instant JOB_START_DATE = Instant.now().truncatedTo(ChronoUnit.DAYS).minus(Duration.ofDays(1));
+
+  private ContainerStateWriter containerStateWriter;
 
   @Mock private InstanceDataDao instanceDataDao;
   @Mock private WorkloadRecommendationDao workloadRecommendationDao;
+
+  @Before
+  public void setUp() throws Exception {
+    containerStateWriter = new ContainerStateWriter(instanceDataDao, workloadRecommendationDao, JOB_START_DATE);
+  }
 
   @Test
   @Owner(developers = AVMOHAN)
@@ -150,6 +161,23 @@ public class ContainerStateWriterTest extends CategoryTest {
                                                                       .kind(WORKLOAD_TYPE)
                                                                       .build()))
         .thenReturn(originalRecommendation);
+    when(workloadRecommendationDao.fetchPartialRecommendationHistogramForWorkload(ResourceId.builder()
+                                                                                      .accountId(ACCOUNT_ID)
+                                                                                      .clusterId(CLUSTER_ID)
+                                                                                      .namespace(NAMESPACE)
+                                                                                      .name(WORKLOAD_NAME)
+                                                                                      .kind(WORKLOAD_TYPE)
+                                                                                      .build(),
+             JOB_START_DATE))
+        .thenReturn(PartialRecommendationHistogram.builder()
+                        .accountId(ACCOUNT_ID)
+                        .clusterId(CLUSTER_ID)
+                        .namespace(NAMESPACE)
+                        .workloadName(WORKLOAD_NAME)
+                        .workloadType(WORKLOAD_TYPE)
+                        .date(JOB_START_DATE)
+                        .containerCheckpoints(new HashMap<>())
+                        .build());
     containerStateWriter.write(Collections.singletonList(
         PublishedMessage.builder()
             .accountId(ACCOUNT_ID)
@@ -213,6 +241,24 @@ public class ContainerStateWriterTest extends CategoryTest {
 
                  ))
         .thenReturn(originalRecommendation);
+
+    when(workloadRecommendationDao.fetchPartialRecommendationHistogramForWorkload(ResourceId.builder()
+                                                                                      .accountId(ACCOUNT_ID)
+                                                                                      .clusterId(CLUSTER_ID)
+                                                                                      .namespace(NAMESPACE)
+                                                                                      .name(WORKLOAD_NAME)
+                                                                                      .kind(WORKLOAD_TYPE)
+                                                                                      .build(),
+             JOB_START_DATE))
+        .thenReturn(PartialRecommendationHistogram.builder()
+                        .accountId(ACCOUNT_ID)
+                        .clusterId(CLUSTER_ID)
+                        .namespace(NAMESPACE)
+                        .workloadName(WORKLOAD_NAME)
+                        .workloadType(WORKLOAD_TYPE)
+                        .date(JOB_START_DATE)
+                        .containerCheckpoints(new HashMap<>())
+                        .build());
     int msgSamplesCount = 20;
     Instant msgLastSampleStart = anyTime.plus(Duration.ofMinutes(70));
     containerStateWriter.write(Collections.singletonList(
