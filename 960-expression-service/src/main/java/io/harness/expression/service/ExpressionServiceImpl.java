@@ -41,12 +41,18 @@ public class ExpressionServiceImpl extends ExpressionEvaulatorServiceGrpc.Expres
 
     for (ExpressionQuery expressionQuery : expressionQueries) {
       try {
-        String expression = expressionQuery.getJexl();
+        String originalExpr = expressionQuery.getJexl();
         Map<String, Object> context = getContextMap(expressionQuery.getJsonContext());
-        Object value = expressionEvaluator.substitute(expression, context);
+        String evaluatedExpr =
+            expressionEvaluator.substitute(wrapWithExpressionString(originalExpr), context).toString();
+
+        if (!evaluatedExpr.equals(originalExpr)) {
+          evaluatedExpr = unWrapExpressionString(evaluatedExpr);
+        }
+
         responseBuilder.addValues(ExpressionValue.newBuilder()
-                                      .setValue(value.toString())
-                                      .setJexl(expression)
+                                      .setValue(evaluatedExpr)
+                                      .setJexl(originalExpr)
                                       .setStatusCode(ExpressionValue.EvaluationStatus.SUCCESS)
                                       .build());
 
@@ -60,6 +66,17 @@ public class ExpressionServiceImpl extends ExpressionEvaulatorServiceGrpc.Expres
     }
     responseObserver.onNext(responseBuilder.build());
     responseObserver.onCompleted();
+  }
+
+  public static String wrapWithExpressionString(String expr) {
+    return expr == null ? null : "${" + expr + "}";
+  }
+
+  public static String unWrapExpressionString(String expr) {
+    if (expr.startsWith("${") && expr.endsWith("}")) {
+      return expr.substring(2, expr.length() - 1);
+    }
+    return expr;
   }
 
   private Map<String, Object> getContextMap(String jsonContext) throws IOException {

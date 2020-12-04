@@ -3,6 +3,7 @@ package io.harness.expression.service;
 import static io.harness.expression.service.ExpressionValue.EvaluationStatus.ERROR;
 import static io.harness.expression.service.ExpressionValue.EvaluationStatus.SUCCESS;
 import static io.harness.rule.OwnerRule.ALEKSANDAR;
+import static io.harness.rule.OwnerRule.HARSH;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -188,6 +189,86 @@ public class ExpressionEvaluatorServiceTest extends ExpressionServiceTestBase {
     ExpressionResponse expressionResponse =
         expressionEvaulatorServiceBlockingStub.evaluateExpression(expressionRequest);
     assertThat(expressionResponse.getValues(0).getValue()).isEqualTo("Testing string substitution");
+    assertThat(expressionResponse.getValues(0).getStatusCode()).isEqualTo(SUCCESS);
+  }
+
+  @Test
+  @Owner(developers = HARSH)
+  @Category(UnitTests.class)
+  public void shouldEvaluateNestedObject() {
+    ExpressionResponse expressionResponse = expressionEvaulatorServiceBlockingStub.evaluateExpression(
+        ExpressionRequest.newBuilder()
+            .addQueries(ExpressionQuery.newBuilder()
+                            .setJexl("VAR1.VAR2")
+                            .setJsonContext("{\"VAR1\":{\"VAR2\":{\"VAR3\":\"VALUE\",\"VAR4\":\"VALUE4\"}}}")
+                            .build())
+            .build());
+    assertThat(expressionResponse).isNotNull();
+    assertThat(expressionResponse.getValues(0).getValue()).isEqualTo("{VAR3=VALUE, VAR4=VALUE4}");
+    assertThat(expressionResponse.getValues(0).getStatusCode()).isEqualTo(SUCCESS);
+  }
+
+  @Test
+  @Owner(developers = HARSH)
+  @Category(UnitTests.class)
+  public void shouldEvaluatenBooleanObject1() {
+    ExpressionResponse expressionResponse = expressionEvaulatorServiceBlockingStub.evaluateExpression(
+        ExpressionRequest.newBuilder()
+            .addQueries(ExpressionQuery.newBuilder()
+                            .setJexl("2==2")
+                            .setJsonContext("{\"VAR1\":{\"VAR2\":{\"VAR3\":\"VALUE\",\"VAR4\":\"VALUE4\"}}}")
+                            .build())
+            .build());
+    assertThat(expressionResponse).isNotNull();
+    assertThat(expressionResponse.getValues(0).getValue()).isEqualTo("true");
+    assertThat(expressionResponse.getValues(0).getStatusCode()).isEqualTo(SUCCESS);
+  }
+
+  @Test
+  @Owner(developers = HARSH)
+  @Category(UnitTests.class)
+  public void shouldEvaluatenBooleanObject() {
+    ExpressionResponse expressionResponse = expressionEvaulatorServiceBlockingStub.evaluateExpression(
+        ExpressionRequest.newBuilder()
+            .addQueries(ExpressionQuery.newBuilder()
+                            .setJexl("${2==2 && 4==4} ${VAR1.VAR2}")
+                            .setJsonContext("{\"VAR1\":{\"VAR2\":{\"VAR3\":\"VALUE\",\"VAR4\":\"VALUE4\"}}}")
+                            .build())
+            .build());
+    assertThat(expressionResponse).isNotNull();
+    assertThat(expressionResponse.getValues(0).getValue()).isEqualTo("true {VAR3=VALUE, VAR4=VALUE4}");
+    assertThat(expressionResponse.getValues(0).getStatusCode()).isEqualTo(SUCCESS);
+  }
+
+  @Test
+  @Owner(developers = HARSH)
+  @Category(UnitTests.class)
+  public void shouldKeepUnresolvedExpressionIntact() {
+    ExpressionResponse expressionResponse = expressionEvaulatorServiceBlockingStub.evaluateExpression(
+        ExpressionRequest.newBuilder()
+            .addQueries(ExpressionQuery.newBuilder()
+                            .setJexl("${HOME}")
+                            .setJsonContext("{\"VAR1\":{\"VAR2\":{\"VAR3\":\"VALUE\",\"VAR4\":\"VALUE4\"}}}")
+                            .build())
+            .build());
+    assertThat(expressionResponse).isNotNull();
+    assertThat(expressionResponse.getValues(0).getValue()).isEqualTo("${HOME}");
+    assertThat(expressionResponse.getValues(0).getStatusCode()).isEqualTo(SUCCESS);
+  }
+
+  @Test
+  @Owner(developers = HARSH)
+  @Category(UnitTests.class)
+  public void shouldKeepPartialUnresolvedExpressionIntact() {
+    ExpressionResponse expressionResponse = expressionEvaulatorServiceBlockingStub.evaluateExpression(
+        ExpressionRequest.newBuilder()
+            .addQueries(ExpressionQuery.newBuilder()
+                            .setJexl("hello - ${VAR1.VAR2}")
+                            .setJsonContext("{\"VAR1\":{\"VAR2\":{\"VAR3\":\"VALUE\",\"VAR4\":\"VALUE4\"}}}")
+                            .build())
+            .build());
+    assertThat(expressionResponse).isNotNull();
+    assertThat(expressionResponse.getValues(0).getValue()).isEqualTo("hello - {VAR3=VALUE, VAR4=VALUE4}");
     assertThat(expressionResponse.getValues(0).getStatusCode()).isEqualTo(SUCCESS);
   }
 }
