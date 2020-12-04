@@ -32,6 +32,7 @@
         <!--<module>430-cv-nextgen-commons</module>-->
         <!--<module>440-connector-nextgen</module>-->
         <!--<module>450-ce-views</module>-->
+        <!--<module>460-capability</module>-->
         <!--<module>490-ce-commons</module>-->
         <!--<module>850-execution-plan</module>-->
         <!--<module>850-ng-pipeline-commons</module>-->

@@ -73,6 +73,7 @@ public class ManagerRegistrars {
           .add(OrchestrationStepsMorphiaRegistrar.class)
           .add(ProjectAndOrgMorphiaRegistrar.class)
           .add(ViewsMorphiaRegistrar.class)
+          .addAll(CapabilityRegistrars.morphiaRegistrars)
           .build();
 
   public static final ImmutableSet<Class<? extends AliasRegistrar>> aliasRegistrars =

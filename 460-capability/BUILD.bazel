@@ -9,30 +9,31 @@ load("//tools/bazel/pmd:defs.bzl", "pmd")
 sources()
 
 java_library(
-    name = "maven_deps",
+    name = "module",
+    srcs = glob(["src/main/**/*.java"]),
+    resource_jars = [
+        "//460-capability/src/main/proto:460_capability_java_proto",
+    ],
     visibility = ["//visibility:public"],
-    exports = [
+    deps = [
+        "//:lombok",
+        "//460-capability/src/main/proto:460_capability_java_proto",
+        "//950-delegate-tasks-beans:module",
         "//960-persistence:module",
         "@maven//:com_google_protobuf_protobuf_java",
     ],
 )
 
 java_library(
-    name = "module",
-    srcs = glob(["src/main/**/*.java"]),
+    name = "tests",
+    srcs = glob(["src/test/**/*.java"]),
+    resources = [
+        "//950-ng-core/src/test/resources:resource",
+    ],
     visibility = ["//visibility:public"],
     deps = [
-        "maven_deps",
+        "module",
         "//:lombok",
-        "//460-capability/src/main/proto:240_capability_java_proto",
-        "//460-capability/src/main/proto:240_capability_proto",
-        "//950-delegate-tasks-beans:module",
-    ],
-)
-
-java_library(
-    name = "test_deps",
-    exports = [
         "//960-persistence:supporter-test",
         "//990-commons-test:module",
         "@maven//:ch_qos_logback_logback_classic",
@@ -45,21 +46,6 @@ java_library(
     ],
 )
 
-java_library(
-    name = "tests",
-    srcs = glob(["src/test/**/*.java"]),
-    resources = [
-        "//950-ng-core/src/test/resources:resource",
-    ],
-    visibility = ["//visibility:public"],
-    deps = [
-        "maven_deps",
-        "module",
-        "test_deps",
-        "//:lombok",
-    ],
-)
-
 run_tests()
 
 checkstyle()
@@ -68,7 +54,6 @@ sonarqube_test(
     name = "sq_mycomponent",
     srcs = ["sources"],
     targets = [
-        ":maven_deps",
         ":module",
     ],
 )

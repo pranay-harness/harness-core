@@ -29,7 +29,7 @@ fi
 
 if [ "${RUN_BAZEL_TESTS}" == "true" ]
 then
-  bazel ${bazelrc} build ${GCP} ${BAZEL_ARGUMENTS} -- //... -//product/... -//commons/... -//71-rest/... -//260-delegate/... -//460-capability/...
+  bazel ${bazelrc} build ${GCP} ${BAZEL_ARGUMENTS} -- //... -//product/... -//commons/... -//71-rest/... -//260-delegate/...
   bazel ${bazelrc} test --keep_going ${GCP} ${BAZEL_ARGUMENTS} -- //... -//product/... -//commons/... -//71-rest/... -//260-delegate/... || true
   # 71-rest and 260-delegate modules are excluded.
 fi
@@ -40,6 +40,7 @@ BAZEL_MODULES="\
   //430-cv-nextgen-commons:module \
   //440-connector-nextgen:module \
   //450-ce-views:module \
+  //460-capability:module \
   //490-ce-commons:module \
   //800-pipeline-service:module \
   //800-pipeline-service:module_deploy.jar \
@@ -241,6 +242,7 @@ build_bazel_module 420-delegate-service
 build_bazel_module 430-cv-nextgen-commons
 build_bazel_module 440-connector-nextgen
 build_bazel_module 450-ce-views
+build_bazel_module 460-capability
 build_bazel_module 490-ce-commons
 build_bazel_module 840-ng-triggers
 build_bazel_module 850-execution-plan
