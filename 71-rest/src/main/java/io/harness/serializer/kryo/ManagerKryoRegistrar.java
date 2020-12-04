@@ -170,6 +170,7 @@ import software.wings.beans.ElasticLoadBalancerConfig;
 import software.wings.beans.ElementExecutionSummary;
 import software.wings.beans.ElkConfig;
 import software.wings.beans.EntityType;
+import software.wings.beans.EntityVersion;
 import software.wings.beans.Environment.EnvironmentType;
 import software.wings.beans.ErrorStrategy;
 import software.wings.beans.Event;
@@ -1476,6 +1477,8 @@ public class ManagerKryoRegistrar implements KryoRegistrar {
     kryo.register(HelmChart.class, 71106);
     kryo.register(ConfigFile.class, 71107);
     kryo.register(ConfigFile.ConfigOverrideType.class, 71108);
+    kryo.register(EntityVersion.class, 71109);
+    kryo.register(EntityVersion.ChangeType.class, 71110);
     kryo.register(ArtifactStreamSummary.class, 7202);
     kryo.register(AwsCrossAccountAttributes.class, 7203);
     kryo.register(RepositoryFormat.class, 7204);
