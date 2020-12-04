@@ -12,6 +12,7 @@ import io.harness.persistence.CreatedAtAware;
 import io.harness.persistence.PersistentEntity;
 import io.harness.persistence.UpdatedAtAware;
 import io.harness.persistence.UuidAware;
+import io.harness.pms.plan.GraphLayoutNode;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.github.reinert.jjschema.SchemaIgnore;
@@ -74,6 +75,8 @@ public class PipelineEntity implements PersistentEntity, AccountAccess, UuidAwar
 
   @Version Long version;
   @Builder.Default Map<String, org.bson.Document> filters = new HashMap<>();
+  @Builder.Default Map<String, GraphLayoutNode> layoutNodeMap = new HashMap<>();
+  String startingNodeID;
 
   @Override
   public String getAccountId() {

@@ -50,7 +50,7 @@ public class FilterCreatorMergeService {
     this.pmsSdkInstanceService = pmsSdkInstanceService;
   }
 
-  public FilterCreatorMergeServiceResponse getFiltersAndStageCount(@NotNull String yaml) throws IOException {
+  public FilterCreatorMergeServiceResponse getPipelineInfo(@NotNull String yaml) throws IOException {
     Map<String, Map<String, Set<String>>> sdkInstances = pmsSdkInstanceService.getInstanceNameToSupportedTypes();
     Map<String, PlanCreatorServiceInfo> services = new HashMap<>();
     if (EmptyPredicate.isNotEmpty(planCreatorServices) && EmptyPredicate.isNotEmpty(sdkInstances)) {
@@ -70,7 +70,12 @@ public class FilterCreatorMergeService {
     FilterCreationBlobResponse response = obtainFiltersRecursively(services, dependencies, filters);
     validateFilterCreationBlobResponse(response);
 
-    return FilterCreatorMergeServiceResponse.builder().filters(filters).stageCount(response.getStageCount()).build();
+    return FilterCreatorMergeServiceResponse.builder()
+        .filters(filters)
+        .layoutNodeMap(response.getLayoutNodesMap())
+        .stageCount(response.getStageCount())
+        .startingNodeId(response.getStartingNodeId())
+        .build();
   }
 
   @VisibleForTesting
