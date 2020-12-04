@@ -153,7 +153,7 @@ public class DefaultConnectorServiceImpl implements ConnectorService {
     Connector newConnector = connectorMapper.toConnector(connectorRequest, accountIdentifier);
     newConnector.setId(existingConnector.get().getId());
     newConnector.setVersion(existingConnector.get().getVersion());
-    newConnector.setStatus(existingConnector.get().getStatus());
+    newConnector.setConnectivityDetails(existingConnector.get().getConnectivityDetails());
     newConnector.setCreatedAt(existingConnector.get().getCreatedAt());
     Connector updatedConnector = connectorRepository.save(newConnector);
     return connectorMapper.writeDTO(updatedConnector);
@@ -307,7 +307,7 @@ public class DefaultConnectorServiceImpl implements ConnectorService {
       } else {
         connectorConnectivityDetailsBuilder.lastConnectedAt(lastStatus == null ? 0 : lastStatus.getLastConnectedAt());
       }
-      connector.setStatus(connectorConnectivityDetailsBuilder.build());
+      connector.setConnectivityDetails(connectorConnectivityDetailsBuilder.build());
       connectorRepository.save(connector);
     }
   }

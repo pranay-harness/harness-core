@@ -8,7 +8,7 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
-import java.util.List;
+import java.util.Map;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -30,7 +30,7 @@ public abstract class SecretManagerConfigDTO {
   private String accountIdentifier;
   private String orgIdentifier;
   private String projectIdentifier;
-  private List<String> tags;
+  private Map<String, String> tags;
   private String identifier;
   private String description;
 

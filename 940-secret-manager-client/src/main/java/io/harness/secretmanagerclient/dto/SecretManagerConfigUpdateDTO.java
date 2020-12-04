@@ -4,7 +4,7 @@ import io.harness.security.encryption.EncryptionType;
 
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
-import java.util.List;
+import java.util.Map;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -21,7 +21,7 @@ import lombok.experimental.SuperBuilder;
   , @JsonSubTypes.Type(name = "GCP_KMS", value = GcpKmsConfigUpdateDTO.class)
 })
 public class SecretManagerConfigUpdateDTO {
-  private List<String> tags;
+  private Map<String, String> tags;
   private EncryptionType encryptionType;
   private boolean isDefault;
   private String description;

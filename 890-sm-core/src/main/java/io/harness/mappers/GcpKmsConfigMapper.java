@@ -3,6 +3,7 @@ package io.harness.mappers;
 import static io.harness.annotations.dev.HarnessTeam.PL;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.ng.core.mapper.TagMapper;
 import io.harness.secretmanagerclient.NGSecretManagerMetadata;
 import io.harness.secretmanagerclient.dto.GcpKmsConfigDTO;
 import io.harness.secretmanagerclient.dto.GcpKmsConfigUpdateDTO;
@@ -36,7 +37,7 @@ public class GcpKmsConfigMapper {
     if (!Optional.ofNullable(gcpKmsConfig.getNgMetadata()).isPresent()) {
       gcpKmsConfig.setNgMetadata(NGSecretManagerMetadata.builder().build());
     }
-    gcpKmsConfig.getNgMetadata().setTags(gcpKmsConfigDTO.getTags());
+    gcpKmsConfig.getNgMetadata().setTags(TagMapper.convertToList(gcpKmsConfigDTO.getTags()));
     gcpKmsConfig.getNgMetadata().setDescription(gcpKmsConfigDTO.getDescription());
     return gcpKmsConfig;
   }

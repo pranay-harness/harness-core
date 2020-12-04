@@ -4,6 +4,7 @@ import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.mappers.SecretManagerConfigMapper.ngMetaDataFromDto;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.ng.core.mapper.TagMapper;
 import io.harness.secretmanagerclient.NGSecretManagerMetadata;
 import io.harness.secretmanagerclient.dto.VaultConfigDTO;
 import io.harness.secretmanagerclient.dto.VaultConfigUpdateDTO;
@@ -57,7 +58,7 @@ public class VaultConfigMapper {
     if (!Optional.ofNullable(vaultConfig.getNgMetadata()).isPresent()) {
       vaultConfig.setNgMetadata(NGSecretManagerMetadata.builder().build());
     }
-    vaultConfig.getNgMetadata().setTags(vaultConfigDTO.getTags());
+    vaultConfig.getNgMetadata().setTags(TagMapper.convertToList(vaultConfigDTO.getTags()));
     vaultConfig.getNgMetadata().setDescription(vaultConfigDTO.getDescription());
     return vaultConfig;
   }
