@@ -62,6 +62,7 @@ class ContainerStateWriter implements ItemWriter<PublishedMessage> {
   @Override
   public void write(List<? extends PublishedMessage> items) throws Exception {
     Map<ResourceId, WorkloadState> workloadToRecommendation = new HashMap<>();
+    Map<ResourceId, WorkloadStateV2> workloadToPartialHistogram = new HashMap<>();
     for (PublishedMessage item : items) {
       String accountId = item.getAccountId();
       ContainerStateProto containerStateProto = (ContainerStateProto) item.getMessage();
@@ -89,9 +90,13 @@ class ContainerStateWriter implements ItemWriter<PublishedMessage> {
       }
       WorkloadState workloadState = workloadToRecommendation.computeIfAbsent(workloadId, this::getWorkloadState);
       updateContainerStateMap(workloadState.getContainerStateMap(), containerStateProto);
-      updateContainerStateMapSingleDay(workloadState.getContainerStateMapSingleDay(), containerStateProto);
+
+      WorkloadStateV2 workloadStateV2 =
+          workloadToPartialHistogram.computeIfAbsent(workloadId, this::getWorkloadStateV2);
+      updateContainerStateMapSingleDay(workloadStateV2.getContainerStateMap(), containerStateProto);
     }
     persistChanges(workloadToRecommendation);
+    persistChangesV2(workloadToPartialHistogram);
   }
 
   private void updateContainerStateMap(
@@ -192,6 +197,11 @@ class ContainerStateWriter implements ItemWriter<PublishedMessage> {
     return new WorkloadState(workloadRecommendationDao.fetchRecommendationForWorkload(workloadId));
   }
 
+  private WorkloadStateV2 getWorkloadStateV2(ResourceId workloadId) {
+    return new WorkloadStateV2(
+        workloadRecommendationDao.fetchPartialRecommendationHistogramForWorkload(workloadId, jobStartDate));
+  }
+
   /**
    *  Update the cached changes into DB.
    */
@@ -210,8 +220,15 @@ class ContainerStateWriter implements ItemWriter<PublishedMessage> {
                                                   .orElse(Instant.EPOCH);
       recommendation.setLastReceivedUtilDataAt(lastReceivedUtilDataTimestamp);
       workloadRecommendationDao.save(recommendation);
+    });
+  }
 
-      Map<String, ContainerStateV2> containerStatesV2 = workloadState.getContainerStateMapSingleDay();
+  /**
+   *  Update the cached changes into DB.
+   */
+  private void persistChangesV2(Map<ResourceId, WorkloadStateV2> workloadToPartialHistogram) {
+    workloadToPartialHistogram.forEach((workloadId, workloadState) -> {
+      Map<String, ContainerStateV2> containerStatesV2 = workloadState.getContainerStateMap();
       Map<String, ContainerCheckpoint> containerCheckpointsV2 = containerStatesV2.entrySet().stream().collect(
           Collectors.toMap(Map.Entry::getKey, cse -> cse.getValue().toContainerCheckpoint()));
       PartialRecommendationHistogram partialRecommendationHistogram = PartialRecommendationHistogram.builder()

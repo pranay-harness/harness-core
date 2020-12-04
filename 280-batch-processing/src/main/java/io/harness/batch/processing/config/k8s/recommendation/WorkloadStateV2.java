@@ -1,0 +1,23 @@
+package io.harness.batch.processing.config.k8s.recommendation;
+
+import software.wings.graphql.datafetcher.ce.recommendation.entity.PartialRecommendationHistogram;
+
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Optional;
+import java.util.stream.Collectors;
+import lombok.Value;
+
+@Value
+class WorkloadStateV2 {
+  Map<String, ContainerStateV2> containerStateMap;
+
+  WorkloadStateV2(PartialRecommendationHistogram partialRecommendationHistogram) {
+    this.containerStateMap =
+        Optional.ofNullable(partialRecommendationHistogram.getContainerCheckpoints())
+            .orElseGet(HashMap::new)
+            .entrySet()
+            .stream()
+            .collect(Collectors.toMap(Map.Entry::getKey, e -> ContainerStateV2.fromCheckpoint(e.getValue())));
+  }
+}
