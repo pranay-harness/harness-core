@@ -2,20 +2,20 @@ package io.harness.steps.resourcerestraint;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.distribution.constraint.Consumer.State.ACTIVE;
-import static io.harness.facilitator.FacilitatorResponse.FacilitatorResponseBuilder;
+import static io.harness.pms.sdk.core.facilitator.FacilitatorResponse.FacilitatorResponseBuilder;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.distribution.constraint.Constraint;
 import io.harness.distribution.constraint.ConstraintUnit;
 import io.harness.distribution.constraint.Consumer;
 import io.harness.engine.expressions.EngineExpressionService;
-import io.harness.facilitator.Facilitator;
-import io.harness.facilitator.FacilitatorResponse;
-import io.harness.facilitator.FacilitatorUtils;
-import io.harness.facilitator.OrchestrationFacilitatorType;
 import io.harness.pms.ambiance.Ambiance;
 import io.harness.pms.execution.ExecutionMode;
 import io.harness.pms.facilitators.FacilitatorType;
+import io.harness.pms.sdk.core.facilitator.Facilitator;
+import io.harness.pms.sdk.core.facilitator.FacilitatorResponse;
+import io.harness.pms.sdk.core.facilitator.FacilitatorUtils;
+import io.harness.pms.sdk.core.facilitator.OrchestrationFacilitatorType;
 import io.harness.pms.sdk.core.steps.io.StepInputPackage;
 import io.harness.pms.sdk.core.steps.io.StepParameters;
 import io.harness.steps.resourcerestraint.beans.AcquireMode;

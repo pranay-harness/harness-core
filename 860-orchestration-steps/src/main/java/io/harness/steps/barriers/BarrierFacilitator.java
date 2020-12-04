@@ -2,14 +2,14 @@ package io.harness.steps.barriers;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 
-import io.harness.facilitator.Facilitator;
-import io.harness.facilitator.FacilitatorResponse;
-import io.harness.facilitator.FacilitatorResponse.FacilitatorResponseBuilder;
-import io.harness.facilitator.FacilitatorUtils;
-import io.harness.facilitator.OrchestrationFacilitatorType;
 import io.harness.pms.ambiance.Ambiance;
 import io.harness.pms.execution.ExecutionMode;
 import io.harness.pms.facilitators.FacilitatorType;
+import io.harness.pms.sdk.core.facilitator.Facilitator;
+import io.harness.pms.sdk.core.facilitator.FacilitatorResponse;
+import io.harness.pms.sdk.core.facilitator.FacilitatorResponse.FacilitatorResponseBuilder;
+import io.harness.pms.sdk.core.facilitator.FacilitatorUtils;
+import io.harness.pms.sdk.core.facilitator.OrchestrationFacilitatorType;
 import io.harness.pms.sdk.core.steps.io.StepInputPackage;
 import io.harness.pms.sdk.core.steps.io.StepParameters;
 import io.harness.steps.barriers.beans.BarrierExecutionInstance;

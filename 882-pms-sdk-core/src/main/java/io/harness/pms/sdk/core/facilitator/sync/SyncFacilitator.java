@@ -1,16 +1,15 @@
-package io.harness.facilitator.taskv2;
+package io.harness.pms.sdk.core.facilitator.sync;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 
-import io.harness.annotations.Redesign;
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.facilitator.Facilitator;
-import io.harness.facilitator.FacilitatorResponse;
-import io.harness.facilitator.FacilitatorUtils;
-import io.harness.facilitator.OrchestrationFacilitatorType;
 import io.harness.pms.ambiance.Ambiance;
 import io.harness.pms.execution.ExecutionMode;
 import io.harness.pms.facilitators.FacilitatorType;
+import io.harness.pms.sdk.core.facilitator.Facilitator;
+import io.harness.pms.sdk.core.facilitator.FacilitatorResponse;
+import io.harness.pms.sdk.core.facilitator.FacilitatorUtils;
+import io.harness.pms.sdk.core.facilitator.OrchestrationFacilitatorType;
 import io.harness.pms.sdk.core.steps.io.StepInputPackage;
 import io.harness.pms.sdk.core.steps.io.StepParameters;
 
@@ -18,10 +17,9 @@ import com.google.inject.Inject;
 import java.time.Duration;
 
 @OwnedBy(CDC)
-@Redesign
-public class TaskV2Facilitator implements Facilitator {
+public class SyncFacilitator implements Facilitator {
   public static final FacilitatorType FACILITATOR_TYPE =
-      FacilitatorType.newBuilder().setType(OrchestrationFacilitatorType.TASK_V2).build();
+      FacilitatorType.newBuilder().setType(OrchestrationFacilitatorType.SYNC).build();
 
   @Inject private FacilitatorUtils facilitatorUtils;
 
@@ -29,6 +27,6 @@ public class TaskV2Facilitator implements Facilitator {
   public FacilitatorResponse facilitate(
       Ambiance ambiance, StepParameters stepParameters, byte[] parameters, StepInputPackage inputPackage) {
     Duration waitDuration = facilitatorUtils.extractWaitDurationFromDefaultParams(parameters);
-    return FacilitatorResponse.builder().executionMode(ExecutionMode.TASK_V2).initialWait(waitDuration).build();
+    return FacilitatorResponse.builder().executionMode(ExecutionMode.SYNC).initialWait(waitDuration).build();
   }
 }

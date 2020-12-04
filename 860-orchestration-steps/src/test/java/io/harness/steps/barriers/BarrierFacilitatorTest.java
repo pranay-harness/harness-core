@@ -11,9 +11,9 @@ import static org.mockito.Mockito.when;
 
 import io.harness.OrchestrationStepsTestBase;
 import io.harness.category.element.UnitTests;
-import io.harness.facilitator.DefaultFacilitatorParams;
-import io.harness.facilitator.FacilitatorResponse;
 import io.harness.pms.ambiance.Ambiance;
+import io.harness.pms.sdk.core.facilitator.DefaultFacilitatorParams;
+import io.harness.pms.sdk.core.facilitator.FacilitatorResponse;
 import io.harness.rule.Owner;
 import io.harness.serializer.KryoSerializer;
 import io.harness.steps.barriers.beans.BarrierExecutionInstance;

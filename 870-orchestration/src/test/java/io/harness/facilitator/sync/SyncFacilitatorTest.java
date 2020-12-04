@@ -6,10 +6,11 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.OrchestrationTestBase;
 import io.harness.category.element.UnitTests;
-import io.harness.facilitator.DefaultFacilitatorParams;
-import io.harness.facilitator.FacilitatorResponse;
 import io.harness.pms.ambiance.Ambiance;
 import io.harness.pms.execution.ExecutionMode;
+import io.harness.pms.sdk.core.facilitator.DefaultFacilitatorParams;
+import io.harness.pms.sdk.core.facilitator.FacilitatorResponse;
+import io.harness.pms.sdk.core.facilitator.sync.SyncFacilitator;
 import io.harness.rule.Owner;
 import io.harness.serializer.KryoSerializer;
 

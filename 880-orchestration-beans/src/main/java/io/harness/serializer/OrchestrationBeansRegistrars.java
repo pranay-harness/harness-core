@@ -38,6 +38,7 @@ public class OrchestrationBeansRegistrars {
           .addAll(PersistenceRegistrars.aliasRegistrars)
           .addAll(TimeoutEngineRegistrars.aliasRegistrars)
           .add(PmsContractsAliasRegistrar.class)
+          .add(PmsSdkCoreAliasRegistrar.class)
           .add(OrchestrationBeansAliasRegistrar.class)
           .build();
 

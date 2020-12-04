@@ -32,6 +32,7 @@ public class OrchestrationBeansModule extends AbstractModule {
     install(TimeoutEngineModule.getInstance());
     install(OrchestrationRegistryModule.getInstance());
     install(OrchestrationPersistenceModule.getInstance());
+    install(PmsSdkCoreModule.getInstance());
 
     MapBinder.newMapBinder(binder(), String.class, StepRegistrar.class);
     MapBinder.newMapBinder(binder(), String.class, AdviserRegistrar.class);

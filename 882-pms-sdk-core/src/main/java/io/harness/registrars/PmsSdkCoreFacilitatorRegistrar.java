@@ -3,19 +3,19 @@ package io.harness.registrars;
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.facilitator.Facilitator;
-import io.harness.facilitator.async.AsyncFacilitator;
-import io.harness.facilitator.chain.ChildChainFacilitator;
-import io.harness.facilitator.chain.TaskChainFacilitator;
-import io.harness.facilitator.chain.TaskChainV2Facilitator;
-import io.harness.facilitator.chain.TaskChainV3Facilitator;
-import io.harness.facilitator.child.ChildFacilitator;
-import io.harness.facilitator.children.ChildrenFacilitator;
-import io.harness.facilitator.sync.SyncFacilitator;
-import io.harness.facilitator.task.TaskFacilitator;
-import io.harness.facilitator.taskv2.TaskV2Facilitator;
-import io.harness.facilitator.taskv3.TaskV3Facilitator;
 import io.harness.pms.facilitators.FacilitatorType;
+import io.harness.pms.sdk.core.facilitator.Facilitator;
+import io.harness.pms.sdk.core.facilitator.async.AsyncFacilitator;
+import io.harness.pms.sdk.core.facilitator.chain.ChildChainFacilitator;
+import io.harness.pms.sdk.core.facilitator.chain.TaskChainFacilitator;
+import io.harness.pms.sdk.core.facilitator.chain.TaskChainV2Facilitator;
+import io.harness.pms.sdk.core.facilitator.chain.TaskChainV3Facilitator;
+import io.harness.pms.sdk.core.facilitator.child.ChildFacilitator;
+import io.harness.pms.sdk.core.facilitator.chilidren.ChildrenFacilitator;
+import io.harness.pms.sdk.core.facilitator.sync.SyncFacilitator;
+import io.harness.pms.sdk.core.facilitator.task.TaskFacilitator;
+import io.harness.pms.sdk.core.facilitator.taskv2.TaskV2Facilitator;
+import io.harness.pms.sdk.core.facilitator.taskv3.TaskV3Facilitator;
 import io.harness.registries.registrar.FacilitatorRegistrar;
 
 import com.google.inject.Inject;
@@ -24,7 +24,7 @@ import java.util.Set;
 import org.apache.commons.lang3.tuple.Pair;
 
 @OwnedBy(CDC)
-public class OrchestrationFacilitatorRegistrar implements FacilitatorRegistrar {
+public class PmsSdkCoreFacilitatorRegistrar implements FacilitatorRegistrar {
   @Inject private Injector injector;
 
   @Override

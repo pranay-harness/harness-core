@@ -20,9 +20,9 @@ import io.harness.executionplan.core.impl.ExecutionPlanCreatorResponseImpl.Execu
 import io.harness.executionplan.plancreator.beans.PlanCreatorConstants;
 import io.harness.executionplan.plancreator.beans.PlanNodeType;
 import io.harness.executionplan.service.ExecutionPlanCreatorHelper;
-import io.harness.facilitator.OrchestrationFacilitatorType;
 import io.harness.pms.facilitators.FacilitatorObtainment;
 import io.harness.pms.facilitators.FacilitatorType;
+import io.harness.pms.sdk.core.facilitator.OrchestrationFacilitatorType;
 import io.harness.pms.sdk.core.plan.PlanNode;
 import io.harness.yaml.core.ExecutionElement;
 import io.harness.yaml.core.ParallelStepElement;

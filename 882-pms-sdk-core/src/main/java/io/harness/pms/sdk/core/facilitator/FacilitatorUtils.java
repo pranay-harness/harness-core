@@ -1,4 +1,4 @@
-package io.harness.facilitator;
+package io.harness.pms.sdk.core.facilitator;
 
 import io.harness.serializer.KryoSerializer;
 

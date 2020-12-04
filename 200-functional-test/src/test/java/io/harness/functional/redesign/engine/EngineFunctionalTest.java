@@ -34,6 +34,7 @@ import com.google.inject.Inject;
 import java.util.List;
 import java.util.stream.Collectors;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
@@ -292,6 +293,7 @@ public class EngineFunctionalTest extends AbstractFunctionalTest {
   @Test
   @Owner(developers = GARVIT, intermittent = true)
   @Category(FunctionalTests.class)
+  @Ignore("Ignoring currently as timeouts are ignored for PMS")
   public void shouldExecuteSimpleTimeoutPlan() {
     PlanExecution timeoutResponse =
         testSetupHelper.executePlan(bearerToken, application.getAccountId(), application.getAppId(), "simple-timeout");
