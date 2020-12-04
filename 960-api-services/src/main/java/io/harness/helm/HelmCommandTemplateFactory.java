@@ -1,4 +1,4 @@
-package software.wings.helpers.ext.helm;
+package io.harness.helm;
 
 import static io.harness.k8s.model.HelmVersion.V2;
 
