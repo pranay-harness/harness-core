@@ -1,6 +1,5 @@
 package io.harness.cdng.pipeline.executions;
 
-import io.harness.AmbianceUtils;
 import io.harness.cdng.environment.EnvironmentOutcome;
 import io.harness.cdng.infra.steps.InfrastructureStep;
 import io.harness.cdng.pipeline.executions.service.NgPipelineExecutionService;
@@ -14,6 +13,7 @@ import io.harness.execution.events.OrchestrationEvent;
 import io.harness.ngpipeline.common.AmbianceHelper;
 import io.harness.pms.ambiance.Ambiance;
 import io.harness.pms.execution.Status;
+import io.harness.pms.execution.utils.AmbianceUtils;
 import io.harness.pms.plan.PlanNodeProto;
 import io.harness.steps.StepOutcomeGroup;
 

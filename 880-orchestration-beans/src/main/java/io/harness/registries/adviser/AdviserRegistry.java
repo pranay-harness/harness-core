@@ -2,10 +2,10 @@ package io.harness.registries.adviser;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 
-import io.harness.adviser.Adviser;
 import io.harness.annotations.Redesign;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.pms.advisers.AdviserType;
+import io.harness.pms.sdk.core.adviser.Adviser;
 import io.harness.registries.Registry;
 import io.harness.registries.RegistryType;
 import io.harness.registries.exceptions.DuplicateRegistryException;

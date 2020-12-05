@@ -6,10 +6,7 @@ import static io.harness.rule.OwnerRule.PRASHANT;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.when;
 
-import io.harness.AmbianceUtils;
 import io.harness.OrchestrationTestBase;
-import io.harness.adviser.AdvisingEvent;
-import io.harness.adviser.AdvisingEvent.AdvisingEventBuilder;
 import io.harness.category.element.UnitTests;
 import io.harness.engine.executions.node.NodeExecutionService;
 import io.harness.execution.NodeExecution;
@@ -23,7 +20,11 @@ import io.harness.pms.commons.RepairActionCode;
 import io.harness.pms.execution.Status;
 import io.harness.pms.execution.failure.FailureInfo;
 import io.harness.pms.execution.failure.FailureType;
+import io.harness.pms.execution.utils.AmbianceUtils;
 import io.harness.pms.plan.PlanNodeProto;
+import io.harness.pms.sdk.core.adviser.AdvisingEvent;
+import io.harness.pms.sdk.core.adviser.AdvisingEvent.AdvisingEventBuilder;
+import io.harness.pms.sdk.core.adviser.retry.RetryAdviserParameters;
 import io.harness.pms.steps.StepType;
 import io.harness.rule.Owner;
 import io.harness.serializer.KryoSerializer;
@@ -117,7 +118,7 @@ public class RetryAdviserTest extends OrchestrationTestBase {
             .retryIds(Arrays.asList(generateUuid(), generateUuid(), generateUuid(), generateUuid()))
             .build();
     when(nodeExecutionService.get(AmbianceUtils.obtainCurrentRuntimeId(ambiance))).thenReturn(nodeExecution);
-    AdvisingEvent advisingEvent = AdvisingEvent.<RetryAdviserParameters>builder()
+    AdvisingEvent advisingEvent = AdvisingEvent.<io.harness.pms.sdk.core.adviser.retry.RetryAdviserParameters>builder()
                                       .ambiance(ambiance)
                                       .toStatus(Status.FAILED)
                                       .adviserParameters(kryoSerializer.asBytes(getRetryParamsWithIgnore()))
@@ -193,7 +194,7 @@ public class RetryAdviserTest extends OrchestrationTestBase {
     assertThat(canAdvise).isFalse();
   }
 
-  private static RetryAdviserParameters getRetryParamsWithIgnore() {
+  private static io.harness.pms.sdk.core.adviser.retry.RetryAdviserParameters getRetryParamsWithIgnore() {
     return RetryAdviserParameters.builder()
         .retryCount(5)
         .waitIntervalList(ImmutableList.of(2, 5))

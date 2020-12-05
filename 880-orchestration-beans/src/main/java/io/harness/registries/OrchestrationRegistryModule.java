@@ -2,7 +2,6 @@ package io.harness.registries;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 
-import io.harness.adviser.Adviser;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.execution.events.OrchestrationEventHandler;
 import io.harness.execution.events.OrchestrationEventType;
@@ -11,6 +10,7 @@ import io.harness.expression.field.OrchestrationFieldType;
 import io.harness.pms.advisers.AdviserType;
 import io.harness.pms.facilitators.FacilitatorType;
 import io.harness.pms.refobjects.RefType;
+import io.harness.pms.sdk.core.adviser.Adviser;
 import io.harness.pms.sdk.core.facilitator.Facilitator;
 import io.harness.pms.sdk.core.steps.Step;
 import io.harness.pms.steps.StepType;

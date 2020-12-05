@@ -5,13 +5,13 @@ import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static org.springframework.data.mongodb.core.query.Criteria.where;
 import static org.springframework.data.mongodb.core.query.Query.query;
 
-import io.harness.StatusUtils;
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.engine.status.StepStatusUpdateInfo;
+import io.harness.engine.interrupts.statusupdate.StepStatusUpdateInfo;
 import io.harness.exception.InvalidRequestException;
 import io.harness.execution.PlanExecution;
 import io.harness.execution.PlanExecution.PlanExecutionKeys;
 import io.harness.pms.execution.Status;
+import io.harness.pms.execution.utils.StatusUtils;
 import io.harness.repositories.PlanExecutionRepository;
 
 import com.google.inject.Inject;

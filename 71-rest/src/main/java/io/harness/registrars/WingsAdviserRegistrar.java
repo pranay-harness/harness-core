@@ -2,9 +2,9 @@ package io.harness.registrars;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 
-import io.harness.adviser.Adviser;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.pms.advisers.AdviserType;
+import io.harness.pms.sdk.core.adviser.Adviser;
 import io.harness.redesign.advisers.HttpResponseCodeSwitchAdviser;
 import io.harness.registries.registrar.AdviserRegistrar;
 

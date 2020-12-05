@@ -2,11 +2,6 @@ package io.harness.serializer.kryo;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 
-import io.harness.advisers.fail.OnFailAdviserParameters;
-import io.harness.advisers.ignore.IgnoreAdviserParameters;
-import io.harness.advisers.manualintervention.ManualInterventionAdviserParameters;
-import io.harness.advisers.retry.RetryAdviserParameters;
-import io.harness.advisers.success.OnSuccessAdviserParameters;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.DelegateTask;
 import io.harness.beans.ExecutionStatus;
@@ -31,11 +26,6 @@ public class OrchestrationKryoRegister implements KryoRegistrar {
     kryo.register(DelegateTask.class, 5003);
 
     kryo.register(ExecutionStatusResponseData.class, 3102);
-    kryo.register(RetryAdviserParameters.class, 3103);
-    kryo.register(OnSuccessAdviserParameters.class, 3104);
-    kryo.register(OnFailAdviserParameters.class, 3105);
-    kryo.register(IgnoreAdviserParameters.class, 3106);
-    kryo.register(ManualInterventionAdviserParameters.class, 3107);
 
     // Put promoted classes here and do not change the id
     kryo.register(DelayEventNotifyData.class, 7273);

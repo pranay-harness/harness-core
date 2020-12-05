@@ -5,7 +5,6 @@ import static io.harness.rule.OwnerRule.VAIBHAV_SI;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import io.harness.advisers.fail.OnFailAdviserParameters;
 import io.harness.category.element.UnitTests;
 import io.harness.cdng.CDNGBaseTest;
 import io.harness.cdng.executionplan.ExecutionPlanCreatorRegistrar;
@@ -17,6 +16,7 @@ import io.harness.executionplan.service.ExecutionPlanCreatorService;
 import io.harness.ngpipeline.pipeline.beans.yaml.NgPipeline;
 import io.harness.plan.Plan;
 import io.harness.pms.plan.PlanNodeProto;
+import io.harness.pms.sdk.core.adviser.fail.OnFailAdviserParameters;
 import io.harness.pms.serializer.json.JsonOrchestrationUtils;
 import io.harness.rule.Owner;
 import io.harness.serializer.KryoSerializer;

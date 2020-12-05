@@ -2,9 +2,6 @@ package io.harness.redesign.advisers;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 
-import io.harness.StatusUtils;
-import io.harness.adviser.Adviser;
-import io.harness.adviser.AdvisingEvent;
 import io.harness.annotations.Redesign;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.engine.outcomes.OutcomeService;
@@ -14,6 +11,9 @@ import io.harness.pms.advisers.AdviserResponse;
 import io.harness.pms.advisers.AdviserType;
 import io.harness.pms.advisers.NextStepAdvise;
 import io.harness.pms.data.StepOutcomeRef;
+import io.harness.pms.execution.utils.StatusUtils;
+import io.harness.pms.sdk.core.adviser.Adviser;
+import io.harness.pms.sdk.core.adviser.AdvisingEvent;
 import io.harness.pms.sdk.core.data.Outcome;
 import io.harness.serializer.KryoSerializer;
 

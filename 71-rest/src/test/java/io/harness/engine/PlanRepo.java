@@ -2,8 +2,6 @@ package io.harness.engine;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 
-import io.harness.adviser.OrchestrationAdviserTypes;
-import io.harness.advisers.success.OnSuccessAdviserParameters;
 import io.harness.engine.interrupts.steps.SimpleAsyncStep;
 import io.harness.engine.interrupts.steps.SimpleStepAsyncParams;
 import io.harness.plan.Plan;
@@ -11,6 +9,8 @@ import io.harness.pms.advisers.AdviserObtainment;
 import io.harness.pms.advisers.AdviserType;
 import io.harness.pms.facilitators.FacilitatorObtainment;
 import io.harness.pms.facilitators.FacilitatorType;
+import io.harness.pms.sdk.core.adviser.OrchestrationAdviserTypes;
+import io.harness.pms.sdk.core.adviser.success.OnSuccessAdviserParameters;
 import io.harness.pms.sdk.core.facilitator.OrchestrationFacilitatorType;
 import io.harness.pms.sdk.core.plan.PlanNode;
 import io.harness.pms.steps.StepType;

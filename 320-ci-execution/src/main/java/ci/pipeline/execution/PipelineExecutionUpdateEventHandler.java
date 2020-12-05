@@ -1,12 +1,12 @@
 package ci.pipeline.execution;
 
-import io.harness.AmbianceUtils;
 import io.harness.engine.executions.node.NodeExecutionServiceImpl;
 import io.harness.execution.NodeExecution;
 import io.harness.execution.events.OrchestrationEvent;
 import io.harness.execution.events.SyncOrchestrationEventHandler;
 import io.harness.ngpipeline.common.AmbianceHelper;
 import io.harness.pms.ambiance.Ambiance;
+import io.harness.pms.execution.utils.AmbianceUtils;
 
 import com.google.inject.Inject;
 import lombok.extern.slf4j.Slf4j;

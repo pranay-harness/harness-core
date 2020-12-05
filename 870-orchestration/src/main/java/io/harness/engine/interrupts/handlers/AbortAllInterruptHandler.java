@@ -13,7 +13,6 @@ import static io.harness.interrupts.Interrupt.State.PROCESSING;
 import static io.harness.pms.execution.Status.ABORTED;
 import static io.harness.pms.execution.Status.DISCONTINUING;
 
-import io.harness.StatusUtils;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.engine.executions.node.NodeExecutionService;
 import io.harness.engine.interrupts.InterruptHandler;
@@ -22,7 +21,7 @@ import io.harness.engine.interrupts.helpers.AbortHelper;
 import io.harness.exception.InvalidRequestException;
 import io.harness.execution.NodeExecution;
 import io.harness.interrupts.Interrupt;
-import io.harness.pms.execution.Status;
+import io.harness.pms.execution.utils.StatusUtils;
 
 import com.google.inject.Inject;
 import java.util.List;

@@ -16,7 +16,6 @@ import static java.time.Duration.ofMinutes;
 import static org.springframework.data.mongodb.core.query.Criteria.where;
 import static org.springframework.data.mongodb.core.query.Query.query;
 
-import io.harness.StatusUtils;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.distribution.barrier.Barrier;
 import io.harness.distribution.barrier.BarrierId;
@@ -34,6 +33,7 @@ import io.harness.mongo.iterator.filter.SpringFilterExpander;
 import io.harness.mongo.iterator.provider.SpringPersistenceProvider;
 import io.harness.persistence.HPersistence;
 import io.harness.pms.execution.Status;
+import io.harness.pms.execution.utils.StatusUtils;
 import io.harness.repositories.BarrierNodeRepository;
 import io.harness.steps.barriers.BarrierStep;
 import io.harness.steps.barriers.beans.BarrierExecutionInstance;

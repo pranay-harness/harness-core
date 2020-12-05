@@ -1,6 +1,8 @@
 package io.harness;
 
+import io.harness.registrars.PmsSdkCoreAdviserRegistrar;
 import io.harness.registrars.PmsSdkCoreFacilitatorRegistrar;
+import io.harness.registries.registrar.AdviserRegistrar;
 import io.harness.registries.registrar.FacilitatorRegistrar;
 
 import com.google.inject.AbstractModule;
@@ -24,5 +26,10 @@ public class PmsSdkCoreModule extends AbstractModule {
         MapBinder.newMapBinder(binder(), String.class, FacilitatorRegistrar.class);
     facilitatorRegistrarMapBinder.addBinding(PmsSdkCoreFacilitatorRegistrar.class.getName())
         .to(PmsSdkCoreFacilitatorRegistrar.class);
+
+    MapBinder<String, AdviserRegistrar> adviserRegistrarMapBinder =
+        MapBinder.newMapBinder(binder(), String.class, AdviserRegistrar.class);
+    adviserRegistrarMapBinder.addBinding(PmsSdkCoreAdviserRegistrar.class.getName())
+        .to(PmsSdkCoreAdviserRegistrar.class);
   }
 }
