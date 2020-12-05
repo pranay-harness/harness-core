@@ -2,13 +2,14 @@ import datetime
 import time
 
 DATE_FORMAT_MM_DD_YYYY = "%m/%d/%Y"
+DATE_FORMAT_LOCAL_VERSION = "%c"
 SECONDS_IN_SINGLE_YEAR = 31536000
 SECONDS_IN_SINGLE_DAY = 86400
 
 
-def get_date_obj_from_str(date_input, date_format):
+def get_date_obj_from_str(date_input_str, date_format):
     try:
-        date_time_obj = datetime.datetime.strptime(date_input, date_format)
+        date_time_obj = datetime.datetime.strptime(date_input_str, date_format)
         return date_time_obj
     except:
         return None
@@ -24,12 +25,30 @@ def get_local_timezone():
     return local_timezone
 
 
-def convert_date_to_local_timezone(date_input):
-    return date_input.astimezone(get_local_timezone())
+def convert_date_to_local_timezone(date_input_obj):
+    return date_input_obj.astimezone(get_local_timezone())
 
+
+def convert_date_to_timestamp(date_input_obj):
+    try:
+        return int(date_input_obj.timestamp())
+    except:
+        return None
 
 def get_current_time_in_epoch_in_seconds():
     return int(time.time())
+
+
+def get_current_local_date_obj():
+    return convert_date_to_local_timezone(get_date_obj_from_epoch(get_current_time_in_epoch_in_seconds()))
+
+
+def format_date(date_input_obj, date_format):
+    return date_input_obj.strftime(date_format)
+
+
+def get_current_time_local_version_str():
+    return format_date(get_current_local_date_obj(), DATE_FORMAT_LOCAL_VERSION)
 
 
 def print_list(data):

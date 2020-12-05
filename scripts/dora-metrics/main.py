@@ -46,7 +46,7 @@ if __name__ == "__main__":
             # convert date time object into local timezone
             start_time_obj = helper.convert_date_to_local_timezone(start_time_obj)
             # get epoch time corresponding to local timezone date
-            start_time_epoch = int(start_time_obj.timestamp())
+            start_time_epoch = helper.convert_date_to_timestamp(start_time_obj)
             break
 
         print("ERROR : Date invalid, please try again")
@@ -61,7 +61,7 @@ if __name__ == "__main__":
 
         if end_time_obj is not None:
             end_time_obj = helper.convert_date_to_local_timezone(end_time_obj)
-            end_time_epoch = int(end_time_obj.timestamp())
+            end_time_epoch = helper.convert_date_to_timestamp(end_time_obj)
             break
 
         print("ERROR : Date invalid, please try again")
