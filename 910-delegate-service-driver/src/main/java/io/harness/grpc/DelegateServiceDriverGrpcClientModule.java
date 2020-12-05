@@ -23,20 +23,18 @@ import io.grpc.netty.shaded.io.netty.handler.ssl.SslContext;
 import io.grpc.netty.shaded.io.netty.handler.ssl.util.InsecureTrustManagerFactory;
 import javax.net.ssl.SSLException;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.StringUtils;
 
 @Slf4j
 public class DelegateServiceDriverGrpcClientModule extends ProviderModule {
   private final String serviceSecret;
   private final String target;
   private final String authority;
-  private final String protocol;
+  private final String deployMode = System.getenv().get("DEPLOY_MODE");
 
-  public DelegateServiceDriverGrpcClientModule(String serviceSecret, String target, String authority, String protocol) {
+  public DelegateServiceDriverGrpcClientModule(String serviceSecret, String target, String authority) {
     this.serviceSecret = serviceSecret;
     this.target = target;
     this.authority = authority;
-    this.protocol = protocol;
   }
 
   @Override
@@ -50,18 +48,16 @@ public class DelegateServiceDriverGrpcClientModule extends ProviderModule {
   @Provides
   public Channel managerChannel(VersionInfoManager versionInfoManager) throws SSLException {
     String authorityToUse = computeAuthority(versionInfoManager.getVersionInfo());
-
-    if (StringUtils.isBlank(protocol) || protocol.toLowerCase().startsWith("https")) {
+    if (("ONPREM".equals(deployMode) || "KUBERNETES_ONPREM".equals(deployMode))) {
+      return NettyChannelBuilder.forTarget(target).overrideAuthority(authorityToUse).usePlaintext().build();
+    } else {
       SslContext sslContext = GrpcSslContexts.forClient().trustManager(InsecureTrustManagerFactory.INSTANCE).build();
       return NettyChannelBuilder.forTarget(target).overrideAuthority(authorityToUse).sslContext(sslContext).build();
     }
-
-    return NettyChannelBuilder.forTarget(target).overrideAuthority(authorityToUse).usePlaintext().build();
   }
 
   private String computeAuthority(VersionInfo versionInfo) {
     String defaultAuthority = "default-authority.harness.io";
-    String deployMode = System.getenv().get("DEPLOY_MODE");
     String authorityToUse;
     if (!isValidAuthority(authority)) {
       log.info("Authority in config {} is invalid. Using default value {}", authority, defaultAuthority);
@@ -80,7 +76,6 @@ public class DelegateServiceDriverGrpcClientModule extends ProviderModule {
       log.info("Deploy Mode is {}. Using non-versioned authority", deployMode);
       authorityToUse = authority;
     }
-
     return authorityToUse;
   }
 

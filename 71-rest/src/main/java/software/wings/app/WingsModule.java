@@ -793,7 +793,7 @@ public class WingsModule extends AbstractModule implements ServersModule {
     install(DelegateServiceDriverModule.getInstance());
     install(new DelegateServiceDriverGrpcClientModule(configuration.getPortal().getJwtNextGenManagerSecret(),
         configuration.getGrpcDelegateServiceClientConfig().getTarget(),
-        configuration.getGrpcDelegateServiceClientConfig().getAuthority(), configuration.getApiUrl()));
+        configuration.getGrpcDelegateServiceClientConfig().getAuthority()));
     install(PersistentLockModule.getInstance());
     install(FeatureFlagModule.getInstance());
 
