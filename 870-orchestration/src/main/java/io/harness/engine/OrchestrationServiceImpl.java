@@ -10,14 +10,13 @@ import io.harness.engine.executions.plan.PlanExecutionService;
 import io.harness.engine.interrupts.InterruptManager;
 import io.harness.engine.interrupts.InterruptPackage;
 import io.harness.execution.PlanExecution;
-import io.harness.execution.events.OrchestrationEvent;
 import io.harness.interrupts.Interrupt;
 import io.harness.plan.Plan;
 import io.harness.pms.ambiance.Ambiance;
 import io.harness.pms.contracts.execution.events.OrchestrationEventType;
 import io.harness.pms.execution.Status;
 import io.harness.pms.plan.PlanNodeProto;
-import io.harness.pms.sdk.core.plan.PlanNode;
+import io.harness.pms.sdk.core.events.OrchestrationEvent;
 
 import com.google.inject.Inject;
 import java.util.HashMap;

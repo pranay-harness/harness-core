@@ -3,8 +3,8 @@ package io.harness.registries.registrar;
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.execution.events.OrchestrationEventHandler;
 import io.harness.pms.contracts.execution.events.OrchestrationEventType;
+import io.harness.pms.sdk.core.events.OrchestrationEventHandler;
 import io.harness.registries.Registrar;
 
 import java.util.Set;

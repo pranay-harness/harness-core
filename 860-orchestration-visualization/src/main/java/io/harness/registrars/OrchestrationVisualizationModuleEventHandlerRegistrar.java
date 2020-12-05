@@ -11,8 +11,8 @@ import io.harness.event.NodeExecutionStatusUpdateEventHandlerV2;
 import io.harness.event.OrchestrationEndEventHandler;
 import io.harness.event.OrchestrationStartEventHandler;
 import io.harness.event.PlanExecutionStatusUpdateEventHandler;
-import io.harness.execution.events.OrchestrationEventHandler;
 import io.harness.pms.contracts.execution.events.OrchestrationEventType;
+import io.harness.pms.sdk.core.events.OrchestrationEventHandler;
 import io.harness.registries.registrar.OrchestrationEventHandlerRegistrar;
 
 import com.google.inject.Inject;

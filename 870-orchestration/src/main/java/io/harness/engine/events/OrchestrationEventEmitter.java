@@ -2,10 +2,10 @@ package io.harness.engine.events;
 
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.execution.events.OrchestrationEvent;
-import io.harness.execution.events.OrchestrationEventHandler;
-import io.harness.execution.events.OrchestrationSubject;
 import io.harness.logging.AutoLogContext;
+import io.harness.pms.sdk.core.events.OrchestrationEvent;
+import io.harness.pms.sdk.core.events.OrchestrationEventHandler;
+import io.harness.pms.sdk.core.events.OrchestrationSubject;
 import io.harness.queue.QueuePublisher;
 import io.harness.registries.events.OrchestrationEventHandlerRegistry;
 

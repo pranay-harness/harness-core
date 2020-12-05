@@ -5,8 +5,8 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.engine.events.NodeExecutionStatusUpdateEventHandler;
 import io.harness.engine.events.OrchestrationEndEventHandler;
 import io.harness.engine.events.OrchestrationStartEventHandler;
-import io.harness.execution.events.OrchestrationEventHandler;
 import io.harness.pms.contracts.execution.events.OrchestrationEventType;
+import io.harness.pms.sdk.core.events.OrchestrationEventHandler;
 import io.harness.registries.registrar.OrchestrationEventHandlerRegistrar;
 
 import com.google.inject.Inject;

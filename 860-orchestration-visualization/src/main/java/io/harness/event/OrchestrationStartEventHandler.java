@@ -7,8 +7,8 @@ import io.harness.beans.OrchestrationGraph;
 import io.harness.beans.internal.OrchestrationAdjacencyListInternal;
 import io.harness.engine.executions.plan.PlanExecutionService;
 import io.harness.execution.PlanExecution;
-import io.harness.execution.events.OrchestrationEvent;
-import io.harness.execution.events.SyncOrchestrationEventHandler;
+import io.harness.pms.sdk.core.events.OrchestrationEvent;
+import io.harness.pms.sdk.core.events.SyncOrchestrationEventHandler;
 import io.harness.service.GraphGenerationService;
 
 import com.google.inject.Inject;
