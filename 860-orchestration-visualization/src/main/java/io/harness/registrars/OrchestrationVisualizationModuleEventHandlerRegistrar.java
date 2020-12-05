@@ -1,8 +1,10 @@
 package io.harness.registrars;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
-import static io.harness.execution.events.OrchestrationEventType.*;
-import static io.harness.execution.events.OrchestrationEventType.NODE_EXECUTION_STATUS_UPDATE;
+import static io.harness.pms.contracts.execution.events.OrchestrationEventType.NODE_EXECUTION_STATUS_UPDATE;
+import static io.harness.pms.contracts.execution.events.OrchestrationEventType.ORCHESTRATION_END;
+import static io.harness.pms.contracts.execution.events.OrchestrationEventType.ORCHESTRATION_START;
+import static io.harness.pms.contracts.execution.events.OrchestrationEventType.PLAN_EXECUTION_STATUS_UPDATE;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.event.NodeExecutionStatusUpdateEventHandlerV2;
@@ -10,7 +12,7 @@ import io.harness.event.OrchestrationEndEventHandler;
 import io.harness.event.OrchestrationStartEventHandler;
 import io.harness.event.PlanExecutionStatusUpdateEventHandler;
 import io.harness.execution.events.OrchestrationEventHandler;
-import io.harness.execution.events.OrchestrationEventType;
+import io.harness.pms.contracts.execution.events.OrchestrationEventType;
 import io.harness.registries.registrar.OrchestrationEventHandlerRegistrar;
 
 import com.google.inject.Inject;

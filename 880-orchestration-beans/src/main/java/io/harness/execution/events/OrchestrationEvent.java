@@ -7,6 +7,7 @@ import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.logging.AutoLogContext;
 import io.harness.pms.ambiance.Ambiance;
+import io.harness.pms.contracts.execution.events.OrchestrationEventType;
 import io.harness.pms.execution.utils.AmbianceUtils;
 import io.harness.queue.Queuable;
 
@@ -34,7 +35,7 @@ public class OrchestrationEvent extends Queuable {
 
   public AutoLogContext autoLogContext() {
     Map<String, String> logContext = AmbianceUtils.logContextMap(ambiance);
-    logContext.put(OrchestrationEventKeys.eventType, eventType.getType());
+    logContext.put(OrchestrationEventKeys.eventType, eventType.name());
     return new AutoLogContext(logContext, OVERRIDE_NESTS);
   }
 }

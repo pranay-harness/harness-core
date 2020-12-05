@@ -9,8 +9,8 @@ import io.harness.category.element.UnitTests;
 import io.harness.execution.events.AsyncOrchestrationEventHandler;
 import io.harness.execution.events.OrchestrationEvent;
 import io.harness.execution.events.OrchestrationEventHandler;
-import io.harness.execution.events.OrchestrationEventType;
 import io.harness.execution.events.SyncOrchestrationEventHandler;
+import io.harness.pms.contracts.execution.events.OrchestrationEventType;
 import io.harness.registries.RegistryType;
 import io.harness.rule.Owner;
 

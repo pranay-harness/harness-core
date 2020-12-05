@@ -3,7 +3,7 @@ package io.harness.registrars;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.execution.events.OrchestrationEventHandler;
-import io.harness.execution.events.OrchestrationEventType;
+import io.harness.pms.contracts.execution.events.OrchestrationEventType;
 import io.harness.registries.registrar.OrchestrationEventHandlerRegistrar;
 import io.harness.steps.barriers.BarrierInitializer;
 

@@ -1,7 +1,5 @@
 package io.harness.cdng.creator.plan.stage;
 
-import io.harness.adviser.OrchestrationAdviserTypes;
-import io.harness.advisers.success.OnSuccessAdviserParameters;
 import io.harness.cdng.creator.plan.infrastructure.InfrastructurePmsPlanCreator;
 import io.harness.cdng.creator.plan.service.ServicePMSPlanCreator;
 import io.harness.cdng.pipeline.beans.DeploymentStageStepParameters;
@@ -10,6 +8,8 @@ import io.harness.plancreator.stages.stage.StageElementConfig;
 import io.harness.pms.advisers.AdviserObtainment;
 import io.harness.pms.advisers.AdviserType;
 import io.harness.pms.facilitators.FacilitatorObtainment;
+import io.harness.pms.sdk.core.adviser.OrchestrationAdviserTypes;
+import io.harness.pms.sdk.core.adviser.success.OnSuccessAdviserParameters;
 import io.harness.pms.sdk.core.facilitator.child.ChildFacilitator;
 import io.harness.pms.sdk.core.plan.PlanNode;
 import io.harness.pms.sdk.core.plan.creation.beans.PlanCreationContext;
