@@ -65,7 +65,7 @@ public class GenericStepPlanCreator implements SupportDefinedExecutorPlanCreator
         .identifier(stepElement.getIdentifier())
         .stepType(StepType.newBuilder().setType(genericStepInfo.getStepType().getType()).build())
         .group(StepOutcomeGroup.STEP.name())
-        .stepParameters(genericStepInfo.getStepParameters())
+        .stepParameters(stepElement.getStepSpecType().getStepParameters())
         .facilitatorObtainment(
             FacilitatorObtainment.newBuilder()
                 .setType(FacilitatorType.newBuilder().setType(genericStepInfo.getFacilitatorType()).build())

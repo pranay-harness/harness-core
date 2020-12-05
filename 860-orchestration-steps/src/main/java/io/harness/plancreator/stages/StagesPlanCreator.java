@@ -64,11 +64,11 @@ public class StagesPlanCreator extends ChildrenPlanCreator<StagesConfig> {
 
     yamlNodes.forEach(yamlNode -> {
       YamlField stageField = yamlNode.getField("stage");
-      YamlField stepGroupField = yamlNode.getField("stepGroup");
+      YamlField parallelStageField = yamlNode.getField("parallel");
       if (stageField != null) {
         stageFields.add(stageField);
-      } else if (stepGroupField != null) {
-        stageFields.add(stepGroupField);
+      } else if (parallelStageField != null) {
+        stageFields.add(parallelStageField);
       }
     });
     return stageFields;
