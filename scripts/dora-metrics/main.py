@@ -6,12 +6,13 @@ if __name__ == "__main__":
     api_key = input("Enter API-KEY : ")
 
     while True:
-        file_status = input("Enter E for using existing file (leave blank for New file) : ")
+        file_operation = input("Enter A to append to existing file (leave blank to create new file) : ")
 
-        if file_status == 'e' or file_status == 'E' or file_status == "":
-            if file_status == "":
-                file_status = 'n'
-            file_status = file_status.lower()
+        if file_operation == 'a' or file_operation == 'A' or file_operation == "":
+            if file_operation == "":
+                file_operation = script.FILE_OPERATION_NEW
+            else:
+                file_operation = script.FILE_OPERATION_APPEND
             break
         print("ERROR : invalid input, please try again")
 
@@ -25,12 +26,16 @@ if __name__ == "__main__":
     while True:
         entity_type = input("Fetch deployments - Enter W for workflow or P for pipeline (leave blank for all) : ")
         if entity_type == "":
+            entity_type = script.ENTITY_ALL_EXECUTION
             # fetch all deployments
             break
 
-        entity_type = entity_type.lower()
-        if entity_type == 'w' or entity_type == 'p':
-            entity_id = input("Enter job id : ")
+        if entity_type == 'w':
+            entity_type = script.ENTITY_WORKFLOW_EXECUTION
+        else:
+            entity_type = script.ENTITY_PIPELINE_EXECUTION
+
+        entity_id = input("Enter job id : ")
 
     while True:
         start_time_input = input("Enter start time of search interval (MM/DD/YYYY) : ")
@@ -61,4 +66,14 @@ if __name__ == "__main__":
 
         print("ERROR : Date invalid, please try again")
 
-    script.compile_data(api_key, start_time_epoch, end_time_epoch, entity_type, entity_id, filename, file_status)
+    input_arguments = {
+        script.ARGS_API_KEY : api_key,
+        script.ARGS_FILE_OPERATION : file_operation,
+        script.ARGS_FILENAME_KEY : filename,
+        script.ARGS_SEARCH_ENTITY_TYPE_KEY : entity_type,
+        script.ARGS_SEARCH_ENTITY_ID_KEY : entity_id,
+        script.ARGS_SEARCH_INTERVAL_START_TIME_EPOCH_KEY : start_time_epoch,
+        script.ARGS_SEARCH_INTERVAL_END_TIME_EPOCH_KEY : end_time_epoch,
+    }
+
+    script.compile_data(input_arguments)

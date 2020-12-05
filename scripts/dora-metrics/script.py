@@ -3,6 +3,17 @@ import time
 import csv
 import helper
 
+
+ARGS_API_KEY = "api_key"
+ARGS_SEARCH_INTERVAL_START_TIME_EPOCH_KEY = "search_interval_start_time_epoch"
+ARGS_SEARCH_INTERVAL_END_TIME_EPOCH_KEY = "search_interval_end_time_epoch"
+ARGS_SEARCH_ENTITY_TYPE_KEY = "search_entity_type"
+ARGS_SEARCH_ENTITY_ID_KEY = "search_entity_id"
+ARGS_FILENAME_KEY = "filename"
+ARGS_FILE_OPERATION = "file_operation"
+FILE_OPERATION_APPEND = "append"
+FILE_OPERATION_NEW = "new"
+
 CSV_COL_APPLICATION_NAME = "Application Name"
 CSV_COL_ENTITY_TYPE = "Entity Type"
 CSV_COL_PIPELINE_NAME = "Pipeline Name"
@@ -32,6 +43,7 @@ CAUSE_EXECUTED_ALONG_PIPELINE = "ExecutedAlongPipeline"
 
 ENTITY_PIPELINE_EXECUTION = "PipelineExecution"
 ENTITY_WORKFLOW_EXECUTION = "WorkflowExecution"
+ENTITY_ALL_EXECUTION = "AllExecution"
 
 DEFAULT_API_KEY = "cHg3eGRfQkZSQ2ktcGZXUFlYVmp2dzo6ZEs3bkRPRVNGcG1XcWhuaEVRR2R3NjN6ZnVqYlFMZ1ZZT2pmNGEyb3dBMVdJQlBuNTVXclVVdEZjYWdCQkdJd0xwMFdPa3RxUml4VTRwRWw="
 CLIENT_ACCOUNT_ID = "px7xd_BFRCi-pfWPYXVjvw"
@@ -62,16 +74,8 @@ REQUEST_HEADERS = {
 REQUEST_RETRY_COUNT = 3
 
 MISSING_VALUE_PLACE_HOLDER = "<< DELETED >>"
-FILE_STATUS_NEW = "NEW"
-FILE_STATUS_EXISTING = "EXISTING"
 TEMP_CSV_FILE_NAME = "temp.csv"
 
-
-#### helper methods #####
-
-
-
-#########################
 
 def custom_workflow_parser_helper(items_set):
     # if len > 1, that means it contains valid values as well
@@ -140,7 +144,7 @@ def get_all_deployments(api_key, account_id, offset, entity_type, entity_id, sta
         response = requests.post(request_url, json=request_payload, headers=request_headers)
         if response.status_code == 200:
             return response.json()
-
+        print(response.json())
         print("RETRYING")
         # reduce retry count on each repetition
         retry_count -= 1
@@ -375,7 +379,7 @@ def create_csv_data(executions):
     data_rows = []
 
     for execution in executions:
-        print(execution)
+        # print(execution)
 
         # pipeline specific details
         application_name = get_field(execution, CSV_COL_APPLICATION_NAME)
@@ -467,29 +471,21 @@ def copy_csv_file(source_file, dest_file):
                 writer.writerow(row)
 
 
-def compile_data(api_key, start_time_interval_epoch, end_time_interval_epoch, entity_type, entity_id, filename, file_status):
-    if api_key == "":
-        api_key = DEFAULT_API_KEY
+def compile_data(input_args):
+    # TODO
+    # add input validation
 
+    api_key = input_args.get(ARGS_API_KEY)
     account_id = CLIENT_ACCOUNT_ID
+    filename = input_args.get(ARGS_FILENAME_KEY) + ".csv"
+    file_operation = input_args.get(ARGS_FILE_OPERATION)
+    entity_type = input_args.get(ARGS_SEARCH_ENTITY_TYPE_KEY)
+    entity_id = input_args.get(ARGS_SEARCH_ENTITY_ID_KEY, "")
+    start_time_interval_epoch = input_args.get(ARGS_SEARCH_INTERVAL_START_TIME_EPOCH_KEY)
+    end_time_interval_epoch = input_args.get(ARGS_SEARCH_INTERVAL_END_TIME_EPOCH_KEY)
 
-    if entity_type == 'w':
-        entity_type = ENTITY_WORKFLOW_EXECUTION
-    if entity_type == 'p':
-        entity_type = ENTITY_PIPELINE_EXECUTION
-
-    filename += ".csv"
-    if file_status == 'n':
-        file_status = FILE_STATUS_NEW
+    if file_operation == FILE_OPERATION_NEW:
         init_csv_file(filename)
-    else:
-        file_status = FILE_STATUS_EXISTING
-
-    if start_time_interval_epoch == "":
-        # default interval is last 1 month from now, so calculate interval start time accordingly
-        start_time_interval_epoch = get_past_time_from_epoch(int(time.time()), 0, 1, 0)
-    if end_time_interval_epoch == "":
-        end_time_interval_epoch = int(time.time())
 
     curr_offset = 0
     repeat = True
