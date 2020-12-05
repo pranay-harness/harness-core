@@ -4,6 +4,8 @@ import io.harness.registrars.PmsSdkCoreAdviserRegistrar;
 import io.harness.registrars.PmsSdkCoreFacilitatorRegistrar;
 import io.harness.registries.registrar.AdviserRegistrar;
 import io.harness.registries.registrar.FacilitatorRegistrar;
+import io.harness.registries.registrar.OrchestrationEventHandlerRegistrar;
+import io.harness.registries.registrar.StepRegistrar;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.multibindings.MapBinder;
@@ -31,5 +33,9 @@ public class PmsSdkCoreModule extends AbstractModule {
         MapBinder.newMapBinder(binder(), String.class, AdviserRegistrar.class);
     adviserRegistrarMapBinder.addBinding(PmsSdkCoreAdviserRegistrar.class.getName())
         .to(PmsSdkCoreAdviserRegistrar.class);
+
+    MapBinder.newMapBinder(binder(), String.class, OrchestrationEventHandlerRegistrar.class);
+
+    MapBinder.newMapBinder(binder(), String.class, StepRegistrar.class);
   }
 }
