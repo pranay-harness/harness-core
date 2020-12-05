@@ -27,6 +27,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class ManagerGrpcClientModule extends ProviderModule {
   private final Config config;
+  private final String deployMode = System.getenv().get("DEPLOY_MODE");
 
   public ManagerGrpcClientModule(Config config) {
     this.config = config;
@@ -44,20 +45,19 @@ public class ManagerGrpcClientModule extends ProviderModule {
   @Provides
   public Channel managerChannel(VersionInfoManager versionInfoManager) throws SSLException {
     String authorityToUse = computeAuthority(versionInfoManager.getVersionInfo());
-    String protocol = System.getenv().get("API_URL");
-    if ((protocol == null) || (protocol.toLowerCase().startsWith("https"))) {
+    if (("ONPREM".equals(deployMode) || "KUBERNETES_ONPREM".equals(deployMode))) {
+      return NettyChannelBuilder.forTarget(config.target).overrideAuthority(authorityToUse).usePlaintext().build();
+    } else {
       SslContext sslContext = GrpcSslContexts.forClient().trustManager(InsecureTrustManagerFactory.INSTANCE).build();
       return NettyChannelBuilder.forTarget(config.target)
-          .overrideAuthority(authorityToUse)
-          .sslContext(sslContext)
-          .build();
+              .overrideAuthority(authorityToUse)
+              .sslContext(sslContext)
+              .build();
     }
-    return NettyChannelBuilder.forTarget(config.target).overrideAuthority(authorityToUse).usePlaintext().build();
   }
 
   private String computeAuthority(VersionInfo versionInfo) {
     String defaultAuthority = "default-authority.harness.io";
-    String deployMode = System.getenv().get("DEPLOY_MODE");
     String authorityToUse;
     if (!isValidAuthority(config.authority)) {
       log.info("Authority in config {} is invalid. Using default value {}", config.authority, defaultAuthority);
