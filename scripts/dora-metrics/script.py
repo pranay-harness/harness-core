@@ -1,6 +1,7 @@
 import requests
 import time
 import csv
+import helper
 
 CSV_COL_APPLICATION_NAME = "Application Name"
 CSV_COL_ENTITY_TYPE = "Entity Type"
@@ -60,8 +61,6 @@ REQUEST_HEADERS = {
 }
 REQUEST_RETRY_COUNT = 3
 
-SECONDS_IN_SINGLE_YEAR = 31536000
-SECONDS_IN_SINGLE_DAY = 86400
 MISSING_VALUE_PLACE_HOLDER = "<< DELETED >>"
 FILE_STATUS_NEW = "NEW"
 FILE_STATUS_EXISTING = "EXISTING"
@@ -70,19 +69,7 @@ TEMP_CSV_FILE_NAME = "temp.csv"
 
 #### helper methods #####
 
-def print_list(data):
-    for i in range(len(data)):
-        print(data[i])
 
-
-def get_past_time_from_epoch(curr_epoch_in_seconds, years, months, days):
-    # assuming 30 days in each month
-    return curr_epoch_in_seconds - (
-            years * SECONDS_IN_SINGLE_YEAR + months * 30 * SECONDS_IN_SINGLE_DAY + days * SECONDS_IN_SINGLE_DAY)
-
-
-def join_list_items(itemList, separator):
-    return separator.join(itemList)
 
 #########################
 
@@ -420,18 +407,18 @@ def create_csv_data(executions):
             CSV_COL_PIPELINE_NAME: pipeline_name,
             CSV_COL_WORKFLOW_NAME: workflow_name,
             CSV_COL_STATUS: status,
-            CSV_COL_TAGS: join_list_items(tags, ","),
+            CSV_COL_TAGS: helper.join_list_items(tags, ","),
             CSV_COL_START_DATE: start_date,
             CSV_COL_START_TIME: start_time,
             CSV_COL_END_DATE: end_date,
             CSV_COL_END_TIME: end_time,
             CSV_COL_TRIGGER_TYPE: trigger_type,
             CSV_COL_TRIGGER_DETAILS: trigger_name,
-            CSV_COL_ENVIRONMENT: join_list_items(env, ","),
-            CSV_COL_SERVICE: join_list_items(services, ","),
-            CSV_COL_ARTIFACT_SOURCE: join_list_items(artifacts_sources, ","),
-            CSV_COL_ARTIFACT_BUILD: join_list_items(artifacts, ","),
-            CSV_COL_PIPELINE_APPROVAL_STAGE: join_list_items(pipeline_approval_stage_details, ",")
+            CSV_COL_ENVIRONMENT: helper.join_list_items(env, ","),
+            CSV_COL_SERVICE: helper.join_list_items(services, ","),
+            CSV_COL_ARTIFACT_SOURCE: helper.join_list_items(artifacts_sources, ","),
+            CSV_COL_ARTIFACT_BUILD: helper.join_list_items(artifacts, ","),
+            CSV_COL_PIPELINE_APPROVAL_STAGE: helper.join_list_items(pipeline_approval_stage_details, ",")
         }
 
         data_rows.append(prepare_csv_row(main_execution_details))

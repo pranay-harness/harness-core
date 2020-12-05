@@ -1,30 +1,5 @@
 import script
-import datetime
-import time
-
-DATE_FORMAT_MM_DD_YYYY = "%m/%d/%Y"
-
-
-def get_date_obj_from_str(date_input):
-    try:
-        date_time_obj = datetime.datetime.strptime(date_input, DATE_FORMAT_MM_DD_YYYY)
-        return date_time_obj
-    except:
-        return None
-
-
-def get_date_obj_from_epoch(epoch_in_seconds):
-    epoch_date = datetime.datetime.fromtimestamp(epoch_in_seconds)
-    return epoch_date
-
-
-def get_local_timezone():
-    local_timezone = datetime.datetime.now(datetime.timezone(datetime.timedelta(0))).astimezone().tzinfo
-    return local_timezone
-
-
-def convert_date_to_local_timezone(date_input):
-    return date_input.astimezone(get_local_timezone())
+import helper
 
 
 if __name__ == "__main__":
@@ -60,11 +35,11 @@ if __name__ == "__main__":
     while True:
         start_time_input = input("Enter start time of search interval (MM/DD/YYYY) : ")
         # convert string date input to date time obj
-        start_time_obj = get_date_obj_from_str(start_time_input)
+        start_time_obj = helper.get_date_obj_from_str(start_time_input)
 
         if start_time_obj is not None:
             # convert date time object into local timezone
-            start_time_obj = convert_date_to_local_timezone(start_time_obj)
+            start_time_obj = helper.convert_date_to_local_timezone(start_time_obj)
             # get epoch time corresponding to local timezone date
             start_time_epoch = int(start_time_obj.timestamp())
             break
@@ -74,13 +49,13 @@ if __name__ == "__main__":
     while True:
         end_time_input = input("Enter end time of search interval (MM/DD/YYYY) (leave blank to search till now) : ")
         if end_time_input == "":
-            end_time_epoch = int(time.time())
-            end_time_obj = get_date_obj_from_epoch(end_time_epoch)
+            end_time_epoch = helper.get_current_time_in_epoch_in_seconds()
+            end_time_obj = helper.get_date_obj_from_epoch(end_time_epoch)
         else :
-            end_time_obj = get_date_obj_from_str(end_time_input)
+            end_time_obj = helper.get_date_obj_from_str(end_time_input)
 
         if end_time_obj is not None:
-            end_time_obj = convert_date_to_local_timezone(end_time_obj)
+            end_time_obj = helper.convert_date_to_local_timezone(end_time_obj)
             end_time_epoch = int(end_time_obj.timestamp())
             break
 
