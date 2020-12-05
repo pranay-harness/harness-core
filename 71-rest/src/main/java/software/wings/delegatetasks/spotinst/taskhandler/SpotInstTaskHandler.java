@@ -53,6 +53,7 @@ import com.google.common.util.concurrent.UncheckedTimeoutException;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 import com.google.inject.Inject;
+import java.lang.reflect.Type;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -263,7 +264,7 @@ public abstract class SpotInstTaskHandler {
   }
 
   Map<String, Object> getJsonConfigMapFromElastigroupJson(String elastigroupJson) {
-    java.lang.reflect.Type mapType = new TypeToken<Map<String, Object>>() {}.getType();
+    Type mapType = new TypeToken<Map<String, Object>>() {}.getType();
     Gson gson = new Gson();
 
     // Map<"group": {...entire config...}>, this is elastiGroupConfig json that spotinst exposes

@@ -1,6 +1,8 @@
 package software.wings.delegatetasks.validation;
 
 import io.harness.annotation.HarnessEntity;
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.mongo.index.FdIndex;
 import io.harness.mongo.index.FdTtlIndex;
 import io.harness.mongo.index.Field;
@@ -36,6 +38,7 @@ import org.mongodb.morphia.annotations.Id;
     })
 @JsonIgnoreProperties(ignoreUnknown = true)
 @FieldNameConstants(innerTypeName = "DelegateConnectionResultKeys")
+@TargetModule(Module._930_DELEGATE_TASKS)
 public class DelegateConnectionResult implements PersistentEntity, UuidAware, UpdatedAtAware, AccountAccess {
   @Id private String uuid;
 

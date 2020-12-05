@@ -8,6 +8,8 @@ import static org.powermock.api.mockito.PowerMockito.mock;
 import static org.powermock.api.mockito.PowerMockito.spy;
 
 import io.harness.CategoryTest;
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.ExecutionStatus;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.beans.DelegateTaskPackage;
@@ -46,6 +48,7 @@ import org.powermock.modules.junit4.PowerMockRunner;
 @RunWith(PowerMockRunner.class)
 @PrepareForTest({FluentCreate.class, FluentUpdate.class})
 @PowerMockIgnore({"javax.net.ssl.*", "javax.security.auth.x500.X500Principal"})
+@TargetModule(Module._930_DELEGATE_TASKS)
 public class JiraTaskTest extends CategoryTest {
   private static final String BASE_URL = "http://jira.com";
 

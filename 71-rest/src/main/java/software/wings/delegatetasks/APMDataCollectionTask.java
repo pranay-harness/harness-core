@@ -10,6 +10,8 @@ import static software.wings.service.impl.newrelic.NewRelicMetricDataRecord.DEFA
 import static software.wings.sm.states.DynatraceState.CONTROL_HOST_NAME;
 import static software.wings.sm.states.DynatraceState.TEST_HOST_NAME;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.delegate.beans.DelegateTaskPackage;
 import io.harness.delegate.beans.DelegateTaskResponse;
@@ -67,6 +69,7 @@ import retrofit2.Retrofit;
 import retrofit2.converter.jackson.JacksonConverterFactory;
 
 @Slf4j
+@TargetModule(Module._930_DELEGATE_TASKS)
 public class APMDataCollectionTask extends AbstractDelegateDataCollectionTask {
   private static final int CANARY_DAYS_TO_COLLECT = 7;
 

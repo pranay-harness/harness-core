@@ -15,6 +15,8 @@ import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.FileData;
 import io.harness.category.element.UnitTests;
 import io.harness.exception.InvalidArgumentsException;
@@ -49,6 +51,7 @@ import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.Spy;
 
+@TargetModule(Module._930_DELEGATE_TASKS)
 public class PcfRunPluginCommandTaskHandlerTest extends WingsBaseTest {
   private static final String USERNMAE = "USERNAME";
   public static final String URL = "URL";

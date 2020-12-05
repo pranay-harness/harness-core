@@ -8,6 +8,8 @@ import static software.wings.common.VerificationConstants.DURATION_TO_ASK_MINUTE
 import static software.wings.service.impl.analysis.TimeSeriesMlAnalysisType.PREDICTIVE;
 import static software.wings.service.impl.newrelic.NewRelicMetricDataRecord.DEFAULT_GROUP_NAME;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.delegate.beans.DelegateTaskPackage;
 import io.harness.delegate.beans.DelegateTaskResponse;
 import io.harness.delegate.beans.logstreaming.ILogStreamingTaskClient;
@@ -56,6 +58,7 @@ import org.slf4j.Logger;
  * Created by Pranjal on 11/30/18.
  */
 @Slf4j
+@TargetModule(Module._930_DELEGATE_TASKS)
 public class StackDriverDataCollectionTask extends AbstractDelegateDataCollectionTask {
   private StackDriverDataCollectionInfo dataCollectionInfo;
 

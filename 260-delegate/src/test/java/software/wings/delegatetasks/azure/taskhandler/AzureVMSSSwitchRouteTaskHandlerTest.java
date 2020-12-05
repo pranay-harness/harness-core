@@ -15,6 +15,8 @@ import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.azure.client.AzureAutoScaleSettingsClient;
 import io.harness.azure.client.AzureComputeClient;
 import io.harness.azure.client.AzureNetworkClient;
@@ -50,6 +52,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import rx.Observable;
 
+@TargetModule(Module._930_DELEGATE_TASKS)
 public class AzureVMSSSwitchRouteTaskHandlerTest extends WingsBaseTest {
   @Mock private AzureComputeClient azureComputeClient;
   @Mock private AzureNetworkClient azureNetworkClient;

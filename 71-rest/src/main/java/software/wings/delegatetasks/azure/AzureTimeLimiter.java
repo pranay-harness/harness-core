@@ -10,6 +10,8 @@ import static software.wings.delegatetasks.azure.DefaultCompletableSubscriber.Co
 import static java.lang.String.format;
 import static java.time.Duration.ofSeconds;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.exception.InvalidRequestException;
 import io.harness.logging.LogCallback;
 import io.harness.logging.LogLevel;
@@ -27,6 +29,7 @@ import lombok.extern.slf4j.Slf4j;
 @Singleton
 @NoArgsConstructor
 @Slf4j
+@TargetModule(Module._930_DELEGATE_TASKS)
 public class AzureTimeLimiter {
   @Inject protected TimeLimiter timeLimiter;
 

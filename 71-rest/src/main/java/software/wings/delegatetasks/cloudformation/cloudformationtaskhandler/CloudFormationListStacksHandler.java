@@ -2,6 +2,8 @@ package software.wings.delegatetasks.cloudformation.cloudformationtaskhandler;
 
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.exception.ExceptionUtils;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.logging.LogLevel;
@@ -26,6 +28,7 @@ import lombok.NoArgsConstructor;
 
 @Singleton
 @NoArgsConstructor
+@TargetModule(Module._930_DELEGATE_TASKS)
 public class CloudFormationListStacksHandler extends CloudFormationCommandTaskHandler {
   @Override
   protected CloudFormationCommandExecutionResponse executeInternal(CloudFormationCommandRequest request,

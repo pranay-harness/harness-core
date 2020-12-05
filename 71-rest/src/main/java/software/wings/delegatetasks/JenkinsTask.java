@@ -12,7 +12,9 @@ import static software.wings.beans.Log.Builder.aLog;
 
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
+import io.harness.annotations.dev.Module;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.ExecutionStatus;
 import io.harness.delegate.beans.DelegateTaskPackage;
 import io.harness.delegate.beans.DelegateTaskResponse;
@@ -67,6 +69,7 @@ import org.apache.http.conn.ConnectTimeoutException;
  */
 @OwnedBy(CDC)
 @Slf4j
+@TargetModule(Module._930_DELEGATE_TASKS)
 public class JenkinsTask extends AbstractDelegateRunnableTask {
   @Inject private EncryptionService encryptionService;
   @Inject private DelegateLogService logService;

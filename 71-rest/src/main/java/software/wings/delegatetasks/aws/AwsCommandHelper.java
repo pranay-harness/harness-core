@@ -5,6 +5,9 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
+
 import software.wings.beans.AwsConfig;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.command.CommandExecutionContext;
@@ -16,6 +19,7 @@ import com.google.inject.Singleton;
 import java.util.List;
 
 @Singleton
+@TargetModule(Module._930_DELEGATE_TASKS)
 public class AwsCommandHelper {
   public List<String> getAwsConfigTagsFromContext(CommandExecutionContext context) {
     SettingAttribute cloudProviderSetting = context.getCloudProviderSetting();

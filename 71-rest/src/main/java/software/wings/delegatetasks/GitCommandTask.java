@@ -10,6 +10,8 @@ import static software.wings.beans.yaml.YamlConstants.GIT_YAML_LOG_PREFIX;
 
 import static org.apache.commons.lang3.StringUtils.isBlank;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.delegate.beans.DelegateTaskPackage;
 import io.harness.delegate.beans.DelegateTaskResponse;
 import io.harness.delegate.beans.logstreaming.ILogStreamingTaskClient;
@@ -48,6 +50,7 @@ import org.apache.commons.lang3.NotImplementedException;
  * Created by anubhaw on 10/26/17.
  */
 @Slf4j
+@TargetModule(Module._930_DELEGATE_TASKS)
 public class GitCommandTask extends AbstractDelegateRunnableTask {
   @Inject private GitClient gitClient;
   @Inject private EncryptionService encryptionService;

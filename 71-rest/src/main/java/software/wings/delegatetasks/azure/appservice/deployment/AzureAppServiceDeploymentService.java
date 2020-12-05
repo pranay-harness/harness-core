@@ -18,6 +18,8 @@ import static java.lang.String.format;
 import static org.apache.commons.lang3.StringUtils.EMPTY;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.azure.client.AzureContainerRegistryClient;
 import io.harness.azure.client.AzureMonitorClient;
 import io.harness.azure.client.AzureWebClient;
@@ -67,6 +69,7 @@ import org.joda.time.DateTime;
 @Singleton
 @NoArgsConstructor
 @Slf4j
+@TargetModule(Module._930_DELEGATE_TASKS)
 public class AzureAppServiceDeploymentService {
   @Inject private AzureWebClient azureWebClient;
   @Inject private AzureContainerRegistryClient azureContainerRegistryClient;

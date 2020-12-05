@@ -6,6 +6,8 @@ import static io.harness.network.Http.getOkHttpClientBuilder;
 
 import static software.wings.service.impl.appdynamics.AppdynamicsDelegateServiceImpl.BT_PERFORMANCE_PATH_PREFIX;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.delegate.task.DataCollectionExecutorService;
 
 import software.wings.beans.AppDynamicsConfig;
@@ -42,6 +44,7 @@ import retrofit2.Retrofit;
 import retrofit2.converter.jackson.JacksonConverterFactory;
 
 @Slf4j
+@TargetModule(Module._930_DELEGATE_TASKS)
 public class AppDynamicsDataCollector implements MetricsDataCollector<AppDynamicsDataCollectionInfoV2> {
   @Inject private DataCollectionExecutorService dataCollectionService;
 

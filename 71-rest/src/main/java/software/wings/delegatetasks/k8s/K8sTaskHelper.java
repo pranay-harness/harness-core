@@ -21,6 +21,8 @@ import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.StringUtils.EMPTY;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.FileData;
 import io.harness.delegate.task.k8s.K8sTaskHelperBase;
 import io.harness.exception.ExceptionUtils;
@@ -80,6 +82,7 @@ import org.zeroturnaround.exec.stream.LogOutputStream;
 
 @Singleton
 @Slf4j
+@TargetModule(Module._930_DELEGATE_TASKS)
 public class K8sTaskHelper {
   @Inject protected DelegateLogService delegateLogService;
   @Inject private transient KubernetesContainerService kubernetesContainerService;

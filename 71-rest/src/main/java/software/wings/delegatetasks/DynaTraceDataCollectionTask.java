@@ -9,6 +9,8 @@ import static software.wings.service.impl.analysis.AnalysisComparisonStrategy.CO
 import static software.wings.service.impl.newrelic.NewRelicMetricDataRecord.DEFAULT_GROUP_NAME;
 import static software.wings.sm.states.AbstractMetricAnalysisState.CANARY_DAYS_TO_COLLECT;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.delegate.beans.DelegateTaskPackage;
 import io.harness.delegate.beans.DelegateTaskResponse;
 import io.harness.delegate.beans.logstreaming.ILogStreamingTaskClient;
@@ -54,6 +56,7 @@ import org.slf4j.Logger;
  * Created by rsingh on 2/6/18.
  */
 @Slf4j
+@TargetModule(Module._930_DELEGATE_TASKS)
 public class DynaTraceDataCollectionTask extends AbstractDelegateDataCollectionTask {
   private DynaTraceDataCollectionInfo dataCollectionInfo;
 

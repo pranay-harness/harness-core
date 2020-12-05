@@ -8,6 +8,8 @@ import static io.harness.rule.OwnerRule.ROHIT_KUMAR;
 import static java.util.stream.Collectors.toList;
 import static org.assertj.core.api.Assertions.assertThat;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.DelegateTask;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.beans.TaskData;
@@ -34,6 +36,7 @@ import java.util.Map;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
+@TargetModule(Module._930_DELEGATE_TASKS)
 public class CapabilityHelperTest extends WingsBaseTest {
   public static final String HTTP_PORT = "80";
   public static final String HTTPS_PORT = "443";

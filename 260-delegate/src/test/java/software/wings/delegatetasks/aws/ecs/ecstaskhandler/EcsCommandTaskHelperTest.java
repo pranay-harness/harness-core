@@ -12,6 +12,8 @@ import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
 
@@ -34,6 +36,7 @@ import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 
+@TargetModule(Module._930_DELEGATE_TASKS)
 public class EcsCommandTaskHelperTest extends WingsBaseTest {
   @Mock private ExecutionLogCallback executionLogCallback;
   @Mock private AwsAppAutoScalingHelperServiceDelegate appAutoScalingService;

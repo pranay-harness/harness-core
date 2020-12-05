@@ -7,6 +7,8 @@ import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.doReturn;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.task.spotinst.request.SpotInstGetElastigroupJsonParameters;
 import io.harness.delegate.task.spotinst.request.SpotInstListElastigroupInstancesParameters;
@@ -38,6 +40,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Spy;
 
+@TargetModule(Module._930_DELEGATE_TASKS)
 public class SpotInstSyncTaskHandlerTest extends WingsBaseTest {
   @Mock private DelegateLogService mockDelegateLogService;
   @Mock private SpotInstHelperServiceDelegate mockSpotInstHelperServiceDelegate;

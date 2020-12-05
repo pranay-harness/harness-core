@@ -2,6 +2,8 @@ package software.wings.delegatetasks.aws.ecs.ecstaskhandler;
 
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.exception.ExceptionUtils;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.logging.Misc;
@@ -33,6 +35,7 @@ import lombok.extern.slf4j.Slf4j;
 
 @Singleton
 @Slf4j
+@TargetModule(Module._930_DELEGATE_TASKS)
 public class EcsSetupCommandHandler extends EcsCommandTaskHandler {
   @Inject private AwsHelperService awsHelperService;
   @Inject private EcsContainerService ecsContainerService;

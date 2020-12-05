@@ -8,6 +8,8 @@ import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.category.element.UnitTests;
 import io.harness.ccm.config.CCMConfig;
 import io.harness.k8s.apiclient.ApiClientFactoryImpl;
@@ -34,6 +36,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Spy;
 
+@TargetModule(Module._930_DELEGATE_TASKS)
 public class K8sVersionTaskHandlerTest extends WingsBaseTest {
   @Mock private ApiClientFactoryImpl apiClientFactory;
   @Mock private K8sTaskParameters k8sTaskParameters;

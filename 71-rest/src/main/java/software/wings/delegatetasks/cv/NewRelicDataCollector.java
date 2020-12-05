@@ -11,6 +11,8 @@ import static software.wings.service.impl.newrelic.NewRelicMetricValueDefinition
 import static software.wings.service.impl.newrelic.NewRelicMetricValueDefinition.ERROR;
 import static software.wings.service.impl.newrelic.NewRelicMetricValueDefinition.REQUSET_PER_MINUTE;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.delegate.task.DataCollectionExecutorService;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
@@ -66,6 +68,7 @@ import retrofit2.Retrofit;
 import retrofit2.converter.jackson.JacksonConverterFactory;
 
 @Slf4j
+@TargetModule(Module._930_DELEGATE_TASKS)
 public class NewRelicDataCollector implements MetricsDataCollector<NewRelicDataCollectionInfoV2> {
   private static final Set<String> txnsToCollect = Sets.newHashSet("WebTransaction/", "WebTransactionTotalTime/");
   private static final int METRIC_DATA_QUERY_BATCH_SIZE = 15;

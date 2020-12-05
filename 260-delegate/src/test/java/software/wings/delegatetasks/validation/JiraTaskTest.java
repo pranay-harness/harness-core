@@ -9,6 +9,8 @@ import static software.wings.utils.WingsTestConstants.USER_NAME;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.beans.DelegateTaskPackage;
 import io.harness.delegate.beans.TaskData;
@@ -23,6 +25,7 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 
+@TargetModule(Module._930_DELEGATE_TASKS)
 public class JiraTaskTest extends WingsBaseTest {
   @InjectMocks
   private JiraTask jiraTask =

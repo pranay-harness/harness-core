@@ -8,7 +8,9 @@ import static io.harness.logging.CommandExecutionStatus.FAILURE;
 import static io.harness.logging.CommandExecutionStatus.SUCCESS;
 import static io.harness.state.StateConstants.DEFAULT_STEADY_STATE_TIMEOUT;
 
+import io.harness.annotations.dev.Module;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.delegate.beans.DelegateTaskPackage;
 import io.harness.delegate.beans.DelegateTaskResponse;
 import io.harness.delegate.beans.logstreaming.ILogStreamingTaskClient;
@@ -39,6 +41,7 @@ import org.apache.commons.lang3.NotImplementedException;
 
 @OwnedBy(CDC)
 @Slf4j
+@TargetModule(Module._930_DELEGATE_TASKS)
 public class HelmRepoConfigValidationTask extends AbstractDelegateRunnableTask {
   private static final String WORKING_DIR_BASE = "./repository/helm-validation/";
   private static final HelmVersion defaultHelmVersion = HelmVersion.V3;

@@ -7,6 +7,8 @@ import static software.wings.beans.yaml.YamlConstants.PATH_DELIMITER;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.fail;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.k8s.model.KubernetesResource;
 import io.harness.k8s.model.Release;
 
@@ -19,6 +21,7 @@ import org.zeroturnaround.exec.ProcessOutput;
 import org.zeroturnaround.exec.ProcessResult;
 
 @Singleton
+@TargetModule(Module._930_DELEGATE_TASKS)
 public class K8sTestHelper {
   private static String resourcePath = "./k8s";
   private static String deploymentYaml = "deployment.yaml";

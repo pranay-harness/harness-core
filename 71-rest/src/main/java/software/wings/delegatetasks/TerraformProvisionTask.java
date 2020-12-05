@@ -36,6 +36,8 @@ import static com.google.common.base.Joiner.on;
 import static java.lang.String.format;
 import static java.time.Duration.ofSeconds;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.ExecutionStatus;
 import io.harness.delegate.beans.DelegateFile;
 import io.harness.delegate.beans.DelegateTaskPackage;
@@ -115,6 +117,7 @@ import org.zeroturnaround.exec.ProcessResult;
 import org.zeroturnaround.exec.stream.LogOutputStream;
 
 @Slf4j
+@TargetModule(Module._930_DELEGATE_TASKS)
 public class TerraformProvisionTask extends AbstractDelegateRunnableTask {
   @Inject private GitClient gitClient;
   @Inject private GitClientHelper gitClientHelper;

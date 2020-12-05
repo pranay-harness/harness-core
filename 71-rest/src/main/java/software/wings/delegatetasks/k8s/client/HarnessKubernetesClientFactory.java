@@ -1,5 +1,7 @@
 package software.wings.delegatetasks.k8s.client;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.exception.InvalidRequestException;
 import io.harness.k8s.KubernetesHelperService;
 import io.harness.k8s.model.KubernetesConfig;
@@ -18,6 +20,7 @@ import java.net.MalformedURLException;
 import java.net.URL;
 
 @Singleton
+@TargetModule(Module._930_DELEGATE_TASKS)
 public class HarnessKubernetesClientFactory implements KubernetesClientFactory {
   @Inject private ContainerDeploymentDelegateHelper containerDeploymentDelegateHelper;
   @Inject private KubernetesHelperService kubernetesHelperService;

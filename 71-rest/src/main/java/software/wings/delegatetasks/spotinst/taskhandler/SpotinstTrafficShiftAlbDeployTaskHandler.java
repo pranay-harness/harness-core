@@ -8,6 +8,8 @@ import static io.harness.spotinst.model.SpotInstConstants.UP_SCALE_STEADY_STATE_
 import static java.lang.String.format;
 import static java.util.Collections.emptyList;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.delegate.task.spotinst.request.SpotInstTaskParameters;
 import io.harness.delegate.task.spotinst.request.SpotinstTrafficShiftAlbDeployParameters;
 import io.harness.delegate.task.spotinst.response.SpotInstTaskExecutionResponse;
@@ -26,6 +28,7 @@ import lombok.extern.slf4j.Slf4j;
 @Singleton
 @NoArgsConstructor
 @Slf4j
+@TargetModule(Module._930_DELEGATE_TASKS)
 public class SpotinstTrafficShiftAlbDeployTaskHandler extends SpotInstTaskHandler {
   @Override
   protected SpotInstTaskExecutionResponse executeTaskInternal(SpotInstTaskParameters spotinstTaskParameters,

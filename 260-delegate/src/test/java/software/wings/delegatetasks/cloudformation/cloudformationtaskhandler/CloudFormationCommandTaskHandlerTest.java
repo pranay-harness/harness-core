@@ -23,6 +23,8 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.mockito.MockitoAnnotations.initMocks;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.category.element.UnitTests;
 import io.harness.exception.ExceptionUtils;
 import io.harness.logging.CommandExecutionStatus;
@@ -69,6 +71,7 @@ import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 
+@TargetModule(Module._930_DELEGATE_TASKS)
 public class CloudFormationCommandTaskHandlerTest extends WingsBaseTest {
   @Mock private EncryptionService mockEncryptionService;
   @Mock private AwsHelperService mockAwsHelperService;

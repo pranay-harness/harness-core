@@ -8,6 +8,8 @@ import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.when;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.delegate.beans.DelegateTaskPackage;
@@ -37,6 +39,7 @@ import org.mockito.Mockito;
 import org.mockito.junit.MockitoJUnit;
 import org.mockito.junit.MockitoRule;
 
+@TargetModule(Module._930_DELEGATE_TASKS)
 public class CollaborationProviderTaskTest extends WingsBaseTest {
   @Rule public MockitoRule mockitoRule = MockitoJUnit.rule();
 

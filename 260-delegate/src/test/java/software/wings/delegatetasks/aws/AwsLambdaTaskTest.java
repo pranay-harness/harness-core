@@ -12,6 +12,8 @@ import static org.mockito.Matchers.anyBoolean;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.verify;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.ExecutionStatus;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.beans.DelegateTaskPackage;
@@ -37,6 +39,7 @@ import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 
+@TargetModule(Module._930_DELEGATE_TASKS)
 public class AwsLambdaTaskTest extends WingsBaseTest {
   @Mock private DelegateLogService mockDelegateLogService;
   @Mock private AwsLambdaHelperServiceDelegate mockAwsLambdaHelperServiceDelegate;

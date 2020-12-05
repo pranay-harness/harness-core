@@ -1,5 +1,7 @@
 package software.wings.delegatetasks.delegatecapability;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.delegate.beans.executioncapability.CapabilityType;
 import io.harness.delegate.task.executioncapability.AlwaysFalseValidationCapabilityCheck;
 import io.harness.delegate.task.executioncapability.AwsRegionCapabilityCheck;
@@ -29,6 +31,7 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 @Singleton
+@TargetModule(Module._930_DELEGATE_TASKS)
 public class CapabilityCheckFactory {
   @Inject SocketConnectivityCapabilityCheck socketConnectivityCapabilityCheck;
   @Inject ProcessExecutorCapabilityCheck processExecutorCapabilityCheck;

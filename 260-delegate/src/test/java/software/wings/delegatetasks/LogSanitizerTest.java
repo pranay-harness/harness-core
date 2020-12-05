@@ -5,6 +5,8 @@ import static io.harness.rule.OwnerRule.GEORGE;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
 
@@ -15,6 +17,7 @@ import java.util.Set;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
+@TargetModule(Module._930_DELEGATE_TASKS)
 public class LogSanitizerTest {
   private static final String TEST_VALUE = "testValue";
   private static final String TEST_KEY = "testKey";

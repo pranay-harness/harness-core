@@ -21,6 +21,8 @@ import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.ExecutionStatus;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.beans.DelegateTaskPackage;
@@ -68,6 +70,7 @@ import org.mockito.junit.MockitoRule;
 /**
  * Created by rishi on 12/16/16.
  */
+@TargetModule(Module._930_DELEGATE_TASKS)
 public class JenkinsTaskTest extends WingsBaseTest {
   @Rule public MockitoRule mockitoRule = MockitoJUnit.rule();
   @Mock private JenkinsFactory jenkinsFactory;

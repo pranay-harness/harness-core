@@ -6,6 +6,8 @@ import static io.harness.network.Http.getOkHttpClientBuilderWithReadtimeOut;
 import static java.lang.String.format;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.network.Http;
 import io.harness.serializer.JsonUtils;
 
@@ -22,6 +24,7 @@ import software.wings.service.impl.elk.ElkQueryType;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import java.nio.charset.StandardCharsets;
+import java.security.SecureRandom;
 import java.security.cert.X509Certificate;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -46,6 +49,7 @@ import retrofit2.Call;
 import retrofit2.Retrofit;
 import retrofit2.converter.jackson.JacksonConverterFactory;
 @Slf4j
+@TargetModule(Module._930_DELEGATE_TASKS)
 public class ElkDataCollector implements LogDataCollector<ElkDataCollectionInfoV2> {
   private ElkDataCollectionInfoV2 dataCollectionInfo;
   private DataCollectionExecutionContext context;
@@ -242,23 +246,23 @@ public class ElkDataCollector implements LogDataCollector<ElkDataCollectionInfoV
   private static OkHttpClient.Builder getUnsafeOkHttpClient() {
     try {
       // Create a trust manager that does not validate certificate chains
-      final TrustManager[] trustAllCerts = new TrustManager[] {new X509TrustManager(){
-          @Override public void checkClientTrusted(java.security.cert.X509Certificate[] chain, String authType){
+      final TrustManager[] trustAllCerts = new TrustManager[] {
+          new X509TrustManager(){@Override public void checkClientTrusted(X509Certificate[] chain, String authType){
               // all trust manager so no need to check
           }
 
-          @Override public void checkServerTrusted(java.security.cert.X509Certificate[] chain, String authType){
-              // all trust manager so no need to check
-          }
+              @Override public void checkServerTrusted(X509Certificate[] chain, String authType){
+                  // all trust manager so no need to check
+              }
 
-          @Override public java.security.cert.X509Certificate[] getAcceptedIssuers(){return new X509Certificate[] {};
+              @Override public X509Certificate[] getAcceptedIssuers(){return new X509Certificate[] {};
     }
   }
 };
 
 // Install the all-trusting trust manager
 final SSLContext sslContext = SSLContext.getInstance("SSL");
-sslContext.init(null, trustAllCerts, new java.security.SecureRandom());
+sslContext.init(null, trustAllCerts, new SecureRandom());
 // Create an ssl socket factory with our all-trusting manager
 final SSLSocketFactory sslSocketFactory = sslContext.getSocketFactory();
 

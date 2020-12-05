@@ -10,6 +10,8 @@ import static software.wings.common.VerificationConstants.DATA_COLLECTION_RETRY_
 import static software.wings.common.VerificationConstants.NON_HOST_PREVIOUS_ANALYSIS;
 import static software.wings.common.VerificationConstants.URL_BODY_APPENDER;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.delegate.beans.DelegateTaskPackage;
 import io.harness.delegate.beans.DelegateTaskResponse;
 import io.harness.delegate.beans.logstreaming.ILogStreamingTaskClient;
@@ -58,6 +60,7 @@ import retrofit2.converter.jackson.JacksonConverterFactory;
  * @author Praveen
  */
 @Slf4j
+@TargetModule(Module._930_DELEGATE_TASKS)
 public class CustomLogDataCollectionTask extends AbstractDelegateDataCollectionTask {
   @Inject private LogAnalysisStoreService logAnalysisStoreService;
   @Inject private RequestExecutor requestExecutor;

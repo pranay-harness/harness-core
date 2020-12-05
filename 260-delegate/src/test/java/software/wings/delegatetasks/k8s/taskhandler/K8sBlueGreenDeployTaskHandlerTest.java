@@ -44,6 +44,8 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.k8s.K8sBGBaseHandler;
 import io.harness.delegate.task.k8s.K8sTaskHelperBase;
@@ -98,6 +100,7 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 
+@TargetModule(Module._930_DELEGATE_TASKS)
 public class K8sBlueGreenDeployTaskHandlerTest extends WingsBaseTest {
   @Mock private ContainerDeploymentDelegateHelper containerDeploymentDelegateHelper;
   @Mock private KubernetesContainerService kubernetesContainerService;

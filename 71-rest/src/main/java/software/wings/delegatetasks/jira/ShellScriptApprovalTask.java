@@ -7,7 +7,9 @@ import static io.harness.logging.LogLevel.INFO;
 
 import static software.wings.beans.Log.Builder.aLog;
 
+import io.harness.annotations.dev.Module;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.ExecutionStatus;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.delegate.beans.DelegateResponseData;
@@ -40,6 +42,7 @@ import org.apache.commons.collections4.MapUtils;
 import org.apache.commons.lang3.StringUtils;
 
 @OwnedBy(CDC)
+@TargetModule(Module._930_DELEGATE_TASKS)
 public class ShellScriptApprovalTask extends AbstractDelegateRunnableTask {
   private static final String SCRIPT_APPROVAL_ENV_VARIABLE = "HARNESS_APPROVAL_STATUS";
   private static final String APPROVE_STATUS = "Approved";

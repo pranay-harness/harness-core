@@ -10,6 +10,8 @@ import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static software.wings.beans.artifact.ArtifactStreamCollectionStatus.STABLE;
 import static software.wings.beans.artifact.ArtifactStreamCollectionStatus.UNSTABLE;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.delegate.beans.ErrorNotifyResponseData;
 import io.harness.exception.WingsException;
@@ -55,6 +57,7 @@ import lombok.extern.slf4j.Slf4j;
  */
 @Data
 @Slf4j
+@TargetModule(Module._930_DELEGATE_TASKS)
 public class BuildSourceCallback implements NotifyCallback {
   private String accountId;
   private String artifactStreamId;

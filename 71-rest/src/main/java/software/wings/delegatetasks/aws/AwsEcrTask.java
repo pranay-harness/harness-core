@@ -3,7 +3,9 @@ package software.wings.delegatetasks.aws;
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.beans.ExecutionStatus.SUCCESS;
 
+import io.harness.annotations.dev.Module;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.delegate.beans.DelegateTaskPackage;
 import io.harness.delegate.beans.DelegateTaskResponse;
 import io.harness.delegate.beans.logstreaming.ILogStreamingTaskClient;
@@ -29,6 +31,7 @@ import org.apache.commons.lang3.NotImplementedException;
 
 @OwnedBy(CDC)
 @Slf4j
+@TargetModule(Module._930_DELEGATE_TASKS)
 public class AwsEcrTask extends AbstractDelegateRunnableTask {
   @Inject private AwsEcrHelperServiceDelegate ecrServiceDelegate;
 

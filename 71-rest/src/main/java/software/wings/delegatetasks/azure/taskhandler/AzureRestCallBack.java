@@ -5,12 +5,16 @@ import static io.harness.logging.LogLevel.INFO;
 
 import static java.lang.String.format;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
+
 import software.wings.beans.command.ExecutionLogCallback;
 
 import com.microsoft.azure.CloudException;
 import com.microsoft.rest.ServiceCallback;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+@TargetModule(Module._930_DELEGATE_TASKS)
 public class AzureRestCallBack<T> implements ServiceCallback<T> {
   private Throwable throwable;
   private final AtomicBoolean updateFailed = new AtomicBoolean();

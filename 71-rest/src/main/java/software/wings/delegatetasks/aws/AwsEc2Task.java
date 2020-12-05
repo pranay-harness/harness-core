@@ -2,6 +2,8 @@ package software.wings.delegatetasks.aws;
 
 import static io.harness.beans.ExecutionStatus.SUCCESS;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.delegate.beans.DelegateTaskPackage;
 import io.harness.delegate.beans.DelegateTaskResponse;
 import io.harness.delegate.beans.logstreaming.ILogStreamingTaskClient;
@@ -37,6 +39,7 @@ import java.util.function.BooleanSupplier;
 import java.util.function.Consumer;
 import org.apache.commons.lang3.NotImplementedException;
 
+@TargetModule(Module._930_DELEGATE_TASKS)
 public class AwsEc2Task extends AbstractDelegateRunnableTask {
   @Inject private AwsEc2HelperServiceDelegate ec2ServiceDelegate;
 

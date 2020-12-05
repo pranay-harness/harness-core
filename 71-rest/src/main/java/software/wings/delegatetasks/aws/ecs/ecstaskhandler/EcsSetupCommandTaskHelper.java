@@ -24,6 +24,8 @@ import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.apache.commons.lang3.StringUtils.trim;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.container.ContainerInfo;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
@@ -106,6 +108,7 @@ import org.slf4j.Logger;
 
 @Singleton
 @Slf4j
+@TargetModule(Module._930_DELEGATE_TASKS)
 public class EcsSetupCommandTaskHelper {
   @Inject private AwsClusterService awsClusterService;
   @Inject private AwsAppAutoScalingHelperServiceDelegate awsAppAutoScalingService;
@@ -469,7 +472,7 @@ public class EcsSetupCommandTaskHelper {
             .withTaskDefinition(taskDefinition.getFamily() + ":" + taskDefinition.getRevision());
 
     if (setupParams.isBlueGreen()) {
-      createServiceRequest.withTags(new com.amazonaws.services.ecs.model.Tag().withKey(BG_VERSION).withValue(BG_GREEN));
+      createServiceRequest.withTags(new Tag().withKey(BG_VERSION).withValue(BG_GREEN));
     }
 
     // For DAEMON scheduling Strategy, no desired count is required.

@@ -2,6 +2,8 @@ package software.wings.delegatetasks.aws;
 
 import static io.harness.beans.ExecutionStatus.SUCCESS;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.delegate.beans.DelegateTaskPackage;
 import io.harness.delegate.beans.DelegateTaskResponse;
 import io.harness.delegate.beans.logstreaming.ILogStreamingTaskClient;
@@ -26,6 +28,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.NotImplementedException;
 
 @Slf4j
+@TargetModule(Module._930_DELEGATE_TASKS)
 public class AwsCFTask extends AbstractDelegateRunnableTask {
   @Inject private AwsCFHelperServiceDelegate awsCFHelperServiceDelegate;
 

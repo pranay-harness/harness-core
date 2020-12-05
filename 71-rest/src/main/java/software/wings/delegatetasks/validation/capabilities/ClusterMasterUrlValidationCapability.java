@@ -1,5 +1,7 @@
 package software.wings.delegatetasks.validation.capabilities;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.delegate.beans.executioncapability.CapabilityType;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.exception.InvalidRequestException;
@@ -16,6 +18,7 @@ import lombok.Value;
 
 @Value
 @Builder
+@TargetModule(Module._930_DELEGATE_TASKS)
 public class ClusterMasterUrlValidationCapability implements ExecutionCapability {
   @NotNull ContainerServiceParams containerServiceParams;
   CapabilityType capabilityType = CapabilityType.CLUSTER_MASTER_URL;

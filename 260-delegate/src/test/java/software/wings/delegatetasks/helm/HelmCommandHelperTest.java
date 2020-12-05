@@ -6,6 +6,8 @@ import static io.harness.rule.OwnerRule.VAIBHAV_SI;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.category.element.UnitTests;
 import io.harness.exception.WingsException;
 import io.harness.rule.Owner;
@@ -21,6 +23,7 @@ import java.util.Optional;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
+@TargetModule(Module._930_DELEGATE_TASKS)
 public class HelmCommandHelperTest extends WingsBaseTest {
   @Inject private HelmCommandHelper helmCommandHelper;
 
