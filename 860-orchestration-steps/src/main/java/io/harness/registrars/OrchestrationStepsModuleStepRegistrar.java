@@ -7,6 +7,10 @@ import io.harness.pms.sdk.core.steps.Step;
 import io.harness.pms.steps.StepType;
 import io.harness.registries.registrar.StepRegistrar;
 import io.harness.steps.barriers.BarrierStep;
+import io.harness.steps.common.NGForkStep;
+import io.harness.steps.common.NGSectionStep;
+import io.harness.steps.common.pipeline.PipelineSetupStep;
+import io.harness.steps.common.steps.stepgroup.StepGroupStep;
 import io.harness.steps.dummy.DummySectionStep;
 import io.harness.steps.dummy.DummyStep;
 import io.harness.steps.fork.ForkStep;
@@ -32,5 +36,9 @@ public class OrchestrationStepsModuleStepRegistrar implements StepRegistrar {
     stepClasses.add(Pair.of(DummyStep.STEP_TYPE, injector.getInstance(DummyStep.class)));
     stepClasses.add(Pair.of(SectionChainStep.STEP_TYPE, injector.getInstance(SectionChainStep.class)));
     stepClasses.add(Pair.of(DummySectionStep.STEP_TYPE, injector.getInstance(DummySectionStep.class)));
+    stepClasses.add(Pair.of(PipelineSetupStep.STEP_TYPE, injector.getInstance(PipelineSetupStep.class)));
+    stepClasses.add(Pair.of(StepGroupStep.STEP_TYPE, injector.getInstance(StepGroupStep.class)));
+    stepClasses.add(Pair.of(NGForkStep.STEP_TYPE, injector.getInstance(NGForkStep.class)));
+    stepClasses.add(Pair.of(NGSectionStep.STEP_TYPE, injector.getInstance(NGSectionStep.class)));
   }
 }

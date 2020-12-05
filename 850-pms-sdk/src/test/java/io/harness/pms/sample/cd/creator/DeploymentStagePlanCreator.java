@@ -40,9 +40,8 @@ public class DeploymentStagePlanCreator extends ChildrenPlanCreator<DeploymentSt
   }
 
   @Override
-  public Map<String, PlanCreationResponse> createPlanForChildrenNodes(
-      PlanCreationContext ctx, DeploymentStage deploymentStage) {
-    DeploymentStageSpec spec = Preconditions.checkNotNull(deploymentStage.getSpec());
+  public Map<String, PlanCreationResponse> createPlanForChildrenNodes(PlanCreationContext ctx, DeploymentStage config) {
+    DeploymentStageSpec spec = Preconditions.checkNotNull(config.getSpec());
     Map<String, PlanCreationResponse> responseMap = new HashMap<>();
     createPlanNodeForService(responseMap, ctx, spec.getService());
     createPlanNodeForInfrastructure(responseMap, ctx, spec.getInfrastructure());
@@ -52,13 +51,13 @@ public class DeploymentStagePlanCreator extends ChildrenPlanCreator<DeploymentSt
 
   @Override
   public PlanNode createPlanForParentNode(
-      PlanCreationContext ctx, DeploymentStage deploymentStage, Set<String> childrenNodeIds) {
+      PlanCreationContext ctx, DeploymentStage config, List<String> childrenNodeIds) {
     return PlanNode.builder()
-        .uuid(deploymentStage.getUuid())
-        .identifier(deploymentStage.getIdentifier())
+        .uuid(config.getUuid())
+        .identifier(config.getIdentifier())
         .stepType(StepType.newBuilder().setType("stage").build())
         .group("stage")
-        .name(deploymentStage.getIdentifier())
+        .name(config.getIdentifier())
         .stepParameters(new MapStepParameters("childrenNodeIds", childrenNodeIds))
         .facilitatorObtainment(FacilitatorObtainment.newBuilder()
                                    .setType(FacilitatorType.newBuilder().setType("CHILDREN").build())

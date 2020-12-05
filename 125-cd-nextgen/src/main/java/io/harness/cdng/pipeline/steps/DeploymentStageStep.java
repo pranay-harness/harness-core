@@ -30,9 +30,8 @@ public class DeploymentStageStep implements ChildExecutable<DeploymentStageStepP
       Ambiance ambiance, DeploymentStageStepParameters stepParameters, StepInputPackage inputPackage) {
     log.info("Executing deployment stage with params [{}]", stepParameters);
 
-    final Map<String, String> fieldToExecutionNodeIdMap = stepParameters.getFieldToExecutionNodeIdMap();
-    final String executionNodeId = fieldToExecutionNodeIdMap.get("execution");
-    return ChildExecutableResponse.newBuilder().setChildNodeId(executionNodeId).build();
+    final String serviceNodeId = stepParameters.getChildNodeID();
+    return ChildExecutableResponse.newBuilder().setChildNodeId(serviceNodeId).build();
   }
 
   @Override

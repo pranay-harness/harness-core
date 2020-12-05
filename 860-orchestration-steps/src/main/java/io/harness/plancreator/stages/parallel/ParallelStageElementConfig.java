@@ -11,7 +11,7 @@ import org.springframework.data.annotation.TypeAlias;
 
 @Data
 @Builder
-@TypeAlias("stageElementConfig")
+@TypeAlias("parallelStageElementConfig")
 public class ParallelStageElementConfig {
   @NotNull List<StageElementWrapperConfig> sections;
 

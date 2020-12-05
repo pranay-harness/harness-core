@@ -1,4 +1,4 @@
-package io.harness.plancreator.stages.parallel;
+package io.harness.plancreator.steps;
 
 import io.harness.adviser.OrchestrationAdviserTypes;
 import io.harness.advisers.success.OnSuccessAdviserParameters;
@@ -11,33 +11,25 @@ import io.harness.pms.sdk.core.plan.PlanNode;
 import io.harness.pms.sdk.core.plan.creation.beans.PlanCreationContext;
 import io.harness.pms.sdk.core.plan.creation.beans.PlanCreationResponse;
 import io.harness.pms.sdk.core.plan.creation.creators.ChildrenPlanCreator;
+import io.harness.pms.sdk.core.steps.io.StepParameters;
 import io.harness.pms.yaml.YamlField;
 import io.harness.pms.yaml.YamlNode;
 import io.harness.serializer.KryoSerializer;
-import io.harness.steps.common.NGForkStep;
-import io.harness.steps.fork.ForkStepParameters;
+import io.harness.steps.StepOutcomeGroup;
+import io.harness.steps.common.steps.stepgroup.StepGroupStep;
+import io.harness.steps.common.steps.stepgroup.StepGroupStepParameters;
 
-import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
 import com.google.protobuf.ByteString;
 import java.util.*;
-import java.util.stream.Collectors;
 
-public class ParallelPlanCreator extends ChildrenPlanCreator<YamlField> {
+public class StepGroupPMSPlanCreator extends ChildrenPlanCreator<StepGroupElementConfig> {
   @Inject private KryoSerializer kryoSerializer;
 
   @Override
-  public Class<YamlField> getFieldClass() {
-    return YamlField.class;
-  }
-
-  @Override
-  public Map<String, Set<String>> getSupportedTypes() {
-    return Collections.singletonMap("parallel", Collections.singleton(PlanCreatorUtils.ANY_TYPE));
-  }
-
-  @Override
-  public Map<String, PlanCreationResponse> createPlanForChildrenNodes(PlanCreationContext ctx, YamlField config) {
+  public Map<String, PlanCreationResponse> createPlanForChildrenNodes(
+      PlanCreationContext ctx, StepGroupElementConfig config) {
     List<YamlField> dependencyNodeIdsList = getDependencyNodeIdsList(ctx);
 
     Map<String, PlanCreationResponse> responseMap = new HashMap<>();
@@ -46,30 +38,43 @@ public class ParallelPlanCreator extends ChildrenPlanCreator<YamlField> {
       yamlFieldMap.put(yamlField.getNode().getUuid(), yamlField);
       responseMap.put(yamlField.getNode().getUuid(), PlanCreationResponse.builder().dependencies(yamlFieldMap).build());
     }
-
     return responseMap;
   }
 
   @Override
-  public PlanNode createPlanForParentNode(PlanCreationContext ctx, YamlField config, List<String> childrenNodeIds) {
-    YamlNode currentNode = config.getNode();
+  public PlanNode createPlanForParentNode(
+      PlanCreationContext ctx, StepGroupElementConfig config, List<String> childrenNodeIds) {
+    StepParameters stepParameters = StepGroupStepParameters.getStepParameters(config, childrenNodeIds.get(0));
     return PlanNode.builder()
-        .uuid(currentNode.getUuid())
-        .name("parallel")
-        .identifier("parallel" + currentNode.getUuid())
-        .stepType(NGForkStep.STEP_TYPE)
-        .stepParameters(ForkStepParameters.builder().parallelNodeIds(childrenNodeIds).build())
+        .name(config.getName())
+        .uuid(config.getUuid())
+        .identifier(config.getIdentifier())
+        .stepType(StepGroupStep.STEP_TYPE)
+        .group(StepOutcomeGroup.STEP_GROUP.name())
+        .stepParameters(stepParameters)
         .facilitatorObtainment(FacilitatorObtainment.newBuilder().setType(ChildFacilitator.FACILITATOR_TYPE).build())
-        .adviserObtainments(getAdviserObtainmentFromMetaData(config))
-        .skipExpressionChain(true)
+        .adviserObtainments(getAdviserObtainmentFromMetaData(ctx.getCurrentField()))
+        .skipExpressionChain(false)
         .build();
+  }
+
+  @Override
+  public Class<StepGroupElementConfig> getFieldClass() {
+    return StepGroupElementConfig.class;
+  }
+
+  @Override
+  public Map<String, Set<String>> getSupportedTypes() {
+    return Collections.singletonMap("stepGroup", Collections.singleton(PlanCreatorUtils.ANY_TYPE));
   }
 
   private List<AdviserObtainment> getAdviserObtainmentFromMetaData(YamlField currentField) {
     List<AdviserObtainment> adviserObtainments = new ArrayList<>();
     if (currentField != null && currentField.getNode() != null) {
-      YamlField siblingField = currentField.getNode().nextSiblingFromParentArray(
-          currentField.getName(), Arrays.asList("stage", "step", "stepGroup", "parallel"));
+      YamlField siblingField =
+          Preconditions.checkNotNull(currentField.getNode().getField("steps"))
+              .getNode()
+              .nextSiblingFromParentArray(currentField.getName(), Arrays.asList("step", "parallel"));
       if (siblingField != null && siblingField.getNode().getUuid() != null) {
         adviserObtainments.add(
             AdviserObtainment.newBuilder()
@@ -82,29 +87,23 @@ public class ParallelPlanCreator extends ChildrenPlanCreator<YamlField> {
     return adviserObtainments;
   }
 
-  @VisibleForTesting
   List<YamlField> getDependencyNodeIdsList(PlanCreationContext planCreationContext) {
-    List<YamlField> childYamlFields = Optional.of(planCreationContext.getCurrentField().getNode().asArray())
-                                          .orElse(Collections.emptyList())
-                                          .stream()
-                                          .map(el -> el.getField("stage"))
-                                          .filter(Objects::nonNull)
-                                          .collect(Collectors.toList());
-
-    if (childYamlFields.isEmpty()) {
-      List<YamlNode> yamlNodes =
-          Optional.of(planCreationContext.getCurrentField().getNode().asArray()).orElse(Collections.emptyList());
-
-      yamlNodes.forEach(yamlNode -> {
-        YamlField stageField = yamlNode.getField("step");
-        YamlField stepGroupField = yamlNode.getField("stepGroup");
-        if (stageField != null) {
-          childYamlFields.add(stageField);
-        } else if (stepGroupField != null) {
-          childYamlFields.add(stepGroupField);
-        }
-      });
-    }
+    List<YamlField> childYamlFields = new LinkedList<>();
+    List<YamlNode> yamlNodes =
+        Optional
+            .of(Preconditions.checkNotNull(planCreationContext.getCurrentField().getNode().getField("steps"))
+                    .getNode()
+                    .asArray())
+            .orElse(Collections.emptyList());
+    yamlNodes.forEach(yamlNode -> {
+      YamlField stageField = yamlNode.getField("step");
+      YamlField stepGroupField = yamlNode.getField("parallel");
+      if (stageField != null) {
+        childYamlFields.add(stageField);
+      } else if (stepGroupField != null) {
+        childYamlFields.add(stepGroupField);
+      }
+    });
     return childYamlFields;
   }
 }
