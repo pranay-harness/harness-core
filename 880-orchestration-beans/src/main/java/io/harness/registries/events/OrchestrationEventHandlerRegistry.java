@@ -2,8 +2,8 @@ package io.harness.registries.events;
 
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.execution.events.OrchestrationEventHandler;
 import io.harness.pms.contracts.execution.events.OrchestrationEventType;
+import io.harness.pms.sdk.core.events.OrchestrationEventHandler;
 import io.harness.registries.Registry;
 import io.harness.registries.RegistryType;
 

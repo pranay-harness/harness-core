@@ -12,11 +12,11 @@ import io.harness.engine.interrupts.InterruptHelper;
 import io.harness.execution.NodeExecution;
 import io.harness.execution.NodeExecution.NodeExecutionKeys;
 import io.harness.execution.PlanExecution;
-import io.harness.execution.events.OrchestrationEvent;
 import io.harness.interrupts.ExecutionInterruptType;
 import io.harness.interrupts.InterruptEffect;
 import io.harness.pms.contracts.execution.events.OrchestrationEventType;
 import io.harness.pms.execution.utils.StatusUtils;
+import io.harness.pms.sdk.core.events.OrchestrationEvent;
 
 import com.google.inject.Inject;
 import java.util.List;

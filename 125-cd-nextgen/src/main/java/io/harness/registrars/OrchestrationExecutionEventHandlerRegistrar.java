@@ -2,8 +2,8 @@ package io.harness.registrars;
 
 import io.harness.cdng.pipeline.executions.PipelineExecutionStartEventHandler;
 import io.harness.cdng.pipeline.executions.PipelineExecutionUpdateEventHandler;
-import io.harness.execution.events.OrchestrationEventHandler;
 import io.harness.pms.contracts.execution.events.OrchestrationEventType;
+import io.harness.pms.sdk.core.events.OrchestrationEventHandler;
 import io.harness.registries.registrar.OrchestrationEventHandlerRegistrar;
 
 import com.google.inject.Inject;

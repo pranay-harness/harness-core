@@ -7,7 +7,6 @@ import io.harness.data.ExecutionSweepingOutputInstance;
 import io.harness.data.OutcomeInstance;
 import io.harness.execution.NodeExecution;
 import io.harness.execution.PlanExecution;
-import io.harness.execution.events.OrchestrationEvent;
 import io.harness.interrupts.Interrupt;
 import io.harness.morphia.MorphiaRegistrar;
 import io.harness.morphia.MorphiaRegistrarHelperPut;
@@ -23,7 +22,6 @@ public class OrchestrationBeansMorphiaRegistrar implements MorphiaRegistrar {
     set.add(Interrupt.class);
     set.add(OutcomeInstance.class);
     set.add(ExecutionSweepingOutputInstance.class);
-    set.add(OrchestrationEvent.class);
   }
 
   @Override

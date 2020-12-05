@@ -6,11 +6,11 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.OrchestrationBeansTestBase;
 import io.harness.category.element.UnitTests;
-import io.harness.execution.events.AsyncOrchestrationEventHandler;
-import io.harness.execution.events.OrchestrationEvent;
-import io.harness.execution.events.OrchestrationEventHandler;
-import io.harness.execution.events.SyncOrchestrationEventHandler;
 import io.harness.pms.contracts.execution.events.OrchestrationEventType;
+import io.harness.pms.sdk.core.events.AsyncOrchestrationEventHandler;
+import io.harness.pms.sdk.core.events.OrchestrationEvent;
+import io.harness.pms.sdk.core.events.OrchestrationEventHandler;
+import io.harness.pms.sdk.core.events.SyncOrchestrationEventHandler;
 import io.harness.registries.RegistryType;
 import io.harness.rule.Owner;
 

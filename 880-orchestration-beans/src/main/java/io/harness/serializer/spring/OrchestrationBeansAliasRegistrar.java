@@ -4,7 +4,6 @@ import io.harness.data.ExecutionSweepingOutputInstance;
 import io.harness.data.OutcomeInstance;
 import io.harness.execution.NodeExecution;
 import io.harness.execution.PlanExecution;
-import io.harness.execution.events.OrchestrationEvent;
 import io.harness.interrupts.Interrupt;
 import io.harness.interrupts.InterruptEffect;
 import io.harness.plan.Plan;
@@ -26,6 +25,5 @@ public class OrchestrationBeansAliasRegistrar implements AliasRegistrar {
     orchestrationElements.put("executionSweepingOutput", ExecutionSweepingOutputInstance.class);
     orchestrationElements.put("activeTimeoutTracker", ActiveTimeoutTracker.class);
     orchestrationElements.put("timeoutDetails", TimeoutDetails.class);
-    orchestrationElements.put("orchestrationEvent", OrchestrationEvent.class);
   }
 }
