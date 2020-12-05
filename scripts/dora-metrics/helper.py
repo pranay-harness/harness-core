@@ -6,9 +6,9 @@ SECONDS_IN_SINGLE_YEAR = 31536000
 SECONDS_IN_SINGLE_DAY = 86400
 
 
-def get_date_obj_from_str(date_input):
+def get_date_obj_from_str(date_input, date_format):
     try:
-        date_time_obj = datetime.datetime.strptime(date_input, DATE_FORMAT_MM_DD_YYYY)
+        date_time_obj = datetime.datetime.strptime(date_input, date_format)
         return date_time_obj
     except:
         return None

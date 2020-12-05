@@ -40,7 +40,7 @@ if __name__ == "__main__":
     while True:
         start_time_input = input("Enter start time of search interval (MM/DD/YYYY) : ")
         # convert string date input to date time obj
-        start_time_obj = helper.get_date_obj_from_str(start_time_input)
+        start_time_obj = helper.get_date_obj_from_str(start_time_input, helper.DATE_FORMAT_MM_DD_YYYY)
 
         if start_time_obj is not None:
             # convert date time object into local timezone
@@ -57,7 +57,7 @@ if __name__ == "__main__":
             end_time_epoch = helper.get_current_time_in_epoch_in_seconds()
             end_time_obj = helper.get_date_obj_from_epoch(end_time_epoch)
         else :
-            end_time_obj = helper.get_date_obj_from_str(end_time_input)
+            end_time_obj = helper.get_date_obj_from_str(end_time_input, helper.DATE_FORMAT_MM_DD_YYYY)
 
         if end_time_obj is not None:
             end_time_obj = helper.convert_date_to_local_timezone(end_time_obj)
