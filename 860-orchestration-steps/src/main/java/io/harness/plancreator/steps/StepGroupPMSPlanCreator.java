@@ -71,10 +71,8 @@ public class StepGroupPMSPlanCreator extends ChildrenPlanCreator<StepGroupElemen
   private List<AdviserObtainment> getAdviserObtainmentFromMetaData(YamlField currentField) {
     List<AdviserObtainment> adviserObtainments = new ArrayList<>();
     if (currentField != null && currentField.getNode() != null) {
-      YamlField siblingField =
-          Preconditions.checkNotNull(currentField.getNode().getField("steps"))
-              .getNode()
-              .nextSiblingFromParentArray(currentField.getName(), Arrays.asList("step", "parallel"));
+      YamlField siblingField = currentField.getNode().nextSiblingFromParentArray(
+          currentField.getName(), Arrays.asList("step", "parallel", "stepGroup"));
       if (siblingField != null && siblingField.getNode().getUuid() != null) {
         adviserObtainments.add(
             AdviserObtainment.newBuilder()
@@ -96,12 +94,12 @@ public class StepGroupPMSPlanCreator extends ChildrenPlanCreator<StepGroupElemen
                     .asArray())
             .orElse(Collections.emptyList());
     yamlNodes.forEach(yamlNode -> {
-      YamlField stageField = yamlNode.getField("step");
-      YamlField stepGroupField = yamlNode.getField("parallel");
-      if (stageField != null) {
-        childYamlFields.add(stageField);
-      } else if (stepGroupField != null) {
-        childYamlFields.add(stepGroupField);
+      YamlField stepField = yamlNode.getField("step");
+      YamlField parallelStepField = yamlNode.getField("parallel");
+      if (stepField != null) {
+        childYamlFields.add(stepField);
+      } else if (parallelStepField != null) {
+        childYamlFields.add(parallelStepField);
       }
     });
     return childYamlFields;

@@ -1,11 +1,11 @@
 package io.harness.cdng.pipeline.stepinfo;
 
-import io.harness.cdng.executionplan.utils.PlanCreatorFacilitatorUtils;
 import io.harness.cdng.pipeline.CDStepInfo;
 import io.harness.cdng.visitor.YamlTypes;
 import io.harness.cdng.visitor.helpers.cdstepinfo.ShellScriptStepInfoVisitorHelper;
 import io.harness.delegate.task.shell.ScriptType;
 import io.harness.executions.steps.StepSpecTypeConstants;
+import io.harness.pms.sdk.core.facilitator.OrchestrationFacilitatorType;
 import io.harness.pms.steps.StepType;
 import io.harness.redesign.states.shell.ShellScriptStep;
 import io.harness.redesign.states.shell.ShellScriptStepParameters;
@@ -59,7 +59,7 @@ public class ShellScriptStepInfo extends ShellScriptStepParameters implements CD
   @Override
   @JsonIgnore
   public String getFacilitatorType() {
-    return PlanCreatorFacilitatorUtils.decideTaskFacilitatorType();
+    return OrchestrationFacilitatorType.TASK_V3;
   }
 
   @Override

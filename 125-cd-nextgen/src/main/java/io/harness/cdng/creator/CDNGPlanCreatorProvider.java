@@ -1,6 +1,7 @@
 package io.harness.cdng.creator;
 
 import io.harness.cdng.creator.plan.stage.DeploymentStagePMSPlanCreator;
+import io.harness.cdng.creator.plan.steps.CDPMSStepPlanCreator;
 import io.harness.pms.sdk.core.pipeline.filters.FilterJsonCreator;
 import io.harness.pms.sdk.core.plan.creation.creators.PartialPlanCreator;
 import io.harness.pms.sdk.core.plan.creation.creators.PipelineServiceInfoProvider;
@@ -21,6 +22,7 @@ public class CDNGPlanCreatorProvider implements PipelineServiceInfoProvider {
   public List<PartialPlanCreator<?>> getPlanCreators() {
     List<PartialPlanCreator<?>> planCreators = new LinkedList<>();
     planCreators.add(new DeploymentStagePMSPlanCreator());
+    planCreators.add(new CDPMSStepPlanCreator());
     return planCreators;
   }
 

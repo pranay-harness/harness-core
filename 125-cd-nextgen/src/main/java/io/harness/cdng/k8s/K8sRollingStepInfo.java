@@ -2,7 +2,6 @@ package io.harness.cdng.k8s;
 
 import io.harness.beans.ParameterField;
 import io.harness.cdng.executionplan.CDStepDependencyKey;
-import io.harness.cdng.executionplan.utils.PlanCreatorFacilitatorUtils;
 import io.harness.cdng.pipeline.CDStepInfo;
 import io.harness.cdng.stepsdependency.constants.OutcomeExpressionConstants;
 import io.harness.cdng.stepsdependency.utils.CDStepDependencyUtils;
@@ -15,6 +14,7 @@ import io.harness.executionplan.stepsdependency.bean.KeyAwareStepDependencySpec;
 import io.harness.executionplan.stepsdependency.instructors.OutcomeRefStepDependencyInstructor;
 import io.harness.executionplan.utils.ParentPathInfoUtils;
 import io.harness.executions.steps.StepSpecTypeConstants;
+import io.harness.pms.sdk.core.facilitator.OrchestrationFacilitatorType;
 import io.harness.pms.steps.StepType;
 import io.harness.walktree.beans.LevelNode;
 import io.harness.walktree.visitor.SimpleVisitorHelper;
@@ -68,7 +68,7 @@ public class K8sRollingStepInfo extends K8sRollingStepParameters implements CDSt
 
   @Override
   public String getFacilitatorType() {
-    return PlanCreatorFacilitatorUtils.decideTaskChainFacilitatorType();
+    return OrchestrationFacilitatorType.TASK_CHAIN_V3;
   }
 
   @Override
