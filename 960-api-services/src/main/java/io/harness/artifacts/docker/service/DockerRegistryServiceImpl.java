@@ -24,6 +24,7 @@ import io.harness.exception.WingsException;
 import io.harness.expression.RegexFunctor;
 import io.harness.network.Http;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import java.io.IOException;
@@ -36,6 +37,10 @@ import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import net.jodah.expiringmap.ExpirationPolicy;
 import net.jodah.expiringmap.ExpiringMap;
@@ -416,138 +421,26 @@ public class DockerRegistryServiceImpl implements DockerRegistryService {
     return parseLink(headers.get("link"));
   }
 
-  /**
-   * The type Docker image tag response.
-   */
+  @JsonIgnoreProperties(ignoreUnknown = true)
+  @Data
+  @Builder
+  @AllArgsConstructor
+  @NoArgsConstructor
   public static class DockerImageTagResponse {
     private String name;
     private List<String> tags;
     private String link;
-
-    /**
-     * Gets name.
-     *
-     * @return the name
-     */
-    public String getName() {
-      return name;
-    }
-
-    /**
-     * Sets name.
-     *
-     * @param name the name
-     */
-    public void setName(String name) {
-      this.name = name;
-    }
-
-    /**
-     * Gets tags.
-     *
-     * @return the tags
-     */
-    public List<String> getTags() {
-      return tags;
-    }
-
-    /**
-     * Sets tags.
-     *
-     * @param tags the tags
-     */
-    public void setTags(List<String> tags) {
-      this.tags = tags;
-    }
-
-    public String getLink() {
-      return link;
-    }
-
-    public void setLink(String link) {
-      this.link = link;
-    }
   }
 
-  /**
-   * The type Docker registry token.
-   */
+  @JsonIgnoreProperties(ignoreUnknown = true)
+  @Data
+  @Builder
+  @AllArgsConstructor
+  @NoArgsConstructor
   public static class DockerRegistryToken {
     private String token;
     private String access_token;
     private Integer expires_in;
     private String issued_at;
-
-    /**
-     * Gets token.
-     *
-     * @return the token
-     */
-    public String getToken() {
-      return token;
-    }
-
-    /**
-     * Sets token.
-     *
-     * @param token the token
-     */
-    public void setToken(String token) {
-      this.token = token;
-    }
-
-    /**
-     * Gets access token.
-     *
-     * @return the access token
-     */
-    public String getAccess_token() {
-      return access_token;
-    }
-
-    /**
-     * Sets access token.
-     *
-     * @param access_token the access token
-     */
-    public void setAccess_token(String access_token) {
-      this.access_token = access_token;
-    }
-
-    /**
-     * Gets expires in.
-     *
-     * @return the expires in
-     */
-    public Integer getExpires_in() {
-      return expires_in;
-    }
-
-    /**
-     * Sets expires in.
-     *
-     * @param expires_in the expires in
-     */
-    public void setExpires_in(Integer expires_in) {
-      this.expires_in = expires_in;
-    }
-
-    /**
-     * Gets issued at.
-     *
-     * @return the issued at
-     */
-    public String getIssued_at() {
-      return issued_at;
-    }
-
-    /**
-     * Sets issued at.
-     *
-     * @param issued_at the issued at
-     */
-    public void setIssued_at(String issued_at) {
-      this.issued_at = issued_at;
-    }
   }
 }
