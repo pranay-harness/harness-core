@@ -37,8 +37,8 @@ public class PipelinePlanCreator extends ChildrenPlanCreator<YamlField> {
   }
 
   @Override
-  public Map<String, PlanCreationResponse> createPlanForChildrenNodes(PlanCreationContext ctx, YamlField field) {
-    YamlNode yamlNode = field.getNode();
+  public Map<String, PlanCreationResponse> createPlanForChildrenNodes(PlanCreationContext ctx, YamlField config) {
+    YamlNode yamlNode = config.getNode();
     Map<String, PlanCreationResponse> responseMap = new HashMap<>();
     YamlNode stagesYamlNode = Preconditions.checkNotNull(yamlNode.getField("stages")).getNode();
     if (stagesYamlNode == null) {
@@ -72,8 +72,8 @@ public class PipelinePlanCreator extends ChildrenPlanCreator<YamlField> {
   }
 
   @Override
-  public PlanNode createPlanForParentNode(PlanCreationContext ctx, YamlField field, Set<String> childrenNodeIds) {
-    YamlNode yamlNode = field.getNode();
+  public PlanNode createPlanForParentNode(PlanCreationContext ctx, YamlField config, List<String> childrenNodeIds) {
+    YamlNode yamlNode = config.getNode();
     return PlanNode.builder()
         .uuid(yamlNode.getUuid())
         .identifier(yamlNode.getIdentifier())

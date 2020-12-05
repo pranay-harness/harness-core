@@ -1,8 +1,9 @@
 package io.harness.plancreator.pipeline;
 
+import io.harness.plancreator.beans.PlanCreationConstants;
 import io.harness.pms.facilitators.FacilitatorObtainment;
-import io.harness.pms.facilitators.FacilitatorType;
 import io.harness.pms.plan.creation.PlanCreatorUtils;
+import io.harness.pms.sdk.core.facilitator.child.ChildFacilitator;
 import io.harness.pms.sdk.core.plan.PlanNode;
 import io.harness.pms.sdk.core.plan.creation.beans.PlanCreationContext;
 import io.harness.pms.sdk.core.plan.creation.beans.PlanCreationResponse;
@@ -15,10 +16,7 @@ import io.harness.steps.common.pipeline.PipelineSetupStep;
 import io.harness.steps.common.pipeline.PipelineSetupStepParameters;
 
 import com.google.common.base.Preconditions;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 public class NGPipelinePlanCreator extends ChildrenPlanCreator<PipelineInfoConfig> {
   @Override
@@ -28,7 +26,7 @@ public class NGPipelinePlanCreator extends ChildrenPlanCreator<PipelineInfoConfi
 
   @Override
   public Map<String, PlanCreationResponse> createPlanForChildrenNodes(
-      PlanCreationContext ctx, PipelineInfoConfig field) {
+      PlanCreationContext ctx, PipelineInfoConfig config) {
     Map<String, PlanCreationResponse> responseMap = new HashMap<>();
     Map<String, YamlField> dependencies = new HashMap<>();
     YamlField stagesYamlNode = Preconditions.checkNotNull(ctx.getCurrentField().getNode().getField("stages"));
@@ -44,21 +42,20 @@ public class NGPipelinePlanCreator extends ChildrenPlanCreator<PipelineInfoConfi
 
   @Override
   public PlanNode createPlanForParentNode(
-      PlanCreationContext ctx, PipelineInfoConfig field, Set<String> childrenNodeIds) {
-    String name = field.getName() != null ? field.getName() : field.getIdentifier();
+      PlanCreationContext ctx, PipelineInfoConfig config, List<String> childrenNodeIds) {
+    String name = config.getName() != null ? config.getName() : config.getIdentifier();
     YamlNode stagesYamlNode = Preconditions.checkNotNull(ctx.getCurrentField().getNode().getField("stages")).getNode();
 
-    StepParameters stepParameters = PipelineSetupStepParameters.getStepParameters(field, stagesYamlNode.getUuid());
+    StepParameters stepParameters = PipelineSetupStepParameters.getStepParameters(config, stagesYamlNode.getUuid());
 
     return PlanNode.builder()
-        .uuid(field.getUuid())
-        .identifier(field.getIdentifier())
+        .uuid(config.getUuid())
+        .identifier(PlanCreationConstants.PIPELINE_NODE_IDENTIFIER)
         .stepType(PipelineSetupStep.STEP_TYPE)
         .group(StepOutcomeGroup.PIPELINE.name())
         .name(name)
         .stepParameters(stepParameters)
-        .facilitatorObtainment(
-            FacilitatorObtainment.newBuilder().setType(FacilitatorType.newBuilder().setType("CHILD").build()).build())
+        .facilitatorObtainment(FacilitatorObtainment.newBuilder().setType(ChildFacilitator.FACILITATOR_TYPE).build())
         .skipExpressionChain(false)
         .build();
   }

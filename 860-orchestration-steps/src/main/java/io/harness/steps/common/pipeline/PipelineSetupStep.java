@@ -22,7 +22,7 @@ public class PipelineSetupStep implements ChildExecutable<PipelineSetupStepParam
   @Override
   public ChildExecutableResponse obtainChild(
       Ambiance ambiance, PipelineSetupStepParameters stepParameters, StepInputPackage inputPackage) {
-    log.info("Starting execution for pipeline [{}]", stepParameters);
+    log.info("Starting execution for Pipeline Step [{}]", stepParameters);
 
     final String stagesNodeId = stepParameters.getChildNodeID();
     return ChildExecutableResponse.newBuilder().setChildNodeId(stagesNodeId).build();
@@ -31,7 +31,7 @@ public class PipelineSetupStep implements ChildExecutable<PipelineSetupStepParam
   @Override
   public StepResponse handleChildResponse(
       Ambiance ambiance, PipelineSetupStepParameters stepParameters, Map<String, ResponseData> responseDataMap) {
-    log.info("Executed pipeline =[{}]", stepParameters);
+    log.info("Executed Pipeline Step =[{}]", stepParameters);
 
     return createStepResponseFromChildResponse(responseDataMap);
   }
