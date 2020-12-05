@@ -2,9 +2,9 @@ package io.harness.timeout.trackers.active;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 
-import io.harness.StatusUtils;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.pms.execution.Status;
+import io.harness.pms.execution.utils.StatusUtils;
 import io.harness.timeout.Dimension;
 import io.harness.timeout.TimeoutEvent;
 import io.harness.timeout.trackers.PausableTimeoutTracker;

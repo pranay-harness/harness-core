@@ -2,12 +2,12 @@ package io.harness.execution.events;
 
 import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_NESTS;
 
-import io.harness.AmbianceUtils;
 import io.harness.annotation.HarnessEntity;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.logging.AutoLogContext;
 import io.harness.pms.ambiance.Ambiance;
+import io.harness.pms.execution.utils.AmbianceUtils;
 import io.harness.queue.Queuable;
 
 import java.util.Map;

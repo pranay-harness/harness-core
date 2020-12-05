@@ -6,7 +6,6 @@ import static io.harness.interrupts.Interrupt.State.PROCESSED_SUCCESSFULLY;
 import static io.harness.interrupts.Interrupt.State.PROCESSED_UNSUCCESSFULLY;
 import static io.harness.pms.execution.Status.EXPIRED;
 
-import io.harness.StatusUtils;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.engine.executions.node.NodeExecutionService;
 import io.harness.engine.interrupts.InterruptHandler;
@@ -15,6 +14,7 @@ import io.harness.engine.interrupts.helpers.AbortHelper;
 import io.harness.exception.InvalidRequestException;
 import io.harness.execution.NodeExecution;
 import io.harness.interrupts.Interrupt;
+import io.harness.pms.execution.utils.StatusUtils;
 
 import com.google.inject.Inject;
 import javax.validation.Valid;

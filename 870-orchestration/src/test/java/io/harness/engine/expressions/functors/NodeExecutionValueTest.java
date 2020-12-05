@@ -8,7 +8,6 @@ import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.when;
 
-import io.harness.AmbianceUtils;
 import io.harness.OrchestrationTestBase;
 import io.harness.category.element.UnitTests;
 import io.harness.engine.executions.node.NodeExecutionService;
@@ -17,6 +16,7 @@ import io.harness.engine.outcomes.OutcomeService;
 import io.harness.execution.NodeExecution;
 import io.harness.pms.ambiance.Ambiance;
 import io.harness.pms.ambiance.Level;
+import io.harness.pms.execution.utils.AmbianceUtils;
 import io.harness.pms.plan.PlanNodeProto;
 import io.harness.pms.sdk.core.steps.io.StepParameters;
 import io.harness.pms.steps.StepType;

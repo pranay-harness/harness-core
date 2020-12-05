@@ -5,7 +5,6 @@ import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.distribution.constraint.Consumer.State.ACTIVE;
 import static io.harness.distribution.constraint.Consumer.State.BLOCKED;
 
-import io.harness.AmbianceUtils;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.distribution.constraint.Constraint;
 import io.harness.distribution.constraint.ConstraintUnit;
@@ -19,6 +18,7 @@ import io.harness.exception.InvalidRequestException;
 import io.harness.pms.ambiance.Ambiance;
 import io.harness.pms.execution.AsyncExecutableResponse;
 import io.harness.pms.execution.Status;
+import io.harness.pms.execution.utils.AmbianceUtils;
 import io.harness.pms.sdk.core.steps.executables.AsyncExecutable;
 import io.harness.pms.sdk.core.steps.executables.SyncExecutable;
 import io.harness.pms.sdk.core.steps.io.PassThroughData;

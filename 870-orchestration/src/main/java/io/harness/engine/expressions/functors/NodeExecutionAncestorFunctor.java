@@ -2,7 +2,6 @@ package io.harness.engine.expressions.functors;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 
-import io.harness.AmbianceUtils;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.engine.expressions.NodeExecutionsCache;
 import io.harness.engine.outcomes.OutcomeService;
@@ -10,6 +9,7 @@ import io.harness.engine.outputs.ExecutionSweepingOutputService;
 import io.harness.execution.NodeExecution;
 import io.harness.expression.LateBindingMap;
 import io.harness.pms.ambiance.Ambiance;
+import io.harness.pms.execution.utils.AmbianceUtils;
 
 import java.util.Map;
 import java.util.Set;

@@ -5,10 +5,10 @@ import static io.harness.rule.OwnerRule.PRASHANT;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import io.harness.AmbianceUtils;
 import io.harness.OrchestrationTestBase;
 import io.harness.category.element.UnitTests;
 import io.harness.pms.ambiance.Ambiance;
+import io.harness.pms.execution.utils.AmbianceUtils;
 import io.harness.pms.sdk.core.data.Outcome;
 import io.harness.refObjects.RefObjectUtil;
 import io.harness.rule.Owner;

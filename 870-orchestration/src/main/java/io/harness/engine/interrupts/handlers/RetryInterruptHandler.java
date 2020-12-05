@@ -4,7 +4,6 @@ import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.pms.execution.Status.RUNNING;
 
-import io.harness.StatusUtils;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.engine.executions.node.NodeExecutionService;
 import io.harness.engine.executions.plan.PlanExecutionService;
@@ -16,6 +15,7 @@ import io.harness.execution.ExecutionModeUtils;
 import io.harness.execution.NodeExecution;
 import io.harness.interrupts.Interrupt;
 import io.harness.interrupts.Interrupt.State;
+import io.harness.pms.execution.utils.StatusUtils;
 
 import com.google.inject.Inject;
 

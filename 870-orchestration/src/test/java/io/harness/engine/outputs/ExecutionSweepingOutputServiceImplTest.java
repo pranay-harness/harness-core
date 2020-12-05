@@ -6,11 +6,11 @@ import static io.harness.rule.OwnerRule.GARVIT;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-import io.harness.AmbianceUtils;
 import io.harness.OrchestrationTestBase;
 import io.harness.category.element.UnitTests;
 import io.harness.pms.ambiance.Ambiance;
 import io.harness.pms.ambiance.Level;
+import io.harness.pms.execution.utils.AmbianceUtils;
 import io.harness.pms.sdk.core.data.SweepingOutput;
 import io.harness.pms.steps.StepType;
 import io.harness.refObjects.RefObjectUtil;
