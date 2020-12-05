@@ -1,5 +1,7 @@
 package software.wings.delegatetasks.buildsource;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.delegate.beans.DelegateMetaInfo;
 import io.harness.delegate.beans.DelegateTaskNotifyResponseData;
 import io.harness.logging.CommandExecutionStatus;
@@ -18,6 +20,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 @EqualsAndHashCode(callSuper = false)
+@TargetModule(Module._930_DELEGATE_TASKS)
 public class BuildSourceExecutionResponse implements DelegateTaskNotifyResponseData {
   private DelegateMetaInfo delegateMetaInfo;
   private BuildSourceResponse buildSourceResponse;

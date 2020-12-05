@@ -1,5 +1,8 @@
 package software.wings.delegatetasks.helm;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
+
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -18,6 +21,7 @@ import lombok.Data;
 @Data
 @Builder
 @AllArgsConstructor
+@TargetModule(Module._930_DELEGATE_TASKS)
 public class HelmDeployChartSpec {
   private String url;
   private String name;

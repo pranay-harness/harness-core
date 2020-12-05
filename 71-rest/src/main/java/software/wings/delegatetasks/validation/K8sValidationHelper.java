@@ -6,6 +6,8 @@ import static io.harness.network.Http.connectableHttpUrl;
 
 import static java.lang.String.format;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
 import io.harness.filesystem.FileIo;
@@ -40,6 +42,7 @@ import org.zeroturnaround.exec.ProcessExecutor;
 
 @Singleton
 @Slf4j
+@TargetModule(Module._930_DELEGATE_TASKS)
 public class K8sValidationHelper {
   @Inject @Transient private transient GkeClusterService gkeClusterService;
   @Inject @Transient private transient AzureHelperService azureHelperService;

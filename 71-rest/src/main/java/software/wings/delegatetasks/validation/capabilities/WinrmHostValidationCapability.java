@@ -1,5 +1,7 @@
 package software.wings.delegatetasks.validation.capabilities;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.delegate.beans.executioncapability.CapabilityType;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.security.encryption.EncryptedDataDetail;
@@ -15,6 +17,7 @@ import lombok.Value;
 
 @Value
 @Builder
+@TargetModule(Module._930_DELEGATE_TASKS)
 public class WinrmHostValidationCapability implements ExecutionCapability {
   @NotNull BasicValidationInfo validationInfo;
   @NotNull private WinRmConnectionAttributes winRmConnectionAttributes;

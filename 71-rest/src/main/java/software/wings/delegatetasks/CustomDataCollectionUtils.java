@@ -3,6 +3,9 @@ package software.wings.delegatetasks;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
+
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -18,6 +21,7 @@ import lombok.extern.slf4j.Slf4j;
 
 @UtilityClass
 @Slf4j
+@TargetModule(Module._930_DELEGATE_TASKS)
 public class CustomDataCollectionUtils {
   private static final String ISO_DATE_FORMAT = "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'";
 

@@ -5,6 +5,8 @@ import static io.harness.threading.Morpheus.sleep;
 import static software.wings.common.VerificationConstants.DATA_COLLECTION_RETRY_SLEEP;
 import static software.wings.common.VerificationConstants.DUMMY_HOST_NAME;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.delegate.beans.DelegateTaskPackage;
 import io.harness.delegate.beans.DelegateTaskResponse;
 import io.harness.delegate.beans.logstreaming.ILogStreamingTaskClient;
@@ -50,6 +52,7 @@ import org.slf4j.Logger;
  */
 
 @Slf4j
+@TargetModule(Module._930_DELEGATE_TASKS)
 public class ElkLogzDataCollectionTask extends AbstractDelegateDataCollectionTask {
   @Inject private ElkDelegateService elkDelegateService;
   @Inject private LogzDelegateService logzDelegateService;

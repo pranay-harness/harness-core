@@ -12,6 +12,8 @@ import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.spy;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.task.spotinst.request.SpotinstTrafficShiftAlbDeployParameters;
 import io.harness.delegate.task.spotinst.response.SpotInstTaskExecutionResponse;
@@ -28,6 +30,7 @@ import com.amazonaws.services.ec2.model.Instance;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
+@TargetModule(Module._930_DELEGATE_TASKS)
 public class SpotinstTrafficShiftAlbDeployTaskHandlerTest extends WingsBaseTest {
   @Test
   @Owner(developers = SATYAM)

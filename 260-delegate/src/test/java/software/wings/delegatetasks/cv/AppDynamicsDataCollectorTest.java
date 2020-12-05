@@ -11,6 +11,8 @@ import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.task.DataCollectionExecutorService;
 import io.harness.rule.Owner;
@@ -41,6 +43,7 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.Mockito;
 import org.mockito.Spy;
 
+@TargetModule(Module._930_DELEGATE_TASKS)
 public class AppDynamicsDataCollectorTest extends WingsBaseTest {
   @Spy private AppDynamicsDataCollector appDynamicsDataCollector;
   @Inject private DataCollectionExecutorService dataCollectionService;

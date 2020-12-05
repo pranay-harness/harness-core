@@ -19,6 +19,8 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.task.k8s.K8sTaskHelperBase;
 import io.harness.exception.InvalidArgumentsException;
@@ -51,6 +53,7 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 
+@TargetModule(Module._930_DELEGATE_TASKS)
 public class K8sDeleteTaskHandlerTest extends WingsBaseTest {
   @Mock private K8sTaskHelper k8sTaskHelper;
   @Mock private K8sTaskHelperBase k8sTaskHelperBase;

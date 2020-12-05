@@ -4,6 +4,8 @@ import static io.harness.threading.Morpheus.sleep;
 
 import static software.wings.common.VerificationConstants.DATA_COLLECTION_RETRY_SLEEP;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.delegate.beans.DelegateTaskPackage;
 import io.harness.delegate.beans.DelegateTaskResponse;
 import io.harness.delegate.beans.logstreaming.ILogStreamingTaskClient;
@@ -34,6 +36,7 @@ import org.slf4j.Logger;
  * Created by sriram_parthasarathy on 9/12/17.
  */
 @Slf4j
+@TargetModule(Module._930_DELEGATE_TASKS)
 public class SumoDataCollectionTask extends AbstractDelegateDataCollectionTask {
   private SumoDataCollectionInfo dataCollectionInfo;
   private SumoLogicClient sumoClient;

@@ -14,6 +14,8 @@ import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.category.element.UnitTests;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.rule.Owner;
@@ -36,6 +38,7 @@ import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 
+@TargetModule(Module._930_DELEGATE_TASKS)
 public class EcsBlueGreenRoute53SetupCommandHandlerTest extends WingsBaseTest {
   @Mock private EcsSetupCommandTaskHelper mockEcsSetupCommandTaskHelper;
   @Mock private DelegateFileManager mockDelegateFileManager;

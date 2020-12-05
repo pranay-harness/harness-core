@@ -14,6 +14,8 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.verify;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.task.aws.LbDetailsForAlbTrafficShift;
 import io.harness.delegate.task.spotinst.request.SpotinstTrafficShiftAlbSetupParameters;
@@ -33,6 +35,7 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.ArgumentCaptor;
 
+@TargetModule(Module._930_DELEGATE_TASKS)
 public class SpotinstTrafficShiftAlbSetupTaskHandlerTest extends WingsBaseTest {
   private final String INIT_JSON = "{\n"
       + "  \"group\": {\n"

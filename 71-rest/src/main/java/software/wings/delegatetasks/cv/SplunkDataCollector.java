@@ -2,6 +2,9 @@ package software.wings.delegatetasks.cv;
 
 import static software.wings.common.VerificationConstants.URL_STRING;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
+
 import software.wings.beans.SplunkConfig;
 import software.wings.service.impl.ThirdPartyApiCallLog;
 import software.wings.service.impl.ThirdPartyApiCallLog.FieldType;
@@ -41,6 +44,7 @@ import org.apache.http.HttpStatus;
 import org.apache.xerces.impl.dv.util.Base64;
 
 @Slf4j
+@TargetModule(Module._930_DELEGATE_TASKS)
 public class SplunkDataCollector implements LogDataCollector<SplunkDataCollectionInfoV2> {
   private static final String START_TIME = "Start Time";
   private static final String END_TIME = "End Time";

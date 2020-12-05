@@ -8,6 +8,8 @@ import static software.wings.common.VerificationConstants.DATA_COLLECTION_RETRY_
 import static software.wings.common.VerificationConstants.STACKDRIVER_DEFAULT_HOST_NAME_FIELD;
 import static software.wings.common.VerificationConstants.STACKDRIVER_DEFAULT_LOG_MESSAGE_FIELD;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.delegate.beans.DelegateTaskPackage;
 import io.harness.delegate.beans.DelegateTaskResponse;
 import io.harness.delegate.beans.logstreaming.ILogStreamingTaskClient;
@@ -38,6 +40,7 @@ import org.joda.time.DateTime;
 import org.slf4j.Logger;
 
 @Slf4j
+@TargetModule(Module._930_DELEGATE_TASKS)
 public class StackDriverLogDataCollectionTask extends AbstractDelegateDataCollectionTask {
   private StackDriverLogDataCollectionInfo dataCollectionInfo;
 

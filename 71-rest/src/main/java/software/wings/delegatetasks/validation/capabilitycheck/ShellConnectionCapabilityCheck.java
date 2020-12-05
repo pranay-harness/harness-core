@@ -4,6 +4,8 @@ import static software.wings.core.ssh.executors.SshSessionFactory.getSSHSession;
 
 import static java.time.Duration.ofSeconds;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.delegate.beans.executioncapability.CapabilityResponse;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.delegate.task.executioncapability.CapabilityCheck;
@@ -22,6 +24,7 @@ import com.jcraft.jsch.JSchException;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
+@TargetModule(Module._930_DELEGATE_TASKS)
 public class ShellConnectionCapabilityCheck implements CapabilityCheck {
   @Inject EncryptionService encryptionService;
   @Override

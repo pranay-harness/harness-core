@@ -4,6 +4,8 @@ import static io.harness.rule.OwnerRule.SRIRAM;
 
 import static junit.framework.TestCase.fail;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.task.DataCollectionExecutorService;
 import io.harness.exception.WingsException;
@@ -19,6 +21,7 @@ import java.util.concurrent.Callable;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
+@TargetModule(Module._930_DELEGATE_TASKS)
 public class DataCollectionExecutorServiceTest extends APMStateVerificationTestBase {
   @Inject private DataCollectionExecutorService executorService;
 

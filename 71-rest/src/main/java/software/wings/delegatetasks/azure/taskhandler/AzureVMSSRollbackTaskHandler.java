@@ -11,6 +11,8 @@ import static io.harness.logging.LogLevel.INFO;
 
 import static java.lang.String.format;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.azure.model.AzureConfig;
 import io.harness.delegate.task.azure.request.AzureVMSSDeployTaskParameters;
 import io.harness.delegate.task.azure.request.AzureVMSSTaskParameters;
@@ -29,6 +31,7 @@ import lombok.extern.slf4j.Slf4j;
 @Singleton
 @NoArgsConstructor
 @Slf4j
+@TargetModule(Module._930_DELEGATE_TASKS)
 public class AzureVMSSRollbackTaskHandler extends AzureVMSSDeployTaskHandler {
   @Override
   protected AzureVMSSTaskExecutionResponse executeTaskInternal(

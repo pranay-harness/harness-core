@@ -12,6 +12,8 @@ import static software.wings.beans.LogHelper.color;
 import static java.lang.String.format;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.delegate.beans.DelegateTaskPackage;
 import io.harness.delegate.beans.DelegateTaskResponse;
@@ -52,6 +54,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.NotImplementedException;
 
 @Slf4j
+@TargetModule(Module._930_DELEGATE_TASKS)
 public class GitFetchFilesTask extends AbstractDelegateRunnableTask {
   @Inject private GitService gitService;
   @Inject private EncryptionService encryptionService;

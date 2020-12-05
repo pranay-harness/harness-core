@@ -13,6 +13,8 @@ import static org.mockito.Mockito.when;
 import static org.mockito.MockitoAnnotations.initMocks;
 
 import io.harness.CategoryTest;
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
 
@@ -42,6 +44,7 @@ import org.mockito.Mock;
 import retrofit2.Call;
 import retrofit2.Response;
 
+@TargetModule(Module._930_DELEGATE_TASKS)
 public class RequestExecutorTest extends CategoryTest {
   @Mock private DelegateLogService delegateLogService;
   private RequestExecutor requestExecutor;

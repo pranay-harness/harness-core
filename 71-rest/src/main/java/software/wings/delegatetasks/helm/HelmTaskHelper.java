@@ -18,6 +18,8 @@ import static org.apache.commons.lang3.StringUtils.defaultString;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.FileData;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.HelmClientException;
@@ -79,6 +81,7 @@ import org.zeroturnaround.exec.stream.LogOutputStream;
 
 @Singleton
 @Slf4j
+@TargetModule(Module._930_DELEGATE_TASKS)
 public class HelmTaskHelper {
   private static final String WORKING_DIR_BASE = "./repository/helm-values/";
   public static final String RESOURCE_DIR_BASE = "./repository/helm/resources/";

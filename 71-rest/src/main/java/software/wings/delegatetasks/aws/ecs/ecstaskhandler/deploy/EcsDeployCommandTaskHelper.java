@@ -8,6 +8,8 @@ import static software.wings.beans.InstanceUnitType.PERCENTAGE;
 import static java.lang.String.format;
 import static org.apache.commons.lang3.StringUtils.substringBefore;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.container.ContainerInfo;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.InvalidRequestException;
@@ -71,6 +73,7 @@ import org.apache.commons.lang3.StringUtils;
 
 @Singleton
 @Slf4j
+@TargetModule(Module._930_DELEGATE_TASKS)
 public class EcsDeployCommandTaskHelper {
   @Inject private AwsClusterService awsClusterService;
   @Inject private AwsAppAutoScalingHelperServiceDelegate awsAppAutoScalingService;

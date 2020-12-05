@@ -6,6 +6,8 @@ import static io.harness.threading.Morpheus.sleep;
 import static software.wings.common.VerificationConstants.DATA_COLLECTION_RETRY_SLEEP;
 import static software.wings.common.VerificationConstants.DURATION_TO_ASK_MINUTES;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.delegate.beans.DelegateTaskPackage;
 import io.harness.delegate.beans.DelegateTaskResponse;
 import io.harness.delegate.beans.logstreaming.ILogStreamingTaskClient;
@@ -58,6 +60,7 @@ import org.slf4j.Logger;
  * Created by rsingh on 5/18/17.
  */
 @Slf4j
+@TargetModule(Module._930_DELEGATE_TASKS)
 public class AppdynamicsDataCollectionTask extends AbstractDelegateDataCollectionTask {
   private AppdynamicsDataCollectionInfo dataCollectionInfo;
 

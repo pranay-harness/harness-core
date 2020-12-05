@@ -15,6 +15,8 @@ import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doReturn;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.azure.client.AzureMonitorClient;
 import io.harness.azure.client.AzureWebClient;
 import io.harness.azure.model.AzureConfig;
@@ -37,6 +39,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Spy;
 
+@TargetModule(Module._930_DELEGATE_TASKS)
 public class AzureWebAppSlotSwapTaskHandlerTest extends WingsBaseTest {
   public static final String SUBSCRIPTION_ID = "subscriptionId";
   public static final String RESOURCE_GROUP_NAME = "resourceGroupName";

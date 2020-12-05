@@ -2,6 +2,8 @@ package software.wings.delegatetasks.validation.capabilitycheck;
 
 import static software.wings.common.Constants.WINDOWS_HOME_DIR;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.delegate.beans.executioncapability.CapabilityResponse;
 import io.harness.delegate.beans.executioncapability.CapabilityResponse.CapabilityResponseBuilder;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
@@ -27,6 +29,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 
 @Slf4j
+@TargetModule(Module._930_DELEGATE_TASKS)
 public class WinrmHostValidationCapabilityCheck implements CapabilityCheck {
   @Inject private EncryptionService encryptionService;
 

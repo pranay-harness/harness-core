@@ -5,6 +5,8 @@ import static io.harness.logging.CommandExecutionStatus.FAILURE;
 
 import static java.lang.String.format;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.delegate.command.CommandExecutionResult;
 import io.harness.delegate.service.ExecutionConfigOverrideFromFileOnDelegate;
 import io.harness.exception.CommandExecutionException;
@@ -30,6 +32,7 @@ import java.util.List;
 import org.apache.commons.lang3.StringUtils;
 
 @Singleton
+@TargetModule(Module._930_DELEGATE_TASKS)
 public class ShellScriptTaskHandler {
   @Inject private SshExecutorFactory sshExecutorFactory;
   @Inject private WinRmExecutorFactory winrmExecutorFactory;

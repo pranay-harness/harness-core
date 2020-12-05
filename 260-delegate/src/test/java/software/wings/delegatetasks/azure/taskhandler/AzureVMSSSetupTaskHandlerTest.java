@@ -19,6 +19,8 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.azure.client.AzureAutoScaleSettingsClient;
 import io.harness.azure.client.AzureComputeClient;
 import io.harness.azure.model.AzureConfig;
@@ -61,6 +63,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Spy;
 
+@TargetModule(Module._930_DELEGATE_TASKS)
 public class AzureVMSSSetupTaskHandlerTest extends WingsBaseTest {
   @Mock private DelegateLogService mockDelegateLogService;
   @Mock private AzureComputeClient mockAzureComputeClient;

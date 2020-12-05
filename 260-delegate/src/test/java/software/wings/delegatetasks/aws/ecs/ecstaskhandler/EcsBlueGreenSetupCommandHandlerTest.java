@@ -17,6 +17,8 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.task.aws.AwsElbListener;
 import io.harness.delegate.task.aws.AwsElbListenerRuleData;
@@ -48,6 +50,7 @@ import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 
+@TargetModule(Module._930_DELEGATE_TASKS)
 public class EcsBlueGreenSetupCommandHandlerTest extends WingsBaseTest {
   private final Listener forwardListener =
       new Listener().withDefaultActions(new Action().withTargetGroupArn("arn").withType("forward"));

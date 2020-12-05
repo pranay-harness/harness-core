@@ -2,6 +2,8 @@ package software.wings.delegatetasks.validation.capabilitycheck;
 
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.delegate.beans.executioncapability.CapabilityResponse;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.delegate.task.executioncapability.CapabilityCheck;
@@ -17,6 +19,7 @@ import java.util.List;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
+@TargetModule(Module._930_DELEGATE_TASKS)
 public class GitConnectionCapabilityCheck implements CapabilityCheck {
   @Inject private EncryptionService encryptionService;
   @Inject private GitClient gitClient;

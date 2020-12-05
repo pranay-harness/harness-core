@@ -1,5 +1,7 @@
 package software.wings.delegatetasks.validation.capabilitycheck;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.delegate.beans.executioncapability.CapabilityResponse;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.delegate.task.executioncapability.CapabilityCheck;
@@ -13,6 +15,7 @@ import software.wings.helpers.ext.helm.response.HelmCommandResponse;
 
 import com.google.inject.Inject;
 
+@TargetModule(Module._930_DELEGATE_TASKS)
 public class HelmCommandCapabilityCheck implements CapabilityCheck {
   @Inject private HelmDeployService helmDeployService;
   @Inject private ContainerDeploymentDelegateHelper containerDeploymentDelegateHelper;

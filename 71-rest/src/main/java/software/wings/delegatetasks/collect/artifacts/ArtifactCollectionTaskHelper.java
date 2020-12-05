@@ -10,7 +10,9 @@ import static software.wings.beans.Log.Builder.aLog;
 
 import static org.apache.commons.lang3.StringUtils.isBlank;
 
+import io.harness.annotations.dev.Module;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.delegate.beans.DelegateFile;
 import io.harness.delegate.service.DelegateAgentFileService.FileBucket;
 import io.harness.delegate.task.ListNotifyResponseData;
@@ -62,6 +64,7 @@ import org.apache.commons.lang3.tuple.Pair;
 @OwnedBy(CDC)
 @Singleton
 @Slf4j
+@TargetModule(Module._930_DELEGATE_TASKS)
 public class ArtifactCollectionTaskHelper {
   private static final String ARTIFACT_STRING = "artifact/";
   private static final String ARTIFACT_FILE_SIZE_MESSAGE = "Getting artifact file size for artifact: ";

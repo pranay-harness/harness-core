@@ -20,6 +20,8 @@ import static software.wings.utils.WingsTestConstants.SSH_USER_NAME;
 import static junit.framework.TestCase.assertEquals;
 import static org.mockito.Mockito.when;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.beans.DelegateTaskPackage;
 import io.harness.delegate.beans.TaskData;
@@ -40,6 +42,7 @@ import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 
+@TargetModule(Module._930_DELEGATE_TASKS)
 public class CommandTaskTest extends WingsBaseTest {
   @Mock ServiceCommandExecutorService serviceCommandExecutorService;
 

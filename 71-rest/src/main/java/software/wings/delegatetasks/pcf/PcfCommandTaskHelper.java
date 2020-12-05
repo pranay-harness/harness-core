@@ -51,6 +51,8 @@ import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.StringUtils.EMPTY;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.data.structure.UUIDGenerator;
 import io.harness.delegate.service.DelegateAgentFileService.FileBucket;
@@ -124,6 +126,7 @@ import org.jetbrains.annotations.NotNull;
  * Stateles helper class
  */
 @Singleton
+@TargetModule(Module._930_DELEGATE_TASKS)
 public class PcfCommandTaskHelper {
   private static final Yaml yaml;
   public static final String CURRENT_INSTANCE_COUNT = "CURRENT-INSTANCE-COUNT: ";

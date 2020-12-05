@@ -1,11 +1,15 @@
 package software.wings.delegatetasks.azure;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
+
 import lombok.Getter;
 import rx.CompletableSubscriber;
 import rx.Observer;
 import rx.Subscription;
 
 @Getter
+@TargetModule(Module._930_DELEGATE_TASKS)
 public class DefaultCompletableSubscriber implements CompletableSubscriber, Observer<Void> {
   private CompletableSubscriberStatus status = CompletableSubscriberStatus.UNSUBSCRIBED;
   private Throwable error;

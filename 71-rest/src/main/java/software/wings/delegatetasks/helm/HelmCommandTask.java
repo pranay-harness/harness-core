@@ -2,6 +2,8 @@ package software.wings.delegatetasks.helm;
 
 import static java.lang.String.format;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.delegate.beans.DelegateTaskPackage;
 import io.harness.delegate.beans.DelegateTaskResponse;
 import io.harness.delegate.beans.logstreaming.ILogStreamingTaskClient;
@@ -36,6 +38,7 @@ import org.apache.commons.lang3.NotImplementedException;
  * Created by anubhaw on 3/22/18.
  */
 @Slf4j
+@TargetModule(Module._930_DELEGATE_TASKS)
 public class HelmCommandTask extends AbstractDelegateRunnableTask {
   @Inject private DelegateLogService delegateLogService;
   @Inject private HelmDeployService helmDeployService;

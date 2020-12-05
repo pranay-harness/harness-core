@@ -1,5 +1,7 @@
 package software.wings.delegatetasks.azure.appservice.deployment.context;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.azure.context.AzureWebClientContext;
 import io.harness.azure.model.AzureAppServiceApplicationSetting;
 import io.harness.azure.model.AzureAppServiceConnectionString;
@@ -13,6 +15,7 @@ import lombok.NoArgsConstructor;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
+@TargetModule(Module._930_DELEGATE_TASKS)
 public class AzureAppServiceDeploymentContext {
   private AzureWebClientContext azureWebClientContext;
   private ILogStreamingTaskClient logStreamingTaskClient;

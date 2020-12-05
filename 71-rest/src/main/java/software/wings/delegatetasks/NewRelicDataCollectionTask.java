@@ -16,6 +16,8 @@ import static software.wings.service.impl.newrelic.NewRelicMetricValueDefinition
 import static software.wings.service.impl.newrelic.NewRelicMetricValueDefinition.ERROR;
 import static software.wings.service.impl.newrelic.NewRelicMetricValueDefinition.REQUSET_PER_MINUTE;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.delegate.beans.DelegateTaskPackage;
 import io.harness.delegate.beans.DelegateTaskResponse;
 import io.harness.delegate.beans.logstreaming.ILogStreamingTaskClient;
@@ -67,6 +69,7 @@ import org.slf4j.Logger;
  * Created by rsingh on 5/18/17.
  */
 @Slf4j
+@TargetModule(Module._930_DELEGATE_TASKS)
 public class NewRelicDataCollectionTask extends AbstractDelegateDataCollectionTask {
   private static final String ALL_WEB_TXN_NAME = "WebTransaction/all";
   private static final String ALL_ERRORS_TXN_NAME = "Errors/all";

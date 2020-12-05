@@ -11,6 +11,8 @@ import static java.lang.String.format;
 import static java.time.Duration.ofSeconds;
 import static java.util.stream.Collectors.toMap;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.ExceptionUtils;
 import io.harness.logging.CommandExecutionStatus;
@@ -51,6 +53,7 @@ import lombok.NoArgsConstructor;
 
 @Singleton
 @NoArgsConstructor
+@TargetModule(Module._930_DELEGATE_TASKS)
 public class CloudFormationCreateStackHandler extends CloudFormationCommandTaskHandler {
   @Inject private GitUtilsDelegate gitUtilsDelegate;
 

@@ -1,5 +1,7 @@
 package software.wings.delegatetasks.buildsource;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.logging.AutoLogContext;
 import io.harness.persistence.LogKeyUtils;
 
@@ -7,6 +9,7 @@ import software.wings.beans.artifact.ArtifactStream;
 
 import com.google.common.collect.ImmutableMap;
 
+@TargetModule(Module._930_DELEGATE_TASKS)
 public class ArtifactStreamLogContext extends AutoLogContext {
   public static final String ID = LogKeyUtils.calculateLogKeyForId(ArtifactStream.class);
   public static final String ARTIFACT_STREAM_TYPE = "artifactStreamType";

@@ -12,6 +12,8 @@ import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.beans.DelegateTaskPackage;
 import io.harness.delegate.beans.TaskData;
@@ -53,6 +55,7 @@ import org.mockito.MockitoAnnotations;
 import retrofit2.Call;
 
 @Slf4j
+@TargetModule(Module._930_DELEGATE_TASKS)
 public class APMDataCollectionTaskTest extends WingsBaseTest {
   APMDataCollectionInfo dataCollectionInfo;
   @Mock private RequestExecutor requestExecutor;
@@ -107,7 +110,7 @@ public class APMDataCollectionTaskTest extends WingsBaseTest {
     Class[] innerClasses = dataCollectionTask.getClass().getDeclaredClasses();
     log.info("" + innerClasses);
     Class[] parameterTypes = new Class[1];
-    parameterTypes[0] = java.lang.String.class;
+    parameterTypes[0] = String.class;
     Method m = innerClasses[0].getDeclaredMethod("resolveBatchHosts", parameterTypes);
     m.setAccessible(true);
     return m;

@@ -18,6 +18,8 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.category.element.UnitTests;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.rule.Owner;
@@ -43,6 +45,7 @@ import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 
+@TargetModule(Module._930_DELEGATE_TASKS)
 public class EcsDeployCommandHandlerTest extends WingsBaseTest {
   @Mock private EcsDeployCommandTaskHelper mockEcsDeployCommandTaskHelper;
   @Mock private AwsClusterService mockAwsClusterService;

@@ -15,7 +15,9 @@ import static java.util.Collections.singletonList;
 import static java.util.Objects.requireNonNull;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
+import io.harness.annotations.dev.Module;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.ExecutionStatus;
 import io.harness.delegate.beans.DelegateTaskPackage;
 import io.harness.delegate.beans.DelegateTaskResponse;
@@ -64,6 +66,7 @@ import org.jetbrains.annotations.Nullable;
  */
 @OwnedBy(CDC)
 @Slf4j
+@TargetModule(Module._930_DELEGATE_TASKS)
 public class GcbTask extends AbstractDelegateRunnableTask {
   @Inject private EncryptionService encryptionService;
   @Inject private DelegateLogService logService;

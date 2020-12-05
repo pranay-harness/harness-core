@@ -4,6 +4,8 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
 import static java.util.Collections.singletonList;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.DelegateTask;
 import io.harness.beans.DelegateTask.DelegateTaskBuilder;
 import io.harness.delegate.beans.RemoteMethodReturnValueData;
@@ -25,6 +27,7 @@ import java.lang.reflect.Method;
 /**
  * Created by peeyushaggarwal on 1/12/17.
  */
+@TargetModule(Module._930_DELEGATE_TASKS)
 public class DelegateInvocationHandler implements InvocationHandler {
   private DelegateService delegateService;
   private SyncTaskContext syncTaskContext;

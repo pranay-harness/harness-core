@@ -5,6 +5,8 @@ import static io.harness.logging.CommandExecutionStatus.SUCCESS;
 import static java.lang.String.format;
 import static java.lang.String.valueOf;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.delegate.task.spotinst.request.SpotInstGetElastigroupJsonParameters;
 import io.harness.delegate.task.spotinst.request.SpotInstListElastigroupInstancesParameters;
 import io.harness.delegate.task.spotinst.request.SpotInstTaskParameters;
@@ -28,6 +30,7 @@ import lombok.extern.slf4j.Slf4j;
 @Singleton
 @NoArgsConstructor
 @Slf4j
+@TargetModule(Module._930_DELEGATE_TASKS)
 public class SpotInstSyncTaskHandler extends SpotInstTaskHandler {
   @Override
   protected SpotInstTaskExecutionResponse executeTaskInternal(SpotInstTaskParameters spotInstTaskParameters,

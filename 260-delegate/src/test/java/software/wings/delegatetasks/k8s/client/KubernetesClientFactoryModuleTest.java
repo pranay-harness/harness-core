@@ -6,6 +6,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 
 import io.harness.CategoryTest;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.category.element.UnitTests;
 import io.harness.govern.ProviderModule;
 import io.harness.k8s.KubernetesContainerService;
@@ -29,6 +30,7 @@ import org.junit.runners.JUnit4;
 
 @Slf4j
 @RunWith(JUnit4.class)
+@TargetModule(io.harness.annotations.dev.Module._930_DELEGATE_TASKS)
 public class KubernetesClientFactoryModuleTest extends CategoryTest {
   @Test
   @Owner(developers = ACASIAN)
