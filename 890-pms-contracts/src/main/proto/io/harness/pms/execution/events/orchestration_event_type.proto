@@ -1,0 +1,14 @@
+syntax = "proto3";
+
+package io.harness.pms.contracts.execution.events;
+
+option java_multiple_files = true;
+
+enum OrchestrationEventType {
+  UNKNOWN = 0;
+  ORCHESTRATION_START = 1;
+  ORCHESTRATION_END = 2;
+  NODE_EXECUTION_STATUS_UPDATE = 3;
+  INTERVENTION_WAIT_START = 4;
+  PLAN_EXECUTION_STATUS_UPDATE = 5;
+}

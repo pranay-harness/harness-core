@@ -1,7 +1,5 @@
 package io.harness.cdng.creator.plan.infrastructure;
 
-import io.harness.adviser.OrchestrationAdviserTypes;
-import io.harness.advisers.success.OnSuccessAdviserParameters;
 import io.harness.cdng.infra.steps.InfraSectionStepParameters;
 import io.harness.cdng.infra.steps.InfraStepParameters;
 import io.harness.cdng.infra.steps.InfrastructureSectionStep;
@@ -11,6 +9,8 @@ import io.harness.executionplan.plancreator.beans.PlanCreatorConstants;
 import io.harness.pms.advisers.AdviserObtainment;
 import io.harness.pms.advisers.AdviserType;
 import io.harness.pms.facilitators.FacilitatorObtainment;
+import io.harness.pms.sdk.core.adviser.OrchestrationAdviserTypes;
+import io.harness.pms.sdk.core.adviser.success.OnSuccessAdviserParameters;
 import io.harness.pms.sdk.core.facilitator.child.ChildFacilitator;
 import io.harness.pms.sdk.core.facilitator.sync.SyncFacilitator;
 import io.harness.pms.sdk.core.plan.PlanNode;

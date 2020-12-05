@@ -1,7 +1,7 @@
 package io.harness.event;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
-import static io.harness.execution.events.OrchestrationEventType.ORCHESTRATION_START;
+import static io.harness.pms.contracts.execution.events.OrchestrationEventType.ORCHESTRATION_START;
 import static io.harness.rule.OwnerRule.ALEXEI;
 
 import static org.assertj.core.api.Assertions.assertThat;

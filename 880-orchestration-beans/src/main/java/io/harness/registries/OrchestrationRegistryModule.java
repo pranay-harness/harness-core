@@ -4,10 +4,10 @@ import static io.harness.annotations.dev.HarnessTeam.CDC;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.execution.events.OrchestrationEventHandler;
-import io.harness.execution.events.OrchestrationEventType;
 import io.harness.expression.field.OrchestrationFieldProcessor;
 import io.harness.expression.field.OrchestrationFieldType;
 import io.harness.pms.advisers.AdviserType;
+import io.harness.pms.contracts.execution.events.OrchestrationEventType;
 import io.harness.pms.facilitators.FacilitatorType;
 import io.harness.pms.refobjects.RefType;
 import io.harness.pms.sdk.core.adviser.Adviser;
