@@ -2,7 +2,7 @@ import requests
 import time
 import csv
 import helper
-
+import log_manager
 
 ARGS_API_KEY = "api_key"
 ARGS_SEARCH_INTERVAL_START_TIME_EPOCH_KEY = "search_interval_start_time_epoch"
@@ -33,7 +33,8 @@ CSV_COL_ARTIFACT_SOURCE = "Artifact Source(s)"
 CSV_COL_ARTIFACT_BUILD = "Artifiact Build No(s)"
 CSV_HEADERS = [CSV_COL_APPLICATION_NAME, CSV_COL_ENTITY_TYPE, CSV_COL_PIPELINE_NAME, CSV_COL_WORKFLOW_NAME,
                CSV_COL_STATUS, CSV_COL_TAGS, CSV_COL_START_DATE, CSV_COL_START_TIME, CSV_COL_END_DATE, CSV_COL_END_TIME,
-               CSV_COL_PIPELINE_APPROVAL_STAGE, CSV_COL_TRIGGER_TYPE, CSV_COL_TRIGGER_DETAILS, CSV_COL_ENVIRONMENT, CSV_COL_SERVICE,
+               CSV_COL_PIPELINE_APPROVAL_STAGE, CSV_COL_TRIGGER_TYPE, CSV_COL_TRIGGER_DETAILS, CSV_COL_ENVIRONMENT,
+               CSV_COL_SERVICE,
                CSV_COL_ARTIFACT_SOURCE, CSV_COL_ARTIFACT_BUILD]
 
 CAUSE_EXECUTED_BY_USER = "ExecutedByUser"
@@ -93,7 +94,7 @@ def construct_graphql_filter(entity_type, entity_id, start_time_epoch, end_time_
     if entity_type == ENTITY_PIPELINE_EXECUTION:
         graphql_filter = graphql_filter.replace(PIPELINE_FILTER_PLACE_HOLDER, GRAPHQL_PIPELINE_FILTER)
         graphql_filter = graphql_filter.replace(PIPELINE_ID_FILTER_PLACE_HOLDER, entity_id)
-    else :
+    else:
         graphql_filter = graphql_filter.replace(PIPELINE_FILTER_PLACE_HOLDER, "")
 
     if entity_type == ENTITY_WORKFLOW_EXECUTION:
@@ -106,13 +107,13 @@ def construct_graphql_filter(entity_type, entity_id, start_time_epoch, end_time_
         graphql_filter = graphql_filter.replace(AFTER_DATE_FILTER_PLACE_HOLDER, "")
     else:
         graphql_filter = graphql_filter.replace(AFTER_DATE_FILTER_PLACE_HOLDER, GRAPHQL_AFTER_DATE_FILTER)
-        graphql_filter = graphql_filter.replace(VALUE_PLACE_HOLDER, str(start_time_epoch*1000))
+        graphql_filter = graphql_filter.replace(VALUE_PLACE_HOLDER, str(start_time_epoch * 1000))
 
     if end_time_epoch is None:
         graphql_filter = graphql_filter.replace(BEFORE_DATE_FILTER_PLACE_HOLDER, "")
     else:
         graphql_filter = graphql_filter.replace(BEFORE_DATE_FILTER_PLACE_HOLDER, GRAPHQL_BEFORE_DATE_FILTER)
-        graphql_filter = graphql_filter.replace(VALUE_PLACE_HOLDER, str(end_time_epoch*1000))
+        graphql_filter = graphql_filter.replace(VALUE_PLACE_HOLDER, str(end_time_epoch * 1000))
 
     return graphql_filter
 
@@ -121,32 +122,60 @@ def construct_graphql_query(entity_type, entity_id, offset, start_time_epoch, en
     graphql_query = GRAPHQL_QUERY
     graphql_query = graphql_query.replace(OFFSET_PLACE_HOLDER, offset)
 
-    graphql_query = graphql_query.replace(FILTER_PLACE_HOLDER, construct_graphql_filter(entity_type, entity_id, start_time_epoch, end_time_epoch))
+    graphql_query = graphql_query.replace(FILTER_PLACE_HOLDER,
+                                          construct_graphql_filter(entity_type, entity_id, start_time_epoch,
+                                                                   end_time_epoch))
 
-    print(graphql_query)
     return graphql_query
+
+
+def handle_api_response(response):
+    """
+    This method does response handling as per use-case and also logging for the same
+    :param response: response object
+    :type response: Response
+    :return: 200 response or not, payload of response
+    :rtype: Bool, dict
+    """
+    if response.status_code == 200:
+        response_payload = response.json()
+        # log the response with json payload
+        log_manager.log_response(response.status_code, response_payload)
+
+        if 'errors' not in response_payload:
+            # successful response
+            return True, response.json()
+
+    else:
+        # log the response with content in case of non-200 response
+        log_manager.log_response(response.status_code, response.content)
+
+    # log api error
+    log_manager.log_api_error()
+
+    return False, None
 
 
 def get_all_deployments(api_key, account_id, offset, entity_type, entity_id, start_time_epoch, end_time_epoch):
     retry_count = REQUEST_RETRY_COUNT
 
     request_url = REQUEST_URL + account_id
-
     request_headers = REQUEST_HEADERS
     request_headers[HEADER_X_API_KEY] = api_key
-
     request_payload = {
         PAYLOAD_PARAM_QUERY: construct_graphql_query(entity_type, entity_id, offset, start_time_epoch, end_time_epoch)
     }
 
     # retry in case of failures (non-200 HTTP responses)
     while retry_count > 0:
+        log_manager.log_request(request_url, request_headers, request_payload)
         response = requests.post(request_url, json=request_payload, headers=request_headers)
-        if response.status_code == 200:
-            return response.json()
-        print(response.json())
-        print("RETRYING")
-        # reduce retry count on each repetition
+
+        is_success_response, response_payload = handle_api_response(response)
+        if is_success_response:
+            return response_payload
+
+        # reduce retry count on each repetition of failure response
         retry_count -= 1
 
     raise Exception("Unable to get valid HTTP 200 response")
@@ -269,7 +298,8 @@ def get_trigger_details(execution, trigger_type):
 
     if trigger_type == CAUSE_EXECUTED_ALONG_PIPELINE and execution['cause'] is not None:
         if 'execution' in execution['cause'] and execution['cause']['execution'] is not None:
-            if 'pipeline' in execution['cause']['execution'] and execution['cause']['execution']['pipeline'] is not None:
+            if 'pipeline' in execution['cause']['execution'] and execution['cause']['execution'][
+                'pipeline'] is not None:
                 if 'name' in execution['cause']['execution']['pipeline']:
                     return execution['cause']['execution']['pipeline']['name']
 
@@ -363,7 +393,8 @@ def get_workflow_details(workflows):
 
         workflow_details_list.append(workflow_details)
 
-    return custom_workflow_parser_helper(env), custom_workflow_parser_helper(services), custom_workflow_parser_helper(artifacts), custom_workflow_parser_helper(artifacts_sources), workflow_details_list
+    return custom_workflow_parser_helper(env), custom_workflow_parser_helper(services), custom_workflow_parser_helper(
+        artifacts), custom_workflow_parser_helper(artifacts_sources), workflow_details_list
 
 
 def prepare_csv_row(entry_details):
@@ -472,49 +503,60 @@ def copy_csv_file(source_file, dest_file):
 
 
 def compile_data(input_args):
-    # TODO
-    # add input validation
+    try:
+        # TODO
+        # add input validation
+        log_manager.log_input_params(input_args)
 
-    api_key = input_args.get(ARGS_API_KEY)
-    account_id = CLIENT_ACCOUNT_ID
-    filename = input_args.get(ARGS_FILENAME_KEY) + ".csv"
-    file_operation = input_args.get(ARGS_FILE_OPERATION)
-    entity_type = input_args.get(ARGS_SEARCH_ENTITY_TYPE_KEY)
-    entity_id = input_args.get(ARGS_SEARCH_ENTITY_ID_KEY, "")
-    start_time_interval_epoch = input_args.get(ARGS_SEARCH_INTERVAL_START_TIME_EPOCH_KEY)
-    end_time_interval_epoch = input_args.get(ARGS_SEARCH_INTERVAL_END_TIME_EPOCH_KEY)
+        api_key = input_args.get(ARGS_API_KEY)
+        account_id = CLIENT_ACCOUNT_ID
+        filename = input_args.get(ARGS_FILENAME_KEY) + ".csv"
+        file_operation = input_args.get(ARGS_FILE_OPERATION)
+        entity_type = input_args.get(ARGS_SEARCH_ENTITY_TYPE_KEY)
+        entity_id = input_args.get(ARGS_SEARCH_ENTITY_ID_KEY, "")
+        start_time_interval_epoch = input_args.get(ARGS_SEARCH_INTERVAL_START_TIME_EPOCH_KEY)
+        end_time_interval_epoch = input_args.get(ARGS_SEARCH_INTERVAL_END_TIME_EPOCH_KEY)
 
-    if file_operation == FILE_OPERATION_NEW:
-        init_csv_file(filename)
+        if file_operation == FILE_OPERATION_NEW:
+            init_csv_file(filename)
 
-    curr_offset = 0
-    repeat = True
+        curr_offset = 0
+        repeat = True
 
-    # create blank temp file
-    create_new_csv(TEMP_CSV_FILE_NAME)
+        # create blank temp file
+        create_new_csv(TEMP_CSV_FILE_NAME)
 
-    while repeat is True:
-        # fetch all deployments via graphql query in pagination manner
-        deployments_result = get_all_deployments(api_key, account_id, str(curr_offset), entity_type, entity_id, start_time_interval_epoch, end_time_interval_epoch)
+        while repeat is True:
+            # fetch all deployments via graphql query in pagination manner
+            deployments_result = get_all_deployments(api_key, account_id, str(curr_offset), entity_type, entity_id,
+                                                     start_time_interval_epoch, end_time_interval_epoch)
 
-        # get updated offset
-        repeat, limit = get_page_details(deployments_result)
+            # get updated offset
+            repeat, limit = get_page_details(deployments_result)
 
-        # parse deployments
-        executions = get_pipeline_executions(deployments_result)
+            # parse deployments
+            executions = get_pipeline_executions(deployments_result)
 
-        # parse and create data rows out of the executions
-        data_rows, is_threshold_breached = create_csv_data(executions)
+            # parse and create data rows out of the executions
+            data_rows, is_threshold_breached = create_csv_data(executions)
 
-        # append all data rows to the temp csv
-        append_to_csv_file(TEMP_CSV_FILE_NAME, data_rows)
+            # append all data rows to the temp csv
+            append_to_csv_file(TEMP_CSV_FILE_NAME, data_rows)
 
-        if is_threshold_breached:
-            repeat = False
-        else:
-            curr_offset = curr_offset + limit
+            if is_threshold_breached:
+                repeat = False
+            else:
+                curr_offset = curr_offset + limit
 
-    # copy all data from current temp file to the original file
-    copy_csv_file(TEMP_CSV_FILE_NAME, filename)
+        # copy all data from current temp file to the original file
+        copy_csv_file(TEMP_CSV_FILE_NAME, filename)
 
-    print("--XX--COMPLETED--XX--")
+        print(log_manager.get_debug_log())
+
+        print("--XX--COMPLETED--XX--")
+
+    except Exception as e:
+        print("EXCEPTION : ", e)
+    finally:
+        print(log_manager.get_debug_log())
+        print(log_manager.get_error_log())
