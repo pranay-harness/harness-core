@@ -19,7 +19,7 @@ public class SecretFileServiceImpl implements SecretModifyService {
 
   @Override
   public EncryptedDataDTO create(String accountIdentifier, SecretDTOV2 dto) {
-    // no need to make a call to 71-rest in case of creating file without any content
+    // no need to make a call to 400-rest in case of creating file without any content
     SecretFileSpecDTO specDTO = (SecretFileSpecDTO) dto.getSpec();
     return EncryptedDataDTO.builder()
         .account(accountIdentifier)
@@ -36,13 +36,13 @@ public class SecretFileServiceImpl implements SecretModifyService {
 
   @Override
   public boolean update(String accountIdentifier, SecretDTOV2 dto) {
-    // no need to make a call to 71-rest in case of updating file without any content
+    // no need to make a call to 400-rest in case of updating file without any content
     return true;
   }
 
   @Override
   public boolean updateViaYaml(String accountIdentifier, SecretDTOV2 dto) {
-    // no need to make a call to 71-rest in case of updating file without any content
+    // no need to make a call to 400-rest in case of updating file without any content
     return true;
   }
 }

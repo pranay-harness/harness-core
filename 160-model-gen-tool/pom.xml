@@ -60,7 +60,7 @@
         </dependency>
         <dependency>
             <groupId>software.wings</groupId>
-            <artifactId>71-rest</artifactId>
+            <artifactId>400-rest</artifactId>
             <version>${project.parent.version}</version>
         </dependency>
         <dependency>

@@ -151,7 +151,7 @@ NOTE: the data from it is used for every git operation github does on you behave
     $ docker run -p 9200:9200 -p 9300:9300 -v ~/_elasticsearch_data:/usr/share/elasticsearch/data -e "discovery.type=single-node" docker.elastic.co/elasticsearch/elasticsearch:7.3.0
     ```
 
-    In portal/71-rest/config.yml set `searchEnabled` to `true`.
+    In portal/400-rest/config.yml set `searchEnabled` to `true`.
 
     Run mongo in replica set:
 
@@ -198,7 +198,7 @@ cd to `portal` directory
 1. Start server by running following commands :
 
    * `mvn clean install -DskipTests`
-   * `java -Xms1024m -Xmx4096m -XX:+HeapDumpOnOutOfMemoryError -XX:+PrintGCDetails -XX:+PrintGCDateStamps -Xloggc:mygclogfilename.gc -XX:+UseParallelGC -XX:MaxGCPauseMillis=500 -Xbootclasspath/p:~/.m2/repository/org/mortbay/jetty/alpn/alpn-boot/8.1.13.v20181017/alpn-boot-8.1.13.v20181017.jar -Dfile.encoding=UTF-8 -jar 71-rest/target/rest-capsule.jar server 71-rest/config.yml > portal.log &`
+   * `java -Xms1024m -Xmx4096m -XX:+HeapDumpOnOutOfMemoryError -XX:+PrintGCDetails -XX:+PrintGCDateStamps -Xloggc:mygclogfilename.gc -XX:+UseParallelGC -XX:MaxGCPauseMillis=500 -Xbootclasspath/p:~/.m2/repository/org/mortbay/jetty/alpn/alpn-boot/8.1.13.v20181017/alpn-boot-8.1.13.v20181017.jar -Dfile.encoding=UTF-8 -jar 400-rest/target/rest-capsule.jar server 400-rest/config.yml > portal.log &`
 
 2. Generate sample data required to run the services locally by running the following step only once.
    DataGenUtil: Open a new terminal and run following command (Make sure you [setup `HARNESS_GENERATION_PASSPHRASE` environment variable](https://docs.google.com/document/d/1CddJtyZ7CvLzHnBIe408tQN-zCeQ7NXTfIdEGilm4bs/edit) in your Bash profile):

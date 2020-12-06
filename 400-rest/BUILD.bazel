@@ -644,11 +644,11 @@ java_binary(
     data = ["//:resource"],
     main_class = "software.wings.app.WingsApplication",
     resources = [
-        "//71-rest/src/main/resources:resource",
+        "//400-rest/src/main/resources:resource",
     ],
     visibility = ["//visibility:public"],
     runtime_deps = [
-        "//71-rest/src/main/resources",
+        "//400-rest/src/main/resources",
         "@maven//:javax_ws_rs_javax_ws_rs_api",
     ],
     deps = [
@@ -758,7 +758,7 @@ java_library(
     data = ["//:resource"],
     resources = [
         "//:resource",
-        "//71-rest/src/main/resources:resource",
+        "//400-rest/src/main/resources:resource",
         "//980-commons/src/main/resources:resource",
         "//980-commons/src/main/resources-filtered:resource",
         "//980-commons/src/test/resources:resource",
@@ -782,18 +782,18 @@ java_library(
         ["src/test/**/*.java"],
     ),
     data = [
-        "//71-rest/src/test/resources:resource",
+        "//400-rest/src/test/resources:resource",
     ],
     resources = [
         "//:resource",
-        "//71-rest/src/main/resources:resource",
+        "//400-rest/src/main/resources:resource",
         "//980-commons/src/main/resources:resource",
         "//980-commons/src/main/resources-filtered:resource",
         "//980-commons/src/test/resources:resource",
     ],
     visibility = ["//visibility:public"],
     runtime_deps = [
-        "//71-rest/src/main/resources",
+        "//400-rest/src/main/resources",
         "//980-commons/src/main/resources",
         "//980-commons/src/main/resources-filtered:resources",
         "//980-commons/src/test/resources",

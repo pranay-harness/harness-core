@@ -10,7 +10,7 @@ UI_FOLDER=`cat $PROPERTY_FILE | grep "UI_PATH" | cut -d '=' -f2`
 
 cd $CURRENT_DIR
 echo "Started Copying Files........." 
-cp -r $ROOT_FOLDER/71-rest/config.yml $ROOT_FOLDER/71-rest/target/rest-capsule.jar $CURRENT_DIR/
+cp -r $ROOT_FOLDER/400-rest/config.yml $ROOT_FOLDER/400-rest/target/rest-capsule.jar $CURRENT_DIR/
 cp -r $ROOT_FOLDER/270-verification/verification-config.yml $ROOT_FOLDER/270-verification/target/verification-capsule.jar $CURRENT_DIR/
 cp -r $ROOT_FOLDER/260-delegate/config-delegate.yml $ROOT_FOLDER/260-delegate/target/delegate-capsule.jar $CURRENT_DIR/
 cp -r $ROOT_FOLDER/250-watcher/config-watcher.yml $ROOT_FOLDER/250-watcher/target/watcher-capsule.jar $CURRENT_DIR/

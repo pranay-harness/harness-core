@@ -10,7 +10,7 @@ PROJECT=$4
 mvn clean install -DskipTests -Dmaven.repo.local=$(pwd)/.m2
 
 find $FROM_MODULE/target/test-classes/ -iname "*.class" | cut -c 30- | rev | cut -c 7- | rev | cut -f1 -d"$" | tr "/" "." | sort | uniq > $FROM_MODULE/target/file1.txt
-jdeps -v 71-rest/target/rest-tests.jar | grep "rest-tests.jar" | awk ' { print $3 } ' | cut -f1 -d"$" | sort | uniq > $FROM_MODULE/target/file2.txt
+jdeps -v 400-rest/target/rest-tests.jar | grep "rest-tests.jar" | awk ' { print $3 } ' | cut -f1 -d"$" | sort | uniq > $FROM_MODULE/target/file2.txt
 
 IFS=
 CLASSES=`diff $FROM_MODULE/target/file1.txt $FROM_MODULE/target/file2.txt | grep "< " | cut -c 3- | grep $PACKAGE`

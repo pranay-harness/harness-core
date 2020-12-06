@@ -38,7 +38,7 @@ public class ManagerExecutor {
 
   public static void ensureManager(Class clazz, String alpnPath, String alpnJarPath) throws IOException {
     if (!isHealthy()) {
-      final Path config = Paths.get(Project.rootDirectory(clazz), "71-rest", "config.yml");
+      final Path config = Paths.get(Project.rootDirectory(clazz), "400-rest", "config.yml");
       FileUtils.modifyConfigFile(new File(config.toString()));
       executeLocalManager("server", clazz, alpnPath, alpnJarPath);
     }
@@ -77,8 +77,8 @@ public class ManagerExecutor {
 
     log.info("Execute the manager from {}", directory);
 
-    final Path jar = Paths.get(directory.getPath(), "71-rest", "target", "rest-capsule.jar");
-    final Path config = Paths.get(directory.getPath(), "71-rest", "modified_config.yml");
+    final Path jar = Paths.get(directory.getPath(), "400-rest", "target", "rest-capsule.jar");
+    final Path config = Paths.get(directory.getPath(), "400-rest", "modified_config.yml");
     String alpn = System.getProperty("user.home") + "/.m2/repository/" + alpnJarPath;
 
     if (!new File(alpn).exists()) {

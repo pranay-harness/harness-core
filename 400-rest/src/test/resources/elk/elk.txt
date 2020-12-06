@@ -1,0 +1,133 @@
+{
+  "took": 389,
+  "timed_out": false,
+  "_shards": {
+    "total": 110,
+    "successful": 110,
+    "skipped": 0,
+    "failed": 0
+  },
+  "hits": {
+    "total": 3,
+    "max_score": 0,
+    "hits": [
+      {
+        "_index": "filebeat-6.0.1-2018.07.17",
+        "_type": "doc",
+        "_id": "lLn_qWQB_SuTx-U-jOt7",
+        "_score": 0,
+        "_source": {
+          "@timestamp": "2018-07-17T20:47:33.515Z",
+          "source": "/var/lib/docker/containers/ab6fbd55d75a842be8f1e7769bc46f48312b7e6198fda00386619938049d5955/ab6fbd55d75a842be8f1e7769bc46f48312b7e6198fda00386619938049d5955-json.log",
+          "offset": 573037,
+          "prospector": {
+            "type": "log"
+          },
+          "kubernetes": {
+            "pod": {
+              "name": "rddashboard-prod-5-67d88f4657-ff7k9"
+            },
+            "namespace": "default",
+            "labels": {
+              "harness-revision": "5",
+              "harness-service": "rddashboard",
+              "pod-template-hash": "2384490213",
+              "run": "rddashboard-prod",
+              "harness-app": "tyler-technologies",
+              "harness-env": "prod"
+            },
+            "container": {
+              "name": "rddashboard-prod"
+            }
+          },
+          "beat": {
+            "name": "filebeat-x8xpl",
+            "hostname": "filebeat-x8xpl",
+            "version": "6.0.1"
+          },
+          "log": "      Executing HttpStatusCodeResult, setting HTTP status code 400",
+          "stream": "stdout",
+          "time": "2018-07-17T20:47:33.155926064Z"
+        }
+      },
+      {
+        "_index": "filebeat-6.0.1-2018.07.17",
+        "_type": "doc",
+        "_id": "mLn_qWQB_SuTx-U-jOt7",
+        "_score": 0,
+        "_source": {
+          "@timestamp": "2018-07-17T20:47:33.515Z",
+          "source": "/var/lib/docker/containers/ab6fbd55d75a842be8f1e7769bc46f48312b7e6198fda00386619938049d5955/ab6fbd55d75a842be8f1e7769bc46f48312b7e6198fda00386619938049d5955-json.log",
+          "offset": 573698,
+          "prospector": {
+            "type": "log"
+          },
+          "kubernetes": {
+            "pod": {
+              "name": "rddashboard-prod-5-67d88f4657-ff7k9"
+            },
+            "namespace": "default",
+            "labels": {
+              "harness-revision": "5",
+              "harness-service": "rddashboard",
+              "pod-template-hash": "2384490213",
+              "run": "rddashboard-prod",
+              "harness-app": "tyler-technologies",
+              "harness-env": "prod"
+            },
+            "container": {
+              "name": "rddashboard-prod"
+            }
+          },
+          "beat": {
+            "version": "6.0.1",
+            "name": "filebeat-x8xpl",
+            "hostname": "filebeat-x8xpl"
+          },
+          "log": "      Request finished in 348.5169ms 400 ",
+          "stream": "stdout",
+          "time": "2018-07-17T20:47:33.156979007Z"
+        }
+      },
+      {
+        "_index": "filebeat-6.0.1-2018.07.17",
+        "_type": "doc",
+        "_id": "xbn_qWQB_SuTx-U-kOtl",
+        "_score": 0,
+        "_source": {
+          "@timestamp": "2018-07-17T20:47:35.517Z",
+          "time": "2018-07-17T20:47:35.432825983Z",
+          "log": "      Request finished in 25.4001ms 200 application/json; charset=utf-8",
+          "prospector": {
+            "type": "log"
+          },
+          "kubernetes": {
+            "labels": {
+              "harness-env": "prod",
+              "harness-revision": "5",
+              "harness-service": "rddashboard",
+              "pod-template-hash": "2384490213",
+              "run": "rddashboard-prod",
+              "harness-app": "tyler-technologies"
+            },
+            "container": {
+              "name": "rddashboard-prod"
+            },
+            "pod": {
+              "name": "rddashboard-prod-5-67d88f4657-ff7k9"
+            },
+            "namespace": "default"
+          },
+          "beat": {
+            "version": "6.0.1",
+            "name": "filebeat-x8xpl",
+            "hostname": "filebeat-x8xpl"
+          },
+          "source": "/var/lib/docker/containers/ab6fbd55d75a842be8f1e7769bc46f48312b7e6198fda00386619938049d5955/ab6fbd55d75a842be8f1e7769bc46f48312b7e6198fda00386619938049d5955-json.log",
+          "offset": 578155,
+          "stream": "stdout"
+        }
+      }
+    ]
+  }
+}

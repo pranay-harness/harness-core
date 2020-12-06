@@ -6,7 +6,7 @@
     <version>0.0.1-SNAPSHOT</version>
     <packaging>pom</packaging>
     <modules>
-        <module>71-rest</module>
+        <module>400-rest</module>
         <!--The following modules are in the new order-->
         <module>120-ng-manager</module>
         <module>125-cd-nextgen</module>
