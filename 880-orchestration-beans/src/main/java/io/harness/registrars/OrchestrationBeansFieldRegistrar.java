@@ -3,11 +3,11 @@ package io.harness.registrars;
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.expression.field.OrchestrationFieldProcessor;
-import io.harness.expression.field.OrchestrationFieldType;
 import io.harness.expression.field.dummy.DummyOrchestrationField;
 import io.harness.expression.field.dummy.DummyOrchestrationFieldProcessor;
-import io.harness.registries.registrar.OrchestrationFieldRegistrar;
+import io.harness.pms.sdk.core.expression.OrchestrationFieldProcessor;
+import io.harness.pms.sdk.core.expression.OrchestrationFieldType;
+import io.harness.pms.sdk.core.registries.registrar.OrchestrationFieldRegistrar;
 
 import com.google.inject.Inject;
 import com.google.inject.Injector;

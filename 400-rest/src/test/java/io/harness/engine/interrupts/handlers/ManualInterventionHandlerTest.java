@@ -21,7 +21,7 @@ import io.harness.execution.NodeExecution;
 import io.harness.execution.PlanExecution;
 import io.harness.interrupts.ExecutionInterruptType;
 import io.harness.interrupts.Interrupt;
-import io.harness.registries.state.StepRegistry;
+import io.harness.pms.sdk.core.registries.StepRegistry;
 import io.harness.rule.Owner;
 import io.harness.waiter.OrchestrationNotifyEventListener;
 

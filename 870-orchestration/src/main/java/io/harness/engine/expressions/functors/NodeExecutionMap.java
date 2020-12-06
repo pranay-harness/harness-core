@@ -16,7 +16,7 @@ import io.harness.execution.NodeExecution;
 import io.harness.expression.ExpressionEvaluatorUtils;
 import io.harness.expression.LateBindingMap;
 import io.harness.pms.ambiance.Ambiance;
-import io.harness.refObjects.RefObjectUtil;
+import io.harness.pms.sdk.core.resolver.RefObjectUtil;
 
 import java.util.Collections;
 import java.util.List;

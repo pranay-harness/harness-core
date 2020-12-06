@@ -6,7 +6,7 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.engine.outcomes.OutcomeService;
 import io.harness.expression.LateBindingMap;
 import io.harness.pms.ambiance.Ambiance;
-import io.harness.refObjects.RefObjectUtil;
+import io.harness.pms.sdk.core.resolver.RefObjectUtil;
 
 import lombok.Builder;
 import lombok.EqualsAndHashCode;

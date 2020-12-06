@@ -21,7 +21,7 @@ import io.harness.pms.ambiance.Level;
 import io.harness.pms.execution.utils.AmbianceUtils;
 import io.harness.pms.refobjects.RefObject;
 import io.harness.pms.sdk.core.data.Outcome;
-import io.harness.resolvers.ResolverUtils;
+import io.harness.pms.sdk.core.resolver.ResolverUtils;
 
 import com.google.inject.Inject;
 import com.google.inject.Injector;

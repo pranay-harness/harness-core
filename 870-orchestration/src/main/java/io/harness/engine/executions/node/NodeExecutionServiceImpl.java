@@ -20,10 +20,10 @@ import io.harness.pms.contracts.execution.events.OrchestrationEventType;
 import io.harness.pms.execution.Status;
 import io.harness.pms.execution.utils.StatusUtils;
 import io.harness.pms.sdk.core.events.OrchestrationEvent;
+import io.harness.pms.sdk.core.registries.StepRegistry;
 import io.harness.pms.sdk.core.steps.Step;
 import io.harness.pms.sdk.core.steps.io.StepParameters;
 import io.harness.pms.serializer.json.JsonOrchestrationUtils;
-import io.harness.registries.state.StepRegistry;
 
 import com.google.inject.Inject;
 import com.mongodb.client.result.UpdateResult;

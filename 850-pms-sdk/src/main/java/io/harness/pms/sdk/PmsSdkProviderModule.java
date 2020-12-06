@@ -8,8 +8,8 @@ import io.harness.mongo.queue.QueueFactory;
 import io.harness.pms.execution.NodeExecutionEvent;
 import io.harness.pms.sdk.core.pipeline.filters.FilterCreationResponseMerger;
 import io.harness.pms.sdk.core.plan.creation.creators.PipelineServiceInfoProvider;
+import io.harness.pms.sdk.core.registries.StepRegistry;
 import io.harness.queue.QueueConsumer;
-import io.harness.registries.state.StepRegistry;
 
 import com.google.common.util.concurrent.Service;
 import com.google.common.util.concurrent.ServiceManager;

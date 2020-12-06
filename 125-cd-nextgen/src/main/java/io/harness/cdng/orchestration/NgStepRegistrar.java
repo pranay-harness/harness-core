@@ -14,9 +14,9 @@ import io.harness.cdng.pipeline.steps.PipelineSetupStep;
 import io.harness.cdng.pipeline.steps.RollbackOptionalChildChainStep;
 import io.harness.cdng.pipeline.steps.RollbackOptionalChildrenStep;
 import io.harness.cdng.service.steps.ServiceStep;
+import io.harness.pms.sdk.core.registries.registrar.StepRegistrar;
 import io.harness.pms.sdk.core.steps.Step;
 import io.harness.pms.steps.StepType;
-import io.harness.registries.registrar.StepRegistrar;
 
 import com.google.inject.Inject;
 import com.google.inject.Injector;

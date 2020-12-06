@@ -24,10 +24,10 @@ import io.harness.executionplan.utils.ParentPathInfoUtils;
 import io.harness.pms.ambiance.Ambiance;
 import io.harness.pms.sdk.core.data.Outcome;
 import io.harness.pms.sdk.core.data.StepTransput;
+import io.harness.pms.sdk.core.resolver.RefObjectUtil;
 import io.harness.pms.sdk.core.steps.io.ResolvedRefInput;
 import io.harness.pms.sdk.core.steps.io.StepInputPackage;
 import io.harness.pms.sdk.core.steps.io.StepParameters;
-import io.harness.refObjects.RefObjectUtil;
 import io.harness.rule.Owner;
 import io.harness.steps.dummy.DummyStepParameters;
 

@@ -2,8 +2,8 @@ package io.harness.beans;
 
 import io.harness.expression.ExpressionEvaluatorUtils;
 import io.harness.expression.NotExpression;
-import io.harness.expression.field.OrchestrationField;
-import io.harness.expression.field.OrchestrationFieldType;
+import io.harness.pms.sdk.core.expression.OrchestrationField;
+import io.harness.pms.sdk.core.expression.OrchestrationFieldType;
 import io.harness.walktree.registries.visitorfield.VisitorFieldType;
 import io.harness.walktree.registries.visitorfield.VisitorFieldWrapper;
 

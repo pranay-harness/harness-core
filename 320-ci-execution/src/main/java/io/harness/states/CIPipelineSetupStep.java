@@ -1,6 +1,6 @@
 package io.harness.states;
 
-import static io.harness.resolvers.ResolverUtils.GLOBAL_GROUP_SCOPE;
+import static io.harness.pms.sdk.core.resolver.ResolverUtils.GLOBAL_GROUP_SCOPE;
 import static io.harness.steps.StepUtils.createStepResponseFromChildResponse;
 
 import io.harness.beans.CIPipelineSetupParameters;

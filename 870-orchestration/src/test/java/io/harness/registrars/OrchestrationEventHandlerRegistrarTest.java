@@ -7,7 +7,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.OrchestrationTestBase;
 import io.harness.category.element.UnitTests;
-import io.harness.registries.registrar.OrchestrationEventHandlerRegistrar;
+import io.harness.pms.sdk.core.registries.registrar.OrchestrationEventHandlerRegistrar;
 import io.harness.rule.Owner;
 
 import com.google.inject.Inject;
@@ -35,7 +35,7 @@ public class OrchestrationEventHandlerRegistrarTest extends OrchestrationTestBas
   public void testAllRegistrarsAreRegistered() {
     Set<String> orchestrationEventHandlerRegistrarsClasses = new HashSet<>();
 
-    Reflections reflections = new Reflections("io.harness.registrars");
+    Reflections reflections = new Reflections("io.harness");
     for (Class clazz : reflections.getSubTypesOf(OrchestrationEventHandlerRegistrar.class)) {
       orchestrationEventHandlerRegistrarsClasses.add(clazz.getName());
     }

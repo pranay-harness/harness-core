@@ -4,12 +4,12 @@ import io.harness.beans.InputSetValidator;
 import io.harness.beans.ParameterField;
 import io.harness.engine.expressions.EngineExpressionService;
 import io.harness.expression.EngineExpressionEvaluator;
-import io.harness.expression.field.OrchestrationFieldProcessor;
-import io.harness.expression.field.ProcessorResult;
 import io.harness.ngpipeline.inputset.validators.InputSetValidatorFactory;
 import io.harness.ngpipeline.inputset.validators.RuntimeValidator;
 import io.harness.ngpipeline.inputset.validators.RuntimeValidatorResponse;
 import io.harness.pms.ambiance.Ambiance;
+import io.harness.pms.sdk.core.expression.OrchestrationFieldProcessor;
+import io.harness.pms.sdk.core.expression.ProcessorResult;
 
 import com.google.inject.Inject;
 

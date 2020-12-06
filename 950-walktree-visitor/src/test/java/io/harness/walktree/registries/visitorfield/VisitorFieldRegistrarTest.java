@@ -26,7 +26,7 @@ public class VisitorFieldRegistrarTest extends WalkTreeTestBase {
   public void testAllRegistrarsAreRegistered() {
     Set<String> fieldRegistrarClasses = new HashSet<>();
 
-    Reflections reflections = new Reflections("io.harness.registrars");
+    Reflections reflections = new Reflections("io.harness");
     for (Class clazz : reflections.getSubTypesOf(VisitableFieldRegistrar.class)) {
       fieldRegistrarClasses.add(clazz.getName());
     }

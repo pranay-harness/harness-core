@@ -14,10 +14,10 @@ import io.harness.pms.execution.AsyncExecutableResponse;
 import io.harness.pms.execution.Status;
 import io.harness.pms.execution.failure.FailureInfo;
 import io.harness.pms.execution.failure.FailureType;
+import io.harness.pms.sdk.core.resolver.RefObjectUtil;
 import io.harness.pms.sdk.core.steps.executables.AsyncExecutable;
 import io.harness.pms.sdk.core.steps.io.StepInputPackage;
 import io.harness.pms.sdk.core.steps.io.StepResponse;
-import io.harness.refObjects.RefObjectUtil;
 import io.harness.tasks.ResponseData;
 
 import com.google.inject.Inject;

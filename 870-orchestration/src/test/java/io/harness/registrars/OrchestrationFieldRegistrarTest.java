@@ -6,7 +6,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.OrchestrationTestBase;
 import io.harness.category.element.UnitTests;
-import io.harness.registries.registrar.OrchestrationFieldRegistrar;
+import io.harness.pms.sdk.core.registries.registrar.OrchestrationFieldRegistrar;
 import io.harness.rule.Owner;
 
 import com.google.inject.Inject;
@@ -28,7 +28,7 @@ public class OrchestrationFieldRegistrarTest extends OrchestrationTestBase {
       throws NoSuchMethodException, IllegalAccessException, InvocationTargetException, InstantiationException {
     Set<String> fieldRegistrarClasses = new HashSet<>();
 
-    Reflections reflections = new Reflections("io.harness.registrars");
+    Reflections reflections = new Reflections("io.harness");
     for (Class clazz : reflections.getSubTypesOf(OrchestrationFieldRegistrar.class)) {
       fieldRegistrarClasses.add(clazz.getName());
     }
