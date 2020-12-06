@@ -1,25 +1,21 @@
-package software.wings.service;
+package io.harness.ff;
 
 import static io.harness.beans.FeatureFlag.Scope.GLOBAL;
 import static io.harness.rule.OwnerRule.BRETT;
 import static io.harness.rule.OwnerRule.RUSHABH;
 
-import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
-
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 
+import io.harness.FeatureFlagTestBase;
 import io.harness.beans.FeatureFlag;
 import io.harness.beans.FeatureName;
 import io.harness.beans.PageRequest;
 import io.harness.beans.SearchFilter;
 import io.harness.category.element.UnitTests;
 import io.harness.configuration.DeployMode;
-import io.harness.ff.FeatureFlagServiceImpl;
 import io.harness.persistence.HPersistence;
 import io.harness.rule.Owner;
-
-import software.wings.WingsBaseTest;
 
 import com.google.inject.Inject;
 import java.util.HashSet;
@@ -30,15 +26,16 @@ import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.mockito.Spy;
 
-public class FeatureFlagTest extends WingsBaseTest {
+public class FeatureFlagTest extends FeatureFlagTestBase {
   private static final FeatureName FEATURE =
       FeatureName.CV_DEMO; // Just pick a different one if this one should be deleted.
 
+  private static final String ACCOUNT_ID = "ACCOUNT_ID";
   private static final String TEST_ACCOUNT_ID = "TEST_ACCOUNT_ID";
   private static final String TEST_ACCOUNT_ID_X = "TEST_ACCOUNT_ID_X";
   private static final String TEST_ACCOUNT_ID_Y = "TEST_ACCOUNT_ID_Y";
 
-  @Inject @InjectMocks @Spy private FeatureFlagServiceImpl featureFlagService;
+  @Inject @InjectMocks @Spy private io.harness.ff.FeatureFlagServiceImpl featureFlagService;
 
   @Inject private HPersistence persistence;
 
