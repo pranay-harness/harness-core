@@ -2,7 +2,7 @@ package io.harness.pms.sample.cv.creator.filters;
 
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
-import io.harness.pms.pipeline.filter.FilterCreationResponse;
+import io.harness.pms.filter.creation.FilterCreationResponse;
 import io.harness.pms.sdk.core.pipeline.filters.FilterCreationResponseMerger;
 
 public class CVFilterCreationResponseMerger implements FilterCreationResponseMerger {

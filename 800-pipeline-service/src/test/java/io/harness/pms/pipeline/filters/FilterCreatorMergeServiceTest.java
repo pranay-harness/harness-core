@@ -14,13 +14,13 @@ import static org.mockito.Mockito.when;
 import io.harness.PipelineServiceTestBase;
 import io.harness.category.element.UnitTests;
 import io.harness.exception.InvalidRequestException;
+import io.harness.pms.filter.creation.FilterCreatorMergeService;
+import io.harness.pms.filter.creation.FilterCreatorMergeServiceResponse;
 import io.harness.pms.plan.FilterCreationBlobResponse;
 import io.harness.pms.plan.PlanCreationServiceGrpc;
 import io.harness.pms.plan.YamlFieldBlob;
 import io.harness.pms.plan.creation.PlanCreatorServiceInfo;
 import io.harness.pms.sdk.PmsSdkInstanceService;
-import io.harness.pms.sdk.core.FilterCreatorMergeService;
-import io.harness.pms.sdk.core.FilterCreatorMergeServiceResponse;
 import io.harness.rule.Owner;
 
 import java.io.IOException;

@@ -1,4 +1,4 @@
-package io.harness.pms.sdk.core;
+package io.harness.pms.filter.creation;
 
 import io.harness.pms.plan.FilterCreationBlobResponse;
 
