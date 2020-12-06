@@ -36,6 +36,9 @@ def get_debug_log_api_response():
 
 
 def construct_log(val):
+    if val is None:
+        val = ""
+
     log_format = {
         LOG_FORMAT_TIMESTAMP_KEY: helper.get_current_time_local_version_str(),
         LOG_FORMAT_MESSAGE_KEY: str(val)
@@ -63,6 +66,10 @@ def log_response(http_status, payload):
         "payload": payload
     }
     DEBUG_LOG_DETAILS[DEBUG_LOG_KEY_API_RESPONSE] = construct_log(response_details)
+
+
+def log_last_execution(execution):
+    DEBUG_LOG_DETAILS[DEBUG_LOG_KEY_LAST_EXECUTION_RECORD] = construct_log(execution)
 
 
 def log_api_error():

@@ -411,6 +411,7 @@ def create_csv_data(executions):
 
     for execution in executions:
         # print(execution)
+        log_manager.log_last_execution(execution)
 
         # pipeline specific details
         application_name = get_field(execution, CSV_COL_APPLICATION_NAME)
