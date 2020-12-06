@@ -3,7 +3,6 @@ package io.harness.serializer;
 import io.harness.morphia.MorphiaRegistrar;
 import io.harness.serializer.morphia.NextGenMorphiaClassesRegistrar;
 import io.harness.serializer.morphia.UserGroupMorphiaRegistrar;
-import io.harness.spring.AliasRegistrar;
 
 import com.google.common.collect.ImmutableSet;
 
@@ -24,13 +23,5 @@ public class NextGenRegistrars {
           .addAll(NGTriggerRegistrars.morphiaRegistrars)
           .add(UserGroupMorphiaRegistrar.class)
           .add(NextGenMorphiaClassesRegistrar.class)
-          .build();
-
-  public static final ImmutableSet<Class<? extends AliasRegistrar>> aliasRegistrars =
-      ImmutableSet.<Class<? extends AliasRegistrar>>builder()
-          .addAll(SecretManagerClientRegistrars.aliasRegistrars)
-          .addAll(ConnectorNextGenRegistrars.aliasRegistrars)
-          .addAll(NGTriggerRegistrars.aliasRegistrars)
-          .addAll(CDNGRegistrars.aliasRegistrars)
           .build();
 }

@@ -26,7 +26,6 @@ import io.harness.persistence.HPersistence;
 import io.harness.serializer.KryoRegistrar;
 import io.harness.serializer.ManagerRegistrars;
 import io.harness.service.DelegateServiceModule;
-import io.harness.spring.AliasRegistrar;
 import io.harness.springdata.SpringPersistenceModule;
 import io.harness.stream.AtmosphereBroadcaster;
 import io.harness.stream.StreamModule;
@@ -118,14 +117,6 @@ public class DataGenApplication extends Application<MainConfiguration> {
       Set<Class<? extends MorphiaRegistrar>> morphiaRegistrars() {
         return ImmutableSet.<Class<? extends MorphiaRegistrar>>builder()
             .addAll(ManagerRegistrars.morphiaRegistrars)
-            .build();
-      }
-
-      @Provides
-      @Singleton
-      Set<Class<? extends AliasRegistrar>> aliasRegistrars() {
-        return ImmutableSet.<Class<? extends AliasRegistrar>>builder()
-            .addAll(ManagerRegistrars.aliasRegistrars)
             .build();
       }
 

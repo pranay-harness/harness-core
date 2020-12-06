@@ -12,7 +12,6 @@ import io.harness.rule.InjectorRuleMixin;
 import io.harness.serializer.KryoModule;
 import io.harness.serializer.KryoRegistrar;
 import io.harness.serializer.PipelineServiceModuleRegistrars;
-import io.harness.spring.AliasRegistrar;
 import io.harness.springdata.SpringPersistenceTestModule;
 import io.harness.testlib.module.MongoRuleMixin;
 import io.harness.testlib.module.TestMongoModule;
@@ -65,14 +64,6 @@ public class PipelineServiceTestRule implements InjectorRuleMixin, MethodRule, M
       Set<Class<? extends MorphiaRegistrar>> morphiaRegistrars() {
         return ImmutableSet.<Class<? extends MorphiaRegistrar>>builder()
             .addAll(PipelineServiceModuleRegistrars.morphiaRegistrars)
-            .build();
-      }
-
-      @Provides
-      @Singleton
-      Set<Class<? extends AliasRegistrar>> aliasRegistrars() {
-        return ImmutableSet.<Class<? extends AliasRegistrar>>builder()
-            .addAll(PipelineServiceModuleRegistrars.aliasRegistrars)
             .build();
       }
 

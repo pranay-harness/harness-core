@@ -7,7 +7,6 @@ import io.harness.morphia.MorphiaRegistrar;
 import io.harness.persistence.HPersistence;
 import io.harness.serializer.KryoRegistrar;
 import io.harness.serializer.PmsSdkModuleRegistrars;
-import io.harness.spring.AliasRegistrar;
 
 import com.google.common.collect.ImmutableSet;
 import com.google.inject.AbstractModule;
@@ -43,14 +42,6 @@ public class CdServiceModule extends AbstractModule {
   public Set<Class<? extends MorphiaRegistrar>> morphiaRegistrars() {
     return ImmutableSet.<Class<? extends MorphiaRegistrar>>builder()
         .addAll(PmsSdkModuleRegistrars.morphiaRegistrars)
-        .build();
-  }
-
-  @Provides
-  @Singleton
-  public Set<Class<? extends AliasRegistrar>> aliasRegistrars() {
-    return ImmutableSet.<Class<? extends AliasRegistrar>>builder()
-        .addAll(PmsSdkModuleRegistrars.aliasRegistrars)
         .build();
   }
 

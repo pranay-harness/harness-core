@@ -48,9 +48,7 @@ import io.harness.serializer.KryoRegistrar;
 import io.harness.serializer.ManagerRegistrars;
 import io.harness.serializer.kryo.TestManagerKryoRegistrar;
 import io.harness.serializer.morphia.ManagerTestMorphiaRegistrar;
-import io.harness.serializer.spring.WingsTestSpringAliasRegistrar;
 import io.harness.service.DelegateServiceModule;
-import io.harness.spring.AliasRegistrar;
 import io.harness.springdata.SpringPersistenceTestModule;
 import io.harness.testlib.RealMongo;
 import io.harness.testlib.module.MongoRuleMixin;
@@ -192,15 +190,6 @@ public class WingsRule implements MethodRule, InjectorRuleMixin, MongoRuleMixin 
       @Singleton
       Set<Class<? extends MorphiaRegistrar>> morphiaRegistrars() {
         return getMorphiaRegistrars();
-      }
-
-      @Provides
-      @Singleton
-      Set<Class<? extends AliasRegistrar>> aliasRegistrars() {
-        return ImmutableSet.<Class<? extends AliasRegistrar>>builder()
-            .addAll(ManagerRegistrars.aliasRegistrars)
-            .add(WingsTestSpringAliasRegistrar.class)
-            .build();
       }
 
       @Provides

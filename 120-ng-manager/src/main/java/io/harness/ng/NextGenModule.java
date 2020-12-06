@@ -67,7 +67,6 @@ import io.harness.serializer.KryoRegistrar;
 import io.harness.serializer.ManagerRegistrars;
 import io.harness.serializer.NextGenRegistrars;
 import io.harness.service.DelegateServiceDriverModule;
-import io.harness.spring.AliasRegistrar;
 import io.harness.springdata.SpringPersistenceModule;
 import io.harness.tasks.TaskExecutor;
 import io.harness.tasks.TaskMode;
@@ -200,14 +199,6 @@ public class NextGenModule extends AbstractModule {
       Set<Class<? extends MorphiaRegistrar>> morphiaRegistrars() {
         return ImmutableSet.<Class<? extends MorphiaRegistrar>>builder()
             .addAll(NextGenRegistrars.morphiaRegistrars)
-            .build();
-      }
-
-      @Provides
-      @Singleton
-      Set<Class<? extends AliasRegistrar>> aliasRegistrars() {
-        return ImmutableSet.<Class<? extends AliasRegistrar>>builder()
-            .addAll(NextGenRegistrars.aliasRegistrars)
             .build();
       }
 

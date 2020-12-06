@@ -5,7 +5,6 @@ import io.harness.serializer.ApiServicesRegistrars;
 import io.harness.serializer.CapabilityRegistrars;
 import io.harness.serializer.DelegateTasksBeansRegistrars;
 import io.harness.serializer.KryoRegistrar;
-import io.harness.spring.AliasRegistrar;
 
 import com.google.common.collect.ImmutableSet;
 import lombok.experimental.UtilityClass;
@@ -23,11 +22,5 @@ public class DelegateTasksRegistrars {
           .addAll(ApiServicesRegistrars.morphiaRegistrars)
           .addAll(CapabilityRegistrars.morphiaRegistrars)
           .addAll(DelegateTasksBeansRegistrars.morphiaRegistrars)
-          .build();
-
-  public static final ImmutableSet<Class<? extends AliasRegistrar>> aliasRegistrars =
-      ImmutableSet.<Class<? extends AliasRegistrar>>builder()
-          .addAll(ApiServicesRegistrars.aliasRegistrars)
-          .addAll(DelegateTasksBeansRegistrars.aliasRegistrars)
           .build();
 }

@@ -2,7 +2,6 @@ package io.harness.serializer;
 
 import io.harness.morphia.MorphiaRegistrar;
 import io.harness.serializer.kryo.CvNextGenCommonsBeansKryoRegistrar;
-import io.harness.spring.AliasRegistrar;
 
 import com.google.common.collect.ImmutableSet;
 import lombok.experimental.UtilityClass;
@@ -20,11 +19,5 @@ public class CvNextGenCommonsRegistrars {
       ImmutableSet.<Class<? extends MorphiaRegistrar>>builder()
           .addAll(ConnectorNextGenRegistrars.morphiaRegistrars)
           .addAll(CommonEntitiesRegistrars.morphiaRegistrars)
-          .build();
-
-  public static final ImmutableSet<Class<? extends AliasRegistrar>> aliasRegistrars =
-      ImmutableSet.<Class<? extends AliasRegistrar>>builder()
-          .addAll(ConnectorNextGenRegistrars.aliasRegistrars)
-          .addAll(CommonEntitiesRegistrars.aliasRegistrars)
           .build();
 }

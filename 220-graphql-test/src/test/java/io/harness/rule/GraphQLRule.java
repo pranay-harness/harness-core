@@ -28,7 +28,6 @@ import io.harness.serializer.KryoRegistrar;
 import io.harness.serializer.ManagerRegistrars;
 import io.harness.serializer.kryo.TestManagerKryoRegistrar;
 import io.harness.service.DelegateServiceModule;
-import io.harness.spring.AliasRegistrar;
 import io.harness.springdata.SpringPersistenceTestModule;
 import io.harness.testlib.module.MongoRuleMixin;
 import io.harness.testlib.module.TestMongoModule;
@@ -165,14 +164,6 @@ public class GraphQLRule implements MethodRule, InjectorRuleMixin, MongoRuleMixi
       Set<Class<? extends MorphiaRegistrar>> morphiaRegistrars() {
         return ImmutableSet.<Class<? extends MorphiaRegistrar>>builder()
             .addAll(ManagerRegistrars.morphiaRegistrars)
-            .build();
-      }
-
-      @Provides
-      @Singleton
-      Set<Class<? extends AliasRegistrar>> aliasRegistrars() {
-        return ImmutableSet.<Class<? extends AliasRegistrar>>builder()
-            .addAll(ManagerRegistrars.aliasRegistrars)
             .build();
       }
 

@@ -3,8 +3,6 @@ package io.harness.serializer;
 import io.harness.morphia.MorphiaRegistrar;
 import io.harness.serializer.kryo.NGPipelineKryoRegistrar;
 import io.harness.serializer.morphia.NGPipelineMorphiaRegistrar;
-import io.harness.serializer.spring.NGPipelineAliasRegistrar;
-import io.harness.spring.AliasRegistrar;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -21,16 +19,6 @@ public class NGPipelineRegistrars {
           .addAll(OrchestrationVisualizationModuleRegistrars.kryoRegistrars)
           .addAll(YamlBeansModuleRegistrars.kryoRegistrars)
           .add(NGPipelineKryoRegistrar.class)
-          .build();
-
-  public final ImmutableSet<Class<? extends AliasRegistrar>> aliasRegistrars =
-      ImmutableSet.<Class<? extends AliasRegistrar>>builder()
-          .addAll(DelegateTasksBeansRegistrars.aliasRegistrars)
-          .addAll(ProjectAndOrgRegistrars.aliasRegistrars)
-          .addAll(NGCoreClientRegistrars.aliasRegistrars)
-          .addAll(OrchestrationVisualizationModuleRegistrars.aliasRegistrars)
-          .addAll(YamlBeansModuleRegistrars.aliasRegistrars)
-          .add(NGPipelineAliasRegistrar.class)
           .build();
 
   public final ImmutableSet<Class<? extends MorphiaRegistrar>> morphiaRegistrars =

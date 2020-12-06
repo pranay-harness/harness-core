@@ -3,7 +3,6 @@ package io.harness.serializer;
 import io.harness.morphia.MorphiaRegistrar;
 import io.harness.serializer.kryo.SMCoreKryoRegistrar;
 import io.harness.serializer.morphia.SMCoreMorphiaRegistrar;
-import io.harness.spring.AliasRegistrar;
 
 import com.google.common.collect.ImmutableSet;
 import lombok.experimental.UtilityClass;
@@ -21,10 +20,5 @@ public class SMCoreRegistrars {
           .addAll(SecretManagerClientRegistrars.morphiaRegistrars)
           .addAll(RbacCoreRegistrars.morphiaRegistrars)
           .add(SMCoreMorphiaRegistrar.class)
-          .build();
-  public static final ImmutableSet<Class<? extends AliasRegistrar>> aliasRegistrars =
-      ImmutableSet.<Class<? extends AliasRegistrar>>builder()
-          .addAll(SecretManagerClientRegistrars.aliasRegistrars)
-          .addAll(RbacCoreRegistrars.aliasRegistrars)
           .build();
 }

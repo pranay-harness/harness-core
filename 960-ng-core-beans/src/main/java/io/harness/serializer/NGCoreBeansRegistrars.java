@@ -2,7 +2,6 @@ package io.harness.serializer;
 
 import io.harness.morphia.MorphiaRegistrar;
 import io.harness.serializer.kryo.NGCoreBeansKryoRegistrar;
-import io.harness.spring.AliasRegistrar;
 
 import com.google.common.collect.ImmutableSet;
 import io.serializer.registrars.NGCommonsRegistrars;
@@ -15,12 +14,6 @@ public class NGCoreBeansRegistrars {
           .addAll(NGCommonsRegistrars.kryoRegistrars)
           .addAll(ApiServiceBeansRegistrars.kryoRegistrars)
           .add(NGCoreBeansKryoRegistrar.class)
-          .build();
-
-  public static final ImmutableSet<Class<? extends AliasRegistrar>> aliasRegistrars =
-      ImmutableSet.<Class<? extends AliasRegistrar>>builder()
-          .addAll(NGCommonsRegistrars.aliasRegistrars)
-          .addAll(ApiServiceBeansRegistrars.aliasRegistrars)
           .build();
 
   public static final ImmutableSet<Class<? extends MorphiaRegistrar>> morphiaRegistrars =

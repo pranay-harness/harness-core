@@ -14,7 +14,6 @@ import io.harness.pms.pipeline.service.PMSPipelineServiceImpl;
 import io.harness.queue.QueuePublisher;
 import io.harness.serializer.KryoRegistrar;
 import io.harness.serializer.PipelineServiceModuleRegistrars;
-import io.harness.spring.AliasRegistrar;
 import io.harness.springdata.SpringPersistenceModule;
 
 import com.google.common.collect.ImmutableList;
@@ -71,14 +70,6 @@ public class PipelineServiceModule extends AbstractModule {
   public Set<Class<? extends MorphiaRegistrar>> morphiaRegistrars() {
     return ImmutableSet.<Class<? extends MorphiaRegistrar>>builder()
         .addAll(PipelineServiceModuleRegistrars.morphiaRegistrars)
-        .build();
-  }
-
-  @Provides
-  @Singleton
-  public Set<Class<? extends AliasRegistrar>> aliasRegistrars() {
-    return ImmutableSet.<Class<? extends AliasRegistrar>>builder()
-        .addAll(PipelineServiceModuleRegistrars.aliasRegistrars)
         .build();
   }
 

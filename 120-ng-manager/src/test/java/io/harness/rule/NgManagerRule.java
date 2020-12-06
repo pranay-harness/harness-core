@@ -18,7 +18,6 @@ import io.harness.serializer.KryoRegistrar;
 import io.harness.serializer.ManagerRegistrars;
 import io.harness.serializer.NextGenRegistrars;
 import io.harness.service.DelegateGrpcClientWrapper;
-import io.harness.spring.AliasRegistrar;
 import io.harness.springdata.SpringPersistenceTestModule;
 import io.harness.testlib.module.MongoRuleMixin;
 import io.harness.testlib.module.TestMongoModule;
@@ -95,12 +94,6 @@ public class NgManagerRule implements MethodRule, InjectorRuleMixin, MongoRuleMi
       @Singleton
       Set<Class<? extends MorphiaRegistrar>> morphiaRegistrars() {
         return NextGenRegistrars.morphiaRegistrars;
-      }
-
-      @Provides
-      @Singleton
-      Set<Class<? extends AliasRegistrar>> aliasRegistrars() {
-        return NextGenRegistrars.aliasRegistrars;
       }
 
       @Provides

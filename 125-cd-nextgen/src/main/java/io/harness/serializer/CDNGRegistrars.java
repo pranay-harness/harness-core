@@ -3,8 +3,6 @@ package io.harness.serializer;
 import io.harness.morphia.MorphiaRegistrar;
 import io.harness.serializer.kryo.NGKryoRegistrar;
 import io.harness.serializer.morphia.NGMorphiaRegistrar;
-import io.harness.serializer.spring.NgAliasRegistrar;
-import io.harness.spring.AliasRegistrar;
 
 import com.google.common.collect.ImmutableSet;
 import lombok.experimental.UtilityClass;
@@ -33,17 +31,5 @@ public class CDNGRegistrars {
           .addAll(ConnectorNextGenRegistrars.morphiaRegistrars)
           .addAll(PmsSdkModuleRegistrars.morphiaRegistrars)
           .add(NGMorphiaRegistrar.class)
-          .build();
-
-  public static final ImmutableSet<Class<? extends AliasRegistrar>> aliasRegistrars =
-      ImmutableSet.<Class<? extends AliasRegistrar>>builder()
-          .addAll(ManagerRegistrars.aliasRegistrars)
-          .addAll(SMCoreRegistrars.aliasRegistrars)
-          .addAll(DelegateServiceDriverRegistrars.aliasRegistrars)
-          .addAll(ExecutionPlanModuleRegistrars.aliasRegistrars)
-          .addAll(NGPipelineRegistrars.aliasRegistrars)
-          .addAll(ConnectorNextGenRegistrars.aliasRegistrars)
-          .addAll(PmsSdkModuleRegistrars.aliasRegistrars)
-          .add(NgAliasRegistrar.class)
           .build();
 }
