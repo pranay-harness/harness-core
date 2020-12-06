@@ -1,7 +1,5 @@
 package io.harness.ccm.setup.graphql;
 
-import static io.harness.ccm.billing.preaggregated.PreAggregateConstants.countStringValueConstant;
-import static io.harness.ccm.billing.preaggregated.PreAggregateConstants.entityCloudProviderConst;
 import static io.harness.rule.OwnerRule.ROHIT;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -11,6 +9,7 @@ import static org.mockito.Mockito.when;
 
 import io.harness.category.element.UnitTests;
 import io.harness.ccm.billing.bigquery.BigQueryService;
+import io.harness.ccm.billing.preaggregated.PreAggregateConstants;
 import io.harness.ccm.setup.config.CESetUpConfig;
 import io.harness.ccm.setup.graphql.QLCEOverviewStatsData.QLCEOverviewStatsDataBuilder;
 import io.harness.rule.Owner;
@@ -119,8 +118,8 @@ public class OverviewPageStatsDataFetcherTest extends AbstractDataFetcherTestBas
   public void testModifyOverviewStatsBuilder() {
     FieldValueList row = mock(FieldValueList.class);
     FieldValue fieldValue = mock(FieldValue.class);
-    when(row.get(entityCloudProviderConst)).thenReturn(fieldValue);
-    when(row.get(countStringValueConstant)).thenReturn(fieldValue);
+    when(row.get(PreAggregateConstants.entityCloudProviderConst)).thenReturn(fieldValue);
+    when(row.get(PreAggregateConstants.countStringValueConstant)).thenReturn(fieldValue);
     when(fieldValue.getStringValue()).thenReturn("AWS");
     when(fieldValue.getDoubleValue()).thenReturn(1.0);
     QLCEOverviewStatsDataBuilder overviewStatsDataBuilder = QLCEOverviewStatsData.builder();

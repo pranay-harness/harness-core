@@ -77,7 +77,7 @@ public class PipelineExecutionControllerTest extends WingsBaseTest {
   public void pipelineExecutionIsBuiltCorrectlyEvenWhenStageIsDeleted() {
     // Note: Deleted few fields from this due to issues with serialization
     WorkflowExecution workflowExecution =
-        JsonUtils.readResourceFile("./execution/workflow_execution.json", WorkflowExecution.class);
+        JsonUtils.readResourceFile("execution/workflow_execution.json", WorkflowExecution.class);
 
     when(workflowExecutionService.fetchWorkflowVariables(any(), any(), anyString(), anyString()))
         .thenThrow(new IllegalStateException());
@@ -86,7 +86,7 @@ public class PipelineExecutionControllerTest extends WingsBaseTest {
     pipelineExecutionController.populatePipelineExecution(workflowExecution, builder);
     JsonNode actual = JsonUtils.toJsonNode(builder.build());
     JsonNode expected =
-        JsonUtils.readResourceFile("./execution/qlPipeline_execution_expected_when_exception.json", JsonNode.class);
+        JsonUtils.readResourceFile("execution/qlPipeline_execution_expected_when_exception.json", JsonNode.class);
     assertEquals("QLPipeline execution should be equal", expected, actual);
   }
 
@@ -96,7 +96,7 @@ public class PipelineExecutionControllerTest extends WingsBaseTest {
   public void pipelineExecutionIsBuiltCorrectly() {
     // Note: Deleted few fields from this due to issues with serialization
     WorkflowExecution workflowExecution =
-        JsonUtils.readResourceFile("./execution/workflow_execution.json", WorkflowExecution.class);
+        JsonUtils.readResourceFile("execution/workflow_execution.json", WorkflowExecution.class);
 
     WorkflowVariablesMetadata metadata = new WorkflowVariablesMetadata(Lists.newArrayList());
     when(workflowExecutionService.fetchWorkflowVariables(any(), any(), anyString(), anyString())).thenReturn(metadata);
@@ -104,7 +104,7 @@ public class PipelineExecutionControllerTest extends WingsBaseTest {
     QLPipelineExecutionBuilder builder = QLPipelineExecution.builder();
     pipelineExecutionController.populatePipelineExecution(workflowExecution, builder);
     JsonNode actual = JsonUtils.toJsonNode(builder.build());
-    JsonNode expected = JsonUtils.readResourceFile("./execution/qlPipeline_execution_expected.json", JsonNode.class);
+    JsonNode expected = JsonUtils.readResourceFile("execution/qlPipeline_execution_expected.json", JsonNode.class);
     assertEquals("QLPipeline execution should be equal", expected, actual);
   }
 

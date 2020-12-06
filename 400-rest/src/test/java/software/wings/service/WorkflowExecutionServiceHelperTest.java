@@ -55,7 +55,6 @@ import com.google.inject.Inject;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import org.assertj.core.api.Assertions;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
@@ -369,7 +368,7 @@ public class WorkflowExecutionServiceHelperTest extends WingsBaseTest {
         appID, pipelineExecutionId, pipelineStageElementId);
     List<Variable> expected =
         JsonUtils.readResourceFile("./expected_workflow_vars_metada.json", new TypeReference<List<Variable>>() {});
-    Assertions.assertThat(actual.getWorkflowVariables()).isEqualTo(expected);
+    assertThat(actual.getWorkflowVariables()).isEqualTo(expected);
   }
 
   @Test

@@ -11,6 +11,7 @@ import static software.wings.utils.WingsTestConstants.APP_NAME;
 import static software.wings.utils.WingsTestConstants.ENV_ID;
 
 import static java.util.Arrays.asList;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyList;
@@ -51,7 +52,6 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import org.assertj.core.api.Assertions;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -86,10 +86,10 @@ public class DelegateProfileManagerServiceTest extends WingsBaseTest {
 
     PageResponse<DelegateProfileDetails> delegateProfileDetailsPageResponse =
         delegateProfileManagerService.list(ACCOUNT_ID, pageRequest);
-    Assertions.assertThat(delegateProfileDetailsPageResponse).isNull();
+    assertThat(delegateProfileDetailsPageResponse).isNull();
 
     delegateProfileDetailsPageResponse = delegateProfileManagerService.list(ACCOUNT_ID, pageRequest);
-    Assertions.assertThat(delegateProfileDetailsPageResponse).isNotNull();
+    assertThat(delegateProfileDetailsPageResponse).isNotNull();
   }
 
   @Test
@@ -107,15 +107,13 @@ public class DelegateProfileManagerServiceTest extends WingsBaseTest {
 
     DelegateProfileDetails updatedDelegateProfileDetails =
         delegateProfileManagerService.get(ACCOUNT_ID, delegateProfileGrpc.getProfileId().getId());
-    Assertions.assertThat(updatedDelegateProfileDetails).isNull();
+    assertThat(updatedDelegateProfileDetails).isNull();
 
     updatedDelegateProfileDetails =
         delegateProfileManagerService.get(ACCOUNT_ID, delegateProfileGrpc.getProfileId().getId());
-    Assertions.assertThat(updatedDelegateProfileDetails).isNotNull();
-    Assertions.assertThat(updatedDelegateProfileDetails.getUuid())
-        .isEqualTo(delegateProfileGrpc.getProfileId().getId());
-    Assertions.assertThat(updatedDelegateProfileDetails.getAccountId())
-        .isEqualTo(delegateProfileGrpc.getAccountId().getId());
+    assertThat(updatedDelegateProfileDetails).isNotNull();
+    assertThat(updatedDelegateProfileDetails.getUuid()).isEqualTo(delegateProfileGrpc.getProfileId().getId());
+    assertThat(updatedDelegateProfileDetails.getAccountId()).isEqualTo(delegateProfileGrpc.getAccountId().getId());
   }
 
   @Test
@@ -155,17 +153,16 @@ public class DelegateProfileManagerServiceTest extends WingsBaseTest {
         .thenReturn(delegateProfileGrpc);
 
     DelegateProfileDetails updatedDelegateProfileDetails = delegateProfileManagerService.update(profileDetail);
-    Assertions.assertThat(updatedDelegateProfileDetails).isNull();
+    assertThat(updatedDelegateProfileDetails).isNull();
 
     updatedDelegateProfileDetails = delegateProfileManagerService.update(profileDetail);
-    Assertions.assertThat(updatedDelegateProfileDetails).isNotNull();
-    Assertions.assertThat(updatedDelegateProfileDetails.getUuid())
-        .isEqualTo(delegateProfileGrpc.getProfileId().getId());
-    Assertions.assertThat(updatedDelegateProfileDetails).isEqualToIgnoringGivenFields(profileDetail, "uuid");
-    Assertions.assertThat(updatedDelegateProfileDetails.getAccountId()).isEqualTo(ACCOUNT_ID);
-    Assertions.assertThat(updatedDelegateProfileDetails.getDescription()).isEqualTo("description");
-    Assertions.assertThat(updatedDelegateProfileDetails.getScopingRules().get(0).getDescription()).isEqualTo("test");
-    Assertions.assertThat(updatedDelegateProfileDetails.getScopingRules().get(0).getApplicationId()).isEqualTo("appId");
+    assertThat(updatedDelegateProfileDetails).isNotNull();
+    assertThat(updatedDelegateProfileDetails.getUuid()).isEqualTo(delegateProfileGrpc.getProfileId().getId());
+    assertThat(updatedDelegateProfileDetails).isEqualToIgnoringGivenFields(profileDetail, "uuid");
+    assertThat(updatedDelegateProfileDetails.getAccountId()).isEqualTo(ACCOUNT_ID);
+    assertThat(updatedDelegateProfileDetails.getDescription()).isEqualTo("description");
+    assertThat(updatedDelegateProfileDetails.getScopingRules().get(0).getDescription()).isEqualTo("test");
+    assertThat(updatedDelegateProfileDetails.getScopingRules().get(0).getApplicationId()).isEqualTo("appId");
   }
 
   @Test
@@ -236,8 +233,8 @@ public class DelegateProfileManagerServiceTest extends WingsBaseTest {
     when(delegateProfileServiceGrpcClient.addProfile(any(DelegateProfileGrpc.class))).thenReturn(delegateProfileGrpc);
 
     DelegateProfileDetails result = delegateProfileManagerService.add(profileDetail);
-    Assertions.assertThat(result).isNotNull();
-    Assertions.assertThat(result).isEqualToIgnoringGivenFields(profileDetail, "uuid");
+    assertThat(result).isNotNull();
+    assertThat(result).isEqualToIgnoringGivenFields(profileDetail, "uuid");
   }
 
   @Test
@@ -279,15 +276,13 @@ public class DelegateProfileManagerServiceTest extends WingsBaseTest {
 
     DelegateProfileDetails updatedDelegateProfileDetails = delegateProfileManagerService.updateScopingRules(
         ACCOUNT_ID, delegateProfileGrpc.getProfileId().getId(), asList(scopingRuleDetail));
-    Assertions.assertThat(updatedDelegateProfileDetails).isNull();
+    assertThat(updatedDelegateProfileDetails).isNull();
 
     updatedDelegateProfileDetails = delegateProfileManagerService.updateScopingRules(
         ACCOUNT_ID, delegateProfileGrpc.getProfileId().getId(), asList(scopingRuleDetail));
-    Assertions.assertThat(updatedDelegateProfileDetails).isNotNull();
-    Assertions.assertThat(updatedDelegateProfileDetails.getUuid())
-        .isEqualTo(delegateProfileGrpc.getProfileId().getId());
-    Assertions.assertThat(updatedDelegateProfileDetails.getAccountId())
-        .isEqualTo(delegateProfileGrpc.getAccountId().getId());
+    assertThat(updatedDelegateProfileDetails).isNotNull();
+    assertThat(updatedDelegateProfileDetails.getUuid()).isEqualTo(delegateProfileGrpc.getProfileId().getId());
+    assertThat(updatedDelegateProfileDetails.getAccountId()).isEqualTo(delegateProfileGrpc.getAccountId().getId());
   }
 
   @Test
@@ -336,16 +331,14 @@ public class DelegateProfileManagerServiceTest extends WingsBaseTest {
 
     DelegateProfileDetails updatedDelegateProfileDetails = delegateProfileManagerService.updateSelectors(
         ACCOUNT_ID, delegateProfileGrpc.getProfileId().getId(), selectors);
-    Assertions.assertThat(updatedDelegateProfileDetails).isNull();
+    assertThat(updatedDelegateProfileDetails).isNull();
 
     updatedDelegateProfileDetails = delegateProfileManagerService.updateSelectors(
         ACCOUNT_ID, delegateProfileGrpc.getProfileId().getId(), selectors);
 
-    Assertions.assertThat(updatedDelegateProfileDetails).isNotNull();
-    Assertions.assertThat(updatedDelegateProfileDetails.getUuid())
-        .isEqualTo(delegateProfileGrpc.getProfileId().getId());
-    Assertions.assertThat(updatedDelegateProfileDetails.getAccountId())
-        .isEqualTo(delegateProfileGrpc.getAccountId().getId());
+    assertThat(updatedDelegateProfileDetails).isNotNull();
+    assertThat(updatedDelegateProfileDetails.getUuid()).isEqualTo(delegateProfileGrpc.getProfileId().getId());
+    assertThat(updatedDelegateProfileDetails.getAccountId()).isEqualTo(delegateProfileGrpc.getAccountId().getId());
   }
 
   @Test
@@ -367,8 +360,8 @@ public class DelegateProfileManagerServiceTest extends WingsBaseTest {
 
     String description = delegateProfileManagerService.generateScopingRuleDescription(scopingEntities);
 
-    Assertions.assertThat(description).isNotNull();
-    Assertions.assertThat(description).isEqualTo("Application: Harness App; Service: service1, service2; ");
+    assertThat(description).isNotNull();
+    assertThat(description).isEqualTo("Application: Harness App; Service: service1, service2; ");
   }
 
   @Test
@@ -387,8 +380,8 @@ public class DelegateProfileManagerServiceTest extends WingsBaseTest {
     List<String> retrieveScopingRuleEntitiesNames =
         delegateProfileManagerService.retrieveScopingRuleEntitiesNames(APP_ID_FIELD, scopingEntitiesIds);
 
-    Assertions.assertThat(retrieveScopingRuleEntitiesNames).isNotNull();
-    Assertions.assertThat(retrieveScopingRuleEntitiesNames).containsExactly(APP_NAME);
+    assertThat(retrieveScopingRuleEntitiesNames).isNotNull();
+    assertThat(retrieveScopingRuleEntitiesNames).containsExactly(APP_NAME);
   }
 
   @Test
@@ -412,8 +405,8 @@ public class DelegateProfileManagerServiceTest extends WingsBaseTest {
     List<String> retrieveScopingRuleEntitiesNames =
         delegateProfileManagerService.retrieveScopingRuleEntitiesNames(SERVICE_ID_FIELD, scopingEntitiesIds);
 
-    Assertions.assertThat(retrieveScopingRuleEntitiesNames).isNotNull();
-    Assertions.assertThat(retrieveScopingRuleEntitiesNames).containsExactly("To-Do List K8s", "To-Do List Docker");
+    assertThat(retrieveScopingRuleEntitiesNames).isNotNull();
+    assertThat(retrieveScopingRuleEntitiesNames).containsExactly("To-Do List K8s", "To-Do List Docker");
   }
 
   @Test
@@ -432,7 +425,7 @@ public class DelegateProfileManagerServiceTest extends WingsBaseTest {
     List<String> retrieveScopingRuleEntitiesNames =
         delegateProfileManagerService.retrieveScopingRuleEntitiesNames(ENV_ID_FIELD, scopingEntitiesIds);
 
-    Assertions.assertThat(retrieveScopingRuleEntitiesNames).isNotNull();
-    Assertions.assertThat(retrieveScopingRuleEntitiesNames).containsExactly("qa");
+    assertThat(retrieveScopingRuleEntitiesNames).isNotNull();
+    assertThat(retrieveScopingRuleEntitiesNames).containsExactly("qa");
   }
 }
