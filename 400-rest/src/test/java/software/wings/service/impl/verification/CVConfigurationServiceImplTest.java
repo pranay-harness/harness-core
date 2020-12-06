@@ -15,6 +15,7 @@ import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 import static software.wings.common.VerificationConstants.CRON_POLL_INTERVAL_IN_MINUTES;
 import static software.wings.common.VerificationConstants.SERVICE_GUAARD_LIMIT;
 import static software.wings.sm.StateType.APM_VERIFICATION;
+import static software.wings.utils.StackDriverUtils.createStackDriverConfig;
 
 import static java.time.Duration.ofMillis;
 import static java.time.Duration.ofSeconds;
@@ -89,7 +90,6 @@ import software.wings.verification.log.CustomLogCVServiceConfiguration;
 import software.wings.verification.log.LogsCVConfiguration;
 import software.wings.verification.prometheus.PrometheusCVServiceConfiguration;
 import software.wings.verification.stackdriver.StackDriverMetricCVConfiguration;
-import software.wings.verification.stackdriver.StackDriverMetricDefinition;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.google.common.base.Charsets;
@@ -730,41 +730,6 @@ public class CVConfigurationServiceImplTest extends WingsBaseTest {
     assertThat(definition.getMetricTemplates().size()).isEqualTo(3);
     assertThat(definition.getMetricTemplates().keySet())
         .isEqualTo(new HashSet<>(Lists.newArrayList("metricName2", "metricName3", updatedMetricName)));
-  }
-
-  public static StackDriverMetricCVConfiguration createStackDriverConfig(String accountId) throws Exception {
-    String paramsForStackDriver = Resources.toString(
-        CVConfigurationServiceImplTest.class.getResource("/apm/stackdriverpayload.json"), Charsets.UTF_8);
-    StackDriverMetricDefinition definition = StackDriverMetricDefinition.builder()
-                                                 .filterJson(paramsForStackDriver)
-                                                 .metricName("metricName")
-                                                 .metricType("INFRA")
-                                                 .txnName("TransactionName1")
-                                                 .build();
-    StackDriverMetricDefinition definition1 = StackDriverMetricDefinition.builder()
-                                                  .filterJson(paramsForStackDriver)
-                                                  .metricName("metricName2")
-                                                  .metricType("INFRA")
-                                                  .txnName("TransactionName2")
-                                                  .build();
-    StackDriverMetricDefinition definition2 = StackDriverMetricDefinition.builder()
-                                                  .filterJson(paramsForStackDriver)
-                                                  .metricName("metricName3")
-                                                  .metricType("INFRA")
-                                                  .txnName("TransactionName2")
-                                                  .build();
-    StackDriverMetricCVConfiguration configuration =
-        StackDriverMetricCVConfiguration.builder()
-            .metricDefinitions(Arrays.asList(definition, definition1, definition2))
-            .build();
-    configuration.setAccountId(accountId);
-    configuration.setStateType(StateType.STACK_DRIVER);
-    configuration.setEnvId(generateUuid());
-    configuration.setName("StackDriver");
-    configuration.setConnectorId(generateUuid());
-    configuration.setServiceId(generateUuid());
-
-    return configuration;
   }
 
   @Test

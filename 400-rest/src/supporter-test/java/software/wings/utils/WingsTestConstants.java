@@ -8,9 +8,6 @@ import io.harness.limits.lib.StaticLimit;
 import lombok.AllArgsConstructor;
 import lombok.Value;
 
-/**
- * Created by anubhaw on 5/26/16.
- */
 public interface WingsTestConstants {
   String APP_ID = "APP_ID";
 

@@ -1,4 +1,4 @@
-package io.harness.grpc;
+package io.harness.engine.interrupts.steps;
 
 import io.harness.persistence.PersistentEntity;
 

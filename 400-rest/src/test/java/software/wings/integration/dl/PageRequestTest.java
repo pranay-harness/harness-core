@@ -12,7 +12,6 @@ import static io.harness.rule.OwnerRule.GEORGE;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 
-import io.harness.annotation.HarnessEntity;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageRequest.PageRequestBuilder;
 import io.harness.beans.PageResponse;
@@ -22,42 +21,15 @@ import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
 
 import software.wings.WingsBaseTest;
-import software.wings.beans.Base;
 import software.wings.dl.WingsPersistence;
 
 import com.google.inject.Inject;
 import java.util.List;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.EqualsAndHashCode;
-import lombok.NoArgsConstructor;
-import lombok.Value;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
-import org.mongodb.morphia.annotations.Entity;
 
 public class PageRequestTest extends WingsBaseTest {
   @Inject private WingsPersistence wingsPersistence;
-
-  @Value
-  @Builder
-  private static class DummyItem {
-    int i;
-    String s;
-  }
-
-  @Data
-  @Builder
-  @NoArgsConstructor
-  @AllArgsConstructor
-  @EqualsAndHashCode(callSuper = false)
-  @Entity(value = "!!!testDummies", noClassnameStored = true)
-  @HarnessEntity(exportable = false)
-  public static class Dummy extends Base {
-    private List<DummyItem> dummies;
-    private String name;
-  }
 
   @Test
   @Owner(developers = GEORGE)
@@ -65,13 +37,13 @@ public class PageRequestTest extends WingsBaseTest {
   public void shouldRequestElemMatch() {
     {
       final Dummy dummy = new Dummy();
-      dummy.dummies = asList(DummyItem.builder().i(1).s("foo").build(), DummyItem.builder().i(2).s("foo").build());
+      dummy.setDummies(asList(DummyItem.builder().i(1).s("foo").build(), DummyItem.builder().i(2).s("foo").build()));
       wingsPersistence.save(dummy);
     }
 
     {
       final Dummy dummy = new Dummy();
-      dummy.dummies = asList(DummyItem.builder().i(2).s("foo").build(), DummyItem.builder().i(1).s("bar").build());
+      dummy.setDummies(asList(DummyItem.builder().i(2).s("foo").build(), DummyItem.builder().i(1).s("bar").build()));
       wingsPersistence.save(dummy);
     }
 

@@ -627,32 +627,6 @@ public class StateMachineExecutorTest extends WingsBaseTest {
         .isEqualTo(true);
   }
 
-  public static class CustomExecutionEventAdvisor implements ExecutionEventAdvisor {
-    private ExecutionInterruptType executionInterruptType;
-
-    public CustomExecutionEventAdvisor() {}
-
-    public CustomExecutionEventAdvisor(ExecutionInterruptType executionInterruptType) {
-      this.executionInterruptType = executionInterruptType;
-    }
-
-    @Override
-    public ExecutionEventAdvice onExecutionEvent(ExecutionEvent executionEvent) {
-      if (executionEvent.getExecutionStatus() == ExecutionStatus.FAILED) {
-        return anExecutionEventAdvice().withExecutionInterruptType(executionInterruptType).build();
-      }
-      return null;
-    }
-
-    public ExecutionInterruptType getExecutionInterruptType() {
-      return executionInterruptType;
-    }
-
-    public void setExecutionInterruptType(ExecutionInterruptType executionInterruptType) {
-      this.executionInterruptType = executionInterruptType;
-    }
-  }
-
   /**
    * Should trigger and fail asynch.
    *

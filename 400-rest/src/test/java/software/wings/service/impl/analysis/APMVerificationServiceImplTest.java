@@ -6,7 +6,7 @@ import static io.harness.rule.OwnerRule.PRAVEEN;
 import static io.harness.rule.OwnerRule.RAGHU;
 
 import static software.wings.service.impl.verification.CVConfigurationServiceImplTest.createCustomLogsConfig;
-import static software.wings.service.impl.verification.CVConfigurationServiceImplTest.createStackDriverConfig;
+import static software.wings.utils.StackDriverUtils.createStackDriverConfig;
 
 import static org.apache.cxf.ws.addressing.ContextUtils.generateUUID;
 import static org.assertj.core.api.Assertions.assertThat;
