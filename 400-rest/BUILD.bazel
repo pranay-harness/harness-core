@@ -635,14 +635,13 @@ java_library(
     ],
 )
 
-java_binary(
+java_library(
     name = "module",
     srcs = glob([
         "src/main/**/*.java",
         "src/generated/**/*.java",
     ]),
     data = ["//:resource"],
-    main_class = "software.wings.app.WingsApplication",
     resources = [
         "//400-rest/src/main/resources:resource",
     ],
@@ -652,83 +651,54 @@ java_binary(
         "@maven//:javax_ws_rs_javax_ws_rs_api",
     ],
     deps = [
-        "@maven//:com_google_guava_guava",
-        #order of dependency is important. Comment is added so that running buildifer does not change the order
-        "@maven//:org_springframework_spring_tx",
-        #order of dependency is important. Comment is added so that running buildifer does not change the order
-        "@maven//:xml_resolver_xml_resolver",
-        #order of dependency is important. Comment is added so that running buildifer does not change the order
-        "@maven//:org_apache_santuario_xmlsec",
-        #order of dependency is important. Comment is added so that running buildifer does not change the order
-        "@maven//:org_apache_cxf_cxf_rt_wsdl",
-        #order of dependency is important. Comment is added so that running buildifer does not change the order
-        "@maven//:com_google_http_client_google_http_client",
-        #order of dependency is important. Comment is added so that running buildifer does not change the order
-        "@maven//:org_apache_cxf_cxf_rt_transports_http",
-        #order of dependency is important. Comment is added so that running buildifer does not change the order
-        "@maven//:io_netty_netty_transport_native_unix_common",
-        #order of dependency is important. Comment is added so that running buildifer does not change the order
-        "@maven//:org_springframework_data_spring_data_mongodb",
-        #order of dependency is important. Comment is added so that running buildifer does not change the order
-        "@maven//:org_apache_cxf_cxf_rt_bindings_xml",
-        #order of dependency is important. Comment is added so that running buildifer does not change the order
-        "@maven//:io_netty_netty_all",
-        #order of dependency is important. Comment is added so that running buildifer does not change the order
-        "@maven//:org_springframework_spring_aop",
-        #order of dependency is important. Comment is added so that running buildifer does not change the order
-        "@maven//:org_jetbrains_annotations",
-        #order of dependency is important. Comment is added so that running buildifer does not change the order
-        "@maven//:org_glassfish_hk2_external_javax_inject",
-        #order of dependency is important. Comment is added so that running buildifer does not change the order
-        "@maven//:javax_annotation_javax_annotation_api",
-        #order of dependency is important. Comment is added so that running buildifer does not change the order
-        "@maven//:org_springframework_data_spring_data_commons",
-        #order of dependency is important. Comment is added so that running buildifer does not change the order
-        "@maven//:org_quartz_scheduler_quartz",
-        #order of dependency is important. Comment is added so that running buildifer does not change the order
-        "@maven//:io_fabric8_kubernetes_model",
-        #order of dependency is important. Comment is added so that running buildifer does not change the order
-        "@maven//:org_eclipse_jgit_org_eclipse_jgit_http_apache",
-        #order of dependency is important. Comment is added so that running buildifer does not change the order
-        "@maven//:io_sundr_sundr_codegen",
-        #order of dependency is important. Comment is added so that running buildifer does not change the order
-        "@maven//:com_github_spullara_mustache_java_compiler",
-        #order of dependency is important. Comment is added so that running buildifer does not change the order
-        "@maven//:org_slf4j_jcl_over_slf4j",
-        #order of dependency is important. Comment is added so that running buildifer does not change the order
-        "@maven//:com_fasterxml_woodstox_woodstox_core",
-        #order of dependency is important. Comment is added so that running buildifer does not change the order
-        "@maven//:org_elasticsearch_jna",
-        #order of dependency is important. Comment is added so that running buildifer does not change the order
-        "@maven//:javax_activation_activation",
-        #order of dependency is important. Comment is added so that running buildifer does not change the order
-        "@maven//:io_netty_netty_buffer",
-        #order of dependency is important. Comment is added so that running buildifer does not change the order
-        "@maven//:io_netty_netty_codec",
-        #order of dependency is important. Comment is added so that running buildifer does not change the order
-        "@maven//:io_netty_netty_codec_http",
-        #order of dependency is important. Comment is added so that running buildifer does not change the order
-        "@maven//:io_netty_netty_codec_http2",
-        #order of dependency is important. Comment is added so that running buildifer does not change the order
-        "@maven//:io_netty_netty_codec_socks",
-        #order of dependency is important. Comment is added so that running buildifer does not change the order
-        "@maven//:io_netty_netty_common",
-        #order of dependency is important. Comment is added so that running buildifer does not change the order
-        "@maven//:io_netty_netty_handler",
-        #order of dependency is important. Comment is added so that running buildifer does not change the order
-        "@maven//:io_netty_netty_handler_proxy",
-        #order of dependency is important. Comment is added so that running buildifer does not change the order
-        "@maven//:io_netty_netty_resolver",
-        #order of dependency is important. Comment is added so that running buildifer does not change the order
-        "@maven//:io_netty_netty_transport",
-        #order of dependency is important. Comment is added so that running buildifer does not change the order
-        "@maven//:io_netty_netty_transport_native_epoll",
-        #order of dependency is important. Comment is added so that running buildifer does not change the order
-        "@maven//:net_bytebuddy_byte_buddy",
-        #order of dependency is important. Comment is added so that running buildifer does not change the order
-        "@maven//:com_amazonaws_aws_java_sdk_autoscaling",
         "maven_deps",
         "//:lombok",
+        "@maven//:com_amazonaws_aws_java_sdk_autoscaling",
+        "@maven//:com_fasterxml_woodstox_woodstox_core",
+        "@maven//:com_github_spullara_mustache_java_compiler",
+        "@maven//:com_google_guava_guava",
+        "@maven//:com_google_http_client_google_http_client",
+        "@maven//:io_fabric8_kubernetes_model",
+        "@maven//:io_netty_netty_all",
+        "@maven//:io_netty_netty_buffer",
+        "@maven//:io_netty_netty_codec",
+        "@maven//:io_netty_netty_codec_http",
+        "@maven//:io_netty_netty_codec_http2",
+        "@maven//:io_netty_netty_codec_socks",
+        "@maven//:io_netty_netty_common",
+        "@maven//:io_netty_netty_handler",
+        "@maven//:io_netty_netty_handler_proxy",
+        "@maven//:io_netty_netty_resolver",
+        "@maven//:io_netty_netty_transport",
+        "@maven//:io_netty_netty_transport_native_epoll",
+        "@maven//:io_netty_netty_transport_native_unix_common",
+        "@maven//:io_sundr_sundr_codegen",
+        "@maven//:javax_activation_activation",
+        "@maven//:javax_annotation_javax_annotation_api",
+        "@maven//:net_bytebuddy_byte_buddy",
+        "@maven//:org_apache_cxf_cxf_rt_bindings_xml",
+        "@maven//:org_apache_cxf_cxf_rt_transports_http",
+        "@maven//:org_apache_cxf_cxf_rt_wsdl",
+        "@maven//:org_apache_santuario_xmlsec",
+        "@maven//:org_eclipse_jgit_org_eclipse_jgit_http_apache",
+        "@maven//:org_elasticsearch_jna",
+        "@maven//:org_glassfish_hk2_external_javax_inject",
+        "@maven//:org_jetbrains_annotations",
+        "@maven//:org_quartz_scheduler_quartz",
+        "@maven//:org_slf4j_jcl_over_slf4j",
+        "@maven//:org_springframework_data_spring_data_commons",
+        "@maven//:org_springframework_data_spring_data_mongodb",
+        "@maven//:org_springframework_spring_aop",
+        "@maven//:org_springframework_spring_tx",
+        "@maven//:xml_resolver_xml_resolver",
+    ],
+)
+
+java_binary(
+    name = "rest",
+    main_class = "software.wings.app.WingsApplication",
+    runtime_deps = [
+        ":module",
     ],
 )
 
@@ -765,14 +735,13 @@ java_library(
     ],
     visibility = ["//visibility:public"],
     deps = [
-        "@maven//:com_google_guava_guava",
-        # keeping guava on top of maven_deps for right version resoulution
-        "@maven//:com_github_tomakehurst_wiremock",
-        "@maven//:com_github_tomakehurst_wiremock_standalone",
         "maven_deps",
         "module",
         "test_deps",
         "//:lombok",
+        "@maven//:com_github_tomakehurst_wiremock",
+        "@maven//:com_github_tomakehurst_wiremock_standalone",
+        "@maven//:com_google_guava_guava",
     ],
 )
 
@@ -800,14 +769,13 @@ java_library(
         "@maven//:javax_ws_rs_javax_ws_rs_api",
     ],
     deps = [
-        "@maven//:com_google_guava_guava",
-        # keeping guava on top of maven_deps for right version resoulution
+        "maven_deps",
+        "test_deps",
+        ":module",
+        "//:lombok",
         "@maven//:com_github_tomakehurst_wiremock",
         "@maven//:com_github_tomakehurst_wiremock_standalone",
-        "maven_deps",
-        "module",
-        "test_deps",
-        "//:lombok",
+        "@maven//:com_google_guava_guava",
     ],
 )
 
