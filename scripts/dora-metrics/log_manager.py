@@ -7,30 +7,32 @@ DEBUG_LOG_KEY_API_RESPONSE = "api_response"
 DEBUG_LOG_KEY_LAST_EXECUTION_RECORD = "last_execution_record"
 
 ERROR_LOG_API_FAILURE = "api_errors"
+ERROR_LOG_EXCEPTION = "exception"
 
 LOG_FORMAT_TIMESTAMP_KEY = "timestamp"
 LOG_FORMAT_MESSAGE_KEY = "message"
 
-DEBUG_LOG_DETAILS = {
+DEBUG_LOG = {
     DEBUG_LOG_KEY_INPUT_PARAMS: {},
     DEBUG_LOG_KEY_API_REQUEST: {},
     DEBUG_LOG_KEY_API_RESPONSE: {},
     DEBUG_LOG_KEY_LAST_EXECUTION_RECORD: {},
 }
 
-ERROR_LOG_DETAILS = {
-    ERROR_LOG_API_FAILURE: []
+ERROR_LOG = {
+    ERROR_LOG_API_FAILURE: [],
+    ERROR_LOG_EXCEPTION: {}
 }
 
 
 ###### GETTERS ######
 
 def get_debug_log_api_request():
-    return DEBUG_LOG_DETAILS[DEBUG_LOG_KEY_API_REQUEST]
+    return DEBUG_LOG[DEBUG_LOG_KEY_API_REQUEST]
 
 
 def get_debug_log_api_response():
-    return DEBUG_LOG_DETAILS[DEBUG_LOG_KEY_API_RESPONSE]
+    return DEBUG_LOG[DEBUG_LOG_KEY_API_RESPONSE]
 
 #####################
 
@@ -48,7 +50,7 @@ def construct_log(val):
 
 
 def log_input_params(input_params):
-    DEBUG_LOG_DETAILS[DEBUG_LOG_KEY_INPUT_PARAMS] = construct_log(input_params)
+    DEBUG_LOG[DEBUG_LOG_KEY_INPUT_PARAMS] = construct_log(input_params)
 
 
 def log_request(uri, headers, payload):
@@ -57,7 +59,7 @@ def log_request(uri, headers, payload):
         "headers": headers,
         "payload": payload
     }
-    DEBUG_LOG_DETAILS[DEBUG_LOG_KEY_API_REQUEST] = construct_log(request_details)
+    DEBUG_LOG[DEBUG_LOG_KEY_API_REQUEST] = construct_log(request_details)
 
 
 def log_response(http_status, payload):
@@ -65,11 +67,11 @@ def log_response(http_status, payload):
         "http_status": http_status,
         "payload": payload
     }
-    DEBUG_LOG_DETAILS[DEBUG_LOG_KEY_API_RESPONSE] = construct_log(response_details)
+    DEBUG_LOG[DEBUG_LOG_KEY_API_RESPONSE] = construct_log(response_details)
 
 
 def log_last_execution(execution):
-    DEBUG_LOG_DETAILS[DEBUG_LOG_KEY_LAST_EXECUTION_RECORD] = construct_log(execution)
+    DEBUG_LOG[DEBUG_LOG_KEY_LAST_EXECUTION_RECORD] = construct_log(execution)
 
 
 def log_api_error():
@@ -78,12 +80,16 @@ def log_api_error():
         "request": get_debug_log_api_request(),
         "response": get_debug_log_api_response()
     }
-    ERROR_LOG_DETAILS[ERROR_LOG_API_FAILURE].append(construct_log(api_error))
+    ERROR_LOG[ERROR_LOG_API_FAILURE].append(construct_log(api_error))
+
+
+def log_exception(e):
+    ERROR_LOG[ERROR_LOG_EXCEPTION] = construct_log(e)
 
 
 def get_debug_log():
-    return json.dumps(DEBUG_LOG_DETAILS, indent=4)
+    return json.dumps(DEBUG_LOG, indent=4)
 
 
 def get_error_log():
-    return json.dumps(ERROR_LOG_DETAILS, indent=4)
+    return json.dumps(ERROR_LOG, indent=4)
