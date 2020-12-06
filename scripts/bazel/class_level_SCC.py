@@ -161,7 +161,7 @@ class SCC:
 
 dir_name = "experiment"
 os.system('find resources/bazel/'+dir_name+' -name "*.class" -type f > resources/bazel/sources-list.txt')
-os.system('find 71-rest/src/main/java -name "*.java" -type f > resources/bazel/raw-files.txt')
+os.system('find 400-rest/src/main/java -name "*.java" -type f > resources/bazel/raw-files.txt')
 f1 = open("resources/bazel/sources-list.txt","r")
 f2 = open("resources/bazel/raw-files.txt","r")
 f3 = open("resources/bazel/targets-list.txt","w")
@@ -240,7 +240,7 @@ def add_dymmy_cycles():
     scc.add_edge(*("S","R"))
 
 def read_graph_from_file():
-    f = open("resources/bazel/71-rest-graph-1.txt","r")
+    f = open("resources/bazel/400-rest-graph-1.txt","r")
     edges = f.readlines()
     nodes = set()
     for edge in edges:

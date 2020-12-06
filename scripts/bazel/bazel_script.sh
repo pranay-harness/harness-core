@@ -29,9 +29,9 @@ fi
 
 if [ "${RUN_BAZEL_TESTS}" == "true" ]
 then
-  bazel ${bazelrc} build ${GCP} ${BAZEL_ARGUMENTS} -- //... -//product/... -//commons/... -//71-rest/... -//260-delegate/...
-  bazel ${bazelrc} test --keep_going ${GCP} ${BAZEL_ARGUMENTS} -- //... -//product/... -//commons/... -//71-rest/... -//260-delegate/... || true
-  # 71-rest and 260-delegate modules are excluded.
+  bazel ${bazelrc} build ${GCP} ${BAZEL_ARGUMENTS} -- //... -//product/... -//commons/... -//400-rest/... -//260-delegate/...
+  bazel ${bazelrc} test --keep_going ${GCP} ${BAZEL_ARGUMENTS} -- //... -//product/... -//commons/... -//400-rest/... -//260-delegate/... || true
+  # 400-rest and 260-delegate modules are excluded.
 fi
 
 BAZEL_MODULES="\

@@ -55,14 +55,14 @@ if [[ -z "${SERVER_BUILD_DIR}" ]]; then
   java -Xms1024m -Xmx4096m -XX:+HeapDumpOnOutOfMemoryError -XX:+PrintGCDetails -XX:+PrintGCDateStamps \
        -Xloggc:portal-gc-logs.gc -XX:+UseParallelGC -XX:MaxGCPauseMillis=500 \
        -Xbootclasspath/p:$HOME/.m2/repository/org/mortbay/jetty/alpn/alpn-boot/8.1.13.v20181017/alpn-boot-8.1.13.v20181017.jar \
-       -Dfile.encoding=UTF-8 -jar 71-rest/target/rest-capsule.jar 71-rest/config.yml > portal.log 2>&1 &
+       -Dfile.encoding=UTF-8 -jar 400-rest/target/rest-capsule.jar 400-rest/config.yml > portal.log 2>&1 &
 else
   echo "SERVER_BUILD_DIR is set, using prebuilt server build"
   echo $SERVER_BUILD_DIR
   java -Xms1024m -Xmx4096m -XX:+HeapDumpOnOutOfMemoryError -XX:+PrintGCDetails -XX:+PrintGCDateStamps \
          -Xloggc:portal-gc-logs.gc -XX:+UseParallelGC -XX:MaxGCPauseMillis=500 \
          -Xbootclasspath/p:$HOME/.m2/repository/org/mortbay/jetty/alpn/alpn-boot/8.1.13.v20181017/alpn-boot-8.1.13.v20181017.jar \
-         -Dfile.encoding=UTF-8 -jar $SERVER_BUILD_DIR/71-rest/target/rest-capsule.jar 71-rest/config.yml > portal.log 2>&1 &
+         -Dfile.encoding=UTF-8 -jar $SERVER_BUILD_DIR/400-rest/target/rest-capsule.jar 400-rest/config.yml > portal.log 2>&1 &
 fi
 
 echo 'sleep for server to start'
@@ -99,7 +99,7 @@ fi
 echo "datagen finished"
 
 # specifying -DfailIfNoTests=false flag b/c we are using surefire on integration dir
-mvn ${MAVEN_ARGS} test -pl 71-rest -Dtest=software.wings.integration.JenkinsIntegrationTest -DfailIfNoTests=false
+mvn ${MAVEN_ARGS} test -pl 400-rest -Dtest=software.wings.integration.JenkinsIntegrationTest -DfailIfNoTests=false
 
 jenkins_overwrite_status=$?
 echo "JenkinsIntegrationTest finished with status $jenkins_overwrite_status"
@@ -135,7 +135,7 @@ fi
 # wait for delegate to start
 echo 'wait for delegate to start'
 
-mvn ${MAVEN_ARGS} test -pl 71-rest -Dtest=software.wings.integration.DelegateRegistrationIntegrationTest#shouldWaitForADelegateToRegister -DfailIfNoTests=false
+mvn ${MAVEN_ARGS} test -pl 400-rest -Dtest=software.wings.integration.DelegateRegistrationIntegrationTest#shouldWaitForADelegateToRegister -DfailIfNoTests=false
 foundRegisteredDelegate=$?
 if [[ $foundRegisteredDelegate -ne 0 ]] ; then
   echo 'Delegate registration failed';
@@ -158,7 +158,7 @@ docker ps
 
 # Vault integration test need to be run first to avoid interfering with other integration test such as
 # Sumo/Elk integration tests etc.
-mvn ${MAVEN_ARGS} test -pl 71-rest -Dtest=software.wings.integration.security.VaultIntegrationTest -DfailIfNoTests=false
-mvn ${MAVEN_ARGS} test -pl 71-rest -Dtest=software.wings.integration.security.KmsIntegrationTest -DfailIfNoTests=false
+mvn ${MAVEN_ARGS} test -pl 400-rest -Dtest=software.wings.integration.security.VaultIntegrationTest -DfailIfNoTests=false
+mvn ${MAVEN_ARGS} test -pl 400-rest -Dtest=software.wings.integration.security.KmsIntegrationTest -DfailIfNoTests=false
 
 

@@ -21,7 +21,7 @@ public class SSHSecretServiceImpl implements SecretModifyService {
 
   @Override
   public EncryptedDataDTO create(String accountIdentifier, SecretDTOV2 dto) {
-    // no need to make a call to 71-rest for ssh secrets
+    // no need to make a call to 400-rest for ssh secrets
     return EncryptedDataDTO.builder()
         .name(dto.getName())
         .account(accountIdentifier)
@@ -37,13 +37,13 @@ public class SSHSecretServiceImpl implements SecretModifyService {
 
   @Override
   public boolean update(String accountIdentifier, SecretDTOV2 dto) {
-    // no need to make a rest call to 71-rest for ssh secrets
+    // no need to make a rest call to 400-rest for ssh secrets
     return true;
   }
 
   @Override
   public boolean updateViaYaml(String accountIdentifier, SecretDTOV2 dto) {
-    // no need to make a call to 71-rest for ssh secrets
+    // no need to make a call to 400-rest for ssh secrets
     return true;
   }
 }
