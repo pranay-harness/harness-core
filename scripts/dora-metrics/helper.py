@@ -1,5 +1,7 @@
 import datetime
 import time
+import os
+import sys
 
 DATE_FORMAT_MM_DD_YYYY = "%m/%d/%Y"
 DATE_FORMAT_LOCAL_VERSION = "%c"
@@ -35,6 +37,7 @@ def convert_date_to_timestamp(date_input_obj):
     except:
         return None
 
+
 def get_current_time_in_epoch_in_seconds():
     return int(time.time())
 
@@ -49,6 +52,14 @@ def format_date(date_input_obj, date_format):
 
 def get_current_time_local_version_str():
     return format_date(get_current_local_date_obj(), DATE_FORMAT_LOCAL_VERSION)
+
+
+def get_current_working_directory_path_str():
+    return os.path.dirname(sys.argv[0])
+
+
+def get_absolute_file_path(filename):
+    return os.path.join(get_current_working_directory_path_str(), filename)
 
 
 def print_list(data):

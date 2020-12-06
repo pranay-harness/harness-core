@@ -3,6 +3,7 @@ import time
 import helper
 import log_manager
 import file_manager
+import sys
 
 ARGS_API_KEY = "api_key"
 ARGS_SEARCH_INTERVAL_START_TIME_EPOCH_KEY = "search_interval_start_time_epoch"
@@ -526,10 +527,10 @@ def compile_data(input_args):
 
         # copy all data from current temp file to the original file
         file_manager.copy_csv_file(TEMP_CSV_FILE_NAME, filename)
-
-        # print("--XX--COMPLETED--XX--")
     except Exception as e:
         log_manager.log_exception(e)
     finally:
         file_manager.append_to_file(DEBUG_LOG_FILE_NAME, log_manager.get_debug_log())
         file_manager.append_to_file(ERROR_LOG_FILE_NAME, log_manager.get_error_log())
+
+    sys.exit("\n------- Execution Completed --------")
