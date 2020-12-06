@@ -5,7 +5,6 @@ import io.harness.serializer.kryo.DelegateServiceKryoRegister;
 import io.harness.serializer.kryo.RbacCoreKryoRegistrar;
 import io.harness.serializer.morphia.CommonEntitiesMorphiaRegister;
 import io.harness.serializer.morphia.DelegateServiceMorphiaRegistrar;
-import io.harness.spring.AliasRegistrar;
 
 import com.google.common.collect.ImmutableSet;
 import lombok.experimental.UtilityClass;
@@ -26,11 +25,5 @@ public class DelegateServiceRegistrars {
           .add(CommonEntitiesMorphiaRegister.class)
           .addAll(OrchestrationRegistrars.morphiaRegistrars)
           .add(DelegateServiceMorphiaRegistrar.class)
-          .build();
-
-  public static final ImmutableSet<Class<? extends AliasRegistrar>> aliasRegistrars =
-      ImmutableSet.<Class<? extends AliasRegistrar>>builder()
-          .addAll(DelegateServiceBeansRegistrars.aliasRegistrars)
-          .addAll(OrchestrationRegistrars.aliasRegistrars)
           .build();
 }

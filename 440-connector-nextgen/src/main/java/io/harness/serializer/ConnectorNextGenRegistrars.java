@@ -3,7 +3,6 @@ package io.harness.serializer;
 import io.harness.morphia.MorphiaRegistrar;
 import io.harness.serializer.kryo.ConnectorNextGenKryoRegistrar;
 import io.harness.serializer.morphia.ConnectorMorphiaClassesRegistrar;
-import io.harness.spring.AliasRegistrar;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -28,14 +27,6 @@ public class ConnectorNextGenRegistrars {
           .addAll(NGCoreClientRegistrars.morphiaRegistrars)
           .addAll(YamlBeansModuleRegistrars.morphiaRegistrars)
           .add(ConnectorMorphiaClassesRegistrar.class)
-          .build();
-
-  public static final ImmutableSet<Class<? extends AliasRegistrar>> aliasRegistrars =
-      ImmutableSet.<Class<? extends AliasRegistrar>>builder()
-          .addAll(NGCoreRegistrars.aliasRegistrars)
-          .addAll(DelegateServiceDriverRegistrars.aliasRegistrars)
-          .addAll(NGCoreClientRegistrars.aliasRegistrars)
-          .addAll(YamlBeansModuleRegistrars.aliasRegistrars)
           .build();
 
   public static final ImmutableList<Class<? extends Converter<?, ?>>> springConverters =

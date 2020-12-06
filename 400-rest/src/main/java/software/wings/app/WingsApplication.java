@@ -102,7 +102,6 @@ import io.harness.serializer.KryoRegistrar;
 import io.harness.serializer.ManagerRegistrars;
 import io.harness.service.DelegateServiceModule;
 import io.harness.service.impl.DelegateSyncServiceImpl;
-import io.harness.spring.AliasRegistrar;
 import io.harness.springdata.SpringPersistenceModule;
 import io.harness.state.inspection.StateInspectionService;
 import io.harness.state.inspection.StateInspectionServiceImpl;
@@ -378,14 +377,6 @@ public class WingsApplication extends Application<MainConfiguration> {
       Set<Class<? extends MorphiaRegistrar>> morphiaRegistrars() {
         return ImmutableSet.<Class<? extends MorphiaRegistrar>>builder()
             .addAll(ManagerRegistrars.morphiaRegistrars)
-            .build();
-      }
-
-      @Provides
-      @Singleton
-      Set<Class<? extends AliasRegistrar>> aliasRegistrars() {
-        return ImmutableSet.<Class<? extends AliasRegistrar>>builder()
-            .addAll(ManagerRegistrars.aliasRegistrars)
             .build();
       }
 

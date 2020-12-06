@@ -5,7 +5,6 @@ import static io.harness.annotations.dev.HarnessTeam.CDC;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.morphia.MorphiaRegistrar;
 import io.harness.serializer.kryo.OrchestrationVisualizationKryoRegistrar;
-import io.harness.spring.AliasRegistrar;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -25,9 +24,6 @@ public class OrchestrationVisualizationModuleRegistrars {
       ImmutableSet.<Class<? extends MorphiaRegistrar>>builder()
           .addAll(OrchestrationRegistrars.morphiaRegistrars)
           .build();
-
-  public static final ImmutableSet<Class<? extends AliasRegistrar>> aliasRegistrars =
-      ImmutableSet.<Class<? extends AliasRegistrar>>builder().addAll(OrchestrationRegistrars.aliasRegistrars).build();
 
   public static final ImmutableList<Class<? extends Converter<?, ?>>> springConverters =
       ImmutableList.<Class<? extends Converter<?, ?>>>builder()

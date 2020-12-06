@@ -19,7 +19,6 @@ import io.harness.serializer.KryoModule;
 import io.harness.serializer.KryoRegistrar;
 import io.harness.serializer.OrchestrationBeansRegistrars;
 import io.harness.serializer.OrchestrationStepsModuleRegistrars;
-import io.harness.spring.AliasRegistrar;
 import io.harness.springdata.SpringPersistenceTestModule;
 import io.harness.testlib.module.MongoRuleMixin;
 import io.harness.testlib.module.TestMongoModule;
@@ -85,14 +84,6 @@ public class OrchestrationStepsRule implements MethodRule, InjectorRuleMixin, Mo
       Set<Class<? extends MorphiaRegistrar>> morphiaRegistrars() {
         return ImmutableSet.<Class<? extends MorphiaRegistrar>>builder()
             .addAll(OrchestrationStepsModuleRegistrars.morphiaRegistrars)
-            .build();
-      }
-
-      @Provides
-      @Singleton
-      Set<Class<? extends AliasRegistrar>> aliasRegistrars() {
-        return ImmutableSet.<Class<? extends AliasRegistrar>>builder()
-            .addAll(OrchestrationStepsModuleRegistrars.aliasRegistrars)
             .build();
       }
 

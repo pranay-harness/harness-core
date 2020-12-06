@@ -5,8 +5,6 @@ import io.harness.persistence.converters.DurationConverter;
 import io.harness.persistence.converters.ObjectArrayConverter;
 import io.harness.serializer.kryo.PersistenceKryoRegistrar;
 import io.harness.serializer.morphia.PersistenceMorphiaRegistrar;
-import io.harness.serializer.spring.PersistenceAliasRegistrar;
-import io.harness.spring.AliasRegistrar;
 
 import com.google.common.collect.ImmutableSet;
 import io.serializer.registrars.NGCommonsRegistrars;
@@ -25,12 +23,6 @@ public class PersistenceRegistrars {
       ImmutableSet.<Class<? extends MorphiaRegistrar>>builder()
           .addAll(NGCommonsRegistrars.morphiaRegistrars)
           .add(PersistenceMorphiaRegistrar.class)
-          .build();
-
-  public static final ImmutableSet<Class<? extends AliasRegistrar>> aliasRegistrars =
-      ImmutableSet.<Class<? extends AliasRegistrar>>builder()
-          .addAll(NGCommonsRegistrars.aliasRegistrars)
-          .add(PersistenceAliasRegistrar.class)
           .build();
 
   public static final ImmutableSet<Class<? extends TypeConverter>> morphiaConverters =

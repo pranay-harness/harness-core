@@ -20,8 +20,6 @@ import io.harness.serializer.morphia.ManagerMorphiaRegistrar;
 import io.harness.serializer.morphia.OrchestrationStepsMorphiaRegistrar;
 import io.harness.serializer.morphia.ProjectAndOrgMorphiaRegistrar;
 import io.harness.serializer.morphia.ViewsMorphiaRegistrar;
-import io.harness.serializer.spring.WingsAliasRegistrar;
-import io.harness.spring.AliasRegistrar;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -74,20 +72,6 @@ public class ManagerRegistrars {
           .add(ProjectAndOrgMorphiaRegistrar.class)
           .add(ViewsMorphiaRegistrar.class)
           .addAll(CapabilityRegistrars.morphiaRegistrars)
-          .build();
-
-  public static final ImmutableSet<Class<? extends AliasRegistrar>> aliasRegistrars =
-      ImmutableSet.<Class<? extends AliasRegistrar>>builder()
-          .addAll(CvNextGenCommonsRegistrars.aliasRegistrars)
-          .addAll(DelegateTasksBeansRegistrars.aliasRegistrars)
-          .addAll(PersistenceRegistrars.aliasRegistrars)
-          .addAll(TimeoutEngineRegistrars.aliasRegistrars)
-          .addAll(OrchestrationBeansRegistrars.aliasRegistrars)
-          .addAll(OrchestrationRegistrars.aliasRegistrars)
-          .addAll(OrchestrationStepsModuleRegistrars.aliasRegistrars)
-          .addAll(OrchestrationVisualizationModuleRegistrars.aliasRegistrars)
-          .addAll(OrchestrationVisualizationModuleRegistrars.aliasRegistrars)
-          .add(WingsAliasRegistrar.class)
           .build();
 
   public static final ImmutableSet<Class<? extends TypeConverter>> morphiaConverters =

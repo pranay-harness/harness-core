@@ -8,7 +8,6 @@ import io.harness.morphia.MorphiaRegistrar;
 import io.harness.persistence.HPersistence;
 import io.harness.serializer.KryoRegistrar;
 import io.harness.serializer.morphia.NotificationClientMorphiaRegistrar;
-import io.harness.spring.AliasRegistrar;
 
 import com.google.common.collect.ImmutableSet;
 import com.google.inject.AbstractModule;
@@ -49,12 +48,6 @@ public class NotificationClientApplicationModule extends AbstractModule {
         return ImmutableSet.<Class<? extends MorphiaRegistrar>>builder()
             .add(NotificationClientMorphiaRegistrar.class)
             .build();
-      }
-
-      @Provides
-      @Singleton
-      Set<Class<? extends AliasRegistrar>> aliasRegistrars() {
-        return ImmutableSet.<Class<? extends AliasRegistrar>>builder().build();
       }
 
       @Provides

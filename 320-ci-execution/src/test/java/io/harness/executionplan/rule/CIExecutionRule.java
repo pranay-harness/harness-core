@@ -13,8 +13,6 @@ import io.harness.persistence.HPersistence;
 import io.harness.queue.QueueController;
 import io.harness.remote.client.ServiceHttpClientConfig;
 import io.harness.rule.InjectorRuleMixin;
-import io.harness.serializer.CiExecutionRegistrars;
-import io.harness.spring.AliasRegistrar;
 import io.harness.springdata.SpringPersistenceTestModule;
 import io.harness.testlib.module.MongoRuleMixin;
 import io.harness.testlib.module.TestMongoModule;
@@ -22,18 +20,14 @@ import io.harness.threading.CurrentThreadExecutor;
 import io.harness.threading.ExecutorModule;
 
 import com.google.common.base.Suppliers;
-import com.google.common.collect.ImmutableSet;
 import com.google.inject.AbstractModule;
 import com.google.inject.Injector;
 import com.google.inject.Module;
-import com.google.inject.Provides;
-import com.google.inject.Singleton;
 import com.google.inject.TypeLiteral;
 import java.io.Closeable;
 import java.lang.annotation.Annotation;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Set;
 import java.util.function.Supplier;
 import org.junit.Rule;
 import org.junit.rules.MethodRule;
@@ -84,15 +78,6 @@ public class CIExecutionRule implements MethodRule, InjectorRuleMixin, MongoRule
       }
     });
 
-    modules.add(new AbstractModule() {
-      @Provides
-      @Singleton
-      Set<Class<? extends AliasRegistrar>> aliasRegistrars() {
-        return ImmutableSet.<Class<? extends AliasRegistrar>>builder()
-            .addAll(CiExecutionRegistrars.aliasRegistrars)
-            .build();
-      }
-    });
     modules.add(TestMongoModule.getInstance());
     modules.add(new SpringPersistenceTestModule());
     modules.add(new CIExecutionServiceModule(CIExecutionServiceConfig.builder()

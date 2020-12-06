@@ -1,7 +1,6 @@
 package io.harness.serializer;
 
 import io.harness.morphia.MorphiaRegistrar;
-import io.harness.spring.AliasRegistrar;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -31,17 +30,6 @@ public class CiExecutionRegistrars {
           .addAll(ApiServicesRegistrars.morphiaRegistrars)
           .addAll(SMCoreRegistrars.morphiaRegistrars)
           .addAll(ConnectorNextGenRegistrars.morphiaRegistrars)
-          .build();
-
-  public static final ImmutableSet<Class<? extends AliasRegistrar>> aliasRegistrars =
-      ImmutableSet.<Class<? extends AliasRegistrar>>builder()
-          .addAll(CommonsRegistrars.aliasRegistrars)
-          .addAll(CiBeansRegistrars.aliasRegistrars)
-          .addAll(NGCoreRegistrars.aliasRegistrars)
-          .addAll(NGPipelineRegistrars.aliasRegistrars)
-          .addAll(ApiServicesRegistrars.aliasRegistrars)
-          .addAll(SMCoreRegistrars.aliasRegistrars)
-          .addAll(ConnectorNextGenRegistrars.aliasRegistrars)
           .build();
 
   public static final ImmutableList<Class<? extends Converter<?, ?>>> springConverters =

@@ -5,7 +5,6 @@ import static io.harness.annotations.dev.HarnessTeam.CDC;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.morphia.MorphiaRegistrar;
 import io.harness.serializer.morphia.PMSPipelineMorphiaRegistrar;
-import io.harness.spring.AliasRegistrar;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -24,9 +23,6 @@ public class PipelineServiceModuleRegistrars {
           .addAll(OrchestrationRegistrars.morphiaRegistrars)
           .add(PMSPipelineMorphiaRegistrar.class)
           .build();
-
-  public final ImmutableSet<Class<? extends AliasRegistrar>> aliasRegistrars =
-      ImmutableSet.<Class<? extends AliasRegistrar>>builder().addAll(OrchestrationRegistrars.aliasRegistrars).build();
 
   public final ImmutableSet<Class<? extends TypeConverter>> morphiaConverters =
       ImmutableSet.<Class<? extends TypeConverter>>builder().addAll(OrchestrationRegistrars.morphiaConverters).build();

@@ -15,7 +15,6 @@ import io.harness.serializer.morphia.converters.LevelMorphiaConverter;
 import io.harness.serializer.morphia.converters.RefObjectMorphiaConverter;
 import io.harness.serializer.morphia.converters.RefTypeMorphiaConverter;
 import io.harness.serializer.morphia.converters.StepTypeMorphiaConverter;
-import io.harness.serializer.spring.OrchestrationAliasRegistrar;
 import io.harness.serializer.spring.converters.advisers.obtainment.AdviserObtainmentReadConverter;
 import io.harness.serializer.spring.converters.advisers.obtainment.AdviserObtainmentWriteConverter;
 import io.harness.serializer.spring.converters.advisers.type.AdviserTypeReadConverter;
@@ -46,7 +45,6 @@ import io.harness.serializer.spring.converters.steps.StepTypeReadConverter;
 import io.harness.serializer.spring.converters.steps.StepTypeWriteConverter;
 import io.harness.serializer.spring.converters.sweepingoutput.SweepingOutputReadMongoConverter;
 import io.harness.serializer.spring.converters.sweepingoutput.SweepingOutputWriteMongoConverter;
-import io.harness.spring.AliasRegistrar;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -71,14 +69,6 @@ public class OrchestrationRegistrars {
           .addAll(WaitEngineRegistrars.morphiaRegistrars)
           .addAll(OrchestrationBeansRegistrars.morphiaRegistrars)
           .add(OrchestrationMorphiaRegistrar.class)
-          .build();
-
-  public static final ImmutableSet<Class<? extends AliasRegistrar>> aliasRegistrars =
-      ImmutableSet.<Class<? extends AliasRegistrar>>builder()
-          .addAll(DelegateTasksRegistrars.aliasRegistrars)
-          .addAll(WaitEngineRegistrars.aliasRegistrars)
-          .addAll(OrchestrationBeansRegistrars.aliasRegistrars)
-          .add(OrchestrationAliasRegistrar.class)
           .build();
 
   public static final ImmutableSet<Class<? extends TypeConverter>> morphiaConverters =

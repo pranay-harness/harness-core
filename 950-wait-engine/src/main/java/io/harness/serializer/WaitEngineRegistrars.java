@@ -3,7 +3,6 @@ package io.harness.serializer;
 import io.harness.morphia.MorphiaRegistrar;
 import io.harness.serializer.kryo.WaitEngineKryoRegister;
 import io.harness.serializer.morphia.WaitEngineMorphiaRegistrar;
-import io.harness.spring.AliasRegistrar;
 
 import com.google.common.collect.ImmutableSet;
 import lombok.experimental.UtilityClass;
@@ -21,7 +20,4 @@ public class WaitEngineRegistrars {
           .addAll(PersistenceRegistrars.morphiaRegistrars)
           .add(WaitEngineMorphiaRegistrar.class)
           .build();
-
-  public final ImmutableSet<Class<? extends AliasRegistrar>> aliasRegistrars =
-      ImmutableSet.<Class<? extends AliasRegistrar>>builder().addAll(PersistenceRegistrars.aliasRegistrars).build();
 }

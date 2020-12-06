@@ -45,7 +45,6 @@ import io.harness.serializer.json.StepTypeSerializer;
 import io.harness.service.impl.DelegateAsyncServiceImpl;
 import io.harness.service.impl.DelegateProgressServiceImpl;
 import io.harness.service.impl.DelegateSyncServiceImpl;
-import io.harness.spring.AliasRegistrar;
 import io.harness.springdata.SpringPersistenceModule;
 import io.harness.waiter.NotifierScheduledExecutorService;
 import io.harness.waiter.NotifyEvent;
@@ -178,14 +177,6 @@ public class CIManagerApplication extends Application<CIManagerConfiguration> {
             .put(DelegateSyncTaskResponse.class, "ciManager_delegateSyncTaskResponses")
             .put(DelegateAsyncTaskResponse.class, "ciManager_delegateAsyncTaskResponses")
             .put(DelegateTaskProgressResponse.class, "ciManager_delegateTaskProgressResponses")
-            .build();
-      }
-
-      @Provides
-      @Singleton
-      Set<Class<? extends AliasRegistrar>> aliasRegistrars() {
-        return ImmutableSet.<Class<? extends AliasRegistrar>>builder()
-            .addAll(CiExecutionRegistrars.aliasRegistrars)
             .build();
       }
 
