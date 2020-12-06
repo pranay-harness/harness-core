@@ -76,6 +76,8 @@ REQUEST_RETRY_COUNT = 3
 
 MISSING_VALUE_PLACE_HOLDER = "<< DELETED >>"
 TEMP_CSV_FILE_NAME = "temp.csv"
+DEBUG_LOG_FILE_NAME = "debug.txt"
+ERROR_LOG_FILE_NAME = "error.txt"
 
 
 def custom_workflow_parser_helper(items_set):
@@ -186,7 +188,6 @@ def get_pipeline_executions(query_result):
 
 
 def get_page_details(query_result):
-    print(query_result)
     page_info = query_result['data']['executions']['pageInfo']
     return page_info['hasMore'], page_info['limit']
 
@@ -470,7 +471,7 @@ def create_csv_data(executions):
     return data_rows, False
 
 
-def init_csv_file(filename):
+def init_csv_file_with_headers(filename):
     with open(filename, 'w') as csvfile:
         # create new csv file and put headers in it
         # creating a csv writer object
@@ -480,8 +481,8 @@ def init_csv_file(filename):
         csvwriter.writerow(CSV_HEADERS)
 
 
-def create_new_csv(filename):
-    with open(filename, 'w') as csvfile:
+def create_new_file(filename):
+    with open(filename, 'w') as file:
         pass
 
 
@@ -494,6 +495,11 @@ def append_to_csv_file(filename, data_rows):
         csvwriter.writerows(data_rows)
 
 
+def append_to_file(filename, data):
+    with open(filename, 'a') as file:
+        file.writelines(data)
+
+
 def copy_csv_file(source_file, dest_file):
     with open(dest_file, 'a+') as w:
         writer = csv.writer(w)
@@ -501,6 +507,14 @@ def copy_csv_file(source_file, dest_file):
             reader = csv.reader(f)
             for row in reader:
                 writer.writerow(row)
+
+
+def init_backoffice_files():
+    # create blank temp file
+    create_new_file(TEMP_CSV_FILE_NAME)
+    # create new debug and error log files
+    create_new_file(DEBUG_LOG_FILE_NAME)
+    create_new_file(ERROR_LOG_FILE_NAME)
 
 
 def compile_data(input_args):
@@ -519,13 +533,12 @@ def compile_data(input_args):
         end_time_interval_epoch = input_args.get(ARGS_SEARCH_INTERVAL_END_TIME_EPOCH_KEY)
 
         if file_operation == FILE_OPERATION_NEW:
-            init_csv_file(filename)
+            init_csv_file_with_headers(filename)
+
+        init_backoffice_files()
 
         curr_offset = 0
         repeat = True
-
-        # create blank temp file
-        create_new_csv(TEMP_CSV_FILE_NAME)
 
         while repeat is True:
             # fetch all deployments via graphql query in pagination manner
@@ -552,12 +565,10 @@ def compile_data(input_args):
         # copy all data from current temp file to the original file
         copy_csv_file(TEMP_CSV_FILE_NAME, filename)
 
-        print(log_manager.get_debug_log())
-
         print("--XX--COMPLETED--XX--")
 
     except Exception as e:
         print("EXCEPTION : ", e)
     finally:
-        print(log_manager.get_debug_log())
-        print(log_manager.get_error_log())
+        append_to_file(DEBUG_LOG_FILE_NAME, log_manager.get_debug_log())
+        append_to_file(ERROR_LOG_FILE_NAME, log_manager.get_error_log())
