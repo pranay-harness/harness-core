@@ -12,9 +12,9 @@ import io.harness.execution.NodeExecution;
 import io.harness.pms.ambiance.Ambiance;
 import io.harness.pms.execution.utils.AmbianceUtils;
 import io.harness.pms.plan.PlanNodeProto;
+import io.harness.pms.sdk.core.registries.StepRegistry;
 import io.harness.pms.sdk.core.steps.executables.SyncExecutable;
 import io.harness.pms.sdk.core.steps.io.StepResponse;
-import io.harness.registries.state.StepRegistry;
 
 import com.google.inject.Inject;
 import lombok.extern.slf4j.Slf4j;

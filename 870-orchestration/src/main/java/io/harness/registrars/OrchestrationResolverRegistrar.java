@@ -7,8 +7,8 @@ import io.harness.engine.outcomes.OutcomeService;
 import io.harness.engine.outputs.ExecutionSweepingOutputService;
 import io.harness.pms.data.OrchestrationRefType;
 import io.harness.pms.refobjects.RefType;
-import io.harness.registries.registrar.ResolverRegistrar;
-import io.harness.resolvers.Resolver;
+import io.harness.pms.sdk.core.registries.registrar.ResolverRegistrar;
+import io.harness.pms.sdk.core.resolver.Resolver;
 
 import com.google.inject.Inject;
 import com.google.inject.Injector;

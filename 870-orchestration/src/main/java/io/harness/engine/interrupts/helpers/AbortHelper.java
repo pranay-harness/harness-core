@@ -22,9 +22,9 @@ import io.harness.pms.execution.Status;
 import io.harness.pms.execution.TaskChainExecutableResponse;
 import io.harness.pms.execution.TaskExecutableResponse;
 import io.harness.pms.plan.PlanNodeProto;
+import io.harness.pms.sdk.core.registries.StepRegistry;
 import io.harness.pms.sdk.core.steps.Step;
 import io.harness.pms.sdk.core.steps.executables.Abortable;
-import io.harness.registries.state.StepRegistry;
 import io.harness.tasks.TaskExecutor;
 
 import com.google.common.base.Preconditions;

@@ -24,9 +24,9 @@ import io.harness.pms.execution.Status;
 import io.harness.pms.execution.failure.FailureInfo;
 import io.harness.pms.execution.failure.FailureType;
 import io.harness.pms.refobjects.RefObject;
+import io.harness.pms.sdk.core.resolver.RefObjectUtil;
 import io.harness.pms.sdk.core.steps.io.StepInputPackage;
 import io.harness.pms.sdk.core.steps.io.StepResponse;
-import io.harness.refObjects.RefObjectUtil;
 import io.harness.rule.Owner;
 import io.harness.tasks.ResponseData;
 

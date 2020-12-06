@@ -7,8 +7,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.category.element.UnitTests;
 import io.harness.pms.sdk.core.PmsSdkCoreTestBase;
-import io.harness.registrars.PmsSdkCoreFacilitatorRegistrar;
-import io.harness.registries.registrar.FacilitatorRegistrar;
+import io.harness.pms.sdk.core.registries.registrar.FacilitatorRegistrar;
+import io.harness.pms.sdk.core.registries.registrar.local.PmsSdkCoreFacilitatorRegistrar;
 import io.harness.rule.Owner;
 
 import com.google.inject.Inject;
@@ -36,7 +36,7 @@ public class PmsSdkCoreFacilitatorRegistrarTest extends PmsSdkCoreTestBase {
   public void testAllRegistrarsAreRegistered() {
     Set<String> facilitatorRegistrarClasses = new HashSet<>();
 
-    Reflections reflections = new Reflections("io.harness.registrars");
+    Reflections reflections = new Reflections("io.harness");
     for (Class clazz : reflections.getSubTypesOf(FacilitatorRegistrar.class)) {
       facilitatorRegistrarClasses.add(clazz.getName());
     }

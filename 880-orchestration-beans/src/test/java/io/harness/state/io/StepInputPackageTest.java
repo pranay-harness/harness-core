@@ -9,9 +9,9 @@ import static org.assertj.core.api.Assumptions.assumeThat;
 import io.harness.OrchestrationBeansTestBase;
 import io.harness.category.element.UnitTests;
 import io.harness.pms.sdk.core.data.StepTransput;
+import io.harness.pms.sdk.core.resolver.RefObjectUtil;
 import io.harness.pms.sdk.core.steps.io.ResolvedRefInput;
 import io.harness.pms.sdk.core.steps.io.StepInputPackage;
-import io.harness.refObjects.RefObjectUtil;
 import io.harness.rule.Owner;
 import io.harness.utils.DummyOutcome;
 

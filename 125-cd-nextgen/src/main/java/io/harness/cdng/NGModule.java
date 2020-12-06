@@ -13,10 +13,10 @@ import io.harness.cdng.pipeline.executions.service.NgPipelineExecutionServiceImp
 import io.harness.executionplan.ExecutionPlanModule;
 import io.harness.ng.core.NGCoreModule;
 import io.harness.ngpipeline.pipeline.executions.registries.StageTypeToStageExecutionMapperRegistryModule;
+import io.harness.pms.sdk.core.registries.registrar.OrchestrationEventHandlerRegistrar;
 import io.harness.registrars.NGStageTypeToStageExecutionSummaryMapperRegistrar;
 import io.harness.registrars.OrchestrationExecutionEventHandlerRegistrar;
 import io.harness.registrars.StageTypeToStageExecutionMapperRegistrar;
-import io.harness.registries.registrar.OrchestrationEventHandlerRegistrar;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.multibindings.MapBinder;

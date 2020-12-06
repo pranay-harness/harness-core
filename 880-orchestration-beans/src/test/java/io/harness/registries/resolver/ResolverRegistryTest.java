@@ -11,10 +11,11 @@ import io.harness.pms.ambiance.Ambiance;
 import io.harness.pms.data.OrchestrationRefType;
 import io.harness.pms.refobjects.RefObject;
 import io.harness.pms.refobjects.RefType;
-import io.harness.registries.RegistryType;
+import io.harness.pms.sdk.core.registries.RegistryType;
+import io.harness.pms.sdk.core.registries.ResolverRegistry;
+import io.harness.pms.sdk.core.resolver.Resolver;
 import io.harness.registries.exceptions.DuplicateRegistryException;
 import io.harness.registries.exceptions.UnregisteredKeyAccessException;
-import io.harness.resolvers.Resolver;
 import io.harness.rule.Owner;
 import io.harness.utils.DummyOutcome;
 

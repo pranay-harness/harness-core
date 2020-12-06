@@ -1,15 +1,10 @@
 package io.harness;
 
 import io.harness.orchestration.OrchestrationPersistenceModule;
+import io.harness.pms.sdk.core.registries.PmsSdkCoreRegistryModule;
+import io.harness.pms.sdk.core.registries.registrar.OrchestrationFieldRegistrar;
 import io.harness.registrars.OrchestrationBeansFieldRegistrar;
 import io.harness.registrars.OrchestrationBeansTimeoutRegistrar;
-import io.harness.registries.OrchestrationRegistryModule;
-import io.harness.registries.registrar.AdviserRegistrar;
-import io.harness.registries.registrar.FacilitatorRegistrar;
-import io.harness.registries.registrar.OrchestrationEventHandlerRegistrar;
-import io.harness.registries.registrar.OrchestrationFieldRegistrar;
-import io.harness.registries.registrar.ResolverRegistrar;
-import io.harness.registries.registrar.StepRegistrar;
 import io.harness.registries.registrar.TimeoutRegistrar;
 
 import com.google.inject.AbstractModule;
@@ -30,11 +25,10 @@ public class OrchestrationBeansModule extends AbstractModule {
   @Override
   protected void configure() {
     install(TimeoutEngineModule.getInstance());
-    install(OrchestrationRegistryModule.getInstance());
+    install(PmsSdkCoreRegistryModule.getInstance());
     install(OrchestrationPersistenceModule.getInstance());
     install(PmsSdkCoreModule.getInstance());
 
-    MapBinder.newMapBinder(binder(), String.class, ResolverRegistrar.class);
     MapBinder<String, OrchestrationFieldRegistrar> orchestrationFieldRegistrarMapBinder =
         MapBinder.newMapBinder(binder(), String.class, OrchestrationFieldRegistrar.class);
     orchestrationFieldRegistrarMapBinder.addBinding(OrchestrationBeansFieldRegistrar.class.getName())

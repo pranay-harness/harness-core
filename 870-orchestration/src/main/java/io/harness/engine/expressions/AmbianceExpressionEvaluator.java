@@ -25,12 +25,12 @@ import io.harness.expression.RegexFunctor;
 import io.harness.expression.ResolveObjectResponse;
 import io.harness.expression.VariableResolverTracker;
 import io.harness.expression.XmlFunctor;
-import io.harness.expression.field.OrchestrationField;
-import io.harness.expression.field.OrchestrationFieldProcessor;
-import io.harness.expression.field.OrchestrationFieldType;
-import io.harness.expression.field.ProcessorResult;
 import io.harness.pms.ambiance.Ambiance;
-import io.harness.registries.field.OrchestrationFieldRegistry;
+import io.harness.pms.sdk.core.expression.OrchestrationField;
+import io.harness.pms.sdk.core.expression.OrchestrationFieldProcessor;
+import io.harness.pms.sdk.core.expression.OrchestrationFieldType;
+import io.harness.pms.sdk.core.expression.ProcessorResult;
+import io.harness.pms.sdk.core.registries.OrchestrationFieldRegistry;
 
 import com.google.common.collect.ImmutableList;
 import com.google.inject.Inject;

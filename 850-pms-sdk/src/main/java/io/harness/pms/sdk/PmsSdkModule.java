@@ -1,5 +1,6 @@
 package io.harness.pms.sdk;
 
+import io.harness.PmsSdkCoreModule;
 import io.harness.pms.plan.InitializeSdkRequest;
 import io.harness.pms.plan.PmsServiceGrpc.PmsServiceBlockingStub;
 import io.harness.pms.sdk.core.plan.creation.creators.PipelineServiceInfoProvider;
@@ -7,7 +8,11 @@ import io.harness.pms.sdk.core.plan.creation.creators.PipelineServiceInfoProvide
 import com.google.common.util.concurrent.ServiceManager;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
+import com.google.inject.Module;
 import io.grpc.StatusRuntimeException;
+import java.util.ArrayList;
+import java.util.List;
+import javax.validation.constraints.NotNull;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
@@ -35,14 +40,22 @@ public class PmsSdkModule {
   private void initialize() throws StatusRuntimeException, Exception {
     PipelineServiceInfoProvider pipelineServiceInfoProvider = config.getPipelineServiceInfoProvider();
     String serviceName = pipelineServiceInfoProvider.getServiceName();
-
-    Injector injector = Guice.createInjector(PmsSdkGrpcModule.getInstance(), PmsSdkPersistenceModule.getInstance(),
-        PmsSdkProviderModule.getInstance(config, serviceName), PmsSdkQueueModule.getInstance());
-
+    Injector injector = Guice.createInjector(getModules(serviceName));
     ServiceManager serviceManager = injector.getInstance(ServiceManager.class).startAsync();
     serviceManager.awaitHealthy();
     Runtime.getRuntime().addShutdownHook(new Thread(() -> serviceManager.stopAsync().awaitStopped()));
     registerSdk(pipelineServiceInfoProvider, serviceName, injector);
+  }
+
+  @NotNull
+  private List<Module> getModules(String serviceName) {
+    List<Module> modules = new ArrayList<>();
+    modules.add(PmsSdkCoreModule.getInstance());
+    modules.add(PmsSdkPersistenceModule.getInstance());
+    modules.add(PmsSdkProviderModule.getInstance(config, serviceName));
+    modules.add(PmsSdkGrpcModule.getInstance());
+    modules.add(PmsSdkQueueModule.getInstance());
+    return modules;
   }
 
   private void registerSdk(
