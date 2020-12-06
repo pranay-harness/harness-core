@@ -1,8 +1,8 @@
 import requests
 import time
-import csv
 import helper
 import log_manager
+import file_manager
 
 ARGS_API_KEY = "api_key"
 ARGS_SEARCH_INTERVAL_START_TIME_EPOCH_KEY = "search_interval_start_time_epoch"
@@ -471,50 +471,12 @@ def create_csv_data(executions):
     return data_rows, False
 
 
-def init_csv_file_with_headers(filename):
-    with open(filename, 'w') as csvfile:
-        # create new csv file and put headers in it
-        # creating a csv writer object
-        csvwriter = csv.writer(csvfile)
-
-        # writing the fields
-        csvwriter.writerow(CSV_HEADERS)
-
-
-def create_new_file(filename):
-    with open(filename, 'w') as file:
-        pass
-
-
-def append_to_csv_file(filename, data_rows):
-    with open(filename, 'a') as csvfile:
-        # creating a csv writer object
-        csvwriter = csv.writer(csvfile)
-
-        # writing the data rows
-        csvwriter.writerows(data_rows)
-
-
-def append_to_file(filename, data):
-    with open(filename, 'a') as file:
-        file.writelines(data)
-
-
-def copy_csv_file(source_file, dest_file):
-    with open(dest_file, 'a+') as w:
-        writer = csv.writer(w)
-        with open(source_file, 'r') as f:
-            reader = csv.reader(f)
-            for row in reader:
-                writer.writerow(row)
-
-
 def init_backoffice_files():
     # create blank temp file
-    create_new_file(TEMP_CSV_FILE_NAME)
+    file_manager.create_new_file(TEMP_CSV_FILE_NAME)
     # create new debug and error log files
-    create_new_file(DEBUG_LOG_FILE_NAME)
-    create_new_file(ERROR_LOG_FILE_NAME)
+    file_manager.create_new_file(DEBUG_LOG_FILE_NAME)
+    file_manager.create_new_file(ERROR_LOG_FILE_NAME)
 
 
 def compile_data(input_args):
@@ -533,7 +495,7 @@ def compile_data(input_args):
         end_time_interval_epoch = input_args.get(ARGS_SEARCH_INTERVAL_END_TIME_EPOCH_KEY)
 
         if file_operation == FILE_OPERATION_NEW:
-            init_csv_file_with_headers(filename)
+            file_manager.init_csv_file_with_headers(filename, CSV_HEADERS)
 
         init_backoffice_files()
 
@@ -555,7 +517,7 @@ def compile_data(input_args):
             data_rows, is_threshold_breached = create_csv_data(executions)
 
             # append all data rows to the temp csv
-            append_to_csv_file(TEMP_CSV_FILE_NAME, data_rows)
+            file_manager.append_to_csv_file(TEMP_CSV_FILE_NAME, data_rows)
 
             if is_threshold_breached:
                 repeat = False
@@ -563,12 +525,12 @@ def compile_data(input_args):
                 curr_offset = curr_offset + limit
 
         # copy all data from current temp file to the original file
-        copy_csv_file(TEMP_CSV_FILE_NAME, filename)
+        file_manager.copy_csv_file(TEMP_CSV_FILE_NAME, filename)
 
         print("--XX--COMPLETED--XX--")
 
     except Exception as e:
         print("EXCEPTION : ", e)
     finally:
-        append_to_file(DEBUG_LOG_FILE_NAME, log_manager.get_debug_log())
-        append_to_file(ERROR_LOG_FILE_NAME, log_manager.get_error_log())
+        file_manager.append_to_file(DEBUG_LOG_FILE_NAME, log_manager.get_debug_log())
+        file_manager.append_to_file(ERROR_LOG_FILE_NAME, log_manager.get_error_log())
