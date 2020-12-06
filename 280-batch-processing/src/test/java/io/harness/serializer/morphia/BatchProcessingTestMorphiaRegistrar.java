@@ -3,16 +3,16 @@ package io.harness.serializer.morphia;
 import io.harness.morphia.MorphiaRegistrar;
 import io.harness.morphia.MorphiaRegistrarHelperPut;
 
-import software.wings.integration.common.MongoDBTest;
-import software.wings.integration.dl.PageRequestTest;
+import software.wings.integration.common.MongoEntity;
+import software.wings.integration.dl.Dummy;
 
 import java.util.Set;
 
 public class BatchProcessingTestMorphiaRegistrar implements MorphiaRegistrar {
   @Override
   public void registerClasses(Set<Class> set) {
-    set.add(PageRequestTest.Dummy.class);
-    set.add(MongoDBTest.MongoEntity.class);
+    set.add(Dummy.class);
+    set.add(MongoEntity.class);
   }
 
   @Override

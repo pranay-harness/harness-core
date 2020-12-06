@@ -26,8 +26,8 @@ import software.wings.api.HostElement;
 import software.wings.api.WorkflowElement;
 import software.wings.api.artifact.ServiceArtifactElement;
 import software.wings.api.artifact.ServiceArtifactVariableElement;
+import software.wings.expression.SweepingOutputData;
 import software.wings.service.impl.SweepingOutputServiceImpl;
-import software.wings.service.impl.SweepingOutputServiceImplTest;
 import software.wings.service.intfc.StateExecutionService;
 import software.wings.service.intfc.sweepingoutput.SweepingOutputService;
 import software.wings.sm.ContextElement;
@@ -129,7 +129,7 @@ public class ResumeStateUtilsTest extends WingsBaseTest {
                 stateExecutionInstanceIdEnvState, SweepingOutputInstance.Scope.WORKFLOW)
             .name("wf1")
             .output(kryoSerializer.asBytes(SWEEPING_OUTPUT_CONTENT))
-            .value(SweepingOutputServiceImplTest.SweepingOutputData.builder().text(SWEEPING_OUTPUT_CONTENT).build())
+            .value(SweepingOutputData.builder().text(SWEEPING_OUTPUT_CONTENT).build())
             .build());
 
     // All the others should be copied.
@@ -139,7 +139,7 @@ public class ResumeStateUtilsTest extends WingsBaseTest {
                 stateExecutionInstanceIdEnvState, SweepingOutputInstance.Scope.PIPELINE)
             .name("pl1")
             .output(kryoSerializer.asBytes(SWEEPING_OUTPUT_CONTENT))
-            .value(SweepingOutputServiceImplTest.SweepingOutputData.builder().text(SWEEPING_OUTPUT_CONTENT).build())
+            .value(SweepingOutputData.builder().text(SWEEPING_OUTPUT_CONTENT).build())
             .build());
     sweepingOutputService.save(
         SweepingOutputServiceImpl
@@ -147,16 +147,15 @@ public class ResumeStateUtilsTest extends WingsBaseTest {
                 stateExecutionInstanceIdEnvState, SweepingOutputInstance.Scope.PIPELINE)
             .name("pl2")
             .output(kryoSerializer.asBytes(SWEEPING_OUTPUT_CONTENT))
-            .value(SweepingOutputServiceImplTest.SweepingOutputData.builder().text(SWEEPING_OUTPUT_CONTENT).build())
+            .value(SweepingOutputData.builder().text(SWEEPING_OUTPUT_CONTENT).build())
             .build());
-    sweepingOutputService.save(
-        SweepingOutputServiceImpl
-            .prepareSweepingOutputBuilder(appId, pipelineExecutionUuid, null, null,
-                stateExecutionInstanceIdApprovalState, SweepingOutputInstance.Scope.PIPELINE)
-            .name("pl3")
-            .output(kryoSerializer.asBytes(SWEEPING_OUTPUT_CONTENT))
-            .value(SweepingOutputServiceImplTest.SweepingOutputData.builder().text(SWEEPING_OUTPUT_CONTENT).build())
-            .build());
+    sweepingOutputService.save(SweepingOutputServiceImpl
+                                   .prepareSweepingOutputBuilder(appId, pipelineExecutionUuid, null, null,
+                                       stateExecutionInstanceIdApprovalState, SweepingOutputInstance.Scope.PIPELINE)
+                                   .name("pl3")
+                                   .output(kryoSerializer.asBytes(SWEEPING_OUTPUT_CONTENT))
+                                   .value(SweepingOutputData.builder().text(SWEEPING_OUTPUT_CONTENT).build())
+                                   .build());
 
     String newPipelineExecutionUuid = generateUuid();
     String newStateExecutionInstanceIdEnvState = generateUuid();
@@ -219,7 +218,6 @@ public class ResumeStateUtilsTest extends WingsBaseTest {
 
   private void verifyOutputAndValue(SweepingOutputInstance instance) {
     assertThat(instance.getOutput()).isEqualTo(kryoSerializer.asBytes(SWEEPING_OUTPUT_CONTENT));
-    assertThat(((SweepingOutputServiceImplTest.SweepingOutputData) instance.getValue()).getText())
-        .isEqualTo(SWEEPING_OUTPUT_CONTENT);
+    assertThat(((SweepingOutputData) instance.getValue()).getText()).isEqualTo(SWEEPING_OUTPUT_CONTENT);
   }
 }

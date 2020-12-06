@@ -9,26 +9,17 @@ import io.harness.rule.Owner;
 import io.harness.threading.Concurrent;
 
 import software.wings.WingsBaseTest;
-import software.wings.beans.Base;
 import software.wings.dl.WingsPersistence;
 import software.wings.rules.Integration;
 
 import com.google.inject.Inject;
-import lombok.Getter;
-import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
-import org.mongodb.morphia.annotations.Entity;
 
 @Integration
 @Slf4j
 public class MongoDBTest extends WingsBaseTest {
-  @Entity(value = "!!!testMongo", noClassnameStored = true)
-  public static class MongoEntity extends Base {
-    @Getter @Setter private String data;
-  }
-
   @Inject WingsPersistence wingsPersistence;
 
   @Test

@@ -12,7 +12,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.beans.SweepingOutputInstance;
 import io.harness.category.element.UnitTests;
-import io.harness.pms.sdk.core.data.SweepingOutput;
 import io.harness.rule.Owner;
 import io.harness.serializer.KryoSerializer;
 
@@ -28,8 +27,6 @@ import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
 import java.util.HashMap;
 import java.util.Map;
-import lombok.Builder;
-import lombok.Value;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
@@ -114,7 +111,7 @@ public class ManagerExpressionEvaluatorTest extends WingsBaseTest {
                                        .appId(appId)
                                        .pipelineExecutionId(pipelineExecutionId)
                                        .workflowExecutionId(workflowExecutionId)
-                                       .output(kryoSerializer.asDeflatedBytes(ImmutableMap.of("foo", "bar")))
+                                       .output(kryoSerializer.asDeflatedBytes(ImmutableMap.of("text", "bar")))
                                        .build());
 
     Map<String, Object> context =
@@ -130,12 +127,12 @@ public class ManagerExpressionEvaluatorTest extends WingsBaseTest {
                     .build())
             .build();
 
-    assertThat(expressionEvaluator.substitute("${context.output(\"jenkins\").foo}", context)).isEqualTo("bar");
-    assertThat(expressionEvaluator.substitute("${context.jenkins.foo}", context)).isEqualTo("bar");
+    assertThat(expressionEvaluator.substitute("${context.output(\"jenkins\").text}", context)).isEqualTo("bar");
+    assertThat(expressionEvaluator.substitute("${context.jenkins.text}", context)).isEqualTo("bar");
 
     // Test that the first pass did not break the functionality
-    assertThat(expressionEvaluator.substitute("${context.output(\"jenkins\").foo}", context)).isEqualTo("bar");
-    assertThat(expressionEvaluator.substitute("${context.jenkins.foo}", context)).isEqualTo("bar");
+    assertThat(expressionEvaluator.substitute("${context.output(\"jenkins\").text}", context)).isEqualTo("bar");
+    assertThat(expressionEvaluator.substitute("${context.jenkins.text}", context)).isEqualTo("bar");
   }
 
   @Test
@@ -154,7 +151,7 @@ public class ManagerExpressionEvaluatorTest extends WingsBaseTest {
                                        .appId(appId)
                                        .pipelineExecutionId(pipelineExecutionId)
                                        .workflowExecutionId(workflowExecutionId)
-                                       .output(kryoSerializer.asDeflatedBytes(ImmutableMap.of("foo", "bar")))
+                                       .output(kryoSerializer.asDeflatedBytes(ImmutableMap.of("text", "bar")))
                                        .build());
 
     Map<String, Object> context =
@@ -172,13 +169,7 @@ public class ManagerExpressionEvaluatorTest extends WingsBaseTest {
                     .build())
             .build();
 
-    assertThat(expressionEvaluator.substitute("${workflow.foo}", context)).isEqualTo("bar");
-  }
-
-  @Value
-  @Builder
-  public static class SweepingOutputData implements SweepingOutput {
-    String foo;
+    assertThat(expressionEvaluator.substitute("${workflow.text}", context)).isEqualTo("bar");
   }
 
   @Test
@@ -197,7 +188,7 @@ public class ManagerExpressionEvaluatorTest extends WingsBaseTest {
                                        .appId(appId)
                                        .pipelineExecutionId(pipelineExecutionId)
                                        .workflowExecutionId(workflowExecutionId)
-                                       .value(SweepingOutputData.builder().foo("bar").build())
+                                       .value(SweepingOutputData.builder().text("bar").build())
                                        .build());
 
     Map<String, Object> context =
@@ -214,6 +205,6 @@ public class ManagerExpressionEvaluatorTest extends WingsBaseTest {
                     .build())
             .build();
 
-    assertThat(expressionEvaluator.substitute("${workflow.foo}", context)).isEqualTo("bar");
+    assertThat(expressionEvaluator.substitute("${workflow.text}", context)).isEqualTo("bar");
   }
 }

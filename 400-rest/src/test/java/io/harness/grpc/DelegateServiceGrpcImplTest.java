@@ -42,6 +42,7 @@ import io.harness.delegate.TaskType;
 import io.harness.delegate.beans.DelegateStringProgressData;
 import io.harness.delegate.beans.executioncapability.SystemEnvCheckerCapability;
 import io.harness.delegate.task.shell.ScriptType;
+import io.harness.engine.interrupts.steps.TestTransportEntity;
 import io.harness.exception.DelegateServiceDriverException;
 import io.harness.exception.DelegateServiceLiteException;
 import io.harness.exception.InvalidRequestException;

@@ -38,6 +38,7 @@ import software.wings.api.instancedetails.InstanceInfoVariables;
 import software.wings.beans.Environment;
 import software.wings.common.VariableProcessor;
 import software.wings.expression.ManagerExpressionEvaluator;
+import software.wings.expression.SweepingOutputData;
 import software.wings.service.intfc.sweepingoutput.SweepingOutputInquiry;
 import software.wings.service.intfc.sweepingoutput.SweepingOutputService;
 import software.wings.sm.ContextElement;
@@ -55,8 +56,6 @@ import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Optional;
-import lombok.Builder;
-import lombok.Value;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -80,12 +79,6 @@ public class SweepingOutputServiceImplTest extends WingsBaseTest {
   private SweepingOutputInstance sweepingOutputInstance;
   private StateExecutionInstance stateExecutionInstance;
   @Inject KryoSerializer kryoSerializer;
-
-  @Value
-  @Builder
-  public static class SweepingOutputData implements SweepingOutput {
-    String text;
-  }
 
   @Before
   public void setup() {

@@ -689,3 +689,50 @@ java_binary(
         "//:lombok",
     ],
 )
+
+java_library(
+    name = "tests",
+    srcs = glob(
+        ["src/test/**/*.java"],
+    ),
+    data = [
+        "//400-rest/src/test/resources:resource",
+    ],
+    resources = [
+        "//:resource",
+        "//400-rest/src/main/resources:resource",
+        "//980-commons/src/main/resources:resource",
+        "//980-commons/src/main/resources-filtered:resource",
+        "//980-commons/src/test/resources:resource",
+    ],
+    visibility = ["//visibility:public"],
+    runtime_deps = [
+        "//400-rest/src/main/resources",
+        "//980-commons/src/main/resources",
+        "//980-commons/src/main/resources-filtered:resources",
+        "//980-commons/src/test/resources",
+        "@maven//:javax_ws_rs_javax_ws_rs_api",
+    ],
+    deps = [
+        ":module",
+        "//:lombok",
+        "//400-rest:supporter-test",
+        "//990-commons-test:module",
+        "@maven//:com_bertramlabs_plugins_hcl4j",
+        "@maven//:com_github_tomakehurst_wiremock",
+        "@maven//:com_github_tomakehurst_wiremock_standalone",
+        "@maven//:com_google_guava_guava",
+        "@maven//:com_icegreen_greenmail",
+        "@maven//:com_openpojo_openpojo",
+        "@maven//:io_github_benas_random_beans",
+        "@maven//:junit_junit",
+        "@maven//:org_assertj_assertj_core",
+        "@maven//:org_glassfish_jersey_test_framework_providers_jersey_test_framework_provider_grizzly2",
+        "@maven//:org_glassfish_jersey_test_framework_providers_jersey_test_framework_provider_inmemory",
+        "@maven//:org_mockito_mockito_core",
+        "@maven//:org_powermock_powermock_module_junit4",
+        "@maven//:pl_pragmatists_JUnitParams",
+    ],
+)
+
+run_tests()

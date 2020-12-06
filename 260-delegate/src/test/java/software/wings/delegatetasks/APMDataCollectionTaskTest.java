@@ -28,7 +28,6 @@ import software.wings.metrics.MetricType;
 import software.wings.service.impl.analysis.DataCollectionTaskResult;
 import software.wings.service.impl.apm.APMDataCollectionInfo;
 import software.wings.service.impl.apm.APMMetricInfo;
-import software.wings.service.impl.apm.APMParserTest;
 import software.wings.service.intfc.security.EncryptionService;
 import software.wings.sm.StateType;
 
@@ -173,8 +172,8 @@ public class APMDataCollectionTaskTest extends WingsBaseTest {
   @Owner(developers = PRAVEEN)
   @Category(UnitTests.class)
   public void testDataCollection() throws Exception {
-    String text500 =
-        Resources.toString(APMParserTest.class.getResource("/apm/insights_sample_response.json"), Charsets.UTF_8);
+    String text500 = Resources.toString(
+        APMDataCollectionTaskTest.class.getResource("/apm/insights_sample_response.json"), Charsets.UTF_8);
 
     Map<String, APMMetricInfo.ResponseMapper> responseMapperMap = new HashMap<>();
     responseMapperMap.put(
