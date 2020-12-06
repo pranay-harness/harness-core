@@ -71,9 +71,9 @@ public class RuntimeInputExecutionInputsControllerTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void testQLExecutionInputReturnsCorrectServices() {
     WorkflowExecution pipelineExecution =
-        JsonUtils.readResourceFile("./execution/pipeline_execution.json", WorkflowExecution.class);
+        JsonUtils.readResourceFile("execution/pipeline_execution.json", WorkflowExecution.class);
     when(workflowExecutionService.getWorkflowExecution(anyString(), anyString())).thenReturn(pipelineExecution);
-    Pipeline pipeline = JsonUtils.readResourceFile("./pipeline/pipeline.json", Pipeline.class);
+    Pipeline pipeline = JsonUtils.readResourceFile("pipeline/pipeline.json", Pipeline.class);
     when(pipelineService.readPipeline(anyString(), anyString(), eq(true))).thenReturn(pipeline);
     when(pipelineExecutionController.resolveEnvId(eq(pipeline), anyListOf(QLVariableInput.class))).thenReturn("envId");
     when(pipelineExecutionController.validateAndResolvePipelineVariables(
@@ -106,7 +106,7 @@ public class RuntimeInputExecutionInputsControllerTest extends WingsBaseTest {
                                                                 .variableInputs(new ArrayList<>())
                                                                 .build(),
         "accountId"));
-    JsonNode expected = JsonUtils.readResourceFile("./execution/qlExecution_input_expected.json", JsonNode.class);
+    JsonNode expected = JsonUtils.readResourceFile("execution/qlExecution_input_expected.json", JsonNode.class);
     assertEquals("QLInputs should be equal", expected.toString(), actual.toString());
   }
 }

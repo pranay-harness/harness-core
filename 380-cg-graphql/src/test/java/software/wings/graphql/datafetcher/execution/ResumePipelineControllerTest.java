@@ -54,11 +54,10 @@ public class ResumePipelineControllerTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void testPipelineResumesCorrectly() {
     QLRuntimeExecutionInputs parameter =
-        JsonUtils.readResourceFile("./execution/graphql_continue_exec_params.json", QLRuntimeExecutionInputs.class);
+        JsonUtils.readResourceFile("execution/graphql_continue_exec_params.json", QLRuntimeExecutionInputs.class);
     WorkflowExecution execution =
-        JsonUtils.readResourceFile("./execution/pipeline_execution_graphql.json", WorkflowExecution.class);
-    Pipeline pipeline =
-        JsonUtils.readResourceFile("./pipeline/pipeline_env_infra_service_runtime.json", Pipeline.class);
+        JsonUtils.readResourceFile("execution/pipeline_execution_graphql.json", WorkflowExecution.class);
+    Pipeline pipeline = JsonUtils.readResourceFile("pipeline/pipeline_env_infra_service_runtime.json", Pipeline.class);
     String envId = "dlEk9oARQ6Oa4TDyZ62IKw";
     Map<String, String> wfVars = ImmutableMap.<String, String>builder()
                                      .put("service", "NA2uRPKLTqm9VU3dPENb-g")

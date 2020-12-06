@@ -3,6 +3,7 @@ package io.harness.ng.core.api.impl;
 import static io.harness.rule.OwnerRule.PHOENIKX;
 
 import static io.github.benas.randombeans.api.EnhancedRandom.random;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.RETURNS_DEEP_STUBS;
 import static org.mockito.Mockito.atLeastOnce;
@@ -27,7 +28,6 @@ import com.google.common.collect.Lists;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
-import org.assertj.core.api.Assertions;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -61,7 +61,7 @@ public class NGSecretManagerServiceImplTest extends CategoryTest {
 
     SecretManagerConfigDTO savedDTO = ngSecretManagerService.createSecretManager(random(VaultConfigDTO.class));
 
-    Assertions.assertThat(savedDTO).isEqualTo(dto);
+    assertThat(savedDTO).isEqualTo(dto);
   }
 
   @Test
@@ -76,7 +76,7 @@ public class NGSecretManagerServiceImplTest extends CategoryTest {
     boolean success = ngSecretManagerService.deleteSecretManager(
         KMS_IDENTIFIER, ACCOUNT_IDENTIFIER, ORG_IDENTIFIER, PROJECT_IDENTIFIER);
 
-    Assertions.assertThat(success).isTrue();
+    assertThat(success).isTrue();
   }
 
   @Test
@@ -92,8 +92,8 @@ public class NGSecretManagerServiceImplTest extends CategoryTest {
     List<SecretManagerConfigDTO> secretManagerConfigList =
         ngSecretManagerService.listSecretManagers(ACCOUNT_IDENTIFIER, ORG_IDENTIFIER, PROJECT_IDENTIFIER);
 
-    Assertions.assertThat(secretManagerConfigList).isNotEmpty();
-    Assertions.assertThat(secretManagerConfigList).isEqualTo(secretManagerConfigs);
+    assertThat(secretManagerConfigList).isNotEmpty();
+    assertThat(secretManagerConfigList).isEqualTo(secretManagerConfigs);
   }
 
   @Test
@@ -104,7 +104,7 @@ public class NGSecretManagerServiceImplTest extends CategoryTest {
         .thenReturn(Response.success(new RestResponse<>(true)));
 
     boolean success = ngSecretManagerService.validate("account", null, null, "identifier");
-    Assertions.assertThat(success).isTrue();
+    assertThat(success).isTrue();
     verify(secretManagerClient, atLeastOnce()).validateSecretManager(any(), any(), any(), any());
   }
 
@@ -120,7 +120,7 @@ public class NGSecretManagerServiceImplTest extends CategoryTest {
                                    .build())));
     SecretManagerMetadataDTO metadataDTO = ngSecretManagerService.getMetadata("Account", null);
 
-    Assertions.assertThat(metadataDTO).isNotNull();
+    assertThat(metadataDTO).isNotNull();
     verify(secretManagerClient, atLeastOnce()).getSecretManagerMetadata(any(), any());
   }
 
@@ -132,7 +132,7 @@ public class NGSecretManagerServiceImplTest extends CategoryTest {
         .thenReturn(Response.success(new RestResponse<>(LocalConfigDTO.builder().build())));
     SecretManagerConfigDTO responseDTO = ngSecretManagerService.getGlobalSecretManager("Account");
 
-    Assertions.assertThat(responseDTO).isNotNull();
+    assertThat(responseDTO).isNotNull();
     verify(secretManagerClient, atLeastOnce()).getGlobalSecretManager(any());
   }
 
@@ -144,7 +144,7 @@ public class NGSecretManagerServiceImplTest extends CategoryTest {
         .thenReturn(Response.success(new RestResponse<>(LocalConfigDTO.builder().build())));
     SecretManagerConfigDTO secretManagerConfigDTO =
         ngSecretManagerService.getSecretManager("account", null, null, "identifier");
-    Assertions.assertThat(secretManagerConfigDTO).isNotNull();
+    assertThat(secretManagerConfigDTO).isNotNull();
     verify(secretManagerClient, atLeastOnce()).getSecretManager(any(), any(), any(), any());
   }
 
@@ -156,7 +156,7 @@ public class NGSecretManagerServiceImplTest extends CategoryTest {
         .thenReturn(Response.success(new RestResponse<>(LocalConfigDTO.builder().build())));
     SecretManagerConfigDTO secretManagerConfigDTO = ngSecretManagerService.updateSecretManager(
         "account", null, null, "identifier", VaultConfigUpdateDTO.builder().build());
-    Assertions.assertThat(secretManagerConfigDTO).isNotNull();
+    assertThat(secretManagerConfigDTO).isNotNull();
     verify(secretManagerClient, atLeastOnce()).updateSecretManager(any(), any(), any(), any(), any());
   }
 }

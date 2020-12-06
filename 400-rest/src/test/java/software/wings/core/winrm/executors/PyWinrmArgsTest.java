@@ -1,5 +1,7 @@
 package software.wings.core.winrm.executors;
 
+import static org.assertj.core.api.Assertions.assertThat;
+
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
 import io.harness.rule.OwnerRule;
@@ -8,7 +10,6 @@ import software.wings.WingsBaseTest;
 
 import java.util.HashMap;
 import java.util.Map;
-import org.assertj.core.api.Assertions;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
@@ -29,7 +30,7 @@ public class PyWinrmArgsTest extends WingsBaseTest {
                            .serverCertValidation(true)
                            .environmentMap(m)
                            .build();
-    Assertions.assertThat(args.getArgs("/commandFile.path"))
+    assertThat(args.getArgs("/commandFile.path"))
         .isEqualTo(
             "-e 'host' -u 'harness' -s 'true' -env $'k1=v1' $'k2=,=v2=,==j' $'VARIA\\'BLE_N?AME_F\\'OO=\"SOME_%$!_VA\\'LUE@?=A' -w '/temp' -t '10' -cfile '/commandFile.path'");
   }
@@ -50,7 +51,7 @@ public class PyWinrmArgsTest extends WingsBaseTest {
                            .serverCertValidation(true)
                            .environmentMap(m)
                            .build();
-    Assertions.assertThat(args.getArgs("/commandFile.path"))
+    assertThat(args.getArgs("/commandFile.path"))
         .isEqualTo(
             "-e 'host' -u 'harness' -s 'true' -env $'k1=v1' $'k2=,=v2=,==j\\' now escape quote \\' now double quote \\\\\\' now ends with \\\\' $'VARIA\\'BLE_N?AME_F\\'OO=\"SOME_%$!_VA\\'LUE@?=A' -w '/temp' -t '10' -cfile '/commandFile.path'");
   }
@@ -68,7 +69,7 @@ public class PyWinrmArgsTest extends WingsBaseTest {
                            .serverCertValidation(true)
                            .environmentMap(m)
                            .build();
-    Assertions.assertThat(args.getArgs("/commandFile.path"))
+    assertThat(args.getArgs("/commandFile.path"))
         .isEqualTo("-e 'host' -u 'harness' -s 'true' -env {} -w '/temp' -t '10' -cfile '/commandFile.path'");
   }
 
@@ -84,7 +85,7 @@ public class PyWinrmArgsTest extends WingsBaseTest {
                            .serverCertValidation(true)
                            .environmentMap(null)
                            .build();
-    Assertions.assertThat(args.getArgs("/commandFile.path"))
+    assertThat(args.getArgs("/commandFile.path"))
         .isEqualTo("-e 'host' -u 'harness' -s 'true' -env {} -w '/temp' -t '10' -cfile '/commandFile.path'");
   }
 }
