@@ -134,7 +134,7 @@ if [[ "" != "$EVENTS_FRAMEWORK_REDIS_SENTINELS" ]]; then
 fi
 
 if [[ "" != "$GRPC_SERVER_PORT" ]]; then
-  yq write -i $CONFIG_FILE   pmsSdkGrpcServerConfig.connectors.port "$GRPC_SERVER_PORT"
+  yq write -i $CONFIG_FILE pmsSdkGrpcServerConfig.connectors[0].port "$GRPC_SERVER_PORT"
 fi
 
 if [[ "" != "$SHOULD_CONFIGURE_WITH_PMS" ]]; then
