@@ -3,6 +3,7 @@ package io.harness.pms.sdk.core.plan.creation.beans;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.InvalidRequestException;
 import io.harness.pms.plan.PlanCreationBlobResponse;
+import io.harness.pms.plan.PlanCreationContextValue;
 import io.harness.pms.plan.PlanNodeProto;
 import io.harness.pms.sdk.core.plan.PlanNode;
 import io.harness.pms.sdk.core.plan.creation.mappers.PlanNodeProtoMapper;
@@ -19,12 +20,23 @@ import lombok.Singular;
 public class PlanCreationResponse {
   @Singular Map<String, PlanNode> nodes;
   @Singular Map<String, YamlField> dependencies;
+  @Singular("contextMap") Map<String, PlanCreationContextValue> contextMap;
   String startingNodeId;
 
   public void merge(PlanCreationResponse other) {
     addNodes(other.getNodes());
     addDependencies(other.getDependencies());
     mergeStartingNodeId(other.getStartingNodeId());
+    mergeContext(other.getContextMap());
+  }
+
+  public void mergeContext(Map<String, PlanCreationContextValue> contextMap) {
+    if (EmptyPredicate.isEmpty(contextMap)) {
+      return;
+    }
+    for (Map.Entry<String, PlanCreationContextValue> entry : contextMap.entrySet()) {
+      putContextValue(entry.getKey(), entry.getValue());
+    }
   }
 
   public void addNodes(Map<String, PlanNode> newNodes) {
@@ -53,6 +65,19 @@ public class PlanCreationResponse {
       return;
     }
     fields.values().forEach(this::addDependency);
+  }
+
+  public void putContextValue(String key, PlanCreationContextValue value) {
+    if (contextMap != null && contextMap.containsKey(key)) {
+      return;
+    }
+
+    if (contextMap == null) {
+      contextMap = new HashMap<>();
+    } else if (!(contextMap instanceof HashMap)) {
+      contextMap = new HashMap<>(contextMap);
+    }
+    contextMap.put(key, value);
   }
 
   public void addDependency(YamlField field) {
@@ -97,6 +122,11 @@ public class PlanCreationResponse {
     }
     if (EmptyPredicate.isNotEmpty(startingNodeId)) {
       finalBlobResponseBuilder.setStartingNodeId(startingNodeId);
+    }
+    if (EmptyPredicate.isNotEmpty(contextMap)) {
+      for (Map.Entry<String, PlanCreationContextValue> dependency : contextMap.entrySet()) {
+        finalBlobResponseBuilder.putContext(dependency.getKey(), dependency.getValue());
+      }
     }
     return finalBlobResponseBuilder.build();
   }

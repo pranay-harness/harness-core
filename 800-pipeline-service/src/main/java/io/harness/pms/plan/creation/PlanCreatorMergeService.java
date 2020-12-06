@@ -77,15 +77,14 @@ public class PlanCreatorMergeService {
     }
 
     for (int i = 0; i < MAX_DEPTH && EmptyPredicate.isNotEmpty(finalResponseBuilder.getDependenciesMap()); i++) {
-      PlanCreationBlobResponse currIterationResponse =
-          createPlanForDependencies(services, finalResponseBuilder.getDependenciesMap());
+      PlanCreationBlobResponse currIterationResponse = createPlanForDependencies(services, finalResponseBuilder);
       PlanCreationBlobResponseUtils.addNodes(finalResponseBuilder, currIterationResponse.getNodesMap());
       PlanCreationBlobResponseUtils.mergeStartingNodeId(
           finalResponseBuilder, currIterationResponse.getStartingNodeId());
       if (EmptyPredicate.isNotEmpty(finalResponseBuilder.getDependenciesMap())) {
         throw new InvalidRequestException("Some YAML nodes could not be parsed");
       }
-
+      PlanCreationBlobResponseUtils.mergeContext(finalResponseBuilder, currIterationResponse.getContextMap());
       PlanCreationBlobResponseUtils.addDependencies(finalResponseBuilder, currIterationResponse.getDependenciesMap());
     }
 
@@ -93,13 +92,14 @@ public class PlanCreatorMergeService {
   }
 
   private PlanCreationBlobResponse createPlanForDependencies(
-      Map<String, PlanCreatorServiceInfo> services, Map<String, YamlFieldBlob> dependencies) {
+      Map<String, PlanCreatorServiceInfo> services, PlanCreationBlobResponse.Builder responseBuilder) {
     PlanCreationBlobResponse.Builder currIterationResponseBuilder = PlanCreationBlobResponse.newBuilder();
     CompletableFutures<PlanCreationBlobResponse> completableFutures = new CompletableFutures<>(executor);
     for (Map.Entry<String, PlanCreatorServiceInfo> serviceEntry : services.entrySet()) {
       Map<String, Set<String>> supportedTypes = serviceEntry.getValue().getSupportedTypes();
       Map<String, YamlFieldBlob> filteredDependencies =
-          dependencies.entrySet()
+          responseBuilder.getDependenciesMap()
+              .entrySet()
               .stream()
               .filter(entry -> {
                 try {
@@ -118,7 +118,10 @@ public class PlanCreatorMergeService {
       completableFutures.supplyAsync(() -> {
         try {
           return serviceEntry.getValue().getPlanCreationClient().createPlan(
-              PlanCreationBlobRequest.newBuilder().putAllDependencies(filteredDependencies).build());
+              PlanCreationBlobRequest.newBuilder()
+                  .putAllDependencies(filteredDependencies)
+                  .putAllContext(responseBuilder.getContextMap())
+                  .build());
         } catch (Exception ex) {
           log.error("Error fetching partial plan from service " + serviceEntry.getKey(), ex);
           return null;
