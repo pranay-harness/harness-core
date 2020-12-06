@@ -3,9 +3,11 @@ package io.harness.pms.plan.creation;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.InvalidRequestException;
 import io.harness.pms.plan.PlanCreationBlobResponse;
+import io.harness.pms.plan.PlanCreationContextValue;
 import io.harness.pms.plan.PlanNodeProto;
 import io.harness.pms.plan.YamlFieldBlob;
 
+import java.util.HashMap;
 import java.util.Map;
 import lombok.experimental.UtilityClass;
 
@@ -18,6 +20,15 @@ public class PlanCreationBlobResponseUtils {
     addNodes(builder, other.getNodesMap());
     addDependencies(builder, other.getDependenciesMap());
     mergeStartingNodeId(builder, other.getStartingNodeId());
+    mergeContext(builder, other.getContextMap());
+  }
+
+  public void mergeContext(
+      PlanCreationBlobResponse.Builder builder, Map<String, PlanCreationContextValue> contextValueMap) {
+    if (EmptyPredicate.isEmpty(contextValueMap)) {
+      return;
+    }
+    builder.putAllContext(contextValueMap);
   }
 
   public void addNodes(PlanCreationBlobResponse.Builder builder, Map<String, PlanNodeProto> newNodes) {
