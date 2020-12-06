@@ -2,11 +2,12 @@ package io.harness.pms.sample.cd.creator.filters;
 
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
-import io.harness.pms.pipeline.filter.FilterCreationResponse;
+import io.harness.pms.filter.creation.FilterCreationResponse;
 import io.harness.pms.sample.cd.beans.DeploymentStage;
 import io.harness.pms.sample.cd.beans.Infrastructure;
 import io.harness.pms.sample.cd.beans.Service;
 import io.harness.pms.sample.cd.beans.ServiceDefinition;
+import io.harness.pms.sdk.core.filter.creation.beans.FilterCreationContext;
 import io.harness.pms.sdk.core.pipeline.filters.FilterJsonCreator;
 
 import java.util.Collections;
@@ -25,7 +26,8 @@ public class DeploymentStageFilterCreator implements FilterJsonCreator<Deploymen
   }
 
   @Override
-  public FilterCreationResponse handleNode(DeploymentStage deploymentStage) {
+  public FilterCreationResponse handleNode(
+      FilterCreationContext filterCreationContext, DeploymentStage deploymentStage) {
     FilterCreationResponse creationResponse = FilterCreationResponse.builder().build();
 
     CdFilter cdFilter = CdFilter.builder().build();

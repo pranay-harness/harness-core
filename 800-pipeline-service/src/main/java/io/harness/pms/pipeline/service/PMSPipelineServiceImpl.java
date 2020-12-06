@@ -8,14 +8,14 @@ import static java.lang.String.format;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.DuplicateFieldException;
 import io.harness.exception.InvalidRequestException;
+import io.harness.pms.filter.creation.FilterCreatorMergeService;
+import io.harness.pms.filter.creation.FilterCreatorMergeServiceResponse;
 import io.harness.pms.pipeline.CommonStepInfo;
 import io.harness.pms.pipeline.PipelineEntity;
 import io.harness.pms.pipeline.PipelineEntity.PipelineEntityKeys;
 import io.harness.pms.pipeline.StepCategory;
 import io.harness.pms.pipeline.StepData;
 import io.harness.pms.sdk.PmsSdkInstanceService;
-import io.harness.pms.sdk.core.FilterCreatorMergeService;
-import io.harness.pms.sdk.core.FilterCreatorMergeServiceResponse;
 import io.harness.pms.steps.StepInfo;
 import io.harness.repositories.pipeline.PMSPipelineRepository;
 
@@ -62,7 +62,7 @@ public class PMSPipelineServiceImpl implements PMSPipelineService {
           pipelineEntity.getProjectIdentifier(), pipelineEntity.getIdentifier(), pipelineEntity.getIdentifier());
 
       // Todo: Uncomment when we have the CD Service integration with NextGenApp.
-      // updatePipelineInfo(pipelineEntity);
+      updatePipelineInfo(pipelineEntity);
 
       PipelineEntity createdEntity = pmsPipelineRepository.save(pipelineEntity);
       return createdEntity;

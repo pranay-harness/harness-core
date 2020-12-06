@@ -6,10 +6,10 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.PipelineServiceTestBase;
 import io.harness.category.element.UnitTests;
+import io.harness.pms.filter.creation.FilterCreatorMergeService;
 import io.harness.pms.pipeline.CommonStepInfo;
 import io.harness.pms.pipeline.StepCategory;
 import io.harness.pms.sdk.PmsSdkInstanceService;
-import io.harness.pms.sdk.core.FilterCreatorMergeService;
 import io.harness.pms.steps.StepInfo;
 import io.harness.pms.steps.StepMetaData;
 import io.harness.repositories.pipeline.PMSPipelineRepository;
