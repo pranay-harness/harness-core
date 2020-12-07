@@ -1,8 +1,13 @@
 package software.wings.service.impl;
 
+import static io.harness.rule.OwnerRule.DEEPAK_PUTHRAYA;
 import static io.harness.rule.OwnerRule.SRINIVAS;
 
 import static software.wings.helpers.ext.jenkins.BuildDetails.Builder.aBuildDetails;
+import static software.wings.utils.RepositoryFormat.docker;
+import static software.wings.utils.RepositoryFormat.maven;
+import static software.wings.utils.RepositoryFormat.npm;
+import static software.wings.utils.RepositoryFormat.nuget;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 import static software.wings.utils.WingsTestConstants.APP_ID;
 import static software.wings.utils.WingsTestConstants.ARTIFACT_GROUP_ID;
@@ -14,6 +19,14 @@ import static software.wings.utils.WingsTestConstants.SETTING_ID;
 
 import static java.util.stream.Collectors.toList;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyBoolean;
+import static org.mockito.Matchers.anyInt;
+import static org.mockito.Matchers.eq;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import io.harness.category.element.UnitTests;
@@ -22,23 +35,30 @@ import io.harness.exception.WingsException;
 import io.harness.rule.Owner;
 
 import software.wings.WingsBaseTest;
+import software.wings.beans.artifact.ArtifactStreamAttributes;
+import software.wings.beans.artifact.ArtifactStreamType;
 import software.wings.beans.artifact.NexusArtifactStream;
 import software.wings.beans.config.NexusConfig;
 import software.wings.helpers.ext.jenkins.BuildDetails;
 import software.wings.helpers.ext.jenkins.JobDetails;
 import software.wings.helpers.ext.nexus.NexusService;
 import software.wings.service.intfc.NexusBuildService;
+import software.wings.utils.ArtifactType;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.stream.IntStream;
 import java.util.stream.Stream;
+import org.assertj.core.api.Assertions;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
+import org.mockito.AdditionalMatchers;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 
@@ -92,8 +112,24 @@ public class NexusBuildServiceTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void shouldGetArtifactPaths() {
     when(nexusService.getArtifactPaths(nexusConfig, null, "releases")).thenReturn(Lists.newArrayList("/fakepath"));
+    when(nexusService.getArtifactPaths(nexusConfig, null, "releases", "groupId"))
+        .thenReturn(Lists.newArrayList("/fakepath2"));
+    when(nexusService.getArtifactNames(nexusConfig, null, "releases", "groupId"))
+        .thenReturn(Lists.newArrayList("/fakeName1"));
+    when(nexusService.getArtifactNames(nexusConfig, null, "releases", "groupId", maven.name()))
+        .thenReturn(Lists.newArrayList("/fakeName2"));
+
     List<String> jobs = nexusBuildService.getArtifactPaths("releases", null, nexusConfig, null);
     assertThat(jobs).hasSize(1).containsExactlyInAnyOrder("/fakepath");
+
+    jobs = nexusBuildService.getArtifactPaths("releases", "groupId", nexusConfig, null);
+    assertThat(jobs).hasSize(1).containsExactlyInAnyOrder("/fakeName1");
+
+    jobs = nexusBuildService.getArtifactPaths("releases", null, nexusConfig, null, null);
+    assertThat(jobs).hasSize(1).containsExactlyInAnyOrder("/fakepath");
+
+    jobs = nexusBuildService.getArtifactPaths("releases", "groupId", nexusConfig, null, maven.name());
+    assertThat(jobs).hasSize(1).containsExactlyInAnyOrder("/fakeName2");
   }
 
   @Test
@@ -126,5 +162,174 @@ public class NexusBuildServiceTest extends WingsBaseTest {
       assertThat(e.getParams()).isNotEmpty();
       assertThat(e.getParams().get("message")).isEqualTo("Could not reach Nexus Server at : BAD_URL");
     }
+  }
+
+  @Test
+  @Owner(developers = DEEPAK_PUTHRAYA)
+  @Category(UnitTests.class)
+  public void shouldValidateArtifactServer() {
+    // Makes an actual network request to the given nexus url.
+    NexusConfig nexusConfig = NexusConfig.builder()
+                                  .nexusUrl("https://harness.io")
+                                  .username("username")
+                                  .password("password".toCharArray())
+                                  .accountId(ACCOUNT_ID)
+                                  .build();
+    nexusBuildService.validateArtifactServer(nexusConfig, Collections.emptyList());
+    verify(nexusService).isRunning(eq(nexusConfig), eq(Collections.emptyList()));
+  }
+
+  @Test
+  @Owner(developers = DEEPAK_PUTHRAYA)
+  @Category(UnitTests.class)
+  public void shouldFailPlansForNonDockerImages() {
+    assertThatThrownBy(() -> {
+      nexusBuildService.getPlans(nexusConfig, Collections.emptyList(), ArtifactType.JAR, docker.name());
+    }).isInstanceOf(WingsException.class);
+  }
+
+  @Test
+  @Owner(developers = DEEPAK_PUTHRAYA)
+  @Category(UnitTests.class)
+  public void ShouldCollectPlans() {
+    // For Docker ArtifactType
+    nexusBuildService.getPlans(nexusConfig, Collections.emptyList(), ArtifactType.DOCKER, docker.name());
+    verify(nexusService).getRepositories(eq(nexusConfig), eq(Collections.emptyList()), eq(docker.name()));
+
+    nexusBuildService.getPlans(nexusConfig, Collections.emptyList(), ArtifactType.JAR, maven.name());
+    verify(nexusService).getRepositories(eq(nexusConfig), eq(Collections.emptyList()), eq(maven.name()));
+  }
+
+  @Test
+  @Owner(developers = DEEPAK_PUTHRAYA)
+  @Category(UnitTests.class)
+  public void ShouldCollectBuild() {
+    ArtifactStreamAttributes nugetAttributes = ArtifactStreamAttributes.builder()
+                                                   .repositoryFormat(nuget.name())
+                                                   .jobName("someJobName")
+                                                   .nexusPackageName("someNexusPackage")
+                                                   .artifactStreamType(ArtifactStreamType.NEXUS.name())
+                                                   .build();
+    String buildNo = "someBuildNumber";
+    List<BuildDetails> allBuilds =
+        IntStream.rangeClosed(1, 100)
+            .boxed()
+            .sorted(Comparator.reverseOrder())
+            .map(i -> BuildDetails.Builder.aBuildDetails().withNumber(String.valueOf(i)).build())
+            .collect(toList());
+    when(nexusService.getVersion(AdditionalMatchers.or(eq(nuget.name()), eq(npm.name())), eq(nexusConfig),
+             eq(Collections.emptyList()), eq("someJobName"), eq("someNexusPackage"), eq("someBuildNumber")))
+        .thenReturn(allBuilds);
+
+    BuildDetails actual =
+        nexusBuildService.getBuild(APP_ID, nugetAttributes, nexusConfig, Collections.emptyList(), buildNo);
+    verify(nexusService)
+        .getVersion(eq(nuget.name()), eq(nexusConfig), eq(Collections.emptyList()), eq("someJobName"),
+            eq("someNexusPackage"), eq("someBuildNumber"));
+    assertThat(actual).isEqualTo(allBuilds.get(0));
+
+    ArtifactStreamAttributes npmAttributes = ArtifactStreamAttributes.builder()
+                                                 .repositoryFormat(npm.name())
+                                                 .jobName("someJobName")
+                                                 .nexusPackageName("someNexusPackage")
+                                                 .artifactStreamType(ArtifactStreamType.NEXUS.name())
+                                                 .build();
+    actual = nexusBuildService.getBuild(APP_ID, npmAttributes, nexusConfig, Collections.emptyList(), buildNo);
+    verify(nexusService)
+        .getVersion(eq(npm.name()), eq(nexusConfig), eq(Collections.emptyList()), eq("someJobName"),
+            eq("someNexusPackage"), eq("someBuildNumber"));
+    assertThat(actual).isEqualTo(allBuilds.get(0));
+
+    ArtifactStreamAttributes attributes = ArtifactStreamAttributes.builder()
+                                              .repositoryFormat("ANYTHING_ELSE")
+                                              .jobName("someJobName")
+                                              .nexusPackageName("someNexusPackage")
+                                              .groupId("someGroupID")
+                                              .artifactName("someArtifactName")
+                                              .extension("someExtension")
+                                              .classifier("someClassifier")
+                                              .artifactStreamType(ArtifactStreamType.NEXUS.name())
+                                              .build();
+    nexusBuildService.getBuild(APP_ID, attributes, nexusConfig, Collections.emptyList(), buildNo);
+    verify(nexusService)
+        .getVersion(eq(nexusConfig), eq(Collections.emptyList()), eq("someJobName"), eq("someGroupID"),
+            eq("someArtifactName"), eq("someExtension"), eq("someClassifier"), eq(buildNo));
+  }
+
+  @Test
+  @Owner(developers = DEEPAK_PUTHRAYA)
+  @Category(UnitTests.class)
+  public void shouldCollectDockerBuilds() {
+    ArtifactStreamAttributes attributes = ArtifactStreamAttributes.builder()
+                                              .artifactType(ArtifactType.DOCKER)
+                                              .repositoryFormat(docker.name())
+                                              .artifactStreamType(ArtifactStreamType.NEXUS.name())
+                                              .build();
+    nexusBuildService.getBuilds(APP_ID, attributes, nexusConfig, Collections.emptyList());
+    verify(nexusService).getBuilds(eq(nexusConfig), eq(Collections.emptyList()), eq(attributes), anyInt());
+  }
+
+  @Test
+  @Owner(developers = DEEPAK_PUTHRAYA)
+  @Category(UnitTests.class)
+  public void shouldCollectNugetAndNpmBuilds() {
+    ArtifactStreamAttributes attributes = ArtifactStreamAttributes.builder()
+                                              .jobName("someJobName")
+                                              .nexusPackageName("someNexusPackageName")
+                                              .supportForNexusGroupReposEnabled(true)
+                                              .repositoryFormat(npm.name())
+                                              .artifactStreamType(ArtifactStreamType.NEXUS.name())
+                                              .build();
+    nexusBuildService.getBuilds(APP_ID, attributes, nexusConfig, Collections.emptyList());
+    verify(nexusService)
+        .getVersions(eq(npm.name()), eq(nexusConfig), eq(Collections.emptyList()), eq("someJobName"),
+            eq("someNexusPackageName"), anyBoolean());
+
+    attributes = ArtifactStreamAttributes.builder()
+                     .jobName("someJobName")
+                     .nexusPackageName("someNexusPackageName")
+                     .supportForNexusGroupReposEnabled(true)
+                     .repositoryFormat(nuget.name())
+                     .artifactStreamType(ArtifactStreamType.NEXUS.name())
+                     .build();
+    nexusBuildService.getBuilds(APP_ID, attributes, nexusConfig, Collections.emptyList());
+    verify(nexusService)
+        .getVersions(eq(npm.name()), eq(nexusConfig), eq(Collections.emptyList()), eq("someJobName"),
+            eq("someNexusPackageName"), anyBoolean());
+  }
+
+  @Test
+  @Owner(developers = DEEPAK_PUTHRAYA)
+  @Category(UnitTests.class)
+  public void shouldValidateArtifactSource() {
+    ArtifactStreamAttributes attributes = ArtifactStreamAttributes.builder().build();
+    boolean actual = nexusBuildService.validateArtifactSource(nexusConfig, null, attributes);
+    Assertions.assertThat(actual).isTrue();
+    verify(nexusService, never()).existsVersion(any(), any(), any(), any(), any(), any(), any());
+
+    attributes = ArtifactStreamAttributes.builder().extension("someExtension").build();
+    actual = nexusBuildService.validateArtifactSource(nexusConfig, null, attributes);
+    verify(nexusService, times(1)).existsVersion(any(), any(), any(), any(), any(), eq("someExtension"), any());
+    Assertions.assertThat(actual).isFalse();
+
+    attributes = ArtifactStreamAttributes.builder().classifier("someClassifier").build();
+    actual = nexusBuildService.validateArtifactSource(nexusConfig, null, attributes);
+    verify(nexusService, times(1)).existsVersion(any(), any(), any(), any(), any(), any(), eq("someClassifier"));
+    Assertions.assertThat(actual).isFalse();
+  }
+
+  @Test
+  @Owner(developers = DEEPAK_PUTHRAYA)
+  @Category(UnitTests.class)
+  public void shouldReturnLastSuccessfulBuild() {
+    ArtifactStreamAttributes attributes = ArtifactStreamAttributes.builder()
+                                              .artifactStreamType(ArtifactStreamType.NEXUS.name())
+                                              .jobName("someJob")
+                                              .groupId("someGroup")
+                                              .artifactName("artifactName")
+                                              .build();
+    nexusBuildService.getLastSuccessfulBuild(APP_ID, attributes, nexusConfig, null);
+    verify(nexusService)
+        .getLatestVersion(eq(nexusConfig), eq(null), eq("someJob"), eq("someGroup"), eq("artifactName"));
   }
 }

@@ -1,6 +1,7 @@
 package software.wings.helpers.ext.artifactory;
 
 import static io.harness.rule.OwnerRule.AADITI;
+import static io.harness.rule.OwnerRule.DEEPAK_PUTHRAYA;
 import static io.harness.rule.OwnerRule.GEORGE;
 import static io.harness.rule.OwnerRule.SRINIVAS;
 
@@ -8,6 +9,7 @@ import static software.wings.utils.ArtifactType.RPM;
 import static software.wings.utils.ArtifactType.WAR;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
@@ -19,6 +21,7 @@ import software.wings.beans.artifact.Artifact.ArtifactMetadataKeys;
 import software.wings.beans.artifact.ArtifactStreamAttributes;
 import software.wings.beans.artifact.ArtifactStreamType;
 import software.wings.beans.config.ArtifactoryConfig;
+import software.wings.exception.ArtifactoryServerException;
 import software.wings.helpers.ext.jenkins.BuildDetails;
 import software.wings.service.impl.security.EncryptionServiceImpl;
 import software.wings.utils.ArtifactType;
@@ -156,7 +159,7 @@ public class ArtifactoryServiceTest extends CategoryTest {
   @Category(UnitTests.class)
   public void shouldGetRpmFilePaths() {
     List<BuildDetails> builds =
-        artifactoryService.getFilePaths(artifactoryConfig, null, "harness-rpm", "todolist*", "generic", 50);
+        artifactoryService.getFilePaths(artifactoryConfig, null, "harness-rpm", "todolist*/", "generic", 50);
     assertThat(builds).isNotNull();
     assertThat(builds).extracting(BuildDetails::getNumber).contains("todolist-1.0-2.x86_64.rpm");
   }
@@ -190,7 +193,7 @@ public class ArtifactoryServiceTest extends CategoryTest {
   @Category(UnitTests.class)
   public void shouldGetCorrectBuildNoForArtifactPathsWithoutAnyWildcardCharacter() {
     List<BuildDetails> builds = artifactoryService.getFilePaths(
-        artifactoryConfig, null, "harness-maven", "io/harness/todolist/todolist/1.0/todolist-1.0.war", "any", 50);
+        artifactoryConfig, null, "harness-maven", "/io/harness/todolist/todolist/1.0/todolist-1.0.war", "any", 50);
     assertThat(builds).isNotNull();
     assertThat(builds)
         .extracting(BuildDetails::getNumber)
@@ -320,6 +323,17 @@ public class ArtifactoryServiceTest extends CategoryTest {
   }
 
   @Test
+  @Owner(developers = DEEPAK_PUTHRAYA)
+  @Category(UnitTests.class)
+  public void testGetDefaultRepositoriesWithRepositoryType() {
+    Map<String, String> repositories =
+        artifactoryService.getRepositories(artifactoryConfig, null, RepositoryType.nuget);
+    assertThat(repositories).isNotNull();
+    assertThat(repositories).containsKeys("harness-rpm");
+    assertThat(repositories).doesNotContainKeys("docker");
+  }
+
+  @Test
   @Owner(developers = AADITI)
   @Category(UnitTests.class)
   public void shouldGetFilePathsWithWildCardForAnonymousUser() {
@@ -332,11 +346,32 @@ public class ArtifactoryServiceTest extends CategoryTest {
   }
 
   @Test
+  @Owner(developers = DEEPAK_PUTHRAYA)
+  @Category(UnitTests.class)
+  public void shouldGetFilePathsWithWildCardForAnonymousUser1() {
+    List<BuildDetails> builds = artifactoryService.getFilePaths(
+        artifactoryConfigAnonymous, null, "harness-maven", "tdlist/1.1/*.war", "any", 50);
+    assertThat(builds).isNotNull();
+    assertThat(builds).extracting(BuildDetails::getNumber).contains("tdlist-1.1.war");
+  }
+
+  @Test
+  @Owner(developers = DEEPAK_PUTHRAYA)
+  @Category(UnitTests.class)
+  public void shouldThrowExceptionWhenEmptyArtifactPath() {
+    assertThatThrownBy(
+        () -> artifactoryService.getFilePaths(artifactoryConfigAnonymous, null, "harness-maven", "    ", "any", 50))
+        .isInstanceOf(ArtifactoryServerException.class)
+        .extracting("message")
+        .isEqualTo("Artifact path can not be empty");
+  }
+
+  @Test
   @Owner(developers = AADITI)
   @Category(UnitTests.class)
   public void shouldGetFilePathsForAnonymousUser() {
     List<BuildDetails> builds =
-        artifactoryService.getFilePaths(artifactoryConfigAnonymous, null, "harness-maven", "myartifact", "any", 50);
+        artifactoryService.getFilePaths(artifactoryConfigAnonymous, null, "harness-maven", "//myartifact/", "any", 50);
     assertThat(builds).isNotNull();
     assertThat(builds).extracting(BuildDetails::getNumber).contains("myartifact2");
   }
