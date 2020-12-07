@@ -39,9 +39,9 @@ public final class HelmCommandFlagConstants {
         ImmutableSet.of(DeploymentType.HELM, DeploymentType.KUBERNETES),
         ImmutableSet.of(HelmSourceRepo, HelmChartRepo)),
     PULL(ImmutableSet.of(HelmCliCommandType.FETCH.name()), ImmutableSet.of(V3),
-        ImmutableSet.of(DeploymentType.HELM, DeploymentType.KUBERNETES), ImmutableSet.of(HelmSourceRepo)),
+        ImmutableSet.of(DeploymentType.HELM, DeploymentType.KUBERNETES), ImmutableSet.of(HelmChartRepo)),
     FETCH(ImmutableSet.of(HelmCliCommandType.FETCH.name()), ImmutableSet.of(V2),
-        ImmutableSet.of(DeploymentType.HELM, DeploymentType.KUBERNETES), ImmutableSet.of(HelmSourceRepo)),
+        ImmutableSet.of(DeploymentType.HELM, DeploymentType.KUBERNETES), ImmutableSet.of(HelmChartRepo)),
     TEMPLATE(
         ImmutableSet.of(HelmCliCommandType.RENDER_CHART.name(), HelmCliCommandType.RENDER_SPECIFIC_CHART_FILE.name()),
         ImmutableSet.of(V2, V3), ImmutableSet.of(DeploymentType.HELM, DeploymentType.KUBERNETES),
