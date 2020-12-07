@@ -87,6 +87,23 @@ pipeline:
                     scriptType: BASH
                     scriptString: |
                       echo 'I should not execute'
+              - parallel:
+                  - step:
+                      name: http step 13
+                      identifier: http-step-13
+                      type: http
+                      spec:
+                        socketTimeoutMillis: 1000
+                        method: GET
+                        url: http://localhost:8080/temp-13.json
+                  - step:
+                      name: http step 14
+                      identifier: http-step-14
+                      type: http
+                      spec:
+                        socketTimeoutMillis: 1000
+                        method: GET
+                        url: http://localhost:8080/temp-14.json
             rollbackSteps:
               - step:
                   name: "Rollback Rollout Deployment"

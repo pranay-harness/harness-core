@@ -87,7 +87,7 @@ public class YamlUtils {
    * @return
    */
   public String getFullyQualifiedName(YamlNode yamlNode) {
-    return getQualifiedNameList(yamlNode, "pipeline").stream().collect(Collectors.joining("."));
+    return String.join(".", getQualifiedNameList(yamlNode, "pipeline"));
   }
 
   /**
@@ -99,7 +99,7 @@ public class YamlUtils {
    * @return
    */
   public String getQualifiedNameTillGivenField(YamlNode yamlNode, String fieldName) {
-    return getQualifiedNameList(yamlNode, fieldName).stream().collect(Collectors.joining("."));
+    return String.join(".", getQualifiedNameList(yamlNode, fieldName));
   }
 
   /**
@@ -111,17 +111,17 @@ public class YamlUtils {
    */
   public String getQNBetweenTwoFields(YamlNode yamlNode, String from, String to) {
     List<String> qualifiedNames = getQualifiedNameList(yamlNode, "pipeline");
-    String response = "";
+    StringBuilder response = new StringBuilder();
     for (String qualifiedName : qualifiedNames) {
       if (qualifiedName.equals(from)) {
-        response += qualifiedName + ".";
+        response.append(qualifiedName).append(".");
       }
       if (qualifiedName.equals(to)) {
-        response += qualifiedName;
+        response.append(qualifiedName);
         break;
       }
     }
-    return response;
+    return response.toString();
   }
 
   private List<String> getQualifiedNameList(YamlNode yamlNode, String fieldName) {
@@ -153,7 +153,7 @@ public class YamlUtils {
         return "";
       }
     }
-    YamlField field = null;
+    YamlField field;
     // Because UUID won't be there in leaf objects
     if (yamlNode.getUuid() != null) {
       field = getMatchingFieldNameFromParentUsingUUID(parentNode, yamlNode.getUuid());
@@ -172,10 +172,7 @@ public class YamlUtils {
     if (ignorableStringForQualifiedName.contains(fieldName)) {
       return true;
     }
-    if (fieldName.contains("Definition")) {
-      return true;
-    }
-    return false;
+    return fieldName.contains("Definition");
   }
 
   private void injectUuidInObject(JsonNode node) {
@@ -185,6 +182,48 @@ public class YamlUtils {
       Entry<String, JsonNode> field = it.next();
       injectUuid(field.getValue());
     }
+  }
+
+  public YamlNode getGivenYamlNodeFromParentPath(YamlNode currentNode, String fieldName) {
+    if (currentNode == null) {
+      return null;
+    }
+    YamlNode requiredNode;
+    if (currentNode.getParentNode() == null) {
+      return null;
+    }
+    if (currentNode.getParentNode().isArray()) {
+      requiredNode = checkNodeIfParentIsArray(currentNode.getParentNode(), fieldName);
+    } else {
+      requiredNode = checkNodeIfParentIsObject(currentNode.getParentNode(), fieldName);
+    }
+    if (requiredNode == null) {
+      return getGivenYamlNodeFromParentPath(currentNode.getParentNode(), fieldName);
+    }
+    return requiredNode;
+  }
+
+  private YamlNode checkNodeIfParentIsObject(YamlNode parentNode, String fieldName) {
+    List<YamlField> fields = parentNode.fields();
+    for (YamlField currentField : fields) {
+      if (currentField.getName().equals(fieldName)) {
+        return currentField.getNode();
+      }
+    }
+    return null;
+  }
+
+  private YamlNode checkNodeIfParentIsArray(YamlNode parentNode, String fieldName) {
+    List<YamlNode> yamlNodes = parentNode.getParentNode().asArray();
+    for (YamlNode yamlNode : yamlNodes) {
+      List<YamlField> currentNodeFields = yamlNode.fields();
+      for (YamlField currentNodeField : currentNodeFields) {
+        if (currentNodeField.getName().equals(fieldName)) {
+          return currentNodeField.getNode();
+        }
+      }
+    }
+    return null;
   }
 
   private void injectUuidInArray(JsonNode node) {
