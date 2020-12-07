@@ -51,6 +51,7 @@
         <generated.repo.code>${basedir}/src/generated/java</generated.repo.code>
         <gitBranch>default</gitBranch>
         <gitCommitId>default</gitCommitId>
+        <google.http-client.version>1.38.0</google.http-client.version>
         <grpc-testing.version>1.33.1</grpc-testing.version>
         <grpc.version>1.33.1</grpc.version>
         <guice.version>4.2.3</guice.version>
@@ -638,6 +639,11 @@
                 <groupId>com.google.guava</groupId>
                 <artifactId>guava</artifactId>
                 <version>21.0</version>
+            </dependency>
+            <dependency>
+                <groupId>com.google.http-client</groupId>
+                <artifactId>google-http-client-apache-v2</artifactId>
+                <version>${google.http-client.version}</version>
             </dependency>
             <dependency>
                 <groupId>com.google.inject</groupId>

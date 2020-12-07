@@ -14,6 +14,7 @@ import static java.util.stream.Collectors.toList;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.ExceptionUtils;
+import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.network.Http;
 import io.harness.security.encryption.EncryptedDataDetail;
@@ -26,6 +27,7 @@ import software.wings.common.BuildDetailsComparatorAscending;
 import software.wings.helpers.ext.jenkins.BuildDetails;
 import software.wings.service.impl.GcpHelperService;
 
+import com.google.api.client.auth.oauth2.TokenResponseException;
 import com.google.api.client.googleapis.auth.oauth2.GoogleCredential;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -171,12 +173,16 @@ public class GcrServiceImpl implements GcrService {
     }
     GoogleCredential gc = gcpHelperService.getGoogleCredential(gcpConfig, encryptionDetails, false);
 
-    if (gc.refreshToken()) {
-      return Credentials.basic("_token", gc.getAccessToken());
-    } else {
-      String msg = "Could not refresh token for google cloud provider";
-      log.warn(msg);
-      throw new WingsException(ErrorCode.DEFAULT_ERROR_CODE, USER).addParam("message", msg);
+    try {
+      if (gc.refreshToken()) {
+        return Credentials.basic("_token", gc.getAccessToken());
+      } else {
+        String msg = "Could not refresh token for google cloud provider";
+        log.warn(msg);
+        throw new WingsException(ErrorCode.DEFAULT_ERROR_CODE, USER).addParam("message", msg);
+      }
+    } catch (TokenResponseException e) {
+      throw new InvalidRequestException("407 Proxy Authentication Required");
     }
   }
 
