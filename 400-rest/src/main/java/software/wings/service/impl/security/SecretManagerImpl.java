@@ -150,6 +150,11 @@ public class SecretManagerImpl implements SecretManager {
   }
 
   @Override
+  public SecretManagerConfig getSecretManagerByName(String accountId, String name) {
+    return secretManagerConfigService.getSecretManagerByName(accountId, name);
+  }
+
+  @Override
   public SecretManagerConfig getSecretManager(String accountId, String kmsId, EncryptionType encryptionType) {
     return secretManagerConfigService.getSecretManager(accountId, kmsId, encryptionType);
   }

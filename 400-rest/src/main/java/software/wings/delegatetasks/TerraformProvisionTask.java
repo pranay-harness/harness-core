@@ -6,13 +6,13 @@ import static io.harness.delegate.beans.DelegateFile.Builder.aDelegateFile;
 import static io.harness.filesystem.FileIo.deleteDirectoryAndItsContentIfExists;
 import static io.harness.logging.LogLevel.ERROR;
 import static io.harness.logging.LogLevel.INFO;
+import static io.harness.logging.LogLevel.WARN;
 import static io.harness.provision.TerraformConstants.RESOURCE_READY_WAIT_TIME_SECONDS;
 import static io.harness.provision.TerraformConstants.TERRAFORM_APPLY_PLAN_FILE_VAR_NAME;
 import static io.harness.provision.TerraformConstants.TERRAFORM_BACKEND_CONFIGS_FILE_NAME;
 import static io.harness.provision.TerraformConstants.TERRAFORM_DESTROY_PLAN_FILE_OUTPUT_NAME;
 import static io.harness.provision.TerraformConstants.TERRAFORM_DESTROY_PLAN_FILE_VAR_NAME;
 import static io.harness.provision.TerraformConstants.TERRAFORM_INTERNAL_FOLDER;
-import static io.harness.provision.TerraformConstants.TERRAFORM_PLAN_FILE_NAME;
 import static io.harness.provision.TerraformConstants.TERRAFORM_PLAN_FILE_OUTPUT_NAME;
 import static io.harness.provision.TerraformConstants.TERRAFORM_STATE_FILE_NAME;
 import static io.harness.provision.TerraformConstants.TERRAFORM_VARIABLES_FILE_NAME;
@@ -36,8 +36,6 @@ import static com.google.common.base.Joiner.on;
 import static java.lang.String.format;
 import static java.time.Duration.ofSeconds;
 
-import io.harness.annotations.dev.Module;
-import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.ExecutionStatus;
 import io.harness.delegate.beans.DelegateFile;
 import io.harness.delegate.beans.DelegateTaskPackage;
@@ -54,6 +52,7 @@ import io.harness.git.model.GitRepositoryType;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.logging.LogLevel;
 import io.harness.security.encryption.EncryptedDataDetail;
+import io.harness.security.encryption.EncryptedRecordData;
 
 import software.wings.api.TerraformExecutionData;
 import software.wings.api.TerraformExecutionData.TerraformExecutionDataBuilder;
@@ -69,6 +68,7 @@ import software.wings.beans.delegation.TerraformProvisionParameters;
 import software.wings.beans.delegation.TerraformProvisionParameters.TerraformCommandUnit;
 import software.wings.beans.yaml.GitFetchFilesRequest;
 import software.wings.delegatetasks.validation.terraform.TerraformTaskUtils;
+import software.wings.service.impl.security.kms.TerraformPlanEncryptDecryptHelper;
 import software.wings.service.impl.yaml.GitClientHelper;
 import software.wings.service.intfc.security.EncryptionService;
 import software.wings.service.intfc.yaml.GitClient;
@@ -86,7 +86,6 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStreamWriter;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.ArrayList;
@@ -117,13 +116,13 @@ import org.zeroturnaround.exec.ProcessResult;
 import org.zeroturnaround.exec.stream.LogOutputStream;
 
 @Slf4j
-@TargetModule(Module._930_DELEGATE_TASKS)
 public class TerraformProvisionTask extends AbstractDelegateRunnableTask {
   @Inject private GitClient gitClient;
   @Inject private GitClientHelper gitClientHelper;
   @Inject private EncryptionService encryptionService;
   @Inject private DelegateLogService logService;
   @Inject private DelegateFileManager delegateFileManager;
+  @Inject private TerraformPlanEncryptDecryptHelper planEncryptDecryptHelper;
 
   public TerraformProvisionTask(DelegateTaskPackage delegateTaskPackage, ILogStreamingTaskClient logStreamingTaskClient,
       Consumer<DelegateTaskResponse> consumer, BooleanSupplier preExecute) {
@@ -180,7 +179,7 @@ public class TerraformProvisionTask extends AbstractDelegateRunnableTask {
       saveExecutionLog(parameters, format("%nInheriting git state at commit id: [%s]", gitConfig.getReference()),
           CommandExecutionStatus.RUNNING, INFO);
     }
-
+    EncryptedRecordData encryptedTfPlan = parameters.getEncryptedTfPlan();
     try {
       encryptionService.decrypt(gitConfig, parameters.getSourceRepoEncryptionDetails(), false);
       gitClient.ensureRepoLocallyClonedAndUpdated(gitOperationContext);
@@ -301,7 +300,9 @@ public class TerraformProvisionTask extends AbstractDelegateRunnableTask {
             code = executeShellCommand(command, scriptDirectory, parameters, envVars, activityLogOutputStream);
           }
           // if the plan exists we should use the approved plan, instead create a plan
-          if (code == 0 && parameters.getTerraformPlan() == null) {
+          if (code == 0 && parameters.getEncryptedTfPlan() == null) {
+            saveExecutionLog(parameters, color("\nGenerating terraform plan \n", LogColor.Yellow, LogWeight.Bold),
+                CommandExecutionStatus.RUNNING, INFO);
             command = format("terraform plan -out=tfplan -input=false %s %s ", targetArgs, varParams);
             commandToLog = format("terraform plan -out=tfplan -input=false %s %s ", targetArgs, uiLogs);
             saveExecutionLog(parameters, commandToLog, CommandExecutionStatus.RUNNING, INFO);
@@ -310,8 +311,11 @@ public class TerraformProvisionTask extends AbstractDelegateRunnableTask {
             if (code == 0 && parameters.isSaveTerraformJson()) {
               code = executeTerraformShowCommand(parameters, scriptDirectory, APPLY, envVars, planJsonLogOutputStream);
             }
-          } else if (code == 0 && parameters.getTerraformPlan() != null) {
+          } else if (code == 0 && parameters.getEncryptedTfPlan() != null) {
             // case when we are inheriting the approved  plan
+            saveExecutionLog(parameters,
+                color("\nDecrypting terraform plan before applying\n", LogColor.Yellow, LogWeight.Bold),
+                CommandExecutionStatus.RUNNING, INFO);
             saveTerraformPlanContentToFile(parameters, scriptDirectory);
             saveExecutionLog(parameters, color("\nUsing approved terraform plan \n", LogColor.Yellow, LogWeight.Bold),
                 CommandExecutionStatus.RUNNING, INFO);
@@ -367,7 +371,7 @@ public class TerraformProvisionTask extends AbstractDelegateRunnableTask {
                     executeTerraformShowCommand(parameters, scriptDirectory, DESTROY, envVars, planJsonLogOutputStream);
               }
             } else {
-              if (parameters.getTerraformPlan() == null) {
+              if (parameters.getEncryptedTfPlan() == null) {
                 command = format("terraform destroy -force %s %s", targetArgs, varParams);
                 commandToLog = format("terraform destroy -force %s %s", targetArgs, uiLogs);
                 saveExecutionLog(parameters, commandToLog, CommandExecutionStatus.RUNNING, INFO);
@@ -425,35 +429,23 @@ public class TerraformProvisionTask extends AbstractDelegateRunnableTask {
         }
       }
 
-      DelegateFile planLogFile = null;
-      if (APPLY == parameters.getCommand()) {
-        planLogFile = aDelegateFile()
-                          .withAccountId(parameters.getAccountId())
-                          .withDelegateId(getDelegateId())
-                          .withTaskId(getTaskId())
-                          .withEntityId(parameters.getEntityId())
-                          .withBucket(FileBucket.TERRAFORM_PLAN)
-                          .withFileName(TERRAFORM_PLAN_FILE_NAME)
-                          .build();
-        planLogFile = delegateFileManager.upload(
-            planLogFile, new ByteArrayInputStream(planLogOutputStream.getPlanLog().getBytes(StandardCharsets.UTF_8)));
-      }
-
       List<NameValuePair> backendConfigs =
           getAllVariables(parameters.getBackendConfigs(), parameters.getEncryptedBackendConfigs());
       List<NameValuePair> environmentVars =
           getAllVariables(parameters.getEnvironmentVariables(), parameters.getEncryptedEnvironmentVariables());
 
-      byte[] terraformPlan = parameters.isRunPlanOnly() && parameters.isExportPlanToApplyStep()
-          ? getTerraformPlanFile(scriptDirectory, parameters)
-          : null;
+      if (parameters.isExportPlanToApplyStep()) {
+        byte[] terraformPlanFile = getTerraformPlanFile(scriptDirectory, parameters);
+        saveExecutionLog(parameters, color("\nEncrypting terraform plan \n", LogColor.Yellow, LogWeight.Bold),
+            CommandExecutionStatus.RUNNING, INFO);
+        encryptedTfPlan = (EncryptedRecordData) planEncryptDecryptHelper.encryptTerraformPlan(
+            terraformPlanFile, parameters.getPlanName(), parameters.getSecretManagerConfig());
+      }
 
       final TerraformExecutionDataBuilder terraformExecutionDataBuilder =
           TerraformExecutionData.builder()
               .entityId(delegateFile.getEntityId())
               .stateFileId(delegateFile.getFileId())
-              .planLogFileId(APPLY == parameters.getCommand() ? planLogFile.getFileId() : null)
-              .tfPlanFile(terraformPlan)
               .tfPlanJson(planJsonLogOutputStream.getPlanJson())
               .commandExecuted(parameters.getCommand())
               .sourceRepoReference(sourceRepoReference)
@@ -466,7 +458,8 @@ public class TerraformProvisionTask extends AbstractDelegateRunnableTask {
               .delegateTag(parameters.getDelegateTag())
               .executionStatus(code == 0 ? ExecutionStatus.SUCCESS : ExecutionStatus.FAILED)
               .errorMessage(code == 0 ? null : "The terraform command exited with code " + code)
-              .workspace(parameters.getWorkspace());
+              .workspace(parameters.getWorkspace())
+              .encryptedTfPlan(encryptedTfPlan);
 
       if (parameters.getCommandUnit() != TerraformCommandUnit.Destroy
           && commandExecutionStatus == CommandExecutionStatus.SUCCESS && !parameters.isRunPlanOnly()) {
@@ -487,7 +480,26 @@ public class TerraformProvisionTask extends AbstractDelegateRunnableTask {
     } catch (Exception ex) {
       return logErrorAndGetFailureResponse(parameters, ex, "Failed to complete Terraform Task");
     } finally {
+      FileUtils.deleteQuietly(new File(workingDir));
       FileUtils.deleteQuietly(new File(baseDir));
+      if (parameters.getEncryptedTfPlan() != null) {
+        try {
+          boolean isSafelyDeleted = planEncryptDecryptHelper.deleteTfPlanFromVault(
+              parameters.getSecretManagerConfig(), parameters.getEncryptedTfPlan());
+          if (isSafelyDeleted) {
+            log.info("Terraform Plan has been safely deleted from vault");
+          }
+        } catch (Exception ex) {
+          saveExecutionLog(parameters,
+              color(format("Failed to delete secret: [%s] from vault: [%s], please clean it up",
+                        parameters.getEncryptedTfPlan().getEncryptionKey(),
+                        parameters.getSecretManagerConfig().getName()),
+                  LogColor.Yellow, LogWeight.Bold),
+              CommandExecutionStatus.RUNNING, WARN);
+          saveExecutionLog(parameters, ex.getMessage(), CommandExecutionStatus.RUNNING, WARN);
+          log.error("Exception occurred while deleting Terraform Plan from vault", ex);
+        }
+      }
     }
   }
 
@@ -516,7 +528,7 @@ public class TerraformProvisionTask extends AbstractDelegateRunnableTask {
   }
 
   private boolean shouldSkipRefresh(TerraformProvisionParameters parameters) {
-    return parameters.getTerraformPlan() != null && parameters.isSkipRefreshBeforeApplyingPlan();
+    return parameters.getEncryptedTfPlan() != null && parameters.isSkipRefreshBeforeApplyingPlan();
   }
 
   private String collectEnvVarKeys(Map<String, String> envVars) {
@@ -745,7 +757,10 @@ public class TerraformProvisionTask extends AbstractDelegateRunnableTask {
                   getWorkspacePlanFileFormat(parameters).replace("$WORKSPACE_NAME", parameters.getWorkspace()))
               .toFile();
 
-    FileUtils.copyInputStreamToFile(new ByteArrayInputStream(parameters.getTerraformPlan()), tfPlanFile);
+    byte[] decryptedTerraformPlan = planEncryptDecryptHelper.getDecryptedTerraformPlan(
+        parameters.getSecretManagerConfig(), parameters.getEncryptedTfPlan());
+
+    FileUtils.copyInputStreamToFile(new ByteArrayInputStream(decryptedTerraformPlan), tfPlanFile);
   }
 
   @NotNull

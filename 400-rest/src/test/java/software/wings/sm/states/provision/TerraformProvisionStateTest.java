@@ -31,6 +31,7 @@ import static java.util.stream.Collectors.toMap;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyBoolean;
 import static org.mockito.Matchers.anyList;
 import static org.mockito.Matchers.anyListOf;
 import static org.mockito.Matchers.anyMap;
@@ -63,7 +64,9 @@ import io.harness.exception.InvalidRequestException;
 import io.harness.ff.FeatureFlagService;
 import io.harness.provision.TfVarScriptRepositorySource;
 import io.harness.rule.Owner;
+import io.harness.secretmanagers.SecretManagerConfigService;
 import io.harness.security.encryption.EncryptedDataDetail;
+import io.harness.security.encryption.EncryptedRecordData;
 import io.harness.tasks.Cd1SetupFields;
 import io.harness.tasks.ResponseData;
 
@@ -71,7 +74,6 @@ import software.wings.WingsBaseTest;
 import software.wings.api.ScriptStateExecutionData;
 import software.wings.api.TerraformExecutionData;
 import software.wings.api.TerraformOutputInfoElement;
-import software.wings.api.TerraformPlanParam;
 import software.wings.api.terraform.TerraformProvisionInheritPlanElement;
 import software.wings.api.terraform.TfVarGitSource;
 import software.wings.beans.Activity;
@@ -81,6 +83,7 @@ import software.wings.beans.Environment.EnvironmentType;
 import software.wings.beans.GitConfig;
 import software.wings.beans.GitFileConfig;
 import software.wings.beans.InfrastructureProvisioner;
+import software.wings.beans.KmsConfig;
 import software.wings.beans.NameValuePair;
 import software.wings.beans.PhaseStep;
 import software.wings.beans.TerraformInfrastructureProvisioner;
@@ -141,6 +144,8 @@ public class TerraformProvisionStateTest extends WingsBaseTest {
   @Mock private ExecutionContextImpl executionContext;
   @Mock private WingsPersistence wingsPersistence;
   @Mock private GitConfigHelperService gitConfigHelperService;
+  @Mock private TerraformPlanHelper terraformPlanHelper;
+  @Mock private SecretManagerConfigService secretManagerConfigService;
   @Spy private GitFileConfigHelperService gitFileConfigHelperService;
   @Mock private FeatureFlagService featureFlagService;
   @InjectMocks private TerraformProvisionState state = new ApplyTerraformProvisionState("tf");
@@ -188,6 +193,12 @@ public class TerraformProvisionStateTest extends WingsBaseTest {
     doReturn(builder()).when(executionContext).prepareSweepingOutputBuilder(any(Scope.class));
 
     when(featureFlagService.isEnabled(eq(FeatureName.EXPORT_TF_PLAN), anyString())).thenReturn(true);
+    doReturn(KmsConfig.builder().accountId(ACCOUNT_ID).name("name").build())
+        .when(secretManagerConfigService)
+        .getSecretManager(any(), any(), any());
+    doReturn(KmsConfig.builder().accountId(ACCOUNT_ID).name("name").build())
+        .when(secretManagerConfigService)
+        .getDefaultSecretManager(any());
   }
 
   @Test
@@ -336,6 +347,7 @@ public class TerraformProvisionStateTest extends WingsBaseTest {
                                                          .appId(APP_ID)
                                                          .path("current/working/directory")
                                                          .variables(getTerraformVariables())
+                                                         .kmsId("kmsId")
                                                          .build();
     GitConfig gitConfig = GitConfig.builder().branch("master").build();
     FileMetadata fileMetadata =
@@ -468,6 +480,8 @@ public class TerraformProvisionStateTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void testExecuteInheritApprovedPlan() {
     state.setInheritApprovedPlan(true);
+    EncryptedRecordData encryptedPlan =
+        EncryptedRecordData.builder().name("terraformPlan").encryptedValue("terraformPlan".toCharArray()).build();
     List<ContextElement> terraformProvisionInheritPlanElements = new ArrayList<>();
     TerraformProvisionInheritPlanElement terraformProvisionInheritPlanElement =
         TerraformProvisionInheritPlanElement.builder()
@@ -478,6 +492,7 @@ public class TerraformProvisionStateTest extends WingsBaseTest {
             .environmentVariables(getTerraformEnvironmentVariables())
             .targets(Arrays.asList("target1"))
             .variables(getTerraformVariables())
+            .encryptedTfPlan(encryptedPlan)
             .build();
     terraformProvisionInheritPlanElements.add(terraformProvisionInheritPlanElement);
     when(executionContext.getContextElementList(TERRAFORM_INHERIT_PLAN))
@@ -490,10 +505,12 @@ public class TerraformProvisionStateTest extends WingsBaseTest {
                                                          .appId(APP_ID)
                                                          .path("current/working/directory")
                                                          .sourceRepoBranch("sourceRepoBranch")
+                                                         .kmsId("kmsId")
                                                          .build();
     GitConfig gitConfig = GitConfig.builder().branch("master").build();
     doReturn(provisioner).when(infrastructureProvisionerService).get(APP_ID, PROVISIONER_ID);
     doReturn("fileId").when(fileService).getLatestFileId(anyString(), eq(FileBucket.TERRAFORM_STATE));
+    doReturn(ACCOUNT_ID).when(executionContext).getAccountId();
     doReturn(gitConfig).when(gitUtilsManager).getGitConfig(anyString());
     when(executionContext.getWorkflowExecutionId()).thenReturn(WORKFLOW_EXECUTION_ID);
     when(executionContext.prepareSweepingOutputInquiryBuilder()).thenReturn(SweepingOutputInquiry.builder());
@@ -512,6 +529,7 @@ public class TerraformProvisionStateTest extends WingsBaseTest {
     // once for environment variables, once for variables
     verify(infrastructureProvisionerService, times(2)).extractUnresolvedTextVariables(anyList());
     verify(secretManager, times(1)).getEncryptionDetails(any(GitConfig.class), anyString(), anyString());
+    verify(secretManagerConfigService, times(1)).getSecretManager(anyString(), anyString(), anyBoolean());
     assertThat(executionResponse.getCorrelationIds().get(0)).isEqualTo("uuid");
     assertThat(((ScriptStateExecutionData) executionResponse.getStateExecutionData()).getActivityId())
         .isEqualTo("uuid");
@@ -605,7 +623,10 @@ public class TerraformProvisionStateTest extends WingsBaseTest {
     state.setExportPlanToApplyStep(true);
     Map<String, ResponseData> response = new HashMap<>();
     response.put("activityId",
-        TerraformExecutionData.builder().tfPlanFile("TFPlanFileContent".getBytes()).tfPlanJson("{}").build());
+        TerraformExecutionData.builder()
+            .encryptedTfPlan(EncryptedRecordData.builder().build())
+            .tfPlanJson("{}")
+            .build());
     doReturn("workflowExecutionId").when(executionContext).getWorkflowExecutionId();
     state.setProvisionerId(PROVISIONER_ID);
     doReturn(SweepingOutputInquiry.builder()).when(executionContext).prepareSweepingOutputInquiryBuilder();
@@ -619,10 +640,10 @@ public class TerraformProvisionStateTest extends WingsBaseTest {
     assertThat(
         ((TerraformProvisionInheritPlanElement) executionResponse.getContextElements().get(0)).getProvisionerId())
         .isEqualTo(PROVISIONER_ID);
-    verify(secretManager, times(1)).saveSecretFile(anyString(), any());
-    // once for saving the tfplan content, once for saving the tfplan json variable
-    verify(sweepingOutputService, times(2)).save(any(SweepingOutputInstance.class));
-    verify(executionContext, times(1)).prepareSweepingOutputBuilder(eq(Scope.WORKFLOW));
+    // for saving encrypted in sweepingOutput
+    verify(terraformPlanHelper, times(1)).saveEncryptedTfPlanToSweepingOutput(any(), any(), any());
+    // for saving the tfplan json variable
+    verify(sweepingOutputService, times(1)).save(any(SweepingOutputInstance.class));
     verify(executionContext, times(1)).prepareSweepingOutputBuilder(eq(Scope.PIPELINE));
   }
 
@@ -649,27 +670,6 @@ public class TerraformProvisionStateTest extends WingsBaseTest {
     verify(infrastructureProvisionerService, times(1)).get(APP_ID, PROVISIONER_ID);
     assertThat(executionResponse.getStateExecutionData()).isEqualTo(terraformExecutionData);
     assertThat(executionResponse.getExecutionStatus()).isEqualTo(ExecutionStatus.FAILED);
-  }
-
-  @Test
-  @Owner(developers = BOJANA)
-  @Category(UnitTests.class)
-  public void testGetTerraformPlanFromSecretManager() {
-    String terraformPlanSecretManagerId = "terraformPlanSecretManagerId";
-    when(executionContext.getWorkflowExecutionId()).thenReturn(WORKFLOW_EXECUTION_ID);
-    when(executionContext.getAccountId()).thenReturn(ACCOUNT_ID);
-    SweepingOutputInstance sweepingOutputInstance =
-        SweepingOutputInstance.builder()
-            .value(TerraformPlanParam.builder().terraformPlanSecretManagerId(terraformPlanSecretManagerId).build())
-            .build();
-    when(executionContext.prepareSweepingOutputInquiryBuilder()).thenReturn(SweepingOutputInquiry.builder());
-    when(sweepingOutputService.find(any(SweepingOutputInquiry.class))).thenReturn(sweepingOutputInstance);
-    byte[] terraformPlanContent = "terraformPlanContent".getBytes();
-    when(secretManager.getFileContents(anyString(), anyString())).thenReturn(terraformPlanContent);
-    byte[] retrievedFileContent = state.getTerraformPlanFromSecretManager(executionContext);
-    assertThat(retrievedFileContent).isEqualTo(terraformPlanContent);
-    verify(secretManager, times(1)).getFileContents(ACCOUNT_ID, terraformPlanSecretManagerId);
-    verify(sweepingOutputService, times(1)).find(any(SweepingOutputInquiry.class));
   }
 
   @Test
@@ -751,28 +751,6 @@ public class TerraformProvisionStateTest extends WingsBaseTest {
     TerraformOutputInfoElement terraformOutputInfoElement =
         (TerraformOutputInfoElement) executionResponse.getContextElements().get(0);
     assertThat(terraformOutputInfoElement.paramMap(executionContext)).containsKeys("terraform");
-  }
-
-  @Test
-  @Owner(developers = BOJANA)
-  @Category(UnitTests.class)
-  public void testDeleteTerraformPlanFromSecretManager() {
-    String terraformPlanSecretManagerId = "terraformPlanSecretManagerId";
-    String sweepingOutputInstanceUUID = "sweepingOutputInstanceUUID";
-    when(executionContext.getWorkflowExecutionId()).thenReturn(WORKFLOW_EXECUTION_ID);
-    when(executionContext.getAccountId()).thenReturn(ACCOUNT_ID);
-    when(executionContext.getAppId()).thenReturn(APP_ID);
-    SweepingOutputInstance sweepingOutputInstance =
-        SweepingOutputInstance.builder()
-            .uuid(sweepingOutputInstanceUUID)
-            .value(TerraformPlanParam.builder().terraformPlanSecretManagerId(terraformPlanSecretManagerId).build())
-            .build();
-    when(executionContext.prepareSweepingOutputInquiryBuilder()).thenReturn(SweepingOutputInquiry.builder());
-    when(sweepingOutputService.find(any(SweepingOutputInquiry.class))).thenReturn(sweepingOutputInstance);
-    state.deleteTerraformPlanFromSecretManager(executionContext);
-    verify(sweepingOutputService, times(1)).find(any(SweepingOutputInquiry.class));
-    verify(secretManager, times(1)).deleteSecret(ACCOUNT_ID, terraformPlanSecretManagerId, new HashMap<>(), false);
-    verify(sweepingOutputService, times(1)).deleteById(APP_ID, sweepingOutputInstanceUUID);
   }
 
   private void assertParametersVariables(TerraformProvisionParameters parameters) {

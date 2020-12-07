@@ -51,6 +51,8 @@ public interface SecretManagerConfigService {
 
   SecretManagerConfig getSecretManager(String accountId, String entityId, boolean maskSecrets);
 
+  SecretManagerConfig getSecretManagerByName(String accountId, String name);
+
   SecretManagerConfig getSecretManagerByName(
       String accountId, String entityName, EncryptionType encryptionType, boolean maskSecrets);
 

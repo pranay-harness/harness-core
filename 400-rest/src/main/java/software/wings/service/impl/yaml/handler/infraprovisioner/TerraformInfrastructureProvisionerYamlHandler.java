@@ -9,6 +9,7 @@ import static software.wings.beans.Application.GLOBAL_APP_ID;
 
 import static java.util.stream.Collectors.toList;
 
+import io.harness.beans.SecretManagerConfig;
 import io.harness.exception.InvalidRequestException;
 
 import software.wings.beans.Application;
@@ -21,6 +22,7 @@ import software.wings.beans.yaml.ChangeContext;
 import software.wings.service.impl.yaml.handler.NameValuePairYamlHandler;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.SettingsService;
+import software.wings.service.intfc.security.SecretManager;
 import software.wings.utils.Utils;
 
 import com.google.inject.Inject;
@@ -30,6 +32,7 @@ public class TerraformInfrastructureProvisionerYamlHandler
     extends InfrastructureProvisionerYamlHandler<Yaml, TerraformInfrastructureProvisioner> {
   @Inject SettingsService settingsService;
   @Inject AppService appService;
+  @Inject SecretManager secretManager;
 
   protected String getSourceRepoSettingId(String appId, String sourceRepoSettingName) {
     Application application = appService.get(appId);
@@ -61,6 +64,10 @@ public class TerraformInfrastructureProvisionerYamlHandler
     }
     if (isNotEmpty(bean.getEnvironmentVariables())) {
       yaml.setEnvironmentVariables(getSortedNameValuePairYamlList(bean.getEnvironmentVariables(), bean.getAppId()));
+    }
+    if (isNotEmpty(bean.getKmsId())) {
+      SecretManagerConfig secretManagerConfig = secretManager.getSecretManager(bean.getAccountId(), bean.getKmsId());
+      yaml.setSecretMangerName(secretManagerConfig.getName());
     }
     yaml.setSkipRefreshBeforeApplyingPlan(bean.isSkipRefreshBeforeApplyingPlan());
     return yaml;
@@ -121,6 +128,11 @@ public class TerraformInfrastructureProvisionerYamlHandler
     }
     if (isNotEmpty(yaml.getEnvironmentVariables())) {
       bean.setEnvironmentVariables(getNameValuePairList(yaml.getEnvironmentVariables()));
+    }
+    if (isNotEmpty(yaml.getSecretMangerName())) {
+      SecretManagerConfig secretManagerConfig =
+          secretManager.getSecretManagerByName(bean.getAccountId(), yaml.getSecretMangerName());
+      bean.setKmsId(secretManagerConfig.getUuid());
     }
   }
 

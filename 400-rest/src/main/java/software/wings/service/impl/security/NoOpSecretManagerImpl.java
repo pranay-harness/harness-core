@@ -46,6 +46,10 @@ public class NoOpSecretManagerImpl implements SecretManager {
   }
 
   @Override
+  public SecretManagerConfig getSecretManagerByName(String accountId, String name) {
+    throw new UnsupportedOperationException();
+  }
+
   public SecretManagerConfig getSecretManager(String accountId, String entityId, EncryptionType encryptionType) {
     throw new UnsupportedOperationException();
   }
