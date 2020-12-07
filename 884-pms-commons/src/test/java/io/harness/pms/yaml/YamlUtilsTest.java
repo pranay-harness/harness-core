@@ -169,11 +169,11 @@ public class YamlUtilsTest extends CategoryTest {
     // Stage1 Node
     YamlNode stage1Node = stagesNode.getNode().asArray().get(0).getField("stage").getNode();
 
-    String stageFQN = YamlUtils.getFullyQualifiedName(stage1Node);
-    assertThat(stageFQN).isEqualTo("pipeline.stages.qaStage");
+    String stageFQN = YamlUtils.getQualifiedNameTillGivenField(stage1Node, "stage");
+    assertThat(stageFQN).isEqualTo("qaStage");
     // Stage1 Service Node
     YamlNode serviceNode = stage1Node.getField("spec").getNode().getField("service").getNode();
-    assertThat(YamlUtils.getQualifiedNameTillGivenField(serviceNode, "stages")).isEqualTo("stages.qaStage.service");
+    assertThat(YamlUtils.getQualifiedNameTillGivenField(serviceNode, "stage")).isEqualTo("qaStage.service");
 
     // image Path qualified Name
     YamlNode imagePath = serviceNode.getField("serviceDefinition")

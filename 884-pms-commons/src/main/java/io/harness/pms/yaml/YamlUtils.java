@@ -137,6 +137,13 @@ public class YamlUtils {
       qualifiedNameList.add(qualifiedName);
       return qualifiedNameList;
     }
+    if (yamlNode.getUuid() != null
+        && fieldName.equals(
+            getMatchingFieldNameFromParentUsingUUID(yamlNode.getParentNode(), yamlNode.getUuid()).getName())) {
+      List<String> qualifiedNameList = new ArrayList<>();
+      qualifiedNameList.add(qualifiedName);
+      return qualifiedNameList;
+    }
     List<String> qualifiedNameList = getQualifiedNameList(yamlNode.getParentNode(), fieldName);
     qualifiedNameList.add(qualifiedName);
     return qualifiedNameList;
