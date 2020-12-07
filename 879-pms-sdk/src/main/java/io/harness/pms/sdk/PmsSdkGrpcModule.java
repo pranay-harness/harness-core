@@ -23,13 +23,18 @@ import java.util.HashSet;
 import java.util.Set;
 
 public class PmsSdkGrpcModule extends AbstractModule {
+  private final PmsSdkConfiguration config;
   private static PmsSdkGrpcModule instance;
 
-  public static PmsSdkGrpcModule getInstance() {
+  public static PmsSdkGrpcModule getInstance(PmsSdkConfiguration config) {
     if (instance == null) {
-      instance = new PmsSdkGrpcModule();
+      instance = new PmsSdkGrpcModule(config);
     }
     return instance;
+  }
+
+  private PmsSdkGrpcModule(PmsSdkConfiguration config) {
+    this.config = config;
   }
 
   @Override
@@ -41,8 +46,7 @@ public class PmsSdkGrpcModule extends AbstractModule {
   @Provides
   @Singleton
   @Named("pms-sdk-grpc-service")
-  public Service pmsSdkGrpcService(
-      PmsSdkConfiguration config, HealthStatusManager healthStatusManager, PlanCreatorService planCreatorService) {
+  public Service pmsSdkGrpcService(HealthStatusManager healthStatusManager, PlanCreatorService planCreatorService) {
     Set<BindableService> cdServices = new HashSet<>();
     cdServices.add(healthStatusManager.getHealthService());
     cdServices.add(planCreatorService);
@@ -53,7 +57,7 @@ public class PmsSdkGrpcModule extends AbstractModule {
   @Provides
   @Singleton
   public PmsServiceBlockingStub pmsGrpcClient(
-      PmsSdkConfiguration config, HealthStatusManager healthStatusManager, PlanCreatorService planCreatorService) {
+      HealthStatusManager healthStatusManager, PlanCreatorService planCreatorService) {
     GrpcClientConfig clientConfig = config.getPmsGrpcClientConfig();
     Channel channel = NettyChannelBuilder.forTarget(clientConfig.getTarget())
                           .overrideAuthority(clientConfig.getAuthority())

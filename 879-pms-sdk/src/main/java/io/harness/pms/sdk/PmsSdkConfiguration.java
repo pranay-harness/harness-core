@@ -18,5 +18,4 @@ public class PmsSdkConfiguration {
   GrpcClientConfig pmsGrpcClientConfig;
   PipelineServiceInfoProvider pipelineServiceInfoProvider;
   FilterCreationResponseMerger filterCreationResponseMerger;
-  StepRegistry stepRegistry;
 }

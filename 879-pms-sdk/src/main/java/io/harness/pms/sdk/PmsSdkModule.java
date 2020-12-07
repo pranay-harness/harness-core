@@ -55,7 +55,7 @@ public class PmsSdkModule {
     modules.add(PmsSdkRegistryModule.getInstance());
     modules.add(PmsSdkPersistenceModule.getInstance());
     modules.add(PmsSdkProviderModule.getInstance(config, serviceName));
-    modules.add(PmsSdkGrpcModule.getInstance());
+    modules.add(PmsSdkGrpcModule.getInstance(config));
     modules.add(PmsSdkQueueModule.getInstance());
     return modules;
   }

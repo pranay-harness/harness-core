@@ -75,10 +75,4 @@ class PmsSdkProviderModule extends AbstractModule {
   public MongoConfig mongoConfig() {
     return config.getMongoConfig();
   }
-
-  @Provides
-  @Singleton
-  StepRegistry providesStateRegistry() {
-    return config.getStepRegistry();
-  }
 }
