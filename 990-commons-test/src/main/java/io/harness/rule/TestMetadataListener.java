@@ -39,6 +39,10 @@ public class TestMetadataListener extends RunListener {
     testMetadataMap.computeIfAbsent(className, k -> new ArrayList<>()).add(testMetadata);
   }
 
+  public static void ignoredOnPurpose(Throwable exception) {
+    // We would like to express explicitly that we are ignoring this exception
+  }
+
   @Override
   public void testRunFinished(Result result) throws Exception {
     // With forks on, we occasionally read file while it's partially written resulting in parse exception
@@ -50,8 +54,9 @@ public class TestMetadataListener extends RunListener {
           new MetadataPersister(outputFolder).persist(testMetadataMap);
           break;
         }
+        Thread.sleep(1);
       } catch (Exception e) {
-        e.printStackTrace();
+        ignoredOnPurpose(e);
       }
     }
   }
