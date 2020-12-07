@@ -14,6 +14,8 @@ java_library(
         "//970-ng-commons:module",
         "//980-commons:module",
         "@maven//:com_fasterxml_jackson_dataformat_jackson_dataformat_xml",
+        "@maven//:com_fasterxml_jackson_dataformat_jackson_dataformat_yaml",
+        "@maven//:com_networknt_json_schema_validator",
         "@maven//:io_swagger_swagger_annotations",
     ],
 )

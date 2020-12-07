@@ -1,5 +1,6 @@
 package io.harness.yaml;
 
+import com.google.inject.Singleton;
 import java.io.InputStream;
 import lombok.Builder;
 import lombok.Data;
@@ -9,10 +10,14 @@ import lombok.Data;
  */
 @Data
 @Builder
+@Singleton
 public class YamlSdkConfiguration {
   /**
    * InputStream for index.xml of snippets.
    */
   InputStream snippetIndex;
-  // todo(abhinav): add yaml schema config
+  /**
+   * Schema base path.
+   */
+  String schemaBasePath;
 }
