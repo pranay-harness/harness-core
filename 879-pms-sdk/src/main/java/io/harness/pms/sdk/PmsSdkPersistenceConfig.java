@@ -54,4 +54,9 @@ public class PmsSdkPersistenceConfig extends AbstractMongoConfiguration {
   public MongoTemplate mongoTemplate() throws Exception {
     return new HMongoTemplate(mongoDbFactory(), mappingMongoConverter());
   }
+
+  @Override
+  protected boolean autoIndexCreation() {
+    return false;
+  }
 }

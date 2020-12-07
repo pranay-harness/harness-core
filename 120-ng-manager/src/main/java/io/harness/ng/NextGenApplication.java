@@ -187,7 +187,6 @@ public class NextGenApplication extends Application<NextGenConfiguration> {
                                           .pmsGrpcClientConfig(appConfig.getPmsGrpcClientConfig())
                                           .pipelineServiceInfoProvider(new CDNGPlanCreatorProvider())
                                           .filterCreationResponseMerger(new CDNGFilterCreationResponseMerger())
-                                          .stepRegistry(registerStepRegistry(injector))
                                           .build();
       try {
         PmsSdkModule.initializeDefaultInstance(sdkConfig);
