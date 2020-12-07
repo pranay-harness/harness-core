@@ -39,7 +39,6 @@ public class IntegrationStage implements CIStage {
   @Getter(onMethod = @__(@JsonIgnore)) @JsonIgnore private String name;
 
   private boolean runParallel;
-  private String skipCondition;
   private boolean skipGitClone;
 
   private List<String> sharedPaths;

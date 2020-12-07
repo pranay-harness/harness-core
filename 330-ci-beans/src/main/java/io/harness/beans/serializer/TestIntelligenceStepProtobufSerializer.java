@@ -1,10 +1,12 @@
 package io.harness.beans.serializer;
 
+import io.harness.beans.steps.CIStepInfo;
 import io.harness.beans.steps.stepinfo.TestIntelligenceStepInfo;
 import io.harness.callback.DelegateCallbackToken;
 import io.harness.product.ci.engine.proto.StepContext;
 import io.harness.product.ci.engine.proto.TestIntelligenceStep;
 import io.harness.product.ci.engine.proto.UnitStep;
+import io.harness.yaml.core.StepElement;
 
 import com.google.inject.Inject;
 import java.util.Optional;
@@ -15,11 +17,14 @@ public class TestIntelligenceStepProtobufSerializer implements ProtobufStepSeria
   @Inject private Supplier<DelegateCallbackToken> delegateCallbackTokenSupplier;
 
   @Override
-  public String serializeToBase64(TestIntelligenceStepInfo object) {
+  public String serializeToBase64(StepElement object) {
     return Base64.encodeBase64String(serializeStep(object).toByteArray());
   }
 
-  public UnitStep serializeStep(TestIntelligenceStepInfo testIntelligenceStepInfo) {
+  public UnitStep serializeStep(StepElement step) {
+    CIStepInfo ciStepInfo = (CIStepInfo) step.getStepSpecType();
+    TestIntelligenceStepInfo testIntelligenceStepInfo = (TestIntelligenceStepInfo) ciStepInfo;
+
     TestIntelligenceStep.Builder testIntelligenceStepBuilder = TestIntelligenceStep.newBuilder();
     testIntelligenceStepBuilder.setGoals(testIntelligenceStepInfo.getGoals());
     testIntelligenceStepBuilder.setContainerPort(testIntelligenceStepInfo.getPort());
@@ -29,12 +34,15 @@ public class TestIntelligenceStepProtobufSerializer implements ProtobufStepSeria
                                                .setNumRetries(testIntelligenceStepInfo.getRetry())
                                                .setExecutionTimeoutSecs(testIntelligenceStepInfo.getTimeout())
                                                .build());
+
+    String skipCondition = SkipConditionUtils.getSkipCondition(step);
     return UnitStep.newBuilder()
         .setId(testIntelligenceStepInfo.getIdentifier())
         .setTaskId(testIntelligenceStepInfo.getCallbackId())
         .setCallbackToken(delegateCallbackTokenSupplier.get().getToken())
         .setDisplayName(Optional.ofNullable(testIntelligenceStepInfo.getDisplayName()).orElse(""))
         .setTestIntelligence(testIntelligenceStepBuilder.build())
+        .setSkipCondition(Optional.ofNullable(skipCondition).orElse(""))
         .build();
   }
 }

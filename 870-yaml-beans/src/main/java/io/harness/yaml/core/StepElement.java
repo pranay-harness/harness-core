@@ -3,6 +3,8 @@ package io.harness.yaml.core;
 import static com.fasterxml.jackson.annotation.JsonTypeInfo.As.EXTERNAL_PROPERTY;
 import static com.fasterxml.jackson.annotation.JsonTypeInfo.Id.NAME;
 
+import io.harness.beans.ParameterField;
+import io.harness.common.SwaggerConstants;
 import io.harness.data.validator.EntityIdentifier;
 import io.harness.data.validator.EntityName;
 import io.harness.visitor.helpers.executionelement.StepElementVisitorHelper;
@@ -13,10 +15,12 @@ import io.harness.walktree.visitor.Visitable;
 import io.harness.yaml.core.auxiliary.intfc.ExecutionWrapper;
 import io.harness.yaml.core.failurestrategy.FailureStrategyConfig;
 import io.harness.yaml.core.intfc.WithIdentifier;
+import io.harness.yaml.core.intfc.WithSkipCondition;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.fasterxml.jackson.annotation.JsonTypeName;
+import io.swagger.annotations.ApiModelProperty;
 import java.util.List;
 import lombok.Builder;
 import lombok.Data;
@@ -28,7 +32,7 @@ import org.springframework.data.annotation.TypeAlias;
 @JsonTypeName("step")
 @SimpleVisitorHelper(helperClass = StepElementVisitorHelper.class)
 @TypeAlias("io.harness.yaml.core.stepElement")
-public class StepElement implements ExecutionWrapper, WithIdentifier, Visitable {
+public class StepElement implements ExecutionWrapper, WithIdentifier, WithSkipCondition, Visitable {
   @EntityIdentifier String identifier;
   @EntityName String name;
   List<FailureStrategyConfig> failureStrategies;
@@ -37,6 +41,8 @@ public class StepElement implements ExecutionWrapper, WithIdentifier, Visitable 
   @JsonProperty("spec")
   @JsonTypeInfo(use = NAME, property = "type", include = EXTERNAL_PROPERTY, visible = true)
   StepSpecType stepSpecType;
+
+  @ApiModelProperty(dataType = SwaggerConstants.STRING_CLASSPATH) ParameterField<String> skipCondition;
 
   // For Visitor Framework Impl
   String metadata;

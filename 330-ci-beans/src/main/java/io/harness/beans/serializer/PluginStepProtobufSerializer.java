@@ -1,10 +1,12 @@
 package io.harness.beans.serializer;
 
+import io.harness.beans.steps.CIStepInfo;
 import io.harness.beans.steps.stepinfo.PluginStepInfo;
 import io.harness.callback.DelegateCallbackToken;
 import io.harness.product.ci.engine.proto.PluginStep;
 import io.harness.product.ci.engine.proto.StepContext;
 import io.harness.product.ci.engine.proto.UnitStep;
+import io.harness.yaml.core.StepElement;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -17,11 +19,14 @@ public class PluginStepProtobufSerializer implements ProtobufStepSerializer<Plug
   @Inject private Supplier<DelegateCallbackToken> delegateCallbackTokenSupplier;
 
   @Override
-  public String serializeToBase64(PluginStepInfo object) {
-    return Base64.encodeBase64String(serializeStep(object).toByteArray());
+  public String serializeToBase64(StepElement step) {
+    return Base64.encodeBase64String(serializeStep(step).toByteArray());
   }
 
-  public UnitStep serializeStep(PluginStepInfo pluginStepInfo) {
+  public UnitStep serializeStep(StepElement step) {
+    CIStepInfo ciStepInfo = (CIStepInfo) step.getStepSpecType();
+    PluginStepInfo pluginStepInfo = (PluginStepInfo) ciStepInfo;
+
     StepContext stepContext = StepContext.newBuilder()
                                   .setNumRetries(pluginStepInfo.getRetry())
                                   .setExecutionTimeoutSecs(pluginStepInfo.getTimeout())
@@ -31,12 +36,14 @@ public class PluginStepProtobufSerializer implements ProtobufStepSerializer<Plug
                                 .setImage(pluginStepInfo.getImage())
                                 .setContext(stepContext)
                                 .build();
+
+    String skipCondition = SkipConditionUtils.getSkipCondition(step);
     return UnitStep.newBuilder()
         .setId(pluginStepInfo.getIdentifier())
         .setTaskId(pluginStepInfo.getCallbackId())
         .setCallbackToken(delegateCallbackTokenSupplier.get().getToken())
         .setDisplayName(Optional.ofNullable(pluginStepInfo.getDisplayName()).orElse(""))
-        .setSkipCondition(Optional.ofNullable(pluginStepInfo.getSkipCondition()).orElse(""))
+        .setSkipCondition(Optional.ofNullable(skipCondition).orElse(""))
         .setPlugin(pluginStep)
         .build();
   }

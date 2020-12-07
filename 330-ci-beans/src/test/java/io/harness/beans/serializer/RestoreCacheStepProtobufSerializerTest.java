@@ -9,6 +9,7 @@ import io.harness.beans.steps.stepinfo.RestoreCacheStepInfo;
 import io.harness.category.element.UnitTests;
 import io.harness.product.ci.engine.proto.UnitStep;
 import io.harness.rule.Owner;
+import io.harness.yaml.core.StepElement;
 
 import com.google.inject.Inject;
 import com.google.protobuf.InvalidProtocolBufferException;
@@ -33,8 +34,10 @@ public class RestoreCacheStepProtobufSerializerTest extends CIBeansTest {
                                                     .key(RESTORE_KEY)
                                                     .failIfNotExist(true)
                                                     .build();
+    StepElement stepElement = StepElement.builder().type("restoreCache").stepSpecType(restoreCacheStepInfo).build();
+
     restoreCacheStepInfo.setCallbackId(CALLBACK_ID);
-    String serialize = protobufSerializer.serializeToBase64(restoreCacheStepInfo);
+    String serialize = protobufSerializer.serializeToBase64(stepElement);
     UnitStep restoreStep = UnitStep.parseFrom(Base64.decodeBase64(serialize));
 
     assertThat(restoreStep.getRestoreCache().getKey()).isEqualTo(RESTORE_KEY);

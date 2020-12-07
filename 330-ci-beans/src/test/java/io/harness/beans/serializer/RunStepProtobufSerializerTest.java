@@ -9,6 +9,7 @@ import io.harness.beans.steps.stepinfo.RunStepInfo;
 import io.harness.category.element.UnitTests;
 import io.harness.product.ci.engine.proto.UnitStep;
 import io.harness.rule.Owner;
+import io.harness.yaml.core.StepElement;
 
 import com.google.inject.Inject;
 import com.google.protobuf.InvalidProtocolBufferException;
@@ -40,9 +41,11 @@ public class RunStepProtobufSerializerTest extends CIBeansTest {
                                   .command(Arrays.asList(MVN_CLEAN_INSTALL))
                                   .output(Arrays.asList(OUTPUT))
                                   .build();
+    StepElement stepElement = StepElement.builder().type("run").stepSpecType(runStepInfo).build();
+
     runStepInfo.setCallbackId(CALLBACK_ID);
     runStepInfo.setPort(PORT);
-    String serialize = protobufSerializer.serializeToBase64(runStepInfo);
+    String serialize = protobufSerializer.serializeToBase64(stepElement);
     UnitStep runStep = UnitStep.parseFrom(Base64.decodeBase64(serialize));
     assertThat(runStep.getId()).isEqualTo(RUN_STEP_ID);
     assertThat(runStep.getDisplayName()).isEqualTo(RUN_STEP);
