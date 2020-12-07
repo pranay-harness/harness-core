@@ -75,5 +75,6 @@ public class AlertRule implements PersistentEntity, UuidAware, CreatedAtAware, U
     public static final String enabledRisk = alertCondition + "." + AlertConditionKeys.enabledRisk;
     public static final String threshold =
         alertCondition + "." + AlertConditionKeys.notify + "." + RiskNotifyKeys.threshold;
+    public static final String enabledVerifications = alertCondition + "." + AlertConditionKeys.enabledVerifications;
   }
 }

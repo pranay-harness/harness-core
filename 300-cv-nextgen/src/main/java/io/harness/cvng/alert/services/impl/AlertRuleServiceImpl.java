@@ -9,6 +9,7 @@ import io.harness.cvng.alert.entities.AlertRule;
 import io.harness.cvng.alert.entities.AlertRule.AlertRuleKeys;
 import io.harness.cvng.alert.services.api.AlertRuleService;
 import io.harness.cvng.alert.util.ActivityType;
+import io.harness.cvng.alert.util.VerificationStatus;
 import io.harness.ng.beans.PageResponse;
 import io.harness.persistence.HPersistence;
 import io.harness.utils.PageUtils;
@@ -94,6 +95,35 @@ public class AlertRuleServiceImpl implements AlertRuleService {
                      || alertRule.getAlertCondition().getServices().contains(serviceIdentifier))
                   && (isEmpty(alertRule.getAlertCondition().getEnvironments())
                       || alertRule.getAlertCondition().getEnvironments().contains(envIdentifier)))
+          .forEach(rule -> { notifyChannel(); });
+    }
+  }
+
+  @Override
+  public void processDeploymentVerification(String accountId, String orgIdentifier, String projectIdentifier,
+      String serviceIdentifier, String envIdentifier, ActivityType activityType,
+      VerificationStatus verificationStatus) {
+    List<AlertRule> alertRules = hPersistence.createQuery(AlertRule.class)
+                                     .filter(AlertRuleKeys.accountId, accountId)
+                                     .filter(AlertRuleKeys.orgIdentifier, orgIdentifier)
+                                     .filter(AlertRuleKeys.projectIdentifier, projectIdentifier)
+                                     .filter(AlertRuleKeys.enabledVerifications, true)
+                                     .asList();
+
+    if (isNotEmpty(alertRules)) {
+      alertRules.stream()
+          .filter(alertRule
+              -> (isEmpty(alertRule.getAlertCondition().getServices())
+                     || alertRule.getAlertCondition().getServices().contains(serviceIdentifier))
+                  && (isEmpty(alertRule.getAlertCondition().getEnvironments())
+                      || alertRule.getAlertCondition().getEnvironments().contains(envIdentifier))
+                  && (isEmpty(alertRule.getAlertCondition().getVerificationsNotify().getVerificationStatuses())
+                      || alertRule.getAlertCondition().getVerificationsNotify().getVerificationStatuses().contains(
+                          verificationStatus))
+                  && (isEmpty(alertRule.getAlertCondition().getVerificationsNotify().getActivityTypes())
+                      || alertRule.getAlertCondition().getVerificationsNotify().getActivityTypes().contains(
+                          activityType)))
+
           .forEach(rule -> { notifyChannel(); });
     }
   }

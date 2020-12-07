@@ -474,6 +474,225 @@ public class AlertRuleServiceImplTest extends CvNextGenTest {
     verify(alertRuleServiceImpl, times(0)).notifyChannel();
   }
 
+  @Test
+  @Owner(developers = VUK)
+  @Category(UnitTests.class)
+  public void testProcessDeploymentVerification_ChannelIsNotified() {
+    VerificationsNotify verificationsNotify =
+        VerificationsNotify.builder()
+            .activityTypes(Arrays.asList(ActivityType.POST_DEPLOYMENT))
+            .verificationStatuses(Arrays.asList(VerificationStatus.VERIFICATION_PASSED))
+            .build();
+
+    AlertCondition alertCondition = AlertCondition.builder()
+                                        .enabledRisk(true)
+                                        .enabledVerifications(true)
+                                        .services(Arrays.asList("ser1", "ser2", "ser3"))
+                                        .environments(Arrays.asList("prod"))
+                                        .notify(RiskNotify.builder().threshold(40).build())
+                                        .verificationsNotify(verificationsNotify)
+                                        .build();
+
+    AlertRule alertRule = AlertRule.builder()
+                              .uuid(generateUuid())
+                              .name(generateUuid())
+                              .accountId(generateUuid())
+                              .orgIdentifier(generateUuid())
+                              .projectIdentifier(generateUuid())
+                              .identifier(generateUuid())
+                              .alertCondition(alertCondition)
+                              .build();
+
+    hPersistence.save(alertRule);
+
+    AlertRule retrievedAlertRule = hPersistence.get(AlertRule.class, alertRule.getUuid());
+    assertThat(retrievedAlertRule).isNotNull();
+
+    alertRuleServiceImpl.processDeploymentVerification(retrievedAlertRule.getAccountId(),
+        retrievedAlertRule.getOrgIdentifier(), retrievedAlertRule.getProjectIdentifier(),
+        retrievedAlertRule.getAlertCondition().getServices().get(0),
+        retrievedAlertRule.getAlertCondition().getEnvironments().get(0),
+        retrievedAlertRule.getAlertCondition().getVerificationsNotify().getActivityTypes().get(0),
+        retrievedAlertRule.getAlertCondition().getVerificationsNotify().getVerificationStatuses().get(0));
+
+    verify(alertRuleServiceImpl, times(1)).notifyChannel();
+  }
+
+  @Test
+  @Owner(developers = VUK)
+  @Category(UnitTests.class)
+  public void testProcessDeploymentVerification_EnabledVerificationFalse_ChannelIsNotNotified() {
+    VerificationsNotify verificationsNotify =
+        VerificationsNotify.builder()
+            .activityTypes(Arrays.asList(ActivityType.POST_DEPLOYMENT))
+            .verificationStatuses(Arrays.asList(VerificationStatus.VERIFICATION_PASSED))
+            .build();
+
+    AlertCondition alertCondition = AlertCondition.builder()
+                                        .enabledRisk(true)
+                                        .enabledVerifications(false)
+                                        .services(Arrays.asList("ser1", "ser2", "ser3"))
+                                        .environments(Arrays.asList("prod"))
+                                        .notify(RiskNotify.builder().threshold(40).build())
+                                        .verificationsNotify(verificationsNotify)
+                                        .build();
+
+    AlertRule alertRule = AlertRule.builder()
+                              .uuid(generateUuid())
+                              .name(generateUuid())
+                              .accountId(generateUuid())
+                              .orgIdentifier(generateUuid())
+                              .projectIdentifier(generateUuid())
+                              .identifier(generateUuid())
+                              .alertCondition(alertCondition)
+                              .build();
+
+    hPersistence.save(alertRule);
+
+    AlertRule retrievedAlertRule = hPersistence.get(AlertRule.class, alertRule.getUuid());
+    assertThat(retrievedAlertRule).isNotNull();
+
+    alertRuleServiceImpl.processDeploymentVerification(retrievedAlertRule.getAccountId(),
+        retrievedAlertRule.getOrgIdentifier(), retrievedAlertRule.getProjectIdentifier(),
+        retrievedAlertRule.getAlertCondition().getServices().get(0),
+        retrievedAlertRule.getAlertCondition().getEnvironments().get(0),
+        retrievedAlertRule.getAlertCondition().getVerificationsNotify().getActivityTypes().get(0),
+        retrievedAlertRule.getAlertCondition().getVerificationsNotify().getVerificationStatuses().get(0));
+
+    verify(alertRuleServiceImpl, times(0)).notifyChannel();
+  }
+
+  @Test
+  @Owner(developers = VUK)
+  @Category(UnitTests.class)
+  public void testProcessDeploymentVerification_ActivityTypeAndVerificationStatusNull_ChannelIsNotNotified() {
+    VerificationsNotify verificationsNotify =
+        VerificationsNotify.builder()
+            .activityTypes(Arrays.asList(ActivityType.DURING_DEPLOYMENT, ActivityType.POST_DEPLOYMENT))
+            .verificationStatuses(Arrays.asList(VerificationStatus.VERIFICATION_PASSED))
+            .build();
+
+    AlertCondition alertCondition = AlertCondition.builder()
+                                        .enabledRisk(true)
+                                        .enabledVerifications(true)
+                                        .services(Arrays.asList("ser1", "ser2", "ser3"))
+                                        .environments(Arrays.asList("prod"))
+                                        .notify(RiskNotify.builder().threshold(40).build())
+                                        .verificationsNotify(verificationsNotify)
+                                        .build();
+
+    AlertRule alertRule = AlertRule.builder()
+                              .uuid(generateUuid())
+                              .name(generateUuid())
+                              .accountId(generateUuid())
+                              .orgIdentifier(generateUuid())
+                              .projectIdentifier(generateUuid())
+                              .identifier(generateUuid())
+                              .alertCondition(alertCondition)
+                              .build();
+
+    hPersistence.save(alertRule);
+
+    AlertRule retrievedAlertRule = hPersistence.get(AlertRule.class, alertRule.getUuid());
+    assertThat(retrievedAlertRule).isNotNull();
+
+    alertRuleServiceImpl.processDeploymentVerification(retrievedAlertRule.getAccountId(),
+        retrievedAlertRule.getOrgIdentifier(), retrievedAlertRule.getProjectIdentifier(),
+        retrievedAlertRule.getAlertCondition().getServices().get(0),
+        retrievedAlertRule.getAlertCondition().getEnvironments().get(0), null, null);
+
+    verify(alertRuleServiceImpl, times(0)).notifyChannel();
+  }
+
+  @Test
+  @Owner(developers = VUK)
+  @Category(UnitTests.class)
+  public void testProcessDeploymentVerification_AllActivityTypesDifferentVerificationStatus_ChannelIsNotNotified() {
+    VerificationsNotify verificationsNotify =
+        VerificationsNotify.builder()
+            .activityTypes(Arrays.asList(ActivityType.POST_DEPLOYMENT, ActivityType.DURING_DEPLOYMENT,
+                ActivityType.INFRASTRUCTURE_CHANGE, ActivityType.CONFIG_CHANGE, ActivityType.PRE_DEPLOYMENT))
+            .verificationStatuses(Arrays.asList(VerificationStatus.VERIFICATION_PASSED))
+            .build();
+
+    AlertCondition alertCondition = AlertCondition.builder()
+                                        .enabledRisk(true)
+                                        .enabledVerifications(true)
+                                        .services(Arrays.asList("ser1", "ser2", "ser3"))
+                                        .environments(Arrays.asList("prod"))
+                                        .notify(RiskNotify.builder().threshold(40).build())
+                                        .verificationsNotify(verificationsNotify)
+                                        .build();
+
+    AlertRule alertRule = AlertRule.builder()
+                              .uuid(generateUuid())
+                              .name(generateUuid())
+                              .accountId(generateUuid())
+                              .orgIdentifier(generateUuid())
+                              .projectIdentifier(generateUuid())
+                              .identifier(generateUuid())
+                              .alertCondition(alertCondition)
+                              .build();
+
+    hPersistence.save(alertRule);
+
+    AlertRule retrievedAlertRule = hPersistence.get(AlertRule.class, alertRule.getUuid());
+    assertThat(retrievedAlertRule).isNotNull();
+
+    alertRuleServiceImpl.processDeploymentVerification(retrievedAlertRule.getAccountId(),
+        retrievedAlertRule.getOrgIdentifier(), retrievedAlertRule.getProjectIdentifier(),
+        retrievedAlertRule.getAlertCondition().getServices().get(0),
+        retrievedAlertRule.getAlertCondition().getEnvironments().get(0),
+        retrievedAlertRule.getAlertCondition().getVerificationsNotify().getActivityTypes().get(0),
+        VerificationStatus.VERIFICATION_FAILED);
+
+    verify(alertRuleServiceImpl, times(0)).notifyChannel();
+  }
+
+  @Test
+  @Owner(developers = VUK)
+  @Category(UnitTests.class)
+  public void testProcessDeploymentVerification_AllVerificationStatusesDifferentActivityType_ChannelIsNotNotified() {
+    VerificationsNotify verificationsNotify =
+        VerificationsNotify.builder()
+            .activityTypes(Arrays.asList(ActivityType.POST_DEPLOYMENT))
+            .verificationStatuses(
+                Arrays.asList(VerificationStatus.VERIFICATION_PASSED, VerificationStatus.VERIFICATION_PASSED))
+            .build();
+
+    AlertCondition alertCondition = AlertCondition.builder()
+                                        .enabledRisk(true)
+                                        .enabledVerifications(true)
+                                        .services(Arrays.asList("ser1", "ser2", "ser3"))
+                                        .environments(Arrays.asList("prod"))
+                                        .notify(RiskNotify.builder().threshold(40).build())
+                                        .verificationsNotify(verificationsNotify)
+                                        .build();
+
+    AlertRule alertRule = AlertRule.builder()
+                              .uuid(generateUuid())
+                              .name(generateUuid())
+                              .accountId(generateUuid())
+                              .orgIdentifier(generateUuid())
+                              .projectIdentifier(generateUuid())
+                              .identifier(generateUuid())
+                              .alertCondition(alertCondition)
+                              .build();
+
+    hPersistence.save(alertRule);
+
+    AlertRule retrievedAlertRule = hPersistence.get(AlertRule.class, alertRule.getUuid());
+    assertThat(retrievedAlertRule).isNotNull();
+
+    alertRuleServiceImpl.processDeploymentVerification(retrievedAlertRule.getAccountId(),
+        retrievedAlertRule.getOrgIdentifier(), retrievedAlertRule.getProjectIdentifier(),
+        retrievedAlertRule.getAlertCondition().getServices().get(0),
+        retrievedAlertRule.getAlertCondition().getEnvironments().get(0), ActivityType.DURING_DEPLOYMENT,
+        retrievedAlertRule.getAlertCondition().getVerificationsNotify().getVerificationStatuses().get(0));
+
+    verify(alertRuleServiceImpl, times(0)).notifyChannel();
+  }
+
   private AlertCondition getAlertConditionForAlertRuleDTODummyValues() {
     List<String> servicesDTO = new ArrayList<>();
     servicesDTO.add("serDTO1");
