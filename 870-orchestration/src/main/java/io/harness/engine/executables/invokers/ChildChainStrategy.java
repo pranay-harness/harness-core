@@ -85,21 +85,19 @@ public class ChildChainStrategy implements ExecuteStrategy {
       accumulatedResponse = invocationHelper.accumulateResponses(
           ambiance.getPlanExecutionId(), resumePackage.getResponseDataMap().keySet().iterator().next());
     }
+    byte[] passThrowDataBytes = lastChildChainExecutableResponse.getPassThroughData().toByteArray();
+    PassThroughData passThroughData = passThrowDataBytes.length == 0 ? new PassThroughData() {
+    } : (PassThroughData) kryoSerializer.asObject(passThrowDataBytes);
     if (lastChildChainExecutableResponse.getLastLink() || lastChildChainExecutableResponse.getSuspend()
         || isBroken(accumulatedResponse) || isAborted(accumulatedResponse)) {
       StepResponse stepResponse = childChainExecutable.finalizeExecution(ambiance,
-          nodeExecutionService.extractResolvedStepParameters(nodeExecution),
-          (PassThroughData) kryoSerializer.asObject(
-              lastChildChainExecutableResponse.getPassThroughData().toByteArray()),
-          accumulatedResponse);
+          nodeExecutionService.extractResolvedStepParameters(nodeExecution), passThroughData, accumulatedResponse);
       engine.handleStepResponse(nodeExecution.getUuid(), stepResponse);
     } else {
       StepInputPackage inputPackage =
           engineObtainmentHelper.obtainInputPackage(ambiance, nodeExecution.getNode().getRebObjectsList());
       ChildChainExecutableResponse chainResponse = childChainExecutable.executeNextChild(ambiance,
-          nodeExecutionService.extractResolvedStepParameters(nodeExecution), inputPackage,
-          (PassThroughData) kryoSerializer.asObject(
-              lastChildChainExecutableResponse.getPassThroughData().toByteArray()),
+          nodeExecutionService.extractResolvedStepParameters(nodeExecution), inputPackage, passThroughData,
           accumulatedResponse);
       handleResponse(ambiance, nodeExecution, chainResponse);
     }

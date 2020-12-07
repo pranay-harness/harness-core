@@ -5,14 +5,12 @@ import static io.harness.pms.contracts.execution.events.OrchestrationEventType.P
 import static io.harness.rule.OwnerRule.ALEXEI;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import io.harness.OrchestrationVisualizationTestBase;
 import io.harness.beans.OrchestrationGraph;
 import io.harness.cache.SpringMongoStore;
 import io.harness.category.element.UnitTests;
 import io.harness.engine.executions.plan.PlanExecutionService;
-import io.harness.exception.InvalidRequestException;
 import io.harness.execution.PlanExecution;
 import io.harness.pms.ambiance.Ambiance;
 import io.harness.pms.execution.Status;
@@ -35,21 +33,6 @@ public class PlanExecutionStatusUpdateEventHandlerTest extends OrchestrationVisu
   @Inject PlanExecutionService planExecutionService;
   @Inject GraphGenerationService graphGenerationService;
   @Inject PlanExecutionStatusUpdateEventHandler planExecutionStatusUpdateEventHandler;
-
-  @Test
-  @Owner(developers = ALEXEI)
-  @Category(UnitTests.class)
-  @RealMongo
-  public void shouldThrowInvalidRequestException() {
-    String planExecutionId = generateUuid();
-    OrchestrationEvent event = OrchestrationEvent.builder()
-                                   .ambiance(Ambiance.newBuilder().setPlanExecutionId(planExecutionId).build())
-                                   .eventType(PLAN_EXECUTION_STATUS_UPDATE)
-                                   .build();
-
-    assertThatThrownBy(() -> planExecutionStatusUpdateEventHandler.handleEvent(event))
-        .isInstanceOf(InvalidRequestException.class);
-  }
 
   @Test
   @Owner(developers = ALEXEI)

@@ -36,33 +36,37 @@ public class NodeExecutionStatusUpdateEventHandlerV2 implements AsyncOrchestrati
     if (nodeExecutionId == null) {
       return;
     }
+    try {
+      NodeExecution nodeExecution = nodeExecutionService.get(nodeExecutionId);
 
-    NodeExecution nodeExecution = nodeExecutionService.get(nodeExecutionId);
+      OrchestrationGraph orchestrationGraph =
+          graphGenerationService.getCachedOrchestrationGraph(ambiance.getPlanExecutionId());
 
-    OrchestrationGraph orchestrationGraph =
-        graphGenerationService.getCachedOrchestrationGraph(ambiance.getPlanExecutionId());
+      if (orchestrationGraph.getRootNodeIds().isEmpty()) {
+        log.info("Setting rootNodeId: [{}] for plan [{}]", nodeExecutionId, ambiance.getPlanExecutionId());
+        orchestrationGraph.getRootNodeIds().add(nodeExecutionId);
+      }
 
-    if (orchestrationGraph.getRootNodeIds().isEmpty()) {
-      log.info("Setting rootNodeId: [{}] for plan [{}]", nodeExecutionId, ambiance.getPlanExecutionId());
-      orchestrationGraph.getRootNodeIds().add(nodeExecutionId);
+      Map<String, GraphVertex> graphVertexMap = orchestrationGraph.getAdjacencyList().getGraphVertexMap();
+      if (graphVertexMap.containsKey(nodeExecutionId)) {
+        log.info("Updating graph vertex for [{}] with status [{}]. PlanExecutionId: [{}]", nodeExecutionId,
+            nodeExecution.getStatus(), ambiance.getPlanExecutionId());
+        graphVertexMap.computeIfPresent(nodeExecutionId, (key, prevValue) -> {
+          GraphVertex newValue = GraphVertexConverter.convertFrom(nodeExecution);
+          if (StatusUtils.isFinalStatus(newValue.getStatus())) {
+            newValue.setOutcomes(outcomeService.findAllByRuntimeId(ambiance.getPlanExecutionId(), nodeExecutionId));
+          }
+          return newValue;
+        });
+      } else {
+        log.info("Adding graph vertex with id [{}] and status [{}]. PlanExecutionId: [{}]", nodeExecutionId,
+            nodeExecution.getStatus(), ambiance.getPlanExecutionId());
+        orchestrationAdjacencyListGenerator.populateAdjacencyList(orchestrationGraph.getAdjacencyList(), nodeExecution);
+      }
+      graphGenerationService.cacheOrchestrationGraph(orchestrationGraph);
+    } catch (Exception e) {
+      log.error("[{}] event failed for [{}] for plan [{}]", event.getEventType(), nodeExecutionId,
+          ambiance.getPlanExecutionId(), e);
     }
-
-    Map<String, GraphVertex> graphVertexMap = orchestrationGraph.getAdjacencyList().getGraphVertexMap();
-    if (graphVertexMap.containsKey(nodeExecutionId)) {
-      log.info("Updating graph vertex for [{}] with status [{}]. PlanExecutionId: [{}]", nodeExecutionId,
-          nodeExecution.getStatus(), ambiance.getPlanExecutionId());
-      graphVertexMap.computeIfPresent(nodeExecutionId, (key, prevValue) -> {
-        GraphVertex newValue = GraphVertexConverter.convertFrom(nodeExecution);
-        if (StatusUtils.isFinalStatus(newValue.getStatus())) {
-          newValue.setOutcomes(outcomeService.findAllByRuntimeId(ambiance.getPlanExecutionId(), nodeExecutionId));
-        }
-        return newValue;
-      });
-    } else {
-      log.info("Adding graph vertex with id [{}] and status [{}]. PlanExecutionId: [{}]", nodeExecutionId,
-          nodeExecution.getStatus(), ambiance.getPlanExecutionId());
-      orchestrationAdjacencyListGenerator.populateAdjacencyList(orchestrationGraph.getAdjacencyList(), nodeExecution);
-    }
-    graphGenerationService.cacheOrchestrationGraph(orchestrationGraph);
   }
 }

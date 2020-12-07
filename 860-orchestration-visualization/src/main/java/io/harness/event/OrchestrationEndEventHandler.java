@@ -6,6 +6,8 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.OrchestrationGraph;
 import io.harness.engine.executions.plan.PlanExecutionService;
 import io.harness.execution.PlanExecution;
+import io.harness.pms.ambiance.Ambiance;
+import io.harness.pms.execution.utils.AmbianceUtils;
 import io.harness.pms.sdk.core.events.AsyncOrchestrationEventHandler;
 import io.harness.pms.sdk.core.events.OrchestrationEvent;
 import io.harness.service.GraphGenerationService;
@@ -21,13 +23,19 @@ public class OrchestrationEndEventHandler implements AsyncOrchestrationEventHand
 
   @Override
   public void handleEvent(OrchestrationEvent event) {
-    PlanExecution planExecution = planExecutionService.get(event.getAmbiance().getPlanExecutionId());
-    log.info("Ending Execution for planExecutionId [{}] with status [{}].", planExecution.getUuid(),
-        planExecution.getStatus());
+    Ambiance ambiance = event.getAmbiance();
+    try {
+      PlanExecution planExecution = planExecutionService.get(ambiance.getPlanExecutionId());
+      log.info("Ending Execution for planExecutionId [{}] with status [{}].", planExecution.getUuid(),
+          planExecution.getStatus());
 
-    OrchestrationGraph cachedGraph = graphGenerationService.getCachedOrchestrationGraph(planExecution.getUuid());
+      OrchestrationGraph cachedGraph = graphGenerationService.getCachedOrchestrationGraph(planExecution.getUuid());
 
-    graphGenerationService.cacheOrchestrationGraph(
-        cachedGraph.withStatus(planExecution.getStatus()).withEndTs(planExecution.getEndTs()));
+      graphGenerationService.cacheOrchestrationGraph(
+          cachedGraph.withStatus(planExecution.getStatus()).withEndTs(planExecution.getEndTs()));
+    } catch (Exception e) {
+      log.error("[{}] event failed for [{}] for plan [{}]", event.getEventType(),
+          AmbianceUtils.obtainCurrentRuntimeId(ambiance), ambiance.getPlanExecutionId(), e);
+    }
   }
 }

@@ -4,7 +4,6 @@ import io.harness.interrupts.InterruptEffect;
 import io.harness.pms.execution.ExecutionMode;
 import io.harness.pms.execution.Status;
 import io.harness.pms.execution.failure.FailureInfo;
-import io.harness.pms.sdk.core.data.Metadata;
 import io.harness.pms.sdk.core.data.Outcome;
 import io.harness.pms.steps.SkipType;
 import io.harness.tasks.ProgressData;
@@ -37,7 +36,7 @@ public class GraphVertexDTO {
   Map<String, Object> stepParameters;
   ExecutionMode mode;
 
-  List<Metadata> executableResponsesMetadata;
+  List<Map<String, Object>> executableResponsesMetadata;
   List<InterruptEffect> interruptHistories;
   List<Outcome> outcomes;
   List<String> retryIds;
