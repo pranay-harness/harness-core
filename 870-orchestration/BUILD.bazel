@@ -11,7 +11,7 @@ java_library(
     name = "maven_deps",
     visibility = ["//visibility:public"],
     exports = [
-        "//880-orchestration-beans:module",
+        "//876-orchestration-beans:module",
         "//890-orchestration-persistence:module",
         "//890-pms-contracts:module",
         "//930-delegate-tasks:module",

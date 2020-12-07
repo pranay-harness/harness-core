@@ -47,12 +47,12 @@ BAZEL_MODULES="\
   //840-ng-triggers:module \
   //850-execution-plan:module \
   //850-ng-pipeline-commons:module \
-  //850-pms-sdk:module \
   //860-orchestration-steps:module \
   //860-orchestration-visualization:module \
   //870-orchestration:module \
   //870-yaml-beans:module \
-  //880-orchestration-beans:module \
+  //876-orchestration-beans:module \
+  //879-pms-sdk:module \
   //882-pms-sdk-core:module \
   //884-pms-commons:module \
   //890-orchestration-persistence:module \
@@ -249,12 +249,12 @@ build_bazel_module 490-ce-commons
 build_bazel_module 840-ng-triggers
 build_bazel_module 850-execution-plan
 build_bazel_module 850-ng-pipeline-commons
-build_bazel_module 850-pms-sdk
 build_bazel_module 860-orchestration-steps
 build_bazel_module 860-orchestration-visualization
 build_bazel_module 870-orchestration
 build_bazel_module 870-yaml-beans
-build_bazel_module 880-orchestration-beans
+build_bazel_module 876-orchestration-beans
+build_bazel_module 879-pms-sdk
 build_bazel_module 882-pms-sdk-core
 build_bazel_module 884-pms-commons
 build_bazel_module 890-orchestration-persistence

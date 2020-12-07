@@ -13,7 +13,7 @@ import io.harness.engine.executions.plan.PlanExecutionService;
 import io.harness.engine.expressions.AmbianceExpressionEvaluator;
 import io.harness.expression.EngineExpressionEvaluator;
 import io.harness.pms.ambiance.Ambiance;
-import io.harness.pms.sdk.core.registries.OrchestrationFieldRegistry;
+import io.harness.pms.sdk.registries.OrchestrationFieldRegistry;
 import io.harness.rule.Owner;
 import io.harness.serializer.jackson.NGHarnessJacksonModule;
 

@@ -750,6 +750,11 @@
         </dependency>
         <dependency>
             <groupId>software.wings</groupId>
+            <artifactId>879-pms-sdk</artifactId>
+            <version>${project.parent.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>software.wings</groupId>
             <artifactId>890-sm-core</artifactId>
             <version>${project.parent.version}</version>
         </dependency>

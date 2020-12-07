@@ -33,7 +33,7 @@ import io.harness.persistence.HPersistence;
 import io.harness.pms.execution.failure.FailureInfo;
 import io.harness.pms.sdk.PmsSdkConfiguration;
 import io.harness.pms.sdk.PmsSdkModule;
-import io.harness.pms.sdk.core.registries.StepRegistry;
+import io.harness.pms.sdk.registries.StepRegistry;
 import io.harness.pms.steps.StepType;
 import io.harness.queue.QueueListenerController;
 import io.harness.queue.QueuePublisher;

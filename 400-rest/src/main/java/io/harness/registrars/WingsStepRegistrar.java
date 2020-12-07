@@ -3,8 +3,8 @@ package io.harness.registrars;
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.pms.sdk.core.registries.registrar.StepRegistrar;
 import io.harness.pms.sdk.core.steps.Step;
+import io.harness.pms.sdk.registries.registrar.StepRegistrar;
 import io.harness.pms.steps.StepType;
 import io.harness.redesign.states.email.EmailStep;
 import io.harness.redesign.states.http.BasicHttpStep;
