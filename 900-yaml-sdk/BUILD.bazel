@@ -17,6 +17,12 @@ java_library(
         "@maven//:com_fasterxml_jackson_dataformat_jackson_dataformat_yaml",
         "@maven//:com_networknt_json_schema_validator",
         "@maven//:io_swagger_swagger_annotations",
+        "@maven//:io_swagger_swagger_core",
+        "@maven//:io_swagger_swagger_jaxrs",
+        "@maven//:io_swagger_swagger_jersey2_jaxrs",
+        "@maven//:io_swagger_swagger_models",
+        "@maven//:org_apache_maven_maven_plugin_api",
+        "@maven//:org_apache_maven_plugin_tools_maven_plugin_annotations",
     ],
 )
 

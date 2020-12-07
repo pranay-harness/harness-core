@@ -1,12 +1,12 @@
-package io.harness.yaml.impl;
+package io.harness.yaml.snippets.impl;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 
 import io.harness.exception.InvalidRequestException;
-import io.harness.yaml.bean.YamlSnippetMetaData;
-import io.harness.yaml.dto.YamlSnippetMetaDataDTO;
-import io.harness.yaml.dto.YamlSnippetsDTO;
-import io.harness.yaml.helper.YamlSnippetHelper;
+import io.harness.yaml.snippets.bean.YamlSnippetMetaData;
+import io.harness.yaml.snippets.dto.YamlSnippetMetaDataDTO;
+import io.harness.yaml.snippets.dto.YamlSnippetsDTO;
+import io.harness.yaml.snippets.helper.YamlSnippetHelper;
 
 import com.google.common.collect.Sets;
 import com.google.inject.Inject;

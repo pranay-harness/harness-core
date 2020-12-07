@@ -1,4 +1,4 @@
-package io.harness.yaml.impl;
+package io.harness.yaml.snippets;
 
 import static io.harness.rule.OwnerRule.ABHINAV;
 
@@ -7,8 +7,9 @@ import static org.assertj.core.api.Assertions.assertThat;
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
-import io.harness.yaml.dto.YamlSnippetsDTO;
-import io.harness.yaml.helper.YamlSnippetHelper;
+import io.harness.yaml.snippets.dto.YamlSnippetsDTO;
+import io.harness.yaml.snippets.helper.YamlSnippetHelper;
+import io.harness.yaml.snippets.impl.YamlSnippetProvider;
 
 import java.io.IOException;
 import java.io.InputStream;

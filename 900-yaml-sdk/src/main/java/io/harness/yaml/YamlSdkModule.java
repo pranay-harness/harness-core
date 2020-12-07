@@ -2,7 +2,8 @@ package io.harness.yaml;
 
 import io.harness.exception.InvalidRequestException;
 import io.harness.govern.ProviderModule;
-import io.harness.yaml.helper.YamlSnippetHelper;
+import io.harness.yaml.snippets.dto.YamlSnippetsDTO;
+import io.harness.yaml.snippets.helper.YamlSnippetHelper;
 
 import com.google.inject.Guice;
 import com.google.inject.Injector;
@@ -57,7 +58,7 @@ public class YamlSdkModule {
 
   /**
    * Initialises snippet which caches and maintains maps for fast retrieval of snippets and snippets metadata {@link
-   * io.harness.yaml.dto.YamlSnippetsDTO}.
+   * YamlSnippetsDTO}.
    *
    * @throws InvalidRequestException when snippets couldn't be initialized.
    */

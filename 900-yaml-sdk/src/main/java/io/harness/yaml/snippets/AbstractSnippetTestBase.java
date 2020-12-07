@@ -1,4 +1,4 @@
-package io.harness.yaml;
+package io.harness.yaml.snippets;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 
