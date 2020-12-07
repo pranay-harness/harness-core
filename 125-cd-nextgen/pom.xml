@@ -51,7 +51,7 @@
         </dependency>
         <dependency>
             <groupId>software.wings</groupId>
-            <artifactId>850-pms-sdk</artifactId>
+            <artifactId>879-pms-sdk</artifactId>
             <version>${project.parent.version}</version>
         </dependency>
         <dependency>

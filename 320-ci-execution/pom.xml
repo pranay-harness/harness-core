@@ -62,17 +62,17 @@
         </dependency>
         <dependency>
             <groupId>software.wings</groupId>
-            <artifactId>850-pms-sdk</artifactId>
-            <version>${project.parent.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>software.wings</groupId>
             <artifactId>870-orchestration</artifactId>
             <version>${project.parent.version}</version>
         </dependency>
         <dependency>
             <groupId>software.wings</groupId>
-            <artifactId>880-orchestration-beans</artifactId>
+            <artifactId>876-orchestration-beans</artifactId>
+            <version>${project.parent.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>software.wings</groupId>
+            <artifactId>879-pms-sdk</artifactId>
             <version>${project.parent.version}</version>
         </dependency>
         <dependency>

@@ -1,8 +1,8 @@
 package io.harness;
 
-import io.harness.pms.sdk.core.registries.registrar.FacilitatorRegistrar;
-import io.harness.pms.sdk.core.registries.registrar.OrchestrationEventHandlerRegistrar;
-import io.harness.pms.sdk.core.registries.registrar.StepRegistrar;
+import io.harness.pms.sdk.registries.registrar.FacilitatorRegistrar;
+import io.harness.pms.sdk.registries.registrar.OrchestrationEventHandlerRegistrar;
+import io.harness.pms.sdk.registries.registrar.StepRegistrar;
 import io.harness.registrars.OrchestrationStepsModuleEventHandlerRegistrar;
 import io.harness.registrars.OrchestrationStepsModuleFacilitatorRegistrar;
 import io.harness.registrars.OrchestrationStepsModuleStepRegistrar;

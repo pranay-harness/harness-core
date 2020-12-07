@@ -1,7 +1,7 @@
 package io.harness.registrars;
 
-import io.harness.pms.sdk.core.registries.registrar.StepRegistrar;
 import io.harness.pms.sdk.core.steps.Step;
+import io.harness.pms.sdk.registries.registrar.StepRegistrar;
 import io.harness.pms.steps.StepType;
 import io.harness.states.BuildStatusStep;
 import io.harness.states.BuildStep;

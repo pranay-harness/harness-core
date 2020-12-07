@@ -7,7 +7,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.OrchestrationTestBase;
 import io.harness.category.element.UnitTests;
-import io.harness.pms.sdk.core.registries.registrar.OrchestrationEventHandlerRegistrar;
+import io.harness.pms.sdk.registries.registrar.OrchestrationEventHandlerRegistrar;
 import io.harness.rule.Owner;
 
 import com.google.inject.Inject;
@@ -19,15 +19,7 @@ import org.junit.experimental.categories.Category;
 import org.reflections.Reflections;
 
 public class OrchestrationEventHandlerRegistrarTest extends OrchestrationTestBase {
-  @Inject OrchestrationModuleEventHandlerRegistrar orchestrationModuleEventHandlerRegistrar;
   @Inject Map<String, OrchestrationEventHandlerRegistrar> orchestrationEventHandlerRegistrars;
-
-  @Test
-  @Owner(developers = PRASHANT)
-  @Category(UnitTests.class)
-  public void shouldTestRegister() {
-    orchestrationModuleEventHandlerRegistrar.testClassesModule();
-  }
 
   @Test
   @Owner(developers = BRIJESH)

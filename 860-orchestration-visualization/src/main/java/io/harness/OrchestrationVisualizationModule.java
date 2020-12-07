@@ -3,7 +3,7 @@ package io.harness;
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.pms.sdk.core.registries.registrar.OrchestrationEventHandlerRegistrar;
+import io.harness.pms.sdk.registries.registrar.OrchestrationEventHandlerRegistrar;
 import io.harness.registrars.OrchestrationVisualizationModuleEventHandlerRegistrar;
 import io.harness.service.GraphGenerationService;
 import io.harness.service.impl.GraphGenerationServiceImpl;

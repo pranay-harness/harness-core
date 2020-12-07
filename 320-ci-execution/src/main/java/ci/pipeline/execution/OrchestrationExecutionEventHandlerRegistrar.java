@@ -2,7 +2,7 @@ package ci.pipeline.execution;
 
 import io.harness.pms.contracts.execution.events.OrchestrationEventType;
 import io.harness.pms.sdk.core.events.OrchestrationEventHandler;
-import io.harness.pms.sdk.core.registries.registrar.OrchestrationEventHandlerRegistrar;
+import io.harness.pms.sdk.registries.registrar.OrchestrationEventHandlerRegistrar;
 
 import com.google.inject.Inject;
 import com.google.inject.Injector;

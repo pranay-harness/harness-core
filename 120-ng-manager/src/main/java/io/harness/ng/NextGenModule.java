@@ -57,7 +57,7 @@ import io.harness.ng.gitsync.handlers.ConnectorYamlHandler;
 import io.harness.ng.orchestration.NgDelegate2TaskExecutor;
 import io.harness.ngtriggers.service.TriggerWebhookService;
 import io.harness.ngtriggers.service.impl.TriggerWebhookServiceImpl;
-import io.harness.pms.sdk.core.registries.registrar.StepRegistrar;
+import io.harness.pms.sdk.registries.registrar.StepRegistrar;
 import io.harness.queue.QueueController;
 import io.harness.redesign.services.CustomExecutionService;
 import io.harness.redesign.services.CustomExecutionServiceImpl;

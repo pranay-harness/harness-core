@@ -5,7 +5,7 @@ import static io.harness.annotations.dev.HarnessTeam.CDC;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.pms.facilitators.FacilitatorType;
 import io.harness.pms.sdk.core.facilitator.Facilitator;
-import io.harness.pms.sdk.core.registries.registrar.FacilitatorRegistrar;
+import io.harness.pms.sdk.registries.registrar.FacilitatorRegistrar;
 import io.harness.steps.barriers.BarrierFacilitator;
 import io.harness.steps.resourcerestraint.ResourceRestraintFacilitator;
 

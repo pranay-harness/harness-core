@@ -20,7 +20,7 @@ import io.harness.engine.interrupts.InterruptTestHelper;
 import io.harness.engine.interrupts.steps.SimpleAsyncStep;
 import io.harness.execution.PlanExecution;
 import io.harness.interrupts.Interrupt;
-import io.harness.pms.sdk.core.registries.StepRegistry;
+import io.harness.pms.sdk.registries.StepRegistry;
 import io.harness.rule.Owner;
 import io.harness.testlib.RealMongo;
 import io.harness.waiter.OrchestrationNotifyEventListener;

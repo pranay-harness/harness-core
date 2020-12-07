@@ -7,7 +7,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.OrchestrationTestBase;
 import io.harness.category.element.UnitTests;
-import io.harness.pms.sdk.core.registries.registrar.AdviserRegistrar;
+import io.harness.pms.sdk.registries.registrar.AdviserRegistrar;
 import io.harness.rule.Owner;
 
 import com.google.inject.Inject;
@@ -20,14 +20,6 @@ import org.reflections.Reflections;
 
 public class OrchestrationAdviserRegistrarTest extends OrchestrationTestBase {
   @Inject Map<String, AdviserRegistrar> adviserRegistrars;
-  @Inject private OrchestrationAdviserRegistrar orchestrationAdviserRegistrar;
-
-  @Test
-  @Owner(developers = PRASHANT)
-  @Category(UnitTests.class)
-  public void shouldTestRegister() {
-    orchestrationAdviserRegistrar.testClassesModule();
-  }
 
   @Test
   @Owner(developers = BRIJESH)

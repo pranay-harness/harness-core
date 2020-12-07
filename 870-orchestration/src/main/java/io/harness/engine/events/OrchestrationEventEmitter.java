@@ -6,7 +6,7 @@ import io.harness.logging.AutoLogContext;
 import io.harness.pms.sdk.core.events.OrchestrationEvent;
 import io.harness.pms.sdk.core.events.OrchestrationEventHandler;
 import io.harness.pms.sdk.core.events.OrchestrationSubject;
-import io.harness.pms.sdk.core.registries.OrchestrationEventHandlerRegistry;
+import io.harness.pms.sdk.registries.OrchestrationEventHandlerRegistry;
 import io.harness.queue.QueuePublisher;
 
 import com.google.inject.Inject;

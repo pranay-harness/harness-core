@@ -12,12 +12,12 @@ directories:
   840-ng-triggers
   850-execution-plan
   850-ng-pipeline-commons
-  850-pms-sdk
   860-orchestration-steps
   860-orchestration-visualization
   870-orchestration
   870-yaml-beans
-  880-orchestration-beans
+  876-orchestration-beans
+  879-pms-sdk
   882-pms-sdk-core
   884-pms-commons
   890-orchestration-persistence
