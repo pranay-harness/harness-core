@@ -1,0 +1,16 @@
+{
+  "repo": "harness-maven",
+  "path": "/tdlist/1.1",
+  "created": "2017-09-30T18:30:57.800Z",
+  "createdBy": "admin",
+  "lastModified": "2017-09-30T18:30:57.800Z",
+  "modifiedBy": "admin",
+  "lastUpdated": "2017-09-30T18:30:57.800Z",
+  "children": [
+    {
+      "uri": "/tdlist-1.1.war",
+      "folder": false
+    }
+  ],
+  "uri": "https://harness.jfrog.io/harness/api/storage/harness-maven/tdlist/1.1"
+}

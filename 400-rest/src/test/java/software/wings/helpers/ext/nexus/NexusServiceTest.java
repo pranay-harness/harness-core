@@ -1,18 +1,22 @@
 package software.wings.helpers.ext.nexus;
 
 import static io.harness.rule.OwnerRule.AADITI;
+import static io.harness.rule.OwnerRule.DEEPAK_PUTHRAYA;
 import static io.harness.rule.OwnerRule.GEORGE;
 import static io.harness.rule.OwnerRule.ROHITKARELIA;
 import static io.harness.rule.OwnerRule.SRINIVAS;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
 import static com.github.tomakehurst.wiremock.client.WireMock.get;
+import static com.github.tomakehurst.wiremock.client.WireMock.post;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlMatching;
+import static com.github.tomakehurst.wiremock.client.WireMock.urlPathMatching;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.assertj.core.api.Assertions.tuple;
 import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.when;
 
 import io.harness.category.element.UnitTests;
@@ -22,6 +26,7 @@ import io.harness.delegate.task.ListNotifyResponseData;
 import io.harness.exception.ArtifactServerException;
 import io.harness.exception.InvalidArtifactServerException;
 import io.harness.exception.InvalidRequestException;
+import io.harness.exception.UnsupportedOperationException;
 import io.harness.exception.WingsException;
 import io.harness.rule.Owner;
 
@@ -36,23 +41,32 @@ import software.wings.delegatetasks.collect.artifacts.ArtifactCollectionTaskHelp
 import software.wings.helpers.ext.jenkins.BuildDetails;
 import software.wings.utils.RepositoryFormat;
 
+import com.github.tomakehurst.wiremock.client.ResponseDefinitionBuilder;
 import com.github.tomakehurst.wiremock.http.Fault;
 import com.github.tomakehurst.wiremock.junit.WireMockRule;
+import com.google.common.util.concurrent.FakeTimeLimiter;
+import com.google.common.util.concurrent.TimeLimiter;
 import com.google.inject.Inject;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.SocketTimeoutException;
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.TimeoutException;
+import javax.xml.stream.XMLStreamException;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.tuple.Pair;
+import org.joor.Reflect;
 import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.Mockito;
 
 /**
  * Created by srinivas on 3/30/17.
@@ -1534,6 +1548,28 @@ public class NexusServiceTest extends WingsBaseTest {
     nexusService.isRunning(config, null);
   }
 
+  @Test
+  @Owner(developers = DEEPAK_PUTHRAYA)
+  @Category(UnitTests.class)
+  public void testValidConnection() throws IOException {
+    assertThat(nexusService.isRunning(nexusThreeConfig, null)).isTrue();
+    assertThat(nexusService.isRunning(nexusConfig, null)).isTrue();
+
+    NexusThreeServiceImpl nexusThreeService = Mockito.mock(NexusThreeServiceImpl.class);
+    Reflect.on(nexusService).set("nexusThreeService", nexusThreeService);
+
+    when(nexusThreeService.isServerValid(any(), eq(null))).thenThrow(new RuntimeException("Some uncaught exception"));
+    assertThat(nexusService.isRunning(nexusThreeConfig, null)).isTrue();
+
+    nexusThreeService = Mockito.mock(NexusThreeServiceImpl.class);
+    Reflect.on(nexusService).set("nexusThreeService", nexusThreeService);
+
+    // Note: Throw any WingsException. This exception may not actually be thrown here.
+    when(nexusThreeService.isServerValid(any(), eq(new ArrayList<>())))
+        .thenThrow(new UnsupportedOperationException("Invalid server"));
+    assertThat(nexusService.isRunning(nexusThreeConfig, new ArrayList<>())).isTrue();
+  }
+
   @Test(expected = InvalidArtifactServerException.class)
   @Owner(developers = AADITI)
   @Category(UnitTests.class)
@@ -1833,5 +1869,108 @@ public class NexusServiceTest extends WingsBaseTest {
         nexusService.getGroupIdPathsUsingPrivateApis(nexusThreeConfig, null, "npm-hosted", RepositoryFormat.npm.name()))
         .hasSize(1)
         .contains("npm-app1");
+  }
+
+  @Test
+  @Owner(developers = DEEPAK_PUTHRAYA)
+  @Category(UnitTests.class)
+  public void shouldHandleExceptionsWhenGettingGroupsIdPathsUsingPrivateApis() throws Exception {
+    wireMockRule.stubFor(
+        post(urlPathMatching("/nexus/service/extdirect")).willReturn(new ResponseDefinitionBuilder().withStatus(401)));
+    assertThatThrownBy(() -> nexusService.getGroupIdPathsUsingPrivateApis(nexusConfig, null, null, null))
+        .isInstanceOf(WingsException.class);
+
+    wireMockRule.stubFor(
+        post(urlPathMatching("/nexus/service/extdirect")).willReturn(new ResponseDefinitionBuilder().withStatus(405)));
+    assertThatThrownBy(() -> nexusService.getGroupIdPathsUsingPrivateApis(nexusConfig, null, null, null))
+        .isInstanceOf(WingsException.class);
+
+    wireMockRule.stubFor(
+        post(urlPathMatching("/nexus/service/extdirect")).willReturn(new ResponseDefinitionBuilder().withStatus(502)));
+    assertThatThrownBy(() -> nexusService.getGroupIdPathsUsingPrivateApis(nexusConfig, null, null, null))
+        .isInstanceOf(WingsException.class);
+  }
+
+  @Test
+  @Owner(developers = DEEPAK_PUTHRAYA)
+  @Category(UnitTests.class)
+  public void shouldHandleExceptionsWhenGetGroupIdPaths() {
+    wireMockRule.stubFor(
+        post(urlPathMatching("/nexus/service/extdirect")).willReturn(new ResponseDefinitionBuilder().withStatus(401)));
+    assertThatThrownBy(() -> nexusService.getGroupIdPaths(nexusConfig, null, null, null))
+        .isInstanceOf(WingsException.class);
+
+    wireMockRule.stubFor(
+        post(urlPathMatching("/nexus/service/extdirect")).willReturn(new ResponseDefinitionBuilder().withStatus(405)));
+    assertThatThrownBy(() -> nexusService.getGroupIdPaths(nexusConfig, null, null, null))
+        .isInstanceOf(WingsException.class);
+
+    wireMockRule.stubFor(
+        post(urlPathMatching("/nexus/service/extdirect")).willReturn(new ResponseDefinitionBuilder().withStatus(502)));
+    assertThatThrownBy(() -> nexusService.getGroupIdPaths(nexusConfig, null, null, null))
+        .isInstanceOf(WingsException.class);
+  }
+
+  @Test
+  @Owner(developers = DEEPAK_PUTHRAYA)
+  @Category(UnitTests.class)
+  public void shouldReturnCorrectErrorMessagesForGetGroupIdPathsUsingPrivateApis() throws Exception {
+    NexusThreeServiceImpl nexusThreeService = Mockito.mock(NexusThreeServiceImpl.class);
+    Reflect.on(nexusService).set("nexusThreeService", nexusThreeService);
+    TimeLimiter timeLimiter = new FakeTimeLimiter();
+    Reflect.on(nexusService).set("timeLimiter", timeLimiter);
+
+    RuntimeException e = new RuntimeException(new TimeoutException());
+    when(nexusThreeService.collectGroupIds(any(), eq(null), eq("repo1"), any(), eq(null))).thenThrow(e);
+    assertThatThrownBy(() -> nexusService.getGroupIdPathsUsingPrivateApis(nexusConfig, null, "repo1", null))
+        .isInstanceOf(ArtifactServerException.class);
+
+    when(nexusThreeService.collectGroupIds(any(), eq(null), eq("repo2"), any(), eq(null)))
+        .thenThrow(new RuntimeException());
+    assertThatThrownBy(() -> nexusService.getGroupIdPathsUsingPrivateApis(nexusConfig, null, "repo2", null))
+        .isInstanceOf(ArtifactServerException.class);
+
+    e = new RuntimeException(new XMLStreamException());
+    when(nexusThreeService.collectGroupIds(any(), eq(null), eq("repo3"), any(), eq(null))).thenThrow(e);
+    assertThatThrownBy(() -> nexusService.getGroupIdPathsUsingPrivateApis(nexusConfig, null, "repo3", null))
+        .isInstanceOf(InvalidArtifactServerException.class);
+
+    e = new RuntimeException(new SocketTimeoutException());
+    when(nexusThreeService.collectGroupIds(any(), eq(null), eq("repo4"), any(), eq(null))).thenThrow(e);
+    assertThatThrownBy(() -> nexusService.getGroupIdPathsUsingPrivateApis(nexusConfig, null, "repo4", null))
+        .isInstanceOf(ArtifactServerException.class);
+  }
+
+  @Test
+  @Owner(developers = DEEPAK_PUTHRAYA)
+  @Category(UnitTests.class)
+  public void shouldReturnCorrectErrorMessagesForGetGroupIdPaths() throws Exception {
+    NexusTwoServiceImpl nexusTwoService = Mockito.mock(NexusTwoServiceImpl.class);
+    Reflect.on(nexusService).set("nexusTwoService", nexusTwoService);
+    TimeLimiter timeLimiter = new FakeTimeLimiter();
+    Reflect.on(nexusService).set("timeLimiter", timeLimiter);
+
+    RuntimeException e = new RuntimeException(new TimeoutException());
+    when(nexusTwoService.collectGroupIds(any(), eq(null), eq("repo1"), any(), eq(null))).thenThrow(e);
+    assertThatThrownBy(() -> nexusService.getGroupIdPaths(nexusConfig, null, "repo1", null))
+        .isInstanceOf(ArtifactServerException.class);
+
+    when(nexusTwoService.collectGroupIds(any(), eq(null), eq("repo2"), any(), eq(null)))
+        .thenThrow(new RuntimeException());
+    assertThatThrownBy(() -> nexusService.getGroupIdPaths(nexusConfig, null, "repo2", null))
+        .isInstanceOf(ArtifactServerException.class);
+
+    e = new RuntimeException(new XMLStreamException());
+    when(nexusTwoService.collectGroupIds(any(), eq(null), eq("repo3"), any(), eq(null))).thenThrow(e);
+    assertThatThrownBy(() -> nexusService.getGroupIdPaths(nexusConfig, null, "repo3", null))
+        .isInstanceOf(InvalidArtifactServerException.class);
+
+    e = new RuntimeException(new SocketTimeoutException());
+    when(nexusTwoService.collectGroupIds(any(), eq(null), eq("repo4"), any(), eq(null))).thenThrow(e);
+    assertThatThrownBy(() -> nexusService.getGroupIdPaths(nexusConfig, null, "repo4", null))
+        .isInstanceOf(ArtifactServerException.class);
+
+    assertThatThrownBy(() -> nexusService.getGroupIdPaths(nexusThreeConfig, null, "repo4", null))
+        .isInstanceOf(WingsException.class);
   }
 }

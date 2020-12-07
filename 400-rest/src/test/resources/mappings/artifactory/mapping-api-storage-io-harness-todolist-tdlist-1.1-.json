@@ -1,0 +1,13 @@
+{
+  "request": {
+    "method": "GET",
+    "url": "/artifactory/api/storage/harness-maven/tdlist/1.1"
+  },
+  "response": {
+    "status": 200,
+    "bodyFileName" : "/artifactory/body-storage-io-harness-todolist-version-api-tdlist-1.1.json",
+    "headers": {
+      "Content-Type": "application/json"
+    }
+  }
+}
