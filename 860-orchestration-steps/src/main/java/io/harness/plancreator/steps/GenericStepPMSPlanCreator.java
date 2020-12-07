@@ -12,6 +12,7 @@ import io.harness.pms.sdk.core.plan.creation.beans.PlanCreationContext;
 import io.harness.pms.sdk.core.plan.creation.beans.PlanCreationResponse;
 import io.harness.pms.sdk.core.plan.creation.creators.PartialPlanCreator;
 import io.harness.pms.yaml.YamlField;
+import io.harness.pms.yaml.YamlUtils;
 import io.harness.serializer.KryoSerializer;
 import io.harness.steps.StepOutcomeGroup;
 import io.harness.yaml.core.StepElement;
@@ -20,7 +21,7 @@ import com.google.inject.Inject;
 import com.google.protobuf.ByteString;
 import java.util.*;
 
-public abstract class GenericPMSPlanCreator implements PartialPlanCreator<StepElement> {
+public abstract class GenericStepPMSPlanCreator implements PartialPlanCreator<StepElement> {
   @Inject private KryoSerializer kryoSerializer;
 
   public abstract Set<String> getSupportedStepTypes();
@@ -70,6 +71,9 @@ public abstract class GenericPMSPlanCreator implements PartialPlanCreator<StepEl
   private List<AdviserObtainment> getAdviserObtainmentFromMetaData(YamlField currentField) {
     List<AdviserObtainment> adviserObtainments = new ArrayList<>();
     if (currentField != null && currentField.getNode() != null) {
+      if (checkIfParentIsParallel(currentField)) {
+        return adviserObtainments;
+      }
       YamlField siblingField = currentField.getNode().nextSiblingFromParentArray(
           currentField.getName(), Arrays.asList("step", "parallel", "stepGroup"));
       if (siblingField != null && siblingField.getNode().getUuid() != null) {
@@ -82,5 +86,9 @@ public abstract class GenericPMSPlanCreator implements PartialPlanCreator<StepEl
       }
     }
     return adviserObtainments;
+  }
+
+  private boolean checkIfParentIsParallel(YamlField currentField) {
+    return YamlUtils.getGivenYamlNodeFromParentPath(currentField.getNode(), "parallel") != null;
   }
 }

@@ -30,6 +30,13 @@ public class ExecutionPMSPlanCreator extends ChildrenPlanCreator<ExecutionElemen
       responseMap.put(
           stepYamlField.getNode().getUuid(), PlanCreationResponse.builder().dependencies(stepYamlFieldMap).build());
     }
+    YamlField rollbackStepsField = ctx.getCurrentField().getNode().getField("rollbackSteps");
+    if (rollbackStepsField != null) {
+      Map<String, YamlField> rollbackDependencyMap = new HashMap<>();
+      rollbackDependencyMap.put(rollbackStepsField.getNode().getUuid(), rollbackStepsField);
+      responseMap.put(rollbackStepsField.getNode().getUuid(),
+          PlanCreationResponse.builder().dependencies(rollbackDependencyMap).build());
+    }
     return responseMap;
   }
 
