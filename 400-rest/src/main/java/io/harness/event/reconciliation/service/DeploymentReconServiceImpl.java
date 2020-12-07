@@ -6,6 +6,7 @@ import static io.harness.persistence.HQuery.excludeAuthority;
 import static java.time.Duration.ofMinutes;
 
 import io.harness.beans.ExecutionStatus;
+import io.harness.beans.FeatureName;
 import io.harness.event.reconciliation.deployment.DeploymentReconRecord;
 import io.harness.event.reconciliation.deployment.DeploymentReconRecord.DeploymentReconRecordKeys;
 import io.harness.event.reconciliation.deployment.DetectionStatus;
@@ -13,6 +14,7 @@ import io.harness.event.reconciliation.deployment.ReconcilationAction;
 import io.harness.event.reconciliation.deployment.ReconciliationStatus;
 import io.harness.event.timeseries.processor.DeploymentEventProcessor;
 import io.harness.event.usagemetrics.UsageMetricsEventPublisher;
+import io.harness.ff.FeatureFlagService;
 import io.harness.lock.AcquiredLock;
 import io.harness.lock.PersistentLocker;
 import io.harness.persistence.HIterator;
@@ -56,6 +58,7 @@ public class DeploymentReconServiceImpl implements DeploymentReconService {
   @Inject private UsageMetricsEventPublisher usageMetricsEventPublisher;
   @Inject private DeploymentEventProcessor deploymentEventProcessor;
   @Inject private DataFetcherUtils utils;
+  @Inject private FeatureFlagService featureFlagService;
   protected static final long COOL_DOWN_INTERVAL = 15 * 60 * 1000; /* 15 MINS COOL DOWN INTERVAL */
 
   private static final String CHECK_MISSING_DATA_QUERY =
@@ -340,6 +343,36 @@ public class DeploymentReconServiceImpl implements DeploymentReconService {
   }
 
   protected long getWFExecCountFromMongoDB(String accountId, long durationStartTs, long durationEndTs) {
+    if (featureFlagService.isEnabled(FeatureName.ADDRESS_INEFFICIENT_QUERIES, accountId)) {
+      long finishedWFExecutionCount = wingsPersistence.createQuery(WorkflowExecution.class)
+                                          .field(WorkflowExecutionKeys.accountId)
+                                          .equal(accountId)
+                                          .field(WorkflowExecutionKeys.startTs)
+                                          .exists()
+                                          .field(WorkflowExecutionKeys.endTs)
+                                          .greaterThanOrEq(durationStartTs)
+                                          .field(WorkflowExecutionKeys.endTs)
+                                          .lessThanOrEq(durationEndTs)
+                                          .field(WorkflowExecutionKeys.pipelineExecutionId)
+                                          .doesNotExist()
+                                          .field(WorkflowExecutionKeys.status)
+                                          .in(ExecutionStatus.finalStatuses())
+                                          .count();
+
+      long runningWFExecutionCount = wingsPersistence.createQuery(WorkflowExecution.class)
+                                         .field(WorkflowExecutionKeys.accountId)
+                                         .equal(accountId)
+                                         .field(WorkflowExecutionKeys.startTs)
+                                         .greaterThanOrEq(durationStartTs)
+                                         .field(WorkflowExecutionKeys.startTs)
+                                         .lessThanOrEq(durationEndTs)
+                                         .field(WorkflowExecutionKeys.pipelineExecutionId)
+                                         .doesNotExist()
+                                         .field(WorkflowExecutionKeys.status)
+                                         .in(ExecutionStatus.persistedActiveStatuses())
+                                         .count();
+      return finishedWFExecutionCount + runningWFExecutionCount;
+    }
     Query<WorkflowExecution> query = wingsPersistence.createQuery(WorkflowExecution.class)
                                          .field(WorkflowExecutionKeys.accountId)
                                          .equal(accountId)
