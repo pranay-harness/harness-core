@@ -10,9 +10,11 @@ import lombok.Value;
 
 @Value
 class WorkloadState {
+  K8sWorkloadRecommendation recommendation;
   Map<String, ContainerState> containerStateMap;
 
   WorkloadState(K8sWorkloadRecommendation recommendation) {
+    this.recommendation = recommendation;
     this.containerStateMap =
         Optional.ofNullable(recommendation.getContainerCheckpoints())
             .orElseGet(HashMap::new)
