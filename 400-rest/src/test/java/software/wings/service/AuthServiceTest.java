@@ -3,6 +3,7 @@ package software.wings.service;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.rule.OwnerRule.ANUBHAW;
 import static io.harness.rule.OwnerRule.BRETT;
+import static io.harness.rule.OwnerRule.HINGER;
 import static io.harness.rule.OwnerRule.MARKO;
 import static io.harness.rule.OwnerRule.RAMA;
 import static io.harness.rule.OwnerRule.RUSHABH;
@@ -11,9 +12,11 @@ import static io.harness.rule.OwnerRule.VIKAS;
 
 import static software.wings.beans.Account.Builder.anAccount;
 import static software.wings.beans.Application.Builder.anApplication;
+import static software.wings.beans.CanaryOrchestrationWorkflow.CanaryOrchestrationWorkflowBuilder.aCanaryOrchestrationWorkflow;
 import static software.wings.beans.Environment.Builder.anEnvironment;
 import static software.wings.beans.Role.Builder.aRole;
 import static software.wings.beans.User.Builder.anUser;
+import static software.wings.beans.Workflow.WorkflowBuilder.aWorkflow;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 import static software.wings.utils.WingsTestConstants.APP_ID;
 import static software.wings.utils.WingsTestConstants.ENV_ID;
@@ -56,10 +59,12 @@ import software.wings.beans.Application;
 import software.wings.beans.AuthToken;
 import software.wings.beans.Environment;
 import software.wings.beans.Environment.EnvironmentType;
+import software.wings.beans.Pipeline;
 import software.wings.beans.Role;
 import software.wings.beans.RoleType;
 import software.wings.beans.User;
 import software.wings.beans.User.Builder;
+import software.wings.beans.Workflow;
 import software.wings.dl.GenericDbCache;
 import software.wings.security.AppPermissionSummary;
 import software.wings.security.PermissionAttribute;
@@ -716,5 +721,79 @@ public class AuthServiceTest extends WingsBaseTest {
         .appId("TestApp")
         .accounts(Arrays.asList(mockAccount))
         .build();
+  }
+
+  @Test
+  @Owner(developers = HINGER)
+  @Category(UnitTests.class)
+  public void denyWorkflowCreationWhenEnvironmentAccessNotPresent() {
+    Application application = anApplication().name("appName").uuid(generateUuid()).build();
+
+    // Workflow with a different envId than what is allowed
+    Workflow workflow = aWorkflow()
+                            .appId(application.getUuid())
+                            .envId(generateUuid())
+                            .uuid(generateUuid())
+                            .orchestrationWorkflow(aCanaryOrchestrationWorkflow().build())
+                            .build();
+
+    Set<String> workflowCreatePermissionsForEnvs = new HashSet<>();
+    workflowCreatePermissionsForEnvs.add(generateUuid());
+
+    AppPermissionSummary appPermissionSummary =
+        AppPermissionSummary.builder().workflowCreatePermissionsForEnvs(workflowCreatePermissionsForEnvs).build();
+
+    Map<String, AppPermissionSummary> appPermissionMapInternal = new HashMap<>();
+    appPermissionMapInternal.put(application.getUuid(), appPermissionSummary);
+
+    UserPermissionInfo userPermissionInfo =
+        UserPermissionInfo.builder().appPermissionMapInternal(appPermissionMapInternal).build();
+    UserRequestContext userRequestContext = UserRequestContext.builder().userPermissionInfo(userPermissionInfo).build();
+
+    User user = anUser().uuid(generateUuid()).name("user-name").userRequestContext(userRequestContext).build();
+    UserThreadLocal.set(user);
+
+    assertThatThrownBy(() -> authService.checkWorkflowPermissionsForEnv(application.getUuid(), workflow, Action.CREATE))
+        .isInstanceOf(WingsException.class)
+        .hasMessageContaining("ACCESS_DENIED");
+
+    UserThreadLocal.unset();
+  }
+
+  @Test
+  @Owner(developers = HINGER)
+  @Category(UnitTests.class)
+  public void createPipelineWhenEnvironmentAccessPresent() {
+    Application application = anApplication().name("appName").uuid(generateUuid()).build();
+
+    // empty pipeline should not throw error for invalid environment access
+    Pipeline pipeline = Pipeline.builder().build();
+
+    Set<String> pipelineCreatePermissionsForEnvs = new HashSet<>();
+    pipelineCreatePermissionsForEnvs.add(generateUuid());
+
+    AppPermissionSummary appPermissionSummary =
+        AppPermissionSummary.builder().pipelineCreatePermissionsForEnvs(pipelineCreatePermissionsForEnvs).build();
+
+    Map<String, AppPermissionSummary> appPermissionMapInternal = new HashMap<>();
+    appPermissionMapInternal.put(application.getUuid(), appPermissionSummary);
+
+    UserPermissionInfo userPermissionInfo =
+        UserPermissionInfo.builder().appPermissionMapInternal(appPermissionMapInternal).build();
+    UserRequestContext userRequestContext = UserRequestContext.builder().userPermissionInfo(userPermissionInfo).build();
+
+    User user = anUser().uuid(generateUuid()).name("user-name").userRequestContext(userRequestContext).build();
+
+    UserThreadLocal.set(user);
+    boolean exceptionThrown = false;
+    try {
+      authService.checkPipelinePermissionsForEnv(application.getUuid(), pipeline, Action.CREATE);
+    } catch (WingsException ex) {
+      exceptionThrown = true;
+    } finally {
+      UserThreadLocal.unset();
+    }
+    // no error since the environment is not required in the pipeline
+    assertThat(exceptionThrown).isFalse();
   }
 }
