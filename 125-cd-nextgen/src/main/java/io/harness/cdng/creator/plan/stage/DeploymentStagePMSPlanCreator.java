@@ -43,12 +43,12 @@ public class DeploymentStagePMSPlanCreator extends ChildrenPlanCreator<StageElem
     Map<String, YamlField> dependenciesNodeMap = new HashMap<>();
 
     // Adding service child
-    YamlNode serviceNode = ctx.getCurrentField().getNode().getField("spec").getNode().getField("service").getNode();
+    YamlField serviceField = ctx.getCurrentField().getNode().getField("spec").getNode().getField("service");
 
     PlanNode servicePlanNode = ServicePMSPlanCreator.createPlanForServiceNode(
-        serviceNode, ((DeploymentStageConfig) field.getStageType()).getService(), kryoSerializer);
-    planCreationResponseMap.put(
-        serviceNode.getUuid(), PlanCreationResponse.builder().node(serviceNode.getUuid(), servicePlanNode).build());
+        serviceField, ((DeploymentStageConfig) field.getStageType()).getService(), kryoSerializer);
+    planCreationResponseMap.put(serviceField.getNode().getUuid(),
+        PlanCreationResponse.builder().node(serviceField.getNode().getUuid(), servicePlanNode).build());
 
     // Adding infrastructure node
     String infraDefNodeUuid = ctx.getCurrentField()
@@ -58,15 +58,17 @@ public class DeploymentStagePMSPlanCreator extends ChildrenPlanCreator<StageElem
                                   .getField("infrastructureDefinition")
                                   .getNode()
                                   .getUuid();
-    YamlNode infraNode = ctx.getCurrentField().getNode().getField("infrastructure").getNode();
+    YamlField infraField = ctx.getCurrentField().getNode().getField("infrastructure");
+    YamlNode infraNode = infraField.getNode();
 
     PlanNode infraStepNode = InfrastructurePmsPlanCreator.getInfraStepPlanNode(
-        infraDefNodeUuid, ((DeploymentStageConfig) field.getStageType()).getInfrastructure());
+        infraDefNodeUuid, ((DeploymentStageConfig) field.getStageType()).getInfrastructure(), infraField);
     planCreationResponseMap.put(
         infraDefNodeUuid, PlanCreationResponse.builder().node(infraDefNodeUuid, infraStepNode).build());
 
-    PlanNode infraSectionPlanNode = InfrastructurePmsPlanCreator.getInfraSectionPlanNode(infraNode,
-        infraStepNode.getUuid(), ((DeploymentStageConfig) field.getStageType()).getInfrastructure(), kryoSerializer);
+    PlanNode infraSectionPlanNode =
+        InfrastructurePmsPlanCreator.getInfraSectionPlanNode(infraNode, infraStepNode.getUuid(),
+            ((DeploymentStageConfig) field.getStageType()).getInfrastructure(), kryoSerializer, infraField);
     planCreationResponseMap.put(
         infraNode.getUuid(), PlanCreationResponse.builder().node(infraNode.getUuid(), infraSectionPlanNode).build());
 
