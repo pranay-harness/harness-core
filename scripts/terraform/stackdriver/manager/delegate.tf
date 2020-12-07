@@ -236,8 +236,8 @@ resource "google_logging_metric" "delegate_tasks_assigning" {
   }
 }
 
-resource "google_logging_metric" "delegate_no_eligible" {
-  name = join("_", [local.name_prefix, "delegate_no_eligible"])
+resource "google_logging_metric" "delegate_no_eligible_by_account" {
+  name = join("_", [local.name_prefix, "delegate_no_eligible_by_account"])
   description = "Owner: Platform delegate"
   filter = join("\n", [local.filter_prefix,
     "\"delegates active but no delegates are eligible to execute task\""])
@@ -252,6 +252,31 @@ resource "google_logging_metric" "delegate_no_eligible" {
   }
   label_extractors = {
     "accountId": "EXTRACT(jsonPayload.harness.accountId)"
+  }
+}
+
+resource "google_logging_metric" "delegate_no_eligible_by_task" {
+  name = join("_", [local.name_prefix, "delegate_no_eligible_by_task"])
+  description = "Owner: Platform delegate"
+  filter = join("\n", [local.filter_prefix,
+    "\"delegates active but no delegates are eligible to execute task\""])
+  metric_descriptor {
+    metric_kind = "DELTA"
+    value_type = "INT64"
+    labels {
+      key = "taskType"
+      value_type = "STRING"
+      description = "The type of the task"
+    }
+    labels {
+      key = "taskGroup"
+      value_type = "STRING"
+      description = "The group of the task"
+    }
+  }
+  label_extractors = {
+    "taskType": "EXTRACT(jsonPayload.harness.taskType)",
+    "taskGroup": "EXTRACT(jsonPayload.harness.taskGroup)"
   }
 }
 
@@ -736,12 +761,50 @@ resource "google_monitoring_dashboard" "delegate_tasks_dashboard" {
             {
               "timeSeriesQuery": {
                 "timeSeriesFilter": {
-                  "filter": "metric.type=\"logging.googleapis.com/user/x_${var.deployment}_delegate_no_eligible\" resource.type=\"k8s_container\"",
+                  "filter": "metric.type=\"logging.googleapis.com/user/x_${var.deployment}_delegate_no_eligible_by_account\" resource.type=\"k8s_container\"",
                   "aggregation": {
                     "perSeriesAligner": "ALIGN_RATE",
                     "crossSeriesReducer": "REDUCE_SUM",
                     "groupByFields": [
                       "metric.label.\"accountId\""
+                    ]
+                  },
+                  "secondaryAggregation": {},
+                  "pickTimeSeriesFilter": {
+                    "rankingMethod": "METHOD_MAX",
+                    "numTimeSeries": 5,
+                    "direction": "TOP"
+                  }
+                },
+                "unitOverride": "1"
+              },
+              "plotType": "LINE",
+              "minAlignmentPeriod": "60s"
+            }
+          ],
+          "timeshiftDuration": "0s",
+          "yAxis": {
+            "label": "y1Axis",
+            "scale": "LINEAR"
+          },
+          "chartOptions": {
+            "mode": "COLOR"
+          }
+        }
+      },
+      {
+        "title": "No Eligible Delegates by Task",
+        "xyChart": {
+          "dataSets": [
+            {
+              "timeSeriesQuery": {
+                "timeSeriesFilter": {
+                  "filter": "metric.type=\"logging.googleapis.com/user/x_${var.deployment}_delegate_no_eligible_by_task\" resource.type=\"k8s_container\"",
+                  "aggregation": {
+                    "perSeriesAligner": "ALIGN_RATE",
+                    "crossSeriesReducer": "REDUCE_SUM",
+                    "groupByFields": [
+                      "metric.label.\"taskType\""
                     ]
                   },
                   "secondaryAggregation": {},
