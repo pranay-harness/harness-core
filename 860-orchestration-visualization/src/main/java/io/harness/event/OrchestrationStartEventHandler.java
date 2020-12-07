@@ -7,6 +7,8 @@ import io.harness.beans.OrchestrationGraph;
 import io.harness.beans.internal.OrchestrationAdjacencyListInternal;
 import io.harness.engine.executions.plan.PlanExecutionService;
 import io.harness.execution.PlanExecution;
+import io.harness.pms.ambiance.Ambiance;
+import io.harness.pms.execution.utils.AmbianceUtils;
 import io.harness.pms.sdk.core.events.OrchestrationEvent;
 import io.harness.pms.sdk.core.events.SyncOrchestrationEventHandler;
 import io.harness.service.GraphGenerationService;
@@ -26,26 +28,33 @@ public class OrchestrationStartEventHandler implements SyncOrchestrationEventHan
 
   @Override
   public void handleEvent(OrchestrationEvent event) {
-    PlanExecution planExecution = planExecutionService.get(event.getAmbiance().getPlanExecutionId());
+    Ambiance ambiance = event.getAmbiance();
+    try {
+      PlanExecution planExecution = planExecutionService.get(ambiance.getPlanExecutionId());
 
-    log.info("Starting Execution for planExecutionId [{}] with status [{}].", planExecution.getUuid(),
-        planExecution.getStatus());
+      log.info("Starting Execution for planExecutionId [{}] with status [{}].", planExecution.getUuid(),
+          planExecution.getStatus());
 
-    OrchestrationGraph graphInternal = OrchestrationGraph.builder()
-                                           .cacheKey(planExecution.getUuid())
-                                           .cacheParams(null)
-                                           .cacheContextOrder(System.currentTimeMillis())
-                                           .adjacencyList(OrchestrationAdjacencyListInternal.builder()
-                                                              .graphVertexMap(new HashMap<>())
-                                                              .adjacencyMap(new HashMap<>())
-                                                              .build())
-                                           .planExecutionId(planExecution.getUuid())
-                                           .rootNodeIds(new ArrayList<>())
-                                           .startTs(planExecution.getStartTs())
-                                           .endTs(planExecution.getEndTs())
-                                           .status(planExecution.getStatus())
-                                           .build();
+      OrchestrationGraph graphInternal = OrchestrationGraph.builder()
+                                             .cacheKey(planExecution.getUuid())
+                                             .cacheParams(null)
+                                             .cacheContextOrder(System.currentTimeMillis())
+                                             .adjacencyList(OrchestrationAdjacencyListInternal.builder()
+                                                                .graphVertexMap(new HashMap<>())
+                                                                .adjacencyMap(new HashMap<>())
+                                                                .build())
+                                             .planExecutionId(planExecution.getUuid())
+                                             .rootNodeIds(new ArrayList<>())
+                                             .startTs(planExecution.getStartTs())
+                                             .endTs(planExecution.getEndTs())
+                                             .status(planExecution.getStatus())
+                                             .build();
 
-    graphGenerationService.cacheOrchestrationGraph(graphInternal);
+      graphGenerationService.cacheOrchestrationGraph(graphInternal);
+    } catch (Exception e) {
+      log.error("[{}] event failed for [{}] for plan [{}]", event.getEventType(),
+          AmbianceUtils.obtainCurrentRuntimeId(ambiance), ambiance.getPlanExecutionId(), e);
+      throw e;
+    }
   }
 }

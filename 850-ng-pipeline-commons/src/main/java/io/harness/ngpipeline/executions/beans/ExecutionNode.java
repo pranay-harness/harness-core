@@ -20,6 +20,6 @@ public class ExecutionNode {
   String stepType;
   ExecutionStatus status;
   FailureInfo failureInfo;
-  List<Metadata> executableResponsesMetadata;
+  List<Map<String, Object>> executableResponsesMetadata;
   Map<String, List<ProgressData>> taskIdToProgressDataMap;
 }

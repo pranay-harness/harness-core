@@ -8,7 +8,6 @@ import io.harness.pms.ambiance.Ambiance;
 import io.harness.pms.execution.ExecutionMode;
 import io.harness.pms.execution.Status;
 import io.harness.pms.execution.failure.FailureInfo;
-import io.harness.pms.sdk.core.data.Metadata;
 import io.harness.pms.sdk.core.data.Outcome;
 import io.harness.pms.steps.SkipType;
 import io.harness.tasks.ProgressData;
@@ -45,7 +44,7 @@ public class GraphVertex implements Serializable {
   private Map<String, Object> stepParameters;
   private ExecutionMode mode;
 
-  private List<Metadata> executableResponsesMetadata;
+  private List<Map<String, Object>> executableResponsesMetadata;
   private List<InterruptEffect> interruptHistories;
   private List<Outcome> outcomes;
   private List<String> retryIds;

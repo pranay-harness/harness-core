@@ -109,8 +109,6 @@ public class TaskChainStrategy implements TaskExecuteStrategy {
           -> ops.addToSet(NodeExecutionKeys.executableResponses,
               ExecutableResponse.newBuilder()
                   .setTaskChain(TaskChainExecutableResponse.newBuilder()
-                                    .setTaskId(null)
-                                    .setTaskMode(null)
                                     .setChainEnd(true)
                                     .setPassThroughData(ByteString.copyFrom(
                                         kryoSerializer.asBytes(taskChainResponse.getPassThroughData())))
