@@ -79,6 +79,7 @@ public class GraphVertexConverter {
         .stream()
         .filter(response -> EmptyPredicate.isNotEmpty(response.getMetadata()))
         .map(meta -> JsonUtils.asMap(meta.getMetadata()))
+        .filter(EmptyPredicate::isNotEmpty)
         .collect(Collectors.toList());
   }
 }

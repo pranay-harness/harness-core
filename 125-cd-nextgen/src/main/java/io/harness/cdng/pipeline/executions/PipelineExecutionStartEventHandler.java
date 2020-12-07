@@ -7,8 +7,8 @@ import io.harness.execution.PlanExecution;
 import io.harness.ngpipeline.common.AmbianceHelper;
 import io.harness.pms.ambiance.Ambiance;
 import io.harness.pms.plan.PlanNodeProto;
-import io.harness.pms.sdk.core.events.AsyncOrchestrationEventHandler;
 import io.harness.pms.sdk.core.events.OrchestrationEvent;
+import io.harness.pms.sdk.core.events.SyncOrchestrationEventHandler;
 import io.harness.pms.serializer.json.JsonOrchestrationUtils;
 import io.harness.steps.StepOutcomeGroup;
 
@@ -17,7 +17,7 @@ import java.util.Objects;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class PipelineExecutionStartEventHandler implements AsyncOrchestrationEventHandler {
+public class PipelineExecutionStartEventHandler implements SyncOrchestrationEventHandler {
   @Inject private NgPipelineExecutionService ngPipelineExecutionService;
   @Inject private PlanExecutionService planExecutionService;
 
