@@ -14,10 +14,12 @@ import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.verify;
 
+import io.harness.beans.SecretManagerConfig;
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
 
 import software.wings.beans.Application;
+import software.wings.beans.KmsConfig;
 import software.wings.beans.NameValuePair;
 import software.wings.beans.Service;
 import software.wings.beans.ServiceVariable.Type;
@@ -33,6 +35,7 @@ import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.InfrastructureProvisionerService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.SettingsService;
+import software.wings.service.intfc.security.SecretManager;
 import software.wings.utils.WingsTestConstants;
 import software.wings.yaml.handler.YamlHandlerTestBase;
 
@@ -53,6 +56,7 @@ public class TerraformInfrastructureProvisionerYamlHandlerTest extends YamlHandl
   @Mock private SettingsService mockSettingsService;
   @Mock private AppService appService;
   @Mock private HarnessTagYamlHelper harnessTagYamlHelper;
+  @Mock private SecretManager secretManager;
 
   @InjectMocks @Inject private TerraformInfrastructureProvisionerYamlHandler handler;
   private String validYamlFilePath = "Setup/Applications/APP_NAME/Infrastructure Provisioners/TF_Name.yaml";
@@ -64,6 +68,7 @@ public class TerraformInfrastructureProvisionerYamlHandlerTest extends YamlHandl
       + "- name: secret_key\n"
       + "  valueType: ENCRYPTED_TEXT\n"
       + "repoName: REPO_NAME\n"
+      + "secretMangerName: SECRET_MANAGER\n"
       + "skipRefreshBeforeApplyingPlan: true\n"
       + "sourceRepoBranch: master\n"
       + "sourceRepoSettingName: TERRAFORM_TEST_GIT_REPO\n"
@@ -87,9 +92,12 @@ public class TerraformInfrastructureProvisionerYamlHandlerTest extends YamlHandl
     doReturn(service).when(mockServiceResourceService).getServiceByName(anyString(), anyString());
     SettingAttribute settingAttribute =
         SettingAttribute.Builder.aSettingAttribute().withUuid(SETTING_ID).withName("TERRAFORM_TEST_GIT_REPO").build();
+    SecretManagerConfig secretManagerConfig = KmsConfig.builder().uuid("KMSID").name("SECRET_MANAGER").build();
     doReturn(settingAttribute).when(mockSettingsService).getSettingAttributeByName(anyString(), anyString());
     doReturn(settingAttribute).when(mockSettingsService).get(anyString(), anyString());
     doReturn(Application.Builder.anApplication().uuid(APP_ID).build()).when(appService).get(any());
+    doReturn(secretManagerConfig).when(secretManager).getSecretManager(anyString(), anyString());
+    doReturn(secretManagerConfig).when(secretManager).getSecretManagerByName(any(), any());
     handler.upsertFromYaml(changeContext, asList(changeContext));
     ArgumentCaptor<TerraformInfrastructureProvisioner> captor =
         ArgumentCaptor.forClass(TerraformInfrastructureProvisioner.class);
@@ -100,6 +108,7 @@ public class TerraformInfrastructureProvisionerYamlHandlerTest extends YamlHandl
     assertThat(APP_ID).isEqualTo(provisionerSaved.getAppId());
     assertThat(SETTING_ID).isEqualTo(provisionerSaved.getSourceRepoSettingId());
     assertThat(provisionerSaved.getRepoName()).isEqualTo("REPO_NAME");
+    assertThat(provisionerSaved.getKmsId()).isEqualTo("KMSID");
 
     Yaml yamlFromObject = handler.toYaml(provisionerSaved, WingsTestConstants.APP_ID);
     String yamlContent = getYamlContent(yamlFromObject);
@@ -118,6 +127,7 @@ public class TerraformInfrastructureProvisionerYamlHandlerTest extends YamlHandl
                                                          .repoName("REPO_NAME")
                                                          .variables(variables)
                                                          .backendConfigs(variables)
+                                                         .kmsId("KMSID")
                                                          .skipRefreshBeforeApplyingPlan(true)
                                                          .build();
     TerraformInfrastructureProvisioner.Yaml yaml1 = handler.toYaml(provisioner, APP_ID);
@@ -132,7 +142,7 @@ public class TerraformInfrastructureProvisionerYamlHandlerTest extends YamlHandl
     assertThat("secret_key").isEqualTo(yaml1.getBackendConfigs().get(1).getName());
     assertThat(yaml1.getVariables().size()).isEqualTo(2);
     assertThat(yaml1.getBackendConfigs().size()).isEqualTo(2);
-
+    assertThat("SECRET_MANAGER").isEqualTo(yaml1.getSecretMangerName());
     handler.upsertFromYaml(changeContext, null);
     TerraformInfrastructureProvisioner provisioner1 = captor.getValue();
     assertThat(provisioner).isEqualToIgnoringGivenFields(provisioner1, "uuid", "name", "description");

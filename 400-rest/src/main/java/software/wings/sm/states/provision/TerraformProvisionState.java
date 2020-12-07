@@ -50,7 +50,7 @@ import io.harness.beans.DelegateTask;
 import io.harness.beans.ExecutionStatus;
 import io.harness.beans.FeatureName;
 import io.harness.beans.FileMetadata;
-import io.harness.beans.SecretFile;
+import io.harness.beans.SecretManagerConfig;
 import io.harness.beans.SweepingOutputInstance;
 import io.harness.beans.TriggeredBy;
 import io.harness.context.ContextElementType;
@@ -62,6 +62,7 @@ import io.harness.ff.FeatureFlagService;
 import io.harness.provision.TfVarScriptRepositorySource;
 import io.harness.provision.TfVarSource;
 import io.harness.provision.TfVarSource.TfVarSourceType;
+import io.harness.secretmanagers.SecretManagerConfigService;
 import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.serializer.JsonUtils;
 import io.harness.tasks.Cd1SetupFields;
@@ -148,6 +149,7 @@ public abstract class TerraformProvisionState extends State {
   @Inject private transient SettingsService settingsService;
   @Inject private transient InfrastructureMappingService infrastructureMappingService;
   @Inject private transient GitUtilsManager gitUtilsManager;
+  @Inject private SecretManagerConfigService secretManagerConfigService;
   @Inject private transient GitFileConfigHelperService gitFileConfigHelperService;
 
   @Inject private transient ServiceVariableService serviceVariableService;
@@ -161,7 +163,7 @@ public abstract class TerraformProvisionState extends State {
   @Inject private transient LogService logService;
   @Inject protected FeatureFlagService featureFlagService;
   @Inject protected SweepingOutputService sweepingOutputService;
-
+  @Inject protected TerraformPlanHelper terraformPlanHelper;
   @Inject protected transient MainConfiguration configuration;
 
   @Attributes(title = "Provisioner") @Getter @Setter String provisionerId;
@@ -240,9 +242,10 @@ public abstract class TerraformProvisionState extends State {
     terraformExecutionData.setActivityId(activityId);
     TerraformInfrastructureProvisioner terraformProvisioner = getTerraformInfrastructureProvisioner(context);
     updateActivityStatus(activityId, context.getAppId(), terraformExecutionData.getExecutionStatus());
-
     if (exportPlanToApplyStep || (runPlanOnly && TerraformCommand.DESTROY == command())) {
-      saveTerraformPlanToSecretManager(terraformExecutionData.getTfPlanFile(), context);
+      String planName = getPlanName(context);
+      terraformPlanHelper.saveEncryptedTfPlanToSweepingOutput(
+          terraformExecutionData.getEncryptedTfPlan(), context, planName);
       fileService.updateParentEntityIdAndVersion(PhaseStep.class, terraformExecutionData.getEntityId(), null,
           terraformExecutionData.getStateFileId(), null, FileBucket.TERRAFORM_STATE);
     }
@@ -262,6 +265,7 @@ public abstract class TerraformProvisionState extends State {
             .backendConfigs(terraformExecutionData.getBackendConfigs())
             .environmentVariables(terraformExecutionData.getEnvironmentVariables())
             .workspace(terraformExecutionData.getWorkspace())
+            .encryptedTfPlan(terraformExecutionData.getEncryptedTfPlan())
             .build();
 
     return ExecutionResponse.builder()
@@ -293,70 +297,9 @@ public abstract class TerraformProvisionState extends State {
     }
   }
 
-  private void saveTerraformPlanToSecretManager(byte[] terraformPlan, ExecutionContext context) {
-    // if the plan exists in the secret manager, we need to overwrite it
-    byte[] oldTerraformPLan = getTerraformPlanFromSecretManager(context);
-    if (oldTerraformPLan != null) {
-      deleteTerraformPlanFromSecretManager(context);
-    }
-
-    String planName = getPlanName(context);
-
-    SecretFile secretFile = SecretFile.builder()
-                                .fileContent(terraformPlan)
-                                .name(planName)
-                                .hideFromListing(true)
-                                .kmsId(null)
-                                .scopedToAccount(true)
-                                .usageRestrictions(null)
-                                .runtimeParameters(new HashMap<>())
-                                .build();
-    String terraformPlanSecretManagerId = secretManager.saveSecretFile(context.getAccountId(), secretFile);
-
-    sweepingOutputService.save(
-        context.prepareSweepingOutputBuilder(SweepingOutputInstance.Scope.WORKFLOW)
-            .name(planName)
-            .value(TerraformPlanParam.builder().terraformPlanSecretManagerId(terraformPlanSecretManagerId).build())
-            .build());
-  }
-
-  @VisibleForTesting
-  byte[] getTerraformPlanFromSecretManager(ExecutionContext context) {
-    String planName = getPlanName(context);
-    SweepingOutputInstance sweepingOutputInstance =
-        sweepingOutputService.find(context.prepareSweepingOutputInquiryBuilder().name(planName).build());
-
-    // if the reference to the plan file exists, use that plan in the apply step
-    if (sweepingOutputInstance != null) {
-      String terraformPlanSecretManagerId =
-          ((TerraformPlanParam) sweepingOutputInstance.getValue()).getTerraformPlanSecretManagerId();
-      return secretManager.getFileContents(context.getAccountId(), terraformPlanSecretManagerId);
-    }
-    return null;
-  }
-
   private String getPlanName(ExecutionContext context) {
     String planPrefix = TerraformCommand.DESTROY == command() ? TF_DESTROY_NAME_PREFIX : TF_NAME_PREFIX;
     return String.format(planPrefix, context.getWorkflowExecutionId());
-  }
-
-  @VisibleForTesting
-  void deleteTerraformPlanFromSecretManager(ExecutionContext context) {
-    String planName = getPlanName(context);
-    SweepingOutputInstance sweepingOutputInstance =
-        sweepingOutputService.find(context.prepareSweepingOutputInquiryBuilder().name(planName).build());
-
-    if (sweepingOutputInstance == null) {
-      // we didn't find the plan reference in the sweeping output, there's nothing to delete
-      return;
-    }
-
-    String terraformPlanSecretManagerId =
-        ((TerraformPlanParam) sweepingOutputInstance.getValue()).getTerraformPlanSecretManagerId();
-    secretManager.deleteSecret(context.getAccountId(), terraformPlanSecretManagerId, new HashMap<>(), false);
-
-    // delete the plan reference from sweeping output
-    sweepingOutputService.deleteById(context.getAppId(), sweepingOutputInstance.getUuid());
   }
 
   protected String getMarkerName() {
@@ -386,8 +329,8 @@ public abstract class TerraformProvisionState extends State {
     terraformExecutionData.setActivityId(activityId);
 
     // delete the plan if it exists
-    deleteTerraformPlanFromSecretManager(context);
-
+    String planName = getPlanName(context);
+    terraformPlanHelper.deleteEncryptedTfPlanFromSweepingOutput(context, planName);
     TerraformInfrastructureProvisioner terraformProvisioner = getTerraformInfrastructureProvisioner(context);
     if (!(this instanceof DestroyTerraformProvisionState)) {
       markApplyExecutionCompleted(context);
@@ -614,6 +557,10 @@ public abstract class TerraformProvisionState extends State {
     gitConfigHelperService.convertToRepoGitConfig(
         gitConfig, context.renderExpression(terraformProvisioner.getRepoName()));
 
+    SecretManagerConfig secretManagerConfig = isEmpty(terraformProvisioner.getKmsId())
+        ? secretManagerConfigService.getDefaultSecretManager(context.getAccountId())
+        : secretManagerConfigService.getSecretManager(context.getAccountId(), terraformProvisioner.getKmsId(), false);
+
     ExecutionContextImpl executionContext = (ExecutionContextImpl) context;
     TerraformProvisionParameters parameters =
         TerraformProvisionParameters.builder()
@@ -642,12 +589,13 @@ public abstract class TerraformProvisionState extends State {
             .tfVarSource(element.getTfVarSource())
             .runPlanOnly(false)
             .exportPlanToApplyStep(false)
-            .terraformPlan(getTerraformPlanFromSecretManager(context))
             .workspace(workspace)
             .delegateTag(element.getDelegateTag())
             .skipRefreshBeforeApplyingPlan(terraformProvisioner.isSkipRefreshBeforeApplyingPlan())
+            .encryptedTfPlan(element.getEncryptedTfPlan())
+            .secretManagerConfig(secretManagerConfig)
+            .planName(getPlanName(context))
             .build();
-
     return createAndRunTask(activityId, executionContext, parameters, element.getDelegateTag());
   }
 
@@ -698,6 +646,11 @@ public abstract class TerraformProvisionState extends State {
   private ExecutionResponse executeInternalRegular(ExecutionContext context, String activityId) {
     TerraformInfrastructureProvisioner terraformProvisioner = getTerraformInfrastructureProvisioner(context);
     GitConfig gitConfig = gitUtilsManager.getGitConfig(terraformProvisioner.getSourceRepoSettingId());
+
+    SecretManagerConfig secretManagerConfig = isEmpty(terraformProvisioner.getKmsId())
+        ? secretManagerConfigService.getDefaultSecretManager(context.getAccountId())
+        : secretManagerConfigService.getSecretManager(context.getAccountId(), terraformProvisioner.getKmsId(), false);
+
     String branch = context.renderExpression(terraformProvisioner.getSourceRepoBranch());
     if (isNotEmpty(branch)) {
       gitConfig.setBranch(branch);
@@ -848,12 +801,14 @@ public abstract class TerraformProvisionState extends State {
             .runPlanOnly(runPlanOnly)
             .exportPlanToApplyStep(exportPlanToApplyStep)
             .saveTerraformJson(featureFlagService.isEnabled(FeatureName.EXPORT_TF_PLAN, context.getAccountId()))
-            .terraformPlan(null)
             .tfVarFiles(getRenderedTfVarFiles(tfVarFiles, context))
             .workspace(workspace)
             .delegateTag(delegateTag)
             .tfVarSource(tfVarSource)
             .skipRefreshBeforeApplyingPlan(terraformProvisioner.isSkipRefreshBeforeApplyingPlan())
+            .secretManagerConfig(secretManagerConfig)
+            .encryptedTfPlan(null)
+            .planName(getPlanName(context))
             .build();
 
     return createAndRunTask(activityId, executionContext, parameters, delegateTag);

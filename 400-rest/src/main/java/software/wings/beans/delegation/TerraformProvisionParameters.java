@@ -2,6 +2,7 @@ package software.wings.beans.delegation;
 
 import static io.harness.expression.Expression.ALLOW_SECRETS;
 
+import io.harness.beans.SecretManagerConfig;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.delegate.beans.executioncapability.ExecutionCapabilityDemander;
 import io.harness.delegate.task.ActivityAccess;
@@ -10,6 +11,7 @@ import io.harness.expression.Expression;
 import io.harness.expression.ExpressionEvaluator;
 import io.harness.provision.TfVarSource;
 import io.harness.security.encryption.EncryptedDataDetail;
+import io.harness.security.encryption.EncryptedRecordData;
 
 import software.wings.beans.GitConfig;
 import software.wings.beans.NameValuePair;
@@ -70,8 +72,10 @@ public class TerraformProvisionParameters implements TaskParameters, ActivityAcc
   private final String workspace;
   private final String delegateTag;
 
-  private final byte[] terraformPlan;
   private final boolean saveTerraformJson;
+  private final SecretManagerConfig secretManagerConfig;
+  private final EncryptedRecordData encryptedTfPlan;
+  private final String planName;
 
   private final TfVarSource tfVarSource;
   /**
@@ -90,6 +94,9 @@ public class TerraformProvisionParameters implements TaskParameters, ActivityAcc
                            .settingAttribute(sourceRepo.getSshSettingAttribute())
                            .encryptedDataDetails(sourceRepoEncryptionDetails)
                            .build());
+    }
+    if (secretManagerConfig != null) {
+      capabilities.addAll(CapabilityHelper.fetchExecutionCapabilityForSecretManager(secretManagerConfig, null));
     }
     return capabilities;
   }

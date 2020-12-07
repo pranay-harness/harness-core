@@ -2,6 +2,7 @@ package software.wings.api.terraform;
 
 import io.harness.context.ContextElementType;
 import io.harness.provision.TfVarSource;
+import io.harness.security.encryption.EncryptedRecordData;
 
 import software.wings.beans.NameValuePair;
 import software.wings.sm.ContextElement;
@@ -29,6 +30,7 @@ public class TerraformProvisionInheritPlanElement implements ContextElement {
   private List<NameValuePair> environmentVariables;
   private String workspace;
   private String delegateTag;
+  private EncryptedRecordData encryptedTfPlan;
 
   @Override
   public ContextElementType getElementType() {

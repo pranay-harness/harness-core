@@ -40,6 +40,8 @@ public interface SecretManager extends OwnedByAccount {
 
   SecretManagerConfig getSecretManager(String accountId, String kmsId);
 
+  SecretManagerConfig getSecretManagerByName(String accountId, String name);
+
   SecretManagerConfig getSecretManager(String accountId, String entityId, EncryptionType encryptionType);
 
   void updateUsageRestrictionsForSecretManagerConfig(

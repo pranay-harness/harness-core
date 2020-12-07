@@ -238,6 +238,11 @@ public class SecretManagerConfigServiceImpl implements SecretManagerConfigServic
     return secretManagerConfig;
   }
 
+  @Override
+  public SecretManagerConfig getSecretManagerByName(String accountId, String name) {
+    return getSecretManagerInternalByName(accountId, name);
+  }
+
   private SecretManagerConfig getSecretManagerInternal(String accountId, String entityId) {
     if (entityId.equals(accountId)) {
       return localSecretManagerService.getEncryptionConfig(accountId);
@@ -265,6 +270,21 @@ public class SecretManagerConfigServiceImpl implements SecretManagerConfigServic
           .enableValidation()
           .field(SecretManagerConfigKeys.encryptionType)
           .equal(encryptionType)
+          .get();
+    }
+  }
+
+  private SecretManagerConfig getSecretManagerInternalByName(String accountId, String secretMangerName) {
+    if (secretMangerName.equals(HARNESS_DEFAULT_SECRET_MANAGER)) {
+      return localSecretManagerService.getEncryptionConfig(accountId);
+    } else {
+      return wingsPersistence.createQuery(SecretManagerConfig.class)
+          .field(SecretManagerConfigKeys.accountId)
+          .in(Arrays.asList(accountId, GLOBAL_ACCOUNT_ID))
+          .disableValidation()
+          .field(SecretManagerConfigKeys.name)
+          .equal(secretMangerName)
+          .enableValidation()
           .get();
     }
   }

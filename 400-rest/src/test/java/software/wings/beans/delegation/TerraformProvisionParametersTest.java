@@ -10,6 +10,7 @@ import io.harness.rule.OwnerRule;
 
 import software.wings.WingsBaseTest;
 import software.wings.beans.GitConfig;
+import software.wings.beans.KmsConfig;
 
 import java.util.stream.Collectors;
 import org.junit.Test;
@@ -22,6 +23,7 @@ public class TerraformProvisionParametersTest extends WingsBaseTest {
   public void fetchRequiredExecutionCapabilities() {
     testWithGitConfig();
     testWithoutGitConfig();
+    testWithSecretManagerConfig();
   }
 
   private void testWithoutGitConfig() {
@@ -42,5 +44,17 @@ public class TerraformProvisionParametersTest extends WingsBaseTest {
                    .map(ExecutionCapability::getCapabilityType)
                    .collect(Collectors.toList()))
         .containsExactlyInAnyOrder(CapabilityType.GIT_CONNECTION, CapabilityType.PROCESS_EXECUTOR);
+  }
+
+  private void testWithSecretManagerConfig() {
+    TerraformProvisionParameters parameters = TerraformProvisionParameters.builder()
+                                                  .sourceRepo(GitConfig.builder().build())
+                                                  .secretManagerConfig(KmsConfig.builder().build())
+                                                  .build();
+    assertThat(parameters.fetchRequiredExecutionCapabilities(null)
+                   .stream()
+                   .map(ExecutionCapability::getCapabilityType)
+                   .collect(Collectors.toList()))
+        .containsExactlyInAnyOrder(CapabilityType.GIT_CONNECTION, CapabilityType.PROCESS_EXECUTOR, CapabilityType.HTTP);
   }
 }
