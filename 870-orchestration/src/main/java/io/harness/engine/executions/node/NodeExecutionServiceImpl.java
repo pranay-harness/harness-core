@@ -13,10 +13,12 @@ import io.harness.engine.events.OrchestrationEventEmitter;
 import io.harness.exception.InvalidRequestException;
 import io.harness.execution.NodeExecution;
 import io.harness.execution.NodeExecution.NodeExecutionKeys;
+import io.harness.execution.NodeExecutionMapper;
 import io.harness.interrupts.ExecutionInterruptType;
 import io.harness.interrupts.InterruptEffect;
 import io.harness.pms.ambiance.Ambiance;
 import io.harness.pms.contracts.execution.events.OrchestrationEventType;
+import io.harness.pms.execution.NodeExecutionProto;
 import io.harness.pms.execution.Status;
 import io.harness.pms.execution.utils.StatusUtils;
 import io.harness.pms.sdk.core.events.OrchestrationEvent;
@@ -24,6 +26,7 @@ import io.harness.pms.sdk.core.steps.Step;
 import io.harness.pms.sdk.core.steps.io.StepParameters;
 import io.harness.pms.sdk.registries.StepRegistry;
 import io.harness.pms.serializer.json.JsonOrchestrationUtils;
+import io.harness.pms.steps.StepType;
 
 import com.google.inject.Inject;
 import com.mongodb.client.result.UpdateResult;
@@ -155,6 +158,11 @@ public class NodeExecutionServiceImpl implements NodeExecutionService {
     return nodeExecution.getVersion() == null ? mongoTemplate.insert(nodeExecution) : mongoTemplate.save(nodeExecution);
   }
 
+  @Override
+  public NodeExecution save(NodeExecutionProto nodeExecution) {
+    return save(NodeExecutionMapper.fromNodeExecutionProto(nodeExecution));
+  }
+
   /**
    * Always use this method while updating statuses. This guarantees we a hopping from correct statuses.
    * As we don't have transactions it is possible that you node execution state is manipulated by some other thread and
@@ -244,24 +252,35 @@ public class NodeExecutionServiceImpl implements NodeExecutionService {
   }
 
   @Override
+  public StepParameters extractStepParameters(NodeExecutionProto nodeExecution) {
+    return extractStepParametersInternal(
+        nodeExecution.getNode().getStepType(), nodeExecution.getNode().getStepParameters());
+  }
+
+  @Override
+  public StepParameters extractResolvedStepParameters(NodeExecutionProto nodeExecution) {
+    return extractStepParametersInternal(
+        nodeExecution.getNode().getStepType(), nodeExecution.getResolvedStepParameters());
+  }
+
+  @Override
   public StepParameters extractStepParameters(NodeExecution nodeExecution) {
-    Document document = isEmpty(nodeExecution.getNode().getStepParameters())
-        ? null
-        : Document.parse(nodeExecution.getNode().getStepParameters());
-    return extractStepParametersInternal(nodeExecution, document);
+    return extractStepParametersInternal(
+        nodeExecution.getNode().getStepType(), nodeExecution.getNode().getStepParameters());
   }
 
   @Override
   public StepParameters extractResolvedStepParameters(NodeExecution nodeExecution) {
-    return extractStepParametersInternal(nodeExecution, nodeExecution.getResolvedStepParameters());
+    return extractStepParametersInternal(nodeExecution.getNode().getStepType(),
+        nodeExecution.getResolvedStepParameters() == null ? null : nodeExecution.getResolvedStepParameters().toJson());
   }
 
-  private StepParameters extractStepParametersInternal(NodeExecution nodeExecution, Document stepParameters) {
-    Step step = stepRegistry.obtain(nodeExecution.getNode().getStepType());
-    if (stepParameters == null) {
+  private StepParameters extractStepParametersInternal(StepType stepType, String stepParameters) {
+    Step<?> step = stepRegistry.obtain(stepType);
+    if (isEmpty(stepParameters)) {
       return null;
     }
-    return (StepParameters) JsonOrchestrationUtils.asObject(stepParameters.toJson(), step.getStepParametersClass());
+    return JsonOrchestrationUtils.asObject(stepParameters, step.getStepParametersClass());
   }
 
   private void emitEvent(Ambiance ambiance) {

@@ -15,17 +15,17 @@ import "io/harness/pms/execution/failure/failure_info.proto";
 import "io/harness/pms/execution/status.proto";
 import "io/harness/pms/data/step_outcome_ref.proto";
 
-message NodeExecution {
+message NodeExecutionProto {
   string uuid = 1;
   io.harness.pms.ambiance.Ambiance ambiance = 2;
-  io.harness.pms.plan.PlanNodeProto planNode = 3;
+  io.harness.pms.plan.PlanNodeProto node = 3;
   ExecutionMode mode = 4;
 
   google.protobuf.Timestamp startTs = 5;
   google.protobuf.Timestamp endTs = 6;
   google.protobuf.Duration initialWaitDuration = 7;
 
-  bytes resolvedStepParameters = 8;
+  string resolvedStepParameters = 8;
 
   string notifyId = 9;
 

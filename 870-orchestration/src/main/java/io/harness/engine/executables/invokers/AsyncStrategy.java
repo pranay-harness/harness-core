@@ -13,11 +13,11 @@ import io.harness.engine.executables.ResumePackage;
 import io.harness.engine.executions.node.NodeExecutionService;
 import io.harness.engine.resume.EngineResumeCallback;
 import io.harness.exception.InvalidRequestException;
-import io.harness.execution.NodeExecution;
 import io.harness.execution.NodeExecution.NodeExecutionKeys;
 import io.harness.pms.ambiance.Ambiance;
 import io.harness.pms.execution.AsyncExecutableResponse;
 import io.harness.pms.execution.ExecutableResponse;
+import io.harness.pms.execution.NodeExecutionProto;
 import io.harness.pms.execution.Status;
 import io.harness.pms.execution.utils.AmbianceUtils;
 import io.harness.pms.plan.PlanNodeProto;
@@ -45,17 +45,17 @@ public class AsyncStrategy implements ExecuteStrategy {
 
   @Override
   public void start(InvokerPackage invokerPackage) {
-    NodeExecution nodeExecution = invokerPackage.getNodeExecution();
+    NodeExecutionProto nodeExecution = invokerPackage.getNodeExecution();
     Ambiance ambiance = nodeExecution.getAmbiance();
-    AsyncExecutable asyncExecutable = extractAsyncExecutable(invokerPackage.getNodeExecution());
+    AsyncExecutable asyncExecutable = extractAsyncExecutable(nodeExecution);
     AsyncExecutableResponse asyncExecutableResponse = asyncExecutable.executeAsync(
         ambiance, nodeExecutionService.extractResolvedStepParameters(nodeExecution), invokerPackage.getInputPackage());
-    handleResponse(ambiance, asyncExecutableResponse);
+    handleResponse(ambiance, nodeExecution, asyncExecutableResponse);
   }
 
   @Override
   public void resume(ResumePackage resumePackage) {
-    NodeExecution nodeExecution = resumePackage.getNodeExecution();
+    NodeExecutionProto nodeExecution = resumePackage.getNodeExecution();
     Ambiance ambiance = nodeExecution.getAmbiance();
     AsyncExecutable asyncExecutable = extractAsyncExecutable(nodeExecution);
     StepResponse stepResponse = asyncExecutable.handleAsyncResponse(ambiance,
@@ -63,9 +63,7 @@ public class AsyncStrategy implements ExecuteStrategy {
     engine.handleStepResponse(nodeExecution.getUuid(), stepResponse);
   }
 
-  private void handleResponse(Ambiance ambiance, AsyncExecutableResponse response) {
-    NodeExecution nodeExecution =
-        Preconditions.checkNotNull(nodeExecutionService.get(AmbianceUtils.obtainCurrentRuntimeId(ambiance)));
+  private void handleResponse(Ambiance ambiance, NodeExecutionProto nodeExecution, AsyncExecutableResponse response) {
     PlanNodeProto node = nodeExecution.getNode();
     if (isEmpty(response.getCallbackIdsList())) {
       log.error("StepResponse has no callbackIds - currentState : " + node.getName()
@@ -81,7 +79,7 @@ public class AsyncStrategy implements ExecuteStrategy {
             NodeExecutionKeys.executableResponses, ExecutableResponse.newBuilder().setAsync(response).build()));
   }
 
-  private AsyncExecutable extractAsyncExecutable(NodeExecution nodeExecution) {
+  private AsyncExecutable extractAsyncExecutable(NodeExecutionProto nodeExecution) {
     PlanNodeProto node = nodeExecution.getNode();
     return (AsyncExecutable) stepRegistry.obtain(node.getStepType());
   }

@@ -18,13 +18,14 @@ import io.harness.engine.executables.ResumePackage;
 import io.harness.engine.executions.node.NodeExecutionService;
 import io.harness.engine.executions.plan.PlanExecutionService;
 import io.harness.engine.resume.EngineResumeCallback;
-import io.harness.execution.NodeExecution;
 import io.harness.execution.NodeExecution.NodeExecutionKeys;
+import io.harness.execution.NodeExecutionUtils;
 import io.harness.execution.PlanExecution;
 import io.harness.plan.Plan;
 import io.harness.pms.ambiance.Ambiance;
 import io.harness.pms.execution.ChildChainExecutableResponse;
 import io.harness.pms.execution.ExecutableResponse;
+import io.harness.pms.execution.NodeExecutionProto;
 import io.harness.pms.execution.utils.AmbianceUtils;
 import io.harness.pms.execution.utils.LevelUtils;
 import io.harness.pms.execution.utils.StatusUtils;
@@ -43,7 +44,6 @@ import io.harness.waiter.WaitNotifyEngine;
 import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
-import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.ExecutorService;
@@ -64,22 +64,22 @@ public class ChildChainStrategy implements ExecuteStrategy {
 
   @Override
   public void start(InvokerPackage invokerPackage) {
-    NodeExecution nodeExecution = invokerPackage.getNodeExecution();
+    NodeExecutionProto nodeExecution = invokerPackage.getNodeExecution();
     ChildChainExecutable childChainExecutable = extractExecutable(nodeExecution);
     Ambiance ambiance = nodeExecution.getAmbiance();
     ChildChainExecutableResponse childChainResponse;
     childChainResponse = childChainExecutable.executeFirstChild(
         ambiance, nodeExecutionService.extractResolvedStepParameters(nodeExecution), invokerPackage.getInputPackage());
-    handleResponse(ambiance, childChainResponse);
+    handleResponse(ambiance, nodeExecution, childChainResponse);
   }
 
   @Override
   public void resume(ResumePackage resumePackage) {
-    NodeExecution nodeExecution = resumePackage.getNodeExecution();
+    NodeExecutionProto nodeExecution = resumePackage.getNodeExecution();
     Ambiance ambiance = nodeExecution.getAmbiance();
     ChildChainExecutable childChainExecutable = extractExecutable(nodeExecution);
     ChildChainExecutableResponse lastChildChainExecutableResponse = Preconditions.checkNotNull(
-        Objects.requireNonNull(nodeExecution.obtainLatestExecutableResponse()).getChildChain());
+        Objects.requireNonNull(NodeExecutionUtils.obtainLatestExecutableResponse(nodeExecution)).getChildChain());
     Map<String, ResponseData> accumulatedResponse = resumePackage.getResponseDataMap();
     if (!lastChildChainExecutableResponse.getSuspend()) {
       accumulatedResponse = invocationHelper.accumulateResponses(
@@ -101,18 +101,18 @@ public class ChildChainStrategy implements ExecuteStrategy {
           (PassThroughData) kryoSerializer.asObject(
               lastChildChainExecutableResponse.getPassThroughData().toByteArray()),
           accumulatedResponse);
-      handleResponse(ambiance, chainResponse);
+      handleResponse(ambiance, nodeExecution, chainResponse);
     }
   }
 
-  ChildChainExecutable extractExecutable(NodeExecution nodeExecution) {
+  ChildChainExecutable extractExecutable(NodeExecutionProto nodeExecution) {
     PlanNodeProto node = nodeExecution.getNode();
     return (ChildChainExecutable) stepRegistry.obtain(node.getStepType());
   }
 
-  private void handleResponse(Ambiance ambiance, ChildChainExecutableResponse childChainResponse) {
+  private void handleResponse(
+      Ambiance ambiance, NodeExecutionProto nodeExecution, ChildChainExecutableResponse childChainResponse) {
     PlanExecution planExecution = planExecutionService.get(ambiance.getPlanExecutionId());
-    NodeExecution nodeExecution = nodeExecutionService.get(AmbianceUtils.obtainCurrentRuntimeId(ambiance));
     if (childChainResponse.getSuspend()) {
       suspendChain(childChainResponse, nodeExecution);
     } else {
@@ -121,21 +121,20 @@ public class ChildChainStrategy implements ExecuteStrategy {
   }
 
   private void executeChild(Ambiance ambiance, ChildChainExecutableResponse childChainResponse,
-      PlanExecution planExecution, NodeExecution nodeExecution) {
+      PlanExecution planExecution, NodeExecutionProto nodeExecution) {
     String childInstanceId = generateUuid();
     Plan plan = planExecution.getPlan();
     PlanNodeProto node = plan.fetchNode(childChainResponse.getNextChildId());
     Ambiance clonedAmbiance =
         AmbianceUtils.cloneForChild(ambiance, LevelUtils.buildLevelFromPlanNode(childInstanceId, node));
-    NodeExecution childNodeExecution = NodeExecution.builder()
-                                           .uuid(childInstanceId)
-                                           .node(node)
-                                           .ambiance(clonedAmbiance)
-                                           .status(QUEUED)
-                                           .notifyId(childInstanceId)
-                                           .parentId(nodeExecution.getUuid())
-                                           .progressDataMap(new LinkedHashMap<>())
-                                           .build();
+    NodeExecutionProto childNodeExecution = NodeExecutionProto.newBuilder()
+                                                .setUuid(childInstanceId)
+                                                .setNode(node)
+                                                .setAmbiance(clonedAmbiance)
+                                                .setStatus(QUEUED)
+                                                .setNotifyId(childInstanceId)
+                                                .setParentId(nodeExecution.getUuid())
+                                                .build();
     nodeExecutionService.save(childNodeExecution);
     executorService.submit(
         ExecutionEngineDispatcher.builder().ambiance(clonedAmbiance).orchestrationEngine(engine).build());
@@ -147,7 +146,7 @@ public class ChildChainStrategy implements ExecuteStrategy {
             ExecutableResponse.newBuilder().setChildChain(childChainResponse).build()));
   }
 
-  private void suspendChain(ChildChainExecutableResponse childChainResponse, NodeExecution nodeExecution) {
+  private void suspendChain(ChildChainExecutableResponse childChainResponse, NodeExecutionProto nodeExecution) {
     String ignoreNotifyId = "ignore-" + nodeExecution.getUuid();
     nodeExecutionService.update(nodeExecution.getUuid(),
         ops

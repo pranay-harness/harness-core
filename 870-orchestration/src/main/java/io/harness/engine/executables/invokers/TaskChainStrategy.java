@@ -12,10 +12,11 @@ import io.harness.engine.executables.TaskExecuteStrategy;
 import io.harness.engine.executions.node.NodeExecutionService;
 import io.harness.engine.progress.EngineProgressCallback;
 import io.harness.engine.resume.EngineResumeCallback;
-import io.harness.execution.NodeExecution;
 import io.harness.execution.NodeExecution.NodeExecutionKeys;
+import io.harness.execution.NodeExecutionUtils;
 import io.harness.pms.ambiance.Ambiance;
 import io.harness.pms.execution.ExecutableResponse;
+import io.harness.pms.execution.NodeExecutionProto;
 import io.harness.pms.execution.Status;
 import io.harness.pms.execution.TaskChainExecutableResponse;
 import io.harness.pms.execution.TaskMode;
@@ -61,7 +62,7 @@ public class TaskChainStrategy implements TaskExecuteStrategy {
 
   @Override
   public void start(InvokerPackage invokerPackage) {
-    NodeExecution nodeExecution = invokerPackage.getNodeExecution();
+    NodeExecutionProto nodeExecution = invokerPackage.getNodeExecution();
     TaskChainExecutable taskChainExecutable = extractTaskChainExecutable(nodeExecution);
     Ambiance ambiance = nodeExecution.getAmbiance();
     TaskChainResponse taskChainResponse;
@@ -72,11 +73,11 @@ public class TaskChainStrategy implements TaskExecuteStrategy {
 
   @Override
   public void resume(ResumePackage resumePackage) {
-    NodeExecution nodeExecution = resumePackage.getNodeExecution();
+    NodeExecutionProto nodeExecution = resumePackage.getNodeExecution();
     Ambiance ambiance = nodeExecution.getAmbiance();
     TaskChainExecutable taskChainExecutable = extractTaskChainExecutable(nodeExecution);
     TaskChainExecutableResponse lastLinkResponse =
-        Objects.requireNonNull(nodeExecution.obtainLatestExecutableResponse()).getTaskChain();
+        Objects.requireNonNull(NodeExecutionUtils.obtainLatestExecutableResponse(nodeExecution)).getTaskChain();
     if (lastLinkResponse.getChainEnd()) {
       StepResponse stepResponse = taskChainExecutable.finalizeExecution(ambiance,
           nodeExecutionService.extractResolvedStepParameters(nodeExecution),
@@ -94,13 +95,13 @@ public class TaskChainStrategy implements TaskExecuteStrategy {
     }
   }
 
-  private TaskChainExecutable extractTaskChainExecutable(NodeExecution nodeExecution) {
+  private TaskChainExecutable extractTaskChainExecutable(NodeExecutionProto nodeExecution) {
     PlanNodeProto node = nodeExecution.getNode();
     return (TaskChainExecutable) stepRegistry.obtain(node.getStepType());
   }
 
   private void handleResponse(
-      @NonNull Ambiance ambiance, NodeExecution nodeExecution, @NonNull TaskChainResponse taskChainResponse) {
+      @NonNull Ambiance ambiance, NodeExecutionProto nodeExecution, @NonNull TaskChainResponse taskChainResponse) {
     if (taskChainResponse.isChainEnd() && taskChainResponse.getTask() == null) {
       TaskChainExecutable taskChainExecutable = extractTaskChainExecutable(nodeExecution);
       nodeExecutionService.update(nodeExecution.getUuid(),

@@ -35,6 +35,7 @@ import io.harness.engine.resume.EngineWaitResumeCallback;
 import io.harness.exception.ExceptionUtils;
 import io.harness.execution.NodeExecution;
 import io.harness.execution.NodeExecution.NodeExecutionKeys;
+import io.harness.execution.NodeExecutionMapper;
 import io.harness.execution.PlanExecution;
 import io.harness.execution.PlanExecution.PlanExecutionKeys;
 import io.harness.logging.AutoLogContext;
@@ -242,7 +243,7 @@ public class OrchestrationEngine {
     invoker.handleStart(InvokerPackage.builder()
                             .inputPackage(inputPackage)
                             .passThroughData(facilitatorResponse.getPassThroughData())
-                            .nodeExecution(nodeExecution)
+                            .nodeExecution(NodeExecutionMapper.toNodeExecutionProto(nodeExecution))
                             .build());
   }
 
@@ -424,7 +425,7 @@ public class OrchestrationEngine {
         nodeExecution = Preconditions.checkNotNull(nodeExecutionService.updateStatus(nodeExecutionId, RUNNING));
       }
       executorService.execute(EngineResumeExecutor.builder()
-                                  .nodeExecution(nodeExecution)
+                                  .nodeExecution(NodeExecutionMapper.toNodeExecutionProto(nodeExecution))
                                   .response(response)
                                   .asyncError(asyncError)
                                   .orchestrationEngine(this)

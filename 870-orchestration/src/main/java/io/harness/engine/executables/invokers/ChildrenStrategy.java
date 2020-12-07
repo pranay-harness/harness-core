@@ -14,7 +14,6 @@ import io.harness.engine.executables.ResumePackage;
 import io.harness.engine.executions.node.NodeExecutionService;
 import io.harness.engine.executions.plan.PlanExecutionService;
 import io.harness.engine.resume.EngineResumeCallback;
-import io.harness.execution.NodeExecution;
 import io.harness.execution.NodeExecution.NodeExecutionKeys;
 import io.harness.execution.PlanExecution;
 import io.harness.plan.Plan;
@@ -22,6 +21,7 @@ import io.harness.pms.ambiance.Ambiance;
 import io.harness.pms.execution.ChildrenExecutableResponse;
 import io.harness.pms.execution.ChildrenExecutableResponse.Child;
 import io.harness.pms.execution.ExecutableResponse;
+import io.harness.pms.execution.NodeExecutionProto;
 import io.harness.pms.execution.Status;
 import io.harness.pms.execution.utils.AmbianceUtils;
 import io.harness.pms.execution.utils.LevelUtils;
@@ -53,17 +53,17 @@ public class ChildrenStrategy implements ExecuteStrategy {
 
   @Override
   public void start(InvokerPackage invokerPackage) {
-    NodeExecution nodeExecution = invokerPackage.getNodeExecution();
+    NodeExecutionProto nodeExecution = invokerPackage.getNodeExecution();
     ChildrenExecutable childrenExecutable = extractChildrenExecutable(nodeExecution);
     Ambiance ambiance = nodeExecution.getAmbiance();
     ChildrenExecutableResponse response = childrenExecutable.obtainChildren(
         ambiance, nodeExecutionService.extractResolvedStepParameters(nodeExecution), invokerPackage.getInputPackage());
-    handleResponse(ambiance, response);
+    handleResponse(ambiance, nodeExecution, response);
   }
 
   @Override
   public void resume(ResumePackage resumePackage) {
-    NodeExecution nodeExecution = resumePackage.getNodeExecution();
+    NodeExecutionProto nodeExecution = resumePackage.getNodeExecution();
     Ambiance ambiance = nodeExecution.getAmbiance();
     ChildrenExecutable childrenExecutable = extractChildrenExecutable(nodeExecution);
     StepResponse stepResponse = childrenExecutable.handleChildrenResponse(ambiance,
@@ -71,14 +71,14 @@ public class ChildrenStrategy implements ExecuteStrategy {
     engine.handleStepResponse(nodeExecution.getUuid(), stepResponse);
   }
 
-  private ChildrenExecutable extractChildrenExecutable(NodeExecution nodeExecution) {
+  private ChildrenExecutable extractChildrenExecutable(NodeExecutionProto nodeExecution) {
     PlanNodeProto node = nodeExecution.getNode();
     return (ChildrenExecutable) stepRegistry.obtain(node.getStepType());
   }
 
-  private void handleResponse(Ambiance ambiance, ChildrenExecutableResponse response) {
+  private void handleResponse(
+      Ambiance ambiance, NodeExecutionProto nodeExecution, ChildrenExecutableResponse response) {
     PlanExecution planExecution = planExecutionService.get(ambiance.getPlanExecutionId());
-    NodeExecution nodeExecution = nodeExecutionService.get(AmbianceUtils.obtainCurrentRuntimeId(ambiance));
     Plan plan = planExecution.getPlan();
     List<String> callbackIds = new ArrayList<>();
     for (Child child : response.getChildrenList()) {
@@ -86,15 +86,14 @@ public class ChildrenStrategy implements ExecuteStrategy {
       callbackIds.add(uuid);
       PlanNodeProto node = plan.fetchNode(child.getChildNodeId());
       Ambiance clonedAmbiance = AmbianceUtils.cloneForChild(ambiance, LevelUtils.buildLevelFromPlanNode(uuid, node));
-      NodeExecution childNodeExecution = NodeExecution.builder()
-                                             .uuid(uuid)
-                                             .node(node)
-                                             .ambiance(clonedAmbiance)
-                                             .status(Status.QUEUED)
-                                             .notifyId(uuid)
-                                             .parentId(nodeExecution.getUuid())
-                                             .progressDataMap(new LinkedHashMap<>())
-                                             .build();
+      NodeExecutionProto childNodeExecution = NodeExecutionProto.newBuilder()
+                                                  .setUuid(uuid)
+                                                  .setNode(node)
+                                                  .setAmbiance(clonedAmbiance)
+                                                  .setStatus(Status.QUEUED)
+                                                  .setNotifyId(uuid)
+                                                  .setParentId(nodeExecution.getUuid())
+                                                  .build();
       nodeExecutionService.save(childNodeExecution);
       executorService.submit(
           ExecutionEngineDispatcher.builder().ambiance(clonedAmbiance).orchestrationEngine(engine).build());
