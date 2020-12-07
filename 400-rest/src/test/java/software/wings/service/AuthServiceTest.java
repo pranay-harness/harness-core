@@ -39,6 +39,7 @@ import io.harness.beans.FeatureName;
 import io.harness.category.element.UnitTests;
 import io.harness.eraro.ErrorCode;
 import io.harness.event.handler.impl.segment.SegmentHandler;
+import io.harness.exception.AccessDeniedException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.InvalidTokenException;
 import io.harness.exception.WingsException;
@@ -497,8 +498,8 @@ public class AuthServiceTest extends WingsBaseTest {
     assertThatThrownBy(()
                            -> authService.authorize(ACCOUNT_ID, appId, null, user,
                                asList(new PermissionAttribute(ResourceType.USER, Action.READ)), null))
-        .isInstanceOf(WingsException.class)
-        .hasMessage(ErrorCode.ACCESS_DENIED.name());
+        .isInstanceOf(AccessDeniedException.class)
+        .hasMessage("Not authorized");
   }
 
   @Test
@@ -533,8 +534,8 @@ public class AuthServiceTest extends WingsBaseTest {
     assertThatThrownBy(()
                            -> authService.authorize(ACCOUNT_ID, APP_ID, null, user,
                                asList(new PermissionAttribute(ResourceType.APPLICATION, Action.READ)), null))
-        .isInstanceOf(WingsException.class)
-        .hasMessage(ErrorCode.ACCESS_DENIED.name());
+        .isInstanceOf(AccessDeniedException.class)
+        .hasMessage("Not authorized");
   }
 
   @Test
@@ -547,8 +548,8 @@ public class AuthServiceTest extends WingsBaseTest {
     assertThatThrownBy(()
                            -> authService.authorize(ACCOUNT_ID, APP_ID, ENV_ID, user,
                                asList(new PermissionAttribute(ResourceType.APPLICATION, Action.UPDATE)), null))
-        .isInstanceOf(WingsException.class)
-        .hasMessage(ErrorCode.ACCESS_DENIED.name());
+        .isInstanceOf(AccessDeniedException.class)
+        .hasMessage("Not authorized");
   }
 
   @Test

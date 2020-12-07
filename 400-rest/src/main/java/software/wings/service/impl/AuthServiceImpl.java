@@ -38,8 +38,10 @@ import io.harness.cvng.core.services.api.VerificationServiceSecretManager;
 import io.harness.entity.ServiceSecretKey.ServiceType;
 import io.harness.eraro.ErrorCode;
 import io.harness.event.handler.impl.segment.SegmentHandler;
+import io.harness.exception.AccessDeniedException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.InvalidTokenException;
+import io.harness.exception.UnauthorizedException;
 import io.harness.exception.WingsException;
 import io.harness.logging.AutoLogContext;
 import io.harness.persistence.HPersistence;
@@ -231,7 +233,7 @@ public class AuthServiceImpl implements AuthService {
   private AuthToken verifyToken(String tokenString) {
     AuthToken authToken = verifyJWTToken(tokenString);
     if (authToken == null) {
-      throw new WingsException(INVALID_TOKEN, USER);
+      throw new UnauthorizedException("Invalid auth token", USER);
     }
     return authToken;
   }
@@ -239,7 +241,7 @@ public class AuthServiceImpl implements AuthService {
   private AuthToken getAuthTokenWithUser(AuthToken authToken) {
     User user = getUserFromCacheOrDB(authToken.getUserId());
     if (user == null) {
-      throw new WingsException(USER_DOES_NOT_EXIST);
+      throw new UnauthorizedException("User not found", USER);
     }
     authToken.setUser(user);
 
@@ -273,13 +275,13 @@ public class AuthServiceImpl implements AuthService {
     if (!accountNullCheck) {
       if (accountId == null || dbCache.get(Account.class, accountId) == null) {
         log.error("Auth Failure: non-existing accountId: {}", accountId);
-        throw new WingsException(ACCESS_DENIED);
+        throw new AccessDeniedException("Not authorized to access the account", USER);
       }
     }
 
     if (appId != null && dbCache.get(Application.class, appId) == null) {
       log.error("Auth Failure: non-existing appId: {}", appId);
-      throw new WingsException(ACCESS_DENIED);
+      throw new AccessDeniedException("Not authorized to access the app", USER);
     }
 
     if (user.isAccountAdmin(accountId)) {
@@ -295,7 +297,7 @@ public class AuthServiceImpl implements AuthService {
     for (PermissionAttribute permissionAttribute : permissionAttributes) {
       if (!authorizeAccessType(accountId, appId, envId, envType, permissionAttribute,
               user.getRolesByAccountId(accountId), userRequestInfo)) {
-        throw new WingsException(ACCESS_DENIED);
+        throw new AccessDeniedException("Not authorized", USER);
       }
     }
   }
@@ -311,7 +313,7 @@ public class AuthServiceImpl implements AuthService {
       List<PermissionAttribute> permissionAttributes, UserRequestInfo userRequestInfo) {
     if (accountId == null || dbCache.get(Account.class, accountId) == null) {
       log.error("Auth Failure: non-existing accountId: {}", accountId);
-      throw new WingsException(ACCESS_DENIED);
+      throw new AccessDeniedException("Not authorized to access the account", USER);
     }
 
     if (appIds != null) {
@@ -328,7 +330,7 @@ public class AuthServiceImpl implements AuthService {
     for (PermissionAttribute permissionAttribute : permissionAttributes) {
       if (!authorizeAccessType(appId, entityId, permissionAttribute, userPermissionInfo)) {
         log.warn("User {} not authorized to access requested resource: {}", user.getName(), entityId);
-        throw new WingsException(ACCESS_DENIED, USER);
+        throw new AccessDeniedException("Not authorized", USER);
       }
     }
   }
@@ -339,13 +341,13 @@ public class AuthServiceImpl implements AuthService {
     if (!accountNullCheck) {
       if (accountId == null || dbCache.get(Account.class, accountId) == null) {
         log.error("Auth Failure: non-existing accountId: {}", accountId);
-        throw new WingsException(ACCESS_DENIED, USER);
+        throw new AccessDeniedException("Not authorized to access the account", USER);
       }
     }
 
     if (appId != null && dbCache.get(Application.class, appId) == null) {
       log.error("Auth Failure: non-existing appId: {}", appId);
-      throw new WingsException(ACCESS_DENIED, USER);
+      throw new AccessDeniedException("Not authorized to access the app", USER);
     }
 
     if (user == null) {
@@ -378,7 +380,7 @@ public class AuthServiceImpl implements AuthService {
       List<PermissionAttribute> permissionAttributes) {
     if (accountId == null || dbCache.get(Account.class, accountId) == null) {
       log.error("Auth Failure: non-existing accountId: {}", accountId);
-      throw new WingsException(ACCESS_DENIED, USER);
+      throw new AccessDeniedException("Not authorized to access the account", USER);
     }
 
     if (appIds != null) {
@@ -958,11 +960,11 @@ public class AuthServiceImpl implements AuthService {
                                                       .getDeploymentExecutePermissionsForEnvs();
 
     if (isEmpty(deploymentEnvExecutePermissions)) {
-      throw new WingsException(ErrorCode.ACCESS_DENIED, USER);
+      throw new AccessDeniedException("Not authorized", USER);
     }
 
     if (!deploymentEnvExecutePermissions.contains(envId)) {
-      throw new WingsException(ErrorCode.ACCESS_DENIED, USER);
+      throw new AccessDeniedException("Not authorized", USER);
     }
   }
 
@@ -1153,7 +1155,7 @@ public class AuthServiceImpl implements AuthService {
     Map<String, AppPermissionSummaryForUI> appPermissionMap = userPermissionInfo.getAppPermissionMap();
     if (appPermissionMap == null || !appPermissionMap.containsKey(appId)) {
       log.error("Auth Failure: User does not have access to app {}", appId);
-      throw new WingsException(ACCESS_DENIED, USER);
+      throw new AccessDeniedException("Not authorized to access the app", USER);
     }
 
     if (Action.UPDATE == action) {
@@ -1162,7 +1164,7 @@ public class AuthServiceImpl implements AuthService {
       if (accountPermissionSummary == null || isEmpty(accountPermissionSummary.getPermissions())
           || !accountPermissionSummary.getPermissions().contains(MANAGE_APPLICATIONS)) {
         log.error("Auth Failure: User does not have access to update {}", appId);
-        throw new WingsException(ACCESS_DENIED, USER);
+        throw new AccessDeniedException("Not authorized to update the app", USER);
       }
     }
   }

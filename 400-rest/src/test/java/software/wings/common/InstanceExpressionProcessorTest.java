@@ -152,9 +152,11 @@ public class InstanceExpressionProcessorTest extends WingsBaseTest {
   @Category(UnitTests.class)
   @Ignore("Ignoring as instance without any filter is disabled")
   public void shouldReturnInstances() {
-    Application app = wingsPersistence.saveAndGet(Application.class, anApplication().name("App1").build());
+    Application app = anApplication().name("App1").build();
+    wingsPersistence.save(app);
     String appId = app.getUuid();
-    Environment env = wingsPersistence.saveAndGet(Environment.class, anEnvironment().appId(app.getUuid()).build());
+    Environment env = anEnvironment().appId(app.getUuid()).build();
+    wingsPersistence.save(env);
 
     ExecutionContextImpl context = mock(ExecutionContextImpl.class);
     when(context.getApp()).thenReturn(app);
@@ -222,9 +224,11 @@ public class InstanceExpressionProcessorTest extends WingsBaseTest {
   @Owner(developers = PRASHANT)
   @Category(UnitTests.class)
   public void shouldReturnInstancesFromParam() {
-    Application app = wingsPersistence.saveAndGet(Application.class, anApplication().name("App1").build());
+    Application app = anApplication().name("App1").build();
+    wingsPersistence.save(app);
     String appId = app.getUuid();
-    Environment env = wingsPersistence.saveAndGet(Environment.class, anEnvironment().appId(app.getUuid()).build());
+    Environment env = anEnvironment().appId(app.getUuid()).build();
+    wingsPersistence.save(env);
     PhaseElement phaseElement = PhaseElement.builder()
                                     .infraDefinitionId(INFRA_DEFINITION_ID)
                                     .rollback(false)
@@ -281,9 +285,11 @@ public class InstanceExpressionProcessorTest extends WingsBaseTest {
   @Owner(developers = PRASHANT)
   @Category(UnitTests.class)
   public void shouldReturnCommonInstancesFromParam() {
-    Application app = wingsPersistence.saveAndGet(Application.class, anApplication().name("App1").build());
+    Application app = anApplication().name("App1").build();
+    wingsPersistence.save(app);
     String appId = app.getUuid();
-    Environment env = wingsPersistence.saveAndGet(Environment.class, anEnvironment().appId(app.getUuid()).build());
+    Environment env = anEnvironment().appId(app.getUuid()).build();
+    wingsPersistence.save(env);
     PhaseElement phaseElement = PhaseElement.builder()
                                     .infraDefinitionId(INFRA_DEFINITION_ID)
                                     .rollback(false)
@@ -343,9 +349,11 @@ public class InstanceExpressionProcessorTest extends WingsBaseTest {
   @Owner(developers = GEORGE)
   @Category(UnitTests.class)
   public void shouldReturnCommonInstancesFromParam2() {
-    Application app = wingsPersistence.saveAndGet(Application.class, anApplication().name("App1").build());
+    Application app = anApplication().name("App1").build();
+    wingsPersistence.save(app);
     String appId = app.getUuid();
-    Environment env = wingsPersistence.saveAndGet(Environment.class, anEnvironment().appId(app.getUuid()).build());
+    Environment env = anEnvironment().appId(app.getUuid()).build();
+    wingsPersistence.save(env);
     PhaseElement phaseElement = PhaseElement.builder()
                                     .infraDefinitionId(INFRA_DEFINITION_ID)
                                     .rollback(false)
@@ -422,10 +430,11 @@ public class InstanceExpressionProcessorTest extends WingsBaseTest {
 
     Application app = anApplication().name("AppA").accountId(ACCOUNT_ID).build();
     app = appService.save(app);
-    Environment env =
-        wingsPersistence.saveAndGet(Environment.class, anEnvironment().appId(app.getUuid()).name("DEV").build());
+    Environment env = anEnvironment().appId(app.getUuid()).name("DEV").build();
+    wingsPersistence.save(env);
 
-    Service service = wingsPersistence.saveAndGet(Service.class, Service.builder().name("svc1").build());
+    Service service = Service.builder().name("svc1").build();
+    wingsPersistence.save(service);
 
     ServiceTemplate serviceTemplate = serviceTemplateService.save(aServiceTemplate()
                                                                       .withAppId(app.getUuid())
@@ -503,13 +512,12 @@ public class InstanceExpressionProcessorTest extends WingsBaseTest {
   public void shouldFetchInstanceElements() {
     Application app = anApplication().name("AppA").accountId(ACCOUNT_ID).build();
     app = appService.save(app);
-    Environment env = wingsPersistence.saveAndGet(
-        Environment.class, Environment.Builder.anEnvironment().appId(app.getUuid()).build());
-    Host applicationHost = wingsPersistence.saveAndGet(
-        Host.class, aHost().withAppId(app.getAppId()).withEnvId(env.getUuid()).withHostName("host1").build());
-
-    Service service = wingsPersistence.saveAndGet(
-        Service.class, Service.builder().appId(app.getAppId()).uuid(generateUuid()).name("svc1").build());
+    Environment env = Environment.Builder.anEnvironment().appId(app.getUuid()).build();
+    wingsPersistence.save(env);
+    Host applicationHost = aHost().withAppId(app.getAppId()).withEnvId(env.getUuid()).withHostName("host1").build();
+    wingsPersistence.save(applicationHost);
+    Service service = Service.builder().appId(app.getAppId()).uuid(generateUuid()).name("svc1").build();
+    wingsPersistence.save(service);
     ServiceTemplate serviceTemplate = serviceTemplateService.save(aServiceTemplate()
                                                                       .withAppId(app.getUuid())
                                                                       .withEnvId(env.getUuid())
@@ -559,9 +567,10 @@ public class InstanceExpressionProcessorTest extends WingsBaseTest {
   @Owner(developers = GEORGE)
   @Category(UnitTests.class)
   public void shouldReturnInstancesFromPartition() {
-    Application app = wingsPersistence.saveAndGet(Application.class, anApplication().name("App1").build());
-    String appId = app.getUuid();
-    Environment env = wingsPersistence.saveAndGet(Environment.class, anEnvironment().appId(app.getUuid()).build());
+    Application app = anApplication().name("App1").build();
+    wingsPersistence.save(app);
+    Environment env = anEnvironment().appId(app.getUuid()).build();
+    wingsPersistence.save(env);
 
     ExecutionContextImpl context = mock(ExecutionContextImpl.class);
     when(context.getApp()).thenReturn(app);
