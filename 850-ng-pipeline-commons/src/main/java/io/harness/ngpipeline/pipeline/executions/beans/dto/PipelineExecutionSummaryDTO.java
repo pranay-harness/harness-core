@@ -2,8 +2,8 @@ package io.harness.ngpipeline.pipeline.executions.beans.dto;
 
 import io.harness.ngpipeline.pipeline.executions.ExecutionStatus;
 import io.harness.ngpipeline.pipeline.executions.beans.ExecutionErrorInfo;
-import io.harness.ngpipeline.pipeline.executions.beans.ExecutionTriggerInfo;
 import io.harness.pipeline.executions.NGStageType;
+import io.harness.pms.pipeline.ExecutionTriggerInfo;
 
 import java.util.List;
 import java.util.Map;

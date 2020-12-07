@@ -29,8 +29,6 @@ import io.harness.ngpipeline.executions.beans.ExecutionGraph;
 import io.harness.ngpipeline.executions.mapper.ExecutionGraphMapper;
 import io.harness.ngpipeline.pipeline.beans.yaml.NgPipeline;
 import io.harness.ngpipeline.pipeline.executions.ExecutionStatus;
-import io.harness.ngpipeline.pipeline.executions.TriggerType;
-import io.harness.ngpipeline.pipeline.executions.beans.ExecutionTriggerInfo;
 import io.harness.ngpipeline.pipeline.executions.beans.PipelineExecutionInterruptType;
 import io.harness.ngpipeline.pipeline.executions.beans.PipelineExecutionSummary;
 import io.harness.ngpipeline.pipeline.executions.beans.PipelineExecutionSummary.PipelineExecutionSummaryKeys;
@@ -38,6 +36,8 @@ import io.harness.ngpipeline.pipeline.executions.beans.PipelineExecutionSummaryF
 import io.harness.ngpipeline.pipeline.executions.beans.ServiceExecutionSummary;
 import io.harness.ngpipeline.pipeline.executions.beans.dto.PipelineExecutionInterruptDTO;
 import io.harness.ngpipeline.pipeline.service.NGPipelineService;
+import io.harness.pms.pipeline.ExecutionTriggerInfo;
+import io.harness.pms.pipeline.TriggerType;
 import io.harness.repositories.pipeline.PipelineExecutionRepository;
 import io.harness.service.GraphGenerationService;
 import io.harness.steps.StepOutcomeGroup;

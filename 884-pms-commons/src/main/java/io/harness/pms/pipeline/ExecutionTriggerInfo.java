@@ -1,7 +1,6 @@
-package io.harness.ngpipeline.pipeline.executions.beans;
+package io.harness.pms.pipeline;
 
 import io.harness.beans.EmbeddedUser;
-import io.harness.ngpipeline.pipeline.executions.TriggerType;
 
 import lombok.Builder;
 import lombok.Value;

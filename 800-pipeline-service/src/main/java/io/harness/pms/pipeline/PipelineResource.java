@@ -1,20 +1,27 @@
 package io.harness.pms.pipeline;
 
+import static io.harness.data.structure.UUIDGenerator.generateUuid;
+
 import static java.lang.Long.parseLong;
 import static javax.ws.rs.core.HttpHeaders.IF_MATCH;
 import static org.apache.commons.lang3.StringUtils.isNumeric;
 
 import io.harness.NGCommonEntityConstants;
 import io.harness.NGResourceFilterConstants;
+import io.harness.beans.EmbeddedUser;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.InvalidRequestException;
 import io.harness.ng.core.dto.ErrorDTO;
 import io.harness.ng.core.dto.FailureDTO;
 import io.harness.ng.core.dto.ResponseDTO;
+import io.harness.pms.execution.Status;
 import io.harness.pms.filter.creation.PMSPipelineFilterRequestDTO;
 import io.harness.pms.pipeline.PipelineEntity.PipelineEntityKeys;
 import io.harness.pms.pipeline.mappers.PMSPipelineDtoMapper;
 import io.harness.pms.pipeline.mappers.PMSPipelineFilterHelper;
+import io.harness.pms.pipeline.resource.EdgeLayoutListDTO;
+import io.harness.pms.pipeline.resource.GraphLayoutNodeDTO;
+import io.harness.pms.pipeline.resource.PlanExecutionSummaryDTO;
 import io.harness.pms.pipeline.service.PMSPipelineService;
 import io.harness.serializer.JsonUtils;
 import io.harness.utils.PageUtils;
@@ -26,7 +33,11 @@ import io.swagger.annotations.ApiParam;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
 import java.io.IOException;
+import java.time.Duration;
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import javax.validation.constraints.NotNull;
 import javax.ws.rs.Consumes;
@@ -187,5 +198,61 @@ public class PipelineResource {
     log.info("Get Steps for given module");
 
     return ResponseDTO.newResponse(pmsPipelineService.getSteps(module, category));
+  }
+
+  @GET
+  @Path("/summary/plan/{pipelineIdentifier}")
+  @ApiOperation(value = "Gets Plan Summary of a pipeline", nickname = "getPlanSummary")
+  public ResponseDTO<PlanExecutionSummaryDTO> getPlanSummary(
+      @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountId,
+      @NotNull @QueryParam(NGCommonEntityConstants.ORG_KEY) String orgId,
+      @NotNull @QueryParam(NGCommonEntityConstants.PROJECT_KEY) String projectId,
+      @PathParam(NGCommonEntityConstants.PIPELINE_KEY) String pipelineId) {
+    log.info("Get plan Summary");
+
+    String pipelineNodeUuid = generateUuid();
+    String stageNodeUuid = generateUuid();
+
+    Map<String, GraphLayoutNodeDTO> layoutNodeMap = new HashMap<>();
+    GraphLayoutNodeDTO pipelineLayoutNode =
+        GraphLayoutNodeDTO.builder()
+            .nodeType("pipeline")
+            .nodeIdentifier("pipeline")
+            .nodeUuid(pipelineNodeUuid)
+            .status(Status.RUNNING)
+            .edgeLayoutList(EdgeLayoutListDTO.builder().nextIds(Collections.singletonList(stageNodeUuid)).build())
+            .build();
+
+    GraphLayoutNodeDTO stageLayoutNode = GraphLayoutNodeDTO.builder()
+                                             .nodeUuid(stageNodeUuid)
+                                             .nodeType("stages")
+                                             .nodeIdentifier("stages")
+                                             .status(Status.QUEUED)
+                                             .edgeLayoutList(EdgeLayoutListDTO.builder().build())
+                                             .build();
+    layoutNodeMap.put(pipelineNodeUuid, pipelineLayoutNode);
+    layoutNodeMap.put(stageNodeUuid, stageLayoutNode);
+
+    Map<String, org.bson.Document> moduleInfo = new HashMap<>();
+    moduleInfo.put("CD", new org.bson.Document().append("DeploymentType", "k8s").append("namespace", "mock-namespace"));
+
+    PlanExecutionSummaryDTO planExecutionSummaryDTO =
+        PlanExecutionSummaryDTO.builder()
+            .pipelineId(pipelineId)
+            .name("Mock Pipeline")
+            .createdAt(System.currentTimeMillis())
+            .executionTriggerInfo(ExecutionTriggerInfo.builder()
+                                      .triggeredBy(EmbeddedUser.builder().name("Harness Dev").build())
+                                      .triggerType(TriggerType.MANUAL)
+                                      .build())
+            .duration(Duration.ofMinutes(90).toMillis())
+            .status(Status.RUNNING)
+            .layoutNodeMap(layoutNodeMap)
+            .startingNodeId(pipelineNodeUuid)
+            .moduleInfo(moduleInfo)
+            .tags(new HashMap<>())
+            .build();
+
+    return ResponseDTO.newResponse(planExecutionSummaryDTO);
   }
 }
