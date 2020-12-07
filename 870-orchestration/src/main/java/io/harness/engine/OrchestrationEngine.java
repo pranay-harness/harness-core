@@ -238,10 +238,12 @@ public class OrchestrationEngine {
 
   public void invokeExecutable(
       Ambiance ambiance, FacilitatorResponse facilitatorResponse, StepInputPackage inputPackage) {
+    PlanExecution planExecution = Preconditions.checkNotNull(planExecutionService.get(ambiance.getPlanExecutionId()));
     NodeExecution nodeExecution = prepareNodeExecutionForInvocation(ambiance, facilitatorResponse);
     ExecutableProcessor invoker = executableProcessorFactory.obtainProcessor(facilitatorResponse.getExecutionMode());
     invoker.handleStart(InvokerPackage.builder()
                             .inputPackage(inputPackage)
+                            .nodes(planExecution.getPlan().getNodes())
                             .passThroughData(facilitatorResponse.getPassThroughData())
                             .nodeExecution(NodeExecutionMapper.toNodeExecutionProto(nodeExecution))
                             .build());
@@ -421,11 +423,14 @@ public class OrchestrationEngine {
             nodeExecution.getStatus());
         return;
       }
+
+      PlanExecution planExecution = Preconditions.checkNotNull(planExecutionService.get(ambiance.getPlanExecutionId()));
       if (nodeExecution.getStatus() != RUNNING) {
         nodeExecution = Preconditions.checkNotNull(nodeExecutionService.updateStatus(nodeExecutionId, RUNNING));
       }
       executorService.execute(EngineResumeExecutor.builder()
                                   .nodeExecution(NodeExecutionMapper.toNodeExecutionProto(nodeExecution))
+                                  .nodes(planExecution.getPlan().getNodes())
                                   .response(response)
                                   .asyncError(asyncError)
                                   .orchestrationEngine(this)
