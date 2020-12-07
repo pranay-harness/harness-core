@@ -19,6 +19,7 @@ import io.harness.yaml.core.auxiliary.intfc.StageElementWrapper;
 import io.harness.yaml.core.failurestrategy.FailureStrategyConfig;
 import io.harness.yaml.core.intfc.StageType;
 import io.harness.yaml.core.intfc.WithIdentifier;
+import io.harness.yaml.core.intfc.WithSkipCondition;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
@@ -36,7 +37,7 @@ import org.springframework.data.annotation.TypeAlias;
 @JsonTypeName("stage")
 @SimpleVisitorHelper(helperClass = StageElementHelper.class)
 @TypeAlias("io.harness.yaml.core.stageElement")
-public class StageElement implements StageElementWrapper, WithIdentifier, Visitable {
+public class StageElement implements StageElementWrapper, WithIdentifier, Visitable, WithSkipCondition {
   @NotNull(groups = PreInputSet.class) @Required(groups = PostInputSet.class) @EntityIdentifier String identifier;
   @EntityName String name;
   @ApiModelProperty(dataType = SwaggerConstants.STRING_CLASSPATH) ParameterField<String> description;
@@ -47,6 +48,8 @@ public class StageElement implements StageElementWrapper, WithIdentifier, Visita
   @JsonProperty("spec")
   @JsonTypeInfo(use = NAME, property = "type", include = EXTERNAL_PROPERTY, visible = true)
   StageType stageType;
+
+  @ApiModelProperty(dataType = SwaggerConstants.STRING_CLASSPATH) ParameterField<String> skipCondition;
 
   // For Visitor Framework Impl
   String metadata;

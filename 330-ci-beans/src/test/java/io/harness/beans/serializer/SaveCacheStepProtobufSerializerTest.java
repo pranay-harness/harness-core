@@ -10,6 +10,7 @@ import io.harness.callback.DelegateCallbackToken;
 import io.harness.category.element.UnitTests;
 import io.harness.product.ci.engine.proto.UnitStep;
 import io.harness.rule.Owner;
+import io.harness.yaml.core.StepElement;
 
 import com.google.inject.Inject;
 import com.google.protobuf.InvalidProtocolBufferException;
@@ -40,7 +41,9 @@ public class SaveCacheStepProtobufSerializerTest extends CIBeansTest {
                                               .paths(Arrays.asList(PATH_1, PATH_2))
                                               .build();
     saveCacheStepInfo.setCallbackId(CALLBACK_ID);
-    String serialize = protobufSerializer.serializeToBase64(saveCacheStepInfo);
+    StepElement stepElement = StepElement.builder().type("saveCache").stepSpecType(saveCacheStepInfo).build();
+
+    String serialize = protobufSerializer.serializeToBase64(stepElement);
     UnitStep saveCacheStep = UnitStep.parseFrom(Base64.decodeBase64(serialize));
 
     assertThat(saveCacheStep.getDisplayName()).isEqualTo(SAVE_CACHE);

@@ -9,6 +9,7 @@ import io.harness.beans.steps.stepinfo.PluginStepInfo;
 import io.harness.category.element.UnitTests;
 import io.harness.product.ci.engine.proto.UnitStep;
 import io.harness.rule.Owner;
+import io.harness.yaml.core.StepElement;
 
 import com.google.inject.Inject;
 import com.google.protobuf.InvalidProtocolBufferException;
@@ -39,7 +40,9 @@ public class PluginStepProtobufSerializerTest extends CIBeansTest {
                                         .build();
     pluginStepInfo.setCallbackId(CALLBACK_ID);
     pluginStepInfo.setPort(PORT);
-    String serialize = protobufSerializer.serializeToBase64(pluginStepInfo);
+    StepElement stepElement = StepElement.builder().type("plugin").stepSpecType(pluginStepInfo).build();
+
+    String serialize = protobufSerializer.serializeToBase64(stepElement);
     UnitStep pluginStep = UnitStep.parseFrom(Base64.decodeBase64(serialize));
     assertThat(pluginStep.getId()).isEqualTo(PLUGIN_STEP_ID);
     assertThat(pluginStep.getDisplayName()).isEqualTo(PLUGIN_STEP);

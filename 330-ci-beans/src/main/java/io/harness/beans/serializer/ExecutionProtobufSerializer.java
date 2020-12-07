@@ -2,14 +2,7 @@ package io.harness.beans.serializer;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 
-import io.harness.beans.plugin.compatible.PluginCompatibleStep;
 import io.harness.beans.steps.CIStepInfo;
-import io.harness.beans.steps.stepinfo.PluginStepInfo;
-import io.harness.beans.steps.stepinfo.PublishStepInfo;
-import io.harness.beans.steps.stepinfo.RestoreCacheStepInfo;
-import io.harness.beans.steps.stepinfo.RunStepInfo;
-import io.harness.beans.steps.stepinfo.SaveCacheStepInfo;
-import io.harness.beans.steps.stepinfo.TestIntelligenceStepInfo;
 import io.harness.product.ci.engine.proto.Execution;
 import io.harness.product.ci.engine.proto.ParallelStep;
 import io.harness.product.ci.engine.proto.Step;
@@ -82,15 +75,15 @@ public class ExecutionProtobufSerializer implements ProtobufSerializer<Execution
       CIStepInfo ciStepInfo = (CIStepInfo) step.getStepSpecType();
       switch (ciStepInfo.getNonYamlInfo().getStepInfoType()) {
         case RUN:
-          return runStepProtobufSerializer.serializeStep((RunStepInfo) ciStepInfo);
+          return runStepProtobufSerializer.serializeStep(step);
         case PLUGIN:
-          return pluginStepProtobufSerializer.serializeStep((PluginStepInfo) ciStepInfo);
+          return pluginStepProtobufSerializer.serializeStep(step);
         case SAVE_CACHE:
-          return saveCacheStepProtobufSerializer.serializeStep((SaveCacheStepInfo) ciStepInfo);
+          return saveCacheStepProtobufSerializer.serializeStep(step);
         case RESTORE_CACHE:
-          return restoreCacheStepProtobufSerializer.serializeStep((RestoreCacheStepInfo) ciStepInfo);
+          return restoreCacheStepProtobufSerializer.serializeStep(step);
         case PUBLISH:
-          return publishStepProtobufSerializer.serializeStep((PublishStepInfo) ciStepInfo);
+          return publishStepProtobufSerializer.serializeStep(step);
         case GCR:
         case DOCKER:
         case ECR:
@@ -100,9 +93,9 @@ public class ExecutionProtobufSerializer implements ProtobufSerializer<Execution
         case RESTORE_CACHE_GCS:
         case SAVE_CACHE_S3:
         case RESTORE_CACHE_S3:
-          return pluginCompatibleStepSerializer.serializeStep((PluginCompatibleStep) ciStepInfo);
+          return pluginCompatibleStepSerializer.serializeStep(step);
         case TEST_INTELLIGENCE:
-          return testIntelligenceStepProtobufSerializer.serializeStep((TestIntelligenceStepInfo) ciStepInfo);
+          return testIntelligenceStepProtobufSerializer.serializeStep(step);
         case CLEANUP:
         case TEST:
         case BUILD:

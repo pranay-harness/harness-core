@@ -2,6 +2,7 @@ package io.harness.beans.serializer;
 
 import static io.harness.product.ci.engine.proto.AuthType.BASIC_AUTH;
 
+import io.harness.beans.steps.CIStepInfo;
 import io.harness.beans.steps.stepinfo.PublishStepInfo;
 import io.harness.beans.steps.stepinfo.publish.artifact.Artifact;
 import io.harness.beans.steps.stepinfo.publish.artifact.DockerFileArtifact;
@@ -20,6 +21,7 @@ import io.harness.product.ci.engine.proto.PublishArtifactsStep;
 import io.harness.product.ci.engine.proto.UnitStep;
 import io.harness.product.ci.engine.proto.UploadFile;
 import io.harness.utils.IdentifierRefHelper;
+import io.harness.yaml.core.StepElement;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -34,11 +36,14 @@ public class PublishStepProtobufSerializer implements ProtobufStepSerializer<Pub
   @Inject private Supplier<DelegateCallbackToken> delegateCallbackTokenSupplier;
 
   @Override
-  public String serializeToBase64(PublishStepInfo stepInfo) {
+  public String serializeToBase64(StepElement stepInfo) {
     return Base64.encodeBase64String(serializeStep(stepInfo).toByteArray());
   }
 
-  public UnitStep serializeStep(PublishStepInfo publishStepInfo) {
+  public UnitStep serializeStep(StepElement step) {
+    CIStepInfo ciStepInfo = (CIStepInfo) step.getStepSpecType();
+    PublishStepInfo publishStepInfo = (PublishStepInfo) ciStepInfo;
+
     PublishArtifactsStep.Builder publishArtifactsStepBuilder = PublishArtifactsStep.newBuilder();
     publishStepInfo.getPublishArtifacts().forEach(artifact -> {
       switch (artifact.getType()) {
@@ -55,12 +60,14 @@ public class PublishStepProtobufSerializer implements ProtobufStepSerializer<Pub
       }
     });
 
+    String skipCondition = SkipConditionUtils.getSkipCondition(step);
     return UnitStep.newBuilder()
         .setId(publishStepInfo.getIdentifier())
         .setTaskId(publishStepInfo.getCallbackId())
         .setCallbackToken(delegateCallbackTokenSupplier.get().getToken())
         .setDisplayName(Optional.ofNullable(publishStepInfo.getDisplayName()).orElse(""))
         .setPublishArtifacts(publishArtifactsStepBuilder.build())
+        .setSkipCondition(Optional.ofNullable(skipCondition).orElse(""))
         .build();
   }
 
