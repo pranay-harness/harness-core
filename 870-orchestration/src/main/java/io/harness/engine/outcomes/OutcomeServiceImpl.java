@@ -64,7 +64,7 @@ public class OutcomeServiceImpl implements OutcomeService {
                                    .levels(ambiance.getLevelsList())
                                    .producedBy(producedBy)
                                    .name(name)
-                                   .outcome(value)
+                                   .outcome(convertToDocument(value))
                                    .levelRuntimeIdIdx(ResolverUtils.prepareLevelRuntimeIdIdx(ambiance.getLevelsList()))
                                    .build());
       return instance.getUuid();
@@ -104,7 +104,7 @@ public class OutcomeServiceImpl implements OutcomeService {
     if (EmptyPredicate.isEmpty(instances)) {
       throw new OutcomeException(format("Could not resolve outcome with name '%s'", name));
     }
-    return instances.get(0).getOutcome();
+    return convertToObject(instances.get(0).getOutcome());
   }
 
   private Outcome resolveUsingRuntimeId(@NotNull Ambiance ambiance, @NotNull RefObject refObject) {
@@ -124,7 +124,7 @@ public class OutcomeServiceImpl implements OutcomeService {
     if (instance == null) {
       throw new OutcomeException(format("Could not resolve outcome with name '%s'", name));
     }
-    return instance.getOutcome();
+    return convertToObject(instance.getOutcome());
   }
 
   @Override
@@ -136,7 +136,7 @@ public class OutcomeServiceImpl implements OutcomeService {
     Query query = query(where(OutcomeInstanceKeys.uuid).in(outcomeInstanceIds));
     Iterable<OutcomeInstance> outcomesInstances = mongoTemplate.find(query, OutcomeInstance.class);
     for (OutcomeInstance instance : outcomesInstances) {
-      outcomes.add(instance.getOutcome());
+      outcomes.add(convertToObject(instance.getOutcome()));
     }
     return outcomes;
   }
@@ -146,7 +146,7 @@ public class OutcomeServiceImpl implements OutcomeService {
     Query query = query(where(OutcomeInstanceKeys.uuid).is(outcomeInstanceId));
     Optional<OutcomeInstance> outcomeInstance =
         Optional.ofNullable(mongoTemplate.findOne(query, OutcomeInstance.class));
-    return outcomeInstance.map(OutcomeInstance::getOutcome).orElse(null);
+    return outcomeInstance.map(oi -> convertToObject(oi.getOutcome())).orElse(null);
   }
 
   @Override
@@ -160,6 +160,6 @@ public class OutcomeServiceImpl implements OutcomeService {
       return Collections.emptyList();
     }
 
-    return outcomeInstances.stream().map(OutcomeInstance::getOutcome).collect(Collectors.toList());
+    return outcomeInstances.stream().map(oi -> convertToObject(oi.getOutcome())).collect(Collectors.toList());
   }
 }

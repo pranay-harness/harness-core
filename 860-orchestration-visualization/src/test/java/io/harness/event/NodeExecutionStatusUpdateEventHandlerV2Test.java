@@ -45,6 +45,7 @@ import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import org.assertj.core.util.Maps;
 import org.awaitility.Awaitility;
+import org.bson.Document;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.Spy;
@@ -197,12 +198,14 @@ public class NodeExecutionStatusUpdateEventHandlerV2Test extends OrchestrationVi
 
     // creating outcome
     DummyOutcome dummyOutcome = new DummyOutcome("outcome");
+    Document doc = Document.parse(dummyOutcome.toJson());
+    doc.put(JsonOrchestrationUtils.PMS_CLASS_KEY, dummyOutcome.getClass().getName());
     OutcomeInstance outcome =
         OutcomeInstance.builder()
             .planExecutionId(planExecution.getUuid())
             .producedBy(LevelUtils.buildLevelFromPlanNode(dummyStart.getUuid(), dummyStart.getNode()))
             .createdAt(System.currentTimeMillis())
-            .outcome(dummyOutcome)
+            .outcome(doc)
             .build();
     mongoTemplate.insert(outcome);
 

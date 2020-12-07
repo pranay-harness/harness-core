@@ -52,7 +52,7 @@ public class ExecutionSweepingOutputServiceImpl implements ExecutionSweepingOutp
                                    .planExecutionId(ambiance.getPlanExecutionId())
                                    .levels(ambiance.getLevelsList())
                                    .name(name)
-                                   .value(value)
+                                   .value(convertToDocument(value))
                                    .levelRuntimeIdIdx(ResolverUtils.prepareLevelRuntimeIdIdx(ambiance.getLevelsList()))
                                    .build());
       return instance.getUuid();
@@ -92,6 +92,6 @@ public class ExecutionSweepingOutputServiceImpl implements ExecutionSweepingOutp
       throw new SweepingOutputException(format("Could not resolve sweeping output with name '%s'", name));
     }
 
-    return instance.getValue();
+    return convertToObject(instance.getValue());
   }
 }
