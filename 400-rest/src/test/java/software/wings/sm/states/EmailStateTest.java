@@ -18,6 +18,7 @@ import static software.wings.utils.WingsTestConstants.ENV_ID;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.joor.Reflect.on;
 import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -34,6 +35,7 @@ import software.wings.app.MainConfiguration;
 import software.wings.app.PortalConfig;
 import software.wings.beans.Account;
 import software.wings.beans.User;
+import software.wings.expression.ManagerExpressionEvaluator;
 import software.wings.helpers.ext.mail.EmailData;
 import software.wings.helpers.ext.url.SubdomainUrlHelperIntfc;
 import software.wings.service.impl.UserServiceImpl;
@@ -92,6 +94,7 @@ public class EmailStateTest extends WingsBaseTest {
   @Mock private MainConfiguration configuration;
   @Mock private SubdomainUrlHelperIntfc subdomainUrlHelper;
   @Mock private UserServiceImpl userServiceImpl;
+  @Mock private ManagerExpressionEvaluator evaluator;
 
   private ExecutionContextImpl context;
   private Account account;
@@ -107,6 +110,7 @@ public class EmailStateTest extends WingsBaseTest {
     stateExecutionInstance.setDisplayName(stateName);
 
     context = new ExecutionContextImpl(stateExecutionInstance, null, injector);
+
     WorkflowStandardParams workflowStandardParams = new WorkflowStandardParams();
     on(workflowStandardParams).set("app", anApplication().accountId(ACCOUNT_ID).uuid(APP_ID).build());
     on(workflowStandardParams).set("env", anEnvironment().uuid(ENV_ID).build());
@@ -265,6 +269,40 @@ public class EmailStateTest extends WingsBaseTest {
                   .cc(Lists.newArrayList("cc1", "cc2"))
                   .subject("Deployment triggered by: admin")
                   .body("Deployment triggered by: admin")
+                  .build());
+  }
+
+  @Test
+  @Owner(developers = MILOS)
+  @Category(UnitTests.class)
+  public void shouldRenderWorkflowVariables() {
+    on(context).set("evaluator", evaluator);
+
+    emailState.setToAddress("${workflow.variables.var1}");
+    emailState.setCcAddress("${workflow.variables.var2}");
+    emailState.setBody("body");
+    emailState.setSubject("subject");
+
+    when(evaluator.substitute(eq("${workflow.variables.var1}"), any(), any(), any())).thenReturn("to1");
+    when(evaluator.substitute(eq("${workflow.variables.var2}"), any(), any(), any())).thenReturn("cc1");
+    when(evaluator.substitute(eq("body"), any(), any(), any())).thenReturn("body");
+    when(evaluator.substitute(eq("subject"), any(), any(), any())).thenReturn("subject");
+
+    ExecutionResponse executionResponse = emailState.execute(context);
+    assertThat(executionResponse).extracting(ExecutionResponse::getExecutionStatus).isEqualTo(ExecutionStatus.SUCCESS);
+    assertThat(executionResponse.getStateExecutionData())
+        .isInstanceOf(EmailStateExecutionData.class)
+        .isEqualTo(
+            expected.but().withToAddress("to1").withCcAddress("cc1").withSubject("subject").withBody("body").build());
+    assertThat(executionResponse.getErrorMessage()).isNull();
+
+    verify(emailNotificationService)
+        .send(EmailData.builder()
+                  .to(Lists.newArrayList("to1"))
+                  .cc(Lists.newArrayList("cc1"))
+                  .accountId(ACCOUNT_ID)
+                  .subject("subject")
+                  .body("body")
                   .build());
   }
 
