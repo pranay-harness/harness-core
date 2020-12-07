@@ -52,7 +52,7 @@ public class ExecutionSweepingOutputInstance implements PersistentEntity, UuidAc
   @NotNull @Trimmed String name;
   String levelRuntimeIdIdx;
 
-  @Getter SweepingOutput value;
+  @Getter org.bson.Document value;
   @Wither @CreatedDate Long createdAt;
 
   @FdIndex @Builder.Default Date validUntil = Date.from(OffsetDateTime.now().plusMonths(6).toInstant());

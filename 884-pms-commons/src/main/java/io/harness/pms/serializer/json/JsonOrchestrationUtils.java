@@ -22,6 +22,7 @@ import lombok.extern.slf4j.Slf4j;
 public class JsonOrchestrationUtils {
   public static final ObjectMapper mapper;
   public static final ObjectMapper nonIgnoringMapper;
+  public static final String PMS_CLASS_KEY = "_pms_class";
 
   static {
     mapper = new ObjectMapper();

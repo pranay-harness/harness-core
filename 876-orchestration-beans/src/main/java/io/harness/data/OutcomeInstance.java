@@ -49,7 +49,7 @@ public class OutcomeInstance implements PersistentEntity, UuidAccess {
   @NotEmpty @Trimmed String name;
   String levelRuntimeIdIdx;
 
-  Outcome outcome;
+  org.bson.Document outcome;
   @Wither @CreatedDate Long createdAt;
   @Wither @Version Long version;
 

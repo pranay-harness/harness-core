@@ -8,9 +8,12 @@ import io.harness.pms.ambiance.Ambiance;
 import io.harness.pms.ambiance.Level;
 import io.harness.pms.refobjects.RefObject;
 import io.harness.pms.sdk.core.data.StepTransput;
+import io.harness.pms.serializer.json.JsonOrchestrationUtils;
 
 import java.util.List;
 import javax.validation.constraints.NotNull;
+import lombok.SneakyThrows;
+import org.bson.Document;
 
 @OwnedBy(CDC)
 public interface Resolver<T extends StepTransput> {
@@ -39,5 +42,23 @@ public interface Resolver<T extends StepTransput> {
     }
 
     throw new GroupNotFoundException(groupName);
+  }
+
+  default Document convertToDocument(T value) {
+    if (value == null) {
+      return null;
+    }
+    Document document = Document.parse(value.toJson());
+    document.put(JsonOrchestrationUtils.PMS_CLASS_KEY, value.getClass().getName());
+    return document;
+  }
+
+  @SneakyThrows
+  default T convertToObject(Document value) {
+    if (value == null) {
+      return null;
+    }
+    Class<?> aClass = Class.forName((String) value.remove(JsonOrchestrationUtils.PMS_CLASS_KEY));
+    return (T) JsonOrchestrationUtils.asObject(value.toJson(), aClass);
   }
 }
