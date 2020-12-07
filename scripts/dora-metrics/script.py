@@ -1,5 +1,4 @@
 import requests
-import time
 import helper
 import log_manager
 import file_manager
@@ -193,38 +192,41 @@ def get_page_details(query_result):
     return page_info['hasMore'], page_info['limit']
 
 
-def get_field(execution, fieldName):
+def get_field(execution, field_name):
     try:
-        if fieldName == CSV_COL_APPLICATION_NAME:
+        if field_name == CSV_COL_APPLICATION_NAME:
             return execution['application']['name']
 
-        if fieldName == CSV_COL_ENTITY_TYPE:
+        if field_name == CSV_COL_ENTITY_TYPE:
             return execution['__typename']
 
-        if fieldName == CSV_COL_STATUS:
+        if field_name == CSV_COL_STATUS:
             return execution['status']
 
-        if fieldName == CSV_COL_TAGS:
-            formattedTagsList = []
-            tagsList = execution['tags']
-            for tag in tagsList:
-                formattedTagsList.append(tag['name'] + ":" + tag['value'])
+        if field_name == CSV_COL_TAGS:
+            formatted_tags_list = []
+            tags_list = execution['tags']
+            for tag in tags_list:
+                formatted_tags_list.append(tag['name'] + ":" + tag['value'])
 
-            return formattedTagsList
+            return formatted_tags_list
 
-        if fieldName == CSV_COL_START_DATE:
-            return time.strftime('%d-%b-%Y', time.localtime(execution['startedAt'] / 1000))
+        if field_name == CSV_COL_START_DATE:
+            return helper.format_date(helper.get_date_obj_from_epoch(execution['startedAt']/1000), helper.DATE_FORMAT_DD_MMM_YYYY)
 
-        if fieldName == CSV_COL_START_TIME:
-            return time.strftime('%H:%M:%S', time.localtime(execution['startedAt'] / 1000))
+        if field_name == CSV_COL_START_TIME:
+            return helper.format_date(helper.get_date_obj_from_epoch(execution['startedAt'] / 1000),
+                                      helper.DATE_FORMAT_HH_MM_SS)
 
-        if fieldName == CSV_COL_END_DATE and execution['endedAt'] is not None:
-            return time.strftime('%d-%b-%Y', time.localtime(execution['endedAt'] / 1000))
+        if field_name == CSV_COL_END_DATE and execution['endedAt'] is not None:
+            return helper.format_date(helper.get_date_obj_from_epoch(execution['endedAt'] / 1000),
+                                      helper.DATE_FORMAT_DD_MMM_YYYY)
 
-        if fieldName == CSV_COL_END_TIME and execution['endedAt'] is not None:
-            return time.strftime('%H:%M:%S', time.localtime(execution['endedAt'] / 1000))
+        if field_name == CSV_COL_END_TIME and execution['endedAt'] is not None:
+            return helper.format_date(helper.get_date_obj_from_epoch(execution['endedAt'] / 1000),
+                                      helper.DATE_FORMAT_HH_MM_SS)
 
-        if fieldName == CSV_COL_TRIGGER_TYPE:
+        if field_name == CSV_COL_TRIGGER_TYPE:
             if 'user' in execution['cause']:
                 return CAUSE_EXECUTED_BY_USER
             if 'apiKey' in execution['cause']:
@@ -234,7 +236,7 @@ def get_field(execution, fieldName):
             if 'execution' in execution['cause']:
                 return CAUSE_EXECUTED_ALONG_PIPELINE
 
-        if fieldName == CSV_COL_WORKFLOW_NAME:
+        if field_name == CSV_COL_WORKFLOW_NAME:
             if execution['workflow'] is None or 'name' not in execution['workflow']:
                 return MISSING_VALUE_PLACE_HOLDER
             else:
