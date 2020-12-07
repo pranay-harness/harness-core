@@ -87,7 +87,6 @@ modules = [
     "//450-ce-views",
     "//460-capability",
     "//490-ce-commons",
-    "//900-yaml-sdk",
     "//930-delegate-tasks",
     "//950-delegate-tasks-beans",
     "//960-api-services",

@@ -1,4 +1,4 @@
-package io.harness.yaml.bean;
+package io.harness.yaml.snippets.bean;
 
 import java.util.List;
 import lombok.AccessLevel;

@@ -3,9 +3,9 @@ package io.harness.yaml.snippets.resources;
 import io.harness.ng.core.dto.ErrorDTO;
 import io.harness.ng.core.dto.FailureDTO;
 import io.harness.ng.core.dto.ResponseDTO;
-import io.harness.yaml.dto.YamlSnippetsDTO;
-import io.harness.yaml.impl.YamlSnippetProvider;
 import io.harness.yaml.snippets.SnippetTag;
+import io.harness.yaml.snippets.dto.YamlSnippetsDTO;
+import io.harness.yaml.snippets.impl.YamlSnippetProvider;
 
 import com.google.inject.Inject;
 import io.swagger.annotations.Api;

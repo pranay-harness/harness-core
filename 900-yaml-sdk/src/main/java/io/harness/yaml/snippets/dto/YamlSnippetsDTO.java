@@ -1,4 +1,4 @@
-package io.harness.yaml.dto;
+package io.harness.yaml.snippets.dto;
 
 import io.swagger.annotations.ApiModel;
 import java.util.List;

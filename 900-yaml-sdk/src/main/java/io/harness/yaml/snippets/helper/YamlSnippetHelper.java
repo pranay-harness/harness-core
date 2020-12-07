@@ -1,10 +1,11 @@
-package io.harness.yaml.helper;
+package io.harness.yaml.snippets.helper;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 
 import io.harness.exception.InvalidRequestException;
-import io.harness.yaml.bean.YamlSnippetMetaData;
-import io.harness.yaml.bean.YamlSnippets;
+import io.harness.yaml.snippets.bean.YamlSnippetMetaData;
+import io.harness.yaml.snippets.bean.YamlSnippets;
+import io.harness.yaml.snippets.dto.YamlSnippetMetaDataDTO;
 
 import com.fasterxml.jackson.dataformat.xml.XmlMapper;
 import com.google.inject.Singleton;
@@ -26,7 +27,7 @@ public class YamlSnippetHelper {
    */
   private static Map<String, Set<YamlSnippetMetaData>> tagSnippetMetaDataMap = new HashMap<>();
   /**
-   * Used to maintain Map of identifier{@link io.harness.yaml.dto.YamlSnippetMetaDataDTO}  with snippet metadata.
+   * Used to maintain Map of identifier{@link YamlSnippetMetaDataDTO}  with snippet metadata.
    * It will be used for fast retrieval of snippet based on tags.
    */
   private static Map<String, YamlSnippetMetaData> identifierSnippetMap = new HashMap<>();

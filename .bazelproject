@@ -23,7 +23,6 @@ directories:
   890-orchestration-persistence
   890-pms-contracts
   890-sm-core
-  900-yaml-sdk
   910-delegate-service-driver
   910-delegate-task-grpc-service
   920-delegate-agent-beans

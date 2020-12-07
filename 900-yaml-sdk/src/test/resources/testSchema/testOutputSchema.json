@@ -1,0 +1,118 @@
+{
+  "type": "object",
+  "properties": {
+    "spec": {
+      "$ref": "#/definitions/TestInterface",
+      "originalRef": "TestInterface"
+    }
+  },
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "type": {
+            "const": "ClassWithoutApiModelOverride"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "spec": {
+            "$ref": "#/definitions/ClassWithoutApiModelOverride"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "type": {
+            "const": "ClassWithApiModelOverride"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "spec": {
+            "$ref": "#/definitions/testName"
+          }
+        }
+      }
+    }
+  ],
+  "definitions": {
+    "ClassWhichContainsInterface": {
+      "type": "object",
+      "properties": {
+        "spec": {
+          "$ref": "#/definitions/TestInterface",
+          "originalRef": "TestInterface"
+        }
+      },
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "ClassWithoutApiModelOverride"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "spec": {
+                "$ref": "#/definitions/ClassWithoutApiModelOverride"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "ClassWithApiModelOverride"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "spec": {
+                "$ref": "#/definitions/testName"
+              }
+            }
+          }
+        }
+      ]
+    },
+    "ClassWithoutApiModelOverride": {
+      "allOf": [
+        {
+          "$ref": "#/definitions/TestInterface",
+          "originalRef": "TestInterface"
+        },
+        {
+          "type": "object"
+        }
+      ],
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "TestInterface": {
+      "type": "object",
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "testName": {
+      "allOf": [
+        {
+          "$ref": "#/definitions/TestInterface",
+          "originalRef": "TestInterface"
+        },
+        {
+          "type": "object"
+        }
+      ],
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    }
+  }
+}
