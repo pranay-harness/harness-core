@@ -62,6 +62,7 @@ import io.harness.exception.GeneralException;
 import io.harness.exception.InvalidArgumentsException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.UnauthorizedException;
+import io.harness.exception.UnexpectedException;
 import io.harness.exception.WingsException;
 import io.harness.ff.FeatureFlagService;
 import io.harness.lock.AcquiredLock;
@@ -1007,7 +1008,7 @@ public class AccountServiceImpl implements AccountService {
     if (isBlank(mainConfiguration.getSampleTargetEnv())) {
       String err = "Sample target env not configured";
       log.warn(err);
-      throw new WingsException(ErrorCode.GENERAL_ERROR).addParam("message", err);
+      throw new UnexpectedException(err);
     }
 
     String script =
@@ -1046,7 +1047,7 @@ public class AccountServiceImpl implements AccountService {
 
     String err = "Failed to provision";
     log.warn(err);
-    throw new WingsException(ErrorCode.GENERAL_ERROR).addParam("message", err);
+    throw new UnexpectedException(err);
   }
 
   @Override
@@ -1073,7 +1074,7 @@ public class AccountServiceImpl implements AccountService {
     if (isBlank(mainConfiguration.getSampleTargetStatusHost())) {
       String err = "Sample target status host not configured";
       log.warn(err);
-      throw new WingsException(ErrorCode.GENERAL_ERROR).addParam("message", err);
+      throw new UnexpectedException(err);
     }
 
     try {
@@ -1096,16 +1097,14 @@ public class AccountServiceImpl implements AccountService {
         }
         return steps;
       }
-      throw new WingsException(ErrorCode.GENERAL_ERROR)
-          .addParam("message", String.format("Empty provisioning result for account %s", accountId));
+      throw new UnexpectedException(String.format("Empty provisioning result for account %s", accountId));
     } catch (SocketTimeoutException e) {
       // Timed out for some reason. Return empty list to indicate unknown progress. UI can ignore and try again.
       log.info("Timed out getting progress. Returning empty list.");
       return new ArrayList<>();
     } catch (IOException e) {
-      throw new WingsException(ErrorCode.GENERAL_ERROR, e)
-          .addParam("message",
-              String.format("Exception in fetching delegate provisioning progress for account %s", accountId));
+      throw new UnexpectedException(
+          String.format("Exception in fetching delegate provisioning progress for account %s", accountId), e);
     }
   }
 
@@ -1122,7 +1121,7 @@ public class AccountServiceImpl implements AccountService {
   private boolean setAccountStatusInternal(Account account, String accountStatus) {
     String accountId = account.getUuid();
     if (!AccountStatus.isValid(accountStatus)) {
-      throw new WingsException("Invalid account status: " + accountStatus, USER);
+      throw new InvalidArgumentsException("Invalid account status: " + accountStatus, USER);
     }
 
     if (AccountStatus.INACTIVE.equals(accountStatus)) {
