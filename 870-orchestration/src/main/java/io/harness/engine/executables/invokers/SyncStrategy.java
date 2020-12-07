@@ -8,8 +8,8 @@ import io.harness.engine.OrchestrationEngine;
 import io.harness.engine.executables.ExecuteStrategy;
 import io.harness.engine.executables.InvokerPackage;
 import io.harness.engine.executions.node.NodeExecutionService;
-import io.harness.execution.NodeExecution;
 import io.harness.pms.ambiance.Ambiance;
+import io.harness.pms.execution.NodeExecutionProto;
 import io.harness.pms.execution.utils.AmbianceUtils;
 import io.harness.pms.plan.PlanNodeProto;
 import io.harness.pms.sdk.core.steps.executables.SyncExecutable;
@@ -30,7 +30,7 @@ public class SyncStrategy implements ExecuteStrategy {
 
   @Override
   public void start(InvokerPackage invokerPackage) {
-    NodeExecution nodeExecution = invokerPackage.getNodeExecution();
+    NodeExecutionProto nodeExecution = invokerPackage.getNodeExecution();
     Ambiance ambiance = nodeExecution.getAmbiance();
     SyncExecutable syncExecutable = extractSyncExecutable(nodeExecution);
     StepResponse stepResponse =
@@ -39,7 +39,7 @@ public class SyncStrategy implements ExecuteStrategy {
     engine.handleStepResponse(AmbianceUtils.obtainCurrentRuntimeId(ambiance), stepResponse);
   }
 
-  SyncExecutable extractSyncExecutable(NodeExecution nodeExecution) {
+  SyncExecutable extractSyncExecutable(NodeExecutionProto nodeExecution) {
     PlanNodeProto node = nodeExecution.getNode();
     return (SyncExecutable) stepRegistry.obtain(node.getStepType());
   }

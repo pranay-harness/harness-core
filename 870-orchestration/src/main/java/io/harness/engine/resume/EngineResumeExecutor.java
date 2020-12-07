@@ -9,7 +9,11 @@ import io.harness.engine.EngineExceptionUtils;
 import io.harness.engine.OrchestrationEngine;
 import io.harness.engine.executables.ExecutableProcessor;
 import io.harness.engine.executables.ResumePackage;
+import io.harness.engine.expressions.functors.NodeExecutionMap;
 import io.harness.execution.NodeExecution;
+import io.harness.execution.NodeExecutionMapper;
+import io.harness.execution.NodeExecutionUtils;
+import io.harness.pms.execution.NodeExecutionProto;
 import io.harness.pms.execution.Status;
 import io.harness.pms.execution.failure.FailureInfo;
 import io.harness.pms.sdk.core.steps.io.StepResponse;
@@ -29,7 +33,7 @@ import lombok.extern.slf4j.Slf4j;
 public class EngineResumeExecutor implements Runnable {
   boolean asyncError;
   Map<String, ResponseData> response;
-  NodeExecution nodeExecution;
+  NodeExecutionProto nodeExecution;
   OrchestrationEngine orchestrationEngine;
   ExecutableProcessor processor;
 

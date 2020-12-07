@@ -12,13 +12,12 @@ import io.harness.engine.executables.TaskExecuteStrategy;
 import io.harness.engine.executions.node.NodeExecutionService;
 import io.harness.engine.progress.EngineProgressCallback;
 import io.harness.engine.resume.EngineResumeCallback;
-import io.harness.execution.NodeExecution;
 import io.harness.execution.NodeExecution.NodeExecutionKeys;
 import io.harness.pms.ambiance.Ambiance;
 import io.harness.pms.execution.ExecutableResponse;
+import io.harness.pms.execution.NodeExecutionProto;
 import io.harness.pms.execution.TaskExecutableResponse;
 import io.harness.pms.execution.TaskMode;
-import io.harness.pms.execution.utils.AmbianceUtils;
 import io.harness.pms.plan.PlanNodeProto;
 import io.harness.pms.sdk.core.steps.executables.TaskExecutable;
 import io.harness.pms.sdk.core.steps.io.StepResponse;
@@ -55,17 +54,17 @@ public class TaskStrategy implements TaskExecuteStrategy {
 
   @Override
   public void start(InvokerPackage invokerPackage) {
-    NodeExecution nodeExecution = invokerPackage.getNodeExecution();
+    NodeExecutionProto nodeExecution = invokerPackage.getNodeExecution();
     TaskExecutable taskExecutable = extractTaskExecutable(nodeExecution);
     Ambiance ambiance = nodeExecution.getAmbiance();
     Task task = taskExecutable.obtainTask(
         ambiance, nodeExecutionService.extractResolvedStepParameters(nodeExecution), invokerPackage.getInputPackage());
-    handleResponse(ambiance, task);
+    handleResponse(ambiance, nodeExecution, task);
   }
 
   @Override
   public void resume(ResumePackage resumePackage) {
-    NodeExecution nodeExecution = resumePackage.getNodeExecution();
+    NodeExecutionProto nodeExecution = resumePackage.getNodeExecution();
     Ambiance ambiance = nodeExecution.getAmbiance();
     TaskExecutable taskExecutable = extractTaskExecutable(nodeExecution);
     StepResponse stepResponse = taskExecutable.handleTaskResult(ambiance,
@@ -73,14 +72,12 @@ public class TaskStrategy implements TaskExecuteStrategy {
     engine.handleStepResponse(nodeExecution.getUuid(), stepResponse);
   }
 
-  private TaskExecutable extractTaskExecutable(NodeExecution nodeExecution) {
+  private TaskExecutable extractTaskExecutable(NodeExecutionProto nodeExecution) {
     PlanNodeProto node = nodeExecution.getNode();
     return (TaskExecutable) stepRegistry.obtain(node.getStepType());
   }
 
-  private void handleResponse(@NonNull Ambiance ambiance, Task task) {
-    NodeExecution nodeExecution =
-        Preconditions.checkNotNull(nodeExecutionService.get(AmbianceUtils.obtainCurrentRuntimeId(ambiance)));
+  private void handleResponse(@NonNull Ambiance ambiance, NodeExecutionProto nodeExecution, Task task) {
     TaskExecutor taskExecutor = taskExecutorMap.get(mode.name());
     String taskId = Preconditions.checkNotNull(taskExecutor.queueTask(ambiance.getSetupAbstractionsMap(), task));
     NotifyCallback notifyCallback = EngineResumeCallback.builder().nodeExecutionId(nodeExecution.getUuid()).build();

@@ -4,7 +4,7 @@ import static io.harness.annotations.dev.HarnessTeam.CDC;
 
 import io.harness.annotations.Redesign;
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.execution.NodeExecution;
+import io.harness.pms.execution.NodeExecutionProto;
 import io.harness.pms.sdk.core.steps.io.PassThroughData;
 import io.harness.pms.sdk.core.steps.io.StepInputPackage;
 
@@ -17,7 +17,7 @@ import lombok.Value;
 @Builder
 @Redesign
 public class InvokerPackage {
-  @NonNull NodeExecution nodeExecution;
+  @NonNull NodeExecutionProto nodeExecution;
   StepInputPackage inputPackage;
   PassThroughData passThroughData;
 }
