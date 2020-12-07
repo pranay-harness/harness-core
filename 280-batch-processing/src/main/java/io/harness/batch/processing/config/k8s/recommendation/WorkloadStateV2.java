@@ -10,9 +10,11 @@ import lombok.Value;
 
 @Value
 class WorkloadStateV2 {
+  PartialRecommendationHistogram histogram;
   Map<String, ContainerStateV2> containerStateMap;
 
   WorkloadStateV2(PartialRecommendationHistogram partialRecommendationHistogram) {
+    this.histogram = partialRecommendationHistogram;
     this.containerStateMap =
         Optional.ofNullable(partialRecommendationHistogram.getContainerCheckpoints())
             .orElseGet(HashMap::new)
