@@ -111,6 +111,7 @@ public class JiraCreateUpdate extends State implements SweepingOutputStateMixin 
   private static final String TIMETRACKING = "timetracking";
   private static final String TIME_TRACKING_ORIGINAL_ESTIMATE = "TimeTracking:OriginalEstimate";
   private static final String TIME_TRACKING_REMAINING_ESTIMATE = "TimeTracking:RemainingEstimate";
+  private static final String NUMBER = "number";
 
   @Inject private transient ActivityService activityService;
   @Inject @Transient private LogService logService;
@@ -467,7 +468,8 @@ public class JiraCreateUpdate extends State implements SweepingOutputStateMixin 
   void resolveCustomFieldsVars(
       Map<String, String> customFieldsIdToNameMap, Map<String, Map<Object, Object>> customFieldsValueToIdMap) {
     for (Entry<String, JiraCustomFieldValue> customFieldValueEntry : customFields.entrySet()) {
-      if (customFieldsIdToNameMap.get(customFieldValueEntry.getKey()) != null) {
+      if (customFieldsIdToNameMap.get(customFieldValueEntry.getKey()) != null
+          && !customFieldValueEntry.getValue().getFieldType().equals(NUMBER)) {
         Set<Object> allowedValues = customFieldsValueToIdMap.get(customFieldValueEntry.getKey()).keySet();
         Collection<Object> allowedIds = customFieldsValueToIdMap.get(customFieldValueEntry.getKey()).values();
         String customFieldName = customFieldsIdToNameMap.get(customFieldValueEntry.getKey());
@@ -524,7 +526,7 @@ public class JiraCreateUpdate extends State implements SweepingOutputStateMixin 
           String parsedDateTimeValue = parseDateTimeValue(value.getFieldValue(), context);
           value.setFieldValue(parsedDateTimeValue);
         }
-        if (value.getFieldType().equals("number")) {
+        if (value.getFieldType().equals(NUMBER)) {
           String parsedNumber = parseNumberValue(value.getFieldValue(), context, customFieldName);
           value.setFieldValue(parsedNumber);
         }
@@ -544,7 +546,7 @@ public class JiraCreateUpdate extends State implements SweepingOutputStateMixin 
         .filter(jiraField
             -> jiraField.getSchema().get("type").equals(OPTION) || jiraField.getSchema().get("type").equals(RESOLUTION)
                 || (jiraField.getSchema().get("type").equals(ARRAY) && jiraField.getAllowedValues() != null)
-                || jiraField.getSchema().get("type").equals("number"))
+                || jiraField.getSchema().get("type").equals(NUMBER))
         .collect(toMap(JiraField::getKey, JiraField::getName));
   }
 

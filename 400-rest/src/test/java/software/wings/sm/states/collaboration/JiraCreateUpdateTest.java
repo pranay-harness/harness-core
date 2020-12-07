@@ -11,6 +11,7 @@ import static software.wings.utils.WingsTestConstants.APP_NAME;
 import static software.wings.utils.WingsTestConstants.JIRA_CONNECTOR_ID;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
@@ -238,6 +239,7 @@ public class JiraCreateUpdateTest extends WingsBaseTest {
     map.put("multi", "Multiselect");
     map.put("customfield_option", "Option Name");
     map.put("customfield_option_2", "Option Name");
+    map.put("customfield_option_number", "Number");
 
     assertThat(jiraCreateUpdateState.mapCustomFieldsIdsToNames(createMetaResponse)).isEqualTo(map);
   }
@@ -323,6 +325,26 @@ public class JiraCreateUpdateTest extends WingsBaseTest {
     String resolvedExpression = jiraCreateUpdateState.getCustomFieldsMap().get("multi").getFieldValue();
 
     assertThat(resolvedExpression).isEqualTo("multiselect_id_1,multiselect_id_2");
+  }
+
+  @Test
+  @Owner(developers = AGORODETKI)
+  @Category(UnitTests.class)
+  public void shouldIgnoreNumberFieldTypeWhenResolvingCustomFieldVars() {
+    jiraCreateUpdateState.setProject("PN");
+    jiraCreateUpdateState.setIssueType("Issue Type");
+    Map<String, JiraCustomFieldValue> customFields = new HashMap<>();
+    JiraCustomFieldValue numberTypeField = new JiraCustomFieldValue();
+    numberTypeField.setFieldType("number");
+    numberTypeField.setFieldValue("3");
+    customFields.put("customfield_option_number", numberTypeField);
+    jiraCreateUpdateState.setCustomFields(customFields);
+
+    assertThatCode(()
+                       -> jiraCreateUpdateState.resolveCustomFieldsVars(
+                           jiraCreateUpdateState.mapCustomFieldsIdsToNames(createMetaResponse),
+                           jiraCreateUpdateState.mapCustomFieldsValuesToId(createMetaResponse)))
+        .doesNotThrowAnyException();
   }
 
   @Test(expected = HarnessJiraException.class)
