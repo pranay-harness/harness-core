@@ -5,6 +5,10 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.exception.WingsException.USER;
 
+import static software.wings.beans.trigger.WebhookSource.BitBucketEventType.ALL;
+import static software.wings.beans.trigger.WebhookSource.BitBucketEventType.ANY;
+import static software.wings.beans.trigger.WebhookSource.BitBucketEventType.PING;
+import static software.wings.beans.trigger.WebhookSource.BitBucketEventType.valueOf;
 import static software.wings.graphql.schema.type.trigger.QLGitHubAction.packageActions;
 import static software.wings.graphql.schema.type.trigger.QLGitHubAction.pullRequestActions;
 import static software.wings.graphql.schema.type.trigger.QLGitHubAction.releaseActions;
@@ -48,6 +52,7 @@ import software.wings.graphql.schema.type.trigger.QLWebhookSource;
 import software.wings.service.intfc.ArtifactStreamService;
 import software.wings.service.intfc.SettingsService;
 
+import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import java.util.Arrays;
@@ -208,7 +213,7 @@ public class TriggerConditionController {
     String action = null;
     BitBucketEventType bitBucketEventType = bitBucketEvents.get(0);
 
-    if (bitBucketEventType == BitBucketEventType.ANY || bitBucketEventType == BitBucketEventType.PING) {
+    if (Sets.newHashSet(ANY, PING, ALL).contains(bitBucketEventType)) {
       eventType = bitBucketEventType.getValue();
     } else {
       String[] eventAndAction = bitBucketEventType.getValue().split(":");
@@ -410,7 +415,7 @@ public class TriggerConditionController {
       throw new InvalidRequestException("Bitbucket event must not be null", USER);
     }
     BitBucketEventType bitBucketEventType =
-        BitBucketEventType.valueOf(qlTriggerConditionInput.getWebhookConditionInput().getBitbucketEvent().name());
+        valueOf(qlTriggerConditionInput.getWebhookConditionInput().getBitbucketEvent().name());
     String webhookEventType = bitBucketEventType.getEventType().getValue();
 
     builder.eventTypes(Arrays.asList(WebhookEventType.find(webhookEventType)));

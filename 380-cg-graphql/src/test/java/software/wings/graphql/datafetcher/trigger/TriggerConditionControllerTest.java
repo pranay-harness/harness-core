@@ -541,6 +541,66 @@ public class TriggerConditionControllerTest extends CategoryTest {
   @Test
   @Owner(developers = MILAN)
   @Category(UnitTests.class)
+  public void populateTriggerConditionShouldReturnWebhookTriggerConditionWithBitBucketWebhookSourceAllEvent() {
+    String accountId = "1234";
+    PortalConfig portalConfig = Mockito.mock(PortalConfig.class);
+
+    Mockito.when(portalConfig.getUrl()).thenReturn("URL");
+    mainConfiguration.setPortal(portalConfig);
+    Mockito.when(mainConfiguration.getPortal()).thenReturn(portalConfig);
+
+    when(mainConfiguration.getDeployMode()).thenReturn(DeployMode.KUBERNETES);
+
+    WebHookToken webHookToken =
+        WebHookToken.builder().webHookToken("webhookToken").httpMethod("POST").payload("payload").build();
+    StringBuilder webhookURL = new StringBuilder(mainConfiguration.getPortal().getUrl());
+    webhookURL.append("/gateway/api/webhooks/")
+        .append(webHookToken.getWebHookToken())
+        .append("?accountId=")
+        .append(accountId);
+
+    WebHookTriggerCondition webhookTriggerCondition =
+        WebHookTriggerCondition.builder()
+            .webHookToken(webHookToken)
+            .webhookSource(WebhookSource.BITBUCKET)
+            .bitBucketEvents(Arrays.asList(WebhookSource.BitBucketEventType.ALL))
+            .branchName("branchName")
+            .gitConnectorId("gitConnectorId")
+            .filePaths(Arrays.asList("filePath1", "filePath2"))
+            .checkFileContentChanged(true)
+            .build();
+    Trigger trigger = Trigger.builder().condition(webhookTriggerCondition).build();
+
+    SettingAttribute gitConfig = new SettingAttribute();
+    gitConfig.setName("gitConnectorName");
+    Mockito.when(settingsService.get(Matchers.anyString())).thenReturn(gitConfig);
+
+    QLOnWebhook qlOnWebhook = (QLOnWebhook) triggerConditionController.populateTriggerCondition(trigger, accountId);
+
+    assertThat(qlOnWebhook).isNotNull();
+    assertThat(qlOnWebhook.getWebhookSource().name()).isEqualTo(webhookTriggerCondition.getWebhookSource().name());
+    assertThat(qlOnWebhook.getBranchRegex()).isEqualTo(webhookTriggerCondition.getBranchRegex());
+    assertThat(qlOnWebhook.getBranchName()).isEqualTo(webhookTriggerCondition.getBranchName());
+    assertThat(qlOnWebhook.getGitConnectorId()).isEqualTo(webhookTriggerCondition.getGitConnectorId());
+    assertThat(qlOnWebhook.getGitConnectorName()).isEqualTo(gitConfig.getName());
+    assertThat(qlOnWebhook.getFilePaths()).isEqualTo(webhookTriggerCondition.getFilePaths());
+    assertThat(qlOnWebhook.getDeployOnlyIfFilesChanged())
+        .isEqualTo(webhookTriggerCondition.isCheckFileContentChanged());
+    assertThat(qlOnWebhook.getTriggerConditionType().name())
+        .isEqualTo(webhookTriggerCondition.getConditionType().name());
+    assertThat(qlOnWebhook.getWebhookDetails()).isNotNull();
+    assertThat(qlOnWebhook.getWebhookDetails().getHeader()).isEqualTo("content-type: application/json");
+    assertThat(qlOnWebhook.getWebhookDetails().getMethod()).isEqualTo(webHookToken.getHttpMethod());
+    assertThat(qlOnWebhook.getWebhookDetails().getPayload()).isEqualTo(webHookToken.getPayload());
+    assertThat(qlOnWebhook.getWebhookDetails().getWebhookURL()).isEqualTo(webhookURL.toString());
+    assertThat(qlOnWebhook.getWebhookEvent()).isNotNull();
+    assertThat(qlOnWebhook.getWebhookEvent().getEvent()).isEqualTo("all");
+    assertThat(qlOnWebhook.getWebhookEvent().getAction()).isNull();
+  }
+
+  @Test
+  @Owner(developers = MILAN)
+  @Category(UnitTests.class)
   public void resolveTriggerConditionShouldReturnOnNewArtifactConditionType() throws Exception {
     QLTriggerConditionInput qlTriggerConditionInput =
         QLTriggerConditionInput.builder().conditionType(QLConditionType.ON_NEW_ARTIFACT).build();
