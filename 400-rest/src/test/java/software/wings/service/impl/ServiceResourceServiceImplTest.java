@@ -800,35 +800,35 @@ public class ServiceResourceServiceImplTest extends WingsBaseTest {
     Service service = Service.builder().appId(APP_ID).uuid(SERVICE_ID).helmVersion(V2).deploymentType(HELM).build();
     wingsPersistence.save(service);
     assertThat(serviceResourceService.getHelmCommandFlags(V2, APP_ID, SERVICE_ID, StoreType.HelmChartRepo))
-        .containsExactlyInAnyOrder(LIST, INSTALL, TEMPLATE, ROLLBACK, VERSION, DELETE, UPGRADE, HISTORY);
+        .containsExactlyInAnyOrder(LIST, INSTALL, TEMPLATE, ROLLBACK, VERSION, DELETE, UPGRADE, HISTORY, FETCH);
     assertThat(serviceResourceService.getHelmCommandFlags(null, APP_ID, SERVICE_ID, StoreType.HelmChartRepo))
-        .containsExactlyInAnyOrder(LIST, INSTALL, TEMPLATE, ROLLBACK, VERSION, DELETE, UPGRADE, HISTORY);
+        .containsExactlyInAnyOrder(LIST, INSTALL, TEMPLATE, ROLLBACK, VERSION, DELETE, UPGRADE, HISTORY, FETCH);
     assertThat(serviceResourceService.getHelmCommandFlags(V3, APP_ID, SERVICE_ID, StoreType.HelmChartRepo))
-        .containsExactlyInAnyOrder(LIST, INSTALL, TEMPLATE, ROLLBACK, VERSION, UNINSTALL, UPGRADE, HISTORY);
+        .containsExactlyInAnyOrder(LIST, INSTALL, TEMPLATE, ROLLBACK, VERSION, UNINSTALL, UPGRADE, HISTORY, PULL);
 
     assertThat(serviceResourceService.getHelmCommandFlags(V2, APP_ID, SERVICE_ID, StoreType.HelmSourceRepo))
-        .containsExactlyInAnyOrder(LIST, INSTALL, TEMPLATE, ROLLBACK, VERSION, DELETE, UPGRADE, HISTORY, FETCH);
+        .containsExactlyInAnyOrder(LIST, INSTALL, TEMPLATE, ROLLBACK, VERSION, DELETE, UPGRADE, HISTORY);
     assertThat(serviceResourceService.getHelmCommandFlags(null, APP_ID, SERVICE_ID, StoreType.HelmSourceRepo))
-        .containsExactlyInAnyOrder(LIST, INSTALL, TEMPLATE, ROLLBACK, VERSION, DELETE, UPGRADE, HISTORY, FETCH);
+        .containsExactlyInAnyOrder(LIST, INSTALL, TEMPLATE, ROLLBACK, VERSION, DELETE, UPGRADE, HISTORY);
     assertThat(serviceResourceService.getHelmCommandFlags(V3, APP_ID, SERVICE_ID, StoreType.HelmSourceRepo))
-        .containsExactlyInAnyOrder(LIST, INSTALL, TEMPLATE, ROLLBACK, VERSION, UNINSTALL, UPGRADE, HISTORY, PULL);
+        .containsExactlyInAnyOrder(LIST, INSTALL, TEMPLATE, ROLLBACK, VERSION, UNINSTALL, UPGRADE, HISTORY);
 
     service.setDeploymentType(KUBERNETES);
     service.setHelmVersion(V3);
     wingsPersistence.save(service);
     assertThat(serviceResourceService.getHelmCommandFlags(V2, APP_ID, SERVICE_ID, StoreType.HelmChartRepo))
-        .containsExactlyInAnyOrder(VERSION, TEMPLATE);
+        .containsExactlyInAnyOrder(FETCH, VERSION, TEMPLATE);
     assertThat(serviceResourceService.getHelmCommandFlags(null, APP_ID, SERVICE_ID, StoreType.HelmChartRepo))
-        .containsExactlyInAnyOrder(VERSION, TEMPLATE);
+        .containsExactlyInAnyOrder(PULL, VERSION, TEMPLATE);
     assertThat(serviceResourceService.getHelmCommandFlags(V3, APP_ID, SERVICE_ID, StoreType.HelmChartRepo))
-        .containsExactlyInAnyOrder(VERSION, TEMPLATE);
+        .containsExactlyInAnyOrder(PULL, VERSION, TEMPLATE);
 
     assertThat(serviceResourceService.getHelmCommandFlags(V2, APP_ID, SERVICE_ID, StoreType.HelmSourceRepo))
-        .containsExactlyInAnyOrder(FETCH, VERSION, TEMPLATE);
+        .containsExactlyInAnyOrder(VERSION, TEMPLATE);
     assertThat(serviceResourceService.getHelmCommandFlags(null, APP_ID, SERVICE_ID, StoreType.HelmSourceRepo))
-        .containsExactlyInAnyOrder(PULL, VERSION, TEMPLATE);
+        .containsExactlyInAnyOrder(VERSION, TEMPLATE);
     assertThat(serviceResourceService.getHelmCommandFlags(V3, APP_ID, SERVICE_ID, StoreType.HelmSourceRepo))
-        .containsExactlyInAnyOrder(PULL, VERSION, TEMPLATE);
+        .containsExactlyInAnyOrder(VERSION, TEMPLATE);
   }
 
   @Test
