@@ -9,16 +9,14 @@ import io.harness.engine.EngineExceptionUtils;
 import io.harness.engine.OrchestrationEngine;
 import io.harness.engine.executables.ExecutableProcessor;
 import io.harness.engine.executables.ResumePackage;
-import io.harness.engine.expressions.functors.NodeExecutionMap;
-import io.harness.execution.NodeExecution;
-import io.harness.execution.NodeExecutionMapper;
-import io.harness.execution.NodeExecutionUtils;
 import io.harness.pms.execution.NodeExecutionProto;
 import io.harness.pms.execution.Status;
 import io.harness.pms.execution.failure.FailureInfo;
+import io.harness.pms.plan.PlanNodeProto;
 import io.harness.pms.sdk.core.steps.io.StepResponse;
 import io.harness.tasks.ResponseData;
 
+import java.util.List;
 import java.util.Map;
 import lombok.Builder;
 import lombok.Value;
@@ -34,6 +32,7 @@ public class EngineResumeExecutor implements Runnable {
   boolean asyncError;
   Map<String, ResponseData> response;
   NodeExecutionProto nodeExecution;
+  List<PlanNodeProto> nodes;
   OrchestrationEngine orchestrationEngine;
   ExecutableProcessor processor;
 
@@ -54,7 +53,8 @@ public class EngineResumeExecutor implements Runnable {
         return;
       }
 
-      processor.handleResume(ResumePackage.builder().nodeExecution(nodeExecution).responseDataMap(response).build());
+      processor.handleResume(
+          ResumePackage.builder().nodeExecution(nodeExecution).nodes(nodes).responseDataMap(response).build());
     } catch (Exception ex) {
       orchestrationEngine.handleError(nodeExecution.getAmbiance(), ex);
     }
