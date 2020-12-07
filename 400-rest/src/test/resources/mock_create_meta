@@ -1,6 +1,5 @@
 {
-  "expand" : "projects", "projects" :
- [ {
+  "expand" : "projects", "projects" : [ {
     "id" : "1",
     "key" : "PN",
     "name" : "Project Name",
@@ -8,17 +7,14 @@
       "id" : "1",
       "name" : "Issue Type",
       "description" : "Description",
-      "subtask": false,
+      "subtask" : false,
       "fields" : {
         "issuetype" : {
           "key" : "issuetype",
           "name" : "Issue Type",
           "required" : "true",
           "schema" : {"type" : "issuetype", "system" : "issuetype"},
-          "allowedValues" : [ {
-            "id" : "id",
-            "name" : "Issue Name"
-          } ],
+          "allowedValues" : [ {"id" : "id", "name" : "Issue Name"} ],
           "custom" : "false"
         },
         "multi" : {
@@ -48,12 +44,20 @@
           ],
           "custom" : "true"
         },
+        "customfield_option_number" : {
+          "key" : "customfield_option_number",
+          "name" : "Number",
+          "required" : "false",
+          "schema" :
+              {"type" : "number", "custom" : "customSchema", "customId" : 1},
+          "custom" : "true"
+        },
         "customfield_option_2" : {
           "key" : "customfield_option_2",
           "name" : "Option Name",
           "required" : "false",
           "schema" :
-          {"type" : "option", "custom" : "customSchema", "customId" : 1},
+              {"type" : "option", "custom" : "customSchema", "customId" : 1},
           "allowedValues" : [
             {"value" : "OptionValue1", "id" : "option_id_1"},
             {"value" : "OptionValue2", "id" : "option_id_2"}
@@ -61,43 +65,24 @@
           "custom" : "true"
         },
         "timetracking" : {
-          "key": "timetracking",
-          "name": "Timetracking",
-          "required": "true",
-          "schema": {
-            "type": "timetracking"
-          }
+          "key" : "timetracking",
+          "name" : "Timetracking",
+          "required" : "true",
+          "schema" : {"type" : "timetracking"}
         },
-        "priority": {
-          "required": false,
-          "schema": {
-            "type": "priority",
-            "system": "priority"
-          },
-          "name": "Priority",
-          "fieldId": "priority",
-          "hasDefaultValue": true,
-          "operations": [
-            "set"
-          ],
-          "allowedValues": [
-            {
-              "name": "High",
-              "id": "1"
-            },
-            {
-              "name": "Medium",
-              "id": "2"
-            },
-            {
-              "name": "Low",
-              "id": "3"
-            }
+        "priority" : {
+          "required" : false,
+          "schema" : {"type" : "priority", "system" : "priority"},
+          "name" : "Priority",
+          "fieldId" : "priority",
+          "hasDefaultValue" : true,
+          "operations" : ["set"],
+          "allowedValues" : [
+            {"name" : "High", "id" : "1"}, {"name" : "Medium", "id" : "2"},
+            {"name" : "Low", "id" : "3"}
           ]
         }
       }
-    }
-    ]
-  }
- ]
+    } ]
+  } ]
 }
