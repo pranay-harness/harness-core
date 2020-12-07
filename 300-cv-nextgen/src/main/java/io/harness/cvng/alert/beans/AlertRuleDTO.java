@@ -7,9 +7,11 @@ import io.harness.ng.core.dto.NotificationSettingType;
 import java.util.List;
 import lombok.Builder;
 import lombok.Value;
+import lombok.experimental.FieldNameConstants;
 
 @Value
 @Builder
+@FieldNameConstants(innerTypeName = "AlertRuleDTOKeys")
 public class AlertRuleDTO {
   String uuid;
   boolean enabled;
@@ -24,6 +26,7 @@ public class AlertRuleDTO {
 
   @Value
   @Builder
+  @FieldNameConstants(innerTypeName = "AlertConditionKeys")
   public static class AlertCondition {
     List<String> services;
     List<String> environments;
@@ -37,6 +40,7 @@ public class AlertRuleDTO {
 
   @Value
   @Builder
+  @FieldNameConstants(innerTypeName = "VerificationsNotifyKeys")
   public static class VerificationsNotify {
     List<ActivityType> activityTypes;
     List<VerificationStatus> verificationStatuses;
@@ -44,12 +48,14 @@ public class AlertRuleDTO {
 
   @Value
   @Builder
+  @FieldNameConstants(innerTypeName = "RiskNotifyKeys")
   public static class RiskNotify {
     int threshold;
   }
 
   @Value
   @Builder
+  @FieldNameConstants(innerTypeName = "NotificationMethodKeys")
   public static class NotificationMethod {
     NotificationSettingType notificationSettingType;
 
