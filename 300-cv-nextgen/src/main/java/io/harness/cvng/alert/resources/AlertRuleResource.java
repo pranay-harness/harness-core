@@ -2,6 +2,7 @@ package io.harness.cvng.alert.resources;
 
 import io.harness.cvng.alert.beans.AlertRuleDTO;
 import io.harness.cvng.alert.services.api.AlertRuleService;
+import io.harness.cvng.alert.util.ActivityType;
 import io.harness.ng.beans.PageResponse;
 import io.harness.rest.RestResponse;
 import io.harness.security.annotations.NextGenManagerAuth;
@@ -53,6 +54,17 @@ public class AlertRuleResource {
       @QueryParam("identifier") @NotNull String identifier) {
     return new RestResponse<>(
         alertRuleService.getAlertRuleDTO(accountId, orgIdentifier, projectIdentifier, identifier));
+  }
+
+  @GET
+  @Timed
+  @ExceptionMetered
+  @Path("/activityTypes")
+  @ApiOperation(value = "gets activity types", nickname = "getActivityTypes")
+  public RestResponse<List<ActivityType>> getActivityTypes(@QueryParam("accountId") @NotNull String accountId,
+      @QueryParam("orgIdentifier") @NotNull String orgIdentifier,
+      @QueryParam("projectIdentifier") @NotNull String projectIdentifier) {
+    return new RestResponse<>(alertRuleService.getActivityTypes(accountId, orgIdentifier, projectIdentifier));
   }
 
   @POST

@@ -1,9 +1,10 @@
 package io.harness.cvng.alert.entities;
 
-import static io.harness.cvng.alert.beans.AlertRuleDTO.AlertCondition;
-import static io.harness.cvng.alert.beans.AlertRuleDTO.NotificationMethod;
-
 import io.harness.cvng.alert.beans.AlertRuleDTO;
+import io.harness.cvng.alert.beans.AlertRuleDTO.AlertCondition;
+import io.harness.cvng.alert.beans.AlertRuleDTO.AlertCondition.AlertConditionKeys;
+import io.harness.cvng.alert.beans.AlertRuleDTO.NotificationMethod;
+import io.harness.cvng.alert.beans.AlertRuleDTO.RiskNotify.RiskNotifyKeys;
 import io.harness.mongo.index.FdUniqueIndex;
 import io.harness.persistence.CreatedAtAware;
 import io.harness.persistence.PersistentEntity;
@@ -15,6 +16,7 @@ import javax.validation.constraints.NotNull;
 import lombok.Builder;
 import lombok.Data;
 import lombok.experimental.FieldNameConstants;
+import lombok.experimental.UtilityClass;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Id;
 
@@ -66,5 +68,12 @@ public class AlertRule implements PersistentEntity, UuidAware, CreatedAtAware, U
         .alertCondition(alertRuleDTO.getAlertCondition())
         .notificationMethod(alertRuleDTO.getNotificationMethod())
         .build();
+  }
+
+  @UtilityClass
+  public static final class AlertRuleKeys {
+    public static final String enabledRisk = alertCondition + "." + AlertConditionKeys.enabledRisk;
+    public static final String threshold =
+        alertCondition + "." + AlertConditionKeys.notify + "." + RiskNotifyKeys.threshold;
   }
 }

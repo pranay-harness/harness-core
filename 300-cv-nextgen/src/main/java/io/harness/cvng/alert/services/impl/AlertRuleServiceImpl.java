@@ -1,22 +1,25 @@
 package io.harness.cvng.alert.services.impl;
 
 import static io.harness.cvng.alert.entities.AlertRule.convertFromDTO;
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
 import io.harness.cvng.alert.beans.AlertRuleDTO;
 import io.harness.cvng.alert.entities.AlertRule;
 import io.harness.cvng.alert.entities.AlertRule.AlertRuleKeys;
 import io.harness.cvng.alert.services.api.AlertRuleService;
+import io.harness.cvng.alert.util.ActivityType;
 import io.harness.ng.beans.PageResponse;
 import io.harness.persistence.HPersistence;
 import io.harness.utils.PageUtils;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
+import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
-
 @Slf4j
 public class AlertRuleServiceImpl implements AlertRuleService {
   @Inject private HPersistence hPersistence;
@@ -70,6 +73,37 @@ public class AlertRuleServiceImpl implements AlertRuleService {
                             .field(AlertRuleKeys.identifier)
                             .equal(identifier)
                             .get());
+  }
+
+  @Override
+  public void processRiskScore(String accountId, String orgIdentifier, String projectIdentifier,
+      String serviceIdentifier, String envIdentifier, double riskScore) {
+    List<AlertRule> alertRules = hPersistence.createQuery(AlertRule.class)
+                                     .filter(AlertRuleKeys.accountId, accountId)
+                                     .filter(AlertRuleKeys.orgIdentifier, orgIdentifier)
+                                     .filter(AlertRuleKeys.projectIdentifier, projectIdentifier)
+                                     .filter(AlertRuleKeys.enabledRisk, true)
+                                     .field(AlertRuleKeys.threshold)
+                                     .lessThanOrEq(riskScore * 100)
+                                     .asList();
+
+    if (isNotEmpty(alertRules)) {
+      alertRules.stream()
+          .filter(alertRule
+              -> (isEmpty(alertRule.getAlertCondition().getServices())
+                     || alertRule.getAlertCondition().getServices().contains(serviceIdentifier))
+                  && (isEmpty(alertRule.getAlertCondition().getEnvironments())
+                      || alertRule.getAlertCondition().getEnvironments().contains(envIdentifier)))
+          .forEach(rule -> { notifyChannel(); });
+    }
+  }
+
+  @VisibleForTesting
+  public void notifyChannel() {}
+
+  @Override
+  public List<ActivityType> getActivityTypes(String accountId, String orgIdentifier, String projectIdentifier) {
+    return Arrays.asList(ActivityType.values());
   }
 
   private List<AlertRuleDTO> list(String accountId, String projectIdentifier, String orgIdentifier) {
