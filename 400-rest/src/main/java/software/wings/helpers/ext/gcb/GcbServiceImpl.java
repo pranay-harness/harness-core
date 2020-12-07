@@ -19,6 +19,7 @@ import software.wings.helpers.ext.gcb.models.RepoSource;
 import software.wings.helpers.ext.gcs.GcsRestClient;
 import software.wings.service.impl.GcpHelperService;
 
+import com.google.api.client.auth.oauth2.TokenResponseException;
 import com.google.api.client.googleapis.auth.oauth2.GoogleCredential;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Inject;
@@ -191,12 +192,17 @@ public class GcbServiceImpl implements GcbService {
     }
     GoogleCredential gc = gcpHelperService.getGoogleCredential(gcpConfig, encryptionDetails, false);
 
-    if (gc.refreshToken()) {
-      return String.join(" ", "Bearer", gc.getAccessToken());
-    } else {
-      String msg = "Could not refresh token for google cloud provider";
-      log.warn(msg);
-      throw new GcbClientException(msg);
+    try {
+      if (gc.refreshToken()) {
+        return String.join(" ", "Bearer", gc.getAccessToken());
+      } else {
+        String msg = "Could not refresh token for google cloud provider";
+        log.warn(msg);
+        throw new GcbClientException(msg);
+      }
+    } catch (TokenResponseException e) {
+      log.info("GCB_TASK - GCB task failed due to: ", e);
+      throw new GcbClientException("407 Proxy Authentication Required");
     }
   }
 
