@@ -37,7 +37,6 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.stream.Stream;
 import lombok.experimental.UtilityClass;
-import org.apache.commons.io.FileUtils;
 import org.zeroturnaround.exec.InvalidExitValueException;
 import org.zeroturnaround.exec.ProcessExecutor;
 import org.zeroturnaround.exec.ProcessResult;
@@ -190,14 +189,13 @@ public class FileIo {
 
   public static boolean releaseLock(File file) {
     File lockFile = new File(file.getPath() + ".lock");
-    try {
-      if (lockFile.exists()) {
-        FileUtils.forceDelete(lockFile);
-      }
+    if (lockFile.delete()) {
       return true;
-    } catch (Exception e) {
-      return false;
     }
+    if (!lockFile.exists()) {
+      return true;
+    }
+    return false;
   }
 
   public static boolean isLocked(File file) {
