@@ -23,6 +23,8 @@ import io.harness.ngpipeline.pipeline.beans.yaml.NgPipeline;
 import io.harness.ngpipeline.pipeline.mappers.NgPipelineFilterHelper;
 import io.harness.ngpipeline.pipeline.mappers.PipelineDtoMapper;
 import io.harness.ngpipeline.pipeline.service.NGPipelineService;
+// import io.harness.ngtriggers.utils.TriggerUtils;
+import io.harness.plancreator.pipeline.PipelineConfig;
 import io.harness.utils.PageUtils;
 
 import com.google.inject.Inject;
@@ -202,5 +204,13 @@ public class NGPipelineResource {
       @PathParam(NGCommonEntityConstants.PIPELINE_KEY) String pipelineId) {
     return ResponseDTO.newResponse(ngPipelineService.delete(
         accountId, orgId, projectId, pipelineId, isNumeric(ifMatch) ? parseLong(ifMatch) : null));
+  }
+
+  @GET
+  @Path("/dummyApiForSwaggerSchemaCheck")
+  @ApiOperation(value = "dummy api for checking pms schema", nickname = "dummyApiForSwaggerSchemaCheck")
+  public ResponseDTO<PipelineConfig> dummyApiForSwaggerSchemaCheck() {
+    log.info("Get pipeline");
+    return ResponseDTO.newResponse(PipelineConfig.builder().build());
   }
 }

@@ -18,6 +18,7 @@ public class NGPipelineRegistrars {
           .addAll(NGCoreClientRegistrars.kryoRegistrars)
           .addAll(OrchestrationVisualizationModuleRegistrars.kryoRegistrars)
           .addAll(YamlBeansModuleRegistrars.kryoRegistrars)
+          .addAll(OrchestrationStepsModuleRegistrars.kryoRegistrars)
           .add(NGPipelineKryoRegistrar.class)
           .build();
 
@@ -28,11 +29,13 @@ public class NGPipelineRegistrars {
           .addAll(NGCoreClientRegistrars.morphiaRegistrars)
           .addAll(OrchestrationVisualizationModuleRegistrars.morphiaRegistrars)
           .addAll(YamlBeansModuleRegistrars.morphiaRegistrars)
+          .addAll(OrchestrationStepsModuleRegistrars.morphiaRegistrars)
           .add(NGPipelineMorphiaRegistrar.class)
           .build();
 
   public static ImmutableList<? extends Class<? extends Converter<?, ?>>> springConverters =
       ImmutableList.<Class<? extends Converter<?, ?>>>builder()
           .addAll(OrchestrationRegistrars.springConverters)
+          .addAll(OrchestrationStepsModuleRegistrars.springConverters)
           .build();
 }

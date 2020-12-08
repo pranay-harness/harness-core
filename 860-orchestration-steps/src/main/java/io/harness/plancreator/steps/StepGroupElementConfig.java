@@ -18,7 +18,7 @@ import org.springframework.data.annotation.TypeAlias;
 @TypeAlias("stepGroupElementConfig")
 public class StepGroupElementConfig {
   String uuid;
-  @EntityIdentifier String identifier;
+  @NotNull @EntityIdentifier String identifier;
   @EntityName String name;
 
   List<FailureStrategyConfig> failureStrategies;
