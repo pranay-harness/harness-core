@@ -19,6 +19,7 @@ import static java.util.Collections.singletonList;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.DelegateTask;
 import io.harness.beans.ExecutionStatus;
+import io.harness.beans.FeatureName;
 import io.harness.beans.SweepingOutputInstance;
 import io.harness.context.ContextElementType;
 import io.harness.data.algorithm.HashGenerator;
@@ -418,10 +419,9 @@ public class ShellScriptState extends State implements SweepingOutputStateMixin 
             .keyName(keyName)
             .disableWinRMCommandEncodingFFSet(
                 featureFlagService.isEnabled(DISABLE_WINRM_COMMAND_ENCODING, executionContext.getApp().getAccountId()))
+            .disableWinRMEnvVariables(featureFlagService.isEnabled(
+                FeatureName.DISABLE_WINRM_ENV_VARIABLES, executionContext.getApp().getAccountId()))
             .saveExecutionLogs(true);
-    // TODO: This has to be enabled once CS team gives go ahead
-    //    if (featureFlagService.isEnabled(FeatureName.SHELL_SCRIPT_ENV,
-    //    workflowStandardParams.getApp().getAccountId())) {
     Map<String, String> serviceVariables = context.getServiceVariables().entrySet().stream().collect(
         Collectors.toMap(Map.Entry::getKey, e -> e.getValue().toString()));
     Map<String, String> safeDisplayServiceVariables = context.getSafeDisplayServiceVariables();
@@ -432,7 +432,6 @@ public class ShellScriptState extends State implements SweepingOutputStateMixin 
       safeDisplayServiceVariables.replaceAll((name, value) -> context.renderExpression(value));
     }
     shellScriptParameters.serviceVariables(serviceVariables).safeDisplayServiceVariables(safeDisplayServiceVariables);
-    //    }
 
     int expressionFunctorToken = HashGenerator.generateIntegerHash();
 

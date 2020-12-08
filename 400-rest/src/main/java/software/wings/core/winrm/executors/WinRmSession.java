@@ -53,7 +53,7 @@ public class WinRmSession implements AutoCloseable {
     if (config.getAuthenticationScheme() == AuthenticationScheme.KERBEROS) {
       args = PyWinrmArgs.builder()
                  .hostname(getEndpoint(config.getHostname(), config.getPort(), config.isUseSSL()))
-                 .username(config.getUsername())
+                 .username(getUserPrincipal(config.getUsername(), config.getDomain()))
                  .environmentMap(processedEnvironmentMap)
                  .workingDir(config.getWorkingDirectory())
                  .timeout(config.getTimeout())

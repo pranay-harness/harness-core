@@ -506,7 +506,9 @@ public class CommandState extends State {
               .timeout(getTimeoutMillis())
               .executeOnDelegate(executeOnDelegate)
               .deploymentType(deploymentType != null ? deploymentType.name() : null)
-              .delegateSelectors(getDelegateSelectors(context));
+              .delegateSelectors(getDelegateSelectors(context))
+              .disableWinRMEnvVariables(
+                  featureFlagService.isEnabled(FeatureName.DISABLE_WINRM_ENV_VARIABLES, accountId));
 
       if (host != null) {
         getHostConnectionDetails(context, host, commandExecutionContextBuilder);
