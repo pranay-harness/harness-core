@@ -21,6 +21,7 @@ java_library(
         "@maven//:io_swagger_swagger_jaxrs",
         "@maven//:io_swagger_swagger_jersey2_jaxrs",
         "@maven//:io_swagger_swagger_models",
+        "@maven//:org_apache_maven_maven_core",
         "@maven//:org_apache_maven_maven_plugin_api",
         "@maven//:org_apache_maven_plugin_tools_maven_plugin_annotations",
     ],
