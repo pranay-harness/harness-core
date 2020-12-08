@@ -992,7 +992,9 @@ public class PipelineServiceImpl implements PipelineService {
       if (!isEmpty(workflowVariables)) {
         nonEntityVariables.forEach(variable -> {
           if (!contains(pipelineVariables, variable.getName())) {
-            pipelineVariables.add(variable.cloneInternal());
+            Variable cloned = variable.cloneInternal();
+            cloned.setRuntimeInput(false);
+            pipelineVariables.add(cloned);
           }
         });
       }

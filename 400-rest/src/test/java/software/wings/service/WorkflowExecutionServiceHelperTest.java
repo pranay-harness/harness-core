@@ -390,7 +390,7 @@ public class WorkflowExecutionServiceHelperTest extends WingsBaseTest {
         Lists.newArrayList(varBuilder("Environment", false, "InfraDefinition_KUBERNETES", ENVIRONMENT),
             varBuilder("InfraDefinition_KUBERNETES", true, "ServiceId", INFRASTRUCTURE_DEFINITION),
             varBuilder("ServiceId", true, "InfraDefinition_KUBERNETES", SERVICE));
-    List<Variable> pipelineVariables = Lists.newArrayList(varBuilder("env", false, "pipelineInfra", ENVIRONMENT),
+    List<Variable> pipelineVariables = Lists.newArrayList(varBuilder("env", null, "pipelineInfra", ENVIRONMENT),
         varBuilder("pipelineInfra", true, "pipelineService", INFRASTRUCTURE_DEFINITION),
         varBuilder("pipelineService", true, "pipelineInfra", SERVICE));
 
@@ -411,7 +411,7 @@ public class WorkflowExecutionServiceHelperTest extends WingsBaseTest {
     assertThat(actual).isEqualTo(expected);
   }
 
-  private Variable varBuilder(String name, boolean isRuntime, String relatedField, EntityType entityType) {
+  private Variable varBuilder(String name, Boolean isRuntime, String relatedField, EntityType entityType) {
     Variable var = new Variable();
     var.setName(name);
     var.setMandatory(true);
