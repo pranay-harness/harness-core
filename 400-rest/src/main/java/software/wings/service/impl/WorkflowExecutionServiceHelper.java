@@ -418,8 +418,10 @@ public class WorkflowExecutionServiceHelper {
                                        .map(v -> ExpressionEvaluator.getName(resolvedVariablesValues.get(v.getName())))
                                        .collect(Collectors.toSet());
 
-    Set<String> runtimePipelineVarNames =
-        pipelineVariables.stream().filter(Variable::getRuntimeInput).map(Variable::getName).collect(Collectors.toSet());
+    Set<String> runtimePipelineVarNames = pipelineVariables.stream()
+                                              .filter(v -> Boolean.TRUE.equals(v.getRuntimeInput()))
+                                              .map(Variable::getName)
+                                              .collect(Collectors.toSet());
     Map<String, String> wfVariables = new HashMap<>();
     for (Map.Entry<String, String> entry : args.getWorkflowVariables().entrySet()) {
       if (!runtimePipelineVarNames.contains(entry.getKey())) {
