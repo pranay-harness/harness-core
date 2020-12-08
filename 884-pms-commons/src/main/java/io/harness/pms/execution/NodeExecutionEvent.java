@@ -21,6 +21,7 @@ import org.springframework.data.mongodb.core.mapping.Document;
 @TypeAlias("nodeExecutionEvent")
 @HarnessEntity(exportable = false)
 public class NodeExecutionEvent extends Queuable {
-  NodeExecutionEventType eventType;
   NodeExecutionProto nodeExecution;
+  NodeExecutionEventType eventType;
+  NodeExecutionEventData eventData;
 }
