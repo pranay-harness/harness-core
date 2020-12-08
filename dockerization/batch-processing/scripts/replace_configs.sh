@@ -118,3 +118,11 @@ fi
 if [[ "" != "$ISOLATED_REPLICA" ]]; then
   yq write -i $CONFIG_FILE podInfo.isolatedReplica "$ISOLATED_REPLICA"
 fi
+
+if [[ "" != "$BUDGET_ALERTS_JOB_CRON" ]]; then
+  yq write -i $CONFIG_FILE scheduler-jobs-config.budgetAlertsJobCron "$BUDGET_ALERTS_JOB_CRON"
+fi
+
+if [[ "" != "$WEEKLY_REPORT_JOB_CRON" ]]; then
+  yq write -i $CONFIG_FILE scheduler-jobs-config.weeklyReportsJobCron "$WEEKLY_REPORT_JOB_CRON"
+fi
