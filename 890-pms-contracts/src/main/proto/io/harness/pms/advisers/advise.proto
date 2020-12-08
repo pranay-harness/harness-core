@@ -12,6 +12,7 @@ enum AdviseType {
   RETRY = 2;
   INTERVENTION_WAIT = 3;
   END_PLAN = 4;
+  MARK_SUCCESS = 5;
 }
 
 message AdviserResponse {
@@ -20,6 +21,7 @@ message AdviserResponse {
     RetryAdvise retryAdvise = 2;
     InterventionWaitAdvise interventionWaitAdvise = 3;
     EndPlanAdvise endPlanAdvise = 4;
+    MarkSuccessAdvise markSuccessAdvise = 6;
   }
   AdviseType type = 5;
 }
@@ -38,3 +40,7 @@ message InterventionWaitAdvise {
 }
 
 message EndPlanAdvise {}
+
+message MarkSuccessAdvise {
+  string nextNodeId = 1;
+}

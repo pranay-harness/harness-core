@@ -17,6 +17,7 @@ import io.harness.pms.facilitators.FacilitatorType;
 import io.harness.pms.sdk.core.adviser.OrchestrationAdviserTypes;
 import io.harness.pms.sdk.core.adviser.fail.OnFailAdviser;
 import io.harness.pms.sdk.core.adviser.fail.OnFailAdviserParameters;
+import io.harness.pms.sdk.core.adviser.marksuccess.OnMarkSuccessAdviserParameters;
 import io.harness.pms.sdk.core.adviser.retry.RetryAdviserParameters;
 import io.harness.pms.sdk.core.adviser.success.OnSuccessAdviser;
 import io.harness.pms.sdk.core.adviser.success.OnSuccessAdviserParameters;
@@ -316,29 +317,29 @@ public class CustomExecutionProvider {
     String dummyNodeId = generateUuid();
 
     BasicHttpStepParameters basicHttpStateParameters1 =
-        BasicHttpStepParameters.builder().url(getMockServerUrl() + BASIC_HTTP_STATE_URL_200).method("GET").build();
+        BasicHttpStepParameters.builder().url(getMockServerUrl() + BASIC_HTTP_STATE_URL_500).method("GET").build();
 
     BasicHttpStepParameters basicHttpStateParameters2 =
         BasicHttpStepParameters.builder().url(getMockServerUrl() + BASIC_HTTP_STATE_URL_404).method("GET").build();
     return Plan.builder()
-        .node(
-            PlanNode.builder()
-                .uuid(httpNodeId1)
-                .name("Basic Http 1")
-                .stepType(BASIC_HTTP_STEP_TYPE)
-                .identifier("http_1")
-                .stepParameters(basicHttpStateParameters1)
-                .facilitatorObtainment(
-                    FacilitatorObtainment.newBuilder()
-                        .setType(FacilitatorType.newBuilder().setType(OrchestrationFacilitatorType.TASK).build())
-                        .build())
-                .adviserObtainment(
-                    AdviserObtainment.newBuilder()
-                        .setType(AdviserType.newBuilder().setType(OrchestrationAdviserTypes.ON_SUCCESS.name()).build())
-                        .setParameters(ByteString.copyFrom(kryoSerializer.asBytes(
-                            OnSuccessAdviserParameters.builder().nextNodeId(waitNodeId1).build())))
-                        .build())
-                .build())
+        .node(PlanNode.builder()
+                  .uuid(httpNodeId1)
+                  .name("Basic Http 1")
+                  .stepType(BASIC_HTTP_STEP_TYPE)
+                  .identifier("http_1")
+                  .stepParameters(basicHttpStateParameters1)
+                  .facilitatorObtainment(
+                      FacilitatorObtainment.newBuilder()
+                          .setType(FacilitatorType.newBuilder().setType(OrchestrationFacilitatorType.TASK).build())
+                          .build())
+                  .adviserObtainment(
+                      AdviserObtainment.newBuilder()
+                          .setType(
+                              AdviserType.newBuilder().setType(OrchestrationAdviserTypes.MARK_SUCCESS.name()).build())
+                          .setParameters(ByteString.copyFrom(kryoSerializer.asBytes(
+                              OnMarkSuccessAdviserParameters.builder().nextNodeId(waitNodeId1).build())))
+                          .build())
+                  .build())
         .node(
             PlanNode.builder()
                 .uuid(waitNodeId1)

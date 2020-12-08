@@ -14,6 +14,7 @@ import java.util.List;
 import javax.validation.constraints.NotNull;
 import lombok.SneakyThrows;
 import org.bson.Document;
+import org.bson.json.JsonWriterSettings;
 
 @OwnedBy(CDC)
 public interface Resolver<T extends StepTransput> {
@@ -58,7 +59,9 @@ public interface Resolver<T extends StepTransput> {
     if (value == null) {
       return null;
     }
+    JsonWriterSettings writerSettings =
+        JsonWriterSettings.builder().int64Converter((v, writer) -> writer.writeNumber(v.toString())).build();
     Class<?> aClass = Class.forName((String) value.remove(JsonOrchestrationUtils.PMS_CLASS_KEY));
-    return (T) JsonOrchestrationUtils.asObject(value.toJson(), aClass);
+    return (T) JsonOrchestrationUtils.asObject(value.toJson(writerSettings), aClass);
   }
 }

@@ -19,5 +19,7 @@ public enum OrchestrationAdviserTypes {
   ABORT,
   PAUSE,
   RESUME,
-  MANUAL_INTERVENTION;
+  MANUAL_INTERVENTION,
+
+  MARK_SUCCESS
 }
