@@ -8,6 +8,7 @@ import io.harness.batch.processing.dao.intfc.PublishedMessageDao;
 import io.harness.batch.processing.service.intfc.InstanceDataBulkWriteService;
 import io.harness.batch.processing.tasklet.reader.PublishedMessageReader;
 import io.harness.batch.processing.writer.constants.EventTypeConstants;
+import io.harness.ccm.commons.beans.InstanceType;
 import io.harness.event.grpc.PublishedMessage;
 import io.harness.grpc.utils.HTimestamps;
 import io.harness.perpetualtask.k8s.watch.PVEvent;
@@ -89,6 +90,7 @@ public class K8sPVEventTasklet implements Tasklet {
         .instanceId(pvEvent.getPvUid())
         .instanceName(pvEvent.getPvName())
         .type(type)
+        .instanceType(InstanceType.K8S_PV)
         .timestamp(HTimestamps.toInstant(pvEvent.getTimestamp()))
         .build();
   }

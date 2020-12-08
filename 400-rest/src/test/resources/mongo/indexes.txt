@@ -372,6 +372,7 @@ instanceData {"name": "accountId_clusterId_instanceName_usageStartTime", "backgr
 instanceData {"name": "accountId_clusterId_instanceState_usageStartTime", "background": true} {"accountId": 1, "clusterId": 1, "instanceState": 1, "usageStartTime": 1}
 instanceData {"name": "accountId_usageStartTime_usageStopTime", "background": true} {"accountId": 1, "usageStartTime": 1, "usageStopTime": 1}
 instanceData {"name": "instanceId_1", "background": true} {"instanceId": 1}
+instanceData {"name": "ttl_1", "background": true, "expireAfterSeconds": 0} {"ttl": 1}
 instanceEventQueue {"name": "earliestGet_1", "background": true, "expireAfterSeconds": 86400} {"earliestGet": 1}
 instanceEventQueue {"name": "next4", "background": true} {"topic": 1, "earliestGet": 1}
 instanceStats {"name": "accountId_timestamp_unique_idx", "unique": true} {"accountId": 1, "timestamp": 1}

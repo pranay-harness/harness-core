@@ -10,6 +10,7 @@ import io.harness.ccm.commons.beans.StorageResource;
 import io.harness.ccm.commons.entities.InstanceData.InstanceDataKeys;
 import io.harness.mongo.index.CdIndex;
 import io.harness.mongo.index.FdIndex;
+import io.harness.mongo.index.FdTtlIndex;
 import io.harness.mongo.index.Field;
 import io.harness.mongo.index.IndexType;
 import io.harness.persistence.AccountAccess;
@@ -19,6 +20,7 @@ import io.harness.persistence.UpdatedAtAware;
 import io.harness.persistence.UuidAware;
 
 import java.time.Instant;
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import lombok.AccessLevel;
@@ -88,6 +90,8 @@ public class InstanceData implements PersistentEntity, UuidAware, CreatedAtAware
   long lastUpdatedAt;
 
   HarnessServiceInfo harnessServiceInfo;
+
+  @FdTtlIndex private Date ttl;
 
   public static final class InstanceDataKeys {
     private InstanceDataKeys() {}
