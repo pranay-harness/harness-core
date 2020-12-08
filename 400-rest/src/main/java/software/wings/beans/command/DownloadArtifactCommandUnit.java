@@ -319,7 +319,7 @@ public class DownloadArtifactCommandUnit extends ExecCommandUnit {
     // credentials from instance metadata)
     if (awsConfig.isUseEc2IamCredentials()) {
       String url = "http://169.254.169.254/";
-      AWSTemporaryCredentials credentials = awsHelperService.getCredentialsForIAMROleOnDelegate(url);
+      AWSTemporaryCredentials credentials = awsHelperService.getCredentialsForIAMROleOnDelegate(url, awsConfig);
       awsAccessKey = credentials.getAccessKeyId();
       awsSecretKey = credentials.getSecretKey();
       awsToken = credentials.getToken();

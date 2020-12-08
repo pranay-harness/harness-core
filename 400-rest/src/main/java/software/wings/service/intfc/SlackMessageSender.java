@@ -10,5 +10,6 @@ import software.wings.delegatetasks.DelegateTaskType;
 
 @OwnedBy(CDC)
 public interface SlackMessageSender {
-  @DelegateTaskType(TaskType.SLACK) void send(SlackMessage slackMessage, boolean forceProxyCallForDelegate);
+  @DelegateTaskType(TaskType.SLACK)
+  void send(SlackMessage slackMessage, boolean forceProxyCallForDelegate, boolean isCertValidationRequired);
 }

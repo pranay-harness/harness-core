@@ -45,7 +45,9 @@ import software.wings.beans.VariableType;
 import software.wings.beans.template.TemplateUtils;
 import software.wings.expression.ManagerExpressionEvaluator;
 import software.wings.expression.ManagerPreviewExpressionEvaluator;
+import software.wings.service.impl.AccountServiceImpl;
 import software.wings.service.impl.ActivityHelperService;
+import software.wings.service.impl.SettingServiceHelper;
 import software.wings.service.intfc.DelegateService;
 import software.wings.service.intfc.security.ManagerDecryptionService;
 import software.wings.service.intfc.security.SecretManager;
@@ -120,6 +122,8 @@ public class HttpState extends State implements SweepingOutputStateMixin {
   @Inject protected transient ManagerDecryptionService managerDecryptionService;
   @Inject protected transient SecretManager secretManager;
   @Inject protected transient DelegateService delegateService;
+  @Inject private SettingServiceHelper settingServiceHelper;
+  @Inject private AccountServiceImpl accountService;
   @Transient @Inject KryoSerializer kryoSerializer;
 
   public HttpState() {}
@@ -369,6 +373,8 @@ public class HttpState extends State implements SweepingOutputStateMixin {
       context.resetPreparedCache();
     }
 
+    boolean isCertValidationRequired = accountService.isCertValidationRequired(context.getAccountId());
+
     HttpTaskParameters httpTaskParameters = HttpTaskParameters.builder()
                                                 .header(finalHeader)
                                                 .method(finalMethod)
@@ -376,6 +382,7 @@ public class HttpState extends State implements SweepingOutputStateMixin {
                                                 .url(finalUrl)
                                                 .socketTimeoutMillis(taskSocketTimeout)
                                                 .useProxy(useProxy)
+                                                .isCertValidationRequired(isCertValidationRequired)
                                                 .build();
 
     HttpStateExecutionDataBuilder executionDataBuilder =

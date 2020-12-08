@@ -408,14 +408,15 @@ public class ServiceNowDelegateServiceImpl implements ServiceNowDelegateService 
   public ServiceNowRestClient getRestClient(ServiceNowTaskParameters taskParameters) {
     ServiceNowConfig config = taskParameters.getServiceNowConfig();
     encryptionService.decrypt(config, taskParameters.getEncryptionDetails(), false);
-    return getRetrofit(getBaseUrl(config), JacksonConverterFactory.create()).create(ServiceNowRestClient.class);
+    return getRetrofit(config, JacksonConverterFactory.create()).create(ServiceNowRestClient.class);
   }
 
-  public static Retrofit getRetrofit(String baseUrl, Converter.Factory converterFactory) {
+  public static Retrofit getRetrofit(ServiceNowConfig config, Converter.Factory converterFactory) {
+    String baseUrl = getBaseUrl(config);
     return new Retrofit.Builder()
         .baseUrl(baseUrl)
         .addConverterFactory(converterFactory)
-        .client(Http.getUnsafeOkHttpClient(baseUrl))
+        .client(Http.getOkHttpClient(baseUrl, config.isCertValidationRequired()))
         .build();
   }
 

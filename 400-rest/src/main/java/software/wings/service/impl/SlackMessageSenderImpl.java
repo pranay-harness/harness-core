@@ -36,7 +36,7 @@ import retrofit2.http.Url;
 @Slf4j
 public class SlackMessageSenderImpl implements SlackMessageSender {
   @Override
-  public void send(SlackMessage slackMessage, boolean sendFromDelegate) {
+  public void send(SlackMessage slackMessage, boolean sendFromDelegate, boolean isCertValidationRequired) {
     String outgoingWebhookUrl = slackMessage.getOutgoingWebhookUrl();
     String slackChannel = slackMessage.getSlackChannel();
     String senderName = slackMessage.getSenderName();
@@ -76,7 +76,7 @@ public class SlackMessageSenderImpl implements SlackMessageSender {
       SlackWebhookClient webhookClient = getWebhookClient(outgoingWebhookUrl);
       webhookClient.post(payload);
     } else {
-      sendGenericHttpPostRequest(outgoingWebhookUrl, payload);
+      sendGenericHttpPostRequest(outgoingWebhookUrl, payload, isCertValidationRequired);
     }
   }
 
@@ -84,7 +84,7 @@ public class SlackMessageSenderImpl implements SlackMessageSender {
     return SlackClientFactory.createWebhookClient(webhookUrl);
   }
 
-  private void sendGenericHttpPostRequest(String webhookUrl, Payload payload) {
+  private void sendGenericHttpPostRequest(String webhookUrl, Payload payload, boolean isCertValidationRequired) {
     if (webhookUrl.endsWith("/")) {
       webhookUrl = webhookUrl.substring(0, webhookUrl.length() - 1);
     }
@@ -92,7 +92,7 @@ public class SlackMessageSenderImpl implements SlackMessageSender {
     String baseUrl = webhookUrl.substring(0, lastIndexOf);
     String webhookToken = webhookUrl.substring(lastIndexOf);
     try {
-      getSlackHttpClient(baseUrl).PostMsg(webhookToken, payload).execute();
+      getSlackHttpClient(baseUrl, isCertValidationRequired).PostMsg(webhookToken, payload).execute();
     } catch (IOException e) {
       throw new InvalidRequestException("Post message failed", e);
     }
@@ -102,11 +102,11 @@ public class SlackMessageSenderImpl implements SlackMessageSender {
     return webhookUrl.startsWith(SLACK_WEBHOOK_URL_PREFIX);
   }
 
-  SlackHttpClient getSlackHttpClient(String baseUrl) {
+  SlackHttpClient getSlackHttpClient(String baseUrl, boolean isCertValidationRequired) {
     final Retrofit retrofit = new Retrofit.Builder()
                                   .baseUrl(baseUrl)
                                   .addConverterFactory(JacksonConverterFactory.create())
-                                  .client(Http.getUnsafeOkHttpClient(baseUrl))
+                                  .client(Http.getOkHttpClient(baseUrl, isCertValidationRequired))
                                   .build();
     return retrofit.create(SlackHttpClient.class);
   }

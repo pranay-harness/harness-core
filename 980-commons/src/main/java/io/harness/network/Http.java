@@ -269,6 +269,23 @@ public class Http {
     }
   }
 
+  public OkHttpClient getOkHttpClient(String url, boolean isCertValidationRequired) {
+    return getOkHttpClientBuilder(url, isCertValidationRequired).build();
+  }
+
+  public OkHttpClient.Builder getOkHttpClientBuilder(String url, boolean isCertValidationRequired) {
+    return getOkHttpClientBuilder(url, 15, 15, isCertValidationRequired);
+  }
+
+  public OkHttpClient.Builder getOkHttpClientBuilder(
+      String url, long connectTimeOutSeconds, long readTimeOutSeconds, boolean isCertValidationRequired) {
+    if (isCertValidationRequired) {
+      return getSafeOkHttpClientBuilder(url, connectTimeOutSeconds, readTimeOutSeconds);
+    } else {
+      return getUnsafeOkHttpClientBuilder(url, connectTimeOutSeconds, readTimeOutSeconds);
+    }
+  }
+
   public static boolean validUrl(String url) {
     return urlValidator.isValid(url);
   }

@@ -12,4 +12,5 @@ public class HttpInternalConfig {
   String body;
   int socketTimeoutMillis;
   boolean useProxy;
+  boolean isCertValidationRequired;
 }

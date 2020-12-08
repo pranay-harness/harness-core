@@ -13,6 +13,7 @@ public class DockerInternalConfig {
   String dockerRegistryUrl;
   String username;
   String password;
+  boolean isCertValidationRequired;
 
   public boolean hasCredentials() {
     return isNotEmpty(username);

@@ -14,6 +14,7 @@ import software.wings.beans.SyncTaskContext;
 import software.wings.beans.notification.SlackNotificationConfiguration;
 import software.wings.beans.notification.SlackNotificationSetting;
 import software.wings.delegatetasks.DelegateProxyFactory;
+import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.SlackMessageSender;
 import software.wings.service.intfc.SlackNotificationService;
 
@@ -40,6 +41,7 @@ public class SlackNotificationServiceImpl implements SlackNotificationService {
   @Inject private DelegateProxyFactory delegateProxyFactory;
   @Inject private SlackMessageSender slackMessageSender;
   @Inject private FeatureFlagService featureFlagService;
+  @Inject private AccountService accountService;
   private OkHttpClient client = new OkHttpClient();
 
   public static final String SLACK_WEBHOOK_URL_PREFIX = "https://hooks.slack.com/services/";
@@ -59,6 +61,8 @@ public class SlackNotificationServiceImpl implements SlackNotificationService {
       return;
     }
 
+    boolean isCertValidationRequired = accountService.isCertValidationRequired(accountId);
+
     if (featureFlagService.isEnabled(FeatureName.SEND_SLACK_NOTIFICATION_FROM_DELEGATE, accountId)) {
       try {
         log.info("Sending message via delegate");
@@ -69,14 +73,15 @@ public class SlackNotificationServiceImpl implements SlackNotificationService {
                                               .build();
         log.info("Sending message for account {} via delegate", accountId);
         delegateProxyFactory.get(SlackMessageSender.class, syncTaskContext)
-            .send(new SlackMessage(slackConfig.getOutgoingWebhookUrl(), slackChannel, senderName, message), true);
+            .send(new SlackMessage(slackConfig.getOutgoingWebhookUrl(), slackChannel, senderName, message), true,
+                isCertValidationRequired);
       } catch (Exception ex) {
         log.error("Failed to send slack message", ex);
       }
     } else {
       log.info("Sending message for account {} via manager", accountId);
-      slackMessageSender.send(
-          new SlackMessage(slackConfig.getOutgoingWebhookUrl(), slackChannel, senderName, message), false);
+      slackMessageSender.send(new SlackMessage(slackConfig.getOutgoingWebhookUrl(), slackChannel, senderName, message),
+          false, isCertValidationRequired);
     }
   }
 

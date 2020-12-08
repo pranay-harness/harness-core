@@ -46,11 +46,15 @@ public class HttpServiceImpl implements HttpService {
     HttpInternalResponse httpInternalResponse = new HttpInternalResponse();
 
     SSLContextBuilder builder = new SSLContextBuilder();
-    try {
-      builder.loadTrustMaterial((x509Certificates, s) -> true);
-    } catch (NoSuchAlgorithmException | KeyStoreException e) {
-      log.error("", e);
+
+    if (!httpInternalConfig.isCertValidationRequired()) {
+      try {
+        builder.loadTrustMaterial((x509Certificates, s) -> true);
+      } catch (NoSuchAlgorithmException | KeyStoreException e) {
+        log.error("", e);
+      }
     }
+
     SSLConnectionSocketFactory sslsf = null;
     try {
       sslsf = new SSLConnectionSocketFactory(builder.build(), (s, sslSession) -> true);

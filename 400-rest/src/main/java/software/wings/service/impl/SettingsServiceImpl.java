@@ -567,6 +567,8 @@ public class SettingsServiceImpl implements SettingsService {
   }
 
   private SettingAttribute forceSave(SettingAttribute settingAttribute, boolean alreadyUpdatedReferencedSecrets) {
+    String accountId = settingAttribute.getAccountId();
+
     if (!alreadyUpdatedReferencedSecrets) {
       settingServiceHelper.updateReferencedSecrets(settingAttribute);
     }
@@ -576,11 +578,11 @@ public class SettingsServiceImpl implements SettingsService {
     }
 
     settingServiceHelper.validateUsageRestrictionsOnEntitySave(
-        settingAttribute, settingAttribute.getAccountId(), getUsageRestrictions(settingAttribute));
+        settingAttribute, accountId, getUsageRestrictions(settingAttribute));
 
     if (settingAttribute.getValue() != null) {
       if (settingAttribute.getValue() instanceof EncryptableSetting) {
-        ((EncryptableSetting) settingAttribute.getValue()).setAccountId(settingAttribute.getAccountId());
+        ((EncryptableSetting) settingAttribute.getValue()).setAccountId(accountId);
       }
     }
 
@@ -588,11 +590,11 @@ public class SettingsServiceImpl implements SettingsService {
         duplicateCheck(() -> wingsPersistence.save(settingAttribute), "name", settingAttribute.getName());
     if (isNotBlank(createdSettingAttributeId) && !settingAttribute.isSample()) {
       if (SettingCategory.CLOUD_PROVIDER == settingAttribute.getCategory()) {
-        eventPublishHelper.publishAccountEvent(settingAttribute.getAccountId(),
+        eventPublishHelper.publishAccountEvent(accountId,
             AccountEvent.builder().accountEventType(AccountEventType.CLOUD_PROVIDER_CREATED).build(), true, true);
       } else if (settingServiceHelper.isConnectorCategory(settingAttribute.getCategory())
           && settingServiceHelper.isArtifactServer(settingAttribute.getValue().getSettingType())) {
-        eventPublishHelper.publishAccountEvent(settingAttribute.getAccountId(),
+        eventPublishHelper.publishAccountEvent(accountId,
             AccountEvent.builder().accountEventType(AccountEventType.ARTIFACT_REPO_CREATED).build(), true, true);
       }
     }
@@ -894,11 +896,13 @@ public class SettingsServiceImpl implements SettingsService {
 
   @Override
   public SettingAttribute get(String appId, String envId, String varId) {
-    return wingsPersistence.createQuery(SettingAttribute.class)
-        .filter("appId", appId)
-        .filter(SettingAttributeKeys.envId, envId)
-        .filter(ID_KEY, varId)
-        .get();
+    SettingAttribute settingAttribute = wingsPersistence.createQuery(SettingAttribute.class)
+                                            .filter("appId", appId)
+                                            .filter(SettingAttributeKeys.envId, envId)
+                                            .filter(ID_KEY, varId)
+                                            .get();
+    setCertValidationRequired(settingAttribute);
+    return settingAttribute;
   }
 
   /* (non-Javadoc)
@@ -908,11 +912,14 @@ public class SettingsServiceImpl implements SettingsService {
   public SettingAttribute get(String varId) {
     SettingAttribute settingAttribute = getById(varId);
     setInternal(settingAttribute);
+    setCertValidationRequired(settingAttribute);
     return settingAttribute;
   }
 
   private SettingAttribute getById(String varId) {
-    return wingsPersistence.get(SettingAttribute.class, varId);
+    SettingAttribute settingAttribute = wingsPersistence.get(SettingAttribute.class, varId);
+    setCertValidationRequired(settingAttribute);
+    return settingAttribute;
   }
 
   @Override
@@ -927,16 +934,24 @@ public class SettingsServiceImpl implements SettingsService {
 
   @Override
   public SettingAttribute getByAccountAndId(String accountId, String settingId) {
-    return wingsPersistence.createQuery(SettingAttribute.class)
-        .filter(SettingAttributeKeys.uuid, settingId)
-        .filter(SettingAttributeKeys.accountId, accountId)
-        .get();
+    SettingAttribute settingAttribute = wingsPersistence.createQuery(SettingAttribute.class)
+                                            .filter(SettingAttributeKeys.uuid, settingId)
+                                            .filter(SettingAttributeKeys.accountId, accountId)
+                                            .get();
+    setCertValidationRequired(settingAttribute);
+    return settingAttribute;
   }
 
   private void setInternal(SettingAttribute settingAttribute) {
     if (settingAttribute != null && settingAttribute.getValue() instanceof GitConfig) {
       GitConfig gitConfig = (GitConfig) settingAttribute.getValue();
       gitConfigHelperService.setSshKeySettingAttributeIfNeeded(gitConfig);
+    }
+  }
+
+  private void setCertValidationRequired(SettingAttribute settingAttribute) {
+    if (settingAttribute != null && settingAttribute.getAccountId() != null) {
+      settingServiceHelper.setCertValidationRequired(settingAttribute.getAccountId(), settingAttribute);
     }
   }
 
@@ -950,10 +965,12 @@ public class SettingsServiceImpl implements SettingsService {
 
   @Override
   public SettingAttribute getSettingAttributeByName(String accountId, String settingAttributeName) {
-    return wingsPersistence.createQuery(SettingAttribute.class)
-        .filter(SettingAttributeKeys.name, settingAttributeName)
-        .filter(SettingAttributeKeys.accountId, accountId)
-        .get();
+    SettingAttribute settingAttribute = wingsPersistence.createQuery(SettingAttribute.class)
+                                            .filter(SettingAttributeKeys.name, settingAttributeName)
+                                            .filter(SettingAttributeKeys.accountId, accountId)
+                                            .get();
+    setCertValidationRequired(settingAttribute);
+    return settingAttribute;
   }
 
   private void resetUnchangedEncryptedFields(

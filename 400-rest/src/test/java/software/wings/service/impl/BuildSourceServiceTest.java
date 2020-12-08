@@ -3,6 +3,7 @@ package software.wings.service.impl;
 import static io.harness.rule.OwnerRule.AADITI;
 import static io.harness.rule.OwnerRule.AGORODETKI;
 import static io.harness.rule.OwnerRule.GARVIT;
+import static io.harness.rule.OwnerRule.MILOS;
 
 import static software.wings.beans.template.artifactsource.CustomRepositoryMapping.AttributeMapping.builder;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
@@ -71,6 +72,7 @@ import software.wings.helpers.ext.gcs.GcsService;
 import software.wings.helpers.ext.jenkins.BuildDetails;
 import software.wings.helpers.ext.jenkins.JobDetails;
 import software.wings.helpers.ext.nexus.NexusService;
+import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.AmazonS3BuildService;
 import software.wings.service.intfc.ArtifactStreamService;
 import software.wings.service.intfc.ArtifactStreamServiceBindingService;
@@ -96,6 +98,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.ArgumentCaptor;
@@ -125,6 +128,12 @@ public class BuildSourceServiceTest extends WingsBaseTest {
   @Mock DelegateProxyFactory delegateProxyFactory;
   @Mock ExpressionEvaluator evaluator;
   @Mock FeatureFlagService featureFlagService;
+  @Mock AccountService accountService;
+
+  @Before
+  public void setup() {
+    when(accountService.isCertValidationRequired(anyString())).thenReturn(false);
+  }
 
   @Test
   @Owner(developers = AADITI)
@@ -1299,5 +1308,45 @@ public class BuildSourceServiceTest extends WingsBaseTest {
         SettingAttribute.Builder.aSettingAttribute().withValue(AwsConfig.builder().build()).build());
     verify(delegateProxyFactory).get(any(), syncTaskContextArgumentCaptor.capture());
     assertThat(syncTaskContextArgumentCaptor.getValue().getTags()).isNull();
+  }
+
+  @Test
+  @Owner(developers = MILOS)
+  @Category(UnitTests.class)
+  public void testGetJobsWithAppIdForBambooWithCertValidation() {
+    BambooConfig bambooConfig = BambooConfig.builder().build();
+    bambooConfig.setCertValidationRequired(true);
+
+    SettingAttribute settingAttribute =
+        SettingAttribute.Builder.aSettingAttribute().withAccountId(ACCOUNT_ID).withValue(bambooConfig).build();
+    when(settingsService.get(SETTING_ID)).thenReturn(settingAttribute);
+    when(delegateProxyFactory.get(any(), any(SyncTaskContext.class))).thenReturn(bambooBuildService);
+    when(bambooBuildService.getJobs(any(), any(), any()))
+        .thenReturn(asList(new JobDetails("USERDEFINEDPROJECTKEY-RIS", false), new JobDetails("SAM-BUIL", false),
+            new JobDetails("SAM-SAM", false), new JobDetails("TOD-TODIR", false),
+            new JobDetails("USERDEFINEDPROJECTKEY-TES", false), new JobDetails("TOD-TOD", false)));
+    Set<JobDetails> jobDetails = buildSourceService.getJobs(APP_ID, SETTING_ID, null);
+    assertThat(jobDetails).isNotEmpty();
+    assertThat(jobDetails.size()).isEqualTo(6);
+    assertThat(jobDetails)
+        .extracting(JobDetails::getJobName)
+        .containsSequence(
+            "SAM-BUIL", "SAM-SAM", "TOD-TOD", "TOD-TODIR", "USERDEFINEDPROJECTKEY-RIS", "USERDEFINEDPROJECTKEY-TES");
+  }
+
+  @Test
+  @Owner(developers = MILOS)
+  @Category(UnitTests.class)
+  public void testValidateNexusArtifactSourceWithCertValidation() {
+    NexusConfig nexusConfig = NexusConfig.builder().build();
+    nexusConfig.setCertValidationRequired(true);
+    SettingAttribute settingAttribute =
+        SettingAttribute.Builder.aSettingAttribute().withAccountId(ACCOUNT_ID).withValue(nexusConfig).build();
+    when(settingsService.get(SETTING_ID)).thenReturn(settingAttribute);
+    when(delegateProxyFactory.get(any(), any(SyncTaskContext.class))).thenReturn(nexusBuildService);
+    ArtifactStreamAttributes nexusArtifactStream = ArtifactStreamAttributes.builder().extension("jar").build();
+    when(nexusService.existsVersion(any(), any(), anyString(), anyString(), anyString(), anyString(), anyString()))
+        .thenReturn(false);
+    assertThat(buildSourceService.validateArtifactSource(APP_ID, SETTING_ID, nexusArtifactStream)).isFalse();
   }
 }

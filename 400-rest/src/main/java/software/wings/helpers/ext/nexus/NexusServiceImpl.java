@@ -88,11 +88,12 @@ public class NexusServiceImpl implements NexusService {
     return nexusConfig.getNexusUrl().endsWith("/") ? nexusConfig.getNexusUrl() : nexusConfig.getNexusUrl() + "/";
   }
 
-  public static Retrofit getRetrofit(String baseUrl, Converter.Factory converterFactory) {
+  public static Retrofit getRetrofit(NexusConfig nexusConfig, Converter.Factory converterFactory) {
+    String baseUrl = getBaseUrl(nexusConfig);
     return new Retrofit.Builder()
         .baseUrl(baseUrl)
         .addConverterFactory(converterFactory)
-        .client(Http.getUnsafeOkHttpClient(baseUrl))
+        .client(Http.getOkHttpClient(baseUrl, nexusConfig.isCertValidationRequired()))
         .build();
   }
 

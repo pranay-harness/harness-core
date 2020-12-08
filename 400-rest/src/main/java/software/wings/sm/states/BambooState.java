@@ -32,6 +32,7 @@ import software.wings.beans.Application;
 import software.wings.beans.BambooConfig;
 import software.wings.beans.Environment;
 import software.wings.beans.TaskType;
+import software.wings.service.impl.SettingServiceHelper;
 import software.wings.service.intfc.ActivityService;
 import software.wings.service.intfc.DelegateService;
 import software.wings.service.intfc.security.SecretManager;
@@ -78,6 +79,7 @@ public class BambooState extends State {
 
   @Inject private DelegateService delegateService;
   @Inject private SecretManager secretManager;
+  @Inject private SettingServiceHelper settingServiceHelper;
 
   public BambooState(String name) {
     super(name, BAMBOO.name());
@@ -158,6 +160,7 @@ public class BambooState extends State {
           .errorMessage("Bamboo Server was deleted. Please update with an appropriate server")
           .build();
     }
+    settingServiceHelper.setCertValidationRequired(accountId, bambooConfig);
 
     String evaluatedPlanName = context.renderExpression(planName);
 

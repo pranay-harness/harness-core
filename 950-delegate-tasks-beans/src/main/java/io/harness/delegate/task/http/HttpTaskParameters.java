@@ -24,6 +24,7 @@ public class HttpTaskParameters implements TaskParameters, ExecutionCapabilityDe
   @Expression(ALLOW_SECRETS) String body;
   int socketTimeoutMillis;
   boolean useProxy;
+  boolean isCertValidationRequired;
 
   @Override
   public List<ExecutionCapability> fetchRequiredExecutionCapabilities(ExpressionEvaluator maskingEvaluator) {

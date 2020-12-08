@@ -145,6 +145,7 @@ public class SettingValidationService {
   @Inject private CCMSettingService ccmSettingService;
   @Inject private AWSCEConfigValidationService awsceConfigValidationService;
   @Inject private GcpHelperServiceManager gcpHelperServiceManager;
+  @Inject private SettingServiceHelper settingServiceHelper;
 
   public ValidationResult validateConnectivity(SettingAttribute settingAttribute) {
     SettingValue settingValue = settingAttribute.getValue();
@@ -223,6 +224,7 @@ public class SettingValidationService {
     }
 
     SettingValue settingValue = settingAttribute.getValue();
+    settingServiceHelper.setCertValidationRequired(settingAttribute.getAccountId(), settingValue);
     List<EncryptedDataDetail> encryptedDataDetails = fetchEncryptionDetails(settingValue);
 
     if (settingValue instanceof GcpConfig) {

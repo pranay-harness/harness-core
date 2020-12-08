@@ -41,6 +41,7 @@ public class HttpTask extends AbstractDelegateRunnableTask {
                                    .socketTimeoutMillis(httpTaskParameters.getSocketTimeoutMillis())
                                    .url(httpTaskParameters.getUrl())
                                    .useProxy(httpTaskParameters.isUseProxy())
+                                   .isCertValidationRequired(httpTaskParameters.isCertValidationRequired())
                                    .build());
     return HttpStateExecutionResponse.builder()
         .executionStatus(
