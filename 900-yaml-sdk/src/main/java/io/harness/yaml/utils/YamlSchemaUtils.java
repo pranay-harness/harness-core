@@ -1,9 +1,11 @@
-package io.harness.yaml.schema;
+package io.harness.yaml.utils;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 
+import io.harness.EntityType;
+
 import io.swagger.annotations.ApiModel;
-import java.lang.annotation.Annotation;
+import java.io.File;
 import java.net.URLClassLoader;
 import java.util.Set;
 import javax.annotation.Nullable;
@@ -16,11 +18,11 @@ import org.reflections.util.FilterBuilder;
 public class YamlSchemaUtils {
   /**
    * @param classLoader     {@link ClassLoader} object which will be used for reflection. If null default class loader
-   *     will be used.
+   *                        will be used.
    * @param annotationClass Annotation for which lookup will happen.
    * @return Classes which contains the annotation.
    */
-  public Set<Class<?>> getClasses(@Nullable URLClassLoader classLoader, Class<? extends Annotation> annotationClass) {
+  public Set<Class<?>> getClasses(@Nullable URLClassLoader classLoader, Class annotationClass) {
     Reflections reflections;
     if (classLoader != null) {
       FilterBuilder filter = new FilterBuilder().include(FilterBuilder.prefix("io.harness")).include("software.wings");
@@ -50,5 +52,16 @@ public class YamlSchemaUtils {
       // do Nothing.
     }
     return clazz.getSimpleName();
+  }
+
+  /**
+   * @param entityType     Entity type
+   * @param schemaBasePath the base path inside which schema is stored.
+   * @return The path which contains the complete schema for entityType.
+   */
+  public String getSchemaPathForEntityType(EntityType entityType, String schemaBasePath) {
+    final String yamlName = entityType.getYamlName();
+    String resourcePath = yamlName + File.separator + YamlConstants.SCHEMA_FILE_NAME;
+    return isEmpty(schemaBasePath) ? resourcePath : schemaBasePath + File.separator + resourcePath;
   }
 }

@@ -1,4 +1,4 @@
-package io.harness.yaml.constants;
+package io.harness.yaml.utils;
 
 public class YamlConstants {
   public static final String JSON_EXTENSION = ".json";

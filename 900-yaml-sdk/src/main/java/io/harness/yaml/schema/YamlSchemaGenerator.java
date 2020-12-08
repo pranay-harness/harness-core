@@ -1,10 +1,11 @@
 package io.harness.yaml.schema;
 
-import io.harness.yaml.constants.YamlConstants;
 import io.harness.yaml.schema.beans.FieldSubtypeData;
 import io.harness.yaml.schema.beans.SchemaConstants;
 import io.harness.yaml.schema.beans.SubtypeClassMap;
 import io.harness.yaml.schema.beans.YamlSchemaConfiguration;
+import io.harness.yaml.utils.YamlConstants;
+import io.harness.yaml.utils.YamlSchemaUtils;
 import io.harness.yamlSchema.YamlSchemaRoot;
 
 import com.fasterxml.jackson.annotation.JsonInclude;

@@ -19,7 +19,7 @@ public class JacksonSubtypeHelperTest extends CategoryTest {
   @Test
   @Owner(developers = ABHINAV)
   @Category(UnitTests.class)
-  public void testGetEnumMapping() {
+  public void testGetSubtypeMapping() {
     JacksonSubtypeHelper jacksonSubtypeHelper = new JacksonSubtypeHelper();
     Map<String, Set<FieldSubtypeData>> stringModelSet = new HashMap<>();
     jacksonSubtypeHelper.getSubtypeMapping(TestClass.ClassWhichContainsInterface.class, stringModelSet);

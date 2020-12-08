@@ -4,7 +4,7 @@ import static io.harness.rule.OwnerRule.ABHINAV;
 
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
-import io.harness.yaml.AbstractSnippetTestBase;
+import io.harness.yaml.schema.AbstractSnippetTestBase;
 
 import java.io.IOException;
 import java.io.InputStream;
