@@ -47,6 +47,8 @@ public class InstanceUtils {
       instanceType = InstanceType.AZURE_VMSS_INSTANCE;
     } else if (InfrastructureMappingType.AZURE_WEBAPP.name().equals(infraMappingType)) {
       instanceType = InstanceType.AZURE_WEB_APP_INSTANCE;
+    } else if (InfrastructureMappingType.AZURE_INFRA.name().equals(infraMappingType)) {
+      instanceType = InstanceType.AZURE_VMSS_INSTANCE;
     } else {
       String msg = "Unsupported infraMapping type:" + infraMappingType;
       log.error(msg);

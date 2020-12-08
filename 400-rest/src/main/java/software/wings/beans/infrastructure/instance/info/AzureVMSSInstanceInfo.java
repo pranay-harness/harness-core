@@ -6,7 +6,7 @@ import lombok.EqualsAndHashCode;
 
 @Data
 @Builder
-@EqualsAndHashCode(callSuper = true)
+@EqualsAndHashCode
 public class AzureVMSSInstanceInfo extends InstanceInfo {
   private String vmssId;
   private String azureVMId;

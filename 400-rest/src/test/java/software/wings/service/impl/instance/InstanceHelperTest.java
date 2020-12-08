@@ -1,5 +1,6 @@
 package software.wings.service.impl.instance;
 
+import static io.harness.rule.OwnerRule.ACASIAN;
 import static io.harness.rule.OwnerRule.ADWAIT;
 import static io.harness.rule.OwnerRule.ANKIT;
 import static io.harness.rule.OwnerRule.GEORGE;
@@ -33,6 +34,7 @@ import io.harness.beans.EmbeddedUser;
 import io.harness.beans.FeatureName;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.beans.DelegateResponseData;
+import io.harness.delegate.task.azure.response.AzureVMInstanceData;
 import io.harness.exception.GeneralException;
 import io.harness.ff.FeatureFlagService;
 import io.harness.lock.AcquiredLock;
@@ -76,6 +78,7 @@ import software.wings.beans.WorkflowExecution;
 import software.wings.beans.artifact.Artifact;
 import software.wings.beans.infrastructure.Host;
 import software.wings.beans.infrastructure.instance.InstanceType;
+import software.wings.beans.infrastructure.instance.info.AzureVMSSInstanceInfo;
 import software.wings.beans.infrastructure.instance.info.Ec2InstanceInfo;
 import software.wings.beans.infrastructure.instance.info.PhysicalHostInstanceInfo;
 import software.wings.beans.infrastructure.instance.key.HostInstanceKey;
@@ -188,6 +191,8 @@ public class InstanceHelperTest extends WingsBaseTest {
   private String PUBLIC_DNS_2 = "ec2-54-218-107-144.us-west-2.compute.amazonaws.com";
   static com.amazonaws.services.ec2.model.Instance instance1;
   static com.amazonaws.services.ec2.model.Instance instance2;
+  static AzureVMInstanceData azureInstance1;
+  static AzureVMInstanceData azureInstance2;
   private InstanceHelperTestHelper instaceHelperTestHelper = new InstanceHelperTestHelper();
   @Before
   public void setUp() {
@@ -260,6 +265,18 @@ public class InstanceHelperTest extends WingsBaseTest {
     instance2.setPrivateDnsName(PRIVATE_DNS_2);
     instance2.setPublicDnsName(PUBLIC_DNS_2);
 
+    azureInstance1 = AzureVMInstanceData.builder()
+                         .instanceId("instance_1")
+                         .privateDnsName(PRIVATE_DNS_1)
+                         .publicDnsName(PUBLIC_DNS_1)
+                         .privateIpAddress(HOST_NAME_IP1)
+                         .build();
+    azureInstance2 = AzureVMInstanceData.builder()
+                         .instanceId("instance_2")
+                         .privateDnsName(PRIVATE_DNS_2)
+                         .publicDnsName(PUBLIC_DNS_2)
+                         .privateIpAddress(HOST_NAME_IP2)
+                         .build();
     Set<String> names = new HashSet<>();
     names.add("name1");
     names.add("name2");
@@ -468,6 +485,54 @@ public class InstanceHelperTest extends WingsBaseTest {
                    .contains(((AwsAmiDeploymentKey) event.getDeploymentSummaries().get(1).getAwsAmiDeploymentKey())
                                  .getAutoScalingGroupName()))
         .isTrue();
+  }
+
+  @Test
+  @Owner(developers = ACASIAN)
+  @Category(UnitTests.class)
+  public void testExtractInstanceBaseOnType_AZURE_INFRA() {
+    endsAtTime = System.currentTimeMillis();
+    phaseExecutionData = instaceHelperTestHelper.initExecutionSummary(
+        InfrastructureMappingType.AZURE_INFRA, endsAtTime, DeploymentType.SSH.name());
+    phaseExecutionSummary = instaceHelperTestHelper.initPhaseExecutionSummary(
+        InfrastructureMappingType.AZURE_INFRA, WorkflowServiceHelper.DEPLOY_SERVICE);
+    phaseStepExecutionData = getPhaseStepExecutionData(phaseExecutionSummary);
+    doReturn(PhysicalInfrastructureMapping.Builder.aPhysicalInfrastructureMapping()
+                 .withUuid(INFRA_MAP_ID)
+                 .withInfraMappingType(InfrastructureMappingType.AZURE_INFRA.name())
+                 .withComputeProviderSettingId(COMPUTE_PROVIDER_ID)
+                 .withAppId(APP_ID)
+                 .build())
+        .when(infraMappingService)
+        .get(anyString(), anyString());
+
+    doReturn(Host.Builder.aHost().withHostName("hostName").withUuid("host_1").withPublicDns("host1").build())
+        .when(hostService)
+        .get(anyString(), anyString(), anyString());
+
+    PhaseStepSubWorkflow phaseStepSubWorkflow = new PhaseStepSubWorkflow("Name");
+    phaseStepSubWorkflow.setRollback(false);
+    doReturn(INFRA_MAP_ID).when(context).fetchInfraMappingId();
+
+    instanceHelper.extractInstanceOrDeploymentInfoBaseOnType(STATE_EXECUTION_INSTANCE_ID, phaseExecutionData,
+        phaseStepExecutionData, workflowStandardParams, APP_ID, workflowExecution, phaseStepSubWorkflow, context);
+
+    // Capture the argument of the doSomething function
+    ArgumentCaptor<List> captor = ArgumentCaptor.forClass(List.class);
+    verify(instanceService).saveOrUpdate(captor.capture());
+
+    /*
+     * We have mocked instanceService.saveOrUpdate() for Physical hosts to doNothing as we dont want to test save
+     * functionality here. The way we test here is we capture generated Instance dtos those are passed to saveOrUpdate
+     * method and we validate them to see if they are valid
+     * */
+    List instances = captor.getValue();
+    instaceHelperTestHelper.assertInstances(instances, InstanceType.AZURE_VMSS_INSTANCE,
+        InfrastructureMappingType.AZURE_INFRA,
+        HostInstanceKey.builder().hostName("hostName").infraMappingId(INFRA_MAP_ID).build(),
+        HostInstanceKey.builder().hostName("hostName").infraMappingId(INFRA_MAP_ID).build(),
+        AzureVMSSInstanceInfo.builder().host("hostName").build(),
+        AzureVMSSInstanceInfo.builder().host("hostName").build(), endsAtTime);
   }
 
   private PhaseStepExecutionData getPhaseStepExecutionData(PhaseExecutionSummary phaseExecutionSummary) {

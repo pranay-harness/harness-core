@@ -6,6 +6,7 @@ import static io.harness.exception.WingsException.USER_SRE;
 import static io.harness.validation.Validator.notNullCheck;
 
 import static software.wings.beans.InfrastructureMappingType.AWS_SSH;
+import static software.wings.beans.InfrastructureMappingType.AZURE_INFRA;
 import static software.wings.beans.InfrastructureMappingType.PHYSICAL_DATA_CENTER_SSH;
 import static software.wings.beans.InfrastructureMappingType.PHYSICAL_DATA_CENTER_WINRM;
 import static software.wings.service.InstanceSyncConstants.HARNESS_ACCOUNT_ID;
@@ -52,6 +53,7 @@ import software.wings.beans.infrastructure.Host;
 import software.wings.beans.infrastructure.instance.Instance;
 import software.wings.beans.infrastructure.instance.Instance.InstanceBuilder;
 import software.wings.beans.infrastructure.instance.ManualSyncJob;
+import software.wings.beans.infrastructure.instance.info.AzureVMSSInstanceInfo;
 import software.wings.beans.infrastructure.instance.info.Ec2InstanceInfo;
 import software.wings.beans.infrastructure.instance.info.InstanceInfo;
 import software.wings.beans.infrastructure.instance.info.PhysicalHostInstanceInfo;
@@ -162,7 +164,8 @@ public class InstanceHelper {
 
       if (PHYSICAL_DATA_CENTER_SSH.getName().equals(infrastructureMapping.getInfraMappingType())
           || PHYSICAL_DATA_CENTER_WINRM.getName().equals(infrastructureMapping.getInfraMappingType())
-          || AWS_SSH.getName().equals(infrastructureMapping.getInfraMappingType())) {
+          || AWS_SSH.getName().equals(infrastructureMapping.getInfraMappingType())
+          || AZURE_INFRA.name().equals(infrastructureMapping.getInfraMappingType())) {
         List<Instance> instanceList = Lists.newArrayList();
         PhaseStepExecutionSummary phaseStepExecutionSummary = phaseStepExecutionData.getPhaseStepExecutionSummary();
 
@@ -400,24 +403,29 @@ public class InstanceHelper {
 
   private void setInstanceInfoAndKey(
       InstanceBuilder builder, Host host, String infraMappingType, String infraMappingId) {
-    InstanceInfo instanceInfo;
+    InstanceInfo instanceInfo = null;
     HostInstanceKey hostInstanceKey =
         HostInstanceKey.builder().hostName(host.getHostName()).infraMappingId(infraMappingId).build();
     builder.hostInstanceKey(hostInstanceKey);
 
+    if (AZURE_INFRA.name().equals(infraMappingType)) {
+      instanceInfo = AzureVMSSInstanceInfo.builder().host(host.getHostName()).build();
+    }
+
+    if (AWS_SSH.getName().equals(infraMappingType)) {
+      instanceInfo = Ec2InstanceInfo.builder()
+                         .ec2Instance(host.getEc2Instance())
+                         .hostId(host.getUuid())
+                         .hostName(host.getHostName())
+                         .hostPublicDns(host.getPublicDns())
+                         .build();
+    }
     if (PHYSICAL_DATA_CENTER_SSH.getName().equals(infraMappingType)
         || PHYSICAL_DATA_CENTER_WINRM.getName().equals(infraMappingType)) {
       instanceInfo = PhysicalHostInstanceInfo.builder()
                          .hostPublicDns(host.getPublicDns())
                          .hostId(host.getUuid())
                          .hostName(host.getHostName())
-                         .build();
-    } else {
-      instanceInfo = Ec2InstanceInfo.builder()
-                         .ec2Instance(host.getEc2Instance())
-                         .hostId(host.getUuid())
-                         .hostName(host.getHostName())
-                         .hostPublicDns(host.getPublicDns())
                          .build();
     }
 

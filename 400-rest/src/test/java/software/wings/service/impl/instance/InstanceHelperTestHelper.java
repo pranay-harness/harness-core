@@ -93,6 +93,35 @@ public class InstanceHelperTestHelper {
     return instanceStatusSummaries;
   }
 
+  private List<InstanceStatusSummary> getInstanceStatusSummariesForAzure() {
+    List<InstanceStatusSummary> instanceStatusSummaries = new ArrayList<>();
+    instanceStatusSummaries.add(
+        InstanceStatusSummaryBuilder.anInstanceStatusSummary()
+            .withStatus(ExecutionStatus.SUCCESS)
+            .withInstanceElement(InstanceElement.Builder.anInstanceElement()
+                                     .host(HostElement.builder()
+                                               .azureVMInstance(InstanceHelperTest.azureInstance1)
+                                               .uuid("instance_1")
+                                               .build())
+                                     .uuid("instance_1")
+                                     .build())
+            .build());
+
+    instanceStatusSummaries.add(
+        InstanceStatusSummaryBuilder.anInstanceStatusSummary()
+            .withStatus(ExecutionStatus.SUCCESS)
+            .withInstanceElement(InstanceElement.Builder.anInstanceElement()
+                                     .host(HostElement.builder()
+                                               .azureVMInstance(InstanceHelperTest.azureInstance1)
+                                               .uuid("instance_2")
+                                               .build())
+                                     .uuid("instance_2")
+                                     .build())
+            .build());
+
+    return instanceStatusSummaries;
+  }
+
   private List<InstanceStatusSummary> getInstanceStatusSummariesForGCP() {
     List<InstanceStatusSummary> instanceStatusSummaries = new ArrayList<>();
     instanceStatusSummaries.add(InstanceStatusSummaryBuilder.anInstanceStatusSummary()
@@ -151,6 +180,8 @@ public class InstanceHelperTestHelper {
       instanceStatusSummaries = getInstanceStatusSummariesForAws();
     } else if (InfrastructureMappingType.AWS_ECS == infrastructureMappingType) {
       instanceStatusSummaries = getInstanceStatusSummariesForAws();
+    } else if (InfrastructureMappingType.AZURE_INFRA == infrastructureMappingType) {
+      instanceStatusSummaries = getInstanceStatusSummariesForAzure();
     }
 
     return initExecutionSummary(instanceStatusSummaries, endTime, deploymentType);
@@ -199,7 +230,8 @@ public class InstanceHelperTestHelper {
             .serviceName("serviceName")
             .appName("app1")
             .infraMappingId(InstanceHelperTest.INFRA_MAP_ID)
-            .infraMappingType(mappingType.getName())
+            .infraMappingType(
+                (mappingType == InfrastructureMappingType.AZURE_INFRA) ? mappingType.name() : mappingType.getName())
             .computeProviderId("computeProvider_1")
             .computeProviderName("computeProviderName")
             .lastArtifactStreamId("artifactStream_1")
@@ -228,7 +260,8 @@ public class InstanceHelperTestHelper {
             .serviceName("serviceName")
             .appName("app1")
             .infraMappingId(InstanceHelperTest.INFRA_MAP_ID)
-            .infraMappingType(mappingType.getName())
+            .infraMappingType(
+                (mappingType == InfrastructureMappingType.AZURE_INFRA) ? mappingType.name() : mappingType.getName())
             .computeProviderId("computeProvider_1")
             .computeProviderName("computeProviderName")
             .lastArtifactStreamId("artifactStream_1")
@@ -258,6 +291,11 @@ public class InstanceHelperTestHelper {
               StepExecutionSummaryBuilder.aStepExecutionSummary().withStatus(ExecutionStatus.SUCCESS).build());
 
     } else if (InfrastructureMappingType.AWS_SSH == infrastructureMappingType) {
+      stepExecutionSummaries =
+          asList(StepExecutionSummaryBuilder.aStepExecutionSummary().withStatus(ExecutionStatus.SUCCESS).build(),
+              StepExecutionSummaryBuilder.aStepExecutionSummary().withStatus(ExecutionStatus.SUCCESS).build());
+
+    } else if (InfrastructureMappingType.AZURE_INFRA == infrastructureMappingType) {
       stepExecutionSummaries =
           asList(StepExecutionSummaryBuilder.aStepExecutionSummary().withStatus(ExecutionStatus.SUCCESS).build(),
               StepExecutionSummaryBuilder.aStepExecutionSummary().withStatus(ExecutionStatus.SUCCESS).build());
