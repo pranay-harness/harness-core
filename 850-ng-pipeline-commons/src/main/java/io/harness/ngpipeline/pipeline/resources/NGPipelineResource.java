@@ -7,7 +7,10 @@ import static org.apache.commons.lang3.StringUtils.isNumeric;
 import io.harness.NGCommonEntityConstants;
 import io.harness.NGResourceFilterConstants;
 import io.harness.data.structure.EmptyPredicate;
+import io.harness.exception.DuplicateFieldException;
 import io.harness.exception.InvalidRequestException;
+import io.harness.exception.YamlException;
+import io.harness.ng.core.Status;
 import io.harness.ng.core.dto.ErrorDTO;
 import io.harness.ng.core.dto.FailureDTO;
 import io.harness.ng.core.dto.ResponseDTO;
@@ -20,15 +23,30 @@ import io.harness.ngpipeline.pipeline.beans.yaml.NgPipeline;
 import io.harness.ngpipeline.pipeline.mappers.NgPipelineFilterHelper;
 import io.harness.ngpipeline.pipeline.mappers.PipelineDtoMapper;
 import io.harness.ngpipeline.pipeline.service.NGPipelineService;
-// import io.harness.ngtriggers.utils.TriggerUtils;
 import io.harness.utils.PageUtils;
 
 import com.google.inject.Inject;
-import io.swagger.annotations.*;
+import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiImplicitParam;
+import io.swagger.annotations.ApiImplicitParams;
+import io.swagger.annotations.ApiOperation;
+import io.swagger.annotations.ApiParam;
+import io.swagger.annotations.ApiResponse;
+import io.swagger.annotations.ApiResponses;
 import java.util.List;
 import java.util.Optional;
 import javax.validation.constraints.NotNull;
-import javax.ws.rs.*;
+import javax.ws.rs.Consumes;
+import javax.ws.rs.DELETE;
+import javax.ws.rs.DefaultValue;
+import javax.ws.rs.GET;
+import javax.ws.rs.HeaderParam;
+import javax.ws.rs.POST;
+import javax.ws.rs.PUT;
+import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
+import javax.ws.rs.Produces;
+import javax.ws.rs.QueryParam;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -37,6 +55,8 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.mongodb.core.query.Criteria;
+
+// import io.harness.ngtriggers.utils.TriggerUtils;
 
 @Api("pipelines")
 @Path("pipelines")
@@ -120,10 +140,31 @@ public class NGPipelineResource {
       @NotNull @QueryParam(NGCommonEntityConstants.PROJECT_KEY) String projectId,
       @NotNull @ApiParam(hidden = true, type = "") String yaml) {
     log.info("Creating pipeline");
-    NgPipelineEntity ngPipelineEntity = PipelineDtoMapper.toPipelineEntity(accountId, orgId, projectId, yaml);
-    NgPipelineEntity createdEntity = ngPipelineService.create(ngPipelineEntity);
+    ResponseDTO responseDTO = null;
+    try {
+      NgPipelineEntity ngPipelineEntity = PipelineDtoMapper.toPipelineEntity(accountId, orgId, projectId, yaml);
+      NgPipelineEntity createdEntity = ngPipelineService.create(ngPipelineEntity);
+      return ResponseDTO.newResponse(createdEntity.getVersion().toString(), createdEntity.getIdentifier());
 
-    return ResponseDTO.newResponse(createdEntity.getVersion().toString(), createdEntity.getIdentifier());
+    } catch (DuplicateFieldException ex) {
+      responseDTO = ResponseDTO.newResponse(String.format(
+          "ERROR:  Failed to save pipeline in projectIdentifier %s, orgIdentifier %s, accountIdentifier %s due to %s ",
+          projectId, orgId, accountId, ex.getMessage()));
+      responseDTO.setStatus(Status.ERROR);
+      return responseDTO;
+    } catch (YamlException ex) {
+      responseDTO = ResponseDTO.newResponse(String.format(
+          "ERROR:  Failed to save pipeline in projectIdentifier  %s, orgIdentifier  %s, accountIdentifier %s due to %s ",
+          projectId, orgId, accountId, ex.getMessage()));
+      responseDTO.setStatus(Status.ERROR);
+      return responseDTO;
+    } catch (Exception ex) {
+      responseDTO = ResponseDTO.newResponse(String.format(
+          "ERROR:  Failed to save pipeline in projectIdentifier  %s, orgIdentifier  %s, accountIdentifier %s due to %s ",
+          projectId, orgId, accountId, ex.getMessage()));
+      responseDTO.setStatus(Status.ERROR);
+      return responseDTO;
+    }
   }
 
   @PUT

@@ -10,9 +10,9 @@ import io.harness.delegate.beans.ci.pod.SecretVariableDTO;
 import io.harness.delegate.beans.ci.pod.SecretVariableDetails;
 import io.harness.encryption.SecretRefData;
 import io.harness.exception.InvalidArgumentsException;
-import io.harness.exception.InvalidRequestException;
-import io.harness.exception.UnexpectedException;
 import io.harness.exception.WingsException;
+import io.harness.exception.ngexception.CIStageExecutionException;
+import io.harness.exception.ngexception.CIStageExecutionUserException;
 import io.harness.network.SafeHttpCall;
 import io.harness.ng.core.NGAccess;
 import io.harness.ng.core.dto.secrets.SecretDTOV2;
@@ -85,15 +85,17 @@ public class SecretVariableUtils {
                                   .getData();
 
     } catch (IOException e) {
-      throw new UnexpectedException(format("Unable to get secret information : [%s] with scope: [%s]",
-                                        identifierRef.getIdentifier(), identifierRef.getScope()),
+      log.error(format("Unable to get secret information : [%s] with scope: [%s]", identifierRef.getIdentifier(),
+          identifierRef.getScope()));
+
+      throw new CIStageExecutionException(format("Unable to get secret information : [%s] with scope: [%s]",
+                                              identifierRef.getIdentifier(), identifierRef.getScope()),
           e);
     }
 
     if (secretResponseWrapper == null) {
-      throw new InvalidRequestException(format("Secret not found for identifier : [%s] with scope: [%s]",
-                                            identifierRef.getIdentifier(), identifierRef.getScope()),
-          WingsException.USER);
+      throw new CIStageExecutionUserException(format("Secret not found for identifier : [%s] with scope: [%s]",
+          identifierRef.getIdentifier(), identifierRef.getScope()));
     }
     return secretResponseWrapper.getSecret();
   }
