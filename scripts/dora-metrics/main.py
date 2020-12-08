@@ -1,9 +1,9 @@
 import script
 import helper
-
+import config
 
 if __name__ == "__main__":
-    api_key = input("Enter API-KEY : ")
+    # api_key = input("Enter API-KEY : ")
 
     while True:
         file_operation = input("Enter A to append to existing file (leave blank to create new file) : ")
@@ -57,11 +57,12 @@ if __name__ == "__main__":
         print("ERROR : Date invalid, please try again")
 
     while True:
-        end_time_input = input("Enter end time of search interval (MM/DD/YYYY HH:MM:SS) (leave blank to search till now) : ")
+        end_time_input = input(
+            "Enter end time of search interval (MM/DD/YYYY HH:MM:SS) (leave blank to search till now) : ")
         if end_time_input == "":
             end_time_epoch = helper.get_current_time_in_epoch_in_seconds()
             end_time_obj = helper.get_date_obj_from_epoch(end_time_epoch)
-        else :
+        else:
             end_time_obj = helper.get_date_obj_from_str(end_time_input, helper.DATE_FORMAT_MM_DD_YYYY_HH_MM_SS)
 
         if end_time_obj is not None:
@@ -72,13 +73,15 @@ if __name__ == "__main__":
         print("ERROR : Date invalid, please try again")
 
     input_arguments = {
-        script.ARGS_API_KEY : api_key,
-        script.ARGS_FILE_OPERATION : file_operation,
-        script.ARGS_FILENAME_KEY : filename,
-        script.ARGS_SEARCH_ENTITY_TYPE_KEY : entity_type,
-        script.ARGS_SEARCH_ENTITY_ID_KEY : entity_id,
-        script.ARGS_SEARCH_INTERVAL_START_TIME_EPOCH_KEY : start_time_epoch,
-        script.ARGS_SEARCH_INTERVAL_END_TIME_EPOCH_KEY : end_time_epoch,
+        script.ARGS_KEY_APP_DOMAIN_KEY: config.APP_DOMAIN_QA,
+        script.ARGS_API_KEY: config.DEFAULT_API_KEY,
+        script.ARGS_ACCOUNT_ID_KEY: config.DEFAULT_ACCOUNT_ID,
+        script.ARGS_FILE_OPERATION_KEY: file_operation,
+        script.ARGS_FILENAME_KEY: filename,
+        script.ARGS_SEARCH_ENTITY_TYPE_KEY: entity_type,
+        script.ARGS_SEARCH_ENTITY_ID_KEY: entity_id,
+        script.ARGS_SEARCH_INTERVAL_START_TIME_EPOCH_KEY: start_time_epoch,
+        script.ARGS_SEARCH_INTERVAL_END_TIME_EPOCH_KEY: end_time_epoch,
     }
 
     script.compile_data(input_arguments)

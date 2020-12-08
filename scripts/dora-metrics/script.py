@@ -5,12 +5,15 @@ import file_manager
 import sys
 
 ARGS_API_KEY = "api_key"
+ARGS_ACCOUNT_ID_KEY = "account_id"
+ARGS_KEY_APP_DOMAIN_KEY = "app_domain"
 ARGS_SEARCH_INTERVAL_START_TIME_EPOCH_KEY = "search_interval_start_time_epoch"
 ARGS_SEARCH_INTERVAL_END_TIME_EPOCH_KEY = "search_interval_end_time_epoch"
 ARGS_SEARCH_ENTITY_TYPE_KEY = "search_entity_type"
 ARGS_SEARCH_ENTITY_ID_KEY = "search_entity_id"
 ARGS_FILENAME_KEY = "filename"
-ARGS_FILE_OPERATION = "file_operation"
+ARGS_FILEPATH_KEY = "filepath"
+ARGS_FILE_OPERATION_KEY = "file_operation"
 FILE_OPERATION_APPEND = "append"
 FILE_OPERATION_NEW = "new"
 
@@ -46,9 +49,6 @@ ENTITY_PIPELINE_EXECUTION = "PipelineExecution"
 ENTITY_WORKFLOW_EXECUTION = "WorkflowExecution"
 ENTITY_ALL_EXECUTION = "AllExecution"
 
-DEFAULT_API_KEY = "cHg3eGRfQkZSQ2ktcGZXUFlYVmp2dzo6ZEs3bkRPRVNGcG1XcWhuaEVRR2R3NjN6ZnVqYlFMZ1ZZT2pmNGEyb3dBMVdJQlBuNTVXclVVdEZjYWdCQkdJd0xwMFdPa3RxUml4VTRwRWw="
-CLIENT_ACCOUNT_ID = "px7xd_BFRCi-pfWPYXVjvw"
-
 HEADER_X_API_KEY = "x-api-key"
 PAYLOAD_PARAM_QUERY = "query"
 GRAPHQL_QUERY = "{ executions(limit: 100, offset: $OFFSET, $FILTER) { pageInfo { hasMore limit offset total } nodes { id application { name } status tags { name value } __typename cause { ... on ExecutedByUser { user { email } } ... on ExecutedByAPIKey { apiKey { name } } ... on ExecutedByTrigger { trigger { name } } ... on ExecutedAlongPipeline { execution { pipeline { name } } } } startedAt endedAt ... on PipelineExecution { pipeline { name } pipelineStageExecutions{ ... on ApprovalStageExecution{ pipelineStageName status approvalStepType } } memberExecutions { nodes { ... on WorkflowExecution { workflow { name } status tags { name value } startedAt endedAt artifacts { buildNo artifactSource { name } } cause { ... on ExecutedByUser { user { email } } ... on ExecutedByAPIKey { apiKey { name } } ... on ExecutedByTrigger { trigger { name } } ... on ExecutedAlongPipeline { execution { pipeline { name } } } } outcomes { nodes { ... on DeploymentOutcome { environment { name type } service { name deploymentType } } } } } } } } ... on WorkflowExecution { workflow { name } artifacts { buildNo artifactSource { name } } outcomes { nodes { ... on DeploymentOutcome { environment { name type } service { name deploymentType } } } } } } } } "
@@ -68,7 +68,7 @@ AFTER_DATE_FILTER_PLACE_HOLDER = "$GRAPHQL_AFTER_DATE_FILTER"
 WORKFLOW_ID_FILTER_PLACE_HOLDER = "$WORKFLOW_ID"
 PIPELINE_ID_FILTER_PLACE_HOLDER = "$PIPELINE_ID"
 
-REQUEST_URL = "https://qa.harness.io/gateway/api/graphql?accountId="
+REQUEST_URL_PATH = "/api/graphql?accountId="
 REQUEST_HEADERS = {
     "content-type": "application/json",
 }
@@ -158,10 +158,10 @@ def handle_api_response(response):
     return False, None
 
 
-def get_all_deployments(api_key, account_id, offset, entity_type, entity_id, start_time_epoch, end_time_epoch):
+def get_all_deployments(app_domain, api_key, account_id, offset, entity_type, entity_id, start_time_epoch, end_time_epoch):
     retry_count = REQUEST_RETRY_COUNT
 
-    request_url = REQUEST_URL + account_id
+    request_url = app_domain + REQUEST_URL_PATH + account_id
     request_headers = REQUEST_HEADERS
     request_headers[HEADER_X_API_KEY] = api_key
     request_payload = {
@@ -474,40 +474,49 @@ def create_csv_data(executions):
     return data_rows, False
 
 
-def init_backoffice_files():
+def init_backoffice_files(temp_file_path, debug_log_file_path, error_log_file_path):
     # create blank temp file
-    file_manager.create_new_file(TEMP_CSV_FILE_NAME)
+    file_manager.create_new_file(temp_file_path)
     # create new debug and error log files
-    file_manager.create_new_file(DEBUG_LOG_FILE_NAME)
-    file_manager.create_new_file(ERROR_LOG_FILE_NAME)
+    file_manager.create_new_file(debug_log_file_path)
+    file_manager.create_new_file(error_log_file_path)
 
 
 def compile_data(input_args):
+    global debug_log_file_path, error_log_file_path
     try:
         # TODO
         # add input validation
         log_manager.log_input_params(input_args)
 
         api_key = input_args.get(ARGS_API_KEY)
-        account_id = CLIENT_ACCOUNT_ID
+        account_id = input_args.get(ARGS_ACCOUNT_ID_KEY)
+        app_domain = input_args.get(ARGS_KEY_APP_DOMAIN_KEY)
         filename = input_args.get(ARGS_FILENAME_KEY) + ".csv"
-        file_operation = input_args.get(ARGS_FILE_OPERATION)
+        # if filepath is empty, then put current working directory as file path
+        filepath = input_args.get(ARGS_FILEPATH_KEY, helper.get_current_working_directory_path_str())
+        file_operation = input_args.get(ARGS_FILE_OPERATION_KEY)
         entity_type = input_args.get(ARGS_SEARCH_ENTITY_TYPE_KEY)
         entity_id = input_args.get(ARGS_SEARCH_ENTITY_ID_KEY, "")
         start_time_interval_epoch = input_args.get(ARGS_SEARCH_INTERVAL_START_TIME_EPOCH_KEY)
         end_time_interval_epoch = input_args.get(ARGS_SEARCH_INTERVAL_END_TIME_EPOCH_KEY)
 
-        if file_operation == FILE_OPERATION_NEW:
-            file_manager.init_csv_file_with_headers(filename, CSV_HEADERS)
+        output_file_path = helper.get_file_path(filepath, filename)
+        temp_file_path = helper.get_file_path(helper.get_current_working_directory_path_str(), TEMP_CSV_FILE_NAME)
+        debug_log_file_path = helper.get_file_path(helper.get_current_working_directory_path_str(), DEBUG_LOG_FILE_NAME)
+        error_log_file_path = helper.get_file_path(helper.get_current_working_directory_path_str(), ERROR_LOG_FILE_NAME)
 
-        init_backoffice_files()
+        if file_operation == FILE_OPERATION_NEW:
+            file_manager.init_csv_file_with_headers(output_file_path, CSV_HEADERS)
+
+        init_backoffice_files(temp_file_path, debug_log_file_path, error_log_file_path)
 
         curr_offset = 0
         repeat = True
 
         while repeat is True:
             # fetch all deployments via graphql query in pagination manner
-            deployments_result = get_all_deployments(api_key, account_id, str(curr_offset), entity_type, entity_id,
+            deployments_result = get_all_deployments(app_domain, api_key, account_id, str(curr_offset), entity_type, entity_id,
                                                      start_time_interval_epoch, end_time_interval_epoch)
 
             # get updated offset
@@ -520,7 +529,7 @@ def compile_data(input_args):
             data_rows, is_threshold_breached = create_csv_data(executions)
 
             # append all data rows to the temp csv
-            file_manager.append_to_csv_file(TEMP_CSV_FILE_NAME, data_rows)
+            file_manager.append_to_csv_file(temp_file_path, data_rows)
 
             if is_threshold_breached:
                 repeat = False
@@ -528,13 +537,13 @@ def compile_data(input_args):
                 curr_offset = curr_offset + limit
 
         # copy all data from current temp file to the original file
-        file_manager.copy_csv_file(TEMP_CSV_FILE_NAME, filename)
-        log_manager.log_console_message("Output file created at : {}".format(helper.get_absolute_file_path(filename)))
+        file_manager.copy_csv_file(temp_file_path, output_file_path)
+        log_manager.log_console_message("Output file created at : {}".format(output_file_path))
     except Exception as e:
         log_manager.log_exception(e)
-        log_manager.log_console_error("Exception occured, please check error logs at : {}".format(helper.get_absolute_file_path(ERROR_LOG_FILE_NAME)))
+        log_manager.log_console_error("Exception occured, please check error logs at : {}".format(error_log_file_path))
     finally:
-        file_manager.append_to_file(DEBUG_LOG_FILE_NAME, log_manager.get_debug_log())
-        file_manager.append_to_file(ERROR_LOG_FILE_NAME, log_manager.get_error_log())
+        file_manager.append_to_file(debug_log_file_path, log_manager.get_debug_log())
+        file_manager.append_to_file(error_log_file_path, log_manager.get_error_log())
 
     sys.exit("\n------- Execution Completed --------")

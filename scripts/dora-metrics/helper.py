@@ -65,6 +65,10 @@ def get_absolute_file_path(filename):
     return os.path.join(get_current_working_directory_path_str(), filename)
 
 
+def get_file_path(file_directory, filename):
+    return os.path.join(file_directory, filename)
+
+
 def print_list(data):
     for i in range(len(data)):
         print(data[i])
