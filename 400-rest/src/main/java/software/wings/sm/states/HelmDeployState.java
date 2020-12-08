@@ -61,6 +61,7 @@ import software.wings.api.InstanceElement;
 import software.wings.api.InstanceElementListParam;
 import software.wings.api.PhaseElement;
 import software.wings.api.ServiceElement;
+import software.wings.api.helm.HelmReleaseInfoElement;
 import software.wings.api.instancedetails.InstanceInfoVariables;
 import software.wings.beans.Activity;
 import software.wings.beans.Activity.ActivityBuilder;
@@ -1105,9 +1106,12 @@ public class HelmDeployState extends State {
       List<InstanceDetails> instanceDetails =
           ContainerHelper.generateInstanceDetails(helmInstallCommandResponse.getContainerInfoList());
       saveInstanceInfoToSweepingOutput(context, instanceElements, instanceDetails);
+      saveHelmReleaseInfoToSweepingOutput(
+          context, HelmReleaseInfoElement.builder().releaseName(stateExecutionData.getReleaseName()).build());
 
       executionResponseBuilder.contextElement(instanceElementListParam);
       executionResponseBuilder.notifyElement(instanceElementListParam);
+
     } else {
       log.info("Got helm execution response with status "
           + executionResponse.getHelmCommandResponse().getCommandExecutionStatus().toString() + " with output "
@@ -1127,6 +1131,17 @@ public class HelmDeployState extends State {
                                               .instanceDetails(instanceDetails)
                                               .skipVerification(isEmpty(instanceDetails))
                                               .build())
+                                   .build());
+  }
+
+  @VisibleForTesting
+  void saveHelmReleaseInfoToSweepingOutput(ExecutionContext context, HelmReleaseInfoElement helmReleaseInfoElement) {
+    Scope scope = workflowExecutionService.isMultiService(context.getAppId(), context.getWorkflowExecutionId())
+        ? Scope.PHASE
+        : Scope.WORKFLOW;
+    sweepingOutputService.save(context.prepareSweepingOutputBuilder(scope)
+                                   .name(HelmReleaseInfoElement.SWEEPING_OUTPUT_NAME)
+                                   .value(helmReleaseInfoElement)
                                    .build());
   }
 

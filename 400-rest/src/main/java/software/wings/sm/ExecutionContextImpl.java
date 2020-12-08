@@ -67,6 +67,7 @@ import software.wings.api.artifact.ServiceArtifactElement;
 import software.wings.api.artifact.ServiceArtifactElements;
 import software.wings.api.artifact.ServiceArtifactVariableElement;
 import software.wings.api.artifact.ServiceArtifactVariableElements;
+import software.wings.api.helm.HelmReleaseInfoElement;
 import software.wings.api.instancedetails.InstanceApiResponse;
 import software.wings.api.instancedetails.InstanceInfoVariables;
 import software.wings.beans.Activity;
@@ -1249,7 +1250,11 @@ public class ExecutionContextImpl implements DeploymentExecutionContext {
                       .cloudProvider(cloudProvider)
                       .build());
     } else if (DeploymentType.HELM.name().equals(phaseElement.getDeploymentType())) {
+      HelmReleaseInfoElement helmReleaseInfoElement = sweepingOutputService.findSweepingOutput(
+          prepareSweepingOutputInquiryBuilder().name(HelmReleaseInfoElement.SWEEPING_OUTPUT_NAME).build());
+
       builder.helm(Helm.builder()
+                       .releaseName(helmReleaseInfoElement != null ? helmReleaseInfoElement.getReleaseName() : null)
                        .shortId(infraMappingId.substring(0, 7).toLowerCase().replace('-', 'z').replace('_', 'z'))
                        .build());
     } else if (DeploymentType.CUSTOM.name().equals(phaseElement.getDeploymentType())) {

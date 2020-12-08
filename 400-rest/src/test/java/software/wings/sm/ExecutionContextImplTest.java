@@ -1,6 +1,7 @@
 package software.wings.sm;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
+import static io.harness.rule.OwnerRule.ABOSII;
 import static io.harness.rule.OwnerRule.ANSHUL;
 import static io.harness.rule.OwnerRule.BRETT;
 import static io.harness.rule.OwnerRule.GARVIT;
@@ -75,6 +76,7 @@ import software.wings.api.artifact.ServiceArtifactElement;
 import software.wings.api.artifact.ServiceArtifactElements;
 import software.wings.api.artifact.ServiceArtifactVariableElement;
 import software.wings.api.artifact.ServiceArtifactVariableElements;
+import software.wings.api.helm.HelmReleaseInfoElement;
 import software.wings.api.instancedetails.InstanceApiResponse;
 import software.wings.api.instancedetails.InstanceInfoVariables;
 import software.wings.beans.Application;
@@ -126,6 +128,7 @@ import org.assertj.core.util.Maps;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
@@ -1199,5 +1202,33 @@ public class ExecutionContextImplTest extends WingsBaseTest {
     context.populateDeploymentSpecificInfoInInfraMappingElement(infra, phaseElement, builder);
 
     assertThat(builder.build().getCustom().getVars()).isEmpty();
+  }
+
+  @Test
+  @Owner(developers = ABOSII)
+  @Category(UnitTests.class)
+  public void shouldPopulateReleaseNameForHelmDeploymentInInfraMappingElement() {
+    final PhaseElement phaseElement = PhaseElement.builder().deploymentType(DeploymentType.HELM.name()).build();
+    final ExecutionContextImpl context = Mockito.spy(new ExecutionContextImpl(new StateExecutionInstance()));
+    final InfrastructureMapping infra = CustomInfrastructureMapping.builder().build();
+    final InfraMappingElementBuilder builder = InfraMappingElement.builder();
+    final String releaseName = "test-12345-release";
+
+    HelmReleaseInfoElement helmReleaseInfoElement = HelmReleaseInfoElement.builder().releaseName(releaseName).build();
+
+    on(context).set("settingsService", settingsService);
+    on(context).set("sweepingOutputService", sweepingOutputService);
+    doReturn(WingsTestConstants.INFRA_MAPPING_ID).when(context).fetchInfraMappingId();
+
+    // HelmReleaseInfoElement missing
+    context.populateDeploymentSpecificInfoInInfraMappingElement(infra, phaseElement, builder);
+    assertThat(builder.build().getHelm().getReleaseName()).isNull();
+
+    // HelmReleaseInfoElement is present
+    ArgumentCaptor<SweepingOutputInquiry> inquiryCaptor = ArgumentCaptor.forClass(SweepingOutputInquiry.class);
+    doReturn(helmReleaseInfoElement).when(sweepingOutputService).findSweepingOutput(inquiryCaptor.capture());
+    context.populateDeploymentSpecificInfoInInfraMappingElement(infra, phaseElement, builder);
+    assertThat(builder.build().getHelm().getReleaseName()).isEqualTo(releaseName);
+    assertThat(inquiryCaptor.getValue().getName()).isEqualTo(HelmReleaseInfoElement.SWEEPING_OUTPUT_NAME);
   }
 }

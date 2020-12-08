@@ -113,6 +113,7 @@ import software.wings.api.ecs.EcsListenerUpdateExecutionSummary;
 import software.wings.api.ecs.EcsListenerUpdateStateExecutionData;
 import software.wings.api.ecs.EcsRoute53WeightUpdateStateExecutionData;
 import software.wings.api.ecs.EcsRunTaskStateExecutionData;
+import software.wings.api.helm.HelmReleaseInfoElement;
 import software.wings.api.instancedetails.InstanceInfoVariables;
 import software.wings.api.jira.JiraExecutionData;
 import software.wings.api.jira.JiraExecutionData.JiraIssueData;
@@ -1749,5 +1750,6 @@ public class ManagerKryoRegistrar implements KryoRegistrar {
     kryo.register(AzureAppServiceSlotSwapExecutionSummary.class, 8114);
     kryo.register(CVNGStateResponseData.class, 8115);
     kryo.register(CVNGVerificationTask.Status.class, 8117);
+    kryo.register(HelmReleaseInfoElement.class, 8118);
   }
 }
