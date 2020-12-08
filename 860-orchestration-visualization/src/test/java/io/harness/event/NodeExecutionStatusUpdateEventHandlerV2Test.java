@@ -29,6 +29,7 @@ import io.harness.pms.execution.utils.LevelUtils;
 import io.harness.pms.plan.PlanNodeProto;
 import io.harness.pms.sdk.core.events.OrchestrationEvent;
 import io.harness.pms.serializer.json.JsonOrchestrationUtils;
+import io.harness.pms.serializer.persistence.DocumentOrchestrationUtils;
 import io.harness.pms.steps.StepType;
 import io.harness.rule.Owner;
 import io.harness.service.GraphGenerationService;
@@ -199,7 +200,7 @@ public class NodeExecutionStatusUpdateEventHandlerV2Test extends OrchestrationVi
     // creating outcome
     DummyOutcome dummyOutcome = new DummyOutcome("outcome");
     Document doc = Document.parse(dummyOutcome.toJson());
-    doc.put(JsonOrchestrationUtils.PMS_CLASS_KEY, dummyOutcome.getClass().getName());
+    doc.put(DocumentOrchestrationUtils.PMS_CLASS_KEY, dummyOutcome.getClass().getName());
     OutcomeInstance outcome =
         OutcomeInstance.builder()
             .planExecutionId(planExecution.getUuid())
