@@ -1017,7 +1017,6 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
 
   @Override
   public WorkflowExecution getWorkflowExecution(String appId, String workflowExecutionId) {
-    log.debug("Retrieving workflow execution details for id {} of App Id {} ", workflowExecutionId, appId);
     WorkflowExecution workflowExecution =
         wingsPersistence.getWithAppId(WorkflowExecution.class, appId, workflowExecutionId);
     if (workflowExecution != null && workflowExecution.getArtifacts() != null) {
@@ -5138,5 +5137,37 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
       String accountId = workflowExecution.getAccountId();
       executorService.submit(() -> mongoStore.upsert(downgradedTree, ofMinutes(1), true, accountId));
     }
+  }
+
+  @Override
+  public boolean checkWorkflowExecutionInFinalStatus(String appId, String workflowExecutionId) {
+    final WorkflowExecution workflowExecution =
+        fetchWorkflowExecution(appId, workflowExecutionId, WorkflowExecutionKeys.status);
+    return ExecutionStatus.isFinalStatus(workflowExecution.getStatus());
+  }
+
+  @Override
+  public ExecutionStatus fetchWorkflowExecutionStatus(String appId, String workflowExecutionId) {
+    return fetchWorkflowExecution(appId, workflowExecutionId, WorkflowExecutionKeys.status).getStatus();
+  }
+
+  @Override
+  public WorkflowExecution fetchWorkflowExecution(String appId, String workflowExecutionId, String... projectedFields) {
+    Query<WorkflowExecution> query = wingsPersistence.createQuery(WorkflowExecution.class)
+                                         .filter(WorkflowExecutionKeys.appId, appId)
+                                         .filter(WorkflowExecutionKeys.uuid, workflowExecutionId)
+                                         .project(WorkflowExecutionKeys.appId, true)
+                                         .project(WorkflowExecutionKeys.uuid, true);
+
+    if (projectedFields != null) {
+      for (String projectedField : projectedFields) {
+        query.project(projectedField, true);
+      }
+    }
+    WorkflowExecution workflowExecution = query.get();
+    if (workflowExecution == null) {
+      throw new InvalidRequestException("Workflow execution does not exist.");
+    }
+    return workflowExecution;
   }
 }

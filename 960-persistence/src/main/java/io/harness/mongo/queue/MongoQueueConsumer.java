@@ -47,7 +47,6 @@ public class MongoQueueConsumer<T extends Queuable> implements QueueConsumer<T> 
   @Override
   public T get(Duration wait, Duration poll) {
     long endTime = System.currentTimeMillis() + wait.toMillis();
-
     boolean acquired = false;
     try {
       acquired = semaphore.tryAcquire(wait.toMillis(), TimeUnit.MILLISECONDS);
