@@ -11,6 +11,7 @@ import io.harness.yaml.extended.ci.codebase.CodeBase;
 import io.swagger.annotations.ApiModelProperty;
 import java.util.List;
 import java.util.Map;
+import javax.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -23,8 +24,8 @@ import org.springframework.data.annotation.TypeAlias;
 @TypeAlias("pipelineInfoConfig")
 public class PipelineInfoConfig {
   String uuid;
-  @EntityName String name;
-  @EntityIdentifier String identifier;
+  @NotNull @EntityName String name;
+  @NotNull @EntityIdentifier String identifier;
 
   @ApiModelProperty(dataType = SwaggerConstants.STRING_CLASSPATH) ParameterField<String> description;
   Map<String, String> tags;
