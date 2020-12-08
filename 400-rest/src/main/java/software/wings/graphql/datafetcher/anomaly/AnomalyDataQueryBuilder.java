@@ -39,10 +39,14 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class AnomalyDataQueryBuilder {
+  private void addAccountFilter(SelectQuery selectQuery, String accountId) {
+    selectQuery.addCondition(BinaryCondition.equalTo(AnomaliesDataTableSchema.accountId, accountId));
+  }
+
   public String formAnomalyFetchQuery(String accountId, QLAnomalyInput input) {
     SelectQuery query = new SelectQuery();
     query.addAllTableColumns(AnomaliesDataTableSchema.table);
-    query.addCondition(BinaryCondition.equalTo(AnomaliesDataTableSchema.accountId, accountId));
+    addAccountFilter(query, accountId);
     query.addCondition(BinaryCondition.equalTo(AnomaliesDataTableSchema.id, input.getAnomalyId()));
 
     return query.toString();
@@ -75,6 +79,7 @@ public class AnomalyDataQueryBuilder {
     filters = new ArrayList<QLBillingDataFilter>(filters);
 
     SelectQuery query = new SelectQuery();
+    addAccountFilter(query, accountId);
     query.addAllTableColumns(AnomaliesDataTableSchema.table);
     query.addAliasedColumn(new CustomSql(AnomaliesDataTableSchema.actualCost.getColumnNameSQL() + " - "
                                + AnomaliesDataTableSchema.expectedCost.getColumnNameSQL()),
@@ -89,6 +94,7 @@ public class AnomalyDataQueryBuilder {
     filters = new ArrayList<QLBillingDataFilter>(filters);
 
     SelectQuery query = new SelectQuery();
+    addAccountFilter(query, accountId);
     query.addAllTableColumns(AnomaliesDataTableSchema.table);
     query.addAliasedColumn(new CustomSql(AnomaliesDataTableSchema.actualCost.getColumnNameSQL() + " - "
                                + AnomaliesDataTableSchema.expectedCost.getColumnNameSQL()),
@@ -284,6 +290,7 @@ public class AnomalyDataQueryBuilder {
   public String formCloudQuery(String accountId, List<CloudBillingFilter> filters, List<CloudBillingGroupBy> groupBy) {
     filters = new ArrayList<CloudBillingFilter>(filters);
     SelectQuery query = new SelectQuery();
+    addAccountFilter(query, accountId);
     query.addAllTableColumns(AnomaliesDataTableSchema.table);
     query.addAliasedColumn(new CustomSql(AnomaliesDataTableSchema.actualCost.getColumnNameSQL() + " - "
                                + AnomaliesDataTableSchema.expectedCost.getColumnNameSQL()),
