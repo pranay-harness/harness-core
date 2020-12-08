@@ -10,6 +10,18 @@ logging:
       target: STDOUT
       logFormat: "%date{ISO8601} %green([%thread]) %highlight(%-5level) %cyan(%logger) - %msg %yellow(%replace(%mdc){'(.+)', '[$1]'}) %n"
 
+xxxxxxxx
+  applicationConnectors:
+    - type: http
+      port: 12001
+      maxRequestHeaderSize: 100KiB
+  adminConnectors:
+    - type: http
+      port: 12002
+  requestLog:
+    appenders: []
+  maxThreads: 1024
+
 mongo:
   uri: mongodb://localhost:27017/pms-harness
   connectTimeout: 30000
