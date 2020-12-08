@@ -4,6 +4,7 @@ import os
 import sys
 
 DATE_FORMAT_MM_DD_YYYY = "%m/%d/%Y"
+DATE_FORMAT_MM_DD_YYYY_HH_MM_SS = "%m/%d/%Y %H:%M:%S"
 DATE_FORMAT_LOCAL_VERSION = "%c"
 DATE_FORMAT_DD_MMM_YYYY = "%d-%b-%Y"
 DATE_FORMAT_HH_MM_SS = "%H:%M:%S"

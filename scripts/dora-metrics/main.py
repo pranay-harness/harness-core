@@ -43,9 +43,9 @@ if __name__ == "__main__":
         entity_id = input("Enter job id : ")
 
     while True:
-        start_time_input = input("Enter start time of search interval (MM/DD/YYYY) : ")
+        start_time_input = input("Enter start time of search interval (MM/DD/YYYY HH:MM:SS) : ")
         # convert string date input to date time obj
-        start_time_obj = helper.get_date_obj_from_str(start_time_input, helper.DATE_FORMAT_MM_DD_YYYY)
+        start_time_obj = helper.get_date_obj_from_str(start_time_input, helper.DATE_FORMAT_MM_DD_YYYY_HH_MM_SS)
 
         if start_time_obj is not None:
             # convert date time object into local timezone
@@ -57,12 +57,12 @@ if __name__ == "__main__":
         print("ERROR : Date invalid, please try again")
 
     while True:
-        end_time_input = input("Enter end time of search interval (MM/DD/YYYY) (leave blank to search till now) : ")
+        end_time_input = input("Enter end time of search interval (MM/DD/YYYY HH:MM:SS) (leave blank to search till now) : ")
         if end_time_input == "":
             end_time_epoch = helper.get_current_time_in_epoch_in_seconds()
             end_time_obj = helper.get_date_obj_from_epoch(end_time_epoch)
         else :
-            end_time_obj = helper.get_date_obj_from_str(end_time_input, helper.DATE_FORMAT_MM_DD_YYYY)
+            end_time_obj = helper.get_date_obj_from_str(end_time_input, helper.DATE_FORMAT_MM_DD_YYYY_HH_MM_SS)
 
         if end_time_obj is not None:
             end_time_obj = helper.convert_date_to_local_timezone(end_time_obj)
