@@ -9,6 +9,7 @@ import io.harness.pms.sdk.core.adviser.abort.OnAbortAdviser;
 import io.harness.pms.sdk.core.adviser.fail.OnFailAdviser;
 import io.harness.pms.sdk.core.adviser.ignore.IgnoreAdviser;
 import io.harness.pms.sdk.core.adviser.manualintervention.ManualInterventionAdviser;
+import io.harness.pms.sdk.core.adviser.marksuccess.OnMarkSuccessAdviser;
 import io.harness.pms.sdk.core.adviser.success.OnSuccessAdviser;
 import io.harness.pms.sdk.registries.registrar.AdviserRegistrar;
 
@@ -29,5 +30,6 @@ public class PmsSdkAdviserRegistrar implements AdviserRegistrar {
     adviserClasses.add(
         Pair.of(ManualInterventionAdviser.ADVISER_TYPE, injector.getInstance(ManualInterventionAdviser.class)));
     adviserClasses.add(Pair.of(OnAbortAdviser.ADVISER_TYPE, injector.getInstance(OnAbortAdviser.class)));
+    adviserClasses.add(Pair.of(OnMarkSuccessAdviser.ADVISER_TYPE, injector.getInstance(OnMarkSuccessAdviser.class)));
   }
 }

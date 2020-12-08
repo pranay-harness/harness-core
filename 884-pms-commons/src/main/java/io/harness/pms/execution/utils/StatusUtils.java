@@ -92,12 +92,13 @@ public class StatusUtils {
       case QUEUED:
         return EnumSet.of(PAUSED, PAUSING);
       case ABORTED:
-      case SUCCEEDED:
       case ERRORED:
       case SUSPENDED:
       case FAILED:
       case EXPIRED:
         return FINALIZABLE_STATUSES;
+      case SUCCEEDED:
+        return EnumSet.allOf(Status.class);
       default:
         throw new IllegalStateException("Unexpected value: " + status);
     }
