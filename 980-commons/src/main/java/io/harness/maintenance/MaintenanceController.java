@@ -1,17 +1,18 @@
 package io.harness.maintenance;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
-import static io.harness.threading.Morpheus.sleep;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.observer.Subject;
+import io.harness.threading.Schedulable;
 
-import com.google.inject.Inject;
+import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.google.inject.Singleton;
 import io.dropwizard.lifecycle.Managed;
 import java.io.File;
-import java.time.Duration;
-import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledFuture;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import lombok.extern.slf4j.Slf4j;
 
@@ -46,33 +47,47 @@ public class MaintenanceController implements Managed {
     return forceMaintenance != null ? forceMaintenance : maintenance.get();
   }
 
-  @Inject private ExecutorService executorService;
-
-  private final AtomicBoolean running = new AtomicBoolean(true);
+  private final AtomicBoolean running = new AtomicBoolean(false);
   private final Subject<MaintenanceListener> maintenanceListenerSubject = new Subject<>();
+  private ScheduledFuture scheduledFuture;
 
   public void register(MaintenanceListener listener) {
     maintenanceListenerSubject.register(listener);
   }
 
+  /* (non-Javadoc)
+   * @see io.dropwizard.lifecycle.Managed#start()
+   */
   @Override
   public void start() {
-    executorService.submit(() -> {
-      while (running.get()) {
-        boolean isShutdown = new File(SHUTDOWN_FILENAME).exists();
-        if (shutdown.getAndSet(isShutdown) != isShutdown) {
-          maintenanceListenerSubject.fireInform(MaintenanceListener::onShutdown);
-        }
-        boolean isMaintenance =
-            forceMaintenance != null ? forceMaintenance : new File(MAINTENANCE_FILENAME).exists() || isShutdown;
-        if (maintenance.getAndSet(isMaintenance) != isMaintenance) {
-          log.info("{} maintenance mode", isMaintenance ? "Entering" : "Leaving");
-          maintenanceListenerSubject.fireInform(
-              isMaintenance ? MaintenanceListener::onEnterMaintenance : MaintenanceListener::onLeaveMaintenance);
-        }
-        sleep(Duration.ofSeconds(1));
+    if (!running.getAndSet(true)) {
+      scheduledFuture =
+          Executors
+              .newSingleThreadScheduledExecutor(
+                  new ThreadFactoryBuilder().setNameFormat("maintenance-controller").build())
+              .scheduleWithFixedDelay(
+                  new Schedulable("Unexpected exception occurred while notifying for maintenance or shutdown",
+                      this::checkForMaintenance),
+                  1L, 1L, TimeUnit.SECONDS);
+    }
+  }
+
+  private void checkForMaintenance() {
+    boolean isShutdown = new File(SHUTDOWN_FILENAME).exists();
+    if (shutdown.getAndSet(isShutdown) != isShutdown) {
+      // We don't expect to ever leave shutdown mode, but log either way
+      log.info("{} shutdown mode", isShutdown ? "Entering" : "Leaving");
+      if (isShutdown) {
+        maintenanceListenerSubject.fireInform(MaintenanceListener::onShutdown);
       }
-    });
+    }
+    boolean isMaintenance =
+        forceMaintenance != null ? forceMaintenance : new File(MAINTENANCE_FILENAME).exists() || isShutdown;
+    if (maintenance.getAndSet(isMaintenance) != isMaintenance) {
+      log.info("{} maintenance mode", isMaintenance ? "Entering" : "Leaving");
+      maintenanceListenerSubject.fireInform(
+          isMaintenance ? MaintenanceListener::onEnterMaintenance : MaintenanceListener::onLeaveMaintenance);
+    }
   }
 
   /* (non-Javadoc)
@@ -80,6 +95,10 @@ public class MaintenanceController implements Managed {
    */
   @Override
   public void stop() {
-    running.set(false);
+    if (running.getAndSet(false)) {
+      if (scheduledFuture != null) {
+        scheduledFuture.cancel(true);
+      }
+    }
   }
 }
