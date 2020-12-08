@@ -130,11 +130,7 @@ public interface ArtifactStreamServiceBindingService {
 
   Service getService(@NotEmpty String appId, @NotEmpty String artifactStreamId, boolean throwException);
 
-  Service getService(@NotEmpty String artifactStreamId, boolean throwException);
-
   String getServiceId(@NotEmpty String appId, @NotEmpty String artifactStreamId, boolean throwException);
-
-  String getServiceId(@NotEmpty String artifactStreamId, boolean throwException);
 
   void processServiceVariables(List<ServiceVariable> serviceVariables);
 
