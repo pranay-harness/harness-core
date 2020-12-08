@@ -124,8 +124,14 @@ import software.wings.graphql.datafetcher.pipeline.PipelineStatsDataFetcher;
 import software.wings.graphql.datafetcher.pipeline.PipelineVariableConnectionDataFetcher;
 import software.wings.graphql.datafetcher.pipeline.batch.PipelineBatchDataFetcher;
 import software.wings.graphql.datafetcher.pipeline.batch.PipelineBatchDataLoader;
+import software.wings.graphql.datafetcher.secretManager.CreateSecretManagerDataFetcher;
+import software.wings.graphql.datafetcher.secretManager.DeleteSecretManagerDataFetcher;
+import software.wings.graphql.datafetcher.secretManager.HashicorpVaultDataFetcher;
 import software.wings.graphql.datafetcher.secretManager.SecretManagerDataFetcher;
+import software.wings.graphql.datafetcher.secretManager.SecretManagerDataFetchers;
+import software.wings.graphql.datafetcher.secretManager.SecretManagerMutationDataFetcher;
 import software.wings.graphql.datafetcher.secretManager.SecretManagersDataFetcher;
+import software.wings.graphql.datafetcher.secretManager.UpdateSecretManagerDataFetcher;
 import software.wings.graphql.datafetcher.secrets.CreateSecretDataFetcher;
 import software.wings.graphql.datafetcher.secrets.DeleteSecretDataFetcher;
 import software.wings.graphql.datafetcher.secrets.GetSecretDataFetcher;
@@ -384,6 +390,15 @@ public class GraphQLModule extends AbstractModule {
     bindDataFetcherWithAnnotation(ViewFilterStatsDataFetcher.class);
     bindDataFetcherWithAnnotation(PipelineResumeRuntimeDataFetcher.class);
     bindDataFetcherWithAnnotation(RuntimeExecutionInputsToResumePipelineDataFetcher.class);
+
+    bindDataFetcherWithAnnotation(CreateSecretManagerDataFetcher.class);
+    bindDataFetcherWithAnnotation(DeleteSecretManagerDataFetcher.class);
+    bindDataFetcherWithAnnotation(UpdateSecretManagerDataFetcher.class);
+
+    binder()
+        .bind(SecretManagerMutationDataFetcher.class)
+        .annotatedWith(Names.named(SecretManagerDataFetchers.HASHICORP_VAULT_DATA_FETCHER.getName()))
+        .to(HashicorpVaultDataFetcher.class);
   }
 
   @NotNull

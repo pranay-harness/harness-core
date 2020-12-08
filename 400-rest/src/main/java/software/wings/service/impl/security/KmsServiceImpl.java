@@ -2,7 +2,9 @@ package software.wings.service.impl.security;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.beans.EncryptedData.PARENT_ID_KEY;
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.eraro.ErrorCode.KMS_OPERATION_ERROR;
 import static io.harness.eraro.ErrorCode.SECRET_MANAGEMENT_ERROR;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.exception.WingsException.USER_SRE;
@@ -222,6 +224,9 @@ public class KmsServiceImpl extends AbstractSecretServiceImpl implements KmsServ
   }
 
   private void validateKms(String accountId, KmsConfig kmsConfig) {
+    if (isEmpty(kmsConfig.getName())) {
+      throw new SecretManagementException(KMS_OPERATION_ERROR, "Name can not be empty", USER);
+    }
     try {
       kmsEncryptorsRegistry.getKmsEncryptor(kmsConfig).encryptSecret(
           accountId, UUID.randomUUID().toString(), kmsConfig);
