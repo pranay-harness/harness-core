@@ -193,6 +193,10 @@ public class CyberArkServiceImpl extends AbstractSecretServiceImpl implements Cy
 
   @Override
   public void validateConfig(CyberArkConfig cyberArkConfig) {
+    if (isEmpty(cyberArkConfig.getName())) {
+      throw new SecretManagementException(CYBERARK_OPERATION_ERROR, "Name can not be empty", USER);
+    }
+
     SyncTaskContext syncTaskContext = SyncTaskContext.builder()
                                           .accountId(cyberArkConfig.getAccountId())
                                           .timeout(Duration.ofSeconds(10).toMillis())

@@ -1,6 +1,7 @@
 package software.wings.service.impl.security;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.eraro.ErrorCode.AZURE_KEY_VAULT_OPERATION_ERROR;
 import static io.harness.exception.WingsException.USER;
@@ -14,6 +15,7 @@ import io.harness.beans.EncryptedData;
 import io.harness.beans.EncryptedData.EncryptedDataKeys;
 import io.harness.beans.EncryptedDataParent;
 import io.harness.exception.AzureKeyVaultOperationException;
+import io.harness.exception.SecretManagementException;
 import io.harness.security.encryption.EncryptionType;
 import io.harness.serializer.KryoSerializer;
 
@@ -46,6 +48,7 @@ public class AzureSecretsManagerServiceImpl extends AbstractSecretServiceImpl im
   @Override
   public String saveAzureSecretsManagerConfig(String accountId, AzureVaultConfig azureVautConfig) {
     checkIfSecretsManagerConfigCanBeCreatedOrUpdated(accountId);
+    validateConfig(azureVautConfig);
     azureVautConfig.setAccountId(accountId);
     AzureVaultConfig oldConfigForAudit = null;
     AzureVaultConfig savedAzureVaultConfig = null;
@@ -91,6 +94,12 @@ public class AzureSecretsManagerServiceImpl extends AbstractSecretServiceImpl im
     generateAuditForSecretManager(accountId, oldConfigForAudit, azureVautConfig);
 
     return secretManagerConfigService.save(azureVautConfig);
+  }
+
+  private void validateConfig(AzureVaultConfig azureVautConfig) {
+    if (isEmpty(azureVautConfig.getName())) {
+      throw new SecretManagementException(AZURE_KEY_VAULT_OPERATION_ERROR, "Name can not be empty", USER);
+    }
   }
 
   private String saveSecretField(AzureVaultConfig secretsManagerConfig, String configId,

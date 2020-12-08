@@ -480,6 +480,12 @@ public class VaultServiceImpl extends AbstractSecretServiceImpl implements Vault
   }
 
   public void validateVaultConfig(String accountId, VaultConfig vaultConfig) {
+    if (isEmpty(vaultConfig.getName())) {
+      throw new SecretManagementException(VAULT_OPERATION_ERROR, "Name can not be empty", USER);
+    }
+    if (isEmpty(vaultConfig.getVaultUrl())) {
+      throw new SecretManagementException(VAULT_OPERATION_ERROR, "Vault URL can not be empty", USER);
+    }
     if (isEmpty(vaultConfig.getSecretEngineName()) || vaultConfig.getSecretEngineVersion() == 0) {
       throw new SecretManagementException(
           VAULT_OPERATION_ERROR, "Secret engine or secret engine version was not specified", USER);
