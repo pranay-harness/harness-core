@@ -2,6 +2,7 @@ import requests
 import helper
 import log_manager
 import file_manager
+import exception
 import sys
 
 ARGS_API_KEY = "api_key"
@@ -11,8 +12,9 @@ ARGS_SEARCH_INTERVAL_START_TIME_EPOCH_KEY = "search_interval_start_time_epoch"
 ARGS_SEARCH_INTERVAL_END_TIME_EPOCH_KEY = "search_interval_end_time_epoch"
 ARGS_SEARCH_ENTITY_TYPE_KEY = "search_entity_type"
 ARGS_SEARCH_ENTITY_ID_KEY = "search_entity_id"
-ARGS_FILENAME_KEY = "filename"
-ARGS_FILEPATH_KEY = "filepath"
+ARGS_OUTPUT_FILENAME_KEY = "output_filename"
+ARGS_OUTPUT_FILE_DIR_KEY = "output_file_dir"
+ARGS_META_FILE_DIR_KEY = "meta_dir_path"
 ARGS_FILE_OPERATION_KEY = "file_operation"
 FILE_OPERATION_APPEND = "append"
 FILE_OPERATION_NEW = "new"
@@ -482,32 +484,69 @@ def init_backoffice_files(temp_file_path, debug_log_file_path, error_log_file_pa
     file_manager.create_new_file(error_log_file_path)
 
 
+def validate_input(input_args):
+    if input_args.get(ARGS_API_KEY) == "":
+        raise exception.InputException("API Key empty")
+
+    if input_args.get(ARGS_KEY_APP_DOMAIN_KEY) == "":
+        raise exception.InputException("App Domain empty")
+
+    if input_args.get(ARGS_ACCOUNT_ID_KEY) == "":
+        raise exception.InputException("Account ID empty")
+
+    file_operation = input_args.get(ARGS_FILE_OPERATION_KEY)
+    if file_operation != FILE_OPERATION_APPEND and file_operation != FILE_OPERATION_NEW:
+        raise exception.InputException("Invalid file operation : " + file_operation)
+
+    output_file_dir = input_args.get(ARGS_OUTPUT_FILE_DIR_KEY)
+    if output_file_dir == "":
+        raise exception.InputException("Output filepath is empty")
+    if helper.is_directory_exists(output_file_dir) is False:
+        raise exception.InputException("Output file directory doesn't exist : " + output_file_dir)
+
+    meta_file_dir = input_args.get(ARGS_META_FILE_DIR_KEY)
+    if meta_file_dir != "" and helper.is_directory_exists(meta_file_dir) is False:
+        raise exception.InputException("Meta file directory doesn't exist : " + meta_file_dir)
+
+    output_filename = input_args.get(ARGS_OUTPUT_FILENAME_KEY) + ".csv"
+    absolute_file_path = helper.get_file_path(output_file_dir, output_filename)
+    if file_operation == FILE_OPERATION_APPEND and helper.is_file_exists(absolute_file_path) is False:
+        raise exception.InputException("Output file doesn't exist : " + absolute_file_path)
+
+    entity_type = input_args.get(ARGS_SEARCH_ENTITY_TYPE_KEY)
+    if entity_type != ENTITY_ALL_EXECUTION and entity_type != ENTITY_PIPELINE_EXECUTION and entity_type != ENTITY_WORKFLOW_EXECUTION:
+        raise exception.InputException("Invalid entity type (Workflow/Pipeline/All) : " + entity_type)
+
+
 def compile_data(input_args):
     global debug_log_file_path, error_log_file_path
     try:
-        # TODO
-        # add input validation
         log_manager.log_input_params(input_args)
+        # do input validation
+        validate_input(input_args)
 
         api_key = input_args.get(ARGS_API_KEY)
         account_id = input_args.get(ARGS_ACCOUNT_ID_KEY)
         app_domain = input_args.get(ARGS_KEY_APP_DOMAIN_KEY)
-        filename = input_args.get(ARGS_FILENAME_KEY) + ".csv"
-        # if filepath is empty, then put current working directory as file path
-        filepath = input_args.get(ARGS_FILEPATH_KEY, helper.get_current_working_directory_path_str())
+        output_filename = input_args.get(ARGS_OUTPUT_FILENAME_KEY) + ".csv"
+        output_file_dir = input_args.get(ARGS_OUTPUT_FILE_DIR_KEY)
+        meta_file_dir = input_args.get(ARGS_META_FILE_DIR_KEY)
         file_operation = input_args.get(ARGS_FILE_OPERATION_KEY)
         entity_type = input_args.get(ARGS_SEARCH_ENTITY_TYPE_KEY)
         entity_id = input_args.get(ARGS_SEARCH_ENTITY_ID_KEY, "")
         start_time_interval_epoch = input_args.get(ARGS_SEARCH_INTERVAL_START_TIME_EPOCH_KEY)
         end_time_interval_epoch = input_args.get(ARGS_SEARCH_INTERVAL_END_TIME_EPOCH_KEY)
 
-        output_file_path = helper.get_file_path(filepath, filename)
-        temp_file_path = helper.get_file_path(helper.get_current_working_directory_path_str(), TEMP_CSV_FILE_NAME)
-        debug_log_file_path = helper.get_file_path(helper.get_current_working_directory_path_str(), DEBUG_LOG_FILE_NAME)
-        error_log_file_path = helper.get_file_path(helper.get_current_working_directory_path_str(), ERROR_LOG_FILE_NAME)
-
+        output_file_path = helper.get_file_path(output_file_dir, output_filename)
         if file_operation == FILE_OPERATION_NEW:
             file_manager.init_csv_file_with_headers(output_file_path, CSV_HEADERS)
+
+        if meta_file_dir == "":
+            # default is working directory
+            meta_file_dir = helper.get_current_working_directory_path_str()
+        temp_file_path = helper.get_file_path(meta_file_dir, TEMP_CSV_FILE_NAME)
+        debug_log_file_path = helper.get_file_path(meta_file_dir, DEBUG_LOG_FILE_NAME)
+        error_log_file_path = helper.get_file_path(meta_file_dir, ERROR_LOG_FILE_NAME)
 
         init_backoffice_files(temp_file_path, debug_log_file_path, error_log_file_path)
 
@@ -539,11 +578,16 @@ def compile_data(input_args):
         # copy all data from current temp file to the original file
         file_manager.copy_csv_file(temp_file_path, output_file_path)
         log_manager.log_console_message("Output file created at : {}".format(output_file_path))
+        log_manager.log_console_message("Operation SUCCESS !!!")
+    except exception.InputException as input_exception:
+        log_manager.log_console_error(input_exception)
+        # exit process in case of input validation exception
+        # no meta files created yet, so can't write to them
+        sys.exit(400)
     except Exception as e:
         log_manager.log_exception(e)
         log_manager.log_console_error("Exception occured, please check error logs at : {}".format(error_log_file_path))
-    finally:
-        file_manager.append_to_file(debug_log_file_path, log_manager.get_debug_log())
-        file_manager.append_to_file(error_log_file_path, log_manager.get_error_log())
+        log_manager.log_console_error("Operation ** FAILED ** !!!")
 
-    sys.exit("\n------- Execution Completed --------")
+    file_manager.append_to_file(debug_log_file_path, log_manager.get_debug_log())
+    file_manager.append_to_file(error_log_file_path, log_manager.get_error_log())

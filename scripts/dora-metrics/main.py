@@ -3,8 +3,6 @@ import helper
 import config
 
 if __name__ == "__main__":
-    # api_key = input("Enter API-KEY : ")
-
     while True:
         file_operation = input("Enter A to append to existing file (leave blank to create new file) : ")
 
@@ -77,7 +75,7 @@ if __name__ == "__main__":
         script.ARGS_API_KEY: config.DEFAULT_API_KEY,
         script.ARGS_ACCOUNT_ID_KEY: config.DEFAULT_ACCOUNT_ID,
         script.ARGS_FILE_OPERATION_KEY: file_operation,
-        script.ARGS_FILENAME_KEY: filename,
+        script.ARGS_OUTPUT_FILENAME_KEY: filename,
         script.ARGS_SEARCH_ENTITY_TYPE_KEY: entity_type,
         script.ARGS_SEARCH_ENTITY_ID_KEY: entity_id,
         script.ARGS_SEARCH_INTERVAL_START_TIME_EPOCH_KEY: start_time_epoch,
