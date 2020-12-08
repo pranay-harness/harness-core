@@ -287,4 +287,10 @@ public interface WorkflowExecutionService extends StateStatusUpdate {
 
   StateExecutionInstance getStateExecutionInstancePipelineStage(
       String appId, String pipelineExecutionId, String pipelineStageElementId);
+
+  boolean checkWorkflowExecutionInFinalStatus(String appId, String workflowExecutionId);
+
+  ExecutionStatus fetchWorkflowExecutionStatus(String appId, String workflowExecutionId);
+
+  WorkflowExecution fetchWorkflowExecution(String appId, String workflowExecutionId, String... projectedFields);
 }

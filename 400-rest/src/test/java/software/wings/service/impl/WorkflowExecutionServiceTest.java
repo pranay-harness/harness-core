@@ -12,6 +12,7 @@ import static io.harness.rule.OwnerRule.HARSH;
 import static io.harness.rule.OwnerRule.POOJA;
 import static io.harness.rule.OwnerRule.PRABU;
 import static io.harness.rule.OwnerRule.RAMA;
+import static io.harness.rule.OwnerRule.SRINIVAS;
 import static io.harness.rule.OwnerRule.UJJAWAL;
 import static io.harness.rule.OwnerRule.YOGESH;
 
@@ -43,6 +44,7 @@ import static software.wings.utils.WingsTestConstants.SERVICE_INSTANCE_ID;
 import static software.wings.utils.WingsTestConstants.USER_EMAIL;
 import static software.wings.utils.WingsTestConstants.USER_GROUP_ID;
 import static software.wings.utils.WingsTestConstants.USER_ID;
+import static software.wings.utils.WingsTestConstants.WORKFLOW_EXECUTION_ID;
 import static software.wings.utils.WingsTestConstants.WORKFLOW_ID;
 import static software.wings.utils.WingsTestConstants.WORKFLOW_NAME;
 
@@ -1220,5 +1222,82 @@ public class WorkflowExecutionServiceTest extends WingsBaseTest {
                                        .build();
 
     assertThat(actual).isEqualTo(expected);
+  }
+
+  @Test
+  @Owner(developers = {SRINIVAS})
+  @Category(UnitTests.class)
+  public void shouldCheckWorkflowExecutionStatusInFinalStatus() {
+    Query query = mock(Query.class);
+    when(wingsPersistence.createQuery(eq(WorkflowExecution.class))).thenReturn(query);
+    when(query.filter(anyString(), anyString())).thenReturn(query);
+    when(query.project(anyString(), anyBoolean())).thenReturn(query);
+
+    when(query.get()).thenReturn(WorkflowExecution.builder().status(ExecutionStatus.SUCCESS).build());
+    assertThat(workflowExecutionService.checkWorkflowExecutionInFinalStatus(APP_ID, WORKFLOW_EXECUTION_ID)).isTrue();
+
+    when(query.get()).thenReturn(WorkflowExecution.builder().status(ExecutionStatus.RUNNING).build());
+    assertThat(workflowExecutionService.checkWorkflowExecutionInFinalStatus(APP_ID, WORKFLOW_EXECUTION_ID)).isFalse();
+  }
+
+  @Test
+  @Owner(developers = {SRINIVAS})
+  @Category(UnitTests.class)
+  public void shouldFetchWorkflowExecutionStatus() {
+    Query query = mock(Query.class);
+    when(wingsPersistence.createQuery(eq(WorkflowExecution.class))).thenReturn(query);
+    when(query.filter(anyString(), anyString())).thenReturn(query);
+    when(query.project(anyString(), anyBoolean())).thenReturn(query);
+
+    when(query.get()).thenReturn(WorkflowExecution.builder().status(ExecutionStatus.SUCCESS).build());
+    assertThat(workflowExecutionService.fetchWorkflowExecutionStatus(APP_ID, WORKFLOW_EXECUTION_ID))
+        .isEqualTo(ExecutionStatus.SUCCESS);
+  }
+
+  @Test
+  @Owner(developers = {SRINIVAS})
+  @Category(UnitTests.class)
+  public void shouldFetchWorkflowExecutionWithFilter() {
+    Query query = mock(Query.class);
+    when(wingsPersistence.createQuery(eq(WorkflowExecution.class))).thenReturn(query);
+    when(query.filter(anyString(), anyString())).thenReturn(query);
+    when(query.project(anyString(), anyBoolean())).thenReturn(query);
+
+    when(query.get()).thenReturn(WorkflowExecution.builder().status(ExecutionStatus.SUCCESS).envId(ENV_ID).build());
+    assertThat(workflowExecutionService.fetchWorkflowExecution(
+                   APP_ID, WORKFLOW_EXECUTION_ID, WorkflowExecutionKeys.status, WorkflowExecutionKeys.envId))
+        .isNotNull()
+        .extracting(WorkflowExecutionKeys.envId)
+        .isEqualTo(ENV_ID);
+  }
+
+  @Test(expected = InvalidRequestException.class)
+  @Owner(developers = {SRINIVAS})
+  @Category(UnitTests.class)
+  public void shouldFetchWorkflowExecutionThrowException() {
+    Query query = mock(Query.class);
+    when(wingsPersistence.createQuery(eq(WorkflowExecution.class))).thenReturn(query);
+    when(query.filter(anyString(), anyString())).thenReturn(query);
+    when(query.project(anyString(), anyBoolean())).thenReturn(query);
+
+    when(query.get()).thenReturn(null);
+    workflowExecutionService.fetchWorkflowExecution(
+        APP_ID, WORKFLOW_EXECUTION_ID, WorkflowExecutionKeys.status, WorkflowExecutionKeys.envId);
+  }
+
+  @Owner(developers = {SRINIVAS})
+  @Category(UnitTests.class)
+  public void shouldFetchWorkflowExecutionWithoutProjectedFields() {
+    Query query = mock(Query.class);
+    when(wingsPersistence.createQuery(eq(WorkflowExecution.class))).thenReturn(query);
+    when(query.filter(anyString(), anyString())).thenReturn(query);
+    when(query.project(anyString(), anyBoolean())).thenReturn(query);
+
+    when(query.get()).thenReturn(WorkflowExecution.builder().status(ExecutionStatus.SUCCESS).envId(ENV_ID).build());
+    assertThat(workflowExecutionService.fetchWorkflowExecution(
+                   APP_ID, WORKFLOW_EXECUTION_ID, WorkflowExecutionKeys.status, WorkflowExecutionKeys.envId))
+        .isNotNull()
+        .extracting(WorkflowExecutionKeys.envId)
+        .isEqualTo(ENV_ID);
   }
 }
