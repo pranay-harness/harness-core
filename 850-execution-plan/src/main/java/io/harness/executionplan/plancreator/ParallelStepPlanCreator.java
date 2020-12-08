@@ -15,6 +15,7 @@ import io.harness.pms.facilitators.FacilitatorObtainment;
 import io.harness.pms.facilitators.FacilitatorType;
 import io.harness.pms.sdk.core.facilitator.OrchestrationFacilitatorType;
 import io.harness.pms.sdk.core.plan.PlanNode;
+import io.harness.pms.steps.SkipType;
 import io.harness.pms.steps.StepType;
 import io.harness.steps.StepOutcomeGroup;
 import io.harness.steps.fork.ForkStep;
@@ -76,6 +77,7 @@ public class ParallelStepPlanCreator implements SupportDefinedExecutorPlanCreato
                 .setType(FacilitatorType.newBuilder().setType(OrchestrationFacilitatorType.CHILDREN).build())
                 .build())
         .skipExpressionChain(true)
+        .skipGraphType(SkipType.SKIP_NODE)
         .build();
   }
 
