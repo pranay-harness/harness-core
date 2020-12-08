@@ -13,7 +13,7 @@ import io.harness.category.element.UnitTests;
 import io.harness.delegate.AccountId;
 import io.harness.delegate.TaskExecutionStage;
 import io.harness.delegate.TaskId;
-import io.harness.grpc.DelegateServiceGrpcLiteClient;
+import io.harness.grpc.DelegateServiceGrpcAgentClient;
 import io.harness.rule.Owner;
 import io.harness.serializer.KryoSerializer;
 import io.harness.task.TaskServiceTestBase;
@@ -49,7 +49,7 @@ import org.mockito.Mock;
 
 public class TaskServiceImplTest extends TaskServiceTestBase {
   @Rule public GrpcCleanupRule grpcCleanupRule = new GrpcCleanupRule();
-  @Mock private DelegateServiceGrpcLiteClient delegateServiceGrpcLiteClient;
+  @Mock private DelegateServiceGrpcAgentClient delegateServiceGrpcAgentClient;
   @Inject KryoSerializer kryoSerializer;
   @Inject ResponseDataConverterRegistry registry;
 
@@ -64,7 +64,7 @@ public class TaskServiceImplTest extends TaskServiceTestBase {
   @Before
   public void doSetup() throws IOException {
     TaskServiceTestHelper.registerConverters(registry);
-    TaskServiceImpl taskService = new TaskServiceImpl(delegateServiceGrpcLiteClient, kryoSerializer, registry);
+    TaskServiceImpl taskService = new TaskServiceImpl(delegateServiceGrpcAgentClient, kryoSerializer, registry);
 
     String serverName = InProcessServerBuilder.generateName();
     testInProcessServer = grpcCleanupRule.register(
@@ -86,7 +86,7 @@ public class TaskServiceImplTest extends TaskServiceTestBase {
   @Owner(developers = ALEKSANDAR)
   @Category(UnitTests.class)
   public void shouldExecuteParkedTask() {
-    when(delegateServiceGrpcLiteClient.executeParkedTask(eq(accountId), eq(taskId)))
+    when(delegateServiceGrpcAgentClient.executeParkedTask(eq(accountId), eq(taskId)))
         .thenReturn(io.harness.delegate.ExecuteParkedTaskResponse.newBuilder().setTaskId(taskId).build())
         .thenThrow(new IllegalArgumentException());
     ExecuteParkedTaskResponse executeParkedTaskResponse = taskServiceBlockingStub.executeParkedTask(
@@ -103,7 +103,7 @@ public class TaskServiceImplTest extends TaskServiceTestBase {
   @Owner(developers = ALEKSANDAR)
   @Category(UnitTests.class)
   public void shouldGetTaskProgress() {
-    when(delegateServiceGrpcLiteClient.taskProgress(eq(accountId), eq(taskId)))
+    when(delegateServiceGrpcAgentClient.taskProgress(eq(accountId), eq(taskId)))
         .thenReturn(TaskExecutionStage.EXECUTING)
         .thenThrow(new IllegalArgumentException());
     TaskProgressResponse taskProgressResponse = taskServiceBlockingStub.taskProgress(
@@ -121,7 +121,7 @@ public class TaskServiceImplTest extends TaskServiceTestBase {
   @Owner(developers = ALEKSANDAR)
   @Category(UnitTests.class)
   public void shouldGetHTTPTaskResults() {
-    when(delegateServiceGrpcLiteClient.fetchParkedTaskStatus(accountId, taskId, delegateCallbackToken))
+    when(delegateServiceGrpcAgentClient.fetchParkedTaskStatus(accountId, taskId, delegateCallbackToken))
         .thenReturn(
             io.harness.delegate.FetchParkedTaskStatusResponse.newBuilder()
                 .setFetchResults(true)
@@ -160,7 +160,7 @@ public class TaskServiceImplTest extends TaskServiceTestBase {
   @Owner(developers = ALEKSANDAR)
   @Category(UnitTests.class)
   public void shouldGetJIRATaskResults() {
-    when(delegateServiceGrpcLiteClient.fetchParkedTaskStatus(accountId, taskId, delegateCallbackToken))
+    when(delegateServiceGrpcAgentClient.fetchParkedTaskStatus(accountId, taskId, delegateCallbackToken))
         .thenReturn(
             io.harness.delegate.FetchParkedTaskStatusResponse.newBuilder()
                 .setFetchResults(true)
@@ -199,7 +199,7 @@ public class TaskServiceImplTest extends TaskServiceTestBase {
   @Owner(developers = ALEKSANDAR)
   @Category(UnitTests.class)
   public void shouldGetEmptyTaskResults() {
-    when(delegateServiceGrpcLiteClient.fetchParkedTaskStatus(accountId, taskId, delegateCallbackToken))
+    when(delegateServiceGrpcAgentClient.fetchParkedTaskStatus(accountId, taskId, delegateCallbackToken))
         .thenReturn(io.harness.delegate.FetchParkedTaskStatusResponse.newBuilder().setFetchResults(false).build());
     FetchParkedTaskStatusResponse taskResults =
         taskServiceBlockingStub.fetchParkedTaskStatus(FetchParkedTaskStatusRequest.newBuilder()
@@ -221,7 +221,7 @@ public class TaskServiceImplTest extends TaskServiceTestBase {
   @Owner(developers = ALEKSANDAR)
   @Category(UnitTests.class)
   public void shouldSendTaskStatus() {
-    when(delegateServiceGrpcLiteClient.sendTaskStatus(eq(accountId), eq(taskId), eq(delegateCallbackToken),
+    when(delegateServiceGrpcAgentClient.sendTaskStatus(eq(accountId), eq(taskId), eq(delegateCallbackToken),
              eq(taskServiceTestHelper.getDeflatedStepStatusTaskResponseData())))
         .thenReturn(true)
         .thenThrow(new IllegalArgumentException());
@@ -258,7 +258,7 @@ public class TaskServiceImplTest extends TaskServiceTestBase {
   @Owner(developers = SANJA)
   @Category(UnitTests.class)
   public void shouldSendTaskProgressSuccess() {
-    when(delegateServiceGrpcLiteClient.sendTaskProgressUpdate(eq(accountId), eq(taskId), eq(delegateCallbackToken),
+    when(delegateServiceGrpcAgentClient.sendTaskProgressUpdate(eq(accountId), eq(taskId), eq(delegateCallbackToken),
              eq(taskServiceTestHelper.getTaskProgressResponseData().getKryoResultsData().toByteArray())))
         .thenReturn(true);
     SendTaskProgressResponse sendTaskProgressResponse = taskServiceBlockingStub.sendTaskProgress(
@@ -276,7 +276,7 @@ public class TaskServiceImplTest extends TaskServiceTestBase {
   @Owner(developers = SANJA)
   @Category(UnitTests.class)
   public void shouldSendTaskProgressException() {
-    when(delegateServiceGrpcLiteClient.sendTaskProgressUpdate(eq(accountId), eq(taskId), eq(delegateCallbackToken),
+    when(delegateServiceGrpcAgentClient.sendTaskProgressUpdate(eq(accountId), eq(taskId), eq(delegateCallbackToken),
              eq(taskServiceTestHelper.getTaskProgressResponseData().getKryoResultsData().toByteArray())))
         .thenThrow(new IllegalArgumentException());
 

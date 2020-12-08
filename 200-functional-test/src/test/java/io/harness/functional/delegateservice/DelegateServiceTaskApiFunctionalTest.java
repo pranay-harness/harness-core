@@ -31,8 +31,8 @@ import io.harness.delegate.task.http.HttpTaskParameters;
 import io.harness.exception.DelegateServiceDriverException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.functional.AbstractFunctionalTest;
+import io.harness.grpc.DelegateServiceGrpcAgentClient;
 import io.harness.grpc.DelegateServiceGrpcClient;
-import io.harness.grpc.DelegateServiceGrpcLiteClient;
 import io.harness.rule.Owner;
 import io.harness.serializer.KryoSerializer;
 import io.harness.service.intfc.DelegateAsyncService;
@@ -368,8 +368,8 @@ public class DelegateServiceTaskApiFunctionalTest extends AbstractFunctionalTest
 
     DelegateServiceGrpcClient delegateServiceGrpcClient = new DelegateServiceGrpcClient(
         delegateServiceBlockingStub, delegateAsyncService, kryoSerializer, delegateSyncService);
-    DelegateServiceGrpcLiteClient delegateServiceGrpcLiteClient =
-        new DelegateServiceGrpcLiteClient(delegateServiceBlockingStub);
+    DelegateServiceGrpcAgentClient delegateServiceGrpcAgentClient =
+        new DelegateServiceGrpcAgentClient(delegateServiceBlockingStub);
 
     DelegateCallbackToken callbackToken = delegateServiceGrpcClient.registerCallback(
         DelegateCallback.newBuilder()
@@ -391,12 +391,12 @@ public class DelegateServiceTaskApiFunctionalTest extends AbstractFunctionalTest
 
     waitNotifyEngine.waitForAllOn("general", new TestNotifyCallback(), new TestProgressCallback(), taskUuid);
 
-    delegateServiceGrpcLiteClient.sendTaskProgressUpdate(
+    delegateServiceGrpcAgentClient.sendTaskProgressUpdate(
         AccountId.newBuilder().setId(getAccount().getUuid()).build(), taskId, callbackToken, testDataBytes);
-    delegateServiceGrpcLiteClient.sendTaskProgressUpdate(
+    delegateServiceGrpcAgentClient.sendTaskProgressUpdate(
         AccountId.newBuilder().setId(getAccount().getUuid()).build(), taskId, callbackToken, testDataBytes2);
 
-    Poller.pollFor(Duration.ofMinutes(3), Duration.ofSeconds(5), () -> { return progressCallCount.get() == 2; });
+    Poller.pollFor(Duration.ofMinutes(4), Duration.ofSeconds(5), () -> { return progressCallCount.get() == 2; });
 
     assertThat(progressCallCount.get()).isEqualTo(2);
     assertThat(progressDataList.size()).isEqualTo(2);

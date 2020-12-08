@@ -38,3 +38,4 @@ delegateCheckLocation: ${delegateCheckLocation}
 useCdn: ${useCdn}
 cdnUrl: ${cdnUrl}
 jreVersion: ${jreVersion}
+managerServiceSecret: ${managerServiceSecret}

@@ -2,7 +2,7 @@ package io.harness.grpc;
 
 import io.harness.callback.DelegateCallbackToken;
 import io.harness.delegate.AccountId;
-import io.harness.delegate.DelegateServiceGrpc;
+import io.harness.delegate.DelegateServiceGrpc.DelegateServiceBlockingStub;
 import io.harness.delegate.ExecuteParkedTaskRequest;
 import io.harness.delegate.ExecuteParkedTaskResponse;
 import io.harness.delegate.FetchParkedTaskStatusRequest;
@@ -19,16 +19,40 @@ import io.harness.delegate.TaskResponseData;
 import io.harness.exception.DelegateServiceLiteException;
 
 import com.google.inject.Inject;
+import com.google.inject.name.Named;
 import com.google.protobuf.ByteString;
 import io.grpc.StatusRuntimeException;
 import java.util.concurrent.TimeUnit;
+import lombok.extern.slf4j.Slf4j;
 
-public class DelegateServiceGrpcLiteClient {
-  private final DelegateServiceGrpc.DelegateServiceBlockingStub delegateServiceBlockingStub;
+@Slf4j
+public class DelegateServiceGrpcAgentClient {
+  private final DelegateServiceBlockingStub delegateServiceBlockingStub;
 
   @Inject
-  public DelegateServiceGrpcLiteClient(DelegateServiceGrpc.DelegateServiceBlockingStub delegateServiceBlockingStub) {
+  public DelegateServiceGrpcAgentClient(
+      @Named("agent-client-stub") DelegateServiceBlockingStub delegateServiceBlockingStub) {
     this.delegateServiceBlockingStub = delegateServiceBlockingStub;
+  }
+
+  public boolean sendTaskProgressUpdate(
+      AccountId accountId, TaskId taskId, DelegateCallbackToken delegateCallbackToken, byte[] responseData) {
+    try {
+      SendTaskProgressResponse response =
+          delegateServiceBlockingStub.withDeadlineAfter(30, TimeUnit.SECONDS)
+              .sendTaskProgress(
+                  SendTaskProgressRequest.newBuilder()
+                      .setAccountId(accountId)
+                      .setTaskId(taskId)
+                      .setCallbackToken(delegateCallbackToken)
+                      .setTaskResponseData(
+                          TaskResponseData.newBuilder().setKryoResultsData(ByteString.copyFrom(responseData)).build())
+                      .build());
+
+      return response.getSuccess();
+    } catch (StatusRuntimeException ex) {
+      throw new DelegateServiceGrpcClientException("Unexpected error occurred while sending task progress update.", ex);
+    }
   }
 
   public ExecuteParkedTaskResponse executeParkedTask(AccountId accountId, TaskId taskId) {
@@ -83,26 +107,6 @@ public class DelegateServiceGrpcLiteClient {
       return response.getSuccess();
     } catch (StatusRuntimeException ex) {
       throw new DelegateServiceLiteException("Unexpected error occurred while checking task progress.", ex);
-    }
-  }
-
-  public boolean sendTaskProgressUpdate(
-      AccountId accountId, TaskId taskId, DelegateCallbackToken delegateCallbackToken, byte[] responseData) {
-    try {
-      SendTaskProgressResponse response =
-          delegateServiceBlockingStub.withDeadlineAfter(30, TimeUnit.SECONDS)
-              .sendTaskProgress(
-                  SendTaskProgressRequest.newBuilder()
-                      .setAccountId(accountId)
-                      .setTaskId(taskId)
-                      .setCallbackToken(delegateCallbackToken)
-                      .setTaskResponseData(
-                          TaskResponseData.newBuilder().setKryoResultsData(ByteString.copyFrom(responseData)).build())
-                      .build());
-
-      return response.getSuccess();
-    } catch (StatusRuntimeException ex) {
-      throw new DelegateServiceLiteException("Unexpected error occurred while sending task progress update.", ex);
     }
   }
 }
