@@ -3,6 +3,7 @@ package io.harness.ng;
 import static io.harness.NGConstants.CONNECTOR_HEARTBEAT_LOG_PREFIX;
 import static io.harness.NGConstants.HARNESS_SECRET_MANAGER_IDENTIFIER;
 import static io.harness.connector.ConnectorModule.DEFAULT_CONNECTOR_SERVICE;
+import static io.harness.delegate.beans.connector.ConnectorCategory.SECRET_MANAGER;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.ng.NextGenModule.SECRET_MANAGER_CONNECTOR_SERVICE;
 
@@ -22,9 +23,7 @@ import io.harness.delegate.beans.connector.ConnectorCategory;
 import io.harness.delegate.beans.connector.ConnectorType;
 import io.harness.delegate.beans.connector.ConnectorValidationResult;
 import io.harness.encryption.Scope;
-import io.harness.eraro.ErrorCode;
 import io.harness.exception.InvalidRequestException;
-import io.harness.exception.SecretManagementException;
 import io.harness.ng.core.activityhistory.NGActivityType;
 import io.harness.repositories.ConnectorRepository;
 import io.harness.utils.FullyQualifiedIdentifierHelper;
@@ -59,10 +58,7 @@ public class ConnectorServiceImpl implements ConnectorService {
   }
 
   private ConnectorService getConnectorService(ConnectorType connectorType) {
-    if (connectorType == ConnectorType.LOCAL) {
-      throw new SecretManagementException(
-          ErrorCode.SECRET_MANAGEMENT_ERROR, "Operation not allowed for Secret Manager", USER);
-    } else if (connectorType == ConnectorType.VAULT || connectorType == ConnectorType.GCP_KMS) {
+    if (SECRET_MANAGER.getConnectors().contains(connectorType)) {
       return secretManagerConnectorService;
     }
     return defaultConnectorService;

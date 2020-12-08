@@ -5,6 +5,7 @@ import static io.harness.connector.entities.Connector.CONNECTOR_COLLECTION_NAME;
 import io.harness.annotation.HarnessRepo;
 import io.harness.connector.entities.Connector;
 
+import com.mongodb.client.result.UpdateResult;
 import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -38,6 +39,11 @@ public class ConnectorCustomRepositoryImpl implements ConnectorCustomRepository 
   @Override
   public Connector update(Query query, Update update) {
     return mongoTemplate.findAndModify(query, update, new FindAndModifyOptions().returnNew(true), Connector.class);
+  }
+
+  @Override
+  public UpdateResult updateMultiple(Query query, Update update) {
+    return mongoTemplate.updateMulti(query, update, Connector.class);
   }
 
   @Override

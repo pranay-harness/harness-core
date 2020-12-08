@@ -142,7 +142,7 @@ public class ProjectServiceImpl implements ProjectService {
       globalSecretManager.setName(getDefaultHarnessSecretManagerName(globalSecretManager.getEncryptionType()));
       globalSecretManager.setProjectIdentifier(project.getIdentifier());
       globalSecretManager.setOrgIdentifier(project.getOrgIdentifier());
-      globalSecretManager.setDefault(false);
+      globalSecretManager.setDefault(true);
       secretManagerConnectorService.create(getConnectorRequestDTO(globalSecretManager), project.getAccountIdentifier());
     } catch (Exception ex) {
       throw new SecretManagementException(SECRET_MANAGEMENT_ERROR,

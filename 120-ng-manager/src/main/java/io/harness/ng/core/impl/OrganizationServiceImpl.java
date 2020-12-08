@@ -115,7 +115,7 @@ public class OrganizationServiceImpl implements OrganizationService {
       globalSecretManager.setName(getDefaultHarnessSecretManagerName(globalSecretManager.getEncryptionType()));
       globalSecretManager.setProjectIdentifier(null);
       globalSecretManager.setOrgIdentifier(organization.getIdentifier());
-      globalSecretManager.setDefault(false);
+      globalSecretManager.setDefault(true);
       secretManagerConnectorService.create(
           getConnectorRequestDTO(globalSecretManager), organization.getAccountIdentifier());
     } catch (Exception ex) {

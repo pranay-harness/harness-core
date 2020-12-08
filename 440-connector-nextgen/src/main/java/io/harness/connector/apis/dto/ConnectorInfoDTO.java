@@ -8,6 +8,7 @@ import io.harness.delegate.beans.connector.artifactoryconnector.ArtifactoryConne
 import io.harness.delegate.beans.connector.awsconnector.AwsConnectorDTO;
 import io.harness.delegate.beans.connector.docker.DockerConnectorDTO;
 import io.harness.delegate.beans.connector.gcpconnector.GcpConnectorDTO;
+import io.harness.delegate.beans.connector.gcpkmsconnector.GcpKmsConnectorDTO;
 import io.harness.delegate.beans.connector.gitconnector.GitConfigDTO;
 import io.harness.delegate.beans.connector.jira.JiraConnectorDTO;
 import io.harness.delegate.beans.connector.k8Connector.KubernetesClusterConfigDTO;
@@ -18,7 +19,6 @@ import io.harness.delegate.beans.connector.vaultconnector.VaultConnectorDTO;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.delegate.beans.executioncapability.ExecutionCapabilityDemander;
 import io.harness.expression.ExpressionEvaluator;
-import io.harness.secretmanagerclient.dto.GcpKmsConfigDTO;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -59,7 +59,7 @@ public class ConnectorInfoDTO {
         @JsonSubTypes.Type(value = VaultConnectorDTO.class, name = "Vault"),
         @JsonSubTypes.Type(value = DockerConnectorDTO.class, name = "DockerRegistry"),
         @JsonSubTypes.Type(value = LocalConnectorDTO.class, name = "Local"),
-        @JsonSubTypes.Type(value = GcpKmsConfigDTO.class, name = "GcpKms"),
+        @JsonSubTypes.Type(value = GcpKmsConnectorDTO.class, name = "GcpKms"),
         @JsonSubTypes.Type(value = GcpConnectorDTO.class, name = "Gcp"),
         @JsonSubTypes.Type(value = AwsConnectorDTO.class, name = "Aws"),
         @JsonSubTypes.Type(value = ArtifactoryConnectorDTO.class, name = "Artifactory"),

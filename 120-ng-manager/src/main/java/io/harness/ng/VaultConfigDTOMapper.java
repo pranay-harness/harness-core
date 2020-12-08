@@ -23,7 +23,7 @@ public class VaultConfigDTOMapper {
         .secretEngineName(vaultConnectorDTO.getSecretEngineName())
         .appRoleId(vaultConnectorDTO.getAppRoleId())
         .secretId(vaultConnectorDTO.getSecretId())
-        .isDefault(vaultConnectorDTO.isDefault())
+        .isDefault(false)
         .encryptionType(EncryptionType.VAULT)
         .tags(connector.getTags())
         .description(connector.getDescription())
@@ -42,7 +42,7 @@ public class VaultConfigDTOMapper {
         .secretEngineName(vaultConnectorDTO.getSecretEngineName())
         .appRoleId(vaultConnectorDTO.getAppRoleId())
         .secretId(vaultConnectorDTO.getSecretId())
-        .isDefault(vaultConnectorDTO.isDefault())
+        .isDefault(false)
         .encryptionType(EncryptionType.VAULT)
         .secretEngineVersion(vaultConnectorDTO.getSecretEngineVersion())
 

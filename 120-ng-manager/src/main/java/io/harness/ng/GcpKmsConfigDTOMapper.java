@@ -20,7 +20,7 @@ public class GcpKmsConfigDTOMapper {
         .keyRing(gcpKmsConnectorDTO.getKeyRing())
         .credentials(gcpKmsConnectorDTO.getCredentials())
         .projectId(gcpKmsConnectorDTO.getProjectId())
-        .isDefault(gcpKmsConnectorDTO.isDefault())
+        .isDefault(false)
         .encryptionType(EncryptionType.GCP_KMS)
 
         .name(connector.getName())
@@ -42,7 +42,7 @@ public class GcpKmsConfigDTOMapper {
         .keyRing(gcpKmsConnectorDTO.getKeyRing())
         .credentials(gcpKmsConnectorDTO.getCredentials())
         .projectId(gcpKmsConnectorDTO.getProjectId())
-        .isDefault(gcpKmsConnectorDTO.isDefault())
+        .isDefault(false)
         .encryptionType(EncryptionType.GCP_KMS)
 
         .tags(connector.getTags())
