@@ -62,7 +62,7 @@ public class PMSPipelineServiceImpl implements PMSPipelineService {
           pipelineEntity.getProjectIdentifier(), pipelineEntity.getIdentifier(), pipelineEntity.getIdentifier());
 
       // Todo: Uncomment when we have the CD Service integration with NextGenApp.
-      updatePipelineInfo(pipelineEntity);
+      // updatePipelineInfo(pipelineEntity);
 
       PipelineEntity createdEntity = pmsPipelineRepository.save(pipelineEntity);
       return createdEntity;

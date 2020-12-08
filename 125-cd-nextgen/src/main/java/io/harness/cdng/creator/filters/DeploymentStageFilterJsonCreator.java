@@ -6,6 +6,7 @@ import io.harness.cdng.creator.plan.stage.DeploymentStageConfig;
 import io.harness.cdng.pipeline.PipelineInfrastructure;
 import io.harness.cdng.service.beans.ServiceConfig;
 import io.harness.cdng.service.beans.ServiceDefinition;
+import io.harness.plancreator.stages.stage.StageElementConfig;
 import io.harness.pms.cdng.sample.cd.creator.filters.CdFilter;
 import io.harness.pms.cdng.sample.cd.creator.filters.CdFilter.CdFilterBuilder;
 import io.harness.pms.filter.creation.FilterCreationResponse;
@@ -17,10 +18,10 @@ import java.util.Collections;
 import java.util.Map;
 import java.util.Set;
 
-public class DeploymentStageFilterJsonCreator implements FilterJsonCreator<DeploymentStageConfig> {
+public class DeploymentStageFilterJsonCreator implements FilterJsonCreator<StageElementConfig> {
   @Override
-  public Class<DeploymentStageConfig> getFieldClass() {
-    return DeploymentStageConfig.class;
+  public Class<StageElementConfig> getFieldClass() {
+    return StageElementConfig.class;
   }
 
   @Override
@@ -29,16 +30,16 @@ public class DeploymentStageFilterJsonCreator implements FilterJsonCreator<Deplo
   }
 
   @Override
-  public FilterCreationResponse handleNode(
-      FilterCreationContext filterCreationContext, DeploymentStageConfig yamlField) {
+  public FilterCreationResponse handleNode(FilterCreationContext filterCreationContext, StageElementConfig yamlField) {
     FilterCreationResponseBuilder creationResponse = FilterCreationResponse.builder();
 
     CdFilterBuilder cdFilter = CdFilter.builder();
-    if (yamlField.getExecution() == null) {
+    DeploymentStageConfig deploymentStageConfig = (DeploymentStageConfig) yamlField.getStageType();
+    if (deploymentStageConfig.getExecution() == null) {
       return creationResponse.build();
     }
 
-    ServiceConfig service = yamlField.getService();
+    ServiceConfig service = deploymentStageConfig.getService();
     if (service != null && isNotEmpty(service.getName().getValue())) {
       cdFilter.serviceName(service.getName().getValue());
     }
@@ -48,7 +49,7 @@ public class DeploymentStageFilterJsonCreator implements FilterJsonCreator<Deplo
       cdFilter.deploymentType(serviceDefinition.getType());
     }
 
-    PipelineInfrastructure infrastructure = yamlField.getInfrastructure();
+    PipelineInfrastructure infrastructure = deploymentStageConfig.getInfrastructure();
     if (infrastructure != null && infrastructure.getEnvironment() != null
         && isNotEmpty(infrastructure.getEnvironment().getName().getValue())) {
       cdFilter.environmentName(infrastructure.getEnvironment().getName().getValue());
