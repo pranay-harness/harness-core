@@ -40,6 +40,7 @@ import io.harness.testframework.framework.Setup;
 
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.google.inject.Inject;
 import io.restassured.config.ObjectMapperConfig;
 import io.restassured.config.RestAssuredConfig;
@@ -65,6 +66,7 @@ public class OrchestrationEngineTestSetupHelper {
                     .objectMapperConfig(new ObjectMapperConfig().jackson2ObjectMapperFactory((cls, charset) -> {
                       ObjectMapper mapper = new ObjectMapper();
                       mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+                      mapper.registerModule(new JavaTimeModule());
                       mapper.addMixIn(Outcome.class, OutcomeTestMixin.class);
                       mapper.addMixIn(StepParameters.class, StepParametersTestMixin.class);
                       mapper.addMixIn(Ambiance.class, AmbianceTestMixin.class);
