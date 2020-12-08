@@ -10,7 +10,6 @@ import io.harness.pms.yaml.YamlField;
 
 import com.google.common.base.Preconditions;
 import java.util.*;
-import java.util.stream.Collectors;
 
 public class PipelineFilterJsonCreator extends ChildrenFilterJsonCreator<PipelineInfoConfig> {
   @Override
@@ -25,17 +24,9 @@ public class PipelineFilterJsonCreator extends ChildrenFilterJsonCreator<Pipelin
 
   @Override
   public Map<String, YamlField> getDependencies(FilterCreationContext filterCreationContext) {
-    Map<String, YamlField> dependencies = new HashMap<>();
     YamlField stagesYamlNode =
         Preconditions.checkNotNull(filterCreationContext.getCurrentField().getNode().getField("stages"));
-    if (stagesYamlNode.getNode() == null) {
-      return dependencies;
-    }
-    List<YamlField> stageYamlFields = getStageYamlFields(stagesYamlNode);
-    for (YamlField stageYamlField : stageYamlFields) {
-      dependencies.put(stageYamlField.getNode().getUuid(), stageYamlField);
-    }
-    return dependencies;
+    return StagesFilterJsonCreator.getDependencies(stagesYamlNode);
   }
 
   @Override
@@ -54,12 +45,6 @@ public class PipelineFilterJsonCreator extends ChildrenFilterJsonCreator<Pipelin
     Map<String, GraphLayoutNode> layoutNodeMap = new HashMap<>();
     YamlField stagesYamlNode =
         Preconditions.checkNotNull(filterCreationContext.getCurrentField().getNode().getField("stages"));
-    Map<String, YamlField> stageYamlFieldMap = new HashMap<>();
-    EdgeLayoutList.Builder stagesEdgesBuilder = EdgeLayoutList.newBuilder();
-    getStageYamlFields(stagesYamlNode).forEach(stageField -> {
-      stageYamlFieldMap.put(stageField.getNode().getUuid(), stageField);
-      stagesEdgesBuilder.addNextIds(stageField.getNode().getUuid());
-    });
     GraphLayoutNode pipelineGraph =
         GraphLayoutNode.newBuilder()
             .setNodeType("pipeline")
@@ -67,31 +52,8 @@ public class PipelineFilterJsonCreator extends ChildrenFilterJsonCreator<Pipelin
             .setNodeUUID(pipelineInfoConfig.getUuid())
             .setEdgeLayoutList(EdgeLayoutList.newBuilder().addNextIds(stagesYamlNode.getNode().getUuid()).build())
             .build();
-    GraphLayoutNode stagesGraph = GraphLayoutNode.newBuilder()
-                                      .setNodeUUID(stagesYamlNode.getNode().getUuid())
-                                      .setNodeType("stages")
-                                      .setNodeIdentifier("stages")
-                                      .setEdgeLayoutList(stagesEdgesBuilder.build())
-                                      .build();
     layoutNodeMap.put(pipelineInfoConfig.getUuid(), pipelineGraph);
-    layoutNodeMap.put(stagesYamlNode.getNode().getUuid(), stagesGraph);
-    layoutNodeMap.put(pipelineInfoConfig.getUuid(), pipelineGraph);
+    layoutNodeMap.putAll(StagesFilterJsonCreator.getStagesGraphLayoutNode(stagesYamlNode));
     return layoutNodeMap;
-  }
-
-  private List<YamlField> getStageYamlFields(YamlField stagesYamlField) {
-    List<YamlField> stageYamlFields = Optional.of(stagesYamlField.getNode().asArray())
-                                          .orElse(Collections.emptyList())
-                                          .stream()
-                                          .map(el -> el.getField("stage"))
-                                          .filter(Objects::nonNull)
-                                          .collect(Collectors.toList());
-    stageYamlFields.addAll(Optional.of(stagesYamlField.getNode().asArray())
-                               .orElse(Collections.emptyList())
-                               .stream()
-                               .map(el -> el.getField("parallel"))
-                               .filter(Objects::nonNull)
-                               .collect(Collectors.toList()));
-    return stageYamlFields;
   }
 }

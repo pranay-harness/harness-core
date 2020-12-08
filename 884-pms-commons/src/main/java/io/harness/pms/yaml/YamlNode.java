@@ -47,7 +47,7 @@ public class YamlNode {
       return null;
     }
     List<YamlNode> yamlNodes = parentNode.parentNode.asArray();
-    for (int i = 0; i < yamlNodes.size(); i++) {
+    for (int i = 0; i < yamlNodes.size() - 1; i++) {
       YamlField givenNode = yamlNodes.get(i).getField(currentFieldName);
       if (givenNode != null && givenNode.getNode().getUuid() != null) {
         if (givenNode.getNode().getUuid().equals(this.getUuid())) {
