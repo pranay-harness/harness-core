@@ -106,6 +106,7 @@ import software.wings.api.InstanceElementListParam;
 import software.wings.api.PhaseElement;
 import software.wings.api.ServiceElement;
 import software.wings.api.ServiceTemplateElement;
+import software.wings.api.helm.HelmReleaseInfoElement;
 import software.wings.app.MainConfiguration;
 import software.wings.app.PortalConfig;
 import software.wings.beans.Activity;
@@ -1665,5 +1666,29 @@ public class HelmDeployStateTest extends WingsBaseTest {
     assertThat(activity.getServiceName()).isEqualTo("serviceName");
     assertThat(activity.getServiceInstanceId()).isEqualTo("instanceId");
     assertThat(activity.getHostName()).isEqualTo(HOST_NAME);
+  }
+
+  @Test
+  @Owner(developers = ABOSII)
+  @Category(UnitTests.class)
+  public void testSaveHelmReleaseInfoToSweepingOutput() {
+    ExecutionContextImpl contextSpy = spy(context);
+    final HelmReleaseInfoElement helmReleaseInfoElement = HelmReleaseInfoElement.builder().releaseName("test").build();
+
+    ArgumentCaptor<SweepingOutputInstance> instanceCaptor = ArgumentCaptor.forClass(SweepingOutputInstance.class);
+    doReturn(false).when(workflowExecutionService).isMultiService(context.getAppId(), context.getWorkflowExecutionId());
+    helmDeployState.saveHelmReleaseInfoToSweepingOutput(contextSpy, helmReleaseInfoElement);
+    verify(contextSpy).prepareSweepingOutputBuilder(SweepingOutputInstance.Scope.WORKFLOW);
+    verify(sweepingOutputService).save(instanceCaptor.capture());
+    assertThat(instanceCaptor.getValue().getName()).isEqualTo(HelmReleaseInfoElement.SWEEPING_OUTPUT_NAME);
+    assertThat(((HelmReleaseInfoElement) instanceCaptor.getValue().getValue()).getReleaseName()).isEqualTo("test");
+
+    doReturn(true).when(workflowExecutionService).isMultiService(context.getAppId(), context.getWorkflowExecutionId());
+    helmDeployState.saveHelmReleaseInfoToSweepingOutput(contextSpy, helmReleaseInfoElement);
+    verify(contextSpy).prepareSweepingOutputBuilder(SweepingOutputInstance.Scope.PHASE);
+    // 1 time is from previous case
+    verify(sweepingOutputService, times(2)).save(instanceCaptor.capture());
+    assertThat(instanceCaptor.getValue().getName()).isEqualTo(HelmReleaseInfoElement.SWEEPING_OUTPUT_NAME);
+    assertThat(((HelmReleaseInfoElement) instanceCaptor.getValue().getValue()).getReleaseName()).isEqualTo("test");
   }
 }
