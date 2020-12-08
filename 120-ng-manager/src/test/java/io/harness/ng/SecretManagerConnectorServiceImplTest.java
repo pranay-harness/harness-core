@@ -22,6 +22,7 @@ import io.harness.delegate.beans.connector.vaultconnector.VaultConnectorDTO;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.SecretManagementException;
 import io.harness.ng.core.api.NGSecretManagerService;
+import io.harness.repositories.ConnectorRepository;
 import io.harness.rule.Owner;
 import io.harness.secretmanagerclient.dto.SecretManagerConfigDTO;
 import io.harness.secretmanagerclient.dto.VaultConfigDTO;
@@ -36,13 +37,15 @@ public class SecretManagerConnectorServiceImplTest extends CategoryTest {
   private NGSecretManagerService ngSecretManagerService;
   private ConnectorService defaultConnectorService;
   private SecretManagerConnectorServiceImpl secretManagerConnectorService;
+  private ConnectorRepository connectorRepository;
 
   @Before
   public void setup() {
     ngSecretManagerService = mock(NGSecretManagerService.class);
     defaultConnectorService = mock(ConnectorService.class);
+    connectorRepository = mock(ConnectorRepository.class);
     secretManagerConnectorService =
-        new SecretManagerConnectorServiceImpl(defaultConnectorService, ngSecretManagerService);
+        new SecretManagerConnectorServiceImpl(defaultConnectorService, ngSecretManagerService, connectorRepository);
   }
 
   private InvalidRequestException getInvalidRequestException() {
@@ -65,6 +68,7 @@ public class SecretManagerConnectorServiceImplTest extends CategoryTest {
     SecretManagerConfigDTO secretManagerConfigDTO = random(VaultConfigDTO.class);
     when(ngSecretManagerService.createSecretManager(any())).thenReturn(secretManagerConfigDTO);
     when(defaultConnectorService.create(any(), any())).thenReturn(null);
+    when(connectorRepository.updateMultiple(any(), any())).thenReturn(null);
     ConnectorResponseDTO connectorDTO = secretManagerConnectorService.create(getRequestDTO(), ACCOUNT);
     assertThat(connectorDTO).isEqualTo(null);
     verify(defaultConnectorService).create(any(), any());
@@ -75,6 +79,7 @@ public class SecretManagerConnectorServiceImplTest extends CategoryTest {
   @Category(UnitTests.class)
   public void testCreateSecretManagerConnectorShouldFail_ManagerReturnsNull() throws IOException {
     when(ngSecretManagerService.createSecretManager(any())).thenReturn(null);
+    when(connectorRepository.updateMultiple(any(), any())).thenReturn(null);
     try {
       secretManagerConnectorService.create(getRequestDTO(), ACCOUNT);
       fail("Should fail if execution reaches here");
@@ -89,7 +94,7 @@ public class SecretManagerConnectorServiceImplTest extends CategoryTest {
   public void testCreateSecretManagerConnectorShouldFail_exceptionFromManager() throws IOException {
     SecretManagerConfigDTO secretManagerConfigDTO = random(VaultConfigDTO.class);
     when(ngSecretManagerService.createSecretManager(any())).thenThrow(getInvalidRequestException());
-
+    when(connectorRepository.updateMultiple(any(), any())).thenReturn(null);
     try {
       secretManagerConnectorService.create(getRequestDTO(), ACCOUNT);
       fail("Should fail if execution reaches here");
@@ -106,6 +111,7 @@ public class SecretManagerConnectorServiceImplTest extends CategoryTest {
     when(ngSecretManagerService.createSecretManager(any())).thenReturn(secretManagerConfigDTO);
     when(defaultConnectorService.create(any(), any())).thenThrow(new InvalidRequestException("error"));
     when(ngSecretManagerService.deleteSecretManager(any(), any(), any(), any())).thenReturn(true);
+    when(connectorRepository.updateMultiple(any(), any())).thenReturn(null);
     try {
       secretManagerConnectorService.create(getRequestDTO(), ACCOUNT);
       fail("Should fail if execution reaches here");
@@ -128,6 +134,7 @@ public class SecretManagerConnectorServiceImplTest extends CategoryTest {
     when(ngSecretManagerService.updateSecretManager(any(), any(), any(), any(), any()))
         .thenReturn(random(VaultConfigDTO.class));
     when(defaultConnectorService.update(any(), any())).thenReturn(null);
+    when(connectorRepository.updateMultiple(any(), any())).thenReturn(null);
     ConnectorResponseDTO connectorDTO = secretManagerConnectorService.update(getRequestDTO(), ACCOUNT);
     assertThat(connectorDTO).isEqualTo(null);
   }

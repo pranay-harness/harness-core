@@ -81,7 +81,7 @@ public class NGUtils {
   }
 
   public static ConnectorDTO getConnectorRequestDTO(SecretManagerConfigDTO secretManagerConfigDTO) {
-    ConnectorInfoDTO connectorInfo = null;
+    ConnectorInfoDTO connectorInfo;
     switch (secretManagerConfigDTO.getEncryptionType()) {
       case GCP_KMS:
         GcpKmsConfigDTO gcpKmsConfig = (GcpKmsConfigDTO) secretManagerConfigDTO;
