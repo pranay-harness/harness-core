@@ -87,6 +87,14 @@ def log_exception(e):
     ERROR_LOG[ERROR_LOG_EXCEPTION] = construct_log(e)
 
 
+def log_console_error(error):
+    print("\n[ERROR] : ", str(error))
+
+
+def log_console_message(message):
+    print("\n[INFO] : ", str(message))
+
+
 def get_debug_log():
     return json.dumps(DEBUG_LOG, indent=4)
 

@@ -529,8 +529,10 @@ def compile_data(input_args):
 
         # copy all data from current temp file to the original file
         file_manager.copy_csv_file(TEMP_CSV_FILE_NAME, filename)
+        log_manager.log_console_message("Output file created at : {}".format(helper.get_absolute_file_path(filename)))
     except Exception as e:
         log_manager.log_exception(e)
+        log_manager.log_console_error("Exception occured, please check error logs at : {}".format(helper.get_absolute_file_path(ERROR_LOG_FILE_NAME)))
     finally:
         file_manager.append_to_file(DEBUG_LOG_FILE_NAME, log_manager.get_debug_log())
         file_manager.append_to_file(ERROR_LOG_FILE_NAME, log_manager.get_error_log())

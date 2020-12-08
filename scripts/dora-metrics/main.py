@@ -30,6 +30,11 @@ if __name__ == "__main__":
             # fetch all deployments
             break
 
+        entity_type = entity_type.lower()
+        if entity_type != 'w' or entity_type != 'p':
+            print("ERROR : Input invalid, please try again")
+            continue
+
         if entity_type == 'w':
             entity_type = script.ENTITY_WORKFLOW_EXECUTION
         else:
