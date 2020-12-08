@@ -88,6 +88,8 @@ public class CommandExecutionContext implements ExecutionCapabilityDemander {
   private boolean inlineSshCommand;
   private boolean executeOnDelegate;
   private boolean disableWinRMCommandEncodingFFSet; // DISABLE_WINRM_COMMAND_ENCODING
+  private boolean
+      disableWinRMEnvVariables; //  DISABLE_WINRM_ENV_VARIABLES stop passing service variables as env variables
   private List<String> delegateSelectors;
 
   // new fields for multi artifact
@@ -193,7 +195,7 @@ public class CommandExecutionContext implements ExecutionCapabilityDemander {
         .useSSL(winrmConnectionAttributes.isUseSSL())
         .skipCertChecks(winrmConnectionAttributes.isSkipCertChecks())
         .workingDirectory(commandPath)
-        .environment(envVariables == null ? Collections.emptyMap() : envVariables)
+        .environment(envVariables == null || disableWinRMEnvVariables ? Collections.emptyMap() : envVariables)
         .useKeyTab(winrmConnectionAttributes.isUseKeyTab())
         .keyTabFilePath(winrmConnectionAttributes.getKeyTabFilePath())
         .useNoProfile(winrmConnectionAttributes.isUseNoProfile())
@@ -313,6 +315,8 @@ public class CommandExecutionContext implements ExecutionCapabilityDemander {
     private boolean inlineSshCommand;
     private boolean executeOnDelegate;
     private boolean disableWinRMCommandEncodingFFSet; // DISABLE_WINRM_COMMAND_ENCODING
+    private boolean
+        disableWinRMEnvVariables; //  DISABLE_WINRM_ENV_VARIABLES stop passing service variables as env variables
     private List<String> delegateSelectors;
 
     // new fields for multi artifact
@@ -508,6 +512,11 @@ public class CommandExecutionContext implements ExecutionCapabilityDemander {
       return this;
     }
 
+    public Builder disableWinRMEnvVariables(boolean disableWinRMEnvVariables) {
+      this.disableWinRMEnvVariables = disableWinRMEnvVariables;
+      return this;
+    }
+
     public Builder executeOnDelegate(boolean executeOnDelegate) {
       this.executeOnDelegate = executeOnDelegate;
       return this;
@@ -588,6 +597,7 @@ public class CommandExecutionContext implements ExecutionCapabilityDemander {
           .artifactServerEncryptedDataDetailsMap(artifactServerEncryptedDataDetailsMap)
           .artifactFileName(artifactFileName)
           .disableWinRMCommandEncodingFFSet(disableWinRMCommandEncodingFFSet)
+          .disableWinRMEnvVariables(disableWinRMEnvVariables)
           .delegateSelectors(delegateSelectors);
     }
 
@@ -635,6 +645,7 @@ public class CommandExecutionContext implements ExecutionCapabilityDemander {
       commandExecutionContext.setArtifactServerEncryptedDataDetailsMap(artifactServerEncryptedDataDetailsMap);
       commandExecutionContext.setArtifactFileName(artifactFileName);
       commandExecutionContext.setDisableWinRMCommandEncodingFFSet(disableWinRMCommandEncodingFFSet);
+      commandExecutionContext.setDisableWinRMEnvVariables(disableWinRMEnvVariables);
       commandExecutionContext.setDelegateSelectors(delegateSelectors);
       return commandExecutionContext;
     }

@@ -8,6 +8,7 @@ import static software.wings.beans.SSHExecutionCredential.Builder.aSSHExecutionC
 import static software.wings.beans.command.CommandExecutionContext.Builder.aCommandExecutionContext;
 import static software.wings.beans.command.KubernetesResizeParams.KubernetesResizeParamsBuilder.aKubernetesResizeParams;
 import static software.wings.beans.command.KubernetesSetupParams.KubernetesSetupParamsBuilder.aKubernetesSetupParams;
+import static software.wings.beans.infrastructure.Host.Builder.aHost;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 import static software.wings.utils.WingsTestConstants.ACTIVITY_ID;
 import static software.wings.utils.WingsTestConstants.APP_ID;
@@ -23,15 +24,17 @@ import io.harness.delegate.beans.executioncapability.HttpConnectionExecutionCapa
 import io.harness.delegate.beans.executioncapability.SelectorCapability;
 import io.harness.delegate.beans.executioncapability.SystemEnvCheckerCapability;
 import io.harness.rule.Owner;
+import io.harness.rule.OwnerRule;
 
 import software.wings.WingsBaseTest;
 import software.wings.api.DeploymentType;
+import software.wings.beans.WinRmConnectionAttributes;
 import software.wings.beans.command.helpers.SettingAttributeTestHelper;
-import software.wings.beans.infrastructure.Host;
 import software.wings.delegatetasks.validation.capabilities.SSHHostValidationCapability;
 import software.wings.delegatetasks.validation.capabilities.WinrmHostValidationCapability;
 import software.wings.utils.WingsTestConstants;
 
+import com.google.common.collect.ImmutableMap;
 import java.util.Arrays;
 import java.util.List;
 import org.junit.Test;
@@ -46,7 +49,7 @@ public class CommandExecutionContextTest extends WingsBaseTest {
           .envId(ENV_ID)
           .accountId(ACCOUNT_ID)
           .activityId(ACTIVITY_ID)
-          .host(Host.Builder.aHost().withPublicDns(WingsTestConstants.PUBLIC_DNS).build());
+          .host(aHost().withPublicDns(WingsTestConstants.PUBLIC_DNS).build());
 
   @Test
   @Owner(developers = PRASHANT)
@@ -203,5 +206,26 @@ public class CommandExecutionContextTest extends WingsBaseTest {
     executionCapabilities = executionContext.fetchRequiredExecutionCapabilities(null);
     assertThat(executionCapabilities).hasSize(1);
     assertThat(executionCapabilities.get(0).fetchCapabilityBasis()).isEqualTo(MASTER_URL + "Resize");
+  }
+
+  @Test
+  @Owner(developers = OwnerRule.YOGESH)
+  @Category(UnitTests.class)
+  public void shouldNotSetEnvVariablesWithFF() {
+    CommandExecutionContext context;
+    context = aCommandExecutionContext()
+                  .host(aHost().build())
+                  .winRmConnectionAttributes(WinRmConnectionAttributes.builder().useKeyTab(true).build())
+                  .envVariables(ImmutableMap.of("k1", "v1"))
+                  .build();
+    assertThat(context.winrmSessionConfig("Execute", "foo").getEnvironment()).containsKey("k1");
+
+    context = aCommandExecutionContext()
+                  .envVariables(ImmutableMap.of("k1", "v1"))
+                  .host(aHost().build())
+                  .winRmConnectionAttributes(WinRmConnectionAttributes.builder().useKeyTab(true).build())
+                  .disableWinRMEnvVariables(true)
+                  .build();
+    assertThat(context.winrmSessionConfig("Execute", "foo").getEnvironment()).isEmpty();
   }
 }

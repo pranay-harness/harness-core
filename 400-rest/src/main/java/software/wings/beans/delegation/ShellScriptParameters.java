@@ -36,6 +36,7 @@ import software.wings.sm.states.ShellScriptState;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -79,6 +80,7 @@ public class ShellScriptParameters implements TaskParameters, ActivityAccess, Ex
   private final boolean localOverrideFeatureFlag;
   private final boolean saveExecutionLogs;
   boolean disableWinRMCommandEncodingFFSet; // DISABLE_WINRM_COMMAND_ENCODING
+  boolean disableWinRMEnvVariables; //  DISABLE_WINRM_ENV_VARIABLES stop passing service variables as env variables
 
   private Map<String, String> getResolvedEnvironmentVariables() {
     Map<String, String> resolvedEnvironment = new HashMap<>();
@@ -138,7 +140,7 @@ public class ShellScriptParameters implements TaskParameters, ActivityAccess, Ex
         .useSSL(winrmConnectionAttributes.isUseSSL())
         .skipCertChecks(winrmConnectionAttributes.isSkipCertChecks())
         .workingDirectory(workingDirectory)
-        .environment(getResolvedEnvironmentVariables())
+        .environment(disableWinRMEnvVariables ? Collections.emptyMap() : getResolvedEnvironmentVariables())
         .useNoProfile(winrmConnectionAttributes.isUseNoProfile())
         .build();
   }
