@@ -11,6 +11,7 @@ import io.harness.pms.sdk.core.plan.PlanNode;
 import io.harness.pms.sdk.core.plan.creation.beans.PlanCreationContext;
 import io.harness.pms.sdk.core.plan.creation.beans.PlanCreationResponse;
 import io.harness.pms.sdk.core.plan.creation.creators.ChildrenPlanCreator;
+import io.harness.pms.steps.SkipType;
 import io.harness.pms.yaml.YamlField;
 import io.harness.pms.yaml.YamlNode;
 import io.harness.serializer.KryoSerializer;
@@ -62,6 +63,7 @@ public class ParallelPlanCreator extends ChildrenPlanCreator<YamlField> {
         .facilitatorObtainment(FacilitatorObtainment.newBuilder().setType(ChildFacilitator.FACILITATOR_TYPE).build())
         .adviserObtainments(getAdviserObtainmentFromMetaData(config))
         .skipExpressionChain(true)
+        .skipGraphType(SkipType.SKIP_NODE)
         .build();
   }
 
