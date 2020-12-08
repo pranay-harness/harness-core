@@ -2,6 +2,7 @@ package io.harness.batch.processing.schedule;
 
 import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
 
+import io.harness.batch.processing.YamlPropertyLoaderFactory;
 import io.harness.batch.processing.billing.timeseries.service.impl.BillingDataServiceImpl;
 import io.harness.batch.processing.billing.timeseries.service.impl.K8sUtilizationGranularDataServiceImpl;
 import io.harness.batch.processing.billing.timeseries.service.impl.WeeklyReportServiceImpl;
@@ -37,12 +38,14 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.batch.core.Job;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.PropertySource;
 import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.scheduling.annotation.Scheduled;
 
 @Slf4j
 @Configuration
 @EnableScheduling
+@PropertySource(value = "file:./batch-processing-config.yml", factory = YamlPropertyLoaderFactory.class)
 public class EventJobScheduler {
   @Autowired private List<Job> jobs;
   @Autowired private BatchJobRunner batchJobRunner;
@@ -162,7 +165,7 @@ public class EventJobScheduler {
     }
   }
 
-  @Scheduled(cron = "0 0 14 * * MON")
+  @Scheduled(cron = "${scheduler-jobs-config.weeklyReportsJobCron}")
   public void runWeeklyReportJob() {
     try {
       weeklyReportService.generateAndSendWeeklyReport();
@@ -183,7 +186,7 @@ public class EventJobScheduler {
     }
   }
 
-  @Scheduled(cron = "0 30 14 * * ?")
+  @Scheduled(cron = "${scheduler-jobs-config.budgetAlertsJobCron}")
   public void runBudgetAlertsJob() {
     try {
       budgetAlertsService.sendBudgetAlerts();
