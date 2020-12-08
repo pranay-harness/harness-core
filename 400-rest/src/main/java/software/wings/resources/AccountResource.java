@@ -373,6 +373,18 @@ public class AccountResource {
     }
   }
 
+  @DELETE
+  @Path("export-delete")
+  @Timed
+  @ExceptionMetered
+  public RestResponse<Boolean> deleteExportableAccountData(@QueryParam("accountId") @NotEmpty String accountId) {
+    RestResponse<Boolean> response = accountPermissionUtils.checkIfHarnessUser("User not allowed to delete account");
+    if (response == null) {
+      response = new RestResponse<>(accountService.deleteExportableAccountData(accountId));
+    }
+    return response;
+  }
+
   @GET
   @Path("{accountId}")
   @AuthRule(permissionType = LOGGED_IN)
