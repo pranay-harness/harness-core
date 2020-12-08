@@ -14,7 +14,7 @@ import io.harness.perpetualtask.instancesync.AzureWebAppInstanceSyncPerpetualPro
 import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.serializer.KryoSerializer;
 
-import software.wings.delegatetasks.azure.appservice.webapp.taskhandler.AzureWebAppListDeploymentDataTaskHandler;
+import software.wings.delegatetasks.azure.appservice.webapp.taskhandler.AzureWebAppListWebAppInstancesTaskHandler;
 import software.wings.service.intfc.security.EncryptionService;
 
 import com.google.inject.Inject;
@@ -28,7 +28,7 @@ public class AzureWebAppInstanceSyncDelegateExecutor implements PerpetualTaskExe
   @Inject private EncryptionService encryptionService;
   @Inject private DelegateAgentManagerClient delegateAgentManagerClient;
   @Inject private KryoSerializer kryoSerializer;
-  @Inject private AzureWebAppListDeploymentDataTaskHandler listDeploymentDataTaskHandler;
+  @Inject private AzureWebAppListWebAppInstancesTaskHandler listWebAppInstancesTaskHandler;
 
   @Override
   public PerpetualTaskResponse runOnce(
@@ -67,9 +67,12 @@ public class AzureWebAppInstanceSyncDelegateExecutor implements PerpetualTaskExe
                                                    .appName(taskParams.getAppName())
                                                    .build();
     try {
-      AzureAppServiceTaskResponse azureAppServiceTaskResponse = listDeploymentDataTaskHandler.executeTaskInternal(
+      AzureAppServiceTaskResponse azureAppServiceTaskResponse = listWebAppInstancesTaskHandler.executeTaskInternal(
           parameters, createAzureConfigForDelegateTask(azureConfig), null);
-      return AzureTaskExecutionResponse.builder().azureTaskResponse(azureAppServiceTaskResponse).build();
+      return AzureTaskExecutionResponse.builder()
+          .commandExecutionStatus(CommandExecutionStatus.SUCCESS)
+          .azureTaskResponse(azureAppServiceTaskResponse)
+          .build();
     } catch (Exception ex) {
       log.error("Failed to execute instance sync task for Web App app name: {}, slot name: {}", taskParams.getAppName(),
           taskParams.getSlotName(), ex);

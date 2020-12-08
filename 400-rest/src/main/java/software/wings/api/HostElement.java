@@ -36,7 +36,7 @@ public class HostElement implements ContextElement {
   private Instance ec2Instance;
   private PcfInstanceElement pcfElement;
   private AzureVMInstanceData azureVMInstance;
-  private AzureAppDeploymentData appDeploymentData;
+  private AzureAppDeploymentData webAppInstance;
 
   @Override
   public String getName() {

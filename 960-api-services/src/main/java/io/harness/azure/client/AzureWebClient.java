@@ -9,6 +9,7 @@ import io.harness.azure.model.WebAppHostingOS;
 
 import com.microsoft.azure.management.appservice.DeploymentSlot;
 import com.microsoft.azure.management.appservice.WebApp;
+import com.microsoft.azure.management.appservice.implementation.SiteInstanceInner;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -303,4 +304,13 @@ public interface AzureWebClient {
    * @return
    */
   double getDeploymentSlotTrafficWeight(AzureWebClientContext context, String slotName);
+
+  /**
+   * List slot instance identifiers.
+   *
+   * @param context
+   * @param slotName
+   * @return
+   */
+  List<SiteInstanceInner> listInstanceIdentifiersSlot(AzureWebClientContext context, String slotName);
 }

@@ -79,12 +79,14 @@ public class InstanceDetails {
   @Value
   @Builder
   public static class AZURE_WEBAPP {
-    private String resourceGroup;
-    private String subscriptionId;
+    private String ip;
+    private String instanceId;
+    private String instanceType;
+    private String instanceName;
+    private String instanceHostName;
     private String appName;
     private String deploySlot;
     private String deploySlotId;
     private String appServicePlanId;
-    private String defaultHostName;
   }
 }

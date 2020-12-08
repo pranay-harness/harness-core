@@ -7,6 +7,8 @@ import static software.wings.service.InstanceSyncConstants.INFRASTRUCTURE_MAPPIN
 import static software.wings.service.InstanceSyncConstants.INTERVAL_MINUTES;
 import static software.wings.service.InstanceSyncConstants.TIMEOUT_SECONDS;
 
+import static java.lang.String.format;
+
 import io.harness.perpetualtask.PerpetualTaskClientContext;
 import io.harness.perpetualtask.PerpetualTaskSchedule;
 import io.harness.perpetualtask.PerpetualTaskService;
@@ -47,29 +49,42 @@ public class AzureWebAppInstanceSyncPerpetualTaskCreator implements InstanceSync
     return createPerpetualTasks(webAppInstancesInfo, infrastructureMapping);
   }
 
+  private Set<AzureWebAppInstanceInfo> getWebAppInstancesInfo(String appId, String infraMappingId) {
+    List<Instance> instances = instanceService.getInstancesForAppAndInframapping(appId, infraMappingId);
+    return emptyIfNull(instances)
+        .stream()
+        .map(Instance::getInstanceInfo)
+        .filter(AzureWebAppInstanceInfo.class ::isInstance)
+        .map(AzureWebAppInstanceInfo.class ::cast)
+        .collect(Collectors.toSet());
+  }
+
   @Override
   public List<String> createPerpetualTasksForNewDeployment(List<DeploymentSummary> deploymentSummaries,
       List<PerpetualTaskRecord> existingPerpetualTasks, InfrastructureMapping infrastructureMapping) {
-    Set<String> existingWebAppNames = existingPerpetualTasks.stream()
-                                          .map(task -> task.getClientContext().getClientParams())
-                                          .map(params -> params.get(APP_NAME))
-                                          .collect(Collectors.toSet());
-
-    List<AzureWebAppDeploymentKey> newDeploymentWebAppKeys =
+    List<AzureWebAppDeploymentKey> newWebAppInstancesDeploymentKeys =
         deploymentSummaries.stream().map(DeploymentSummary::getAzureWebAppDeploymentKey).collect(Collectors.toList());
 
-    Set<String> newDeploymentWebAppNames =
-        newDeploymentWebAppKeys.stream().map(AzureWebAppDeploymentKey::getAppName).collect(Collectors.toSet());
+    Set<String> existingWebAppInstances =
+        existingPerpetualTasks.stream()
+            .map(task -> task.getClientContext().getClientParams())
+            .map(params -> format("%s_%s", params.get(APP_NAME), params.get(SLOT_NAME)))
+            .collect(Collectors.toSet());
 
-    Sets.SetView<String> newDeployedWebAppNames = Sets.difference(newDeploymentWebAppNames, existingWebAppNames);
+    Set<String> newWebAppInstances = deploymentSummaries.stream()
+                                         .map(DeploymentSummary::getAzureWebAppDeploymentKey)
+                                         .map(AzureWebAppDeploymentKey::getKey)
+                                         .collect(Collectors.toSet());
+
+    Sets.SetView<String> newDeployedWebAppInstances = Sets.difference(newWebAppInstances, existingWebAppInstances);
 
     Set<AzureWebAppInstanceInfo> webAppInstancesInfo =
-        newDeploymentWebAppKeys.stream()
-            .filter(newDeployedWebAppKey -> newDeployedWebAppNames.contains(newDeployedWebAppKey.getAppName()))
-            .map(newDeployedWebAppKey
+        newWebAppInstancesDeploymentKeys.stream()
+            .filter(newDeployedWebAppKey -> newDeployedWebAppInstances.contains(newDeployedWebAppKey.getKey()))
+            .map(deploymentKey
                 -> AzureWebAppInstanceInfo.builder()
-                       .appName(newDeployedWebAppKey.getAppName())
-                       .slotName(newDeployedWebAppKey.getSlotName())
+                       .appName(deploymentKey.getAppName())
+                       .slotName(deploymentKey.getSlotName())
                        .build())
             .collect(Collectors.toSet());
 
@@ -108,15 +123,5 @@ public class AzureWebAppInstanceSyncPerpetualTaskCreator implements InstanceSync
 
     return perpetualTaskService.createTask(
         PerpetualTaskType.AZURE_WEB_APP_INSTANCE_SYNC, accountId, clientContext, schedule, false, "");
-  }
-
-  private Set<AzureWebAppInstanceInfo> getWebAppInstancesInfo(String appId, String infraMappingId) {
-    List<Instance> instances = instanceService.getInstancesForAppAndInframapping(appId, infraMappingId);
-    return emptyIfNull(instances)
-        .stream()
-        .map(Instance::getInstanceInfo)
-        .filter(AzureWebAppInstanceInfo.class ::isInstance)
-        .map(AzureWebAppInstanceInfo.class ::cast)
-        .collect(Collectors.toSet());
   }
 }

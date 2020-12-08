@@ -14,7 +14,7 @@ import io.harness.serializer.KryoSerializer;
 import io.harness.tasks.Cd1SetupFields;
 
 import software.wings.beans.AzureConfig;
-import software.wings.beans.AzureVMSSInfrastructureMapping;
+import software.wings.beans.AzureWebAppInfrastructureMapping;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.TaskType;
 import software.wings.service.impl.azure.manager.AzureTaskExecutionRequest;
@@ -42,7 +42,6 @@ public class AzureWebAppInstanceSyncPerpetualTaskClient implements PerpetualTask
   @Inject private SettingsService settingsService;
   @Inject private SecretManager secretManager;
   @Inject private KryoSerializer kryoSerializer;
-
   @Inject private AzureVMSSStateHelper azureVMSSStateHelper;
 
   @Override
@@ -102,8 +101,8 @@ public class AzureWebAppInstanceSyncPerpetualTaskClient implements PerpetualTask
     String infraMappingId = clientParams.get(INFRASTRUCTURE_MAPPING_ID);
     String appName = clientParams.get(APP_NAME);
     String slotName = clientParams.get(SLOT_NAME);
-    AzureVMSSInfrastructureMapping infraMapping =
-        (AzureVMSSInfrastructureMapping) infraMappingService.get(appId, infraMappingId);
+    AzureWebAppInfrastructureMapping infraMapping =
+        (AzureWebAppInfrastructureMapping) infraMappingService.get(appId, infraMappingId);
 
     SettingAttribute settingAttribute = settingsService.get(infraMapping.getComputeProviderSettingId());
     AzureConfig azureConfig = (AzureConfig) settingAttribute.getValue();
@@ -113,7 +112,7 @@ public class AzureWebAppInstanceSyncPerpetualTaskClient implements PerpetualTask
         .azureConfig(azureConfig)
         .encryptedDataDetails(encryptedDataDetails)
         .subscriptionId(infraMapping.getSubscriptionId())
-        .resourceGroupName(infraMapping.getResourceGroupName())
+        .resourceGroupName(infraMapping.getResourceGroup())
         .appName(appName)
         .slotName(slotName)
         .build();
