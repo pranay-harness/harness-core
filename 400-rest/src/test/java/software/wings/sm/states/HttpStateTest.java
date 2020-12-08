@@ -3,6 +3,7 @@ package software.wings.sm.states;
 import static io.harness.rule.OwnerRule.DINESH;
 import static io.harness.rule.OwnerRule.GEORGE;
 import static io.harness.rule.OwnerRule.MARKO;
+import static io.harness.rule.OwnerRule.MILOS;
 import static io.harness.rule.OwnerRule.PRABU;
 import static io.harness.rule.OwnerRule.SRINIVAS;
 
@@ -15,6 +16,7 @@ import static software.wings.beans.artifact.Artifact.Builder.anArtifact;
 import static software.wings.sm.ContextElement.ARTIFACT;
 import static software.wings.sm.StateExecutionInstance.Builder.aStateExecutionInstance;
 import static software.wings.sm.states.HttpState.Builder.aHttpState;
+import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 import static software.wings.utils.WingsTestConstants.ACTIVITY_ID;
 import static software.wings.utils.WingsTestConstants.APP_ID;
 import static software.wings.utils.WingsTestConstants.APP_NAME;
@@ -59,11 +61,13 @@ import software.wings.api.HttpStateExecutionData;
 import software.wings.api.ServiceElement;
 import software.wings.beans.Activity;
 import software.wings.beans.Activity.Type;
+import software.wings.beans.Application;
 import software.wings.beans.Environment.EnvironmentType;
 import software.wings.beans.Variable;
 import software.wings.beans.artifact.Artifact.ArtifactMetadataKeys;
 import software.wings.beans.template.TemplateUtils;
 import software.wings.delegatetasks.HttpTask;
+import software.wings.service.impl.AccountServiceImpl;
 import software.wings.service.impl.ActivityHelperService;
 import software.wings.service.intfc.DelegateService;
 import software.wings.service.intfc.StateExecutionService;
@@ -140,6 +144,7 @@ public class HttpStateTest extends WingsBaseTest {
   @Mock private TemplateUtils templateUtils;
   @Mock private StateExecutionService stateExecutionService;
   @Inject private HttpServiceImpl httpService;
+  @Mock private AccountServiceImpl accountService;
 
   private ExecutionResponse asyncExecutionResponse;
 
@@ -153,15 +158,20 @@ public class HttpStateTest extends WingsBaseTest {
     StateExecutionInstance stateExecutionInstance =
         aStateExecutionInstance().displayName("healthCheck1").uuid(STATE_EXECUTION_ID).build();
 
+    Application app = anApplication().accountId(ACCOUNT_ID).build();
+
     Map<String, StateExecutionData> stateExecutionMap = new HashMap<>();
     stateExecutionMap.put("healthCheck1", HttpStateExecutionData.builder().build());
     stateExecutionInstance.setStateExecutionMap(stateExecutionMap);
+
+    when(accountService.isCertValidationRequired(any())).thenReturn(false);
 
     when(workflowStandardParams.fetchRequiredApp()).thenReturn(anApplication().uuid(APP_ID).name(APP_NAME).build());
     when(workflowStandardParams.getEnv())
         .thenReturn(anEnvironment().uuid(ENV_ID).name(ENV_NAME).environmentType(EnvironmentType.NON_PROD).build());
     when(workflowStandardParams.getAppId()).thenReturn(APP_ID);
     when(workflowStandardParams.getEnvId()).thenReturn(ENV_ID);
+    when(workflowStandardParams.getApp()).thenReturn(app);
 
     when(workflowStandardParams.getElementType()).thenReturn(ContextElementType.STANDARD);
     context = new ExecutionContextImpl(stateExecutionInstance, null, injector);
@@ -333,6 +343,46 @@ public class HttpStateTest extends WingsBaseTest {
   @Owner(developers = SRINIVAS)
   @Category(UnitTests.class)
   public void shouldExecuteAndEvaluateResponse() throws IllegalAccessException {
+    wireMockRule.stubFor(get(urlEqualTo("/health/status"))
+                             .withHeader("Content-Type", equalTo("application/xml"))
+                             .withHeader("Accept", equalTo("*/*"))
+                             .willReturn(aResponse()
+                                             .withStatus(200)
+                                             .withBody("<health><status>Enabled</status></health>")
+                                             .withHeader("Content-Type", "text/xml")));
+
+    HttpState httpState = getHttpState(httpStateBuilder.but(), context);
+    FieldUtils.writeField(httpState, "stateExecutionService", stateExecutionService, true);
+    ExecutionResponse response = httpState.execute(context);
+
+    assertThat(response).isNotNull().extracting(ExecutionResponse::isAsync).isEqualTo(true);
+
+    response = asyncExecutionResponse;
+
+    assertThat(response.getStateExecutionData())
+        .isNotNull()
+        .isInstanceOf(HttpStateExecutionData.class)
+        .isEqualToComparingOnlyGivenFields(HttpStateExecutionData.builder()
+                                               .assertionStatus("SUCCESS")
+                                               .httpResponseCode(200)
+                                               .httpResponseBody("<health><status>Enabled</status></health>")
+                                               .build(),
+            "httpUrl", "assertionStatus", "httpResponseCode", "httpResponseBody");
+
+    verify(activityHelperService).createAndSaveActivity(any(), any(), any(), any(), any());
+    verify(activityHelperService).updateStatus(ACTIVITY_ID, APP_ID, ExecutionStatus.SUCCESS);
+    verify(stateExecutionService).appendDelegateTaskDetails(anyString(), any(DelegateTaskDetails.class));
+  }
+
+  /**
+   * Should execute and evaluate response with certificate validation.
+   */
+  @Test
+  @Owner(developers = MILOS)
+  @Category(UnitTests.class)
+  public void shouldExecuteAndEvaluateResponseWithCertValidation() throws IllegalAccessException {
+    when(accountService.isCertValidationRequired(any())).thenReturn(true);
+
     wireMockRule.stubFor(get(urlEqualTo("/health/status"))
                              .withHeader("Content-Type", equalTo("application/xml"))
                              .withHeader("Accept", equalTo("*/*"))
@@ -706,6 +756,7 @@ public class HttpStateTest extends WingsBaseTest {
     on(httpState).set("activityHelperService", activityHelperService);
     on(httpState).set("delegateService", delegateService);
     on(httpState).set("templateUtils", templateUtils);
+    on(httpState).set("accountService", accountService);
 
     doAnswer(invocation -> {
       DelegateTask task = invocation.getArgumentAt(0, DelegateTask.class);

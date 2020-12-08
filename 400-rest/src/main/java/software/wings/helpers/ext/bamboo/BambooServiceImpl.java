@@ -87,7 +87,7 @@ public class BambooServiceImpl implements BambooService {
       Retrofit retrofit = new Retrofit.Builder()
                               .baseUrl(bambooUrl)
                               .addConverterFactory(JacksonConverterFactory.create())
-                              .client(Http.getUnsafeOkHttpClient(bambooUrl))
+                              .client(Http.getOkHttpClient(bambooUrl, bambooConfig.isCertValidationRequired()))
                               .build();
       return retrofit.create(BambooRestClient.class);
     } catch (InvalidArtifactServerException e) {

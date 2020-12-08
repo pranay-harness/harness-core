@@ -3,6 +3,7 @@ package software.wings.service.impl;
 import static io.harness.rule.OwnerRule.ACASIAN;
 import static io.harness.rule.OwnerRule.BRETT;
 import static io.harness.rule.OwnerRule.INDER;
+import static io.harness.rule.OwnerRule.MILOS;
 import static io.harness.rule.OwnerRule.RUSHABH;
 import static io.harness.rule.OwnerRule.SATYAM;
 
@@ -68,15 +69,23 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import org.apache.commons.lang3.reflect.FieldUtils;
+import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
+import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
 
 public class AwsHelperServiceTest extends WingsBaseTest {
   @Rule public WireMockRule wireMockRule = new WireMockRule(9877);
+  @Mock AwsConfig awsConfig;
+
+  @Before
+  public void setup() {
+    when(awsConfig.isCertValidationRequired()).thenReturn(false);
+  }
 
   @Test
   @Owner(developers = BRETT)
@@ -384,7 +393,7 @@ public class AwsHelperServiceTest extends WingsBaseTest {
 
     AwsHelperService service = new AwsHelperService();
 
-    AWSTemporaryCredentials cred = service.getCredentialsForIAMROleOnDelegate(url);
+    AWSTemporaryCredentials cred = service.getCredentialsForIAMROleOnDelegate(url, awsConfig);
     assertThat(cred).isEqualTo(credentials);
   }
 
@@ -408,7 +417,7 @@ public class AwsHelperServiceTest extends WingsBaseTest {
 
     AwsHelperService service = new AwsHelperService();
 
-    assertThatThrownBy(() -> service.getCredentialsForIAMROleOnDelegate(url))
+    assertThatThrownBy(() -> service.getCredentialsForIAMROleOnDelegate(url, awsConfig))
         .isInstanceOf(InvalidRequestException.class);
   }
 
@@ -432,7 +441,33 @@ public class AwsHelperServiceTest extends WingsBaseTest {
 
     AwsHelperService service = new AwsHelperService();
 
-    assertThatThrownBy(() -> service.getCredentialsForIAMROleOnDelegate(url))
+    assertThatThrownBy(() -> service.getCredentialsForIAMROleOnDelegate(url, awsConfig))
         .isInstanceOf(InvalidRequestException.class);
+  }
+
+  @Test
+  @Owner(developers = MILOS)
+  @Category(UnitTests.class)
+  public void testGetCredentialsForIAMROleOnDelegateWithCertValidation() {
+    String url = "http://localhost:9877/";
+    AWSTemporaryCredentials credentials = AWSTemporaryCredentials.builder()
+                                              .code("SUCCESS")
+                                              .accessKeyId(ACCESS_KEY)
+                                              .secretKey(String.valueOf(SECRET_KEY))
+                                              .build();
+
+    String credentialsString = jsonToStringConverter(credentials);
+
+    when(awsConfig.isCertValidationRequired()).thenReturn(true);
+
+    wireMockRule.stubFor(get(urlEqualTo("/latest/meta-data/iam/security-credentials/"))
+                             .willReturn(aResponse().withBody("role").withStatus(200)));
+    wireMockRule.stubFor(get(urlEqualTo("/latest/meta-data/iam/security-credentials/role"))
+                             .willReturn(aResponse().withBody(credentialsString).withStatus(200)));
+
+    AwsHelperService service = new AwsHelperService();
+
+    AWSTemporaryCredentials cred = service.getCredentialsForIAMROleOnDelegate(url, awsConfig);
+    assertThat(cred).isEqualTo(credentials);
   }
 }

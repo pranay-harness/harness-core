@@ -1,5 +1,6 @@
 package software.wings.sm.states;
 
+import static io.harness.rule.OwnerRule.MILOS;
 import static io.harness.rule.OwnerRule.SRINIVAS;
 
 import static software.wings.beans.Application.Builder.anApplication;
@@ -30,6 +31,7 @@ import software.wings.api.BambooExecutionData;
 import software.wings.api.JenkinsExecutionData;
 import software.wings.beans.Activity;
 import software.wings.beans.BambooConfig;
+import software.wings.service.impl.SettingServiceHelper;
 import software.wings.service.intfc.ActivityService;
 import software.wings.service.intfc.DelegateService;
 import software.wings.service.intfc.security.SecretManager;
@@ -62,6 +64,7 @@ public class BambooStateTest extends CategoryTest {
   @Mock private ExecutionContextImpl executionContext;
   @Mock private DelegateService delegateService;
   @Mock private SecretManager secretManager;
+  @Mock private SettingServiceHelper settingServiceHelper;
 
   @InjectMocks private BambooState bambooState = new BambooState("bamboo");
 
@@ -72,13 +75,7 @@ public class BambooStateTest extends CategoryTest {
     when(executionContext.getApp()).thenReturn(anApplication().accountId(ACCOUNT_ID).uuid(APP_ID).build());
     when(executionContext.getEnv()).thenReturn(anEnvironment().uuid(ENV_ID).appId(APP_ID).build());
     when(activityService.save(any(Activity.class))).thenReturn(ACTIVITY_WITH_ID);
-    when(executionContext.getGlobalSettingValue(ACCOUNT_ID, SETTING_ID))
-        .thenReturn(BambooConfig.builder()
-                        .bambooUrl("http://bamboo")
-                        .username("username")
-                        .password("password".toCharArray())
-                        .accountId(ACCOUNT_ID)
-                        .build());
+    when(executionContext.getGlobalSettingValue(ACCOUNT_ID, SETTING_ID)).thenReturn(getBambooConfig(false));
     when(executionContext.renderExpression(anyString()))
         .thenAnswer(invocation -> invocation.getArgumentAt(0, String.class));
 
@@ -146,5 +143,31 @@ public class BambooStateTest extends CategoryTest {
 
     // TODO: getErrorMsg returns null - is this expected
     // assertThat(executionContext.getStateExecutionData().getErrorMsg()).isNotBlank();
+  }
+
+  @Test
+  @Owner(developers = MILOS)
+  @Category(UnitTests.class)
+  public void shouldExecuteWithCertValidation() {
+    when(executionContext.getGlobalSettingValue(ACCOUNT_ID, SETTING_ID)).thenReturn(getBambooConfig(true));
+    ExecutionResponse executionResponse = bambooState.execute(executionContext);
+    assertThat(executionResponse).isNotNull().hasFieldOrPropertyWithValue("async", true);
+    ArgumentCaptor<DelegateTask> delegateTaskArgumentCaptor = ArgumentCaptor.forClass(DelegateTask.class);
+    verify(delegateService).queueTask(delegateTaskArgumentCaptor.capture());
+    assertThat(delegateTaskArgumentCaptor.getValue())
+        .isNotNull()
+        .hasFieldOrPropertyWithValue("data.taskType", BAMBOO.name());
+  }
+
+  private BambooConfig getBambooConfig(boolean isCertvalidationRequired) {
+    BambooConfig bambooConfig = BambooConfig.builder()
+                                    .bambooUrl("http://bamboo")
+                                    .username("username")
+                                    .password("password".toCharArray())
+                                    .accountId(ACCOUNT_ID)
+                                    .build();
+
+    bambooConfig.setCertValidationRequired(isCertvalidationRequired);
+    return bambooConfig;
   }
 }

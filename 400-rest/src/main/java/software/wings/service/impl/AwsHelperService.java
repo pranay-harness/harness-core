@@ -1596,8 +1596,8 @@ public class AwsHelperService {
     return getAmazonEcsClient(region, awsConfig).untagResource(untagResourceRequest);
   }
 
-  AWSTemporaryCredentialsRestClient getAWSTemporaryCredentialsRestClient(String url) {
-    OkHttpClient okHttpClient = Http.getUnsafeOkHttpClient(url);
+  AWSTemporaryCredentialsRestClient getAWSTemporaryCredentialsRestClient(String url, AwsConfig awsConfig) {
+    OkHttpClient okHttpClient = Http.getOkHttpClient(url, awsConfig.isCertValidationRequired());
     Retrofit retrofit = new Retrofit.Builder()
                             .client(okHttpClient)
                             .baseUrl(url)
@@ -1607,8 +1607,8 @@ public class AwsHelperService {
   }
 
   @VisibleForTesting
-  public AWSTemporaryCredentials getCredentialsForIAMROleOnDelegate(String url) {
-    AWSTemporaryCredentialsRestClient credentialsRestClient = getAWSTemporaryCredentialsRestClient(url);
+  public AWSTemporaryCredentials getCredentialsForIAMROleOnDelegate(String url, AwsConfig awsConfig) {
+    AWSTemporaryCredentialsRestClient credentialsRestClient = getAWSTemporaryCredentialsRestClient(url, awsConfig);
     String roleName;
     try {
       Response<ResponseBody> response = credentialsRestClient.getRoleName().execute();

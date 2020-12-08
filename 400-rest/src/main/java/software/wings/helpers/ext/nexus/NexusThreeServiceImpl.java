@@ -7,7 +7,6 @@ import static io.harness.eraro.ErrorCode.INVALID_ARTIFACT_SERVER;
 import static io.harness.threading.Morpheus.quietSleep;
 
 import static software.wings.helpers.ext.jenkins.BuildDetails.Builder.aBuildDetails;
-import static software.wings.helpers.ext.nexus.NexusServiceImpl.getBaseUrl;
 import static software.wings.helpers.ext.nexus.NexusServiceImpl.getRetrofit;
 import static software.wings.helpers.ext.nexus.NexusServiceImpl.isSuccessful;
 
@@ -562,7 +561,7 @@ public class NexusThreeServiceImpl {
     if (nexusConfig.hasCredentials()) {
       encryptionService.decrypt(nexusConfig, encryptionDetails, false);
     }
-    return getRetrofit(getBaseUrl(nexusConfig), JacksonConverterFactory.create()).create(NexusThreeRestClient.class);
+    return getRetrofit(nexusConfig, JacksonConverterFactory.create()).create(NexusThreeRestClient.class);
   }
 
   public Pair<String, InputStream> downloadArtifact(NexusConfig nexusConfig,

@@ -21,7 +21,17 @@ import lombok.Setter;
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "type", include = As.EXISTING_PROPERTY)
 public abstract class SettingValue implements ExecutionCapabilityDemander {
   @Getter @Setter String type;
+  @JsonIgnore @SchemaIgnore private boolean isCertValidationRequired;
   @JsonIgnore @SchemaIgnore private transient boolean decrypted;
+
+  @SchemaIgnore
+  public boolean isCertValidationRequired() {
+    return isCertValidationRequired;
+  }
+
+  public void setCertValidationRequired(boolean isCertValidationRequired) {
+    this.isCertValidationRequired = isCertValidationRequired;
+  }
 
   @SchemaIgnore
   public boolean isDecrypted() {

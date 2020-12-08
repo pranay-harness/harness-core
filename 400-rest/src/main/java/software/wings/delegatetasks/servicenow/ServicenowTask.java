@@ -401,6 +401,6 @@ public class ServicenowTask extends AbstractDelegateRunnableTask {
   private ServiceNowRestClient getRestClient(ServiceNowTaskParameters taskParameters) {
     ServiceNowConfig config = taskParameters.getServiceNowConfig();
     encryptionService.decrypt(config, taskParameters.getEncryptionDetails(), false);
-    return getRetrofit(getBaseUrl(config), JacksonConverterFactory.create()).create(ServiceNowRestClient.class);
+    return getRetrofit(config, JacksonConverterFactory.create()).create(ServiceNowRestClient.class);
   }
 }

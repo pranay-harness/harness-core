@@ -15,6 +15,7 @@ public class DockerConfigToInternalMapper {
 
     return DockerInternalConfig.builder()
         .dockerRegistryUrl(dockerConfig.getDockerRegistryUrl())
+        .isCertValidationRequired(dockerConfig.isCertValidationRequired())
         .username(dockerConfig.getUsername())
         .password(password)
         .build();

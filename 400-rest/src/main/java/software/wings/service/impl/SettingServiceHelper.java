@@ -63,6 +63,7 @@ import io.harness.security.encryption.EncryptedDataDetail;
 import software.wings.annotation.EncryptableSetting;
 import software.wings.beans.SettingAttribute;
 import software.wings.security.UsageRestrictions;
+import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.UsageRestrictionsService;
 import software.wings.service.intfc.security.ManagerDecryptionService;
 import software.wings.service.intfc.security.SecretManager;
@@ -95,6 +96,7 @@ public class SettingServiceHelper {
   @Inject private ManagerDecryptionService managerDecryptionService;
   @Inject private FeatureFlagService featureFlagService;
   @Inject private UsageRestrictionsService usageRestrictionsService;
+  @Inject private AccountService accountService;
 
   public boolean hasReferencedSecrets(SettingAttribute settingAttribute) {
     if (settingAttribute == null || settingAttribute.getValue() == null || settingAttribute.getAccountId() == null
@@ -399,6 +401,18 @@ public class SettingServiceHelper {
       default: {
         return ACCOUNT_MANAGEMENT;
       }
+    }
+  }
+
+  public void setCertValidationRequired(String accountId, SettingAttribute settingAttribute) {
+    if (settingAttribute != null && settingAttribute.getValue() != null) {
+      settingAttribute.getValue().setCertValidationRequired(accountService.isCertValidationRequired(accountId));
+    }
+  }
+
+  public void setCertValidationRequired(String accountId, SettingValue settingValue) {
+    if (settingValue != null) {
+      settingValue.setCertValidationRequired(accountService.isCertValidationRequired(accountId));
     }
   }
 }

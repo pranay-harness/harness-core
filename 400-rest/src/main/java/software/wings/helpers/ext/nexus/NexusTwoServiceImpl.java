@@ -912,8 +912,7 @@ public class NexusTwoServiceImpl {
     if (nexusConfig.hasCredentials()) {
       encryptionService.decrypt(nexusConfig, encryptionDetails, false);
     }
-    return getRetrofit(getBaseUrl(nexusConfig), SimpleXmlConverterFactory.createNonStrict())
-        .create(NexusRestClient.class);
+    return getRetrofit(nexusConfig, SimpleXmlConverterFactory.createNonStrict()).create(NexusRestClient.class);
   }
 
   private NexusRestClient getRestClientJacksonConverter(
@@ -921,7 +920,7 @@ public class NexusTwoServiceImpl {
     if (nexusConfig.hasCredentials()) {
       encryptionService.decrypt(nexusConfig, encryptionDetails, false);
     }
-    return getRetrofit(getBaseUrl(nexusConfig), JacksonConverterFactory.create()).create(NexusRestClient.class);
+    return getRetrofit(nexusConfig, JacksonConverterFactory.create()).create(NexusRestClient.class);
   }
 
   @SuppressWarnings({"squid:S3510"})
