@@ -8,13 +8,12 @@ import io.harness.pms.ambiance.Ambiance;
 import io.harness.pms.ambiance.Level;
 import io.harness.pms.refobjects.RefObject;
 import io.harness.pms.sdk.core.data.StepTransput;
-import io.harness.pms.serializer.json.JsonOrchestrationUtils;
+import io.harness.pms.serializer.persistence.DocumentOrchestrationUtils;
 
 import java.util.List;
 import javax.validation.constraints.NotNull;
 import lombok.SneakyThrows;
 import org.bson.Document;
-import org.bson.json.JsonWriterSettings;
 
 @OwnedBy(CDC)
 public interface Resolver<T extends StepTransput> {
@@ -46,22 +45,11 @@ public interface Resolver<T extends StepTransput> {
   }
 
   default Document convertToDocument(T value) {
-    if (value == null) {
-      return null;
-    }
-    Document document = Document.parse(value.toJson());
-    document.put(JsonOrchestrationUtils.PMS_CLASS_KEY, value.getClass().getName());
-    return document;
+    return DocumentOrchestrationUtils.convertToDocument(value);
   }
 
   @SneakyThrows
   default T convertToObject(Document value) {
-    if (value == null) {
-      return null;
-    }
-    JsonWriterSettings writerSettings =
-        JsonWriterSettings.builder().int64Converter((v, writer) -> writer.writeNumber(v.toString())).build();
-    Class<?> aClass = Class.forName((String) value.remove(JsonOrchestrationUtils.PMS_CLASS_KEY));
-    return (T) JsonOrchestrationUtils.asObject(value.toJson(writerSettings), aClass);
+    return DocumentOrchestrationUtils.convertFromDocument(value);
   }
 }

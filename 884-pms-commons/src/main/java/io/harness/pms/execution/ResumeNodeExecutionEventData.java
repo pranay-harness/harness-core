@@ -1,9 +1,8 @@
-package io.harness.pms.sdk.core.execution;
+package io.harness.pms.execution;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.pms.execution.NodeExecutionEventData;
 import io.harness.pms.plan.PlanNodeProto;
 import io.harness.tasks.ResponseData;
 
@@ -16,7 +15,6 @@ import lombok.Value;
 @Value
 @Builder
 public class ResumeNodeExecutionEventData implements NodeExecutionEventData {
-  // TODO: move to sdk-commons
   List<PlanNodeProto> nodes;
   Map<String, ResponseData> response;
   boolean asyncError;
