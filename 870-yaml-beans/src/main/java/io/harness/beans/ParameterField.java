@@ -4,9 +4,11 @@ import io.harness.expression.ExpressionEvaluatorUtils;
 import io.harness.expression.NotExpression;
 import io.harness.pms.sdk.core.expression.OrchestrationField;
 import io.harness.pms.sdk.core.expression.OrchestrationFieldType;
+import io.harness.pms.serializer.json.JsonOrchestrationIgnore;
 import io.harness.walktree.registries.visitorfield.VisitorFieldType;
 import io.harness.walktree.registries.visitorfield.VisitorFieldWrapper;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
@@ -19,15 +21,15 @@ public class ParameterField<T> implements OrchestrationField, VisitorFieldWrappe
   public static final VisitorFieldType VISITOR_FIELD_TYPE = VisitorFieldType.builder().type("PARAMETER_FIELD").build();
 
   @NotExpression private String expressionValue;
-  private boolean isExpression;
+  private boolean expression;
   private T value;
-  private boolean isTypeString;
+  private boolean typeString;
 
   // This field is set when runtime input with validation is given.
   private InputSetValidator inputSetValidator;
 
   // Below 2 fields are when caller wants to set String field instead of T like for some errors, input set merge, etc.
-  private boolean isJsonResponseField;
+  private boolean jsonResponseField;
   private String responseField;
 
   private static final ParameterField<?> EMPTY = new ParameterField<>(null, false, null, null, false, null);
@@ -45,27 +47,27 @@ public class ParameterField<T> implements OrchestrationField, VisitorFieldWrappe
     return new ParameterField<>(true, responseField);
   }
 
-  public ParameterField(T value, boolean isExpression, String expressionValue, InputSetValidator inputSetValidator,
-      boolean isTypeString) {
+  public ParameterField(
+      T value, boolean expression, String expressionValue, InputSetValidator inputSetValidator, boolean typeString) {
     this.value = value;
-    this.isExpression = isExpression;
+    this.expression = expression;
     this.expressionValue = expressionValue;
     this.inputSetValidator = inputSetValidator;
-    this.isTypeString = isTypeString;
+    this.typeString = typeString;
   }
 
-  private ParameterField(String expressionValue, boolean isExpression, T value, InputSetValidator inputSetValidator,
-      boolean isJsonResponseField, String responseField) {
+  private ParameterField(String expressionValue, boolean expression, T value, InputSetValidator inputSetValidator,
+      boolean jsonResponseField, String responseField) {
     this.expressionValue = expressionValue;
-    this.isExpression = isExpression;
+    this.expression = expression;
     this.value = value;
     this.inputSetValidator = inputSetValidator;
-    this.isJsonResponseField = isJsonResponseField;
+    this.jsonResponseField = jsonResponseField;
     this.responseField = responseField;
   }
 
-  private ParameterField(boolean isJsonResponseField, String responseField) {
-    this.isJsonResponseField = isJsonResponseField;
+  private ParameterField(boolean jsonResponseField, String responseField) {
+    this.jsonResponseField = jsonResponseField;
     this.responseField = responseField;
   }
 
@@ -74,21 +76,23 @@ public class ParameterField<T> implements OrchestrationField, VisitorFieldWrappe
   }
 
   public Object get(String key) {
-    return isExpression ? expressionValue : ExpressionEvaluatorUtils.fetchField(value, key).orElse(null);
+    return expression ? expressionValue : ExpressionEvaluatorUtils.fetchField(value, key).orElse(null);
   }
 
   public void updateWithExpression(String newExpression) {
-    isExpression = true;
+    expression = true;
     expressionValue = newExpression;
   }
 
   public void updateWithValue(Object newValue) {
-    isExpression = false;
+    expression = false;
     value = (T) newValue;
   }
 
+  @JsonIgnore
+  @JsonOrchestrationIgnore
   public Object getJsonFieldValue() {
-    if (isExpression) {
+    if (expression) {
       StringBuilder result = new StringBuilder(expressionValue);
       if (inputSetValidator != null) {
         result.append('.')
@@ -99,7 +103,7 @@ public class ParameterField<T> implements OrchestrationField, VisitorFieldWrappe
       }
       return result.toString();
     } else {
-      return isJsonResponseField ? responseField : value;
+      return jsonResponseField ? responseField : value;
     }
   }
 
@@ -109,11 +113,15 @@ public class ParameterField<T> implements OrchestrationField, VisitorFieldWrappe
   }
 
   @Override
+  @JsonIgnore
+  @JsonOrchestrationIgnore
   public Object getFinalValue() {
-    return isExpression ? expressionValue : value;
+    return expression ? expressionValue : value;
   }
 
   @Override
+  @JsonIgnore
+  @JsonOrchestrationIgnore
   public VisitorFieldType getVisitorFieldType() {
     return VISITOR_FIELD_TYPE;
   }
