@@ -25,7 +25,9 @@ import io.harness.persistence.HPersistence;
 
 import com.google.inject.Inject;
 import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.Collections;
+import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -54,6 +56,7 @@ public class InstanceDataDaoImpl implements InstanceDataDao {
   public boolean updateInstanceStopTime(InstanceData instanceData, Instant stopTime) {
     instanceData.setUsageStopTime(stopTime);
     instanceData.setInstanceState(InstanceState.STOPPED);
+    instanceData.setTtl(new Date(stopTime.plus(30, ChronoUnit.DAYS).toEpochMilli()));
     return hPersistence.save(instanceData) != null;
   }
 

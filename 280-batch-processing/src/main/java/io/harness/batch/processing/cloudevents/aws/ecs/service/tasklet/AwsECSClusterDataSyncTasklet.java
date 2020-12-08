@@ -337,8 +337,10 @@ public class AwsECSClusterDataSyncTasklet implements Tasklet {
 
   private boolean updateInstanceStopTimeForTask(InstanceData instanceData, Task task) {
     if (null != task.getStoppedAt()) {
-      instanceData.setUsageStopTime(task.getStoppedAt().toInstant());
+      Instant usageStopInstant = task.getStoppedAt().toInstant();
+      instanceData.setUsageStopTime(usageStopInstant);
       instanceData.setInstanceState(InstanceState.STOPPED);
+      instanceData.setTtl(new Date(usageStopInstant.plus(30, ChronoUnit.DAYS).toEpochMilli()));
       return true;
     }
     return false;

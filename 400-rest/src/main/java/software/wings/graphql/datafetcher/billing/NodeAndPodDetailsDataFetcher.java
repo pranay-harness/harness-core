@@ -56,6 +56,8 @@ public class NodeAndPodDetailsDataFetcher
   private static final String PARENT_RESOURCE_ID = "parent_resource_id";
   private static final String NODE_POOL_NAME = "node_pool_name";
   private static final String K8S_POD_CAPACITY = "pod_capacity";
+  private static final String DEFAULT_STRING_VALUE = "-";
+  private static final InstanceData DEFAULT_INSTANCE_DATA = InstanceData.builder().metaData(new HashMap<>()).build();
 
   @Override
   @AuthRule(permissionType = PermissionAttribute.PermissionType.LOGGED_IN)
@@ -161,6 +163,9 @@ public class NodeAndPodDetailsDataFetcher
           case CLUSTERID:
             clusterId = resultSet.getString(field.getFieldName());
             break;
+          case INSTANCENAME:
+            name = resultSet.getString(field.getFieldName());
+            break;
           default:
             break;
         }
@@ -228,33 +233,34 @@ public class NodeAndPodDetailsDataFetcher
       List<String> instanceIdsWithCluster) {
     List<QLNodeAndPodDetailsTableRow> entityTableListData = new ArrayList<>();
     instanceIdsWithCluster.forEach(instanceIdWithCluster -> {
-      if (!instanceIdToInstanceData.containsKey(instanceIdWithCluster)
-          || !instanceIdToCostData.containsKey(instanceIdWithCluster)
-          || instanceIdToInstanceData.get(instanceIdWithCluster).getUsageStartTime() == null) {
-        return;
-      }
-      InstanceData entry = instanceIdToInstanceData.get(instanceIdWithCluster);
+      InstanceData entry = instanceIdToInstanceData.getOrDefault(instanceIdWithCluster, DEFAULT_INSTANCE_DATA);
       QLNodeAndPodDetailsTableRow costDataEntry = instanceIdToCostData.get(instanceIdWithCluster);
       QLNodeAndPodDetailsTableRowBuilder builder = QLNodeAndPodDetailsTableRow.builder();
-      builder.name(entry.getInstanceName())
-          .id(costDataEntry.getClusterId() + BillingStatsDefaultKeys.TOKEN + entry.getInstanceId())
-          .nodeId(entry.getInstanceId())
+      builder.name(costDataEntry.getName())
+          .id(costDataEntry.getClusterId() + BillingStatsDefaultKeys.TOKEN + costDataEntry.getId())
+          .nodeId(costDataEntry.getId())
           .clusterName(costDataEntry.getClusterName())
           .clusterId(costDataEntry.getClusterId())
-          .nodePoolName(entry.getMetaData().getOrDefault(NODE_POOL_NAME, "-"))
-          .podCapacity(entry.getMetaData().getOrDefault(K8S_POD_CAPACITY, "-"))
+          .nodePoolName(entry.getMetaData().getOrDefault(NODE_POOL_NAME, DEFAULT_STRING_VALUE))
+          .podCapacity(entry.getMetaData().getOrDefault(K8S_POD_CAPACITY, DEFAULT_STRING_VALUE))
           .totalCost(costDataEntry.getTotalCost())
           .idleCost(costDataEntry.getIdleCost())
           .systemCost(costDataEntry.getSystemCost())
           .unallocatedCost(costDataEntry.getUnallocatedCost())
           .networkCost(costDataEntry.getNetworkCost())
-          .cpuAllocatable(billingDataHelper.getRoundedDoubleValue(entry.getTotalResource().getCpuUnits() / 1024))
-          .memoryAllocatable(billingDataHelper.getRoundedDoubleValue(entry.getTotalResource().getMemoryMb() / 1024))
-          .machineType(entry.getMetaData().get(OPERATING_SYSTEM))
-          .instanceCategory(entry.getMetaData().get(INSTANCE_CATEGORY))
-          .createTime(entry.getUsageStartTime().toEpochMilli());
+          .cpuAllocatable(-1D)
+          .memoryAllocatable(-1D)
+          .machineType(entry.getMetaData().getOrDefault(OPERATING_SYSTEM, DEFAULT_STRING_VALUE))
+          .instanceCategory(entry.getMetaData().getOrDefault(INSTANCE_CATEGORY, DEFAULT_STRING_VALUE));
+      if (entry.getTotalResource() != null) {
+        builder.cpuAllocatable(billingDataHelper.getRoundedDoubleValue(entry.getTotalResource().getCpuUnits() / 1024))
+            .memoryAllocatable(billingDataHelper.getRoundedDoubleValue(entry.getTotalResource().getMemoryMb() / 1024));
+      }
       if (entry.getUsageStopTime() != null) {
         builder.deleteTime(entry.getUsageStopTime().toEpochMilli());
+      }
+      if (entry.getUsageStartTime() != null) {
+        builder.createTime(entry.getUsageStartTime().toEpochMilli());
       }
       entityTableListData.add(builder.build());
     });
@@ -266,31 +272,35 @@ public class NodeAndPodDetailsDataFetcher
       List<String> instanceIds) {
     List<QLNodeAndPodDetailsTableRow> entityTableListData = new ArrayList<>();
     instanceIds.forEach(instanceId -> {
-      if (!instanceIdToInstanceData.containsKey(instanceId) || !instanceIdToCostData.containsKey(instanceId)
-          || instanceIdToInstanceData.get(instanceId).getUsageStartTime() == null) {
-        return;
-      }
-      InstanceData entry = instanceIdToInstanceData.get(instanceId);
-      QLNodeAndPodDetailsTableRow costDataEntry = instanceIdToCostData.get(entry.getInstanceId());
+      InstanceData entry = instanceIdToInstanceData.getOrDefault(instanceId, DEFAULT_INSTANCE_DATA);
+      QLNodeAndPodDetailsTableRow costDataEntry = instanceIdToCostData.get(instanceId);
       QLNodeAndPodDetailsTableRowBuilder builder = QLNodeAndPodDetailsTableRow.builder();
-      builder.name(entry.getInstanceName())
-          .id(entry.getInstanceId())
-          .namespace(entry.getMetaData().get(NAMESPACE))
-          .workload(entry.getMetaData().get(WORKLOAD))
+      builder.name(costDataEntry.getName())
+          .id(instanceId)
+          .namespace(entry.getMetaData().getOrDefault(NAMESPACE, DEFAULT_STRING_VALUE))
+          .workload(entry.getMetaData().getOrDefault(WORKLOAD, DEFAULT_STRING_VALUE))
           .clusterName(costDataEntry.getClusterName())
           .clusterId(costDataEntry.getClusterId())
-          .node(entry.getMetaData().get(PARENT_RESOURCE_ID))
-          .nodePoolName(entry.getMetaData().getOrDefault(NODE_POOL_NAME, "-"))
+          .node(entry.getMetaData().getOrDefault(PARENT_RESOURCE_ID, DEFAULT_STRING_VALUE))
+          .nodePoolName(entry.getMetaData().getOrDefault(NODE_POOL_NAME, DEFAULT_STRING_VALUE))
           .totalCost(costDataEntry.getTotalCost())
           .idleCost(costDataEntry.getIdleCost())
           .systemCost(costDataEntry.getSystemCost())
           .unallocatedCost(costDataEntry.getUnallocatedCost())
           .networkCost(costDataEntry.getNetworkCost())
-          .cpuRequested(billingDataHelper.getRoundedDoubleValue(entry.getTotalResource().getCpuUnits() / 1024))
-          .memoryRequested(billingDataHelper.getRoundedDoubleValue(entry.getTotalResource().getMemoryMb() / 1024))
-          .createTime(entry.getUsageStartTime().toEpochMilli());
+          .cpuRequested(-1D)
+          .memoryRequested(-1D);
       if (entry.getUsageStopTime() != null) {
         builder.deleteTime(entry.getUsageStopTime().toEpochMilli());
+      }
+
+      if (entry.getTotalResource() != null) {
+        builder.cpuRequested(billingDataHelper.getRoundedDoubleValue(entry.getTotalResource().getCpuUnits() / 1024))
+            .memoryRequested(billingDataHelper.getRoundedDoubleValue(entry.getTotalResource().getMemoryMb() / 1024));
+      }
+
+      if (entry.getUsageStartTime() != null) {
+        builder.createTime(entry.getUsageStartTime().toEpochMilli());
       }
       entityTableListData.add(builder.build());
     });

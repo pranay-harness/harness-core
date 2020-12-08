@@ -9,6 +9,7 @@ import io.harness.batch.processing.service.intfc.InstanceDataBulkWriteService;
 import io.harness.batch.processing.service.intfc.InstanceDataService;
 import io.harness.batch.processing.tasklet.reader.PublishedMessageReader;
 import io.harness.batch.processing.writer.constants.EventTypeConstants;
+import io.harness.ccm.commons.beans.InstanceType;
 import io.harness.event.grpc.PublishedMessage;
 import io.harness.grpc.utils.HTimestamps;
 import io.harness.perpetualtask.k8s.watch.NodeEvent;
@@ -86,6 +87,7 @@ public class K8sNodeEventTasklet implements Tasklet {
         .instanceId(nodeEvent.getNodeUid())
         .instanceName(nodeEvent.getNodeName())
         .type(type)
+        .instanceType(InstanceType.K8S_NODE)
         .timestamp(HTimestamps.toInstant(nodeEvent.getTimestamp()))
         .build();
   }

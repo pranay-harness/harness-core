@@ -8,6 +8,7 @@ import io.harness.batch.processing.ccm.InstanceInfo;
 import io.harness.batch.processing.config.BatchMainConfig;
 import io.harness.batch.processing.service.intfc.InstanceDataBulkWriteService;
 import io.harness.ccm.commons.beans.InstanceState;
+import io.harness.ccm.commons.beans.InstanceType;
 import io.harness.ccm.commons.entities.InstanceData;
 import io.harness.ccm.commons.entities.InstanceData.InstanceDataKeys;
 import io.harness.event.payloads.Lifecycle;
@@ -24,6 +25,8 @@ import com.mongodb.BasicDBObject;
 import com.mongodb.BulkWriteOperation;
 import com.mongodb.BulkWriteResult;
 import java.time.Instant;
+import java.time.temporal.ChronoUnit;
+import java.util.Date;
 import java.util.List;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.NotImplementedException;
@@ -84,6 +87,7 @@ public class InstanceDataBulkWriteServiceImpl implements InstanceDataBulkWriteSe
 
         BasicDBObject updateOperations = new BasicDBObject(ImmutableMap.of(InstanceDataKeys.usageStopTime, instanceTime,
             InstanceDataKeys.instanceState, InstanceState.STOPPED.name()));
+        updateOperations.append(InstanceDataKeys.ttl, new Date(instanceTime.plus(180, ChronoUnit.DAYS).toEpochMilli()));
 
         bulkWriteOperation.find(filter).update(new BasicDBObject("$set", updateOperations));
       } catch (Exception ex) {
@@ -191,6 +195,13 @@ public class InstanceDataBulkWriteServiceImpl implements InstanceDataBulkWriteSe
 
             updateOperations = new BasicDBObject(ImmutableMap.of(
                 InstanceDataKeys.usageStopTime, instant, InstanceDataKeys.instanceState, InstanceState.STOPPED.name()));
+
+            if (instanceEvent.getInstanceType() == InstanceType.K8S_POD) {
+              updateOperations.append(InstanceDataKeys.ttl, new Date(instant.plus(30, ChronoUnit.DAYS).toEpochMilli()));
+            } else if (instanceEvent.getInstanceType() == InstanceType.K8S_NODE) {
+              updateOperations.append(
+                  InstanceDataKeys.ttl, new Date(instant.plus(180, ChronoUnit.DAYS).toEpochMilli()));
+            }
 
             bulkWriteOperation.find(filter).update(new BasicDBObject("$set", updateOperations));
             break;

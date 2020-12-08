@@ -1,6 +1,7 @@
 package software.wings.graphql.datafetcher.billing;
 
 import static io.harness.rule.OwnerRule.SHUBHANSHU;
+import static io.harness.rule.OwnerRule.UTSAV;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -33,6 +34,7 @@ import software.wings.graphql.schema.type.aggregation.billing.QLBillingSortType;
 import software.wings.graphql.schema.type.aggregation.billing.QLCCMEntityGroupBy;
 import software.wings.graphql.schema.type.aggregation.billing.QLCCMGroupBy;
 import software.wings.graphql.schema.type.aggregation.billing.QLNodeAndPodDetailsTableData;
+import software.wings.graphql.schema.type.aggregation.billing.QLNodeAndPodDetailsTableRow;
 import software.wings.security.UserThreadLocal;
 import software.wings.service.intfc.ce.CeAccountExpirationChecker;
 
@@ -167,9 +169,85 @@ public class NodeAndPodDetailsDataFetcherTest extends AbstractDataFetcherTestBas
     assertThat(data.getData().get(0).getMemoryAllocatable()).isEqualTo(MEMORY_MB / 1024);
     assertThat(data.getData().get(0).getMachineType()).isEqualTo("linux");
     assertThat(data.getData().get(0).getInstanceCategory()).isEqualTo("SPOT");
-    assertThat(data.getData().get(0).getCpuAllocatable()).isEqualTo(CPU_UNITS / 1024);
     assertThat(data.getData().get(0).getCreateTime()).isEqualTo(USAGE_START_TIME.toEpochMilli());
     assertThat(data.getData().get(0).getNodePoolName()).isEqualTo("pool-ui-pr-non-preemptible");
+    assertThat(data.getData().get(0).getName()).isEqualTo(INSTANCE_NAME);
+  }
+
+  @Test
+  @Owner(developers = UTSAV)
+  @Category(UnitTests.class)
+  public void testFetchMethodNodeDetailsWithTTLedInstanceData() {
+    final String defaultStringValue = "-";
+    when(instanceDataService.fetchInstanceDataForGivenInstances(Collections.singletonList(INSTANCE_ID)))
+        .thenReturn(Collections.emptyList());
+
+    String[] clusterIdFilterValues = new String[] {CLUSTER_ID};
+
+    List<QLBillingDataFilter> filters = new ArrayList<>();
+    filters.add(makeClusterFilter(clusterIdFilterValues));
+    filters.add(makeTimeFilter(0L));
+    List<QLCCMGroupBy> groupBy = Arrays.asList(makeNodeEntityGroupBy(), makeClusterEntityGroupBy());
+    List<QLBillingSortCriteria> sortCriteria = Arrays.asList(makeAscByAmountSortingCriteria());
+    List<QLCCMAggregationFunction> aggregationFunctions = Arrays.asList(makeBillingAmtAggregation(),
+        makeIdleCostAggregation(), makeUnallocatedCostAggregation(), makeNetworkCostAggregation());
+
+    QLNodeAndPodDetailsTableData data = (QLNodeAndPodDetailsTableData) nodeAndPodDetailsDataFetcher.fetch(
+        ACCOUNT_ID, aggregationFunctions, filters, groupBy, sortCriteria, LIMIT, OFFSET);
+
+    assertThat(data).isNotNull();
+    QLNodeAndPodDetailsTableRow row0 = data.getData().get(0);
+
+    assertThat(row0.getId()).isEqualTo(CLUSTER_ID + ":" + INSTANCE_ID);
+    assertThat(row0.getTotalCost()).isEqualTo(10.0);
+    assertThat(row0.getIdleCost()).isEqualTo(3.0);
+    assertThat(row0.getUnallocatedCost()).isEqualTo(4.0);
+    assertThat(row0.getNetworkCost()).isEqualTo(3.0);
+    assertThat(row0.getCpuAllocatable()).isEqualTo(-1D);
+    assertThat(row0.getMemoryAllocatable()).isEqualTo(-1D);
+    assertThat(row0.getMachineType()).isEqualTo(defaultStringValue);
+    assertThat(row0.getInstanceCategory()).isEqualTo(defaultStringValue);
+    assertThat(row0.getCreateTime()).isEqualTo(0L);
+    assertThat(row0.getDeleteTime()).isEqualTo(0L);
+    assertThat(row0.getNodePoolName()).isEqualTo(defaultStringValue);
+    assertThat(row0.getName()).isEqualTo(INSTANCE_NAME);
+  }
+
+  @Test
+  @Owner(developers = UTSAV)
+  @Category(UnitTests.class)
+  public void testFetchMethodPodDetailsWithTTLedInstanceData() {
+    final String defaultStringValue = "-";
+    when(instanceDataService.fetchInstanceDataForGivenInstances(Collections.singletonList(INSTANCE_ID)))
+        .thenReturn(Collections.emptyList());
+
+    List<QLBillingDataFilter> filters = new ArrayList<>();
+    filters.add(makeInstanceTypeFilter(new String[] {"K8S_POD"}));
+    filters.add(makeClusterFilter(new String[] {CLUSTER_ID}));
+    filters.add(makeTimeFilter(0L));
+
+    List<QLCCMGroupBy> groupBy = Arrays.asList(makeNodeEntityGroupBy(), makeClusterEntityGroupBy());
+    List<QLBillingSortCriteria> sortCriteria = Arrays.asList(makeAscByAmountSortingCriteria());
+    List<QLCCMAggregationFunction> aggregationFunctions = Arrays.asList(makeBillingAmtAggregation(),
+        makeIdleCostAggregation(), makeUnallocatedCostAggregation(), makeNetworkCostAggregation());
+
+    QLNodeAndPodDetailsTableData data = (QLNodeAndPodDetailsTableData) nodeAndPodDetailsDataFetcher.fetch(
+        ACCOUNT_ID, aggregationFunctions, filters, groupBy, sortCriteria, LIMIT, OFFSET);
+
+    assertThat(data).isNotNull();
+    QLNodeAndPodDetailsTableRow row0 = data.getData().get(0);
+
+    assertThat(row0.getId()).isEqualTo(INSTANCE_ID);
+    assertThat(row0.getTotalCost()).isEqualTo(10.0);
+    assertThat(row0.getIdleCost()).isEqualTo(3.0);
+    assertThat(row0.getCpuRequested()).isEqualTo(-1D);
+    assertThat(row0.getMemoryRequested()).isEqualTo(-1D);
+    assertThat(row0.getWorkload()).isEqualTo(defaultStringValue);
+    assertThat(row0.getNamespace()).isEqualTo(defaultStringValue);
+    assertThat(row0.getCreateTime()).isEqualTo(0L);
+    assertThat(row0.getDeleteTime()).isEqualTo(0L);
+    assertThat(row0.getNodePoolName()).isEqualTo(defaultStringValue);
+    assertThat(row0.getName()).isEqualTo(INSTANCE_NAME);
   }
 
   @Test
@@ -203,6 +281,7 @@ public class NodeAndPodDetailsDataFetcherTest extends AbstractDataFetcherTestBas
     assertThat(data.getData().get(0).getCpuRequested()).isEqualTo(CPU_UNITS / 1024);
     assertThat(data.getData().get(0).getCreateTime()).isEqualTo(USAGE_START_TIME.toEpochMilli());
     assertThat(data.getData().get(0).getNodePoolName()).isEqualTo("pool-ui-pr-non-preemptible");
+    assertThat(data.getData().get(0).getName()).isEqualTo(INSTANCE_NAME);
   }
 
   private void mockResultSet() throws SQLException {
@@ -221,6 +300,7 @@ public class NodeAndPodDetailsDataFetcherTest extends AbstractDataFetcherTestBas
     when(resultSet.getString("INSTANCEID")).thenAnswer((Answer<String>) invocation -> INSTANCE_ID);
     when(resultSet.getString("CLUSTERID")).thenAnswer((Answer<String>) invocation -> CLUSTER_ID);
     when(resultSet.getString("CLUSTERNAME")).thenAnswer((Answer<String>) invocation -> CLUSTER1_NAME);
+    when(resultSet.getString("INSTANCENAME")).thenAnswer((Answer<String>) invocation -> INSTANCE_NAME);
 
     returnResultSet(1);
   }
@@ -275,6 +355,11 @@ public class NodeAndPodDetailsDataFetcherTest extends AbstractDataFetcherTestBas
   private QLBillingDataFilter makeClusterFilter(String[] values) {
     QLIdFilter clusterFilter = QLIdFilter.builder().operator(QLIdOperator.EQUALS).values(values).build();
     return QLBillingDataFilter.builder().cluster(clusterFilter).build();
+  }
+
+  private QLBillingDataFilter makeInstanceTypeFilter(String[] values) {
+    QLIdFilter clusterFilter = QLIdFilter.builder().operator(QLIdOperator.EQUALS).values(values).build();
+    return QLBillingDataFilter.builder().instanceType(clusterFilter).build();
   }
 
   private QLBillingDataFilter makeParentInstanceIdFilter(String[] values) {
