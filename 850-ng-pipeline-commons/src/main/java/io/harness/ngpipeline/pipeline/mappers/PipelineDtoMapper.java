@@ -1,8 +1,10 @@
 package io.harness.ngpipeline.pipeline.mappers;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.exception.WingsException.USER;
 
 import io.harness.exception.InvalidRequestException;
+import io.harness.exception.YamlException;
 import io.harness.ng.core.mapper.TagMapper;
 import io.harness.ngpipeline.pipeline.beans.entities.NgPipelineEntity;
 import io.harness.ngpipeline.pipeline.beans.resources.NGPipelineResponseDTO;
@@ -22,11 +24,18 @@ import lombok.experimental.UtilityClass;
 @UtilityClass
 public class PipelineDtoMapper {
   public NgPipelineEntity toPipelineEntity(String accountId, String orgId, String projectId, String yaml) {
+    NgPipeline ngPipeline = null;
     try {
-      NgPipeline ngPipeline = YamlPipelineUtils.read(yaml, NgPipeline.class);
-      if (isEmpty(ngPipeline.getStages())) {
-        throw new InvalidRequestException("stages cannot be empty for the given pipeline");
-      }
+      ngPipeline = YamlPipelineUtils.read(yaml, NgPipeline.class);
+    } catch (IOException ex) {
+      throw new YamlException(ex.getMessage(), USER);
+    }
+
+    if (isEmpty(ngPipeline.getStages())) {
+      throw new InvalidRequestException("stages cannot be empty for the given pipeline");
+    }
+
+    try {
       return NgPipelineEntity.builder()
           .ngPipeline(ngPipeline)
           .yamlPipeline(yaml)
@@ -36,7 +45,7 @@ public class PipelineDtoMapper {
           .identifier(ngPipeline.getIdentifier())
           .tags(TagMapper.convertToList(ngPipeline.getTags()))
           .build();
-    } catch (IOException e) {
+    } catch (Exception e) {
       throw new InvalidRequestException("Cannot create inputSet entity due to " + e.getMessage());
     }
   }

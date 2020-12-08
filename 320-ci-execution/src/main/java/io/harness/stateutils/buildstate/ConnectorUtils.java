@@ -31,9 +31,7 @@ import io.harness.delegate.beans.connector.k8Connector.KubernetesClusterDetailsD
 import io.harness.delegate.beans.connector.k8Connector.KubernetesCredentialDTO;
 import io.harness.delegate.beans.connector.k8Connector.KubernetesCredentialType;
 import io.harness.exception.InvalidArgumentsException;
-import io.harness.exception.InvalidRequestException;
-import io.harness.exception.UnexpectedException;
-import io.harness.exception.WingsException;
+import io.harness.exception.ngexception.CIStageExecutionException;
 import io.harness.network.SafeHttpCall;
 import io.harness.ng.core.NGAccess;
 import io.harness.secretmanagerclient.services.api.SecretManagerClientService;
@@ -227,15 +225,16 @@ public class ConnectorUtils {
               .getData();
 
     } catch (Exception e) {
-      throw new UnexpectedException(format("Unable to get connector information : [%s] with scope: [%s]",
-                                        connectorRef.getIdentifier(), connectorRef.getScope()),
+      log.error(format("Unable to get connector information : [%s] with scope: [%s]", connectorRef.getIdentifier(),
+          connectorRef.getScope()));
+      throw new CIStageExecutionException(format("Unable to get connector information : [%s] with scope: [%s]",
+                                              connectorRef.getIdentifier(), connectorRef.getScope()),
           e);
     }
 
     if (!connectorDTO.isPresent()) {
-      throw new InvalidRequestException(format("Connector not found for identifier : [%s] with scope: [%s]",
-                                            connectorRef.getIdentifier(), connectorRef.getScope()),
-          WingsException.USER);
+      throw new CIStageExecutionException(format("Connector not found for identifier : [%s] with scope: [%s]",
+          connectorRef.getIdentifier(), connectorRef.getScope()));
     }
     return connectorDTO.get();
   }

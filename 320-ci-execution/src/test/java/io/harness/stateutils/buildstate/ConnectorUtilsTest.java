@@ -22,8 +22,7 @@ import io.harness.delegate.beans.connector.docker.DockerAuthCredentialsDTO;
 import io.harness.delegate.beans.connector.gitconnector.GitAuthenticationDTO;
 import io.harness.delegate.beans.connector.k8Connector.KubernetesAuthCredentialDTO;
 import io.harness.exception.InvalidArgumentsException;
-import io.harness.exception.InvalidRequestException;
-import io.harness.exception.UnexpectedException;
+import io.harness.exception.ngexception.CIStageExecutionException;
 import io.harness.executionplan.CIExecutionPlanTestHelper;
 import io.harness.executionplan.CIExecutionTest;
 import io.harness.ng.core.BaseNGAccess;
@@ -237,9 +236,9 @@ public class ConnectorUtilsTest extends CIExecutionTest {
         .thenReturn(Collections.singletonList(EncryptedDataDetail.builder().build()));
 
     assertThatThrownBy(() -> connectorUtils.getConnectorDetails(ngAccess, connectorId01))
-        .isInstanceOf(InvalidRequestException.class);
+        .isInstanceOf(CIStageExecutionException.class);
     assertThatThrownBy(() -> connectorUtils.getConnectorDetails(ngAccess, connectorId01))
-        .isInstanceOf(UnexpectedException.class);
+        .isInstanceOf(CIStageExecutionException.class);
   }
 
   @Test
