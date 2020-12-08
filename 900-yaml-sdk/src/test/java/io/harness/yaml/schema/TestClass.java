@@ -1,5 +1,6 @@
 package io.harness.yaml.schema;
 
+import io.harness.EntityType;
 import io.harness.yamlSchema.YamlSchemaRoot;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -22,7 +23,7 @@ public class TestClass {
 
   public static class ClassWithoutApiModelOverride implements TestInterface { String testString; }
 
-  @YamlSchemaRoot("testRoot")
+  @YamlSchemaRoot(EntityType.CONNECTORS)
   public static class ClassWhichContainsInterface {
     @NotNull Types type;
     @JsonProperty("spec")

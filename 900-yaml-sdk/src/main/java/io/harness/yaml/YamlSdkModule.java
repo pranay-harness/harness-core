@@ -2,8 +2,10 @@ package io.harness.yaml;
 
 import io.harness.exception.InvalidRequestException;
 import io.harness.govern.ProviderModule;
+import io.harness.yaml.schema.YamlSchemaHelper;
 import io.harness.yaml.snippets.dto.YamlSnippetsDTO;
 import io.harness.yaml.snippets.helper.YamlSnippetHelper;
+import io.harness.yaml.validator.YamlSchemaValidator;
 
 import com.google.inject.Guice;
 import com.google.inject.Injector;
@@ -19,7 +21,9 @@ import org.apache.commons.io.IOUtils;
 
 @Slf4j
 public class YamlSdkModule {
-  YamlSnippetHelper yamlSnippetHelper = new YamlSnippetHelper();
+  YamlSnippetHelper yamlSnippetHelper;
+  YamlSchemaValidator yamlSchemaValidator;
+  YamlSchemaHelper yamlSchemaHelper;
   private static YamlSdkModule defaultInstance;
 
   public static YamlSdkModule getDefaultInstance() {
@@ -52,8 +56,12 @@ public class YamlSdkModule {
       }
     });
     Injector injector = Guice.createInjector(modules);
-
+    yamlSnippetHelper = injector.getInstance(YamlSnippetHelper.class);
+    yamlSchemaValidator = injector.getInstance(YamlSchemaValidator.class);
+    yamlSchemaHelper = injector.getInstance(YamlSchemaHelper.class);
     initializeSnippets();
+    initializeValidatorWithSchema();
+    initializeSchemas();
   }
 
   /**
@@ -74,5 +82,19 @@ public class YamlSdkModule {
     } catch (Exception e) {
       throw new InvalidRequestException("Cannot initialize snippets", e);
     }
+  }
+
+  /**
+   * Initialises a static map which will help in fast validation against a schema.
+   */
+  private void initializeValidatorWithSchema() {
+    yamlSchemaValidator.populateSchemaInStaticMap(config.getSchemaBasePath());
+  }
+
+  /**
+   * Initialises a static map which will help in fast retrieval of schemas.
+   */
+  private void initializeSchemas() {
+    yamlSchemaHelper.initializeSchemaMaps(config.getSchemaBasePath());
   }
 }
