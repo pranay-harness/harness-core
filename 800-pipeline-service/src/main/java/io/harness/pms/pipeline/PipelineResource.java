@@ -26,6 +26,7 @@ import io.harness.pms.pipeline.service.PMSPipelineService;
 import io.harness.serializer.JsonUtils;
 import io.harness.utils.PageUtils;
 
+import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
@@ -201,7 +202,7 @@ public class PipelineResource {
   }
 
   @GET
-  @Path("/summary/plan/{pipelineIdentifier}")
+  @Path("/summary/execution/{pipelineIdentifier}")
   @ApiOperation(value = "Gets Plan Summary of a pipeline", nickname = "getPlanSummary")
   public ResponseDTO<PlanExecutionSummaryDTO> getPlanSummary(
       @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountId,
@@ -212,6 +213,11 @@ public class PipelineResource {
 
     String pipelineNodeUuid = generateUuid();
     String stageNodeUuid = generateUuid();
+    String ciStageUuid = generateUuid();
+    String ciUnitTest1Uuid = generateUuid();
+    String ciUnitTest2Uuid = generateUuid();
+    String cdStageUuid = generateUuid();
+    String cdRollingDeploymentId = generateUuid();
 
     Map<String, GraphLayoutNodeDTO> layoutNodeMap = new HashMap<>();
     GraphLayoutNodeDTO pipelineLayoutNode =
@@ -223,17 +229,70 @@ public class PipelineResource {
             .edgeLayoutList(EdgeLayoutListDTO.builder().nextIds(Collections.singletonList(stageNodeUuid)).build())
             .build();
 
-    GraphLayoutNodeDTO stageLayoutNode = GraphLayoutNodeDTO.builder()
-                                             .nodeUuid(stageNodeUuid)
-                                             .nodeType("stages")
-                                             .nodeIdentifier("stages")
-                                             .status(Status.QUEUED)
-                                             .edgeLayoutList(EdgeLayoutListDTO.builder().build())
-                                             .build();
+    GraphLayoutNodeDTO stageLayoutNode =
+        GraphLayoutNodeDTO.builder()
+            .nodeUuid(stageNodeUuid)
+            .nodeType("stages")
+            .nodeIdentifier("stages")
+            .status(Status.RUNNING)
+            .edgeLayoutList(EdgeLayoutListDTO.builder().nextIds(Lists.newArrayList(ciStageUuid)).build())
+            .build();
+    GraphLayoutNodeDTO ciStage =
+        GraphLayoutNodeDTO.builder()
+            .nodeUuid(ciStageUuid)
+            .nodeType("ciStage")
+            .nodeIdentifier("ciStage")
+            .status(Status.RUNNING)
+            .edgeLayoutList(EdgeLayoutListDTO.builder()
+                                .currentNodeChildren(Lists.newArrayList(ciUnitTest1Uuid, ciUnitTest2Uuid))
+                                .nextIds(Lists.newArrayList(cdStageUuid))
+                                .build())
+            .build();
+    GraphLayoutNodeDTO ciTest1 = GraphLayoutNodeDTO.builder()
+                                     .nodeUuid(ciUnitTest1Uuid)
+                                     .nodeType("ci_unit_tests_1")
+                                     .nodeIdentifier("ci_unit_tests_1")
+                                     .status(Status.SUCCEEDED)
+                                     .edgeLayoutList(EdgeLayoutListDTO.builder().build())
+                                     .build();
+    GraphLayoutNodeDTO ciTest2 = GraphLayoutNodeDTO.builder()
+                                     .nodeUuid(ciUnitTest2Uuid)
+                                     .nodeType("ci_unit_tests_2")
+                                     .nodeIdentifier("ci_unit_tests_2")
+                                     .status(Status.SKIPPED)
+                                     .edgeLayoutList(EdgeLayoutListDTO.builder().build())
+                                     .build();
+    GraphLayoutNodeDTO cdStage =
+        GraphLayoutNodeDTO.builder()
+            .nodeUuid(cdStageUuid)
+            .nodeType("cdStage")
+            .nodeIdentifier("cdStage")
+            .status(Status.RUNNING)
+            .edgeLayoutList(EdgeLayoutListDTO.builder().nextIds(Lists.newArrayList(cdRollingDeploymentId)).build())
+            .build();
+    GraphLayoutNodeDTO cdRollingDeployment = GraphLayoutNodeDTO.builder()
+                                                 .nodeUuid(cdRollingDeploymentId)
+                                                 .nodeType("Rolling Deployment")
+                                                 .nodeIdentifier("Rolling Deployments")
+                                                 .status(Status.TASK_WAITING)
+                                                 .edgeLayoutList(EdgeLayoutListDTO.builder().build())
+                                                 .build();
     layoutNodeMap.put(pipelineNodeUuid, pipelineLayoutNode);
     layoutNodeMap.put(stageNodeUuid, stageLayoutNode);
+    layoutNodeMap.put(ciStageUuid, ciStage);
+    layoutNodeMap.put(ciUnitTest1Uuid, ciTest1);
+    layoutNodeMap.put(ciUnitTest2Uuid, ciTest2);
+    layoutNodeMap.put(cdStageUuid, cdStage);
+    layoutNodeMap.put(cdRollingDeploymentId, cdRollingDeployment);
 
     Map<String, org.bson.Document> moduleInfo = new HashMap<>();
+    moduleInfo.put("CI",
+        new org.bson.Document().append("ciBuildBranchHook",
+            new org.bson.Document()
+                .append("name", "master")
+                .append("link", "https://github.com/wings-software/portal/blob/master/")
+                .append("state", "CLOSED")
+                .append("commits", "[]")));
     moduleInfo.put("CD", new org.bson.Document().append("DeploymentType", "k8s").append("namespace", "mock-namespace"));
 
     PlanExecutionSummaryDTO planExecutionSummaryDTO =
