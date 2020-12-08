@@ -109,7 +109,7 @@ import io.harness.delegate.task.validation.DelegateConnectionResultDetail;
 import io.harness.exception.UnexpectedException;
 import io.harness.expression.ExpressionReflectionUtils;
 import io.harness.filesystem.FileIo;
-import io.harness.grpc.DelegateServiceGrpcLiteClient;
+import io.harness.grpc.DelegateServiceGrpcAgentClient;
 import io.harness.logging.AutoLogContext;
 import io.harness.logstreaming.DelegateAgentLogStreamingClient;
 import io.harness.logstreaming.LogStreamingTaskClient;
@@ -297,7 +297,7 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
   @Inject(optional = true) @Nullable private PerpetualTaskWorker perpetualTaskWorker;
   @Inject(optional = true) @Nullable private DelegateAgentLogStreamingClient delegateAgentLogStreamingClient;
   @Inject DelegateTaskFactory delegateTaskFactory;
-  @Inject(optional = true) @Nullable private DelegateServiceGrpcLiteClient delegateServiceGrpcLiteClient;
+  @Inject(optional = true) @Nullable private DelegateServiceGrpcAgentClient delegateServiceGrpcAgentClient;
   @Inject private KryoSerializer kryoSerializer;
 
   private final AtomicBoolean waiter = new AtomicBoolean(true);
@@ -1911,12 +1911,12 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
             .appId(appId)
             .activityId(activityId);
 
-    if (isNotBlank(delegateTaskPackage.getDelegateCallbackToken()) && delegateServiceGrpcLiteClient != null) {
+    if (isNotBlank(delegateTaskPackage.getDelegateCallbackToken()) && delegateServiceGrpcAgentClient != null) {
       taskClientBuilder.taskProgressClient(TaskProgressClient.builder()
                                                .accountId(delegateTaskPackage.getAccountId())
                                                .taskId(delegateTaskPackage.getDelegateTaskId())
                                                .delegateCallbackToken(delegateTaskPackage.getDelegateCallbackToken())
-                                               .delegateServiceGrpcLiteClient(delegateServiceGrpcLiteClient)
+                                               .delegateServiceGrpcAgentClient(delegateServiceGrpcAgentClient)
                                                .kryoSerializer(kryoSerializer)
                                                .build());
     }

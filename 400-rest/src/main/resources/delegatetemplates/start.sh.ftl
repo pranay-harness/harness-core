@@ -212,6 +212,10 @@ export DELEGATE_PROFILE=${delegateProfile}
 export DELEGATE_TYPE=${delegateType}
 </#if>
 
+if [ -z "$MANAGER_SERVICE_SECRET" ]; then
+  export MANAGER_SERVICE_SECRET=${managerServiceSecret}
+fi
+
 export HOSTNAME
 export CAPSULE_CACHE_DIR="$DIR/.cache"
 

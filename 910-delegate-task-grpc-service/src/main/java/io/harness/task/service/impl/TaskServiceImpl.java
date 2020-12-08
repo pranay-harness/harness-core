@@ -8,7 +8,7 @@ import io.harness.delegate.TaskExecutionStage;
 import io.harness.delegate.TaskId;
 import io.harness.delegate.task.stepstatus.StepStatusTaskResponseData;
 import io.harness.exception.InvalidArgumentsException;
-import io.harness.grpc.DelegateServiceGrpcLiteClient;
+import io.harness.grpc.DelegateServiceGrpcAgentClient;
 import io.harness.serializer.KryoSerializer;
 import io.harness.task.converters.ResponseDataConverterRegistry;
 import io.harness.task.service.ExecuteParkedTaskRequest;
@@ -36,14 +36,14 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class TaskServiceImpl extends TaskServiceGrpc.TaskServiceImplBase {
-  private final DelegateServiceGrpcLiteClient delegateServiceGrpcLiteClient;
+  private final DelegateServiceGrpcAgentClient delegateServiceGrpcAgentClient;
   private final KryoSerializer kryoSerializer;
   private final ResponseDataConverterRegistry responseDataConverterRegistry;
 
   @Inject
-  public TaskServiceImpl(DelegateServiceGrpcLiteClient delegateServiceGrpcLiteClient, KryoSerializer kryoSerializer,
+  public TaskServiceImpl(DelegateServiceGrpcAgentClient delegateServiceGrpcAgentClient, KryoSerializer kryoSerializer,
       ResponseDataConverterRegistry responseDataConverterRegistry) {
-    this.delegateServiceGrpcLiteClient = delegateServiceGrpcLiteClient;
+    this.delegateServiceGrpcAgentClient = delegateServiceGrpcAgentClient;
     this.kryoSerializer = kryoSerializer;
     this.responseDataConverterRegistry = responseDataConverterRegistry;
   }
@@ -54,7 +54,7 @@ public class TaskServiceImpl extends TaskServiceGrpc.TaskServiceImplBase {
     log.info("Received fetchParkedTaskStatus call, accountId:{}, taskId:{}", request.getAccountId().getId(),
         request.getTaskId().getId());
     try {
-      delegateServiceGrpcLiteClient.executeParkedTask(request.getAccountId(), request.getTaskId());
+      delegateServiceGrpcAgentClient.executeParkedTask(request.getAccountId(), request.getTaskId());
       responseObserver.onNext(ExecuteParkedTaskResponse.newBuilder().setTaskId(request.getTaskId()).build());
       responseObserver.onCompleted();
     } catch (Exception ex) {
@@ -69,7 +69,7 @@ public class TaskServiceImpl extends TaskServiceGrpc.TaskServiceImplBase {
         request.getTaskId().getId());
     try {
       TaskExecutionStage taskExecutionStage =
-          delegateServiceGrpcLiteClient.taskProgress(request.getAccountId(), request.getTaskId());
+          delegateServiceGrpcAgentClient.taskProgress(request.getAccountId(), request.getTaskId());
       responseObserver.onNext(TaskProgressResponse.newBuilder().setCurrentStage(taskExecutionStage).build());
       responseObserver.onCompleted();
     } catch (Exception ex) {
@@ -85,7 +85,7 @@ public class TaskServiceImpl extends TaskServiceGrpc.TaskServiceImplBase {
         request.getAccountId().getId(), request.getTaskId().getId(), request.getCallbackToken().getToken());
     try {
       io.harness.delegate.FetchParkedTaskStatusResponse fetchParkedTaskStatusResponse =
-          delegateServiceGrpcLiteClient.fetchParkedTaskStatus(
+          delegateServiceGrpcAgentClient.fetchParkedTaskStatus(
               request.getAccountId(), request.getTaskId(), request.getCallbackToken());
       if (fetchParkedTaskStatusResponse.getFetchResults()) {
         responseObserver.onNext(buildFetchParkedTaskStatusResponse(
@@ -149,7 +149,7 @@ public class TaskServiceImpl extends TaskServiceGrpc.TaskServiceImplBase {
                                 .error(stepStatus.getErrorMessage())
                                 .build())
                 .build();
-        boolean success = delegateServiceGrpcLiteClient.sendTaskStatus(request.getAccountId(), request.getTaskId(),
+        boolean success = delegateServiceGrpcAgentClient.sendTaskStatus(request.getAccountId(), request.getTaskId(),
             request.getCallbackToken(), kryoSerializer.asDeflatedBytes(responseData));
 
         responseObserver.onNext(SendTaskStatusResponse.newBuilder().setSuccess(success).build());
@@ -170,7 +170,7 @@ public class TaskServiceImpl extends TaskServiceGrpc.TaskServiceImplBase {
     log.info("Received sendTaskStatus call, accountId:{}, taskId:{}, callbackToken:{}", request.getAccountId().getId(),
         request.getTaskId().getId(), request.getCallbackToken().getToken());
     try {
-      delegateServiceGrpcLiteClient.sendTaskProgressUpdate(request.getAccountId(), request.getTaskId(),
+      delegateServiceGrpcAgentClient.sendTaskProgressUpdate(request.getAccountId(), request.getTaskId(),
           request.getCallbackToken(), request.getTaskResponseData().getKryoResultsData().toByteArray());
       responseObserver.onNext(SendTaskProgressResponse.newBuilder().setSuccess(true).build());
       responseObserver.onCompleted();
