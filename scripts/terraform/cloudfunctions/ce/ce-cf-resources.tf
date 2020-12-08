@@ -70,14 +70,14 @@ data "archive_file" "ce-gcpdata" {
 }
 
 resource "google_storage_bucket_object" "ce-clusterdata-archive" {
-  name   = "ce-clusterdata.zip"
+  name   = "ce-clusterdata.${data.archive_file.ce-clusterdata.output_md5}.zip"
   bucket = "${google_storage_bucket.bucket1.name}"
   source = "${path.module}/files/ce-clusterdata.zip"
   depends_on = ["data.archive_file.ce-clusterdata"]
 }
 
 resource "google_storage_bucket_object" "ce-gcpdata-archive" {
-  name   = "ce-gcpdata.zip"
+  name = "ce-gcpdata.${data.archive_file.ce-gcpdata.output_md5}.zip"
   bucket = "${google_storage_bucket.bucket1.name}"
   source = "${path.module}/files/ce-gcpdata.zip"
   depends_on = ["data.archive_file.ce-gcpdata"]
