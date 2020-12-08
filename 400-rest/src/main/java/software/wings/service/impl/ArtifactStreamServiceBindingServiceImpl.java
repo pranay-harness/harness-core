@@ -1,5 +1,6 @@
 package software.wings.service.impl;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
@@ -12,14 +13,13 @@ import static software.wings.beans.Application.GLOBAL_APP_ID;
 
 import static java.lang.String.format;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.FeatureName;
 import io.harness.beans.SearchFilter.Operator;
 import io.harness.beans.SortOrder.OrderType;
-import io.harness.eraro.ErrorCode;
 import io.harness.eraro.Level;
 import io.harness.exception.InvalidArtifactServerException;
 import io.harness.exception.InvalidRequestException;
-import io.harness.exception.WingsException;
 import io.harness.ff.FeatureFlagService;
 
 import software.wings.beans.EntityType;
@@ -55,6 +55,7 @@ import org.hibernate.validator.constraints.NotEmpty;
 @Singleton
 @ValidateOnExecution
 @Slf4j
+@OwnedBy(CDC)
 public class ArtifactStreamServiceBindingServiceImpl implements ArtifactStreamServiceBindingService {
   @Inject private ServiceResourceService serviceResourceService;
   @Inject private ArtifactStreamService artifactStreamService;
@@ -491,20 +492,10 @@ public class ArtifactStreamServiceBindingServiceImpl implements ArtifactStreamSe
 
   @Override
   public Service getService(String appId, String artifactStreamId, boolean throwException) {
-    if (GLOBAL_APP_ID.equals(appId)) {
-      return getService(artifactStreamId, throwException);
-    }
-    return getService(listServices(appId, artifactStreamId), artifactStreamId, throwException);
-  }
-
-  @Override
-  public Service getService(String artifactStreamId, boolean throwException) {
-    return getService(listServices(artifactStreamId), artifactStreamId, throwException);
-  }
-
-  private Service getService(List<Service> services, String artifactStreamId, boolean throwException) {
+    List<Service> services = listServices(appId, artifactStreamId);
     if (isEmpty(services)) {
       if (throwException) {
+        artifactStreamService.delete(appId, artifactStreamId);
         throw new InvalidArtifactServerException(
             format("Artifact stream %s is a zombie.", artifactStreamId), Level.INFO, USER);
       }
@@ -516,23 +507,15 @@ public class ArtifactStreamServiceBindingServiceImpl implements ArtifactStreamSe
 
   @Override
   public String getServiceId(String appId, String artifactStreamId, boolean throwException) {
-    if (GLOBAL_APP_ID.equals(appId)) {
-      return getServiceId(artifactStreamId, throwException);
-    }
-
-    return getServiceId(listServiceIds(appId, artifactStreamId), artifactStreamId, throwException);
+    return getServiceId(appId, listServiceIds(appId, artifactStreamId), artifactStreamId, throwException);
   }
 
-  @Override
-  public String getServiceId(String artifactStreamId, boolean throwException) {
-    return getServiceId(listServiceIds(artifactStreamId), artifactStreamId, throwException);
-  }
-
-  private String getServiceId(List<String> serviceIds, String artifactStreamId, boolean throwException) {
+  private String getServiceId(String appId, List<String> serviceIds, String artifactStreamId, boolean throwException) {
     if (isEmpty(serviceIds)) {
       if (throwException) {
-        throw new WingsException(ErrorCode.GENERAL_ERROR, USER)
-            .addParam("message", format("Artifact stream %s is a zombie.", artifactStreamId));
+        artifactStreamService.delete(appId, artifactStreamId);
+        throw new InvalidArtifactServerException(
+            format("Artifact stream %s is a zombie.", artifactStreamId), Level.INFO, USER);
       }
       return null;
     }

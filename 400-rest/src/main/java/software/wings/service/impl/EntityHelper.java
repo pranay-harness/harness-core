@@ -290,7 +290,7 @@ public class EntityHelper {
       entityName = artifactStream.getName();
       appId = artifactStream.fetchAppId();
       // TODO: ASR: maybe change this to use setting_id
-      Service service = artifactStreamServiceBindingService.getService(artifactStream.getUuid(), false);
+      Service service = artifactStreamServiceBindingService.getService(appId, artifactStream.getUuid(), false);
       if (service == null) {
         affectedResourceId = "";
         affectedResourceName = "";
