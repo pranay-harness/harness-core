@@ -21,7 +21,7 @@ import lombok.extern.slf4j.Slf4j;
 @Singleton
 @NoArgsConstructor
 @Slf4j
-public class AzureWebAppListDeploymentDataTaskHandler extends AbstractAzureWebAppTaskHandler {
+public class AzureWebAppListWebAppInstancesTaskHandler extends AbstractAzureWebAppTaskHandler {
   @Inject private AzureAppServiceDeploymentService deploymentService;
 
   @Override

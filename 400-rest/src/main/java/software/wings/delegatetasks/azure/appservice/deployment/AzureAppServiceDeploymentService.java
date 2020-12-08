@@ -10,6 +10,7 @@ import static io.harness.azure.model.AzureConstants.STOP_DEPLOYMENT_SLOT;
 import static io.harness.azure.model.AzureConstants.SUCCESS_REQUEST;
 import static io.harness.azure.model.AzureConstants.UPDATE_DEPLOYMENT_SLOT_CONFIGURATION_SETTINGS;
 import static io.harness.azure.model.AzureConstants.UPDATE_DEPLOYMENT_SLOT_CONTAINER_SETTINGS;
+import static io.harness.azure.model.AzureConstants.WEB_APP_INSTANCE_STATUS_RUNNING;
 import static io.harness.azure.model.AzureConstants.WEB_APP_NAME_BLANK_ERROR_MSG;
 import static io.harness.logging.CommandExecutionStatus.SUCCESS;
 import static io.harness.logging.LogLevel.INFO;
@@ -49,11 +50,11 @@ import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.microsoft.azure.management.appservice.DeploymentSlot;
+import com.microsoft.azure.management.appservice.implementation.SiteInstanceInner;
 import com.microsoft.azure.management.containerregistry.Registry;
 import com.microsoft.azure.management.containerregistry.RegistryCredentials;
 import com.microsoft.azure.management.monitor.EventData;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -105,15 +106,25 @@ public class AzureAppServiceDeploymentService {
 
     DeploymentSlot deploymentSlot = deploymentSlotName.get();
 
-    return Collections.singletonList(AzureAppDeploymentData.builder()
-                                         .subscriptionId(azureWebClientContext.getSubscriptionId())
-                                         .resourceGroup(azureWebClientContext.getResourceGroupName())
-                                         .appName(azureWebClientContext.getAppName())
-                                         .deploySlot(slotName)
-                                         .deploySlotId(deploymentSlot.id())
-                                         .appServicePlanId(deploymentSlot.appServicePlanId())
-                                         .hostName(deploymentSlot.defaultHostName())
-                                         .build());
+    List<SiteInstanceInner> siteInstanceInners =
+        azureWebClient.listInstanceIdentifiersSlot(azureWebClientContext, slotName);
+
+    return siteInstanceInners.stream()
+        .map(siteInstanceInner
+            -> AzureAppDeploymentData.builder()
+                   .subscriptionId(azureWebClientContext.getSubscriptionId())
+                   .resourceGroup(azureWebClientContext.getResourceGroupName())
+                   .appName(azureWebClientContext.getAppName())
+                   .deploySlot(slotName)
+                   .deploySlotId(deploymentSlot.id())
+                   .appServicePlanId(deploymentSlot.appServicePlanId())
+                   .hostName(deploymentSlot.defaultHostName())
+                   .instanceId(siteInstanceInner.id())
+                   .instanceName(siteInstanceInner.name())
+                   .instanceType(siteInstanceInner.type())
+                   .instanceState(WEB_APP_INSTANCE_STATUS_RUNNING)
+                   .build())
+        .collect(Collectors.toList());
   }
 
   private void validateContextForDockerDeployment(AzureAppServiceDockerDeploymentContext deploymentContext) {

@@ -24,6 +24,7 @@ import software.wings.beans.infrastructure.instance.key.deployment.AwsAmiDeploym
 import software.wings.beans.infrastructure.instance.key.deployment.AwsCodeDeployDeploymentKey;
 import software.wings.beans.infrastructure.instance.key.deployment.AwsLambdaDeploymentKey;
 import software.wings.beans.infrastructure.instance.key.deployment.AzureVMSSDeploymentKey;
+import software.wings.beans.infrastructure.instance.key.deployment.AzureWebAppDeploymentKey;
 import software.wings.beans.infrastructure.instance.key.deployment.ContainerDeploymentKey;
 import software.wings.beans.infrastructure.instance.key.deployment.CustomDeploymentKey;
 import software.wings.beans.infrastructure.instance.key.deployment.CustomDeploymentKey.CustomDeploymentFieldKeys;
@@ -174,6 +175,11 @@ public class DeploymentServiceImpl implements DeploymentService {
       AzureVMSSDeploymentKey azureVMSSDeploymentKey = deploymentSummary.getAzureVMSSDeploymentKey();
       query.filter("azureVMSSDeploymentKey.vmssId", azureVMSSDeploymentKey.getVmssId());
       return azureVMSSDeploymentKey;
+    } else if (deploymentSummary.getAzureWebAppDeploymentKey() != null) {
+      AzureWebAppDeploymentKey azureWebAppDeploymentKey = deploymentSummary.getAzureWebAppDeploymentKey();
+      query.filter("azureWebAppDeploymentKey.appName", azureWebAppDeploymentKey.getAppName());
+      query.filter("azureWebAppDeploymentKey.slotName", azureWebAppDeploymentKey.getSlotName());
+      return azureWebAppDeploymentKey;
     } else {
       String msg = "Either AMI, CodeDeploy, container or pcf deployment key needs to be set";
       log.error(msg);

@@ -166,4 +166,7 @@ public interface AzureConstants {
   String DOCKER_HUB_PRIVATE = "DOCKER_HUB_PRIVATE";
   String DOCKER_HUB_PUBLIC = "DOCKER_HUB_PUBLIC";
   String ARTIFACTORY_PRIVATE_REGISTRY = "ARTIFACTORY_PRIVATE_REGISTRY";
+
+  // Web App Instance status
+  String WEB_APP_INSTANCE_STATUS_RUNNING = "Running";
 }

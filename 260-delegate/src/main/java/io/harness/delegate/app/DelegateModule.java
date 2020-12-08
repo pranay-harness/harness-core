@@ -205,8 +205,8 @@ import software.wings.delegatetasks.aws.ecs.ecstaskhandler.deploy.EcsRunTaskDepl
 import software.wings.delegatetasks.azure.AzureVMSSTask;
 import software.wings.delegatetasks.azure.appservice.AbstractAzureAppServiceTaskHandler;
 import software.wings.delegatetasks.azure.appservice.AzureAppServiceTask;
-import software.wings.delegatetasks.azure.appservice.webapp.taskhandler.AzureWebAppListDeploymentDataTaskHandler;
 import software.wings.delegatetasks.azure.appservice.webapp.taskhandler.AzureWebAppListWebAppDeploymentSlotNamesTaskHandler;
+import software.wings.delegatetasks.azure.appservice.webapp.taskhandler.AzureWebAppListWebAppInstancesTaskHandler;
 import software.wings.delegatetasks.azure.appservice.webapp.taskhandler.AzureWebAppListWebAppNamesTaskHandler;
 import software.wings.delegatetasks.azure.appservice.webapp.taskhandler.AzureWebAppRollbackTaskHandler;
 import software.wings.delegatetasks.azure.appservice.webapp.taskhandler.AzureWebAppSlotSetupTaskHandler;
@@ -880,8 +880,8 @@ public class DelegateModule extends AbstractModule {
     azureAppServiceTaskTypeToTaskHandlerMap
         .addBinding(AzureAppServiceTaskType.LIST_WEB_APP_DEPLOYMENT_SLOT_NAMES.name())
         .to(AzureWebAppListWebAppDeploymentSlotNamesTaskHandler.class);
-    azureAppServiceTaskTypeToTaskHandlerMap.addBinding(AzureAppServiceTaskType.LIST_WEB_APP_DEPLOYMENT_DATA.name())
-        .to(AzureWebAppListDeploymentDataTaskHandler.class);
+    azureAppServiceTaskTypeToTaskHandlerMap.addBinding(AzureAppServiceTaskType.LIST_WEB_APP_INSTANCES_DATA.name())
+        .to(AzureWebAppListWebAppInstancesTaskHandler.class);
     azureAppServiceTaskTypeToTaskHandlerMap.addBinding(AzureAppServiceTaskType.SLOT_SETUP.name())
         .to(AzureWebAppSlotSetupTaskHandler.class);
     azureAppServiceTaskTypeToTaskHandlerMap.addBinding(AzureAppServiceTaskType.SLOT_SHIFT_TRAFFIC.name())

@@ -11,6 +11,7 @@ import static java.lang.String.format;
 import static java.util.Collections.emptyMap;
 import static java.util.Optional.of;
 import static java.util.stream.Collectors.toSet;
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 import io.harness.beans.FeatureName;
 import io.harness.delegate.beans.DelegateResponseData;
@@ -196,32 +197,25 @@ public class AzureWebAppInstanceHandler extends InstanceHandler implements Insta
     Set<String> instanceIdsToBeAdded =
         difference(latestSlotWebAppInstances.keySet(), latestSlotWebAppInstancesInDb.keySet());
 
-    if (isNotEmpty(instanceIdsToBeAdded)) {
-      DeploymentSummary finalDeploymentSummary;
-      if (deploymentSummary == null && isNotEmpty(latestSlotWebAppInstancesInDb)) {
-        Optional<Instance> instanceWithExecutionInfoOptional = getInstanceWithExecutionInfo(currentInstancesInDb);
-        if (!instanceWithExecutionInfoOptional.isPresent()) {
-          log.warn("Couldn't find an instance from a previous deployment for inframapping: [{}]",
-              infrastructureMapping.getUuid());
-          return;
-        }
-
-        DeploymentSummary deploymentSummaryFromPrevious =
-            DeploymentSummary.builder().deploymentInfo(AzureWebAppDeploymentInfo.builder().build()).build();
-        generateDeploymentSummaryFromInstance(instanceWithExecutionInfoOptional.get(), deploymentSummaryFromPrevious);
-        finalDeploymentSummary = deploymentSummaryFromPrevious;
-      } else {
-        finalDeploymentSummary = getDeploymentSummaryForInstanceCreation(deploymentSummary, false);
-      }
-
-      instanceIdsToBeAdded.forEach(instanceId -> {
-        AzureAppDeploymentData deploymentData = latestSlotWebAppInstances.get(instanceId);
-        Instance instance = getInstance(infrastructureMapping, finalDeploymentSummary, deploymentData);
-        instanceService.save(instance);
-      });
-
-      log.info("Instances to be added {}", instanceIdsToBeAdded.size());
+    if (isEmpty(instanceIdsToBeAdded)) {
+      return;
     }
+
+    Optional<DeploymentSummary> deploymentSummaryOp =
+        getDeploymentSummary(deploymentSummary, latestSlotWebAppInstancesInDb, currentInstancesInDb);
+    if (!deploymentSummaryOp.isPresent()) {
+      log.warn("Couldn't find an instance from a previous deployment for inframapping: [{}]",
+          infrastructureMapping.getUuid());
+      return;
+    }
+
+    instanceIdsToBeAdded.forEach(instanceId -> {
+      AzureAppDeploymentData webAppInstance = latestSlotWebAppInstances.get(instanceId);
+      Instance instance = getInstance(infrastructureMapping, deploymentSummaryOp.get(), webAppInstance);
+      instanceService.save(instance);
+    });
+
+    log.info("Instances to be added {}", instanceIdsToBeAdded.size());
   }
 
   private Map<String, Instance> getInstanceIdToInstanceInDbMap(Collection<Instance> currentInstancesInDb) {
@@ -259,22 +253,42 @@ public class AzureWebAppInstanceHandler extends InstanceHandler implements Insta
     }
   }
 
+  public Optional<DeploymentSummary> getDeploymentSummary(DeploymentSummary deploymentSummary,
+      Map<String, Instance> latestSlotWebAppInstancesInDb, Collection<Instance> currentInstancesInDb) {
+    if (deploymentSummary == null && isNotEmpty(latestSlotWebAppInstancesInDb)) {
+      Optional<Instance> instanceWithExecutionInfoOptional = getInstanceWithExecutionInfo(currentInstancesInDb);
+      return instanceWithExecutionInfoOptional.map(this::getDeploymentSummaryFromPrevious);
+    } else {
+      return Optional.of(getDeploymentSummaryForInstanceCreation(deploymentSummary, false));
+    }
+  }
+
+  @NotNull
+  private DeploymentSummary getDeploymentSummaryFromPrevious(Instance instanceWithExecutionInfo) {
+    DeploymentSummary deploymentSummaryFromPrevious =
+        DeploymentSummary.builder().deploymentInfo(AzureWebAppDeploymentInfo.builder().build()).build();
+    generateDeploymentSummaryFromInstance(instanceWithExecutionInfo, deploymentSummaryFromPrevious);
+    return deploymentSummaryFromPrevious;
+  }
+
   private Instance getInstance(AzureWebAppInfrastructureMapping infrastructureMapping,
-      DeploymentSummary finalDeploymentSummary, AzureAppDeploymentData deploymentData) {
+      DeploymentSummary finalDeploymentSummary, AzureAppDeploymentData webAppInstance) {
     InstanceBuilder instanceBuilder = buildInstanceBase(null, infrastructureMapping, finalDeploymentSummary);
-    InstanceInfo instanceInfo = toAzureWebAppInstanceInfo(deploymentData);
+    InstanceInfo instanceInfo = toAzureWebAppInstanceInfo(webAppInstance);
     instanceBuilder.instanceInfo(instanceInfo);
     return instanceBuilder.build();
   }
 
-  private AzureWebAppInstanceInfo toAzureWebAppInstanceInfo(AzureAppDeploymentData deploymentData) {
+  private AzureWebAppInstanceInfo toAzureWebAppInstanceInfo(AzureAppDeploymentData webAppInstance) {
     return AzureWebAppInstanceInfo.builder()
-        .instanceId(deploymentData.getInstanceId())
-        .slotName(deploymentData.getDeploySlot())
-        .slotId(deploymentData.getDeploySlotId())
-        .appName(deploymentData.getAppName())
-        .host(deploymentData.getHostName())
-        .appServicePlanId(deploymentData.getAppServicePlanId())
+        .instanceId(webAppInstance.getInstanceId())
+        .slotName(webAppInstance.getDeploySlot())
+        .slotId(webAppInstance.getDeploySlotId())
+        .appName(webAppInstance.getAppName())
+        .host(webAppInstance.getHostName())
+        .appServicePlanId(webAppInstance.getAppServicePlanId())
+        .instanceType(webAppInstance.getInstanceType())
+        .state(webAppInstance.getInstanceState())
         .build();
   }
 
@@ -298,7 +312,7 @@ public class AzureWebAppInstanceHandler extends InstanceHandler implements Insta
 
   private String getAppNameAndSlotNameKey(DeploymentSummary summary) {
     AzureWebAppDeploymentKey azureWebAppDeploymentKey = summary.getAzureWebAppDeploymentKey();
-    return azureWebAppDeploymentKey.getAppName().concat("_").concat(azureWebAppDeploymentKey.getSlotName());
+    return azureWebAppDeploymentKey.getKey();
   }
 
   @Override
@@ -337,11 +351,33 @@ public class AzureWebAppInstanceHandler extends InstanceHandler implements Insta
               .findFirst();
       if (stepExecutionSummaryOptional.isPresent()) {
         List<DeploymentInfo> deploymentInfoList = new ArrayList<>();
+        AzureAppServiceSlotSetupExecutionSummary azureAppServiceSlotSetupExecutionSummary =
+            (AzureAppServiceSlotSetupExecutionSummary) stepExecutionSummaryOptional.get();
+        addNewWebInstanceToDeploymentList(deploymentInfoList, azureAppServiceSlotSetupExecutionSummary);
+        addOldWebInstanceToDeploymentList(deploymentInfoList, azureAppServiceSlotSetupExecutionSummary);
         return of(deploymentInfoList);
       }
     }
 
     return Optional.empty();
+  }
+
+  private void addNewWebInstanceToDeploymentList(List<DeploymentInfo> deploymentInfoList,
+      AzureAppServiceSlotSetupExecutionSummary azureAppServiceSlotSetupExecutionSummary) {
+    String newAppName = azureAppServiceSlotSetupExecutionSummary.getNewAppName();
+    String newSlotName = azureAppServiceSlotSetupExecutionSummary.getNewSlotName();
+    if (isNotBlank(newAppName) && isNotBlank(newSlotName)) {
+      deploymentInfoList.add(AzureWebAppDeploymentInfo.builder().appName(newAppName).slotName(newSlotName).build());
+    }
+  }
+
+  private void addOldWebInstanceToDeploymentList(List<DeploymentInfo> deploymentInfoList,
+      AzureAppServiceSlotSetupExecutionSummary azureAppServiceSlotSetupExecutionSummary) {
+    String oldAppName = azureAppServiceSlotSetupExecutionSummary.getOldAppName();
+    String oldSlotName = azureAppServiceSlotSetupExecutionSummary.getOldSlotName();
+    if (isNotBlank(oldAppName) && isNotBlank(oldSlotName)) {
+      deploymentInfoList.add(AzureWebAppDeploymentInfo.builder().appName(oldAppName).slotName(oldSlotName).build());
+    }
   }
 
   @Override
@@ -370,11 +406,11 @@ public class AzureWebAppInstanceHandler extends InstanceHandler implements Insta
 
   @NotNull
   private String getAppNameAndSlotNameKey(AzureWebAppInstanceInfo azureWebAppInstanceInfo) {
-    return azureWebAppInstanceInfo.getAppName().concat("_").concat(azureWebAppInstanceInfo.getSlotName());
+    return format("%s_%s", azureWebAppInstanceInfo.getAppName(), azureWebAppInstanceInfo.getSlotName());
   }
 
   @NotNull
   private String getAppNameAndSlotNameKey(AzureAppDeploymentData azureAppDeploymentData) {
-    return azureAppDeploymentData.getAppName().concat("_").concat(azureAppDeploymentData.getDeploySlot());
+    return format("%s_%s", azureAppDeploymentData.getAppName(), azureAppDeploymentData.getDeploySlot());
   }
 }

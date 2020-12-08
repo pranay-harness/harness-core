@@ -134,10 +134,10 @@ public class AzureSweepingOutputServiceHelper {
       AzureWebAppInfrastructureMapping infraMapping, List<AzureAppDeploymentData> appDeploymentData) {
     return appDeploymentData.stream()
         .filter(Objects::nonNull)
-        .map(appDeploy -> {
+        .map(webAppInstance -> {
           Host host = aHost()
-                          .withHostName(appDeploy.getHostName())
-                          .withPublicDns(appDeploy.getAppName())
+                          .withHostName(webAppInstance.getAppName())
+                          .withPublicDns(webAppInstance.getHostName())
                           .withAppId(infraMapping.getAppId())
                           .withEnvId(infraMapping.getEnvId())
                           .withHostConnAttr(infraMapping.getHostConnectionAttrs())
@@ -148,19 +148,19 @@ public class AzureSweepingOutputServiceHelper {
           Host savedHost = hostService.saveHost(host);
           HostElement hostElement = HostElement.builder()
                                         .uuid(savedHost.getUuid())
-                                        .publicDns(appDeploy.getHostName())
-                                        .ip(appDeploy.getHostName())
-                                        .appDeploymentData(appDeploy)
-                                        .instanceId(appDeploy.getHostName())
+                                        .publicDns(webAppInstance.getHostName())
+                                        .ip(webAppInstance.getInstanceIp())
+                                        .webAppInstance(webAppInstance)
+                                        .instanceId(webAppInstance.getHostName())
                                         .build();
           final Map<String, Object> contextMap = context.asMap();
           contextMap.put(HOST, hostElement);
           String hostName = getHostnameFromConvention(contextMap, "");
           hostElement.setHostName(hostName);
           return anInstanceElement()
-              .uuid(appDeploy.getDeploySlotId())
+              .uuid(webAppInstance.getDeploySlotId())
               .hostName(hostName)
-              .displayName(appDeploy.getHostName())
+              .displayName(webAppInstance.getHostName())
               .host(hostElement)
               .newInstance(true)
               .build();
@@ -177,13 +177,15 @@ public class AzureSweepingOutputServiceHelper {
                    .newInstance(true)
                    .hostName(instanceElement.getHostName())
                    .azureWebapp(InstanceDetails.AZURE_WEBAPP.builder()
-                                    .subscriptionId(instanceElement.getSubscriptionId())
-                                    .resourceGroup(instanceElement.getResourceGroup())
+                                    .ip(instanceElement.getInstanceIp())
                                     .appName(instanceElement.getAppName())
                                     .appServicePlanId(instanceElement.getAppServicePlanId())
                                     .deploySlot(instanceElement.getDeploySlot())
                                     .deploySlotId(instanceElement.getDeploySlotId())
-                                    .defaultHostName(instanceElement.getHostName())
+                                    .instanceHostName(instanceElement.getHostName())
+                                    .instanceId(instanceElement.getInstanceId())
+                                    .instanceName(instanceElement.getInstanceName())
+                                    .instanceType(instanceElement.getInstanceType())
                                     .build())
                    .build())
         .collect(toList());

@@ -11,4 +11,9 @@ import lombok.EqualsAndHashCode;
 @Data
 @Builder
 @EqualsAndHashCode(callSuper = true)
-public class AzureAppServiceSlotSetupExecutionSummary extends StepExecutionSummary {}
+public class AzureAppServiceSlotSetupExecutionSummary extends StepExecutionSummary {
+  private String oldAppName;
+  private String oldSlotName;
+  private String newAppName;
+  private String newSlotName;
+}

@@ -18,7 +18,7 @@ import lombok.NoArgsConstructor;
 public class AzureAppServiceTaskParameters extends AzureTaskParameters {
   private static final Set<AzureAppServiceTaskType> SYNC_TASK_TYPES = newHashSet(
       AzureAppServiceTaskParameters.AzureAppServiceTaskType.LIST_WEB_APP_NAMES,
-      AzureAppServiceTaskType.LIST_WEB_APP_DEPLOYMENT_SLOT_NAMES, AzureAppServiceTaskType.LIST_WEB_APP_DEPLOYMENT_DATA);
+      AzureAppServiceTaskType.LIST_WEB_APP_DEPLOYMENT_SLOT_NAMES, AzureAppServiceTaskType.LIST_WEB_APP_INSTANCES_DATA);
 
   @NotNull private AzureAppServiceTaskType commandType;
   @NotNull private AzureAppServiceType appServiceType;
@@ -38,7 +38,7 @@ public class AzureAppServiceTaskParameters extends AzureTaskParameters {
   public enum AzureAppServiceTaskType {
     LIST_WEB_APP_NAMES,
     LIST_WEB_APP_DEPLOYMENT_SLOT_NAMES,
-    LIST_WEB_APP_DEPLOYMENT_DATA,
+    LIST_WEB_APP_INSTANCES_DATA,
     SLOT_SETUP,
     SLOT_SHIFT_TRAFFIC,
     SLOT_SWAP,

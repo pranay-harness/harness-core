@@ -34,6 +34,7 @@ import com.microsoft.azure.management.appservice.Experiments;
 import com.microsoft.azure.management.appservice.RampUpRule;
 import com.microsoft.azure.management.appservice.WebApp;
 import com.microsoft.azure.management.appservice.implementation.SiteConfigResourceInner;
+import com.microsoft.azure.management.appservice.implementation.SiteInstanceInner;
 import com.microsoft.azure.management.appservice.implementation.StringDictionaryInner;
 import java.time.Duration;
 import java.time.Instant;
@@ -538,5 +539,23 @@ public class AzureWebClientImpl extends AzureClient implements AzureWebClient {
 
   private String getDeploymentSlotDefaultHostName(AzureWebClientContext context, String slotName) {
     return getDeploymentSlot(context, slotName).defaultHostName();
+  }
+
+  public List<SiteInstanceInner> listInstanceIdentifiersSlot(AzureWebClientContext context, String slotName) {
+    Azure azure = getAzureClientByContext(context);
+    String appName = context.getAppName();
+    String resourceGroupName = context.getResourceGroupName();
+
+    log.debug("Start listing instance identifiers for slot, resourceGroupName: {}, slotName: {}, context: {}",
+        resourceGroupName, slotName, context);
+    PagedList<SiteInstanceInner> siteInstanceInners =
+        azure.webApps().inner().listInstanceIdentifiersSlot(resourceGroupName, appName, slotName);
+
+    List<SiteInstanceInner> siteInstanceInnersList = new ArrayList<>();
+    for (SiteInstanceInner siteInstanceInner : siteInstanceInners) {
+      siteInstanceInnersList.add(siteInstanceInner);
+    }
+
+    return siteInstanceInnersList;
   }
 }
