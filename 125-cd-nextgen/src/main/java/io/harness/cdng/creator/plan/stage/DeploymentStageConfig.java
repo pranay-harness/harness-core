@@ -1,11 +1,11 @@
 package io.harness.cdng.creator.plan.stage;
 
-import io.harness.beans.ParameterField;
 import io.harness.cdng.pipeline.PipelineInfrastructure;
 import io.harness.cdng.service.beans.ServiceConfig;
 import io.harness.common.SwaggerConstants;
 import io.harness.plancreator.execution.ExecutionElementConfig;
 import io.harness.plancreator.stages.stage.StageInfoConfig;
+import io.harness.pms.yaml.ParameterField;
 import io.harness.yaml.core.variables.NGVariable;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;

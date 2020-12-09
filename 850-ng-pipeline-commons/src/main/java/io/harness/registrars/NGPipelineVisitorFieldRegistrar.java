@@ -1,7 +1,7 @@
 package io.harness.registrars;
 
-import io.harness.beans.ParameterField;
 import io.harness.ngpipeline.inputset.ParameterVisitorFieldProcessor;
+import io.harness.pms.yaml.ParameterField;
 import io.harness.walktree.registries.registrars.VisitableFieldRegistrar;
 import io.harness.walktree.registries.visitorfield.VisitableFieldProcessor;
 import io.harness.walktree.registries.visitorfield.VisitorFieldType;

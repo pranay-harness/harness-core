@@ -1,6 +1,5 @@
 package io.harness.cdng.manifest.yaml.kinds;
 
-import io.harness.beans.ParameterField;
 import io.harness.cdng.manifest.ManifestType;
 import io.harness.cdng.manifest.ValuesPathProvider;
 import io.harness.cdng.manifest.yaml.ManifestAttributes;
@@ -9,6 +8,7 @@ import io.harness.cdng.manifest.yaml.StoreConfigWrapper;
 import io.harness.cdng.visitor.YamlTypes;
 import io.harness.cdng.visitor.helpers.manifest.K8sManifestVisitorHelper;
 import io.harness.data.validator.EntityIdentifier;
+import io.harness.pms.yaml.ParameterField;
 import io.harness.walktree.beans.LevelNode;
 import io.harness.walktree.beans.VisitableChildren;
 import io.harness.walktree.visitor.SimpleVisitorHelper;

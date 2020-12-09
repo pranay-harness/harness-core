@@ -7,7 +7,6 @@ import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.CiBeansTestBase;
-import io.harness.beans.ParameterField;
 import io.harness.beans.stages.IntegrationStage;
 import io.harness.beans.steps.stepinfo.GitCloneStepInfo;
 import io.harness.beans.steps.stepinfo.PluginStepInfo;
@@ -27,6 +26,7 @@ import io.harness.category.element.UnitTests;
 import io.harness.encryption.Scope;
 import io.harness.encryption.SecretRefData;
 import io.harness.ngpipeline.pipeline.beans.yaml.NgPipeline;
+import io.harness.pms.yaml.ParameterField;
 import io.harness.rule.Owner;
 import io.harness.yaml.core.ExecutionElement;
 import io.harness.yaml.core.ParallelStepElement;

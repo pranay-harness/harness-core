@@ -2,9 +2,9 @@ package io.harness.cdng.visitor.helpers.artifact;
 
 import io.harness.EntityType;
 import io.harness.beans.IdentifierRef;
-import io.harness.beans.ParameterField;
 import io.harness.cdng.artifact.bean.yaml.DockerHubArtifactConfig;
 import io.harness.ng.core.EntityDetail;
+import io.harness.pms.yaml.ParameterField;
 import io.harness.utils.IdentifierRefHelper;
 import io.harness.walktree.visitor.entityreference.EntityReferenceExtractor;
 import io.harness.walktree.visitor.validation.ConfigValidator;

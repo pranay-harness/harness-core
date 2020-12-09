@@ -2,8 +2,8 @@ package io.harness.expression.field.dummy;
 
 import io.harness.expression.EngineExpressionEvaluator;
 import io.harness.pms.ambiance.Ambiance;
-import io.harness.pms.sdk.core.expression.OrchestrationFieldProcessor;
-import io.harness.pms.sdk.core.expression.ProcessorResult;
+import io.harness.pms.expression.OrchestrationFieldProcessor;
+import io.harness.pms.expression.ProcessorResult;
 
 import lombok.AllArgsConstructor;
 import lombok.NoArgsConstructor;

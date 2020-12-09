@@ -9,7 +9,6 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import io.harness.app.beans.dto.CIPipelineFilterDTO;
-import io.harness.beans.ParameterField;
 import io.harness.beans.stages.IntegrationStage;
 import io.harness.beans.steps.stepinfo.TestIntelligenceStepInfo;
 import io.harness.category.element.UnitTests;
@@ -18,6 +17,7 @@ import io.harness.ngpipeline.pipeline.beans.entities.NgPipelineEntity;
 import io.harness.ngpipeline.pipeline.beans.yaml.NgPipeline;
 import io.harness.ngpipeline.pipeline.mappers.PipelineDtoMapper;
 import io.harness.ngpipeline.pipeline.service.NGPipelineServiceImpl;
+import io.harness.pms.yaml.ParameterField;
 import io.harness.repositories.pipeline.spring.NgPipelineRepository;
 import io.harness.rule.Owner;
 import io.harness.yaml.core.ExecutionElement;

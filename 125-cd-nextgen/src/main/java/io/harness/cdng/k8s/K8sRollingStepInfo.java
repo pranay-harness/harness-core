@@ -1,6 +1,5 @@
 package io.harness.cdng.k8s;
 
-import io.harness.beans.ParameterField;
 import io.harness.cdng.executionplan.CDStepDependencyKey;
 import io.harness.cdng.pipeline.CDStepInfo;
 import io.harness.cdng.stepsdependency.constants.OutcomeExpressionConstants;
@@ -16,6 +15,7 @@ import io.harness.executionplan.utils.ParentPathInfoUtils;
 import io.harness.executions.steps.StepSpecTypeConstants;
 import io.harness.pms.sdk.core.facilitator.OrchestrationFacilitatorType;
 import io.harness.pms.steps.StepType;
+import io.harness.pms.yaml.ParameterField;
 import io.harness.walktree.beans.LevelNode;
 import io.harness.walktree.visitor.SimpleVisitorHelper;
 import io.harness.walktree.visitor.Visitable;

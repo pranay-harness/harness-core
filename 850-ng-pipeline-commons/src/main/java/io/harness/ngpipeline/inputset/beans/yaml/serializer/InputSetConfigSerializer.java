@@ -1,9 +1,9 @@
 package io.harness.ngpipeline.inputset.beans.yaml.serializer;
 
-import io.harness.beans.ParameterField;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.ngpipeline.inputset.beans.yaml.InputSetConfig;
 import io.harness.ngpipeline.pipeline.beans.yaml.NgPipeline;
+import io.harness.pms.yaml.ParameterField;
 import io.harness.reflection.ReflectionUtils;
 
 import com.fasterxml.jackson.core.JsonGenerator;

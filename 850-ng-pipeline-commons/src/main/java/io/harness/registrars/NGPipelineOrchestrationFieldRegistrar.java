@@ -1,10 +1,10 @@
 package io.harness.registrars;
 
-import io.harness.beans.ParameterField;
 import io.harness.ngpipeline.expressions.ParameterFieldProcessor;
-import io.harness.pms.sdk.core.expression.OrchestrationFieldProcessor;
-import io.harness.pms.sdk.core.expression.OrchestrationFieldType;
+import io.harness.pms.expression.OrchestrationFieldProcessor;
+import io.harness.pms.expression.OrchestrationFieldType;
 import io.harness.pms.sdk.registries.registrar.OrchestrationFieldRegistrar;
+import io.harness.pms.yaml.ParameterField;
 
 import com.google.inject.Inject;
 import com.google.inject.Injector;

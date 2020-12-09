@@ -1,15 +1,15 @@
 package io.harness.ngpipeline.expressions;
 
-import io.harness.beans.InputSetValidator;
-import io.harness.beans.ParameterField;
 import io.harness.engine.expressions.EngineExpressionService;
 import io.harness.expression.EngineExpressionEvaluator;
 import io.harness.ngpipeline.inputset.validators.InputSetValidatorFactory;
 import io.harness.ngpipeline.inputset.validators.RuntimeValidator;
 import io.harness.ngpipeline.inputset.validators.RuntimeValidatorResponse;
 import io.harness.pms.ambiance.Ambiance;
-import io.harness.pms.sdk.core.expression.OrchestrationFieldProcessor;
-import io.harness.pms.sdk.core.expression.ProcessorResult;
+import io.harness.pms.expression.OrchestrationFieldProcessor;
+import io.harness.pms.expression.ProcessorResult;
+import io.harness.pms.yaml.ParameterField;
+import io.harness.pms.yaml.validation.InputSetValidator;
 
 import com.google.inject.Inject;
 

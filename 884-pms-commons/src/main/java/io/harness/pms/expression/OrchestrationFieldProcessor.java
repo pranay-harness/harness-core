@@ -1,4 +1,4 @@
-package io.harness.pms.sdk.core.expression;
+package io.harness.pms.expression;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 

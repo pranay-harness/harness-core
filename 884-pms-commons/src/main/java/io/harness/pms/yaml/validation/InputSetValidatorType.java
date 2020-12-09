@@ -1,4 +1,4 @@
-package io.harness.beans;
+package io.harness.pms.yaml.validation;
 
 public enum InputSetValidatorType {
   ALLOWED_VALUES("allowedValues"),

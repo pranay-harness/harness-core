@@ -1,4 +1,4 @@
-package io.harness.serializer;
+package io.harness.serializer.morphia;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 

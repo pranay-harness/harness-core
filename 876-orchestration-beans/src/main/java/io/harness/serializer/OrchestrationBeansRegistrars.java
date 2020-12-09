@@ -4,6 +4,7 @@ import io.harness.morphia.MorphiaRegistrar;
 import io.harness.pms.serializer.kryo.PmsContractsKryoRegistrar;
 import io.harness.serializer.kryo.OrchestrationBeansKryoRegistrar;
 import io.harness.serializer.morphia.OrchestrationBeansMorphiaRegistrar;
+import io.harness.serializer.morphia.PmsCommonsMorphiaRegistrar;
 import io.harness.serializer.morphia.converters.SweepingOutputConverter;
 
 import com.google.common.collect.ImmutableSet;
@@ -18,6 +19,8 @@ public class OrchestrationBeansRegistrars {
           .addAll(TimeoutEngineRegistrars.kryoRegistrars)
           .add(PmsContractsKryoRegistrar.class)
           .add(PmsSdkCoreKryoRegistrar.class)
+          .addAll(PmsCommonsModuleRegistrars.kryoRegistrars)
+          .addAll(NGCoreBeansRegistrars.kryoRegistrars)
           .add(OrchestrationBeansKryoRegistrar.class)
           .build();
 

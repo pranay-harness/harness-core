@@ -5,8 +5,8 @@ import static io.harness.annotations.dev.HarnessTeam.CDC;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.expression.field.dummy.DummyOrchestrationField;
 import io.harness.expression.field.dummy.DummyOrchestrationFieldProcessor;
-import io.harness.pms.sdk.core.expression.OrchestrationFieldProcessor;
-import io.harness.pms.sdk.core.expression.OrchestrationFieldType;
+import io.harness.pms.expression.OrchestrationFieldProcessor;
+import io.harness.pms.expression.OrchestrationFieldType;
 import io.harness.pms.sdk.registries.registrar.OrchestrationFieldRegistrar;
 
 import com.google.inject.Inject;
