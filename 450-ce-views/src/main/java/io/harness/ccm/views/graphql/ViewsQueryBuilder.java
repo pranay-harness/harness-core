@@ -562,7 +562,7 @@ public class ViewsQueryBuilder {
         .build();
   }
 
-  private static Condition getSqlAndCondition(List<Condition> conditionList) {
+  public static Condition getSqlAndCondition(List<Condition> conditionList) {
     switch (conditionList.size()) {
       case 2:
         return ComboCondition.and(conditionList.get(0), conditionList.get(1));
@@ -597,7 +597,7 @@ public class ViewsQueryBuilder {
     }
   }
 
-  private static Condition getSqlOrCondition(List<Condition> conditionList) {
+  public static Condition getSqlOrCondition(List<Condition> conditionList) {
     switch (conditionList.size()) {
       case 2:
         return ComboCondition.or(conditionList.get(0), conditionList.get(1));
