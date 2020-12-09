@@ -1,6 +1,7 @@
 package io.harness;
 
 import io.harness.config.PublisherConfiguration;
+import io.harness.engine.expressions.AmbianceExpressionEvaluatorProvider;
 import io.harness.grpc.server.PipelineServiceGrpcModule;
 import io.harness.mongo.MongoConfig;
 import io.harness.mongo.MongoModule;
@@ -11,6 +12,7 @@ import io.harness.persistence.HPersistence;
 import io.harness.pms.execution.NodeExecutionEvent;
 import io.harness.pms.pipeline.service.PMSPipelineService;
 import io.harness.pms.pipeline.service.PMSPipelineServiceImpl;
+import io.harness.queue.QueueController;
 import io.harness.queue.QueuePublisher;
 import io.harness.serializer.KryoRegistrar;
 import io.harness.serializer.PipelineServiceModuleRegistrars;
@@ -45,6 +47,23 @@ public class PipelineServiceModule extends AbstractModule {
     install(MongoModule.getInstance());
     install(PipelineServiceGrpcModule.getInstance());
     install(new SpringPersistenceModule());
+    install(OrchestrationModule.getInstance());
+    install(new AbstractModule() {
+      @Override
+      protected void configure() {
+        bind(QueueController.class).toInstance(new QueueController() {
+          @Override
+          public boolean isPrimary() {
+            return true;
+          }
+
+          @Override
+          public boolean isNotPrimary() {
+            return false;
+          }
+        });
+      }
+    });
 
     bind(HPersistence.class).to(MongoPersistence.class);
     bind(PMSPipelineService.class).to(PMSPipelineServiceImpl.class);
@@ -100,5 +119,13 @@ public class PipelineServiceModule extends AbstractModule {
   @Named("morphiaClasses")
   Map<Class, String> morphiaCustomCollectionNames() {
     return Collections.emptyMap();
+  }
+
+  @Provides
+  @Singleton
+  public OrchestrationModuleConfig orchestrationModuleConfig() {
+    return OrchestrationModuleConfig.builder()
+        .expressionEvaluatorProvider(new AmbianceExpressionEvaluatorProvider())
+        .build();
   }
 }
