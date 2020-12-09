@@ -35,10 +35,6 @@ public class GitConfigDTO extends ConnectorConfigDTO implements ExecutionCapabil
   @JsonProperty("spec")
   @JsonTypeInfo(
       use = JsonTypeInfo.Id.NAME, property = "type", include = JsonTypeInfo.As.EXTERNAL_PROPERTY, visible = true)
-  @JsonSubTypes({
-    @JsonSubTypes.Type(value = GitHTTPAuthenticationDTO.class, name = GitConfigConstants.HTTP)
-    , @JsonSubTypes.Type(value = GitSSHAuthenticationDTO.class, name = GitConfigConstants.SSH)
-  })
   @Valid
   @NotNull
   GitAuthenticationDTO gitAuth;

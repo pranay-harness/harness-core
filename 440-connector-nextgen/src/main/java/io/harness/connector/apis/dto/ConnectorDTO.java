@@ -1,5 +1,8 @@
 package io.harness.connector.apis.dto;
 
+import io.harness.EntityType;
+import io.harness.yamlSchema.YamlSchemaRoot;
+
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import io.swagger.annotations.ApiModel;
@@ -13,6 +16,7 @@ import lombok.experimental.FieldDefaults;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @Builder
 @ApiModel("Connector")
+@YamlSchemaRoot(EntityType.CONNECTORS)
 public class ConnectorDTO {
   @JsonProperty("connector") ConnectorInfoDTO connectorInfo;
 }

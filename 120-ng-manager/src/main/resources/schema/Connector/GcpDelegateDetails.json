@@ -1,0 +1,17 @@
+{
+  "allOf": [
+    {
+      "$ref": "#/definitions/GcpCredentialSpec",
+      "originalRef": "GcpCredentialSpec"
+    },
+    {
+      "type": "object",
+      "properties": {
+        "delegateSelector": {
+          "type": "string"
+        }
+      }
+    }
+  ],
+  "$schema": "http://json-schema.org/draft-07/schema#"
+}

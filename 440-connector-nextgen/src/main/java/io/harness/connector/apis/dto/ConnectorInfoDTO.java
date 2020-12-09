@@ -51,21 +51,6 @@ public class ConnectorInfoDTO {
   @JsonProperty("spec")
   @JsonTypeInfo(
       use = JsonTypeInfo.Id.NAME, property = "type", include = JsonTypeInfo.As.EXTERNAL_PROPERTY, visible = true)
-  @JsonSubTypes({
-    @JsonSubTypes.Type(value = KubernetesClusterConfigDTO.class, name = "K8sCluster")
-    , @JsonSubTypes.Type(value = GitConfigDTO.class, name = "Git"),
-        @JsonSubTypes.Type(value = SplunkConnectorDTO.class, name = "Splunk"),
-        @JsonSubTypes.Type(value = AppDynamicsConnectorDTO.class, name = "AppDynamics"),
-        @JsonSubTypes.Type(value = VaultConnectorDTO.class, name = "Vault"),
-        @JsonSubTypes.Type(value = DockerConnectorDTO.class, name = "DockerRegistry"),
-        @JsonSubTypes.Type(value = LocalConnectorDTO.class, name = "Local"),
-        @JsonSubTypes.Type(value = GcpKmsConnectorDTO.class, name = "GcpKms"),
-        @JsonSubTypes.Type(value = GcpConnectorDTO.class, name = "Gcp"),
-        @JsonSubTypes.Type(value = AwsConnectorDTO.class, name = "Aws"),
-        @JsonSubTypes.Type(value = ArtifactoryConnectorDTO.class, name = "Artifactory"),
-        @JsonSubTypes.Type(value = JiraConnectorDTO.class, name = "Jira"),
-        @JsonSubTypes.Type(value = NexusConnectorDTO.class, name = "Nexus")
-  })
   @Valid
   @NotNull
   ConnectorConfigDTO connectorConfig;

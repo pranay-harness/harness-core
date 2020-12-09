@@ -54,7 +54,7 @@ import io.harness.waiter.NotifyResponseCleaner;
 import io.harness.waiter.ProgressUpdateService;
 import io.harness.yaml.YamlSdkConfiguration;
 import io.harness.yaml.YamlSdkModule;
-import io.harness.yaml.snippets.SnippetConstants;
+import io.harness.yaml.snippets.YamlSdkConstants;
 
 import software.wings.app.CharsetResponseFilter;
 
@@ -172,11 +172,19 @@ public class NextGenApplication extends Application<NextGenConfiguration> {
 
     registerPipelineSDK(injector, appConfig);
 
-    final InputStream snippetIndexFile = getClass().getClassLoader().getResourceAsStream(SnippetConstants.resourceFile);
-    YamlSdkConfiguration yamlSdkConfiguration = YamlSdkConfiguration.builder().snippetIndex(snippetIndexFile).build();
-    YamlSdkModule.initializeDefaultInstance(yamlSdkConfiguration);
+    registerYamlSdk();
 
     MaintenanceController.forceMaintenance(false);
+  }
+
+  private void registerYamlSdk() {
+    final InputStream snippetIndexFile =
+        getClass().getClassLoader().getResourceAsStream(YamlSdkConstants.snippetsResourceFile);
+    YamlSdkConfiguration yamlSdkConfiguration = YamlSdkConfiguration.builder()
+                                                    .snippetIndex(snippetIndexFile)
+                                                    .schemaBasePath(YamlSdkConstants.schemaBasePath)
+                                                    .build();
+    YamlSdkModule.initializeDefaultInstance(yamlSdkConfiguration);
   }
 
   public void registerPipelineSDK(Injector injector, NextGenConfiguration appConfig) {

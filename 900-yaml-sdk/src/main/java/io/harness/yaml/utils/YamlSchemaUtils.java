@@ -3,6 +3,7 @@ package io.harness.yaml.utils;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 
 import io.harness.EntityType;
+import io.harness.yamlSchema.YamlSchemaRoot;
 
 import io.swagger.annotations.ApiModel;
 import java.io.File;
@@ -63,5 +64,14 @@ public class YamlSchemaUtils {
     final String yamlName = entityType.getYamlName();
     String resourcePath = yamlName + File.separator + YamlConstants.SCHEMA_FILE_NAME;
     return isEmpty(schemaBasePath) ? resourcePath : schemaBasePath + File.separator + resourcePath;
+  }
+
+  /**
+   * @param clazz The class.
+   * @return EntityType of the class.
+   */
+  public String getEntityName(Class<?> clazz) {
+    YamlSchemaRoot declaredAnnotation = clazz.getDeclaredAnnotation(YamlSchemaRoot.class);
+    return declaredAnnotation.value().getYamlName();
   }
 }

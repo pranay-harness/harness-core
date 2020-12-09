@@ -24,10 +24,6 @@ public class AwsCredentialDTO {
   @JsonProperty("spec")
   @JsonTypeInfo(
       use = JsonTypeInfo.Id.NAME, property = "type", include = JsonTypeInfo.As.EXTERNAL_PROPERTY, visible = true)
-  @JsonSubTypes({
-    @JsonSubTypes.Type(value = AwsInheritFromDelegateSpecDTO.class, name = AwsConstants.INHERIT_FROM_DELEGATE)
-    , @JsonSubTypes.Type(value = AwsManualConfigSpecDTO.class, name = AwsConstants.MANUAL_CONFIG)
-  })
   @NotNull
   @Valid
   AwsCredentialSpecDTO config;

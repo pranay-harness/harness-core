@@ -1,0 +1,24 @@
+{
+  "allOf": [
+    {
+      "$ref": "#/definitions/ConnectorConfigDTO",
+      "originalRef": "ConnectorConfigDTO"
+    },
+    {
+      "type": "object",
+      "required": [
+        "artifactoryServerUrl"
+      ],
+      "properties": {
+        "artifactoryServerUrl": {
+          "type": "string"
+        },
+        "auth": {
+          "$ref": "#/definitions/ArtifactoryAuthentication",
+          "originalRef": "ArtifactoryAuthentication"
+        }
+      }
+    }
+  ],
+  "$schema": "http://json-schema.org/draft-07/schema#"
+}

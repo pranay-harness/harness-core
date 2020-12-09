@@ -48,10 +48,9 @@ public class YamlSchemaGeneratorTest extends CategoryTest {
     verify(yamlSchemaGenerator, times(5))
         .writeContentsToFile(fileNameArgumentCaptor.capture(), contentArgumentCaptor.capture(), any());
     Set<String> filePaths = new HashSet<>();
-    filePaths.addAll(Arrays.asList("testBasePath/ClassWhichContainsInterface/ClassWhichContainsInterface.json",
-        "testBasePath/ClassWhichContainsInterface/ClassWithoutApiModelOverride.json",
-        "testBasePath/ClassWhichContainsInterface/TestInterface.json",
-        "testBasePath/ClassWhichContainsInterface/testName.json", "testBasePath/ClassWhichContainsInterface/all.json"));
+    filePaths.addAll(Arrays.asList("testBasePath/Connectors/ClassWhichContainsInterface.json",
+        "testBasePath/Connectors/ClassWithoutApiModelOverride.json", "testBasePath/Connectors/TestInterface.json",
+        "testBasePath/Connectors/testName.json", "testBasePath/Connectors/all.json"));
 
     assertThat(fileNameArgumentCaptor.getAllValues().size()).isEqualTo(5);
     fileNameArgumentCaptor.getAllValues().forEach(filePath -> { assertThat(filePath).isIn(filePaths); });
