@@ -1,0 +1,33 @@
+{
+  "allOf": [
+    {
+      "$ref": "#/definitions/KubernetesAuthCredentialDTO"
+    },
+    {
+      "type": "object",
+      "required": [
+        "clientCertRef",
+        "clientKeyPassphraseRef",
+        "clientKeyRef"
+      ],
+      "properties": {
+        "caCertRef": {
+          "type": "string"
+        },
+        "clientCertRef": {
+          "type": "string"
+        },
+        "clientKeyAlgo": {
+          "type": "string"
+        },
+        "clientKeyPassphraseRef": {
+          "type": "string"
+        },
+        "clientKeyRef": {
+          "type": "string"
+        }
+      }
+    }
+  ],
+  "$schema": "http://json-schema.org/draft-07/schema#"
+}

@@ -1,0 +1,22 @@
+{
+  "allOf": [
+    {
+      "$ref": "#/definitions/ConnectorConfigDTO"
+    },
+    {
+      "type": "object",
+      "required": [
+        "dockerRegistryUrl"
+      ],
+      "properties": {
+        "auth": {
+          "$ref": "#/definitions/DockerAuthenticationDTO"
+        },
+        "dockerRegistryUrl": {
+          "type": "string"
+        }
+      }
+    }
+  ],
+  "$schema": "http://json-schema.org/draft-07/schema#"
+}

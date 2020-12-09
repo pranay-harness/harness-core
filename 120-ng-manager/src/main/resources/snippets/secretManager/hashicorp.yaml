@@ -6,8 +6,7 @@ connector:
   orgIdentifier: "Devops"
   # Project ID
   projectIdentifer: "Harness_Sample_App"
-  tags:
-    - tag1
+
   type: Vault
   spec:
     vaultUrl: vaultUrl

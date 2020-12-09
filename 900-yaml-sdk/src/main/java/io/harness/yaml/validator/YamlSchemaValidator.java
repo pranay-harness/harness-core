@@ -40,6 +40,10 @@ public class YamlSchemaValidator {
       throw new InvalidRequestException("No schema found for entityType.");
     }
     JsonSchema schema = schemas.get(entityType);
+    return validate(yaml, schema);
+  }
+
+  public Set<String> validate(String yaml, JsonSchema schema) throws IOException {
     ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
     JsonNode jsonNode = mapper.readTree(yaml);
     Set<ValidationMessage> validateMsg = schema.validate(jsonNode);
@@ -52,10 +56,8 @@ public class YamlSchemaValidator {
   public void populateSchemaInStaticMap(String schemaBasePath) {
     final Set<Class<?>> rootClasses = YamlSchemaUtils.getClasses(null, YamlSchemaUtils.class);
     if (isNotEmpty(rootClasses)) {
-      ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
-      JsonSchemaFactory factory = JsonSchemaFactory.builder(JsonSchemaFactory.getInstance(SpecVersion.VersionFlag.V7))
-                                      .objectMapper(mapper)
-                                      .build();
+      JsonSchemaFactory factory =
+          JsonSchemaFactory.builder(JsonSchemaFactory.getInstance(SpecVersion.VersionFlag.V7)).build();
       rootClasses.forEach(rootClass -> {
         final EntityType entityType = rootClass.getAnnotation(YamlSchemaRoot.class).value();
         final String schemaPathFromEntityType = YamlSchemaUtils.getSchemaPathForEntityType(entityType, schemaBasePath);

@@ -1,5 +1,6 @@
 package io.harness.yaml.schema;
 
+import io.harness.exception.InvalidRequestException;
 import io.harness.yaml.schema.beans.FieldSubtypeData;
 import io.harness.yaml.schema.beans.SchemaConstants;
 import io.harness.yaml.schema.beans.SubtypeClassMap;
@@ -24,6 +25,7 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -38,23 +40,39 @@ public class YamlSchemaGenerator {
    */
   public void generateYamlSchemaFiles(YamlSchemaConfiguration yamlSchemaConfiguration) {
     final Set<Class<?>> rootSchemaClasses = getClassesForYamlSchemaGeneration(yamlSchemaConfiguration);
+    SwaggerGenerator swaggerGenerator = new SwaggerGenerator();
 
     for (Class<?> rootSchemaClass : rootSchemaClasses) {
-      SwaggerGenerator swaggerGenerator = new SwaggerGenerator();
-      log.info("Generating swagger for {}", rootSchemaClass.toString());
-      final Map<String, Model> stringModelMap = swaggerGenerator.generateDefinitions(rootSchemaClass);
-      log.info("Generated swagger");
-
-      final Map<String, Set<FieldSubtypeData>> subTypeMap = getSubTypeMap(rootSchemaClass);
-      log.info("Generated subtype Map");
-
-      final String entitySwaggerName = YamlSchemaUtils.getSwaggerName(rootSchemaClass);
-      final String entityName = YamlSchemaUtils.getEntityName(rootSchemaClass);
-      log.info("Generating yaml schema for {}", entityName);
-      generateDefinitions(stringModelMap, yamlSchemaConfiguration.getGeneratedPathRoot() + File.separator + entityName,
-          subTypeMap, entitySwaggerName);
-      log.info("Saved files");
+      generateJsonSchemaForRootClass(yamlSchemaConfiguration, swaggerGenerator, rootSchemaClass);
     }
+  }
+
+  @VisibleForTesting
+  void generateJsonSchemaForRootClass(
+      YamlSchemaConfiguration yamlSchemaConfiguration, SwaggerGenerator swaggerGenerator, Class<?> rootSchemaClass) {
+    log.info("Generating swagger for {}", rootSchemaClass.toString());
+    final Map<String, Model> stringModelMap = swaggerGenerator.generateDefinitions(rootSchemaClass);
+    log.info("Generated swagger");
+
+    final Map<String, Set<FieldSubtypeData>> subTypeMap = getSubTypeMap(rootSchemaClass);
+    log.info("Generated subtype Map");
+
+    final String entitySwaggerName = YamlSchemaUtils.getSwaggerName(rootSchemaClass);
+    final String entityName = YamlSchemaUtils.getEntityName(rootSchemaClass);
+    log.info("Generating yaml schema for {}", entityName);
+    final Map<String, JsonNode> stringJsonNodeMap = generateDefinitions(stringModelMap,
+        yamlSchemaConfiguration.getGeneratedPathRoot() + File.separator + entityName, subTypeMap, entitySwaggerName);
+    ObjectMapper mapper = SchemaGeneratorUtils.getObjectMapperForSchemaGeneration();
+    DefaultPrettyPrinter defaultPrettyPrinter = new SchemaGeneratorUtils.SchemaPrinter();
+    ObjectWriter jsonWriter = mapper.writer(defaultPrettyPrinter);
+    stringJsonNodeMap.forEach((filePath, content) -> {
+      try {
+        writeContentsToFile(filePath, content, jsonWriter);
+      } catch (IOException e) {
+        throw new InvalidRequestException("Cannot save file", e);
+      }
+    });
+    log.info("Saved files");
   }
 
   @VisibleForTesting
@@ -67,15 +85,15 @@ public class YamlSchemaGenerator {
    * @param basePath    path where schema will be stored.
    * @param subTypeMap  extra subtype info which will be added to definitions.
    * @param baseNodeKey The root yaml entity name in definition for which schema is being generated.
+   * @return map of file path and the the json node of schema.
    */
-  private void generateDefinitions(Map<String, Model> definitions, String basePath,
+  @VisibleForTesting
+  Map<String, JsonNode> generateDefinitions(Map<String, Model> definitions, String basePath,
       Map<String, Set<FieldSubtypeData>> subTypeMap, String baseNodeKey) {
+    Map<String, JsonNode> filePathContentMap = new HashMap<>();
     ObjectMapper mapper = SchemaGeneratorUtils.getObjectMapperForSchemaGeneration();
-    DefaultPrettyPrinter defaultPrettyPrinter = new SchemaGeneratorUtils.SchemaPrinter();
-    ObjectWriter jsonWriter = mapper.writer(defaultPrettyPrinter);
-
     try {
-      final String definitionsJson = jsonWriter.writeValueAsString(definitions.entrySet());
+      final String definitionsJson = mapper.writeValueAsString(definitions.entrySet());
 
       ArrayNode definitionsArrayNode = (ArrayNode) mapper.readTree(definitionsJson);
       ObjectNode modifiedNode = mapper.createObjectNode();
@@ -84,18 +102,18 @@ public class YamlSchemaGenerator {
         // Assuming only single node in next
         final String name = node.fieldNames().next();
         ObjectNode value = (ObjectNode) node.get(name);
-
         convertSwaggerToJsonSchema(subTypeMap, mapper, name, value);
-        writeContentsToFile(basePath + File.separator + name + YamlConstants.JSON_EXTENSION, value, jsonWriter);
+        filePathContentMap.put(basePath + File.separator + name + YamlConstants.JSON_EXTENSION, value);
         modifiedNode.with(name).setAll(value);
       }
 
       ObjectNode outputNode = mapper.createObjectNode();
       generateCompleteSchema(baseNodeKey, modifiedNode, outputNode);
-      writeContentsToFile(basePath + File.separator + YamlConstants.SCHEMA_FILE_NAME, outputNode, jsonWriter);
+      filePathContentMap.put(basePath + File.separator + YamlConstants.SCHEMA_FILE_NAME, outputNode);
     } catch (IOException e) {
       log.error("Error in generating Yaml Schema.", e);
     }
+    return filePathContentMap;
   }
 
   @VisibleForTesting
@@ -132,6 +150,32 @@ public class YamlSchemaGenerator {
       }
       value.putArray(SchemaConstants.ALL_OF_NODE).addAll(allConditionals);
     }
+    removeUnwantedNodes(value, "originalRef");
+  }
+  private void removeUnwantedNodes(JsonNode objectNode, String unwantedNode) {
+    if (objectNode.isArray()) {
+      final Iterator<JsonNode> elements = objectNode.elements();
+      while (elements.hasNext()) {
+        final JsonNode node = elements.next();
+        if (node.isArray()) {
+          ArrayNode arrayNode = (ArrayNode) node;
+          final Iterator<JsonNode> nodeIterator = arrayNode.elements();
+          while (nodeIterator.hasNext()) {
+            JsonNode nextNode = nodeIterator.next();
+            removeUnwantedNodes(nextNode, unwantedNode);
+          }
+        } else if (node.isObject()) {
+          removeUnwantedNodes(node, unwantedNode);
+        }
+      }
+    } else if (objectNode.isObject()) {
+      ObjectNode node = (ObjectNode) objectNode;
+      node.remove(unwantedNode);
+      final Iterator<JsonNode> elements = node.elements();
+      while (elements.hasNext()) {
+        removeUnwantedNodes(elements.next(), unwantedNode);
+      }
+    }
   }
 
   /**
@@ -158,7 +202,8 @@ public class YamlSchemaGenerator {
     }
   }
 
-  private Map<String, Set<FieldSubtypeData>> getSubTypeMap(Class<?> clazz) {
+  @VisibleForTesting
+  Map<String, Set<FieldSubtypeData>> getSubTypeMap(Class<?> clazz) {
     Map<String, Set<FieldSubtypeData>> classSubtypesMap = new HashMap<>();
     JacksonSubtypeHelper jacksonSubtypeHelper = new JacksonSubtypeHelper();
     jacksonSubtypeHelper.getSubtypeMapping(clazz, classSubtypesMap);

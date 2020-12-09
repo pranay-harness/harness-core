@@ -2,8 +2,7 @@
   "type": "object",
   "properties": {
     "spec": {
-      "$ref": "#/definitions/TestInterface",
-      "originalRef": "TestInterface"
+      "$ref": "#/definitions/TestInterface"
     }
   },
   "$schema": "http://json-schema.org/draft-07/schema#",
@@ -46,8 +45,7 @@
       "type": "object",
       "properties": {
         "spec": {
-          "$ref": "#/definitions/TestInterface",
-          "originalRef": "TestInterface"
+          "$ref": "#/definitions/TestInterface"
         }
       },
       "$schema": "http://json-schema.org/draft-07/schema#",
@@ -89,8 +87,7 @@
     "ClassWithoutApiModelOverride": {
       "allOf": [
         {
-          "$ref": "#/definitions/TestInterface",
-          "originalRef": "TestInterface"
+          "$ref": "#/definitions/TestInterface"
         },
         {
           "type": "object"
@@ -105,8 +102,7 @@
     "testName": {
       "allOf": [
         {
-          "$ref": "#/definitions/TestInterface",
-          "originalRef": "TestInterface"
+          "$ref": "#/definitions/TestInterface"
         },
         {
           "type": "object"

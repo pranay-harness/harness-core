@@ -4,22 +4,44 @@ import static io.harness.rule.OwnerRule.ABHINAV;
 
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
+import io.harness.yaml.YamlSdkConstants;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.IOUtils;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
-public class YamlSnippetsTest implements AbstractSnippetTestBase {
+@Slf4j
+public class YamlSnippetsTest implements AbstractSnippetChecker {
   @Test
   @Owner(developers = ABHINAV)
   @Category(UnitTests.class)
-  public void testSnippets() throws IOException {
+  public void testSnippetsForTags() throws IOException {
     testIconTagsAreInTags();
+  }
+
+  @Test
+  @Owner(developers = ABHINAV)
+  @Category(UnitTests.class)
+  public void testSnippetsForCorrectResource() throws IOException {
     testSnippetHasCorrectResourceFileSpecified();
+  }
+
+  @Test
+  @Owner(developers = ABHINAV)
+  @Category(UnitTests.class)
+  public void testEnumAndXmlInSync() throws IOException {
     testTagsEnumAndXmlInSync();
+  }
+
+  @Test
+  @Owner(developers = ABHINAV)
+  @Category(UnitTests.class)
+  public void testSnippetsMatchSchema() throws IOException {
+    testSnippetsMatchSchema(log);
   }
 
   @Override
@@ -37,5 +59,10 @@ public class YamlSnippetsTest implements AbstractSnippetTestBase {
   @Override
   public long getTotalTagsInEnum() {
     return SnippetTag.values().length;
+  }
+
+  @Override
+  public String getSchemaBasePath() {
+    return YamlSdkConstants.schemaBasePath;
   }
 }
