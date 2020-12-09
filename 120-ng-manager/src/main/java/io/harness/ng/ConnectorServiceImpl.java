@@ -1,6 +1,7 @@
 package io.harness.ng;
 
 import static io.harness.NGConstants.CONNECTOR_HEARTBEAT_LOG_PREFIX;
+import static io.harness.NGConstants.CONNECTOR_STRING;
 import static io.harness.NGConstants.HARNESS_SECRET_MANAGER_IDENTIFIER;
 import static io.harness.connector.ConnectorModule.DEFAULT_CONNECTOR_SERVICE;
 import static io.harness.delegate.beans.connector.ConnectorCategory.SECRET_MANAGER;
@@ -23,14 +24,21 @@ import io.harness.delegate.beans.connector.ConnectorCategory;
 import io.harness.delegate.beans.connector.ConnectorType;
 import io.harness.delegate.beans.connector.ConnectorValidationResult;
 import io.harness.encryption.Scope;
+import io.harness.eventsframework.ConnectorUpdateEventDTO;
+import io.harness.eventsframework.Event;
+import io.harness.eventsframework.EventDrivenClient;
+import io.harness.eventsframework.EventFrameworkConstants;
 import io.harness.exception.InvalidRequestException;
 import io.harness.ng.core.activityhistory.NGActivityType;
 import io.harness.repositories.ConnectorRepository;
+import io.harness.serializer.KryoSerializer;
 import io.harness.utils.FullyQualifiedIdentifierHelper;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
+import com.google.protobuf.Any;
+import com.google.protobuf.ByteString;
 import java.util.Optional;
 import javax.validation.constraints.NotNull;
 import lombok.extern.slf4j.Slf4j;
@@ -44,17 +52,21 @@ public class ConnectorServiceImpl implements ConnectorService {
   private final ConnectorActivityService connectorActivityService;
   private final ConnectorHeartbeatService connectorHeartbeatService;
   private final ConnectorRepository connectorRepository;
+  private final EventDrivenClient eventDrivenClient;
+  private final KryoSerializer kryoSerializer;
 
   @Inject
   public ConnectorServiceImpl(@Named(DEFAULT_CONNECTOR_SERVICE) ConnectorService defaultConnectorService,
       @Named(SECRET_MANAGER_CONNECTOR_SERVICE) ConnectorService secretManagerConnectorService,
       ConnectorActivityService connectorActivityService, ConnectorHeartbeatService connectorHeartbeatService,
-      ConnectorRepository connectorRepository) {
+      ConnectorRepository connectorRepository, EventDrivenClient eventDrivenClient, KryoSerializer kryoSerializer) {
     this.defaultConnectorService = defaultConnectorService;
     this.secretManagerConnectorService = secretManagerConnectorService;
     this.connectorActivityService = connectorActivityService;
     this.connectorHeartbeatService = connectorHeartbeatService;
     this.connectorRepository = connectorRepository;
+    this.eventDrivenClient = eventDrivenClient;
+    this.kryoSerializer = kryoSerializer;
   }
 
   private ConnectorService getConnectorService(ConnectorType connectorType) {
@@ -109,7 +121,23 @@ public class ConnectorServiceImpl implements ConnectorService {
         getConnectorService(connectorInfo.getConnectorType()).update(connector, accountIdentifier);
     ConnectorInfoDTO savedConnector = connectorResponse.getConnector();
     createConnectorUpdateActivity(accountIdentifier, savedConnector);
+    publishEventForConnectorUpdate(accountIdentifier, savedConnector);
     return connectorResponse;
+  }
+
+  private void publishEventForConnectorUpdate(String accountIdentifier, ConnectorInfoDTO savedConnector) {
+    try {
+      ByteString connectorConfigBytes = ByteString.copyFrom(kryoSerializer.asBytes(savedConnector));
+      eventDrivenClient.publishEvent(EventFrameworkConstants.CONNECTOR_UPDATE_CHANNEL,
+          Event.newBuilder()
+              .setAccountId(accountIdentifier)
+              .setPayload(Any.pack(ConnectorUpdateEventDTO.newBuilder().setConnector(connectorConfigBytes).build()))
+              .build());
+    } catch (Exception ex) {
+      log.info("Exception while publishing the event of connector update for {}",
+          String.format(CONNECTOR_STRING, savedConnector.getIdentifier(), accountIdentifier,
+              savedConnector.getOrgIdentifier(), savedConnector.getProjectIdentifier()));
+    }
   }
 
   private void createConnectorUpdateActivity(String accountIdentifier, ConnectorInfoDTO connector) {

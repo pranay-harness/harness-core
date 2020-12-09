@@ -8,4 +8,5 @@ public class EventFrameworkConstants {
   // Also, for channels which are dynamically created, please ensure that the
   // prefixes are picked up from this file
   public static final String PROJECT_UPDATE_CHANNEL = "project_update";
+  public static final String CONNECTOR_UPDATE_CHANNEL = "connector_update";
 }
