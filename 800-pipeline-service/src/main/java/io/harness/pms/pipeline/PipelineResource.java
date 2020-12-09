@@ -1,6 +1,8 @@
 package io.harness.pms.pipeline;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
+import static io.harness.utils.PageUtils.getNGPageResponse;
+import static io.harness.utils.PageUtils.getPageRequest;
 
 import static java.lang.Long.parseLong;
 import static javax.ws.rs.core.HttpHeaders.IF_MATCH;
@@ -35,6 +37,7 @@ import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
 import java.io.IOException;
 import java.time.Duration;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -210,7 +213,25 @@ public class PipelineResource {
       @NotNull @QueryParam(NGCommonEntityConstants.PROJECT_KEY) String projectId,
       @PathParam(NGCommonEntityConstants.PIPELINE_KEY) String pipelineId) {
     log.info("Get plan Summary");
+    return ResponseDTO.newResponse(getPlanExecutionSummaryDto());
+  }
 
+  @GET
+  @Path("/execution/summary")
+  @ApiOperation(value = "Gets Executions list", nickname = "getListOfExecutions")
+  public ResponseDTO<List<PlanExecutionSummaryDTO>> getListOfExecutions(
+      @NotNull @QueryParam("accountIdentifier") String accountId, @QueryParam("orgIdentifier") String orgId,
+      @NotNull @QueryParam("projectIdentifier") String projectId, @QueryParam("filter") String filter,
+      @QueryParam("page") @DefaultValue("0") int page, @QueryParam("size") @DefaultValue("10") int size,
+      @QueryParam("sort") List<String> sort) {
+    log.info("Get List of executions");
+    List<PlanExecutionSummaryDTO> planExecutionSummaryDTOS = new ArrayList<>();
+    planExecutionSummaryDTOS.add(getPlanExecutionSummaryDto());
+    planExecutionSummaryDTOS.add(getPlanExecutionSummaryDto());
+    return ResponseDTO.newResponse(planExecutionSummaryDTOS);
+  }
+
+  public PlanExecutionSummaryDTO getPlanExecutionSummaryDto() {
     String pipelineNodeUuid = generateUuid();
     String stageNodeUuid = generateUuid();
     String ciStageUuid = generateUuid();
@@ -295,23 +316,20 @@ public class PipelineResource {
                 .append("commits", "[]")));
     moduleInfo.put("CD", new org.bson.Document().append("DeploymentType", "k8s").append("namespace", "mock-namespace"));
 
-    PlanExecutionSummaryDTO planExecutionSummaryDTO =
-        PlanExecutionSummaryDTO.builder()
-            .pipelineId(pipelineId)
-            .name("Mock Pipeline")
-            .createdAt(System.currentTimeMillis())
-            .executionTriggerInfo(ExecutionTriggerInfo.builder()
-                                      .triggeredBy(EmbeddedUser.builder().name("Harness Dev").build())
-                                      .triggerType(TriggerType.MANUAL)
-                                      .build())
-            .duration(Duration.ofMinutes(90).toMillis())
-            .status(Status.RUNNING)
-            .layoutNodeMap(layoutNodeMap)
-            .startingNodeId(pipelineNodeUuid)
-            .moduleInfo(moduleInfo)
-            .tags(new HashMap<>())
-            .build();
-
-    return ResponseDTO.newResponse(planExecutionSummaryDTO);
+    return PlanExecutionSummaryDTO.builder()
+        .pipelineId(generateUuid())
+        .name("Mock Pipeline")
+        .createdAt(System.currentTimeMillis())
+        .executionTriggerInfo(ExecutionTriggerInfo.builder()
+                                  .triggeredBy(EmbeddedUser.builder().name("Harness Dev").build())
+                                  .triggerType(TriggerType.MANUAL)
+                                  .build())
+        .duration(Duration.ofMinutes(90).toMillis())
+        .status(Status.RUNNING)
+        .layoutNodeMap(layoutNodeMap)
+        .startingNodeId(pipelineNodeUuid)
+        .moduleInfo(moduleInfo)
+        .tags(new HashMap<>())
+        .build();
   }
 }
