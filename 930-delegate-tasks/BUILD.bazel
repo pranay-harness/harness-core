@@ -27,6 +27,7 @@ java_library(
         "@maven//:com_google_inject_guice",
         "@maven//:com_google_protobuf_protobuf_java",
         "@maven//:com_hierynomus_smbj",
+        "@maven//:com_hierynomus_sshj",
         "@maven//:commons_io_commons_io",
         "@maven//:io_fabric8_fabric8_utils",
         "@maven//:io_fabric8_kubernetes_api",
