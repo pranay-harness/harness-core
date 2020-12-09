@@ -184,6 +184,10 @@ public class EnvironmentYamlHandler extends BaseYamlHandler<Environment.Yaml, En
 
   private List<ServiceVariable> getAllVariableOverridesForEnv(Environment environment) {
     List<ServiceVariable> serviceVariableList = Lists.newArrayList();
+    List<ServiceVariable> serviceVariablesForAllServices = serviceVariableService.getServiceVariablesForEntity(
+        environment.getAppId(), environment.getUuid(), OBTAIN_VALUE);
+    serviceVariableList.addAll(serviceVariablesForAllServices);
+
     if (isEmpty(environment.getServiceTemplates())) {
       return serviceVariableList;
     }
@@ -193,9 +197,6 @@ public class EnvironmentYamlHandler extends BaseYamlHandler<Environment.Yaml, En
       serviceVariableList.addAll(serviceVariablesByTemplate);
     });
 
-    List<ServiceVariable> serviceVariablesForAllServices = serviceVariableService.getServiceVariablesForEntity(
-        environment.getAppId(), environment.getUuid(), OBTAIN_VALUE);
-    serviceVariableList.addAll(serviceVariablesForAllServices);
     return serviceVariableList;
   }
 
