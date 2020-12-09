@@ -22,6 +22,7 @@ import lombok.experimental.FieldDefaults;
  *             </tags>
  *             <iconTag>tag1</icontag>
  *             <resourcePath>snippets/snippet.yaml<resourcePath>
+ *             <schemaEntityType>Connector</schemaEntityType>
  *         </YamlSnippetMetaData>
  *     </yamlSnippetMetaDataList>
  * </YamlSnippets>

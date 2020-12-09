@@ -53,8 +53,8 @@ import io.harness.waiter.NotifyQueuePublisherRegister;
 import io.harness.waiter.NotifyResponseCleaner;
 import io.harness.waiter.ProgressUpdateService;
 import io.harness.yaml.YamlSdkConfiguration;
+import io.harness.yaml.YamlSdkConstants;
 import io.harness.yaml.YamlSdkModule;
-import io.harness.yaml.snippets.YamlSdkConstants;
 
 import software.wings.app.CharsetResponseFilter;
 

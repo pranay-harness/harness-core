@@ -34,7 +34,7 @@ public class YamlSchemaUtils {
                                         .addClassLoader(classLoader));
 
     } else {
-      reflections = new Reflections();
+      reflections = new Reflections("software.wings", "io.harness");
     }
     return reflections.getTypesAnnotatedWith(annotationClass);
   }

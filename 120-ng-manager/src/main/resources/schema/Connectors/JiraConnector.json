@@ -1,0 +1,26 @@
+{
+  "allOf": [
+    {
+      "$ref": "#/definitions/ConnectorConfigDTO"
+    },
+    {
+      "type": "object",
+      "required": [
+        "jiraUrl",
+        "passwordRef"
+      ],
+      "properties": {
+        "jiraUrl": {
+          "type": "string"
+        },
+        "passwordRef": {
+          "type": "string"
+        },
+        "username": {
+          "type": "string"
+        }
+      }
+    }
+  ],
+  "$schema": "http://json-schema.org/draft-07/schema#"
+}

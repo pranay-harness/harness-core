@@ -13,7 +13,7 @@ connector:
         masterUrl: "k8s master url"
         auth:
           # OpenID Connect (OIDC): OAuth2 supported by some OAuth2 providers, notably Azure Active Directory, Salesforce, and Google.
-          type: OpenidConnect
+          type: OpenIdConnect
           spec:
             # URL of the provider which allows the API server to discover public signing keys. Required
             oidcIssuerUrl: "https://dev-00000.okta.com/oauth2/default/v1"

@@ -12,7 +12,7 @@ connector:
       spec:
         masterUrl: "k8s master url"
         auth:
-          type: UserPassword
+          type: UsernamePassword
           spec:
             # Username for the Kubernetes cluster. Requried
             username:  "admin"

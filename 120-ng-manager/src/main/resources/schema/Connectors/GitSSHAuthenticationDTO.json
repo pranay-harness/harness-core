@@ -1,0 +1,16 @@
+{
+  "allOf": [
+    {
+      "$ref": "#/definitions/GitAuthenticationDTO"
+    },
+    {
+      "type": "object",
+      "properties": {
+        "sshKeyReference": {
+          "type": "string"
+        }
+      }
+    }
+  ],
+  "$schema": "http://json-schema.org/draft-07/schema#"
+}

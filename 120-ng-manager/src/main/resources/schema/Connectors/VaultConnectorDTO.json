@@ -1,0 +1,45 @@
+{
+  "allOf": [
+    {
+      "$ref": "#/definitions/ConnectorConfigDTO"
+    },
+    {
+      "type": "object",
+      "properties": {
+        "appRoleId": {
+          "type": "string"
+        },
+        "authToken": {
+          "type": "string"
+        },
+        "basePath": {
+          "type": "string"
+        },
+        "default": {
+          "type": "boolean"
+        },
+        "readOnly": {
+          "type": "boolean"
+        },
+        "renewIntervalHours": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "secretEngineName": {
+          "type": "string"
+        },
+        "secretEngineVersion": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "secretId": {
+          "type": "string"
+        },
+        "vaultUrl": {
+          "type": "string"
+        }
+      }
+    }
+  ],
+  "$schema": "http://json-schema.org/draft-07/schema#"
+}

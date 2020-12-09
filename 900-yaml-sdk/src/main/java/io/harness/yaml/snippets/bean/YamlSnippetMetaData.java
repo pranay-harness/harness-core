@@ -36,4 +36,9 @@ public class YamlSnippetMetaData {
    * icon for the tag which UI will display.
    */
   String iconTag;
+
+  /**
+   * The entity Type for which the schema is.
+   */
+  String schemaEntityType;
 }

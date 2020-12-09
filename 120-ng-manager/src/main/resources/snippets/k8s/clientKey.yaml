@@ -12,7 +12,7 @@ connector:
       spec:
         masterUrl: "k8s master url"
         auth:
-          type: ClentKeyCert
+          type: ClientKeyCert
           spec:
             # Root certificate used to validate client certificates presented to the API server. Optional
             caCertRef: "acc.kubeClusterCacert"
