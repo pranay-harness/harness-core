@@ -1,6 +1,7 @@
 package io.harness.pms.pipeline.resource;
 
-import io.harness.pms.execution.Status;
+import io.harness.pms.execution.ExecutionStatus;
+import io.harness.pms.execution.beans.ExecutionErrorInfo;
 import io.harness.pms.pipeline.ExecutionTriggerInfo;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
@@ -18,21 +19,29 @@ import org.bson.Document;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonInclude(JsonInclude.Include.NON_NULL)
-@ApiModel("PlanExecutionSummary")
-public class PlanExecutionSummaryDTO {
-  String pipelineId;
+@ApiModel("PipelineExecutionSummary")
+public class PipelineExecutionSummaryDTO {
+  String pipelineIdentifier;
+  String planExecutionId;
   String name;
 
-  Status status;
+  ExecutionStatus status;
 
-  Long createdAt;
-  Long duration;
+  Map<String, String> tags;
 
   ExecutionTriggerInfo executionTriggerInfo;
+  ExecutionErrorInfo executionErrorInfo;
 
+  Map<String, Document> moduleInfo;
   Map<String, GraphLayoutNodeDTO> layoutNodeMap;
   String startingNodeId;
 
-  Map<String, Document> moduleInfo;
-  Map<String, String> tags;
+  Long startTs;
+  Long endTs;
+  Long createdAt;
+
+  long successfulStagesCount;
+  long runningStagesCount;
+  long failedStagesCount;
+  long totalStagesCount;
 }

@@ -7,11 +7,11 @@ import io.harness.cdng.service.beans.ServiceOutcome;
 import io.harness.execution.NodeExecution;
 import io.harness.execution.PlanExecution;
 import io.harness.executions.steps.ExecutionNodeType;
-import io.harness.ngpipeline.pipeline.executions.ExecutionStatus;
 import io.harness.ngpipeline.pipeline.executions.beans.PipelineExecutionInterruptType;
 import io.harness.ngpipeline.pipeline.executions.beans.PipelineExecutionSummary;
 import io.harness.ngpipeline.pipeline.executions.beans.PipelineExecutionSummaryFilter;
 import io.harness.ngpipeline.pipeline.executions.beans.dto.PipelineExecutionInterruptDTO;
+import io.harness.pms.execution.ExecutionStatus;
 
 import java.util.List;
 import java.util.Map;

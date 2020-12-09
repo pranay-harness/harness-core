@@ -11,12 +11,12 @@ import io.harness.ng.beans.PageResponse;
 import io.harness.ng.core.dto.ErrorDTO;
 import io.harness.ng.core.dto.FailureDTO;
 import io.harness.ng.core.dto.ResponseDTO;
-import io.harness.ngpipeline.pipeline.executions.ExecutionStatus;
 import io.harness.ngpipeline.pipeline.executions.beans.PipelineExecutionInterruptType;
 import io.harness.ngpipeline.pipeline.executions.beans.PipelineExecutionSummary.PipelineExecutionSummaryKeys;
 import io.harness.ngpipeline.pipeline.executions.beans.PipelineExecutionSummaryFilter;
 import io.harness.ngpipeline.pipeline.executions.beans.dto.PipelineExecutionInterruptDTO;
 import io.harness.ngpipeline.pipeline.executions.beans.dto.PipelineExecutionSummaryDTO;
+import io.harness.pms.execution.ExecutionStatus;
 
 import com.codahale.metrics.annotation.ExceptionMetered;
 import com.codahale.metrics.annotation.Timed;

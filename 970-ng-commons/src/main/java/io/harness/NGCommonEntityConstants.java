@@ -20,4 +20,5 @@ public class NGCommonEntityConstants {
   public static final String MONGODB_ID = "_id";
   public static final String CONNECTOR_IDENTIFIER_KEY = "connectorIdentifier";
   public static final String REPO_URL = "repoURL";
+  public static final String PLAN_KEY = "planExecutionId";
 }

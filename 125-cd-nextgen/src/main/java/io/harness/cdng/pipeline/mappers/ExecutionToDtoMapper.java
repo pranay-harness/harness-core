@@ -1,7 +1,6 @@
 package io.harness.cdng.pipeline.mappers;
 
 import io.harness.ng.core.mapper.TagMapper;
-import io.harness.ngpipeline.pipeline.executions.ExecutionStatus;
 import io.harness.ngpipeline.pipeline.executions.beans.CDStageExecutionSummary;
 import io.harness.ngpipeline.pipeline.executions.beans.ParallelStageExecutionSummary;
 import io.harness.ngpipeline.pipeline.executions.beans.PipelineExecutionSummary;
@@ -10,6 +9,7 @@ import io.harness.ngpipeline.pipeline.executions.beans.dto.CDStageExecutionSumma
 import io.harness.ngpipeline.pipeline.executions.beans.dto.ParallelStageExecutionSummaryDTO;
 import io.harness.ngpipeline.pipeline.executions.beans.dto.PipelineExecutionSummaryDTO;
 import io.harness.ngpipeline.pipeline.executions.beans.dto.StageExecutionSummaryDTO;
+import io.harness.pms.execution.ExecutionStatus;
 
 import java.util.List;
 import java.util.stream.Collectors;

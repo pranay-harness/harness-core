@@ -1,6 +1,4 @@
-package io.harness.ngpipeline.pipeline.executions;
-
-import io.harness.pms.execution.Status;
+package io.harness.pms.execution;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
