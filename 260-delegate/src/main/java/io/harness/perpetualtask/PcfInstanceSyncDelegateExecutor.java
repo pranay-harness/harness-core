@@ -65,8 +65,19 @@ public class PcfInstanceSyncDelegateExecutor implements PerpetualTaskExecutor {
     PcfInstanceSyncResponse pcfInstanceSyncResponse =
         (PcfInstanceSyncResponse) pcfCommandExecutionResponse.getPcfCommandResponse();
     try {
-      int instanceSize = Collections.size(pcfInstanceSyncResponse.getInstanceIndices());
-      log.info("Found {} number of instances pcf deployment", instanceSize);
+      if (pcfInstanceSyncResponse == null) {
+        pcfInstanceSyncResponse = PcfInstanceSyncResponse.builder()
+                                      .commandExecutionStatus(CommandExecutionStatus.FAILURE)
+                                      .name(applicationName)
+                                      .organization(orgName)
+                                      .space(space)
+                                      .output("Null pcfInstanceSyncResponse returned")
+                                      .build();
+        pcfCommandExecutionResponse.setPcfCommandResponse(pcfInstanceSyncResponse);
+      } else {
+        int instanceSize = Collections.size(pcfInstanceSyncResponse.getInstanceIndices());
+        log.info("Found {} number of instances pcf deployment", instanceSize);
+      }
       execute(delegateAgentManagerClient.publishInstanceSyncResult(
           taskId.getId(), pcfConfig.getAccountId(), pcfCommandExecutionResponse));
     } catch (Exception ex) {
