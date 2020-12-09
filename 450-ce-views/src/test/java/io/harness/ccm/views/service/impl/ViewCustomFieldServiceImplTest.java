@@ -1,9 +1,12 @@
 package io.harness.ccm.views.service.impl;
 
 import static io.harness.rule.OwnerRule.HITESH;
+import static io.harness.rule.OwnerRule.ROHIT;
 
 import static java.util.Collections.singletonList;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
+import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.doReturn;
 
 import io.harness.CategoryTest;
@@ -17,6 +20,8 @@ import io.harness.rule.Owner;
 
 import com.google.cloud.bigquery.BigQuery;
 import com.google.inject.Inject;
+import java.util.Collections;
+import java.util.List;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -47,6 +52,62 @@ public class ViewCustomFieldServiceImplTest extends CategoryTest {
     doReturn(viewCustomField()).when(viewCustomFieldDao).findByName(ACCOUNT_ID, VIEW_ID, CUSTOM_FIELD_NAME);
     assertThatExceptionOfType(InvalidRequestException.class)
         .isThrownBy(() -> viewCustomFieldService.save(viewCustomField(), bigQuery, "tableName"));
+  }
+
+  @Test
+  @Owner(developers = ROHIT)
+  @Category(UnitTests.class)
+  public void testSavingCustomField() {
+    doReturn(null).when(viewCustomFieldDao).findByName(ACCOUNT_ID, VIEW_ID, CUSTOM_FIELD_NAME);
+    viewCustomFieldService.save(viewCustomField(), bigQuery, "tableName");
+  }
+
+  @Test
+  @Owner(developers = ROHIT)
+  @Category(UnitTests.class)
+  public void testGetField() {
+    doReturn(viewCustomField()).when(viewCustomFieldDao).getById(UUID);
+    ViewCustomField viewCustomField = viewCustomFieldService.get(UUID);
+    assertThat(viewCustomField).isEqualTo(viewCustomField());
+  }
+
+  @Test
+  @Owner(developers = ROHIT)
+  @Category(UnitTests.class)
+  public void testDeleteCustomField() {
+    doReturn(true).when(viewCustomFieldDao).delete(any(), any());
+    boolean delete = viewCustomFieldService.delete(UUID, ACCOUNT_ID);
+    assertThat(delete).isTrue();
+  }
+
+  @Test
+  @Owner(developers = ROHIT)
+  @Category(UnitTests.class)
+  public void testDeleteCustomFieldByViewId() {
+    doReturn(true).when(viewCustomFieldDao).deleteByViewId(any(), any());
+    boolean delete = viewCustomFieldService.deleteByViewId(UUID, ACCOUNT_ID);
+    assertThat(delete).isTrue();
+  }
+
+  @Test
+  @Owner(developers = ROHIT)
+  @Category(UnitTests.class)
+  public void testGetCustomField() {
+    doReturn(Collections.singletonList(viewCustomField())).when(viewCustomFieldDao).findByAccountId(ACCOUNT_ID);
+    List<ViewField> customFields = viewCustomFieldService.getCustomFields(ACCOUNT_ID);
+    assertThat(customFields.size()).isEqualTo(1);
+    assertThat(customFields.get(0).getFieldId()).isEqualTo(UUID);
+    assertThat(customFields.get(0).getFieldName()).isEqualTo(CUSTOM_FIELD_NAME);
+    assertThat(customFields.get(0).getIdentifier()).isEqualTo(ViewFieldIdentifier.CUSTOM);
+  }
+
+  @Test
+  @Owner(developers = ROHIT)
+  @Category(UnitTests.class)
+  public void testGetCustomFieldPerView() {
+    doReturn(Collections.singletonList(viewCustomField())).when(viewCustomFieldDao).findByViewId(UUID);
+    List<ViewField> customFields = viewCustomFieldService.getCustomFieldsPerView(UUID);
+    assertThat(customFields.size()).isEqualTo(1);
   }
 
   private ViewCustomField viewCustomField() {

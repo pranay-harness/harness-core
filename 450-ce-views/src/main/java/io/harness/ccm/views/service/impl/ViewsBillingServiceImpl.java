@@ -427,7 +427,7 @@ public class ViewsBillingServiceImpl implements ViewsBillingService {
     return entityStatsDataPoints;
   }
 
-  List<String> convertToFilterValuesData(TableResult result, List<QLCEViewFieldInput> viewFieldList) {
+  public List<String> convertToFilterValuesData(TableResult result, List<QLCEViewFieldInput> viewFieldList) {
     List<String> filterValues = new ArrayList<>();
     for (FieldValueList row : result.iterateAll()) {
       for (QLCEViewFieldInput field : viewFieldList) {
