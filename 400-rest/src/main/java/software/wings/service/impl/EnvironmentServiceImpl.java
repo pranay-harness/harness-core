@@ -724,7 +724,6 @@ public class EnvironmentServiceImpl implements EnvironmentService, DataProvider 
       notNullCheck("appId", appId, USER);
       Application sourceApplication = appService.get(appId);
       Map<String, String> serviceMapping = cloneMetadata.getServiceMapping();
-      notNullCheck("serviceMapping", serviceMapping, USER);
 
       validateServiceMapping(appId, targetAppId, serviceMapping);
 
@@ -747,64 +746,69 @@ public class EnvironmentServiceImpl implements EnvironmentService, DataProvider 
       // Create environment
       clonedEnvironment = save(clonedEnvironment);
 
-      // Copy templates
-      List<ServiceTemplate> serviceTemplates = sourceEnvironment.getServiceTemplates();
-      if (serviceTemplates != null) {
-        for (ServiceTemplate serviceTemplate : serviceTemplates) {
-          String serviceId = serviceTemplate.getServiceId();
-          String targetServiceId = serviceMapping.get(serviceId);
-          if (targetServiceId == null) {
-            continue;
+      if (serviceMapping != null) {
+        // Copy templates
+        List<ServiceTemplate> serviceTemplates = sourceEnvironment.getServiceTemplates();
+        if (serviceTemplates != null) {
+          for (ServiceTemplate serviceTemplate : serviceTemplates) {
+            String serviceId = serviceTemplate.getServiceId();
+            String targetServiceId = serviceMapping.get(serviceId);
+            if (targetServiceId == null) {
+              continue;
+            }
+            Service targetService = serviceResourceService.getWithDetails(targetAppId, targetServiceId);
+            notNullCheck("Target Service", targetService, USER);
+
+            String clonedEnvironmentUuid = clonedEnvironment.getUuid();
+
+            // Verify if the service template already exists in the target app
+            PageRequest<ServiceTemplate> serviceTemplatePageRequest = aPageRequest()
+                                                                          .withLimit(UNLIMITED)
+                                                                          .addFilter("appId", EQ, targetAppId)
+                                                                          .addFilter("envId", EQ, clonedEnvironmentUuid)
+                                                                          .addFilter("serviceId", EQ, targetServiceId)
+                                                                          .build();
+
+            List<ServiceTemplate> serviceTemplateList =
+                serviceTemplateService.list(serviceTemplatePageRequest, false, OBTAIN_VALUE);
+            ServiceTemplate clonedServiceTemplate = null;
+            if (isNotEmpty(serviceTemplateList)) {
+              clonedServiceTemplate = serviceTemplateList.get(0);
+            }
+            if (clonedServiceTemplate == null) {
+              clonedServiceTemplate = serviceTemplate.cloneInternal();
+              clonedServiceTemplate.setAppId(targetAppId);
+              clonedServiceTemplate.setEnvId(clonedEnvironmentUuid);
+              clonedServiceTemplate.setServiceId(targetServiceId);
+              clonedServiceTemplate.setName(targetService.getName());
+              // Check if the service template exist before cloning
+              clonedServiceTemplate = serviceTemplateService.save(clonedServiceTemplate);
+            }
+            serviceTemplate =
+                serviceTemplateService.get(appId, serviceTemplate.getEnvId(), serviceTemplate.getUuid(), true, MASKED);
+            if (serviceTemplate != null) {
+              // Clone Service Variable overrides
+              cloneServiceVariables(clonedEnvironment, serviceTemplate.getServiceVariablesOverrides(),
+                  clonedServiceTemplate.getUuid(), targetAppId, targetServiceId);
+              // Clone Service Config File overrides
+              cloneConfigFiles(clonedEnvironment, clonedServiceTemplate, serviceTemplate.getConfigFilesOverrides(),
+                  targetAppId, targetServiceId);
+            }
           }
-          Service targetService = serviceResourceService.getWithDetails(targetAppId, targetServiceId);
-          notNullCheck("Target Service", targetService, USER);
-
-          String clonedEnvironmentUuid = clonedEnvironment.getUuid();
-
-          // Verify if the service template already exists in the target app
-          PageRequest<ServiceTemplate> serviceTemplatePageRequest = aPageRequest()
+          // Clone ALL service variable overrides
+          PageRequest<ServiceVariable> serviceVariablePageRequest = aPageRequest()
                                                                         .withLimit(UNLIMITED)
-                                                                        .addFilter("appId", EQ, targetAppId)
-                                                                        .addFilter("envId", EQ, clonedEnvironmentUuid)
-                                                                        .addFilter("serviceId", EQ, targetServiceId)
+                                                                        .addFilter("appId", EQ, appId)
+                                                                        .addFilter("entityId", EQ, envId)
                                                                         .build();
-
-          List<ServiceTemplate> serviceTemplateList =
-              serviceTemplateService.list(serviceTemplatePageRequest, false, OBTAIN_VALUE);
-          ServiceTemplate clonedServiceTemplate = null;
-          if (isNotEmpty(serviceTemplateList)) {
-            clonedServiceTemplate = serviceTemplateList.get(0);
-          }
-          if (clonedServiceTemplate == null) {
-            clonedServiceTemplate = serviceTemplate.cloneInternal();
-            clonedServiceTemplate.setAppId(targetAppId);
-            clonedServiceTemplate.setEnvId(clonedEnvironmentUuid);
-            clonedServiceTemplate.setServiceId(targetServiceId);
-            clonedServiceTemplate.setName(targetService.getName());
-            // Check if the service template exist before cloning
-            clonedServiceTemplate = serviceTemplateService.save(clonedServiceTemplate);
-          }
-          serviceTemplate =
-              serviceTemplateService.get(appId, serviceTemplate.getEnvId(), serviceTemplate.getUuid(), true, MASKED);
-          if (serviceTemplate != null) {
-            // Clone Service Variable overrides
-            cloneServiceVariables(clonedEnvironment, serviceTemplate.getServiceVariablesOverrides(),
-                clonedServiceTemplate.getUuid(), targetAppId, targetServiceId);
-            // Clone Service Config File overrides
-            cloneConfigFiles(clonedEnvironment, clonedServiceTemplate, serviceTemplate.getConfigFilesOverrides(),
-                targetAppId, targetServiceId);
-          }
+          List<ServiceVariable> serviceVariables =
+              serviceVariableService.list(serviceVariablePageRequest, OBTAIN_VALUE);
+          cloneServiceVariables(clonedEnvironment, serviceVariables, null, targetAppId, null);
+          // ToDo anshul why do we have same thing in two places
+          cloneAppManifests(clonedEnvironment.getAppId(), clonedEnvironment.getUuid(), envId);
+          log.info("Cloning environment from appId {} to appId {}", appId, targetAppId);
         }
-        // Clone ALL service variable overrides
-        PageRequest<ServiceVariable> serviceVariablePageRequest =
-            aPageRequest().withLimit(UNLIMITED).addFilter("appId", EQ, appId).addFilter("entityId", EQ, envId).build();
-        List<ServiceVariable> serviceVariables = serviceVariableService.list(serviceVariablePageRequest, OBTAIN_VALUE);
-        cloneServiceVariables(clonedEnvironment, serviceVariables, null, targetAppId, null);
-        // ToDo anshul why do we have same thing in two places
-        cloneAppManifests(clonedEnvironment.getAppId(), clonedEnvironment.getUuid(), envId);
-        log.info("Cloning environment from appId {} to appId {}", appId, targetAppId);
       }
-
       List<ConfigFile> configFiles = configService.getConfigFilesForEntity(appId, DEFAULT_TEMPLATE_ID, envId);
       cloneConfigFiles(clonedEnvironment, null, configFiles, targetAppId, null);
       return clonedEnvironment;
