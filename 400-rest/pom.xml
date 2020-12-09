@@ -965,6 +965,21 @@
                             </sources>
                         </configuration>
                     </execution>
+                    <execution>
+                        <id>add-supporter-test-resource</id>
+                        <goals>
+                            <goal>add-test-resource</goal>
+                        </goals>
+                        <phase>generate-resources</phase>
+                        <configuration>
+                            <resources>
+                                <resource>
+                                    <directory>src/supporter-test/resources</directory>
+                                    <targetPath />
+                                </resource>
+                            </resources>
+                        </configuration>
+                    </execution>
                 </executions>
             </plugin>
             <plugin>
