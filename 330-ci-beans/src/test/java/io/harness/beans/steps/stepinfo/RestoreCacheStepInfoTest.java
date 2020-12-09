@@ -4,7 +4,7 @@ import static io.harness.rule.OwnerRule.ALEKSANDAR;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import io.harness.beans.CIBeansTest;
+import io.harness.CiBeansTestBase;
 import io.harness.beans.steps.CIStepInfoType;
 import io.harness.beans.steps.TypeInfo;
 import io.harness.category.element.UnitTests;
@@ -19,7 +19,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
-public class RestoreCacheStepInfoTest extends CIBeansTest {
+public class RestoreCacheStepInfoTest extends CiBeansTestBase {
   private String yamlString;
   @Before
   public void setUp() {

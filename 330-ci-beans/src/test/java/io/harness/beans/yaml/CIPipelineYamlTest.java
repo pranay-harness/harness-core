@@ -6,7 +6,7 @@ import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
 
-import io.harness.beans.CIBeansTest;
+import io.harness.CiBeansTestBase;
 import io.harness.beans.ParameterField;
 import io.harness.beans.stages.IntegrationStage;
 import io.harness.beans.steps.stepinfo.GitCloneStepInfo;
@@ -40,7 +40,7 @@ import java.net.URL;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
-public class CIPipelineYamlTest extends CIBeansTest {
+public class CIPipelineYamlTest extends CiBeansTestBase {
   @Test
   @Owner(developers = ALEKSANDAR)
   @Category(UnitTests.class)

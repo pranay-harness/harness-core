@@ -4,7 +4,7 @@ import static io.harness.rule.OwnerRule.ALEKSANDAR;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import io.harness.beans.CIBeansTest;
+import io.harness.CiBeansTestBase;
 import io.harness.beans.steps.stepinfo.RestoreCacheStepInfo;
 import io.harness.category.element.UnitTests;
 import io.harness.product.ci.engine.proto.UnitStep;
@@ -17,7 +17,7 @@ import org.apache.commons.codec.binary.Base64;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
-public class RestoreCacheStepProtobufSerializerTest extends CIBeansTest {
+public class RestoreCacheStepProtobufSerializerTest extends CiBeansTestBase {
   public static final String RESTORE_ID = "restore-id";
   public static final String RESTORE_CACHE = "restore-cache";
   public static final String RESTORE_KEY = "restore-key";

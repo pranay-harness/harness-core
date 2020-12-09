@@ -4,7 +4,7 @@ import static io.harness.rule.OwnerRule.SHUBHAM;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import io.harness.beans.CIBeansTest;
+import io.harness.CiBeansTestBase;
 import io.harness.beans.steps.stepinfo.PluginStepInfo;
 import io.harness.category.element.UnitTests;
 import io.harness.product.ci.engine.proto.UnitStep;
@@ -17,7 +17,7 @@ import org.apache.commons.codec.binary.Base64;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
-public class PluginStepProtobufSerializerTest extends CIBeansTest {
+public class PluginStepProtobufSerializerTest extends CiBeansTestBase {
   public static final String PLUGIN_STEP = "plugin-step";
   public static final String PLUGIN_STEP_ID = "run-step-id";
   public static final String PLUGIN_IMAGE = "plugins/git";

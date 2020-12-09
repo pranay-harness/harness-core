@@ -16,7 +16,7 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
 @Slf4j
-public class CiBeansComponentTest extends CiBeansTest {
+public class CiBeansComponentTest extends CiBeansTestBase {
   @Inject private Map<String, TestExecution> tests;
 
   @Test
