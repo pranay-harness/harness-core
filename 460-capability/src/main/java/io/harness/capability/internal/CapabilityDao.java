@@ -37,16 +37,16 @@ public class CapabilityDao {
     checkState(!requirement.getAccountId().isEmpty());
     requirement.setValidUntil(Date.from(Instant.now().plus(Duration.ofHours(100))));
     String capabilityId = persistence.save(requirement);
-    persistence.save(allDelegateIds.stream()
-                         .map(delegateId
-                             -> (CapabilitySubjectPermission) CapabilitySubjectPermission.builder()
-                                    .accountId(requirement.getAccountId())
-                                    .capabilityId(capabilityId)
-                                    .delegateId(delegateId)
-                                    .validUntil(Date.from(creationTime))
-                                    .permissionResult(PermissionResult.UNCHECKED)
-                                    .build())
-                         .collect(toList()));
+    persistence.saveBatch(allDelegateIds.stream()
+                              .map(delegateId
+                                  -> (CapabilitySubjectPermission) CapabilitySubjectPermission.builder()
+                                         .accountId(requirement.getAccountId())
+                                         .capabilityId(capabilityId)
+                                         .delegateId(delegateId)
+                                         .validUntil(Date.from(creationTime))
+                                         .permissionResult(PermissionResult.UNCHECKED)
+                                         .build())
+                              .collect(toList()));
     return capabilityId;
   }
 
