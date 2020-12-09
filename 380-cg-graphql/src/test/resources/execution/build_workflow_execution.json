@@ -1,0 +1,132 @@
+{
+  "uuid" : "EXECUTION_ID1",
+  "appId" : "APP1_ID_ACCOUNT1",
+  "createdBy" : {
+    "uuid" : "lv0euRhKRCyiXWzS7pOg6g",
+    "name" : "Admin",
+    "email" : "admin@harness.io"
+  },
+  "createdAt" : 1606760381234,
+  "accountId" : "ACCOUNT1_ID",
+  "workflowId" : "ywS7zut9QrW2VTdkTS48rQ",
+  "stateMachine" : {
+    "appId" : "U82mlZ7YRveJyFUC2ciHZQ",
+    "createdAt" : 0,
+    "accountId" : "kmpySmUISimoRrJL6NL73w",
+    "originId" : "ywS7zut9QrW2VTdkTS48rQ",
+    "originVersion" : 51,
+    "valid" : true
+  },
+  "workflowIds" : [
+    "ywS7zut9QrW2VTdkTS48rQ"
+  ],
+  "appName" : "test_app2",
+  "workflowType" : "ORCHESTRATION",
+  "status" : "SUCCESS",
+  "pipelineExecutionId" : "F-SlLs66TU-Bu8qfRJnFhQ",
+  "stageName" : "STAGE 1",
+  "name" : "Test-build",
+  "releaseNo" : "58",
+  "total" : 3,
+  "executionArgs" : {
+    "workflowType" : "ORCHESTRATION",
+    "orchestrationId" : "ywS7zut9QrW2VTdkTS48rQ",
+    "triggeredFromPipeline" : true,
+    "pipelineId" : "SaUQBkyTQfqd9G7FRegErg",
+    "pipelinePhaseElementId" : "K7UO5uNrRsGQUmwV13CLzQ",
+    "pipelinePhaseParallelIndex" : 1,
+    "stageName" : "STAGE 1",
+    "workflowVariables" : {
+      "test" : "10"
+    },
+    "excludeHostsWithSameArtifact" : false,
+    "notifyTriggeredUserOnly" : false,
+    "targetToSpecificHosts" : false,
+    "continueWithDefaultValues" : false
+  },
+  "triggeredBy" : {
+    "uuid" : "lv0euRhKRCyiXWzS7pOg6g",
+    "name" : "Admin",
+    "email" : "admin@harness.io"
+  },
+  "pipelineSummary" : {
+    "pipelineId" : "SaUQBkyTQfqd9G7FRegErg",
+    "pipelineName" : "Build pipeline"
+  },
+  "orchestrationType" : "BUILD",
+  "isBaseline" : false,
+  "keywords" : [
+    "orchestration",
+    "test-build",
+    "admin@harness.io",
+    "build pipeline",
+    "admin",
+    "test_app2"
+  ],
+  "onDemandRollback" : false,
+  "useSweepingOutputs" : false,
+  "latestPipelineResume" : false,
+  "cdPageCandidate" : false,
+  "validUntil" : null,
+  "startTs" : 1606760381244,
+  "nextIteration" : 1606760450262,
+  "buildExecutionSummaries" : [
+    {
+      "artifactStreamId" : "zEe-_AKNQWWOJ2pv5aGF1A",
+      "artifactSource" : "harnessexample/hello-world",
+      "revision" : "N/A",
+      "buildName" : "harnessexample/hello-world (1.5)",
+      "metadata" : "harnessexample/hello-world {image=harnessexample.azurecr.io/hello-world:1.5, tag=1.5}"
+    }
+  ],
+  "duration" : 50823,
+  "endTs" : 1606760432067,
+  "breakdown" : {
+    "success" : 3,
+    "failed" : 0,
+    "inprogress" : 0,
+    "queued" : 0
+  },
+  "artifacts": [
+    {
+      "artifactStreamId" : "nKKHUZQ-TMia1Rll3ko8ew",
+      "artifactSourceName" : "library/nginx",
+      "metadata" : {
+        "image" : "registry.hub.docker.com/library/nginx:1.19.5-alpine",
+        "tag" : "1.19.5-alpine",
+        "buildNo" : "1.19.5-alpine"
+      },
+      "displayName" : "library/nginx_1.19.5-alpine_2311539",
+      "serviceIds" : [
+        "4B307m_XTpOoLCsbHoPk7A"
+      ],
+      "status" : "APPROVED",
+      "contentStatus" : "METADATA_ONLY",
+      "settingId" : "rejPaQZ7RmSM4at4fB3c2w",
+      "accountId" : "kmpySmUISimoRrJL6NL73w",
+      "artifactStreamType" : "DOCKER",
+      "uiDisplayName" : "Tag# 1.19.5-alpine",
+      "buildIdentity" : "1.19.5-alpine_Hb5D-gnxQkODVywAYyLaIw",
+      "uuid" : "6M6zV19WTrSKpCEVMYjv7g",
+      "appId" : "U82mlZ7YRveJyFUC2ciHZQ",
+      "createdBy" : {
+        "uuid" : "lv0euRhKRCyiXWzS7pOg6g",
+        "name" : "Admin",
+        "email" : "admin@harness.io"
+      },
+      "createdAt" : 1606415345569,
+      "lastUpdatedBy" : {
+        "uuid" : "lv0euRhKRCyiXWzS7pOg6g",
+        "name" : "Admin",
+        "email" : "admin@harness.io"
+      },
+      "lastUpdatedAt" : 1606760195616
+    }
+  ],
+  "tags" : [
+    {
+      "name" : "myworkflow",
+      "value" : "Workflow"
+    }
+  ]
+}

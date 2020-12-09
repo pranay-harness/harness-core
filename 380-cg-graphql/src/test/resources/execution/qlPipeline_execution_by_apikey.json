@@ -1,0 +1,40 @@
+{
+  "id":null,
+  "pipelineId":"nYTmfZAITqeRj67IUo7vxw",
+  "createdAt":1602836077877,
+  "startedAt":1602836077884,
+  "endedAt":1602885444650,
+  "status":"FAILED",
+  "cause":{
+    "apiKey":{
+      "id":"KEY_ID",
+      "name":"API_KEY"
+    },
+    "using":"GRAPHQL_API"
+  },
+  "notes":null,
+  "appId":"nCLN8c84SqWPr44sqg65JQ",
+  "tags":[
+    {
+      "name":"mypipeline",
+      "value":"Pipeline - z8uZsbTwRr6s8VzJQJa8aQ"
+    }
+  ],
+  "pipelineStageExecutions":[
+    {
+      "pipelineStageElementId":"KZPqXENuRbKqkuISe07JAQ",
+      "pipelineStepName":"template-wf",
+      "pipelineStageName":"STAGE 2",
+      "workflowExecutionId":null,
+      "runtimeInputVariables":null,
+      "status":"PAUSED"
+    },
+    {
+      "pipelineStageElementId":"QI17tOeqQA2okKqcIkPMjg",
+      "pipelineStepName":"Approval 1",
+      "pipelineStageName":"STAGE 2",
+      "status":"QUEUED",
+      "approvalStepType":"USER_GROUP"
+    }
+  ]
+}

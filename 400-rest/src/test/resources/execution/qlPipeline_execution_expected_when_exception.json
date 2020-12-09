@@ -20,7 +20,6 @@
   },
   "notes": null,
   "appId": "nCLN8c84SqWPr44sqg65JQ",
-  "tags": [],
   "pipelineStageExecutions": [
     {
       "pipelineStageElementId": "KZPqXENuRbKqkuISe07JAQ",
@@ -36,6 +35,12 @@
       "pipelineStageName": "STAGE 2",
       "status": "QUEUED",
       "approvalStepType": "USER_GROUP"
+    }
+  ],
+  "tags" : [
+    {
+      "name" : "mypipeline",
+      "value" : "Pipeline - z8uZsbTwRr6s8VzJQJa8aQ"
     }
   ]
 }
