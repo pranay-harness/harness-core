@@ -140,6 +140,10 @@ fi
 
 export DEPLOY_MODE=KUBERNETES
 
+if [ -z "$MANAGER_SERVICE_SECRET" ]; then
+  export MANAGER_SERVICE_SECRET=**********
+fi
+
 if [[ $DEPLOY_MODE != "KUBERNETES" ]]; then
   echo "Checking Delegate latest version..."
   DELEGATE_STORAGE_URL=http://localhost:8888
