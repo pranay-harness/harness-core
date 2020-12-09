@@ -56,6 +56,7 @@ public class BillingDataPipelineServiceImplTest {
 
   private static final String gcpProjectId = "projectId";
   private static final String gcsBasePath = "gs://bucketName";
+  private static final String gcpPipelinePubSubTopic = "ce-gcpdata";
 
   @Mock private static ServiceAccountCredentials mockCredential;
   @Mock private static DataTransferServiceClient dataTransferServiceClient;
@@ -68,8 +69,11 @@ public class BillingDataPipelineServiceImplTest {
 
   @Before
   public void setup() throws IOException {
-    BillingDataPipelineConfig billingDataPipelineConfig =
-        BillingDataPipelineConfig.builder().gcpProjectId(gcpProjectId).gcsBasePath(gcsBasePath).build();
+    BillingDataPipelineConfig billingDataPipelineConfig = BillingDataPipelineConfig.builder()
+                                                              .gcpProjectId(gcpProjectId)
+                                                              .gcsBasePath(gcsBasePath)
+                                                              .gcpPipelinePubSubTopic(gcpPipelinePubSubTopic)
+                                                              .build();
     when(mainConfig.getBillingDataPipelineConfig()).thenReturn(billingDataPipelineConfig);
     when(billingDataPipelineRecordDao.getByAccountId(accountId)).thenReturn(null);
     mockCredential = mock(ServiceAccountCredentials.class);

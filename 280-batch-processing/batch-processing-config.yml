@@ -40,6 +40,8 @@ awsS3SyncConfig:
 billingDataPipelineConfig:
   gcpProjectId: gcpProjectIdPlaceHolder
   gcsBasePath: gcsBasePathPlaceHolder
+  gcpPipelinePubSubTopic: "ce-gcpdata"
+  gcpUseNewPipeline: false
   clusterDataGcsBucketName: "clusterdata-qa"
   clusterDataGcsBackupBucketName: "clusterdata-qa-backup"
 
