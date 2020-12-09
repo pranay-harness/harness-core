@@ -1,11 +1,13 @@
 package software.wings.service.impl.yaml.handler.environment;
 
 import static io.harness.beans.PageResponse.PageResponseBuilder.aPageResponse;
+import static io.harness.rule.OwnerRule.INDER;
 import static io.harness.rule.OwnerRule.RAMA;
 import static io.harness.rule.OwnerRule.YOGESH;
 
 import static software.wings.beans.Application.Builder.anApplication;
 import static software.wings.beans.Environment.Builder.anEnvironment;
+import static software.wings.beans.Environment.GLOBAL_ENV_ID;
 import static software.wings.beans.ServiceTemplate.Builder.aServiceTemplate;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 import static software.wings.utils.WingsTestConstants.APP_ID;
@@ -361,5 +363,63 @@ public class EnvironmentYamlHandlerTest extends YamlHandlerTestBase {
         .description("valid env yaml")
         .configMapYamlByServiceTemplateId(Collections.emptyMap())
         .build();
+  }
+
+  @Test
+  @Owner(developers = INDER)
+  @Category(UnitTests.class)
+  public void testSaveGet_variableOverride_OnUpdateEnvironment() {
+    final String encryped_yaml_ref = "safeharness:some-secret";
+    final String expected_value_for_encrypted_var = "safeharness:some-secret";
+    ArgumentCaptor<ServiceVariable> captor = ArgumentCaptor.forClass(ServiceVariable.class);
+    Environment environment = getDefaultEnvironment();
+    ServiceVariable existing = ServiceVariable.builder()
+                                   .name("sv-1")
+                                   .type(Type.TEXT)
+                                   .envId(GLOBAL_ENV_ID)
+                                   .entityType(EntityType.ENVIRONMENT)
+                                   .build();
+    existing.setAppId(APP_ID);
+
+    VariableOverrideYaml new_override =
+        VariableOverrideYaml.builder().name("sv-2").value(encryped_yaml_ref).valueType("ENCRYPTED_TEXT").build();
+
+    when(yamlHelper.extractEncryptedRecordId(eq(new_override.getValue()), anyString()))
+        .thenReturn(expected_value_for_encrypted_var);
+    when(mockServiceVariableService.getServiceVariablesByTemplate(
+             anyString(), anyString(), any(ServiceTemplate.class), any()))
+        .thenReturn(Collections.emptyList());
+    when(mockServiceVariableService.getServiceVariablesForEntity(
+             anyString(), anyString(), eq(ServiceVariableService.EncryptedFieldMode.OBTAIN_VALUE)))
+        .thenReturn(asList(existing));
+    when(yamlHelper.getEnvironment(APP_ID, validYamlFilePath)).thenReturn(environment);
+    when(secretManager.getEncryptedYamlRef(any(), any())).thenReturn(new_override.getValue());
+
+    Yaml yaml = yamlHandler.toYaml(environment, environment.getAppId());
+    yaml.setVariableOverrides(Arrays.asList(new_override));
+    ChangeContext<Yaml> changeContext = getChangeContext(yaml);
+
+    yamlHandler.upsertFromYaml(changeContext, null);
+    verify(mockServiceVariableService, times(1)).save(captor.capture(), anyBoolean());
+    List<String> varNames =
+        captor.getAllValues().stream().map(ServiceVariable::getValue).map(String::valueOf).collect(Collectors.toList());
+    assertThat(varNames).containsExactlyInAnyOrder(new_override.getValue());
+
+    ServiceVariable newly_added = ServiceVariable.builder()
+                                      .name("sv-2")
+                                      .type(Type.ENCRYPTED_TEXT)
+                                      .envId(GLOBAL_ENV_ID)
+                                      .entityType(EntityType.ENVIRONMENT)
+                                      .value(encryped_yaml_ref.toCharArray())
+                                      .build();
+    newly_added.setAppId(APP_ID);
+    when(mockServiceVariableService.getServiceVariablesForEntity(
+             anyString(), anyString(), eq(ServiceVariableService.EncryptedFieldMode.OBTAIN_VALUE)))
+        .thenReturn(asList(existing, newly_added));
+
+    yaml = yamlHandler.toYaml(environment, environment.getAppId());
+    List<VariableOverrideYaml> variableOverrides = yaml.getVariableOverrides();
+    assertThat(variableOverrides).isNotNull().hasSize(2);
+    assertThat(variableOverrides).contains(new_override);
   }
 }
