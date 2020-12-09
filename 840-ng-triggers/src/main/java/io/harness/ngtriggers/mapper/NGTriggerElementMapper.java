@@ -1,24 +1,40 @@
 package io.harness.ngtriggers.mapper;
 
+import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.InvalidRequestException;
+import io.harness.ng.core.mapper.TagMapper;
 import io.harness.ngtriggers.beans.config.HeaderConfig;
 import io.harness.ngtriggers.beans.config.NGTriggerConfig;
+import io.harness.ngtriggers.beans.dto.LastTriggerExecutionDetails;
+import io.harness.ngtriggers.beans.dto.NGTriggerDetailsResponseDTO;
 import io.harness.ngtriggers.beans.dto.NGTriggerResponseDTO;
+import io.harness.ngtriggers.beans.dto.WebhookDetails;
 import io.harness.ngtriggers.beans.entity.NGTriggerEntity;
+import io.harness.ngtriggers.beans.entity.TriggerEventHistory;
 import io.harness.ngtriggers.beans.entity.TriggerWebhookEvent;
 import io.harness.ngtriggers.beans.entity.metadata.NGTriggerMetadata;
 import io.harness.ngtriggers.beans.entity.metadata.WebhookMetadata;
 import io.harness.ngtriggers.beans.source.NGTriggerSource;
 import io.harness.ngtriggers.beans.source.NGTriggerType;
 import io.harness.ngtriggers.beans.source.webhook.WebhookTriggerConfig;
+import io.harness.repositories.ng.core.spring.TriggerEventHistoryRepository;
 import io.harness.yaml.utils.YamlPipelineUtils;
 
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import java.io.IOException;
 import java.util.List;
-import lombok.experimental.UtilityClass;
+import java.util.Optional;
+import lombok.AllArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Sort;
 
-@UtilityClass
+@Singleton
+@AllArgsConstructor(onConstructor = @__({ @Inject }))
+@Slf4j
 public class NGTriggerElementMapper {
+  private TriggerEventHistoryRepository triggerEventHistoryRepository;
+
   public NGTriggerConfig toTriggerConfig(String yaml) {
     try {
       return YamlPipelineUtils.read(yaml, NGTriggerConfig.class);
@@ -56,6 +72,8 @@ public class NGTriggerElementMapper {
         .targetIdentifier(config.getTarget().getTargetIdentifier())
         .targetType(config.getTarget().getType())
         .metadata(toMetadata(config.getSource()))
+        .enabled(config.getEnabled())
+        .tags(TagMapper.convertToList(config.getTags()))
         .build();
   }
 
@@ -90,5 +108,54 @@ public class NGTriggerElementMapper {
   public TriggerWebhookEvent toNGTriggerWebhookEvent(
       String accountIdentifier, String payload, List<HeaderConfig> headerConfigs) {
     return TriggerWebhookEvent.builder().accountId(accountIdentifier).headers(headerConfigs).payload(payload).build();
+  }
+
+  public NGTriggerDetailsResponseDTO toNGTriggerDetailsResponseDTO(NGTriggerEntity ngTriggerEntity) {
+    NGTriggerDetailsResponseDTO.NGTriggerDetailsResponseDTOBuilder ngTriggerDetailsResponseDTO =
+        NGTriggerDetailsResponseDTO.builder()
+            .name(ngTriggerEntity.getName())
+            .identifier(ngTriggerEntity.getIdentifier())
+            .description(ngTriggerEntity.getDescription())
+            .type(ngTriggerEntity.getType())
+            .tags(TagMapper.convertToMap(ngTriggerEntity.getTags()))
+            .enabled(ngTriggerEntity.getEnabled() == null || ngTriggerEntity.getEnabled());
+
+    // Webhook Details
+    if (ngTriggerEntity.getType() == NGTriggerType.WEBHOOK) {
+      // TODO: Webhook secret is null of all except BitBucketCloud
+      WebhookDetails webhookDetails = WebhookDetails.builder()
+                                          .webhookSourceRepo(ngTriggerEntity.getMetadata().getWebhook().getType())
+                                          .webhookSecret(null)
+                                          .build();
+      ngTriggerDetailsResponseDTO.webhookDetails(webhookDetails);
+    }
+
+    Optional<TriggerEventHistory> triggerEventHistory = fetchLatestExecutionForTrigger(ngTriggerEntity);
+
+    if (triggerEventHistory.isPresent()) {
+      LastTriggerExecutionDetails lastTriggerExecutionDetails =
+          LastTriggerExecutionDetails.builder()
+              .lastExecutionStatus(triggerEventHistory.get().getFinalStatus())
+              .lastExecutionSuccessful(!triggerEventHistory.get().isExceptionOccurred())
+              .message(triggerEventHistory.get().getMessage())
+              .planExecutionId(triggerEventHistory.get().getPlanExecutionId())
+              .lastExecutionTime(triggerEventHistory.get().getCreatedAt())
+              .build();
+      ngTriggerDetailsResponseDTO.lastTriggerExecutionDetails(lastTriggerExecutionDetails);
+    }
+
+    return ngTriggerDetailsResponseDTO.build();
+  }
+
+  public Optional<TriggerEventHistory> fetchLatestExecutionForTrigger(NGTriggerEntity ngTriggerEntity) {
+    List<TriggerEventHistory> triggerEventHistoryList =
+        triggerEventHistoryRepository.findFirst1ByAccountIdAndOrgIdentifierAndProjectIdentifierAndTriggerIdentifier(
+            ngTriggerEntity.getAccountId(), ngTriggerEntity.getOrgIdentifier(), ngTriggerEntity.getProjectIdentifier(),
+            ngTriggerEntity.getIdentifier(),
+            Sort.by(TriggerEventHistory.TriggerEventHistoryKeys.createdAt).descending());
+    if (!EmptyPredicate.isEmpty(triggerEventHistoryList)) {
+      return Optional.of(triggerEventHistoryList.get(0));
+    }
+    return Optional.empty();
   }
 }

@@ -216,13 +216,14 @@ public class WebhookEventPayloadParser {
       throw new InvalidRequestException("Failed to resolve Webhook Source. Reason: HttpHeaders are empty.");
     }
 
-    if (headerKeys.contains(X_GIT_HUB_EVENT)) {
+    if (headerKeys.stream().anyMatch(X_GIT_HUB_EVENT::equalsIgnoreCase)) {
       return GitProvider.GITHUB;
-    } else if (headerKeys.contains(X_GIT_LAB_EVENT)) {
+    } else if (headerKeys.stream().anyMatch(X_GIT_LAB_EVENT::equalsIgnoreCase)) {
       return GitProvider.GITLAB;
-    } else if (headerKeys.contains(X_BIT_BUCKET_EVENT)) {
+    } else if (headerKeys.stream().anyMatch(X_BIT_BUCKET_EVENT::equalsIgnoreCase)) {
       return GitProvider.BITBUCKET;
     }
+
     throw new InvalidRequestException("Unable to resolve the Webhook Source. "
             + "One of " + X_GIT_HUB_EVENT + ", " + X_BIT_BUCKET_EVENT + ", " + X_GIT_LAB_EVENT
             + " must be present in Headers",

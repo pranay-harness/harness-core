@@ -16,9 +16,12 @@ public interface NGTriggerService {
 
   NGTriggerEntity update(NGTriggerEntity ngTriggerEntity);
 
+  boolean updateTriggerStatus(NGTriggerEntity ngTriggerEntity, boolean status);
+
   Page<NGTriggerEntity> list(Criteria criteria, Pageable pageable);
 
-  Page<NGTriggerEntity> listWebhookTriggers(String accountIdentifier, String repoUrl, boolean isDeleted);
+  Page<NGTriggerEntity> listWebhookTriggers(
+      String accountIdentifier, String repoUrl, boolean isDeleted, boolean enabledOnly);
 
   boolean delete(String accountId, String orgIdentifier, String projectIdentifier, String targetIdentifier,
       String identifier, Long version);

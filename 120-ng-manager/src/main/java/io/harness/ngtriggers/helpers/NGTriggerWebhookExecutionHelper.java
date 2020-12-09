@@ -1,6 +1,7 @@
 package io.harness.ngtriggers.helpers;
 
 import static io.harness.ngtriggers.beans.webhookresponse.WebhookEventResponse.FinalStatus.INVALID_RUNTIME_INPUT_YAML;
+import static io.harness.ngtriggers.beans.webhookresponse.WebhookEventResponse.FinalStatus.NO_ENABLED_TRIGGER_FOUND_FOR_REPO;
 import static io.harness.ngtriggers.beans.webhookresponse.WebhookEventResponse.FinalStatus.NO_MATCHING_TRIGGER_FOR_PAYLOAD_CONDITIONS;
 import static io.harness.ngtriggers.beans.webhookresponse.WebhookEventResponse.FinalStatus.NO_MATCHING_TRIGGER_FOR_REPO;
 import static io.harness.ngtriggers.beans.webhookresponse.WebhookEventResponse.FinalStatus.TARGET_DID_NOT_EXECUTE;
@@ -48,6 +49,7 @@ public class NGTriggerWebhookExecutionHelper {
   private final NGTriggerService ngTriggerService;
   private final NGPipelineExecuteHelper ngPipelineExecuteHelper;
   private final WebhookEventPayloadParser webhookEventPayloadParser;
+  private final NGTriggerElementMapper ngTriggerElementMapper;
 
   public WebhookEventResponse handleTriggerWebhookEvent(TriggerWebhookEvent triggerWebhookEvent) {
     WebhookPayloadData webhookPayloadData;
@@ -64,8 +66,20 @@ public class NGTriggerWebhookExecutionHelper {
         retrieveTriggersConfiguredForRepo(triggerWebhookEvent, webhookPayloadData.getRepository().getLink());
     if (EmptyPredicate.isEmpty(triggersForRepo)) {
       log.info("No trigger found for repoUrl:" + webhookPayloadData.getRepository().getLink());
-      return WebhookEventResponseHelper.toResponse(NO_MATCHING_TRIGGER_FOR_REPO, triggerWebhookEvent, null, EMPTY,
+      return WebhookEventResponseHelper.toResponse(NO_MATCHING_TRIGGER_FOR_REPO, triggerWebhookEvent, null, null,
           "No Trigger was configured for Repo: " + webhookPayloadData.getRepository().getLink(), null);
+    }
+
+    // Filtered out disabled triggers
+    triggersForRepo = triggersForRepo.stream()
+                          .filter(trigger -> trigger.getEnabled() == null || trigger.getEnabled())
+                          .collect(Collectors.toList());
+
+    if (EmptyPredicate.isEmpty(triggersForRepo)) {
+      log.info("No ENABLED trigger found for repoUrl:" + webhookPayloadData.getRepository().getLink());
+      return WebhookEventResponseHelper.toResponse(NO_ENABLED_TRIGGER_FOUND_FOR_REPO, triggerWebhookEvent, null, null,
+          "No Trigger configured for Repo was in ENABLED status: " + webhookPayloadData.getRepository().getLink(),
+          null);
     }
 
     // 3. Apply Event, Action and Condition filters
@@ -73,7 +87,7 @@ public class NGTriggerWebhookExecutionHelper {
     if (!optionalEntity.isPresent()) {
       log.info("No trigger matched payload after condition evaluation:");
       return WebhookEventResponseHelper.toResponse(NO_MATCHING_TRIGGER_FOR_PAYLOAD_CONDITIONS, triggerWebhookEvent,
-          null, EMPTY, "No Trigger matched for payload event", null);
+          null, null, "No Trigger matched for payload event", null);
     }
 
     // 4. Request Execution if trigger is available
@@ -101,8 +115,8 @@ public class NGTriggerWebhookExecutionHelper {
                      .append(", using trigger: ")
                      .append(ngTriggerEntity.getIdentifier())
                      .toString());
-        return WebhookEventResponseHelper.toResponse(TARGET_DID_NOT_EXECUTE, triggerWebhookEvent, response,
-            ngTriggerEntity.getIdentifier(), EMPTY, targetExecutionSummary);
+        return WebhookEventResponseHelper.toResponse(
+            TARGET_DID_NOT_EXECUTE, triggerWebhookEvent, response, ngTriggerEntity, EMPTY, targetExecutionSummary);
       } else {
         log.info(new StringBuilder(128)
                      .append(ngTriggerEntity.getTargetType())
@@ -112,7 +126,7 @@ public class NGTriggerWebhookExecutionHelper {
                      .append(ngTriggerEntity.getIdentifier())
                      .toString());
         return WebhookEventResponseHelper.toResponse(TARGET_EXECUTION_REQUESTED, triggerWebhookEvent, response,
-            ngTriggerEntity.getIdentifier(), "Pipeline execution was requested successfully", targetExecutionSummary);
+            ngTriggerEntity, "Pipeline execution was requested successfully", targetExecutionSummary);
       }
     } catch (Exception e) {
       log.info(new StringBuilder(128)
@@ -126,7 +140,7 @@ public class NGTriggerWebhookExecutionHelper {
       TargetExecutionSummary targetExecutionSummary =
           WebhookEventResponseHelper.prepareTargetExecutionSummary(null, triggerDetails, runtimeInputYaml);
       return WebhookEventResponseHelper.toResponse(INVALID_RUNTIME_INPUT_YAML, triggerWebhookEvent, null,
-          ngTriggerEntity.getIdentifier(), e.getMessage(), targetExecutionSummary);
+          ngTriggerEntity, e.getMessage(), targetExecutionSummary);
     }
   }
 
@@ -147,7 +161,7 @@ public class NGTriggerWebhookExecutionHelper {
   private List<NGTriggerEntity> retrieveTriggersConfiguredForRepo(
       TriggerWebhookEvent triggerWebhookEvent, String repoUrl) {
     Page<NGTriggerEntity> triggerPage =
-        ngTriggerService.listWebhookTriggers(triggerWebhookEvent.getAccountId(), repoUrl, false);
+        ngTriggerService.listWebhookTriggers(triggerWebhookEvent.getAccountId(), repoUrl, false, false);
 
     List<NGTriggerEntity> listOfTriggers = triggerPage.get().collect(Collectors.toList());
     return EmptyPredicate.isEmpty(listOfTriggers) ? Collections.emptyList() : listOfTriggers;
@@ -157,7 +171,7 @@ public class NGTriggerWebhookExecutionHelper {
   Optional<TriggerDetails> applyFilters(WebhookPayloadData webhookPayloadData, List<NGTriggerEntity> triggersForRepo) {
     TriggerDetails matchedTrigger = null;
     for (NGTriggerEntity ngTriggerEntity : triggersForRepo) {
-      NGTriggerConfig ngTriggerConfig = NGTriggerElementMapper.toTriggerConfig(ngTriggerEntity.getYaml());
+      NGTriggerConfig ngTriggerConfig = ngTriggerElementMapper.toTriggerConfig(ngTriggerEntity.getYaml());
       TriggerDetails triggerDetails =
           TriggerDetails.builder().ngTriggerConfig(ngTriggerConfig).ngTriggerEntity(ngTriggerEntity).build();
       if (checkTriggerEligibility(webhookPayloadData, triggerDetails)) {

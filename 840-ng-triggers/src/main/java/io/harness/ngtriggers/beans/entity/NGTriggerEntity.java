@@ -6,15 +6,18 @@ import io.harness.data.validator.EntityName;
 import io.harness.mongo.index.CompoundMongoIndex;
 import io.harness.mongo.index.Field;
 import io.harness.mongo.index.MongoIndex;
+import io.harness.ng.core.common.beans.NGTag;
 import io.harness.ngtriggers.beans.entity.metadata.NGTriggerMetadata;
 import io.harness.ngtriggers.beans.source.NGTriggerType;
 import io.harness.ngtriggers.beans.target.TargetType;
 
 import com.google.common.collect.ImmutableList;
 import java.util.List;
+import java.util.Map;
 import javax.validation.constraints.Size;
 import lombok.Builder;
 import lombok.Data;
+import lombok.Singular;
 import lombok.experimental.FieldNameConstants;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Entity;
@@ -77,4 +80,6 @@ public class NGTriggerEntity {
   @LastModifiedDate Long lastModifiedAt;
   @Version Long version;
   @Builder.Default Boolean deleted = Boolean.FALSE;
+  @Singular @Size(max = 128) List<NGTag> tags;
+  @Builder.Default Boolean enabled = Boolean.TRUE;
 }

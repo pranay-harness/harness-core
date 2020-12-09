@@ -13,6 +13,7 @@ import io.harness.ngtriggers.beans.source.webhook.WebhookSourceRepo;
 import io.harness.ngtriggers.helpers.WebhookConfigHelper;
 import io.harness.ngtriggers.mapper.NGTriggerElementMapper;
 import io.harness.ngtriggers.service.NGTriggerService;
+import io.harness.security.annotations.PublicApi;
 import io.harness.yaml.utils.YamlPipelineUtils;
 
 import com.google.inject.Inject;
@@ -45,6 +46,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class NGTriggerWebhookConfigResource {
   private final NGTriggerService ngTriggerService;
+  private final NGTriggerElementMapper ngTriggerElementMapper;
 
   @GET
   @Path("/sourceRepos")
@@ -70,6 +72,7 @@ public class NGTriggerWebhookConfigResource {
   @POST
   @Path("/trigger")
   @ApiOperation(value = "accept webhook event", nickname = "webhookEndpoint")
+  @PublicApi
   public ResponseDTO<String> processWebhookEvent(
       @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier, @NotNull String eventPayload,
       @Context HttpHeaders httpHeaders) {
@@ -78,7 +81,7 @@ public class NGTriggerWebhookConfigResource {
         (k, v) -> headerConfigs.add(HeaderConfig.builder().key(k).values(v).build()));
 
     TriggerWebhookEvent eventEntity =
-        NGTriggerElementMapper.toNGTriggerWebhookEvent(accountIdentifier, eventPayload, headerConfigs);
+        ngTriggerElementMapper.toNGTriggerWebhookEvent(accountIdentifier, eventPayload, headerConfigs);
     TriggerWebhookEvent newEvent = ngTriggerService.addEventToQueue(eventEntity);
     return ResponseDTO.newResponse(newEvent.getUuid());
   }

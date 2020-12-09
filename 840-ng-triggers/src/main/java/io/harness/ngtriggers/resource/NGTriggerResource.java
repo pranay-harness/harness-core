@@ -14,6 +14,7 @@ import io.harness.ng.core.dto.ErrorDTO;
 import io.harness.ng.core.dto.FailureDTO;
 import io.harness.ng.core.dto.ResponseDTO;
 import io.harness.ngtriggers.beans.config.NGTriggerConfig;
+import io.harness.ngtriggers.beans.dto.NGTriggerDetailsResponseDTO;
 import io.harness.ngtriggers.beans.dto.NGTriggerResponseDTO;
 import io.harness.ngtriggers.beans.entity.NGTriggerEntity;
 import io.harness.ngtriggers.beans.entity.NGTriggerEntity.NGTriggerEntityKeys;
@@ -50,6 +51,7 @@ import org.springframework.data.mongodb.core.query.Criteria;
 @Slf4j
 public class NGTriggerResource {
   private final NGTriggerService ngTriggerService;
+  private final NGTriggerElementMapper ngTriggerElementMapper;
 
   @POST
   @ApiImplicitParams({
@@ -63,10 +65,10 @@ public class NGTriggerResource {
       @NotNull @QueryParam(NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier,
       @NotNull @ApiParam(hidden = true, type = "") String yaml) {
     NGTriggerEntity ngTriggerEntity =
-        NGTriggerElementMapper.toTriggerEntity(accountIdentifier, orgIdentifier, projectIdentifier, yaml);
+        ngTriggerElementMapper.toTriggerEntity(accountIdentifier, orgIdentifier, projectIdentifier, yaml);
     NGTriggerEntity createdEntity = ngTriggerService.create(ngTriggerEntity);
     return ResponseDTO.newResponse(
-        createdEntity.getVersion().toString(), NGTriggerElementMapper.toResponseDTO(createdEntity));
+        createdEntity.getVersion().toString(), ngTriggerElementMapper.toResponseDTO(createdEntity));
   }
 
   @GET
@@ -81,7 +83,7 @@ public class NGTriggerResource {
     Optional<NGTriggerEntity> ngTriggerEntity = ngTriggerService.get(
         accountIdentifier, orgIdentifier, projectIdentifier, targetIdentifier, triggerIdentifier, false);
     return ResponseDTO.newResponse(ngTriggerEntity.get().getVersion().toString(),
-        ngTriggerEntity.map(NGTriggerElementMapper::toResponseDTO).orElse(null));
+        ngTriggerEntity.map(ngTriggerElementMapper::toResponseDTO).orElse(null));
   }
 
   @PUT
@@ -98,13 +100,27 @@ public class NGTriggerResource {
       @NotNull @QueryParam(NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier,
       @PathParam("triggerIdentifier") String triggerIdentifier,
       @NotNull @ApiParam(hidden = true, type = "") String yaml) {
-    NGTriggerEntity ngTriggerEntity = NGTriggerElementMapper.toTriggerEntity(
+    NGTriggerEntity ngTriggerEntity = ngTriggerElementMapper.toTriggerEntity(
         accountIdentifier, orgIdentifier, projectIdentifier, triggerIdentifier, yaml);
     ngTriggerEntity.setVersion(isNumeric(ifMatch) ? parseLong(ifMatch) : null);
 
     NGTriggerEntity updatedEntity = ngTriggerService.update(ngTriggerEntity);
     return ResponseDTO.newResponse(
-        updatedEntity.getVersion().toString(), NGTriggerElementMapper.toResponseDTO(updatedEntity));
+        updatedEntity.getVersion().toString(), ngTriggerElementMapper.toResponseDTO(updatedEntity));
+  }
+
+  @PUT
+  @Path("{triggerIdentifier}/status")
+  @ApiOperation(value = "Update a trigger's status by identifier", nickname = "updateTriggerStatus")
+  public ResponseDTO<Boolean> updateTriggerStatus(
+      @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier,
+      @NotNull @QueryParam(NGCommonEntityConstants.ORG_KEY) String orgIdentifier,
+      @NotNull @QueryParam(NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier,
+      @NotNull @QueryParam("targetIdentifier") String targetIdentifier,
+      @PathParam("triggerIdentifier") String triggerIdentifier, @NotNull @QueryParam("status") boolean status) {
+    Optional<NGTriggerEntity> ngTriggerEntity = ngTriggerService.get(
+        accountIdentifier, orgIdentifier, projectIdentifier, targetIdentifier, triggerIdentifier, false);
+    return ResponseDTO.newResponse(ngTriggerService.updateTriggerStatus(ngTriggerEntity.get(), status));
   }
 
   @DELETE
@@ -122,7 +138,7 @@ public class NGTriggerResource {
 
   @GET
   @ApiOperation(value = "Gets Triggers list for target", nickname = "getTriggerListForTarget")
-  public ResponseDTO<PageResponse<NGTriggerResponseDTO>> getListForTarget(
+  public ResponseDTO<PageResponse<NGTriggerDetailsResponseDTO>> getListForTarget(
       @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier,
       @NotNull @QueryParam(NGCommonEntityConstants.ORG_KEY) String orgIdentifier,
       @NotNull @QueryParam(NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier,
@@ -137,8 +153,8 @@ public class NGTriggerResource {
     } else {
       pageRequest = PageUtils.getPageRequest(page, size, sort);
     }
-    Page<NGTriggerResponseDTO> triggers =
-        ngTriggerService.list(criteria, pageRequest).map(NGTriggerElementMapper::toResponseDTO);
+    Page<NGTriggerDetailsResponseDTO> triggers =
+        ngTriggerService.list(criteria, pageRequest).map(ngTriggerElementMapper::toNGTriggerDetailsResponseDTO);
     return ResponseDTO.newResponse(getNGPageResponse(triggers));
   }
 
@@ -149,7 +165,8 @@ public class NGTriggerResource {
       @NotNull @QueryParam("repoURL") String repoURL, @QueryParam("filter") String filterQuery,
       @QueryParam("page") @DefaultValue("0") int page, @QueryParam("size") @DefaultValue("25") int size,
       @QueryParam("sort") List<String> sort, @QueryParam(NGResourceFilterConstants.SEARCH_TERM_KEY) String searchTerm) {
-    Criteria criteria = TriggerFilterHelper.createCriteriaForWebhookTriggerGetList(null, repoURL, searchTerm, false);
+    Criteria criteria =
+        TriggerFilterHelper.createCriteriaForWebhookTriggerGetList(null, repoURL, searchTerm, false, false);
     Pageable pageRequest;
     if (EmptyPredicate.isEmpty(sort)) {
       pageRequest =
@@ -158,7 +175,7 @@ public class NGTriggerResource {
       pageRequest = PageUtils.getPageRequest(page, size, sort);
     }
     Page<NGTriggerResponseDTO> triggers =
-        ngTriggerService.list(criteria, pageRequest).map(NGTriggerElementMapper::toResponseDTO);
+        ngTriggerService.list(criteria, pageRequest).map(ngTriggerElementMapper::toResponseDTO);
     return ResponseDTO.newResponse(getNGPageResponse(triggers));
   }
 }

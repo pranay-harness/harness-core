@@ -8,10 +8,9 @@ import static io.harness.ngtriggers.beans.webhookresponse.WebhookEventResponse.F
 import static io.harness.ngtriggers.beans.webhookresponse.WebhookEventResponse.FinalStatus.TARGET_DID_NOT_EXECUTE;
 import static io.harness.ngtriggers.beans.webhookresponse.WebhookEventResponse.FinalStatus.TARGET_EXECUTION_REQUESTED;
 
-import static org.apache.commons.lang3.StringUtils.EMPTY;
-
 import io.harness.ngpipeline.pipeline.beans.resources.NGPipelineExecutionResponseDTO;
 import io.harness.ngtriggers.beans.dto.TriggerDetails;
+import io.harness.ngtriggers.beans.entity.NGTriggerEntity;
 import io.harness.ngtriggers.beans.entity.TriggerEventHistory;
 import io.harness.ngtriggers.beans.entity.TriggerWebhookEvent;
 import io.harness.ngtriggers.beans.scm.ParsePayloadResponse;
@@ -28,17 +27,20 @@ import lombok.experimental.UtilityClass;
 public class WebhookEventResponseHelper {
   public WebhookEventResponse toResponse(WebhookEventResponse.FinalStatus status,
       TriggerWebhookEvent triggerWebhookEvent, NGPipelineExecutionResponseDTO pipelineExecutionResponseDTO,
-      String triggerIdentifier, String message, TargetExecutionSummary targetExecutionSummary) {
-    WebhookEventResponse response = WebhookEventResponse.builder()
-                                        .accountId(triggerWebhookEvent.getAccountId())
-                                        .eventCorrelationId(triggerWebhookEvent.getUuid())
-                                        .payload(triggerWebhookEvent.getPayload())
-                                        .createdAt(triggerWebhookEvent.getCreatedAt())
-                                        .finalStatus(status)
-                                        .triggerIdentifier(triggerIdentifier)
-                                        .message(message)
-                                        .targetExecutionSummary(targetExecutionSummary)
-                                        .build();
+      NGTriggerEntity ngTriggerEntity, String message, TargetExecutionSummary targetExecutionSummary) {
+    WebhookEventResponse response =
+        WebhookEventResponse.builder()
+            .accountId(triggerWebhookEvent.getAccountId())
+            .orgIdentifier(ngTriggerEntity == null ? null : ngTriggerEntity.getOrgIdentifier())
+            .projectIdentifier(ngTriggerEntity == null ? null : ngTriggerEntity.getProjectIdentifier())
+            .eventCorrelationId(triggerWebhookEvent.getUuid())
+            .payload(triggerWebhookEvent.getPayload())
+            .createdAt(triggerWebhookEvent.getCreatedAt())
+            .finalStatus(status)
+            .triggerIdentifier(ngTriggerEntity == null ? null : ngTriggerEntity.getIdentifier())
+            .message(message)
+            .targetExecutionSummary(targetExecutionSummary)
+            .build();
     if (pipelineExecutionResponseDTO == null) {
       response.setExceptionOccurred(true);
       return response;
@@ -57,10 +59,12 @@ public class WebhookEventResponseHelper {
   public TriggerEventHistory toEntity(WebhookEventResponse response) {
     return TriggerEventHistory.builder()
         .accountId(response.getAccountId())
+        .orgIdentifier(response.getOrgIdentifier())
+        .projectIdentifier(response.getProjectIdentifier())
         .eventCorrelationId(response.getEventCorrelationId())
         .payload(response.getPayload())
         .eventCreatedAt(response.getCreatedAt())
-        .finalStatus(response.getFinalStatus())
+        .finalStatus(response.getFinalStatus().toString())
         .message(response.getMessage())
         .exceptionOccurred(response.isExceptionOccurred())
         .triggerIdentifier(response.getTriggerIdentifier())
@@ -78,7 +82,7 @@ public class WebhookEventResponseHelper {
         status = SCM_SERVICE_CONNECTION_FAILED;
       }
     }
-    return toResponse(status, parsePayloadReponse.getOriginalEvent(), null, EMPTY, exception.getMessage(), null);
+    return toResponse(status, parsePayloadReponse.getOriginalEvent(), null, null, exception.getMessage(), null);
   }
 
   public TargetExecutionSummary prepareTargetExecutionSummary(

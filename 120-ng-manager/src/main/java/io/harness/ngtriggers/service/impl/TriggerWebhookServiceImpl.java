@@ -18,7 +18,7 @@ import io.harness.ngtriggers.helpers.NGTriggerWebhookExecutionHelper;
 import io.harness.ngtriggers.helpers.WebhookEventResponseHelper;
 import io.harness.ngtriggers.service.NGTriggerService;
 import io.harness.ngtriggers.service.TriggerWebhookService;
-import io.harness.repositories.ngtriggers.TriggerEventHistoryRepository;
+import io.harness.repositories.ng.core.spring.TriggerEventHistoryRepository;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -43,7 +43,7 @@ public class TriggerWebhookServiceImpl
     persistenceIteratorFactory.createPumpIteratorWithDedicatedThreadPool(
         PersistenceIteratorFactory.PumpExecutorOptions.builder()
             .name("WebhookEventProcessor")
-            .poolSize(2)
+            .poolSize(1)
             .interval(ofSeconds(15))
             .build(),
         TriggerWebhookService.class,
@@ -53,7 +53,11 @@ public class TriggerWebhookServiceImpl
             .targetInterval(ofSeconds(15))
             .acceptableNoAlertDelay(ofSeconds(30))
             .handler(this)
-            .filterExpander(query -> query.addCriteria(Criteria.where(TriggerWebhookEventsKeys.attemptCount).lte(2)))
+            .filterExpander(query
+                -> query.addCriteria(new Criteria()
+                                         .and(TriggerWebhookEventsKeys.attemptCount)
+                                         .lte(2)
+                                         .andOperator(Criteria.where(TriggerWebhookEventsKeys.processing).is(false))))
             .schedulingType(REGULAR)
             .persistenceProvider(new SpringPersistenceProvider<>(mongoTemplate))
             .redistribute(true));
@@ -61,11 +65,12 @@ public class TriggerWebhookServiceImpl
 
   @Override
   public void handle(TriggerWebhookEvent event) {
-    WebhookEventResponse response = ngTriggerWebhookExecutionHelper.handleTriggerWebhookEvent(event);
     try {
+      updateTriggerEventProcessingStatus(event, true); // start processing
+      WebhookEventResponse response = ngTriggerWebhookExecutionHelper.handleTriggerWebhookEvent(event);
       if (response.getFinalStatus() == SCM_SERVICE_CONNECTION_FAILED) {
         event.setAttemptCount(event.getAttemptCount() + 1);
-        ngTriggerService.updateTriggerWebhookEvent(event);
+        updateTriggerEventProcessingStatus(event, false);
       } else {
         if (WebhookEventResponseHelper.isFinalStatusAnEvent(response.getFinalStatus())) {
           triggerEventHistoryRepository.save(WebhookEventResponseHelper.toEntity(response));
@@ -73,8 +78,14 @@ public class TriggerWebhookServiceImpl
         ngTriggerService.deleteTriggerWebhookEvent(event);
       }
     } catch (Exception e) {
-      log.error(
-          "Exception while handling webhook event. Should have been handled gracefully before this. Please check", e);
+      event.setAttemptCount(event.getAttemptCount() + 1);
+      ngTriggerService.updateTriggerWebhookEvent(event);
+      log.error("Exception while handling webhook event. Please check", e);
     }
+  }
+
+  protected void updateTriggerEventProcessingStatus(TriggerWebhookEvent event, boolean status) {
+    event.setProcessing(status);
+    ngTriggerService.updateTriggerWebhookEvent(event);
   }
 }

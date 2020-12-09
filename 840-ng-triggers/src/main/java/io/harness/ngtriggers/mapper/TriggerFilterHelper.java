@@ -51,7 +51,7 @@ public class TriggerFilterHelper {
   }
 
   public Criteria createCriteriaForWebhookTriggerGetList(
-      String accountIdentifier, String repoURL, String searchTerm, boolean deleted) {
+      String accountIdentifier, String repoURL, String searchTerm, boolean deleted, boolean enabledOnly) {
     Criteria criteria = new Criteria();
     if (isNotEmpty(accountIdentifier)) {
       criteria.and(NGTriggerEntityKeys.accountId).is(accountIdentifier);
@@ -61,6 +61,9 @@ public class TriggerFilterHelper {
     }
     criteria.and(NGTriggerEntityKeys.deleted).is(deleted);
     criteria.and(NGTriggerEntityKeys.type).is(NGTriggerType.WEBHOOK);
+    if (enabledOnly) {
+      criteria.and(NGTriggerEntityKeys.enabled).is(true);
+    }
 
     if (EmptyPredicate.isNotEmpty(searchTerm)) {
       Criteria searchCriteria = new Criteria().orOperator(
@@ -81,7 +84,8 @@ public class TriggerFilterHelper {
 
     update.set(NGTriggerEntityKeys.type, triggerEntity.getType());
     update.set(NGTriggerEntityKeys.metadata, triggerEntity.getMetadata());
-
+    update.set(NGTriggerEntityKeys.enabled, triggerEntity.getEnabled());
+    update.set(NGTriggerEntityKeys.tags, triggerEntity.getTags());
     update.set(NGTriggerEntityKeys.deleted, false);
 
     return update;
@@ -90,6 +94,7 @@ public class TriggerFilterHelper {
   public Update getUpdateOperations(TriggerWebhookEvent triggerWebhookEvent) {
     Update update = new Update();
     update.set(TriggerWebhookEventsKeys.attemptCount, triggerWebhookEvent.getAttemptCount());
+    update.set(TriggerWebhookEventsKeys.processing, triggerWebhookEvent.isProcessing());
     return update;
   }
 
