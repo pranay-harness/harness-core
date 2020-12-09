@@ -42,11 +42,21 @@ public class AzureRestCallBack<T> implements ServiceCallback<T> {
     return updateFailed.get();
   }
 
-  public String failureMessage() {
+  public String getErrorMessage() {
+    String failureMessage = failureMessage();
+    String bodyMessage = getBodyMessage();
+    if (bodyMessage == null) {
+      return failureMessage;
+    } else {
+      return format("%s: %s", failureMessage, bodyMessage);
+    }
+  }
+
+  private String failureMessage() {
     return throwable.getMessage();
   }
 
-  public String getBodyMessage() {
+  private String getBodyMessage() {
     if (throwable instanceof CloudException) {
       CloudException cloudException = (CloudException) throwable;
       if (cloudException.body() != null) {
@@ -54,15 +64,5 @@ public class AzureRestCallBack<T> implements ServiceCallback<T> {
       }
     }
     return null;
-  }
-
-  public String getErrorMessage() {
-    String failureMessage = failureMessage();
-    String bodyMessage = getBodyMessage();
-    if (bodyMessage == null) {
-      return failureMessage;
-    } else {
-      return format("%: %", failureMessage, bodyMessage);
-    }
   }
 }

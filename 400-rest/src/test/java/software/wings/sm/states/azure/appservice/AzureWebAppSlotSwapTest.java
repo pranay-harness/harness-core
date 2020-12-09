@@ -1,4 +1,4 @@
-package software.wings.sm.states.azure;
+package software.wings.sm.states.azure.appservice;
 
 import static io.harness.beans.ExecutionStatus.FAILED;
 import static io.harness.beans.ExecutionStatus.SUCCESS;
@@ -47,6 +47,8 @@ import software.wings.service.intfc.DelegateService;
 import software.wings.sm.ExecutionContextImpl;
 import software.wings.sm.ExecutionResponse;
 import software.wings.sm.states.ManagerExecutionLogCallback;
+import software.wings.sm.states.azure.AzureSweepingOutputServiceHelper;
+import software.wings.sm.states.azure.AzureVMSSStateHelper;
 import software.wings.sm.states.azure.appservices.AzureAppServiceSlotSetupContextElement;
 import software.wings.sm.states.azure.appservices.AzureAppServiceSlotSwapExecutionData;
 import software.wings.sm.states.azure.appservices.AzureAppServiceSlotSwapExecutionSummary;
