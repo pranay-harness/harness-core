@@ -323,9 +323,11 @@ public class DelegateProfileServiceGrpcImpl extends DelegateProfileServiceImplBa
   private Map<String, ScopingValues> convertScopes(Map<String, Set<String>> scopingEntities) {
     Map<String, ScopingValues> grpcScopingEntities = new HashMap<>();
 
-    for (Map.Entry<String, Set<String>> entry : scopingEntities.entrySet()) {
-      ScopingValues scopingValues = ScopingValues.newBuilder().addAllValue(entry.getValue()).build();
-      grpcScopingEntities.put(entry.getKey(), scopingValues);
+    if (scopingEntities != null) {
+      for (Map.Entry<String, Set<String>> entry : scopingEntities.entrySet()) {
+        ScopingValues scopingValues = ScopingValues.newBuilder().addAllValue(entry.getValue()).build();
+        grpcScopingEntities.put(entry.getKey(), scopingValues);
+      }
     }
 
     return grpcScopingEntities;
