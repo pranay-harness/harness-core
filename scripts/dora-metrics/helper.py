@@ -69,6 +69,20 @@ def get_file_path(file_directory, filename):
     return os.path.join(file_directory, filename)
 
 
+def is_directory_exists(path):
+    if os.path.isdir(path):
+        return True
+    else:
+        return False
+
+
+def is_file_exists(filepath):
+    if os.path.isfile(filepath):
+        return True
+    else:
+        return False
+
+
 def print_list(data):
     for i in range(len(data)):
         print(data[i])
@@ -80,5 +94,13 @@ def get_past_time_from_epoch(curr_epoch_in_seconds, years, months, days):
             years * SECONDS_IN_SINGLE_YEAR + months * 30 * SECONDS_IN_SINGLE_DAY + days * SECONDS_IN_SINGLE_DAY)
 
 
-def join_list_items(itemList, separator):
-    return separator.join(itemList)
+def join_list_items(item_list, separator):
+    return separator.join(item_list)
+
+
+def get_list_from_string(item_list, delimiter):
+    try:
+        item_list = item_list[1:-1]
+        return item_list.split(delimiter)
+    except Exception:
+        return []

@@ -6,7 +6,7 @@ import log_manager
 # Sample command to run
 # python3 workflow_driver.py "https://qa.harness.io/gateway" "cHg3eGRfQkZSQ2ktcGZXUFlYVmp2dzo6ZEs3bkRPRVNGcG1XcWhuaEVRR2R3NjN6ZnVqYlFMZ1ZZT2pmNGEyb3dBMVdJQlBuNTVXclVVdEZjYWdCQkdJd0xwMFdPa3RxUml4VTRwRWw=" "px7xd_BFRCi-pfWPYXVjvw" "NEW" "/Users/mohitgarg" "sample" "" "" "" "12/02/2020 00:00:00" "12/05/2020 00:00:00"
 
-TOTAL_ARGS = 11 # including default arg0
+TOTAL_ARGS = 14 # including default arg0
 
 if __name__ == "__main__":
     args = sys.argv[1:]
@@ -26,6 +26,9 @@ if __name__ == "__main__":
         entity_id = args[8].strip()
         start_time_date = args[9].strip()
         end_time_date = args[10].strip()
+        tags_entity_type = args[11].strip()
+        tags_names = args[12].strip()
+        tags_values = args[13].strip()
 
         # put validation
         if file_operation_id != "APPEND" and file_operation_id != "NEW":
@@ -70,6 +73,9 @@ if __name__ == "__main__":
         else:
             raise Exception("Invalid end date")
 
+        tags_names_list = helper.get_list_from_string(tags_names, ",")
+        tags_values_list = helper.get_list_from_string(tags_values, ",")
+
         input_arguments = {
             script.ARGS_KEY_APP_DOMAIN_KEY: domain_name,
             script.ARGS_API_KEY: api_key,
@@ -82,6 +88,9 @@ if __name__ == "__main__":
             script.ARGS_SEARCH_ENTITY_ID_KEY: entity_id,
             script.ARGS_SEARCH_INTERVAL_START_TIME_EPOCH_KEY: start_time_epoch,
             script.ARGS_SEARCH_INTERVAL_END_TIME_EPOCH_KEY: end_time_epoch,
+            script.ARGS_TAGS_ENTITY_TYPE_KEY: tags_entity_type,
+            script.ARGS_TAGS_NAMES_LIST_KEY: tags_names_list,
+            script.ARGS_TAGS_VALUES_LIST_KEY: tags_values_list
         }
         script.compile_data(input_arguments)
         sys.exit(200)

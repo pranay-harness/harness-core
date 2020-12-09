@@ -4,6 +4,7 @@ import log_manager
 import file_manager
 import exception
 import sys
+import config
 
 ARGS_API_KEY = "api_key"
 ARGS_ACCOUNT_ID_KEY = "account_id"
@@ -16,6 +17,9 @@ ARGS_OUTPUT_FILENAME_KEY = "output_filename"
 ARGS_OUTPUT_FILE_DIR_KEY = "output_file_dir"
 ARGS_META_FILE_DIR_KEY = "meta_dir_path"
 ARGS_FILE_OPERATION_KEY = "file_operation"
+ARGS_TAGS_ENTITY_TYPE_KEY = "tag_entity_type"
+ARGS_TAGS_NAMES_LIST_KEY = "tags_name"
+ARGS_TAGS_VALUES_LIST_KEY = "tags_values"
 FILE_OPERATION_APPEND = "append"
 FILE_OPERATION_NEW = "new"
 
@@ -58,7 +62,9 @@ GRAPHQL_PIPELINE_FILTER = '{pipeline:{operator:EQUALS,values:["$PIPELINE_ID"]}}'
 GRAPHQL_WORKFLOW_FILTER = '{workflow:{operator:EQUALS,values:["$WORKFLOW_ID"]}}'
 GRAPHQL_BEFORE_DATE_FILTER = '{startTime: {operator: BEFORE, value: $VALUE}}'
 GRAPHQL_AFTER_DATE_FILTER = '{startTime: {operator: AFTER, value: $VALUE}}'
-GRAPHQL_FILTER = 'filters:[$GRAPHQL_PIPELINE_FILTER, $GRAPHQL_WORKFLOW_FILTER, $GRAPHQL_BEFORE_DATE_FILTER, $GRAPHQL_AFTER_DATE_FILTER]'
+GRAPHQL_TAGS_FILTER = '{tag: {entityType:$TAG_ENTITY_TYPE, tags: $TAGS_LIST}}'
+GRAPHQL_TAG_PAIR_TEMPLATE = '{name: "$TAG_NAME", value: "$TAG_VALUE"}'
+GRAPHQL_FILTER = 'filters:[$GRAPHQL_PIPELINE_FILTER, $GRAPHQL_WORKFLOW_FILTER, $GRAPHQL_BEFORE_DATE_FILTER, $GRAPHQL_AFTER_DATE_FILTER, $GRAPHQL_TAGS_FILTER]'
 
 FILTER_PLACE_HOLDER = "$FILTER"
 OFFSET_PLACE_HOLDER = "$OFFSET"
@@ -69,6 +75,11 @@ BEFORE_DATE_FILTER_PLACE_HOLDER = "$GRAPHQL_BEFORE_DATE_FILTER"
 AFTER_DATE_FILTER_PLACE_HOLDER = "$GRAPHQL_AFTER_DATE_FILTER"
 WORKFLOW_ID_FILTER_PLACE_HOLDER = "$WORKFLOW_ID"
 PIPELINE_ID_FILTER_PLACE_HOLDER = "$PIPELINE_ID"
+TAGS_LIST_FILTER_PLACE_HOLDER = "$TAGS_LIST"
+TAGS_ENTITY_TYPE_PLACE_HOLDER = "$TAG_ENTITY_TYPE"
+TAGS_FILTER_PLACE_HOLDER = "$GRAPHQL_TAGS_FILTER"
+TAG_NAME_PLACE_HOLDER = "$TAG_NAME"
+TAG_VALUE_PLACE_HOLDER = "$TAG_VALUE"
 
 REQUEST_URL_PATH = "/api/graphql?accountId="
 REQUEST_HEADERS = {
@@ -92,7 +103,8 @@ def custom_workflow_parser_helper(items_set):
     return list(items_set)
 
 
-def construct_graphql_filter(entity_type, entity_id, start_time_epoch, end_time_epoch):
+def construct_graphql_filter(entity_type, entity_id, start_time_epoch, end_time_epoch, tags_entity_type,
+                             tags_names_list, tags_values_list):
     graphql_filter = GRAPHQL_FILTER
 
     if entity_type == ENTITY_PIPELINE_EXECUTION:
@@ -119,16 +131,32 @@ def construct_graphql_filter(entity_type, entity_id, start_time_epoch, end_time_
         graphql_filter = graphql_filter.replace(BEFORE_DATE_FILTER_PLACE_HOLDER, GRAPHQL_BEFORE_DATE_FILTER)
         graphql_filter = graphql_filter.replace(VALUE_PLACE_HOLDER, str(end_time_epoch * 1000))
 
+    if tags_entity_type != "":
+        tags_pair_list = []
+        for name, value in zip(tags_names_list, tags_values_list):
+            tag_pair = GRAPHQL_TAG_PAIR_TEMPLATE
+            tag_pair = tag_pair.replace(TAG_NAME_PLACE_HOLDER, name)
+            tag_pair = tag_pair.replace(TAG_VALUE_PLACE_HOLDER, value)
+            tags_pair_list.append(tag_pair)
+
+        graphql_filter = graphql_filter.replace(TAGS_FILTER_PLACE_HOLDER, GRAPHQL_TAGS_FILTER)
+        graphql_filter = graphql_filter.replace(TAGS_ENTITY_TYPE_PLACE_HOLDER, tags_entity_type)
+        graphql_filter = graphql_filter.replace(TAGS_LIST_FILTER_PLACE_HOLDER, str(tags_pair_list))
+    else:
+        graphql_filter = graphql_filter.replace(TAGS_FILTER_PLACE_HOLDER, "")
+
     return graphql_filter
 
 
-def construct_graphql_query(entity_type, entity_id, offset, start_time_epoch, end_time_epoch):
+def construct_graphql_query(entity_type, entity_id, offset, start_time_epoch, end_time_epoch, tags_entity_type,
+                            tags_names_list, tags_values_list):
     graphql_query = GRAPHQL_QUERY
     graphql_query = graphql_query.replace(OFFSET_PLACE_HOLDER, offset)
 
     graphql_query = graphql_query.replace(FILTER_PLACE_HOLDER,
                                           construct_graphql_filter(entity_type, entity_id, start_time_epoch,
-                                                                   end_time_epoch))
+                                                                   end_time_epoch, tags_entity_type, tags_names_list,
+                                                                   tags_values_list))
 
     return graphql_query
 
@@ -160,14 +188,16 @@ def handle_api_response(response):
     return False, None
 
 
-def get_all_deployments(app_domain, api_key, account_id, offset, entity_type, entity_id, start_time_epoch, end_time_epoch):
+def get_all_deployments(app_domain, api_key, account_id, offset, entity_type, entity_id, start_time_epoch,
+                        end_time_epoch, tags_entity_type, tags_names_list, tags_values_list):
     retry_count = REQUEST_RETRY_COUNT
 
     request_url = app_domain + REQUEST_URL_PATH + account_id
     request_headers = REQUEST_HEADERS
     request_headers[HEADER_X_API_KEY] = api_key
     request_payload = {
-        PAYLOAD_PARAM_QUERY: construct_graphql_query(entity_type, entity_id, offset, start_time_epoch, end_time_epoch)
+        PAYLOAD_PARAM_QUERY: construct_graphql_query(entity_type, entity_id, offset, start_time_epoch, end_time_epoch,
+                                                     tags_entity_type, tags_names_list, tags_values_list)
     }
 
     # retry in case of failures (non-200 HTTP responses)
@@ -214,7 +244,8 @@ def get_field(execution, field_name):
             return formatted_tags_list
 
         if field_name == CSV_COL_START_DATE:
-            return helper.format_date(helper.get_date_obj_from_epoch(execution['startedAt']/1000), helper.DATE_FORMAT_DD_MMM_YYYY)
+            return helper.format_date(helper.get_date_obj_from_epoch(execution['startedAt'] / 1000),
+                                      helper.DATE_FORMAT_DD_MMM_YYYY)
 
         if field_name == CSV_COL_START_TIME:
             return helper.format_date(helper.get_date_obj_from_epoch(execution['startedAt'] / 1000),
@@ -517,9 +548,22 @@ def validate_input(input_args):
     if entity_type != ENTITY_ALL_EXECUTION and entity_type != ENTITY_PIPELINE_EXECUTION and entity_type != ENTITY_WORKFLOW_EXECUTION:
         raise exception.InputException("Invalid entity type (Workflow/Pipeline/All) : " + entity_type)
 
+    tag_entity_type = input_args.get(ARGS_TAGS_ENTITY_TYPE_KEY)
+    if tag_entity_type != "":
+        # check if tag entity type input is valid or not
+        if tag_entity_type not in config.TAG_ENTITY_TYPE_VALUES:
+            raise exception.InputException("Invalid tag entity type : " + tag_entity_type)
+        entity_tags_names_list = input_args.get(ARGS_TAGS_NAMES_LIST_KEY)
+        entity_tags_values_list = input_args.get(ARGS_TAGS_VALUES_LIST_KEY)
+        if len(entity_tags_names_list) != len(entity_tags_values_list):
+            raise exception.InputException("Invalid tags details")
+
 
 def compile_data(input_args):
-    global debug_log_file_path, error_log_file_path
+    # Put default meta directory path as current working directory of the application
+    debug_log_file_path = helper.get_current_working_directory_path_str()
+    error_log_file_path = helper.get_current_working_directory_path_str()
+
     try:
         log_manager.log_input_params(input_args)
         # do input validation
@@ -530,12 +574,15 @@ def compile_data(input_args):
         app_domain = input_args.get(ARGS_KEY_APP_DOMAIN_KEY)
         output_filename = input_args.get(ARGS_OUTPUT_FILENAME_KEY) + ".csv"
         output_file_dir = input_args.get(ARGS_OUTPUT_FILE_DIR_KEY)
-        meta_file_dir = input_args.get(ARGS_META_FILE_DIR_KEY)
+        meta_file_dir = input_args.get(ARGS_META_FILE_DIR_KEY, "")
         file_operation = input_args.get(ARGS_FILE_OPERATION_KEY)
         entity_type = input_args.get(ARGS_SEARCH_ENTITY_TYPE_KEY)
         entity_id = input_args.get(ARGS_SEARCH_ENTITY_ID_KEY, "")
         start_time_interval_epoch = input_args.get(ARGS_SEARCH_INTERVAL_START_TIME_EPOCH_KEY)
         end_time_interval_epoch = input_args.get(ARGS_SEARCH_INTERVAL_END_TIME_EPOCH_KEY)
+        tags_entity_type = input_args.get(ARGS_TAGS_ENTITY_TYPE_KEY, "")
+        tags_names_list = input_args.get(ARGS_TAGS_NAMES_LIST_KEY)
+        tags_values_list = input_args.get(ARGS_TAGS_VALUES_LIST_KEY)
 
         output_file_path = helper.get_file_path(output_file_dir, output_filename)
         if file_operation == FILE_OPERATION_NEW:
@@ -555,8 +602,10 @@ def compile_data(input_args):
 
         while repeat is True:
             # fetch all deployments via graphql query in pagination manner
-            deployments_result = get_all_deployments(app_domain, api_key, account_id, str(curr_offset), entity_type, entity_id,
-                                                     start_time_interval_epoch, end_time_interval_epoch)
+            deployments_result = get_all_deployments(app_domain, api_key, account_id, str(curr_offset), entity_type,
+                                                     entity_id,
+                                                     start_time_interval_epoch, end_time_interval_epoch,
+                                                     tags_entity_type, tags_names_list, tags_values_list)
 
             # get updated offset
             repeat, limit = get_page_details(deployments_result)
