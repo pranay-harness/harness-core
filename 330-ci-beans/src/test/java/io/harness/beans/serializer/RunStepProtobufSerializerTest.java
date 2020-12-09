@@ -4,7 +4,7 @@ import static io.harness.rule.OwnerRule.ALEKSANDAR;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import io.harness.beans.CIBeansTest;
+import io.harness.CiBeansTestBase;
 import io.harness.beans.steps.stepinfo.RunStepInfo;
 import io.harness.category.element.UnitTests;
 import io.harness.product.ci.engine.proto.UnitStep;
@@ -18,7 +18,7 @@ import org.apache.commons.codec.binary.Base64;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
-public class RunStepProtobufSerializerTest extends CIBeansTest {
+public class RunStepProtobufSerializerTest extends CiBeansTestBase {
   public static final String RUN_STEP = "run-step";
   public static final String RUN_STEP_ID = "run-step-id";
   public static final String MVN_CLEAN_INSTALL = "mvn clean install";

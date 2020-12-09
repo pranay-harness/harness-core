@@ -4,7 +4,7 @@ import static io.harness.rule.OwnerRule.ALEKSANDAR;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import io.harness.beans.CIBeansTest;
+import io.harness.CiBeansTestBase;
 import io.harness.beans.steps.CIStepInfoType;
 import io.harness.beans.steps.TypeInfo;
 import io.harness.beans.steps.stepinfo.publish.artifact.Artifact;
@@ -23,7 +23,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
-public class PublishStepInfoTest extends CIBeansTest {
+public class PublishStepInfoTest extends CiBeansTestBase {
   private String yamlString;
   @Before
   public void setUp() {

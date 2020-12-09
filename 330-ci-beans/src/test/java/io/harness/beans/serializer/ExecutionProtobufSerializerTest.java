@@ -4,7 +4,7 @@ import static io.harness.rule.OwnerRule.ALEKSANDAR;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import io.harness.beans.CIBeansTest;
+import io.harness.CiBeansTestBase;
 import io.harness.beans.steps.stepinfo.PluginStepInfo;
 import io.harness.beans.steps.stepinfo.RunStepInfo;
 import io.harness.category.element.UnitTests;
@@ -19,7 +19,7 @@ import org.apache.commons.codec.binary.Base64;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
-public class ExecutionProtobufSerializerTest extends CIBeansTest {
+public class ExecutionProtobufSerializerTest extends CiBeansTestBase {
   @Inject ProtobufSerializer<ExecutionElement> executionProtobufSerializer;
 
   @SneakyThrows

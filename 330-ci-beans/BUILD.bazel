@@ -443,26 +443,27 @@ java_library(
     ],
 )
 
-#java_library(
-#    name = "tests",
-#    srcs = glob(["src/test/**/*.java"]),
-#    resources = [
-#        "//330-ci-beans/src/test/resources:resource",
-#    ],
-#    visibility = ["//visibility:private"],
-#    deps = [
-#        "maven_deps",
-#        "module",
-#        "//:lombok",
-#        "//990-commons-test:module",
-#        "@maven//:junit_junit",
-#        "@maven//:org_assertj_assertj_core",
-#        "@maven//:org_mockito_mockito_core",
-#        "@maven//:org_powermock_powermock_module_junit4",
-#    ],
-#)
+java_library(
+    name = "tests",
+    srcs = glob(["src/test/**/*.java"]),
+    resources = [
+        "//330-ci-beans/src/test/resources:resource",
+    ],
+    visibility = ["//visibility:private"],
+    deps = [
+        "maven_deps",
+        "module",
+        "//:lombok",
+        "//960-persistence:supporter-test",
+        "//990-commons-test:module",
+        "@maven//:junit_junit",
+        "@maven//:org_assertj_assertj_core",
+        "@maven//:org_mockito_mockito_core",
+        "@maven//:org_powermock_powermock_module_junit4",
+    ],
+)
 
-#run_tests()
+run_tests()
 
 checkstyle()
 

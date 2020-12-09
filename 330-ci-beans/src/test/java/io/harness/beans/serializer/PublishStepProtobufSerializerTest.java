@@ -8,7 +8,7 @@ import static io.harness.rule.OwnerRule.ALEKSANDAR;
 import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
 
-import io.harness.beans.CIBeansTest;
+import io.harness.CiBeansTestBase;
 import io.harness.beans.steps.stepinfo.PublishStepInfo;
 import io.harness.beans.steps.stepinfo.publish.artifact.DockerFileArtifact;
 import io.harness.beans.steps.stepinfo.publish.artifact.FilePatternArtifact;
@@ -30,7 +30,7 @@ import org.apache.commons.codec.binary.Base64;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
-public class PublishStepProtobufSerializerTest extends CIBeansTest {
+public class PublishStepProtobufSerializerTest extends CiBeansTestBase {
   public static final String PUBLISH_ID = "publish-id";
   public static final String PUBLISH_NAME = "publish-name";
   public static final String FILE_PATTERN = "~/dir/.*";
