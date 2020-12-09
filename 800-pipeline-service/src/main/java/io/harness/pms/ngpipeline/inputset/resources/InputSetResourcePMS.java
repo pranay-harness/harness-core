@@ -4,16 +4,22 @@ import static javax.ws.rs.core.HttpHeaders.IF_MATCH;
 
 import io.harness.NGCommonEntityConstants;
 import io.harness.NGResourceFilterConstants;
+import io.harness.exception.InvalidRequestException;
 import io.harness.ng.beans.PageResponse;
 import io.harness.ng.core.dto.ErrorDTO;
 import io.harness.ng.core.dto.FailureDTO;
 import io.harness.ng.core.dto.ResponseDTO;
+import io.harness.pms.inputset.helpers.MergeHelper;
 import io.harness.pms.ngpipeline.inputset.beans.resource.*;
 import io.harness.pms.ngpipeline.overlayinputset.beans.resource.OverlayInputSetResponseDTOPMS;
+import io.harness.pms.pipeline.PipelineEntity;
+import io.harness.pms.pipeline.service.PMSPipelineService;
 
 import com.google.inject.Inject;
 import io.swagger.annotations.*;
+import java.io.IOException;
 import java.util.List;
+import java.util.Optional;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 import javax.ws.rs.*;
@@ -31,6 +37,8 @@ import lombok.AllArgsConstructor;
       , @ApiResponse(code = 500, response = ErrorDTO.class, message = "Internal server error")
     })
 public class InputSetResourcePMS {
+  private final PMSPipelineService pmsPipelineService;
+
   @GET
   @Path("{inputSetIdentifier}")
   @ApiOperation(value = "Gets an InputSet by identifier", nickname = "getInputSetForPipeline")
@@ -64,7 +72,7 @@ public class InputSetResourcePMS {
       @NotNull @QueryParam(NGCommonEntityConstants.ORG_KEY) String orgIdentifier,
       @NotNull @QueryParam(NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier,
       @NotNull @QueryParam(NGCommonEntityConstants.PIPELINE_KEY) String pipelineIdentifier,
-      @NotNull @ApiParam(hidden = true, type = "") String yaml) {
+      @NotNull @ApiParam(hidden = true) String yaml) {
     return ResponseDTO.newResponse(InputSetResponseDTOPMS.builder().build());
   }
 
@@ -76,7 +84,7 @@ public class InputSetResourcePMS {
       @NotNull @QueryParam(NGCommonEntityConstants.ORG_KEY) String orgIdentifier,
       @NotNull @QueryParam(NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier,
       @NotNull @QueryParam(NGCommonEntityConstants.PIPELINE_KEY) String pipelineIdentifier,
-      @NotNull @ApiParam(hidden = true, type = "") String yaml) {
+      @NotNull @ApiParam(hidden = true) String yaml) {
     return ResponseDTO.newResponse(OverlayInputSetResponseDTOPMS.builder().build());
   }
 
@@ -89,7 +97,7 @@ public class InputSetResourcePMS {
       @NotNull @QueryParam(NGCommonEntityConstants.ORG_KEY) String orgIdentifier,
       @NotNull @QueryParam(NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier,
       @NotNull @QueryParam(NGCommonEntityConstants.PIPELINE_KEY) String pipelineIdentifier,
-      @NotNull @ApiParam(hidden = true, type = "") String yaml) {
+      @NotNull @ApiParam(hidden = true) String yaml) {
     return ResponseDTO.newResponse(InputSetResponseDTOPMS.builder().build());
   }
 
@@ -102,7 +110,7 @@ public class InputSetResourcePMS {
       @NotNull @QueryParam(NGCommonEntityConstants.ORG_KEY) String orgIdentifier,
       @NotNull @QueryParam(NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier,
       @NotNull @QueryParam(NGCommonEntityConstants.PIPELINE_KEY) String pipelineIdentifier,
-      @NotNull @ApiParam(hidden = true, type = "") String yaml) {
+      @NotNull @ApiParam(hidden = true) String yaml) {
     return ResponseDTO.newResponse(OverlayInputSetResponseDTOPMS.builder().build());
   }
 
@@ -143,7 +151,20 @@ public class InputSetResourcePMS {
       @NotNull @QueryParam(NGCommonEntityConstants.ORG_KEY) String orgIdentifier,
       @NotNull @QueryParam(NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier,
       @NotNull @QueryParam(NGCommonEntityConstants.PIPELINE_KEY) String pipelineIdentifier) {
-    return ResponseDTO.newResponse(InputSetTemplateResponseDTOPMS.builder().build());
+    Optional<PipelineEntity> optionalPipelineEntity =
+        pmsPipelineService.get(accountId, orgIdentifier, projectIdentifier, pipelineIdentifier, false);
+    if (optionalPipelineEntity.isPresent()) {
+      String pipelineYaml = optionalPipelineEntity.get().getYaml();
+      try {
+        String pipelineTemplateYaml = MergeHelper.createTemplateFromPipeline(pipelineYaml, true);
+        return ResponseDTO.newResponse(
+            InputSetTemplateResponseDTOPMS.builder().inputSetTemplateYaml(pipelineTemplateYaml).build());
+      } catch (IOException e) {
+        throw new InvalidRequestException("Could not convert pipeline to template");
+      }
+    } else {
+      return ResponseDTO.newResponse(InputSetTemplateResponseDTOPMS.builder().build());
+    }
   }
 
   @POST

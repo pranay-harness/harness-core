@@ -3,9 +3,11 @@ package io.harness.pms.yaml;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 
 import io.harness.data.structure.EmptyPredicate;
+import io.harness.exception.InvalidRequestException;
 import io.harness.serializer.AnnotationAwareJsonSubtypeResolver;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -40,6 +42,14 @@ public class YamlUtils {
 
   public <T> T read(String yaml, Class<T> cls) throws IOException {
     return mapper.readValue(yaml, cls);
+  }
+
+  public String write(Object object) {
+    try {
+      return mapper.writeValueAsString(object);
+    } catch (JsonProcessingException e) {
+      throw new InvalidRequestException("Couldn't convert object to Yaml");
+    }
   }
 
   public YamlField readTree(String content) throws IOException {
