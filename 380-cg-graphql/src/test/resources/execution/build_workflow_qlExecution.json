@@ -1,0 +1,29 @@
+{
+  "id":"EXECUTION_ID1",
+  "workflowId":"ywS7zut9QrW2VTdkTS48rQ",
+  "createdAt":1606760381234,
+  "startedAt":1606760381244,
+  "endedAt":1606760432067,
+  "status":"SUCCESS",
+  "artifacts":[
+    {
+      "id":"6M6zV19WTrSKpCEVMYjv7g",
+      "buildNo":"1.19.5-alpine",
+      "collectedAt":1606415345569,
+      "artifactSourceId":"nKKHUZQ-TMia1Rll3ko8ew"
+    }
+  ],
+  "cause":{
+    "context":{
+      "executionId":"F-SlLs66TU-Bu8qfRJnFhQ"
+    }
+  },
+  "notes":null,
+  "appId":"APP1_ID_ACCOUNT1",
+  "tags":[
+    {
+      "name":"myworkflow",
+      "value":"Workflow"
+    }
+  ]
+}

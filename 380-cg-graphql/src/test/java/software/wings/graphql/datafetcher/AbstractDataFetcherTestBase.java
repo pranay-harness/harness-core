@@ -80,6 +80,9 @@ public abstract class AbstractDataFetcherTestBase extends WingsBaseTest {
   public static final String ENV4_ID_APP2_ACCOUNT1 = "ENV4_ID_APP2_ACCOUNT1";
   public static final String INSTANCE5_SERVICE3_ENV3_APP2_ACCOUNT1 = "INSTANCE5_SERVICE3_ENV3_APP2_ACCOUNT1";
   public static final String INSTANCE6_SERVICE3_ENV4_APP2_ACCOUNT1 = "INSTANCE6_SERVICE3_ENV4_APP2_ACCOUNT1";
+  public static final String CONNECTOR_ID1_ACCOUNT1 = "CONNECTOR1_ID_ACCOUNT1";
+  public static final String CONNECTOR_ID2_ACCOUNT1 = "CONNECTOR2_ID_ACCOUNT1";
+  public static final String CONNECTOR_ID3_ACCOUNT2 = "CONNECTOR3_ID_ACCOUNT2";
   public static final String CLOUD_PROVIDER1_ID_ACCOUNT1 = "CLOUD_PROVIDER1_ID_ACCOUNT1";
   public static final String CLOUD_PROVIDER2_ID_ACCOUNT1 = "CLOUD_PROVIDER2_ID_ACCOUNT1";
   public static final String CLOUD_PROVIDER3_ID_ACCOUNT2 = "CLOUD_PROVIDER3_ID_ACCOUNT2";
@@ -238,6 +241,18 @@ public abstract class AbstractDataFetcherTestBase extends WingsBaseTest {
                                          .withCategory(SettingCategory.CLOUD_PROVIDER)
                                          .build();
     settingsService.save(cloudProvider, false);
+  }
+
+  public void createConnector(String accountId, String appId, String uuid, String name, SettingValue settingValue) {
+    SettingAttribute connector = SettingAttribute.Builder.aSettingAttribute()
+                                     .withName(name)
+                                     .withValue(settingValue)
+                                     .withUuid(uuid)
+                                     .withAccountId(accountId)
+                                     .withAppId(appId)
+                                     .withCategory(SettingCategory.CONNECTOR)
+                                     .build();
+    settingsService.save(connector, false);
   }
 
   public void createCEConnector(String uuid, String accountId, String name, SettingValue settingValue) {

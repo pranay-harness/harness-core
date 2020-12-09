@@ -339,6 +339,12 @@
     "puthraya app",
     "admin"
   ],
+  "tags" : [
+    {
+      "name" : "mypipeline",
+      "value" : "Pipeline - z8uZsbTwRr6s8VzJQJa8aQ"
+    }
+  ],
   "onDemandRollback" : false,
   "useSweepingOutputs" : false,
   "latestPipelineResume" : false,
