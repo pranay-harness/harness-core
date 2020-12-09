@@ -47,6 +47,7 @@ import software.wings.beans.ResourceConstraintUsage;
 import software.wings.beans.ResourceConstraintUsage.ActiveScope;
 import software.wings.beans.ResourceConstraintUsage.ActiveScope.ActiveScopeBuilder;
 import software.wings.beans.WorkflowExecution;
+import software.wings.beans.WorkflowExecution.WorkflowExecutionKeys;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ResourceConstraintService;
@@ -197,9 +198,8 @@ public class ResourceConstraintServiceImpl implements ResourceConstraintService,
     boolean finished = false;
     switch (holdingScope) {
       case WORKFLOW:
-        final WorkflowExecution workflowExecution =
-            workflowExecutionService.getWorkflowExecution(instance.getAppId(), instance.getReleaseEntityId());
-        finished = workflowExecution != null && ExecutionStatus.isFinalStatus(workflowExecution.getStatus());
+        finished = workflowExecutionService.checkWorkflowExecutionInFinalStatus(
+            instance.getAppId(), instance.getReleaseEntityId());
         break;
       case PHASE:
         final StateExecutionData stateExecutionData = stateExecutionService.phaseStateExecutionData(instance.getAppId(),
@@ -325,16 +325,17 @@ public class ResourceConstraintServiceImpl implements ResourceConstraintService,
         HoldingScope scope = HoldingScope.valueOf(instance.getReleaseEntityType());
         switch (scope) {
           case WORKFLOW: {
-            final WorkflowExecution workflowExecution =
-                workflowExecutionService.getWorkflowExecution(instance.getAppId(), instance.getReleaseEntityId());
-            builder.releaseEntityName(workflowExecution.normalizedName());
+            final WorkflowExecution workflowExecution = workflowExecutionService.fetchWorkflowExecution(
+                instance.getAppId(), instance.getReleaseEntityId(), WorkflowExecutionKeys.name);
+            builder.releaseEntityName(workflowExecution.getName());
             break;
           }
           case PHASE: {
             final WorkflowExecution workflowExecution =
-                workflowExecutionService.getWorkflowExecution(instance.getAppId(),
-                    ResourceConstraintService.workflowExecutionIdFromReleaseEntityId(instance.getReleaseEntityId()));
-            builder.releaseEntityName(workflowExecution.normalizedName()
+                workflowExecutionService.fetchWorkflowExecution(instance.getAppId(),
+                    ResourceConstraintService.workflowExecutionIdFromReleaseEntityId(instance.getReleaseEntityId()),
+                    WorkflowExecutionKeys.name);
+            builder.releaseEntityName(workflowExecution.getName()
                 + ", Phase: " + ResourceConstraintService.phaseNameFromReleaseEntityId(instance.getReleaseEntityId()));
             break;
           }
