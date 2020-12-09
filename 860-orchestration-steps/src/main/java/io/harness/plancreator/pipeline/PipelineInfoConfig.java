@@ -1,10 +1,10 @@
 package io.harness.plancreator.pipeline;
 
-import io.harness.beans.ParameterField;
 import io.harness.common.SwaggerConstants;
 import io.harness.data.validator.EntityIdentifier;
 import io.harness.data.validator.EntityName;
 import io.harness.plancreator.stages.StageElementWrapperConfig;
+import io.harness.pms.yaml.ParameterField;
 import io.harness.yaml.core.variables.NGVariable;
 import io.harness.yaml.extended.ci.codebase.CodeBase;
 

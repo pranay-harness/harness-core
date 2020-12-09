@@ -1,9 +1,9 @@
 package io.harness.cdng.pipeline.beans;
 
-import io.harness.beans.ParameterField;
 import io.harness.cdng.creator.plan.stage.DeploymentStageConfig;
 import io.harness.plancreator.stages.stage.StageElementConfig;
 import io.harness.pms.sdk.core.steps.io.StepParameters;
+import io.harness.pms.yaml.ParameterField;
 import io.harness.yaml.core.failurestrategy.FailureStrategyConfig;
 import io.harness.yaml.core.variables.NGVariable;
 

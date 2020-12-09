@@ -4,6 +4,7 @@ import static io.harness.data.structure.UUIDGenerator.generateUuid;
 
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.InvalidRequestException;
+import io.harness.pms.serializer.jackson.NGHarnessJacksonModule;
 import io.harness.serializer.AnnotationAwareJsonSubtypeResolver;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
@@ -19,9 +20,12 @@ import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.google.common.base.Preconditions;
 import java.io.IOException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.Iterator;
+import java.util.List;
 import java.util.Map.Entry;
-import java.util.stream.Collectors;
 import lombok.experimental.UtilityClass;
 
 @UtilityClass
@@ -38,6 +42,7 @@ public class YamlUtils {
     mapper.registerModule(new Jdk8Module());
     mapper.registerModule(new GuavaModule());
     mapper.registerModule(new JavaTimeModule());
+    mapper.registerModule(new NGHarnessJacksonModule());
   }
 
   public <T> T read(String yaml, Class<T> cls) throws IOException {

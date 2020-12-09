@@ -26,10 +26,10 @@ import io.harness.expression.ResolveObjectResponse;
 import io.harness.expression.VariableResolverTracker;
 import io.harness.expression.XmlFunctor;
 import io.harness.pms.ambiance.Ambiance;
-import io.harness.pms.sdk.core.expression.OrchestrationField;
-import io.harness.pms.sdk.core.expression.OrchestrationFieldProcessor;
-import io.harness.pms.sdk.core.expression.OrchestrationFieldType;
-import io.harness.pms.sdk.core.expression.ProcessorResult;
+import io.harness.pms.expression.OrchestrationField;
+import io.harness.pms.expression.OrchestrationFieldProcessor;
+import io.harness.pms.expression.OrchestrationFieldType;
+import io.harness.pms.expression.ProcessorResult;
 import io.harness.pms.sdk.registries.OrchestrationFieldRegistry;
 
 import com.google.common.collect.ImmutableList;

@@ -7,7 +7,6 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.when;
 
 import io.harness.CategoryTest;
-import io.harness.beans.ParameterField;
 import io.harness.category.element.UnitTests;
 import io.harness.cdng.artifact.bean.ArtifactConfig;
 import io.harness.cdng.artifact.bean.DockerArtifactOutcome;
@@ -25,6 +24,7 @@ import io.harness.delegate.task.artifacts.response.ArtifactTaskResponse;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.pms.ambiance.Ambiance;
 import io.harness.pms.sdk.core.steps.io.StepResponse.StepOutcome;
+import io.harness.pms.yaml.ParameterField;
 import io.harness.rule.Owner;
 import io.harness.tasks.ResponseData;
 import io.harness.tasks.Task;

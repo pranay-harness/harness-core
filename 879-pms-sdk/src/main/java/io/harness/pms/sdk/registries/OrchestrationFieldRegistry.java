@@ -3,8 +3,8 @@ package io.harness.pms.sdk.registries;
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.pms.sdk.core.expression.OrchestrationFieldProcessor;
-import io.harness.pms.sdk.core.expression.OrchestrationFieldType;
+import io.harness.pms.expression.OrchestrationFieldProcessor;
+import io.harness.pms.expression.OrchestrationFieldType;
 import io.harness.registries.Registry;
 import io.harness.registries.exceptions.DuplicateRegistryException;
 import io.harness.registries.exceptions.UnregisteredKeyAccessException;

@@ -6,10 +6,10 @@ import static java.util.Collections.singletonMap;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.CategoryTest;
-import io.harness.beans.ParameterField;
 import io.harness.category.element.UnitTests;
 import io.harness.ng.core.common.beans.NGTag;
 import io.harness.ng.core.environment.beans.EnvironmentType;
+import io.harness.pms.yaml.ParameterField;
 import io.harness.rule.Owner;
 
 import java.util.Collections;

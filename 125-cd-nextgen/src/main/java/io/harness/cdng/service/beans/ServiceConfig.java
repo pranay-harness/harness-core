@@ -1,9 +1,9 @@
 package io.harness.cdng.service.beans;
 
-import io.harness.beans.ParameterField;
 import io.harness.cdng.visitor.YamlTypes;
 import io.harness.cdng.visitor.helpers.serviceconfig.ServiceConfigVisitorHelper;
 import io.harness.common.SwaggerConstants;
+import io.harness.pms.yaml.ParameterField;
 import io.harness.walktree.beans.LevelNode;
 import io.harness.walktree.beans.VisitableChildren;
 import io.harness.walktree.visitor.SimpleVisitorHelper;

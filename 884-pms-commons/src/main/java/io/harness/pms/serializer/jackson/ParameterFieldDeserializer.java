@@ -1,12 +1,12 @@
-package io.harness.serializer.jackson;
+package io.harness.pms.serializer.jackson;
 
 import static io.harness.expression.ExpressionEvaluator.matchesVariablePattern;
 
-import io.harness.beans.InputSetValidator;
-import io.harness.beans.InputSetValidatorType;
-import io.harness.beans.ParameterField;
 import io.harness.common.NGExpressionUtils;
 import io.harness.exception.InvalidArgumentsException;
+import io.harness.pms.yaml.ParameterField;
+import io.harness.pms.yaml.validation.InputSetValidator;
+import io.harness.pms.yaml.validation.InputSetValidatorType;
 
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.core.JsonToken;

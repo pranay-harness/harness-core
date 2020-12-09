@@ -1,4 +1,4 @@
-package io.harness.serializer.jackson;
+package io.harness.pms.serializer.jackson;
 
 import com.fasterxml.jackson.core.Version;
 import com.fasterxml.jackson.databind.Module;

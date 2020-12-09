@@ -3,9 +3,9 @@ package io.harness.ngpipeline.common;
 import static io.harness.data.structure.CollectionUtils.emptyIfNull;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
+import io.harness.pms.serializer.jackson.NGHarnessJacksonModule;
 import io.harness.serializer.AnnotationAwareJsonSubtypeResolver;
 import io.harness.serializer.jackson.HarnessJacksonModule;
-import io.harness.serializer.jackson.NGHarnessJacksonModule;
 
 import software.wings.jersey.JsonViews;
 

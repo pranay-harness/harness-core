@@ -1,8 +1,8 @@
 package io.harness.expression.field.dummy;
 
 import io.harness.expression.ExpressionEvaluatorUtils;
-import io.harness.pms.sdk.core.expression.OrchestrationField;
-import io.harness.pms.sdk.core.expression.OrchestrationFieldType;
+import io.harness.pms.expression.OrchestrationField;
+import io.harness.pms.expression.OrchestrationFieldType;
 
 import lombok.Getter;
 

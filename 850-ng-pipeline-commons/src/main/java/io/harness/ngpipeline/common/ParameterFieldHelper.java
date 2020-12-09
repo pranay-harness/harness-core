@@ -1,6 +1,6 @@
 package io.harness.ngpipeline.common;
 
-import io.harness.beans.ParameterField;
+import io.harness.pms.yaml.ParameterField;
 
 import lombok.experimental.UtilityClass;
 

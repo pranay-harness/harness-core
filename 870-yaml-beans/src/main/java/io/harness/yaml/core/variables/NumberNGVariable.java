@@ -1,7 +1,7 @@
 package io.harness.yaml.core.variables;
 
-import io.harness.beans.ParameterField;
 import io.harness.common.SwaggerConstants;
+import io.harness.pms.yaml.ParameterField;
 import io.harness.visitor.helpers.variables.NumberVariableVisitorHelper;
 import io.harness.walktree.beans.LevelNode;
 import io.harness.walktree.visitor.SimpleVisitorHelper;

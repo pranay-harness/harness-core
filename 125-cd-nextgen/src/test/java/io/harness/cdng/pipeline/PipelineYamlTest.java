@@ -7,8 +7,6 @@ import static java.util.stream.Collectors.toSet;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.CategoryTest;
-import io.harness.beans.InputSetValidatorType;
-import io.harness.beans.ParameterField;
 import io.harness.category.element.UnitTests;
 import io.harness.cdng.artifact.bean.ArtifactConfig;
 import io.harness.cdng.artifact.bean.SidecarArtifactWrapper;
@@ -27,6 +25,8 @@ import io.harness.cdng.service.beans.StageOverridesConfig;
 import io.harness.cdng.variables.beans.NGVariableOverrideSets;
 import io.harness.ng.core.common.beans.NGTag;
 import io.harness.ngpipeline.pipeline.beans.yaml.NgPipeline;
+import io.harness.pms.yaml.ParameterField;
+import io.harness.pms.yaml.validation.InputSetValidatorType;
 import io.harness.rule.Owner;
 import io.harness.yaml.core.ParallelStepElement;
 import io.harness.yaml.core.StageElement;

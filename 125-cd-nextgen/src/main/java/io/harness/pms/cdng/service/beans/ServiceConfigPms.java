@@ -1,7 +1,7 @@
 package io.harness.pms.cdng.service.beans;
 
-import io.harness.beans.ParameterField;
 import io.harness.common.SwaggerConstants;
+import io.harness.pms.yaml.ParameterField;
 import io.harness.yaml.core.intfc.OverridesApplier;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;

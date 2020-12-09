@@ -1,6 +1,5 @@
 package io.harness.ngpipeline.pipeline.beans.yaml;
 
-import io.harness.beans.ParameterField;
 import io.harness.common.SwaggerConstants;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.data.validator.EntityIdentifier;
@@ -9,6 +8,7 @@ import io.harness.mongo.index.Field;
 import io.harness.ng.RsqlQueryable;
 import io.harness.ngpipeline.pipeline.beans.yaml.NgPipeline.NgPipelineKeys;
 import io.harness.ngpipeline.visitor.helpers.ngpipeline.NgPipelineVisitorHelper;
+import io.harness.pms.yaml.ParameterField;
 import io.harness.walktree.beans.LevelNode;
 import io.harness.walktree.beans.VisitableChildren;
 import io.harness.walktree.visitor.SimpleVisitorHelper;

@@ -1,4 +1,4 @@
-package io.harness.beans;
+package io.harness.pms.yaml.validation;
 
 import lombok.Value;
 

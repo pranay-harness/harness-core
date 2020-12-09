@@ -1,6 +1,5 @@
 package io.harness.cdng.artifact.steps;
 
-import io.harness.beans.ParameterField;
 import io.harness.cdng.artifact.bean.ArtifactConfig;
 import io.harness.cdng.artifact.bean.ArtifactOutcome;
 import io.harness.cdng.artifact.bean.yaml.ArtifactListConfig;
@@ -25,6 +24,7 @@ import io.harness.exception.InvalidRequestException;
 import io.harness.ngpipeline.common.AmbianceHelper;
 import io.harness.pms.ambiance.Ambiance;
 import io.harness.pms.sdk.core.steps.io.StepResponse.StepOutcome;
+import io.harness.pms.yaml.ParameterField;
 import io.harness.steps.StepUtils;
 import io.harness.tasks.Cd1SetupFields;
 import io.harness.tasks.Task;

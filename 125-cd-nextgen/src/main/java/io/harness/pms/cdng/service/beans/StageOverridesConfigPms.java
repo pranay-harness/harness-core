@@ -1,9 +1,9 @@
 package io.harness.pms.cdng.service.beans;
 
-import io.harness.beans.ParameterField;
 import io.harness.common.SwaggerConstants;
 import io.harness.pms.cdng.artifact.bean.yaml.ArtifactListConfigPms;
 import io.harness.pms.cdng.manifest.yaml.ManifestConfigWrapperPms;
+import io.harness.pms.yaml.ParameterField;
 import io.harness.pms.yaml.core.variables.NGVariablePms;
 
 import io.swagger.annotations.ApiModelProperty;

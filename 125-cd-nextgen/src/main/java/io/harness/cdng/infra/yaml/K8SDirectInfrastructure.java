@@ -1,11 +1,11 @@
 package io.harness.cdng.infra.yaml;
 
-import io.harness.beans.ParameterField;
 import io.harness.cdng.infra.beans.InfraMapping;
 import io.harness.cdng.infra.beans.K8sDirectInfraMapping;
 import io.harness.cdng.visitor.YamlTypes;
 import io.harness.cdng.visitor.helpers.pipelineinfrastructure.K8SDirectInfrastructureVisitorHelper;
 import io.harness.common.SwaggerConstants;
+import io.harness.pms.yaml.ParameterField;
 import io.harness.walktree.beans.LevelNode;
 import io.harness.walktree.visitor.SimpleVisitorHelper;
 import io.harness.walktree.visitor.Visitable;

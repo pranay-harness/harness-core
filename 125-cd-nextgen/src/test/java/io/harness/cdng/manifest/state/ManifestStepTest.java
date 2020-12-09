@@ -5,7 +5,6 @@ import static io.harness.rule.OwnerRule.ARCHIT;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.CategoryTest;
-import io.harness.beans.ParameterField;
 import io.harness.category.element.UnitTests;
 import io.harness.cdng.manifest.yaml.GitStore;
 import io.harness.cdng.manifest.yaml.ManifestConfig;
@@ -16,6 +15,7 @@ import io.harness.cdng.manifest.yaml.kinds.K8sManifest;
 import io.harness.cdng.manifest.yaml.kinds.ValuesManifest;
 import io.harness.delegate.beans.storeconfig.FetchType;
 import io.harness.pms.sdk.core.steps.io.StepResponse;
+import io.harness.pms.yaml.ParameterField;
 import io.harness.rule.Owner;
 
 import java.util.Arrays;

@@ -20,6 +20,7 @@ public class OrchestrationStepsModuleRegistrars {
           .add(OrchestrationStepsKryoRegistrar.class)
           .add(YamlKryoRegistrar.class)
           .add(NGCoreBeansKryoRegistrar.class)
+          .addAll(PmsCommonsModuleRegistrars.kryoRegistrars)
           .build();
 
   public static final ImmutableSet<Class<? extends MorphiaRegistrar>> morphiaRegistrars =

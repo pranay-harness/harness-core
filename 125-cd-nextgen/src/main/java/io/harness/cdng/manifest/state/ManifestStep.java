@@ -2,7 +2,6 @@ package io.harness.cdng.manifest.state;
 
 import static io.harness.cdng.manifest.ManifestConstants.MANIFESTS;
 
-import io.harness.beans.ParameterField;
 import io.harness.cdng.manifest.yaml.ManifestAttributes;
 import io.harness.cdng.manifest.yaml.ManifestConfigWrapper;
 import io.harness.cdng.manifest.yaml.ManifestOutcome;
@@ -10,6 +9,7 @@ import io.harness.cdng.service.beans.ServiceConfig;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.InvalidRequestException;
 import io.harness.pms.sdk.core.steps.io.StepResponse.StepOutcome;
+import io.harness.pms.yaml.ParameterField;
 import io.harness.yaml.core.intfc.WithIdentifier;
 
 import com.google.common.annotations.VisibleForTesting;
