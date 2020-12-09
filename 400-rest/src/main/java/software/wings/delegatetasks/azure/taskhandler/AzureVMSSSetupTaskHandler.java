@@ -487,9 +487,9 @@ public class AzureVMSSSetupTaskHandler extends AzureVMSSTaskHandler {
     return baseVirtualMachineScaleSetOp.get();
   }
 
-  private void attachNewCreatedVMSSToStageBackendPool(AzureConfig azureConfig,
-      AzureVMSSSetupTaskParameters setupTaskParameters, String newVirtualMachineScaleSetName,
-      ExecutionLogCallback logCallback) {
+  @VisibleForTesting
+  void attachNewCreatedVMSSToStageBackendPool(AzureConfig azureConfig, AzureVMSSSetupTaskParameters setupTaskParameters,
+      String newVirtualMachineScaleSetName, ExecutionLogCallback logCallback) {
     AzureLoadBalancerDetailForBGDeployment azureLoadBalancerDetail = setupTaskParameters.getAzureLoadBalancerDetail();
     String stageBackendPool = azureLoadBalancerDetail.getStageBackendPool();
     String loadBalancerName = azureLoadBalancerDetail.getLoadBalancerName();
@@ -512,7 +512,8 @@ public class AzureVMSSSetupTaskHandler extends AzureVMSSTaskHandler {
     logCallback.saveExecutionLog("Successful attached Virtual Machine Scale Set to stage backend pool");
   }
 
-  private LoadBalancer getLoadBalancer(
+  @VisibleForTesting
+  LoadBalancer getLoadBalancer(
       AzureConfig azureConfig, String subscriptionId, String resourceGroupName, String loadBalancerName) {
     Optional<LoadBalancer> loadBalancerOp =
         azureNetworkClient.getLoadBalancerByName(azureConfig, subscriptionId, resourceGroupName, loadBalancerName);
