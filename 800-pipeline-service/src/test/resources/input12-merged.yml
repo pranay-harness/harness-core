@@ -1,0 +1,78 @@
+pipeline:
+  identifier: "Test_Pipline11"
+  variables:
+  - name: "port2"
+    value: 8000
+  stages:
+  - stage:
+      identifier: "qaStage"
+      spec:
+        execution:
+          steps:
+          - step:
+              identifier: "httpStep1"
+              spec:
+                url: "www.google.com"
+          - parallel:
+            - step:
+                identifier: "httpStep2"
+                spec:
+                  method: "POST"
+          - step:
+              identifier: "httpStep11"
+              spec:
+                socketTimeoutMillis: 60000
+  - parallel:
+    - stage:
+        identifier: "qaStage2"
+        spec:
+          service:
+            identifier: "manager"
+            serviceDefinition:
+              spec:
+                manifests:
+                - manifest:
+                    identifier: "baseValues"
+                    spec:
+                      store:
+                        spec:
+                          connectorRef: "defaultConn"
+          execution:
+            steps:
+            - step:
+                identifier: "httpStep4"
+                spec:
+                  method: "GET"
+    - stage:
+        identifier: "qaStage3"
+        spec:
+          service:
+            identifier: "manager"
+            serviceDefinition:
+              spec:
+                manifests:
+                - manifest:
+                    identifier: "baseValues"
+                    type: "K8sManifest"
+                    spec:
+                      store:
+                        type: "Git"
+                        spec:
+                          connectorRef: "my_git_connector"
+                          gitFetchType: "Branch"
+                          branch: "master"
+                          paths:
+                          - "test/spec"
+                - manifest:
+                    identifier: "qaOverride"
+                    type: "Values"
+                    spec:
+                      store:
+                        type: "Git"
+                        spec:
+                          connectorRef: "my_git_connector"
+                          gitFetchType: "Branch"
+                          branch: "master"
+                          paths:
+                          - "test/baseValues.yaml"
+                          - "test/qa/values_1.yaml"
