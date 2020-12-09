@@ -20,9 +20,11 @@ import io.harness.ngtriggers.beans.entity.NGTriggerEntity;
 import io.harness.ngtriggers.beans.entity.metadata.NGTriggerMetadata;
 import io.harness.ngtriggers.beans.source.webhook.WebhookTriggerConfig;
 import io.harness.ngtriggers.beans.source.webhook.WebhookTriggerSpec;
+import io.harness.repositories.ng.core.spring.TriggerEventHistoryRepository;
 import io.harness.rule.Owner;
 
 import com.google.common.io.Resources;
+import com.google.inject.Inject;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.Objects;
@@ -31,12 +33,19 @@ import java.util.stream.Collectors;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.Mockito;
+import org.mockito.MockitoAnnotations;
 
 public class NGTriggerElementMapperTest extends CategoryTest {
   private String ngTriggerYaml;
+  @Mock private TriggerEventHistoryRepository triggerEventHistoryRepository;
+  @InjectMocks @Inject private NGTriggerElementMapper ngTriggerElementMapper;
 
   @Before
   public void setUp() throws IOException {
+    MockitoAnnotations.initMocks(this);
     ClassLoader classLoader = getClass().getClassLoader();
     String filename = "ng-trigger.yaml";
     ngTriggerYaml =
@@ -47,7 +56,7 @@ public class NGTriggerElementMapperTest extends CategoryTest {
   @Owner(developers = NAMAN)
   @Category(UnitTests.class)
   public void testToTriggerConfig() {
-    NGTriggerConfig trigger = NGTriggerElementMapper.toTriggerConfig(ngTriggerYaml);
+    NGTriggerConfig trigger = ngTriggerElementMapper.toTriggerConfig(ngTriggerYaml);
     assertThat(trigger).isNotNull();
     assertThat(trigger.getIdentifier()).isEqualTo("first_trigger");
     assertThat(trigger.getSource().getType()).isEqualTo(WEBHOOK);
@@ -86,7 +95,7 @@ public class NGTriggerElementMapperTest extends CategoryTest {
   @Owner(developers = ADWAIT)
   @Category(UnitTests.class)
   public void testToTriggerEntityFromYaml() {
-    NGTriggerEntity ngTriggerEntity = NGTriggerElementMapper.toTriggerEntity("accId", "orgId", "projId", ngTriggerYaml);
+    NGTriggerEntity ngTriggerEntity = ngTriggerElementMapper.toTriggerEntity("accId", "orgId", "projId", ngTriggerYaml);
 
     assertThat(ngTriggerEntity.getAccountId()).isEqualTo("accId");
     assertThat(ngTriggerEntity.getOrgIdentifier()).isEqualTo("orgId");
@@ -109,7 +118,7 @@ public class NGTriggerElementMapperTest extends CategoryTest {
   @Category(UnitTests.class)
   public void testToTriggerEntityWithWrongIdentifier() {
     assertThatThrownBy(
-        () -> NGTriggerElementMapper.toTriggerEntity("accId", "orgId", "projId", "not_first_trigger", ngTriggerYaml))
+        () -> ngTriggerElementMapper.toTriggerEntity("accId", "orgId", "projId", "not_first_trigger", ngTriggerYaml))
         .isInstanceOf(InvalidRequestException.class);
   }
 
@@ -117,8 +126,8 @@ public class NGTriggerElementMapperTest extends CategoryTest {
   @Owner(developers = NAMAN)
   @Category(UnitTests.class)
   public void testToResponseDTO() {
-    NGTriggerEntity ngTriggerEntity = NGTriggerElementMapper.toTriggerEntity("accId", "orgId", "projId", ngTriggerYaml);
-    NGTriggerResponseDTO responseDTO = NGTriggerElementMapper.toResponseDTO(ngTriggerEntity);
+    NGTriggerEntity ngTriggerEntity = ngTriggerElementMapper.toTriggerEntity("accId", "orgId", "projId", ngTriggerYaml);
+    NGTriggerResponseDTO responseDTO = ngTriggerElementMapper.toResponseDTO(ngTriggerEntity);
     assertThat(responseDTO.getAccountIdentifier()).isEqualTo(ngTriggerEntity.getAccountId());
     assertThat(responseDTO.getOrgIdentifier()).isEqualTo(ngTriggerEntity.getOrgIdentifier());
     assertThat(responseDTO.getProjectIdentifier()).isEqualTo(ngTriggerEntity.getProjectIdentifier());

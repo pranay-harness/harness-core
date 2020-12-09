@@ -1,10 +1,14 @@
 package io.harness.ngtriggers.beans.entity;
 
 import io.harness.annotation.HarnessEntity;
+import io.harness.mongo.index.CompoundMongoIndex;
+import io.harness.mongo.index.MongoIndex;
+import io.harness.mongo.index.SortCompoundMongoIndex;
 import io.harness.ngtriggers.beans.target.pipeline.TargetExecutionSummary;
-import io.harness.ngtriggers.beans.webhookresponse.WebhookEventResponse;
 import io.harness.persistence.PersistentEntity;
 
+import com.google.common.collect.ImmutableList;
+import java.util.List;
 import lombok.Builder;
 import lombok.Data;
 import lombok.experimental.FieldNameConstants;
@@ -22,12 +26,27 @@ import org.springframework.data.mongodb.core.mapping.Document;
 @TypeAlias("triggerEventHistory")
 @HarnessEntity(exportable = true)
 public class TriggerEventHistory implements PersistentEntity {
+  public static List<MongoIndex> mongoIndexes() {
+    return ImmutableList.<MongoIndex>builder()
+        .add(SortCompoundMongoIndex.builder()
+                 .name("las")
+                 .field(TriggerEventHistoryKeys.accountId)
+                 .field(TriggerEventHistoryKeys.orgIdentifier)
+                 .field(TriggerEventHistoryKeys.projectIdentifier)
+                 .field(TriggerEventHistoryKeys.triggerIdentifier)
+                 .descSortField(TriggerEventHistoryKeys.createdAt)
+                 .build())
+        .build();
+  }
+
   @Id @org.mongodb.morphia.annotations.Id String uuid;
   String accountId;
+  String orgIdentifier;
+  String projectIdentifier;
   String eventCorrelationId;
   String payload;
   Long eventCreatedAt;
-  WebhookEventResponse.FinalStatus finalStatus;
+  String finalStatus;
   String message;
   String planExecutionId;
   boolean exceptionOccurred;

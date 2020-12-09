@@ -4,12 +4,15 @@ import static io.harness.rule.OwnerRule.NAMAN;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
-import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.*;
 
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.ngtriggers.beans.config.NGTriggerConfig;
+import io.harness.ngtriggers.beans.dto.LastTriggerExecutionDetails;
+import io.harness.ngtriggers.beans.dto.NGTriggerDetailsResponseDTO;
 import io.harness.ngtriggers.beans.dto.NGTriggerResponseDTO;
+import io.harness.ngtriggers.beans.dto.WebhookDetails;
 import io.harness.ngtriggers.beans.entity.NGTriggerEntity;
 import io.harness.ngtriggers.beans.entity.NGTriggerEntity.NGTriggerEntityKeys;
 import io.harness.ngtriggers.beans.entity.metadata.NGTriggerMetadata;
@@ -17,12 +20,14 @@ import io.harness.ngtriggers.beans.entity.metadata.WebhookMetadata;
 import io.harness.ngtriggers.beans.source.NGTriggerType;
 import io.harness.ngtriggers.beans.source.webhook.WebhookTriggerConfig;
 import io.harness.ngtriggers.beans.target.TargetType;
+import io.harness.ngtriggers.mapper.NGTriggerElementMapper;
 import io.harness.ngtriggers.mapper.TriggerFilterHelper;
 import io.harness.ngtriggers.service.NGTriggerService;
 import io.harness.rule.Owner;
 import io.harness.yaml.utils.YamlPipelineUtils;
 
 import com.google.common.io.Resources;
+import com.google.inject.Inject;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.Collections;
@@ -41,6 +46,7 @@ import org.springframework.data.mongodb.core.query.Criteria;
 public class NGTriggerResourceTest extends CategoryTest {
   @Mock NGTriggerService ngTriggerService;
   @InjectMocks NGTriggerResource ngTriggerResource;
+  @Mock NGTriggerElementMapper ngTriggerElementMapper;
 
   private final String IDENTIFIER = "first_trigger";
   private final String NAME = "first trigger";
@@ -50,6 +56,7 @@ public class NGTriggerResourceTest extends CategoryTest {
   private final String PROJ_IDENTIFIER = "projId";
   private String ngTriggerYaml;
 
+  private NGTriggerDetailsResponseDTO ngTriggerDetailsResponseDTO;
   private NGTriggerResponseDTO ngTriggerResponseDTO;
   private NGTriggerEntity ngTriggerEntity;
   private NGTriggerConfig ngTriggerConfig;
@@ -83,6 +90,22 @@ public class NGTriggerResourceTest extends CategoryTest {
                                .version(0L)
                                .build();
 
+    ngTriggerDetailsResponseDTO =
+        NGTriggerDetailsResponseDTO.builder()
+            .name(NAME)
+            .identifier(IDENTIFIER)
+            .type(NGTriggerType.WEBHOOK)
+            .lastTriggerExecutionDetails(LastTriggerExecutionDetails.builder()
+                                             .lastExecutionTime(1607306091861L)
+                                             .lastExecutionStatus("SUCCESS")
+                                             .lastExecutionSuccessful(false)
+                                             .planExecutionId("PYV86FtaSfes7uPrGYJhBg")
+                                             .message("Pipeline execution was requested successfully")
+                                             .build())
+            .webhookDetails(WebhookDetails.builder().webhookSourceRepo("Github").build())
+            .enabled(true)
+            .build();
+
     ngTriggerEntity = NGTriggerEntity.builder()
                           .accountId(ACCOUNT_ID)
                           .orgIdentifier(ORG_IDENTIFIER)
@@ -103,6 +126,7 @@ public class NGTriggerResourceTest extends CategoryTest {
   @Category(UnitTests.class)
   public void testCreate() {
     doReturn(ngTriggerEntity).when(ngTriggerService).create(any());
+    when(ngTriggerElementMapper.toResponseDTO(ngTriggerEntity)).thenReturn(ngTriggerResponseDTO);
 
     NGTriggerResponseDTO responseDTO =
         ngTriggerResource.create(ACCOUNT_ID, ORG_IDENTIFIER, PROJ_IDENTIFIER, ngTriggerYaml).getData();
@@ -116,6 +140,7 @@ public class NGTriggerResourceTest extends CategoryTest {
     doReturn(Optional.of(ngTriggerEntity))
         .when(ngTriggerService)
         .get(ACCOUNT_ID, ORG_IDENTIFIER, PROJ_IDENTIFIER, PIPELINE_IDENTIFIER, IDENTIFIER, false);
+    when(ngTriggerElementMapper.toResponseDTO(ngTriggerEntity)).thenReturn(ngTriggerResponseDTO);
     NGTriggerResponseDTO responseDTO =
         ngTriggerResource.get(ACCOUNT_ID, ORG_IDENTIFIER, PROJ_IDENTIFIER, PIPELINE_IDENTIFIER, IDENTIFIER).getData();
     assertThat(responseDTO).isEqualTo(ngTriggerResponseDTO);
@@ -126,6 +151,9 @@ public class NGTriggerResourceTest extends CategoryTest {
   @Category(UnitTests.class)
   public void testUpdate() {
     doReturn(ngTriggerEntity).when(ngTriggerService).update(any());
+    when(ngTriggerElementMapper.toTriggerEntity(ACCOUNT_ID, ORG_IDENTIFIER, PROJ_IDENTIFIER, IDENTIFIER, ngTriggerYaml))
+        .thenReturn(ngTriggerEntity);
+    when(ngTriggerElementMapper.toResponseDTO(ngTriggerEntity)).thenReturn(ngTriggerResponseDTO);
 
     NGTriggerResponseDTO responseDTO =
         ngTriggerResource.update("0", ACCOUNT_ID, ORG_IDENTIFIER, PROJ_IDENTIFIER, IDENTIFIER, ngTriggerYaml).getData();
@@ -140,7 +168,7 @@ public class NGTriggerResourceTest extends CategoryTest {
     doReturn(true)
         .when(ngTriggerService)
         .delete(ACCOUNT_ID, ORG_IDENTIFIER, PROJ_IDENTIFIER, PIPELINE_IDENTIFIER, IDENTIFIER, null);
-
+    when(ngTriggerElementMapper.toResponseDTO(ngTriggerEntity)).thenReturn(ngTriggerResponseDTO);
     Boolean response =
         ngTriggerResource.delete(null, ACCOUNT_ID, ORG_IDENTIFIER, PROJ_IDENTIFIER, PIPELINE_IDENTIFIER, IDENTIFIER)
             .getData();
@@ -157,11 +185,13 @@ public class NGTriggerResourceTest extends CategoryTest {
     final Page<NGTriggerEntity> serviceList = new PageImpl<>(Collections.singletonList(ngTriggerEntity), pageable, 1);
     doReturn(serviceList).when(ngTriggerService).list(criteria, pageable);
 
-    List<NGTriggerResponseDTO> content =
+    when(ngTriggerElementMapper.toNGTriggerDetailsResponseDTO(ngTriggerEntity)).thenReturn(ngTriggerDetailsResponseDTO);
+
+    List<NGTriggerDetailsResponseDTO> content =
         ngTriggerResource.getListForTarget("", "", "", "", "", 0, 10, null, "").getData().getContent();
 
     assertThat(content).isNotNull();
     assertThat(content.size()).isEqualTo(1);
-    assertThat(content.get(0)).isEqualTo(ngTriggerResponseDTO);
+    assertThat(content.get(0).getName()).isEqualTo(ngTriggerDetailsResponseDTO.getName());
   }
 }

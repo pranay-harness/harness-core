@@ -62,13 +62,29 @@ public class NGTriggerServiceImpl implements NGTriggerService {
   }
 
   @Override
+  public boolean updateTriggerStatus(NGTriggerEntity ngTriggerEntity, boolean status) {
+    Criteria criteria = getTriggerEqualityCriteria(ngTriggerEntity, false);
+    ngTriggerEntity.setEnabled(status);
+
+    NGTriggerEntity updatedEntity = ngTriggerRepository.update(criteria, ngTriggerEntity);
+    if (updatedEntity != null) {
+      return updatedEntity.getEnabled();
+    } else {
+      throw new InvalidRequestException(
+          String.format("NGTrigger [%s] couldn't be updated or doesn't exist", ngTriggerEntity.getIdentifier()));
+    }
+  }
+
+  @Override
   public Page<NGTriggerEntity> list(Criteria criteria, Pageable pageable) {
     return ngTriggerRepository.findAll(criteria, pageable);
   }
 
   @Override
-  public Page<NGTriggerEntity> listWebhookTriggers(String accountIdentifier, String repoUrl, boolean isDeleted) {
-    return list(TriggerFilterHelper.createCriteriaForWebhookTriggerGetList(accountIdentifier, repoUrl, "", false),
+  public Page<NGTriggerEntity> listWebhookTriggers(
+      String accountIdentifier, String repoUrl, boolean isDeleted, boolean enabledOnly) {
+    return list(
+        TriggerFilterHelper.createCriteriaForWebhookTriggerGetList(accountIdentifier, repoUrl, "", false, enabledOnly),
         Pageable.unpaged());
   }
 
