@@ -1,0 +1,30 @@
+{
+  "allOf": [
+    {
+      "$ref": "#/definitions/ConnectorConfigDTO",
+      "originalRef": "ConnectorConfigDTO"
+    },
+    {
+      "type": "object",
+      "required": [
+        "accountId",
+        "passwordRef"
+      ],
+      "properties": {
+        "accountId": {
+          "type": "string"
+        },
+        "passwordRef": {
+          "type": "string"
+        },
+        "splunkUrl": {
+          "type": "string"
+        },
+        "username": {
+          "type": "string"
+        }
+      }
+    }
+  ],
+  "$schema": "http://json-schema.org/draft-07/schema#"
+}

@@ -1,0 +1,17 @@
+{
+  "allOf": [
+    {
+      "$ref": "#/definitions/ConnectorConfigDTO",
+      "originalRef": "ConnectorConfigDTO"
+    },
+    {
+      "type": "object",
+      "properties": {
+        "default": {
+          "type": "boolean"
+        }
+      }
+    }
+  ],
+  "$schema": "http://json-schema.org/draft-07/schema#"
+}

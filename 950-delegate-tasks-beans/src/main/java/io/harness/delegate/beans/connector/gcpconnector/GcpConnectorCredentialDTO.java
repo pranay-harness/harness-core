@@ -23,10 +23,6 @@ public class GcpConnectorCredentialDTO {
   @JsonProperty("spec")
   @JsonTypeInfo(
       use = JsonTypeInfo.Id.NAME, property = "type", include = JsonTypeInfo.As.EXTERNAL_PROPERTY, visible = true)
-  @JsonSubTypes({
-    @JsonSubTypes.Type(value = GcpDelegateDetailsDTO.class, name = GcpConstants.INHERIT_FROM_DELEGATE)
-    , @JsonSubTypes.Type(value = GcpManualDetailsDTO.class, name = GcpConstants.MANUAL_CONFIG)
-  })
   @NotNull
   @Valid
   GcpCredentialSpecDTO config;

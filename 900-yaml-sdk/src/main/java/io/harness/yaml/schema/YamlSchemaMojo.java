@@ -1,5 +1,7 @@
 package io.harness.yaml.schema;
 
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
+
 import io.harness.yaml.schema.beans.YamlSchemaConfiguration;
 
 import java.io.File;
@@ -7,8 +9,6 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.util.List;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import org.apache.maven.artifact.DependencyResolutionRequiredException;
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
@@ -17,7 +17,6 @@ import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.plugins.annotations.ResolutionScope;
 import org.apache.maven.project.MavenProject;
-import org.reflections.Reflections;
 
 @Mojo(name = "generate", defaultPhase = LifecyclePhase.COMPILE, requiresDependencyResolution = ResolutionScope.COMPILE,
     requiresDependencyCollection = ResolutionScope.COMPILE)
@@ -45,11 +44,9 @@ public class YamlSchemaMojo extends AbstractMojo {
    */
   public void execute() throws MojoExecutionException {
     classLoader = getClassLoader();
-
-    getLog().info(Reflections.log.getName());
-    Logger.getLogger(Reflections.log.getName()).setLevel(Level.OFF);
     YamlSchemaGenerator generator = new YamlSchemaGenerator();
-    String path = "src" + File.separator + "main" + File.separator + "resources" + File.separator + generationFolder;
+    String path = project.getBuild().getSourceDirectory() + "/../resources";
+    path = isEmpty(generationFolder) ? path : path + File.separator + generationFolder;
     YamlSchemaConfiguration yamlSchemaConfiguration =
         YamlSchemaConfiguration.builder().generatedPathRoot(path).classLoader(classLoader).build();
 

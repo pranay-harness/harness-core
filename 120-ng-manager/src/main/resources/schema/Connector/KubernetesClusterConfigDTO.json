@@ -1,0 +1,18 @@
+{
+  "allOf": [
+    {
+      "$ref": "#/definitions/ConnectorConfigDTO",
+      "originalRef": "ConnectorConfigDTO"
+    },
+    {
+      "type": "object",
+      "properties": {
+        "credential": {
+          "$ref": "#/definitions/KubernetesCredentialDTO",
+          "originalRef": "KubernetesCredentialDTO"
+        }
+      }
+    }
+  ],
+  "$schema": "http://json-schema.org/draft-07/schema#"
+}

@@ -1,0 +1,17 @@
+{
+  "allOf": [
+    {
+      "$ref": "#/definitions/TGTGenerationSpecDTO",
+      "originalRef": "TGTGenerationSpecDTO"
+    },
+    {
+      "type": "object",
+      "properties": {
+        "keyPath": {
+          "type": "string"
+        }
+      }
+    }
+  ],
+  "$schema": "http://json-schema.org/draft-07/schema#"
+}

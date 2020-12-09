@@ -236,6 +236,22 @@
                     </execution>
                 </executions>
             </plugin>
+            <plugin>
+                <groupId>software.wings</groupId>
+                <artifactId>900-yaml-sdk</artifactId>
+                <version>0.0.1-SNAPSHOT</version>
+                <configuration>
+                    <generationFolder>schema</generationFolder>
+                </configuration>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>generate</goal>
+                        </goals>
+                        <phase>compile</phase>
+                    </execution>
+                </executions>
+            </plugin>
         </plugins>
     </build>
 </project>

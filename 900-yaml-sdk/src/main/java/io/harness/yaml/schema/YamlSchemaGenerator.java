@@ -8,14 +8,11 @@ import io.harness.yaml.utils.YamlConstants;
 import io.harness.yaml.utils.YamlSchemaUtils;
 import io.harness.yamlSchema.YamlSchemaRoot;
 
-import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.fasterxml.jackson.core.util.DefaultPrettyPrinter;
-import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectWriter;
-import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.annotations.VisibleForTesting;
@@ -51,10 +48,11 @@ public class YamlSchemaGenerator {
       final Map<String, Set<FieldSubtypeData>> subTypeMap = getSubTypeMap(rootSchemaClass);
       log.info("Generated subtype Map");
 
-      final String swaggerName = YamlSchemaUtils.getSwaggerName(rootSchemaClass);
-      log.info("Generating yaml schema for {}", swaggerName);
-      generateDefinitions(stringModelMap, yamlSchemaConfiguration.getGeneratedPathRoot() + File.separator + swaggerName,
-          subTypeMap, swaggerName);
+      final String entitySwaggerName = YamlSchemaUtils.getSwaggerName(rootSchemaClass);
+      final String entityName = YamlSchemaUtils.getEntityName(rootSchemaClass);
+      log.info("Generating yaml schema for {}", entityName);
+      generateDefinitions(stringModelMap, yamlSchemaConfiguration.getGeneratedPathRoot() + File.separator + entityName,
+          subTypeMap, entitySwaggerName);
       log.info("Saved files");
     }
   }
@@ -64,14 +62,17 @@ public class YamlSchemaGenerator {
     return YamlSchemaUtils.getClasses(yamlSchemaConfiguration.getClassLoader(), YamlSchemaRoot.class);
   }
 
+  /**
+   * @param definitions swagger generated definitions.
+   * @param basePath    path where schema will be stored.
+   * @param subTypeMap  extra subtype info which will be added to definitions.
+   * @param baseNodeKey The root yaml entity name in definition for which schema is being generated.
+   */
   private void generateDefinitions(Map<String, Model> definitions, String basePath,
       Map<String, Set<FieldSubtypeData>> subTypeMap, String baseNodeKey) {
-    ObjectMapper mapper = new ObjectMapper();
-    mapper.setSerializationInclusion(JsonInclude.Include.NON_NULL);
-    mapper.configure(SerializationFeature.FAIL_ON_EMPTY_BEANS, false);
-    mapper.configure(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false);
-    mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
-    ObjectWriter jsonWriter = mapper.writer(new DefaultPrettyPrinter());
+    ObjectMapper mapper = SchemaGeneratorUtils.getObjectMapperForSchemaGeneration();
+    DefaultPrettyPrinter defaultPrettyPrinter = new SchemaGeneratorUtils.SchemaPrinter();
+    ObjectWriter jsonWriter = mapper.writer(defaultPrettyPrinter);
 
     try {
       final String definitionsJson = jsonWriter.writeValueAsString(definitions.entrySet());
@@ -93,7 +94,7 @@ public class YamlSchemaGenerator {
       generateCompleteSchema(baseNodeKey, modifiedNode, outputNode);
       writeContentsToFile(basePath + File.separator + YamlConstants.SCHEMA_FILE_NAME, outputNode, jsonWriter);
     } catch (IOException e) {
-      log.error("Error in generating Yaml Schema.");
+      log.error("Error in generating Yaml Schema.", e);
     }
   }
 
@@ -102,6 +103,7 @@ public class YamlSchemaGenerator {
       throws IOException {
     Files.createDirectories(Paths.get(fileName).getParent());
     FileUtils.write(new File(fileName), jsonWriter.writeValueAsString(content), StandardCharsets.UTF_8);
+    log.info("Saved Json Schema at: {}", fileName);
   }
 
   /**

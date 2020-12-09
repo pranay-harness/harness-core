@@ -1,0 +1,25 @@
+{
+  "allOf": [
+    {
+      "$ref": "#/definitions/SecretSpecDTO",
+      "originalRef": "SecretSpecDTO"
+    },
+    {
+      "type": "object",
+      "required": [
+        "auth"
+      ],
+      "properties": {
+        "auth": {
+          "$ref": "#/definitions/SSHAuthDTO",
+          "originalRef": "SSHAuthDTO"
+        },
+        "port": {
+          "type": "integer",
+          "format": "int32"
+        }
+      }
+    }
+  ],
+  "$schema": "http://json-schema.org/draft-07/schema#"
+}

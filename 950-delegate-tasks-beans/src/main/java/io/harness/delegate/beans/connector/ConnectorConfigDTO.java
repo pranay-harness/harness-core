@@ -18,15 +18,25 @@ import io.harness.delegate.beans.connector.vaultconnector.VaultConnectorDTO;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonSubTypes;
 import io.swagger.annotations.ApiModel;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
-@ApiModel(value = "ConnectorConfigDTO",
-    subTypes = {KubernetesClusterConfigDTO.class, GitConfigDTO.class, DockerConnectorDTO.class,
-        SplunkConnectorDTO.class, AppDynamicsConnectorDTO.class, VaultConnectorDTO.class, LocalConnectorDTO.class,
-        GcpKmsConnectorDTO.class, GcpConnectorDTO.class, AwsConnectorDTO.class, ArtifactoryConnectorDTO.class,
-        JiraConnectorDTO.class, NexusConnectorDTO.class, AzureContainerRegistryConnectorDTO.class},
-    discriminator = "type")
+@JsonSubTypes({
+  @JsonSubTypes.Type(value = KubernetesClusterConfigDTO.class, name = "K8sCluster")
+  , @JsonSubTypes.Type(value = GitConfigDTO.class, name = "Git"),
+      @JsonSubTypes.Type(value = SplunkConnectorDTO.class, name = "Splunk"),
+      @JsonSubTypes.Type(value = AppDynamicsConnectorDTO.class, name = "AppDynamics"),
+      @JsonSubTypes.Type(value = VaultConnectorDTO.class, name = "Vault"),
+      @JsonSubTypes.Type(value = DockerConnectorDTO.class, name = "DockerRegistry"),
+      @JsonSubTypes.Type(value = LocalConnectorDTO.class, name = "Local"),
+      @JsonSubTypes.Type(value = GcpKmsConnectorDTO.class, name = "GcpKms"),
+      @JsonSubTypes.Type(value = GcpConnectorDTO.class, name = "Gcp"),
+      @JsonSubTypes.Type(value = AwsConnectorDTO.class, name = "Aws"),
+      @JsonSubTypes.Type(value = ArtifactoryConnectorDTO.class, name = "Artifactory"),
+      @JsonSubTypes.Type(value = JiraConnectorDTO.class, name = "Jira"),
+      @JsonSubTypes.Type(value = NexusConnectorDTO.class, name = "Nexus")
+})
 public abstract class ConnectorConfigDTO {
   @JsonIgnore public abstract DecryptableEntity getDecryptableEntity();
 }

@@ -4,7 +4,6 @@ import static io.harness.rule.OwnerRule.ABHINAV;
 
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
-import io.harness.yaml.schema.AbstractSnippetTestBase;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -26,7 +25,7 @@ public class YamlSnippetsTest implements AbstractSnippetTestBase {
   @Override
   public String getIndexResourceFileContent() throws IOException {
     final InputStream resourceAsStream =
-        SnippetConstants.class.getClassLoader().getResourceAsStream(SnippetConstants.resourceFile);
+        YamlSdkConstants.class.getClassLoader().getResourceAsStream(YamlSdkConstants.snippetsResourceFile);
     return IOUtils.toString(resourceAsStream, StandardCharsets.UTF_8.name());
   }
 

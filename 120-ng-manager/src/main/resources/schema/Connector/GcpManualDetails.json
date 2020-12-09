@@ -1,0 +1,20 @@
+{
+  "allOf": [
+    {
+      "$ref": "#/definitions/GcpCredentialSpec",
+      "originalRef": "GcpCredentialSpec"
+    },
+    {
+      "type": "object",
+      "required": [
+        "secretKeyRef"
+      ],
+      "properties": {
+        "secretKeyRef": {
+          "type": "string"
+        }
+      }
+    }
+  ],
+  "$schema": "http://json-schema.org/draft-07/schema#"
+}
