@@ -1,8 +1,7 @@
-package io.harness.ngpipeline.executions.beans;
+package io.harness.pms.execution.beans;
 
-import io.harness.ngpipeline.pipeline.executions.ExecutionStatus;
+import io.harness.pms.execution.ExecutionStatus;
 import io.harness.pms.execution.failure.FailureInfo;
-import io.harness.pms.sdk.core.data.Metadata;
 import io.harness.tasks.ProgressData;
 
 import java.util.List;

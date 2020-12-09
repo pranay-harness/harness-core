@@ -1,4 +1,4 @@
-package io.harness.ngpipeline.executions.beans;
+package io.harness.pms.execution.beans;
 
 import java.util.List;
 import lombok.Builder;

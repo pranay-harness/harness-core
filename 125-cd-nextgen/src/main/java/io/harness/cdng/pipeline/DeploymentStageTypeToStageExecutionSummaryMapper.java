@@ -1,9 +1,9 @@
 package io.harness.cdng.pipeline;
 
 import io.harness.ngpipeline.pipeline.StageTypeToStageExecutionSummaryMapper;
-import io.harness.ngpipeline.pipeline.executions.ExecutionStatus;
 import io.harness.ngpipeline.pipeline.executions.beans.CDStageExecutionSummary;
 import io.harness.ngpipeline.pipeline.executions.beans.StageExecutionSummary;
+import io.harness.pms.execution.ExecutionStatus;
 
 public class DeploymentStageTypeToStageExecutionSummaryMapper
     implements StageTypeToStageExecutionSummaryMapper<DeploymentStage> {

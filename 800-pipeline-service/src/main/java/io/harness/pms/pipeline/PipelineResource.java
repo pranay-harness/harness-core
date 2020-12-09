@@ -6,6 +6,7 @@ import static io.harness.utils.PageUtils.getPageRequest;
 
 import static java.lang.Long.parseLong;
 import static javax.ws.rs.core.HttpHeaders.IF_MATCH;
+import static org.apache.commons.lang3.StringUtils.isNotEmpty;
 import static org.apache.commons.lang3.StringUtils.isNumeric;
 
 import io.harness.NGCommonEntityConstants;
@@ -16,16 +17,21 @@ import io.harness.exception.InvalidRequestException;
 import io.harness.ng.core.dto.ErrorDTO;
 import io.harness.ng.core.dto.FailureDTO;
 import io.harness.ng.core.dto.ResponseDTO;
-import io.harness.pms.execution.Status;
+import io.harness.pms.execution.ExecutionStatus;
+import io.harness.pms.execution.beans.ExecutionGraph;
+import io.harness.pms.execution.beans.ExecutionNode;
+import io.harness.pms.execution.beans.ExecutionNodeAdjacencyList;
 import io.harness.pms.filter.creation.PMSPipelineFilterRequestDTO;
 import io.harness.pms.pipeline.PipelineEntity.PipelineEntityKeys;
 import io.harness.pms.pipeline.mappers.PMSPipelineDtoMapper;
 import io.harness.pms.pipeline.mappers.PMSPipelineFilterHelper;
 import io.harness.pms.pipeline.resource.EdgeLayoutListDTO;
 import io.harness.pms.pipeline.resource.GraphLayoutNodeDTO;
-import io.harness.pms.pipeline.resource.PlanExecutionSummaryDTO;
+import io.harness.pms.pipeline.resource.PipelineExecutionDetailDTO;
+import io.harness.pms.pipeline.resource.PipelineExecutionSummaryDTO;
 import io.harness.pms.pipeline.service.PMSPipelineService;
 import io.harness.serializer.JsonUtils;
+import io.harness.tasks.ProgressData;
 import io.harness.utils.PageUtils;
 
 import com.google.common.collect.Lists;
@@ -38,6 +44,7 @@ import io.swagger.annotations.ApiResponses;
 import java.io.IOException;
 import java.time.Duration;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -57,7 +64,10 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Value;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.groovy.util.Maps;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -204,39 +214,70 @@ public class PipelineResource {
     return ResponseDTO.newResponse(pmsPipelineService.getSteps(module, category));
   }
 
+  // ToDo(Alexei) should be removed
+  @Deprecated
   @GET
   @Path("/summary/execution/{pipelineIdentifier}")
   @ApiOperation(value = "Gets Plan Summary of a pipeline", nickname = "getPlanSummary")
-  public ResponseDTO<PlanExecutionSummaryDTO> getPlanSummary(
+  public ResponseDTO<PipelineExecutionSummaryDTO> getPlanSummary(
       @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountId,
       @NotNull @QueryParam(NGCommonEntityConstants.ORG_KEY) String orgId,
       @NotNull @QueryParam(NGCommonEntityConstants.PROJECT_KEY) String projectId,
       @PathParam(NGCommonEntityConstants.PIPELINE_KEY) String pipelineId) {
     log.info("Get plan Summary");
-    return ResponseDTO.newResponse(getPlanExecutionSummaryDto());
+    return ResponseDTO.newResponse(generatePipelineExecutionSummaryDTO(null));
   }
 
   @GET
   @Path("/execution/summary")
   @ApiOperation(value = "Gets Executions list", nickname = "getListOfExecutions")
-  public ResponseDTO<List<PlanExecutionSummaryDTO>> getListOfExecutions(
+  public ResponseDTO<List<PipelineExecutionSummaryDTO>> getListOfExecutions(
       @NotNull @QueryParam("accountIdentifier") String accountId, @QueryParam("orgIdentifier") String orgId,
       @NotNull @QueryParam("projectIdentifier") String projectId, @QueryParam("filter") String filter,
       @QueryParam("page") @DefaultValue("0") int page, @QueryParam("size") @DefaultValue("10") int size,
       @QueryParam("sort") List<String> sort) {
     log.info("Get List of executions");
-    List<PlanExecutionSummaryDTO> planExecutionSummaryDTOS = new ArrayList<>();
-    planExecutionSummaryDTOS.add(getPlanExecutionSummaryDto());
-    planExecutionSummaryDTOS.add(getPlanExecutionSummaryDto());
+    List<PipelineExecutionSummaryDTO> planExecutionSummaryDTOS = new ArrayList<>();
+    planExecutionSummaryDTOS.add(generatePipelineExecutionSummaryDTO(null));
+    planExecutionSummaryDTOS.add(generatePipelineExecutionSummaryDTO(null));
     return ResponseDTO.newResponse(planExecutionSummaryDTOS);
   }
 
-  public PlanExecutionSummaryDTO getPlanExecutionSummaryDto() {
+  @GET
+  @Path("/execution/{planExecutionId}")
+  @ApiOperation(value = "Gets Execution Detail", nickname = "getExecutionDetail")
+  public ResponseDTO<PipelineExecutionDetailDTO> getExecutionDetail(
+      @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountId,
+      @NotNull @QueryParam(NGCommonEntityConstants.ORG_KEY) String orgId,
+      @NotNull @QueryParam(NGCommonEntityConstants.PROJECT_KEY) String projectId,
+      @QueryParam("stageIdentifier") String stageIdentifier,
+      @PathParam(NGCommonEntityConstants.PLAN_KEY) String planExecutionId) {
+    log.info("Get Execution Detail");
+
+    ExecutionGraph executionGraph = null;
+    if (isNotEmpty(stageIdentifier)) {
+      executionGraph = generateExecutionGraph(stageIdentifier);
+    }
+
+    PipelineExecutionDetailDTO pipelineExecutionDetailDTO =
+        PipelineExecutionDetailDTO.builder()
+            .pipelineExecutionSummary(generatePipelineExecutionSummaryDTO(planExecutionId))
+            .executionGraph(executionGraph)
+            .build();
+
+    return ResponseDTO.newResponse(pipelineExecutionDetailDTO);
+  }
+
+  private PipelineExecutionSummaryDTO generatePipelineExecutionSummaryDTO(String planExecutionId) {
+    if (planExecutionId == null) {
+      planExecutionId = generateUuid();
+    }
     String pipelineNodeUuid = generateUuid();
     String stageNodeUuid = generateUuid();
     String ciStageUuid = generateUuid();
     String ciUnitTest1Uuid = generateUuid();
     String ciUnitTest2Uuid = generateUuid();
+    String staging1Uuid = generateUuid();
     String cdStageUuid = generateUuid();
     String cdRollingDeploymentId = generateUuid();
 
@@ -246,7 +287,7 @@ public class PipelineResource {
             .nodeType("pipeline")
             .nodeIdentifier("pipeline")
             .nodeUuid(pipelineNodeUuid)
-            .status(Status.RUNNING)
+            .status(ExecutionStatus.RUNNING)
             .edgeLayoutList(EdgeLayoutListDTO.builder().nextIds(Collections.singletonList(stageNodeUuid)).build())
             .build();
 
@@ -255,7 +296,7 @@ public class PipelineResource {
             .nodeUuid(stageNodeUuid)
             .nodeType("stages")
             .nodeIdentifier("stages")
-            .status(Status.RUNNING)
+            .status(ExecutionStatus.RUNNING)
             .edgeLayoutList(EdgeLayoutListDTO.builder().nextIds(Lists.newArrayList(ciStageUuid)).build())
             .build();
     GraphLayoutNodeDTO ciStage =
@@ -263,39 +304,57 @@ public class PipelineResource {
             .nodeUuid(ciStageUuid)
             .nodeType("ciStage")
             .nodeIdentifier("ciStage")
-            .status(Status.RUNNING)
+            .status(ExecutionStatus.RUNNING)
             .edgeLayoutList(EdgeLayoutListDTO.builder()
                                 .currentNodeChildren(Lists.newArrayList(ciUnitTest1Uuid, ciUnitTest2Uuid))
-                                .nextIds(Lists.newArrayList(cdStageUuid))
+                                .nextIds(Lists.newArrayList(staging1Uuid))
                                 .build())
             .build();
     GraphLayoutNodeDTO ciTest1 = GraphLayoutNodeDTO.builder()
                                      .nodeUuid(ciUnitTest1Uuid)
                                      .nodeType("ci_unit_tests_1")
                                      .nodeIdentifier("ci_unit_tests_1")
-                                     .status(Status.SUCCEEDED)
+                                     .status(ExecutionStatus.SUCCESS)
+                                     .moduleInfo(Maps.of("CI",
+                                         new org.bson.Document().append("unit-tests-1",
+                                             new org.bson.Document()
+                                                 .append("name", "unit-tests-1")
+                                                 .append("numberOfTests", "115")
+                                                 .append("numberOfFlakyTests", "0")
+                                                 .append("status", "success"))))
                                      .edgeLayoutList(EdgeLayoutListDTO.builder().build())
                                      .build();
     GraphLayoutNodeDTO ciTest2 = GraphLayoutNodeDTO.builder()
                                      .nodeUuid(ciUnitTest2Uuid)
                                      .nodeType("ci_unit_tests_2")
                                      .nodeIdentifier("ci_unit_tests_2")
-                                     .status(Status.SKIPPED)
+                                     .status(ExecutionStatus.SUSPENDED)
                                      .edgeLayoutList(EdgeLayoutListDTO.builder().build())
                                      .build();
+    GraphLayoutNodeDTO staging1 =
+        GraphLayoutNodeDTO.builder()
+            .nodeUuid(staging1Uuid)
+            .nodeType("Staging1")
+            .nodeIdentifier("Staging1")
+            .status(ExecutionStatus.RUNNING)
+            .edgeLayoutList(EdgeLayoutListDTO.builder().nextIds(Lists.newArrayList(cdStageUuid)).build())
+            .build();
+
     GraphLayoutNodeDTO cdStage =
         GraphLayoutNodeDTO.builder()
             .nodeUuid(cdStageUuid)
             .nodeType("cdStage")
             .nodeIdentifier("cdStage")
-            .status(Status.RUNNING)
+            .status(ExecutionStatus.RUNNING)
+            .moduleInfo(Maps.of(
+                "CD", new org.bson.Document().append("DeploymentType", "k8s").append("namespace", "mock-namespace")))
             .edgeLayoutList(EdgeLayoutListDTO.builder().nextIds(Lists.newArrayList(cdRollingDeploymentId)).build())
             .build();
     GraphLayoutNodeDTO cdRollingDeployment = GraphLayoutNodeDTO.builder()
                                                  .nodeUuid(cdRollingDeploymentId)
                                                  .nodeType("Rolling Deployment")
                                                  .nodeIdentifier("Rolling Deployments")
-                                                 .status(Status.TASK_WAITING)
+                                                 .status(ExecutionStatus.RUNNING)
                                                  .edgeLayoutList(EdgeLayoutListDTO.builder().build())
                                                  .build();
     layoutNodeMap.put(pipelineNodeUuid, pipelineLayoutNode);
@@ -303,6 +362,7 @@ public class PipelineResource {
     layoutNodeMap.put(ciStageUuid, ciStage);
     layoutNodeMap.put(ciUnitTest1Uuid, ciTest1);
     layoutNodeMap.put(ciUnitTest2Uuid, ciTest2);
+    layoutNodeMap.put(staging1Uuid, staging1);
     layoutNodeMap.put(cdStageUuid, cdStage);
     layoutNodeMap.put(cdRollingDeploymentId, cdRollingDeployment);
 
@@ -316,20 +376,214 @@ public class PipelineResource {
                 .append("commits", "[]")));
     moduleInfo.put("CD", new org.bson.Document().append("DeploymentType", "k8s").append("namespace", "mock-namespace"));
 
-    return PlanExecutionSummaryDTO.builder()
-        .pipelineId(generateUuid())
+    return PipelineExecutionSummaryDTO.builder()
+        .pipelineIdentifier(pipelineNodeUuid)
+        .planExecutionId(planExecutionId)
         .name("Mock Pipeline")
         .createdAt(System.currentTimeMillis())
         .executionTriggerInfo(ExecutionTriggerInfo.builder()
                                   .triggeredBy(EmbeddedUser.builder().name("Harness Dev").build())
                                   .triggerType(TriggerType.MANUAL)
                                   .build())
-        .duration(Duration.ofMinutes(90).toMillis())
-        .status(Status.RUNNING)
+        .startTs(System.currentTimeMillis())
+        .endTs(System.currentTimeMillis() + 5000)
+        .status(ExecutionStatus.RUNNING)
         .layoutNodeMap(layoutNodeMap)
         .startingNodeId(pipelineNodeUuid)
         .moduleInfo(moduleInfo)
-        .tags(new HashMap<>())
         .build();
+  }
+
+  private ExecutionGraph generateExecutionGraph(String stageIdentifier) {
+    String serviceUuid = generateUuid();
+    String provisioningInfraUuid = generateUuid();
+    String infraUuid = generateUuid();
+    String terraformPlanUuid = generateUuid();
+    String approvalUuid = generateUuid();
+    String terraformApplyUuid = generateUuid();
+    String executionUuid = generateUuid();
+    String k8sUpdateUuid = generateUuid();
+    String forkUuid = generateUuid();
+    String step1Uuid = generateUuid();
+    String step2Uuid = generateUuid();
+
+    Map<String, ExecutionNode> executionNodeMap = new HashMap<>();
+    Map<String, ExecutionNodeAdjacencyList> nodeAdjacencyListMap = new HashMap<>();
+
+    ExecutionNode staging1 = ExecutionNode.builder()
+                                 .uuid(stageIdentifier)
+                                 .name("Staging1")
+                                 .startTs(System.currentTimeMillis())
+                                 .status(ExecutionStatus.RUNNING)
+                                 .stepType("STAGE")
+                                 .build();
+    executionNodeMap.put(stageIdentifier, staging1);
+    nodeAdjacencyListMap.put(
+        stageIdentifier, ExecutionNodeAdjacencyList.builder().nextIds(Lists.newArrayList(serviceUuid)).build());
+
+    ExecutionNode service = ExecutionNode.builder()
+                                .uuid(serviceUuid)
+                                .name("Service")
+                                .startTs(System.currentTimeMillis())
+                                .endTs(System.currentTimeMillis())
+                                .status(ExecutionStatus.SUCCESS)
+                                .stepType("SERVICE")
+                                .build();
+    executionNodeMap.put(serviceUuid, service);
+    nodeAdjacencyListMap.put(
+        serviceUuid, ExecutionNodeAdjacencyList.builder().nextIds(Lists.newArrayList(provisioningInfraUuid)).build());
+
+    ExecutionNode provisioningInfra =
+        ExecutionNode.builder()
+            .uuid(provisioningInfraUuid)
+            .name("Provisioning Infrastructure")
+            .startTs(System.currentTimeMillis())
+            .endTs(System.currentTimeMillis())
+            .status(ExecutionStatus.SUCCESS)
+            .stepType("SECTION CHAIN")
+            .executableResponsesMetadata(
+                Lists.newArrayList(new org.bson.Document().append("status", "Done").append("approvalField", "status"),
+                    new org.bson.Document().append("terraformApplyResponse", "someResponse")))
+            .taskIdToProgressDataMap(Maps.of(generateUuid(),
+                Arrays.asList(DummyProgressData.builder().data("50% done").build(),
+                    DummyProgressData.builder().data("100% done").build()),
+                generateUuid(),
+                Arrays.asList(DummyProgressData.builder().data("33% done").build(),
+                    DummyProgressData.builder().data("100% done").build())))
+            .build();
+    executionNodeMap.put(provisioningInfraUuid, provisioningInfra);
+    nodeAdjacencyListMap.put(provisioningInfraUuid,
+        ExecutionNodeAdjacencyList.builder()
+            .children(Lists.newArrayList(terraformPlanUuid))
+            .nextIds(Lists.newArrayList(infraUuid))
+            .build());
+
+    ExecutionNode terraformPlan = ExecutionNode.builder()
+                                      .uuid(terraformPlanUuid)
+                                      .name("Terraform Plan")
+                                      .startTs(System.currentTimeMillis())
+                                      .endTs(System.currentTimeMillis())
+                                      .status(ExecutionStatus.SUCCESS)
+                                      .stepType("TASK")
+                                      .build();
+    executionNodeMap.put(terraformPlanUuid, terraformPlan);
+    nodeAdjacencyListMap.put(
+        terraformPlanUuid, ExecutionNodeAdjacencyList.builder().nextIds(Lists.newArrayList(approvalUuid)).build());
+
+    ExecutionNode approval =
+        ExecutionNode.builder()
+            .uuid(approvalUuid)
+            .name("Approve")
+            .startTs(System.currentTimeMillis())
+            .endTs(System.currentTimeMillis())
+            .status(ExecutionStatus.SUCCESS)
+            .stepType("TASK")
+            .executableResponsesMetadata(
+                Lists.newArrayList(new org.bson.Document().append("status", "Done").append("approvalField", "status")))
+            .taskIdToProgressDataMap(Maps.of(generateUuid(),
+                Arrays.asList(DummyProgressData.builder().data("50% done").build(),
+                    DummyProgressData.builder().data("100% done").build())))
+            .build();
+    executionNodeMap.put(approvalUuid, approval);
+    nodeAdjacencyListMap.put(
+        approvalUuid, ExecutionNodeAdjacencyList.builder().nextIds(Lists.newArrayList(terraformApplyUuid)).build());
+
+    ExecutionNode terraformApply = ExecutionNode.builder()
+                                       .uuid(terraformApplyUuid)
+                                       .name("Terraform Apply")
+                                       .startTs(System.currentTimeMillis())
+                                       .endTs(System.currentTimeMillis())
+                                       .status(ExecutionStatus.SUCCESS)
+                                       .stepType("TASK")
+                                       .executableResponsesMetadata(Lists.newArrayList(
+                                           new org.bson.Document().append("terraformApplyResponse", "someResponse")))
+                                       .taskIdToProgressDataMap(Maps.of(generateUuid(),
+                                           Arrays.asList(DummyProgressData.builder().data("33% done").build(),
+                                               DummyProgressData.builder().data("100% done").build())))
+                                       .build();
+    executionNodeMap.put(terraformApplyUuid, terraformApply);
+    nodeAdjacencyListMap.put(terraformApplyUuid, ExecutionNodeAdjacencyList.builder().build());
+
+    ExecutionNode infra = ExecutionNode.builder()
+                              .uuid(infraUuid)
+                              .name("Infrastructure")
+                              .startTs(System.currentTimeMillis())
+                              .endTs(System.currentTimeMillis())
+                              .status(ExecutionStatus.SUCCESS)
+                              .stepType("INFRA")
+                              .build();
+    executionNodeMap.put(infraUuid, infra);
+    nodeAdjacencyListMap.put(
+        infraUuid, ExecutionNodeAdjacencyList.builder().nextIds(Lists.newArrayList(executionUuid)).build());
+
+    ExecutionNode execution = ExecutionNode.builder()
+                                  .uuid(executionUuid)
+                                  .name("Execution")
+                                  .startTs(System.currentTimeMillis())
+                                  .endTs(System.currentTimeMillis())
+                                  .status(ExecutionStatus.RUNNING)
+                                  .stepType("SECTION")
+                                  .build();
+    executionNodeMap.put(executionUuid, execution);
+    nodeAdjacencyListMap.put(
+        executionUuid, ExecutionNodeAdjacencyList.builder().children(Lists.newArrayList(k8sUpdateUuid)).build());
+
+    ExecutionNode k8sUpdate = ExecutionNode.builder()
+                                  .uuid(k8sUpdateUuid)
+                                  .name("k8sUpdate")
+                                  .startTs(System.currentTimeMillis())
+                                  .endTs(System.currentTimeMillis())
+                                  .status(ExecutionStatus.SUCCESS)
+                                  .stepType("TASK")
+                                  .build();
+    executionNodeMap.put(k8sUpdateUuid, k8sUpdate);
+    nodeAdjacencyListMap.put(
+        k8sUpdateUuid, ExecutionNodeAdjacencyList.builder().nextIds(Lists.newArrayList(forkUuid)).build());
+
+    ExecutionNode fork = ExecutionNode.builder()
+                             .uuid(forkUuid)
+                             .name("Fork")
+                             .startTs(System.currentTimeMillis())
+                             .endTs(System.currentTimeMillis())
+                             .status(ExecutionStatus.RUNNING)
+                             .stepType("FORK")
+                             .build();
+    executionNodeMap.put(forkUuid, fork);
+    nodeAdjacencyListMap.put(
+        forkUuid, ExecutionNodeAdjacencyList.builder().children(Lists.newArrayList(step1Uuid, step2Uuid)).build());
+
+    ExecutionNode step1 = ExecutionNode.builder()
+                              .uuid(step1Uuid)
+                              .name("Step1")
+                              .startTs(System.currentTimeMillis())
+                              .endTs(System.currentTimeMillis())
+                              .status(ExecutionStatus.RUNNING)
+                              .stepType("TERRAFORM")
+                              .build();
+    executionNodeMap.put(step1Uuid, step1);
+    nodeAdjacencyListMap.put(step1Uuid, ExecutionNodeAdjacencyList.builder().build());
+
+    ExecutionNode step2 = ExecutionNode.builder()
+                              .uuid(step2Uuid)
+                              .name("Step2")
+                              .startTs(System.currentTimeMillis())
+                              .endTs(System.currentTimeMillis())
+                              .status(ExecutionStatus.WAITING)
+                              .stepType("APPROVAL")
+                              .build();
+    executionNodeMap.put(step2Uuid, step2);
+    nodeAdjacencyListMap.put(step2Uuid, ExecutionNodeAdjacencyList.builder().build());
+
+    return ExecutionGraph.builder()
+        .rootNodeId(stageIdentifier)
+        .nodeMap(executionNodeMap)
+        .nodeAdjacencyListMap(nodeAdjacencyListMap)
+        .build();
+  }
+
+  @Value
+  @Builder
+  private static class DummyProgressData implements ProgressData {
+    String data;
   }
 }

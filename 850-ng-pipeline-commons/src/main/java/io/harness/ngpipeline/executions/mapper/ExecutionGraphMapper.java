@@ -4,11 +4,11 @@ import io.harness.beans.EdgeList;
 import io.harness.dto.GraphVertexDTO;
 import io.harness.dto.OrchestrationAdjacencyListDTO;
 import io.harness.dto.OrchestrationGraphDTO;
-import io.harness.ngpipeline.executions.beans.ExecutionGraph;
-import io.harness.ngpipeline.executions.beans.ExecutionGraph.ExecutionGraphBuilder;
-import io.harness.ngpipeline.executions.beans.ExecutionNode;
-import io.harness.ngpipeline.executions.beans.ExecutionNodeAdjacencyList;
-import io.harness.ngpipeline.pipeline.executions.ExecutionStatus;
+import io.harness.pms.execution.ExecutionStatus;
+import io.harness.pms.execution.beans.ExecutionGraph;
+import io.harness.pms.execution.beans.ExecutionGraph.ExecutionGraphBuilder;
+import io.harness.pms.execution.beans.ExecutionNode;
+import io.harness.pms.execution.beans.ExecutionNodeAdjacencyList;
 
 import java.util.HashMap;
 import java.util.Map;
