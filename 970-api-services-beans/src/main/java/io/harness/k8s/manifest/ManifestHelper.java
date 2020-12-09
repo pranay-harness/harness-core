@@ -17,6 +17,7 @@ import io.harness.k8s.model.Kind;
 import io.harness.k8s.model.KubernetesResource;
 import io.harness.k8s.model.KubernetesResourceId;
 
+import com.esotericsoftware.yamlbeans.YamlConfig;
 import com.esotericsoftware.yamlbeans.YamlException;
 import com.esotericsoftware.yamlbeans.YamlReader;
 import com.esotericsoftware.yamlbeans.parser.Parser.ParserException;
@@ -47,7 +48,9 @@ public class ManifestHelper {
     Map map = null;
 
     try {
-      YamlReader reader = new YamlReader(spec);
+      YamlConfig config = new YamlConfig();
+      config.readConfig.setClassTags(false);
+      YamlReader reader = new YamlReader(spec, config);
       Object o = reader.read();
       if (o == null) {
         return null;

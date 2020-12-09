@@ -8,6 +8,7 @@ import static io.harness.k8s.manifest.ManifestHelper.processYaml;
 import static io.harness.k8s.manifest.ManifestHelper.validateValuesFileContents;
 import static io.harness.k8s.manifest.ObjectYamlUtils.toYaml;
 import static io.harness.logging.LoggingInitializer.initializeLogging;
+import static io.harness.rule.OwnerRule.ABOSII;
 import static io.harness.rule.OwnerRule.ACASIAN;
 import static io.harness.rule.OwnerRule.ANSHUL;
 import static io.harness.rule.OwnerRule.PUNEET;
@@ -503,6 +504,29 @@ public class ManifestHelperTest extends CategoryTest {
         + "  namespace: \n"
         + "data:\n"
         + "  hello: world");
+    assertThat(kubernetesResources).isNotEmpty();
+  }
+
+  @Test
+  @Owner(developers = ABOSII)
+  @Category(UnitTests.class)
+  public void testProcessYamlWithYAMLTags() {
+    List<KubernetesResource> kubernetesResources = processYaml("apiVersion: apiextensions.k8s.io/v1\n"
+        + "kind: CustomResourceDefinition\n"
+        + "metadata:\n"
+        + "  name: custom.resource.def\n"
+        + "spec:\n"
+        + "  versions:\n"
+        + "    - &version\n"
+        + "      name: v1alpha1\n"
+        + "      served: true\n"
+        + "      schema:\n"
+        + "        openAPIV3Schema:\n"
+        + "          type: object\n"
+        + "    - !!merge <<: *version\n"
+        + "  names:\n"
+        + "    kind: ResourceDef\n");
+
     assertThat(kubernetesResources).isNotEmpty();
   }
 }
