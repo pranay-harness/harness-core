@@ -106,12 +106,17 @@ public class GcpServiceAccountServiceImpl implements GcpServiceAccountService {
     request.execute();
   }
 
-  public void addRoleToServiceAccount(String serviceAccountEmail, String role) {
+  public void addRolesToServiceAccount(String serviceAccountEmail, String[] roles) {
     CESetUpConfig ceSetUpConfig = mainConfiguration.getCeSetUpConfig();
     String projectId = ceSetUpConfig.getGcpProjectId();
     com.google.api.services.cloudresourcemanager.model.Policy projectPolicy =
         gcpResourceManagerService.getIamPolicy(projectId); // TODO: should check if the policy is empty
-    GcpResourceManagerUtils.addBinding(projectPolicy, role, format("serviceAccount:%s", serviceAccountEmail));
+    for (String role : roles) {
+      // Add roles in the service account
+      log.info("Adding role {} to gcpServiceAccount {}", role, serviceAccountEmail);
+      GcpResourceManagerUtils.addBinding(projectPolicy, role, format("serviceAccount:%s", serviceAccountEmail));
+      log.info("Added role {} to gcpServiceAccount {}", role, serviceAccountEmail);
+    }
     gcpResourceManagerService.setPolicy(projectId, projectPolicy);
   }
 

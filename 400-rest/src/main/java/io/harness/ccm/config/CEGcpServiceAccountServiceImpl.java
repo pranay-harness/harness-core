@@ -63,9 +63,14 @@ public class CEGcpServiceAccountServiceImpl implements CEGcpServiceAccountServic
   public GcpServiceAccount getDefaultServiceAccount(String accountId) throws IOException {
     GcpServiceAccount gcpServiceAccount = getByAccountId(accountId);
     if (gcpServiceAccount == null) {
+      log.info("Creating gcpServiceAccount");
       String serviceAccountEmail = create(accountId);
+      log.info("Created gcpServiceAccount");
       gcpServiceAccountService.setIamPolicies(serviceAccountEmail);
-      gcpServiceAccountService.addRoleToServiceAccount(serviceAccountEmail, "roles/bigquery.admin");
+      // https://cloud.google.com/pubsub/docs/access-control
+      String[] roles = {"roles/bigquery.admin", "roles/pubsub.admin"};
+      gcpServiceAccountService.addRolesToServiceAccount(serviceAccountEmail, roles);
+      log.info("Added roles to  gcpServiceAccount");
       gcpServiceAccount = getByAccountId(accountId);
     }
     return gcpServiceAccount;

@@ -56,12 +56,12 @@ public class GcpBillingDataPipelineTasklet implements Tasklet {
     Account account = cloudToHarnessMappingService.getAccountInfoFromId(accountId);
     String accountName = account.getAccountName();
     String gcpProjectId = mainConfig.getBillingDataPipelineConfig().getGcpProjectId();
-
+    log.info("Executing GcpBillingDataPipelineTasklet");
     List<GcpBillingAccount> gcpBillingAccounts =
         cloudToHarnessMappingService.listGcpBillingAccountUpdatedInDuration(accountId,
             CCMJobConstants.getFieldValueFromJobParams(parameters, CCMJobConstants.JOB_START_DATE).toEpochMilli(),
             CCMJobConstants.getFieldValueFromJobParams(parameters, CCMJobConstants.JOB_END_DATE).toEpochMilli());
-
+    log.info("Found gcpBillingAccounts {}", gcpBillingAccounts);
     gcpBillingAccounts.stream()
         .filter(gcpBillingAccount -> {
           List<BillingDataPipelineRecord> billingDataPipelineRecords =
@@ -81,22 +81,26 @@ public class GcpBillingDataPipelineTasklet implements Tasklet {
           String transferJobResourceName = null;
           String transferJobDisplayName = null;
           String runOnceScheduledQueryName;
-
+          log.info("Found region {}", Strings.toLowerCase(gcpBqDataSetRegion));
           switch (Strings.toLowerCase(gcpBqDataSetRegion)) {
             case US:
               transferJobDisplayName = String.format(GCP_COPY_SCHEDULED_QUERY_TEMPLATE, gcpBqProjectId, gcpBqDatasetId);
+              log.info("Creating scheduled query with name {}", transferJobDisplayName);
               try {
                 billingDataPipelineService.createTransferScheduledQueriesForGCP(transferJobDisplayName, dstDataSetId,
                     gcpOrganization.getServiceAccountEmail(), gcpBqProjectId + "." + gcpBqDatasetId);
+                log.info("Created scheduled query with name {}", transferJobDisplayName);
               } catch (IOException e) {
                 log.error("Error while creating BQ -> BQ Transfer Job {}", transferJobDisplayName, e);
               }
               try {
                 runOnceScheduledQueryName =
                     String.format(RUN_ONCE_GCP_COPY_SCHEDULED_QUERY_TEMPLATE, gcpBqProjectId, gcpBqDatasetId);
+                log.info("Creating scheduled query with name {}", runOnceScheduledQueryName);
                 transferJobResourceName =
                     billingDataPipelineService.createRunOnceScheduledQueryGCP(runOnceScheduledQueryName, gcpBqProjectId,
                         gcpBqDatasetId, dstDataSetId, gcpOrganization.getServiceAccountEmail());
+                log.info("Created scheduled query with name {}", runOnceScheduledQueryName);
               } catch (IOException e) {
                 log.error("Error while creating BQ -> BQ Run Once Scheduled Query Job {}", transferJobDisplayName, e);
               }
@@ -104,9 +108,11 @@ public class GcpBillingDataPipelineTasklet implements Tasklet {
             default:
               try {
                 transferJobDisplayName = String.format(COPY_TRANSFER_JOB_NAME_TEMPLATE, gcpBqProjectId, gcpBqDatasetId);
+                log.info("Creating BQ Transfer job with name {}", transferJobDisplayName);
                 transferJobResourceName =
                     billingDataPipelineService.createDataTransferJobFromBQ(transferJobDisplayName, gcpBqProjectId,
                         gcpBqDatasetId, dstProjectId, dstDataSetId, gcpOrganization.getServiceAccountEmail());
+                log.info("Created BQ Transfer job with name {}", transferJobDisplayName);
               } catch (IOException e) {
                 log.error("Error while creating BQ -> BQ Transfer Job {}", transferJobDisplayName, e);
               }
@@ -115,6 +121,7 @@ public class GcpBillingDataPipelineTasklet implements Tasklet {
           try {
             billingDataPipelineService.triggerTransferJobRun(
                 transferJobResourceName, gcpOrganization.getServiceAccountEmail());
+            log.info("Triggered BQ Transfer job with name {}", transferJobResourceName);
           } catch (IOException e) {
             log.error("Error while starting manual run for BQ -> BQ Transfer Job {}", transferJobDisplayName, e);
           }
@@ -124,6 +131,7 @@ public class GcpBillingDataPipelineTasklet implements Tasklet {
           try {
             scheduledQueryResourceName =
                 billingDataPipelineService.createScheduledQueriesForGCP(scheduledQueryDisplayName, dstDataSetId);
+            log.info("Created preaggregated scheduled query for GCP");
           } catch (IOException e) {
             log.error("Error while creating Scheduled Queries {}", scheduledQueryDisplayName, e);
           }

@@ -59,9 +59,9 @@ def main(event, context):
     if os.environ.get('disabled', 'false').lower() == 'true':
         print("Function is disabled...")
         return
-    jsonData["projectName"] = os.environ.get('GCP_PROJECT', 'ce-prod')
+    jsonData["projectName"] = os.environ.get('GCP_PROJECT', 'ce-prod-274307')
     if jsonData["dataSourceId"] == "scheduled_query":
-      # dataset needs to be fetched from params.query
+        # dataset needs to be fetched from params.query
         try:
             jsonData["destinationDatasetId"] = jsonData.get("params", {}).get("query", "").split(".")[1]
         except:
@@ -72,7 +72,7 @@ def main(event, context):
         print("Execution disabled for this account :%s" % jsonData["accountId"])
         return
     state = jsonData["state"] # SUCCEEDED
-    jsonData["datasetName"] = "%s.BillingReport_%s" % (jsonData["projectName"], jsonData["accountId"])
+    jsonData["datasetName"] = jsonData["destinationDatasetId"] # for compatibility
     print(jsonData)
     client = bigquery.Client(jsonData["projectName"])
     dataset = client.dataset(jsonData["destinationDatasetId"])
@@ -111,13 +111,13 @@ def loadIntoUnified(client, jsonData):
     """ % (jsonData["datasetName"], jsonData["datasetName"], jsonData["datasetName"])
 
     job_config = bigquery.QueryJobConfig(
-    query_parameters=[
-      bigquery.ScalarQueryParameter(
-           "run_date",
-           "DATE",
-           datetime.datetime.utcnow().date(),
-      )
-      ]
+        query_parameters=[
+            bigquery.ScalarQueryParameter(
+                "run_date",
+                "DATE",
+                datetime.datetime.utcnow().date(),
+            )
+        ]
     )
     query_job = client.query(query, job_config=job_config)
     #print(query)
@@ -139,13 +139,13 @@ def loadIntoPreaggregated(client, jsonData):
     """ % (jsonData["datasetName"], jsonData["datasetName"], jsonData["datasetName"])
 
     job_config = bigquery.QueryJobConfig(
-    query_parameters=[
-      bigquery.ScalarQueryParameter(
-           "run_date",
-           "DATE",
-           datetime.datetime.utcnow().date(),
-      )
-      ]
+        query_parameters=[
+            bigquery.ScalarQueryParameter(
+                "run_date",
+                "DATE",
+                datetime.datetime.utcnow().date(),
+            )
+        ]
     )
     query_job = client.query(query, job_config=job_config)
     #print(query)

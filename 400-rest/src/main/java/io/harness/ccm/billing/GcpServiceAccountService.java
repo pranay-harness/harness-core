@@ -6,5 +6,5 @@ import java.io.IOException;
 public interface GcpServiceAccountService {
   ServiceAccount create(String serviceAccountId, String displayName) throws IOException;
   void setIamPolicies(String serviceAccountEmail) throws IOException;
-  void addRoleToServiceAccount(String serviceAccountEmail, String role);
+  void addRolesToServiceAccount(String serviceAccountEmail, String[] roles);
 }
