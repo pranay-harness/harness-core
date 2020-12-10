@@ -4,8 +4,10 @@ import static io.harness.rule.OwnerRule.NAMAN;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.pms.inputset.fqn.FQN;
+import io.harness.pms.ngpipeline.inputset.beans.resource.InputSetErrorWrapperDTOPMS;
 import io.harness.rule.Owner;
 
 import com.google.common.io.Resources;
@@ -19,7 +21,7 @@ import java.util.stream.Collectors;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
-public class MergeHelperTest {
+public class MergeHelperTest extends CategoryTest {
   @Test
   @Owner(developers = NAMAN)
   @Category(UnitTests.class)
@@ -28,7 +30,7 @@ public class MergeHelperTest {
 
     String filename = "pipeline-extensive.yml";
     String yaml = Resources.toString(Objects.requireNonNull(classLoader.getResource(filename)), StandardCharsets.UTF_8);
-    String templateYaml = MergeHelper.createTemplateFromPipeline(yaml, true);
+    String templateYaml = MergeHelper.createTemplateFromPipeline(yaml);
 
     String resFile = "pipeline-extensive-template.yml";
     String resTemplate =
@@ -45,11 +47,11 @@ public class MergeHelperTest {
     String filename = "pipeline-extensive.yml";
     String yaml = Resources.toString(Objects.requireNonNull(classLoader.getResource(filename)), StandardCharsets.UTF_8);
 
-    String inputSet = "inputSet1.yml";
+    String inputSet = "runtimeInput1.yml";
     String inputSetYaml =
         Resources.toString(Objects.requireNonNull(classLoader.getResource(inputSet)), StandardCharsets.UTF_8);
 
-    String res = MergeHelper.mergeInputSetIntoPipeline(yaml, inputSetYaml, true);
+    String res = MergeHelper.mergeInputSetIntoPipeline(yaml, inputSetYaml);
     String resYaml = res.replace("\"", "");
 
     String mergedYamlFile = "pipeline-extensive-merged.yml";
@@ -67,24 +69,26 @@ public class MergeHelperTest {
 
     String filename = "pipeline-extensive.yml";
     String yaml = Resources.toString(Objects.requireNonNull(classLoader.getResource(filename)), StandardCharsets.UTF_8);
-    String templateYaml = MergeHelper.createTemplateFromPipeline(yaml, true);
+    String templateYaml = MergeHelper.createTemplateFromPipeline(yaml);
 
-    String inputSet = "inputSet1.yml";
+    String inputSet = "runtimeInput1.yml";
     String inputSetYaml =
         Resources.toString(Objects.requireNonNull(classLoader.getResource(inputSet)), StandardCharsets.UTF_8);
 
     Set<FQN> invalidFQNs = MergeHelper.getInvalidFQNsInInputSet(templateYaml, inputSetYaml);
     assertThat(invalidFQNs).isEmpty();
 
-    String inputSetWrong = "inputSet1Wrong.yml";
+    String inputSetWrong = "runtimeInputWrong1.yml";
     String inputSetYamlWrong =
         Resources.toString(Objects.requireNonNull(classLoader.getResource(inputSetWrong)), StandardCharsets.UTF_8);
 
     invalidFQNs = MergeHelper.getInvalidFQNsInInputSet(templateYaml, inputSetYamlWrong);
-    assertThat(invalidFQNs.size()).isEqualTo(1);
-    String invalidFQN =
+    assertThat(invalidFQNs.size()).isEqualTo(2);
+    String invalidFQN1 =
         "pipeline.stages.stage[identifier:qaStage].spec.execution.steps.step[identifier:httpStep1].spec.method.";
-    assertThat(invalidFQNs.stream().map(FQN::display).collect(Collectors.toList()).contains(invalidFQN)).isTrue();
+    String invalidFQN2 = "pipeline.stages.stage[identifier:qaStage].absolutelyWrongKey.";
+    assertThat(invalidFQNs.stream().map(FQN::display).collect(Collectors.toList()).contains(invalidFQN1)).isTrue();
+    assertThat(invalidFQNs.stream().map(FQN::display).collect(Collectors.toList()).contains(invalidFQN2)).isTrue();
   }
 
   @Test
@@ -92,10 +96,10 @@ public class MergeHelperTest {
   @Category(UnitTests.class)
   public void testMergeInputSets() throws IOException {
     ClassLoader classLoader = getClass().getClassLoader();
-    String inputSet1 = "input1.yml";
+    String inputSet1 = "inputSet1.yml";
     String inputSetYaml1 =
         Resources.toString(Objects.requireNonNull(classLoader.getResource(inputSet1)), StandardCharsets.UTF_8);
-    String inputSet2 = "input2.yml";
+    String inputSet2 = "inputSet2.yml";
     String inputSetYaml2 =
         Resources.toString(Objects.requireNonNull(classLoader.getResource(inputSet2)), StandardCharsets.UTF_8);
     List<String> inputSetYamlList = new ArrayList<>();
@@ -104,7 +108,7 @@ public class MergeHelperTest {
 
     String filename = "pipeline-extensive.yml";
     String yaml = Resources.toString(Objects.requireNonNull(classLoader.getResource(filename)), StandardCharsets.UTF_8);
-    String templateYaml = MergeHelper.createTemplateFromPipeline(yaml, true);
+    String templateYaml = MergeHelper.createTemplateFromPipeline(yaml);
 
     String mergedYaml = MergeHelper.mergeInputSets(templateYaml, inputSetYamlList);
 
@@ -112,5 +116,74 @@ public class MergeHelperTest {
     String inputSetYamlMerged =
         Resources.toString(Objects.requireNonNull(classLoader.getResource(inputSetMerged)), StandardCharsets.UTF_8);
     assertThat(mergedYaml).isEqualTo(inputSetYamlMerged);
+  }
+
+  @Test
+  @Owner(developers = NAMAN)
+  @Category(UnitTests.class)
+  public void testSanitizeInputSets() throws IOException {
+    ClassLoader classLoader = getClass().getClassLoader();
+
+    String filename = "pipeline-extensive.yml";
+    String yaml = Resources.toString(Objects.requireNonNull(classLoader.getResource(filename)), StandardCharsets.UTF_8);
+
+    String wrongRuntimeInputFile = "runtimeInputWrong1.yml";
+    String wrongRuntimeInput = Resources.toString(
+        Objects.requireNonNull(classLoader.getResource(wrongRuntimeInputFile)), StandardCharsets.UTF_8);
+
+    String sanitizedYaml1 = MergeHelper.sanitizeRuntimeInput(yaml, wrongRuntimeInput);
+
+    String inputSetWrongFile = "inputSetWrong1.yml";
+    String inputSetWrongYaml =
+        Resources.toString(Objects.requireNonNull(classLoader.getResource(inputSetWrongFile)), StandardCharsets.UTF_8);
+
+    String sanitizedYaml2 = MergeHelper.sanitizeInputSet(yaml, inputSetWrongYaml);
+
+    String correctFile = "runtimeInput1.yml";
+    String correctYaml =
+        Resources.toString(Objects.requireNonNull(classLoader.getResource(correctFile)), StandardCharsets.UTF_8)
+            .replace("\"", "");
+    assertThat(sanitizedYaml1.replace("\"", "")).isEqualTo(correctYaml);
+    assertThat(sanitizedYaml2.replace("\"", "")).isEqualTo(correctYaml);
+  }
+
+  @Test
+  @Owner(developers = NAMAN)
+  @Category(UnitTests.class)
+  public void testGetErrorMap() throws IOException {
+    ClassLoader classLoader = getClass().getClassLoader();
+
+    String filename = "pipeline-extensive.yml";
+    String yaml = Resources.toString(Objects.requireNonNull(classLoader.getResource(filename)), StandardCharsets.UTF_8);
+
+    String inputSetWrongFile = "inputSetWrong1.yml";
+    String inputSetWrongYaml =
+        Resources.toString(Objects.requireNonNull(classLoader.getResource(inputSetWrongFile)), StandardCharsets.UTF_8);
+
+    InputSetErrorWrapperDTOPMS errorWrapperDTOPMS = MergeHelper.getErrorMap(yaml, inputSetWrongYaml);
+    assertThat(errorWrapperDTOPMS.getErrorPipelineYaml())
+        .isEqualTo("pipeline:\n"
+            + "  identifier: \"Test_Pipline11\"\n"
+            + "  stages:\n"
+            + "  - stage:\n"
+            + "      identifier: \"qaStage\"\n"
+            + "      spec:\n"
+            + "        execution:\n"
+            + "          steps:\n"
+            + "          - step:\n"
+            + "              identifier: \"httpStep1\"\n"
+            + "              spec:\n"
+            + "                method: \"pipeline.stages.stage[identifier:qaStage].spec.execution.steps.step[identifier:httpStep1].spec.method.\"\n");
+    assertThat(errorWrapperDTOPMS.getUuidToErrorResponseMap().size()).isEqualTo(1);
+    assertThat(
+        errorWrapperDTOPMS.getUuidToErrorResponseMap().containsKey(
+            "pipeline.stages.stage[identifier:qaStage].spec.execution.steps.step[identifier:httpStep1].spec.method."))
+        .isTrue();
+
+    String inputSetFile = "inputSet1.yml";
+    String inputSetYaml =
+        Resources.toString(Objects.requireNonNull(classLoader.getResource(inputSetFile)), StandardCharsets.UTF_8);
+    InputSetErrorWrapperDTOPMS emptyErrorWrapperDTOPMS = MergeHelper.getErrorMap(yaml, inputSetYaml);
+    assertThat(emptyErrorWrapperDTOPMS).isNull();
   }
 }

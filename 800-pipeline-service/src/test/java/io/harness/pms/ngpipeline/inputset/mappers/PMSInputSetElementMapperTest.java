@@ -29,7 +29,7 @@ public class PMSInputSetElementMapperTest extends CategoryTest {
   @Category(UnitTests.class)
   public void testToInputSetEntity() throws IOException {
     ClassLoader classLoader = getClass().getClassLoader();
-    String inputSet = "input1.yml";
+    String inputSet = "inputSet1.yml";
     String inputSetYaml =
         Resources.toString(Objects.requireNonNull(classLoader.getResource(inputSet)), StandardCharsets.UTF_8);
     InputSetEntity entity = PMSInputSetElementMapper.toInputSetEntity(
@@ -51,7 +51,7 @@ public class PMSInputSetElementMapperTest extends CategoryTest {
   @Category(UnitTests.class)
   public void testToInputSetEntityForOverlay() throws IOException {
     ClassLoader classLoader = getClass().getClassLoader();
-    String inputSet = "overlay1.yml";
+    String inputSet = "overlaySet1.yml";
     String inputSetYaml =
         Resources.toString(Objects.requireNonNull(classLoader.getResource(inputSet)), StandardCharsets.UTF_8);
     InputSetEntity entity = PMSInputSetElementMapper.toInputSetEntityForOverlay(

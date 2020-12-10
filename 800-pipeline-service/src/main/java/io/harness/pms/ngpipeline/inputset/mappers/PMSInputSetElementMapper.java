@@ -5,6 +5,7 @@ import io.harness.ng.core.mapper.TagMapper;
 import io.harness.pms.inputset.PipelineYamlConfig;
 import io.harness.pms.ngpipeline.inputset.beans.entity.InputSetEntity;
 import io.harness.pms.ngpipeline.inputset.beans.entity.InputSetEntityType;
+import io.harness.pms.ngpipeline.inputset.beans.resource.InputSetErrorWrapperDTOPMS;
 import io.harness.pms.ngpipeline.inputset.beans.resource.InputSetResponseDTOPMS;
 import io.harness.pms.ngpipeline.inputset.beans.resource.InputSetSummaryResponseDTOPMS;
 import io.harness.pms.ngpipeline.overlayinputset.beans.resource.OverlayInputSetResponseDTOPMS;
@@ -51,6 +52,23 @@ public class PMSInputSetElementMapper {
         .build();
   }
 
+  public InputSetResponseDTOPMS toInputSetResponseDTOPMS(String accountId, String orgIdentifier,
+      String projectIdentifier, String pipelineIdentifier, String yaml, InputSetErrorWrapperDTOPMS errorWrapperDTO) {
+    return InputSetResponseDTOPMS.builder()
+        .accountId(accountId)
+        .orgIdentifier(orgIdentifier)
+        .projectIdentifier(projectIdentifier)
+        .pipelineIdentifier(pipelineIdentifier)
+        .identifier(getStringField(yaml, "identifier", "inputSet"))
+        .inputSetYaml(yaml)
+        .name(getStringField(yaml, "name", "inputSet"))
+        .description(getStringField(yaml, "description", "inputSet"))
+        .tags(getTags(yaml, "inputSet"))
+        .isErrorResponse(true)
+        .inputSetErrorWrapper(errorWrapperDTO)
+        .build();
+  }
+
   public InputSetResponseDTOPMS toInputSetResponseDTOPMS(InputSetEntity entity) {
     return InputSetResponseDTOPMS.builder()
         .accountId(entity.getAccountId())
@@ -67,6 +85,11 @@ public class PMSInputSetElementMapper {
   }
 
   public OverlayInputSetResponseDTOPMS toOverlayInputSetResponseDTOPMS(InputSetEntity entity) {
+    return toOverlayInputSetResponseDTOPMS(entity, false, null);
+  }
+
+  public OverlayInputSetResponseDTOPMS toOverlayInputSetResponseDTOPMS(
+      InputSetEntity entity, boolean isError, Map<String, String> invalidReferences) {
     return OverlayInputSetResponseDTOPMS.builder()
         .accountId(entity.getAccountId())
         .orgIdentifier(entity.getOrgIdentifier())
@@ -79,6 +102,8 @@ public class PMSInputSetElementMapper {
         .tags(TagMapper.convertToMap(entity.getTags()))
         .inputSetReferences(entity.getInputSetReferences())
         .version(entity.getVersion())
+        .isErrorResponse(isError)
+        .invalidInputSetReferences(invalidReferences)
         .build();
   }
 
