@@ -1,5 +1,9 @@
 package io.harness.delegate.task.executioncapability;
 
+import io.harness.capability.CapabilityParameters;
+import io.harness.capability.CapabilitySubjectPermission;
+import io.harness.capability.CapabilitySubjectPermission.PermissionResult;
+import io.harness.capability.SocketConnectivityParameters;
 import io.harness.delegate.beans.executioncapability.CapabilityResponse;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.delegate.beans.executioncapability.SocketConnectivityExecutionCapability;
@@ -29,6 +33,26 @@ public class SocketConnectivityCapabilityCheck implements CapabilityCheck {
     } catch (Exception ex) {
       log.error("Error Occurred while checking socketConnCapability: {}", ex.getMessage());
       return CapabilityResponse.builder().delegateCapability(socketConnCapability).validated(false).build();
+    }
+  }
+
+  public CapabilitySubjectPermission performCapabilityCheckWithProto(CapabilityParameters parameters) {
+    CapabilitySubjectPermission.CapabilitySubjectPermissionBuilder builder = CapabilitySubjectPermission.builder();
+    if (parameters.getCapabilityCase() != CapabilityParameters.CapabilityCase.SOCKET_CONNECTIVITY_PARAMETERS) {
+      return builder.permissionResult(PermissionResult.DENIED).build();
+    }
+    SocketConnectivityParameters socketParameters = parameters.getSocketConnectivityParameters();
+    try {
+      return builder
+          .permissionResult(connectableHost(socketParameters.getHostName().isEmpty() ? socketParameters.getUrl()
+                                                                                     : socketParameters.getHostName(),
+                                socketParameters.getPort())
+                  ? PermissionResult.ALLOWED
+                  : PermissionResult.DENIED)
+          .build();
+    } catch (Exception ex) {
+      log.error("Error Occurred while checking socketConnCapability: {}", ex.getMessage());
+      return builder.permissionResult(PermissionResult.DENIED).build();
     }
   }
 

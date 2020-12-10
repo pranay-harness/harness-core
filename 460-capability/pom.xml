@@ -36,10 +36,9 @@
         </dependency>
         <dependency>
             <groupId>software.wings</groupId>
-            <artifactId>960-persistence</artifactId>
+            <artifactId>960-persistence-test</artifactId>
             <version>${project.parent.version}</version>
-            <type>test-jar</type>
-            <scope>test</scope>
+	    <scope>test</scope>
         </dependency>
     </dependencies>
 </project> 
