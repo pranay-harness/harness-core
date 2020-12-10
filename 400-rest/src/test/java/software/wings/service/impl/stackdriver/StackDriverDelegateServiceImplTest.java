@@ -25,6 +25,7 @@ import software.wings.beans.GcpConfig;
 import software.wings.delegatetasks.DelegateCVActivityLogService;
 import software.wings.delegatetasks.DelegateLogService;
 import software.wings.delegatetasks.cv.DataCollectionException;
+import software.wings.helpers.ext.gcb.GcbService;
 import software.wings.service.impl.GcpHelperService;
 import software.wings.service.impl.ThirdPartyApiCallLog;
 import software.wings.service.impl.analysis.VerificationNodeDataSetupResponse;
@@ -59,6 +60,7 @@ public class StackDriverDelegateServiceImplTest extends WingsBaseTest {
   @Mock private DelegateCVActivityLogService delegateCVActivityLogService;
   @Mock private EncryptionService encryptionService;
   @Mock private DelegateLogService delegateLogService;
+  @Mock private GcbService gcbService;
 
   private String accountId;
   private StackDriverLogDataCollectionInfo dataCollectionInfo;
@@ -77,6 +79,7 @@ public class StackDriverDelegateServiceImplTest extends WingsBaseTest {
         stackDriverDelegateService, "delegateCVActivityLogService", delegateCVActivityLogService, true);
     FieldUtils.writeField(stackDriverDelegateService, "encryptionService", encryptionService, true);
     FieldUtils.writeField(stackDriverDelegateService, "delegateLogService", delegateLogService, true);
+    FieldUtils.writeField(stackDriverDelegateService, "gcbService", gcbService, true);
     Logging logging = mock(Logging.class);
     Logging.Entries entries = mock(Logging.Entries.class);
     when(logging.entries()).thenReturn(entries);
@@ -104,6 +107,7 @@ public class StackDriverDelegateServiceImplTest extends WingsBaseTest {
                              .hosts(Sets.newHashSet(generateUuid()))
                              .stateExecutionId(generateUuid())
                              .build();
+    when(gcbService.getProjectId(any(GcpConfig.class))).thenReturn("test");
 
     taskParams = StackdriverGcpConfigTaskParams.builder().gcpConfig(dataCollectionInfo.getGcpConfig()).build();
 

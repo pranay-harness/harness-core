@@ -206,7 +206,8 @@ public class GcbServiceImpl implements GcbService {
     }
   }
 
-  private String getProjectId(GcpConfig gcpConfig) {
+  @Override
+  public String getProjectId(GcpConfig gcpConfig) {
     if (gcpConfig.isUseDelegate()) {
       return gcpHelperService.getClusterProjectId(TaskType.GCB);
     } else {
