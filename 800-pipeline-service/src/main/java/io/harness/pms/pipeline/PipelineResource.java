@@ -1,8 +1,6 @@
 package io.harness.pms.pipeline;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
-import static io.harness.utils.PageUtils.getNGPageResponse;
-import static io.harness.utils.PageUtils.getPageRequest;
 
 import static java.lang.Long.parseLong;
 import static javax.ws.rs.core.HttpHeaders.IF_MATCH;
@@ -42,7 +40,6 @@ import io.swagger.annotations.ApiParam;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
 import java.io.IOException;
-import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -69,6 +66,7 @@ import lombok.Value;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.groovy.util.Maps;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
@@ -214,24 +212,10 @@ public class PipelineResource {
     return ResponseDTO.newResponse(pmsPipelineService.getSteps(module, category));
   }
 
-  // ToDo(Alexei) should be removed
-  @Deprecated
-  @GET
-  @Path("/summary/execution/{pipelineIdentifier}")
-  @ApiOperation(value = "Gets Plan Summary of a pipeline", nickname = "getPlanSummary")
-  public ResponseDTO<PipelineExecutionSummaryDTO> getPlanSummary(
-      @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountId,
-      @NotNull @QueryParam(NGCommonEntityConstants.ORG_KEY) String orgId,
-      @NotNull @QueryParam(NGCommonEntityConstants.PROJECT_KEY) String projectId,
-      @PathParam(NGCommonEntityConstants.PIPELINE_KEY) String pipelineId) {
-    log.info("Get plan Summary");
-    return ResponseDTO.newResponse(generatePipelineExecutionSummaryDTO(null));
-  }
-
   @GET
   @Path("/execution/summary")
   @ApiOperation(value = "Gets Executions list", nickname = "getListOfExecutions")
-  public ResponseDTO<List<PipelineExecutionSummaryDTO>> getListOfExecutions(
+  public ResponseDTO<Page<PipelineExecutionSummaryDTO>> getListOfExecutions(
       @NotNull @QueryParam("accountIdentifier") String accountId, @QueryParam("orgIdentifier") String orgId,
       @NotNull @QueryParam("projectIdentifier") String projectId, @QueryParam("filter") String filter,
       @QueryParam("page") @DefaultValue("0") int page, @QueryParam("size") @DefaultValue("10") int size,
@@ -240,7 +224,10 @@ public class PipelineResource {
     List<PipelineExecutionSummaryDTO> planExecutionSummaryDTOS = new ArrayList<>();
     planExecutionSummaryDTOS.add(generatePipelineExecutionSummaryDTO(null));
     planExecutionSummaryDTOS.add(generatePipelineExecutionSummaryDTO(null));
-    return ResponseDTO.newResponse(planExecutionSummaryDTOS);
+    planExecutionSummaryDTOS.add(generatePipelineExecutionSummaryDTO(null));
+    planExecutionSummaryDTOS.add(generatePipelineExecutionSummaryDTO(null));
+    return ResponseDTO.newResponse(new PageImpl<>(
+        planExecutionSummaryDTOS, PageUtils.getPageRequest(page, size, sort), planExecutionSummaryDTOS.size()));
   }
 
   @GET
@@ -249,7 +236,7 @@ public class PipelineResource {
   public ResponseDTO<PipelineExecutionDetailDTO> getExecutionDetail(
       @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountId,
       @NotNull @QueryParam(NGCommonEntityConstants.ORG_KEY) String orgId,
-      @NotNull @QueryParam(NGCommonEntityConstants.PROJECT_KEY) String projectId,
+      @NotNull @QueryParam(NGCommonEntityConstants.PROJECT_KEY) String projectId, @QueryParam("filter") String filter,
       @QueryParam("stageIdentifier") String stageIdentifier,
       @PathParam(NGCommonEntityConstants.PLAN_KEY) String planExecutionId) {
     log.info("Get Execution Detail");
