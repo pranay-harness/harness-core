@@ -15,6 +15,7 @@ import static software.wings.beans.LogColor.Yellow;
 import static software.wings.beans.LogHelper.color;
 import static software.wings.beans.LogWeight.Bold;
 import static software.wings.beans.LogWeight.Normal;
+import static software.wings.delegatetasks.helm.HelmTaskHelper.getChartDirectory;
 
 import static java.lang.String.format;
 import static java.util.stream.Collectors.toList;
@@ -182,9 +183,10 @@ public class K8sTaskHelper {
             helmCommandFlag);
 
       case HelmChartRepo:
-        manifestFilesDirectory =
-            Paths.get(manifestFilesDirectory, k8sDelegateManifestConfig.getHelmChartConfigParams().getChartName())
-                .toString();
+        manifestFilesDirectory = Paths
+                                     .get(getChartDirectory(manifestFilesDirectory,
+                                         k8sDelegateManifestConfig.getHelmChartConfigParams().getChartName()))
+                                     .toString();
         return renderTemplateForHelm(k8sDelegateTaskParams.getHelmPath(), manifestFilesDirectory, valuesFiles,
             releaseName, namespace, executionLogCallback, k8sTaskParameters.getHelmVersion(), timeoutInMillis,
             helmCommandFlag);

@@ -7,6 +7,7 @@ import static io.harness.helm.HelmConstants.DEFAULT_TILLER_CONNECTION_TIMEOUT_MI
 import static io.harness.logging.LogLevel.INFO;
 import static io.harness.validation.Validator.notNullCheck;
 
+import static software.wings.delegatetasks.helm.HelmTaskHelper.getChartDirectory;
 import static software.wings.helpers.ext.helm.HelmHelper.filterWorkloads;
 
 import static java.lang.String.format;
@@ -366,7 +367,7 @@ public class HelmDeployServiceImpl implements HelmDeployService {
 
     helmTaskHelper.downloadChartFiles(
         helmChartConfigParams, workingDirectory, timeoutInMillis, commandRequest.getHelmCommandFlag());
-    commandRequest.setWorkingDir(Paths.get(workingDirectory, helmChartConfigParams.getChartName()).toString());
+    commandRequest.setWorkingDir(getChartDirectory(workingDirectory, helmChartConfigParams.getChartName()));
 
     commandRequest.getExecutionLogCallback().saveExecutionLog("Helm Chart Repo checked-out locally");
   }

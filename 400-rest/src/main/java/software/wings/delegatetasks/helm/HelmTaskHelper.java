@@ -170,8 +170,8 @@ public class HelmTaskHelper {
         }
       }
 
-      return new String(
-          Files.readAllBytes(Paths.get(workingDirectory, helmChartConfigParams.getChartName(), VALUES_YAML)),
+      return new String(Files.readAllBytes(Paths.get(
+                            getChartDirectory(workingDirectory, helmChartConfigParams.getChartName()), VALUES_YAML)),
           StandardCharsets.UTF_8);
     } catch (Exception ex) {
       log.info("values.yaml file not found", ex);
@@ -810,5 +810,13 @@ public class HelmTaskHelper {
     removeRepo(
         helmChartConfigParams.getRepoName(), workingDirectory, helmChartConfigParams.getHelmVersion(), timeoutInMillis);
     cleanup(workingDirectory);
+  }
+
+  public static String getChartDirectory(String parentDir, String chartName) {
+    int lastIndex = chartName.lastIndexOf('/');
+    if (lastIndex != -1) {
+      return Paths.get(parentDir, chartName.substring(lastIndex + 1)).toString();
+    }
+    return Paths.get(parentDir, chartName).toString();
   }
 }

@@ -1,5 +1,6 @@
 package software.wings.service.impl;
 
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.UUIDGenerator.convertBase64UuidToCanonicalForm;
 import static io.harness.validation.Validator.notNullCheck;
 
@@ -7,9 +8,11 @@ import static java.lang.String.format;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
+import io.harness.beans.FeatureName;
 import io.harness.context.ContextElementType;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
+import io.harness.ff.FeatureFlagService;
 import io.harness.k8s.model.HelmVersion;
 import io.harness.security.encryption.EncryptedDataDetail;
 
@@ -36,6 +39,7 @@ public class HelmChartConfigHelperService {
   @Inject private SettingsService settingsService;
   @Inject private SecretManager secretManager;
   @Inject private ServiceResourceService serviceResourceService;
+  @Inject private FeatureFlagService featureFlagService;
 
   public HelmChartConfig getHelmChartConfigFromYaml(String accountId, String appId, HelmChartConfig helmChartConfig) {
     if (helmChartConfig == null) {
@@ -115,11 +119,19 @@ public class HelmChartConfigHelperService {
 
     if (isNotBlank(helmChartConfig.getChartName())) {
       String chartName = helmChartConfig.getChartName();
-      int lastIndex = chartName.lastIndexOf('/');
-
-      if (lastIndex != -1) {
-        helmChartConfigParamsBuilder.chartName(chartName.substring(lastIndex + 1))
-            .repoName(chartName.substring(0, lastIndex));
+      // If the Feature Flag is enabled, we split the chart name smartly ( i.e only in certain cases ). Else, we always
+      // split ( this is legacy behaviour)
+      // Todo(Yogesh): Remove this once customers correct there configuration
+      boolean smartChartNameSplitEnabled =
+          featureFlagService.isEnabled(FeatureName.HELM_CHART_NAME_SPLIT, context.getAccountId());
+      if (!smartChartNameSplitEnabled || chartSourceIsUnknown(helmChartConfig)) {
+        int lastIndex = chartName.lastIndexOf('/');
+        if (lastIndex != -1) {
+          helmChartConfigParamsBuilder.chartName(chartName.substring(lastIndex + 1))
+              .repoName(chartName.substring(0, lastIndex));
+        } else {
+          helmChartConfigParamsBuilder.chartName(chartName);
+        }
       } else {
         helmChartConfigParamsBuilder.chartName(chartName);
       }
@@ -166,6 +178,10 @@ public class HelmChartConfigHelperService {
     }
 
     return helmChartConfigParamsBuilder.build();
+  }
+
+  private boolean chartSourceIsUnknown(HelmChartConfig helmChartConfig) {
+    return isEmpty(helmChartConfig.getConnectorId()) && isEmpty(helmChartConfig.getChartUrl());
   }
 
   private HelmVersion getHelmVersionFromService(ExecutionContext context) {
