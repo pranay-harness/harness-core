@@ -627,6 +627,7 @@ import software.wings.service.impl.aws.model.AwsEcrGetImageUrlRequest;
 import software.wings.service.impl.aws.model.AwsEcrGetImageUrlResponse;
 import software.wings.service.impl.aws.model.AwsEcrRequest;
 import software.wings.service.impl.aws.model.AwsEcrRequest.AwsEcrRequestType;
+import software.wings.service.impl.aws.model.AwsEcsAllPhaseRollbackData;
 import software.wings.service.impl.aws.model.AwsEcsListClusterServicesRequest;
 import software.wings.service.impl.aws.model.AwsEcsListClusterServicesResponse;
 import software.wings.service.impl.aws.model.AwsEcsListClustersRequest;
@@ -1749,5 +1750,6 @@ public class ManagerKryoRegistrar implements KryoRegistrar {
     kryo.register(CVNGStateResponseData.class, 8115);
     kryo.register(CVNGVerificationTask.Status.class, 8117);
     kryo.register(HelmReleaseInfoElement.class, 8118);
+    kryo.register(AwsEcsAllPhaseRollbackData.class, 8119);
   }
 }

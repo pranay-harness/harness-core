@@ -78,7 +78,8 @@ public class EcsDeployCommandHandler extends EcsCommandTaskHandler {
 
       if (!resizeParams.isRollback()) {
         newInstanceDataList = new ArrayList<>();
-        ContainerServiceData newInstanceData = ecsDeployCommandTaskHelper.getNewInstanceData(contextData);
+        ContainerServiceData newInstanceData =
+            ecsDeployCommandTaskHelper.getNewInstanceData(contextData, executionLogCallback);
         newInstanceDataList.add(newInstanceData);
         oldInstanceDataList = ecsDeployCommandTaskHelper.getOldInstanceData(contextData, newInstanceData);
       } else {
@@ -118,8 +119,11 @@ public class EcsDeployCommandHandler extends EcsCommandTaskHandler {
       List<ContainerServiceData> firstDataList = resizeNewFirst ? newInstanceDataList : oldInstanceDataList;
       List<ContainerServiceData> secondDataList = resizeNewFirst ? oldInstanceDataList : newInstanceDataList;
 
+      handleAutoScalarBeforeResize(contextData, executionLogCallback);
       resizeInstances(contextData, firstDataList, executionDataBuilder, executionLogCallback, resizeNewFirst);
       resizeInstances(contextData, secondDataList, executionDataBuilder, executionLogCallback, !resizeNewFirst);
+      handleAutoScalarAfterResize(contextData, executionLogCallback, newInstanceDataList);
+
     } catch (TimeoutException ex) {
       log.error(ex.getMessage());
       log.error(ExceptionUtils.getMessage(ex), ex);
@@ -138,6 +142,28 @@ public class EcsDeployCommandHandler extends EcsCommandTaskHandler {
     }
 
     return executionResponse;
+  }
+
+  private void handleAutoScalarAfterResize(ContextData contextData, ExecutionLogCallback executionLogCallback,
+      List<ContainerServiceData> newInstanceDataList) {
+    if (contextData.getResizeParams().isRollback()) {
+      if (contextData.getResizeParams().isRollbackAllPhases() || contextData.getResizeParams().isLastDeployPhase()) {
+        ecsDeployCommandTaskHelper.restoreAutoScalarConfigs(contextData, executionLogCallback);
+      }
+    } else {
+      if (contextData.getResizeParams().isLastDeployPhase()) {
+        ecsDeployCommandTaskHelper.createAutoScalarConfigIfServiceReachedMaxSize(
+            contextData, newInstanceDataList.get(0), executionLogCallback);
+      }
+    }
+  }
+
+  private void handleAutoScalarBeforeResize(ContextData contextData, ExecutionLogCallback executionLogCallback) {
+    if (contextData.getResizeParams().isRollback()) {
+      ecsDeployCommandTaskHelper.deleteAutoScalarForNewService(contextData, executionLogCallback);
+    } else {
+      ecsDeployCommandTaskHelper.deregisterAutoScalarsIfExists(contextData, executionLogCallback);
+    }
   }
 
   private void copyExexcutionDataIntoResponse(
@@ -178,21 +204,9 @@ public class EcsDeployCommandHandler extends EcsCommandTaskHandler {
       ContextData contextData, ContainerServiceData containerServiceData, ExecutionLogCallback executionLogCallback) {
     EcsResizeParams resizeParams = contextData.getResizeParams();
 
-    // As a part of Rollback, restore AutoScalingConfig if required
-    if (resizeParams.isRollback()) {
-      ecsDeployCommandTaskHelper.restoreAutoScalarConfigs(contextData, containerServiceData, executionLogCallback);
-    } else {
-      ecsDeployCommandTaskHelper.deregisterAutoScalarsIfExists(contextData, executionLogCallback);
-    }
-
-    List<ContainerInfo> containerInfos = awsClusterService.resizeCluster(resizeParams.getRegion(),
-        contextData.getSettingAttribute(), contextData.getEncryptedDataDetails(), resizeParams.getClusterName(),
-        containerServiceData.getName(), containerServiceData.getPreviousCount(), containerServiceData.getDesiredCount(),
+    return awsClusterService.resizeCluster(resizeParams.getRegion(), contextData.getSettingAttribute(),
+        contextData.getEncryptedDataDetails(), resizeParams.getClusterName(), containerServiceData.getName(),
+        containerServiceData.getPreviousCount(), containerServiceData.getDesiredCount(),
         resizeParams.getServiceSteadyStateTimeout(), executionLogCallback);
-
-    ecsDeployCommandTaskHelper.createAutoScalarConfigIfServiceReachedMaxSize(
-        contextData, containerServiceData, executionLogCallback);
-
-    return containerInfos;
   }
 }

@@ -127,9 +127,25 @@ public class EcsDeployCommandTaskHelperTest extends WingsBaseTest {
   @Test
   @Owner(developers = SATYAM)
   @Category(UnitTests.class)
+  public void testAttachAutoScalarInRollbackPhase() {
+    ExecutionLogCallback mockCallback = mock(ExecutionLogCallback.class);
+    doNothing().when(mockCallback).saveExecutionLog(anyString());
+    ContainerServiceData serviceData = ContainerServiceData.builder().name("foo__1").desiredCount(1).build();
+    EcsResizeParams params = anEcsResizeParams().build();
+    params.setRollback(false);
+    assertThat(helper.attachAutoScalarInRollbackPhase(params, mockCallback)).isFalse();
+    params.setRollback(true);
+    params.setPreviousAwsAutoScalarConfigs(singletonList(AwsAutoScalarConfig.builder().build()));
+    assertThat(helper.attachAutoScalarInRollbackPhase(params, mockCallback)).isTrue();
+  }
+
+  @Test
+  @Owner(developers = SATYAM)
+  @Category(UnitTests.class)
   public void testRestoreAutoScalarConfigs() {
     ExecutionLogCallback mockCallback = mock(ExecutionLogCallback.class);
     doNothing().when(mockCallback).saveExecutionLog(anyString());
+    String[] originalCount = new String[] {"foo__0", "2"};
     ContextData data = ContextData.builder()
                            .awsConfig(AwsConfig.builder().build())
                            .resizeParams(anEcsResizeParams()
@@ -137,6 +153,7 @@ public class EcsDeployCommandTaskHelperTest extends WingsBaseTest {
                                              .withRegion("us-east-1")
                                              .withContainerServiceName("foo__1")
                                              .withClusterName("cluster")
+                                             .withOriginalServiceCounts(singletonList(originalCount))
                                              .withPreviousEcsAutoScalarsAlreadyRemoved(false)
                                              .withPreviousAwsAutoScalarConfigs(
                                                  singletonList(AwsAutoScalarConfig.builder()
@@ -150,7 +167,7 @@ public class EcsDeployCommandTaskHelperTest extends WingsBaseTest {
     doReturn(target).when(mockAwsAppAutoScalingService).getScalableTargetFromJson(anyString());
     DescribeScalableTargetsResult result = new DescribeScalableTargetsResult();
     doReturn(result).when(mockAwsAppAutoScalingService).listScalableTargets(anyString(), any(), anyList(), any());
-    helper.restoreAutoScalarConfigs(data, mock(ContainerServiceData.class), mockCallback);
+    helper.restoreAutoScalarConfigs(data, mockCallback);
     verify(mockEcsCommandTaskHelper)
         .registerScalableTargetForEcsService(any(), anyString(), any(), anyList(), any(), any());
     verify(mockEcsCommandTaskHelper)
@@ -228,7 +245,8 @@ public class EcsDeployCommandTaskHelperTest extends WingsBaseTest {
     doReturn(singletonList(new Service().withServiceName("foo__1").withDesiredCount(1)))
         .when(mockAwsClusterService)
         .getServices(anyString(), any(), anyList(), anyString());
-    ContainerServiceData instanceData = helper.getNewInstanceData(data);
+    ExecutionLogCallback mockCallback = mock(ExecutionLogCallback.class);
+    ContainerServiceData instanceData = helper.getNewInstanceData(data, mockCallback);
     assertThat(instanceData).isNotNull();
     assertThat(instanceData.getDesiredCount()).isEqualTo(2);
   }

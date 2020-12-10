@@ -28,6 +28,7 @@ public interface AwsConstants {
   String ECS_SERVICE_SETUP_SWEEPING_OUTPUT_NAME = "setupSweepingOutputEcs";
   String ECS_SERVICE_DEPLOY_SWEEPING_OUTPUT_NAME = "deploySweepingOutputEcs";
   String ECS_RUN_TASK_DEPLOY_SWEEPING_OUTPUT_NAME = "runTaskDeploySweepingOutputEcs";
+  String ECS_ALL_PHASE_ROLLBACK_DONE = "ecsAllPhaseRollbackDone";
 
   String MIN_INSTANCES = "minInstancesExpr";
   String MAX_INSTANCES = "maxInstancesExpr";

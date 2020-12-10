@@ -133,7 +133,8 @@ public class EcsServiceDeployTest extends WingsBaseTest {
     ExecutionContextImpl mockContext = mock(ExecutionContextImpl.class);
     EcsCommandExecutionResponse executionResponse = EcsCommandExecutionResponse.builder().build();
     state.handleAsyncResponse(mockContext, ImmutableMap.of(ACTIVITY_ID, executionResponse));
-    verify(mockEcsStateHelper).handleDelegateResponseForEcsDeploy(any(), anyMap(), anyBoolean(), any(), any(), any());
+    verify(mockEcsStateHelper)
+        .handleDelegateResponseForEcsDeploy(any(), anyMap(), anyBoolean(), any(), anyBoolean(), any());
   }
 
   @Test
@@ -180,7 +181,7 @@ public class EcsServiceDeployTest extends WingsBaseTest {
     Map<String, ResponseData> delegateResponse = new HashMap<>();
     doThrow(new WingsException("test"))
         .when(mockEcsStateHelper)
-        .handleDelegateResponseForEcsDeploy(any(), anyMap(), anyBoolean(), any(), any(), any());
+        .handleDelegateResponseForEcsDeploy(any(), anyMap(), anyBoolean(), any(), anyBoolean(), any());
     state.handleAsyncResponse(mockContext, delegateResponse);
     assertThatExceptionOfType(WingsException.class).isThrownBy(() -> state.execute(mockContext));
   }
@@ -193,7 +194,7 @@ public class EcsServiceDeployTest extends WingsBaseTest {
     Map<String, ResponseData> delegateResponse = new HashMap<>();
     doThrow(new NullPointerException("test"))
         .when(mockEcsStateHelper)
-        .handleDelegateResponseForEcsDeploy(any(), anyMap(), anyBoolean(), any(), any(), any());
+        .handleDelegateResponseForEcsDeploy(any(), anyMap(), anyBoolean(), any(), anyBoolean(), any());
     state.handleAsyncResponse(mockContext, delegateResponse);
     assertThatExceptionOfType(InvalidRequestException.class).isThrownBy(() -> state.execute(mockContext));
   }

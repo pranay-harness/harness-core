@@ -67,6 +67,7 @@ import software.wings.api.HostElement;
 import software.wings.api.InstanceElementListParam;
 import software.wings.api.PhaseElement;
 import software.wings.api.ServiceElement;
+import software.wings.api.WorkflowElement;
 import software.wings.beans.Activity;
 import software.wings.beans.Application;
 import software.wings.beans.AwsConfig;
@@ -535,7 +536,7 @@ public class EcsStateHelperTest extends WingsBaseTest {
                                     .build();
     doReturn(phaseElement).when(mockContext).getContextElement(any(), anyString());
     ExecutionResponse response = helper.handleDelegateResponseForEcsDeploy(
-        mockContext, ImmutableMap.of(ACTIVITY_ID, delegateResponse), false, mockService, null, mockHelper);
+        mockContext, ImmutableMap.of(ACTIVITY_ID, delegateResponse), false, mockService, false, mockHelper);
     assertThat(response).isNotNull();
     assertThat(response.getExecutionStatus()).isEqualTo(SUCCESS);
     List<ContextElement> contextElements = response.getContextElements();
@@ -618,6 +619,7 @@ public class EcsStateHelperTest extends WingsBaseTest {
     SecretManager mockSecretManaer = mock(SecretManager.class);
     WorkflowStandardParams mockParams = mock(WorkflowStandardParams.class);
     doReturn(mockParams).when(mockContext).getContextElement(any());
+    doReturn(WorkflowElement.builder().build()).when(mockParams).getWorkflowElement();
     Application app = anApplication().uuid(APP_ID).name(APP_NAME).build();
     Environment env = anEnvironment().uuid(ENV_ID).name(ENV_NAME).build();
     doReturn(app).when(mockParams).fetchRequiredApp();

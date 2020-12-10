@@ -184,6 +184,16 @@ public class WorkflowExecutionServiceHelper {
                                                canaryOrchestrationWorkflow, executionArgs))
                                            .build());
         }
+        if (isNotEmpty(canaryOrchestrationWorkflow.getWorkflowPhaseIds())
+            && canaryOrchestrationWorkflow.getRollbackWorkflowPhaseIdMap().get(
+                   canaryOrchestrationWorkflow.getWorkflowPhaseIds().get(0))
+                != null) {
+          stdParams.setLastDeployPhaseId(canaryOrchestrationWorkflow.getWorkflowPhaseIds().get(
+              canaryOrchestrationWorkflow.getWorkflowPhaseIds().size() - 1));
+          stdParams.setLastRollbackPhaseId(canaryOrchestrationWorkflow.getRollbackWorkflowPhaseIdMap()
+                                               .get(canaryOrchestrationWorkflow.getWorkflowPhaseIds().get(0))
+                                               .getUuid());
+        }
       }
     } else {
       stdParams = new WorkflowStandardParams();
