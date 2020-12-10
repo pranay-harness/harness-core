@@ -95,11 +95,7 @@ public class LogClusterServiceImpl implements LogClusterService {
 
   private Optional<LogClusterLearningEngineTask> buildServiceGuardClusterTasksForLogL2Clustering(AnalysisInput input) {
     Instant timeForL2Task = input.getEndTime().truncatedTo(ChronoUnit.SECONDS).minus(1, ChronoUnit.MINUTES);
-    List<LogClusterDTO> clusterLogs = getClusteredLogData(
-        input.getVerificationTaskId(), input.getStartTime(), input.getEndTime(), LogClusterLevel.L1);
-    if (isEmpty(clusterLogs)) {
-      return Optional.empty();
-    }
+
     Instant startTime = timeForL2Task.minus(Duration.ofMinutes(5));
     Instant endTime = timeForL2Task;
     String testDataUrl =
