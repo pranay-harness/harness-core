@@ -1,10 +1,13 @@
 package io.harness.pms.execution;
 
+import static io.harness.data.structure.UUIDGenerator.generateUuid;
+
 import io.harness.annotation.HarnessEntity;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.queue.Queuable;
 
+import lombok.Builder;
 import lombok.EqualsAndHashCode;
 import lombok.Value;
 import lombok.experimental.FieldNameConstants;
@@ -20,8 +23,10 @@ import org.springframework.data.mongodb.core.mapping.Document;
 @Document("nodeExecutionEventQueue")
 @TypeAlias("nodeExecutionEvent")
 @HarnessEntity(exportable = false)
+@Builder
 public class NodeExecutionEvent extends Queuable {
   NodeExecutionProto nodeExecution;
   NodeExecutionEventType eventType;
   NodeExecutionEventData eventData;
+  @Builder.Default String notifyId = generateUuid();
 }

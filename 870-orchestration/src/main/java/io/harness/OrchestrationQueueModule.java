@@ -7,7 +7,9 @@ import io.harness.config.PublisherConfiguration;
 import io.harness.delay.DelayEvent;
 import io.harness.delay.DelayEventListener;
 import io.harness.engine.events.OrchestrationEventListener;
+import io.harness.engine.pms.sdk.NodeExecutionEventListener;
 import io.harness.mongo.queue.QueueFactory;
+import io.harness.pms.execution.NodeExecutionEvent;
 import io.harness.pms.sdk.core.events.OrchestrationEvent;
 import io.harness.queue.QueueConsumer;
 import io.harness.queue.QueueListener;
@@ -35,6 +37,7 @@ public class OrchestrationQueueModule extends AbstractModule {
   protected void configure() {
     bind(new TypeLiteral<QueueListener<DelayEvent>>() {}).to(DelayEventListener.class);
     bind(new TypeLiteral<QueueListener<OrchestrationEvent>>() {}).to(OrchestrationEventListener.class);
+    bind(new TypeLiteral<QueueListener<NodeExecutionEvent>>() {}).to(NodeExecutionEventListener.class);
   }
 
   @Provides
@@ -66,6 +69,22 @@ public class OrchestrationQueueModule extends AbstractModule {
   QueueConsumer<OrchestrationEvent> orchestrationEventQueueConsumer(Injector injector,
       VersionInfoManager versionInfoManager, PublisherConfiguration config, MongoTemplate mongoTemplate) {
     return QueueFactory.createNgQueueConsumer(injector, OrchestrationEvent.class, ofSeconds(5),
+        singletonList(singletonList(versionInfoManager.getVersionInfo().getVersion())), config, mongoTemplate);
+  }
+
+  @Provides
+  @Singleton
+  QueuePublisher<NodeExecutionEvent> executionEventQueuePublisher(Injector injector,
+      VersionInfoManager versionInfoManager, PublisherConfiguration config, MongoTemplate mongoTemplate) {
+    return QueueFactory.createNgQueuePublisher(injector, NodeExecutionEvent.class,
+        singletonList(versionInfoManager.getVersionInfo().getVersion()), config, mongoTemplate);
+  }
+
+  @Provides
+  @Singleton
+  QueueConsumer<NodeExecutionEvent> executionEventQueueConsumer(Injector injector,
+      VersionInfoManager versionInfoManager, PublisherConfiguration config, MongoTemplate mongoTemplate) {
+    return QueueFactory.createNgQueueConsumer(injector, NodeExecutionEvent.class, ofSeconds(3),
         singletonList(singletonList(versionInfoManager.getVersionInfo().getVersion())), config, mongoTemplate);
   }
 }

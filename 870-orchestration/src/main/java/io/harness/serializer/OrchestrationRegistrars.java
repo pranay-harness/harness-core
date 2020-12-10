@@ -25,12 +25,16 @@ import io.harness.serializer.spring.converters.executableresponse.ExecutableResp
 import io.harness.serializer.spring.converters.executableresponse.ExecutableResponseWriteConverter;
 import io.harness.serializer.spring.converters.facilitators.obtainment.FacilitatorObtainmentReadConverter;
 import io.harness.serializer.spring.converters.facilitators.obtainment.FacilitatorObtainmentWriteConverter;
+import io.harness.serializer.spring.converters.facilitators.response.FacilitatorResponseReadConverter;
+import io.harness.serializer.spring.converters.facilitators.response.FacilitatorResponseWriteConverter;
 import io.harness.serializer.spring.converters.facilitators.type.FacilitatorTypeReadConverter;
 import io.harness.serializer.spring.converters.facilitators.type.FacilitatorTypeWriteConverter;
 import io.harness.serializer.spring.converters.failureinfo.FailureInfoReadConverter;
 import io.harness.serializer.spring.converters.failureinfo.FailureInfoWriteConverter;
 import io.harness.serializer.spring.converters.level.LevelReadConverter;
 import io.harness.serializer.spring.converters.level.LevelWriteConverter;
+import io.harness.serializer.spring.converters.nodeexecution.NodeExecutionReadConverter;
+import io.harness.serializer.spring.converters.nodeexecution.NodeExecutionWriteConverter;
 import io.harness.serializer.spring.converters.plannode.PlanNodeProtoReadConverter;
 import io.harness.serializer.spring.converters.plannode.PlanNodeProtoWriteConverter;
 import io.harness.serializer.spring.converters.refobject.RefObjectReadConverter;
@@ -97,5 +101,7 @@ public class OrchestrationRegistrars {
       RefObjectWriteConverter.class, StepInfoReadConverter.class, StepInfoWriteConverter.class,
       FailureInfoReadConverter.class, FailureInfoWriteConverter.class, PlanNodeProtoReadConverter.class,
       PlanNodeProtoWriteConverter.class, StepOutcomeRefReadConverter.class, StepOutcomeRefWriteConverter.class,
-      ExecutableResponseReadConverter.class, ExecutableResponseWriteConverter.class);
+      ExecutableResponseReadConverter.class, ExecutableResponseWriteConverter.class, NodeExecutionReadConverter.class,
+      NodeExecutionWriteConverter.class, FacilitatorResponseReadConverter.class,
+      FacilitatorResponseWriteConverter.class);
 }

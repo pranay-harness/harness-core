@@ -12,6 +12,7 @@ import io.harness.delegate.beans.DelegateAsyncTaskResponse;
 import io.harness.delegate.beans.DelegateSyncTaskResponse;
 import io.harness.delegate.beans.DelegateTaskProgressResponse;
 import io.harness.engine.events.OrchestrationEventListener;
+import io.harness.engine.pms.sdk.NodeExecutionEventListener;
 import io.harness.executionplan.CIExecutionPlanCreatorRegistrar;
 import io.harness.executionplan.ExecutionPlanModule;
 import io.harness.govern.ProviderModule;
@@ -304,6 +305,7 @@ public class CIManagerApplication extends Application<CIManagerConfiguration> {
     QueueListenerController queueListenerController = injector.getInstance(QueueListenerController.class);
     queueListenerController.register(injector.getInstance(OrchestrationNotifyEventListener.class), 5);
     queueListenerController.register(injector.getInstance(OrchestrationEventListener.class), 1);
+    queueListenerController.register(injector.getInstance(NodeExecutionEventListener.class), 1);
   }
 
   private void registerManagedBeans(Environment environment, Injector injector) {

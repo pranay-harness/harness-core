@@ -18,6 +18,7 @@ import io.harness.engine.interrupts.InterruptPackage;
 import io.harness.engine.interrupts.InterruptService;
 import io.harness.engine.interrupts.InterruptTestHelper;
 import io.harness.engine.interrupts.steps.SimpleAsyncStep;
+import io.harness.engine.pms.sdk.NodeExecutionEventListener;
 import io.harness.execution.PlanExecution;
 import io.harness.interrupts.Interrupt;
 import io.harness.pms.sdk.registries.StepRegistry;
@@ -35,7 +36,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
-@Listeners(OrchestrationNotifyEventListener.class)
+@Listeners({OrchestrationNotifyEventListener.class, NodeExecutionEventListener.class})
 public class PauseAndResumeHandlerTest extends WingsBaseTest {
   @Inject private Injector injector;
   @Inject private OrchestrationService orchestrationService;

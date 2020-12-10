@@ -7,6 +7,7 @@ import io.harness.beans.DelegateTask;
 import io.harness.beans.SweepingOutputInstance;
 import io.harness.delay.DelayEvent;
 import io.harness.delay.DelayEventNotifyData;
+import io.harness.engine.pms.EngineFacilitationCallback;
 import io.harness.engine.resume.EngineResumeAllCallback;
 import io.harness.engine.resume.EngineResumeCallback;
 import io.harness.engine.resume.EngineWaitResumeCallback;
@@ -37,6 +38,7 @@ public class OrchestrationMorphiaRegistrar implements MorphiaRegistrar {
     h.put("engine.resume.EngineResumeCallback", EngineResumeCallback.class);
     h.put("engine.resume.EngineWaitResumeCallback", EngineWaitResumeCallback.class);
     h.put("engine.resume.EngineWaitRetryCallback", EngineWaitRetryCallback.class);
+    h.put("engine.pms.EngineFacilitationCallback", EngineFacilitationCallback.class);
 
     // Facilitator related classes
     h.put("delay.DelayEventNotifyData", DelayEventNotifyData.class);

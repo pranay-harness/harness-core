@@ -6,6 +6,8 @@ import io.harness.engine.EngineObtainmentHelper;
 import io.harness.engine.NoopTaskExecutor;
 import io.harness.engine.OrchestrationService;
 import io.harness.engine.OrchestrationServiceImpl;
+import io.harness.engine.executions.node.NodeExecutionProtoService;
+import io.harness.engine.executions.node.NodeExecutionProtoServiceImpl;
 import io.harness.engine.executions.node.NodeExecutionService;
 import io.harness.engine.executions.node.NodeExecutionServiceImpl;
 import io.harness.engine.executions.plan.PlanExecutionService;
@@ -66,6 +68,7 @@ public class OrchestrationModule extends AbstractModule implements ServersModule
 
     bind(StateInspectionService.class).to(StateInspectionServiceImpl.class);
     bind(NodeExecutionService.class).to(NodeExecutionServiceImpl.class);
+    bind(NodeExecutionProtoService.class).to(NodeExecutionProtoServiceImpl.class);
     bind(PlanExecutionService.class).to(PlanExecutionServiceImpl.class);
     bind(InterruptService.class).to(InterruptServiceImpl.class);
     bind(EngineExpressionService.class).to(EngineExpressionServiceImpl.class);
