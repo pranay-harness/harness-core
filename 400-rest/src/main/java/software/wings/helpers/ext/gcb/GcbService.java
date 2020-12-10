@@ -29,4 +29,6 @@ public interface GcbService {
   List<GcbTrigger> getAllTriggers(GcpConfig gcpConfig, List<EncryptedDataDetail> encryptionDetails);
 
   GcbBuildDetails cancelBuild(GcpConfig gcpConfig, List<EncryptedDataDetail> encryptionDetails, String buildId);
+
+  String getProjectId(GcpConfig gcpConfig);
 }
