@@ -9,4 +9,5 @@ import lombok.Data;
 @Builder
 public class AwsEcsAllPhaseRollbackData implements SweepingOutput {
   private boolean allPhaseRollbackDone;
+  private String type;
 }
