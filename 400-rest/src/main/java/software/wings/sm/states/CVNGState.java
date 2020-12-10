@@ -1,9 +1,9 @@
 package software.wings.sm.states;
 
 import io.harness.beans.ExecutionStatus;
-import io.harness.cvng.beans.ActivityDTO;
-import io.harness.cvng.beans.DeploymentActivityDTO;
+import io.harness.cvng.beans.activity.ActivityDTO;
 import io.harness.cvng.beans.activity.ActivityStatusDTO;
+import io.harness.cvng.beans.activity.DeploymentActivityDTO;
 import io.harness.cvng.client.CVNGService;
 import io.harness.cvng.state.CVNGVerificationTask;
 import io.harness.cvng.state.CVNGVerificationTask.Status;

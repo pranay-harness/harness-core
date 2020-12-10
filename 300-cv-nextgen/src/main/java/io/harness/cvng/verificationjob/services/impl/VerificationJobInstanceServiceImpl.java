@@ -42,6 +42,7 @@ import io.harness.cvng.verificationjob.beans.TestVerificationBaselineExecutionDT
 import io.harness.cvng.verificationjob.beans.VerificationJobInstanceDTO;
 import io.harness.cvng.verificationjob.beans.VerificationJobType;
 import io.harness.cvng.verificationjob.entities.VerificationJob;
+import io.harness.cvng.verificationjob.entities.VerificationJob.VerificationJobKeys;
 import io.harness.cvng.verificationjob.entities.VerificationJobInstance;
 import io.harness.cvng.verificationjob.entities.VerificationJobInstance.ExecutionStatus;
 import io.harness.cvng.verificationjob.entities.VerificationJobInstance.ProgressLog;
@@ -59,6 +60,7 @@ import com.google.inject.Injector;
 import com.google.inject.Key;
 import com.google.inject.name.Names;
 import java.time.Clock;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -144,6 +146,9 @@ public class VerificationJobInstanceServiceImpl implements VerificationJobInstan
   }
   @Override
   public List<VerificationJobInstance> get(List<String> verificationJobInstanceIds) {
+    if (isEmpty(verificationJobInstanceIds)) {
+      return Collections.emptyList();
+    }
     return hPersistence.createQuery(VerificationJobInstance.class, excludeAuthority)
         .field(VerificationJobInstanceKeys.uuid)
         .in(verificationJobInstanceIds)
@@ -151,6 +156,9 @@ public class VerificationJobInstanceServiceImpl implements VerificationJobInstan
   }
 
   public List<VerificationJobInstance> getNonDeploymentInstances(List<String> verificationJobInstanceIds) {
+    if (isEmpty(verificationJobInstanceIds)) {
+      return Collections.emptyList();
+    }
     List<VerificationJobInstance> allInstances = get(verificationJobInstanceIds);
     List<VerificationJobInstance> nonDeploymentInstances = new ArrayList<>();
     if (allInstances != null) {
@@ -441,8 +449,7 @@ public class VerificationJobInstanceServiceImpl implements VerificationJobInstan
       return null;
     }
     List<Optional<Double>> risks = new ArrayList<>();
-    verificationJobInstances.forEach(
-        verificationJobInstance -> { risks.add(getLatestRiskScore(verificationJobInstance)); });
+    verificationJobInstances.forEach(verificationJobInstance -> risks.add(getLatestRiskScore(verificationJobInstance)));
     return summarizeVerificationJobInstances(verificationJobInstances, risks);
   }
 
@@ -558,6 +565,32 @@ public class VerificationJobInstanceServiceImpl implements VerificationJobInstan
         .progress(progress)
         .notStarted(notStarted)
         .build();
+  }
+
+  @Override
+  public List<VerificationJobInstance> getRunningOrQueuedJobInstances(String orgIdentifier, String projectIdentifier,
+      String envIdentifier, String serviceIdentifier, VerificationJobType jobType, Instant endTimeBefore) {
+    Preconditions.checkNotNull(orgIdentifier);
+    Preconditions.checkNotNull(projectIdentifier);
+    Preconditions.checkNotNull(envIdentifier);
+    Preconditions.checkNotNull(serviceIdentifier);
+
+    List<VerificationJobInstance> verificationJobInstances =
+        hPersistence.createQuery(VerificationJobInstance.class, excludeAuthority)
+            .filter(VerificationJobInstanceKeys.resolvedJob + "." + VerificationJobKeys.orgIdentifier, orgIdentifier)
+            .filter(VerificationJobInstanceKeys.resolvedJob + "." + VerificationJobKeys.projectIdentifier,
+                projectIdentifier)
+            .filter(VerificationJobInstanceKeys.resolvedJob + "." + VerificationJobKeys.type, jobType)
+            .field(VerificationJobInstanceKeys.executionStatus)
+            .notIn(ExecutionStatus.finalStatuses())
+            .asList();
+
+    return verificationJobInstances.stream()
+        .filter(instance
+            -> instance.getResolvedJob().getServiceIdentifier().equals(serviceIdentifier)
+                && instance.getResolvedJob().getEnvIdentifier().equals(envIdentifier)
+                && instance.getEndTime().isAfter(endTimeBefore))
+        .collect(Collectors.toList());
   }
 
   @Nullable

@@ -33,6 +33,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.experimental.FieldNameConstants;
+import lombok.experimental.SuperBuilder;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Id;
 
@@ -42,6 +43,7 @@ import org.mongodb.morphia.annotations.Id;
 @JsonIgnoreProperties(ignoreUnknown = true)
 @Entity(value = "verificationJobs")
 @HarnessEntity(exportable = true)
+@SuperBuilder
 // Also the serialization of duration is in millis.
 public abstract class VerificationJob
     implements PersistentEntity, UuidAware, CreatedAtAware, UpdatedAtAware, AccountAccess {

@@ -16,4 +16,6 @@ public interface VerificationJobService {
   List<VerificationJobDTO> list(String accountId, String projectId, String orgIdentifier);
   boolean doesAVerificationJobExistsForThisProject(String accountId, String orgIdentifier, String projectIdentifier);
   int getNumberOfServicesUndergoingHealthVerification(String accountId, String orgIdentifier, String projectIdentifier);
+  List<VerificationJob> getHealthVerificationJobs(String accountIdentifier, String orgIdentifier,
+      String projectIdentifier, String envIdentifier, String serviceIdentifier);
 }

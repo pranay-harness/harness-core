@@ -3,9 +3,9 @@ package io.harness.cvng.activity.entities;
 import static io.harness.cvng.core.utils.ErrorMessageUtils.generateErrorMessageFromParam;
 
 import io.harness.annotation.HarnessEntity;
-import io.harness.cvng.beans.ActivityDTO;
-import io.harness.cvng.beans.ActivityDTO.VerificationJobRuntimeDetails;
-import io.harness.cvng.beans.ActivityType;
+import io.harness.cvng.beans.activity.ActivityDTO;
+import io.harness.cvng.beans.activity.ActivityDTO.VerificationJobRuntimeDetails;
+import io.harness.cvng.beans.activity.ActivityType;
 import io.harness.cvng.verificationjob.entities.VerificationJobInstance;
 import io.harness.mongo.index.FdIndex;
 import io.harness.mongo.index.FdTtlIndex;
@@ -23,18 +23,18 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import javax.validation.constraints.NotNull;
-import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.experimental.FieldNameConstants;
+import lombok.experimental.SuperBuilder;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Id;
 
 @Data
 @FieldNameConstants(innerTypeName = "ActivityKeys")
 @NoArgsConstructor
-@AllArgsConstructor
+@SuperBuilder
 @EqualsAndHashCode(callSuper = false)
 @JsonIgnoreProperties(ignoreUnknown = true)
 @Entity(value = "activities")

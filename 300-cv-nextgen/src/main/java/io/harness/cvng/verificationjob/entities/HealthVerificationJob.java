@@ -13,11 +13,13 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.experimental.FieldNameConstants;
+import lombok.experimental.SuperBuilder;
 
 @Data
 @FieldNameConstants(innerTypeName = "HealthVerificationJobKeys")
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = true)
+@SuperBuilder
 public class HealthVerificationJob extends VerificationJob {
   @Override
   public VerificationJobType getType() {

@@ -1,4 +1,4 @@
-package io.harness.cvng.beans;
+package io.harness.cvng.beans.activity;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import java.util.Set;

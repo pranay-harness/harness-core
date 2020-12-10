@@ -2,7 +2,7 @@ package io.harness.cvng.client;
 
 import static io.harness.cvng.core.services.CVNextGenConstants.INTERNAL_ACTIVITY_RESOURCE;
 
-import io.harness.cvng.beans.ActivityDTO;
+import io.harness.cvng.beans.activity.ActivityDTO;
 import io.harness.cvng.beans.activity.ActivityStatusDTO;
 import io.harness.rest.RestResponse;
 

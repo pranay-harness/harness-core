@@ -3,9 +3,9 @@ package io.harness.cvng.activity.entities;
 import static io.harness.cvng.core.services.CVNextGenConstants.DATA_COLLECTION_DELAY;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 
-import io.harness.cvng.beans.ActivityDTO;
-import io.harness.cvng.beans.ActivityType;
-import io.harness.cvng.beans.DeploymentActivityDTO;
+import io.harness.cvng.beans.activity.ActivityDTO;
+import io.harness.cvng.beans.activity.ActivityType;
+import io.harness.cvng.beans.activity.DeploymentActivityDTO;
 import io.harness.cvng.core.utils.DateTimeUtils;
 import io.harness.cvng.verificationjob.beans.VerificationJobType;
 import io.harness.cvng.verificationjob.entities.VerificationJobInstance;

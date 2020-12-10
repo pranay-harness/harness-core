@@ -1,42 +1,58 @@
 package io.harness.cvng.activity.entities;
 
-import static io.harness.cvng.core.utils.ErrorMessageUtils.generateErrorMessageFromParam;
-
-import io.harness.cvng.beans.ActivityDTO;
-import io.harness.cvng.beans.ActivityType;
-import io.harness.cvng.beans.KubernetesActivityDTO;
+import io.harness.cvng.beans.activity.ActivityDTO;
+import io.harness.cvng.beans.activity.ActivityType;
+import io.harness.cvng.beans.activity.KubernetesActivityDTO;
+import io.harness.cvng.beans.activity.KubernetesActivityDTO.KubernetesEventType;
+import io.harness.cvng.core.utils.DateTimeUtils;
+import io.harness.cvng.verificationjob.entities.VerificationJobInstance;
+import io.harness.mongo.index.FdIndex;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
-import com.google.common.base.Preconditions;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
+import java.time.Instant;
+import java.util.Set;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.experimental.FieldNameConstants;
+import lombok.experimental.SuperBuilder;
+import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
-@JsonTypeName("INFRASTRUCTURE")
 @Data
 @FieldNameConstants(innerTypeName = "KubernetesActivityKeys")
-@Builder
-@AllArgsConstructor
+@SuperBuilder
 @EqualsAndHashCode(callSuper = true)
-public class KubernetesActivity extends InfrastructureActivity {
-  private String message;
-  private String eventDetails;
+@JsonTypeName("KUBERNETES")
+public class KubernetesActivity extends Activity {
+  KubernetesEventType eventType;
+  Set<KubernetesActivityDTO> activities;
+  @FdIndex Instant bucketStartTime;
+  ActivityType kubernetesActivityType;
 
   @Override
-  public void fromDTO(ActivityDTO activityDTO) {
-    Preconditions.checkState(activityDTO instanceof KubernetesActivityDTO);
-    KubernetesActivityDTO kubernetesActivityDTO = (KubernetesActivityDTO) activityDTO;
-    setMessage(kubernetesActivityDTO.getMessage());
-    setEventDetails(kubernetesActivityDTO.getEventDetails());
-    setType(ActivityType.INFRASTRUCTURE);
-    addCommonFileds(activityDTO);
+  public ActivityType getType() {
+    return ActivityType.KUBERNETES;
   }
 
   @Override
-  public void validateActivityParams() {
-    Preconditions.checkNotNull(message, generateErrorMessageFromParam(KubernetesActivityKeys.message));
-    Preconditions.checkNotNull(eventDetails, generateErrorMessageFromParam(KubernetesActivityKeys.eventDetails));
+  public void fromDTO(ActivityDTO activityDTO) {
+    throw new NotImplementedException();
+  }
+
+  @Override
+  public void fillInVerificationJobInstanceDetails(VerificationJobInstance verificationJobInstance) {
+    Instant roundedDownTime = DateTimeUtils.roundDownTo5MinBoundary(getActivityStartTime());
+    Instant preactivityStart = roundedDownTime.minus(verificationJobInstance.getResolvedJob().getDuration());
+
+    verificationJobInstance.setPreActivityVerificationStartTime(preactivityStart);
+    verificationJobInstance.setPostActivityVerificationStartTime(roundedDownTime);
+    verificationJobInstance.setStartTime(preactivityStart);
+  }
+
+  @Override
+  public void validateActivityParams() {}
+
+  @Override
+  public String getActivityName() {
+    return activities.size() + " " + eventType.name() + " kubernetes events";
   }
 }
