@@ -9,7 +9,6 @@ import static java.util.Collections.singletonList;
 import static junit.framework.TestCase.assertEquals;
 import static junit.framework.TestCase.assertTrue;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.anyString;
 import static org.mockito.Mockito.doReturn;
@@ -27,7 +26,6 @@ import io.harness.dto.OrchestrationGraphDTO;
 import io.harness.engine.OrchestrationService;
 import io.harness.engine.executions.node.NodeExecutionService;
 import io.harness.engine.interrupts.InterruptPackage;
-import io.harness.exception.InvalidRequestException;
 import io.harness.execution.NodeExecution;
 import io.harness.execution.PlanExecution;
 import io.harness.executions.steps.ExecutionNodeType;
@@ -43,6 +41,7 @@ import io.harness.ngpipeline.pipeline.executions.beans.PipelineExecutionSummaryF
 import io.harness.ngpipeline.pipeline.service.NGPipelineService;
 import io.harness.plan.Plan;
 import io.harness.pms.execution.ExecutionStatus;
+import io.harness.pms.execution.Status;
 import io.harness.pms.execution.beans.ExecutionGraph;
 import io.harness.pms.pipeline.ExecutionTriggerInfo;
 import io.harness.pms.pipeline.TriggerType;
@@ -97,7 +96,6 @@ public class NgPipelineExecutionServiceImplTest extends CategoryTest {
   @Owner(developers = VAIBHAV_SI)
   @Category(UnitTests.class)
   public void testGetPipelineExecutionDetail() {
-    shouldFailIfNodeForStageIdentifierNotFound();
     shouldReturnStageGraph();
   }
 
@@ -222,18 +220,13 @@ public class NgPipelineExecutionServiceImplTest extends CategoryTest {
   }
 
   private void shouldReturnStageGraph() {
-    NodeExecution stageNodeExecution =
-        NodeExecution.builder().node(PlanNodeProto.newBuilder().setUuid("planNodeId").build()).build();
     doReturn(Optional.of(PipelineExecutionSummary.builder().build()))
         .when(pipelineExecutionRepository)
         .findByPlanExecutionId(any());
-    doReturn(Optional.of(stageNodeExecution))
-        .when(nodeExecutionService)
-        .getByNodeIdentifier("stageId", "planExecutionId");
-    OrchestrationGraphDTO orchestrationGraph = OrchestrationGraphDTO.builder().build();
+    OrchestrationGraphDTO orchestrationGraph = OrchestrationGraphDTO.builder().status(Status.SUCCEEDED).build();
     doReturn(orchestrationGraph)
         .when(graphGenerationService)
-        .generatePartialOrchestrationGraphFromSetupNodeId("planNodeId", "planExecutionId");
+        .generatePartialOrchestrationGraphFromIdentifier("stageId", "planExecutionId");
     PowerMockito.mockStatic(ExecutionGraphMapper.class);
     ExecutionGraph executionGraph = ExecutionGraph.builder().build();
     when(ExecutionGraphMapper.toExecutionGraph(orchestrationGraph)).thenReturn(executionGraph);
@@ -241,12 +234,6 @@ public class NgPipelineExecutionServiceImplTest extends CategoryTest {
     PipelineExecutionDetail pipelineExecutionDetail =
         ngPipelineExecutionService.getPipelineExecutionDetail("planExecutionId", "stageId");
     assertThat(pipelineExecutionDetail.getStageGraph()).isEqualTo(executionGraph);
-  }
-
-  private void shouldFailIfNodeForStageIdentifierNotFound() {
-    doReturn(Optional.empty()).when(nodeExecutionService).getByNodeIdentifier(anyString(), anyString());
-    assertThatThrownBy(() -> ngPipelineExecutionService.getPipelineExecutionDetail("planId", "stageId"))
-        .isInstanceOf(InvalidRequestException.class);
   }
 
   @Test
