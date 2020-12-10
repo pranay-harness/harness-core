@@ -9,6 +9,7 @@ import software.wings.api.DeploymentType;
 import software.wings.beans.DatadogConfig;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.StateType;
+import software.wings.sm.states.CustomLogVerificationState.ResponseMapper;
 import software.wings.stencils.DefaultValue;
 import software.wings.verification.VerificationStateAnalysisExecutionData;
 
@@ -25,6 +26,7 @@ import org.slf4j.Logger;
 @Slf4j
 public class DatadogLogState extends AbstractLogAnalysisState {
   public static final String HOST_NAME_SEPARATOR = " OR ";
+  public static final String HOST_NAME_RESERVED_FIELD = "host";
 
   protected String analysisServerConfigId;
 
@@ -101,28 +103,28 @@ public class DatadogLogState extends AbstractLogAnalysisState {
     }
   }
 
-  public static Map<String, Map<String, CustomLogVerificationState.ResponseMapper>> constructLogDefinitions(
+  public static Map<String, Map<String, ResponseMapper>> constructLogDefinitions(
       DatadogConfig datadogConfig, String hostnameField, boolean is24x7) {
-    Map<String, Map<String, CustomLogVerificationState.ResponseMapper>> logDefinition = new HashMap<>();
-    Map<String, CustomLogVerificationState.ResponseMapper> responseMappers = new HashMap<>();
+    Map<String, Map<String, ResponseMapper>> logDefinition = new HashMap<>();
+    Map<String, ResponseMapper> responseMappers = new HashMap<>();
     List<String> pathList = Collections.singletonList("logs[*].content.timestamp");
-    responseMappers.put("timestamp",
-        CustomLogVerificationState.ResponseMapper.builder()
-            .fieldName("timestamp")
-            .jsonPath(pathList)
-            .timestampFormat("")
-            .build());
+    responseMappers.put(
+        "timestamp", ResponseMapper.builder().fieldName("timestamp").jsonPath(pathList).timestampFormat("").build());
     List<String> pathList2 = Collections.singletonList("logs[*].content.message");
-    responseMappers.put("logMessage",
-        CustomLogVerificationState.ResponseMapper.builder().fieldName("logMessage").jsonPath(pathList2).build());
+    responseMappers.put("logMessage", ResponseMapper.builder().fieldName("logMessage").jsonPath(pathList2).build());
 
-    List<String> pathList3 = Collections.singletonList("logs[*].content.tags.[*]");
-    responseMappers.put("host",
-        CustomLogVerificationState.ResponseMapper.builder()
-            .fieldName("host")
-            .regexs(Collections.singletonList("((?<=" + hostnameField + ":)(.*))"))
-            .jsonPath(pathList3)
-            .build());
+    if (HOST_NAME_RESERVED_FIELD.equals(hostnameField)) {
+      List<String> pathList3 = Collections.singletonList("logs[*].content." + hostnameField);
+      responseMappers.put("host", ResponseMapper.builder().fieldName("host").jsonPath(pathList3).build());
+    } else {
+      List<String> pathList3 = Collections.singletonList("logs[*].content.tags.[*]");
+      responseMappers.put("host",
+          ResponseMapper.builder()
+              .fieldName("host")
+              .regexs(Collections.singletonList("((?<=" + hostnameField + ":)(.*))"))
+              .jsonPath(pathList3)
+              .build());
+    }
 
     String eventsUrl = datadogConfig.getUrl() + DatadogConfig.LOG_API_PATH_SUFFIX;
     logDefinition.put(replaceDotWithUnicode(eventsUrl), responseMappers);
