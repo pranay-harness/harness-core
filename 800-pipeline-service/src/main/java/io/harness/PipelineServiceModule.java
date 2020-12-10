@@ -10,6 +10,8 @@ import io.harness.mongo.queue.QueueFactory;
 import io.harness.morphia.MorphiaRegistrar;
 import io.harness.persistence.HPersistence;
 import io.harness.pms.execution.NodeExecutionEvent;
+import io.harness.pms.ngpipeline.inputset.service.PMSInputSetService;
+import io.harness.pms.ngpipeline.inputset.service.PMSInputSetServiceImpl;
 import io.harness.pms.pipeline.service.PMSPipelineService;
 import io.harness.pms.pipeline.service.PMSPipelineServiceImpl;
 import io.harness.queue.QueueController;
@@ -67,6 +69,7 @@ public class PipelineServiceModule extends AbstractModule {
 
     bind(HPersistence.class).to(MongoPersistence.class);
     bind(PMSPipelineService.class).to(PMSPipelineServiceImpl.class);
+    bind(PMSInputSetService.class).to(PMSInputSetServiceImpl.class);
   }
 
   @Provides

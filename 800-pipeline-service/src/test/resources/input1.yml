@@ -1,6 +1,10 @@
 inputSet:
   identifier: input1
   name: this name
+  description: this has a description too
+  tags:
+    company: harness
+    kind : normal
   pipeline:
     identifier: "Test_Pipline11"
     variables:
