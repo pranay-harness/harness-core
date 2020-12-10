@@ -1,6 +1,7 @@
 package software.wings.service.impl.logs;
 
 import static io.harness.rule.OwnerRule.PRAVEEN;
+import static io.harness.rule.OwnerRule.SOWMYA;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -8,17 +9,20 @@ import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
 
+import software.wings.beans.DatadogConfig;
 import software.wings.service.impl.analysis.LogElement;
 import software.wings.service.impl.log.LogResponseParser;
 import software.wings.service.impl.log.LogResponseParser.LogResponseData;
 import software.wings.sm.states.BugsnagState;
 import software.wings.sm.states.CustomLogVerificationState;
 import software.wings.sm.states.CustomLogVerificationState.ResponseMapper;
+import software.wings.sm.states.DatadogLogState;
 
 import com.google.common.base.Charsets;
 import com.google.common.io.Resources;
 import java.io.IOException;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -180,5 +184,60 @@ public class LogResponseParserTest extends CategoryTest {
     List<LogElement> logs = parser.extractLogs(data);
     assertThat(logs).isNotNull();
     assertThat(1 == logs.size()).isTrue();
+  }
+
+  @Test
+  @Owner(developers = SOWMYA)
+  @Category(UnitTests.class)
+  public void testParseValidResponse_datadogHostFromTag() throws IOException {
+    String textLoad = Resources.toString(
+        LogResponseParserTest.class.getResource("/apm/datadog_log_json_response.json"), Charsets.UTF_8);
+    DatadogConfig datadogConfig = DatadogConfig.builder().url("https://app․datadoghq․com/").build();
+
+    List<String> hostList = Collections.singletonList("harness-example-deployment-canary-68659cc85f-szjs7");
+    Map<String, Map<String, ResponseMapper>> response =
+        DatadogLogState.constructLogDefinitions(datadogConfig, "pod_name", false);
+    Map<String, ResponseMapper> responseMappers = response.get("https://app․datadoghq․com/logs-queries/list");
+
+    LogResponseParser parser = new LogResponseParser();
+    LogResponseParser.LogResponseData data =
+        new LogResponseData(textLoad, new HashSet<>(hostList), true, false, responseMappers);
+
+    List<LogElement> logs = parser.extractLogs(data);
+    assertThat(logs).isNotNull();
+    assertThat(logs.size()).isEqualTo(2);
+    for (LogElement logElement : logs) {
+      assertThat(logElement.getHost()).isEqualTo(hostList.get(0));
+      assertThat(logElement.getLogMessage()).isNotNull();
+      assertThat(logElement.getTimeStamp()).isNotNull();
+    }
+  }
+
+  @Test
+  @Owner(developers = SOWMYA)
+  @Category(UnitTests.class)
+  public void testParseValidResponse_datadogReservedHostField() throws IOException {
+    String textLoad = Resources.toString(
+        LogResponseParserTest.class.getResource("/apm/datadog_log_json_response.json"), Charsets.UTF_8);
+    DatadogConfig datadogConfig = DatadogConfig.builder().url("https://app․datadoghq․com/").build();
+
+    List<String> hostList =
+        Collections.singletonList("gke-cv-test-instana-pool-1-b8420bad-gqc2.c.playground-243019.internal");
+    Map<String, Map<String, ResponseMapper>> response =
+        DatadogLogState.constructLogDefinitions(datadogConfig, "host", false);
+    Map<String, ResponseMapper> responseMappers = response.get("https://app․datadoghq․com/logs-queries/list");
+
+    LogResponseParser parser = new LogResponseParser();
+    LogResponseParser.LogResponseData data =
+        new LogResponseData(textLoad, new HashSet<>(hostList), true, false, responseMappers);
+
+    List<LogElement> logs = parser.extractLogs(data);
+    assertThat(logs).isNotNull();
+    assertThat(logs.size()).isEqualTo(2);
+    for (LogElement logElement : logs) {
+      assertThat(logElement.getHost()).isEqualTo(hostList.get(0));
+      assertThat(logElement.getLogMessage()).isNotNull();
+      assertThat(logElement.getTimeStamp()).isNotNull();
+    }
   }
 }
