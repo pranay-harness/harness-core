@@ -1,21 +1,23 @@
 package io.harness;
 
-import io.harness.eventsframework.Event;
-import io.harness.eventsframework.ProjectUpdate;
-import io.harness.eventsframework.RedisStreamClient;
+import io.harness.eventsframework.*;
+import io.harness.eventsframework.impl.RedisProducer;
+import io.harness.eventsframework.producer.Message;
+import io.harness.redis.RedisConfig;
 
-import com.google.protobuf.Any;
+import com.google.common.collect.ImmutableMap;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
+import org.redisson.api.RedissonClient;
 
 @Slf4j
 public class MessageProducer implements Runnable {
-  RedisStreamClient client;
+  io.harness.eventsframework.impl.RedisProducer client;
   String channel;
   String color;
 
-  public MessageProducer(RedisStreamClient client, String channel, String color) {
-    this.client = client;
+  public MessageProducer(String channel, RedisConfig redisConfig, String color) {
+    this.client = new RedisProducer(channel, redisConfig);
     this.channel = channel;
     this.color = color;
   }
@@ -29,13 +31,15 @@ public class MessageProducer implements Runnable {
   private void publishMessages() throws InterruptedException {
     int count = 0;
     while (true) {
-      Event projectEvent =
-          Event.newBuilder()
-              .setAccountId("account1")
-              .setPayload(Any.pack(ProjectUpdate.newBuilder().setProjectIdentifier(String.valueOf(count)).build()))
+      Message projectEvent =
+          Message.newBuilder()
+              .putAllMetadata(ImmutableMap.of("accountId", "account1", "desc", "desc1", "test", "test2"))
+              .setData(ProjectUpdate.newBuilder().setProjectIdentifier(String.valueOf(count)).build().toByteString())
               .build();
-      log.info("{}Pushing pid: {} in redis{}", color, count, ColorConstants.TEXT_RESET);
-      client.publishEvent(channel, projectEvent);
+
+      String messageId = client.send(projectEvent);
+      log.info("{}Pushed pid: {} in redis, received: {}{}", color, count, messageId, ColorConstants.TEXT_RESET);
+
       count += 1;
       Thread.sleep(500);
     }

@@ -12,6 +12,7 @@ import static io.harness.ng.core.utils.NGUtils.getConnectorRequestDTO;
 import static io.harness.ng.core.utils.NGUtils.getDefaultHarnessSecretManagerName;
 import static io.harness.ng.core.utils.NGUtils.validate;
 import static io.harness.ng.core.utils.NGUtils.verifyValuesNotChanged;
+import static io.harness.ng.eventsframework.EventsFrameworkModule.PROJECT_UPDATE_PRODUCER;
 
 import static java.util.Collections.singletonList;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
@@ -20,10 +21,9 @@ import io.harness.ModuleType;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.connector.apis.dto.ConnectorDTO;
 import io.harness.connector.services.ConnectorService;
-import io.harness.eventsframework.Event;
-import io.harness.eventsframework.EventDrivenClient;
-import io.harness.eventsframework.EventFrameworkConstants;
 import io.harness.eventsframework.ProjectUpdate;
+import io.harness.eventsframework.api.AbstractProducer;
+import io.harness.eventsframework.producer.Message;
 import io.harness.exception.DuplicateFieldException;
 import io.harness.exception.InvalidArgumentsException;
 import io.harness.exception.InvalidRequestException;
@@ -51,7 +51,7 @@ import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
-import com.google.protobuf.Any;
+import com.google.protobuf.ByteString;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -72,7 +72,7 @@ public class ProjectServiceImpl implements ProjectService {
   private final OrganizationService organizationService;
   private final NGSecretManagerService ngSecretManagerService;
   private final ConnectorService secretManagerConnectorService;
-  private final EventDrivenClient eventDrivenClient;
+  private final AbstractProducer eventProducer;
   private final NgUserService ngUserService;
   private static final String PROJECT_ADMIN_ROLE_NAME = "Project Admin";
 
@@ -80,12 +80,12 @@ public class ProjectServiceImpl implements ProjectService {
   public ProjectServiceImpl(ProjectRepository projectRepository, OrganizationService organizationService,
       NGSecretManagerService ngSecretManagerService,
       @Named(SECRET_MANAGER_CONNECTOR_SERVICE) ConnectorService secretManagerConnectorService,
-      EventDrivenClient eventDrivenClient, NgUserService ngUserService) {
+      @Named(PROJECT_UPDATE_PRODUCER) AbstractProducer eventProducer, NgUserService ngUserService) {
     this.projectRepository = projectRepository;
     this.organizationService = organizationService;
     this.ngSecretManagerService = ngSecretManagerService;
     this.secretManagerConnectorService = secretManagerConnectorService;
-    this.eventDrivenClient = eventDrivenClient;
+    this.eventProducer = eventProducer;
     this.ngUserService = ngUserService;
   }
 
@@ -189,14 +189,18 @@ public class ProjectServiceImpl implements ProjectService {
   }
 
   private void publishUpdates(Project project) {
-    eventDrivenClient.publishEvent(EventFrameworkConstants.PROJECT_UPDATE_CHANNEL,
-        Event.newBuilder()
-            .setAccountId(project.getAccountIdentifier())
-            .setPayload(Any.pack(ProjectUpdate.newBuilder()
-                                     .setProjectIdentifier(project.getIdentifier())
-                                     .setOrgIdentifier(project.getOrgIdentifier())
-                                     .build()))
-            .build());
+    eventProducer.send(Message.newBuilder()
+                           .putMetadata("accountId", project.getAccountIdentifier())
+                           .setData(getProjectPayload(project))
+                           .build());
+  }
+
+  private ByteString getProjectPayload(Project project) {
+    return ProjectUpdate.newBuilder()
+        .setProjectIdentifier(project.getIdentifier())
+        .setOrgIdentifier(project.getOrgIdentifier())
+        .build()
+        .toByteString();
   }
 
   private List<ModuleType> verifyModulesNotRemoved(List<ModuleType> oldList, List<ModuleType> newList) {

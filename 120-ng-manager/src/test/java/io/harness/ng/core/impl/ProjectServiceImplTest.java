@@ -25,10 +25,9 @@ import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.connector.apis.dto.ConnectorResponseDTO;
 import io.harness.connector.services.ConnectorService;
-import io.harness.eventsframework.Event;
-import io.harness.eventsframework.EventDrivenClient;
-import io.harness.eventsframework.EventFrameworkConstants;
-import io.harness.eventsframework.NoOpEventClient;
+import io.harness.eventsframework.api.AbstractProducer;
+import io.harness.eventsframework.impl.NoOpProducer;
+import io.harness.eventsframework.producer.Message;
 import io.harness.exception.InvalidRequestException;
 import io.harness.ng.core.api.NGSecretManagerService;
 import io.harness.ng.core.dto.ProjectDTO;
@@ -60,7 +59,7 @@ public class ProjectServiceImplTest extends CategoryTest {
   private NGSecretManagerService ngSecretManagerService;
   private ConnectorService secretManagerConnectorService;
   private ProjectServiceImpl projectService;
-  private EventDrivenClient eventDrivenClient;
+  private AbstractProducer eventProducer;
   private NgUserService ngUserService;
 
   @Before
@@ -69,10 +68,10 @@ public class ProjectServiceImplTest extends CategoryTest {
     organizationService = mock(OrganizationService.class);
     ngSecretManagerService = mock(NGSecretManagerService.class);
     secretManagerConnectorService = mock(ConnectorService.class);
-    eventDrivenClient = mock(NoOpEventClient.class);
+    eventProducer = mock(NoOpProducer.class);
     ngUserService = mock(NgUserService.class);
     projectService = spy(new ProjectServiceImpl(projectRepository, organizationService, ngSecretManagerService,
-        secretManagerConnectorService, eventDrivenClient, ngUserService));
+        secretManagerConnectorService, eventProducer, ngUserService));
   }
 
   private ProjectDTO createProjectDTO(String accountIdentifier, String orgIdentifier, String identifier) {
@@ -143,9 +142,8 @@ public class ProjectServiceImplTest extends CategoryTest {
 
     Project updatedProject = projectService.update(accountIdentifier, orgIdentifier, identifier, projectDTO);
 
-    ArgumentCaptor<Event> eventCaptor = ArgumentCaptor.forClass(Event.class);
-    verify(eventDrivenClient, times(1))
-        .publishEvent(eq(EventFrameworkConstants.PROJECT_UPDATE_CHANNEL), eventCaptor.capture());
+    ArgumentCaptor<Message> producerMessage = ArgumentCaptor.forClass(Message.class);
+    verify(eventProducer, times(1)).send(producerMessage.capture());
 
     assertEquals(project, updatedProject);
   }
