@@ -1467,7 +1467,7 @@ public class K8sTaskHelperTest extends WingsBaseTest {
   @Test
   @Owner(developers = SAHIL)
   @Category(UnitTests.class)
-  public void testRenderTemplateHelmChartRepo() throws Exception {
+  public void TC1_testRenderTemplateHelmChartRepo() throws Exception {
     final String workingDirectory = ".";
     K8sDelegateTaskParams k8sDelegateTaskParams =
         K8sDelegateTaskParams.builder().workingDirectory(workingDirectory).helmPath("helm").build();
@@ -1483,6 +1483,33 @@ public class K8sTaskHelperTest extends WingsBaseTest {
             .build(),
         ".", new ArrayList<>(), "release", "namespace", executionLogCallback, K8sApplyTaskParameters.builder().build());
 
+    verify(mockK8sTaskHelperBase, times(1)).executeShellCommand(eq("./chart"), anyString(), any(), anyLong());
+    assertThat(manifestFiles.size()).isEqualTo(1);
+  }
+
+  /**
+   * Chart name with / eg. bitnami/nginx. The directory should be ./nginx
+   */
+  @Test
+  @Owner(developers = YOGESH)
+  @Category(UnitTests.class)
+  public void TC2_testRenderTemplateHelmChartRepo() throws Exception {
+    final String workingDirectory = ".";
+    K8sDelegateTaskParams k8sDelegateTaskParams =
+        K8sDelegateTaskParams.builder().workingDirectory(workingDirectory).helmPath("helm").build();
+
+    ProcessResult processResult = new ProcessResult(0, new ProcessOutput("".getBytes()));
+    doReturn(processResult).when(mockK8sTaskHelperBase).executeShellCommand(any(), any(), any(), anyLong());
+    doReturn("").when(mockK8sTaskHelperBase).writeValuesToFile(any(), any());
+
+    final List<FileData> manifestFiles = helper.renderTemplate(k8sDelegateTaskParams,
+        K8sDelegateManifestConfig.builder()
+            .helmChartConfigParams(HelmChartConfigParams.builder().chartName("bitnami/nginx").build())
+            .manifestStoreTypes(HelmChartRepo)
+            .build(),
+        ".", new ArrayList<>(), "release", "namespace", executionLogCallback, K8sApplyTaskParameters.builder().build());
+
+    verify(mockK8sTaskHelperBase, times(1)).executeShellCommand(eq("./nginx"), anyString(), any(), anyLong());
     assertThat(manifestFiles.size()).isEqualTo(1);
   }
 

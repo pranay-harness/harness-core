@@ -9,9 +9,11 @@ import static org.mockito.Mockito.anyString;
 import static org.mockito.Mockito.eq;
 import static org.mockito.Mockito.when;
 
+import io.harness.beans.FeatureName;
 import io.harness.category.element.UnitTests;
 import io.harness.context.ContextElementType;
 import io.harness.exception.GeneralException;
+import io.harness.ff.FeatureFlagService;
 import io.harness.k8s.model.HelmVersion;
 import io.harness.rule.Owner;
 import io.harness.rule.OwnerRule;
@@ -37,13 +39,15 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
+import org.mockito.Matchers;
 import org.mockito.Mock;
 
 public class HelmChartConfigHelperServiceTest extends WingsBaseTest {
   @Mock private ServiceResourceService serviceResourceService;
-  @Mock private SettingsService settingsService;
-  @Mock private SecretManager secretManager;
+  @Mock private SettingsService mockSettingsService;
+  @Mock private SecretManager mockSecretManager;
   @Mock private ExecutionContext executionContext;
+  @Mock private FeatureFlagService mockFeatureFlagService;
 
   private SettingAttribute helmConnector;
 
@@ -66,8 +70,8 @@ public class HelmChartConfigHelperServiceTest extends WingsBaseTest {
     helmConnector.setUuid("abc");
     helmConnector.setValue(HttpHelmRepoConfig.builder().build());
 
-    when(settingsService.get(anyString())).thenReturn(helmConnector);
-    when(settingsService.getByName(eq(ACCOUNT_ID), eq(APP_ID), anyString())).thenReturn(helmConnector);
+    when(mockSettingsService.get(anyString())).thenReturn(helmConnector);
+    when(mockSettingsService.getByName(eq(ACCOUNT_ID), eq(APP_ID), anyString())).thenReturn(helmConnector);
   }
 
   @Test
@@ -212,8 +216,8 @@ public class HelmChartConfigHelperServiceTest extends WingsBaseTest {
     settingAttribute.setUuid("abc");
     settingAttribute.setValue(AmazonS3HelmRepoConfig.builder().connectorId("cloudProviderId").build());
 
-    when(settingsService.get(anyString())).thenReturn(settingAttribute);
-    when(settingsService.get("cloudProviderId")).thenReturn(null);
+    when(mockSettingsService.get(anyString())).thenReturn(settingAttribute);
+    when(mockSettingsService.get("cloudProviderId")).thenReturn(null);
 
     try {
       helmChartConfigHelperService.getHelmChartConfigTaskParams(executionContext, appManifest);
@@ -222,5 +226,79 @@ public class HelmChartConfigHelperServiceTest extends WingsBaseTest {
       assertThat(ex.getMessage())
           .isEqualTo("Cloud provider deleted for helm repository connector [s3-helm-connector] selected in service");
     }
+  }
+
+  @Test
+  @Owner(developers = OwnerRule.YOGESH)
+  @Category(UnitTests.class)
+  public void shouldHandleChartNamesProperly() {
+    when(executionContext.renderExpression(anyString())).thenAnswer(i -> i.getArgumentAt(0, String.class));
+    when(mockFeatureFlagService.isEnabled(Matchers.eq(FeatureName.HELM_CHART_NAME_SPLIT), anyString()))
+        .thenReturn(true);
+
+    handleChartNameForHelmRepo();
+    handleChartNameForNoneRepoAndUrl();
+    handleChartNameForRepoAlreadyInstalledOnDelegate();
+  }
+
+  private void handleChartNameForRepoAlreadyInstalledOnDelegate() {
+    HelmChartConfigParams helmChartConfigTaskParams;
+    ApplicationManifest applicationManifest = ApplicationManifest.builder()
+                                                  .helmChartConfig(HelmChartConfig.builder().chartName("vault").build())
+                                                  .storeType(StoreType.HelmChartRepo)
+                                                  .build();
+
+    helmChartConfigTaskParams =
+        helmChartConfigHelperService.getHelmChartConfigTaskParams(executionContext, applicationManifest);
+    assertThat(helmChartConfigTaskParams.getChartName()).isEqualTo("vault");
+
+    applicationManifest.setHelmChartConfig(HelmChartConfig.builder().chartName("stable/vault").build());
+    helmChartConfigTaskParams =
+        helmChartConfigHelperService.getHelmChartConfigTaskParams(executionContext, applicationManifest);
+    assertThat(helmChartConfigTaskParams.getChartName()).isEqualTo("vault");
+
+    applicationManifest.setHelmChartConfig(
+        HelmChartConfig.builder().connectorId("").chartUrl("").chartName("stable/vault").build());
+    helmChartConfigTaskParams =
+        helmChartConfigHelperService.getHelmChartConfigTaskParams(executionContext, applicationManifest);
+    assertThat(helmChartConfigTaskParams.getChartName()).isEqualTo("vault");
+  }
+
+  private void handleChartNameForNoneRepoAndUrl() {
+    HelmChartConfigParams helmChartConfigTaskParams;
+    ApplicationManifest applicationManifest =
+        ApplicationManifest.builder()
+            .helmChartConfig(HelmChartConfig.builder().chartUrl("charts.helm.sh").chartName("vault").build())
+            .storeType(StoreType.HelmChartRepo)
+            .build();
+
+    helmChartConfigTaskParams =
+        helmChartConfigHelperService.getHelmChartConfigTaskParams(executionContext, applicationManifest);
+    assertThat(helmChartConfigTaskParams.getChartName()).isEqualTo("vault");
+
+    applicationManifest.setHelmChartConfig(
+        HelmChartConfig.builder().chartUrl("charts.helm.sh").chartName("stable/vault").build());
+    helmChartConfigTaskParams =
+        helmChartConfigHelperService.getHelmChartConfigTaskParams(executionContext, applicationManifest);
+    assertThat(helmChartConfigTaskParams.getChartName()).isEqualTo("stable/vault");
+  }
+
+  private void handleChartNameForHelmRepo() {
+    HelmChartConfigParams helmChartConfigTaskParams;
+    ApplicationManifest applicationManifest =
+        ApplicationManifest.builder()
+            .helmChartConfig(HelmChartConfig.builder().connectorId("connectorId").chartName("vault").build())
+            .storeType(StoreType.HelmChartRepo)
+            .build();
+
+    helmChartConfigTaskParams =
+        helmChartConfigHelperService.getHelmChartConfigTaskParams(executionContext, applicationManifest);
+    assertThat(helmChartConfigTaskParams.getChartName()).isEqualTo("vault");
+
+    applicationManifest.setHelmChartConfig(
+        HelmChartConfig.builder().connectorId("connectorId").chartName("stable/vault").build());
+    helmChartConfigTaskParams =
+        helmChartConfigHelperService.getHelmChartConfigTaskParams(executionContext, applicationManifest);
+    assertThat(helmChartConfigTaskParams.getChartName()).isEqualTo("stable/vault");
   }
 }
