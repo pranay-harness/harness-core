@@ -43,6 +43,7 @@ import io.harness.delegate.beans.DelegateAsyncTaskResponse;
 import io.harness.delegate.beans.DelegateSyncTaskResponse;
 import io.harness.delegate.beans.DelegateTaskProgressResponse;
 import io.harness.engine.events.OrchestrationEventListener;
+import io.harness.engine.pms.sdk.NodeExecutionEventListener;
 import io.harness.event.EventsModule;
 import io.harness.event.listener.EventListener;
 import io.harness.event.reconciliation.service.DeploymentReconExecutorService;
@@ -791,6 +792,7 @@ public class WingsApplication extends Application<MainConfiguration> {
     queueListenerController.register(injector.getInstance(OrchestrationNotifyEventListener.class), 5);
     queueListenerController.register(injector.getInstance(PruneEntityListener.class), 1);
     queueListenerController.register(injector.getInstance(OrchestrationEventListener.class), 1);
+    queueListenerController.register(injector.getInstance(NodeExecutionEventListener.class), 1);
   }
 
   private void scheduleJobs(Injector injector, MainConfiguration configuration) {

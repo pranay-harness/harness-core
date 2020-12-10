@@ -15,6 +15,7 @@ import io.harness.cdng.creator.CDNGPlanCreatorProvider;
 import io.harness.cdng.creator.filters.CDNGFilterCreationResponseMerger;
 import io.harness.cdng.executionplan.ExecutionPlanCreatorRegistrar;
 import io.harness.engine.events.OrchestrationEventListener;
+import io.harness.engine.pms.sdk.NodeExecutionEventListener;
 import io.harness.gitsync.core.runnable.GitChangeSetRunnable;
 import io.harness.maintenance.MaintenanceController;
 import io.harness.metrics.HarnessMetricRegistry;
@@ -257,6 +258,7 @@ public class NextGenApplication extends Application<NextGenConfiguration> {
     queueListenerController.register(injector.getInstance(NgOrchestrationNotifyEventListener.class), 5);
     queueListenerController.register(injector.getInstance(EmailNotificationListener.class), 1);
     queueListenerController.register(injector.getInstance(OrchestrationEventListener.class), 1);
+    queueListenerController.register(injector.getInstance(NodeExecutionEventListener.class), 1);
   }
 
   private void registerWaitEnginePublishers(Injector injector) {

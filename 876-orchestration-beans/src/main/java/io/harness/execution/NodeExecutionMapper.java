@@ -46,8 +46,11 @@ public class NodeExecutionMapper {
                                              .setUuid(nodeExecution.getUuid())
                                              .setAmbiance(nodeExecution.getAmbiance())
                                              .setNode(nodeExecution.getNode())
-                                             .setMode(nodeExecution.getMode())
                                              .setStatus(nodeExecution.getStatus());
+
+    if (nodeExecution.getMode() != null) {
+      builder.setMode(nodeExecution.getMode());
+    }
     if (nodeExecution.getStartTs() != null) {
       builder.setStartTs(ProtoUtils.unixMillisToTimestamp(nodeExecution.getStartTs()));
     }

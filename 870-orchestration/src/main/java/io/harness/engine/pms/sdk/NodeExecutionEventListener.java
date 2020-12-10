@@ -1,9 +1,12 @@
-package io.harness.engine;
+package io.harness.engine.pms.sdk;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 
+import io.harness.OrchestrationPublisherName;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.delegate.beans.ErrorNotifyResponseData;
+import io.harness.engine.EngineExceptionUtils;
+import io.harness.engine.EngineObtainmentHelper;
 import io.harness.engine.executables.ExecutableProcessor;
 import io.harness.engine.executables.ExecutableProcessorFactory;
 import io.harness.engine.executables.InvokerPackage;
@@ -11,6 +14,7 @@ import io.harness.engine.executables.ResumePackage;
 import io.harness.engine.executions.node.NodeExecutionProtoService;
 import io.harness.pms.ambiance.Ambiance;
 import io.harness.pms.execution.NodeExecutionEvent;
+import io.harness.pms.execution.NodeExecutionEventType;
 import io.harness.pms.execution.NodeExecutionProto;
 import io.harness.pms.execution.ResumeNodeExecutionEventData;
 import io.harness.pms.execution.StartNodeExecutionEventData;
@@ -23,25 +27,29 @@ import io.harness.pms.sdk.core.facilitator.Facilitator;
 import io.harness.pms.sdk.core.facilitator.FacilitatorResponse;
 import io.harness.pms.sdk.core.facilitator.FacilitatorResponseMapper;
 import io.harness.pms.sdk.core.steps.io.StepInputPackage;
-import io.harness.pms.sdk.registries.AdviserRegistry;
 import io.harness.pms.sdk.registries.FacilitatorRegistry;
-import io.harness.pms.sdk.registries.StepRegistry;
 import io.harness.pms.steps.io.StepResponseProto;
 import io.harness.queue.QueueConsumer;
 import io.harness.queue.QueueListener;
+import io.harness.tasks.BinaryResponseData;
+import io.harness.tasks.FailureResponseData;
+import io.harness.waiter.WaitNotifyEngine;
 
 import com.google.inject.Inject;
+import com.google.inject.name.Named;
 import lombok.extern.slf4j.Slf4j;
 
 @OwnedBy(CDC)
 @Slf4j
 public class NodeExecutionEventListener extends QueueListener<NodeExecutionEvent> {
-  @Inject private StepRegistry stepRegistry;
-  @Inject private AdviserRegistry adviserRegistry;
   @Inject private FacilitatorRegistry facilitatorRegistry;
   @Inject private NodeExecutionProtoService nodeExecutionProtoService;
   @Inject private EngineObtainmentHelper engineObtainmentHelper;
   @Inject private ExecutableProcessorFactory executableProcessorFactory;
+
+  // TODO : Temporary for now Replace it with an interaction Service
+  @Inject @Named(OrchestrationPublisherName.PUBLISHER_NAME) String publisherName;
+  @Inject private WaitNotifyEngine waitNotifyEngine;
 
   @Inject
   public NodeExecutionEventListener(QueueConsumer<NodeExecutionEvent> queueConsumer) {
@@ -50,8 +58,17 @@ public class NodeExecutionEventListener extends QueueListener<NodeExecutionEvent
 
   @Override
   public void onMessage(NodeExecutionEvent event) {
-    log.info("Notifying for NodeExecutionEvent: type: {}, id: {}", event.getEventType().name(),
-        event.getNodeExecution().getUuid());
+    NodeExecutionEventType nodeExecutionEventType = event.getEventType();
+    switch (nodeExecutionEventType) {
+      case START:
+        startExecution(event);
+        break;
+      case FACILITATE:
+        facilitateExecution(event);
+        break;
+      default:
+        throw new UnsupportedOperationException("NodeExecution Event Has no handler" + event.getEventType());
+    }
   }
 
   private void facilitateExecution(NodeExecutionEvent event) {
@@ -60,7 +77,7 @@ public class NodeExecutionEventListener extends QueueListener<NodeExecutionEvent
       Ambiance ambiance = nodeExecution.getAmbiance();
       StepInputPackage inputPackage = obtainInputPackage(nodeExecution);
       PlanNodeProto node = nodeExecution.getNode();
-      FacilitatorResponseProto facilitatorResponse;
+      FacilitatorResponseProto facilitatorResponse = null;
       for (FacilitatorObtainment obtainment : node.getFacilitatorObtainmentsList()) {
         Facilitator facilitator = facilitatorRegistry.obtain(obtainment.getType());
         FacilitatorResponse currFacilitatorResponse =
@@ -71,9 +88,15 @@ public class NodeExecutionEventListener extends QueueListener<NodeExecutionEvent
           break;
         }
       }
-      // TODO: Send the facilitator response to pipeline service for processing
-    } catch (Exception ignored) {
-      // TODO: Send error to pipeline service for processing
+      if (facilitatorResponse == null) {
+        waitNotifyEngine.doneWith(
+            event.getNotifyId(), FailureResponseData.builder().message("FacilitatorResponse is null").build());
+        return;
+      }
+      waitNotifyEngine.doneWith(
+          event.getNotifyId(), BinaryResponseData.builder().data(facilitatorResponse.toByteArray()).build());
+    } catch (Exception ex) {
+      waitNotifyEngine.doneWith(event.getNotifyId(), FailureResponseData.builder().message(ex.getMessage()).build());
     }
   }
 

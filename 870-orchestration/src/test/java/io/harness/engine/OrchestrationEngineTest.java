@@ -48,9 +48,11 @@ import com.google.protobuf.ByteString;
 import java.time.Duration;
 import java.util.Map;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
+@Ignore("Will enable after setting up listeners")
 public class OrchestrationEngineTest extends OrchestrationTestBase {
   @Inject private Injector injector;
   @Inject private AdviserRegistry adviserRegistry;

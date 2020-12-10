@@ -17,6 +17,7 @@ import io.harness.engine.interrupts.InterruptPackage;
 import io.harness.engine.interrupts.InterruptTestHelper;
 import io.harness.engine.interrupts.steps.SimpleAsyncStep;
 import io.harness.engine.interrupts.steps.SimpleStepAsyncParams;
+import io.harness.engine.pms.sdk.NodeExecutionEventListener;
 import io.harness.execution.NodeExecution;
 import io.harness.execution.PlanExecution;
 import io.harness.interrupts.ExecutionInterruptType;
@@ -37,7 +38,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
-@Listeners(OrchestrationNotifyEventListener.class)
+@Listeners({OrchestrationNotifyEventListener.class, NodeExecutionEventListener.class})
 public class ManualInterventionHandlerTest extends WingsBaseTest {
   @Inject private Injector injector;
   @Inject private OrchestrationService orchestrationService;

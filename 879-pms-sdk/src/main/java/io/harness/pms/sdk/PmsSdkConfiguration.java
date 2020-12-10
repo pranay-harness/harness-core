@@ -6,6 +6,7 @@ import io.harness.mongo.MongoConfig;
 import io.harness.pms.sdk.core.pipeline.filters.FilterCreationResponseMerger;
 import io.harness.pms.sdk.core.plan.creation.creators.PipelineServiceInfoProvider;
 import io.harness.pms.sdk.registries.StepRegistry;
+import io.harness.pms.steps.StepType;
 
 import lombok.Builder;
 import lombok.Value;
