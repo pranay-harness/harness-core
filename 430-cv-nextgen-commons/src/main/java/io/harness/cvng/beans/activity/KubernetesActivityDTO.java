@@ -1,4 +1,4 @@
-package io.harness.cvng.beans;
+package io.harness.cvng.beans.activity;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import lombok.Data;
@@ -9,15 +9,19 @@ import lombok.experimental.SuperBuilder;
 @Data
 @SuperBuilder
 @NoArgsConstructor
-@JsonTypeName("INFRASTRUCTURE")
 @EqualsAndHashCode(callSuper = true)
+@JsonTypeName("KUBERNETES")
 public class KubernetesActivityDTO extends ActivityDTO {
   String message;
   String activitySourceConfigId;
   String eventDetails;
+  KubernetesEventType eventType;
+  ActivityType kubernetesActivityType;
 
   @Override
   public ActivityType getType() {
-    return ActivityType.INFRASTRUCTURE;
+    return ActivityType.KUBERNETES;
   }
+
+  public enum KubernetesEventType { Normal, Warning, Error }
 }

@@ -4,7 +4,7 @@ import static io.harness.cvng.core.services.CVNextGenConstants.INTERNAL_ACTIVITY
 
 import io.harness.annotations.ExposeInternalException;
 import io.harness.cvng.activity.services.api.ActivityService;
-import io.harness.cvng.beans.ActivityDTO;
+import io.harness.cvng.beans.activity.ActivityDTO;
 import io.harness.cvng.beans.activity.ActivityStatusDTO;
 import io.harness.rest.RestResponse;
 import io.harness.security.annotations.LearningEngineAuth;

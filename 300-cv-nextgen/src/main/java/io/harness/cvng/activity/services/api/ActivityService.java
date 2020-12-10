@@ -7,7 +7,7 @@ import io.harness.cvng.activity.beans.DeploymentActivityResultDTO;
 import io.harness.cvng.activity.beans.DeploymentActivityResultDTO.DeploymentVerificationJobInstanceSummary;
 import io.harness.cvng.activity.beans.DeploymentActivityVerificationResultDTO;
 import io.harness.cvng.activity.entities.Activity;
-import io.harness.cvng.beans.ActivityDTO;
+import io.harness.cvng.beans.activity.ActivityDTO;
 import io.harness.cvng.beans.activity.ActivityStatusDTO;
 
 import java.time.Instant;
@@ -42,4 +42,5 @@ public interface ActivityService {
   DeploymentVerificationJobInstanceSummary getDeploymentSummary(String activityId);
 
   ActivityStatusDTO getActivityStatus(String accountId, String activityId);
+  List<String> createVerificationJobInstancesForActivity(Activity activity);
 }

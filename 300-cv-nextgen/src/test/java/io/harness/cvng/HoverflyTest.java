@@ -15,7 +15,7 @@ public class HoverflyTest extends CategoryTest {
   static {
     try {
       HOVERFLY_RULE = HoverflyRule.inSimulationMode(HoverflyConfig.localConfigs().disableTlsVerification());
-      // HOVERFLY_RULE = HoverflyRule.inCaptureMode(HoverflyConfig.localConfigs().disableTlsVerification());
+      //       HOVERFLY_RULE = HoverflyRule.inCaptureMode(HoverflyConfig.localConfigs().disableTlsVerification());
     } catch (Exception e) {
       log.info("Initializing HoverflyRule inSimulationMode failed. Retrying one more time : {}", e);
       // This is rarely failing in CI with port conflict exception. So retrying one more time.

@@ -1,7 +1,7 @@
 package io.harness.cvng.activity.services.api;
 
 import io.harness.cvng.activity.entities.KubernetesActivitySource;
-import io.harness.cvng.beans.KubernetesActivityDTO;
+import io.harness.cvng.beans.activity.KubernetesActivityDTO;
 import io.harness.cvng.beans.activity.KubernetesActivitySourceDTO;
 import io.harness.ng.beans.PageResponse;
 

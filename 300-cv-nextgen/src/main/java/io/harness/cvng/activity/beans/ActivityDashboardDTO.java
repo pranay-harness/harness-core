@@ -1,6 +1,6 @@
 package io.harness.cvng.activity.beans;
 
-import io.harness.cvng.beans.ActivityType;
+import io.harness.cvng.beans.activity.ActivityType;
 import io.harness.cvng.beans.activity.ActivityVerificationStatus;
 
 import lombok.Builder;

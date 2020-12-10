@@ -4,6 +4,7 @@ import static io.harness.cvng.verificationjob.beans.VerificationJobType.HEALTH;
 
 import io.harness.cvng.verificationjob.beans.VerificationJobDTO;
 import io.harness.cvng.verificationjob.entities.VerificationJob;
+import io.harness.cvng.verificationjob.entities.VerificationJob.RuntimeParameter.RuntimeParameterKeys;
 import io.harness.cvng.verificationjob.entities.VerificationJob.VerificationJobKeys;
 import io.harness.cvng.verificationjob.services.api.VerificationJobService;
 import io.harness.persistence.HPersistence;
@@ -56,6 +57,24 @@ public class VerificationJobServiceImpl implements VerificationJobService {
         .filter(VerificationJobKeys.accountId, accountId)
         .filter(VerificationJobKeys.identifier, identifier)
         .get();
+  }
+
+  @Override
+  public List<VerificationJob> getHealthVerificationJobs(String accountIdentifier, String orgIdentifier,
+      String projectIdentifier, String envIdentifier, String serviceIdentifier) {
+    Preconditions.checkNotNull(accountIdentifier);
+    Preconditions.checkNotNull(orgIdentifier);
+    Preconditions.checkNotNull(projectIdentifier);
+    Preconditions.checkNotNull(envIdentifier);
+    Preconditions.checkNotNull(serviceIdentifier);
+    return hPersistence.createQuery(VerificationJob.class)
+        .filter(VerificationJobKeys.accountId, accountIdentifier)
+        .filter(VerificationJobKeys.orgIdentifier, orgIdentifier)
+        .filter(VerificationJobKeys.projectIdentifier, projectIdentifier)
+        .filter(VerificationJobKeys.envIdentifier + "." + RuntimeParameterKeys.value, envIdentifier)
+        .filter(VerificationJobKeys.serviceIdentifier + "." + RuntimeParameterKeys.value, serviceIdentifier)
+        .filter(VerificationJobKeys.type, HEALTH)
+        .asList();
   }
 
   @Override

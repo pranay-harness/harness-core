@@ -2,7 +2,7 @@ package io.harness.cvng.activity.resources;
 
 import io.harness.annotations.ExposeInternalException;
 import io.harness.cvng.activity.services.api.ActivityService;
-import io.harness.cvng.beans.ActivityDTO;
+import io.harness.cvng.beans.activity.ActivityDTO;
 import io.harness.security.annotations.PublicApi;
 
 import com.codahale.metrics.annotation.ExceptionMetered;

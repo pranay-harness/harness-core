@@ -33,18 +33,18 @@ import io.harness.cvng.activity.beans.DeploymentActivityResultDTO;
 import io.harness.cvng.activity.beans.DeploymentActivityVerificationResultDTO;
 import io.harness.cvng.activity.entities.Activity;
 import io.harness.cvng.activity.entities.Activity.ActivityKeys;
-import io.harness.cvng.activity.entities.KubernetesActivity.KubernetesActivityKeys;
+import io.harness.cvng.activity.entities.KubernetesActivity;
 import io.harness.cvng.activity.services.api.ActivityService;
 import io.harness.cvng.analysis.entities.HealthVerificationPeriod;
-import io.harness.cvng.beans.ActivityDTO;
-import io.harness.cvng.beans.ActivityDTO.VerificationJobRuntimeDetails;
-import io.harness.cvng.beans.ActivityType;
 import io.harness.cvng.beans.CVMonitoringCategory;
 import io.harness.cvng.beans.DataSourceType;
-import io.harness.cvng.beans.DeploymentActivityDTO;
-import io.harness.cvng.beans.KubernetesActivityDTO;
+import io.harness.cvng.beans.activity.ActivityDTO;
+import io.harness.cvng.beans.activity.ActivityDTO.VerificationJobRuntimeDetails;
 import io.harness.cvng.beans.activity.ActivityStatusDTO;
+import io.harness.cvng.beans.activity.ActivityType;
 import io.harness.cvng.beans.activity.ActivityVerificationStatus;
+import io.harness.cvng.beans.activity.DeploymentActivityDTO;
+import io.harness.cvng.beans.activity.InfrastructureActivityDTO;
 import io.harness.cvng.client.NextGenService;
 import io.harness.cvng.core.entities.AppDynamicsCVConfig;
 import io.harness.cvng.core.entities.SplunkCVConfig;
@@ -53,9 +53,13 @@ import io.harness.cvng.core.services.api.VerificationTaskService;
 import io.harness.cvng.core.services.api.WebhookService;
 import io.harness.cvng.dashboard.services.api.HealthVerificationHeatMapService;
 import io.harness.cvng.verificationjob.beans.Sensitivity;
+import io.harness.cvng.verificationjob.beans.VerificationJobType;
 import io.harness.cvng.verificationjob.entities.CanaryVerificationJob;
+import io.harness.cvng.verificationjob.entities.HealthVerificationJob;
 import io.harness.cvng.verificationjob.entities.VerificationJob;
+import io.harness.cvng.verificationjob.entities.VerificationJob.RuntimeParameter;
 import io.harness.cvng.verificationjob.entities.VerificationJobInstance;
+import io.harness.cvng.verificationjob.entities.VerificationJobInstance.ExecutionStatus;
 import io.harness.cvng.verificationjob.services.api.VerificationJobInstanceService;
 import io.harness.cvng.verificationjob.services.api.VerificationJobService;
 import io.harness.ng.core.service.dto.ServiceResponseDTO;
@@ -88,6 +92,8 @@ import org.mockito.MockitoAnnotations;
 public class ActivityServiceImplTest extends CvNextGenTest {
   @Inject private HPersistence hPersistence;
   @Inject private ActivityService activityService;
+  @Inject private VerificationJobService realVerificationJobService;
+  @Inject private VerificationJobInstanceService realVerificationJobInstanceService;
   @Mock private CVConfigService cvConfigService;
   @Mock private WebhookService mockWebhookService;
   @Mock private VerificationJobService verificationJobService;
@@ -133,9 +139,10 @@ public class ActivityServiceImplTest extends CvNextGenTest {
   @Category(UnitTests.class)
   public void testRegisterActivity_whenNoJobExists() {
     VerificationJob verificationJob = createVerificationJob();
-    when(verificationJobService.getVerificationJob(accountId, verificationJob.getIdentifier())).thenReturn(null);
+    when(verificationJobService.getVerificationJob(accountId, verificationJob.getIdentifier()))
+        .thenAnswer(invocationOnMock -> { return null; });
     assertThatThrownBy(
-        () -> activityService.register(accountId, generateUuid(), getKubernetesActivity(verificationJob)))
+        () -> activityService.register(accountId, generateUuid(), getDeploymentActivity(verificationJob)))
         .isInstanceOf(NullPointerException.class)
         .hasMessage("No Job exists for verificationJobIdentifier: 'identifier'");
   }
@@ -150,11 +157,11 @@ public class ActivityServiceImplTest extends CvNextGenTest {
     when(cvConfigService.list(
              anyString(), anyString(), anyString(), anyString(), anyString(), any(CVMonitoringCategory.class)))
         .thenReturn(null);
-    KubernetesActivityDTO kubernetesActivity = getKubernetesActivity(verificationJob);
-    assertThatThrownBy(() -> activityService.register(accountId, generateUuid(), kubernetesActivity))
+    DeploymentActivityDTO deploymentActivity = getDeploymentActivity(verificationJob);
+    assertThatThrownBy(() -> activityService.register(accountId, generateUuid(), deploymentActivity))
         .isInstanceOf(IllegalStateException.class)
         .hasMessage("No data sources defined for environment " + envIdentifier + " and service "
-            + kubernetesActivity.getServiceIdentifier());
+            + deploymentActivity.getServiceIdentifier());
   }
 
   @Test
@@ -167,11 +174,11 @@ public class ActivityServiceImplTest extends CvNextGenTest {
     when(cvConfigService.list(
              anyString(), anyString(), anyString(), anyString(), anyString(), any(CVMonitoringCategory.class)))
         .thenReturn(Lists.newArrayList(new SplunkCVConfig()));
-    KubernetesActivityDTO kubernetesActivity = getKubernetesActivity(verificationJob);
-    assertThatThrownBy(() -> activityService.register(accountId, generateUuid(), kubernetesActivity))
+    DeploymentActivityDTO deploymentActivity = getDeploymentActivity(verificationJob);
+    assertThatThrownBy(() -> activityService.register(accountId, generateUuid(), deploymentActivity))
         .isInstanceOf(IllegalStateException.class)
         .hasMessage("No data sources of type(s) [APP_DYNAMICS] defined for environment " + envIdentifier
-            + " and service " + kubernetesActivity.getServiceIdentifier());
+            + " and service " + deploymentActivity.getServiceIdentifier());
   }
 
   @Test
@@ -183,7 +190,7 @@ public class ActivityServiceImplTest extends CvNextGenTest {
         .thenReturn(verificationJob);
     when(verificationJobInstanceService.create(anyList())).thenReturn(Arrays.asList("taskId1"));
 
-    activityService.register(accountId, generateUuid(), getKubernetesActivity(verificationJob));
+    activityService.register(accountId, generateUuid(), getDeploymentActivity(verificationJob));
 
     Activity activity = hPersistence.createQuery(Activity.class)
                             .filter(ActivityKeys.projectIdentifier, projectIdentifier)
@@ -191,8 +198,8 @@ public class ActivityServiceImplTest extends CvNextGenTest {
                             .get();
 
     assertThat(activity).isNotNull();
-    assertThat(activity.getType().name()).isEqualTo(ActivityType.INFRASTRUCTURE.name());
-    assertThat(activity.getActivityName()).isEqualTo("Pod restart activity");
+    assertThat(activity.getType().name()).isEqualTo(ActivityType.DEPLOYMENT.name());
+    assertThat(activity.getActivityName()).isEqualTo("Build 23 deploy");
   }
 
   @Test
@@ -204,7 +211,7 @@ public class ActivityServiceImplTest extends CvNextGenTest {
         .thenReturn(verificationJob);
     when(verificationJobInstanceService.create(anyList())).thenReturn(Arrays.asList("taskId1"));
 
-    activityService.register(accountId, generateUuid(), getKubernetesActivity(verificationJob));
+    activityService.register(accountId, generateUuid(), getDeploymentActivity(verificationJob));
 
     ArgumentCaptor<List> argumentCaptor = ArgumentCaptor.forClass(List.class);
     verify(verificationJobInstanceService).create(argumentCaptor.capture());
@@ -212,24 +219,6 @@ public class ActivityServiceImplTest extends CvNextGenTest {
     List<VerificationJobInstance> verificationJobInstanceList = argumentCaptor.getValue();
 
     assertThat(verificationJobInstanceList.get(0).getResolvedJob().getUuid()).isNull();
-  }
-
-  @Test
-  @Owner(developers = PRAVEEN)
-  @Category(UnitTests.class)
-  public void testRegisterActivity_kubernetesActivityNoClusterName() {
-    ActivityDTO activityDTO = KubernetesActivityDTO.builder().message("pod restarts").build();
-    activityDTO.setAccountIdentifier(accountId);
-    activityDTO.setProjectIdentifier(projectIdentifier);
-    activityDTO.setOrgIdentifier(orgIdentifier);
-    activityDTO.setActivityStartTime(Instant.now().toEpochMilli());
-    activityDTO.setEnvironmentIdentifier(generateUuid());
-    activityDTO.setName("Pod restart activity");
-    activityDTO.setServiceIdentifier(generateUuid());
-
-    assertThatThrownBy(() -> activityService.register(accountId, generateUuid(), activityDTO))
-        .isInstanceOf(NullPointerException.class)
-        .hasMessage(KubernetesActivityKeys.eventDetails + " should not be null");
   }
 
   @Test
@@ -392,7 +381,7 @@ public class ActivityServiceImplTest extends CvNextGenTest {
     doNothing().when(verificationJobInstanceService).addResultsToDeploymentResultSummary(anyString(), anyList(), any());
     ActivityDTO activityDTO = getDeploymentActivity(verificationJob);
     activityService.register(accountId, generateUuid(), activityDTO);
-    activityService.register(accountId, generateUuid(), getKubernetesActivity(verificationJob));
+    activityService.register(accountId, generateUuid(), getDeploymentActivity(verificationJob));
     DeploymentActivityResultDTO result = activityService.getDeploymentActivityVerificationsByTag(
         accountId, orgIdentifier, projectIdentifier, serviceIdentifier, deploymentTag);
     assertThat(result).isNotNull();
@@ -455,7 +444,7 @@ public class ActivityServiceImplTest extends CvNextGenTest {
         .thenReturn(verificationJob);
     when(verificationJobInstanceService.create(anyList())).thenReturn(Arrays.asList("taskId1"));
 
-    activityService.register(accountId, generateUuid(), getKubernetesActivity(verificationJob));
+    activityService.register(accountId, generateUuid(), getDeploymentActivity(verificationJob));
 
     Activity activity = hPersistence.createQuery(Activity.class)
                             .filter(ActivityKeys.projectIdentifier, projectIdentifier)
@@ -478,7 +467,7 @@ public class ActivityServiceImplTest extends CvNextGenTest {
         .thenReturn(verificationJob);
     when(verificationJobInstanceService.create(anyList())).thenReturn(Arrays.asList("taskId1"));
 
-    activityService.register(accountId, generateUuid(), getKubernetesActivity(verificationJob));
+    activityService.register(accountId, generateUuid(), getDeploymentActivity(verificationJob));
 
     Activity activity = hPersistence.createQuery(Activity.class)
                             .filter(ActivityKeys.projectIdentifier, projectIdentifier)
@@ -497,7 +486,7 @@ public class ActivityServiceImplTest extends CvNextGenTest {
     VerificationJob verificationJob = createVerificationJob();
     when(verificationJobService.getVerificationJob(accountId, verificationJob.getIdentifier()))
         .thenReturn(verificationJob);
-    activityService.register(accountId, generateUuid(), getKubernetesActivity(verificationJob));
+    activityService.register(accountId, generateUuid(), getDeploymentActivity(verificationJob));
 
     Activity activity = hPersistence.createQuery(Activity.class)
                             .filter(ActivityKeys.projectIdentifier, projectIdentifier)
@@ -538,7 +527,7 @@ public class ActivityServiceImplTest extends CvNextGenTest {
     VerificationJob verificationJob = createVerificationJob();
     when(verificationJobService.getVerificationJob(accountId, verificationJob.getIdentifier()))
         .thenReturn(verificationJob);
-    activityService.register(accountId, generateUuid(), getKubernetesActivity(verificationJob));
+    activityService.register(accountId, generateUuid(), getDeploymentActivity(verificationJob));
 
     Activity activity = hPersistence.createQuery(Activity.class)
                             .filter(ActivityKeys.projectIdentifier, projectIdentifier)
@@ -575,9 +564,10 @@ public class ActivityServiceImplTest extends CvNextGenTest {
     VerificationJob verificationJob = createVerificationJob();
     when(verificationJobService.getVerificationJob(accountId, verificationJob.getIdentifier()))
         .thenReturn(verificationJob);
-
-    activityService.register(accountId, generateUuid(), getKubernetesActivity(verificationJob));
-    activityService.register(accountId, generateUuid(), getKubernetesActivity(verificationJob));
+    when(verificationJobInstanceService.create(anyList())).thenReturn(Lists.newArrayList(generateUuid()));
+    instant = Instant.now();
+    activityService.register(accountId, generateUuid(), getInfrastructureActivity(verificationJob));
+    activityService.register(accountId, generateUuid(), getInfrastructureActivity(verificationJob));
 
     ActivityVerificationSummary summary = createActivitySummary(Instant.now());
     when(verificationJobInstanceService.getActivityVerificationSummary(anyList())).thenReturn(summary);
@@ -626,9 +616,9 @@ public class ActivityServiceImplTest extends CvNextGenTest {
     VerificationJob verificationJob = createVerificationJob();
     when(verificationJobService.getVerificationJob(accountId, verificationJob.getIdentifier()))
         .thenReturn(verificationJob);
-
-    activityService.register(accountId, generateUuid(), getKubernetesActivity(verificationJob));
-    activityService.register(accountId, generateUuid(), getKubernetesActivity(verificationJob));
+    instant = Instant.now();
+    activityService.register(accountId, generateUuid(), getDeploymentActivity(verificationJob));
+    activityService.register(accountId, generateUuid(), getDeploymentActivity(verificationJob));
 
     ActivityVerificationSummary summary = createActivitySummary(Instant.now());
     when(verificationJobInstanceService.getActivityVerificationSummary(anyList())).thenReturn(summary);
@@ -647,7 +637,7 @@ public class ActivityServiceImplTest extends CvNextGenTest {
 
     dashboardDTOList.forEach(dashboardDTO -> {
       assertThat(ids.contains(dashboardDTO.getActivityId())).isTrue();
-      assertThat(dashboardDTO.getActivityType().name()).isEqualTo(ActivityType.INFRASTRUCTURE.name());
+      assertThat(dashboardDTO.getActivityType().name()).isEqualTo(ActivityType.DEPLOYMENT.name());
       assertThat(dashboardDTO.getEnvironmentIdentifier()).isEqualTo(envIdentifier);
       assertThat(dashboardDTO.getVerificationStatus().name()).isEqualTo(summary.getAggregatedStatus().name());
     });
@@ -698,6 +688,113 @@ public class ActivityServiceImplTest extends CvNextGenTest {
     assertThat(activityStatusDTO.getStatus()).isEqualTo(ActivityVerificationStatus.NOT_STARTED);
   }
 
+  @Test
+  @Owner(developers = RAGHU)
+  @Category(UnitTests.class)
+  public void testCreateVerificationJobInstancesForActivity_whenNoHealthJob() throws IllegalAccessException {
+    FieldUtils.writeField(activityService, "verificationJobService", realVerificationJobService, true);
+    FieldUtils.writeField(activityService, "verificationJobInstanceService", realVerificationJobInstanceService, true);
+    KubernetesActivity kubernetesActivity = getKubernetesActivity();
+    kubernetesActivity.setVerificationJobRuntimeDetails(null);
+
+    assertThat(activityService.createVerificationJobInstancesForActivity(kubernetesActivity)).isEmpty();
+  }
+
+  @Test
+  @Owner(developers = RAGHU)
+  @Category(UnitTests.class)
+  public void testCreateVerificationJobInstancesForActivity_whenHealthJob() throws IllegalAccessException {
+    FieldUtils.writeField(activityService, "verificationJobService", realVerificationJobService, true);
+    FieldUtils.writeField(activityService, "verificationJobInstanceService", realVerificationJobInstanceService, true);
+    KubernetesActivity kubernetesActivity = getKubernetesActivity();
+    realVerificationJobService.save(HealthVerificationJob.builder()
+                                        .accountId(accountId)
+                                        .orgIdentifier(kubernetesActivity.getOrgIdentifier())
+                                        .projectIdentifier(kubernetesActivity.getProjectIdentifier())
+                                        .envIdentifier(RuntimeParameter.builder()
+                                                           .isRuntimeParam(false)
+                                                           .value(kubernetesActivity.getEnvironmentIdentifier())
+                                                           .build())
+                                        .serviceIdentifier(RuntimeParameter.builder()
+                                                               .isRuntimeParam(false)
+                                                               .value(kubernetesActivity.getServiceIdentifier())
+                                                               .build())
+                                        .duration(RuntimeParameter.builder().isRuntimeParam(false).value("30m").build())
+                                        .dataSources(Lists.newArrayList(DataSourceType.APP_DYNAMICS))
+                                        .type(VerificationJobType.HEALTH)
+                                        .build());
+    kubernetesActivity.setVerificationJobRuntimeDetails(null);
+    assertThat(activityService.createVerificationJobInstancesForActivity(kubernetesActivity).size()).isEqualTo(1);
+  }
+
+  @Test
+  @Owner(developers = RAGHU)
+  @Category(UnitTests.class)
+  public void testCreateVerificationJobInstancesForActivity_whenHealthJobRunning() throws IllegalAccessException {
+    FieldUtils.writeField(activityService, "verificationJobService", realVerificationJobService, true);
+    FieldUtils.writeField(activityService, "verificationJobInstanceService", realVerificationJobInstanceService, true);
+    KubernetesActivity kubernetesActivity = getKubernetesActivity();
+    HealthVerificationJob healthVerificationJob =
+        HealthVerificationJob.builder()
+            .accountId(accountId)
+            .orgIdentifier(kubernetesActivity.getOrgIdentifier())
+            .projectIdentifier(kubernetesActivity.getProjectIdentifier())
+            .envIdentifier(RuntimeParameter.builder()
+                               .isRuntimeParam(false)
+                               .value(kubernetesActivity.getEnvironmentIdentifier())
+                               .build())
+            .serviceIdentifier(RuntimeParameter.builder()
+                                   .isRuntimeParam(false)
+                                   .value(kubernetesActivity.getServiceIdentifier())
+                                   .build())
+            .duration(RuntimeParameter.builder().isRuntimeParam(false).value("30m").build())
+            .dataSources(Lists.newArrayList(DataSourceType.APP_DYNAMICS))
+            .type(VerificationJobType.HEALTH)
+            .build();
+    realVerificationJobService.save(healthVerificationJob);
+    realVerificationJobInstanceService.create(VerificationJobInstance.builder()
+                                                  .accountId(kubernetesActivity.getAccountIdentifier())
+                                                  .resolvedJob(healthVerificationJob)
+                                                  .executionStatus(ExecutionStatus.RUNNING)
+                                                  .startTime(Instant.now())
+                                                  .build());
+    assertThat(activityService.createVerificationJobInstancesForActivity(kubernetesActivity)).isNull();
+  }
+
+  @Test
+  @Owner(developers = RAGHU)
+  @Category(UnitTests.class)
+  public void testCreateVerificationJobInstancesForActivity_whenHealthJobSuccess() throws IllegalAccessException {
+    FieldUtils.writeField(activityService, "verificationJobService", realVerificationJobService, true);
+    FieldUtils.writeField(activityService, "verificationJobInstanceService", realVerificationJobInstanceService, true);
+    KubernetesActivity kubernetesActivity = getKubernetesActivity();
+    HealthVerificationJob healthVerificationJob =
+        HealthVerificationJob.builder()
+            .accountId(accountId)
+            .orgIdentifier(kubernetesActivity.getOrgIdentifier())
+            .projectIdentifier(kubernetesActivity.getProjectIdentifier())
+            .envIdentifier(RuntimeParameter.builder()
+                               .isRuntimeParam(false)
+                               .value(kubernetesActivity.getEnvironmentIdentifier())
+                               .build())
+            .serviceIdentifier(RuntimeParameter.builder()
+                                   .isRuntimeParam(false)
+                                   .value(kubernetesActivity.getServiceIdentifier())
+                                   .build())
+            .duration(RuntimeParameter.builder().isRuntimeParam(false).value("30m").build())
+            .dataSources(Lists.newArrayList(DataSourceType.APP_DYNAMICS))
+            .type(VerificationJobType.HEALTH)
+            .build();
+    realVerificationJobService.save(healthVerificationJob);
+    realVerificationJobInstanceService.create(VerificationJobInstance.builder()
+                                                  .accountId(kubernetesActivity.getAccountIdentifier())
+                                                  .resolvedJob(healthVerificationJob)
+                                                  .executionStatus(ExecutionStatus.SUCCESS)
+                                                  .startTime(Instant.now())
+                                                  .build());
+    assertThat(activityService.createVerificationJobInstancesForActivity(kubernetesActivity).size()).isEqualTo(1);
+  }
+
   private DeploymentActivityDTO getDeploymentActivity(VerificationJob verificationJob) {
     List<VerificationJobRuntimeDetails> verificationJobDetails = new ArrayList<>();
     Map<String, String> runtimeParams = new HashMap<>();
@@ -736,8 +833,19 @@ public class ActivityServiceImplTest extends CvNextGenTest {
     return activityDTO;
   }
 
-  private KubernetesActivityDTO getKubernetesActivity(VerificationJob verificationJob) {
-    KubernetesActivityDTO activityDTO = KubernetesActivityDTO.builder().message("pod restarts").build();
+  private KubernetesActivity getKubernetesActivity() {
+    KubernetesActivity activity = KubernetesActivity.builder().build();
+    activity.setAccountIdentifier(accountId);
+    activity.setProjectIdentifier(projectIdentifier);
+    activity.setOrgIdentifier(orgIdentifier);
+    activity.setActivityStartTime(Instant.now());
+    activity.setEnvironmentIdentifier(envIdentifier);
+    activity.setServiceIdentifier(generateUuid());
+    return activity;
+  }
+
+  private InfrastructureActivityDTO getInfrastructureActivity(VerificationJob verificationJob) {
+    InfrastructureActivityDTO activityDTO = InfrastructureActivityDTO.builder().message("pod restarts").build();
     activityDTO.setAccountIdentifier(accountId);
     activityDTO.setProjectIdentifier(projectIdentifier);
     activityDTO.setOrgIdentifier(orgIdentifier);
@@ -745,7 +853,7 @@ public class ActivityServiceImplTest extends CvNextGenTest {
     activityDTO.setEnvironmentIdentifier(envIdentifier);
     activityDTO.setName("Pod restart activity");
     activityDTO.setServiceIdentifier(generateUuid());
-    activityDTO.setEventDetails(generateUuid());
+    activityDTO.setMessage(generateUuid());
 
     Map<String, String> runtimeParams = new HashMap<>();
     runtimeParams.put(JOB_IDENTIFIER_KEY, verificationJob.getIdentifier());

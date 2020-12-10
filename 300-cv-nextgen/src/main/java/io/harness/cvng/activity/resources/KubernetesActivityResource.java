@@ -4,7 +4,7 @@ import static io.harness.cvng.core.services.CVNextGenConstants.KUBERNETES_RESOUR
 
 import io.harness.annotations.ExposeInternalException;
 import io.harness.cvng.activity.services.api.KubernetesActivitySourceService;
-import io.harness.cvng.beans.KubernetesActivityDTO;
+import io.harness.cvng.beans.activity.KubernetesActivityDTO;
 import io.harness.cvng.beans.activity.KubernetesActivitySourceDTO;
 import io.harness.ng.beans.PageResponse;
 import io.harness.rest.RestResponse;

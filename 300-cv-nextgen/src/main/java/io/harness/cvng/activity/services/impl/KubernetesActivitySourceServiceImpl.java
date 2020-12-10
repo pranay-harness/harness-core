@@ -2,33 +2,41 @@ package io.harness.cvng.activity.services.impl;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.persistence.HQuery.excludeAuthority;
 
 import io.harness.cvng.activity.entities.Activity;
+import io.harness.cvng.activity.entities.Activity.ActivityKeys;
+import io.harness.cvng.activity.entities.KubernetesActivity;
+import io.harness.cvng.activity.entities.KubernetesActivity.KubernetesActivityKeys;
 import io.harness.cvng.activity.entities.KubernetesActivitySource;
 import io.harness.cvng.activity.entities.KubernetesActivitySource.KubernetesActivitySourceKeys;
 import io.harness.cvng.activity.services.api.ActivityService;
 import io.harness.cvng.activity.services.api.KubernetesActivitySourceService;
 import io.harness.cvng.beans.DataCollectionConnectorBundle;
 import io.harness.cvng.beans.DataCollectionType;
-import io.harness.cvng.beans.KubernetesActivityDTO;
+import io.harness.cvng.beans.activity.ActivityType;
+import io.harness.cvng.beans.activity.KubernetesActivityDTO;
 import io.harness.cvng.beans.activity.KubernetesActivitySourceDTO;
 import io.harness.cvng.client.VerificationManagerService;
 import io.harness.cvng.core.entities.CVConfig.CVConfigKeys;
 import io.harness.cvng.core.entities.DataCollectionTask.DataCollectionTaskKeys;
 import io.harness.ng.beans.PageResponse;
 import io.harness.persistence.HPersistence;
+import io.harness.time.Timestamp;
 import io.harness.utils.PageUtils;
 
 import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
 import com.mongodb.BasicDBObject;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
+import org.mongodb.morphia.FindAndModifyOptions;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
 
@@ -127,17 +135,44 @@ public class KubernetesActivitySourceServiceImpl implements KubernetesActivitySo
       String accountId, String activitySourceId, List<KubernetesActivityDTO> activities) {
     KubernetesActivitySource activitySource = getActivitySource(activitySourceId);
     Preconditions.checkNotNull(activitySource, "No source found with {}", activitySourceId);
-    activities.forEach(activity -> {
-      activity.setAccountIdentifier(accountId);
-      activity.setOrgIdentifier(activitySource.getOrgIdentifier());
-      activity.setProjectIdentifier(activitySource.getProjectIdentifier());
-    });
 
-    List<Activity> kubernetesActivities =
-        activities.stream()
-            .map(kubernetesActivityDTO -> activityService.getActivityFromDTO(kubernetesActivityDTO))
-            .collect(Collectors.toList());
-    hPersistence.save(kubernetesActivities);
+    activities.forEach(activity -> {
+      Preconditions.checkNotNull(activity.getEnvironmentIdentifier(), "environment identifier can not be null");
+      Preconditions.checkNotNull(activity.getServiceIdentifier(), "service identifier can not be null");
+      Instant bucketStartTime = Instant.ofEpochMilli(Timestamp.minuteBoundary(activity.getActivityStartTime()));
+      Query<Activity> query =
+          hPersistence.createQuery(Activity.class, excludeAuthority)
+              .disableValidation()
+              .filter(ActivityKeys.accountIdentifier, accountId)
+              .filter(ActivityKeys.orgIdentifier, activitySource.getOrgIdentifier())
+              .filter(ActivityKeys.projectIdentifier, activitySource.getProjectIdentifier())
+              .filter(KubernetesActivityKeys.kubernetesActivityType, activity.getKubernetesActivityType())
+              .filter(KubernetesActivityKeys.eventType, activity.getEventType())
+              .filter(KubernetesActivityKeys.bucketStartTime, bucketStartTime);
+
+      Activity savedActivity = hPersistence.upsert(query,
+          hPersistence.createUpdateOperations(Activity.class)
+              .disableValidation()
+              .setOnInsert("className", KubernetesActivity.class.getName())
+              .setOnInsert(ActivityKeys.accountIdentifier, accountId)
+              .setOnInsert(ActivityKeys.uuid, generateUuid())
+              .setOnInsert(ActivityKeys.orgIdentifier, activitySource.getOrgIdentifier())
+              .setOnInsert(ActivityKeys.projectIdentifier, activitySource.getProjectIdentifier())
+              .setOnInsert(ActivityKeys.environmentIdentifier, activity.getEnvironmentIdentifier())
+              .setOnInsert(ActivityKeys.serviceIdentifier, activity.getServiceIdentifier())
+              .setOnInsert(ActivityKeys.activityStartTime, bucketStartTime)
+              .setOnInsert(ActivityKeys.type, ActivityType.KUBERNETES)
+              .setOnInsert(KubernetesActivityKeys.kubernetesActivityType, activity.getKubernetesActivityType())
+              .setOnInsert(KubernetesActivityKeys.eventType, activity.getEventType())
+              .setOnInsert(KubernetesActivityKeys.bucketStartTime, bucketStartTime)
+              .addToSet(KubernetesActivityKeys.activities, activity),
+          new FindAndModifyOptions().upsert(true));
+      List<String> verificationJobInstances = activityService.createVerificationJobInstancesForActivity(savedActivity);
+      if (isNotEmpty(verificationJobInstances)) {
+        savedActivity.setVerificationJobInstanceIds(verificationJobInstances);
+        hPersistence.save(savedActivity);
+      }
+    });
     return true;
   }
 
