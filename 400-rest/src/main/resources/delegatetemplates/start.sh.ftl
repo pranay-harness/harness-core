@@ -212,7 +212,7 @@ export DELEGATE_PROFILE=${delegateProfile}
 export DELEGATE_TYPE=${delegateType}
 </#if>
 
-if [ -z "$MANAGER_SERVICE_SECRET" ]; then
+if [[ -z "$MANAGER_SERVICE_SECRET" || "$MANAGER_SERVICE_SECRET" == "null" ]]; then
   export MANAGER_SERVICE_SECRET=${managerServiceSecret}
 fi
 

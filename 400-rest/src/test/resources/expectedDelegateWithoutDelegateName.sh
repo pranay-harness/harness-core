@@ -140,7 +140,7 @@ fi
 
 export DEPLOY_MODE=KUBERNETES
 
-if [ -z "$MANAGER_SERVICE_SECRET" ]; then
+if [[ -z "$MANAGER_SERVICE_SECRET" || "$MANAGER_SERVICE_SECRET" == "null" ]]; then
   export MANAGER_SERVICE_SECRET=**********
 fi
 

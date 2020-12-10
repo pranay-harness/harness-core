@@ -256,7 +256,7 @@ rm -f -- *.bak
 export DELEGATE_PROFILE=QFWin33JRlKWKBzpzE5A9A
 export DELEGATE_TYPE=SHELL_SCRIPT
 
-if [ -z "$MANAGER_SERVICE_SECRET" ]; then
+if [[ -z "$MANAGER_SERVICE_SECRET" || "$MANAGER_SERVICE_SECRET" == "null" ]]; then
   export MANAGER_SERVICE_SECRET=**********
 fi
 
