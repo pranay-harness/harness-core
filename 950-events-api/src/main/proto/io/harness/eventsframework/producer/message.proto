@@ -1,0 +1,11 @@
+syntax = "proto3";
+import "google/protobuf/any.proto";
+
+package io.harness.eventsframework.producer;
+
+option java_multiple_files = true;
+
+message Message {
+  map<string, string> metadata = 1;
+  bytes data = 2;
+}

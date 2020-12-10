@@ -20,9 +20,6 @@ import io.harness.delegate.beans.DelegateAsyncTaskResponse;
 import io.harness.delegate.beans.DelegateSyncTaskResponse;
 import io.harness.delegate.beans.DelegateTaskProgressResponse;
 import io.harness.entitysetupusageclient.EntitySetupUsageClientModule;
-import io.harness.eventsframework.EventDrivenClient;
-import io.harness.eventsframework.NoOpEventClient;
-import io.harness.eventsframework.RedisStreamClient;
 import io.harness.executionplan.ExecutionPlanModule;
 import io.harness.gitsync.GitSyncModule;
 import io.harness.gitsync.core.impl.GitSyncManagerInterfaceImpl;
@@ -53,6 +50,7 @@ import io.harness.ng.core.impl.ProjectServiceImpl;
 import io.harness.ng.core.schema.YamlBaseUrlService;
 import io.harness.ng.core.services.OrganizationService;
 import io.harness.ng.core.services.ProjectService;
+import io.harness.ng.eventsframework.EventsFrameworkModule;
 import io.harness.ng.gitsync.NgCoreGitChangeSetProcessorServiceImpl;
 import io.harness.ng.gitsync.handlers.ConnectorYamlHandler;
 import io.harness.ng.orchestration.NgDelegate2TaskExecutor;
@@ -62,7 +60,6 @@ import io.harness.pms.sdk.registries.registrar.StepRegistrar;
 import io.harness.queue.QueueController;
 import io.harness.redesign.services.CustomExecutionService;
 import io.harness.redesign.services.CustomExecutionServiceImpl;
-import io.harness.redis.RedisConfig;
 import io.harness.secretmanagerclient.SecretManagementClientModule;
 import io.harness.serializer.KryoRegistrar;
 import io.harness.serializer.ManagerRegistrars;
@@ -241,6 +238,7 @@ public class NextGenModule extends AbstractModule {
     install(OrchestrationStepsModule.getInstance());
     install(OrchestrationVisualizationModule.getInstance());
     install(ExecutionPlanModule.getInstance());
+    install(new EventsFrameworkModule(appConfig.getEventsFrameworkConfiguration()));
 
     MapBinder<String, StepRegistrar> stepRegistrarMapBinder =
         MapBinder.newMapBinder(binder(), String.class, StepRegistrar.class);
@@ -257,22 +255,12 @@ public class NextGenModule extends AbstractModule {
     bind(ConnectorService.class)
         .annotatedWith(Names.named(SECRET_MANAGER_CONNECTOR_SERVICE))
         .to(SecretManagerConnectorServiceImpl.class);
+
     bind(UserGroupService.class).to(UserGroupServiceImpl.class);
     bind(GitChangeProcessorService.class).to(NgCoreGitChangeSetProcessorServiceImpl.class);
     bindYamlHandlers();
     bind(YamlBaseUrlService.class).to(YamlBaseUrlServiceImpl.class);
     bind(TriggerWebhookService.class).to(TriggerWebhookServiceImpl.class);
-  }
-
-  @Provides
-  @Singleton
-  public EventDrivenClient getEventDrivenClient() {
-    RedisConfig config = this.appConfig.getEventsFrameworkConfiguration().getRedisConfig();
-    if (config.getRedisUrl().equals("dummyRedisUrl")) {
-      return new NoOpEventClient();
-    } else {
-      return new RedisStreamClient(config);
-    }
   }
 
   @Provides

@@ -7,6 +7,7 @@ import static io.harness.connector.ConnectorModule.DEFAULT_CONNECTOR_SERVICE;
 import static io.harness.delegate.beans.connector.ConnectorCategory.SECRET_MANAGER;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.ng.NextGenModule.SECRET_MANAGER_CONNECTOR_SERVICE;
+import static io.harness.ng.eventsframework.EventsFrameworkModule.CONNECTOR_UPDATE_PRODUCER;
 
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
@@ -25,9 +26,8 @@ import io.harness.delegate.beans.connector.ConnectorType;
 import io.harness.delegate.beans.connector.ConnectorValidationResult;
 import io.harness.encryption.Scope;
 import io.harness.eventsframework.ConnectorUpdateEventDTO;
-import io.harness.eventsframework.Event;
-import io.harness.eventsframework.EventDrivenClient;
-import io.harness.eventsframework.EventFrameworkConstants;
+import io.harness.eventsframework.api.AbstractProducer;
+import io.harness.eventsframework.producer.Message;
 import io.harness.exception.InvalidRequestException;
 import io.harness.ng.core.activityhistory.NGActivityType;
 import io.harness.repositories.ConnectorRepository;
@@ -37,7 +37,6 @@ import io.harness.utils.FullyQualifiedIdentifierHelper;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
-import com.google.protobuf.Any;
 import com.google.protobuf.ByteString;
 import java.util.Optional;
 import javax.validation.constraints.NotNull;
@@ -52,20 +51,21 @@ public class ConnectorServiceImpl implements ConnectorService {
   private final ConnectorActivityService connectorActivityService;
   private final ConnectorHeartbeatService connectorHeartbeatService;
   private final ConnectorRepository connectorRepository;
-  private final EventDrivenClient eventDrivenClient;
+  private final AbstractProducer eventProducer;
   private final KryoSerializer kryoSerializer;
 
   @Inject
   public ConnectorServiceImpl(@Named(DEFAULT_CONNECTOR_SERVICE) ConnectorService defaultConnectorService,
       @Named(SECRET_MANAGER_CONNECTOR_SERVICE) ConnectorService secretManagerConnectorService,
       ConnectorActivityService connectorActivityService, ConnectorHeartbeatService connectorHeartbeatService,
-      ConnectorRepository connectorRepository, EventDrivenClient eventDrivenClient, KryoSerializer kryoSerializer) {
+      ConnectorRepository connectorRepository, @Named(CONNECTOR_UPDATE_PRODUCER) AbstractProducer eventProducer,
+      KryoSerializer kryoSerializer) {
     this.defaultConnectorService = defaultConnectorService;
     this.secretManagerConnectorService = secretManagerConnectorService;
     this.connectorActivityService = connectorActivityService;
     this.connectorHeartbeatService = connectorHeartbeatService;
     this.connectorRepository = connectorRepository;
-    this.eventDrivenClient = eventDrivenClient;
+    this.eventProducer = eventProducer;
     this.kryoSerializer = kryoSerializer;
   }
 
@@ -125,10 +125,10 @@ public class ConnectorServiceImpl implements ConnectorService {
   private void publishEventForConnectorUpdate(String accountIdentifier, ConnectorInfoDTO savedConnector) {
     try {
       ByteString connectorConfigBytes = ByteString.copyFrom(kryoSerializer.asBytes(savedConnector));
-      eventDrivenClient.publishEvent(EventFrameworkConstants.CONNECTOR_UPDATE_CHANNEL,
-          Event.newBuilder()
-              .setAccountId(accountIdentifier)
-              .setPayload(Any.pack(ConnectorUpdateEventDTO.newBuilder().setConnector(connectorConfigBytes).build()))
+      eventProducer.send(
+          Message.newBuilder()
+              .putMetadata("accountId", accountIdentifier)
+              .setData(ConnectorUpdateEventDTO.newBuilder().setConnector(connectorConfigBytes).build().toByteString())
               .build());
     } catch (Exception ex) {
       log.info("Exception while publishing the event of connector update for {}",
