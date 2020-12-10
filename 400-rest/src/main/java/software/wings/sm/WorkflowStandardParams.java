@@ -128,6 +128,9 @@ public class WorkflowStandardParams implements ExecutionContextAware, ContextEle
 
   @JsonIgnore private EmbeddedUser currentUser;
 
+  @Getter @Setter private String lastDeployPhaseId;
+  @Getter @Setter private String lastRollbackPhaseId;
+
   @Override
   public ContextElement cloneMin() {
     return this;

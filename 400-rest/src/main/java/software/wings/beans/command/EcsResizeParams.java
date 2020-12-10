@@ -16,6 +16,7 @@ public class EcsResizeParams extends ContainerResizeParams {
   private List<AwsAutoScalarConfig> previousAwsAutoScalarConfigs;
   private List<AwsAutoScalarConfig> awsAutoScalarConfigForNewService;
   private boolean previousEcsAutoScalarsAlreadyRemoved;
+  private boolean lastDeployPhase;
 
   public static final class EcsResizeParamsBuilder {
     private String region;
@@ -40,11 +41,17 @@ public class EcsResizeParams extends ContainerResizeParams {
     private List<AwsAutoScalarConfig> previousAwsAutoScalarConfigs;
     private List<AwsAutoScalarConfig> awsAutoScalarConfigForNewService;
     private boolean previousEcsAutoScalarsAlreadyRemoved;
+    private boolean lastDeployPhase;
 
     private EcsResizeParamsBuilder() {}
 
     public static EcsResizeParamsBuilder anEcsResizeParams() {
       return new EcsResizeParamsBuilder();
+    }
+
+    public EcsResizeParamsBuilder withLastDeployPhase(boolean lastDeployPhase) {
+      this.lastDeployPhase = lastDeployPhase;
+      return this;
     }
 
     public EcsResizeParamsBuilder withRegion(String region) {
@@ -180,6 +187,7 @@ public class EcsResizeParams extends ContainerResizeParams {
           .withDownsizeInstanceCount(downsizeInstanceCount)
           .withDownsizeInstanceUnitType(downsizeInstanceUnitType)
           .withOriginalServiceCounts(originalServiceCounts)
+          .withLastDeployPhase(lastDeployPhase)
           .withOriginalTrafficWeights(originalTrafficWeights)
           .withPreviousAwsAutoScalarConfigs(previousAwsAutoScalarConfigs)
           .withAwsAutoScalarConfigForNewService(awsAutoScalarConfigForNewService)
@@ -210,6 +218,7 @@ public class EcsResizeParams extends ContainerResizeParams {
       ecsResizeParams.setPreviousAwsAutoScalarConfigs(previousAwsAutoScalarConfigs);
       ecsResizeParams.setAwsAutoScalarConfigForNewService(awsAutoScalarConfigForNewService);
       ecsResizeParams.setPreviousEcsAutoScalarsAlreadyRemoved(previousEcsAutoScalarsAlreadyRemoved);
+      ecsResizeParams.setLastDeployPhase(lastDeployPhase);
       return ecsResizeParams;
     }
   }

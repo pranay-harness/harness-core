@@ -126,4 +126,10 @@ public interface ExecutionContext {
   InstanceApiResponse renderExpressionsForInstanceDetailsForWorkflow(String expression, boolean newInstancesOnly);
 
   String appendStateExecutionId(String str);
+
+  /*
+   * The below method assumes that the Workflow Phases are statically generated and
+   * hence should not be used in Rolling and similar workflows.
+   */
+  boolean isLastPhase(boolean rollback);
 }

@@ -14,6 +14,7 @@ import static io.harness.validation.Validator.notNullCheck;
 
 import static software.wings.beans.ResizeStrategy.RESIZE_NEW_FIRST;
 import static software.wings.beans.TaskType.ECS_COMMAND_TASK;
+import static software.wings.service.impl.aws.model.AwsConstants.ECS_ALL_PHASE_ROLLBACK_DONE;
 import static software.wings.service.impl.aws.model.AwsConstants.ECS_SERVICE_DEPLOY_SWEEPING_OUTPUT_NAME;
 import static software.wings.service.impl.aws.model.AwsConstants.ECS_SERVICE_SETUP_SWEEPING_OUTPUT_NAME;
 import static software.wings.sm.states.ContainerServiceSetup.DEFAULT_MAX;
@@ -44,6 +45,7 @@ import io.harness.git.model.GitFile;
 import io.harness.k8s.model.ImageDetails;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.logging.Misc;
+import io.harness.pms.sdk.core.data.SweepingOutput;
 import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.tasks.Cd1SetupFields;
 import io.harness.tasks.ResponseData;
@@ -100,12 +102,12 @@ import software.wings.helpers.ext.ecs.response.EcsCommandExecutionResponse;
 import software.wings.helpers.ext.ecs.response.EcsServiceDeployResponse;
 import software.wings.helpers.ext.k8s.request.K8sValuesLocation;
 import software.wings.service.impl.artifact.ArtifactCollectionUtils;
+import software.wings.service.impl.aws.model.AwsEcsAllPhaseRollbackData;
 import software.wings.service.intfc.ActivityService;
 import software.wings.service.intfc.DelegateService;
 import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.LogService;
 import software.wings.service.intfc.ServiceResourceService;
-import software.wings.service.intfc.ServiceTemplateService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.security.SecretManager;
 import software.wings.service.intfc.sweepingoutput.SweepingOutputInquiry;
@@ -797,9 +799,19 @@ public class EcsStateHelper {
     }
   }
 
+  boolean allPhaseRollbackDone(ExecutionContext context) {
+    SweepingOutputInquiry inquiry =
+        context.prepareSweepingOutputInquiryBuilder().name(ECS_ALL_PHASE_ROLLBACK_DONE).build();
+    SweepingOutput sweepingOutput = sweepingOutputService.findSweepingOutput(inquiry);
+    if (sweepingOutput == null) {
+      return false;
+    }
+    return ((AwsEcsAllPhaseRollbackData) sweepingOutput).isAllPhaseRollbackDone();
+  }
+
   public ExecutionResponse handleDelegateResponseForEcsDeploy(ExecutionContext context,
-      Map<String, ResponseData> response, boolean rollback, ActivityService activityService,
-      ServiceTemplateService serviceTemplateService, ContainerDeploymentManagerHelper containerDeploymentHelper) {
+      Map<String, ResponseData> response, boolean rollback, ActivityService activityService, boolean rollbackAllPhases,
+      ContainerDeploymentManagerHelper containerDeploymentHelper) {
     String activityId = response.keySet().iterator().next();
     EcsCommandExecutionResponse executionResponse = (EcsCommandExecutionResponse) response.values().iterator().next();
     ExecutionStatus executionStatus =
@@ -849,6 +861,13 @@ public class EcsStateHelper {
 
     if (!rollback && SUCCESS == executionStatus) {
       updateContainerElementAfterSuccessfulResize(context);
+    }
+
+    if (rollback && rollbackAllPhases && SUCCESS == executionStatus) {
+      sweepingOutputService.save(context.prepareSweepingOutputBuilder(SweepingOutputInstance.Scope.WORKFLOW)
+                                     .name(ECS_ALL_PHASE_ROLLBACK_DONE)
+                                     .value(AwsEcsAllPhaseRollbackData.builder().allPhaseRollbackDone(true).build())
+                                     .build());
     }
 
     return ExecutionResponse.builder()

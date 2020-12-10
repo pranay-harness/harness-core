@@ -126,6 +126,7 @@ public class EcsServiceDeploy extends State {
                 deployDataBag.getContainerElement().isPrevAutoscalarsAlreadyRemoved())
             .withDownsizeInstanceCount(getDownsizeCount(context))
             .withDownsizeInstanceUnitType(getDownsizeInstanceUnitType())
+            .withLastDeployPhase(context.isLastPhase(false))
             .build();
 
     EcsServiceDeployRequest request = EcsServiceDeployRequest.builder()
@@ -160,7 +161,7 @@ public class EcsServiceDeploy extends State {
   public ExecutionResponse handleAsyncResponse(ExecutionContext context, Map<String, ResponseData> response) {
     try {
       return ecsStateHelper.handleDelegateResponseForEcsDeploy(
-          context, response, false, activityService, serviceTemplateService, containerDeploymentHelper);
+          context, response, false, activityService, false, containerDeploymentHelper);
     } catch (WingsException e) {
       throw e;
     } catch (Exception e) {
