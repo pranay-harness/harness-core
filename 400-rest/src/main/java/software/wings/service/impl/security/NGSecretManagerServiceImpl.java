@@ -177,6 +177,11 @@ public class NGSecretManagerServiceImpl implements NGSecretManagerService {
 
   @Override
   public SecretManagerConfig updateSecretManager(SecretManagerConfig secretManagerConfig) {
+    if (Boolean.TRUE.equals(secretManagerConfig.getNgMetadata().getHarnessManaged())) {
+      throw new UnsupportedOperationException(
+          String.format("Update operation not supported for Harness Secret Manager (identifier: [%s])",
+              secretManagerConfig.getNgMetadata().getIdentifier()));
+    }
     switch (secretManagerConfig.getEncryptionType()) {
       case VAULT:
         vaultService.saveOrUpdateVaultConfig(
@@ -198,6 +203,10 @@ public class NGSecretManagerServiceImpl implements NGSecretManagerService {
         getSecretManager(accountIdentifier, orgIdentifier, projectIdentifier, identifier);
     if (secretManagerConfigOptional.isPresent()) {
       SecretManagerConfig secretManagerConfig = secretManagerConfigOptional.get();
+      if (Boolean.TRUE.equals(secretManagerConfig.getNgMetadata().getHarnessManaged())) {
+        throw new UnsupportedOperationException(
+            String.format("Delete operation not supported for Harness Secret Manager (identifier: [%s])", identifier));
+      }
       switch (secretManagerConfig.getEncryptionType()) {
         case VAULT:
           VaultConfig vaultConfig = (VaultConfig) secretManagerConfig;

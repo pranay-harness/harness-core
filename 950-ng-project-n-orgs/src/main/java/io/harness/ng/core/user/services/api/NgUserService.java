@@ -11,10 +11,13 @@ import java.util.List;
 import java.util.Optional;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.mongodb.core.query.Criteria;
 
 @OwnedBy(PL)
 public interface NgUserService {
   Page<User> list(String accountIdentifier, String searchString, Pageable page);
+
+  List<UserProjectMap> listUserProjectMap(Criteria criteria);
 
   Optional<User> getUserFromEmail(String accountId, String email);
 
@@ -24,6 +27,8 @@ public interface NgUserService {
       String uuid, String accountIdentifier, String orgIdentifier, String projectIdentifier);
 
   void createUserProjectMap(Invite invite, User user);
+
+  List<User> getUsersByIds(List<String> userIds);
 
   UserProjectMap createUserProjectMap(UserProjectMap userProjectMap);
 }

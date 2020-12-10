@@ -9,6 +9,7 @@ import io.harness.delegate.beans.connector.ConnectorConfigDTO;
 import io.harness.delegate.beans.connector.ConnectorType;
 import io.harness.delegate.beans.connector.gcpkmsconnector.GcpKmsConnectorDTO;
 import io.harness.delegate.beans.connector.vaultconnector.VaultConnectorDTO;
+import io.harness.exception.InvalidRequestException;
 import io.harness.secretmanagerclient.dto.SecretManagerConfigUpdateDTO;
 
 import lombok.experimental.UtilityClass;
@@ -22,6 +23,8 @@ public class SecretManagerConfigUpdateDTOMapper {
       return getVaultConfigUpdateDTO(connectorRequestDTO, (VaultConnectorDTO) connectorConfigDTO);
     } else if (connector.getConnectorType() == ConnectorType.GCP_KMS) {
       return getGcpKmsConfigUpdateDTO(connectorRequestDTO, (GcpKmsConnectorDTO) connectorConfigDTO);
+    } else if (connector.getConnectorType() == ConnectorType.LOCAL) {
+      throw new InvalidRequestException("Update operation not supported for Local Secret Manager");
     }
     throw new IllegalArgumentException("This is not a valid secret manager type: " + connector.getConnectorType());
   }

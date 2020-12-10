@@ -6,6 +6,7 @@ import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.delegate.beans.executioncapability.ExecutionCapabilityDemander;
 import io.harness.expression.ExpressionEvaluator;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import java.util.Collections;
@@ -14,7 +15,7 @@ import lombok.*;
 
 @Getter
 @Setter
-@Builder
+@NoArgsConstructor
 @ToString(exclude = {"credentials"})
 @EqualsAndHashCode(callSuper = true)
 @JsonIgnoreProperties(ignoreUnknown = true)
@@ -26,6 +27,18 @@ public class GcpKmsConnectorDTO extends ConnectorConfigDTO implements ExecutionC
   private String keyName;
   private char[] credentials;
   private boolean isDefault;
+  @JsonIgnore private boolean harnessManaged;
+
+  @Builder
+  public GcpKmsConnectorDTO(
+      String projectId, String region, String keyRing, String keyName, char[] credentials, boolean isDefault) {
+    this.projectId = projectId;
+    this.region = region;
+    this.keyRing = keyRing;
+    this.keyName = keyName;
+    this.credentials = credentials;
+    this.isDefault = isDefault;
+  }
 
   @Override
   public DecryptableEntity getDecryptableEntity() {

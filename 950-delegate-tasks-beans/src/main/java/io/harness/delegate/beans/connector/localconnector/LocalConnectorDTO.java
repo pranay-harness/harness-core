@@ -6,6 +6,7 @@ import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.delegate.beans.executioncapability.ExecutionCapabilityDemander;
 import io.harness.expression.ExpressionEvaluator;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import java.util.Collections;
@@ -14,13 +15,19 @@ import lombok.*;
 
 @Getter
 @Setter
-@Builder
+@NoArgsConstructor
 @ToString
 @EqualsAndHashCode(callSuper = true)
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class LocalConnectorDTO extends ConnectorConfigDTO implements ExecutionCapabilityDemander {
   private boolean isDefault;
+  @JsonIgnore private boolean harnessManaged;
+
+  @Builder
+  public LocalConnectorDTO(boolean isDefault) {
+    this.isDefault = isDefault;
+  }
 
   @Override
   public DecryptableEntity getDecryptableEntity() {

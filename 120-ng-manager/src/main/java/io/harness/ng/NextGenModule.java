@@ -37,6 +37,7 @@ import io.harness.morphia.MorphiaRegistrar;
 import io.harness.ng.core.CoreModule;
 import io.harness.ng.core.DefaultOrganizationModule;
 import io.harness.ng.core.InviteModule;
+import io.harness.ng.core.NGAggregateModule;
 import io.harness.ng.core.SecretManagementModule;
 import io.harness.ng.core.api.NGModulesService;
 import io.harness.ng.core.api.NGSecretServiceV2;
@@ -177,6 +178,7 @@ public class NextGenModule extends AbstractModule {
     install(new ConnectorModule());
     install(new GitSyncModule());
     install(new DefaultOrganizationModule());
+    install(new NGAggregateModule());
     install(NGModule.getInstance());
     install(new SecretManagementModule());
     install(new SecretManagementClientModule(this.appConfig.getServiceHttpClientConfig(),

@@ -22,6 +22,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.mongodb.core.query.Criteria;
 
 @Singleton
 @AllArgsConstructor(onConstructor = @__({ @Inject }))
@@ -38,6 +39,11 @@ public class NgUserServiceImpl implements NgUserService {
         accountIdentifier, String.valueOf(pageable.getOffset()), String.valueOf(pageable.getPageSize()), searchString));
     List<User> users = userPageResponse.getResponse();
     return new PageImpl<>(users, pageable, users.size());
+  }
+
+  @Override
+  public List<UserProjectMap> listUserProjectMap(Criteria criteria) {
+    return userProjectMapRepository.findAll(criteria);
   }
 
   public Optional<User> getUserFromEmail(String accountId, String email) {
@@ -75,6 +81,11 @@ public class NgUserServiceImpl implements NgUserService {
                                                               .roles(ImmutableList.of(invite.getRole()))
                                                               .build());
     userProjectMapRepository.save(userProjectMap);
+  }
+
+  @Override
+  public List<User> getUsersByIds(List<String> userIds) {
+    return RestClientUtils.getResponse(userClient.getUsersByIds(userIds));
   }
 
   @Override

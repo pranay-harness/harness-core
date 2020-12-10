@@ -18,6 +18,7 @@ import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 import io.harness.ModuleType;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.connector.apis.dto.ConnectorDTO;
 import io.harness.connector.services.ConnectorService;
 import io.harness.eventsframework.Event;
 import io.harness.eventsframework.EventDrivenClient;
@@ -143,7 +144,8 @@ public class ProjectServiceImpl implements ProjectService {
       globalSecretManager.setProjectIdentifier(project.getIdentifier());
       globalSecretManager.setOrgIdentifier(project.getOrgIdentifier());
       globalSecretManager.setDefault(true);
-      secretManagerConnectorService.create(getConnectorRequestDTO(globalSecretManager), project.getAccountIdentifier());
+      ConnectorDTO connectorDTO = getConnectorRequestDTO(globalSecretManager, true);
+      secretManagerConnectorService.create(connectorDTO, project.getAccountIdentifier());
     } catch (Exception ex) {
       throw new SecretManagementException(SECRET_MANAGEMENT_ERROR,
           String.format("Harness Secret Manager for project %s could not be created", project.getName()), ex, USER);
@@ -218,6 +220,11 @@ public class ProjectServiceImpl implements ProjectService {
   @Override
   public Page<Project> list(Criteria criteria, Pageable pageable) {
     return projectRepository.findAll(criteria, pageable);
+  }
+
+  @Override
+  public List<Project> list(Criteria criteria) {
+    return projectRepository.findAll(criteria);
   }
 
   private Criteria createProjectFilterCriteria(Criteria criteria, ProjectFilterDTO projectFilterDTO) {

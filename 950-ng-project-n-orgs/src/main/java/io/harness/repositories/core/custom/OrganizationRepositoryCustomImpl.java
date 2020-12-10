@@ -29,6 +29,12 @@ public class OrganizationRepositoryCustomImpl implements OrganizationRepositoryC
   }
 
   @Override
+  public List<Organization> findAll(Criteria criteria) {
+    Query query = new Query(criteria);
+    return mongoTemplate.find(query, Organization.class);
+  }
+
+  @Override
   public Organization update(Query query, Update update) {
     return mongoTemplate.findAndModify(query, update, new FindAndModifyOptions().returnNew(true), Organization.class);
   }
@@ -39,6 +45,8 @@ public class OrganizationRepositoryCustomImpl implements OrganizationRepositoryC
                             .is(accountIdentifier)
                             .and(OrganizationKeys.identifier)
                             .is(identifier)
+                            .and(OrganizationKeys.harnessManaged)
+                            .ne(Boolean.TRUE)
                             .and(OrganizationKeys.deleted)
                             .ne(Boolean.TRUE);
     if (version != null) {

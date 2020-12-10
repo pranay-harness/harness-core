@@ -24,6 +24,7 @@ public class LocalConfigDTOMapper {
         .tags(connector.getTags())
         .identifier(connector.getIdentifier())
         .description(connector.getDescription())
+        .harnessManaged(localConnectorDTO.isHarnessManaged())
         .build();
   }
 }

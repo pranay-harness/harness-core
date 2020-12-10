@@ -5,7 +5,8 @@ import static javax.ws.rs.core.HttpHeaders.IF_MATCH;
 import io.harness.NGCommonEntityConstants;
 import io.harness.NGResourceFilterConstants;
 import io.harness.ng.beans.PageResponse;
-import io.harness.ng.core.dto.OrganizationDTO;
+import io.harness.ng.core.dto.OrganizationRequest;
+import io.harness.ng.core.dto.OrganizationResponse;
 import io.harness.ng.core.dto.ResponseDTO;
 
 import java.util.List;
@@ -24,17 +25,17 @@ public interface OrganizationManagerClient {
   String ORGANIZATIONS_API = "organizations";
 
   @POST(ORGANIZATIONS_API)
-  Call<ResponseDTO<OrganizationDTO>> createOrganization(
+  Call<ResponseDTO<OrganizationResponse>> createOrganization(
       @Query(value = NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier,
-      @Body OrganizationDTO organizationDTO);
+      @Body OrganizationRequest organizationDTO);
 
   @GET(ORGANIZATIONS_API + "/{identifier}")
-  Call<ResponseDTO<Optional<OrganizationDTO>>> getOrganization(
+  Call<ResponseDTO<Optional<OrganizationResponse>>> getOrganization(
       @Path(value = NGCommonEntityConstants.IDENTIFIER_KEY) String identifier,
       @Query(value = NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier);
 
   @GET(ORGANIZATIONS_API)
-  Call<ResponseDTO<PageResponse<OrganizationDTO>>> listOrganization(
+  Call<ResponseDTO<PageResponse<OrganizationResponse>>> listOrganization(
       @Path(value = NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier,
       @Query(NGResourceFilterConstants.SEARCH_TERM_KEY) String searchTerm,
       @Query(value = NGResourceFilterConstants.PAGE_KEY) int page,
@@ -42,10 +43,10 @@ public interface OrganizationManagerClient {
       @Query(value = NGResourceFilterConstants.SORT_KEY) List<String> sort);
 
   @PUT(ORGANIZATIONS_API + "/{identifier}")
-  Call<ResponseDTO<Optional<OrganizationDTO>>> updateOrganization(
+  Call<ResponseDTO<Optional<OrganizationResponse>>> updateOrganization(
       @Path(value = NGCommonEntityConstants.IDENTIFIER_KEY) String identifier,
       @Query(value = NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier,
-      @Body OrganizationDTO organizationDTO);
+      @Body OrganizationRequest organizationDTO);
 
   @DELETE(ORGANIZATIONS_API + "/{identifier}")
   Call<ResponseDTO<Boolean>> deleteOrganization(@Header(IF_MATCH) Long ifMatch,
