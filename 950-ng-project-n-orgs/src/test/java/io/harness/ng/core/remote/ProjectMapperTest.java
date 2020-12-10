@@ -72,7 +72,6 @@ public class ProjectMapperTest {
     assertEquals(project.getColor(), fromProject.getColor());
     assertEquals(project.getDescription(), fromProject.getDescription());
     assertEquals(emptyMap(), fromProject.getTags());
-    assertEquals(project.getLastModifiedAt(), fromProject.getLastModifiedAt());
     assertEquals(project.getModules(), fromProject.getModules());
   }
 }

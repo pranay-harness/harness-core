@@ -3,7 +3,7 @@ package io.harness.ng.core.remote;
 import static io.harness.NGConstants.DEFAULT_ORG_IDENTIFIER;
 import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.ng.core.remote.ProjectMapper.writeDTO;
+import static io.harness.ng.core.remote.ProjectMapper.toResponseWrapper;
 import static io.harness.utils.PageUtils.getNGPageResponse;
 import static io.harness.utils.PageUtils.getPageRequest;
 
@@ -20,10 +20,12 @@ import io.harness.ng.beans.PageRequest;
 import io.harness.ng.beans.PageResponse;
 import io.harness.ng.core.dto.ErrorDTO;
 import io.harness.ng.core.dto.FailureDTO;
-import io.harness.ng.core.dto.ProjectDTO;
 import io.harness.ng.core.dto.ProjectFilterDTO;
+import io.harness.ng.core.dto.ProjectRequest;
+import io.harness.ng.core.dto.ProjectResponse;
 import io.harness.ng.core.dto.ResponseDTO;
 import io.harness.ng.core.entities.Project;
+import io.harness.ng.core.entities.Project.ProjectKeys;
 import io.harness.ng.core.services.ProjectService;
 import io.harness.security.annotations.NextGenManagerAuth;
 
@@ -70,37 +72,40 @@ public class ProjectResource {
 
   @POST
   @ApiOperation(value = "Create a Project", nickname = "postProject")
-  public ResponseDTO<ProjectDTO> create(
+  public ResponseDTO<ProjectResponse> create(
       @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier,
       @QueryParam(NGCommonEntityConstants.ORG_KEY) @DefaultValue(DEFAULT_ORG_IDENTIFIER) String orgIdentifier,
-      @NotNull @Valid ProjectDTO projectDTO) {
-    Project createdProject = projectService.create(accountIdentifier, orgIdentifier, projectDTO);
-    return ResponseDTO.newResponse(createdProject.getVersion().toString(), writeDTO(createdProject));
+      @NotNull @Valid ProjectRequest projectDTO) {
+    Project createdProject = projectService.create(accountIdentifier, orgIdentifier, projectDTO.getProject());
+    return ResponseDTO.newResponse(createdProject.getVersion().toString(), toResponseWrapper(createdProject));
   }
 
   @GET
   @Path("{identifier}")
   @ApiOperation(value = "Gets a Project by identifier", nickname = "getProject")
-  public ResponseDTO<ProjectDTO> get(@NotNull @PathParam(NGCommonEntityConstants.IDENTIFIER_KEY) String identifier,
+  public ResponseDTO<ProjectResponse> get(@NotNull @PathParam(NGCommonEntityConstants.IDENTIFIER_KEY) String identifier,
       @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier,
       @QueryParam(NGCommonEntityConstants.ORG_KEY) @DefaultValue(DEFAULT_ORG_IDENTIFIER) String orgIdentifier) {
     Optional<Project> projectOptional = projectService.get(accountIdentifier, orgIdentifier, identifier);
     if (!projectOptional.isPresent()) {
-      throw new NotFoundException("Resource not found");
+      throw new NotFoundException(
+          String.format("Project with orgIdentifier [%s] and identifier [%s] not found", orgIdentifier, identifier));
     }
-    return ResponseDTO.newResponse(projectOptional.get().getVersion().toString(), writeDTO(projectOptional.get()));
+    return ResponseDTO.newResponse(
+        projectOptional.get().getVersion().toString(), toResponseWrapper(projectOptional.get()));
   }
 
   @GET
   @ApiOperation(value = "Get Project list", nickname = "getProjectList")
-  public ResponseDTO<PageResponse<ProjectDTO>> list(
+  public ResponseDTO<PageResponse<ProjectResponse>> list(
       @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier,
       @QueryParam(NGCommonEntityConstants.ORG_KEY) String orgIdentifier,
       @QueryParam("hasModule") @DefaultValue("true") boolean hasModule,
       @QueryParam(NGResourceFilterConstants.MODULE_TYPE_KEY) ModuleType moduleType,
       @QueryParam(NGResourceFilterConstants.SEARCH_TERM_KEY) String searchTerm, @BeanParam PageRequest pageRequest) {
     if (isEmpty(pageRequest.getSortOrders())) {
-      SortOrder order = SortOrder.Builder.aSortOrder().withField("lastModifiedAt", SortOrder.OrderType.DESC).build();
+      SortOrder order =
+          SortOrder.Builder.aSortOrder().withField(ProjectKeys.lastModifiedAt, SortOrder.OrderType.DESC).build();
       pageRequest.setSortOrders(ImmutableList.of(order));
     }
     ProjectFilterDTO projectFilterDTO = ProjectFilterDTO.builder()
@@ -109,22 +114,24 @@ public class ProjectResource {
                                             .hasModule(hasModule)
                                             .moduleType(moduleType)
                                             .build();
-    Page<ProjectDTO> projects = projectService.list(accountIdentifier, getPageRequest(pageRequest), projectFilterDTO)
-                                    .map(ProjectMapper::writeDTO);
+    Page<ProjectResponse> projects =
+        projectService.list(accountIdentifier, getPageRequest(pageRequest), projectFilterDTO)
+            .map(ProjectMapper::toResponseWrapper);
     return ResponseDTO.newResponse(getNGPageResponse(projects));
   }
 
   @PUT
   @Path("{identifier}")
   @ApiOperation(value = "Update a project by identifier", nickname = "putProject")
-  public ResponseDTO<ProjectDTO> update(@HeaderParam(IF_MATCH) String ifMatch,
+  public ResponseDTO<ProjectResponse> update(@HeaderParam(IF_MATCH) String ifMatch,
       @NotNull @PathParam(NGCommonEntityConstants.IDENTIFIER_KEY) String identifier,
       @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier,
       @QueryParam(NGCommonEntityConstants.ORG_KEY) @DefaultValue(DEFAULT_ORG_IDENTIFIER) String orgIdentifier,
-      @NotNull @Valid ProjectDTO projectDTO) {
-    projectDTO.setVersion(isNumeric(ifMatch) ? parseLong(ifMatch) : null);
-    Project updatedProject = projectService.update(accountIdentifier, orgIdentifier, identifier, projectDTO);
-    return ResponseDTO.newResponse(updatedProject.getVersion().toString(), writeDTO(updatedProject));
+      @NotNull @Valid ProjectRequest projectDTO) {
+    projectDTO.getProject().setVersion(isNumeric(ifMatch) ? parseLong(ifMatch) : null);
+    Project updatedProject =
+        projectService.update(accountIdentifier, orgIdentifier, identifier, projectDTO.getProject());
+    return ResponseDTO.newResponse(updatedProject.getVersion().toString(), toResponseWrapper(updatedProject));
   }
 
   @DELETE

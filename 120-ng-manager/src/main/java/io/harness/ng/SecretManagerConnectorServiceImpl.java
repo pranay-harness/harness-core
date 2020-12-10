@@ -72,7 +72,7 @@ public class SecretManagerConnectorServiceImpl implements ConnectorService {
   public ConnectorResponseDTO create(@Valid ConnectorDTO connector, String accountIdentifier) {
     // TODO{karan} Remove this section after event driven is used to create harness secret manager for account
     ConnectorInfoDTO connectorInfo = connector.getConnectorInfo();
-    if (connectorInfo.getIdentifier().equals(HARNESS_SECRET_MANAGER_IDENTIFIER)) {
+    if (isHarnessManaged(connectorInfo)) {
       if (!defaultConnectorService.get(accountIdentifier, null, null, HARNESS_SECRET_MANAGER_IDENTIFIER).isPresent()) {
         log.info("Account level Harness Secret Manager not found");
         String orgIdentifier = connectorInfo.getOrgIdentifier();
@@ -91,6 +91,17 @@ public class SecretManagerConnectorServiceImpl implements ConnectorService {
       }
     }
     return createSecretManagerConnector(connector, accountIdentifier);
+  }
+
+  private boolean isHarnessManaged(ConnectorInfoDTO connectorInfoDTO) {
+    switch (connectorInfoDTO.getConnectorType()) {
+      case GCP_KMS:
+        return ((GcpKmsConnectorDTO) connectorInfoDTO.getConnectorConfig()).isHarnessManaged();
+      case LOCAL:
+        return ((LocalConnectorDTO) connectorInfoDTO.getConnectorConfig()).isHarnessManaged();
+      default:
+        return false;
+    }
   }
 
   private ConnectorResponseDTO createSecretManagerConnector(ConnectorDTO connector, String accountIdentifier) {

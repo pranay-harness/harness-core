@@ -4,6 +4,7 @@ import io.harness.ng.core.dto.OrganizationDTO;
 import io.harness.ng.core.dto.OrganizationFilterDTO;
 import io.harness.ng.core.entities.Organization;
 
+import java.util.List;
 import java.util.Optional;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -19,6 +20,8 @@ public interface OrganizationService {
   Page<Organization> list(String accountIdentifier, Pageable pageable, OrganizationFilterDTO organizationFilterDTO);
 
   Page<Organization> list(Criteria criteria, Pageable pageable);
+
+  List<Organization> list(Criteria criteria);
 
   boolean delete(String accountIdentifier, String identifier, Long version);
 }

@@ -15,11 +15,12 @@ import javax.validation.constraints.Size;
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 import lombok.experimental.FieldDefaults;
 
 @Data
-@Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
+@NoArgsConstructor
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonInclude(NON_NULL)
 @ApiModel(value = "Organization")
@@ -29,6 +30,16 @@ public class OrganizationDTO {
   @ApiModelProperty(required = true) @NGEntityName String name;
   @Size(max = 1024) String description;
   @Size(max = 128) Map<String, String> tags;
-  Long lastModifiedAt;
   @JsonIgnore Long version;
+  @JsonIgnore boolean harnessManaged;
+
+  @Builder
+  public OrganizationDTO(
+      String accountIdentifier, String identifier, String name, String description, Map<String, String> tags) {
+    this.accountIdentifier = accountIdentifier;
+    this.identifier = identifier;
+    this.name = name;
+    this.description = description;
+    this.tags = tags;
+  }
 }

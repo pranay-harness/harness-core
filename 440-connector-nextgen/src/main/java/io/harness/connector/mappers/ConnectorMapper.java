@@ -6,6 +6,8 @@ import io.harness.connector.apis.dto.ConnectorDTO;
 import io.harness.connector.apis.dto.ConnectorInfoDTO;
 import io.harness.connector.apis.dto.ConnectorResponseDTO;
 import io.harness.connector.entities.Connector;
+import io.harness.connector.entities.embedded.gcpkmsconnector.GcpKmsConnector;
+import io.harness.connector.entities.embedded.localconnector.LocalConnector;
 import io.harness.connector.mappers.appdynamicsmapper.AppDynamicsDTOToEntity;
 import io.harness.connector.mappers.appdynamicsmapper.AppDynamicsEntityToDTO;
 import io.harness.connector.mappers.gitconnectormapper.GitDTOToEntity;
@@ -13,6 +15,8 @@ import io.harness.connector.mappers.gitconnectormapper.GitEntityToDTO;
 import io.harness.connector.mappers.kubernetesMapper.KubernetesDTOToEntity;
 import io.harness.connector.mappers.kubernetesMapper.KubernetesEntityToDTO;
 import io.harness.delegate.beans.connector.ConnectorConfigDTO;
+import io.harness.delegate.beans.connector.gcpkmsconnector.GcpKmsConnectorDTO;
+import io.harness.delegate.beans.connector.localconnector.LocalConnectorDTO;
 import io.harness.encryption.Scope;
 import io.harness.ng.core.mapper.TagMapper;
 import io.harness.utils.FullyQualifiedIdentifierHelper;
@@ -87,7 +91,19 @@ public class ConnectorMapper {
         .status(connector.getConnectivityDetails())
         .createdAt(connector.getCreatedAt())
         .lastModifiedAt(connector.getLastModifiedAt())
+        .harnessManaged(isHarnessManaged(connector))
         .build();
+  }
+
+  private boolean isHarnessManaged(Connector connector) {
+    switch (connector.getType()) {
+      case GCP_KMS:
+        return Boolean.TRUE.equals(((GcpKmsConnector) connector).getHarnessManaged());
+      case LOCAL:
+        return Boolean.TRUE.equals(((LocalConnector) connector).getHarnessManaged());
+      default:
+        return false;
+    }
   }
 
   private ConnectorConfigDTO createConnectorConfigDTO(Connector connector) {

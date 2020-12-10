@@ -19,4 +19,5 @@ import org.springframework.data.annotation.TypeAlias;
 @TypeAlias("io.harness.connector.entities.embedded.localconnector.LocalConnector")
 public class LocalConnector extends Connector {
   boolean isDefault;
+  @Builder.Default Boolean harnessManaged = Boolean.TRUE;
 }

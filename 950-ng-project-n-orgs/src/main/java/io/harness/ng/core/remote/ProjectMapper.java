@@ -7,6 +7,7 @@ import static io.harness.ng.core.mapper.TagMapper.convertToMap;
 import static java.util.Collections.emptyList;
 
 import io.harness.ng.core.dto.ProjectDTO;
+import io.harness.ng.core.dto.ProjectResponse;
 import io.harness.ng.core.entities.Project;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -40,7 +41,14 @@ public class ProjectMapper {
         .color(project.getColor())
         .tags(convertToMap(project.getTags()))
         .modules(project.getModules())
+        .build();
+  }
+
+  public static ProjectResponse toResponseWrapper(Project project) {
+    return ProjectResponse.builder()
+        .createdAt(project.getCreatedAt())
         .lastModifiedAt(project.getLastModifiedAt())
+        .project(writeDTO(project))
         .build();
   }
 

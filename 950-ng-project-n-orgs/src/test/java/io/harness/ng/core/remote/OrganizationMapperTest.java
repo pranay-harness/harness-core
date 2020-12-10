@@ -61,6 +61,5 @@ public class OrganizationMapperTest {
     assertEquals(organization.getName(), fromOrganization.getName());
     assertEquals(organization.getDescription(), fromOrganization.getDescription());
     assertEquals(emptyMap(), fromOrganization.getTags());
-    assertEquals(organization.getLastModifiedAt(), fromOrganization.getLastModifiedAt());
   }
 }

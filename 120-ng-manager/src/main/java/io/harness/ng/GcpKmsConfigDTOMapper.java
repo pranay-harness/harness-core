@@ -30,6 +30,7 @@ public class GcpKmsConfigDTOMapper {
         .tags(connector.getTags())
         .identifier(connector.getIdentifier())
         .description(connector.getDescription())
+        .harnessManaged(gcpKmsConnectorDTO.isHarnessManaged())
         .build();
   }
 

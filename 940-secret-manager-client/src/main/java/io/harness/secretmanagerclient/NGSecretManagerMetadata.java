@@ -22,4 +22,5 @@ public class NGSecretManagerMetadata extends NGMetadata {
   private String projectIdentifier;
   private List<NGTag> tags;
   private String description;
+  private Boolean harnessManaged;
 }

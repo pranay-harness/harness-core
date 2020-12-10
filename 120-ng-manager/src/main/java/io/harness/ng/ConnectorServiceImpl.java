@@ -114,9 +114,6 @@ public class ConnectorServiceImpl implements ConnectorService {
   @Override
   public ConnectorResponseDTO update(@NotNull ConnectorDTO connector, String accountIdentifier) {
     ConnectorInfoDTO connectorInfo = connector.getConnectorInfo();
-    if (HARNESS_SECRET_MANAGER_IDENTIFIER.equals(connectorInfo.getIdentifier())) {
-      throw new InvalidRequestException("Update operation not supported for Harness Secret Manager", USER);
-    }
     ConnectorResponseDTO connectorResponse =
         getConnectorService(connectorInfo.getConnectorType()).update(connector, accountIdentifier);
     ConnectorInfoDTO savedConnector = connectorResponse.getConnector();
@@ -151,9 +148,6 @@ public class ConnectorServiceImpl implements ConnectorService {
   @Override
   public boolean delete(
       String accountIdentifier, String orgIdentifier, String projectIdentifier, String connectorIdentifier) {
-    if (HARNESS_SECRET_MANAGER_IDENTIFIER.equals(connectorIdentifier)) {
-      throw new InvalidRequestException("Delete operation not supported for Harness Secret Manager", USER);
-    }
     String fullyQualifiedIdentifier = FullyQualifiedIdentifierHelper.getFullyQualifiedIdentifier(
         accountIdentifier, orgIdentifier, projectIdentifier, connectorIdentifier);
     Optional<Connector> connectorOptional =

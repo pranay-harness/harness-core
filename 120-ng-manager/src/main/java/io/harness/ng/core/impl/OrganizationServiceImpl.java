@@ -14,6 +14,7 @@ import static io.harness.ng.core.utils.NGUtils.verifyValuesNotChanged;
 import static java.util.Collections.singletonList;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
+import io.harness.connector.apis.dto.ConnectorDTO;
 import io.harness.connector.services.ConnectorService;
 import io.harness.exception.DuplicateFieldException;
 import io.harness.exception.InvalidRequestException;
@@ -37,6 +38,7 @@ import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
+import java.util.List;
 import java.util.Optional;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.tuple.Pair;
@@ -116,8 +118,8 @@ public class OrganizationServiceImpl implements OrganizationService {
       globalSecretManager.setProjectIdentifier(null);
       globalSecretManager.setOrgIdentifier(organization.getIdentifier());
       globalSecretManager.setDefault(true);
-      secretManagerConnectorService.create(
-          getConnectorRequestDTO(globalSecretManager), organization.getAccountIdentifier());
+      ConnectorDTO connectorDTO = getConnectorRequestDTO(globalSecretManager, true);
+      secretManagerConnectorService.create(connectorDTO, organization.getAccountIdentifier());
     } catch (Exception ex) {
       throw new SecretManagementException(SECRET_MANAGEMENT_ERROR,
           String.format("Harness Secret Manager for organisation %s could not be created", organization.getName()), ex,
@@ -138,6 +140,11 @@ public class OrganizationServiceImpl implements OrganizationService {
 
     if (optionalOrganization.isPresent()) {
       Organization existingOrganization = optionalOrganization.get();
+      if (existingOrganization.getHarnessManaged()) {
+        throw new InvalidRequestException(
+            String.format("Update operation not supported for Default Organization (identifier: [%s])", identifier),
+            USER);
+      }
       Organization organization = toOrganization(organizationDTO);
       organization.setAccountIdentifier(accountIdentifier);
       organization.setId(existingOrganization.getId());
@@ -165,6 +172,11 @@ public class OrganizationServiceImpl implements OrganizationService {
   @Override
   public Page<Organization> list(Criteria criteria, Pageable pageable) {
     return organizationRepository.findAll(criteria, pageable);
+  }
+
+  @Override
+  public List<Organization> list(Criteria criteria) {
+    return organizationRepository.findAll(criteria);
   }
 
   private Criteria createOrganizationFilterCriteria(Criteria criteria, OrganizationFilterDTO organizationFilterDTO) {

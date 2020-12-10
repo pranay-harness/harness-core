@@ -2,7 +2,7 @@ package io.harness.ng.core.remote;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.ng.core.remote.OrganizationMapper.writeDto;
+import static io.harness.ng.core.remote.OrganizationMapper.toResponseWrapper;
 import static io.harness.utils.PageUtils.getNGPageResponse;
 import static io.harness.utils.PageUtils.getPageRequest;
 
@@ -18,10 +18,12 @@ import io.harness.ng.beans.PageRequest;
 import io.harness.ng.beans.PageResponse;
 import io.harness.ng.core.dto.ErrorDTO;
 import io.harness.ng.core.dto.FailureDTO;
-import io.harness.ng.core.dto.OrganizationDTO;
 import io.harness.ng.core.dto.OrganizationFilterDTO;
+import io.harness.ng.core.dto.OrganizationRequest;
+import io.harness.ng.core.dto.OrganizationResponse;
 import io.harness.ng.core.dto.ResponseDTO;
 import io.harness.ng.core.entities.Organization;
+import io.harness.ng.core.entities.Organization.OrganizationKeys;
 import io.harness.ng.core.services.OrganizationService;
 import io.harness.security.annotations.NextGenManagerAuth;
 
@@ -67,52 +69,56 @@ public class OrganizationResource {
 
   @POST
   @ApiOperation(value = "Create an Organization", nickname = "postOrganization")
-  public ResponseDTO<OrganizationDTO> create(
+  public ResponseDTO<OrganizationResponse> create(
       @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier,
-      @NotNull @Valid OrganizationDTO organizationDTO) {
-    Organization updatedOrganization = organizationService.create(accountIdentifier, organizationDTO);
-    return ResponseDTO.newResponse(updatedOrganization.getVersion().toString(), writeDto(updatedOrganization));
+      @NotNull @Valid OrganizationRequest organizationDTO) {
+    organizationDTO.getOrganization().setHarnessManaged(organizationDTO.isHarnessManaged());
+    Organization updatedOrganization = organizationService.create(accountIdentifier, organizationDTO.getOrganization());
+    return ResponseDTO.newResponse(updatedOrganization.getVersion().toString(), toResponseWrapper(updatedOrganization));
   }
 
   @GET
   @Path("{identifier}")
   @ApiOperation(value = "Get an Organization by identifier", nickname = "getOrganization")
-  public ResponseDTO<OrganizationDTO> get(@NotNull @PathParam(NGCommonEntityConstants.IDENTIFIER_KEY) String identifier,
+  public ResponseDTO<OrganizationResponse> get(
+      @NotNull @PathParam(NGCommonEntityConstants.IDENTIFIER_KEY) String identifier,
       @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier) {
     Optional<Organization> organizationOptional = organizationService.get(accountIdentifier, identifier);
     if (!organizationOptional.isPresent()) {
-      throw new NotFoundException("Resource not found");
+      throw new NotFoundException(String.format("Organization with identifier [%s] not found", identifier));
     }
     return ResponseDTO.newResponse(
-        organizationOptional.get().getVersion().toString(), writeDto(organizationOptional.get()));
+        organizationOptional.get().getVersion().toString(), toResponseWrapper(organizationOptional.get()));
   }
 
   @GET
   @ApiOperation(value = "Get Organization list", nickname = "getOrganizationList")
-  public ResponseDTO<PageResponse<OrganizationDTO>> list(
+  public ResponseDTO<PageResponse<OrganizationResponse>> list(
       @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier,
       @QueryParam(NGResourceFilterConstants.SEARCH_TERM_KEY) String searchTerm, @BeanParam PageRequest pageRequest) {
     if (isEmpty(pageRequest.getSortOrders())) {
-      SortOrder order = SortOrder.Builder.aSortOrder().withField("lastModifiedAt", SortOrder.OrderType.DESC).build();
+      SortOrder order =
+          SortOrder.Builder.aSortOrder().withField(OrganizationKeys.lastModifiedAt, SortOrder.OrderType.DESC).build();
       pageRequest.setSortOrders(ImmutableList.of(order));
     }
     OrganizationFilterDTO organizationFilterDTO = OrganizationFilterDTO.builder().searchTerm(searchTerm).build();
-    Page<OrganizationDTO> organizations =
+    Page<OrganizationResponse> organizations =
         organizationService.list(accountIdentifier, getPageRequest(pageRequest), organizationFilterDTO)
-            .map(OrganizationMapper::writeDto);
+            .map(OrganizationMapper::toResponseWrapper);
     return ResponseDTO.newResponse(getNGPageResponse(organizations));
   }
 
   @PUT
   @Path("{identifier}")
   @ApiOperation(value = "Update an Organization by identifier", nickname = "putOrganization")
-  public ResponseDTO<OrganizationDTO> update(@HeaderParam(IF_MATCH) String ifMatch,
+  public ResponseDTO<OrganizationResponse> update(@HeaderParam(IF_MATCH) String ifMatch,
       @NotNull @PathParam(NGCommonEntityConstants.IDENTIFIER_KEY) String identifier,
       @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier,
-      @NotNull @Valid OrganizationDTO organizationDTO) {
-    organizationDTO.setVersion(isNumeric(ifMatch) ? parseLong(ifMatch) : null);
-    Organization updatedOrganization = organizationService.update(accountIdentifier, identifier, organizationDTO);
-    return ResponseDTO.newResponse(updatedOrganization.getVersion().toString(), writeDto(updatedOrganization));
+      @NotNull @Valid OrganizationRequest organizationDTO) {
+    organizationDTO.getOrganization().setVersion(isNumeric(ifMatch) ? parseLong(ifMatch) : null);
+    Organization updatedOrganization =
+        organizationService.update(accountIdentifier, identifier, organizationDTO.getOrganization());
+    return ResponseDTO.newResponse(updatedOrganization.getVersion().toString(), toResponseWrapper(updatedOrganization));
   }
 
   @DELETE

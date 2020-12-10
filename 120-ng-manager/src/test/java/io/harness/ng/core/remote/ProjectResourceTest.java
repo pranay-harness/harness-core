@@ -24,6 +24,8 @@ import io.harness.ng.beans.PageRequest;
 import io.harness.ng.beans.PageResponse;
 import io.harness.ng.core.dto.ProjectDTO;
 import io.harness.ng.core.dto.ProjectFilterDTO;
+import io.harness.ng.core.dto.ProjectRequest;
+import io.harness.ng.core.dto.ProjectResponse;
 import io.harness.ng.core.dto.ResponseDTO;
 import io.harness.ng.core.entities.Project;
 import io.harness.ng.core.services.ProjectService;
@@ -65,17 +67,19 @@ public class ProjectResourceTest extends CategoryTest {
   @Category(UnitTests.class)
   public void testCreate() {
     ProjectDTO projectDTO = getProjectDTO(accountIdentifier, orgIdentifier, identifier, name);
+    ProjectRequest projectRequestWrapper = ProjectRequest.builder().project(projectDTO).build();
     Project project = toProject(projectDTO);
     project.setVersion((long) 0);
 
     when(projectService.create(accountIdentifier, orgIdentifier, projectDTO)).thenReturn(project);
 
-    ResponseDTO<ProjectDTO> responseDTO = projectResource.create(accountIdentifier, orgIdentifier, projectDTO);
+    ResponseDTO<ProjectResponse> responseDTO =
+        projectResource.create(accountIdentifier, orgIdentifier, projectRequestWrapper);
 
     assertEquals(project.getVersion().toString(), responseDTO.getEntityTag());
-    assertEquals(accountIdentifier, responseDTO.getData().getAccountIdentifier());
-    assertEquals(orgIdentifier, responseDTO.getData().getOrgIdentifier());
-    assertEquals(identifier, responseDTO.getData().getIdentifier());
+    assertEquals(accountIdentifier, responseDTO.getData().getProject().getAccountIdentifier());
+    assertEquals(orgIdentifier, responseDTO.getData().getProject().getOrgIdentifier());
+    assertEquals(identifier, responseDTO.getData().getProject().getIdentifier());
   }
 
   @Test
@@ -83,17 +87,18 @@ public class ProjectResourceTest extends CategoryTest {
   @Category(UnitTests.class)
   public void testGet() {
     ProjectDTO projectDTO = getProjectDTO(accountIdentifier, orgIdentifier, identifier, name);
+    ProjectRequest projectRequestWrapper = ProjectRequest.builder().project(projectDTO).build();
     Project project = toProject(projectDTO);
     project.setVersion((long) 0);
 
     when(projectService.get(accountIdentifier, orgIdentifier, identifier)).thenReturn(Optional.of(project));
 
-    ResponseDTO<ProjectDTO> responseDTO = projectResource.get(identifier, accountIdentifier, orgIdentifier);
+    ResponseDTO<ProjectResponse> responseDTO = projectResource.get(identifier, accountIdentifier, orgIdentifier);
 
     assertEquals(project.getVersion().toString(), responseDTO.getEntityTag());
-    assertEquals(accountIdentifier, responseDTO.getData().getAccountIdentifier());
-    assertEquals(orgIdentifier, responseDTO.getData().getOrgIdentifier());
-    assertEquals(identifier, responseDTO.getData().getIdentifier());
+    assertEquals(accountIdentifier, responseDTO.getData().getProject().getAccountIdentifier());
+    assertEquals(orgIdentifier, responseDTO.getData().getProject().getOrgIdentifier());
+    assertEquals(identifier, responseDTO.getData().getProject().getIdentifier());
 
     when(projectService.get(accountIdentifier, orgIdentifier, identifier)).thenReturn(Optional.empty());
 
@@ -121,7 +126,7 @@ public class ProjectResourceTest extends CategoryTest {
 
     when(projectService.list(eq(accountIdentifier), any(), any())).thenReturn(getPage(singletonList(project), 1));
 
-    ResponseDTO<PageResponse<ProjectDTO>> response =
+    ResponseDTO<PageResponse<ProjectResponse>> response =
         projectResource.list(accountIdentifier, orgIdentifier, true, ModuleType.CD, searchTerm, pageRequest);
 
     verify(projectService, times(1)).list(eq(accountIdentifier), any(), argumentCaptor.capture());
@@ -130,9 +135,9 @@ public class ProjectResourceTest extends CategoryTest {
     assertEquals(searchTerm, projectFilterDTO.getSearchTerm());
     assertEquals(ModuleType.CD, projectFilterDTO.getModuleType());
     assertEquals(1, response.getData().getPageItemCount());
-    assertEquals(accountIdentifier, response.getData().getContent().get(0).getAccountIdentifier());
-    assertEquals(orgIdentifier, response.getData().getContent().get(0).getOrgIdentifier());
-    assertEquals(identifier, response.getData().getContent().get(0).getIdentifier());
+    assertEquals(accountIdentifier, response.getData().getContent().get(0).getProject().getAccountIdentifier());
+    assertEquals(orgIdentifier, response.getData().getContent().get(0).getProject().getOrgIdentifier());
+    assertEquals(identifier, response.getData().getContent().get(0).getProject().getIdentifier());
   }
 
   @Test
@@ -141,18 +146,19 @@ public class ProjectResourceTest extends CategoryTest {
   public void testUpdate() {
     String ifMatch = "0";
     ProjectDTO projectDTO = getProjectDTO(accountIdentifier, orgIdentifier, identifier, name);
+    ProjectRequest projectRequestWrapper = ProjectRequest.builder().project(projectDTO).build();
     Project project = toProject(projectDTO);
     project.setVersion(parseLong(ifMatch) + 1);
 
     when(projectService.update(accountIdentifier, orgIdentifier, identifier, projectDTO)).thenReturn(project);
 
-    ResponseDTO<ProjectDTO> response =
-        projectResource.update(ifMatch, identifier, accountIdentifier, orgIdentifier, projectDTO);
+    ResponseDTO<ProjectResponse> response =
+        projectResource.update(ifMatch, identifier, accountIdentifier, orgIdentifier, projectRequestWrapper);
 
     assertEquals("1", response.getEntityTag());
-    assertEquals(accountIdentifier, response.getData().getAccountIdentifier());
-    assertEquals(orgIdentifier, response.getData().getOrgIdentifier());
-    assertEquals(identifier, response.getData().getIdentifier());
+    assertEquals(accountIdentifier, response.getData().getProject().getAccountIdentifier());
+    assertEquals(orgIdentifier, response.getData().getProject().getOrgIdentifier());
+    assertEquals(identifier, response.getData().getProject().getIdentifier());
   }
 
   @Test

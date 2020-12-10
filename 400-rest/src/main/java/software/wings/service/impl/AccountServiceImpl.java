@@ -72,6 +72,7 @@ import io.harness.logging.AutoLogContext;
 import io.harness.managerclient.HttpsCertRequirement.CertRequirement;
 import io.harness.network.Http;
 import io.harness.ng.core.dto.OrganizationDTO;
+import io.harness.ng.core.dto.OrganizationRequest;
 import io.harness.observer.Subject;
 import io.harness.organizationmanagerclient.remote.OrganizationManagerClient;
 import io.harness.persistence.HIterator;
@@ -426,8 +427,10 @@ public class AccountServiceImpl implements AccountService {
     createOrganizationDTO.setName("Default");
     createOrganizationDTO.setTags(emptyMap());
     createOrganizationDTO.setDescription("Default Organization");
+    OrganizationRequest organizationRequestWrapper =
+        OrganizationRequest.builder().organization(createOrganizationDTO).harnessManaged(true).build();
     try {
-      organizationManagerClient.createOrganization(accountId, createOrganizationDTO).execute();
+      organizationManagerClient.createOrganization(accountId, organizationRequestWrapper).execute();
     } catch (IOException ex) {
       log.info(String.format("Failed to create Default Organization for account id: [%s]", accountId), ex);
     }

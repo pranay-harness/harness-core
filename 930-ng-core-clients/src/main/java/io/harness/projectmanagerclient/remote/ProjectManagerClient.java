@@ -6,7 +6,8 @@ import io.harness.ModuleType;
 import io.harness.NGCommonEntityConstants;
 import io.harness.NGResourceFilterConstants;
 import io.harness.ng.beans.PageResponse;
-import io.harness.ng.core.dto.ProjectDTO;
+import io.harness.ng.core.dto.ProjectRequest;
+import io.harness.ng.core.dto.ProjectResponse;
 import io.harness.ng.core.dto.ResponseDTO;
 
 import java.util.List;
@@ -25,18 +26,18 @@ public interface ProjectManagerClient {
   String PROJECTS_API = "projects";
 
   @POST(PROJECTS_API)
-  Call<ResponseDTO<ProjectDTO>> createProject(
+  Call<ResponseDTO<ProjectResponse>> createProject(
       @Query(value = NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier,
-      @Query(value = NGCommonEntityConstants.ORG_KEY) String orgIdentifier, @Body ProjectDTO projectDTO);
+      @Query(value = NGCommonEntityConstants.ORG_KEY) String orgIdentifier, @Body ProjectRequest projectDTO);
 
   @GET(PROJECTS_API + "/{identifier}")
-  Call<ResponseDTO<Optional<ProjectDTO>>> getProject(
+  Call<ResponseDTO<Optional<ProjectResponse>>> getProject(
       @Path(value = NGCommonEntityConstants.IDENTIFIER_KEY) String identifier,
       @Query(value = NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier,
       @Query(value = NGCommonEntityConstants.ORG_KEY) String orgIdentifier);
 
   @GET(PROJECTS_API)
-  Call<ResponseDTO<PageResponse<ProjectDTO>>> listProject(
+  Call<ResponseDTO<PageResponse<ProjectResponse>>> listProject(
       @Query(value = NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier,
       @Query(value = NGCommonEntityConstants.ORG_KEY) String orgIdentifier,
       @Query(value = "hasModule") boolean hasModule,
@@ -47,10 +48,10 @@ public interface ProjectManagerClient {
       @Query(value = NGResourceFilterConstants.SORT_KEY) List<String> sort);
 
   @PUT(PROJECTS_API + "/{identifier}")
-  Call<ResponseDTO<Optional<ProjectDTO>>> updateProject(
+  Call<ResponseDTO<Optional<ProjectResponse>>> updateProject(
       @Path(value = NGCommonEntityConstants.IDENTIFIER_KEY) String identifier,
       @Query(value = NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier,
-      @Query(value = NGCommonEntityConstants.ORG_KEY) String orgIdentifier, @Body ProjectDTO projectDTO);
+      @Query(value = NGCommonEntityConstants.ORG_KEY) String orgIdentifier, @Body ProjectRequest projectDTO);
 
   @DELETE(PROJECTS_API + "/{identifier}")
   Call<ResponseDTO<Boolean>> deleteProject(@Header(IF_MATCH) Long ifMatch,
