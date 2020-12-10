@@ -1,6 +1,6 @@
 package io.harness.pms.ngpipeline.inputset.beans.resource;
 
-import io.harness.pms.ngpipeline.overlayinputset.beans.InputSetEntityTypePMS;
+import io.harness.pms.ngpipeline.inputset.beans.entity.InputSetEntityType;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
@@ -20,7 +20,7 @@ public class InputSetSummaryResponseDTOPMS {
   String name;
   String pipelineIdentifier;
   String description;
-  InputSetEntityTypePMS inputSetType;
+  InputSetEntityType inputSetType;
   Map<String, String> tags;
   @JsonIgnore Long version;
 }
