@@ -135,5 +135,140 @@
             <resourcePath>snippets/secretManager/hashicorp.yaml</resourcePath>
         </YamlSnippetMetaData>
         <!--/Repeating unit-->
+
+        <!--Repeating unit-->
+        <YamlSnippetMetaData>
+            <name>Secret Text Inline</name>
+            <version>0.1</version>
+            <description>Secret Text Inline</description>
+            <tags>
+                <tag>secret</tag>
+                <tag>secretText</tag>
+            </tags>
+            <iconTag>secretText</iconTag>
+            <schemaEntityType>Secrets</schemaEntityType>
+            <resourcePath>snippets/secret/secretText/inline.yaml</resourcePath>
+        </YamlSnippetMetaData>
+        <!--/Repeating unit-->
+
+        <!--Repeating unit-->
+        <YamlSnippetMetaData>
+            <name>Secret Text Reference</name>
+            <version>0.1</version>
+            <description>Secret Text Reference</description>
+            <tags>
+                <tag>secret</tag>
+                <tag>secretText</tag>
+            </tags>
+            <iconTag>secretText</iconTag>
+            <schemaEntityType>Secrets</schemaEntityType>
+            <resourcePath>snippets/secret/secretText/reference.yaml</resourcePath>
+        </YamlSnippetMetaData>
+        <!--/Repeating unit-->
+
+        <!--Repeating unit-->
+        <YamlSnippetMetaData>
+            <name>Secret File</name>
+            <version>0.1</version>
+            <description>Secret File</description>
+            <tags>
+                <tag>secret</tag>
+                <tag>secretFile</tag>
+            </tags>
+            <iconTag>secretFile</iconTag>
+            <schemaEntityType>Secrets</schemaEntityType>
+            <resourcePath>snippets/secret/secretFile/file.yaml</resourcePath>
+        </YamlSnippetMetaData>
+        <!--/Repeating unit-->
+
+        <!--Repeating unit-->
+        <YamlSnippetMetaData>
+            <name>SSH Password</name>
+            <version>0.1</version>
+            <description>SSH Password</description>
+            <tags>
+                <tag>secret</tag>
+                <tag>sshKey</tag>
+            </tags>
+            <iconTag>sshKey</iconTag>
+            <schemaEntityType>Secrets</schemaEntityType>
+            <resourcePath>snippets/secret/sshKey/ssh/password.yaml</resourcePath>
+        </YamlSnippetMetaData>
+        <!--/Repeating unit-->
+
+        <!--Repeating unit-->
+        <YamlSnippetMetaData>
+            <name>SSH Key Path</name>
+            <version>0.1</version>
+            <description>SSH Key Path</description>
+            <tags>
+                <tag>secret</tag>
+                <tag>sshKey</tag>
+            </tags>
+            <iconTag>sshKey</iconTag>
+            <schemaEntityType>Secrets</schemaEntityType>
+            <resourcePath>snippets/secret/sshKey/ssh/keyPath.yaml</resourcePath>
+        </YamlSnippetMetaData>
+        <!--/Repeating unit-->
+
+        <!--Repeating unit-->
+        <YamlSnippetMetaData>
+            <name>SSH Key Reference</name>
+            <version>0.1</version>
+            <description>SSH Key Reference</description>
+            <tags>
+                <tag>secret</tag>
+                <tag>sshKey</tag>
+            </tags>
+            <iconTag>sshKey</iconTag>
+            <schemaEntityType>Secrets</schemaEntityType>
+            <resourcePath>snippets/secret/sshKey/ssh/keyReference.yaml</resourcePath>
+        </YamlSnippetMetaData>
+        <!--/Repeating unit-->
+
+        <!--Repeating unit-->
+        <YamlSnippetMetaData>
+            <name>Kerberos</name>
+            <version>0.1</version>
+            <description>Kerberos</description>
+            <tags>
+                <tag>secret</tag>
+                <tag>sshKey</tag>
+            </tags>
+            <iconTag>sshKey</iconTag>
+            <schemaEntityType>Secrets</schemaEntityType>
+            <resourcePath>snippets/secret/sshKey/kerberos/none.yaml</resourcePath>
+        </YamlSnippetMetaData>
+        <!--/Repeating unit-->
+
+        <!--Repeating unit-->
+        <YamlSnippetMetaData>
+            <name>Kerberos Password</name>
+            <version>0.1</version>
+            <description>Kerberos Password</description>
+            <tags>
+                <tag>secret</tag>
+                <tag>sshKey</tag>
+            </tags>
+            <iconTag>sshKey</iconTag>
+            <schemaEntityType>Secrets</schemaEntityType>
+            <resourcePath>snippets/secret/sshKey/kerberos/password.yaml</resourcePath>
+        </YamlSnippetMetaData>
+        <!--/Repeating unit-->
+
+        <!--Repeating unit-->
+        <YamlSnippetMetaData>
+            <name>Kerberos Key Tab File Path</name>
+            <version>0.1</version>
+            <description>Kerberos Key Tab File Path</description>
+            <tags>
+                <tag>secret</tag>
+                <tag>sshKey</tag>
+            </tags>
+            <iconTag>sshKey</iconTag>
+            <schemaEntityType>Secrets</schemaEntityType>
+            <resourcePath>snippets/secret/sshKey/kerberos/keyTabFilePath.yaml</resourcePath>
+        </YamlSnippetMetaData>
+        <!--/Repeating unit-->
     </yamlSnippetMetaDataList>
 </YamlSnippets>

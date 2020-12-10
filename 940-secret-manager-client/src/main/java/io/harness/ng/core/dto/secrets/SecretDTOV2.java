@@ -1,12 +1,10 @@
 package io.harness.ng.core.dto.secrets;
 
-import io.harness.EntityType;
 import io.harness.data.validator.EntityIdentifier;
 import io.harness.data.validator.EntityName;
 import io.harness.data.validator.NGEntityName;
 import io.harness.ng.core.models.Secret;
 import io.harness.secretmanagerclient.SecretType;
-import io.harness.yamlSchema.YamlSchemaRoot;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
@@ -25,7 +23,6 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonInclude(Include.NON_NULL)
-@YamlSchemaRoot(EntityType.SECRETS)
 public class SecretDTOV2 {
   @NotNull private SecretType type;
   @NotNull @NGEntityName private String name;
