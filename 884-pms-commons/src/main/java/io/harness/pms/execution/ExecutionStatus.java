@@ -5,6 +5,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonValue;
 import com.google.common.collect.Sets;
 import java.util.Arrays;
+import java.util.EnumSet;
 import java.util.Set;
 
 public enum ExecutionStatus {
@@ -20,6 +21,9 @@ public enum ExecutionStatus {
   @JsonProperty("Success") SUCCESS(Sets.newHashSet(Status.SUCCEEDED), "Success"),
   @JsonProperty("Suspended") SUSPENDED(Sets.newHashSet(Status.SUSPENDED), "Suspended");
 
+  static final Set<ExecutionStatus> TERMINAL_STATUSES = Sets.newHashSet(FAILED, SUCCESS, ABORTED, EXPIRED);
+  public static final Set<Status> BROKE_STATUSES = EnumSet.of(Status.FAILED, Status.ERRORED);
+
   Set<Status> engineStatuses;
   String displayName;
 
@@ -27,7 +31,6 @@ public enum ExecutionStatus {
     this.engineStatuses = engineStatuses;
     this.displayName = displayName;
   }
-  static final Set<ExecutionStatus> terminalStatuses = Sets.newHashSet(FAILED, SUCCESS, ABORTED, EXPIRED);
 
   @JsonCreator
   public static ExecutionStatus getExecutionStatus(@JsonProperty("type") String displayName) {
@@ -41,7 +44,7 @@ public enum ExecutionStatus {
   }
 
   public static boolean isTerminal(ExecutionStatus executionStatus) {
-    return terminalStatuses.contains(executionStatus);
+    return TERMINAL_STATUSES.contains(executionStatus);
   }
 
   public static ExecutionStatus getExecutionStatus(Status status) {

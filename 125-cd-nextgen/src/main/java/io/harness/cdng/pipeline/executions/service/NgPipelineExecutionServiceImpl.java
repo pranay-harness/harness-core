@@ -49,7 +49,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.Optional;
 import java.util.stream.Collectors;
 import javax.annotation.Nonnull;
 import lombok.NonNull;
@@ -164,17 +163,18 @@ public class NgPipelineExecutionServiceImpl implements NgPipelineExecutionServic
     PipelineExecutionDetailBuilder pipelineExecutionDetailBuilder = PipelineExecutionDetail.builder();
 
     if (isNotEmpty(stageIdentifier)) {
-      Optional<NodeExecution> stageNode = nodeExecutionService.getByNodeIdentifier(stageIdentifier, planExecutionId);
-      if (!stageNode.isPresent()) {
-        throw new InvalidRequestException(
-            format("No Graph node found corresponding to identifier: [%s], planExecutionId: [%s]", stageIdentifier,
-                planExecutionId));
-      }
       OrchestrationGraphDTO orchestrationGraph =
-          graphGenerationService.generatePartialOrchestrationGraphFromSetupNodeId(
-              stageNode.get().getNode().getUuid(), planExecutionId);
+          graphGenerationService.generatePartialOrchestrationGraphFromIdentifier(stageIdentifier, planExecutionId);
       @NonNull ExecutionGraph executionGraph = ExecutionGraphMapper.toExecutionGraph(orchestrationGraph);
       pipelineExecutionDetailBuilder.stageGraph(executionGraph);
+
+      if (ExecutionStatus.BROKE_STATUSES.contains(orchestrationGraph.getStatus())) {
+        OrchestrationGraphDTO rollbackOrchestrationGraph =
+            graphGenerationService.generatePartialOrchestrationGraphFromIdentifier(
+                stageIdentifier + "Rollback", planExecutionId);
+        ExecutionGraph rollbackExecutionGraph = ExecutionGraphMapper.toExecutionGraph(rollbackOrchestrationGraph);
+        pipelineExecutionDetailBuilder.stageRollbackGraph(rollbackExecutionGraph);
+      }
     }
 
     return pipelineExecutionDetailBuilder

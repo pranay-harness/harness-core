@@ -11,4 +11,5 @@ import lombok.Value;
 public class PipelineExecutionDetail {
   PipelineExecutionSummaryDTO pipelineExecution;
   ExecutionGraph stageGraph;
+  ExecutionGraph stageRollbackGraph;
 }
