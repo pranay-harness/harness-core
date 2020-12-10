@@ -17,6 +17,7 @@ import io.harness.ng.core.dto.ResponseDTO;
 import io.harness.pms.inputset.helpers.MergeHelper;
 import io.harness.pms.ngpipeline.inputset.beans.entity.InputSetEntity;
 import io.harness.pms.ngpipeline.inputset.beans.entity.InputSetEntity.InputSetEntityKeys;
+import io.harness.pms.ngpipeline.inputset.beans.entity.InputSetEntityType;
 import io.harness.pms.ngpipeline.inputset.beans.resource.*;
 import io.harness.pms.ngpipeline.inputset.mappers.PMSInputSetElementMapper;
 import io.harness.pms.ngpipeline.inputset.mappers.PMSInputSetFilterHelper;
@@ -29,7 +30,9 @@ import io.harness.utils.PageUtils;
 import com.google.inject.Inject;
 import io.swagger.annotations.*;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
@@ -104,7 +107,28 @@ public class InputSetResourcePMS {
       @NotNull @QueryParam(NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier,
       @NotNull @QueryParam(NGCommonEntityConstants.PIPELINE_KEY) String pipelineIdentifier,
       @NotNull @ApiParam(hidden = true) String yaml) {
-    // validate yaml : TBD
+    try {
+      yaml = MergeHelper.removeRuntimeInputFromYaml(yaml);
+    } catch (IOException e) {
+      throw new InvalidRequestException("Could not clear ${input} fields from yaml : " + e.getMessage());
+    }
+
+    Optional<PipelineEntity> pipelineEntity =
+        pmsPipelineService.get(accountId, orgIdentifier, projectIdentifier, pipelineIdentifier, false);
+    if (pipelineEntity.isPresent()) {
+      String pipelineYaml = pipelineEntity.get().getYaml();
+      try {
+        InputSetErrorWrapperDTOPMS errorWrapperDTO = MergeHelper.getErrorMap(pipelineYaml, yaml);
+        if (errorWrapperDTO != null) {
+          return ResponseDTO.newResponse(PMSInputSetElementMapper.toInputSetResponseDTOPMS(
+              accountId, orgIdentifier, projectIdentifier, pipelineIdentifier, yaml, errorWrapperDTO));
+        }
+      } catch (IOException e) {
+        throw new InvalidRequestException("Invalid input set yaml");
+      }
+    } else {
+      throw new InvalidRequestException("Pipeline does not exist");
+    }
 
     InputSetEntity entity = PMSInputSetElementMapper.toInputSetEntity(
         accountId, orgIdentifier, projectIdentifier, pipelineIdentifier, yaml);
@@ -122,10 +146,23 @@ public class InputSetResourcePMS {
       @NotNull @QueryParam(NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier,
       @NotNull @QueryParam(NGCommonEntityConstants.PIPELINE_KEY) String pipelineIdentifier,
       @NotNull @ApiParam(hidden = true) String yaml) {
-    // validate yaml : TBD
-
     InputSetEntity entity = PMSInputSetElementMapper.toInputSetEntityForOverlay(
         accountId, orgIdentifier, projectIdentifier, pipelineIdentifier, yaml);
+
+    List<String> inputSetReferences = entity.getInputSetReferences();
+    if (inputSetReferences.isEmpty()) {
+      throw new InvalidRequestException("Input Set References can't be empty");
+    }
+    List<Optional<InputSetEntity>> inputSets = new ArrayList<>();
+    inputSetReferences.forEach(identifier
+        -> inputSets.add(pmsInputSetService.get(
+            accountId, orgIdentifier, projectIdentifier, pipelineIdentifier, identifier, false)));
+    Map<String, String> invalidReferences = MergeHelper.getInvalidInputSetReferences(inputSets, inputSetReferences);
+    if (!invalidReferences.isEmpty()) {
+      return ResponseDTO.newResponse(
+          PMSInputSetElementMapper.toOverlayInputSetResponseDTOPMS(entity, true, invalidReferences));
+    }
+
     InputSetEntity createdEntity = pmsInputSetService.create(entity);
     return ResponseDTO.newResponse(
         createdEntity.getVersion().toString(), PMSInputSetElementMapper.toOverlayInputSetResponseDTOPMS(createdEntity));
@@ -141,7 +178,28 @@ public class InputSetResourcePMS {
       @NotNull @QueryParam(NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier,
       @NotNull @QueryParam(NGCommonEntityConstants.PIPELINE_KEY) String pipelineIdentifier,
       @NotNull @ApiParam(hidden = true) String yaml) {
-    // validate yaml : TBD
+    try {
+      yaml = MergeHelper.removeRuntimeInputFromYaml(yaml);
+    } catch (IOException e) {
+      throw new InvalidRequestException("Could not clear ${input} fields from yaml : " + e.getMessage());
+    }
+
+    Optional<PipelineEntity> pipelineEntity =
+        pmsPipelineService.get(accountId, orgIdentifier, projectIdentifier, pipelineIdentifier, false);
+    if (pipelineEntity.isPresent()) {
+      String pipelineYaml = pipelineEntity.get().getYaml();
+      try {
+        InputSetErrorWrapperDTOPMS errorWrapperDTO = MergeHelper.getErrorMap(pipelineYaml, yaml);
+        if (errorWrapperDTO != null) {
+          return ResponseDTO.newResponse(PMSInputSetElementMapper.toInputSetResponseDTOPMS(
+              accountId, orgIdentifier, projectIdentifier, pipelineIdentifier, yaml, errorWrapperDTO));
+        }
+      } catch (IOException e) {
+        throw new InvalidRequestException("Invalid input set yaml");
+      }
+    } else {
+      throw new InvalidRequestException("Pipeline does not exist");
+    }
 
     InputSetEntity entity = PMSInputSetElementMapper.toInputSetEntity(
         accountId, orgIdentifier, projectIdentifier, pipelineIdentifier, yaml);
@@ -161,11 +219,24 @@ public class InputSetResourcePMS {
       @NotNull @QueryParam(NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier,
       @NotNull @QueryParam(NGCommonEntityConstants.PIPELINE_KEY) String pipelineIdentifier,
       @NotNull @ApiParam(hidden = true) String yaml) {
-    // validate yaml : TBD
-
     InputSetEntity entity = PMSInputSetElementMapper.toInputSetEntityForOverlay(
         accountId, orgIdentifier, projectIdentifier, pipelineIdentifier, yaml);
     entity.setVersion(isNumeric(ifMatch) ? parseLong(ifMatch) : null);
+
+    List<String> inputSetReferences = entity.getInputSetReferences();
+    if (inputSetReferences.isEmpty()) {
+      throw new InvalidRequestException("Input Set References can't be empty");
+    }
+    List<Optional<InputSetEntity>> inputSets = new ArrayList<>();
+    inputSetReferences.forEach(identifier
+        -> inputSets.add(pmsInputSetService.get(
+            accountId, orgIdentifier, projectIdentifier, pipelineIdentifier, identifier, false)));
+    Map<String, String> invalidReferences = MergeHelper.getInvalidInputSetReferences(inputSets, inputSetReferences);
+    if (!invalidReferences.isEmpty()) {
+      return ResponseDTO.newResponse(
+          PMSInputSetElementMapper.toOverlayInputSetResponseDTOPMS(entity, true, invalidReferences));
+    }
+
     InputSetEntity createdEntity = pmsInputSetService.update(entity);
     return ResponseDTO.newResponse(
         createdEntity.getVersion().toString(), PMSInputSetElementMapper.toOverlayInputSetResponseDTOPMS(createdEntity));
@@ -222,7 +293,7 @@ public class InputSetResourcePMS {
     if (optionalPipelineEntity.isPresent()) {
       String pipelineYaml = optionalPipelineEntity.get().getYaml();
       try {
-        String pipelineTemplateYaml = MergeHelper.createTemplateFromPipeline(pipelineYaml, true);
+        String pipelineTemplateYaml = MergeHelper.createTemplateFromPipeline(pipelineYaml);
         return ResponseDTO.newResponse(
             InputSetTemplateResponseDTOPMS.builder().inputSetTemplateYaml(pipelineTemplateYaml).build());
       } catch (IOException e) {
@@ -245,6 +316,38 @@ public class InputSetResourcePMS {
       @NotNull @QueryParam(NGCommonEntityConstants.PIPELINE_KEY) String pipelineIdentifier,
       @QueryParam("useFQNIfError") @DefaultValue("false") boolean useFQNIfErrorResponse,
       @NotNull @Valid MergeInputSetRequestDTOPMS mergeInputSetRequestDTO) {
-    return ResponseDTO.newResponse(MergeInputSetResponseDTOPMS.builder().build());
+    String pipelineTemplate = getTemplateFromPipeline(accountId, orgIdentifier, projectIdentifier, pipelineIdentifier)
+                                  .getData()
+                                  .getInputSetTemplateYaml();
+    List<String> inputSetReferences = mergeInputSetRequestDTO.getInputSetReferences();
+    List<String> inputSetYamlList = new ArrayList<>();
+    inputSetReferences.forEach(identifier -> {
+      Optional<InputSetEntity> entity =
+          pmsInputSetService.get(accountId, orgIdentifier, projectIdentifier, pipelineIdentifier, identifier, false);
+      if (!entity.isPresent()) {
+        throw new InvalidRequestException(identifier + " does not exist");
+      }
+      InputSetEntity inputSet = entity.get();
+      if (inputSet.getInputSetEntityType() == InputSetEntityType.INPUT_SET) {
+        inputSetYamlList.add(entity.get().getYaml());
+      } else {
+        List<String> overlayReferences = inputSet.getInputSetReferences();
+        overlayReferences.forEach(id -> {
+          Optional<InputSetEntity> entity2 =
+              pmsInputSetService.get(accountId, orgIdentifier, projectIdentifier, pipelineIdentifier, id, false);
+          if (!entity2.isPresent()) {
+            throw new InvalidRequestException(id + " does not exist");
+          }
+          inputSetYamlList.add(entity2.get().getYaml());
+        });
+      }
+    });
+    try {
+      String mergedYaml = MergeHelper.mergeInputSets(pipelineTemplate, inputSetYamlList);
+      return ResponseDTO.newResponse(
+          MergeInputSetResponseDTOPMS.builder().isErrorResponse(false).pipelineYaml(mergedYaml).build());
+    } catch (IOException e) {
+      throw new InvalidRequestException("Could not merge input sets : " + e.getMessage());
+    }
   }
 }

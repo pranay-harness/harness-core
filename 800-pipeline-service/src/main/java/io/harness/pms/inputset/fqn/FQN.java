@@ -57,4 +57,8 @@ public class FQN {
     FQNNode secondLastNode = fqnList.get(fqnList.size() - 2);
     return secondLastNode.getNodeType().equals(FQNNode.NodeType.UUID) && lastNode.getKey().equals("name");
   }
+
+  public String getFieldName() {
+    return fqnList.get(fqnList.size() - 1).getKey();
+  }
 }

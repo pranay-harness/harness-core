@@ -6,6 +6,7 @@ pipeline:
   stages:
     - stage:
         identifier: "qaStage"
+        absolutelyWrongKey: absolutelyWrongValue
         spec:
           execution:
             steps:
