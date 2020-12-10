@@ -13,6 +13,7 @@ import software.wings.sm.ContextElement;
 import software.wings.sm.ExecutionContext;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonTypeName;
 import java.util.List;
 import java.util.Map;
 import lombok.Builder;
@@ -24,6 +25,7 @@ import lombok.Data;
 @JsonIgnoreProperties(ignoreUnknown = true)
 @Data
 @Builder
+@JsonTypeName("containerServiceElement")
 public class ContainerServiceElement implements ContextElement, SweepingOutput {
   private String uuid;
   private String name;
@@ -72,5 +74,10 @@ public class ContainerServiceElement implements ContextElement, SweepingOutput {
   @Override
   public ContextElement cloneMin() {
     return this;
+  }
+
+  @Override
+  public String getType() {
+    return "containerServiceElement";
   }
 }

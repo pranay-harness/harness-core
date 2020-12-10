@@ -16,4 +16,9 @@ public interface OutcomeService extends Resolver<Outcome> {
   List<Outcome> fetchOutcomes(List<String> outcomeInstanceIds);
 
   Outcome fetchOutcome(@NonNull String outcomeInstanceId);
+
+  @Override
+  default Class<Outcome> getStepTransputClass() {
+    return Outcome.class;
+  }
 }

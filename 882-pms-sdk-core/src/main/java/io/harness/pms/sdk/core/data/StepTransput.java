@@ -6,4 +6,6 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.pms.serializer.json.JsonSerializable;
 
 @OwnedBy(CDC)
-public interface StepTransput extends JsonSerializable {}
+public interface StepTransput extends JsonSerializable {
+  String getType();
+}

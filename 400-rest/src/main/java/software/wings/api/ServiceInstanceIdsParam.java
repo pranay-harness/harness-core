@@ -10,6 +10,7 @@ import io.harness.pms.sdk.core.data.SweepingOutput;
 import software.wings.sm.ContextElement;
 import software.wings.sm.ExecutionContext;
 
+import com.fasterxml.jackson.annotation.JsonTypeName;
 import java.util.List;
 import java.util.Map;
 
@@ -18,6 +19,7 @@ import java.util.Map;
  *
  * @author Rishi
  */
+@JsonTypeName("serviceInstanceIdsParam")
 public class ServiceInstanceIdsParam implements ContextElement, SweepingOutput {
   public static final String SERVICE_INSTANCE_IDS_PARAMS = "SERVICE_INSTANCE_IDS_PARAMS";
 
@@ -90,6 +92,11 @@ public class ServiceInstanceIdsParam implements ContextElement, SweepingOutput {
   @Override
   public ContextElement cloneMin() {
     return this;
+  }
+
+  @Override
+  public String getType() {
+    return "serviceInstanceIdsParam";
   }
 
   public static final class ServiceInstanceIdsParamBuilder {

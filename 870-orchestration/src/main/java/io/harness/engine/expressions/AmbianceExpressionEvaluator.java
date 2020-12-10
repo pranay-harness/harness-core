@@ -13,7 +13,6 @@ import io.harness.engine.expressions.functors.NodeExecutionEntityType;
 import io.harness.engine.expressions.functors.NodeExecutionQualifiedFunctor;
 import io.harness.engine.expressions.functors.OutcomeFunctor;
 import io.harness.engine.outcomes.OutcomeService;
-import io.harness.engine.outputs.ExecutionSweepingOutputService;
 import io.harness.exception.CriticalExpressionEvaluationException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.execution.PlanExecution;
@@ -30,6 +29,7 @@ import io.harness.pms.expression.OrchestrationField;
 import io.harness.pms.expression.OrchestrationFieldProcessor;
 import io.harness.pms.expression.OrchestrationFieldType;
 import io.harness.pms.expression.ProcessorResult;
+import io.harness.pms.sdk.core.resolver.outputs.ExecutionSweepingOutputService;
 import io.harness.pms.sdk.registries.OrchestrationFieldRegistry;
 
 import com.google.common.collect.ImmutableList;

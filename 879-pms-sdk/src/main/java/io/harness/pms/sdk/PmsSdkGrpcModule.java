@@ -5,6 +5,8 @@ import io.harness.grpc.server.GrpcServer;
 import io.harness.pms.plan.PmsServiceGrpc;
 import io.harness.pms.plan.PmsServiceGrpc.PmsServiceBlockingStub;
 import io.harness.pms.sdk.core.plan.creation.creators.PlanCreatorService;
+import io.harness.pms.service.SweepingOutputServiceGrpc;
+import io.harness.pms.service.SweepingOutputServiceGrpc.SweepingOutputServiceBlockingStub;
 
 import com.google.common.util.concurrent.Service;
 import com.google.inject.AbstractModule;
@@ -64,5 +66,16 @@ public class PmsSdkGrpcModule extends AbstractModule {
                           .usePlaintext()
                           .build();
     return PmsServiceGrpc.newBlockingStub(channel);
+  }
+
+  @Provides
+  @Singleton
+  public SweepingOutputServiceBlockingStub sweepingOutputGrpcClient(HealthStatusManager healthStatusManager) {
+    GrpcClientConfig clientConfig = config.getPmsGrpcClientConfig();
+    Channel channel = NettyChannelBuilder.forTarget(clientConfig.getTarget())
+                          .overrideAuthority(clientConfig.getAuthority())
+                          .usePlaintext()
+                          .build();
+    return SweepingOutputServiceGrpc.newBlockingStub(channel);
   }
 }

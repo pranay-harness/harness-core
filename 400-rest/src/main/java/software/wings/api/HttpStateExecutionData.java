@@ -12,6 +12,7 @@ import io.harness.serializer.XmlUtils;
 import software.wings.sm.ContextElement;
 import software.wings.sm.StateExecutionData;
 
+import com.fasterxml.jackson.annotation.JsonTypeName;
 import java.io.IOException;
 import java.util.Map;
 import javax.xml.parsers.ParserConfigurationException;
@@ -34,6 +35,7 @@ import org.w3c.dom.Document;
 @NoArgsConstructor
 @AllArgsConstructor
 @EqualsAndHashCode(callSuper = true)
+@JsonTypeName("httpStateExecutionData")
 public class HttpStateExecutionData extends StateExecutionData implements DelegateTaskNotifyResponseData, Outcome {
   private String httpUrl;
   private String httpMethod;
@@ -146,5 +148,10 @@ public class HttpStateExecutionData extends StateExecutionData implements Delega
     putNotNull(executionDetails, "warningMessage",
         ExecutionDataValue.builder().displayName("Warning").value(warningMessage).build());
     return executionDetails;
+  }
+
+  @Override
+  public String getType() {
+    return "httpStateExecutionData";
   }
 }

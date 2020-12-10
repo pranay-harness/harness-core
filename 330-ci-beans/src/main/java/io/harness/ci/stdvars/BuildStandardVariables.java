@@ -3,6 +3,7 @@ package io.harness.ci.stdvars;
 import io.harness.pms.sdk.core.data.SweepingOutput;
 import io.harness.validation.Update;
 
+import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.github.reinert.jjschema.SchemaIgnore;
 import javax.validation.constraints.NotNull;
 import lombok.Builder;
@@ -12,10 +13,16 @@ import org.springframework.data.annotation.TypeAlias;
 
 @Value
 @Builder
-@TypeAlias("stepTaskDetails")
+@TypeAlias("buildStandardVariables")
+@JsonTypeName("buildStandardVariables")
 public class BuildStandardVariables implements SweepingOutput {
   public static final String BUILD_VARIABLE = "build";
-  private GitVariables git;
-  private Long number;
+  GitVariables git;
+  Long number;
   @Id @NotNull(groups = {Update.class}) @SchemaIgnore private String uuid;
+
+  @Override
+  public String getType() {
+    return "buildStandardVariables";
+  }
 }

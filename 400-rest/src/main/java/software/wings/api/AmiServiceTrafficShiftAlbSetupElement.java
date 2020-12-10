@@ -9,6 +9,7 @@ import software.wings.sm.ContextElement;
 import software.wings.sm.ExecutionContext;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.google.common.collect.ImmutableMap;
 import java.util.HashMap;
 import java.util.List;
@@ -23,6 +24,7 @@ import lombok.NoArgsConstructor;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
+@JsonTypeName("amiServiceTrafficShiftAlbSetupElement")
 public class AmiServiceTrafficShiftAlbSetupElement implements ContextElement, SweepingOutput {
   private String uuid;
   private String name;
@@ -55,5 +57,10 @@ public class AmiServiceTrafficShiftAlbSetupElement implements ContextElement, Sw
     map.put("newAsgName", newAutoScalingGroupName);
     map.put("oldAsgName", oldAutoScalingGroupName);
     return ImmutableMap.of("ami", map);
+  }
+
+  @Override
+  public String getType() {
+    return "amiServiceTrafficShiftAlbSetupElement";
   }
 }

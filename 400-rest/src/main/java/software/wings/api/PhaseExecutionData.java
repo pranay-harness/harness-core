@@ -10,6 +10,7 @@ import software.wings.beans.ElementExecutionSummary;
 import software.wings.sm.ContextElement;
 import software.wings.sm.states.ElementStateExecutionData;
 
+import com.fasterxml.jackson.annotation.JsonTypeName;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -19,6 +20,7 @@ import java.util.Map;
  * Created by rishi on 1/19/17.
  */
 @OwnedBy(CDC)
+@JsonTypeName("phaseExecutionData")
 public class PhaseExecutionData extends ElementStateExecutionData implements SweepingOutput {
   public static final String SWEEPING_OUTPUT_NAME = "phaseExecutionData";
 
@@ -161,6 +163,11 @@ public class PhaseExecutionData extends ElementStateExecutionData implements Swe
     putNotNull(executionDetails, "clusterName",
         ExecutionDataValue.builder().displayName("Cluster Name").value(clusterName).build());
     return executionDetails;
+  }
+
+  @Override
+  public String getType() {
+    return "phaseExecutionData";
   }
 
   public static final class PhaseExecutionDataBuilder {

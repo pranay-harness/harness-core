@@ -3,6 +3,7 @@ package io.harness.cdng.artifact.bean;
 import io.harness.ngpipeline.pipeline.executions.beans.ArtifactSummary;
 import io.harness.ngpipeline.pipeline.executions.beans.DockerArtifactSummary;
 
+import com.fasterxml.jackson.annotation.JsonTypeName;
 import lombok.Builder;
 import lombok.EqualsAndHashCode;
 import lombok.Value;
@@ -12,6 +13,7 @@ import org.springframework.data.annotation.TypeAlias;
 @Builder
 @EqualsAndHashCode(callSuper = false)
 @TypeAlias("dockerArtifactOutcome")
+@JsonTypeName("dockerArtifactOutcome")
 public class DockerArtifactOutcome implements ArtifactOutcome {
   /** Docker hub registry connector. */
   String connectorRef;
@@ -31,5 +33,10 @@ public class DockerArtifactOutcome implements ArtifactOutcome {
   @Override
   public ArtifactSummary getArtifactSummary() {
     return DockerArtifactSummary.builder().imagePath(getImagePath()).tag(getTag()).build();
+  }
+
+  @Override
+  public String getType() {
+    return "dockerArtifactOutcome";
   }
 }

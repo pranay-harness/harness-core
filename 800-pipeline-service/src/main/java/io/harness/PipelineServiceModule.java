@@ -74,13 +74,6 @@ public class PipelineServiceModule extends AbstractModule {
 
   @Provides
   @Singleton
-  public QueuePublisher<NodeExecutionEvent> nodeExecutionEventQueuePublisher(
-      Injector injector, PublisherConfiguration config) {
-    return QueueFactory.createQueuePublisher(injector, NodeExecutionEvent.class, null, config);
-  }
-
-  @Provides
-  @Singleton
   public Set<Class<? extends KryoRegistrar>> kryoRegistrars() {
     return ImmutableSet.<Class<? extends KryoRegistrar>>builder()
         .addAll(PipelineServiceModuleRegistrars.kryoRegistrars)

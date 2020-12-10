@@ -19,9 +19,10 @@ import io.harness.engine.interrupts.InterruptService;
 import io.harness.engine.interrupts.InterruptServiceImpl;
 import io.harness.engine.outcomes.OutcomeService;
 import io.harness.engine.outcomes.OutcomeServiceImpl;
-import io.harness.engine.outputs.ExecutionSweepingOutputService;
 import io.harness.engine.outputs.ExecutionSweepingOutputServiceImpl;
 import io.harness.govern.ServersModule;
+import io.harness.pms.sdk.core.resolver.outputs.ExecutionSweepingGrpcOutputService;
+import io.harness.pms.sdk.core.resolver.outputs.ExecutionSweepingOutputService;
 import io.harness.pms.sdk.registries.registrar.AdviserRegistrar;
 import io.harness.pms.sdk.registries.registrar.OrchestrationEventHandlerRegistrar;
 import io.harness.pms.sdk.registries.registrar.ResolverRegistrar;
@@ -73,7 +74,6 @@ public class OrchestrationModule extends AbstractModule implements ServersModule
     bind(InterruptService.class).to(InterruptServiceImpl.class);
     bind(EngineExpressionService.class).to(EngineExpressionServiceImpl.class);
     bind(OutcomeService.class).to(OutcomeServiceImpl.class);
-    bind(ExecutionSweepingOutputService.class).to(ExecutionSweepingOutputServiceImpl.class);
     bind(OrchestrationService.class).to(OrchestrationServiceImpl.class);
     bind(EngineObtainmentHelper.class).in(Singleton.class);
 
@@ -113,6 +113,17 @@ public class OrchestrationModule extends AbstractModule implements ServersModule
   @Named(OrchestrationPublisherName.PUBLISHER_NAME)
   public String publisherName(OrchestrationModuleConfig config) {
     return config.getPublisherName();
+  }
+
+  @Provides
+  @Singleton
+  public ExecutionSweepingOutputService executionSweepingOutputService(
+      OrchestrationModuleConfig config, Injector injector) {
+    if (config.isUseServiceRPC()) {
+      return injector.getInstance(ExecutionSweepingGrpcOutputService.class);
+    } else {
+      return injector.getInstance(ExecutionSweepingOutputServiceImpl.class);
+    }
   }
 
   @Override

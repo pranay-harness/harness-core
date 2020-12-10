@@ -12,6 +12,7 @@ import software.wings.sm.ContextElement;
 import software.wings.sm.ExecutionContext;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonTypeName;
 import java.util.List;
 import java.util.Map;
 import lombok.AllArgsConstructor;
@@ -24,6 +25,7 @@ import lombok.NoArgsConstructor;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
+@JsonTypeName("spotInstSetupContextElement")
 public class SpotInstSetupContextElement implements ContextElement, SweepingOutput {
   private String uuid;
   private String name;
@@ -57,5 +59,10 @@ public class SpotInstSetupContextElement implements ContextElement, SweepingOutp
   @Override
   public ContextElement cloneMin() {
     return null;
+  }
+
+  @Override
+  public String getType() {
+    return "spotInstSetupContextElement";
   }
 }

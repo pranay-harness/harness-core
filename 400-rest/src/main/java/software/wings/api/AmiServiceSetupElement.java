@@ -10,6 +10,7 @@ import software.wings.sm.ContextElement;
 import software.wings.sm.ExecutionContext;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.google.common.collect.ImmutableMap;
 import java.util.HashMap;
 import java.util.List;
@@ -24,6 +25,7 @@ import lombok.NoArgsConstructor;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
+@JsonTypeName("amiServiceSetupElement")
 public class AmiServiceSetupElement implements ContextElement, SweepingOutput {
   private String uuid;
   private String name;
@@ -68,5 +70,10 @@ public class AmiServiceSetupElement implements ContextElement, SweepingOutput {
   @Override
   public ContextElement cloneMin() {
     return null;
+  }
+
+  @Override
+  public String getType() {
+    return "amiServiceSetupElement";
   }
 }

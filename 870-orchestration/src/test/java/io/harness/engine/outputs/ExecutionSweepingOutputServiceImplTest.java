@@ -15,6 +15,7 @@ import io.harness.pms.sdk.core.data.SweepingOutput;
 import io.harness.pms.sdk.core.resolver.GroupNotFoundException;
 import io.harness.pms.sdk.core.resolver.RefObjectUtil;
 import io.harness.pms.sdk.core.resolver.ResolverUtils;
+import io.harness.pms.sdk.core.resolver.outputs.ExecutionSweepingOutputService;
 import io.harness.pms.steps.StepType;
 import io.harness.rule.Owner;
 import io.harness.testlib.RealMongo;

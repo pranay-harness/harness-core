@@ -5,9 +5,9 @@ import static io.harness.annotations.dev.HarnessTeam.CDC;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.engine.expressions.NodeExecutionsCache;
 import io.harness.engine.outcomes.OutcomeService;
-import io.harness.engine.outputs.ExecutionSweepingOutputService;
 import io.harness.expression.LateBindingValue;
 import io.harness.pms.ambiance.Ambiance;
+import io.harness.pms.sdk.core.resolver.outputs.ExecutionSweepingOutputService;
 
 import java.util.Set;
 import lombok.Builder;
