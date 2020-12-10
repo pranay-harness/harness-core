@@ -64,5 +64,10 @@ public class ResolverRegistryTest extends OrchestrationBeansTestBase {
     public String consumeInternal(Ambiance ambiance, String name, DummyOutcome value, int levelsToKeep) {
       return "id";
     }
+
+    @Override
+    public Class<DummyOutcome> getStepTransputClass() {
+      return DummyOutcome.class;
+    }
   }
 }

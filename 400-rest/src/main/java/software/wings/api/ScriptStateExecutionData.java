@@ -9,6 +9,7 @@ import io.harness.pms.sdk.core.data.Outcome;
 
 import software.wings.sm.StateExecutionData;
 
+import com.fasterxml.jackson.annotation.JsonTypeName;
 import java.util.Map;
 import lombok.Builder;
 import lombok.Data;
@@ -18,6 +19,7 @@ import lombok.EqualsAndHashCode;
 @Data
 @Builder
 @EqualsAndHashCode(callSuper = false)
+@JsonTypeName("scriptStateExecutionData")
 public class ScriptStateExecutionData extends StateExecutionData implements DelegateTaskNotifyResponseData, Outcome {
   private String name;
   private String activityId;
@@ -56,5 +58,10 @@ public class ScriptStateExecutionData extends StateExecutionData implements Dele
               .value(removeNullValues(sweepingOutputEnvVariables))
               .build());
     }
+  }
+
+  @Override
+  public String getType() {
+    return "scriptStateExecutionData";
   }
 }

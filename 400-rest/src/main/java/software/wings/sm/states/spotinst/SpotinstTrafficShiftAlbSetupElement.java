@@ -9,6 +9,7 @@ import software.wings.sm.ContextElement;
 import software.wings.sm.ExecutionContext;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonTypeName;
 import java.util.List;
 import java.util.Map;
 import lombok.AllArgsConstructor;
@@ -21,6 +22,7 @@ import lombok.NoArgsConstructor;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
+@JsonTypeName("spotinstTrafficShiftAlbSetupElement")
 public class SpotinstTrafficShiftAlbSetupElement implements ContextElement, SweepingOutput {
   private String uuid;
   private String name;
@@ -48,5 +50,10 @@ public class SpotinstTrafficShiftAlbSetupElement implements ContextElement, Swee
   @Override
   public ContextElement cloneMin() {
     return null;
+  }
+
+  @Override
+  public String getType() {
+    return "spotinstTrafficShiftAlbSetupElement";
   }
 }

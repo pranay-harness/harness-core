@@ -47,7 +47,7 @@ public class PipelinePlanTest extends CDNGBaseTest {
   }
 
   @Test
-  @Owner(developers = ARCHIT)
+  @Owner(developers = ARCHIT, intermittent = true)
   @Category(UnitTests.class)
   public void testPipelinePlanForGivenYaml() throws IOException {
     ClassLoader classLoader = this.getClass().getClassLoader();

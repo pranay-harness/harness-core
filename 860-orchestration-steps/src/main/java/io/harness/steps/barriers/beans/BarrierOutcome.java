@@ -5,6 +5,7 @@ import static io.harness.annotations.dev.HarnessTeam.CDC;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.pms.sdk.core.data.Outcome;
 
+import com.fasterxml.jackson.annotation.JsonTypeName;
 import lombok.Builder;
 import lombok.Value;
 import org.springframework.data.annotation.TypeAlias;
@@ -13,7 +14,13 @@ import org.springframework.data.annotation.TypeAlias;
 @Value
 @Builder
 @TypeAlias("barrierOutcome")
+@JsonTypeName("barrierOutcome")
 public class BarrierOutcome implements Outcome {
   String message;
   String identifier;
+
+  @Override
+  public String getType() {
+    return "barrierOutcome";
+  }
 }

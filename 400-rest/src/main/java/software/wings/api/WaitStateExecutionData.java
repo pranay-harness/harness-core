@@ -11,6 +11,7 @@ import io.harness.pms.sdk.core.data.Outcome;
 
 import software.wings.sm.StateExecutionData;
 
+import com.fasterxml.jackson.annotation.JsonTypeName;
 import java.util.Map;
 
 /**
@@ -19,6 +20,7 @@ import java.util.Map;
  * @author Rishi
  */
 @OwnedBy(CDC)
+@JsonTypeName("waitStateExecutionData")
 public class WaitStateExecutionData extends StateExecutionData implements Outcome {
   private long duration;
   private long wakeupTs;
@@ -92,5 +94,10 @@ public class WaitStateExecutionData extends StateExecutionData implements Outcom
     putNotNull(executionDetails, "duration",
         ExecutionDataValue.builder().displayName("Duration (In Seconds)").value(duration).build());
     return executionDetails;
+  }
+
+  @Override
+  public String getType() {
+    return "waitStateExecutionData";
   }
 }

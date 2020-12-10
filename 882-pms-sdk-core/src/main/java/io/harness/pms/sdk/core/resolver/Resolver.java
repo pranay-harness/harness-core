@@ -21,6 +21,8 @@ public interface Resolver<T extends StepTransput> {
 
   String consumeInternal(@NotNull Ambiance ambiance, @NotNull String name, T value, int levelsToKeep);
 
+  Class<T> getStepTransputClass();
+
   default String consume(@NotNull Ambiance ambiance, @NotNull String name, T value, String groupName) {
     if (EmptyPredicate.isEmpty(groupName)) {
       return consumeInternal(ambiance, name, value, -1);

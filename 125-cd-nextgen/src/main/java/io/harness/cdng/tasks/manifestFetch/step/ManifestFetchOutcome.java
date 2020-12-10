@@ -3,6 +3,7 @@ package io.harness.cdng.tasks.manifestFetch.step;
 import io.harness.git.model.GitFile;
 import io.harness.pms.sdk.core.data.Outcome;
 
+import com.fasterxml.jackson.annotation.JsonTypeName;
 import java.io.Serializable;
 import java.util.List;
 import lombok.Builder;
@@ -13,9 +14,15 @@ import org.springframework.data.annotation.TypeAlias;
 @Value
 @Builder
 @TypeAlias("manifestFetchOutcome")
+@JsonTypeName("manifestFetchOutcome")
 public class ManifestFetchOutcome implements Outcome {
-  private List<ManifestDataDetails> manifestDataDetailsForSpec;
-  private List<ManifestDataDetails> manifestDataDetailsForOverrides;
+  List<ManifestDataDetails> manifestDataDetailsForSpec;
+  List<ManifestDataDetails> manifestDataDetailsForOverrides;
+
+  @Override
+  public String getType() {
+    return "manifestFetchOutcome";
+  }
 
   @Data
   @Builder

@@ -31,6 +31,7 @@ import io.harness.pms.sdk.core.steps.io.StepParameters;
 import io.harness.rule.Owner;
 import io.harness.steps.dummy.DummyStepParameters;
 
+import com.fasterxml.jackson.annotation.JsonTypeName;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -177,7 +178,13 @@ public class CDStepDependencyUtilsTest extends CategoryTest {
 
   @Data
   @AllArgsConstructor
+  @JsonTypeName("cdDummyOutcome")
   public static class DummyOutcome implements Outcome {
     String name;
+
+    @Override
+    public String getType() {
+      return "cdDummyOutcome";
+    }
   }
 }

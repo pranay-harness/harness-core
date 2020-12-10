@@ -7,6 +7,7 @@ import software.wings.api.InstanceFetchStateExecutionSummary;
 import software.wings.sm.InstanceStatusSummary;
 import software.wings.sm.StateExecutionData;
 
+import com.fasterxml.jackson.annotation.JsonTypeName;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -17,6 +18,7 @@ import lombok.EqualsAndHashCode;
 @Data
 @Builder
 @EqualsAndHashCode(callSuper = false)
+@JsonTypeName("instanceFetchStateExecutionData")
 public class InstanceFetchStateExecutionData extends StateExecutionData implements Outcome {
   private String activityId;
   private String hostObjectArrayPath;
@@ -51,5 +53,10 @@ public class InstanceFetchStateExecutionData extends StateExecutionData implemen
         .instanceFetchScript(instanceFetchScript)
         .scriptOutput(scriptOutput)
         .build();
+  }
+
+  @Override
+  public String getType() {
+    return "instanceFetchStateExecutionData";
   }
 }

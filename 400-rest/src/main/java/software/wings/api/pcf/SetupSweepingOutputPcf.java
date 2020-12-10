@@ -10,12 +10,14 @@ import software.wings.beans.ResizeStrategy;
 import software.wings.helpers.ext.pcf.request.PcfCommandRequest;
 import software.wings.helpers.ext.pcf.response.PcfAppSetupTimeDetails;
 
+import com.fasterxml.jackson.annotation.JsonTypeName;
 import java.util.List;
 import lombok.Builder;
 import lombok.Value;
 
 @Value
 @Builder
+@JsonTypeName("setupSweepingOutputPcf")
 public class SetupSweepingOutputPcf implements SweepingOutput {
   public static final String SWEEPING_OUTPUT_NAME = "setupSweepingOutputPcf";
 
@@ -71,5 +73,10 @@ public class SetupSweepingOutputPcf implements SweepingOutput {
     }
 
     return null;
+  }
+
+  @Override
+  public String getType() {
+    return "setupSweepingOutputPcf";
   }
 }

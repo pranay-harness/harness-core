@@ -10,13 +10,13 @@ import io.harness.data.structure.EmptyPredicate;
 import io.harness.engine.expressions.NodeExecutionsCache;
 import io.harness.engine.outcomes.OutcomeException;
 import io.harness.engine.outcomes.OutcomeService;
-import io.harness.engine.outputs.ExecutionSweepingOutputService;
 import io.harness.engine.outputs.SweepingOutputException;
 import io.harness.execution.NodeExecution;
 import io.harness.expression.ExpressionEvaluatorUtils;
 import io.harness.expression.LateBindingMap;
 import io.harness.pms.ambiance.Ambiance;
 import io.harness.pms.sdk.core.resolver.RefObjectUtil;
+import io.harness.pms.sdk.core.resolver.outputs.ExecutionSweepingOutputService;
 
 import java.util.Collections;
 import java.util.List;

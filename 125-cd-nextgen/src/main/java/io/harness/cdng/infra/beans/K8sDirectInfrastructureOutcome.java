@@ -20,4 +20,9 @@ public class K8sDirectInfrastructureOutcome implements InfrastructureOutcome {
   public String getKind() {
     return InfrastructureKind.KUBERNETES_DIRECT;
   }
+
+  @Override
+  public String getType() {
+    return InfrastructureKind.KUBERNETES_DIRECT;
+  }
 }

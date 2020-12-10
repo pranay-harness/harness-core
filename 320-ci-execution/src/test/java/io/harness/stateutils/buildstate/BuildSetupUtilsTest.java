@@ -19,11 +19,11 @@ import io.harness.delegate.beans.ci.CIBuildSetupTaskParams;
 import io.harness.delegate.beans.ci.pod.ConnectorDetails;
 import io.harness.delegate.beans.ci.pod.SecretVariableDetails;
 import io.harness.engine.expressions.EngineExpressionService;
-import io.harness.engine.outputs.ExecutionSweepingOutputService;
 import io.harness.executionplan.CIExecutionPlanTestHelper;
 import io.harness.executionplan.CIExecutionTest;
 import io.harness.logserviceclient.CILogServiceUtils;
 import io.harness.pms.ambiance.Ambiance;
+import io.harness.pms.sdk.core.resolver.outputs.ExecutionSweepingOutputService;
 import io.harness.rule.Owner;
 
 import com.google.inject.Inject;

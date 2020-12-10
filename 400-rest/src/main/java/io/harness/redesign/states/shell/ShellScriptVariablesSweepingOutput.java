@@ -6,6 +6,7 @@ import io.harness.annotations.Redesign;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.pms.sdk.core.data.SweepingOutput;
 
+import com.fasterxml.jackson.annotation.JsonTypeName;
 import java.util.Map;
 import lombok.Builder;
 import lombok.Value;
@@ -14,6 +15,12 @@ import lombok.Value;
 @Redesign
 @Value
 @Builder
+@JsonTypeName("shellScriptVariablesSweepingOutput")
 public class ShellScriptVariablesSweepingOutput implements SweepingOutput {
   Map<String, String> variables;
+
+  @Override
+  public String getType() {
+    return "shellScriptVariablesSweepingOutput";
+  }
 }

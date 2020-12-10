@@ -20,6 +20,7 @@ import io.harness.pms.execution.utils.AmbianceUtils;
 import io.harness.pms.refobjects.RefObject;
 import io.harness.pms.sdk.core.data.SweepingOutput;
 import io.harness.pms.sdk.core.resolver.ResolverUtils;
+import io.harness.pms.sdk.core.resolver.outputs.ExecutionSweepingOutputService;
 
 import com.google.inject.Inject;
 import com.google.inject.Injector;

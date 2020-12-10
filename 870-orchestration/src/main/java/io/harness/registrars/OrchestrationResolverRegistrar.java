@@ -4,10 +4,10 @@ import static io.harness.annotations.dev.HarnessTeam.CDC;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.engine.outcomes.OutcomeService;
-import io.harness.engine.outputs.ExecutionSweepingOutputService;
 import io.harness.pms.data.OrchestrationRefType;
 import io.harness.pms.refobjects.RefType;
 import io.harness.pms.sdk.core.resolver.Resolver;
+import io.harness.pms.sdk.core.resolver.outputs.ExecutionSweepingOutputService;
 import io.harness.pms.sdk.registries.registrar.ResolverRegistrar;
 
 import com.google.inject.Inject;

@@ -7,6 +7,7 @@ import software.wings.beans.container.AwsAutoScalarConfig;
 import software.wings.sm.ContextElement;
 import software.wings.sm.ExecutionContext;
 
+import com.fasterxml.jackson.annotation.JsonTypeName;
 import java.util.List;
 import java.util.Map;
 import lombok.Builder;
@@ -17,6 +18,7 @@ import lombok.Data;
  */
 @Data
 @Builder
+@JsonTypeName("containerRollbackRequestElement")
 public class ContainerRollbackRequestElement implements ContextElement, SweepingOutput {
   public static final String CONTAINER_ROLLBACK_REQUEST_PARAM = "CONTAINER_ROLLBACK_REQUEST_PARAM";
 
@@ -52,5 +54,10 @@ public class ContainerRollbackRequestElement implements ContextElement, Sweeping
   @Override
   public ContextElement cloneMin() {
     return this;
+  }
+
+  @Override
+  public String getType() {
+    return "containerRollbackRequestElement";
   }
 }

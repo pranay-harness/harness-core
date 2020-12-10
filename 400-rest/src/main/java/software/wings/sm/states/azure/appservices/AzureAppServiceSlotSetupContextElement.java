@@ -8,6 +8,7 @@ import software.wings.sm.ContextElement;
 import software.wings.sm.ExecutionContext;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.google.common.collect.ImmutableMap;
 import java.util.HashMap;
 import java.util.Map;
@@ -21,6 +22,7 @@ import lombok.NoArgsConstructor;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
+@JsonTypeName("azureAppServiceSlotSetupContextElement")
 public class AzureAppServiceSlotSetupContextElement implements ContextElement, SweepingOutput {
   private String uuid;
   private String name;
@@ -48,5 +50,10 @@ public class AzureAppServiceSlotSetupContextElement implements ContextElement, S
   @Override
   public ContextElement cloneMin() {
     return null;
+  }
+
+  @Override
+  public String getType() {
+    return "azureAppServiceSlotSetupContextElement";
   }
 }
