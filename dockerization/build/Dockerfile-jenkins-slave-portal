@@ -80,7 +80,7 @@ RUN cd /tmp \
     && git clone https://github.com/bazelbuild/buildtools.git \
     && cd buildtools \
     && bazel build //... \
-    && cp /tmp/buildtools/bazel-bin/unused_deps/unused_deps-linux_amd64 /usr/bin/unused_deps \
+    && cp /tmp/buildtools/bazel-bin/unused_deps/unused_deps_/unused_deps /usr/bin/unused_deps \
     && unused_deps --version \
     && cd / \
     && rm -rf /tmp/*
