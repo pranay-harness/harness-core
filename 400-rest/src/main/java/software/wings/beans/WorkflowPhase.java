@@ -325,6 +325,7 @@ public class WorkflowPhase implements UuidAccess {
                                             .templateExpressions(getTemplateExpressions())
                                             .daemonSet(isDaemonSet())
                                             .statefulSet(isStatefulSet())
+                                            .variableOverrides(getVariableOverrides())
                                             .build();
     List<PhaseStep> phaseSteps = getPhaseSteps();
     List<PhaseStep> clonedPhaseSteps = new ArrayList<>();
