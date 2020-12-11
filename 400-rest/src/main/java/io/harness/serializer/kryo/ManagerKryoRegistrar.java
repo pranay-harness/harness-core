@@ -228,7 +228,6 @@ import software.wings.beans.SplunkConfig;
 import software.wings.beans.SpotInstConfig;
 import software.wings.beans.SumoConfig;
 import software.wings.beans.Tag;
-import software.wings.beans.TaskType;
 import software.wings.beans.TechStack;
 import software.wings.beans.TerraformInputVariablesTaskResponse;
 import software.wings.beans.TrialSignupOptions;
@@ -1090,7 +1089,6 @@ public class ManagerKryoRegistrar implements KryoRegistrar {
     kryo.register(LdapUserSettings.class, 5497);
     kryo.register(SSOType.class, 5503);
     kryo.register(SumoConfig.class, 5178);
-    kryo.register(TaskType.class, 5005);
     kryo.register(TerraformInputVariablesTaskResponse.class, 5522);
     kryo.register(TriggerCommandType.class, 5555);
     kryo.register(User.class, 5355);
