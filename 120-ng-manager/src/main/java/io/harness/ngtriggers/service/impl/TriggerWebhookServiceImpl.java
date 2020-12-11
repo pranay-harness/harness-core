@@ -1,7 +1,7 @@
 package io.harness.ngtriggers.service.impl;
 
 import static io.harness.mongo.iterator.MongoPersistenceIterator.SchedulingType.REGULAR;
-import static io.harness.ngtriggers.beans.webhookresponse.WebhookEventResponse.FinalStatus.SCM_SERVICE_CONNECTION_FAILED;
+import static io.harness.ngtriggers.beans.response.WebhookEventResponse.FinalStatus.SCM_SERVICE_CONNECTION_FAILED;
 
 import static java.time.Duration.ofSeconds;
 
@@ -13,8 +13,8 @@ import io.harness.mongo.iterator.provider.MorphiaPersistenceRequiredProvider;
 import io.harness.mongo.iterator.provider.SpringPersistenceProvider;
 import io.harness.ngtriggers.beans.entity.TriggerWebhookEvent;
 import io.harness.ngtriggers.beans.entity.TriggerWebhookEvent.TriggerWebhookEventsKeys;
-import io.harness.ngtriggers.beans.webhookresponse.WebhookEventResponse;
-import io.harness.ngtriggers.helpers.NGTriggerWebhookExecutionHelper;
+import io.harness.ngtriggers.beans.response.WebhookEventResponse;
+import io.harness.ngtriggers.helper.NGTriggerWebhookExecutionHelper;
 import io.harness.ngtriggers.helpers.WebhookEventResponseHelper;
 import io.harness.ngtriggers.service.NGTriggerService;
 import io.harness.ngtriggers.service.TriggerWebhookService;
