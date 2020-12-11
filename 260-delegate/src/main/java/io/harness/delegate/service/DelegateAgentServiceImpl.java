@@ -2338,8 +2338,14 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
 
     Map<String, char[]> decryptedRecords = delegateDecryptionService.decrypt(encryptionConfigListMap);
     Map<String, char[]> secretUuidToValues = new HashMap<>();
-    secretDetails.forEach(
-        (key, value) -> secretUuidToValues.put(key, decryptedRecords.get(value.getEncryptedRecord().getUuid())));
+
+    secretDetails.forEach((key, value) -> {
+      char[] secretValue = decryptedRecords.get(value.getEncryptedRecord().getUuid());
+      secretUuidToValues.put(key, secretValue);
+
+      // Adds secret values from the 3 phase decryption to the list of task secrets to be masked
+      delegateTaskPackage.getSecrets().add(String.valueOf(secretValue));
+    });
 
     DelegateExpressionEvaluator delegateExpressionEvaluator =
         new DelegateExpressionEvaluator(secretUuidToValues, delegateTaskPackage.getData().getExpressionFunctorToken());

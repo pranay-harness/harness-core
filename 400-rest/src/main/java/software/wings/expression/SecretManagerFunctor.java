@@ -18,6 +18,7 @@ import io.harness.exception.InvalidRequestException;
 import io.harness.expression.ExpressionFunctor;
 import io.harness.ff.FeatureFlagService;
 import io.harness.security.encryption.EncryptedDataDetail;
+import io.harness.security.encryption.EncryptedRecordData;
 import io.harness.security.encryption.EncryptionConfig;
 import io.harness.security.encryption.EncryptionType;
 
@@ -126,8 +127,24 @@ public class SecretManagerFunctor implements ExpressionFunctor, SecretManagerFun
     String encryptionConfigUuid = encryptedDataDetail.getEncryptionConfig().getUuid();
     encryptionConfigs.put(encryptionConfigUuid, encryptedDataDetail.getEncryptionConfig());
 
-    SecretDetail secretDetail =
-        SecretDetail.builder().configUuid(encryptionConfigUuid).encryptedRecord(encryptedData).build();
+    SecretDetail secretDetail = SecretDetail.builder()
+                                    .configUuid(encryptionConfigUuid)
+                                    .encryptedRecord(EncryptedRecordData.builder()
+                                                         .uuid(encryptedData.getUuid())
+                                                         .name(encryptedData.getName())
+                                                         .path(encryptedData.getPath())
+                                                         .parameters(encryptedData.getParameters())
+                                                         .encryptionKey(encryptedData.getEncryptionKey())
+                                                         .encryptedValue(encryptedData.getEncryptedValue())
+                                                         .kmsId(encryptedData.getKmsId())
+                                                         .encryptionType(encryptedData.getEncryptionType())
+                                                         .backupEncryptedValue(encryptedData.getBackupEncryptedValue())
+                                                         .backupEncryptionKey(encryptedData.getBackupEncryptionKey())
+                                                         .backupKmsId(encryptedData.getBackupKmsId())
+                                                         .backupEncryptionType(encryptedData.getBackupEncryptionType())
+                                                         .base64Encoded(encryptedData.isBase64Encoded())
+                                                         .build())
+                                    .build();
 
     String secretDetailsUuid = generateUuid();
 

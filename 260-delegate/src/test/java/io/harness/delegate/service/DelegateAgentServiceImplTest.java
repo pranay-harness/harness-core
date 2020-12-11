@@ -82,10 +82,11 @@ public class DelegateAgentServiceImplTest extends CategoryTest {
     encryptionConfigMap.put("KMS_CONFIG_UUID", kmsConfig);
 
     Map<String, SecretDetail> secretDetails = new HashMap<>();
-    SecretDetail secretDetail = SecretDetail.builder()
-                                    .configUuid("KMS_CONFIG_UUID")
-                                    .encryptedRecord(EncryptedData.builder().accountId("ACCOUNT_ID").build())
-                                    .build();
+    SecretDetail secretDetail =
+        SecretDetail.builder()
+            .configUuid("KMS_CONFIG_UUID")
+            .encryptedRecord(EncryptedData.builder().uuid("ENC_UUID").accountId("ACCOUNT_ID").build())
+            .build();
 
     secretDetails.put("SECRET_UUID", secretDetail);
 
@@ -96,6 +97,10 @@ public class DelegateAgentServiceImplTest extends CategoryTest {
                                                   .encryptionConfigs(encryptionConfigMap)
                                                   .secretDetails(secretDetails)
                                                   .build();
+
+    Map<String, char[]> decryptedRecords = new HashMap<>();
+    decryptedRecords.put("ENC_UUID", "test".toCharArray());
+    when(delegateDecryptionService.decrypt(anyMap())).thenReturn(decryptedRecords);
 
     delegateService.applyDelegateSecretFunctor(delegateTaskPackage);
     verify(delegateDecryptionService, times(1)).decrypt(anyMap());
