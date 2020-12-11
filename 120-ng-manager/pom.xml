@@ -77,7 +77,7 @@
         </dependency>
         <dependency>
             <groupId>software.wings</groupId>
-            <artifactId>840-ng-triggers</artifactId>
+            <artifactId>780-ng-triggers</artifactId>
             <version>${project.parent.version}</version>
         </dependency>
         <dependency>
