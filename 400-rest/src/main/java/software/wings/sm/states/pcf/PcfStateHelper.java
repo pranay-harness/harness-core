@@ -161,9 +161,11 @@ public class PcfStateHelper {
                   .timeout(TimeUnit.MINUTES.toMillis(taskCreationData.getTimeout()))
                   .build())
         .setupAbstraction(Cd1SetupFields.ENV_ID_FIELD, taskCreationData.getEnvId())
+        .setupAbstraction(Cd1SetupFields.ENV_TYPE_FIELD, taskCreationData.getEnvironmentType().name())
         .setupAbstraction(Cd1SetupFields.INFRASTRUCTURE_MAPPING_ID_FIELD, taskCreationData.getInfrastructureMappingId())
         .tags(ListUtils.emptyIfNull(taskCreationData.getTagList()))
         .setupAbstraction(Cd1SetupFields.SERVICE_TEMPLATE_ID_FIELD, taskCreationData.getServiceTemplateId())
+        .setupAbstraction(Cd1SetupFields.SERVICE_ID_FIELD, taskCreationData.getServiceId())
         .build();
   }
 
@@ -261,6 +263,7 @@ public class PcfStateHelper {
                             .envId(queueRequestData.getEnvId())
                             .taskType(TaskType.PCF_COMMAND_TASK)
                             .infrastructureMappingId(pcfInfrastructureMapping.getUuid())
+                            .environmentType(queueRequestData.getEnvironmentType())
                             .parameters(new Object[] {pcfCommandRequest, queueRequestData.getEncryptedDataDetails()})
                             .timeout(timeoutIntervalInMinutes)
                             .build());

@@ -352,6 +352,7 @@ public class PcfStateHelperTest extends WingsBaseTest {
                                                                   .accountId(ACCOUNT_ID)
                                                                   .envId(ENV_ID)
                                                                   .infrastructureMappingId(INFRA_MAPPING_ID)
+                                                                  .environmentType(PROD)
                                                                   .taskType(COMMAND)
                                                                   .timeout(5l)
                                                                   .waitId(waitId)
@@ -366,6 +367,7 @@ public class PcfStateHelperTest extends WingsBaseTest {
     assertThat(delegateTask.getSetupAbstractions().get(Cd1SetupFields.ENV_ID_FIELD)).isEqualTo(ENV_ID);
     assertThat(delegateTask.getSetupAbstractions().get(Cd1SetupFields.INFRASTRUCTURE_MAPPING_ID_FIELD))
         .isEqualTo(INFRA_MAPPING_ID);
+    assertThat(delegateTask.getSetupAbstractions().get(Cd1SetupFields.ENV_TYPE_FIELD)).isEqualTo(PROD.name());
     assertThat(delegateTask.getWaitId()).isEqualTo(waitId);
     assertThat(delegateTask.getData().isAsync()).isTrue();
 
@@ -440,6 +442,7 @@ public class PcfStateHelperTest extends WingsBaseTest {
             .timeoutIntervalInMinutes(5)
             .app(anApplication().name(APP_NAME).appId(APP_ID).uuid(APP_ID).accountId(ACCOUNT_ID).build())
             .activityId(ACTIVITY_ID)
+            .environmentType(PROD)
             .pcfInfrastructureMapping(PcfInfrastructureMapping.builder()
                                           .tempRouteMap(Arrays.asList("temproute.io"))
                                           .routeMaps(Arrays.asList("route.io"))

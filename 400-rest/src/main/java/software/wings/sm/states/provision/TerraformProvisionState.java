@@ -616,6 +616,8 @@ public abstract class TerraformProvisionState extends State {
             .setupAbstraction(Cd1SetupFields.APP_ID_FIELD, requireNonNull(executionContext.getApp()).getAppId())
             .setupAbstraction(Cd1SetupFields.ENV_ID_FIELD,
                 executionContext.getEnv() != null ? executionContext.getEnv().getUuid() : null)
+            .setupAbstraction(Cd1SetupFields.ENV_TYPE_FIELD,
+                executionContext.getEnv() != null ? executionContext.getEnv().getEnvironmentType().name() : null)
             .tags(getRenderedTaskTags(delegateTag, executionContext))
             .data(TaskData.builder()
                       .async(true)

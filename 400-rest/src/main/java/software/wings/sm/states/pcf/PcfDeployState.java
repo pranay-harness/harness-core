@@ -200,6 +200,7 @@ public class PcfDeployState extends State {
                                            .taskType(TaskType.PCF_COMMAND_TASK)
                                            .waitId(activity.getUuid())
                                            .envId(env.getUuid())
+                                           .environmentType(env.getEnvironmentType())
                                            .infrastructureMappingId(pcfInfrastructureMapping.getUuid())
                                            .parameters(new Object[] {commandRequest, encryptedDataDetails})
                                            .timeout(setupSweepingOutputPcf.getTimeoutIntervalInMinutes() == null

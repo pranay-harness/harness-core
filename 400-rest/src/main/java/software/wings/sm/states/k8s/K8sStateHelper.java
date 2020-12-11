@@ -120,6 +120,7 @@ import software.wings.service.intfc.ActivityService;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ApplicationManifestService;
 import software.wings.service.intfc.DelegateService;
+import software.wings.service.intfc.EnvironmentService;
 import software.wings.service.intfc.InfrastructureDefinitionService;
 import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.ServiceResourceService;
@@ -190,6 +191,7 @@ public class K8sStateHelper {
   @Inject private InstanceService instanceService;
   @Inject private KryoSerializer kryoSerializer;
   @Inject private GitConfigHelperService gitConfigHelperService;
+  @Inject private EnvironmentService environmentService;
 
   private static final long MIN_TASK_TIMEOUT_IN_MINUTES = 1L;
 
@@ -310,22 +312,23 @@ public class K8sStateHelper {
     }
 
     String waitId = generateUuid();
-    DelegateTask delegateTask =
-        DelegateTask.builder()
-            .accountId(app.getAccountId())
-            .setupAbstraction(Cd1SetupFields.APP_ID_FIELD, app.getUuid())
-            .setupAbstraction(Cd1SetupFields.ENV_ID_FIELD, getEnvIdFromExecutionContext(context))
-            .setupAbstraction(
-                Cd1SetupFields.INFRASTRUCTURE_MAPPING_ID_FIELD, getContainerInfrastructureMappingId(context))
-            .waitId(waitId)
-            .tags(tags)
-            .data(TaskData.builder()
-                      .async(true)
-                      .taskType(TaskType.GIT_FETCH_FILES_TASK.name())
-                      .parameters(new Object[] {fetchFilesTaskParams})
-                      .timeout(TimeUnit.MINUTES.toMillis(GIT_FETCH_FILES_TASK_ASYNC_TIMEOUT))
-                      .build())
-            .build();
+    Environment env = getEnvFromExecutionContext(context);
+    DelegateTask delegateTask = DelegateTask.builder()
+                                    .accountId(app.getAccountId())
+                                    .setupAbstraction(Cd1SetupFields.APP_ID_FIELD, app.getUuid())
+                                    .setupAbstraction(Cd1SetupFields.ENV_ID_FIELD, env.getUuid())
+                                    .setupAbstraction(Cd1SetupFields.ENV_TYPE_FIELD, env.getEnvironmentType().name())
+                                    .setupAbstraction(Cd1SetupFields.INFRASTRUCTURE_MAPPING_ID_FIELD,
+                                        getContainerInfrastructureMappingId(context))
+                                    .waitId(waitId)
+                                    .tags(tags)
+                                    .data(TaskData.builder()
+                                              .async(true)
+                                              .taskType(TaskType.GIT_FETCH_FILES_TASK.name())
+                                              .parameters(new Object[] {fetchFilesTaskParams})
+                                              .timeout(TimeUnit.MINUTES.toMillis(GIT_FETCH_FILES_TASK_ASYNC_TIMEOUT))
+                                              .build())
+                                    .build();
 
     String delegateTaskId = delegateService.queueTask(delegateTask);
 
@@ -787,7 +790,13 @@ public class K8sStateHelper {
                       .timeout(Duration.ofMinutes(2).toMillis())
                       .build())
             .setupAbstraction(Cd1SetupFields.ENV_ID_FIELD, containerInfrastructureMapping.getEnvId())
+            .setupAbstraction(Cd1SetupFields.ENV_TYPE_FIELD,
+                environmentService
+                    .get(containerInfrastructureMapping.getAppId(), containerInfrastructureMapping.getEnvId())
+                    .getEnvironmentType()
+                    .name())
             .setupAbstraction(Cd1SetupFields.INFRASTRUCTURE_MAPPING_ID_FIELD, containerInfrastructureMapping.getUuid())
+            .setupAbstraction(Cd1SetupFields.SERVICE_ID_FIELD, containerInfrastructureMapping.getServiceId())
             .build();
 
     DelegateResponseData notifyResponseData = delegateService.executeTask(delegateTask);
@@ -974,24 +983,27 @@ public class K8sStateHelper {
 
     String waitId = generateUuid();
     int expressionFunctorToken = HashGenerator.generateIntegerHash();
-    DelegateTask delegateTask =
-        DelegateTask.builder()
-            .accountId(app.getAccountId())
-            .setupAbstraction(Cd1SetupFields.APP_ID_FIELD, app.getUuid())
-            .setupAbstraction(Cd1SetupFields.ENV_ID_FIELD, getEnvIdFromExecutionContext(context))
-            .setupAbstraction(
-                Cd1SetupFields.INFRASTRUCTURE_MAPPING_ID_FIELD, getContainerInfrastructureMappingId(context))
-            .setupAbstraction(Cd1SetupFields.SERVICE_TEMPLATE_ID_FIELD, serviceTemplateId)
-            .waitId(waitId)
-            .tags(tags)
-            .data(TaskData.builder()
-                      .async(true)
-                      .taskType(TaskType.HELM_VALUES_FETCH.name())
-                      .parameters(new Object[] {helmValuesFetchTaskParameters})
-                      .timeout(TimeUnit.MINUTES.toMillis(10))
-                      .expressionFunctorToken(expressionFunctorToken)
-                      .build())
-            .build();
+    Environment env = getEnvFromExecutionContext(context);
+    DelegateTask delegateTask = DelegateTask.builder()
+                                    .accountId(app.getAccountId())
+                                    .setupAbstraction(Cd1SetupFields.APP_ID_FIELD, app.getUuid())
+                                    .setupAbstraction(Cd1SetupFields.ENV_ID_FIELD, env.getUuid())
+                                    .setupAbstraction(Cd1SetupFields.ENV_TYPE_FIELD, env.getEnvironmentType().name())
+                                    .setupAbstraction(Cd1SetupFields.INFRASTRUCTURE_MAPPING_ID_FIELD,
+                                        getContainerInfrastructureMappingId(context))
+                                    .setupAbstraction(Cd1SetupFields.SERVICE_TEMPLATE_ID_FIELD, serviceTemplateId)
+                                    .setupAbstraction(Cd1SetupFields.SERVICE_ID_FIELD,
+                                        infraMapping != null ? infraMapping.getServiceId() : null)
+                                    .waitId(waitId)
+                                    .tags(tags)
+                                    .data(TaskData.builder()
+                                              .async(true)
+                                              .taskType(TaskType.HELM_VALUES_FETCH.name())
+                                              .parameters(new Object[] {helmValuesFetchTaskParameters})
+                                              .timeout(TimeUnit.MINUTES.toMillis(10))
+                                              .expressionFunctorToken(expressionFunctorToken)
+                                              .build())
+                                    .build();
 
     K8sStateExecutionData stateExecutionData = K8sStateExecutionData.builder()
                                                    .activityId(activityId)
@@ -1039,13 +1051,13 @@ public class K8sStateHelper {
     return infrastructureMapping.getUuid();
   }
 
-  public String getEnvIdFromExecutionContext(ExecutionContext context) {
+  public Environment getEnvFromExecutionContext(ExecutionContext context) {
     WorkflowStandardParams workflowStandardParams = context.getContextElement(ContextElementType.STANDARD);
     if (workflowStandardParams == null || workflowStandardParams.getEnv() == null) {
       return null;
     }
 
-    return workflowStandardParams.getEnv().getUuid();
+    return workflowStandardParams.getEnv();
   }
 
   public void validateK8sV2TypeServiceUsed(ExecutionContext context) {
