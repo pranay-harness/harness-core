@@ -295,6 +295,7 @@ import software.wings.beans.GraphNode;
 import software.wings.beans.InfrastructureMappingType;
 import software.wings.beans.JenkinsConfig;
 import software.wings.beans.MultiServiceOrchestrationWorkflow;
+import software.wings.beans.NameValuePair;
 import software.wings.beans.NotificationGroup;
 import software.wings.beans.NotificationRule;
 import software.wings.beans.OrchestrationWorkflow;
@@ -490,7 +491,8 @@ public class WorkflowServiceTest extends WingsBaseTest {
     when(serviceResourceService.get(APP_ID, SERVICE_ID, false)).thenReturn(service);
     when(serviceResourceService.get(SERVICE_ID)).thenReturn(service);
     when(serviceResourceService.getWithDetails(APP_ID, SERVICE_ID)).thenReturn(service);
-    when(serviceResourceService.fetchServicesByUuids(APP_ID, asList(SERVICE_ID))).thenReturn(asList(service));
+    when(serviceResourceService.fetchServicesByUuids(APP_ID, java.util.Arrays.asList(SERVICE_ID)))
+        .thenReturn(java.util.Arrays.asList(service));
     when(infrastructureMappingService.get(APP_ID, INFRA_MAPPING_ID))
         .thenReturn(anAwsInfrastructureMapping()
                         .withUuid(INFRA_MAPPING_ID)
@@ -515,11 +517,11 @@ public class WorkflowServiceTest extends WingsBaseTest {
                     .withUuid(ROLE_ID)
                     .withAccountId(application.getAccountId())
                     .build();
-    List<NotificationGroup> notificationGroups = asList(aNotificationGroup()
-                                                            .withUuid(NOTIFICATION_GROUP_ID)
-                                                            .withAccountId(application.getAccountId())
-                                                            .withRole(role)
-                                                            .build());
+    List<NotificationGroup> notificationGroups = java.util.Arrays.asList(aNotificationGroup()
+                                                                             .withUuid(NOTIFICATION_GROUP_ID)
+                                                                             .withAccountId(application.getAccountId())
+                                                                             .withRole(role)
+                                                                             .build());
     when(notificationSetupService.listNotificationGroups(
              application.getAccountId(), RoleType.ACCOUNT_ADMIN.getDisplayName()))
         .thenReturn(notificationGroups);
@@ -796,7 +798,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
     Pipeline pipeline = constructPipeline(workflowId);
 
     when(pipelineService.listPipelines(any(PageRequest.class)))
-        .thenReturn(aPageResponse().withResponse(asList(pipeline)).build());
+        .thenReturn(aPageResponse().withResponse(java.util.Arrays.asList(pipeline)).build());
     assertThatThrownBy(() -> workflowService.deleteWorkflow(APP_ID, workflowId))
         .isInstanceOf(WingsException.class)
         .hasMessage("Workflow is referenced by 1 pipeline [PIPELINE_NAME].");
@@ -1450,12 +1452,13 @@ public class WorkflowServiceTest extends WingsBaseTest {
     assertThat(orchestrationWorkflow.getWorkflowPhases().get(0))
         .isNotNull()
         .hasFieldOrPropertyWithValue("valid", false)
-        .hasFieldOrPropertyWithValue("validationMessage", format(PHASE_VALIDATION_MESSAGE, asList(DEPLOY_CONTAINERS)));
+        .hasFieldOrPropertyWithValue(
+            "validationMessage", format(PHASE_VALIDATION_MESSAGE, java.util.Arrays.asList(DEPLOY_CONTAINERS)));
     assertThat(orchestrationWorkflow.getWorkflowPhases().get(0).getPhaseSteps().get(0))
         .isNotNull()
         .hasFieldOrPropertyWithValue("valid", false)
         .hasFieldOrPropertyWithValue(
-            "validationMessage", format(PHASE_STEP_VALIDATION_MESSAGE, asList(UPGRADE_CONTAINERS)));
+            "validationMessage", format(PHASE_STEP_VALIDATION_MESSAGE, java.util.Arrays.asList(UPGRADE_CONTAINERS)));
     assertThat(orchestrationWorkflow.getWorkflowPhases()
                    .get(0)
                    .getPhaseSteps()
@@ -1467,7 +1470,8 @@ public class WorkflowServiceTest extends WingsBaseTest {
                    .get())
         .isNotNull()
         .hasFieldOrPropertyWithValue("valid", false)
-        .hasFieldOrPropertyWithValue("validationMessage", format(STEP_VALIDATION_MESSAGE, asList("instanceCount")));
+        .hasFieldOrPropertyWithValue(
+            "validationMessage", format(STEP_VALIDATION_MESSAGE, java.util.Arrays.asList("instanceCount")));
     assertThat(orchestrationWorkflow.getWorkflowPhases()
                    .get(0)
                    .getPhaseSteps()
@@ -2044,8 +2048,13 @@ public class WorkflowServiceTest extends WingsBaseTest {
     WorkflowPhase workflowPhase = aWorkflowPhase().infraDefinitionId(INFRA_DEFINITION_ID).serviceId(SERVICE_ID).build();
     workflowService.createWorkflowPhase(workflow1.getAppId(), workflow1.getUuid(), workflowPhase);
 
-    WorkflowPhase workflowPhase2 =
-        aWorkflowPhase().infraDefinitionId(INFRA_DEFINITION_ID).serviceId(SERVICE_ID).build();
+    List<NameValuePair> phaseOverrides = new ArrayList<>();
+    phaseOverrides.add(NameValuePair.builder().name("Var1").value("Val1").build());
+    WorkflowPhase workflowPhase2 = aWorkflowPhase()
+                                       .infraDefinitionId(INFRA_DEFINITION_ID)
+                                       .serviceId(SERVICE_ID)
+                                       .variableOverrides(phaseOverrides)
+                                       .build();
     workflowService.createWorkflowPhase(workflow1.getAppId(), workflow1.getUuid(), workflowPhase2);
 
     Workflow workflow2 = workflowService.readWorkflow(workflow1.getAppId(), workflow1.getUuid());
@@ -2068,6 +2077,11 @@ public class WorkflowServiceTest extends WingsBaseTest {
     assertThat(clonedWorkflowPhase)
         .isEqualToComparingOnlyGivenFields(workflowPhase2, "infraDefinitionId", "serviceId", "computeProviderId");
     assertThat(clonedWorkflowPhase.getPhaseSteps()).isNotNull().size().isEqualTo(workflowPhase2.getPhaseSteps().size());
+    assertThat(clonedWorkflowPhase.getVariableOverrides())
+        .isNotNull()
+        .extracting(NameValuePair::getName)
+        .contains("Var1");
+    assertThat(clonedWorkflowPhase.getVariableOverrides()).extracting(NameValuePair::getValue).contains("Val1");
   }
 
   @Test
@@ -2368,8 +2382,8 @@ public class WorkflowServiceTest extends WingsBaseTest {
   public void shouldUpdateFailureStrategies() {
     Workflow workflow1 = createCanaryWorkflow();
 
-    List<FailureStrategy> failureStrategies =
-        newArrayList(FailureStrategy.builder().failureTypes(asList(FailureType.VERIFICATION_FAILURE)).build());
+    List<FailureStrategy> failureStrategies = newArrayList(
+        FailureStrategy.builder().failureTypes(java.util.Arrays.asList(FailureType.VERIFICATION_FAILURE)).build());
     List<FailureStrategy> updated =
         workflowService.updateFailureStrategies(workflow1.getAppId(), workflow1.getUuid(), failureStrategies);
 
@@ -2400,7 +2414,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
 
       List<FailureStrategy> failureStrategies =
           newArrayList(FailureStrategy.builder()
-                           .failureTypes(asList(FailureType.VERIFICATION_FAILURE))
+                           .failureTypes(java.util.Arrays.asList(FailureType.VERIFICATION_FAILURE))
                            .failureCriteria(FailureCriteria.builder().failureThresholdPercentage(-1).build())
                            .build());
 
@@ -2415,7 +2429,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
 
       List<FailureStrategy> failureStrategies =
           newArrayList(FailureStrategy.builder()
-                           .failureTypes(asList(FailureType.VERIFICATION_FAILURE))
+                           .failureTypes(java.util.Arrays.asList(FailureType.VERIFICATION_FAILURE))
                            .failureCriteria(FailureCriteria.builder().failureThresholdPercentage(101).build())
                            .build());
       List<FailureStrategy> updated =
@@ -2430,7 +2444,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
 
       List<FailureStrategy> failureStrategies =
           newArrayList(FailureStrategy.builder()
-                           .failureTypes(asList(FailureType.VERIFICATION_FAILURE))
+                           .failureTypes(java.util.Arrays.asList(FailureType.VERIFICATION_FAILURE))
                            .failureCriteria(FailureCriteria.builder().failureThresholdPercentage(100).build())
                            .build());
       List<FailureStrategy> updated =
@@ -2438,7 +2452,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
 
       failureStrategies =
           newArrayList(FailureStrategy.builder()
-                           .failureTypes(asList(FailureType.VERIFICATION_FAILURE))
+                           .failureTypes(java.util.Arrays.asList(FailureType.VERIFICATION_FAILURE))
                            .failureCriteria(FailureCriteria.builder().failureThresholdPercentage(100).build())
                            .build());
       workflowService.updateFailureStrategies(workflow1.getAppId(), workflow1.getUuid(), failureStrategies);
@@ -2619,7 +2633,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
     Workflow workflow2 = workflowService.createWorkflow(workflow1);
     assertThat(workflow2).isNotNull().hasFieldOrProperty("uuid");
 
-    workflow2.setTemplateExpressions(asList(getEnvTemplateExpression()));
+    workflow2.setTemplateExpressions(java.util.Arrays.asList(getEnvTemplateExpression()));
 
     workflowService.updateWorkflow(workflow2, null, false);
 
@@ -2666,7 +2680,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
     Workflow workflow2 = workflowService.createWorkflow(workflow1);
     assertThat(workflow2).isNotNull().hasFieldOrProperty("uuid");
 
-    workflow2.setTemplateExpressions(asList(getEnvTemplateExpression()));
+    workflow2.setTemplateExpressions(java.util.Arrays.asList(getEnvTemplateExpression()));
 
     workflowService.updateWorkflow(workflow2, null, false);
 
@@ -2839,7 +2853,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
     Workflow workflow2 = workflowService.createWorkflow(workflow1);
     assertThat(workflow2).isNotNull().hasFieldOrProperty("uuid");
 
-    workflow2.setTemplateExpressions(asList(getEnvTemplateExpression()));
+    workflow2.setTemplateExpressions(java.util.Arrays.asList(getEnvTemplateExpression()));
 
     workflowService.updateWorkflow(workflow2, null, false);
 
@@ -2876,7 +2890,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
                                            .expression("${Environment_Changed}")
                                            .metadata(ImmutableMap.of("entityType", "ENVIRONMENT"))
                                            .build();
-    workflow3.setTemplateExpressions(asList(envExpression));
+    workflow3.setTemplateExpressions(java.util.Arrays.asList(envExpression));
 
     workflow3 = workflowService.updateWorkflow(workflow3, null, false);
 
@@ -3070,7 +3084,8 @@ public class WorkflowServiceTest extends WingsBaseTest {
   @Owner(developers = SRINIVAS)
   @Category(UnitTests.class)
   public void shouldAwsCodeDeployStateDefaults() {
-    when(artifactStreamService.fetchArtifactStreamsForService(APP_ID, SERVICE_ID)).thenReturn(asList(artifactStream));
+    when(artifactStreamService.fetchArtifactStreamsForService(APP_ID, SERVICE_ID))
+        .thenReturn(java.util.Arrays.asList(artifactStream));
     when(artifactStream.getArtifactStreamType()).thenReturn(ArtifactStreamType.AMAZON_S3.name());
     Map<String, String> defaults = workflowService.getStateDefaults(APP_ID, SERVICE_ID, AWS_CODEDEPLOY_STATE);
     assertThat(defaults).isNotEmpty();
@@ -3245,7 +3260,8 @@ public class WorkflowServiceTest extends WingsBaseTest {
         .extracting(Variable::obtainEntityType)
         .containsSequence(SERVICE, INFRASTRUCTURE_DEFINITION);
 
-    when(serviceResourceService.fetchServicesByUuids(APP_ID, asList(SERVICE_ID))).thenReturn(asList(service));
+    when(serviceResourceService.fetchServicesByUuids(APP_ID, java.util.Arrays.asList(SERVICE_ID)))
+        .thenReturn(java.util.Arrays.asList(service));
     List<Service> resolvedServices =
         workflowService.getResolvedServices(workflow3, ImmutableMap.of("Service", SERVICE_ID));
     assertThat(resolvedServices).isNotEmpty().extracting(Service::getName).contains(SERVICE_NAME);
@@ -3257,8 +3273,9 @@ public class WorkflowServiceTest extends WingsBaseTest {
   public void shouldGetResolvedInfraDef() {
     InfrastructureDefinition infrastructureDefinition = buildAwsSshInfraDef(INFRA_DEFINITION_ID);
     when(infrastructureDefinitionService.get(APP_ID, INFRA_DEFINITION_ID)).thenReturn(infrastructureDefinition);
-    when(infrastructureDefinitionService.getInfraStructureDefinitionByUuids(APP_ID, asList(INFRA_DEFINITION_ID)))
-        .thenReturn(asList(infrastructureDefinition));
+    when(infrastructureDefinitionService.getInfraStructureDefinitionByUuids(
+             APP_ID, java.util.Arrays.asList(INFRA_DEFINITION_ID)))
+        .thenReturn(java.util.Arrays.asList(infrastructureDefinition));
     Workflow workflow1 = constructCanaryWorkflowWithPhase();
 
     Workflow savedWorkflow = workflowService.createWorkflow(workflow1);
@@ -3276,8 +3293,9 @@ public class WorkflowServiceTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void shouldGetResolvedTemplatizedInfraMappings() {
     mockAwsInfraDef(INFRA_DEFINITION_ID);
-    when(infrastructureDefinitionService.getInfraStructureDefinitionByUuids(APP_ID, asList(INFRA_DEFINITION_ID)))
-        .thenReturn(asList(buildAwsSshInfraDef(INFRA_DEFINITION_ID)));
+    when(infrastructureDefinitionService.getInfraStructureDefinitionByUuids(
+             APP_ID, java.util.Arrays.asList(INFRA_DEFINITION_ID)))
+        .thenReturn(java.util.Arrays.asList(buildAwsSshInfraDef(INFRA_DEFINITION_ID)));
 
     Workflow workflow1 = createCanaryWorkflow();
     WorkflowPhase workflowPhase = aWorkflowPhase().infraDefinitionId(INFRA_DEFINITION_ID).serviceId(SERVICE_ID).build();
@@ -3314,7 +3332,8 @@ public class WorkflowServiceTest extends WingsBaseTest {
         .extracting(Variable::obtainEntityType)
         .containsSequence(SERVICE, INFRASTRUCTURE_DEFINITION);
 
-    when(serviceResourceService.fetchServicesByUuids(APP_ID, asList(SERVICE_ID))).thenReturn(asList(service));
+    when(serviceResourceService.fetchServicesByUuids(APP_ID, java.util.Arrays.asList(SERVICE_ID)))
+        .thenReturn(java.util.Arrays.asList(service));
 
     List<InfrastructureDefinition> resolvedInfraDefinitions = workflowService.getResolvedInfraDefinitions(
         workflow3, ImmutableMap.of("Service", SERVICE_ID, "InfraDef_SSH", INFRA_DEFINITION_ID));
@@ -3364,7 +3383,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void shouldGetResolvedEnvironmentIdForTemplatizedWorkflow() {
     Workflow workflow = constructBasicWorkflowWithPhase();
-    workflow.setTemplateExpressions(asList(getEnvTemplateExpression()));
+    workflow.setTemplateExpressions(java.util.Arrays.asList(getEnvTemplateExpression()));
 
     Workflow workflow2 = workflowService.createWorkflow(workflow);
     assertThat(workflow2).isNotNull().hasFieldOrProperty("uuid").hasFieldOrPropertyWithValue("appId", APP_ID);
@@ -3498,7 +3517,8 @@ public class WorkflowServiceTest extends WingsBaseTest {
     List<Variable> templateVariables = preDeploymentStep.getTemplateVariables();
     assertThat(templateVariables).isNotEmpty();
 
-    preDeploymentStep.setTemplateVariables(asList(aVariable().name("url").value("https://google.com").build()));
+    preDeploymentStep.setTemplateVariables(
+        java.util.Arrays.asList(aVariable().name("url").value("https://google.com").build()));
 
     Workflow oldWorkflow = workflowService.readWorkflow(savedWorkflow.getAppId(), savedWorkflow.getUuid());
 
@@ -3895,7 +3915,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
                                              .allowedList(Collections.singletonList(ARTIFACT_STREAM_ID))
                                              .build();
     when(featureFlagService.isEnabled(FeatureName.DEFAULT_ARTIFACT, ACCOUNT_ID)).thenReturn(false);
-    workflowService.updateArtifactVariables(APP_ID, null, asList(artifactVariable2), true, null);
+    workflowService.updateArtifactVariables(APP_ID, null, java.util.Arrays.asList(artifactVariable2), true, null);
 
     assertThat(artifactVariable2.getArtifactStreamSummaries()).isNotNull();
     assertThat(artifactVariable2.getArtifactStreamSummaries().size()).isEqualTo(1);
@@ -4302,7 +4322,8 @@ public class WorkflowServiceTest extends WingsBaseTest {
     assertThat(workflowCategorySteps.getCategories())
         .extracting(
             WorkflowCategoryStepsMeta::getId, WorkflowCategoryStepsMeta::getName, WorkflowCategoryStepsMeta::getStepIds)
-        .contains(tuple(ARTIFACT.name(), ARTIFACT.getDisplayName(), asList(ARTIFACT_COLLECTION.name())));
+        .contains(
+            tuple(ARTIFACT.name(), ARTIFACT.getDisplayName(), java.util.Arrays.asList(ARTIFACT_COLLECTION.name())));
 
     validateCommonCategories(workflowCategorySteps);
 
@@ -4325,7 +4346,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
     assertThat(workflowCategorySteps.getCategories())
         .extracting(
             WorkflowCategoryStepsMeta::getId, WorkflowCategoryStepsMeta::getName, WorkflowCategoryStepsMeta::getStepIds)
-        .contains(tuple(NOTIFICATION.name(), NOTIFICATION.getDisplayName(), asList(EMAIL.name())));
+        .contains(tuple(NOTIFICATION.name(), NOTIFICATION.getDisplayName(), java.util.Arrays.asList(EMAIL.name())));
     assertThat(workflowCategorySteps.getCategories())
         .extracting(
             WorkflowCategoryStepsMeta::getId, WorkflowCategoryStepsMeta::getName, WorkflowCategoryStepsMeta::getStepIds)
@@ -4346,7 +4367,8 @@ public class WorkflowServiceTest extends WingsBaseTest {
           .extracting(WorkflowCategoryStepsMeta::getId, WorkflowCategoryStepsMeta::getName,
               WorkflowCategoryStepsMeta::getStepIds)
           .contains(tuple(WorkflowStepType.INFRASTRUCTURE_PROVISIONER.name(),
-              WorkflowStepType.INFRASTRUCTURE_PROVISIONER.getDisplayName(), asList(TERRAFORM_APPLY.name())));
+              WorkflowStepType.INFRASTRUCTURE_PROVISIONER.getDisplayName(),
+              java.util.Arrays.asList(TERRAFORM_APPLY.name())));
     } else if (isK8sPhaseStep) {
       assertThat(workflowCategorySteps.getCategories())
           .extracting(WorkflowCategoryStepsMeta::getId, WorkflowCategoryStepsMeta::getName,
@@ -4452,8 +4474,8 @@ public class WorkflowServiceTest extends WingsBaseTest {
     assertThat(workflowCategorySteps.getCategories())
         .extracting(
             WorkflowCategoryStepsMeta::getId, WorkflowCategoryStepsMeta::getName, WorkflowCategoryStepsMeta::getStepIds)
-        .contains(
-            tuple(WorkflowStepType.HELM.name(), WorkflowStepType.HELM.getDisplayName(), asList(HELM_DEPLOY.name())));
+        .contains(tuple(WorkflowStepType.HELM.name(), WorkflowStepType.HELM.getDisplayName(),
+            java.util.Arrays.asList(HELM_DEPLOY.name())));
 
     validateCommonCategories(workflowCategorySteps, false, true);
 
@@ -4585,7 +4607,8 @@ public class WorkflowServiceTest extends WingsBaseTest {
     assertThat(workflowCategorySteps.getCategories())
         .extracting(
             WorkflowCategoryStepsMeta::getId, WorkflowCategoryStepsMeta::getName, WorkflowCategoryStepsMeta::getStepIds)
-        .contains(tuple(AWS_AMI.name(), AWS_AMI.getDisplayName(), asList(StepType.AWS_AMI_SERVICE_ROLLBACK.name())));
+        .contains(tuple(AWS_AMI.name(), AWS_AMI.getDisplayName(),
+            java.util.Arrays.asList(StepType.AWS_AMI_SERVICE_ROLLBACK.name())));
 
     validateCommonCategories(workflowCategorySteps);
 
@@ -4688,7 +4711,8 @@ public class WorkflowServiceTest extends WingsBaseTest {
     assertThat(workflowCategorySteps.getCategories())
         .extracting(
             WorkflowCategoryStepsMeta::getId, WorkflowCategoryStepsMeta::getName, WorkflowCategoryStepsMeta::getStepIds)
-        .contains(tuple(AWS_SSH.name(), AWS_SSH.getDisplayName(), asList(StepType.AWS_NODE_SELECT.name())));
+        .contains(
+            tuple(AWS_SSH.name(), AWS_SSH.getDisplayName(), java.util.Arrays.asList(StepType.AWS_NODE_SELECT.name())));
     assertThat(workflowCategorySteps.getCategories())
         .extracting(WorkflowCategoryStepsMeta::getId)
         .doesNotContain(DC_SSH.name(), AZURE_NODE_SELECT.name());
@@ -4710,7 +4734,8 @@ public class WorkflowServiceTest extends WingsBaseTest {
     assertThat(workflowCategorySteps.getCategories())
         .extracting(
             WorkflowCategoryStepsMeta::getId, WorkflowCategoryStepsMeta::getName, WorkflowCategoryStepsMeta::getStepIds)
-        .contains(tuple(AWS_SSH.name(), AWS_SSH.getDisplayName(), asList(StepType.AWS_NODE_SELECT.name())));
+        .contains(
+            tuple(AWS_SSH.name(), AWS_SSH.getDisplayName(), java.util.Arrays.asList(StepType.AWS_NODE_SELECT.name())));
     assertThat(workflowCategorySteps.getCategories())
         .extracting(WorkflowCategoryStepsMeta::getId)
         .doesNotContain(DC_SSH.name(), AZURE_NODE_SELECT.name());
@@ -4745,15 +4770,16 @@ public class WorkflowServiceTest extends WingsBaseTest {
     assertThat(workflowCategorySteps.getCategories())
         .extracting(
             WorkflowCategoryStepsMeta::getId, WorkflowCategoryStepsMeta::getName, WorkflowCategoryStepsMeta::getStepIds)
-        .contains(tuple("RECENTLY_USED", "Recently Used", asList(EMAIL.name())));
+        .contains(tuple("RECENTLY_USED", "Recently Used", java.util.Arrays.asList(EMAIL.name())));
     assertThat(workflowCategorySteps.getCategories())
         .extracting(
             WorkflowCategoryStepsMeta::getId, WorkflowCategoryStepsMeta::getName, WorkflowCategoryStepsMeta::getStepIds)
-        .contains(tuple("MY_FAVORITES", "My Favorites", asList(StepType.AWS_NODE_SELECT.name())));
+        .contains(tuple("MY_FAVORITES", "My Favorites", java.util.Arrays.asList(StepType.AWS_NODE_SELECT.name())));
     assertThat(workflowCategorySteps.getCategories())
         .extracting(
             WorkflowCategoryStepsMeta::getId, WorkflowCategoryStepsMeta::getName, WorkflowCategoryStepsMeta::getStepIds)
-        .contains(tuple(AWS_SSH.name(), AWS_SSH.getDisplayName(), asList(StepType.AWS_NODE_SELECT.name())));
+        .contains(
+            tuple(AWS_SSH.name(), AWS_SSH.getDisplayName(), java.util.Arrays.asList(StepType.AWS_NODE_SELECT.name())));
     assertThat(workflowCategorySteps.getCategories())
         .extracting(WorkflowCategoryStepsMeta::getId)
         .doesNotContain(DC_SSH.name(), AZURE_NODE_SELECT.name());
@@ -4860,7 +4886,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
                                                   .settingId(SETTING_ID)
                                                   .jobname("${repo}")
                                                   .groupId("mygroup")
-                                                  .artifactPaths(asList("todolist"))
+                                                  .artifactPaths(java.util.Arrays.asList("todolist"))
                                                   .autoPopulate(false)
                                                   .serviceId(SERVICE_ID)
                                                   .name("art_parameterized")
@@ -4868,7 +4894,8 @@ public class WorkflowServiceTest extends WingsBaseTest {
                                                   .build();
     nexusArtifactStream.setArtifactStreamParameterized(true);
     when(artifactStreamService.get(ARTIFACT_STREAM_ID)).thenReturn(nexusArtifactStream);
-    when(artifactStreamService.getArtifactStreamParameters(ARTIFACT_STREAM_ID)).thenReturn(asList("repo"));
+    when(artifactStreamService.getArtifactStreamParameters(ARTIFACT_STREAM_ID))
+        .thenReturn(java.util.Arrays.asList("repo"));
     workflowService.resolveArtifactStreamMetadata(APP_ID, artifactVariables, workflowExecution);
     assertThat(artifactVariables.get(0).getArtifactStreamMetadata()).isNull();
     assertThat(artifactVariables.get(1).getArtifactStreamMetadata()).isNotNull();
@@ -4893,7 +4920,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
     Map<String, Object> map1 = new HashMap<>();
     map1.put("repo", "myrepo");
     map1.put("buildNo", "1.0");
-    executionArgs.setArtifactVariables(asList(
+    executionArgs.setArtifactVariables(java.util.Arrays.asList(
         ArtifactVariable.builder()
             .entityType(SERVICE)
             .entityId("SERVICE_ID_1")
@@ -4909,7 +4936,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
                                                   .settingId(SETTING_ID)
                                                   .jobname("${repo}")
                                                   .groupId("${group}")
-                                                  .artifactPaths(asList("todolist"))
+                                                  .artifactPaths(java.util.Arrays.asList("todolist"))
                                                   .autoPopulate(false)
                                                   .serviceId(SERVICE_ID)
                                                   .name("art_parameterized")
@@ -4941,7 +4968,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
     Map<String, Object> map1 = new HashMap<>();
     map1.put("repo", "myrepo");
     map1.put("buildNo", "1.0");
-    executionArgs.setArtifactVariables(asList(
+    executionArgs.setArtifactVariables(java.util.Arrays.asList(
         ArtifactVariable.builder()
             .entityType(SERVICE)
             .entityId("SERVICE_ID_1")
@@ -4957,7 +4984,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
                                                   .settingId(SETTING_ID)
                                                   .jobname("releases")
                                                   .groupId("mygroup")
-                                                  .artifactPaths(asList("todolist"))
+                                                  .artifactPaths(java.util.Arrays.asList("todolist"))
                                                   .autoPopulate(false)
                                                   .serviceId(SERVICE_ID)
                                                   .name("art_parameterized")
