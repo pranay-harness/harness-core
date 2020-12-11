@@ -923,6 +923,7 @@ public class HelmDeployState extends State {
             .setupAbstraction(Cd1SetupFields.APP_ID_FIELD, app.getUuid())
             .setupAbstraction(Cd1SetupFields.ENV_ID_FIELD, env.getUuid())
             .setupAbstraction(Cd1SetupFields.INFRASTRUCTURE_MAPPING_ID_FIELD, containerInfraMapping.getUuid())
+            .setupAbstraction(Cd1SetupFields.SERVICE_ID_FIELD, containerInfraMapping.getServiceId())
             .setupAbstraction(Cd1SetupFields.SERVICE_TEMPLATE_ID_FIELD,
                 serviceTemplateHelper.fetchServiceTemplateId(containerInfraMapping))
             .setupAbstraction(Cd1SetupFields.ARTIFACT_STREAM_ID_FIELD, artifactStreamId)
@@ -1023,25 +1024,26 @@ public class HelmDeployState extends State {
         buildStateExecutionContext(helmDeployStateExecutionDataBuilder, expressionFunctorToken);
 
     String waitId = generateUuid();
-    DelegateTask delegateTask =
-        DelegateTask.builder()
-            .accountId(app.getAccountId())
-            .description("Fetch Files")
-            .setupAbstraction(Cd1SetupFields.APP_ID_FIELD, app.getUuid())
-            .setupAbstraction(Cd1SetupFields.ENV_ID_FIELD, k8sStateHelper.getEnvIdFromExecutionContext(context))
-            .setupAbstraction(Cd1SetupFields.INFRASTRUCTURE_MAPPING_ID_FIELD,
-                k8sStateHelper.getContainerInfrastructureMappingId(context))
-            .waitId(waitId)
-            .tags(tags)
-            .data(TaskData.builder()
-                      .async(true)
-                      .taskType(TaskType.GIT_FETCH_FILES_TASK.name())
-                      .parameters(new Object[] {fetchFilesTaskParams})
-                      .timeout(TimeUnit.MINUTES.toMillis(GIT_FETCH_FILES_TASK_ASYNC_TIMEOUT))
-                      .expressionFunctorToken(expressionFunctorToken)
-                      .build())
-            .selectionLogsTrackingEnabled(isSelectionLogsTrackingForTasksEnabled())
-            .build();
+    Environment env = k8sStateHelper.getEnvFromExecutionContext(context);
+    DelegateTask delegateTask = DelegateTask.builder()
+                                    .accountId(app.getAccountId())
+                                    .description("Fetch Files")
+                                    .setupAbstraction(Cd1SetupFields.APP_ID_FIELD, app.getUuid())
+                                    .setupAbstraction(Cd1SetupFields.ENV_ID_FIELD, env.getUuid())
+                                    .setupAbstraction(Cd1SetupFields.ENV_TYPE_FIELD, env.getEnvironmentType().name())
+                                    .setupAbstraction(Cd1SetupFields.INFRASTRUCTURE_MAPPING_ID_FIELD,
+                                        k8sStateHelper.getContainerInfrastructureMappingId(context))
+                                    .waitId(waitId)
+                                    .tags(tags)
+                                    .data(TaskData.builder()
+                                              .async(true)
+                                              .taskType(TaskType.GIT_FETCH_FILES_TASK.name())
+                                              .parameters(new Object[] {fetchFilesTaskParams})
+                                              .timeout(TimeUnit.MINUTES.toMillis(GIT_FETCH_FILES_TASK_ASYNC_TIMEOUT))
+                                              .expressionFunctorToken(expressionFunctorToken)
+                                              .build())
+                                    .selectionLogsTrackingEnabled(isSelectionLogsTrackingForTasksEnabled())
+                                    .build();
 
     renderDelegateTask(context, delegateTask, stateExecutionContext);
 
@@ -1266,16 +1268,19 @@ public class HelmDeployState extends State {
     ContainerInfrastructureMapping containerInfraMapping =
         (ContainerInfrastructureMapping) infrastructureMappingService.get(app.getUuid(), context.fetchInfraMappingId());
 
+    Environment env = k8sStateHelper.getEnvFromExecutionContext(context);
     DelegateTask delegateTask =
         DelegateTask.builder()
             .accountId(app.getAccountId())
             .description("Fetch Helm Values")
             .setupAbstraction(Cd1SetupFields.APP_ID_FIELD, app.getUuid())
-            .setupAbstraction(Cd1SetupFields.ENV_ID_FIELD, k8sStateHelper.getEnvIdFromExecutionContext(context))
+            .setupAbstraction(Cd1SetupFields.ENV_ID_FIELD, env.getUuid())
+            .setupAbstraction(Cd1SetupFields.ENV_TYPE_FIELD, env.getEnvironmentType().name())
             .setupAbstraction(Cd1SetupFields.INFRASTRUCTURE_MAPPING_ID_FIELD,
                 k8sStateHelper.getContainerInfrastructureMappingId(context))
             .setupAbstraction(Cd1SetupFields.SERVICE_TEMPLATE_ID_FIELD,
                 serviceTemplateHelper.fetchServiceTemplateId(containerInfraMapping))
+            .setupAbstraction(Cd1SetupFields.SERVICE_ID_FIELD, containerInfraMapping.getServiceId())
             .waitId(waitId)
             .tags(tags)
             .data(TaskData.builder()

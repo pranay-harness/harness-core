@@ -401,6 +401,9 @@ public class HelmDeployStateTest extends WingsBaseTest {
     on(workflowStandardParams).set("subdomainUrlHelper", subdomainUrlHelper);
     when(featureFlagService.isEnabled(FeatureName.ARTIFACT_STREAM_REFACTOR, ACCOUNT_ID)).thenReturn(false);
     when(subdomainUrlHelper.getPortalBaseUrl(any())).thenReturn("baseUrl");
+    doReturn(anEnvironment().uuid(ENV_ID).environmentType(EnvironmentType.NON_PROD).build())
+        .when(k8sStateHelper)
+        .getEnvFromExecutionContext(context);
   }
 
   @Test

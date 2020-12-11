@@ -472,8 +472,7 @@ public class PcfPluginStateTest extends WingsBaseTest {
 
     verify(activityService, times(0)).updateStatus("activityId", APP_ID, FAILED);
 
-    PcfPluginStateExecutionData pcfSetupStateExecutionData =
-        (PcfPluginStateExecutionData) context.getStateExecutionData();
+    PcfPluginStateExecutionData pcfSetupStateExecutionData = context.getStateExecutionData();
 
     assertThat(pcfSetupStateExecutionData.getFetchFilesResult()).isEqualTo(gitFetchFilesFromMultipleRepoResult);
 

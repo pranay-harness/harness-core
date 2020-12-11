@@ -4,6 +4,7 @@ import io.harness.delegate.beans.DelegateTaskNotifyResponseData;
 
 import software.wings.api.ExecutionDataValue;
 import software.wings.api.pcf.PcfPluginExecutionSummary.PcfPluginExecutionSummaryBuilder;
+import software.wings.beans.Environment.EnvironmentType;
 import software.wings.beans.TaskType;
 import software.wings.beans.appmanifest.ApplicationManifest;
 import software.wings.beans.yaml.GitFetchFilesFromMultipleRepoResult;
@@ -30,6 +31,7 @@ public class PcfPluginStateExecutionData extends StateExecutionData implements D
   private String appId;
   private String serviceId;
   private String envId;
+  private EnvironmentType environmentType;
   private String infraMappingId;
   private String commandName;
   private TaskType taskType;

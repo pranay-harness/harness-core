@@ -349,7 +349,9 @@ public class PcfSetupState extends State {
             .waitId(waitId)
             .taskType(TaskType.PCF_COMMAND_TASK)
             .envId(env.getUuid())
+            .environmentType(env.getEnvironmentType())
             .infrastructureMappingId(pcfInfrastructureMapping.getUuid())
+            .serviceId(pcfInfrastructureMapping.getServiceId())
             .parameters(new Object[] {commandRequest, encryptedDataDetails})
             .timeout(timeoutIntervalInMinutes == null ? DEFAULT_PCF_TASK_TIMEOUT_MIN : timeoutIntervalInMinutes)
             .build());

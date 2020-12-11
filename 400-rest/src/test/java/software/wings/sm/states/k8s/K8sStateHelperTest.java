@@ -11,6 +11,7 @@ import static io.harness.rule.OwnerRule.YOGESH;
 
 import static software.wings.api.InstanceElement.Builder.anInstanceElement;
 import static software.wings.beans.Application.Builder.anApplication;
+import static software.wings.beans.Environment.Builder.anEnvironment;
 import static software.wings.beans.GcpKubernetesInfrastructureMapping.Builder.aGcpKubernetesInfrastructureMapping;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 import static software.wings.beans.appmanifest.AppManifestKind.K8S_MANIFEST;
@@ -281,11 +282,7 @@ public class K8sStateHelperTest extends WingsBaseTest {
     when(appService.getApplicationWithDefaults(APP_ID)).thenReturn(application);
     when(appService.get(any())).thenReturn(application);
     when(environmentService.get(APP_ID, ENV_ID, false))
-        .thenReturn(Environment.Builder.anEnvironment()
-                        .appId(APP_ID)
-                        .environmentType(EnvironmentType.PROD)
-                        .uuid(ENV_ID)
-                        .build());
+        .thenReturn(anEnvironment().appId(APP_ID).environmentType(EnvironmentType.PROD).uuid(ENV_ID).build());
     when(evaluator.substitute(anyString(), anyMap(), any(VariableResolverTracker.class), anyString()))
         .thenAnswer(i -> i.getArguments()[0]);
     doReturn(K8sClusterConfig.builder().build())
@@ -631,6 +628,9 @@ public class K8sStateHelperTest extends WingsBaseTest {
                                             .k8sTaskResponse(K8sInstanceSyncResponse.builder().build())
                                             .build();
     when(delegateService.executeTask(any())).thenReturn(response);
+    Environment env = new Environment();
+    env.setEnvironmentType(EnvironmentType.PROD);
+    when(environmentService.get(anyString(), anyString())).thenReturn(env);
 
     SettingAttribute settingAttribute = aSettingAttribute()
                                             .withUuid(SETTING_ID)
@@ -1224,6 +1224,7 @@ public class K8sStateHelperTest extends WingsBaseTest {
     verify(delegateService, times(2)).queueTask(captor.capture());
     assertThat(captor.getValue().getSetupAbstractions().get(Cd1SetupFields.INFRASTRUCTURE_MAPPING_ID_FIELD))
         .isEqualTo(null);
+    assertThat(captor.getValue().getSetupAbstractions().get(Cd1SetupFields.SERVICE_ID_FIELD)).isEqualTo(null);
 
     when(applicationManifestUtils.getAppManifestByApplyingHelmChartOverride(context)).thenReturn(null);
     try {

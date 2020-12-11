@@ -155,6 +155,7 @@ public class PcfSwitchBlueGreenRoutes extends State {
             .pcfInfrastructureMapping(pcfInfrastructureMapping)
             .activityId(activity.getUuid())
             .envId(env.getUuid())
+            .environmentType(env.getEnvironmentType())
             .timeoutIntervalInMinutes(firstNonNull(setupSweepingOutputPcf.getTimeoutIntervalInMinutes(), 5))
             .commandName(PCF_BG_SWAP_ROUTE_COMMAND)
             .requestConfigData(requestConfigData)

@@ -157,6 +157,7 @@ public class MapRouteState extends State {
             .pcfInfrastructureMapping(infrastructureMapping)
             .activityId(activity.getUuid())
             .envId(environment.getUuid())
+            .environmentType(environment.getEnvironmentType())
             .timeoutIntervalInMinutes(setupSweepingOutputPcf.getTimeoutIntervalInMinutes())
             .commandName(PCF_MAP_ROUTE_COMMAND)
             .requestConfigData(requestConfigData)
