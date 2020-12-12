@@ -3,6 +3,7 @@ package io.harness.ngtriggers.service.impl;
 import static io.harness.mongo.iterator.MongoPersistenceIterator.SchedulingType.REGULAR;
 import static io.harness.ngtriggers.beans.response.WebhookEventResponse.FinalStatus.SCM_SERVICE_CONNECTION_FAILED;
 
+import static java.time.Duration.ofMinutes;
 import static java.time.Duration.ofSeconds;
 
 import io.harness.iterator.PersistenceIteratorFactory;
@@ -43,14 +44,15 @@ public class TriggerWebhookServiceImpl
     persistenceIteratorFactory.createPumpIteratorWithDedicatedThreadPool(
         PersistenceIteratorFactory.PumpExecutorOptions.builder()
             .name("WebhookEventProcessor")
-            .poolSize(1)
-            .interval(ofSeconds(15))
+            .poolSize(2)
+            .interval(ofSeconds(10))
             .build(),
         TriggerWebhookService.class,
         MongoPersistenceIterator.<TriggerWebhookEvent, SpringFilterExpander>builder()
             .clazz(TriggerWebhookEvent.class)
             .fieldName(TriggerWebhookEventsKeys.nextIteration)
-            .targetInterval(ofSeconds(15))
+            .targetInterval(ofMinutes(5))
+            .acceptableExecutionTime(ofMinutes(1))
             .acceptableNoAlertDelay(ofSeconds(30))
             .handler(this)
             .filterExpander(query

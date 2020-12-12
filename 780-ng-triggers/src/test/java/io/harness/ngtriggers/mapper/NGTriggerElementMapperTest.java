@@ -95,7 +95,8 @@ public class NGTriggerElementMapperTest extends CategoryTest {
   @Owner(developers = ADWAIT)
   @Category(UnitTests.class)
   public void testToTriggerEntityFromYaml() {
-    NGTriggerEntity ngTriggerEntity = ngTriggerElementMapper.toTriggerEntity("accId", "orgId", "projId", ngTriggerYaml);
+    NGTriggerEntity ngTriggerEntity =
+        ngTriggerElementMapper.toTriggerDetails("accId", "orgId", "projId", ngTriggerYaml).getNgTriggerEntity();
 
     assertThat(ngTriggerEntity.getAccountId()).isEqualTo("accId");
     assertThat(ngTriggerEntity.getOrgIdentifier()).isEqualTo("orgId");
@@ -126,7 +127,8 @@ public class NGTriggerElementMapperTest extends CategoryTest {
   @Owner(developers = NAMAN)
   @Category(UnitTests.class)
   public void testToResponseDTO() {
-    NGTriggerEntity ngTriggerEntity = ngTriggerElementMapper.toTriggerEntity("accId", "orgId", "projId", ngTriggerYaml);
+    NGTriggerEntity ngTriggerEntity =
+        ngTriggerElementMapper.toTriggerDetails("accId", "orgId", "projId", ngTriggerYaml).getNgTriggerEntity();
     NGTriggerResponseDTO responseDTO = ngTriggerElementMapper.toResponseDTO(ngTriggerEntity);
     assertThat(responseDTO.getAccountIdentifier()).isEqualTo(ngTriggerEntity.getAccountId());
     assertThat(responseDTO.getOrgIdentifier()).isEqualTo(ngTriggerEntity.getOrgIdentifier());

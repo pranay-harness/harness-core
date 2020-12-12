@@ -1,7 +1,7 @@
-package io.harness.pms.inputset;
+package io.harness.pms.merger;
 
-import io.harness.pms.inputset.fqn.FQN;
-import io.harness.pms.inputset.helpers.FQNUtils;
+import io.harness.pms.merger.fqn.FQN;
+import io.harness.pms.merger.helpers.FQNUtils;
 import io.harness.pms.yaml.YamlUtils;
 
 import com.fasterxml.jackson.databind.JsonNode;

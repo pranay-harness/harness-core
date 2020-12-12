@@ -1,4 +1,4 @@
-package io.harness.pms.inputset.fqn;
+package io.harness.pms.merger.fqn;
 
 import java.util.ArrayList;
 import java.util.List;

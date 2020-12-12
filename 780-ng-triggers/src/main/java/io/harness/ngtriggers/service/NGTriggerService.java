@@ -1,5 +1,7 @@
 package io.harness.ngtriggers.service;
 
+import io.harness.ngtriggers.beans.config.NGTriggerConfig;
+import io.harness.ngtriggers.beans.dto.TriggerDetails;
 import io.harness.ngtriggers.beans.entity.NGTriggerEntity;
 import io.harness.ngtriggers.beans.entity.TriggerWebhookEvent;
 
@@ -29,4 +31,8 @@ public interface NGTriggerService {
   TriggerWebhookEvent addEventToQueue(TriggerWebhookEvent webhookEventQueueRecord);
   TriggerWebhookEvent updateTriggerWebhookEvent(TriggerWebhookEvent webhookEventQueueRecord);
   void deleteTriggerWebhookEvent(TriggerWebhookEvent webhookEventQueueRecord);
+
+  void sanitizeRuntimeInputForTrigger(TriggerDetails triggerDetails) throws Exception;
+
+  String generateFinalPipelineYmlForTrigger(TriggerDetails triggerDetails);
 }

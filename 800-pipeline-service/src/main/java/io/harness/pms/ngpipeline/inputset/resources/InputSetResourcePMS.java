@@ -1,5 +1,8 @@
 package io.harness.pms.ngpipeline.inputset.resources;
 
+import static io.harness.pms.merger.helpers.MergeHelper.createTemplateFromPipeline;
+import static io.harness.pms.merger.helpers.MergeHelper.mergeInputSets;
+import static io.harness.pms.merger.helpers.MergeHelper.removeRuntimeInputFromYaml;
 import static io.harness.utils.PageUtils.getNGPageResponse;
 
 import static java.lang.Long.parseLong;
@@ -108,7 +111,7 @@ public class InputSetResourcePMS {
       @NotNull @QueryParam(NGCommonEntityConstants.PIPELINE_KEY) String pipelineIdentifier,
       @NotNull @ApiParam(hidden = true) String yaml) {
     try {
-      yaml = MergeHelper.removeRuntimeInputFromYaml(yaml);
+      yaml = removeRuntimeInputFromYaml(yaml);
     } catch (IOException e) {
       throw new InvalidRequestException("Could not clear ${input} fields from yaml : " + e.getMessage());
     }
@@ -179,7 +182,7 @@ public class InputSetResourcePMS {
       @NotNull @QueryParam(NGCommonEntityConstants.PIPELINE_KEY) String pipelineIdentifier,
       @NotNull @ApiParam(hidden = true) String yaml) {
     try {
-      yaml = MergeHelper.removeRuntimeInputFromYaml(yaml);
+      yaml = removeRuntimeInputFromYaml(yaml);
     } catch (IOException e) {
       throw new InvalidRequestException("Could not clear ${input} fields from yaml : " + e.getMessage());
     }
@@ -293,7 +296,7 @@ public class InputSetResourcePMS {
     if (optionalPipelineEntity.isPresent()) {
       String pipelineYaml = optionalPipelineEntity.get().getYaml();
       try {
-        String pipelineTemplateYaml = MergeHelper.createTemplateFromPipeline(pipelineYaml);
+        String pipelineTemplateYaml = createTemplateFromPipeline(pipelineYaml);
         return ResponseDTO.newResponse(
             InputSetTemplateResponseDTOPMS.builder().inputSetTemplateYaml(pipelineTemplateYaml).build());
       } catch (IOException e) {
@@ -343,7 +346,7 @@ public class InputSetResourcePMS {
       }
     });
     try {
-      String mergedYaml = MergeHelper.mergeInputSets(pipelineTemplate, inputSetYamlList);
+      String mergedYaml = mergeInputSets(pipelineTemplate, inputSetYamlList);
       return ResponseDTO.newResponse(
           MergeInputSetResponseDTOPMS.builder().isErrorResponse(false).pipelineYaml(mergedYaml).build());
     } catch (IOException e) {

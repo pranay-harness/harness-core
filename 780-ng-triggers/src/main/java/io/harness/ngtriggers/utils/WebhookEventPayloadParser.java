@@ -7,6 +7,7 @@ import static java.util.stream.Collectors.toSet;
 
 import io.harness.exception.InvalidRequestException;
 import io.harness.ngtriggers.beans.config.HeaderConfig;
+import io.harness.ngtriggers.beans.dto.WebhookEventHeaderData;
 import io.harness.ngtriggers.beans.entity.TriggerWebhookEvent;
 import io.harness.ngtriggers.beans.scm.*;
 import io.harness.ngtriggers.beans.scm.Repository;
@@ -228,5 +229,26 @@ public class WebhookEventPayloadParser {
             + "One of " + X_GIT_HUB_EVENT + ", " + X_BIT_BUCKET_EVENT + ", " + X_GIT_LAB_EVENT
             + " must be present in Headers",
         USER);
+  }
+
+  public WebhookEventHeaderData obtainWebhookSourceKeyData(List<HeaderConfig> headerConfigs) {
+    HeaderConfig headerConfig = headerConfigs.stream()
+                                    .filter(config
+                                        -> config.getKey().equalsIgnoreCase(X_GIT_HUB_EVENT)
+                                            || config.getKey().equalsIgnoreCase(X_GIT_LAB_EVENT)
+                                            || config.getKey().equalsIgnoreCase(X_BIT_BUCKET_EVENT))
+                                    .findFirst()
+                                    .orElse(null);
+
+    WebhookEventHeaderData.WebhookEventHeaderDataBuilder builder = WebhookEventHeaderData.builder().dataFound(false);
+    if (headerConfig != null) {
+      return WebhookEventHeaderData.builder()
+          .sourceKey(headerConfig.getKey())
+          .sourceKeyVal(headerConfig.getValues())
+          .dataFound(true)
+          .build();
+    }
+
+    return builder.build();
   }
 }

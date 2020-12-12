@@ -1,5 +1,6 @@
 package io.harness.ngtriggers.resource;
 
+import static io.harness.exception.WingsException.USER;
 import static io.harness.utils.PageUtils.getNGPageResponse;
 
 import static java.lang.Long.parseLong;
@@ -9,6 +10,9 @@ import static org.apache.commons.lang3.StringUtils.isNumeric;
 import io.harness.NGCommonEntityConstants;
 import io.harness.NGResourceFilterConstants;
 import io.harness.data.structure.EmptyPredicate;
+import io.harness.exception.InvalidRequestException;
+import io.harness.exception.TriggerException;
+import io.harness.exception.WingsException;
 import io.harness.ng.beans.PageResponse;
 import io.harness.ng.core.dto.ErrorDTO;
 import io.harness.ng.core.dto.FailureDTO;
@@ -16,6 +20,7 @@ import io.harness.ng.core.dto.ResponseDTO;
 import io.harness.ngtriggers.beans.config.NGTriggerConfig;
 import io.harness.ngtriggers.beans.dto.NGTriggerDetailsResponseDTO;
 import io.harness.ngtriggers.beans.dto.NGTriggerResponseDTO;
+import io.harness.ngtriggers.beans.dto.TriggerDetails;
 import io.harness.ngtriggers.beans.entity.NGTriggerEntity;
 import io.harness.ngtriggers.beans.entity.NGTriggerEntity.NGTriggerEntityKeys;
 import io.harness.ngtriggers.mapper.NGTriggerElementMapper;
@@ -64,11 +69,17 @@ public class NGTriggerResource {
       @NotNull @QueryParam(NGCommonEntityConstants.ORG_KEY) String orgIdentifier,
       @NotNull @QueryParam(NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier,
       @NotNull @ApiParam(hidden = true, type = "") String yaml) {
-    NGTriggerEntity ngTriggerEntity =
-        ngTriggerElementMapper.toTriggerEntity(accountIdentifier, orgIdentifier, projectIdentifier, yaml);
-    NGTriggerEntity createdEntity = ngTriggerService.create(ngTriggerEntity);
-    return ResponseDTO.newResponse(
-        createdEntity.getVersion().toString(), ngTriggerElementMapper.toResponseDTO(createdEntity));
+    NGTriggerEntity createdEntity = null;
+    try {
+      TriggerDetails triggerDetails =
+          ngTriggerElementMapper.toTriggerDetails(accountIdentifier, orgIdentifier, projectIdentifier, yaml);
+      ngTriggerService.sanitizeRuntimeInputForTrigger(triggerDetails);
+      createdEntity = ngTriggerService.create(triggerDetails.getNgTriggerEntity());
+      return ResponseDTO.newResponse(
+          createdEntity.getVersion().toString(), ngTriggerElementMapper.toResponseDTO(createdEntity));
+    } catch (Exception e) {
+      throw new InvalidRequestException("Failed while Saving Trigger: " + e.getMessage());
+    }
   }
 
   @GET
