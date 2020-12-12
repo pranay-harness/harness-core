@@ -187,6 +187,10 @@ public class InfrastructureProvisionerGenerator {
           builder.environmentVariables(terraformInfrastructureProvisioner.getEnvironmentVariables());
         }
 
+        if (terraformInfrastructureProvisioner.getKmsId() != null) {
+          builder.kmsId(terraformInfrastructureProvisioner.getKmsId());
+        }
+
         newInfrastructureProvisioner = builder.build();
         break;
       }
