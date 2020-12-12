@@ -4,7 +4,7 @@ EOF
 
 plan=$(cat plan.json | sed "s/^'//g" | sed "s/'$//g")
 
-terraform_version=$(echo "$plan" | jq ".terraform_version")
+terraform_version=$(echo "$plan" | grep ".terraform_version")
 
 rm -f plan.json
 

@@ -1,5 +1,6 @@
 package io.harness.functional;
 
+import static io.harness.beans.SearchFilter.Operator.EQ;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.persistence.HQuery.excludeAuthority;
@@ -11,6 +12,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 import io.harness.CategoryTest;
 import io.harness.beans.ExecutionStatus;
 import io.harness.beans.FeatureName;
+import io.harness.beans.PageRequest;
+import io.harness.beans.PageResponse;
 import io.harness.beans.WorkflowType;
 import io.harness.ff.FeatureFlagService;
 import io.harness.multiline.MultilineStringMixin;
@@ -29,9 +32,12 @@ import io.harness.testframework.restutils.WorkflowRestUtils;
 import software.wings.api.DeploymentType;
 import software.wings.api.PhaseStepExecutionData;
 import software.wings.beans.Account;
+import software.wings.beans.Activity;
+import software.wings.beans.Activity.ActivityKeys;
 import software.wings.beans.ExecutionArgs;
 import software.wings.beans.ExecutionCredential;
 import software.wings.beans.ExecutionCredential.ExecutionType;
+import software.wings.beans.Log;
 import software.wings.beans.SSHExecutionCredential;
 import software.wings.beans.User;
 import software.wings.beans.Workflow;
@@ -48,6 +54,7 @@ import software.wings.service.impl.analysis.AnalysisContext.AnalysisContextKeys;
 import software.wings.service.impl.security.auth.AuthHandler;
 import software.wings.service.intfc.InfrastructureDefinitionService;
 import software.wings.service.intfc.InfrastructureMappingService;
+import software.wings.service.intfc.LogService;
 import software.wings.service.intfc.UserService;
 import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.service.intfc.instance.InstanceService;
@@ -95,6 +102,7 @@ public abstract class AbstractFunctionalTest extends CategoryTest implements Gra
   @Inject InfrastructureMappingService infrastructureMappingService;
   @Inject ServerlessInstanceService serverlessInstanceService;
   @Inject InfrastructureDefinitionService infrastructureDefinitionService;
+  @Inject LogService logService;
 
   @Override
   public DataLoaderRegistry getDataLoaderRegistry() {
@@ -407,5 +415,25 @@ public abstract class AbstractFunctionalTest extends CategoryTest implements Gra
         .filter(InstanceKeys.serviceId, serviceId)
         .filter(InstanceKeys.isDeleted, Boolean.FALSE)
         .asList();
+  }
+
+  public void getFailedWorkflowExecutionLogs(WorkflowExecution workflowExecution) {
+    if (workflowExecution != null && workflowExecution.getStatus() != ExecutionStatus.FAILED) {
+      log.info("Workflow execution didn't failed, skipping fetching logs");
+      return;
+    }
+    List<Activity> activities = wingsPersistence.createQuery(Activity.class)
+                                    .filter(ActivityKeys.accountId, workflowExecution.getAccountId())
+                                    .filter(ActivityKeys.workflowExecutionId, workflowExecution.getUuid())
+                                    .asList();
+
+    for (Activity activity : activities) {
+      PageRequest<Log> request = new PageRequest<>();
+      request.addFilter("activityId", EQ, activity.getUuid());
+      request.addFilter("commandUnitName", EQ, activity.getCommandUnits().get(0).getName());
+      PageResponse<Log> logPageResponse = logService.list(workflowExecution.getAppId(), request);
+      log.info("for activityId : {}", activity.getUuid());
+      logPageResponse.forEach(response -> log.info(response.getLogLine()));
+    }
   }
 }
