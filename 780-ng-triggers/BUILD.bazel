@@ -11,9 +11,9 @@ java_library(
     name = "maven_deps",
     visibility = ["//visibility:public"],
     exports = [
-        "//800-pipeline-service:module",
         "//850-ng-pipeline-commons:module",
         "//870-yaml-beans:module",
+        "//884-pms-commons:module",
         "//950-common-entities:module",
         "//970-ng-commons:module",
         "//product/ci/scm/proto:ciscm_java_proto",

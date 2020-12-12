@@ -1,5 +1,8 @@
 package io.harness.ngtriggers.helper;
 
+import static io.harness.cdng.pipeline.plancreators.PipelinePlanCreator.WEBHOOK_EVENT_PAYLOAD_EVENT_REPO_TYPE;
+import static io.harness.cdng.pipeline.plancreators.PipelinePlanCreator.WEBHOOK_EVENT_PAYLOAD_EVENT_TYPE;
+import static io.harness.exception.WingsException.USER;
 import static io.harness.ngtriggers.beans.response.WebhookEventResponse.FinalStatus.INVALID_RUNTIME_INPUT_YAML;
 import static io.harness.ngtriggers.beans.response.WebhookEventResponse.FinalStatus.NO_ENABLED_TRIGGER_FOUND_FOR_REPO;
 import static io.harness.ngtriggers.beans.response.WebhookEventResponse.FinalStatus.NO_MATCHING_TRIGGER_FOR_PAYLOAD_CONDITIONS;
@@ -11,11 +14,20 @@ import static org.apache.commons.lang3.StringUtils.EMPTY;
 
 import io.harness.beans.EmbeddedUser;
 import io.harness.cdng.pipeline.helpers.NGPipelineExecuteHelper;
+import io.harness.cdng.pipeline.mappers.NGPipelineExecutionDTOMapper;
+import io.harness.cdng.pipeline.plancreators.PipelinePlanCreator;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.InvalidRequestException;
+import io.harness.exception.TriggerException;
+import io.harness.execution.PlanExecution;
+import io.harness.ngpipeline.inputset.beans.entities.MergeInputSetResponse;
+import io.harness.ngpipeline.pipeline.beans.entities.NgPipelineEntity;
 import io.harness.ngpipeline.pipeline.beans.resources.NGPipelineExecutionResponseDTO;
+import io.harness.ngpipeline.pipeline.mappers.PipelineDtoMapper;
+import io.harness.ngpipeline.pipeline.service.NGPipelineService;
 import io.harness.ngtriggers.beans.config.NGTriggerConfig;
 import io.harness.ngtriggers.beans.dto.TriggerDetails;
+import io.harness.ngtriggers.beans.dto.WebhookEventHeaderData;
 import io.harness.ngtriggers.beans.entity.NGTriggerEntity;
 import io.harness.ngtriggers.beans.entity.TriggerWebhookEvent;
 import io.harness.ngtriggers.beans.response.TargetExecutionSummary;
@@ -37,7 +49,9 @@ import io.harness.ngtriggers.utils.WebhookTriggerFilterUtil;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Inject;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 import lombok.AllArgsConstructor;
@@ -48,6 +62,7 @@ import org.springframework.data.domain.Page;
 @Slf4j
 public class NGTriggerWebhookExecutionHelper {
   private final NGTriggerService ngTriggerService;
+  private final NGPipelineService ngPipelineService;
   private final NGPipelineExecuteHelper ngPipelineExecuteHelper;
   private final WebhookEventPayloadParser webhookEventPayloadParser;
   private final NGTriggerElementMapper ngTriggerElementMapper;
@@ -103,8 +118,18 @@ public class NGTriggerWebhookExecutionHelper {
         ((PipelineTargetSpec) triggerDetails.getNgTriggerConfig().getTarget().getSpec()).getRuntimeInputYaml();
 
     try {
+      Map<String, Object> contextAttributes = new HashMap<>();
+      contextAttributes.put(PipelinePlanCreator.EVENT_PAYLOAD_KEY, triggerWebhookEvent.getPayload());
+
+      WebhookEventHeaderData webhookEventHeaderData =
+          webhookEventPayloadParser.obtainWebhookSourceKeyData(triggerWebhookEvent.getHeaders());
+      if (webhookEventHeaderData.isDataFound()) {
+        contextAttributes.put(WEBHOOK_EVENT_PAYLOAD_EVENT_REPO_TYPE, webhookEventHeaderData.getSourceKey());
+        contextAttributes.put(WEBHOOK_EVENT_PAYLOAD_EVENT_TYPE, webhookEventHeaderData.getSourceKeyVal().get(0));
+      }
+
       NGPipelineExecutionResponseDTO response =
-          resolveRuntimeInputAndSubmitExecutionRequest(triggerDetails, triggerWebhookEvent.getPayload());
+          resolveRuntimeInputAndSubmitExecutionRequest(triggerDetails, contextAttributes);
 
       TargetExecutionSummary targetExecutionSummary =
           WebhookEventResponseHelper.prepareTargetExecutionSummary(response, triggerDetails, runtimeInputYaml);
@@ -208,19 +233,31 @@ public class NGTriggerWebhookExecutionHelper {
   }
 
   private NGPipelineExecutionResponseDTO resolveRuntimeInputAndSubmitExecutionRequest(
-      TriggerDetails triggerDetails, String eventPayload) {
-    NGTriggerConfig ngTriggerConfig = triggerDetails.getNgTriggerConfig();
-    NGTriggerEntity ngTriggerEntity = triggerDetails.getNgTriggerEntity();
-    TargetSpec targetSpec = ngTriggerConfig.getTarget().getSpec();
-    EmbeddedUser embeddedUser = EmbeddedUser.builder().email("email").name("name").uuid("uuid").build();
+      TriggerDetails triggerDetails, Map<String, Object> contextAttributes) {
+    // TODO: once, we have user object availalbe, use it.
+    EmbeddedUser embeddedUser = EmbeddedUser.builder().email("").name("trigger").uuid("systemUser").build();
+    try {
+      String finalPipelineYmlForTrigger = ngTriggerService.generateFinalPipelineYmlForTrigger(triggerDetails);
 
-    if (PipelineTargetSpec.class.isAssignableFrom(targetSpec.getClass())) {
-      PipelineTargetSpec pipelineTargetSpec = (PipelineTargetSpec) targetSpec;
-      return ngPipelineExecuteHelper.runPipelineWithInputSetPipelineYaml(ngTriggerEntity.getAccountId(),
-          ngTriggerEntity.getOrgIdentifier(), ngTriggerEntity.getProjectIdentifier(),
-          ngTriggerEntity.getTargetIdentifier(), pipelineTargetSpec.getRuntimeInputYaml(), eventPayload, false,
-          embeddedUser);
+      NGTriggerEntity ngTriggerEntity = triggerDetails.getNgTriggerEntity();
+      String runtimeInputYaml = readRuntimeInputFromConfig(triggerDetails.getNgTriggerConfig());
+      NgPipelineEntity ngPipelineEntity = PipelineDtoMapper.toPipelineEntity(ngTriggerEntity.getAccountId(),
+          ngTriggerEntity.getOrgIdentifier(), ngTriggerEntity.getProjectIdentifier(), finalPipelineYmlForTrigger);
+
+      contextAttributes.put(PipelinePlanCreator.INPUT_SET_YAML_KEY, runtimeInputYaml);
+      PlanExecution planExecution = ngPipelineExecuteHelper.startPipelinePlanExecution(ngTriggerEntity.getAccountId(),
+          ngTriggerEntity.getOrgIdentifier(), ngTriggerEntity.getProjectIdentifier(), ngPipelineEntity.getNgPipeline(),
+          embeddedUser, contextAttributes);
+      return NGPipelineExecutionDTOMapper.toNGPipelineResponseDTO(
+          planExecution, MergeInputSetResponse.builder().isErrorResponse(false).build());
+    } catch (Exception e) {
+      throw new TriggerException("Failed while requesting Pipeline Execution" + e.getMessage(), USER);
     }
-    throw new InvalidRequestException("Target type does not match");
+  }
+
+  private String readRuntimeInputFromConfig(NGTriggerConfig ngTriggerConfig) {
+    TargetSpec targetSpec = ngTriggerConfig.getTarget().getSpec();
+    PipelineTargetSpec pipelineTargetSpec = (PipelineTargetSpec) targetSpec;
+    return pipelineTargetSpec.getRuntimeInputYaml();
   }
 }

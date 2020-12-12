@@ -6,8 +6,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
-import io.harness.pms.inputset.PipelineYamlConfig;
-import io.harness.pms.inputset.fqn.FQN;
+import io.harness.pms.merger.PipelineYamlConfig;
+import io.harness.pms.merger.fqn.FQN;
 import io.harness.pms.yaml.YamlUtils;
 import io.harness.rule.Owner;
 

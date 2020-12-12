@@ -2,7 +2,7 @@ package io.harness.pms.ngpipeline.inputset.mappers;
 
 import io.harness.exception.InvalidRequestException;
 import io.harness.ng.core.mapper.TagMapper;
-import io.harness.pms.inputset.PipelineYamlConfig;
+import io.harness.pms.merger.PipelineYamlConfig;
 import io.harness.pms.ngpipeline.inputset.beans.entity.InputSetEntity;
 import io.harness.pms.ngpipeline.inputset.beans.entity.InputSetEntityType;
 import io.harness.pms.ngpipeline.inputset.beans.resource.InputSetErrorWrapperDTOPMS;

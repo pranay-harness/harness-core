@@ -8,6 +8,7 @@ import io.harness.ngtriggers.beans.config.NGTriggerConfig;
 import io.harness.ngtriggers.beans.dto.LastTriggerExecutionDetails;
 import io.harness.ngtriggers.beans.dto.NGTriggerDetailsResponseDTO;
 import io.harness.ngtriggers.beans.dto.NGTriggerResponseDTO;
+import io.harness.ngtriggers.beans.dto.TriggerDetails;
 import io.harness.ngtriggers.beans.dto.WebhookDetails;
 import io.harness.ngtriggers.beans.entity.NGTriggerEntity;
 import io.harness.ngtriggers.beans.entity.TriggerEventHistory;
@@ -44,10 +45,12 @@ public class NGTriggerElementMapper {
     }
   }
 
-  public NGTriggerEntity toTriggerEntity(
+  public TriggerDetails toTriggerDetails(
       String accountIdentifier, String orgIdentifier, String projectIdentifier, String yaml) {
     NGTriggerConfig config = toTriggerConfig(yaml);
-    return toTriggerEntity(accountIdentifier, orgIdentifier, projectIdentifier, config, yaml);
+    NGTriggerEntity ngTriggerEntity =
+        toTriggerEntity(accountIdentifier, orgIdentifier, projectIdentifier, config, yaml);
+    return TriggerDetails.builder().ngTriggerConfig(config).ngTriggerEntity(ngTriggerEntity).build();
   }
 
   public NGTriggerEntity toTriggerEntity(

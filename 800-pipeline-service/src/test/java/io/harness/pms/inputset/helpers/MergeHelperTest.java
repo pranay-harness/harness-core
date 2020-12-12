@@ -1,12 +1,18 @@
 package io.harness.pms.inputset.helpers;
 
+import static io.harness.pms.merger.helpers.MergeHelper.createTemplateFromPipeline;
+import static io.harness.pms.merger.helpers.MergeHelper.getInvalidFQNsInInputSet;
+import static io.harness.pms.merger.helpers.MergeHelper.mergeInputSetIntoPipeline;
+import static io.harness.pms.merger.helpers.MergeHelper.mergeInputSets;
+import static io.harness.pms.merger.helpers.MergeHelper.sanitizeInputSet;
+import static io.harness.pms.merger.helpers.MergeHelper.sanitizeRuntimeInput;
 import static io.harness.rule.OwnerRule.NAMAN;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
-import io.harness.pms.inputset.fqn.FQN;
+import io.harness.pms.merger.fqn.FQN;
 import io.harness.pms.ngpipeline.inputset.beans.resource.InputSetErrorWrapperDTOPMS;
 import io.harness.rule.Owner;
 
@@ -30,7 +36,7 @@ public class MergeHelperTest extends CategoryTest {
 
     String filename = "pipeline-extensive.yml";
     String yaml = Resources.toString(Objects.requireNonNull(classLoader.getResource(filename)), StandardCharsets.UTF_8);
-    String templateYaml = MergeHelper.createTemplateFromPipeline(yaml);
+    String templateYaml = createTemplateFromPipeline(yaml);
 
     String resFile = "pipeline-extensive-template.yml";
     String resTemplate =
@@ -51,7 +57,7 @@ public class MergeHelperTest extends CategoryTest {
     String inputSetYaml =
         Resources.toString(Objects.requireNonNull(classLoader.getResource(inputSet)), StandardCharsets.UTF_8);
 
-    String res = MergeHelper.mergeInputSetIntoPipeline(yaml, inputSetYaml);
+    String res = mergeInputSetIntoPipeline(yaml, inputSetYaml);
     String resYaml = res.replace("\"", "");
 
     String mergedYamlFile = "pipeline-extensive-merged.yml";
@@ -69,20 +75,20 @@ public class MergeHelperTest extends CategoryTest {
 
     String filename = "pipeline-extensive.yml";
     String yaml = Resources.toString(Objects.requireNonNull(classLoader.getResource(filename)), StandardCharsets.UTF_8);
-    String templateYaml = MergeHelper.createTemplateFromPipeline(yaml);
+    String templateYaml = createTemplateFromPipeline(yaml);
 
     String inputSet = "runtimeInput1.yml";
     String inputSetYaml =
         Resources.toString(Objects.requireNonNull(classLoader.getResource(inputSet)), StandardCharsets.UTF_8);
 
-    Set<FQN> invalidFQNs = MergeHelper.getInvalidFQNsInInputSet(templateYaml, inputSetYaml);
+    Set<FQN> invalidFQNs = getInvalidFQNsInInputSet(templateYaml, inputSetYaml);
     assertThat(invalidFQNs).isEmpty();
 
     String inputSetWrong = "runtimeInputWrong1.yml";
     String inputSetYamlWrong =
         Resources.toString(Objects.requireNonNull(classLoader.getResource(inputSetWrong)), StandardCharsets.UTF_8);
 
-    invalidFQNs = MergeHelper.getInvalidFQNsInInputSet(templateYaml, inputSetYamlWrong);
+    invalidFQNs = getInvalidFQNsInInputSet(templateYaml, inputSetYamlWrong);
     assertThat(invalidFQNs.size()).isEqualTo(2);
     String invalidFQN1 =
         "pipeline.stages.stage[identifier:qaStage].spec.execution.steps.step[identifier:httpStep1].spec.method.";
@@ -108,9 +114,9 @@ public class MergeHelperTest extends CategoryTest {
 
     String filename = "pipeline-extensive.yml";
     String yaml = Resources.toString(Objects.requireNonNull(classLoader.getResource(filename)), StandardCharsets.UTF_8);
-    String templateYaml = MergeHelper.createTemplateFromPipeline(yaml);
+    String templateYaml = createTemplateFromPipeline(yaml);
 
-    String mergedYaml = MergeHelper.mergeInputSets(templateYaml, inputSetYamlList);
+    String mergedYaml = mergeInputSets(templateYaml, inputSetYamlList);
 
     String inputSetMerged = "input12-merged.yml";
     String inputSetYamlMerged =
@@ -131,13 +137,13 @@ public class MergeHelperTest extends CategoryTest {
     String wrongRuntimeInput = Resources.toString(
         Objects.requireNonNull(classLoader.getResource(wrongRuntimeInputFile)), StandardCharsets.UTF_8);
 
-    String sanitizedYaml1 = MergeHelper.sanitizeRuntimeInput(yaml, wrongRuntimeInput);
+    String sanitizedYaml1 = sanitizeRuntimeInput(yaml, wrongRuntimeInput);
 
     String inputSetWrongFile = "inputSetWrong1.yml";
     String inputSetWrongYaml =
         Resources.toString(Objects.requireNonNull(classLoader.getResource(inputSetWrongFile)), StandardCharsets.UTF_8);
 
-    String sanitizedYaml2 = MergeHelper.sanitizeInputSet(yaml, inputSetWrongYaml);
+    String sanitizedYaml2 = sanitizeInputSet(yaml, inputSetWrongYaml);
 
     String correctFile = "runtimeInput1.yml";
     String correctYaml =

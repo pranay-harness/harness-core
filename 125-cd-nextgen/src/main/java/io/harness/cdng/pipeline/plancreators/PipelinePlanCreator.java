@@ -40,6 +40,8 @@ public class PipelinePlanCreator
     extends AbstractPlanCreatorWithChildren<NgPipeline> implements SupportDefinedExecutorPlanCreator<NgPipeline> {
   public static String INPUT_SET_YAML_KEY = "InputSetYaml";
   public static String EVENT_PAYLOAD_KEY = "eventPayload";
+  public static String WEBHOOK_EVENT_PAYLOAD_EVENT_REPO_TYPE = "webhookEventRepoType";
+  public static String WEBHOOK_EVENT_PAYLOAD_EVENT_TYPE = "webhookEventType";
 
   @Inject private ExecutionPlanCreatorHelper executionPlanCreatorHelper;
 

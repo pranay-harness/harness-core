@@ -1,5 +1,8 @@
 package io.harness.cdng.pipeline.helpers;
 
+import static io.harness.cdng.pipeline.plancreators.PipelinePlanCreator.EVENT_PAYLOAD_KEY;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+
 import io.harness.beans.EmbeddedUser;
 import io.harness.cdng.common.beans.SetupAbstractionKeys;
 import io.harness.cdng.pipeline.beans.CDPipelineValidationInfo;
@@ -57,7 +60,7 @@ public class NGPipelineExecuteHelper {
       contextAttributes.put(PipelinePlanCreator.INPUT_SET_YAML_KEY, inputSetPipelineYaml);
     }
     if (eventPayload != null) {
-      contextAttributes.put(PipelinePlanCreator.EVENT_PAYLOAD_KEY, eventPayload);
+      contextAttributes.put(EVENT_PAYLOAD_KEY, eventPayload);
     }
     return getPipelineResponseDTO(
         accountId, orgIdentifier, projectIdentifier, mergeInputSetResponse, user, contextAttributes);
@@ -129,7 +132,7 @@ public class NGPipelineExecuteHelper {
     return NGPipelineExecutionDTOMapper.toNGPipelineResponseDTO(planExecution, mergeInputSetResponse);
   }
 
-  private PlanExecution startPipelinePlanExecution(String accountId, String orgIdentifier, String projectIdentifier,
+  public PlanExecution startPipelinePlanExecution(String accountId, String orgIdentifier, String projectIdentifier,
       NgPipeline finalPipeline, EmbeddedUser user, Map<String, Object> contextAttributes) {
     final Plan planForPipeline =
         executionPlanCreatorService.createPlanForPipeline(finalPipeline, accountId, contextAttributes);
@@ -143,9 +146,12 @@ public class NGPipelineExecuteHelper {
             .put(SetupAbstractionKeys.orgIdentifier, orgIdentifier)
             .put(SetupAbstractionKeys.projectIdentifier, projectIdentifier);
 
-    if (contextAttributes.get(PipelinePlanCreator.EVENT_PAYLOAD_KEY) != null) {
-      abstractionsBuilder.put(
-          PipelinePlanCreator.EVENT_PAYLOAD_KEY, (String) contextAttributes.get(PipelinePlanCreator.EVENT_PAYLOAD_KEY));
+    if (isNotEmpty(contextAttributes)) {
+      contextAttributes.forEach((key, val) -> {
+        if (val != null && String.class.isAssignableFrom(val.getClass())) {
+          abstractionsBuilder.put(key, (String) val);
+        }
+      });
     }
 
     if (user != null) {
