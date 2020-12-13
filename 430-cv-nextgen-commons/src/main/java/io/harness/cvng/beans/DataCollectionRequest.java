@@ -40,7 +40,7 @@ public abstract class DataCollectionRequest<T extends ConnectorConfigDTO> implem
     return Collections.emptyMap();
   }
 
-  public Map<String, Object> getDslEnvVariables() {
+  public Map<String, Object> fetchDslEnvVariables() {
     return Collections.emptyMap();
   }
 
