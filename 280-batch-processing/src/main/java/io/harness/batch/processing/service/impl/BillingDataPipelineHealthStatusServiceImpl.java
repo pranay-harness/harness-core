@@ -93,9 +93,19 @@ public class BillingDataPipelineHealthStatusServiceImpl implements BillingDataPi
                 .accountId(billingDataPipelineRecord.getAccountId())
                 .settingId(billingDataPipelineRecord.getSettingId())
                 .dataTransferJobStatus(getTransferStateStringValue(
-                    transferToStatusMap, billingDataPipelineRecord.getDataTransferJobName()))
-                .preAggregatedScheduledQueryStatus(getTransferStateStringValue(
-                    transferToStatusMap, billingDataPipelineRecord.getPreAggregatedScheduledQueryName()));
+                    transferToStatusMap, billingDataPipelineRecord.getDataTransferJobName()));
+        if (billingDataPipelineRecord.getCloudProvider().equals(CloudProvider.GCP.name())
+            && mainConfig.getBillingDataPipelineConfig().isGcpUseNewPipeline()) {
+          // For GCP only + in new pipeline, we dont need to compute preagg status anymore.
+          // This is for compatibility with health status api in manager
+          log.info("Setting status for preagg query in new pipeline");
+          billingDataPipelineRecordBuilder.preAggregatedScheduledQueryStatus(TransferState.SUCCEEDED.toString());
+        } else {
+          // Regular flow
+          log.info("Setting status for preagg query");
+          billingDataPipelineRecordBuilder.preAggregatedScheduledQueryStatus(getTransferStateStringValue(
+              transferToStatusMap, billingDataPipelineRecord.getPreAggregatedScheduledQueryName()));
+        }
         if (billingDataPipelineRecord.getCloudProvider().equals(CloudProvider.AWS.name())) {
           billingDataPipelineRecordBuilder
               .awsFallbackTableScheduledQueryStatus(getTransferStateStringValue(
