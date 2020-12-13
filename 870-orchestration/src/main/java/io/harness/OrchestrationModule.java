@@ -20,6 +20,8 @@ import io.harness.engine.interrupts.InterruptServiceImpl;
 import io.harness.engine.outcomes.OutcomeService;
 import io.harness.engine.outcomes.OutcomeServiceImpl;
 import io.harness.engine.outputs.ExecutionSweepingOutputServiceImpl;
+import io.harness.engine.pms.data.PmsSweepingOutputService;
+import io.harness.engine.pms.data.PmsSweepingOutputServiceImpl;
 import io.harness.govern.ServersModule;
 import io.harness.pms.sdk.core.resolver.outputs.ExecutionSweepingGrpcOutputService;
 import io.harness.pms.sdk.core.resolver.outputs.ExecutionSweepingOutputService;
@@ -93,6 +95,9 @@ public class OrchestrationModule extends AbstractModule implements ServersModule
     MapBinder<String, TaskExecutor> taskExecutorMap =
         MapBinder.newMapBinder(binder(), String.class, TaskExecutor.class);
     taskExecutorMap.addBinding(TaskMode.NOOP.name()).to(NoopTaskExecutor.class);
+
+    // PMS Services
+    bind(PmsSweepingOutputService.class).to(PmsSweepingOutputServiceImpl.class).in(Singleton.class);
   }
 
   @Provides
@@ -119,7 +124,7 @@ public class OrchestrationModule extends AbstractModule implements ServersModule
   @Singleton
   public ExecutionSweepingOutputService executionSweepingOutputService(
       OrchestrationModuleConfig config, Injector injector) {
-    if (config.isUseServiceRPC()) {
+    if (config.isWithPMS()) {
       return injector.getInstance(ExecutionSweepingGrpcOutputService.class);
     } else {
       return injector.getInstance(ExecutionSweepingOutputServiceImpl.class);

@@ -19,9 +19,9 @@ import org.bson.Document;
 public interface Resolver<T extends StepTransput> {
   T resolve(@NotNull Ambiance ambiance, @NotNull RefObject refObject);
 
-  String consumeInternal(@NotNull Ambiance ambiance, @NotNull String name, T value, int levelsToKeep);
-
-  Class<T> getStepTransputClass();
+  default String consumeInternal(@NotNull Ambiance ambiance, @NotNull String name, T value, int levelsToKeep) {
+    throw new UnsupportedOperationException("Method not supported for class : " + this.getClass().getName());
+  };
 
   default String consume(@NotNull Ambiance ambiance, @NotNull String name, T value, String groupName) {
     if (EmptyPredicate.isEmpty(groupName)) {

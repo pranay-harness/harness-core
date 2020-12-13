@@ -47,4 +47,12 @@ public class DocumentOrchestrationUtils {
     }
     return convertFromDocument(Document.parse(value));
   }
+
+  @SneakyThrows
+  public Document convertToDocumentFromJson(String value) {
+    if (EmptyPredicate.isEmpty(value)) {
+      return null;
+    }
+    return Document.parse(value);
+  }
 }
