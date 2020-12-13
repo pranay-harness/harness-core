@@ -21,6 +21,7 @@ import static io.harness.validation.Validator.notNullCheck;
 
 import static software.wings.beans.Environment.EnvironmentType.ALL;
 import static software.wings.beans.Environment.GLOBAL_ENV_ID;
+import static software.wings.beans.WorkflowExecution.WorkflowExecutionKeys;
 import static software.wings.beans.alert.AlertType.ApprovalNeeded;
 import static software.wings.common.NotificationMessageResolver.NotificationMessageType.APPROVAL_EXPIRED_NOTIFICATION;
 import static software.wings.common.NotificationMessageResolver.NotificationMessageType.APPROVAL_EXPIRED_WORKFLOW_NOTIFICATION;
@@ -43,7 +44,6 @@ import io.harness.beans.SweepingOutputInstance.Scope;
 import io.harness.beans.TriggeredBy;
 import io.harness.beans.WorkflowType;
 import io.harness.context.ContextElementType;
-import io.harness.data.structure.EmptyPredicate;
 import io.harness.eraro.ErrorCode;
 import io.harness.eraro.Level;
 import io.harness.exception.ExceptionUtils;
@@ -65,7 +65,6 @@ import software.wings.beans.Activity;
 import software.wings.beans.Activity.ActivityBuilder;
 import software.wings.beans.Activity.Type;
 import software.wings.beans.Application;
-import software.wings.beans.ElementExecutionSummary;
 import software.wings.beans.EnvSummary;
 import software.wings.beans.Environment;
 import software.wings.beans.InformationNotification;
@@ -101,6 +100,7 @@ import software.wings.service.intfc.ActivityService;
 import software.wings.service.intfc.AlertService;
 import software.wings.service.intfc.ApprovalPolingService;
 import software.wings.service.intfc.NotificationService;
+import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.UserGroupService;
 import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.service.intfc.servicenow.ServiceNowService;
@@ -165,6 +165,7 @@ public class ApprovalState extends State implements SweepingOutputStateMixin {
   }
 
   public enum ApprovalStateType { JIRA, USER_GROUP, SHELL_SCRIPT, SERVICENOW }
+
   public static final MediaType JSON = MediaType.parse("application/json; charset=utf-8");
 
   @Inject private AlertService alertService;
@@ -179,6 +180,8 @@ public class ApprovalState extends State implements SweepingOutputStateMixin {
   @Inject private SecretManager secretManager;
   @Inject private transient SweepingOutputService sweepingOutputService;
   @Inject private UserGroupService userGroupService;
+  @Inject private ServiceResourceService serviceResourceService;
+
   @Inject @Transient private TemplateExpressionProcessor templateExpressionProcessor;
   @Transient @Inject KryoSerializer kryoSerializer;
 
@@ -196,6 +199,7 @@ public class ApprovalState extends State implements SweepingOutputStateMixin {
   @Getter @Setter private String sweepingOutputName;
 
   @Getter @Setter List<NameValuePair> variables;
+
   public ApprovalState(String name) {
     super(name, StateType.APPROVAL.name());
   }
@@ -253,8 +257,8 @@ public class ApprovalState extends State implements SweepingOutputStateMixin {
       log.error("Error sending approval notification. accountId={}", app.getAccountId(), e);
     }
 
-    WorkflowExecution workflowExecution =
-        workflowExecutionService.getExecutionDetailsWithoutGraph(app.getAppId(), context.getWorkflowExecutionId());
+    WorkflowExecution workflowExecution = workflowExecutionService.fetchWorkflowExecution(app.getAppId(),
+        context.getWorkflowExecutionId(), WorkflowExecutionKeys.pipelineSummary, WorkflowExecutionKeys.workflowId);
     if (workflowExecution != null) {
       if (workflowExecution.getPipelineSummary() != null) {
         executionData.setWorkflowId(workflowExecution.getPipelineSummary().getPipelineId());
@@ -800,22 +804,25 @@ public class ApprovalState extends State implements SweepingOutputStateMixin {
     }
 
     WorkflowExecution workflowExecution =
-        workflowExecutionService.getExecutionDetails(context.getAppId(), context.getWorkflowExecutionId(), true);
+        workflowExecutionService.fetchWorkflowExecution(context.getAppId(), context.getWorkflowExecutionId(),
+            WorkflowExecutionKeys.artifacts, WorkflowExecutionKeys.environments, WorkflowExecutionKeys.serviceIds);
 
-    if (EmptyPredicate.isNotEmpty(workflowExecution.getExecutionArgs().getArtifacts())) {
-      for (Artifact artifact : workflowExecution.getExecutionArgs().getArtifacts()) {
+    if (isNotEmpty(workflowExecution.getArtifacts())) {
+      for (Artifact artifact : workflowExecution.getArtifacts()) {
         artifacts.add(
             artifact.getArtifactSourceName() + ": " + artifact.getMetadata().get(ArtifactMetadataKeys.buildNo));
       }
     }
-    if (EmptyPredicate.isNotEmpty(workflowExecution.getEnvironments())) {
+    if (isNotEmpty(workflowExecution.getEnvironments())) {
       for (EnvSummary envSummary : workflowExecution.getEnvironments()) {
         environments.add(envSummary.getName());
       }
     }
-    if (EmptyPredicate.isNotEmpty(workflowExecution.getServiceExecutionSummaries())) {
-      for (ElementExecutionSummary elementExecutionSummary : workflowExecution.getServiceExecutionSummaries()) {
-        services.add(elementExecutionSummary.getContextElement().getName());
+    if (isNotEmpty(workflowExecution.getServiceIds())) {
+      List<String> serviceNames =
+          serviceResourceService.fetchServiceNamesByUuids(context.getAppId(), workflowExecution.getServiceIds());
+      for (String serviceName : serviceNames) {
+        services.add(serviceName);
       }
     }
 
@@ -1197,7 +1204,8 @@ public class ApprovalState extends State implements SweepingOutputStateMixin {
   Map<String, String> getPlaceholderValues(ExecutionContext context, String userName, ExecutionStatus status) {
     Application app = Objects.requireNonNull(context.getApp());
     WorkflowExecution workflowExecution =
-        workflowExecutionService.getWorkflowExecution(app.getUuid(), context.getWorkflowExecutionId());
+        workflowExecutionService.fetchWorkflowExecution(app.getUuid(), context.getWorkflowExecutionId(),
+            WorkflowExecutionKeys.createdAt, WorkflowExecutionKeys.triggeredBy, WorkflowExecutionKeys.status);
 
     String statusMsg = getStatusMessage(status);
     long startTs = (status == PAUSED) ? workflowExecution.getCreatedAt() : context.getStateExecutionData().getStartTs();
