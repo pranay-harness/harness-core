@@ -19,6 +19,8 @@ import static software.wings.beans.Application.Builder.anApplication;
 import static software.wings.beans.ElementExecutionSummary.ElementExecutionSummaryBuilder.anElementExecutionSummary;
 import static software.wings.beans.Environment.Builder.anEnvironment;
 import static software.wings.beans.NotificationGroup.NotificationGroupBuilder.aNotificationGroup;
+import static software.wings.beans.WorkflowExecution.WorkflowExecutionKeys;
+import static software.wings.beans.WorkflowExecution.builder;
 import static software.wings.beans.artifact.Artifact.Builder.anArtifact;
 import static software.wings.common.NotificationMessageResolver.NotificationMessageType.APPROVAL_EXPIRED_WORKFLOW_NOTIFICATION;
 import static software.wings.common.NotificationMessageResolver.NotificationMessageType.WORKFLOW_ABORT_NOTIFICATION;
@@ -30,11 +32,16 @@ import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 import static software.wings.utils.WingsTestConstants.APPROVAL_EXECUTION_ID;
 import static software.wings.utils.WingsTestConstants.APP_ID;
 import static software.wings.utils.WingsTestConstants.ARTIFACT_ID;
+import static software.wings.utils.WingsTestConstants.ARTIFACT_SOURCE_NAME;
+import static software.wings.utils.WingsTestConstants.ARTIFACT_STREAM_ID;
 import static software.wings.utils.WingsTestConstants.BUILD_JOB_NAME;
 import static software.wings.utils.WingsTestConstants.ENV_ID;
+import static software.wings.utils.WingsTestConstants.ENV_NAME;
 import static software.wings.utils.WingsTestConstants.NOTIFICATION_GROUP_ID;
 import static software.wings.utils.WingsTestConstants.PIPELINE_EXECUTION_ID;
 import static software.wings.utils.WingsTestConstants.PIPELINE_WORKFLOW_EXECUTION_ID;
+import static software.wings.utils.WingsTestConstants.SERVICE_ID;
+import static software.wings.utils.WingsTestConstants.SERVICE_NAME;
 import static software.wings.utils.WingsTestConstants.STATE_EXECUTION_ID;
 import static software.wings.utils.WingsTestConstants.STATE_NAME;
 import static software.wings.utils.WingsTestConstants.USER_EMAIL;
@@ -108,6 +115,7 @@ import software.wings.service.intfc.ApprovalPolingService;
 import software.wings.service.intfc.NotificationService;
 import software.wings.service.intfc.NotificationSetupService;
 import software.wings.service.intfc.PipelineService;
+import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.StateExecutionService;
 import software.wings.service.intfc.UserGroupService;
 import software.wings.service.intfc.WorkflowExecutionService;
@@ -132,7 +140,6 @@ import java.io.File;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
@@ -172,7 +179,6 @@ public class ApprovalStateTest extends WingsBaseTest {
   @Mock private NotificationMessageResolver notificationMessageResolver;
   @Mock private WorkflowNotificationHelper workflowNotificationHelper;
   @Mock private PipelineService pipelineService;
-  @Mock private WorkflowExecution workflowExecution;
   @Mock private SecretManager secretManager;
   @Mock private SweepingOutputService sweepingOutputService;
   @Mock private JiraHelperService jiraHelperService;
@@ -183,6 +189,7 @@ public class ApprovalStateTest extends WingsBaseTest {
   @Mock private WaitNotifyEngine waitNotifyEngine;
   @Mock private State state;
   @Mock private TemplateExpressionProcessor templateExpressionProcessor;
+  @Mock private ServiceResourceService serviceResourceService;
   @InjectMocks private ApprovalState approvalState = new ApprovalState("ApprovalState");
 
   @Inject KryoSerializer kryoSerializer;
@@ -233,7 +240,7 @@ public class ApprovalStateTest extends WingsBaseTest {
 
     elementExecutionSummaries.add(0, anElementExecutionSummary().withContextElement(amiServiceDeployElement).build());
 
-    WorkflowExecution workflowExecution = WorkflowExecution.builder()
+    WorkflowExecution workflowExecution = builder()
                                               .executionArgs(executionArgs)
                                               .environments(Collections.singletonList(envsummary))
                                               .serviceExecutionSummaries(elementExecutionSummaries)
@@ -248,8 +255,9 @@ public class ApprovalStateTest extends WingsBaseTest {
     String secret = "secret";
     when(secretManager.generateJWTTokenWithCustomTimeOut(claims, secret, 60 * 60 * 1000 * 168)).thenReturn("token");
 
-    when(workflowExecutionService.getWorkflowExecution(APP_ID, PIPELINE_WORKFLOW_EXECUTION_ID))
-        .thenReturn(WorkflowExecution.builder()
+    when(workflowExecutionService.fetchWorkflowExecution(APP_ID, PIPELINE_WORKFLOW_EXECUTION_ID,
+             WorkflowExecutionKeys.createdAt, WorkflowExecutionKeys.triggeredBy, WorkflowExecutionKeys.status))
+        .thenReturn(builder()
                         .status(ExecutionStatus.NEW)
                         .appId(APP_ID)
                         .triggeredBy(EmbeddedUser.builder().name(USER_NAME).uuid(USER_NAME).build())
@@ -267,6 +275,22 @@ public class ApprovalStateTest extends WingsBaseTest {
     when(notificationMessageResolver.getPlaceholderValues(
              any(), any(), any(Long.class), any(Long.class), any(), any(), any(), any(), any()))
         .thenReturn(placeholders);
+
+    when(workflowExecutionService.fetchWorkflowExecution(APP_ID, PIPELINE_WORKFLOW_EXECUTION_ID,
+             WorkflowExecutionKeys.artifacts, WorkflowExecutionKeys.environments, WorkflowExecutionKeys.serviceIds))
+        .thenReturn(WorkflowExecution.builder()
+                        .status(ExecutionStatus.NEW)
+                        .appId(APP_ID)
+                        .triggeredBy(EmbeddedUser.builder().name(USER_NAME).uuid(USER_NAME).build())
+                        .serviceIds(asList(SERVICE_ID))
+                        .environments(asList(EnvSummary.builder().name(ENV_NAME).build()))
+                        .artifacts(asList(Artifact.Builder.anArtifact()
+                                              .withArtifactSourceName(ARTIFACT_SOURCE_NAME)
+                                              .withArtifactStreamId(ARTIFACT_STREAM_ID)
+                                              .build()))
+                        .createdAt(70L)
+                        .build());
+    when(serviceResourceService.fetchServiceNamesByUuids(APP_ID, asList(SERVICE_ID))).thenReturn(asList(SERVICE_NAME));
   }
 
   @Test
@@ -290,6 +314,11 @@ public class ApprovalStateTest extends WingsBaseTest {
         .sendApprovalNotification(Mockito.eq(ACCOUNT_ID), Mockito.eq(WORKFLOW_PAUSE_NOTIFICATION), Mockito.anyMap(),
             Mockito.any(), Mockito.eq(ApprovalStateType.USER_GROUP));
     assertThat(executionResponse.getExecutionStatus()).isEqualTo(PAUSED);
+
+    verify(serviceResourceService, times(1)).fetchServiceNamesByUuids(APP_ID, asList(SERVICE_ID));
+    verify(workflowExecutionService, times(1))
+        .fetchWorkflowExecution(APP_ID, PIPELINE_WORKFLOW_EXECUTION_ID, WorkflowExecutionKeys.artifacts,
+            WorkflowExecutionKeys.environments, WorkflowExecutionKeys.serviceIds);
   }
 
   @Test
@@ -312,6 +341,11 @@ public class ApprovalStateTest extends WingsBaseTest {
         .sendApprovalNotification(Mockito.eq(ACCOUNT_ID), Mockito.eq(WORKFLOW_PAUSE_NOTIFICATION), Mockito.anyMap(),
             Mockito.any(), Mockito.eq(ApprovalStateType.USER_GROUP));
     assertThat(executionResponse.getExecutionStatus()).isEqualTo(PAUSED);
+
+    verify(serviceResourceService, times(1)).fetchServiceNamesByUuids(APP_ID, asList(SERVICE_ID));
+    verify(workflowExecutionService, times(1))
+        .fetchWorkflowExecution(APP_ID, PIPELINE_WORKFLOW_EXECUTION_ID, WorkflowExecutionKeys.artifacts,
+            WorkflowExecutionKeys.environments, WorkflowExecutionKeys.serviceIds);
   }
 
   @Test
@@ -368,7 +402,13 @@ public class ApprovalStateTest extends WingsBaseTest {
         .thenReturn(aStateExecutionInstance().executionType(WorkflowType.ORCHESTRATION).build());
     approvalState.setDisableAssertion(disableAssertion);
     when(context.evaluateExpression(eq(disableAssertion), any())).thenReturn(false);
+
     ExecutionResponse executionResponse = approvalState.execute(context);
+
+    verify(serviceResourceService, times(1)).fetchServiceNamesByUuids(APP_ID, asList(SERVICE_ID));
+    verify(workflowExecutionService, times(1))
+        .fetchWorkflowExecution(APP_ID, PIPELINE_WORKFLOW_EXECUTION_ID, WorkflowExecutionKeys.artifacts,
+            WorkflowExecutionKeys.environments, WorkflowExecutionKeys.serviceIds);
     verify(workflowExecutionService, times(0))
         .triggerOrchestrationExecution(
             eq(APP_ID), eq(null), eq(WORKFLOW_ID), eq(PIPELINE_WORKFLOW_EXECUTION_ID), any(), any());
@@ -531,6 +571,11 @@ public class ApprovalStateTest extends WingsBaseTest {
     assertThat(approvalNeededAlert.getWorkflowType()).isEqualTo(WorkflowType.ORCHESTRATION);
     assertThat(approvalNeededAlert.getWorkflowExecutionId()).isEqualTo(PIPELINE_WORKFLOW_EXECUTION_ID);
     assertThat(approvalNeededAlert.getPipelineExecutionId()).isEqualTo(null);
+
+    verify(serviceResourceService, times(1)).fetchServiceNamesByUuids(APP_ID, asList(SERVICE_ID));
+    verify(workflowExecutionService, times(1))
+        .fetchWorkflowExecution(APP_ID, PIPELINE_WORKFLOW_EXECUTION_ID, WorkflowExecutionKeys.artifacts,
+            WorkflowExecutionKeys.environments, WorkflowExecutionKeys.serviceIds);
   }
 
   @Test
@@ -549,6 +594,10 @@ public class ApprovalStateTest extends WingsBaseTest {
     assertThat(approvalNeededAlert.getWorkflowType()).isEqualTo(WorkflowType.PIPELINE);
     assertThat(approvalNeededAlert.getWorkflowExecutionId()).isEqualTo(null);
     assertThat(approvalNeededAlert.getPipelineExecutionId()).isEqualTo(PIPELINE_WORKFLOW_EXECUTION_ID);
+    verify(serviceResourceService, times(1)).fetchServiceNamesByUuids(APP_ID, asList(SERVICE_ID));
+    verify(workflowExecutionService, times(1))
+        .fetchWorkflowExecution(APP_ID, PIPELINE_WORKFLOW_EXECUTION_ID, WorkflowExecutionKeys.artifacts,
+            WorkflowExecutionKeys.environments, WorkflowExecutionKeys.serviceIds);
   }
 
   @Test
@@ -575,6 +624,11 @@ public class ApprovalStateTest extends WingsBaseTest {
     assertThat(approvalNeededAlert.getWorkflowType()).isEqualTo(WorkflowType.ORCHESTRATION);
     assertThat(approvalNeededAlert.getWorkflowExecutionId()).isEqualTo(PIPELINE_WORKFLOW_EXECUTION_ID);
     assertThat(approvalNeededAlert.getPipelineExecutionId()).isEqualTo(PIPELINE_EXECUTION_ID);
+
+    verify(serviceResourceService, times(1)).fetchServiceNamesByUuids(APP_ID, asList(SERVICE_ID));
+    verify(workflowExecutionService, times(1))
+        .fetchWorkflowExecution(APP_ID, PIPELINE_WORKFLOW_EXECUTION_ID, WorkflowExecutionKeys.artifacts,
+            WorkflowExecutionKeys.environments, WorkflowExecutionKeys.serviceIds);
   }
 
   @Test
@@ -773,7 +827,7 @@ public class ApprovalStateTest extends WingsBaseTest {
     ApprovalStateParams approvalStateParams = new ApprovalStateParams();
     Criteria approvalCriteria = new Criteria();
     approvalCriteria.setConditions(
-        Collections.singletonMap("approval", Arrays.asList("Requested", "Canceled", approvalValue)));
+        Collections.singletonMap("approval", asList("Requested", "Canceled", approvalValue)));
     ServiceNowApprovalParams serviceNowApprovalParams =
         ServiceNowApprovalParams.builder().issueNumber("issueNumber").approval(approvalCriteria).build();
     approvalStateParams.setServiceNowApprovalParams(serviceNowApprovalParams);
@@ -803,8 +857,8 @@ public class ApprovalStateTest extends WingsBaseTest {
 
     ApprovalStateParams approvalStateParams = new ApprovalStateParams();
     Criteria rejectionCriteria = new Criteria();
-    rejectionCriteria.setConditions(ImmutableMap.of(
-        SERVICENOW_STATE, Arrays.asList("Closed", "Cancelled"), "approval", Arrays.asList("Approved", "Requested")));
+    rejectionCriteria.setConditions(
+        ImmutableMap.of(SERVICENOW_STATE, asList("Closed", "Cancelled"), "approval", asList("Approved", "Requested")));
     Criteria approvalCriteria = new Criteria();
     approvalCriteria.setConditions(Collections.singletonMap("state", Collections.singletonList("Review")));
     ServiceNowApprovalParams serviceNowApprovalParams = ServiceNowApprovalParams.builder()
@@ -844,8 +898,8 @@ public class ApprovalStateTest extends WingsBaseTest {
     ApprovalStateParams approvalStateParams = new ApprovalStateParams();
     Criteria rejectionCriteria = new Criteria();
     rejectionCriteria.setOperator(ConditionalOperator.OR);
-    rejectionCriteria.setConditions(ImmutableMap.of(
-        SERVICENOW_STATE, Arrays.asList("Closed", "Cancelled"), "approval", Arrays.asList("Approved", "Requested")));
+    rejectionCriteria.setConditions(
+        ImmutableMap.of(SERVICENOW_STATE, asList("Closed", "Cancelled"), "approval", asList("Approved", "Requested")));
     Criteria approvalCriteria = new Criteria();
     approvalCriteria.setConditions(Collections.singletonMap("state", Collections.singletonList("Review")));
     ServiceNowApprovalParams serviceNowApprovalParams = ServiceNowApprovalParams.builder()
@@ -883,8 +937,8 @@ public class ApprovalStateTest extends WingsBaseTest {
 
     ApprovalStateParams approvalStateParams = new ApprovalStateParams();
     Criteria rejectionCriteria = new Criteria();
-    rejectionCriteria.setConditions(ImmutableMap.of(
-        SERVICENOW_STATE, Arrays.asList("Closed", "Cancelled"), "approval", Arrays.asList("Approved", "Requested")));
+    rejectionCriteria.setConditions(
+        ImmutableMap.of(SERVICENOW_STATE, asList("Closed", "Cancelled"), "approval", asList("Approved", "Requested")));
     Criteria approvalCriteria = new Criteria();
     approvalCriteria.setConditions(Collections.singletonMap("state", Collections.singletonList("Review")));
     ServiceNowApprovalParams serviceNowApprovalParams = ServiceNowApprovalParams.builder()
@@ -919,11 +973,11 @@ public class ApprovalStateTest extends WingsBaseTest {
 
     ApprovalStateParams approvalStateParams = new ApprovalStateParams();
     Criteria approvalCriteria = new Criteria();
-    approvalCriteria.setConditions(ImmutableMap.of(
-        SERVICENOW_STATE, Arrays.asList("Closed", "Scheduled"), "approval", Arrays.asList("Approved", "Requested")));
+    approvalCriteria.setConditions(
+        ImmutableMap.of(SERVICENOW_STATE, asList("Closed", "Scheduled"), "approval", asList("Approved", "Requested")));
     Criteria rejectionCriteria = new Criteria();
     rejectionCriteria.setConditions(ImmutableMap.of(
-        SERVICENOW_STATE, Arrays.asList("Scheduled", "Cancelled"), "approval", Arrays.asList("Approved", "Rejected")));
+        SERVICENOW_STATE, asList("Scheduled", "Cancelled"), "approval", asList("Approved", "Rejected")));
     ServiceNowApprovalParams serviceNowApprovalParams = ServiceNowApprovalParams.builder()
                                                             .issueNumber("issueNumber")
                                                             .rejection(rejectionCriteria)
@@ -988,8 +1042,8 @@ public class ApprovalStateTest extends WingsBaseTest {
     ServiceNowApprovalParams serviceNowApprovalParams =
         ServiceNowApprovalParams.builder()
             .issueNumber("issueNumber")
-            .approval(new Criteria(Collections.singletonMap(SERVICENOW_STATE, Arrays.asList("DONE", "IMPLEMENTED")),
-                ConditionalOperator.OR))
+            .approval(new Criteria(
+                Collections.singletonMap(SERVICENOW_STATE, asList("DONE", "IMPLEMENTED")), ConditionalOperator.OR))
             .build();
     approvalStateParams.setServiceNowApprovalParams(serviceNowApprovalParams);
     approvalState.setApprovalStateParams(approvalStateParams);
@@ -1023,11 +1077,11 @@ public class ApprovalStateTest extends WingsBaseTest {
 
     ApprovalStateParams approvalStateParams = new ApprovalStateParams();
     Criteria approvalCriteria = new Criteria();
-    approvalCriteria.setConditions(ImmutableMap.of(
-        SERVICENOW_STATE, Arrays.asList("Closed", "Scheduled"), "approval", Arrays.asList("Approved", "Requested")));
+    approvalCriteria.setConditions(
+        ImmutableMap.of(SERVICENOW_STATE, asList("Closed", "Scheduled"), "approval", asList("Approved", "Requested")));
     Criteria rejectionCriteria = new Criteria();
     rejectionCriteria.setConditions(ImmutableMap.of(
-        SERVICENOW_STATE, Arrays.asList("Scheduled", "Cancelled"), "approval", Arrays.asList("Approved", "Rejected")));
+        SERVICENOW_STATE, asList("Scheduled", "Cancelled"), "approval", asList("Approved", "Rejected")));
     ServiceNowApprovalParams serviceNowApprovalParams = ServiceNowApprovalParams.builder()
                                                             .issueNumber("issueNumber")
                                                             .rejection(rejectionCriteria)
@@ -1065,11 +1119,11 @@ public class ApprovalStateTest extends WingsBaseTest {
 
     ApprovalStateParams approvalStateParams = new ApprovalStateParams();
     Criteria approvalCriteria = new Criteria();
-    approvalCriteria.setConditions(ImmutableMap.of(
-        SERVICENOW_STATE, Arrays.asList("Closed", "Scheduled"), "approval", Arrays.asList("Approved", "Requested")));
+    approvalCriteria.setConditions(
+        ImmutableMap.of(SERVICENOW_STATE, asList("Closed", "Scheduled"), "approval", asList("Approved", "Requested")));
     Criteria rejectionCriteria = new Criteria();
     rejectionCriteria.setConditions(ImmutableMap.of(
-        SERVICENOW_STATE, Arrays.asList("Scheduled", "Cancelled"), "approval", Arrays.asList("Approved", "Rejected")));
+        SERVICENOW_STATE, asList("Scheduled", "Cancelled"), "approval", asList("Approved", "Rejected")));
     ServiceNowApprovalParams serviceNowApprovalParams = ServiceNowApprovalParams.builder()
                                                             .issueNumber("issueNumber")
                                                             .rejection(rejectionCriteria)
@@ -1122,11 +1176,11 @@ public class ApprovalStateTest extends WingsBaseTest {
 
     ApprovalStateParams approvalStateParams = new ApprovalStateParams();
     Criteria approvalCriteria = new Criteria();
-    approvalCriteria.setConditions(ImmutableMap.of(
-        SERVICENOW_STATE, Arrays.asList("Closed", "Scheduled"), "approval", Arrays.asList("Approved", "Requested")));
+    approvalCriteria.setConditions(
+        ImmutableMap.of(SERVICENOW_STATE, asList("Closed", "Scheduled"), "approval", asList("Approved", "Requested")));
     Criteria rejectionCriteria = new Criteria();
-    rejectionCriteria.setConditions(ImmutableMap.of(SERVICENOW_STATE, Arrays.asList("Scheduled", "Cancelled"),
-        "approval", Arrays.asList("Not yet Requested", "Rejected")));
+    rejectionCriteria.setConditions(ImmutableMap.of(
+        SERVICENOW_STATE, asList("Scheduled", "Cancelled"), "approval", asList("Not yet Requested", "Rejected")));
     ServiceNowApprovalParams serviceNowApprovalParams = ServiceNowApprovalParams.builder()
                                                             .issueNumber("issueNumber")
                                                             .rejection(rejectionCriteria)
@@ -1205,6 +1259,11 @@ public class ApprovalStateTest extends WingsBaseTest {
         .sendApprovalNotification(Mockito.eq(ACCOUNT_ID), Mockito.eq(WORKFLOW_PAUSE_NOTIFICATION), Mockito.anyMap(),
             Mockito.any(), Mockito.eq(ApprovalStateType.USER_GROUP));
     assertThat(executionResponse.getExecutionStatus()).isEqualTo(PAUSED);
+
+    verify(serviceResourceService, times(1)).fetchServiceNamesByUuids(APP_ID, asList(SERVICE_ID));
+    verify(workflowExecutionService, times(1))
+        .fetchWorkflowExecution(APP_ID, PIPELINE_WORKFLOW_EXECUTION_ID, WorkflowExecutionKeys.artifacts,
+            WorkflowExecutionKeys.environments, WorkflowExecutionKeys.serviceIds);
   }
 
   @Test
@@ -1242,6 +1301,10 @@ public class ApprovalStateTest extends WingsBaseTest {
         .sendApprovalNotification(Mockito.eq(ACCOUNT_ID), Mockito.eq(WORKFLOW_PAUSE_NOTIFICATION), Mockito.anyMap(),
             Mockito.any(), Mockito.eq(ApprovalStateType.USER_GROUP));
     assertThat(executionResponse.getExecutionStatus()).isEqualTo(PAUSED);
+    verify(serviceResourceService, times(1)).fetchServiceNamesByUuids(APP_ID, asList(SERVICE_ID));
+    verify(workflowExecutionService, times(1))
+        .fetchWorkflowExecution(APP_ID, PIPELINE_WORKFLOW_EXECUTION_ID, WorkflowExecutionKeys.artifacts,
+            WorkflowExecutionKeys.environments, WorkflowExecutionKeys.serviceIds);
   }
 
   private void verifyJiraSweepingOutput() {
