@@ -16,5 +16,5 @@ public class OrchestrationModuleConfig {
   @Builder.Default int maxPoolSize = 5;
   @Builder.Default long idleTimeInSecs = 10;
   @Builder.Default String publisherName = ORCHESTRATION;
-  @Builder.Default boolean useServiceRPC = false;
+  boolean withPMS;
 }
