@@ -186,9 +186,9 @@ public class CVDataCollectionTaskServiceImpl implements CVDataCollectionTaskServ
                                        .projectIdentifier(projectIdentifier)
                                        .build();
     List<EncryptedDataDetail> encryptedDataDetails = new ArrayList<>();
-    if (dataCollectionRequest.getConnectorConfigDTO() instanceof DecryptableEntity) {
+    if (dataCollectionRequest.getConnectorConfigDTO().getDecryptableEntity() != null) {
       encryptedDataDetails = ngSecretService.getEncryptionDetails(
-          basicNGAccessObject, (DecryptableEntity) dataCollectionRequest.getConnectorConfigDTO());
+          basicNGAccessObject, dataCollectionRequest.getConnectorConfigDTO().getDecryptableEntity());
     }
     SyncTaskContext taskContext = getSyncTaskContext(accountId);
     return delegateProxyFactory.get(CVNGDataCollectionDelegateService.class, taskContext)

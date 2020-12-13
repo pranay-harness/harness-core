@@ -47,6 +47,7 @@ import io.harness.cvng.core.services.api.MetricPackService;
 import io.harness.cvng.core.services.api.MonitoringSourceImportStatusCreator;
 import io.harness.cvng.core.services.api.OnboardingService;
 import io.harness.cvng.core.services.api.SplunkService;
+import io.harness.cvng.core.services.api.StackdriverService;
 import io.harness.cvng.core.services.api.TimeSeriesService;
 import io.harness.cvng.core.services.api.VerificationTaskService;
 import io.harness.cvng.core.services.api.WebhookService;
@@ -65,6 +66,7 @@ import io.harness.cvng.core.services.impl.OnboardingServiceImpl;
 import io.harness.cvng.core.services.impl.SplunkCVConfigTransformer;
 import io.harness.cvng.core.services.impl.SplunkDataCollectionInfoMapper;
 import io.harness.cvng.core.services.impl.SplunkServiceImpl;
+import io.harness.cvng.core.services.impl.StackdriverServiceImpl;
 import io.harness.cvng.core.services.impl.TimeSeriesServiceImpl;
 import io.harness.cvng.core.services.impl.VerificationTaskServiceImpl;
 import io.harness.cvng.core.services.impl.WebhookServiceImpl;
@@ -198,6 +200,7 @@ public class CVServiceModule extends AbstractModule {
       bind(CVSetupService.class).to(CVSetupServiceImpl.class);
       bindTheMonitoringSourceImportStatusCreators();
       bind(CD10MappingService.class).to(CD10MappingServiceImpl.class);
+      bind(StackdriverService.class).to(StackdriverServiceImpl.class);
     } catch (IOException e) {
       throw new IllegalStateException("Could not load versionInfo.yaml", e);
     }
