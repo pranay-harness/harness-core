@@ -235,8 +235,12 @@ public class ShellScriptStep implements TaskExecutable<ShellScriptStepParameters
                   //                  .expressionFunctorToken(ambiance.getExpressionFunctorToken())
                   .build())
         .setupAbstraction(Cd1SetupFields.ENV_ID_FIELD, environment == null ? null : environment.getUuid())
+        .setupAbstraction(
+            Cd1SetupFields.ENV_TYPE_FIELD, environment == null ? null : environment.getEnvironmentType().name())
         .setupAbstraction(Cd1SetupFields.INFRASTRUCTURE_MAPPING_ID_FIELD,
             infrastructureMapping == null ? null : infrastructureMapping.getUuid())
+        .setupAbstraction(Cd1SetupFields.SERVICE_ID_FIELD,
+            infrastructureMapping == null ? null : infrastructureMapping.getServiceId())
         .setupAbstraction(Cd1SetupFields.SERVICE_TEMPLATE_ID_FIELD, serviceTemplateId)
         .build();
   }

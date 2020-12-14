@@ -132,4 +132,6 @@ public interface ExecutionContext {
    * hence should not be used in Rolling and similar workflows.
    */
   boolean isLastPhase(boolean rollback);
+
+  String getEnvType();
 }

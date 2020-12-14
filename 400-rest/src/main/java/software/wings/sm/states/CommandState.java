@@ -681,11 +681,14 @@ public class CommandState extends State {
 
   private String queueDelegateTask(String activityId, String envId, String infrastructureMappingId, Command command,
       String accountId, CommandExecutionContext commandExecutionContext, ExecutionContext context) {
+    String appId = context.getAppId();
+    InfrastructureMapping infrastructureMapping = infrastructureMappingService.get(appId, infrastructureMappingId);
+    String serviceId = infrastructureMapping == null ? null : infrastructureMapping.getServiceId();
     String delegateTaskId;
     DelegateTask delegateTask =
         DelegateTask.builder()
             .accountId(accountId)
-            .setupAbstraction(Cd1SetupFields.APP_ID_FIELD, context.getAppId())
+            .setupAbstraction(Cd1SetupFields.APP_ID_FIELD, appId)
             .waitId(activityId)
             .tags(awsCommandHelper.getAwsConfigTagsFromContext(commandExecutionContext))
             .workflowExecutionId(context.getWorkflowExecutionId())
@@ -696,7 +699,10 @@ public class CommandState extends State {
                       .timeout(defaultIfNullTimeout(TimeUnit.MINUTES.toMillis(30)))
                       .build())
             .setupAbstraction(Cd1SetupFields.ENV_ID_FIELD, envId)
+            .setupAbstraction(Cd1SetupFields.ENV_TYPE_FIELD, context.getEnvType())
+
             .setupAbstraction(Cd1SetupFields.INFRASTRUCTURE_MAPPING_ID_FIELD, infrastructureMappingId)
+            .setupAbstraction(Cd1SetupFields.SERVICE_ID_FIELD, serviceId)
             .build();
     delegateTaskId = delegateService.queueTask(delegateTask);
     return delegateTaskId;

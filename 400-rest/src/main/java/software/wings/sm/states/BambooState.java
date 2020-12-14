@@ -31,10 +31,12 @@ import software.wings.beans.Activity.ActivityBuilder;
 import software.wings.beans.Application;
 import software.wings.beans.BambooConfig;
 import software.wings.beans.Environment;
+import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.TaskType;
 import software.wings.service.impl.SettingServiceHelper;
 import software.wings.service.intfc.ActivityService;
 import software.wings.service.intfc.DelegateService;
+import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.security.SecretManager;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionContextImpl;
@@ -78,6 +80,7 @@ public class BambooState extends State {
   @Transient @Inject private ActivityService activityService;
 
   @Inject private DelegateService delegateService;
+  @Inject @Transient private InfrastructureMappingService infrastructureMappingService;
   @Inject private SecretManager secretManager;
   @Inject private SettingServiceHelper settingServiceHelper;
 
@@ -186,6 +189,9 @@ public class BambooState extends State {
 
     final String finalPlanName = evaluatedPlanName;
     String infrastructureMappingId = context.fetchInfraMappingId();
+    InfrastructureMapping infrastructureMapping =
+        infrastructureMappingService.get(context.getAppId(), infrastructureMappingId);
+    String serviceId = infrastructureMapping == null ? null : infrastructureMapping.getServiceId();
 
     DelegateTask delegateTask =
         DelegateTask.builder()
@@ -202,7 +208,10 @@ public class BambooState extends State {
                       .timeout(defaultIfNullTimeout(DEFAULT_ASYNC_CALL_TIMEOUT))
                       .build())
             .setupAbstraction(Cd1SetupFields.ENV_ID_FIELD, envId)
+            .setupAbstraction(Cd1SetupFields.ENV_TYPE_FIELD, context.getEnvType())
             .setupAbstraction(Cd1SetupFields.INFRASTRUCTURE_MAPPING_ID_FIELD, infrastructureMappingId)
+            .setupAbstraction(Cd1SetupFields.SERVICE_ID_FIELD, serviceId)
+
             .build();
 
     String delegateTaskId = delegateService.queueTask(delegateTask);

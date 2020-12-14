@@ -1513,6 +1513,12 @@ public class ExecutionContextImpl implements DeploymentExecutionContext {
     return join(str, stateExecutionInstance.getUuid());
   }
 
+  public String getEnvType() {
+    WorkflowStandardParams workflowStandardParams = getContextElement(ContextElementType.STANDARD);
+    return (workflowStandardParams == null || workflowStandardParams.getEnv() == null)
+        ? null
+        : workflowStandardParams.getEnv().getEnvironmentType().name();
+  }
   private boolean isEligible(boolean instanceFromNewDeployment, boolean newInstancesOnly) {
     return !newInstancesOnly || instanceFromNewDeployment;
   }

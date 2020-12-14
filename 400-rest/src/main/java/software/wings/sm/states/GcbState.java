@@ -43,6 +43,7 @@ import software.wings.beans.Application;
 import software.wings.beans.Environment;
 import software.wings.beans.GcpConfig;
 import software.wings.beans.GitConfig;
+import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.NameValuePair;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.TemplateExpression;
@@ -54,6 +55,7 @@ import software.wings.helpers.ext.gcb.models.GcbBuildDetails;
 import software.wings.helpers.ext.gcb.models.GcbBuildStatus;
 import software.wings.service.intfc.ActivityService;
 import software.wings.service.intfc.DelegateService;
+import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.security.SecretManager;
 import software.wings.service.intfc.sweepingoutput.SweepingOutputService;
@@ -105,6 +107,7 @@ public class GcbState extends State implements SweepingOutputStateMixin {
   @Transient @Inject private TemplateUtils templateUtils;
   @Transient @Inject private SettingsService settingsService;
   @Transient @Inject KryoSerializer kryoSerializer;
+  @Transient @Inject InfrastructureMappingService infrastructureMappingService;
 
   public GcbState(String name) {
     super(name, StateType.GCB.name());
@@ -211,7 +214,7 @@ public class GcbState extends State implements SweepingOutputStateMixin {
       gcbTaskParams.setTimeout(getTimeoutMillis());
       gcbTaskParams.setStartTs(System.currentTimeMillis());
     }
-    DelegateTask delegateTask = delegateTaskOf(activityId, context, gcbTaskParams);
+    DelegateTask delegateTask = delegateTaskOf(activityId, context, infrastructureMappingService, gcbTaskParams);
     delegateService.queueTask(delegateTask);
 
     GcbExecutionData gcbExecutionData = GcbExecutionData.builder().activityId(activityId).build();
@@ -224,14 +227,18 @@ public class GcbState extends State implements SweepingOutputStateMixin {
         .build();
   }
 
-  private static DelegateTask delegateTaskOf(
-      @NotNull final String activityId, @NotNull final ExecutionContext context, Object... parameters) {
+  private static DelegateTask delegateTaskOf(@NotNull final String activityId, @NotNull final ExecutionContext context,
+      InfrastructureMappingService infrastructureMappingService, Object... parameters) {
     final Application application = context.fetchRequiredApp();
     final WorkflowStandardParams workflowStandardParams = context.getContextElement(ContextElementType.STANDARD);
     String envId = Optional.ofNullable(workflowStandardParams)
                        .map(WorkflowStandardParams::getEnv)
                        .map(Environment::getUuid)
                        .orElse(null);
+    String infrastructureMappingId = context.fetchInfraMappingId();
+    InfrastructureMapping infrastructureMapping =
+        infrastructureMappingService.get(context.getAppId(), infrastructureMappingId);
+    String serviceId = infrastructureMapping == null ? null : infrastructureMapping.getServiceId();
     return DelegateTask.builder()
         .accountId(application.getAccountId())
         .waitId(activityId)
@@ -243,7 +250,10 @@ public class GcbState extends State implements SweepingOutputStateMixin {
                   .timeout(DEFAULT_ASYNC_CALL_TIMEOUT)
                   .build())
         .setupAbstraction(Cd1SetupFields.ENV_ID_FIELD, envId)
-        .setupAbstraction(Cd1SetupFields.INFRASTRUCTURE_MAPPING_ID_FIELD, context.fetchInfraMappingId())
+        .setupAbstraction(Cd1SetupFields.ENV_TYPE_FIELD, context.getEnvType())
+
+        .setupAbstraction(Cd1SetupFields.INFRASTRUCTURE_MAPPING_ID_FIELD, infrastructureMappingId)
+        .setupAbstraction(Cd1SetupFields.SERVICE_ID_FIELD, serviceId)
         .build();
   }
 
@@ -283,7 +293,7 @@ public class GcbState extends State implements SweepingOutputStateMixin {
     GcbTaskParams parameters = delegateResponse.getParams();
     parameters.setType(POLL);
     final String waitId = UUIDGenerator.generateUuid();
-    DelegateTask delegateTask = delegateTaskOf(waitId, context, parameters);
+    DelegateTask delegateTask = delegateTaskOf(waitId, context, infrastructureMappingService, parameters);
     delegateService.queueTask(delegateTask);
     appendDelegateTaskDetails(context, delegateTask);
     final GcbExecutionData gcbExecutionData = context.getStateExecutionData();
@@ -319,7 +329,8 @@ public class GcbState extends State implements SweepingOutputStateMixin {
       GcbDelegateResponse delegateResponse = null;
       try {
         delegateResponse = delegateService.executeTask(
-            delegateTaskOf(((GcbExecutionData) context.getStateExecutionData()).getActivityId(), context, params));
+            delegateTaskOf(((GcbExecutionData) context.getStateExecutionData()).getActivityId(), context,
+                infrastructureMappingService, params));
       } catch (InterruptedException e) {
         Thread.currentThread().interrupt();
       }

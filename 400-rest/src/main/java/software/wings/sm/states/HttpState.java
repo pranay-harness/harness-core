@@ -38,6 +38,7 @@ import io.harness.tasks.ResponseData;
 import software.wings.api.HttpStateExecutionData;
 import software.wings.api.HttpStateExecutionData.HttpStateExecutionDataBuilder;
 import software.wings.beans.Activity.Type;
+import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.NameValuePair;
 import software.wings.beans.TaskType;
 import software.wings.beans.Variable;
@@ -49,6 +50,7 @@ import software.wings.service.impl.AccountServiceImpl;
 import software.wings.service.impl.ActivityHelperService;
 import software.wings.service.impl.SettingServiceHelper;
 import software.wings.service.intfc.DelegateService;
+import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.security.ManagerDecryptionService;
 import software.wings.service.intfc.security.SecretManager;
 import software.wings.service.intfc.sweepingoutput.SweepingOutputService;
@@ -122,6 +124,7 @@ public class HttpState extends State implements SweepingOutputStateMixin {
   @Inject protected transient ManagerDecryptionService managerDecryptionService;
   @Inject protected transient SecretManager secretManager;
   @Inject protected transient DelegateService delegateService;
+  @Inject @Transient InfrastructureMappingService infrastructureMappingService;
   @Inject private SettingServiceHelper settingServiceHelper;
   @Inject private AccountServiceImpl accountService;
   @Transient @Inject KryoSerializer kryoSerializer;
@@ -342,7 +345,6 @@ public class HttpState extends State implements SweepingOutputStateMixin {
    */
   protected ExecutionResponse executeInternal(ExecutionContext context, String activityId) {
     String envId = obtainEnvId(context.getContextElement(ContextElementType.STANDARD));
-
     String finalUrl = trim(getFinalUrl(context));
     String finalBody = null;
     try {
@@ -398,6 +400,9 @@ public class HttpState extends State implements SweepingOutputStateMixin {
         .httpMethod(expressionEvaluator.substitute(httpTaskParameters.getMethod(), Collections.emptyMap()))
         .header(expressionEvaluator.substitute(httpTaskParameters.getHeader(), Collections.emptyMap()))
         .warningMessage(warningMessage);
+    InfrastructureMapping infrastructureMapping =
+        infrastructureMappingService.get(context.getAppId(), infrastructureMappingId);
+    String serviceId = infrastructureMapping == null ? null : infrastructureMapping.getServiceId();
 
     DelegateTask delegateTask =
         DelegateTask.builder()
@@ -415,7 +420,11 @@ public class HttpState extends State implements SweepingOutputStateMixin {
                       .expressionFunctorToken(expressionFunctorToken)
                       .build())
             .setupAbstraction(Cd1SetupFields.ENV_ID_FIELD, envId)
+            .setupAbstraction(Cd1SetupFields.ENV_TYPE_FIELD, context.getEnvType())
+
             .setupAbstraction(Cd1SetupFields.INFRASTRUCTURE_MAPPING_ID_FIELD, infrastructureMappingId)
+            .setupAbstraction(Cd1SetupFields.SERVICE_ID_FIELD, serviceId)
+
             .selectionLogsTrackingEnabled(isSelectionLogsTrackingForTasksEnabled())
             .workflowExecutionId(context.getWorkflowExecutionId())
             .build();
