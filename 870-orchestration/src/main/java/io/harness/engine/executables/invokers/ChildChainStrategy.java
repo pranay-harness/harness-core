@@ -29,6 +29,7 @@ import io.harness.pms.sdk.core.steps.executables.ChildChainExecutable;
 import io.harness.pms.sdk.core.steps.io.PassThroughData;
 import io.harness.pms.sdk.core.steps.io.StepInputPackage;
 import io.harness.pms.sdk.core.steps.io.StepResponse;
+import io.harness.pms.sdk.core.steps.io.StepResponseMapper;
 import io.harness.pms.sdk.registries.StepRegistry;
 import io.harness.serializer.KryoSerializer;
 import io.harness.state.io.StepResponseNotifyData;
@@ -84,7 +85,8 @@ public class ChildChainStrategy implements ExecuteStrategy {
         || isBroken(accumulatedResponse) || isAborted(accumulatedResponse)) {
       StepResponse stepResponse = childChainExecutable.finalizeExecution(ambiance,
           pmsNodeExecutionService.extractResolvedStepParameters(nodeExecution), passThroughData, accumulatedResponse);
-      pmsNodeExecutionService.handleStepResponse(nodeExecution.getUuid(), stepResponse);
+      pmsNodeExecutionService.handleStepResponse(
+          nodeExecution.getUuid(), StepResponseMapper.toStepResponseProto(stepResponse));
     } else {
       StepInputPackage inputPackage =
           engineObtainmentHelper.obtainInputPackage(ambiance, nodeExecution.getNode().getRebObjectsList());

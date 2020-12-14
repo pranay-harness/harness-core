@@ -30,7 +30,6 @@ import io.harness.engine.expressions.EngineExpressionService;
 import io.harness.engine.interrupts.InterruptCheck;
 import io.harness.engine.interrupts.InterruptService;
 import io.harness.engine.pms.EngineFacilitationCallback;
-import io.harness.engine.resume.EngineResumeExecutor;
 import io.harness.engine.resume.EngineWaitResumeCallback;
 import io.harness.exception.ExceptionUtils;
 import io.harness.execution.NodeExecution;
@@ -49,6 +48,7 @@ import io.harness.pms.contracts.execution.failure.FailureInfo;
 import io.harness.pms.contracts.plan.PlanNodeProto;
 import io.harness.pms.execution.NodeExecutionEvent;
 import io.harness.pms.execution.NodeExecutionEventType;
+import io.harness.pms.execution.ResumeNodeExecutionEventData;
 import io.harness.pms.execution.StartNodeExecutionEventData;
 import io.harness.pms.execution.utils.AdviseTypeUtils;
 import io.harness.pms.execution.utils.AmbianceUtils;
@@ -424,14 +424,19 @@ public class OrchestrationEngine {
       if (nodeExecution.getStatus() != RUNNING) {
         nodeExecution = Preconditions.checkNotNull(nodeExecutionService.updateStatus(nodeExecutionId, RUNNING));
       }
-      executorService.execute(EngineResumeExecutor.builder()
-                                  .nodeExecution(NodeExecutionMapper.toNodeExecutionProto(nodeExecution))
-                                  .nodes(planExecution.getPlan().getNodes())
-                                  .response(response)
-                                  .asyncError(asyncError)
-                                  .orchestrationEngine(this)
-                                  .processor(executableProcessorFactory.obtainProcessor(nodeExecution.getMode()))
-                                  .build());
+
+      ResumeNodeExecutionEventData data = ResumeNodeExecutionEventData.builder()
+                                              .asyncError(asyncError)
+                                              .nodes(planExecution.getPlan().getNodes())
+                                              .response(response)
+                                              .build();
+      NodeExecutionEvent resumeEvent = NodeExecutionEvent.builder()
+                                           .eventType(NodeExecutionEventType.RESUME)
+                                           .nodeExecution(NodeExecutionMapper.toNodeExecutionProto(nodeExecution))
+                                           .eventData(data)
+                                           .build();
+      nodeExecutionEventQueuePublisher.send(Collections.singletonList(config.getServiceName()), resumeEvent);
+      // Do something with the waitId
     } catch (Exception exception) {
       handleError(ambiance, exception);
     }

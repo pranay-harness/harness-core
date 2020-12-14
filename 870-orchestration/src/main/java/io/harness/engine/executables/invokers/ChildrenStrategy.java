@@ -20,6 +20,7 @@ import io.harness.pms.execution.utils.LevelUtils;
 import io.harness.pms.sdk.core.execution.PmsNodeExecutionService;
 import io.harness.pms.sdk.core.steps.executables.ChildrenExecutable;
 import io.harness.pms.sdk.core.steps.io.StepResponse;
+import io.harness.pms.sdk.core.steps.io.StepResponseMapper;
 import io.harness.pms.sdk.registries.StepRegistry;
 
 import com.google.inject.Inject;
@@ -50,7 +51,8 @@ public class ChildrenStrategy implements ExecuteStrategy {
     ChildrenExecutable childrenExecutable = extractChildrenExecutable(nodeExecution);
     StepResponse stepResponse = childrenExecutable.handleChildrenResponse(ambiance,
         pmsNodeExecutionService.extractResolvedStepParameters(nodeExecution), resumePackage.getResponseDataMap());
-    pmsNodeExecutionService.handleStepResponse(nodeExecution.getUuid(), stepResponse);
+    pmsNodeExecutionService.handleStepResponse(
+        nodeExecution.getUuid(), StepResponseMapper.toStepResponseProto(stepResponse));
   }
 
   private ChildrenExecutable extractChildrenExecutable(NodeExecutionProto nodeExecution) {

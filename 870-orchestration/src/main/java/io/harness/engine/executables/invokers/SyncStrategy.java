@@ -13,6 +13,7 @@ import io.harness.pms.execution.utils.AmbianceUtils;
 import io.harness.pms.sdk.core.execution.PmsNodeExecutionService;
 import io.harness.pms.sdk.core.steps.executables.SyncExecutable;
 import io.harness.pms.sdk.core.steps.io.StepResponse;
+import io.harness.pms.sdk.core.steps.io.StepResponseMapper;
 import io.harness.pms.sdk.registries.StepRegistry;
 
 import com.google.inject.Inject;
@@ -34,7 +35,8 @@ public class SyncStrategy implements ExecuteStrategy {
     StepResponse stepResponse =
         syncExecutable.executeSync(ambiance, pmsNodeExecutionService.extractResolvedStepParameters(nodeExecution),
             invokerPackage.getInputPackage(), invokerPackage.getPassThroughData());
-    pmsNodeExecutionService.handleStepResponse(AmbianceUtils.obtainCurrentRuntimeId(ambiance), stepResponse);
+    pmsNodeExecutionService.handleStepResponse(
+        AmbianceUtils.obtainCurrentRuntimeId(ambiance), StepResponseMapper.toStepResponseProto(stepResponse));
   }
 
   SyncExecutable extractSyncExecutable(NodeExecutionProto nodeExecution) {

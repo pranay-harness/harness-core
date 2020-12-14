@@ -17,10 +17,12 @@ import io.harness.pms.contracts.execution.NodeExecutionProto;
 import io.harness.pms.contracts.execution.Status;
 import io.harness.pms.contracts.execution.TaskMode;
 import io.harness.pms.contracts.steps.StepType;
+import io.harness.pms.contracts.steps.io.StepResponseProto;
 import io.harness.pms.sdk.core.execution.PmsNodeExecutionService;
 import io.harness.pms.sdk.core.steps.Step;
 import io.harness.pms.sdk.core.steps.io.StepParameters;
 import io.harness.pms.sdk.core.steps.io.StepResponse;
+import io.harness.pms.sdk.core.steps.io.StepResponseMapper;
 import io.harness.pms.sdk.registries.StepRegistry;
 import io.harness.pms.serializer.json.JsonOrchestrationUtils;
 import io.harness.tasks.Task;
@@ -86,8 +88,8 @@ public class PmsNodeExecutionServiceImpl implements PmsNodeExecutionService {
   }
 
   @Override
-  public void handleStepResponse(@NonNull String nodeExecutionId, @NonNull StepResponse stepResponse) {
-    engine.handleStepResponse(nodeExecutionId, stepResponse);
+  public void handleStepResponse(@NonNull String nodeExecutionId, @NonNull StepResponseProto stepResponse) {
+    engine.handleStepResponse(nodeExecutionId, StepResponseMapper.fromStepResponseProto(stepResponse));
   }
 
   @Override

@@ -66,6 +66,9 @@ public class NodeExecutionEventListener extends QueueListener<NodeExecutionEvent
       case FACILITATE:
         facilitateExecution(event);
         break;
+      case RESUME:
+        resumeExecution(event);
+        break;
       default:
         throw new UnsupportedOperationException("NodeExecution Event Has no handler" + event.getEventType());
     }
@@ -138,7 +141,7 @@ public class NodeExecutionEventListener extends QueueListener<NodeExecutionEvent
                                     .setErrorMessage(errorNotifyResponseData.getErrorMessage())
                                     .build())
                 .build();
-        // TODO: Send the step response to pipeline service for processing
+        pmsNodeExecutionService.handleStepResponse(nodeExecution.getUuid(), stepResponse);
         return;
       }
 

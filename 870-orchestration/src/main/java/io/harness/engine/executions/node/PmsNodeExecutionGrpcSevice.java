@@ -9,7 +9,6 @@ import io.harness.pms.contracts.plan.QueueNodeExecutionRequest;
 import io.harness.pms.contracts.plan.QueueNodeExecutionResponse;
 import io.harness.pms.contracts.plan.QueueTaskRequest;
 import io.harness.pms.contracts.plan.QueueTaskResponse;
-import io.harness.pms.sdk.core.steps.io.StepResponseMapper;
 import io.harness.serializer.KryoSerializer;
 import io.harness.tasks.Task;
 
@@ -50,8 +49,7 @@ public class PmsNodeExecutionGrpcSevice extends NodeExecutionProtoServiceImplBas
   @Override
   public void handleStepResponse(
       HandleStepResponseRequest request, StreamObserver<HandleStepResponseResponse> responseObserver) {
-    pmsNodeExecutionService.handleStepResponse(
-        request.getNodeExecutionId(), StepResponseMapper.fromStepResponseProto(request.getStepResponse()));
+    pmsNodeExecutionService.handleStepResponse(request.getNodeExecutionId(), request.getStepResponse());
     responseObserver.onNext(HandleStepResponseResponse.newBuilder().build());
     responseObserver.onCompleted();
   }

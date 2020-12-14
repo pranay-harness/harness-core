@@ -15,11 +15,10 @@ import io.harness.pms.contracts.plan.QueueNodeExecutionRequest;
 import io.harness.pms.contracts.plan.QueueTaskRequest;
 import io.harness.pms.contracts.plan.QueueTaskResponse;
 import io.harness.pms.contracts.steps.StepType;
+import io.harness.pms.contracts.steps.io.StepResponseProto;
 import io.harness.pms.sdk.core.execution.PmsNodeExecutionService;
 import io.harness.pms.sdk.core.steps.Step;
 import io.harness.pms.sdk.core.steps.io.StepParameters;
-import io.harness.pms.sdk.core.steps.io.StepResponse;
-import io.harness.pms.sdk.core.steps.io.StepResponseMapper;
 import io.harness.pms.sdk.registries.StepRegistry;
 import io.harness.pms.serializer.json.JsonOrchestrationUtils;
 import io.harness.serializer.KryoSerializer;
@@ -72,12 +71,11 @@ public class PmsNodeExecutionServiceGrpcImpl implements PmsNodeExecutionService 
   }
 
   @Override
-  public void handleStepResponse(@NonNull String nodeExecutionId, @NonNull StepResponse stepResponse) {
-    nodeExecutionProtoServiceBlockingStub.handleStepResponse(
-        HandleStepResponseRequest.newBuilder()
-            .setNodeExecutionId(nodeExecutionId)
-            .setStepResponse(StepResponseMapper.toStepResponseProto(stepResponse))
-            .build());
+  public void handleStepResponse(@NonNull String nodeExecutionId, @NonNull StepResponseProto stepResponse) {
+    nodeExecutionProtoServiceBlockingStub.handleStepResponse(HandleStepResponseRequest.newBuilder()
+                                                                 .setNodeExecutionId(nodeExecutionId)
+                                                                 .setStepResponse(stepResponse)
+                                                                 .build());
   }
 
   @Override

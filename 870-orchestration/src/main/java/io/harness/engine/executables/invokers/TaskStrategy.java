@@ -16,6 +16,7 @@ import io.harness.pms.contracts.plan.PlanNodeProto;
 import io.harness.pms.sdk.core.execution.PmsNodeExecutionService;
 import io.harness.pms.sdk.core.steps.executables.TaskExecutable;
 import io.harness.pms.sdk.core.steps.io.StepResponse;
+import io.harness.pms.sdk.core.steps.io.StepResponseMapper;
 import io.harness.pms.sdk.registries.StepRegistry;
 import io.harness.tasks.Task;
 
@@ -55,7 +56,8 @@ public class TaskStrategy implements TaskExecuteStrategy {
     TaskExecutable taskExecutable = extractTaskExecutable(nodeExecution);
     StepResponse stepResponse = taskExecutable.handleTaskResult(ambiance,
         pmsNodeExecutionService.extractResolvedStepParameters(nodeExecution), resumePackage.getResponseDataMap());
-    pmsNodeExecutionService.handleStepResponse(nodeExecution.getUuid(), stepResponse);
+    pmsNodeExecutionService.handleStepResponse(
+        nodeExecution.getUuid(), StepResponseMapper.toStepResponseProto(stepResponse));
   }
 
   private TaskExecutable extractTaskExecutable(NodeExecutionProto nodeExecution) {
