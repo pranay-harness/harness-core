@@ -28,6 +28,7 @@ import org.apache.commons.io.IOUtils;
 @Slf4j
 public class YamlSchemaValidator {
   public static Map<EntityType, JsonSchema> schemas = new HashMap<>();
+  ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
 
   /**
    * @param yaml       The yaml String which is to be validated against schema of entity.
@@ -44,7 +45,6 @@ public class YamlSchemaValidator {
   }
 
   public Set<String> validate(String yaml, JsonSchema schema) throws IOException {
-    ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
     JsonNode jsonNode = mapper.readTree(yaml);
     Set<ValidationMessage> validateMsg = schema.validate(jsonNode);
     return validateMsg.stream().map(ValidationMessage::getMessage).collect(Collectors.toSet());

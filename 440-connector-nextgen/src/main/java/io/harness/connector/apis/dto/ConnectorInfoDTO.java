@@ -1,5 +1,7 @@
 package io.harness.connector.apis.dto;
 
+import static io.harness.ConnectorConstants.CONNECTOR_TYPES;
+
 import io.harness.delegate.beans.connector.ConnectorConfigDTO;
 import io.harness.delegate.beans.connector.ConnectorType;
 import io.harness.delegate.beans.connector.ExecutionCapabilityDemanderWithScope;
@@ -46,11 +48,11 @@ public class ConnectorInfoDTO {
   String projectIdentifier;
   Map<String, String> tags;
 
-  @NotNull @JsonProperty("type") ConnectorType connectorType;
+  @NotNull @JsonProperty(CONNECTOR_TYPES) ConnectorType connectorType;
 
   @JsonProperty("spec")
-  @JsonTypeInfo(
-      use = JsonTypeInfo.Id.NAME, property = "type", include = JsonTypeInfo.As.EXTERNAL_PROPERTY, visible = true)
+  @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = CONNECTOR_TYPES, include = JsonTypeInfo.As.EXTERNAL_PROPERTY,
+      visible = true)
   @Valid
   @NotNull
   ConnectorConfigDTO connectorConfig;

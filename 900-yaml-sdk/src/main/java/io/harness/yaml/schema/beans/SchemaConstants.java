@@ -11,4 +11,5 @@ public class SchemaConstants {
   public static final String CONST_NODE = "const";
   public static final String DEFINITIONS_STRING_PREFIX = "#/" + DEFINITIONS_NODE + "/";
   public static final String JSON_SCHEMA_7 = "http://json-schema.org/draft-07/schema#";
+  public static final String ENUM_NODE = "enum";
 }
