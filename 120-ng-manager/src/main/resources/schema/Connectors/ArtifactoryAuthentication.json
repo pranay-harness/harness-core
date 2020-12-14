@@ -5,9 +5,6 @@
     "type"
   ],
   "properties": {
-    "spec": {
-      "$ref": "#/definitions/ArtifactoryAuthCredentials"
-    },
     "type": {
       "type": "string",
       "enum": [

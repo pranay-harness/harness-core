@@ -22,9 +22,6 @@
     "projectIdentifier": {
       "type": "string"
     },
-    "spec": {
-      "$ref": "#/definitions/ConnectorConfigDTO"
-    },
     "tags": {
       "type": "object",
       "additionalProperties": {

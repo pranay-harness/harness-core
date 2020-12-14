@@ -147,11 +147,19 @@ public class YamlSchemaGenerator {
       final Set<FieldSubtypeData> fieldSubtypeDatas = subTypeMap.get(name);
       for (FieldSubtypeData fieldSubtypeData : fieldSubtypeDatas) {
         addConditionalBlock(mapper, allConditionals, fieldSubtypeData);
+        removeFieldWithRefFromSchema(value, fieldSubtypeData);
       }
       value.putArray(SchemaConstants.ALL_OF_NODE).addAll(allConditionals);
     }
     removeUnwantedNodes(value, "originalRef");
   }
+
+  private void removeFieldWithRefFromSchema(ObjectNode value, FieldSubtypeData fieldSubtypeData) {
+    final String fieldName = fieldSubtypeData.getFieldName();
+    ObjectNode propertiesNode = (ObjectNode) value.findValue(SchemaConstants.PROPERTIES_NODE);
+    propertiesNode.remove(fieldName);
+  }
+
   private void removeUnwantedNodes(JsonNode objectNode, String unwantedNode) {
     if (objectNode.isArray()) {
       final Iterator<JsonNode> elements = objectNode.elements();

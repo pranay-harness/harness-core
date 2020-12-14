@@ -53,9 +53,6 @@
         "type"
       ],
       "properties": {
-        "spec": {
-          "$ref": "#/definitions/ArtifactoryAuthCredentials"
-        },
         "type": {
           "type": "string",
           "enum": [
@@ -156,9 +153,6 @@
       "properties": {
         "crossAccountAccess": {
           "$ref": "#/definitions/CrossAccountAccess"
-        },
-        "spec": {
-          "$ref": "#/definitions/AwsCredentialSpec"
         },
         "type": {
           "type": "string",
@@ -286,9 +280,6 @@
         },
         "projectIdentifier": {
           "type": "string"
-        },
-        "spec": {
-          "$ref": "#/definitions/ConnectorConfigDTO"
         },
         "tags": {
           "type": "object",
@@ -573,9 +564,6 @@
         "type"
       ],
       "properties": {
-        "spec": {
-          "$ref": "#/definitions/DockerAuthCredentialsDTO"
-        },
         "type": {
           "type": "string",
           "enum": [
@@ -671,9 +659,6 @@
         "type"
       ],
       "properties": {
-        "spec": {
-          "$ref": "#/definitions/GcpCredentialSpec"
-        },
         "type": {
           "type": "string",
           "enum": [
@@ -924,9 +909,6 @@
         "type"
       ],
       "properties": {
-        "spec": {
-          "$ref": "#/definitions/KubernetesAuthCredentialDTO"
-        },
         "type": {
           "type": "string",
           "enum": [
@@ -1084,9 +1066,6 @@
         "type"
       ],
       "properties": {
-        "spec": {
-          "$ref": "#/definitions/KubernetesCredentialSpecDTO"
-        },
         "type": {
           "type": "string",
           "enum": [
@@ -1259,9 +1238,6 @@
         "type"
       ],
       "properties": {
-        "spec": {
-          "$ref": "#/definitions/NexusAuthCredentials"
-        },
         "type": {
           "type": "string",
           "enum": [

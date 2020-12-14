@@ -9,11 +9,14 @@ import io.harness.ng.core.dto.ErrorDTO;
 import io.harness.ng.core.dto.FailureDTO;
 import io.harness.ng.core.dto.ResponseDTO;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.inject.Inject;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
+import java.io.IOException;
 import javax.validation.constraints.NotNull;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
@@ -39,26 +42,29 @@ public class YamlSchemaResource {
 
   @GET
   @ApiOperation(value = "Get Yaml Schema", nickname = "getYamlSchema")
-  public ResponseDTO<String> getYamlSchema(@QueryParam("entityType") @NotNull EntityType entityType) {
+  public ResponseDTO<JsonNode> getYamlSchema(@QueryParam("entityType") @NotNull EntityType entityType)
+      throws IOException {
     final String schemaForEntityType = yamlSchemaHelper.getSchemaForEntityType(entityType);
     if (isEmpty(schemaForEntityType)) {
       throw new InvalidRequestException(String.format("No schema found for entity type %s ", entityType.getYamlName()));
     }
-    return ResponseDTO.newResponse(schemaForEntityType);
+    ObjectMapper mapper = new ObjectMapper();
+    return ResponseDTO.newResponse(mapper.readTree(schemaForEntityType));
   }
 
   // todo(abhinav): Currently handled only for connector subtype, handle it generically for all subtypes.
   @GET
   @Path("{entityType}")
   @ApiOperation(value = "Get Yaml Schema for subtype", nickname = "getYamlSchemaForSubtype")
-  public ResponseDTO<String> getYamlSchemaForSubtype(@PathParam("entityType") @NotNull EntityType entityType,
-      @QueryParam("subtype") @NotNull ConnectorType entitySubtype) {
+  public ResponseDTO<JsonNode> getYamlSchemaForSubtype(@PathParam("entityType") @NotNull EntityType entityType,
+      @QueryParam("subtype") @NotNull ConnectorType entitySubtype) throws IOException {
     final String schemaForEntityType = yamlSchemaHelper.getSchemaForEntityType(entityType);
     if (isEmpty(schemaForEntityType)) {
       throw new InvalidRequestException(String.format("No schema found for entity type %s ", entityType.getYamlName()));
     }
     final String schemaForSubtype =
         yamlSchemaSubtypeHelper.getSchemaForSubtype(entityType, entitySubtype, schemaForEntityType);
-    return ResponseDTO.newResponse(schemaForSubtype);
+    ObjectMapper mapper = new ObjectMapper();
+    return ResponseDTO.newResponse(mapper.readTree(schemaForSubtype));
   }
 }
