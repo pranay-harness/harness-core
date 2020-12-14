@@ -2,15 +2,9 @@ package io.harness.delegate.beans.connector.gcpconnector;
 
 import io.harness.beans.DecryptableEntity;
 import io.harness.delegate.beans.connector.ConnectorConfigDTO;
-import io.harness.delegate.beans.executioncapability.ExecutionCapability;
-import io.harness.delegate.beans.executioncapability.ExecutionCapabilityDemander;
-import io.harness.delegate.task.mixin.HttpConnectionExecutionCapabilityGenerator;
-import io.harness.expression.ExpressionEvaluator;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import io.swagger.annotations.ApiModel;
-import java.util.Arrays;
-import java.util.List;
 import javax.validation.Valid;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
@@ -23,7 +17,7 @@ import lombok.experimental.FieldDefaults;
 @JsonIgnoreProperties(ignoreUnknown = true)
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @ApiModel("GcpConnector")
-public class GcpConnectorDTO extends ConnectorConfigDTO implements ExecutionCapabilityDemander {
+public class GcpConnectorDTO extends ConnectorConfigDTO {
   @Valid GcpConnectorCredentialDTO credential;
 
   @Override
@@ -33,12 +27,5 @@ public class GcpConnectorDTO extends ConnectorConfigDTO implements ExecutionCapa
       return gcpManualDetailsDTO;
     }
     return null;
-  }
-
-  @Override
-  public List<ExecutionCapability> fetchRequiredExecutionCapabilities(ExpressionEvaluator maskingEvaluator) {
-    final String GCS_URL = "https://storage.cloud.google.com/";
-    return Arrays.asList(
-        HttpConnectionExecutionCapabilityGenerator.buildHttpConnectionExecutionCapability(GCS_URL, maskingEvaluator));
   }
 }

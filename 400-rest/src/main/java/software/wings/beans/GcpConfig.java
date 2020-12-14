@@ -2,10 +2,11 @@ package software.wings.beans;
 
 import static software.wings.settings.SettingVariableTypes.GCP;
 
+import static java.util.Collections.emptyList;
+
 import io.harness.ccm.config.CCMConfig;
 import io.harness.ccm.config.CloudCostAware;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
-import io.harness.delegate.task.mixin.HttpConnectionExecutionCapabilityGenerator;
 import io.harness.encryption.Encrypted;
 import io.harness.expression.ExpressionEvaluator;
 
@@ -21,7 +22,6 @@ import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.fasterxml.jackson.annotation.JsonView;
 import com.github.reinert.jjschema.SchemaIgnore;
-import java.util.Arrays;
 import java.util.List;
 import lombok.Builder;
 import lombok.Data;
@@ -39,7 +39,6 @@ import org.hibernate.validator.constraints.NotEmpty;
 @ToString(exclude = {"serviceAccountKeyFileContent", "encryptedServiceAccountKeyFileContent"})
 @EqualsAndHashCode(callSuper = false)
 public class GcpConfig extends SettingValue implements EncryptableSetting, CloudCostAware {
-  private static final String GCS_URL = "https://storage.cloud.google.com/";
   @Encrypted(fieldName = "service_account_key_file") private char[] serviceAccountKeyFileContent;
 
   @SchemaIgnore @NotEmpty private String accountId;
@@ -68,8 +67,7 @@ public class GcpConfig extends SettingValue implements EncryptableSetting, Cloud
 
   @Override
   public List<ExecutionCapability> fetchRequiredExecutionCapabilities(ExpressionEvaluator maskingEvaluator) {
-    return Arrays.asList(
-        HttpConnectionExecutionCapabilityGenerator.buildHttpConnectionExecutionCapability(GCS_URL, maskingEvaluator));
+    return emptyList();
   }
 
   @Override
