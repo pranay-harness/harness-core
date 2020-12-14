@@ -175,9 +175,9 @@ public class SpotInstDeployState extends State {
 
     SpotInstCommandRequest spotInstCommandRequest = stateExecutionData.getSpotinstCommandRequest();
 
-    DelegateTask task =
-        spotInstStateHelper.getDelegateTask(app.getAccountId(), app.getUuid(), TaskType.SPOTINST_COMMAND_TASK,
-            activity.getUuid(), env.getUuid(), awsAmiInfrastructureMapping.getUuid(), spotInstCommandRequest);
+    DelegateTask task = spotInstStateHelper.getDelegateTask(app.getAccountId(), app.getUuid(),
+        TaskType.SPOTINST_COMMAND_TASK, activity.getUuid(), env.getUuid(), awsAmiInfrastructureMapping.getUuid(),
+        spotInstCommandRequest, env.getEnvironmentType(), awsAmiInfrastructureMapping.getServiceId());
 
     delegateService.queueTask(task);
 

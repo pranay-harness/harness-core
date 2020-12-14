@@ -142,7 +142,8 @@ public class SpotinstTrafficShiftAlbSwitchRoutesState extends State {
 
     DelegateTask delegateTask = spotinstStateHelper.getDelegateTask(dataBag.getApp().getAccountId(),
         dataBag.getApp().getUuid(), TaskType.SPOTINST_COMMAND_TASK, activity.getUuid(), dataBag.getEnv().getUuid(),
-        dataBag.getInfrastructureMapping().getUuid(), commandRequest);
+        dataBag.getInfrastructureMapping().getUuid(), commandRequest, dataBag.getEnv().getEnvironmentType(),
+        dataBag.getInfrastructureMapping().getServiceId());
 
     delegateService.queueTask(delegateTask);
 

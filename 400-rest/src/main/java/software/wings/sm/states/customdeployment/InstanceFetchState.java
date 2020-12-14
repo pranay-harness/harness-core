@@ -202,23 +202,27 @@ public class InstanceFetchState extends State {
         ObjectUtils.defaultIfNull(Long.valueOf(getTimeoutMillis(context)), TaskData.DEFAULT_ASYNC_CALL_TIMEOUT);
 
     int expressionFunctorToken = HashGenerator.generateIntegerHash();
-    DelegateTask delegateTask = DelegateTask.builder()
-                                    .accountId(accountId)
-                                    .description("Fetch Instances")
-                                    .waitId(activityId)
-                                    .setupAbstraction(Cd1SetupFields.APP_ID_FIELD, appId)
-                                    .setupAbstraction(Cd1SetupFields.SERVICE_TEMPLATE_ID_FIELD, serviceTemplateId)
-                                    .setupAbstraction(Cd1SetupFields.ENV_ID_FIELD, envId)
-                                    .setupAbstraction(Cd1SetupFields.INFRASTRUCTURE_MAPPING_ID_FIELD, infraMappingId)
-                                    .tags(getRenderedTags(context))
-                                    .data(TaskData.builder()
-                                              .async(true)
-                                              .parameters(new Object[] {taskParameters})
-                                              .taskType(TaskType.SHELL_SCRIPT_PROVISION_TASK.name())
-                                              .timeout(timeout)
-                                              .expressionFunctorToken(expressionFunctorToken)
-                                              .build())
-                                    .build();
+    DelegateTask delegateTask =
+        DelegateTask.builder()
+            .accountId(accountId)
+            .description("Fetch Instances")
+            .waitId(activityId)
+            .setupAbstraction(Cd1SetupFields.APP_ID_FIELD, appId)
+            .setupAbstraction(Cd1SetupFields.SERVICE_TEMPLATE_ID_FIELD, serviceTemplateId)
+            .setupAbstraction(Cd1SetupFields.ENV_ID_FIELD, envId)
+            .setupAbstraction(
+                Cd1SetupFields.ENV_TYPE_FIELD, workflowStandardParams.getEnv().getEnvironmentType().name())
+            .setupAbstraction(Cd1SetupFields.INFRASTRUCTURE_MAPPING_ID_FIELD, infraMappingId)
+            .setupAbstraction(Cd1SetupFields.SERVICE_ID_FIELD, infrastructureMapping.getServiceId())
+            .tags(getRenderedTags(context))
+            .data(TaskData.builder()
+                      .async(true)
+                      .parameters(new Object[] {taskParameters})
+                      .taskType(TaskType.SHELL_SCRIPT_PROVISION_TASK.name())
+                      .timeout(timeout)
+                      .expressionFunctorToken(expressionFunctorToken)
+                      .build())
+            .build();
 
     renderDelegateTask(context, delegateTask,
         StateExecutionContext.builder()

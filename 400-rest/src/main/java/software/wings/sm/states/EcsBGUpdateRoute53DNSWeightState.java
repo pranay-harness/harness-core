@@ -193,6 +193,8 @@ public class EcsBGUpdateRoute53DNSWeightState extends State {
                       .build())
             .tags(isNotEmpty(request.getAwsConfig().getTag()) ? singletonList(request.getAwsConfig().getTag()) : null)
             .setupAbstraction(Cd1SetupFields.ENV_ID_FIELD, infrastructureMapping.getEnvId())
+            .setupAbstraction(
+                Cd1SetupFields.ENV_TYPE_FIELD, context.fetchRequiredEnvironment().getEnvironmentType().name())
             .build();
 
     delegateService.queueTask(delegateTask);

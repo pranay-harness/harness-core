@@ -231,7 +231,9 @@ public class AwsCodeDeployState extends State {
                       .timeout(getTaskTimeout())
                       .build())
             .setupAbstraction(Cd1SetupFields.ENV_ID_FIELD, envId)
+            .setupAbstraction(Cd1SetupFields.ENV_TYPE_FIELD, env.getEnvironmentType().name())
             .setupAbstraction(Cd1SetupFields.INFRASTRUCTURE_MAPPING_ID_FIELD, infrastructureMapping.getUuid())
+            .setupAbstraction(Cd1SetupFields.SERVICE_ID_FIELD, infrastructureMapping.getServiceId())
             .build());
 
     return ExecutionResponse.builder()

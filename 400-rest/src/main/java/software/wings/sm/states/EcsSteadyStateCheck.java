@@ -125,6 +125,7 @@ public class EcsSteadyStateCheck extends State {
                         .timeout(defaultIfNullTimeout(DEFAULT_ASYNC_CALL_TIMEOUT))
                         .build())
               .setupAbstraction(Cd1SetupFields.ENV_ID_FIELD, env.getUuid())
+              .setupAbstraction(Cd1SetupFields.ENV_TYPE_FIELD, env.getEnvironmentType().name())
               .build();
       String delegateTaskId = delegateService.queueTask(delegateTask);
       return ExecutionResponse.builder()

@@ -193,7 +193,11 @@ public class AzureVMSSSwitchRoutesState extends State {
                       .build())
             .setupAbstraction(Cd1SetupFields.ENV_ID_FIELD, azureVMSSStateData.getEnvironment().getUuid())
             .setupAbstraction(
+                Cd1SetupFields.ENV_TYPE_FIELD, azureVMSSStateData.getEnvironment().getEnvironmentType().name())
+            .setupAbstraction(
                 Cd1SetupFields.INFRASTRUCTURE_MAPPING_ID_FIELD, azureVMSSStateData.getInfrastructureMapping().getUuid())
+            .setupAbstraction(
+                Cd1SetupFields.SERVICE_ID_FIELD, azureVMSSStateData.getInfrastructureMapping().getServiceId())
             .build();
     delegateService.queueTask(delegateTask);
     return stateExecutionData;

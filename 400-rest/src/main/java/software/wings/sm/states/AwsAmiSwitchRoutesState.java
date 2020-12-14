@@ -181,6 +181,8 @@ public class AwsAmiSwitchRoutesState extends State {
                     ? singletonList(routesRequest.getAwsConfig().getTag())
                     : null)
             .setupAbstraction(Cd1SetupFields.ENV_ID_FIELD, infrastructureMapping.getEnvId())
+            .setupAbstraction(
+                Cd1SetupFields.ENV_TYPE_FIELD, context.fetchRequiredEnvironment().getEnvironmentType().name())
             .build();
     delegateService.queueTask(delegateTask);
 

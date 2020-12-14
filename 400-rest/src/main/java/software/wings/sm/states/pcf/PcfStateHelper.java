@@ -264,6 +264,7 @@ public class PcfStateHelper {
                             .taskType(TaskType.PCF_COMMAND_TASK)
                             .infrastructureMappingId(pcfInfrastructureMapping.getUuid())
                             .environmentType(queueRequestData.getEnvironmentType())
+                            .serviceId(pcfInfrastructureMapping.getServiceId())
                             .parameters(new Object[] {pcfCommandRequest, queueRequestData.getEncryptedDataDetails()})
                             .timeout(timeoutIntervalInMinutes)
                             .build());
@@ -639,7 +640,9 @@ public class PcfStateHelper {
         .accountId(app.getAccountId())
         .setupAbstraction(Cd1SetupFields.APP_ID_FIELD, app.getUuid())
         .setupAbstraction(Cd1SetupFields.ENV_ID_FIELD, env.getUuid())
+        .setupAbstraction(Cd1SetupFields.ENV_TYPE_FIELD, env.getEnvironmentType().name())
         .setupAbstraction(Cd1SetupFields.INFRASTRUCTURE_MAPPING_ID_FIELD, infraMapping.getUuid())
+        .setupAbstraction(Cd1SetupFields.SERVICE_ID_FIELD, infraMapping.getServiceId())
         .waitId(waitId)
         .data(TaskData.builder()
                   .async(true)

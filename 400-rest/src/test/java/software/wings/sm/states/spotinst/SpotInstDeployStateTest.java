@@ -136,7 +136,8 @@ public class SpotInstDeployStateTest extends WingsBaseTest {
     DelegateTask task = DelegateTask.builder().build();
     doReturn(task)
         .when(mockSpotinstStateHelper)
-        .getDelegateTask(anyString(), anyString(), any(), anyString(), anyString(), anyString(), any());
+        .getDelegateTask(
+            anyString(), anyString(), any(), anyString(), anyString(), anyString(), any(), any(), anyString());
     Activity activity = Activity.builder().uuid(ACTIVITY_ID).build();
     doReturn(activity)
         .when(mockSpotinstStateHelper)

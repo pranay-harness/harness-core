@@ -114,25 +114,27 @@ public class AwsAmiServiceRollback extends AwsAmiServiceDeployState {
     // list of older Asgs first. In that case, the flag sent to the delegate would need to be reversed.
     boolean resizeNewFirst = RESIZE_NEW_FIRST != serviceSetupElement.getResizeStrategy();
 
-    AmiResizeTaskRequestData amiResizeTaskRequestData = AmiResizeTaskRequestData.builder()
-                                                            .accountId(infrastructureMapping.getAccountId())
-                                                            .activityId(activity.getUuid())
-                                                            .appId(infrastructureMapping.getAppId())
-                                                            .envId(infrastructureMapping.getEnvId())
-                                                            .awsConfig(awsConfig)
-                                                            .encryptionDetails(encryptionDetails)
-                                                            .rollback(true)
-                                                            .region(region)
-                                                            .commandName(getCommandName())
-                                                            .resizeNewFirst(resizeNewFirst)
-                                                            .newAutoScalingGroupName(newAgName)
-                                                            .newAsgFinalDesiredCount(newAsgFinalDesiredCount)
-                                                            .resizeData(oldAsgCounts)
-                                                            .serviceSetupElement(serviceSetupElement)
-                                                            .classicLBs(infrastructureMapping.getClassicLoadBalancers())
-                                                            .targetGroupArns(infrastructureMapping.getTargetGroupArns())
-                                                            .context(context)
-                                                            .build();
+    AmiResizeTaskRequestData amiResizeTaskRequestData =
+        AmiResizeTaskRequestData.builder()
+            .accountId(infrastructureMapping.getAccountId())
+            .activityId(activity.getUuid())
+            .appId(infrastructureMapping.getAppId())
+            .envId(infrastructureMapping.getEnvId())
+            .environmentType(context.fetchRequiredEnvironment().getEnvironmentType())
+            .awsConfig(awsConfig)
+            .encryptionDetails(encryptionDetails)
+            .rollback(true)
+            .region(region)
+            .commandName(getCommandName())
+            .resizeNewFirst(resizeNewFirst)
+            .newAutoScalingGroupName(newAgName)
+            .newAsgFinalDesiredCount(newAsgFinalDesiredCount)
+            .resizeData(oldAsgCounts)
+            .serviceSetupElement(serviceSetupElement)
+            .classicLBs(infrastructureMapping.getClassicLoadBalancers())
+            .targetGroupArns(infrastructureMapping.getTargetGroupArns())
+            .context(context)
+            .build();
     createAndQueueResizeTask(amiResizeTaskRequestData);
 
     AwsAmiDeployStateExecutionData awsAmiDeployStateExecutionData = prepareStateExecutionData(activity.getUuid(),

@@ -353,6 +353,7 @@ public class PcfStateHelperTest extends WingsBaseTest {
                                                                   .envId(ENV_ID)
                                                                   .infrastructureMappingId(INFRA_MAPPING_ID)
                                                                   .environmentType(PROD)
+                                                                  .serviceId(SERVICE_ID)
                                                                   .taskType(COMMAND)
                                                                   .timeout(5l)
                                                                   .waitId(waitId)
@@ -368,6 +369,7 @@ public class PcfStateHelperTest extends WingsBaseTest {
     assertThat(delegateTask.getSetupAbstractions().get(Cd1SetupFields.INFRASTRUCTURE_MAPPING_ID_FIELD))
         .isEqualTo(INFRA_MAPPING_ID);
     assertThat(delegateTask.getSetupAbstractions().get(Cd1SetupFields.ENV_TYPE_FIELD)).isEqualTo(PROD.name());
+    assertThat(delegateTask.getSetupAbstractions().get(Cd1SetupFields.SERVICE_ID_FIELD)).isEqualTo(SERVICE_ID);
     assertThat(delegateTask.getWaitId()).isEqualTo(waitId);
     assertThat(delegateTask.getData().isAsync()).isTrue();
 

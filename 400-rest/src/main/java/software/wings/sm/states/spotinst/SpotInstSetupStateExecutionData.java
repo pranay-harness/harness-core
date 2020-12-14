@@ -4,6 +4,7 @@ import io.harness.delegate.beans.DelegateTaskNotifyResponseData;
 import io.harness.spotinst.model.ElastiGroup;
 
 import software.wings.api.ExecutionDataValue;
+import software.wings.beans.Environment.EnvironmentType;
 import software.wings.service.impl.spotinst.SpotInstCommandRequest;
 import software.wings.sm.StateExecutionData;
 
@@ -25,6 +26,7 @@ public class SpotInstSetupStateExecutionData extends StateExecutionData implemen
   private String elastiGroupName;
   private String serviceId;
   private String envId;
+  private EnvironmentType environmentType;
   private String appId;
   private String infraMappingId;
   private String commandName;

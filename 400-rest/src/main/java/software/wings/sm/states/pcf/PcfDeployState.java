@@ -202,6 +202,7 @@ public class PcfDeployState extends State {
                                            .envId(env.getUuid())
                                            .environmentType(env.getEnvironmentType())
                                            .infrastructureMappingId(pcfInfrastructureMapping.getUuid())
+                                           .serviceId(pcfInfrastructureMapping.getServiceId())
                                            .parameters(new Object[] {commandRequest, encryptedDataDetails})
                                            .timeout(setupSweepingOutputPcf.getTimeoutIntervalInMinutes() == null
                                                    ? DEFAULT_PCF_TASK_TIMEOUT_MIN

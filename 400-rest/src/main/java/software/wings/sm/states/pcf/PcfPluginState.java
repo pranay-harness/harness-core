@@ -396,6 +396,7 @@ public class PcfPluginState extends State {
                                            .envId(env.getUuid())
                                            .environmentType(env.getEnvironmentType())
                                            .infrastructureMappingId(pcfInfrastructureMapping.getUuid())
+                                           .serviceId(pcfInfrastructureMapping.getServiceId())
                                            .parameters(new Object[] {commandRequest})
                                            .timeout(timeoutIntervalInMin)
                                            .tagList(renderedTags)

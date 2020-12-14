@@ -312,7 +312,7 @@ public class EcsStateHelper {
 
   public ExecutionResponse queueDelegateTaskForEcsListenerUpdate(Application app, AwsConfig awsConfig,
       DelegateService delegateService, EcsInfrastructureMapping ecsInfrastructureMapping, String activityId,
-      String envId, String commandName, EcsListenerUpdateRequestConfigData requestConfigData,
+      Environment environment, String commandName, EcsListenerUpdateRequestConfigData requestConfigData,
       List<EncryptedDataDetail> encryptedDataDetails, int serviceSteadyStateTimeout) {
     EcsCommandRequest ecsCommandRequest = getEcsCommandListenerUpdateRequest(commandName, app.getUuid(),
         app.getAccountId(), activityId, awsConfig, requestConfigData, serviceSteadyStateTimeout);
@@ -321,7 +321,7 @@ public class EcsStateHelper {
         activityId, app.getAccountId(), app.getUuid(), ecsCommandRequest, commandName, requestConfigData);
 
     DelegateTask delegateTask = getDelegateTask(app.getAccountId(), app.getUuid(), TaskType.ECS_COMMAND_TASK,
-        activityId, envId, ecsInfrastructureMapping.getUuid(), new Object[] {ecsCommandRequest, encryptedDataDetails},
+        activityId, environment, ecsInfrastructureMapping, new Object[] {ecsCommandRequest, encryptedDataDetails},
         serviceSteadyStateTimeout);
     delegateTask.setTags(isNotEmpty(awsConfig.getTag()) ? singletonList(awsConfig.getTag()) : null);
 
@@ -405,12 +405,13 @@ public class EcsStateHelper {
         .build();
   }
 
-  public DelegateTask getDelegateTask(String accountId, String appId, TaskType taskType, String waitId, String envId,
-      String infrastructureMappingId, Object[] parameters, long timeout) {
+  public DelegateTask getDelegateTask(String accountId, String appId, TaskType taskType, String waitId, Environment env,
+      InfrastructureMapping infrastructureMapping, Object[] parameters, long timeout) {
     return DelegateTask.builder()
         .setupAbstraction(Cd1SetupFields.APP_ID_FIELD, appId)
         .accountId(accountId)
-        .setupAbstraction(Cd1SetupFields.ENV_ID_FIELD, envId)
+        .setupAbstraction(Cd1SetupFields.ENV_ID_FIELD, env.getUuid())
+        .setupAbstraction(Cd1SetupFields.ENV_TYPE_FIELD, env.getEnvironmentType().name())
         .waitId(waitId)
         .data(TaskData.builder()
                   .async(true)
@@ -418,7 +419,8 @@ public class EcsStateHelper {
                   .parameters(parameters)
                   .timeout(TimeUnit.MINUTES.toMillis(timeout))
                   .build())
-        .setupAbstraction(Cd1SetupFields.INFRASTRUCTURE_MAPPING_ID_FIELD, infrastructureMappingId)
+        .setupAbstraction(Cd1SetupFields.INFRASTRUCTURE_MAPPING_ID_FIELD, infrastructureMapping.getUuid())
+        .setupAbstraction(Cd1SetupFields.SERVICE_ID_FIELD, infrastructureMapping.getServiceId())
         .build();
   }
 
@@ -682,6 +684,8 @@ public class EcsStateHelper {
             .setupAbstraction(Cd1SetupFields.APP_ID_FIELD, ecsSetUpDataBag.getApplication().getUuid())
             .accountId(ecsSetUpDataBag.getApplication().getAccountId())
             .setupAbstraction(Cd1SetupFields.ENV_ID_FIELD, ecsSetUpDataBag.getEnvironment().getUuid())
+            .setupAbstraction(
+                Cd1SetupFields.ENV_TYPE_FIELD, ecsSetUpDataBag.getEnvironment().getEnvironmentType().name())
             .waitId(activityId)
             .data(TaskData.builder()
                       .async(true)
@@ -694,6 +698,8 @@ public class EcsStateHelper {
                     : null)
             .setupAbstraction(
                 Cd1SetupFields.INFRASTRUCTURE_MAPPING_ID_FIELD, ecsSetUpDataBag.getEcsInfrastructureMapping().getUuid())
+            .setupAbstraction(
+                Cd1SetupFields.SERVICE_ID_FIELD, ecsSetUpDataBag.getEcsInfrastructureMapping().getServiceId())
             .build();
     delegateService.queueTask(task);
     return task;
@@ -948,23 +954,27 @@ public class EcsStateHelper {
 
   public String createAndQueueDelegateTaskForEcsServiceDeploy(EcsDeployDataBag deployDataBag,
       EcsServiceDeployRequest request, Activity activity, DelegateService delegateService) {
-    DelegateTask task = DelegateTask.builder()
-                            .accountId(deployDataBag.getApp().getAccountId())
-                            .setupAbstraction(Cd1SetupFields.APP_ID_FIELD, deployDataBag.getApp().getUuid())
-                            .waitId(activity.getUuid())
-                            .tags(isNotEmpty(deployDataBag.getAwsConfig().getTag())
-                                    ? singletonList(deployDataBag.getAwsConfig().getTag())
-                                    : null)
-                            .data(TaskData.builder()
-                                      .async(true)
-                                      .taskType(TaskType.ECS_COMMAND_TASK.name())
-                                      .parameters(new Object[] {request, deployDataBag.getEncryptedDataDetails()})
-                                      .timeout(MINUTES.toMillis(getTimeout(deployDataBag)))
-                                      .build())
-                            .setupAbstraction(Cd1SetupFields.ENV_ID_FIELD, deployDataBag.getEnv().getUuid())
-                            .setupAbstraction(Cd1SetupFields.INFRASTRUCTURE_MAPPING_ID_FIELD,
-                                deployDataBag.getEcsInfrastructureMapping().getUuid())
-                            .build();
+    DelegateTask task =
+        DelegateTask.builder()
+            .accountId(deployDataBag.getApp().getAccountId())
+            .setupAbstraction(Cd1SetupFields.APP_ID_FIELD, deployDataBag.getApp().getUuid())
+            .waitId(activity.getUuid())
+            .tags(isNotEmpty(deployDataBag.getAwsConfig().getTag())
+                    ? singletonList(deployDataBag.getAwsConfig().getTag())
+                    : null)
+            .data(TaskData.builder()
+                      .async(true)
+                      .taskType(TaskType.ECS_COMMAND_TASK.name())
+                      .parameters(new Object[] {request, deployDataBag.getEncryptedDataDetails()})
+                      .timeout(MINUTES.toMillis(getTimeout(deployDataBag)))
+                      .build())
+            .setupAbstraction(Cd1SetupFields.ENV_ID_FIELD, deployDataBag.getEnv().getUuid())
+            .setupAbstraction(Cd1SetupFields.ENV_TYPE_FIELD, deployDataBag.getEnv().getEnvironmentType().name())
+            .setupAbstraction(
+                Cd1SetupFields.INFRASTRUCTURE_MAPPING_ID_FIELD, deployDataBag.getEcsInfrastructureMapping().getUuid())
+            .setupAbstraction(
+                Cd1SetupFields.SERVICE_ID_FIELD, deployDataBag.getEcsInfrastructureMapping().getServiceId())
+            .build();
     return delegateService.queueTask(task);
   }
 
@@ -995,7 +1005,10 @@ public class EcsStateHelper {
                       .timeout(MINUTES.toMillis(getTimeout(ecsRunTaskDataBag)))
                       .build())
             .setupAbstraction(Cd1SetupFields.ENV_ID_FIELD, ecsRunTaskDataBag.getEnvUuid())
+            .setupAbstraction(
+                Cd1SetupFields.ENV_TYPE_FIELD, executionContext.fetchRequiredEnvironment().getEnvironmentType().name())
             .setupAbstraction(Cd1SetupFields.INFRASTRUCTURE_MAPPING_ID_FIELD, ecsInfrastructureMapping.getUuid())
+            .setupAbstraction(Cd1SetupFields.SERVICE_ID_FIELD, ecsInfrastructureMapping.getServiceId())
             .build();
     delegateService.queueTask(task);
     return task;

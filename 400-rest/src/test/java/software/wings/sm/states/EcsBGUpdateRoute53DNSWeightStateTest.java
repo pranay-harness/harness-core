@@ -9,6 +9,7 @@ import static software.wings.api.DeploymentType.ECS;
 import static software.wings.beans.Application.Builder.anApplication;
 import static software.wings.beans.EcsInfrastructureMapping.Builder.anEcsInfrastructureMapping;
 import static software.wings.beans.Environment.Builder.anEnvironment;
+import static software.wings.beans.Environment.EnvironmentType.PROD;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 import static software.wings.utils.WingsTestConstants.ACTIVITY_ID;
@@ -116,8 +117,9 @@ public class EcsBGUpdateRoute53DNSWeightStateTest extends WingsBaseTest {
         .when(mockEcsStateHelper)
         .getSetupElementFromSweepingOutput(any(), anyBoolean());
     doReturn(INFRA_MAPPING_ID).when(mockContext).fetchInfraMappingId();
-    Environment environment = anEnvironment().uuid(ENV_ID).name(ENV_NAME).build();
+    Environment environment = anEnvironment().uuid(ENV_ID).environmentType(PROD).name(ENV_NAME).build();
     doReturn(environment).when(mockContext).getEnv();
+    doReturn(environment).when(mockContext).fetchRequiredEnvironment();
     Application application = anApplication().uuid(APP_ID).name(APP_NAME).accountId(ACCOUNT_ID).build();
     doReturn(application).when(mockContext).getApp();
     Activity activity = Activity.builder().uuid(ACTIVITY_ID).build();

@@ -171,6 +171,8 @@ public class AwsAmiTrafficShiftAlbSwitchRoutesState extends State {
                     ? singletonList(trafficShiftRequest.getAwsConfig().getTag())
                     : null)
             .setupAbstraction(Cd1SetupFields.ENV_ID_FIELD, awsAmiTrafficShiftAlbData.getEnv().getUuid())
+            .setupAbstraction(
+                Cd1SetupFields.ENV_TYPE_FIELD, awsAmiTrafficShiftAlbData.getEnv().getEnvironmentType().name())
             .build();
     delegateService.queueTask(delegateTask);
 

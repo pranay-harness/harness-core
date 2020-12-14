@@ -11,6 +11,7 @@ import static io.harness.rule.OwnerRule.TMACARI;
 import static software.wings.beans.Application.Builder.anApplication;
 import static software.wings.beans.AwsAmiInfrastructureMapping.Builder.anAwsAmiInfrastructureMapping;
 import static software.wings.beans.Environment.Builder.anEnvironment;
+import static software.wings.beans.Environment.EnvironmentType.PROD;
 import static software.wings.beans.InstanceUnitType.COUNT;
 import static software.wings.beans.InstanceUnitType.PERCENTAGE;
 import static software.wings.beans.ResizeStrategy.RESIZE_NEW_FIRST;
@@ -193,8 +194,9 @@ public class AwsAmiServiceDeployStateTest extends WingsBaseTest {
         .when(awsAmiServiceStateHelper)
         .getSetupElementFromSweepingOutput(mockContext, AMI_SERVICE_SETUP_SWEEPING_OUTPUT_NAME);
     doReturn(mockParams).when(mockContext).getContextElement(any());
-    Environment environment = anEnvironment().uuid(ENV_ID).name(ENV_NAME).build();
+    Environment environment = anEnvironment().uuid(ENV_ID).environmentType(PROD).name(ENV_NAME).build();
     doReturn(environment).when(mockParams).getEnv();
+    doReturn(environment).when(mockContext).fetchRequiredEnvironment();
     Application application = anApplication().uuid(APP_ID).name(APP_NAME).accountId(ACCOUNT_ID).build();
     doReturn(application).when(mockParams).getApp();
     Service service = Service.builder().uuid(SERVICE_ID).name(SERVICE_NAME).build();

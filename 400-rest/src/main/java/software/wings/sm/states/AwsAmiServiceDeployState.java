@@ -322,25 +322,27 @@ public class AwsAmiServiceDeployState extends State {
         instanceCountLocal, getInstanceUnitType(), newInstanceData, oldInstanceData);
     boolean resizeNewFirst = serviceSetupElement.getResizeStrategy() == ResizeStrategy.RESIZE_NEW_FIRST;
 
-    AmiResizeTaskRequestData amiResizeTaskRequestData = AmiResizeTaskRequestData.builder()
-                                                            .accountId(infrastructureMapping.getAccountId())
-                                                            .activityId(activity.getUuid())
-                                                            .appId(infrastructureMapping.getAppId())
-                                                            .envId(infrastructureMapping.getEnvId())
-                                                            .awsConfig(awsConfig)
-                                                            .encryptionDetails(encryptionDetails)
-                                                            .region(region)
-                                                            .commandName(getCommandName())
-                                                            .resizeNewFirst(resizeNewFirst)
-                                                            .newAutoScalingGroupName(newAutoScalingGroupName)
-                                                            .newAsgFinalDesiredCount(newAsgFinalDesiredCount)
-                                                            .resizeData(newDesiredCapacities)
-                                                            .serviceSetupElement(serviceSetupElement)
-                                                            .classicLBs(classicLbs)
-                                                            .targetGroupArns(targetGroupArns)
-                                                            .rollback(false)
-                                                            .context(context)
-                                                            .build();
+    AmiResizeTaskRequestData amiResizeTaskRequestData =
+        AmiResizeTaskRequestData.builder()
+            .accountId(infrastructureMapping.getAccountId())
+            .activityId(activity.getUuid())
+            .appId(infrastructureMapping.getAppId())
+            .envId(infrastructureMapping.getEnvId())
+            .environmentType(context.fetchRequiredEnvironment().getEnvironmentType())
+            .awsConfig(awsConfig)
+            .encryptionDetails(encryptionDetails)
+            .region(region)
+            .commandName(getCommandName())
+            .resizeNewFirst(resizeNewFirst)
+            .newAutoScalingGroupName(newAutoScalingGroupName)
+            .newAsgFinalDesiredCount(newAsgFinalDesiredCount)
+            .resizeData(newDesiredCapacities)
+            .serviceSetupElement(serviceSetupElement)
+            .classicLBs(classicLbs)
+            .targetGroupArns(targetGroupArns)
+            .rollback(false)
+            .context(context)
+            .build();
 
     createAndQueueResizeTask(amiResizeTaskRequestData);
 
@@ -399,6 +401,7 @@ public class AwsAmiServiceDeployState extends State {
                       .build())
             .tags(isNotEmpty(request.getAwsConfig().getTag()) ? singletonList(request.getAwsConfig().getTag()) : null)
             .setupAbstraction(Cd1SetupFields.ENV_ID_FIELD, envId)
+            .setupAbstraction(Cd1SetupFields.ENV_TYPE_FIELD, amiResizeTaskRequestData.getEnvironmentType().name())
             .build();
     delegateService.queueTask(delegateTask);
   }
