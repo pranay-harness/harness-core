@@ -1,17 +1,27 @@
-# Use this file to generate new safe image or add new packages
 # Filename: Dockerfile
-FROM us.gcr.io/platform-205701/alpine:base
+FROM harness/alpine:safe-alpine3.12-sec874
 CMD ["/bin/sh"]
 
-#upgrade packages except openjdk8. Note: harness has hard dependency on existing 242 version
-RUN apk upgrade --available --ignore openjdk8 openjdk8-jre openjdk8-jre-lib openjdk8-jre-base && sync
+#add new package postgresql-client [OPS-2813]
+RUN apk add postgresql-client
+
+#upgrade packages except openjdk8
+RUN apk upgrade --available --no-cache --ignore openjdk8 openjdk8-jre openjdk8-jre-lib openjdk8-jre-base && sync
+RUN rm -rf /var/cache/apk/*
 
 #pip upgrade: install package pip-uprade-outdated, upgrade packages and uninstall additional package
+RUN rm -rf ~/.cache/pip/selfcheck/*
+RUN rm -rf ~/.cache/pip/http/*
 RUN pip list --outdated
-RUN pip install pip-upgrade-outdated
-RUN pip_upgrade_outdated -3 -v -x distlib -x rsa -x docutils
+RUN pip install -U pip-upgrade-outdated
+RUN pip_upgrade_outdated -3 -v -x distlib -x rsa -x docutils -x pep517
 RUN pip list --outdated
 RUN pip uninstall -y pip-upgrade-outdated
+RUN rm -rf ~/.cache/pip/selfcheck/*
+RUN rm -rf ~/.cache/pip/http/*
 
-#Nothing to add, Just ensuring packages related with Openjdk8 is not update
+#Ensure Openjdk8 is not update [We have hard dependency on openjdk8-242
 RUN apk list --installed | grep -i openjdk8
+
+# Remove SunPKCS11 Provider
+RUN sed -i "s|^security.provider.10=.*$||" /usr/lib/jvm/default-jvm/jre/lib/security/java.security
