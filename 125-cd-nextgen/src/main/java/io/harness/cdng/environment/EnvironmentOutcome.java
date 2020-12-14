@@ -16,7 +16,7 @@ public class EnvironmentOutcome implements Outcome {
   String name;
   String identifier;
   String description;
-  EnvironmentType type;
+  EnvironmentType environmentType;
   List<NGTag> tags;
 
   @Override
