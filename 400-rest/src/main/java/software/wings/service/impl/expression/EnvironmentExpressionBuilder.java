@@ -16,6 +16,7 @@ import io.harness.beans.FeatureName;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.ff.FeatureFlagService;
 
+import software.wings.beans.ServiceTemplate.ServiceTemplateKeys;
 import software.wings.service.intfc.AppService;
 
 import com.google.inject.Inject;
@@ -75,6 +76,7 @@ public class EnvironmentExpressionBuilder extends ExpressionBuilder {
             .addFilter("envId", EQ, envId)
             .addFilter("serviceId", IN, serviceIds.toArray())
             .addFieldsIncluded("uuid")
+            .addFieldsIncluded(ServiceTemplateKeys.appId)
             .build(),
         SERVICE);
   }
