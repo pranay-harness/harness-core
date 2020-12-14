@@ -3923,6 +3923,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
                          .stepIds(upped)
                          .build());
     }
+    steps.remove(StepType.COMMAND.name());
   }
 
   private void addFavoritesToWorkflowCategories(
