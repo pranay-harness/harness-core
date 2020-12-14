@@ -7,6 +7,7 @@ import io.harness.pms.contracts.execution.ExecutableResponse;
 import io.harness.pms.contracts.execution.NodeExecutionProto;
 import io.harness.pms.contracts.execution.Status;
 import io.harness.pms.contracts.execution.TaskMode;
+import io.harness.pms.contracts.steps.io.StepResponseProto;
 import io.harness.pms.sdk.core.steps.io.StepParameters;
 import io.harness.pms.sdk.core.steps.io.StepResponse;
 import io.harness.tasks.Task;
@@ -21,6 +22,6 @@ public interface PmsNodeExecutionService {
   String queueTask(String nodeExecutionId, TaskMode mode, Map<String, String> setupAbstractions, Task task);
   void addExecutableResponse(
       @NonNull String nodeExecutionId, Status status, ExecutableResponse executableResponse, List<String> callbackIds);
-  void handleStepResponse(@NonNull String nodeExecutionId, @NonNull StepResponse stepResponse);
+  void handleStepResponse(@NonNull String nodeExecutionId, @NonNull StepResponseProto stepResponse);
   StepParameters extractResolvedStepParameters(NodeExecutionProto nodeExecution);
 }

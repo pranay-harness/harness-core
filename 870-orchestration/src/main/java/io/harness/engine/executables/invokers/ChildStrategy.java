@@ -20,6 +20,7 @@ import io.harness.pms.execution.utils.LevelUtils;
 import io.harness.pms.sdk.core.execution.PmsNodeExecutionService;
 import io.harness.pms.sdk.core.steps.executables.ChildExecutable;
 import io.harness.pms.sdk.core.steps.io.StepResponse;
+import io.harness.pms.sdk.core.steps.io.StepResponseMapper;
 import io.harness.pms.sdk.registries.StepRegistry;
 import io.harness.tasks.ResponseData;
 
@@ -55,7 +56,8 @@ public class ChildStrategy implements ExecuteStrategy {
         ambiance.getPlanExecutionId(), resumePackage.getResponseDataMap().keySet().iterator().next());
     StepResponse stepResponse = childExecutable.handleChildResponse(
         ambiance, pmsNodeExecutionService.extractResolvedStepParameters(nodeExecution), accumulateResponses);
-    pmsNodeExecutionService.handleStepResponse(nodeExecution.getUuid(), stepResponse);
+    pmsNodeExecutionService.handleStepResponse(
+        nodeExecution.getUuid(), StepResponseMapper.toStepResponseProto(stepResponse));
   }
 
   private ChildExecutable extractChildExecutable(NodeExecutionProto nodeExecution) {

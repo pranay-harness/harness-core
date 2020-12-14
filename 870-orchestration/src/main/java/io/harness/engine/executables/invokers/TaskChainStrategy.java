@@ -22,6 +22,7 @@ import io.harness.pms.sdk.core.steps.executables.TaskChainResponse;
 import io.harness.pms.sdk.core.steps.io.PassThroughData;
 import io.harness.pms.sdk.core.steps.io.StepInputPackage;
 import io.harness.pms.sdk.core.steps.io.StepResponse;
+import io.harness.pms.sdk.core.steps.io.StepResponseMapper;
 import io.harness.pms.sdk.registries.StepRegistry;
 import io.harness.serializer.KryoSerializer;
 
@@ -69,7 +70,8 @@ public class TaskChainStrategy implements TaskExecuteStrategy {
           pmsNodeExecutionService.extractResolvedStepParameters(nodeExecution),
           (PassThroughData) kryoSerializer.asObject(lastLinkResponse.getPassThroughData().toByteArray()),
           resumePackage.getResponseDataMap());
-      pmsNodeExecutionService.handleStepResponse(nodeExecution.getUuid(), stepResponse);
+      pmsNodeExecutionService.handleStepResponse(
+          nodeExecution.getUuid(), StepResponseMapper.toStepResponseProto(stepResponse));
     } else {
       StepInputPackage inputPackage =
           engineObtainmentHelper.obtainInputPackage(ambiance, nodeExecution.getNode().getRebObjectsList());
@@ -104,7 +106,8 @@ public class TaskChainStrategy implements TaskExecuteStrategy {
       StepResponse stepResponse = taskChainExecutable.finalizeExecution(ambiance,
           pmsNodeExecutionService.extractResolvedStepParameters(nodeExecution), taskChainResponse.getPassThroughData(),
           null);
-      pmsNodeExecutionService.handleStepResponse(nodeExecution.getUuid(), stepResponse);
+      pmsNodeExecutionService.handleStepResponse(
+          nodeExecution.getUuid(), StepResponseMapper.toStepResponseProto(stepResponse));
       return;
     }
 

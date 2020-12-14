@@ -20,6 +20,7 @@ import io.harness.pms.contracts.plan.PlanNodeProto;
 import io.harness.pms.sdk.core.execution.PmsNodeExecutionService;
 import io.harness.pms.sdk.core.steps.executables.AsyncExecutable;
 import io.harness.pms.sdk.core.steps.io.StepResponse;
+import io.harness.pms.sdk.core.steps.io.StepResponseMapper;
 import io.harness.pms.sdk.registries.StepRegistry;
 import io.harness.waiter.NotifyCallback;
 import io.harness.waiter.WaitNotifyEngine;
@@ -56,7 +57,8 @@ public class AsyncStrategy implements ExecuteStrategy {
     AsyncExecutable asyncExecutable = extractAsyncExecutable(nodeExecution);
     StepResponse stepResponse = asyncExecutable.handleAsyncResponse(ambiance,
         pmsNodeExecutionService.extractResolvedStepParameters(nodeExecution), resumePackage.getResponseDataMap());
-    pmsNodeExecutionService.handleStepResponse(nodeExecution.getUuid(), stepResponse);
+    pmsNodeExecutionService.handleStepResponse(
+        nodeExecution.getUuid(), StepResponseMapper.toStepResponseProto(stepResponse));
   }
 
   private void handleResponse(Ambiance ambiance, NodeExecutionProto nodeExecution, AsyncExecutableResponse response) {
